@@ -9,7 +9,6 @@ import os.path
 import json
 import copy
 import datetime
-import subprocess
 import sys
 import urllib2
 
@@ -51,40 +50,7 @@ DEFAULT_JOB_PATH = os.path.join(
 
 def load_mozharness_info():
     with open(MOZHARNESS_CONFIG) as content:
-        return json.loads(content)
-
-def get_hg_url():
-    ''' Determine the url for the mercurial repository'''
-    try:
-        url = subprocess.check_output(
-            ['hg', 'path', 'default'],
-            stderr=subprocess.PIPE
-        )
-    except subprocess.CalledProcessError:
-        sys.stderr.write(
-            "Error: Could not determine the current hg repository url. " \
-            "Ensure command is executed within a hg respository"
-        )
-        sys.exit(1)
-
-    return url
-
-def get_latest_hg_revision(repository):
-    ''' Retrieves the revision number of the latest changed head'''
-    try:
-        revision = subprocess.check_output(
-            ['hg', 'id', '-r', 'tip', repository, '-i'],
-            stderr=subprocess.PIPE
-        ).strip('\n')
-    except subprocess.CalledProcessError:
-        sys.stderr.write(
-            "Error: Could not determine the latest hg revision at {} " \
-            "Ensure command is executed within a cloned hg respository and " \
-            "remote default remote repository is accessible".format(repository)
-        )
-        sys.exit(1)
-
-    return revision
+        return json.load(content)
 
 def docker_image(name):
     ''' Determine the docker tag/revision from an in tree docker file '''
@@ -200,9 +166,6 @@ class Graph(object):
     @CommandArgument('--base-repository',
         default=os.environ.get('GECKO_BASE_REPOSITORY'),
         help='URL for "base" repository to clone')
-    @CommandArgument('--mozharness-repository',
-        default='https://hg.mozilla.org/build/mozharness',
-        help='URL for custom mozharness repo')
     @CommandArgument('--head-repository',
         default=os.environ.get('GECKO_HEAD_REPOSITORY'),
         help='URL for "head" repository to fetch revision from')
@@ -212,12 +175,6 @@ class Graph(object):
     @CommandArgument('--head-rev',
         default=os.environ.get('GECKO_HEAD_REV'),
         help='Commit revision to use from head repository')
-    @CommandArgument('--mozharness-rev',
-        default='default',
-        help='Commit revision to use from mozharness repository')
-    @CommandArgument('--mozharness-ref',
-        default='master',
-        help='Commit ref to use from mozharness repository')
     @CommandArgument('--message',
         help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
     @CommandArgument('--revision-hash',
@@ -254,6 +211,8 @@ class Graph(object):
         jobs = templates.load(job_path, {})
 
         job_graph = parse_commit(message, jobs)
+        mozharness = load_mozharness_info()
+
         # Template parameters used when expanding the graph
         parameters = dict(gaia_info().items() + {
             'project': project,
@@ -267,9 +226,9 @@ class Graph(object):
             'owner': params['owner'],
             'from_now': json_time_from_now,
             'now': datetime.datetime.now().isoformat(),
-            'mozharness_repository': params['mozharness_repository'],
-            'mozharness_rev': params['mozharness_rev'],
-            'mozharness_ref': params['mozharness_ref'],
+            'mozharness_repository': mozharness['repo'],
+            'mozharness_rev': mozharness['revision'],
+            'mozharness_ref':mozharness.get('reference', mozharness['revision']),
             'revision_hash': params['revision_hash']
         }.items())
 
