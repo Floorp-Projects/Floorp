@@ -208,6 +208,15 @@ let CustomizableUIInternal = {
       "loop-button",
     ];
 
+    // Insert the Pocket button after the bookmarks button if it's present.
+    for (let widgetDefinition of CustomizableWidgets) {
+      if (widgetDefinition.id == "pocket-button") {
+        let idx = navbarPlacements.indexOf("bookmarks-menu-button") + 1;
+        navbarPlacements.splice(idx, 0, widgetDefinition.id);
+        break;
+      }
+    }
+
     if (Services.prefs.getBoolPref(kPrefWebIDEInNavbar)) {
       navbarPlacements.push("webide-button");
     }
@@ -288,19 +297,40 @@ let CustomizableUIInternal = {
   },
 
   _introduceNewBuiltinWidgets: function() {
-    if (!gSavedState || gSavedState.currentVersion >= kVersion) {
+    // We should still enter even if gSavedState.currentVersion >= kVersion
+    // because the per-widget pref facility is independent of versioning.
+    if (!gSavedState) {
       return;
     }
 
     let currentVersion = gSavedState.currentVersion;
     for (let [id, widget] of gPalette) {
-      if (widget._introducedInVersion > currentVersion &&
-          widget.defaultArea) {
-        let futurePlacements = gFuturePlacements.get(widget.defaultArea);
-        if (futurePlacements) {
-          futurePlacements.add(id);
-        } else {
-          gFuturePlacements.set(widget.defaultArea, new Set([id]));
+      if (widget.defaultArea) {
+        let shouldAdd = false;
+        let shouldSetPref = false;
+        let prefId = "browser.toolbarbuttons.introduced." + widget.id;
+        if (widget._introducedInVersion === "pref") {
+          try {
+            shouldAdd = !Services.prefs.getBoolPref(prefId);
+          } catch (ex) {
+            // Pref doesn't exist:
+            shouldAdd = true;
+          }
+          shouldSetPref = shouldAdd;
+        } else if (widget._introducedInVersion > currentVersion) {
+          shouldAdd = true;
+        }
+
+        if (shouldAdd) {
+          let futurePlacements = gFuturePlacements.get(widget.defaultArea);
+          if (futurePlacements) {
+            futurePlacements.add(id);
+          } else {
+            gFuturePlacements.set(widget.defaultArea, new Set([id]));
+          }
+          if (shouldSetPref) {
+            Services.prefs.setBoolPref(prefId, true);
+          }
         }
       }
     }
@@ -2087,6 +2117,14 @@ let CustomizableUIInternal = {
     // opened - so we know there's no build areas to handle. Also, builtin
     // widgets are expected to be (mostly) static, so shouldn't affect the
     // current placement settings.
+
+    // This allows a widget to be both built-in by default but also able to be
+    // destroyed based on criteria that may not be available when the widget is
+    // created -- for example, because some other feature in the browser
+    // supersedes the widget.
+    let conditionalDestroyPromise = aData.conditionalDestroyPromise || null;
+    delete aData.conditionalDestroyPromise;
+
     let widget = this.normalizeWidget(aData, CustomizableUI.SOURCE_BUILTIN);
     if (!widget) {
       ERROR("Error creating builtin widget: " + aData.id);
@@ -2095,6 +2133,16 @@ let CustomizableUIInternal = {
 
     LOG("Creating built-in widget with id: " + widget.id);
     gPalette.set(widget.id, widget);
+
+    if (conditionalDestroyPromise) {
+      conditionalDestroyPromise.then(shouldDestroy => {
+        if (shouldDestroy) {
+          this.destroyWidget(widget.id);
+        }
+      }, err => {
+        Cu.reportError(err);
+      });
+    }
   },
 
   // Returns true if the area will eventually lazily restore (but hasn't yet).

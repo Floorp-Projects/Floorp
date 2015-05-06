@@ -15,89 +15,86 @@
 // Test the asynchronous live-updating of bookmarks query results
 SimpleTest.waitForExplicitFinish();
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
+const {utils: Cu, interfaces: Ci} = Components;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
-var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
-function uri(spec) {
-  return iosvc.newURI(spec, null, null);
+const TEST_URI = NetUtil.newURI("http://foo.com");
+
+function promiseOnItemChanged() {
+  return new Promise(resolve => {
+    PlacesUtils.bookmarks.addObserver({
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onItemAdded() {},
+      onItemRemoved() {},
+      onItemVisited() {},
+      onItemMoved() {},
+
+      onItemChanged() {
+        PlacesUtils.bookmarks.removeObserver(this);
+        resolve();
+      },
+
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver])
+    }, false);
+  });
 }
 
-var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
+Task.spawn(function* () {
+  // add 2 bookmarks to the toolbar, same URI, different titles (set later)
+  let bm1 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: TEST_URI
+  });
 
-// add 2 bookmarks to the toolbar, same URI, different titles (set later)
-var toolbarFolderId = bmsvc.toolbarFolder;
-var testURI = uri("http://foo.com");
-var bm1 = bmsvc.insertBookmark(toolbarFolderId, testURI, bmsvc.DEFAULT_INDEX, "");
-var bm2 = bmsvc.insertBookmark(toolbarFolderId, testURI, bmsvc.DEFAULT_INDEX, "");
+  let bm2 = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: TEST_URI
+  });
 
-// query for bookmarks
-var options = histsvc.getNewQueryOptions();
-var query = histsvc.getNewQuery();
-query.setFolders([toolbarFolderId], 1);
-var result = histsvc.executeQuery(query, options);
-var rootNode = result.root;
-rootNode.containerOpen = true;
+  // query for bookmarks
+  let rootNode = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
 
-// set up observer
-var observer =
-{
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsINavBookmarkObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  // set up observer
+  let promiseObserved = promiseOnItemChanged();
 
-  // nsINavBookmarkObserver
-  onBeginUpdateBatch: function(){},
-  onEndUpdateBatch: function(){},
-  onItemAdded: function(){},
-  onItemRemoved: function(){},
-  onItemChanged: function(bookmarkId, property, isAnnotationProperty, value,
-                          lastModified, itemType){
-    runTest();
-    bmsvc.removeObserver(this);
-  },
-  onItemVisited: function(){},
-  onItemMoved: function(){}
-};
-bmsvc.addObserver(observer, false);
+  // modify the bookmark's title
+  yield PlacesUtils.bookmarks.update({
+    guid: bm2.guid, title: "foo"
+  });
 
-// modify the bookmark's title
-var newTitle = "foo";
-bmsvc.setItemTitle(bm2, newTitle);
+  // wait for notification
+  yield promiseObserved;
 
-/*
-  this gets called after our observer gets notified of onItemChanged
-  which is triggered by updating the item's title.
-  after receiving the notification, our original query should also
-  have been live-updated, so we can iterate through its children,
-  to check that only the modified bookmark has changed.
-*/
-function runTest() {
+  // Continue after our observer gets notified of onItemChanged
+  // which is triggered by updating the item's title.
+  // After receiving the notification, our original query should also
+  // have been live-updated, so we can iterate through its children,
+  // to check that only the modified bookmark has changed.
+
   // result node should be updated
-  var cc = rootNode.childCount;
-  for (var i=0; i < cc; ++i) {
-    var node = rootNode.getChild(i);
+  let cc = rootNode.childCount;
+  for (let i = 0; i < cc; ++i) {
+    let node = rootNode.getChild(i);
     // test that bm1 does not have new title
-    if (node.itemId == bm1)
-      ok(node.title != newTitle,
+    if (node.bookmarkGuid == bm1.guid)
+      ok(node.title != "foo",
          "Changing a bookmark's title did not affect the title of other bookmarks with the same URI");
   }
   rootNode.containerOpen = false;
 
-  // clean up finish test
-  bmsvc.removeItem(bm1);
-  bmsvc.removeItem(bm2);
+  // clean up
+  yield PlacesUtils.bookmarks.remove(bm1);
+  yield PlacesUtils.bookmarks.remove(bm2);
+}).catch(err => {
+  ok(false, `uncaught error: ${err}`);
+}).then(() => {
   SimpleTest.finish();
-}
-
+});
 ]]>
 </script>
 

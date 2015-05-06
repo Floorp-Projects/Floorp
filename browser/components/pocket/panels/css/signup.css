@@ -6,6 +6,7 @@
  *  Contents:
  *  Global
  *  Core detail
+ *  Core detail - storyboard
  *  Buttons
  *  Responsive
  */
@@ -24,8 +25,6 @@
     text-align: center;
 }
 .pkt_ext_containersignup_inactive {
-    -moz-animation: pkt_ext_hide 0.3s ease-out;
-    -webkit-animation: pkt_ext_hide 0.3s ease-out;
     animation: pkt_ext_hide 0.3s ease-out;
     opacity: 0;
     visibility: hidden;
@@ -34,20 +33,6 @@
     content: " ";
     display:table;
     clear:both;
-}
-@-webkit-keyframes pkt_ext_hide {
-    0% {
-        opacity: 1;
-        visibility: visible;
-    }
-    99% {
-        opacity: 0;
-        visibility: visible;
-    }
-    100% {
-        opacity: 0;
-        visibility: hidden;
-    }
 }
 @keyframes pkt_ext_hide {
     0% {
@@ -72,57 +57,48 @@
     font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     line-height: 1.3;
     margin: 0 auto 1.5em;
-    max-width: 250px;
+    max-width: 260px;
 }
 .pkt_ext_containersignup a { 
     color: #4c8fd0;
-    text-decoration: none;
 }
 .pkt_ext_containersignup a:hover {
     color: #3076b9;
 }
-.pkt_ext_containersignup .pkt_ext_introrecommend {
-    background-color: #f4f4f4;
-    color: #333;
-    font-size: 12px;
-    font-weight: normal;
-    margin: 0;
-    padding: 1em 0.5em;
-}
 .pkt_ext_containersignup .pkt_ext_introdetail {
     background-color: #fbfbfb;
     border: 1px solid #c1c1c1;
-    border-width: 1px 0;
+    border-width: 0 0 1px;
 }
 .pkt_ext_containersignup .pkt_ext_logo {
     background: url(../img/pocketlogo@1x.png) center bottom no-repeat;
     display: block;
-    height: 38px;
+    height: 32px;
     margin: 0 auto 15px;
     padding-top: 25px;
     position: relative;
     text-indent: -9999px;
-    width: 147px;
+    width: 123px;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 1.5dppx) {
+@media (min-resolution: 1.1dppx) {
     .pkt_ext_containersignup .pkt_ext_logo {
         background-image: url(../img/pocketlogo@2x.png);
-        background-size: 147px 38px;
+        background-size: 123px 32px;
     }
 }
 .pkt_ext_containersignup .pkt_ext_introimg {
-    background: url(../img/pocketmultidevices@1x.png) center center no-repeat;
+    background: url(../img/pocketsignup_hero@1x.png) center center no-repeat;
     display: block;
-    height: 122px;
-    margin: 10px auto 20px;
+    height: 125px;
+    margin: 0 auto;
     position: relative;
     text-indent: -9999px;
-    width: 171px;
+    width: 255px;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 1.5dppx) {
+@media (min-resolution: 1.1dppx) {
     .pkt_ext_containersignup .pkt_ext_introimg {
-        background-image: url(../img/pocketmultidevices@2x.png);
-        background-size: 171px 122px;
+        background-image: url(../img/pocketsignup_hero@2x.png);
+        background-size: 255px 125px;
     }
 }
 .pkt_ext_containersignup .pkt_ext_tagline {
@@ -160,6 +136,72 @@
     font-size: 12px;
     max-width: 320px;
     margin-top: 15px;
+}
+
+/*=Core detail - storyboard
+--------------------------------------------------------------------------------------- */
+.pkt_ext_introstory {
+    align-items: center;
+    display: flex;
+    padding: 20px;
+}
+.pkt_ext_introstory:after {
+    clear: both;
+    content: "";
+    display: table;
+}
+.pkt_ext_introstory p {
+    margin-bottom: 0;
+    text-align: left;
+}
+.pkt_ext_introstoryone {
+    padding: 20px 18px 15px 20px;
+}
+.pkt_ext_introstorytwo {
+    padding: 3px 0 0 20px;
+}
+.pkt_ext_introstorytwo .pkt_ext_tagline {
+    margin-bottom: 1.5em;
+}
+.pkt_ext_introstory_text {
+    flex: 1;
+}
+.pkt_ext_introstoryone_img,
+.pkt_ext_introstorytwo_img {
+    display: block;
+    overflow: hidden;
+    position: relative;
+    text-indent: -999px;
+}
+.pkt_ext_introstoryone_img {
+    background: url(../img/pocketsignup_button@1x.png) center right no-repeat;
+    height: 82px;
+    padding: 0 0 0 0.7em;
+    width: 82px;
+}
+@media (min-resolution: 1.1dppx) {
+    .pkt_ext_introstoryone_img {
+        background-image: url(../img/pocketsignup_button@2x.png);
+        background-size: 82px 82px;
+    }
+}
+.pkt_ext_introstorytwo_img {
+    background: url(../img/pocketsignup_devices@1x.png) bottom right no-repeat;
+    height: 110px;
+    padding: 1em 0 0 0.7em;
+    width: 124px;
+}
+@media (min-resolution: 1.1dppx) {
+    .pkt_ext_introstorytwo_img {
+        background-image: url(../img/pocketsignup_devices@2x.png);
+        background-size: 124px 110px;
+    }
+}
+.pkt_ext_introstorydivider {
+    border-top: 1px solid #c1c1c1;
+    height: 1px;
+    margin: 0 auto;
+    width: 125px;
 }
 
 /*=Buttons
@@ -218,8 +260,6 @@
 .pkt_ext_containersignup .signupinterim-btn-signup,
 .pkt_ext_containersignup .forgot-btn-submit,
 .pkt_ext_containersignup .forgotreset-btn-change {
-    -moz-box-sizing: content-box;
-    -webkit-box-sizing: content-box;
     min-width: 12.125em;
     padding: 0.8em 1.1875em;
     box-sizing: content-box;
@@ -242,7 +282,7 @@
     width: 22px;
     position: absolute;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 144dpi) {
+@media (min-resolution: 1.1dppx) {
     .pkt_ext_containersignup .signup-btn-firefox .logo {
         background-image: url(../img/signup_firefoxlogo@2x.png);
         background-size: 22px 22px;
