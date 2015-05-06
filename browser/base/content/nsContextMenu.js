@@ -239,7 +239,7 @@ nsContextMenu.prototype = {
         (uri.schemeIs("http") || uri.schemeIs("https") ||
          (uri.schemeIs("about") && ReaderMode.getOriginalUrl(uri.spec)));
     }
-    this.showItem("context-pocket", canPocket && window.Pocket && Pocket.isLoggedIn);
+    this.showItem("context-pocket", canPocket && window.pktApi && window.pktApi.isUserLoggedIn());
   },
 
   initViewItems: function CM_initViewItems() {
