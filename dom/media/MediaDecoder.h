@@ -889,7 +889,7 @@ public:
 
   // Schedules the state machine to run one cycle on the shared state
   // machine thread. Main thread only.
-  nsresult ScheduleStateMachineThread();
+  nsresult ScheduleStateMachine();
 
   struct Statistics {
     // Estimate of the current playback rate (bytes/second).
