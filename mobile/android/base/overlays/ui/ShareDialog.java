@@ -408,7 +408,7 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         try {
             // This can launch in the guest profile. Sorry.
             final Intent i = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-            i.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS_NAME);
+            i.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
             startActivity(i);
         } catch (URISyntaxException e) {
             // Nothing much we can do.
