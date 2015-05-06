@@ -625,7 +625,7 @@ add_test(function test_write_disconnecting_cause() {
   let pduHelper = context.GsmPDUHelper;
   let tlvHelper = context.ComprehensionTlvHelper;
 
-  tlvHelper.writeCauseTlv(RIL_ERROR_TO_GECKO_ERROR[ERROR_GENERIC_FAILURE]);
+  tlvHelper.writeCauseTlv(RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[CALL_FAIL_BUSY]);
   let tag = pduHelper.readHexOctet();
   equal(tag, COMPREHENSIONTLV_TAG_CAUSE | COMPREHENSIONTLV_FLAG_CR);
   let len = pduHelper.readHexOctet();
@@ -633,7 +633,7 @@ add_test(function test_write_disconnecting_cause() {
   let standard = pduHelper.readHexOctet();
   equal(standard, 0x60);
   let cause = pduHelper.readHexOctet();
-  equal(cause, 0x80 | ERROR_GENERIC_FAILURE);
+  equal(cause, 0x80 | CALL_FAIL_BUSY);
 
   run_next_test();
 });
