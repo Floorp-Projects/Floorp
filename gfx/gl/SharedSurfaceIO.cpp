@@ -6,9 +6,8 @@
 #include "SharedSurfaceIO.h"
 
 #include "GLContextCGL.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/MacIOSurface.h"
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
+#include "mozilla/DebugOnly.h"
 #include "ScopedGLHelpers.h"
 
 namespace mozilla {
@@ -153,8 +152,7 @@ SharedSurface_IOSurface::SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioS
                   AttachmentType::GLTexture,
                   gl,
                   size,
-                  hasAlpha,
-                  true)
+                  hasAlpha)
   , mIOSurf(ioSurf)
 {
     gl->MakeCurrent();
@@ -172,29 +170,18 @@ SharedSurface_IOSurface::~SharedSurface_IOSurface()
     }
 }
 
-bool
-SharedSurface_IOSurface::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
-{
-    bool isOpaque = !mHasAlpha;
-    *out_descriptor = layers::SurfaceDescriptorMacIOSurface(mIOSurf->GetIOSurfaceID(),
-                                                            mIOSurf->GetContentsScaleFactor(),
-                                                            isOpaque);
-    return true;
-}
-
 ////////////////////////////////////////////////////////////////////////
 // SurfaceFactory_IOSurface
 
 /*static*/ UniquePtr<SurfaceFactory_IOSurface>
-SurfaceFactory_IOSurface::Create(GLContext* gl, const SurfaceCaps& caps,
-                                 const RefPtr<layers::ISurfaceAllocator>& allocator,
-                                 const layers::TextureFlags& flags)
+SurfaceFactory_IOSurface::Create(GLContext* gl,
+                                 const SurfaceCaps& caps)
 {
     gfx::IntSize maxDims(MacIOSurface::GetMaxWidth(),
                          MacIOSurface::GetMaxHeight());
 
     typedef SurfaceFactory_IOSurface ptrT;
-    UniquePtr<ptrT> ret( new ptrT(gl, caps, allocator, flags, maxDims) );
+    UniquePtr<ptrT> ret( new ptrT(gl, caps, maxDims) );
     return Move(ret);
 }
 
