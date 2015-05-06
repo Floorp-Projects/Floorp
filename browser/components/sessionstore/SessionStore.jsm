@@ -88,6 +88,16 @@ const NOTAB_MESSAGES = new Set([
   "SessionStore:update",
 ]);
 
+// The list of messages we accept without an "epoch" parameter.
+// See getCurrentEpoch() and friends to find out what an "epoch" is.
+const NOEPOCH_MESSAGES = new Set([
+  // For a description see above.
+  "SessionStore:setupSyncHandler",
+
+  // For a description see above.
+  "SessionStore:crashedTabRevived",
+]);
+
 // The list of messages we want to receive even during the short period after a
 // frame has been removed from the DOM and before its frame script has finished
 // unloading.
@@ -330,10 +340,7 @@ let SessionStoreInternal = {
   // windows yet to be restored
   _restoreCount: -1,
 
-  // This number gets incremented each time we start to restore a tab.
-  _nextRestoreEpoch: 1,
-
-  // For each <browser> element being restored, records the current epoch.
+  // For each <browser> element, records the current epoch.
   _browserEpochs: new WeakMap(),
 
   // Any browsers that fires the oop-browser-crashed event gets stored in
@@ -616,6 +623,19 @@ let SessionStoreInternal = {
                       `from a browser that has no tab`);
     }
 
+    let data = aMessage.data || {};
+    let hasEpoch = data.hasOwnProperty("epoch");
+
+    // Most messages sent by frame scripts require to pass an epoch.
+    if (!hasEpoch && !NOEPOCH_MESSAGES.has(aMessage.name)) {
+      throw new Error(`received message '${aMessage.name}' without an epoch`);
+    }
+
+    // Ignore messages from previous epochs.
+    if (hasEpoch && !this.isCurrentEpoch(browser, data.epoch)) {
+      return;
+    }
+
     switch (aMessage.name) {
       case "SessionStore:setupSyncHandler":
         TabState.setSyncHandler(browser, aMessage.objects.handler);
@@ -681,77 +701,69 @@ let SessionStoreInternal = {
         }
         break;
       case "SessionStore:restoreHistoryComplete":
-        if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
-          // Notify the tabbrowser that the tab chrome has been restored.
-          let tabData = browser.__SS_data;
+        // Notify the tabbrowser that the tab chrome has been restored.
+        let tabData = browser.__SS_data;
 
-          // wall-paper fix for bug 439675: make sure that the URL to be loaded
-          // is always visible in the address bar
-          let activePageData = tabData.entries[tabData.index - 1] || null;
-          let uri = activePageData ? activePageData.url || null : null;
-          browser.userTypedValue = uri;
+        // wall-paper fix for bug 439675: make sure that the URL to be loaded
+        // is always visible in the address bar
+        let activePageData = tabData.entries[tabData.index - 1] || null;
+        let uri = activePageData ? activePageData.url || null : null;
+        browser.userTypedValue = uri;
 
-          // If the page has a title, set it.
-          if (activePageData) {
-            if (activePageData.title) {
-              tab.label = activePageData.title;
-              tab.crop = "end";
-            } else if (activePageData.url != "about:blank") {
-              tab.label = activePageData.url;
-              tab.crop = "center";
-            }
+        // If the page has a title, set it.
+        if (activePageData) {
+          if (activePageData.title) {
+            tab.label = activePageData.title;
+            tab.crop = "end";
+          } else if (activePageData.url != "about:blank") {
+            tab.label = activePageData.url;
+            tab.crop = "center";
           }
-
-          // Restore the tab icon.
-          if ("image" in tabData) {
-            win.gBrowser.setIcon(tab, tabData.image);
-          }
-
-          let event = win.document.createEvent("Events");
-          event.initEvent("SSTabRestoring", true, false);
-          tab.dispatchEvent(event);
         }
+
+        // Restore the tab icon.
+        if ("image" in tabData) {
+          win.gBrowser.setIcon(tab, tabData.image);
+        }
+
+        let event = win.document.createEvent("Events");
+        event.initEvent("SSTabRestoring", true, false);
+        tab.dispatchEvent(event);
         break;
       case "SessionStore:restoreTabContentStarted":
-        if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
-          if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
-            // If a load not initiated by sessionstore was started in a
-            // previously pending tab. Mark the tab as no longer pending.
-            this.markTabAsRestoring(tab);
-          } else {
-            // If the user was typing into the URL bar when we crashed, but hadn't hit
-            // enter yet, then we just need to write that value to the URL bar without
-            // loading anything. This must happen after the load, since it will clear
-            // userTypedValue.
-            let tabData = browser.__SS_data;
-            if (tabData.userTypedValue && !tabData.userTypedClear) {
-              browser.userTypedValue = tabData.userTypedValue;
-              win.URLBarSetURI();
-            }
+        if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
+          // If a load not initiated by sessionstore was started in a
+          // previously pending tab. Mark the tab as no longer pending.
+          this.markTabAsRestoring(tab);
+        } else {
+          // If the user was typing into the URL bar when we crashed, but hadn't hit
+          // enter yet, then we just need to write that value to the URL bar without
+          // loading anything. This must happen after the load, since it will clear
+          // userTypedValue.
+          let tabData = browser.__SS_data;
+          if (tabData.userTypedValue && !tabData.userTypedClear) {
+            browser.userTypedValue = tabData.userTypedValue;
+            win.URLBarSetURI();
           }
         }
         break;
       case "SessionStore:restoreTabContentComplete":
-        if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
-          // This callback is used exclusively by tests that want to
-          // monitor the progress of network loads.
-          if (gDebuggingEnabled) {
-            Services.obs.notifyObservers(browser, NOTIFY_TAB_RESTORED, null);
-          }
-
-          delete browser.__SS_data;
-
-          SessionStoreInternal._resetLocalTabRestoringState(tab);
-          SessionStoreInternal.restoreNextTab();
-
-          this._sendTabRestoredNotification(tab);
+        // This callback is used exclusively by tests that want to
+        // monitor the progress of network loads.
+        if (gDebuggingEnabled) {
+          Services.obs.notifyObservers(browser, NOTIFY_TAB_RESTORED, null);
         }
+
+        delete browser.__SS_data;
+
+        SessionStoreInternal._resetLocalTabRestoringState(tab);
+        SessionStoreInternal.restoreNextTab();
+
+        this._sendTabRestoredNotification(tab);
         break;
       case "SessionStore:reloadPendingTab":
-        if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
-          if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
-            this.restoreTabContent(tab);
-          }
+        if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
+          this.restoreTabContent(tab);
         }
         break;
       case "SessionStore:crashedTabRevived":
@@ -2794,11 +2806,6 @@ let SessionStoreInternal = {
     // Tab is now open.
     delete tabData.closedAt;
 
-    // Flush all data from the content script synchronously. This is done so
-    // that all async messages that are still on their way to chrome will
-    // be ignored and don't override any tab data set when restoring.
-    TabState.flush(browser);
-
     // Ensure the index is in bounds.
     let activeIndex = (tabData.index || tabData.entries.length) - 1;
     activeIndex = Math.min(activeIndex, tabData.entries.length - 1);
@@ -2816,11 +2823,10 @@ let SessionStoreInternal = {
     }
     tabbrowser.updateBrowserRemotenessByURL(browser, uri);
 
-    // Start a new epoch and include the epoch in the restoreHistory
-    // message. If a message is received that relates to a previous epoch, we
-    // discard it.
-    let epoch = this._nextRestoreEpoch++;
-    this._browserEpochs.set(browser.permanentKey, epoch);
+    // Start a new epoch to discard all frame script messages relating to a
+    // previous epoch. All async messages that are still on their way to chrome
+    // will be ignored and don't override any tab data set when restoring.
+    let epoch = this.startNextEpoch(browser);
 
     // keep the data around to prevent dataloss in case
     // a tab gets closed before it's been properly restored
@@ -3607,7 +3613,6 @@ let SessionStoreInternal = {
 
     // The browser is no longer in any sort of restoring state.
     delete browser.__SS_restoreState;
-    this._browserEpochs.delete(browser.permanentKey);
 
     aTab.removeAttribute("pending");
     browser.removeAttribute("pending");
@@ -3633,6 +3638,26 @@ let SessionStoreInternal = {
   },
 
   /**
+   * Each fresh tab starts out with epoch=0. This function can be used to
+   * start a next epoch by incrementing the current value. It will enables us
+   * to ignore stale messages sent from previous epochs. The function returns
+   * the new epoch ID for the given |browser|.
+   */
+  startNextEpoch(browser) {
+    let next = this.getCurrentEpoch(browser) + 1;
+    this._browserEpochs.set(browser.permanentKey, next);
+    return next;
+  },
+
+  /**
+   * Returns the current epoch for the given <browser>. If we haven't assigned
+   * a new epoch this will default to zero for new tabs.
+   */
+  getCurrentEpoch(browser) {
+    return this._browserEpochs.get(browser.permanentKey) || 0;
+  },
+
+  /**
    * Each time a <browser> element is restored, we increment its "epoch". To
    * check if a message from content-sessionStore.js is out of date, we can
    * compare the epoch received with the message to the <browser> element's
@@ -3640,7 +3665,7 @@ let SessionStoreInternal = {
    * with respect to |browser|.
    */
   isCurrentEpoch: function (browser, epoch) {
-    return (this._browserEpochs.get(browser.permanentKey) || 0) == epoch;
+    return this.getCurrentEpoch(browser) == epoch;
   },
 
 };
