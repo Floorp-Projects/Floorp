@@ -6894,7 +6894,7 @@ xxx
 *.zw
 
 
-// List of new gTLDs imported from https://newgtlds.icann.org/newgtlds.csv on 2015-04-07T06:02:08Z
+// List of new gTLDs imported from https://newgtlds.icann.org/newgtlds.csv on 2015-05-06T09:31:08Z
 
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -6947,6 +6947,9 @@ africa
 // africamagic : 2015-03-05 Electronic Media Network (Pty) Ltd
 africamagic
 
+// agakhan : 2015-04-23 Fondation Aga Khan (Aga Khan Foundation)
+agakhan
+
 // agency : 2013-11-14 Steel Falls, LLC
 agency
 
@@ -6958,6 +6961,9 @@ airforce
 
 // airtel : 2014-10-24 Bharti Airtel Limited
 airtel
+
+// akdn : 2015-04-23 Fondation Aga Khan (Aga Khan Foundation)
+akdn
 
 // alibaba : 2015-01-15 Alibaba Group Holding Limited
 alibaba
@@ -7030,6 +7036,9 @@ axa
 
 // azure : 2014-12-18 Microsoft Corporation
 azure
+
+// baby : 2015-04-09 Johnson & Johnson Services, Inc.
+baby
 
 // baidu : 2015-01-08 Baidu, Inc.
 baidu
@@ -7262,13 +7271,16 @@ cba
 // cbn : 2014-08-22 The Christian Broadcasting Network, Inc.
 cbn
 
+// ceb : 2015-04-09 The Corporate Executive Board Company
+ceb
+
 // center : 2013-11-07 Tin Mill, LLC
 center
 
 // ceo : 2013-11-07 CEOTLD Pty Ltd
 ceo
 
-// cern : 2014-06-05 European Organization for Nuclear Research (\
+// cern : 2014-06-05 European Organization for Nuclear Research ("CERN")
 cern
 
 // cfa : 2014-08-28 CFA Institute
@@ -7277,8 +7289,14 @@ cfa
 // cfd : 2014-12-11 IG Group Holdings PLC
 cfd
 
+// chanel : 2015-04-09 Chanel International B.V.
+chanel
+
 // channel : 2014-05-08 Charleston Road Registry Inc.
 channel
+
+// chase : 2015-04-30 JPMorgan Chase & Co.
+chase
 
 // chat : 2014-12-04 Sand Fields, LLC
 chat
@@ -7330,6 +7348,9 @@ clinic
 
 // clothing : 2013-08-27 Steel Lake, LLC
 clothing
+
+// cloud : 2015-04-16 ARUBA S.p.A.
+cloud
 
 // club : 2013-11-08 .CLUB DOMAINS, LLC
 club
@@ -7757,7 +7778,7 @@ garden
 // gbiz : 2014-07-17 Charleston Road Registry Inc.
 gbiz
 
-// gdn : 2014-07-31 Joint Stock Company \
+// gdn : 2014-07-31 Joint Stock Company "Navigation-information systems"
 gdn
 
 // gea : 2014-12-04 GEA Group Aktiengesellschaft
@@ -8027,6 +8048,9 @@ java
 // jcb : 2014-11-20 JCB Co., Ltd.
 jcb
 
+// jcp : 2015-04-23 JCP Media, Inc.
+jcp
+
 // jetzt : 2014-01-09 New TLD Company AB
 jetzt
 
@@ -8054,6 +8078,9 @@ jot
 // joy : 2014-12-18 Amazon EU S.à r.l.
 joy
 
+// jpmorgan : 2015-04-30 JPMorgan Chase & Co.
+jpmorgan
+
 // jprs : 2014-09-18 Japan Registry Services Co., Ltd.
 jprs
 
@@ -8065,6 +8092,15 @@ kaufen
 
 // kddi : 2014-09-12 KDDI CORPORATION
 kddi
+
+// kerryhotels : 2015-04-30 Kerry Trading Co. Limited
+kerryhotels
+
+// kerrylogistics : 2015-04-09 Kerry Trading Co. Limited
+kerrylogistics
+
+// kerryproperties : 2015-04-09 Kerry Trading Co. Limited
+kerryproperties
 
 // kfh : 2014-12-04 Kuwait Finance House
 kfh
@@ -8087,6 +8123,9 @@ koeln
 // komatsu : 2015-01-08 Komatsu Ltd.
 komatsu
 
+// kpmg : 2015-04-23 KPMG International Cooperative (KPMG International Genossenschaft)
+kpmg
+
 // kpn : 2015-01-08 Koninklijke KPN N.V.
 kpn
 
@@ -8095,6 +8134,9 @@ krd
 
 // kred : 2013-12-19 KredTLD Pty Ltd
 kred
+
+// kuokgroup : 2015-04-09 Kerry Trading Co. Limited
+kuokgroup
 
 // kyknet : 2015-03-05 Electronic Media Network (Pty) Ltd
 kyknet
@@ -8129,7 +8171,7 @@ law
 // lawyer : 2014-03-20
 lawyer
 
-// lds : 2014-03-20 IRI Domain Management, LLC (\
+// lds : 2014-03-20 IRI Domain Management, LLC ("Applicant")
 lds
 
 // lease : 2014-03-06 Victor Trail, LLC
@@ -8140,6 +8182,9 @@ leclerc
 
 // legal : 2014-10-16 Blue Falls, LLC
 legal
+
+// lexus : 2015-04-23 TOYOTA MOTOR CORPORATION
+lexus
 
 // lgbt : 2014-05-08 Afilias Limited
 lgbt
@@ -8291,6 +8336,9 @@ microsoft
 // mini : 2014-01-09 Bayerische Motoren Werke Aktiengesellschaft
 mini
 
+// mls : 2015-04-23 The Canadian Real Estate Association
+mls
+
 // mma : 2014-11-07 MMA IARD
 mma
 
@@ -8309,6 +8357,9 @@ moe
 // moi : 2014-12-18 Amazon EU S.à r.l.
 moi
 
+// mom : 2015-04-16 Uniregistry, Corp.
+mom
+
 // monash : 2013-09-30 Monash University
 monash
 
@@ -8318,7 +8369,7 @@ money
 // montblanc : 2014-06-23 Richemont DNS Inc.
 montblanc
 
-// mormon : 2013-12-05 IRI Domain Management, LLC (\
+// mormon : 2013-12-05 IRI Domain Management, LLC ("Applicant")
 mormon
 
 // mortgage : 2014-03-20
@@ -8431,6 +8482,9 @@ nyc
 
 // obi : 2014-09-25 OBI Group Holding SE & Co. KGaA
 obi
+
+// observer : 2015-04-30 Guardian News and Media Limited
+observer
 
 // office : 2015-03-12 Microsoft Corporation
 office
@@ -8593,6 +8647,9 @@ properties
 
 // property : 2014-05-22 Uniregistry, Corp.
 property
+
+// protection : 2015-04-23 Symantec Corporation
+protection
 
 // pub : 2013-12-12 United TLD Holdco Ltd.
 pub
@@ -8771,7 +8828,7 @@ sbs
 // sca : 2014-03-13 SVENSKA CELLULOSA AKTIEBOLAGET SCA (publ)
 sca
 
-// scb : 2014-02-20 The Siam Commercial Bank Public Company Limited (\
+// scb : 2014-02-20 The Siam Commercial Bank Public Company Limited ("SCB")
 scb
 
 // schmidt : 2014-04-03 SALM S.A.S.
@@ -8822,6 +8879,9 @@ sexy
 // sharp : 2014-05-01 Sharp Corporation
 sharp
 
+// shaw : 2015-04-23 Shaw Cablesystems G.P.
+shaw
+
 // shia : 2014-09-04 Asia Green IT System Bilgisayar San. ve Tic. Ltd. Sti.
 shia
 
@@ -8848,6 +8908,9 @@ singles
 
 // site : 2015-01-15 DotSite Inc.
 site
+
+// ski : 2015-04-09 STARTING DOT LIMITED
+ski
 
 // skin : 2015-01-15 L'Oréal
 skin
@@ -8930,6 +8993,9 @@ stockholm
 // storage : 2014-12-22 Self Storage Company LLC
 storage
 
+// store : 2015-04-09 DotStore Inc.
+store
+
 // studio : 2015-02-11 Spring Goodbye, LLC
 studio
 
@@ -8984,13 +9050,16 @@ tab
 // taipei : 2014-07-10 Taipei City Government
 taipei
 
+// talk : 2015-04-09 Amazon EU S.à r.l.
+talk
+
 // taobao : 2015-01-15 Alibaba Group Holding Limited
 taobao
 
 // tatamotors : 2015-03-12 Tata Motors Ltd
 tatamotors
 
-// tatar : 2014-04-24 Limited Liability Company \
+// tatar : 2014-04-24 Limited Liability Company "Coordination Center of Regional Domain of Tatarstan Republic"
 tatar
 
 // tattoo : 2013-08-30 Uniregistry, Corp.
@@ -9031,6 +9100,9 @@ thd
 
 // theater : 2015-03-19 Blue Tigers, LLC
 theater
+
+// theguardian : 2015-04-30 Guardian News and Media Limited
+theguardian
 
 // tickets : 2015-02-05 Accent Media Limited
 tickets
@@ -9076,6 +9148,9 @@ tours
 
 // town : 2014-03-06 Koko Moon, LLC
 town
+
+// toyota : 2015-04-23 TOYOTA MOTOR CORPORATION
+toyota
 
 // toys : 2014-03-06 Pioneer Orchard, LLC
 toys
@@ -9389,6 +9464,9 @@ xin
 // xn--estv75g : 2015-02-19 Industrial and Commercial Bank of China Limited
 工行
 
+// xn--fct429k : 2015-04-09 Amazon EU S.à r.l.
+家電
+
 // xn--fhbei : 2015-01-15 VeriSign Sarl
 كوم
 
@@ -9518,6 +9596,9 @@ vermögensberatung
 // xn--vuq861b : 2014-10-16 Beijing Tele-info Network Technology Co., Ltd.
 信息
 
+// xn--w4r85el8fhu5dnra : 2015-04-30 Kerry Trading Co. Limited
+嘉里大酒店
+
 // xn--xhq521b : 2013-11-14 Guangzhou YU Wei Information Technology Co., Ltd.
 广东
 
@@ -9547,6 +9628,9 @@ yoga
 
 // yokohama : 2013-12-12 GMO Registry, Inc.
 yokohama
+
+// you : 2015-04-09 Amazon EU S.à r.l.
+you
 
 // youtube : 2014-05-01 Charleston Road Registry Inc.
 youtube
