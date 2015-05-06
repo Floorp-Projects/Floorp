@@ -2147,13 +2147,18 @@ public:
 
   /**
    * Find a suitable scale for an element (aContent) over the course of any
-   * animations and transitions on the element.
+   * animations and transitions of the CSS transform property on the
+   * element that run on the compositor thread.
    * It will check the maximum and minimum scale during the animations and
    * transitions and return a suitable value for performance and quality.
-   * Will return scale(1,1) if there is no animated scaling.
-   * Always return positive value.
+   * Will return scale(1,1) if there are no such animations.
+   * Always returns a positive value.
+   * @param aVisibleSize is the size of the area we want to paint
+   * @param aDisplaySize is the size of the display area of the pres context
    */
-  static gfxSize ComputeSuitableScaleForAnimation(nsIContent* aContent);
+  static gfxSize ComputeSuitableScaleForAnimation(nsIContent* aContent,
+                                                  const nsSize& aVisibleSize,
+                                                  const nsSize& aDisplaySize);
 
   /**
    * Checks if we should forcibly use nearest pixel filtering for the

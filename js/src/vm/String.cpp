@@ -630,13 +630,6 @@ template <typename CharT>
 JSFlatString*
 JSDependentString::undependInternal(ExclusiveContext* cx)
 {
-    /*
-     * We destroy the base() pointer in undepend, so we need a pre-barrier. We
-     * don't need a post-barrier because there aren't any outgoing pointers
-     * afterwards.
-     */
-    JSString::writeBarrierPre(base());
-
     size_t n = length();
     CharT* s = cx->pod_malloc<CharT>(n + 1);
     if (!s)

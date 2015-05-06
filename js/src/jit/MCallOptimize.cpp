@@ -383,37 +383,37 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
 
     if (native == js::simd_int32x4_load)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 4);
-    if (native == js::simd_int32x4_loadX)
+    if (native == js::simd_int32x4_load1)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 1);
-    if (native == js::simd_int32x4_loadXY)
+    if (native == js::simd_int32x4_load2)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 2);
-    if (native == js::simd_int32x4_loadXYZ)
+    if (native == js::simd_int32x4_load3)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 3);
 
     if (native == js::simd_float32x4_load)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 4);
-    if (native == js::simd_float32x4_loadX)
+    if (native == js::simd_float32x4_load1)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 1);
-    if (native == js::simd_float32x4_loadXY)
+    if (native == js::simd_float32x4_load2)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 2);
-    if (native == js::simd_float32x4_loadXYZ)
+    if (native == js::simd_float32x4_load3)
         return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 3);
 
     if (native == js::simd_int32x4_store)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 4);
-    if (native == js::simd_int32x4_storeX)
+    if (native == js::simd_int32x4_store1)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 1);
-    if (native == js::simd_int32x4_storeXY)
+    if (native == js::simd_int32x4_store2)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 2);
-    if (native == js::simd_int32x4_storeXYZ)
+    if (native == js::simd_int32x4_store3)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 3);
     if (native == js::simd_float32x4_store)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 4);
-    if (native == js::simd_float32x4_storeX)
+    if (native == js::simd_float32x4_store1)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 1);
-    if (native == js::simd_float32x4_storeXY)
+    if (native == js::simd_float32x4_store2)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 2);
-    if (native == js::simd_float32x4_storeXYZ)
+    if (native == js::simd_float32x4_store3)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 3);
 
     if (native == js::simd_int32x4_bool)
