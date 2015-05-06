@@ -377,14 +377,10 @@ Telephony::HandleCallInfo(nsITelephonyCallInfo* aInfo)
     nsRefPtr<TelephonyCallId> id = call->Id();
     id->UpdateNumber(number);
 
-    nsAutoString disconnectedReason;
-    aInfo->GetDisconnectedReason(disconnectedReason);
-
     // State changed.
     if (call->CallState() != callState) {
       if (callState == nsITelephonyService::CALL_STATE_DISCONNECTED) {
-        call->UpdateDisconnectedReason(disconnectedReason);
-        call->ChangeState(nsITelephonyService::CALL_STATE_DISCONNECTED);
+        call->ChangeStateInternal(callState, true);
         return NS_OK;
       }
 
