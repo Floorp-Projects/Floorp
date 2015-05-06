@@ -130,7 +130,7 @@ public class PostSearchFragment extends Fragment {
 
                 // If the intent URI didn't specify a package, open this in Fennec.
                 if (i.getPackage() == null) {
-                    i.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS_NAME);
+                    i.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
                     Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL,
                             TelemetryContract.Method.CONTENT, "search-result");
                 } else {

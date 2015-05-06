@@ -5,6 +5,9 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+// Initialize this before the imports, as some of them need it.
+do_get_profile();
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Http.jsm");
@@ -13,7 +16,9 @@ Cu.import("resource:///modules/loop/MozLoopService.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource:///modules/loop/LoopCalls.jsm");
 Cu.import("resource:///modules/loop/LoopRooms.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 const { MozLoopServiceInternal } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+const { LoopRoomsInternal } = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "MozLoopPushHandler",
                                   "resource:///modules/loop/MozLoopPushHandler.jsm");
@@ -135,7 +140,7 @@ let mockPushHandler = {
  * enables us to check parameters and return messages similar to the push
  * server.
  */
-function MockWebSocketChannel() {};
+function MockWebSocketChannel() {}
 
 MockWebSocketChannel.prototype = {
   QueryInterface: XPCOMUtils.generateQI(Ci.nsIWebSocketChannel),
@@ -210,4 +215,11 @@ MockWebSocketChannel.prototype = {
   serverClose: function (err) {
     this.listener.onServerClose(this.context, err || -1);
   },
+};
+
+const extend = function(target, source) {
+  for (let key of Object.getOwnPropertyNames(source)) {
+    target[key] = source[key];
+  }
+  return target;
 };

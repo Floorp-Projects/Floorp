@@ -52,8 +52,6 @@ const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
 const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
 
-const CONSOLE_DIR_VIEW_HEIGHT = 0.6;
-
 const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 // The amount of time in milliseconds that we wait before performing a live
@@ -2664,9 +2662,6 @@ WebConsoleFrame.prototype = {
 
     // Display the variables view after the message node.
     if (aLevel == "dir") {
-      bodyNode.style.height = (this.window.innerHeight *
-                               CONSOLE_DIR_VIEW_HEIGHT) + "px";
-
       let options = {
         objectActor: body.arguments[0],
         targetElement: bodyNode,

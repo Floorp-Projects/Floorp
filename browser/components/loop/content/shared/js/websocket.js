@@ -46,7 +46,7 @@ loop.CallConnectionWebSocket = (function() {
       loop.shared.utils.getBoolPreference("debug.websocket");
 
     _.extend(this, Backbone.Events);
-  };
+  }
 
   CallConnectionWebSocket.prototype = {
     /**

@@ -215,7 +215,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       if (event.target && event.target.href) {
         this.props.dispatcher.dispatch(new sharedActions.RecordClick({
           linkInfo: event.target.href
-        }))
+        }));
       }
     },
 
@@ -288,7 +288,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     getInitialState: function() {
       return {
         failureLogged: false
-      }
+      };
     },
 
     _logFailure: function(message) {

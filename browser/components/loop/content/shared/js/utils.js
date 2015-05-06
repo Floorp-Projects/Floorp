@@ -18,7 +18,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
       throw new Error("mozL10n.get not availabled from chrome!");
     }};
   } else {
-    mozL10n = document.mozL10n || navigator.mozL10n
+    mozL10n = document.mozL10n || navigator.mozL10n;
   }
 
   /**

@@ -43,6 +43,8 @@ RecordingModel.prototype = {
   _timelineStartTime: 0,
   _memoryStartTime: 0,
   _configuration: {},
+  _originalBufferStatus: null,
+  _bufferPercent: null,
 
   // Serializable fields, necessary and sufficient for import and export.
   _label: "",
@@ -90,7 +92,7 @@ RecordingModel.prototype = {
    * Sets up the instance with data from the SharedPerformanceConnection when
    * starting a recording. Should only be called by SharedPerformanceConnection.
    */
-  populate: function (info) {
+  _populate: function (info) {
     // Times must come from the actor in order to be self-consistent.
     // However, we also want to update the view with the elapsed time
     // even when the actor is not generating data. To do this we get
@@ -100,6 +102,12 @@ RecordingModel.prototype = {
     this._profilerStartTime = info.profilerStartTime;
     this._timelineStartTime = info.timelineStartTime;
     this._memoryStartTime = info.memoryStartTime;
+    this._originalBufferStatus = {
+      position: info.position,
+      totalSize: info.totalSize,
+      generation: info.generation
+    };
+
     this._recording = true;
 
     this._markers = [];
@@ -281,9 +289,35 @@ RecordingModel.prototype = {
   },
 
   /**
+   * Returns the percent (value between 0 and 1) of buffer used in this
+   * recording. Returns `null` for recordings that are no longer recording.
+   */
+  getBufferUsage: function () {
+    return this.isRecording() ? this._bufferPercent : null;
+  },
+
+  /**
+   * Fired whenever the PerformanceFront has new buffer data.
+   */
+  _addBufferStatusData: function (bufferStatus) {
+    // If this model isn't currently recording, or if the server does not
+    // support buffer status (or if this fires after actors are being destroyed),
+    // ignore this information.
+    if (!bufferStatus || !this.isRecording()) {
+      return;
+    }
+    let { position: currentPosition, totalSize, generation: currentGeneration } = bufferStatus;
+    let { position: origPosition, generation: origGeneration } = this._originalBufferStatus;
+
+    let normalizedCurrent = (totalSize * (currentGeneration - origGeneration)) + currentPosition;
+    let percent = (normalizedCurrent - origPosition) / totalSize;
+    this._bufferPercent = percent > 1 ? 1 : percent;
+  },
+
+  /**
    * Fired whenever the PerformanceFront emits markers, memory or ticks.
    */
-  addTimelineData: function (eventName, ...data) {
+  _addTimelineData: function (eventName, ...data) {
     // If this model isn't currently recording,
     // ignore the timeline data.
     if (!this.isRecording()) {
@@ -343,7 +377,9 @@ RecordingModel.prototype = {
         break;
       }
     }
-  }
+  },
+
+  toString: () => "[object RecordingModel]"
 };
 
 exports.RecordingModel = RecordingModel;
