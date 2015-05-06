@@ -591,7 +591,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 .setViewportOrigin(offsetX, offsetY)
                 .setZoomFactor(zoom)
                 .setPageRect(pageRect, cssPageRect)
-                .setIsRTL(tab.getIsRTL());
+                .setIsRTL(tab != null ? tab.getIsRTL() : false);
             // Since we have switched to displaying a different document, we need to update any
             // viewport-related state we have lying around. This includes mGeckoViewport and
             // mViewportMetrics. Usually this information is updated via handleViewportMessage
@@ -605,8 +605,10 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
             setViewportMetrics(newMetrics);
 
-            mView.setBackgroundColor(tab.getBackgroundColor());
-            setZoomConstraints(tab.getZoomConstraints());
+            if (tab != null) {
+                mView.setBackgroundColor(tab.getBackgroundColor());
+                setZoomConstraints(tab.getZoomConstraints());
+            }
 
             // At this point, we have just switched to displaying a different document than we
             // we previously displaying. This means we need to abort any panning/zooming animations

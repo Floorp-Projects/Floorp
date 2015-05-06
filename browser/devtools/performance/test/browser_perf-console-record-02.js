@@ -15,10 +15,10 @@ function spawnTest () {
   yield profilerConnected;
   let connection = getPerformanceActorsConnection(target);
 
-  let profileStart = once(connection, "console-profile-start");
+  let profileStart = once(connection, "recording-started");
   console.profile("rust");
   yield profileStart;
-  profileStart = once(connection, "console-profile-start");
+  profileStart = once(connection, "recording-started");
   console.profile("rust2");
   yield profileStart;
 
@@ -38,10 +38,10 @@ function spawnTest () {
   is(RecordingsView.selectedItem.attachment, recordings[0],
     "The first console recording should be selected.");
 
-  let profileEnd = once(connection, "console-profile-end");
+  let profileEnd = once(connection, "recording-stopped");
   console.profileEnd("rust");
   yield profileEnd;
-  profileEnd = once(connection, "console-profile-end");
+  profileEnd = once(connection, "recording-stopped");
   console.profileEnd("rust2");
   yield profileEnd;
 
