@@ -192,8 +192,12 @@ public:
 // output is determined when the MediaDataDecoder is created.
 //
 // Unless otherwise noted, all functions are only called on the decode task
-// queue. Don't block inside these functions, unless it's explicitly noted
-// that you should (like in Flush()).
+// queue.  An exception is the MediaDataDecoder in
+// MP4Reader::IsVideoAccelerated() for which all calls (Init(),
+// IsHardwareAccelerated(), and Shutdown()) are from the main thread.
+//
+// Don't block inside these functions, unless it's explicitly noted that you
+// should (like in Flush()).
 //
 // Decoding is done asynchronously. Any async work can be done on the
 // MediaTaskQueue passed into the PlatformDecoderModules's Create*Decoder()
@@ -247,7 +251,7 @@ public:
   // returned.
   virtual nsresult Shutdown() = 0;
 
-  // Called from the state machine task queue.
+  // Called from the state machine task queue or main thread.
   virtual bool IsHardwareAccelerated() const { return false; }
 
   // ConfigurationChanged will be called to inform the video or audio decoder
