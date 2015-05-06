@@ -247,7 +247,19 @@ BookmarksEngine.prototype = {
       // Figure out with which key to store the mapping.
       let key;
       let id = this._store.idForGUID(guid);
-      switch (PlacesUtils.bookmarks.getItemType(id)) {
+      let itemType;
+      try {
+        itemType = PlacesUtils.bookmarks.getItemType(id);
+      } catch (ex) {
+        this._log.warn("Deleting invalid bookmark record with id", id);
+        try {
+          PlacesUtils.bookmarks.removeItem(id);
+        } catch (ex) {
+          this._log.warn("Failed to delete invalid bookmark", ex);
+        }
+        continue;
+      }
+      switch (itemType) {
         case PlacesUtils.bookmarks.TYPE_BOOKMARK:
 
           // Smart bookmarks map to their annotation value.
@@ -256,7 +268,7 @@ BookmarksEngine.prototype = {
             queryId = PlacesUtils.annotations.getItemAnnotation(
               id, SMART_BOOKMARKS_ANNO);
           } catch(ex) {}
-          
+
           if (queryId)
             key = "q" + queryId;
           else
