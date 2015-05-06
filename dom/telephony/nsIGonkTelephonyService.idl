@@ -10,7 +10,7 @@
         "@mozilla.org/telephony/gonktelephonyservice;1"
 %}
 
-[scriptable, uuid(d287e11a-0a65-4456-b481-c63d62afdb5d)]
+[scriptable, uuid(8653d76b-6805-41d2-8ea5-3b14fb4e682d)]
 interface nsIGonkTelephonyService : nsITelephonyService
 {
   void notifyCallRing();
