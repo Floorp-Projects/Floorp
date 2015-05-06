@@ -110,7 +110,7 @@ struct SplayNoCopy : SplayTreeNode<SplayNoCopy>
   SplayNoCopy(const SplayNoCopy&) = delete;
   SplayNoCopy(SplayNoCopy&&) = delete;
 
-  static int compare(const SplayNoCopy&, const SplayNoCopy&) {}
+  static int compare(const SplayNoCopy&, const SplayNoCopy&) { return 0; }
 };
 
 static SplayTree<SplayNoCopy, SplayNoCopy> testNoCopy;
