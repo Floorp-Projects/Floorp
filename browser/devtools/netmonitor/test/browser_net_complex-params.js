@@ -17,7 +17,7 @@ function test() {
     NetworkDetails._params.lazyEmpty = false;
 
     Task.spawn(function () {
-      yield waitForNetworkEvents(aMonitor, 0, 6);
+      yield waitForNetworkEvents(aMonitor, 1, 6);
 
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.getElementById("details-pane-toggle"));
@@ -46,6 +46,10 @@ function test() {
       RequestsMenu.selectedIndex = 5;
       yield waitFor(aMonitor.panelWin, EVENTS.REQUEST_POST_PARAMS_DISPLAYED);
       yield testParamsTab2('a', '"b"', '?foo=bar', "text");
+
+      RequestsMenu.selectedIndex = 6;
+      yield waitFor(aMonitor.panelWin, EVENTS.SIDEBAR_POPULATED);
+      yield testParamsTab3('a', '"b"');
 
       yield teardown(aMonitor);
       finish();
@@ -139,6 +143,25 @@ function test() {
         is(aEditor.getMode(), Editor.modes[aEditorMode],
           "The mode active in the source editor is incorrect.");
       });
+    }
+
+    function testParamsTab3(aQueryStringParamName, aQueryStringParamValue) {
+      let tab = document.querySelectorAll("#details-pane tab")[2];
+      let tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
+
+      is(tabpanel.querySelectorAll(".variables-view-scope").length, 0,
+        "The number of param scopes displayed in this tabpanel is incorrect.");
+      is(tabpanel.querySelectorAll(".variable-or-property").length, 0,
+        "The number of param values displayed in this tabpanel is incorrect.");
+      is(tabpanel.querySelectorAll(".variables-view-empty-notice").length, 1,
+        "The empty notice should be displayed in this tabpanel.");
+
+      is(tabpanel.querySelector("#request-params-box")
+        .hasAttribute("hidden"), false,
+        "The request params box should not be hidden.");
+      is(tabpanel.querySelector("#request-post-data-textarea-box")
+        .hasAttribute("hidden"), true,
+        "The request post data textarea box should be hidden.");
     }
 
     aDebuggee.performRequests();
