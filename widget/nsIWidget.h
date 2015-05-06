@@ -1751,6 +1751,8 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* event,
                              nsEventStatus & aStatus) = 0;
 
+    virtual bool IsMultiProcessWindow() = 0;
+
     /**
      * Dispatches an event that must be handled by APZ first, when APZ is
      * enabled. If invoked in the child process, it is forwarded to the
