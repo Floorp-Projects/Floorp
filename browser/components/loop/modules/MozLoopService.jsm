@@ -64,7 +64,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI",
 XPCOMUtils.defineLazyModuleGetter(this, "convertToRTCStatsReport",
   "resource://gre/modules/media/RTCStatsReport.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "loopUtils",
-  "resource:///modules/loop/utils.js", "utils")
+  "resource:///modules/loop/utils.js", "utils");
 XPCOMUtils.defineLazyModuleGetter(this, "loopCrypto",
   "resource:///modules/loop/crypto.js", "LoopCrypto");
 
@@ -170,12 +170,12 @@ let MozLoopServiceInternal = {
   deferredRegistrations: new Map(),
 
   get pushHandler() {
-    return this.mocks.pushHandler || MozLoopPushHandler
+    return this.mocks.pushHandler || MozLoopPushHandler;
   },
 
   // The uri of the Loop server.
   get loopServerUri() {
-    return Services.prefs.getCharPref("loop.server")
+    return Services.prefs.getCharPref("loop.server");
   },
 
   /**
@@ -365,7 +365,7 @@ let MozLoopServiceInternal = {
         } else {
           resolve(this.registerWithLoopServer(sessionType, serviceType, pushURL));
         }
-      }
+      };
 
       this.pushHandler.register(channelID, onRegistered, onNotification);
     });
@@ -443,7 +443,7 @@ let MozLoopServiceInternal = {
 
     // Create a blank URL record set if none exists for this sessionType.
     if (!pushURLs) {
-      pushURLs = {calls: undefined, rooms: undefined};
+      pushURLs = { calls: undefined, rooms: undefined };
       this.pushURLs.set(sessionType, pushURLs);
     }
 
@@ -456,7 +456,7 @@ let MozLoopServiceInternal = {
     newURLs[serviceType] = pushURL;
 
     return this.hawkRequestInternal(sessionType, "/registration", "POST",
-                                    {simplePushURLs: newURLs}).then(
+                                    { simplePushURLs: newURLs }).then(
       (response) => {
         // If this failed we got an invalid token.
         if (!this.storeSessionToken(sessionType, response.headers)) {
@@ -533,7 +533,7 @@ let MozLoopServiceInternal = {
           log.error("Failed to unregister with the loop server. Error: ", error);
           throw error;
         });
-    }
+    };
 
     return Promise.all([unregister(sessionType, callsPushURL), unregister(sessionType, roomsPushURL)]);
   },
@@ -584,7 +584,7 @@ let MozLoopServiceInternal = {
         } else {
           newPayloadObj[property] = payloadObj[property];
         }
-      };
+      }
       payloadObj = newPayloadObj;
     }
 
@@ -804,7 +804,7 @@ let MozLoopServiceInternal = {
           log.info(e.data.ok ?
             "Successfully staged loop report for telemetry upload." :
             ("Failed to stage loop report. Error: " + e.data.fail));
-        }
+        };
         worker.postMessage(job);
       });
     }, pc.id);
@@ -942,7 +942,7 @@ let MozLoopServiceInternal = {
 
       return JSON.parse(response.body);
     },
-    error => {this._hawkRequestError(error);});
+    error => { this._hawkRequestError(error); });
   },
 
   /**
@@ -1025,7 +1025,7 @@ let MozLoopServiceInternal = {
     return this.hawkRequestInternal(LOOP_SESSION_TYPE.FXA, "/fxa-oauth/token", "POST", payload).then(response => {
       return JSON.parse(response.body);
     },
-    error => {this._hawkRequestError(error);});
+    error => { this._hawkRequestError(error); });
   },
 
   /**
@@ -1689,7 +1689,7 @@ this.MozLoopService = {
    */
   hawkRequest: function(sessionType, path, method, payloadObj) {
     return MozLoopServiceInternal.hawkRequest(sessionType, path, method, payloadObj).catch(
-      error => {MozLoopServiceInternal._hawkRequestError(error);});
+      error => { MozLoopServiceInternal._hawkRequestError(error); });
   },
 
   /**
