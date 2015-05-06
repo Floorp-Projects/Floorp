@@ -2918,8 +2918,8 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
     }
     return NS_OK;
 
-#elif defined(XP_MACOSX)
-    // OS X uses sec; only supports idle time being set.
+#elif defined(XP_DARWIN)
+    // Darwin uses sec; only supports idle time being set.
     int err = setsockopt(sock, IPPROTO_TCP, TCP_KEEPALIVE,
                          &aIdleTime, sizeof(aIdleTime));
     if (NS_WARN_IF(err)) {
