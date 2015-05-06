@@ -14,7 +14,7 @@ MacIOSurfaceTextureHostOGL::MacIOSurfaceTextureHostOGL(TextureFlags aFlags,
                                                        const SurfaceDescriptorMacIOSurface& aDescriptor)
   : TextureHost(aFlags)
 {
-  mSurface = MacIOSurface::LookupSurface(aDescriptor.surface(),
+  mSurface = MacIOSurface::LookupSurface(aDescriptor.surfaceId(),
                                          aDescriptor.scaleFactor(),
                                          !aDescriptor.isOpaque());
 }
