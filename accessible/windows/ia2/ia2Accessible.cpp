@@ -495,7 +495,7 @@ ia2Accessible::get_uniqueID(long* aUniqueID)
     return E_INVALIDARG;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
-  *aUniqueID = - reinterpret_cast<intptr_t>(acc->UniqueID());
+  *aUniqueID = AccessibleWrap::GetChildIDFor(acc);
   return S_OK;
 
   A11Y_TRYBLOCK_END

@@ -196,7 +196,7 @@ SavedFrame::finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject 
 
     // ClassSpec
     {
-        GenericCreateConstructor<SavedFrame::construct, 0, JSFunction::FinalizeKind>,
+        GenericCreateConstructor<SavedFrame::construct, 0, gc::AllocKind::FUNCTION>,
         GenericCreatePrototype,
         SavedFrame::staticFunctions,
         nullptr,

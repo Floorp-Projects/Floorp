@@ -43,10 +43,10 @@
   V(greaterThanOrEqual, (CompareFunc<Float32x4, GreaterThanOrEqual>), 2)              \
   V(lessThan, (CompareFunc<Float32x4, LessThan>), 2)                                  \
   V(lessThanOrEqual, (CompareFunc<Float32x4, LessThanOrEqual>), 2)                    \
-  V(load,    (Load<Float32x4, 4>), 2)                                                 \
-  V(loadXYZ, (Load<Float32x4, 3>), 2)                                                 \
-  V(loadXY,  (Load<Float32x4, 2>), 2)                                                 \
-  V(loadX,   (Load<Float32x4, 1>), 2)                                                 \
+  V(load,  (Load<Float32x4, 4>), 2)                                                   \
+  V(load3, (Load<Float32x4, 3>), 2)                                                   \
+  V(load2, (Load<Float32x4, 2>), 2)                                                   \
+  V(load1, (Load<Float32x4, 1>), 2)                                                   \
   V(max, (BinaryFunc<Float32x4, Maximum, Float32x4>), 2)                              \
   V(maxNum, (BinaryFunc<Float32x4, MaxNum, Float32x4>), 2)                            \
   V(min, (BinaryFunc<Float32x4, Minimum, Float32x4>), 2)                              \
@@ -54,10 +54,10 @@
   V(mul, (BinaryFunc<Float32x4, Mul, Float32x4>), 2)                                  \
   V(notEqual, (CompareFunc<Float32x4, NotEqual>), 2)                                  \
   V(or, (CoercedBinaryFunc<Float32x4, Int32x4, Or, Float32x4>), 2)                    \
-  V(store,    (Store<Float32x4, 4>), 3)                                               \
-  V(storeXYZ, (Store<Float32x4, 3>), 3)                                               \
-  V(storeXY,  (Store<Float32x4, 2>), 3)                                               \
-  V(storeX,   (Store<Float32x4, 1>), 3)                                               \
+  V(store,  (Store<Float32x4, 4>), 3)                                                 \
+  V(store3, (Store<Float32x4, 3>), 3)                                                 \
+  V(store2, (Store<Float32x4, 2>), 3)                                                 \
+  V(store1, (Store<Float32x4, 1>), 3)                                                 \
   V(sub, (BinaryFunc<Float32x4, Sub, Float32x4>), 2)                                  \
   V(withX, (FuncWith<Float32x4, WithX>), 2)                                           \
   V(withY, (FuncWith<Float32x4, WithY>), 2)                                           \
@@ -101,16 +101,16 @@
   V(greaterThanOrEqual, (CompareFunc<Float64x2, GreaterThanOrEqual>), 2)              \
   V(lessThan, (CompareFunc<Float64x2, LessThan>), 2)                                  \
   V(lessThanOrEqual, (CompareFunc<Float64x2, LessThanOrEqual>), 2)                    \
-  V(load,    (Load<Float64x2, 2>), 2)                                                 \
-  V(loadX,   (Load<Float64x2, 1>), 2)                                                 \
+  V(load,  (Load<Float64x2, 2>), 2)                                                   \
+  V(load1, (Load<Float64x2, 1>), 2)                                                   \
   V(max, (BinaryFunc<Float64x2, Maximum, Float64x2>), 2)                              \
   V(maxNum, (BinaryFunc<Float64x2, MaxNum, Float64x2>), 2)                            \
   V(min, (BinaryFunc<Float64x2, Minimum, Float64x2>), 2)                              \
   V(minNum, (BinaryFunc<Float64x2, MinNum, Float64x2>), 2)                            \
   V(mul, (BinaryFunc<Float64x2, Mul, Float64x2>), 2)                                  \
   V(notEqual, (CompareFunc<Float64x2, NotEqual>), 2)                                  \
-  V(store,    (Store<Float64x2, 2>), 3)                                               \
-  V(storeX,   (Store<Float64x2, 1>), 3)                                               \
+  V(store,  (Store<Float64x2, 2>), 3)                                                 \
+  V(store1, (Store<Float64x2, 1>), 3)                                                 \
   V(sub, (BinaryFunc<Float64x2, Sub, Float64x2>), 2)                                  \
   V(withX, (FuncWith<Float64x2, WithX>), 2)                                           \
   V(withY, (FuncWith<Float64x2, WithY>), 2)
@@ -148,10 +148,10 @@
   V(greaterThanOrEqual, (CompareFunc<Int32x4, GreaterThanOrEqual>), 2)                \
   V(lessThan, (CompareFunc<Int32x4, LessThan>), 2)                                    \
   V(lessThanOrEqual, (CompareFunc<Int32x4, LessThanOrEqual>), 2)                      \
-  V(load,    (Load<Int32x4, 4>), 2)                                                   \
-  V(loadXYZ, (Load<Int32x4, 3>), 2)                                                   \
-  V(loadXY,  (Load<Int32x4, 2>), 2)                                                   \
-  V(loadX,   (Load<Int32x4, 1>), 2)                                                   \
+  V(load,  (Load<Int32x4, 4>), 2)                                                     \
+  V(load3, (Load<Int32x4, 3>), 2)                                                     \
+  V(load2, (Load<Int32x4, 2>), 2)                                                     \
+  V(load1, (Load<Int32x4, 1>), 2)                                                     \
   V(mul, (BinaryFunc<Int32x4, Mul, Int32x4>), 2)                                      \
   V(notEqual, (CompareFunc<Int32x4, NotEqual>), 2)                                    \
   V(or, (BinaryFunc<Int32x4, Or, Int32x4>), 2)                                        \
@@ -159,10 +159,10 @@
   V(shiftLeftByScalar, (Int32x4BinaryScalar<ShiftLeft>), 2)                           \
   V(shiftRightArithmeticByScalar, (Int32x4BinaryScalar<ShiftRightArithmetic>), 2)     \
   V(shiftRightLogicalByScalar, (Int32x4BinaryScalar<ShiftRightLogical>), 2)           \
-  V(store,    (Store<Int32x4, 4>), 3)                                                 \
-  V(storeXYZ, (Store<Int32x4, 3>), 3)                                                 \
-  V(storeXY,  (Store<Int32x4, 2>), 3)                                                 \
-  V(storeX,   (Store<Int32x4, 1>), 3)                                                 \
+  V(store,  (Store<Int32x4, 4>), 3)                                                   \
+  V(store3, (Store<Int32x4, 3>), 3)                                                   \
+  V(store2, (Store<Int32x4, 2>), 3)                                                   \
+  V(store1, (Store<Int32x4, 1>), 3)                                                   \
   V(withX, (FuncWith<Int32x4, WithX>), 2)                                             \
   V(withY, (FuncWith<Int32x4, WithY>), 2)                                             \
   V(withZ, (FuncWith<Int32x4, WithZ>), 2)                                             \
@@ -244,13 +244,13 @@
     _(swizzle)                       \
     _(shuffle)                       \
     _(load)                          \
-    _(loadX)                         \
-    _(loadXY)                        \
-    _(loadXYZ)                       \
+    _(load1)                         \
+    _(load2)                         \
+    _(load3)                         \
     _(store)                         \
-    _(storeX)                        \
-    _(storeXY)                       \
-    _(storeXYZ)                      \
+    _(store1)                        \
+    _(store2)                        \
+    _(store3)                        \
     _(check)
 #define ION_ONLY_INT32X4_SIMD_OP(_)  \
     _(bool)

@@ -89,15 +89,11 @@ BluetoothOppManager::Observe(nsISupports* aSubject,
 {
   MOZ_ASSERT(sBluetoothOppManager);
 
-#ifdef MOZ_B2G_BT_API_V2
-  // Removed in bluetooth2
-#else
   // if state of any volume was changed
   if (!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
     HandleVolumeStateChanged(aSubject);
     return NS_OK;
   }
-#endif
 
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     HandleShutdown();
@@ -226,13 +222,9 @@ BluetoothOppManager::~BluetoothOppManager()
     BT_WARNING("Failed to remove shutdown observer!");
   }
 
-#ifdef MOZ_B2G_BT_API_V2
-  // Removed in bluetooth2
-#else
   if (NS_FAILED(obs->RemoveObserver(this, NS_VOLUME_STATE_CHANGED))) {
     BT_WARNING("Failed to remove volume observer!");
   }
-#endif
 }
 
 bool
@@ -245,14 +237,10 @@ BluetoothOppManager::Init()
     return false;
   }
 
-#ifdef MOZ_B2G_BT_API_V2
-  // Removed in bluetooth2
-#else
   if (NS_FAILED(obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false))) {
     BT_WARNING("Failed to add ns volume observer!");
     return false;
   }
-#endif
 
   /**
    * We don't start listening here as BluetoothServiceBluedroid calls Listen()
@@ -321,9 +309,6 @@ BluetoothOppManager::HandleShutdown()
   sBluetoothOppManager = nullptr;
 }
 
-#ifdef MOZ_B2G_BT_API_V2
-  // Removed in bluetooth2
-#else
 void
 BluetoothOppManager::HandleVolumeStateChanged(nsISupports* aSubject)
 {
@@ -357,7 +342,6 @@ BluetoothOppManager::HandleVolumeStateChanged(nsISupports* aSubject)
     Disconnect(nullptr);
   }
 }
-#endif
 
 bool
 BluetoothOppManager::Listen()

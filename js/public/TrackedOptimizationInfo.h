@@ -31,6 +31,7 @@ namespace JS {
     _(SetProp_DefiniteSlot)                             \
     _(SetProp_Unboxed)                                  \
     _(SetProp_InlineAccess)                             \
+    _(SetProp_InlineCache)                              \
                                                         \
     _(GetElem_TypedObject)                              \
     _(GetElem_Dense)                                    \
