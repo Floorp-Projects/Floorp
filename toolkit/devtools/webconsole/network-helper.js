@@ -577,8 +577,17 @@ let NetworkHelper = {
     if (!NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
       const state = securityInfo.securityState;
 
-      if (state & wpl.STATE_IS_SECURE) {
-        // The connection is secure.
+      let uri = null;
+      if (httpActivity.channel && httpActivity.channel.URI) {
+        uri = httpActivity.channel.URI;
+      }
+      if (uri && !uri.schemeIs("https") && !uri.schemeIs("wss")) {
+        // it is not enough to look at the transport security info - schemes other than
+        // https and wss are subject to downgrade/etc at the scheme level and should
+        // always be considered insecure
+        info.state = "insecure";
+      } else if (state & wpl.STATE_IS_SECURE) {
+        // The connection is secure if the scheme is sufficient
         info.state = "secure";
       } else if (state & wpl.STATE_IS_BROKEN) {
         // The connection is not secure, there was no error but there's some
