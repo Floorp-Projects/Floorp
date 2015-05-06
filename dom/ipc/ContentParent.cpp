@@ -421,7 +421,7 @@ public:
 
 private:
     const uint32_t mGeneration;
-    // Non-null if we haven't yet called EndChildReport() on it.
+    // Non-null if we haven't yet called EndProcessReport() on it.
     nsRefPtr<nsMemoryReporterManager> mReporterManager;
 
     ContentParent* Owner()
@@ -461,7 +461,7 @@ void
 MemoryReportRequestParent::ActorDestroy(ActorDestroyReason aWhy)
 {
     if (mReporterManager) {
-        mReporterManager->EndChildReport(mGeneration, aWhy == Deletion);
+        mReporterManager->EndProcessReport(mGeneration, aWhy == Deletion);
         mReporterManager = nullptr;
     }
 }
@@ -645,7 +645,6 @@ static const char* sObserverTopics[] = {
     "profile-before-change",
     NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC,
     NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC,
-    "child-memory-reporter-request",
     "memory-pressure",
     "child-gc-request",
     "child-cc-request",
@@ -1973,18 +1972,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         }
     }
 
-    // Tell the memory reporter manager that this ContentParent is going away.
-    nsRefPtr<nsMemoryReporterManager> mgr =
-        nsMemoryReporterManager::GetOrCreate();
-#ifdef MOZ_NUWA_PROCESS
-    bool isMemoryChild = !IsNuwaProcess();
-#else
-    bool isMemoryChild = true;
-#endif
-    if (mgr && isMemoryChild) {
-        mgr->DecrementNumChildProcesses();
-    }
-
     // remove the global remote preferences observers
     Preferences::RemoveObserver(this, "");
 
@@ -2258,15 +2245,6 @@ ContentParent::ContentParent(mozIApplication* aApp,
 
     IToplevelProtocol::SetTransport(mSubprocess->GetChannel());
 
-    if (!aIsNuwaProcess) {
-        // Tell the memory reporter manager that this ContentParent exists.
-        nsRefPtr<nsMemoryReporterManager> mgr =
-            nsMemoryReporterManager::GetOrCreate();
-        if (mgr) {
-            mgr->IncrementNumChildProcesses();
-        }
-    }
-
     std::vector<std::string> extraArgs;
     if (aIsNuwaProcess) {
         extraArgs.push_back("-nuwa");
@@ -2330,13 +2308,6 @@ ContentParent::ContentParent(ContentParent* aTemplate,
     mSubprocess = new GeckoExistingProcessHost(GeckoProcessType_Content,
                                                aPid,
                                                *fd);
-
-    // Tell the memory reporter manager that this ContentParent exists.
-    nsRefPtr<nsMemoryReporterManager> mgr =
-        nsMemoryReporterManager::GetOrCreate();
-    if (mgr) {
-        mgr->IncrementNumChildProcesses();
-    }
 
     mSubprocess->LaunchAndWaitForProcessHandle();
 
@@ -3058,46 +3029,6 @@ ContentParent::Observe(nsISupports* aSubject,
         if (!SendNotifyAlertsObserver(nsDependentCString(aTopic),
                                       nsDependentString(aData)))
             return NS_ERROR_NOT_AVAILABLE;
-    }
-    else if (!strcmp(aTopic, "child-memory-reporter-request")) {
-        bool isNuwa = false;
-#ifdef MOZ_NUWA_PROCESS
-        isNuwa = IsNuwaProcess();
-#endif
-        if (!isNuwa) {
-            unsigned generation;
-            int anonymize, minimize, identOffset = -1;
-            nsDependentString msg(aData);
-            NS_ConvertUTF16toUTF8 cmsg(msg);
-
-            if (sscanf(cmsg.get(),
-                       "generation=%x anonymize=%d minimize=%d DMDident=%n",
-                       &generation, &anonymize, &minimize, &identOffset) < 3
-                || identOffset < 0) {
-                return NS_ERROR_INVALID_ARG;
-            }
-            // The pre-%n part of the string should be all ASCII, so the byte
-            // offset in identOffset should be correct as a char offset.
-            MOZ_ASSERT(cmsg[identOffset - 1] == '=');
-            MaybeFileDesc dmdFileDesc = void_t();
-#ifdef MOZ_DMD
-            nsAutoString dmdIdent(Substring(msg, identOffset));
-            if (!dmdIdent.IsEmpty()) {
-                FILE *dmdFile = nullptr;
-                nsresult rv = nsMemoryInfoDumper::OpenDMDFile(dmdIdent, Pid(), &dmdFile);
-                if (NS_WARN_IF(NS_FAILED(rv))) {
-                    // Proceed with the memory report as if DMD were disabled.
-                    dmdFile = nullptr;
-                }
-                if (dmdFile) {
-                    dmdFileDesc = FILEToFileDescriptor(dmdFile);
-                    fclose(dmdFile);
-                }
-            }
-#endif
-            unused << SendPMemoryReportRequestConstructor(
-              generation, anonymize, minimize, dmdFileDesc);
-        }
     }
     else if (!strcmp(aTopic, "child-gc-request")){
         unused << SendGarbageCollect();
