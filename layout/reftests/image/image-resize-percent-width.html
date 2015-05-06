@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<script>
+function run() {
+  var img = document.getElementsByTagName("img")[0];
+  img.offsetWidth; // flush layout
+  img.onload = imgload;
+  img.src = "blue-50x50.png";
+}
+function imgload() {
+  document.documentElement.classList.remove("reftest-wait");
+}
+</script>
+<body onload="run()">
+<div style="width: -moz-max-content"><img src="blue-100x50.png" style="width: 100%; height: 50px"></div>
