@@ -7,10 +7,7 @@
 #ifndef nsSHistory_h
 #define nsSHistory_h
 
-// Helper Classes
 #include "nsCOMPtr.h"
-
-//Interfaces Needed
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
 #include "nsIWebNavigation.h"
@@ -18,7 +15,6 @@
 #include "nsTObserverArray.h"
 #include "nsWeakPtr.h"
 
-// Needed to maintain global list of all SHistory objects
 #include "prclist.h"
 
 class nsIDocShell;
@@ -34,7 +30,6 @@ class nsSHistory final : public PRCList,
 {
 public:
   nsSHistory();
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
   NS_DECL_NSISHISTORYINTERNAL
@@ -56,15 +51,18 @@ protected:
   friend class nsSHEnumerator;
   friend class nsSHistoryObserver;
 
-   // Could become part of nsIWebNavigation
-   NS_IMETHOD GetTransactionAtIndex(int32_t aIndex, nsISHTransaction ** aResult);
-   nsresult CompareFrames(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell, long aLoadType, bool * aIsFrameFound);
-   nsresult InitiateLoad(nsISHEntry * aFrameEntry, nsIDocShell * aFrameDS, long aLoadType);
+  // Could become part of nsIWebNavigation
+  NS_IMETHOD GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult);
+  nsresult CompareFrames(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
+                         nsIDocShell* aRootDocShell, long aLoadType,
+                         bool* aIsFrameFound);
+  nsresult InitiateLoad(nsISHEntry* aFrameEntry, nsIDocShell* aFrameDS,
+                        long aLoadType);
 
-   NS_IMETHOD LoadEntry(int32_t aIndex, long aLoadType, uint32_t histCmd);
+  NS_IMETHOD LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd);
 
 #ifdef DEBUG
-   nsresult PrintHistory();
+  nsresult PrintHistory();
 #endif
 
   // Evict content viewers in this window which don't lie in the "safe" range
@@ -79,7 +77,9 @@ protected:
 
   void RemoveDynEntries(int32_t aOldIndex, int32_t aNewIndex);
 
-  nsresult LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType, uint32_t aHistCmd);
+  nsresult LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
+                                 uint32_t aHistCmd);
+
 protected:
   // aIndex is the index of the transaction which may be removed.
   // If aKeepNext is true, aIndex is compared to aIndex + 1,
@@ -93,29 +93,27 @@ protected:
   // Session History listeners
   nsAutoTObserverArray<nsWeakPtr, 2> mListeners;
   // Weak reference. Do not refcount this.
-  nsIDocShell *  mRootDocShell;
+  nsIDocShell* mRootDocShell;
 
   // Max viewers allowed total, across all SHistory objects
-  static int32_t  sHistoryMaxTotalViewers;
+  static int32_t sHistoryMaxTotalViewers;
 };
-//*****************************************************************************
-//***    nsSHEnumerator: Object Management
-//*****************************************************************************
+
 class nsSHEnumerator : public nsISimpleEnumerator
 {
 public:
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
 
-  explicit nsSHEnumerator(nsSHistory *  aHistory);
-  
+  explicit nsSHEnumerator(nsSHistory* aHistory);
+
 protected:
   friend class nsSHistory;
   virtual ~nsSHEnumerator();
+
 private:
-  int32_t     mIndex;
-  nsSHistory *  mSHistory;  
+  int32_t mIndex;
+  nsSHistory* mSHistory;
 };
 
-#endif   /* nsSHistory */
+#endif /* nsSHistory */
