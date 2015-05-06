@@ -59,7 +59,12 @@ ProfilerActor.prototype = {
     return { features: nsIProfilerModule.GetFeatures([]) };
   },
 
-  onGetBufferInfo: function(request) {
+  /**
+   * Returns an object with the values of the current status of the
+   * circular buffer in the profiler, returning `position`, `totalSize`,
+   * and the current `generation` of the buffer.
+   */
+  onGetBufferInfo: function() {
     let position = {}, totalSize = {}, generation = {};
     nsIProfilerModule.GetBufferInfo(position, totalSize, generation);
     return {
@@ -102,8 +107,9 @@ ProfilerActor.prototype = {
       options.threadFilters,
       options.threadFilters.length
     );
+    let { position, totalSize, generation } = this.onGetBufferInfo();
 
-    return { started: true };
+    return { started: true, position, totalSize, generation };
   },
 
   /**
@@ -127,7 +133,8 @@ ProfilerActor.prototype = {
   onIsActive: function() {
     let isActive = nsIProfilerModule.IsActive();
     let elapsedTime = isActive ? nsIProfilerModule.getElapsedTime() : undefined;
-    return { isActive: isActive, currentTime: elapsedTime };
+    let { position, totalSize, generation } = this.onGetBufferInfo();
+    return { isActive: isActive, currentTime: elapsedTime, position, totalSize, generation };
   },
 
   /**

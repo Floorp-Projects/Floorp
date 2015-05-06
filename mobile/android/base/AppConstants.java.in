@@ -81,10 +81,17 @@ public class AppConstants {
     }
 
     /**
-     * The name of the Java class that launches the browser.
+     * The name of the Java class that represents the android application.
      */
-    public static final String BROWSER_INTENT_CLASS_NAME = "org.mozilla.gecko.BrowserApp";
-    public static final String SEARCH_INTENT_CLASS_NAME = "org.mozilla.search.SearchActivity";
+    public static final String MOZ_ANDROID_APPLICATION_CLASS = "@MOZ_ANDROID_APPLICATION_CLASS@";
+    /**
+     * The name of the Java class that launches the browser activity.
+     */
+    public static final String MOZ_ANDROID_BROWSER_INTENT_CLASS = "@MOZ_ANDROID_BROWSER_INTENT_CLASS@";
+    /**
+     * The name of the Java class that launches the search activity.
+     */
+    public static final String MOZ_ANDROID_SEARCH_INTENT_CLASS = "@MOZ_ANDROID_SEARCH_INTENT_CLASS@";
 
     public static final String GRE_MILESTONE = "@GRE_MILESTONE@";
 

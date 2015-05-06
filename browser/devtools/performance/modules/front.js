@@ -21,14 +21,11 @@ loader.lazyImporter(this, "gDevTools",
 loader.lazyImporter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
-
-// How often do we pull allocation sites from the memory actor.
-const DEFAULT_ALLOCATION_SITES_PULL_TIMEOUT = 200; // ms
-
 // Events to pipe from PerformanceActorsConnection to the PerformanceFront
 const CONNECTION_PIPE_EVENTS = [
   "timeline-data", "profiler-already-active", "profiler-activated",
-  "recording-starting", "recording-started", "recording-stopping", "recording-stopped"
+  "recording-starting", "recording-started", "recording-stopping", "recording-stopped",
+  "buffer-status"
 ];
 
 /**
@@ -79,6 +76,7 @@ function PerformanceActorsConnection(target) {
   this._onTimelineData = this._onTimelineData.bind(this);
   this._onConsoleProfileStart = this._onConsoleProfileStart.bind(this);
   this._onConsoleProfileEnd = this._onConsoleProfileEnd.bind(this);
+  this._onBufferStatus = this._onBufferStatus.bind(this);
   this._onProfilerUnexpectedlyStopped = this._onProfilerUnexpectedlyStopped.bind(this);
 
   Services.obs.notifyObservers(null, "performance-actors-connection-created", null);
@@ -173,6 +171,7 @@ PerformanceActorsConnection.prototype = {
     this._profiler.on("profiler-stopped", this._onProfilerUnexpectedlyStopped);
     this._profiler.on("profiler-already-active", this._pipeToConnection);
     this._profiler.on("profiler-activated", this._pipeToConnection);
+    this._profiler.on("buffer-status", this._onBufferStatus);
   },
 
   /**
@@ -186,6 +185,7 @@ PerformanceActorsConnection.prototype = {
     this._profiler.off("profiler-stopped", this._onProfilerUnexpectedlyStopped);
     this._profiler.off("profiler-already-active", this._pipeToConnection);
     this._profiler.off("profiler-activated", this._pipeToConnection);
+    this._profiler.off("buffer-status", this._onBufferStatus);
   },
 
   /**
@@ -289,8 +289,23 @@ PerformanceActorsConnection.prototype = {
    * Populate our internal store of recordings for all currently recording sessions.
    */
   _onTimelineData: function (_, ...data) {
-    this._recordings.forEach(e => e.addTimelineData.apply(e, data));
+    this._recordings.forEach(e => e._addTimelineData.apply(e, data));
     this.emit("timeline-data", ...data);
+  },
+
+  /**
+   * Called whenever the underlying profiler polls its buffer status.
+   */
+  _onBufferStatus: function (_, data) {
+    // If no buffer data emitted (whether from an older actor being destroyed
+    // from a previous test, or the server does not support it), just ignore.
+    // Also check for a value of buffer status (`position`) to see if it's
+    // because of an unsupported server.
+    if (!data || data.position === void 0) {
+      return;
+    }
+    this._recordings.forEach(e => e._addBufferStatusData.call(e, data));
+    this.emit("buffer-status", data);
   },
 
   /**
@@ -310,15 +325,18 @@ PerformanceActorsConnection.prototype = {
     // Get the corresponding start times from each one of them.
     // The timeline and memory actors are target-dependent, so start those as well,
     // even though these are mocked in older Geckos (FF < 35)
-    let profilerStartTime = yield this._profiler.start(options);
+    let { startTime, position, generation, totalSize } = yield this._profiler.start(options);
     let timelineStartTime = yield this._timeline.start(options);
     let memoryStartTime = yield this._memory.start(options);
 
-    let data = { profilerStartTime, timelineStartTime, memoryStartTime };
+    let data = {
+      profilerStartTime: startTime, timelineStartTime, memoryStartTime,
+      generation, position, totalSize
+    };
 
     // Signify to the model that the recording has started,
     // populate with data and store the recording model here.
-    model.populate(data);
+    model._populate(data);
     this._recordings.push(model);
 
     this.emit("recording-started", model);
@@ -368,6 +386,9 @@ PerformanceActorsConnection.prototype = {
     // juse use Date.now() for the memory and timeline end times, as those
     // are only used in tests.
     if (!this.isRecording()) {
+      // This doesn't stop the profiler, just turns off polling for
+      // events, and also turns off events on memory/timeline actors.
+      yield this._profiler.stop();
       memoryEndTime = yield this._memory.stop(config);
       timelineEndTime = yield this._timeline.stop(config);
     }

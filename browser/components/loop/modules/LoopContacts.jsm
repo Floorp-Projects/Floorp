@@ -288,7 +288,7 @@ const batch = function(operation, data, callback) {
     }
     callback(null, processed);
   });
-}
+};
 
 /**
  * Extend a `target` object with the properties defined in `source`.

@@ -94,7 +94,7 @@ describe("loop.StandaloneClient", function() {
           sinon.assert.calledWithExactly(console.error, "Server error",
                                         "HTTP 404 Not Found", serverResponse);
         });
-      })
+     });
     });
 
 
