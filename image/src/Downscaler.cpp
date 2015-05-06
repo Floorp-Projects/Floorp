@@ -69,6 +69,8 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
              "Invalid original size");
 
   mOriginalSize = aOriginalSize;
+  mScale = gfxSize(double(mOriginalSize.width) / mTargetSize.width,
+                   double(mOriginalSize.height) / mTargetSize.height);
   mOutputBuffer = aOutputBuffer;
   mHasAlpha = aHasAlpha;
 
@@ -183,17 +185,25 @@ Downscaler::HasInvalidation() const
   return mCurrentOutLine > mPrevInvalidatedLine;
 }
 
-nsIntRect
+DownscalerInvalidRect
 Downscaler::TakeInvalidRect()
 {
   if (MOZ_UNLIKELY(!HasInvalidation())) {
-    return nsIntRect();
+    return DownscalerInvalidRect();
   }
 
-  nsIntRect invalidRect(0, mPrevInvalidatedLine,
-                        mTargetSize.width,
-                        mCurrentOutLine - mPrevInvalidatedLine);
+  DownscalerInvalidRect invalidRect;
+
+  // Compute the target size invalid rect.
+  invalidRect.mTargetSizeRect =
+    nsIntRect(0, mPrevInvalidatedLine,
+              mTargetSize.width, mCurrentOutLine - mPrevInvalidatedLine);
   mPrevInvalidatedLine = mCurrentOutLine;
+
+  // Compute the original size invalid rect.
+  invalidRect.mOriginalSizeRect = invalidRect.mTargetSizeRect;
+  invalidRect.mOriginalSizeRect.ScaleRoundOut(mScale.width, mScale.height);
+
   return invalidRect;
 }
 

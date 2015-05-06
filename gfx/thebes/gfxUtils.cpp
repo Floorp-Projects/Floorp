@@ -1319,7 +1319,7 @@ gfxUtils::WriteAsPNG(SourceSurface* aSurface, const char* aFile)
       }
     }
     if (!file) {
-      NS_WARNING("Failed to open file to create PNG!\n");
+      NS_WARNING("Failed to open file to create PNG!");
       return;
     }
   }

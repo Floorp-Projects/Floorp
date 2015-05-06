@@ -32,6 +32,7 @@
 #include "nsSize.h"
 #include "nsTArray.h"
 #include "prsystem.h"
+#include "ShutdownTracker.h"
 #include "SVGImageContext.h"
 
 using std::max;
@@ -66,9 +67,10 @@ static StaticRefPtr<SurfaceCacheImpl> sInstance;
 typedef size_t Cost;
 
 static Cost
-ComputeCost(const IntSize& aSize)
+ComputeCost(const IntSize& aSize, uint32_t aBytesPerPixel)
 {
-  return aSize.width * aSize.height * 4;  // width * height * 4 bytes (32bpp)
+  MOZ_ASSERT(aBytesPerPixel == 1 || aBytesPerPixel == 4);
+  return aSize.width * aSize.height * aBytesPerPixel;
 }
 
 /**
@@ -526,7 +528,8 @@ public:
       } else {
         // Our call to AddObject must have failed in StartTracking; most likely
         // we're in XPCOM shutdown right now.
-        NS_WARNING("Not expiration-tracking an unlocked surface!");
+        NS_WARN_IF_FALSE(ShutdownTracker::ShutdownHasStarted(),
+                         "Not expiration-tracking an unlocked surface!");
       }
 
       DebugOnly<bool> foundInCosts = mCosts.RemoveElementSorted(costEntry);
@@ -1001,18 +1004,18 @@ SurfaceCache::Insert(imgFrame*         aSurface,
   }
 
   MutexAutoLock lock(sInstance->GetMutex());
-  Cost cost = ComputeCost(aSurfaceKey.Size());
+  Cost cost = ComputeCost(aSurface->GetSize(), aSurface->GetBytesPerPixel());
   return sInstance->Insert(aSurface, cost, aImageKey, aSurfaceKey, aLifetime);
 }
 
 /* static */ bool
-SurfaceCache::CanHold(const IntSize& aSize)
+SurfaceCache::CanHold(const IntSize& aSize, uint32_t aBytesPerPixel /* = 4 */)
 {
   if (!sInstance) {
     return false;
   }
 
-  Cost cost = ComputeCost(aSize);
+  Cost cost = ComputeCost(aSize, aBytesPerPixel);
   return sInstance->CanHold(cost);
 }
 

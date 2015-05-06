@@ -61,7 +61,6 @@ config = {
             "options": [
                 "--adbpath=%(adbpath)s",
                 "--b2gpath=%(b2gpath)s",
-                "--console-level=INFO",
                 "--emulator=%(emulator)s",
                 "--logdir=%(logcat_dir)s",
                 "--remote-webserver=%(remote_webserver)s",
@@ -82,7 +81,6 @@ config = {
             "options": [
                 "--adbpath=%(adbpath)s",
                 "--b2gpath=%(b2gpath)s",
-                "--console-level=INFO",
                 "--emulator=%(emulator)s",
                 "--logdir=%(logcat_dir)s",
                 "--remote-webserver=%(remote_webserver)s",

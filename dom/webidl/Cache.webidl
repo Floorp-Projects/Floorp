@@ -13,32 +13,32 @@
 [Exposed=(Window,Worker),
  Func="mozilla::dom::cache::Cache::PrefEnabled"]
 interface Cache {
-[Throws]
-Promise<Response> match(RequestInfo request, optional CacheQueryOptions options);
-[Throws]
-Promise<sequence<Response>> matchAll(optional RequestInfo request, optional CacheQueryOptions options);
-[Throws]
-Promise<void> add(RequestInfo request);
-[Throws]
-Promise<void> addAll(sequence<RequestInfo> requests);
-[Throws]
-Promise<void> put(RequestInfo request, Response response);
-[Throws]
-Promise<boolean> delete(RequestInfo request, optional CacheQueryOptions options);
-[Throws]
-Promise<sequence<Request>> keys(optional RequestInfo request, optional CacheQueryOptions options);
+  [NewObject]
+  Promise<Response> match(RequestInfo request, optional CacheQueryOptions options);
+  [NewObject]
+  Promise<sequence<Response>> matchAll(optional RequestInfo request, optional CacheQueryOptions options);
+  [NewObject]
+  Promise<void> add(RequestInfo request);
+  [NewObject]
+  Promise<void> addAll(sequence<RequestInfo> requests);
+  [NewObject]
+  Promise<void> put(RequestInfo request, Response response);
+  [NewObject]
+  Promise<boolean> delete(RequestInfo request, optional CacheQueryOptions options);
+  [NewObject]
+  Promise<sequence<Request>> keys(optional RequestInfo request, optional CacheQueryOptions options);
 };
 
 dictionary CacheQueryOptions {
-boolean ignoreSearch = false;
-boolean ignoreMethod = false;
-boolean ignoreVary = false;
-DOMString cacheName;
+  boolean ignoreSearch = false;
+  boolean ignoreMethod = false;
+  boolean ignoreVary = false;
+  DOMString cacheName;
 };
 
 dictionary CacheBatchOperation {
-DOMString type;
-Request request;
-Response response;
-CacheQueryOptions options;
+  DOMString type;
+  Request request;
+  Response response;
+  CacheQueryOptions options;
 };

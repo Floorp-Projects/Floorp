@@ -1084,6 +1084,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mAddActiveEventFuzzTime(true),
     mIsFrozen(false),
     mFullScreen(false),
+    mFullscreenMode(false),
     mIsClosed(false),
     mInClose(false),
     mHavePendingClose(false),
@@ -6081,6 +6082,22 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust, gfx:
   // If we are already in full screen mode, just return.
   if (mFullScreen == aFullScreen)
     return NS_OK;
+
+  // If a fullscreen is originated from chrome, we are switching to
+  // the fullscreen mode, otherwise, we are entering DOM fullscreen.
+  // Note that although entering DOM fullscreen could also cause
+  // consequential calls to this method, those calls will be skipped
+  // at the condition above.
+  if (aRequireTrust) {
+    mFullscreenMode = aFullScreen;
+  } else {
+    // If we are exiting from DOM fullscreen while we
+    // initially make the window fullscreen because of
+    // fullscreen mode, don't restore the window.
+    if (!aFullScreen && mFullscreenMode) {
+      return NS_OK;
+    }
+  }
 
   // dispatch a "fullscreen" DOM event so that XUL apps can
   // respond visually if we are kicked into full screen mode

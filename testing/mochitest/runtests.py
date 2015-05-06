@@ -53,12 +53,20 @@ from manifestparser.filters import (
     subsuite,
     tags,
 )
-from mochitest_options import MochitestOptions
+from mochitest_options import MochitestArgumentParser
 from mozprofile import Profile, Preferences
 from mozprofile.permissions import ServerLocations
 from urllib import quote_plus as encodeURIComponent
 from mozlog.structured.formatters import TbplFormatter
 from mozlog.structured import commandline
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+try:
+    from mozbuild.base import MozbuildObject
+    build_obj = MozbuildObject.from_environment(cwd=here)
+except ImportError:
+    build_obj = None
 
 
 ###########################
@@ -2595,29 +2603,34 @@ class Mochitest(MochitestUtilsMixin):
         return dirlist
 
 
-def main():
+def run_test_harness(options):
+    logger_options = {
+        key: value for key, value in vars(options).iteritems() if key.startswith('log')}
+    runner = Mochitest(logger_options)
+    result = runner.runTests(options)
+
+    # don't dump failures if running from automation as treeherder already displays them
+    if build_obj:
+        if runner.message_logger.errors:
+            result = 1
+            runner.message_logger.logger.warning("The following tests failed:")
+            for error in runner.message_logger.errors:
+                runner.message_logger.logger.log_raw(error)
+
+    runner.message_logger.finish()
+
+    return result
+
+
+def cli(args=sys.argv[1:]):
     # parse command line options
-    parser = MochitestOptions()
-    commandline.add_logging_group(parser)
-    options = parser.parse_args()
+    parser = MochitestArgumentParser(app='generic')
+    options = parser.parse_args(args)
     if options is None:
         # parsing error
         sys.exit(1)
-    logger_options = {
-        key: value for key,
-        value in vars(options).iteritems() if key.startswith('log')}
-    mochitest = Mochitest(logger_options)
-    options = parser.verifyOptions(options, mochitest)
 
-    options.utilityPath = mochitest.getFullPath(options.utilityPath)
-    options.certPath = mochitest.getFullPath(options.certPath)
-    if options.symbolsPath and len(urlparse(options.symbolsPath).scheme) < 2:
-        options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
-
-    return_code = mochitest.runTests(options)
-    mochitest.message_logger.finish()
-
-    sys.exit(return_code)
+    return run_test_harness(options)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(cli())

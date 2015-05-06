@@ -300,6 +300,10 @@ toolbar[customizing] > .overflow-button {
   visibility: collapse;
 }
 
+#navigator-toolbox[fullscreenShouldAnimate] {
+  transition: 1.5s margin-top ease-out;
+}
+
 /* Rules to help integrate SDK widgets */
 toolbaritem[sdkstylewidget="true"] > toolbarbutton,
 toolbarpaletteitem > toolbaritem[sdkstylewidget="true"] > iframe,

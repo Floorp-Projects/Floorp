@@ -555,8 +555,8 @@ function IdlInterface(obj, is_callback) {
     this.members = obj.members.map(function(m){return new IdlInterfaceMember(m); });
     if (this.has_extended_attribute("Unforgeable")) {
         this.members
-            .filter(m => !m["static"] && (m.type == "attribute" || m.type == "operation"))
-            .forEach(m => m.isUnforgeable = true);
+            .filter(function(m) { return !m["static"] && (m.type == "attribute" || m.type == "operation"); })
+            .forEach(function(m) { return m.isUnforgeable = true; });
     }
 
     /**
