@@ -1,0 +1,32 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Program(CONFIG['MOZ_CHILD_PROCESS_NAME_PIE'])
+SOURCES += [
+    '../MozillaRuntimeMainAndroid.cpp',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/toolkit/xre',
+    '/xpcom/base',
+]
+
+if CONFIG['MOZ_SANDBOX']:
+    USE_LIBS += [
+        'mozsandbox',
+    ]
+
+    # gcc lto likes to put the top level asm in syscall.cc in a different partition
+    # from the function using it which breaks the build.  Work around that by
+    # forcing there to be only one partition.
+    if '-flto' in CONFIG['OS_CXXFLAGS'] and not CONFIG['CLANG_CXX']:
+	LDFLAGS += ['--param lto-partitions=1']
+
+LDFLAGS += ['-pie']
+
+FAIL_ON_WARNINGS = True
