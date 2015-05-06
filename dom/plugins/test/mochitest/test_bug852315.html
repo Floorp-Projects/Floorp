@@ -37,13 +37,23 @@ i.addEventListener("load", function loadfunc() {
   // Navigate the frame to cause the document with the plugin to go inactive
   i.removeEventListener("load", loadfunc);
   i.src = "about:blank";
-  SimpleTest.executeSoon(function() {
-    // Ensure this event doesn't race with CheckPluginStopEvent
-    SimpleTest.executeSoon(function() {
+
+  const MAX_ATTEMPTS = 5;
+  var attempts = 0;
+  function checkPluginDestroyRan() {
+    // We may need to retry a few times until the plugin stop event makes
+    // its way through the event queue.
+    if (attempts < MAX_ATTEMPTS && !destroyran) {
+      ++attempts;
+      SimpleTest.executeSoon(checkPluginDestroyRan);
+    } else {
+      info("Number of retry attempts: " + attempts);
       ok(destroyran, "OnDestroy callback ran and did not crash");
       SimpleTest.finish();
-    });
-  });
+    }
+  }
+
+  SimpleTest.executeSoon(checkPluginDestroyRan);
 });
 document.body.appendChild(i);
 
