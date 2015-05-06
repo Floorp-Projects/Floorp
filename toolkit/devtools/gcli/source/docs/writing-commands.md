@@ -88,7 +88,7 @@ depends on what context you are writing your command for.
 
 GCLI supports Mozilla style localization. To add a command that will only ever
 be used embedded in Firefox, this is the way to go. Your strings should be
-stored in ``browser/locales/en-US/chrome/browser/devtools/gclicommands.properties``,
+stored in ``toolkit/locales/en-US/chrome/global/devtools/gclicommands.properties``,
 And you should access them using ``let l10n = require("gcli/l10n")`` and then
 ``l10n.lookup(...)`` or ``l10n.lookupFormat()``
 
@@ -755,4 +755,3 @@ types this is enough detail. There are a number of exceptions:
   provide a customization of this type. See settingValue for an example.
 
 See below for more information.
-
