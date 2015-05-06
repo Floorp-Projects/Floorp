@@ -171,10 +171,7 @@ RootActor.prototype = {
     },
     // Whether or not `getProfile()` supports specifying a `startTime`
     // and `endTime` to filter out samples. Fx40+
-    profilerDataFilterable: true,
-    // Whether or not the profiler has a `getBufferInfo` method
-    // necessary as the profiler does not use the ActorFront class.
-    profilerBufferStatus: true,
+    profilerDataFilterable: true
   },
 
   /**

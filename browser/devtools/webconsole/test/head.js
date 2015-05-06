@@ -1421,6 +1421,9 @@ function whenDelayedStartupFinished(aWindow, aCallback)
  *        opening vview for them is very slow (they can cause timeouts in debug
  *        builds).
  *
+ *        - consoleOutput: string|RegExp, optional, expected consoleOutput
+ *        If not provided consoleOuput = output;
+ *
  *        - printOutput: string|RegExp, optional, expected output for
  *        |print(input)|. If this is not provided, printOutput = output.
  *
@@ -1462,11 +1465,14 @@ function checkOutputForInputs(hud, inputTests)
     hud.jsterm.clearOutput();
     hud.jsterm.execute("console.log(" + entry.input + ")");
 
+    let consoleOutput = "consoleOutput" in entry ?
+                        entry.consoleOutput : entry.output;
+
     let [result] = yield waitForMessages({
       webconsole: hud,
       messages: [{
-        name: "console.log() output: " + entry.output,
-        text: entry.output,
+        name: "console.log() output: " + consoleOutput,
+        text: consoleOutput,
         category: CATEGORY_WEBDEV,
         severity: SEVERITY_LOG,
       }],

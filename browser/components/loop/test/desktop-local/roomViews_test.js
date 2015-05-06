@@ -680,6 +680,6 @@ describe("loop.roomViews", function () {
         React.addons.TestUtils.Simulate.click(closeBtn);
         expect(view.getDOMNode()).to.eql(null);
       });
-    })
+    });
   });
 });
