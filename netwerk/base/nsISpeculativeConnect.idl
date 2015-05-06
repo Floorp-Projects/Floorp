@@ -8,7 +8,7 @@
 interface nsIURI;
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(fa580a8d-f4a4-47c5-8ade-4f9786e8d1de)]
+[scriptable, uuid(d74a17ac-5b8a-4824-a309-b1f04a3c4aed)]
 interface nsISpeculativeConnect : nsISupports
 {
     /**
@@ -28,6 +28,8 @@ interface nsISpeculativeConnect : nsISupports
     void speculativeConnect(in nsIURI aURI,
                             in nsIInterfaceRequestor aCallbacks);
 
+    void speculativeAnonymousConnect(in nsIURI aURI,
+                                     in nsIInterfaceRequestor aCallbacks);
 };
 
 /**

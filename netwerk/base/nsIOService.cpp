@@ -1640,14 +1640,21 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request, nsIChannel *cha
     if (!speculativeHandler)
         return NS_OK;
 
-    speculativeHandler->SpeculativeConnect(uri,
-                                           mCallbacks);
+    nsLoadFlags loadFlags = 0;
+    channel->GetLoadFlags(&loadFlags);
+    if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
+        speculativeHandler->SpeculativeAnonymousConnect(uri, mCallbacks);
+    } else {
+        speculativeHandler->SpeculativeConnect(uri, mCallbacks);
+    }
+
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIOService::SpeculativeConnect(nsIURI *aURI,
-                                nsIInterfaceRequestor *aCallbacks)
+nsresult
+nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
+                                        nsIInterfaceRequestor *aCallbacks,
+                                        bool aAnonymous)
 {
     // Check for proxy information. If there is a proxy configured then a
     // speculative connect should not be performed because the potential
@@ -1678,8 +1685,14 @@ nsIOService::SpeculativeConnect(nsIURI *aURI,
                             nsILoadInfo::SEC_NORMAL,
                             nsIContentPolicy::TYPE_OTHER,
                             getter_AddRefs(channel));
-
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (aAnonymous) {
+        nsLoadFlags loadFlags = 0;
+        channel->GetLoadFlags(&loadFlags);
+        loadFlags |= nsIRequest::LOAD_ANONYMOUS;
+        channel->SetLoadFlags(loadFlags);
+    }
 
     nsCOMPtr<nsICancelable> cancelable;
     nsRefPtr<IOServiceProxyCallback> callback =
@@ -1689,6 +1702,20 @@ nsIOService::SpeculativeConnect(nsIURI *aURI,
         return pps2->AsyncResolve2(channel, 0, callback, getter_AddRefs(cancelable));
     }
     return pps->AsyncResolve(channel, 0, callback, getter_AddRefs(cancelable));
+}
+
+NS_IMETHODIMP
+nsIOService::SpeculativeConnect(nsIURI *aURI,
+                                nsIInterfaceRequestor *aCallbacks)
+{
+    return SpeculativeConnectInternal(aURI, aCallbacks, false);
+}
+
+NS_IMETHODIMP
+nsIOService::SpeculativeAnonymousConnect(nsIURI *aURI,
+                                         nsIInterfaceRequestor *aCallbacks)
+{
+    return SpeculativeConnectInternal(aURI, aCallbacks, true);
 }
 
 void
