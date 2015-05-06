@@ -6,8 +6,6 @@
 
 // Tests that the rule view search filter works properly for multiple rule selectors.
 
-const SEARCH = "body";
-
 let TEST_URI = [
   '<style type="text/css">',
   '  html, body, div {',
@@ -28,25 +26,20 @@ add_task(function*() {
 });
 
 function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"" + SEARCH + "\"");
+  info("Setting filter text to \"body\"");
 
   let win = ruleView.doc.defaultView;
   let searchField = ruleView.searchField;
   let onRuleViewFilter = inspector.once("ruleview-filtered");
 
   searchField.focus();
-  synthesizeKeys(SEARCH, win);
+  synthesizeKeys("body", win);
   yield onRuleViewFilter;
 
   info("Check that the correct rules are visible");
   is(ruleView.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
-    "First rule is inline element.");
-
-  let ruleEditor = getRuleViewRuleEditor(ruleView, 1);
-
-  is(ruleEditor.rule.selectorText, "html, body, div",
-    "Second rule is html, body, div.");
-  ok(ruleEditor.selectorText.children[2].classList.contains("ruleview-highlight"),
+  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element", "First rule is inline element.");
+  is(getRuleViewRuleEditor(ruleView, 1).rule.selectorText, "html, body, div", "Second rule is html, body, div.");
+  ok(getRuleViewRuleEditor(ruleView, 1).selectorText.children[2].classList.contains("ruleview-highlight"),
     "body selector is highlighted.")
 }
