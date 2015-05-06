@@ -41,12 +41,11 @@ let PerformanceView = {
     this._onRecordButtonClick = this._onRecordButtonClick.bind(this);
     this._onImportButtonClick = this._onImportButtonClick.bind(this);
     this._onClearButtonClick = this._onClearButtonClick.bind(this);
-    this._lockRecordButton = this._lockRecordButton.bind(this);
-    this._unlockRecordButton = this._unlockRecordButton.bind(this);
+    this._lockRecordButtons = this._lockRecordButtons.bind(this);
+    this._unlockRecordButtons = this._unlockRecordButtons.bind(this);
     this._onRecordingSelected = this._onRecordingSelected.bind(this);
     this._onRecordingStopped = this._onRecordingStopped.bind(this);
-    this._onRecordingWillStop = this._onRecordingWillStop.bind(this);
-    this._onRecordingWillStart = this._onRecordingWillStart.bind(this);
+    this._onRecordingStarted = this._onRecordingStarted.bind(this);
 
     for (let button of $$(".record-button")) {
       button.addEventListener("click", this._onRecordButtonClick);
@@ -55,11 +54,8 @@ let PerformanceView = {
     this._clearButton.addEventListener("click", this._onClearButtonClick);
 
     // Bind to controller events to unlock the record button
-    PerformanceController.on(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
-    PerformanceController.on(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
-    PerformanceController.on(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
+    PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
-    PerformanceController.on(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
 
     this.setState("empty");
@@ -82,11 +78,8 @@ let PerformanceView = {
     this._importButton.removeEventListener("click", this._onImportButtonClick);
     this._clearButton.removeEventListener("click", this._onClearButtonClick);
 
-    PerformanceController.off(EVENTS.RECORDING_WILL_START, this._onRecordingWillStart);
-    PerformanceController.off(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
-    PerformanceController.off(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
+    PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
-    PerformanceController.off(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
 
     yield ToolbarView.destroy();
@@ -130,31 +123,30 @@ let PerformanceView = {
    * Adds the `locked` attribute on the record button. This prevents it
    * from being clicked while recording is started or stopped.
    */
-  _lockRecordButton: function () {
-    this._recordButton.setAttribute("locked", "true");
+  _lockRecordButtons: function () {
+    for (let button of $$(".record-button")) {
+      button.setAttribute("locked", "true");
+    }
   },
 
   /**
    * Removes the `locked` attribute on the record button.
    */
-  _unlockRecordButton: function () {
-    this._recordButton.removeAttribute("locked");
+  _unlockRecordButtons: function () {
+    for (let button of $$(".record-button")) {
+      button.removeAttribute("locked");
+    }
   },
 
   /**
-   * Fired when a recording is starting, but not yet completed.
+   * When a recording has started.
    */
-  _onRecordingWillStart: function () {
-    this._lockRecordButton();
-    this._recordButton.setAttribute("checked", "true");
-  },
-
-  /**
-   * Fired when a recording is stopping, but not yet completed.
-   */
-  _onRecordingWillStop: function () {
-    this._lockRecordButton();
-    this._recordButton.removeAttribute("checked");
+  _onRecordingStarted: function (_, recording) {
+    // A stopped recording can be from `console.profileEnd` -- only unlock
+    // the button if it's the main recording that was started via UI.
+    if (!recording.isConsole()) {
+      this._unlockRecordButtons();
+    }
   },
 
   /**
@@ -164,7 +156,7 @@ let PerformanceView = {
     // A stopped recording can be from `console.profileEnd` -- only unlock
     // the button if it's the main recording that was started via UI.
     if (!recording.isConsole()) {
-      this._unlockRecordButton();
+      this._unlockRecordButtons();
     }
 
     // If the currently selected recording is the one that just stopped,
@@ -187,7 +179,15 @@ let PerformanceView = {
   _onRecordButtonClick: function (e) {
     if (this._recordButton.hasAttribute("checked")) {
       this.emit(EVENTS.UI_STOP_RECORDING);
+      this._lockRecordButtons();
+      for (let button of $$(".record-button")) {
+        button.removeAttribute("checked");
+      }
     } else {
+      this._lockRecordButtons();
+      for (let button of $$(".record-button")) {
+        button.setAttribute("checked", "true");
+      }
       this.emit(EVENTS.UI_START_RECORDING);
     }
   },
