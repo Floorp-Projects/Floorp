@@ -146,7 +146,7 @@ ErrorResult::ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
   MOZ_ASSERT(argCount <= 10);
   argCount = std::min<uint16_t>(argCount, 10);
   while (argCount--) {
-    message->mArgs.AppendElement(*va_arg(ap, nsString*));
+    message->mArgs.AppendElement(*va_arg(ap, const nsAString*));
   }
   mMessage = message;
 #ifdef DEBUG

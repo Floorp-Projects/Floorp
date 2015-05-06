@@ -243,21 +243,6 @@ inline uint32_t MicrosecondsToRTPTime(Microseconds us) {
   return uint32_t(0xffffffff & (us * 90000) / 1000000);
 }
 
-class AutoLock {
-public:
-  AutoLock(GMPMutex* aMutex)
-    : mMutex(aMutex)
-  {
-    assert(aMutex);
-    mMutex->Acquire();
-  }
-  ~AutoLock() {
-    mMutex->Release();
-  }
-private:
-  GMPMutex* mMutex;
-};
-
 void dump(const uint8_t* data, uint32_t len, const char* filename);
 
 HRESULT

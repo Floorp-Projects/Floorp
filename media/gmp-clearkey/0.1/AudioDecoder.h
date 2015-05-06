@@ -21,15 +21,15 @@
 #include "gmp-audio-host.h"
 #include "gmp-task-utils.h"
 #include "WMFAACDecoder.h"
+#include "RefCounted.h"
 
 #include "mfobjects.h"
 
 class AudioDecoder : public GMPAudioDecoder
+                   , public RefCounted
 {
 public:
   AudioDecoder(GMPAudioHost *aHostAPI);
-
-  virtual ~AudioDecoder();
 
   virtual void InitDecode(const GMPAudioCodec& aCodecSettings,
                           GMPAudioDecoderCallback* aCallback) override;
@@ -45,6 +45,7 @@ public:
   bool HasShutdown() { return mHasShutdown; }
 
 private:
+  virtual ~AudioDecoder();
 
   void EnsureWorker();
 
@@ -56,8 +57,7 @@ private:
   HRESULT MFToGMPSample(IMFSample* aSample,
                         GMPAudioSamples* aAudioFrame);
 
-  void MaybeRunOnMainThread(gmp_task_args_base* aTask);
-  void Destroy();
+  void MaybeRunOnMainThread(GMPTask* aTask);
 
   GMPAudioHost *mHostAPI; // host-owned, invalid at DecodingComplete
   GMPAudioDecoderCallback* mCallback; // host-owned, invalid at DecodingComplete

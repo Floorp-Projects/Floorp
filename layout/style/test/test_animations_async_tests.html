@@ -6,60 +6,15 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="animation_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <style>
-  /* must use implicit value at one end */
-  @keyframes slide-left { from { margin-left: -1000px } }
-  </style>
   <script type="application/javascript">
 
   SimpleTest.waitForExplicitFinish();
 
-  var gDisplay;
-
   function run() {
-    gDisplay = document.getElementById("display");
-    setTimeout(test1, 0);
+    SpecialPowers.pushPrefEnv(
+      {"set": [['layout.css.font-loading-api.enabled', true]]},
+      function() { window.open("file_animations_async_tests.html"); });
   }
-
-  /*
-   * Bug 1086937 - Animations continue correctly across load of
-   * downloadable font.
-   */
-  function test1() {
-    var animdiv = document.createElement("div");
-    // Take control of the refresh driver right from the start
-    advance_clock(0);
-    animdiv.style.animation = "slide-left 100s linear"; // 10px per second
-    gDisplay.appendChild(animdiv);
-    var cs = getComputedStyle(animdiv, "");
-    is(cs.marginLeft, "-1000px", "initial value of animation (force flush)");
-    advance_clock(1000);
-    is(cs.marginLeft, "-990px", "value of animation before font load");
-
-    var font = new FontFace("DownloadedAhem", "url(Ahem.ttf)");
-    document.fonts.add(font);
-
-    var fontdiv = document.createElement("div");
-    fontdiv.appendChild(document.createTextNode("A"));
-    fontdiv.style.fontFamily = "DownloadedAhem";
-    gDisplay.appendChild(fontdiv);
-
-    font.load().then(function(loadedFace) {
-      is(cs.marginLeft, "-990px", "value of animation after font load " +
-                                  "(clock only advances when we say so)");
-      advance_clock(1000);
-      is(cs.marginLeft, "-980px",
-         "animation should still be advancing after font load");
-
-      SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
-      document.fonts.delete(font);
-      animdiv.remove();
-      fontdiv.remove();
-
-      SimpleTest.finish();
-    });
-  }
-
   </script>
 </head>
 <body onload="run()">

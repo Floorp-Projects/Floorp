@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <assert.h>
 #include "gmp-decryption.h"
 
 #define CLEARKEY_KEY_LEN ((size_t)16)
@@ -74,5 +75,26 @@ Contains(const Container& aContainer, const Element& aElement)
 {
   return aContainer.find(aElement) != aContainer.end();
 }
+
+class AutoLock {
+public:
+  explicit AutoLock(GMPMutex* aMutex)
+    : mMutex(aMutex)
+  {
+    assert(aMutex);
+    if (mMutex) {
+      mMutex->Acquire();
+    }
+  }
+  ~AutoLock() {
+    if (mMutex) {
+      mMutex->Release();
+    }
+  }
+private:
+  GMPMutex* mMutex;
+};
+
+GMPMutex* GMPCreateMutex();
 
 #endif // __ClearKeyUtils_h__
