@@ -284,26 +284,32 @@ protected:
     ResolveMethodType mResolveMethod;
     RejectMethodType mRejectMethod;
   };
+
+  void ThenInternal(AbstractThread* aResponseThread, ThenValueBase* aThenValue,
+                    const char* aCallSite)
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(aResponseThread->IsDispatchReliable());
+    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
+    mHaveConsumer = true;
+    PROMISE_LOG("%s invoking Then() [this=%p, aThenValue=%p, isPending=%d]",
+                aCallSite, this, aThenValue, (int) IsPending());
+    if (!IsPending()) {
+      aThenValue->Dispatch(this);
+    } else {
+      mThenValues.AppendElement(aThenValue);
+    }
+  }
+
 public:
 
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
   already_AddRefed<Consumer> RefableThen(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
                                          ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
-    MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(aResponseThread->IsDispatchReliable());
-    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
-    mHaveConsumer = true;
     nsRefPtr<ThenValueBase> thenValue = new ThenValue<ThisType, ResolveMethodType, RejectMethodType>(
                                               aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
-    PROMISE_LOG("%s invoking Then() [this=%p, thenValue=%p, aThisVal=%p, isPending=%d]",
-                aCallSite, this, thenValue.get(), aThisVal, (int) IsPending());
-    if (!IsPending()) {
-      thenValue->Dispatch(this);
-    } else {
-      mThenValues.AppendElement(thenValue);
-    }
-
+    ThenInternal(aResponseThread, thenValue, aCallSite);
     return thenValue.forget();
   }
 
