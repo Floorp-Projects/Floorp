@@ -155,7 +155,7 @@ public class TabQueueHelper {
         ThreadUtils.assertNotOnUiThread();
 
         Intent resultIntent = new Intent();
-        resultIntent.setClassName(context, AppConstants.BROWSER_INTENT_CLASS_NAME);
+        resultIntent.setClassName(context, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
         resultIntent.setAction(TabQueueHelper.LOAD_URLS_ACTION);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, resultIntent, PendingIntent.FLAG_CANCEL_CURRENT);

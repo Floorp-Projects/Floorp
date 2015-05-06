@@ -68,7 +68,7 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
      * Start fennec with the supplied intent.
      */
     private void loadNormally(Intent intent) {
-        intent.setClassName(getApplicationContext(), AppConstants.BROWSER_INTENT_CLASS_NAME);
+        intent.setClassName(getApplicationContext(), AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
         startActivity(intent);
         finish();
     }
