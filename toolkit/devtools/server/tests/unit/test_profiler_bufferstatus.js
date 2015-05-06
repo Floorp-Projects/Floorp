@@ -36,19 +36,9 @@ function run_test()
   do_test_pending();
 }
 
-function check_empty_buffer(client, actor, callback)
-{
-  client.request({ to: actor, type: "getBufferInfo" }, response => {
-    do_check_true(response.position === 0);
-    do_check_true(response.totalSize === 0);
-    do_check_true(response.generation === 0);
-    callback();
-  });
-}
-
 function check_buffer(client, actor, callback)
 {
-  client.request({ to: actor, type: "getBufferInfo" }, response => {
+  client.request({ to: actor, type: "isActive" }, response => {
     do_check_true(typeof response.position === "number");
     do_check_true(typeof response.totalSize === "number");
     do_check_true(typeof response.generation === "number");
@@ -58,6 +48,20 @@ function check_buffer(client, actor, callback)
     do_check_true(response.generation === 0);
 
     callback();
+  });
+}
+
+function check_empty_buffer(client, actor, callback)
+{
+  client.request({ to: actor, type: "isActive" }, response => {
+    do_check_false(Profiler.IsActive());
+    do_check_false(response.isActive);
+    do_check_true(response.position === void 0);
+    do_check_true(response.totalSize === void 0);
+    do_check_true(response.generation === void 0);
+    do_check_false(response.isActive);
+    do_check_eq(response.currentTime, undefined);
+    calback();
   });
 }
 

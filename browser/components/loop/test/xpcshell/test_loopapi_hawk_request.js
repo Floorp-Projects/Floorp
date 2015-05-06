@@ -33,7 +33,7 @@ function generateSessionTypeVerificationStub(desiredSessionType) {
 
       resolve();
     });
-  };
+  }
 
   return hawkRequestStub;
 }
