@@ -6,8 +6,6 @@
 
 // Tests that the rule view search filter works properly for inline styles.
 
-const SEARCH = "color";
-
 let TEST_URI = [
   '<style type="text/css">',
   '  #testid {',
@@ -25,22 +23,19 @@ add_task(function*() {
 });
 
 function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"" + SEARCH + "\"");
+  info("Setting filter text to \"color\"");
 
   let win = ruleView.doc.defaultView;
   let searchField = ruleView.searchField;
   let onRuleViewFiltered = inspector.once("ruleview-filtered");
 
   searchField.focus();
-  synthesizeKeys(SEARCH, win);
+  synthesizeKeys("color", win);
   yield onRuleViewFiltered;
 
   info("Check that the correct rules are visible");
   is(ruleView.element.children.length, 1, "Should have 1 rule.");
-
-  let rule = getRuleViewRuleEditor(ruleView, 0).rule;
-
-  is(rule.selectorText, "element", "First rule is inline element.");
-  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
+  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element", "First rule is inline element.");
+  ok(getRuleViewRuleEditor(ruleView, 0).rule.textProps[0].editor.element.classList.contains("ruleview-highlight"),
     "background-color text property is correctly highlighted.");
 }
