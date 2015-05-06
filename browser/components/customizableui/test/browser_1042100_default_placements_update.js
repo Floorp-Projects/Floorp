@@ -71,6 +71,27 @@ function test() {
   ok(haveNavbarPlacements, "Should have placements for nav-bar");
   if (haveNavbarPlacements) {
     let placements = [...gFuturePlacements.get(CustomizableUI.AREA_NAVBAR)];
+
+    // Ignore widgets that are placed using the pref facility and not the
+    // versioned facility.  They're independent of kVersion and the saved
+    // state's current version, so they may be present in the placements.
+    for (let i = 0; i < placements.length; ) {
+      if (placements[i] == testWidgetNew.id) {
+        i++;
+        continue;
+      }
+      let pref = "browser.toolbarbuttons.introduced." + placements[i];
+      let introduced = false;
+      try {
+        introduced = Services.prefs.getBoolPref(pref);
+      } catch (ex) {}
+      if (!introduced) {
+        i++;
+        continue;
+      }
+      placements.splice(i, 1);
+    }
+
     is(placements.length, 1, "Should have 1 newly placed widget in nav-bar");
     is(placements[0], testWidgetNew.id, "Should have our test widget to be placed in nav-bar");
   }
