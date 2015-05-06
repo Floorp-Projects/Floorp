@@ -2935,21 +2935,7 @@ inline ReturnType
 GetPreviousRawFrame(FrameType* frame)
 {
     size_t prevSize = frame->prevFrameLocalSize() + FrameType::Size();
-    return ReturnType(((uint8_t*) frame) + prevSize);
-}
-
-template <typename ReturnType=CommonFrameLayout*>
-inline ReturnType
-GetPreviousRawFrame(ExitFrameLayout* frame)
-{
-    // Unwound exit frames are fake exit frames, and have the size of a
-    // JitFrameLayout instead of ExitFrameLayout. See
-    // JitFrameIterator::prevFp.
-    size_t frameSize = IsUnwoundFrame(frame->prevType())
-                       ? JitFrameLayout::Size()
-                       : ExitFrameLayout::Size();
-    size_t prevSize = frame->prevFrameLocalSize() + frameSize;
-    return ReturnType(((uint8_t*) frame) + prevSize);
+    return (ReturnType) (((uint8_t*) frame) + prevSize);
 }
 
 JitProfilingFrameIterator::JitProfilingFrameIterator(void* exitFrame)
@@ -2964,7 +2950,7 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(void* exitFrame)
         return;
     }
 
-    if (prevType == JitFrame_BaselineJS || prevType == JitFrame_Unwound_BaselineJS) {
+    if (prevType == JitFrame_BaselineJS) {
         returnAddressToFp_ = frame->returnAddress();
         fp_ = GetPreviousRawFrame<ExitFrameLayout, uint8_t*>(frame);
         type_ = JitFrame_BaselineJS;
