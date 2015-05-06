@@ -2209,6 +2209,17 @@ private:
     NPError  mResult;
 };
 
+static void
+RunAsyncNPP_New(void* aChildInstance)
+{
+    MOZ_ASSERT(aChildInstance);
+    PluginInstanceChild* childInstance =
+        static_cast<PluginInstanceChild*>(aChildInstance);
+    NPError rv = childInstance->DoNPP_New();
+    AsyncNewResultSender* task = new AsyncNewResultSender(childInstance, rv);
+    childInstance->PostChildAsyncCall(task);
+}
+
 bool
 PluginModuleChild::RecvAsyncNPP_New(PPluginInstanceChild* aActor)
 {
@@ -2216,9 +2227,8 @@ PluginModuleChild::RecvAsyncNPP_New(PPluginInstanceChild* aActor)
     PluginInstanceChild* childInstance =
         reinterpret_cast<PluginInstanceChild*>(aActor);
     AssertPluginThread();
-    NPError rv = childInstance->DoNPP_New();
-    AsyncNewResultSender* task = new AsyncNewResultSender(childInstance, rv);
-    childInstance->PostChildAsyncCall(task);
+    // We don't want to run NPP_New async from within nested calls
+    childInstance->AsyncCall(&RunAsyncNPP_New, childInstance);
     return true;
 }
 
