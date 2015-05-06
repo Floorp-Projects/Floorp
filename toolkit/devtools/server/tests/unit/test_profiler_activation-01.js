@@ -9,6 +9,7 @@
  */
 
 const Profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
+const MAX_PROFILER_ENTRIES = 10000000;
 
 function run_test()
 {
@@ -35,17 +36,30 @@ function test_activate(client1, actor1, client2, actor2, callback) {
     do_check_false(Profiler.IsActive());
     do_check_false(response.isActive);
     do_check_eq(response.currentTime, undefined);
+    do_check_true(typeof response.position === "number");
+    do_check_true(typeof response.totalSize === "number");
+    do_check_true(typeof response.generation === "number");
 
     // Start the profiler on the first connection....
-    client1.request({ to: actor1, type: "startProfiler" }, response => {
+    client1.request({ to: actor1, type: "startProfiler", entries: MAX_PROFILER_ENTRIES }, response => {
       do_check_true(Profiler.IsActive());
       do_check_true(response.started);
+      do_check_true(typeof response.position === "number");
+      do_check_true(typeof response.totalSize === "number");
+      do_check_true(typeof response.generation === "number");
+      do_check_true(response.position >= 0 && response.position < response.totalSize);
+      do_check_true(response.totalSize === MAX_PROFILER_ENTRIES);
 
       // On the next connection just make sure the actor has been instantiated.
       client2.request({ to: actor2, type: "isActive" }, response => {
         do_check_true(Profiler.IsActive());
         do_check_true(response.isActive);
         do_check_true(response.currentTime > 0);
+        do_check_true(typeof response.position === "number");
+        do_check_true(typeof response.totalSize === "number");
+        do_check_true(typeof response.generation === "number");
+        do_check_true(response.position >= 0 && response.position < response.totalSize);
+        do_check_true(response.totalSize === MAX_PROFILER_ENTRIES);
 
         let origConnectionClosed = DebuggerServer._connectionClosed;
 
