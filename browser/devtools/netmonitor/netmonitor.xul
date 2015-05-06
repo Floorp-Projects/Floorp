@@ -31,6 +31,10 @@
       <menuitem id="request-menu-context-copy-url"
                 label="&netmonitorUI.context.copyUrl;"
                 accesskey="&netmonitorUI.context.copyUrl.accesskey;"/>
+      <menuitem id="request-menu-context-copy-url-params"
+                label="&netmonitorUI.context.copyUrlParams;"
+                accesskey="&netmonitorUI.context.copyUrlParams.accesskey;"
+                oncommand="NetMonitorView.RequestsMenu.copyUrlParams();"/>
       <menuitem id="request-menu-context-copy-as-curl"
                 label="&netmonitorUI.context.copyAsCurl;"
                 oncommand="NetMonitorView.RequestsMenu.copyAsCurl();"/>
