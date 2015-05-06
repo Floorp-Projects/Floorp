@@ -18,13 +18,11 @@ sys.path.insert(
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 from runtests import Mochitest, MessageLogger
-from mochitest_options import RemoteOptions
-from mozlog import structured
+from mochitest_options import MochitestArgumentParser
 
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_slice
 import devicemanager
-import droid
 import mozinfo
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -461,40 +459,16 @@ class MochiRemote(Mochitest):
         return self._automation.runApp(*args, **kwargs)
 
 
-def main(args):
+def run_test_harness(options):
     message_logger = MessageLogger(logger=None)
     process_args = {'messageLogger': message_logger}
     auto = RemoteAutomation(None, "fennec", processArgs=process_args)
 
-    parser = RemoteOptions(auto)
-    structured.commandline.add_logging_group(parser)
-    options = parser.parse_args(args)
-
-    if (options.dm_trans == "adb"):
-        if (options.deviceIP):
-            dm = droid.DroidADB(
-                options.deviceIP,
-                options.devicePort,
-                deviceRoot=options.remoteTestRoot)
-        elif (options.deviceSerial):
-            dm = droid.DroidADB(
-                None,
-                None,
-                deviceSerial=options.deviceSerial,
-                deviceRoot=options.remoteTestRoot)
-        else:
-            dm = droid.DroidADB(deviceRoot=options.remoteTestRoot)
-    else:
-        dm = droid.DroidSUT(
-            options.deviceIP,
-            options.devicePort,
-            deviceRoot=options.remoteTestRoot)
-    auto.setDeviceManager(dm)
-    options = parser.verifyRemoteOptions(options, auto)
-
     if options is None:
         raise ValueError("Invalid options specified, use --help for a list of valid options")
 
+    dm = options.dm
+    auto.setDeviceManager(dm)
     mochitest = MochiRemote(auto, dm, options)
 
     log = mochitest.log
@@ -507,10 +481,6 @@ def main(args):
     else:
         auto.setProduct(options.remoteProductName)
     auto.setAppName(options.remoteappname)
-
-    options = parser.verifyOptions(options, mochitest)
-    if (options is None):
-        return 1
 
     logParent = os.path.dirname(options.remoteLogFile)
     dm.mkDir(logParent)
@@ -738,5 +708,12 @@ def main(args):
     return retVal
 
 
+def main(args=sys.argv[1:]):
+    parser = MochitestArgumentParser(app='android')
+    options = parser.parse_args(args)
+
+    return run_test_harness(options)
+
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

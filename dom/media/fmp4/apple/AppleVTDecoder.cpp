@@ -168,8 +168,7 @@ PlatformCallback(void* decompressionOutputRefCon,
     return;
   }
   if (flags & kVTDecodeInfo_FrameDropped) {
-    NS_WARNING("  ...frame dropped...");
-    return;
+    NS_WARNING("  ...frame tagged as dropped...");
   }
   MOZ_ASSERT(CFGetTypeID(image) == CVPixelBufferGetTypeID(),
     "VideoToolbox returned an unexpected image type");
@@ -246,7 +245,9 @@ AppleVTDecoder::SubmitFrame(MediaRawData* aSample)
                                          CreateAppleFrameRef(aSample),
                                          &infoFlags);
   if (rv != noErr && !(infoFlags & kVTDecodeInfo_FrameDropped)) {
+    LOG("AppleVTDecoder: Error %d VTDecompressionSessionDecodeFrame", rv);
     NS_WARNING("Couldn't pass frame to decoder");
+    mCallback->Error();
     return NS_ERROR_FAILURE;
   }
 

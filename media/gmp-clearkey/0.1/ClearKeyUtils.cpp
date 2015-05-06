@@ -24,6 +24,7 @@
 #include "ClearKeyBase64.h"
 #include "ArrayUtils.h"
 #include <assert.h>
+#include <memory.h>
 #include "Endian.h"
 #include "openaes/oaes_lib.h"
 
@@ -538,4 +539,11 @@ ClearKeyUtils::IsValidSessionId(const char* aBuff, uint32_t aLength)
     }
   }
   return true;
+}
+
+GMPMutex* GMPCreateMutex() {
+  GMPMutex* mutex;
+  auto err = GetPlatform()->createmutex(&mutex);
+  assert(mutex);
+  return GMP_FAILED(err) ? nullptr : mutex;
 }

@@ -666,7 +666,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   }
 
   if (UseVsyncComposition()) {
-    NS_WARNING("Enabling vsync compositor\n");
+    NS_WARNING("Enabling vsync compositor");
     mCompositorScheduler = new CompositorVsyncScheduler(this, aWidget);
   } else {
     mCompositorScheduler = new CompositorSoftwareTimerScheduler(this);

@@ -17,24 +17,18 @@
   var registration;
   var promise;
 
-  SimpleTest.requestCompleteLog();
-
   function start() {
-    info("start got called");
     return navigator.serviceWorker.register("worker_updatefoundevent.js",
                                             { scope: "./updatefoundevent.html" })
       .then((swr) => registration = swr);
   }
 
   function startWaitForUpdateFound() {
-    info("startWaitForUpdateFound got called");
     registration.onupdatefound = function(e) {
-      info("onupdatefound");
     }
 
     promise = new Promise(function(resolve, reject) {
       window.onmessage = function(e) {
-        info("Got message " + e.data);
 
         if (e.data == "finish") {
           ok(true, "Received updatefound");
@@ -52,18 +46,16 @@
   }
 
   function registerNext() {
-    info("registerNext got called");
     return navigator.serviceWorker.register("worker_updatefoundevent2.js",
                                             { scope: "./updatefoundevent.html" });
   }
 
   function waitForUpdateFound() {
-    info("waitForUpdateFound got called");
     return promise;
   }
 
   function unregister() {
-    info("unregister got called");
+    window.onmessage = null;
     return registration.unregister().then(function(result) {
       ok(result, "Unregister should return true.");
     });
@@ -85,7 +77,6 @@
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
-    ["browser.dom.window.dump.enabled", true],
   ]}, runTest);
 </script>
 </pre>

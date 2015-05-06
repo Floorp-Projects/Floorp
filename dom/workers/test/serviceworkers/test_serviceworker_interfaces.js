@@ -91,9 +91,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "BroadcastChannel",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "Cache", release: false },
+    "Cache",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "CacheStorage", release: false },
+    "CacheStorage",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Client",
 // IMPORTANT: Do not change this list without review from a DOM peer!

@@ -427,22 +427,6 @@ public:
     OnNotDecoded(MediaData::VIDEO_DATA, aReason);
   }
 
-  void OnSeekCompleted(int64_t aTime);
-  void OnSeekFailed(nsresult aResult);
-
-  void OnWaitForDataResolved(MediaData::Type aType)
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    WaitRequestRef(aType).Complete();
-    DispatchDecodeTasksIfNeeded();
-  }
-
-  void OnWaitForDataRejected(WaitForDataRejectValue aRejection)
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    WaitRequestRef(aRejection.mType).Complete();
-  }
-
   // Resets all state related to decoding and playback, emptying all buffers
   // and aborting all pending operations on the decode task queue.
   void Reset();

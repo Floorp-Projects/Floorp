@@ -719,16 +719,16 @@ nsJPEGDecoder::OutputScanlines(bool* suspend)
       }
   }
 
-  if (top != mInfo.output_scanline) {
+  if (mDownscaler && mDownscaler->HasInvalidation()) {
+    DownscalerInvalidRect invalidRect = mDownscaler->TakeInvalidRect();
+    PostInvalidation(invalidRect.mOriginalSizeRect,
+                     Some(invalidRect.mTargetSizeRect));
+    MOZ_ASSERT(!mDownscaler->HasInvalidation());
+  } else if (!mDownscaler && top != mInfo.output_scanline) {
     PostInvalidation(nsIntRect(0, top,
                                mInfo.output_width,
-                               mInfo.output_scanline - top),
-                     mDownscaler ? Some(mDownscaler->TakeInvalidRect())
-                                 : Nothing());
+                               mInfo.output_scanline - top));
   }
-
-  MOZ_ASSERT(!mDownscaler || !mDownscaler->HasInvalidation(),
-             "Didn't send downscaler's invalidation");
 }
 
 // Override the standard error method in the IJG JPEG decoder code.
