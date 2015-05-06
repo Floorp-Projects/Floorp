@@ -249,7 +249,7 @@ describe("loop.standaloneRoomViews", function() {
           local: {},
           remote: {}
         });
-      })
+      });
     });
 
     describe("#publishStream", function() {

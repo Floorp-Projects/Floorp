@@ -89,7 +89,7 @@ function* testMethod(aMethod, aHud, aOutputNode) {
   yield waitForMessages({
     webconsole: aHud,
     messages: [{
-      text: '"foo" "bar"',
+      text: 'foo bar',
       category: CATEGORY_WEBDEV,
     }],
   })

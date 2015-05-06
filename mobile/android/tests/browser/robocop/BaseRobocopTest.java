@@ -43,7 +43,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
     /**
      * The Java Class instance that launches the browser.
      * <p>
-     * This should always agree with {@link AppConstants#BROWSER_INTENT_CLASS_NAME}.
+     * This should always agree with {@link AppConstants#MOZ_ANDROID_BROWSER_INTENT_CLASS}.
      */
     public static final Class<? extends Activity> BROWSER_INTENT_CLASS;
 
@@ -51,7 +51,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
     static {
         Class<? extends Activity> cl;
         try {
-            cl = (Class<? extends Activity>) Class.forName(AppConstants.BROWSER_INTENT_CLASS_NAME);
+            cl = (Class<? extends Activity>) Class.forName(AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
         } catch (ClassNotFoundException e) {
             // Oh well.
             cl = Activity.class;

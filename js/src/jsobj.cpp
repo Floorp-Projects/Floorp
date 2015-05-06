@@ -1085,7 +1085,7 @@ NewObject(ExclusiveContext* cx, HandleObjectGroup group, gc::AllocKind kind,
 
     MOZ_ASSERT(clasp != &ArrayObject::class_);
     MOZ_ASSERT_IF(clasp == &JSFunction::class_,
-                  kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
+                  kind == AllocKind::FUNCTION || kind == AllocKind::FUNCTION_EXTENDED);
 
     // For objects which can have fixed data following the object, only use
     // enough fixed slots to cover the number of reserved slots in the object,

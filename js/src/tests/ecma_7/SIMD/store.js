@@ -28,7 +28,7 @@ function assertChanged(ta, from, expected) {
 
 function testStore(ta, kind, i, v) {
     reset(ta);
-    SIMD[kind].storeX(ta, i, v);
+    SIMD[kind].store1(ta, i, v);
     assertChanged(ta, i, [v.x]);
 
     reset(ta);
@@ -37,11 +37,11 @@ function testStore(ta, kind, i, v) {
 
     if (simdLength(v) > 2) {
         reset(ta);
-        SIMD[kind].storeXY(ta, i, v);
+        SIMD[kind].store2(ta, i, v);
         assertChanged(ta, i, [v.x, v.y]);
 
         reset(ta);
-        SIMD[kind].storeXYZ(ta, i, v);
+        SIMD[kind].store3(ta, i, v);
         assertChanged(ta, i, [v.x, v.y, v.z]);
     }
 }

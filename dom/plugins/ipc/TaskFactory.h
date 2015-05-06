@@ -7,6 +7,8 @@
 
 #include <base/task.h>
 
+#include "mozilla/Move.h"
+
 /*
  * This is based on the ScopedRunnableMethodFactory from ipc/chromium/src/base/task.h
  * Chromium's factories assert if tasks are created and run on different threads,
@@ -27,7 +29,12 @@ private:
   class TaskWrapper : public TaskType
   {
   public:
-    explicit TaskWrapper(RevocableStore* store) : revocable_(store) { }
+    template<typename... Args>
+    explicit TaskWrapper(RevocableStore* store, Args&&... args)
+      : TaskType(mozilla::Forward<Args>(args)...)
+      , revocable_(store)
+    {
+    }
 
     virtual void Run() {
       if (!revocable_.revoked())
@@ -41,11 +48,11 @@ private:
 public:
   explicit TaskFactory(T* object) : object_(object) { }
 
-  template <class TaskParamType>
-  inline TaskParamType* NewTask()
+  template <typename TaskParamType, typename... Args>
+  inline TaskParamType* NewTask(Args&&... args)
   {
     typedef TaskWrapper<TaskParamType> TaskWrapper;
-    TaskWrapper* task = new TaskWrapper(this);
+    TaskWrapper* task = new TaskWrapper(this, mozilla::Forward<Args>(args)...);
     return task;
   }
 
