@@ -3304,6 +3304,10 @@ SearchService.prototype = {
     return this.getEngineByName(defaultEngine);
   },
 
+  resetToOriginalDefaultEngine: function SRCH_SVC__resetToOriginalDefaultEngine() {
+    this.defaultEngine = this._originalDefaultEngine;
+  },
+
   _buildCache: function SRCH_SVC__buildCache() {
     if (!getBoolPref(BROWSER_SEARCH_PREF + "cache.enabled", true))
       return;

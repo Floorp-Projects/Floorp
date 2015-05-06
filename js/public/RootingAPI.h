@@ -204,8 +204,8 @@ struct JS_PUBLIC_API(NullPtr)
     static void * const constNullValue;
 };
 
-JS_FRIEND_API(void) HeapCellPostBarrier(js::gc::Cell** cellp);
-JS_FRIEND_API(void) HeapCellRelocate(js::gc::Cell** cellp);
+JS_FRIEND_API(void) HeapObjectPostBarrier(JSObject** objp);
+JS_FRIEND_API(void) HeapObjectRelocate(JSObject** objp);
 
 #ifdef JS_DEBUG
 /*
@@ -214,9 +214,13 @@ JS_FRIEND_API(void) HeapCellRelocate(js::gc::Cell** cellp);
  */
 extern JS_FRIEND_API(void)
 AssertGCThingMustBeTenured(JSObject* obj);
+extern JS_FRIEND_API(void)
+AssertGCThingIsNotAnObjectSubclass(js::gc::Cell* cell);
 #else
 inline void
 AssertGCThingMustBeTenured(JSObject* obj) {}
+inline void
+AssertGCThingIsNotAnObjectSubclass(js::gc::Cell* cell) {}
 #endif
 
 /*
@@ -639,7 +643,10 @@ struct GCMethods<T*>
 {
     static T* initial() { return nullptr; }
     static bool needsPostBarrier(T* v) { return false; }
-    static void postBarrier(T** vp) {}
+    static void postBarrier(T** vp) {
+        if (vp)
+            JS::AssertGCThingIsNotAnObjectSubclass(reinterpret_cast<js::gc::Cell*>(vp));
+    }
     static void relocate(T** vp) {}
 };
 
@@ -657,10 +664,10 @@ struct GCMethods<JSObject*>
         return v != nullptr && gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(v));
     }
     static void postBarrier(JSObject** vp) {
-        JS::HeapCellPostBarrier(reinterpret_cast<js::gc::Cell**>(vp));
+        JS::HeapObjectPostBarrier(vp);
     }
     static void relocate(JSObject** vp) {
-        JS::HeapCellRelocate(reinterpret_cast<js::gc::Cell**>(vp));
+        JS::HeapObjectRelocate(vp);
     }
 };
 
@@ -672,10 +679,10 @@ struct GCMethods<JSFunction*>
         return v != nullptr && gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(v));
     }
     static void postBarrier(JSFunction** vp) {
-        JS::HeapCellPostBarrier(reinterpret_cast<js::gc::Cell**>(vp));
+        JS::HeapObjectPostBarrier(reinterpret_cast<JSObject**>(vp));
     }
     static void relocate(JSFunction** vp) {
-        JS::HeapCellRelocate(reinterpret_cast<js::gc::Cell**>(vp));
+        JS::HeapObjectRelocate(reinterpret_cast<JSObject**>(vp));
     }
 };
 

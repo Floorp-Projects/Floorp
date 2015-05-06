@@ -23,6 +23,7 @@
 #include "gmp-api/gmp-decryption.h"
 #include "Endian.h"
 #include <assert.h>
+#include <string.h>
 
 using namespace mozilla;
 
