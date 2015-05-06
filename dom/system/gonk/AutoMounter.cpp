@@ -845,6 +845,16 @@ AutoMounter::UpdateState()
       break;
 
     case STATE_UMS_CONFIGURING:
+      if (mtpEnabled) {
+        // MTP was enabled. Start reconfiguring.
+        SetState(STATE_MTP_CONFIGURING);
+        SetUsbFunction(USB_FUNC_MTP);
+        break;
+      }
+      if (rndisConfigured) {
+        SetState(STATE_RNDIS_CONFIGURED);
+        break;
+      }
       // While configuring, the USB configuration state will change from
       // CONFIGURED -> CONNECTED -> DISCONNECTED -> CONNECTED -> CONFIGURED
       // so we don't check for cable unplugged here. However, having said
@@ -853,17 +863,7 @@ AutoMounter::UpdateState()
       // in. This is why we need to check for mtpEnabled once we get the
       // configured event.
       if (umsConfigured) {
-        if (mtpEnabled) {
-          // MTP was enabled. Start reconfiguring.
-          SetState(STATE_MTP_CONFIGURING);
-          SetUsbFunction(USB_FUNC_MTP);
-          break;
-        }
         SetState(STATE_UMS_CONFIGURED);
-      }
-      if (rndisConfigured) {
-        SetState(STATE_RNDIS_CONFIGURED);
-        break;
       }
       break;
 
@@ -1119,6 +1119,7 @@ void AutoMounter::GetStatus(bool& umsAvail, bool& umsConfigured, bool& umsEnable
                             bool& mtpAvail, bool& mtpConfigured, bool& mtpEnabled,
                             bool& rndisConfigured)
 {
+  umsAvail = false;
   umsConfigured = false;
   umsEnabled = false;
   mtpAvail = false;

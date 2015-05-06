@@ -3163,7 +3163,7 @@ const Class DateObject::class_ = {
     nullptr, /* construct */
     nullptr, /* trace */
     {
-        GenericCreateConstructor<DateConstructor, 7, JSFunction::FinalizeKind>,
+        GenericCreateConstructor<DateConstructor, 7, gc::AllocKind::FUNCTION>,
         GenericCreatePrototype,
         date_static_methods,
         nullptr,

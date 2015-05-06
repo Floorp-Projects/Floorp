@@ -490,7 +490,7 @@ ErrorObject::createProto(JSContext* cx, JSProtoKey key)
 ErrorObject::createConstructor(JSContext* cx, JSProtoKey key)
 {
     RootedObject ctor(cx);
-    ctor = GenericCreateConstructor<Error, 1, JSFunction::ExtendedFinalizeKind>(cx, key);
+    ctor = GenericCreateConstructor<Error, 1, gc::AllocKind::FUNCTION_EXTENDED>(cx, key);
     if (!ctor)
         return nullptr;
 

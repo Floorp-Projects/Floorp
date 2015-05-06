@@ -33,65 +33,65 @@ function f() {
         assertEqX4(SIMD.float32x4.load(u8,  (16 << 2) - (4 << 2)), [13,14,15,16]);
     }
 
-    function testLoadX() {
-        assertEqX4(SIMD.float32x4.loadX(f64, 0),      [1,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(f32, 1),      [2,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(i32, 2),      [3,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(i16, 3 << 1), [4,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(u16, 4 << 1), [5,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(i8 , 5 << 2), [6,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(u8 , 6 << 2), [7,0,0,0]);
+    function testLoad1() {
+        assertEqX4(SIMD.float32x4.load1(f64, 0),      [1,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(f32, 1),      [2,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(i32, 2),      [3,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(i16, 3 << 1), [4,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(u16, 4 << 1), [5,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(i8 , 5 << 2), [6,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(u8 , 6 << 2), [7,0,0,0]);
 
-        assertEqX4(SIMD.float32x4.loadX(f64, (16 >> 1) - (4 >> 1)), [13,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(f32, 16 - 4),               [13,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(i32, 16 - 4),               [13,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(i16, (16 << 1) - (4 << 1)), [13,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(u16, (16 << 1) - (4 << 1)), [13,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(i8,  (16 << 2) - (4 << 2)), [13,0,0,0]);
-        assertEqX4(SIMD.float32x4.loadX(u8,  (16 << 2) - (4 << 2)), [13,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(f64, (16 >> 1) - (4 >> 1)), [13,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(f32, 16 - 4),               [13,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(i32, 16 - 4),               [13,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(i16, (16 << 1) - (4 << 1)), [13,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(u16, (16 << 1) - (4 << 1)), [13,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(i8,  (16 << 2) - (4 << 2)), [13,0,0,0]);
+        assertEqX4(SIMD.float32x4.load1(u8,  (16 << 2) - (4 << 2)), [13,0,0,0]);
     }
 
-    function testLoadXY() {
-        assertEqX4(SIMD.float32x4.loadXY(f64, 0),      [1,2,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(f32, 1),      [2,3,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(i32, 2),      [3,4,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(i16, 3 << 1), [4,5,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(u16, 4 << 1), [5,6,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(i8 , 5 << 2), [6,7,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(u8 , 6 << 2), [7,8,0,0]);
+    function testLoad2() {
+        assertEqX4(SIMD.float32x4.load2(f64, 0),      [1,2,0,0]);
+        assertEqX4(SIMD.float32x4.load2(f32, 1),      [2,3,0,0]);
+        assertEqX4(SIMD.float32x4.load2(i32, 2),      [3,4,0,0]);
+        assertEqX4(SIMD.float32x4.load2(i16, 3 << 1), [4,5,0,0]);
+        assertEqX4(SIMD.float32x4.load2(u16, 4 << 1), [5,6,0,0]);
+        assertEqX4(SIMD.float32x4.load2(i8 , 5 << 2), [6,7,0,0]);
+        assertEqX4(SIMD.float32x4.load2(u8 , 6 << 2), [7,8,0,0]);
 
-        assertEqX4(SIMD.float32x4.loadXY(f64, (16 >> 1) - (4 >> 1)), [13,14,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(f32, 16 - 4),               [13,14,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(i32, 16 - 4),               [13,14,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(i16, (16 << 1) - (4 << 1)), [13,14,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(u16, (16 << 1) - (4 << 1)), [13,14,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(i8,  (16 << 2) - (4 << 2)), [13,14,0,0]);
-        assertEqX4(SIMD.float32x4.loadXY(u8,  (16 << 2) - (4 << 2)), [13,14,0,0]);
+        assertEqX4(SIMD.float32x4.load2(f64, (16 >> 1) - (4 >> 1)), [13,14,0,0]);
+        assertEqX4(SIMD.float32x4.load2(f32, 16 - 4),               [13,14,0,0]);
+        assertEqX4(SIMD.float32x4.load2(i32, 16 - 4),               [13,14,0,0]);
+        assertEqX4(SIMD.float32x4.load2(i16, (16 << 1) - (4 << 1)), [13,14,0,0]);
+        assertEqX4(SIMD.float32x4.load2(u16, (16 << 1) - (4 << 1)), [13,14,0,0]);
+        assertEqX4(SIMD.float32x4.load2(i8,  (16 << 2) - (4 << 2)), [13,14,0,0]);
+        assertEqX4(SIMD.float32x4.load2(u8,  (16 << 2) - (4 << 2)), [13,14,0,0]);
     }
 
-    function testLoadXYZ() {
-        assertEqX4(SIMD.float32x4.loadXYZ(f64, 0),      [1,2,3,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(f32, 1),      [2,3,4,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(i32, 2),      [3,4,5,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(i16, 3 << 1), [4,5,6,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(u16, 4 << 1), [5,6,7,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(i8 , 5 << 2), [6,7,8,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(u8 , 6 << 2), [7,8,9,0]);
+    function testLoad3() {
+        assertEqX4(SIMD.float32x4.load3(f64, 0),      [1,2,3,0]);
+        assertEqX4(SIMD.float32x4.load3(f32, 1),      [2,3,4,0]);
+        assertEqX4(SIMD.float32x4.load3(i32, 2),      [3,4,5,0]);
+        assertEqX4(SIMD.float32x4.load3(i16, 3 << 1), [4,5,6,0]);
+        assertEqX4(SIMD.float32x4.load3(u16, 4 << 1), [5,6,7,0]);
+        assertEqX4(SIMD.float32x4.load3(i8 , 5 << 2), [6,7,8,0]);
+        assertEqX4(SIMD.float32x4.load3(u8 , 6 << 2), [7,8,9,0]);
 
-        assertEqX4(SIMD.float32x4.loadXYZ(f64, (16 >> 1) - (4 >> 1)), [13,14,15,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(f32, 16 - 4),               [13,14,15,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(i32, 16 - 4),               [13,14,15,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(i16, (16 << 1) - (4 << 1)), [13,14,15,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(u16, (16 << 1) - (4 << 1)), [13,14,15,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(i8,  (16 << 2) - (4 << 2)), [13,14,15,0]);
-        assertEqX4(SIMD.float32x4.loadXYZ(u8,  (16 << 2) - (4 << 2)), [13,14,15,0]);
+        assertEqX4(SIMD.float32x4.load3(f64, (16 >> 1) - (4 >> 1)), [13,14,15,0]);
+        assertEqX4(SIMD.float32x4.load3(f32, 16 - 4),               [13,14,15,0]);
+        assertEqX4(SIMD.float32x4.load3(i32, 16 - 4),               [13,14,15,0]);
+        assertEqX4(SIMD.float32x4.load3(i16, (16 << 1) - (4 << 1)), [13,14,15,0]);
+        assertEqX4(SIMD.float32x4.load3(u16, (16 << 1) - (4 << 1)), [13,14,15,0]);
+        assertEqX4(SIMD.float32x4.load3(i8,  (16 << 2) - (4 << 2)), [13,14,15,0]);
+        assertEqX4(SIMD.float32x4.load3(u8,  (16 << 2) - (4 << 2)), [13,14,15,0]);
     }
 
     for (var i = 0; i < 150; i++) {
         testLoad();
-        testLoadX();
-        testLoadXY();
-        testLoadXYZ();
+        testLoad1();
+        testLoad2();
+        testLoad3();
     }
 }
 

@@ -123,3 +123,6 @@ pref(dom.image.srcset.enabled,true) == image-srcset-svg-2x.html image-srcset-svg
 pref(dom.image.srcset.enabled,true) == image-srcset-svg-1x.html image-srcset-svg-1x-ref.html
 pref(dom.image.srcset.enabled,true) == image-srcset-svg-default-2x.html image-srcset-svg-default-2x-ref.html
 pref(dom.image.srcset.enabled,true) == image-srcset-svg-default-1x.html image-srcset-svg-default-1x-ref.html
+
+== image-resize-percent-height.html image-resize-ref.html
+== image-resize-percent-width.html image-resize-ref.html
