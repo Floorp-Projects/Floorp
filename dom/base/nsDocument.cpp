@@ -270,14 +270,14 @@ nsIdentifierMapEntry::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 bool
 nsIdentifierMapEntry::IsEmpty()
 {
-  return mIdContentList.Count() == 0 && !mNameContentList &&
+  return mIdContentList.IsEmpty() && !mNameContentList &&
          !mChangeCallbacks && !mImageElement;
 }
 
 Element*
 nsIdentifierMapEntry::GetIdElement()
 {
-  return static_cast<Element*>(mIdContentList.SafeElementAt(0));
+  return mIdContentList.SafeElementAt(0);
 }
 
 Element*
@@ -289,8 +289,8 @@ nsIdentifierMapEntry::GetImageIdElement()
 void
 nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<nsIContent>* aElements)
 {
-  for (int32_t i = 0; i < mIdContentList.Count(); ++i) {
-    aElements->AppendObject(static_cast<Element*>(mIdContentList[i]));
+  for (size_t i = 0; i < mIdContentList.Length(); ++i) {
+    aElements->AppendObject(mIdContentList[i]);
   }
 }
 
@@ -592,16 +592,15 @@ bool
 nsIdentifierMapEntry::AddIdElement(Element* aElement)
 {
   NS_PRECONDITION(aElement, "Must have element");
-  NS_PRECONDITION(mIdContentList.IndexOf(nullptr) < 0,
+  NS_PRECONDITION(!mIdContentList.Contains(nullptr),
                   "Why is null in our list?");
 
 #ifdef DEBUG
-  Element* currentElement =
-    static_cast<Element*>(mIdContentList.SafeElementAt(0));
+  Element* currentElement = mIdContentList.SafeElementAt(0);
 #endif
 
   // Common case
-  if (mIdContentList.Count() == 0) {
+  if (mIdContentList.IsEmpty()) {
     if (!mIdContentList.AppendElement(aElement))
       return false;
     NS_ASSERTION(currentElement == nullptr, "How did that happen?");
@@ -613,7 +612,7 @@ nsIdentifierMapEntry::AddIdElement(Element* aElement)
   // with us.  Search for the right place to insert the content.
 
   size_t idx;
-  if (BinarySearchIf(mIdContentList, 0, mIdContentList.Count(),
+  if (BinarySearchIf(mIdContentList, 0, mIdContentList.Length(),
                      PositionComparator(aElement), &idx)) {
     // Already in the list, so already in the right spot.  Get out of here.
     // XXXbz this only happens because XUL does all sorts of random
@@ -621,12 +620,12 @@ nsIdentifierMapEntry::AddIdElement(Element* aElement)
     return true;
   }
 
-  if (!mIdContentList.InsertElementAt(aElement, idx))
+  if (!mIdContentList.InsertElementAt(idx, aElement)) {
     return false;
+  }
 
   if (idx == 0) {
-    Element* oldElement =
-      static_cast<Element*>(mIdContentList.SafeElementAt(1));
+    Element* oldElement = mIdContentList.SafeElementAt(1);
     NS_ASSERTION(currentElement == oldElement, "How did that happen?");
     FireChangeCallbacks(oldElement, aElement);
   }
@@ -645,17 +644,15 @@ nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
   // Only assert this in HTML documents for now as XUL does all sorts of weird
   // crap.
   NS_ASSERTION(!aElement->OwnerDoc()->IsHTMLDocument() ||
-               mIdContentList.IndexOf(aElement) >= 0,
+               mIdContentList.Contains(aElement),
                "Removing id entry that doesn't exist");
 
   // XXXbz should this ever Compact() I guess when all the content is gone
   // we'll just get cleaned up in the natural order of things...
-  Element* currentElement =
-    static_cast<Element*>(mIdContentList.SafeElementAt(0));
+  Element* currentElement = mIdContentList.SafeElementAt(0);
   mIdContentList.RemoveElement(aElement);
   if (currentElement == aElement) {
-    FireChangeCallbacks(currentElement,
-                        static_cast<Element*>(mIdContentList.SafeElementAt(0)));
+    FireChangeCallbacks(currentElement, mIdContentList.SafeElementAt(0));
   }
 }
 
@@ -5048,7 +5045,7 @@ nsDocument::GetElementById(const nsAString& aElementId)
   return entry ? entry->GetIdElement() : nullptr;
 }
 
-const nsSmallVoidArray*
+const nsTArray<Element*>*
 nsDocument::GetAllElementsForId(const nsAString& aElementId) const
 {
   if (aElementId.IsEmpty()) {
@@ -5056,7 +5053,7 @@ nsDocument::GetAllElementsForId(const nsAString& aElementId) const
   }
 
   nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aElementId);
-  return entry ? entry->GetIdElements() : nullptr;
+  return entry ? &entry->GetIdElements() : nullptr;
 }
 
 NS_IMETHODIMP
