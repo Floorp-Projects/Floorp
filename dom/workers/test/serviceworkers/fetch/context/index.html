@@ -326,10 +326,6 @@
   }
 
   function testCache() {
-    if (isAndroid) {
-      // FIXME: Re-enable this test on Android once bug 1148818 gets fixed.
-      return Promise.resolve();
-    }
     return new Promise(function(resolve, reject) {
       // Issue an XHR that will be intercepted by the SW in order to start off
       // the test with a RequestContext value that is not the default ("fetch").

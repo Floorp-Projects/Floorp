@@ -153,6 +153,13 @@ function legacyRequest (target, actor, method, args) {
  */
 function actorCompatibilityBridge (method) {
   return function () {
+    // If there's no target or client on this actor facade,
+    // abort silently -- this occurs in tests when polling occurs
+    // after the test ends, when tests do not wait for toolbox destruction
+    // (which will destroy the actor facade, turning off the polling).
+    if (!this._target || !this._target.client) {
+      return;
+    }
     // Check to see if this is a modern ActorFront, which has its
     // own `request` method. Also, check if its a mock actor, as it mimicks
     // the ActorFront interface.

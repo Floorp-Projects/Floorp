@@ -130,10 +130,10 @@ add_test(function test_ping_websocket() {
   mockWebSocket.defaultMsgHandler = (msg) => {
     pingReceived = true;
     // Do not send a ping response.
-  }
+  };
   mockWebSocket.close = () => {
     socketClosed = true;
-  }
+  };
 
   MozLoopPushHandler.shutdown();
   MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket});
@@ -220,4 +220,4 @@ function run_test() {
   });
 
   run_next_test();
-};
+}

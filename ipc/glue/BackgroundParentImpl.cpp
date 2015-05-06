@@ -262,7 +262,8 @@ BackgroundParentImpl::AllocPBroadcastChannelParent(
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  return new BroadcastChannelParent(aOrigin, aChannel, aPrivateBrowsing);
+  return new BroadcastChannelParent(aPrincipalInfo, aOrigin, aChannel,
+                                    aPrivateBrowsing);
 }
 
 namespace {
@@ -313,47 +314,6 @@ public:
     if (NS_WARN_IF(NS_FAILED(rv)) || isNullPrincipal) {
       mContentParent->KillHard("BroadcastChannel killed: no null principal.");
       return NS_OK;
-    }
-
-    bool unknownAppId;
-    rv = principal->GetUnknownAppId(&unknownAppId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mContentParent->KillHard("BroadcastChannel killed: failed to get the app status.");
-      return NS_OK;
-    }
-
-    if (!unknownAppId) {
-      uint32_t appId;
-      rv = principal->GetAppId(&appId);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        mContentParent->KillHard("BroadcastChannel killed: failed to get the app id.");
-        return NS_OK;
-      }
-
-      // If the broadcastChannel is used by an app, the origin is the manifest URL.
-      if (appId != nsIScriptSecurityManager::NO_APP_ID) {
-        nsresult rv;
-        nsCOMPtr<nsIAppsService> appsService =
-          do_GetService("@mozilla.org/AppsService;1", &rv);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          mContentParent->KillHard("BroadcastChannel killed: appService getter failed.");
-          return NS_OK;
-        }
-
-        nsAutoString origin;
-        rv = appsService->GetManifestURLByLocalId(appId, origin);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          mContentParent->KillHard("BroadcastChannel killed: failed to retrieve the manifestURL.");
-          return NS_OK;
-        }
-
-        if (!origin.Equals(mOrigin)) {
-          mContentParent->KillHard("BroadcastChannel killed: origins do not match.");
-          return NS_OK;
-        }
-
-        return NS_OK;
-      }
     }
 
     nsCOMPtr<nsIURI> uri;
