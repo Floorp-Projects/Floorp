@@ -12,14 +12,24 @@
   SimpleTest.waitForExplicitFinish();
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
+  const MAX_ATTEMPTS = 5;
+  var attempts = 0;
   var destroyed = false;
   function onDestroy() {
     destroyed = true;
   }
 
   function checkPluginAlreadyDestroyed() {
-    is(destroyed, true, "Plugin instance should have been destroyed.");
-    SimpleTest.finish();
+    // We may need to retry a few times until the plugin stop event makes
+    // its way through the event queue.
+    if (attempts < MAX_ATTEMPTS && !destroyed) {
+      ++attempts;
+      SimpleTest.executeSoon(checkPluginAlreadyDestroyed);
+    } else {
+      info("Number of retry attempts: " + attempts);
+      is(destroyed, true, "Plugin instance should have been destroyed.");
+      SimpleTest.finish();
+    }
   }
 
   function startTest() {
@@ -27,10 +37,8 @@
     var d1 = document.getElementById('div1');
 
     p1.callOnDestroy(onDestroy);
-
-    setTimeout(checkPluginAlreadyDestroyed, 0);
-
     d1.removeChild(p1);
+    SimpleTest.executeSoon(checkPluginAlreadyDestroyed);
   }
   </script>
 
