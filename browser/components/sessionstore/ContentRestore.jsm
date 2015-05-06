@@ -36,9 +36,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
  * In a typical restore, content-sessionStore.js will call the following based
  * on messages and events it receives:
  *
- *   restoreHistory(epoch, tabData, callbacks)
+ *   restoreHistory(tabData, loadArguments, callbacks)
  *     Restores the tab's history and session cookies.
- *   restoreTabContent(finishCallback)
+ *   restoreTabContent(loadArguments, finishCallback)
  *     Starts loading the data for the current page to restore.
  *   restoreDocument()
  *     Restore form and scroll data.
@@ -54,11 +54,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
  * At any time, SessionStore.jsm can cancel the ongoing restore by sending a
  * reset message, which causes resetRestore to be called. At that point it's
  * legal to begin another restore.
- *
- * The epoch that is passed into restoreHistory is merely a token. All messages
- * sent back to SessionStore.jsm include the epoch. This way, SessionStore.jsm
- * can discard messages that relate to restores that it has canceled (by
- * starting a new restore, say).
  */
 function ContentRestore(chromeGlobal) {
   let internal = new ContentRestoreInternal(chromeGlobal);
@@ -67,8 +62,7 @@ function ContentRestore(chromeGlobal) {
   let EXPORTED_METHODS = ["restoreHistory",
                           "restoreTabContent",
                           "restoreDocument",
-                          "resetRestore",
-                          "getRestoreEpoch",
+                          "resetRestore"
                          ];
 
   for (let method of EXPORTED_METHODS) {
@@ -83,9 +77,6 @@ function ContentRestoreInternal(chromeGlobal) {
 
   // The following fields are only valid during certain phases of the restore
   // process.
-
-  // The epoch that was passed into restoreHistory. Removed in restoreDocument.
-  this._epoch = 0;
 
   // The tabData for the restore. Set in restoreHistory and removed in
   // restoreTabContent.
@@ -123,9 +114,8 @@ ContentRestoreInternal.prototype = {
    * non-zero) is passed through to all the callbacks. If a load in the tab
    * is started while it is pending, the appropriate callbacks are called.
    */
-  restoreHistory(epoch, tabData, loadArguments, callbacks) {
+  restoreHistory(tabData, loadArguments, callbacks) {
     this._tabData = tabData;
-    this._epoch = epoch;
 
     // In case about:blank isn't done yet.
     let webNavigation = this.docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -290,8 +280,6 @@ ContentRestoreInternal.prototype = {
    * called when the "load" event fires for the restoring tab.
    */
   restoreDocument: function () {
-    this._epoch = 0;
-
     if (!this._restoringDocument) {
       return;
     }
@@ -327,15 +315,7 @@ ContentRestoreInternal.prototype = {
       this._progressListener.uninstall();
     }
     this._progressListener = null;
-  },
-
-  /**
-   * If a restore is ongoing, this function returns the value of |epoch| that
-   * was passed to restoreHistory. If no restore is ongoing, it returns 0.
-   */
-  getRestoreEpoch: function () {
-    return this._epoch;
-  },
+  }
 };
 
 /*
