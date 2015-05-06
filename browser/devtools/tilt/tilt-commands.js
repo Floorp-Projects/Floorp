@@ -48,20 +48,27 @@ exports.items = [
   hidden: true,
   state: {
     isChecked: function(aTarget) {
+      if (!aTarget.tab) {
+        return false;
+      }
       let browserWindow = aTarget.tab.ownerDocument.defaultView;
       return !!TiltManager.getTiltForBrowser(browserWindow).currentInstance;
     },
     onChange: function(aTarget, aChangeHandler) {
+      if (!aTarget.tab) {
+        return;
+      }
       let browserWindow = aTarget.tab.ownerDocument.defaultView;
       let tilt = TiltManager.getTiltForBrowser(browserWindow);
       tilt.on("change", aChangeHandler);
     },
     offChange: function(aTarget, aChangeHandler) {
-      if (aTarget.tab) {
-        let browserWindow = aTarget.tab.ownerDocument.defaultView;
-        let tilt = TiltManager.getTiltForBrowser(browserWindow);
-        tilt.off("change", aChangeHandler);
+      if (!aTarget.tab) {
+        return;
       }
+      let browserWindow = aTarget.tab.ownerDocument.defaultView;
+      let tilt = TiltManager.getTiltForBrowser(browserWindow);
+      tilt.off("change", aChangeHandler);
     },
   },
   exec: function(args, context) {
