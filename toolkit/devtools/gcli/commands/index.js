@@ -79,9 +79,14 @@ exports.devtoolsModules = [
  * Register commands from tools with 'command: [ "some/module" ]' definitions.
  * The map/reduce incantation squashes the array of arrays to a single array.
  */
-const defaultTools = require("definitions").defaultTools;
-exports.devtoolsToolModules = defaultTools.map(def => def.commands || [])
-                                 .reduce((prev, curr) => prev.concat(curr), []);
+try {
+  const defaultTools = require("definitions").defaultTools;
+  exports.devtoolsToolModules = defaultTools.map(def => def.commands || [])
+                                   .reduce((prev, curr) => prev.concat(curr), []);
+} catch(e) {
+  // "definitions" is only accessible from Firefox
+  exports.devtoolsToolModules = [];
+}
 
 /**
  * Add modules to a system for use in a content process (but don't call load)

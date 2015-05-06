@@ -717,9 +717,12 @@ Toolbox.prototype = {
       this._buildPickerButton();
     }
 
-    // Set the visibility of the built in buttons before adding more buttons
-    // so they are shown before calling into the GCLI actor.
     this.setToolboxButtonsVisibility();
+
+    // Old servers don't have a GCLI Actor, so just return
+    if (!this.target.hasActor("gcli")) {
+      return promise.resolve();
+    }
 
     const options = {
       environment: CommandUtils.createEnvironment(this, '_target')
