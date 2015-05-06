@@ -823,7 +823,7 @@ InitClass(JSContext* cx, HandleObject obj, HandleObject parent_proto,
           const JSPropertySpec* ps, const JSFunctionSpec* fs,
           const JSPropertySpec* static_ps, const JSFunctionSpec* static_fs,
           NativeObject** ctorp = nullptr,
-          gc::AllocKind ctorKind = JSFunction::FinalizeKind);
+          gc::AllocKind ctorKind = gc::AllocKind::FUNCTION);
 
 } /* namespace js */
 

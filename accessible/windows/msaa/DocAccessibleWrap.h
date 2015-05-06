@@ -34,12 +34,30 @@ public:
   // DocAccessible
   virtual void* GetNativeWindow() const;
 
+  /**
+   * Manage the mapping from id to Accessible.
+   */
+#ifdef _WIN64
+  void AddID(uint32_t aID, AccessibleWrap* aAcc)
+    { mIDToAccessibleMap.Put(aID, aAcc); }
+  void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
+  AccessibleWrap* GetAccessibleByID(uint32_t aID) const
+    { return mIDToAccessibleMap.Get(aID); }
+#endif
+
 protected:
   // DocAccessible
   virtual void DoInitialUpdate();
 
 protected:
   void* mHWND;
+
+  /*
+   * This provides a mapping from 32 bit id to accessible objects.
+   */
+#ifdef _WIN64
+  nsDataHashtable<nsUint32HashKey, AccessibleWrap*> mIDToAccessibleMap;
+#endif
 };
 
 } // namespace a11y

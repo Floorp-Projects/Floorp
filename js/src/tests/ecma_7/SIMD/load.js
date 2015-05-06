@@ -51,7 +51,7 @@ function MakeComparator(kind, arr, shared) {
         var asArray = Array.prototype.slice.call(uint8, startBytes, endBytes);
 
         // If length is less than SIZE_BYTES bytes, fill with 0.
-        // This is needed for loadX, loadXY, loadXYZ which do only partial
+        // This is needed for load1, load2, load3 which do only partial
         // reads.
         for (var i = asArray.length; i < SIZE_BYTES; i++) asArray[i] = 0;
         assertEq(asArray.length, SIZE_BYTES);
@@ -62,22 +62,22 @@ function MakeComparator(kind, arr, shared) {
     var assertFunc = (lanes == 2) ? assertEqX2 : assertEqX4;
     var type = SIMD[kind];
     return {
-        loadX: function(index) {
-            var v = type.loadX(arr, index);
+        load1: function(index) {
+            var v = type.load1(arr, index);
             assertFunc(v, slice(index, 1));
         },
 
-        loadXY: function(index) {
+        load2: function(index) {
             if (lanes < 4)
                 return;
-            var v = type.loadXY(arr, index);
+            var v = type.load2(arr, index);
             assertFunc(v, slice(index, 2));
         },
 
-       loadXYZ: function(index) {
+       load3: function(index) {
            if (lanes < 4)
                return;
-           var v = type.loadXYZ(arr, index);
+           var v = type.load3(arr, index);
            assertFunc(v, slice(index, 3));
         },
 
@@ -114,9 +114,9 @@ function testLoad(kind, TA) {
         var C = MakeComparator(kind, ta);
         var bpe = ta.BYTES_PER_ELEMENT;
 
-        var lastValidArgLoadX   = (SIZE_BYTES - (lanes == 4 ? 4 : 8))  / bpe | 0;
-        var lastValidArgLoadXY  = (SIZE_BYTES - 8)  / bpe | 0;
-        var lastValidArgLoadXYZ = (SIZE_BYTES - 12) / bpe | 0;
+        var lastValidArgLoad1   = (SIZE_BYTES - (lanes == 4 ? 4 : 8))  / bpe | 0;
+        var lastValidArgLoad2   = (SIZE_BYTES - 8)  / bpe | 0;
+        var lastValidArgLoad3   = (SIZE_BYTES - 12) / bpe | 0;
         var lastValidArgLoad    = (SIZE_BYTES - 16) / bpe | 0;
 
         C.load(0);
@@ -126,28 +126,28 @@ function testLoad(kind, TA) {
         C.load(lastValidArgLoad);
         assertThrowsInstanceOf(() => SIMD[kind].load(ta, lastValidArgLoad + 1), RangeError);
 
-        C.loadX(0);
-        C.loadX(1);
-        C.loadX(2);
-        C.loadX(3);
-        C.loadX(lastValidArgLoadX);
-        assertThrowsInstanceOf(() => SIMD[kind].loadX(ta, lastValidArgLoadX + 1), RangeError);
+        C.load1(0);
+        C.load1(1);
+        C.load1(2);
+        C.load1(3);
+        C.load1(lastValidArgLoad1);
+        assertThrowsInstanceOf(() => SIMD[kind].load1(ta, lastValidArgLoad1 + 1), RangeError);
 
-        C.loadXY(0);
-        C.loadXY(1);
-        C.loadXY(2);
-        C.loadXY(3);
-        C.loadXY(lastValidArgLoadXY);
+        C.load2(0);
+        C.load2(1);
+        C.load2(2);
+        C.load2(3);
+        C.load2(lastValidArgLoad2);
 
-        C.loadXYZ(0);
-        C.loadXYZ(1);
-        C.loadXYZ(2);
-        C.loadXYZ(3);
-        C.loadXYZ(lastValidArgLoadXYZ);
+        C.load3(0);
+        C.load3(1);
+        C.load3(2);
+        C.load3(3);
+        C.load3(lastValidArgLoad3);
 
         if (lanes >= 4) {
-            assertThrowsInstanceOf(() => SIMD[kind].loadXY(ta, lastValidArgLoadXY + 1), RangeError);
-            assertThrowsInstanceOf(() => SIMD[kind].loadXYZ(ta, lastValidArgLoadXYZ + 1), RangeError);
+            assertThrowsInstanceOf(() => SIMD[kind].load2(ta, lastValidArgLoad2 + 1), RangeError);
+            assertThrowsInstanceOf(() => SIMD[kind].load3(ta, lastValidArgLoad3 + 1), RangeError);
         }
     }
 
@@ -191,14 +191,14 @@ function testSharedArrayBufferCompat() {
         for (var kind of ['int32x4', 'float32x4', 'float64x2']) {
             var comp = MakeComparator(kind, ta);
             comp.load(0);
-            comp.loadX(0);
-            comp.loadXY(0);
-            comp.loadXYZ(0);
+            comp.load1(0);
+            comp.load2(0);
+            comp.load3(0);
 
             comp.load(3);
-            comp.loadX(3);
-            comp.loadXY(3);
-            comp.loadXYZ(3);
+            comp.load1(3);
+            comp.load2(3);
+            comp.load3(3);
         }
 
         assertThrowsInstanceOf(() => SIMD.int32x4.load(ta, 1024), RangeError);
