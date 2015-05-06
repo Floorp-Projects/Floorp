@@ -1910,12 +1910,24 @@ MediaDecoderStateMachine::InitiateSeek()
   Reset();
 
   // Do the seek.
+  nsRefPtr<MediaDecoderStateMachine> self = this;
   mSeekRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                     &MediaDecoderReader::Seek, mCurrentSeek.mTarget.mTime,
                                     GetEndTime())
-    ->RefableThen(TaskQueue(), __func__, this,
-                  &MediaDecoderStateMachine::OnSeekCompleted,
-                  &MediaDecoderStateMachine::OnSeekFailed));
+    ->RefableThen(TaskQueue(), __func__,
+                  [self] (int64_t) -> void {
+                    ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+                    self->mSeekRequest.Complete();
+                    // We must decode the first samples of active streams, so we can determine
+                    // the new stream time. So dispatch tasks to do that.
+                    self->mDecodeToSeekTarget = true;
+                    self->DispatchDecodeTasksIfNeeded();
+                  }, [self] (nsresult aResult) -> void {
+                    ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+                    self->mSeekRequest.Complete();
+                    MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
+                    self->DecodeError();
+                  }));
 }
 
 nsresult
@@ -2393,30 +2405,6 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   }
 
   return NS_OK;
-}
-
-void
-MediaDecoderStateMachine::OnSeekCompleted(int64_t aTime)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  mSeekRequest.Complete();
-
-  // We must decode the first samples of active streams, so we can determine
-  // the new stream time. So dispatch tasks to do that.
-  mDecodeToSeekTarget = true;
-
-  DispatchDecodeTasksIfNeeded();
-}
-
-void
-MediaDecoderStateMachine::OnSeekFailed(nsresult aResult)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  mSeekRequest.Complete();
-  MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
-  DecodeError();
 }
 
 void
