@@ -229,6 +229,8 @@
 #include "mozilla/dom/BoxObject.h"
 #include "gfxVR.h"
 
+#include "nsISpeculativeConnect.h"
+
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "mozilla/MediaManager.h"
 #endif // MOZ_MEDIA_NAVIGATOR
@@ -5096,6 +5098,10 @@ nsDocument::DispatchContentLoadedEvents()
   // Unpin references to preloaded images
   mPreloadingImages.Clear();
 
+  // DOM manipulation after content loaded should not care if the element
+  // came from the preloader.
+  mPreloadedPreconnects.Clear();
+
   if (mTiming) {
     mTiming->NotifyDOMContentLoadedStart(nsIDocument::GetDocumentURI());
   }
@@ -9808,6 +9814,23 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr,
   if (NS_SUCCEEDED(rv)) {
     mPreloadingImages.Put(uri, request.forget());
   }
+}
+
+void
+nsDocument::MaybePreconnect(nsIURI* uri)
+{
+  if (mPreloadedPreconnects.Contains(uri)) {
+    return;
+  }
+  mPreloadedPreconnects.Put(uri, true);
+
+  nsCOMPtr<nsISpeculativeConnect>
+    speculator(do_QueryInterface(nsContentUtils::GetIOService()));
+  if (!speculator) {
+    return;
+  }
+
+  speculator->SpeculativeConnect(uri, nullptr);
 }
 
 void
