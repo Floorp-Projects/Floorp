@@ -26,6 +26,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         '../printingui/win',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    DEFINES['PROXY_PRINTING'] = 1
     LOCAL_INCLUDES += [
         '../printingui/mac',
     ]
