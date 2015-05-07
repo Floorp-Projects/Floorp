@@ -6734,7 +6734,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         Address initLength(elements, ObjectElements::offsetOfInitializedLength());
         masm.branchKey(Assembler::NotEqual, initLength, ToInt32Key(index), &callStub);
     } else {
-        Address initLength(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
+        Address initLength(object, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
         masm.load32(initLength, ToRegister(temp));
         masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), ToRegister(temp));
         masm.branchKey(Assembler::NotEqual, ToRegister(temp), ToInt32Key(index), &callStub);
