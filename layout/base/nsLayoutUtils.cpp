@@ -7732,44 +7732,22 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
   }
   nsIPresShell* rootPresShell = nullptr;
   if (rootPresContext) {
-    // See the comments in the code that calculates the root
-    // composition bounds in RecordFrameMetrics.
-    // TODO: Reuse that code here.
-    nsIPresShell* rootPresShell = rootPresContext->PresShell();
+    rootPresShell = rootPresContext->PresShell();
     if (nsIFrame* rootFrame = rootPresShell->GetRootFrame()) {
       LayoutDeviceToLayerScale2D cumulativeResolution(
         rootPresShell->GetCumulativeResolution()
       * nsLayoutUtils::GetTransformToAncestorScale(rootFrame));
-      int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
-      LayerSize frameSize =
-        (LayoutDeviceRect::FromAppUnits(rootFrame->GetRect(), rootAUPerDevPixel)
-         * cumulativeResolution).Size();
-      rootCompositionSize = frameSize * LayerToScreenScale(1.0f);
-#ifdef MOZ_WIDGET_ANDROID
-      nsIWidget* widget = rootFrame->GetNearestWidget();
-#else
-      nsView* view = rootFrame->GetView();
-      nsIWidget* widget = view ? view->GetWidget() : nullptr;
-#endif
-      if (widget) {
-        nsIntRect widgetBounds;
-        widget->GetBounds(widgetBounds);
-        rootCompositionSize = ScreenSize(ViewAs<ScreenPixel>(widgetBounds.Size()));
-#ifdef MOZ_WIDGET_ANDROID
-        if (frameSize.height < rootCompositionSize.height) {
-          rootCompositionSize.height = frameSize.height;
-        }
-#endif
+      ParentLayerRect compBounds;
+      if (UpdateCompositionBoundsForRCDRSF(compBounds, rootPresContext,
+          rootFrame->GetRect(), true, cumulativeResolution)) {
+        rootCompositionSize = ViewAs<ScreenPixel>(compBounds.Size(),
+            PixelCastJustification::ScreenIsParentLayerForRoot);
       } else {
-        LayoutDeviceIntSize contentSize;
-        if (nsLayoutUtils::GetContentViewerSize(rootPresContext, contentSize)) {
-          LayoutDeviceToLayerScale scale;
-          if (rootPresContext->GetParentPresContext()) {
-            float res = rootPresContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
-            scale = LayoutDeviceToLayerScale(res);
-          }
-          rootCompositionSize = contentSize * scale * LayerToScreenScale(1.0f);
-        }
+        int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
+        LayerSize frameSize =
+          (LayoutDeviceRect::FromAppUnits(rootFrame->GetRect(), rootAUPerDevPixel)
+           * cumulativeResolution).Size();
+        rootCompositionSize = frameSize * LayerToScreenScale(1.0f);
       }
     }
   } else {
