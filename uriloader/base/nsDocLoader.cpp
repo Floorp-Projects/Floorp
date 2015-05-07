@@ -37,7 +37,6 @@
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
 
-#if defined(PR_LOGGING)
 //
 // Log module for nsIDocumentLoader logging...
 //
@@ -50,7 +49,6 @@ static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
 // the file nspr.log
 //
 PRLogModuleInfo* gDocLoaderLog = nullptr;
-#endif /* PR_LOGGING */
 
 
 #if defined(DEBUG)
@@ -105,11 +103,9 @@ nsDocLoader::nsDocLoader()
     mDontFlushLayout(false),
     mIsFlushingLayout(false)
 {
-#if defined(PR_LOGGING)
   if (nullptr == gDocLoaderLog) {
       gDocLoaderLog = PR_NewLogModule("DocLoader");
   }
-#endif /* PR_LOGGING */
 
   static const PLDHashTableOps hash_table_ops =
   {
@@ -402,7 +398,6 @@ nsDocLoader::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 {
   // called each time a request is added to the group.
 
-#ifdef PR_LOGGING
   if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
     nsAutoCString name;
     request->GetName(name);
@@ -417,7 +412,7 @@ nsDocLoader::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
             (mIsLoadingDocument ? "true" : "false"),
             count));
   }
-#endif /* PR_LOGGING */
+
   bool bJustStartedLoading = false;
 
   nsLoadFlags loadFlags = 0;
@@ -483,7 +478,6 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
 {
   nsresult rv = NS_OK;
 
-#ifdef PR_LOGGING
   if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
     nsAutoCString name;
     aRequest->GetName(name);
@@ -498,7 +492,6 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
            aStatus, (mIsLoadingDocument ? "true" : "false"),
            count));
   }
-#endif
 
   bool bFireTransferring = false;
 

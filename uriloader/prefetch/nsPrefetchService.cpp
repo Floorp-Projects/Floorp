@@ -32,7 +32,6 @@
 
 using namespace mozilla;
 
-#if defined(PR_LOGGING)
 //
 // To enable logging (see prlog.h for full details):
 //
@@ -43,7 +42,6 @@ using namespace mozilla;
 // the file http.log
 //
 static PRLogModuleInfo *gPrefetchLog;
-#endif
 
 #undef LOG
 #define LOG(args) PR_LOG(gPrefetchLog, 4, args)
@@ -410,10 +408,8 @@ nsPrefetchService::~nsPrefetchService()
 nsresult
 nsPrefetchService::Init()
 {
-#if defined(PR_LOGGING)
     if (!gPrefetchLog)
         gPrefetchLog = PR_NewLogModule("nsPrefetch");
-#endif
 
     nsresult rv;
 
@@ -449,13 +445,11 @@ nsPrefetchService::ProcessNextURI()
 
         if (NS_FAILED(rv)) break;
 
-#if defined(PR_LOGGING)
         if (LOG_ENABLED()) {
             nsAutoCString spec;
             mCurrentNode->mURI->GetSpec(spec);
             LOG(("ProcessNextURI [%s]\n", spec.get()));
         }
-#endif
 
         //
         // if opening the channel fails, then just skip to the next uri
@@ -636,13 +630,11 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     NS_ENSURE_ARG_POINTER(aURI);
     NS_ENSURE_ARG_POINTER(aReferrerURI);
 
-#if defined(PR_LOGGING)
     if (LOG_ENABLED()) {
         nsAutoCString spec;
         aURI->GetSpec(spec);
         LOG(("PrefetchURI [%s]\n", spec.get()));
     }
-#endif
 
     if (mDisabled) {
         LOG(("rejected: prefetch service is disabled\n"));

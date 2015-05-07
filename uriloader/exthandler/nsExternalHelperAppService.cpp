@@ -122,9 +122,7 @@ enum {
 , NS_FOLDER_VALUE_CUSTOM = 2
 };
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* nsExternalHelperAppService::mLog = nullptr;
-#endif
 
 // Using level 3 here because the OSHelperAppServices use a log level
 // of PR_LOG_DEBUG (4), and we want less detailed output here
@@ -591,13 +589,11 @@ nsresult nsExternalHelperAppService::Init()
   if (!obs)
     return NS_ERROR_FAILURE;
 
-#ifdef PR_LOGGING
   if (!mLog) {
     mLog = PR_NewLogModule("HelperAppService");
     if (!mLog)
       return NS_ERROR_OUT_OF_MEMORY;
   }
-#endif
 
   nsresult rv = obs->AddObserver(this, "profile-before-change", true);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1612,12 +1608,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     nsresult transferError = rv;
 
     rv = CreateFailedTransfer(aChannel && NS_UsePrivateBrowsing(aChannel));
-#ifdef PR_LOGGING
     if (NS_FAILED(rv)) {
       LOG(("Failed to create transfer to report failure."
            "Will fallback to prompter!"));
     }
-#endif
 
     mCanceled = true;
     request->Cancel(transferError);
@@ -2637,7 +2631,6 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
       (*_retval)->SetPrimaryExtension(aFileExt);
   }
 
-#ifdef PR_LOGGING
   if (LOG_ENABLED()) {
     nsAutoCString type;
     (*_retval)->GetMIMEType(type);
@@ -2646,7 +2639,6 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
     (*_retval)->GetPrimaryExtension(ext);
     LOG(("MIME Info Summary: Type '%s', Primary Ext '%s'\n", type.get(), ext.get()));
   }
-#endif
 
   return NS_OK;
 }
