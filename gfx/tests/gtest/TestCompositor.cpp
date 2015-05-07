@@ -33,11 +33,11 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD              GetClientBounds(nsIntRect &aRect) override {
-    aRect = nsIntRect(0, 0, gCompWidth, gCompHeight);
+  NS_IMETHOD              GetClientBounds(IntRect &aRect) override {
+    aRect = IntRect(0, 0, gCompWidth, gCompHeight);
     return NS_OK;
   }
-  NS_IMETHOD              GetBounds(nsIntRect &aRect) override { return GetClientBounds(aRect); }
+  NS_IMETHOD              GetBounds(IntRect &aRect) override { return GetClientBounds(aRect); }
 
   void* GetNativeData(uint32_t aDataType) override {
     if (aDataType == NS_NATIVE_OPENGL_CONTEXT) {
@@ -53,7 +53,7 @@ public:
 
   NS_IMETHOD              Create(nsIWidget *aParent,
                                  nsNativeWidget aNativeParent,
-                                 const nsIntRect &aRect,
+                                 const IntRect &aRect,
                                  nsWidgetInitData *aInitData = nullptr) override { return NS_OK; }
   NS_IMETHOD              Show(bool aState) override { return NS_OK; }
   virtual bool            IsVisible() const override { return true; }
@@ -68,7 +68,7 @@ public:
   virtual bool            IsEnabled() const override { return true; }
   NS_IMETHOD              SetFocus(bool aRaise) override { return NS_OK; }
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override { return NS_OK; }
-  NS_IMETHOD              Invalidate(const nsIntRect &aRect) override { return NS_OK; }
+  NS_IMETHOD              Invalidate(const IntRect &aRect) override { return NS_OK; }
   NS_IMETHOD              SetTitle(const nsAString& title) override { return NS_OK; }
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override { return LayoutDeviceIntPoint(0, 0); }
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
@@ -182,7 +182,7 @@ static bool CompositeAndCompare(nsRefPtr<LayerManagerComposite> layerManager, Dr
 {
   RefPtr<DrawTarget> drawTarget = CreateDT();
 
-  layerManager->BeginTransactionWithDrawTarget(drawTarget, nsIntRect(0, 0, gCompWidth, gCompHeight));
+  layerManager->BeginTransactionWithDrawTarget(drawTarget, IntRect(0, 0, gCompWidth, gCompHeight));
   layerManager->EndEmptyTransaction();
 
   RefPtr<SourceSurface> ss = drawTarget->Snapshot();
@@ -231,10 +231,10 @@ TEST(Gfx, CompositorSimpleTree)
     nsRefPtr<LayerManager> lmBase = layerManager.get();
     nsTArray<nsRefPtr<Layer>> layers;
     nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(nsIntRect(0, 0, gCompWidth, gCompHeight)),
-      nsIntRegion(nsIntRect(0, 0, gCompWidth, gCompHeight)),
-      nsIntRegion(nsIntRect(0, 0, 100, 100)),
-      nsIntRegion(nsIntRect(0, 50, 100, 100)),
+      nsIntRegion(IntRect(0, 0, gCompWidth, gCompHeight)),
+      nsIntRegion(IntRect(0, 0, gCompWidth, gCompHeight)),
+      nsIntRegion(IntRect(0, 0, 100, 100)),
+      nsIntRegion(IntRect(0, 50, 100, 100)),
     };
     nsRefPtr<Layer> root = CreateLayerTree("c(ooo)", layerVisibleRegion, nullptr, lmBase, layers);
 
