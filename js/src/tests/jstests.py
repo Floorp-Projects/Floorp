@@ -159,8 +159,13 @@ def parse_args():
     output_og.add_option('--no-progress', dest='hide_progress',
                          action='store_true',
                          help='Do not show the progress bar.')
-    output_og.add_option('--tinderbox', action='store_true',
-                         help='Use tinderbox-parseable output format.')
+    output_og.add_option('--tinderbox', dest='format', action='store_const',
+                         const='automation',
+                         help='Use automation-parseable output format.')
+    output_og.add_option('--format', dest='format', default='none',
+                          type='choice', choices=['automation', 'none'],
+                          help='Output format. Either automation or none'
+                         ' (default %default).')
     op.add_option_group(output_og)
 
     special_og = OptionGroup(op, "Special",
@@ -239,7 +244,7 @@ def parse_args():
             raise SystemExit("Failed to open output file: " + str(ex))
 
     # Hide the progress bar if it will get in the way of other output.
-    options.hide_progress = (options.tinderbox or
+    options.hide_progress = (options.format == 'automation' or
                              not ProgressBar.conservative_isatty() or
                              options.hide_progress)
 
