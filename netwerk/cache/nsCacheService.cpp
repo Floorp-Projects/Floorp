@@ -1767,10 +1767,12 @@ nsCacheService::CreateCustomOfflineDevice(nsIFile *aProfileDir,
 {
     NS_ENSURE_ARG(aProfileDir);
 
-    nsAutoCString profilePath;
-    aProfileDir->GetNativePath(profilePath);
-    CACHE_LOG_ALWAYS(("Creating custom offline device, %s, %d",
-                      profilePath.BeginReading(), aQuota));
+    if (PR_LOG_TEST(gCacheLog, PR_LOG_ALWAYS)) {
+      nsAutoCString profilePath;
+      aProfileDir->GetNativePath(profilePath);
+      CACHE_LOG_ALWAYS(("Creating custom offline device, %s, %d",
+                        profilePath.BeginReading(), aQuota));
+    }
 
     if (!mInitialized)         return NS_ERROR_NOT_AVAILABLE;
     if (!mEnableOfflineDevice) return NS_ERROR_NOT_AVAILABLE;
