@@ -224,7 +224,7 @@ DocAccessibleChild::RecvRelationByType(const uint64_t& aID,
 {
   Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
   if (!acc)
-    return false;
+    return true;
 
   auto type = static_cast<RelationType>(aType);
   Relation rel = acc->RelationByType(type);
@@ -256,8 +256,8 @@ DocAccessibleChild::RecvRelations(const uint64_t& aID,
                                   nsTArray<RelationTargets>* aRelations)
 {
   Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
-  if (!aID)
-    return false;
+  if (!acc)
+    return true;
 
 #define RELATIONTYPE(gecko, s, a, m, i) AddRelation(acc, RelationType::gecko, aRelations);
 
