@@ -259,10 +259,22 @@ SettingsListener.observe('app.reportCrashes', 'ask', function(value) {
  */
 function setUpdateTrackingId() {
   try {
+    // Migrate the "privacy.donottrackheader.value" pref. See bug 1042135.
+    if (Services.prefs.prefHasUserValue("privacy.donottrackheader.value")) {
+      // Make sure the doNotTrack value conforms to the conversion from
+      // three-state to two-state. (This reverts a setting of "please track me"
+      // to the default "don't say anything").
+      if (Services.prefs.getBoolPref("privacy.donottrackheader.enabled") &&
+          (Services.prefs.getIntPref("privacy.donottrackheader.value") != 1)) {
+        Services.prefs.clearUserPref("privacy.donottrackheader.enabled");
+      }
+      // This pref has been removed, so always clear it.
+      Services.prefs.clearUserPref("privacy.donottrackheader.value");
+    }
+
     let dntEnabled = Services.prefs.getBoolPref('privacy.donottrackheader.enabled');
-    let dntValue =  Services.prefs.getIntPref('privacy.donottrackheader.value');
-    // If the user specifically decides to disallow tracking (1), we just bail out.
-    if (dntEnabled && (dntValue == 1)) {
+
+    if (dntEnabled) {
       return;
     }
 
