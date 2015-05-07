@@ -121,7 +121,8 @@ DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
   rv = dbFileUrl->SetQuery(
     NS_LITERAL_CSTRING("persistenceType=") + type +
     NS_LITERAL_CSTRING("&group=") + aQuotaInfo.mGroup +
-    NS_LITERAL_CSTRING("&origin=") + aQuotaInfo.mOrigin);
+    NS_LITERAL_CSTRING("&origin=") + aQuotaInfo.mOrigin +
+    NS_LITERAL_CSTRING("&cache=private"));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   nsCOMPtr<mozIStorageService> ss =
