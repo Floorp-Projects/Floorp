@@ -3776,6 +3776,21 @@ GCRuntime::checkForCompartmentMismatches()
 }
 #endif
 
+static void
+RelazifyFunctions(Zone* zone, AllocKind kind)
+{
+    MOZ_ASSERT(kind == AllocKind::FUNCTION ||
+               kind == AllocKind::FUNCTION_EXTENDED);
+
+    JSRuntime* rt = zone->runtimeFromMainThread();
+
+    for (ZoneCellIterUnderGC i(zone, kind); !i.done(); i.next()) {
+        JSFunction* fun = &i.get<JSObject>()->as<JSFunction>();
+        if (fun->hasScript())
+            fun->maybeRelazify(rt);
+    }
+}
+
 bool
 GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
 {
@@ -3869,6 +3884,17 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
             gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_DISCARD_CODE);
             zone->discardJitCode(rt->defaultFreeOp());
         }
+    }
+
+    /*
+     * Relazify functions after discarding JIT code (we can't relazify
+     * functions with JIT code) and before the actual mark phase, so that
+     * the current GC can collect the JSScripts we're unlinking here.
+     */
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_RELAZIFY_FUNCTIONS);
+        RelazifyFunctions(zone, AllocKind::FUNCTION);
+        RelazifyFunctions(zone, AllocKind::FUNCTION_EXTENDED);
     }
 
     startNumber = number;
