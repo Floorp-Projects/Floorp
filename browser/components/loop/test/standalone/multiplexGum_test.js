@@ -292,7 +292,7 @@ describe("loop.standaloneMedia._MultiplexGum", function() {
           localStream: null,
           pending: false,
           errorCallbacks: [],
-          successCallbacks: [],
+          successCallbacks: []
       });
     });
 

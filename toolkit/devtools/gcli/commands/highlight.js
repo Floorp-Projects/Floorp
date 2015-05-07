@@ -10,7 +10,7 @@ require("devtools/server/actors/inspector");
 const {BoxModelHighlighter} = require("devtools/server/actors/highlighter");
 
 XPCOMUtils.defineLazyGetter(this, "nodesSelected", function() {
-  return Services.strings.createBundle("chrome://browser/locale/devtools/gclicommands.properties");
+  return Services.strings.createBundle("chrome://global/locale/devtools/gclicommands.properties");
 });
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm","resource://gre/modules/PluralForm.jsm");
 const events = require("sdk/event/core");

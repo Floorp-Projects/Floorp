@@ -250,6 +250,7 @@ let DirectoryLinksProvider = {
     for (let suggestedSite of link.frecent_sites) {
       let suggestedMap = this._suggestedLinks.get(suggestedSite) || new Map();
       suggestedMap.set(link.url, link);
+      this._setupStartEndTime(link);
       this._suggestedLinks.set(suggestedSite, suggestedMap);
     }
   },
@@ -363,6 +364,97 @@ let DirectoryLinksProvider = {
       Cu.reportError(error);
       return emptyOutput;
     });
+  },
+
+  /**
+   * Translates link.time_limits to UTC miliseconds and sets
+   * link.startTime and link.endTime properties in link object
+   */
+  _setupStartEndTime: function DirectoryLinksProvider_setupStartEndTime(link) {
+    // set start/end limits. Use ISO_8601 format: '2014-01-10T20:20:20.600Z'
+    // (details here http://en.wikipedia.org/wiki/ISO_8601)
+    // Note that if timezone is missing, FX will interpret as local time
+    // meaning that the server can sepecify any time, but if the capmaign
+    // needs to start at same time across multiple timezones, the server
+    // omits timezone indicator
+    if (!link.time_limits) {
+      return;
+    }
+
+    let parsedTime;
+    if (link.time_limits.start) {
+      parsedTime = Date.parse(link.time_limits.start);
+      if (parsedTime && !isNaN(parsedTime)) {
+        link.startTime = parsedTime;
+      }
+    }
+    if (link.time_limits.end) {
+      parsedTime = Date.parse(link.time_limits.end);
+      if (parsedTime && !isNaN(parsedTime)) {
+        link.endTime = parsedTime;
+      }
+    }
+  },
+
+  /*
+   * Handles campaign timeout
+   */
+  _onCampaignTimeout: function DirectoryLinksProvider_onCampaignTimeout() {
+    // _campaignTimeoutID is invalid here, so just set it to null
+    this._campaignTimeoutID = null;
+    this._updateSuggestedTile();
+  },
+
+  /*
+   * Clears capmpaign timeout
+   */
+  _clearCampaignTimeout: function DirectoryLinksProvider_clearCampaignTimeout() {
+    if (this._campaignTimeoutID) {
+      clearTimeout(this._campaignTimeoutID);
+      this._campaignTimeoutID = null;
+    }
+  },
+
+  /**
+   * Setup capmpaign timeout to recompute suggested tiles upon
+   * reaching soonest start or end time for the campaign
+   * @param timeout in milliseconds
+   */
+  _setupCampaignTimeCheck: function DirectoryLinksProvider_setupCampaignTimeCheck(timeout) {
+    // sanity check
+    if (!timeout || timeout <= 0) {
+      return;
+    }
+    this._clearCampaignTimeout();
+    // setup next timeout
+    this._campaignTimeoutID = setTimeout(this._onCampaignTimeout.bind(this), timeout);
+  },
+
+  /**
+   * Test link for campaign time limits: checks if link falls within start/end time
+   * and returns an object containing a use flag and the timeoutDate milliseconds
+   * when the link has to be re-checked for campaign start-ready or end-reach
+   * @param link
+   * @return object {use: true or false, timeoutDate: milliseconds or null}
+   */
+  _testLinkForCampaignTimeLimits: function DirectoryLinksProvider_testLinkForCampaignTimeLimits(link) {
+    let currentTime = Date.now();
+    // test for start time first
+    if (link.startTime && link.startTime > currentTime) {
+      // not yet ready for start
+      return {use: false, timeoutDate: link.startTime};
+    }
+    // otherwise check for end time
+    if (link.endTime) {
+      // passed end time
+      if (link.endTime <= currentTime) {
+        return {use: false};
+      }
+      // otherwise link is still ok, but we need to set timeoutDate
+      return {use: true, timeoutDate: link.endTime};
+    }
+    // if we are here, the link is ok and no timeoutDate needed
+    return {use: true};
   },
 
   /**
@@ -490,6 +582,7 @@ let DirectoryLinksProvider = {
       this._enhancedLinks.clear();
       this._frequencyCaps.clear();
       this._suggestedLinks.clear();
+      this._clearCampaignTimeout();
 
       let validityFilter = function(link) {
         // Make sure the link url is allowed and images too if they exist
@@ -705,6 +798,7 @@ let DirectoryLinksProvider = {
     // want to count each suggested link once (based on url), thus possibleLinks is a map
     // from url to suggestedLink. Thus, each link has an equal chance of being chosen at
     // random from flattenedLinks if it appears only once.
+    let nextTimeout;
     let possibleLinks = new Map();
     let targetedSites = new Map();
     this._topSitesWithSuggestedLinks.forEach(topSiteWithSuggestedLink => {
@@ -712,6 +806,18 @@ let DirectoryLinksProvider = {
       suggestedLinksMap.forEach((suggestedLink, url) => {
         // Skip this link if we've shown it too many times already
         if (this._frequencyCaps.get(url) <= 0) {
+          return;
+        }
+
+        // as we iterate suggestedLinks, check for campaign start/end
+        // time limits, and set nextTimeout to the closest timestamp
+        let {use, timeoutDate} = this._testLinkForCampaignTimeLimits(suggestedLink);
+        // update nextTimeout is necessary
+        if (timeoutDate && (!nextTimeout || nextTimeout > timeoutDate)) {
+          nextTimeout = timeoutDate;
+        }
+        // Skip link if it falls outside campaign time limits
+        if (!use) {
           return;
         }
 
@@ -725,6 +831,11 @@ let DirectoryLinksProvider = {
         targetedSites.get(url).push(topSiteWithSuggestedLink);
       })
     });
+
+    // setup timeout check for starting or ending campaigns
+    if (nextTimeout) {
+      this._setupCampaignTimeCheck(nextTimeout - Date.now());
+    }
 
     // We might have run out of possible links to show
     let numLinks = possibleLinks.size;
