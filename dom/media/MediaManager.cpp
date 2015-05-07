@@ -61,6 +61,8 @@
 #include "mozilla/WindowsVersion.h"
 #endif
 
+#include <map>
+
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaStream::GetCurrentTime.
 #ifdef GetCurrentTime
@@ -1024,12 +1026,22 @@ static void
   nsTArray<const MediaTrackConstraintSet*> aggregateConstraints;
   aggregateConstraints.AppendElement(&c);
 
+  std::multimap<uint32_t, nsRefPtr<DeviceType>> ordered;
+
   for (uint32_t i = 0; i < candidateSet.Length();) {
-    if (candidateSet[i]->GetBestFitnessDistance(aggregateConstraints) == UINT32_MAX) {
+    uint32_t distance = candidateSet[i]->GetBestFitnessDistance(aggregateConstraints);
+    if (distance == UINT32_MAX) {
       candidateSet.RemoveElementAt(i);
     } else {
+      ordered.insert(std::pair<uint32_t, nsRefPtr<DeviceType>>(distance,
+                                                               candidateSet[i]));
       ++i;
     }
+  }
+  // Order devices by shortest distance
+  for (auto& ordinal : ordered) {
+    candidateSet.RemoveElement(ordinal.second);
+    candidateSet.AppendElement(ordinal.second);
   }
 
   // Then apply advanced constraints.
