@@ -37,7 +37,7 @@
 #include "nsCSSProperty.h"              // for nsCSSProperty
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for Layer::Release, etc
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsSize.h"                     // for nsIntSize
 #include "nsString.h"                   // for nsCString
@@ -817,7 +817,7 @@ public:
    * large displayport. Computing this more exactly is too expensive,
    * but this approximation is sufficient for what we need to use it for.
    */
-  virtual void SetLayerBounds(const nsIntRect& aLayerBounds)
+  virtual void SetLayerBounds(const gfx::IntRect& aLayerBounds)
   {
     if (!mLayerBounds.IsEqualEdges(aLayerBounds)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) LayerBounds", this));
@@ -1223,7 +1223,7 @@ public:
   gfx::CompositionOp GetMixBlendMode() const { return mMixBlendMode; }
   const Maybe<ParentLayerIntRect>& GetClipRect() const { return mClipRect; }
   uint32_t GetContentFlags() { return mContentFlags; }
-  const nsIntRect& GetLayerBounds() const { return mLayerBounds; }
+  const gfx::IntRect& GetLayerBounds() const { return mLayerBounds; }
   const nsIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   const FrameMetrics& GetFrameMetrics(uint32_t aIndex) const;
   uint32_t GetFrameMetricsCount() const { return mFrameMetrics.Length(); }
@@ -1553,7 +1553,7 @@ public:
   /**
    * Adds to the current invalid rect.
    */
-  void AddInvalidRect(const nsIntRect& aRect) { mInvalidRegion.Or(mInvalidRegion, aRect); }
+  void AddInvalidRect(const gfx::IntRect& aRect) { mInvalidRegion.Or(mInvalidRegion, aRect); }
 
   /**
    * Clear the invalid rect, marking the layer as being identical to what is currently
@@ -1675,7 +1675,7 @@ protected:
   void* mImplData;
   nsRefPtr<Layer> mMaskLayer;
   gfx::UserData mUserData;
-  nsIntRect mLayerBounds;
+  gfx::IntRect mLayerBounds;
   nsIntRegion mVisibleRegion;
   nsTArray<FrameMetrics> mFrameMetrics;
   EventRegions mEventRegions;
@@ -1695,7 +1695,7 @@ protected:
   gfx::CompositionOp mMixBlendMode;
   bool mForceIsolatedGroup;
   Maybe<ParentLayerIntRect> mClipRect;
-  nsIntRect mTileSourceRect;
+  gfx::IntRect mTileSourceRect;
   nsIntRegion mInvalidRegion;
   nsTArray<nsRefPtr<AsyncPanZoomController> > mApzcs;
   uint32_t mContentFlags;
@@ -2074,7 +2074,7 @@ public:
     }
   }
 
-  void SetBounds(const nsIntRect& aBounds)
+  void SetBounds(const gfx::IntRect& aBounds)
   {
     if (!mBounds.IsEqualEdges(aBounds)) {
       mBounds = aBounds;
@@ -2082,7 +2082,7 @@ public:
     }
   }
 
-  const nsIntRect& GetBounds()
+  const gfx::IntRect& GetBounds()
   {
     return mBounds;
   }
@@ -2109,7 +2109,7 @@ protected:
 
   virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
 
-  nsIntRect mBounds;
+  gfx::IntRect mBounds;
   gfxRGBA mColor;
 };
 
@@ -2276,7 +2276,7 @@ protected:
   /**
    * 0, 0, canvaswidth, canvasheight
    */
-  nsIntRect mBounds;
+  gfx::IntRect mBounds;
   PreTransactionCallback* mPreTransCallback;
   void* mPreTransCallbackData;
   DidTransactionCallback mPostTransCallback;
@@ -2404,9 +2404,9 @@ void WriteSnapshotToDumpFile(Compositor* aCompositor, gfx::DrawTarget* aTarget);
 #endif
 
 // A utility function used by different LayerManager implementations.
-nsIntRect ToOutsideIntRect(const gfxRect &aRect);
+gfx::IntRect ToOutsideIntRect(const gfxRect &aRect);
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 
 #endif /* GFX_LAYERS_H */

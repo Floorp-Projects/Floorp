@@ -15,7 +15,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "gfxPrefs.h"                   // for WebGLForceLayersReadback
 
