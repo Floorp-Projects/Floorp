@@ -30,7 +30,7 @@ DECL_CLASS(nsIFile);
 DECL_CLASS(nsILocalFile);
 DECL_CLASS(nsIDirectoryServiceProvider);
 DECL_CLASS(nsIMemory);
-DECL_CLASS(nsIDebug);
+DECL_CLASS(nsIDebug2);
 
 #ifdef __cplusplus
 namespace mozilla {
@@ -400,6 +400,6 @@ XPCOM_API(void) NS_CycleCollectorSuspect3(void* aPtr,
  */
 #define NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID "xpcom-category-cleared"
 
-XPCOM_API(nsresult) NS_GetDebug(nsIDebug** aResult);
+XPCOM_API(nsresult) NS_GetDebug(nsIDebug2** aResult);
 
 #endif
