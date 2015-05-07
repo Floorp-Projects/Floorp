@@ -87,7 +87,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
-#include "mozilla/media/webrtc/WebrtcGlobalParent.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsAppRunner.h"
 #include "nsAutoPtr.h"
@@ -166,6 +165,10 @@
 #include "nsIBlocklistService.h"
 
 #include "nsIBidiKeyboard.h"
+
+#ifdef MOZ_WEBRTC
+#include "signaling/src/peerconnection/WebrtcGlobalParent.h"
+#endif
 
 #if defined(ANDROID) || defined(LINUX)
 #include "nsSystemInfo.h"
@@ -4950,14 +4953,22 @@ ContentParent::DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActo
 PWebrtcGlobalParent *
 ContentParent::AllocPWebrtcGlobalParent()
 {
+#ifdef MOZ_WEBRTC
     return WebrtcGlobalParent::Alloc();
+#else
+    return nullptr;
+#endif
 }
 
 bool
 ContentParent::DeallocPWebrtcGlobalParent(PWebrtcGlobalParent *aActor)
 {
+#ifdef MOZ_WEBRTC
     WebrtcGlobalParent::Dealloc(static_cast<WebrtcGlobalParent*>(aActor));
     return true;
+#else
+    return false;
+#endif
 }
 
 bool

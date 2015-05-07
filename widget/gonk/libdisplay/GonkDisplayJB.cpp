@@ -353,10 +353,10 @@ GonkDisplayJB::GetPrevDispAcquireFd()
 void
 GonkDisplayJB::StopBootAnim()
 {
+    StopBootAnimation();
     if (mBootAnimBuffer.get()) {
         mBootAnimBuffer = nullptr;
     }
-    StopBootAnimation();
 }
 
 __attribute__ ((visibility ("default")))

@@ -2478,8 +2478,7 @@ FindMatchingElementsWithId(const nsAString& aId, nsINode* aRoot,
              "document if it's in the document.  Note that document fragments "
              "can't be IsInDoc(), so should never show up here.");
 
-  const nsSmallVoidArray* elements = aRoot->OwnerDoc()->GetAllElementsForId(aId);
-
+  const nsTArray<Element*>* elements = aRoot->OwnerDoc()->GetAllElementsForId(aId);
   if (!elements) {
     // Nothing to do; we're done
     return;
@@ -2487,8 +2486,8 @@ FindMatchingElementsWithId(const nsAString& aId, nsINode* aRoot,
 
   // XXXbz: Should we fall back to the tree walk if aRoot is not the
   // document and |elements| is long, for some value of "long"?
-  for (int32_t i = 0; i < elements->Count(); ++i) {
-    Element *element = static_cast<Element*>(elements->ElementAt(i));
+  for (size_t i = 0; i < elements->Length(); ++i) {
+    Element* element = (*elements)[i];
     if (!aRoot->IsElement() ||
         (element != aRoot &&
            nsContentUtils::ContentIsDescendantOf(element, aRoot))) {

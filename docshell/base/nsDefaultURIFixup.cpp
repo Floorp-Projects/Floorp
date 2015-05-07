@@ -970,7 +970,8 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
 
     // If we're at the end of the string or this is the first slash,
     // check if the thing before the slash looks like ipv4:
-    if ((iter.size_forward() == 1 || (lastSlashLoc == uint32_t(kNotFound) && *iter == '/')) &&
+    if ((iter.size_forward() == 1 ||
+         (lastSlashLoc == uint32_t(kNotFound) && *iter == '/')) &&
         // Need 2 or 3 dots + only digits
         (foundDots == 2 || foundDots == 3) &&
         // and they should be all that came before now:
