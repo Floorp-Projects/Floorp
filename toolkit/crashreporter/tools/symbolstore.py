@@ -638,9 +638,10 @@ class Dumper:
                             # FILE index filename
                             (x, index, filename) = line.rstrip().split(None, 2)
                             filename = os.path.normpath(self.FixFilenameCase(filename))
+                            # We want original file paths for the source server.
+                            sourcepath = filename
                             if filename in self.file_mapping:
                                 filename = self.file_mapping[filename]
-                            sourcepath = filename
                             if self.vcsinfo:
                                 (filename, rootname) = GetVCSFilename(filename, self.srcdirs)
                                 # sets vcs_root in case the loop through files were to end on an empty rootname
