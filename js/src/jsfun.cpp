@@ -2131,13 +2131,6 @@ js::CloneFunctionObject(JSContext* cx, HandleFunction fun, HandleObject parent,
 
     bool useSameScript = CloneFunctionObjectUseSameScript(cx->compartment(), fun, parent);
 
-    JSScript::AutoDelazify funScript(cx);
-    if (!useSameScript && fun->isInterpretedLazy()) {
-        funScript = fun;
-        if (!funScript)
-            return nullptr;
-    }
-
     NewObjectKind newKind = useSameScript ? newKindArg : SingletonObject;
     RootedObject cloneProto(cx, proto);
     if (!cloneProto && fun->isStarGenerator()) {
@@ -2161,6 +2154,13 @@ js::CloneFunctionObject(JSContext* cx, HandleFunction fun, HandleObject parent,
     if (!cloneobj)
         return nullptr;
     RootedFunction clone(cx, &cloneobj->as<JSFunction>());
+
+    JSScript::AutoDelazify funScript(cx);
+    if (!useSameScript && fun->isInterpretedLazy()) {
+        funScript = fun;
+        if (!funScript)
+            return nullptr;
+    }
 
     MOZ_ASSERT(useSameScript || !fun->isInterpretedLazy());
 
