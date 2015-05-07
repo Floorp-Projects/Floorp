@@ -3490,6 +3490,21 @@ nsXPCComponents_Utils::SetAddonInterposition(const nsACString& addonIdStr,
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::SetAddonCallInterposition(HandleValue target,
+                                                 JSContext* cx)
+{
+    NS_ENSURE_TRUE(target.isObject(), NS_ERROR_INVALID_ARG);
+    RootedObject targetObj(cx, &target.toObject());
+    targetObj = js::CheckedUnwrap(targetObj);
+    NS_ENSURE_TRUE(targetObj, NS_ERROR_INVALID_ARG);
+    XPCWrappedNativeScope* xpcScope = ObjectScope(targetObj);
+    NS_ENSURE_TRUE(xpcScope, NS_ERROR_INVALID_ARG);
+
+    xpcScope->SetAddonCallInterposition();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::Now(double* aRetval)
 {
     bool isInconsistent = false;
