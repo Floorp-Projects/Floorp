@@ -553,6 +553,71 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     return result;
   }
 
+  /**
+   * Get the difference after comparing two different objects. It compares property
+   * names and their respective values if necessary.
+   * This function does _not_ recurse into object values to keep this functions'
+   * complexity predictable to O(2).
+   *
+   * @param  {Object} a Object number 1, the comparator.
+   * @param  {Object} b Object number 2, the comparison.
+   * @return {Object}   The diff output, which is itself an object structured as:
+   *                    {
+   *                      updated: [prop1, prop6],
+   *                      added: [prop2],
+   *                      removed: [prop3]
+   *                    }
+   */
+  function objectDiff(a, b) {
+    var propsA = a ? Object.getOwnPropertyNames(a) : [];
+    var propsB = b ? Object.getOwnPropertyNames(b) : [];
+    var diff = {
+      updated: [],
+      added: [],
+      removed: []
+    };
+
+    var prop;
+    for (var i = 0, lA = propsA.length; i < lA; ++i) {
+      prop = propsA[i];
+      if (propsB.indexOf(prop) == -1) {
+        diff.removed.push(prop);
+      } else if (a[prop] !== b[prop]) {
+        diff.updated.push(prop);
+      }
+    }
+
+    for (var j = 0, lB = propsB.length; j < lB; ++j) {
+      prop = propsB[j];
+      if (propsA.indexOf(prop) == -1) {
+        diff.added.push(prop);
+      }
+    }
+
+    return diff;
+  }
+
+  /**
+   * When comparing two object, you sometimes want to ignore falsy values when
+   * they're not persisted on the server, for example.
+   * This function removes all the empty/ falsy properties from the target object.
+   *
+   * @param  {Object} obj Target object to strip the falsy properties from
+   * @return {Object}
+   */
+  function stripFalsyValues(obj) {
+    var props = Object.getOwnPropertyNames(obj);
+    var prop;
+    for (var i = props.length; i >= 0; --i) {
+      prop = props[i];
+      // If the value of the object property evaluates to |false|, delete it.
+      if (!obj[prop]) {
+        delete obj[prop];
+      }
+    }
+    return obj;
+  }
+
   this.utils = {
     CALL_TYPES: CALL_TYPES,
     FAILURE_DETAILS: FAILURE_DETAILS,
@@ -576,6 +641,8 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     atob: atob,
     btoa: btoa,
     strToUint8Array: strToUint8Array,
-    Uint8ArrayToStr: Uint8ArrayToStr
+    Uint8ArrayToStr: Uint8ArrayToStr,
+    objectDiff: objectDiff,
+    stripFalsyValues: stripFalsyValues
   };
 }).call(inChrome ? this : loop.shared);

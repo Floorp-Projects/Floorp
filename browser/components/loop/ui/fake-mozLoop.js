@@ -126,7 +126,7 @@ navigator.mozLoop = {
       // Ensure we skip FTE completely.
       case "gettingStarted.seen":
       case "contacts.gravatars.promo":
-      case "contextInConverations.enabled":
+      case "contextInConversations.enabled":
         return true;
       case "contacts.gravatars.show":
         return false;

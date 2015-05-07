@@ -19,6 +19,10 @@ describe("loop.roomViews", function () {
     fakeMozLoop = {
       getAudioBlob: sinon.stub(),
       getLoopPref: sinon.stub(),
+      getSelectedTabMetadata: sinon.stub().callsArgWith(0, {
+        previews: [],
+        title: ""
+      }),
       isSocialShareButtonAvailable: sinon.stub()
     };
 
@@ -112,6 +116,7 @@ describe("loop.roomViews", function () {
     function mountTestComponent(props) {
       props = _.extend({
         dispatcher: dispatcher,
+        mozLoop: fakeMozLoop,
         roomData: {},
         show: true,
         showContext: false
@@ -134,53 +139,6 @@ describe("loop.roomViews", function () {
         sinon.assert.calledWith(dispatcher.dispatch,
           new sharedActions.EmailRoomUrl({roomUrl: "http://invalid"}));
       });
-
-    describe("Rename Room", function() {
-      var roomNameBox;
-
-      beforeEach(function() {
-        view = mountTestComponent({
-          roomData: {
-            roomToken: "fakeToken",
-            roomName: "fakeName"
-          }
-        });
-
-        roomNameBox = view.getDOMNode().querySelector(".input-room-name");
-      });
-
-      it("should dispatch a RenameRoom action when the focus is lost",
-        function() {
-          React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
-            value: "reallyFake"
-          }});
-
-          React.addons.TestUtils.Simulate.blur(roomNameBox);
-
-          sinon.assert.calledOnce(dispatcher.dispatch);
-          sinon.assert.calledWithExactly(dispatcher.dispatch,
-            new sharedActions.RenameRoom({
-              roomToken: "fakeToken",
-              newRoomName: "reallyFake"
-            }));
-        });
-
-      it("should dispatch a RenameRoom action when Enter key is pressed",
-        function() {
-          React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
-            value: "reallyFake"
-          }});
-
-          TestUtils.Simulate.keyDown(roomNameBox, {key: "Enter", which: 13});
-
-          sinon.assert.calledOnce(dispatcher.dispatch);
-          sinon.assert.calledWithExactly(dispatcher.dispatch,
-            new sharedActions.RenameRoom({
-              roomToken: "fakeToken",
-              newRoomName: "reallyFake"
-            }));
-        });
-    });
 
     describe("Copy Button", function() {
       beforeEach(function() {
@@ -241,6 +199,29 @@ describe("loop.roomViews", function () {
         });
 
         expect(view.getDOMNode().querySelector(".room-context")).to.not.eql(null);
+      });
+
+      it("should render the context in editMode when the pencil is clicked", function() {
+        view = mountTestComponent({
+          showContext: true,
+          roomData: {
+            roomContextUrls: [fakeContextURL]
+          }
+        });
+
+        var pencil = view.getDOMNode().querySelector(".room-context-btn-edit");
+        expect(pencil).to.not.eql(null);
+
+        React.addons.TestUtils.Simulate.click(pencil);
+
+        expect(view.state.editMode).to.eql(true);
+        var node = view.getDOMNode();
+        expect(node.querySelector("form")).to.not.eql(null);
+        // No text paragraphs should be visible in editMode.
+        var visiblePs = Array.slice(node.querySelector("p")).filter(function(p) {
+          return p.classList.contains("hide") || p.classList.contains("error");
+        });
+        expect(visiblePs.length).to.eql(0);
       });
 
       it("should format the context url for display", function() {
@@ -629,7 +610,12 @@ describe("loop.roomViews", function () {
 
     function mountTestComponent(props) {
       props = _.extend({
-        show: true
+        dispatcher: dispatcher,
+        mozLoop: fakeMozLoop,
+        show: true,
+        roomData: {
+          roomToken: "fakeToken"
+        }
       }, props);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.roomViews.DesktopRoomContextView, props));
@@ -679,6 +665,134 @@ describe("loop.roomViews", function () {
         var closeBtn = view.getDOMNode().querySelector(".room-context-btn-close");
         React.addons.TestUtils.Simulate.click(closeBtn);
         expect(view.getDOMNode()).to.eql(null);
+      });
+
+      it("should render the view in editMode when appropriate", function() {
+        var roomName = "Hello, is it me you're looking for?";
+        view = mountTestComponent({
+          editMode: true,
+          roomData: {
+            roomName: roomName,
+            roomContextUrls: [fakeContextURL]
+          }
+        });
+
+        var node = view.getDOMNode();
+        expect(node.querySelector("form")).to.not.eql(null);
+        // Check the contents of the form fields.
+        expect(node.querySelector(".room-context-name").value).to.eql(roomName);
+        expect(node.querySelector(".room-context-url").value).to.eql(fakeContextURL.location);
+        expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
+      });
+
+      it("should show the checkbox as disabled when no context is available", function() {
+        view = mountTestComponent({
+          editMode: true,
+          roomData: {
+            roomToken: "fakeToken",
+            roomName: "fakeName"
+          }
+        });
+
+        var checkbox = view.getDOMNode().querySelector(".checkbox");
+        expect(checkbox.classList.contains("disabled")).to.eql(true);
+      });
+    });
+
+    describe("Update Room", function() {
+      var roomNameBox;
+
+      beforeEach(function() {
+        sandbox.stub(dispatcher, "dispatch");
+
+        view = mountTestComponent({
+          editMode: true,
+          roomData: {
+            roomToken: "fakeToken",
+            roomName: "fakeName",
+            roomContextUrls: [fakeContextURL]
+          }
+        });
+
+        roomNameBox = view.getDOMNode().querySelector(".room-context-name");
+      });
+
+      it("should dispatch a UpdateRoomContext action when the focus is lost",
+        function() {
+          React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
+            value: "reallyFake"
+          }});
+
+          React.addons.TestUtils.Simulate.blur(roomNameBox);
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.UpdateRoomContext({
+              roomToken: "fakeToken",
+              newRoomName: "reallyFake",
+              newRoomDescription: fakeContextURL.description,
+              newRoomURL: fakeContextURL.location,
+              newRoomThumbnail: fakeContextURL.thumbnail
+            }));
+        });
+
+      it("should dispatch a UpdateRoomContext action when Enter key is pressed",
+        function() {
+          React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
+            value: "reallyFake"
+          }});
+
+          TestUtils.Simulate.keyDown(roomNameBox, {key: "Enter", which: 13});
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.UpdateRoomContext({
+              roomToken: "fakeToken",
+              newRoomName: "reallyFake",
+              newRoomDescription: fakeContextURL.description,
+              newRoomURL: fakeContextURL.location,
+              newRoomThumbnail: fakeContextURL.thumbnail
+            }));
+        });
+    });
+
+    describe("#handleCheckboxChange", function() {
+      var node, checkbox;
+
+      beforeEach(function() {
+        view = mountTestComponent({
+          availableContext: {
+            description: fakeContextURL.description,
+            previewImage: fakeContextURL.thumbnail,
+            url: fakeContextURL.location
+          },
+          editMode: true,
+          roomData: {
+            roomToken: "fakeToken",
+            roomName: "fakeName"
+          }
+        });
+
+        node = view.getDOMNode();
+        checkbox = node.querySelector(".checkbox");
+      });
+
+      it("should prefill the form with available context data when clicked", function() {
+        React.addons.TestUtils.Simulate.click(checkbox);
+
+        expect(node.querySelector(".room-context-name").value).to.eql("fakeName");
+        expect(node.querySelector(".room-context-url").value).to.eql(fakeContextURL.location);
+        expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
+      });
+
+      it("should undo prefill when clicking the checkbox again", function() {
+        React.addons.TestUtils.Simulate.click(checkbox);
+        // Twice.
+        React.addons.TestUtils.Simulate.click(checkbox);
+
+        expect(node.querySelector(".room-context-name").value).to.eql("fakeName");
+        expect(node.querySelector(".room-context-url").value).to.eql("");
+        expect(node.querySelector(".room-context-comments").value).to.eql("");
       });
     });
   });

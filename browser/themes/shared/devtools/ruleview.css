@@ -80,9 +80,9 @@
   cursor: default;
 }
 
-
 .ruleview-rule[uneditable=true] .ruleview-namecontainer > .ruleview-propertyname,
-.ruleview-rule[uneditable=true] .ruleview-propertycontainer > .ruleview-propertyvalue {
+.ruleview-rule[uneditable=true] .ruleview-propertyvaluecontainer >
+.ruleview-propertyvalue {
   border-bottom-color: transparent;
 }
 
@@ -142,7 +142,7 @@
 }
 
 .ruleview-namecontainer,
-.ruleview-propertycontainer,
+.ruleview-propertyvaluecontainer,
 .ruleview-propertyname,
 .ruleview-propertyvalue {
   text-decoration: inherit;
@@ -219,7 +219,7 @@
   clear: right;
 }
 
-.ruleview-property  > * {
+.ruleview-propertycontainer  > * {
   vertical-align: middle;
 }
 
@@ -232,12 +232,12 @@
 }
 
 .ruleview-namecontainer > .ruleview-propertyname,
-.ruleview-propertycontainer > .ruleview-propertyvalue {
+.ruleview-propertyvaluecontainer > .ruleview-propertyvalue {
   border-bottom: 1px dashed transparent;
 }
 
 .ruleview-namecontainer:hover > .ruleview-propertyname,
-.ruleview-propertycontainer:hover > .ruleview-propertyvalue {
+.ruleview-propertyvaluecontainer:hover > .ruleview-propertyvalue {
   border-bottom-color: hsl(0,0%,50%);
 }
 

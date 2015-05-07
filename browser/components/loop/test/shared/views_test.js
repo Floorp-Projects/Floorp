@@ -724,5 +724,96 @@ describe("loop.shared.views", function() {
       });
     });
   });
+
+  describe("Checkbox", function() {
+    var view;
+
+    afterEach(function() {
+      view = null;
+    });
+
+    function mountTestComponent(props) {
+      props = _.extend({ onChange: function() {} }, props);
+      return TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.Checkbox, props));
+    }
+
+    describe("#render", function() {
+      it("should render a checkbox with only required props supplied", function() {
+        view = mountTestComponent();
+
+        var node = view.getDOMNode();
+        expect(node).to.not.eql(null);
+        expect(node.classList.contains("checkbox-wrapper")).to.eql(true);
+        expect(node.hasAttribute("disabled")).to.eql(false);
+        expect(node.childNodes.length).to.eql(1);
+      });
+
+      it("should render a label when it's supplied", function() {
+        view = mountTestComponent({ label: "Some label" });
+
+        var node = view.getDOMNode();
+        expect(node.lastChild.localName).to.eql("label");
+        expect(node.lastChild.textContent).to.eql("Some label");
+      });
+
+      it("should render the checkbox as disabled when told to", function() {
+        view = mountTestComponent({
+          disabled: true
+        });
+
+        var node = view.getDOMNode();
+        expect(node.classList.contains("disabled")).to.eql(true);
+        expect(node.hasAttribute("disabled")).to.eql(true);
+      });
+    });
+
+    describe("#_handleClick", function() {
+      var onChange;
+
+      beforeEach(function() {
+        onChange = sinon.stub();
+      });
+
+      afterEach(function() {
+        onChange = null;
+      });
+
+      it("should invoke the `onChange` function on click", function() {
+        view = mountTestComponent({ onChange: onChange });
+
+        expect(view.state.checked).to.eql(false);
+
+        var node = view.getDOMNode();
+        TestUtils.Simulate.click(node);
+
+        expect(view.state.checked).to.eql(true);
+        sinon.assert.calledOnce(onChange);
+        sinon.assert.calledWithExactly(onChange, {
+          checked: true,
+          value: ""
+        });
+      });
+
+      it("should signal a value change on click", function() {
+        view = mountTestComponent({
+          onChange: onChange,
+          value: "some-value"
+        });
+
+        expect(view.state.value).to.eql("");
+
+        var node = view.getDOMNode();
+        TestUtils.Simulate.click(node);
+
+        expect(view.state.value).to.eql("some-value");
+        sinon.assert.calledOnce(onChange);
+        sinon.assert.calledWithExactly(onChange, {
+          checked: true,
+          value: "some-value"
+        });
+      });
+    });
+  });
 });
 

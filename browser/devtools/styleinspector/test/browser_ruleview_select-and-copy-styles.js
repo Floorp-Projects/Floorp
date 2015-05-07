@@ -48,7 +48,7 @@ function checkCopySelection(view) {
 
   let contentDoc = view.doc;
   let prop = contentDoc.querySelector(".ruleview-property");
-  let values = contentDoc.querySelectorAll(".ruleview-propertycontainer");
+  let values = contentDoc.querySelectorAll(".ruleview-propertyvaluecontainer");
 
   let range = contentDoc.createRange();
   range.setStart(prop, 0);

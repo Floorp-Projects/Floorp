@@ -56,6 +56,7 @@ browser.jar:
   content/browser/loop/shared/img/svg/glyph-help-16x16.svg      (content/shared/img/svg/glyph-help-16x16.svg)
   content/browser/loop/shared/img/audio-call-avatar.svg         (content/shared/img/audio-call-avatar.svg)
   content/browser/loop/shared/img/beta-ribbon.svg               (content/shared/img/beta-ribbon.svg)
+  content/browser/loop/shared/img/check.svg                     (content/shared/img/check.svg)
   content/browser/loop/shared/img/icons-10x10.svg               (content/shared/img/icons-10x10.svg)
   content/browser/loop/shared/img/icons-14x14.svg               (content/shared/img/icons-14x14.svg)
   content/browser/loop/shared/img/icons-16x16.svg               (content/shared/img/icons-16x16.svg)
@@ -94,7 +95,7 @@ browser.jar:
   content/browser/loop/shared/libs/react-0.12.2.js    (content/shared/libs/react-0.12.2-prod.js)
 #endif
   content/browser/loop/shared/libs/lodash-2.4.1.js    (content/shared/libs/lodash-2.4.1.js)
-  content/browser/loop/shared/libs/jquery-2.1.0.js    (content/shared/libs/jquery-2.1.0.js)
+  content/browser/loop/shared/libs/jquery-2.1.4.js    (content/shared/libs/jquery-2.1.4.js)
   content/browser/loop/shared/libs/backbone-1.1.2.js  (content/shared/libs/backbone-1.1.2.js)
 
   # Shared sounds
