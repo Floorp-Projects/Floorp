@@ -80,8 +80,14 @@ protected:
                              StreamTime delta);
   template<class ValueType, class ConstrainRange>
   static uint32_t FitnessDistance(ValueType n, const ConstrainRange& aRange);
+  static uint32_t FitnessDistance(int32_t n,
+      const dom::OwningLongOrConstrainLongRange& aConstraint, bool aAdvanced);
+  static uint32_t FitnessDistance(double n,
+      const dom::OwningDoubleOrConstrainDoubleRange& aConstraint, bool aAdvanced);
+
   static uint32_t GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
-                                     const dom::MediaTrackConstraintSet &aConstraints);
+                                     const dom::MediaTrackConstraintSet &aConstraints,
+                                     bool aAdvanced);
   static void TrimLessFitCandidates(CapabilitySet& set);
   static void LogConstraints(const dom::MediaTrackConstraintSet& aConstraints,
                              bool aAdvanced);
