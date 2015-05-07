@@ -712,16 +712,15 @@ SenderHelper::SendTextureSource(GLContext* aGLContext,
         aGLContext->GetUIntegerv(LOCAL_GL_TEXTURE_BINDING_RECTANGLE, &textureId);
     }
 
-    gfx::IntSize size = aSource->GetSize();
-
-    // By sending 0 to ReadTextureImage rely upon aSource->BindTexture binding
-    // texture correctly. textureId is used for tracking in DebugGLTextureData.
-    RefPtr<DataSourceSurface> img =
-        aGLContext->ReadTexImageHelper()->ReadTexImage(0, textureTarget,
-                                                       size,
-                                                       shaderConfig, aFlipY);
-
     if (!IsTextureIdContainsInList(textureId)) {
+      gfx::IntSize size = aSource->GetSize();
+
+      // By sending 0 to ReadTextureImage rely upon aSource->BindTexture binding
+      // texture correctly. textureId is used for tracking in DebugGLTextureData.
+      RefPtr<DataSourceSurface> img =
+          aGLContext->ReadTexImageHelper()->ReadTexImage(0, textureTarget,
+                                                         size,
+                                                         shaderConfig, aFlipY);
       sTextureIdList.push_back(textureId);
       WebSocketHelper::GetSocketManager()->AppendDebugData(
           new DebugGLTextureData(aGLContext, aLayerRef, textureTarget,
