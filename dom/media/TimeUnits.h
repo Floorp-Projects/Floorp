@@ -7,9 +7,11 @@
 #ifndef TIME_UNITS_H
 #define TIME_UNITS_H
 
+#include "Intervals.h"
 #include "VideoUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/dom/TimeRanges.h"
 
 namespace mozilla {
 namespace media {
@@ -40,6 +42,9 @@ struct Microseconds {
     }
   }
 
+  bool operator == (const Microseconds& aOther) const {
+    return mValue == aOther.mValue;
+  }
   bool operator > (const Microseconds& aOther) const {
     return mValue > aOther.mValue;
   }
@@ -87,6 +92,10 @@ public:
     return double(mValue.value()) / USECS_PER_S;
   }
 
+  bool operator == (const TimeUnit& aOther) const {
+    MOZ_ASSERT(IsValid() && aOther.IsValid());
+    return mValue.value() == aOther.mValue.value();
+  }
   bool operator >= (const TimeUnit& aOther) const {
     MOZ_ASSERT(IsValid() && aOther.IsValid());
     return mValue.value() >= aOther.mValue.value();
@@ -113,9 +122,18 @@ public:
     return mValue.isValid();
   }
 
+  TimeUnit()
+    : mValue(CheckedInt64(0))
+  {}
+
   explicit TimeUnit(const Microseconds& aMicroseconds)
     : mValue(aMicroseconds.mValue)
   {}
+  TimeUnit& operator = (const Microseconds& aMicroseconds)
+  {
+    mValue = aMicroseconds.mValue;
+    return *this;
+  }
 
   TimeUnit(const TimeUnit&) = default;
 
@@ -128,6 +146,64 @@ private:
 
   // Our internal representation is in microseconds.
   CheckedInt64 mValue;
+};
+
+typedef Interval<TimeUnit> TimeInterval;
+
+class TimeIntervals : public IntervalSet<TimeUnit>
+{
+public:
+  typedef IntervalSet<TimeUnit> BaseType;
+
+  // We can't use inherited constructors yet. So we have to duplicate all the
+  // constructors found in IntervalSet base class.
+  // all this could be later replaced with:
+  // using IntervalSet<TimeUnit>::IntervalSet;
+
+  // MOZ_IMPLICIT as we want to enable initialization in the form:
+  // TimeIntervals i = ... like we would do with IntervalSet<T> i = ...
+  MOZ_IMPLICIT TimeIntervals(const BaseType& aOther)
+    : BaseType(aOther)
+  {}
+  MOZ_IMPLICIT TimeIntervals(BaseType&& aOther)
+    : BaseType(Move(aOther))
+  {}
+  explicit TimeIntervals(const BaseType::ElemType& aOther)
+    : BaseType(aOther)
+  {}
+  explicit TimeIntervals(BaseType::ElemType&& aOther)
+    : BaseType(Move(aOther))
+  {}
+
+  TimeIntervals() = default;
+
+  // Make TimeIntervals interchangeable with dom::TimeRanges.
+  explicit TimeIntervals(dom::TimeRanges* aRanges)
+  {
+    for (uint32_t i = 0; i < aRanges->Length(); i++) {
+      ErrorResult rv;
+      *this +=
+        TimeInterval(TimeUnit::FromSeconds(aRanges->Start(i, rv)),
+                     TimeUnit::FromSeconds(aRanges->End(i, rv)));
+    }
+  }
+  TimeIntervals& operator = (dom::TimeRanges* aRanges)
+  {
+    *this = TimeIntervals(aRanges);
+    return *this;
+  }
+
+  static TimeIntervals FromTimeRanges(dom::TimeRanges* aRanges)
+  {
+    return TimeIntervals(aRanges);
+  }
+
+  void ToTimeRanges(dom::TimeRanges* aRanges) const
+  {
+    for (IndexType i = 0; i < Length(); i++) {
+      aRanges->Add(Start(i).ToSeconds(), End(i).ToSeconds());
+    }
+  }
 };
 
 } // namespace media
