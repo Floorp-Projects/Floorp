@@ -557,8 +557,6 @@ var gSyncSetup = {
 
       Weave.Service.persistLogin();
       Weave.Svc.Obs.notify("weave:service:setup-complete");
-
-      gSyncUtils.openFirstSyncProgressPage();
     }
     Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
     window.close();
