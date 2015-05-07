@@ -127,7 +127,6 @@ public abstract class DoorHanger extends LinearLayout {
 
     protected void setButtons(DoorhangerConfig config) {
         final JSONArray buttons = config.getButtons();
-        final OnButtonClickListener listener = config.getButtonClickListener();
         for (int i = 0; i < buttons.length(); i++) {
             try {
                 final JSONObject buttonObject = buttons.getJSONObject(i);

@@ -380,6 +380,8 @@ size. -->
 <!ENTITY doorhanger_login_edit_toggle "Show password">
 <!ENTITY doorhanger_login_edit_toast_error "Failed to save login">
 <!ENTITY doorhanger_login_select_message "Copy password from &formatS;?">
+<!ENTITY doorhanger_login_select_toast_copy "Password copied to clipboard">
+<!ENTITY doorhanger_login_select_toast_copy_error "Couldn\'t copy password">
 
 <!ENTITY pref_titlebar_mode "Title bar">
 <!ENTITY pref_titlebar_mode_title "Show page title">
@@ -440,6 +442,7 @@ size. -->
 <!ENTITY button_set "Set">
 <!ENTITY button_clear "Clear">
 <!ENTITY button_remember "Remember">
+<!ENTITY button_copy "Copy">
 
 <!ENTITY firstrun_panel_title_welcome "Welcome">
 
