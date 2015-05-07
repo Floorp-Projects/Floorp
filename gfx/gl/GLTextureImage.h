@@ -153,7 +153,7 @@ public:
      */
     virtual void Resize(const gfx::IntSize& aSize) {
         mSize = aSize;
-        nsIntRegion r(nsIntRect(0, 0, aSize.width, aSize.height));
+        nsIntRegion r(gfx::IntRect(0, 0, aSize.width, aSize.height));
         BeginUpdate(r);
         EndUpdate();
     }

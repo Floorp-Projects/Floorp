@@ -65,7 +65,7 @@ protected:
 
     GLContext* mGLContext;
 
-    nsIntRect mUpdateRect;
+    gfx::IntRect mUpdateRect;
     gfx::SurfaceFormat mUpdateFormat;
     RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
     EGLImage mEGLImage;

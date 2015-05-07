@@ -66,7 +66,7 @@ private:
   * The resulting vertex coordinates should be drawn using GL_TRIANGLES,
   * and rects.numRects * 3 * 6
   */
-void DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
+void DecomposeIntoNoRepeatTriangles(const gfx::IntRect& aTexCoordRect,
                                     const nsIntSize& aTexSize,
                                     RectTriangles& aRects,
                                     bool aFlipY = false);
