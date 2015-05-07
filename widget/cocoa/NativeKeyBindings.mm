@@ -240,7 +240,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
 
       PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
         ("%p NativeKeyBindings::KeyPress, selector=%s",
-         this, ToNewCString(nsSelectorString)));
+         this, NS_LossyConvertUTF16toASCII(nsSelectorString).get()));
     }
 
     // Try to find a simple mapping in the hashtable
