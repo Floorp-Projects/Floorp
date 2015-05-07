@@ -110,8 +110,8 @@
 namespace js {
 
 class Bindings;
-class Nursery;
 class StaticBlockObject;
+class TenuringTracer;
 
 typedef JSGetterOp GetterOp;
 typedef JSSetterOp SetterOp;
@@ -531,12 +531,12 @@ class Shape : public gc::TenuredCell
     friend class ::JSObject;
     friend class ::JSFunction;
     friend class Bindings;
-    friend class Nursery;
     friend class NativeObject;
     friend class PropertyTree;
     friend class StaticBlockObject;
-    friend struct StackShape;
+    friend class TenuringTracer;
     friend struct StackBaseShape;
+    friend struct StackShape;
 
   protected:
     HeapPtrBaseShape    base_;
@@ -1213,7 +1213,7 @@ class ShapeGetterSetterRef : public gc::BufferableRef
 
   public:
     explicit ShapeGetterSetterRef(AccessorShape* shape) : shape_(shape) {}
-    void mark(JSTracer* trc) { shape_->fixupGetterSetterForBarrier(trc); }
+    void trace(JSTracer* trc) override { shape_->fixupGetterSetterForBarrier(trc); }
 };
 
 static inline void

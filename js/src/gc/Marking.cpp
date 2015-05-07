@@ -1767,18 +1767,18 @@ DoTenuring<jsid>(TenuringTracer& mover, jsid* idp)
 
 template <typename T>
 void
-StoreBuffer::MonoTypeBuffer<T>::mark(StoreBuffer* owner, TenuringTracer& mover)
+js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(StoreBuffer* owner, TenuringTracer& mover)
 {
     mozilla::ReentrancyGuard g(*owner);
     MOZ_ASSERT(owner->isEnabled());
     MOZ_ASSERT(stores_.initialized());
     sinkStores(owner);
     for (typename StoreSet::Range r = stores_.all(); !r.empty(); r.popFront())
-        r.front().mark(mover);
+        r.front().trace(mover);
 }
 
 void
-StoreBuffer::SlotsEdge::mark(TenuringTracer& mover) const
+js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const
 {
     NativeObject* obj = object();
 
@@ -1804,7 +1804,7 @@ StoreBuffer::SlotsEdge::mark(TenuringTracer& mover) const
 }
 
 void
-StoreBuffer::WholeCellEdges::mark(TenuringTracer& mover) const
+js::gc::StoreBuffer::WholeCellEdges::trace(TenuringTracer& mover) const
 {
     MOZ_ASSERT(edge->isTenured());
     JSGCTraceKind kind = GetGCThingTraceKind(edge);
@@ -1832,7 +1832,7 @@ StoreBuffer::WholeCellEdges::mark(TenuringTracer& mover) const
 }
 
 void
-StoreBuffer::CellPtrEdge::mark(TenuringTracer& mover) const
+js::gc::StoreBuffer::CellPtrEdge::trace(TenuringTracer& mover) const
 {
     if (!*edge)
         return;
@@ -1842,7 +1842,7 @@ StoreBuffer::CellPtrEdge::mark(TenuringTracer& mover) const
 }
 
 void
-StoreBuffer::ValueEdge::mark(TenuringTracer& mover) const
+js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const
 {
     if (deref())
         DoTenuring(mover, edge);
@@ -1850,45 +1850,37 @@ StoreBuffer::ValueEdge::mark(TenuringTracer& mover) const
 
 /* Insert the given relocation entry into the list of things to visit. */
 void
-TenuringTracer::insertIntoFixupList(RelocationOverlay* entry) {
+js::TenuringTracer::insertIntoFixupList(RelocationOverlay* entry) {
     *tail = entry;
     tail = &entry->next_;
     *tail = nullptr;
 }
 
 JSObject*
-TenuringTracer::moveToTenured(JSObject* obj) {
-    return (JSObject*)nursery_.moveToTenured(*this, obj);
-}
-
-void*
-js::Nursery::moveToTenured(TenuringTracer& mover, JSObject* src)
+js::TenuringTracer::moveToTenured(JSObject* src)
 {
-    AllocKind dstKind = src->allocKindForTenure(*this);
-    Zone* zone = src->zone();
-    JSObject* dst = reinterpret_cast<JSObject*>(allocateFromTenured(zone, dstKind));
-    if (!dst)
-        CrashAtUnhandlableOOM("Failed to allocate object while tenuring.");
+    MOZ_ASSERT(IsInsideNursery(src));
 
-    mover.tenuredSize += moveObjectToTenured(mover, dst, src, dstKind);
+    AllocKind dstKind = src->allocKindForTenure(nursery());
+    Zone* zone = src->zone();
+    TenuredCell* t = zone->arenas.allocateFromFreeList(dstKind, Arena::thingSize(dstKind));
+    if (!t) {
+        zone->arenas.checkEmptyFreeList(dstKind);
+        AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
+        t = zone->arenas.allocateFromArena(zone, dstKind, maybeStartBackgroundAllocation);
+        if (!t)
+            CrashAtUnhandlableOOM("Failed to allocate object while tenuring.");
+    }
+    JSObject* dst = reinterpret_cast<JSObject*>(t);
+
+    tenuredSize += moveObjectToTenured(dst, src, dstKind);
 
     RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
     overlay->forwardTo(dst);
-    mover.insertIntoFixupList(overlay);
+    insertIntoFixupList(overlay);
 
     TracePromoteToTenured(src, dst);
-    return static_cast<void*>(dst);
-}
-
-MOZ_ALWAYS_INLINE TenuredCell*
-js::Nursery::allocateFromTenured(Zone* zone, AllocKind thingKind)
-{
-    TenuredCell* t = zone->arenas.allocateFromFreeList(thingKind, Arena::thingSize(thingKind));
-    if (t)
-        return t;
-    zone->arenas.checkEmptyFreeList(thingKind);
-    AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
-    return zone->arenas.allocateFromArena(zone, thingKind, maybeStartBackgroundAllocation);
+    return dst;
 }
 
 // Structure for counting how many times objects in a particular group have
@@ -1918,7 +1910,7 @@ js::Nursery::collectToFixedPoint(TenuringTracer& mover, TenureCountCache& tenure
 {
     for (RelocationOverlay* p = mover.head; p; p = p->next()) {
         JSObject* obj = static_cast<JSObject*>(p->forwardingAddress());
-        traceObject(mover, obj);
+        mover.traceObject(obj);
 
         TenureCount& entry = tenureCounts.findEntry(obj->group());
         if (entry.group == obj->group()) {
@@ -1930,31 +1922,28 @@ js::Nursery::collectToFixedPoint(TenuringTracer& mover, TenureCountCache& tenure
     }
 }
 
+// Visit all object children of the object and trace them.
 MOZ_ALWAYS_INLINE void
-js::Nursery::traceObject(TenuringTracer& mover, JSObject* obj)
+js::TenuringTracer::traceObject(JSObject* obj)
 {
     const Class* clasp = obj->getClass();
     if (clasp->trace) {
         if (clasp->trace == InlineTypedObject::obj_trace) {
             TypeDescr* descr = &obj->as<InlineTypedObject>().typeDescr();
-            if (descr->hasTraceList()) {
-                markTraceList(mover, descr->traceList(),
-                              obj->as<InlineTypedObject>().inlineTypedMem());
-            }
+            if (descr->hasTraceList())
+                markTraceList(descr->traceList(), obj->as<InlineTypedObject>().inlineTypedMem());
             return;
         }
         if (clasp == &UnboxedPlainObject::class_) {
             JSObject** pexpando = obj->as<UnboxedPlainObject>().addressOfExpando();
             if (*pexpando)
-                markObject(mover, pexpando);
+                markObject(pexpando);
             const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layoutDontCheckGeneration();
-            if (layout.traceList()) {
-                markTraceList(mover, layout.traceList(),
-                              obj->as<UnboxedPlainObject>().data());
-            }
+            if (layout.traceList())
+                markTraceList(layout.traceList(), obj->as<UnboxedPlainObject>().data());
             return;
         }
-        clasp->trace(&mover, obj);
+        clasp->trace(this, obj);
     }
 
     MOZ_ASSERT(obj->isNative() == clasp->isNative());
@@ -1965,43 +1954,43 @@ js::Nursery::traceObject(TenuringTracer& mover, JSObject* obj)
     // Note: the contents of copy on write elements pointers are filled in
     // during parsing and cannot contain nursery pointers.
     if (!nobj->hasEmptyElements() && !nobj->denseElementsAreCopyOnWrite())
-        markSlots(mover, nobj->getDenseElements(), nobj->getDenseInitializedLength());
+        markSlots(nobj->getDenseElements(), nobj->getDenseInitializedLength());
 
     HeapSlot* fixedStart;
     HeapSlot* fixedEnd;
     HeapSlot* dynStart;
     HeapSlot* dynEnd;
     nobj->getSlotRange(0, nobj->slotSpan(), &fixedStart, &fixedEnd, &dynStart, &dynEnd);
-    markSlots(mover, fixedStart, fixedEnd);
-    markSlots(mover, dynStart, dynEnd);
+    markSlots(fixedStart, fixedEnd);
+    markSlots(dynStart, dynEnd);
 }
 
 MOZ_ALWAYS_INLINE void
-js::Nursery::markSlots(TenuringTracer& mover, HeapSlot* vp, uint32_t nslots)
+js::TenuringTracer::markSlots(HeapSlot* vp, uint32_t nslots)
 {
-    markSlots(mover, vp, vp + nslots);
+    markSlots(vp, vp + nslots);
 }
 
 MOZ_ALWAYS_INLINE void
-js::Nursery::markSlots(TenuringTracer& mover, HeapSlot* vp, HeapSlot* end)
+js::TenuringTracer::markSlots(HeapSlot* vp, HeapSlot* end)
 {
     for (; vp != end; ++vp)
-        markSlot(mover, vp);
+        markSlot(vp);
 }
 
 MOZ_ALWAYS_INLINE void
-js::Nursery::markSlot(TenuringTracer& mover, HeapSlot* slotp)
+js::TenuringTracer::markSlot(HeapSlot* slotp)
 {
     if (!slotp->isObject())
         return;
 
     JSObject* obj = &slotp->toObject();
-    if (markObject(mover, &obj))
+    if (markObject(&obj))
         slotp->unsafeGet()->setObject(*obj);
 }
 
 MOZ_ALWAYS_INLINE void
-js::Nursery::markTraceList(TenuringTracer& mover, const int32_t* traceList, uint8_t* memory)
+js::TenuringTracer::markTraceList(const int32_t* traceList, uint8_t* memory)
 {
     while (*traceList != -1) {
         // Strings are not in the nursery and do not need tracing.
@@ -2010,34 +1999,32 @@ js::Nursery::markTraceList(TenuringTracer& mover, const int32_t* traceList, uint
     traceList++;
     while (*traceList != -1) {
         JSObject** pobj = reinterpret_cast<JSObject **>(memory + *traceList);
-        markObject(mover, pobj);
+        markObject(pobj);
         traceList++;
     }
     traceList++;
     while (*traceList != -1) {
         HeapSlot* pslot = reinterpret_cast<HeapSlot *>(memory + *traceList);
-        markSlot(mover, pslot);
+        markSlot(pslot);
         traceList++;
     }
 }
 
 MOZ_ALWAYS_INLINE bool
-js::Nursery::markObject(TenuringTracer& mover, JSObject** pobj)
+js::TenuringTracer::markObject(JSObject** pobj)
 {
     if (!IsInsideNursery(*pobj))
         return false;
 
-    if (getForwardedPointer(pobj))
+    if (nursery().getForwardedPointer(pobj))
         return true;
 
-    *pobj = static_cast<JSObject*>(moveToTenured(mover, *pobj));
+    *pobj = moveToTenured(*pobj);
     return true;
 }
 
-
 MOZ_ALWAYS_INLINE size_t
-js::Nursery::moveObjectToTenured(TenuringTracer& mover,
-                                 JSObject* dst, JSObject* src, AllocKind dstKind)
+js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind dstKind)
 {
     size_t srcSize = Arena::thingSize(dstKind);
     size_t tenuredSize = srcSize;
@@ -2070,9 +2057,9 @@ js::Nursery::moveObjectToTenured(TenuringTracer& mover,
     }
 
     if (src->is<InlineTypedObject>()) {
-        InlineTypedObject::objectMovedDuringMinorGC(&mover, dst, src);
+        InlineTypedObject::objectMovedDuringMinorGC(this, dst, src);
     } else if (src->is<UnboxedArrayObject>()) {
-        tenuredSize += UnboxedArrayObject::objectMovedDuringMinorGC(&mover, dst, src, dstKind);
+        tenuredSize += UnboxedArrayObject::objectMovedDuringMinorGC(this, dst, src, dstKind);
     } else {
         // Objects with JSCLASS_SKIP_NURSERY_FINALIZE need to be handled above
         // to ensure any additional nursery buffers they hold are moved.
@@ -2083,14 +2070,14 @@ js::Nursery::moveObjectToTenured(TenuringTracer& mover,
 }
 
 MOZ_ALWAYS_INLINE size_t
-js::Nursery::moveSlotsToTenured(NativeObject* dst, NativeObject* src, AllocKind dstKind)
+js::TenuringTracer::moveSlotsToTenured(NativeObject* dst, NativeObject* src, AllocKind dstKind)
 {
     /* Fixed slots have already been copied over. */
     if (!src->hasDynamicSlots())
         return 0;
 
-    if (!isInside(src->slots_)) {
-        removeMallocedBuffer(src->slots_);
+    if (!nursery().isInside(src->slots_)) {
+        nursery().removeMallocedBuffer(src->slots_);
         return 0;
     }
 
@@ -2100,12 +2087,12 @@ js::Nursery::moveSlotsToTenured(NativeObject* dst, NativeObject* src, AllocKind 
     if (!dst->slots_)
         CrashAtUnhandlableOOM("Failed to allocate slots while tenuring.");
     PodCopy(dst->slots_, src->slots_, count);
-    setSlotsForwardingPointer(src->slots_, dst->slots_, count);
+    nursery().setSlotsForwardingPointer(src->slots_, dst->slots_, count);
     return count * sizeof(HeapSlot);
 }
 
 MOZ_ALWAYS_INLINE size_t
-js::Nursery::moveElementsToTenured(NativeObject* dst, NativeObject* src, AllocKind dstKind)
+js::TenuringTracer::moveElementsToTenured(NativeObject* dst, NativeObject* src, AllocKind dstKind)
 {
     if (src->hasEmptyElements() || src->denseElementsAreCopyOnWrite())
         return 0;
@@ -2115,9 +2102,9 @@ js::Nursery::moveElementsToTenured(NativeObject* dst, NativeObject* src, AllocKi
     ObjectElements* dstHeader;
 
     /* TODO Bug 874151: Prefer to put element data inline if we have space. */
-    if (!isInside(srcHeader)) {
+    if (!nursery().isInside(srcHeader)) {
         MOZ_ASSERT(src->elements_ == dst->elements_);
-        removeMallocedBuffer(srcHeader);
+        nursery().removeMallocedBuffer(srcHeader);
         return 0;
     }
 
@@ -2128,7 +2115,7 @@ js::Nursery::moveElementsToTenured(NativeObject* dst, NativeObject* src, AllocKi
         dst->as<ArrayObject>().setFixedElements();
         dstHeader = dst->as<ArrayObject>().getElementsHeader();
         js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
-        setElementsForwardingPointer(srcHeader, dstHeader, nslots);
+        nursery().setElementsForwardingPointer(srcHeader, dstHeader, nslots);
         return nslots * sizeof(HeapSlot);
     }
 
@@ -2137,7 +2124,7 @@ js::Nursery::moveElementsToTenured(NativeObject* dst, NativeObject* src, AllocKi
     if (!dstHeader)
         CrashAtUnhandlableOOM("Failed to allocate elements while tenuring.");
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
-    setElementsForwardingPointer(srcHeader, dstHeader, nslots);
+    nursery().setElementsForwardingPointer(srcHeader, dstHeader, nslots);
     dst->elements_ = dstHeader->elements();
     return nslots * sizeof(HeapSlot);
 }

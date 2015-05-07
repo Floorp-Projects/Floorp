@@ -18,7 +18,7 @@ using namespace js;
 using namespace js::gc;
 
 void
-StoreBuffer::GenericBuffer::mark(StoreBuffer* owner, JSTracer* trc)
+StoreBuffer::GenericBuffer::trace(StoreBuffer* owner, JSTracer* trc)
 {
     mozilla::ReentrancyGuard g(*owner);
     MOZ_ASSERT(owner->isEnabled());
@@ -29,7 +29,7 @@ StoreBuffer::GenericBuffer::mark(StoreBuffer* owner, JSTracer* trc)
         unsigned size = *e.get<unsigned>();
         e.popFront<unsigned>();
         BufferableRef* edge = e.get<BufferableRef>(size);
-        edge->mark(trc);
+        edge->trace(trc);
         e.popFront(size);
     }
 }
