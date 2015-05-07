@@ -38,12 +38,8 @@
 
 using namespace mozilla;
 
-#if defined(PR_LOGGING)
 static PRLogModuleInfo *gNotifyAddrLog = nullptr;
 #define LOG(args) PR_LOG(gNotifyAddrLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
 
 #define NETWORK_NOTIFY_CHANGED_PREF "network.notify.changed"
 
@@ -303,10 +299,8 @@ class NuwaMarkLinkMonitorThreadRunner : public nsRunnable
 nsresult
 nsNotifyAddrListener::Init(void)
 {
-#if defined(PR_LOGGING)
     if (!gNotifyAddrLog)
         gNotifyAddrLog = PR_NewLogModule("nsNotifyAddr");
-#endif
 
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();

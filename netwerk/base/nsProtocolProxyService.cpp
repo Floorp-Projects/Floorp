@@ -48,8 +48,6 @@ namespace mozilla {
 using namespace mozilla;
 
 #include "prlog.h"
-#if defined(PR_LOGGING)
-#endif
 #undef LOG
 #define LOG(args) PR_LOG(net::GetProxyLog(), PR_LOG_DEBUG, args)
 

@@ -1230,7 +1230,6 @@ nsSocketTransport::InitiateSocket()
     // connected - Bug 853423.
     if (mConnectionFlags & nsISocketTransport::DISABLE_RFC1918 &&
         IsIPAddrLocal(&mNetAddr)) {
-#ifdef PR_LOGGING
         if (SOCKET_LOG_ENABLED()) {
             nsAutoCString netAddrCString;
             netAddrCString.SetCapacity(kIPv6CStrBufSize);
@@ -1244,7 +1243,6 @@ nsSocketTransport::InitiateSocket()
                         mHost.get(), mPort, mProxyHost.get(), mProxyPort,
                         netAddrCString.get()));
         }
-#endif
         mCondition = NS_ERROR_CONNECTION_REFUSED;
         OnSocketDetached(nullptr);
         return mCondition;
@@ -1351,13 +1349,11 @@ nsSocketTransport::InitiateSocket()
     mPollTimeout = mTimeouts[TIMEOUT_CONNECT];
     SendStatus(NS_NET_STATUS_CONNECTING_TO);
 
-#if defined(PR_LOGGING)
     if (SOCKET_LOG_ENABLED()) {
         char buf[kNetAddrMaxCStrBufSize];
         NetAddrToString(&mNetAddr, buf, sizeof(buf));
         SOCKET_LOG(("  trying address: %s\n", buf));
     }
-#endif
 
     //
     // Initiate the connect() to the host...
@@ -2786,7 +2782,7 @@ nsSocketTransport::TraceOutBuf(const char *buf, int32_t n)
 
 static void LogNSPRError(const char* aPrefix, const void *aObjPtr)
 {
-#if defined(PR_LOGGING) && defined(DEBUG)
+#if defined(DEBUG)
     PRErrorCode errCode = PR_GetError();
     int errLen = PR_GetErrorTextLength();
     nsAutoCString errStr;
@@ -2826,7 +2822,7 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveEnabled(bool aEnable)
 
 static void LogOSError(const char *aPrefix, const void *aObjPtr)
 {
-#if defined(PR_LOGGING) && defined(DEBUG)
+#if defined(DEBUG)
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
 #ifdef XP_WIN
