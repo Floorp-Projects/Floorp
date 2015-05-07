@@ -118,8 +118,8 @@ class ResultsSink:
         if output.timed_out:
             self.counts['TIMEOUT'] += 1
         if isinstance(output, NullTestOutput):
-            if self.options.tinderbox:
-                self.print_tinderbox_result(
+            if self.options.format == 'automation':
+                self.print_automation_result(
                     'TEST-KNOWN-FAIL', output.test, time=output.dt,
                     skip=True)
             self.counts['SKIP'] += 1
@@ -170,18 +170,18 @@ class ResultsSink:
             else:
                 self.counts['SKIP'] += 1
 
-            if self.options.tinderbox:
+            if self.options.format == 'automation':
                 if result.result != TestResult.PASS and len(result.results) > 1:
                     for sub_ok, msg in result.results:
                         tup = (sub_ok, result.test.expect, result.test.random)
                         label = self.LABELS[tup][0]
                         if label == 'TEST-UNEXPECTED-PASS':
                             label = 'TEST-PASS (EXPECTED RANDOM)'
-                        self.print_tinderbox_result(
+                        self.print_automation_result(
                             label, result.test, time=output.dt,
                             message=msg)
                 tup = (result.result, result.test.expect, result.test.random)
-                self.print_tinderbox_result(
+                self.print_automation_result(
                     self.LABELS[tup][0], result.test, time=output.dt)
                 return
 
@@ -195,12 +195,12 @@ class ResultsSink:
 
     def finish(self, completed):
         self.pb.finish(completed)
-        if not self.options.tinderbox:
+        if not self.options.format == 'automation':
             self.list(completed)
 
     # Conceptually, this maps (test result x test expection) to text labels.
     #      key   is (result, expect, random)
-    #      value is (tinderbox label, dev test category)
+    #      value is (automation label, dev test category)
     LABELS = {
         (TestResult.CRASH, False, False): ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
         (TestResult.CRASH, False, True):  ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
@@ -248,8 +248,8 @@ class ResultsSink:
     def all_passed(self):
         return 'REGRESSIONS' not in self.groups and 'TIMEOUTS' not in self.groups
 
-    def print_tinderbox_result(self, label, test, message=None, skip=False,
-                               time=None):
+    def print_automation_result(self, label, test, message=None, skip=False,
+                                time=None):
         result = label
         result += " | " + test.path
         args = []
