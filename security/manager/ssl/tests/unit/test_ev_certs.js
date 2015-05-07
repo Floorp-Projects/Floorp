@@ -50,8 +50,8 @@ function check_cert_err(cert_name, expected_error) {
   let cert = certdb.findCertByNickname(null, cert_name);
   let hasEVPolicy = {};
   let verifiedChain = {};
-  let error = certdb.verifyCertNow(cert, certificateUsageSSLServer,
-                                   NO_FLAGS, verifiedChain, hasEVPolicy);
+  let error = certdb.verifyCertNow(cert, certificateUsageSSLServer, NO_FLAGS,
+                                   null, verifiedChain, hasEVPolicy);
   do_check_eq(error,  expected_error);
 }
 
@@ -60,8 +60,8 @@ function check_ee_for_ev(cert_name, expected_ev) {
     let cert = certdb.findCertByNickname(null, cert_name);
     let hasEVPolicy = {};
     let verifiedChain = {};
-    let error = certdb.verifyCertNow(cert, certificateUsageSSLServer,
-                                     NO_FLAGS, verifiedChain, hasEVPolicy);
+    let error = certdb.verifyCertNow(cert, certificateUsageSSLServer, NO_FLAGS,
+                                     null, verifiedChain, hasEVPolicy);
     do_check_eq(hasEVPolicy.value, expected_ev);
     do_check_eq(error, PRErrorCodeSuccess);
 }
@@ -212,8 +212,8 @@ function run_test() {
       let flags = Ci.nsIX509CertDB.FLAG_LOCAL_ONLY |
                   Ci.nsIX509CertDB.FLAG_MUST_BE_EV;
 
-      let error = certdb.verifyCertNow(cert, certificateUsageSSLServer,
-                                       flags, verifiedChain, hasEVPolicy);
+      let error = certdb.verifyCertNow(cert, certificateUsageSSLServer, flags,
+                                       null, verifiedChain, hasEVPolicy);
       do_check_eq(hasEVPolicy.value, gEVExpected);
       do_check_eq(error,
                   gEVExpected ? PRErrorCodeSuccess
@@ -293,7 +293,7 @@ function check_no_ocsp_requests(cert_name, expected_error) {
   let flags = Ci.nsIX509CertDB.FLAG_LOCAL_ONLY |
               Ci.nsIX509CertDB.FLAG_MUST_BE_EV;
   let error = certdb.verifyCertNow(cert, certificateUsageSSLServer, flags,
-                                   verifiedChain, hasEVPolicy);
+                                   null, verifiedChain, hasEVPolicy);
   // Since we're not doing OCSP requests, no certificate will be EV.
   do_check_eq(hasEVPolicy.value, false);
   do_check_eq(expected_error, error);
