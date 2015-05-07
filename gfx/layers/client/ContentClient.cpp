@@ -136,7 +136,7 @@ ContentClientBasic::ContentClientBasic()
 
 void
 ContentClientBasic::CreateBuffer(ContentType aType,
-                                 const nsIntRect& aRect,
+                                 const IntRect& aRect,
                                  uint32_t aFlags,
                                  RefPtr<gfx::DrawTarget>* aBlackDT,
                                  RefPtr<gfx::DrawTarget>* aWhiteDT)
@@ -171,7 +171,7 @@ class RemoteBufferReadbackProcessor : public TextureReadbackSink
 {
 public:
   RemoteBufferReadbackProcessor(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates,
-                                const nsIntRect& aBufferRect, const nsIntPoint& aBufferRotation)
+                                const IntRect& aBufferRect, const nsIntPoint& aBufferRotation)
     : mReadbackUpdates(*aReadbackUpdates)
     , mBufferRect(aBufferRect)
     , mBufferRotation(aBufferRotation)
@@ -221,7 +221,7 @@ private:
   // This array is used to keep the layers alive until the callback.
   vector<RefPtr<Layer>> mLayerRefs;
 
-  nsIntRect mBufferRect;
+  IntRect mBufferRect;
   nsIntPoint mBufferRotation;
 };
 
@@ -276,7 +276,7 @@ ContentClientRemoteBuffer::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadba
 
 void
 ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
-                                               const nsIntRect& aRect,
+                                               const IntRect& aRect,
                                                uint32_t aFlags)
 {
   // If we hit this assertion, then it might be due to an empty transaction
@@ -304,7 +304,7 @@ ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
 }
 
 void
-ContentClientRemoteBuffer::CreateBackBuffer(const nsIntRect& aBufferRect)
+ContentClientRemoteBuffer::CreateBackBuffer(const IntRect& aBufferRect)
 {
   // gfx::BackendType::NONE means fallback to the content backend
   mTextureClient = CreateTextureClientForDrawing(
@@ -331,7 +331,7 @@ ContentClientRemoteBuffer::CreateBackBuffer(const nsIntRect& aBufferRect)
 
 void
 ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
-                                        const nsIntRect& aRect,
+                                        const IntRect& aRect,
                                         uint32_t aFlags,
                                         RefPtr<gfx::DrawTarget>* aBlackDT,
                                         RefPtr<gfx::DrawTarget>* aWhiteDT)
@@ -487,7 +487,7 @@ ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
   mTextureClientOnWhite = mFrontClientOnWhite;
   mFrontClientOnWhite = oldBack;
 
-  nsIntRect oldBufferRect = mBufferRect;
+  IntRect oldBufferRect = mBufferRect;
   mBufferRect = mFrontBufferRect;
   mFrontBufferRect = oldBufferRect;
 
@@ -668,5 +668,5 @@ ContentClientSingleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
   }
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla
