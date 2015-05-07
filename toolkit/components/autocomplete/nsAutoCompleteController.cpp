@@ -470,6 +470,13 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
             return NS_OK;
           }
 
+          // Some script may have changed the value of the text field since our
+          // last keypress or after our focus handler and we don't want to search
+          // for a stale string.
+          nsAutoString value;
+          input->GetTextValue(value);
+          mSearchString = value;
+
           StartSearches();
         }
       }

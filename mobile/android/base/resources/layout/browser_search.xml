@@ -19,4 +19,31 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
+    <!-- The window background is set to our desired color, #fff, so
+         reduce overdraw by not drawing the background.
+
+         Note: this needs to be transparent and not null because we
+         draw a divider in onDraw. -->
+    <view class="org.mozilla.gecko.home.SearchEngineBar$SearchEngineBarContainer"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:background="@android:color/transparent">
+
+        <!-- We add a marginTop so the outer container can draw a divider.
+
+             listSelector is too slow for showing pressed state
+             so we set the pressed colors on the child. -->
+        <org.mozilla.gecko.home.SearchEngineBar
+              android:id="@+id/search_engine_bar"
+              android:layout_width="wrap_content"
+              android:layout_height="48dp"
+              android:layout_marginTop="1dp"
+              android:orientation="horizontal"
+              android:layout_gravity="center_horizontal"
+              android:choiceMode="singleChoice"
+              android:listSelector="@android:color/transparent"
+              android:cacheColorHint="@android:color/transparent"/>
+
+   </view>
+
 </LinearLayout>

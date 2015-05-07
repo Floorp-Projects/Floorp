@@ -17,8 +17,8 @@ EXTRA_JS_MODULES += [
   'FxAccountsOAuthClient.jsm',
   'FxAccountsOAuthGrantClient.jsm',
   'FxAccountsProfile.jsm',
-  'FxAccountsProfileChannel.jsm',
   'FxAccountsProfileClient.jsm',
+  'FxAccountsWebChannel.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [

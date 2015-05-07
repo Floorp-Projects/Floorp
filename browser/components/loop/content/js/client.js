@@ -115,7 +115,7 @@ loop.Client = (function($) {
           }
         }.bind(this)
       );
-    },
+    }
   };
 
   return Client;

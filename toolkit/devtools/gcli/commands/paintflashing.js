@@ -7,8 +7,13 @@
 const { Cc, Ci, Cu } = require("chrome");
 const TargetFactory = require("resource://gre/modules/devtools/Loader.jsm").devtools.TargetFactory;
 
-const Telemetry = require("devtools/shared/telemetry");
-const telemetry = new Telemetry();
+let telemetry;
+try {
+  const Telemetry = require("devtools/shared/telemetry");
+  telemetry = new Telemetry();
+} catch(e) {
+  // DevTools Telemetry module only available in Firefox
+}
 
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const eventEmitter = new EventEmitter();
@@ -35,6 +40,9 @@ function onPaintFlashingChanged(target, value) {
   target.off("navigate", fireChange);
   target.once("navigate", fireChange);
 
+  if (!telemetry) {
+    return;
+  }
   if (value) {
     telemetry.toolOpened("paintflashing");
   } else {
