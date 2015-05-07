@@ -408,7 +408,7 @@ loop.roomViews = (function(mozL10n) {
 
     _shouldRenderContextView: function() {
       return !!(
-        this.props.mozLoop.getLoopPref("contextInConverations.enabled") &&
+        this.props.mozLoop.getLoopPref("contextInConversations.enabled") &&
         (this.state.roomContextUrls || this.state.roomDescription)
       );
     },
