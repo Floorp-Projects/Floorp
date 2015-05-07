@@ -53,6 +53,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     DEFINES['SQLITE_ENABLE_LOCKING_STYLE'] = 1
 
+# sqlite defaults this to on on __APPLE_ but it breaks on newer iOS SDKs
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
+    DEFINES['SQLITE_ENABLE_LOCKING_STYLE'] = 0
+
 # Turn on SQLite's assertions in debug builds.
 if CONFIG['MOZ_DEBUG']:
     DEFINES['SQLITE_DEBUG'] = 1
