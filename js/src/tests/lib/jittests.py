@@ -472,8 +472,8 @@ def check_output(out, err, rc, timed_out, test, options):
 
     return True
 
-def print_tinderbox(ok, res):
-    # Output test failures in a TBPL parsable format, eg:
+def print_automation_format(ok, res):
+    # Output test failures in a parsable format suitable for automation, eg:
     # TEST-RESULT | filename.js | Failure description (code N, args "--foobar")
     #
     # Example:
@@ -664,7 +664,7 @@ def print_test_summary(num_tests, failures, complete, doing, options):
               + ('' if complete
                  else ' (partial run -- interrupted by user {})'.format(doing)))
 
-    if options.tinderbox:
+    if options.format == 'automation':
         num_failures = len(failures) if failures else 0
         print('Result summary:')
         print('Passed: {:d}'.format(num_tests - num_failures))
@@ -723,8 +723,8 @@ def process_test_results(results, num_tests, options):
                 else:
                     pb.message("FAIL - {}".format(res.test.relpath_tests))
 
-            if options.tinderbox:
-                print_tinderbox(ok, res)
+            if options.format == 'automation':
+                print_automation_format(ok, res)
 
             n = i + 1
             pb.update(n, {
