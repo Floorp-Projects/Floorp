@@ -1,5 +1,8 @@
 this.EXPORTED_SYMBOLS = ["Test"];
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+Cu.importGlobalProperties(["URL"]);
+
 this.Test = {
   start: function(ok, is, finish) {
     let worker = new ChromeWorker("jsm_url_worker.js");
@@ -13,11 +16,13 @@ this.Test = {
         xhr.onreadystatechange = function() {
           if (xhr.readyState == 4) {
             ok(true, "Blob readable!");
+            URL.revokeObjectURL(event.data.url);
             finish();
           }
         }
         xhr.onerror = function() {
-          ok(true, "Blob unreadable, should not happen!");
+          ok(false, "Blob unreadable, should not happen!");
+          URL.revokeObjectURL(event.data.url);
           finish();
         }
         xhr.send();

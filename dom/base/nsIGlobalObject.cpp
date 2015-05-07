@@ -32,7 +32,6 @@ nsIGlobalObject::RegisterHostObjectURI(const nsACString& aURI)
 void
 nsIGlobalObject::UnregisterHostObjectURI(const nsACString& aURI)
 {
-  MOZ_ASSERT(mHostObjectURIs.Contains(aURI));
   mHostObjectURIs.RemoveElement(aURI);
 }
 
