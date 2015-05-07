@@ -83,6 +83,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
         mComponents(nullptr),
         mNext(nullptr),
         mGlobalJSObject(aGlobal),
+        mHasCallInterpositions(false),
         mIsContentXBLScope(false),
         mIsAddonScope(false)
 {
@@ -131,9 +132,18 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
 
     JSAddonId* addonId = JS::AddonIdOfObject(aGlobal);
     if (gInterpositionMap) {
+        bool isSystem = nsContentUtils::IsSystemPrincipal(principal);
         if (InterpositionMap::Ptr p = gInterpositionMap->lookup(addonId)) {
-            MOZ_RELEASE_ASSERT(nsContentUtils::IsSystemPrincipal(principal));
+            MOZ_RELEASE_ASSERT(isSystem);
             mInterposition = p->value();
+        }
+        // We also want multiprocessCompatible add-ons to have a default interposition.
+        if (!mInterposition && addonId && isSystem) {
+          bool interpositionEnabled = mozilla::Preferences::GetBool(
+            "extensions.interposition.enabled", false);
+          if (interpositionEnabled) {
+            mInterposition = do_GetService("@mozilla.org/addons/default-addon-shims;1");
+          }
         }
     }
 }

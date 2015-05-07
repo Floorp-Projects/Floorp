@@ -248,10 +248,10 @@ already_AddRefed<Layer> CreateLayerTree(
 TEST(Layers, LayerTree) {
   const char* layerTreeSyntax = "c(c(tt))";
   nsIntRegion layerVisibleRegion[] = {
-    nsIntRegion(nsIntRect(0,0,100,100)),
-    nsIntRegion(nsIntRect(0,0,100,100)),
-    nsIntRegion(nsIntRect(0,0,100,100)),
-    nsIntRegion(nsIntRect(10,10,20,20)),
+    nsIntRegion(IntRect(0,0,100,100)),
+    nsIntRegion(IntRect(0,0,100,100)),
+    nsIntRegion(IntRect(0,0,100,100)),
+    nsIntRegion(IntRect(10,10,20,20)),
   };
   Matrix4x4 transforms[] = {
     Matrix4x4(),

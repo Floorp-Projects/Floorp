@@ -345,6 +345,57 @@ let CustomizableUIInternal = {
     }
   },
 
+  _placeNewDefaultWidgetsInArea: function(aArea) {
+    let futurePlacedWidgets = gFuturePlacements.get(aArea);
+    let savedPlacements = gSavedState && gSavedState.placements && gSavedState.placements[aArea];
+    let defaultPlacements = gAreas.get(aArea).get("defaultPlacements");
+    if (!savedPlacements || !savedPlacements.length || !futurePlacedWidgets || !defaultPlacements ||
+        !defaultPlacements.length) {
+      return;
+    }
+    let defaultWidgetIndex = -1;
+
+    for (let widgetId of futurePlacedWidgets) {
+      let widget = gPalette.get(widgetId);
+      if (!widget || widget.source !== CustomizableUI.SOURCE_BUILTIN ||
+          !widget.defaultArea || !widget._introducedInVersion ||
+          savedPlacements.indexOf(widget.id) !== -1) {
+        continue;
+      }
+      defaultWidgetIndex = defaultPlacements.indexOf(widget.id);
+      if (defaultWidgetIndex === -1) {
+        continue;
+      }
+      // Now we know that this widget should be here by default, was newly introduced,
+      // and we have a saved state to insert into, and a default state to work off of.
+      // Try introducing after widgets that come before it in the default placements:
+      for (let i = defaultWidgetIndex; i >= 0; i--) {
+        // Special case: if the defaults list this widget as coming first, insert at the beginning:
+        if (i === 0 && i === defaultWidgetIndex) {
+          savedPlacements.splice(0, 0, widget.id);
+          // Before you ask, yes, deleting things inside a let x of y loop where y is a Set is
+          // safe, and we won't skip any items.
+          futurePlacedWidgets.delete(widget.id);
+          break;
+        }
+        // Otherwise, if we're somewhere other than the beginning, check if the previous
+        // widget is in the saved placements.
+        if (i) {
+          let previousWidget = defaultPlacements[i - 1];
+          let previousWidgetIndex = savedPlacements.indexOf(previousWidget);
+          if (previousWidgetIndex != -1) {
+            savedPlacements.splice(previousWidgetIndex + 1, 0, widget.id);
+            futurePlacedWidgets.delete(widget.id);
+            break;
+          }
+        }
+      }
+      // The loop above either inserts the item or doesn't - either way, we can get away
+      // with doing nothing else now; if the item remains in gFuturePlacements, we'll
+      // add it at the end in restoreStateForArea.
+    }
+  },
+
   wrapWidget: function(aWidgetId) {
     if (gGroupWrapperCache.has(aWidgetId)) {
       return gGroupWrapperCache.get(aWidgetId);
@@ -424,6 +475,9 @@ let CustomizableUIInternal = {
 
     if (!areaIsKnown) {
       gAreas.set(aName, props);
+
+      // Reconcile new default widgets. Have to do this before we start restoring things.
+      this._placeNewDefaultWidgetsInArea(aName);
 
       if (props.get("legacy") && !gPlacements.has(aName)) {
         // Guarantee this area exists in gFuturePlacements, to avoid checking it in

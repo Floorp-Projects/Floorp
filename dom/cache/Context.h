@@ -111,13 +111,14 @@ public:
   // will run on the QuotaManager IO thread.  Note, this Action must
   // be execute synchronously.
   static already_AddRefed<Context>
-  Create(Manager* aManager, Action* aQuotaIOThreadAction, Context* aOldContext);
+  Create(Manager* aManager, nsIThread* aTarget,
+         Action* aQuotaIOThreadAction, Context* aOldContext);
 
   // Execute given action on the target once the quota manager has been
   // initialized.
   //
   // Only callable from the thread that created the Context.
-  void Dispatch(nsIEventTarget* aTarget, Action* aAction);
+  void Dispatch(Action* aAction);
 
   // Cancel any Actions running or waiting to run.  This should allow the
   // Context to be released and Listener::RemoveContext() will be called
@@ -152,6 +153,7 @@ public:
   }
 
 private:
+  class Data;
   class QuotaInitRunnable;
   class ActionRunnable;
 
@@ -169,10 +171,10 @@ private:
     nsRefPtr<Action> mAction;
   };
 
-  explicit Context(Manager* aManager);
+  Context(Manager* aManager, nsIThread* aTarget);
   ~Context();
   void Start();
-  void DispatchAction(nsIEventTarget* aTarget, Action* aAction);
+  void DispatchAction(Action* aAction, bool aDoomData = false);
   void OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
                    nsMainThreadPtrHandle<OfflineStorage>& aOfflineStorage);
 
@@ -182,7 +184,12 @@ private:
   void
   SetNextContext(Context* aNextContext);
 
+  void
+  DoomTargetData();
+
   nsRefPtr<Manager> mManager;
+  nsCOMPtr<nsIThread> mTarget;
+  nsRefPtr<Data> mData;
   State mState;
   QuotaInfo mQuotaInfo;
   nsRefPtr<QuotaInitRunnable> mInitRunnable;

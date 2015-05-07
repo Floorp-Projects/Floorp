@@ -850,7 +850,7 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
 
     if (aDestRegion) {
       nsIntRegionRectIterator iter(*aDestRegion);
-      const nsIntRect *iterRect;
+      const IntRect *iterRect;
       while ((iterRect = iter.Next())) {
         D3D11_BOX box;
         box.front = 0;
@@ -924,11 +924,11 @@ DataTextureSourceD3D11::GetTileRect(uint32_t aIndex) const
   return GetTileRectD3D11(aIndex, mSize, mCompositor->GetMaxTextureSize());
 }
 
-nsIntRect
+IntRect
 DataTextureSourceD3D11::GetTileRect()
 {
   IntRect rect = GetTileRect(mCurrentTile);
-  return nsIntRect(rect.x, rect.y, rect.width, rect.height);
+  return IntRect(rect.x, rect.y, rect.width, rect.height);
 }
 
 void

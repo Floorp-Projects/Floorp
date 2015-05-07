@@ -43,7 +43,8 @@ protected:
 
 private:
   virtual void
-  RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo) override;
+  RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
+              Data* aOptionalData) override;
 
   nsresult OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aQuotaDir,
                           mozIStorageConnection** aConnOut);

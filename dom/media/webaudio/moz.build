@@ -21,6 +21,7 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 EXPORTS += [
+    'AlignedTArray.h',
     'AudioContext.h',
     'AudioEventTimeline.h',
     'AudioNodeEngine.h',
@@ -107,6 +108,9 @@ UNIFIED_SOURCES += [
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     SOURCES += ['AudioNodeEngineNEON.cpp']
     SOURCES['AudioNodeEngineNEON.cpp'].flags += ['-mfpu=neon']
+    LOCAL_INCLUDES += [
+        '/media/openmax_dl/dl/api/'
+    ]
 
 FAIL_ON_WARNINGS = True
 
@@ -116,3 +120,4 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '..'
 ]
+

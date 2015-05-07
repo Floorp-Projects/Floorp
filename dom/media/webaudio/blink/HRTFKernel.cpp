@@ -51,6 +51,14 @@ HRTFKernel::HRTFKernel(float* impulseResponse, size_t length, float sampleRate)
     : m_frameDelay(0)
     , m_sampleRate(sampleRate)
 {
+    AlignedTArray<float> buffer;
+    // copy to a 32-byte aligned buffer
+    if (((uintptr_t)impulseResponse & 31) != 0) {
+      buffer.SetLength(length);
+      mozilla::PodCopy(buffer.Elements(), impulseResponse, length);
+      impulseResponse = buffer.Elements();
+    }
+
     // Determine the leading delay (average group delay) for the response.
     m_frameDelay = extractAverageGroupDelay(impulseResponse, length);
 
@@ -79,18 +87,18 @@ nsReturnRef<HRTFKernel> HRTFKernel::createInterpolatedKernel(HRTFKernel* kernel1
     MOZ_ASSERT(kernel1 && kernel2);
     if (!kernel1 || !kernel2)
         return nsReturnRef<HRTFKernel>();
- 
+
     MOZ_ASSERT(x >= 0.0 && x < 1.0);
     x = mozilla::clamped(x, 0.0f, 1.0f);
-    
+
     float sampleRate1 = kernel1->sampleRate();
     float sampleRate2 = kernel2->sampleRate();
     MOZ_ASSERT(sampleRate1 == sampleRate2);
     if (sampleRate1 != sampleRate2)
         return nsReturnRef<HRTFKernel>();
-    
+
     float frameDelay = (1 - x) * kernel1->frameDelay() + x * kernel2->frameDelay();
-    
+
     nsAutoPtr<FFTBlock> interpolatedFrame(
         FFTBlock::CreateInterpolatedBlock(*kernel1->fftFrame(), *kernel2->fftFrame(), x));
     return HRTFKernel::create(interpolatedFrame, frameDelay, sampleRate1);

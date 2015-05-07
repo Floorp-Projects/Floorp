@@ -11,6 +11,8 @@
 #include "mozilla/dom/cache/Types.h"
 #include "nsISupportsImpl.h"
 
+class mozIStorageConnection;
+
 namespace mozilla {
 namespace dom {
 namespace cache {
@@ -33,12 +35,27 @@ public:
     Release(void) = 0;
   };
 
+  // Class containing data that can be opportunistically shared between
+  // multiple Actions running on the same thread/Context.  In theory
+  // this could be abstracted to a generic key/value map, but for now
+  // just explicitly provide accessors for the data we need.
+  class Data
+  {
+  public:
+    virtual mozIStorageConnection*
+    GetConnection() const = 0;
+
+    virtual void
+    SetConnection(mozIStorageConnection* aConn) = 0;
+  };
+
   // Execute operations on the target thread.  Once complete call
   // Resolver::Resolve().  This can be done sync or async.
   // Note: Action should hold Resolver ref until its ready to call Resolve().
   // Note: The "target" thread is determined when the Action is scheduled on
   //       Context.  The Action should not assume any particular thread is used.
-  virtual void RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo) = 0;
+  virtual void RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
+                           Data* aOptionalData) = 0;
 
   // Called on initiating thread when the Action is canceled.  The Action is
   // responsible for calling Resolver::Resolve() as normal; either with a

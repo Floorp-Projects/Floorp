@@ -17,7 +17,7 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(1f5b7f08-fa80-49e9-b881-888f081240da)]
+[scriptable, uuid(60b4cbf7-2a08-4419-8937-6ef495417824)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -27,6 +27,9 @@ interface inIDOMUtils : nsISupports
   nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
   unsigned long getRuleLine(in nsIDOMCSSRule aRule);
   unsigned long getRuleColumn(in nsIDOMCSSRule aRule);
+
+  [implicit_jscontext]
+  jsval getCSSLexer(in DOMString aText);
 
   // Utilities for working with selectors.  We don't have a JS OM representation
   // of a single selector or a selector list yet, but given a rule we can index
@@ -103,9 +106,6 @@ interface inIDOMUtils : nsISupports
   // For shorthands, checks whether there's a corresponding longhand property
   // that accepts values of this type.  Throws on unsupported properties or
   // unknown types.
-  //
-  // This function may incorrectly return false for properties that use custom
-  // parsing functions instead of table-driven parsing.
   const unsigned long TYPE_LENGTH = 0;
   const unsigned long TYPE_PERCENTAGE = 1;
   const unsigned long TYPE_COLOR = 2;
