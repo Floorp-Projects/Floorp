@@ -282,6 +282,10 @@ public:
         // CGContextRef we pass to it in NPP_HandleEvent(NPCocoaEventDrawRect)
         // outside of that call.  See bug 804606.
         QUIRK_FLASH_AVOID_CGMODE_CRASHES                = 1 << 10,
+        // Work around a Flash bug where it fails to check the error code of a
+        // NPN_GetValue(NPNVdocumentOrigin) call before trying to dereference
+        // its char* output.
+        QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN        = 1 << 11,
     };
 
     int GetQuirks() { return mQuirks; }

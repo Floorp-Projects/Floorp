@@ -116,6 +116,11 @@ public:
 
   virtual void FlushComplete();
 
+  virtual bool OnReaderTaskQueue() override
+  {
+    return mProxyCallback->OnReaderTaskQueue();
+  }
+
 private:
   MediaDataDecoderProxy* mProxyDecoder;
   MediaDataDecoderCallback* mProxyCallback;

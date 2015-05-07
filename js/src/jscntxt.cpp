@@ -86,7 +86,6 @@ js::TraceCycleDetectionSet(JSTracer* trc, js::ObjectSet& set)
 {
     for (js::ObjectSet::Enum e(set); !e.empty(); e.popFront()) {
         JSObject* key = e.front();
-        JS::AutoOriginalTraceLocation reloc(trc, &e.front());
         TraceRoot(trc, &key, "cycle detector table entry");
         if (key != e.front())
             e.rekeyFront(key);

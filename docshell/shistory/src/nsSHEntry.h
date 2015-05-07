@@ -26,9 +26,9 @@ class nsSHEntry final : public nsISHEntry,
                         public nsISHContainer,
                         public nsISHEntryInternal
 {
-public: 
+public:
   nsSHEntry();
-  nsSHEntry(const nsSHEntry &other);
+  nsSHEntry(const nsSHEntry& aOther);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
@@ -39,7 +39,7 @@ public:
 
   static nsresult Startup();
   static void Shutdown();
-  
+
 private:
   ~nsSHEntry();
 
@@ -48,22 +48,22 @@ private:
   nsRefPtr<nsSHEntryShared> mShared;
 
   // See nsSHEntry.idl for comments on these members.
-  nsCOMPtr<nsIURI>         mURI;
-  nsCOMPtr<nsIURI>         mReferrerURI;
-  uint32_t                 mReferrerPolicy;
-  nsString                 mTitle;
+  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mReferrerURI;
+  uint32_t mReferrerPolicy;
+  nsString mTitle;
   nsCOMPtr<nsIInputStream> mPostData;
-  uint32_t                 mLoadType;
-  uint32_t                 mID;
-  int32_t                  mScrollPositionX;
-  int32_t                  mScrollPositionY;
-  nsISHEntry*              mParent;
-  nsCOMArray<nsISHEntry>   mChildren;
-  bool                     mURIWasModified;
+  uint32_t mLoadType;
+  uint32_t mID;
+  int32_t mScrollPositionX;
+  int32_t mScrollPositionY;
+  nsISHEntry* mParent;
+  nsCOMArray<nsISHEntry> mChildren;
+  bool mURIWasModified;
   nsCOMPtr<nsIStructuredCloneContainer> mStateData;
-  bool                     mIsSrcdocEntry;
-  nsString                 mSrcdocData;
-  nsCOMPtr<nsIURI>         mBaseURI;
+  bool mIsSrcdocEntry;
+  nsString mSrcdocData;
+  nsCOMPtr<nsIURI> mBaseURI;
 };
 
 #endif /* nsSHEntry_h */

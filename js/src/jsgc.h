@@ -1189,6 +1189,7 @@ MergeCompartments(JSCompartment* source, JSCompartment* target);
 class RelocationOverlay
 {
     friend class MinorCollectionTracer;
+    friend class js::TenuringTracer;
 
     /* The low bit is set so this should never equal a normal pointer. */
     static const uintptr_t Relocated = uintptr_t(0xbad0bad1);
@@ -1336,8 +1337,6 @@ const int ZealGenerationalGCValue = 7;
 const int ZealIncrementalRootsThenFinish = 8;
 const int ZealIncrementalMarkAllThenFinish = 9;
 const int ZealIncrementalMultipleSlices = 10;
-const int ZealVerifierPostValue = 11;
-const int ZealFrameVerifierPostValue = 12;
 const int ZealCheckHashTablesOnMinorGC = 13;
 const int ZealCompactValue = 14;
 const int ZealLimit = 14;

@@ -60,7 +60,6 @@ EXPORTS += [
     'nsTPriorityQueue.h',
     'nsTWeakRef.h',
     'nsVersionComparator.h',
-    'nsVoidArray.h',
     'nsWeakReference.h',
     'nsXPTCUtils.h',
     'pldhash.h',
