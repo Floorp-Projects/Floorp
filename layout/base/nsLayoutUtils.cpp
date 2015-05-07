@@ -6611,6 +6611,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
 
   uint32_t status;
   imgRequest->GetImageStatus(&status);
+  result.mHasSize = status & imgIRequest::STATUS_SIZE_AVAILABLE;
   if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0) {
     // Spec says to use GetComplete, but that only works on
     // nsIDOMHTMLImageElement, and we support all sorts of other stuff
@@ -6731,6 +6732,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
   // in case this is being used by -moz-element()
   aElement->MarkContextClean();
 
+  result.mHasSize = true;
   result.mSize = size;
   result.mPrincipal = aElement->NodePrincipal();
   result.mIsWriteOnly = aElement->IsWriteOnly();
@@ -6783,6 +6785,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
   }
 
   result.mCORSUsed = aElement->GetCORSMode() != CORS_NONE;
+  result.mHasSize = true;
   result.mSize = size;
   result.mPrincipal = principal.forget();
   result.mIsWriteOnly = false;
@@ -7839,6 +7842,7 @@ nsLayoutUtils::SurfaceFromElementResult::SurfaceFromElementResult()
   // Use safe default values here
   : mIsWriteOnly(true)
   , mIsStillLoading(false)
+  , mHasSize(false)
   , mCORSUsed(false)
   , mIsPremultiplied(true)
 {

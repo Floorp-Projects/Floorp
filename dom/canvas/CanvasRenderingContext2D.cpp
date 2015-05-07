@@ -4317,8 +4317,11 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
       res = nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mTarget);
 
     if (!res.mSourceSurface && !res.mDrawInfo.mImgContainer) {
-      // Spec says to silently do nothing if the element is still loading.
-      if (!res.mIsStillLoading) {
+      // The spec says to silently do nothing in the following cases:
+      //   - The element is still loading.
+      //   - The image is bad, but it's not in the broken state (i.e., we could
+      //     decode the headers and get the size).
+      if (!res.mIsStillLoading && !res.mHasSize) {
         error.Throw(NS_ERROR_NOT_AVAILABLE);
       }
       return;
