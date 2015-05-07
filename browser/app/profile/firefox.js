@@ -1857,7 +1857,7 @@ pref("browser.polaris.enabled", false);
 pref("privacy.trackingprotection.ui.enabled", false);
 #endif
 
-#ifdef E10S_TESTING_ONLY
+#ifdef NIGHTLY_BUILD
 // At the moment, autostart.2 is used, while autostart.1 is unused.
 // We leave it here set to false to reset users' defaults and allow
 // us to change everybody to true in the future, when desired.
