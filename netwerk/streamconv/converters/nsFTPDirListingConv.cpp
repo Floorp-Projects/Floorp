@@ -19,6 +19,7 @@
 #include "ParseFTPList.h"
 #include <algorithm>
 
+#if defined(PR_LOGGING)
 //
 // Log module for FTP dir listing stream converter logging...
 //
@@ -32,6 +33,7 @@
 //
 PRLogModuleInfo* gFTPDirListConvLog = nullptr;
 
+#endif /* PR_LOGGING */
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS(nsFTPDirListingConv,
@@ -191,6 +193,7 @@ nsFTPDirListingConv::~nsFTPDirListingConv() {
 
 nsresult
 nsFTPDirListingConv::Init() {
+#if defined(PR_LOGGING)
     //
     // Initialize the global PRLogModule for FTP Protocol logging 
     // if necessary...
@@ -198,6 +201,7 @@ nsFTPDirListingConv::Init() {
     if (nullptr == gFTPDirListConvLog) {
         gFTPDirListConvLog = PR_NewLogModule("nsFTPDirListingConv");
     }
+#endif /* PR_LOGGING */
 
     return NS_OK;
 }

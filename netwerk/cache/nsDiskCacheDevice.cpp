@@ -65,7 +65,9 @@ public:
     NS_IMETHOD Run()
     {
         nsCacheServiceAutoLock lock(LOCK_TELEM(NSDISKCACHEDEVICEDEACTIVATEENTRYEVENT_RUN));
+#ifdef PR_LOGGING
         CACHE_LOG_DEBUG(("nsDiskCacheDeviceDeactivateEntryEvent[%p]\n", this));
+#endif
         if (!mCanceled) {
             (void) mDevice->DeactivateEntry_Private(mEntry, mBinding);
         }

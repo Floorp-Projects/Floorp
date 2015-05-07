@@ -22,7 +22,9 @@
 
 using namespace mozilla;
 
+#if defined(PR_LOGGING)
 PRLogModuleInfo *gWifiMonitorLog;
+#endif
 
 NS_IMPL_ISUPPORTS(nsWifiMonitor,
                   nsIWifiMonitor,
@@ -31,7 +33,9 @@ NS_IMPL_ISUPPORTS(nsWifiMonitor,
 
 nsWifiMonitor::nsWifiMonitor()
 {
+#if defined(PR_LOGGING)
   gWifiMonitorLog = PR_NewLogModule("WifiMonitor");
+#endif
 
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   if (obsSvc) {

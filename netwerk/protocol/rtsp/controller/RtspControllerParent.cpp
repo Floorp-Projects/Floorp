@@ -62,8 +62,10 @@ RtspControllerParent::RtspControllerParent()
   : mIPCOpen(true)
   , mTotalTracks(0)
 {
+#if defined(PR_LOGGING)
   if (!gRtspLog)
     gRtspLog = PR_NewLogModule("nsRtsp");
+#endif
 }
 
 RtspControllerParent::~RtspControllerParent()

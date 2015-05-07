@@ -27,10 +27,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(PR_LOGGING)
 //
 // set NSPR_LOG_MODULES=Test:5
 //
 static PRLogModuleInfo *gTestLog = nullptr;
+#endif
 #define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,7 +223,9 @@ main(int argc, char* argv[])
         if (registrar)
             registrar->AutoRegister(nullptr);
 
+#if defined(PR_LOGGING)
         gTestLog = PR_NewLogModule("Test");
+#endif
 
         // Make sure the DNS service is initialized on the main thread
         nsCOMPtr<nsIDNSService> dns =

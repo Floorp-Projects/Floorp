@@ -296,7 +296,9 @@ public:
     NS_IMETHOD Run()
     {
         nsCacheServiceAutoLock autoLock(LOCK_TELEM(NSBLOCKONCACHETHREADEVENT_RUN));
+#ifdef PR_LOGGING
         CACHE_LOG_DEBUG(("nsBlockOnCacheThreadEvent [%p]\n", this));
+#endif
         nsCacheService::gService->mCondVar.Notify();
         return NS_OK;
     }
@@ -1250,7 +1252,9 @@ nsCacheService::Shutdown()
 
         mCustomOfflineDevices.Enumerate(&nsCacheService::ShutdownCustomCacheDeviceEnum, nullptr);
 
+#ifdef PR_LOGGING
         LogCacheStatistics();
+#endif
 
         mClearingEntries = false;
         mCacheIOThread.swap(cacheIOThread);
@@ -1767,12 +1771,12 @@ nsCacheService::CreateCustomOfflineDevice(nsIFile *aProfileDir,
 {
     NS_ENSURE_ARG(aProfileDir);
 
-    if (PR_LOG_TEST(gCacheLog, PR_LOG_ALWAYS)) {
-      nsAutoCString profilePath;
-      aProfileDir->GetNativePath(profilePath);
-      CACHE_LOG_ALWAYS(("Creating custom offline device, %s, %d",
-                        profilePath.BeginReading(), aQuota));
-    }
+#if defined(PR_LOGGING)
+    nsAutoCString profilePath;
+    aProfileDir->GetNativePath(profilePath);
+    CACHE_LOG_ALWAYS(("Creating custom offline device, %s, %d",
+                      profilePath.BeginReading(), aQuota));
+#endif
 
     if (!mInitialized)         return NS_ERROR_NOT_AVAILABLE;
     if (!mEnableOfflineDevice) return NS_ERROR_NOT_AVAILABLE;
@@ -3113,6 +3117,7 @@ void nsCacheService::GetAppCacheDirectory(nsIFile ** result)
 }
 
 
+#if defined(PR_LOGGING)
 void
 nsCacheService::LogCacheStatistics()
 {
@@ -3132,6 +3137,7 @@ nsCacheService::LogCacheStatistics()
     CACHE_LOG_ALWAYS(("    Deactivated Unbound Entries = %d\n",
                       mDeactivatedUnboundEntries));
 }
+#endif
 
 nsresult
 nsCacheService::SetDiskSmartSize()

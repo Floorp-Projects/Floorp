@@ -13,7 +13,9 @@
 #include "mozilla/HashFunctions.h"
 #include "nsCRT.h"
 
+#if defined(PR_LOGGING)
 PRLogModuleInfo *gHttpLog = nullptr;
+#endif
 
 namespace mozilla {
 namespace net {
