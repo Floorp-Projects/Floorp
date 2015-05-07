@@ -4,9 +4,13 @@
 
 package org.mozilla.gecko.toolbar;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONArray;
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.GeckoAppShell;
@@ -40,7 +44,7 @@ import org.mozilla.gecko.widget.SiteLogins;
  */
 public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListener {
 
-    public static enum ButtonType { DISABLE, ENABLE, KEEP_BLOCKING };
+    public static enum ButtonType { DISABLE, ENABLE, KEEP_BLOCKING, CANCEL, COPY };
 
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
@@ -71,12 +75,12 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private DoorHanger mTrackingContentNotification;
     private DoorHanger mSelectLoginDoorhanger;
 
-    private final OnButtonClickListener mButtonClickListener;
+    private final OnButtonClickListener mContentButtonClickListener;
 
     public SiteIdentityPopup(Context context) {
         super(context);
 
-        mButtonClickListener = new PopupButtonListener();
+        mContentButtonClickListener = new ContentNotificationButtonListener();
         EventDispatcher.getInstance().registerGeckoThreadListener(this, "Doorhanger:Logins");
     }
 
@@ -163,7 +167,35 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             return;
         }
 
-        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.LOGIN, null);
+        final JSONObject login = (JSONObject) logins.get(0);
+        final OnButtonClickListener buttonClickListener = new OnButtonClickListener() {
+            @Override
+            public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
+                try {
+                    final int buttonId = response.getInt("callback");
+                    if (buttonId == ButtonType.COPY.ordinal()) {
+                        final ClipboardManager manager = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                        final String password = login.getString("password");
+                        if (AppConstants.Versions.feature11Plus) {
+                            manager.setPrimaryClip(ClipData.newPlainText("password", password));
+                        } else {
+                            manager.setText(password);
+                        }
+                        Toast.makeText(mContext, R.string.doorhanger_login_select_toast_copy, Toast.LENGTH_SHORT).show();
+                    }
+                    dismiss();
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error handling Select login button click", e);
+                    Toast.makeText(mContext, R.string.doorhanger_login_select_toast_copy_error, Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.LOGIN, buttonClickListener);
+
+        // Set buttons.
+        config.appendButton(mContext.getString(R.string.button_cancel), ButtonType.CANCEL.ordinal());
+        config.appendButton(mContext.getString(R.string.button_copy), ButtonType.COPY.ordinal());
 
         // Set message.
         String username = ((JSONObject) logins.get(0)).getString("username");
@@ -248,7 +280,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         // Remove any existing mixed content notification.
         removeMixedContentNotification();
 
-        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.MIXED_CONTENT, mButtonClickListener);
+        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.MIXED_CONTENT, mContentButtonClickListener);
         int icon;
         if (blocked) {
             icon = R.drawable.shield_enabled_doorhanger;
@@ -280,7 +312,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         // Remove any existing tracking content notification.
         removeTrackingContentNotification();
 
-        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.TRACKING, mButtonClickListener);
+        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.TRACKING, mContentButtonClickListener);
 
         int icon;
         if (blocked) {
@@ -403,7 +435,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         mDivider.setVisibility(View.GONE);
     }
 
-    private class PopupButtonListener implements OnButtonClickListener {
+    private class ContentNotificationButtonListener implements OnButtonClickListener {
         @Override
         public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
             GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", response.toString());
