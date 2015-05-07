@@ -2902,11 +2902,9 @@ int64_t MediaDecoderStateMachine::GetClock() const
       clock_time = GetVideoStreamPosition();
     }
     // Ensure the clock can never go backwards.
-    // Note we allow clock going backwards in capture mode during seeking.
-    NS_ASSERTION(GetMediaTime() <= clock_time ||
-                 mPlaybackRate <= 0 ||
-                 (mAudioCaptured && mState == DECODER_STATE_SEEKING),
-      "Clock should go forwards.");
+    // Note we allow clock going backwards in capture mode - we should fix this in bug 1162381.
+    NS_ASSERTION(GetMediaTime() <= clock_time || mPlaybackRate <= 0 || mAudioCaptured,
+    "Clock should go forwards.");
   }
 
   return clock_time;
