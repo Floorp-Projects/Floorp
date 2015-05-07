@@ -67,7 +67,6 @@ function runTheTest() {
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
-    ["dom.serviceWorkers.periodic-updates.enabled", true],
   ]}, function() {
     start();
   });
