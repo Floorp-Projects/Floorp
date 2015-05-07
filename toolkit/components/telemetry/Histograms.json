@@ -6571,6 +6571,48 @@
     "kind": "boolean",
     "description": "Was WebIDE's debug button used during this runtime connection?"
   },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_TYPE": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime type did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_ID": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime ID did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PROCESSOR": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime processor did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_OS": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime OS did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PLATFORM_VERSION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime platform version did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_APP_TYPE": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime app type did WebIDE connect to?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_VERSION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "What runtime version did WebIDE connect to?"
+  },
   "DEVTOOLS_OS_ENUMERATED_PER_USER": {
     "expires_in_version": "never",
     "kind": "enumerated",

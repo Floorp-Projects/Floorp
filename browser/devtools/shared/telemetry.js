@@ -281,6 +281,28 @@ Telemetry.prototype = {
   },
 
   /**
+   * Log a value to a keyed histogram.
+   *
+   * @param  {String} histogramId
+   *         Histogram in which the data is to be stored.
+   * @param  {String} key
+   *         The key within the single histogram.
+   * @param  value
+   *         Value to store.
+   */
+  logKeyed: function(histogramId, key, value) {
+    if (histogramId) {
+      try {
+        let histogram = Services.telemetry.getKeyedHistogramById(histogramId);
+        histogram.add(key, value);
+      } catch(e) {
+        dump("Warning: An attempt was made to write to the " + histogramId +
+             " histogram, which is not defined in Histograms.json\n");
+      }
+    }
+  },
+
+  /**
    * Log info about usage once per browser version. This allows us to discover
    * how many individual users are using our tools for each browser version.
    *
