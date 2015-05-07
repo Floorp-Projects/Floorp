@@ -396,7 +396,7 @@ RenderLayers(ContainerT* aContainer,
       if (layer->GetFrameMetrics(i - 1).IsScrollable()) {
         // Since the composition bounds are in the parent layer's coordinates,
         // use the parent's effective transform rather than the layer's own.
-        ParentLayerRect compositionBounds = layer->GetFrameMetrics(i - 1).mCompositionBounds;
+        ParentLayerRect compositionBounds = layer->GetFrameMetrics(i - 1).GetCompositionBounds();
         aManager->GetCompositor()->DrawDiagnostics(DiagnosticFlags::CONTAINER,
                                                    compositionBounds.ToUnknownRect(),
                                                    gfx::Rect(aClipRect.ToUnknownRect()),

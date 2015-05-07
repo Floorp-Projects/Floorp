@@ -39,8 +39,8 @@ public:
   static const FrameMetrics sNullMetrics;   // We often need an empty metrics
 
   FrameMetrics()
-    : mCompositionBounds(0, 0, 0, 0)
-    , mPresShellResolution(1)
+    : mPresShellResolution(1)
+    , mCompositionBounds(0, 0, 0, 0)
     , mDisplayPort(0, 0, 0, 0)
     , mCriticalDisplayPort(0, 0, 0, 0)
     , mScrollableRect(0, 0, 0, 0)
@@ -239,27 +239,6 @@ public:
     return copy;
   }
 
-  // ---------------------------------------------------------------------------
-  // The following metrics are all in widget space/device pixels.
-  //
-
-  // This is the area within the widget that we're compositing to. It is in the
-  // same coordinate space as the reference frame for the scrolled frame.
-  //
-  // This is useful because, on mobile, the viewport and composition dimensions
-  // are not always the same. In this case, we calculate the displayport using
-  // an area bigger than the region we're compositing to. If we used the
-  // viewport dimensions to calculate the displayport, we'd run into situations
-  // where we're prerendering the wrong regions and the content may be clipped,
-  // or too much of it prerendered. If the composition dimensions are the same as the
-  // viewport dimensions, there is no need for this and we can just use the viewport
-  // instead.
-  //
-  // This value is valid for nested scrollable layers as well, and is still
-  // relative to the layer tree origin. This value is provided by Gecko at
-  // layout/paint time.
-  ParentLayerRect mCompositionBounds;
-
 public:
   void SetPresShellResolution(float aPresShellResolution)
   {
@@ -269,6 +248,16 @@ public:
   float GetPresShellResolution() const
   {
     return mPresShellResolution;
+  }
+
+  void SetCompositionBounds(const ParentLayerRect& aCompositionBounds)
+  {
+    mCompositionBounds = aCompositionBounds;
+  }
+
+  const ParentLayerRect& GetCompositionBounds() const
+  {
+    return mCompositionBounds;
   }
 
   void SetDisplayPort(const CSSRect& aDisplayPort)
@@ -538,6 +527,23 @@ private:
   // This is a plain float rather than a ScaleFactor because in and of itself
   // it does not convert between any coordinate spaces for which we have names.
   float mPresShellResolution;
+
+  // This is the area within the widget that we're compositing to. It is in the
+  // same coordinate space as the reference frame for the scrolled frame.
+  //
+  // This is useful because, on mobile, the viewport and composition dimensions
+  // are not always the same. In this case, we calculate the displayport using
+  // an area bigger than the region we're compositing to. If we used the
+  // viewport dimensions to calculate the displayport, we'd run into situations
+  // where we're prerendering the wrong regions and the content may be clipped,
+  // or too much of it prerendered. If the composition dimensions are the same
+  // as the viewport dimensions, there is no need for this and we can just use
+  // the viewport instead.
+  //
+  // This value is valid for nested scrollable layers as well, and is still
+  // relative to the layer tree origin. This value is provided by Gecko at
+  // layout/paint time.
+  ParentLayerRect mCompositionBounds;
 
   // The area of a frame's contents that has been painted, relative to
   // mCompositionBounds.

@@ -533,7 +533,7 @@ ParentLayerCoord Axis::GetOrigin() const {
 }
 
 ParentLayerCoord Axis::GetCompositionLength() const {
-  return GetRectLength(GetFrameMetrics().mCompositionBounds);
+  return GetRectLength(GetFrameMetrics().GetCompositionBounds());
 }
 
 ParentLayerCoord Axis::GetPageStart() const {
@@ -548,7 +548,7 @@ ParentLayerCoord Axis::GetPageLength() const {
 
 bool Axis::ScaleWillOverscrollBothSides(float aScale) const {
   const FrameMetrics& metrics = GetFrameMetrics();
-  ParentLayerRect screenCompositionBounds = metrics.mCompositionBounds
+  ParentLayerRect screenCompositionBounds = metrics.GetCompositionBounds()
                                           / ParentLayerToParentLayerScale(aScale);
   return GetRectLength(screenCompositionBounds) - GetPageLength() > COORDINATE_EPSILON;
 }
