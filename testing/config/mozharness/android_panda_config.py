@@ -45,7 +45,7 @@ config = {
                 "--no-slow",
                 "--no-progress",
                 "--tinderbox",
-                "--tbpl"
+                "--jitflags=all"
             ],
             "run_filename": "jit_test.py",
             "testsdir": "jit-test/jit-test"

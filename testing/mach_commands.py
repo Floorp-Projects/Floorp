@@ -302,7 +302,7 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
 
         print('Running jit-tests')
         jittest_cmd = [os.path.join(self.topsrcdir, 'js', 'src', 'jit-test', 'jit_test.py'),
-              js, '--no-slow', '--tbpl']
+              js, '--no-slow', '--jitflags=all']
         if params['valgrind']:
             jittest_cmd.append('--valgrind')
 
@@ -310,7 +310,7 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
 
         print('running jstests')
         jstest_cmd = [os.path.join(self.topsrcdir, 'js', 'src', 'tests', 'jstests.py'),
-              js, '--tbpl']
+              js, '--jitflags=all']
         jstest_result = subprocess.call(jstest_cmd)
 
         print('running jsapi-tests')
