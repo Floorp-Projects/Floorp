@@ -1,0 +1,100 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+	<script type="application/javascript">
+
+function ok(cond, message) {
+  window.opener.ok(cond, message)
+}
+
+function is(received, expected, message) {
+  window.opener.is(received, expected, message);
+}
+
+function isnot(received, notExpected, message) {
+  window.opener.isnot(received, notExpected, message);
+}
+
+var receivedBufferFullEvents = 0;
+window.performance.onresourcetimingbufferfull = () => {
+  receivedBufferFullEvents++;
+}
+
+window.onload = () => {
+  // Here, we should have 4 entries (1 css, 3 png) since the image was loaded.
+  is(window.performance.getEntries().length, 4, "Performance.getEntries() returned wrong number of entries.");
+
+  window.performance.setResourceTimingBufferSize(5);
+  window.performance.mark("test-start");
+  window.performance.mark("test-end");
+
+  // The URI should be the address of a resource will be loaded later to be used on getEntriesByName.
+  window.performance.measure("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json",
+                             "test-start", "test-end");
+
+  is(window.performance.getEntries().length, 7, "User Timing APIs should never be affected by setResourceTimingBufferSize.");
+  is(window.performance.getEntriesByType("resource").length, 4, "The number of PerformanceResourceTiming should be 4.");
+  is(window.performance.getEntriesByType("mark").length, 2, "The number of PerformanceMark entries should be 2.");
+  is(window.performance.getEntriesByType("measure").length, 1, "The number of PerformanceMeasure entries should be 1.");
+
+  is(receivedBufferFullEvents, 0, "onresourcetimingbufferfull should never be called.");
+
+  makeXhr("test-data2.json", firstCheck);
+}
+
+function makeXhr(aUrl, aCallback) {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onload = aCallback;
+  xmlhttp.open("get", aUrl, true);
+  xmlhttp.send();
+}
+
+function firstCheck() {
+  is(window.performance.getEntriesByType("resource").length, 5, "The number of PerformanceResourceTiming should be 5.");
+  is(receivedBufferFullEvents, 1, "onresourcetimingbufferfull should be called once.");
+  makeXhr("test-data2.json", secondCheck);
+}
+
+function secondCheck() {
+  is(window.performance.getEntriesByType("resource").length, 5, "The number of PerformanceResourceTiming should be 5.");
+  is(receivedBufferFullEvents, 1, "onresourcetimingbufferfull should never be called since the last call.");
+  checkOrder(window.performance.getEntries(), "All PerformanceEntry");
+  checkOrder(window.performance.getEntriesByType("resource"), "PerformanceResourceTiming");
+  checkOrder(window.performance.getEntriesByType("mark"), "PerformanceMark");
+  checkOrder(window.performance.getEntriesByType("measure"), "PerformanceMeasure");
+
+  is(window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json").length, 2,
+                                         "Both PerformanceMeasure and XMLHttpRequest resource should be included.");
+  checkOrder(window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json"),
+                                                 "Entry with performance.getEntrieByName()");
+  window.opener.finishTests();
+}
+
+function checkOrder(entries, name) {
+  for (var i = 0; i < entries.length - 1; i++) {
+    ok(entries[i].startTime <= entries[i + 1].startTime, name + " should be sorted by startTime.");
+  }
+}
+
+</script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1158731"
+     title="Buffer for Performance APIs (Resource Timing, User Timing) should be separeted">
+    Bug #1158731 -  Buffer for Performance APIs (Resource Timing, User Timing) should be separeted
+  </a>
+  <p id="display"></p>
+  <div id="content">
+    <img src="http://mochi.test:8888/tests/image/test/mochitest/over.png">
+      <object data="http://mochi.test:8888/tests/image/test/mochitest/clear.png" type="image/png"/>
+      <embed src="http://mochi.test:8888/tests/image/test/mochitest/green.png" type="image/png"/>
+  </div>
+</body>
+</html>
