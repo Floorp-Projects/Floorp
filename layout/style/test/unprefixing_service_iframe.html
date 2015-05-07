@@ -13,67 +13,84 @@
 
 /** Helper file for testing the CSS Unprefixing Service **/
 
-// Testcases for CSS Unprefixing service, with the (string) declaration that
-// should be unprefixed, and the expected resulting property name & value:
+/* Testcases for CSS Unprefixing service.
+ *
+ * Each testcase MUST have the following fields:
+ *  - decl: A CSS declaration with prefixed style, to be tested via elem.style.
+ *  - targetPropName: The name of the property whose value should be
+ *                    affected by |decl|.
+ *
+ * And will have EITHER:
+ *  - isInvalid: If set to something truthy, this implies that |decl| is
+ *               invalid and should have no effect on |targetPropName|'s
+ *               computed or specified style.
+ *
+ * ...OR:
+ *  - expectedDOMStyleVal: The value that we expect to find in the specified
+ *                         style -- in elem.style.[targetPropName].
+ *  - expectedCompStyleVal: The value that we expect to find in the computed
+ *                          style -- in getComputedStyle(...)[targetPropName]
+ *                          If omitted, this is assumed to be the same as
+ *                          expectedDOMStyleVal. (Usually they'll be the same.)
+ */
 const gTestcases = [
   { decl:  "-webkit-box-flex:5",
     targetPropName: "flex-grow",
-    targetPropVal:  "5" },
+    expectedDOMStyleVal:  "5" },
 
   /* If author happens to specify modern flexbox style after prefixed style,
      make sure the modern stuff is preserved. */
   { decl:  "-webkit-box-flex:4;flex-grow:6",
     targetPropName: "flex-grow",
-    targetPropVal:  "6" },
+    expectedDOMStyleVal:  "6" },
 
   /* Tests for handling !important: */
   { decl:  "-webkit-box-flex:3!important;",
     targetPropName: "flex-grow",
-    targetPropVal:  "3" },
+    expectedDOMStyleVal:  "3" },
   { decl:  "-webkit-box-flex:2!important;flex-grow:1",
     targetPropName: "flex-grow",
-    targetPropVal:  "2" },
+    expectedDOMStyleVal:  "2" },
 
   { decl:  "-webkit-box-flex:1!important bogusText;",
-    targetPropName: "flex-grow"
-    /* invalid syntax --> no target prop-val. */
-  },
+    targetPropName: "flex-grow",
+    isInvalid: true },
 
   // Make sure we handle weird capitalization in property & value, too:
   { decl: "-WEBKIT-BoX-aLign: baSELine",
     targetPropName: "align-items",
-    targetPropVal:  "baseline" },
+    expectedDOMStyleVal:  "baseline" },
 
   { decl: "display:-webkit-box",
     targetPropName: "display",
-    targetPropVal:  "flex" },
+    expectedDOMStyleVal:  "flex" },
 
   { decl: "display:-webkit-box; display:-moz-box;",
     targetPropName: "display",
-    targetPropVal:  "flex" },
+    expectedDOMStyleVal:  "flex" },
 
   { decl: "display:-webkit-foobar; display:-moz-box;",
     targetPropName: "display",
-    targetPropVal:  "-moz-box" },
+    expectedDOMStyleVal:  "-moz-box" },
 
   // -webkit-box-align: baseline | center | end      | start      | stretch
   // ...maps to:
   // align-items:       baseline | center | flex-end | flex-start | stretch
   { decl: "-webkit-box-align: baseline",
     targetPropName: "align-items",
-    targetPropVal:  "baseline" },
+    expectedDOMStyleVal:  "baseline" },
   { decl: "-webkit-box-align: center",
     targetPropName: "align-items",
-    targetPropVal:  "center" },
+    expectedDOMStyleVal:  "center" },
   { decl: "-webkit-box-align: end",
     targetPropName: "align-items",
-    targetPropVal:  "flex-end" },
+    expectedDOMStyleVal:  "flex-end" },
   { decl: "-webkit-box-align: start",
     targetPropName: "align-items",
-    targetPropVal:  "flex-start" },
+    expectedDOMStyleVal:  "flex-start" },
   { decl: "-webkit-box-align: stretch",
     targetPropName: "align-items",
-    targetPropVal:  "stretch" },
+    expectedDOMStyleVal:  "stretch" },
 
   // -webkit-box-direction is not supported, because it's unused & would be
   // complicated to support. See note in CSSUnprefixingService.js for more.
@@ -81,70 +98,70 @@ const gTestcases = [
   // -webkit-box-ordinal-group: <number> maps directly to "order".
   { decl:  "-webkit-box-ordinal-group: 2",
     targetPropName: "order",
-    targetPropVal:  "2" },
+    expectedDOMStyleVal:  "2" },
   { decl:  "-webkit-box-ordinal-group: 6000",
     targetPropName: "order",
-    targetPropVal:  "6000" },
+    expectedDOMStyleVal:  "6000" },
 
   // -webkit-box-orient: horizontal | inline-axis | vertical | block-axis
   // ...maps to:
   // flex-direction:     row        | row         | column   | column
   { decl: "-webkit-box-orient: horizontal",
     targetPropName: "flex-direction",
-    targetPropVal:  "row" },
+    expectedDOMStyleVal:  "row" },
   { decl: "-webkit-box-orient: inline-axis",
     targetPropName: "flex-direction",
-    targetPropVal:  "row" },
+    expectedDOMStyleVal:  "row" },
   { decl: "-webkit-box-orient: vertical",
     targetPropName: "flex-direction",
-    targetPropVal:  "column" },
+    expectedDOMStyleVal:  "column" },
   { decl: "-webkit-box-orient: block-axis",
     targetPropName: "flex-direction",
-    targetPropVal:  "column" },
+    expectedDOMStyleVal:  "column" },
 
   // -webkit-box-pack: start     | center | end      | justify
   // ... maps to:
   // justify-content: flex-start | center | flex-end | space-between
   { decl: "-webkit-box-pack: start",
     targetPropName: "justify-content",
-    targetPropVal:  "flex-start" },
+    expectedDOMStyleVal:  "flex-start" },
   { decl: "-webkit-box-pack: center",
     targetPropName: "justify-content",
-    targetPropVal:  "center" },
+    expectedDOMStyleVal:  "center" },
   { decl: "-webkit-box-pack: end",
     targetPropName: "justify-content",
-    targetPropVal:  "flex-end" },
+    expectedDOMStyleVal:  "flex-end" },
   { decl: "-webkit-box-pack: justify",
     targetPropName: "justify-content",
-    targetPropVal:  "space-between" },
+    expectedDOMStyleVal:  "space-between" },
 
   // -webkit-transform: <transform> maps directly to "transform"
   { decl: "-webkit-transform: matrix(1, 2, 3, 4, 5, 6)",
     targetPropName: "transform",
-    targetPropVal:  "matrix(1, 2, 3, 4, 5, 6)" },
+    expectedDOMStyleVal:  "matrix(1, 2, 3, 4, 5, 6)" },
 
   // -webkit-transition: <property> maps directly to "transition"
   { decl: "-webkit-transition: width 1s linear 2s",
     targetPropName: "transition",
-    targetPropVal:  "width 1s linear 2s" },
+    expectedDOMStyleVal:  "width 1s linear 2s" },
 
   // -webkit-transition **with** -webkit-prefixed property in value.
   { decl: "-webkit-transition: -webkit-transform 1s linear 2s",
     targetPropName: "transition",
-    targetPropVal:  "transform 1s linear 2s" },
+    expectedDOMStyleVal:  "transform 1s linear 2s" },
   // (Re-test to check that it sets the "transition-property" subproperty.)
   { decl: "-webkit-transition: -webkit-transform 1s linear 2s",
     targetPropName: "transition-property",
-    targetPropVal:  "transform" },
+    expectedDOMStyleVal:  "transform" },
 
   // Same as previous test, except with "-webkit-transform" in the
   // middle of the value instead of at the beginning (still valid):
   { decl: "-webkit-transition: 1s -webkit-transform linear 2s",
     targetPropName: "transition",
-    targetPropVal:  "transform 1s linear 2s" },
+    expectedDOMStyleVal:  "transform 1s linear 2s" },
   { decl: "-webkit-transition: 1s -webkit-transform linear 2s",
     targetPropName: "transition-property",
-    targetPropVal:  "transform" },
+    expectedDOMStyleVal:  "transform" },
 ];
 
 function getComputedStyleWrapper(elem, prop)
@@ -180,36 +197,53 @@ function runOneTest(aTestcase)
 {
   let elem = document.getElementById("content");
 
-  let expectedValueInDOMStyle;
-  let expectedValueInComputedStyle;
-  if (typeof(aTestcase.targetPropVal) == 'undefined') {
-    expectedValueInDOMStyle = '';
-    expectedValueInComputedStyle = // initial computed style:
+  // (self-test/sanity-check:)
+  if (!aTestcase.decl || !aTestcase.targetPropName) {
+    ok(false, "Bug in test; missing 'decl' or 'targetPropName' field");
+  }
+
+  // Populate testcase's implied fields:
+  if (aTestcase.isInvalid) {
+    // (self-test/sanity-check:)
+    if (aTestcase.expectedDOMStyleVal || aTestcase.expectedCompStyleVal) {
+      ok(false, "Bug in test; testcase w/ 'isInvalid' field also provided " +
+                "an expected*Val field, but should not have");
+    }
+    aTestcase.expectedDOMStyleVal = '';
+    aTestcase.expectedCompStyleVal = // initial computed style:
       getComputedStyleWrapper(elem, aTestcase.targetPropName);
   } else {
-    expectedValueInDOMStyle = aTestcase.targetPropVal;
-    expectedValueInComputedStyle = aTestcase.targetPropVal;
+    // (self-test/sanity-check:)
+    if (!aTestcase.expectedDOMStyleVal) {
+      ok(false, "Bug in test; testcase must provide expectedDOMStyleVal " +
+                "(or set isInvalid if it's testing an invalid decl)");
+    }
+    // If expected computed style is unspecified, we assume it should match
+    // expected DOM style:
+    if (!aTestcase.expectedCompStyleVal) {
+      aTestcase.expectedCompStyleVal = aTestcase.expectedDOMStyleVal;
+    }
   }
 
   elem.setAttribute("style", aTestcase.decl);
 
-  // Check specified style for fixup:
-  is(elem.style[aTestcase.targetPropName], expectedValueInDOMStyle,
+  // Check that DOM elem.style has the expected value:
+  is(elem.style[aTestcase.targetPropName], aTestcase.expectedDOMStyleVal,
      "Checking if CSS Unprefixing Service produced expected result " +
      "in elem.style['" + aTestcase.targetPropName + "'] " +
      "when given decl '" + aTestcase.decl + "'");
 
-  // Check computed style for fixup:
+  // Check that computed style has the expected value:
   // (only for longhand properties; shorthands aren't in computed style)
   if (gCSSProperties[aTestcase.targetPropName].type == CSS_TYPE_LONGHAND) {
     let computedValue = getComputedStyleWrapper(elem, aTestcase.targetPropName);
-    is(computedValue, expectedValueInComputedStyle,
+    is(computedValue, aTestcase.expectedCompStyleVal,
        "Checking if CSS Unprefixing Service produced expected result " +
        "in computed value of property '" +  aTestcase.targetPropName + "' " +
        "when given decl '" + aTestcase.decl + "'");
   }
 
-  elem.setAttribute("style", "");
+  elem.removeAttribute("style");
 }
 
 // Function used to quickly test that unprefixing is off:
