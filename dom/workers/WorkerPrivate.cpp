@@ -870,16 +870,13 @@ const JSStructuredCloneCallbacks gMainThreadChromeWorkerStructuredCloneCallbacks
 class MainThreadReleaseRunnable final : public nsRunnable
 {
   nsTArray<nsCOMPtr<nsISupports>> mDoomed;
-  nsTArray<nsCString> mHostObjectURIs;
   nsCOMPtr<nsILoadGroup> mLoadGroupToCancel;
 
 public:
   MainThreadReleaseRunnable(nsTArray<nsCOMPtr<nsISupports>>& aDoomed,
-                            nsTArray<nsCString>& aHostObjectURIs,
                             nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel)
   {
     mDoomed.SwapElements(aDoomed);
-    mHostObjectURIs.SwapElements(aHostObjectURIs);
     mLoadGroupToCancel.swap(aLoadGroupToCancel);
   }
 
@@ -894,11 +891,6 @@ public:
     }
 
     mDoomed.Clear();
-
-    for (uint32_t index = 0; index < mHostObjectURIs.Length(); index++) {
-      nsHostObjectProtocolHandler::RemoveDataEntry(mHostObjectURIs[index]);
-    }
-
     return NS_OK;
   }
 
@@ -942,11 +934,8 @@ private:
     nsTArray<nsCOMPtr<nsISupports>> doomed;
     mFinishedWorker->ForgetMainThreadObjects(doomed);
 
-    nsTArray<nsCString> hostObjectURIs;
-    mFinishedWorker->StealHostObjectURIs(hostObjectURIs);
-
     nsRefPtr<MainThreadReleaseRunnable> runnable =
-      new MainThreadReleaseRunnable(doomed, hostObjectURIs, loadGroupToCancel);
+      new MainThreadReleaseRunnable(doomed, loadGroupToCancel);
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       NS_WARNING("Failed to dispatch, going to leak!");
     }
@@ -1000,11 +989,8 @@ private:
     nsTArray<nsCOMPtr<nsISupports> > doomed;
     mFinishedWorker->ForgetMainThreadObjects(doomed);
 
-    nsTArray<nsCString> hostObjectURIs;
-    mFinishedWorker->StealHostObjectURIs(hostObjectURIs);
-
     nsRefPtr<MainThreadReleaseRunnable> runnable =
-      new MainThreadReleaseRunnable(doomed, hostObjectURIs, loadGroupToCancel);
+      new MainThreadReleaseRunnable(doomed, loadGroupToCancel);
     if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
       NS_WARNING("Failed to dispatch, going to leak!");
     }
@@ -4108,29 +4094,6 @@ WorkerPrivateParent<Derived>::ParentJSContext() const
   return mLoadInfo.mScriptContext ?
          mLoadInfo.mScriptContext->GetNativeContext() :
          nsContentUtils::GetSafeJSContext();
-}
-
-template <class Derived>
-void
-WorkerPrivateParent<Derived>::RegisterHostObjectURI(const nsACString& aURI)
-{
-  AssertIsOnMainThread();
-  mHostObjectURIs.AppendElement(aURI);
-}
-
-template <class Derived>
-void
-WorkerPrivateParent<Derived>::UnregisterHostObjectURI(const nsACString& aURI)
-{
-  AssertIsOnMainThread();
-  mHostObjectURIs.RemoveElement(aURI);
-}
-
-template <class Derived>
-void
-WorkerPrivateParent<Derived>::StealHostObjectURIs(nsTArray<nsCString>& aArray)
-{
-  aArray.SwapElements(mHostObjectURIs);
 }
 
 template <class Derived>
