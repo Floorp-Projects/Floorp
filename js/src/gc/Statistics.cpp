@@ -325,6 +325,7 @@ static const PhaseInfo phases[] = {
     { PHASE_GC_BEGIN, "Begin Callback", PHASE_NO_PARENT },
     { PHASE_WAIT_BACKGROUND_THREAD, "Wait Background Thread", PHASE_NO_PARENT },
     { PHASE_MARK_DISCARD_CODE, "Mark Discard Code", PHASE_NO_PARENT },
+    { PHASE_RELAZIFY_FUNCTIONS, "Relazify Functions", PHASE_NO_PARENT },
     { PHASE_PURGE, "Purge", PHASE_NO_PARENT },
     { PHASE_MARK, "Mark", PHASE_NO_PARENT },
         { PHASE_UNMARK, "Unmark", PHASE_MARK },
