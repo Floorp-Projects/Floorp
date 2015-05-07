@@ -2909,10 +2909,10 @@ CalculateFrameMetricsForDisplayPort(nsIScrollableFrame* aScrollFrame) {
   } else {
     compBoundsScale = cumulativeResolution * layerToParentLayerScale;
   }
-  metrics.mCompositionBounds
-      = LayoutDeviceRect::FromAppUnits(nsRect(nsPoint(0, 0), compositionSize),
+  metrics.SetCompositionBounds(
+      LayoutDeviceRect::FromAppUnits(nsRect(nsPoint(0, 0), compositionSize),
                                        presContext->AppUnitsPerDevPixel())
-      * compBoundsScale;
+      * compBoundsScale);
 
   metrics.SetRootCompositionSize(
       nsLayoutUtils::CalculateRootCompositionSize(frame, false, metrics));
@@ -7720,7 +7720,7 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
 {
 
   if (aIsRootContentDocRootScrollFrame) {
-    return ViewAs<LayerPixel>(aMetrics.mCompositionBounds.Size(),
+    return ViewAs<LayerPixel>(aMetrics.GetCompositionBounds().Size(),
                               PixelCastJustification::ParentLayerToLayerForRootComposition)
            * LayerToScreenScale(1.0f)
            / aMetrics.DisplayportPixelsPerCSSPixel();
@@ -8271,7 +8271,6 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
   ParentLayerRect frameBounds = LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
                               * metrics.GetCumulativeResolution()
                               * layerToParentLayerScale;
-  metrics.mCompositionBounds = frameBounds;
 
   // For the root scroll frame of the root content document (RCD-RSF), the above calculation
   // will yield the size of the viewport frame as the composition bounds, which
@@ -8285,7 +8284,7 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
   bool isRootContentDocRootScrollFrame = isRootScrollFrame
                                       && presContext->IsRootContentDocument();
   if (isRootContentDocRootScrollFrame) {
-    UpdateCompositionBoundsForRCDRSF(metrics.mCompositionBounds, presContext,
+    UpdateCompositionBoundsForRCDRSF(frameBounds, presContext,
       compositionBounds, true, metrics.GetCumulativeResolution());
   }
 
@@ -8294,8 +8293,10 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
     nsMargin sizes = scrollableFrame->GetActualScrollbarSizes();
     // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
     ParentLayerMargin boundMargins = CSSMargin::FromAppUnits(sizes) * CSSToParentLayerScale(1.0f);
-    metrics.mCompositionBounds.Deflate(boundMargins);
+    frameBounds.Deflate(boundMargins);
   }
+
+  metrics.SetCompositionBounds(frameBounds);
 
   metrics.SetRootCompositionSize(
     nsLayoutUtils::CalculateRootCompositionSize(aScrollFrame ? aScrollFrame : aForFrame,
