@@ -51,30 +51,26 @@ Request::GetInternalRequest()
 
 namespace {
 void
-GetRequestURLFromWindow(const GlobalObject& aGlobal, nsPIDOMWindow* aWindow,
-                        const nsAString& aInput, nsAString& aRequestURL,
-                        ErrorResult& aRv)
+GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
+                          nsAString& aRequestURL, ErrorResult& aRv)
 {
-  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aDocument);
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIURI> docURI = aWindow->GetDocumentURI();
+  nsCOMPtr<nsIURI> baseURI = aDocument->GetBaseURI();
+  nsCOMPtr<nsIURI> resolvedURI;
+  aRv = NS_NewURI(getter_AddRefs(resolvedURI), aInput, nullptr, baseURI);
+  if (NS_WARN_IF(aRv.Failed())) {
+      return;
+  }
+
   nsAutoCString spec;
-  aRv = docURI->GetSpec(spec);
+  aRv = resolvedURI->GetSpec(spec);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  nsRefPtr<dom::URL> url =
-    dom::URL::Constructor(aGlobal, aInput, NS_ConvertUTF8toUTF16(spec), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  url->Stringify(aRequestURL, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
+  CopyUTF8toUTF16(spec, aRequestURL);
 }
 
 void
@@ -166,11 +162,11 @@ Request::Constructor(const GlobalObject& aGlobal,
 
     nsAutoString requestURL;
     if (NS_IsMainThread()) {
-      nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
-      if (window) {
-        GetRequestURLFromWindow(aGlobal, window, input, requestURL, aRv);
+      nsIDocument* doc = GetEntryDocument();
+      if (doc) {
+        GetRequestURLFromDocument(doc, input, requestURL, aRv);
       } else {
-        // If we don't have a window, we must assume that this is a full URL.
+        // If we don't have a document, we must assume that this is a full URL.
         GetRequestURLFromChrome(input, requestURL, aRv);
       }
     } else {
