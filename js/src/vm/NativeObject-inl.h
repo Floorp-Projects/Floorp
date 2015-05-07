@@ -612,6 +612,15 @@ WarnIfNotConstructing(JSContext* cx, const CallArgs& args, const char* builtinNa
                                         JSMSG_BUILTIN_CTOR_NO_NEW, builtinName);
 }
 
+inline bool
+ThrowIfNotConstructing(JSContext *cx, const CallArgs &args, const char *builtinName)
+{
+    if (args.isConstructing())
+        return true;
+    return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
+                                        JSMSG_BUILTIN_CTOR_NO_NEW_FATAL, builtinName);
+}
+
 } // namespace js
 
 #endif /* vm_NativeObject_inl_h */

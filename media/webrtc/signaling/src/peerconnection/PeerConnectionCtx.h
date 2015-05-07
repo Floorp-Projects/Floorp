@@ -8,7 +8,7 @@
 #include <string>
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-#include "mozilla/media/webrtc/WebrtcGlobalChild.h"
+#include "WebrtcGlobalChild.h"
 #endif
 
 #include "mozilla/Attributes.h"

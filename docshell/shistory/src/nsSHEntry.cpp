@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Local Includes
 #include "nsSHEntry.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
@@ -22,13 +21,9 @@ namespace dom = mozilla::dom;
 
 static uint32_t gEntryID = 0;
 
-//*****************************************************************************
-//***    nsSHEntry: Object Management
-//*****************************************************************************
-
-
 nsSHEntry::nsSHEntry()
-  : mReferrerPolicy(mozilla::net::RP_Default)
+  : mShared(new nsSHEntryShared())
+  , mReferrerPolicy(mozilla::net::RP_Default)
   , mLoadType(0)
   , mID(gEntryID++)
   , mScrollPositionX(0)
@@ -37,26 +32,25 @@ nsSHEntry::nsSHEntry()
   , mURIWasModified(false)
   , mIsSrcdocEntry(false)
 {
-  mShared = new nsSHEntryShared();
 }
 
-nsSHEntry::nsSHEntry(const nsSHEntry &other)
-  : mShared(other.mShared)
-  , mURI(other.mURI)
-  , mReferrerURI(other.mReferrerURI)
-  , mReferrerPolicy(other.mReferrerPolicy)
-  , mTitle(other.mTitle)
-  , mPostData(other.mPostData)
+nsSHEntry::nsSHEntry(const nsSHEntry& aOther)
+  : mShared(aOther.mShared)
+  , mURI(aOther.mURI)
+  , mReferrerURI(aOther.mReferrerURI)
+  , mReferrerPolicy(aOther.mReferrerPolicy)
+  , mTitle(aOther.mTitle)
+  , mPostData(aOther.mPostData)
   , mLoadType(0)         // XXX why not copy?
-  , mID(other.mID)
+  , mID(aOther.mID)
   , mScrollPositionX(0)  // XXX why not copy?
   , mScrollPositionY(0)  // XXX why not copy?
-  , mParent(other.mParent)
-  , mURIWasModified(other.mURIWasModified)
-  , mStateData(other.mStateData)
-  , mIsSrcdocEntry(other.mIsSrcdocEntry)
-  , mSrcdocData(other.mSrcdocData)
-  , mBaseURI(other.mBaseURI)
+  , mParent(aOther.mParent)
+  , mURIWasModified(aOther.mURIWasModified)
+  , mStateData(aOther.mStateData)
+  , mIsSrcdocEntry(aOther.mIsSrcdocEntry)
+  , mSrcdocData(aOther.mSrcdocData)
+  , mBaseURI(aOther.mBaseURI)
 {
 }
 
@@ -75,88 +69,90 @@ nsSHEntry::~nsSHEntry()
   mChildren.EnumerateForwards(ClearParentPtr, nullptr);
 }
 
-//*****************************************************************************
-//    nsSHEntry: nsISupports
-//*****************************************************************************
-
 NS_IMPL_ISUPPORTS(nsSHEntry, nsISHContainer, nsISHEntry, nsISHEntryInternal)
 
-//*****************************************************************************
-//    nsSHEntry: nsISHEntry
-//*****************************************************************************
-
-NS_IMETHODIMP nsSHEntry::SetScrollPosition(int32_t x, int32_t y)
+NS_IMETHODIMP
+nsSHEntry::SetScrollPosition(int32_t aX, int32_t aY)
 {
-  mScrollPositionX = x;
-  mScrollPositionY = y;
+  mScrollPositionX = aX;
+  mScrollPositionY = aY;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetScrollPosition(int32_t *x, int32_t *y)
+NS_IMETHODIMP
+nsSHEntry::GetScrollPosition(int32_t* aX, int32_t* aY)
 {
-  *x = mScrollPositionX;
-  *y = mScrollPositionY;
+  *aX = mScrollPositionX;
+  *aY = mScrollPositionY;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetURIWasModified(bool* aOut)
+NS_IMETHODIMP
+nsSHEntry::GetURIWasModified(bool* aOut)
 {
   *aOut = mURIWasModified;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetURIWasModified(bool aIn)
+NS_IMETHODIMP
+nsSHEntry::SetURIWasModified(bool aIn)
 {
   mURIWasModified = aIn;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetURI(nsIURI** aURI)
+NS_IMETHODIMP
+nsSHEntry::GetURI(nsIURI** aURI)
 {
   *aURI = mURI;
   NS_IF_ADDREF(*aURI);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetURI(nsIURI* aURI)
+NS_IMETHODIMP
+nsSHEntry::SetURI(nsIURI* aURI)
 {
   mURI = aURI;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetReferrerURI(nsIURI **aReferrerURI)
+NS_IMETHODIMP
+nsSHEntry::GetReferrerURI(nsIURI** aReferrerURI)
 {
   *aReferrerURI = mReferrerURI;
   NS_IF_ADDREF(*aReferrerURI);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetReferrerURI(nsIURI *aReferrerURI)
+NS_IMETHODIMP
+nsSHEntry::SetReferrerURI(nsIURI* aReferrerURI)
 {
   mReferrerURI = aReferrerURI;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetReferrerPolicy(uint32_t *aReferrerPolicy)
+NS_IMETHODIMP
+nsSHEntry::GetReferrerPolicy(uint32_t* aReferrerPolicy)
 {
   *aReferrerPolicy = mReferrerPolicy;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetReferrerPolicy(uint32_t aReferrerPolicy)
+NS_IMETHODIMP
+nsSHEntry::SetReferrerPolicy(uint32_t aReferrerPolicy)
 {
   mReferrerPolicy = aReferrerPolicy;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
+nsSHEntry::SetContentViewer(nsIContentViewer* aViewer)
 {
   return mShared->SetContentViewer(aViewer);
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetContentViewer(nsIContentViewer **aResult)
+nsSHEntry::GetContentViewer(nsIContentViewer** aResult)
 {
   *aResult = mShared->mContentViewer;
   NS_IF_ADDREF(*aResult);
@@ -164,15 +160,15 @@ nsSHEntry::GetContentViewer(nsIContentViewer **aResult)
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetAnyContentViewer(nsISHEntry **aOwnerEntry,
-                               nsIContentViewer **aResult)
+nsSHEntry::GetAnyContentViewer(nsISHEntry** aOwnerEntry,
+                               nsIContentViewer** aResult)
 {
   // Find a content viewer in the root node or any of its children,
   // assuming that there is only one content viewer total in any one
   // nsSHEntry tree
   GetContentViewer(aResult);
   if (*aResult) {
-#ifdef DEBUG_PAGE_CACHE 
+#ifdef DEBUG_PAGE_CACHE
     printf("Found content viewer\n");
 #endif
     *aOwnerEntry = this;
@@ -203,124 +199,142 @@ nsSHEntry::SetSticky(bool aSticky)
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetSticky(bool *aSticky)
+nsSHEntry::GetSticky(bool* aSticky)
 {
   *aSticky = mShared->mSticky;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetTitle(char16_t** aTitle)
+NS_IMETHODIMP
+nsSHEntry::GetTitle(char16_t** aTitle)
 {
   // Check for empty title...
   if (mTitle.IsEmpty() && mURI) {
     // Default title is the URL.
     nsAutoCString spec;
-    if (NS_SUCCEEDED(mURI->GetSpec(spec)))
+    if (NS_SUCCEEDED(mURI->GetSpec(spec))) {
       AppendUTF8toUTF16(spec, mTitle);
+    }
   }
 
   *aTitle = ToNewUnicode(mTitle);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetTitle(const nsAString &aTitle)
+NS_IMETHODIMP
+nsSHEntry::SetTitle(const nsAString& aTitle)
 {
   mTitle = aTitle;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetPostData(nsIInputStream** aResult)
+NS_IMETHODIMP
+nsSHEntry::GetPostData(nsIInputStream** aResult)
 {
   *aResult = mPostData;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetPostData(nsIInputStream* aPostData)
+NS_IMETHODIMP
+nsSHEntry::SetPostData(nsIInputStream* aPostData)
 {
   mPostData = aPostData;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult)
+NS_IMETHODIMP
+nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult)
 {
   *aResult = mShared->mLayoutHistoryState;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState)
+NS_IMETHODIMP
+nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState)
 {
   mShared->mLayoutHistoryState = aState;
   if (mShared->mLayoutHistoryState) {
-    mShared->mLayoutHistoryState->
-      SetScrollPositionOnly(!mShared->mSaveLayoutState);
+    mShared->mLayoutHistoryState->SetScrollPositionOnly(
+      !mShared->mSaveLayoutState);
   }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetLoadType(uint32_t * aResult)
+NS_IMETHODIMP
+nsSHEntry::GetLoadType(uint32_t* aResult)
 {
   *aResult = mLoadType;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetLoadType(uint32_t  aLoadType)
+NS_IMETHODIMP
+nsSHEntry::SetLoadType(uint32_t aLoadType)
 {
   mLoadType = aLoadType;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetID(uint32_t * aResult)
+NS_IMETHODIMP
+nsSHEntry::GetID(uint32_t* aResult)
 {
   *aResult = mID;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetID(uint32_t  aID)
+NS_IMETHODIMP
+nsSHEntry::SetID(uint32_t aID)
 {
   mID = aID;
   return NS_OK;
 }
 
-nsSHEntryShared* nsSHEntry::GetSharedState()
+nsSHEntryShared*
+nsSHEntry::GetSharedState()
 {
   return mShared;
 }
 
-NS_IMETHODIMP nsSHEntry::GetIsSubFrame(bool * aFlag)
+NS_IMETHODIMP
+nsSHEntry::GetIsSubFrame(bool* aFlag)
 {
   *aFlag = mShared->mIsFrameNavigation;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetIsSubFrame(bool    aFlag)
+NS_IMETHODIMP
+nsSHEntry::SetIsSubFrame(bool aFlag)
 {
   mShared->mIsFrameNavigation = aFlag;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetCacheKey(nsISupports** aResult)
+NS_IMETHODIMP
+nsSHEntry::GetCacheKey(nsISupports** aResult)
 {
   *aResult = mShared->mCacheKey;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetCacheKey(nsISupports* aCacheKey)
+NS_IMETHODIMP
+nsSHEntry::SetCacheKey(nsISupports* aCacheKey)
 {
   mShared->mCacheKey = aCacheKey;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetSaveLayoutStateFlag(bool * aFlag)
+NS_IMETHODIMP
+nsSHEntry::GetSaveLayoutStateFlag(bool* aFlag)
 {
   *aFlag = mShared->mSaveLayoutState;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetSaveLayoutStateFlag(bool    aFlag)
+NS_IMETHODIMP
+nsSHEntry::SetSaveLayoutStateFlag(bool aFlag)
 {
   mShared->mSaveLayoutState = aFlag;
   if (mShared->mLayoutHistoryState) {
@@ -330,44 +344,48 @@ NS_IMETHODIMP nsSHEntry::SetSaveLayoutStateFlag(bool    aFlag)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetExpirationStatus(bool * aFlag)
+NS_IMETHODIMP
+nsSHEntry::GetExpirationStatus(bool* aFlag)
 {
   *aFlag = mShared->mExpired;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetExpirationStatus(bool    aFlag)
+NS_IMETHODIMP
+nsSHEntry::SetExpirationStatus(bool aFlag)
 {
   mShared->mExpired = aFlag;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetContentType(nsACString& aContentType)
+NS_IMETHODIMP
+nsSHEntry::GetContentType(nsACString& aContentType)
 {
   aContentType = mShared->mContentType;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetContentType(const nsACString& aContentType)
+NS_IMETHODIMP
+nsSHEntry::SetContentType(const nsACString& aContentType)
 {
   mShared->mContentType = aContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::Create(nsIURI * aURI, const nsAString &aTitle,
-                  nsIInputStream * aInputStream,
-                  nsILayoutHistoryState * aLayoutHistoryState,
-                  nsISupports * aCacheKey, const nsACString& aContentType,
-                  nsISupports* aOwner,
-                  uint64_t aDocShellID, bool aDynamicCreation)
+nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
+                  nsIInputStream* aInputStream,
+                  nsILayoutHistoryState* aLayoutHistoryState,
+                  nsISupports* aCacheKey, const nsACString& aContentType,
+                  nsISupports* aOwner, uint64_t aDocShellID,
+                  bool aDynamicCreation)
 {
   mURI = aURI;
   mTitle = aTitle;
   mPostData = aInputStream;
 
   // Set the LoadType by default to loadHistory during creation
-  mLoadType = (uint32_t) nsIDocShellLoadInfo::loadHistory;
+  mLoadType = (uint32_t)nsIDocShellLoadInfo::loadHistory;
 
   mShared->mCacheKey = aCacheKey;
   mShared->mContentType = aContentType;
@@ -375,7 +393,7 @@ nsSHEntry::Create(nsIURI * aURI, const nsAString &aTitle,
   mShared->mDocShellID = aDocShellID;
   mShared->mDynamicallyCreated = aDynamicCreation;
 
-  // By default all entries are set false for subframe flag. 
+  // By default all entries are set false for subframe flag.
   // nsDocShell::CloneAndReplace() which creates entries for
   // all subframe navigations, sets the flag to true.
   mShared->mIsFrameNavigation = false;
@@ -384,7 +402,7 @@ nsSHEntry::Create(nsIURI * aURI, const nsAString &aTitle,
   mShared->mSaveLayoutState = true;
   mShared->mLayoutHistoryState = aLayoutHistoryState;
 
-  //By default the page is not expired
+  // By default the page is not expired
   mShared->mExpired = false;
 
   mIsSrcdocEntry = false;
@@ -394,7 +412,7 @@ nsSHEntry::Create(nsIURI * aURI, const nsAString &aTitle,
 }
 
 NS_IMETHODIMP
-nsSHEntry::Clone(nsISHEntry ** aResult)
+nsSHEntry::Clone(nsISHEntry** aResult)
 {
   *aResult = new nsSHEntry(*this);
   NS_ADDREF(*aResult);
@@ -402,7 +420,7 @@ nsSHEntry::Clone(nsISHEntry ** aResult)
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetParent(nsISHEntry ** aResult)
+nsSHEntry::GetParent(nsISHEntry** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = mParent;
@@ -411,7 +429,7 @@ nsSHEntry::GetParent(nsISHEntry ** aResult)
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetParent(nsISHEntry * aParent)
+nsSHEntry::SetParent(nsISHEntry* aParent)
 {
   /* parent not Addrefed on purpose to avoid cyclic reference
    * Null parent is OK
@@ -423,49 +441,49 @@ nsSHEntry::SetParent(nsISHEntry * aParent)
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetWindowState(nsISupports *aState)
+nsSHEntry::SetWindowState(nsISupports* aState)
 {
   mShared->mWindowState = aState;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetWindowState(nsISupports **aState)
+nsSHEntry::GetWindowState(nsISupports** aState)
 {
   NS_IF_ADDREF(*aState = mShared->mWindowState);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetViewerBounds(const nsIntRect &aBounds)
+nsSHEntry::SetViewerBounds(const nsIntRect& aBounds)
 {
   mShared->mViewerBounds = aBounds;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetViewerBounds(nsIntRect &aBounds)
+nsSHEntry::GetViewerBounds(nsIntRect& aBounds)
 {
   aBounds = mShared->mViewerBounds;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetOwner(nsISupports **aOwner)
+nsSHEntry::GetOwner(nsISupports** aOwner)
 {
   NS_IF_ADDREF(*aOwner = mShared->mOwner);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetOwner(nsISupports *aOwner)
+nsSHEntry::SetOwner(nsISupports* aOwner)
 {
   mShared->mOwner = aOwner;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetBFCacheEntry(nsIBFCacheEntry **aEntry)
+nsSHEntry::GetBFCacheEntry(nsIBFCacheEntry** aEntry)
 {
   NS_ENSURE_ARG_POINTER(aEntry);
   NS_IF_ADDREF(*aEntry = mShared);
@@ -473,18 +491,18 @@ nsSHEntry::GetBFCacheEntry(nsIBFCacheEntry **aEntry)
 }
 
 bool
-nsSHEntry::HasBFCacheEntry(nsIBFCacheEntry *aEntry)
+nsSHEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry)
 {
   return static_cast<nsIBFCacheEntry*>(mShared) == aEntry;
 }
 
 NS_IMETHODIMP
-nsSHEntry::AdoptBFCacheEntry(nsISHEntry *aEntry)
+nsSHEntry::AdoptBFCacheEntry(nsISHEntry* aEntry)
 {
   nsCOMPtr<nsISHEntryInternal> shEntry = do_QueryInterface(aEntry);
   NS_ENSURE_STATE(shEntry);
 
-  nsSHEntryShared *shared = shEntry->GetSharedState();
+  nsSHEntryShared* shared = shEntry->GetSharedState();
   NS_ENSURE_STATE(shared);
 
   mShared = shared;
@@ -492,11 +510,11 @@ nsSHEntry::AdoptBFCacheEntry(nsISHEntry *aEntry)
 }
 
 NS_IMETHODIMP
-nsSHEntry::SharesDocumentWith(nsISHEntry *aEntry, bool *aOut)
+nsSHEntry::SharesDocumentWith(nsISHEntry* aEntry, bool* aOut)
 {
   NS_ENSURE_ARG_POINTER(aOut);
 
-  nsCOMPtr<nsISHEntryInternal> internal = do_QueryInterface(aEntry); 
+  nsCOMPtr<nsISHEntryInternal> internal = do_QueryInterface(aEntry);
   NS_ENSURE_STATE(internal);
 
   *aOut = mShared == internal->GetSharedState();
@@ -518,14 +536,14 @@ nsSHEntry::GetIsSrcdocEntry(bool* aIsSrcdocEntry)
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetSrcdocData(nsAString &aSrcdocData)
+nsSHEntry::GetSrcdocData(nsAString& aSrcdocData)
 {
   aSrcdocData = mSrcdocData;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetSrcdocData(const nsAString &aSrcdocData)
+nsSHEntry::SetSrcdocData(const nsAString& aSrcdocData)
 {
   mSrcdocData = aSrcdocData;
   mIsSrcdocEntry = true;
@@ -533,7 +551,7 @@ nsSHEntry::SetSrcdocData(const nsAString &aSrcdocData)
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetBaseURI(nsIURI **aBaseURI)
+nsSHEntry::GetBaseURI(nsIURI** aBaseURI)
 {
   *aBaseURI = mBaseURI;
   NS_IF_ADDREF(*aBaseURI);
@@ -541,25 +559,21 @@ nsSHEntry::GetBaseURI(nsIURI **aBaseURI)
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetBaseURI(nsIURI *aBaseURI)
+nsSHEntry::SetBaseURI(nsIURI* aBaseURI)
 {
   mBaseURI = aBaseURI;
   return NS_OK;
 }
 
-//*****************************************************************************
-//    nsSHEntry: nsISHContainer
-//*****************************************************************************
-
-NS_IMETHODIMP 
-nsSHEntry::GetChildCount(int32_t * aCount)
+NS_IMETHODIMP
+nsSHEntry::GetChildCount(int32_t* aCount)
 {
   *aCount = mChildren.Count();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::AddChild(nsISHEntry * aChild, int32_t aOffset)
+nsSHEntry::AddChild(nsISHEntry* aChild, int32_t aOffset)
 {
   if (aChild) {
     NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
@@ -579,7 +593,7 @@ nsSHEntry::AddChild(nsISHEntry * aChild, int32_t aOffset)
   //
   //  Assert that aOffset will not be so high as to grow us a lot.
   //
-  NS_ASSERTION(aOffset < (mChildren.Count()+1023), "Large frames array!\n");
+  NS_ASSERTION(aOffset < (mChildren.Count() + 1023), "Large frames array!\n");
 
   bool newChildIsDyn = false;
   if (aChild) {
@@ -634,7 +648,7 @@ nsSHEntry::AddChild(nsISHEntry * aChild, int32_t aOffset)
           }
         }
       }
-  
+
       if (dynEntry) {
         nsCOMArray<nsISHEntry> tmp;
         tmp.SetCount(aOffset - dynEntryIndex + 1);
@@ -642,7 +656,6 @@ nsSHEntry::AddChild(nsISHEntry * aChild, int32_t aOffset)
         NS_ASSERTION(mChildren[aOffset + 1] == dynEntry, "Whaat?");
       }
     }
-    
 
     // Make sure there isn't anything at aOffset.
     if (aOffset < mChildren.Count()) {
@@ -664,7 +677,7 @@ nsSHEntry::AddChild(nsISHEntry * aChild, int32_t aOffset)
 }
 
 NS_IMETHODIMP
-nsSHEntry::RemoveChild(nsISHEntry * aChild)
+nsSHEntry::RemoveChild(nsISHEntry* aChild)
 {
   NS_ENSURE_TRUE(aChild, NS_ERROR_FAILURE);
   bool childRemoved = false;
@@ -692,7 +705,7 @@ nsSHEntry::RemoveChild(nsISHEntry * aChild)
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetChildAt(int32_t aIndex, nsISHEntry ** aResult)
+nsSHEntry::GetChildAt(int32_t aIndex, nsISHEntry** aResult)
 {
   if (aIndex >= 0 && aIndex < mChildren.Count()) {
     *aResult = mChildren[aIndex];
@@ -727,7 +740,7 @@ nsSHEntry::ReplaceChild(nsISHEntry* aNewEntry)
 }
 
 NS_IMETHODIMP
-nsSHEntry::AddChildShell(nsIDocShellTreeItem *aShell)
+nsSHEntry::AddChildShell(nsIDocShellTreeItem* aShell)
 {
   NS_ASSERTION(aShell, "Null child shell added to history entry");
   mShared->mChildShells.AppendObject(aShell);
@@ -735,7 +748,7 @@ nsSHEntry::AddChildShell(nsIDocShellTreeItem *aShell)
 }
 
 NS_IMETHODIMP
-nsSHEntry::ChildShellAt(int32_t aIndex, nsIDocShellTreeItem **aShell)
+nsSHEntry::ChildShellAt(int32_t aIndex, nsIDocShellTreeItem** aShell)
 {
   NS_IF_ADDREF(*aShell = mShared->mChildShells.SafeObjectAt(aIndex));
   return NS_OK;
@@ -749,14 +762,14 @@ nsSHEntry::ClearChildShells()
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetRefreshURIList(nsISupportsArray **aList)
+nsSHEntry::GetRefreshURIList(nsISupportsArray** aList)
 {
   NS_IF_ADDREF(*aList = mShared->mRefreshURIList);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetRefreshURIList(nsISupportsArray *aList)
+nsSHEntry::SetRefreshURIList(nsISupportsArray* aList)
 {
   mShared->mRefreshURIList = aList;
   return NS_OK;
@@ -804,7 +817,7 @@ nsSHEntry::HasDetachedEditor()
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetStateData(nsIStructuredCloneContainer **aContainer)
+nsSHEntry::GetStateData(nsIStructuredCloneContainer** aContainer)
 {
   NS_ENSURE_ARG_POINTER(aContainer);
   NS_IF_ADDREF(*aContainer = mStateData);
@@ -812,7 +825,7 @@ nsSHEntry::GetStateData(nsIStructuredCloneContainer **aContainer)
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetStateData(nsIStructuredCloneContainer *aContainer)
+nsSHEntry::SetStateData(nsIStructuredCloneContainer* aContainer)
 {
   mStateData = aContainer;
   return NS_OK;
@@ -855,9 +868,8 @@ nsSHEntry::SetDocshellID(uint64_t aID)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsSHEntry::GetLastTouched(uint32_t *aLastTouched)
+nsSHEntry::GetLastTouched(uint32_t* aLastTouched)
 {
   *aLastTouched = mShared->mLastTouched;
   return NS_OK;

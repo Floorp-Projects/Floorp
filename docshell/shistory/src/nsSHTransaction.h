@@ -15,25 +15,23 @@
 
 class nsISHEntry;
 
-class nsSHTransaction: public nsISHTransaction
+class nsSHTransaction : public nsISHTransaction
 {
 public:
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSISHTRANSACTION
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISHTRANSACTION
 
-	nsSHTransaction();
-
-protected:
-	virtual ~nsSHTransaction();
-
+  nsSHTransaction();
 
 protected:
-   bool           mPersist;
+  virtual ~nsSHTransaction();
 
-	nsISHTransaction * mPrev; // Weak Reference
-	nsCOMPtr<nsISHTransaction> mNext;
-	nsCOMPtr<nsISHEntry>  mSHEntry;
+protected:
+  bool mPersist;
+
+  nsISHTransaction* mPrev;  // Weak Reference
+  nsCOMPtr<nsISHTransaction> mNext;
+  nsCOMPtr<nsISHEntry> mSHEntry;
 };
 
-
-#endif   /* nsSHTransaction_h */
+#endif /* nsSHTransaction_h */

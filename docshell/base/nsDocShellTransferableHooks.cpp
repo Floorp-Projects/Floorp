@@ -17,10 +17,6 @@ nsTransferableHookData::~nsTransferableHookData()
 {
 }
 
-//*****************************************************************************
-// nsIClipboardDragDropHookList
-//*****************************************************************************
-
 NS_IMPL_ISUPPORTS(nsTransferableHookData, nsIClipboardDragDropHookList)
 
 NS_IMETHODIMP

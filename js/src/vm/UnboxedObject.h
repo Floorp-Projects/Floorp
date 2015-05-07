@@ -265,7 +265,7 @@ class UnboxedPlainObject : public JSObject
     static UnboxedExpandoObject* ensureExpando(JSContext* cx, Handle<UnboxedPlainObject*> obj);
 
     bool setValue(ExclusiveContext* cx, const UnboxedLayout::Property& property, const Value& v);
-    Value getValue(const UnboxedLayout::Property& property);
+    Value getValue(const UnboxedLayout::Property& property, bool maybeUninitialized = false);
 
     static bool convertToNative(JSContext* cx, JSObject* obj);
     static UnboxedPlainObject* create(ExclusiveContext* cx, HandleObjectGroup group,

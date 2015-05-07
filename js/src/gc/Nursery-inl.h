@@ -14,11 +14,8 @@
 #include "js/TracingAPI.h"
 #include "vm/Runtime.h"
 
-namespace js {
-
-template <typename T>
 MOZ_ALWAYS_INLINE bool
-Nursery::getForwardedPointer(T** ref)
+js::Nursery::getForwardedPointer(JSObject** ref) const
 {
     MOZ_ASSERT(ref);
     MOZ_ASSERT(isInside((void*)*ref));
@@ -26,9 +23,11 @@ Nursery::getForwardedPointer(T** ref)
     if (!overlay->isForwarded())
         return false;
     /* This static cast from Cell* restricts T to valid (GC thing) types. */
-    *ref = static_cast<T*>(overlay->forwardingAddress());
+    *ref = static_cast<JSObject*>(overlay->forwardingAddress());
     return true;
 }
+
+namespace js {
 
 // The allocation methods below will not run the garbage collector. If the
 // nursery cannot accomodate the allocation, the malloc heap will be used
