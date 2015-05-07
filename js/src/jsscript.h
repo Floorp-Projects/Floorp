@@ -252,9 +252,6 @@ class Bindings
                                          uint32_t numUnaliasedVars, uint32_t numUnaliasedBodyLevelLexicals,
                                          Binding* bindingArray);
 
-    // Initialize a trivial Bindings with no slots and an empty callObjShape.
-    bool initTrivial(ExclusiveContext* cx);
-
     // CompileScript parses and compiles one statement at a time, but the result
     // is one Script object.  There will be no vars or bindings, because those
     // go on the global, but there may be block-scoped locals, and the number of

@@ -190,18 +190,6 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, InternalBindingsHandle 
     return true;
 }
 
-bool
-Bindings::initTrivial(ExclusiveContext* cx)
-{
-    Shape* shape = EmptyShape::getInitialShape(cx, &CallObject::class_, TaggedProto(nullptr),
-                                               CallObject::RESERVED_SLOTS,
-                                               BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE);
-    if (!shape)
-        return false;
-    callObjShape_.init(shape);
-    return true;
-}
-
 uint8_t*
 Bindings::switchToScriptStorage(Binding* newBindingArray)
 {
@@ -2568,9 +2556,6 @@ JSScript::partiallyInit(ExclusiveContext* cx, HandleScript script, uint32_t ncon
 /* static */ bool
 JSScript::fullyInitTrivial(ExclusiveContext* cx, Handle<JSScript*> script)
 {
-    if (!script->bindings.initTrivial(cx))
-        return false;
-
     if (!partiallyInit(cx, script, 0, 0, 0, 0, 0, 0, 0))
         return false;
 
