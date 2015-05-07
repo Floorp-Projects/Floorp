@@ -18,6 +18,7 @@ import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
 import org.mozilla.gecko.widget.DoorHanger.OnButtonClickListener;
@@ -31,6 +32,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import org.mozilla.gecko.widget.DoorhangerConfig;
+import org.mozilla.gecko.widget.SiteLogins;
 
 /**
  * SiteIdentityPopup is a singleton class that displays site identity data in
@@ -48,6 +50,9 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     private static final String TRACKING_CONTENT_SUPPORT_URL =
         "https://support.mozilla.org/kb/firefox-android-tracking-protection";
 
+    // Placeholder string.
+    private final static String FORMAT_S = "%s";
+
     private SiteIdentity mSiteIdentity;
 
     private LinearLayout mIdentity;
@@ -64,6 +69,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
     private DoorHanger mMixedContentNotification;
     private DoorHanger mTrackingContentNotification;
+    private DoorHanger mSelectLoginDoorhanger;
 
     private final OnButtonClickListener mButtonClickListener;
 
@@ -124,16 +130,84 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     public void handleMessage(String event, JSONObject geckoObject) {
         if ("Doorhanger:Logins".equals(event)) {
             try {
-                final JSONArray logins = geckoObject.getJSONArray("logins");
-                addSelectLoginDoorhanger(logins);
+                final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+                if (selectedTab != null) {
+                    final JSONObject data = geckoObject.getJSONObject("data");
+                    addLoginsToTab(data);
+                }
+                if (isShowing()) {
+                    addSelectLoginDoorhanger(selectedTab);
+                }
             } catch (JSONException e) {
                 Log.e(LOGTAG, "Error accessing logins in Doorhanger:Logins message", e);
             }
         }
     }
 
-    private void addSelectLoginDoorhanger(JSONArray logins) {
-        // TODO: add doorhanger + link (if there is more than one login).
+    private void addLoginsToTab(JSONObject data) throws JSONException {
+        final JSONObject titleObj = data.getJSONObject("title");
+        final JSONArray logins = data.getJSONArray("logins");
+
+        final SiteLogins siteLogins = new SiteLogins(titleObj, logins);
+        Tabs.getInstance().getSelectedTab().setSiteLogins(siteLogins);
+    }
+
+    private void addSelectLoginDoorhanger(Tab tab) throws JSONException {
+        final SiteLogins siteLogins = tab.getSiteLogins();
+        if (siteLogins == null) {
+            return;
+        }
+
+        final JSONArray logins = siteLogins.getLogins();
+        if (logins.length() == 0) {
+            return;
+        }
+
+        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.LOGIN, null);
+
+        // Set message.
+        String username = ((JSONObject) logins.get(0)).getString("username");
+        if (TextUtils.isEmpty(username)) {
+            username = mContext.getString(R.string.doorhanger_login_no_username);
+        }
+
+        final String message = mContext.getString(R.string.doorhanger_login_select_message).replace(FORMAT_S, username);
+        config.setMessage(message);
+
+        // Set options.
+        final JSONObject options = new JSONObject();
+        final JSONObject titleObj = siteLogins.getTitle();
+        options.put("title", titleObj);
+
+        if (logins.length() > 1) {
+            // TODO: Fetch actionText if there is more than one login.
+            final JSONObject actionText = null;
+            options.put("actionText", actionText);
+        }
+
+        config.setOptions(options);
+
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!mInflated) {
+                    init();
+                }
+
+                removeSelectLoginDoorhanger();
+
+                mSelectLoginDoorhanger = DoorHanger.Get(mContext, config);
+                mContent.addView(mSelectLoginDoorhanger);
+                mDivider.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void removeSelectLoginDoorhanger() {
+        if (mSelectLoginDoorhanger != null) {
+            mContent.removeView(mSelectLoginDoorhanger);
+            mSelectLoginDoorhanger = null;
+        }
     }
 
     private void toggleIdentityKnownContainerVisibility(final boolean isIdentityKnown) {
@@ -281,6 +355,12 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             addTrackingContentNotification(trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED);
         }
 
+        try {
+            addSelectLoginDoorhanger(selectedTab);
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error adding selectLogin doorhanger", e);
+        }
+
         showDividers();
 
         super.show();
@@ -319,6 +399,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         super.dismiss();
         removeMixedContentNotification();
         removeTrackingContentNotification();
+        removeSelectLoginDoorhanger();
         mDivider.setVisibility(View.GONE);
     }
 

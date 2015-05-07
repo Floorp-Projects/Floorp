@@ -30,17 +30,17 @@ import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 
 public class LoginDoorHanger extends DoorHanger {
     private static final String LOGTAG = "LoginDoorHanger";
-    private enum ActionType { EDIT };
+    private enum ActionType { EDIT, SELECT }
 
     private final TextView mTitle;
-    private final TextView mLogin;
+    private final TextView mLink;
     private int mCallbackID;
 
     public LoginDoorHanger(Context context, DoorhangerConfig config) {
         super(context, config, Type.LOGIN);
 
         mTitle = (TextView) findViewById(R.id.doorhanger_title);
-        mLogin = (TextView) findViewById(R.id.doorhanger_login);
+        mLink = (TextView) findViewById(R.id.doorhanger_link);
 
         loadConfig(config);
     }
@@ -117,18 +117,9 @@ public class LoginDoorHanger extends DoorHanger {
      */
     private void addActionText(JSONObject actionTextObj) {
         if (actionTextObj == null) {
-            mLogin.setVisibility(View.GONE);
+            mLink.setVisibility(View.GONE);
             return;
         }
-
-        boolean hasUsername = true;
-        String text = actionTextObj.optString("text");
-        if (TextUtils.isEmpty(text)) {
-            hasUsername = false;
-            text = mResources.getString(R.string.doorhanger_login_no_username);
-        }
-        mLogin.setText(text);
-        mLogin.setVisibility(View.VISIBLE);
 
         // Make action.
         try {
@@ -182,10 +173,21 @@ public class LoginDoorHanger extends DoorHanger {
                             dialog.dismiss();
                         }
                     });
+                    String text = actionTextObj.optString("text");
+                    if (TextUtils.isEmpty(text)) {
+                        text = mResources.getString(R.string.doorhanger_login_no_username);
+                    }
+                    mLink.setText(text);
+                    mLink.setVisibility(View.VISIBLE);
+                    break;
+
+                case SELECT:
+
+                    break;
             }
 
             final Dialog dialog = builder.create();
-            mLogin.setOnClickListener(new OnClickListener() {
+            mLink.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     dialog.show();
@@ -193,11 +195,7 @@ public class LoginDoorHanger extends DoorHanger {
             });
 
         } catch (JSONException e) {
-            // Log an error, but leave the text visible if there was a username.
             Log.e(LOGTAG, "Error fetching actionText from JSON", e);
-            if (!hasUsername) {
-                mLogin.setVisibility(View.GONE);
-            }
         }
     }
 }
