@@ -801,7 +801,7 @@ describe("loop.panel", function() {
           location: "http://invalid.com",
           description: "fakeSite",
           thumbnail: "fakeimage.png"
-        }],
+        }]
       }));
     });
 

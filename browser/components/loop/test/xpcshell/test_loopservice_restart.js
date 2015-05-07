@@ -64,7 +64,7 @@ add_task(function* test_initialize_with_invalid_fxa_token() {
       code: 401,
       errno: 110,
       error: "Unauthorized",
-      message: "Unknown credentials",
+      message: "Unknown credentials"
     }));
   });
 

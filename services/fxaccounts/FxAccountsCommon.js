@@ -100,8 +100,8 @@ exports.UI_REQUEST_REFRESH_AUTH = "refreshAuthentication";
 // The OAuth client ID for Firefox Desktop
 exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
 
-// Profile WebChannel ID
-exports.PROFILE_WEBCHANNEL_ID = "account_updates";
+// Firefox Accounts WebChannel ID
+exports.WEBCHANNEL_ID = "account_updates";
 
 // Server errno.
 // From https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-format
