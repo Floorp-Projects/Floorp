@@ -435,22 +435,31 @@ uint32_t
 VideoDevice::GetBestFitnessDistance(
     const nsTArray<const MediaTrackConstraintSet*>& aConstraintSets)
 {
+  // TODO: Minimal kludge to fix plain and ideal facingMode regression, for
+  // smooth landing and uplift. Proper cleanup is forthcoming (1037389).
+  uint64_t distance = 0;
+
   // Interrogate device-inherent properties first.
   for (size_t i = 0; i < aConstraintSets.Length(); i++) {
     auto& c = *aConstraintSets[i];
     if (!c.mFacingMode.IsConstrainDOMStringParameters() ||
+        c.mFacingMode.GetAsConstrainDOMStringParameters().mIdeal.WasPassed() ||
         c.mFacingMode.GetAsConstrainDOMStringParameters().mExact.WasPassed()) {
       nsString deviceFacingMode;
       GetFacingMode(deviceFacingMode);
       if (c.mFacingMode.IsString()) {
         if (c.mFacingMode.GetAsString() != deviceFacingMode) {
-          return UINT32_MAX;
+          if (i == 0) {
+            distance = 1000;
+          }
         }
       } else if (c.mFacingMode.IsStringSequence()) {
         if (!c.mFacingMode.GetAsStringSequence().Contains(deviceFacingMode)) {
-          return UINT32_MAX;
+          if (i == 0) {
+            distance = 1000;
+          }
         }
-      } else {
+      } else if (c.mFacingMode.GetAsConstrainDOMStringParameters().mExact.WasPassed()) {
         auto& exact = c.mFacingMode.GetAsConstrainDOMStringParameters().mExact.Value();
         if (exact.IsString()) {
           if (exact.GetAsString() != deviceFacingMode) {
@@ -458,6 +467,19 @@ VideoDevice::GetBestFitnessDistance(
           }
         } else if (!exact.GetAsStringSequence().Contains(deviceFacingMode)) {
           return UINT32_MAX;
+        }
+      } else if (c.mFacingMode.GetAsConstrainDOMStringParameters().mIdeal.WasPassed()) {
+        auto& ideal = c.mFacingMode.GetAsConstrainDOMStringParameters().mIdeal.Value();
+        if (ideal.IsString()) {
+          if (ideal.GetAsString() != deviceFacingMode) {
+            if (i == 0) {
+              distance = 1000;
+            }
+          }
+        } else if (!ideal.GetAsStringSequence().Contains(deviceFacingMode)) {
+          if (i == 0) {
+            distance = 1000;
+          }
         }
       }
     }
@@ -468,7 +490,8 @@ VideoDevice::GetBestFitnessDistance(
     }
   }
   // Forward request to underlying object to interrogate per-mode capabilities.
-  return GetSource()->GetBestFitnessDistance(aConstraintSets);
+  distance += uint64_t(GetSource()->GetBestFitnessDistance(aConstraintSets));
+  return uint32_t(std::min(distance, uint64_t(UINT32_MAX)));
 }
 
 AudioDevice::AudioDevice(MediaEngineAudioSource* aSource)
