@@ -30,8 +30,15 @@ const Telemetry = Services.telemetry;
 // Compute the path of the pings archive on the first use.
 const DATAREPORTING_DIR = "datareporting";
 const PINGS_ARCHIVE_DIR = "archived";
+const ABORTED_SESSION_FILE_NAME = "aborted-session-ping";
+XPCOMUtils.defineLazyGetter(this, "gDataReportingDir", function() {
+  return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
+});
 XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR, PINGS_ARCHIVE_DIR);
+  return OS.Path.join(gDataReportingDir, PINGS_ARCHIVE_DIR);
+});
+XPCOMUtils.defineLazyGetter(this, "gAbortedSessionFilePath", function() {
+  return OS.Path.join(gDataReportingDir, ABORTED_SESSION_FILE_NAME);
 });
 
 // Files that have been lying around for longer than MAX_PING_FILE_AGE are
@@ -80,6 +87,15 @@ this.TelemetryStorage = {
   },
 
   /**
+   * Shutdown & block on any outstanding async activity in this module.
+   *
+   * @return {Promise} Promise that is resolved when shutdown is complete.
+   */
+  shutdown: function() {
+    return TelemetryStorageImpl.shutdown();
+  },
+
+  /**
    * Save an archived ping to disk.
    *
    * @param {object} ping The ping data to archive.
@@ -110,6 +126,36 @@ this.TelemetryStorage = {
    */
   loadArchivedPingList: function() {
     return TelemetryStorageImpl.loadArchivedPingList();
+  },
+
+  /**
+   * Save an aborted-session ping to disk. This goes to a special location so
+   * it is not picked up as a pending ping.
+   *
+   * @param {object} ping The ping data to save.
+   * @return {promise} Promise that is resolved when the ping is successfully saved.
+   */
+  saveAbortedSessionPing: function(ping) {
+    return TelemetryStorageImpl.saveAbortedSessionPing(ping);
+  },
+
+  /**
+   * Load the aborted-session ping from disk if present.
+   *
+   * @return {promise<object>} Promise that is resolved with the ping data if found.
+   *                           Otherwise returns null.
+   */
+  loadAbortedSessionPing: function() {
+    return TelemetryStorageImpl.loadAbortedSessionPing();
+  },
+
+  /**
+   * Remove the aborted-session ping if present.
+   *
+   * @return {promise} Promise that is resolved once the ping is removed.
+   */
+  removeAbortedSessionPing: function() {
+    return TelemetryStorageImpl.removeAbortedSessionPing();
   },
 
   /**
@@ -257,8 +303,100 @@ this.TelemetryStorage = {
   }),
 };
 
+/**
+ * This object allows the serialisation of asynchronous tasks. This is particularly
+ * useful to serialise write access to the disk in order to prevent race conditions
+ * to corrupt the data being written.
+ * We are using this to synchronize saving to the file that TelemetrySession persists
+ * its state in.
+ */
+function SaveSerializer() {
+  this._queuedOperations = [];
+  this._queuedInProgress = false;
+  this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+}
+
+SaveSerializer.prototype = {
+  /**
+   * Enqueues an operation to a list to serialise their execution in order to prevent race
+   * conditions. Useful to serialise access to disk.
+   *
+   * @param {Function} aFunction The task function to enqueue. It must return a promise.
+   * @return {Promise} A promise resolved when the enqueued task completes.
+   */
+  enqueueTask: function (aFunction) {
+    let promise = new Promise((resolve, reject) =>
+      this._queuedOperations.push([aFunction, resolve, reject]));
+
+    if (this._queuedOperations.length == 1) {
+      this._popAndPerformQueuedOperation();
+    }
+    return promise;
+  },
+
+  /**
+   * Make sure to flush all the pending operations.
+   * @return {Promise} A promise resolved when all the pending operations have completed.
+   */
+  flushTasks: function () {
+    let dummyTask = () => new Promise(resolve => resolve());
+    return this.enqueueTask(dummyTask);
+  },
+
+  /**
+   * Pop a task from the queue, executes it and continue to the next one.
+   * This function recursively pops all the tasks.
+   */
+  _popAndPerformQueuedOperation: function () {
+    if (!this._queuedOperations.length || this._queuedInProgress) {
+      return;
+    }
+
+    this._log.trace("_popAndPerformQueuedOperation - Performing queued operation.");
+    let [func, resolve, reject] = this._queuedOperations.shift();
+    let promise;
+
+    try {
+      this._queuedInProgress = true;
+      promise = func();
+    } catch (ex) {
+      this._log.warn("_popAndPerformQueuedOperation - Queued operation threw during execution. ",
+                     ex);
+      this._queuedInProgress = false;
+      reject(ex);
+      this._popAndPerformQueuedOperation();
+      return;
+    }
+
+    if (!promise || typeof(promise.then) != "function") {
+      let msg = "Queued operation did not return a promise: " + func;
+      this._log.warn("_popAndPerformQueuedOperation - " + msg);
+
+      this._queuedInProgress = false;
+      reject(new Error(msg));
+      this._popAndPerformQueuedOperation();
+      return;
+    }
+
+    promise.then(result => {
+        this._queuedInProgress = false;
+        resolve(result);
+        this._popAndPerformQueuedOperation();
+      },
+      error => {
+        this._log.warn("_popAndPerformQueuedOperation - Failure when performing queued operation.",
+                       error);
+        this._queuedInProgress = false;
+        reject(error);
+        this._popAndPerformQueuedOperation();
+      });
+  },
+};
+
 let TelemetryStorageImpl = {
   _logger: null,
+  // Used to serialize aborted session ping writes to disk.
+  _abortedSessionSerializer: new SaveSerializer(),
 
   get _log() {
     if (!this._logger) {
@@ -267,6 +405,15 @@ let TelemetryStorageImpl = {
 
     return this._logger;
   },
+
+  /**
+   * Shutdown & block on any outstanding async activity in this module.
+   *
+   * @return {Promise} Promise that is resolved when shutdown is complete.
+   */
+  shutdown: Task.async(function*() {
+    yield this._abortedSessionSerializer.flushTasks();
+  }),
 
   /**
    * Save an archived ping to disk.
@@ -654,6 +801,39 @@ let TelemetryStorageImpl = {
       id: uuid,
       type: type,
     };
+  },
+
+  saveAbortedSessionPing: Task.async(function*(ping) {
+    this._log.trace("saveAbortedSessionPing - ping path: " + gAbortedSessionFilePath);
+    yield OS.File.makeDir(gDataReportingDir, { ignoreExisting: true });
+
+    return this._abortedSessionSerializer.enqueueTask(() =>
+      this.savePingToFile(ping, gAbortedSessionFilePath, true));
+  }),
+
+  loadAbortedSessionPing: Task.async(function*() {
+    let ping = null;
+    try {
+      ping = yield this.loadPingFile(gAbortedSessionFilePath);
+    } catch (ex if ex.becauseNoSuchFile) {
+      this._log.trace("loadAbortedSessionPing - no such file");
+    } catch (ex) {
+      this._log.error("loadAbortedSessionPing - error removing ping", ex)
+    }
+    return ping;
+  }),
+
+  removeAbortedSessionPing: function() {
+    return this._abortedSessionSerializer.enqueueTask(Task.async(function*() {
+      try {
+        this._log.trace("removeAbortedSessionPing - success");
+        yield OS.File.remove(gAbortedSessionFilePath);
+      } catch (ex if ex.becauseNoSuchFile) {
+        this._log.trace("removeAbortedSessionPing - no such file");
+      } catch (ex) {
+        this._log.error("removeAbortedSessionPing - error removing ping", ex)
+      }
+    }.bind(this)));
   },
 };
 
