@@ -136,7 +136,6 @@ private:
   bool mPreliminaryHandshakeDone; // after false start items are complete
 
   nsresult ActivateSSL();
-  nsresult SyncNSSNames(const nsNSSShutDownPreventionLock& proofOfLock);
 
   nsCString mNegotiatedNPN;
   bool      mNPNCompleted;
