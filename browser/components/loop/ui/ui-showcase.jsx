@@ -145,7 +145,7 @@
     level: "error",
     message: "Could Not Authenticate",
     details: "Did you change your password?",
-    detailsButtonLabel: "Retry",
+    detailsButtonLabel: "Retry"
   });
 
   var SVGIcon = React.createClass({

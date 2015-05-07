@@ -23,7 +23,7 @@ function errorRequestHandler(request, response) {
       code: parseInt(responseCode),
       errno: INVALID_AUTH_TOKEN,
       error: "INVALID_AUTH_TOKEN",
-      message: "INVALID_AUTH_TOKEN",
+      message: "INVALID_AUTH_TOKEN"
     }));
   }
 }

@@ -363,7 +363,7 @@ loop.shared.models = (function(l10n) {
         this._signalEnd("session:peer-hungup", event);
       }
       this.endSession();
-    },
+    }
   });
 
   /**
