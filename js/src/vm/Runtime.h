@@ -680,6 +680,9 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     JSString* asyncCauseForNewActivations;
 
+    /* If non-null, report JavaScript entry points to this monitor. */
+    JS::dbg::AutoEntryMonitor* entryMonitor;
+
     js::Activation* const* addressOfActivation() const {
         return &activation_;
     }
