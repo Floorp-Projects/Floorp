@@ -2356,14 +2356,16 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     // Transfer existing redirect information. Add all of our existing
     // redirects to the new channel.
     for (int32_t i = 0; i < mRedirects.Count(); ++i) {
-      nsCOMPtr<nsIURI> uri;
-      mRedirects[i]->GetURI(getter_AddRefs(uri));
-      nsCString spec;
-      if (uri) {
-        uri->GetSpec(spec);
+      if (LOG_ENABLED()) {
+        nsCOMPtr<nsIURI> uri;
+        mRedirects[i]->GetURI(getter_AddRefs(uri));
+        nsCString spec;
+        if (uri) {
+          uri->GetSpec(spec);
+        }
+        LOG(("HttpBaseChannel::SetupReplacementChannel adding redirect \'%s\' "
+             "[this=%p]", spec.get(), this));
       }
-      LOG(("HttpBaseChannel::SetupReplacementChannel adding redirect \'%s\' "
-           "[this=%p]", spec.get(), this));
 
       httpInternal->AddRedirect(mRedirects[i]);
     }

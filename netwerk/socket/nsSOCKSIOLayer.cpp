@@ -423,10 +423,12 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
             return PR_FAILURE;
         }
 
-        char buf[kIPv6CStrBufSize];
-        NetAddrToString(&mInternalProxyAddr, buf, sizeof(buf));
-        LOGDEBUG(("socks: trying proxy server, %s:%hu",
-                 buf, ntohs(mInternalProxyAddr.inet.port)));
+        if (PR_LOG_TEST(gSOCKSLog, PR_LOG_DEBUG)) {
+          char buf[kIPv6CStrBufSize];
+          NetAddrToString(&mInternalProxyAddr, buf, sizeof(buf));
+          LOGDEBUG(("socks: trying proxy server, %s:%hu",
+                   buf, ntohs(mInternalProxyAddr.inet.port)));
+        }
 
         NetAddr proxy = mInternalProxyAddr;
         FixupAddressFamily(fd, &proxy);
