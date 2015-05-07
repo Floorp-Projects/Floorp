@@ -36,6 +36,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+import org.mozilla.gecko.widget.SiteLogins;
 
 public class Tab {
     private static final String LOGTAG = "GeckoTab";
@@ -57,6 +58,7 @@ public class Tab {
     private boolean mHasFeeds;
     private boolean mHasOpenSearch;
     private final SiteIdentity mSiteIdentity;
+    private SiteLogins mSiteLogins;
     private BitmapDrawable mThumbnail;
     private final int mParentId;
     private final boolean mExternal;
@@ -280,6 +282,10 @@ public class Tab {
         return mSiteIdentity;
     }
 
+    public SiteLogins getSiteLogins() {
+        return mSiteLogins;
+    }
+
     public boolean isBookmark() {
         return mBookmark;
     }
@@ -494,6 +500,10 @@ public class Tab {
         mSiteIdentity.update(identityData);
     }
 
+    public void setSiteLogins(SiteLogins siteLogins) {
+        mSiteLogins = siteLogins;
+    }
+
     void updateBookmark() {
         if (getURL() == null) {
             return;
@@ -691,6 +701,7 @@ public class Tab {
         setHasFeeds(false);
         setHasOpenSearch(false);
         mSiteIdentity.reset();
+        setSiteLogins(null);
         setZoomConstraints(new ZoomConstraints(true));
         setHasTouchListeners(false);
         setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
