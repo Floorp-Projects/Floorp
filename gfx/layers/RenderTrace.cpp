@@ -30,7 +30,7 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 a
 
   gfx::Matrix4x4 trans = aRootTransform * aLayer->GetTransform();
   trans.ProjectTo2D();
-  nsIntRect clipRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
+  gfx::IntRect clipRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
   Rect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
   trans.TransformBounds(rect);
 
@@ -52,7 +52,7 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 a
   if (aReset) colorId = 0;
 }
 
-void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const nsIntRect aRect) {
+void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const gfx::IntRect aRect) {
   gfx::Matrix4x4 trans = GetRootTransform(aLayer);
   gfx::Rect rect(aRect.x, aRect.y, aRect.width, aRect.height);
   trans.TransformBounds(rect);
@@ -64,7 +64,7 @@ void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const nsIntRe
 }
 void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor) {
   // Clear with an empty rect
-  RenderTraceInvalidateStart(aLayer, aColor, nsIntRect());
+  RenderTraceInvalidateStart(aLayer, aColor, gfx::IntRect());
 }
 
 void renderTraceEventStart(const char *aComment, const char *aColor) {

@@ -49,6 +49,7 @@ if CONFIG['MOZ_UPDATER']:
     ]
 
 EXTRA_JS_MODULES += [
+    'AboutServiceWorkers.jsm',
     'AlertsHelper.jsm',
     'Bootstraper.jsm',
     'ContentRequestHelper.jsm',

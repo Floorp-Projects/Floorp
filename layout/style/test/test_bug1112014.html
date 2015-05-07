@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1112014</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="property_database.js"></script>
+  <script type="application/javascript;version=1.7">
+
+  let utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+    .getService(SpecialPowers.Ci.inIDOMUtils);
+
+  SimpleTest.requestLongerTimeout(2);
+
+  // This holds a canonical test value for each TYPE_ constant.
+  let testValues = {
+    TYPE_LENGTH: "10px",
+    TYPE_PERCENTAGE: "50%",
+    TYPE_COLOR: "rgb(3,3,3)",
+    TYPE_URL: "url(mozilla.org)",
+    TYPE_ANGLE: "90deg",
+    TYPE_FREQUENCY: "10kHz",
+    TYPE_TIME: "1000ms",
+    TYPE_GRADIENT: "linear-gradient( 45deg, blue, red )",
+    TYPE_TIMING_FUNCTION: "cubic-bezier(0.1, 0.7, 1.0, 0.1)",
+    TYPE_IMAGE_RECT: "-moz-image-rect(url(firefox.jpg), 5%, 5%, 10%, 10%)",
+    TYPE_NUMBER: "42"
+  };
+
+  // The canonical test values don't work for all properties, in
+  // particular some shorthand properties.  For these cases we have
+  // override values.
+  let overrideValues = {
+    "font": {
+      TYPE_LENGTH: "10px san-serif",
+      TYPE_PERCENTAGE: "50% san-serif",
+      TYPE_NUMBER: "24px/1.5 san-serif"
+    },
+    "border-image": {
+      TYPE_LENGTH: "url(/somewhere) 30% / 30px stretch",
+      TYPE_IMAGE_RECT: testValues.TYPE_IMAGE_RECT + " 30 30 stretch"
+    },
+    "-moz-border-image": {
+      TYPE_LENGTH: "url(/somewhere) 30% / 30px stretch",
+      TYPE_IMAGE_RECT: testValues.TYPE_IMAGE_RECT + " 30 30 stretch"
+    },
+    "box-shadow": {
+      TYPE_LENGTH: "2px 2px",
+      TYPE_COLOR: testValues.TYPE_COLOR + " 2px 2px"
+    },
+    "text-shadow": {
+      TYPE_LENGTH: "2px 2px",
+      TYPE_COLOR: testValues.TYPE_COLOR + " 2px 2px"
+    },
+    "font-weight": {
+      TYPE_NUMBER: "400"
+    },
+    "grid-template": {
+      TYPE_LENGTH: "'something' 23px",
+      TYPE_PERCENTAGE: "'something' 23%"
+    },
+    "grid": {
+      TYPE_LENGTH: "'something' 23px",
+      TYPE_PERCENTAGE: "'something' 23%"
+    },
+  };
+
+
+  // Ensure that all the TYPE_ constants have a representative
+  // test value, to try to ensure that this test is updated
+  // whenever a new type is added.
+  let reps = [];
+  for (let tc in utils) {
+    if (/TYPE_/.test(tc)) {
+      if (!(tc in testValues)) {
+	reps.push(tc);
+      }
+    }
+  }
+  is(reps.join(","), "", "all types have representative test value");
+
+  for (let propertyName in gCSSProperties) {
+    let prop = gCSSProperties[propertyName];
+    if (prop.backend_only) {
+      // These aren't interesting to us.
+      continue;
+    }
+
+    for (let iter in testValues) {
+      let testValue = testValues[iter];
+      if (propertyName in overrideValues &&
+	  iter in overrideValues[propertyName]) {
+	testValue = overrideValues[propertyName][iter];
+      }
+
+      let supported =
+        utils.cssPropertySupportsType(propertyName, utils[iter]);
+      let parsed = utils.cssPropertyIsValid(propertyName, testValue);
+      is(supported, parsed, propertyName + " supports " + iter);
+    }
+  }
+
+  // Regression test for an assertion failure in an earlier version of
+  // the code.  Note that cssPropertySupportsType returns false for
+  // all types for a variable.
+  ok(!utils.cssPropertySupportsType("--variable", utils.TYPE_COLOR),
+     "cssPropertySupportsType returns false for variable");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1112014">Mozilla Bug 1112014</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

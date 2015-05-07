@@ -101,6 +101,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
     case eColorID_window:
     case eColorID_windowframe:
     case eColorID__moz_dialog:
+    case eColorID__moz_combobox:
         aColor = sMozWindowBackground;
         break;
     case eColorID_WindowForeground:
@@ -404,9 +405,11 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
     case eColorID__moz_comboboxtext:
         aColor = sComboBoxText;
         break;
+#if (MOZ_WIDGET_GTK == 2)
     case eColorID__moz_combobox:
         aColor = sComboBoxBackground;
         break;
+#endif
     case eColorID__moz_menubartext:
         aColor = sMenuBarText;
         break;
@@ -1148,14 +1151,10 @@ nsLookAndFeel::Init()
     gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
     sButtonHoverText = GDK_RGBA_TO_NS_RGBA(color);
 
-    // Combobox label and background colors
+    // Combobox text color
     style = gtk_widget_get_style_context(comboboxLabel);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sComboBoxText = GDK_RGBA_TO_NS_RGBA(color);
-
-    style = gtk_widget_get_style_context(combobox);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
-    sComboBoxBackground = GDK_RGBA_TO_NS_RGBA(color);
 
     // Menubar text and hover text colors    
     style = gtk_widget_get_style_context(menuBar);

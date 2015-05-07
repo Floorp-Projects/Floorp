@@ -1261,6 +1261,13 @@ js::ForwardToNative(JSContext* cx, JSNative native, const CallArgs& args)
     return native(cx, args.length(), args.base());
 }
 
+JS_FRIEND_API(JSObject*)
+js::ConvertArgsToArray(JSContext* cx, const CallArgs& args)
+{
+    RootedObject argsArray(cx, NewDenseCopiedArray(cx, args.length(), args.array()));
+    return argsArray;
+}
+
 JS_FRIEND_API(JSAtom*)
 js::GetPropertyNameFromPC(JSScript* script, jsbytecode* pc)
 {

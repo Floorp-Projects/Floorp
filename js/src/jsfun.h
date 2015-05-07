@@ -284,7 +284,7 @@ class JSFunction : public js::NativeObject
     static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
     static bool createScriptForLazilyInterpretedFunction(JSContext* cx, js::HandleFunction fun);
-    void relazify(JSTracer* trc);
+    void maybeRelazify(JSRuntime* rt);
 
     // Function Scripts
     //

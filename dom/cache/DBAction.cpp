@@ -35,7 +35,8 @@ DBAction::~DBAction()
 }
 
 void
-DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo)
+DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
+                      Data* aOptionalData)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aResolver);
@@ -53,19 +54,34 @@ DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo)
     return;
   }
 
-  rv = dbDir->Append(NS_LITERAL_STRING("cache"));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aResolver->Resolve(rv);
-    return;
+  nsCOMPtr<mozIStorageConnection> conn;
+
+  // Attempt to reuse the connection opened by a previous Action.
+  if (aOptionalData) {
+    conn = aOptionalData->GetConnection();
   }
 
-  nsCOMPtr<mozIStorageConnection> conn;
-  rv = OpenConnection(aQuotaInfo, dbDir, getter_AddRefs(conn));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aResolver->Resolve(rv);
-    return;
+  // If there is no previous Action, then we must open one.
+  if (!conn) {
+    rv = dbDir->Append(NS_LITERAL_STRING("cache"));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aResolver->Resolve(rv);
+      return;
+    }
+
+    rv = OpenConnection(aQuotaInfo, dbDir, getter_AddRefs(conn));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aResolver->Resolve(rv);
+      return;
+    }
+    MOZ_ASSERT(conn);
+
+    // Save this connection in the shared Data object so later Actions can
+    // use it.  This avoids opening a new connection for every Action.
+    if (aOptionalData) {
+      aOptionalData->SetConnection(conn);
+    }
   }
-  MOZ_ASSERT(conn);
 
   RunWithDBOnTarget(aResolver, aQuotaInfo, dbDir, conn);
 }
@@ -121,7 +137,8 @@ DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
   rv = dbFileUrl->SetQuery(
     NS_LITERAL_CSTRING("persistenceType=") + type +
     NS_LITERAL_CSTRING("&group=") + aQuotaInfo.mGroup +
-    NS_LITERAL_CSTRING("&origin=") + aQuotaInfo.mOrigin);
+    NS_LITERAL_CSTRING("&origin=") + aQuotaInfo.mOrigin +
+    NS_LITERAL_CSTRING("&cache=private"));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   nsCOMPtr<mozIStorageService> ss =

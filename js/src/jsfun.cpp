@@ -553,11 +553,6 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleObject enclosingScope, Han
             firstword |= IsStarGenerator;
 
         if (fun->isInterpretedLazy()) {
-            // This can only happen for re-lazified cloned functions, so this
-            // does not apply to any JSFunction produced by the parser, only to
-            // JSFunction created by the runtime.
-            MOZ_ASSERT(!fun->lazyScript()->maybeScript());
-
             // Encode a lazy script.
             firstword |= IsLazy;
             lazy = fun->lazyScript();
@@ -730,31 +725,11 @@ JSFunction::trace(JSTracer* trc)
         // Functions can be be marked as interpreted despite having no script
         // yet at some points when parsing, and can be lazy with no lazy script
         // for self-hosted code.
-        if (hasScript() && u.i.s.script_) {
-            // Functions can be relazified under the following conditions:
-            // - their compartment isn't currently executing scripts or being
-            //   debugged
-            // - they are not in the self-hosting compartment
-            // - they aren't generators
-            // - they don't have JIT code attached
-            // - they don't have child functions
-            // - they have information for un-lazifying them again later
-            // This information can either be a LazyScript, or the name of a
-            // self-hosted function which can be cloned over again. The latter
-            // is stored in the first extended slot.
-            JSRuntime* rt = trc->runtime();
-            if (trc->isMarkingTracer() &&
-                (rt->allowRelazificationForTesting || !compartment()->hasBeenEntered()) &&
-                !compartment()->isDebuggee() && !compartment()->isSelfHosting &&
-                u.i.s.script_->isRelazifiable() && (!isSelfHostedBuiltin() || isExtended()))
-            {
-                relazify(trc);
-            } else {
-                TraceManuallyBarrieredEdge(trc, &u.i.s.script_, "script");
-            }
-        } else if (isInterpretedLazy() && u.i.s.lazy_) {
+        if (hasScript() && u.i.s.script_)
+            TraceManuallyBarrieredEdge(trc, &u.i.s.script_, "script");
+        else if (isInterpretedLazy() && u.i.s.lazy_)
             TraceManuallyBarrieredEdge(trc, &u.i.s.lazy_, "lazyScript");
-        }
+
         if (u.i.env_)
             TraceManuallyBarrieredEdge(trc, &u.i.env_, "fun_environment");
     }
@@ -1512,24 +1487,34 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
 }
 
 void
-JSFunction::relazify(JSTracer* trc)
+JSFunction::maybeRelazify(JSRuntime* rt)
 {
-    JSScript* script = nonLazyScript();
-    MOZ_ASSERT(script->isRelazifiable());
-    MOZ_ASSERT(trc->runtime()->allowRelazificationForTesting || !compartment()->hasBeenEntered());
-    MOZ_ASSERT(!compartment()->isDebuggee());
+    // Try to relazify functions with a non-lazy script. Note: functions can be
+    // marked as interpreted despite having no script yet at some points when
+    // parsing.
+    if (!hasScript() || !u.i.s.script_)
+        return;
 
-    // If the script's canonical function isn't lazy, we have to mark the
-    // script. Otherwise, the following scenario would leave it unmarked
-    // and cause it to be swept while a function is still expecting it to be
-    // valid:
-    // 1. an incremental GC slice causes the canonical function to relazify
-    // 2. a clone is used and delazifies the canonical function
-    // 3. another GC slice causes the clone to relazify
-    // The result is that no function marks the script, but the canonical
-    // function expects it to be valid.
-    if (script->functionNonDelazifying()->hasScript())
-        TraceManuallyBarrieredEdge(trc, &u.i.s.script_, "script");
+    // Don't relazify functions in compartments that are active.
+    JSCompartment* comp = compartment();
+    if (comp->hasBeenEntered() && !rt->allowRelazificationForTesting)
+        return;
+
+    // Don't relazify if the compartment is being debugged or is the
+    // self-hosting compartment.
+    if (comp->isDebuggee() || comp->isSelfHosting)
+        return;
+
+    // Don't relazify functions with JIT code.
+    if (!u.i.s.script_->isRelazifiable())
+        return;
+
+    // To delazify self-hosted builtins we need the name of the function
+    // to clone. This name is stored in the first extended slot.
+    if (isSelfHostedBuiltin() && !isExtended())
+        return;
+
+    JSScript* script = nonLazyScript();
 
     flags_ &= ~INTERPRETED;
     flags_ |= INTERPRETED_LAZY;
@@ -1537,12 +1522,6 @@ JSFunction::relazify(JSTracer* trc)
     u.i.s.lazy_ = lazy;
     if (lazy) {
         MOZ_ASSERT(!isSelfHostedBuiltin());
-        // If this is the script stored in the lazy script to be cloned
-        // for un-lazifying other functions, reset it so the script can
-        // be freed.
-        if (lazy->maybeScript() == script)
-            lazy->resetScript();
-        TraceManuallyBarrieredEdge(trc, &u.i.s.lazy_, "lazyScript");
     } else {
         MOZ_ASSERT(isSelfHostedBuiltin());
         MOZ_ASSERT(isExtended());
@@ -2131,13 +2110,6 @@ js::CloneFunctionObject(JSContext* cx, HandleFunction fun, HandleObject parent,
 
     bool useSameScript = CloneFunctionObjectUseSameScript(cx->compartment(), fun, parent);
 
-    JSScript::AutoDelazify funScript(cx);
-    if (!useSameScript && fun->isInterpretedLazy()) {
-        funScript = fun;
-        if (!funScript)
-            return nullptr;
-    }
-
     NewObjectKind newKind = useSameScript ? newKindArg : SingletonObject;
     RootedObject cloneProto(cx, proto);
     if (!cloneProto && fun->isStarGenerator()) {
@@ -2161,6 +2133,13 @@ js::CloneFunctionObject(JSContext* cx, HandleFunction fun, HandleObject parent,
     if (!cloneobj)
         return nullptr;
     RootedFunction clone(cx, &cloneobj->as<JSFunction>());
+
+    JSScript::AutoDelazify funScript(cx);
+    if (!useSameScript && fun->isInterpretedLazy()) {
+        funScript = fun;
+        if (!funScript)
+            return nullptr;
+    }
 
     MOZ_ASSERT(useSameScript || !fun->isInterpretedLazy());
 
