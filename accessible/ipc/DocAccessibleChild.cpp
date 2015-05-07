@@ -39,6 +39,9 @@ InterfacesFor(Accessible* aAcc)
   if (aAcc->IsTableCell())
     interfaces |= Interfaces::TABLECELL;
 
+  if (aAcc->IsDoc())
+    interfaces |= Interfaces::DOCUMENT;
+
   return interfaces;
 }
 
