@@ -500,12 +500,15 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
                                           aDecodeFlags,
                                           aFrameNum),
                          Lifetime::Persistent);
-  if (outcome != InsertOutcome::SUCCESS) {
-    // We either hit InsertOutcome::FAILURE, which is a temporary failure due to
-    // low memory (we know it's not permanent because we checked CanHold()
-    // above), or InsertOutcome::FAILURE_ALREADY_PRESENT, which means that
-    // another decoder beat us to decoding this frame. Either way, we should
-    // abort this decoder rather than treat this as a real error.
+  if (outcome == InsertOutcome::FAILURE) {
+    // We couldn't insert the surface, almost certainly due to low memory. We
+    // treat this as a permanent error to help the system recover; otherwise, we
+    // might just end up attempting to decode this image again immediately.
+    ref->Abort();
+    return RawAccessFrameRef();
+  } else if (outcome == InsertOutcome::FAILURE_ALREADY_PRESENT) {
+    // Another decoder beat us to decoding this frame. We abort this decoder
+    // rather than treat this as a real error.
     mDecodeAborted = true;
     ref->Abort();
     return RawAccessFrameRef();
