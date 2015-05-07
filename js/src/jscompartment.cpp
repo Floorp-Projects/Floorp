@@ -213,7 +213,7 @@ class WrapperMapRef : public BufferableRef
     WrapperMapRef(WrapperMap* map, const CrossCompartmentKey& key)
       : map(map), key(key) {}
 
-    void mark(JSTracer* trc) {
+    void trace(JSTracer* trc) override {
         CrossCompartmentKey prior = key;
         if (key.debugger)
             TraceManuallyBarrieredEdge(trc, &key.debugger, "CCW debugger");

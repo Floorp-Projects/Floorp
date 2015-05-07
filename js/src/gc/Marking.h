@@ -379,7 +379,7 @@ class HashKeyRef : public BufferableRef
   public:
     HashKeyRef(Map* m, const Key& k) : map(m), key(k) {}
 
-    void mark(JSTracer* trc) {
+    void trace(JSTracer* trc) override {
         Key prior = key;
         typename Map::Ptr p = map->lookup(key);
         if (!p)
