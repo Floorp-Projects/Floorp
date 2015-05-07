@@ -707,7 +707,7 @@ CompositorD3D9::PrepareViewport(const gfx::IntSize& aSize)
 void
 CompositorD3D9::EnsureSize()
 {
-  nsIntRect rect;
+  IntRect rect;
   mWidget->GetClientBounds(rect);
 
   mSize = rect.Size();
