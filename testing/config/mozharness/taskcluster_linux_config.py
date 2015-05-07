@@ -33,7 +33,7 @@ config = {
         "tests/bin/js",
         "--no-slow",
         "--no-progress",
-        "--tinderbox",
+        "--format=automation",
         "--jitflags=all"
     ],
     "mozbase_options": [
