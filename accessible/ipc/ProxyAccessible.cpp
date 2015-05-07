@@ -903,6 +903,15 @@ ProxyAccessible::TakeFocus()
   unused << mDoc->SendTakeFocus(mID);
 }
 
+int32_t
+ProxyAccessible::IndexOfEmbeddedChild(const ProxyAccessible* aChild)
+{
+  uint64_t childID = aChild->mID;
+  uint32_t childIdx;
+  unused << mDoc->SendIndexOfEmbeddedChild(mID, childID, &childIdx);
+  return childIdx;
+}
+
 ProxyAccessible*
 ProxyAccessible::ChildAtPoint(int32_t aX, int32_t aY,
                               Accessible::EWhichChildAtPoint aWhichChild)
