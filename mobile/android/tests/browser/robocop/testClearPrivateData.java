@@ -38,7 +38,7 @@ public class testClearPrivateData extends PixelTest {
 
         loadUrlAndWait(blank1);
         verifyUrlBarTitle(blank1);
-        mDatabaseHelper.addOrUpdateMobileBookmark(mStringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, blank2);
+        mDatabaseHelper.addMobileBookmark(mStringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, blank2);
 
         // Checking that the history list is not empty
         verifyHistoryCount(1);

@@ -548,6 +548,8 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showBookmarkAddedToast() {
+        // This flow is from the option menu which has check to see if a bookmark was already added.
+        // So, it is safe here to show the toast that bookmark_added without any checks.
         getButtonToast().show(false,
                 getResources().getString(R.string.bookmark_added),
                 ButtonToast.LENGTH_SHORT,
