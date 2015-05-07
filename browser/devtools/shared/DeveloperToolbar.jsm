@@ -41,7 +41,7 @@ const Telemetry = require("devtools/shared/telemetry");
 
 XPCOMUtils.defineLazyGetter(this, "gcliInit", function() {
   try {
-    return require("devtools/commandline/commands-index");
+    return require("gcli/commands/index");
   }
   catch (ex) {
     console.log(ex);

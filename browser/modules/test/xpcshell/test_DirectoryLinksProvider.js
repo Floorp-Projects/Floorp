@@ -1226,3 +1226,176 @@ add_task(function test_DirectoryLinksProvider_setDefaultEnhanced() {
   // Clean up
   Services.prefs.clearUserPref("privacy.donottrackheader.value");
 });
+
+add_task(function test_timeSensetiveSuggestedTiles() {
+  // make tile json with start and end dates
+  let testStartTime = Date.now();
+  // start date is now + 1 seconds
+  let startDate = new Date(testStartTime + 1000);
+  // end date is now + 3 seconds
+  let endDate = new Date(testStartTime + 3000);
+  let suggestedTile = Object.assign({
+    time_limits: {
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
+    }
+  }, suggestedTile1);
+
+  // Initial setup
+  let topSites = ["site0.com", "1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
+  let data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+
+  let testObserver = new TestTimingRun();
+  DirectoryLinksProvider.addObserver(testObserver);
+
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
+
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+  let links = yield fetchData();
+
+  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
+  NewTabUtils.isTopPlacesSite = function(site) {
+    return topSites.indexOf(site) >= 0;
+  }
+
+  let origGetProviderLinks = NewTabUtils.getProviderLinks;
+  NewTabUtils.getProviderLinks = function(provider) {
+    return links;
+  }
+
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => 8;
+
+  do_check_eq(DirectoryLinksProvider._updateSuggestedTile(), undefined);
+
+  // this tester will fire twice: when start limit is reached and when tile link
+  // is removed upon end of the campaign, in which case deleteFlag will be set
+  function TestTimingRun() {
+    this.promise = new Promise(resolve => {
+      this.onLinkChanged = (directoryLinksProvider, link, ignoreFlag, deleteFlag) => {
+        // if we are not deleting, add link to links, so we can catch it's removal
+        if (!deleteFlag) {
+          links.unshift(link);
+        }
+
+        isIdentical([...DirectoryLinksProvider._topSitesWithSuggestedLinks], ["hrblock.com", "1040.com"]);
+        do_check_eq(link.frecency, SUGGESTED_FRECENCY);
+        do_check_eq(link.type, "affiliate");
+        do_check_eq(link.url, suggestedTile.url);
+        let timeDelta = Date.now() - testStartTime;
+        if (!deleteFlag) {
+          // this is start timeout corresponding to campaign start
+          // a seconds must pass and targetedSite must be set
+          do_check_true(timeDelta >= 1000);
+          do_check_eq(link.targetedSite, "hrblock.com");
+          do_check_true(DirectoryLinksProvider._campaignTimeoutID);
+        }
+        else {
+          // this is the campaign end timeout, so 3 seconds must pass
+          // and timeout should be cleared
+          do_check_true(timeDelta >= 3000);
+          do_check_false(link.targetedSite);
+          do_check_false(DirectoryLinksProvider._campaignTimeoutID);
+          resolve();
+        }
+      };
+    });
+  }
+
+  // _updateSuggestedTile() is called when fetching directory links.
+  yield testObserver.promise;
+  DirectoryLinksProvider.removeObserver(testObserver);
+
+  // shoudl suggest nothing
+  do_check_eq(DirectoryLinksProvider._updateSuggestedTile(), undefined);
+
+  // set links back to contain directory tile only
+  links.shift();
+
+  // drop the end time - we should pick up the tile
+  suggestedTile.time_limits.end = null;
+  data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
+  dataURI = 'data:application/json,' + JSON.stringify(data);
+
+  // redownload json and getLinks to force time recomputation
+  yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, dataURI);
+
+  // ensure that there's a link returned by _updateSuggestedTile and no timeout
+  let deferred = Promise.defer();
+  DirectoryLinksProvider.getLinks(() => {
+    let link = DirectoryLinksProvider._updateSuggestedTile();
+    // we should have a suggested tile and no timeout
+    do_check_eq(link.type, "affiliate");
+    do_check_eq(link.url, suggestedTile.url);
+    do_check_false(DirectoryLinksProvider._campaignTimeoutID);
+    deferred.resolve();
+  });
+  yield deferred.promise;
+
+  // repeat the test for end time only
+  suggestedTile.time_limits.start = null;
+  suggestedTile.time_limits.end = (new Date(Date.now() + 3000)).toISOString();
+
+  data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
+  dataURI = 'data:application/json,' + JSON.stringify(data);
+
+  // redownload json and call getLinks() to force time recomputation
+  yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, dataURI);
+
+  // ensure that there's a link returned by _updateSuggestedTile and timeout set
+  deferred = Promise.defer();
+  DirectoryLinksProvider.getLinks(() => {
+    let link = DirectoryLinksProvider._updateSuggestedTile();
+    // we should have a suggested tile and timeout set
+    do_check_eq(link.type, "affiliate");
+    do_check_eq(link.url, suggestedTile.url);
+    do_check_true(DirectoryLinksProvider._campaignTimeoutID);
+    DirectoryLinksProvider._clearCampaignTimeout();
+    deferred.resolve();
+  });
+  yield deferred.promise;
+
+  // Cleanup
+  yield promiseCleanDirectoryLinksProvider();
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
+  NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  NewTabUtils.getProviderLinks = origGetProviderLinks;
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
+});
+
+add_task(function test_setupStartEndTime() {
+  let currentTime = Date.now();
+  let dt = new Date(currentTime);
+  let link = {
+    time_limits: {
+      start: dt.toISOString()
+    }
+  };
+
+  // test ISO translation
+  DirectoryLinksProvider._setupStartEndTime(link);
+  do_check_eq(link.startTime, currentTime);
+
+  // test localtime translation
+  let shiftedDate = new Date(currentTime - dt.getTimezoneOffset()*60*1000);
+  link.time_limits.start = shiftedDate.toISOString().replace(/Z$/, "");
+
+  DirectoryLinksProvider._setupStartEndTime(link);
+  do_check_eq(link.startTime, currentTime);
+
+  // throw some garbage into date string
+  delete link.startTime;
+  link.time_limits.start = "no date"
+  DirectoryLinksProvider._setupStartEndTime(link);
+  do_check_false(link.startTime);
+
+  link.time_limits.start = "2015-99999-01T00:00:00"
+  DirectoryLinksProvider._setupStartEndTime(link);
+  do_check_false(link.startTime);
+
+  link.time_limits.start = "20150501T00:00:00"
+  DirectoryLinksProvider._setupStartEndTime(link);
+  do_check_false(link.startTime);
+});
