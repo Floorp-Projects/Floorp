@@ -429,7 +429,7 @@ js::ExclusiveContext::setCompartment(JSCompartment* comp)
 
     // Make sure that the atoms compartment has its own zone.
     MOZ_ASSERT_IF(comp && !runtime_->isAtomsCompartment(comp),
-                  !runtime_->isAtomsZone(comp->zone()));
+                  !comp->zone()->isAtomsZone());
 
     // Both the current and the new compartment should be properly marked as
     // entered at this point.
