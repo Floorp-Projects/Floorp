@@ -104,6 +104,12 @@ HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
 != text-align-justify-last-end.html text-align-justify-last-justify.html
 != text-align-justify-last-center.html text-align-justify-last-justify.html
 == text-align-left-in-rtl-block.html text-align-left-in-rtl-block-ref.html
+== text-align-match-parent-01.html text-align-match-parent-ref.html
+== text-align-match-parent-02.html text-align-match-parent-ref.html
+== text-align-match-parent-03.html text-align-match-parent-ref.html
+== text-align-match-parent-04.html text-align-match-parent-ref.html
+== text-align-match-parent-root-ltr.html text-align-match-parent-root-ltr-ref.html
+== text-align-match-parent-root-rtl.html text-align-match-parent-root-rtl-ref.html
 HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html

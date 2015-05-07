@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset="utf-8">
+    <title>Text-align: match-parent</title>
+    <style>
+div.start  { text-align: start; }
+div.end    { text-align: end; }
+div.left   { text-align: left; }
+div.right  { text-align: right; }
+div > div  { text-align: match-parent; }
+    </style>
+  </head>
+  <body>
+   <div id="d0" style="width: 50%;" class="start" dir="ltr"><div dir="ltr">Left</div></div>
+   <div id="d1" style="width: 50%;" class="start" dir="ltr"><div dir="rtl">Left</div></div>
+   <div id="d2" style="width: 50%;" class="start" dir="rtl"><div dir="ltr">Right</div></div>
+   <div id="d3" style="width: 50%;" class="start" dir="rtl"><div dir="rtl">Right</div></div>
+   <div id="d4" style="width: 50%;" class="end" dir="ltr"><div dir="ltr">Right</div></div>
+   <div id="d5" style="width: 50%;" class="end" dir="ltr"><div dir="rtl">Right</div></div>
+   <div id="d6" style="width: 50%;" class="end" dir="rtl"><div dir="ltr">Left</div></div>
+   <div id="d7" style="width: 50%;" class="end" dir="rtl"><div dir="rtl">Left</div></div>
+   <div id="d8" style="width: 50%;" class="left" dir="ltr"><div dir="ltr">Left</div></div>
+   <div id="d9" style="width: 50%;" class="left" dir="ltr"><div dir="rtl">Left</div></div>
+   <div id="d10" style="width: 50%;" class="left" dir="rtl"><div dir="ltr">Left</div></div>
+   <div id="d11" style="width: 50%;" class="left" dir="rtl"><div dir="rtl">Left</div></div>
+   <div id="d12" style="width: 50%;" class="right" dir="ltr"><div dir="ltr">Right</div></div>
+   <div id="d13" style="width: 50%;" class="right" dir="ltr"><div dir="rtl">Right</div></div>
+   <div id="d14" style="width: 50%;" class="right" dir="rtl"><div dir="ltr">Right</div></div>
+   <div id="d15" style="width: 50%;" class="right" dir="rtl"><div dir="rtl">Right</div></div>
+
+   <script type="text/javascript">
+function changeParentWidth()
+{
+  for (parent = 0; parent < 16; ++parent) {
+     var parentDiv = document.getElementById("d" + parent);
+     parentDiv.style.width = "";
+   }
+
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", changeParentWidth, false);
+   </script>
+ </body>
+</html>

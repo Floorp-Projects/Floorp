@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset="utf-8">
+    <title>Text-align: match-parent</title>
+    <style>
+div.start  { text-align: start; }
+div.end    { text-align: end; }
+div.left   { text-align: left; }
+div.right  { text-align: right; }
+div > div  { text-align: match-parent; }
+    </style>
+  </head>
+  <body>
+   <div id="d0" class="start" dir="rtl"><div dir="ltr">Left</div></div>
+   <div id="d1" class="start" dir="rtl"><div dir="rtl">Left</div></div>
+   <div id="d2" class="start" dir="ltr"><div dir="ltr">Right</div></div>
+   <div id="d3" class="start" dir="ltr"><div dir="rtl">Right</div></div>
+   <div id="d4" class="end" dir="rtl"><div dir="ltr">Right</div></div>
+   <div id="d5" class="end" dir="rtl"><div dir="rtl">Right</div></div>
+   <div id="d6" class="end" dir="ltr"><div dir="ltr">Left</div></div>
+   <div id="d7" class="end" dir="ltr"><div dir="rtl">Left</div></div>
+   <div id="d8" class="left" dir="rtl"><div dir="ltr">Left</div></div>
+   <div id="d9" class="left" dir="rtl"><div dir="rtl">Left</div></div>
+   <div id="d10" class="left" dir="ltr"><div dir="ltr">Left</div></div>
+   <div id="d11" class="left" dir="ltr"><div dir="rtl">Left</div></div>
+   <div id="d12" class="right" dir="rtl"><div dir="ltr">Right</div></div>
+   <div id="d13" class="right" dir="rtl"><div dir="rtl">Right</div></div>
+   <div id="d14" class="right" dir="ltr"><div dir="ltr">Right</div></div>
+   <div id="d15" class="right" dir="ltr"><div dir="rtl">Right</div></div>
+
+   <script type="text/javascript">
+function changeParentDir()
+{
+  for (parent = 0; parent < 16; ++parent) {
+     var parentDiv = document.getElementById("d" + parent);
+     if (parentDiv.dir == "rtl") {
+       parentDiv.dir = "ltr";
+     } else {
+       parentDiv.dir = "rtl";
+     }
+   }
+
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", changeParentDir, false);
+   </script>
+ </body>
+</html>
