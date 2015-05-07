@@ -51,8 +51,9 @@ mar_read_entire_file(const char * filePath, uint32_t maxSize,
         }
       }
     }
-    fclose(f);
   }
+
+  fclose(f);
 
   return result;
 }
