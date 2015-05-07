@@ -69,20 +69,11 @@ function fetchManifest() {
     }
     // Will throw on "about:blank" and possibly other invalid URIs.
     const manifestURL = new content.URL(elem.href, elem.baseURI);
-    const reqInit = {};
-    switch (elem.crossOrigin) {
-      case 'use-credentials':
-        reqInit.credentials = 'include';
-        reqInit.mode = 'cors';
-        break;
-      case 'anonymous':
-        reqInit.credentials = 'omit';
-        reqInit.mode = 'cors';
-        break;
-      default:
-        reqInit.credentials = 'same-origin';
-        reqInit.mode = 'no-cors';
-        break;
+    const reqInit = {
+      mode: 'cors'
+    };
+    if (elem.crossOrigin === 'use-credentials') {
+      reqInit.credentials = 'include';
     }
     const req = new content.Request(manifestURL, reqInit);
     req.setContext('manifest');
