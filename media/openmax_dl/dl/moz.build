@@ -1,0 +1,85 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    Library('openmax_dl')
+
+    EXPORTS.dl.api += [
+        'api/armCOMM_s.h',
+        'api/armOMX.h',
+        'api/omxtypes.h',
+        'api/omxtypes_s.h',
+    ]
+
+    EXPORTS.dl.sp.api += [
+        'sp/api/armSP.h',
+        'sp/api/omxSP.h',
+    ]
+
+    SOURCES += [
+        'sp/src/armSP_FFT_F32TwiddleTable.c',
+        'sp/src/armSP_FFT_S32TwiddleTable.c',
+        'sp/src/omxSP_FFTGetBufSize_C_FC32.c',
+        'sp/src/omxSP_FFTGetBufSize_C_SC16.c',
+        'sp/src/omxSP_FFTGetBufSize_C_SC32.c',
+        'sp/src/omxSP_FFTGetBufSize_R_F32.c',
+        'sp/src/omxSP_FFTGetBufSize_R_S16S32.c',
+        'sp/src/omxSP_FFTGetBufSize_R_S32.c',
+        'sp/src/omxSP_FFTInit_C_FC32.c',
+        'sp/src/omxSP_FFTInit_C_SC16.c',
+        'sp/src/omxSP_FFTInit_C_SC32.c',
+        'sp/src/omxSP_FFTInit_R_F32.c',
+        'sp/src/omxSP_FFTInit_R_S16S32.c',
+        'sp/src/omxSP_FFTInit_R_S32.c',
+    ]
+
+    SOURCES += [
+        'sp/src/armSP_FFT_CToC_FC32_Radix2_fs_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_FC32_Radix2_ls_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_FC32_Radix2_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_FC32_Radix4_fs_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_FC32_Radix4_ls_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_FC32_Radix4_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_FC32_Radix8_fs_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC16_Radix2_fs_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC16_Radix2_ls_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC16_Radix2_ps_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC16_Radix2_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC16_Radix4_fs_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC16_Radix4_ls_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC16_Radix4_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC16_Radix8_fs_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC32_Radix2_fs_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC32_Radix2_ls_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC32_Radix2_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC32_Radix4_fs_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC32_Radix4_ls_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC32_Radix4_unsafe_s.S',
+        'sp/src/armSP_FFT_CToC_SC32_Radix8_fs_unsafe_s.S',
+        'sp/src/armSP_FFTInv_CCSToR_F32_preTwiddleRadix2_unsafe_s.S',
+        'sp/src/armSP_FFTInv_CCSToR_S32_preTwiddleRadix2_unsafe_s.S',
+        'sp/src/omxSP_FFTFwd_CToC_FC32_Sfs_s.S',
+        'sp/src/omxSP_FFTFwd_CToC_SC16_Sfs_s.S',
+        'sp/src/omxSP_FFTFwd_CToC_SC32_Sfs_s.S',
+        'sp/src/omxSP_FFTFwd_RToCCS_F32_Sfs_s.S',
+        'sp/src/omxSP_FFTFwd_RToCCS_S16S32_Sfs_s.S',
+        'sp/src/omxSP_FFTFwd_RToCCS_S32_Sfs_s.S',
+        'sp/src/omxSP_FFTInv_CCSToR_F32_Sfs_s.S',
+        'sp/src/omxSP_FFTInv_CCSToR_S32_Sfs_s.S',
+        'sp/src/omxSP_FFTInv_CCSToR_S32S16_Sfs_s.S',
+        'sp/src/omxSP_FFTInv_CToC_FC32_Sfs_s.S',
+        'sp/src/omxSP_FFTInv_CToC_SC16_Sfs_s.S',
+        'sp/src/omxSP_FFTInv_CToC_SC32_Sfs_s.S',
+    ]
+
+    LOCAL_INCLUDES += [
+        '..',
+        'api'
+    ]
+
+    DEFINES['BIG_FFT_TABLE'] = True
+
+    FINAL_LIBRARY = 'xul'

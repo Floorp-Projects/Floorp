@@ -6,7 +6,6 @@
 
 #include "URL.h"
 
-#include "nsIDocument.h"
 #include "nsIIOService.h"
 #include "nsPIDOMWindow.h"
 
@@ -77,9 +76,9 @@ public:
   CreateURLRunnable(WorkerPrivate* aWorkerPrivate, FileImpl* aBlobImpl,
                     const mozilla::dom::objectURLOptions& aOptions,
                     nsAString& aURL)
-  : WorkerMainThreadRunnable(aWorkerPrivate),
-    mBlobImpl(aBlobImpl),
-    mURL(aURL)
+  : WorkerMainThreadRunnable(aWorkerPrivate)
+  , mBlobImpl(aBlobImpl)
+  , mURL(aURL)
   {
     MOZ_ASSERT(aBlobImpl);
 
@@ -123,23 +122,7 @@ public:
     MOZ_ASSERT(NS_SUCCEEDED(mBlobImpl->GetMutable(&isMutable)));
     MOZ_ASSERT(!isMutable);
 
-    nsCOMPtr<nsIPrincipal> principal;
-    nsIDocument* doc = nullptr;
-
-    nsCOMPtr<nsPIDOMWindow> window = mWorkerPrivate->GetWindow();
-    if (window) {
-      doc = window->GetExtantDoc();
-      if (!doc) {
-        SetDOMStringToNull(mURL);
-        return false;
-      }
-
-      principal = doc->NodePrincipal();
-    } else {
-      // We use the worker Principal in case this is a SharedWorker, a
-      // ChromeWorker or a ServiceWorker.
-      principal = mWorkerPrivate->GetPrincipal();
-    }
+    nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
 
     nsAutoCString url;
     nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(
@@ -152,10 +135,22 @@ public:
       return false;
     }
 
-    if (doc) {
-      doc->RegisterHostObjectUri(url);
-    } else {
-      mWorkerPrivate->RegisterHostObjectURI(url);
+    if (!mWorkerPrivate->IsSharedWorker() &&
+        !mWorkerPrivate->IsServiceWorker()) {
+      // Walk up to top worker object.
+      WorkerPrivate* wp = mWorkerPrivate;
+      while (WorkerPrivate* parent = wp->GetParent()) {
+        wp = parent;
+      }
+
+      nsCOMPtr<nsIScriptContext> sc = wp->GetScriptContext();
+      // We could not have a ScriptContext in JSM code. In this case, we leak.
+      if (sc) {
+        nsCOMPtr<nsIGlobalObject> global = sc->GetGlobalObject();
+        MOZ_ASSERT(global);
+
+        global->RegisterHostObjectURI(url);
+      }
     }
 
     mURL = NS_ConvertUTF8toUTF16(url);
@@ -172,8 +167,8 @@ private:
 public:
   RevokeURLRunnable(WorkerPrivate* aWorkerPrivate,
                     const nsAString& aURL)
-  : WorkerMainThreadRunnable(aWorkerPrivate),
-    mURL(aURL)
+  : WorkerMainThreadRunnable(aWorkerPrivate)
+  , mURL(aURL)
   {}
 
   bool
@@ -181,41 +176,36 @@ public:
   {
     AssertIsOnMainThread();
 
-    nsCOMPtr<nsIPrincipal> principal;
-    nsIDocument* doc = nullptr;
-
-    nsCOMPtr<nsPIDOMWindow> window = mWorkerPrivate->GetWindow();
-    if (window) {
-      doc = window->GetExtantDoc();
-      if (!doc) {
-        return false;
-      }
-
-      principal = doc->NodePrincipal();
-    } else {
-      // We use the worker Principal in case this is a SharedWorker, a
-      // ChromeWorker or a ServiceWorker.
-      principal = mWorkerPrivate->GetPrincipal();
-    }
-
     NS_ConvertUTF16toUTF8 url(mURL);
 
     nsIPrincipal* urlPrincipal =
       nsHostObjectProtocolHandler::GetDataEntryPrincipal(url);
 
+    nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
+
     bool subsumes;
     if (urlPrincipal &&
         NS_SUCCEEDED(principal->Subsumes(urlPrincipal, &subsumes)) &&
         subsumes) {
-      if (doc) {
-        doc->UnregisterHostObjectUri(url);
-      }
-
       nsHostObjectProtocolHandler::RemoveDataEntry(url);
     }
 
-    if (!window) {
-      mWorkerPrivate->UnregisterHostObjectURI(url);
+    if (!mWorkerPrivate->IsSharedWorker() &&
+        !mWorkerPrivate->IsServiceWorker()) {
+      // Walk up to top worker object.
+      WorkerPrivate* wp = mWorkerPrivate;
+      while (WorkerPrivate* parent = wp->GetParent()) {
+        wp = parent;
+      }
+
+      nsCOMPtr<nsIScriptContext> sc = wp->GetScriptContext();
+      // We could not have a ScriptContext in JSM code. In this case, we leak.
+      if (sc) {
+        nsCOMPtr<nsIGlobalObject> global = sc->GetGlobalObject();
+        MOZ_ASSERT(global);
+
+        global->UnregisterHostObjectURI(url);
+      }
     }
 
     return true;
@@ -911,11 +901,23 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, File& aBlob,
   if (!runnable->Dispatch(cx)) {
     JS_ReportPendingException(cx);
   }
+
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (workerPrivate->IsSharedWorker() || workerPrivate->IsServiceWorker()) {
+    WorkerGlobalScope* scope = workerPrivate->GlobalScope();
+    MOZ_ASSERT(scope);
+
+    scope->RegisterHostObjectURI(NS_ConvertUTF16toUTF8(aResult));
+  }
 }
 
 // static
 void
-URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl)
+URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl,
+                     ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
@@ -925,6 +927,17 @@ URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl)
 
   if (!runnable->Dispatch(cx)) {
     JS_ReportPendingException(cx);
+  }
+
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (workerPrivate->IsSharedWorker() || workerPrivate->IsServiceWorker()) {
+    WorkerGlobalScope* scope = workerPrivate->GlobalScope();
+    MOZ_ASSERT(scope);
+
+    scope->UnregisterHostObjectURI(NS_ConvertUTF16toUTF8(aUrl));
   }
 }
 

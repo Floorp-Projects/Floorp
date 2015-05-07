@@ -17,7 +17,7 @@
 #include "mozilla/gfx/Logging.h"        // for gfxCriticalError
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsTArray
 
@@ -274,7 +274,7 @@ TiledLayerBuffer<Derived, Tile>::Dump(std::stringstream& aStream,
                                       const char* aPrefix,
                                       bool aDumpHtml)
 {
-  nsIntRect visibleRect = GetValidRegion().GetBounds();
+  gfx::IntRect visibleRect = GetValidRegion().GetBounds();
   gfx::IntSize scaledTileSize = GetScaledTileSize();
   for (int32_t x = visibleRect.x; x < visibleRect.x + visibleRect.width;) {
     int32_t tileStartX = GetTileStart(x, scaledTileSize.width);
@@ -309,8 +309,8 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
 
   nsTArray<Tile>  newRetainedTiles;
   nsTArray<Tile>& oldRetainedTiles = mRetainedTiles;
-  const nsIntRect oldBound = mValidRegion.GetBounds();
-  const nsIntRect newBound = newValidRegion.GetBounds();
+  const gfx::IntRect oldBound = mValidRegion.GetBounds();
+  const gfx::IntRect newBound = newValidRegion.GetBounds();
   const nsIntPoint oldBufferOrigin(RoundDownToTileEdge(oldBound.x, scaledTileSize.width),
                                    RoundDownToTileEdge(oldBound.y, scaledTileSize.height));
   const nsIntPoint newBufferOrigin(RoundDownToTileEdge(newBound.x, scaledTileSize.width),
@@ -361,7 +361,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
         height = newBound.y + newBound.height - y;
       }
 
-      const nsIntRect tileRect(x,y,width,height);
+      const gfx::IntRect tileRect(x,y,width,height);
       if (oldValidRegion.Intersects(tileRect) && newValidRegion.Intersects(tileRect)) {
         // This old tiles contains some valid area so move it to the new tile
         // buffer. Replace the tile in the old buffer with a placeholder
@@ -506,7 +506,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
         height = newBound.YMost() - y;
       }
 
-      const nsIntRect tileRect(x, y, width, height);
+      const gfx::IntRect tileRect(x, y, width, height);
 
       nsIntRegion tileDrawRegion;
       tileDrawRegion.And(tileRect, regionToPaint);

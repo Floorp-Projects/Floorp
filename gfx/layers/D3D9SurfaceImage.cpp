@@ -107,7 +107,7 @@ D3D9SurfaceImage::SetData(const Data& aData)
   // DXVA surfaces aren't created sharable, so we need to copy the surface
   // to a sharable texture to that it's accessible to the layer manager's
   // device.
-  const nsIntRect& region = aData.mRegion;
+  const gfx::IntRect& region = aData.mRegion;
   RefPtr<IDirect3DTexture9> texture;
   HANDLE shareHandle = nullptr;
   hr = device->CreateTexture(region.width,

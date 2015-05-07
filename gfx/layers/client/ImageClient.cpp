@@ -30,7 +30,7 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
 #include "nsISupportsImpl.h"            // for Image::Release, etc
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "mozilla/gfx/2D.h"
 #ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
@@ -279,7 +279,7 @@ ImageClient::ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
 {}
 
 void
-ImageClient::UpdatePictureRect(nsIntRect aRect)
+ImageClient::UpdatePictureRect(IntRect aRect)
 {
   if (mPictureRect == aRect) {
     return;
@@ -385,5 +385,5 @@ ImageClientOverlay::CreateImage(ImageFormat aFormat)
 }
 
 #endif
-}
-}
+} // namespace layers
+} // namespace mozilla
