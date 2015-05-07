@@ -174,7 +174,7 @@
             </hbox>
             <deck id="details-pane" flex="1">
               <hbox id="waterfall-view" flex="1">
-                <vbox id="waterfall-breakdown" flex="1" />
+                <vbox id="waterfall-breakdown" flex="1" class="devtools-main-content" />
                 <splitter class="devtools-side-splitter"/>
                 <vbox id="waterfall-details"
                       class="theme-sidebar"

@@ -174,6 +174,7 @@ public class LoginDoorHanger extends DoorHanger {
                                 Toast.makeText(mContext, mResources.getString(R.string.doorhanger_login_edit_toast_error), Toast.LENGTH_SHORT).show();
                             }
                             mOnButtonClickListener.onButtonClick(response, LoginDoorHanger.this);
+                            dialog.dismiss();
                         }
                     });
                     builder.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {

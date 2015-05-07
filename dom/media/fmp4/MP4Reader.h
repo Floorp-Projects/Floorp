@@ -164,6 +164,9 @@ private:
     virtual void ReleaseMediaResources() override {
       mReader->ReleaseMediaResources();
     }
+    virtual bool OnReaderTaskQueue() override {
+      return mReader->OnTaskQueue();
+    }
   private:
     MP4Reader* mReader;
     TrackType mType;

@@ -153,7 +153,7 @@ loop.conversationViews = (function(mozL10n) {
 
     getDefaultProps: function() {
       return {
-        showMenu: false,
+        showMenu: false
       };
     },
 
@@ -285,7 +285,7 @@ loop.conversationViews = (function(mozL10n) {
   var AcceptCallButton = React.createClass({
 
     propTypes: {
-      mode: React.PropTypes.object.isRequired,
+      mode: React.PropTypes.object.isRequired
     },
 
     render: function() {
@@ -761,7 +761,7 @@ loop.conversationViews = (function(mozL10n) {
           return this._renderViewFromCallType();
         }
       }
-    },
+    }
   });
 
   return {

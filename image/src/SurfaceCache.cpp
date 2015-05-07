@@ -528,8 +528,8 @@ public:
       } else {
         // Our call to AddObject must have failed in StartTracking; most likely
         // we're in XPCOM shutdown right now.
-        NS_WARN_IF_FALSE(ShutdownTracker::ShutdownHasStarted(),
-                         "Not expiration-tracking an unlocked surface!");
+        NS_ASSERTION(ShutdownTracker::ShutdownHasStarted(),
+                     "Not expiration-tracking an unlocked surface!");
       }
 
       DebugOnly<bool> foundInCosts = mCosts.RemoveElementSorted(costEntry);

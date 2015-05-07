@@ -8,6 +8,7 @@ from argparse import Namespace
 import logging
 import mozpack.path as mozpath
 import os
+import shutil
 import sys
 import warnings
 import which
@@ -90,17 +91,41 @@ class MochitestRunner(MozbuildObject):
 
     def get_webapp_runtime_path(self):
         import mozinfo
-        appname = 'webapprt-stub' + mozinfo.info.get('bin_suffix', '')
+        app_name = 'webapprt-stub' + mozinfo.info.get('bin_suffix', '')
+        app_path = os.path.join(self.distdir, 'bin', app_name)
         if sys.platform.startswith('darwin'):
-            appname = os.path.join(
+            # On Mac, we copy the stub from the dist dir to the test app bundle,
+            # since we have to run it from a bundle for its windows to appear.
+            # Ideally, the build system would do this for us, and we should find
+            # a way for it to do that.
+            mac_dir_name = os.path.join(
+                self.mochitest_dir,
+                'webapprtChrome',
+                'webapprt',
+                'test',
+                'chrome',
+                'TestApp.app',
+                'Contents',
+                'MacOS')
+            mac_app_name = 'webapprt' + mozinfo.info.get('bin_suffix', '')
+            mac_app_path = os.path.join(mac_dir_name, mac_app_name)
+            shutil.copy(app_path, mac_app_path)
+            return mac_app_path
+        return app_path
+
+    # On Mac, the app invoked by runtests.py is in a different app bundle
+    # (as determined by get_webapp_runtime_path above), but the XRE path should
+    # still point to the browser's app bundle, so we set it here explicitly.
+    def get_webapp_runtime_xre_path(self):
+        if sys.platform.startswith('darwin'):
+            xre_path = os.path.join(
                 self.distdir,
                 self.substs['MOZ_MACBUNDLE_NAME'],
                 'Contents',
-                'Resources',
-                appname)
+                'Resources')
         else:
-            appname = os.path.join(self.distdir, 'bin', appname)
-        return appname
+            xre_path = os.path.join(self.distdir, 'bin')
+        return xre_path
 
     def __init__(self, *args, **kwargs):
         MozbuildObject.__init__(self, *args, **kwargs)
@@ -244,11 +269,13 @@ class MochitestRunner(MozbuildObject):
             options.webapprtContent = True
             if not options.app or options.app == self.get_binary_path():
                 options.app = self.get_webapp_runtime_path()
+            options.xrePath = self.get_webapp_runtime_xre_path()
         elif suite == 'webapprt-chrome':
             options.webapprtChrome = True
             options.browserArgs.append("-test-mode")
             if not options.app or options.app == self.get_binary_path():
                 options.app = self.get_webapp_runtime_path()
+            options.xrePath = self.get_webapp_runtime_xre_path()
         else:
             raise Exception('None or unrecognized mochitest suite type.')
 

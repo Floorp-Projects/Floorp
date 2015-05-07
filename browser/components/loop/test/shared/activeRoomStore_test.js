@@ -756,7 +756,7 @@ describe("loop.store.ActiveRoomStore", function () {
 
       store.setupWindowData(new sharedActions.SetupWindowData({
         windowId: "42",
-        type: "room",
+        type: "room"
       }));
 
       store.joinedRoom(actionData);
