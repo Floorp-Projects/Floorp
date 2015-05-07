@@ -81,7 +81,7 @@ TEST(TiledLayerBuffer, EmptyUpdate) {
 
   TestTiledLayerBuffer buffer;
 
-  nsIntRegion validRegion(nsIntRect(0, 0, 10, 10));
+  nsIntRegion validRegion(gfx::IntRect(0, 0, 10, 10));
   buffer.TestUpdate(validRegion, validRegion);
 
   ASSERT_EQ(buffer.GetValidRegion(), validRegion);
