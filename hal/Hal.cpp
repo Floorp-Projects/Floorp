@@ -864,6 +864,13 @@ SetCurrentThreadPriority(hal::ThreadPriority aThreadPriority)
   PROXY_IF_SANDBOXED(SetCurrentThreadPriority(aThreadPriority));
 }
 
+void
+SetThreadPriority(PlatformThreadId aThreadId,
+                  hal::ThreadPriority aThreadPriority)
+{
+  PROXY_IF_SANDBOXED(SetThreadPriority(aThreadId, aThreadPriority));
+}
+
 // From HalTypes.h.
 const char*
 ProcessPriorityToString(ProcessPriority aPriority)

@@ -17,7 +17,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
 #include "nsISupportsImpl.h"            // for Image::AddRef, etc
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsSize.h"                     // for nsIntSize
 
 // Just big enough for a 1080p RGBA32 frame

@@ -9,6 +9,7 @@
 
 #include "AudioNode.h"
 #include "FFTBlock.h"
+#include "AlignedTArray.h"
 
 namespace mozilla {
 namespace dom {
@@ -77,8 +78,8 @@ private:
   double mMaxDecibels;
   double mSmoothingTimeConstant;
   uint32_t mWriteIndex;
-  FallibleTArray<float> mBuffer;
-  FallibleTArray<float> mOutputBuffer;
+  AlignedFallibleTArray<float> mBuffer;
+  AlignedFallibleTArray<float> mOutputBuffer;
 };
 
 }

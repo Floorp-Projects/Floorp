@@ -222,6 +222,8 @@ class JS_FRIEND_API(GCCellPtr)
         return reinterpret_cast<uintptr_t>(asCell());
     }
 
+    bool mayBeOwnedByOtherRuntime() const;
+
   private:
     uintptr_t checkedCast(void* p, JSGCTraceKind traceKind) {
         js::gc::Cell* cell = static_cast<js::gc::Cell*>(p);
@@ -364,6 +366,8 @@ static MOZ_ALWAYS_INLINE bool
 GCThingIsMarkedGray(GCCellPtr thing)
 {
     if (js::gc::IsInsideNursery(thing.asCell()))
+        return false;
+    if (thing.mayBeOwnedByOtherRuntime())
         return false;
     return js::gc::detail::CellIsMarkedGray(thing.asCell());
 }

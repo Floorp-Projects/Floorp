@@ -1165,9 +1165,6 @@ public:
                         js::PointerHasher<JSAddonId*, 3>,
                         js::SystemAllocPolicy> InterpositionMap;
 
-    static bool SetAddonInterposition(JSAddonId* addonId,
-                                      nsIAddonInterposition* interp);
-
     // Gets the appropriate scope object for XBL in this scope. The context
     // must be same-compartment with the global upon entering, and the scope
     // object is wrapped into the compartment of the global.
@@ -1187,6 +1184,12 @@ public:
 
     bool HasInterposition() { return mInterposition; }
     nsCOMPtr<nsIAddonInterposition> GetInterposition();
+
+    static bool SetAddonInterposition(JSAddonId* addonId,
+                                      nsIAddonInterposition* interp);
+
+    void SetAddonCallInterposition() { mHasCallInterpositions = true; }
+    bool HasCallInterposition() { return mHasCallInterpositions; };
 
 protected:
     virtual ~XPCWrappedNativeScope();
@@ -1226,9 +1229,13 @@ private:
     // Lazily created sandboxes for addon code.
     nsTArray<JS::ObjectPtr>          mAddonScopes;
 
-    // This is a service that will be use to interpose on all calls out of this
-    // scope. If it's null, no interposition is done.
+    // This is a service that will be use to interpose on some property accesses on
+    // objects from other scope, for add-on compatibility reasons.
     nsCOMPtr<nsIAddonInterposition>  mInterposition;
+
+    // If this flag is set, we intercept function calls on vanilla JS function objects
+    // from this scope if the caller scope has mInterposition set.
+    bool mHasCallInterpositions;
 
     nsAutoPtr<DOMExpandoSet> mDOMExpandoSet;
 

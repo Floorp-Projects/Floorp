@@ -11,6 +11,8 @@ import subprocess
 import sys
 
 import mozinfo
+import mozlog
+from mozlog import structured
 
 if mozinfo.isLinux:
     import fcntl
@@ -20,9 +22,18 @@ class NetworkError(Exception):
     """Exception thrown when unable to obtain interface or IP."""
 
 
+def _get_logger():
+    logger = structured.get_default_logger(component='moznetwork')
+    if not logger:
+        logger = mozlog.getLogger('moznetwork')
+    return logger
+
+
 def _get_interface_list():
     """Provides a list of available network interfaces
        as a list of tuples (name, ip)"""
+    logger = _get_logger()
+    logger.debug('Gathering interface list')
     max_iface = 32  # Maximum number of interfaces(Aribtrary)
     bytes = max_iface * 32
     is_32bit = (8 * struct.calcsize("P")) == 32  # Set Architecture
@@ -57,22 +68,30 @@ def _proc_matches(args, regex):
 def _parse_ifconfig():
     """Parse the output of running ifconfig on mac in cases other methods
     have failed"""
+    logger = _get_logger()
+    logger.debug('Parsing ifconfig')
 
     # Attempt to determine the default interface in use.
     default_iface = _proc_matches(['route', '-n', 'get', 'default'],
                                   'interface: (\w+)')
+
     if default_iface:
         addr_list = _proc_matches(['ifconfig', default_iface[0]],
                                   'inet (\d+.\d+.\d+.\d+)')
-        if addr_list and not addr_list[0].startswith('127.'):
-            return addr_list[0]
+        if addr_list:
+            logger.debug('Default interface: [%s] %s' % (default_iface[0],
+                                                         addr_list[0]))
+            if not addr_list[0].startswith('127.'):
+                return addr_list[0]
 
     # Iterate over plausible interfaces if we didn't find a suitable default.
     for iface in ['en%s' % i for i in range(10)]:
         addr_list = _proc_matches(['ifconfig', iface],
                                   'inet (\d+.\d+.\d+.\d+)')
-        if addr_list and not addr_list[0].startswith('127.'):
-            return addr_list[0]
+        if addr_list:
+            logger.debug('Interface: [%s] %s' % (iface, addr_list[0]))
+            if not addr_list[0].startswith('127.'):
+                return addr_list[0]
 
     # Just return any that isn't localhost. If we can't find one, we have
     # failed.
@@ -89,11 +108,16 @@ def get_ip():
        "192.168.1.3".
 
        A `NetworkError` exception is raised in case of failure."""
+    logger = _get_logger()
     try:
+        hostname = socket.gethostname()
         try:
-            ip = socket.gethostbyname(socket.gethostname())
+            logger.debug('Retrieving IP for %s' % hostname)
+            ip = socket.gethostbyname(hostname)
         except socket.gaierror:  # for Mac OS X
-            ip = socket.gethostbyname(socket.gethostname() + ".local")
+            hostname += '.local'
+            logger.debug('Retrieving IP for %s' % hostname)
+            ip = socket.gethostbyname(hostname)
     except socket.gaierror:
         # sometimes the hostname doesn't resolve to an ip address, in which
         # case this will always fail
@@ -103,6 +127,7 @@ def get_ip():
         if mozinfo.isLinux:
             interfaces = _get_interface_list()
             for ifconfig in interfaces:
+                logger.debug('Interface: [%s] %s' % (ifconfig[0], ifconfig[1]))
                 if ifconfig[0] == 'lo':
                     continue
                 else:
@@ -124,8 +149,16 @@ def get_lan_ip():
 def cli(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description='Retrieve IP address')
-    parser.parse_args()
-    print 'IP address: %s' % get_ip()
+    structured.commandline.add_logging_group(
+        parser,
+        include_formatters=structured.commandline.TEXT_FORMATTERS
+    )
+
+    args = parser.parse_args()
+    structured.commandline.setup_logging(
+        'mozversion', args, {'mach': sys.stdout})
+
+    _get_logger().info('IP address: %s' % get_ip())
 
 
 if __name__ == '__main__':

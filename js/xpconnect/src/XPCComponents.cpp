@@ -2750,9 +2750,11 @@ class PreciseGCRunnable : public nsRunnable
             }
         }
 
-        PrepareForFullGC(rt);
-        JSGCInvocationKind gckind = mShrinking ? GC_SHRINK : GC_NORMAL;
-        GCForReason(rt, gckind, gcreason::COMPONENT_UTILS);
+        nsJSContext::GarbageCollectNow(gcreason::COMPONENT_UTILS,
+                                       nsJSContext::NonIncrementalGC,
+                                       mShrinking ?
+                                         nsJSContext::ShrinkingGC :
+                                         nsJSContext::NonShrinkingGC);
 
         mCallback->Callback();
         return NS_OK;
@@ -3486,6 +3488,21 @@ nsXPCComponents_Utils::SetAddonInterposition(const nsACString& addonIdStr,
         return NS_ERROR_FAILURE;
     if (!XPCWrappedNativeScope::SetAddonInterposition(addonId, interposition))
         return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::SetAddonCallInterposition(HandleValue target,
+                                                 JSContext* cx)
+{
+    NS_ENSURE_TRUE(target.isObject(), NS_ERROR_INVALID_ARG);
+    RootedObject targetObj(cx, &target.toObject());
+    targetObj = js::CheckedUnwrap(targetObj);
+    NS_ENSURE_TRUE(targetObj, NS_ERROR_INVALID_ARG);
+    XPCWrappedNativeScope* xpcScope = ObjectScope(targetObj);
+    NS_ENSURE_TRUE(xpcScope, NS_ERROR_INVALID_ARG);
+
+    xpcScope->SetAddonCallInterposition();
     return NS_OK;
 }
 

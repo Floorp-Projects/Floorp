@@ -34,7 +34,7 @@ let TestInterposition = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAddonInterposition,
                                          Ci.nsISupportsWeakReference]),
 
-  interpose: function(addonId, target, iid, prop) {
+  interposeProperty: function(addonId, target, iid, prop) {
     do_check_eq(addonId, ADDONID);
     do_check_eq(gExpectedProp, prop);
     gExpectedProp = undefined;
@@ -56,6 +56,12 @@ let TestInterposition = {
     }
 
     return null;
+  },
+
+  interposeCall: function(addonId, originalFunc, originalThis, args) {
+    do_check_eq(addonId, ADDONID);
+    args.splice(0, 0, addonId);
+    return originalFunc.apply(originalThis, args);
   }
 };
 
@@ -138,5 +144,17 @@ function run_test()
     do_check_eq(desc.configurable, false);
   });
 
+  let moduleScope = Cu.Sandbox(this);
+  moduleScope.ADDONID = ADDONID;
+  moduleScope.do_check_eq = do_check_eq;
+  function funToIntercept(addonId) {
+    do_check_eq(addonId, ADDONID);
+    counter++;
+  }
+  sandbox.moduleFunction = Cu.evalInSandbox(funToIntercept.toSource() + "; funToIntercept", moduleScope);
+  Cu.evalInSandbox("var counter = 0;", moduleScope);
+  Cu.evalInSandbox("Components.utils.setAddonCallInterposition(this);", moduleScope);
+  Cu.evalInSandbox("moduleFunction()", sandbox);
+  do_check_eq(Cu.evalInSandbox("counter", moduleScope), 1);
   Cu.setAddonInterposition(ADDONID, null);
 }

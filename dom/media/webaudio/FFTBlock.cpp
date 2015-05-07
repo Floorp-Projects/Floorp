@@ -44,8 +44,7 @@ FFTBlock* FFTBlock::CreateInterpolatedBlock(const FFTBlock& block0, const FFTBlo
 
     // In the time-domain, the 2nd half of the response must be zero, to avoid circular convolution aliasing...
     int fftSize = newBlock->FFTSize();
-    nsTArray<float> buffer;
-    buffer.SetLength(fftSize);
+    AlignedTArray<float> buffer(fftSize);
     newBlock->GetInverseWithoutScaling(buffer.Elements());
     AudioBufferInPlaceScale(buffer.Elements(), 1.0f / fftSize, fftSize / 2);
     PodZero(buffer.Elements() + fftSize / 2, fftSize / 2);
@@ -60,10 +59,10 @@ void FFTBlock::InterpolateFrequencyComponents(const FFTBlock& block0, const FFTB
 {
     // FIXME : with some work, this method could be optimized
 
-    kiss_fft_cpx* dft = mOutputBuffer.Elements();
+    ComplexU* dft = mOutputBuffer.Elements();
 
-    const kiss_fft_cpx* dft1 = block0.mOutputBuffer.Elements();
-    const kiss_fft_cpx* dft2 = block1.mOutputBuffer.Elements();
+    const ComplexU* dft1 = block0.mOutputBuffer.Elements();
+    const ComplexU* dft2 = block1.mOutputBuffer.Elements();
 
     MOZ_ASSERT(mFFTSize == block0.FFTSize());
     MOZ_ASSERT(mFFTSize == block1.FFTSize());
@@ -154,7 +153,7 @@ void FFTBlock::InterpolateFrequencyComponents(const FFTBlock& block0, const FFTB
 
 double FFTBlock::ExtractAverageGroupDelay()
 {
-    kiss_fft_cpx* dft = mOutputBuffer.Elements();
+    ComplexU* dft = mOutputBuffer.Elements();
 
     double aveSum = 0.0;
     double weightSum = 0.0;
@@ -205,7 +204,7 @@ void FFTBlock::AddConstantGroupDelay(double sampleFrameDelay)
 {
     int halfSize = FFTSize() / 2;
 
-    kiss_fft_cpx* dft = mOutputBuffer.Elements();
+    ComplexU* dft = mOutputBuffer.Elements();
 
     const double kSamplePhaseDelay = (2.0 * M_PI) / double(FFTSize());
 

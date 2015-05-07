@@ -15,7 +15,7 @@
 #include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
 #include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
 #include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsIFile.h"                    // for nsIFile
 #include "nsDirectoryServiceDefs.h"     // for NS_OS_TMP_DIR
 #include "prprf.h"                      // for PR_snprintf

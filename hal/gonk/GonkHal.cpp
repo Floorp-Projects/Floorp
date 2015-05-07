@@ -1914,7 +1914,7 @@ EnsureThreadPriorityPrefs(ThreadPriorityPrefs* prefs)
 }
 
 static void
-SetThreadPriority(pid_t aTid, hal::ThreadPriority aThreadPriority)
+DoSetThreadPriority(pid_t aTid, hal::ThreadPriority aThreadPriority)
 {
   // See bug 999115, we can only read preferences on the main thread otherwise
   // we create a race condition in HAL
@@ -1965,7 +1965,7 @@ public:
   NS_IMETHOD Run()
   {
     NS_ASSERTION(NS_IsMainThread(), "Can only set thread priorities on main thread");
-    hal_impl::SetThreadPriority(mThreadId, mThreadPriority);
+    hal_impl::DoSetThreadPriority(mThreadId, mThreadPriority);
     return NS_OK;
   }
 
@@ -1979,11 +1979,18 @@ private:
 void
 SetCurrentThreadPriority(ThreadPriority aThreadPriority)
 {
+  pid_t threadId = gettid();
+  hal_impl::SetThreadPriority(threadId, aThreadPriority);
+}
+
+void
+SetThreadPriority(PlatformThreadId aThreadId,
+                         ThreadPriority aThreadPriority)
+{
   switch (aThreadPriority) {
     case THREAD_PRIORITY_COMPOSITOR: {
-      pid_t threadId = gettid();
       nsCOMPtr<nsIRunnable> runnable =
-        new SetThreadPriorityRunnable(threadId, aThreadPriority);
+        new SetThreadPriorityRunnable(aThreadId, aThreadPriority);
       NS_DispatchToMainThread(runnable);
       break;
     }

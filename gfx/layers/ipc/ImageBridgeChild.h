@@ -152,6 +152,9 @@ public:
    */
   void ConnectAsync(ImageBridgeParent* aParent);
 
+  using PImageBridgeChild::SendImageBridgeThreadId;
+  void SendImageBridgeThreadId();
+
   static void IdentifyCompositorTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
   void BeginTransaction();
