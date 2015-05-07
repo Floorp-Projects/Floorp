@@ -586,10 +586,9 @@ MP4Reader::ReadUpdatedMetadata(MediaInfo* aInfo)
 bool
 MP4Reader::IsMediaSeekable()
 {
-  // We can seek if we get a duration *and* the reader reports that it's
-  // seekable.
+  // Check Demuxer to see if this content is seekable or not.
   MonitorAutoLock mon(mDemuxerMonitor);
-  return mDecoder->GetResource()->IsTransportSeekable();
+  return mDemuxer->CanSeek();
 }
 
 bool
@@ -1077,7 +1076,7 @@ MP4Reader::Seek(int64_t aTime, int64_t aEndTime)
   LOG("aTime=(%lld)", aTime);
   MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   MonitorAutoLock mon(mDemuxerMonitor);
-  if (!mDecoder->GetResource()->IsTransportSeekable() || !mDemuxer->CanSeek()) {
+  if (!mDemuxer->CanSeek()) {
     VLOG("Seek() END (Unseekable)");
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }

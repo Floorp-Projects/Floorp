@@ -551,7 +551,7 @@ DataTextureSourceD3D9::GetTileRect(uint32_t aTileIndex) const
                  verticalTile < (verticalTiles - 1) ? maxSize : mSize.height % maxSize);
 }
 
-nsIntRect
+IntRect
 DataTextureSourceD3D9::GetTileRect()
 {
   return GetTileRect(mCurrentTile);
@@ -880,7 +880,7 @@ DataTextureSourceD3D9::UpdateFromTexture(IDirect3DTexture9* aTexture,
 
   if (aRegion) {
     nsIntRegionRectIterator iter(*aRegion);
-    const nsIntRect *iterRect;
+    const IntRect *iterRect;
     while ((iterRect = iter.Next())) {
       RECT rect;
       rect.left = iterRect->x;

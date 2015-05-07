@@ -26,6 +26,7 @@ partial interface URL {
   static DOMString? createObjectURL(Blob blob, optional objectURLOptions options);
   [Throws]
   static DOMString? createObjectURL(MediaStream stream, optional objectURLOptions options);
+  [Throws]
   static void revokeObjectURL(DOMString url);
 };
 

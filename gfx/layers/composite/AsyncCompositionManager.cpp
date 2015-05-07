@@ -27,7 +27,7 @@
 #include "nsDisplayList.h"              // for nsDisplayTransform, etc
 #include "nsMathUtils.h"                // for NS_round
 #include "nsPoint.h"                    // for nsPoint
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
@@ -56,7 +56,7 @@ IsSameDimension(dom::ScreenOrientation o1, dom::ScreenOrientation o2)
 }
 
 static bool
-ContentMightReflowOnOrientationChange(const nsIntRect& rect)
+ContentMightReflowOnOrientationChange(const IntRect& rect)
 {
   return rect.width != rect.height;
 }

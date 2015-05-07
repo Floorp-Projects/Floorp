@@ -1777,10 +1777,6 @@ nsDocument::~nsDocument()
 
   mPendingTitleChangeEvent.Revoke();
 
-  for (uint32_t i = 0; i < mHostObjectURIs.Length(); ++i) {
-    nsHostObjectProtocolHandler::RemoveDataEntry(mHostObjectURIs[i]);
-  }
-
   // We don't want to leave residual locks on images. Make sure we're in an
   // unlocked state, and then clear the table.
   SetImageLockingState(false);
@@ -2047,10 +2043,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCSSLoader)
 
-  for (uint32_t i = 0; i < tmp->mHostObjectURIs.Length(); ++i) {
-    nsHostObjectProtocolHandler::Traverse(tmp->mHostObjectURIs[i], cb);
-  }
-
   // We own only the items in mDOMMediaQueryLists that have listeners;
   // this reference is managed by their AddListener and RemoveListener
   // methods.
@@ -2160,10 +2152,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   if (tmp->mCSSLoader) {
     tmp->mCSSLoader->DropDocumentReference();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mCSSLoader)
-  }
-
-  for (uint32_t i = 0; i < tmp->mHostObjectURIs.Length(); ++i) {
-    nsHostObjectProtocolHandler::RemoveDataEntry(tmp->mHostObjectURIs[i]);
   }
 
   // We own only the items in mDOMMediaQueryLists that have listeners;
@@ -10062,18 +10050,6 @@ nsDocument::GetTemplateContentsOwner()
   }
 
   return mTemplateContentsOwner;
-}
-
-void
-nsDocument::RegisterHostObjectUri(const nsACString& aUri)
-{
-  mHostObjectURIs.AppendElement(aUri);
-}
-
-void
-nsDocument::UnregisterHostObjectUri(const nsACString& aUri)
-{
-  mHostObjectURIs.RemoveElement(aUri);
 }
 
 void

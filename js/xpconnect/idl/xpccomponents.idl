@@ -123,7 +123,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(1a9bcb85-67a9-4a22-89a2-40eaf7fc31ec)]
+[scriptable, uuid(e04a4a58-2b5e-4a74-941a-0d344b057c5a)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -688,6 +688,12 @@ interface nsIXPCComponents_Utils : nsISupports
 
     [implicit_jscontext]
     void setAddonInterposition(in ACString addonId, in nsIAddonInterposition interposition);
+
+    /*
+     * Enables call interpositions from addon scopes to any functions in the scope of |target|.
+     */
+    [implicit_jscontext]
+    void setAddonCallInterposition(in jsval target);
 
     /*
      * Return a fractional number of milliseconds from process

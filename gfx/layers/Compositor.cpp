@@ -81,7 +81,7 @@ Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
   if (aVisibleRegion.GetNumRects() > 1) {
     nsIntRegionRectIterator screenIter(aVisibleRegion);
 
-    while (const nsIntRect* rect = screenIter.Next())
+    while (const gfx::IntRect* rect = screenIter.Next())
     {
       DrawDiagnostics(aFlags | DiagnosticFlags::REGION_RECT,
                       ToRect(*rect), aClipRect, aTransform, aFlashCounter);
