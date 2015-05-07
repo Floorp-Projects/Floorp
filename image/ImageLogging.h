@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_image_public_ImageLogging_h
-#define mozilla_image_public_ImageLogging_h
+#ifndef mozilla_image_ImageLogging_h
+#define mozilla_image_ImageLogging_h
 
 #include "prlog.h"
 #include "prinrval.h"
@@ -171,4 +171,4 @@ public:
 
 #define LOG_MSG_WITH_PARAM LOG_FUNC_WITH_PARAM
 
-#endif // mozilla_image_public_ImageLogging_h
+#endif // mozilla_image_ImageLogging_h
