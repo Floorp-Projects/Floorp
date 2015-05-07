@@ -2384,7 +2384,7 @@ EnterIon(JSContext* cx, EnterJitData& data)
     data.result.setInt32(data.numActualArgs);
     {
         AssertCompartmentUnchanged pcc(cx);
-        JitActivation activation(cx);
+        JitActivation activation(cx, data.calleeToken);
 
         CALL_GENERATED_CODE(enter, data.jitcode, data.maxArgc, data.maxArgv, /* osrFrame = */nullptr, data.calleeToken,
                             /* scopeChain = */ nullptr, 0, data.result.address());
@@ -2481,14 +2481,15 @@ jit::FastInvoke(JSContext* cx, HandleFunction fun, CallArgs& args)
 {
     JS_CHECK_RECURSION(cx, return JitExec_Error);
 
-    IonScript* ion = fun->nonLazyScript()->ionScript();
+    RootedScript script(cx, fun->nonLazyScript());
+    IonScript* ion = script->ionScript();
     JitCode* code = ion->method();
     void* jitcode = code->raw();
 
     MOZ_ASSERT(jit::IsIonEnabled(cx));
     MOZ_ASSERT(!ion->bailoutExpected());
 
-    JitActivation activation(cx);
+    JitActivation activation(cx, CalleeToToken(script));
 
     EnterJitCode enter = cx->runtime()->jitRuntime()->enterIon();
     void* calleeToken = CalleeToToken(fun, /* constructing = */ false);
