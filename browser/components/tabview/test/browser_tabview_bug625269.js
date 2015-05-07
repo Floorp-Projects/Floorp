@@ -66,11 +66,16 @@ function resizeWindow(win, diffX, diffY, callback) {
 
   (function tryResize() {
     let {outerWidth: width, outerHeight: height} = win;
-    if (width != targetWidth || height != targetHeight) {
-      win.resizeTo(targetWidth, targetHeight);
-      executeSoon(tryResize);
-    } else {
-      callback();
+    if (width == targetWidth && height == targetHeight) {
+      executeSoon(callback);
+      return;
     }
+
+    win.addEventListener("resize", function onResize() {
+      win.removeEventListener("resize", onResize);
+      executeSoon(tryResize);
+    });
+
+    win.resizeTo(targetWidth, targetHeight);
   })();
 }
