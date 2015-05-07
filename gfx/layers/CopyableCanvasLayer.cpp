@@ -18,7 +18,7 @@
 #include "mozilla/gfx/Tools.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsSize.h"                     // for nsIntSize
 #include "gfxUtils.h"
 

@@ -35,7 +35,7 @@
 #include "nsIWidget.h"                  // for nsIWidget
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsMathUtils.h"                // for NS_roundf
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nsString.h"                   // for nsString, nsAutoCString, etc
 #include "ScopedGLHelpers.h"
@@ -1228,9 +1228,9 @@ CompositorOGL::EndFrame()
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting) {
-    nsIntRect rect;
+    IntRect rect;
     if (mUseExternalSurfaceSize) {
-      rect = nsIntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
+      rect = IntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
     } else {
       mWidget->GetBounds(rect);
     }

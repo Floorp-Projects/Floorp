@@ -254,14 +254,14 @@ CompositorScheduler::ResumeComposition()
 }
 
 void
-CompositorScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect)
+CompositorScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
 {
   mLastCompose = TimeStamp::Now();
   ComposeToTarget(aTarget, aRect);
 }
 
 void
-CompositorScheduler::ComposeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect)
+CompositorScheduler::ComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
 {
   MOZ_ASSERT(CompositorParent::IsInCompositorThread());
   MOZ_ASSERT(mCompositorParent);
@@ -540,7 +540,7 @@ CompositorVsyncScheduler::OnForceComposeToTarget()
 }
 
 void
-CompositorVsyncScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect)
+CompositorVsyncScheduler::ForceComposeToTarget(gfx::DrawTarget* aTarget, const IntRect* aRect)
 {
   OnForceComposeToTarget();
   CompositorScheduler::ForceComposeToTarget(aTarget, aRect);

@@ -25,7 +25,7 @@ class Layer;
 
 void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 aRootTransform = gfx::Matrix4x4(), bool aReset = true);
 
-void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const nsIntRect aRect);
+void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const gfx::IntRect aRect);
 void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor);
 
 void renderTraceEventStart(const char *aComment, const char *aColor);
@@ -52,7 +52,7 @@ private:
 inline void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 aRootTransform, bool aReset)
 {}
 
-inline void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const nsIntRect aRect)
+inline void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const gfx::IntRect aRect)
 {}
 
 inline void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor)
