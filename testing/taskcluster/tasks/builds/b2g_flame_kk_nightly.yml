@@ -4,13 +4,16 @@ $inherits:
     build_name: 'flame-kk-nightly'
     build_type: 'opt'
 task:
-  workerType: flame-kk
+  workerType: balrog
   scopes:
     - 'docker-worker:cache:build-flame-kk-nightly'
+    - 'docker-worker:feature:balrogVPNProxy'
   metadata:
     name: '[TC] B2G Flame KK Nightly'
 
   payload:
+    features:
+      balrogVPNProxy: true
     cache:
       build-flame-kk-nightly: /home/worker/object-folder
     env:
