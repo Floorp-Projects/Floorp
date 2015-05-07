@@ -714,7 +714,7 @@ loop.panel = (function(_, mozL10n) {
       var contextClasses = React.addons.classSet({
         context: true,
         hide: !hostname ||
-          !this.props.mozLoop.getLoopPref("contextInConverations.enabled")
+          !this.props.mozLoop.getLoopPref("contextInConversations.enabled")
       });
 
       return (
