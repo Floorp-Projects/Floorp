@@ -13,7 +13,9 @@
 #include "nsProxyRelease.h"
 #include "nsStandardURL.h"
 
+#if defined(PR_LOGGING)
 PRLogModuleInfo *webSocketLog = nullptr;
+#endif
 
 namespace mozilla {
 namespace net {
@@ -27,8 +29,10 @@ BaseWebSocketChannel::BaseWebSocketChannel()
   , mPingInterval(0)
   , mPingResponseTimeout(10000)
 {
+#if defined(PR_LOGGING)
   if (!webSocketLog)
     webSocketLog = PR_NewLogModule("nsWebSocket");
+#endif
 }
 
 //-----------------------------------------------------------------------------

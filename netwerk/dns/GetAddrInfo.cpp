@@ -23,11 +23,16 @@
 #endif
 
 #include "prlog.h"
+#if defined(PR_LOGGING)
 static PRLogModuleInfo *gGetAddrInfoLog = PR_NewLogModule("GetAddrInfo");
 #define LOG(msg, ...) \
   PR_LOG(gGetAddrInfoLog, PR_LOG_DEBUG, ("[DNS]: " msg, ##__VA_ARGS__))
 #define LOG_WARNING(msg, ...) \
   PR_LOG(gGetAddrInfoLog, PR_LOG_WARNING, ("[DNS]: " msg, ##__VA_ARGS__))
+#else
+#define LOG(args)
+#define LOG_WARNING(args)
+#endif
 
 #if DNSQUERY_AVAILABLE
 // There is a bug in windns.h where the type of parameter ppQueryResultsSet for

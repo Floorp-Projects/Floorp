@@ -214,7 +214,9 @@ nsHttpHandler::nsHttpHandler()
     , mTCPKeepaliveLongLivedIdleTimeS(600)
     , mEnforceH1Framing(FRAMECHECK_BARELY)
 {
+#if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
+#endif
 
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
 

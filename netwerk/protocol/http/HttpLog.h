@@ -23,6 +23,7 @@
 // Get rid of Chromium's LOG definition
 #undef LOG
 
+#if defined(PR_LOGGING)
 //
 // Log module for HTTP Protocol logging...
 //
@@ -35,6 +36,7 @@
 // the file http.log
 //
 extern PRLogModuleInfo *gHttpLog;
+#endif
 
 // http logging
 #define LOG1(args) PR_LOG(gHttpLog, 1, args)

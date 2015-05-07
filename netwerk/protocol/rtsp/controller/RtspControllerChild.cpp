@@ -70,8 +70,10 @@ RtspControllerChild::RtspControllerChild(nsIChannel *channel)
   , mPlayTimer(nullptr)
   , mPauseTimer(nullptr)
 {
+#if defined(PR_LOGGING)
   if (!gRtspChildLog)
     gRtspChildLog = PR_NewLogModule("nsRtspChild");
+#endif
   AddIPDLReference();
   gNeckoChild->SendPRtspControllerConstructor(this);
 }

@@ -906,7 +906,9 @@ private:
     SHUTDOWN = 6
   };
 
+#ifdef PR_LOGGING
   static char const * StateString(EState aState);
+#endif
   void ChangeState(EState aNewState);
 
   // Allocates and releases buffer used for reading and writing index.
