@@ -162,6 +162,77 @@ const gTestcases = [
   { decl: "-webkit-transition: 1s -webkit-transform linear 2s",
     targetPropName: "transition-property",
     expectedDOMStyleVal:  "transform" },
+
+  // -webkit-gradient(linear, ...) expressions:
+  { decl: "background-image: -webkit-gradient(linear,0 0,0 100%,from(rgb(1, 2, 3)),to(rgb(104, 105, 106)))",
+    targetPropName: "background-image",
+    expectedDOMStyleVal: "linear-gradient(180deg, rgb(1, 2, 3) 0%, rgb(104, 105, 106) 100%)"},
+  { decl: "background-image: -webkit-gradient(linear, left top, right bottom, from(rgb(1, 2, 3)), to(rgb(201, 202, 203)))",
+    targetPropName: "background-image",
+    expectedDOMStyleVal: "linear-gradient(135deg, rgb(1, 2, 3) 0%, rgb(201, 202, 203) 100%)"},
+
+  { decl: "background-image: -webkit-gradient(linear, left center, right center, from(rgb(1, 2, 3)), to(rgb(201, 202, 203)))",
+    targetPropName: "background-image",
+    expectedDOMStyleVal: "linear-gradient(to right, rgb(1, 2, 3) 0%, rgb(201, 202, 203) 100%)"},
+
+  { decl: "background-image: -webkit-gradient(linear, left center, right center, from(rgb(0, 0, 0)), color-stop(30%, rgb(255, 0, 0)), color-stop(60%, rgb(0, 255, 0)), to(rgb(0, 0, 255)))",
+    targetPropName: "background-image",
+    expectedDOMStyleVal: "linear-gradient(to right, rgb(0, 0, 0) 0%, rgb(255, 0, 0) 30%, rgb(0, 255, 0) 60%, rgb(0, 0, 255) 100%)"},
+
+   // -webkit-gradient(radial, ...) expressions:
+   { decl: "background-image: -webkit-gradient(radial, center center, 0, center center, 50, from(black), to(white)",
+     targetPropName: "background-image",
+     expectedDOMStyleVal: "radial-gradient(50px at center center , black 0%, white 100%)",
+     // XXXdholbert Note: unnecessary space, see bug 1160063----^
+     expectedCompStyleVal: "radial-gradient(50px, rgb(0, 0, 0) 0%, rgb(255, 255, 255) 100%)", },
+
+   { decl: "background-image: -webkit-gradient(radial, left bottom, 0, center center, 50, from(yellow), color-stop(20%, orange), color-stop(40%, red), color-stop(60%, green), color-stop(80%, blue), to(purple))",
+     targetPropName: "background-image",
+     expectedDOMStyleVal: "radial-gradient(50px at left bottom , yellow 0%, orange 20%, red 40%, green 60%, blue 80%, purple 100%)",
+     // XXXdholbert Note: unnecessary space, see bug 1160063--^
+     expectedCompStyleVal: "radial-gradient(50px at 0% 100%, rgb(255, 255, 0) 0%, rgb(255, 165, 0) 20%, rgb(255, 0, 0) 40%, rgb(0, 128, 0) 60%, rgb(0, 0, 255) 80%, rgb(128, 0, 128) 100%)" },
+
+   // -webkit-linear-gradient(...) expressions:
+   { decl: "background-image: -webkit-linear-gradient(top, blue, green)",
+     targetPropName: "background-image",
+     expectedDOMStyleVal: "linear-gradient(to bottom, blue, green)",
+     expectedCompStyleVal: "linear-gradient(rgb(0, 0, 255), rgb(0, 128, 0))", },
+
+   { decl: "background-image: -webkit-linear-gradient(left, blue, green)",
+     targetPropName: "background-image",
+     expectedDOMStyleVal: "linear-gradient(to right, blue, green)",
+     expectedCompStyleVal: "linear-gradient(to right, rgb(0, 0, 255), rgb(0, 128, 0))", },
+
+   { decl: "background-image: -webkit-linear-gradient(left bottom, blue, green)",
+     targetPropName: "background-image",
+     expectedDOMStyleVal: "linear-gradient(to right top, blue, green)",
+     expectedCompStyleVal: "linear-gradient(to top right, rgb(0, 0, 255), rgb(0, 128, 0))", },
+
+   { decl: "background-image: -webkit-linear-gradient(130deg, blue, green)",
+     targetPropName: "background-image",
+     expectedDOMStyleVal: "linear-gradient(320deg, blue, green)",
+     expectedCompStyleVal: "linear-gradient(320deg, rgb(0, 0, 255), rgb(0, 128, 0))", },
+
+   // -webkit-radial-gradient(...) expressions:
+   { decl: "background-image: -webkit-radial-gradient(#000, #fff)",
+     targetPropName: "background-image",
+     expectedDOMStyleVal: "radial-gradient(rgb(0, 0, 0), rgb(255, 255, 255))", },
+
+   /*
+   // XXXdholbert Side/corner specifiers don't work right now -- this is
+   // tracked in https://github.com/hallvors/css-fixme/issues/9 :
+   { decl: "background-image: -webkit-radial-gradient(bottom right, white, black)",
+     targetPropName: "background-image",
+     expectedDOMStyleVal: "radial-gradient(at bottom right, white, black)",
+     expectedCompStyleVal: "radial-gradient(at bottom right, rgb(255, 255, 255), rgb(0, 0, 0))", },
+   */
+
+   // Combination of unprefixed & prefixed gradient styles in a single 'background-image' expression
+   { decl: "background-image: -webkit-linear-gradient(black, white), radial-gradient(blue, purple), -webkit-gradient(linear,0 0,0 100%,from(red),to(orange))",
+     targetPropName: "background-image",
+     expectedDOMStyleVal: "linear-gradient(black, white), radial-gradient(blue, purple), linear-gradient(180deg, red 0%, orange 100%)",
+     expectedCompStyleVal: "linear-gradient(rgb(0, 0, 0), rgb(255, 255, 255)), radial-gradient(rgb(0, 0, 255), rgb(128, 0, 128)), linear-gradient(180deg, rgb(255, 0, 0) 0%, rgb(255, 165, 0) 100%)", },
+
 ];
 
 function getComputedStyleWrapper(elem, prop)
