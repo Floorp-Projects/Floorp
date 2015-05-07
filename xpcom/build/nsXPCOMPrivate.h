@@ -43,7 +43,7 @@ typedef nsresult   (*NewNativeLocalFileFunc)(const nsACString& aPath,
                                              bool aFollowLinks,
                                              nsIFile** aResult);
 
-typedef nsresult   (*GetDebugFunc)(nsIDebug** aResult);
+typedef nsresult   (*GetDebugFunc)(nsIDebug2** aResult);
 
 typedef nsresult   (*StringContainerInitFunc)(nsStringContainer&);
 typedef nsresult   (*StringContainerInit2Func)(nsStringContainer&,
