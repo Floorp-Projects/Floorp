@@ -195,7 +195,7 @@ public:
   IntervalSet()
   {
   }
-  ~IntervalSet()
+  virtual ~IntervalSet()
   {
   }
 
