@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+BRANDING_FILES := \
+	app.ico \
+	$(NULL)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+BRANDING_FILES := \
+	app.icns \
+	$(NULL)
+endif
+
+ifdef MOZ_WIDGET_GTK
+BRANDING_FILES := \
+	default.png \
+	$(NULL)
+endif
+
+BRANDING_DEST := $(DIST)/branding
+BRANDING_TARGET := export
+INSTALL_TARGETS += BRANDING
