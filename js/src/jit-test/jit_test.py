@@ -72,8 +72,13 @@ def main(argv):
                   help='set test timeout in seconds')
     op.add_option('--no-progress', dest='hide_progress', action='store_true',
                   help='hide progress bar')
-    op.add_option('--tinderbox', dest='tinderbox', action='store_true',
-                  help='Tinderbox-parseable output format')
+    op.add_option('--tinderbox', dest='format', action='store_const',
+                  const='automation',
+                  help='Use automation-parseable output format')
+    op.add_option('--format', dest='format', default='none', type='choice',
+                  choices=['automation', 'none'],
+                  help='Output format. Either automation or none'
+                  ' (default %default).')
     op.add_option('--args', dest='shell_args', default='',
                   help='extra args to pass to the JS shell')
     op.add_option('-w', '--write-failures', dest='write_failures',
