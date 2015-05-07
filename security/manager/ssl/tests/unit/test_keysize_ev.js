@@ -36,7 +36,7 @@ function checkEVStatus(cert, usage, isEVExpected) {
   do_print("cert issuer o=" + cert.issuerOrganization);
   let hasEVPolicy = {};
   let verifiedChain = {};
-  let error = certDB.verifyCertNow(cert, usage, NO_FLAGS, verifiedChain,
+  let error = certDB.verifyCertNow(cert, usage, NO_FLAGS, null, verifiedChain,
                                    hasEVPolicy);
   equal(hasEVPolicy.value, isEVExpected);
   equal(error, PRErrorCodeSuccess);
