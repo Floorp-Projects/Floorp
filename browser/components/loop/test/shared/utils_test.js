@@ -318,4 +318,102 @@ describe("loop.shared.utils", function() {
       expect(result).eql({ major: Infinity, minor: 0 });
     });
   });
+
+  describe("#objectDiff", function() {
+    var a, b, diff;
+
+    afterEach(function() {
+      a = b = diff = null;
+    });
+
+    it("should find object property additions", function() {
+      a = {
+        prop1: null
+      };
+      b = {
+        prop1: null,
+        prop2: null
+      };
+
+      diff = sharedUtils.objectDiff(a, b);
+      expect(diff.updated).to.eql([]);
+      expect(diff.removed).to.eql([]);
+      expect(diff.added).to.eql(["prop2"]);
+    });
+
+    it("should find object property value changes", function() {
+      a = {
+        prop1: null
+      };
+      b = {
+        prop1: "null"
+      };
+
+      diff = sharedUtils.objectDiff(a, b);
+      expect(diff.updated).to.eql(["prop1"]);
+      expect(diff.removed).to.eql([]);
+      expect(diff.added).to.eql([]);
+    });
+
+    it("should find object property removals", function() {
+      a = {
+        prop1: null
+      };
+      b = {};
+
+      diff = sharedUtils.objectDiff(a, b);
+      expect(diff.updated).to.eql([]);
+      expect(diff.removed).to.eql(["prop1"]);
+      expect(diff.added).to.eql([]);
+    });
+
+    it("should report a mix of removed, added and updated properties", function() {
+      a = {
+        prop1: null,
+        prop2: null
+      };
+      b = {
+        prop1: "null",
+        prop3: null
+      };
+
+      diff = sharedUtils.objectDiff(a, b);
+      expect(diff.updated).to.eql(["prop1"]);
+      expect(diff.removed).to.eql(["prop2"]);
+      expect(diff.added).to.eql(["prop3"]);
+    });
+  });
+
+  describe("#stripFalsyValues", function() {
+    var obj;
+
+    afterEach(function() {
+      obj = null;
+    });
+
+    it("should strip falsy object property values", function() {
+      obj = {
+        prop1: null,
+        prop2: false,
+        prop3: undefined,
+        prop4: void 0,
+        prop5: "",
+        prop6: 0
+      };
+
+      sharedUtils.stripFalsyValues(obj);
+      expect(obj).to.eql({});
+    });
+
+    it("should keep non-falsy values", function() {
+      obj = {
+        prop1: "null",
+        prop2: null,
+        prop3: true
+      };
+
+      sharedUtils.stripFalsyValues(obj);
+      expect(obj).to.eql({ prop1: "null", prop3: true });
+    });
+  });
 });
