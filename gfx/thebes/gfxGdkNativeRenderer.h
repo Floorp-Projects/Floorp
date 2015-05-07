@@ -77,7 +77,7 @@ private:
     // for gfxXlibNativeRenderer:
     virtual nsresult DrawWithXlib(cairo_surface_t* surface,
                                   nsIntPoint offset,
-                                  nsIntRect* clipRects, uint32_t numClipRects) override;
+                                  mozilla::gfx::IntRect* clipRects, uint32_t numClipRects) override;
 
 #if (MOZ_WIDGET_GTK == 2)
     GdkColormap *mColormap;

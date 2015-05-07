@@ -16,7 +16,7 @@
 nsresult
 gfxGdkNativeRenderer::DrawWithXlib(cairo_surface_t* surface,
                                    nsIntPoint offset,
-                                   nsIntRect* clipRects, uint32_t numClipRects)
+                                   mozilla::gfx::IntRect* clipRects, uint32_t numClipRects)
 {
     GdkDrawable *drawable = gfxPlatformGtk::GetGdkDrawable(surface);
     if (!drawable) {
