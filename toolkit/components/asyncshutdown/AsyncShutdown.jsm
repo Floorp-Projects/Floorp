@@ -51,7 +51,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gDebug",
-  "@mozilla.org/xpcom/debug;1", "nsIDebug");
+  "@mozilla.org/xpcom/debug;1", "nsIDebug2");
 Object.defineProperty(this, "gCrashReporter", {
   get: function() {
     delete this.gCrashReporter;
@@ -889,7 +889,7 @@ Barrier.prototype = Object.freeze({
           }
 
           // To help sorting out bugs, we want to make sure that the
-          // call to nsIDebug.abort points to a guilty client, rather
+          // call to nsIDebug2.abort points to a guilty client, rather
           // than to AsyncShutdown itself. We pick a client that is
           // still blocking and use its filename/lineNumber,
           // which have been determined during the call to `addBlocker`.
