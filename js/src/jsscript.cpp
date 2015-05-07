@@ -1141,7 +1141,10 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript
         uint64_t packedFields;
 
         if (mode == XDR_ENCODE) {
-            MOZ_ASSERT(!lazy->maybeScriptUnbarriered());
+            // Note: it's possible the LazyScript has a non-null script_ pointer
+            // to a JSScript. We don't encode it: we can just delazify the
+            // lazy script.
+
             MOZ_ASSERT(fun == lazy->functionNonDelazifying());
 
             begin = lazy->begin();
