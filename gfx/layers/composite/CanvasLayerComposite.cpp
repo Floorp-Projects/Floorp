@@ -80,7 +80,7 @@ CanvasLayerComposite::GetRenderState()
 }
 
 void
-CanvasLayerComposite::RenderLayer(const nsIntRect& aClipRect)
+CanvasLayerComposite::RenderLayer(const IntRect& aClipRect)
 {
   if (!mImageHost || !mImageHost->IsAttached()) {
     return;

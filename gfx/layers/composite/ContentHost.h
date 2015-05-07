@@ -28,7 +28,7 @@
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsTArray
 #include "nscore.h"                     // for nsACString
@@ -102,7 +102,7 @@ protected:
   }
 
 
-  nsIntRect mBufferRect;
+  gfx::IntRect mBufferRect;
   nsIntPoint mBufferRotation;
   bool mInitialised;
 };
