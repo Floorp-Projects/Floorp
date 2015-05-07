@@ -14,7 +14,6 @@
 #include "nsIDocument.h"
 #include "prlog.h"
 
-#if defined(PR_LOGGING)
 //
 // To enable logging (see prlog.h for full details):
 //
@@ -25,7 +24,6 @@
 // the file offlineupdate.log
 //
 extern PRLogModuleInfo *gOfflineCacheUpdateLog;
-#endif
 
 #undef LOG
 #define LOG(args) PR_LOG(gOfflineCacheUpdateLog, 4, args)
@@ -203,7 +201,6 @@ OfflineCacheUpdateGlue::ApplicationCacheAvailable(nsIApplicationCache *aApplicat
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!existingCache) {
-#if defined(PR_LOGGING)
         if (LOG_ENABLED()) {
             nsAutoCString clientID;
             if (aApplicationCache) {
@@ -212,7 +209,6 @@ OfflineCacheUpdateGlue::ApplicationCacheAvailable(nsIApplicationCache *aApplicat
             LOG(("Update %p: associating app cache %s to document %p",
                  this, clientID.get(), mDocument.get()));
         }
-#endif
 
         rv = container->SetApplicationCache(aApplicationCache);
         NS_ENSURE_SUCCESS(rv, rv);
