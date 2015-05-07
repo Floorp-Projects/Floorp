@@ -387,6 +387,8 @@ public:
 
     virtual bool RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline) override;
 
+    virtual bool RecvSwappedWithOtherRemoteLoader() override;
+
     virtual PDocumentRendererChild*
     AllocPDocumentRendererChild(const nsRect& documentRect, const gfx::Matrix& transform,
                                 const nsString& bgcolor,
