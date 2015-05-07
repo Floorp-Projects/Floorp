@@ -28,9 +28,13 @@ function jar_entries(jarReader, pattern) {
 }
 
 function dir_entries(baseDir, subpath, ext) {
-  var dir = baseDir.clone();
-  dir.append(subpath);
-  var enumerator = dir.directoryEntries;
+  try {
+    var dir = baseDir.clone();
+    dir.append(subpath);
+    var enumerator = dir.directoryEntries;
+  } catch (e) {
+    return [];
+  }
   var entries = [];
   while (enumerator.hasMoreElements()) {
     var file = enumerator.getNext().QueryInterface(Ci.nsIFile);
