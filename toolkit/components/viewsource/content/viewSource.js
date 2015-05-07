@@ -108,6 +108,8 @@ let ViewSourceChrome = {
     removeEventListener("MozSwipeGesture", this, true);
     gContextMenu.removeEventListener("popupshowing", this);
     gContextMenu.removeEventListener("popuphidden", this);
+    Services.els.removeSystemEventListener(gBrowser, "dragover", this, true);
+    Services.els.removeSystemEventListener(gBrowser, "drop", this, true);
   },
 
   /**
@@ -171,6 +173,12 @@ let ViewSourceChrome = {
         break;
       case "popuphidden":
         this.onContextMenuHidden(event);
+        break;
+      case "dragover":
+        this.onDragOver(event);
+        break;
+      case "drop":
+        this.onDrop(event);
         break;
     }
   },
@@ -258,6 +266,9 @@ let ViewSourceChrome = {
 
     gContextMenu.addEventListener("popupshowing", this);
     gContextMenu.addEventListener("popuphidden", this);
+
+    Services.els.addSystemEventListener(gBrowser, "dragover", this, true);
+    Services.els.addSystemEventListener(gBrowser, "drop", this, true);
 
     if (!this.historyEnabled) {
       // Disable the BACK and FORWARD commands and hide the related menu items.
@@ -499,6 +510,51 @@ let ViewSourceChrome = {
     this.contextMenuData = {
       isOpen: false,
     };
+  },
+
+  /**
+   * Called when the user drags something over the content browser.
+   */
+  onDragOver(event) {
+    // For drags that appear to be internal text (for example, tab drags),
+    // set the dropEffect to 'none'. This prevents the drop even if some
+    // other listener cancelled the event.
+    let types = event.dataTransfer.types;
+    if (types.contains("text/x-moz-text-internal") && !types.contains("text/plain")) {
+        event.dataTransfer.dropEffect = "none";
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    let linkHandler = Cc["@mozilla.org/content/dropped-link-handler;1"]
+                        .getService(Ci.nsIDroppedLinkHandler);
+
+    if (linkHandler.canDropLink(event, false)) {
+      event.preventDefault();
+    }
+  },
+
+  /**
+   * Called twhen the user drops something onto the content browser.
+   */
+  onDrop(event) {
+    if (event.defaultPrevented)
+      return;
+
+    let name = { };
+    let linkHandler = Cc["@mozilla.org/content/dropped-link-handler;1"]
+                        .getService(Ci.nsIDroppedLinkHandler);
+    let uri;
+    try {
+      // Pass true to prevent the dropping of javascript:/data: URIs
+      uri = linkHandler.dropLink(event, name, true);
+    } catch (e) {
+      return;
+    }
+
+    if (uri) {
+      this.loadURL(uri);
+    }
   },
 
   /**
