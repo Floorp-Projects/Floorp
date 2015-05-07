@@ -1302,40 +1302,24 @@ void MediaDecoder::ChangeState(PlayState aState)
     RemoveMediaTracks();
   }
 
-  ApplyStateToStateMachine(mPlayState);
+  // XXXbholley - We should refactor things and move this to the code that
+  // actually initiates the seek.
+  if (mPlayState == PLAY_STATE_SEEKING) {
+    mSeekRequest.Begin(ProxyMediaCall(mDecoderStateMachine->TaskQueue(),
+                                      mDecoderStateMachine.get(), __func__,
+                                      &MediaDecoderStateMachine::Seek, mRequestedSeekTarget)
+      ->RefableThen(AbstractThread::MainThread(), __func__, this,
+                    &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
+    mRequestedSeekTarget.Reset();
+  }
+
+  ScheduleStateMachineThread();
 
   CancelDormantTimer();
   // Start dormant timer if necessary
   StartDormantTimer();
 
   GetReentrantMonitor().NotifyAll();
-}
-
-void MediaDecoder::ApplyStateToStateMachine(PlayState aState)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  GetReentrantMonitor().AssertCurrentThreadIn();
-
-  if (mDecoderStateMachine) {
-    switch (aState) {
-      case PLAY_STATE_PLAYING:
-        mDecoderStateMachine->Play();
-        break;
-      case PLAY_STATE_SEEKING:
-        mSeekRequest.Begin(ProxyMediaCall(mDecoderStateMachine->TaskQueue(),
-                                          mDecoderStateMachine.get(), __func__,
-                                          &MediaDecoderStateMachine::Seek, mRequestedSeekTarget)
-          ->RefableThen(AbstractThread::MainThread(), __func__, this,
-                        &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
-        mRequestedSeekTarget.Reset();
-        break;
-      default:
-        // The state machine checks for things like PAUSED in RunStateMachine.
-        // Make sure to keep it in the loop.
-        ScheduleStateMachineThread();
-        break;
-    }
-  }
 }
 
 void MediaDecoder::PlaybackPositionChanged(MediaDecoderEventVisibility aEventVisibility)
