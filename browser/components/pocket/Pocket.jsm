@@ -23,8 +23,20 @@ let Pocket = {
    */
   onPanelViewShowing(event) {
     let window = event.target.ownerDocument.defaultView;
+    window.addEventListener("popupshowing", Pocket.onPocketPanelShowing, true);
+    window.addEventListener("popupshown", Pocket.onPocketPanelShown, true);
+  },
+
+  onPocketPanelShowing(event) {
+    let window = event.target.ownerDocument.defaultView;
+    window.removeEventListener("popupshowing", Pocket.onPocketPanelShowing, true);
     window.pktUI.pocketButtonOnCommand(event);
-    window.pktUI.pocketPanelDidShow(event)
+  },
+
+  onPocketPanelShown(event) {
+    let window = event.target.ownerDocument.defaultView;
+    window.removeEventListener("popupshown", Pocket.onPocketPanelShown, true);
+    window.pktUI.pocketPanelDidShow(event);
   },
 
   onPanelViewHiding(event) {
