@@ -2750,9 +2750,11 @@ class PreciseGCRunnable : public nsRunnable
             }
         }
 
-        PrepareForFullGC(rt);
-        JSGCInvocationKind gckind = mShrinking ? GC_SHRINK : GC_NORMAL;
-        GCForReason(rt, gckind, gcreason::COMPONENT_UTILS);
+        nsJSContext::GarbageCollectNow(gcreason::COMPONENT_UTILS,
+                                       nsJSContext::NonIncrementalGC,
+                                       mShrinking ?
+                                         nsJSContext::ShrinkingGC :
+                                         nsJSContext::NonShrinkingGC);
 
         mCallback->Callback();
         return NS_OK;
