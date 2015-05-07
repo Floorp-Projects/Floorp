@@ -246,12 +246,10 @@ static uint32_t gValidateOrigin = 0xffffffff;
 // Can be overridden with docshell.event_starvation_delay_hint pref.
 #define NS_EVENT_STARVATION_DELAY_HINT 2000
 
-#ifdef PR_LOGGING
 #ifdef DEBUG
 static PRLogModuleInfo* gDocShellLog;
 #endif
 static PRLogModuleInfo* gDocShellLeakLog;
-#endif
 
 const char kBrandBundleURL[]      = "chrome://branding/locale/brand.properties";
 const char kAppstringsBundleURL[] = "chrome://global/locale/appstrings.properties";
@@ -919,7 +917,6 @@ nsDocShell::nsDocShell()
     CallGetService(NS_URIFIXUP_CONTRACTID, &sURIFixup);
   }
 
-#ifdef PR_LOGGING
 #ifdef DEBUG
   if (!gDocShellLog) {
     gDocShellLog = PR_NewLogModule("nsDocShell");
@@ -931,7 +928,6 @@ nsDocShell::nsDocShell()
   if (gDocShellLeakLog) {
     PR_LOG(gDocShellLeakLog, PR_LOG_DEBUG, ("DOCSHELL %p created\n", this));
   }
-#endif
 
 #ifdef DEBUG
   // We're counting the number of |nsDocShells| to help find leaks
@@ -961,11 +957,9 @@ nsDocShell::~nsDocShell()
     NS_IF_RELEASE(sURIFixup);
   }
 
-#ifdef PR_LOGGING
   if (gDocShellLeakLog) {
     PR_LOG(gDocShellLeakLog, PR_LOG_DEBUG, ("DOCSHELL %p destroyed\n", this));
   }
-#endif
 
 #ifdef DEBUG
   // We're counting the number of |nsDocShells| to help find leaks
@@ -1100,7 +1094,7 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
       return NS_ERROR_NO_INTERFACE;
     }
 
-#if defined(PR_LOGGING) && defined(DEBUG)
+#if defined(DEBUG)
     PR_LOG(gDocShellLog, PR_LOG_DEBUG,
            ("nsDocShell[%p]: returning app cache container %p",
             this, domDoc.get()));
@@ -1423,7 +1417,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
     aLoadInfo->GetBaseURI(getter_AddRefs(baseURI));
   }
 
-#if defined(PR_LOGGING) && defined(DEBUG)
+#if defined(DEBUG)
   if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
     nsAutoCString uristr;
     aURI->GetAsciiSpec(uristr);
@@ -1986,7 +1980,6 @@ bool
 nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
                           bool aFireOnLocationChange, uint32_t aLocationFlags)
 {
-#ifdef PR_LOGGING
   if (gDocShellLeakLog && PR_LOG_TEST(gDocShellLeakLog, PR_LOG_DEBUG)) {
     nsAutoCString spec;
     if (aURI) {
@@ -1994,7 +1987,6 @@ nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
     }
     PR_LogPrint("DOCSHELL %p SetCurrentURI %s\n", this, spec.get());
   }
-#endif
 
   // We don't want to send a location change when we're displaying an error
   // page, and we don't want to change our idea of "current URI" either
@@ -5295,7 +5287,7 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
                           const char* aCSSClass,
                           nsIChannel* aFailedChannel)
 {
-#if defined(PR_LOGGING) && defined(DEBUG)
+#if defined(DEBUG)
   if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
     nsAutoCString spec;
     aURI->GetSpec(spec);
@@ -9604,7 +9596,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   nsresult rv = NS_OK;
   mOriginalUriString.Truncate();
 
-#ifdef PR_LOGGING
   if (gDocShellLeakLog && PR_LOG_TEST(gDocShellLeakLog, PR_LOG_DEBUG)) {
     nsAutoCString spec;
     if (aURI) {
@@ -9612,7 +9603,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     }
     PR_LogPrint("DOCSHELL %p InternalLoad %s\n", this, spec.get());
   }
-#endif
   // Initialize aDocShell/aRequest
   if (aDocShell) {
     *aDocShell = nullptr;
@@ -11152,7 +11142,7 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel, nsISupports* aOwner,
   NS_PRECONDITION(aURI, "uri is null");
   NS_PRECONDITION(!aChannel || !aOwner, "Shouldn't have both set");
 
-#if defined(PR_LOGGING) && defined(DEBUG)
+#if defined(DEBUG)
   if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
     nsAutoCString spec;
     aURI->GetSpec(spec);
@@ -11772,7 +11762,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   NS_PRECONDITION(aURI, "uri is null");
   NS_PRECONDITION(!aChannel || !aOwner, "Shouldn't have both set");
 
-#if defined(PR_LOGGING) && defined(DEBUG)
+#if defined(DEBUG)
   if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
     nsAutoCString spec;
     aURI->GetSpec(spec);
