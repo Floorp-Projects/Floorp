@@ -379,9 +379,6 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
   , head(nullptr)
   , tail(&head)
   , savedRuntimeNeedBarrier(rt->needsIncrementalBarrier())
-#ifdef JS_GC_ZEAL
-  , verifyingPostBarriers(nullptr)
-#endif
 {
     rt->gc.incGcNumber();
 
