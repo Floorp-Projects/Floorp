@@ -27,9 +27,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsThreadUtils.h"
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gWin32SoundLog = nullptr;
-#endif
 
 class nsSoundPlayer: public nsRunnable {
 public:
@@ -108,11 +106,9 @@ NS_IMPL_ISUPPORTS(nsSound, nsISound, nsIStreamLoaderObserver)
 
 nsSound::nsSound()
 {
-#ifdef PR_LOGGING
     if (!gWin32SoundLog) {
       gWin32SoundLog = PR_NewLogModule("nsSound");
     }
-#endif
 
     mLastSound = nullptr;
 }

@@ -12,9 +12,7 @@
 
 using namespace mozilla::widget;
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gWindowsLog;
-#endif
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
 MSGFEventMsgInfo gMSGFEvents[] = {
