@@ -249,7 +249,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   // Set up our task queue.
-  RefPtr<SharedThreadPool> pool(GetMediaThreadPool());
+  RefPtr<SharedThreadPool> pool(GetMediaThreadPool(MediaThreadType::PLAYBACK));
   MOZ_DIAGNOSTIC_ASSERT(pool);
   mTaskQueue = new MediaTaskQueue(pool.forget());
 
