@@ -15,6 +15,10 @@
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Logging.h"        // for gfxCriticalError
+#ifdef MOZ_WIDGET_GONK
+# include "GrallocImages.h"  // for GrallocImage
+# include "EGLImageHelpers.h"
+#endif
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "mozilla/layers/GrallocTextureHost.h"
@@ -22,17 +26,11 @@
 #include "AndroidSurfaceTexture.h"
 #include "GfxTexturesReporter.h"        // for GfxTexturesReporter
 #include "GLBlitTextureImageHelper.h"
-#include "GeckoProfiler.h"
-
-#ifdef MOZ_WIDGET_GONK
-# include "GrallocImages.h"  // for GrallocImage
-# include "EGLImageHelpers.h"
-#endif
-
 #ifdef XP_MACOSX
+#include "SharedSurfaceIO.h"
 #include "mozilla/layers/MacIOSurfaceTextureHostOGL.h"
 #endif
-
+#include "GeckoProfiler.h"
 
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
@@ -591,8 +589,6 @@ EGLImageTextureSource::EGLImageTextureSource(CompositorOGL* aCompositor,
   , mWrapMode(aWrapMode)
   , mSize(aSize)
 {
-  MOZ_ASSERT(mTextureTarget == LOCAL_GL_TEXTURE_2D ||
-             mTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL);
 }
 
 void
@@ -606,12 +602,13 @@ EGLImageTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
   MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl()),
              "EGLImage not supported or disabled in runtime");
 
-  GLuint tex = mCompositor->GetTemporaryTexture(mTextureTarget, aTextureUnit);
+  GLuint tex = mCompositor->GetTemporaryTexture(GetTextureTarget(), aTextureUnit);
 
   gl()->fActiveTexture(aTextureUnit);
   gl()->fBindTexture(mTextureTarget, tex);
 
-  gl()->fEGLImageTargetTexture2D(mTextureTarget, mImage);
+  MOZ_ASSERT(mTextureTarget == LOCAL_GL_TEXTURE_2D);
+  gl()->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mImage);
 
   ApplyFilterToBoundTexture(gl(), aFilter, mTextureTarget);
 }
@@ -653,10 +650,12 @@ EGLImageTextureHost::EGLImageTextureHost(TextureFlags aFlags,
   , mSync(aSync)
   , mSize(aSize)
   , mCompositor(nullptr)
-{}
+{
+}
 
 EGLImageTextureHost::~EGLImageTextureHost()
-{}
+{
+}
 
 gl::GLContext*
 EGLImageTextureHost::gl() const
@@ -672,16 +671,13 @@ EGLImageTextureHost::Lock()
   }
 
   EGLint status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), mSync, 0, LOCAL_EGL_FOREVER);
-
   if (status != LOCAL_EGL_CONDITION_SATISFIED) {
-    MOZ_ASSERT(status != 0,
-               "ClientWaitSync generated an error. Has mSync already been destroyed?");
     return false;
   }
 
   if (!mTextureSource) {
     gfx::SurfaceFormat format = gfx::SurfaceFormat::R8G8B8A8;
-    GLenum target = LOCAL_GL_TEXTURE_EXTERNAL;
+    GLenum target = LOCAL_GL_TEXTURE_2D;
     GLenum wrapMode = LOCAL_GL_CLAMP_TO_EDGE;
     mTextureSource = new EGLImageTextureSource(mCompositor,
                                                mImage,
