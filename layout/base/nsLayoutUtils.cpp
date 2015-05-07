@@ -7596,6 +7596,27 @@ nsLayoutUtils::GetContentViewerSize(nsPresContext* aPresContext,
   return true;
 }
 
+static bool
+DeflateScrollbarAreaFromCompositionBoundsFor(nsIFrame* aScrollFrame)
+{
+  if (!aScrollFrame || !aScrollFrame->GetScrollTargetFrame()) {
+    return false;
+  }
+  nsPresContext* presContext = aScrollFrame->PresContext();
+  nsIPresShell* presShell = presContext->GetPresShell();
+  if (!presShell) {
+    return false;
+  }
+  bool isRootScrollFrame = aScrollFrame == presShell->GetRootScrollFrame();
+  bool isRootContentDocRootScrollFrame = isRootScrollFrame
+                                      && presContext->IsRootContentDocument();
+  // Exclude any non-overlay scroll bars from the composition bounds.
+  // This is only done for the RCD-RSF case, because otherwise the scroll
+  // port size is used and that already excludes the scroll bars.
+  return isRootContentDocRootScrollFrame &&
+         !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
+}
+
 /* static */ nsSize
 nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame, bool aSubtractScrollbars)
 {
@@ -7652,13 +7673,14 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame, bool aSubtract
           size = LayoutDevicePixel::ToAppUnits(contentSize, auPerDevPixel);
         }
       }
-
-      if (aSubtractScrollbars && scrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
-        nsMargin margins = scrollableFrame->GetActualScrollbarSizes();
-        size.width -= margins.LeftRight();
-        size.height -= margins.TopBottom();
-      }
     }
+  }
+
+  if (aSubtractScrollbars && DeflateScrollbarAreaFromCompositionBoundsFor(aFrame)) {
+    MOZ_ASSERT(scrollableFrame);
+    nsMargin margins = scrollableFrame->GetActualScrollbarSizes();
+    size.width -= margins.LeftRight();
+    size.height -= margins.TopBottom();
   }
 
   return size;
@@ -7734,11 +7756,9 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
 
   // Adjust composition size for the size of scroll bars.
   nsIFrame* rootRootScrollFrame = rootPresShell ? rootPresShell->GetRootScrollFrame() : nullptr;
-  nsIScrollableFrame* rootScrollableFrame = nullptr;
-  if (rootRootScrollFrame) {
-    rootScrollableFrame = rootRootScrollFrame->GetScrollTargetFrame();
-  }
-  if (rootScrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
+  if (DeflateScrollbarAreaFromCompositionBoundsFor(rootRootScrollFrame)) {
+    nsIScrollableFrame* rootScrollableFrame = rootRootScrollFrame->GetScrollTargetFrame();
+    MOZ_ASSERT(rootScrollableFrame);
     CSSMargin margins = CSSMargin::FromAppUnits(rootScrollableFrame->GetActualScrollbarSizes());
     // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
     rootCompositionSize.width -= margins.LeftRight();
@@ -8297,17 +8317,15 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
           metrics.mCompositionBounds.SizeTo(contentSize * scale);
         }
       }
-
-      // Exclude any non-overlay scroll bars from the composition bounds.
-      // This is only done for the RCD-RSF case, because otherwise the scroll
-      // port size is used and that already excludes the scroll bars.
-      if (scrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
-        nsMargin sizes = scrollableFrame->GetActualScrollbarSizes();
-        // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
-        ParentLayerMargin boundMargins = CSSMargin::FromAppUnits(sizes) * CSSToParentLayerScale(1.0f);
-        metrics.mCompositionBounds.Deflate(boundMargins);
-      }
     }
+  }
+
+  if (DeflateScrollbarAreaFromCompositionBoundsFor(aScrollFrame)) {
+    MOZ_ASSERT(scrollableFrame);
+    nsMargin sizes = scrollableFrame->GetActualScrollbarSizes();
+    // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
+    ParentLayerMargin boundMargins = CSSMargin::FromAppUnits(sizes) * CSSToParentLayerScale(1.0f);
+    metrics.mCompositionBounds.Deflate(boundMargins);
   }
 
   metrics.SetRootCompositionSize(
