@@ -5796,7 +5796,7 @@ StructType::ConstructData(JSContext* cx,
   if (args.length() == fields->count()) {
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
       const FieldInfo& field = r.front().value();
-      STATIC_ASSUME(field.mIndex < fields->count());  /* Quantified invariant */
+      MOZ_ASSERT(field.mIndex < fields->count());  /* Quantified invariant */
       if (!ImplicitConvert(cx, args[field.mIndex], field.mType,
                            buffer + field.mOffset, ConversionType::Construct,
                            nullptr, NullPtr(), 0, obj, field.mIndex))
