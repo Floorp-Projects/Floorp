@@ -2052,15 +2052,6 @@ public:
 
   virtual nsISupports* GetCurrentContentSink() = 0;
 
-  /**
-   * Register/Unregister a hostobject uri as being "owned" by this document.
-   * I.e. that its lifetime is connected with this document. When the document
-   * goes away it should "kill" the uri by calling
-   * nsHostObjectProtocolHandler::RemoveDataEntry
-   */
-  virtual void RegisterHostObjectUri(const nsACString& aUri) = 0;
-  virtual void UnregisterHostObjectUri(const nsACString& aUri) = 0;
-
   virtual void SetScrollToRef(nsIURI *aDocumentURI) = 0;
   virtual void ScrollToRef() = 0;
   virtual void ResetScrolledToRefAlready() = 0;

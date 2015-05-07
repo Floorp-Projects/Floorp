@@ -76,7 +76,8 @@ public:
                               nsAString& aResult,
                               ErrorResult& aError);
   static void RevokeObjectURL(const GlobalObject& aGlobal,
-                              const nsAString& aURL);
+                              const nsAString& aURL,
+                              ErrorResult& aRv);
 
   void GetHref(nsAString& aHref, ErrorResult& aRv) const;
 

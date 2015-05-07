@@ -152,8 +152,10 @@ public:
       return false;
     }
 
-    if (doc) {
-      doc->RegisterHostObjectUri(url);
+    if (window) {
+      nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
+      MOZ_ASSERT(global);
+      global->RegisterHostObjectURI(url);
     } else {
       mWorkerPrivate->RegisterHostObjectURI(url);
     }
@@ -207,8 +209,10 @@ public:
     if (urlPrincipal &&
         NS_SUCCEEDED(principal->Subsumes(urlPrincipal, &subsumes)) &&
         subsumes) {
-      if (doc) {
-        doc->UnregisterHostObjectUri(url);
+      if (window) {
+        nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
+        MOZ_ASSERT(global);
+        global->UnregisterHostObjectURI(url);
       }
 
       nsHostObjectProtocolHandler::RemoveDataEntry(url);
@@ -915,7 +919,8 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, File& aBlob,
 
 // static
 void
-URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl)
+URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl,
+                     ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
