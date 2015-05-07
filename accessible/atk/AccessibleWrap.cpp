@@ -855,6 +855,13 @@ getIndexInParentCB(AtkObject* aAtkObj)
 {
   // We don't use Accessible::IndexInParent() because we don't include text
   // leaf nodes as children in ATK.
+  if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+    if (ProxyAccessible* parent = proxy->Parent())
+      return parent->IndexOfEmbeddedChild(proxy);
+
+    return -1;
+  }
+
     AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
     if (!accWrap) {
         return -1;
