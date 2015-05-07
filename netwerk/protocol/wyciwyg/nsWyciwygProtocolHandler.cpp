@@ -23,10 +23,8 @@ using namespace mozilla::net;
 
 nsWyciwygProtocolHandler::nsWyciwygProtocolHandler() 
 {
-#if defined(PR_LOGGING)
   if (!gWyciwygLog)
     gWyciwygLog = PR_NewLogModule("nsWyciwygChannel");
-#endif
 
   LOG(("Creating nsWyciwygProtocolHandler [this=%p].\n", this));
 }

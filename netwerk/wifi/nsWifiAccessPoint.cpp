@@ -7,9 +7,7 @@
 #include "nsMemory.h"
 #include "prlog.h"
 
-#if defined(PR_LOGGING)
 extern PRLogModuleInfo *gWifiMonitorLog;
-#endif
 #define LOG(args)     PR_LOG(gWifiMonitorLog, PR_LOG_DEBUG, args)
 
 

@@ -26,12 +26,8 @@
 #include "nsCOMPtr.h"
 #include "nsIByteArrayInputStream.h"
 
-#if defined(PR_LOGGING)
 static PRLogModuleInfo *gTestSocketIOLog;
 #define LOG(args) PR_LOG(gTestSocketIOLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -233,9 +229,7 @@ main(int argc, char* argv[])
 
     signal(SIGSEGV, sighandler);
 
-#if defined(PR_LOGGING)
     gTestSocketIOLog = PR_NewLogModule("TestSocketIO");
-#endif
 
     if (argc < 3)
         usage(argv);

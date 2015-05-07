@@ -274,10 +274,8 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
                 *identityInvalid = true;
             }
 #endif // XP_WIN
-#ifdef PR_LOGGING
             if (!module)
                 LOG(("Native sys-ntlm auth module not found.\n"));
-#endif
         }
 
 #ifdef XP_WIN
