@@ -33,14 +33,9 @@ namespace mozilla {
 namespace net {
 
 // NSPR_LOG_MODULES=BackgroundFileSaver:5
-#if defined(PR_LOGGING)
 PRLogModuleInfo *BackgroundFileSaver::prlog = nullptr;
 #define LOG(args) PR_LOG(BackgroundFileSaver::prlog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(BackgroundFileSaver::prlog, 4)
-#else
-#define LOG(args)
-#define LOG_ENABLED() (false)
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
@@ -115,10 +110,8 @@ BackgroundFileSaver::BackgroundFileSaver()
 , mActualTargetKeepPartial(false)
 , mDigestContext(nullptr)
 {
-#if defined(PR_LOGGING)
   if (!prlog)
     prlog = PR_NewLogModule("BackgroundFileSaver");
-#endif
   LOG(("Created BackgroundFileSaver [this = %p]", this));
 }
 

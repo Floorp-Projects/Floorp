@@ -21,12 +21,10 @@
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
-#if defined(PR_LOGGING)
 //
 // NSPR_LOG_MODULES=nsStreamPump:5
 //
 static PRLogModuleInfo *gStreamPumpLog = nullptr;
-#endif
 #undef LOG
 #define LOG(args) PR_LOG(gStreamPumpLog, PR_LOG_DEBUG, args)
 
@@ -47,10 +45,8 @@ nsInputStreamPump::nsInputStreamPump()
     , mRetargeting(false)
     , mMonitor("nsInputStreamPump")
 {
-#if defined(PR_LOGGING)
     if (!gStreamPumpLog)
         gStreamPumpLog = PR_NewLogModule("nsStreamPump");
-#endif
 }
 
 nsInputStreamPump::~nsInputStreamPump()

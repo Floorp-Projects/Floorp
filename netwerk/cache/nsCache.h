@@ -19,7 +19,6 @@
 #include "nsError.h"
 
 // PR_LOG args = "format string", arg, arg, ...
-#if defined(PR_LOGGING)
 extern PRLogModuleInfo * gCacheLog;
 void   CacheLogInit();
 void   CacheLogPrintPath(PRLogModuleLevel level,
@@ -32,14 +31,6 @@ void   CacheLogPrintPath(PRLogModuleLevel level,
 #define CACHE_LOG_DEBUG(args)   PR_LOG(gCacheLog, PR_LOG_DEBUG, args)
 #define CACHE_LOG_PATH(level, format, item) \
                                 CacheLogPrintPath(level, format, item)
-#else
-#define CACHE_LOG_INIT()        {}
-#define CACHE_LOG_ALWAYS(args)  {}
-#define CACHE_LOG_ERROR(args)   {}
-#define CACHE_LOG_WARNING(args) {}
-#define CACHE_LOG_DEBUG(args)   {}
-#define CACHE_LOG_PATH(level, format, item)  {}
-#endif
 
 
 extern uint32_t  SecondsFromPRTime(PRTime prTime);

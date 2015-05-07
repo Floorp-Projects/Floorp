@@ -29,9 +29,7 @@
 using namespace mozilla;
 using namespace mozilla::net;
 
-#if defined(PR_LOGGING)
 PRLogModuleInfo *gSocketTransportLog = nullptr;
-#endif
 
 nsSocketTransportService *gSocketTransportService = nullptr;
 PRThread                 *gSocketThread           = nullptr;
@@ -80,9 +78,7 @@ nsSocketTransportService::nsSocketTransportService()
     , mTelemetryEnabledPref(false)
     , mProbedMaxCount(false)
 {
-#if defined(PR_LOGGING)
     gSocketTransportLog = PR_NewLogModule("nsSocketTransport");
-#endif
 
     NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
