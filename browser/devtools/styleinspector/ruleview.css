@@ -47,18 +47,23 @@ body {
   cursor: text;
 }
 
-.ruleview-propertycontainer {
+.ruleview-propertyvaluecontainer {
   cursor: text;
   padding-right: 15px;
 }
 
-.ruleview-propertycontainer a {
+.ruleview-propertyvaluecontainer a {
   cursor: pointer;
 }
 
-.ruleview-computedlist:not(.styleinspector-open),
+.ruleview-computedlist,
 .ruleview-warning[hidden] {
   display: none;
+}
+
+.ruleview-computedlist[user-open],
+.ruleview-computedlist[filter-open] {
+  display: block;
 }
 
 .ruleview-expandable-container {

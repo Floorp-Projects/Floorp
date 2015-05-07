@@ -368,13 +368,15 @@ NetworkService.prototype = {
     });
   },
 
-  resetRoutingTable: function(network) {
+  resetRoutingTable: function(network, callback) {
     let options = {
       cmd: "removeNetworkRoute",
       ifname: network.name
     };
 
-    this.controlMessage(options);
+    this.controlMessage(options, function(result) {
+      callback.nativeCommandResult(!result.error);
+    });
   },
 
   setDNS: function(networkInterface, callback) {
@@ -406,7 +408,7 @@ NetworkService.prototype = {
     });
   },
 
-  removeDefaultRoute: function(network) {
+  removeDefaultRoute: function(network, callback) {
     debug("Remove default route for " + network.name);
     let gateways = network.getGateways();
     let options = {
@@ -414,7 +416,9 @@ NetworkService.prototype = {
       ifname: network.name,
       gateways: gateways
     };
-    this.controlMessage(options);
+    this.controlMessage(options, function(result) {
+      callback.nativeCommandResult(!result.error);
+    });
   },
 
   _routeToString: function(interfaceName, host, prefixLength, gateway) {
@@ -487,7 +491,7 @@ NetworkService.prototype = {
     });
   },
 
-  addSecondaryRoute: function(ifname, route) {
+  addSecondaryRoute: function(ifname, route, callback) {
     debug("Going to add route to secondary table on " + ifname);
     let options = {
       cmd: "addSecondaryRoute",
@@ -496,10 +500,12 @@ NetworkService.prototype = {
       prefix: route.prefix,
       gateway: route.gateway
     };
-    this.controlMessage(options);
+    this.controlMessage(options, function(result) {
+      callback.nativeCommandResult(!result.error);
+    });
   },
 
-  removeSecondaryRoute: function(ifname, route) {
+  removeSecondaryRoute: function(ifname, route, callback) {
     debug("Going to remove route from secondary table on " + ifname);
     let options = {
       cmd: "removeSecondaryRoute",
@@ -508,7 +514,9 @@ NetworkService.prototype = {
       prefix: route.prefix,
       gateway: route.gateway
     };
-    this.controlMessage(options);
+    this.controlMessage(options, function(result) {
+      callback.nativeCommandResult(!result.error);
+    });
   },
 
   // Enable/Disable DHCP server.

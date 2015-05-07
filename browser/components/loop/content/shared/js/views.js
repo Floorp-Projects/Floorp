@@ -614,9 +614,77 @@ loop.shared.views = (function(_, l10n) {
     }
   });
 
+  var Checkbox = React.createClass({displayName: "Checkbox",
+    PropTypes: {
+      additionalClass: React.PropTypes.string,
+      checked: React.PropTypes.bool,
+      disabled: React.PropTypes.bool,
+      label: React.PropTypes.string,
+      onChange: React.PropTypes.func.isRequired,
+      // If `value` is not supplied, the consumer should rely on the boolean
+      // `checked` state changes.
+      value: React.PropTypes.string
+    },
+
+    getDefaultProps: function() {
+      return {
+        additionalClass: "",
+        checked: false,
+        disabled: false,
+        label: null,
+        value: ""
+      };
+    },
+
+    getInitialState: function() {
+      return {
+        checked: this.props.checked,
+        value: this.props.checked ? this.props.value : ""
+      };
+    },
+
+    _handleClick: function(event) {
+      event.preventDefault();
+
+      var newState = {
+        checked: !this.state.checked,
+        value: this.state.checked ? "" : this.props.value
+      };
+      this.setState(newState);
+      this.props.onChange(newState);
+    },
+
+    render: function() {
+      var cx = React.addons.classSet;
+      var wrapperClasses = {
+        "checkbox-wrapper": true,
+        disabled: this.props.disabled
+      };
+      var checkClasses = {
+        checkbox: true,
+        checked: this.state.checked,
+        disabled: this.props.disabled
+      };
+      if (this.props.additionalClass) {
+        checkClasses[this.props.additionalClass] = true;
+      }
+      return (
+        React.createElement("div", {className: cx(wrapperClasses), 
+             disabled: this.props.disabled, 
+             onClick: this._handleClick}, 
+          React.createElement("div", {className: cx(checkClasses)}), 
+          this.props.label ?
+            React.createElement("label", null, this.props.label) :
+            null
+        )
+      );
+    }
+  });
+
   return {
     Button: Button,
     ButtonGroup: ButtonGroup,
+    Checkbox: Checkbox,
     ConversationView: ConversationView,
     ConversationToolbar: ConversationToolbar,
     MediaControlButton: MediaControlButton,

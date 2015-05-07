@@ -2703,13 +2703,13 @@ DataCall.prototype = {
     if (this.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
       // This needs to run asynchronously, to behave the same way as the case of
       // non-shared apn, see bug 1059110.
-      Services.tm.currentThread.dispatch(function(state) {
+      Services.tm.currentThread.dispatch(() => {
         // Do not notify if state changed while this event was being dispatched,
         // the state probably was notified already or need not to be notified.
-        if (networkInterface.state == state) {
+        if (networkInterface.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
           networkInterface.notifyRILNetworkInterface();
         }
-      }.bind(null, RIL.GECKO_NETWORK_STATE_CONNECTED), Ci.nsIEventTarget.DISPATCH_NORMAL);
+      }, Ci.nsIEventTarget.DISPATCH_NORMAL);
       return;
     }
 
@@ -2829,13 +2829,15 @@ DataCall.prototype = {
       // Notify the DISCONNECTED event immediately after network interface is
       // removed from requestedNetworkIfaces, to make the DataCall, shared or
       // not, to have the same behavior.
-      Services.tm.currentThread.dispatch(function(state) {
+      Services.tm.currentThread.dispatch(() => {
         // Do not notify if state changed while this event was being dispatched,
         // the state probably was notified already or need not to be notified.
-        if (networkInterface.state == state) {
+        if (networkInterface.state == RIL.GECKO_NETWORK_STATE_DISCONNECTED) {
           networkInterface.notifyRILNetworkInterface();
+          // Clear link info after notifying NetworkManager.
+          this.resetLinkInfo();
         }
-      }.bind(null, RIL.GECKO_NETWORK_STATE_DISCONNECTED), Ci.nsIEventTarget.DISPATCH_NORMAL);
+      }, Ci.nsIEventTarget.DISPATCH_NORMAL);
     }
 
     // Only deactivate data call if no more network interface needs this
@@ -2861,7 +2863,6 @@ DataCall.prototype = {
     }, this.onDeactivateDataCallResult.bind(this));
 
     this.state = RIL.GECKO_NETWORK_STATE_DISCONNECTING;
-    this.resetLinkInfo();
   },
 
   // Entry method for timer events. Used to reconnect to a failed APN

@@ -159,7 +159,7 @@ interface nsIDhcpRequestCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(2e030f00-8b74-4800-8add-5862ab183503)]
+[scriptable, uuid(8216224c-a4e0-43fa-9662-3f2446b500c6)]
 interface nsINetworkService : nsISupports
 {
   const long MODIFY_ROUTE_ADD    = 0;
@@ -271,7 +271,8 @@ interface nsINetworkService : nsISupports
    * @param networkInterface
    *        The network interface we want remove from the routing table.
    */
-  void resetRoutingTable(in nsINetworkInterface networkInterface);
+  void resetRoutingTable(in nsINetworkInterface networkInterface,
+                         in nsINativeCommandCallback callback);
 
   /**
    * Set DNS.
@@ -305,7 +306,8 @@ interface nsINetworkService : nsISupports
    * @param networkInterface
    *        The network interface we want remove from the default route.
    */
-  void removeDefaultRoute(in nsINetworkInterface networkInterface);
+  void removeDefaultRoute(in nsINetworkInterface networkInterface,
+                          in nsINativeCommandCallback callback);
 
   /**
    * Modify route.
@@ -342,7 +344,8 @@ interface nsINetworkService : nsISupports
    *        .prefix: destination prefix
    *        .gateway: gateway ip address
    */
-  void addSecondaryRoute(in DOMString interfaceName, in jsval route);
+  void addSecondaryRoute(in DOMString interfaceName, in jsval route,
+                         in nsINativeCommandCallback callback);
 
   /**
    * Remove route from secondary routing table.
@@ -355,7 +358,8 @@ interface nsINetworkService : nsISupports
    *        .prefix: destination prefix
    *        .gateway: gateway ip address
    */
-  void removeSecondaryRoute(in DOMString interfaceName, in jsval route);
+  void removeSecondaryRoute(in DOMString interfaceName, in jsval route,
+                            in nsINativeCommandCallback callback);
 
   /**
    * Enable or disable usb rndis.

@@ -4,20 +4,21 @@
 
 "use strict";
 
-// Tests that the rule view search filter clear button works properly.
+// Tests that the rule view search filter clear button works properly and clears
+// the highlighted rules in the computed list.
 
-const SEARCH = "00F";
+const SEARCH = "0px"
 
 let TEST_URI = [
   '<style type="text/css">',
   '  #testid {',
-  '    background-color: #00F;',
+  '    margin: 4px 0px;',
   '  }',
   '  .testclass {',
-  '    width: 100%;',
+  '    background-color: red;',
   '  }',
   '</style>',
-  '<div id="testid" class="testclass">Styled Node</div>'
+  '<h1 id="testid" class="testclass">Styled Node</h1>'
 ].join("\n");
 
 add_task(function*() {
@@ -45,10 +46,23 @@ function* testAddTextInFilter(inspector, ruleView) {
     "First rule is inline element.");
 
   let rule = getRuleViewRuleEditor(ruleView, 1).rule;
+  let ruleEditor = rule.textProps[0].editor;
+  let computed = ruleEditor.computed;
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
-    "background-color text property is correctly highlighted.");
+  ok(!ruleEditor.expander.getAttribute("open"), "Expander is closed.");
+  ok(ruleEditor.container.classList.contains("ruleview-highlight"),
+    "margin text property is correctly highlighted.");
+  ok(!computed.hasAttribute("filter-open"), "margin computed list is closed.");
+
+  ok(!computed.children[0].classList.contains("ruleview-highlight"),
+    "margin-top computed property is not highlighted.");
+  ok(computed.children[1].classList.contains("ruleview-highlight"),
+    "margin-right computed property is correctly highlighted.");
+  ok(!computed.children[2].classList.contains("ruleview-highlight"),
+    "margin-bottom computed property is not highlighted.");
+  ok(computed.children[3].classList.contains("ruleview-highlight"),
+    "margin-left computed property is correctly highlighted.");
 }
 
 function* testClearSearchFilter(inspector, ruleView) {
@@ -69,4 +83,10 @@ function* testClearSearchFilter(inspector, ruleView) {
   ok(!searchField.value, "Search filter is cleared");
   ok(!doc.querySelectorAll(".ruleview-highlight").length,
     "No rules are higlighted");
+
+  let ruleEditor = getRuleViewRuleEditor(ruleView, 1).rule.textProps[0].editor;
+  let computed = ruleEditor.computed;
+
+  ok(!ruleEditor.expander.getAttribute("open"), "Expander is closed.");
+  ok(!computed.hasAttribute("filter-open"), "margin computed list is closed.");
 }
