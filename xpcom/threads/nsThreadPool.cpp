@@ -15,7 +15,6 @@
 
 using namespace mozilla;
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetThreadPoolLog()
 {
@@ -25,7 +24,6 @@ GetThreadPoolLog()
   }
   return sLog;
 }
-#endif
 #ifdef LOG
 #undef LOG
 #endif
