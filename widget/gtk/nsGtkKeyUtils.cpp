@@ -22,9 +22,7 @@
 #include "nsIBidiKeyboard.h"
 #include "nsServiceManagerUtils.h"
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gKeymapWrapperLog = nullptr;
-#endif // PR_LOGGING
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MouseEvents.h"
@@ -43,8 +41,6 @@ guint KeymapWrapper::sLastRepeatableHardwareKeyCode = 0;
 KeymapWrapper::RepeatState KeymapWrapper::sRepeatState =
     KeymapWrapper::NOT_PRESSED;
 nsIBidiKeyboard* sBidiKeyboard = nullptr;
-
-#ifdef PR_LOGGING
 
 static const char* GetBoolName(bool aBool)
 {
@@ -70,8 +66,6 @@ KeymapWrapper::GetModifierName(Modifier aModifier)
         default:           return "InvalidValue";
     }
 }
-
-#endif // PR_LOGGING
 
 /* static */ KeymapWrapper::Modifier
 KeymapWrapper::GetModifierForGDKKeyval(guint aGdkKeyval)
@@ -159,14 +153,12 @@ KeymapWrapper::KeymapWrapper() :
     mInitialized(false), mGdkKeymap(gdk_keymap_get_default()),
     mXKBBaseEventCode(0)
 {
-#ifdef PR_LOGGING
     if (!gKeymapWrapperLog) {
         gKeymapWrapperLog = PR_NewLogModule("KeymapWrapperWidgets");
     }
     PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
         ("KeymapWrapper(%p): Constructor, mGdkKeymap=%p",
          this, mGdkKeymap));
-#endif // PR_LOGGING
 
     g_signal_connect(mGdkKeymap, "keys-changed",
                      (GCallback)OnKeysChanged, this);

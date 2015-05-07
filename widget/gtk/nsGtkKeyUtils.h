@@ -198,9 +198,7 @@ protected:
      */
     static Modifier GetModifierForGDKKeyval(guint aGdkKeyval);
 
-#ifdef PR_LOGGING
     static const char* GetModifierName(Modifier aModifier);
-#endif // PR_LOGGING
 
     /**
      * mGdkKeymap is a wrapped instance by this class.

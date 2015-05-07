@@ -18,7 +18,6 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gGtkIMLog = nullptr;
 
 static const char*
@@ -75,7 +74,6 @@ GetEventType(GdkEventKey* aKeyEvent)
             return "Unknown";
     }
 }
-#endif
 
 const static bool kUseSimpleContextDefault = MOZ_WIDGET_GTK == 2;
 
@@ -96,11 +94,9 @@ nsGtkIMModule::nsGtkIMModule(nsWindow* aOwnerWindow)
     , mIsIMFocused(false)
     , mIsDeletingSurrounding(false)
 {
-#ifdef PR_LOGGING
     if (!gGtkIMLog) {
         gGtkIMLog = PR_NewLogModule("nsGtkIMModuleWidgets");
     }
-#endif
     static bool sFirstInstance = true;
     if (sFirstInstance) {
         sFirstInstance = false;

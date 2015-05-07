@@ -28,8 +28,6 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-#ifdef PR_LOGGING
-
 PRLogModuleInfo* gLog = nullptr;
 
 static const char*
@@ -305,8 +303,6 @@ GetWindowLevelName(NSInteger aWindowLevel)
   }
 }
 
-#endif // #ifdef PR_LOGGING
-
 static bool
 IsControlChar(uint32_t aCharCode)
 {
@@ -319,14 +315,12 @@ static TISInputSourceWrapper gCurrentInputSource;
 static void
 InitLogModule()
 {
-#ifdef PR_LOGGING
   // Clear() is always called when TISInputSourceWrappper is created.
   if (!gLog) {
     gLog = PR_NewLogModule("TextInputHandlerWidgets");
     TextInputHandler::DebugPrintAllKeyboardLayouts();
     IMEInputHandler::DebugPrintAllIMEModes();
   }
-#endif
 }
 
 static void
@@ -1047,7 +1041,6 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   NS_ASSERTION(aKeyEvent.message == NS_KEY_PRESS,
                "aKeyEvent must be NS_KEY_PRESS event");
 
-#ifdef PR_LOGGING
   if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
     nsAutoString chars;
     nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], chars);
@@ -1062,7 +1055,6 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
        utf8ExpectedChar.get(), GetGeckoKeyEventType(aKeyEvent), aKbType,
        TrueOrFalse(IsOpenedIMEMode())));
   }
-#endif // #ifdef PR_LOGGING
 
   aKeyEvent.isChar = true; // this is not a special key  XXX not used in XP
   aKeyEvent.charCode = aInsertChar;
@@ -1451,7 +1443,6 @@ TextInputHandler::CreateAllKeyboardLayoutList()
 void
 TextInputHandler::DebugPrintAllKeyboardLayouts()
 {
-#ifdef PR_LOGGING
   if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
     CFArrayRef list = CreateAllKeyboardLayoutList();
     PR_LOG(gLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
@@ -1474,7 +1465,6 @@ TextInputHandler::DebugPrintAllKeyboardLayouts()
     }
     ::CFRelease(list);
   }
-#endif // #ifdef PR_LOGGING
 }
 
 
@@ -2270,7 +2260,6 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
     tis.GetInputSourceID(sLatestIMEOpenedModeInputSourceID);
   }
 
-#ifdef PR_LOGGING
   if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
     static CFStringRef sLastTIS = nullptr;
     CFStringRef newTIS;
@@ -2317,7 +2306,6 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
     }
     sLastTIS = newTIS;
   }
-#endif // #ifdef PR_LOGGING
 
   /**
    * When the direction is changed, all the children are notified.
@@ -2360,7 +2348,6 @@ IMEInputHandler::CreateAllIMEModeList()
 void
 IMEInputHandler::DebugPrintAllIMEModes()
 {
-#ifdef PR_LOGGING
   if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
     CFArrayRef list = CreateAllIMEModeList();
     PR_LOG(gLog, PR_LOG_ALWAYS, ("IME mode configuration:"));
@@ -2382,7 +2369,6 @@ IMEInputHandler::DebugPrintAllIMEModes()
     }
     ::CFRelease(list);
   }
-#endif // #ifdef PR_LOGGING
 }
 
 //static
@@ -3695,7 +3681,6 @@ IMEInputHandler::OpenSystemPreferredLanguageIME()
       TISInputSourceWrapper tis;
       tis.InitByLanguage(lang);
       if (tis.IsOpenedIMEMode()) {
-#ifdef PR_LOGGING
         if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
           CFStringRef foundTIS;
           tis.GetInputSourceID(foundTIS);
@@ -3704,7 +3689,6 @@ IMEInputHandler::OpenSystemPreferredLanguageIME()
              "foundTIS=%s, lang=%s",
              this, GetCharacters(foundTIS), GetCharacters(lang)));
         }
-#endif // #ifdef PR_LOGGING
         tis.Select();
         changed = true;
       }
