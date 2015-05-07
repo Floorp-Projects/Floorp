@@ -1035,7 +1035,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   UINT offset = 0;
   mContext->IASetVertexBuffers(0, 1, &buffer, &size, &offset);
 
-  nsIntRect intRect = IntRect(IntPoint(0, 0), mSize);
+  IntRect intRect = IntRect(IntPoint(0, 0), mSize);
   // Sometimes the invalid region is larger than we want to draw.
   nsIntRegion invalidRegionSafe;
 
@@ -1045,7 +1045,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     invalidRegionSafe.And(aInvalidRegion, intRect);
   }
 
-  nsIntRect invalidRect = invalidRegionSafe.GetBounds();
+  IntRect invalidRect = invalidRegionSafe.GetBounds();
   mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
   mInvalidRegion = invalidRegionSafe;
 
@@ -1057,7 +1057,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   if (aClipRectIn) {
-    invalidRect.IntersectRect(invalidRect, nsIntRect(aClipRectIn->x, aClipRectIn->y, aClipRectIn->width, aClipRectIn->height));
+    invalidRect.IntersectRect(invalidRect, IntRect(aClipRectIn->x, aClipRectIn->y, aClipRectIn->width, aClipRectIn->height));
   }
 
   mCurrentClip = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
@@ -1112,7 +1112,7 @@ CompositorD3D11::EndFrame()
       rects.reserve(params.DirtyRectsCount);
 
       nsIntRegionRectIterator iter(mInvalidRegion);
-      const nsIntRect* r;
+      const IntRect* r;
       uint32_t i = 0;
       while ((r = iter.Next()) != nullptr) {
         RECT rect;
@@ -1166,7 +1166,7 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize)
 void
 CompositorD3D11::EnsureSize()
 {
-  nsIntRect rect;
+  IntRect rect;
   mWidget->GetClientBounds(rect);
 
   mSize = rect.Size();

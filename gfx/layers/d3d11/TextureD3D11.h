@@ -209,7 +209,7 @@ public:
 
   virtual bool NextTile() override { return (++mCurrentTile < mTileTextures.size()); }
 
-  virtual nsIntRect GetTileRect() override;
+  virtual gfx::IntRect GetTileRect() override;
 
   virtual void EndBigImageIteration() override { mIterating = false; }
 

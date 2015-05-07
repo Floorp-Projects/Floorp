@@ -23,7 +23,7 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for gfxContext::Release, etc
 #include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
 #include "AutoMaskData.h"
 #include "gfx2DGlue.h"
@@ -38,7 +38,7 @@ IntersectWithClip(const nsIntRegion& aRegion, gfxContext* aContext)
 {
   gfxRect clip = aContext->GetClipExtents();
   clip.RoundOut();
-  nsIntRect r(clip.X(), clip.Y(), clip.Width(), clip.Height());
+  IntRect r(clip.X(), clip.Y(), clip.Width(), clip.Height());
   nsIntRegion result;
   result.And(aRegion, r);
   return result;
