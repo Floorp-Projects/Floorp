@@ -7,6 +7,7 @@
 namespace mozilla {
 namespace net {
 
+#if defined(PR_LOGGING)
 // Log module for cache2 (2013) cache implementation logging...
 //
 // To enable logging (see prlog.h for full details):
@@ -23,6 +24,7 @@ PRLogModuleInfo* GetCache2Log()
     sLog = PR_NewLogModule("cache2");
   return sLog;
 }
+#endif
 
 } // net
 } // mozilla

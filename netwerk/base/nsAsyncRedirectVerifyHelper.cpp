@@ -14,6 +14,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 
 #undef LOG
+#ifdef PR_LOGGING
 static PRLogModuleInfo *
 GetRedirectLog()
 {
@@ -23,6 +24,9 @@ GetRedirectLog()
     return sLog;
 }
 #define LOG(args) PR_LOG(GetRedirectLog(), PR_LOG_DEBUG, args)
+#else
+#define LOG(args)
+#endif
 
 NS_IMPL_ISUPPORTS(nsAsyncRedirectVerifyHelper,
                   nsIAsyncVerifyRedirectCallback,
