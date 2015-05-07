@@ -11,21 +11,35 @@ from results import TestOutput
 
 # When run on tbpl, we run each test multiple times with the following
 # arguments.
-TBPL_FLAGS = [
-    [], # no flags, normal baseline and ion
-    ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
-    ['--ion-eager', '--ion-offthread-compile=off',
-     '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
-    ['--baseline-eager'],
-    ['--baseline-eager', '--no-fpu'],
-    ['--no-baseline', '--no-ion'],
-]
-# Run reduced variants on debug builds, since they take longer time.
-TBPL_DEBUG_FLAGS = [
-    [], # no flags, normal baseline and ion
-    ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
-    ['--baseline-eager'],
-]
+JITFLAGS = {
+    'all': [
+        [], # no flags, normal baseline and ion
+        ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
+        ['--ion-eager', '--ion-offthread-compile=off',
+         '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
+        ['--baseline-eager'],
+        ['--baseline-eager', '--no-fpu'],
+        ['--no-baseline', '--no-ion'],
+    ],
+    # used by jit_test.py
+    'ion': [
+        ['--baseline-eager'],
+        ['--ion-eager', '--ion-offthread-compile=off']
+    ],
+    # Run reduced variants on debug builds, since they take longer time.
+    'debug': [
+        [], # no flags, normal baseline and ion
+        ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
+        ['--baseline-eager'],
+    ],
+    'none': []
+}
+
+def get_jitflags(variant):
+    if variant not in JITFLAGS:
+        print('Invalid jitflag: "{}"'.format(variant))
+        sys.exit(1)
+    return JITFLAGS[variant]
 
 def do_run_cmd(cmd):
     l = [None, None]

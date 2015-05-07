@@ -833,16 +833,6 @@ def run_tests_remote(tests, prefix, options):
     ok = process_test_results(gen, len(tests) * options.repeat, options)
     return ok
 
-def parse_jitflags(options):
-    jitflags = [['-' + flag for flag in flags]
-                for flags in options.jitflags.split(',')]
-    for flags in jitflags:
-        for flag in flags:
-            if flag not in ('-m', '-a', '-p', '-d', '-n'):
-                print('Invalid jit flag: "{}"'.format(flag))
-                sys.exit(1)
-    return jitflags
-
 def platform_might_be_android():
     try:
         # The python package for SL4A provides an |android| module.
