@@ -1946,6 +1946,22 @@ RasterImage::DoError()
   // Put the container in an error state.
   mError = true;
 
+  // Stop animation and release our FrameAnimator.
+  if (mAnimating) {
+    StopAnimation();
+  }
+  mAnim.release();
+
+  // Release all locks.
+  mLockCount = 0;
+  SurfaceCache::UnlockImage(ImageKey(this));
+
+  // Release all frames from the surface cache.
+  SurfaceCache::RemoveImage(ImageKey(this));
+
+  // Invalidate to get rid of any partially-drawn image content.
+  NotifyProgress(NoProgress, IntRect(0, 0, mSize.width, mSize.height));
+
   // Log our error
   LOG_CONTAINER_ERROR;
 }
