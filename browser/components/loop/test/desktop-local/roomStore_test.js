@@ -597,37 +597,45 @@ describe("loop.store.RoomStore", function () {
     });
   });
 
-  describe("#renameRoom", function() {
+  describe("#updateRoomContext", function() {
     var store, fakeMozLoop;
 
     beforeEach(function() {
       fakeMozLoop = {
         rooms: {
-          rename: null
+          get: sinon.stub().callsArgWith(1, null, {
+            roomToken: "42abc",
+            decryptedContext: {
+              roomName: "sillier name"
+            }
+          }),
+          update: null
         }
       };
       store = new loop.store.RoomStore(dispatcher, {mozLoop: fakeMozLoop});
     });
 
     it("should rename the room via mozLoop", function() {
-      fakeMozLoop.rooms.rename = sinon.spy();
-      dispatcher.dispatch(new sharedActions.RenameRoom({
+      fakeMozLoop.rooms.update = sinon.spy();
+      dispatcher.dispatch(new sharedActions.UpdateRoomContext({
         roomToken: "42abc",
         newRoomName: "silly name"
       }));
 
-      sinon.assert.calledOnce(fakeMozLoop.rooms.rename);
-      sinon.assert.calledWith(fakeMozLoop.rooms.rename, "42abc",
-        "silly name");
+      sinon.assert.calledOnce(fakeMozLoop.rooms.get);
+      sinon.assert.calledOnce(fakeMozLoop.rooms.update);
+      sinon.assert.calledWith(fakeMozLoop.rooms.update, "42abc", {
+        roomName: "silly name"
+      });
     });
 
-    it("should store any rename-encountered error", function() {
+    it("should store any update-encountered error", function() {
       var err = new Error("fake");
-      sandbox.stub(fakeMozLoop.rooms, "rename", function(roomToken, roomName, cb) {
+      sandbox.stub(fakeMozLoop.rooms, "update", function(roomToken, roomData, cb) {
         cb(err);
       });
 
-      dispatcher.dispatch(new sharedActions.RenameRoom({
+      dispatcher.dispatch(new sharedActions.UpdateRoomContext({
         roomToken: "42abc",
         newRoomName: "silly name"
       }));
@@ -636,14 +644,70 @@ describe("loop.store.RoomStore", function () {
     });
 
     it("should ensure only submitting a non-empty room name", function() {
-      fakeMozLoop.rooms.rename = sinon.spy();
+      fakeMozLoop.rooms.update = sinon.spy();
 
-      dispatcher.dispatch(new sharedActions.RenameRoom({
+      dispatcher.dispatch(new sharedActions.UpdateRoomContext({
         roomToken: "42abc",
         newRoomName: " \t  \t "
       }));
 
-      sinon.assert.notCalled(fakeMozLoop.rooms.rename);
+      sinon.assert.notCalled(fakeMozLoop.rooms.update);
     });
+
+    it("should save updated context information", function() {
+      fakeMozLoop.rooms.update = sinon.spy();
+
+      dispatcher.dispatch(new sharedActions.UpdateRoomContext({
+        roomToken: "42abc",
+        // Room name doesn't need to change.
+        newRoomName: "sillier name",
+        newRoomDescription: "Hello, is it me you're looking for?",
+        newRoomThumbnail: "http://example.com/empty.gif",
+        newRoomURL: "http://example.com"
+      }));
+
+      sinon.assert.calledOnce(fakeMozLoop.rooms.update);
+      sinon.assert.calledWith(fakeMozLoop.rooms.update, "42abc", {
+        urls: [{
+          description: "Hello, is it me you're looking for?",
+          location: "http://example.com",
+          thumbnail: "http://example.com/empty.gif"
+        }]
+      });
+    });
+
+    it("should not save context information with an invalid URL", function() {
+      fakeMozLoop.rooms.update = sinon.spy();
+
+      dispatcher.dispatch(new sharedActions.UpdateRoomContext({
+        roomToken: "42abc",
+        // Room name doesn't need to change.
+        newRoomName: "sillier name",
+        newRoomDescription: "Hello, is it me you're looking for?",
+        newRoomThumbnail: "http://example.com/empty.gif",
+        // NOTE: there are many variation we could test here, but the URL object
+        // constructor also fails on empty strings and is using the Gecko URL
+        // parser. Therefore we ought to rely on it working properly.
+        newRoomURL: "http/example.com"
+      }));
+
+      sinon.assert.notCalled(fakeMozLoop.rooms.update);
+    });
+
+    it("should not save context information when no context information is provided",
+      function() {
+        fakeMozLoop.rooms.update = sinon.spy();
+
+        dispatcher.dispatch(new sharedActions.UpdateRoomContext({
+          roomToken: "42abc",
+          // Room name doesn't need to change.
+          newRoomName: "sillier name",
+          newRoomDescription: "",
+          newRoomThumbnail: "",
+          newRoomURL: ""
+        }));
+
+        sinon.assert.notCalled(fakeMozLoop.rooms.update);
+      });
   });
 });

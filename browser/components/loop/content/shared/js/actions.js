@@ -330,19 +330,21 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Renames a room.
+     * Updates the context data attached to a room.
      * XXX: should move to some roomActions module - refs bug 1079284
      */
-    RenameRoom: Action.define("renameRoom", {
+    UpdateRoomContext: Action.define("updateRoomContext", {
       roomToken: String,
       newRoomName: String
+      // newRoomDescription: String, Optional.
+      // newRoomThumbnail: String, Optional.
+      // newRoomURL: String Optional.
     }),
 
     /**
-     * Renaming a room error.
-     * XXX: should move to some roomActions module - refs bug 1079284
+     * Updating the context data attached to a room error.
      */
-    RenameRoomError: Action.define("renameRoomError", {
+    UpdateRoomContextError: Action.define("updateRoomContextError", {
       error: [Error, Object]
     }),
 

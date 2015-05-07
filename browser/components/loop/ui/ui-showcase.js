@@ -164,9 +164,9 @@
   var SVGIcons = React.createClass({displayName: "SVGIcons",
     shapes: {
       "10x10": ["close", "close-active", "close-disabled", "dropdown",
-        "dropdown-white", "dropdown-active", "dropdown-disabled", "expand",
-        "expand-active", "expand-disabled", "minimize", "minimize-active",
-        "minimize-disabled"
+        "dropdown-white", "dropdown-active", "dropdown-disabled", "edit",
+        "edit-active", "edit-disabled", "expand", "expand-active", "expand-disabled",
+        "minimize", "minimize-active", "minimize-disabled"
       ],
       "14x14": ["audio", "audio-active", "audio-disabled", "facemute",
         "facemute-active", "facemute-disabled", "hangup", "hangup-active",

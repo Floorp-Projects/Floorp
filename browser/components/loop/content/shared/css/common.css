@@ -458,3 +458,46 @@ body[dir=rtl] .dropdown-menu-item {
   border-top: 1px solid #dedede;
   background-color: #fff;
 }
+
+/* Custom checkbox */
+
+.checkbox-wrapper {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.checkbox {
+  float: left;
+  width: 1em;
+  height: 1em;
+  -moz-margin-end: .5em;
+  margin-top: .1em;
+  border: 1px solid #999;
+  border-radius: 3px;
+  cursor: pointer;
+  background-color: transparent;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 1em 1em;
+}
+
+body[dir="rtl"] .checkbox {
+  float: right;
+}
+
+.checkbox.checked {
+  background-image: url("../img/check.svg#check");
+}
+
+.checkbox.checked:hover,
+.checkbox.checked:hover:active {
+  background-image: url("../img/check.svg#check-active");
+}
+
+.checkbox.disabled {
+  border: 1px solid #909090;
+}
+
+.checkbox.checked.disabled {
+  background-image: url("../img/check.svg#check-disabled");
+}

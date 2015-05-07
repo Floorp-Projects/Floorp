@@ -7,6 +7,8 @@
 // Tests that the rule view search filter works properly when modifying the
 // existing search filter value
 
+const SEARCH = "00F"
+
 let TEST_URI = [
   '<style type="text/css">',
   '  #testid {',
@@ -28,21 +30,25 @@ add_task(function*() {
 });
 
 function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"00F\"");
+  info("Setting filter text to \"" + SEARCH + "\"");
 
   let win = ruleView.doc.defaultView;
   let searchField = ruleView.searchField;
   let onRuleViewFiltered = inspector.once("ruleview-filtered");
 
   searchField.focus();
-  synthesizeKeys("00F", win);
+  synthesizeKeys(SEARCH, win);
   yield onRuleViewFiltered;
 
   info("Check that the correct rules are visible");
   is(ruleView.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element", "First rule is inline element.");
-  is(getRuleViewRuleEditor(ruleView, 1).rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(getRuleViewRuleEditor(ruleView, 1).rule.textProps[0].editor.element.classList.contains("ruleview-highlight"),
+  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
+    "First rule is inline element.");
+
+  let rule = getRuleViewRuleEditor(ruleView, 1).rule;
+
+  is(rule.selectorText, "#testid", "Second rule is #testid.");
+  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
     "background-color text property is correctly highlighted.");
 }
 
@@ -57,13 +63,20 @@ function* testRemoveTextInFilter(inspector, ruleView) {
   EventUtils.synthesizeKey("VK_BACK_SPACE", {}, win);
   yield inspector.once("ruleview-filtered");
 
-  info("heck that the correct rules are visible");
+  info("Check that the correct rules are visible");
   is(ruleView.element.children.length, 3, "Should have 3 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element", "First rule is inline element.");
-  is(getRuleViewRuleEditor(ruleView, 1).rule.selectorText, "#testid", "Second rule is #testid.");
-  is(getRuleViewRuleEditor(ruleView, 2).rule.selectorText, ".testclass", "Second rule is .testclass.");
-  ok(getRuleViewRuleEditor(ruleView, 1).rule.textProps[0].editor.element.classList.contains("ruleview-highlight"),
+  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
+    "First rule is inline element.");
+
+  let rule = getRuleViewRuleEditor(ruleView, 1).rule;
+
+  is(rule.selectorText, "#testid", "Second rule is #testid.");
+  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
     "background-color text property is correctly highlighted.");
-  ok(getRuleViewRuleEditor(ruleView, 2).rule.textProps[0].editor.element.classList.contains("ruleview-highlight"),
+
+  rule = getRuleViewRuleEditor(ruleView, 2).rule;
+
+  is(rule.selectorText, ".testclass", "Second rule is .testclass.");
+  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
     "width text property is correctly highlighted.");
 }

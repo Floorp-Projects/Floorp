@@ -91,9 +91,9 @@ loop.store = loop.store || {};
       "getAllRooms",
       "getAllRoomsError",
       "openRoom",
-      "renameRoom",
-      "renameRoomError",
       "shareRoomUrl",
+      "updateRoomContext",
+      "updateRoomContextError",
       "updateRoomList"
     ],
 
@@ -469,29 +469,79 @@ loop.store = loop.store || {};
     },
 
     /**
-     * Renames a room.
+     * Updates the context data attached to a room.
      *
-     * @param {sharedActions.RenameRoom} actionData
+     * @param {sharedActions.UpdateRoomContext} actionData
      */
-    renameRoom: function(actionData) {
-      var oldRoomName = this.getStoreState("roomName");
-      var newRoomName = actionData.newRoomName.trim();
+    updateRoomContext: function(actionData) {
+      this._mozLoop.rooms.get(actionData.roomToken, function(err, room) {
+        if (err) {
+          this.dispatchAction(new sharedActions.UpdateRoomContextError({
+            error: err
+          }));
+          return;
+        }
 
-      // Skip update if name is unchanged or empty.
-      if (!newRoomName || oldRoomName === newRoomName) {
-        return;
-      }
-
-      this.setStoreState({error: null});
-      this._mozLoop.rooms.rename(actionData.roomToken, newRoomName,
-        function(err) {
-          if (err) {
-            this.dispatchAction(new sharedActions.RenameRoomError({error: err}));
+        var roomData = {};
+        var context = room.decryptedContext;
+        var oldRoomName = context.roomName;
+        var newRoomName = actionData.newRoomName.trim();
+        if (newRoomName && oldRoomName != newRoomName) {
+          roomData.roomName = newRoomName;
+        }
+        var oldRoomURLs = context.urls;
+        var oldRoomURL = oldRoomURLs && oldRoomURLs[0];
+        // Since we want to prevent storing falsy (i.e. empty) values for context
+        // data, there's no need to send that to the server as an update.
+        var newRoomURL = loop.shared.utils.stripFalsyValues({
+          location: actionData.newRoomURL ? actionData.newRoomURL.trim() : "",
+          thumbnail: actionData.newRoomURL ? actionData.newRoomThumbnail.trim() : "",
+          description: actionData.newRoomDescription ?
+            actionData.newRoomDescription.trim() : ""
+        });
+        // Only attach a context to the room when
+        // 1) there was already a URL set,
+        // 2) a new URL is provided as of now,
+        // 3) the URL data has changed.
+        var diff = loop.shared.utils.objectDiff(oldRoomURL, newRoomURL);
+        if (diff.added.length || diff.updated.length) {
+          newRoomURL = _.extend(oldRoomURL || {}, newRoomURL);
+          var isValidURL = false;
+          try {
+            isValidURL = new URL(newRoomURL.location);
+          } catch(ex) {}
+          if (isValidURL) {
+            roomData.urls = [newRoomURL];
           }
-        }.bind(this));
+        }
+        // TODO: there currently is no clear UX defined on what to do when all
+        // context data was cleared, e.g. when diff.removed contains all the
+        // context properties. Until then, we can't deal with context removal here.
+
+        // When no properties have been set on the roomData object, there's nothing
+        // to save.
+        if (!Object.getOwnPropertyNames(roomData).length) {
+          return;
+        }
+
+        this.setStoreState({error: null});
+        this._mozLoop.rooms.update(actionData.roomToken, roomData,
+          function(err, data) {
+            if (err) {
+              this.dispatchAction(new sharedActions.UpdateRoomContextError({
+                error: err
+              }));
+            }
+          }.bind(this));
+      }.bind(this));
     },
 
-    renameRoomError: function(actionData) {
+    /**
+     * Updating the context data attached to a room error.
+     *
+     * @param {sharedActions.UpdateRoomContextError} actionData
+     */
+    updateRoomContextError: function(actionData) {
       this.setStoreState({error: actionData.error});
     }
   });

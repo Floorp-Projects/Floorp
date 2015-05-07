@@ -31,7 +31,8 @@ class nsScreenGonk : public nsBaseScreen
     typedef mozilla::hal::ScreenConfiguration ScreenConfiguration;
 
 public:
-    nsScreenGonk();
+    nsScreenGonk(uint32_t aId, ANativeWindow* aNativeWindow);
+
     ~nsScreenGonk();
 
     NS_IMETHOD GetId(uint32_t* aId);
@@ -42,9 +43,14 @@ public:
     NS_IMETHOD GetRotation(uint32_t* aRotation);
     NS_IMETHOD SetRotation(uint32_t  aRotation);
 
+    uint32_t GetId();
+    nsIntRect GetRect();
+    float GetDpi();
+    ANativeWindow* GetNativeWindow();
     nsIntRect GetNaturalBounds();
     uint32_t EffectiveScreenRotation();
     ScreenConfiguration GetConfiguration();
+    bool IsPrimaryScreen();
 
     void RegisterWindow(nsWindow* aWindow);
     void UnregisterWindow(nsWindow* aWindow);
@@ -56,8 +62,12 @@ public:
     }
 
 protected:
-    nsIntRect mScreenBounds;
-    nsIntRect mVirtualBounds;
+    uint32_t mId;
+    int32_t mColorDepth;
+    android::sp<ANativeWindow> mNativeWindow;
+    float mDpi;
+    nsIntRect mNaturalBounds; // Screen bounds w/o rotation taken into account.
+    nsIntRect mVirtualBounds; // Screen bounds w/ rotation taken into account.
     uint32_t mScreenRotation;
     uint32_t mPhysicalScreenRotation;
     nsTArray<nsWindow*> mTopWindows;
@@ -65,6 +75,15 @@ protected:
 
 class nsScreenManagerGonk final : public nsIScreenManager
 {
+public:
+    enum {
+        // TODO: Bug 1138287 will define more screen/display types.
+        PRIMARY_SCREEN_TYPE = 0,
+
+        // TODO: Maintain a mapping from type to id dynamically.
+        PRIMARY_SCREEN_ID = 0,
+    };
+
 public:
     nsScreenManagerGonk();
 
@@ -77,12 +96,16 @@ public:
     void Initialize();
     void DisplayEnabled(bool aEnabled);
 
+    void AddScreen(uint32_t aDisplayType);
+    void RemoveScreen(uint32_t aDisplayType);
+
 protected:
     ~nsScreenManagerGonk();
     void VsyncControl(bool aEnabled);
+    uint32_t GetIdFromType(uint32_t aDisplayType);
 
     bool mInitialized;
-    nsCOMPtr<nsIScreen> mOneScreen;
+    nsTArray<nsRefPtr<nsScreenGonk>> mScreens;
     nsRefPtr<nsRunnable> mScreenOnEvent;
     nsRefPtr<nsRunnable> mScreenOffEvent;
 };
