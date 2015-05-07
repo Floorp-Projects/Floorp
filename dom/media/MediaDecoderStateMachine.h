@@ -226,22 +226,6 @@ public:
   bool OnDecodeTaskQueue() const;
   bool OnTaskQueue() const;
 
-  // Cause state transitions. These methods obtain the decoder monitor
-  // to synchronise the change of state, and to notify other threads
-  // that the state has changed.
-  void Play()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    RefPtr<nsRunnable> r = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::PlayInternal);
-    TaskQueue()->Dispatch(r);
-  }
-
-private:
-  // The actual work for the above, which happens asynchronously on the state
-  // machine thread.
-  void PlayInternal();
-public:
-
   // Seeks to the decoder to aTarget asynchronously.
   // Must be called on the state machine thread.
   nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
@@ -592,6 +576,9 @@ protected:
   // Starts the audio thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
   nsresult StartAudioThread();
+
+  // Notification method invoked when mPlayState changes.
+  void PlayStateChanged();
 
   // Sets internal state which causes playback of media to pause.
   // The decoder monitor must be held.

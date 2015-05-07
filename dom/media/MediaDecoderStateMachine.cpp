@@ -318,7 +318,7 @@ MediaDecoderStateMachine::InitializationTask()
   mWatchManager.Watch(mVolume, &MediaDecoderStateMachine::VolumeChanged);
   mWatchManager.Watch(mLogicalPlaybackRate, &MediaDecoderStateMachine::LogicalPlaybackRateChanged);
   mWatchManager.Watch(mPreservesPitch, &MediaDecoderStateMachine::PreservesPitchChanged);
-
+  mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
 }
 
 bool MediaDecoderStateMachine::HasFutureAudio() {
@@ -1627,10 +1627,17 @@ void MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
   }
 }
 
-void MediaDecoderStateMachine::PlayInternal()
+void MediaDecoderStateMachine::PlayStateChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+  // This method used to be a Play() method invoked by MediaDecoder when the
+  // play state became PLAY_STATE_PLAYING. As such, it doesn't have any work to
+  // do for other state changes. That could change.
+  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
+    return;
+  }
 
   // Once we start playing, we don't want to minimize our prerolling, as we
   // assume the user is likely to want to keep playing in future. This needs to
