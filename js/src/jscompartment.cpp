@@ -761,7 +761,7 @@ CreateLazyScriptsForCompartment(JSContext* cx)
         // Sweeping is incremental; take care to not delazify functions that
         // are about to be finalized. GC things referenced by objects that are
         // about to be finalized (e.g., in slots) may already be freed.
-        if (gc::IsAboutToBeFinalizedUnbarriered(&obj) ||
+        if (gc::IsObjectAboutToBeFinalized(&obj) ||
             obj->compartment() != cx->compartment() ||
             !obj->is<JSFunction>())
         {
