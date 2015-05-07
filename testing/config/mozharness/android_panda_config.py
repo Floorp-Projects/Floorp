@@ -44,7 +44,7 @@ config = {
                 "--localLib=../tests/bin",
                 "--no-slow",
                 "--no-progress",
-                "--tinderbox",
+                "--format=automation",
                 "--jitflags=all"
             ],
             "run_filename": "jit_test.py",
