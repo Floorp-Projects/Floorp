@@ -744,8 +744,12 @@ CallAsmJS(JSContext* cx, unsigned argc, Value* vp)
         // that the optimized asm.js-to-Ion FFI call path (which we want to be
         // very fast) can avoid doing so. The JitActivation is marked as
         // inactive so stack iteration will skip over it.
+        //
+        // We needn't provide an entry script pointer; that's only used for
+        // reporting entry points to performance-monitoring tools, and asm.js ->
+        // Ion calls will never be entry points.
         AsmJSActivation activation(cx, module);
-        JitActivation jitActivation(cx, /* active */ false);
+        JitActivation jitActivation(cx, /* entryScript */ nullptr, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
         AsmJSModule::CodePtr enter = module.entryTrampoline(func);
