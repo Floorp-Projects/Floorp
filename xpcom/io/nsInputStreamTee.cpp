@@ -22,7 +22,6 @@ using namespace mozilla;
 #ifdef LOG
 #undef LOG
 #endif
-#ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetTeeLog()
 {
@@ -33,9 +32,6 @@ GetTeeLog()
   return sLog;
 }
 #define LOG(args) PR_LOG(GetTeeLog(), PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
 
 class nsInputStreamTee final : public nsIInputStreamTee
 {
