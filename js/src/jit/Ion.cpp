@@ -1731,8 +1731,7 @@ MarkOffThreadNurseryObjects::mark(JSTracer* trc)
     JSRuntime* rt = trc->runtime();
 
     if (trc->runtime()->isHeapMinorCollecting()) {
-        // Only reset hasIonNurseryObjects if we're doing an actual minor GC,
-        // not if we're, for instance, verifying post barriers.
+        // Only reset hasIonNurseryObjects if we're doing an actual minor GC.
         MOZ_ASSERT(rt->jitRuntime()->hasIonNurseryObjects());
         rt->jitRuntime()->setHasIonNurseryObjects(false);
     }

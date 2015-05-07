@@ -1342,8 +1342,7 @@ const int ZealCompactValue = 14;
 const int ZealLimit = 14;
 
 enum VerifierType {
-    PreBarrierVerifier,
-    PostBarrierVerifier
+    PreBarrierVerifier
 };
 
 #ifdef JS_GC_ZEAL
