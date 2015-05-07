@@ -257,10 +257,12 @@ nsLoadGroup::Cancel(nsresult status)
             continue;
         }
 
-        nsAutoCString nameStr;
-        request->GetName(nameStr);
-        LOG(("LOADGROUP [%x]: Canceling request %x %s.\n",
-             this, request, nameStr.get()));
+        if (PR_LOG_TEST(gLoadGroupLog, PR_LOG_DEBUG)) {
+            nsAutoCString nameStr;
+            request->GetName(nameStr);
+            LOG(("LOADGROUP [%x]: Canceling request %x %s.\n",
+                 this, request, nameStr.get()));
+        }
 
         //
         // Remove the request from the load group...  This may cause
@@ -323,10 +325,12 @@ nsLoadGroup::Suspend()
         if (!request)
             continue;
 
-        nsAutoCString nameStr;
-        request->GetName(nameStr);
-        LOG(("LOADGROUP [%x]: Suspending request %x %s.\n",
-            this, request, nameStr.get()));
+        if (PR_LOG_TEST(gLoadGroupLog, PR_LOG_DEBUG)) {
+            nsAutoCString nameStr;
+            request->GetName(nameStr);
+            LOG(("LOADGROUP [%x]: Suspending request %x %s.\n",
+                this, request, nameStr.get()));
+        }
 
         // Suspend the request...
         rv = request->Suspend();
@@ -373,10 +377,12 @@ nsLoadGroup::Resume()
         if (!request)
             continue;
 
-        nsAutoCString nameStr;
-        request->GetName(nameStr);
-        LOG(("LOADGROUP [%x]: Resuming request %x %s.\n",
-            this, request, nameStr.get()));
+        if (PR_LOG_TEST(gLoadGroupLog, PR_LOG_DEBUG)) {
+            nsAutoCString nameStr;
+            request->GetName(nameStr);
+            LOG(("LOADGROUP [%x]: Resuming request %x %s.\n",
+                this, request, nameStr.get()));
+        }
 
         // Resume the request...
         rv = request->Resume();
@@ -460,7 +466,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
 {
     nsresult rv;
 
-    {
+    if (PR_LOG_TEST(gLoadGroupLog, PR_LOG_DEBUG)) {
         nsAutoCString nameStr;
         request->GetName(nameStr);
         LOG(("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
@@ -557,7 +563,7 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
     NS_ENSURE_ARG_POINTER(request);
     nsresult rv;
 
-    {
+    if (PR_LOG_TEST(gLoadGroupLog, PR_LOG_DEBUG)) {
         nsAutoCString nameStr;
         request->GetName(nameStr);
         LOG(("LOADGROUP [%x]: Removing request %x %s status %x (count=%d).\n",
