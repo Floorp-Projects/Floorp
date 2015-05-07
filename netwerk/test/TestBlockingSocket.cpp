@@ -19,12 +19,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(PR_LOGGING)
 //
 // set NSPR_LOG_MODULES=Test:5
 //
 static PRLogModuleInfo *gTestLog = nullptr;
-#endif
 #define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,19 +102,15 @@ main(int argc, char* argv[])
         nsCOMPtr<nsIServiceManager> servMan;
         NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
 
-#if defined(PR_LOGGING)
         gTestLog = PR_NewLogModule("Test");
-#endif
 
         nsCOMPtr<nsIFile> file;
         rv = NS_NewNativeLocalFile(nsDependentCString(fileName), false, getter_AddRefs(file));
         if (NS_FAILED(rv)) return -1;
 
         rv = RunBlockingTest(nsDependentCString(hostName), port, file);
-#if defined(PR_LOGGING)
         if (NS_FAILED(rv))
             LOG(("RunBlockingTest failed [rv=%x]\n", rv));
-#endif
 
         // give background threads a chance to finish whatever work they may
         // be doing.

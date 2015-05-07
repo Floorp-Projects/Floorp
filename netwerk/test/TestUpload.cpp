@@ -16,12 +16,10 @@
 #include "nsIUploadChannel.h"
 
 #include "prlog.h"
-#if defined(PR_LOGGING)
 //
 // set NSPR_LOG_MODULES=Test:5
 //
 static PRLogModuleInfo *gTestLog = nullptr;
-#endif
 #define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
 
 //-----------------------------------------------------------------------------
@@ -110,9 +108,7 @@ main(int argc, char* argv[])
     char* uriSpec  = argv[1];
     char* fileName = argv[2];
 
-#if defined(PR_LOGGING) 
     gTestLog = PR_NewLogModule("Test");
-#endif
 
     {
         nsCOMPtr<nsIServiceManager> servMan;
