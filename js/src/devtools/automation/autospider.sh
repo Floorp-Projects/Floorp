@@ -179,11 +179,11 @@ fi
 if [[ "$VARIANT" = "warnaserr" ||
       "$VARIANT" = "warnaserrdebug" ||
       "$VARIANT" = "plain" ]]; then
-    export JSTESTS_EXTRA_ARGS=--tbpl
+    export JSTESTS_EXTRA_ARGS=--jitflags=all
 elif [[ "$VARIANT" = "arm-sim" ||
         "$VARIANT" = "rootanalysis" ||
         "$VARIANT" = "plaindebug" ]]; then
-    export JSTESTS_EXTRA_ARGS=--tbpl-debug
+    export JSTESTS_EXTRA_ARGS=--jitflags=debug
 fi
 
 $COMMAND_PREFIX $MAKE check || exit 1
