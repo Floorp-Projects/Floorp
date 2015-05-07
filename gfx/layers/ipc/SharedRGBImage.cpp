@@ -69,10 +69,7 @@ SharedRGBImage::~SharedRGBImage()
 
   if (mCompositable->GetAsyncID() != 0 &&
       !InImageBridgeChildThread()) {
-    ADDREF_MANUALLY(mTextureClient);
-    ImageBridgeChild::DispatchReleaseTextureClient(mTextureClient);
-    mTextureClient = nullptr;
-
+    ImageBridgeChild::DispatchReleaseTextureClient(mTextureClient.forget().take());
     ImageBridgeChild::DispatchReleaseImageClient(mCompositable.forget().take());
   }
 }
