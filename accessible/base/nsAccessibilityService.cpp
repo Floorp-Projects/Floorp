@@ -1257,7 +1257,11 @@ nsAccessibilityService::Init()
   logging::CheckEnv();
 #endif
 
-  gApplicationAccessible = new ApplicationAccessibleWrap();
+  if (XRE_GetProcessType() == GeckoProcessType_Default)
+    gApplicationAccessible = new ApplicationAccessibleWrap();
+  else
+    gApplicationAccessible = new ApplicationAccessible();
+
   NS_ADDREF(gApplicationAccessible); // will release in Shutdown()
 
 #ifdef MOZ_CRASHREPORTER
@@ -1274,7 +1278,8 @@ nsAccessibilityService::Init()
   gIsShutdown = false;
 
   // Now its safe to start platform accessibility.
-  PlatformInit();
+  if (XRE_GetProcessType() == GeckoProcessType_Default)
+    PlatformInit();
 
   return true;
 }
@@ -1316,7 +1321,9 @@ nsAccessibilityService::Shutdown()
 
   gIsShutdown = true;
 
-  PlatformShutdown();
+  if (XRE_GetProcessType() == GeckoProcessType_Default)
+    PlatformShutdown();
+
   gApplicationAccessible->Shutdown();
   NS_RELEASE(gApplicationAccessible);
   gApplicationAccessible = nullptr;

@@ -29,6 +29,7 @@ namespace js {
 
 class ObjectElements;
 class NativeObject;
+class Nursery;
 class HeapSlot;
 class ObjectGroup;
 
@@ -37,11 +38,43 @@ void SetGCZeal(JSRuntime*, uint8_t, uint32_t);
 namespace gc {
 struct Cell;
 class MinorCollectionTracer;
+class RelocationOverlay;
 } /* namespace gc */
 
 namespace jit {
 class MacroAssembler;
 }
+
+class TenuringTracer : public JSTracer
+{
+    friend class Nursery;
+    Nursery& nursery_;
+
+    // Amount of data moved to the tenured generation during collection.
+    size_t tenuredSize;
+
+    // This list is threaded through the Nursery using the space from already
+    // moved things. The list is used to fix up the moved things and to find
+    // things held live by intra-Nursery pointers.
+    gc::RelocationOverlay* head;
+    gc::RelocationOverlay** tail;
+
+    // Save and restore all of the runtime state we use during MinorGC.
+    bool savedRuntimeNeedBarrier;
+
+    TenuringTracer(JSRuntime* rt, Nursery* nursery);
+    ~TenuringTracer();
+
+  public:
+    const Nursery& nursery() const { return nursery_; }
+    JSObject* moveToTenured(JSObject* thing);
+
+    void insertIntoFixupList(gc::RelocationOverlay* entry);
+
+#ifdef JS_GC_ZEAL
+    bool verifyingPostBarriers;
+#endif
+};
 
 class Nursery
 {
@@ -122,14 +155,13 @@ class Nursery
      * sets |*ref| to the new location of the object and returns true. Otherwise
      * returns false and leaves |*ref| unset.
      */
-    template <typename T>
-    MOZ_ALWAYS_INLINE bool getForwardedPointer(T** ref);
+    MOZ_ALWAYS_INLINE bool getForwardedPointer(JSObject** ref) const;
 
     /* Forward a slots/elements pointer stored in an Ion frame. */
     void forwardBufferPointer(HeapSlot** pSlotsElems);
 
     void maybeSetForwardingPointer(JSTracer* trc, void* oldData, void* newData, bool direct) {
-        if (IsMinorCollectionTracer(trc) && isInside(oldData))
+        if (trc->isTenuringTracer() && isInside(oldData))
             setForwardingPointer(oldData, newData, direct);
     }
 
@@ -160,10 +192,6 @@ class Nursery
 
     MOZ_ALWAYS_INLINE uintptr_t heapEnd() const {
         return heapEnd_;
-    }
-
-    static bool IsMinorCollectionTracer(JSTracer* trc) {
-        return trc->isCallbackTracer() && trc->asCallbackTracer()->hasCallback(MinorGCCallback);
     }
 
 #ifdef JS_GC_ZEAL
@@ -297,16 +325,16 @@ class Nursery
      * Move the object at |src| in the Nursery to an already-allocated cell
      * |dst| in Tenured.
      */
-    void collectToFixedPoint(gc::MinorCollectionTracer* trc, TenureCountCache& tenureCounts);
-    MOZ_ALWAYS_INLINE void traceObject(gc::MinorCollectionTracer* trc, JSObject* src);
-    MOZ_ALWAYS_INLINE void markSlots(gc::MinorCollectionTracer* trc, HeapSlot* vp, uint32_t nslots);
-    MOZ_ALWAYS_INLINE void markSlots(gc::MinorCollectionTracer* trc, HeapSlot* vp, HeapSlot* end);
-    MOZ_ALWAYS_INLINE void markSlot(gc::MinorCollectionTracer* trc, HeapSlot* slotp);
-    MOZ_ALWAYS_INLINE void markTraceList(gc::MinorCollectionTracer* trc,
+    void collectToFixedPoint(TenuringTracer& trc, TenureCountCache& tenureCounts);
+    MOZ_ALWAYS_INLINE void traceObject(TenuringTracer& trc, JSObject* src);
+    MOZ_ALWAYS_INLINE void markSlots(TenuringTracer& trc, HeapSlot* vp, uint32_t nslots);
+    MOZ_ALWAYS_INLINE void markSlots(TenuringTracer& trc, HeapSlot* vp, HeapSlot* end);
+    MOZ_ALWAYS_INLINE void markSlot(TenuringTracer& trc, HeapSlot* slotp);
+    MOZ_ALWAYS_INLINE void markTraceList(TenuringTracer& trc,
                                          const int32_t* traceList, uint8_t* memory);
-    MOZ_ALWAYS_INLINE bool markObject(gc::MinorCollectionTracer* trc, JSObject** pobj);
-    void* moveToTenured(gc::MinorCollectionTracer* trc, JSObject* src);
-    size_t moveObjectToTenured(gc::MinorCollectionTracer* trc, JSObject* dst, JSObject* src,
+    MOZ_ALWAYS_INLINE bool markObject(TenuringTracer& trc, JSObject** pobj);
+    void* moveToTenured(TenuringTracer& trc, JSObject* src);
+    size_t moveObjectToTenured(TenuringTracer& trc, JSObject* dst, JSObject* src,
                                gc::AllocKind dstKind);
     size_t moveElementsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
     size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
@@ -331,8 +359,7 @@ class Nursery
     void growAllocableSpace();
     void shrinkAllocableSpace();
 
-    static void MinorGCCallback(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind);
-
+    friend class TenuringTracer;
     friend class gc::MinorCollectionTracer;
     friend class jit::MacroAssembler;
 };

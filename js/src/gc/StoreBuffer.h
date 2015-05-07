@@ -122,7 +122,7 @@ class StoreBuffer
         }
 
         /* Mark the source of all edges in the store buffer. */
-        void mark(StoreBuffer* owner, JSTracer* trc);
+        void mark(StoreBuffer* owner, TenuringTracer& mover);
 
         size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
             return stores_.sizeOfExcludingThis(mallocSizeOf);
@@ -211,7 +211,7 @@ class StoreBuffer
             return !nursery.isInside(edge);
         }
 
-        void mark(JSTracer* trc) const;
+        void mark(TenuringTracer& mover) const;
 
         CellPtrEdge tagged() const { return CellPtrEdge((Cell**)(uintptr_t(edge) | 1)); }
         CellPtrEdge untagged() const { return CellPtrEdge((Cell**)(uintptr_t(edge) & ~1)); }
@@ -236,7 +236,7 @@ class StoreBuffer
             return !nursery.isInside(edge);
         }
 
-        void mark(JSTracer* trc) const;
+        void mark(TenuringTracer& mover) const;
 
         ValueEdge tagged() const { return ValueEdge((JS::Value*)(uintptr_t(edge) | 1)); }
         ValueEdge untagged() const { return ValueEdge((JS::Value*)(uintptr_t(edge) & ~1)); }
@@ -282,7 +282,7 @@ class StoreBuffer
             return !IsInsideNursery(reinterpret_cast<Cell*>(object()));
         }
 
-        void mark(JSTracer* trc) const;
+        void mark(TenuringTracer& mover) const;
 
         typedef struct {
             typedef SlotsEdge Lookup;
@@ -308,7 +308,7 @@ class StoreBuffer
         static bool supportsDeduplication() { return true; }
         void* deduplicationKey() const { return (void*)edge; }
 
-        void mark(JSTracer* trc) const;
+        void mark(TenuringTracer& mover) const;
 
         typedef PointerEdgeHasher<WholeCellEdges> Hasher;
     };
@@ -444,14 +444,13 @@ class StoreBuffer
     }
 
     /* Methods to mark the source of all edges in the store buffer. */
-    void markAll(JSTracer* trc);
-    void markValues(JSTracer* trc)            { bufferVal.mark(this, trc); }
-    void markCells(JSTracer* trc)             { bufferCell.mark(this, trc); }
-    void markSlots(JSTracer* trc)             { bufferSlot.mark(this, trc); }
-    void markWholeCells(JSTracer* trc)        { bufferWholeCell.mark(this, trc); }
-    void markRelocatableValues(JSTracer* trc) { bufferRelocVal.mark(this, trc); }
-    void markRelocatableCells(JSTracer* trc)  { bufferRelocCell.mark(this, trc); }
-    void markGenericEntries(JSTracer* trc)    { bufferGeneric.mark(this, trc); }
+    void markValues(TenuringTracer& mover)            { bufferVal.mark(this, mover); }
+    void markCells(TenuringTracer& mover)             { bufferCell.mark(this, mover); }
+    void markSlots(TenuringTracer& mover)             { bufferSlot.mark(this, mover); }
+    void markWholeCells(TenuringTracer& mover)        { bufferWholeCell.mark(this, mover); }
+    void markRelocatableValues(TenuringTracer& mover) { bufferRelocVal.mark(this, mover); }
+    void markRelocatableCells(TenuringTracer& mover)  { bufferRelocCell.mark(this, mover); }
+    void markGenericEntries(JSTracer *trc)            { bufferGeneric.mark(this, trc); }
 
     /* For use by our owned buffers and for testing. */
     void setAboutToOverflow();

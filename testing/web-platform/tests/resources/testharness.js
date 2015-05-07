@@ -2356,7 +2356,15 @@ policies and contribution forms [3].
     AssertionError.prototype = Object.create(Error.prototype);
 
     AssertionError.prototype.get_stack = function() {
-        var lines = new Error().stack.split("\n");
+        var stack = new Error().stack;
+        if (!stack) {
+            try {
+                throw new Error();
+            } catch (e) {
+                stack = e.stack;
+            }
+        }
+        var lines = stack.split("\n");
         var rv = [];
         var re = /\/resources\/testharness\.js/;
         var i = 0;
