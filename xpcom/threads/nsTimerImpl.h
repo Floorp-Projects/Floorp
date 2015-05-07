@@ -22,7 +22,6 @@
 #endif
 
 extern PRLogModuleInfo* GetTimerLog();
-#define DEBUG_TIMERS 1
 
 #define NS_TIMER_CID \
 { /* 5ff24248-1dd2-11b2-8427-fbab44f29bc8 */         \
@@ -153,13 +152,10 @@ private:
   nsRefPtr<mozilla::tasktracer::FakeTracedTask> mTracedTask;
 #endif
 
-#ifdef DEBUG_TIMERS
   TimeStamp             mStart, mStart2;
   static double         sDeltaSum;
   static double         sDeltaSumSquared;
   static double         sDeltaNum;
-#endif
-
 };
 
 #endif /* nsTimerImpl_h___ */
