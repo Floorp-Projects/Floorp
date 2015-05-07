@@ -1616,6 +1616,22 @@ DocAccessibleChild::RecvTakeFocus(const uint64_t& aID)
 }
 
 bool
+DocAccessibleChild::RecvIndexOfEmbeddedChild(const uint64_t& aID,
+                                             const uint64_t& aChildID,
+                                             uint32_t* aChildIdx)
+{
+  *aChildIdx = 0;
+
+  Accessible* parent = IdToAccessible(aID);
+  Accessible* child = IdToAccessible(aChildID);
+  if (!parent || !child)
+    return true;
+
+  *aChildIdx = parent->GetIndexOfEmbeddedChild(child);
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvChildAtPoint(const uint64_t& aID,
                                      const int32_t& aX,
                                      const int32_t& aY,
