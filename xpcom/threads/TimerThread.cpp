@@ -260,11 +260,9 @@ TimerThread::Run()
           RemoveTimerInternal(timer);
           timer = nullptr;
 
-          if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
-            PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
-                   ("Timer thread woke up %fms from when it was supposed to\n",
-                    fabs((now - timerRef->mTimeout).ToMilliseconds())));
-          }
+          PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
+                 ("Timer thread woke up %fms from when it was supposed to\n",
+                  fabs((now - timerRef->mTimeout).ToMilliseconds())));
 
           {
             // We release mMonitor around the Fire call to avoid deadlock.
