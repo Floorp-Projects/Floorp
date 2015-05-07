@@ -1961,7 +1961,7 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
         layoutSize = ComputePlainObjectLayout(cx, templateShape, properties);
 
         // The entire object must be allocatable inline.
-        if (sizeof(JSObject) + layoutSize > JSObject::MAX_BYTE_SIZE)
+        if (UnboxedPlainObject::offsetOfData() + layoutSize > JSObject::MAX_BYTE_SIZE)
             return true;
     }
 

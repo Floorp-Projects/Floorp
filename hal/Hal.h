@@ -10,6 +10,7 @@
 #include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/HalTypes.h"
 #include "base/basictypes.h"
+#include "base/platform_thread.h"
 #include "mozilla/Observer.h"
 #include "mozilla/Types.h"
 #include "nsTArray.h"
@@ -484,6 +485,14 @@ void SetProcessPriority(int aPid,
  * must specify a type of function like THREAD_PRIORITY_COMPOSITOR.
  */
 void SetCurrentThreadPriority(hal::ThreadPriority aThreadPriority);
+
+/**
+ * Set a thread priority to appropriate platform-specific value for
+ * given functionality. Instead of providing arbitrary priority numbers you
+ * must specify a type of function like THREAD_PRIORITY_COMPOSITOR.
+ */
+void SetThreadPriority(PlatformThreadId aThreadId,
+                       hal::ThreadPriority aThreadPriority);
 
 /**
  * Register an observer for the FM radio.

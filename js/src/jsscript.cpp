@@ -1141,7 +1141,10 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript
         uint64_t packedFields;
 
         if (mode == XDR_ENCODE) {
-            MOZ_ASSERT(!lazy->maybeScript());
+            // Note: it's possible the LazyScript has a non-null script_ pointer
+            // to a JSScript. We don't encode it: we can just delazify the
+            // lazy script.
+
             MOZ_ASSERT(fun == lazy->functionNonDelazifying());
 
             begin = lazy->begin();
@@ -2733,6 +2736,15 @@ JSScript::finalize(FreeOp* fop)
     }
 
     fop->runtime()->lazyScriptCache.remove(this);
+
+    if (lazyScript && lazyScript->maybeScriptUnbarriered() == this) {
+        // In most cases, our LazyScript's script pointer will reference this
+        // script. However, because sweeping can be incremental, it's
+        // possible LazyScript::maybeScript() already null'ed this pointer.
+        // Furthermore, if we unlazified the LazyScript, it will have a
+        // completely different JSScript.
+        lazyScript->resetScript();
+    }
 }
 
 static const uint32_t GSN_CACHE_THRESHOLD = 100;
@@ -3725,15 +3737,16 @@ LazyScript::LazyScript(JSFunction* fun, void* table, uint64_t packedFields, uint
 void
 LazyScript::initScript(JSScript* script)
 {
-    MOZ_ASSERT(script && !script_);
-    script_ = script;
+    MOZ_ASSERT(script);
+    MOZ_ASSERT(!script_.unbarrieredGet());
+    script_.set(script);
 }
 
 void
 LazyScript::resetScript()
 {
-    MOZ_ASSERT(script_);
-    script_ = nullptr;
+    MOZ_ASSERT(script_.unbarrieredGet());
+    script_.set(nullptr);
 }
 
 void
@@ -3851,7 +3864,7 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
     MOZ_ASSERT(!res->sourceObject());
     res->setParent(enclosingScope, &sourceObjectScript->scriptSourceUnwrap());
 
-    MOZ_ASSERT(!res->maybeScript());
+    MOZ_ASSERT(!res->maybeScriptUnbarriered());
     if (script)
         res->initScript(script);
 

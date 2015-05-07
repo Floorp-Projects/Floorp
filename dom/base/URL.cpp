@@ -148,41 +148,38 @@ void
 URL::CreateObjectURLInternal(const GlobalObject& aGlobal, nsISupports* aObject,
                              const nsACString& aScheme,
                              const objectURLOptions& aOptions,
-                             nsAString& aResult, ErrorResult& aError)
+                             nsAString& aResult, ErrorResult& aRv)
 {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   nsCOMPtr<nsIPrincipal> principal = nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   nsAutoCString url;
   nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(aScheme, aObject,
                                                           principal, url);
   if (NS_FAILED(rv)) {
-    aError.Throw(rv);
+    aRv.Throw(rv);
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal.GetAsSupports());
-  nsGlobalWindow* window = static_cast<nsGlobalWindow*>(w.get());
-
-  if (window) {
-    NS_PRECONDITION(window->IsInnerWindow(), "Should be inner window");
-
-    if (!window->GetExtantDoc()) {
-      aError.Throw(NS_ERROR_INVALID_POINTER);
-      return;
-    }
-
-    nsIDocument* doc = window->GetExtantDoc();
-    if (doc) {
-      doc->RegisterHostObjectUri(url);
-    }
-  }
-
+  global->RegisterHostObjectURI(url);
   CopyASCIItoUTF16(url, aResult);
 }
 
 void
-URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL)
+URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,
+                     ErrorResult& aRv)
 {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   NS_LossyConvertUTF16toASCII asciiurl(aURL);
@@ -191,12 +188,8 @@ URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL)
     nsHostObjectProtocolHandler::GetDataEntryPrincipal(asciiurl);
 
   if (urlPrincipal && principal->Subsumes(urlPrincipal)) {
-    nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal.GetAsSupports());
-    nsGlobalWindow* window = static_cast<nsGlobalWindow*>(w.get());
-
-    if (window && window->GetExtantDoc()) {
-      window->GetExtantDoc()->UnregisterHostObjectUri(asciiurl);
-    }
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+    global->UnregisterHostObjectURI(asciiurl);
     nsHostObjectProtocolHandler::RemoveDataEntry(asciiurl);
   }
 }

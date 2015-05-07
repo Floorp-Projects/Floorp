@@ -216,12 +216,11 @@ SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* 
         return false;
     }
 
+    // Bugs 1068458, 1161298: Limit length to 2^31-1.
     uint32_t length;
-    bool overflow;
-    if (!ToLengthClamped(cx, args.get(0), &length, &overflow)) {
-        // Bug 1068458: Limit length to 2^31-1.
-        if (overflow || length > INT32_MAX)
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_LENGTH);
+    bool overflow_unused;
+    if (!ToLengthClamped(cx, args.get(0), &length, &overflow_unused) || length > INT32_MAX) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_LENGTH);
         return false;
     }
 

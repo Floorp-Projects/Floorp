@@ -35,6 +35,7 @@
 
   let prefs = [
     ["dom.ipc.processCount", 3],            // Allow up to 3 child processes
+    ["memory.report_concurrency", 2],       // Cover more child handling cases
     ["memory.system_memory_reporter", true] // Test SystemMemoryReporter
   ];
 

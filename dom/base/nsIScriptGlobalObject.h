@@ -78,6 +78,9 @@ public:
   }
 
   virtual bool IsBlackForCC(bool aTracingNeeded = true) { return false; }
+
+protected:
+  virtual ~nsIScriptGlobalObject() {}
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptGlobalObject,

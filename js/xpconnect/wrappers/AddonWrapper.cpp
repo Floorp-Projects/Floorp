@@ -22,8 +22,8 @@ using namespace JS;
 namespace xpc {
 
 bool
-Interpose(JSContext* cx, HandleObject target, const nsIID* iid, HandleId id,
-          MutableHandle<JSPropertyDescriptor> descriptor)
+InterposeProperty(JSContext* cx, HandleObject target, const nsIID* iid, HandleId id,
+                  MutableHandle<JSPropertyDescriptor> descriptor)
 {
     // We only want to do interpostion on DOM instances and
     // wrapped natives.
@@ -45,8 +45,8 @@ Interpose(JSContext* cx, HandleObject target, const nsIID* iid, HandleId id,
     RootedValue prop(cx, IdToValue(id));
     RootedValue targetValue(cx, ObjectValue(*target));
     RootedValue descriptorVal(cx);
-    nsresult rv = interp->Interpose(addonIdValue, targetValue,
-                                    iid, prop, &descriptorVal);
+    nsresult rv = interp->InterposeProperty(addonIdValue, targetValue,
+                                            iid, prop, &descriptorVal);
     if (NS_FAILED(rv)) {
         xpc::Throw(cx, rv);
         return false;
@@ -79,12 +79,64 @@ Interpose(JSContext* cx, HandleObject target, const nsIID* iid, HandleId id,
     return true;
 }
 
+bool
+InterposeCall(JSContext* cx, JS::HandleObject target, const JS::CallArgs& args, bool* done)
+{
+    *done = false;
+    XPCWrappedNativeScope* scope = ObjectScope(CurrentGlobalOrNull(cx));
+    MOZ_ASSERT(scope->HasInterposition());
+
+    nsCOMPtr<nsIAddonInterposition> interp = scope->GetInterposition();
+
+    RootedObject unwrappedTarget(cx, UncheckedUnwrap(target));
+    XPCWrappedNativeScope* targetScope = ObjectScope(unwrappedTarget);
+    bool hasInterpostion = targetScope->HasCallInterposition();
+
+    if (!hasInterpostion)
+        return true;
+
+    // If there is a call interpostion, we don't want to propogate the
+    // call to Base:
+    *done = true; 
+
+    JSAddonId* addonId = AddonIdOfObject(target);
+    RootedValue addonIdValue(cx, StringValue(StringOfAddonId(addonId)));
+    RootedValue targetValue(cx, ObjectValue(*target));
+    RootedValue thisValue(cx, args.thisv());
+    RootedObject argsArray(cx, ConvertArgsToArray(cx, args));
+    if (!argsArray)
+        return false;
+
+    RootedValue argsVal(cx, ObjectValue(*argsArray));
+    RootedValue returnVal(cx);
+
+    nsresult rv = interp->InterposeCall(addonIdValue, targetValue,
+                                        thisValue, argsVal, args.rval());
+    if (NS_FAILED(rv)) {
+        xpc::Throw(cx, rv);
+        return false;
+    }
+
+    return true;
+}
+
+template<typename Base>
+bool AddonWrapper<Base>::call(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                              const JS::CallArgs& args) const
+{
+    bool done = false;
+    if (!InterposeCall(cx, wrapper, args, &done))
+        return false;
+
+    return done || Base::call(cx, wrapper, args);
+}
+
 template<typename Base>
 bool
 AddonWrapper<Base>::getPropertyDescriptor(JSContext* cx, HandleObject wrapper,
                                           HandleId id, MutableHandle<JSPropertyDescriptor> desc) const
 {
-    if (!Interpose(cx, wrapper, nullptr, id, desc))
+    if (!InterposeProperty(cx, wrapper, nullptr, id, desc))
         return false;
 
     if (desc.object())
@@ -98,7 +150,7 @@ bool
 AddonWrapper<Base>::getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper,
                                              HandleId id, MutableHandle<JSPropertyDescriptor> desc) const
 {
-    if (!Interpose(cx, wrapper, nullptr, id, desc))
+    if (!InterposeProperty(cx, wrapper, nullptr, id, desc))
         return false;
 
     if (desc.object())
@@ -113,7 +165,7 @@ AddonWrapper<Base>::get(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle
                         JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const
 {
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!Interpose(cx, wrapper, nullptr, id, &desc))
+    if (!InterposeProperty(cx, wrapper, nullptr, id, &desc))
         return false;
 
     if (!desc.object())
@@ -136,7 +188,7 @@ AddonWrapper<Base>::set(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id
                         JS::HandleValue receiver, JS::ObjectOpResult& result) const
 {
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!Interpose(cx, wrapper, nullptr, id, &desc))
+    if (!InterposeProperty(cx, wrapper, nullptr, id, &desc))
         return false;
 
     if (!desc.object())
@@ -164,7 +216,7 @@ AddonWrapper<Base>::defineProperty(JSContext* cx, HandleObject wrapper, HandleId
                                    ObjectOpResult& result) const
 {
     Rooted<JSPropertyDescriptor> interpDesc(cx);
-    if (!Interpose(cx, wrapper, nullptr, id, &interpDesc))
+    if (!InterposeProperty(cx, wrapper, nullptr, id, &interpDesc))
         return false;
 
     if (!interpDesc.object())
@@ -180,7 +232,7 @@ AddonWrapper<Base>::delete_(JSContext* cx, HandleObject wrapper, HandleId id,
                             ObjectOpResult& result) const
 {
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!Interpose(cx, wrapper, nullptr, id, &desc))
+    if (!InterposeProperty(cx, wrapper, nullptr, id, &desc))
         return false;
 
     if (!desc.object())

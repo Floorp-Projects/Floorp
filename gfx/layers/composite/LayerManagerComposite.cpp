@@ -51,7 +51,7 @@
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsIWidget.h"                  // for nsIWidget
 #include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion, etc
 #ifdef MOZ_WIDGET_ANDROID
 #include <android/log.h>
@@ -148,7 +148,7 @@ LayerManagerComposite::Destroy()
 }
 
 void
-LayerManagerComposite::UpdateRenderBounds(const nsIntRect& aRect)
+LayerManagerComposite::UpdateRenderBounds(const IntRect& aRect)
 {
   mRenderBounds = aRect;
 }
@@ -175,7 +175,7 @@ LayerManagerComposite::BeginTransaction()
 }
 
 void
-LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget, const nsIntRect& aRect)
+LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget, const IntRect& aRect)
 {
   mInTransaction = true;
   
@@ -553,7 +553,7 @@ LayerManagerComposite::PushGroupForLayerEffects()
 }
 void
 LayerManagerComposite::PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> aPreviousTarget,
-                                               nsIntRect aClipRect,
+                                               IntRect aClipRect,
                                                bool aGrayscaleEffect,
                                                bool aInvertEffect,
                                                float aContrastEffect)
@@ -724,7 +724,7 @@ LayerManagerComposite::Render()
   }
 
   // Allow widget to render a custom background.
-  mCompositor->GetWidget()->DrawWindowUnderlay(this, nsIntRect(actualBounds.x,
+  mCompositor->GetWidget()->DrawWindowUnderlay(this, IntRect(actualBounds.x,
                                                                actualBounds.y,
                                                                actualBounds.width,
                                                                actualBounds.height));
@@ -742,7 +742,7 @@ LayerManagerComposite::Render()
 
   if (!mRegionToClear.IsEmpty()) {
     nsIntRegionRectIterator iter(mRegionToClear);
-    const nsIntRect *r;
+    const IntRect *r;
     while ((r = iter.Next())) {
       mCompositor->ClearRect(Rect(r->x, r->y, r->width, r->height));
     }
@@ -755,7 +755,7 @@ LayerManagerComposite::Render()
   }
 
   // Allow widget to render a custom foreground.
-  mCompositor->GetWidget()->DrawWindowOverlay(this, nsIntRect(actualBounds.x,
+  mCompositor->GetWidget()->DrawWindowOverlay(this, IntRect(actualBounds.x,
                                                               actualBounds.y,
                                                               actualBounds.width,
                                                               actualBounds.height));
@@ -940,7 +940,7 @@ LayerManagerComposite::RenderToPresentationSurface()
   egl->fClearColor(0.0, 0.0, 0.0, 0.0);
   egl->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
 
-  const nsIntRect clipRect = nsIntRect(0, 0, (int)(scale * pageWidth), actualHeight);
+  const IntRect clipRect = IntRect(0, 0, (int)(scale * pageWidth), actualHeight);
   RootLayer()->Prepare(RenderTargetPixel::FromUntyped(clipRect));
   RootLayer()->RenderLayer(clipRect);
 
@@ -961,9 +961,9 @@ SubtractTransformedRegion(nsIntRegion& aRegion,
   // For each rect in the region, find out its bounds in screen space and
   // subtract it from the screen region.
   nsIntRegionRectIterator it(aRegionToSubtract);
-  while (const nsIntRect* rect = it.Next()) {
+  while (const IntRect* rect = it.Next()) {
     Rect incompleteRect = aTransform.TransformBounds(ToRect(*rect));
-    aRegion.Sub(aRegion, nsIntRect(incompleteRect.x,
+    aRegion.Sub(aRegion, IntRect(incompleteRect.x,
                                    incompleteRect.y,
                                    incompleteRect.width,
                                    incompleteRect.height));
@@ -1039,13 +1039,13 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
 static float
 GetDisplayportCoverage(const CSSRect& aDisplayPort,
                        const Matrix4x4& aTransformToScreen,
-                       const nsIntRect& aScreenRect)
+                       const IntRect& aScreenRect)
 {
   Rect transformedDisplayport =
     aTransformToScreen.TransformBounds(aDisplayPort.ToUnknownRect());
 
   transformedDisplayport.RoundOut();
-  nsIntRect displayport = nsIntRect(transformedDisplayport.x,
+  IntRect displayport = IntRect(transformedDisplayport.x,
                                     transformedDisplayport.y,
                                     transformedDisplayport.width,
                                     transformedDisplayport.height);
@@ -1076,7 +1076,7 @@ LayerManagerComposite::ComputeRenderIntegrity()
     rootMetrics = LayerMetricsWrapper(root).Metrics();
   }
   ParentLayerIntRect bounds = RoundedToInt(rootMetrics.mCompositionBounds);
-  nsIntRect screenRect(bounds.x,
+  IntRect screenRect(bounds.x,
                        bounds.y,
                        bounds.width,
                        bounds.height);
@@ -1104,7 +1104,7 @@ LayerManagerComposite::ComputeRenderIntegrity()
                                      metrics.GetScrollableRect().width,
                                      metrics.GetScrollableRect().height));
     documentBounds.RoundOut();
-    screenRect = screenRect.Intersect(nsIntRect(documentBounds.x, documentBounds.y,
+    screenRect = screenRect.Intersect(IntRect(documentBounds.x, documentBounds.y,
                                                 documentBounds.width, documentBounds.height));
 
     // If the screen rect is empty, the user has scrolled entirely into
