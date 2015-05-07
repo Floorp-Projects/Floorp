@@ -100,8 +100,8 @@ public:
   virtual void Composite(TimeStamp aTimestamp) = 0;
   virtual void ScheduleTask(CancelableTask*, int);
   virtual void ResumeComposition();
-  virtual void ForceComposeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect);
-  virtual void ComposeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect = nullptr);
+  virtual void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect);
+  virtual void ComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
   virtual void Destroy();
 
   const TimeStamp& GetLastComposeTime()
@@ -162,7 +162,7 @@ public:
   virtual void CancelCurrentCompositeTask() override;
   virtual bool NeedsComposite() override;
   virtual void Composite(TimeStamp aVsyncTimestamp) override;
-  virtual void ForceComposeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect) override;
+  virtual void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect) override;
   virtual void Destroy() override;
 
 private:

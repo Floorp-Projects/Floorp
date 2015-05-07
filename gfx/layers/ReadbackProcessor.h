@@ -7,7 +7,7 @@
 #define GFX_READBACKPROCESSOR_H
 
 #include <stdint.h>                     // for uint64_t
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsTArray.h"                   // for nsTArray
  
 class nsIntRegion;
@@ -46,7 +46,7 @@ public:
      * visible region. Translate it to mLayer's coordinate system
      * by adding mLayer->GetBackgroundLayerOffset().
      */
-    nsIntRect      mUpdateRect;
+    gfx::IntRect      mUpdateRect;
     /**
      * The sequence counter value to use when calling DoUpdate
      */
