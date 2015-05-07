@@ -77,7 +77,6 @@
                      android:layout_width="match_parent"
                      android:layout_height="match_parent"
                      android:layout_below="@+id/browser_chrome"
-                     android:background="@android:color/white"
                      android:visibility="invisible"/>
 
         <!-- When focus is cleared from from BrowserToolbar's EditText to

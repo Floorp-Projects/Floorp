@@ -462,7 +462,7 @@ this.GoogleImporter.prototype = {
     let addressNodes = entry.getElementsByTagNameNS(kNS_GD, "structuredPostalAddress");
     if (addressNodes.length) {
       contact.adr = [];
-      for (let [,addressNode] of Iterator(addressNodes)) {
+      for (let [, addressNode] of Iterator(addressNodes)) {
         let adr = extractFieldsFromNode(new Map([
           ["countryName", "country"],
           ["locality", "city"],
@@ -482,7 +482,7 @@ this.GoogleImporter.prototype = {
     let emailNodes = entry.getElementsByTagNameNS(kNS_GD, "email");
     if (emailNodes.length) {
       contact.email = [];
-      for (let [,emailNode] of Iterator(emailNodes)) {
+      for (let [, emailNode] of Iterator(emailNodes)) {
         contact.email.push({
           pref: (emailNode.getAttribute("primary") == "true"),
           type: [getFieldType(emailNode)],
@@ -495,7 +495,7 @@ this.GoogleImporter.prototype = {
     let phoneNodes = entry.getElementsByTagNameNS(kNS_GD, "phoneNumber");
     if (phoneNodes.length) {
       contact.tel = [];
-      for (let [,phoneNode] of Iterator(phoneNodes)) {
+      for (let [, phoneNode] of Iterator(phoneNodes)) {
         let phoneNumber = phoneNode.hasAttribute("uri") ?
           phoneNode.getAttribute("uri").replace("tel:", "") :
           phoneNode.textContent;
@@ -511,7 +511,7 @@ this.GoogleImporter.prototype = {
     if (orgNodes.length) {
       contact.org = [];
       contact.jobTitle = [];
-      for (let [,orgNode] of Iterator(orgNodes)) {
+      for (let [, orgNode] of Iterator(orgNodes)) {
         let orgElement = orgNode.getElementsByTagNameNS(kNS_GD, "orgName")[0];
         let titleElement = orgNode.getElementsByTagNameNS(kNS_GD, "orgTitle")[0];
         contact.org.push(orgElement ? orgElement.textContent : "");
