@@ -423,10 +423,11 @@ let TelemetryStorageImpl = {
    */
   saveArchivedPing: Task.async(function*(ping) {
     const creationDate = new Date(ping.creationDate);
-    const filePath = getArchivedPingPath(ping.id, creationDate, ping.type);
+    // Get the archived ping path and append the lz4 suffix to it (so we have 'jsonlz4').
+    const filePath = getArchivedPingPath(ping.id, creationDate, ping.type) + "lz4";
     yield OS.File.makeDir(OS.Path.dirname(filePath), { ignoreExisting: true,
                                                        from: OS.Constants.Path.profileDir });
-    yield TelemetryStorage.savePingToFile(ping, filePath, true);
+    yield this.savePingToFile(ping, filePath, /*overwrite*/ true, /*compressed*/ true);
   }),
 
   /**
@@ -437,12 +438,21 @@ let TelemetryStorageImpl = {
    * @param {string} type The pings type.
    * @return {promise<object>} Promise that is resolved with the ping data.
    */
-  loadArchivedPing: function(id, timestampCreated, type) {
+  loadArchivedPing: Task.async(function*(id, timestampCreated, type) {
     this._log.trace("loadArchivedPing - id: " + id + ", timestampCreated: " + timestampCreated + ", type: " + type);
     const path = getArchivedPingPath(id, new Date(timestampCreated), type);
-    this._log.trace("loadArchivedPing - loading ping from: " + path);
-    return this.loadPingFile(path);
-  },
+    const pathCompressed = path + "lz4";
+
+    try {
+      // Try to load a compressed version of the archived ping first.
+      this._log.trace("loadArchivedPing - loading ping from: " + pathCompressed);
+      return yield this.loadPingFile(pathCompressed, /*compressed*/ true);
+    } catch (ex if ex.becauseNoSuchFile) {
+      // If that fails, look for the uncompressed version.
+      this._log.trace("loadArchivedPing - compressed ping not found, loading: " + path);
+      return yield this.loadPingFile(path, /*compressed*/ false);
+    }
+  }),
 
   /**
    * Remove an archived ping from disk.
@@ -452,12 +462,15 @@ let TelemetryStorageImpl = {
    * @param {string} type The pings type.
    * @return {promise<object>} Promise that is resolved when the pings is removed.
    */
-  _removeArchivedPing: function(id, timestampCreated, type) {
+  _removeArchivedPing: Task.async(function*(id, timestampCreated, type) {
     this._log.trace("_removeArchivedPing - id: " + id + ", timestampCreated: " + timestampCreated + ", type: " + type);
     const path = getArchivedPingPath(id, new Date(timestampCreated), type);
+    const pathCompressed = path + "lz4";
+
     this._log.trace("_removeArchivedPing - removing ping from: " + path);
-    return OS.File.remove(path);
-  },
+    yield OS.File.remove(path, {ignoreAbsent: true});
+    yield OS.File.remove(pathCompressed, {ignoreAbsent: true});
+  }),
 
   /**
    * Get a list of info on the archived pings.
@@ -489,7 +502,7 @@ let TelemetryStorageImpl = {
       let pingIterator = new OS.File.DirectoryIterator(dir.path);
       let pings = (yield pingIterator.nextBatch()).filter(e => !e.isDir);
 
-      // Now process any ping files of the form "<timestamp>.<uuid>.<type>.json"
+      // Now process any ping files of the form "<timestamp>.<uuid>.<type>.[json|jsonlz4]".
       for (let p of pings) {
         // data may be null if the filename doesn't match the above format.
         let data = this._getArchivedPingDataFromFileName(p.name);
@@ -528,14 +541,19 @@ let TelemetryStorageImpl = {
    * @param {bool} overwrite If |true|, the file will be overwritten if it exists,
    * if |false| the file will not be overwritten and no error will be reported if
    * the file exists.
+   * @param {bool} [compress=false] If |true|, the file will use lz4 compression. Otherwise no
+   * compression will be used.
    * @returns {promise}
    */
-  savePingToFile: function(ping, filePath, overwrite) {
+  savePingToFile: function(ping, filePath, overwrite, compress = false) {
     return Task.spawn(function*() {
       try {
         let pingString = JSON.stringify(ping);
-        yield OS.File.writeAtomic(filePath, pingString, {tmpPath: filePath + ".tmp",
-                                  noOverwrite: !overwrite});
+        let options = { tmpPath: filePath + ".tmp", noOverwrite: !overwrite };
+        if (compress) {
+          options.compression = "lz4";
+        }
+        yield OS.File.writeAtomic(filePath, pingString, options);
       } catch(e if e.becauseExists) {
       }
     })
@@ -733,11 +751,16 @@ let TelemetryStorageImpl = {
   /**
    * Loads a ping file.
    * @param {String} aFilePath The path of the ping file.
+   * @param {Boolean} [aCompressed=false] If |true|, expects the file to be compressed using lz4.
    * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
    *                           ping contains invalid data.
    */
-  loadPingFile: Task.async(function* (aFilePath) {
-    let array = yield OS.File.read(aFilePath);
+  loadPingFile: Task.async(function* (aFilePath, aCompressed = false) {
+    let options = {};
+    if (aCompressed) {
+      options.compression = "lz4";
+    }
+    let array = yield OS.File.read(aFilePath, options);
     let decoder = new TextDecoder();
     let string = decoder.decode(array);
 
@@ -751,7 +774,7 @@ let TelemetryStorageImpl = {
 
   /**
    * Archived pings are saved with file names of the form:
-   * "<timestamp>.<uuid>.<type>.json"
+   * "<timestamp>.<uuid>.<type>.[json|jsonlz4]"
    * This helper extracts that data from a given filename.
    *
    * @param fileName {String} The filename.
@@ -770,8 +793,8 @@ let TelemetryStorageImpl = {
     }
 
     let [timestamp, uuid, type, extension] = parts;
-    if (extension != "json") {
-      this._log.trace("_getArchivedPingDataFromFileName - should have a 'json' extension");
+    if (extension != "json" && extension != "jsonlz4") {
+      this._log.trace("_getArchivedPingDataFromFileName - should have 'json' or 'jsonlz4' extension");
       return null;
     }
 
