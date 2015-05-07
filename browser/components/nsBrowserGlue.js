@@ -2791,8 +2791,11 @@ let E10SUINotification = {
   checkStatus: function() {
     let skipE10sChecks = false;
     try {
-      skipE10sChecks = (UpdateChannel.get() != "nightly") ||
-                       Services.prefs.getBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y");
+      let updateChannel = UpdateChannel.get();
+      let channelAuthorized = updateChannel == "nightly" || updateChannel == "aurora";
+
+      skipE10sChecks = !channelAuthorized ||
+                       UpdateServices.prefs.getBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y");
     } catch(e) {}
 
     if (skipE10sChecks) {
@@ -2911,7 +2914,7 @@ let E10SUINotification = {
 
     let browser = win.gBrowser.selectedBrowser;
 
-    let promptMessage = "Would you like to help us test multiprocess Nightly (e10s)? You can also enable e10s in Nightly preferences. Notable fixes:";
+    let promptMessage = "Multi-process is coming soon to Firefox. You can start using it now to get early access to some of the benefits:";
     let mainAction = {
       label: "Enable and Restart",
       accessKey: "E",
@@ -2944,9 +2947,8 @@ let E10SUINotification = {
     win.PopupNotifications.show(browser, "enable-e10s", promptMessage, null, mainAction, secondaryActions, options);
 
     let highlights = [
-      "Less crashing!",
-      "Improved add-on compatibility and DevTools",
-      "PDF.js, Web Console, Spellchecking, WebRTC now work"
+      "Improved responsiveness",
+      "Fewer crashes"
     ];
 
     let doorhangerExtraContent = win.document.getElementById("enable-e10s-notification")
