@@ -391,13 +391,13 @@ nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
   aUri.Append(':');
 
   if (aPrincipal) {
-    nsAutoString origin;
-    rv = nsContentUtils::GetUTFOrigin(aPrincipal, origin);
+    nsAutoCString origin;
+    rv = nsContentUtils::GetASCIIOrigin(aPrincipal, origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    AppendUTF16toUTF8(origin, aUri);
+    aUri.Append(origin);
     aUri.Append('/');
   }
 
