@@ -18,9 +18,7 @@
 #include "nsDirectoryIndexStream.h"
 #include "prlog.h"
 #include "prtime.h"
-#ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
-#endif
 
 #include "nsISimpleEnumerator.h"
 #ifdef THREADSAFE_I18N
@@ -46,10 +44,8 @@ static PRLogModuleInfo* gLog;
 nsDirectoryIndexStream::nsDirectoryIndexStream()
     : mOffset(0), mStatus(NS_OK), mPos(0)
 {
-#ifdef PR_LOGGING
     if (! gLog)
         gLog = PR_NewLogModule("nsDirectoryIndexStream");
-#endif
 
     PR_LOG(gLog, PR_LOG_DEBUG,
            ("nsDirectoryIndexStream[%p]: created", this));
@@ -96,7 +92,6 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     if (!isDir)
         return NS_ERROR_ILLEGAL_VALUE;
 
-#ifdef PR_LOGGING
     if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
         nsAutoCString path;
         aDir->GetNativePath(path);
@@ -104,7 +99,6 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
                ("nsDirectoryIndexStream[%p]: initialized on %s",
                 this, path.get()));
     }
-#endif
 
     // Sigh. We have to allocate on the heap because there are no
     // assignment operators defined.
@@ -245,7 +239,6 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
             nsIFile* current = mArray.ObjectAt(mPos);
             ++mPos;
 
-#ifdef PR_LOGGING
             if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
                 nsAutoCString path;
                 current->GetNativePath(path);
@@ -253,7 +246,6 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
                        ("nsDirectoryIndexStream[%p]: iterated %s",
                         this, path.get()));
             }
-#endif
 
             // rjc: don't return hidden files/directories!
             // bbaetz: why not?
