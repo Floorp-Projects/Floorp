@@ -39,6 +39,7 @@
 
 using namespace js;
 
+using JS::dbg::AutoEntryMonitor;
 using JS::dbg::Builder;
 using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
@@ -7799,6 +7800,21 @@ Builder::newObject(JSContext* cx)
 
     // If the allocation failed, this will return a false Object, as the spec promises.
     return Object(cx, *this, obj);
+}
+
+
+/*** JS::dbg::AutoEntryMonitor ******************************************************************/
+
+AutoEntryMonitor::AutoEntryMonitor(JSContext* cx)
+  : runtime_(cx->runtime()),
+    savedMonitor_(cx->runtime()->entryMonitor)
+{
+    runtime_->entryMonitor = this;
+}
+
+AutoEntryMonitor::~AutoEntryMonitor()
+{
+    runtime_->entryMonitor = savedMonitor_;
 }
 
 

@@ -21,6 +21,12 @@
 
 struct JSCompartment;
 
+namespace JS {
+namespace dbg {
+class AutoEntryMonitor;
+}
+}
+
 namespace js {
 
 class ArgumentsObject;
@@ -1091,6 +1097,11 @@ class Activation
     // Value of asyncCause to be attached to asyncStack_.
     RootedString asyncCause_;
 
+    // The entry point monitor that was set on cx_->runtime() when this
+    // Activation was created. Subclasses should report their entry frame's
+    // function or script here.
+    JS::dbg::AutoEntryMonitor* entryMonitor_;
+
     enum Kind { Interpreter, Jit, AsmJS };
     Kind kind_;
 
@@ -1340,7 +1351,11 @@ class JitActivation : public Activation
 #endif
 
   public:
-    explicit JitActivation(JSContext* cx, bool active = true);
+    // If non-null, |entryScript| should be the script we're about to begin
+    // executing, for the benefit of performance tooling. We can pass null for
+    // entryScript when we know we couldn't possibly be entering JS directly
+    // from the JSAPI: OSR, asm.js -> Ion transitions, and so on.
+    explicit JitActivation(JSContext* cx, CalleeToken entryPoint, bool active = true);
     ~JitActivation();
 
     bool isActive() const {
