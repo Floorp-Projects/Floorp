@@ -26,7 +26,7 @@ public:
     Data(ID3D11Texture2D* aTexture,
          ID3D11Device* aDevice,
          ID3D11DeviceContext* aContext,
-         const nsIntRect& aRegion)
+         const gfx::IntRect& aRegion)
       : mTexture(aTexture),
         mDevice(aDevice),
         mContext(aContext),
@@ -34,7 +34,7 @@ public:
     RefPtr<ID3D11Texture2D> mTexture;
     RefPtr<ID3D11Device> mDevice;
     RefPtr<ID3D11DeviceContext> mContext;
-    nsIntRect mRegion;
+    gfx::IntRect mRegion;
   };
 
   D3D11ShareHandleImage() : Image(NULL, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE), mSize(0, 0) {}
@@ -52,12 +52,12 @@ public:
 
   ID3D11Texture2D* GetTexture() const;
 
-  virtual nsIntRect GetPictureRect() override { return mPictureRect; }
+  virtual gfx::IntRect GetPictureRect() override { return mPictureRect; }
 
 private:
 
   gfx::IntSize mSize;
-  nsIntRect mPictureRect;
+  gfx::IntRect mPictureRect;
   RefPtr<ID3D11Texture2D> mTexture;
   RefPtr<TextureClient> mTextureClient;
   HANDLE mShareHandle;

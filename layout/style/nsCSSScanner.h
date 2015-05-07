@@ -27,6 +27,8 @@ enum nsCSSTokenType {
   // comments do *not* count as white space; comments separate tokens
   // but are not themselves tokens.
   eCSSToken_Whitespace,     //
+  // A comment.
+  eCSSToken_Comment,        // /*...*/
 
   // Identifier-like tokens.  mIdent is the text of the identifier.
   // The difference between ID and Hash is: if the text after the #
@@ -182,13 +184,24 @@ private:
   bool mInitialized;
 };
 
+enum nsCSSScannerExclude {
+  // Return all tokens, including whitespace and comments.
+  eCSSScannerExclude_None,
+  // Include whitespace but exclude comments.
+  eCSSScannerExclude_Comments,
+  // Exclude whitespace and comments.
+  eCSSScannerExclude_WhitespaceAndComments
+};
+
 // nsCSSScanner tokenizes an input stream using the CSS2.1 forward
 // compatible tokenization rules.  Used internally by nsCSSParser;
 // not available for use by other code.
 class nsCSSScanner {
   public:
   // |aLineNumber == 1| is the beginning of a file, use |aLineNumber == 0|
-  // when the line number is unknown.
+  // when the line number is unknown.  The scanner does not take
+  // ownership of |aBuffer|, so the caller must be sure to keep it
+  // alive for the lifetime of the scanner.
   nsCSSScanner(const nsAString& aBuffer, uint32_t aLineNumber);
   ~nsCSSScanner();
 
@@ -220,14 +233,20 @@ class nsCSSScanner {
   uint32_t GetColumnNumber() const
   { return mTokenOffset - mTokenLineOffset; }
 
+  uint32_t GetTokenOffset() const
+  { return mTokenOffset; }
+
+  uint32_t GetTokenEndOffset() const
+  { return mOffset; }
+
   // Get the text of the line containing the first character of
   // the most recently processed token.
   nsDependentSubstring GetCurrentLine() const;
 
   // Get the next token.  Return false on EOF.  aTokenResult is filled
-  // in with the data for the token.  If aSkipWS is true, skip over
-  // eCSSToken_Whitespace tokens rather than returning them.
-  bool Next(nsCSSToken& aTokenResult, bool aSkipWS);
+  // in with the data for the token.  aSkip controls whether
+  // whitespace and/or comment tokens are ever returned.
+  bool Next(nsCSSToken& aTokenResult, nsCSSScannerExclude aSkip);
 
   // Get the body of an URL token (everything after the 'url(').
   // This is exposed for use by nsCSSParser::ParseMozDocumentRule,

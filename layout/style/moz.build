@@ -89,6 +89,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'CSS.h',
+    'CSSLexer.h',
     'CSSRuleList.h',
     'CSSValue.h',
     'FontFace.h',
@@ -113,6 +114,7 @@ UNIFIED_SOURCES += [
     'AnimationCommon.cpp',
     'CounterStyleManager.cpp',
     'CSS.cpp',
+    'CSSLexer.cpp',
     'CSSRuleList.cpp',
     'CSSStyleSheet.cpp',
     'CSSVariableDeclarations.cpp',

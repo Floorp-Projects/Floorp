@@ -357,7 +357,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
     if (scope->HasInterposition()) {
         Rooted<JSPropertyDescriptor> desc(ccx);
-        if (!xpc::Interpose(ccx, obj, iface->GetIID(), id, &desc))
+        if (!xpc::InterposeProperty(ccx, obj, iface->GetIID(), id, &desc))
             return false;
 
         if (desc.object()) {

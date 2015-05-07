@@ -54,7 +54,7 @@ X11DataTextureSourceBasic::Update(gfx::DataSourceSurface* aSurface,
 
   if (aDestRegion) {
     nsIntRegionRectIterator iter(*aDestRegion);
-    while (const nsIntRect* iterRect = iter.Next()) {
+    while (const IntRect* iterRect = iter.Next()) {
       IntRect srcRect(iterRect->x, iterRect->y, iterRect->width, iterRect->height);
       IntPoint dstPoint(iterRect->x, iterRect->y);
 

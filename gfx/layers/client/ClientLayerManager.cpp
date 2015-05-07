@@ -199,7 +199,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
     hal::GetCurrentScreenConfiguration(&currentConfig);
     orientation = currentConfig.orientation();
   }
-  nsIntRect targetBounds = mWidget->GetNaturalBounds();
+  IntRect targetBounds = mWidget->GetNaturalBounds();
   targetBounds.x = targetBounds.y = 0;
   mForwarder->BeginTransaction(targetBounds, mTargetRotation, orientation);
 
@@ -466,10 +466,10 @@ ClientLayerManager::MakeSnapshotIfRequired()
       // The compositor doesn't draw to a different sized surface
       // when there's a rotation. Instead we rotate the result
       // when drawing into dt
-      nsIntRect outerBounds;
+      IntRect outerBounds;
       mWidget->GetBounds(outerBounds);
 
-      nsIntRect bounds = ToOutsideIntRect(mShadowTarget->GetClipExtents());
+      IntRect bounds = ToOutsideIntRect(mShadowTarget->GetClipExtents());
       if (mTargetRotation) {
         bounds = RotateRect(bounds, outerBounds, mTargetRotation);
       }
@@ -791,5 +791,5 @@ ClientLayer::~ClientLayer()
   MOZ_COUNT_DTOR(ClientLayer);
 }
 
-} // layers
-} // mozilla
+} // namespace layers
+} // namespace mozilla
