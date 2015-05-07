@@ -32,8 +32,7 @@ public:
 
   virtual MediaDecoder* Clone() override final;
   virtual MediaDecoderStateMachine* CreateStateMachine() override final;
-  virtual void ApplyStateToStateMachine(PlayState aState)
-                                        override final;
+  virtual void ChangeState(PlayState aState) override final;
 };
 
 } // namespace mozilla
