@@ -17,7 +17,7 @@ def add_libdir_to_path():
 add_libdir_to_path()
 
 import jittests
-from tests import TBPL_FLAGS
+from tests import get_jitflags
 
 # Python 3.3 added shutil.which, but we can't use that yet.
 def which(name):
@@ -89,10 +89,9 @@ def main(argv):
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
                   help='Run all tests with valgrind, if valgrind is in $PATH.')
-    op.add_option('--jitflags', dest='jitflags', default='',
-                  help='Example: --jitflags=m,mn to run each test with "-m"'
-                  ' and "-m -n" [default="%default"]. Long flags, such as'
-                  ' "--ion-eager", should be set using --args.')
+    op.add_option('--jitflags', dest='jitflags', default='none', type='string',
+                  help='IonMonkey option combinations. One of all, debug,'
+                  ' ion, and none (default %default).')
     op.add_option('--avoid-stdio', dest='avoid_stdio', action='store_true',
                   help='Use js-shell file indirection instead of piping stdio.')
     op.add_option('--write-failure-output', dest='write_failure_output',
@@ -223,12 +222,11 @@ def main(argv):
     if options.tbpl:
         # Running all bits would take forever. Instead, we test a few
         # interesting combinations.
-        test_flags = TBPL_FLAGS
+        test_flags = get_jitflags('all')
     elif options.ion:
-        test_flags = [['--baseline-eager'],
-                      ['--ion-eager', '--ion-offthread-compile=off']]
+        test_flags = get_jitflags('ion')
     else:
-        test_flags = jittests.parse_jitflags(options)
+        test_flags = get_jitflags(options.jitflags)
 
     job_list = [_ for test in test_list
                 for _ in test.copy_variants(test_flags)]
