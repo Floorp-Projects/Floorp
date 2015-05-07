@@ -604,7 +604,7 @@ struct JSCompartment
 };
 
 inline bool
-JSRuntime::isAtomsZone(JS::Zone* zone)
+JSRuntime::isAtomsZone(const JS::Zone* zone) const
 {
     return zone == atomsCompartment_->zone();
 }

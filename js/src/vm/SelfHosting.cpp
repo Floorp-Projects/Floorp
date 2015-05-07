@@ -1634,13 +1634,13 @@ JSRuntime::markSelfHostingGlobal(JSTracer* trc)
 }
 
 bool
-JSRuntime::isSelfHostingCompartment(JSCompartment* comp)
+JSRuntime::isSelfHostingCompartment(JSCompartment* comp) const
 {
     return selfHostingGlobal_->compartment() == comp;
 }
 
 bool
-JSRuntime::isSelfHostingZone(JS::Zone* zone)
+JSRuntime::isSelfHostingZone(const JS::Zone* zone) const
 {
     return selfHostingGlobal_ && selfHostingGlobal_->zoneFromAnyThread() == zone;
 }
