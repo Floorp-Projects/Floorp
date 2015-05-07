@@ -566,3 +566,5 @@ if CONFIG['OS_ARCH'] == 'SunOS':
 
 if CONFIG['GNU_CXX']:
     FAIL_ON_WARNINGS = True
+
+NO_EXPAND_LIBS = True

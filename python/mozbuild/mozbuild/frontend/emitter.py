@@ -456,6 +456,13 @@ class TreeMetadataEmitter(LoggingMixin):
                 elif static_lib:
                     static_args['is_sdk'] = True
 
+            if context.get('NO_EXPAND_LIBS'):
+                if not static_lib:
+                    raise SandboxValidationError(
+                        'NO_EXPAND_LIBS can only be set for static libraries.',
+                        context)
+                static_args['no_expand_lib'] = True
+
             if shared_lib and static_lib:
                 if not static_name and not shared_name:
                     raise SandboxValidationError(
