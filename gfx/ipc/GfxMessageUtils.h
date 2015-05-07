@@ -422,7 +422,7 @@ struct RegionParamTraits
 
 template<>
 struct ParamTraits<nsIntRegion>
-  : RegionParamTraits<nsIntRegion, nsIntRect, nsIntRegionRectIterator>
+  : RegionParamTraits<nsIntRegion, mozilla::gfx::IntRect, nsIntRegionRectIterator>
 {};
 
 template<>
