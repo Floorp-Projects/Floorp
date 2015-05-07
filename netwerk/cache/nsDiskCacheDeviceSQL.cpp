@@ -225,9 +225,11 @@ nsOfflineCacheEvictionFunction::Apply()
   LOG(("nsOfflineCacheEvictionFunction::Apply\n"));
 
   for (int32_t i = 0; i < mItems.Count(); i++) {
-    nsAutoCString path;
-    mItems[i]->GetNativePath(path);
-    LOG(("  removing %s\n", path.get()));
+    if (PR_LOG_TEST(gCacheLog, PR_LOG_DEBUG)) {
+      nsAutoCString path;
+      mItems[i]->GetNativePath(path);
+      LOG(("  removing %s\n", path.get()));
+    }
 
     mItems[i]->Remove(false);
   }
