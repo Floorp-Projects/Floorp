@@ -157,52 +157,26 @@ CSSUnprefixingService.prototype = {
                                             aPrefixedFuncBody,
                                             aUnprefixedFuncName, /*[out]*/
                                             aUnprefixedFuncBody /*[out]*/) {
-    // XXX Implement me!
-    // Sample working output:
-    //    aUnprefixedFuncName.value = "radial-gradient";
-    //    aUnprefixedFuncBody.value = "lime, green";
-    //    return true;
-
-    return false;
-  },
-};
-
-// XXXdholbert BEGIN IMPORTED CODE
-// Source: https://github.com/hallvors/css-fixme/blob/fd91a1e259/cssfixme.htm
-function createFixupGradientDeclaration(decl, parent){
-    var value = decl.value.trim(), newValue='', prop = decl.property.replace(/-webkit-/, '');
-    // -webkit-gradient(<type>, <point> [, <radius>]?, <point> [, <radius>]? [, <stop>]*)
-    // fff -webkit-gradient(linear,0 0,0 100%,from(#fff),to(#f6f6f6));
-    // Sometimes there is code before the -webkit-gradient, for example when it's part of a more complex background: shorthand declaration
-    // we'll extract and keep any stuff before -webkit-gradient before we try parsing the gradient part
-    var head = value.substr(0, value.indexOf('-webkit-gradient'));
-    if(head){
-        value = value.substr(head.length);
-    }
-    var m = value.match(/-webkit-gradient\s*\(\s*(linear|radial)\s*(.*)/);
-    if(m){ // yay, really old syntax...
-
-        // extracting the values..
-        var parts = oldGradientParser(value), type; //GM_log(JSON.stringify(parts, null, 2))
-        for(var i = 0; i < parts.length; i++){
-            if(!parts[i].args)continue;
-            if(parts[i].name === '-webkit-gradient'){
-                type = parts[i].args[0].name;
-                newValue += type + '-gradient('; // radial or linear
-            }
-            newValue += standardizeOldGradientArgs(type, parts[i].args.slice(1));
-            newValue += ')' // end of gradient method
-            if (i < parts.length - 1) {
-                newValue += ', '
-            }
-        }
+    var unprefixedFuncName, newValue;
+    if (aPrefixedFuncName == "-webkit-gradient") {
+      // Create expression for oldGradientParser:
+      var parts = this.oldGradientParser(aPrefixedFuncBody);
+      var type = parts[0].name;
+      newValue = this.standardizeOldGradientArgs(type, parts.slice(1));
+      unprefixedFuncName = type + "-gradient";
     }else{ // we're dealing with more modern syntax - should be somewhat easier, at least for linear gradients.
         // Fix three things: remove -webkit-, add 'to ' before reversed top/bottom keywords, recalculate deg-values
         // -webkit-linear-gradient( [ [ <angle> | [top | bottom] || [left | right] ],]? <color-stop>[, <color-stop>]+);
-        newValue = value.replace(/-webkit-/, '');
+        if (aPrefixedFuncName != "-webkit-linear-gradient" &&
+            aPrefixedFuncName != "-webkit-radial-gradient") {
+          // Unrecognized prefixed gradient type
+          return false;
+        }
+        unprefixedFuncName = aPrefixedFuncName.replace(/-webkit-/, '');
+
         // Keywords top, bottom, left, right: can be stand-alone or combined pairwise but in any order ('top left' or 'left top')
         // These give the starting edge or corner in the -webkit syntax. The standardised equivalent is 'to ' plus opposite values
-        newValue = newValue.replace(/(top|bottom|left|right)+\s*(top|bottom|left|right)*/, function(str){
+        newValue = aPrefixedFuncBody.replace(/(top|bottom|left|right)+\s*(top|bottom|left|right)*/, function(str){
             var words = str.split(/\s+/);
             for(var i=0; i<words.length; i++){
                 switch(words[i].toLowerCase()){
@@ -228,19 +202,14 @@ function createFixupGradientDeclaration(decl, parent){
          });
 
     }
-    // Similar to the code for "head" above..
-    var tail = value.substr(value.lastIndexOf(')')+1);
-    if( tail && tail.trim() !== ','){ // sometimes the gradient is a part of a more complex declaration (for example an image shorthand with stuff like no-repeat added), and what's after the gradient needs to be included
-        newValue += tail;
-    }
-    if(head){
-        newValue = head + newValue;
-    }
-    // GM_log(newValue)
-    return {type:'declaration', property:prop, value:newValue, _fxjsdefined:true};
-}
+    aUnprefixedFuncName.value = unprefixedFuncName;
+    aUnprefixedFuncBody.value = newValue;
+    return true;
+  },
 
-function oldGradientParser(str){
+  // Helpers for generateUnprefixedGradientValue():
+  // ----------------------------------------------
+  oldGradientParser : function(str){
     /** This method takes a legacy -webkit-gradient() method call and parses it
         to pull out the values, function names and their arguments.
         It returns something like [{name:'-webkit-gradient',args:[{name:'linear'}, {name:'top left'} ... ]}]
@@ -278,18 +247,18 @@ function oldGradientParser(str){
     }
 
     return objs;
-}
+  },
 
-/* Given an array of args for "-webkit-gradient(...)" returned by
- * oldGradientParser(), this function constructs a string representing the
- * equivalent arguments for a standard "linear-gradient(...)" or
- * "radial-gradient(...)" expression.
- *
- * @param type  Either 'linear' or 'radial'.
- * @param args  An array of args for a "-webkit-gradient(...)" expression,
- *              provided by oldGradientParser() (not including gradient type).
- */
-function standardizeOldGradientArgs(type, args){
+  /* Given an array of args for "-webkit-gradient(...)" returned by
+   * oldGradientParser(), this function constructs a string representing the
+   * equivalent arguments for a standard "linear-gradient(...)" or
+   * "radial-gradient(...)" expression.
+   *
+   * @param type  Either 'linear' or 'radial'.
+   * @param args  An array of args for a "-webkit-gradient(...)" expression,
+   *              provided by oldGradientParser() (not including gradient type).
+   */
+  standardizeOldGradientArgs : function(type, args){
     var stdArgStr = "";
     var stops = [];
     if(/^linear/.test(type)){
@@ -335,7 +304,7 @@ function standardizeOldGradientArgs(type, args){
         };
         color = args[j].args[colorIndex].name;
         if (args[j].args[colorIndex].args) { // the color is itself a function call, like rgb()
-            color += '(' + colorValue(args[j].args[colorIndex].args) + ')';
+            color += '(' + this.colorValue(args[j].args[colorIndex].args) + ')';
         };
         if (args[j].name === 'from'){
             stops.unshift(color + ' ' + position);
@@ -354,15 +323,15 @@ function standardizeOldGradientArgs(type, args){
         stdArgStr += ', ' + toColor + ' 100%';
     }
     return stdArgStr;
-}
+  },
 
-function colorValue(obj){
+  colorValue: function(obj){
     var ar = [];
     for (var i = 0; i < obj.length; i++) {
         ar.push(obj[i].name);
     };
     return ar.join(', ');
-}
-// XXXdholbert END IMPORTED CODE
+  },
+};
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([CSSUnprefixingService]);
