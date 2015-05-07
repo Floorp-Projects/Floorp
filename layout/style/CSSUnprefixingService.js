@@ -151,6 +151,20 @@ CSSUnprefixingService.prototype = {
     // No known mapping for property aPropName.
     return false;
   },
+
+  // See documentation in nsICSSUnprefixingService.idl
+  generateUnprefixedGradientValue: function(aPrefixedFuncName,
+                                            aPrefixedFuncBody,
+                                            aUnprefixedFuncName, /*[out]*/
+                                            aUnprefixedFuncBody /*[out]*/) {
+    // XXX Implement me!
+    // Sample working output:
+    //    aUnprefixedFuncName.value = "radial-gradient";
+    //    aUnprefixedFuncBody.value = "lime, green";
+    //    return true;
+
+    return false;
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([CSSUnprefixingService]);
