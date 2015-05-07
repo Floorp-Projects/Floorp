@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for promise and timeout ordering</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+var t = async_test("Promise callbacks should run immediately after the setTimeout handler that enqueues them");
+var origPostMessage = window.postMessage;
+window.postMessage = function(msg) { origPostMessage.call(window, msg, "*"); }
+window.onmessage = t.step_func_done(function(e) {
+  assert_equals(e.data, "t1start, t1end, promise, t2");
+});
+</script>
+<script src="file_promise_and_timeout_ordering.js"></script>
