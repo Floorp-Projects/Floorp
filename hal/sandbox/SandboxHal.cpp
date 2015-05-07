@@ -356,6 +356,13 @@ SetProcessPriority(int aPid, ProcessPriority aPriority, uint32_t aLRU)
 void
 SetCurrentThreadPriority(ThreadPriority aThreadPriority)
 {
+  NS_RUNTIMEABORT("Setting current thread priority cannot be called from sandboxed contexts.");
+}
+
+void
+SetThreadPriority(PlatformThreadId aThreadId,
+                  ThreadPriority aThreadPriority)
+{
   NS_RUNTIMEABORT("Setting thread priority cannot be called from sandboxed contexts.");
 }
 

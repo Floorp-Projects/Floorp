@@ -12,6 +12,8 @@
 #include "base/task.h"                  // for CancelableTask, DeleteTask, etc
 #include "base/tracked.h"               // for FROM_HERE
 #include "mozilla/gfx/Point.h"                   // for IntSize
+#include "mozilla/Hal.h"                // for hal::SetCurrentThreadPriority()
+#include "mozilla/HalTypes.h"           // for hal::THREAD_PRIORITY_COMPOSITOR
 #include "mozilla/ipc/MessageChannel.h" // for MessageChannel, etc
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"      // for Transport
@@ -53,6 +55,7 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
                                      ProcessId aChildProcessId)
   : mMessageLoop(aLoop)
   , mTransport(aTransport)
+  , mSetChildThreadPriority(false)
   , mCompositorThreadHolder(GetCompositorThreadHolder())
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -93,6 +96,20 @@ ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
   MessageLoop::current()->PostTask(
     FROM_HERE,
     NewRunnableMethod(this, &ImageBridgeParent::DeferredDestroy));
+}
+
+bool
+ImageBridgeParent::RecvImageBridgeThreadId(const PlatformThreadId& aThreadId)
+{
+  MOZ_ASSERT(!mSetChildThreadPriority);
+  if (mSetChildThreadPriority) {
+    return false;
+  }
+  mSetChildThreadPriority = true;
+#ifdef MOZ_WIDGET_GONK
+  hal::SetThreadPriority(aThreadId, hal::THREAD_PRIORITY_COMPOSITOR);
+#endif
+  return true;
 }
 
 class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender

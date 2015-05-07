@@ -526,6 +526,19 @@ ImageBridgeChild::EndTransaction()
   SendPendingAsyncMessges();
 }
 
+void
+ImageBridgeChild::SendImageBridgeThreadId()
+{
+#ifdef MOZ_WIDGET_GONK
+  SendImageBridgeThreadId(gettid());
+#endif
+}
+
+static void CallSendImageBridgeThreadId(ImageBridgeChild* aImageBridgeChild)
+{
+  MOZ_ASSERT(InImageBridgeChildThread());
+  aImageBridgeChild->SendImageBridgeThreadId();
+}
 
 PImageBridgeChild*
 ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
@@ -545,6 +558,10 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
     FROM_HERE,
     NewRunnableFunction(ConnectImageBridgeInChildProcess,
                         aTransport, aOtherPid));
+  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+    FROM_HERE,
+    NewRunnableFunction(CallSendImageBridgeThreadId,
+                        sImageBridgeChildSingleton.get()));
 
   return sImageBridgeChildSingleton;
 }
@@ -598,6 +615,10 @@ bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
     sImageBridgeParentSingleton = new ImageBridgeParent(
       CompositorParent::CompositorLoop(), nullptr, base::GetCurrentProcId());
     sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
+    sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(CallSendImageBridgeThreadId,
+                          sImageBridgeChildSingleton.get()));
     return true;
   } else {
     return false;
