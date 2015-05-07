@@ -43,6 +43,11 @@ public:
   virtual void InputExhausted() override;
   virtual void Error() override;
 
+  virtual bool OnReaderTaskQueue() override
+  {
+    return mReader->OnTaskQueue();
+  }
+
   IntelWebMVideoDecoder(WebMReader* aReader);
   ~IntelWebMVideoDecoder();
 

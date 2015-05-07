@@ -127,14 +127,13 @@
  * There are also special classes HeapValue and HeapId, which barrier js::Value
  * and jsid, respectively.
  *
- * One additional note: not all object writes need to be barriered. Writes to
- * newly allocated objects do not need a pre-barrier.  In these cases, we use
+ * One additional note: not all object writes need to be pre-barriered. Writes
+ * to newly allocated objects do not need a pre-barrier. In these cases, we use
  * the "obj->field.init(value)" method instead of "obj->field = value". We use
  * the init naming idiom in many places to signify that a field is being
  * assigned for the first time.
  *
- * For each of pointers, Values and jsids this file implements four classes,
- * illustrated here for the pointer (Ptr) classes:
+ * This file implements four classes, illustrated here:
  *
  * BarrieredBase          abstract base class which provides common operations
  *  |  |  |
@@ -144,9 +143,27 @@
  *  |
  * RelocatablePtr         provides pre- and post-barriers and is relocatable
  *
+ * The implementation of the barrier logic is implemented on T::writeBarrier.*,
+ * via:
+ *
+ * BarrieredBase<T>::pre
+ *  -> InternalGCMethods<T*>::preBarrier
+ *      -> T::writeBarrierPre
+ *  -> InternalGCMethods<Value>::preBarrier
+ *  -> InternalGCMethods<jsid>::preBarrier
+ *      -> InternalGCMethods<T*>::preBarrier
+ *          -> T::writeBarrierPre
+ *
+ * HeapPtr<T>::post and RelocatablePtr<T>::post
+ *  -> InternalGCMethods<T*>::postBarrier
+ *      -> T::writeBarrierPost
+ *  -> InternalGCMethods<Value>::postBarrier
+ *      -> StoreBuffer::put
+ *
  * These classes are designed to be used by the internals of the JS engine.
- * Barriers designed to be used externally are provided in
- * js/public/RootingAPI.h.
+ * Barriers designed to be used externally are provided in js/RootingAPI.h.
+ * These external barriers call into the same post-barrier implementations at
+ * InternalGCMethods<T>::post via an indirect call to Heap(.+)Barrier.
  */
 
 class JSAtom;
