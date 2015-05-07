@@ -141,7 +141,7 @@ ImageHost::Composite(EffectChain& aEffectChain,
 
     it->BeginBigImageIteration();
     do {
-      nsIntRect tileRect = it->GetTileRect();
+      IntRect tileRect = it->GetTileRect();
       gfx::Rect rect(tileRect.x, tileRect.y, tileRect.width, tileRect.height);
       if (mHasPictureRect) {
         rect = rect.Intersect(pictureRect);
@@ -378,5 +378,5 @@ ImageHostOverlay::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 }
 
 #endif
-}
-}
+} // namespace layers
+} // namespace mozilla
