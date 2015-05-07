@@ -256,6 +256,11 @@ panelview:not([mainview]) .toolbarbutton-text,
   padding: 4px 0;
 }
 
+.cui-widget-panel[viewId="PanelUI-pocketView"] > .panel-arrowcontainer > .panel-arrowcontent {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .cui-widget-panel.cui-widget-panelWithFooter > .panel-arrowcontainer > .panel-arrowcontent {
   padding-bottom: 0;
 }

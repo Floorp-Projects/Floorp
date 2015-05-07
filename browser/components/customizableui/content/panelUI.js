@@ -332,6 +332,7 @@ const PanelUI = {
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
       tempPanel.setAttribute("class", "cui-widget-panel");
+      tempPanel.setAttribute("viewId", aViewId);
       if (this._disableAnimations) {
         tempPanel.setAttribute("animate", "false");
       }
