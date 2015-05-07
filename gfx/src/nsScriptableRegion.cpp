@@ -13,7 +13,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
 #include "nsID.h"
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nscore.h"                     // for NS_IMETHODIMP
 
 class JSObject;
@@ -38,7 +38,7 @@ NS_IMETHODIMP nsScriptableRegion::SetToRegion(nsIScriptableRegion *aRegion)
 
 NS_IMETHODIMP nsScriptableRegion::SetToRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
 {
-  mRegion = nsIntRect(aX, aY, aWidth, aHeight);
+  mRegion = mozilla::gfx::IntRect(aX, aY, aWidth, aHeight);
   return NS_OK;
 }
 
@@ -52,7 +52,7 @@ NS_IMETHODIMP nsScriptableRegion::IntersectRegion(nsIScriptableRegion *aRegion)
 
 NS_IMETHODIMP nsScriptableRegion::IntersectRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
 {
-  mRegion.And(mRegion, nsIntRect(aX, aY, aWidth, aHeight));
+  mRegion.And(mRegion, mozilla::gfx::IntRect(aX, aY, aWidth, aHeight));
   return NS_OK;
 }
 
@@ -66,7 +66,7 @@ NS_IMETHODIMP nsScriptableRegion::UnionRegion(nsIScriptableRegion *aRegion)
 
 NS_IMETHODIMP nsScriptableRegion::UnionRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
 {
-  mRegion.Or(mRegion, nsIntRect(aX, aY, aWidth, aHeight));
+  mRegion.Or(mRegion, mozilla::gfx::IntRect(aX, aY, aWidth, aHeight));
   return NS_OK;
 }
 
@@ -80,7 +80,7 @@ NS_IMETHODIMP nsScriptableRegion::SubtractRegion(nsIScriptableRegion *aRegion)
 
 NS_IMETHODIMP nsScriptableRegion::SubtractRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
 {
-  mRegion.Sub(mRegion, nsIntRect(aX, aY, aWidth, aHeight));
+  mRegion.Sub(mRegion, mozilla::gfx::IntRect(aX, aY, aWidth, aHeight));
   return NS_OK;
 }
 
@@ -100,7 +100,7 @@ NS_IMETHODIMP nsScriptableRegion::IsEqualRegion(nsIScriptableRegion *aRegion, bo
 
 NS_IMETHODIMP nsScriptableRegion::GetBoundingBox(int32_t *aX, int32_t *aY, int32_t *aWidth, int32_t *aHeight)
 {
-  nsIntRect boundRect = mRegion.GetBounds();
+  mozilla::gfx::IntRect boundRect = mRegion.GetBounds();
   *aX = boundRect.x;
   *aY = boundRect.y;
   *aWidth = boundRect.width;
@@ -116,7 +116,7 @@ NS_IMETHODIMP nsScriptableRegion::Offset(int32_t aXOffset, int32_t aYOffset)
 
 NS_IMETHODIMP nsScriptableRegion::ContainsRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, bool *containsRect)
 {
-  *containsRect = mRegion.Contains(nsIntRect(aX, aY, aWidth, aHeight));
+  *containsRect = mRegion.Contains(mozilla::gfx::IntRect(aX, aY, aWidth, aHeight));
   return NS_OK;
 }
 
@@ -145,7 +145,7 @@ NS_IMETHODIMP nsScriptableRegion::GetRects(JSContext* aCx, JS::MutableHandle<JS:
 
   uint32_t n = 0;
   nsIntRegionRectIterator iter(mRegion);
-  const nsIntRect *rect;
+  const mozilla::gfx::IntRect *rect;
 
   while ((rect = iter.Next())) {
     if (!JS_DefineElement(aCx, destArray, n, rect->x, JSPROP_ENUMERATE) ||
