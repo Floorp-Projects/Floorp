@@ -7692,10 +7692,11 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame, bool aSubtract
                                       && aFrame == presShell->GetRootScrollFrame();
   if (isRootContentDocRootScrollFrame) {
     ParentLayerRect compBounds;
-    // TODO: The UpdateCompositionBoundsForRCDRSF below doesn't take into
-    // account the mTransformScale as part of the LayerToParentLayerScale.
+    LayoutDeviceToLayerScale2D cumulativeResolution(
+        presShell->GetCumulativeResolution()
+      * nsLayoutUtils::GetTransformToAncestorScale(aFrame));
     if (UpdateCompositionBoundsForRCDRSF(compBounds, presContext, aFrame->GetRect(),
-        false, LayoutDeviceToParentLayerScale2D(presShell->GetCumulativeResolution()))) {
+        false, cumulativeResolution)) {
       int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
       size = nsSize(compBounds.width * auPerDevPixel, compBounds.height * auPerDevPixel);
     }
