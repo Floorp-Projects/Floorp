@@ -217,9 +217,18 @@ private:
 
 class SharedThreadPool;
 
+// The MediaDataDecoder API blocks, with implementations waiting on platform
+// decoder tasks.  These platform decoder tasks are queued on a separate
+// thread pool to ensure they can run when the MediaDataDecoder clients'
+// thread pool is blocked.  Tasks on the PLATFORM_DECODER thread pool must not
+// wait on tasks in the PLAYBACK thread pool.
+enum class MediaThreadType {
+  PLAYBACK, // MediaDecoderStateMachine and MediaDecoderReader
+  PLATFORM_DECODER
+};
 // Returns the thread pool that is shared amongst all decoder state machines
 // for decoding streams.
-TemporaryRef<SharedThreadPool> GetMediaThreadPool();
+TemporaryRef<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType);
 
 enum H264_PROFILE {
   H264_PROFILE_UNKNOWN                     = 0,

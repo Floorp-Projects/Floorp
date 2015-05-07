@@ -197,10 +197,22 @@ IsValidVideoRegion(const nsIntSize& aFrame, const nsIntRect& aPicture,
     aDisplay.width * aDisplay.height != 0;
 }
 
-TemporaryRef<SharedThreadPool> GetMediaThreadPool()
+TemporaryRef<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType)
 {
-  return SharedThreadPool::Get(NS_LITERAL_CSTRING("Media Playback"),
-                               Preferences::GetUint("media.num-decode-threads", 25));
+  const char *name;
+  switch (aType) {
+    case MediaThreadType::PLATFORM_DECODER:
+      name = "MediaPDecoder";
+      break;
+    default:
+      MOZ_ASSERT(false);
+    case MediaThreadType::PLAYBACK:
+      name = "MediaPlayback";
+      break;
+  }
+  return SharedThreadPool::
+    Get(nsDependentCString(name),
+        Preferences::GetUint("media.num-decode-threads", 12));
 }
 
 bool
@@ -304,7 +316,8 @@ class CreateTaskQueueTask : public nsRunnable {
 public:
   NS_IMETHOD Run() {
     MOZ_ASSERT(NS_IsMainThread());
-    mTaskQueue = new MediaTaskQueue(GetMediaThreadPool());
+    mTaskQueue =
+      new MediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
     return NS_OK;
   }
   nsRefPtr<MediaTaskQueue> mTaskQueue;
@@ -314,7 +327,8 @@ class CreateFlushableTaskQueueTask : public nsRunnable {
 public:
   NS_IMETHOD Run() {
     MOZ_ASSERT(NS_IsMainThread());
-    mTaskQueue = new FlushableMediaTaskQueue(GetMediaThreadPool());
+    mTaskQueue =
+      new FlushableMediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
     return NS_OK;
   }
   nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
