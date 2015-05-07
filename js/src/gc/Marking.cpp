@@ -750,7 +750,7 @@ GCMarker::traverse(AccessorShape* thing) {
 
 template <typename S, typename T>
 void
-js::GCMarker::traverse(S source, T target)
+js::GCMarker::traverseEdge(S source, T target)
 {
     MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(target),
                   runtime()->isAtomsZone(target->zone()) || target->zone() == source->zone());
@@ -761,31 +761,31 @@ namespace js {
 // Special-case JSObject->JSObject edges to check the compartment too.
 template <>
 void
-GCMarker::traverse(JSObject* source, JSObject* target)
+GCMarker::traverseEdge(JSObject* source, JSObject* target)
 {
     MOZ_ASSERT(target->compartment() == source->compartment());
     traverse(target);
 }
 } // namespace js
 
-template <typename V, typename S> struct TraverseFunctor : public VoidDefaultAdaptor<V> {
+template <typename V, typename S> struct TraverseEdgeFunctor : public VoidDefaultAdaptor<V> {
     template <typename T> void operator()(T t, GCMarker* gcmarker, S s) {
-        return gcmarker->traverse(s, t);
+        return gcmarker->traverseEdge(s, t);
     }
 };
 
 template <typename S>
 void
-js::GCMarker::traverse(S source, jsid id)
+js::GCMarker::traverseEdge(S source, jsid id)
 {
-    DispatchIdTyped(TraverseFunctor<jsid, S>(), id, this, source);
+    DispatchIdTyped(TraverseEdgeFunctor<jsid, S>(), id, this, source);
 }
 
 template <typename S>
 void
-js::GCMarker::traverse(S source, Value v)
+js::GCMarker::traverseEdge(S source, Value v)
 {
-    DispatchValueTyped(TraverseFunctor<Value, S>(), v, this, source);
+    DispatchValueTyped(TraverseEdgeFunctor<Value, S>(), v, this, source);
 }
 
 template <typename T>
@@ -834,22 +834,22 @@ inline void
 js::GCMarker::eagerlyMarkChildren(LazyScript *thing)
 {
     if (thing->function_)
-        traverse(thing, static_cast<JSObject*>(thing->function_));
+        traverseEdge(thing, static_cast<JSObject*>(thing->function_));
 
     if (thing->sourceObject_)
-        traverse(thing, static_cast<JSObject*>(thing->sourceObject_));
+        traverseEdge(thing, static_cast<JSObject*>(thing->sourceObject_));
 
     if (thing->enclosingScope_)
-        traverse(thing, static_cast<JSObject*>(thing->enclosingScope_));
+        traverseEdge(thing, static_cast<JSObject*>(thing->enclosingScope_));
 
     // We rely on the fact that atoms are always tenured.
     LazyScript::FreeVariable* freeVariables = thing->freeVariables();
     for (auto i : MakeRange(thing->numFreeVariables()))
-        traverse(thing, static_cast<JSString*>(freeVariables[i].atom()));
+        traverseEdge(thing, static_cast<JSString*>(freeVariables[i].atom()));
 
     HeapPtrFunction* innerFunctions = thing->innerFunctions();
     for (auto i : MakeRange(thing->numInnerFunctions()))
-        traverse(thing, static_cast<JSObject*>(innerFunctions[i]));
+        traverseEdge(thing, static_cast<JSObject*>(innerFunctions[i]));
 }
 
 void
@@ -870,16 +870,16 @@ js::GCMarker::eagerlyMarkChildren(Shape* shape)
 {
     MOZ_ASSERT(shape->isMarked(this->markColor()));
     do {
-        traverse(shape, shape->base());
-        traverse(shape, shape->propidRef().get());
+        traverseEdge(shape, shape->base());
+        traverseEdge(shape, shape->propidRef().get());
 
         // When triggered between slices on belhalf of a barrier, these
         // objects may reside in the nursery, so require an extra check.
         // FIXME: Bug 1157967 - remove the isTenured checks.
         if (shape->hasGetterObject() && shape->getterObject()->isTenured())
-            traverse(shape, shape->getterObject());
+            traverseEdge(shape, shape->getterObject());
         if (shape->hasSetterObject() && shape->setterObject()->isTenured())
-            traverse(shape, shape->setterObject());
+            traverseEdge(shape, shape->setterObject());
 
         shape = shape->previous();
     } while (shape && mark(shape));
@@ -1030,16 +1030,16 @@ js::GCMarker::lazilyMarkChildren(ObjectGroup* group)
     unsigned count = group->getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
         if (ObjectGroup::Property* prop = group->getProperty(i))
-            traverse(group, prop->id.get());
+            traverseEdge(group, prop->id.get());
     }
 
     if (group->proto().isObject())
-        traverse(group, group->proto().toObject());
+        traverseEdge(group, group->proto().toObject());
 
     group->compartment()->mark();
 
     if (GlobalObject* global = group->compartment()->unsafeUnbarrieredMaybeGlobal())
-        traverse(group, static_cast<JSObject*>(global));
+        traverseEdge(group, static_cast<JSObject*>(global));
 
     if (group->newScript())
         group->newScript()->trace(this);
@@ -1051,13 +1051,13 @@ js::GCMarker::lazilyMarkChildren(ObjectGroup* group)
         group->unboxedLayout().trace(this);
 
     if (ObjectGroup* unboxedGroup = group->maybeOriginalUnboxedGroup())
-        traverse(group, unboxedGroup);
+        traverseEdge(group, unboxedGroup);
 
     if (TypeDescr* descr = group->maybeTypeDescr())
-        traverse(group, static_cast<JSObject*>(descr));
+        traverseEdge(group, static_cast<JSObject*>(descr));
 
     if (JSFunction* fun = group->maybeInterpretedFunction())
-        traverse(group, static_cast<JSObject*>(fun));
+        traverseEdge(group, static_cast<JSObject*>(fun));
 }
 
 
@@ -1182,7 +1182,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
 
         const Value& v = *vp++;
         if (v.isString()) {
-            traverse(obj, v.toString());
+            traverseEdge(obj, v.toString());
         } else if (v.isObject()) {
             JSObject* obj2 = &v.toObject();
             MOZ_ASSERT(obj->compartment() == obj2->compartment());
@@ -1193,7 +1193,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
                 goto scan_obj;
             }
         } else if (v.isSymbol()) {
-            traverse(obj, v.toSymbol());
+            traverseEdge(obj, v.toSymbol());
         }
     }
     return;
@@ -1202,20 +1202,20 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
     {
         while (*unboxedTraceList != -1) {
             JSString* str = *reinterpret_cast<JSString**>(unboxedMemory + *unboxedTraceList);
-            traverse(obj, str);
+            traverseEdge(obj, str);
             unboxedTraceList++;
         }
         unboxedTraceList++;
         while (*unboxedTraceList != -1) {
             JSObject* obj2 = *reinterpret_cast<JSObject**>(unboxedMemory + *unboxedTraceList);
             if (obj2)
-                traverse(obj, obj2);
+                traverseEdge(obj, obj2);
             unboxedTraceList++;
         }
         unboxedTraceList++;
         while (*unboxedTraceList != -1) {
             const Value& v = *reinterpret_cast<Value*>(unboxedMemory + *unboxedTraceList);
-            traverse(obj, v);
+            traverseEdge(obj, v);
             unboxedTraceList++;
         }
         return;
@@ -1232,7 +1232,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         }
 
         ObjectGroup* group = obj->groupFromGC();
-        traverse(obj, group);
+        traverseEdge(obj, group);
 
         /* Call the trace hook if necessary. */
         const Class* clasp = group->clasp();
@@ -1245,7 +1245,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
                           clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
             if (clasp->trace == InlineTypedObject::obj_trace) {
                 Shape* shape = obj->as<InlineTypedObject>().shapeFromGC();
-                traverse(obj, shape);
+                traverseEdge(obj, shape);
                 TypeDescr* descr = &obj->as<InlineTypedObject>().typeDescr();
                 if (!descr->hasTraceList())
                     return;
@@ -1256,7 +1256,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
             if (clasp == &UnboxedPlainObject::class_) {
                 JSObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
                 if (expando)
-                    traverse(obj, expando);
+                    traverseEdge(obj, expando);
                 const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layout();
                 unboxedTraceList = layout.traceList();
                 if (!unboxedTraceList)
@@ -1273,7 +1273,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         NativeObject* nobj = &obj->as<NativeObject>();
 
         Shape* shape = nobj->lastProperty();
-        traverse(obj, shape);
+        traverseEdge(obj, shape);
 
         unsigned nslots = nobj->slotSpan();
 
@@ -1284,7 +1284,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
             if (nobj->denseElementsAreCopyOnWrite()) {
                 JSObject* owner = nobj->getElementsHeader()->ownerObject();
                 if (owner != nobj) {
-                    traverse(obj, owner);
+                    traverseEdge(obj, owner);
                     break;
                 }
             }
