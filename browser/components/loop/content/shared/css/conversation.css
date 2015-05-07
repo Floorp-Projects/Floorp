@@ -903,7 +903,7 @@ html, .fx-embedded, #main,
 }
 
 body[dir="rtl"] .room-invitation-addcontext {
-  padding-left: auto;
+  padding-left: 0;
   padding-right: 1.5em;
   background-position: right top;
 }
