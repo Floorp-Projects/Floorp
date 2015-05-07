@@ -829,8 +829,6 @@ let Impl = {
   _delayedInitTaskDeferred: null,
   // Used to serialize session state writes to disk.
   _stateSaveSerializer: new SaveSerializer(),
-  // Used to serialize aborted session ping writes to disk.
-  _abortedSessionSerializer: new SaveSerializer(),
 
   /**
    * Gets a series of simple measurements (counters). At the moment, this
@@ -1494,7 +1492,7 @@ let Impl = {
 
         if (IS_UNIFIED_TELEMETRY) {
           // Check for a previously written aborted session ping.
-          yield this._checkAbortedSessionPing();
+          yield TelemetryController.checkAbortedSessionPing();
 
           // Write the first aborted-session ping as early as possible. Just do that
           // if we are not testing, since calling Telemetry.reset() will make a previous
@@ -1840,8 +1838,7 @@ let Impl = {
           yield this._stateSaveSerializer.flushTasks();
 
           if (IS_UNIFIED_TELEMETRY) {
-            yield this._abortedSessionSerializer
-                      .enqueueTask(() => this._removeAbortedSessionPing());
+            yield TelemetryController.removeAbortedSessionPing();
           }
 
           reset();
@@ -1990,47 +1987,6 @@ let Impl = {
   },
 
   /**
-   * Deletes the aborted session ping. This is called during shutdown.
-   * @return {Promise} Resolved when the aborted session ping is removed or if it doesn't
-   *                   exist.
-   */
-  _removeAbortedSessionPing: function() {
-    const FILE_PATH = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY,
-                                   ABORTED_SESSION_FILE_NAME);
-    try {
-      this._log.trace("_removeAbortedSessionPing - success");
-      return OS.File.remove(FILE_PATH);
-    } catch (ex if ex.becauseNoSuchFile) {
-      this._log.trace("_removeAbortedSessionPing - no such file");
-    } catch (ex) {
-      this._log.error("_removeAbortedSessionPing - error removing ping", ex)
-    }
-    return Promise.resolve();
-  },
-
-  /**
-   * Check if there's any aborted session ping available. If so, tell TelemetryController about
-   * it.
-   */
-  _checkAbortedSessionPing: Task.async(function* () {
-    // Create the subdirectory that will contain te aborted session ping. We put it in a
-    // subdirectory so that it doesn't get picked up as a pending ping. Please note that
-    // this does nothing if the directory does not already exist.
-    const ABORTED_SESSIONS_DIR =
-      OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY);
-    yield OS.File.makeDir(ABORTED_SESSIONS_DIR, { ignoreExisting: true });
-
-    const FILE_PATH = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY,
-                                   ABORTED_SESSION_FILE_NAME);
-    let abortedExists = yield OS.File.exists(FILE_PATH);
-    if (abortedExists) {
-      this._log.trace("_checkAbortedSessionPing - aborted session found: " + FILE_PATH);
-      yield this._abortedSessionSerializer.enqueueTask(
-        () => TelemetryController.addAbortedSessionPing(FILE_PATH));
-    }
-  }),
-
-  /**
    * Saves the aborted session ping to disk.
    * @param {Object} [aProvidedPayload=null] A payload object to be used as an aborted
    *                 session ping. The reason of this payload is changed to aborted-session.
@@ -2050,13 +2006,6 @@ let Impl = {
       payload = this.getSessionPayload(REASON_ABORTED_SESSION, false);
     }
 
-    let options = {
-      retentionDays: RETENTION_DAYS,
-      addClientId: true,
-      addEnvironment: true,
-      overwrite: true,
-    };
-    return this._abortedSessionSerializer.enqueueTask(() =>
-      TelemetryController.savePing(getPingType(payload), payload, FILE_PATH, options));
+    return TelemetryController.saveAbortedSessionPing(payload);
   },
 };
