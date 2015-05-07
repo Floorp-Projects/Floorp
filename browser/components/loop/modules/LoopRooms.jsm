@@ -710,29 +710,36 @@ let LoopRoomsInternal = {
   },
 
   /**
-   * Renames a room.
+   * Updates a room.
    *
-   * @param {String} roomToken   The room token
-   * @param {String} newRoomName The new name for the room
-   * @param {Function} callback   Function that will be invoked once the operation
-   *                              finished. The first argument passed will be an
-   *                              `Error` object or `null`.
+   * @param {String} roomToken  The room token
+   * @param {Object} roomData   Updated context data for the room. The following
+   *                            properties are expected: `roomName` and `urls`.
+   *                            IMPORTANT: Data in the `roomData::urls` array
+   *                            will be stored as-is, so any data omitted therein
+   *                            will be gone forever.
+   * @param {Function} callback Function that will be invoked once the operation
+   *                            finished. The first argument passed will be an
+   *                            `Error` object or `null`.
    */
-  rename: function(roomToken, newRoomName, callback) {
+  update: function(roomToken, roomData, callback) {
     let room = this.rooms.get(roomToken);
     let url = "/rooms/" + encodeURIComponent(roomToken);
 
-    let roomData = this.rooms.get(roomToken);
-    if (!roomData.decryptedContext) {
-      roomData.decryptedContext = {
-        roomName: newRoomName
+    if (!room.decryptedContext) {
+      room.decryptedContext = {
+        roomName: roomData.roomName || room.roomName
       };
     } else {
-      roomData.decryptedContext.roomName = newRoomName;
+      room.decryptedContext.roomName = roomData.roomName || room.roomName;
+    }
+    if (roomData.urls && roomData.urls.length) {
+      // For now we only support adding one URL to the room context.
+      room.decryptedContext.urls = [roomData.urls[0]];
     }
 
     Task.spawn(function* () {
-      let {all, encrypted} = yield this.promiseEncryptRoomData(roomData);
+      let {all, encrypted} = yield this.promiseEncryptRoomData(room);
 
       // For patch, we only send the context data.
       let sendData = {
@@ -743,7 +750,7 @@ let LoopRoomsInternal = {
       // XXX This should go away once bug 1153788 is fixed.
       if (!sendData.context) {
         sendData = {
-          roomName: newRoomName
+          roomName: room.decryptedContext.roomName
         };
       } else {
         // This might be an upgrade to encrypted rename, so store the key
@@ -864,8 +871,8 @@ this.LoopRooms = {
     return LoopRoomsInternal.sendConnectionStatus(roomToken, sessionToken, status, callback);
   },
 
-  rename: function(roomToken, newRoomName, callback) {
-    return LoopRoomsInternal.rename(roomToken, newRoomName, callback);
+  update: function(roomToken, roomData, callback) {
+    return LoopRoomsInternal.update(roomToken, roomData, callback);
   },
 
   getGuestCreatedRoom: function() {

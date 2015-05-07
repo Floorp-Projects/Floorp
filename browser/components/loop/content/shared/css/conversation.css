@@ -874,7 +874,6 @@ html, .fx-embedded, #main,
   align-items: center;
 }
 
-.room-invitation-overlay .error-display-area.error,
 .room-invitation-overlay input[type="text"] {
   display: block;
   background-color: rgba(0,0,0,.5);
@@ -882,35 +881,31 @@ html, .fx-embedded, #main,
   padding: .5em;
 }
 
-.room-invitation-overlay .error-display-area {
-  display: none;
-}
-
-.room-invitation-overlay .error-display-area.error {
-  position: absolute;
-  top: 2em;
-  left: 1em;
-  right: 1em;
-  text-align: start;
-  width: calc(258px - 2em);
-  color: #d74345;
-}
-
 .room-invitation-overlay .btn-group {
   padding: 0;
 }
 
-.room-invitation-overlay textarea {
-  display: block;
-  background: rgba(0, 0, 0, .5);
-  color: #fff;
-  font-family: "Helvetica Neue", Arial, sans;
-  font-size: 1.2em;
-  border: none;
-  width: 200px;
-  margin: 0 auto;
-  padding: .2em .4em;
-  border-radius: .5em;
+.room-invitation-addcontext {
+  color: #0095dd;
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+  background-image: url("../img/icons-10x10.svg#edit-active");
+  background-size: 1em 1em;
+  background-repeat: no-repeat;
+  background-position: left top;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+.room-invitation-addcontext:hover,
+.room-invitation-addcontext:hover:active {
+  text-decoration: underline;
+}
+
+body[dir="rtl"] .room-invitation-addcontext {
+  padding-left: auto;
+  padding-right: 1.5em;
+  background-position: right top;
 }
 
 .share-service-dropdown {
@@ -975,7 +970,7 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   border-top: 2px solid #444;
   border-bottom: 2px solid #444;
   padding: .5rem;
-  max-height: 120px;
+  max-height: 400px;
   position: absolute;
   left: 0;
   bottom: 0;
@@ -985,6 +980,8 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   flex-flow: row nowrap;
   align-content: flex-start;
   align-items: flex-start;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .room-invitation-overlay .room-context {
@@ -997,7 +994,6 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
 
 .room-context-thumbnail {
   width: 100px;
-  max-height: 200px;
   -moz-margin-end: 1ch;
   margin-bottom: 1em;
   order: 1;
@@ -1022,12 +1018,34 @@ body[dir=rtl] .room-context-content {
   order: 1;
 }
 
+.room-context-content > .error-display-area.error {
+  display: block;
+  background-color: rgba(215,67,69,.8);
+  border-radius: 3px;
+  padding: .5em;
+}
+
+.room-context-content > .error-display-area {
+  display: none;
+}
+
+.room-context-content > .error-display-area.error {
+  margin: 1em 0 .5em 0;
+  text-align: center;
+  text-shadow: 1px 1px 0 rgba(0,0,0,.3);
+}
+
+.room-context-content > .checkbox-wrapper {
+  margin-bottom: .5em;
+}
+
 .room-context-label {
   margin-bottom: 1em;
 }
 
 .room-context-label,
-.room-context-description {
+.room-context-description,
+.room-context-content > .checkbox-wrapper > label {
   color: #fff;
 }
 
@@ -1051,7 +1069,27 @@ body[dir=rtl] .room-context-content {
   text-decoration: underline;
 }
 
-.room-context-btn-close {
+.room-context-content > form > textarea,
+.room-context-content > form > input[type="text"] {
+  display: block;
+  background: rgba(0,0,0,.5);
+  color: #fff;
+  font-family: "Helvetica Neue", Arial, sans;
+  font-size: 1em;
+  border: 1px solid #999;
+  width: 100%;
+  padding: .2em .4em;
+  border-radius: 3px;
+  resize: none;
+}
+
+.room-context-content > form > textarea:not(:last-of-type),
+.room-context-content > form > input[type="text"] {
+  margin: 0 0 .5em 0;
+}
+
+.room-context-btn-close,
+.room-context-btn-edit {
   position: absolute;
   right: 5px;
   top: 5px;
@@ -1066,14 +1104,29 @@ body[dir=rtl] .room-context-content {
   cursor: pointer;
 }
 
+.room-context-btn-edit {
+  right: 18px;
+  background-image: url("../img/icons-10x10.svg#edit");
+}
+
+.room-context-btn-edit:hover,
+.room-context-btn-edit:hover:active {
+  background-image: url("../img/icons-10x10.svg#edit-active");
+}
+
 .room-context-btn-close:hover,
 .room-context-btn-close:hover:active {
   background-image: url("../img/icons-10x10.svg#close-active");
 }
 
-body[dir=rtl] .room-context-btn-close {
+body[dir=rtl] .room-context-btn-close,
+body[dir=rtl] .room-context-btn-edit {
   right: auto;
   left: 5px;
+}
+
+body[dir=rtl] .room-context-btn-edit {
+  left: 18px;
 }
 
 /* Standalone rooms */
