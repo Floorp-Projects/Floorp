@@ -67,22 +67,24 @@ class TenuringTracer : public JSTracer
 
   public:
     const Nursery& nursery() const { return nursery_; }
-    Nursery& nursery() { return nursery_; }
-    JSObject* moveToTenured(JSObject* src);
+
+    // Returns true if the pointer was updated.
+    template <typename T> void traverse(T* thingp);
 
     void insertIntoFixupList(gc::RelocationOverlay* entry);
 
   private:
+    Nursery& nursery() { return nursery_; }
+
+    JSObject* moveToTenured(JSObject* src);
     size_t moveObjectToTenured(JSObject* dst, JSObject* src, gc::AllocKind dstKind);
     size_t moveElementsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
     size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
 
-    MOZ_ALWAYS_INLINE void traceObject(JSObject* src);
-    MOZ_ALWAYS_INLINE void markSlots(HeapSlot* vp, uint32_t nslots);
-    MOZ_ALWAYS_INLINE void markSlots(HeapSlot* vp, HeapSlot* end);
-    MOZ_ALWAYS_INLINE void markSlot(HeapSlot* slotp);
-    MOZ_ALWAYS_INLINE void markTraceList(const int32_t* traceList, uint8_t* memory);
-    MOZ_ALWAYS_INLINE bool markObject(JSObject** pobj);
+    void traceObject(JSObject* src);
+    void markSlots(Value* vp, uint32_t nslots) { markSlots(vp, vp + nslots); }
+    void markSlots(Value* vp, Value* end);
+    void markTraceList(const int32_t* traceList, uint8_t* memory);
 };
 
 class Nursery
