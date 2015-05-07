@@ -12,7 +12,7 @@
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nscore.h"                     // for nsACString
 
 namespace mozilla {
@@ -51,7 +51,7 @@ public:
   virtual void SetLayerManager(LayerManagerComposite* aManager) override;
 
   virtual Layer* GetLayer() override;
-  virtual void RenderLayer(const nsIntRect& aClipRect) override;
+  virtual void RenderLayer(const gfx::IntRect& aClipRect) override;
 
   virtual void CleanupResources() override;
 
@@ -61,7 +61,7 @@ public:
 
   virtual LayerComposite* AsLayerComposite() override { return this; }
 
-  void SetBounds(nsIntRect aBounds) { mBounds = aBounds; }
+  void SetBounds(gfx::IntRect aBounds) { mBounds = aBounds; }
 
   virtual const char* Name() const override { return "CanvasLayerComposite"; }
 
