@@ -1038,8 +1038,6 @@ public:
   virtual void
     EnumerateExternalResources(nsSubDocEnumFunc aCallback, void* aData) override;
 
-  nsTArray<nsCString> mHostObjectURIs;
-
   // Returns our (lazily-initialized) animation controller.
   // If HasAnimationController is true, this is guaranteed to return non-null.
   nsSMILAnimationController* GetAnimationController() override;
@@ -1127,9 +1125,6 @@ public:
   virtual nsISupports* GetCurrentContentSink() override;
 
   virtual mozilla::EventStates GetDocumentState() override;
-
-  virtual void RegisterHostObjectUri(const nsACString& aUri) override;
-  virtual void UnregisterHostObjectUri(const nsACString& aUri) override;
 
   // Only BlockOnload should call this!
   void AsyncBlockOnload();

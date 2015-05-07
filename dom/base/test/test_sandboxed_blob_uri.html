@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Principal in MessageManager</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+
+  <script type="application/javascript;version=1.7">
+    "use strict";
+
+    const Cu = Components.utils;
+
+    var sb = new Cu.Sandbox('https://example.com', { wantGlobalProperties: [ 'Blob', 'URL' ] });
+    Cu.evalInSandbox('var u = URL.createObjectURL(new Blob(["text"], { type: "text/plain" }));', sb);
+    Cu.nukeSandbox(sb);
+    Cu.forceCC();
+
+    ok(true, "are we leaking blobs?");
+
+  </script>
+</body>
+</html>
