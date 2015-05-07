@@ -50,14 +50,12 @@ class DatabaseHelper {
     }
 
     /**
-     * Adds a bookmark, or updates the bookmark title if the url already exists.
-     *
-     * The LocalBrowserDB.addBookmark implementation handles updating existing bookmarks.
+     * Adds a bookmark.
      */
-    protected void addOrUpdateMobileBookmark(String title, String url) {
+    protected void addMobileBookmark(String title, String url) {
         final ContentResolver resolver = mActivity.getContentResolver();
         getProfileDB().addBookmark(resolver, title, url);
-        mAsserter.ok(true, "Inserting/updating a new bookmark", "Inserting/updating the bookmark with the title = " + title + " and the url = " + url);
+        mAsserter.ok(true, "Inserting a new bookmark", "Inserting the bookmark with the title = " + title + " and the url = " + url);
     }
 
     /**
