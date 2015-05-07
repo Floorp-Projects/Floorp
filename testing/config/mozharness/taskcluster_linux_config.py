@@ -34,7 +34,7 @@ config = {
         "--no-slow",
         "--no-progress",
         "--tinderbox",
-        "--tbpl"
+        "--jitflags=all"
     ],
     "mozbase_options": [
         "-b", "%(binary_path)s"
