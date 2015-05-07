@@ -20,7 +20,7 @@
  * property, it should return a replacement property descriptor for it. If not,
  * it should return null.
  */
-[scriptable,uuid(e5453950-d95a-11e3-9c1a-0800200c9a66)]
+[scriptable,uuid(215353cb-6e77-462f-a791-6891f42e593f)]
 interface nsIAddonInterposition : nsISupports
 {
     /**
@@ -35,8 +35,23 @@ interface nsIAddonInterposition : nsISupports
      * @param prop The name of the property being accessed.
      * @return A property descriptor or null.
      */
-    jsval interpose(in jsval addonId,
-                    in jsval target,
-                    in nsIIDPtr iface,
-                    in jsval prop);
+    jsval interposeProperty(in jsval addonId,
+                            in jsval target,
+                            in nsIIDPtr iface,
+                            in jsval prop);
+    /**
+     * We're intercepting calls from add-ons scopes into non-addon scopes.
+     *
+     * @param addonId The ID of the add-on accessing the property.
+     * @param originalFunc The function object being intercepted.
+     * @param originalThis The |this| value for the intercepted call.
+     * @param args The arguments of the original call in an array.
+     * @return The result of the call. NOTE: after the call interception,
+     * the original function will not be called automatically, so the
+     * implementer has to do that.
+     */
+    jsval interposeCall(in jsval addonId,
+                        in jsval originalFunc,
+                        in jsval originalThis,
+                        in jsval args);
 };

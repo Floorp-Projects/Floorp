@@ -400,10 +400,10 @@ static void RunCompositorBench(Compositor* aCompositor, const gfx::Rect& aScreen
       test->Setup(aCompositor, j);
 
       TimeStamp start = TimeStamp::Now();
-      nsIntRect screenRect(aScreenRect.x, aScreenRect.y,
+      IntRect screenRect(aScreenRect.x, aScreenRect.y,
                            aScreenRect.width, aScreenRect.height);
       aCompositor->BeginFrame(
-        nsIntRect(screenRect.x, screenRect.y,
+        IntRect(screenRect.x, screenRect.y,
                   screenRect.width, screenRect.height),
         nullptr, aScreenRect, nullptr, nullptr);
 
@@ -447,7 +447,7 @@ void CompositorBench(Compositor* aCompositor, const gfx::Rect& aScreenRect)
   sRanBenchmark = wantBenchmark;
 }
 
-}
-}
+} // namespace layers
+} // namespace mozilla
 #endif
 

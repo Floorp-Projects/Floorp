@@ -67,6 +67,7 @@ public:
   }
 
   // PImageBridge
+  virtual bool RecvImageBridgeThreadId(const PlatformThreadId& aThreadId) override;
   virtual bool RecvUpdate(EditArray&& aEdits, EditReplyArray* aReply) override;
   virtual bool RecvUpdateNoSwap(EditArray&& aEdits) override;
 
@@ -143,12 +144,13 @@ public:
 
 private:
   void DeferredDestroy();
-
   MessageLoop* mMessageLoop;
   Transport* mTransport;
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.
   nsRefPtr<ImageBridgeParent> mSelfRef;
+
+  bool mSetChildThreadPriority;
 
   /**
    * Map of all living ImageBridgeParent instances

@@ -93,7 +93,7 @@ public:
   }
 
   virtual void
-  RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo) override
+  RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo, Data*) override
   {
     MOZ_ASSERT(aResolver);
     MOZ_ASSERT(aQuotaInfo.mDir);
@@ -1331,7 +1331,7 @@ public:
           context->CancelForCacheId(mCacheId);
           nsRefPtr<Action> action =
             new DeleteOrphanedCacheAction(mManager, mCacheId);
-          context->Dispatch(mManager->mIOThread, action);
+          context->Dispatch(action);
         }
       }
     }
@@ -1540,7 +1540,7 @@ Manager::ReleaseCacheId(CacheId aCacheId)
           context->CancelForCacheId(aCacheId);
           nsRefPtr<Action> action = new DeleteOrphanedCacheAction(this,
                                                                   aCacheId);
-          context->Dispatch(mIOThread, action);
+          context->Dispatch(action);
         }
       }
       MaybeAllowContextToClose();
@@ -1582,7 +1582,7 @@ Manager::ReleaseBodyId(const nsID& aBodyId)
         nsRefPtr<Context> context = mContext;
         if (orphaned && context && !context->IsCanceled()) {
           nsRefPtr<Action> action = new DeleteOrphanedBodyAction(aBodyId);
-          context->Dispatch(mIOThread, action);
+          context->Dispatch(action);
         }
       }
       MaybeAllowContextToClose();
@@ -1657,7 +1657,7 @@ Manager::ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
       MOZ_CRASH("Unknown Cache operation!");
   }
 
-  context->Dispatch(mIOThread, action);
+  context->Dispatch(action);
 }
 
 void
@@ -1704,7 +1704,7 @@ Manager::ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
       MOZ_CRASH("Unknown CacheStorage operation!");
   }
 
-  context->Dispatch(mIOThread, action);
+  context->Dispatch(action);
 }
 
 void
@@ -1730,7 +1730,7 @@ Manager::ExecutePutAll(Listener* aListener, CacheId aCacheId,
                                                   aPutList, aRequestStreamList,
                                                   aResponseStreamList);
 
-  context->Dispatch(mIOThread, action);
+  context->Dispatch(action);
 }
 
 Manager::Manager(ManagerId* aManagerId, nsIThread* aIOThread)
@@ -1774,7 +1774,8 @@ Manager::Init(Manager* aOldManager)
   // per Manager now, this lets us cleanly call Factory::Remove() once the
   // Context goes away.
   nsRefPtr<Action> setupAction = new SetupAction();
-  nsRefPtr<Context> ref = Context::Create(this, setupAction, oldContext);
+  nsRefPtr<Context> ref = Context::Create(this, mIOThread, setupAction,
+                                          oldContext);
   mContext = ref;
 }
 
@@ -1892,7 +1893,7 @@ Manager::NoteOrphanedBodyIdList(const nsTArray<nsID>& aDeletedBodyIdList)
   nsRefPtr<Context> context = mContext;
   if (!deleteNowList.IsEmpty() && context && !context->IsCanceled()) {
     nsRefPtr<Action> action = new DeleteOrphanedBodyAction(deleteNowList);
-    context->Dispatch(mIOThread, action);
+    context->Dispatch(action);
   }
 }
 

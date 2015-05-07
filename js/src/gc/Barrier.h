@@ -749,6 +749,7 @@ typedef ReadBarriered<DebugScopeObject*> ReadBarrieredDebugScopeObject;
 typedef ReadBarriered<GlobalObject*> ReadBarrieredGlobalObject;
 typedef ReadBarriered<JSFunction*> ReadBarrieredFunction;
 typedef ReadBarriered<JSObject*> ReadBarrieredObject;
+typedef ReadBarriered<JSScript*> ReadBarrieredScript;
 typedef ReadBarriered<ScriptSourceObject*> ReadBarrieredScriptSourceObject;
 typedef ReadBarriered<Shape*> ReadBarrieredShape;
 typedef ReadBarriered<UnownedBaseShape*> ReadBarrieredUnownedBaseShape;

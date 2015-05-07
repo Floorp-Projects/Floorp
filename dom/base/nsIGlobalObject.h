@@ -8,12 +8,16 @@
 #define nsIGlobalObject_h__
 
 #include "nsISupports.h"
+#include "nsTArray.h"
 #include "js/TypeDecls.h"
 
 #define NS_IGLOBALOBJECT_IID \
-{ 0xe2538ded, 0x13ef, 0x4f4d, \
-{ 0x94, 0x6b, 0x65, 0xd3, 0x33, 0xb4, 0xf0, 0x3c } }
+{ 0x11afa8be, 0xd997, 0x4e07, \
+{ 0xa6, 0xa3, 0x6f, 0x87, 0x2e, 0xc3, 0xee, 0x7f } }
 
+class nsACString;
+class nsCString;
+class nsCycleCollectionTraversalCallback;
 class nsIPrincipal;
 
 class nsIGlobalObject : public nsISupports
@@ -52,6 +56,21 @@ public:
 
   // This method is not meant to be overridden.
   nsIPrincipal* PrincipalOrNull();
+
+  void RegisterHostObjectURI(const nsACString& aURI);
+
+  void UnregisterHostObjectURI(const nsACString& aURI);
+
+  // Any CC class inheriting nsIGlobalObject should call these 2 methods if it
+  // exposes the URL API.
+  void UnlinkHostObjectURIs();
+  void TraverseHostObjectURIs(nsCycleCollectionTraversalCallback &aCb);
+
+protected:
+  virtual ~nsIGlobalObject();
+
+private:
+  nsTArray<nsCString> mHostObjectURIs;
 
 protected:
   void

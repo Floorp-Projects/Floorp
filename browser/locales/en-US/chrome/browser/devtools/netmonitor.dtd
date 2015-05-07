@@ -248,21 +248,21 @@
   -  in the security tab describing the server certificate section. -->
 <!ENTITY netmonitorUI.security.certificate "Certificate:">
 
-<!-- LOCALIZATION NOTE (netmonitorUI.context.perfTools): This is the label displayed
-  -  on the context menu that shows the performance analysis tools -->
-<!ENTITY netmonitorUI.context.perfTools   "Start Performance Analysis…">
-
-<!-- LOCALIZATION NOTE (netmonitorUI.context.perfTools.accesskey): This is the access key
-  -  for the performance analysis menu item displayed in the context menu for a request -->
-<!ENTITY netmonitorUI.context.perfTools.accesskey "S">
-
 <!-- LOCALIZATION NOTE (netmonitorUI.context.copyUrl): This is the label displayed
   -  on the context menu that copies the selected request's url -->
 <!ENTITY netmonitorUI.context.copyUrl     "Copy URL">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.context.copyUrl.accesskey): This is the access key
   -  for the Copy URL menu item displayed in the context menu for a request -->
-<!ENTITY netmonitorUI.context.copyUrl.accesskey "C">
+<!ENTITY netmonitorUI.context.copyUrl.accesskey "U">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyUrlParams): This is the label displayed
+  -  on the context menu that copies the selected request's url parameters -->
+<!ENTITY netmonitorUI.context.copyUrlParams     "Copy URL Parameters">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyUrlParams.accesskey): This is the access key
+  -  for the Copy URL Parameters menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.copyUrlParams.accesskey "P">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.context.copyAsCurl): This is the label displayed
   -  on the context menu that copies the selected request as a cURL command.
@@ -270,13 +270,25 @@
   -  http://en.wikipedia.org/wiki/CURL -->
 <!ENTITY netmonitorUI.context.copyAsCurl    "Copy as cURL">
 
-<!-- LOCALIZATION NOTE (netmonitorUI.context.copyImageAsDataUri): This is the label displayed
-  -  on the context menu that copies the selected image as data uri -->
-<!ENTITY netmonitorUI.context.copyImageAsDataUri "Copy Image as Data URI">
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyAsCUrl.accesskey): This is the access key
+  -  for the Copy as cURL menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.copyAsCurl.accesskey "C">
 
-<!-- LOCALIZATION NOTE (netmonitorUI.context.copyImageAsDataUri.accesskey): This is the access key
-  -  for the Copy Image As Data URI menu item displayed in the context menu for a request -->
-<!ENTITY netmonitorUI.context.copyImageAsDataUri.accesskey  "I">
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyRequestHeaders): This is the label displayed
+  -  on the context menu that copies the selected item's request headers -->
+<!ENTITY netmonitorUI.context.copyRequestHeaders     "Copy Request Headers">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyRequestHeaders.accesskey): This is the access key
+  -  for the Copy Request Headers menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.copyRequestHeaders.accesskey  "Q">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyResponseHeaders): This is the label displayed
+  -  on the context menu that copies the selected item's response headers -->
+<!ENTITY netmonitorUI.context.copyResponseHeaders     "Copy Response Headers">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyResponseHeaders.accesskey): This is the access key
+  -  for the Copy Response Headers menu item displayed in the context menu for a response -->
+<!ENTITY netmonitorUI.context.copyResponseHeaders.accesskey  "S">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.context.copyResponse): This is the label displayed
   -  on the context menu that copies the selected response as a string -->
@@ -286,17 +298,13 @@
   -  for the Copy Response menu item displayed in the context menu for a request -->
 <!ENTITY netmonitorUI.context.copyResponse.accesskey  "R">
 
-<!-- LOCALIZATION NOTE (netmonitorUI.context.copyRequestHeaders): This is the label displayed
-  -  on the context menu that copies the selected item's request headers -->
-<!ENTITY netmonitorUI.context.copyRequestHeaders     "Copy Request Headers">
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyImageAsDataUri): This is the label displayed
+  -  on the context menu that copies the selected image as data uri -->
+<!ENTITY netmonitorUI.context.copyImageAsDataUri "Copy Image as Data URI">
 
-<!-- LOCALIZATION NOTE (netmonitorUI.context.copyRequestHeaders.accesskey): This is the access key
-  -  for the Copy Request Headers menu item displayed in the context menu for a request -->
-<!ENTITY netmonitorUI.context.copyRequestHeaders.accesskey  "H">
-
-<!-- LOCALIZATION NOTE (netmonitorUI.context.copyResponseHeaders): This is the label displayed
-  -  on the context menu that copies the selected item's response headers -->
-<!ENTITY netmonitorUI.context.copyResponseHeaders     "Copy Response Headers">
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyImageAsDataUri.accesskey): This is the access key
+  -  for the Copy Image As Data URI menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.copyImageAsDataUri.accesskey  "I">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.summary.editAndResend): This is the label displayed
   -  on the button in the headers tab that opens a form to edit and resend the currently
@@ -328,7 +336,15 @@
 <!-- LOCALIZATION NOTE (netmonitorUI.context.newTab.accesskey): This is the access key
   -  for the Open in New Tab menu item displayed in the context menu of the
   -  network container -->
-<!ENTITY netmonitorUI.context.newTab.accesskey "O">
+<!ENTITY netmonitorUI.context.newTab.accesskey "T">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.perfTools): This is the label displayed
+  -  on the context menu that shows the performance analysis tools -->
+<!ENTITY netmonitorUI.context.perfTools   "Start Performance Analysis…">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.perfTools.accesskey): This is the access key
+  -  for the performance analysis menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.perfTools.accesskey "A">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.custom.newRequest): This is the label displayed
   -  as the title of the new custom request form -->

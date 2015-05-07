@@ -18,7 +18,7 @@
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for mozilla::gfx::IntRect
 
 namespace mozilla {
 namespace layers {
@@ -59,7 +59,7 @@ public:
    * The picture rect is the area of the texture which makes up the image. That
    * is, the area that should be composited. In texture space.
    */
-  virtual void UpdatePictureRect(nsIntRect aPictureRect);
+  virtual void UpdatePictureRect(gfx::IntRect aPictureRect);
 
   virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat) = 0;
 
@@ -86,7 +86,7 @@ protected:
 
   CompositableType mType;
   int32_t mLastPaintedImageSerial;
-  nsIntRect mPictureRect;
+  gfx::IntRect mPictureRect;
 };
 
 /**
