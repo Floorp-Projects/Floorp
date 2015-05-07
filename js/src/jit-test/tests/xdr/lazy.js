@@ -158,3 +158,7 @@ evaluate(code, {global:g1, compileAndGo: true, saveBytecode: {value: true}});
 evaluate(code, {global:g2, loadBytecode: true});
 gc();
 assertEq(g2.f.toString(), res);
+
+// Another relazification case.
+var src = "function f() { return 3; }; f(); relazifyFunctions(); 4";
+evalWithCache(src, {assertEqBytecode: true, assertEqResult: true});

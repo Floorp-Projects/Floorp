@@ -553,11 +553,6 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleObject enclosingScope, Han
             firstword |= IsStarGenerator;
 
         if (fun->isInterpretedLazy()) {
-            // This can only happen for re-lazified cloned functions, so this
-            // does not apply to any JSFunction produced by the parser, only to
-            // JSFunction created by the runtime.
-            MOZ_ASSERT(!fun->lazyScript()->maybeScriptUnbarriered());
-
             // Encode a lazy script.
             firstword |= IsLazy;
             lazy = fun->lazyScript();
