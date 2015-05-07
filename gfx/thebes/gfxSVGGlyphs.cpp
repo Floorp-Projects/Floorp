@@ -147,7 +147,7 @@ gfxSVGGlyphsDocument::SetupPresentation()
     rv = docLoaderFactory->CreateInstanceForDocument(nullptr, mDocument, nullptr, getter_AddRefs(viewer));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = viewer->Init(nullptr, nsIntRect(0, 0, 1000, 1000));
+    rv = viewer->Init(nullptr, gfx::IntRect(0, 0, 1000, 1000));
     if (NS_SUCCEEDED(rv)) {
         rv = viewer->Open(nullptr, nullptr);
         NS_ENSURE_SUCCESS(rv, rv);

@@ -25,7 +25,7 @@ inline Rect ToRect(const gfxRect &aRect)
               Float(aRect.width), Float(aRect.height));
 }
 
-inline Rect ToRect(const nsIntRect &aRect)
+inline Rect ToRect(const IntRect &aRect)
 {
   return Rect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
