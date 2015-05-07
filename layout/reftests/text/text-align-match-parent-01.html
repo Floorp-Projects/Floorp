@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Text-align: match-parent</title>
+    <style>
+div.start  { text-align: start; }
+div.end    { text-align: end; }
+div.left   { text-align: left; }
+div.right  { text-align: right; }
+div > div  { text-align: match-parent; }
+    </style>
+  </head>
+  <body>
+   <div class="start" dir="ltr"><div dir="ltr">Left</div></div>
+   <div class="start" dir="ltr"><div dir="rtl">Left</div></div>
+   <div class="start" dir="rtl"><div dir="ltr">Right</div></div>
+   <div class="start" dir="rtl"><div dir="rtl">Right</div></div>
+   <div class="end" dir="ltr"><div dir="ltr">Right</div></div>
+   <div class="end" dir="ltr"><div dir="rtl">Right</div></div>
+   <div class="end" dir="rtl"><div dir="ltr">Left</div></div>
+   <div class="end" dir="rtl"><div dir="rtl">Left</div></div>
+   <div class="left" dir="ltr"><div dir="ltr">Left</div></div>
+   <div class="left" dir="ltr"><div dir="rtl">Left</div></div>
+   <div class="left" dir="rtl"><div dir="ltr">Left</div></div>
+   <div class="left" dir="rtl"><div dir="rtl">Left</div></div>
+   <div class="right" dir="ltr"><div dir="ltr">Right</div></div>
+   <div class="right" dir="ltr"><div dir="rtl">Right</div></div>
+   <div class="right" dir="rtl"><div dir="ltr">Right</div></div>
+   <div class="right" dir="rtl"><div dir="rtl">Right</div></div>
+ </body>
+</html>
