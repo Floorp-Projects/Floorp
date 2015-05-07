@@ -154,6 +154,47 @@ function run_test() {
     check_no_ocsp_requests("no-ocsp-url-cert", SEC_ERROR_POLICY_VALIDATION_FAILED);
   });
 
+  // Check OneCRL OCSP request skipping works correctly
+  add_test(function () {
+    // enable OneCRL OCSP skipping - allow staleness of up to 1 day
+    Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 86400);
+    // set the blocklist-background-update-timer value to the recent past
+    Services.prefs.setIntPref("app.update.lastUpdateTime.blocklist-background-update-timer",
+                              Math.floor(Date.now() / 1000) - 1);
+    clearOCSPCache();
+    // the intermediate should not have an associated OCSP request
+    let ocspResponder = start_ocsp_responder(["ev-valid"]);
+    check_ee_for_ev("ev-valid", gEVExpected);
+    Services.prefs.clearUserPref("security.onecrl.maximum_staleness_in_seconds");
+    ocspResponder.stop(run_next_test);
+  });
+
+  add_test(function () {
+    // disable OneCRL OCSP Skipping (no staleness allowed)
+    Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 0);
+    clearOCSPCache();
+    let ocspResponder = start_ocsp_responder(
+                          gEVExpected ? ["int-ev-valid", "ev-valid"]
+                                      : ["ev-valid"]);
+    check_ee_for_ev("ev-valid", gEVExpected);
+    Services.prefs.clearUserPref("security.onecrl.maximum_staleness_in_seconds");
+    ocspResponder.stop(run_next_test);
+  });
+
+  add_test(function () {
+    // enable OneCRL OCSP skipping - allow staleness of up to 1 day
+    Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds", 86400);
+    // set the blocklist-background-update-timer value to the more distant past
+    Services.prefs.setIntPref("app.update.lastUpdateTime.blocklist-background-update-timer",
+                              Math.floor(Date.now() / 1000) - 86480);
+    clearOCSPCache();
+    let ocspResponder = start_ocsp_responder(
+                          gEVExpected ? ["int-ev-valid", "ev-valid"]
+                                      : ["ev-valid"]);
+    check_ee_for_ev("ev-valid", gEVExpected);
+    Services.prefs.clearUserPref("security.onecrl.maximum_staleness_in_seconds");
+    ocspResponder.stop(run_next_test);
+  });
 
   // Test the EV continues to work with flags after successful EV verification
   add_test(function () {
