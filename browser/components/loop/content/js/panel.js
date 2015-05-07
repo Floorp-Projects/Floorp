@@ -436,7 +436,7 @@ loop.panel = (function(_, mozL10n) {
 
     propTypes: {
       mozLoop: React.PropTypes.object.isRequired,
-      roomUrls: React.PropTypes.object
+      roomUrls: React.PropTypes.array
     },
 
     handleClick: function(event) {

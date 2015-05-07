@@ -39,6 +39,11 @@ use[id$="-disabled"] {
   <path id="dropdown-shape" fill-rule="evenodd" clip-rule="evenodd" d="M9,3L4.984,7L1,3H9z"/>
   <polygon id="expand-shape" fill-rule="evenodd" clip-rule="evenodd" points="10,0 4.838,0 6.506,1.669 0,8.175 1.825,10 8.331,3.494 
     10,5.162"/>
+  <path id="edit-shape" d="M5.493,1.762l2.745,2.745L2.745,10H0V7.255L5.493,1.762z M2.397,9.155l0.601-0.601L1.446,7.002L0.845,7.603
+    V8.31H1.69v0.845H2.397z M5.849,3.028c0-0.096-0.048-0.144-0.146-0.144c-0.044,0-0.081,0.015-0.112,0.046L2.014,6.508
+    C1.983,6.538,1.968,6.577,1.968,6.619c0,0.098,0.048,0.146,0.144,0.146c0.044,0,0.081-0.015,0.112-0.046l3.579-3.577
+    C5.834,3.111,5.849,3.073,5.849,3.028z M10,2.395c0,0.233-0.081,0.431-0.245,0.595L8.66,4.085L5.915,1.34L7.01,0.25
+    C7.168,0.083,7.366,0,7.605,0c0.233,0,0.433,0.083,0.601,0.25l1.55,1.544C9.919,1.966,10,2.166,10,2.395z"/>
   <rect id="minimize-shape" y="3.6" fill-rule="evenodd" clip-rule="evenodd" width="10" height="2.8"/>
 </defs>
 <use id="close"               xlink:href="#close-shape"/>
@@ -48,6 +53,9 @@ use[id$="-disabled"] {
 <use id="dropdown-white"      xlink:href="#dropdown-shape"/>
 <use id="dropdown-active"     xlink:href="#dropdown-shape"/>
 <use id="dropdown-disabled"   xlink:href="#dropdown-shape"/>
+<use id="edit"                xlink:href="#edit-shape"/>
+<use id="edit-active"         xlink:href="#edit-shape"/>
+<use id="edit-disabled"       xlink:href="#edit-shape"/>
 <use id="expand"              xlink:href="#expand-shape"/>
 <use id="expand-active"       xlink:href="#expand-shape"/>
 <use id="expand-disabled"     xlink:href="#expand-shape"/>
