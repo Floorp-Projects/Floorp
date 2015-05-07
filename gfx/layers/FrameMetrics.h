@@ -265,7 +265,7 @@ public:
     mDisplayPort = aDisplayPort;
   }
 
-  CSSRect GetDisplayPort() const
+  const CSSRect& GetDisplayPort() const
   {
     return mDisplayPort;
   }
@@ -275,7 +275,7 @@ public:
     mCriticalDisplayPort = aCriticalDisplayPort;
   }
 
-  CSSRect GetCriticalDisplayPort() const
+  const CSSRect& GetCriticalDisplayPort() const
   {
     return mCriticalDisplayPort;
   }
@@ -285,7 +285,7 @@ public:
     mCumulativeResolution = aCumulativeResolution;
   }
 
-  LayoutDeviceToLayerScale2D GetCumulativeResolution() const
+  const LayoutDeviceToLayerScale2D& GetCumulativeResolution() const
   {
     return mCumulativeResolution;
   }
@@ -295,7 +295,7 @@ public:
     mDevPixelsPerCSSPixel = aDevPixelsPerCSSPixel;
   }
 
-  CSSToLayoutDeviceScale GetDevPixelsPerCSSPixel() const
+  const CSSToLayoutDeviceScale& GetDevPixelsPerCSSPixel() const
   {
     return mDevPixelsPerCSSPixel;
   }
@@ -345,7 +345,7 @@ public:
     mZoom = aZoom;
   }
 
-  CSSToParentLayerScale2D GetZoom() const
+  const CSSToParentLayerScale2D& GetZoom() const
   {
     return mZoom;
   }
@@ -452,7 +452,7 @@ public:
     mExtraResolution = aExtraResolution;
   }
 
-  ScreenToLayerScale2D GetExtraResolution() const
+  const ScreenToLayerScale2D& GetExtraResolution() const
   {
     return mExtraResolution;
   }
