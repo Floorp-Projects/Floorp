@@ -33,7 +33,6 @@
 
 using namespace mozilla;
 
-#ifdef PR_LOGGING 
 static PRLogModuleInfo *
 GetDeviceContextSpecGTKLog()
 {
@@ -42,7 +41,6 @@ GetDeviceContextSpecGTKLog()
     sLog = PR_NewLogModule("DeviceContextSpecGTK");
   return sLog;
 }
-#endif /* PR_LOGGING */
 /* Macro to make lines shorter */
 #define DO_PR_DEBUG_LOG(x) PR_LOG(GetDeviceContextSpecGTKLog(), PR_LOG_DEBUG, x)
 

@@ -32,9 +32,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* sCocoaLog;
-#endif
 
 extern void EnsureLogInitialized();
 
