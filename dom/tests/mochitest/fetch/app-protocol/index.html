@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test app for bug 1161288</title>
+    <script type='application/javascript;version=1.7'>
+function ok(aCondition, aMessage) {
+  if (aCondition) {
+    alert('OK: ' + aMessage);
+  } else {
+    alert('KO: ' + aMessage);
+  }
+}
+
+function done() {
+  alert('DONE');
+}
+
+function testFetchAppResource() {
+  return fetch('foo.txt').then((res) => {
+    ok(true, 'fetch should resolve');
+    if (res.type == 'error') {
+      ok(false, 'fetch failed');
+    }
+    ok(res.status == 200, 'status should be 200');
+    ok(res.statusText == 'OK', 'statusText should be OK');
+    return res.text().then((body) => {
+      ok(body == 'english sentence', 'body should match');
+    });
+  });
+}
+
+function testFetchInvalidAppResource() {
+  return fetch('foo.bar.invalid').then(() => {
+    ok(false, 'fetch should fail');
+  }, (e) => {
+    ok(e instanceof TypeError, 'fetch should fail');
+  });
+}
+
+function runTests() {
+  return Promise.resolve()
+    .then(testFetchAppResource)
+    .then(testFetchInvalidAppResource)
+    .then(done)
+    // Put more promise based tests here.
+}
+  </script>
+  </head>
+  <body onload='runTests()'>
+  </body>
+</html>
