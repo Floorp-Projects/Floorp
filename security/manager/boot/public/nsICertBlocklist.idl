@@ -14,7 +14,7 @@ interface nsIX509Cert;
 /**
  * Represents a service to add certificates as explicitly blocked/distrusted.
  */
-[scriptable, uuid(fed30090-c190-11e4-8830-0800200c9a66)]
+[scriptable, uuid(e0654480-f433-11e4-b939-0800200c9a66)]
 interface nsICertBlocklist : nsISupports {
   /**
    * Add details of a revoked certificate :
@@ -50,4 +50,12 @@ interface nsICertBlocklist : nsISupports {
                           in unsigned long subject_length,
                           [const, array, size_is(pubkey_length)] in octet pubkey,
                           in unsigned long pubkey_length);
+
+   /**
+    * Check that the blocklist data is current. Specifically, that the current
+    * time is no more than security.onecrl.maximum_staleness_in_seconds seconds
+    * after the last blocklist update (as stored in the
+    * app.update.lastUpdateTime.blocklist-background-update-timer pref)
+    */
+   boolean isBlocklistFresh();
 };
