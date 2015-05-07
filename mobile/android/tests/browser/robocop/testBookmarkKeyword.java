@@ -13,7 +13,7 @@ public class testBookmarkKeyword extends AboutHomeTest {
         final String keyword = "testkeyword";
 
         // Add a bookmark, and update it to have a keyword.
-        mDatabaseHelper.addOrUpdateMobileBookmark(mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, url);
+        mDatabaseHelper.addMobileBookmark(mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, url);
         mDatabaseHelper.updateBookmark(url, mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, keyword);
 
         // Enter the keyword in the urlbar.

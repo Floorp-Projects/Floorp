@@ -44,6 +44,10 @@
 <!ENTITY bookmark "Bookmark">
 <!ENTITY bookmark_remove "Remove bookmark">
 <!ENTITY bookmark_added "Bookmark added">
+<!-- Localization note (bookmark_already_added) : This string is
+     used as a label in a toast. It is the verb "to bookmark", not
+     the noun "a bookmark". -->
+<!ENTITY bookmark_already_added "Already bookmarked">
 <!ENTITY bookmark_removed "Bookmark removed">
 <!ENTITY bookmark_updated "Bookmark updated">
 <!ENTITY bookmark_options "Options">
