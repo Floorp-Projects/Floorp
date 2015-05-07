@@ -21,7 +21,6 @@
 #include "ScopedGLHelpers.h"
 #include "gfx2DGlue.h"
 #include "../layers/ipc/ShadowLayers.h"
-#include "mozilla/layers/TextureClientSharedSurface.h"
 
 namespace mozilla {
 namespace gl {
@@ -40,35 +39,39 @@ GLScreenBuffer::Create(GLContext* gl,
         return Move(ret);
     }
 
+    UniquePtr<SurfaceFactory> factory;
 
-    layers::TextureFlags flags = layers::TextureFlags::ORIGIN_BOTTOM_LEFT;
-    if (!caps.premultAlpha) {
-        flags |= layers::TextureFlags::NON_PREMULTIPLIED;
+#ifdef MOZ_WIDGET_GONK
+    /* On B2G, we want a Gralloc factory, and we want one right at the start */
+    layers::ISurfaceAllocator* allocator = caps.surfaceAllocator;
+    if (!factory &&
+        allocator &&
+        XRE_GetProcessType() != GeckoProcessType_Default)
+    {
+        layers::TextureFlags flags = layers::TextureFlags::DEALLOCATE_CLIENT |
+                                     layers::TextureFlags::ORIGIN_BOTTOM_LEFT;
+        if (!caps.premultAlpha) {
+            flags |= layers::TextureFlags::NON_PREMULTIPLIED;
+        }
+
+        factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps, flags,
+                                                     allocator);
     }
+#endif
+#ifdef XP_MACOSX
+    /* On OSX, we want an IOSurface factory, and we want one right at the start */
+    if (!factory) {
+        factory = SurfaceFactory_IOSurface::Create(gl, caps);
+    }
+#endif
 
-    UniquePtr<SurfaceFactory> factory = MakeUnique<SurfaceFactory_Basic>(gl, caps, flags);
+    if (!factory) {
+        factory = MakeUnique<SurfaceFactory_Basic>(gl, caps);
+    }
 
     ret.reset( new GLScreenBuffer(gl, caps, Move(factory)) );
     return Move(ret);
 }
-
-GLScreenBuffer::GLScreenBuffer(GLContext* gl,
-                               const SurfaceCaps& caps,
-                               UniquePtr<SurfaceFactory> factory)
-    : mGL(gl)
-    , mCaps(caps)
-    , mFactory(Move(factory))
-    , mNeedsBlit(true)
-    , mUserReadBufferMode(LOCAL_GL_BACK)
-    , mUserDrawFB(0)
-    , mUserReadFB(0)
-    , mInternalDrawFB(0)
-    , mInternalReadFB(0)
-#ifdef DEBUG
-    , mInInternalMode_DrawFB(true)
-    , mInInternalMode_ReadFB(true)
-#endif
-{ }
 
 GLScreenBuffer::~GLScreenBuffer()
 {
@@ -462,7 +465,7 @@ GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
 bool
 GLScreenBuffer::Swap(const gfx::IntSize& size)
 {
-    RefPtr<SharedSurfaceTextureClient> newBack = mFactory->NewTexClient(size);
+    RefPtr<ShSurfHandle> newBack = mFactory->NewShSurfHandle(size);
     if (!newBack)
         return false;
 
@@ -519,7 +522,7 @@ GLScreenBuffer::PublishFrame(const gfx::IntSize& size)
 bool
 GLScreenBuffer::Resize(const gfx::IntSize& size)
 {
-    RefPtr<SharedSurfaceTextureClient> newBack = mFactory->NewTexClient(size);
+    RefPtr<ShSurfHandle> newBack = mFactory->NewShSurfHandle(size);
     if (!newBack)
         return false;
 
