@@ -44,7 +44,7 @@ const tests = [
       <link rel="manifest" href='resource.sjs?body={"name":"fail"}'>
       <link rel="manifest foo bar test" href='resource.sjs?body={"name":"fail"}'>`
   }, {
-    expected: 'By default, manifest load cross-origin.',
+    expected: 'By default, manifest cannot load cross-origin.',
     get tabURL() {
       let query = [
         `body=<h1>${this.expected}</h1>`,
@@ -53,9 +53,8 @@ const tests = [
       const URL = `${defaultURL}?${query.join('&')}`;
       return URL;
     },
-    run(manifest) {
-      // Waiting on https://bugzilla.mozilla.org/show_bug.cgi?id=1130924
-      todo_is(manifest.name, 'pass-3', this.expected);
+    run(err) {
+      Assert.strictEqual(err.name, 'TypeError', this.expected);
     },
     testData: `<link rel="manifest" href='${remoteURL}?body={"name":"pass-3"}'>`
   },
