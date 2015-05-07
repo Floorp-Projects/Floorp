@@ -2977,7 +2977,7 @@ MBitNot::foldsTo(TempAllocator& alloc)
 
     if (input->isBitNot() && input->toBitNot()->specialization_ == MIRType_Int32) {
         MOZ_ASSERT(input->toBitNot()->getOperand(0)->type() == MIRType_Int32);
-        return input->toBitNot()->getOperand(0); // ~~x => x
+        return MTruncateToInt32::New(alloc, input->toBitNot()->input()); // ~~x => x | 0
     }
 
     return this;

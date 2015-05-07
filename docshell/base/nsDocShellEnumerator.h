@@ -89,7 +89,6 @@ public:
 protected:
   virtual nsresult BuildArrayRecursive(nsIDocShellTreeItem* aItem,
                                        nsTArray<nsWeakPtr>& aItemArray);
-
 };
 
 class nsDocShellBackwardsEnumerator : public nsDocShellEnumerator

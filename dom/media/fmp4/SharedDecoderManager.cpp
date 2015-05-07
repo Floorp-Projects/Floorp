@@ -52,6 +52,11 @@ public:
       mManager->mActiveCallback->ReleaseMediaResources();
     }
   }
+  virtual bool OnReaderTaskQueue() override
+  {
+    MOZ_ASSERT(mManager->mActiveCallback);
+    return mManager->mActiveCallback->OnReaderTaskQueue();
+  }
 
   SharedDecoderManager* mManager;
 };
@@ -186,6 +191,9 @@ SharedDecoderManager::DrainComplete()
 void
 SharedDecoderManager::Shutdown()
 {
+  // Shutdown() should have been called on any proxies.
+  MOZ_ASSERT(!mActiveProxy);
+
   if (mDecoder) {
     mDecoder->Shutdown();
     mDecoder = nullptr;

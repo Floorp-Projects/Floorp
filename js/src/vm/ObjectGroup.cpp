@@ -416,7 +416,6 @@ class ObjectGroupCompartment::NewTableRef : public gc::BufferableRef
 
     void mark(JSTracer* trc) {
         JSObject* prior = proto;
-        JS::AutoOriginalTraceLocation reloc(trc, &proto);
         TraceManuallyBarrieredEdge(trc, &proto, "newObjectGroups set prototype");
         if (prior == proto)
             return;
@@ -466,6 +465,8 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
     // unboxed plain object.
     MOZ_ASSERT(!clasp == (associated && associated->is<JSFunction>()));
 
+    AutoEnterAnalysis enter(cx);
+
     ObjectGroupCompartment::NewTable*& table = cx->compartment()->objectGroups.defaultNewTable;
 
     if (!table) {
@@ -499,6 +500,9 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
             clasp = &PlainObject::class_;
     }
 
+    if (proto.isObject() && !proto.toObject()->setDelegate(cx))
+        return nullptr;
+
     ObjectGroupCompartment::NewTable::AddPtr p =
         table->lookupForAdd(ObjectGroupCompartment::NewEntry::Lookup(clasp, proto, associated));
     if (p) {
@@ -509,11 +513,6 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
         MOZ_ASSERT(group->proto() == proto);
         return group;
     }
-
-    AutoEnterAnalysis enter(cx);
-
-    if (proto.isObject() && !proto.toObject()->setDelegate(cx))
-        return nullptr;
 
     ObjectGroupFlags initialFlags = 0;
     if (!proto.isObject() || proto.toObject()->isNewGroupUnknown())
