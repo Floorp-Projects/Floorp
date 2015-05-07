@@ -12,6 +12,7 @@ namespace net {
 
 extern PRLogModuleInfo* GetCache2Log();
 #define LOG(x)  PR_LOG(GetCache2Log(), PR_LOG_DEBUG, x)
+#define LOG_ENABLED() PR_LOG_TEST(GetCache2Log(), PR_LOG_DEBUG)
 
 } // net
 } // mozilla

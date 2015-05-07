@@ -351,15 +351,17 @@ protected:
 public:
   NS_IMETHOD HandleError(mozIStorageError* aError) override
   {
-    int32_t result = -1;
-    aError->GetResult(&result);
+    if (PR_LOG_TEST(GetCookieLog(), PR_LOG_WARNING)) {
+      int32_t result = -1;
+      aError->GetResult(&result);
 
-    nsAutoCString message;
-    aError->GetMessage(message);
-    COOKIE_LOGSTRING(PR_LOG_WARNING,
-      ("DBListenerErrorHandler::HandleError(): Error %d occurred while "
-       "performing operation '%s' with message '%s'; rebuilding database.",
-       result, GetOpType(), message.get()));
+      nsAutoCString message;
+      aError->GetMessage(message);
+      COOKIE_LOGSTRING(PR_LOG_WARNING,
+        ("DBListenerErrorHandler::HandleError(): Error %d occurred while "
+         "performing operation '%s' with message '%s'; rebuilding database.",
+         result, GetOpType(), message.get()));
+    }
 
     // Rebuild the database.
     gCookieService->HandleCorruptDB(mDBState);

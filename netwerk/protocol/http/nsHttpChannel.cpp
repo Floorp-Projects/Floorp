@@ -6558,10 +6558,12 @@ nsHttpChannel::MaybeInvalidateCacheEntryForSubsequentGet()
     }
 
     // Invalidate the request-uri.
-    nsAutoCString key;
-    mURI->GetAsciiSpec(key);
-    LOG(("MaybeInvalidateCacheEntryForSubsequentGet [this=%p uri=%s]\n",
-        this, key.get()));
+    if (LOG_ENABLED()) {
+      nsAutoCString key;
+      mURI->GetAsciiSpec(key);
+      LOG(("MaybeInvalidateCacheEntryForSubsequentGet [this=%p uri=%s]\n",
+          this, key.get()));
+    }
 
     DoInvalidateCacheEntry(mURI);
 
@@ -6605,7 +6607,10 @@ nsHttpChannel::DoInvalidateCacheEntry(nsIURI* aURI)
     nsresult rv;
 
     nsAutoCString key;
-    aURI->GetAsciiSpec(key);
+    if (LOG_ENABLED()) {
+      aURI->GetAsciiSpec(key);
+    }
+
     LOG(("DoInvalidateCacheEntry [channel=%p key=%s]", this, key.get()));
 
     nsCOMPtr<nsICacheStorageService> cacheStorageService =
