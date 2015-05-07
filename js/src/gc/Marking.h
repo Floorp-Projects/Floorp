@@ -277,7 +277,7 @@ class GCMarker : public JSTracer
         return stack.isEmpty();
     }
 
-    bool restoreValueArray(NativeObject* obj, void** vpp, void** endp);
+    bool restoreValueArray(JSObject* obj, void** vpp, void** endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget& budget);
 
@@ -300,14 +300,9 @@ class GCMarker : public JSTracer
     mozilla::DebugOnly<bool> strictCompartmentChecking;
 };
 
-void
-SetMarkStackLimit(JSRuntime* rt, size_t limit);
-
 bool
 IsBufferingGrayRoots(JSTracer* trc);
 
-} /* namespace js */
-namespace js {
 namespace gc {
 
 /*** Special Cases ***/
@@ -388,7 +383,6 @@ class HashKeyRef : public BufferableRef
         typename Map::Ptr p = map->lookup(key);
         if (!p)
             return;
-        JS::AutoOriginalTraceLocation reloc(trc, (void**)&*p);
         TraceManuallyBarrieredEdge(trc, &key, "HashKeyRef");
         map->rekeyIfMoved(prior, key);
     }

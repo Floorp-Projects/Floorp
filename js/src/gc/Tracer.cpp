@@ -168,7 +168,6 @@ JS_CallTenuredObjectTracer(JSTracer* trc, JS::TenuredHeap<JSObject*>* objp, cons
     if (!obj)
         return;
 
-    JS::AutoOriginalTraceLocation reloc(trc, (void**)objp);
     TraceManuallyBarrieredEdge(trc, &obj, name);
 
     objp->setPtr(obj);

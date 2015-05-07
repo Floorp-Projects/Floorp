@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
     'TestAudioCompactor.cpp',
     'TestGMPCrossOrigin.cpp',
     'TestGMPRemoveAndDelete.cpp',
+    'TestIntervalSet.cpp',
     'TestMP4Demuxer.cpp',
     'TestMP4Reader.cpp',
     'TestTrackEncoder.cpp',

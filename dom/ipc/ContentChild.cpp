@@ -54,7 +54,6 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
-#include "mozilla/media/webrtc/WebrtcGlobalChild.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
@@ -120,6 +119,10 @@
 #include "mozilla/dom/PCycleCollectWithLogsChild.h"
 
 #include "nsIScriptSecurityManager.h"
+
+#ifdef MOZ_WEBRTC
+#include "signaling/src/peerconnection/WebrtcGlobalChild.h"
+#endif
 
 #ifdef MOZ_PERMISSIONS
 #include "nsPermission.h"
@@ -1821,15 +1824,23 @@ ContentChild::DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor)
 PWebrtcGlobalChild *
 ContentChild::AllocPWebrtcGlobalChild()
 {
+#ifdef MOZ_WEBRTC
     WebrtcGlobalChild *child = new WebrtcGlobalChild();
     return child;
+#else
+    return nullptr;
+#endif
 }
 
 bool
 ContentChild::DeallocPWebrtcGlobalChild(PWebrtcGlobalChild *aActor)
 {
+#ifdef MOZ_WEBRTC
     delete static_cast<WebrtcGlobalChild*>(aActor);
     return true;
+#else
+    return false;
+#endif
 }
 
 

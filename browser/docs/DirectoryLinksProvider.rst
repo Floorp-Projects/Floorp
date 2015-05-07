@@ -149,6 +149,7 @@ Below is an example directory source file::
                   "wiki.mozilla.org"
               ],
               "imageURI": "https://tiles.cdn.mozilla.net/images/9ee2b265678f2775de2e4bf680df600b502e6038.3875.png",
+              "time_limits": {"start": "2014-01-01T00:00:00.000Z", "end": "2014-02-01T00:00:00.000Z"},
               "title": "Thanks for testing!",
               "type": "affiliate",
               "url": "https://www.mozilla.com/firefox/tiles"
@@ -182,6 +183,9 @@ A suggested link has additional values:
   Suggested Tile if the user has the site in one of the top 100 most-frecent
   pages. Only preapproved array of strings that are hardcoded into the
   DirectoryLinksProvider module are allowed.
+- ``time_limits`` - an object consisting of start and end timestamps specifying
+  when a Suggested Tile may start and has to stop showing in the newtab.
+  The timestamp is expected in ISO_8601 format: '2014-01-10T20:00:00.000Z'
 
 The preapproved arrays follow a policy for determining what topic grouping is
 allowed as well as the composition of a grouping. The topics are broad

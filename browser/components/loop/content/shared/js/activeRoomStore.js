@@ -565,7 +565,7 @@ loop.store.ActiveRoomStore = (function() {
           constraints: {
             browserWindow: windowId,
             scrollWithPage: true
-          },
+          }
         };
         this._sdkDriver.startScreenShare(options);
       } else if (screenSharingState === SCREEN_SHARE_STATES.ACTIVE) {

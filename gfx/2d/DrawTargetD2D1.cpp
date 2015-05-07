@@ -788,9 +788,21 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
     return false;
   }
 
+  // This single solid color brush system is not very 'threadsafe', however,
+  // issueing multiple drawing commands simultaneously to a single drawtarget
+  // from multiple threads is unexpected since there's no way to guarantee
+  // ordering in that situation anyway.
+  hr = mDC->CreateSolidColorBrush(D2D1::ColorF(0, 0), byRef(mSolidColorBrush));
+
+  if (FAILED(hr)) {
+    gfxCriticalError() << "[D2D1.1] Failure creating solid color brush.";
+    return false;
+  }
+
   mDC->SetTarget(mBitmap);
 
   mDC->BeginDraw();
+
   return true;
 }
 
@@ -842,6 +854,13 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
   }
 
   mDC->SetTarget(mBitmap);
+
+  hr = mDC->CreateSolidColorBrush(D2D1::ColorF(0, 0), byRef(mSolidColorBrush));
+
+  if (FAILED(hr)) {
+    gfxCriticalError() << "[D2D1.1] Failure creating solid color brush.";
+    return false;
+  }
 
   mDC->BeginDraw();
 
@@ -1262,8 +1281,14 @@ DrawTargetD2D1::PopClipsFromDC(ID2D1DeviceContext *aDC)
 TemporaryRef<ID2D1Brush>
 DrawTargetD2D1::CreateTransparentBlackBrush()
 {
-  RefPtr<ID2D1SolidColorBrush> brush;
-  mDC->CreateSolidColorBrush(D2D1::ColorF(0, 0), byRef(brush));
+  return GetSolidColorBrush(D2D1::ColorF(0, 0));
+}
+
+TemporaryRef<ID2D1SolidColorBrush>
+DrawTargetD2D1::GetSolidColorBrush(const D2D_COLOR_F& aColor)
+{
+  RefPtr<ID2D1SolidColorBrush> brush = mSolidColorBrush;
+  brush->SetColor(aColor);
   return brush;
 }
 
@@ -1271,19 +1296,12 @@ TemporaryRef<ID2D1Brush>
 DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 {
   if (!IsPatternSupportedByD2D(aPattern)) {
-    RefPtr<ID2D1SolidColorBrush> colBrush;
-    mDC->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), byRef(colBrush));
-    return colBrush.forget();
+    return GetSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
   if (aPattern.GetType() == PatternType::COLOR) {
-    RefPtr<ID2D1SolidColorBrush> colBrush;
     Color color = static_cast<const ColorPattern*>(&aPattern)->mColor;
-    mDC->CreateSolidColorBrush(D2D1::ColorF(color.r, color.g,
-                                            color.b, color.a),
-                               D2D1::BrushProperties(aAlpha),
-                               byRef(colBrush));
-    return colBrush.forget();
+    return GetSolidColorBrush(D2D1::ColorF(color.r, color.g, color.b, color.a * aAlpha));
   }
   if (aPattern.GetType() == PatternType::LINEAR_GRADIENT) {
     RefPtr<ID2D1LinearGradientBrush> gradBrush;
@@ -1298,14 +1316,11 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
     }
 
     if (pat->mBegin == pat->mEnd) {
-      RefPtr<ID2D1SolidColorBrush> colBrush;
       uint32_t stopCount = stops->mStopCollection->GetGradientStopCount();
       vector<D2D1_GRADIENT_STOP> d2dStops(stopCount);
       stops->mStopCollection->GetGradientStops(&d2dStops.front(), stopCount);
-      mDC->CreateSolidColorBrush(d2dStops.back().color,
-                                 D2D1::BrushProperties(aAlpha),
-                                 byRef(colBrush));
-      return colBrush.forget();
+      d2dStops.back().color.a *= aAlpha;
+      return GetSolidColorBrush(d2dStops.back().color);
     }
 
     mDC->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2DPoint(pat->mBegin),
@@ -1391,6 +1406,12 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
                                                      D2DInterpolationMode(pat->mFilter)),
                           D2D1::BrushProperties(aAlpha, D2DMatrix(mat)),
                           byRef(imageBrush));
+
+    if (!imageBrush) {
+      gfxWarning() << "Couldn't create image brush!";
+      return CreateTransparentBlackBrush();
+    }
+
     return imageBrush.forget();
   }
 

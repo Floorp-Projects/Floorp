@@ -58,7 +58,6 @@ protected:
   // Backup for the corresponding nsIHTMLDocument's  editing state while
   // the editor is detached.
   nsIHTMLDocument::EditingState mDetachedEditingState;
-
 };
 
 #endif // nsDocShellEditorData_h__
