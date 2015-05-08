@@ -467,9 +467,7 @@ public:
         mLocalRulesUsed = true;
     }
 
-#ifdef PR_LOGGING
     static PRLogModuleInfo* GetUserFontsLog();
-#endif
 
 protected:
     // Protected destructor, to discourage deletion outside of Release():
