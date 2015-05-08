@@ -130,7 +130,7 @@ public:
   // Creates an AddrInfo object. It calls the AddrInfo(const char*, const char*)
   // to initialize the host and the cname.
   AddrInfo(const char *host, const PRAddrInfo *prAddrInfo, bool disableIPv4,
-           const char *cname);
+           bool filterNameCollision, const char *cname);
 
   // Creates a basic AddrInfo object (initialize only the host and the cname).
   AddrInfo(const char *host, const char *cname);
