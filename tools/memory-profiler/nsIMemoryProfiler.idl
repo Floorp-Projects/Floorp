@@ -1,0 +1,23 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(f70db623-3bd5-4719-b8ce-4c6b350a925c)]
+interface nsIMemoryProfiler : nsISupports
+{
+  void startProfiler();
+  void stopProfiler();
+  void resetProfiler();
+
+  // Get results in an object which contains three tables:
+  // {
+  //  names, // an array of function names and positions
+  //  traces, // an array of {nameIdx, parentIdx}
+  //  events, // an array of {size, timestamp, traceIdx}
+  // }
+  [implicit_jscontext]
+  jsval getResults();
+};
