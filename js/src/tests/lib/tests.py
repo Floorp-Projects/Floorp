@@ -32,13 +32,17 @@ JITFLAGS = {
         ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
         ['--baseline-eager'],
     ],
-    'none': []
+    'none': [
+        [] # no flags, normal baseline and ion
+    ]
 }
 
-def get_jitflags(variant):
+def get_jitflags(variant, **kwargs):
     if variant not in JITFLAGS:
         print('Invalid jitflag: "{}"'.format(variant))
         sys.exit(1)
+    if variant == 'none' and 'none' in kwargs:
+        return kwargs['none']
     return JITFLAGS[variant]
 
 def do_run_cmd(cmd):
