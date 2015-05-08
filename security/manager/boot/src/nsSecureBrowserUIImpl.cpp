@@ -134,11 +134,13 @@ NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
 {
-  nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
+  if (PR_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
+    nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
 
-  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: Init: mWindow: %p, aWindow: %p\n", this,
-          window.get(), aWindow));
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: Init: mWindow: %p, aWindow: %p\n", this,
+            window.get(), aWindow));
+  }
 
   if (!aWindow) {
     NS_WARNING("Null window passed to nsSecureBrowserUIImpl::Init()");
