@@ -110,6 +110,22 @@ PopupBoxObject::OpenPopupAtScreen(int32_t aXPos, int32_t aYPos,
 }
 
 void
+PopupBoxObject::OpenPopupAtScreenRect(const nsAString& aPosition,
+                                      int32_t aXPos, int32_t aYPos,
+                                      int32_t aWidth, int32_t aHeight,
+                                      bool aIsContextMenu,
+                                      bool aAttributesOverride,
+                                      Event* aTriggerEvent)
+{
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm && mContent) {
+    pm->ShowPopupAtScreenRect(mContent, aPosition,
+                              nsIntRect(aXPos, aYPos, aWidth, aHeight),
+                              aIsContextMenu, aAttributesOverride, aTriggerEvent);
+  }
+}
+
+void
 PopupBoxObject::MoveTo(int32_t aLeft, int32_t aTop)
 {
   nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;

@@ -86,6 +86,12 @@ enum FlipType {
   FlipType_Slide = 3    // allow the arrow to "slide" instead of resizing
 };
 
+enum MenuPopupAnchorType {
+  MenuPopupAnchorType_Node = 0, // anchored to a node
+  MenuPopupAnchorType_Point = 1, // unanchored and positioned at a screen point
+  MenuPopupAnchorType_Rect = 2, // anchored at a screen rectangle
+};
+
 // values are selected so that the direction can be flipped just by
 // changing the sign
 #define POPUPALIGNMENT_NONE 0
@@ -242,11 +248,11 @@ public:
 
   nsView* GetRootViewForPopup(nsIFrame* aStartFrame);
 
-  // set the position of the popup either relative to the anchor aAnchorFrame
-  // (or the frame for mAnchorContent if aAnchorFrame is null) or at a specific
-  // point if a screen position (mScreenXPos and mScreenYPos) are set. The popup
-  // will be adjusted so that it is on screen. If aIsMove is true, then the popup
-  // is being moved, and should not be flipped.
+  // Set the position of the popup either relative to the anchor aAnchorFrame
+  // (or the frame for mAnchorContent if aAnchorFrame is null), anchored at a
+  // rectangle, or at a specific point if a screen position is set. The popup
+  // will be adjusted so that it is on screen. If aIsMove is true, then the
+  // popup is being moved, and should not be flipped.
   nsresult SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aSizedToPopup);
 
   bool HasGeneratedChildren() { return mGeneratedChildren; }
@@ -283,7 +289,13 @@ public:
                        nsIContent* aTriggerContent,
                        const nsAString& aPosition,
                        int32_t aXPos, int32_t aYPos,
+                       MenuPopupAnchorType aAnchorType,
                        bool aAttributesOverride);
+
+  void InitializePopupAtRect(nsIContent* aTriggerContent,
+                             const nsAString& aPosition,
+                             const nsIntRect& aRect,
+                             bool aAttributesOverride);
 
   /**
    * @param aIsContextMenu if true, then the popup is
@@ -371,14 +383,14 @@ public:
                       mozilla::LayoutDeviceIntPoint& aChange);
 
   // Return true if the popup is positioned relative to an anchor.
-  bool IsAnchored() const { return mScreenXPos == -1 && mScreenYPos == -1; }
+  bool IsAnchored() const { return mAnchorType != MenuPopupAnchorType_Point; }
 
   // Return the anchor if there is one.
   nsIContent* GetAnchor() const { return mAnchorContent; }
 
   // Return the screen coordinates of the popup, or (-1, -1) if anchored.
   // This position is in CSS pixels.
-  nsIntPoint ScreenPosition() const { return nsIntPoint(mScreenXPos, mScreenYPos); }
+  nsIntPoint ScreenPosition() const { return mScreenRect.TopLeft(); }
 
   nsIntPoint GetLastClientOffset() const { return mLastClientOffset; }
 
@@ -507,8 +519,7 @@ protected:
   // override mXPos and mYPos.
   int32_t mXPos;
   int32_t mYPos;
-  int32_t mScreenXPos;
-  int32_t mScreenYPos;
+  nsIntRect mScreenRect;
 
   // If the panel prefers to "slide" rather than resize, then the arrow gets
   // positioned at this offset (along either the x or y axis, depending on
@@ -569,6 +580,9 @@ protected:
   // the flip modes that were used when the popup was opened
   bool mHFlip;
   bool mVFlip;
+
+  // How the popup is anchored.
+  MenuPopupAnchorType mAnchorType;
 
   static int8_t sDefaultLevelIsTop;
 
