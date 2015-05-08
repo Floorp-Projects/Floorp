@@ -195,7 +195,7 @@ void
 SdpRtcpAttribute::Serialize(std::ostream& os) const
 {
   os << "a=" << mType << ":" << mPort;
-  if (mNetType != sdp::kNetTypeNone && mAddrType != sdp::kAddrTypeNone) {
+  if (!mAddress.empty()) {
     os << " " << mNetType << " " << mAddrType << " " << mAddress;
   }
   os << CRLF;
