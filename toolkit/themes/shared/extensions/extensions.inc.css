@@ -57,11 +57,6 @@
 }
 
 /*** global informations ***/
-#addons-page .global-info-container {
-  background-color: #f3f7fb;
-  border-top-right-radius: 2px;
-  border-top-left-radius: 2px;
-}
 
 /* Plugins aren't yet disabled by safemode (bug 342333),
    so don't show that warning when viewing plugins. */
