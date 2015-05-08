@@ -727,6 +727,7 @@ class TreeMetadataEmitter(LoggingMixin):
             '.m': set(),
             '.mm': set(),
             '.cpp': set(['.cc', '.cxx']),
+            '.rs': set(),
             '.S': set(),
         }
 
