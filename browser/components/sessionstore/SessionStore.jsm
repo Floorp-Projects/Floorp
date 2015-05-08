@@ -214,16 +214,6 @@ this.SessionStore = {
     SessionStoreInternal.setTabState(aTab, aState);
   },
 
-  // This should not be used by external code, the intention is to remove it
-  // once a better fix is in place for process switching in e10s.
-  // See bug 1075658 for context.
-  _restoreTabAndLoad: function ss_restoreTabAndLoad(aTab, aState, aLoadArguments) {
-    SessionStoreInternal.setTabState(aTab, aState, {
-      restoreImmediately: true,
-      loadArguments: aLoadArguments
-    });
-  },
-
   duplicateTab: function ss_duplicateTab(aWindow, aTab, aDelta = 0) {
     return SessionStoreInternal.duplicateTab(aWindow, aTab, aDelta);
   },
@@ -310,6 +300,10 @@ this.SessionStore = {
 
   reviveCrashedTab(aTab) {
     return SessionStoreInternal.reviveCrashedTab(aTab);
+  },
+
+  navigateAndRestore(tab, loadArguments, historyIndex) {
+    return SessionStoreInternal.navigateAndRestore(tab, loadArguments, historyIndex);
   }
 };
 
@@ -2166,6 +2160,50 @@ let SessionStoreInternal = {
 
     let data = TabState.collect(aTab);
     this.restoreTab(aTab, data);
+  },
+
+  /**
+   * Navigate the given |tab| by first collecting its current state and then
+   * either changing only the index of the currently shown shistory entry,
+   * or restoring the exact same state again and passing the new URL to load
+   * in |loadArguments|. Use this method to seamlessly switch between pages
+   * loaded in the parent and pages loaded in the child process.
+   */
+  navigateAndRestore(tab, loadArguments, historyIndex) {
+    let window = tab.ownerDocument.defaultView;
+    let browser = tab.linkedBrowser;
+
+    // Set tab title to "Connecting..." and start the throbber to pretend we're
+    // doing something while actually waiting for data from the frame script.
+    window.gBrowser.setTabTitleLoading(tab);
+    tab.setAttribute("busy", "true");
+
+    // Flush to get the latest tab state.
+    TabStateFlusher.flush(browser).then(() => {
+      // The tab might have been closed/gone in the meantime.
+      if (tab.closing || !tab.linkedBrowser || !tab.ownerDocument.defaultView) {
+        return;
+      }
+
+      let tabState = TabState.clone(tab);
+      let options = {restoreImmediately: true};
+
+      if (historyIndex >= 0) {
+        tabState.index = historyIndex + 1;
+        tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
+      } else {
+        tabState.userTypedValue = null;
+        options.loadArguments = loadArguments;
+      }
+
+      // Need to reset restoring tabs.
+      if (tab.linkedBrowser.__SS_restoreState) {
+        this._resetLocalTabRestoringState(tab);
+      }
+
+      // Restore the state into the tab.
+      this.restoreTab(tab, tabState, options);
+    });
   },
 
   /**
