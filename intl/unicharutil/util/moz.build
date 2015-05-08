@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# This file builds the unicharutil_external_s library which should be used
+# by frozen (dependent) linkage components. Internal-linkage code should use
+# unicharutil_s which is built in the internal/ subdirectory.
+
 DIRS += ['internal', 'standalone']
 
 EXPORTS += [
@@ -40,3 +44,5 @@ if CONFIG['ENABLE_INTL_API']:
 
 if CONFIG['GNU_CXX']:
     FAIL_ON_WARNINGS = True
+
+DIST_INSTALL = True
