@@ -172,6 +172,7 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
   }
 
   if (!mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs)) {
+    ReleaseVideoBuffer();
     GVDM_LOG("Decoder did not return frame time");
     return NS_ERROR_UNEXPECTED;
   }
