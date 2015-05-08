@@ -282,28 +282,33 @@ TabSources.prototype = {
     // need to be conservative and only treat valid js files as real
     // sources. Otherwise, use the `originalUrl` property to treat it
     // as an HTML source that manages multiple inline sources.
-    if (url) {
-      try {
-        let urlInfo = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
-        if (urlInfo.fileExtension === "html" || urlInfo.fileExtension === "xml") {
-          spec.isInlineSource = true;
-        }
-        else if (urlInfo.fileExtension === "js") {
-          spec.contentType = "text/javascript";
-        }
-      } catch(ex) {
-        // Not a valid URI.
 
-        // bug 1124536: fix getSourceText on scripts associated "javascript:SOURCE" urls
-        // (e.g. 'evaluate(sandbox, sourcecode, "javascript:"+sourcecode)' )
-        if (url.indexOf("javascript:") === 0) {
-          spec.contentType = "text/javascript";
+    // Assume the source is inline if the element that introduced it is not a
+    // script element, or does not have a src attribute.
+    let element = aSource.element ? aSource.element.unsafeDereference() : null;
+    if (element && (element.tagName !== "SCRIPT" || !element.hasAttribute("src"))) {
+      spec.isInlineSource = true;
+    } else {
+      if (url) {
+        try {
+          let urlInfo = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
+          if (urlInfo.fileExtension === "js") {
+            spec.contentType = "text/javascript";
+          }
+        } catch(ex) {
+          // Not a valid URI.
+
+          // bug 1124536: fix getSourceText on scripts associated "javascript:SOURCE" urls
+          // (e.g. 'evaluate(sandbox, sourcecode, "javascript:"+sourcecode)' )
+          if (url.indexOf("javascript:") === 0) {
+            spec.contentType = "text/javascript";
+          }
         }
       }
-    }
-    else {
-      // Assume the content is javascript if there's no URL
-      spec.contentType = "text/javascript";
+      else {
+        // Assume the content is javascript if there's no URL
+        spec.contentType = "text/javascript";
+      }
     }
 
     return this.source(spec);
