@@ -158,6 +158,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TabState",
   "resource:///modules/sessionstore/TabState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TabStateFlusher",
+  "resource:///modules/sessionstore/TabStateFlusher.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource:///modules/sessionstore/Utils.jsm");
 
@@ -652,6 +654,19 @@ let SessionStoreInternal = {
         this.recordTelemetry(aMessage.data.telemetry);
         TabState.update(browser, aMessage.data);
         this.saveStateDelayed(win);
+
+        if (aMessage.data.isFinal) {
+          // If this the final message we need to resolve all pending flush
+          // requests for the given browser as they might have been sent too
+          // late and will never respond. If they have been sent shortly after
+          // switching a browser's remoteness there isn't too much data to skip.
+          TabStateFlusher.resolveAll(browser);
+        } else if (aMessage.data.flushID) {
+          // This is an update kicked off by an async flush request. Notify the
+          // TabStateFlusher so that it can finish the request and notify its
+          // consumer that's waiting for the flush to be done.
+          TabStateFlusher.resolve(browser, aMessage.data.flushID);
+        }
 
         // Handle any updates sent by the child after the tab was closed. This
         // might be the final update as sent by the "unload" handler but also
@@ -1622,6 +1637,10 @@ let SessionStoreInternal = {
       let tab = aWindow.gBrowser.getTabForBrowser(aBrowser);
       this._resetLocalTabRestoringState(tab);
     }
+
+    // The browser crashed so we might never receive flush responses.
+    // Resolve all pending flush requests for the crashed browser.
+    TabStateFlusher.resolveAll(aBrowser);
   },
 
   // Clean up data that has been closed a long time ago.
