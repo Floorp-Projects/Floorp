@@ -2017,6 +2017,8 @@ public:
     /* Whether the element was still loading.  Some consumers need to handle
        this case specially. */
     bool mIsStillLoading;
+    /* Whether the element has a valid size. */
+    bool mHasSize;
     /* Whether the element used CORS when loading. */
     bool mCORSUsed;
     /* Whether the returned image contains premultiplied pixel data */

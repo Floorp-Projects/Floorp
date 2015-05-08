@@ -17,7 +17,6 @@
 using namespace mozilla::ipc;
 using mozilla::dom::TabParent;
 
-#if defined(PR_LOGGING)
 //
 // To enable logging (see prlog.h for full details):
 //
@@ -28,7 +27,6 @@ using mozilla::dom::TabParent;
 // the file offlineupdate.log
 //
 extern PRLogModuleInfo *gOfflineCacheUpdateLog;
-#endif
 
 #undef LOG
 #define LOG(args) PR_LOG(gOfflineCacheUpdateLog, 4, args)

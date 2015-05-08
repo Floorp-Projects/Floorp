@@ -20,7 +20,7 @@ public:
 
   virtual MediaDecoderStateMachine* CreateStateMachineFromReader(MediaOmxCommonReader* aReader) override;
 
-  virtual void ApplyStateToStateMachine(PlayState aState) override;
+  virtual void ChangeState(PlayState aState) override;
 };
 
 } // namespace mozilla

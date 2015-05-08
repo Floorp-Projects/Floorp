@@ -46,9 +46,7 @@
 #include "nsTextStore.h"
 #endif // #ifdef NS_ENABLE_TSF
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gWindowsLog = nullptr;
-#endif
 
 using namespace mozilla::gfx;
 
@@ -432,11 +430,9 @@ WinUtils::DwmFlushProc WinUtils::dwmFlushProcPtr = nullptr;
 void
 WinUtils::Initialize()
 {
-#ifdef PR_LOGGING
   if (!gWindowsLog) {
     gWindowsLog = PR_NewLogModule("Widget");
   }
-#endif
   if (!sDwmDll && IsVistaOrLater()) {
     sDwmDll = ::LoadLibraryW(kDwmLibraryName);
 
@@ -485,11 +481,9 @@ WinUtils::LogW(const wchar_t *fmt, ...)
                             nullptr) > 0) {
       // desktop console
       printf("%s\n", utf8);
-#ifdef PR_LOGGING
       NS_ASSERTION(gWindowsLog, "Called WinUtils Log() but Widget "
                                    "log module doesn't exist!");
       PR_LOG(gWindowsLog, PR_LOG_ALWAYS, (utf8));
-#endif
     }
     delete[] utf8;
   }
@@ -521,11 +515,9 @@ WinUtils::Log(const char *fmt, ...)
   // desktop console
   printf("%s\n", buffer);
 
-#ifdef PR_LOGGING
   NS_ASSERTION(gWindowsLog, "Called WinUtils Log() but Widget "
                                "log module doesn't exist!");
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, (buffer));
-#endif
   delete[] buffer;
 }
 

@@ -36,7 +36,6 @@ using namespace mozilla::net;
 using mozilla::dom::TabChild;
 using mozilla::dom::ContentChild;
 
-#if defined(PR_LOGGING)
 //
 // To enable logging (see prlog.h for full details):
 //
@@ -47,7 +46,6 @@ using mozilla::dom::ContentChild;
 // the file offlineupdate.log
 //
 extern PRLogModuleInfo *gOfflineCacheUpdateLog;
-#endif
 
 #undef LOG
 #define LOG(args) PR_LOG(gOfflineCacheUpdateLog, 4, args)
@@ -153,7 +151,6 @@ OfflineCacheUpdateChild::AssociateDocument(nsIDOMDocument *aDocument,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!existingCache) {
-#if defined(PR_LOGGING)
         if (LOG_ENABLED()) {
             nsAutoCString clientID;
             if (aApplicationCache) {
@@ -162,7 +159,6 @@ OfflineCacheUpdateChild::AssociateDocument(nsIDOMDocument *aDocument,
             LOG(("Update %p: associating app cache %s to document %p",
                  this, clientID.get(), aDocument));
         }
-#endif
 
         rv = container->SetApplicationCache(aApplicationCache);
         NS_ENSURE_SUCCESS(rv, rv);

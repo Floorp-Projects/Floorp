@@ -23,6 +23,9 @@
 #include "nsIObserverService.h"
 #include "mozilla/EMEUtils.h"
 #include "GMPUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -92,6 +95,36 @@ HaveGMPFor(mozIGeckoMediaPluginService* aGMPService,
   return hasPlugin;
 }
 
+#ifdef XP_WIN
+static bool
+AdobePluginDLLExists(const nsACString& aVersionStr)
+{
+  nsCOMPtr<nsIFile> path;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(path));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  rv = path->Append(NS_LITERAL_STRING("gmp-eme-adobe"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  rv = path->AppendNative(aVersionStr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  rv = path->Append(NS_LITERAL_STRING("eme-adobe.dll"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  bool exists = false;
+  return NS_SUCCEEDED(path->Exists(&exists)) && exists;
+}
+#endif
+
 static MediaKeySystemStatus
 EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
                     const nsAString& aKeySystem,
@@ -129,6 +162,22 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
     return MediaKeySystemStatus::Cdm_insufficient_version;
   }
 
+#ifdef XP_WIN
+  if (aKeySystem.EqualsLiteral("com.adobe.access") ||
+      aKeySystem.EqualsLiteral("com.adobe.primetime")) {
+    // Verify that anti-virus hasn't "helpfully" deleted the Adobe GMP DLL,
+    // as we suspect may happen (Bug 1160382).
+    if (!AdobePluginDLLExists(versionStr)) {
+      NS_WARNING("Adobe EME plugin disappeared from disk!");
+      // Reset the prefs that Firefox's GMP downloader sets, so that
+      // Firefox will try to download the plugin next time the updater runs.
+      Preferences::ClearUser("media.gmp-eme-adobe.lastUpdate");
+      Preferences::ClearUser("media.gmp-eme-adobe.version");
+      return MediaKeySystemStatus::Cdm_not_installed;
+    }
+  }
+#endif
+
   return MediaKeySystemStatus::Available;
 }
 
@@ -161,7 +210,8 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
       return MediaKeySystemStatus::Cdm_disabled;
     }
-    if ((!WMFDecoderModule::HasH264() || !WMFDecoderModule::HasAAC()) ||
+    if (!MP4Decoder::CanCreateH264Decoder() ||
+        !MP4Decoder::CanCreateAACDecoder() ||
         !EMEVoucherFileExists()) {
       // The system doesn't have the codecs that Adobe EME relies
       // on installed, or doesn't have a voucher for the plugin-container.

@@ -69,12 +69,8 @@ PR_STATIC_ASSERT (HighThreadThreshold <= MAX_RESOLVER_THREADS);
 
 //----------------------------------------------------------------------------
 
-#if defined(PR_LOGGING)
 static PRLogModuleInfo *gHostResolverLog = nullptr;
 #define LOG(args) PR_LOG(gHostResolverLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
 
 #define LOG_HOST(host, interface) host,                                        \
                  (interface && interface[0] != '\0') ? " on interface " : "",  \
@@ -443,7 +439,7 @@ HostDB_ClearEntry(PLDHashTable *table,
 
     LOG(("Clearing cache db entry for host [%s%s%s].\n",
          LOG_HOST(hr->host, hr->netInterface)));
-#if defined(DEBUG) && defined(PR_LOGGING)
+#if defined(DEBUG)
     {
         MutexAutoLock lock(hr->addr_info_lock);
         if (!hr->addr_info) {
@@ -1052,12 +1048,10 @@ nsHostResolver::ConditionallyCreateThread(nsHostRecord *rec)
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }
-#if defined(PR_LOGGING)
     else {
         LOG(("  Unable to find a thread for looking up host [%s%s%s].\n",
              LOG_HOST(rec->host, rec->netInterface)));
     }
-#endif
     return NS_OK;
 }
 
@@ -1497,10 +1491,8 @@ nsHostResolver::Create(uint32_t maxCacheEntries,
                        uint32_t defaultGracePeriod,
                        nsHostResolver **result)
 {
-#if defined(PR_LOGGING)
     if (!gHostResolverLog)
         gHostResolverLog = PR_NewLogModule("nsHostResolver");
-#endif
 
     nsHostResolver *res = new nsHostResolver(maxCacheEntries, defaultCacheEntryLifetime,
                                              defaultGracePeriod);

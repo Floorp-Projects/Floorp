@@ -118,3 +118,18 @@ interface nsISocketTransportService : nsISupports
      */
     [noscript] void notifyWhenCanAttachSocket(in nsIRunnable aEvent);
 };
+
+[scriptable, uuid(c5204623-5b58-4a16-8b2e-67c34dd02e3f)]
+interface nsIRoutedSocketTransportService : nsISocketTransportService
+{
+    // use this instead of createTransport when you have a transport
+    // that distinguishes between origin and route (aka connection)
+    nsISocketTransport createRoutedTransport([array, size_is(aTypeCount)]
+                                             in string aSocketTypes,
+                                             in unsigned long aTypeCount,
+                                             in AUTF8String aHost, // origin
+                                             in long aPort, // origin
+                                             in AUTF8String aHostRoute,
+                                             in long aPortRoute,
+                                             in nsIProxyInfo aProxyInfo);
+};

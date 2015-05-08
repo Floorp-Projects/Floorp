@@ -24,8 +24,6 @@ using mozilla::TimeStamp;
 static Atomic<int32_t>  gGenerator;
 static TimerThread*     gThread = nullptr;
 
-#ifdef DEBUG_TIMERS
-
 PRLogModuleInfo*
 GetTimerLog()
 {
@@ -61,7 +59,6 @@ myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
   *meanResult = mean;
   *stdDevResult = stdDev;
 }
-#endif
 
 namespace {
 
@@ -127,9 +124,7 @@ public:
     sAllocatorUsers++;
   }
 
-#ifdef DEBUG_TIMERS
   TimeStamp mInitTime;
-#endif
 
   static void Init();
   static void Shutdown();
@@ -318,7 +313,6 @@ nsTimerImpl::Startup()
 void
 nsTimerImpl::Shutdown()
 {
-#ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     double mean = 0, stddev = 0;
     myNS_MeanAndStdDev(sDeltaNum, sDeltaSum, sDeltaSumSquared, &mean, &stddev);
@@ -329,7 +323,6 @@ nsTimerImpl::Shutdown()
     PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
            ("mean: %fms, stddev: %fms\n", mean, stddev));
   }
-#endif
 
   if (!gThread) {
     return;
@@ -575,7 +568,6 @@ nsTimerImpl::Fire()
   mozilla::tasktracer::AutoRunFakeTracedTask runTracedTask(mTracedTask);
 #endif
 
-#ifdef DEBUG_TIMERS
   TimeStamp now = TimeStamp::Now();
   if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     TimeDuration   a = now - mStart; // actual delay in intervals
@@ -600,7 +592,6 @@ nsTimerImpl::Fire()
     mStart = mStart2;
     mStart2 = TimeStamp();
   }
-#endif
 
   TimeStamp timeout = mTimeout;
   if (IsRepeatingPrecisely()) {
@@ -659,13 +650,9 @@ nsTimerImpl::Fire()
   mFiring = false;
   mTimerCallbackWhileFiring = nullptr;
 
-#ifdef DEBUG_TIMERS
-  if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
-    PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
-           ("[this=%p] Took %fms to fire timer callback\n",
-            this, (TimeStamp::Now() - now).ToMilliseconds()));
-  }
-#endif
+  PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
+         ("[this=%p] Took %fms to fire timer callback\n",
+          this, (TimeStamp::Now() - now).ToMilliseconds()));
 
   // Reschedule repeating timers, except REPEATING_PRECISE which already did
   // that in PostTimerEvent, but make sure that we aren't armed already (which
@@ -711,14 +698,12 @@ nsTimerEvent::Run()
     return NS_OK;
   }
 
-#ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     TimeStamp now = TimeStamp::Now();
     PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
            ("[this=%p] time between PostTimerEvent() and Fire(): %fms\n",
             this, (now - mInitTime).ToMilliseconds()));
   }
-#endif
 
   mTimer->Fire();
   // Since nsTimerImpl is not thread-safe, we should release |mTimer|
@@ -754,11 +739,9 @@ nsTimerImpl::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef)
     return timer.forget();
   }
 
-#ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     event->mInitTime = TimeStamp::Now();
   }
-#endif
 
   // If this is a repeating precise timer, we need to calculate the time for
   // the next timer to fire before we make the callback.
@@ -803,7 +786,6 @@ nsTimerImpl::SetDelayInternal(uint32_t aDelay)
 
   mTimeout += delayInterval;
 
-#ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
     if (mStart.IsNull()) {
       mStart = now;
@@ -811,7 +793,6 @@ nsTimerImpl::SetDelayInternal(uint32_t aDelay)
       mStart2 = now;
     }
   }
-#endif
 }
 
 size_t

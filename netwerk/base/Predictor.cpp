@@ -53,12 +53,8 @@ namespace net {
 
 Predictor *Predictor::sSelf = nullptr;
 
-#if defined(PR_LOGGING)
 static PRLogModuleInfo *gPredictorLog = nullptr;
 #define PREDICTOR_LOG(args) PR_LOG(gPredictorLog, 4, args)
-#else
-#define PREDICTOR_LOG(args)
-#endif
 
 #define RETURN_IF_FAILED(_rv) \
   do { \
@@ -315,9 +311,7 @@ Predictor::Predictor()
   ,mMaxResourcesPerEntry(PREDICTOR_MAX_RESOURCES_DEFAULT)
   ,mStartupCount(1)
 {
-#if defined(PR_LOGGING)
   gPredictorLog = PR_NewLogModule("NetworkPredictor");
-#endif
 
   MOZ_ASSERT(!sSelf, "multiple Predictor instances!");
   sSelf = this;

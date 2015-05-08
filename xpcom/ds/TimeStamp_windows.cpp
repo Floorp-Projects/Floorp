@@ -20,7 +20,6 @@
 
 #include <intrin.h>
 
-#if defined(PR_LOGGING)
 // Log module for mozilla::TimeStamp for Windows logging...
 //
 // To enable logging (see prlog.h for full details):
@@ -39,10 +38,7 @@ GetTimeStampLog()
   }
   return sLog;
 }
-  #define LOG(x)  PR_LOG(GetTimeStampLog(), PR_LOG_DEBUG, x)
-#else
-  #define LOG(x)
-#endif /* PR_LOGGING */
+#define LOG(x)  PR_LOG(GetTimeStampLog(), PR_LOG_DEBUG, x)
 
 // Estimate of the smallest duration of time we can measure.
 static volatile ULONGLONG sResolution;

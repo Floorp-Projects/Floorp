@@ -32,8 +32,8 @@ config = {
         "tests/bin/js",
         "--no-slow",
         "--no-progress",
-        "--tinderbox",
-        "--tbpl"
+        "--format=automation",
+        "--jitflags=all"
     ],
     "mozbase_options": [
         "-b", "%(binary_path)s"

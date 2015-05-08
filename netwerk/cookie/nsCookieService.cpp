@@ -190,7 +190,6 @@ struct nsListIter
 #define SET_COOKIE true
 #define GET_COOKIE false
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo *
 GetCookieLog()
 {
@@ -322,13 +321,6 @@ LogSuccess(bool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStrin
   LogSuccess(aSetCookie, aHostURI, aCookieString.get(), aCookie, aReplacing);
 }
 
-#else
-#define COOKIE_LOGFAILURE(a, b, c, d)    PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
-#define COOKIE_LOGSUCCESS(a, b, c, d, e) PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
-#define COOKIE_LOGEVICTED(a, b)          PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
-#define COOKIE_LOGSTRING(a, b)           PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
-#endif
-
 #ifdef DEBUG
 #define NS_ASSERT_SUCCESS(res)                                               \
   PR_BEGIN_MACRO                                                             \
@@ -359,17 +351,17 @@ protected:
 public:
   NS_IMETHOD HandleError(mozIStorageError* aError) override
   {
-    int32_t result = -1;
-    aError->GetResult(&result);
+    if (PR_LOG_TEST(GetCookieLog(), PR_LOG_WARNING)) {
+      int32_t result = -1;
+      aError->GetResult(&result);
 
-#ifdef PR_LOGGING
-    nsAutoCString message;
-    aError->GetMessage(message);
-    COOKIE_LOGSTRING(PR_LOG_WARNING,
-      ("DBListenerErrorHandler::HandleError(): Error %d occurred while "
-       "performing operation '%s' with message '%s'; rebuilding database.",
-       result, GetOpType(), message.get()));
-#endif
+      nsAutoCString message;
+      aError->GetMessage(message);
+      COOKIE_LOGSTRING(PR_LOG_WARNING,
+        ("DBListenerErrorHandler::HandleError(): Error %d occurred while "
+         "performing operation '%s' with message '%s'; rebuilding database.",
+         result, GetOpType(), message.get()));
+    }
 
     // Rebuild the database.
     gCookieService->HandleCorruptDB(mDBState);
@@ -3778,12 +3770,10 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
   NS_ASSERTION(mDBState->hostTable.Count() > 0, "table is empty");
   EnsureReadComplete();
 
-#ifdef PR_LOGGING
   uint32_t initialCookieCount = mDBState->cookieCount;
   COOKIE_LOGSTRING(PR_LOG_DEBUG,
     ("PurgeCookies(): beginning purge with %ld cookies and %lld oldest age",
      mDBState->cookieCount, aCurrentTimeInUsec - mDBState->cookieOldestTime));
-#endif
 
   nsAutoTArray<nsListIter, kMaxNumberOfCookies> purgeList;
 
@@ -3801,9 +3791,7 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
     aCurrentTimeInUsec - mCookiePurgeAge, purgeList, removedList, paramsArray);
   mDBState->hostTable.EnumerateEntries(purgeCookiesCallback, &data);
 
-#ifdef PR_LOGGING
   uint32_t postExpiryCookieCount = mDBState->cookieCount;
-#endif
 
   // now we have a list of iterators for cookies over the age limit.
   // sort them by age, and then we'll see how many to remove...

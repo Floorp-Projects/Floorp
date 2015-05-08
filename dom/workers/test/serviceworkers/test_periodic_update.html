@@ -7,6 +7,7 @@
 <head>
   <title>Bug 1112469 - Test the periodic update of service workers</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="periodic_update_test.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -15,82 +16,9 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
-  var oldSWVersion, newSWVersion;
+gPrefix = "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/";
+runTheTest();
 
-  function start() {
-    const Cc = SpecialPowers.Cc;
-    const Ci = SpecialPowers.Ci;
-
-    function testVersion(sw) {
-      // Verify that the service worker has been correctly updated.
-      testFrame("periodic/frame.html").then(function(body) {
-        newSWVersion = parseInt(body);
-        todo_is(newSWVersion, "2", "Expected correct new version");
-        ok(newSWVersion > oldSWVersion,
-           "The SW should be successfully updated, old: " + oldSWVersion +
-           ", new: " + newSWVersion);
-        unregisterSW().then(function() {
-          SimpleTest.finish();
-        });
-      });
-    }
-
-    registerSW().then(function() {
-      return testFrame("periodic/frame.html").then(function(body) {
-        oldSWVersion = parseInt(body);
-        todo_is(oldSWVersion, "1", "Expected correct old version");
-      });
-    }).then(function() {
-      return navigator.serviceWorker.getRegistration("periodic/foo");
-    }).then(function(reg) {
-      reg.onupdatefound = function() {
-        reg.onupdatefound = null;
-        var sw = reg.installing;
-        sw.onstatechange = function() {
-          sw.onstatechange = null;
-          ok(!reg.waiting && reg.active, "New worker must get activated immediately");
-          testVersion(reg.active);
-        };
-      };
-    }).then(function() {
-      SpecialPowers.startPeriodicServiceWorkerUpdates();
-    });
-  }
-
-  function testFrame(src) {
-    return new Promise(function(resolve, reject) {
-      var iframe = document.createElement("iframe");
-      iframe.src = src;
-      window.callback = function(result) {
-        iframe.src = "about:blank";
-        document.body.removeChild(iframe);
-        iframe = null;
-        SpecialPowers.exactGC(window, function() {
-          resolve(result);
-        });
-      };
-      document.body.appendChild(iframe);
-    });
-  }
-
-  function registerSW() {
-    return testFrame("periodic/register.html");
-  }
-
-  function unregisterSW() {
-    return testFrame("periodic/unregister.html");
-  }
-
-  SimpleTest.waitForExplicitFinish();
-
-  SpecialPowers.pushPrefEnv({"set": [
-    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true],
-    ["dom.serviceWorkers.periodic-updates.enabled", true],
-  ]}, function() {
-    start();
-  });
 </script>
 </pre>
 </body>

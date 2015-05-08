@@ -260,13 +260,9 @@ TimerThread::Run()
           RemoveTimerInternal(timer);
           timer = nullptr;
 
-#ifdef DEBUG_TIMERS
-          if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
-            PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
-                   ("Timer thread woke up %fms from when it was supposed to\n",
-                    fabs((now - timerRef->mTimeout).ToMilliseconds())));
-          }
-#endif
+          PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
+                 ("Timer thread woke up %fms from when it was supposed to\n",
+                  fabs((now - timerRef->mTimeout).ToMilliseconds())));
 
           {
             // We release mMonitor around the Fire call to avoid deadlock.
@@ -346,7 +342,6 @@ TimerThread::Run()
         }
       }
 
-#ifdef DEBUG_TIMERS
       if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
         if (waitFor == PR_INTERVAL_NO_TIMEOUT)
           PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
@@ -355,7 +350,6 @@ TimerThread::Run()
           PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
                  ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
       }
-#endif
     }
 
     mWaiting = true;

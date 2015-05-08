@@ -26,7 +26,7 @@ fi
 
 ./mozharness/scripts/b2g_lightsaber.py \
   --config b2g/taskcluster-lightsaber-nightly.py \
-  --config balrog/staging.py \
+  --config balrog/docker-worker.py \
   "$debug_flag" \
   --disable-mock \
   --variant=$VARIANT \

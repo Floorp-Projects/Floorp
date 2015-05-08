@@ -664,8 +664,17 @@ nsDNSService::Shutdown()
         res = mResolver;
         mResolver = nullptr;
     }
-    if (res)
+    if (res) {
         res->Shutdown();
+    }
+
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (observerService) {
+        observerService->RemoveObserver(this, NS_NETWORK_LINK_TOPIC);
+        observerService->RemoveObserver(this, "last-pb-context-exited");
+    }
+
     return NS_OK;
 }
 

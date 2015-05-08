@@ -1926,6 +1926,14 @@ SpecialPowersAPI.prototype = {
   startPeriodicServiceWorkerUpdates: function() {
     return this._sendSyncMessage('SPPeriodicServiceWorkerUpdates', {});
   },
+
+  removeAllServiceWorkerData: function() {
+    this.notifyObserversInParentProcess(null, "browser:purge-session-history", "");
+  },
+
+  removeServiceWorkerDataForExampleDomain: function() {
+    this.notifyObserversInParentProcess(null, "browser:purge-domain-data", "example.com");
+  },
 };
 
 this.SpecialPowersAPI = SpecialPowersAPI;

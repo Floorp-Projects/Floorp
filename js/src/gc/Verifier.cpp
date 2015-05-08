@@ -45,13 +45,6 @@ using namespace js::gc;
  *   the snapshot and are no longer found must be marked; otherwise an assertion
  *   triggers. Note that we must not GC in between starting and finishing a
  *   verification phase.
- *
- * Post-Barrier Verifier:
- *   When StartVerifyBarriers is called, we create a virtual "Nursery Set" which
- *   future allocations are recorded in and turn on the StoreBuffer. Later,
- *   EndVerifyBarriers traverses the heap and ensures that the set of cross-
- *   generational pointers we find is a subset of the pointers recorded in our
- *   StoreBuffer.
  */
 
 struct EdgeValue
@@ -172,15 +165,6 @@ void
 gc::GCRuntime::startVerifyPreBarriers()
 {
     if (verifyPreData || isIncrementalGCInProgress())
-        return;
-
-    /*
-     * The post barrier verifier requires the storebuffer to be enabled, but the
-     * pre barrier verifier disables it as part of disabling GGC.  Don't allow
-     * starting the pre barrier verifier if the post barrier verifier is already
-     * running.
-     */
-    if (verifyPostData)
         return;
 
     evictNursery();

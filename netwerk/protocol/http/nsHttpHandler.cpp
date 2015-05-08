@@ -214,9 +214,7 @@ nsHttpHandler::nsHttpHandler()
     , mTCPKeepaliveLongLivedIdleTimeS(600)
     , mEnforceH1Framing(FRAMECHECK_BARELY)
 {
-#if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
-#endif
 
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
@@ -351,6 +349,8 @@ nsHttpHandler::Init()
     nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
     mObserverService = new nsMainThreadPtrHolder<nsIObserverService>(obsService);
     if (mObserverService) {
+        // register the handler object as a weak callback as we don't need to worry
+        // about shutdown ordering.
         mObserverService->AddObserver(this, "profile-change-net-teardown", true);
         mObserverService->AddObserver(this, "profile-change-net-restore", true);
         mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
@@ -360,7 +360,8 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "last-pb-context-exited", true);
         mObserverService->AddObserver(this, "webapps-clear-data", true);
         mObserverService->AddObserver(this, "browser:purge-session-history", true);
-        mObserverService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
+        mObserverService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
+        mObserverService->AddObserver(this, "application-background", true);
     }
 
     MakeNewRequestTokenBucket();
@@ -2008,6 +2009,12 @@ nsHttpHandler::Observe(nsISupports *subject,
                 mConnMgr->VerifyTraffic();
             }
         }
+    } else if (!strcmp(topic, "application-background")) {
+        // going to the background on android means we should close
+        // down idle connections for power conservation
+        if (mConnMgr) {
+            mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
+        }
     }
 
     return NS_OK;
@@ -2015,14 +2022,15 @@ nsHttpHandler::Observe(nsISupports *subject,
 
 // nsISpeculativeConnect
 
-NS_IMETHODIMP
-nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
-                                  nsIInterfaceRequestor *aCallbacks)
+nsresult
+nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
+                                          nsIInterfaceRequestor *aCallbacks,
+                                          bool anonymous)
 {
     if (IsNeckoChild()) {
         ipc::URIParams params;
         SerializeURI(aURI, params);
-        gNeckoChild->SendSpeculativeConnect(params);
+        gNeckoChild->SendSpeculativeConnect(params, anonymous);
         return NS_OK;
     }
 
@@ -2085,8 +2093,23 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
 
     nsHttpConnectionInfo *ci =
         new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr, usingSSL);
+    ci->SetAnonymous(anonymous);
 
     return SpeculativeConnect(ci, aCallbacks);
+}
+
+NS_IMETHODIMP
+nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
+                                  nsIInterfaceRequestor *aCallbacks)
+{
+    return SpeculativeConnectInternal(aURI, aCallbacks, false);
+}
+
+NS_IMETHODIMP
+nsHttpHandler::SpeculativeAnonymousConnect(nsIURI *aURI,
+                                           nsIInterfaceRequestor *aCallbacks)
+{
+    return SpeculativeConnectInternal(aURI, aCallbacks, true);
 }
 
 void

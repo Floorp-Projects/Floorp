@@ -60,15 +60,14 @@ public:
   // Listen on socket for incoming connection requests
   nsresult Listen(const struct sockaddr* aAddr, socklen_t aAddrLen);
 
-  // Callback method for accepted connections
-  virtual void OnAccepted(int aFd, const sockaddr_any* aAddr,
-                          socklen_t aAddrLen) {};
-
   // Callback method for successful connection requests
   virtual void OnConnected() {};
 
   // Callback method for successful listen requests
   virtual void OnListening() {};
+
+  // Callback method for accepting from a listening socket
+  virtual void OnSocketCanAcceptWithoutBlocking() {};
 
   // Callback method for receiving from socket
   virtual void OnSocketCanReceiveWithoutBlocking() {};

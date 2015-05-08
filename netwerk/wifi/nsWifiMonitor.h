@@ -26,9 +26,7 @@
 #include "win_wifiScanner.h"
 #endif
 
-#if defined(PR_LOGGING)
 extern PRLogModuleInfo *gWifiMonitorLog;
-#endif
 #define LOG(args)     PR_LOG(gWifiMonitorLog, PR_LOG_DEBUG, args)
 
 class nsWifiAccessPoint;

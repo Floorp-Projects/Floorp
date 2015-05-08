@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(ff13ee00-5485-4551-af6f-1ab6de843365)]
+[scriptable, builtinclass, uuid(384c9aec-29e5-4bdb-abc2-fba10da83e17)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -110,6 +110,22 @@ interface nsIServiceWorkerManager : nsISupports
    * This implements the soft update algorithm.
    */
   void softUpdate(in DOMString aScope);
+
+  /*
+   * Clears ServiceWorker registrations from memory and disk for the specified
+   * host.
+   * - All ServiceWorker instances change their state to redundant.
+   * - Existing ServiceWorker instances handling fetches will keep running.
+   * - All documents will immediately stop being controlled.
+   * - Unregister jobs will be queued for all registrations.
+   *   This eventually results in the registration being deleted from disk too.
+   */
+  void remove(in AUTF8String aHost);
+
+  /*
+   * Clear all registrations for all hosts. See remove().
+   */
+  void removeAll();
 
   // Testing
   DOMString getScopeForUrl(in DOMString path);

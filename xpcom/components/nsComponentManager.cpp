@@ -1031,7 +1031,6 @@ nsComponentManagerImpl::GetClassObject(const nsCID& aClass, const nsIID& aIID,
 {
   nsresult rv;
 
-#ifdef PR_LOGGING
   if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_DEBUG)) {
     char* buf = aClass.ToString();
     PR_LogPrint("nsComponentManager: GetClassObject(%s)", buf);
@@ -1039,7 +1038,6 @@ nsComponentManagerImpl::GetClassObject(const nsCID& aClass, const nsIID& aIID,
       free(buf);
     }
   }
-#endif
 
   PR_ASSERT(aResult != nullptr);
 
@@ -1069,12 +1067,8 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char* aContractID,
 
   nsresult rv;
 
-
-#ifdef PR_LOGGING
-  if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_DEBUG)) {
-    PR_LogPrint("nsComponentManager: GetClassObject(%s)", aContractID);
-  }
-#endif
+  PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+         ("nsComponentManager: GetClassObject(%s)", aContractID));
 
   nsCOMPtr<nsIFactory> factory = FindFactory(aContractID, strlen(aContractID));
   if (!factory) {
@@ -1153,7 +1147,6 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
     rv = NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
-#ifdef PR_LOGGING
   if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING)) {
     char* buf = aClass.ToString();
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
@@ -1163,7 +1156,6 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
       free(buf);
     }
   }
-#endif
 
   return rv;
 }

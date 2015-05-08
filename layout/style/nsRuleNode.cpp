@@ -1431,7 +1431,7 @@ nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
     PL_DHashTableEnumerate(children, EnqueueRuleNodeChildren,
                            &destroyQueueTail);
     *destroyQueueTail = nullptr; // ensure null-termination
-    PL_DHashTableDestroy(children);
+    delete children;
   } else if (HaveChildren()) {
     *destroyQueueTail = ChildrenList();
     do {
@@ -1614,7 +1614,7 @@ nsRuleNode::ConvertChildrenToHash(int32_t aNumKids)
 {
   NS_ASSERTION(!ChildrenAreHashed() && HaveChildren(),
                "must have a non-empty list of children");
-  PLDHashTable *hash = PL_NewDHashTable(&ChildrenHashOps,
+  PLDHashTable *hash = new PLDHashTable(&ChildrenHashOps,
                                         sizeof(ChildrenHashEntry),
                                         aNumKids);
   for (nsRuleNode* curr = ChildrenList(); curr; curr = curr->mNextSibling) {
@@ -1792,8 +1792,9 @@ CheckTextCallback(const nsRuleData* aRuleData,
 {
   const nsCSSValue* textAlignValue = aRuleData->ValueForTextAlign();
   if (textAlignValue->GetUnit() == eCSSUnit_Enumerated &&
-      textAlignValue->GetIntValue() ==
-        NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT) {
+      (textAlignValue->GetIntValue() ==
+        NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT ||
+       textAlignValue->GetIntValue() == NS_STYLE_TEXT_ALIGN_MATCH_PARENT)) {
     // Promote reset to mixed since we have something that depends on
     // the parent.
     if (aResult == nsRuleNode::eRulePartialReset)
@@ -4215,6 +4216,29 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
     uint8_t parentAlign = parentText->mTextAlign;
     text->mTextAlign = (NS_STYLE_TEXT_ALIGN_DEFAULT == parentAlign) ?
       NS_STYLE_TEXT_ALIGN_CENTER : parentAlign;
+  } else if (eCSSUnit_Enumerated == textAlignValue->GetUnit() &&
+             NS_STYLE_TEXT_ALIGN_MATCH_PARENT ==
+               textAlignValue->GetIntValue()) {
+    canStoreInRuleTree = false;
+    nsStyleContext* parent = aContext->GetParent();
+    if (parent) {
+      uint8_t parentAlign = parentText->mTextAlign;
+      uint8_t parentDirection = parent->StyleVisibility()->mDirection;
+      switch (parentAlign) {
+        case NS_STYLE_TEXT_ALIGN_DEFAULT:
+          text->mTextAlign = parentDirection == NS_STYLE_DIRECTION_RTL ?
+            NS_STYLE_TEXT_ALIGN_RIGHT : NS_STYLE_TEXT_ALIGN_LEFT;
+          break;
+
+        case NS_STYLE_TEXT_ALIGN_END:
+          text->mTextAlign = parentDirection == NS_STYLE_DIRECTION_RTL ?
+            NS_STYLE_TEXT_ALIGN_LEFT : NS_STYLE_TEXT_ALIGN_RIGHT;
+          break;
+
+        default:
+          text->mTextAlign = parentAlign;
+      }
+    }
   } else {
     if (eCSSUnit_Pair == textAlignValue->GetUnit()) {
       // Two values were specified, one must be 'true'.
@@ -9348,7 +9372,7 @@ nsRuleNode::SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue)
     PL_DHashTableEnumerate(children, SweepHashEntry, &survivorsWithChildren);
     childrenDestroyed = oldChildCount - children->EntryCount();
     if (childrenDestroyed == oldChildCount) {
-      PL_DHashTableDestroy(children);
+      delete children;
       mChildren.asVoid = nullptr;
     }
   } else {
