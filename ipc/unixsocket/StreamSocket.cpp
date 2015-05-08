@@ -251,13 +251,17 @@ StreamSocketIO::Connect()
       FireSocketError();
       return;
     }
+    if (!mConnector->SetUp(GetFd())) {
+      NS_WARNING("Could not set up socket!");
+      FireSocketError();
+      return;
+    }
+    if (!mConnector->CreateAddr(false, mAddrSize, mAddr, mAddress.get())) {
+      NS_WARNING("Cannot create socket address!");
+      FireSocketError();
+      return;
+    }
     SetFd(fd);
-  }
-
-  if (!mConnector->CreateAddr(false, mAddrSize, mAddr, mAddress.get())) {
-    NS_WARNING("Cannot create socket address!");
-    FireSocketError();
-    return;
   }
 
   // calls OnConnected() on success, or OnError() otherwise
@@ -278,18 +282,6 @@ StreamSocketIO::OnConnected()
 {
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED);
-
-  if (!SetSocketFlags(GetFd())) {
-    NS_WARNING("Cannot set socket flags!");
-    FireSocketError();
-    return;
-  }
-
-  if (!mConnector->SetUp(GetFd())) {
-    NS_WARNING("Could not set up socket!");
-    FireSocketError();
-    return;
-  }
 
   NS_DispatchToMainThread(
     new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
@@ -408,29 +400,28 @@ StreamSocketIO::Accept(int aFd,
 
   // File-descriptor setup
 
+  if (!SetSocketFlags(aFd)) {
+    return NS_ERROR_FAILURE;
+  }
   if (!mConnector->SetUp(aFd)) {
     NS_WARNING("Could not set up socket!");
     return NS_ERROR_FAILURE;
   }
 
-  if (!SetSocketFlags(aFd)) {
-    return NS_ERROR_FAILURE;
-  }
   SetSocket(aFd, SOCKET_IS_CONNECTED);
 
-  AddWatchers(READ_WATCHER, true);
-  if (HasPendingData()) {
-    AddWatchers(WRITE_WATCHER, false);
-  }
-
   // Address setup
-
   memcpy(&mAddr, aAddr, aAddrLen);
   mAddrSize = aAddrLen;
 
   // Signal success
   NS_DispatchToMainThread(
     new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
+
+  AddWatchers(READ_WATCHER, true);
+  if (HasPendingData()) {
+    AddWatchers(WRITE_WATCHER, false);
+  }
 
   return NS_OK;
 }
