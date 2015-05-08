@@ -32,10 +32,6 @@ HTMLFieldSetElement::HTMLFieldSetElement(already_AddRefed<mozilla::dom::NodeInfo
 
 HTMLFieldSetElement::~HTMLFieldSetElement()
 {
-  uint32_t length = mDependentElements.Length();
-  for (uint32_t i = 0; i < length; ++i) {
-    mDependentElements[i]->ForgetFieldSet(this);
-  }
 }
 
 // nsISupports
