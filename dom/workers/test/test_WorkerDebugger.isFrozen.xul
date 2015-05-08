@@ -63,7 +63,7 @@
         is(dbg2.isFrozen, false,
            "debugger for worker on page 2 should not be frozen");
 
-        promise = waitForMultiple([
+        promise = Promise.all([
           waitForDebuggerFreeze(dbg2),
           waitForDebuggerThaw(dbg1),
         ]);
