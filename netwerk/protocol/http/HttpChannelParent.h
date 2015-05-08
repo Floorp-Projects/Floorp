@@ -120,7 +120,9 @@ protected:
                    const ipc::PrincipalInfo&  aTriggeringPrincipalInfo,
                    const uint32_t&            aSecurityFlags,
                    const uint32_t&            aContentPolicyType,
-                   const uint32_t&            aInnerWindowID,
+                   const uint64_t&            aInnerWindowID,
+                   const uint64_t&            aOuterWindowID,
+                   const uint64_t&            aParentOuterWindowID,
                    const OptionalHttpResponseHead& aSynthesizedResponseHead,
                    const uint32_t&            aCacheKey);
 

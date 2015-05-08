@@ -111,7 +111,9 @@ WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
                           triggeringPrincipal,
                           aLoadInfoArgs.securityFlags(),
                           aLoadInfoArgs.contentPolicyType(),
-                          aLoadInfoArgs.innerWindowID());
+                          aLoadInfoArgs.innerWindowID(),
+                          aLoadInfoArgs.outerWindowID(),
+                          aLoadInfoArgs.parentOuterWindowID());
   rv = mChannel->SetLoadInfo(loadInfo);
   if (NS_FAILED(rv)) {
     goto fail;
