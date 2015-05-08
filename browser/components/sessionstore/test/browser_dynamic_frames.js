@@ -24,7 +24,7 @@ add_task(function () {
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
 
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
 
   // Check URLs.
@@ -61,7 +61,7 @@ add_task(function () {
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
 
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
 
   // Check URLs.
@@ -76,7 +76,7 @@ add_task(function () {
   browser.messageManager.sendAsyncMessage("ss-test:click", {id: "lnk"});
   yield promiseBrowserLoaded(browser, false /* don't ignore subframes */);
 
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   ({entries} = JSON.parse(ss.getTabState(tab)));
 
   // Check URLs.

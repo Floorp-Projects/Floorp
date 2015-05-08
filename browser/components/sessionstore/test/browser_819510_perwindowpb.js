@@ -109,8 +109,9 @@ add_task(function* test_3() {
   forgetClosedWindows();
 });
 
-function promiseTabLoad(win, url) {
+function* promiseTabLoad(win, url) {
   let browser = win.gBrowser.selectedBrowser;
   browser.loadURI(url);
-  return promiseBrowserLoaded(browser).then(() => TabState.flush(browser));
+  yield promiseBrowserLoaded(browser);
+  yield TabStateFlusher.flush(browser);
 }

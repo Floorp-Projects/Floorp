@@ -130,7 +130,7 @@ add_task(function test_nested() {
   yield promiseTabRestored(tab);
 
   // Check that the input field has the right value.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   ({formdata} = JSON.parse(ss.getTabState(tab)));
   is(JSON.stringify(formdata), JSON.stringify(FORM_DATA),
     "formdata for iframe restored correctly");
