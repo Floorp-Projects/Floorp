@@ -803,8 +803,9 @@ MacroAssembler::checkUnboxedArrayCapacity(Register obj, const Int32Key& index, R
 void
 MacroAssembler::checkAllocatorState(Label* fail)
 {
-    // Don't execute the inline path if we are tracing allocations.
-    if (js::gc::TraceEnabled())
+    // Don't execute the inline path if we are tracing allocations,
+    // or when the memory profiler is enabled.
+    if (js::gc::TraceEnabled() || MemProfiler::enabled())
         jump(fail);
 
 # ifdef JS_GC_ZEAL
