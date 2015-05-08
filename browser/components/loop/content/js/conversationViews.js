@@ -140,7 +140,7 @@ loop.conversationViews = (function(mozL10n) {
   var EMAIL_OR_PHONE_RE = /^(:?\S+@\S+|\+\d+)$/;
 
   var AcceptCallView = React.createClass({displayName: "AcceptCallView",
-    mixins: [sharedMixins.DropdownMenuMixin],
+    mixins: [sharedMixins.DropdownMenuMixin()],
 
     propTypes: {
       callType: React.PropTypes.string.isRequired,
