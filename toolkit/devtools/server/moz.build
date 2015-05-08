@@ -54,6 +54,7 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/inspector.js',
     'actors/layout.js',
     'actors/memory.js',
+    'actors/memprof.js',
     'actors/monitor.js',
     'actors/object.js',
     'actors/performance-entries.js',
