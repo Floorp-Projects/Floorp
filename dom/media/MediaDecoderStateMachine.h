@@ -666,7 +666,7 @@ protected:
   // by GetCurrentTime(), which is in the range [0,duration].
   int64_t GetMediaTime() const {
     AssertCurrentThreadInMonitor();
-    return mStartTime + mCurrentFrameTime;
+    return mStartTime + mCurrentPosition;
   }
 
   // Returns an upper bound on the number of microseconds of audio that is
@@ -993,7 +993,7 @@ protected:
   // 0 which is the initial playback position. Set by the state machine
   // thread, and read-only from the main thread to get the current
   // time value. Synchronised via decoder monitor.
-  int64_t mCurrentFrameTime;
+  int64_t mCurrentPosition;
 
   // The presentation time of the first audio frame that was played in
   // microseconds. We can add this to the audio stream position to determine
