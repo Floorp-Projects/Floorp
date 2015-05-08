@@ -7,10 +7,11 @@
 </head>
 
 <!-- HTML requires some body element onfoo attributes to add handlers to the
-     *window*, not the element --- but Debugger.Source.prototype.element
-     should return the element. Here, that rule should apply to the body's
-     'onresize' handler. -->
-<body onresize='debugger;'>
+     *window*, not the element --- but Debugger.Source.prototype.element should
+     return the element. Here, that rule should apply to the body's 'onresize'
+     handler. (For the reason for the 'cancelable' check, see the code that
+     sends the event.) -->
+<body onresize='if (event.cancelable) debugger;'>
   <!-- Ordinary content element with event handler. -->
   <div id='heidi' onclick='heinrichFun();'>Heidi</div>
 </body>
