@@ -158,8 +158,8 @@ input[type=button] {
 /* CELLS */
 .newtab-cell {
   display: -moz-box;
-  height: 180px;
-  margin: 20px 10px 68px;
+  height: 210px;
+  margin: 20px 10px 35px;
   width: 290px;
 }
 
@@ -203,14 +203,17 @@ input[type=button] {
 
 .newtab-sponsored,
 .newtab-title {
-  bottom: -26px;
+  bottom: 0;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: 13px;
+  line-height: 30px;
+  vertical-align: middle;
+  background-color: #F2F2F2;
 }
 
 .newtab-suggested {
-  border: 1px solid #dcdcdc;
+  border: 1px solid transparent;
   border-radius: 2px;
   cursor: pointer;
   font-size: 12px;
@@ -231,7 +234,6 @@ input[type=button] {
 
 .newtab-title {
   left: 0;
-  padding-top: 14px;
 }
 
 .newtab-sponsored {
@@ -243,7 +245,7 @@ input[type=button] {
   font-size: 10px;
   height: 17px;
   line-height: 17px;
-  margin-bottom: -1px;
+  margin: 5px;
   padding: 0 4px;
 }
 
@@ -276,9 +278,7 @@ input[type=button] {
 .sponsored-explain,
 .suggested-explain {
   background-color: rgba(51, 51, 51, 0.95);
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-  bottom: 0px;
+  bottom: 30px;
   line-height: 20px;
   padding: 15px 10px;
   position: absolute;

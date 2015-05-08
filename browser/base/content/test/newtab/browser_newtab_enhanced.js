@@ -58,7 +58,7 @@ function runTests() {
   let {type, enhanced, title} = getData(0);
   isnot(type, "enhanced", "history link is not enhanced");
   is(enhanced, "", "history link has no enhanced image");
-  is(title, "site#-1");
+  is(title, "example.com");
 
   is(getData(1), null, "there is only one link and it's a history link");
 
@@ -98,7 +98,7 @@ function runTests() {
   ({type, enhanced, title} = getData(0));
   isnot(type, "enhanced", "history link is not enhanced");
   is(enhanced, "", "history link has no enhanced image");
-  is(title, "site#-1");
+  is(title, "example.com");
 
   is(getData(1), null, "directory link still pushed out by pinned history link");
 
@@ -120,7 +120,7 @@ function runTests() {
   ({type, enhanced, title} = getData(0));
   isnot(type, "enhanced", "history link is not enhanced");
   is(enhanced, "", "history link has no enhanced image");
-  is(title, "site#-1");
+  is(title, "example.com");
 
   isnot(getData(7), null, "there are 8 history links");
   is(getData(8), null, "there are 8 history links");
