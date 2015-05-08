@@ -26,7 +26,17 @@ GenerateCacheName(nsAString& aName);
 class CompareCallback
 {
 public:
-  virtual void ComparisonResult(nsresult aStatus, bool aInCacheAndEqual) = 0;
+  /*
+   * If there is an error, ignore aInCacheAndEqual and aNewCacheName.
+   * On success, if the cached result and network result matched,
+   * aInCacheAndEqual will be true and no new cache name is passed, otherwise
+   * use the new cache name to load the ServiceWorker.
+   */
+  virtual void
+  ComparisonResult(nsresult aStatus,
+                   bool aInCacheAndEqual,
+                   const nsAString& aNewCacheName,
+                   const nsACString& aMaxScope) = 0;
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release() = 0;

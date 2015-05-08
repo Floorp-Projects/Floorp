@@ -121,6 +121,9 @@ HTMLFormControlsCollection::FlushPendingNotifications()
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLFormControlsCollection)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HTMLFormControlsCollection)
+  // Note: We intentionally don't set tmp->mForm to nullptr here, since doing
+  // so may result in crashes because of inconsistent null-checking after the
+  // object gets unlinked.
   tmp->Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END

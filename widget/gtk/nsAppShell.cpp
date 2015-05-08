@@ -26,12 +26,10 @@ using mozilla::unused;
 
 #define NOTIFY_TOKEN 0xFA
 
-#ifdef PR_LOGGING
 PRLogModuleInfo *gWidgetLog = nullptr;
 PRLogModuleInfo *gWidgetFocusLog = nullptr;
 PRLogModuleInfo *gWidgetDragLog = nullptr;
 PRLogModuleInfo *gWidgetDrawLog = nullptr;
-#endif
 
 static GPollFunc sPollFunc;
 
@@ -75,7 +73,6 @@ nsAppShell::~nsAppShell()
 nsresult
 nsAppShell::Init()
 {
-#ifdef PR_LOGGING
     if (!gWidgetLog)
         gWidgetLog = PR_NewLogModule("Widget");
     if (!gWidgetFocusLog)
@@ -84,7 +81,6 @@ nsAppShell::Init()
         gWidgetDragLog = PR_NewLogModule("WidgetDrag");
     if (!gWidgetDrawLog)
         gWidgetDrawLog = PR_NewLogModule("WidgetDraw");
-#endif
 
 #ifdef MOZ_ENABLE_DBUS
     nsCOMPtr<nsIPowerManagerService> powerManagerService =

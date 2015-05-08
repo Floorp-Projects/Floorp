@@ -30,7 +30,6 @@
 using mozilla::ipc::InputStreamParams;
 using mozilla::ipc::StringInputStreamParams;
 
-#if defined(PR_LOGGING)
 //
 // Log module for StorageStream logging...
 //
@@ -51,7 +50,6 @@ GetStorageStreamLog()
   }
   return sLog;
 }
-#endif
 #ifdef LOG
 #undef LOG
 #endif

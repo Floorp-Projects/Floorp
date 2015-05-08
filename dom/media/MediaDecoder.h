@@ -295,7 +295,6 @@ public:
     PLAY_STATE_LOADING,
     PLAY_STATE_PAUSED,
     PLAY_STATE_PLAYING,
-    PLAY_STATE_SEEKING,
     PLAY_STATE_ENDED,
     PLAY_STATE_SHUTDOWN
   };
@@ -513,6 +512,9 @@ public:
    * Connects mDecodedStream->mStream to aStream->mStream.
    */
   void ConnectDecodedStreamToOutputStream(OutputStreamData* aStream);
+
+  void UpdateDecodedStream();
+
   /**
    * Disconnects mDecodedStream->mStream from all outputs and clears
    * mDecodedStream.
@@ -755,9 +757,6 @@ public:
                      nsAutoPtr<MediaInfo> aInfo,
                      nsAutoPtr<MetadataTags> aTags) override;
 
-  int64_t GetSeekTime() { return mRequestedSeekTarget.mTime; }
-  void ResetSeekTime() { mRequestedSeekTarget.Reset(); }
-
   /******
    * The following methods must only be called on the main
    * thread.
@@ -767,10 +766,6 @@ public:
   // notifies any thread blocking on this object's monitor of the
   // change. Call on the main thread only.
   virtual void ChangeState(PlayState aState);
-
-  // Called by |ChangeState|, to update the state machine.
-  // Call on the main thread only and the lock must be obtained.
-  virtual void ApplyStateToStateMachine(PlayState aState);
 
   // May be called by the reader to notify this decoder that the metadata from
   // the media file has been read. Call on the decode thread only.
@@ -807,7 +802,11 @@ public:
   // Call on the main thread only.
   void PlaybackEnded();
 
-  void OnSeekRejected() { mSeekRequest.Complete(); }
+  void OnSeekRejected()
+  {
+    mSeekRequest.Complete();
+    mLogicallySeeking = false;
+  }
   void OnSeekResolved(SeekResolveValue aVal);
 
   // Seeking has started. Inform the element on the main
@@ -890,7 +889,7 @@ public:
 
   // Schedules the state machine to run one cycle on the shared state
   // machine thread. Main thread only.
-  nsresult ScheduleStateMachineThread();
+  nsresult ScheduleStateMachine();
 
   struct Statistics {
     // Estimate of the current playback rate (bytes/second).
@@ -1158,19 +1157,16 @@ protected:
   // Any change to the state must call NotifyAll on the monitor.
   // This can only be PLAY_STATE_PAUSED or PLAY_STATE_PLAYING.
   Canonical<PlayState> mNextState;
+
+  // True if the decoder is seeking.
+  Canonical<bool> mLogicallySeeking;
 public:
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
   AbstractCanonical<PlayState>* CanonicalNextPlayState() { return &mNextState; }
+  AbstractCanonical<bool>* CanonicalLogicallySeeking() { return &mLogicallySeeking; }
 protected:
 
-  // Position to seek to when the seek notification is received by the
-  // decode thread.
-  // This can only be changed on the main thread while holding the decoder
-  // monitor. Thus, it can be safely read while holding the decoder monitor
-  // OR on the main thread.
-  // If the SeekTarget's IsValid() accessor returns false, then no seek has
-  // been requested. When a seek is started this is reset to invalid.
-  SeekTarget mRequestedSeekTarget;
+  virtual void CallSeek(const SeekTarget& aTarget);
 
   MediaPromiseConsumerHolder<SeekPromise> mSeekRequest;
 

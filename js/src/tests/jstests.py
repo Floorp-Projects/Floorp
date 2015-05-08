@@ -13,7 +13,7 @@ from copy import copy
 from subprocess import list2cmdline, call
 
 from lib.results import NullTestOutput
-from lib.tests import TestCase, TBPL_FLAGS, TBPL_DEBUG_FLAGS
+from lib.tests import TestCase, get_jitflags
 from lib.results import ResultsSink
 from lib.progressbar import ProgressBar
 
@@ -92,8 +92,10 @@ def parse_args():
                           ' (in seconds).')
     harness_og.add_option('-a', '--args', dest='shell_args', default='',
                           help='Extra args to pass to the JS shell.')
-    harness_og.add_option('--jitflags', default='',
-                          help="Obsolete. Does nothing.")
+    harness_og.add_option('--jitflags', dest='jitflags', default='none',
+                          type='string',
+                          help='IonMonkey option combinations. One of all,'
+                          ' debug, ion, and none (default %default).')
     harness_og.add_option('--tbpl', action='store_true',
                           help='Runs each test in all configurations tbpl'
                           ' tests.')
@@ -157,8 +159,13 @@ def parse_args():
     output_og.add_option('--no-progress', dest='hide_progress',
                          action='store_true',
                          help='Do not show the progress bar.')
-    output_og.add_option('--tinderbox', action='store_true',
-                         help='Use tinderbox-parseable output format.')
+    output_og.add_option('--tinderbox', dest='format', action='store_const',
+                         const='automation',
+                         help='Use automation-parseable output format.')
+    output_og.add_option('--format', dest='format', default='none',
+                          type='choice', choices=['automation', 'none'],
+                          help='Output format. Either automation or none'
+                         ' (default %default).')
     op.add_option_group(output_og)
 
     special_og = OptionGroup(op, "Special",
@@ -237,7 +244,7 @@ def parse_args():
             raise SystemExit("Failed to open output file: " + str(ex))
 
     # Hide the progress bar if it will get in the way of other output.
-    options.hide_progress = (options.tinderbox or
+    options.hide_progress = (options.format == 'automation' or
                              not ProgressBar.conservative_isatty() or
                              options.hide_progress)
 
@@ -272,9 +279,16 @@ def load_tests(options, requested_paths, excluded_paths):
         sys.exit()
 
     # Create a new test list. Apply each TBPL configuration to every test.
-    if options.tbpl or options.tbpl_debug:
+    flags_list = None
+    if options.tbpl:
+        flags_list = get_jitflags('all')
+    elif options.tbpl_debug:
+        flags_list = get_jitflags('debug')
+    else:
+        flags_list = get_jitflags(options.jitflags)
+
+    if flags_list:
         new_test_list = []
-        flags_list = TBPL_FLAGS if options.tbpl else TBPL_DEBUG_FLAGS
         for test in test_list:
             for jitflags in flags_list:
                 tmp_test = copy(test)
@@ -282,10 +296,6 @@ def load_tests(options, requested_paths, excluded_paths):
                 tmp_test.jitflags.extend(jitflags)
                 new_test_list.append(tmp_test)
         test_list = new_test_list
-
-    if options.jitflags:
-        print("Warning: the --jitflags option is obsolete and does nothing"
-              " now.")
 
     if options.test_file:
         paths = set()

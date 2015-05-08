@@ -1787,7 +1787,7 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
   NS_ASSERTION(aTimer == runtime->mIdleThreadTimer, "Wrong timer!");
 
   // Cheat a little and grab all threads that expire within one second of now.
-  TimeStamp now = TimeStamp::Now() + TimeDuration::FromSeconds(1);
+  TimeStamp now = TimeStamp::NowLoRes() + TimeDuration::FromSeconds(1);
 
   TimeStamp nextExpiration;
 
@@ -1812,25 +1812,21 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
     }
   }
 
-  NS_ASSERTION(nextExpiration.IsNull() || !expiredThreads.IsEmpty(),
-               "Should have a new time or there should be some threads to shut "
-               "down");
+  if (!nextExpiration.IsNull()) {
+    TimeDuration delta = nextExpiration - TimeStamp::NowLoRes();
+    uint32_t delay(delta > TimeDuration(0) ? delta.ToMilliseconds() : 0);
+
+    // Reschedule the timer.
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      aTimer->InitWithFuncCallback(ShutdownIdleThreads,
+                                   nullptr,
+                                   delay,
+                                   nsITimer::TYPE_ONE_SHOT)));
+  }
 
   for (uint32_t index = 0; index < expiredThreads.Length(); index++) {
     if (NS_FAILED(expiredThreads[index]->Shutdown())) {
       NS_WARNING("Failed to shutdown thread!");
-    }
-  }
-
-  if (!nextExpiration.IsNull()) {
-    TimeDuration delta = nextExpiration - TimeStamp::Now();
-    uint32_t delay(delta > TimeDuration(0) ? delta.ToMilliseconds() : 0);
-
-    // Reschedule the timer.
-    if (NS_FAILED(aTimer->InitWithFuncCallback(ShutdownIdleThreads, nullptr,
-                                               delay,
-                                               nsITimer::TYPE_ONE_SHOT))) {
-      NS_ERROR("Can't schedule timer!");
     }
   }
 }
@@ -2502,40 +2498,43 @@ RuntimeService::NoteIdleThread(WorkerThread* aThread)
   AssertIsOnMainThread();
   MOZ_ASSERT(aThread);
 
-  static TimeDuration timeout =
-    TimeDuration::FromSeconds(IDLE_THREAD_TIMEOUT_SEC);
+  bool shutdownThread = mShuttingDown;
+  bool scheduleTimer = false;
 
-  TimeStamp expirationTime = TimeStamp::Now() + timeout;
+  if (!shutdownThread) {
+    static TimeDuration timeout =
+      TimeDuration::FromSeconds(IDLE_THREAD_TIMEOUT_SEC);
 
-  bool shutdown;
-  if (mShuttingDown) {
-    shutdown = true;
-  }
-  else {
+    TimeStamp expirationTime = TimeStamp::NowLoRes() + timeout;
+
     MutexAutoLock lock(mMutex);
 
-    if (mIdleThreadArray.Length() < MAX_IDLE_THREADS) {
+    uint32_t previousIdleCount = mIdleThreadArray.Length();
+
+    if (previousIdleCount < MAX_IDLE_THREADS) {
       IdleThreadInfo* info = mIdleThreadArray.AppendElement();
       info->mThread = aThread;
       info->mExpirationTime = expirationTime;
-      shutdown = false;
-    }
-    else {
-      shutdown = true;
+
+      scheduleTimer = previousIdleCount == 0;
+    } else {
+      shutdownThread = true;
     }
   }
+
+  MOZ_ASSERT_IF(shutdownThread, !scheduleTimer);
+  MOZ_ASSERT_IF(scheduleTimer, !shutdownThread);
 
   // Too many idle threads, just shut this one down.
-  if (shutdown) {
+  if (shutdownThread) {
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aThread->Shutdown()));
-    return;
+  } else if (scheduleTimer) {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      mIdleThreadTimer->InitWithFuncCallback(ShutdownIdleThreads,
+                                             nullptr,
+                                             IDLE_THREAD_TIMEOUT_SEC * 1000,
+                                             nsITimer::TYPE_ONE_SHOT)));
   }
-
-  // Schedule timer.
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mIdleThreadTimer->InitWithFuncCallback(
-                                                 ShutdownIdleThreads, nullptr,
-                                                 IDLE_THREAD_TIMEOUT_SEC * 1000,
-                                                 nsITimer::TYPE_ONE_SHOT)));
 }
 
 void

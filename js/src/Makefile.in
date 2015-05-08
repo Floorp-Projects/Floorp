@@ -134,7 +134,7 @@ check-style::
 
 check-jit-test::
 	$(JITTEST_ASAN_ENV) $(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
-	        --no-slow --no-progress --tinderbox --tbpl \
+	        --no-slow --no-progress --format=automation --jitflags=all \
 			$(JITTEST_VALGRIND_FLAG) \
 			$(JITTEST_EXTRA_ARGS) \
 	        $(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
@@ -143,7 +143,7 @@ check:: check-style
 
 check-jstests:
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/tests/jstests.py \
-		--no-progress --tinderbox --timeout 300 \
+		--no-progress --format=automation --timeout 300 \
 		$(JSTESTS_EXTRA_ARGS) \
 		$(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
 

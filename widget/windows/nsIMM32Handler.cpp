@@ -21,9 +21,7 @@ using namespace mozilla::widget;
 
 static nsIMM32Handler* gIMM32Handler = nullptr;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gIMM32Log = nullptr;
-#endif
 
 static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 
@@ -57,10 +55,8 @@ nsIMM32Handler::EnsureHandlerInstance()
 /* static */ void
 nsIMM32Handler::Initialize()
 {
-#ifdef PR_LOGGING
   if (!gIMM32Log)
     gIMM32Log = PR_NewLogModule("nsIMM32HandlerWidgets");
-#endif
 
   if (!sWM_MSIME_MOUSE) {
     sWM_MSIME_MOUSE = ::RegisterWindowMessage(RWM_MOUSE);
@@ -533,7 +529,6 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
                             LPARAM lParam,
                             MSGResult& aResult)
 {
-#ifdef PR_LOGGING
   switch (wParam) {
     case IMN_CHANGECANDIDATE:
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -606,7 +601,6 @@ nsIMM32Handler::OnIMENotify(nsWindow* aWindow,
          aWindow->GetWindowHandle()));
       break;
   }
-#endif // PR_LOGGING
 
   // not implement yet
   aResult.mConsumed = false;
@@ -1544,7 +1538,6 @@ PlatformToNSAttr(uint8_t aAttr)
   }
 }
 
-#ifdef PR_LOGGING
 static const char*
 GetRangeTypeName(uint32_t aRangeType)
 {
@@ -1563,7 +1556,6 @@ GetRangeTypeName(uint32_t aRangeType)
       return "UNKNOWN SELECTION TYPE!!";
   }
 }
-#endif
 
 void
 nsIMM32Handler::DispatchCompositionChangeEvent(nsWindow* aWindow,

@@ -19,6 +19,7 @@
 #include <netioapi.h>
 #include <iprtrmib.h>
 #include "plstr.h"
+#include "prlog.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
@@ -34,12 +35,8 @@
 
 using namespace mozilla;
 
-#if defined(PR_LOGGING)
 static PRLogModuleInfo *gNotifyAddrLog = nullptr;
 #define LOG(args) PR_LOG(gNotifyAddrLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
 
 static HMODULE sNetshell;
 static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;
@@ -219,10 +216,8 @@ nsNotifyAddrListener::Observe(nsISupports *subject,
 nsresult
 nsNotifyAddrListener::Init(void)
 {
-#if defined(PR_LOGGING)
     if (!gNotifyAddrLog)
         gNotifyAddrLog = PR_NewLogModule("nsNotifyAddr");
-#endif
 
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();

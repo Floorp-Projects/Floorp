@@ -91,6 +91,7 @@ window.onload = function () {
     // Try a dynamically inserted out-of-line script element.
     isolde = doc.createElement('script');
     isolde.setAttribute('src', 'Debugger.Source.prototype.element-2.js');
+    isolde.setAttribute('id', 'idolde, my dear');
     dbg.onDebuggerStatement = isoldeDebuggerHandler;
     doc.body.appendChild(isolde);
   }
@@ -101,8 +102,16 @@ window.onload = function () {
     // The top frame should belong to isolde.
     ok(frame.script.source.element === DOFor(isolde),
        "top frame belongs to isolde");
+    info("frame.script.source.element is: " + uneval(frame.script.source.element));
+    if (typeof frame.script.source.element.unsafeDereference() == 'object') {
+       info("   toString: " + frame.script.source.element.unsafeDereference());
+       info("   id: " + frame.script.source.element.unsafeDereference().id);
+    }
+
     ok(frame.script.source.elementAttributeName === undefined,
        "top frame source is not an attribute of isolde");
+    info("frame.script.source.elementAttributeName is: " +
+         uneval(frame.script.source.elementAttributeName));
 
     // Try a dynamically created div element with a handler.
     dieter = doc.createElement('div');

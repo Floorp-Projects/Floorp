@@ -169,22 +169,6 @@ SizeOfEntryStore(uint32_t aCapacity, uint32_t aEntrySize, uint32_t* aNbytes)
   return uint64_t(*aNbytes) == nbytes64;   // returns false on overflow
 }
 
-PLDHashTable*
-PL_NewDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
-                 uint32_t aLength)
-{
-  PLDHashTable* table = new PLDHashTable();
-  PL_DHashTableInit(table, aOps, aEntrySize, aLength);
-  return table;
-}
-
-void
-PL_DHashTableDestroy(PLDHashTable* aTable)
-{
-  PL_DHashTableFinish(aTable);
-  delete aTable;
-}
-
 /*
  * Compute max and min load numbers (entry counts).  We have a secondary max
  * that allows us to overload a table reasonably if it cannot be grown further
@@ -218,6 +202,7 @@ MOZ_ALWAYS_INLINE void
 PLDHashTable::Init(const PLDHashTableOps* aOps,
                    uint32_t aEntrySize, uint32_t aLength)
 {
+  MOZ_ASSERT(!mAutoFinish);
   MOZ_ASSERT(!IsInitialized());
 
   // Check that the important fields have been set by the constructor.
@@ -266,6 +251,19 @@ PL_DHashTableInit(PLDHashTable* aTable, const PLDHashTableOps* aOps,
   aTable->Init(aOps, aEntrySize, aLength);
 }
 
+PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
+                           uint32_t aLength)
+  : mOps(nullptr)
+  , mAutoFinish(0)
+  , mEntryStore(nullptr)
+#ifdef DEBUG
+  , mRecursionLevel()
+#endif
+{
+  Init(aOps, aEntrySize, aLength);
+  mAutoFinish = 1;
+}
+
 PLDHashTable& PLDHashTable::operator=(PLDHashTable&& aOther)
 {
   if (this == &aOther) {
@@ -273,6 +271,7 @@ PLDHashTable& PLDHashTable::operator=(PLDHashTable&& aOther)
   }
 
   // Destruct |this|.
+  mAutoFinish = 0;
   Finish();
 
   // Move pieces over.
@@ -281,7 +280,9 @@ PLDHashTable& PLDHashTable::operator=(PLDHashTable&& aOther)
   mEntrySize = Move(aOther.mEntrySize);
   mEntryCount = Move(aOther.mEntryCount);
   mRemovedCount = Move(aOther.mRemovedCount);
-  mGeneration = Move(aOther.mGeneration);
+  // We can't use Move() on bitfields. Fortunately, '=' suffices.
+  mGeneration = aOther.mGeneration;
+  mAutoFinish = aOther.mAutoFinish;
   mEntryStore = Move(aOther.mEntryStore);
 #ifdef PL_DHASHMETER
   mStats = Move(aOther.mStats);
@@ -340,6 +341,8 @@ PLDHashTable::EntryIsFree(PLDHashEntryHdr* aEntry)
 MOZ_ALWAYS_INLINE void
 PLDHashTable::Finish()
 {
+  MOZ_ASSERT(!mAutoFinish);
+
   if (!IsInitialized()) {
     MOZ_ASSERT(!mEntryStore);
     return;
@@ -373,6 +376,20 @@ void
 PL_DHashTableFinish(PLDHashTable* aTable)
 {
   aTable->Finish();
+}
+
+PLDHashTable::~PLDHashTable()
+{
+  // If we used automatic initialization, then finalize the table here.
+  // Otherwise, Finish() should have already been called manually.
+  if (mAutoFinish) {
+    mAutoFinish = 0;
+    Finish();
+  } else {
+    // XXX: actually, we can't assert this here because some tables never get
+    // finalized.
+    //MOZ_ASSERT(!IsInitialized());
+  }
 }
 
 // If |IsAdd| is true, the return value is always non-null and it may be a

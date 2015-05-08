@@ -172,7 +172,7 @@ ClientTiledPaintedLayer::BeginPaint()
   if (!hasTransformAnimation) {
     ParentLayerRect criticalDisplayPort =
       (displayportMetrics.GetCriticalDisplayPort() * displayportMetrics.GetZoom())
-      + displayportMetrics.mCompositionBounds.TopLeft();
+      + displayportMetrics.GetCompositionBounds().TopLeft();
     mPaintData.mCriticalDisplayPort = RoundedToInt(
       ApplyParentLayerToLayerTransform(transformDisplayPortToLayer, criticalDisplayPort));
   }
@@ -189,7 +189,7 @@ ClientTiledPaintedLayer::BeginPaint()
   gfx::Matrix4x4 transformToBounds = mPaintData.mTransformToCompBounds;
   transformToBounds.Invert();
   mPaintData.mCompositionBounds = ApplyParentLayerToLayerTransform(
-    transformToBounds, scrollMetrics.mCompositionBounds);
+    transformToBounds, scrollMetrics.GetCompositionBounds());
   TILING_LOG("TILING %p: Composition bounds %s\n", this, Stringify(mPaintData.mCompositionBounds).c_str());
 
   // Calculate the scroll offset since the last transaction

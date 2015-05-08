@@ -48,8 +48,6 @@ namespace mozilla {
 using namespace mozilla;
 
 #include "prlog.h"
-#if defined(PR_LOGGING)
-#endif
 #undef LOG
 #define LOG(args) PR_LOG(net::GetProxyLog(), PR_LOG_DEBUG, args)
 
@@ -461,7 +459,6 @@ nsProtocolProxyService::Init()
         // register for shutdown notification so we can clean ourselves up
         // properly.
         obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-
         obs->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
     }
 
@@ -534,6 +531,13 @@ nsProtocolProxyService::Observe(nsISupports     *aSubject,
             mPACMan->Shutdown();
             mPACMan = nullptr;
         }
+
+        nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+        if (obs) {
+            obs->RemoveObserver(this, NS_NETWORK_LINK_TOPIC);
+            obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        }
+
     } else if (strcmp(aTopic, NS_NETWORK_LINK_TOPIC) == 0) {
         nsCString converted = NS_ConvertUTF16toUTF8(aData);
         const char *state = converted.get();

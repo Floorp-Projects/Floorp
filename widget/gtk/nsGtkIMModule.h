@@ -163,7 +163,6 @@ protected:
      */
     bool IsValidContext(GtkIMContext* aContext) const;
 
-#ifdef PR_LOGGING
     const char* GetCompositionStateName()
     {
         switch (mCompositionState) {
@@ -177,7 +176,6 @@ protected:
                 return "InvaildState";
         }
     }
-#endif // PR_LOGGING
 
 
     // mIsIMFocused is set to TRUE when we call gtk_im_context_focus_in(). And

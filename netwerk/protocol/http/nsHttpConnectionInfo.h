@@ -32,22 +32,23 @@ namespace mozilla { namespace net {
 class nsHttpConnectionInfo
 {
 public:
-    nsHttpConnectionInfo(const nsACString &physicalHost,
-                         int32_t physicalPort,
+    nsHttpConnectionInfo(const nsACString &originHost,
+                         int32_t originPort,
                          const nsACString &npnToken,
                          const nsACString &username,
                          nsProxyInfo *proxyInfo,
                          bool endToEndSSL = false);
 
-    // this version must use TLS and you may supply the domain
-    // information to be validated
-    nsHttpConnectionInfo(const nsACString &physicalHost,
-                         int32_t physicalPort,
+    // this version must use TLS and you may supply separate
+    // connection (aka routing) information than the authenticated
+    // origin information
+    nsHttpConnectionInfo(const nsACString &originHost,
+                         int32_t originPort,
                          const nsACString &npnToken,
                          const nsACString &username,
                          nsProxyInfo *proxyInfo,
-                         const nsACString &logicalHost,
-                         int32_t logicalPort);
+                         const nsACString &routedHost,
+                         int32_t routedPort);
 
 private:
     virtual ~nsHttpConnectionInfo()
@@ -60,11 +61,13 @@ private:
 public:
     const nsAFlatCString &HashKey() const { return mHashKey; }
 
-    const nsCString &GetAuthenticationHost() const { return mAuthenticationHost; }
-    int32_t GetAuthenticationPort() const { return mAuthenticationPort; }
+    const nsCString &GetOrigin() const { return mOrigin; }
+    const char   *Origin()       const { return mOrigin.get(); }
+    int32_t       OriginPort()   const { return mOriginPort; }
 
-    const nsCString &GetOrigin() const { return mAuthenticationHost.IsEmpty() ? mHost : mAuthenticationHost; }
-    int32_t OriginPort() const { return mAuthenticationHost.IsEmpty() ? mPort : mAuthenticationPort; }
+    const nsCString &GetRoutedHost() const { return mRoutedHost; }
+    const char      *RoutedHost() const { return mRoutedHost.get(); }
+    int32_t          RoutedPort() const { return mRoutedPort; }
 
     // With overhead rebuilding the hash key. The initial
     // network interface is empty. So you can reduce one call
@@ -92,10 +95,8 @@ public:
         return mHashKey.Equals(info->HashKey());
     }
 
-    const char   *Host() const           { return mHost.get(); }
-    int32_t       Port() const           { return mPort; }
     const char   *Username() const       { return mUsername.get(); }
-    nsProxyInfo  *ProxyInfo()            { return mProxyInfo; }
+    nsProxyInfo  *ProxyInfo() const      { return mProxyInfo; }
     int32_t       DefaultPort() const    { return mEndToEndSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
     void          SetAnonymous(bool anon)
                                          { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
@@ -112,7 +113,6 @@ public:
 
     const nsCString &GetNetworkInterfaceId() const { return mNetworkInterfaceId; }
 
-    const nsCString &GetHost() { return mHost; }
     const nsCString &GetNPNToken() { return mNPNToken; }
     const nsCString &GetUsername() { return mUsername; }
 
@@ -134,7 +134,7 @@ public:
     // Returns true when CONNECT is used to tunnel through the proxy (e.g. https:// or ws://)
     bool UsingConnect() const { return mUsingConnect; }
 
-    // Returns true when mHost is an RFC1918 literal.
+    // Returns true when origin/proxy is an RFC1918 literal.
     bool HostIsLocalIPLiteral() const;
 
 private:
@@ -146,13 +146,14 @@ private:
               bool EndToEndSSL);
     void SetOriginServer(const nsACString &host, int32_t port);
 
+    nsCString              mOrigin;
+    int32_t                mOriginPort;
+    nsCString              mRoutedHost;
+    int32_t                mRoutedPort;
+
     nsCString              mHashKey;
-    nsCString              mHost;
     nsCString              mNetworkInterfaceId;
-    int32_t                mPort;
     nsCString              mUsername;
-    nsCString              mAuthenticationHost;
-    int32_t                mAuthenticationPort;
     nsCOMPtr<nsProxyInfo>  mProxyInfo;
     bool                   mUsingHttpProxy;
     bool                   mUsingHttpsProxy;

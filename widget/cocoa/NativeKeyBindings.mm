@@ -13,9 +13,7 @@
 namespace mozilla {
 namespace widget {
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gNativeKeyBindingsLog = nullptr;
-#endif
 
 NativeKeyBindings* NativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
 NativeKeyBindings* NativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
@@ -65,11 +63,9 @@ NativeKeyBindings::NativeKeyBindings()
 void
 NativeKeyBindings::Init(NativeKeyBindingsType aType)
 {
-#ifdef PR_LOGGING
   if (!gNativeKeyBindingsLog) {
     gNativeKeyBindingsLog = PR_NewLogModule("NativeKeyBindings");
   }
-#endif
 
   PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
     ("%p NativeKeyBindings::Init", this));
@@ -237,7 +233,6 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
   for (uint32_t i = 0; i < bindingCommands.Length(); i++) {
     SEL selector = bindingCommands[i].selector;
 
-#ifdef PR_LOGGING
     if (PR_LOG_TEST(gNativeKeyBindingsLog, PR_LOG_ALWAYS)) {
       NSString* selectorString = NSStringFromSelector(selector);
       nsAutoString nsSelectorString;
@@ -245,9 +240,8 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
 
       PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
         ("%p NativeKeyBindings::KeyPress, selector=%s",
-         this, ToNewCString(nsSelectorString)));
+         this, NS_LossyConvertUTF16toASCII(nsSelectorString).get()));
     }
-#endif
 
     // Try to find a simple mapping in the hashtable
     Command geckoCommand = static_cast<Command>(mSelectorToCommand.Get(

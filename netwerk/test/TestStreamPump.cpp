@@ -27,15 +27,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(PR_LOGGING)
 //
 // set NSPR_LOG_MODULES=Test:5
 //
 static PRLogModuleInfo *gTestLog = nullptr;
 #define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -155,9 +151,7 @@ main(int argc, char* argv[])
         if (registrar)
             registrar->AutoRegister(nullptr);
 
-#if defined(PR_LOGGING)
         gTestLog = PR_NewLogModule("Test");
-#endif
 
         nsCOMPtr<nsIFile> file;
         rv = NS_NewNativeLocalFile(nsDependentCString(fileName), false, getter_AddRefs(file));

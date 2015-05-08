@@ -1691,6 +1691,7 @@ KTableValue nsCSSProps::kTextAlignKTable[] = {
   eCSSKeyword_start, NS_STYLE_TEXT_ALIGN_DEFAULT,
   eCSSKeyword_end, NS_STYLE_TEXT_ALIGN_END,
   eCSSKeyword_true, NS_STYLE_TEXT_ALIGN_TRUE,
+  eCSSKeyword_match_parent, NS_STYLE_TEXT_ALIGN_MATCH_PARENT,
   eCSSKeyword_UNKNOWN,-1
 };
 

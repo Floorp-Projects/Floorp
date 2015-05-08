@@ -325,9 +325,7 @@ private:
     PLDHashOperator  ShutdownCustomCacheDeviceEnum(const nsAString& aProfileDir,
                                                    nsRefPtr<nsOfflineCacheDevice>& aDevice,
                                                    void* aUserArg);
-#if defined(PR_LOGGING)
     void LogCacheStatistics();
-#endif
 
     nsresult         SetDiskSmartSize_Locked();
 

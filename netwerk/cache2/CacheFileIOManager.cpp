@@ -2968,10 +2968,8 @@ CacheFileIOManager::CacheIndexStateChangedInternal()
 nsresult
 CacheFileIOManager::TrashDirectory(nsIFile *aFile)
 {
-#ifdef PR_LOGGING
   nsAutoCString path;
   aFile->GetNativePath(path);
-#endif
   LOG(("CacheFileIOManager::TrashDirectory() [file=%s]", path.get()));
 
   nsresult rv;
@@ -3201,13 +3199,13 @@ CacheFileIOManager::RemoveTrashInternal()
       if (isDir) {
         NS_WARNING("Found a directory in a trash directory! It will be removed "
                    "recursively, but this can block IO thread for a while!");
-#ifdef PR_LOGGING
-        nsAutoCString path;
-        file->GetNativePath(path);
-#endif
-        LOG(("CacheFileIOManager::RemoveTrashInternal() - Found a directory in a trash "
-            "directory! It will be removed recursively, but this can block IO "
-            "thread for a while! [file=%s]", path.get()));
+        if (LOG_ENABLED()) {
+          nsAutoCString path;
+          file->GetNativePath(path);
+          LOG(("CacheFileIOManager::RemoveTrashInternal() - Found a directory in a trash "
+              "directory! It will be removed recursively, but this can block IO "
+              "thread for a while! [file=%s]", path.get()));
+        }
       }
       file->Remove(isDir);
     }
@@ -3761,13 +3759,12 @@ CacheFileIOManager::SyncRemoveDir(nsIFile *aFile, const char *aDir)
     }
   }
 
-#ifdef PR_LOGGING
-  nsAutoCString path;
-  file->GetNativePath(path);
-#endif
-
-  LOG(("CacheFileIOManager::SyncRemoveDir() - Removing directory %s",
-       path.get()));
+  if (LOG_ENABLED()) {
+    nsAutoCString path;
+    file->GetNativePath(path);
+    LOG(("CacheFileIOManager::SyncRemoveDir() - Removing directory %s",
+         path.get()));
+  }
 
   rv = file->Remove(true);
   if (NS_WARN_IF(NS_FAILED(rv))) {

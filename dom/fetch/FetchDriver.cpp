@@ -12,6 +12,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsIJARChannel.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIUploadChannel2.h"
@@ -293,9 +294,9 @@ FetchDriver::BasicFetch()
     return FailWithNetworkError();
   }
 
-  if (scheme.LowerCaseEqualsLiteral("file")) {
-  } else if (scheme.LowerCaseEqualsLiteral("http") ||
-             scheme.LowerCaseEqualsLiteral("https")) {
+  if (scheme.LowerCaseEqualsLiteral("http") ||
+      scheme.LowerCaseEqualsLiteral("https") ||
+      scheme.LowerCaseEqualsLiteral("app")) {
     return HttpFetch();
   }
 
@@ -486,8 +487,10 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
   // While the spec also gates on the client being a ServiceWorker, we can't
   // infer that here. Instead we rely on callers to set the flag correctly.
   if (mRequest->SkipServiceWorker()) {
-    nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(httpChan);
-    internalChan->ForceNoIntercept();
+    if (httpChan) {
+      nsCOMPtr<nsIHttpChannelInternal> internalChan = do_QueryInterface(httpChan);
+      internalChan->ForceNoIntercept();
+    }
   }
 
   nsCOMPtr<nsIStreamListener> listener = this;
@@ -525,7 +528,7 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
                                unsafeHeaders,
                                getter_AddRefs(preflightChannel));
   } else {
-   rv = chan->AsyncOpen(listener, nullptr);
+    rv = chan->AsyncOpen(listener, nullptr);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -658,28 +661,31 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
     return rv;
   }
 
-  nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest);
-  // For now we only support HTTP.
-  MOZ_ASSERT(channel);
+  nsRefPtr<InternalResponse> response;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+  if (httpChannel) {
+    uint32_t responseStatus;
+    httpChannel->GetResponseStatus(&responseStatus);
 
-  aRequest->GetStatus(&rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError();
-    return rv;
-  }
+    nsAutoCString statusText;
+    httpChannel->GetResponseStatusText(statusText);
 
-  uint32_t responseStatus;
-  channel->GetResponseStatus(&responseStatus);
+    response = new InternalResponse(responseStatus, statusText);
 
-  nsAutoCString statusText;
-  channel->GetResponseStatusText(statusText);
+    nsRefPtr<FillResponseHeaders> visitor = new FillResponseHeaders(response);
+    rv = httpChannel->VisitResponseHeaders(visitor);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      NS_WARNING("Failed to visit all headers.");
+    }
+  } else {
+    nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aRequest);
+    // If it is not an http channel, it has to be a jar one.
+    MOZ_ASSERT(jarChannel);
 
-  nsRefPtr<InternalResponse> response = new InternalResponse(responseStatus, statusText);
-
-  nsRefPtr<FillResponseHeaders> visitor = new FillResponseHeaders(response);
-  rv = channel->VisitResponseHeaders(visitor);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    NS_WARNING("Failed to visit all headers.");
+    // We simulate the http protocol for jar/app requests
+    uint32_t responseStatus = 200;
+    nsAutoCString statusText;
+    response = new InternalResponse(responseStatus, NS_LITERAL_CSTRING("OK"));
   }
 
   // We open a pipe so that we can immediately set the pipe's read end as the
@@ -703,6 +709,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   response->SetBody(pipeInputStream);
 
   nsCOMPtr<nsISupports> securityInfo;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   rv = channel->GetSecurityInfo(getter_AddRefs(securityInfo));
   if (securityInfo) {
     response->SetSecurityInfo(securityInfo);

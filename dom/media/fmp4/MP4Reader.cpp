@@ -73,43 +73,6 @@ TrackTypeToStr(TrackInfo::TrackType aTrack)
 }
 #endif
 
-uint8_t sTestExtraData[40] = { 0x01, 0x64, 0x00, 0x0a, 0xff, 0xe1, 0x00, 0x17, 0x67, 0x64, 0x00, 0x0a, 0xac, 0xd9, 0x44, 0x26, 0x84, 0x00, 0x00, 0x03,
-                               0x00, 0x04, 0x00, 0x00, 0x03, 0x00, 0xc8, 0x3c, 0x48, 0x96, 0x58, 0x01, 0x00, 0x06, 0x68, 0xeb, 0xe3, 0xcb, 0x22, 0xc0 };
-
-/* static */ bool
-MP4Reader::IsVideoAccelerated(LayersBackend aBackend)
-{
-  VideoInfo config;
-  config.mMimeType = "video/avc";
-  config.mId = 1;
-  config.mDuration = 40000;
-  config.mMediaTime = 0;
-  config.mDisplay = config.mImage = nsIntSize(64, 64);
-  config.mExtraData = new MediaByteBuffer();
-  config.mExtraData->AppendElements(sTestExtraData, 40);
-
-  PlatformDecoderModule::Init();
-
-  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
-  if (!platform) {
-    return false;
-  }
-
-  nsRefPtr<MediaDataDecoder> decoder =
-    platform->CreateDecoder(config, nullptr, nullptr, aBackend, nullptr);
-  if (!decoder) {
-    return false;
-  }
-  nsresult rv = decoder->Init();
-  NS_ENSURE_SUCCESS(rv, false);
-
-  bool result = decoder->IsHardwareAccelerated();
-
-  decoder->Shutdown();
-
-  return result;
-}
-
 bool
 AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata)
 {
@@ -289,10 +252,12 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 
   InitLayersBackendType();
 
-  mAudio.mTaskQueue = new FlushableMediaTaskQueue(GetMediaThreadPool());
+  mAudio.mTaskQueue =
+    new FlushableMediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
   NS_ENSURE_TRUE(mAudio.mTaskQueue, NS_ERROR_FAILURE);
 
-  mVideo.mTaskQueue = new FlushableMediaTaskQueue(GetMediaThreadPool());
+  mVideo.mTaskQueue =
+    new FlushableMediaTaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
   NS_ENSURE_TRUE(mVideo.mTaskQueue, NS_ERROR_FAILURE);
 
   static bool sSetupPrefCache = false;
@@ -1018,12 +983,12 @@ MP4Reader::Flush(TrackType aTrack)
     MonitorAutoLock mon(data.mMonitor);
     data.mIsFlushing = true;
     data.mDemuxEOS = false;
-    data.mDrainComplete = false;
   }
   data.mDecoder->Flush();
   {
     MonitorAutoLock mon(data.mMonitor);
     data.mIsFlushing = false;
+    data.mDrainComplete = false;
     data.mOutput.Clear();
     data.mNumSamplesInput = 0;
     data.mNumSamplesOutput = 0;

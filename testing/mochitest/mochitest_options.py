@@ -656,7 +656,9 @@ class MochitestArguments(ArgumentContainer):
                     options.testingModulesDir = possible
 
         if build_obj:
-            options.extraProfileFiles.append(os.path.join(build_obj.distdir, 'plugins'))
+            plugins_dir = os.path.join(build_obj.distdir, 'plugins')
+            if plugins_dir not in options.extraProfileFiles:
+                options.extraProfileFiles.append(plugins_dir)
 
         # Even if buildbot is updated, we still want this, as the path we pass in
         # to the app must be absolute and have proper slashes.
@@ -1159,7 +1161,7 @@ class MochitestArgumentParser(ArgumentParser):
         if not self.app and build_obj:
             if conditions.is_android(build_obj):
                 self.app = 'android'
-            elif conditions.is_b2g(build_obj):
+            elif conditions.is_b2g(build_obj) or conditions.is_b2g_desktop(build_obj):
                 self.app = 'b2g'
         if not self.app:
             # platform can't be determined and app wasn't specified explicitly,

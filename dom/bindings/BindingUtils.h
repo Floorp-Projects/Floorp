@@ -1540,8 +1540,10 @@ struct WrapNativeParentHelper<T, false>
     JSObject* obj;
     if (cache && (obj = cache->GetWrapper())) {
 #ifdef DEBUG
-      NS_ASSERTION(WrapNativeISupportsParent(cx, parent, cache) == obj,
+      JS::Rooted<JSObject*> rootedObj(cx, obj);
+      NS_ASSERTION(WrapNativeISupportsParent(cx, parent, cache) == rootedObj,
                    "Unexpected object in nsWrapperCache");
+      obj = rootedObj;
 #endif
       return obj;
     }

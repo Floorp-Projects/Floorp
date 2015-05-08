@@ -70,10 +70,6 @@ class TenuringTracer : public JSTracer
     JSObject* moveToTenured(JSObject* thing);
 
     void insertIntoFixupList(gc::RelocationOverlay* entry);
-
-#ifdef JS_GC_ZEAL
-    bool verifyingPostBarriers;
-#endif
 };
 
 class Nursery

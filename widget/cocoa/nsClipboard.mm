@@ -31,9 +31,7 @@ using mozilla::RefPtr;
 // Screenshots use the (undocumented) png pasteboard type.
 #define IMAGE_PASTEBOARD_TYPES NSTIFFPboardType, @"Apple PNG pasteboard type", nil
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* sCocoaLog;
-#endif
 
 extern void EnsureLogInitialized();
 

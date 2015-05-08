@@ -1075,7 +1075,7 @@ LayerManagerComposite::ComputeRenderIntegrity()
     // the root layer.
     rootMetrics = LayerMetricsWrapper(root).Metrics();
   }
-  ParentLayerIntRect bounds = RoundedToInt(rootMetrics.mCompositionBounds);
+  ParentLayerIntRect bounds = RoundedToInt(rootMetrics.GetCompositionBounds());
   IntRect screenRect(bounds.x,
                        bounds.y,
                        bounds.width,

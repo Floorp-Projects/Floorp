@@ -20,9 +20,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gWindowsLog;
-#endif
 
 const wchar_t nsWinGesture::kGestureLibraryName[] =  L"user32.dll";
 HMODULE nsWinGesture::sLibraryHandle = nullptr;

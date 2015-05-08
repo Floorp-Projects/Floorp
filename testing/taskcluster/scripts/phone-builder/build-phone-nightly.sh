@@ -14,7 +14,7 @@ aws s3 cp s3://b2g-nightly-credentials/balrog_credentials .
 
 ./mozharness/scripts/b2g_build.py \
   --config b2g/taskcluster-phone-nightly.py \
-  --config balrog/staging.py \
+  --config balrog/docker-worker.py \
   "$debug_flag" \
   --disable-mock \
   --variant=$VARIANT \

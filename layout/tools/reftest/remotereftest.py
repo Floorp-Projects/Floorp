@@ -428,6 +428,13 @@ class RemoteReftest(RefTest):
     def environment(self, **kwargs):
         return self.automation.environment(**kwargs)
 
+    def buildBrowserEnv(self, options, profileDir):
+        browserEnv = RefTest.buildBrowserEnv(self, options, profileDir)
+        # remove desktop environment not used on device
+        if "XPCOM_MEM_BLOAT_LOG" in browserEnv:
+            del browserEnv["XPCOM_MEM_BLOAT_LOG"]
+        return browserEnv
+
     def runApp(self, profile, binary, cmdargs, env,
                timeout=None, debuggerInfo=None,
                symbolsPath=None, options=None):

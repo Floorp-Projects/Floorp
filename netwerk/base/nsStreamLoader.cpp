@@ -21,10 +21,12 @@ nsStreamLoader::~nsStreamLoader()
 }
 
 NS_IMETHODIMP
-nsStreamLoader::Init(nsIStreamLoaderObserver* observer)
+nsStreamLoader::Init(nsIStreamLoaderObserver* aStreamObserver,
+                     nsIRequestObserver* aRequestObserver)
 {
-  NS_ENSURE_ARG_POINTER(observer);
-  mObserver = observer;
+  NS_ENSURE_ARG_POINTER(aStreamObserver);
+  mObserver = aStreamObserver;
+  mRequestObserver = aRequestObserver;
   return NS_OK;
 }
 
@@ -80,6 +82,9 @@ nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     }
   }
   mContext = ctxt;
+  if (mRequestObserver) {
+    mRequestObserver->OnStartRequest(request, ctxt);
+  }
   return NS_OK;
 }
 
@@ -108,6 +113,12 @@ nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     mObserver = 0;
     mContext = 0;
   }
+
+  if (mRequestObserver) {
+    mRequestObserver->OnStopRequest(request, ctxt, aStatus);
+    mRequestObserver = nullptr;
+  }
+
   return NS_OK;
 }
 

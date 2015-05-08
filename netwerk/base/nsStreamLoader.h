@@ -42,6 +42,7 @@ protected:
   nsCOMPtr<nsIStreamLoaderObserver> mObserver;
   nsCOMPtr<nsISupports>             mContext;  // the observer's context
   nsCOMPtr<nsIRequest>              mRequest;
+  nsCOMPtr<nsIRequestObserver>      mRequestObserver;
 
   // Buffer to accumulate incoming data. We preallocate if contentSize is
   // available.

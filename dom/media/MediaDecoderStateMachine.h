@@ -186,7 +186,6 @@ public:
     TaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown));
   }
 
-  void ShutdownReader();
   void FinishShutdown();
 
   bool IsRealTime() const;
@@ -225,22 +224,6 @@ public:
   // on the appropriate threads.
   bool OnDecodeTaskQueue() const;
   bool OnTaskQueue() const;
-
-  // Cause state transitions. These methods obtain the decoder monitor
-  // to synchronise the change of state, and to notify other threads
-  // that the state has changed.
-  void Play()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    RefPtr<nsRunnable> r = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::PlayInternal);
-    TaskQueue()->Dispatch(r);
-  }
-
-private:
-  // The actual work for the above, which happens asynchronously on the state
-  // machine thread.
-  void PlayInternal();
-public:
 
   // Seeks to the decoder to aTarget asynchronously.
   // Must be called on the state machine thread.
@@ -295,15 +278,15 @@ public:
 
   // Must be called with the decode monitor held.
   bool IsBuffering() const {
+    MOZ_ASSERT(OnTaskQueue());
     AssertCurrentThreadInMonitor();
-
     return mState == DECODER_STATE_BUFFERING;
   }
 
   // Must be called with the decode monitor held.
   bool IsSeeking() const {
+    MOZ_ASSERT(OnTaskQueue());
     AssertCurrentThreadInMonitor();
-
     return mState == DECODER_STATE_SEEKING;
   }
 
@@ -343,7 +326,17 @@ public:
   void ScheduleStateMachineWithLockAndWakeDecoder();
 
   // Schedules the shared state machine thread to run the state machine.
+  //
+  // The first variant coalesces multiple calls into a single state machine
+  // cycle, the second variant does not. The second variant must be used when
+  // not already on the state machine task queue.
   void ScheduleStateMachine();
+  void ScheduleStateMachineCrossThread()
+  {
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::RunStateMachine);
+    TaskQueue()->Dispatch(task.forget());
+  }
 
   // Invokes ScheduleStateMachine to run in |aMicroseconds| microseconds,
   // unless it's already scheduled to run earlier, in which case the
@@ -365,6 +358,7 @@ public:
 
   // Drop reference to decoder.  Only called during shutdown dance.
   void BreakCycles() {
+    MOZ_ASSERT(NS_IsMainThread());
     if (mReader) {
       mReader->BreakCycles();
     }
@@ -420,10 +414,12 @@ public:
   void OnNotDecoded(MediaData::Type aType, MediaDecoderReader::NotDecodedReason aReason);
   void OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
   {
+    MOZ_ASSERT(OnTaskQueue());
     OnNotDecoded(MediaData::AUDIO_DATA, aReason);
   }
   void OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
   {
+    MOZ_ASSERT(OnTaskQueue());
     OnNotDecoded(MediaData::VIDEO_DATA, aReason);
   }
 
@@ -514,6 +510,7 @@ protected:
 
   bool OutOfDecodedVideo()
   {
+    MOZ_ASSERT(OnTaskQueue());
     // In buffering mode, we keep the last already-played frame in the queue.
     int emptyVideoSize = mState == DECODER_STATE_BUFFERING ? 1 : 0;
     return IsVideoDecoding() && !VideoQueue().IsFinished() && VideoQueue().GetSize() <= emptyVideoSize;
@@ -593,6 +590,12 @@ protected:
   // one lock count. Called on the state machine thread.
   nsresult StartAudioThread();
 
+  // Notification method invoked when mPlayState changes.
+  void PlayStateChanged();
+
+  // Notification method invoked when mLogicallySeeking changes.
+  void LogicallySeekingChanged();
+
   // Sets internal state which causes playback of media to pause.
   // The decoder monitor must be held.
   void StopPlayback();
@@ -649,10 +652,6 @@ protected:
   // otherwise this dispatches a task to do the decode.
   // The decoder monitor must be held.
   nsresult EnsureVideoDecodeTaskQueued();
-
-  // Calls the reader's SetIdle(). This is only called in a task dispatched to
-  // the decode task queue, don't call it directly.
-  void SetReaderIdle();
 
   // Re-evaluates the state and determines whether we need to dispatch
   // events to run the decode, or if not whether we should set the reader
@@ -831,6 +830,7 @@ public:
 
     void CompleteRequest()
     {
+      MOZ_ASSERT(mSelf->OnTaskQueue());
       mRequest.Complete();
       mTarget = TimeStamp();
     }
@@ -904,6 +904,7 @@ public:
   // The current play state and next play state, mirrored from the main thread.
   Mirror<MediaDecoder::PlayState> mPlayState;
   Mirror<MediaDecoder::PlayState> mNextPlayState;
+  Mirror<bool> mLogicallySeeking;
 
   // Returns true if we're logically playing, that is, if the Play() has
   // been called and Pause() has not or we have not yet reached the end
@@ -1074,6 +1075,7 @@ protected:
   // samples we must consume before are considered to be finished prerolling.
   uint32_t AudioPrerollUsecs() const
   {
+    MOZ_ASSERT(OnTaskQueue());
     if (IsRealTime()) {
       return 0;
     }
@@ -1085,6 +1087,7 @@ protected:
 
   uint32_t VideoPrerollFrames() const
   {
+    MOZ_ASSERT(OnTaskQueue());
     return IsRealTime() ? 0 : GetAmpleVideoFrames() / 2;
   }
 
@@ -1105,6 +1108,7 @@ protected:
 
   void StopPrerollingAudio()
   {
+    MOZ_ASSERT(OnTaskQueue());
     AssertCurrentThreadInMonitor();
     if (mIsAudioPrerolling) {
       mIsAudioPrerolling = false;
@@ -1114,6 +1118,7 @@ protected:
 
   void StopPrerollingVideo()
   {
+    MOZ_ASSERT(OnTaskQueue());
     AssertCurrentThreadInMonitor();
     if (mIsVideoPrerolling) {
       mIsVideoPrerolling = false;
@@ -1145,6 +1150,7 @@ protected:
   MediaPromiseConsumerHolder<MediaDecoderReader::WaitForDataPromise> mAudioWaitRequest;
   const char* AudioRequestStatus()
   {
+    MOZ_ASSERT(OnTaskQueue());
     if (mAudioDataRequest.Exists()) {
       MOZ_DIAGNOSTIC_ASSERT(!mAudioWaitRequest.Exists());
       return "pending";
@@ -1158,6 +1164,7 @@ protected:
   MediaPromiseConsumerHolder<MediaDecoderReader::VideoDataPromise> mVideoDataRequest;
   const char* VideoRequestStatus()
   {
+    MOZ_ASSERT(OnTaskQueue());
     if (mVideoDataRequest.Exists()) {
       MOZ_DIAGNOSTIC_ASSERT(!mVideoWaitRequest.Exists());
       return "pending";
@@ -1169,6 +1176,7 @@ protected:
 
   MediaPromiseConsumerHolder<MediaDecoderReader::WaitForDataPromise>& WaitRequestRef(MediaData::Type aType)
   {
+    MOZ_ASSERT(OnTaskQueue());
     return aType == MediaData::AUDIO_DATA ? mAudioWaitRequest : mVideoWaitRequest;
   }
 

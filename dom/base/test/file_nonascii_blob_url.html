@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test blob URL for non-ascii domain</title>
+</head>
+<body>
+  <p id="result"></p>
+  <script type="application/javascript">
+
+window.onmessage = function(e) {
+  var blob = new Blob([e.data]);
+  var url = URL.createObjectURL(blob);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, false);
+  xhr.send(null);
+
+  parent.postMessage(xhr.responseText, '*');
+}
+
+  </script>
+</body>
+</html>
