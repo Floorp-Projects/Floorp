@@ -45,11 +45,10 @@ public:
   // I/O callback methods
   //
 
-  void OnAccepted(int aFd, const sockaddr_any* aAddr,
-                  socklen_t aAddrLen) override;
   void OnConnected() override;
   void OnError(const char* aFunction, int aErrno) override;
   void OnListening() override;
+  void OnSocketCanAcceptWithoutBlocking() override;
 
   // Methods for |SocketIOBase|
   //
@@ -176,20 +175,6 @@ ListenSocketIO::Listen(ConnectionOrientedSocketIO* aCOSocketIO)
 }
 
 void
-ListenSocketIO::OnAccepted(int aFd,
-                           const sockaddr_any* aAddr,
-                           socklen_t aAddrLen)
-{
-  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
-  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_LISTENING);
-  MOZ_ASSERT(mCOSocketIO);
-
-  RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
-
-  mCOSocketIO->Accept(aFd, aAddr, aAddrLen);
-}
-
-void
 ListenSocketIO::OnConnected()
 {
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
@@ -271,6 +256,29 @@ ListenSocketIO::SetSocketFlags(int aFd)
   }
 
   return true;
+}
+
+void
+ListenSocketIO::OnSocketCanAcceptWithoutBlocking()
+{
+  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
+  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_LISTENING);
+  MOZ_ASSERT(mCOSocketIO);
+
+  struct sockaddr_storage addr;
+  socklen_t addrLen = sizeof(addr);
+  int fd = TEMP_FAILURE_RETRY(accept(GetFd(),
+    reinterpret_cast<struct sockaddr*>(&addr), &addrLen));
+  if (fd < 0) {
+    OnError("accept", errno);
+    return;
+  }
+
+  RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
+
+  mCOSocketIO->Accept(fd,
+                      reinterpret_cast<union sockaddr_any*>(&addr),
+                      addrLen);
 }
 
 // |SocketIOBase|
