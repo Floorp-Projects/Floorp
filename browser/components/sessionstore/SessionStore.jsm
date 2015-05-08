@@ -1805,24 +1805,43 @@ let SessionStoreInternal = {
       throw Components.Exception("Invalid window object: no gBrowser", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    // Flush all data queued in the content script because we will need that
-    // state to properly duplicate the given tab.
-    TabState.flush(aTab.linkedBrowser);
-
-    // Duplicate the tab state
-    let tabState = TabState.clone(aTab);
-
-    tabState.index += aDelta;
-    tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
-    tabState.pinned = false;
-
+    // Create a new tab.
     let newTab = aTab == aWindow.gBrowser.selectedTab ?
       aWindow.gBrowser.addTab(null, {relatedToCurrent: true, ownerTab: aTab}) :
       aWindow.gBrowser.addTab();
 
-    this.restoreTab(newTab, tabState, {
-      restoreImmediately: true /* Load this tab right away. */
+    // Set tab title to "Connecting..." and start the throbber to pretend we're
+    // doing something while actually waiting for data from the frame script.
+    aWindow.gBrowser.setTabTitleLoading(newTab);
+    newTab.setAttribute("busy", "true");
+
+    // Collect state before flushing.
+    let tabState = TabState.clone(aTab);
+
+    // Flush to get the latest tab state to duplicate.
+    let browser = aTab.linkedBrowser;
+    TabStateFlusher.flush(browser).then(() => {
+      // The new tab might have been closed in the meantime.
+      if (newTab.closing || !newTab.linkedBrowser) {
+        return;
+      }
+
+      // Update state with flushed data. We can't use TabState.clone() here as
+      // the tab to duplicate may have already been closed. In that case we
+      // only have access to the <xul:browser>.
+      let options = {includePrivateData: true};
+      TabState.copyFromCache(browser, tabState, options);
+
+      tabState.index += aDelta;
+      tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
+      tabState.pinned = false;
+
+      // Restore the state into the new tab.
+      this.restoreTab(newTab, tabState, {
+        restoreImmediately: true /* Load this tab right away. */
+      });
     });
+
     return newTab;
   },
 
