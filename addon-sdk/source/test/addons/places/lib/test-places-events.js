@@ -29,7 +29,7 @@ const { search } = require('sdk/places/history');
 const {
   invalidResolve, invalidReject, createTree, createBookmark,
   compareWithHost, addVisits, resetPlaces, createBookmarkItem,
-  removeVisits
+  removeVisits, historyBatch
 } = require('./places-helper');
 const { save, MENU, UNSORTED } = require('sdk/places/bookmarks');
 const { promisedEmitter } = require('sdk/places/utils');
@@ -236,9 +236,8 @@ exports['test history-start-batch, history-end-batch, history-start-clear'] = fu
   on(startEvent, 'data', startHandler);
   on(clearEvent, 'data', clearHandler);
 
-  createBookmark().then(() => {
-    resetPlaces(complete);
-  })
+  historyBatch();
+  resetPlaces(complete);
 };
 
 exports['test history-visit, history-title-changed'] = function (assert, done) {
