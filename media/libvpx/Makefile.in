@@ -5,14 +5,7 @@
 # Set up the libvpx assembler config.
 
 AS=$(VPX_AS)
-ASFLAGS=$(VPX_ASFLAGS) -I. -I$(topsrcdir)/media/libvpx/ -I$(topsrcdir)/media/libvpx/vpx_ports/
-AS_DASH_C_FLAG=$(VPX_DASH_C_FLAG)
 ASM_SUFFIX=$(VPX_ASM_SUFFIX)
-
-ifeq ($(OS_TARGET),Android)
-  # For LIBVPX_RAND
-  ASFLAGS += -D__ANDROID__
-endif
 
 ifdef VPX_ARM_ASM
 # Building on an ARM platform with a supported assembler, include

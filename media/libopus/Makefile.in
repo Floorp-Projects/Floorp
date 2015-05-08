@@ -7,10 +7,6 @@ include $(topsrcdir)/config/rules.mk
 ifdef GNU_AS
 ifeq ($(CPU_ARCH),arm)
 
-# These flags are a lie; they're just used to enable the requisite
-# opcodes; actual arch detection is done at runtime.
-ASFLAGS = -march=armv7-a -mfpu=neon
-
 celt_pitch_xcorr_arm-gnu.$(ASM_SUFFIX): celt/arm/armopts-gnu.S
 
 # armopts needs a specific rule, because arm2gnu.pl will always add the .S

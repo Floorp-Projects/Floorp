@@ -1362,6 +1362,15 @@ VARIABLES = {
            appear in the moz.build file.
         """, None),
 
+    'ASFLAGS': (List, list,
+        """Flags passed to the assembler for all of the assembly source files
+           declared in this directory.
+
+           Note that the ordering of flags matters here; these flags will be
+           added to the assembler's command line in the same order as they
+           appear in the moz.build file.
+        """, None),
+
     'LDFLAGS': (List, list,
         """Flags passed to the linker when linking all of the libraries and
            executables declared in this directory.

@@ -45,14 +45,6 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += ['include']
 
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
-    GENERATED_SOURCES += [ '%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
-        'armbits-gnu',
-        'armfrag-gnu',
-        'armidct-gnu',
-        'armloop-gnu',
-    ]]
-
 if '86' in CONFIG['OS_TEST']:
     if CONFIG['OS_ARCH'] != 'SunOS':
         if CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['OS_TEST'] != 'x86_64':
@@ -94,3 +86,16 @@ if CONFIG['GNU_AS']:
         if CONFIG['OS_TARGET'] == 'Android':
             DEFINES['__linux__'] = True
 
+        GENERATED_SOURCES += [ '%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
+            'armbits-gnu',
+            'armfrag-gnu',
+            'armidct-gnu',
+            'armloop-gnu',
+        ]]
+
+        # These flags are a lie; they're just used to enable the requisite
+        # opcodes; actual arch detection is done at runtime.
+        ASFLAGS += [
+            '-march=armv7-a',
+            '-mfpu=neon',
+        ]
