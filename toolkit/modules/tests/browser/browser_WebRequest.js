@@ -63,6 +63,9 @@ function onBeforeSendHeaders(details)
 
     is(details.browser, expected_browser, "correct <browser> element");
     checkType(details);
+
+    let id = windowIDs.get(details.url);
+    is(id, details.windowId, "window ID same in onBeforeSendHeaders as onBeforeRequest");
   }
   if (details.url.indexOf("_redirect.") != -1) {
     return {redirectUrl: details.url.replace("_redirect.", "_good.")};

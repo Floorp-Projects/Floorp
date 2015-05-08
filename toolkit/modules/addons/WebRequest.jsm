@@ -245,7 +245,8 @@ let HttpObserverManager = {
     let channel = request.QueryInterface(Ci.nsIHttpChannel);
     let loadContext = this.getLoadContext(channel);
     let browser = loadContext ? loadContext.topFrameElement : null;
-    let policyType = channel.loadInfo.contentPolicyType;
+    let loadInfo = channel.loadInfo;
+    let policyType = loadInfo.contentPolicyType;
 
     let requestHeaders;
     let responseHeaders;
@@ -262,6 +263,8 @@ let HttpObserverManager = {
         method: channel.requestMethod,
         browser: browser,
         type: WebRequestCommon.typeForPolicyType(policyType),
+        windowId: loadInfo.outerWindowID,
+        parentWindowId: loadInfo.parentOuterWindowID,
       };
       if (opts.requestHeaders) {
         if (!requestHeaders) {
