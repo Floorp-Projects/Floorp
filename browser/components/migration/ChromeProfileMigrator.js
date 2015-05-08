@@ -306,8 +306,11 @@ function GetCookiesResource(aProfileFolder) {
 
     migrate: function(aCallback) {
       let dbConn = Services.storage.openUnsharedDatabase(cookiesFile);
-      let stmt = dbConn.createAsyncStatement(
-          "SELECT host_key, path, name, value, secure, httponly, expires_utc FROM cookies");
+      // We don't support decrypting cookies yet so only import plaintext ones.
+      let stmt = dbConn.createAsyncStatement(`
+        SELECT host_key, name, value, path, expires_utc, secure, httponly, encrypted_value
+        FROM cookies
+        WHERE length(encrypted_value) = 0`);
 
       stmt.executeAsync({
         handleResult : function(aResults) {
