@@ -681,7 +681,7 @@ class BuildReaderError(Exception):
             self._print_exception(inner, s)
 
     def _print_keyerror(self, inner, s):
-        if inner.args[0] not in ('global_ns', 'local_ns'):
+        if not inner.args or inner.args[0] not in ('global_ns', 'local_ns'):
             self._print_exception(inner, s)
             return
 
@@ -740,7 +740,7 @@ class BuildReaderError(Exception):
         s.write('variables and try again.\n')
 
     def _print_valueerror(self, inner, s):
-        if inner.args[0] not in ('global_ns', 'local_ns'):
+        if not inner.args or inner.args[0] not in ('global_ns', 'local_ns'):
             self._print_exception(inner, s)
             return
 
