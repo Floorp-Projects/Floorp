@@ -32,16 +32,6 @@ endif
 
 
 ######################################################################
-# M68k
-######################################################################
-
-ifeq ($(OS_ARCH),Linux)
-ifneq (,$(findstring mips, $(OS_TEST)))
-ASFLAGS		+= -I$(DIST)/include
-endif
-endif
-
-######################################################################
 # PowerPC
 ######################################################################
 #
@@ -50,20 +40,6 @@ endif
 ifeq ($(OS_ARCH),AIX)
 # #24617  Building the CPP's (CXX) optimized causes a crash
 CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
-endif
-
-######################################################################
-# SPARC
-######################################################################
-#
-# Solaris/SPARC
-#
-ifeq ($(OS_ARCH),SunOS)
-ifneq (86,$(findstring 86,$(OS_TEST)))
-ifdef HAVE_64BIT_BUILD
-ASFLAGS		+= -xarch=v9
-endif
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -98,10 +74,6 @@ xptcstubsdef_asm.solx86: $(DIST)/include/xptcstubsdef.inc
 	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9]\))/\12\(\2\)/' \
 	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9][0-9]\))/\13\(\2\)/' \
 	$(DIST)/include/xptcstubsdef.inc > $@
-ifeq (x86_64,$(OS_TEST))
-ASFLAGS += -xarch=amd64
-endif
-
 endif
 endif
 endif

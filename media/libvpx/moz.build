@@ -105,3 +105,16 @@ if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
     CFLAGS += ['-Wno-sign-compare']
+
+ASFLAGS += CONFIG['VPX_ASFLAGS']
+ASFLAGS += [
+    '-I.',
+    '-I%s/media/libvpx/' % TOPSRCDIR,
+    '-I%s/media/libvpx/vpx_ports/' % TOPSRCDIR,
+]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    # For LIBVPX_RAND
+    ASFLAGS += [
+        '-D__ANDROID__'
+    ]

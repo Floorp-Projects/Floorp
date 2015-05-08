@@ -73,6 +73,7 @@ from ..makeutil import Makefile
 MOZBUILD_VARIABLES = [
     'ANDROID_GENERATED_RESFILES',
     'ANDROID_RES_DIRS',
+    'ASFLAGS',
     'CMSRCS',
     'CMMSRCS',
     'CPP_UNIT_TESTS',

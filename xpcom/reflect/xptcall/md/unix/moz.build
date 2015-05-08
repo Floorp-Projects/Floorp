@@ -59,6 +59,7 @@ if CONFIG['OS_ARCH'] == 'SunOS' and '86' in CONFIG['OS_TEST']:
                 'xptcstubs_x86_64_linux.cpp'
             ]
         else:
+            ASFLAGS += ['-xarch=amd64']
             SOURCES += [
                 'xptcinvoke_x86_64_solaris.cpp',
                 'xptcstubs_asm_x86_64_solaris_SUNW.s',
@@ -271,6 +272,7 @@ if CONFIG['OS_ARCH'] in ('OpenBSD', 'FreeBSD') and CONFIG['OS_TEST'] == 'sparc64
 
 if CONFIG['OS_ARCH'] == 'SunOS' and '86' not in CONFIG['OS_TEST']:
     if CONFIG['HAVE_64BIT_BUILD']:
+        ASFLAGS += ['-xarch=v9']
         SOURCES += [
             'xptcinvoke_sparcv9_solaris.cpp',
             'xptcstubs_sparcv9_solaris.cpp',
