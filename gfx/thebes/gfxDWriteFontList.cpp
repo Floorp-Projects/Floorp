@@ -212,7 +212,6 @@ gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             }
         }
 
-#ifdef PR_LOGGING
         if (LOG_FONTLIST_ENABLED()) {
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
                  " with style: %s weight: %d stretch: %d psname: %s fullname: %s",
@@ -223,7 +222,6 @@ gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
                  NS_ConvertUTF16toUTF8(psname).get(),
                  NS_ConvertUTF16toUTF8(fullname).get()));
         }
-#endif
     }
 
     // assume that if no error, all postscript/fullnames were initialized
@@ -556,7 +554,6 @@ gfxDWriteFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         mCharacterMap = new gfxCharacterMap();
     }
 
-#ifdef PR_LOGGING
     LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d hash: %8.8x%s\n",
                   NS_ConvertUTF16toUTF8(mName).get(),
                   charmap->SizeOfIncludingThis(moz_malloc_size_of),
@@ -567,7 +564,6 @@ gfxDWriteFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
                 NS_ConvertUTF16toUTF8(mName).get());
         charmap->Dump(prefix, eGfxLog_cmapdata);
     }
-#endif
 
     return rv;
 }
@@ -1024,7 +1020,6 @@ gfxDWriteFontList::DelayedInitFontList()
                 faces[i]->mFamilyName = gillSansMTFamily->Name();
                 gillSansMTFamily->AddFontEntry(faces[i]);
 
-#ifdef PR_LOGGING
                 if (LOG_FONTLIST_ENABLED()) {
                     gfxFontEntry *fe = faces[i];
                     LOG_FONTLIST(("(fontlist) moved (%s) to family (%s)"
@@ -1034,7 +1029,6 @@ gfxDWriteFontList::DelayedInitFontList()
                          (fe->IsItalic()) ? "italic" : "normal",
                          fe->Weight(), fe->Stretch()));
                 }
-#endif
             }
 
             // remove Gills Sans
