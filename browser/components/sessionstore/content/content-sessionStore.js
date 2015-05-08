@@ -40,6 +40,9 @@ Cu.import("resource:///modules/sessionstore/ContentRestore.jsm", this);
 XPCOMUtils.defineLazyGetter(this, 'gContentRestore',
                             () => { return new ContentRestore(this) });
 
+// The current epoch.
+let gCurrentEpoch = 0;
+
 /**
  * Returns a lazy function that will evaluate the given
  * function |fn| only once and cache its return value.
@@ -88,14 +91,8 @@ let EventListener = {
       return;
     }
 
-    // If we're in the process of restoring, this load may signal
-    // the end of the restoration.
-    let epoch = gContentRestore.getRestoreEpoch();
-    if (!epoch) {
-      return;
-    }
-
-    // Restore the form data and scroll position.
+    // Restore the form data and scroll position. If we're not currently
+    // restoring a tab state then this call will simply be a noop.
     gContentRestore.restoreDocument();
   }
 };
@@ -122,6 +119,14 @@ let MessageListener = {
       return;
     }
 
+    // A fresh tab always starts with epoch=0. The parent has the ability to
+    // override that to signal a new era in this tab's life. This enables it
+    // to ignore async messages that were already sent but not yet received
+    // and would otherwise confuse the internal tab state.
+    if (data.epoch && data.epoch != gCurrentEpoch) {
+      gCurrentEpoch = data.epoch;
+    }
+
     switch (name) {
       case "SessionStore:restoreHistory":
         this.restoreHistory(data);
@@ -139,7 +144,7 @@ let MessageListener = {
   },
 
   restoreHistory({epoch, tabData, loadArguments}) {
-    gContentRestore.restoreHistory(epoch, tabData, loadArguments, {
+    gContentRestore.restoreHistory(tabData, loadArguments, {
       onReload() {
         // Inform SessionStore.jsm about the reload. It will send
         // restoreTabContent in response.
@@ -172,7 +177,7 @@ let MessageListener = {
   },
 
   restoreTabContent({loadArguments}) {
-    let epoch = gContentRestore.getRestoreEpoch();
+    let epoch = gCurrentEpoch;
 
     // We need to pass the value of didStartLoad back to SessionStore.jsm.
     let didStartLoad = gContentRestore.restoreTabContent(loadArguments, () => {
@@ -698,7 +703,8 @@ let MessageQueue = {
     // Send all data to the parent process.
     sendMessage("SessionStore:update", {
       id: this._id, data, telemetry,
-      isFinal: options.isFinal || false
+      isFinal: options.isFinal || false,
+      epoch: gCurrentEpoch
     });
 
     // Increase our unique message ID.

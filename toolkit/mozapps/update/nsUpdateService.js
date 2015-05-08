@@ -497,7 +497,7 @@ function hasUpdateMutex() {
 
 XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpdates() {
   let useService = false;
-  if (shouldUseService() && isServiceInstalled()) {
+  if (shouldUseService()) {
     // No need to perform directory write checks, the maintenance service will
     // be able to write to all directories.
     LOG("gCanApplyUpdates - bypass the write checks because we'll use the service");
@@ -648,8 +648,7 @@ function getCanStageUpdates() {
     return false;
   }
 
-  if (AppConstants.platform == "win" && isServiceInstalled() &&
-      shouldUseService()) {
+  if (AppConstants.platform == "win" && shouldUseService()) {
     // No need to perform directory write checks, the maintenance service will
     // be able to write to all directories.
     LOG("getCanStageUpdates - able to stage updates using the service");
@@ -1025,13 +1024,12 @@ function releaseSDCardMountLock() {
 
 /**
  * Determines if the service should be used to attempt an update
- * or not.  For now this is only when PREF_APP_UPDATE_SERVICE_ENABLED
- * is true and we have Firefox.
+ * or not.
  *
  * @return  true if the service should be used for updates.
  */
 function shouldUseService() {
-  if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
+  if (AppConstants.MOZ_MAINTENANCE_SERVICE && isServiceInstalled()) {
     return getPref("getBoolPref",
                    PREF_APP_UPDATE_SERVICE_ENABLED, false);
   }
@@ -3496,10 +3494,15 @@ Checker.prototype = {
     if (AppConstants.platform == "gonk") {
       let sysLibs = {};
       Cu.import("resource://gre/modules/systemlibs.js", sysLibs);
+      let productDevice = sysLibs.libcutils.property_get("ro.product.device");
+      let buildType = sysLibs.libcutils.property_get("ro.build.type");
       url = url.replace(/%PRODUCT_MODEL%/g,
                         sysLibs.libcutils.property_get("ro.product.model"));
-      url = url.replace(/%PRODUCT_DEVICE%/g,
-                        sysLibs.libcutils.property_get("ro.product.device"));
+      if (buildType == "user") {
+        url = url.replace(/%PRODUCT_DEVICE%/g, productDevice);
+      } else {
+        url = url.replace(/%PRODUCT_DEVICE%/g, productDevice + "-" + buildType);
+      }
       url = url.replace(/%B2G_VERSION%/g,
                         getPref("getCharPref", PREF_APP_B2G_VERSION, null));
     }
@@ -4214,7 +4217,7 @@ Downloader.prototype = {
 
     if (maxProgress != this._patch.size) {
       LOG("Downloader:onProgress - maxProgress: " + maxProgress +
-          " is not equal to expectd patch size: " + this._patch.size);
+          " is not equal to expected patch size: " + this._patch.size);
       // It's important that we use a different code than
       // NS_ERROR_CORRUPTED_CONTENT so that tests can verify the difference
       // between a hash error and a wrong download error.

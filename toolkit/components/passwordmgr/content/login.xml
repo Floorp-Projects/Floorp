@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE bindings SYSTEM "chrome://passwordmgr/locale/passwordManager.dtd">
+
+<bindings id="login-bindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="login"
+           extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content orient="vertical">
+      <xul:label class="login-hostname" crop="end"
+                 xbl:inherits="value=hostname"/>
+      <xul:label class="login-username" crop="end"
+                 xbl:inherits="value=username"/>
+    </content>
+  </binding>
+</bindings>

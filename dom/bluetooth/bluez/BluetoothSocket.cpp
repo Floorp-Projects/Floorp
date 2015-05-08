@@ -64,11 +64,10 @@ public:
   // I/O callback methods
   //
 
-  void OnAccepted(int aFd, const sockaddr_any* aAddr,
-                  socklen_t aAddrLen) override;
   void OnConnected() override;
   void OnError(const char* aFunction, int aErrno) override;
   void OnListening() override;
+  void OnSocketCanAcceptWithoutBlocking() override;
   void OnSocketCanReceiveWithoutBlocking() override;
   void OnSocketCanSendWithoutBlocking() override;
 
@@ -221,14 +220,6 @@ BluetoothSocket::BluetoothSocketIO::Listen()
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(mConnector);
 
-  // This will set things we don't particularly care about, but it will hand
-  // back the correct structure size which is what we do care about.
-  if (!mConnector->CreateAddr(true, mAddrSize, mAddr, nullptr)) {
-    NS_WARNING("Cannot create socket address!");
-    FireSocketError();
-    return;
-  }
-
   if (!IsOpen()) {
     int fd = mConnector->Create();
     if (fd < 0) {
@@ -238,6 +229,18 @@ BluetoothSocket::BluetoothSocketIO::Listen()
     }
     if (!SetSocketFlags(fd)) {
       NS_WARNING("Cannot set socket flags!");
+      FireSocketError();
+      return;
+    }
+    if (!mConnector->SetUpListenSocket(fd)) {
+      NS_WARNING("Could not set up listen socket!");
+      FireSocketError();
+      return;
+    }
+    // This will set things we don't particularly care about, but it will hand
+    // back the correct structure size which is what we do care about.
+    if (!mConnector->CreateAddr(true, mAddrSize, mAddr, nullptr)) {
+      NS_WARNING("Cannot create socket address!");
       FireSocketError();
       return;
     }
@@ -268,13 +271,17 @@ BluetoothSocket::BluetoothSocketIO::Connect()
       FireSocketError();
       return;
     }
+    if (!mConnector->SetUp(fd)) {
+      NS_WARNING("Could not set up socket!");
+      FireSocketError();
+      return;
+    }
+    if (!mConnector->CreateAddr(false, mAddrSize, mAddr, mAddress.get())) {
+      NS_WARNING("Cannot create socket address!");
+      FireSocketError();
+      return;
+    }
     SetFd(fd);
-  }
-
-  if (!mConnector->CreateAddr(false, mAddrSize, mAddr, mAddress.get())) {
-    NS_WARNING("Cannot create socket address!");
-    FireSocketError();
-    return;
   }
 
   // calls OnConnected() on success, or OnError() otherwise
@@ -291,55 +298,10 @@ BluetoothSocket::BluetoothSocketIO::Send(UnixSocketIOBuffer* aBuffer)
 }
 
 void
-BluetoothSocket::BluetoothSocketIO::OnAccepted(
-  int aFd, const sockaddr_any* aAddr, socklen_t aAddrLen)
-{
-  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
-  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_LISTENING);
-  MOZ_ASSERT(aAddr);
-  MOZ_ASSERT(aAddrLen > 0 && (size_t)aAddrLen <= sizeof(mAddr));
-
-  memcpy (&mAddr, aAddr, aAddrLen);
-  mAddrSize = aAddrLen;
-
-  if (!mConnector->SetUp(aFd)) {
-    NS_WARNING("Could not set up socket!");
-    return;
-  }
-
-  RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
-  Close();
-  if (!SetSocketFlags(aFd)) {
-    return;
-  }
-  SetSocket(aFd, SOCKET_IS_CONNECTED);
-
-  NS_DispatchToMainThread(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
-
-  AddWatchers(READ_WATCHER, true);
-  if (HasPendingData()) {
-    AddWatchers(WRITE_WATCHER, false);
-  }
-}
-
-void
 BluetoothSocket::BluetoothSocketIO::OnConnected()
 {
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED);
-
-  if (!SetSocketFlags(GetFd())) {
-    NS_WARNING("Cannot set socket flags!");
-    FireSocketError();
-    return;
-  }
-
-  if (!mConnector->SetUp(GetFd())) {
-    NS_WARNING("Could not set up socket!");
-    FireSocketError();
-    return;
-  }
 
   NS_DispatchToMainThread(
     new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
@@ -356,12 +318,6 @@ BluetoothSocket::BluetoothSocketIO::OnListening()
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_LISTENING);
 
-  if (!mConnector->SetUpListenSocket(GetFd())) {
-    NS_WARNING("Could not set up listen socket!");
-    FireSocketError();
-    return;
-  }
-
   AddWatchers(READ_WATCHER, true);
 }
 
@@ -372,6 +328,41 @@ BluetoothSocket::BluetoothSocketIO::OnError(const char* aFunction, int aErrno)
 
   UnixFdWatcher::OnError(aFunction, aErrno);
   FireSocketError();
+}
+
+void
+BluetoothSocket::BluetoothSocketIO::OnSocketCanAcceptWithoutBlocking()
+{
+  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
+  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_LISTENING);
+
+  RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
+
+  socklen_t mAddrSize = sizeof(mAddr);
+  int fd = TEMP_FAILURE_RETRY(accept(GetFd(),
+    reinterpret_cast<struct sockaddr*>(&mAddr), &mAddrSize));
+  if (fd < 0) {
+    OnError("accept", errno);
+    return;
+  }
+  if (!SetSocketFlags(fd)) {
+    return;
+  }
+  if (!mConnector->SetUp(fd)) {
+    NS_WARNING("Could not set up socket!");
+    return;
+  }
+
+  Close();
+  SetSocket(fd, SOCKET_IS_CONNECTED);
+
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
+
+  AddWatchers(READ_WATCHER, true);
+  if (HasPendingData()) {
+    AddWatchers(WRITE_WATCHER, false);
+  }
 }
 
 void

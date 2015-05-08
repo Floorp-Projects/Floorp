@@ -2,17 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/inContentUI.css");
+@import url("chrome://global/skin/in-content/common.css");
 
-.downloadButton {
-  box-shadow: none;
+#contentAreaDownloadsView {
+  padding: 18px;
 }
 
+#downloadsRichListBox:not(:-moz-focusring) {
+  border-color: transparent;
+}
+
+.downloadButton:not([disabled="true"]):hover,
 .downloadButton:not([disabled="true"]):hover:active,
 .downloadButton:not([disabled]):hover:active {
   background: transparent;
   border: none;
-  box-shadow: none;
+}
+
+.downloadButton > .button-box {
+  padding-bottom: 0;
 }
 
 #downloadsListEmptyDescription {

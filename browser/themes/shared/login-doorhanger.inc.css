@@ -1,0 +1,19 @@
+#login-fill-testing {
+  color: #b33;
+  font-weight: bold;
+}
+
+#login-fill-list {
+  border: 1px solid black;
+  max-height: 20em;
+}
+
+.login-hostname {
+  margin: 4px;
+  font-weight: bold;
+}
+
+.login-username {
+  margin: 4px;
+  color: #888;
+}
