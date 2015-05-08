@@ -551,9 +551,7 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
       mDecoderStateMachine->DispatchAudioCaptured();
     }
     if (!GetDecodedStream()) {
-      int64_t t = mDecoderStateMachine ?
-                  mDecoderStateMachine->GetCurrentTimeUs() : 0;
-      RecreateDecodedStream(t, aStream->Graph());
+      RecreateDecodedStream(mLogicalPosition, aStream->Graph());
     }
     OutputStreamData* os = mOutputStreams.AppendElement();
     os->Init(this, aStream);
@@ -611,7 +609,8 @@ MediaDecoder::MediaDecoder() :
                    "MediaDecoder::mNextFrameStatus (Mirror)"),
   mDecoderPosition(0),
   mPlaybackPosition(0),
-  mCurrentTime(0.0),
+  mLogicalPosition(0.0),
+  mCurrentPosition(AbstractThread::MainThread(), 0, "MediaDecoder::mCurrentPosition (Mirror)"),
   mVolume(AbstractThread::MainThread(), 0.0, "MediaDecoder::mVolume (Canonical)"),
   mPlaybackRate(AbstractThread::MainThread(), 1.0, "MediaDecoder::mPlaybackRate (Canonical)"),
   mPreservesPitch(AbstractThread::MainThread(), true, "MediaDecoder::mPreservesPitch (Canonical)"),
@@ -649,9 +648,18 @@ MediaDecoder::MediaDecoder() :
 
   mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
 
+  //
   // Initialize watchers.
+  //
+
+  // readyState
   mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateReadyState);
   mWatchManager.Watch(mNextFrameStatus, &MediaDecoder::UpdateReadyState);
+
+  // mLogicalPosition
+  mWatchManager.Watch(mCurrentPosition, &MediaDecoder::UpdateLogicalPosition);
+  mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateLogicalPosition);
+  mWatchManager.Watch(mLogicallySeeking, &MediaDecoder::UpdateLogicalPosition);
 }
 
 bool MediaDecoder::Init(MediaDecoderOwner* aOwner)
@@ -831,7 +839,7 @@ nsresult MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
   nsresult rv = SecondsToUsecs(aTime, timeUsecs);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCurrentTime = aTime;
+  mLogicalPosition = aTime;
   mWasEndedWhenEnteredDormant = false;
 
   mLogicallySeeking = true;
@@ -863,7 +871,7 @@ void MediaDecoder::CallSeek(const SeekTarget& aTarget)
 double MediaDecoder::GetCurrentTime()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mCurrentTime;
+  return mLogicalPosition;
 }
 
 already_AddRefed<nsIPrincipal> MediaDecoder::GetCurrentPrincipal()
@@ -1071,7 +1079,6 @@ void MediaDecoder::PlaybackEnded()
     return;
   }
 
-  PlaybackPositionChanged();
   ChangeState(PLAY_STATE_ENDED);
   InvalidateWithFlags(VideoFrameContainer::INVALIDATE_FORCE);
 
@@ -1259,7 +1266,7 @@ void MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
     UpdateDecodedStream();
   }
 
-  PlaybackPositionChanged(aVal.mEventVisibility);
+  UpdateLogicalPosition(aVal.mEventVisibility);
 
   if (mOwner) {
     if (aVal.mEventVisibility != MediaDecoderEventVisibility::Suppressed) {
@@ -1319,35 +1326,20 @@ void MediaDecoder::ChangeState(PlayState aState)
   GetReentrantMonitor().NotifyAll();
 }
 
-void MediaDecoder::PlaybackPositionChanged(MediaDecoderEventVisibility aEventVisibility)
+void MediaDecoder::UpdateLogicalPosition(MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mShuttingDown)
     return;
 
-  double lastTime = mCurrentTime;
-
-  // Control the scope of the monitor so it is not
-  // held while the timeupdate and the invalidate is run.
-  {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    if (mDecoderStateMachine) {
-      // Don't update the official playback position when paused which is
-      // expected by the script. (The current playback position might be still
-      // advancing for a while after paused.)
-      if (!IsSeeking() && mPlayState != PLAY_STATE_PAUSED) {
-        // Only update the current playback position if we're not seeking.
-        // If we are seeking, the update could have been scheduled on the
-        // state machine thread while we were playing but after the seek
-        // algorithm set the current playback position on the main thread,
-        // and we don't want to override the seek algorithm and change the
-        // current time after the seek has started but before it has
-        // completed.
-        mCurrentTime = mDecoderStateMachine->GetCurrentTime();
-      }
-      mDecoderStateMachine->ClearPositionChangeFlag();
-    }
+  // Per spec, offical position remains stable during pause and seek.
+  if (mPlayState == PLAY_STATE_PAUSED || IsSeeking()) {
+    return;
   }
+
+  double currentPosition = static_cast<double>(CurrentPosition()) / static_cast<double>(USECS_PER_S);
+  bool logicalPositionChanged = mLogicalPosition != currentPosition;
+  mLogicalPosition = currentPosition;
 
   // Invalidate the frame so any video data is displayed.
   // Do this before the timeupdate event so that if that
@@ -1355,9 +1347,8 @@ void MediaDecoder::PlaybackPositionChanged(MediaDecoderEventVisibility aEventVis
   // frame has reflowed and the size updated beforehand.
   Invalidate();
 
-  if (mOwner &&
-      (aEventVisibility != MediaDecoderEventVisibility::Suppressed) &&
-      lastTime != mCurrentTime) {
+  if (mOwner && logicalPositionChanged &&
+      aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
     FireTimeUpdate();
   }
 }
@@ -1563,8 +1554,10 @@ MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
 
   if (mDecoderStateMachine) {
     mNextFrameStatus.Connect(mDecoderStateMachine->CanonicalNextFrameStatus());
+    mCurrentPosition.Connect(mDecoderStateMachine->CanonicalCurrentPosition());
   } else {
     mNextFrameStatus.DisconnectIfConnected();
+    mCurrentPosition.DisconnectIfConnected();
   }
 }
 
