@@ -89,7 +89,8 @@ FTPChannelParent::Init(const FTPChannelCreationArgs& aArgs)
     const FTPChannelOpenArgs& a = aArgs.get_FTPChannelOpenArgs();
     return DoAsyncOpen(a.uri(), a.startPos(), a.entityID(), a.uploadStream(),
                        a.requestingPrincipalInfo(), a.triggeringPrincipalInfo(),
-                       a.securityFlags(), a.contentPolicyType(), a.innerWindowID());
+                       a.securityFlags(), a.contentPolicyType(),
+                       a.innerWindowID(), a.outerWindowID(), a.parentOuterWindowID());
   }
   case FTPChannelCreationArgs::TFTPChannelConnectArgs:
   {
@@ -111,7 +112,9 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
                               const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
                               const uint32_t& aSecurityFlags,
                               const uint32_t& aContentPolicyType,
-                              const uint32_t& aInnerWindowID)
+                              const uint64_t& aInnerWindowID,
+                              const uint64_t& aOuterWindowID,
+                              const uint64_t& aParentOuterWindowID)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri)
@@ -154,7 +157,7 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
   nsCOMPtr<nsILoadInfo> loadInfo =
     new mozilla::LoadInfo(requestingPrincipal, triggeringPrincipal,
                           aSecurityFlags, aContentPolicyType,
-                          aInnerWindowID);
+                          aInnerWindowID, aOuterWindowID, aParentOuterWindowID);
 
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannelInternal(getter_AddRefs(chan), uri, loadInfo,

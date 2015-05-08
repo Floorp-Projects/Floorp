@@ -17,7 +17,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(768a1f20-57d4-462a-812a-41c04e5d1e19)]
+[scriptable, builtinclass, uuid(dcf54f49-2d63-4c34-9da1-54df235f354c)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -182,22 +182,44 @@ interface nsILoadInfo : nsISupports
   nsIURI binaryBaseURI();
 
   /**
-   * The innerWindowId of the loadingDocument, used to identify
-   * the loadingDocument in e10s where the loadingDocument is
-   * not available.
+   * Typically these are the window IDs of the window in which the element being
+   * loaded lives. However, if the element being loaded is <frame
+   * src="foo.html"> (or, more generally, if the element QIs to
+   * nsIFrameLoaderOwner) then the window IDs are for the window containing the
+   * foo.html document. In this case, parentOuterWindowID is the window ID of
+   * the window containing the <frame> element.
    *
-   * Warning: If the loadingDocument is null, then the
-   * innerWindowId is 0.
+   * Note that these window IDs can be 0 if the window is not
+   * available. parentOuterWindowID will be the same as outerWindowID if the
+   * window has no parent.
    */
-  readonly attribute unsigned long innerWindowID;
+  readonly attribute unsigned long long innerWindowID;
+  readonly attribute unsigned long long outerWindowID;
+  readonly attribute unsigned long long parentOuterWindowID;
 
 %{ C++
-  inline uint32_t GetInnerWindowID()
+  inline uint64_t GetInnerWindowID()
   {
-    uint32_t result;
+    uint64_t result;
     mozilla::DebugOnly<nsresult> rv = GetInnerWindowID(&result);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;
   }
-%}
+
+  inline uint64_t GetOuterWindowID()
+  {
+    uint64_t result;
+    mozilla::DebugOnly<nsresult> rv = GetOuterWindowID(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+
+  inline uint64_t GetParentOuterWindowID()
+  {
+    uint64_t result;
+    mozilla::DebugOnly<nsresult> rv = GetParentOuterWindowID(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+  %}
 };
