@@ -11,7 +11,6 @@ var PKT_SAVED_OVERLAY = function (options)
     this.savedItemId = 0;
     this.savedUrl = '';
     this.premiumStatus = false;
-    this.panelId = 0;
     this.preventCloseTimerCancel = false;
     this.closeValid = true;
     this.mouseInside = false;
@@ -34,8 +33,14 @@ var PKT_SAVED_OVERLAY = function (options)
             var newtag = $('<li><a href="#" class="token_tag ' + tagclass + '">' + tags[i] + '</a></li>');
             container.append(newtag);
             var templeft = newtag.position().left;
-            this.cxt_suggested_available++;
-            newtagleft = templeft;
+            if (templeft > newtagleft) {
+                this.cxt_suggested_available++;
+                newtagleft = templeft;
+            }
+            else {
+                newtag.remove();
+                break;
+            }
         }
     };
     this.fillUserTags = function() {
@@ -185,6 +190,9 @@ var PKT_SAVED_OVERLAY = function (options)
                         }   
                     }
                 }
+                else {
+                    returnlist.push({name:'blah'});
+                }
                 if (!$('.token-input-dropdown-tag').data('init')) {
                     $('.token-input-dropdown-tag').css('width',inputwrapper.outerWidth()).data('init');
                     inputwrapper.append($('.token-input-dropdown-tag'));
@@ -194,7 +202,7 @@ var PKT_SAVED_OVERLAY = function (options)
             textToData: function(text) {
                 if($.trim(text).length > 25 || !$.trim(text).length) {
                     if (text.length > 25) {
-                        myself.showTagsError(myself.dictJSON.maxtaglength);
+                        $('.pkt_ext_edit_msg').addClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text(myself.dictJSON.invalidTags);
                         changestamp = Date.now();
                         setTimeout(function() {
                             $('.token-input-input-token input').val(text).focus();
@@ -203,7 +211,7 @@ var PKT_SAVED_OVERLAY = function (options)
                     return null;
                 }
                 else {
-                    myself.hideTagsError();
+                    $('.pkt_ext_edit_msg').removeClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text('');
                     return {name:myself.sanitizeText(text.toLowerCase())};
                 }                       
             },
@@ -250,12 +258,6 @@ var PKT_SAVED_OVERLAY = function (options)
                 changestamp = Date.now();
                 myself.showActiveTags();
                 myself.checkPlaceholderStatus();
-            },
-            onShowDropdown: function() {
-               thePKT_SAVED.sendMessage("expandSavePanel");
-            },
-            onHideDropdown: function() {
-               thePKT_SAVED.sendMessage("collapseSavePanel");
             }
         });
         $('body').on('keydown',function(e) {
@@ -361,14 +363,6 @@ var PKT_SAVED_OVERLAY = function (options)
             });
             myself.closePopup();
         });
-    };
-    this.showTagsError = function(msg) {
-        $('.pkt_ext_edit_msg').addClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text(msg);
-        $('.pkt_ext_tag_detail').addClass('pkt_ext_tag_error');
-    };
-    this.hideTagsError = function(msg) {
-        $('.pkt_ext_edit_msg').removeClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text('');
-        $('.pkt_ext_tag_detail').removeClass('pkt_ext_tag_error');
     };
     this.showActiveTags = function() {
         if (!$('.pkt_ext_suggestedtag_detail').length) {
@@ -573,7 +567,6 @@ PKT_SAVED_OVERLAY.prototype = {
         if (this.premiumStatus && !$('.pkt_ext_suggestedtag_detail').length)
         {
             $('body').append(Handlebars.templates.saved_premiumshell(this.dictJSON));
-            $('.pkt_ext_initload').append(Handlebars.templates.saved_premiumextras(this.dictJSON));
         }
     }
 };
@@ -593,11 +586,11 @@ PKT_SAVED.prototype = {
     },
 
     addMessageListener: function(messageId, callback) {
-    	pktPanelMessaging.addMessageListener(this.overlay.panelId, messageId, callback);
+    	Messaging.addMessageListener(messageId, callback);
     },
 
     sendMessage: function(messageId, payload, callback) {
-    	pktPanelMessaging.sendMessage(this.overlay.panelId, messageId, payload, callback);
+    	Messaging.sendMessage(messageId, payload, callback);
     },
 
     create: function() {
@@ -612,9 +605,6 @@ PKT_SAVED.prototype = {
         {
             myself.overlay.pockethost = host[1];
         }
-
-        myself.overlay.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
-
         myself.overlay.create();
 
         // tell back end we're ready
@@ -624,21 +614,7 @@ PKT_SAVED.prototype = {
         thePKT_SAVED.addMessageListener("saveLink",function(resp)
         {
             if (resp.status == 'error') {
-                if (typeof resp.error == 'object')
-                {
-                    if (resp.error.localizedKey)
-                    {
-                        myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved,myself.overlay.dictJSON[resp.error.localizedKey]);
-                    }
-                    else
-                    {
-                        myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved,resp.error.message);
-                    }
-                }       
-                else
-                {
-                    myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved,myself.overlay.dictJSON.errorgeneric);
-                }
+                myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved,myself.overlay.dictJSON.onlylinkssaved);
                 return;
             }
 

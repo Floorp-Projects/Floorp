@@ -52,15 +52,12 @@
 .pkt_ext_containersaved .pkt_ext_loadingspinner {
     position: relative;
     display: inline-block;
+    width: 2.5em;
     height: 2.5em;
-    left: 50%;
-    margin: 2em 0 0 -1.25em;
+    margin: 2em 0 0;
     font-size: 10px;
     text-indent: 999em;
-    position: absolute;
-    top: 4em;
     overflow: hidden;
-    width: 2.5em;
     animation: pkt_ext_spin 0.7s infinite steps(8);
 }
 .pkt_ext_containersaved .pkt_ext_loadingspinner:before,
@@ -99,7 +96,7 @@
 .pkt_ext_containersaved .pkt_ext_initload {
     left: 0;
     position: absolute;
-    top: 0;
+    top: 1em;
     width: 100%;
 }
 .pkt_ext_containersaved .pkt_ext_detail {
@@ -109,6 +106,7 @@
     z-index: 10;
 }
 .pkt_ext_container_detailactive .pkt_ext_initload {
+    transition: opacity 0.2s ease-out;
     opacity: 0;
 }
 .pkt_ext_container_detailactive .pkt_ext_initload .pkt_ext_loadingspinner,
@@ -118,6 +116,7 @@
 .pkt_ext_container_detailactive .pkt_ext_detail {
     max-height: 20em;
     opacity: 1;
+    transition: opacity 0.2s ease-out;
 }
 .pkt_ext_container_finalstate .pkt_ext_edit_msg,
 .pkt_ext_container_finalstate .pkt_ext_tag_detail,
@@ -152,8 +151,29 @@
 @keyframes fade_in_out {
     0% {
         opacity: 1;
+        top: 0;
     }
     50% {
+        opacity: 0;
+        top: 0;
+    }
+    51% {
+        opacity: 0;
+        top: 10px;
+    }
+    100% {
+        opacity: 1;
+        top: 10px;
+    }
+}
+@keyframes fade_in_outalt {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    51% {
         opacity: 0;
     }
     100% {
@@ -162,17 +182,18 @@
 }
 .pkt_ext_container_finalstate h2 {
     animation: fade_in_out 0.4s ease-out;
+    top: 10px;
 }
 .pkt_ext_container_finalerrorstate h2 {
-    animation: none;
+    animation: fade_int_outalt 0.4s ease-out;
     color: #d74345;
+    top: 0;
 }
 .pkt_ext_containersaved .pkt_ext_errordetail {
     display: none;
     font-size: 12px;
     font-weight: normal;
     left: 6.4em;
-    max-width: 21em;
     opacity: 0;
     position: absolute;
     top: 2.7em;
@@ -199,33 +220,20 @@
         background-size: 44px 40px;
     }
 }
-.pkt_ext_container_finalerrorstate .pkt_ext_logo {
-    background-image: url(../img/pocketerror@1x.png);
-    height: 44px;
-    width: 44px;
-}
-@media (min-resolution: 1.1dppx) {
-    .pkt_ext_container_finalerrorstate .pkt_ext_logo {
-        background-image: url(../img/pocketerror@2x.png);
-        background-size: 44px 44px;
-    }
-}
 .pkt_ext_containersaved .pkt_ext_topdetail {
     float: left;
 }
 .pkt_ext_containersaved .pkt_ext_edit_msg {
-    box-sizing: border-box;
     display: none;
-    font-size: 0.75em;
+    font-size: 0.875em;
     left: auto;
-    padding: 0 1.4em;
     position: absolute;
-    text-align: left;
-    top: 8.7em;
+    text-align: center;
+    top: 4.3em;
     width: 100%;
 }
 .pkt_ext_containersaved .pkt_ext_edit_msg_error {
-    color: #d74345;
+    color: #c10000;
 }
 .pkt_ext_containersaved .pkt_ext_edit_msg_active {
     display: block;
@@ -349,9 +357,6 @@
     padding: 0;
     display: flex;    
 }
-.pkt_ext_containersaved .pkt_ext_tag_error {
-    border: none;
-}
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper {
     box-sizing: border-box;
     flex: 1;
@@ -368,9 +373,6 @@
     width: 14em;
     padding-left: 0.5em;
     padding-right: 0.5em;
-}
-.pkt_ext_containersaved .pkt_ext_tag_error .pkt_ext_tag_input_wrapper {
-    border: 1px solid #d74345;
 }
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper .token-input-list {
     display: block;
@@ -416,7 +418,6 @@
 }
 .pkt_ext_containersaved .pkt_ext_btn {
     box-sizing: border-box;
-    color: #333;
     float: none;
     font-size: 0.875em;
     font-size: 14px;
@@ -424,27 +425,13 @@
     height: 2.2em;
     min-width: 4em;
     padding: 0.5em 0;
-    text-decoration: none;
     text-transform: none;
     width: auto;
 }
-.pkt_ext_containersaved .pkt_ext_btn:hover {
-    background-color: #ebebeb;
-}
-.pkt_ext_containersaved .pkt_ext_btn:active {
-    background-color: #dadada;
-}
-.pkt_ext_containersaved .pkt_ext_btn_disabled,
-.pkt_ext_containersaved .pkt_ext_btn_disabled:hover,
-.pkt_ext_containersaved .pkt_ext_btn_disabled:active {
-    background-color: transparent;
+.pkt_ext_containersaved .pkt_ext_btn_disabled {
+    background-color: #ededed;
     cursor: default;
-    opacity: 0.4;
-}
-.pkt_ext_containersaved .pkt_ext_tag_error .pkt_ext_btn {
-    border: 1px solid #c3c3c3;
-    border-width: 1px 1px 1px 0;
-    height: 2.35em;
+    opacity: 0.5;
 }
 .pkt_ext_containersaved .autocomplete-suggestions {
     margin-top: 2.2em;
@@ -452,26 +439,18 @@
 
 /*=Recent/suggested tags
 --------------------------------------------------------------------------------------- */
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detail,
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detailshown {
+.pkt_ext_containersaved .pkt_ext_suggestedtag_detail {
     border-top: 1px solid #c1c1c1;
-    bottom: 0;
     background: #ebebeb;
     clear: both;
-    left: 0;
     opacity: 0;
-    min-height: 110px;
-    position: fixed;
     visibility: hidden;
-    width: 100%;
+    min-height: 110px;
 }
-.pkt_ext_container_detailactive .pkt_ext_suggestedtag_detail,
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detailshown {
+.pkt_ext_container_detailactive .pkt_ext_suggestedtag_detail {
     opacity: 1;
+    transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
     visibility: visible;
-}
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detailshown {
-    padding: 4px 0;
 }
 .pkt_ext_container_finalstate .pkt_ext_suggestedtag_detail {
     opacity: 0;
@@ -509,11 +488,6 @@
     overflow: hidden;
     padding: 2px 0 0 0;
 }
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detail ul {
-    height: auto;
-    margin: 0 2em 0 0;
-    padding-top: 6px;
-}
 .pkt_ext_containersaved .pkt_ext_recenttag_detail li,
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail li {
     background: none;
@@ -538,9 +512,6 @@
     text-align: left;
     top: 2em;
 }
-.pkt_ext_containersaved .pkt_ext_suggestedtag_detail .suggestedtag_msg {
-    margin-right: 1.3em;
-}
 .pkt_ext_containersaved .token_tag {
     border-radius: 4px;
     background: #f7f7f7;
@@ -551,7 +522,7 @@
     font-weight: normal;
     letter-spacing: normal;
     margin-right: 0.5em;
-    padding: 0.125em 0.625em;
+    padding: 0.125em 0.3125em;
     text-decoration: none;
     text-transform: none;
 }
@@ -668,7 +639,7 @@
     border: 1px solid #c3c3c3;
     overflow: hidden;  
     margin: 0;
-    padding: 0 8px;
+    padding: 0 5px;
     background-color: #f7f7f7;
     color: #000;
     font-weight: normal;
@@ -717,7 +688,7 @@
     cursor: pointer;
     display: inline-block;
     height: 8px;
-    margin: 0 0 0 8px;
+    margin: 0 2px 0 8px;
     overflow: hidden;
     width: 8px;
     text-indent: -99px;
