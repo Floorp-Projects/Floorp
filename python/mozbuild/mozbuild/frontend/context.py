@@ -318,6 +318,21 @@ class FinalTargetValue(ContextDerivedValue, unicode):
         return unicode.__new__(cls, value)
 
 
+def Enum(*values):
+    assert len(values)
+    default = values[0]
+
+    class EnumClass(object):
+        def __new__(cls, value=None):
+            if value is None:
+                return default
+            if value in values:
+                return value
+            raise ValueError('Invalid value. Allowed values are: %s'
+                             % ', '.join(repr(v) for v in values))
+    return EnumClass
+
+
 class SourcePath(ContextDerivedValue, UserString):
     """Stores and resolves a source path relative to a given context
 
@@ -1094,11 +1109,17 @@ VARIABLES = {
         ends with ``HOST_BIN_SUFFIX``, ``HOST_PROGRAM`` will remain unchanged.
         """, None),
 
-    'NO_DIST_INSTALL': (bool, bool,
-        """Disable installing certain files into the distribution directory.
+    'DIST_INSTALL': (Enum(None, False, True), bool,
+        """Whether to install certain files into the dist directory.
 
-        If present, some files defined by other variables won't be
-        distributed/shipped with the produced build.
+        By default, some files types are installed in the dist directory, and
+        some aren't. Set this variable to True to force the installation of
+        some files that wouldn't be installed by default. Set this variable to
+        False to force to not install some files that would be installed by
+        default.
+
+        This is confusing for historical reasons, but eventually, the behavior
+        will be made explicit.
         """, None),
 
     'JAR_MANIFESTS': (StrictOrderingOnAppendList, list,
@@ -1790,6 +1811,16 @@ DEPRECATION_HINTS = {
     'TEST_TOOL_DIRS': 'Please use the TEST_DIRS variable instead.',
 
     'PARALLEL_DIRS': 'Please use the DIRS variable instead.',
+
+    'NO_DIST_INSTALL': '''
+        Please use
+
+            DIST_INSTALL = False
+
+        instead of
+
+            NO_DIST_INSTALL = True
+    ''',
 }
 
 # Make sure that all template variables have a deprecation hint.
