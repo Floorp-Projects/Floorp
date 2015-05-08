@@ -206,7 +206,8 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
       return MediaKeySystemStatus::Cdm_disabled;
     }
-    if ((!WMFDecoderModule::HasH264() || !WMFDecoderModule::HasAAC()) ||
+    if (!MP4Decoder::CanCreateH264Decoder() ||
+        !MP4Decoder::CanCreateAACDecoder() ||
         !EMEVoucherFileExists()) {
       // The system doesn't have the codecs that Adobe EME relies
       // on installed, or doesn't have a voucher for the plugin-container.

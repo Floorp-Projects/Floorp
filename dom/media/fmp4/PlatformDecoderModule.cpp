@@ -119,9 +119,6 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
 already_AddRefed<PlatformDecoderModule>
 PlatformDecoderModule::Create()
 {
-  // Note: This runs on the decode thread.
-  MOZ_ASSERT(!NS_IsMainThread());
-
   nsRefPtr<PlatformDecoderModule> m(CreatePDM());
 
   if (m && NS_SUCCEEDED(m->Startup())) {
