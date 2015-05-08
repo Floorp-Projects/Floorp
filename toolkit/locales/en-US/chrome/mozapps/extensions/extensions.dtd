@@ -23,6 +23,9 @@
 <!ENTITY cmd.back.tooltip                     "Go back one page">
 <!ENTITY cmd.forward.tooltip                  "Go forward one page">
 
+<!ENTITY showUnsignedExtensions.button.label  "Some extensions could not be verified">
+<!ENTITY showAllExtensions.button.label       "Show all extensions">
+
 <!-- global warnings -->
 <!ENTITY warning.safemode.label                    "All add-ons have been disabled by safe mode.">
 <!ENTITY warning.checkcompatibility.label          "Add-on compatibility checking is disabled. You may have incompatible add-ons.">
@@ -232,3 +235,18 @@
 <!ENTITY experiment.info.changetelemetry.accesskey "T">
 
 <!ENTITY setting.learnmore "Learn More…">
+
+<!ENTITY disabledUnsigned.heading "Some add-ons have been disabled">
+<!-- LOCALIZATION NOTE (disabledUnsigned.description.start, disabledUnsigned.description.findAddonsLink, disabledUnsigned.description.end):
+     These entities form a sentence, with
+     disabledUnsigned.description.findAddonsLink being a link to an external site. -->
+<!ENTITY disabledUnsigned.description.start "The following add-ons have not been verified for use in &brandShortName;. You can ">
+<!ENTITY disabledUnsigned.description.findAddonsLink "find replacements">
+<!ENTITY disabledUnsigned.description.end " or ask the developer to get them verified.">
+<!ENTITY disabledUnsigned.learnMore "Learn more about our efforts to help keep you safe online.">
+<!-- LOCALIZATION NOTE (disabledUnsigned.devInfo.start, disabledUnsigned.devInfo.linkToManual, disabledUnsigned.devInfo.end):
+     These entities form a sentence, with disabledUnsigned.devInfo.linkToManual
+     being a link to an external site. -->
+<!ENTITY disabledUnsigned.devInfo.start "Developers interested in getting their add-ons verified can continue by reading our ">
+<!ENTITY disabledUnsigned.devInfo.linkToManual "manual">
+<!ENTITY disabledUnsigned.devInfo.end ".">
