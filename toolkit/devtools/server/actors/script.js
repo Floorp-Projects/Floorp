@@ -39,6 +39,17 @@ let TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
 // collections, etc.
 let OBJECT_PREVIEW_MAX_ITEMS = 10;
 
+// The debugger may be called as XPCOM services are instantiated. The debugger
+// itself uses xpcom services to fetch the source code for such services, with
+// the end result being that we attempt to recursively create some services,
+// which results in the component manager asserting in debug builds
+// (ASSERTION: Recursive GetService!). We solve this by pre-creating the
+// following services when the debugger is attached. See bug 1140131 for more.
+const REQUIRED_SERVICES = [
+  "@mozilla.org/addons/integration;1",
+  "@mozilla.org/uriloader/handler-service;1"
+];
+
 /**
  * Call PromiseDebugging.getState on this Debugger.Object's referent and wrap
  * the resulting `value` or `reason` properties in a Debugger.Object instance.
@@ -658,6 +669,9 @@ ThreadActor.prototype = {
     }
 
     this._state = "attached";
+
+    // now's a good time to instantiate the services we need.
+    REQUIRED_SERVICES.map(cid => Cc[cid].getService(Ci.nsISupports));
 
     update(this._options, aRequest.options || {});
     this.sources.reconfigure(this._options);
