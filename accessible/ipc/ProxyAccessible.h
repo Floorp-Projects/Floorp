@@ -47,7 +47,6 @@ public:
 
   // XXX evaluate if this is fast enough.
   size_t IndexInParent() const { return mParent->mChildren.IndexOf(this); }
-  ssize_t IndexOfEmbeddedChild(const ProxyAccessible*);
   bool MustPruneChildren() const;
 
   void Shutdown();
@@ -321,7 +320,6 @@ enum Interfaces
   VALUE = 8,
   TABLE = 16,
   TABLECELL = 32,
-  DOCUMENT = 64,
 };
 
 }
