@@ -21,11 +21,11 @@ use webdriver::command::WebDriverCommand::{
     GetWindowHandles, Close, SetWindowSize,
     GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
     SwitchToParentFrame, FindElement, FindElements,
-    FindElementElement, FindElementElements, IsDisplayed,
-    IsSelected, GetElementAttribute, GetCSSValue, GetElementText,
-    GetElementTagName, GetElementRect, IsEnabled, ElementClick,
-    ElementTap, ElementClear, ElementSendKeys, ExecuteScript,
-    ExecuteAsyncScript, GetCookies, GetCookie, AddCookie,
+    FindElementElement, FindElementElements, GetActiveElement,
+    IsDisplayed, IsSelected, GetElementAttribute, GetCSSValue,
+    GetElementText, GetElementTagName, GetElementRect, IsEnabled,
+    ElementClick, ElementTap, ElementClear, ElementSendKeys,
+    ExecuteScript, ExecuteAsyncScript, GetCookies, GetCookie, AddCookie,
     DeleteCookies, DeleteCookie, SetTimeouts, DismissAlert,
     AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot};
 use webdriver::command::{
@@ -438,6 +438,13 @@ impl MarionetteSession {
                 WebDriverResponse::Generic(ValueResponse::new(
                     Json::Array(elements.iter().map(|x| {x.to_json()}).collect())))
             },
+            GetActiveElement => {
+                let element = try!(self.to_web_element(
+                    try_opt!(json_data.get("value"),
+                             ErrorStatus::UnknownError,
+                             "Failed to find value field")));
+                WebDriverResponse::Generic(ValueResponse::new(element.to_json()))
+            },
             NewSession => {
                 let session_id = try_opt!(
                     try_opt!(json_data.get("sessionId"),
@@ -763,6 +770,7 @@ impl ToMarionette for WebDriverMessage {
                 data.insert("element".to_string(), e.id.to_json());
                 (Some("findElements"), Some(Ok(Json::Object(data.clone()))))
             },
+            GetActiveElement => (Some("getActiveElement"), None),
             IsDisplayed(ref x) => (Some("isElementDisplayed"), Some(x.to_marionette())),
             IsSelected(ref x) => (Some("isElementSelected"), Some(x.to_marionette())),
             GetElementAttribute(ref e, ref x) => {
