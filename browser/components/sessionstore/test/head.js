@@ -25,16 +25,14 @@ registerCleanupFunction(() => {
   }
 });
 
-let tmp = {};
-Cu.import("resource://gre/modules/Promise.jsm", tmp);
-Cu.import("resource://gre/modules/Task.jsm", tmp);
-Cu.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
-Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", tmp);
-Cu.import("resource:///modules/sessionstore/SessionFile.jsm", tmp);
-Cu.import("resource:///modules/sessionstore/TabState.jsm", tmp);
-let {Promise, Task, SessionStore, SessionSaver, SessionFile, TabState} = tmp;
+const {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const {SessionStore} = Cu.import("resource:///modules/sessionstore/SessionStore.jsm", {});
+const {SessionSaver} = Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", {});
+const {SessionFile} = Cu.import("resource:///modules/sessionstore/SessionFile.jsm", {});
+const {TabState} = Cu.import("resource:///modules/sessionstore/TabState.jsm", {});
+const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 
-let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 // Some tests here assume that all restored tabs are loaded without waiting for
 // the user to bring them to the foreground. We ensure this by resetting the
