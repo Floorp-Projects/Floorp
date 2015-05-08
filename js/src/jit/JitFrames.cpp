@@ -2935,7 +2935,21 @@ inline ReturnType
 GetPreviousRawFrame(FrameType* frame)
 {
     size_t prevSize = frame->prevFrameLocalSize() + FrameType::Size();
-    return (ReturnType) (((uint8_t*) frame) + prevSize);
+    return ReturnType(((uint8_t*) frame) + prevSize);
+}
+
+template <typename ReturnType=CommonFrameLayout*>
+inline ReturnType
+GetPreviousRawFrameOfExitFrame(ExitFrameLayout* frame)
+{
+    // Unwound exit frames are fake exit frames, and have the size of a
+    // JitFrameLayout instead of ExitFrameLayout. See
+    // JitFrameIterator::prevFp.
+    size_t frameSize = IsUnwoundFrame(frame->prevType())
+                       ? JitFrameLayout::Size()
+                       : ExitFrameLayout::Size();
+    size_t prevSize = frame->prevFrameLocalSize() + frameSize;
+    return ReturnType(((uint8_t*) frame) + prevSize);
 }
 
 JitProfilingFrameIterator::JitProfilingFrameIterator(void* exitFrame)
@@ -2945,14 +2959,14 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(void* exitFrame)
 
     if (prevType == JitFrame_IonJS || prevType == JitFrame_Unwound_IonJS) {
         returnAddressToFp_ = frame->returnAddress();
-        fp_ = GetPreviousRawFrame<ExitFrameLayout, uint8_t*>(frame);
+        fp_ = GetPreviousRawFrameOfExitFrame<uint8_t*>(frame);
         type_ = JitFrame_IonJS;
         return;
     }
 
-    if (prevType == JitFrame_BaselineJS) {
+    if (prevType == JitFrame_BaselineJS || prevType == JitFrame_Unwound_BaselineJS) {
         returnAddressToFp_ = frame->returnAddress();
-        fp_ = GetPreviousRawFrame<ExitFrameLayout, uint8_t*>(frame);
+        fp_ = GetPreviousRawFrameOfExitFrame<uint8_t*>(frame);
         type_ = JitFrame_BaselineJS;
         fixBaselineDebugModeOSRReturnAddress();
         return;
@@ -2960,7 +2974,7 @@ JitProfilingFrameIterator::JitProfilingFrameIterator(void* exitFrame)
 
     if (prevType == JitFrame_BaselineStub || prevType == JitFrame_Unwound_BaselineStub) {
         BaselineStubFrameLayout* stubFrame =
-            GetPreviousRawFrame<ExitFrameLayout, BaselineStubFrameLayout*>(frame);
+            GetPreviousRawFrameOfExitFrame<BaselineStubFrameLayout*>(frame);
         MOZ_ASSERT_IF(prevType == JitFrame_BaselineStub,
                       stubFrame->prevType() == JitFrame_BaselineJS);
         MOZ_ASSERT_IF(prevType == JitFrame_Unwound_BaselineStub,
