@@ -677,6 +677,20 @@ let PlacesProvider = {
   /**
    * Called by the history service.
    */
+  onDeleteURI: function PlacesProvider_onDeleteURI(aURI, aGUID, aReason) {
+    // let observers remove sensetive data associated with deleted visit
+    this._callObservers("onDeleteURI", {
+      url: aURI.spec,
+    });
+  },
+
+  onClearHistory: function() {
+    this._callObservers("onClearHistory")
+  },
+
+  /**
+   * Called by the history service.
+   */
   onFrecencyChanged: function PlacesProvider_onFrecencyChanged(aURI, aNewFrecency, aGUID, aHidden, aLastVisitDate) {
     // The implementation of the query in getLinks excludes hidden and
     // unvisited pages, so it's important to exclude them here, too.
