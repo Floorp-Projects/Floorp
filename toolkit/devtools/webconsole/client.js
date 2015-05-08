@@ -8,6 +8,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const EventEmitter = require("devtools/toolkit/event-emitter");
 
 loader.lazyImporter(this, "LongStringClient", "resource://gre/modules/devtools/dbg-client.jsm");
 
@@ -28,11 +29,17 @@ function WebConsoleClient(aDebuggerClient, aResponse)
   this._longStrings = {};
   this.traits = aResponse.traits || {};
   this.events = [];
+  this._networkRequests = new Map();
 
   this.pendingEvaluationResults = new Map();
   this.onEvaluationResult = this.onEvaluationResult.bind(this);
+  this.onNetworkEvent = this._onNetworkEvent.bind(this);
+  this.onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
 
   this._client.addListener("evaluationResult", this.onEvaluationResult);
+  this._client.addListener("networkEvent", this.onNetworkEvent);
+  this._client.addListener("networkEventUpdate", this.onNetworkEventUpdate);
+  EventEmitter.decorate(this);
 }
 
 exports.WebConsoleClient = WebConsoleClient;
@@ -41,24 +48,145 @@ WebConsoleClient.prototype = {
   _longStrings: null,
   traits: null,
 
+  /**
+   * Holds the network requests currently displayed by the Web Console. Each key
+   * represents the connection ID and the value is network request information.
+   * @private
+   * @type object
+   */
+  _networkRequests: null,
+
+  getNetworkRequest(actorId) {
+    return this._networkRequests.get(actorId);
+  },
+
+  hasNetworkRequest(actorId) {
+    return this._networkRequests.has(actorId);
+  },
+
+  removeNetworkRequest(actorId) {
+    this._networkRequests.delete(actorId);
+  },
+
+  getNetworkEvents() {
+    return this._networkRequests.values();
+  },
+
   get actor() { return this._actor; },
+
+  /**
+   * The "networkEvent" message type handler. We redirect any message to
+   * the UI for displaying.
+   *
+   * @private
+   * @param string type
+   *        Message type.
+   * @param object packet
+   *        The message received from the server.
+   */
+  _onNetworkEvent: function (type, packet)
+  {
+    if (packet.from == this._actor) {
+      let actor = packet.eventActor;
+      let networkInfo = {
+        _type: "NetworkEvent",
+        timeStamp: actor.timeStamp,
+        node: null,
+        actor: actor.actor,
+        discardRequestBody: true,
+        discardResponseBody: true,
+        startedDateTime: actor.startedDateTime,
+        request: {
+          url: actor.url,
+          method: actor.method,
+        },
+        isXHR: actor.isXHR,
+        response: {},
+        timings: {},
+        updates: [], // track the list of network event updates
+        private: actor.private,
+        fromCache: actor.fromCache
+      };
+      this._networkRequests.set(actor.actor, networkInfo);
+
+      this.emit("networkEvent", networkInfo);
+    }
+  },
+
+  /**
+   * The "networkEventUpdate" message type handler. We redirect any message to
+   * the UI for displaying.
+   *
+   * @private
+   * @param string type
+   *        Message type.
+   * @param object packet
+   *        The message received from the server.
+   */
+  _onNetworkEventUpdate: function (type, packet)
+  {
+    let networkInfo = this.getNetworkRequest(packet.from);
+    if (!networkInfo) {
+      return;
+    }
+
+    networkInfo.updates.push(packet.updateType);
+
+    switch (packet.updateType) {
+      case "requestHeaders":
+        networkInfo.request.headersSize = packet.headersSize;
+        break;
+      case "requestPostData":
+        networkInfo.discardRequestBody = packet.discardRequestBody;
+        networkInfo.request.bodySize = packet.dataSize;
+        break;
+      case "responseStart":
+        networkInfo.response.httpVersion = packet.response.httpVersion;
+        networkInfo.response.status = packet.response.status;
+        networkInfo.response.statusText = packet.response.statusText;
+        networkInfo.response.headersSize = packet.response.headersSize;
+        networkInfo.response.remoteAddress = packet.response.remoteAddress;
+        networkInfo.response.remotePort = packet.response.remotePort;
+        networkInfo.discardResponseBody = packet.response.discardResponseBody;
+        break;
+      case "responseContent":
+        networkInfo.response.content = {
+          mimeType: packet.mimeType,
+        };
+        networkInfo.response.bodySize = packet.contentSize;
+        networkInfo.response.transferredSize = packet.transferredSize;
+        networkInfo.discardResponseBody = packet.discardResponseBody;
+        break;
+      case "eventTimings":
+        networkInfo.totalTime = packet.totalTime;
+        break;
+      case "securityInfo":
+        networkInfo.securityInfo = packet.state;
+        break;
+    }
+
+    this.emit("networkEventUpdate", {
+      packet: packet,
+      networkInfo
+    });
+  },
 
   /**
    * Retrieve the cached messages from the server.
    *
    * @see this.CACHED_MESSAGES
-   * @param array aTypes
+   * @param array types
    *        The array of message types you want from the server. See
    *        this.CACHED_MESSAGES for known types.
    * @param function aOnResponse
    *        The function invoked when the response is received.
    */
-  getCachedMessages: function WCC_getCachedMessages(aTypes, aOnResponse)
+  getCachedMessages: function WCC_getCachedMessages(types, aOnResponse)
   {
     let packet = {
       to: this._actor,
       type: "getCachedMessages",
-      messageTypes: aTypes,
+      messageTypes: types,
     };
     this._client.request(packet, aOnResponse);
   },
@@ -473,10 +601,18 @@ WebConsoleClient.prototype = {
   detach: function WCC_detach(aOnResponse)
   {
     this._client.removeListener("evaluationResult", this.onEvaluationResult);
+    this._client.removeListener("networkEvent", this.onNetworkEvent);
+    this._client.removeListener("networkEventUpdate", this.onNetworkEventUpdate);
     this.stopListeners(null, aOnResponse);
     this._longStrings = null;
     this._client = null;
     this.pendingEvaluationResults.clear();
     this.pendingEvaluationResults = null;
+    this.clearNetworkRequests();
+    this._networkRequests = null;
   },
+
+  clearNetworkRequests: function () {
+    this._networkRequests.clear();
+  }
 };

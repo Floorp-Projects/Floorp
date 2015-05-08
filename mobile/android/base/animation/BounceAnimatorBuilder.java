@@ -18,7 +18,7 @@ import com.nineoldandroids.animation.ValueAnimator;
  * After constructing an instance, animations can be queued up sequentially with the
  * {@link #queue(Attributes) queue} method.
  */
-public class BounceAnimator extends ValueAnimator {
+public class BounceAnimatorBuilder extends ValueAnimator {
 
     public static final class Attributes {
         public final float value;
@@ -34,7 +34,7 @@ public class BounceAnimator extends ValueAnimator {
     private final String mPropertyName;
     private final List<Animator> animatorChain = new LinkedList<Animator>();
 
-    public BounceAnimator(View view, String property) {
+    public BounceAnimatorBuilder(View view, String property) {
         mView = view;
         mPropertyName = property;
     }
@@ -46,10 +46,9 @@ public class BounceAnimator extends ValueAnimator {
         animatorChain.add(animator);
     }
 
-    @Override
-    public void start() {
+    public AnimatorSet build(){
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet.playSequentially(animatorChain);
-        animatorSet.start();
+        return animatorSet;
     }
 }
