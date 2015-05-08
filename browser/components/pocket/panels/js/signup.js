@@ -22,6 +22,7 @@ var PKT_SIGNUP_OVERLAY = function (options)
     this.variant = "";
     this.pockethost = "getpocket.com";
     this.fxasignedin = false;
+    this.panelId = 0;
     this.dictJSON = {};
     this.initCloseTabEvents = function() {
         $('.btn,.pkt_ext_learnmore,.alreadyhave > a').click(function(e)
@@ -162,6 +163,8 @@ PKT_SIGNUP_OVERLAY.prototype = {
             this.pockethost = host[1];
         }
 
+        this.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
+
         if (this.active)
         {
             return;
@@ -207,11 +210,11 @@ PKT_SIGNUP.prototype = {
     },
 
     addMessageListener: function(messageId, callback) {
-        Messaging.addMessageListener(messageId, callback);
+        pktPanelMessaging.addMessageListener(this.overlay.panelId, messageId, callback);
     },
 
     sendMessage: function(messageId, payload, callback) {
-        Messaging.sendMessage(messageId, payload, callback);
+        pktPanelMessaging.sendMessage(this.overlay.panelId, messageId, payload, callback);
     },
 
     create: function() {

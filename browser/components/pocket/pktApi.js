@@ -223,8 +223,6 @@ var pktApi = (function() {
                     }
                     return;
                 }
-
-                // TODO: Better error handling
                 if (options.error) {
                     // In case the user did revoke the access token or it's not
                     // valid anymore clear the user data
@@ -232,15 +230,10 @@ var pktApi = (function() {
                         clearUserData();
                     }
 
-                    // Check to handle Pocket error
-                    var errorMessage = request.getResponseHeader("X-Error");
-                    if (typeof errorMessage !== "undefined") {
-                        options.error(new Error(errorMessage), request);
-                        return;
-                    }
-
-                    // Handle other error
-                    options.error(new Error(request.statusText), request);
+                    // Handle error message
+                    var errorMessage = request.getResponseHeader("X-Error") || request.statusText;
+                    var error = {message: errorMessage};
+                    options.error(error, request);
                 }
 			}
 		};

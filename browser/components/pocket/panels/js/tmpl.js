@@ -1,5 +1,8 @@
 (function() {
   var template = Handlebars.template, templates = Handlebars.templates = Handlebars.templates || {};
+templates['saved_premiumextras'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
+  return "<div class=\"pkt_ext_suggestedtag_detailshown\">\n</div>";
+  },"useData":true});
 templates['saved_premiumshell'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
   var helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
   return "<div class=\"pkt_ext_suggestedtag_detail pkt_ext_suggestedtag_detail_loading\">\n    <h4>"
@@ -8,19 +11,21 @@ templates['saved_premiumshell'] = template({"compiler":[6,">= 2.0.0-beta.1"],"ma
 },"useData":true});
 templates['saved_shell'] = template({"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
   var helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
-  return "<div class=\"pkt_ext_initload\">                        \n    <div class=\"pkt_ext_loadingspinner\"><div></div></div>\n</div>                                      \n<div class=\"pkt_ext_detail\">                        \n    <div class=\"pkt_ext_logo\"></div>\n    <div class=\"pkt_ext_topdetail\">\n        <h2>"
+  return "<div class=\"pkt_ext_initload\">\n    <div class=\"pkt_ext_logo\"></div> \n    <div class=\"pkt_ext_topdetail\">\n        <h2>"
+    + escapeExpression(((helper = (helper = helpers.saving || (depth0 != null ? depth0.saving : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"saving","hash":{},"data":data}) : helper)))
+    + "</h2>\n    </div>                     \n    <div class=\"pkt_ext_loadingspinner\"><div></div></div>\n</div>                                      \n<div class=\"pkt_ext_detail\">                        \n    <div class=\"pkt_ext_logo\"></div>\n    <div class=\"pkt_ext_topdetail\">\n        <h2>"
     + escapeExpression(((helper = (helper = helpers.pagesaved || (depth0 != null ? depth0.pagesaved : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"pagesaved","hash":{},"data":data}) : helper)))
     + "</h2>\n        <h3 class=\"pkt_ext_errordetail\"></h3>\n        <nav class=\"pkt_ext_item_actions pkt_ext_cf\">\n            <ul>\n                <li><a class=\"pkt_ext_removeitem\" href=\"#\">"
     + escapeExpression(((helper = (helper = helpers.removepage || (depth0 != null ? depth0.removepage : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"removepage","hash":{},"data":data}) : helper)))
-    + "</a></li>\n                <li class=\"pkt_ext_actions_separator\"></li>                                \n                <li><a class=\"pkt_ext_openpocket\" href=\"http://"
+    + "</a></li>\n                <li class=\"pkt_ext_actions_separator\"></li>                                \n                <li><a class=\"pkt_ext_openpocket\" href=\"https://"
     + escapeExpression(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"pockethost","hash":{},"data":data}) : helper)))
     + "/a?src=ff_ext_saved\" target=\"_blank\">"
     + escapeExpression(((helper = (helper = helpers.viewlist || (depth0 != null ? depth0.viewlist : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"viewlist","hash":{},"data":data}) : helper)))
-    + "</a></li>\n            </ul>\n        </nav>                        \n    </div>\n    <p class=\"pkt_ext_edit_msg\"></p>                        \n    <div class=\"pkt_ext_tag_detail pkt_ext_cf\">\n        <div class=\"pkt_ext_tag_input_wrapper\">\n            <div class=\"pkt_ext_tag_input_blocker\"></div>\n            <input class=\"pkt_ext_tag_input\" type=\"text\" placeholder=\""
+    + "</a></li>\n            </ul>\n        </nav>                        \n    </div>\n    <div class=\"pkt_ext_tag_detail pkt_ext_cf\">\n        <div class=\"pkt_ext_tag_input_wrapper\">\n            <div class=\"pkt_ext_tag_input_blocker\"></div>\n            <input class=\"pkt_ext_tag_input\" type=\"text\" placeholder=\""
     + escapeExpression(((helper = (helper = helpers.addtags || (depth0 != null ? depth0.addtags : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"addtags","hash":{},"data":data}) : helper)))
     + "\">\n        </div>\n        <a href=\"#\" class=\"pkt_ext_btn pkt_ext_btn_disabled\">"
     + escapeExpression(((helper = (helper = helpers.save || (depth0 != null ? depth0.save : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"save","hash":{},"data":data}) : helper)))
-    + "</a>\n    </div>\n</div>";
+    + "</a>\n    </div>\n    <p class=\"pkt_ext_edit_msg\"></p>                        \n</div>";
 },"useData":true});
 templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data) {
   var helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression;
