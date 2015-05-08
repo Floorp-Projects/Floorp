@@ -7,7 +7,7 @@
 Program('updater-xpcshell')
 
 updater_rel_path = '../'
-NO_DIST_INSTALL = True
+DIST_INSTALL = False
 DEFINES['UPDATER_XPCSHELL_CERT'] = True
 include('../updater-common.build')
 FAIL_ON_WARNINGS = True
