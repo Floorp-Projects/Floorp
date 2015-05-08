@@ -10,10 +10,12 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'nsIMemoryProfiler.idl',
     ]
 
-    # This file cannot be built in unified mode because of name clashes with mozglue headers on Android.
-    SOURCES += [
+    UNIFIED_SOURCES += [
+        'GCHeapProfilerImpl.cpp',
         'MemoryProfiler.cpp',
+        'NativeProfilerImpl.cpp',
         'nsMemoryProfilerFactory.cpp',
+        'UncensoredAllocator.cpp',
     ]
 
     LOCAL_INCLUDES += [
