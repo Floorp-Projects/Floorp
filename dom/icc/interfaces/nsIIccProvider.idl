@@ -6,51 +6,12 @@
 
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
-interface nsIIccInfo;
 interface nsIIccListener;
-
-[scriptable, uuid(6136acab-b50e-494a-a86d-df392a032897)]
-interface nsIIccChannelCallback : nsISupports
-{
-  /**
-   * Callback function to notify on successfully opening a logical channel.
-   *
-   * @param channel
-   *        The Channel Number/Handle that is successfully opened.
-   */
-  void notifyOpenChannelSuccess(in long channel);
-
-  /**
-   * Callback function to notify on successfully closing the logical channel.
-   *
-   */
-  void notifyCloseChannelSuccess();
-
-  /**
-   * Callback function to notify the status of 'iccExchangeAPDU' command.
-   *
-   * @param sw1
-   *        Response's First Status Byte
-   * @param sw2
-   *        Response's Second Status Byte
-   * @param data
-   *        Response's data
-   */
-  void notifyExchangeAPDUResponse(in octet sw1,
-                                  in octet sw2,
-                                  in DOMString data);
-
-  /**
-   * Callback function to notify error
-   *
-   */
-  void notifyError(in DOMString error);
-};
 
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(7dd6e186-b007-11e4-9b7e-7717d7863cb8)]
+[scriptable, uuid(2fbacfc4-f52d-11e4-9667-33b72f279d14)]
 interface nsIIccProvider : nsISupports
 {
   /**
@@ -91,32 +52,4 @@ interface nsIIccProvider : nsISupports
                                  in unsigned long contactType,
                                  in jsval contact,
                                  in DOMString pin2);
-
-  /**
-   * Secure Card Icc communication channel
-   */
-  void iccOpenChannel(in unsigned long clientId,
-                      in DOMString aid,
-                      in nsIIccChannelCallback callback);
-
-  /**
-   * Exchange Command APDU (C-APDU) with SIM on the given logical channel.
-   * Note that 'P3' parameter could be Le/Lc depending on command APDU case.
-   * For Case 1 scenario (when only command header is present), the value
-   * of 'P3' should be set to '-1' explicitly.
-   * Refer to 3G TS 31.101 , 10.2 'Command APDU Structure' for all the cases.
-   */
-  void iccExchangeAPDU(in unsigned long clientId,
-                       in long channel,
-                       in octet cla,
-                       in octet ins,
-                       in octet p1,
-                       in octet p2,
-                       in short p3,
-                       in DOMString data,
-                       in nsIIccChannelCallback callback);
-
-  void iccCloseChannel(in unsigned long clientId,
-                       in long channel,
-                       in nsIIccChannelCallback callback);
 };
