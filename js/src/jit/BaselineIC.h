@@ -4574,6 +4574,12 @@ class ICGetPropCallGetter : public ICMonitoredStub
         return receiverGuard_;
     }
 
+    bool isOwnGetter() const {
+        MOZ_ASSERT(holder_->isNative());
+        MOZ_ASSERT(holderShape_);
+        return receiverGuard_.shape() == holderShape_;
+    }
+
     static size_t offsetOfHolder() {
         return offsetof(ICGetPropCallGetter, holder_);
     }
@@ -4588,12 +4594,6 @@ class ICGetPropCallGetter : public ICMonitoredStub
     }
     static size_t offsetOfReceiverGuard() {
         return offsetof(ICGetPropCallGetter, receiverGuard_);
-    }
-
-    bool isOwnGetter() const {
-        MOZ_ASSERT(holder_->isNative());
-        MOZ_ASSERT(holderShape_);
-        return receiverGuard_.shape() == holderShape_;
     }
 
     class Compiler : public ICStubCompiler {
@@ -5331,10 +5331,13 @@ class ICSetPropCallSetter : public ICStub
     friend class ICStubSpace;
 
   protected:
-    // Object shape/group.
-    HeapReceiverGuard guard_;
+    // Shape/group of receiver object. Used for both own and proto setters.
+    HeapReceiverGuard receiverGuard_;
 
-    // Holder and shape.
+    // Holder and holder shape. For own setters, guarding on receiverGuard_ is
+    // sufficient, although Ion may use holder_ and holderShape_ even for own
+    // setters. In this case holderShape_ == receiverGuard_.shape_ (isOwnSetter
+    // below relies on this).
     HeapPtrObject holder_;
     HeapPtrShape holderShape_;
 
@@ -5344,13 +5347,13 @@ class ICSetPropCallSetter : public ICStub
     // PC of call, for profiler
     uint32_t pcOffset_;
 
-    ICSetPropCallSetter(Kind kind, JitCode* stubCode, ReceiverGuard guard,
+    ICSetPropCallSetter(Kind kind, JitCode* stubCode, ReceiverGuard receiverGuard,
                         JSObject* holder, Shape* holderShape, JSFunction* setter,
                         uint32_t pcOffset);
 
   public:
-    HeapReceiverGuard& guard() {
-        return guard_;
+    HeapReceiverGuard& receiverGuard() {
+        return receiverGuard_;
     }
     HeapPtrObject& holder() {
         return holder_;
@@ -5362,8 +5365,14 @@ class ICSetPropCallSetter : public ICStub
         return setter_;
     }
 
-    static size_t offsetOfGuard() {
-        return offsetof(ICSetPropCallSetter, guard_);
+    bool isOwnSetter() const {
+        MOZ_ASSERT(holder_->isNative());
+        MOZ_ASSERT(holderShape_);
+        return receiverGuard_.shape() == holderShape_;
+    }
+
+    static size_t offsetOfReceiverGuard() {
+        return offsetof(ICSetPropCallSetter, receiverGuard_);
     }
     static size_t offsetOfHolder() {
         return offsetof(ICSetPropCallSetter, holder_);
@@ -5380,21 +5389,22 @@ class ICSetPropCallSetter : public ICStub
 
     class Compiler : public ICStubCompiler {
       protected:
-        RootedObject obj_;
+        RootedObject receiver_;
         RootedObject holder_;
         RootedFunction setter_;
         uint32_t pcOffset_;
 
         virtual int32_t getKey() const {
             return static_cast<int32_t>(kind) |
-                   (HeapReceiverGuard::keyBits(obj_) << 16);
+                   (HeapReceiverGuard::keyBits(receiver_) << 16) |
+                   (static_cast<int32_t>(receiver_ != holder_) << 19);
         }
 
       public:
-        Compiler(JSContext* cx, ICStub::Kind kind, HandleObject obj, HandleObject holder,
+        Compiler(JSContext* cx, ICStub::Kind kind, HandleObject receiver, HandleObject holder,
                  HandleFunction setter, uint32_t pcOffset)
           : ICStubCompiler(cx, kind),
-            obj_(cx, obj),
+            receiver_(cx, receiver),
             holder_(cx, holder),
             setter_(cx, setter),
             pcOffset_(pcOffset)
@@ -5432,7 +5442,7 @@ class ICSetProp_CallScripted : public ICSetPropCallSetter
         {}
 
         ICStub* getStub(ICStubSpace* space) {
-            ReceiverGuard guard(obj_);
+            ReceiverGuard guard(receiver_);
             Shape* holderShape = holder_->as<NativeObject>().lastProperty();
             return newStub<ICSetProp_CallScripted>(space, getStubCode(), guard, holder_,
                                                        holderShape, setter_, pcOffset_);
@@ -5469,7 +5479,7 @@ class ICSetProp_CallNative : public ICSetPropCallSetter
         {}
 
         ICStub* getStub(ICStubSpace* space) {
-            ReceiverGuard guard(obj_);
+            ReceiverGuard guard(receiver_);
             Shape* holderShape = holder_->as<NativeObject>().lastProperty();
             return newStub<ICSetProp_CallNative>(space, getStubCode(), guard, holder_, holderShape,
                                                  setter_, pcOffset_);
