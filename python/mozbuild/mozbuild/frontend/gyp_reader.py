@@ -7,6 +7,7 @@ import gyp
 import sys
 import time
 import os
+from itertools import chain
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
 from .sandbox import alphabetical_sorted
@@ -72,7 +73,6 @@ class GypContext(TemplateContext):
         # from sphinx.
         return dict(VARIABLES,
         EXTRA_ASSEMBLER_FLAGS=(List, list, '', None),
-        EXTRA_COMPILE_FLAGS=(List, list, '', None),
     )
 
 
@@ -204,7 +204,25 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                 context['LOCAL_INCLUDES'] += [include]
 
             context['EXTRA_ASSEMBLER_FLAGS'] = target_conf.get('asflags_mozilla', [])
-            context['EXTRA_COMPILE_FLAGS'] = target_conf.get('cflags_mozilla', [])
+            flags = target_conf.get('cflags_mozilla', [])
+            if flags:
+                suffix_map = {
+                    '.c': 'CFLAGS',
+                    '.cpp': 'CXXFLAGS',
+                    '.cc': 'CXXFLAGS',
+                    '.m': 'CMFLAGS',
+                    '.mm': 'CMMFLAGS',
+                }
+                extensions = {
+                    mozpath.splitext(f)[-1]
+                    for f in chain(sources, unified_sources)
+                }
+                variables = (
+                    suffix_map[e]
+                    for e in extensions if e in suffix_map
+                )
+                for var in variables:
+                    context[var].extend(flags)
         else:
             # Ignore other types than static_library because we don't have
             # anything using them, and we're not testing them. They can be
