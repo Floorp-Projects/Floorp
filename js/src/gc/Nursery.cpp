@@ -235,6 +235,7 @@ js::Nursery::allocate(size_t size)
     position_ = position() + size;
 
     JS_EXTRA_POISON(thing, JS_ALLOCATED_NURSERY_PATTERN, size);
+    MemProfiler::SampleNursery(reinterpret_cast<void*>(thing), size);
     return thing;
 }
 
@@ -678,6 +679,7 @@ js::Nursery::sweep()
 
     /* Set current start position for isEmpty checks. */
     currentStart_ = position();
+    MemProfiler::SweepNursery(runtime());
 }
 
 void
