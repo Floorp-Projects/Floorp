@@ -397,3 +397,28 @@ td,
 th {
   padding: 0;
 }
+
+/* Normalization for FF panel defauts
+   ========================================================================== */
+html {
+  outline: none;
+  padding: 0;
+}
+
+a {
+  color: #0095dd;
+  margin: 0;
+  outline: none;
+  padding: 0;
+  text-decoration: none;
+}
+
+a:hover,
+a:active {
+  color: #008acb;
+  text-decoration: underline;
+}
+
+a:active {
+  color: #006b9d;
+}
