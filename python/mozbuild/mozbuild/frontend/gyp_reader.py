@@ -63,15 +63,7 @@ class GypContext(TemplateContext):
     def __init__(self, config, relobjdir):
         self._relobjdir = relobjdir
         TemplateContext.__init__(self, template='Gyp',
-            allowed_variables=self.VARIABLES(), config=config)
-
-    @classmethod
-    @memoize
-    def VARIABLES(cls):
-        """Returns the allowed variables for a GypContext."""
-        # Using a class method instead of a class variable to hide the content
-        # from sphinx.
-        return dict(VARIABLES)
+            allowed_variables=VARIABLES, config=config)
 
 
 def encode(value):
