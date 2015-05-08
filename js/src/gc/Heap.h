@@ -17,6 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "jsfriendapi.h"
 #include "jspubtd.h"
 #include "jstypes.h"
 #include "jsutil.h"
