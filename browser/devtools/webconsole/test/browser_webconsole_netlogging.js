@@ -73,7 +73,8 @@ function testPageLoad()
     ok(!lastRequest.request.postData.text, "No request body was stored");
     ok(lastRequest.discardRequestBody, "Request body was discarded");
     ok(!lastRequest.response.content.text, "No response body was stored");
-    ok(lastRequest.discardResponseBody, "Response body was discarded");
+    ok(lastRequest.discardResponseBody || lastRequest.fromCache,
+       "Response body was discarded or response came from the cache");
 
     lastRequest = null;
     requestCallback = null;

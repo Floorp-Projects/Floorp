@@ -11,4 +11,15 @@ standalone/content/libs
 standalone/node_modules
 # Libs we don't need to check
 test/shared/vendor
-
+# These are generated react files that we don't need to check
+content/js/contacts.js
+content/js/conversation.js
+content/js/conversationViews.js
+content/js/panel.js
+content/js/roomViews.js
+content/shared/js/feedbackViews.js
+content/shared/js/views.js
+standalone/content/js/fxOSMarketplace.js
+standalone/content/js/standaloneRoomViews.js
+standalone/content/js/webapp.js
+ui/ui-showcase.js

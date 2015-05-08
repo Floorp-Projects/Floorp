@@ -13,15 +13,15 @@ let { ActorPool, createExtraActors, appendExtraActors } = require("devtools/serv
 let { DebuggerServer } = require("devtools/server/main");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dbg_assert } = DevToolsUtils;
-let { TabSources, isHiddenSource } = require("./utils/TabSources");
+let { TabSources } = require("./utils/TabSources");
 let makeDebugger = require("./utils/make-debugger");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
-loader.lazyRequireGetter(this, "AddonThreadActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/script", true);
-loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
+loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
+loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 // Assumptions on events module:
@@ -110,35 +110,6 @@ function sendShutdownEvent() {
 }
 
 exports.sendShutdownEvent = sendShutdownEvent;
-
-/**
- * Unwrap a global that is wrapped in a |Debugger.Object|, or if the global has
- * become a dead object, return |undefined|.
- *
- * @param Debugger.Object wrappedGlobal
- *        The |Debugger.Object| which wraps a global.
- *
- * @returns {Object|undefined}
- *          Returns the unwrapped global object or |undefined| if unwrapping
- *          failed.
- */
-const unwrapDebuggerObjectGlobal = wrappedGlobal => {
-  try {
-    // Because of bug 991399 we sometimes get nuked window references here. We
-    // just bail out in that case.
-    //
-    // Note that addon sandboxes have a DOMWindow as their prototype. So make
-    // sure that we can touch the prototype too (whatever it is), in case _it_
-    // is it a nuked window reference. We force stringification to make sure
-    // that any dead object proxies make themselves known.
-    let global = wrappedGlobal.unsafeDereference();
-    Object.getPrototypeOf(global) + "";
-    return global;
-  }
-  catch (e) {
-    return undefined;
-  }
-};
 
 /**
  * Construct a root actor appropriate for use in a server running in a
@@ -2004,238 +1975,6 @@ BrowserAddonList.prototype.onUninstalled = function (aAddon) {
 };
 
 exports.BrowserAddonList = BrowserAddonList;
-
-function BrowserAddonActor(aConnection, aAddon) {
-  this.conn = aConnection;
-  this._addon = aAddon;
-  this._contextPool = new ActorPool(this.conn);
-  this.conn.addActorPool(this._contextPool);
-  this._threadActor = null;
-  this._global = null;
-
-  this._shouldAddNewGlobalAsDebuggee = this._shouldAddNewGlobalAsDebuggee.bind(this);
-
-  this.makeDebugger = makeDebugger.bind(null, {
-    findDebuggees: this._findDebuggees.bind(this),
-    shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee
-  });
-
-  AddonManager.addAddonListener(this);
-}
-
-BrowserAddonActor.prototype = {
-  actorPrefix: "addon",
-
-  get exited() {
-    return !this._addon;
-  },
-
-  get id() {
-    return this._addon.id;
-  },
-
-  get url() {
-    return this._addon.sourceURI ? this._addon.sourceURI.spec : undefined;
-  },
-
-  get attached() {
-    return this._threadActor;
-  },
-
-  get global() {
-    return this._global;
-  },
-
-  get sources() {
-    if (!this._sources) {
-      dbg_assert(this.threadActor, "threadActor should exist when creating sources.");
-      this._sources = new TabSources(this._threadActor, this._allowSource);
-    }
-    return this._sources;
-  },
-
-
-  form: function BAA_form() {
-    dbg_assert(this.actorID, "addon should have an actorID.");
-    if (!this._consoleActor) {
-      let {AddonConsoleActor} = require("devtools/server/actors/webconsole");
-      this._consoleActor = new AddonConsoleActor(this._addon, this.conn, this);
-      this._contextPool.addActor(this._consoleActor);
-    }
-
-    return {
-      actor: this.actorID,
-      id: this.id,
-      name: this._addon.name,
-      url: this.url,
-      debuggable: this._addon.isDebuggable,
-      consoleActor: this._consoleActor.actorID,
-
-      traits: {
-        highlightable: false,
-        networkMonitor: false,
-      },
-    };
-  },
-
-  disconnect: function BAA_disconnect() {
-    this.conn.removeActorPool(this._contextPool);
-    this._contextPool = null;
-    this._consoleActor = null;
-    this._addon = null;
-    this._global = null;
-    AddonManager.removeAddonListener(this);
-  },
-
-  setOptions: function BAA_setOptions(aOptions) {
-    if ("global" in aOptions) {
-      this._global = aOptions.global;
-    }
-  },
-
-  onDisabled: function BAA_onDisabled(aAddon) {
-    if (aAddon != this._addon) {
-      return;
-    }
-
-    this._global = null;
-  },
-
-  onUninstalled: function BAA_onUninstalled(aAddon) {
-    if (aAddon != this._addon) {
-      return;
-    }
-
-    if (this.attached) {
-      this.onDetach();
-      this.conn.send({ from: this.actorID, type: "tabDetached" });
-    }
-
-    this.disconnect();
-  },
-
-  onAttach: function BAA_onAttach() {
-    if (this.exited) {
-      return { type: "exited" };
-    }
-
-    if (!this.attached) {
-      this._threadActor = new AddonThreadActor(this.conn, this);
-      this._contextPool.addActor(this._threadActor);
-    }
-
-    return { type: "tabAttached", threadActor: this._threadActor.actorID };
-  },
-
-  onDetach: function BAA_onDetach() {
-    if (!this.attached) {
-      return { error: "wrongState" };
-    }
-
-    this._contextPool.removeActor(this._threadActor);
-
-    this._threadActor = null;
-    this._sources = null;
-
-    return { type: "detached" };
-  },
-
-  preNest: function() {
-    let e = Services.wm.getEnumerator(null);
-    while (e.hasMoreElements()) {
-      let win = e.getNext();
-      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-      windowUtils.suppressEventHandling(true);
-      windowUtils.suspendTimeouts();
-    }
-  },
-
-  postNest: function() {
-    let e = Services.wm.getEnumerator(null);
-    while (e.hasMoreElements()) {
-      let win = e.getNext();
-      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-      windowUtils.resumeTimeouts();
-      windowUtils.suppressEventHandling(false);
-    }
-  },
-
-  /**
-   * Return true if the given global is associated with this addon and should be
-   * added as a debuggee, false otherwise.
-   */
-  _shouldAddNewGlobalAsDebuggee: function (aGlobal) {
-    const global = unwrapDebuggerObjectGlobal(aGlobal);
-    try {
-      // This will fail for non-Sandbox objects, hence the try-catch block.
-      let metadata = Cu.getSandboxMetadata(global);
-      if (metadata) {
-        return metadata.addonID === this.id;
-      }
-    } catch (e) {}
-
-    if (global instanceof Ci.nsIDOMWindow) {
-      let id = {};
-      if (mapURIToAddonID(global.document.documentURIObject, id)) {
-        return id.value === this.id;
-      }
-      return false;
-    }
-
-    // Check the global for a __URI__ property and then try to map that to an
-    // add-on
-    let uridescriptor = aGlobal.getOwnPropertyDescriptor("__URI__");
-    if (uridescriptor && "value" in uridescriptor && uridescriptor.value) {
-      let uri;
-      try {
-        uri = Services.io.newURI(uridescriptor.value, null, null);
-      }
-      catch (e) {
-        DevToolsUtils.reportException(
-          "BrowserAddonActor.prototype._shouldAddNewGlobalAsDebuggee",
-          new Error("Invalid URI: " + uridescriptor.value)
-        );
-        return false;
-      }
-
-      let id = {};
-      if (mapURIToAddonID(uri, id)) {
-        return id.value === this.id;
-      }
-    }
-
-    return false;
-  },
-
-  /**
-   * Override the eligibility check for scripts and sources to make
-   * sure every script and source with a URL is stored when debugging
-   * add-ons.
-   */
-  _allowSource: function(aSource) {
-    // XPIProvider.jsm evals some code in every add-on's bootstrap.js. Hide it.
-    if (aSource.url === "resource://gre/modules/addons/XPIProvider.jsm") {
-      return false;
-    }
-
-    return true;
-  },
-
-  /**
-   * Yield the current set of globals associated with this addon that should be
-   * added as debuggees.
-   */
-  _findDebuggees: function (dbg) {
-    return dbg.findAllGlobals().filter(this._shouldAddNewGlobalAsDebuggee);
-  }
-};
-
-BrowserAddonActor.prototype.requestTypes = {
-  "attach": BrowserAddonActor.prototype.onAttach,
-  "detach": BrowserAddonActor.prototype.onDetach
-};
 
 /**
  * The DebuggerProgressListener object is an nsIWebProgressListener which

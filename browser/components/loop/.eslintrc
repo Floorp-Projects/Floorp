@@ -53,7 +53,6 @@
     "no-return-assign": 0,        // TODO: Remove (use default)
     "no-shadow": 0,               // TODO: Remove (use default)
     "no-spaced-func": 0,          // TODO: Remove (use default)
-    "no-trailing-spaces": 0,      // TODO: Remove (use default)
     "no-undef": 0,                // TODO: Remove (use default)
     "no-underscore-dangle": 0,    // Leave as 0. Commonly used for private variables.
     "no-unused-expressions": 0,   // TODO: Remove (use default)

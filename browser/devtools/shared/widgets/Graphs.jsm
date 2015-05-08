@@ -986,12 +986,12 @@ AbstractCanvasGraph.prototype = {
       e.stopPropagation();
     }
 
-    // If a mouseup happened outside the toolbox and the current operation
-    // is causing the selection changed, then end it.
+    // If a mouseup happened outside the window and the current operation
+    // is causing the selection to change, then end it.
     if (e.buttons == 0 && (this.hasSelectionInProgress() ||
                            resizer.margin != null ||
                            dragger.origin != null)) {
-      return this._onMouseUp(e);
+      return this._onMouseUp();
     }
 
     let {mouseX,mouseY} = this._getRelativeEventCoordinates(e);
@@ -1093,10 +1093,8 @@ AbstractCanvasGraph.prototype = {
   /**
    * Listener for the "mouseup" event on the graph's container.
    */
-  _onMouseUp: function(e) {
+  _onMouseUp: function() {
     this._isMouseActive = false;
-    let {mouseX} = this._getRelativeEventCoordinates(e);
-
     switch (this._canvas.getAttribute("input")) {
       case "hovering-background":
       case "hovering-region":
@@ -1115,7 +1113,7 @@ AbstractCanvasGraph.prototype = {
             this.emit("deselecting");
           }
         } else {
-          this._selection.end = mouseX;
+          this._selection.end = this._cursor.x;
           this.emit("selecting");
         }
         break;
