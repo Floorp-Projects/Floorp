@@ -96,6 +96,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
             @Override
             public void onClick(View v) {
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
+                dismiss();
             }
         });
     }
