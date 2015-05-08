@@ -22,7 +22,7 @@ add_task(function* () {
   yield promiseBrowserLoaded(browser);
 
   // Flush to ensure we collected the initial title.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // Set a new title.
   yield ContentTask.spawn(browser, null, function* () {

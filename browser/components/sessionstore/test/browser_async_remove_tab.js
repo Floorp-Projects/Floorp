@@ -10,7 +10,7 @@ function* createTabWithRandomValue(url) {
   ss.setTabValue(tab, "foobar", r);
 
   // Flush to ensure there are no scheduled messages.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   return {tab, r};
 }
