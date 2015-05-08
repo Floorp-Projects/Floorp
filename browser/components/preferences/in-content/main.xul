@@ -130,7 +130,7 @@
 
 #ifdef E10S_TESTING_ONLY
   <checkbox id="e10sAutoStart"
-            label="Enable E10S (multi-process)"/>
+            label="&e10sEnabled.label;"/>
 #endif
 
 #ifdef HAVE_SHELL_SERVICE
