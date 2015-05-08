@@ -56,3 +56,5 @@ if CONFIG['_MSC_VER']:
     DIRS += ['staticruntime']
 
 LOCAL_INCLUDES += ['/memory/build']
+
+DIST_INSTALL = True
