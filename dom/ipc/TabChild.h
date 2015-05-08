@@ -429,6 +429,8 @@ public:
     void GetDPI(float* aDPI);
     void GetDefaultScale(double *aScale);
 
+    void GetMaxTouchPoints(uint32_t* aTouchPoints);
+
     ScreenOrientation GetOrientation() { return mOrientation; }
 
     void SetBackgroundColor(const nscolor& aColor);

@@ -1128,6 +1128,20 @@ PuppetWidget::GetScreenBounds(nsIntRect &aRect) {
   return NS_OK;
 }
 
+uint32_t PuppetWidget::GetMaxTouchPoints() const
+{
+  static uint32_t sTouchPoints = 0;
+  static bool sIsInitialized = false;
+  if (sIsInitialized) {
+    return sTouchPoints;
+  }
+  if (mTabChild) {
+    mTabChild->GetMaxTouchPoints(&sTouchPoints);
+    sIsInitialized = true;
+  }
+  return sTouchPoints;
+}
+
 PuppetScreen::PuppetScreen(void *nativeScreen)
 {
 }
