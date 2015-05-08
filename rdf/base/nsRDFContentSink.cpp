@@ -323,7 +323,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
             // print some fairly useless debugging info
             // XXX we should save line numbers on the context stack: this'd
             // be about 1000x more helpful.
-            if (resource) {
+            if (resource && PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
                 nsXPIDLCString uri;
                 resource->GetValue(getter_Copies(uri));
                 PR_LOG(gLog, PR_LOG_NOTICE,
