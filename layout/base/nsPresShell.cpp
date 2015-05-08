@@ -1216,9 +1216,6 @@ PresShell::Destroy()
   // Revoke any pending events.  We need to do this and cancel pending reflows
   // before we destroy the frame manager, since apparently frame destruction
   // sometimes spins the event queue when plug-ins are involved(!).
-  if (mResizeEventPending) {
-    rd->RemoveResizeEventFlushObserver(this);
-  }
   rd->RemoveLayoutFlushObserver(this);
   if (mHiddenInvalidationObserverRefreshDriver) {
     mHiddenInvalidationObserverRefreshDriver->RemovePresShellToInvalidateIfHidden(this);
@@ -1226,6 +1223,12 @@ PresShell::Destroy()
 
   if (rd->PresContext() == GetPresContext()) {
     rd->RevokeViewManagerFlush();
+  }
+
+  mResizeEvent.Revoke();
+  if (mAsyncResizeTimerIsActive) {
+    mAsyncResizeEventTimer->Cancel();
+    mAsyncResizeTimerIsActive = false;
   }
 
   CancelAllPendingReflows();
@@ -1995,6 +1998,12 @@ PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
     self->UnsuppressPainting();
 }
 
+void
+PresShell::AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell)
+{
+  static_cast<PresShell*>(aPresShell)->FireResizeEvent();
+}
+
 nsresult
 PresShell::ResizeReflowOverride(nscoord aWidth, nscoord aHeight)
 {
@@ -2079,9 +2088,26 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
       nsRect(0, 0, aWidth, rootFrame->GetRect().height));
   }
 
-  if (!mIsDestroying && !mResizeEventPending) {
-    mResizeEventPending = true;
-    GetPresContext()->RefreshDriver()->AddResizeEventFlushObserver(this);
+  if (!mIsDestroying && !mResizeEvent.IsPending() &&
+      !mAsyncResizeTimerIsActive) {
+    if (mInResize) {
+      if (!mAsyncResizeEventTimer) {
+        mAsyncResizeEventTimer = do_CreateInstance("@mozilla.org/timer;1");
+      }
+      if (mAsyncResizeEventTimer) {
+        mAsyncResizeTimerIsActive = true;
+        mAsyncResizeEventTimer->InitWithFuncCallback(AsyncResizeEventCallback,
+                                                     this, 15,
+                                                     nsITimer::TYPE_ONE_SHOT);
+      }
+    } else {
+      nsRefPtr<nsRunnableMethod<PresShell> > resizeEvent =
+        NS_NewRunnableMethod(this, &PresShell::FireResizeEvent);
+      if (NS_SUCCEEDED(NS_DispatchToCurrentThread(resizeEvent))) {
+        mResizeEvent = resizeEvent;
+        mDocument->SetNeedStyleFlush();
+      }
+    }
   }
 
   return NS_OK; //XXX this needs to be real. MMP
@@ -2090,19 +2116,25 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
 void
 PresShell::FireResizeEvent()
 {
-  if (mIsDocumentGone) {
-    return;
+  if (mAsyncResizeTimerIsActive) {
+    mAsyncResizeTimerIsActive = false;
+    mAsyncResizeEventTimer->Cancel();
   }
+  mResizeEvent.Revoke();
 
-  mResizeEventPending = false;
+  if (mIsDocumentGone)
+    return;
 
   //Send resize event from here.
   WidgetEvent event(true, NS_RESIZE_EVENT);
   nsEventStatus status = nsEventStatus_eIgnore;
 
-  nsPIDOMWindow* window = mDocument->GetWindow();
+  nsPIDOMWindow *window = mDocument->GetWindow();
   if (window) {
+    nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+    mInResize = true;
     EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
+    mInResize = false;
   }
 }
 
@@ -4182,6 +4214,13 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     // Processing pending notifications can kill us, and some callers only
     // hold weak refs when calling FlushPendingNotifications().  :(
     nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+
+    if (mResizeEvent.IsPending()) {
+      FireResizeEvent();
+      if (mIsDestroying) {
+        return;
+      }
+    }
 
     // We need to make sure external resource documents are flushed too (for
     // example, svg filters that reference a filter in an external document
