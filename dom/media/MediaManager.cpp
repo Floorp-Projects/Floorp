@@ -1353,6 +1353,11 @@ public:
   {
     MOZ_ASSERT(mOnSuccess);
     MOZ_ASSERT(mOnFailure);
+
+    if (!IsOn(mConstraints.mVideo) && !IsOn(mConstraints.mAudio)) {
+      Fail(NS_LITERAL_STRING("NotSupportedError"));
+      return NS_ERROR_FAILURE;
+    }
     if (IsOn(mConstraints.mVideo)) {
       nsTArray<nsRefPtr<VideoDevice>> sources;
       GetSources(backend, GetInvariant(mConstraints.mVideo),
@@ -1376,6 +1381,11 @@ public:
       // Pick the first available device.
       mAudioDevice = sources[0];
       LOG(("Selected audio device"));
+    }
+
+    if (!mAudioDevice && !mVideoDevice) {
+      Fail(NS_LITERAL_STRING("NotFoundError"));
+      return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
