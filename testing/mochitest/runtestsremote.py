@@ -433,6 +433,11 @@ class MochiRemote(Mochitest):
             self,
             options,
             debugger=debugger)
+        # remove desktop environment not used on device
+        if "MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA" in browserEnv:
+            del browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"]
+        if "XPCOM_MEM_BLOAT_LOG" in browserEnv:
+            del browserEnv["XPCOM_MEM_BLOAT_LOG"]
         # override nsprLogs to avoid processing in Mochitest base class
         self.nsprLogs = None
         browserEnv["NSPR_LOG_FILE"] = os.path.join(
