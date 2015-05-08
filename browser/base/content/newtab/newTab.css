@@ -228,7 +228,6 @@ input[type=button] {
 .newtab-suggested {
   border: 1px solid transparent;
   border-radius: 2px;
-  cursor: pointer;
   font-size: 12px;
   height: 17px;
   line-height: 17px;
@@ -239,6 +238,7 @@ input[type=button] {
   margin-right: auto;
   left: 0;
   top: 215px;
+  -moz-user-select: none;
 }
 
 .newtab-suggested-bounds {
@@ -273,7 +273,7 @@ input[type=button] {
   right: auto;
 }
 
-.newtab-site:-moz-any([type=enhanced], [type=sponsored]) .newtab-sponsored {
+.newtab-site:-moz-any([type=enhanced], [type=sponsored], [suggested]) .newtab-sponsored {
   display: block;
 }
 
