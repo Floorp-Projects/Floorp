@@ -745,6 +745,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // is never present in stylesheets or computed data.
 #define NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT 11
 #define NS_STYLE_TEXT_ALIGN_TRUE                  12
+#define NS_STYLE_TEXT_ALIGN_MATCH_PARENT          13
 // Note: make sure that the largest NS_STYLE_TEXT_ALIGN_* value is smaller than
 // the smallest NS_STYLE_VERTICAL_ALIGN_* value below!
 
@@ -801,15 +802,15 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // Note: these values pickup after the text-align values because there
 // are a few html cases where an object can have both types of
 // alignment applied with a single attribute
-#define NS_STYLE_VERTICAL_ALIGN_BASELINE             13
-#define NS_STYLE_VERTICAL_ALIGN_SUB                  14
-#define NS_STYLE_VERTICAL_ALIGN_SUPER                15
-#define NS_STYLE_VERTICAL_ALIGN_TOP                  16
-#define NS_STYLE_VERTICAL_ALIGN_TEXT_TOP             17
-#define NS_STYLE_VERTICAL_ALIGN_MIDDLE               18
-#define NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM          19
-#define NS_STYLE_VERTICAL_ALIGN_BOTTOM               20
-#define NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE 21
+#define NS_STYLE_VERTICAL_ALIGN_BASELINE             14
+#define NS_STYLE_VERTICAL_ALIGN_SUB                  15
+#define NS_STYLE_VERTICAL_ALIGN_SUPER                16
+#define NS_STYLE_VERTICAL_ALIGN_TOP                  17
+#define NS_STYLE_VERTICAL_ALIGN_TEXT_TOP             18
+#define NS_STYLE_VERTICAL_ALIGN_MIDDLE               19
+#define NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM          20
+#define NS_STYLE_VERTICAL_ALIGN_BOTTOM               21
+#define NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE 22
 
 // See nsStyleVisibility
 #define NS_STYLE_VISIBILITY_HIDDEN              0

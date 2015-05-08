@@ -27,7 +27,6 @@
 namespace mozilla {
 namespace widget {
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gMouseScrollLog = nullptr;
 
 static const char* GetBoolName(bool aBool)
@@ -60,9 +59,6 @@ static void LogKeyStateImpl()
 }
 
 #define LOG_KEYSTATE() LogKeyStateImpl()
-#else // PR_LOGGING
-#define LOG_KEYSTATE()
-#endif
 
 MouseScrollHandler* MouseScrollHandler::sInstance = nullptr;
 
@@ -103,11 +99,9 @@ MouseScrollHandler::GetCurrentMessagePos()
 void
 MouseScrollHandler::Initialize()
 {
-#ifdef PR_LOGGING
   if (!gMouseScrollLog) {
     gMouseScrollLog = PR_NewLogModule("MouseScrollHandlerWidgets");
   }
-#endif
   Device::Init();
 }
 
@@ -648,13 +642,11 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindowBase* aWidget,
       return;
     }
   }
-#ifdef PR_LOGGING
   else {
     PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
       ("MouseScroll::HandleMouseWheelMessage: NS_WHEEL_WHEEL event is not "
        "dispatched"));
   }
-#endif
 }
 
 void
@@ -1229,12 +1221,10 @@ MouseScrollHandler::Device::Elantech::HandleKeyMessage(nsWindowBase* aWidget,
       InitEvent(aWidget, commandEvent);
       aWidget->DispatchWindowEvent(&commandEvent);
     }
-#ifdef PR_LOGGING
     else {
       PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
         ("MouseScroll::Device::Elantech::HandleKeyMessage(): Consumed"));
     }
-#endif
     return true; // consume the message (doesn't need to dispatch key events)
   }
 

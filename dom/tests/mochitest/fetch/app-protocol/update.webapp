@@ -1,0 +1,6 @@
+{
+  "name": "App",
+  "launch_path": "/index.html",
+  "description": "Test app for bug 1161288",
+  "package_path": "application.zip"
+}

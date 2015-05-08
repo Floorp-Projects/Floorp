@@ -35,7 +35,7 @@ MOZHARNESS_CONFIG = os.path.join(GECKO, 'testing', 'mozharness', 'mozharness.jso
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 REGISTRY = open(os.path.join(DOCKER_ROOT, 'REGISTRY')).read().strip()
 
-DEFINE_TASK = 'queue:define-task:aws-provisioner/{}'
+DEFINE_TASK = 'queue:define-task:aws-provisioner-v1/{}'
 
 TREEHERDER_ROUTE_PREFIX = 'tc-treeherder-stage'
 TREEHERDER_ROUTES = {

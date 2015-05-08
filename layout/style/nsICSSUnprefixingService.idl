@@ -8,7 +8,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(927a5c60-0378-4bcb-a50d-99e6d1fe6063)]
+[scriptable, uuid(a5d6e2f4-d3ec-11e4-b002-782bcbaebb28)]
 interface nsICSSUnprefixingService : nsISupports
 {
   /**
@@ -40,6 +40,34 @@ interface nsICSSUnprefixingService : nsISupports
   boolean generateUnprefixedDeclaration(in AString aPropName,
                                         in AString aRightHalfOfDecl,
                                         out AString aUnprefixedDecl);
+
+  /**
+   * @param   aPrefixedFuncName
+   *          The webkit-prefixed gradient function: either
+   *          "-webkit-gradient", "-webkit-linear-gradient", or
+   *          "-webkit-radial-gradient".
+   *
+   * @param   aPrefixedFuncBody
+   *          The body of the gradient function, inside (& not including) the
+   *          parenthesis.
+   *
+   * @param   aUnprefixedFuncName[out]
+   *          The resulting unprefixed gradient function name:
+   *          either "linear-gradient" or "radial-gradient".
+   *
+   * @param   aUnprefixedFuncBody[out]
+   *          The resulting unprefixed gradient function body, suitable for
+   *          including in a "linear-gradient(...)" or "radial-gradient(...)"
+   *          expression.
+   *
+   * @returns true if we were able to successfully parse aWebkitGradientStr
+   *          and populate the outparams accordingly; false otherwise.
+   *
+   */
+  boolean generateUnprefixedGradientValue(in AString aPrefixedFuncName,
+                                          in AString aPrefixedFuncBody,
+                                          out AString aUnprefixedFuncName,
+                                          out AString aUnprefixedFuncBody);
 };
 
 %{C++

@@ -1,0 +1,74 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the Service-Worker-Allowed header</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="content"></div>
+<script class="testbody" type="text/javascript">
+  var gTests = [
+    "worker_scope_different.js",
+    "worker_scope_different2.js",
+    "worker_scope_too_deep.js",
+  ];
+
+  function testPermissiveHeader() {
+    // Make sure that this registration succeeds, as the prefix check should pass.
+    return navigator.serviceWorker.register("swa/worker_scope_too_narrow.js", {scope: "swa/"})
+      .then(swr => {
+        ok(true, "Registration should finish successfully");
+        return swr.unregister();
+      }, err => {
+        ok(false, "Unexpected error when registering the service worker: " + err);
+      });
+  }
+
+  function testPreciseHeader() {
+    // Make sure that this registration succeeds, as the prefix check should pass
+    // given that we parse the use the full pathname from this URL..
+    return navigator.serviceWorker.register("swa/worker_scope_precise.js", {scope: "swa/"})
+      .then(swr => {
+        ok(true, "Registration should finish successfully");
+        return swr.unregister();
+      }, err => {
+        ok(false, "Unexpected error when registering the service worker: " + err);
+      });
+  }
+
+  function runTest() {
+    Promise.all(gTests.map(testName => {
+      return new Promise((resolve, reject) => {
+        // Make sure that registration fails.
+        navigator.serviceWorker.register("swa/" + testName, {scope: "swa/"})
+          .then(reject, resolve);
+      });
+    })).then(values => {
+      values.forEach(error => {
+        is(error.name, "SecurityError", "Registration should fail");
+      });
+      Promise.all([
+          testPermissiveHeader(),
+          testPreciseHeader(),
+      ]).then(SimpleTest.finish, SimpleTest.finish);
+    }, (x) => {
+      ok(false, "Registration should not succeed, but it did");
+      SimpleTest.finish();
+    });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>

@@ -344,7 +344,7 @@ MediaDecoderReader::EnsureTaskQueue()
 {
   if (!mTaskQueue) {
     MOZ_ASSERT(!mTaskQueueIsBorrowed);
-    RefPtr<SharedThreadPool> pool(GetMediaThreadPool());
+    RefPtr<SharedThreadPool> pool(GetMediaThreadPool(MediaThreadType::PLAYBACK));
     MOZ_DIAGNOSTIC_ASSERT(pool);
     mTaskQueue = new MediaTaskQueue(pool.forget());
   }

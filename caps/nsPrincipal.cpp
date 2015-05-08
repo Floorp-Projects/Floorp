@@ -655,6 +655,32 @@ IsOnFullDomainWhitelist(nsIURI* aURI)
     NS_LITERAL_CSTRING("m.video.baidu.com"),
     NS_LITERAL_CSTRING("m.video.baidu.com"),
     NS_LITERAL_CSTRING("imgcache.gtimg.cn"), // for m.v.qq.com
+    NS_LITERAL_CSTRING("i.yimg.jp"), // for *.yahoo.co.jp
+    NS_LITERAL_CSTRING("ai.yimg.jp"), // for *.yahoo.co.jp
+    NS_LITERAL_CSTRING("daily.c.yimg.jp"), // for sp.daily.co.jp
+    NS_LITERAL_CSTRING("stat100.ameba.jp"), // for ameblo.jp
+    NS_LITERAL_CSTRING("user.ameba.jp"), // for ameblo.jp
+    NS_LITERAL_CSTRING("www.goo.ne.jp"),
+    NS_LITERAL_CSTRING("s.tabelog.jp"),
+    NS_LITERAL_CSTRING("x.gnst.jp"), // for mobile.gnavi.co.jp
+    NS_LITERAL_CSTRING("c.x.gnst.jp"), // for mobile.gnavi.co.jp
+    NS_LITERAL_CSTRING("www.smbc-card.com"),
+    NS_LITERAL_CSTRING("static.card.jp.rakuten-static.com"), // for rakuten-card.co.jp
+    NS_LITERAL_CSTRING("img.mixi.net"), // for mixi.jp
+    NS_LITERAL_CSTRING("girlschannel.net"),
+    NS_LITERAL_CSTRING("www.fancl.co.jp"),
+    NS_LITERAL_CSTRING("s.cosme.net"),
+    NS_LITERAL_CSTRING("www.sapporobeer.jp"),
+    NS_LITERAL_CSTRING("www.mapion.co.jp"),
+    NS_LITERAL_CSTRING("touch.navitime.co.jp"),
+    NS_LITERAL_CSTRING("sp.mbga.jp"),
+    NS_LITERAL_CSTRING("ava-a.sp.mbga.jp"), // for sp.mbga.jp
+    NS_LITERAL_CSTRING("www.ntv.co.jp"),
+    NS_LITERAL_CSTRING("mobile.suntory.co.jp"), // for suntory.jp
+    NS_LITERAL_CSTRING("www.aeonsquare.net"),
+    NS_LITERAL_CSTRING("mw.nikkei.com"),
+    NS_LITERAL_CSTRING("www.nhk.or.jp"),
+    NS_LITERAL_CSTRING("www.tokyo-sports.co.jp"),
   };
   static const size_t sNumFullDomainsOnWhitelist =
     MOZ_ARRAY_LENGTH(sFullDomainsOnWhitelist);

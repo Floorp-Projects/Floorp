@@ -6745,6 +6745,10 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
       }
     }
 
+    // Since we might be processing more timeouts, go ahead and flush
+    // the promise queue now before we do that.
+    Promise::PerformMicroTaskCheckpoint();
+
     NS_ASSERTION(mRunningExpiredTimeouts, "Someone changed this!");
   }
 

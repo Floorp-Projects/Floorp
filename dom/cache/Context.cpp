@@ -94,7 +94,7 @@ public:
   }
 
   virtual mozIStorageConnection*
-  GetConnection() const
+  GetConnection() const override
   {
     MOZ_ASSERT(mTarget == NS_GetCurrentThread());
     return mConnection;

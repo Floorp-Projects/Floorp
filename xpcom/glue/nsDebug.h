@@ -227,22 +227,6 @@ inline void MOZ_PretendNoReturn()
 
 #endif /* HAVE_STATIC_ANNOTATIONS */
 
-#ifdef XGILL_PLUGIN
-
-/* Redefine runtime assertion macros to perform static assertions, for both
- * debug and release builds. Don't include the original runtime assertions;
- * this ensures the tool will consider cases where the assertion fails. */
-
-#undef NS_PRECONDITION
-#undef NS_ASSERTION
-#undef NS_POSTCONDITION
-
-#define NS_PRECONDITION(expr, str)   STATIC_ASSERT_RUNTIME(expr)
-#define NS_ASSERTION(expr, str)      STATIC_ASSERT_RUNTIME(expr)
-#define NS_POSTCONDITION(expr, str)  STATIC_ASSERT_RUNTIME(expr)
-
-#endif /* XGILL_PLUGIN */
-
 /******************************************************************************
 ** Macros for terminating execution when an unrecoverable condition is
 ** reached.  These need to be compiled regardless of the DEBUG flag.

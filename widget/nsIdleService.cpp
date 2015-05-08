@@ -46,9 +46,7 @@ using namespace mozilla;
 // Number of seconds in a day.
 #define SECONDS_PER_DAY 86400
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo *sLog = nullptr;
-#endif
 
 #define LOG_TAG "GeckoIdleService"
 #define LOG_LEVEL ANDROID_LOG_DEBUG
@@ -396,10 +394,8 @@ nsIdleService::nsIdleService() : mCurrentlySetToTimeoutAt(TimeStamp()),
                                  mDeltaToNextIdleSwitchInS(UINT32_MAX),
                                  mLastUserInteraction(TimeStamp::Now())
 {
-#ifdef PR_LOGGING
   if (sLog == nullptr)
     sLog = PR_NewLogModule("idleService");
-#endif
   MOZ_ASSERT(!gIdleService);
   gIdleService = this;
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
@@ -792,9 +788,7 @@ nsIdleService::IdleTimerCallback(void)
 void
 nsIdleService::SetTimerExpiryIfBefore(TimeStamp aNextTimeout)
 {
-#if defined(PR_LOGGING) || defined(MOZ_WIDGET_ANDROID)
   TimeDuration nextTimeoutDuration = aNextTimeout - TimeStamp::Now();
-#endif
 
   PR_LOG(sLog, PR_LOG_DEBUG,
          ("idleService: SetTimerExpiryIfBefore: next timeout %0.f msec from now",
@@ -874,9 +868,7 @@ nsIdleService::ReconfigureTimer(void)
   TimeStamp nextTimeoutAt = mLastUserInteraction +
                             TimeDuration::FromSeconds(mDeltaToNextIdleSwitchInS);
 
-#if defined(PR_LOGGING) || defined(MOZ_WIDGET_ANDROID)
   TimeDuration nextTimeoutDuration = nextTimeoutAt - curTime;
-#endif
 
   PR_LOG(sLog, PR_LOG_DEBUG,
          ("idleService: next timeout %0.f msec from now",

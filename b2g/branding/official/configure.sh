@@ -3,5 +3,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOZ_APP_DISPLAYNAME=B2G
-ANDROID_PACKAGE_NAME=org.mozilla.b2g
 MOZ_UPDATER=

@@ -17,8 +17,8 @@ config = {
                 "tests/bin/js",
                 "--no-slow",
                 "--no-progress",
-                "--tinderbox",
-                "--tbpl"
+                "--format=automation",
+                "--jitflags=all"
             ],
             "run_filename": "jit_test.py",
             "testsdir": "jit-test/jit-test"

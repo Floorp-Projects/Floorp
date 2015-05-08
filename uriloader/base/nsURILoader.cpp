@@ -51,9 +51,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* nsURILoader::mLog = nullptr;
-#endif
 
 #define LOG(args) PR_LOG(nsURILoader::mLog, PR_LOG_DEBUG, args)
 #define LOG_ERROR(args) PR_LOG(nsURILoader::mLog, PR_LOG_ERROR, args)
@@ -475,11 +473,9 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
             LOG(("  Content handler failed.  Aborting load"));
             request->Cancel(rv);
           }
-#ifdef PR_LOGGING
           else {
             LOG(("  Content handler taking over load"));
           }
-#endif
 
           return rv;
         }
@@ -759,11 +755,9 @@ nsDocumentOpenInfo::TryContentListener(nsIURIContentListener* aListener,
 
 nsURILoader::nsURILoader()
 {
-#ifdef PR_LOGGING
   if (!mLog) {
     mLog = PR_NewLogModule("URILoader");
   }
-#endif
 }
 
 nsURILoader::~nsURILoader()
@@ -807,7 +801,6 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
 {
   NS_ENSURE_ARG_POINTER(channel);
 
-#ifdef PR_LOGGING
   if (LOG_ENABLED()) {
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
@@ -815,7 +808,6 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
     uri->GetAsciiSpec(spec);
     LOG(("nsURILoader::OpenURI for %s", spec.get()));
   }
-#endif
 
   nsCOMPtr<nsIStreamListener> loader;
   nsresult rv = OpenChannel(channel,
@@ -854,7 +846,6 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
   NS_ASSERTION(channel, "Trying to open a null channel!");
   NS_ASSERTION(aWindowContext, "Window context must not be null");
 
-#ifdef PR_LOGGING
   if (LOG_ENABLED()) {
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
@@ -862,7 +853,6 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
     uri->GetAsciiSpec(spec);
     LOG(("nsURILoader::OpenChannel for %s", spec.get()));
   }
-#endif
 
   // Let the window context's uriListener know that the open is starting.  This
   // gives that window a chance to abort the load process.

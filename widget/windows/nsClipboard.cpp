@@ -34,9 +34,7 @@
 #include "nsEscape.h"
 #include "nsIObserverService.h"
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gWin32ClipboardLog = nullptr;
-#endif
 
 // oddly, this isn't in the MSVC headers anywhere.
 UINT nsClipboard::CF_HTML = ::RegisterClipboardFormatW(L"HTML Format");
@@ -49,11 +47,9 @@ UINT nsClipboard::CF_HTML = ::RegisterClipboardFormatW(L"HTML Format");
 //-------------------------------------------------------------------------
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
-#ifdef PR_LOGGING
   if (!gWin32ClipboardLog) {
     gWin32ClipboardLog = PR_NewLogModule("nsClipboard");
   }
-#endif
 
   mIgnoreEmptyNotification = false;
   mWindow         = nullptr;

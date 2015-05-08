@@ -565,6 +565,11 @@ public:
 private:
     nsRefPtr<Tickler> mWifiTickler;
     void TickleWifi(nsIInterfaceRequestor *cb);
+
+private:
+    nsresult SpeculativeConnectInternal(nsIURI *aURI,
+                                        nsIInterfaceRequestor *aCallbacks,
+                                        bool anonymous);
 };
 
 extern nsHttpHandler *gHttpHandler;

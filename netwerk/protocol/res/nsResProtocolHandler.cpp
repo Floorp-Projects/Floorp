@@ -23,7 +23,6 @@ static NS_DEFINE_CID(kResURLCID, NS_RESURL_CID);
 
 static nsResProtocolHandler *gResHandler = nullptr;
 
-#if defined(PR_LOGGING)
 //
 // Log module for Resource Protocol logging...
 //
@@ -36,7 +35,6 @@ static nsResProtocolHandler *gResHandler = nullptr;
 // the file log.txt
 //
 static PRLogModuleInfo *gResLog;
-#endif
 
 #define kAPP           NS_LITERAL_CSTRING("app")
 #define kGRE           NS_LITERAL_CSTRING("gre")
@@ -104,9 +102,7 @@ nsResURL::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 nsResProtocolHandler::nsResProtocolHandler()
     : mSubstitutions(16)
 {
-#if defined(PR_LOGGING)
     gResLog = PR_NewLogModule("nsResProtocol");
-#endif
 
     NS_ASSERTION(!gResHandler, "res handler already created!");
     gResHandler = this;
@@ -451,13 +447,11 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
 
     rv = baseURI->Resolve(nsDependentCString(p, path.Length()-1), result);
 
-#if defined(PR_LOGGING)
     if (PR_LOG_TEST(gResLog, PR_LOG_DEBUG)) {
         nsAutoCString spec;
         uri->GetAsciiSpec(spec);
         PR_LOG(gResLog, PR_LOG_DEBUG,
                ("%s\n -> %s\n", spec.get(), PromiseFlatCString(result).get()));
     }
-#endif
     return rv;
 }

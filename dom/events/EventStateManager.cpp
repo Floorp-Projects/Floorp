@@ -2745,6 +2745,8 @@ EventStateManager::PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
     case NS_VK_F6:
       // This is to prevent keyboard scrolling while alt modifier in use.
       if (!aKeyboardEvent->IsAlt()) {
+        aStatus = nsEventStatus_eConsumeNoDefault;
+
         // Handling the tab event after it was sent to content is bad,
         // because to the FocusManager the remote-browser looks like one
         // element, so we would just move the focus to the next element
@@ -2768,7 +2770,6 @@ EventStateManager::PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
                         nsIFocusManager::FLAG_BYKEY,
                         getter_AddRefs(result));
         }
-        aStatus = nsEventStatus_eConsumeNoDefault;
       }
       return;
     case 0:

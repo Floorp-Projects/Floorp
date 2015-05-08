@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset="utf-8">
+    <title>Text-align: match-parent</title>
+    <style>
+div.start  { text-align: start; }
+div.end    { text-align: end; }
+div.left   { text-align: left; }
+div.right  { text-align: right; }
+div.center { text-align: center; }
+div.match  { text-align: match-parent; }
+    </style>
+  </head>
+  <body>
+   <div class="start" dir="ltr"><div id="d0" class="center" dir="ltr">Left</div></div>
+   <div class="start" dir="ltr"><div id="d1" class="center" dir="rtl">Left</div></div>
+   <div class="start" dir="rtl"><div id="d2" class="center" dir="ltr">Right</div></div>
+   <div class="start" dir="rtl"><div id="d3" class="center" dir="rtl">Right</div></div>
+   <div class="end" dir="ltr"><div id="d4" class="center" dir="ltr">Right</div></div>
+   <div class="end" dir="ltr"><div id="d5" class="center" dir="rtl">Right</div></div>
+   <div class="end" dir="rtl"><div id="d6" class="center" dir="ltr">Left</div></div>
+   <div class="end" dir="rtl"><div id="d7" class="center" dir="rtl">Left</div></div>
+   <div class="left" dir="ltr"><div id="d8" class="center" dir="ltr">Left</div></div>
+   <div class="left" dir="ltr"><div id="d9" class="center" dir="rtl">Left</div></div>
+   <div class="left" dir="rtl"><div id="d10" class="center" dir="ltr">Left</div></div>
+   <div class="left" dir="rtl"><div id="d11" class="center" dir="rtl">Left</div></div>
+   <div class="right" dir="ltr"><div id="d12" class="center" dir="ltr">Right</div></div>
+   <div class="right" dir="ltr"><div id="d13" class="center" dir="rtl">Right</div></div>
+   <div class="right" dir="rtl"><div id="d14" class="center" dir="ltr">Right</div></div>
+   <div class="right" dir="rtl"><div id="d15" class="center" dir="rtl">Right</div></div>
+
+   <script type="text/javascript">
+function changeChildAlign()
+{
+  for (child = 0; child < 16; ++child) {
+     var childDiv = document.getElementById("d" + child);
+     childDiv.className = "match";
+   }
+
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", changeChildAlign, false);
+   </script>
+ </body>
+</html>

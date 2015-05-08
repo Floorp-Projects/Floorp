@@ -383,7 +383,6 @@ private:
     };
     Status mStatus;
 
-#ifdef PR_LOGGING
     const char* GetStatusName()
     {
       switch (mStatus) {
@@ -399,7 +398,6 @@ private:
           return "Unknown";
       }
     }
-#endif
 
     void Finish();
   }; // SynthesizingEvent

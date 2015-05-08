@@ -84,17 +84,27 @@ MediaOmxCommonDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
 
   mAudioOffloadPlayer->SetSource(mReader->GetAudioOffloadTrack());
   status_t err = mAudioOffloadPlayer->Start(false);
-  if (err == OK) {
-    PauseStateMachine();
-    // Call ChangeState() to run AudioOffloadPlayer since offload state enabled
-    ChangeState(mPlayState);
+  if (err != OK) {
+    mAudioOffloadPlayer = nullptr;
+    mFallbackToStateMachine = true;
+    DECODER_LOG(PR_LOG_DEBUG, ("In %s Unable to start offload audio %d."
+      "Switching to normal mode", __PRETTY_FUNCTION__, err));
     return;
   }
-
-  mAudioOffloadPlayer = nullptr;
-  mFallbackToStateMachine = true;
-  DECODER_LOG(PR_LOG_DEBUG, ("In %s Unable to start offload audio %d."
-      "Switching to normal mode", __PRETTY_FUNCTION__, err));
+  PauseStateMachine();
+  if (mLogicallySeeking) {
+    int64_t timeUsecs = 0;
+    SecondsToUsecs(mCurrentTime, timeUsecs);
+    SeekTarget target = SeekTarget(timeUsecs,
+                                   SeekTarget::Accurate,
+                                   MediaDecoderEventVisibility::Observable);
+    mSeekRequest.DisconnectIfExists();
+    mSeekRequest.Begin(mAudioOffloadPlayer->Seek(target)
+      ->RefableThen(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),
+                    &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
+  }
+  // Call ChangeState() to run AudioOffloadPlayer since offload state enabled
+  ChangeState(mPlayState);
 }
 
 void
@@ -140,17 +150,16 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   mAudioOffloadPlayer = nullptr;
   int64_t timeUsecs = 0;
   SecondsToUsecs(mCurrentTime, timeUsecs);
-  mRequestedSeekTarget = SeekTarget(timeUsecs,
-                                    SeekTarget::Accurate,
-                                    MediaDecoderEventVisibility::Suppressed);
+  SeekTarget target = SeekTarget(timeUsecs,
+                                 SeekTarget::Accurate,
+                                 MediaDecoderEventVisibility::Suppressed);
   // Call Seek of MediaDecoderStateMachine to suppress seek events.
   RefPtr<nsRunnable> event =
     NS_NewRunnableMethodWithArg<SeekTarget>(
       GetStateMachine(),
       &MediaDecoderStateMachine::Seek,
-      mRequestedSeekTarget);
+      target);
   GetStateMachine()->TaskQueue()->Dispatch(event);
-  mRequestedSeekTarget.Reset();
 
   mNextState = mPlayState;
   ChangeState(PLAY_STATE_LOADING);
@@ -226,31 +235,20 @@ MediaOmxCommonDecoder::ChangeState(PlayState aState)
     ResumeStateMachine();
     return;
   }
-
-  switch (mPlayState) {
-    case PLAY_STATE_SEEKING:
-      mSeekRequest.Begin(mAudioOffloadPlayer->Seek(mRequestedSeekTarget)
-        ->RefableThen(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),
-                      &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
-      mRequestedSeekTarget.Reset();
-      break;
-    default: {
-      break;
-    }
-  }
 }
 
 void
-MediaOmxCommonDecoder::ApplyStateToStateMachine(PlayState aState)
+MediaOmxCommonDecoder::CallSeek(const SeekTarget& aTarget)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  // During offload playback, state machine should be in dormant state.
-  // ApplyStateToStateMachine() can change state machine state to
-  // something else or reset the seek time. So don't call this when audio is
-  // offloaded
   if (!mAudioOffloadPlayer) {
-    MediaDecoder::ApplyStateToStateMachine(aState);
+    MediaDecoder::CallSeek(aTarget);
+    return;
   }
+
+  mSeekRequest.DisconnectIfExists();
+  mSeekRequest.Begin(mAudioOffloadPlayer->Seek(aTarget)
+    ->RefableThen(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),
+                  &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
 }
 
 void

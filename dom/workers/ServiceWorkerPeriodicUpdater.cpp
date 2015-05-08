@@ -54,8 +54,13 @@ ServiceWorkerPeriodicUpdater::Observe(nsISupports* aSubject,
                                       const char* aTopic,
                                       const char16_t* aData)
 {
+  // In tests, the pref is set to false so that the idle-daily service does not
+  // trigger updates leading to intermittent failures.
+  // We're called from SpecialPowers inside tests, in which case we need to
+  // update during the test run, for which we use a non-empty aData.
+  NS_NAMED_LITERAL_STRING(CallerSpecialPowers, "Caller:SpecialPowers");
   if (strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY) == 0 &&
-      sPeriodicUpdatesEnabled) {
+      (sPeriodicUpdatesEnabled || (aData && CallerSpecialPowers.Equals(aData)))) {
     // First, update all registrations in the parent process.
     nsCOMPtr<nsIServiceWorkerManager> swm =
       mozilla::services::GetServiceWorkerManager();

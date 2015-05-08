@@ -265,9 +265,7 @@ TimeStamp       nsWindow::sFirstEventTimeStamp = TimeStamp();
 
 static const char *sScreenManagerContractID       = "@mozilla.org/gfx/screenmanager;1";
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gWindowsLog;
-#endif
 
 // Global used in Show window enumerations.
 static bool     gWindowsVisible                   = false;

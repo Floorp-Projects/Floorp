@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<script>
+  fetch("intercept-this").then(function(r) {
+    if (!r.ok) {
+      return "FAIL";
+    }
+    return r.text();
+  }).then(function(body) {
+    parent.postMessage(body, '*');
+  });
+</script>

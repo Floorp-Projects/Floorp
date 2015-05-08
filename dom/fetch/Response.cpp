@@ -62,21 +62,24 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
   nsAutoString parsedURL;
 
   if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
-    nsCOMPtr<nsIURI> docURI = window->GetDocumentURI();
-    nsAutoCString spec;
-    aRv = docURI->GetSpec(spec);
+    nsCOMPtr<nsIURI> baseURI;
+    nsIDocument* doc = GetEntryDocument();
+    if (doc) {
+      baseURI = doc->GetBaseURI();
+    }
+    nsCOMPtr<nsIURI> resolvedURI;
+    aRv = NS_NewURI(getter_AddRefs(resolvedURI), aUrl, nullptr, baseURI);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
-    nsRefPtr<mozilla::dom::URL> url =
-      dom::URL::Constructor(aGlobal, aUrl, NS_ConvertUTF8toUTF16(spec), aRv);
-    if (aRv.Failed()) {
+    nsAutoCString spec;
+    aRv = resolvedURI->GetSpec(spec);
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
-    url->Stringify(parsedURL, aRv);
+    CopyUTF8toUTF16(spec, parsedURL);
   } else {
     workers::WorkerPrivate* worker = workers::GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
