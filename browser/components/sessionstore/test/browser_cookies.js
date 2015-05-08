@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
 
 const PATH = "/browser/browser/components/sessionstore/test/";
@@ -147,7 +144,7 @@ let replaceCurrentURI = Task.async(function* (browser, uri) {
   yield promiseBrowserLoaded(browser);
 
   // Ensure the tab's session history is up-to-date.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 });
 
 /**
