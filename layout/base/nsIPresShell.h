@@ -138,10 +138,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// b7b89561-4f03-44b3-9afa-b47e7f313ffb
+// a7ef8bb3-d628-4965-80f3-a326e089fb7f
 #define NS_IPRESSHELL_IID \
-  { 0xb7b89561, 0x4f03, 0x44b3, \
-    { 0x9a, 0xfa, 0xb4, 0x7e, 0x7f, 0x31, 0x3f, 0xfb } }
+{ 0xa7ef8bb3, 0xd628, 0x4965, \
+  { 0x80, 0xf3, 0xa3, 0x26, 0xe0, 0x89, 0xfb, 0x7f } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1549,8 +1549,6 @@ public:
 
   // Whether we should assume all images are visible.
   virtual bool AssumeAllImagesVisible() = 0;
-
-  virtual void FireResizeEvent() = 0;
 
   /**
    * Refresh observer management.
