@@ -29,14 +29,14 @@ UnixSocketWatcher::Connect(const struct sockaddr* aAddr, socklen_t aAddrLen)
   MOZ_ASSERT(IsOpen());
   MOZ_ASSERT(aAddr || !aAddrLen);
 
-  if (connect(GetFd(), aAddr, aAddrLen) < 0) {
+  if (TEMP_FAILURE_RETRY(connect(GetFd(), aAddr, aAddrLen) < 0)) {
     if (errno == EINPROGRESS) {
       mConnectionStatus = SOCKET_IS_CONNECTING;
       // Set up a write watch to receive the connect signal
       AddWatchers(WRITE_WATCHER, false);
-    } else {
-      OnError("connect", errno);
+      return NS_OK;
     }
+    OnError("connect", errno);
     return NS_ERROR_FAILURE;
   }
 
