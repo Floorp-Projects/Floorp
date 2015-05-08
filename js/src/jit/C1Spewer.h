@@ -34,14 +34,14 @@ class C1Spewer
     bool init(const char* path);
     void beginFunction(MIRGraph* graph, HandleScript script);
     void spewPass(const char* pass);
-    void spewIntervals(const char* pass, BacktrackingAllocator* regalloc);
+    void spewRanges(const char* pass, BacktrackingAllocator* regalloc);
     void endFunction();
     void finish();
 
   private:
     void spewPass(FILE* fp, MBasicBlock* block);
-    void spewIntervals(FILE* fp, BacktrackingAllocator* regalloc, LNode* ins, size_t& nextId);
-    void spewIntervals(FILE* fp, MBasicBlock* block, BacktrackingAllocator* regalloc, size_t& nextId);
+    void spewRanges(FILE* fp, BacktrackingAllocator* regalloc, LNode* ins);
+    void spewRanges(FILE* fp, MBasicBlock* block, BacktrackingAllocator* regalloc);
 };
 
 } // namespace jit
