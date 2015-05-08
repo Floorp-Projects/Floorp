@@ -1,6 +1,6 @@
 en_US Hunspell Dictionary
 Generated from SCOWL Version 2015.04.24
-Wed Apr 29 20:51:21 EDT 2015
+Fri May  8 09:52:07 EDT 2015
 
 http://wordlist.sourceforge.net
 
@@ -311,5 +311,5 @@ from the Ispell distribution they are under the Ispell copyright:
   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
-Build Date: Wed Apr 29 20:51:21 EDT 2015
+Build Date: Fri May  8 09:52:07 EDT 2015
 Wordlist Command: mk-list --accents=strip en_US 60
