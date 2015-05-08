@@ -2505,6 +2505,18 @@ TabParent::RecvGetDefaultScale(double* aValue)
 }
 
 bool
+TabParent::RecvGetMaxTouchPoints(uint32_t* aTouchPoints)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    *aTouchPoints = widget->GetMaxTouchPoints();
+  } else {
+    *aTouchPoints = 0;
+  }
+  return true;
+}
+
+bool
 TabParent::RecvGetWidgetNativeData(WindowsHandle* aValue)
 {
   *aValue = 0;

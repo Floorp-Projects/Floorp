@@ -10,14 +10,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TouchEvents.h"
 #include "nsContentUtils.h"
+#include "mozilla/WidgetUtils.h"
 
 namespace mozilla {
-
-#ifdef XP_WIN
-namespace widget {
-extern int32_t IsTouchDeviceSupportPresent();
-} // namespace widget
-#endif // #ifdef XP_WIN
 
 namespace dom {
 
@@ -188,8 +183,7 @@ TouchEvent::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
 {
   bool prefValue = false;
   int32_t flag = 0;
-  if (NS_SUCCEEDED(Preferences::GetInt("dom.w3c_touch_events.enabled",
-                                        &flag))) {
+  if (NS_SUCCEEDED(Preferences::GetInt("dom.w3c_touch_events.enabled", &flag))) {
     if (flag == 2) {
 #ifdef XP_WIN
       static bool sDidCheckTouchDeviceSupport = false;
@@ -197,7 +191,7 @@ TouchEvent::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
       // On Windows we auto-detect based on device support.
       if (!sDidCheckTouchDeviceSupport) {
         sDidCheckTouchDeviceSupport = true;
-        sIsTouchDeviceSupportPresent = widget::IsTouchDeviceSupportPresent();
+        sIsTouchDeviceSupportPresent = WidgetUtils::IsTouchDeviceSupportPresent();
       }
       prefValue = sIsTouchDeviceSupportPresent;
 #else
