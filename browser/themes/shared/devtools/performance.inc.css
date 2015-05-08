@@ -107,6 +107,26 @@
   background: var(--theme-selection-background);
 }
 
+#details-pane-container .buffer-status-message,
+#details-pane-container .buffer-status-message-full {
+  display: none;
+}
+
+#details-pane-container[buffer-status="in-progress"] .buffer-status-message {
+  display: block;
+  opacity: 0.5;
+}
+
+#details-pane-container[buffer-status="full"] .buffer-status-message {
+  display: block;
+  color: var(--theme-highlight-red);
+  font-weight: bold;
+  opacity: 1;
+}
+
+#details-pane-container[buffer-status="full"] .buffer-status-message-full {
+  display: block;
+}
 
 /* Overview Panel */
 
