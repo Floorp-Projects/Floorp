@@ -512,7 +512,8 @@ loop.roomViews = (function(mozL10n) {
                   valueLink={this.linkState("newRoomDescription")} />
               </form>
               <button className="room-context-btn-close"
-                      onClick={this.handleCloseClick}/>
+                      onClick={this.handleCloseClick}
+                      title={mozL10n.get("cancel_button")}/>
             </div>
           </div>
         );
@@ -537,9 +538,11 @@ loop.roomViews = (function(mozL10n) {
               <div className="room-context-comment">{this.props.roomData.roomDescription}</div> :
               null}
             <button className="room-context-btn-close"
-                    onClick={this.handleCloseClick}/>
+                    onClick={this.handleCloseClick}
+                    title={mozL10n.get("context_hide_tooltip")}/>
             <button className="room-context-btn-edit"
-                    onClick={this.handleEditClick}/>
+                    onClick={this.handleEditClick}
+                    title={mozL10n.get("context_edit_tooltip")}/>
           </div>
         </div>
       );
