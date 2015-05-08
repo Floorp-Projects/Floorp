@@ -52,6 +52,7 @@ typedef struct nr_turn_stun_ctx_ {
   char *realm;
   NR_async_cb success_cb;
   NR_async_cb error_cb;
+  int last_error_code;
 
   STAILQ_ENTRY(nr_turn_stun_ctx_) entry;
 } nr_turn_stun_ctx;
@@ -129,5 +130,7 @@ int nr_turn_client_parse_data_indication(nr_turn_client_ctx *ctx,
                                          UCHAR *newmsg, size_t *newlen,
                                          size_t newsize,
                                          nr_transport_addr *remote_addr);
+int nr_turn_client_ensure_perm(nr_turn_client_ctx *ctx,
+                               nr_transport_addr *addr);
 #endif
 
