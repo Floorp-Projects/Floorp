@@ -2027,9 +2027,22 @@ ThreadActor.prototype = {
       return false;
     }
 
+    let sourceActor = this.sources.createNonSourceMappedActor(aSource);
+
+    // Go ahead and establish the source actors for this script, which
+    // fetches sourcemaps if available and sends onNewSource
+    // notifications.
+    //
+    // We need to use synchronize here because if the page is being reloaded,
+    // this call will replace the previous set of source actors for this source
+    // with a new one. If the source actors have not been replaced by the time
+    // we try to reset the breakpoints below, their location objects will still
+    // point to the old set of source actors, which point to different scripts.
+    this.synchronize(this.sources.createSourceActors(aSource));
+
     // Set any stored breakpoints.
     let promises = [];
-    let sourceActor = this.sources.createNonSourceMappedActor(aSource);
+
     for (let _actor of this.breakpointActorMap.findActors()) {
       // XXX bug 1142115: We do async work in here, so we need to
       // create a fresh binding because for/of does not yet do that in
@@ -2039,12 +2052,13 @@ ThreadActor.prototype = {
       if (actor.isPending) {
         promises.push(actor.originalLocation.originalSourceActor._setBreakpoint(actor));
       } else {
-        promises.push(this.sources.getGeneratedLocation(actor.originalLocation)
-                                  .then((generatedLocation) => {
-          if (generatedLocation.generatedSourceActor.actorID === sourceActor.actorID) {
-            sourceActor._setBreakpointAtGeneratedLocation(
+        promises.push(this.sources.getAllGeneratedLocations(actor.originalLocation)
+                                  .then((generatedLocations) => {
+          if (generatedLocations.length > 0 &&
+              generatedLocations[0].generatedSourceActor.actorID === sourceActor.actorID) {
+            sourceActor._setBreakpointAtAllGeneratedLocations(
               actor,
-              generatedLocation
+              generatedLocations
             );
           }
         }));
@@ -2054,11 +2068,6 @@ ThreadActor.prototype = {
     if (promises.length > 0) {
       this.synchronize(Promise.all(promises));
     }
-
-    // Go ahead and establish the source actors for this script, which
-    // fetches sourcemaps if available and sends onNewSource
-    // notifications
-    this.sources.createSourceActors(aSource);
 
     return true;
   },
@@ -3072,7 +3081,9 @@ SourceActor.prototype = {
     let scripts = this.scripts.getScriptsBySourceActorAndLine(
       generatedSourceActor,
       generatedLine
-    ).filter((script) => !actor.hasScript(script));
+    );
+
+    scripts = scripts.filter((script) => !actor.hasScript(script));
 
     // Find all entry points that correspond to the given location.
     let entryPoints = [];
