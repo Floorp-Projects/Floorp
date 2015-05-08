@@ -87,7 +87,9 @@
 }
 
 /* CELLS */
-.newtab-cell {
+.newtab-cell,
+.newtab-intro-cell,
+.newtab-intro-cell-hover {
   background-color: rgba(255,255,255,.2);
   border-radius: 8px;
 }
@@ -106,10 +108,17 @@
 }
 
 .newtab-cell:not([ignorehover]) > .newtab-site:hover,
-.newtab-site[dragged] {
+.newtab-site[dragged],
+.newtab-intro-cell-hover {
   border: 2px solid white;
   box-shadow: 0 0 6px 2px #4cb1ff;
   margin: -2px;
+}
+
+.newtab-intro-cell .newtab-thumbnail,
+.newtab-intro-cell-hover .newtab-thumbnail {
+  background-color: #cae1f4;
+  background-image: url("chrome://browser/skin/newtab/whimsycorn.png");
 }
 
 .newtab-site[dragged] {
