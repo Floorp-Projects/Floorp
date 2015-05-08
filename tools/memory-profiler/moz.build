@@ -1,0 +1,25 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
+    XPIDL_MODULE = 'memory_profiler'
+    XPIDL_SOURCES += [
+        'nsIMemoryProfiler.idl',
+    ]
+
+    # This file cannot be built in unified mode because of name clashes with mozglue headers on Android.
+    SOURCES += [
+        'MemoryProfiler.cpp',
+        'nsMemoryProfilerFactory.cpp',
+    ]
+
+    LOCAL_INCLUDES += [
+        '/js/xpconnect/src',
+        '/xpcom/base',
+    ]
+
+    FINAL_LIBRARY = 'xul'
+
