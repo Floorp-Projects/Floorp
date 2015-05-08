@@ -5303,3 +5303,32 @@ function setBreakpointAtEntryPoints(actor, entryPoints) {
     }
   }
 }
+
+/**
+ * Unwrap a global that is wrapped in a |Debugger.Object|, or if the global has
+ * become a dead object, return |undefined|.
+ *
+ * @param Debugger.Object wrappedGlobal
+ *        The |Debugger.Object| which wraps a global.
+ *
+ * @returns {Object|undefined}
+ *          Returns the unwrapped global object or |undefined| if unwrapping
+ *          failed.
+ */
+exports.unwrapDebuggerObjectGlobal = wrappedGlobal => {
+  try {
+    // Because of bug 991399 we sometimes get nuked window references here. We
+    // just bail out in that case.
+    //
+    // Note that addon sandboxes have a DOMWindow as their prototype. So make
+    // sure that we can touch the prototype too (whatever it is), in case _it_
+    // is it a nuked window reference. We force stringification to make sure
+    // that any dead object proxies make themselves known.
+    let global = wrappedGlobal.unsafeDereference();
+    Object.getPrototypeOf(global) + "";
+    return global;
+  }
+  catch (e) {
+    return undefined;
+  }
+};

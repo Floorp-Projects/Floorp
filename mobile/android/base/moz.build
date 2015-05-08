@@ -144,7 +144,7 @@ gbjar.sources += [
     'AndroidGamepadManager.java',
     'animation/AnimationUtils.java',
     'animation/AnimatorProxy.java',
-    'animation/BounceAnimator.java',
+    'animation/BounceAnimatorBuilder.java',
     'animation/HeightChangeAnimation.java',
     'animation/PropertyAnimator.java',
     'animation/Rotate3DAnimation.java',
