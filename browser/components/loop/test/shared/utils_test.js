@@ -319,6 +319,43 @@ describe("loop.shared.utils", function() {
     });
   });
 
+  describe("#getPlatform", function() {
+    it("should recognize the OSX userAgent string", function() {
+      var UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0";
+      var result = sharedUtils.getPlatform(UA);
+
+      expect(result).eql("mac");
+    });
+
+    it("should recognize the Windows userAgent string", function() {
+      var UA = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:10.0) Gecko/20100101 Firefox/10.0";
+      var result = sharedUtils.getPlatform(UA);
+
+      expect(result).eql("win");
+    });
+
+    it("should recognize the Linux userAgent string", function() {
+      var UA = "Mozilla/5.0 (X11; Linux i686 on x86_64; rv:10.0) Gecko/20100101 Firefox/10.0";
+      var result = sharedUtils.getPlatform(UA);
+
+      expect(result).eql("other");
+    });
+
+    it("should recognize the OSX oscpu string", function() {
+      var oscpu = "Intel Mac OS X 10.10";
+      var result = sharedUtils.getPlatform(oscpu);
+
+      expect(result).eql("mac");
+    });
+
+    it("should recognize the Windows oscpu string", function() {
+      var oscpu = "Windows NT 5.3; Win64; x64";
+      var result = sharedUtils.getPlatform(oscpu);
+
+      expect(result).eql("win");
+    });
+  });
+
   describe("#objectDiff", function() {
     var a, b, diff;
 

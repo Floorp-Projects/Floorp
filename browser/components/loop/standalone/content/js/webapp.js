@@ -386,7 +386,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
   });
 
   var InitiateCallButton = React.createClass({displayName: "InitiateCallButton",
-    mixins: [sharedMixins.DropdownMenuMixin],
+    mixins: [sharedMixins.DropdownMenuMixin()],
 
     propTypes: {
       caption: React.PropTypes.string.isRequired,
