@@ -207,7 +207,7 @@ define("test/source-map/test-util", ["require", "exports", "module"], function (
   // TODO Issue #128: Define and test this function properly.
   exports['test relative()'] = function (assert, util) {
     assert.equal(libUtil.relative('/the/root', '/the/root/one.js'), 'one.js');
-    assert.equal(libUtil.relative('/the/root', '/the/rootone.js'), '/the/rootone.js');
+    assert.equal(libUtil.relative('/the/root', '/the/rootone.js'), '../rootone.js');
 
     assert.equal(libUtil.relative('', '/the/root/one.js'), '/the/root/one.js');
     assert.equal(libUtil.relative('.', '/the/root/one.js'), '/the/root/one.js');

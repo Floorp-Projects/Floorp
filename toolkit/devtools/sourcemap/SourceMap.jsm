@@ -182,8 +182,10 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
   /**
    * Returns all generated line and column information for the original source,
    * line, and column provided. If no column is provided, returns all mappings
-   * corresponding to a single line. Otherwise, returns all mappings
-   * corresponding to a single line and column.
+   * corresponding to a either the line we are searching for or the next
+   * closest line that has any mappings. Otherwise, returns all mappings
+   * corresponding to the given line and either the column we are searching for
+   * or the next closest column that has any offsets.
    *
    * The only argument is an object with the following properties:
    *
@@ -198,13 +200,15 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
    */
   SourceMapConsumer.prototype.allGeneratedPositionsFor =
     function SourceMapConsumer_allGeneratedPositionsFor(aArgs) {
+      var line = util.getArg(aArgs, 'line');
+
       // When there is no exact match, BasicSourceMapConsumer.prototype._findMapping
       // returns the index of the closest mapping less than the needle. By
       // setting needle.originalColumn to 0, we thus find the last mapping for
       // the given line, provided such a mapping exists.
       var needle = {
         source: util.getArg(aArgs, 'source'),
-        originalLine: util.getArg(aArgs, 'line'),
+        originalLine: line,
         originalColumn: util.getArg(aArgs, 'column', 0)
       };
 
@@ -222,22 +226,41 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
                                     binarySearch.LEAST_UPPER_BOUND);
       if (index >= 0) {
         var mapping = this._originalMappings[index];
-        var originalLine = mapping.originalLine;
-        var originalColumn = mapping.originalColumn;
 
-        // Iterate until either we run out of mappings, or we run into
-        // a mapping for a different line. Since mappings are sorted, this is
-        // guaranteed to find all mappings for the line we are searching for.
-        while (mapping && mapping.originalLine === originalLine &&
-               (aArgs.column === undefined ||
-                mapping.originalColumn === originalColumn)) {
-          mappings.push({
-            line: util.getArg(mapping, 'generatedLine', null),
-            column: util.getArg(mapping, 'generatedColumn', null),
-            lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
-          });
+        if (aArgs.column === undefined) {
+          var originalLine = mapping.originalLine;
 
-          mapping = this._originalMappings[++index];
+          // Iterate until either we run out of mappings, or we run into
+          // a mapping for a different line than the one we found. Since
+          // mappings are sorted, this is guaranteed to find all mappings for
+          // the line we found.
+          while (mapping && mapping.originalLine === originalLine) {
+            mappings.push({
+              line: util.getArg(mapping, 'generatedLine', null),
+              column: util.getArg(mapping, 'generatedColumn', null),
+              lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
+            });
+
+            mapping = this._originalMappings[++index];
+          }
+        } else {
+          var originalColumn = mapping.originalColumn;
+
+          // Iterate until either we run out of mappings, or we run into
+          // a mapping for a different line than the one we were searching for.
+          // Since mappings are sorted, this is guaranteed to find all mappings for
+          // the line we are searching for.
+          while (mapping &&
+                 mapping.originalLine === line &&
+                 mapping.originalColumn == originalColumn) {
+            mappings.push({
+              line: util.getArg(mapping, 'generatedLine', null),
+              column: util.getArg(mapping, 'generatedColumn', null),
+              lastColumn: util.getArg(mapping, 'lastGeneratedColumn', null)
+            });
+
+            mapping = this._originalMappings[++index];
+          }
         }
       }
 
@@ -1170,15 +1193,30 @@ define('source-map/util', ['require', 'exports', 'module' , ], function(require,
 
     aRoot = aRoot.replace(/\/$/, '');
 
-    // XXX: It is possible to remove this block, and the tests still pass!
-    var url = urlParse(aRoot);
-    if (aPath.charAt(0) == "/" && url && url.path == "/") {
-      return aPath.slice(1);
+    // It is possible for the path to be above the root. In this case, simply
+    // checking whether the root is a prefix of the path won't work. Instead, we
+    // need to remove components from the root one by one, until either we find
+    // a prefix that fits, or we run out of components to remove.
+    var level = 0;
+    while (aPath.indexOf(aRoot + '/') !== 0) {
+      var index = aRoot.lastIndexOf("/");
+      if (index < 0) {
+        return aPath;
+      }
+
+      // If the only part of the root that is left is the scheme (i.e. http://,
+      // file:///, etc.), one or more slashes (/), or simply nothing at all, we
+      // have exhausted all components, so the path is not relative to the root.
+      aRoot = aRoot.slice(0, index);
+      if (aRoot.match(/^([^\/]+:\/)\/*$/)) {
+        return aPath;
+      }
+
+      ++level;
     }
 
-    return aPath.indexOf(aRoot + '/') === 0
-      ? aPath.substr(aRoot.length + 1)
-      : aPath;
+    // Make sure we add a "../" for each component we removed from the root.
+    return Array(level + 1).join("../") + aPath.substr(aRoot.length + 1);
   }
   exports.relative = relative;
 
