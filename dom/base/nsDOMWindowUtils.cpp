@@ -26,7 +26,7 @@
 #include "ClientLayerManager.h"
 #include "nsQueryObject.h"
 #ifdef MOZ_FMP4
-#include "MP4Reader.h"
+#include "MP4Decoder.h"
 #endif
 
 #include "nsIScrollableFrame.h"
@@ -2253,7 +2253,7 @@ nsDOMWindowUtils::GetSupportsHardwareH264Decoding(bool* retval)
   if (!mgr)
     return NS_ERROR_FAILURE;
 
-  *retval = MP4Reader::IsVideoAccelerated(mgr->GetCompositorBackendType());
+  *retval = MP4Decoder::IsVideoAccelerated(mgr->GetCompositorBackendType());
 #else
   *retval = false;
 #endif
