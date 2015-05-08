@@ -37,7 +37,7 @@ Site.prototype = {
   /**
    * The title of the site's link.
    */
-  get title() { return this.link.title; },
+  get title() { return this.link.title || this.link.url; },
 
   /**
    * The site's parent cell.
@@ -122,8 +122,10 @@ Site.prototype = {
   _render: function Site_render() {
     let enhanced = gAllPages.enhanced && DirectoryLinksProvider.getEnhancedLink(this.link);
     let url = this.url;
-    let title = enhanced && enhanced.title || this.title || url;
-    let tooltip = (title == url ? title : title + "\n" + url);
+    let title = enhanced && enhanced.title ? enhanced.title :
+                this.link.type == "history" ? this.link.baseDomain :
+                this.title;
+    let tooltip = (this.title == url ? this.title : this.title + "\n" + url);
 
     let link = this._querySelector(".newtab-link");
     link.setAttribute("title", tooltip);

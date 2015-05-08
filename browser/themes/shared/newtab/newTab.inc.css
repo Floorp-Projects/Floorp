@@ -118,7 +118,8 @@
   background-clip: padding-box;
   background-repeat: no-repeat;
   background-size: cover;
-  border-radius: inherit;
+  border-radius: 8px 8px 0px 0px;
+  height: 180px;
   transition: opacity 100ms ease-out;
 }
 
@@ -153,10 +154,6 @@
   color: white;
 }
 
-.newtab-suggested {
-  background-color: white;
-}
-
 .newtab-site:hover .newtab-title {
   color: #222;
 }
@@ -173,6 +170,8 @@
   left: 0;
   position: absolute;
   width: 10px;
+  margin-left: 8px;
+  margin-top: 6px;
 }
 
 .newtab-site[pinned] .newtab-title:-moz-locale-dir(rtl)::before {
