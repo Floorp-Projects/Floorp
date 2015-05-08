@@ -203,16 +203,23 @@ TelephonyListener::HandleCallInfo(nsITelephonyCallInfo* aInfo, bool aSend)
   uint32_t callIndex;
   uint16_t callState;
   nsAutoString number;
+  nsAutoString disconnectedReason;
   bool isOutgoing;
   bool isConference;
 
   aInfo->GetCallIndex(&callIndex);
   aInfo->GetCallState(&callState);
   aInfo->GetNumber(number);
+  aInfo->GetDisconnectedReason(disconnectedReason);
   aInfo->GetIsOutgoing(&isOutgoing);
   aInfo->GetIsConference(&isConference);
 
-  hfp->HandleCallStateChanged(callIndex, callState, EmptyString(), number,
+  // The disconnectedReason of a disconnected call must be nonempty no matter
+  // the call is disconnected for a normal reason or an error.
+  MOZ_ASSERT((callState != nsITelephonyService::CALL_STATE_DISCONNECTED ||
+              !disconnectedReason.IsEmpty()),
+             "disconnectedReason of an disconnected call must be nonempty.");
+  hfp->HandleCallStateChanged(callIndex, callState, disconnectedReason, number,
                               isOutgoing, isConference, aSend);
   return NS_OK;
 }
@@ -231,30 +238,6 @@ NS_IMETHODIMP
 TelephonyListener::EnumerateCallState(nsITelephonyCallInfo* aInfo)
 {
   return HandleCallInfo(aInfo, false);
-}
-
-NS_IMETHODIMP
-TelephonyListener::NotifyError(uint32_t aServiceId,
-                               int32_t aCallIndex,
-                               const nsAString& aError)
-{
-  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
-  NS_ENSURE_TRUE(hfp, NS_ERROR_FAILURE);
-
-  if (aCallIndex > 0) {
-    // In order to not miss any related call state transition.
-    // It's possible that 3G network signal lost for unknown reason.
-    // If a call is released abnormally, NotifyError() will be called,
-    // instead of CallStateChanged(). We need to reset the call array state
-    // via setting CALL_STATE_DISCONNECTED
-    hfp->HandleCallStateChanged(aCallIndex,
-                                nsITelephonyService::CALL_STATE_DISCONNECTED,
-                                aError, EmptyString(), false, false, true);
-    BT_WARNING("Reset the call state due to call transition ends abnormally");
-  }
-
-  BT_WARNING(NS_ConvertUTF16toUTF8(aError).get());
-  return NS_OK;
 }
 
 NS_IMETHODIMP
