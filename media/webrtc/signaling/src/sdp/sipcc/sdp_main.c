@@ -119,7 +119,7 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
     {"TC2WindowSize", sizeof("TC2WindowSize"),
      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
     {"rtcp", sizeof("rtcp"),
-     sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
+     sdp_parse_attr_rtcp, sdp_build_attr_rtcp },
     {"rtr", sizeof("rtr"),
      sdp_parse_attr_rtr, sdp_build_attr_rtr},
     {"silenceSupp", sizeof("silenceSupp"),

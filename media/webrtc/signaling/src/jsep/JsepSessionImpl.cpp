@@ -2559,9 +2559,32 @@ JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
   return AddCandidateToSdp(sdp, candidate, mid, level);
 }
 
+static void SetDefaultAddresses(const std::string& defaultCandidateAddr,
+                                uint16_t defaultCandidatePort,
+                                const std::string& defaultRtcpCandidateAddr,
+                                uint16_t defaultRtcpCandidatePort,
+                                SdpMediaSection* msection)
+{
+  msection->GetConnection().SetAddress(defaultCandidateAddr);
+  msection->SetPort(defaultCandidatePort);
+  if (!defaultRtcpCandidateAddr.empty()) {
+    sdp::AddrType ipVersion = sdp::kIPv4;
+    if (defaultRtcpCandidateAddr.find(':') != std::string::npos) {
+      ipVersion = sdp::kIPv6;
+    }
+    msection->GetAttributeList().SetAttribute(new SdpRtcpAttribute(
+          defaultRtcpCandidatePort,
+          sdp::kInternet,
+          ipVersion,
+          defaultRtcpCandidateAddr));
+  }
+}
+
 nsresult
 JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
                                       uint16_t defaultCandidatePort,
+                                      const std::string& defaultRtcpCandidateAddr,
+                                      uint16_t defaultRtcpCandidatePort,
                                       uint16_t level)
 {
   mLastError.clear();
@@ -2604,13 +2627,19 @@ JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
           MOZ_ASSERT(false);
           continue;
         }
-        bundledMsection->GetConnection().SetAddress(defaultCandidateAddr);
-        bundledMsection->SetPort(defaultCandidatePort);
+        SetDefaultAddresses(defaultCandidateAddr,
+                            defaultCandidatePort,
+                            defaultRtcpCandidateAddr,
+                            defaultRtcpCandidatePort,
+                            bundledMsection);
       }
     }
 
-    msection.GetConnection().SetAddress(defaultCandidateAddr);
-    msection.SetPort(defaultCandidatePort);
+    SetDefaultAddresses(defaultCandidateAddr,
+                        defaultCandidatePort,
+                        defaultRtcpCandidateAddr,
+                        defaultRtcpCandidatePort,
+                        &msection);
 
     // TODO(bug 1095793): Will this have an mid someday?
 

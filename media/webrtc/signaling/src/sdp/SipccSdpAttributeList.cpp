@@ -858,6 +858,38 @@ SipccSdpAttributeList::LoadRtcpFb(sdp_t* sdp, uint16_t level,
   }
 }
 
+void
+SipccSdpAttributeList::LoadRtcp(sdp_t* sdp, uint16_t level,
+                                SdpErrorHolder& errorHolder)
+{
+  sdp_attr_t* attr = sdp_find_attr(sdp, level, 0, SDP_ATTR_RTCP, 1);
+
+  if (!attr) {
+    return;
+  }
+
+  sdp_rtcp_t* rtcp = &attr->attr.rtcp;
+
+  if (rtcp->nettype != SDP_NT_INTERNET) {
+    return;
+  }
+
+  if (rtcp->addrtype != SDP_AT_IP4 && rtcp->addrtype != SDP_AT_IP6) {
+    return;
+  }
+
+  if (!strlen(rtcp->addr)) {
+    SetAttribute(new SdpRtcpAttribute(rtcp->port));
+  } else {
+    SetAttribute(
+        new SdpRtcpAttribute(
+          rtcp->port,
+          sdp::kInternet,
+          rtcp->addrtype == SDP_AT_IP4 ? sdp::kIPv4 : sdp::kIPv6,
+          rtcp->addr));
+  }
+}
+
 bool
 SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
                             SdpErrorHolder& errorHolder)
@@ -891,6 +923,7 @@ SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
     LoadFmtp(sdp, level);
     LoadMsids(sdp, level, errorHolder);
     LoadRtcpFb(sdp, level, errorHolder);
+    LoadRtcp(sdp, level, errorHolder);
     LoadSsrc(sdp, level);
   }
 
@@ -1115,7 +1148,11 @@ SipccSdpAttributeList::GetPtime() const
 const SdpRtcpAttribute&
 SipccSdpAttributeList::GetRtcp() const
 {
-  MOZ_CRASH("Not yet implemented");
+  if (!HasAttribute(SdpAttribute::kRtcpAttribute)) {
+    MOZ_CRASH();
+  }
+  const SdpAttribute* attr = GetAttribute(SdpAttribute::kRtcpAttribute);
+  return *static_cast<const SdpRtcpAttribute*>(attr);
 }
 
 const SdpRtcpFbAttributeList&

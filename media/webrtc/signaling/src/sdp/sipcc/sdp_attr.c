@@ -49,6 +49,33 @@ static const char* logTag = "sdp_attr";
     semicolon = TRUE; \
   }
 
+static int find_token_enum(const char *attr_name,
+                           sdp_t *sdp_p,
+                           const char **ptr,
+                           const sdp_namearray_t *types,
+                           int type_count,
+                           int unknown_value)
+{
+    sdp_result_e  result = SDP_SUCCESS;
+    char          tmp[SDP_MAX_STRING_LEN+1];
+    int           i;
+
+    *ptr = sdp_getnextstrtok(*ptr, tmp, sizeof(tmp), " \t", &result);
+    if (result != SDP_SUCCESS) {
+        sdp_parse_error(sdp_p,
+            "%s Warning: problem parsing %s", sdp_p->debug_str, attr_name);
+        sdp_p->conf_p->num_invalid_param++;
+        return -1;
+    }
+
+    for (i=0; i < type_count; i++) {
+        if (!cpr_strncasecmp(tmp, types[i].name, types[i].strlen)) {
+            return i;
+        }
+    }
+    return unknown_value;
+}
+
 /*
  * Helper function for adding nv-pair where value is string.
  */
@@ -3391,6 +3418,69 @@ sdp_result_e sdp_build_attr_cpar (sdp_t *sdp_p, sdp_attr_t *attr_p,
     return (SDP_SUCCESS);
 }
 
+sdp_result_e sdp_parse_attr_rtcp (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                           const char *ptr)
+{
+  sdp_result_e result;
+  char nettype[SDP_MAX_STRING_LEN];
+  sdp_rtcp_t *rtcp_p = &(attr_p->attr.rtcp);
+  int enum_raw;
+
+  memset(rtcp_p, 0, sizeof(sdp_rtcp_t));
+
+  rtcp_p->port = (uint16_t)sdp_getnextnumtok(ptr, &ptr, " \t", &result);
+  if (result != SDP_SUCCESS) {
+    sdp_parse_error(sdp_p,
+                    "%s Warning: could not parse port for rtcp attribute",
+                    sdp_p->debug_str);
+    sdp_p->conf_p->num_invalid_param++;
+
+    return SDP_INVALID_PARAMETER;
+  }
+
+  /* The rest is optional, although it is all-or-nothing */
+  (void)sdp_getnextstrtok(ptr, nettype, sizeof(nettype), " \t", &result);
+  if (result == SDP_EMPTY_TOKEN) {
+    /* Nothing after the port */
+    return SDP_SUCCESS;
+  }
+
+  enum_raw = find_token_enum("Nettype", sdp_p, &ptr, sdp_nettype,
+                             SDP_MAX_NETWORK_TYPES, SDP_NT_UNSUPPORTED);
+  if (enum_raw == -1) {
+    return SDP_INVALID_PARAMETER;
+  }
+  rtcp_p->nettype = (sdp_nettype_e)enum_raw;
+
+  enum_raw = find_token_enum("Addrtype", sdp_p, &ptr, sdp_addrtype,
+                             SDP_MAX_ADDR_TYPES, SDP_AT_UNSUPPORTED);
+  if (enum_raw == -1) {
+    return SDP_INVALID_PARAMETER;
+  }
+  rtcp_p->addrtype = (sdp_addrtype_e)enum_raw;
+
+  ptr = sdp_getnextstrtok(ptr, rtcp_p->addr, sizeof(rtcp_p->addr), " \t",
+                          &result);
+  if (result != SDP_SUCCESS) {
+    sdp_parse_error(sdp_p,
+                    "%s Warning: could not parse addr for rtcp attribute",
+                    sdp_p->debug_str);
+    sdp_p->conf_p->num_invalid_param++;
+
+    return SDP_INVALID_PARAMETER;
+  }
+
+  return SDP_SUCCESS;
+}
+
+sdp_result_e sdp_build_attr_rtcp (sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                           flex_string *fs)
+{
+  /* We should not be serializing SDP anyway, but we need this function until
+   * Bug 1112737 is resolved. */
+  return SDP_FAILURE;
+}
+
 sdp_result_e sdp_parse_attr_rtr (sdp_t *sdp_p, sdp_attr_t *attr_p,
                                            const char *ptr)
 {
@@ -4876,33 +4966,6 @@ sdp_result_e sdp_build_attr_rtcp_fb(sdp_t *sdp_p,
     flex_string_sprintf(fs, "\r\n");
 
     return SDP_SUCCESS;
-}
-
-static int find_token_enum(const char *attr_name,
-                           sdp_t *sdp_p,
-                           const char **ptr,
-                           const sdp_namearray_t *types,
-                           int type_count,
-                           int unknown_value)
-{
-    sdp_result_e  result = SDP_SUCCESS;
-    char          tmp[SDP_MAX_STRING_LEN+1];
-    int           i;
-
-    *ptr = sdp_getnextstrtok(*ptr, tmp, sizeof(tmp), " \t", &result);
-    if (result != SDP_SUCCESS) {
-        sdp_parse_error(sdp_p,
-            "%s Warning: problem parsing %s", sdp_p->debug_str, attr_name);
-        sdp_p->conf_p->num_invalid_param++;
-        return -1;
-    }
-
-    for (i=0; i < type_count; i++) {
-        if (!cpr_strncasecmp(tmp, types[i].name, types[i].strlen)) {
-            return i;
-        }
-    }
-    return unknown_value;
 }
 
 sdp_result_e sdp_parse_attr_rtcp_fb (sdp_t *sdp_p,
