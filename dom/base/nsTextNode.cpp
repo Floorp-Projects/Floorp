@@ -150,7 +150,7 @@ nsTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
 void nsTextNode::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  ResetDirectionSetByTextNode(this, aNullParent);
+  ResetDirectionSetByTextNode(this);
 
   nsGenericDOMDataNode::UnbindFromTree(aDeep, aNullParent);
 }
