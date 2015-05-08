@@ -13,30 +13,34 @@
   Cu.import('resource://gre/modules/Services.jsm');
   SimpleTest.waitForExplicitFinish();
 
-  // attach to a different origin's CacheStorage
-  var url = 'http://example.com/';
-  var uri = Services.io.newURI(url, null, null);
-  var principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
-  var storage = new CacheStorage('content', principal);
+  SpecialPowers.pushPrefEnv({
+    "set": [["dom.caches.enabled", true]],
+  }, function() {
+    // attach to a different origin's CacheStorage
+    var url = 'http://example.com/';
+    var uri = Services.io.newURI(url, null, null);
+    var principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
+    var storage = new CacheStorage('content', principal);
 
-  // verify we can use the other origin's CacheStorage as normal
-  var req = new Request('http://example.com/index.html');
-  var res = new Response('hello world');
-  var cache;
-  storage.open('foo').then(function(c) {
-    cache = c;
-    ok(cache, 'storage should create cache');
-    return cache.put(req, res.clone());
-  }).then(function() {
-    return cache.match(req);
-  }).then(function(foundResponse) {
-    return Promise.all([res.text(), foundResponse.text()]);
-  }).then(function(results) {
-    is(results[0], results[1], 'cache should contain response');
-    return storage.delete('foo');
-  }).then(function(deleted) {
-    ok(deleted, 'storage should delete cache');
-    SimpleTest.finish();
+    // verify we can use the other origin's CacheStorage as normal
+    var req = new Request('http://example.com/index.html');
+    var res = new Response('hello world');
+    var cache;
+    storage.open('foo').then(function(c) {
+      cache = c;
+      ok(cache, 'storage should create cache');
+      return cache.put(req, res.clone());
+    }).then(function() {
+      return cache.match(req);
+    }).then(function(foundResponse) {
+      return Promise.all([res.text(), foundResponse.text()]);
+    }).then(function(results) {
+      is(results[0], results[1], 'cache should contain response');
+      return storage.delete('foo');
+    }).then(function(deleted) {
+      ok(deleted, 'storage should delete cache');
+      SimpleTest.finish();
+    });
   });
 </script>
 </body>
