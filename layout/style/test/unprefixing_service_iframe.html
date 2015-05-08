@@ -4,9 +4,16 @@
   <meta charset="utf-8">
   <title>Helper file for testing CSS Unprefixing Service</title>
   <script type="text/javascript" src="property_database.js"></script>
+  <style type="text/css">
+    #wrapper {
+      width: 500px;
+    }
+  </style>
 </head>
 <body>
-<div id="content"></div>
+<div id="wrapper">
+  <div id="content"></div>
+</div>
 
 <script type="application/javascript;version=1.7">
 "use strict";
@@ -139,6 +146,17 @@ const gTestcases = [
   { decl: "-webkit-transform: matrix(1, 2, 3, 4, 5, 6)",
     targetPropName: "transform",
     expectedDOMStyleVal:  "matrix(1, 2, 3, 4, 5, 6)" },
+
+  // -webkit-transform-origin: <value> maps directly to "transform-origin"
+  { decl: "-webkit-transform-origin: 0 0",
+    targetPropName: "transform-origin",
+    expectedDOMStyleVal:  "0px 0px 0px",
+    expectedCompStyleVal: "0px 0px" },
+
+  { decl: "-webkit-transform-origin: 100% 0",
+    targetPropName: "transform-origin",
+    expectedDOMStyleVal:  "100% 0px 0px",
+    expectedCompStyleVal: "500px 0px" },
 
   // -webkit-transition: <property> maps directly to "transition"
   { decl: "-webkit-transition: width 1s linear 2s",
