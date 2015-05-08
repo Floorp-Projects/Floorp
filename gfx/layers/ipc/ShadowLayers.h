@@ -211,13 +211,6 @@ public:
   virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
 
-  /**
-   * Notify the compositor that a compositable will be updated asynchronously
-   * through ImageBridge, using an ID to connect the protocols on the
-   * compositor side.
-   */
-  void AttachAsyncCompositable(PLayerTransactionChild* aLayer, uint64_t aID);
-
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) override;
 
