@@ -49,9 +49,17 @@ let gIntro = {
     "numerical-progress",
     "text",
     "buttons",
+    "image",
     "header",
     "footer"
   ],
+
+  _imageTypes: {
+    COG : "cog",
+    PIN_REMOVE : "pin-remove",
+    SUGGESTED : "suggested"
+  },
+
 
   /**
    * The paragraphs & buttons to show on each page in the intros.
@@ -66,12 +74,16 @@ let gIntro = {
   _introPages: {
     "welcome": [[0,1],[2,3],[4,5]],
     "update": [[6,5],[4,3],[0,1]],
-    "buttons": [["skip", "continue"],["back", "next"],["back", "gotit"]]
+    "buttons": [["skip", "continue"],["back", "next"],["back", "gotit"]],
+    "welcome-images": ["cog", "pin-remove", "suggested"],
+    "update-images": ["suggested", "pin-remove", "cog"]
   },
 
   _paragraphs: [],
 
   _nodes: {},
+
+  _images: {},
 
   init: function() {
     for (let idSuffix of this._nodeIDSuffixes) {
@@ -86,11 +98,25 @@ let gIntro = {
     }
   },
 
+  _setImage: function(imageType) {
+    // Remove previously existing images, if any.
+    let currImageHolder = this._nodes.image;
+    while (currImageHolder.firstChild) {
+      currImageHolder.removeChild(currImageHolder.firstChild);
+    }
+
+    this._nodes.image.appendChild(this._images[imageType]);
+  },
+
   _goToPage: function(pageNum) {
     this._currPage = pageNum;
 
     this._nodes["numerical-progress"].innerHTML = `${this._bold(pageNum + 1)} / ${NUM_INTRO_PAGES}`;
     this._nodes["numerical-progress"].setAttribute("page", pageNum);
+
+    // Set the page's image
+    let imageType = this._introPages[this._onboardingType + "-images"][pageNum];
+    this._setImage(imageType);
 
     // Set the paragraphs
     let paragraphNodes = this._nodes.text.getElementsByTagName("p");
@@ -142,6 +168,43 @@ let gIntro = {
       return;
     }
     this._goToPage(this._currPage + 1);
+  },
+
+  _generateImages: function() {
+    Object.keys(this._imageTypes).forEach(type => {
+      let image = "";
+      let imageClass = "";
+      switch (this._imageTypes[type]) {
+        case this._imageTypes.COG:
+          image = document.getElementById("newtab-customize-panel2").cloneNode(true);
+          image.removeAttribute("hidden");
+          image.removeAttribute("type");
+          image.classList.add("newtab-intro-image-customize");
+          break;
+        case this._imageTypes.PIN_REMOVE:
+          imageClass = "-hover";
+          // fall-through
+        case this._imageTypes.SUGGESTED:
+          image = document.createElementNS(HTML_NAMESPACE, "div");
+          image.classList.add("newtab-intro-cell-wrapper");
+
+          // Create the cell's inner HTML code.
+          image.innerHTML =
+            '<div class="newtab-intro-cell' + imageClass + '">' +
+            '  <div class="newtab-site newtab-intro-image-tile" type="sponsored">' +
+            '    <a class="newtab-link">' +
+            '      <span class="newtab-thumbnail"/>' +
+            '      <span class="newtab-title">Example Title</span>' +
+            '    </a>' +
+            '    <input type="button" class="newtab-control newtab-control-pin"/>' +
+            '    <input type="button" class="newtab-control newtab-control-block"/>' + (imageClass ? "" :
+            '    <span class="newtab-sponsored">SUGGESTED</span>') +
+            '  </div>' +
+            '</div>';
+            break;
+      }
+      this._images[this._imageTypes[type]] = image;
+    });
   },
 
   _generateParagraphs: function() {
@@ -207,6 +270,7 @@ let gIntro = {
     if (!this._paragraphs.length) {
       // It's our first time showing the panel. Do some initial setup
       this._generateParagraphs();
+      this._generateImages();
     }
     this._goToPage(0);
 
