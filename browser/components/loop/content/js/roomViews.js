@@ -512,7 +512,8 @@ loop.roomViews = (function(mozL10n) {
                   valueLink: this.linkState("newRoomDescription")})
               ), 
               React.createElement("button", {className: "room-context-btn-close", 
-                      onClick: this.handleCloseClick})
+                      onClick: this.handleCloseClick, 
+                      title: mozL10n.get("cancel_button")})
             )
           )
         );
@@ -537,9 +538,11 @@ loop.roomViews = (function(mozL10n) {
               React.createElement("div", {className: "room-context-comment"}, this.props.roomData.roomDescription) :
               null, 
             React.createElement("button", {className: "room-context-btn-close", 
-                    onClick: this.handleCloseClick}), 
+                    onClick: this.handleCloseClick, 
+                    title: mozL10n.get("context_hide_tooltip")}), 
             React.createElement("button", {className: "room-context-btn-edit", 
-                    onClick: this.handleEditClick})
+                    onClick: this.handleEditClick, 
+                    title: mozL10n.get("context_edit_tooltip")})
           )
         )
       );
