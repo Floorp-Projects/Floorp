@@ -101,15 +101,7 @@ UnixSocketWatcher::OnFileCanReadWithoutBlocking(int aFd)
   if (mConnectionStatus == SOCKET_IS_CONNECTED) {
     OnSocketCanReceiveWithoutBlocking();
   } else if (mConnectionStatus == SOCKET_IS_LISTENING) {
-    sockaddr_any addr;
-    socklen_t addrLen = sizeof(addr);
-    int fd = TEMP_FAILURE_RETRY(accept(GetFd(),
-      reinterpret_cast<struct sockaddr*>(&addr), &addrLen));
-    if (fd < 0) {
-      OnError("accept", errno);
-    } else {
-      OnAccepted(fd, &addr, addrLen);
-    }
+    OnSocketCanAcceptWithoutBlocking();
   } else {
     NS_NOTREACHED("invalid connection state for reading");
   }

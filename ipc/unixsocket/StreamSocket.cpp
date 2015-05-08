@@ -64,8 +64,6 @@ public:
   // I/O callback methods
   //
 
-  void OnAccepted(int aFd, const sockaddr_any* aAddr,
-                  socklen_t aAddrLen) override;
   void OnConnected() override;
   void OnError(const char* aFunction, int aErrno) override;
   void OnListening() override;
@@ -273,40 +271,6 @@ StreamSocketIO::Send(UnixSocketIOBuffer* aData)
 {
   EnqueueData(aData);
   AddWatchers(WRITE_WATCHER, false);
-}
-
-void
-StreamSocketIO::OnAccepted(int aFd,
-                           const sockaddr_any* aAddr,
-                           socklen_t aAddrLen)
-{
-  MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
-  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_LISTENING);
-  MOZ_ASSERT(aAddr);
-  MOZ_ASSERT(aAddrLen <= static_cast<socklen_t>(sizeof(mAddr)));
-
-  memcpy (&mAddr, aAddr, aAddrLen);
-  mAddrSize = aAddrLen;
-
-  if (!mConnector->SetUp(aFd)) {
-    NS_WARNING("Could not set up socket!");
-    return;
-  }
-
-  RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
-  Close();
-  if (!SetSocketFlags(aFd)) {
-    return;
-  }
-  SetSocket(aFd, SOCKET_IS_CONNECTED);
-
-  NS_DispatchToMainThread(
-    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
-
-  AddWatchers(READ_WATCHER, true);
-  if (HasPendingData()) {
-    AddWatchers(WRITE_WATCHER, false);
-  }
 }
 
 void
