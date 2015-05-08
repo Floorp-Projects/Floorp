@@ -71,7 +71,6 @@ class GypContext(TemplateContext):
         # Using a class method instead of a class variable to hide the content
         # from sphinx.
         return dict(VARIABLES,
-        IS_GYP_DIR=(bool, bool, '', None),
         EXTRA_ASSEMBLER_FLAGS=(List, list, '', None),
         EXTRA_COMPILE_FLAGS=(List, list, '', None),
     )
@@ -147,8 +146,6 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
         for f in data[build_file]['included_files']:
             context.add_source(mozpath.abspath(mozpath.join(
                 mozpath.dirname(build_file), f)))
-
-        context['IS_GYP_DIR'] = True
 
         spec = targets[target]
 
