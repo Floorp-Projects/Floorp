@@ -142,7 +142,8 @@
               align="center"
               pack="center"
               flex="1">
-          <hbox class="devtools-toolbarbutton-group">
+          <hbox class="devtools-toolbarbutton-group"
+                pack="center">
             <toolbarbutton class="record-button"
                            label="&profilerUI.startRecording;" />
           </hbox>
@@ -159,10 +160,17 @@
                   align="center"
                   pack="center"
                   flex="1">
-              <hbox class="devtools-toolbarbutton-group">
-                <toolbarbutton class="record-button"
-                               label="&profilerUI.stopRecording;" />
-              </hbox>
+              <vbox>
+                <hbox class="devtools-toolbarbutton-group"
+                      pack="center">
+                  <toolbarbutton class="record-button"
+                                 label="&profilerUI.stopRecording;" />
+                </hbox>
+                <label class="buffer-status-message"
+                       tooltiptext="&profilerUI.bufferStatusTooltip;"/>
+                <label class="buffer-status-message-full"
+                       value="&profilerUI.bufferStatusFull;"/>
+              </vbox>
             </hbox>
             <hbox id="console-recording-notice"
                   class="notice-container"
@@ -180,6 +188,10 @@
                       <label class="console-profile-command" />
                       <label value="&profilerUI.console.stopCommandEnd;" />
                     </hbox>
+                    <label class="buffer-status-message"
+                           tooltiptext="&profilerUI.bufferStatusTooltip;"/>
+                    <label class="buffer-status-message-full"
+                           value="&profilerUI.bufferStatusFull;"/>
                   </vbox>
             </hbox>
             <deck id="details-pane" flex="1">
