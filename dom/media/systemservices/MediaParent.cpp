@@ -281,28 +281,38 @@ class ParentSingleton : public nsISupports
 
     nsresult Load()
     {
+#if defined(ANDROID)
+      return NS_OK; // Bug 1162720
+#else
       nsresult rv = Read();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         Delete();
       }
       return rv;
+#endif
     }
 
     nsresult Save()
     {
+#if defined(ANDROID)
+      return NS_OK; // Bug 1162720
+#else
       nsresult rv = Write();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         NS_WARNING("Failed to write data for EnumerateDevices id-persistence.");
         Delete();
       }
       return rv;
+#endif
     }
 
     void Clear(int64_t aSinceWhen)
     {
       OriginKeysTable::Clear(aSinceWhen);
+#if !defined(ANDROID)
       Delete();
       Save();
+#endif
     }
 
     nsresult Delete()
