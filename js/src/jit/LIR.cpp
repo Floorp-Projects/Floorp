@@ -535,28 +535,28 @@ LInstruction::initSafepoint(TempAllocator& alloc)
 }
 
 bool
-LMoveGroup::add(LAllocation* from, LAllocation* to, LDefinition::Type type)
+LMoveGroup::add(LAllocation from, LAllocation to, LDefinition::Type type)
 {
 #ifdef DEBUG
-    MOZ_ASSERT(*from != *to);
+    MOZ_ASSERT(from != to);
     for (size_t i = 0; i < moves_.length(); i++)
-        MOZ_ASSERT(*to != *moves_[i].to());
+        MOZ_ASSERT(to != moves_[i].to());
 
     // Check that SIMD moves are aligned according to ABI requirements.
     if (LDefinition(type).isSimdType()) {
-        MOZ_ASSERT(from->isMemory() || from->isFloatReg());
-        if (from->isMemory()) {
-            if (from->isArgument())
-                MOZ_ASSERT(from->toArgument()->index() % SimdMemoryAlignment == 0);
+        MOZ_ASSERT(from.isMemory() || from.isFloatReg());
+        if (from.isMemory()) {
+            if (from.isArgument())
+                MOZ_ASSERT(from.toArgument()->index() % SimdMemoryAlignment == 0);
             else
-                MOZ_ASSERT(from->toStackSlot()->slot() % SimdMemoryAlignment == 0);
+                MOZ_ASSERT(from.toStackSlot()->slot() % SimdMemoryAlignment == 0);
         }
-        MOZ_ASSERT(to->isMemory() || to->isFloatReg());
-        if (to->isMemory()) {
-            if (to->isArgument())
-                MOZ_ASSERT(to->toArgument()->index() % SimdMemoryAlignment == 0);
+        MOZ_ASSERT(to.isMemory() || to.isFloatReg());
+        if (to.isMemory()) {
+            if (to.isArgument())
+                MOZ_ASSERT(to.toArgument()->index() % SimdMemoryAlignment == 0);
             else
-                MOZ_ASSERT(to->toStackSlot()->slot() % SimdMemoryAlignment == 0);
+                MOZ_ASSERT(to.toStackSlot()->slot() % SimdMemoryAlignment == 0);
         }
     }
 #endif
@@ -564,24 +564,24 @@ LMoveGroup::add(LAllocation* from, LAllocation* to, LDefinition::Type type)
 }
 
 bool
-LMoveGroup::addAfter(LAllocation* from, LAllocation* to, LDefinition::Type type)
+LMoveGroup::addAfter(LAllocation from, LAllocation to, LDefinition::Type type)
 {
     // Transform the operands to this move so that performing the result
     // simultaneously with existing moves in the group will have the same
     // effect as if the original move took place after the existing moves.
 
     for (size_t i = 0; i < moves_.length(); i++) {
-        if (*moves_[i].to() == *from) {
+        if (moves_[i].to() == from) {
             from = moves_[i].from();
             break;
         }
     }
 
-    if (*from == *to)
+    if (from == to)
         return true;
 
     for (size_t i = 0; i < moves_.length(); i++) {
-        if (*to == *moves_[i].to()) {
+        if (to == moves_[i].to()) {
             moves_[i] = LMove(from, to, type);
             return true;
         }
@@ -596,8 +596,8 @@ LMoveGroup::printOperands(FILE* fp)
     for (size_t i = 0; i < numMoves(); i++) {
         const LMove& move = getMove(i);
         // Use two printfs, as LAllocation::toString is not reentrant.
-        fprintf(fp, " [%s", move.from()->toString());
-        fprintf(fp, " -> %s", move.to()->toString());
+        fprintf(fp, " [%s", move.from().toString());
+        fprintf(fp, " -> %s", move.to().toString());
 #ifdef DEBUG
         fprintf(fp, ", %s", TypeChars[move.type()]);
 #endif
