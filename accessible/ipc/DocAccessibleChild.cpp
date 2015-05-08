@@ -39,9 +39,6 @@ InterfacesFor(Accessible* aAcc)
   if (aAcc->IsTableCell())
     interfaces |= Interfaces::TABLECELL;
 
-  if (aAcc->IsDoc())
-    interfaces |= Interfaces::DOCUMENT;
-
   return interfaces;
 }
 
@@ -1615,22 +1612,6 @@ DocAccessibleChild::RecvTakeFocus(const uint64_t& aID)
     acc->TakeFocus();
   }
 
-  return true;
-}
-
-bool
-DocAccessibleChild::RecvIndexOfEmbeddedChild(const uint64_t& aID,
-                                             const uint64_t& aChildID,
-                                             uint32_t* aChildIdx)
-{
-  *aChildIdx = 0;
-
-  Accessible* parent = IdToAccessible(aID);
-  Accessible* child = IdToAccessible(aChildID);
-  if (!parent || !child)
-    return true;
-
-  *aChildIdx = parent->GetIndexOfEmbeddedChild(child);
   return true;
 }
 
