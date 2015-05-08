@@ -33,6 +33,15 @@ function run_test() {
   }},
   "Error: Missing 'parameters.state' parameter");
 
+  validationHelper({ parameters: {
+    oauth_uri: "http://oauth.test/v1",
+    client_id: "client_id",
+    content_uri: "http://content.test",
+    state: "complete",
+    action: "force_auth"
+  }},
+  "Error: parameters.email is required for action 'force_auth'");
+
   run_next_test();
 }
 
