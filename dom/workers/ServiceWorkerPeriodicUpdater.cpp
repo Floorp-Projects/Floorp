@@ -60,7 +60,7 @@ ServiceWorkerPeriodicUpdater::Observe(nsISupports* aSubject,
   // update during the test run, for which we use a non-empty aData.
   NS_NAMED_LITERAL_STRING(CallerSpecialPowers, "Caller:SpecialPowers");
   if (strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY) == 0 &&
-      (sPeriodicUpdatesEnabled || CallerSpecialPowers.Equals(aData))) {
+      (sPeriodicUpdatesEnabled || (aData && CallerSpecialPowers.Equals(aData)))) {
     // First, update all registrations in the parent process.
     nsCOMPtr<nsIServiceWorkerManager> swm =
       mozilla::services::GetServiceWorkerManager();
