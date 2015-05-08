@@ -251,7 +251,7 @@ if os_bsd:
         LOCAL_INCLUDES += ['src/third_party/libevent/bsd']
 
 ost = CONFIG['OS_TEST']
-if ost.find('86') == -1 and ost.find('arm') == -1 and ost.find('mips') == -1:
+if '86' not in ost and 'arm' not in ost and 'mips' not in ost:
     SOURCES += [
         'src/base/atomicops_internals_mutex.cc',
     ]
