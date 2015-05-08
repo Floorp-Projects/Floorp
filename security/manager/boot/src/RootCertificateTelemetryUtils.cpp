@@ -19,10 +19,8 @@
 
 namespace mozilla { namespace psm { 
 
-#if defined(PR_LOGGING)
 PRLogModuleInfo* gPublicKeyPinningTelemetryLog =
   PR_NewLogModule("PublicKeyPinningTelemetryService");
-#endif
 
 // Used in the BinarySearch method, this does a memcmp between the pointer
 // provided to its construtor and whatever the binary search is looking for.

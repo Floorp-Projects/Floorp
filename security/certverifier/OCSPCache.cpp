@@ -32,9 +32,7 @@
 #include "ScopedNSSTypes.h"
 #include "secerr.h"
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gCertVerifierLog;
-#endif
 
 using namespace mozilla::pkix;
 

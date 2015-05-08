@@ -133,9 +133,7 @@
 #include "secport.h"
 #include "sslerr.h"
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
-#endif
 
 using namespace mozilla::pkix;
 
