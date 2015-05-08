@@ -184,7 +184,10 @@ let gEditItemOverlay = {
       this._namePicker.readOnly = this.readOnly;
     }
 
-    if (showOrCollapse("locationRow", isURI, "location")) {
+    // In some cases we want to hide the location field, since it's not
+    // human-readable, but we still want to initialize it.
+    showOrCollapse("locationRow", isURI, "location");
+    if (isURI) {
       this._initLocationField();
       this._locationField.readOnly = !this._paneInfo.isItem;
     }
