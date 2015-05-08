@@ -7,6 +7,8 @@
 #include "nsCOMPtr.h"
 #include "MemoryProfiler.h"
 
+using mozilla::MemoryProfiler;
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(MemoryProfiler)
 
 NS_DEFINE_NAMED_CID(MEMORY_PROFILER_CID);
