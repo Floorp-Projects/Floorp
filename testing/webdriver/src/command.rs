@@ -31,6 +31,7 @@ pub enum WebDriverCommand {
     FindElements(LocatorParameters),
     FindElementElement(WebElement, LocatorParameters),
     FindElementElements(WebElement, LocatorParameters),
+    GetActiveElement,
     IsDisplayed(WebElement),
     IsSelected(WebElement),
     GetElementAttribute(WebElement, String),
@@ -149,6 +150,7 @@ impl WebDriverMessage {
                 let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::FindElementElements(element, parameters)
             },
+            Route::GetActiveElement => WebDriverCommand::GetActiveElement,
             Route::IsDisplayed => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
@@ -303,16 +305,17 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::GetTitle | WebDriverCommand::GetWindowHandle |
             WebDriverCommand::GetWindowHandles | WebDriverCommand::Close |
             WebDriverCommand::GetWindowSize | WebDriverCommand::MaximizeWindow |
-            WebDriverCommand::SwitchToParentFrame | WebDriverCommand::IsDisplayed(_) |
-            WebDriverCommand::IsSelected(_) | WebDriverCommand::GetElementAttribute(_, _) |
-            WebDriverCommand::GetCSSValue(_, _) | WebDriverCommand::GetElementText(_) |
-            WebDriverCommand::GetElementTagName(_) | WebDriverCommand::GetElementRect(_) |
-            WebDriverCommand::IsEnabled(_) | WebDriverCommand::GetCookies |
-            WebDriverCommand::GetCookie(_) | WebDriverCommand::DeleteCookies |
-            WebDriverCommand::DeleteCookie(_) |WebDriverCommand::DismissAlert |
-            WebDriverCommand::AcceptAlert | WebDriverCommand::GetAlertText |
-            WebDriverCommand::ElementClick(_) | WebDriverCommand::ElementTap(_) |
-            WebDriverCommand::ElementClear(_) | WebDriverCommand::TakeScreenshot => {
+            WebDriverCommand::SwitchToParentFrame | WebDriverCommand::GetActiveElement |
+            WebDriverCommand::IsDisplayed(_) | WebDriverCommand::IsSelected(_) |
+            WebDriverCommand::GetElementAttribute(_, _) | WebDriverCommand::GetCSSValue(_, _) |
+            WebDriverCommand::GetElementText(_) | WebDriverCommand::GetElementTagName(_) |
+            WebDriverCommand::GetElementRect(_) | WebDriverCommand::IsEnabled(_) |
+            WebDriverCommand::GetCookies | WebDriverCommand::GetCookie(_) |
+            WebDriverCommand::DeleteCookies | WebDriverCommand::DeleteCookie(_) |
+            WebDriverCommand::DismissAlert | WebDriverCommand::AcceptAlert |
+            WebDriverCommand::GetAlertText | WebDriverCommand::ElementClick(_) |
+            WebDriverCommand::ElementTap(_) | WebDriverCommand::ElementClear(_) |
+            WebDriverCommand::TakeScreenshot => {
                 None
             },
             WebDriverCommand::Get(ref x) => Some(x.to_json()),
