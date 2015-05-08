@@ -92,6 +92,8 @@
     <command id="cmd_resetAddonAutoUpdate"/>
     <command id="cmd_experimentsLearnMore"/>
     <command id="cmd_experimentsOpenTelemetryPreferences"/>
+    <command id="cmd_showUnsignedExtensions"/>
+    <command id="cmd_showAllExtensions"/>
   </commandset>
 
   <!-- view commands - these act on the selected addon -->
@@ -159,9 +161,12 @@
                       tooltiptext="&view.recentUpdates.label;" disabled="true"/>
       </richlistbox>
     </vbox>
-    <vbox flex="1">
+    <vbox class="main-content" flex="1">
       <!-- main header -->
       <hbox id="header" align="center">
+        <button id="show-all-extensions" hidden="true"
+                label="&showAllExtensions.button.label;"
+                command="cmd_showAllExtensions"/>
         <spacer flex="1"/>
         <hbox id="updates-container" align="center">
           <image class="spinner"/>
@@ -180,6 +185,9 @@
                   label="&updates.restart.label;"
                   command="cmd_restartApp"/>
         </hbox>
+        <button id="show-disabled-unsigned-extensions" hidden="true"
+                label="&showUnsignedExtensions.button.label;"
+                command="cmd_showUnsignedExtensions"/>
         <toolbarbutton id="header-utils-btn" class="header-button" type="menu"
                 tooltiptext="&toolsMenu.tooltip;">
           <menupopup id="utils-menu">
@@ -216,7 +224,6 @@
                  searchbuttonlabel="&search.buttonlabel;"
                  placeholder="&search.placeholder;"/>
       </hbox>
-      <box id="view-port-container" class="main-content" flex="1">
         <!-- view port -->
         <deck id="view-port" flex="1" selectedIndex="0">
 
@@ -329,6 +336,17 @@
 
           <!-- list view -->
           <vbox id="list-view" flex="1" class="view-pane" align="stretch" tabindex="0">
+            <!-- info UI for add-ons that have been disabled for being unsigned -->
+            <vbox id="disabled-unsigned-addons-info" hidden="true">
+              <label id="disabled-unsigned-addons-heading" value="&disabledUnsigned.heading;"/>
+              <description>
+                &disabledUnsigned.description.start;<label class="text-link plain" id="find-alternative-addons">&disabledUnsigned.description.findAddonsLink;</label>&disabledUnsigned.description.end;
+              </description>
+              <hbox pack="start"><label class="text-link" id="signing-learn-more">&disabledUnsigned.learnMore;</label></hbox>
+              <description id="signing-dev-info">
+                &disabledUnsigned.devInfo.start;<label class="text-link plain" id="signing-dev-manual-link">&disabledUnsigned.devInfo.linkToManual;</label>&disabledUnsigned.devInfo.end;
+              </description>
+            </vbox>
             <hbox class="view-header global-warning-container">
               <!-- global warnings -->
               <hbox class="global-warning" flex="1">
@@ -690,7 +708,6 @@
             </hbox>
           </scrollbox>
         </deck>
-      </box>
     </vbox>
   </hbox>
 </page>
