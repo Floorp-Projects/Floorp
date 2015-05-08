@@ -280,7 +280,7 @@ def load_tests(options, requested_paths, excluded_paths):
     elif options.tbpl_debug:
         flags_list = get_jitflags('debug')
     else:
-        flags_list = get_jitflags(options.jitflags)
+        flags_list = get_jitflags(options.jitflags, none=None)
 
     if flags_list:
         new_test_list = []
