@@ -49,13 +49,21 @@ var pktUI = (function() {
 
 	// -- Initialization (on startup and new windows) -- //
 	var inited = false;
-	var currentPanelDidShow, currentPanelDidHide;
+	var _currentPanelDidShow;
+    var _currentPanelDidHide;
 	var _isHidden = false;
-	
 	var _notificationTimeout;
-	
-	var prefBranch = Services.prefs.getBranch("browser.pocket.settings.");
-	
+    
+    // Init panel id at 0. The first actual panel id will have the number 1 so
+    // in case at some point any panel has the id 0 we know there is something
+    // wrong
+    var _panelId = 0;
+
+    var prefBranch = Services.prefs.getBranch("browser.pocket.settings.");
+
+    var savePanelWidth = 350;
+    var savePanelHeights = {collapsed: 153, expanded: 272};
+
 	/**
      * Initalizes Pocket UI and panels
      */
@@ -162,15 +170,15 @@ var pktUI = (function() {
     }
     
     function pocketPanelDidShow(event) {
-    	if (currentPanelDidShow) {
-    		currentPanelDidShow(event);
+    	if (_currentPanelDidShow) {
+    		_currentPanelDidShow(event);
         }
     	
     }
     
     function pocketPanelDidHide(event) {
-    	if (currentPanelDidHide) {
-    		currentPanelDidHide(event);
+    	if (_currentPanelDidHide) {
+    		_currentPanelDidHide(event);
         }
         
         // clear the panel
@@ -299,7 +307,7 @@ var pktUI = (function() {
                     startheight = 436;
                 }
             }
-           showPanel("chrome://browser/content/pocket/panels/signup.html?pockethost=" + Services.prefs.getCharPref("browser.pocket.site") + "&fxasignedin=" + fxasignedin + "&variant=" + pktApi.getSignupAB(), {
+           var panelId = showPanel("chrome://browser/content/pocket/panels/signup.html?pockethost=" + Services.prefs.getCharPref("browser.pocket.site") + "&fxasignedin=" + fxasignedin + "&variant=" + pktApi.getSignupAB(), {
                onShow: function() {
                 },
                onHide: panelDidHide,
@@ -321,13 +329,28 @@ var pktUI = (function() {
 
         var isValidURL = (typeof url !== 'undefined' && (url.startsWith("http") || url.startsWith('https')));
 
-        showPanel("chrome://browser/content/pocket/panels/saved.html?pockethost=" + Services.prefs.getCharPref("browser.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? '1' : '0'), {
+        var panelId = showPanel("chrome://browser/content/pocket/panels/saved.html?pockethost=" + Services.prefs.getCharPref("browser.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? '1' : '0'), {
     		onShow: function() {
+                var saveLinkMessageId = 'saveLink';
+
                 // Send error message for invalid url
                 if (!isValidURL) {
-                    var error = new Error('Only links can be saved');
-                    sendErrorMessage('saveLink', error);
+                    // TODO: Pass key for localized error in error object
+                    var error = {
+                        message: 'Only links can be saved',
+                        localizedKey: "onlylinkssaved"
+                    };
+                    pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, error);
                     return;
+                }
+
+                // Check online state
+                if (!navigator.onLine) {
+                    // TODO: Pass key for localized error in error object
+                    var error = {
+                        message: 'You must be connected to the Internet in order to save to Pocket. Please connect to the Internet and try again.'
+                    };
+                    pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, error);                    return;
                 }
 
                 // Add url
@@ -338,7 +361,7 @@ var pktUI = (function() {
                             status: "success",
                             item: item
                         };
-                        sendMessage('saveLink', successResponse);
+                        pktUIMessaging.sendMessageToPanel(panelId, saveLinkMessageId, successResponse);
                     },
                     error: function(error, request) {
                         // If user is not authorized show singup page
@@ -347,8 +370,13 @@ var pktUI = (function() {
                             return;
                         }
 
-                        // Send error message to panel
-                        sendErrorMessage('saveLink', error);
+                        // If there is no error message in the error use a
+                        // complete catch-all
+                        var errorMessage = error.message || "There was an error when trying to save to Pocket.";
+                        var panelError = { message: errorMessage}
+
+                         // Send error message to panel
+                        pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, panelError);
                     }
                 }
 
@@ -361,8 +389,8 @@ var pktUI = (function() {
 				pktApi.addLink(url, options);
 			},
 			onHide: panelDidHide,
-            width: 350,
-            height: 267
+            width: savePanelWidth,
+            height: pktApi.isPremiumUser() && isValidURL ? savePanelHeights.expanded : savePanelHeights.collapsed
     	});
     }
 
@@ -370,6 +398,9 @@ var pktUI = (function() {
      * Open a generic panel
      */
     function showPanel(url, options) {
+        // Add new panel id
+        _panelId += 1;
+        url += ("&panelId=" + _panelId);
 
         // We don't have to hide and show the panel again if it's already shown
         // as if the user tries to click again on the toolbar button the overlay
@@ -389,13 +420,15 @@ var pktUI = (function() {
 
     	// For some reason setting onpopupshown and onpopuphidden on the panel directly didn't work, so
     	// do it this hacky way for now
-    	currentPanelDidShow = options.onShow;
-    	currentPanelDidHide = options.onHide;
+    	_currentPanelDidShow = options.onShow;
+    	_currentPanelDidHide = options.onHide;
 
         resizePanel({
             width: options.width,
             height: options.height
         });
+
+        return _panelId;
     }
 
     /**
@@ -421,168 +454,132 @@ var pktUI = (function() {
     function panelDidHide() {
     }
 
-    // -- Communication to Panels -- //
-    // https://developer.mozilla.org/en-US/Add-ons/Code_snippets/Interaction_between_privileged_and_non-privileged_pages
-
-    /**
-     * Register a listener and callback for a specific messageId
-     */
-    function addMessageListener(messageId, callback) {
-
-		document.addEventListener('PKT_'+messageId, function(e) { 
-            // ignore to ensure we do not pick up other events in the browser
-			if (e.target.tagName !== 'PKTMESSAGEFROMPANELELEMENT') {
-				return;
-            }
-
-            // Send payload to callback
-			callback(JSON.parse(e.target.getAttribute("payload"))[0]);
-
-			// Cleanup the element
-			e.target.parentNode.removeChild(e.target);
-
-		}, false, true);
-
-    }
-
-    /**
-     * Remove a message listener
-     */
-    function removeMessageListener(messageId, callback) {
-    	document.removeMessageListener('PKT_'+messageId, callback);
-    }
-
-    /**
-     * Send a message to the panel's iframe
-     */
-    function sendMessage(messageId, payload) {
-
-    	var doc = getPanelFrame().contentWindow.document;
-
-		var AnswerEvt = doc.createElement("PKTMessage");
-	    AnswerEvt.setAttribute("payload", JSON.stringify([payload]));
-
-	    doc.documentElement.appendChild(AnswerEvt);
-
-	    var event = doc.createEvent("HTMLEvents");
-	    event.initEvent('PKT_'+messageId, true, false);
-	    AnswerEvt.dispatchEvent(event);
-    }
-
-    /**
-     * Helper function to package an error object and send it to the panel iframe as a message response
-     */
-    function sendErrorMessage(messageId, error) {
-		var errorResponse = {status: "error", error: error.message};
-		sendMessage(messageId, errorResponse);
-	}
-
     /**
      * Register all of the messages needed for the panels
      */
     function registerEventMessages() {
-
-    	// TODO : There are likely some possible race conditions possible here, for example if the user clicks the button quickly multiple times, due to the async property of the messages, a message may be picked up for an older panel. We should consider updating this to include some sort of panelId that changes per open.
     	var iframe = getPanelFrame();
 
     	// Only register the messages once
-    	if (iframe.getAttribute('did_init') == 1) {
-    		return;
+        var didInitAttributeKey = 'did_init';
+        var didInitMessageListener = iframe.getAttribute(didInitAttributeKey);
+        if (typeof didInitMessageListener !== "undefined" && didInitMessageListener == 1) {
+            return;
         }
 
-    	iframe.setAttribute('did_init', 1);
+    	iframe.setAttribute(didInitAttributeKey, 1);
 
 		// When the panel is displayed it generated an event called
 		// "show": we will listen for that event and when it happens,
 		// send our own "show" event to the panel's script, so the
 		// script can prepare the panel for display.
-		addMessageListener("show", function(payload) {
+		var _showMessageId = "show";
+        pktUIMessaging.addMessageListener(_showMessageId, function(panelId, data) {
 			// Let panel know that it is ready
-			sendMessage('show');
+			pktUIMessaging.sendMessageToPanel(panelId, _showMessageId);
 		});
 
-        // Open a new tab with a given url and activate if 
-        addMessageListener("openTabWithUrl", function(payload) {
+        // Open a new tab with a given url and activate if
+        var _openTabWithUrlMessageId = "openTabWithUrl";
+        pktUIMessaging.addMessageListener(_openTabWithUrlMessageId, function(panelId, data) {
+
+            // Check if the tab should become active after opening
             var activate = true;
-            if (typeof payload.activate !== "undefined") {
-                activate = payload.activate;
+            if (typeof data.activate !== "undefined") {
+                activate = data.activate;
             }
-            openTabWithUrl(payload.url, activate);
-            sendMessage("openTabWithUrlResponse", payload.url);
+
+            var url = data.url;
+            openTabWithUrl(url, activate);
+            pktUIMessaging.sendResponseMessageToPanel(panelId, _openTabWithUrlMessageId, url);
         });
 
 		// Close the panel
-		addMessageListener("close", function(payload) {
+		var _closeMessageId = "close";
+       pktUIMessaging.addMessageListener(_closeMessageId, function(panelId, data) {
 			getPanel().hidePopup();
 		});
 
 		// Send the current url to the panel
-		addMessageListener("getCurrentURL", function(payload) {
-			sendMessage('getCurrentURLResponse', getCurrentUrl());
+		var _getCurrentURLMessageId = "getCurrentURL";
+       pktUIMessaging.addMessageListener(_getCurrentURLMessageId, function(panelId, data) {
+            pktUIMessaging.sendResponseMessageToPanel(panelId, _getCurrentURLMessageId, getCurrentUrl());
 		});
+
+        var _resizePanelMessageId = "resizePanel";
+        pktUIMessaging.addMessageListener(_resizePanelMessageId, function(panelId, data) {
+           resizePanel(data);
+        });
 
 		// Callback post initialization to tell background script that panel is "ready" for communication.
-		addMessageListener("listenerReady", function(payload) {
+       pktUIMessaging.addMessageListener("listenerReady", function(panelId, data) {
+
+       });
+
+       pktUIMessaging.addMessageListener("collapseSavePanel", function(panelId, data) {
+           if (!pktApi.isPremiumUser())
+               resizePanel({width:savePanelWidth, height:savePanelHeights.collapsed});
 		});
 
-		addMessageListener("resizePanel", function(payload) {
-			resizePanel(payload);
+		pktUIMessaging.addMessageListener("expandSavePanel", function(panelId, data) {
+           resizePanel({width:savePanelWidth, height:savePanelHeights.expanded});
 		});
 
 		// Ask for recently accessed/used tags for auto complete
-		addMessageListener("getTags", function(payload) {
+		var _getTagsMessageId = "getTags";
+        pktUIMessaging.addMessageListener(_getTagsMessageId, function(panelId, data) {
 			pktApi.getTags(function(tags, usedTags) {
-				sendMessage('getTagsResponse', {tags, usedTags});
+                pktUIMessaging.sendResponseMessageToPanel(panelId, _getTagsMessageId, {
+                    tags: tags,
+                    usedTags: usedTags
+                });
 			});
 		});
 
 		// Ask for suggested tags based on passed url
-		addMessageListener("getSuggestedTags", function(payload) {
-			var responseMessageId = "getSuggestedTagsResponse";
-
-			pktApi.getSuggestedTagsForURL(payload.url, {
+		var _getSuggestedTagsMessageId = "getSuggestedTags";
+       pktUIMessaging.addMessageListener(_getSuggestedTagsMessageId, function(panelId, data) {
+           pktApi.getSuggestedTagsForURL(data.url, {
 				success: function(data, response) {
 					var suggestedTags = data.suggested_tags;
 					var successResponse = {
 						status: "success",
 						value: {
-							"suggestedTags" : suggestedTags
+							suggestedTags : suggestedTags
 						}
 					}
-					sendMessage(responseMessageId, successResponse);
+					pktUIMessaging.sendResponseMessageToPanel(panelId, _getSuggestedTagsMessageId, successResponse);
 				},
 				error: function(error, response) {
-					sendErrorMessage(responseMessageId, error);
+					pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _getSuggestedTagsMessageId, error);
 				}
 			})
 		});
 
 		// Pass url and array list of tags, add to existing save item accordingly
-		addMessageListener("addTags", function(payload) {
-			var responseMessageId = "addTagsResponse";
-
-			pktApi.addTagsToURL(payload.url, payload.tags, {
+		var _addTagsMessageId = "addTags";
+       pktUIMessaging.addMessageListener(_addTagsMessageId, function(panelId, data) {
+           pktApi.addTagsToURL(data.url, data.tags, {
 				success: function(data, response) {
-				  var successResponse = {status: "success"};
-				  sendMessage(responseMessageId, successResponse);
+				    var successResponse = {status: "success"};
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _addTagsMessageId, successResponse);
 				},
 				error: function(error, response) {
-				  sendErrorMessage(responseMessageId, error);
+				  pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _addTagsMessageId, error);
 				}
 			});
 		});
 
 		// Based on clicking "remove page" CTA, and passed unique item id, remove the item
-		addMessageListener("deleteItem", function(payload) {
-			var responseMessageId = "deleteItemResponse";
-
-			pktApi.deleteItem(payload.itemId, {
+		var _deleteItemMessageId = "deleteItem";
+       pktUIMessaging.addMessageListener(_deleteItemMessageId, function(panelId, data) {
+           pktApi.deleteItem(data.itemId, {
 				success: function(data, response) {
-				  var successResponse = {status: "success"};
-				  sendMessage(responseMessageId, successResponse);
+				    var successResponse = {status: "success"};
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _deleteItemMessageId, successResponse);
 				},
 				error: function(error, response) {
-					sendErrorMessage(responseMessageId, error);
+					pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _deleteItemMessageId, error);
 				}
 			})
 		});
@@ -747,4 +744,150 @@ var pktUI = (function() {
     	
 		isHidden
     };
+}());
+
+// -- Communication to Background -- //
+// https://developer.mozilla.org/en-US/Add-ons/Code_snippets/Interaction_between_privileged_and_non-privileged_pages
+var pktUIMessaging = (function() {
+
+    /**
+     * Prefix message id for message listening
+     */
+    function prefixedMessageId(messageId) {
+        return 'PKT_' + messageId;
+    }
+
+    /**
+     * Register a listener and callback for a specific messageId
+     */
+    function addMessageListener(messageId, callback) {
+        document.addEventListener(prefixedMessageId(messageId), function(e) { 
+            // ignore to ensure we do not pick up other events in the browser
+            if (e.target.tagName !== 'PKTMESSAGEFROMPANELELEMENT') {
+                return;
+            }
+
+            // Pass in information to callback
+            var payload = JSON.parse(e.target.getAttribute("payload"))[0];
+            var panelId = payload.panelId;
+            var data = payload.data;
+            callback(panelId, data);
+
+            // Cleanup the element
+            e.target.parentNode.removeChild(e.target);
+
+        }, false, true);
+    }
+
+    /**
+     * Remove a message listener
+     */
+    function removeMessageListener(messageId, callback) {
+        document.removeEventListener(prefixedMessageId(messageId), callback);
+    }
+
+
+    /**
+     * Send a message to the panel's iframe
+     */
+    function sendMessageToPanel(panelId, messageId, payload) {
+
+        if (!isPanelIdValid(panelId)) { return; };
+
+        var panelFrame = document.getElementById('pocket-panel-iframe');
+        if (!isPocketPanelFrameValid(panelFrame)) { return; }
+
+        var doc = panelFrame.contentWindow.document;
+        var documentElement = doc.documentElement;
+
+        // Send message to panel
+        var panelMessageId = prefixedMessageId(panelId + '_' + messageId);
+
+        var AnswerEvt = doc.createElement("PKTMessage");
+        AnswerEvt.setAttribute("payload", JSON.stringify([payload]));
+        documentElement.appendChild(AnswerEvt);
+
+        var event = doc.createEvent("HTMLEvents");
+        event.initEvent(panelMessageId, true, false);
+        AnswerEvt.dispatchEvent(event);
+    }
+
+    function sendResponseMessageToPanel(panelId, messageId, payload) {
+        var responseMessageId = messageId + "Response";
+        sendMessageToPanel(panelId, responseMessageId, payload);
+    }
+
+    /**
+     * Helper function to package an error object and send it to the panel
+     * iframe as a message response
+     */
+    function sendErrorMessageToPanel(panelId, messageId, error) {
+        var errorResponse = {status: "error", error: error};
+        sendMessageToPanel(panelId, messageId, errorResponse);
+    }
+
+    function sendErrorResponseMessageToPanel(panelId, messageId, error) {
+        var errorResponse = {status: "error", error: error};
+        sendResponseMessageToPanel(panelId, messageId, errorResponse);
+    }
+
+    /**
+     * Validation
+     */
+
+    function isPanelIdValid(panelId) {
+        // First check if panelId has a valid value > 0. We set the panelId to
+        // 0 to start. But if for some reason the message is attempted to be
+        // sent before the panel has a panelId, then it's going to send out
+        // a message with panelId 0, which is never going to be heard. If this
+        // happens, it means some race condition occurred where the panel was
+        // trying to communicate before it should.
+        if (panelId === 0) {
+            console.warn("Tried to send message to panel with id 0.")
+            return false;
+        }
+
+        return true
+    }
+
+    function isPocketPanelFrameValid(panelFrame) {
+        // Check if panel is available if not throw a warning and bailout.
+        // We likely try to send to a panel that is not visible anymore
+        if (typeof panelFrame === "undefined") {
+            console.warn("Pocket panel frame is undefined");
+            return false;
+        }
+
+        var contentWindow = panelFrame.contentWindow;
+        if (typeof contentWindow == "undefined") {
+            console.warn("Pocket panel frame content window is undefined");
+            return false;
+        }
+
+        var doc = contentWindow.document;
+        if (typeof doc === "undefined") {
+            console.warn("Pocket panel frame content window document is undefined");
+            return false;
+        }
+
+        var documentElement = doc.documentElement;
+        if (typeof documentElement === "undefined") {
+            console.warn("Pocket panel frame content window document document element is undefined");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Public
+     */
+    return {
+        addMessageListener: addMessageListener,
+        removeMessageListener: removeMessageListener,
+        sendMessageToPanel: sendMessageToPanel,
+        sendResponseMessageToPanel: sendResponseMessageToPanel,
+        sendErrorMessageToPanel: sendErrorMessageToPanel,
+        sendErrorResponseMessageToPanel: sendErrorResponseMessageToPanel
+    }
 }());
