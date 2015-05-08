@@ -28,6 +28,7 @@
 #include "nsIGfxInfo.h"
 #include "AndroidBridge.h"
 #endif
+#include "mozilla/layers/LayersTypes.h"
 
 namespace mozilla {
 
@@ -64,12 +65,6 @@ IsSupportedAudioCodec(const nsAString& aCodec,
   aOutContainsAAC = aCodec.EqualsASCII("mp4a.40.2") ||
                     aCodec.EqualsASCII("mp4a.40.5");
   if (aOutContainsAAC) {
-#ifdef XP_WIN
-    if (!Preferences::GetBool("media.fragmented-mp4.use-blank-decoder") &&
-        !WMFDecoderModule::HasAAC()) {
-      return false;
-    }
-#endif
     return true;
   }
 #ifndef MOZ_GONK_MEDIACODEC // B2G doesn't support MP3 in MP4 yet.
@@ -93,11 +88,6 @@ IsSupportedH264Codec(const nsAString& aCodec)
   }
 
 #ifdef XP_WIN
-  if (!Preferences::GetBool("media.fragmented-mp4.use-blank-decoder") &&
-      !WMFDecoderModule::HasH264()) {
-    return false;
-  }
-
   // Disable 4k video on windows vista since it performs poorly.
   if (!IsWin7OrLater() &&
       level >= H264_LEVEL_5) {
@@ -134,13 +124,15 @@ MP4Decoder::CanHandleMediaType(const nsACString& aType,
   }
 
   if (aType.EqualsASCII("audio/mp4") || aType.EqualsASCII("audio/x-m4a")) {
-    return aCodecs.IsEmpty() ||
-           IsSupportedAudioCodec(aCodecs,
-                                 aOutContainsAAC,
-                                 aOutContainsMP3);
+    return MP4Decoder::CanCreateAACDecoder() &&
+           (aCodecs.IsEmpty() ||
+            IsSupportedAudioCodec(aCodecs,
+                                  aOutContainsAAC,
+                                  aOutContainsMP3));
   }
 
-  if (!aType.EqualsASCII("video/mp4")) {
+  if (!aType.EqualsASCII("video/mp4") ||
+      !MP4Decoder::CanCreateH264Decoder()) {
     return false;
   }
 
@@ -249,5 +241,115 @@ MP4Decoder::IsEnabled()
          HavePlatformMPEGDecoders();
 }
 
-} // namespace mozilla
+static const uint8_t sTestH264ExtraData[] = {
+  0x01, 0x64, 0x00, 0x0a, 0xff, 0xe1, 0x00, 0x17, 0x67, 0x64,
+  0x00, 0x0a, 0xac, 0xd9, 0x44, 0x26, 0x84, 0x00, 0x00, 0x03,
+  0x00, 0x04, 0x00, 0x00, 0x03, 0x00, 0xc8, 0x3c, 0x48, 0x96,
+  0x58, 0x01, 0x00, 0x06, 0x68, 0xeb, 0xe3, 0xcb, 0x22, 0xc0
+};
 
+static already_AddRefed<MediaDataDecoder>
+CreateTestH264Decoder(layers::LayersBackend aBackend,
+                      mp4_demuxer::VideoDecoderConfig& aConfig)
+{
+  aConfig.mime_type = "video/avc";
+  aConfig.extra_data->AppendElements(sTestH264ExtraData,
+                                     MOZ_ARRAY_LENGTH(sTestH264ExtraData));
+
+  PlatformDecoderModule::Init();
+
+  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  if (!platform) {
+    return nullptr;
+  }
+
+  nsRefPtr<MediaDataDecoder> decoder(
+    platform->CreateVideoDecoder(aConfig, aBackend, nullptr, nullptr, nullptr));
+  if (!decoder) {
+    return nullptr;
+  }
+  nsresult rv = decoder->Init();
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return decoder.forget();
+}
+
+/* static */ bool
+MP4Decoder::CanCreateH264Decoder()
+{
+  static bool haveCachedResult = false;
+  static bool result = false;
+  if (haveCachedResult) {
+    return result;
+  }
+  mp4_demuxer::VideoDecoderConfig config;
+  nsRefPtr<MediaDataDecoder> decoder(
+    CreateTestH264Decoder(layers::LayersBackend::LAYERS_BASIC, config));
+  if (decoder) {
+    decoder->Shutdown();
+    result = true;
+  }
+  haveCachedResult = true;
+  return result;
+}
+
+static already_AddRefed<MediaDataDecoder>
+CreateTestAACDecoder(mp4_demuxer::AudioDecoderConfig& aConfig)
+{
+  PlatformDecoderModule::Init();
+
+  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  if (!platform) {
+    return nullptr;
+  }
+
+  nsRefPtr<MediaDataDecoder> decoder(
+    platform->CreateAudioDecoder(aConfig, nullptr, nullptr));
+  if (!decoder) {
+    return nullptr;
+  }
+  nsresult rv = decoder->Init();
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return decoder.forget();
+}
+
+// bipbop.mp4's extradata/config...
+static const uint8_t sTestAACExtraData[] = {
+  0x03, 0x80, 0x80, 0x80, 0x22, 0x00, 0x02, 0x00, 0x04, 0x80,
+  0x80, 0x80, 0x14, 0x40, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x11, 0x51, 0x00, 0x00, 0x11, 0x51, 0x05, 0x80, 0x80, 0x80,
+  0x02, 0x13, 0x90, 0x06, 0x80, 0x80, 0x80, 0x01, 0x02
+};
+
+static const uint8_t sTestAACConfig[] = { 0x13, 0x90 };
+
+/* static */ bool
+MP4Decoder::CanCreateAACDecoder()
+{
+  static bool haveCachedResult = false;
+  static bool result = false;
+  if (haveCachedResult) {
+    return result;
+  }
+  mp4_demuxer::AudioDecoderConfig config;
+  config.mime_type = "audio/mp4a-latm";
+  config.samples_per_second = 22050;
+  config.channel_count = 2;
+  config.bits_per_sample = 16;
+  config.aac_profile = 2;
+  config.extended_profile = 2;
+  config.audio_specific_config->AppendElements(sTestAACConfig,
+                                               MOZ_ARRAY_LENGTH(sTestAACConfig));
+  config.extra_data->AppendElements(sTestAACExtraData,
+                                    MOZ_ARRAY_LENGTH(sTestAACExtraData));
+  nsRefPtr<MediaDataDecoder> decoder(CreateTestAACDecoder(config));
+  if (decoder) {
+    decoder->Shutdown();
+    result = true;
+  }
+  haveCachedResult = true;
+  return result;
+}
+
+} // namespace mozilla

@@ -49,12 +49,18 @@ WMFMediaDataDecoder::Init()
 nsresult
 WMFMediaDataDecoder::Shutdown()
 {
-  DebugOnly<nsresult> rv = mTaskQueue->Dispatch(
-    NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessShutdown));
+  if (mTaskQueue) {
+    DebugOnly<nsresult> rv = mTaskQueue->Dispatch(
+      NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessShutdown));
 #ifdef DEBUG
-  if (NS_FAILED(rv)) {
-    NS_WARNING("WMFMediaDataDecoder::Shutdown() dispatch of task failed!");
+    if (NS_FAILED(rv)) {
+      NS_WARNING("WMFMediaDataDecoder::Shutdown() dispatch of task failed!");
+    }
+#endif
+  } else {
+    ProcessShutdown();
   }
+#ifdef DEBUG
   {
     MonitorAutoLock mon(mMonitor);
     // The MP4Reader should have flushed before calling Shutdown().
