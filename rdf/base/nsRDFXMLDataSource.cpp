@@ -134,9 +134,7 @@ protected:
     static int32_t gRefCnt;
     static nsIRDFService* gRDFService;
 
-#ifdef PR_LOGGING
     static PRLogModuleInfo* gLog;
-#endif
 
     nsresult Init();
     RDFXMLDataSourceImpl(void);
@@ -360,9 +358,7 @@ protected:
 int32_t         RDFXMLDataSourceImpl::gRefCnt = 0;
 nsIRDFService*  RDFXMLDataSourceImpl::gRDFService;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* RDFXMLDataSourceImpl::gLog;
-#endif
 
 static const char kFileURIPrefix[] = "file:";
 static const char kResourceURIPrefix[] = "resource:";
@@ -400,10 +396,8 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mIsDirty(false),
       mLoadState(eLoadState_Unloaded)
 {
-#ifdef PR_LOGGING
     if (! gLog)
         gLog = PR_NewLogModule("nsRDFXMLDataSource");
-#endif
 }
 
 
@@ -833,12 +827,10 @@ RDFXMLDataSourceImpl::Flush(void)
     if (! mURL)
         return NS_ERROR_NOT_INITIALIZED;
 
-#ifdef PR_LOGGING
     nsAutoCString spec;
     mURL->GetSpec(spec);
     PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] flush(%s)", this, spec.get()));
-#endif
 
     nsresult rv;
     if (NS_SUCCEEDED(rv = rdfXMLFlush(mURL)))
@@ -913,14 +905,12 @@ RDFXMLDataSourceImpl::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Refresh(bool aBlocking)
 {
-#ifdef PR_LOGGING
     nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
     PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] refresh(%s) %sblocking", this, spec.get(), (aBlocking ? "" : "non")));
-#endif
     
     // If an asynchronous load is already pending, then just let it do
     // the honors.
@@ -977,14 +967,12 @@ RDFXMLDataSourceImpl::Refresh(bool aBlocking)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::BeginLoad(void)
 {
-#ifdef PR_LOGGING
     nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
     PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] begin-load(%s)", this, spec.get()));
-#endif
     
     mLoadState = eLoadState_Loading;
     for (int32_t i = mObservers.Count() - 1; i >= 0; --i) {
@@ -1003,14 +991,12 @@ RDFXMLDataSourceImpl::BeginLoad(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Interrupt(void)
 {
-#ifdef PR_LOGGING
     nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
     PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] interrupt(%s)", this, spec.get()));
-#endif
     
     for (int32_t i = mObservers.Count() - 1; i >= 0; --i) {
         // Make sure to hold a strong reference to the observer so
@@ -1028,14 +1014,12 @@ RDFXMLDataSourceImpl::Interrupt(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Resume(void)
 {
-#ifdef PR_LOGGING
     nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
     PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] resume(%s)", this, spec.get()));
-#endif
     
     for (int32_t i = mObservers.Count() - 1; i >= 0; --i) {
         // Make sure to hold a strong reference to the observer so
@@ -1053,14 +1037,12 @@ RDFXMLDataSourceImpl::Resume(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::EndLoad(void)
 {
-#ifdef PR_LOGGING
     nsAutoCString spec;
     if (mURL) {
         mURL->GetSpec(spec);
     }
     PR_LOG(gLog, PR_LOG_NOTICE,
            ("rdfxml[%p] end-load(%s)", this, spec.get()));
-#endif
     
     mLoadState = eLoadState_Loaded;
 

@@ -359,26 +359,20 @@ public:
         }
     }
 
-#ifdef PR_LOGGING
     void
     LogOperation(const char* aOperation,
                  nsIRDFResource* asource,
                  nsIRDFResource* aProperty,
                  nsIRDFNode* aTarget,
                  bool aTruthValue = true);
-#endif
 
     bool    mPropagateChanges;
 
 private:
-#ifdef PR_LOGGING
     static PRLogModuleInfo* gLog;
-#endif
 };
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* InMemoryDataSource::gLog;
-#endif
 
 //----------------------------------------------------------------------
 //
@@ -790,10 +784,8 @@ InMemoryDataSource::Init()
     PL_DHashTableInit(&mForwardArcs, PL_DHashGetStubOps(), sizeof(Entry));
     PL_DHashTableInit(&mReverseArcs, PL_DHashGetStubOps(), sizeof(Entry));
 
-#ifdef PR_LOGGING
     if (! gLog)
         gLog = PR_NewLogModule("InMemoryDataSource");
-#endif
 
     return NS_OK;
 }
@@ -866,7 +858,6 @@ NS_INTERFACE_MAP_END
 ////////////////////////////////////////////////////////////////////////
 
 
-#ifdef PR_LOGGING
 void
 InMemoryDataSource::LogOperation(const char* aOperation,
                                  nsIRDFResource* aSource,
@@ -915,7 +906,6 @@ InMemoryDataSource::LogOperation(const char* aOperation,
            ("  -->(unknown-type)\n");
     }
 }
-#endif
 
 
 NS_IMETHODIMP
@@ -1125,9 +1115,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
                                  nsIRDFNode* aTarget,
                                  bool aTruthValue)
 {
-#ifdef PR_LOGGING
     LogOperation("ASSERT", aSource, aProperty, aTarget, aTruthValue);
-#endif
 
     Assertion* next = GetForwardArcs(aSource);
     Assertion* prev = next;
@@ -1265,9 +1253,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
                                    nsIRDFResource* aProperty,
                                    nsIRDFNode* aTarget)
 {
-#ifdef PR_LOGGING
     LogOperation("UNASSERT", aSource, aProperty, aTarget);
-#endif
 
     Assertion* next = GetForwardArcs(aSource);
     Assertion* prev = next;
@@ -1811,9 +1797,7 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
                 as->Mark();
                 *aDidMark = true;
 
-#ifdef PR_LOGGING
                 LogOperation("MARK", aSource, aProperty, aTarget, aTruthValue);
-#endif
 
                 return NS_OK;
             }
@@ -1835,9 +1819,7 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
         as->Mark();
         *aDidMark = true;
 
-#ifdef PR_LOGGING
         LogOperation("MARK", aSource, aProperty, aTarget, aTruthValue);
-#endif
 
         return NS_OK;
     }
@@ -1864,9 +1846,7 @@ InMemoryDataSource::Sweep()
     // Now do the notification.
     Assertion* as = info.mUnassertList;
     while (as) {
-#ifdef PR_LOGGING
         LogOperation("SWEEP", as->mSource, as->u.as.mProperty, as->u.as.mTarget, as->u.as.mTruthValue);
-#endif
         if (!(as->mHashEntry))
         {
             for (int32_t i = int32_t(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
