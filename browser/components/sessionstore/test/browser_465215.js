@@ -1,36 +1,28 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-function test() {
-  /** Test for Bug 465215 **/
+let uniqueName = "bug 465215";
+let uniqueValue1 = "as good as unique: " + Date.now();
+let uniqueValue2 = "as good as unique: " + Math.random();
 
-  waitForExplicitFinish();
-
-  let uniqueName = "bug 465215";
-  let uniqueValue1 = "as good as unique: " + Date.now();
-  let uniqueValue2 = "as good as unique: " + Math.random();
-
+add_task(function* () {
   // set a unique value on a new, blank tab
-  let tab1 = gBrowser.addTab();
-  promiseBrowserLoaded(tab1.linkedBrowser).then(() => {
-    ss.setTabValue(tab1, uniqueName, uniqueValue1);
+  let tab1 = gBrowser.addTab("about:blank");
+  yield promiseBrowserLoaded(tab1.linkedBrowser);
+  ss.setTabValue(tab1, uniqueName, uniqueValue1);
 
-    // duplicate the tab with that value
-    let tab2 = ss.duplicateTab(window, tab1);
-    is(ss.getTabValue(tab2, uniqueName), uniqueValue1, "tab value was duplicated");
+  // duplicate the tab with that value
+  let tab2 = ss.duplicateTab(window, tab1);
+  yield promiseTabRestored(tab2);
+  is(ss.getTabValue(tab2, uniqueName), uniqueValue1, "tab value was duplicated");
 
-    ss.setTabValue(tab2, uniqueName, uniqueValue2);
-    isnot(ss.getTabValue(tab1, uniqueName), uniqueValue2, "tab values aren't sync'd");
+  ss.setTabValue(tab2, uniqueName, uniqueValue2);
+  isnot(ss.getTabValue(tab1, uniqueName), uniqueValue2, "tab values aren't sync'd");
 
-    // overwrite the tab with the value which should remove it
-    promiseTabState(tab1, {entries: []}).then(() => {
-      is(ss.getTabValue(tab1, uniqueName), "", "tab value was cleared");
+  // overwrite the tab with the value which should remove it
+  yield promiseTabState(tab1, {entries: []});
+  is(ss.getTabValue(tab1, uniqueName), "", "tab value was cleared");
 
-      // clean up
-      gBrowser.removeTab(tab2);
-      gBrowser.removeTab(tab1);
-      finish();
-    });
-  });
-}
+  // clean up
+  gBrowser.removeTab(tab2);
+  gBrowser.removeTab(tab1);
+});
