@@ -604,7 +604,9 @@ function resizeAndCheckWidths(first, second, third, checks, cb) {
 }
 
 function getChatBar() {
-  return document.getElementById("pinnedchats");
+  let cb = document.getElementById("pinnedchats");
+  cb.hidden = false;
+  return cb;
 }
 
 function getPopupWidth() {
