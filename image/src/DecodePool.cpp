@@ -192,6 +192,7 @@ public:
   /// Pushes a new decode work item.
   void PushWork(Decoder* aDecoder)
   {
+    MOZ_ASSERT(aDecoder);
     nsRefPtr<Decoder> decoder(aDecoder);
 
     MonitorAutoLock lock(mMonitor);
@@ -201,35 +202,37 @@ public:
       return;
     }
 
-    mQueue.AppendElement(Move(decoder));
+    if (aDecoder->IsSizeDecode()) {
+      mSizeDecodeQueue.AppendElement(Move(decoder));
+    } else {
+      mFullDecodeQueue.AppendElement(Move(decoder));
+    }
+
     mMonitor.Notify();
   }
 
   /// Pops a new work item, blocking if necessary.
   Work PopWork()
   {
-    Work work;
-
     MonitorAutoLock lock(mMonitor);
 
     do {
-      if (!mQueue.IsEmpty()) {
-        // XXX(seth): This is NOT efficient, obviously, since we're removing an
-        // element from the front of the array. However, it's not worth
-        // implementing something better right now, because we are replacing
-        // this FIFO behavior with LIFO behavior very soon.
-        work.mType = Work::Type::DECODE;
-        work.mDecoder = mQueue.ElementAt(0);
-        mQueue.RemoveElementAt(0);
+      // XXX(seth): The queue popping code below is NOT efficient, obviously,
+      // since we're removing an element from the front of the array. However,
+      // it's not worth implementing something better right now, because we are
+      // replacing this FIFO behavior with LIFO behavior very soon.
 
-#ifdef MOZ_NUWA_PROCESS
-        nsThreadManager::get()->SetThreadWorking();
-#endif // MOZ_NUWA_PROCESS
+      // Prioritize size decodes over full decodes.
+      if (!mSizeDecodeQueue.IsEmpty()) {
+        return PopWorkFromQueue(mSizeDecodeQueue);
+      }
 
-        return work;
+      if (!mFullDecodeQueue.IsEmpty()) {
+        return PopWorkFromQueue(mFullDecodeQueue);
       }
 
       if (mShuttingDown) {
+        Work work;
         work.mType = Work::Type::SHUTDOWN;
         return work;
       }
@@ -246,11 +249,26 @@ public:
 private:
   ~DecodePoolImpl() { }
 
+  Work PopWorkFromQueue(nsTArray<nsRefPtr<Decoder>>& aQueue)
+  {
+    Work work;
+    work.mType = Work::Type::DECODE;
+    work.mDecoder = aQueue.ElementAt(0);
+    aQueue.RemoveElementAt(0);
+
+#ifdef MOZ_NUWA_PROCESS
+    nsThreadManager::get()->SetThreadWorking();
+#endif // MOZ_NUWA_PROCESS
+
+    return work;
+  }
+
   nsThreadPoolNaming mThreadNaming;
 
   // mMonitor guards mQueue and mShuttingDown.
   Monitor mMonitor;
-  nsTArray<nsRefPtr<Decoder>> mQueue;
+  nsTArray<nsRefPtr<Decoder>> mSizeDecodeQueue;
+  nsTArray<nsRefPtr<Decoder>> mFullDecodeQueue;
   bool mShuttingDown;
 };
 
