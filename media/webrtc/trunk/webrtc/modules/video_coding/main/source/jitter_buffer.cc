@@ -643,14 +643,12 @@ VCMFrameBufferEnum VCMJitterBuffer::GetFrame(const VCMPacket& packet,
   // slices of the same lower-case frame (timestamp), the more complete
   // solution for FindFrame that uses the seqNum and can move packets
   // between sessions would be needed.
-  if (packet.completeNALU != kNaluComplete) {
-    *frame = incomplete_frames_.FindFrame(packet.seqNum, packet.timestamp);
-    if (*frame)
-      return kNoError;
-    *frame = decodable_frames_.FindFrame(packet.seqNum, packet.timestamp);
-    if (*frame && (*frame)->GetState() != kStateComplete)
-      return kNoError;
-  }
+  *frame = incomplete_frames_.FindFrame(packet.seqNum, packet.timestamp);
+  if (*frame)
+    return kNoError;
+  *frame = decodable_frames_.FindFrame(packet.seqNum, packet.timestamp);
+  if (*frame && (*frame)->GetState() != kStateComplete)
+    return kNoError;
 
   // No match, return empty frame.
   *frame = GetEmptyFrame();
