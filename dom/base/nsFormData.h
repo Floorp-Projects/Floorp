@@ -15,13 +15,13 @@
 #include "nsTArray.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/FormDataBinding.h"
 
 namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-class File;
 class HTMLFormElement;
 class GlobalObject;
 } // namespace dom
