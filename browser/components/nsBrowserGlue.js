@@ -2929,11 +2929,14 @@ let E10SUINotification = {
     Services.prefs.setIntPref("browser.displayedE10SNotice", this.CURRENT_NOTICE_COUNT);
 
     let nb = win.document.getElementById("high-priority-global-notificationbox");
-    let message = "You're now helping to test Process Separation (e10s)! Please report problems you find.";
+    let message = win.gNavigatorBundle.getFormattedString(
+                    "e10s.postActivationInfobar.message",
+                    [gBrandBundle.GetStringFromName("brandShortName")]
+                  );
     let buttons = [
       {
-        label: "Learn More",
-        accessKey: "L",
+        label: win.gNavigatorBundle.getString("e10s.postActivationInfobar.learnMore.label"),
+        accessKey: win.gNavigatorBundle.getString("e10s.postActivationInfobar.learnMore.accesskey"),
         callback: function () {
           win.openUILinkIn("https://wiki.mozilla.org/Electrolysis", "tab");
         }
@@ -2951,10 +2954,13 @@ let E10SUINotification = {
 
     let browser = win.gBrowser.selectedBrowser;
 
-    let promptMessage = "Multi-process is coming soon to Firefox. You can start using it now to get early access to some of the benefits:";
+    let promptMessage = win.gNavigatorBundle.getFormattedString(
+                          "e10s.offerPopup.mainMessage",
+                          [gBrandBundle.GetStringFromName("brandShortName")]
+                        );
     let mainAction = {
-      label: "Enable and Restart",
-      accessKey: "E",
+      label: win.gNavigatorBundle.getString("e10s.offerPopup.enableAndRestart.label"),
+      accessKey: win.gNavigatorBundle.getString("e10s.offerPopup.enableAndRestart.accesskey"),
       callback: function () {
         Services.prefs.setBoolPref("browser.tabs.remote.autostart", true);
         Services.prefs.setBoolPref("browser.enabledE10SFromPrompt", true);
@@ -2968,8 +2974,8 @@ let E10SUINotification = {
     };
     let secondaryActions = [
       {
-        label: "No thanks",
-        accessKey: "N",
+        label: win.gNavigatorBundle.getString("e10s.offerPopup.noThanks.label"),
+        accessKey: win.gNavigatorBundle.getString("e10s.offerPopup.noThanks.accesskey"),
         callback: function () {
           Services.prefs.setIntPref(E10SUINotification.CURRENT_PROMPT_PREF, 5);
         }
@@ -2984,8 +2990,8 @@ let E10SUINotification = {
     win.PopupNotifications.show(browser, "enable-e10s", promptMessage, null, mainAction, secondaryActions, options);
 
     let highlights = [
-      "Improved responsiveness",
-      "Fewer crashes"
+      win.gNavigatorBundle.getString("e10s.offerPopup.highlight1"),
+      win.gNavigatorBundle.getString("e10s.offerPopup.highlight2")
     ];
 
     let doorhangerExtraContent = win.document.getElementById("enable-e10s-notification")
@@ -3016,10 +3022,13 @@ let E10SUINotification = {
 
     let browser = win.gBrowser.selectedBrowser;
 
-    let promptMessage = "Multiprocess Nightly (e10s) does not yet support accessibility features. Multiprocessing will be disabled if you restart Firefox. Would you like to restart?";
+    let promptMessage = win.gNavigatorBundle.getFormattedString(
+                          "e10s.accessibilityNotice.mainMessage",
+                          [gBrandBundle.GetStringFromName("brandShortName")]
+                        );
     let mainAction = {
-      label: "Disable and Restart",
-      accessKey: "R",
+      label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.disableAndRestart.label"),
+      accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.disableAndRestart.accesskey"),
       callback: function () {
         // Restart the app
         let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
@@ -3031,8 +3040,8 @@ let E10SUINotification = {
     };
     let secondaryActions = [
       {
-        label: "Don't Disable",
-        accessKey: "D",
+        label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.label"),
+        accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.accesskey"),
         callback: function () {
           Services.prefs.setBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
         }
