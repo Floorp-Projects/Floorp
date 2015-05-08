@@ -71,9 +71,7 @@ class GypContext(TemplateContext):
         """Returns the allowed variables for a GypContext."""
         # Using a class method instead of a class variable to hide the content
         # from sphinx.
-        return dict(VARIABLES,
-        EXTRA_ASSEMBLER_FLAGS=(List, list, '', None),
-    )
+        return dict(VARIABLES)
 
 
 def encode(value):
@@ -203,7 +201,7 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                     continue
                 context['LOCAL_INCLUDES'] += [include]
 
-            context['EXTRA_ASSEMBLER_FLAGS'] = target_conf.get('asflags_mozilla', [])
+            context['ASFLAGS'] = target_conf.get('asflags_mozilla', [])
             flags = target_conf.get('cflags_mozilla', [])
             if flags:
                 suffix_map = {
