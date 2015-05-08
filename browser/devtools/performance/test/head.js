@@ -195,7 +195,8 @@ function initBackend(aUrl, targetOps={}) {
     // may not exist. Possible options that will actually work:
     // TEST_MOCK_MEMORY_ACTOR = true
     // TEST_MOCK_TIMELINE_ACTOR = true
-    // TEST_MOCK_BUFFER_CHECK_TIMER = number
+    // TEST_MOCK_PROFILER_CHECK_TIMER = number
+    // TEST_PROFILER_FILTER_STATUS = array
     merge(target, targetOps);
 
     let connection = getPerformanceActorsConnection(target);
@@ -206,7 +207,7 @@ function initBackend(aUrl, targetOps={}) {
   });
 }
 
-function initPerformance(aUrl, selectedTool="performance", targetOps={}) {
+function initPerformance(aUrl, tool="performance", targetOps={}) {
   info("Initializing a performance pane.");
 
   return Task.spawn(function*() {
@@ -220,9 +221,11 @@ function initPerformance(aUrl, selectedTool="performance", targetOps={}) {
     // may not exist. Possible options that will actually work:
     // TEST_MOCK_MEMORY_ACTOR = true
     // TEST_MOCK_TIMELINE_ACTOR = true
+    // TEST_MOCK_PROFILER_CHECK_TIMER = number
+    // TEST_PROFILER_FILTER_STATUS = array
     merge(target, targetOps);
 
-    let toolbox = yield gDevTools.showToolbox(target, selectedTool);
+    let toolbox = yield gDevTools.showToolbox(target, tool);
     let panel = toolbox.getCurrentPanel();
     return { target, panel, toolbox };
   });

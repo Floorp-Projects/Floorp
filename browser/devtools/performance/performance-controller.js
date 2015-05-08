@@ -97,6 +97,11 @@ const EVENTS = {
   RECORDING_IMPORTED: "Performance:RecordingImported",
   RECORDING_EXPORTED: "Performance:RecordingExported",
 
+  // When the front has updated information on the profiler's circular buffer
+  PROFILER_STATUS_UPDATED: "Performance:BufferUpdated",
+
+  // When the PerformanceView updates the display of the buffer status
+  UI_BUFFER_STATUS_UPDATED: "Performance:UI:BufferUpdated",
 
   // Emitted by the JITOptimizationsView when it renders new optimization
   // data and clears the optimization data
@@ -184,6 +189,7 @@ let PerformanceController = {
     this._onPrefChanged = this._onPrefChanged.bind(this);
     this._onThemeChanged = this._onThemeChanged.bind(this);
     this._onRecordingStateChange = this._onRecordingStateChange.bind(this);
+    this._onProfilerStatusUpdated = this._onProfilerStatusUpdated.bind(this);
 
     // All boolean prefs should be handled via the OptionsView in the
     // ToolbarView, so that they may be accessible via the "gear" menu.
@@ -203,6 +209,7 @@ let PerformanceController = {
     gFront.on("recording-started", this._onRecordingStateChange);
     gFront.on("recording-stopping", this._onRecordingStateChange);
     gFront.on("recording-stopped", this._onRecordingStateChange);
+    gFront.on("profiler-status", this._onProfilerStatusUpdated);
     ToolbarView.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceView.on(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.on(EVENTS.UI_STOP_RECORDING, this.stopRecording);
@@ -225,6 +232,7 @@ let PerformanceController = {
     gFront.off("recording-started", this._onRecordingStateChange);
     gFront.off("recording-stopping", this._onRecordingStateChange);
     gFront.off("recording-stopped", this._onRecordingStateChange);
+    gFront.on("profiler-status", this._onProfilerStatusUpdated);
     ToolbarView.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceView.off(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.off(EVENTS.UI_STOP_RECORDING, this.stopRecording);
@@ -428,6 +436,13 @@ let PerformanceController = {
     }
 
     this.emit(EVENTS.THEME_CHANGED, data.newValue);
+  },
+
+  /**
+   * Emitted when the front updates RecordingModel's buffer status.
+   */
+  _onProfilerStatusUpdated: function (_, data) {
+    this.emit(EVENTS.PROFILER_STATUS_UPDATED, data);
   },
 
   /**
