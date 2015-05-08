@@ -347,11 +347,12 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
 }
 
 nsresult NrIceMediaStream::GetDefaultCandidate(
+    int component,
     NrIceCandidate* candidate) const {
 
   nr_ice_candidate *cand;
 
-  int r = nr_ice_media_stream_get_default_candidate(stream_, 1, &cand);
+  int r = nr_ice_media_stream_get_default_candidate(stream_, component, &cand);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't get default ICE candidate for '"
               << name_ << "'");

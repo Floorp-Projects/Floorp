@@ -113,6 +113,7 @@ private:
   void LoadMsids(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   void LoadExtmap(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   void LoadRtcpFb(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
+  void LoadRtcp(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   static SdpRtpmapAttributeList::CodecType GetCodecType(rtp_ptype type);
 
   bool

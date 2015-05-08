@@ -389,7 +389,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // This passes a candidate:... attribute  and level
   sigslot::signal2<const std::string&, uint16_t> SignalCandidate;
   // This passes address, port, level of the default candidate.
-  sigslot::signal3<const std::string&, uint16_t, uint16_t>
+  sigslot::signal5<const std::string&, uint16_t,
+                   const std::string&, uint16_t, uint16_t>
       SignalEndOfLocalCandidates;
 
  private:
@@ -448,6 +449,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                         const std::string &candidate);
   void EndOfLocalCandidates(const std::string& aDefaultAddr,
                             uint16_t aDefaultPort,
+                            const std::string& aDefaultRtcpAddr,
+                            uint16_t aDefaultRtcpPort,
                             uint16_t aMLine);
 
   void IceGatheringStateChange_m(NrIceCtx* ctx,
@@ -457,6 +460,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void OnCandidateFound_m(const std::string &candidate, uint16_t aMLine);
   void EndOfLocalCandidates_m(const std::string& aDefaultAddr,
                               uint16_t aDefaultPort,
+                              const std::string& aDefaultRtcpAddr,
+                              uint16_t aDefaultRtcpPort,
                               uint16_t aMLine);
   bool IsIceCtxReady() const {
     return mProxyResolveCompleted;
