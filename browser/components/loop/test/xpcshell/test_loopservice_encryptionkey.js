@@ -9,6 +9,7 @@ const kFxAKeyPref = "loop.key.fxa";
 
 do_register_cleanup(function() {
   Services.prefs.clearUserPref(kGuestKeyPref);
+  Services.prefs.clearUserPref(kFxAKeyPref);
   MozLoopServiceInternal.fxAOAuthTokenData = null;
   MozLoopServiceInternal.fxAOAuthProfile = null;
 });
@@ -57,4 +58,27 @@ add_task(function* test_fxaGetKey() {
   // Currently unimplemented, add a test when we implement the code.
   yield Assert.rejects(MozLoopService.promiseProfileEncryptionKey(),
     /not implemented/, "should reject as unimplemented");
+});
+
+add_task(function test_hasEncryptionKey() {
+  MozLoopServiceInternal.fxAOAuthTokenData = null;
+  MozLoopServiceInternal.fxAOAuthProfile = null;
+
+  Services.prefs.clearUserPref(kGuestKeyPref);
+  Services.prefs.clearUserPref(kFxAKeyPref);
+
+  Assert.ok(MozLoopService.hasEncryptionKey, "should return true in guest mode without a key");
+
+  Services.prefs.setCharPref(kGuestKeyPref, "123456");
+
+  Assert.ok(MozLoopService.hasEncryptionKey, "should return true in guest mode with a key");
+
+  MozLoopServiceInternal.fxAOAuthTokenData = { token_type: "bearer" };
+  MozLoopServiceInternal.fxAOAuthProfile = { email: "fake@invalid.com" };
+
+  Assert.ok(!MozLoopService.hasEncryptionKey, "should return false in fxa mode without a key");
+
+  Services.prefs.setCharPref(kFxAKeyPref, "12345678");
+
+  Assert.ok(MozLoopService.hasEncryptionKey, "should return true in fxa mode with a key");
 });
