@@ -109,12 +109,12 @@ Readability.prototype = {
   DEFAULT_MAX_PAGES: 5,
 
   // Element tags to score by default.
-  DEFAULT_TAGS_TO_SCORE: ["SECTION", "P", "TD", "PRE"],
+  DEFAULT_TAGS_TO_SCORE: "section,h2,h3,h4,h5,h6,p,td,pre".toUpperCase().split(","),
 
   // All of the regular expressions in use within readability.
   // Defined up here so we don't instantiate them repeatedly in loops.
   REGEXPS: {
-    unlikelyCandidates: /banner|combx|comment|community|disqus|extra|foot|header|menu|remark|rss|share|shoutbox|sidebar|skyscraper|sponsor|ad-break|agegate|pagination|pager|popup/i,
+    unlikelyCandidates: /banner|combx|comment|community|disqus|extra|foot|header|menu|related|remark|rss|share|shoutbox|sidebar|skyscraper|sponsor|ad-break|agegate|pagination|pager|popup/i,
     okMaybeItsACandidate: /and|article|body|column|main|shadow/i,
     positive: /article|body|content|entry|hentry|main|page|pagination|post|text|blog|story/i,
     negative: /hidden|banner|combx|comment|com-|contact|foot|footer|footnote|masthead|media|meta|outbrain|promo|related|scroll|share|shoutbox|sidebar|skyscraper|sponsor|shopping|tags|tool|widget/i,
@@ -122,7 +122,7 @@ Readability.prototype = {
     byline: /byline|author|dateline|writtenby/i,
     replaceFonts: /<(\/?)font[^>]*>/gi,
     normalize: /\s{2,}/g,
-    videos: /https?:\/\/(www\.)?(dailymotion|youtube|youtube-nocookie|player\.vimeo)\.com/i,
+    videos: /\/\/(www\.)?(dailymotion|youtube|youtube-nocookie|player\.vimeo)\.com/i,
     nextLink: /(next|weiter|continue|>([^\|]|$)|»([^\|]|$))/i,
     prevLink: /(prev|earl|old|new|<|«)/i,
     whitespace: /^\s*$/,
@@ -739,7 +739,12 @@ Readability.prototype = {
             candidates.push(ancestor);
           }
 
-          ancestor.readability.contentScore += contentScore / (level === 0 ? 1 : level * 2);
+          // Node score divider:
+          // - parent:             1 (no division)
+          // - grandparent:        2
+          // - great grandparent+: ancestor level * 3
+          var scoreDivider = level === 0 ? 1 : level === 1 ? 2 : level * 3;
+          ancestor.readability.contentScore += contentScore / scoreDivider;
         });
       });
 
