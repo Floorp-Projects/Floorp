@@ -700,16 +700,26 @@ public:
 class SdpRtcpAttribute : public SdpAttribute
 {
 public:
-  explicit SdpRtcpAttribute(uint16_t port,
-                            sdp::NetType netType = sdp::kNetTypeNone,
-                            sdp::AddrType addrType = sdp::kAddrTypeNone,
-                            const std::string& address = "")
+  explicit SdpRtcpAttribute(uint16_t port)
+    : SdpAttribute(kRtcpAttribute),
+      mPort(port),
+      mNetType(sdp::kNetTypeNone),
+      mAddrType(sdp::kAddrTypeNone)
+  {}
+
+  SdpRtcpAttribute(uint16_t port,
+                   sdp::NetType netType,
+                   sdp::AddrType addrType,
+                   const std::string& address)
       : SdpAttribute(kRtcpAttribute),
         mPort(port),
         mNetType(netType),
         mAddrType(addrType),
         mAddress(address)
   {
+    MOZ_ASSERT(netType != sdp::kNetTypeNone);
+    MOZ_ASSERT(addrType != sdp::kAddrTypeNone);
+    MOZ_ASSERT(!address.empty());
   }
 
   virtual void Serialize(std::ostream& os) const override;
