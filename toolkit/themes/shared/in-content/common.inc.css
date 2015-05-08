@@ -412,6 +412,10 @@ html|a:hover,
   text-decoration: underline;
 }
 
+html|a:visited {
+  color: #551a8b;
+}
+
 html|a:hover:active,
 .text-link:hover:active,
 .inline-link:hover:active {
