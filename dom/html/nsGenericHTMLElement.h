@@ -1266,6 +1266,9 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
 public:
   explicit nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGenericHTMLFormElement,
+                                           nsGenericHTMLElement)
+
   NS_DECL_ISUPPORTS_INHERITED
 
   nsINode* GetScopeChainParent() const override;
@@ -1413,7 +1416,7 @@ protected:
   FocusTristate FocusState();
 
   /** The form that contains this control */
-  mozilla::dom::HTMLFormElement* mForm;
+  nsRefPtr<mozilla::dom::HTMLFormElement> mForm;
 
   /* This is a pointer to our closest fieldset parent if any */
   mozilla::dom::HTMLFieldSetElement* mFieldSet;
