@@ -79,6 +79,7 @@ from .reader import SandboxValidationError
 from .context import (
     Context,
     SubContext,
+    TemplateContext,
 )
 
 
@@ -560,7 +561,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'EXTRA_PP_COMPONENTS',
             'FAIL_ON_WARNINGS',
             'USE_STATIC_LIBS',
-            'IS_GYP_DIR',
             'NO_DIST_INSTALL',
             'PYTHON_UNIT_TESTS',
             'RCFILE',
@@ -590,6 +590,9 @@ class TreeMetadataEmitter(LoggingMixin):
         # NO_VISIBILITY_FLAGS is slightly different
         if context['NO_VISIBILITY_FLAGS']:
             passthru.variables['VISIBILITY_FLAGS'] = ''
+
+        if isinstance(context, TemplateContext) and context.template == 'Gyp':
+            passthru.variables['IS_GYP_DIR'] = True
 
         for obj in self._process_sources(context, passthru):
             yield obj
