@@ -122,6 +122,12 @@ void profiler_free_backtrace(ProfilerBacktrace* aBacktrace)
 }
 
 static inline
+void profiler_get_backtrace_noalloc(char *output, size_t outputSize)
+{
+  return mozilla_sampler_get_backtrace_noalloc(output, outputSize);
+}
+
+static inline
 bool profiler_is_active()
 {
   return mozilla_sampler_is_active();
