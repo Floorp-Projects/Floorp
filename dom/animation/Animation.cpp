@@ -576,10 +576,18 @@ Animation::DoPlay(LimitBehavior aLimitBehavior)
     return;
   }
 
-  // Clear the start time until we resolve a new one (unless we are aborting
-  // a pending pause operation, in which case we keep the old start time so
-  // that the animation continues moving uninterrupted by the aborted pause).
-  if (!abortedPause) {
+  // Clear the start time until we resolve a new one. We do this except
+  // for the case where we are aborting a pause and don't have a hold time.
+  //
+  // If we're aborting a pause and *do* have a hold time (e.g. because
+  // the animation is finished or we just applied the auto-rewind behavior
+  // above) we should respect it by clearing the start time. If we *don't*
+  // have a hold time we should keep the current start time so that the
+  // the animation continues moving uninterrupted by the aborted pause.
+  //
+  // (If we're not aborting a pause, mHoldTime must be resolved by now
+  //  or else we would have returned above.)
+  if (!mHoldTime.IsNull()) {
     mStartTime.SetNull();
   }
 
