@@ -81,13 +81,6 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_WARN(x, ...) \
   DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoder.get(), ##__VA_ARGS__).get()))
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount() and conflicts with MediaDecoderStateMachine::GetCurrentTime
-// implementation.  With unified builds, putting this in headers is not enough.
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-
 // Certain constants get stored as member variables and then adjusted by various
 // scale factors on a per-decoder basis. We want to make sure to avoid using these
 // constants directly, so we put them in a namespace.
@@ -223,7 +216,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                    "MediaDecoderStateMachine::mNextFrameStatus (Canonical)"),
   mFragmentEndTime(-1),
   mReader(aReader),
-  mCurrentPosition(0),
+  mCurrentPosition(mTaskQueue, 0, "MediaDecoderStateMachine::mCurrentPosition (Canonical)"),
   mAudioStartTime(-1),
   mAudioEndTime(-1),
   mDecodedAudioEndTime(-1),
@@ -1324,16 +1317,6 @@ void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
   UpdatePlaybackPositionInternal(aTime);
 
   bool fragmentEnded = mFragmentEndTime >= 0 && GetMediaTime() >= mFragmentEndTime;
-  if (!mPositionChangeQueued || fragmentEnded) {
-    mPositionChangeQueued = true;
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-        mDecoder,
-        &MediaDecoder::PlaybackPositionChanged,
-        MediaDecoderEventVisibility::Observable);
-    AbstractThread::MainThread()->Dispatch(event.forget());
-  }
-
   mMetadataManager.DispatchMetadataIfNeeded(mDecoder, aTime);
 
   if (fragmentEnded) {
@@ -1387,16 +1370,6 @@ void MediaDecoderStateMachine::VolumeChanged()
   if (mAudioSink) {
     mAudioSink->SetVolume(mVolume);
   }
-}
-
-double MediaDecoderStateMachine::GetCurrentTime() const
-{
-  return static_cast<double>(mCurrentPosition) / static_cast<double>(USECS_PER_S);
-}
-
-int64_t MediaDecoderStateMachine::GetCurrentTimeUs() const
-{
-  return mCurrentPosition;
 }
 
 bool MediaDecoderStateMachine::IsRealTime() const
@@ -1459,7 +1432,7 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
 
   mEndTime = mStartTime + aDuration;
 
-  if (mDecoder && mEndTime >= 0 && mEndTime < mCurrentPosition) {
+  if (mDecoder && mEndTime >= 0 && mEndTime < mCurrentPosition.ReadOnWrongThread()) {
     // The current playback position is now past the end of the element duration
     // the user agent must also seek to the time of the end of the media
     // resource.
@@ -2498,7 +2471,7 @@ MediaDecoderStateMachine::SeekCompleted()
   UpdatePlaybackPositionInternal(newCurrentTime);
 
   // Try to decode another frame to detect if we're at the end...
-  DECODER_LOG("Seek completed, mCurrentPosition=%lld", mCurrentPosition);
+  DECODER_LOG("Seek completed, mCurrentPosition=%lld", mCurrentPosition.Ref());
 
   // Reset quick buffering status. This ensures that if we began the
   // seek while quick-buffering, we won't bypass quick buffering mode
@@ -2565,6 +2538,7 @@ MediaDecoderStateMachine::FinishShutdown()
   mLogicalPlaybackRate.DisconnectIfConnected();
   mPreservesPitch.DisconnectIfConnected();
   mNextFrameStatus.DisconnectAll();
+  mCurrentPosition.DisconnectAll();
 
   // Shut down the watch manager before shutting down our task queue.
   mWatchManager.Shutdown();
