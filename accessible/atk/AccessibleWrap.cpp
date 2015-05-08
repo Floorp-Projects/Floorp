@@ -855,13 +855,6 @@ getIndexInParentCB(AtkObject* aAtkObj)
 {
   // We don't use Accessible::IndexInParent() because we don't include text
   // leaf nodes as children in ATK.
-  if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
-    if (ProxyAccessible* parent = proxy->Parent())
-      return parent->IndexOfEmbeddedChild(proxy);
-
-    return -1;
-  }
-
     AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
     if (!accWrap) {
         return -1;
@@ -1059,9 +1052,6 @@ GetInterfacesForProxy(ProxyAccessible* aProxy, uint32_t aInterfaces)
 
   if (aInterfaces & Interfaces::IMAGE)
     interfaces |= MAI_INTERFACE_IMAGE;
-
-  if (aInterfaces & Interfaces::DOCUMENT)
-    interfaces |= MAI_INTERFACE_DOCUMENT;
 
   return interfaces;
 }
