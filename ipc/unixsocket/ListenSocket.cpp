@@ -154,19 +154,23 @@ ListenSocketIO::Listen(ConnectionOrientedSocketIO* aCOSocketIO)
       FireSocketError();
       return;
     }
+    if (!mConnector->SetUpListenSocket(GetFd())) {
+      NS_WARNING("Could not set up listen socket!");
+      FireSocketError();
+      return;
+    }
+    // This will set things we don't particularly care about, but
+    // it will hand back the correct structure size which is what
+    // we do care about.
+    if (!mConnector->CreateAddr(true, mAddrSize, mAddr, nullptr)) {
+      NS_WARNING("Cannot create socket address!");
+      FireSocketError();
+      return;
+    }
     SetFd(fd);
   }
 
   mCOSocketIO = aCOSocketIO;
-
-  // This will set things we don't particularly care about, but
-  // it will hand back the correct structure size which is what
-  // we do care about.
-  if (!mConnector->CreateAddr(true, mAddrSize, mAddr, nullptr)) {
-    NS_WARNING("Cannot create socket address!");
-    FireSocketError();
-    return;
-  }
 
   // calls OnListening on success, or OnError otherwise
   nsresult rv = UnixSocketWatcher::Listen(
@@ -187,12 +191,6 @@ ListenSocketIO::OnListening()
 {
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_LISTENING);
-
-  if (!mConnector->SetUpListenSocket(GetFd())) {
-    NS_WARNING("Could not set up listen socket!");
-    FireSocketError();
-    return;
-  }
 
   AddWatchers(READ_WATCHER, true);
 
