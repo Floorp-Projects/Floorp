@@ -903,7 +903,7 @@ ProxyAccessible::TakeFocus()
   unused << mDoc->SendTakeFocus(mID);
 }
 
-ssize_t
+int32_t
 ProxyAccessible::IndexOfEmbeddedChild(const ProxyAccessible* aChild)
 {
   uint64_t childID = aChild->mID;
