@@ -669,11 +669,20 @@ function injectLoopAPI(targetWindow) {
       },
     },
 
+    /**
+     * Start the FxA login flow using the OAuth client and params from the Loop
+     * server.
+     *
+     * @param {Boolean} forceReAuth Set to true to force FxA into a re-auth even
+     *                              if the user is already logged in.
+     * @return {Promise} Returns a promise that is resolved on successful
+     *                   completion, or rejected otherwise.
+     */
     logInToFxA: {
       enumerable: true,
       writable: true,
-      value: function() {
-        return MozLoopService.logInToFxA();
+      value: function(forceReAuth) {
+        return MozLoopService.logInToFxA(forceReAuth);
       }
     },
 
@@ -691,6 +700,18 @@ function injectLoopAPI(targetWindow) {
       value: function() {
         return MozLoopService.openFxASettings();
       },
+    },
+
+    /**
+     * Returns true if this profile has an encryption key.
+     *
+     * @return {Boolean} True if the profile has an encryption key.
+     */
+    hasEncryptionKey: {
+      enumerable: true,
+      get: function() {
+        return MozLoopService.hasEncryptionKey;
+      }
     },
 
     /**

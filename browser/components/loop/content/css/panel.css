@@ -23,6 +23,41 @@ body {
   margin: 0;
 }
 
+/* Sign-in request view */
+
+.sign-in-request {
+  text-align: center;
+  vertical-align: middle;
+  margin: 2em 0;
+}
+
+.sign-in-request > h1 {
+  font-size: 1.7em;
+  margin-bottom: .2em;
+}
+
+.sign-in-request > h2,
+.sign-in-request > a {
+  font-size: 1.2em;
+}
+
+.sign-in-request > a {
+  cursor: pointer;
+  color: #0295df;
+}
+
+.sign-in-request > a:hover:active {
+  text-decoration: underline;
+}
+
+.sign-in-request-button {
+  font-size: 1rem;
+  margin: 1rem;
+  width: 80%;
+  padding: .5rem 1rem;
+  border-radius: 3px;
+}
+
 /* Tabs and tab selection buttons */
 
 .tab-view-container {
