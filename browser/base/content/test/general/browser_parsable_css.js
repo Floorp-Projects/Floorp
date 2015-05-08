@@ -24,8 +24,6 @@ const kWhitelist = [
   // Highlighter CSS uses chrome-only pseudo-class, see bug 985597.
   {sourceName: /highlighter\.css/i,
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i},
-  // Tracked in bug 1160629.
-  {sourceName: /pocket\/panels\/css\/.*\.css/i},
 ];
 
 let moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");
