@@ -2773,6 +2773,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </handlers>
   </binding>
 
+  <!-- This is the XBL notification definition for the login fill doorhanger,
+       which is empty because the actual panel is not implemented inside an XBL
+       binding, but made of elements added to the notification panel. This
+       allows accessing the full structure while the panel is hidden. -->
+  <binding id="password-fill-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
+    <content>
+      <children/>
+    </content>
+  </binding>
+
   <binding id="splitmenu">
     <content>
       <xul:hbox anonid="menuitem" flex="1"

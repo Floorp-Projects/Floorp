@@ -173,7 +173,7 @@ var gMessageIds = [];
  *     - text (string): Text to show as banner message
  *     - url (string): URL to open when banner is clicked
  *     - icon (data URI): Icon to appear in banner
- *     - target_geo (string): Country code for where this message should be shown (e.g. "US")
+ *     - countries (list of strings): Country codes for where this message should be shown (e.g. ["US", "GR"])
  */
 function updateBanner(messages) {
   // Remove the current messages, if there are any.
@@ -194,9 +194,10 @@ function updateBanner(messages) {
 
   messages.forEach(function(message) {
     // Don't add this message to the banner if it's not supposed to be shown in this country.
-    if ("target_geo" in message && message.target_geo != gCountryCode) {
+    if ("countries" in message && message.countries.indexOf(gCountryCode) === -1) {
       return;
     }
+
     let id = Home.banner.add({
       text: message.text,
       icon: message.icon,

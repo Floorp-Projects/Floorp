@@ -143,6 +143,11 @@ function createBookmark (data) {
 }
 exports.createBookmark = createBookmark;
 
+function historyBatch () {
+  hsrv.runInBatchMode(() => {}, null);
+}
+exports.historyBatch = historyBatch;
+
 function createBookmarkItem (data) {
   let deferred = defer();
   data = data || {};

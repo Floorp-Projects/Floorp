@@ -41,6 +41,7 @@ EXTRA_PP_JS_MODULES += [
 
 EXTRA_JS_MODULES += [
     'InsecurePasswordUtils.jsm',
+    'LoginDoorhangers.jsm',
     'LoginHelper.jsm',
     'LoginManagerContent.jsm',
     'LoginRecipes.jsm',

@@ -82,12 +82,18 @@ let gEditItemOverlay = {
 
   // Check if the pane is initialized to show only read-only fields.
   get readOnly() {
-    // Bug 1120314 - Folder shortcuts are read-only due to some quirky implementation
-    // details (the most important being the "smart" semantics of node.title).
-    return (!this.initialized ||
-            (!this._paneInfo.visibleRows.has("tagsRow") &&
-             (this._paneInfo.isFolderShortcut ||
-              this._paneInfo.isParentReadOnly)));
+    // TODO (Bug 1120314): Folder shortcuts are currently read-only due to some
+    // quirky implementation details (the most important being the "smart"
+    // semantics of node.title that makes hard to edit the right entry).
+    // This pane is read-only if:
+    //  * the panel is not initialized
+    //  * the node is a folder shortcut
+    //  * the node is not bookmarked
+    //  * the node is child of a read-only container and is not a bookmarked URI
+    return !this.initialized ||
+           this._paneInfo.isFolderShortcut ||
+           !this._paneInfo.isItem ||
+           (this._paneInfo.isParentReadOnly && !this._paneInfo.isBookmark);
   },
 
   // the first field which was edited after this panel was initialized for
@@ -184,19 +190,25 @@ let gEditItemOverlay = {
       this._namePicker.readOnly = this.readOnly;
     }
 
-    if (showOrCollapse("locationRow", isURI, "location")) {
+    // In some cases we want to hide the location field, since it's not
+    // human-readable, but we still want to initialize it.
+    showOrCollapse("locationRow", isURI, "location");
+    if (isURI) {
       this._initLocationField();
-      this._locationField.readOnly = !this._paneInfo.isItem;
+      this._locationField.readOnly = !this.readOnly;
     }
 
-    if (showOrCollapse("descriptionRow",
-                       this._paneInfo.isItem && !this.readOnly,
+    // hide the description field for
+    if (showOrCollapse("descriptionRow", isItem && !this.readOnly,
                        "description")) {
       this._initDescriptionField();
+      this._descriptionField.readOnly = this.readOnly;
     }
 
-    if (showOrCollapse("keywordRow", isBookmark, "keyword"))
+    if (showOrCollapse("keywordRow", isBookmark, "keyword")) {
       this._initKeywordField();
+      this._keywordField.readOnly = this.readOnly;
+    }
 
     // Collapse the tag selector if the item does not accept tags.
     if (showOrCollapse("tagsRow", isURI || bulkTagging, "tags"))
@@ -355,7 +367,7 @@ let gEditItemOverlay = {
 
     // Hide the folders-separator if no folder is annotated as recently-used
     this._element("foldersSeparator").hidden = (menupopup.childNodes.length <= 6);
-    this._folderMenuList.disabled = this._readOnly;
+    this._folderMenuList.disabled = this.readOnly;
   },
 
   QueryInterface:
@@ -387,7 +399,7 @@ let gEditItemOverlay = {
   },
 
   onTagsFieldChange() {
-    if (!this.readOnly) {
+    if (this._paneInfo.isURI || this._paneInfo.bulkTagging) {
       this._updateTags().then(
         anyChanges => {
           if (anyChanges)

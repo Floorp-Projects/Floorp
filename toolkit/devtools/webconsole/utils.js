@@ -1496,13 +1496,6 @@ ConsoleAPIListener.prototype =
       messages = messages.filter((m) => m.consoleID == this.consoleID);
     }
 
-    // ConsoleAPIStorage gives up messages sorted, but we ask for different
-    // blocks of events and we must sort them again in order to show them in the
-    // proper order.
-    messages = messages.sort(function(a, b) {
-      return a.timeStamp - b.timeStamp;
-    });
-
     if (aIncludePrivate) {
       return messages;
     }
