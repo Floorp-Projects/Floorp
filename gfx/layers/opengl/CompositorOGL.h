@@ -420,8 +420,8 @@ private:
                                       const gfx::Rect& aRect,
                                       const gfx::Rect& aTexCoordRect,
                                       TextureSource *aTexture);
-  gfx::Point3D GetLineCoefficients(const gfx::Point3D& aPoint1,
-                                   const gfx::Point3D& aPoint2);
+  gfx::Point3D GetLineCoefficients(const gfx::Point& aPoint1,
+                                   const gfx::Point& aPoint2);
   void ActivateProgram(ShaderProgramOGL *aProg);
   void CleanupResources();
 
