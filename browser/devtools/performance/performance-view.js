@@ -106,8 +106,14 @@ let PerformanceView = {
     if (state === "console-recording") {
       let recording = PerformanceController.getCurrentRecording();
       let label = recording.getLabel() || "";
-      $(".console-profile-recording-notice").value = L10N.getFormatStr("consoleProfile.recordingNotice", label);
-      $(".console-profile-stop-notice").value = L10N.getFormatStr("consoleProfile.stopCommand", label);
+      // Wrap the label in quotes if it exists for the commands.
+      label = label ? `"${label}"` : "";
+
+      let startCommand = $(".console-profile-recording-notice .console-profile-command");
+      let stopCommand = $(".console-profile-stop-notice .console-profile-command");
+
+      startCommand.value = `console.profile(${label})`;
+      stopCommand.value = `console.profileEnd(${label})`;
     }
     this.emit(EVENTS.UI_STATE_CHANGED, state);
   },
