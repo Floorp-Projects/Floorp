@@ -25,10 +25,8 @@ using namespace mozilla;
 using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
-#if defined(PR_LOGGING)
 PRLogModuleInfo* gPublicKeyPinningLog =
   PR_NewLogModule("PublicKeyPinningService");
-#endif
 
 /**
  Computes in the location specified by base64Out the SHA256 digest

@@ -29,7 +29,6 @@
 
 static bool sNTLMv1Forced = false;
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo *
 GetNTLMLog()
 {
@@ -41,9 +40,6 @@ GetNTLMLog()
 
 #define LOG(x) PR_LOG(GetNTLMLog(), PR_LOG_DEBUG, x)
 #define LOG_ENABLED() PR_LOG_TEST(GetNTLMLog(), PR_LOG_DEBUG)
-#else
-#define LOG(x)
-#endif
 
 static void des_makekey(const uint8_t *raw, uint8_t *key);
 static void des_encrypt(const uint8_t *key, const uint8_t *src, uint8_t *hash);
@@ -118,8 +114,6 @@ static const char NTLM_TYPE3_MARKER[] = { 0x03, 0x00, 0x00, 0x00 };
 #define NTLMv2_BLOB1_LEN 28
 
 //-----------------------------------------------------------------------------
-
-#ifdef PR_LOGGING
 
 /**
  * Prints a description of flags to the NSPR Log, if enabled.
@@ -239,13 +233,6 @@ static void LogToken(const char *name, const void *token, uint32_t tokenLen)
     PR_Free(b64data);
   }
 }
-
-#else
-#define LogFlags(x)
-#define LogBuf(a,b,c)
-#define LogToken(a,b,c)
-
-#endif // PR_LOGGING
 
 //-----------------------------------------------------------------------------
 
@@ -1056,10 +1043,8 @@ nsNTLMAuthModule::GetNextToken(const void *inToken,
     }
   }
 
-#ifdef PR_LOGGING
   if (NS_SUCCEEDED(rv))
     LogToken("out-token", *outToken, *outTokenLen);
-#endif
 
   return rv;
 }

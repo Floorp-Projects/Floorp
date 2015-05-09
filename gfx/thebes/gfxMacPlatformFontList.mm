@@ -129,8 +129,6 @@ static NSString* GetNSStringForString(const nsAString& aSrc)
                                    length:aSrc.Length()];
 }
 
-#ifdef PR_LOGGING
-
 #define LOG_FONTLIST(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
                                PR_LOG_DEBUG, args)
 #define LOG_FONTLIST_ENABLED() PR_LOG_TEST( \
@@ -139,8 +137,6 @@ static NSString* GetNSStringForString(const nsAString& aSrc)
 #define LOG_CMAPDATA_ENABLED() PR_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_cmapdata), \
                                    PR_LOG_DEBUG)
-
-#endif // PR_LOGGING
 
 #pragma mark-
 
@@ -238,7 +234,6 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         mCharacterMap = new gfxCharacterMap();
     }
 
-#ifdef PR_LOGGING
     LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d hash: %8.8x%s\n",
                   NS_ConvertUTF16toUTF8(mName).get(),
                   charmap->SizeOfIncludingThis(moz_malloc_size_of),
@@ -249,7 +244,6 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
                 NS_ConvertUTF16toUTF8(mName).get());
         charmap->Dump(prefix, eGfxLog_cmapdata);
     }
-#endif
 
     return rv;
 }
@@ -542,7 +536,6 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             fontEntry->mFixedPitch = true;
         }
 
-#ifdef PR_LOGGING
         if (LOG_FONTLIST_ENABLED()) {
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
                  " with style: %s weight: %d stretch: %d"
@@ -553,7 +546,6 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
                  cssWeight, fontEntry->Stretch(),
                  appKitWeight, macTraits));
         }
-#endif
 
         // insert into font entry array of family
         AddFontEntry(fontEntry);
@@ -752,10 +744,8 @@ gfxMacPlatformFontList::InitSingleFaceList()
 
     uint32_t numFonts = singleFaceFonts.Length();
     for (uint32_t i = 0; i < numFonts; i++) {
-#ifdef PR_LOGGING
         LOG_FONTLIST(("(fontlist-singleface) face name: %s\n",
                       NS_ConvertUTF16toUTF8(singleFaceFonts[i]).get()));
-#endif
         gfxFontEntry *fontEntry = LookupLocalFont(singleFaceFonts[i],
                                                   400, 0,
                                                   NS_FONT_STYLE_NORMAL);
@@ -763,11 +753,9 @@ gfxMacPlatformFontList::InitSingleFaceList()
             nsAutoString familyName, key;
             familyName = singleFaceFonts[i];
             GenerateFontListKey(familyName, key);
-#ifdef PR_LOGGING
             LOG_FONTLIST(("(fontlist-singleface) family name: %s, key: %s\n",
                           NS_ConvertUTF16toUTF8(familyName).get(),
                           NS_ConvertUTF16toUTF8(key).get()));
-#endif
 
             // add only if doesn't exist already
             if (!mFontFamilies.GetWeak(key)) {
@@ -778,11 +766,9 @@ gfxMacPlatformFontList::InitSingleFaceList()
                 familyEntry->AddFontEntry(fontEntry);
                 familyEntry->SetHasStyles(true);
                 mFontFamilies.Put(key, familyEntry);
-#ifdef PR_LOGGING
                 LOG_FONTLIST(("(fontlist-singleface) added new family\n",
                               NS_ConvertUTF16toUTF8(familyName).get(),
                               NS_ConvertUTF16toUTF8(key).get()));
-#endif
             }
         }
     }

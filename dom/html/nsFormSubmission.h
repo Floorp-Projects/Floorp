@@ -9,11 +9,11 @@
 #include "mozilla/Attributes.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsIContent.h"
 
 class nsIURI;
 class nsIInputStream;
 class nsGenericHTMLElement;
-class nsIContent;
 class nsISaveAsCharset;
 class nsIMultiplexInputStream;
 

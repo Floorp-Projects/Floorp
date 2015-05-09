@@ -672,15 +672,16 @@ BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shap
     for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isSetProp_CallScripted() || stub->isSetProp_CallNative()) {
             ICSetPropCallSetter* nstub = static_cast<ICSetPropCallSetter*>(stub);
-            if (!AddReceiver(nstub->guard(), receivers, convertUnboxedGroups))
+            bool isOwn = nstub->isOwnSetter();
+            if (!isOwn && !AddReceiver(nstub->receiverGuard(), receivers, convertUnboxedGroups))
                 return false;
 
             if (!*holder) {
                 *holder = nstub->holder();
                 *holderShape = nstub->holderShape();
                 *commonSetter = nstub->setter();
-                *isOwnProperty = false;
-            } else if (nstub->holderShape() != *holderShape) {
+                *isOwnProperty = isOwn;
+            } else if (nstub->holderShape() != *holderShape || isOwn != *isOwnProperty) {
                 return false;
             } else {
                 MOZ_ASSERT(*commonSetter == nstub->setter());

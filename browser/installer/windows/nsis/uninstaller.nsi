@@ -397,7 +397,9 @@ Section "Uninstall"
     ${UnregisterDLL} "$INSTDIR\AccessibleMarshal.dll"
   ${EndIf}
 
-  ${un.RemovePrecompleteEntries} "false"
+  StrCpy $R2 "false"
+  StrCpy $R3 "false"
+  ${un.RemovePrecompleteEntries} "$R2" "$R3"
 
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
     Delete /REBOOTOK "$INSTDIR\defaults\pref\channel-prefs.js"

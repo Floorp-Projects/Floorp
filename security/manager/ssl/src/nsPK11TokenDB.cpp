@@ -14,9 +14,7 @@
 
 #include "nsPK11TokenDB.h"
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
-#endif
 
 NS_IMPL_ISUPPORTS(nsPK11Token, nsIPK11Token)
 

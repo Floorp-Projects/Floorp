@@ -7,20 +7,21 @@
 #ifndef nsMemoryReporterManager_h__
 #define nsMemoryReporterManager_h__
 
+#include "mozilla/Mutex.h"
+#include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
 #include "nsITimer.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/Mutex.h"
 #include "nsTHashtable.h"
-#include "nsHashKeys.h"
-
-class nsITimer;
 
 namespace mozilla {
 namespace dom {
+class ContentParent;
 class MemoryReport;
 }
 }
+
+class nsITimer;
 
 class nsMemoryReporterManager final : public nsIMemoryReporterManager
 {
@@ -43,24 +44,27 @@ public:
   typedef nsTHashtable<nsRefPtrHashKey<nsIMemoryReporter>> StrongReportersTable;
   typedef nsTHashtable<nsPtrHashKey<nsIMemoryReporter>> WeakReportersTable;
 
-  void IncrementNumChildProcesses();
-  void DecrementNumChildProcesses();
-
   // Inter-process memory reporting proceeds as follows.
   //
   // - GetReports() (declared within NS_DECL_NSIMEMORYREPORTERMANAGER)
-  //   synchronously gets memory reports for the current process, tells all
-  //   child processes to get memory reports, and sets up some state
-  //   (mGetReportsState) for when the child processes report back, including a
-  //   timer.  Control then returns to the main event loop.
+  //   synchronously gets memory reports for the current process, sets up some
+  //   state (mGetReportsState) for when child processes report back --
+  //   including a timer -- and starts telling child processes to get memory
+  //   reports.  Control then returns to the main event loop.
+  //
+  //   The number of concurrent child process reports is limited by the pref
+  //   "memory.report_concurrency" in order to prevent the memory overhead of
+  //   memory reporting from causing problems, especially on B2G when swapping
+  //   to compressed RAM; see bug 1154053.
   //
   // - HandleChildReport() is called (asynchronously) once per child process
   //   reporter callback.
   //
-  // - EndChildReport() is called (asynchronously) once per child process that
-  //   finishes reporting back.  If all child processes do so before time-out,
-  //   the timer is cancelled.  (The number of child processes is part of the
-  //   saved request state.)
+  // - EndProcessReport() is called (asynchronously) once per process that
+  //   finishes reporting back, including the parent.  If all processes do so
+  //   before time-out, the timer is cancelled.  If there are child processes
+  //   whose requests have not yet been sent, they will be started until the
+  //   concurrency limit is (again) reached.
   //
   // - TimeoutCallback() is called (asynchronously) if all the child processes
   //   don't respond within the time threshold.
@@ -104,12 +108,12 @@ public:
   //   is incomplete.
   //
   // Now, what what happens if a child process is created/destroyed in the
-  // middle of a request?  Well, GetReportsState contains a copy of
-  // mNumChildProcesses which it uses to determine finished-ness.  So...
+  // middle of a request?  Well, GetReportsState is initialized with an array
+  // of child process actors as of when the report started.  So...
   //
-  // - If a process is created, it won't have received the request for reports,
-  //   and the GetReportsState's mNumChildProcesses won't account for it.  So
-  //   the reported data will reflect how things were when the request began.
+  // - If a process is created after reporting starts, it won't be sent a
+  //   request for reports.  So the reported data will reflect how things were
+  //   when the request began.
   //
   // - If a process is destroyed before it starts reporting back, the reported
   //   data will reflect how things are when the request ends.
@@ -127,7 +131,7 @@ public:
   //
   void HandleChildReport(uint32_t aGeneration,
                          const mozilla::dom::MemoryReport& aChildReport);
-  void EndChildReport(uint32_t aGeneration, bool aSuccess);
+  void EndProcessReport(uint32_t aGeneration, bool aSuccess);
 
   // Functions that (a) implement distinguished amounts, and (b) are outside of
   // this module.
@@ -199,7 +203,6 @@ private:
   StrongReportersTable* mSavedStrongReporters;
   WeakReportersTable* mSavedWeakReporters;
 
-  uint32_t mNumChildProcesses;
   uint32_t mNextGeneration;
 
   struct GetReportsState
@@ -208,8 +211,13 @@ private:
     bool                                 mAnonymize;
     bool                                 mMinimize;
     nsCOMPtr<nsITimer>                   mTimer;
-    uint32_t                             mNumChildProcesses;
-    uint32_t                             mNumChildProcessesCompleted;
+    // This is a pointer to an nsTArray because otherwise C++ is
+    // unhappy unless this header includes ContentParent.h, which not
+    // everything that includes this header knows how to find.
+    nsTArray<nsRefPtr<mozilla::dom::ContentParent>>* mChildrenPending;
+    uint32_t                             mNumProcessesRunning;
+    uint32_t                             mNumProcessesCompleted;
+    uint32_t                             mConcurrencyLimit;
     nsCOMPtr<nsIHandleReportCallback>    mHandleReport;
     nsCOMPtr<nsISupports>                mHandleReportData;
     nsCOMPtr<nsIFinishReportingCallback> mFinishReporting;
@@ -217,7 +225,7 @@ private:
     nsString                             mDMDDumpIdent;
 
     GetReportsState(uint32_t aGeneration, bool aAnonymize, bool aMinimize,
-                    uint32_t aNumChildProcesses,
+                    uint32_t aConcurrencyLimit,
                     nsIHandleReportCallback* aHandleReport,
                     nsISupports* aHandleReportData,
                     nsIFinishReportingCallback* aFinishReporting,
@@ -226,8 +234,10 @@ private:
       : mGeneration(aGeneration)
       , mAnonymize(aAnonymize)
       , mMinimize(aMinimize)
-      , mNumChildProcesses(aNumChildProcesses)
-      , mNumChildProcessesCompleted(0)
+      , mChildrenPending(nullptr)
+      , mNumProcessesRunning(1) // reporting starts with the parent
+      , mNumProcessesCompleted(0)
+      , mConcurrencyLimit(aConcurrencyLimit)
       , mHandleReport(aHandleReport)
       , mHandleReportData(aHandleReportData)
       , mFinishReporting(aFinishReporting)
@@ -235,6 +245,8 @@ private:
       , mDMDDumpIdent(aDMDDumpIdent)
     {
     }
+
+    ~GetReportsState();
   };
 
   // When this is non-null, a request is in flight.  Note: We use manual
@@ -243,6 +255,8 @@ private:
   GetReportsState* mGetReportsState;
 
   GetReportsState* GetStateForGeneration(uint32_t aGeneration);
+  static bool StartChildReport(mozilla::dom::ContentParent* aChild,
+                               const GetReportsState* aState);
 };
 
 #define NS_MEMORY_REPORTER_MANAGER_CID \

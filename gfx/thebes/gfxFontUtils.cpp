@@ -25,12 +25,8 @@
 #include "plbase64.h"
 #include "prlog.h"
 
-#ifdef PR_LOGGING
-
 #define LOG(log, args) PR_LOG(gfxPlatform::GetLog(log), \
                                PR_LOG_DEBUG, args)
-
-#endif // PR_LOGGING
 
 #define UNICODE_BMP_LIMIT 0x10000
 
@@ -63,7 +59,6 @@ typedef struct {
 
 #pragma pack()
 
-#if PR_LOGGING
 void
 gfxSparseBitSet::Dump(const char* aPrefix, eGfxLog aWhichLog) const
 {
@@ -91,7 +86,6 @@ gfxSparseBitSet::Dump(const char* aPrefix, eGfxLog aWhichLog) const
         LOG(aWhichLog, ("%s", outStr));
     }
 }
-#endif
 
 nsresult
 gfxFontUtils::ReadCMAPTableFormat10(const uint8_t *aBuf, uint32_t aLength,

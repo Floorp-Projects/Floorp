@@ -90,8 +90,6 @@ static int nr_turn_permission_find(nr_turn_client_ctx *ctx,
                                    nr_transport_addr *addr,
                                    nr_turn_permission **permp);
 static int nr_turn_permission_destroy(nr_turn_permission **permp);
-static int nr_turn_client_ensure_perm(nr_turn_client_ctx *ctx,
-                                      nr_transport_addr *addr);
 static void nr_turn_client_refresh_cb(NR_SOCKET s, int how, void *arg);
 static void nr_turn_client_permissions_cb(NR_SOCKET s, int how, void *cb);
 static int nr_turn_client_send_stun_request(nr_turn_client_ctx *ctx,
@@ -131,6 +129,7 @@ static int nr_turn_stun_ctx_create(nr_turn_client_ctx *tctx, int mode,
   sctx->success_cb=success_cb;
   sctx->error_cb=error_cb;
   sctx->mode=mode;
+  sctx->last_error_code=0;
 
   /* Add ourselves to the tctx's list */
   STAILQ_INSERT_TAIL(&tctx->stun_ctxs, sctx, entry);
@@ -207,7 +206,7 @@ static int nr_turn_stun_ctx_start(nr_turn_stun_ctx *ctx)
 
   if ((r=nr_stun_client_reset(ctx->stun))) {
     r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): Couldn't reset STUN",
-          ctx->tctx->label);
+          tctx->label);
     ABORT(r);
   }
 
@@ -226,6 +225,8 @@ static void nr_turn_stun_ctx_cb(NR_SOCKET s, int how, void *arg)
 {
   int r, _status;
   nr_turn_stun_ctx *ctx = (nr_turn_stun_ctx *)arg;
+
+  ctx->last_error_code = ctx->stun->error_code;
 
   switch (ctx->stun->state) {
     case NR_STUN_CLIENT_STATE_DONE:
@@ -597,6 +598,19 @@ static void nr_turn_client_error_cb(NR_SOCKET s, int how, void *arg)
   nr_turn_client_failed(ctx->tctx);
 }
 
+static void nr_turn_client_permission_error_cb(NR_SOCKET s, int how, void *arg)
+{
+  nr_turn_stun_ctx *ctx = (nr_turn_stun_ctx *)arg;
+
+  if (ctx->last_error_code == 403) {
+    r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): mode %d, permission denied",
+          ctx->tctx->label, ctx->mode);
+
+  } else{
+    nr_turn_client_error_cb(0, 0, ctx);
+  }
+}
+
 int nr_turn_client_allocate(nr_turn_client_ctx *ctx,
                             NR_async_cb finished_cb, void *cb_arg)
 {
@@ -889,7 +903,7 @@ abort:
    unused.
 
 */
-static int nr_turn_client_ensure_perm(nr_turn_client_ctx *ctx, nr_transport_addr *addr)
+int nr_turn_client_ensure_perm(nr_turn_client_ctx *ctx, nr_transport_addr *addr)
 {
   int r, _status;
   nr_turn_permission *perm = 0;
@@ -949,7 +963,7 @@ static int nr_turn_permission_create(nr_turn_client_ctx *ctx, nr_transport_addr 
 
   if ((r=nr_turn_stun_ctx_create(ctx, NR_TURN_CLIENT_MODE_PERMISSION_REQUEST,
                                  nr_turn_client_permissions_cb,
-                                 nr_turn_client_error_cb,
+                                 nr_turn_client_permission_error_cb,
                                  &perm->stun)))
     ABORT(r);
 
@@ -990,6 +1004,9 @@ static int nr_turn_permission_find(nr_turn_client_ctx *ctx, nr_transport_addr *a
 
   if (!perm) {
     ABORT(R_NOT_FOUND);
+  }
+  if (perm->stun->last_error_code == 403) {
+    ABORT(R_NOT_PERMITTED);
   }
   *permp = perm;
 
