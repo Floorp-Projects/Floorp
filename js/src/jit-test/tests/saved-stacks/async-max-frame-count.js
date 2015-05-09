@@ -13,14 +13,7 @@ function recur(n, limit) {
 function checkRecursion(n, limit) {
   print("checkRecursion(" + uneval(n) + ", " + uneval(limit) + ")");
 
-  try {
-    var stack = recur(n, limit);
-  } catch (e) {
-    // Some platforms, like ASAN builds, can end up overrecursing. Tolerate
-    // these failures.
-    assertEq(/too much recursion/.test("" + e), true);
-    return;
-  }
+  var stack = recur(n, limit);
 
   // Async stacks are limited even if we didn't ask for a limit. There is a
   // default limit on frames attached on top of any synchronous frames. In this
