@@ -68,6 +68,11 @@ class InlineForwardList : protected InlineForwardListNode<T>
         return iterator(nullptr);
     }
     void removeAt(iterator where) {
+        iterator iter(where);
+        iter++;
+#ifdef DEBUG
+        iter.modifyCount_++;
+#endif
         removeAfter(where.prev, where.iter);
     }
     void pushFront(Node* t) {
@@ -109,18 +114,6 @@ class InlineForwardList : protected InlineForwardListNode<T>
             tail_ = at;
         MOZ_ASSERT(at->next == item);
         at->next = item->next;
-        item->next = nullptr;
-    }
-    void removeAndIncrement(iterator &where) {
-        // Do not change modifyCount_ here. The iterator can still be used
-        // after calling this method, unlike the other methods that modify
-        // the list.
-        Node* item = where.iter;
-        where.iter = item->next;
-        if (item == tail_)
-            tail_ = where.prev;
-        MOZ_ASSERT(where.prev->next == item);
-        where.prev->next = where.iter;
         item->next = nullptr;
     }
     void splitAfter(Node* at, InlineForwardList<T>* to) {
@@ -191,9 +184,6 @@ public:
     }
     bool operator ==(const InlineForwardListIterator<T>& where) const {
         return iter == where.iter;
-    }
-    explicit operator bool() const {
-        return iter != nullptr;
     }
 
 private:

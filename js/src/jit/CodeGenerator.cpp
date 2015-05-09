@@ -2120,13 +2120,13 @@ CodeGenerator::visitMoveGroup(LMoveGroup* group)
     for (size_t i = 0; i < group->numMoves(); i++) {
         const LMove& move = group->getMove(i);
 
-        LAllocation from = move.from();
-        LAllocation to = move.to();
+        const LAllocation* from = move.from();
+        const LAllocation* to = move.to();
         LDefinition::Type type = move.type();
 
         // No bogus moves.
-        MOZ_ASSERT(from != to);
-        MOZ_ASSERT(!from.isConstant());
+        MOZ_ASSERT(*from != *to);
+        MOZ_ASSERT(!from->isConstant());
         MoveOp::Type moveType;
         switch (type) {
           case LDefinition::OBJECT:
