@@ -626,11 +626,9 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         severity = 1.f;
       }
       mLayerManager->VisualFrameWarning(severity);
-#ifdef PR_LOGGING
       PR_LogPrint("LayerTransactionParent::RecvUpdate transaction from process %d took %f ms",
                   OtherPid(),
                   latency.ToMilliseconds());
-#endif
     }
   }
 

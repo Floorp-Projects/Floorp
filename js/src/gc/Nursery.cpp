@@ -438,33 +438,33 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     TenuringTracer mover(rt, this);
 
     // Mark the store buffer. This must happen first.
-    TIME_START(markValues);
-    sb.markValues(mover);
-    TIME_END(markValues);
+    TIME_START(traceValues);
+    sb.traceValues(mover);
+    TIME_END(traceValues);
 
-    TIME_START(markCells);
-    sb.markCells(mover);
-    TIME_END(markCells);
+    TIME_START(traceCells);
+    sb.traceCells(mover);
+    TIME_END(traceCells);
 
-    TIME_START(markSlots);
-    sb.markSlots(mover);
-    TIME_END(markSlots);
+    TIME_START(traceSlots);
+    sb.traceSlots(mover);
+    TIME_END(traceSlots);
 
-    TIME_START(markWholeCells);
-    sb.markWholeCells(mover);
-    TIME_END(markWholeCells);
+    TIME_START(traceWholeCells);
+    sb.traceWholeCells(mover);
+    TIME_END(traceWholeCells);
 
-    TIME_START(markRelocatableValues);
-    sb.markRelocatableValues(mover);
-    TIME_END(markRelocatableValues);
+    TIME_START(traceRelocatableValues);
+    sb.traceRelocatableValues(mover);
+    TIME_END(traceRelocatableValues);
 
-    TIME_START(markRelocatableCells);
-    sb.markRelocatableCells(mover);
-    TIME_END(markRelocatableCells);
+    TIME_START(traceRelocatableCells);
+    sb.traceRelocatableCells(mover);
+    TIME_END(traceRelocatableCells);
 
-    TIME_START(markGenericEntries);
-    sb.markGenericEntries(&mover);
-    TIME_END(markGenericEntries);
+    TIME_START(traceGenericEntries);
+    sb.traceGenericEntries(&mover);
+    TIME_END(traceGenericEntries);
 
     TIME_START(markRuntime);
     rt->gc.markRuntime(&mover);
@@ -574,13 +574,13 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
                 promotionRate * 100,
                 numActiveChunks_,
                 totalTime,
-                TIME_TOTAL(markValues),
-                TIME_TOTAL(markCells),
-                TIME_TOTAL(markSlots),
-                TIME_TOTAL(markWholeCells),
-                TIME_TOTAL(markRelocatableValues),
-                TIME_TOTAL(markRelocatableCells),
-                TIME_TOTAL(markGenericEntries),
+                TIME_TOTAL(traceValues),
+                TIME_TOTAL(traceCells),
+                TIME_TOTAL(traceSlots),
+                TIME_TOTAL(traceWholeCells),
+                TIME_TOTAL(traceRelocatableValues),
+                TIME_TOTAL(traceRelocatableCells),
+                TIME_TOTAL(traceGenericEntries),
                 TIME_TOTAL(checkHashTables),
                 TIME_TOTAL(markRuntime),
                 TIME_TOTAL(markDebugger),

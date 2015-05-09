@@ -627,7 +627,7 @@ const Class WeakMapObject::class_ = {
 
 static const JSFunctionSpec weak_map_methods[] = {
     JS_FN("has",    WeakMap_has, 1, 0),
-    JS_FN("get",    WeakMap_get, 2, 0),
+    JS_FN("get",    WeakMap_get, 1, 0),
     JS_FN("delete", WeakMap_delete, 1, 0),
     JS_FN("set",    WeakMap_set, 2, 0),
     JS_FN("clear",  WeakMap_clear, 0, 0),
@@ -641,8 +641,8 @@ InitWeakMapClass(JSContext* cx, HandleObject obj, bool defineMembers)
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
-    RootedObject weakMapProto(cx, global->createBlankPrototype(cx, &WeakMapObject::class_));
-    if (!weakMapProto)
+    RootedPlainObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!proto)
         return nullptr;
 
     RootedFunction ctor(cx, global->createConstructor(cx, WeakMap_construct,
@@ -650,17 +650,17 @@ InitWeakMapClass(JSContext* cx, HandleObject obj, bool defineMembers)
     if (!ctor)
         return nullptr;
 
-    if (!LinkConstructorAndPrototype(cx, ctor, weakMapProto))
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
     if (defineMembers) {
-        if (!DefinePropertiesAndFunctions(cx, weakMapProto, nullptr, weak_map_methods))
+        if (!DefinePropertiesAndFunctions(cx, proto, nullptr, weak_map_methods))
             return nullptr;
     }
 
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_WeakMap, ctor, weakMapProto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_WeakMap, ctor, proto))
         return nullptr;
-    return weakMapProto;
+    return proto;
 }
 
 JSObject*

@@ -914,6 +914,7 @@ class ArenaLists
 
     friend class GCRuntime;
     friend class js::Nursery;
+    friend class js::TenuringTracer;
 };
 
 /* The number of GC cycles an empty chunk can survive before been released. */

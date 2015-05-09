@@ -573,7 +573,8 @@ class StorageDirectoryHelper final
   mozilla::Mutex mMutex;
   mozilla::CondVar mCondVar;
   nsresult mMainThreadResultCode;
-  bool mPersistent;
+  const bool mPersistent;
+  bool mCreate;
   bool mWaiting;
 
 public:
@@ -584,17 +585,27 @@ public:
     , mCondVar(mMutex, "StorageDirectoryHelper::mCondVar")
     , mMainThreadResultCode(NS_OK)
     , mPersistent(aPersistent)
+    , mCreate(true)
     , mWaiting(true)
   {
     AssertIsOnIOThread();
   }
 
   nsresult
-  CreateOrUpgradeMetadataFiles();
+  CreateOrUpgradeMetadataFiles(bool aCreate);
+
+  nsresult
+  RestoreMetadataFile();
 
 private:
   ~StorageDirectoryHelper()
   { }
+
+  nsresult
+  AddOriginDirectory(nsIFile* aDirectory);
+
+  nsresult
+  ProcessOriginDirectories(bool aMove);
 
   nsresult
   RunOnMainThread();
@@ -1051,6 +1062,20 @@ CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
 }
 
 nsresult
+RestoreDirectoryMetadata(nsIFile* aDirectory, bool aPersistent)
+{
+  nsRefPtr<StorageDirectoryHelper> helper =
+    new StorageDirectoryHelper(aDirectory, aPersistent);
+
+  nsresult rv = helper->RestoreMetadataFile();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 GetDirectoryMetadataInputStream(nsIFile* aDirectory,
                                 nsIBinaryInputStream** aStream)
 {
@@ -1126,6 +1151,83 @@ GetDirectoryMetadata(nsIFile* aDirectory,
   if (aIsApp) {
     *aIsApp = isApp;
   }
+  return NS_OK;
+}
+
+nsresult
+GetDirectoryMetadataWithRestore(nsIFile* aDirectory,
+                                bool aPersistent,
+                                int64_t* aTimestamp,
+                                nsACString& aGroup,
+                                nsACString& aOrigin,
+                                bool* aIsApp)
+{
+  nsresult rv = GetDirectoryMetadata(aDirectory,
+                                     aTimestamp,
+                                     aGroup,
+                                     aOrigin,
+                                     aIsApp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    rv = RestoreDirectoryMetadata(aDirectory, aPersistent);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = GetDirectoryMetadata(aDirectory,
+                              aTimestamp,
+                              aGroup,
+                              aOrigin,
+                              aIsApp);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+GetDirectoryMetadata(nsIFile* aDirectory, int64_t* aTimestamp)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(aTimestamp);
+
+  nsCOMPtr<nsIBinaryInputStream> binaryStream;
+  nsresult rv =
+    GetDirectoryMetadataInputStream(aDirectory, getter_AddRefs(binaryStream));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  uint64_t timestamp;
+  rv = binaryStream->Read64(&timestamp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  *aTimestamp = timestamp;
+  return NS_OK;
+}
+
+nsresult
+GetDirectoryMetadataWithRestore(nsIFile* aDirectory,
+                                bool aPersistent,
+                                int64_t* aTimestamp)
+{
+  nsresult rv = GetDirectoryMetadata(aDirectory, aTimestamp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    rv = RestoreDirectoryMetadata(aDirectory, aPersistent);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = GetDirectoryMetadata(aDirectory, aTimestamp);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1822,6 +1924,9 @@ QuotaManager::GetDirectoryForOrigin(PersistenceType aPersistenceType,
 nsresult
 QuotaManager::InitializeRepository(PersistenceType aPersistenceType)
 {
+  MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_TEMPORARY ||
+             aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
+
   nsresult rv;
 
   nsCOMPtr<nsIFile> directory =
@@ -1885,8 +1990,12 @@ QuotaManager::InitializeRepository(PersistenceType aPersistenceType)
     nsCString group;
     nsCString origin;
     bool isApp;
-    rv = GetDirectoryMetadata(childDirectory, &timestamp, group, origin,
-                              &isApp);
+    rv = GetDirectoryMetadataWithRestore(childDirectory,
+                                         /* aPersistent */ false,
+                                         &timestamp,
+                                         group,
+                                         origin,
+                                         &isApp);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2123,7 +2232,7 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
   nsRefPtr<StorageDirectoryHelper> helper =
     new StorageDirectoryHelper(persistentStorageDir, /* aPersistent */ true);
 
-  rv = helper->CreateOrUpgradeMetadataFiles();
+  rv = helper->CreateOrUpgradeMetadataFiles(/* aCreate */ true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2159,7 +2268,7 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
     helper = new StorageDirectoryHelper(temporaryStorageDir,
                                         /* aPersistent */ false);
 
-    rv = helper->CreateOrUpgradeMetadataFiles();
+    rv = helper->CreateOrUpgradeMetadataFiles(/* aCreate */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2278,15 +2387,13 @@ QuotaManager::EnsureOriginIsInitialized(PersistenceType aPersistenceType,
                                    aIsApp);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      nsCOMPtr<nsIBinaryInputStream> stream;
-      rv = GetDirectoryMetadataInputStream(directory, getter_AddRefs(stream));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      uint64_t ts;
-      rv = stream->Read64(&ts);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      timestamp = ts;
+      bool persistent = aPersistenceType == PERSISTENCE_TYPE_PERSISTENT;
+      rv = GetDirectoryMetadataWithRestore(directory,
+                                           persistent,
+                                           &timestamp);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       MOZ_ASSERT(timestamp <= PR_Now());
     }
@@ -3775,11 +3882,18 @@ OriginClearRunnable::DeleteFiles(QuotaManager* aQuotaManager,
       continue;
     }
 
+    bool persistent = aPersistenceType == PERSISTENCE_TYPE_PERSISTENT;
+
     int64_t timestamp;
     nsCString group;
     nsCString origin;
     bool isApp;
-    rv = GetDirectoryMetadata(file, &timestamp, group, origin, &isApp);
+    rv = GetDirectoryMetadataWithRestore(file,
+                                         persistent,
+                                         &timestamp,
+                                         group,
+                                         origin,
+                                         &isApp);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
@@ -4369,14 +4483,15 @@ SaveOriginAccessTimeRunnable::Run()
 }
 
 nsresult
-StorageDirectoryHelper::CreateOrUpgradeMetadataFiles()
+StorageDirectoryHelper::CreateOrUpgradeMetadataFiles(bool aCreate)
 {
   AssertIsOnIOThread();
+  MOZ_ASSERT_IF(mPersistent, aCreate);
 
-  nsresult rv;
+  mCreate = aCreate;
 
   nsCOMPtr<nsISimpleEnumerator> entries;
-  rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsresult rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4392,67 +4507,121 @@ StorageDirectoryHelper::CreateOrUpgradeMetadataFiles()
     nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
     MOZ_ASSERT(originDir);
 
-    nsString leafName;
-    rv = originDir->GetLeafName(leafName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
     bool isDirectory;
     rv = originDir->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     if (!isDirectory) {
+      nsString leafName;
+      rv = originDir->GetLeafName(leafName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       if (!leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
         NS_WARNING("Something in the storage directory that doesn't belong!");
       }
       continue;
     }
 
-    if (mPersistent) {
-      rv = MaybeUpgradeOriginDirectory(originDir);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-
-    if (leafName.EqualsLiteral(kChromeOrigin)) {
-      OriginProps* originProps = mOriginProps.AppendElement();
-      originProps->mDirectory = originDir;
-      originProps->mSpec = kChromeOrigin;
-      originProps->mType = OriginProps::eChrome;
-    } else {
-      nsCString spec;
-      uint32_t appId;
-      bool inMozBrowser;
-      if (NS_WARN_IF(!OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
-                                                &appId, &inMozBrowser, spec))) {
-        return NS_ERROR_FAILURE;
-      }
-
-      OriginProps* originProps = mOriginProps.AppendElement();
-      originProps->mDirectory = originDir;
-      originProps->mSpec = spec;
-      originProps->mAppId = appId;
-      originProps->mType = OriginProps::eContent;
-      originProps->mInMozBrowser = inMozBrowser;
-
-      if (mPersistent) {
-        int64_t timestamp = INT64_MIN;
-        rv = GetLastModifiedTime(originDir, &timestamp);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        originProps->mTimestamp = timestamp;
-      }
+    rv = AddOriginDirectory(originDir);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 
   if (mOriginProps.IsEmpty()) {
     return NS_OK;
   }
+
+  rv = ProcessOriginDirectories(/* aMove */ true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+StorageDirectoryHelper::RestoreMetadataFile()
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mCreate);
+
+  nsresult rv = AddOriginDirectory(mDirectory);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = ProcessOriginDirectories(/* aMove */ false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+StorageDirectoryHelper::AddOriginDirectory(nsIFile* aDirectory)
+{
+  MOZ_ASSERT(aDirectory);
+
+  nsresult rv;
+
+  if (mPersistent) {
+    rv = MaybeUpgradeOriginDirectory(aDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  nsString leafName;
+  rv = aDirectory->GetLeafName(leafName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (leafName.EqualsLiteral(kChromeOrigin)) {
+    OriginProps* originProps = mOriginProps.AppendElement();
+    originProps->mDirectory = aDirectory;
+    originProps->mSpec = kChromeOrigin;
+    originProps->mType = OriginProps::eChrome;
+  } else {
+    nsCString spec;
+    uint32_t appId;
+    bool inMozBrowser;
+    if (NS_WARN_IF(!OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
+                                              &appId, &inMozBrowser, spec))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    OriginProps* originProps = mOriginProps.AppendElement();
+    originProps->mDirectory = aDirectory;
+    originProps->mSpec = spec;
+    originProps->mAppId = appId;
+    originProps->mType = OriginProps::eContent;
+    originProps->mInMozBrowser = inMozBrowser;
+
+    if (mCreate) {
+      int64_t timestamp = INT64_MIN;
+      rv = GetLastModifiedTime(aDirectory, &timestamp);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      originProps->mTimestamp = timestamp;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+StorageDirectoryHelper::ProcessOriginDirectories(bool aMove)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!mOriginProps.IsEmpty());
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
 
@@ -4473,6 +4642,8 @@ StorageDirectoryHelper::CreateOrUpgradeMetadataFiles()
     return NS_ERROR_FAILURE;
   }
 
+  nsresult rv;
+
   nsCOMPtr<nsIFile> permanentStorageDir;
 
   for (uint32_t count = mOriginProps.Length(), index = 0;
@@ -4480,7 +4651,7 @@ StorageDirectoryHelper::CreateOrUpgradeMetadataFiles()
        index++) {
     OriginProps& originProps = mOriginProps[index];
 
-    if (mPersistent) {
+    if (mCreate) {
       rv = CreateDirectoryMetadata(originProps.mDirectory,
                                    originProps.mTimestamp,
                                    originProps.mGroup,
@@ -4491,7 +4662,9 @@ StorageDirectoryHelper::CreateOrUpgradeMetadataFiles()
       }
 
       // Move whitelisted origins to new persistent storage.
-      if (QuotaManager::IsOriginWhitelistedForPersistentStorage(
+      if (mPersistent &&
+          aMove &&
+          QuotaManager::IsOriginWhitelistedForPersistentStorage(
                                                            originProps.mSpec)) {
         if (!permanentStorageDir) {
           permanentStorageDir =
@@ -4586,7 +4759,7 @@ StorageDirectoryHelper::RunOnMainThread()
           return rv;
         }
 
-        if (mPersistent) {
+        if (mCreate) {
           rv = QuotaManager::GetInfoFromPrincipal(principal,
                                                   &originProps.mGroup,
                                                   &originProps.mOrigin,

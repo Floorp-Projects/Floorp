@@ -46,7 +46,6 @@ IsQuotedPairSymbol(signed char chr) {
   return (chr >= 0);
 }
 
-#if defined(PR_LOGGING)
 static PRLogModuleInfo *
 GetSHParserLog()
 {
@@ -56,7 +55,6 @@ GetSHParserLog()
   }
   return sSHParserLog;
 }
-#endif
 
 #define SHPARSERLOG(args) PR_LOG(GetSHParserLog(), PR_LOG_DEBUG, args)
 

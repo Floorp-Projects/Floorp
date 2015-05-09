@@ -218,14 +218,11 @@ const gTestcases = [
      targetPropName: "background-image",
      expectedDOMStyleVal: "radial-gradient(rgb(0, 0, 0), rgb(255, 255, 255))", },
 
-   /*
-   // XXXdholbert Side/corner specifiers don't work right now -- this is
-   // tracked in https://github.com/hallvors/css-fixme/issues/9 :
    { decl: "background-image: -webkit-radial-gradient(bottom right, white, black)",
      targetPropName: "background-image",
-     expectedDOMStyleVal: "radial-gradient(at bottom right, white, black)",
-     expectedCompStyleVal: "radial-gradient(at bottom right, rgb(255, 255, 255), rgb(0, 0, 0))", },
-   */
+     expectedDOMStyleVal: "radial-gradient(at right bottom , white, black)",
+     // XXXdholbert Note: unnecessary space---------------^ see bug 1160063
+     expectedCompStyleVal: "radial-gradient(at 100% 100%, rgb(255, 255, 255), rgb(0, 0, 0))", },
 
    // Combination of unprefixed & prefixed gradient styles in a single 'background-image' expression
    { decl: "background-image: -webkit-linear-gradient(black, white), radial-gradient(blue, purple), -webkit-gradient(linear,0 0,0 100%,from(red),to(orange))",

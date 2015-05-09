@@ -226,9 +226,7 @@ protected:
     nsIURI*      mDocumentURL;
 
 private:
-#ifdef PR_LOGGING
     static PRLogModuleInfo* gLog;
-#endif
 };
 
 int32_t         RDFContentSinkImpl::gRefCnt = 0;
@@ -241,9 +239,7 @@ nsIRDFResource* RDFContentSinkImpl::kRDF_Bag;
 nsIRDFResource* RDFContentSinkImpl::kRDF_Seq;
 nsIRDFResource* RDFContentSinkImpl::kRDF_nextVal;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* RDFContentSinkImpl::gLog;
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -296,10 +292,8 @@ RDFContentSinkImpl::RDFContentSinkImpl()
         NS_RegisterStaticAtoms(rdf_atoms);
     }
 
-#ifdef PR_LOGGING
     if (! gLog)
         gLog = PR_NewLogModule("nsRDFContentSink");
-#endif
 }
 
 
@@ -326,17 +320,15 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
             RDFContentSinkParseMode parseMode;
             PopContext(resource, state, parseMode);
 
-#ifdef PR_LOGGING
             // print some fairly useless debugging info
             // XXX we should save line numbers on the context stack: this'd
             // be about 1000x more helpful.
-            if (resource) {
+            if (resource && PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
                 nsXPIDLCString uri;
                 resource->GetValue(getter_Copies(uri));
                 PR_LOG(gLog, PR_LOG_NOTICE,
                        ("rdfxml:   uri=%s", (const char*) uri));
             }
-#endif
 
             NS_IF_RELEASE(resource);
         }
@@ -446,7 +438,6 @@ RDFContentSinkImpl::HandleEndElement(const char16_t *aName)
   nsIRDFResource* resource;
   if (NS_FAILED(PopContext(resource, mState, mParseMode))) {
       // XXX parser didn't catch unmatched tags?
-#ifdef PR_LOGGING
       if (PR_LOG_TEST(gLog, PR_LOG_WARNING)) {
           nsAutoString tagStr(aName);
           char* tagCStr = ToNewCString(tagStr);
@@ -457,7 +448,6 @@ RDFContentSinkImpl::HandleEndElement(const char16_t *aName)
 
           free(tagCStr);
       }
-#endif
 
       return NS_ERROR_UNEXPECTED; // XXX
   }

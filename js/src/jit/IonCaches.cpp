@@ -2642,32 +2642,23 @@ GenerateCallSetter(JSContext* cx, IonScript* ion, MacroAssembler& masm,
 
 static bool
 IsCacheableDOMProxyUnshadowedSetterCall(JSContext* cx, HandleObject obj, HandlePropertyName name,
-                                        MutableHandleObject holder, MutableHandleShape shape,
-                                        bool* isSetter)
+                                        MutableHandleObject holder, MutableHandleShape shape)
 {
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
-    *isSetter = false;
-
     RootedObject checkObj(cx, obj->getTaggedProto().toObjectOrNull());
     if (!checkObj)
-        return true;
+        return false;
 
-    if (!LookupProperty(cx, obj, name, holder, shape))
+    if (!LookupPropertyPure(cx, obj, NameToId(name), holder.address(), shape.address()))
         return false;
 
     if (!holder)
-        return true;
+        return false;
 
-    if (!IsCacheableSetPropCallNative(checkObj, holder, shape) &&
-        !IsCacheableSetPropCallPropertyOp(checkObj, holder, shape) &&
-        !IsCacheableSetPropCallScripted(checkObj, holder, shape))
-    {
-        return true;
-    }
-
-    *isSetter = true;
-    return true;
+    return IsCacheableSetPropCallNative(checkObj, holder, shape) ||
+           IsCacheableSetPropCallPropertyOp(checkObj, holder, shape) ||
+           IsCacheableSetPropCallScripted(checkObj, holder, shape);
 }
 
 bool
@@ -2691,14 +2682,7 @@ SetPropertyIC::attachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript,
     RootedPropertyName propName(cx, name());
     RootedObject holder(cx);
     RootedShape shape(cx);
-    bool isSetter;
-    if (!IsCacheableDOMProxyUnshadowedSetterCall(cx, obj, propName, &holder,
-                                                 &shape, &isSetter))
-    {
-        return false;
-    }
-
-    if (isSetter) {
+    if (IsCacheableDOMProxyUnshadowedSetterCall(cx, obj, propName, &holder, &shape)) {
         if (!GenerateCallSetter(cx, ion, masm, attacher, obj, holder, shape, strict(),
                                 object(), value(), &failures, liveRegs_, returnAddr))
         {
