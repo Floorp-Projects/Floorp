@@ -72,13 +72,11 @@ uint32_t gGlyphExtentsSetupLazyTight = 0;
 uint32_t gGlyphExtentsSetupFallBackToTight = 0;
 #endif
 
-#ifdef PR_LOGGING
 #define LOG_FONTINIT(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontinit), \
                                   PR_LOG_DEBUG, args)
 #define LOG_FONTINIT_ENABLED() PR_LOG_TEST( \
                                         gfxPlatform::GetLog(eGfxLog_fontinit), \
                                         PR_LOG_DEBUG)
-#endif // PR_LOGGING
 
 
 /*
@@ -1082,13 +1080,11 @@ gfxFont::CheckForFeaturesInvolvingSpace()
 {
     mFontEntry->mHasSpaceFeaturesInitialized = true;
 
-#ifdef PR_LOGGING
     bool log = LOG_FONTINIT_ENABLED();
     TimeStamp start;
     if (MOZ_UNLIKELY(log)) {
         start = TimeStamp::Now();
     }
-#endif
 
     bool result = false;
 
@@ -1185,7 +1181,6 @@ gfxFont::CheckForFeaturesInvolvingSpace()
     hb_face_destroy(face);
     mFontEntry->mHasSpaceFeatures = result;
 
-#ifdef PR_LOGGING
     if (MOZ_UNLIKELY(log)) {
         TimeDuration elapsed = TimeStamp::Now() - start;
         LOG_FONTINIT((
@@ -1207,7 +1202,6 @@ gfxFont::CheckForFeaturesInvolvingSpace()
             elapsed.ToMilliseconds()
         ));
     }
-#endif
 }
 
 bool

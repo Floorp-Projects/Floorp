@@ -328,12 +328,12 @@ public:
   nsPerformanceTiming* Timing();
   nsPerformanceNavigation* Navigation();
 
-  void GetEntries(nsTArray<nsRefPtr<PerformanceEntry> >& retval);
+  void GetEntries(nsTArray<nsRefPtr<PerformanceEntry>>& retval);
   void GetEntriesByType(const nsAString& entryType,
-                        nsTArray<nsRefPtr<PerformanceEntry> >& retval);
+                        nsTArray<nsRefPtr<PerformanceEntry>>& retval);
   void GetEntriesByName(const nsAString& name,
                         const mozilla::dom::Optional< nsAString >& entryType,
-                        nsTArray<nsRefPtr<PerformanceEntry> >& retval);
+                        nsTArray<nsRefPtr<PerformanceEntry>>& retval);
   void AddEntry(nsIHttpChannel* channel,
                 nsITimedChannel* timedChannel);
   void ClearResourceTimings();
@@ -357,20 +357,22 @@ private:
   DOMTimeMilliSec GetPerformanceTimingFromString(const nsAString& aTimingName);
   DOMHighResTimeStamp ConvertDOMMilliSecToHighRes(const DOMTimeMilliSec aTime);
   void DispatchBufferFullEvent();
-  void InsertPerformanceEntry(PerformanceEntry* aEntry, bool aShouldPrint);
-  void ClearEntries(const mozilla::dom::Optional<nsAString>& aEntryName,
-                    const nsAString& aEntryType);
+  void InsertUserEntry(PerformanceEntry* aEntry);
+  void ClearUserEntries(const mozilla::dom::Optional<nsAString>& aEntryName,
+                        const nsAString& aEntryType);
+  void InsertResourceEntry(PerformanceEntry* aEntry);
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsRefPtr<nsDOMNavigationTiming> mDOMTiming;
   nsCOMPtr<nsITimedChannel> mChannel;
   nsRefPtr<nsPerformanceTiming> mTiming;
   nsRefPtr<nsPerformanceNavigation> mNavigation;
-  nsTArray<nsRefPtr<PerformanceEntry> > mEntries;
+  nsTArray<nsRefPtr<PerformanceEntry>> mResourceEntries;
+  nsTArray<nsRefPtr<PerformanceEntry>> mUserEntries;
   nsRefPtr<nsPerformance> mParentPerformance;
-  uint64_t mPrimaryBufferSize;
+  uint64_t mResourceTimingBufferSize;
   JS::Heap<JSObject*> mMozMemory;
 
-  static const uint64_t kDefaultBufferSize = 150;
+  static const uint64_t kDefaultResourceTimingBufferSize = 150;
 
   // Helper classes
   class PerformanceEntryComparator {

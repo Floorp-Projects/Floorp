@@ -48,11 +48,12 @@ addLoadEvent(function() {
 
   // Now flush out layout on the subdocument, to trigger the resize handler
   is(bod.getBoundingClientRect().width, 50, "Width of body should still be 50px");
-  window.requestAnimationFrame(function() {
-    is(resizeHandlerRan, true, "Resize handler should have run");
-    win.removeEventListener("resize", handleResize, false);
-    SimpleTest.finish();
-  });
+
+  is(resizeHandlerRan, true, "Resize handler should have run");
+
+  win.removeEventListener("resize", handleResize, false);
+
+  SimpleTest.finish();
 });
 </script>
 </pre>

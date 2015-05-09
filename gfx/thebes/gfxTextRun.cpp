@@ -2199,11 +2199,9 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
         }
     }
 
-#ifdef PR_LOGGING
     PRLogModuleInfo *log = (mStyle.systemFont ?
                             gfxPlatform::GetLog(eGfxLog_textrunui) :
                             gfxPlatform::GetLog(eGfxLog_textrun));
-#endif
 
     // variant fallback handling may end up passing through this twice
     bool redo;
@@ -2212,7 +2210,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
 
         if (sizeof(T) == sizeof(uint8_t) && !transformedString) {
 
-#ifdef PR_LOGGING
             if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
                 nsAutoCString lang;
                 mStyle.language->ToUTF8String(lang);
@@ -2238,7 +2235,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                         sizeof(T),
                         str.get()));
             }
-#endif
 
             // the text is still purely 8-bit; bypass the script-run itemizer
             // and treat it as a single Latin run
@@ -2262,7 +2258,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
             int32_t runScript = MOZ_SCRIPT_LATIN;
             while (scriptRuns.Next(runStart, runLimit, runScript)) {
 
-    #ifdef PR_LOGGING
                 if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
                     nsAutoCString lang;
                     mStyle.language->ToUTF8String(lang);
@@ -2288,7 +2283,6 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                             sizeof(T),
                             NS_ConvertUTF16toUTF8(textPtr + runStart, runLen).get()));
                 }
-    #endif
 
                 InitScriptRun(aContext, aTextRun, textPtr + runStart,
                               runStart, runLimit - runStart, runScript, aMFR);

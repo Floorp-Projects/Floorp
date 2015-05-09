@@ -74,6 +74,12 @@ skip-if(B2G||Mulet) fails-if(Android) needs-focus != spellcheck-hyphen-invalid.h
 skip-if(B2G||Mulet) fails-if(Android) needs-focus != spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-multiple-invalid-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == spellcheck-dotafterquote-valid.html spellcheck-dotafterquote-valid-ref.html
 == spellcheck-url-valid.html spellcheck-url-valid-ref.html
+needs-focus == spellcheck-non-latin-arabic.html spellcheck-non-latin-arabic-ref.html
+needs-focus == spellcheck-non-latin-chinese-simplified.html spellcheck-non-latin-chinese-simplified-ref.html
+needs-focus == spellcheck-non-latin-chinese-traditional.html spellcheck-non-latin-chinese-traditional-ref.html
+needs-focus == spellcheck-non-latin-hebrew.html spellcheck-non-latin-hebrew-ref.html
+needs-focus == spellcheck-non-latin-japanese.html spellcheck-non-latin-japanese-ref.html
+needs-focus == spellcheck-non-latin-korean.html spellcheck-non-latin-korean-ref.html
 == unneeded_scroll.html unneeded_scroll-ref.html
 skip-if(B2G||Mulet) == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # Initial mulet triage: parity with B2G/B2G Desktop

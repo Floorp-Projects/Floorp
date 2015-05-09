@@ -473,9 +473,6 @@ APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
 static nsIScrollableFrame*
 GetScrollableAncestorFrame(nsIFrame* aTarget)
 {
-  if (!aTarget) {
-    return nullptr;
-  }
   uint32_t flags = nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT
                  | nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE;
   return nsLayoutUtils::GetNearestScrollableFrame(aTarget, flags);
@@ -530,7 +527,9 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
     nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aRefPoint, aRootFrame);
   nsIFrame* target =
     nsLayoutUtils::GetFrameForPoint(aRootFrame, point, nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
-  nsIScrollableFrame* scrollAncestor = GetScrollableAncestorFrame(target);
+  nsIScrollableFrame* scrollAncestor = target
+    ? GetScrollableAncestorFrame(target)
+    : aRootFrame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
 
   // Assuming that if there's no scrollAncestor, there's already a displayPort.
   nsCOMPtr<dom::Element> dpElement = scrollAncestor

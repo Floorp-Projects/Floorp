@@ -29,9 +29,7 @@
 
 using namespace mozilla::pkix;
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
-#endif
 
 static const unsigned int DEFAULT_MIN_RSA_BITS = 2048;
 

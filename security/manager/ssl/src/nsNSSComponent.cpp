@@ -59,9 +59,7 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gPIPNSSLog = nullptr;
-#endif
 
 int nsNSSComponent::mInstanceCount = 0;
 
@@ -218,10 +216,8 @@ nsNSSComponent::nsNSSComponent()
 #endif
    mCertVerificationThread(nullptr)
 {
-#ifdef PR_LOGGING
   if (!gPIPNSSLog)
     gPIPNSSLog = PR_NewLogModule("pipnss");
-#endif
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::ctor\n"));
   mObserversRegistered = false;
 

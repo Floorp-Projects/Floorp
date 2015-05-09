@@ -25,6 +25,10 @@
 #include "gfx2DGlue.h"
 #include "ReadbackProcessor.h"
 
+#ifdef XP_WIN
+#include "gfxWindowsPlatform.h"
+#endif
+
 namespace mozilla {
 namespace layers {
 
@@ -33,6 +37,13 @@ using namespace mozilla::gfx;
 void
 ClientPaintedLayer::PaintThebes()
 {
+#ifdef XP_WIN
+  if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+    // If our rendering device has reset simply avoid rendering completely.
+    return;
+  }
+#endif
+
   PROFILER_LABEL("ClientPaintedLayer", "PaintThebes",
     js::ProfileEntry::Category::GRAPHICS);
 

@@ -16,7 +16,7 @@ static AtkHyperlink*
 getHyperlinkCB(AtkHyperlinkImpl* aImpl)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImpl));
-  if (!accWrap || !GetProxy(ATK_OBJECT(aImpl)))
+  if (!accWrap && !GetProxy(ATK_OBJECT(aImpl)))
     return nullptr;
 
   if (accWrap)

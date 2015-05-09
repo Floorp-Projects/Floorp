@@ -11,12 +11,12 @@ assertEq(WeakMap.length, 0);
 assertEq(WeakMap.name, "WeakMap");
 
 assertEq(Object.getPrototypeOf(WeakMap.prototype), Object.prototype);
-assertEq(Object.prototype.toString.call(WeakMap.prototype), "[object WeakMap]");
+assertEq(Object.prototype.toString.call(WeakMap.prototype), "[object Object]");
 assertEq(Object.prototype.toString.call(new WeakMap()), "[object WeakMap]");
 assertEq(Object.keys(WeakMap.prototype).join(), "");
 assertEq(WeakMap.prototype.constructor, WeakMap);
 
-function checkMethod(name, arity) { 
+function checkMethod(name, arity) {
     var desc = Object.getOwnPropertyDescriptor(WeakMap.prototype, name);
     assertEq(desc.enumerable, false);
     assertEq(desc.configurable, true);
@@ -26,8 +26,7 @@ function checkMethod(name, arity) {
     assertEq(desc.value.length, arity);
 }
 
-// XXX: WeakMap#get implementation has an undocumented 2nd argument
-//checkMethod("get", 1);
+checkMethod("get", 1);
 checkMethod("has", 1);
 checkMethod("set", 2);
 checkMethod("delete", 1);

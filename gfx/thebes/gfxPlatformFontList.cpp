@@ -23,8 +23,6 @@
 
 using namespace mozilla;
 
-#ifdef PR_LOGGING
-
 #define LOG_FONTLIST(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
                                PR_LOG_DEBUG, args)
 #define LOG_FONTLIST_ENABLED() PR_LOG_TEST( \
@@ -35,8 +33,6 @@ using namespace mozilla;
 #define LOG_FONTINIT_ENABLED() PR_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_fontinit), \
                                    PR_LOG_DEBUG)
-
-#endif // PR_LOGGING
 
 gfxPlatformFontList *gfxPlatformFontList::sPlatformFontList = nullptr;
 
@@ -268,14 +264,12 @@ gfxPlatformFontList::InitOtherFamilyNames()
     Telemetry::AccumulateTimeDelta(Telemetry::FONTLIST_INITOTHERFAMILYNAMES,
                                    start, end);
 
-#ifdef PR_LOGGING
     if (LOG_FONTINIT_ENABLED()) {
         TimeDuration elapsed = end - start;
         LOG_FONTINIT(("(fontinit) InitOtherFamilyNames took %8.2f ms %s",
                       elapsed.ToMilliseconds(),
                       (otherNamesData.mTimedOut ? "timeout" : "")));
     }
-#endif
 }
 
 #define OTHERNAMES_TIMEOUT 200
@@ -328,7 +322,6 @@ gfxPlatformFontList::SearchFamiliesForFaceName(const nsAString& aFaceName)
     TimeStamp end = TimeStamp::Now();
     Telemetry::AccumulateTimeDelta(Telemetry::FONTLIST_INITFACENAMELISTS,
                                    start, end);
-#ifdef PR_LOGGING
     if (LOG_FONTINIT_ENABLED()) {
         TimeDuration elapsed = end - start;
         LOG_FONTINIT(("(fontinit) SearchFamiliesForFaceName took %8.2f ms %s %s",
@@ -336,7 +329,6 @@ gfxPlatformFontList::SearchFamiliesForFaceName(const nsAString& aFaceName)
                       (lookup ? "found name" : ""),
                       (faceNameListsData.mTimedOut ? "timeout" : "")));
     }
-#endif
 
     return lookup;
 }
@@ -586,7 +578,6 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
     }
     TimeDuration elapsed = TimeStamp::Now() - start;
 
-#ifdef PR_LOGGING
     PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textrun);
 
     if (MOZ_UNLIKELY(PR_LOG_TEST(log, PR_LOG_WARNING))) {
@@ -603,7 +594,6 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
                 int32_t(elapsed.ToMicroseconds()),
                 cmapCount));
     }
-#endif
 
     // no match? add to set of non-matching codepoints
     if (!fontEntry) {
@@ -818,12 +808,10 @@ gfxPlatformFontList::AddOtherFamilyName(gfxFontFamily *aFamilyEntry, nsAString& 
 
     if (!mOtherFamilyNames.GetWeak(key)) {
         mOtherFamilyNames.Put(key, aFamilyEntry);
-#ifdef PR_LOGGING
         LOG_FONTLIST(("(fontlist-otherfamily) canonical family: %s, "
                       "other family: %s\n",
                       NS_ConvertUTF16toUTF8(aFamilyEntry->Name()).get(),
                       NS_ConvertUTF16toUTF8(aOtherFamilyName).get()));
-#endif
         if (mBadUnderlineFamilyNames.Contains(key))
             aFamilyEntry->SetBadUnderlineFamily();
     }
@@ -834,11 +822,9 @@ gfxPlatformFontList::AddFullname(gfxFontEntry *aFontEntry, nsAString& aFullname)
 {
     if (!mExtraNames->mFullnames.GetWeak(aFullname)) {
         mExtraNames->mFullnames.Put(aFullname, aFontEntry);
-#ifdef PR_LOGGING
         LOG_FONTLIST(("(fontlist-fullname) name: %s, fullname: %s\n",
                       NS_ConvertUTF16toUTF8(aFontEntry->Name()).get(),
                       NS_ConvertUTF16toUTF8(aFullname).get()));
-#endif
     }
 }
 
@@ -847,11 +833,9 @@ gfxPlatformFontList::AddPostscriptName(gfxFontEntry *aFontEntry, nsAString& aPos
 {
     if (!mExtraNames->mPostscriptNames.GetWeak(aPostscriptName)) {
         mExtraNames->mPostscriptNames.Put(aPostscriptName, aFontEntry);
-#ifdef PR_LOGGING
         LOG_FONTLIST(("(fontlist-postscript) name: %s, psname: %s\n",
                       NS_ConvertUTF16toUTF8(aFontEntry->Name()).get(),
                       NS_ConvertUTF16toUTF8(aPostscriptName).get()));
-#endif
     }
 }
 
@@ -967,13 +951,11 @@ gfxPlatformFontList::LoadFontInfo()
     mStartIndex = endIndex;
     bool done = mStartIndex >= mNumFamilies;
 
-#ifdef PR_LOGGING
     if (LOG_FONTINIT_ENABLED()) {
         TimeDuration elapsed = TimeStamp::Now() - start;
         LOG_FONTINIT(("(fontinit) fontloader load pass %8.2f ms done %s\n",
                       elapsed.ToMilliseconds(), (done ? "true" : "false")));
     }
-#endif
 
     if (done) {
         mOtherFamilyNamesInitialized = true;
@@ -1057,7 +1039,6 @@ gfxPlatformFontList::CleanupLoader()
         }
     }
 
-#ifdef PR_LOGGING
     if (LOG_FONTINIT_ENABLED() && mFontInfo) {
         LOG_FONTINIT(("(fontinit) fontloader load thread took %8.2f ms "
                       "%d families %d fonts %d cmaps "
@@ -1071,7 +1052,6 @@ gfxPlatformFontList::CleanupLoader()
                       (rebuilt ? "(userfont sets rebuilt)" : ""),
                       (forceReflow ? "(global reflow)" : "")));
     }
-#endif
 
     gfxFontInfoLoader::CleanupLoader();
 }
