@@ -1895,16 +1895,15 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFormElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFormElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mForm)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFieldSet)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGenericHTMLFormElement,
                                                 nsGenericHTMLElement)
   tmp->ClearForm(true);
-  tmp->ClearFieldSet();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
+  , mFieldSet(nullptr)
 {
   // We should add the NS_EVENT_STATE_ENABLED bit here as needed, but
   // that depends on our type, which is not initialized yet.  So we
@@ -1913,19 +1912,12 @@ nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<mozilla::dom
 
 nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 {
-  ClearFieldSet();
+  if (mFieldSet) {
+    mFieldSet->RemoveElement(this);
+  }
 
   // Check that this element doesn't know anything about its form at this point.
   NS_ASSERTION(!mForm, "mForm should be null at this point!");
-}
-
-void
-nsGenericHTMLFormElement::ClearFieldSet()
-{
-  if (mFieldSet) {
-    mFieldSet->RemoveElement(this);
-    mFieldSet = nullptr;
-  }
 }
 
 nsINode*
@@ -2262,6 +2254,14 @@ nsGenericHTMLFormElement::IsDisabled() const
 {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) ||
          (mFieldSet && mFieldSet->IsDisabled());
+}
+
+void
+nsGenericHTMLFormElement::ForgetFieldSet(nsIContent* aFieldset)
+{
+  if (mFieldSet == aFieldset) {
+    mFieldSet = nullptr;
+  }
 }
 
 bool

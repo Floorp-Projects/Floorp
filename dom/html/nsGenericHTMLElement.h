@@ -1332,6 +1332,15 @@ public:
   }
 
   /**
+   * This callback is called by a fieldset on all it's elements when it's being
+   * destroyed. When called, the elements should check that aFieldset is there
+   * first parent fieldset and null mFieldset in that case only.
+   *
+   * @param aFieldSet The fieldset being removed.
+   */
+  void ForgetFieldSet(nsIContent* aFieldset);
+
+  /**
    * Returns if the control can be disabled.
    */
   bool CanBeDisabled() const;
@@ -1340,9 +1349,6 @@ public:
                                  int32_t* aTabIndex) override;
 
   virtual bool IsLabelable() const override;
-
-private:
-  void ClearFieldSet();
 
 protected:
   virtual ~nsGenericHTMLFormElement();
@@ -1413,7 +1419,7 @@ protected:
   nsRefPtr<mozilla::dom::HTMLFormElement> mForm;
 
   /* This is a pointer to our closest fieldset parent if any */
-  nsRefPtr<mozilla::dom::HTMLFieldSetElement> mFieldSet;
+  mozilla::dom::HTMLFieldSetElement* mFieldSet;
 };
 
 class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement
