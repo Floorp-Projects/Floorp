@@ -4,7 +4,7 @@
   "id": "jid1-ZZaXFHAPlHwbgw@jetpack",
   "description": "run tab tests in e10s mode",
   "author": "Tomislav Jovanovic",
-  "license": "MPL 2.0",
+  "license": "MPL-2.0",
   "version": "0.1.0",
   "main": "./lib/main.js",
   "e10s": true

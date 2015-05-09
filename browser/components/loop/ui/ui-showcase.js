@@ -17,6 +17,7 @@
   // 1. Desktop components
   // 1.1 Panel
   var PanelView = loop.panel.PanelView;
+  var SignInRequestView = loop.panel.SignInRequestView;
   // 1.2. Conversation Window
   var AcceptCallView = loop.conversationViews.AcceptCallView;
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
@@ -264,6 +265,9 @@
           React.createElement(Section, {name: "PanelView"}, 
             React.createElement("p", {className: "note"}, 
               React.createElement("strong", null, "Note:"), " 332px wide."
+            ), 
+            React.createElement(Example, {summary: "Re-sign-in view", dashed: "true", style: {width: "332px"}}, 
+              React.createElement(SignInRequestView, {mozLoop: mockMozLoopRooms})
             ), 
             React.createElement(Example, {summary: "Room list tab", dashed: "true", style: {width: "332px"}}, 
               React.createElement(PanelView, {client: mockClient, notifications: notifications, 

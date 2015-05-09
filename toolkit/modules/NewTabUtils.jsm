@@ -677,6 +677,20 @@ let PlacesProvider = {
   /**
    * Called by the history service.
    */
+  onDeleteURI: function PlacesProvider_onDeleteURI(aURI, aGUID, aReason) {
+    // let observers remove sensetive data associated with deleted visit
+    this._callObservers("onDeleteURI", {
+      url: aURI.spec,
+    });
+  },
+
+  onClearHistory: function() {
+    this._callObservers("onClearHistory")
+  },
+
+  /**
+   * Called by the history service.
+   */
   onFrecencyChanged: function PlacesProvider_onFrecencyChanged(aURI, aNewFrecency, aGUID, aHidden, aLastVisitDate) {
     // The implementation of the query in getLinks excludes hidden and
     // unvisited pages, so it's important to exclude them here, too.
@@ -868,6 +882,11 @@ let Links = {
     if (links.length)
       pinnedLinks = pinnedLinks.concat(links);
 
+    for (let link of pinnedLinks) {
+      if (link) {
+        link.baseDomain = NewTabUtils.extractSite(link.url);
+      }
+    }
     return pinnedLinks;
   },
 
@@ -1220,6 +1239,8 @@ let Telemetry = {
     let probes = [
       { histogram: "NEWTAB_PAGE_ENABLED",
         value: AllPages.enabled },
+      { histogram: "NEWTAB_PAGE_ENHANCED",
+        value: AllPages.enhanced },
       { histogram: "NEWTAB_PAGE_PINNED_SITES_COUNT",
         value: PinnedLinks.links.length },
       { histogram: "NEWTAB_PAGE_BLOCKED_SITES_COUNT",

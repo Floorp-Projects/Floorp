@@ -41,3 +41,5 @@
 <!ENTITY separateProfileMode.label        "Allow &brandShortName; and Firefox to run at the same time">
 <!ENTITY useFirefoxSync.label             "Tip: This uses separate profiles. Use Sync to share data between them.">
 <!ENTITY getStarted.label                 "Start using Sync…">
+
+<!ENTITY e10sEnabled.label                "Enable multi-process &brandShortName;">

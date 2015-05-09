@@ -4,7 +4,7 @@
   "id": "jid1-DYaXFHAPlHwbgw@jetpack",
   "description": "a basic e10s test add-on",
   "author": "Tomislav Jovanovic",
-  "license": "MPL 2.0",
+  "license": "MPL-2.0",
   "version": "0.1.0",
   "main": "./lib/main.js"
 }

@@ -67,6 +67,7 @@ const Worker = Class({
     let model = modelFor(this);
     if (id !== model.id || !model.attached)
       return;
+    args = JSON.parse(args);
     if (model.destroyed && args[0] != 'detach')
       return;
 
@@ -86,7 +87,7 @@ const Worker = Class({
       return;
     }
 
-    processes.port.emit('sdk/worker/message', model.id, args);
+    processes.port.emit('sdk/worker/message', model.id, JSON.stringify(args));
   },
 
   // properties
@@ -127,15 +128,26 @@ attach.define(Worker, function(worker, window) {
   if (tab)
     frame = frames.getFrameForBrowser(getBrowserForTab(tab));
 
-  merge(model.options, {
-    id: String(uuid()),
-    window: getInnerId(window),
-    url: String(window.location)
-  });
+  function makeStringArray(arrayOrValue) {
+    if (!arrayOrValue)
+      return [];
+    return [String(v) for (v of [].concat(arrayOrValue))];
+  }
 
-  processes.port.emit('sdk/worker/create', model.options);
+  let id = String(uuid());
+  let childOptions = {
+    id,
+    windowId: getInnerId(window),
+    contentScript: makeStringArray(model.options.contentScript),
+    contentScriptFile: makeStringArray(model.options.contentScriptFile),
+    contentScriptOptions: model.options.contentScriptOptions ?
+                          JSON.stringify(model.options.contentScriptOptions) :
+                          null,
+  }
 
-  connect(worker, frame, model.options);
+  processes.port.emit('sdk/worker/create', childOptions);
+
+  connect(worker, frame, { id, url: String(window.location) });
 })
 
 connect.define(Worker, function(worker, frame, { id, url }) {

@@ -646,6 +646,31 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
     assert.equal(mappings[1].column, 3);
   };
 
+  exports['test allGeneratedPositionsFor for column on different line fuzzy'] = function (assert, util) {
+    var map = new SourceMapGenerator({
+      file: 'generated.js'
+    });
+    map.addMapping({
+      original: { line: 2, column: 1 },
+      generated: { line: 2, column: 2 },
+      source: 'foo.coffee'
+    });
+    map.addMapping({
+      original: { line: 2, column: 1 },
+      generated: { line: 2, column: 3 },
+      source: 'foo.coffee'
+    });
+    map = new SourceMapConsumer(map.toString());
+
+    var mappings = map.allGeneratedPositionsFor({
+      line: 1,
+      column: 0,
+      source: 'foo.coffee'
+    });
+
+    assert.equal(mappings.length, 0);
+  };
+
   exports['test computeColumnSpans'] = function (assert, util) {
     var map = new SourceMapGenerator({
       file: 'generated.js'

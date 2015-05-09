@@ -51,7 +51,7 @@ function getRegisteredWindow(chromeWindow) {
 /**
  * Gets a `BrowserWindow` for the provided window options obj
  * @params {Object} options
- *    Options that are passed to the the `BrowserWindowTrait`
+ *    Options that are passed to the the `BrowserWindow`
  * @returns {BrowserWindow}
  */
 function getBrowserWindow(options) {

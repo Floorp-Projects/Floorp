@@ -37,7 +37,7 @@ Site.prototype = {
   /**
    * The title of the site's link.
    */
-  get title() { return this.link.title; },
+  get title() { return this.link.title || this.link.url; },
 
   /**
    * The site's parent cell.
@@ -122,8 +122,10 @@ Site.prototype = {
   _render: function Site_render() {
     let enhanced = gAllPages.enhanced && DirectoryLinksProvider.getEnhancedLink(this.link);
     let url = this.url;
-    let title = enhanced && enhanced.title || this.title || url;
-    let tooltip = (title == url ? title : title + "\n" + url);
+    let title = enhanced && enhanced.title ? enhanced.title :
+                this.link.type == "history" ? this.link.baseDomain :
+                this.title;
+    let tooltip = (this.title == url ? this.title : this.title + "\n" + url);
 
     let link = this._querySelector(".newtab-link");
     link.setAttribute("title", tooltip);
@@ -249,10 +251,11 @@ Site.prototype = {
 
       let link = '<a href="' + TILES_EXPLAIN_LINK + '">' +
                  newTabString("learn.link") + "</a>";
-      let type = this.node.getAttribute("suggested") ? "suggested" : this.node.getAttribute("type");
+      let type = (this.node.getAttribute("suggested") && this.node.getAttribute("type") == "affiliate") ?
+                  "suggested" : this.node.getAttribute("type");
       let icon = '<input type="button" class="newtab-control newtab-' +
                  (type == "enhanced" ? "customize" : "control-block") + '"/>';
-      explain.innerHTML = newTabString(type + ".explain", [icon, link]);
+      explain.innerHTML = newTabString(type + (type == "sponsored" ? ".explain2" : ".explain"), [icon, link]);
 
       button.setAttribute("active", "true");
     }
@@ -295,25 +298,20 @@ Site.prototype = {
         this._toggleLegalText(".newtab-sponsored", ".sponsored-explain");
         action = "sponsored";
       }
-      else if (target.classList.contains("suggested-explain") ||
-               target.classList.contains("newtab-suggested-bounds") ||
-               target.parentElement.classList.contains("newtab-suggested-bounds") ||
-               target.classList.contains("newtab-suggested")) {
-        this._toggleLegalText(".newtab-suggested", ".suggested-explain");
-        action = "suggested";
-      }
-      else if (pinned) {
+      else if (pinned && target.classList.contains("newtab-control-pin")) {
         this.unpin();
         action = "unpin";
       }
-      else {
+      else if (!pinned && target.classList.contains("newtab-control-pin")) {
         this.pin();
         action = "pin";
       }
     }
 
     // Report all link click actions
-    DirectoryLinksProvider.reportSitesAction(gGrid.sites, action, tileIndex);
+    if (action) {
+      DirectoryLinksProvider.reportSitesAction(gGrid.sites, action, tileIndex);
+    }
   },
 
   /**

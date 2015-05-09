@@ -307,6 +307,7 @@ exports.testActiveWindowActiveTabOnActivate_alt = function(assert, done) {
                     "the active window's active tab is the tab provided");
 
     if (++activateCount == 2) {
+      assert.equal(newTabs.length, activateCount, "Should have seen the right number of tabs open");
       tabs.removeListener('activate', onActivate);
 
       newTabs.forEach(function(tab) {
@@ -604,5 +605,60 @@ exports.testAttachStyleToTab = function(assert, done) {
     }
   });
 };
+
+// Tests that the this property is correct in event listeners called from
+// the tabs API.
+exports.testTabEventBindings = function(assert, done) {
+  let loader = Loader(module);
+  let tabs = loader.require("sdk/tabs");
+  let firstTab = tabs.activeTab;
+
+  let EVENTS = ["open", "close", "activate", "deactivate",
+                "load", "ready", "pageshow"];
+
+  let tabBoundEventHandler = (event) => function(tab) {
+    assert.equal(this, tab, "tab listener for " + event + " event should be bound to the tab object.");
+  };
+
+  let tabsBoundEventHandler = (event) => function(tab) {
+    assert.equal(this, tabs, "tabs listener for " + event + " event should be bound to the tabs object.");
+  }
+  for (let event of EVENTS)
+    tabs.on(event, tabsBoundEventHandler(event));
+
+  let tabsOpenEventHandler = (event) => function(tab) {
+    assert.equal(this, tab, "tabs open listener for " + event + " event should be bound to the tab object.");
+  }
+
+  let openArgs = {
+    url: "data:text/html;charset=utf-8,binding-test",
+    onOpen: function(tab) {
+      tabsOpenEventHandler("open").call(this, tab);
+
+      for (let event of EVENTS)
+        tab.on(event, tabBoundEventHandler(event));
+
+      tab.once("pageshow", () => {
+        tab.once("deactivate", () => {
+          tab.once("close", () => {
+            loader.unload();
+            done();
+          });
+
+          tab.close();
+        });
+
+        firstTab.activate();
+      });
+    }
+  };
+  // Listen to everything except onOpen
+  for (let event of EVENTS.slice(1)) {
+    let eventProperty = "on" + event.slice(0, 1).toUpperCase() + event.slice(1);
+    openArgs[eventProperty] = tabsOpenEventHandler(event);
+  }
+
+  tabs.open(openArgs);
+}
 
 require('sdk/test').run(exports);

@@ -18,171 +18,225 @@ const port = 8099;
 const host = 'http://localhost:' + port;
 const { onFaviconChange, serve, binFavicon } = require('./favicon-helpers');
 const { once } = require('sdk/system/events');
-const { defer } = require('sdk/core/promise');
 const { resetPlaces } = require('./places-helper');
 const faviconService = Cc["@mozilla.org/browser/favicon-service;1"].
                          getService(Ci.nsIFaviconService);
 
-exports.testStringGetFaviconCallbackSuccess = function (assert, done) {
+exports.testStringGetFaviconCallbackSuccess = function*(assert) {
   let name = 'callbacksuccess'
-  let srv = makeServer(name);
+  let srv = yield makeServer(name);
   let url = host + '/' + name + '.html';
   let favicon = host + '/' + name + '.ico';
   let tab;
 
-  onFaviconChange(url, function (faviconUrl) {
-    getFavicon(url, function (url) {
-      assert.equal(favicon, url, 'Callback returns correct favicon url');
-      complete(tab, srv, done);
+  let wait = new Promise(resolve => {
+    onFaviconChange(url).then((faviconUrl) => {
+      getFavicon(url, (url) => {
+        assert.equal(favicon, url, 'Callback returns correct favicon url');
+        resolve();
+      });
     });
   });
 
+  assert.pass("Opening tab");
+
   open({
     url: url,
-    onOpen: function (newTab) tab = newTab,
+    onOpen: (newTab) => tab = newTab,
     inBackground: true
   });
+
+  yield wait;
+
+  assert.pass("Complete");
+
+  yield complete(tab, srv);
 };
 
-exports.testStringGetFaviconCallbackFailure = function (assert, done) {
+exports.testStringGetFaviconCallbackFailure = function*(assert) {
   let name = 'callbackfailure';
-  let srv = makeServer(name);
+  let srv = yield makeServer(name);
   let url = host + '/' + name + '.html';
   let tab;
 
-  waitAndExpire(url).then(function () {
-    getFavicon(url, function (url) {
+  let wait = waitAndExpire(url);
+
+  assert.pass("Opening tab");
+
+  open({
+    url: url,
+    onOpen: (newTab) => tab = newTab,
+    inBackground: true
+  });
+
+  yield wait;
+
+  assert.pass("Getting favicon");
+
+  yield new Promise(resolve => {
+    getFavicon(url, (url) => {
       assert.equal(url, null, 'Callback returns null');
-      complete(tab, srv, done);
+      resolve();
     });
   });
 
-  open({
-    url: url,
-    onOpen: function (newTab) tab = newTab,
-    inBackground: true
-  });
+  assert.pass("Complete");
+
+  yield complete(tab, srv);
 };
 
-exports.testStringGetFaviconPromiseSuccess = function (assert, done) {
+exports.testStringGetFaviconPromiseSuccess = function*(assert) {
   let name = 'promisesuccess'
-  let srv = makeServer(name);
+  let srv = yield makeServer(name);
   let url = host + '/' + name + '.html';
   let favicon = host + '/' + name + '.ico';
   let tab;
 
-  onFaviconChange(url, function (faviconUrl) {
-    getFavicon(url).then(function (url) {
-      assert.equal(url, favicon, 'Callback returns null');
-    }, function (err) {
-      assert.fail('Reject should not be called');
-    }).then(complete.bind(null, tab, srv, done));
-  });
+  let wait = onFaviconChange(url);
+
+  assert.pass("Opening tab");
 
   open({
     url: url,
-    onOpen: function (newTab) tab = newTab,
+    onOpen: (newTab) => tab = newTab,
     inBackground: true
   });
+
+  yield wait;
+
+  assert.pass("Getting favicon");
+
+  yield getFavicon(url).then((url) => {
+    assert.equal(url, favicon, 'Callback returns null');
+  }, () => {
+    assert.fail('Reject should not be called');
+  });
+
+  assert.pass("Complete");
+
+  yield complete(tab, srv);
 };
 
-exports.testStringGetFaviconPromiseFailure = function (assert, done) {
+exports.testStringGetFaviconPromiseFailure = function*(assert) {
   let name = 'promisefailure'
-  let srv = makeServer(name);
+  let srv = yield makeServer(name);
   let url = host + '/' + name + '.html';
   let tab;
 
-  waitAndExpire(url).then(function () {
-    getFavicon(url).then(invalidResolve(assert), validReject(assert, 'expired url'))
-      .then(complete.bind(null, tab, srv, done));
-  });
+  let wait = waitAndExpire(url);
+
+  assert.pass("Opening tab");
 
   open({
     url: url,
-    onOpen: function (newTab) tab = newTab,
+    onOpen: (newTab) => tab = newTab,
     inBackground: true
   });
+
+  yield wait;
+
+  assert.pass("Getting favicon");
+
+  yield getFavicon(url).then(invalidResolve(assert), validReject(assert, 'expired url'));
+
+  assert.pass("Complete");
+
+  yield complete(tab, srv);
 };
 
-exports.testTabsGetFaviconPromiseSuccess = function (assert, done) {
+exports.testTabsGetFaviconPromiseSuccess = function*(assert) {
   let name = 'tabs-success'
-  let srv = makeServer(name);
+  let srv = yield makeServer(name);
   let url = host + '/' + name + '.html';
   let favicon = host + '/' + name + '.ico';
   let tab;
 
-  onFaviconChange(url, function () {
-    getFavicon(tab).then(function (url) {
-      assert.equal(url, favicon, "getFavicon should return url for tab");
-      complete(tab, srv, done);
-    });
-  });
+  let iconPromise = onFaviconChange(url);
+
+  assert.pass("Opening tab");
 
   open({
     url: url,
-    onOpen: function (newTab) tab = newTab,
+    onOpen: (newTab) => tab = newTab,
     inBackground: true
   });
+
+  yield iconPromise;
+
+  assert.pass("Getting favicon");
+
+  yield getFavicon(tab).then((url) => {
+    assert.equal(url, favicon, "getFavicon should return url for tab");
+  });
+
+  assert.pass("Complete");
+
+  yield complete(tab, srv);
 };
 
 
-exports.testTabsGetFaviconPromiseFailure = function (assert, done) {
+exports.testTabsGetFaviconPromiseFailure = function*(assert) {
   let name = 'tabs-failure'
-  let srv = makeServer(name);
+  let srv = yield makeServer(name);
   let url = host + '/' + name + '.html';
   let tab;
 
-  waitAndExpire(url).then(function () {
-    getFavicon(tab).then(invalidResolve(assert), validReject(assert, 'expired tab'))
-      .then(complete.bind(null, tab, srv, done));
-  });
+  let wait = waitAndExpire(url);
+
+  assert.pass("Opening tab");
 
   open({
     url: url,
-    onOpen: function (newTab) tab = newTab,
+    onOpen: (newTab) => tab = newTab,
     inBackground: true
   });
+
+  yield wait;
+
+  assert.pass("Getting favicon");
+
+  yield getFavicon(tab).then(invalidResolve(assert), validReject(assert, 'expired tab'));
+
+  assert.pass("Complete");
+
+  yield complete(tab, srv);
 };
 
-exports.testRejects = function (assert, done) {
-  getFavicon({})
-    .then(invalidResolve(assert), validReject(assert, 'Object'))
-  .then(() => getFavicon(null))
-    .then(invalidResolve(assert), validReject(assert, 'null'))
-  .then(() => getFavicon(undefined))
-    .then(invalidResolve(assert), validReject(assert, 'undefined'))
-  .then(() => getFavicon([]))
-    .then(invalidResolve(assert), validReject(assert, 'Array'))
-    .catch(assert.fail).then(done);
+exports.testRejects = function*(assert) {
+  yield getFavicon({})
+    .then(invalidResolve(assert), validReject(assert, 'Object'));
+
+  yield getFavicon(null)
+    .then(invalidResolve(assert), validReject(assert, 'null'));
+
+  yield getFavicon(undefined)
+    .then(invalidResolve(assert), validReject(assert, 'undefined'));
+
+  yield getFavicon([])
+    .then(invalidResolve(assert), validReject(assert, 'Array'));
 };
 
-function invalidResolve (assert) {
-  return function () assert.fail('Promise should not be resolved successfully');
-}
+let invalidResolve = (assert) => () => assert.fail('Promise should not be resolved successfully');
+let validReject = (assert, name) => () => assert.pass(name + ' correctly rejected');
 
-function validReject (assert, name) {
-  return function () assert.pass(name + ' correctly rejected');
-}
+let makeServer = (name) => serve({
+  name: name,
+  favicon: binFavicon,
+  port: port,
+  host: host
+});
 
-function makeServer (name) {
-  return serve({name: name, favicon: binFavicon, port: port, host: host});
-}
-
-function waitAndExpire (url) {
-  let deferred = defer();
-  onFaviconChange(url, function (faviconUrl) {
-    once('places-favicons-expired', function () {
-      deferred.resolve();
-    });
+let waitAndExpire = (url) => new Promise(resolve => {
+  onFaviconChange(url).then(() => {
+    once('places-favicons-expired', resolve);
     faviconService.expireAllFavicons();
   });
-  return deferred.promise;
-}
+});
 
-function complete(tab, srv, done) {
-  tab.close(function () {
+let complete = (tab, srv) => new Promise(resolve => {
+  tab.close(() => {
     resetPlaces(() => {
-      srv.stop(done);
+      srv.stop(resolve);
     });
   });
-}
+});

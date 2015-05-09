@@ -48,6 +48,7 @@ pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCAL
 pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/firefox/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%/%COMPATIBILITY_MODE%?src=firefox");
 pref("extensions.webservice.discoverURL", "https://services.addons.mozilla.org/%LOCALE%/firefox/discovery/pane/%VERSION%/%OS%/%COMPATIBILITY_MODE%");
 pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/list/recommended/all/%MAX_RESULTS%/%OS%/%VERSION%?src=firefox");
+pref("extensions.getAddons.link.url", "https://addons.mozilla.org/%LOCALE%/firefox/");
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
@@ -71,6 +72,7 @@ pref("extensions.autoDisableScopes", 15);
 
 // Don't require signed add-ons by default
 pref("xpinstall.signatures.required", false);
+pref("xpinstall.signatures.devInfoURL", "https://wiki.mozilla.org/Addons/Extension_Signing");
 
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/firefox/dictionaries/");
@@ -1396,6 +1398,8 @@ pref("devtools.inspector.imagePreviewTooltipSize", 300);
 pref("devtools.inspector.showUserAgentStyles", false);
 // Show all native anonymous content (like controls in <video> tags)
 pref("devtools.inspector.showAllAnonymousContent", false);
+// Enable the MDN docs tooltip
+pref("devtools.inspector.mdnDocsTooltip.enabled", true);
 
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "hex");
@@ -1719,7 +1723,7 @@ pref("loop.support_url", "https://support.mozilla.org/kb/group-conversations-fir
 pref("loop.contacts.gravatars.show", false);
 pref("loop.contacts.gravatars.promo", true);
 pref("loop.browserSharing.showInfoBar", true);
-pref("loop.contextInConversations.enabled", false);
+pref("loop.contextInConversations.enabled", true);
 
 pref("social.sidebar.unload_timeout_ms", 10000);
 

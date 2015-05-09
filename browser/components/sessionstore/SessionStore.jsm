@@ -310,18 +310,7 @@ this.SessionStore = {
 
   reviveCrashedTab(aTab) {
     return SessionStoreInternal.reviveCrashedTab(aTab);
-  },
-
-  /**
-   * Backstage pass to implementation details, used for testing purpose.
-   * Controlled by preference "browser.sessionstore.testmode".
-   */
-  get _internal() {
-    if (Services.prefs.getBoolPref("browser.sessionstore.debug")) {
-      return SessionStoreInternal;
-    }
-    return undefined;
-  },
+  }
 };
 
 // Freeze the SessionStore object. We don't want anyone to modify it.

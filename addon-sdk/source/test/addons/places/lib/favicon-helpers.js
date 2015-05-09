@@ -5,7 +5,6 @@
 const { Cc, Ci, Cu } = require('chrome');
 const { Loader } = require('sdk/test/loader');
 const loader = Loader(module);
-const file = require('sdk/io/file');
 const httpd = loader.require('./httpd');
 const { pathFor } = require('sdk/system');
 const { startServerAsync } = httpd;
@@ -14,17 +13,21 @@ const { atob } = Cu.import("resource://gre/modules/Services.jsm", {});
 const historyService = Cc["@mozilla.org/browser/nav-history-service;1"]
                        .getService(Ci.nsINavHistoryService);
 const { events } = require('sdk/places/events');
+const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 
-function onFaviconChange (url, callback) {
-  function handler ({data, type}) {
-    if (type !== 'history-page-changed' ||
-        data.url !== url ||
-        data.property !== Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON)
-      return;
-    events.off('data', handler);
-    callback(data.value);
-  }
-  events.on('data', handler);
+function onFaviconChange (url) {
+  return new Promise(resolve => {
+    function handler ({data, type}) {
+      if (type !== 'history-page-changed' ||
+          data.url !== url ||
+          data.property !== Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON)
+        return;
+      events.off('data', handler);
+      resolve(data.value);
+    }
+
+    events.on('data', handler);
+  });
 }
 exports.onFaviconChange = onFaviconChange;
 
@@ -35,15 +38,16 @@ function serve ({name, favicon, port, host}) {
   let faviconTag = '<link rel="icon" type="image/x-icon" href="/'+ name +'.ico"/>';
   let content = '<html><head>' + faviconTag + '<title>'+name+'</title></head><body></body></html>';
   let srv = startServerAsync(port, basePath);
-  let pagePath = file.join(basePath, name + '.html');
-  let iconPath = file.join(basePath, name + '.ico');
-  let pageStream = file.open(pagePath, 'w');
-  let iconStream = file.open(iconPath, 'wb');
-  iconStream.write(favicon);
-  iconStream.close();
-  pageStream.write(content);
-  pageStream.close();
-  return srv;
+
+  let pagePath = OS.Path.join(basePath, name + '.html');
+  let iconPath = OS.Path.join(basePath, name + '.ico');
+
+
+  return OS.File.writeAtomic(iconPath, favicon).
+    then(() => {
+      return OS.File.writeAtomic(pagePath, content);
+    }).
+    then(() => srv);
 }
 exports.serve = serve;
 

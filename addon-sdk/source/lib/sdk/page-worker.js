@@ -27,6 +27,7 @@ const { has } = require('./util/array');
 const { Rules } = require('./util/rules');
 const { merge } = require('./util/object');
 const { data } = require('./self');
+const { getActiveView } = require("./view/core");
 
 const views = new WeakMap();
 const workers = new WeakMap();
@@ -181,3 +182,5 @@ function pageFromDoc(doc) {
       return page;
   return null;
 }
+
+getActiveView.define(Page, viewFor);
