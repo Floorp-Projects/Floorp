@@ -7,6 +7,8 @@ package org.mozilla.gecko.widget;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -24,9 +26,12 @@ import android.widget.Toast;
 import ch.boye.httpclientandroidlib.util.TextUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONArray;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
+import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 
 public class LoginDoorHanger extends DoorHanger {
     private static final String LOGTAG = "LoginDoorHanger";
@@ -88,11 +93,12 @@ public class LoginDoorHanger extends DoorHanger {
     protected Button createButtonInstance(final String text, final int id) {
         // HACK: Confirm button will the the rightmost/last button added. Bug 1147064 should add differentiation of the two.
         mCallbackID = id;
+        return super.createButtonInstance(text, id);
+    }
 
-        final Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
-        button.setText(text);
-
-        button.setOnClickListener(new Button.OnClickListener() {
+    @Override
+    protected OnClickListener makeOnButtonClickListener(final int id) {
+        return new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final JSONObject response = new JSONObject();
@@ -103,9 +109,7 @@ public class LoginDoorHanger extends DoorHanger {
                 }
                 mOnButtonClickListener.onButtonClick(response, LoginDoorHanger.this);
             }
-        });
-
-        return button;
+        };
     }
 
     /**
@@ -182,7 +186,46 @@ public class LoginDoorHanger extends DoorHanger {
                     break;
 
                 case SELECT:
-
+                    try {
+                        builder.setTitle(mResources.getString(R.string.doorhanger_login_select_title));
+                        final JSONArray logins = bundle.getJSONArray("logins");
+                        final int numLogins = logins.length();
+                        final CharSequence[] usernames = new CharSequence[numLogins];
+                        final String[] passwords = new String[numLogins];
+                        final String noUser = mResources.getString(R.string.doorhanger_login_no_username);
+                        for (int i = 0; i < numLogins; i++) {
+                            final JSONObject login = (JSONObject) logins.get(i);
+                            String user = login.getString("username");
+                            if (TextUtils.isEmpty(user)) {
+                                user = noUser;
+                            }
+                            usernames[i] = user;
+                            passwords[i] = login.getString("password");
+                        }
+                        builder.setItems(usernames, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final JSONObject response = new JSONObject();
+                                try {
+                                    response.put("callback", SiteIdentityPopup.ButtonType.COPY.ordinal());
+                                    response.put("password", passwords[which]);
+                                } catch (JSONException e) {
+                                    Log.e(LOGTAG, "Error making login select dialog JSON", e);
+                                }
+                                mOnButtonClickListener.onButtonClick(response, LoginDoorHanger.this);
+                            }
+                        });
+                        builder.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        mLink.setText(R.string.doorhanger_login_select_action_text);
+                        mLink.setVisibility(View.VISIBLE);
+                    } catch (JSONException e) {
+                        Log.e(LOGTAG, "Problem creating list of logins");
+                    }
                     break;
             }
 

@@ -168,6 +168,8 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         }
 
         final JSONObject login = (JSONObject) logins.get(0);
+
+        // Create button click listener for copying a password to the clipboard.
         final OnButtonClickListener buttonClickListener = new OnButtonClickListener() {
             @Override
             public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
@@ -175,7 +177,13 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
                     final int buttonId = response.getInt("callback");
                     if (buttonId == ButtonType.COPY.ordinal()) {
                         final ClipboardManager manager = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                        final String password = login.getString("password");
+                        String password;
+                        if (response.has("password")) {
+                            // Click listener being called from List Dialog.
+                            password = response.optString("password");
+                        } else {
+                            password = login.getString("password");
+                        }
                         if (AppConstants.Versions.feature11Plus) {
                             manager.setPrimaryClip(ClipData.newPlainText("password", password));
                         } else {
@@ -211,9 +219,16 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         final JSONObject titleObj = siteLogins.getTitle();
         options.put("title", titleObj);
 
+        // Add action text only if there are other logins to select.
         if (logins.length() > 1) {
-            // TODO: Fetch actionText if there is more than one login.
-            final JSONObject actionText = null;
+
+            final JSONObject actionText = new JSONObject();
+            actionText.put("type", "SELECT");
+
+            final JSONObject bundle = new JSONObject();
+            bundle.put("logins", logins);
+
+            actionText.put("bundle", bundle);
             options.put("actionText", actionText);
         }
 
