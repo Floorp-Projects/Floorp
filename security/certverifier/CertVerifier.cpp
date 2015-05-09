@@ -23,9 +23,7 @@
 using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gCertVerifierLog = nullptr;
-#endif
 
 namespace mozilla { namespace psm {
 
@@ -50,11 +48,9 @@ CertVerifier::~CertVerifier()
 void
 InitCertVerifierLog()
 {
-#ifdef PR_LOGGING
   if (!gCertVerifierLog) {
     gCertVerifierLog = PR_NewLogModule("certverifier");
   }
-#endif
 }
 
 SECStatus

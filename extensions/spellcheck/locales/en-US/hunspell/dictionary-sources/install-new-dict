@@ -21,6 +21,9 @@ cp $SPELLER/en_US.dic $SPELLER/en_US.aff $SPELLER/README_en_US.txt orig
 mkdir mozilla-bk
 mv ../en-US.dic ../en-US.aff ../README_en_US.txt mozilla-bk
 
+# Convert the affix file to ISO8859-1
+sed -i=bak -e '/^ICONV/d' -e 's/^SET UTF8$/SET ISO8859-1/' en_US-mozilla.aff
+
 cp en_US-mozilla.aff ../en-US.aff
 cp en_US-mozilla.dic ../en-US.dic
 cp README_en_US-mozilla.txt ../README_en_US.txt

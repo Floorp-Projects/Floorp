@@ -28,9 +28,7 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
-#endif
 
 static void AccumulateCipherSuite(Telemetry::ID probe,
                                   const SSLChannelInfo& channelInfo);
@@ -334,7 +332,6 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
   while (retryable_error &&
          retry_count < max_retries);
 
-#ifdef PR_LOGGING
   if (retry_count > 1)
   {
     if (retryable_error)
@@ -345,7 +342,6 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
              ("nsNSSHttpRequestSession::trySendAndReceiveFcn - success at attempt %d\n",
               retry_count));
   }
-#endif
 
   return result_sec_status;
 }
@@ -662,13 +658,11 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
 
   nsresult rv = aLoader->GetRequest(getter_AddRefs(req));
   
-#ifdef PR_LOGGING
   if (NS_FAILED(aStatus))
   {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("nsHTTPListener::OnStreamComplete status failed %d", aStatus));
   }
-#endif
 
   if (NS_SUCCEEDED(rv))
     hchan = do_QueryInterface(req, &rv);

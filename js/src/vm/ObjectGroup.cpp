@@ -414,7 +414,7 @@ class ObjectGroupCompartment::NewTableRef : public gc::BufferableRef
         : table(table), clasp(clasp), proto(proto), associated(associated)
     {}
 
-    void mark(JSTracer* trc) {
+    void trace(JSTracer* trc) override {
         JSObject* prior = proto;
         TraceManuallyBarrieredEdge(trc, &proto, "newObjectGroups set prototype");
         if (prior == proto)

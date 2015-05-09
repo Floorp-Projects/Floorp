@@ -165,7 +165,7 @@ CSSUnprefixingService.prototype = {
       newValue = this.standardizeOldGradientArgs(type, parts.slice(1));
       unprefixedFuncName = type + "-gradient";
     }else{ // we're dealing with more modern syntax - should be somewhat easier, at least for linear gradients.
-        // Fix three things: remove -webkit-, add 'to ' before reversed top/bottom keywords, recalculate deg-values
+        // Fix three things: remove -webkit-, add 'to ' before reversed top/bottom keywords (linear) or 'at ' before position keywords (radial), recalculate deg-values
         // -webkit-linear-gradient( [ [ <angle> | [top | bottom] || [left | right] ],]? <color-stop>[, <color-stop>]+);
         if (aPrefixedFuncName != "-webkit-linear-gradient" &&
             aPrefixedFuncName != "-webkit-radial-gradient") {
@@ -175,27 +175,31 @@ CSSUnprefixingService.prototype = {
         unprefixedFuncName = aPrefixedFuncName.replace(/-webkit-/, '');
 
         // Keywords top, bottom, left, right: can be stand-alone or combined pairwise but in any order ('top left' or 'left top')
-        // These give the starting edge or corner in the -webkit syntax. The standardised equivalent is 'to ' plus opposite values
-        newValue = aPrefixedFuncBody.replace(/(top|bottom|left|right)+\s*(top|bottom|left|right)*/, function(str){
-            var words = str.split(/\s+/);
-            for(var i=0; i<words.length; i++){
-                switch(words[i].toLowerCase()){
-                    case 'top':
-                        words[i] = 'bottom';
-                        break;
-                    case 'bottom':
-                        words[i] = 'top';
-                        break;
-                    case 'left':
-                        words[i] = 'right';
-                        break;
-                    case 'right':
-                        words[i] = 'left';
+        // These give the starting edge or corner in the -webkit syntax. The standardised equivalent is 'to ' plus opposite values for linear gradients, 'at ' plus same values for radial gradients
+        if(unprefixedFuncName.indexOf('linear') > -1){
+            newValue = aPrefixedFuncBody.replace(/(top|bottom|left|right)+\s*(top|bottom|left|right)*/, function(str){
+                var words = str.split(/\s+/);
+                for(var i=0; i<words.length; i++){
+                    switch(words[i].toLowerCase()){
+                        case 'top':
+                            words[i] = 'bottom';
+                            break;
+                        case 'bottom':
+                            words[i] = 'top';
+                            break;
+                        case 'left':
+                            words[i] = 'right';
+                            break;
+                        case 'right':
+                            words[i] = 'left';
+                    }
                 }
-            }
-            str = words.join(' ');
-            return ( 'to ' + str);
-        });
+                str = words.join(' ');
+                return ( 'to ' + str);
+            });
+        }else{
+            newValue = aPrefixedFuncBody.replace(/(top|bottom|left|right)+\s/, 'at $1 ');
+        }
 
         newValue = newValue.replace(/\d+deg/, function (val) {
              return (360 - (parseInt(val)-90))+'deg';

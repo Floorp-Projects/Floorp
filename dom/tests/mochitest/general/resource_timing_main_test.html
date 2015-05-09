@@ -76,7 +76,7 @@ window.onload = function() {
     bufferFullCounter += 1;
   }
 
-  // Here, we should have 6 entries (1 css, 3 png, 1 html) since the image was loaded.
+  // Here, we should have 5 entries (1 css, 3 png, 1 html) since the image was loaded.
   is(window.performance.getEntries().length, 5, "Performance.getEntries() returned wrong number of entries.");
 
   checkStringify(window.performance.getEntries()[0]);

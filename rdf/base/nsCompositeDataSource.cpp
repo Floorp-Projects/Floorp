@@ -42,12 +42,10 @@
 
 #include "nsEnumeratorUtils.h"
 
-#ifdef PR_LOGGING
 #include "prlog.h"
 #include "prprf.h"
 #include <stdio.h>
 PRLogModuleInfo* nsRDFLog = nullptr;
-#endif
 
 //----------------------------------------------------------------------
 //
@@ -492,10 +490,8 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 	  mCoalesceDuplicateArcs(true),
       mUpdateBatchNest(0)
 {
-#ifdef PR_LOGGING
     if (nsRDFLog == nullptr) 
         nsRDFLog = PR_NewLogModule("RDF");
-#endif
 }
 
 //----------------------------------------------------------------------
