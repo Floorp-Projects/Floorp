@@ -110,7 +110,7 @@ Object.freeze({
   injectTimers: function injectTimers(exports, chromeAPI, pipe, console) {
     // wrapped functions from `'timer'` module.
     // Wrapper adds `try catch` blocks to the callbacks in order to
-    // emit `error` event on a symbiont if exception is thrown in
+    // emit `error` event if exception is thrown in
     // the Worker global scope.
     // @see http://www.w3.org/TR/workers/#workerutils
 

@@ -884,6 +884,7 @@ exports.writeFile = writeFile;
  * The synchronous version of `fs.writeFile`.
  */
 function writeFileSync(filename, data, encoding) {
+  // TODO: Implement this in bug 1148209 https://bugzilla.mozilla.org/show_bug.cgi?id=1148209
   throw Error("Not implemented");
 };
 exports.writeFileSync = writeFileSync;

@@ -6,7 +6,7 @@ If you find a problem, please [report the bug here](https://bugzilla.mozilla.org
 
 ## Developing Add-ons
 
-These resources should provide some help:
+These resources offer some help:
 
 * [Add-on SDK Documentation](https://developer.mozilla.org/en-US/Add-ons/SDK)
 * [Community Developed Modules](https://github.com/mozilla/addon-sdk/wiki/Community-developed-modules)
@@ -17,7 +17,7 @@ These resources should provide some help:
 
 ## Contributing Code
 
-Please read these two guides if you wish to contribute some patches to the addon-sdk:
+Please read these two guides if you wish to make some patches to the addon-sdk:
 
 * [Contribute Guide](https://github.com/mozilla/addon-sdk/blob/master/CONTRIBUTING.md)
 * [Style Guide](https://github.com/mozilla/addon-sdk/wiki/Coding-style-guide)
@@ -29,3 +29,4 @@ We use [bugzilla](https://bugzilla.mozilla.org/) as our issue tracker, here are 
 * [File a bug](https://bugzilla.mozilla.org/enter_bug.cgi?product=Add-on%20SDK)
 * [Open bugs](https://bugzilla.mozilla.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&columnlist=bug_severity%2Cpriority%2Cassigned_to%2Cbug_status%2Ctarget_milestone%2Cresolution%2Cshort_desc%2Cchangeddate&product=Add-on%20SDK&query_format=advanced&order=priority)
 * [Good first bugs](https://bugzilla.mozilla.org/buglist.cgi?status_whiteboard=[good+first+bug]&&resolution=---&product=Add-on+SDK)
+* [Good next bugs](https://bugzilla.mozilla.org/buglist.cgi?status_whiteboard=[good+next+bug]&&resolution=---&product=Add-on+SDK)

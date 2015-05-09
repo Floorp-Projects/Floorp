@@ -83,7 +83,7 @@ loop.shared.views = (function(_, l10n) {
    *                                 loop.shared.utils.SCREEN_SHARE_STATES
    */
   var ScreenShareControlButton = React.createClass({
-    mixins: [sharedMixins.DropdownMenuMixin],
+    mixins: [sharedMixins.DropdownMenuMixin()],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -151,7 +151,8 @@ loop.shared.views = (function(_, l10n) {
       var dropdownMenuClasses = cx({
         "native-dropdown-menu": true,
         "conversation-window-dropdown": true,
-        "visually-hidden": !this.state.showMenu
+        "hide": !this.state.showMenu,
+        "visually-hidden": true
       });
       var windowSharingClasses = cx({
         "disabled": this.state.windowSharingDisabled

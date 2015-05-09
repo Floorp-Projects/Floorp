@@ -261,6 +261,25 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   };
 
   /**
+   * Helper to get the current short platform string, based on the return value
+   * of `getOS`.
+   * Possible return values are 'mac', 'win' or 'other'.
+   *
+   * @param  {String} [os] Optional string for the OS, used in tests only.
+   * @return {String} 'mac', 'win' or 'other'.
+   */
+  var getPlatform = function(os) {
+    os = getOS(os);
+    var platform = "other";
+    if (os.indexOf("mac") > -1) {
+      platform = "mac";
+    } else if (os.indexOf("win") > -1) {
+      platform = "win";
+    }
+    return platform;
+  };
+
+  /**
    * Helper to allow getting some of the location data in a way that's compatible
    * with stubbing for unit tests.
    */
@@ -632,6 +651,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     getBoolPreference: getBoolPreference,
     getOS: getOS,
     getOSVersion: getOSVersion,
+    getPlatform: getPlatform,
     isChrome: isChrome,
     isFirefox: isFirefox,
     isFirefoxOS: isFirefoxOS,

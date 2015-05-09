@@ -948,9 +948,10 @@ let MozLoopServiceInternal = {
   /**
    * Get the OAuth client constructed with Loop OAauth parameters.
    *
+   * @param {Boolean} forceReAuth Set to true to force the user to reauthenticate.
    * @return {Promise}
    */
-  promiseFxAOAuthClient: Task.async(function* () {
+  promiseFxAOAuthClient: Task.async(function* (forceReAuth) {
     // We must make sure to have only a single client otherwise they will have different states and
     // multiple channels. This would happen if the user clicks the Login button more than once.
     if (gFxAOAuthClientPromise) {
@@ -961,6 +962,10 @@ let MozLoopServiceInternal = {
       parameters => {
         // Add the fact that we want keys to the parameters.
         parameters.keys = true;
+        if (forceReAuth) {
+          parameters.action = "force_auth";
+          parameters.email = MozLoopService.userProfile.email;
+        }
 
         try {
           gFxAOAuthClient = new FxAccountsOAuthClient({
@@ -984,11 +989,12 @@ let MozLoopServiceInternal = {
   /**
    * Get the OAuth client and do the authorization web flow to get an OAuth code.
    *
+   * @param {Boolean} forceReAuth Set to true to force the user to reauthenticate.
    * @return {Promise}
    */
-  promiseFxAOAuthAuthorization: function() {
+  promiseFxAOAuthAuthorization: function(forceReAuth) {
     let deferred = Promise.defer();
-    this.promiseFxAOAuthClient().then(
+    this.promiseFxAOAuthClient(forceReAuth).then(
       client => {
         client.onComplete = this._fxAOAuthComplete.bind(this, deferred);
         client.onError = this._fxAOAuthError.bind(this, deferred);
@@ -1366,6 +1372,18 @@ this.MozLoopService = {
     });
   },
 
+  /**
+   * Returns true if this profile has an encryption key. For guest profiles
+   * this is always true, since we can generate a new one if needed. For FxA
+   * profiles, we need to check the preference.
+   *
+   * @return {Boolean} True if the profile has an encryption key.
+   */
+  get hasEncryptionKey() {
+    return !this.userProfile ||
+      Services.prefs.prefHasUserValue("loop.key.fxa");
+  },
+
   get errors() {
     return MozLoopServiceInternal.errors;
   },
@@ -1468,14 +1486,15 @@ this.MozLoopService = {
    *
    * The caller should be prepared to handle rejections related to network, server or login errors.
    *
+   * @param {Boolean} forceReAuth Set to true to force the user to reauthenticate.
    * @return {Promise} that resolves when the FxA login flow is complete.
    */
-  logInToFxA: function() {
+  logInToFxA: function(forceReAuth) {
     log.debug("logInToFxA with fxAOAuthTokenData:", !!MozLoopServiceInternal.fxAOAuthTokenData);
-    if (MozLoopServiceInternal.fxAOAuthTokenData) {
+    if (!forceReAuth && MozLoopServiceInternal.fxAOAuthTokenData) {
       return Promise.resolve(MozLoopServiceInternal.fxAOAuthTokenData);
     }
-    return MozLoopServiceInternal.promiseFxAOAuthAuthorization().then(response => {
+    return MozLoopServiceInternal.promiseFxAOAuthAuthorization(forceReAuth).then(response => {
       return MozLoopServiceInternal.promiseFxAOAuthToken(response.code, response.state);
     }).then(tokenData => {
       MozLoopServiceInternal.fxAOAuthTokenData = tokenData;

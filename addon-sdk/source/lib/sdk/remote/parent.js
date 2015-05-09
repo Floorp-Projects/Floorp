@@ -46,7 +46,7 @@ let pathMapping = Object.keys(options.paths)
 let { getNewLoaderID } = require('../../framescript/FrameScriptManager.jsm');
 let PATH = options.paths[''];
 
-const childOptions = omit(options, ['modules', 'globals']);
+const childOptions = omit(options, ['modules', 'globals', 'resolve', 'load']);
 childOptions.modules = {};
 // @l10n/data is just JSON data and can be safely sent across to the child loader
 try {

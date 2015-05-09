@@ -40,24 +40,25 @@ input[type=button] {
 /* CUSTOMIZE */
 #newtab-customize-button {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 10px;
+  right: 20px;
+  z-index: 101;
 }
 
 #newtab-customize-button:-moz-locale-dir(rtl) {
-  left: 6px;
+  left: 20px;
   right: auto;
 }
 
 #newtab-intro-what {
   cursor: pointer;
   position: absolute;
-  right: 55px;
-  top: 15px;
+  right: 70px;
+  top: 20px;
 }
 
 #newtab-intro-what:-moz-locale-dir(rtl) {
-  left: 55px;
+  left: 70px;
   right: auto;
 }
 
@@ -158,8 +159,8 @@ input[type=button] {
 /* CELLS */
 .newtab-cell {
   display: -moz-box;
-  height: 180px;
-  margin: 20px 10px 68px;
+  height: 210px;
+  margin: 20px 10px 35px;
   width: 290px;
 }
 
@@ -203,16 +204,18 @@ input[type=button] {
 
 .newtab-sponsored,
 .newtab-title {
-  bottom: -26px;
+  bottom: 0;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: 13px;
+  line-height: 30px;
+  vertical-align: middle;
+  background-color: #F2F2F2;
 }
 
 .newtab-suggested {
-  border: 1px solid #dcdcdc;
+  border: 1px solid transparent;
   border-radius: 2px;
-  cursor: pointer;
   font-size: 12px;
   height: 17px;
   line-height: 17px;
@@ -223,6 +226,7 @@ input[type=button] {
   margin-right: auto;
   left: 0;
   top: 215px;
+  -moz-user-select: none;
 }
 
 .newtab-suggested-bounds {
@@ -231,7 +235,6 @@ input[type=button] {
 
 .newtab-title {
   left: 0;
-  padding-top: 14px;
 }
 
 .newtab-sponsored {
@@ -243,7 +246,7 @@ input[type=button] {
   font-size: 10px;
   height: 17px;
   line-height: 17px;
-  margin-bottom: -1px;
+  margin: 5px;
   padding: 0 4px;
 }
 
@@ -258,7 +261,7 @@ input[type=button] {
   right: auto;
 }
 
-.newtab-site:-moz-any([type=enhanced], [type=sponsored]) .newtab-sponsored {
+.newtab-site:-moz-any([type=enhanced], [type=sponsored], [suggested]) .newtab-sponsored {
   display: block;
 }
 
@@ -276,9 +279,7 @@ input[type=button] {
 .sponsored-explain,
 .suggested-explain {
   background-color: rgba(51, 51, 51, 0.95);
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-  bottom: 0px;
+  bottom: 30px;
   line-height: 20px;
   padding: 15px 10px;
   position: absolute;
@@ -487,6 +488,40 @@ input[type=button] {
   transition-duration: 0ms;
 }
 
+#newtab-customize-overlay {
+  opacity: 0;
+  display: none;
+  width: 100%;
+  height: 100%;
+  background: #F9F9F9;
+  z-index: 100;
+  position: fixed;
+  transition: opacity .07s linear;
+}
+
+#newtab-customize-panel {
+  z-index: 101;
+  margin-top: -5px;
+  min-width: 270px;
+}
+
+#newtab-customize-title {
+  color: #7A7A7A;
+  font-size: 14px;
+  background-color: #FFFFFF;
+  height: 52px;
+  line-height: 52px;
+  padding-left: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: default;
+  border-radius: 5px 5px 0px 0px;
+}
+
+#newtab-customize-title > label {
+  cursor: default;
+}
+
 #newtab-customize-panel > .panel-arrowcontainer > .panel-arrowcontent,
 #newtab-search-panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
@@ -495,7 +530,10 @@ input[type=button] {
 .newtab-customize-panel-item,
 .newtab-search-panel-engine,
 #newtab-search-manage {
-  padding: 10px 10px 10px 25px;
+  line-height: 54px;
+  padding-left: 40px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .newtab-customize-panel-item:not(:last-child),
@@ -510,28 +548,76 @@ input[type=button] {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
+.newtab-customize-panel-subitem > label,
 .newtab-customize-panel-item > label,
 .newtab-search-panel-engine > label,
-#newtab-search-manage > label {
+#newtab-search-manage > label,
+.newtab-customize-complex-option {
   padding: 0;
   margin: 0;
+  cursor: pointer;
 }
 
-.newtab-customize-panel-item:not([selected]) {
-  color: #919191;
+.newtab-customize-panel-item:not([selected]),
+.newtab-customize-panel-subitem:not([selected]){
+  color: #7A7A7A;
+}
+
+.newtab-customize-panel-item:not([selected]):hover {
+  color: #FFFFFF;
+  background-color: #4A90E2
+}
+
+.newtab-customize-complex-option:hover > .selectable:not([selected]),
+.selectable:not([selected]):hover {
+  background: url("chrome://global/skin/menu/shared-menu-check-hover.svg") no-repeat #FFFFFF;
+  background-size: 16px 16px;
+  background-position: 15px 20px;
+  color: #171F26;
+}
+
+.newtab-customize-complex-option:hover > .selectable:not([selected]) + .newtab-customize-panel-subitem {
+  background-color: #FFFFFF;
 }
 
 .newtab-customize-panel-item[selected],
 .newtab-search-panel-engine[selected] {
-  background: url("chrome://global/skin/menu/shared-menu-check.png") center left 4px no-repeat transparent;
+  background: url("chrome://global/skin/menu/shared-menu-check-active.svg") no-repeat transparent;
   background-size: 16px 16px;
+  background-position: 15px 20px;
+  color: black;
+  font-weight: 600;
 }
 
-@media (min-resolution: 2dppx) {
-  .newtab-customize-panel-item[selected],
-  .newtab-search-panel-engine[selected] {
-    background-image: url("chrome://global/skin/menu/shared-menu-check@2x.png");
-  }
+.newtab-customize-panel-subitem > .checkbox {
+  width: 18px;
+  height: 18px;
+  background-color: #FFFFFF;
+  border: solid 1px threedshadow;
+}
+
+.newtab-customize-panel-subitem[selected] > .checkbox {
+  background: url("chrome://global/skin/menu/shared-menu-check-black.svg") no-repeat #FFFFFF;
+  background-size: 9px 9px;
+  background-position: center;
+  color: #333333;
+}
+
+.newtab-customize-panel-subitem {
+  font-size: 12px;
+  padding-left: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid threedshadow;
+}
+
+.newtab-customize-panel-subitem > label {
+  padding-left: 10px;
+}
+
+.newtab-customize-panel-superitem {
+  line-height: 14px;
+  border-bottom: medium none !important;
+  padding: 20px 0px 10px 40px;
 }
 
 .searchSuggestionTable {

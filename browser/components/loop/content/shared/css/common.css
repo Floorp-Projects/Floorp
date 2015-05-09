@@ -426,9 +426,9 @@ p {
   border-radius: 2px;
 }
 
-body[dir=rtl] .dropdown-menu-item {
+body[dir=rtl] .dropdown-menu {
   left: auto;
-  right: 10px;
+  right: 0;
 }
 
 .dropdown-menu-item {

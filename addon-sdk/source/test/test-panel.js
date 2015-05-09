@@ -893,34 +893,34 @@ exports['test passing DOM node as first argument'] = function (assert, done) {
 
   let { loader } = LoaderWithHookedConsole(module, onMessage);
   let { Panel } = loader.require('sdk/panel');
-  let { Widget } = loader.require('sdk/widget');
+  let { ActionButton } = loader.require('sdk/ui/button/action');
+  let { getNodeView } = loader.require('sdk/view/core');
   let { document } = getMostRecentBrowserWindow();
-  let widgetId = 'widget:' + self.id + '-panel-widget';
 
   let panel = Panel({
     onShow: function() {
       let panelNode = document.getElementById('mainPopupSet').lastChild;
 
-      assert.equal(panelNode.anchorNode, widgetNode,
-        'the panel is properly anchored to the widget');
+      assert.equal(panelNode.anchorNode, buttonNode,
+        'the panel is properly anchored to the button');
 
       shown.resolve();
     }
   });
 
-  let widget = Widget({
-    id: 'panel-widget',
-    label: 'panel widget',
-    content: '<i></i>',
+  let button = ActionButton({
+    id: 'panel-button',
+    label: 'panel button',
+    icon: './icon.png'
   });
 
-  let widgetNode = document.getElementById(widgetId);
+  let buttonNode = getNodeView(button);
 
   all([warned.promise, shown.promise]).
     then(loader.unload).
     then(done, assert.fail)
 
-  panel.show(widgetNode);
+  panel.show(buttonNode);
 };
 
 // This test is checking that `onpupshowing` events emitted by panel's children

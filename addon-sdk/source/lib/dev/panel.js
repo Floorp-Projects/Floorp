@@ -126,7 +126,7 @@ const Panel = Class({
     return isUninitialized ? Promise.resolve(this) :
            when(this, "unload").then(getTarget);
   },
-  postMessage: function(data, ports) {
+  postMessage: function(data, ports=[]) {
     const manager = managerFor(this);
     manager.sendAsyncMessage("sdk/event/message", {
       type: "message",
@@ -227,11 +227,11 @@ createView.define(Panel, (panel, document) => {
   const frame = document.createElement("iframe");
   setAttributes(frame, {
     "sandbox": "allow-scripts",
-    // It would be great if we could allow remote iframes for sandboxing
-    // panel documents in a content process, but for now platform implementation
-    // is buggy on linux so this is disabled.
-    // "remote": true,
-    "type": "content",
+    // We end up using chrome iframe with forced message manager
+    // as fixing a swapFrameLoader seemed like a giant task (see
+    // Bug 1075490).
+    "type": "chrome",
+    "forcemessagemanager": true,
     "transparent": true,
     "seamless": "seamless",
   });

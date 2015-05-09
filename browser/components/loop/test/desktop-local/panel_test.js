@@ -70,6 +70,9 @@ describe("loop.panel", function() {
         on: sandbox.stub()
       },
       confirm: sandbox.stub(),
+      hasEncryptionKey: true,
+      logInToFxA: sandbox.stub(),
+      logOutFromFxA: sandbox.stub(),
       notifyUITour: sandbox.stub(),
       openURL: sandbox.stub(),
       getSelectedTabMetadata: sandbox.stub()
@@ -453,6 +456,22 @@ describe("loop.panel", function() {
         } catch (ex) {}
       });
 
+      it("should render a SignInRequestView when mozLoop.hasEncryptionKey is false", function() {
+        fakeMozLoop.hasEncryptionKey = false;
+
+        var view = createTestPanelView();
+
+        TestUtils.findRenderedComponentWithType(view, loop.panel.SignInRequestView);
+      });
+
+      it("should render a SignInRequestView when mozLoop.hasEncryptionKey is true", function() {
+        var view = createTestPanelView();
+
+        try {
+          TestUtils.findRenderedComponentWithType(view, loop.panel.SignInRequestView);
+          sinon.assert.fail("Should not find the GettingStartedView if it has been seen");
+        } catch (ex) {}
+      });
     });
   });
 
@@ -929,5 +948,33 @@ describe("loop.panel", function() {
          expect(view.getDOMNode().querySelector(".powered-by")).eql(null);
        });
 
+  });
+
+  describe("loop.panel.SignInRequestView", function() {
+    var view;
+
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(loop.panel.SignInRequestView, {
+          mozLoop: fakeMozLoop
+        }));
+    }
+
+    it("should call login with forced re-authentication when sign-in is clicked", function() {
+      view = mountTestComponent();
+
+      TestUtils.Simulate.click(view.getDOMNode().querySelector("button"));
+
+      sinon.assert.calledOnce(fakeMozLoop.logInToFxA);
+      sinon.assert.calledWithExactly(fakeMozLoop.logInToFxA, true);
+    });
+
+    it("should logout when use as guest is clicked", function() {
+      view = mountTestComponent();
+
+      TestUtils.Simulate.click(view.getDOMNode().querySelector("a"));
+
+      sinon.assert.calledOnce(fakeMozLoop.logOutFromFxA);
+    });
   });
 });

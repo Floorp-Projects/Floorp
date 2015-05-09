@@ -375,6 +375,9 @@ a {
 .inlined-variables-view .message-body {
   display: flex;
   flex-direction: column;
+  resize: vertical;
+  overflow: auto;
+  min-height: 200px;
 }
 .inlined-variables-view iframe {
   display: block;

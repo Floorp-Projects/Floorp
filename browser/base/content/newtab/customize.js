@@ -11,6 +11,8 @@ let gCustomize = {
     "classic",
     "enhanced",
     "panel",
+    "overlay",
+    "learn"
   ],
 
   _nodes: {},
@@ -26,17 +28,47 @@ let gCustomize = {
     });
     this._nodes.classic.addEventListener("click", e => {
       gAllPages.enabled = true;
-      gAllPages.enhanced = false;
+
+      if (this._nodes.enhanced.getAttribute("selected")) {
+        gAllPages.enhanced = true;
+      } else {
+        gAllPages.enhanced = false;
+      }
     });
     this._nodes.enhanced.addEventListener("click", e => {
-      gAllPages.enabled = true;
-      gAllPages.enhanced = true;
+      if (!gAllPages.enabled) {
+        gAllPages.enabled = true;
+        return;
+      }
+      gAllPages.enhanced = !gAllPages.enhanced;
+    });
+    this._nodes.learn.addEventListener("click", e => {
+      window.open(TILES_INTRO_LINK,'new_window');
+      this._onHidden();
     });
 
     this.updateSelected();
   },
 
+  _onHidden: function() {
+    let nodes = gCustomize._nodes;
+    nodes.overlay.addEventListener("transitionend", function onTransitionEnd() {
+      nodes.overlay.removeEventListener("transitionend", onTransitionEnd);
+      nodes.overlay.style.display = "none";
+    });
+    nodes.overlay.style.opacity = 0;
+    nodes.panel.removeEventListener("popuphidden", gCustomize._onHidden);
+    nodes.panel.hidden = true;
+    nodes.button.removeAttribute("active");
+  },
+
   showPanel: function() {
+    this._nodes.overlay.style.display = "block";
+    setTimeout(() => {
+      // Wait for display update to take place, then animate.
+      this._nodes.overlay.style.opacity = 0.8;
+    }, 0);
+
     let nodes = this._nodes;
     let {button, panel} = nodes;
     if (button.hasAttribute("active")) {
@@ -46,11 +78,7 @@ let gCustomize = {
     panel.hidden = false;
     panel.openPopup(button);
     button.setAttribute("active", true);
-    panel.addEventListener("popuphidden", function onHidden() {
-      panel.removeEventListener("popuphidden", onHidden);
-      panel.hidden = true;
-      button.removeAttribute("active");
-    });
+    panel.addEventListener("popuphidden", this._onHidden);
 
     return new Promise(resolve => {
       panel.addEventListener("popupshown", function onShown() {
@@ -72,5 +100,9 @@ let gCustomize = {
         node.removeAttribute("selected");
       }
     });
+    if (selected == "enhanced") {
+      // If enhanced is selected, so is classic (since enhanced is a subitem of classic)
+      this._nodes.classic.setAttribute("selected", true);
+    }
   },
 };

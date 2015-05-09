@@ -4,20 +4,41 @@
 "use strict";
 
 var gulp = require('gulp');
+var patch = require("./bin/node-scripts/apply-patch");
+var ini = require("./bin/node-scripts/update-ini");
 
 gulp.task('test', function(done) {
   require("./bin/jpm-test").run().then(done);
 });
 
 gulp.task('test:addons', function(done) {
-  require("./bin/jpm-test").run("addons").then(done);
+  require("./bin/jpm-test").run("addons").catch(console.error).then(done);
+});
+
+gulp.task('test:docs', function(done) {
+  require("./bin/jpm-test").run("docs").catch(console.error).then(done);
 });
 
 gulp.task('test:examples', function(done) {
-  require("./bin/jpm-test").run("examples").then(done);
+  require("./bin/jpm-test").run("examples").catch(console.error).then(done);
 });
 
 gulp.task('test:modules', function(done) {
-  require("./bin/jpm-test").run("modules").then(done);
+  require("./bin/jpm-test").run("modules").catch(console.error).then(done);
 });
 
+gulp.task('test:ini', function(done) {
+  test("ini").catch(console.error).then(done);
+});
+
+gulp.task('patch:clean', function(done) {
+  patch.clean().catch(console.error).then(done);
+});
+
+gulp.task('patch:apply', function(done) {
+  patch.apply().catch(console.error).then(done);
+});
+
+gulp.task('update:ini', function(done) {
+  ini.updateAddonINI().catch(console.error).then(done);
+});

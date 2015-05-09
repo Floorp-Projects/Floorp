@@ -1017,3 +1017,23 @@ button.button-link:not([disabled="true"]):active:hover {
 #detail-view[active="true"] #detail-experiment-bullet {
   fill: rgb(106, 201, 20);
 }
+
+/*** info UI for add-ons that have been disabled for being unsigned ***/
+
+#show-disabled-unsigned-extensions:not(:hover) {
+  background-color: #fcf8ed;
+}
+
+#disabled-unsigned-addons-info {
+  margin-bottom: 2em;
+}
+
+#disabled-unsigned-addons-heading {
+  font-size: 1.4em;
+  font-weight: bold;
+  margin-bottom: .5em;
+}
+
+#signing-dev-info {
+  font-style: italic;
+}

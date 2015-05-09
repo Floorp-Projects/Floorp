@@ -5,7 +5,7 @@
 "use strict";
 
 module.metadata = {
-  "stability": "experimental"
+  "stability": "deprecated"
 };
 
 const {Cc,Ci,Cr} = require("chrome");

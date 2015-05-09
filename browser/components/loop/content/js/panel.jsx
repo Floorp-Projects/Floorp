@@ -117,7 +117,7 @@ loop.panel = (function(_, mozL10n) {
    * Availability drop down menu subview.
    */
   var AvailabilityDropdown = React.createClass({
-    mixins: [sharedMixins.DropdownMenuMixin],
+    mixins: [sharedMixins.DropdownMenuMixin()],
 
     getInitialState: function() {
       return {
@@ -209,6 +209,45 @@ loop.panel = (function(_, mozL10n) {
           <Button htmlId="fte-button"
                   onClick={this.handleButtonClick}
                   caption={mozL10n.get("first_time_experience_button_label")} />
+        </div>
+      );
+    }
+  });
+
+  /**
+   * Displays a view requesting the user to sign-in again.
+   */
+  var SignInRequestView = React.createClass({
+    mixins: [sharedMixins.WindowCloseMixin],
+
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired
+    },
+
+    handleSignInClick: function(event) {
+      event.preventDefault();
+      this.props.mozLoop.logInToFxA(true);
+      this.closeWindow();
+    },
+
+    handleGuestClick: function(event) {
+      this.props.mozLoop.logOutFromFxA();
+    },
+
+    render: function() {
+      return (
+        <div className="sign-in-request">
+          <h1>{mozL10n.get("sign_in_again_title_line_one")}</h1>
+          <h2>{mozL10n.get("sign_in_again_title_line_two")}</h2>
+          <div>
+            <button className="btn btn-info sign-in-request-button"
+                    onClick={this.handleSignInClick}>
+              {mozL10n.get("sign_in_again_button")}
+            </button>
+          </div>
+          <a onClick={this.handleGuestClick}>
+            {mozL10n.get("sign_in_again_use_as_guest_button")}
+          </a>
         </div>
       );
     }
@@ -322,7 +361,7 @@ loop.panel = (function(_, mozL10n) {
       mozLoop: React.PropTypes.object.isRequired
     },
 
-    mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.WindowCloseMixin],
+    mixins: [sharedMixins.DropdownMenuMixin(), sharedMixins.WindowCloseMixin],
 
     handleClickSettingsEntry: function() {
       // XXX to be implemented at the same time as unhiding the entry
@@ -758,6 +797,7 @@ loop.panel = (function(_, mozL10n) {
 
     getInitialState: function() {
       return {
+        hasEncryptionKey: this.props.mozLoop.hasEncryptionKey,
         userProfile: this.props.userProfile || this.props.mozLoop.userProfile,
         gettingStartedSeen: this.props.mozLoop.getLoopPref("gettingStarted.seen")
       };
@@ -796,7 +836,10 @@ loop.panel = (function(_, mozL10n) {
       var profile = this.props.mozLoop.userProfile;
       var currUid = this.state.userProfile ? this.state.userProfile.uid : null;
       var newUid = profile ? profile.uid : null;
-      if (currUid != newUid) {
+      if (currUid == newUid) {
+        // Update the state of hasEncryptionKey as this might have changed now.
+        this.setState({hasEncryptionKey: this.props.mozLoop.hasEncryptionKey});
+      } else {
         // On profile change (login, logout), switch back to the default tab.
         this.selectTab("rooms");
         this.setState({userProfile: profile});
@@ -827,7 +870,11 @@ loop.panel = (function(_, mozL10n) {
     },
 
     selectTab: function(name) {
-      this.refs.tabView.setState({ selectedTab: name });
+      // The tab view might not be created yet (e.g. getting started or fxa
+      // re-sign in.
+      if (this.refs.tabView) {
+        this.refs.tabView.setState({ selectedTab: name });
+      }
     },
 
     componentWillMount: function() {
@@ -863,6 +910,10 @@ loop.panel = (function(_, mozL10n) {
             <ToSView />
           </div>
         );
+      }
+
+      if (!this.state.hasEncryptionKey) {
+        return <SignInRequestView mozLoop={this.props.mozLoop} />;
       }
 
       // Determine which buttons to NOT show.
@@ -937,10 +988,10 @@ loop.panel = (function(_, mozL10n) {
       notifications={notifications}
       roomStore={roomStore}
       mozLoop={navigator.mozLoop}
-      dispatcher={dispatcher}
-    />, document.querySelector("#main"));
+      dispatcher={dispatcher} />, document.querySelector("#main"));
 
     document.body.setAttribute("dir", mozL10n.getDirection());
+    document.body.setAttribute("platform", loop.shared.utils.getPlatform());
 
     // Notify the window that we've finished initalization and initial layout
     var evtObject = document.createEvent('Event');
@@ -958,6 +1009,7 @@ loop.panel = (function(_, mozL10n) {
     RoomEntry: RoomEntry,
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
+    SignInRequestView: SignInRequestView,
     ToSView: ToSView,
     UserIdentity: UserIdentity
   };
