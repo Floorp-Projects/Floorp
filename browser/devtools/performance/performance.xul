@@ -37,11 +37,12 @@
                 data-pref="show-platform-data"
                 label="&profilerUI.showPlatformData;"
                 tooltiptext="&profilerUI.showPlatformData.tooltiptext;"/>
-      <menuitem id="option-enable-memory"
+      <!-- TODO Re-enable in bug 1163350 -->
+      <!-- <menuitem id="option-enable-memory"
                 type="checkbox"
                 data-pref="enable-memory"
                 label="&profilerUI.enableMemory;"
-                tooltiptext="&profilerUI.enableMemory.tooltiptext;"/>
+                tooltiptext="&profilerUI.enableMemory.tooltiptext;"/> -->
       <menuitem id="option-enable-framerate"
                 type="checkbox"
                 data-pref="enable-framerate"
@@ -62,11 +63,12 @@
                 data-pref="flatten-tree-recursion"
                 label="&profilerUI.flattenTreeRecursion;"
                 tooltiptext="&profilerUI.flattenTreeRecursion.tooltiptext;"/>
-      <menuitem id="option-show-jit-optimizations"
+      <!-- TODO Re-enable in bug 1163351 -->
+      <!-- <menuitem id="option-show-jit-optimizations"
                 type="checkbox"
                 data-pref="show-jit-optimizations"
                 label="&profilerUI.showJITOptimizations;"
-                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/>
+                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/> -->
     </menupopup>
   </popupset>
 
