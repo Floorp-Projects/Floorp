@@ -63,18 +63,19 @@ C1Spewer::spewPass(const char* pass)
 }
 
 void
-C1Spewer::spewRanges(const char* pass, BacktrackingAllocator* regalloc)
+C1Spewer::spewIntervals(const char* pass, BacktrackingAllocator* regalloc)
 {
     if (!spewout_)
         return;
 
-    fprintf(spewout_, "begin_ranges\n");
+    fprintf(spewout_, "begin_intervals\n");
     fprintf(spewout_, " name \"%s\"\n", pass);
 
+    size_t nextId = 0x4000;
     for (MBasicBlockIterator block(graph->begin()); block != graph->end(); block++)
-        spewRanges(spewout_, *block, regalloc);
+        spewIntervals(spewout_, *block, regalloc, nextId);
 
-    fprintf(spewout_, "end_ranges\n");
+    fprintf(spewout_, "end_intervals\n");
     fflush(spewout_);
 }
 
@@ -111,37 +112,42 @@ DumpLIR(FILE* fp, LNode* ins)
 }
 
 void
-C1Spewer::spewRanges(FILE* fp, BacktrackingAllocator* regalloc, LNode* ins)
+C1Spewer::spewIntervals(FILE* fp, BacktrackingAllocator* regalloc, LNode* ins, size_t& nextId)
 {
     for (size_t k = 0; k < ins->numDefs(); k++) {
         uint32_t id = ins->getDef(k)->virtualRegister();
         VirtualRegister* vreg = &regalloc->vregs[id];
 
-        for (LiveRange::RegisterLinkIterator iter = vreg->rangesBegin(); iter; iter++) {
-            LiveRange* range = LiveRange::get(*iter);
-            fprintf(fp, "%d object \"", id);
-            fprintf(fp, "%s", range->bundle()->allocation().toString());
-            fprintf(fp, "\" %d -1", id);
-            fprintf(fp, " [%u, %u[", range->from().bits(), range->to().bits());
-            for (UsePositionIterator usePos(range->usesBegin()); usePos; usePos++)
-                fprintf(fp, " %u M", usePos->pos.bits());
-            fprintf(fp, " \"\"\n");
+        for (size_t i = 0; i < vreg->numIntervals(); i++) {
+            LiveInterval* live = vreg->getInterval(i);
+            if (live->numRanges()) {
+                fprintf(fp, "%d object \"", (i == 0) ? id : int32_t(nextId++));
+                fprintf(fp, "%s", live->getAllocation()->toString());
+                fprintf(fp, "\" %d -1", id);
+                for (size_t j = 0; j < live->numRanges(); j++) {
+                    fprintf(fp, " [%u, %u[", live->getRange(j)->from.bits(),
+                            live->getRange(j)->to.bits());
+                }
+                for (UsePositionIterator usePos(live->usesBegin()); usePos != live->usesEnd(); usePos++)
+                    fprintf(fp, " %u M", usePos->pos.bits());
+                fprintf(fp, " \"\"\n");
+            }
         }
     }
 }
 
 void
-C1Spewer::spewRanges(FILE* fp, MBasicBlock* block, BacktrackingAllocator* regalloc)
+C1Spewer::spewIntervals(FILE* fp, MBasicBlock* block, BacktrackingAllocator* regalloc, size_t& nextId)
 {
     LBlock* lir = block->lir();
     if (!lir)
         return;
 
     for (size_t i = 0; i < lir->numPhis(); i++)
-        spewRanges(fp, regalloc, lir->getPhi(i));
+        spewIntervals(fp, regalloc, lir->getPhi(i), nextId);
 
     for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++)
-        spewRanges(fp, regalloc, *ins);
+        spewIntervals(fp, regalloc, *ins, nextId);
 }
 
 void
