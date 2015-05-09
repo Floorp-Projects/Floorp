@@ -351,7 +351,7 @@ def write_interface(iface, fd):
     def write_attr_decl(a):
         printComments(fd, a.doccomments, '  ')
 
-        fd.write("  /* %s */\n" % a.toIDL());
+        fd.write("  /* %s */\n" % a.toIDL())
 
         fd.write("  %s = 0;\n" % attributeAsNative(a, True))
         if a.infallible:

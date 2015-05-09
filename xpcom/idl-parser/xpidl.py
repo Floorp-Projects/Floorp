@@ -740,20 +740,20 @@ class Attribute(object):
                     raise IDLError("'Null' attribute requires a value", aloc)
                 if readonly:
                     raise IDLError("'Null' attribute only makes sense for setters",
-                                   aloc);
+                                   aloc)
                 if value not in ('Empty', 'Null', 'Stringify'):
                     raise IDLError("'Null' attribute value must be 'Empty', 'Null' or 'Stringify'",
-                                   aloc);
+                                   aloc)
                 self.null = value
             elif name == 'Undefined':
                 if value is None:
                     raise IDLError("'Undefined' attribute requires a value", aloc)
                 if readonly:
                     raise IDLError("'Undefined' attribute only makes sense for setters",
-                                   aloc);
+                                   aloc)
                 if value not in ('Empty', 'Null'):
                     raise IDLError("'Undefined' attribute value must be 'Empty' or 'Null'",
-                                   aloc);
+                                   aloc)
                 self.undefined = value
             else:
                 if value is not None:
@@ -949,14 +949,14 @@ class Param(object):
                     raise IDLError("'Null' must specify a parameter", aloc)
                 if value not in ('Empty', 'Null', 'Stringify'):
                     raise IDLError("'Null' parameter value must be 'Empty', 'Null', or 'Stringify'",
-                                   aloc);
+                                   aloc)
                 self.null = value
             elif name == 'Undefined':
                 if value is None:
                     raise IDLError("'Undefined' must specify a parameter", aloc)
                 if value not in ('Empty', 'Null'):
                     raise IDLError("'Undefined' parameter value must be 'Empty' or 'Null'",
-                                   aloc);
+                                   aloc)
                 self.undefined = value
             else:
                 if value is not None:
