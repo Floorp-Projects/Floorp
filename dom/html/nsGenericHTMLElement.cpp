@@ -1883,26 +1883,9 @@ nsGenericHTMLElement::TouchEventsEnabled(JSContext* /* unused */, JSObject* /* u
 
 //----------------------------------------------------------------------
 
-NS_IMPL_ADDREF_INHERITED(nsGenericHTMLFormElement, nsGenericHTMLElement)
-NS_IMPL_RELEASE_INHERITED(nsGenericHTMLFormElement, nsGenericHTMLElement)
-
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED(nsGenericHTMLFormElement,
-                               nsIFormControl)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFormElement)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFormElement,
-                                                  nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mForm)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGenericHTMLFormElement,
-                                                nsGenericHTMLElement)
-  tmp->ClearForm(true);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
+  , mForm(nullptr)
   , mFieldSet(nullptr)
 {
   // We should add the NS_EVENT_STATE_ENABLED bit here as needed, but
@@ -1919,6 +1902,10 @@ nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
   // Check that this element doesn't know anything about its form at this point.
   NS_ASSERTION(!mForm, "mForm should be null at this point!");
 }
+
+NS_IMPL_ISUPPORTS_INHERITED(nsGenericHTMLFormElement,
+                            nsGenericHTMLElement,
+                            nsIFormControl)
 
 nsINode*
 nsGenericHTMLFormElement::GetScopeChainParent() const
@@ -1999,8 +1986,7 @@ nsresult
 nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);
-  nsRefPtr<HTMLFormElement> copy(mForm);
-  copy.forget(aForm);
+  NS_IF_ADDREF(*aForm = mForm);
   return NS_OK;
 }
 
