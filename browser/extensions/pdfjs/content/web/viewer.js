@@ -19,7 +19,7 @@
            PDFHistory, Preferences, SidebarView, ViewHistory, Stats,
            PDFThumbnailViewer, URL, noContextMenuHandler, SecondaryToolbar,
            PasswordPrompt, PDFPresentationMode, HandTool, Promise,
-           DocumentProperties, PDFOutlineView, PDFAttachmentView,
+           PDFDocumentProperties, PDFOutlineView, PDFAttachmentView,
            OverlayManager, PDFFindController, PDFFindBar, getVisibleElements,
            watchScroll, PDFViewer, PDFRenderingQueue, PresentationModeState,
            RenderingStates, DEFAULT_SCALE, UNKNOWN_SCALE,
@@ -1689,7 +1689,6 @@ var SecondaryToolbar = {
 
   initialize: function secondaryToolbarInitialize(options) {
     this.toolbar = options.toolbar;
-    this.documentProperties = options.documentProperties;
     this.buttonContainer = this.toolbar.firstElementChild;
 
     // Define the toolbar buttons.
@@ -1779,7 +1778,7 @@ var SecondaryToolbar = {
   },
 
   documentPropertiesClick: function secondaryToolbarDocumentPropsClick(evt) {
-    this.documentProperties.open();
+    PDFViewerApplication.pdfDocumentProperties.open();
     this.close();
   },
 
@@ -2677,42 +2676,28 @@ var PasswordPrompt = {
 };
 
 
-var DocumentProperties = {
-  overlayName: null,
-  rawFileSize: 0,
+/**
+ * @typedef {Object} PDFDocumentPropertiesOptions
+ * @property {string} overlayName - Name/identifier for the overlay.
+ * @property {Object} fields - Names and elements of the overlay's fields.
+ * @property {HTMLButtonElement} closeButton - Button for closing the overlay.
+ */
 
-  // Document property fields (in the viewer).
-  fileNameField: null,
-  fileSizeField: null,
-  titleField: null,
-  authorField: null,
-  subjectField: null,
-  keywordsField: null,
-  creationDateField: null,
-  modificationDateField: null,
-  creatorField: null,
-  producerField: null,
-  versionField: null,
-  pageCountField: null,
-  url: null,
-  pdfDocument: null,
-
-  initialize: function documentPropertiesInitialize(options) {
+/**
+ * @class
+ */
+var PDFDocumentProperties = (function PDFDocumentPropertiesClosure() {
+  /**
+   * @constructs PDFDocumentProperties
+   * @param {PDFDocumentPropertiesOptions} options
+   */
+  function PDFDocumentProperties(options) {
+    this.fields = options.fields;
     this.overlayName = options.overlayName;
 
-    // Set the document property fields.
-    this.fileNameField = options.fileNameField;
-    this.fileSizeField = options.fileSizeField;
-    this.titleField = options.titleField;
-    this.authorField = options.authorField;
-    this.subjectField = options.subjectField;
-    this.keywordsField = options.keywordsField;
-    this.creationDateField = options.creationDateField;
-    this.modificationDateField = options.modificationDateField;
-    this.creatorField = options.creatorField;
-    this.producerField = options.producerField;
-    this.versionField = options.versionField;
-    this.pageCountField = options.pageCountField;
+    this.rawFileSize = 0;
+    this.url = null;
+    this.pdfDocument = null;
 
     // Bind the event listener for the Close button.
     if (options.closeButton) {
@@ -2724,138 +2709,179 @@ var DocumentProperties = {
     }.bind(this));
 
     OverlayManager.register(this.overlayName, this.close.bind(this));
-  },
+  }
 
-  getProperties: function documentPropertiesGetProperties() {
-    if (!OverlayManager.active) {
-      // If the dialog was closed before dataAvailablePromise was resolved,
-      // don't bother updating the properties.
-      return;
-    }
-    // Get the file size (if it hasn't already been set).
-    this.pdfDocument.getDownloadInfo().then(function(data) {
-      if (data.length === this.rawFileSize) {
+  PDFDocumentProperties.prototype = {
+    /**
+     * Open the document properties overlay.
+     */
+    open: function PDFDocumentProperties_open() {
+      Promise.all([OverlayManager.open(this.overlayName),
+                   this.dataAvailablePromise]).then(function () {
+        this._getProperties();
+      }.bind(this));
+    },
+
+    /**
+     * Close the document properties overlay.
+     */
+    close: function PDFDocumentProperties_close() {
+      OverlayManager.close(this.overlayName);
+    },
+
+    /**
+     * Set the file size of the PDF document. This method is used to
+     * update the file size in the document properties overlay once it
+     * is known so we do not have to wait until the entire file is loaded.
+     *
+     * @param {number} fileSize - The file size of the PDF document.
+     */
+    setFileSize: function PDFDocumentProperties_setFileSize(fileSize) {
+      if (fileSize > 0) {
+        this.rawFileSize = fileSize;
+      }
+    },
+
+    /**
+     * Set a reference to the PDF document and the URL in order
+     * to populate the overlay fields with the document properties.
+     * Note that the overlay will contain no information if this method
+     * is not called.
+     *
+     * @param {Object} pdfDocument - A reference to the PDF document.
+     * @param {string} url - The URL of the document.
+     */
+    setDocumentAndUrl:
+        function PDFDocumentProperties_setDocumentAndUrl(pdfDocument, url) {
+      this.pdfDocument = pdfDocument;
+      this.url = url;
+      this.resolveDataAvailable();
+    },
+
+    /**
+     * @private
+     */
+    _getProperties: function PDFDocumentProperties_getProperties() {
+      if (!OverlayManager.active) {
+        // If the dialog was closed before dataAvailablePromise was resolved,
+        // don't bother updating the properties.
         return;
       }
-      this.setFileSize(data.length);
-      this.updateUI(this.fileSizeField, this.parseFileSize());
-    }.bind(this));
+      // Get the file size (if it hasn't already been set).
+      this.pdfDocument.getDownloadInfo().then(function(data) {
+        if (data.length === this.rawFileSize) {
+          return;
+        }
+        this.setFileSize(data.length);
+        this._updateUI(this.fields['fileSize'], this._parseFileSize());
+      }.bind(this));
 
-    // Get the document properties.
-    this.pdfDocument.getMetadata().then(function(data) {
-      var fields = [
-        { field: this.fileNameField,
-          content: getPDFFileNameFromURL(this.url) },
-        { field: this.fileSizeField, content: this.parseFileSize() },
-        { field: this.titleField, content: data.info.Title },
-        { field: this.authorField, content: data.info.Author },
-        { field: this.subjectField, content: data.info.Subject },
-        { field: this.keywordsField, content: data.info.Keywords },
-        { field: this.creationDateField,
-          content: this.parseDate(data.info.CreationDate) },
-        { field: this.modificationDateField,
-          content: this.parseDate(data.info.ModDate) },
-        { field: this.creatorField, content: data.info.Creator },
-        { field: this.producerField, content: data.info.Producer },
-        { field: this.versionField, content: data.info.PDFFormatVersion },
-        { field: this.pageCountField, content: this.pdfDocument.numPages }
-      ];
+      // Get the document properties.
+      this.pdfDocument.getMetadata().then(function(data) {
+        var content = {
+          'fileName': getPDFFileNameFromURL(this.url),
+          'fileSize': this._parseFileSize(),
+          'title': data.info.Title,
+          'author': data.info.Author,
+          'subject': data.info.Subject,
+          'keywords': data.info.Keywords,
+          'creationDate': this._parseDate(data.info.CreationDate),
+          'modificationDate': this._parseDate(data.info.ModDate),
+          'creator': data.info.Creator,
+          'producer': data.info.Producer,
+          'version': data.info.PDFFormatVersion,
+          'pageCount': this.pdfDocument.numPages
+        };
 
-      // Show the properties in the dialog.
-      for (var item in fields) {
-        var element = fields[item];
-        this.updateUI(element.field, element.content);
+        // Show the properties in the dialog.
+        for (var identifier in content) {
+          this._updateUI(this.fields[identifier], content[identifier]);
+        }
+      }.bind(this));
+    },
+
+    /**
+     * @private
+     */
+    _updateUI: function PDFDocumentProperties_updateUI(field, content) {
+      if (field && content !== undefined && content !== '') {
+        field.textContent = content;
       }
-    }.bind(this));
-  },
+    },
 
-  updateUI: function documentPropertiesUpdateUI(field, content) {
-    if (field && content !== undefined && content !== '') {
-      field.textContent = content;
+    /**
+     * @private
+     */
+    _parseFileSize: function PDFDocumentProperties_parseFileSize() {
+      var fileSize = this.rawFileSize, kb = fileSize / 1024;
+      if (!kb) {
+        return;
+      } else if (kb < 1024) {
+        return mozL10n.get('document_properties_kb', {
+          size_kb: (+kb.toPrecision(3)).toLocaleString(),
+          size_b: fileSize.toLocaleString()
+        }, '{{size_kb}} KB ({{size_b}} bytes)');
+      } else {
+        return mozL10n.get('document_properties_mb', {
+          size_mb: (+(kb / 1024).toPrecision(3)).toLocaleString(),
+          size_b: fileSize.toLocaleString()
+        }, '{{size_mb}} MB ({{size_b}} bytes)');
+      }
+    },
+
+    /**
+     * @private
+     */
+    _parseDate: function PDFDocumentProperties_parseDate(inputDate) {
+      // This is implemented according to the PDF specification, but note that
+      // Adobe Reader doesn't handle changing the date to universal time
+      // and doesn't use the user's time zone (they're effectively ignoring
+      // the HH' and mm' parts of the date string).
+      var dateToParse = inputDate;
+      if (dateToParse === undefined) {
+        return '';
+      }
+
+      // Remove the D: prefix if it is available.
+      if (dateToParse.substring(0,2) === 'D:') {
+        dateToParse = dateToParse.substring(2);
+      }
+
+      // Get all elements from the PDF date string.
+      // JavaScript's Date object expects the month to be between
+      // 0 and 11 instead of 1 and 12, so we're correcting for this.
+      var year = parseInt(dateToParse.substring(0,4), 10);
+      var month = parseInt(dateToParse.substring(4,6), 10) - 1;
+      var day = parseInt(dateToParse.substring(6,8), 10);
+      var hours = parseInt(dateToParse.substring(8,10), 10);
+      var minutes = parseInt(dateToParse.substring(10,12), 10);
+      var seconds = parseInt(dateToParse.substring(12,14), 10);
+      var utRel = dateToParse.substring(14,15);
+      var offsetHours = parseInt(dateToParse.substring(15,17), 10);
+      var offsetMinutes = parseInt(dateToParse.substring(18,20), 10);
+
+      // As per spec, utRel = 'Z' means equal to universal time.
+      // The other cases ('-' and '+') have to be handled here.
+      if (utRel === '-') {
+        hours += offsetHours;
+        minutes += offsetMinutes;
+      } else if (utRel === '+') {
+        hours -= offsetHours;
+        minutes -= offsetMinutes;
+      }
+
+      // Return the new date format from the user's locale.
+      var date = new Date(Date.UTC(year, month, day, hours, minutes, seconds));
+      var dateString = date.toLocaleDateString();
+      var timeString = date.toLocaleTimeString();
+      return mozL10n.get('document_properties_date_string',
+                         {date: dateString, time: timeString},
+                         '{{date}}, {{time}}');
     }
-  },
+  };
 
-  setFileSize: function documentPropertiesSetFileSize(fileSize) {
-    if (fileSize > 0) {
-      this.rawFileSize = fileSize;
-    }
-  },
-
-  parseFileSize: function documentPropertiesParseFileSize() {
-    var fileSize = this.rawFileSize, kb = fileSize / 1024;
-    if (!kb) {
-      return;
-    } else if (kb < 1024) {
-      return mozL10n.get('document_properties_kb', {
-        size_kb: (+kb.toPrecision(3)).toLocaleString(),
-        size_b: fileSize.toLocaleString()
-      }, '{{size_kb}} KB ({{size_b}} bytes)');
-    } else {
-      return mozL10n.get('document_properties_mb', {
-        size_mb: (+(kb / 1024).toPrecision(3)).toLocaleString(),
-        size_b: fileSize.toLocaleString()
-      }, '{{size_mb}} MB ({{size_b}} bytes)');
-    }
-  },
-
-  open: function documentPropertiesOpen() {
-    Promise.all([OverlayManager.open(this.overlayName),
-                 this.dataAvailablePromise]).then(function () {
-      this.getProperties();
-    }.bind(this));
-  },
-
-  close: function documentPropertiesClose() {
-    OverlayManager.close(this.overlayName);
-  },
-
-  parseDate: function documentPropertiesParseDate(inputDate) {
-    // This is implemented according to the PDF specification, but note that
-    // Adobe Reader doesn't handle changing the date to universal time
-    // and doesn't use the user's time zone (they're effectively ignoring
-    // the HH' and mm' parts of the date string).
-    var dateToParse = inputDate;
-    if (dateToParse === undefined) {
-      return '';
-    }
-
-    // Remove the D: prefix if it is available.
-    if (dateToParse.substring(0,2) === 'D:') {
-      dateToParse = dateToParse.substring(2);
-    }
-
-    // Get all elements from the PDF date string.
-    // JavaScript's Date object expects the month to be between
-    // 0 and 11 instead of 1 and 12, so we're correcting for this.
-    var year = parseInt(dateToParse.substring(0,4), 10);
-    var month = parseInt(dateToParse.substring(4,6), 10) - 1;
-    var day = parseInt(dateToParse.substring(6,8), 10);
-    var hours = parseInt(dateToParse.substring(8,10), 10);
-    var minutes = parseInt(dateToParse.substring(10,12), 10);
-    var seconds = parseInt(dateToParse.substring(12,14), 10);
-    var utRel = dateToParse.substring(14,15);
-    var offsetHours = parseInt(dateToParse.substring(15,17), 10);
-    var offsetMinutes = parseInt(dateToParse.substring(18,20), 10);
-
-    // As per spec, utRel = 'Z' means equal to universal time.
-    // The other cases ('-' and '+') have to be handled here.
-    if (utRel === '-') {
-      hours += offsetHours;
-      minutes += offsetMinutes;
-    } else if (utRel === '+') {
-      hours -= offsetHours;
-      minutes -= offsetMinutes;
-    }
-
-    // Return the new date format from the user's locale.
-    var date = new Date(Date.UTC(year, month, day, hours, minutes, seconds));
-    var dateString = date.toLocaleDateString();
-    var timeString = date.toLocaleTimeString();
-    return mozL10n.get('document_properties_date_string',
-                       {date: dateString, time: timeString},
-                       '{{date}}, {{time}}');
-  }
-};
+  return PDFDocumentProperties;
+})();
 
 
 var PresentationModeState = {
@@ -3375,9 +3401,6 @@ var PDFPageView = (function PDFPageViewClosure() {
       }
       this.textLayer = textLayer;
 
-      // TODO(mack): use data attributes to store these
-      ctx._scaleX = outputScale.sx;
-      ctx._scaleY = outputScale.sy;
       if (outputScale.scaled) {
         ctx.scale(outputScale.sx, outputScale.sy);
       }
@@ -4695,10 +4718,6 @@ var PDFViewer = (function pdfViewer() {
       this.container.focus();
     },
 
-    blur: function () {
-      this.container.blur();
-    },
-
     get isInPresentationMode() {
       return this.presentationModeState === PresentationModeState.FULLSCREEN;
     },
@@ -5538,6 +5557,8 @@ var PDFViewerApplication = {
   pdfRenderingQueue: null,
   /** @type {PDFPresentationMode} */
   pdfPresentationMode: null,
+  /** @type {PDFDocumentProperties} */
+  pdfDocumentProperties: null,
   pageRotation: 0,
   updateScaleControls: true,
   isInitialViewSet: false,
@@ -5601,6 +5622,25 @@ var PDFViewerApplication = {
       toggleHandTool: document.getElementById('toggleHandTool')
     });
 
+    this.pdfDocumentProperties = new PDFDocumentProperties({
+      overlayName: 'documentPropertiesOverlay',
+      closeButton: document.getElementById('documentPropertiesClose'),
+      fields: {
+        'fileName': document.getElementById('fileNameField'),
+        'fileSize': document.getElementById('fileSizeField'),
+        'title': document.getElementById('titleField'),
+        'author': document.getElementById('authorField'),
+        'subject': document.getElementById('subjectField'),
+        'keywords': document.getElementById('keywordsField'),
+        'creationDate': document.getElementById('creationDateField'),
+        'modificationDate': document.getElementById('modificationDateField'),
+        'creator': document.getElementById('creatorField'),
+        'producer': document.getElementById('producerField'),
+        'version': document.getElementById('versionField'),
+        'pageCount': document.getElementById('pageCountField')
+      }
+    });
+
     SecondaryToolbar.initialize({
       toolbar: document.getElementById('secondaryToolbar'),
       toggleButton: document.getElementById('secondaryToolbarToggle'),
@@ -5614,7 +5654,6 @@ var PDFViewerApplication = {
       lastPage: document.getElementById('lastPage'),
       pageRotateCw: document.getElementById('pageRotateCw'),
       pageRotateCcw: document.getElementById('pageRotateCcw'),
-      documentProperties: DocumentProperties,
       documentPropertiesButton: document.getElementById('documentProperties')
     });
 
@@ -5643,23 +5682,6 @@ var PDFViewerApplication = {
       passwordText: document.getElementById('passwordText'),
       passwordSubmit: document.getElementById('passwordSubmit'),
       passwordCancel: document.getElementById('passwordCancel')
-    });
-
-    DocumentProperties.initialize({
-      overlayName: 'documentPropertiesOverlay',
-      closeButton: document.getElementById('documentPropertiesClose'),
-      fileNameField: document.getElementById('fileNameField'),
-      fileSizeField: document.getElementById('fileSizeField'),
-      titleField: document.getElementById('titleField'),
-      authorField: document.getElementById('authorField'),
-      subjectField: document.getElementById('subjectField'),
-      keywordsField: document.getElementById('keywordsField'),
-      creationDateField: document.getElementById('creationDateField'),
-      modificationDateField: document.getElementById('modificationDateField'),
-      creatorField: document.getElementById('creatorField'),
-      producerField: document.getElementById('producerField'),
-      versionField: document.getElementById('versionField'),
-      pageCountField: document.getElementById('pageCountField')
     });
 
     var self = this;
@@ -5832,7 +5854,8 @@ var PDFViewerApplication = {
                                     pdfDataRangeTransport);
 
           if (args.length) {
-            DocumentProperties.setFileSize(args.length);
+            PDFViewerApplication.pdfDocumentProperties
+                                .setFileSize(args.length);
           }
           break;
         case 'range':
@@ -5970,7 +5993,7 @@ var PDFViewerApplication = {
     );
 
     if (args && args.length) {
-      DocumentProperties.setFileSize(args.length);
+      PDFViewerApplication.pdfDocumentProperties.setFileSize(args.length);
     }
   },
 
@@ -6010,8 +6033,9 @@ var PDFViewerApplication = {
   fallback: function pdfViewFallback(featureId) {
     // Only trigger the fallback once so we don't spam the user with messages
     // for one PDF.
-    if (this.fellback)
+    if (this.fellback) {
       return;
+    }
     this.fellback = true;
     var url = this.url.split('#')[0];
     FirefoxCom.request('fallback', { featureId: featureId, url: url },
@@ -6221,9 +6245,7 @@ var PDFViewerApplication = {
 
     this.pdfDocument = pdfDocument;
 
-    DocumentProperties.url = this.url;
-    DocumentProperties.pdfDocument = pdfDocument;
-    DocumentProperties.resolveDataAvailable();
+    this.pdfDocumentProperties.setDocumentAndUrl(pdfDocument, this.url);
 
     var downloadedPromise = pdfDocument.getDownloadInfo().then(function() {
       self.downloadComplete = true;
@@ -6290,7 +6312,6 @@ var PDFViewerApplication = {
         // unless the viewer is embedded in a web page.
         if (!self.isViewerEmbedded) {
           self.pdfViewer.focus();
-          self.pdfViewer.blur();
         }
       }, function rejected(reason) {
         console.error(reason);
@@ -6403,12 +6424,13 @@ var PDFViewerApplication = {
 
       var versionId = String(info.PDFFormatVersion).slice(-1) | 0;
       var generatorId = 0;
-      var KNOWN_GENERATORS = ["acrobat distiller", "acrobat pdfwritter",
-       "adobe livecycle", "adobe pdf library", "adobe photoshop", "ghostscript",
-       "tcpdf", "cairo", "dvipdfm", "dvips", "pdftex", "pdfkit", "itext",
-       "prince", "quarkxpress", "mac os x", "microsoft", "openoffice", "oracle",
-       "luradocument", "pdf-xchange", "antenna house", "aspose.cells", "fpdf"];
-      var generatorId = 0;
+      var KNOWN_GENERATORS = [
+        'acrobat distiller', 'acrobat pdfwriter', 'adobe livecycle',
+        'adobe pdf library', 'adobe photoshop', 'ghostscript', 'tcpdf',
+        'cairo', 'dvipdfm', 'dvips', 'pdftex', 'pdfkit', 'itext', 'prince',
+        'quarkxpress', 'mac os x', 'microsoft', 'openoffice', 'oracle',
+        'luradocument', 'pdf-xchange', 'antenna house', 'aspose.cells', 'fpdf'
+      ];
       if (info.Producer) {
         KNOWN_GENERATORS.some(function (generator, s, i) {
           if (generator.indexOf(s) < 0) {
@@ -6673,9 +6695,9 @@ var PDFViewerApplication = {
       this.pdfViewer.getPageView(i).beforePrint();
     }
 
-      FirefoxCom.request('reportTelemetry', JSON.stringify({
-        type: 'print'
-      }));
+    FirefoxCom.request('reportTelemetry', JSON.stringify({
+      type: 'print'
+    }));
   },
 
   afterPrint: function pdfViewSetupAfterPrint() {
@@ -6938,23 +6960,23 @@ document.addEventListener('pagerendered', function (e) {
       'An error occurred while rendering the page.'), pageView.error);
   }
 
-  FirefoxCom.request('reportTelemetry', JSON.stringify({
-    type: 'pageInfo'
-  }));
-  // It is a good time to report stream and font types
-  PDFViewerApplication.pdfDocument.getStats().then(function (stats) {
-    FirefoxCom.request('reportTelemetry', JSON.stringify({
-      type: 'documentStats',
-      stats: stats
-    }));
-  });
-
   // If the page is still visible when it has finished rendering,
   // ensure that the page number input loading indicator is hidden.
   if (pageNumber === PDFViewerApplication.page) {
     var pageNumberInput = document.getElementById('pageNumber');
     pageNumberInput.classList.remove(PAGE_NUMBER_LOADING_INDICATOR);
   }
+
+  FirefoxCom.request('reportTelemetry', JSON.stringify({
+    type: 'pageInfo'
+  }));
+  // It is a good time to report stream and font types.
+  PDFViewerApplication.pdfDocument.getStats().then(function (stats) {
+    FirefoxCom.request('reportTelemetry', JSON.stringify({
+      type: 'documentStats',
+      stats: stats
+    }));
+  });
 }, true);
 
 document.addEventListener('textlayerrendered', function (e) {
@@ -7384,10 +7406,9 @@ window.addEventListener('keydown', function keydown(evt) {
       pdfViewer.focus();
     }
     // 32=Spacebar
-    if (evt.keyCode === 32 && curElementTagName !== 'BUTTON') {
-      // Workaround for issue in Firefox, that prevents scroll keys from
-      // working when elements with 'tabindex' are focused. (#3498)
-      pdfViewer.blur();
+    if (evt.keyCode === 32 && curElementTagName !== 'BUTTON' &&
+        !pdfViewer.containsElement(curElement)) {
+      pdfViewer.focus();
     }
   }
 
