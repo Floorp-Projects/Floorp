@@ -73,9 +73,9 @@ SpeechSynthesisRequestChild::~SpeechSynthesisRequestChild()
 }
 
 bool
-SpeechSynthesisRequestChild::RecvOnStart(const nsString& aUri)
+SpeechSynthesisRequestChild::RecvOnStart()
 {
-  mTask->DispatchStartImpl(aUri);
+  mTask->DispatchStartImpl();
   return true;
 }
 

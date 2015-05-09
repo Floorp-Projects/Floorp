@@ -148,12 +148,6 @@ SpeechSynthesisUtterance::SetPitch(float aPitch)
 }
 
 void
-SpeechSynthesisUtterance::GetChosenVoiceURI(nsString& aResult) const
-{
-  aResult = mChosenVoiceURI;
-}
-
-void
 SpeechSynthesisUtterance::DispatchSpeechSynthesisEvent(const nsAString& aEventType,
                                                        uint32_t aCharIndex,
                                                        float aElapsedTime,
