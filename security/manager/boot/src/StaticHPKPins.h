@@ -509,9 +509,17 @@ static const StaticFingerprints kPinset_google_sha1 = {
   kPinset_google_sha1_Data
 };
 
+static const char* kPinset_google_sha256_Data[] = {
+  kGeoTrust_Global_CAFingerprint,
+};
+static const StaticFingerprints kPinset_google_sha256 = {
+  sizeof(kPinset_google_sha256_Data) / sizeof(const char*),
+  kPinset_google_sha256_Data
+};
+
 static const StaticPinset kPinset_google = {
   &kPinset_google_sha1,
-  nullptr
+  &kPinset_google_sha256
 };
 
 static const char* kPinset_tor_sha1_Data[] = {
@@ -1009,6 +1017,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "goto.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "groups.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "gstatic.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "hangouts.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "history.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "hostedtalkgadget.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "inbox.google.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -1078,8 +1087,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "ytimg.com", true, false, false, -1, &kPinset_google_root_pems },
 };
 
-// Pinning Preload List Length = 347;
+// Pinning Preload List Length = 348;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1439029294559000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1439634142984000);
