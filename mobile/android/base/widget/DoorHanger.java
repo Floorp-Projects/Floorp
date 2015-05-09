@@ -208,7 +208,14 @@ public abstract class DoorHanger extends LinearLayout {
         mButtonsContainer.addView(button, sButtonParams);
     }
 
-    protected abstract Button createButtonInstance(String text, int id);
+    protected Button createButtonInstance(String text, int id) {
+        final Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
+        button.setText(text);
+        button.setOnClickListener(makeOnButtonClickListener(id));
+        return button;
+    }
+
+    protected abstract OnClickListener makeOnButtonClickListener(final int id);
 
     /*
      * Checks with persistence and timeout options to see if it's okay to remove a doorhanger.

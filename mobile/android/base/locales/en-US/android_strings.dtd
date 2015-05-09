@@ -382,6 +382,8 @@ size. -->
 <!ENTITY doorhanger_login_select_message "Copy password from &formatS;?">
 <!ENTITY doorhanger_login_select_toast_copy "Password copied to clipboard">
 <!ENTITY doorhanger_login_select_toast_copy_error "Couldn\'t copy password">
+<!ENTITY doorhanger_login_select_action_text "Select another login">
+<!ENTITY doorhanger_login_select_title "Copy password from">
 
 <!ENTITY pref_titlebar_mode "Title bar">
 <!ENTITY pref_titlebar_mode_title "Show page title">
