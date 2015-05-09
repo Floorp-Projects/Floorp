@@ -1567,6 +1567,21 @@ let BookmarkingUI = {
 
   updatePocketItemVisibility: function BUI_updatePocketItemVisibility(prefix) {
     let hidden = !CustomizableUI.getPlacementOfWidget("pocket-button");
+    if (!hidden) {
+      let locale = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                   getService(Ci.nsIXULChromeRegistry).
+                   getSelectedLocale("browser");
+      let url = "chrome://browser/content/browser-pocket-" + locale + ".properties";
+      let bundle = Services.strings.createBundle(url);
+      let item = document.getElementById(prefix + "pocket");
+      try {
+        item.setAttribute("label", bundle.GetStringFromName("pocketMenuitem.label"));
+      } catch (err) {
+        // GetStringFromName throws when the bundle doesn't exist.  In that
+        // case, the item will retain the browser-pocket.dtd en-US string that
+        // it has in the markup.
+      }
+    }
     document.getElementById(prefix + "pocket").hidden = hidden;
     document.getElementById(prefix + "pocketSeparator").hidden = hidden;
   },
