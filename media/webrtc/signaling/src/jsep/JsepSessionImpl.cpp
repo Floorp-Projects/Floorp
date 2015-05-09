@@ -2462,11 +2462,11 @@ JsepSessionImpl::AddCandidateToSdp(Sdp* sdp,
 {
 
   if (level >= sdp->GetMediaSectionCount()) {
-    JSEP_SET_ERROR("Index " << level << " out of range");
-    return NS_ERROR_INVALID_ARG;
+    // Ignore
+    return NS_OK;
   }
 
-  // Trim off '[a=]candidate:'
+  // Trim off a=candidate:
   size_t begin = candidateUntrimmed.find(':');
   if (begin == std::string::npos) {
     JSEP_SET_ERROR("Invalid candidate, no ':' (" << candidateUntrimmed << ")");
