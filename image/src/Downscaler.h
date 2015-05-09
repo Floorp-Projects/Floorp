@@ -15,7 +15,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsRect.h"
 
-#ifdef MOZ_ENABLE_SKIA
 
 namespace skia {
   class ConvolutionFilter1D;
@@ -33,6 +32,8 @@ struct DownscalerInvalidRect
   nsIntRect mOriginalSizeRect;
   nsIntRect mTargetSizeRect;
 };
+
+#ifdef MOZ_ENABLE_SKIA
 
 /**
  * Downscaler is a high-quality, streaming image downscaler based upon Skia's
@@ -119,20 +120,12 @@ private:
   bool mHasAlpha;
 };
 
-} // namespace image
-} // namespace mozilla
-
-
 #else
-
 
 /**
  * Downscaler requires Skia to work, so we provide a dummy implementation if
  * Skia is disabled that asserts if constructed.
  */
-
-namespace mozilla {
-namespace image {
 
 class Downscaler
 {
@@ -144,6 +137,7 @@ public:
 
   const nsIntSize& OriginalSize() const { return nsIntSize(); }
   const nsIntSize& TargetSize() const { return nsIntSize(); }
+  const gfxSize& Scale() const { return gfxSize(1.0, 1.0); }
 
   nsresult BeginFrame(const nsIntSize&, uint8_t*, bool)
   {
@@ -153,14 +147,13 @@ public:
   uint8_t* RowBuffer() { return nullptr; }
   void CommitRow() { }
   bool HasInvalidation() const { return false; }
-  nsIntRect TakeInvalidRect() { return nsIntRect(); }
+  DownscalerInvalidRect TakeInvalidRect() { return DownscalerInvalidRect(); }
   void ResetForNextProgressivePass() { }
 };
 
+#endif // MOZ_ENABLE_SKIA
 
 } // namespace image
 } // namespace mozilla
-
-#endif // MOZ_ENABLE_SKIA
 
 #endif // mozilla_image_src_Downscaler_h

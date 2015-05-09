@@ -36,7 +36,6 @@
 
 using namespace mozilla;
 
-#if defined(PR_LOGGING)
 //
 // Log module for nsSecureBrowserUI logging...
 //
@@ -49,7 +48,6 @@ using namespace mozilla;
 // the file nspr.log
 //
 PRLogModuleInfo* gSecureDocLog = nullptr;
-#endif /* PR_LOGGING */
 
 struct RequestHashEntry : PLDHashEntryHdr {
     void *r;
@@ -116,10 +114,8 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 {
   ResetStateTracking();
   
-#if defined(PR_LOGGING)
   if (!gSecureDocLog)
     gSecureDocLog = PR_NewLogModule("nsSecureBrowserUI");
-#endif /* PR_LOGGING */
 }
 
 nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
@@ -138,14 +134,13 @@ NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
 {
+  if (PR_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
+    nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
 
-#ifdef PR_LOGGING
-  nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
-
-  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: Init: mWindow: %p, aWindow: %p\n", this,
-          window.get(), aWindow));
-#endif
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: Init: mWindow: %p, aWindow: %p\n", this,
+            window.get(), aWindow));
+  }
 
   if (!aWindow) {
     NS_WARNING("Null window passed to nsSecureBrowserUIImpl::Init()");
@@ -618,7 +613,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   }
   const bool isToplevelProgress = (windowForProgress.get() == window.get()) && !isNoContentResponse;
   
-#ifdef PR_LOGGING
   if (windowForProgress)
   {
     if (isToplevelProgress)
@@ -637,7 +631,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
              ("SecureUI:%p: OnStateChange: progress: no window known\n", this));
   }
-#endif
 
   PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
          ("SecureUI:%p: OnStateChange\n", this));
@@ -652,7 +645,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     return NS_ERROR_NULL_POINTER;
   }
 
-#ifdef PR_LOGGING
   if (PR_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
     nsXPIDLCString reqname;
     aRequest->GetName(reqname);
@@ -660,7 +652,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
            ("SecureUI:%p: %p %p OnStateChange %x %s\n", this, aWebProgress,
             aRequest, aProgressStateFlags, reqname.get()));
   }
-#endif
 
   nsCOMPtr<nsISupports> securityInfo(ExtractSecurityInfo(aRequest));
 
@@ -689,7 +680,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   uint32_t loadFlags = 0;
   aRequest->GetLoadFlags(&loadFlags);
 
-#ifdef PR_LOGGING
   if (aProgressStateFlags & STATE_START
       &&
       aProgressStateFlags & STATE_IS_REQUEST
@@ -713,7 +703,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: OnStateChange: SOMETHING STOPS FOR TOPMOST DOCUMENT\n", this));
   }
-#endif
 
   bool isSubDocumentRelevant = true;
 

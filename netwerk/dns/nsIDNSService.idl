@@ -163,4 +163,9 @@ interface nsIDNSService : nsISupports
      * If set, only IPv6 addresses will be returned from resolve/asyncResolve.
      */
     const unsigned long RESOLVE_DISABLE_IPV4 = (1 << 7);
+
+    /**
+     * If set, allow name collision results (127.0.53.53) which are normally filtered.
+     */
+    const unsigned long RESOLVE_ALLOW_NAME_COLLISION = (1 << 8);
 };

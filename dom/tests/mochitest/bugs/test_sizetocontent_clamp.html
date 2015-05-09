@@ -37,21 +37,23 @@ var innerWidthMax = (isWin8 ? 125 : 100);
 
 function test() {
   var w = window.open('data:text/html,null', null, 'width=300,height=300');
+  var nbResize = 0;
 
   SimpleTest.waitForFocus(function() {
     w.onresize = function() {
-      if (!(w.innerWidth + epsilon >= innerWidthMin &&
-            w.innerWidth - epsilon <= innerWidthMax)) {
-        // We need still another resize event.
+      nbResize++;
+
+      if (nbResize == 1) {
         return;
       }
-      if (!(w.innerHeight + epsilon >= 100 &&
-        w.innerHeight - epsilon <= 100)) {
-        // ditto
-        return;
-      }
-      ok(true, "innerWidth should be between " + innerWidthMin + " and " + innerWidthMax);
-      ok(true, "innerHeight should be around 100");
+
+      ok(w.innerWidth + epsilon >= innerWidthMin && w.innerWidth - epsilon <= innerWidthMax,
+         "innerWidth should be between " + innerWidthMin + " and " + innerWidthMax);
+      ok(w.innerHeight + epsilon >= 100 && w.innerHeight - epsilon <= 100,
+         "innerHeight should be around 100");
+
+      // It's not clear why 2 events are coming...
+      is(nbResize, 2, "We should get 2 events.");
 
       w.close();
 

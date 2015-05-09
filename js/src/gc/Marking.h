@@ -149,10 +149,10 @@ class GCMarker : public JSTracer
     template <typename T> void traverse(T thing);
 
     // Calls traverse on target after making additional assertions.
-    template <typename S, typename T> void traverse(S source, T target);
-
+    template <typename S, typename T> void traverseEdge(S source, T target);
     // C++ requires explicit declarations of partial template instantiations.
-    template <typename S> void traverse(S source, jsid target);
+    template <typename S> void traverseEdge(S source, jsid target);
+    template <typename S> void traverseEdge(S source, Value target);
 
     /*
      * Care must be taken changing the mark color from gray to black. The cycle
@@ -378,7 +378,7 @@ class HashKeyRef : public BufferableRef
   public:
     HashKeyRef(Map* m, const Key& k) : map(m), key(k) {}
 
-    void mark(JSTracer* trc) {
+    void trace(JSTracer* trc) override {
         Key prior = key;
         typename Map::Ptr p = map->lookup(key);
         if (!p)

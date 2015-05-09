@@ -647,7 +647,7 @@ IsOnFullDomainWhitelist(nsIURI* aURI)
     NS_LITERAL_CSTRING("touch.qunar.com"),
     NS_LITERAL_CSTRING("mjs.sinaimg.cn"), // for sina.cn
     NS_LITERAL_CSTRING("static.qiyi.com"), // for m.iqiyi.com
-    NS_LITERAL_CSTRING("www.kuaidi100.com"), // for m.kuaidi100.com
+    NS_LITERAL_CSTRING("cdn.kuaidi100.com"), // for m.kuaidi100.com
     NS_LITERAL_CSTRING("m.pc6.com"),
     NS_LITERAL_CSTRING("m.haosou.com"),
     NS_LITERAL_CSTRING("m.mi.com"),

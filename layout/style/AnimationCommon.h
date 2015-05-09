@@ -161,6 +161,14 @@ protected:
     return false;
   }
 
+  // Return an AnimationCollection* if we have an animation for
+  // the element aContent and pseudo-element indicator aElementProperty
+  // that can be performed on the compositor thread (as defined by 
+  // AnimationCollection::CanPerformOnCompositorThread).
+  //
+  // Note that this does not test whether the element's layer uses
+  // off-main-thread compositing, although it does check whether
+  // off-main-thread compositing is enabled as a whole.
   static AnimationCollection*
   GetAnimationsForCompositor(nsIContent* aContent,
                              nsIAtom* aElementProperty,
@@ -283,11 +291,13 @@ struct AnimationCollection : public PRCList
     CanAnimate_AllowPartial = 2
   };
 
+private:
   static bool
   CanAnimatePropertyOnCompositor(const dom::Element *aElement,
                                  nsCSSProperty aProperty,
                                  CanAnimateFlags aFlags);
 
+public:
   static bool IsCompositorAnimationDisabledForFrame(nsIFrame* aFrame);
 
   // True if this animation can be performed on the compositor thread.
@@ -303,6 +313,10 @@ struct AnimationCollection : public PRCList
   // time can be fully represented by data sent to the compositor.
   // (This is useful for determining whether throttle the animation
   // (suppress main-thread style updates).)
+  //
+  // Note that this does not test whether the element's layer uses
+  // off-main-thread compositing, although it does check whether
+  // off-main-thread compositing is enabled as a whole.
   bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const;
 
   void PostUpdateLayerAnimations();

@@ -377,7 +377,6 @@ static void nr_ice_candidate_pair_restart(nr_ice_peer_ctx *pctx, nr_ice_cand_pai
 int nr_ice_candidate_pair_start(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair)
   {
     int r,_status;
-    UINT4 mode;
 
     /* Register the stun ctx for when responses come in*/
     if(r=nr_ice_socket_register_stun_client(pair->local->isock,pair->stun_client,&pair->stun_client_handle))
