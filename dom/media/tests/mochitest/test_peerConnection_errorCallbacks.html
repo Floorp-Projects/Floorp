@@ -42,16 +42,6 @@
           validateReason);
   };
 
-  function testAddIceCandidateError() {
-    var pc = new mozRTCPeerConnection();
-    info ("Testing addIceCandidate error");
-    return pc.addIceCandidate(new mozRTCIceCandidate({ candidate: "Pony Lords, jump!",
-                                                       sdpMid: "whee",
-                                                       sdpMLineIndex: 1 }))
-    .then(generateErrorCallback("addIceCandidate with nonsense candidate should fail"),
-          validateReason);
-  };
-
   // No test for createOffer errors -- there's nothing we can do at this
   // level to evoke an error in createOffer.
 
@@ -59,7 +49,6 @@
     testCreateAnswerError()
     .then(testSetLocalDescriptionError)
     .then(testSetRemoteDescriptionError)
-    .then(testAddIceCandidateError)
     .catch(reason => ok(false, "unexpected error: " + reason))
     .then(networkTestFinished);
   });
