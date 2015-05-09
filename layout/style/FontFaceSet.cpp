@@ -213,14 +213,12 @@ FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv)
     return nullptr;
   }
 
-  if (aFontFace.HasRule()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_MODIFICATION_ERR);
-    return nullptr;
-  }
-
   if (aFontFace.IsInFontFaceSet()) {
     return this;
   }
+
+  MOZ_ASSERT(!aFontFace.HasRule(),
+             "rule-backed FontFaces should always be in the FontFaceSet");
 
   bool removed = mUnavailableFaces.RemoveElement(&aFontFace);
   if (!removed) {
@@ -283,7 +281,6 @@ FontFaceSet::Delete(FontFace& aFontFace, ErrorResult& aRv)
   mPresContext->FlushUserFontSet();
 
   if (aFontFace.HasRule()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_MODIFICATION_ERR);
     return false;
   }
 
