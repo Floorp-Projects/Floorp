@@ -55,16 +55,17 @@ function runTests() {
   // Test with enhanced = false
   yield addNewTabPageTab();
   yield customizeNewTabPage("classic");
+  yield customizeNewTabPage("enhanced"); // Toggle enhanced off
   let {type, enhanced, title} = getData(0);
   isnot(type, "enhanced", "history link is not enhanced");
   is(enhanced, "", "history link has no enhanced image");
-  is(title, "site#-1");
+  is(title, "example.com");
 
   is(getData(1), null, "there is only one link and it's a history link");
 
   // Test with enhanced = true
   yield addNewTabPageTab();
-  yield customizeNewTabPage("enhanced");
+  yield customizeNewTabPage("enhanced"); // Toggle enhanced on
   ({type, enhanced, title} = getData(0));
   is(type, "organic", "directory link is organic");
   isnot(enhanced, "", "directory link has enhanced image");
@@ -94,11 +95,11 @@ function runTests() {
 
   // Test pinned link with enhanced = false
   yield addNewTabPageTab();
-  yield customizeNewTabPage("classic");
+  yield customizeNewTabPage("enhanced"); // Toggle enhanced off
   ({type, enhanced, title} = getData(0));
   isnot(type, "enhanced", "history link is not enhanced");
   is(enhanced, "", "history link has no enhanced image");
-  is(title, "site#-1");
+  is(title, "example.com");
 
   is(getData(1), null, "directory link still pushed out by pinned history link");
 
@@ -116,11 +117,10 @@ function runTests() {
 
   // Test with enhanced = false
   yield addNewTabPageTab();
-  yield customizeNewTabPage("classic");
   ({type, enhanced, title} = getData(0));
   isnot(type, "enhanced", "history link is not enhanced");
   is(enhanced, "", "history link has no enhanced image");
-  is(title, "site#-1");
+  is(title, "example.com");
 
   isnot(getData(7), null, "there are 8 history links");
   is(getData(8), null, "there are 8 history links");

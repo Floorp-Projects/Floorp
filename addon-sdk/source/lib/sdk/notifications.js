@@ -10,7 +10,6 @@ module.metadata = {
 
 const { Cc, Ci, Cr } = require("chrome");
 const apiUtils = require("./deprecated/api-utils");
-const errors = require("./deprecated/errors");
 const { isString, isUndefined, instanceOf } = require('./lang/type');
 const { URL, isLocalURL } = require('./url');
 const { data } = require('./self');
@@ -34,9 +33,15 @@ catch (err) {
 exports.notify = function notifications_notify(options) {
   let valOpts = validateOptions(options);
   let clickObserver = !valOpts.onClick ? null : {
-    observe: function notificationClickObserved(subject, topic, data) {
-      if (topic === "alertclickcallback")
-        errors.catchAndLog(valOpts.onClick).call(exports, valOpts.data);
+    observe: (subject, topic, data) => {
+      if (topic === "alertclickcallback") {
+        try {
+          valOpts.onClick.call(exports, valOpts.data);
+        }
+        catch(e) {
+          console.exception(e);
+        }
+      }
     }
   };
   function notifyWithOpts(notifyFn) {

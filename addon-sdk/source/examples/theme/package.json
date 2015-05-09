@@ -4,7 +4,7 @@
   "id": "theme@jetpack",
   "description": "How to create new theme for devtools",
   "author": "Jan Odvarko",
-  "license": "MPL 2.0",
+  "license": "MPL-2.0",
   "version": "0.1.0",
   "main": "lib/main"
 }

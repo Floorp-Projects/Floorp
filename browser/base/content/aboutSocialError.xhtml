@@ -16,18 +16,22 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>&loadError.label;</title>
-    <link rel="stylesheet" type="text/css" media="all"
-          href="chrome://browser/skin/aboutSocialError.css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/aboutNetError.css" type="text/css" media="all" />
+    <link rel="stylesheet" type="text/css" media="all" href="chrome://browser/skin/aboutSocialError.css"/>
+    <link rel="icon" type="image/png" id="favicon" href="chrome://global/skin/icons/warning-16.png"/>
   </head>
 
   <body>
-    <div id="error-box">
-      <p id="main-error-msg"></p>
-      <p id="helper-error-msg"></p>
-    </div>
+    <div id="errorPageContainer">
+
+      <!-- Error Title -->
+      <div id="errorTitle">
+        <p id="errorShortDescText" >foo</p>
+      </div>
+
     <div id="button-box">
       <button id="btnTryAgain" onclick="tryAgainButton()"/>
-      <button id="btnCloseSidebar" onclick="closeSidebarButton()"/>
+    </div>
     </div>
   </body>
 
@@ -56,10 +60,8 @@
       switch (mode) {
         case "compactInfo":
           document.getElementById("btnTryAgain").style.display = 'none';
-          document.getElementById("btnCloseSidebar").style.display = 'none';
           break;
         case "tryAgainOnly":
-          document.getElementById("btnCloseSidebar").style.display = 'none';
           //intentional fall-through
         case "tryAgain":
           config.tryAgainCallback = loadQueryURL;
@@ -83,20 +85,12 @@
 
       // Sets up the error message
       let msg = browserBundle.formatStringFromName("social.error.message", [productName, providerName], 2);
-      document.getElementById("main-error-msg").textContent = msg;
+      document.getElementById("errorShortDescText").textContent = msg;
 
       // Sets up the buttons' labels and accesskeys
       let btnTryAgain = document.getElementById("btnTryAgain");
       btnTryAgain.textContent = browserBundle.GetStringFromName("social.error.tryAgain.label");
       btnTryAgain.accessKey = browserBundle.GetStringFromName("social.error.tryAgain.accesskey");
-
-      let btnCloseSidebar = document.getElementById("btnCloseSidebar");
-      btnCloseSidebar.textContent = browserBundle.GetStringFromName("social.error.closeSidebar.label");
-      btnCloseSidebar.accessKey = browserBundle.GetStringFromName("social.error.closeSidebar.accesskey");
-    }
-
-    function closeSidebarButton() {
-      SocialSidebar.toggleSidebar();
     }
 
     function tryAgainButton() {

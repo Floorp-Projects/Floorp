@@ -1,0 +1,12 @@
+addon-sdk
+github
+stackoverflow
+bugzilla
+irc
+erikvold
+jsantell
+mossop
+gozala
+zer0
+autonome
+0c0w3

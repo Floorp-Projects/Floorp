@@ -1,0 +1,28 @@
+{
+  "name": "jetpack-id",
+  "version": "1.0.0",
+  "description": "Creates an ID from a Firefox Jetpack manifest",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/jsantell/jetpack-id"
+  },
+  "author": {
+    "name": "Jordan Santell",
+    "url": "http://github.com/jsantell"
+  },
+  "license": "MPL-2.0",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec --ui bdd"
+  },
+  "keywords": [
+    "jetpack",
+    "addon",
+    "mozilla",
+    "firefox"
+  ],
+  "devDependencies": {
+    "mocha": "*",
+    "chai": "*"
+  }
+}

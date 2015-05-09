@@ -16,6 +16,7 @@ Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -197,6 +198,7 @@ function promiseCleanDirectoryLinksProvider() {
   return Task.spawn(function() {
     yield promiseDirectoryDownloadOnPrefChange(kLocalePref, "en-US");
     yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, kTestURL);
+    yield DirectoryLinksProvider._clearFrequencyCap();
     DirectoryLinksProvider._lastDownloadMS  = 0;
     DirectoryLinksProvider.reset();
   });
@@ -221,6 +223,20 @@ function run_test() {
     Services.prefs.clearUserPref(kPingUrlPref);
     Services.prefs.clearUserPref(kNewtabEnhancedPref);
   });
+}
+
+
+function setTimeout(fun, timeout) {
+  let timer = Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+  var event = {
+    notify: function (timer) {
+      fun();
+    }
+  };
+  timer.initWithCallback(event, timeout,
+                         Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+  return timer;
 }
 
 add_task(function test_shouldUpdateSuggestedTile() {
@@ -551,7 +567,8 @@ add_task(function test_frequencyCappedSites_views() {
     suggested: [{
       type: "affiliate",
       frecent_sites: targets,
-      url: testUrl
+      url: testUrl,
+      frequency_caps: {daily: 5}
     }],
     directory: [{
       type: "organic",
@@ -1398,4 +1415,260 @@ add_task(function test_setupStartEndTime() {
   link.time_limits.start = "20150501T00:00:00"
   DirectoryLinksProvider._setupStartEndTime(link);
   do_check_false(link.startTime);
+});
+
+add_task(function test_DirectoryLinksProvider_frequencyCapSetup() {
+  yield promiseSetupDirectoryLinksProvider();
+  yield DirectoryLinksProvider.init();
+
+  yield promiseCleanDirectoryLinksProvider();
+  yield DirectoryLinksProvider._readFrequencyCapFile();
+  isIdentical(DirectoryLinksProvider._frequencyCaps, {});
+
+  // setup few links
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+      url: "1",
+  });
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+      url: "2",
+      frequency_caps: {daily: 1, total: 2}
+  });
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+      url: "3",
+      frequency_caps: {total: 2}
+  });
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+      url: "4",
+      frequency_caps: {daily: 1}
+  });
+  let freqCapsObject = DirectoryLinksProvider._frequencyCaps;
+  let capObject = freqCapsObject["1"];
+  let defaultDaily = capObject.dailyCap;
+  let defaultTotal = capObject.totalCap;
+  // check if we have defaults set
+  do_check_true(capObject.dailyCap > 0);
+  do_check_true(capObject.totalCap > 0);
+  // check if defaults are properly handled
+  do_check_eq(freqCapsObject["2"].dailyCap, 1);
+  do_check_eq(freqCapsObject["2"].totalCap, 2);
+  do_check_eq(freqCapsObject["3"].dailyCap, defaultDaily);
+  do_check_eq(freqCapsObject["3"].totalCap, 2);
+  do_check_eq(freqCapsObject["4"].dailyCap, 1);
+  do_check_eq(freqCapsObject["4"].totalCap, defaultTotal);
+
+  // write object to file
+  yield DirectoryLinksProvider._writeFrequencyCapFile();
+  // empty out freqCapsObject and read file back
+  DirectoryLinksProvider._frequencyCaps = {};
+  yield DirectoryLinksProvider._readFrequencyCapFile();
+  // re-ran tests - they should all pass
+  do_check_eq(freqCapsObject["2"].dailyCap, 1);
+  do_check_eq(freqCapsObject["2"].totalCap, 2);
+  do_check_eq(freqCapsObject["3"].dailyCap, defaultDaily);
+  do_check_eq(freqCapsObject["3"].totalCap, 2);
+  do_check_eq(freqCapsObject["4"].dailyCap, 1);
+  do_check_eq(freqCapsObject["4"].totalCap, defaultTotal);
+
+  // wait a second and prune frequency caps
+  yield new Promise(resolve => {
+    setTimeout(resolve, 1100);
+  });
+
+  // update one link and create another
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+      url: "3",
+      frequency_caps: {daily: 1, total: 2}
+  });
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+      url: "7",
+      frequency_caps: {daily: 1, total: 2}
+  });
+  // now prune the ones that have been in the object longer than 1 second
+  DirectoryLinksProvider._pruneFrequencyCapUrls(1000);
+  // make sure all keys but "3" and "7" are deleted
+  Object.keys(DirectoryLinksProvider._frequencyCaps).forEach(key => {
+    do_check_true(key == "3" || key == "7");
+  });
+
+  yield promiseCleanDirectoryLinksProvider();
+});
+
+add_task(function test_DirectoryLinksProvider_getFrequencyCapLogic() {
+  yield promiseSetupDirectoryLinksProvider();
+  yield DirectoryLinksProvider.init();
+
+  // setup suggested links
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+    url: "1",
+    frequency_caps: {daily: 2, total: 4}
+  });
+
+  do_check_true(DirectoryLinksProvider._testFrequencyCapLimits("1"));
+  // exhaust daily views
+  DirectoryLinksProvider._addFrequencyCapView("1")
+  do_check_true(DirectoryLinksProvider._testFrequencyCapLimits("1"));
+  DirectoryLinksProvider._addFrequencyCapView("1")
+  do_check_false(DirectoryLinksProvider._testFrequencyCapLimits("1"));
+
+  // now step into the furture
+  let _wasTodayOrig = DirectoryLinksProvider._wasToday;
+  DirectoryLinksProvider._wasToday = function () {return false;}
+  // exhaust total views
+  DirectoryLinksProvider._addFrequencyCapView("1")
+  do_check_true(DirectoryLinksProvider._testFrequencyCapLimits("1"));
+  DirectoryLinksProvider._addFrequencyCapView("1")
+  // reached totalViews 4, should return false
+  do_check_false(DirectoryLinksProvider._testFrequencyCapLimits("1"));
+
+  // add more views by updating configuration
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+    url: "1",
+    frequency_caps: {daily: 5, total: 10}
+  });
+  // should be true, since we have more total views
+  do_check_true(DirectoryLinksProvider._testFrequencyCapLimits("1"));
+
+  // set click flag
+  DirectoryLinksProvider._setFrequencyCapClick("1");
+  // always false after click
+  do_check_false(DirectoryLinksProvider._testFrequencyCapLimits("1"));
+
+  // use unknown urls and ensure nothing breaks
+  DirectoryLinksProvider._addFrequencyCapView("nosuch.url");
+  DirectoryLinksProvider._setFrequencyCapClick("nosuch.url");
+  // testing unknown url should always return false
+  do_check_false(DirectoryLinksProvider._testFrequencyCapLimits("nosuch.url"));
+
+  // reset _wasToday back to original function
+  DirectoryLinksProvider._wasToday = _wasTodayOrig;
+  yield promiseCleanDirectoryLinksProvider();
+});
+
+add_task(function test_DirectoryLinksProvider_getFrequencyCapReportSiteAction() {
+  yield promiseSetupDirectoryLinksProvider();
+  yield DirectoryLinksProvider.init();
+
+  // setup suggested links
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+    url: "bar.com",
+    frequency_caps: {daily: 2, total: 4}
+  });
+
+  do_check_true(DirectoryLinksProvider._testFrequencyCapLimits("bar.com"));
+  // report site action
+  yield DirectoryLinksProvider.reportSitesAction([{
+    link: {
+      targetedSite: "foo.com",
+      url: "bar.com"
+    },
+    isPinned: function() {return false;},
+  }], "view", 0);
+
+  // read file content and ensure that view counters are updated
+  let data = yield readJsonFile(DirectoryLinksProvider._frequencyCapFilePath);
+  do_check_eq(data["bar.com"].dailyViews, 1);
+  do_check_eq(data["bar.com"].totalViews, 1);
+
+  yield promiseCleanDirectoryLinksProvider();
+});
+
+add_task(function test_DirectoryLinksProvider_ClickRemoval() {
+  yield promiseSetupDirectoryLinksProvider();
+  yield DirectoryLinksProvider.init();
+  let landingUrl = "http://foo.com";
+
+  // setup suggested links
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+    url: landingUrl,
+    frequency_caps: {daily: 2, total: 4}
+  });
+
+  // add views
+  DirectoryLinksProvider._addFrequencyCapView(landingUrl)
+  DirectoryLinksProvider._addFrequencyCapView(landingUrl)
+  // make a click
+  DirectoryLinksProvider._setFrequencyCapClick(landingUrl);
+
+  // views must be 2 and click must be set
+  do_check_eq(DirectoryLinksProvider._frequencyCaps[landingUrl].totalViews, 2);
+  do_check_true(DirectoryLinksProvider._frequencyCaps[landingUrl].clicked);
+
+  // now insert a visit into places
+  yield new Promise(resolve => {
+    PlacesUtils.asyncHistory.updatePlaces(
+      {
+        uri: NetUtil.newURI(landingUrl),
+        title: "HELLO",
+        visits: [{
+          visitDate: Date.now()*1000,
+          transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
+        }]
+      },
+      {
+        handleError: function () {do_check_true(false);},
+        handleResult: function () {},
+        handleCompletion: function () {resolve();}
+      }
+    );
+  });
+
+  function UrlDeletionTester() {
+    this.promise = new Promise(resolve => {
+      this.onDeleteURI = (directoryLinksProvider, link) => {
+        resolve();
+      };
+      this.onClearHistory = (directoryLinksProvider) => {
+        resolve();
+      };
+    });
+  };
+
+  let testObserver = new UrlDeletionTester();
+  DirectoryLinksProvider.addObserver(testObserver);
+
+  PlacesUtils.bhistory.removePage(NetUtil.newURI(landingUrl));
+  yield testObserver.promise;
+  DirectoryLinksProvider.removeObserver(testObserver);
+  // views must be 2 and click should not exist
+  do_check_eq(DirectoryLinksProvider._frequencyCaps[landingUrl].totalViews, 2);
+  do_check_false(DirectoryLinksProvider._frequencyCaps[landingUrl].hasOwnProperty("clicked"));
+
+  // verify that disk written data is kosher
+  let data = yield readJsonFile(DirectoryLinksProvider._frequencyCapFilePath);
+  do_check_eq(data[landingUrl].totalViews, 2);
+  do_check_false(data[landingUrl].hasOwnProperty("clicked"));
+
+  // now test clear history
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+    url: landingUrl,
+    frequency_caps: {daily: 2, total: 4}
+  });
+  DirectoryLinksProvider._updateFrequencyCapSettings({
+    url: "http://bar.com",
+    frequency_caps: {daily: 2, total: 4}
+  });
+
+  DirectoryLinksProvider._setFrequencyCapClick(landingUrl);
+  DirectoryLinksProvider._setFrequencyCapClick("http://bar.com");
+  // both tiles must have clicked
+  do_check_true(DirectoryLinksProvider._frequencyCaps[landingUrl].clicked);
+  do_check_true(DirectoryLinksProvider._frequencyCaps["http://bar.com"].clicked);
+
+  testObserver = new UrlDeletionTester();
+  DirectoryLinksProvider.addObserver(testObserver);
+  // remove all hostory
+  PlacesUtils.bhistory.removeAllPages();
+
+  yield testObserver.promise;
+  DirectoryLinksProvider.removeObserver(testObserver);
+  // no clicks should remain in the cap object
+  do_check_false(DirectoryLinksProvider._frequencyCaps[landingUrl].hasOwnProperty("clicked"));
+  do_check_false(DirectoryLinksProvider._frequencyCaps["http://bar.com"].hasOwnProperty("clicked"));
+
+  // verify that disk written data is kosher
+  data = yield readJsonFile(DirectoryLinksProvider._frequencyCapFilePath);
+  do_check_false(data[landingUrl].hasOwnProperty("clicked"));
+  do_check_false(data["http://bar.com"].hasOwnProperty("clicked"));
+
+  yield promiseCleanDirectoryLinksProvider();
 });

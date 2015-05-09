@@ -1333,6 +1333,24 @@ var gViewController = {
         mainWindow.openAdvancedPreferences("dataChoicesTab");
       },
     },
+
+    cmd_showUnsignedExtensions: {
+      isEnabled: function cmd_showUnsignedExtensions_isEnabled() {
+        return true;
+      },
+      doCommand: function cmd_showUnsignedExtensions_doCommand() {
+        gViewController.loadView("addons://list/extension?unsigned=true");
+      },
+    },
+
+    cmd_showAllExtensions: {
+      isEnabled: function cmd_showUnsignedExtensions_isEnabled() {
+        return true;
+      },
+      doCommand: function cmd_showUnsignedExtensions_doCommand() {
+        gViewController.loadView("addons://list/extension");
+      },
+    },
   },
 
   supportsCommand: function gVC_supportsCommand(aCommand) {
@@ -1834,6 +1852,7 @@ var gCategories = {
       aId = aPreviousView;
       view = gViewController.parseViewId(aPreviousView);
     }
+    aId = aId.replace(/\?.*/, "");
 
     Services.prefs.setCharPref(PREF_UI_LASTCATEGORY, aId);
 
@@ -2589,9 +2608,33 @@ var gListView = {
           item.showInDetailView();
       }
     }, false);
+
+    document.getElementById("signing-learn-more").setAttribute("href",
+      Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons");
+
+    let findSignedAddonsLink = document.getElementById("find-alternative-addons");
+    try {
+      findSignedAddonsLink.setAttribute("href",
+        Services.urlFormatter.formatURLPref("extensions.getAddons.link.url"));
+    } catch (e) {
+      findSignedAddonsLink.classList.remove("text-link");
+    }
+
+    try {
+      document.getElementById("signing-dev-manual-link").setAttribute("href",
+        Services.prefs.getCharPref("xpinstall.signatures.devInfoURL"));
+    } catch (e) {
+      document.getElementById("signing-dev-info").hidden = true;
+    }
   },
 
   show: function gListView_show(aType, aRequest) {
+    let showOnlyDisabledUnsigned = false;
+    if (aType.endsWith("?unsigned=true")) {
+      aType = aType.replace(/\?.*/, "");
+      showOnlyDisabledUnsigned = true;
+    }
+
     if (!(aType in AddonManager.addonTypes))
       throw Components.Exception("Attempting to show unknown type " + aType, Cr.NS_ERROR_INVALID_ARG);
 
@@ -2606,8 +2649,7 @@ var gListView = {
       navigator.plugins.refresh(false);
     }
 
-    var self = this;
-    getAddonsAndInstalls(aType, function show_getAddonsAndInstalls(aAddonsList, aInstallsList) {
+    getAddonsAndInstalls(aType, (aAddonsList, aInstallsList) => {
       if (gViewController && aRequest != gViewController.currentViewRequest)
         return;
 
@@ -2619,14 +2661,16 @@ var gListView = {
       for (let installItem of aInstallsList)
         elements.push(createItem(installItem, true));
 
-      self.showEmptyNotice(elements.length == 0);
+      this.showEmptyNotice(elements.length == 0);
       if (elements.length > 0) {
         sortElements(elements, ["uiState", "name"], true);
         for (let element of elements)
-          self._listBox.appendChild(element);
+          this._listBox.appendChild(element);
       }
 
-      gEventManager.registerInstallListener(self);
+      this.filterDisabledUnsigned(showOnlyDisabledUnsigned);
+
+      gEventManager.registerInstallListener(this);
       gViewController.updateCommands();
       gViewController.notifyViewChanged();
     });
@@ -2635,6 +2679,25 @@ var gListView = {
   hide: function gListView_hide() {
     gEventManager.unregisterInstallListener(this);
     doPendingUninstalls(this._listBox);
+  },
+
+  filterDisabledUnsigned: function gListView_filterDisabledUnsigned(aFilter = true) {
+    let foundDisabledUnsigned = false;
+
+    for (let item of this._listBox.childNodes) {
+      let isDisabledUnsigned = item.mAddon.appDisabled &&
+                               item.mAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING;
+      if (isDisabledUnsigned)
+        foundDisabledUnsigned = true;
+      else
+        item.hidden = aFilter;
+    }
+
+    document.getElementById("show-disabled-unsigned-extensions").hidden =
+      aFilter || !foundDisabledUnsigned;
+
+    document.getElementById("show-all-extensions").hidden = !aFilter;
+    document.getElementById("disabled-unsigned-addons-info").hidden = !aFilter;
   },
 
   showEmptyNotice: function gListView_showEmptyNotice(aShow) {

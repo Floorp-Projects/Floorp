@@ -132,6 +132,7 @@ navigator.mozLoop = {
         return false;
     }
   },
+  hasEncryptionKey: true,
   setLoopPref: function(){},
   releaseCallData: function() {},
   copyString: function() {},

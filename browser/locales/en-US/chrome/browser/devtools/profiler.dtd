@@ -21,6 +21,14 @@
 <!ENTITY profilerUI.stopNotice1    "Click on the">
 <!ENTITY profilerUI.stopNotice2    "button again to stop profiling.">
 
+<!-- LOCALIZATION NOTE (profilerUI.bufferStatusTooltip): This string
+  -  is displayed as the tooltip for the buffer capacity during a recording. -->
+<!ENTITY profilerUI.bufferStatusTooltip "The profiler stores samples in a circular buffer, and once the buffer reaches the limit for a recording, newer samples begin to overwrite samples at the beginning of the recording.">
+
+<!-- LOCALIZATION NOTE (profilerUI.bufferStatusFull): This string
+  -  is displayed when the profiler's circular buffer has started to overlap. -->
+<!ENTITY profilerUI.bufferStatusFull "The buffer is full. Older samples are now being overwritten.">
+
 <!-- LOCALIZATION NOTE (profilerUI.loadingNotice): This is the label shown
   -  in the call list view while loading a profile. -->
 <!ENTITY profilerUI.loadingNotice "Loading…">

@@ -5,7 +5,7 @@
     "javascript", "engine", "addon", "extension",
     "xulrunner", "firefox", "browser"
   ],
-  "license": "MPL 2.0",
+  "license": "MPL-2.0",
   "unpack": true,
   "scripts": {
     "test": "gulp test"
@@ -21,13 +21,17 @@
   "devDependencies": {
     "async": "0.9.0",
     "chai": "2.1.1",
+    "fs-extra": "0.18.2",
     "glob": "4.4.2",
     "gulp": "3.8.11",
+    "ini-parser": "0.0.2",
     "jpm": "0.0.29",
     "lodash": "3.3.1",
     "mocha": "2.1.0",
+    "patch-editor": "0.0.1",
     "promise": "6.1.0",
     "rimraf": "2.3.1",
+    "teacher": "0.0.1",
     "unzip": "0.1.11",
     "xmldom": "0.1.19"
   }

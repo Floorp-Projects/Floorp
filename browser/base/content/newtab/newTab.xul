@@ -22,6 +22,8 @@
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&newtab.pageTitle;">
 
+  <div id="newtab-customize-overlay"></div>
+
   <xul:panel id="newtab-intro-panel" orient="vertical" type="arrow"
              noautohide="true" hidden="true">
     <h1>&newtab.intro.header;</h1>
@@ -36,14 +38,23 @@
 
   <xul:panel id="newtab-customize-panel" orient="vertical" type="arrow"
              noautohide="true" hidden="true">
-    <xul:hbox id="newtab-customize-enhanced" class="newtab-customize-panel-item">
-      <xul:label>&newtab.customize.suggested;</xul:label>
+    <xul:hbox id="newtab-customize-title" class="newtab-customize-panel-item">
+      <xul:label>&newtab.customize.cog.title;</xul:label>
     </xul:hbox>
-    <xul:hbox id="newtab-customize-classic" class="newtab-customize-panel-item">
-      <xul:label>&newtab.customize.topsites;</xul:label>
-    </xul:hbox>
-    <xul:hbox id="newtab-customize-blank" class="newtab-customize-panel-item">
+    <xul:vbox class="newtab-customize-complex-option">
+      <xul:hbox id="newtab-customize-classic" class="newtab-customize-panel-superitem newtab-customize-panel-item selectable">
+        <xul:label>&newtab.customize.classic;</xul:label>
+      </xul:hbox>
+      <xul:hbox id="newtab-customize-enhanced" class="newtab-customize-panel-subitem">
+        <xul:label class="checkbox"></xul:label>
+        <xul:label>&newtab.customize.cog.enhanced;</xul:label>
+      </xul:hbox>
+    </xul:vbox>
+    <xul:hbox id="newtab-customize-blank" class="newtab-customize-panel-item selectable">
       <xul:label>&newtab.customize.blank2;</xul:label>
+    </xul:hbox>
+    <xul:hbox id="newtab-customize-learn" class="newtab-customize-panel-item">
+      <xul:label>&newtab.customize.cog.learn;</xul:label>
     </xul:hbox>
   </xul:panel>
 

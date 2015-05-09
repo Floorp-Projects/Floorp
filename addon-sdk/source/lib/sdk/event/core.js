@@ -86,6 +86,14 @@ exports.once = once;
  *    Arguments that will be passed to listeners.
  */
 function emit (target, type, ...args) {
+  emitOnObject(target, type, target, ...args);
+}
+exports.emit = emit;
+
+/**
+ * A variant of emit that allows setting the this property for event listeners
+ */
+function emitOnObject(target, type, thisArg, ...args) {
   let all = observers(target, '*').length;
   let state = observers(target, type);
   let listeners = state.slice();
@@ -101,7 +109,7 @@ function emit (target, type, ...args) {
       let listener = listeners[index];
       // Dispatch only if listener is still registered.
       if (~state.indexOf(listener))
-        listener.apply(target, args);
+        listener.apply(thisArg, args);
     }
     catch (error) {
       // If exception is not thrown by a error listener and error listener is
@@ -114,7 +122,7 @@ function emit (target, type, ...args) {
    // Also emit on `"*"` so that one could listen for all events.
   if (type !== '*') emit(target, '*', type, ...args);
 }
-exports.emit = emit;
+exports.emitOnObject = emitOnObject;
 
 /**
  * Removes an event `listener` for the given event `type` on the given event

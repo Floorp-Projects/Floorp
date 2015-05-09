@@ -449,7 +449,7 @@ function workerMessageReceived(process, id, args) {
   if (internal(this).id != id)
     return;
 
-  emit(this, ...args);
+  emit(this, ...JSON.parse(args));
 }
 
 // All things that have a label on the context menu extend this

@@ -4465,6 +4465,11 @@
     "kind": "boolean",
     "description": "New tab page is enabled."
   },
+  "NEWTAB_PAGE_ENHANCED": {
+    "expires_in_version": "default",
+    "kind": "boolean",
+    "description": "New tab page is enhanced (showing suggestions)."
+  },
   "NEWTAB_PAGE_PINNED_SITES_COUNT": {
     "expires_in_version": "default",
     "kind": "enumerated",

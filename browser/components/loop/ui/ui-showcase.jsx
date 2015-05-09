@@ -17,6 +17,7 @@
   // 1. Desktop components
   // 1.1 Panel
   var PanelView = loop.panel.PanelView;
+  var SignInRequestView = loop.panel.SignInRequestView;
   // 1.2. Conversation Window
   var AcceptCallView = loop.conversationViews.AcceptCallView;
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
@@ -265,6 +266,9 @@
             <p className="note">
               <strong>Note:</strong> 332px wide.
             </p>
+            <Example summary="Re-sign-in view" dashed="true" style={{width: "332px"}}>
+              <SignInRequestView mozLoop={mockMozLoopRooms} />
+            </Example>
             <Example summary="Room list tab" dashed="true" style={{width: "332px"}}>
               <PanelView client={mockClient} notifications={notifications}
                          userProfile={{email: "test@example.com"}}

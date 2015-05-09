@@ -48,10 +48,6 @@ xul|caption > xul|label {
   margin: 0 !important;
 }
 
-xul|description {
-  -moz-margin-start: 0;
-}
-
 *|*.main-content {
   padding-top: 40px;
   -moz-padding-end: 44px; /* compensate the 4px margin of child elements */
@@ -75,7 +71,8 @@ xul|groupbox {
   font-size: 1.25rem;
 }
 
-xul|groupbox xul|label {
+xul|groupbox xul|label,
+xul|groupbox xul|description {
   /* !important needed to override toolkit !important rule */
   -moz-margin-start: 0 !important;
   -moz-margin-end: 0 !important;
@@ -410,6 +407,10 @@ html|a:hover,
 .inline-link:hover {
   color: #178ce5;
   text-decoration: underline;
+}
+
+html|a:visited {
+  color: #551a8b;
 }
 
 html|a:hover:active,
