@@ -1448,7 +1448,7 @@ nsDOMCameraControl::OnUserError(CameraControlListener::UserContext aContext, nsr
       break;
 
     case CameraControlListener::kInSetConfiguration:
-      if (mSetInitialConfig) {
+      if (mSetInitialConfig && mCameraControl) {
         // If the SetConfiguration() call in the constructor fails, there
         // is nothing we can do except release the camera hardware. This
         // will trigger a hardware state change, and when the flag that
