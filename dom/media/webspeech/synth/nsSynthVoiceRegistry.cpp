@@ -561,8 +561,6 @@ nsSynthVoiceRegistry::Speak(const nsAString& aText,
 
   VoiceData* voice = FindBestMatch(aUri, aLang);
 
-  aTask->SetChosenVoiceURI(voice->mUri);
-
   if (!voice) {
     NS_WARNING("No voices found.");
     aTask->DispatchError(0, 0);
