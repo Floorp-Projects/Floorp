@@ -22,20 +22,7 @@
 #include "BaseRect.h"
 #include "Matrix.h"
 
-#ifdef WIN32
-// This file gets included from nsGlobalWindow.cpp, which doesn't like
-// having windows.h included in it. Since OutputDebugStringA is the only
-// thing we need from windows.h, we just declare it here directly.
-// Note: the function's documented signature is
-//  WINBASEAPI void WINAPI OutputDebugStringA(LPCSTR lpOutputString)
-// but if we don't include windows.h, the macros WINBASEAPI, WINAPI, and 
-// LPCSTR are not defined, so we need to replace them with their expansions.
-extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* lpOutputString);
-#endif
-
-#if defined(PR_LOGGING)
 extern GFX2D_API PRLogModuleInfo *GetGFX2DLog();
-#endif
 
 namespace mozilla {
 namespace gfx {
@@ -55,8 +42,6 @@ const int LOG_DEFAULT = LOG_EVERYTHING;
 const int LOG_DEFAULT = LOG_CRITICAL;
 #endif
 
-#if defined(PR_LOGGING)
-
 inline PRLogModuleLevel PRLogLevelForLevel(int aLevel) {
   switch (aLevel) {
   case LOG_CRITICAL:
@@ -72,8 +57,6 @@ inline PRLogModuleLevel PRLogLevelForLevel(int aLevel) {
   }
   return PR_LOG_DEBUG;
 }
-
-#endif
 
 class PreferenceAccess
 {
@@ -147,19 +130,15 @@ struct BasicLogger
   // in the appropriate places in that method.
   static bool ShouldOutputMessage(int aLevel) {
     if (PreferenceAccess::sGfxLogLevel >= aLevel) {
-#if defined(WIN32) && !defined(PR_LOGGING)
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
       return true;
-#elif defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
-      return true;
-#elif defined(PR_LOGGING)
+#else
       if (PR_LOG_TEST(GetGFX2DLog(), PRLogLevelForLevel(aLevel))) {
         return true;
       } else if ((PreferenceAccess::sGfxLogLevel >= LOG_DEBUG_PRLOG) ||
                  (aLevel < LOG_DEBUG)) {
         return true;
       }
-#else
-      return true;
 #endif
     }
     return false;
@@ -178,19 +157,15 @@ struct BasicLogger
     // make the corresponding change in the ShouldOutputMessage method
     // above.
     if (PreferenceAccess::sGfxLogLevel >= aLevel) {
-#if defined(WIN32) && !defined(PR_LOGGING)
-      ::OutputDebugStringA((aNoNewline ? aString : aString+"\n").c_str());
-#elif defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
       printf_stderr("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
-#elif defined(PR_LOGGING)
+#else
       if (PR_LOG_TEST(GetGFX2DLog(), PRLogLevelForLevel(aLevel))) {
         PR_LogPrint("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
       } else if ((PreferenceAccess::sGfxLogLevel >= LOG_DEBUG_PRLOG) ||
                  (aLevel < LOG_DEBUG)) {
         printf("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
       }
-#else
-      printf("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
 #endif
     }
   }

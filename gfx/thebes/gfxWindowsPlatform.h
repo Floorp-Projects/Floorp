@@ -276,6 +276,7 @@ private:
     void Init();
     void InitD3D11Devices();
     IDXGIAdapter1 *GetDXGIAdapter();
+    bool IsDeviceReset(HRESULT hr, DeviceResetReason* aReason);
 
     bool mUseDirectWrite;
     bool mUsingGDIFonts;
@@ -298,6 +299,8 @@ private:
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
     bool mCanInitMediaDevice;
+    bool mHasDeviceReset;
+    DeviceResetReason mDeviceResetReason;
 
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
 };

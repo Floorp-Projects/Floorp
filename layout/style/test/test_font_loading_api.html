@@ -830,13 +830,7 @@ function runTest() {
     document.fonts.clear();
     ok(document.fonts.has(face), "CSS-connected FontFace should not be removed from document.fonts when clear is called (TEST 33)");
 
-    var exceptionName = "";
-    try {
-      document.fonts.delete(face);
-    } catch (ex) {
-      exceptionName = ex.name;
-    }
-    ok(exceptionName == "InvalidModificationError", "attempting to remove CSS-connected FontFace from document.fonts should throw an InvalidModificationError (TEST 33)");
+    is(document.fonts.delete(face), false, "attempting to remove CSS-connected FontFace from document.fonts should return false (TEST 33)");
     ok(document.fonts.has(face), "CSS-connected FontFace should not be removed from document.fonts when delete is called (TEST 33)");
 
     style.textContent = "";
@@ -1090,11 +1084,56 @@ function runTest() {
         is(events[1].fontfaces.length, 1, "second event should only have 1 FontFace (TEST 39)");
         is(events[1].fontfaces[0], all[1], "second event should have the second FontFace (TEST 39)");
 
+        style.textContent = "";
+
         document.fonts.onloadingdone = null;
         document.fonts.onloadingerror = null;
         document.fonts.clear();
         return document.fonts.ready;
       });
+
+  }).then(function() {
+
+    // (TEST 40) Test that an attempt to add the same FontFace object a second
+    // time to a FontFaceSet will be ignored.
+
+    // First set up a @font-face rule.
+    var style = document.querySelector("style");
+    style.textContent = "@font-face { font-family: something; src: url(x); }";
+
+    // Then add a couple of non-connected FontFace objects.
+    var f1 = new FontFace("test1", "url(x)");
+    var f2 = new FontFace("test2", "url(x)");
+
+    document.fonts.add(f1);
+    document.fonts.add(f2);
+
+    var all = Array.from(document.fonts);
+    var ruleFontFace = all[0];
+
+    is(all.length, 3, "number of FontFace objects in the FontFaceSet before duplicate add (TEST 40)");
+    is(all[1], f1, "first non-connected FontFace object in the FontFaceSet before duplicate add (TEST 40)");
+    is(all[2], f2, "second non-connected FontFace object in the FontFaceSet before duplicate add (TEST 40)");
+
+    document.fonts.add(f1);
+
+    all = Array.from(document.fonts);
+    is(all.length, 3, "number of FontFace objects in the FontFaceSet after duplicate add #1 (TEST 40)");
+    is(all[0], ruleFontFace, "rule-based FontFace object in the FontFaceSEt after duplicate add #1 (TEST 40)");
+    is(all[1], f1, "first non-connected FontFace object in the FontFaceSet after duplicate add #1 (TEST 40)");
+    is(all[2], f2, "second non-connected FontFace object in the FontFaceSet after duplicate add #1 (TEST 40)");
+
+    document.fonts.add(ruleFontFace);
+
+    all = Array.from(document.fonts);
+    is(all.length, 3, "number of FontFace objects in the FontFaceSet after duplicate add #2 (TEST 40)");
+    is(all[0], ruleFontFace, "rule-based FontFace object in the FontFaceSEt after duplicate add #2 (TEST 40)");
+    is(all[1], f1, "first non-connected FontFace object in the FontFaceSet after duplicate add #2 (TEST 40)");
+    is(all[2], f2, "second non-connected FontFace object in the FontFaceSet after duplicate add #2 (TEST 40)");
+
+    style.textContent = "";
+
+    document.fonts.clear();
 
   }).then(function() {
 

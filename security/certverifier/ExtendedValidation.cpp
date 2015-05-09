@@ -16,9 +16,7 @@
 #include "prerror.h"
 #include "prinit.h"
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
-#endif
 
 #define CONST_OID static const unsigned char
 #define OI(x) { siDEROID, (unsigned char*) x, sizeof x }

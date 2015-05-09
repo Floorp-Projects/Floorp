@@ -31,9 +31,7 @@
 using namespace mozilla;
 using namespace mozilla::pkix;
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gCertVerifierLog;
-#endif
 
 static const uint64_t ServerFailureDelaySeconds = 5 * 60;
 

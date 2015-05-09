@@ -1722,11 +1722,11 @@ MIRGenerator::traceNurseryObjects(JSTracer* trc)
 class MarkOffThreadNurseryObjects : public gc::BufferableRef
 {
   public:
-    void mark(JSTracer* trc);
+    void trace(JSTracer* trc) override;
 };
 
 void
-MarkOffThreadNurseryObjects::mark(JSTracer* trc)
+MarkOffThreadNurseryObjects::trace(JSTracer* trc)
 {
     JSRuntime* rt = trc->runtime();
 
