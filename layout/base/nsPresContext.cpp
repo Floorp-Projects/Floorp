@@ -2113,7 +2113,6 @@ nsPresContext::FlushUserFontSet()
       if (!mFontFaceSet) {
         mFontFaceSet = new FontFaceSet(mDocument->GetInnerWindow(), this);
       }
-      mFontFaceSet->EnsureUserFontSet(this);
       bool changed = mFontFaceSet->UpdateRules(rules);
 
       // We need to enqueue a style change reflow (for later) to
