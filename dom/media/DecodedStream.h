@@ -8,6 +8,7 @@
 #define DecodedStream_h_
 
 #include "nsRefPtr.h"
+#include "nsTArray.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/Point.h"
 
@@ -101,9 +102,12 @@ public:
   void DestroyData();
   void RecreateData(MediaDecoder* aDecoder, int64_t aInitialTime,
                     SourceMediaStream* aStream);
+  nsTArray<OutputStreamData>& OutputStreams();
 
 private:
   UniquePtr<DecodedStreamData> mData;
+  // Data about MediaStreams that are being fed by the decoder.
+  nsTArray<OutputStreamData> mOutputStreams;
 };
 
 } // namespace mozilla
