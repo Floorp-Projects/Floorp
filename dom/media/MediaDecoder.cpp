@@ -295,7 +295,7 @@ void MediaDecoder::ConnectDecodedStreamToOutputStream(OutputStreamData* aStream)
 
   // The output stream must stay in sync with the decoded stream, so if
   // either stream is blocked, we block the other.
-  aStream->mPort = aStream->mStream->AllocateInputPort(mDecodedStream->mStream,
+  aStream->mPort = aStream->mStream->AllocateInputPort(GetDecodedStream()->mStream,
       MediaInputPort::FLAG_BLOCK_INPUT | MediaInputPort::FLAG_BLOCK_OUTPUT);
   // Unblock the output stream now. While it's connected to mDecodedStream,
   // mDecodedStream is responsible for controlling blocking.
@@ -307,11 +307,11 @@ void MediaDecoder::UpdateDecodedStream()
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
 
-  if (mDecodedStream) {
+  if (GetDecodedStream()) {
     bool blockForPlayState = mPlayState != PLAY_STATE_PLAYING || mLogicallySeeking;
-    if (mDecodedStream->mHaveBlockedForPlayState != blockForPlayState) {
-      mDecodedStream->mStream->ChangeExplicitBlockerCount(blockForPlayState ? 1 : -1);
-      mDecodedStream->mHaveBlockedForPlayState = blockForPlayState;
+    if (GetDecodedStream()->mHaveBlockedForPlayState != blockForPlayState) {
+      GetDecodedStream()->mStream->ChangeExplicitBlockerCount(blockForPlayState ? 1 : -1);
+      GetDecodedStream()->mHaveBlockedForPlayState = blockForPlayState;
     }
   }
 }
@@ -346,26 +346,26 @@ void MediaDecoder::DestroyDecodedStream()
     }
   }
 
-  mDecodedStream = nullptr;
+  mDecodedStream.DestroyData();
 }
 
 void MediaDecoder::UpdateStreamBlockingForStateMachinePlaying()
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
-  if (!mDecodedStream) {
+  if (!GetDecodedStream()) {
     return;
   }
   bool blockForStateMachineNotPlaying =
     mDecoderStateMachine && !mDecoderStateMachine->IsPlaying() &&
     mDecoderStateMachine->GetState() != MediaDecoderStateMachine::DECODER_STATE_COMPLETED;
-  if (blockForStateMachineNotPlaying != mDecodedStream->mHaveBlockedForStateMachineNotPlaying) {
-    mDecodedStream->mHaveBlockedForStateMachineNotPlaying = blockForStateMachineNotPlaying;
+  if (blockForStateMachineNotPlaying != GetDecodedStream()->mHaveBlockedForStateMachineNotPlaying) {
+    GetDecodedStream()->mHaveBlockedForStateMachineNotPlaying = blockForStateMachineNotPlaying;
     int32_t delta = blockForStateMachineNotPlaying ? 1 : -1;
     if (NS_IsMainThread()) {
-      mDecodedStream->mStream->ChangeExplicitBlockerCount(delta);
+      GetDecodedStream()->mStream->ChangeExplicitBlockerCount(delta);
     } else {
       nsCOMPtr<nsIRunnable> runnable =
-          NS_NewRunnableMethodWithArg<int32_t>(mDecodedStream->mStream.get(),
+          NS_NewRunnableMethodWithArg<int32_t>(GetDecodedStream()->mStream.get(),
               &MediaStream::ChangeExplicitBlockerCount, delta);
       NS_DispatchToMainThread(runnable);
     }
@@ -380,13 +380,11 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
   DECODER_LOG("RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
 
   if (!aGraph) {
-    aGraph = mDecodedStream->mStream->Graph();
+    aGraph = GetDecodedStream()->mStream->Graph();
   }
   DestroyDecodedStream();
 
-  mDecodedStream = new DecodedStreamData(this,
-                                         aStartTimeUSecs,
-                                         aGraph->CreateSourceStream(nullptr));
+  mDecodedStream.RecreateData(this, aStartTimeUSecs, aGraph->CreateSourceStream(nullptr));
 
   // Note that the delay between removing ports in DestroyDecodedStream
   // and adding new ones won't cause a glitch since all graph operations
@@ -399,9 +397,9 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
   }
   UpdateStreamBlockingForStateMachinePlaying();
 
-  mDecodedStream->mHaveBlockedForPlayState = mPlayState != PLAY_STATE_PLAYING;
-  if (mDecodedStream->mHaveBlockedForPlayState) {
-    mDecodedStream->mStream->ChangeExplicitBlockerCount(1);
+  GetDecodedStream()->mHaveBlockedForPlayState = mPlayState != PLAY_STATE_PLAYING;
+  if (GetDecodedStream()->mHaveBlockedForPlayState) {
+    GetDecodedStream()->mStream->ChangeExplicitBlockerCount(1);
   }
 }
 
