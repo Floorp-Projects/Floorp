@@ -7710,3 +7710,57 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
   return NS_OK;
 }
 
+/* static */
+void
+nsContentUtils::FirePageHideEvent(nsIDocShellTreeItem* aItem,
+                                  EventTarget* aChromeEventHandler)
+{
+  nsCOMPtr<nsIDocument> doc = aItem->GetDocument();
+  NS_ASSERTION(doc, "What happened here?");
+  doc->OnPageHide(true, aChromeEventHandler);
+
+  int32_t childCount = 0;
+  aItem->GetChildCount(&childCount);
+  nsAutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> kids;
+  kids.AppendElements(childCount);
+  for (int32_t i = 0; i < childCount; ++i) {
+    aItem->GetChildAt(i, getter_AddRefs(kids[i]));
+  }
+
+  for (uint32_t i = 0; i < kids.Length(); ++i) {
+    if (kids[i]) {
+      FirePageHideEvent(kids[i], aChromeEventHandler);
+    }
+  }
+}
+
+// The pageshow event is fired for a given document only if IsShowing() returns
+// the same thing as aFireIfShowing.  This gives us a way to fire pageshow only
+// on documents that are still loading or only on documents that are already
+// loaded.
+/* static */
+void
+nsContentUtils::FirePageShowEvent(nsIDocShellTreeItem* aItem,
+                                  EventTarget* aChromeEventHandler,
+                                  bool aFireIfShowing)
+{
+  int32_t childCount = 0;
+  aItem->GetChildCount(&childCount);
+  nsAutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> kids;
+  kids.AppendElements(childCount);
+  for (int32_t i = 0; i < childCount; ++i) {
+    aItem->GetChildAt(i, getter_AddRefs(kids[i]));
+  }
+
+  for (uint32_t i = 0; i < kids.Length(); ++i) {
+    if (kids[i]) {
+      FirePageShowEvent(kids[i], aChromeEventHandler, aFireIfShowing);
+    }
+  }
+
+  nsCOMPtr<nsIDocument> doc = aItem->GetDocument();
+  NS_ASSERTION(doc, "What happened here?");
+  if (doc->IsShowing() == aFireIfShowing) {
+    doc->OnPageShow(true, aChromeEventHandler);
+  }
+}

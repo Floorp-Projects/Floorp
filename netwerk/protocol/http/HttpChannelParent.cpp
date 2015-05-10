@@ -113,7 +113,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(), a.fds(),
                        a.requestingPrincipalInfo(), a.triggeringPrincipalInfo(),
                        a.securityFlags(), a.contentPolicyType(), a.innerWindowID(),
-                       a.synthesizedResponseHead());
+                       a.synthesizedResponseHead(), a.cacheKey());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
@@ -267,7 +267,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const uint32_t&            aSecurityFlags,
                                  const uint32_t&            aContentPolicyType,
                                  const uint32_t&            aInnerWindowID,
-                                 const OptionalHttpResponseHead& aSynthesizedResponseHead)
+                                 const OptionalHttpResponseHead& aSynthesizedResponseHead,
+                                 const OptionalHttpChannelCacheKey& aCacheKey)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
@@ -387,6 +388,15 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 
   if (aSynthesizedResponseHead.type() == OptionalHttpResponseHead::TnsHttpResponseHead) {
     mSynthesizedResponseHead = new nsHttpResponseHead(aSynthesizedResponseHead.get_nsHttpResponseHead());
+  }
+
+  if (aCacheKey.type() == OptionalHttpChannelCacheKey::THttpChannelCacheKey) {
+    nsRefPtr<nsHttpChannelCacheKey> cacheKey = new nsHttpChannelCacheKey();
+    cacheKey->SetData(aCacheKey.get_HttpChannelCacheKey().postId(),
+                      aCacheKey.get_HttpChannelCacheKey().key());
+    nsCOMPtr<nsISupports> cacheKeySupp;
+    CallQueryInterface(cacheKey.get(), getter_AddRefs(cacheKeySupp));
+    mChannel->SetCacheKey(cacheKeySupp);
   }
 
   if (priority != nsISupportsPriority::PRIORITY_NORMAL) {
@@ -804,6 +814,21 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
   uint16_t redirectCount = 0;
   mChannel->GetRedirectCount(&redirectCount);
+
+  nsCOMPtr<nsISupports> cacheKeySupp;
+  mChannel->GetCacheKey(getter_AddRefs(cacheKeySupp));
+  uint32_t postId = 0;
+  nsAutoCString key;
+  if (cacheKeySupp) {
+    nsresult rv = static_cast<nsHttpChannelCacheKey *>(
+      static_cast<nsISupportsPRUint32 *>(cacheKeySupp.get()))->GetData(&postId,
+                                                                       key);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  HttpChannelCacheKey cacheKey = HttpChannelCacheKey(postId, key);
+
   if (mIPCClosed ||
       !SendOnStartRequest(channelStatus,
                           responseHead ? *responseHead : nsHttpResponseHead(),
@@ -813,7 +838,8 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           mCacheEntry ? true : false,
                           expirationTime, cachedCharset, secInfoSerialization,
                           mChannel->GetSelfAddr(), mChannel->GetPeerAddr(),
-                          redirectCount))
+                          redirectCount,
+                          cacheKey))
   {
     return NS_ERROR_UNEXPECTED;
   }
