@@ -81,7 +81,7 @@
     </style>
 
     <style name="Widget.GeckoMenuListView" parent="Widget.ListView">
-        <item name="android:divider">#FFC9D3DC</item>
+        <item name="android:divider">@color/divider_light</item>
     </style>
 
     <style name="Widget.MenuItemActionBar">
