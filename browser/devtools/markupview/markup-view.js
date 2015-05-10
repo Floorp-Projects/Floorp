@@ -150,7 +150,7 @@ MarkupView.prototype = {
     // Show markup-containers as hovered on toolbox "picker-node-hovered" event
     // which happens when the "pick" button is pressed
     this._onToolboxPickerHover = (event, nodeFront) => {
-      this.showNode(nodeFront, true).then(() => {
+      this.showNode(nodeFront).then(() => {
         this._showContainerAsHovered(nodeFront);
       });
     };
@@ -436,7 +436,7 @@ MarkupView.prototype = {
         this._brieflyShowBoxModel(selection.nodeFront);
       }
 
-      this.showNode(selection.nodeFront, true).then(() => {
+      this.showNode(selection.nodeFront).then(() => {
         if (this._destroyer) {
           return promise.reject("markupview destroyed");
         }
@@ -836,7 +836,7 @@ MarkupView.prototype = {
    * Make sure the given node's parents are expanded and the
    * node is scrolled on to screen.
    */
-  showNode: function(aNode, centered) {
+  showNode: function(aNode, centered=true) {
     let parent = aNode;
 
     this.importNode(aNode);
@@ -852,7 +852,6 @@ MarkupView.prototype = {
       }
       return this._ensureVisible(aNode);
     }).then(() => {
-      // Why is this not working?
       this.layoutHelpers.scrollIntoViewIfNeeded(this.getContainer(aNode).editor.elt, centered);
     }, e => {
       // Only report this rejection as an error if the panel hasn't been

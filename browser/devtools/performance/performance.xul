@@ -37,11 +37,12 @@
                 data-pref="show-platform-data"
                 label="&profilerUI.showPlatformData;"
                 tooltiptext="&profilerUI.showPlatformData.tooltiptext;"/>
-      <menuitem id="option-enable-memory"
+      <!-- TODO Re-enable in bug 1163350 -->
+      <!-- <menuitem id="option-enable-memory"
                 type="checkbox"
                 data-pref="enable-memory"
                 label="&profilerUI.enableMemory;"
-                tooltiptext="&profilerUI.enableMemory.tooltiptext;"/>
+                tooltiptext="&profilerUI.enableMemory.tooltiptext;"/> -->
       <menuitem id="option-enable-framerate"
                 type="checkbox"
                 data-pref="enable-framerate"
@@ -62,11 +63,12 @@
                 data-pref="flatten-tree-recursion"
                 label="&profilerUI.flattenTreeRecursion;"
                 tooltiptext="&profilerUI.flattenTreeRecursion.tooltiptext;"/>
-      <menuitem id="option-show-jit-optimizations"
+      <!-- TODO Re-enable in bug 1163351 -->
+      <!-- <menuitem id="option-show-jit-optimizations"
                 type="checkbox"
                 data-pref="show-jit-optimizations"
                 label="&profilerUI.showJITOptimizations;"
-                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/>
+                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/> -->
     </menupopup>
   </popupset>
 
@@ -77,8 +79,8 @@
         <hbox id="recordings-controls"
               class="devtools-toolbarbutton-group">
           <toolbarbutton id="main-record-button"
-                         class="devtools-toolbarbutton record-button devtools-thobber"
-                         tooltiptext="&profilerUI.recordButton.tooltip;"/>
+                         class="devtools-toolbarbutton record-button"
+                         tooltiptext="&profilerUI.recordButton2.tooltip;"/>
           <toolbarbutton id="import-button"
                          class="devtools-toolbarbutton"
                          label="&profilerUI.importButton;"/>
@@ -140,10 +142,11 @@
               align="center"
               pack="center"
               flex="1">
-          <label value="&profilerUI.emptyNotice1;"/>
-          <button class="devtools-toolbarbutton record-button"
-                  standalone="true" />
-          <label value="&profilerUI.emptyNotice2;"/>
+          <hbox class="devtools-toolbarbutton-group"
+                pack="center">
+            <toolbarbutton class="record-button"
+                           label="&profilerUI.startRecording;" />
+          </hbox>
         </hbox>
         <vbox id="performance-view-content" flex="1">
           <vbox id="overview-pane">
@@ -157,19 +160,38 @@
                   align="center"
                   pack="center"
                   flex="1">
-              <label value="&profilerUI.stopNotice1;"/>
-              <button class="devtools-toolbarbutton record-button"
-                      standalone="true" />
-              <label value="&profilerUI.stopNotice2;"/>
+              <vbox>
+                <hbox class="devtools-toolbarbutton-group"
+                      pack="center">
+                  <toolbarbutton class="record-button"
+                                 label="&profilerUI.stopRecording;" />
+                </hbox>
+                <label class="buffer-status-message"
+                       tooltiptext="&profilerUI.bufferStatusTooltip;"/>
+                <label class="buffer-status-message-full"
+                       value="&profilerUI.bufferStatusFull;"/>
+              </vbox>
             </hbox>
             <hbox id="console-recording-notice"
                   class="notice-container"
                   align="center"
                   pack="center"
                   flex="1">
-                  <vbox>
-                    <label class="console-profile-recording-notice" />
-                    <label class="console-profile-stop-notice" />
+                  <vbox flex="1" align="center">
+                    <hbox class="console-profile-recording-notice">
+                      <label value="&profilerUI.console.recordingNoticeStart;" />
+                      <label class="console-profile-command" />
+                      <label value="&profilerUI.console.recordingNoticeEnd;" />
+                    </hbox>
+                    <hbox class="console-profile-stop-notice">
+                      <label value="&profilerUI.console.stopCommandStart;" />
+                      <label class="console-profile-command" />
+                      <label value="&profilerUI.console.stopCommandEnd;" />
+                    </hbox>
+                    <label class="buffer-status-message"
+                           tooltiptext="&profilerUI.bufferStatusTooltip;"/>
+                    <label class="buffer-status-message-full"
+                           value="&profilerUI.bufferStatusFull;"/>
                   </vbox>
             </hbox>
             <deck id="details-pane" flex="1">
