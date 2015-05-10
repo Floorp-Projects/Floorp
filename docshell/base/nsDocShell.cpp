@@ -2987,6 +2987,20 @@ nsDocShell::PopProfileTimelineMarkers(
     // all the embedded Layer markers to this array.
     dom::Sequence<dom::ProfileTimelineLayerRect> layerRectangles;
 
+    // If this is a TRACING_TIMESTAMP marker, there's no corresponding "end"
+    // marker, as it's a single unit of time, not a duration, create the final
+    // marker here.
+    if (startPayload->GetMetaData() == TRACING_TIMESTAMP) {
+      mozilla::dom::ProfileTimelineMarker* marker =
+        profileTimelineMarkers.AppendElement();
+
+      marker->mName = NS_ConvertUTF8toUTF16(startPayload->GetName());
+      marker->mStart = startPayload->GetTime();
+      marker->mEnd = startPayload->GetTime();
+      startPayload->AddDetails(*marker);
+      continue;
+    }
+
     if (startPayload->GetMetaData() == TRACING_INTERVAL_START) {
       bool hasSeenEnd = false;
 
@@ -10725,7 +10739,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   // (ie. POST data, referrer, ...)
   //
   if (httpChannel) {
-    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(httpChannel));
+    nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(httpChannel));
     /* Get the cache Key from SH */
     nsCOMPtr<nsISupports> cacheKey;
     if (mLSHE) {
@@ -11275,7 +11289,7 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel, nsISupports* aOwner,
                  "We shouldn't be updating session history for forced"
                  " reloads!");
 
-    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aChannel));
+    nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aChannel));
     nsCOMPtr<nsISupports> cacheKey;
     // Get the Cache Key and store it in SH.
     if (cacheChannel) {
@@ -11829,7 +11843,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   nsCOMPtr<nsISupports> owner = aOwner;
   bool expired = false;
   bool discardLayoutState = false;
-  nsCOMPtr<nsICachingChannel> cacheChannel;
+  nsCOMPtr<nsICacheInfoChannel> cacheChannel;
   if (aChannel) {
     cacheChannel = do_QueryInterface(aChannel);
 

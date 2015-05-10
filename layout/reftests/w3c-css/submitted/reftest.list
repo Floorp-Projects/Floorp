@@ -47,7 +47,7 @@ include ruby/reftest.list
 # include selectors4/reftest.list
 
 # Text Level 3
-# include text3/reftest.list
+include text3/reftest.list
 
 # Text Decoration Level 3
 include text-decor-3/reftest.list

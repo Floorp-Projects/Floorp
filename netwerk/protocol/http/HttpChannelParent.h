@@ -121,7 +121,8 @@ protected:
                    const uint32_t&            aSecurityFlags,
                    const uint32_t&            aContentPolicyType,
                    const uint32_t&            aInnerWindowID,
-                   const OptionalHttpResponseHead& aSynthesizedResponseHead);
+                   const OptionalHttpResponseHead& aSynthesizedResponseHead,
+                   const OptionalHttpChannelCacheKey& aCacheKey);
 
   virtual bool RecvSetPriority(const uint16_t& priority) override;
   virtual bool RecvSetClassOfService(const uint32_t& cos) override;

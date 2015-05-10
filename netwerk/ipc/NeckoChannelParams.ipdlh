@@ -30,6 +30,18 @@ union OptionalHttpResponseHead
   nsHttpResponseHead;
 };
 
+struct HttpChannelCacheKey
+{
+  uint32_t postId;
+  nsCString key;
+};
+
+union OptionalHttpChannelCacheKey
+{
+  void_t;
+  HttpChannelCacheKey;
+};
+
 struct HttpChannelOpenArgs
 {
   URIParams                   uri;
@@ -67,6 +79,7 @@ struct HttpChannelOpenArgs
   uint32_t                    contentPolicyType;
   uint32_t                    innerWindowID;
   OptionalHttpResponseHead    synthesizedResponseHead;
+  OptionalHttpChannelCacheKey cacheKey;
 };
 
 struct HttpChannelConnectArgs

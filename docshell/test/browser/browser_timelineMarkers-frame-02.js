@@ -90,6 +90,33 @@ let TESTS = [{
     is(markers[1].name, "ConsoleTime", "Got second ConsoleTime marker");
     is(markers[1].causeName, "BAR", "Got ConsoleTime BAR detail");
   }
+}, {
+  desc: "Timestamps created by console.timeStamp()",
+  searchFor: "Timestamp",
+  setup: function(docshell) {
+    content.console.timeStamp("rock");
+    let markers = docShell.popProfileTimelineMarkers();
+    is(markers.length, 1, "Got one marker");
+    is(markers[0].name, "TimeStamp", "Got Timestamp marker");
+    is(markers[0].causeName, "rock", "Got Timestamp label value");
+    content.console.timeStamp("paper");
+    content.console.timeStamp("scissors");
+    content.console.timeStamp();
+    content.console.timeStamp(undefined);
+  },
+  check: function (markers) {
+    is(markers.length, 4, "Got 4 markers");
+    is(markers[0].name, "TimeStamp", "Got Timestamp marker");
+    is(markers[0].causeName, "paper", "Got Timestamp label value");
+    is(markers[1].name, "TimeStamp", "Got Timestamp marker");
+    is(markers[1].causeName, "scissors", "Got Timestamp label value");
+    is(markers[2].name, "TimeStamp", "Got empty Timestamp marker when no argument given");
+    is(markers[2].causeName, void 0, "Got empty Timestamp label value");
+    is(markers[3].name, "TimeStamp", "Got empty Timestamp marker when argument is undefined");
+    is(markers[3].causeName, void 0, "Got empty Timestamp label value");
+    markers.forEach(m => is(m.end, m.start,
+      "All Timestamp markers should have identical start/end times"));
+  }
 }];
 
 timelineContentTest(TESTS);
