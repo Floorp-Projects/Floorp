@@ -1035,7 +1035,32 @@ Range::rsh(TempAllocator& alloc, const Range* lhs, const Range* rhs)
 {
     MOZ_ASSERT(lhs->isInt32());
     MOZ_ASSERT(rhs->isInt32());
-    return Range::NewInt32Range(alloc, Min(lhs->lower(), 0), Max(lhs->upper(), 0));
+
+    // Canonicalize the shift range to 0 to 31.
+    int32_t shiftLower = rhs->lower();
+    int32_t shiftUpper = rhs->upper();
+    if ((int64_t(shiftUpper) - int64_t(shiftLower)) >= 31) {
+        shiftLower = 0;
+        shiftUpper = 31;
+    } else {
+        shiftLower &= 0x1f;
+        shiftUpper &= 0x1f;
+        if (shiftLower > shiftUpper) {
+            shiftLower = 0;
+            shiftUpper = 31;
+        }
+    }
+    MOZ_ASSERT(shiftLower >= 0 && shiftUpper <= 31);
+
+    // The lhs bounds are signed, thus the minimum is either the lower bound
+    // shift by the smallest shift if negative or the lower bound shifted by the
+    // biggest shift otherwise.  And the opposite for the maximum.
+    int32_t lhsLower = lhs->lower();
+    int32_t min = lhsLower < 0 ? lhsLower >> shiftLower : lhsLower >> shiftUpper;
+    int32_t lhsUpper = lhs->upper();
+    int32_t max = lhsUpper >= 0 ? lhsUpper >> shiftLower : lhsUpper >> shiftUpper;
+
+    return Range::NewInt32Range(alloc, min, max);
 }
 
 Range*
