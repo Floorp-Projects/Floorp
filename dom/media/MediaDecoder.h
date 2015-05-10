@@ -398,11 +398,6 @@ public:
   void UpdateDecodedStream();
 
   /**
-   * Disconnects mDecodedStream->mStream from all outputs and clears
-   * mDecodedStream.
-   */
-  void DestroyDecodedStream();
-  /**
    * Recreates mDecodedStream. Call this to create mDecodedStream at first,
    * and when seeking, to ensure a new stream is set up with fresh buffers.
    * aStartTimeUSecs is relative to the state machine's mStartTime.
