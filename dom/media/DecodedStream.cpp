@@ -204,4 +204,10 @@ DecodedStream::RecreateData(MediaDecoder* aDecoder, int64_t aInitialTime,
   mData.reset(new DecodedStreamData(aDecoder, aInitialTime, aStream));
 }
 
+nsTArray<OutputStreamData>&
+DecodedStream::OutputStreams()
+{
+  return mOutputStreams;
+}
+
 } // namespace mozilla

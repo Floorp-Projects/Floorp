@@ -420,10 +420,11 @@ public:
    * Decoder monitor must be held.
    */
   void UpdateStreamBlockingForStateMachinePlaying();
+
   nsTArray<OutputStreamData>& OutputStreams()
   {
     GetReentrantMonitor().AssertCurrentThreadIn();
-    return mOutputStreams;
+    return mDecodedStream.OutputStreams();
   }
 
   DecodedStreamData* GetDecodedStream()
@@ -1031,8 +1032,6 @@ private:
 #endif
 
 protected:
-  // Data about MediaStreams that are being fed by this decoder.
-  nsTArray<OutputStreamData> mOutputStreams;
   // The SourceMediaStream we are using to feed the mOutputStreams. This stream
   // is never exposed outside the decoder.
   // Only written on the main thread while holding the monitor. Therefore it
