@@ -220,4 +220,18 @@ DecodedStream::GetReentrantMonitor()
   return mMonitor;
 }
 
+void
+DecodedStream::Connect(OutputStreamData* aStream)
+{
+  NS_ASSERTION(!aStream->mPort, "Already connected?");
+
+  // The output stream must stay in sync with the decoded stream, so if
+  // either stream is blocked, we block the other.
+  aStream->mPort = aStream->mStream->AllocateInputPort(mData->mStream,
+      MediaInputPort::FLAG_BLOCK_INPUT | MediaInputPort::FLAG_BLOCK_OUTPUT);
+  // Unblock the output stream now. While it's connected to DecodedStream,
+  // DecodedStream is responsible for controlling blocking.
+  aStream->mStream->ChangeExplicitBlockerCount(-1);
+}
+
 } // namespace mozilla
