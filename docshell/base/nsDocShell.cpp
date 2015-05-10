@@ -10739,7 +10739,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   // (ie. POST data, referrer, ...)
   //
   if (httpChannel) {
-    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(httpChannel));
+    nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(httpChannel));
     /* Get the cache Key from SH */
     nsCOMPtr<nsISupports> cacheKey;
     if (mLSHE) {
@@ -11289,7 +11289,7 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel, nsISupports* aOwner,
                  "We shouldn't be updating session history for forced"
                  " reloads!");
 
-    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aChannel));
+    nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aChannel));
     nsCOMPtr<nsISupports> cacheKey;
     // Get the Cache Key and store it in SH.
     if (cacheChannel) {
@@ -11843,7 +11843,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   nsCOMPtr<nsISupports> owner = aOwner;
   bool expired = false;
   bool discardLayoutState = false;
-  nsCOMPtr<nsICachingChannel> cacheChannel;
+  nsCOMPtr<nsICacheInfoChannel> cacheChannel;
   if (aChannel) {
     cacheChannel = do_QueryInterface(aChannel);
 
