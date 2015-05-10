@@ -38,6 +38,7 @@
 #include "gfx2DGlue.h"
 #include "nsPrintfCString.h"
 #include "DOMMediaStream.h"
+#include "DecodedStream.h"
 
 #include <algorithm>
 
