@@ -2930,8 +2930,6 @@ void
 nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx)
 {
-  DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
-
   if (mColor == NS_RGBA(0, 0, 0, 0)) {
     return;
   }
@@ -2944,6 +2942,8 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
   // pixel shorter in rare cases. Disabled in favor of the old code for now.
   // Note that the pref layout.css.devPixelsPerPx needs to be set to 1 to
   // reproduce the bug.
+  DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
+
   Rect rect = NSRectToSnappedRect(borderBox,
                                   mFrame->PresContext()->AppUnitsPerDevPixel(),
                                   aDrawTarget);
