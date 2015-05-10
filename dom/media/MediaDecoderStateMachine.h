@@ -98,6 +98,7 @@ namespace mozilla {
 class AudioSegment;
 class MediaTaskQueue;
 class AudioSink;
+class DecodedStreamData;
 
 /*
   The state machine class. This manages the decoding and seeking in the
@@ -117,10 +118,9 @@ class MediaDecoderStateMachine
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
 public:
   typedef MediaDecoderOwner::NextFrameStatus NextFrameStatus;
-  typedef MediaDecoder::DecodedStreamData DecodedStreamData;
   MediaDecoderStateMachine(MediaDecoder* aDecoder,
-                               MediaDecoderReader* aReader,
-                               bool aRealTime = false);
+                           MediaDecoderReader* aReader,
+                           bool aRealTime = false);
 
   nsresult Init(MediaDecoderStateMachine* aCloneDonor);
 
