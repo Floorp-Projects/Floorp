@@ -307,7 +307,7 @@ public:
   /**
    * Keep track of important decisions for debugging.
    */
-  nsAutoCString mLog;
+  nsCString mLog;
 
   #define FLB_LOG_PAINTED_LAYER_DECISION(pld, ...) \
           if (gfxPrefs::LayersDumpDecision()) { \
