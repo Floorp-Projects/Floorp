@@ -325,6 +325,7 @@ function consoleAPISanityTest() {
   ok(win.console.groupEnd, "console.groupEnd is here");
   ok(win.console.time, "console.time is here");
   ok(win.console.timeEnd, "console.timeEnd is here");
+  ok(win.console.timeStamp, "console.timeStamp is here");
   ok(win.console.assert, "console.assert is here");
   ok(win.console.count, "console.count is here");
 }
@@ -415,6 +416,85 @@ function testConsoleTimeEnd(aMessageObject) {
   gArgs[0].arguments.forEach(function (a, i) {
     is(aMessageObject.arguments[i], a, "correct arg " + i);
   });
+
+  startTimeStampTest();
+}
+
+function startTimeStampTest() {
+  // Reset the observer function to cope with the fabricated test data.
+  ConsoleObserver.observe = function CO_observe(aSubject, aTopic, aData) {
+    try {
+      testConsoleTimeStamp(aSubject.wrappedJSObject);
+    } catch (ex) {
+      // XXX Bug 906593 - Exceptions in this function currently aren't
+      // reported, because of some XPConnect weirdness, so report them manually
+      ok(false, "Exception thrown in CO_observe: " + ex);
+    }
+  };
+  gLevel = "timeStamp";
+  gArgs = [
+    {filename: TEST_URI, lineNumber: 58, functionName: "timeStamp",
+     arguments: ["!!!"]
+    }
+  ];
+
+  let button = gWindow.document.getElementById("test-timeStamp");
+  ok(button, "found #test-timeStamp button");
+  EventUtils.synthesizeMouseAtCenter(button, {}, gWindow);
+}
+
+function testConsoleTimeStamp(aMessageObject) {
+  let messageWindow = Services.wm.getOuterWindowWithId(aMessageObject.ID);
+  is(messageWindow, gWindow, "found correct window by window ID");
+
+  is(aMessageObject.level, gLevel, "expected level received");
+
+  is(aMessageObject.filename, gArgs[0].filename, "filename matches");
+  is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
+  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
+  ok(aMessageObject.timeStamp > 0, "timeStamp is a positive value");
+
+  gArgs[0].arguments.forEach(function (a, i) {
+    is(aMessageObject.arguments[i], a, "correct arg " + i);
+  });
+
+  startEmptyTimeStampTest();
+}
+
+function startEmptyTimeStampTest () {
+  // Reset the observer function to cope with the fabricated test data.
+  ConsoleObserver.observe = function CO_observe(aSubject, aTopic, aData) {
+    try {
+      testEmptyConsoleTimeStamp(aSubject.wrappedJSObject);
+    } catch (ex) {
+      // XXX Bug 906593 - Exceptions in this function currently aren't
+      // reported, because of some XPConnect weirdness, so report them manually
+      ok(false, "Exception thrown in CO_observe: " + ex);
+    }
+  };
+  gLevel = "timeStamp";
+  gArgs = [
+    {filename: TEST_URI, lineNumber: 58, functionName: "timeStamp",
+     arguments: []
+    }
+  ];
+
+  let button = gWindow.document.getElementById("test-emptyTimeStamp");
+  ok(button, "found #test-emptyTimeStamp button");
+  EventUtils.synthesizeMouseAtCenter(button, {}, gWindow);
+}
+
+function testEmptyConsoleTimeStamp(aMessageObject) {
+  let messageWindow = Services.wm.getOuterWindowWithId(aMessageObject.ID);
+  is(messageWindow, gWindow, "found correct window by window ID");
+
+  is(aMessageObject.level, gLevel, "expected level received");
+
+  is(aMessageObject.filename, gArgs[0].filename, "filename matches");
+  is(aMessageObject.lineNumber, gArgs[0].lineNumber, "lineNumber matches");
+  is(aMessageObject.functionName, gArgs[0].functionName, "functionName matches");
+  ok(aMessageObject.timeStamp > 0, "timeStamp is a positive value");
+  is(aMessageObject.arguments.length, 0, "we don't have arguments");
 
   startEmptyTimerTest();
 }

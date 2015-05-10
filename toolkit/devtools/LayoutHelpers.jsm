@@ -216,38 +216,35 @@ LayoutHelpers.prototype = {
   },
 
   /**
-   * Scroll the document so that the element "elem" appears in the viewport.
+   * Scroll the document so that the element "elem" appears vertically in
+   * the viewport.
    *
    * @param {DOMNode} elem
    *        The element that needs to appear in the viewport.
    * @param {Boolean} centered
    *        true if you want it centered, false if you want it to appear on the
-   *        top of the viewport. It is true by default, and that is usually what
+   *        top of the viewport. True by default, and that is usually what
    *        you want.
    */
   scrollIntoViewIfNeeded: function(elem, centered) {
     // We want to default to centering the element in the page,
     // so as to keep the context of the element.
-    centered = centered === undefined? true: !!centered;
+    centered = centered === undefined ? true: !!centered;
 
     let win = elem.ownerDocument.defaultView;
     let clientRect = elem.getBoundingClientRect();
 
-    // The following are always from the {top, bottom, left, right}
+    // The following are always from the {top, bottom}
     // of the viewport, to the {top, …} of the box.
     // Think of them as geometrical vectors, it helps.
     // The origin is at the top left.
 
     let topToBottom = clientRect.bottom;
     let bottomToTop = clientRect.top - win.innerHeight;
-    let leftToRight = clientRect.right;
-    let rightToLeft = clientRect.left - win.innerWidth;
-    let xAllowed = true;  // We allow one translation on the x axis,
-    let yAllowed = true;  // and one on the y axis.
+    let yAllowed = true;  // We allow one translation on the y axis.
 
     // Whatever `centered` is, the behavior is the same if the box is
     // (even partially) visible.
-
     if ((topToBottom > 0 || !centered) && topToBottom <= elem.offsetHeight) {
       win.scrollBy(0, topToBottom - elem.offsetHeight);
       yAllowed = false;
@@ -257,41 +254,14 @@ LayoutHelpers.prototype = {
       yAllowed = false;
     }
 
-    if ((leftToRight > 0 || !centered) && leftToRight <= elem.offsetWidth) {
-      if (xAllowed) {
-        win.scrollBy(leftToRight - elem.offsetWidth, 0);
-        xAllowed = false;
-      }
-    } else
-    if ((rightToLeft < 0 || !centered) && rightToLeft >= -elem.offsetWidth) {
-      if (xAllowed) {
-        win.scrollBy(rightToLeft + elem.offsetWidth, 0);
-        xAllowed = false;
-      }
-    }
-
     // If we want it centered, and the box is completely hidden,
     // then we center it explicitly.
-
     if (centered) {
-
       if (yAllowed && (topToBottom <= 0 || bottomToTop >= 0)) {
         win.scroll(win.scrollX,
                    win.scrollY + clientRect.top
                    - (win.innerHeight - elem.offsetHeight) / 2);
       }
-
-      if (xAllowed && (leftToRight <= 0 || rightToLeft <= 0)) {
-        win.scroll(win.scrollX + clientRect.left
-                   - (win.innerWidth - elem.offsetWidth) / 2,
-                   win.scrollY);
-      }
-    }
-
-    if (!this.isTopLevelWindow(win)) {
-      // We are inside an iframe.
-      let frameElement = this.getFrameElement(win);
-      this.scrollIntoViewIfNeeded(frameElement, centered);
     }
   },
 

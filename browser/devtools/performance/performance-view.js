@@ -9,6 +9,9 @@
 let PerformanceView = {
 
   _state: null,
+  // Set to true if the front emits a "buffer-status" event, indicating
+  // that the server has support for determining buffer status.
+  _bufferStatusSupported: false,
 
   // Mapping of state to selectors for different panes
   // of the main profiler view. Used in `PerformanceView.setState()`
@@ -46,6 +49,7 @@ let PerformanceView = {
     this._onRecordingSelected = this._onRecordingSelected.bind(this);
     this._onRecordingStopped = this._onRecordingStopped.bind(this);
     this._onRecordingStarted = this._onRecordingStarted.bind(this);
+    this._onProfilerStatusUpdated = this._onProfilerStatusUpdated.bind(this);
 
     for (let button of $$(".record-button")) {
       button.addEventListener("click", this._onRecordButtonClick);
@@ -57,6 +61,7 @@ let PerformanceView = {
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
+    PerformanceController.on(EVENTS.PROFILER_STATUS_UPDATED, this._onProfilerStatusUpdated);
 
     this.setState("empty");
 
@@ -81,6 +86,7 @@ let PerformanceView = {
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
+    PerformanceController.off(EVENTS.PROFILER_STATUS_UPDATED, this._onProfilerStatusUpdated);
 
     yield ToolbarView.destroy();
     yield RecordingsView.destroy();
@@ -106,9 +112,17 @@ let PerformanceView = {
     if (state === "console-recording") {
       let recording = PerformanceController.getCurrentRecording();
       let label = recording.getLabel() || "";
-      $(".console-profile-recording-notice").value = L10N.getFormatStr("consoleProfile.recordingNotice", label);
-      $(".console-profile-stop-notice").value = L10N.getFormatStr("consoleProfile.stopCommand", label);
+      // Wrap the label in quotes if it exists for the commands.
+      label = label ? `"${label}"` : "";
+
+      let startCommand = $(".console-profile-recording-notice .console-profile-command");
+      let stopCommand = $(".console-profile-stop-notice .console-profile-command");
+
+      startCommand.value = `console.profile(${label})`;
+      stopCommand.value = `console.profileEnd(${label})`;
     }
+
+    this.updateBufferStatus();
     this.emit(EVENTS.UI_STATE_CHANGED, state);
   },
 
@@ -117,6 +131,41 @@ let PerformanceView = {
    */
   getState: function () {
     return this._state;
+  },
+
+  /**
+   * Updates the displayed buffer status.
+   */
+  updateBufferStatus: function () {
+    // If we've never seen a "buffer-status" event from the front, ignore
+    // and keep the buffer elements hidden.
+    if (!this._bufferStatusSupported) {
+      return;
+    }
+
+    let recording = PerformanceController.getCurrentRecording();
+    if (!recording || !recording.isRecording()) {
+      return;
+    }
+
+    let bufferUsage = recording.getBufferUsage();
+
+    // Normalize to a percentage value
+    let percent = Math.floor(bufferUsage * 100);
+
+    let $container = $("#details-pane-container");
+    let $bufferLabel = $(".buffer-status-message", $container.selectedPanel);
+
+    // Be a little flexible on the buffer status, although not sure how
+    // this could happen, as RecordingModel clamps.
+    if (percent >= 99) {
+      $container.setAttribute("buffer-status", "full");
+    } else {
+      $container.setAttribute("buffer-status", "in-progress");
+    }
+
+    $bufferLabel.value = L10N.getFormatStr("profiler.bufferStatus", percent);
+    this.emit(EVENTS.UI_BUFFER_UPDATED, percent);
   },
 
   /**
@@ -146,6 +195,9 @@ let PerformanceView = {
     // the button if it's the main recording that was started via UI.
     if (!recording.isConsole()) {
       this._unlockRecordButtons();
+    }
+    if (recording.isRecording()) {
+      this.updateBufferStatus();
     }
   },
 
@@ -219,6 +271,29 @@ let PerformanceView = {
     } else {
       this.setState("recorded");
     }
+  },
+
+  /**
+   * Fired when the controller has updated information on the buffer's status.
+   * Update the buffer status display if shown.
+   */
+  _onProfilerStatusUpdated: function (_, data) {
+    // We only care about buffer status here, so check to see
+    // if it has position.
+    if (!data || data.position === void 0) {
+      return;
+    }
+    // If this is our first buffer event, set the status and add a class
+    if (!this._bufferStatusSupported) {
+      this._bufferStatusSupported = true;
+      $("#details-pane-container").setAttribute("buffer-status", "in-progress");
+    }
+
+    if (!this.getState("recording") && !this.getState("console-recording")) {
+      return;
+    }
+
+    this.updateBufferStatus();
   },
 
   toString: () => "[object PerformanceView]"
