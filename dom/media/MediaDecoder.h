@@ -395,11 +395,6 @@ public:
   // replaying after the input as ended. In the latter case, the new source is
   // not connected to streams created by captureStreamUntilEnded.
 
-  /**
-   * Connects mDecodedStream->mStream to aStream->mStream.
-   */
-  void ConnectDecodedStreamToOutputStream(OutputStreamData* aStream);
-
   void UpdateDecodedStream();
 
   /**

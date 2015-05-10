@@ -103,6 +103,7 @@ public:
   void RecreateData(int64_t aInitialTime, SourceMediaStream* aStream);
   nsTArray<OutputStreamData>& OutputStreams();
   ReentrantMonitor& GetReentrantMonitor();
+  void Connect(OutputStreamData* aStream);
 
 private:
   UniquePtr<DecodedStreamData> mData;
