@@ -195,6 +195,33 @@ DecodedStream::DestroyData()
 {
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
+
+  // Avoid the redundant blocking to output stream.
+  if (!mData) {
+    return;
+  }
+
+  // All streams are having their SourceMediaStream disconnected, so they
+  // need to be explicitly blocked again.
+  auto& outputStreams = OutputStreams();
+  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
+    OutputStreamData& os = outputStreams[i];
+    // Explicitly remove all existing ports.
+    // This is not strictly necessary but it's good form.
+    MOZ_ASSERT(os.mPort, "Double-delete of the ports!");
+    os.mPort->Destroy();
+    os.mPort = nullptr;
+    // During cycle collection, nsDOMMediaStream can be destroyed and send
+    // its Destroy message before this decoder is destroyed. So we have to
+    // be careful not to send any messages after the Destroy().
+    if (os.mStream->IsDestroyed()) {
+      // Probably the DOM MediaStream was GCed. Clean up.
+      outputStreams.RemoveElementAt(i);
+    } else {
+      os.mStream->ChangeExplicitBlockerCount(1);
+    }
+  }
+
   mData = nullptr;
 }
 
@@ -223,6 +250,8 @@ DecodedStream::GetReentrantMonitor()
 void
 DecodedStream::Connect(OutputStreamData* aStream)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  GetReentrantMonitor().AssertCurrentThreadIn();
   NS_ASSERTION(!aStream->mPort, "Already connected?");
 
   // The output stream must stay in sync with the decoded stream, so if
