@@ -288,7 +288,7 @@ let Reader = {
     return yield ReaderMode.downloadAndParseDocument(url).catch(e => {
       Cu.reportError("Error downloading and parsing document: " + e);
       return null;
-    });;
+    });
   }),
 
   _getSavedArticle: function(browser) {
