@@ -25,6 +25,7 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannel, mHttpChannel)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannelInternal, mHttpChannelInternal)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICachingChannel, mCachingChannel)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICacheInfoChannel, mCacheInfoChannel)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIApplicationCacheChannel, mApplicationCacheChannel)
     NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUploadChannel, mUploadChannel)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIViewSourceChannel)
@@ -80,6 +81,7 @@ nsViewSourceChannel::Init(nsIURI* uri)
     mHttpChannel = do_QueryInterface(mChannel);
     mHttpChannelInternal = do_QueryInterface(mChannel);
     mCachingChannel = do_QueryInterface(mChannel);
+    mCacheInfoChannel = do_QueryInterface(mChannel);
     mApplicationCacheChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(mChannel);
     
@@ -117,6 +119,7 @@ nsViewSourceChannel::InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc)
     mHttpChannel = do_QueryInterface(mChannel);
     mHttpChannelInternal = do_QueryInterface(mChannel);
     mCachingChannel = do_QueryInterface(mChannel);
+    mCacheInfoChannel = do_QueryInterface(mChannel);
     mApplicationCacheChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(mChannel);
     return NS_OK;
@@ -544,6 +547,7 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     mChannel = do_QueryInterface(aRequest);
     mHttpChannel = do_QueryInterface(aRequest);
     mCachingChannel = do_QueryInterface(aRequest);
+    mCacheInfoChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(aRequest);
     
     return mListener->OnStartRequest(static_cast<nsIViewSourceChannel*>

@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid (299d69b4-ee86-4541-802d-7642671ebf97)]
+[scriptable, uuid (c5f583f0-ae53-4e39-8af9-2c2d0d7af093)]
 interface nsICacheInfoChannel : nsISupports
 {
   /**
@@ -26,4 +26,23 @@ interface nsICacheInfoChannel : nsISupports
    * and after the channel fires its OnStopRequest notification.
    */
   boolean isFromCache();
+
+  /**
+   * Set/get the cache key... uniquely identifies the data in the cache
+   * for this channel.  Holding a reference to this key does NOT prevent
+   * the cached data from being removed.
+   *
+   * A cache key retrieved from a particular instance of nsICachingChannel
+   * could be set on another instance of nsICachingChannel provided the
+   * underlying implementations are compatible and provided the new 
+   * channel instance was created with the same URI.  The implementation of
+   * nsICachingChannel would be expected to use the cache entry identified
+   * by the cache token.  Depending on the value of nsIRequest::loadFlags,
+   * the cache entry may be validated, overwritten, or simply read.
+   *
+   * The cache key may be NULL indicating that the URI of the channel is
+   * sufficient to locate the same cache entry.  Setting a NULL cache key
+   * is likewise valid.
+   */
+  attribute nsISupports cacheKey;
 };
