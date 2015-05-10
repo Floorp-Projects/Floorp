@@ -17,7 +17,7 @@ interface nsIFile;
  *   3) Support for uniquely identifying cached data in cases when the URL
  *      is insufficient (e.g., HTTP form submission).
  */
-[scriptable, uuid(3d46b469-7405-416e-ba42-84899963b403)]
+[scriptable, uuid(436b939d-e391-48e5-ba64-ab0e496e3400)]
 interface nsICachingChannel : nsICacheInfoChannel
 {
     /**
@@ -44,25 +44,6 @@ interface nsICachingChannel : nsICacheInfoChannel
      *      NS_ERROR_NOT_AVAILABLE when there is not offline cache token
      */
     attribute nsISupports offlineCacheToken;
-
-    /**
-     * Set/get the cache key... uniquely identifies the data in the cache
-     * for this channel.  Holding a reference to this key does NOT prevent
-     * the cached data from being removed.
-     * 
-     * A cache key retrieved from a particular instance of nsICachingChannel
-     * could be set on another instance of nsICachingChannel provided the
-     * underlying implementations are compatible and provided the new 
-     * channel instance was created with the same URI.  The implementation of
-     * nsICachingChannel would be expected to use the cache entry identified
-     * by the cache token.  Depending on the value of nsIRequest::loadFlags,
-     * the cache entry may be validated, overwritten, or simply read.
-     *
-     * The cache key may be NULL indicating that the URI of the channel is
-     * sufficient to locate the same cache entry.  Setting a NULL cache key
-     * is likewise valid.
-     */
-    attribute nsISupports cacheKey;
 
     /**
      * Instructs the channel to only store the metadata of the entry, and not

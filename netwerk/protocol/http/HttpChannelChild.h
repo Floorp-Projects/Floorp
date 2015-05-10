@@ -117,7 +117,8 @@ protected:
                           const nsCString& securityInfoSerialization,
                           const NetAddr& selfAddr,
                           const NetAddr& peerAddr,
-                          const int16_t& redirectCount) override;
+                          const int16_t& redirectCount,
+                          const HttpChannelCacheKey& cacheKey) override;
   bool RecvOnTransportAndData(const nsresult& channelStatus,
                               const nsresult& status,
                               const uint64_t& progress,
@@ -176,6 +177,7 @@ private:
   bool mCacheEntryAvailable;
   uint32_t     mCacheExpirationTime;
   nsCString    mCachedCharset;
+  nsCOMPtr<nsISupports> mCacheKey;
 
   // If ResumeAt is called before AsyncOpen, we need to send extra data upstream
   bool mSendResumeAt;
@@ -208,7 +210,8 @@ private:
                       const nsCString& cachedCharset,
                       const nsCString& securityInfoSerialization,
                       const NetAddr& selfAddr,
-                      const NetAddr& peerAddr);
+                      const NetAddr& peerAddr,
+                      const HttpChannelCacheKey& cacheKey);
   void OnTransportAndData(const nsresult& channelStatus,
                           const nsresult& status,
                           const uint64_t progress,
