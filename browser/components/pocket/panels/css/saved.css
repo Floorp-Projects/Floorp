@@ -12,6 +12,7 @@
  *  Premium upsell
  *  Token input/autocomplete
  *  Overflow mode
+ *  Language overrides
  */
 
 /*=Global
@@ -811,4 +812,14 @@
     text-align: center;
     top: 8.3em;
     width: 100%;
+}
+
+/*=Language overrides
+--------------------------------------------------------------------------------------- */
+.pkt_ext_saved_es .pkt_ext_btn {
+    min-width: 5em;
+}
+.pkt_ext_saved_de .pkt_ext_btn,
+.pkt_ext_saved_ru .pkt_ext_btn {
+    min-width: 6em;
 }
