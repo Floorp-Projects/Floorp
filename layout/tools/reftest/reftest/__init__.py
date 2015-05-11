@@ -45,15 +45,16 @@ class ReftestManifest(object):
         self.dirs = set()
         self.files = set()
         self.manifests = set()
+        self.tests = set()
 
     def load(self, path):
         """Parse a reftest manifest file."""
-        normalized = os.path.normpath(os.path.abspath(path))
-        self.manifests.add(normalized)
+        normalized_path = os.path.normpath(os.path.abspath(path))
+        self.manifests.add(normalized_path)
         if not self.path:
-            self.path = normalized
+            self.path = normalized_path
 
-        mdir = os.path.dirname(normalized)
+        mdir = os.path.dirname(normalized_path)
         self.dirs.add(mdir)
 
         with open(path, 'r') as fh:
@@ -123,3 +124,4 @@ class ReftestManifest(object):
                     test = os.path.normpath(os.path.join(mdir, urlprefix + f))
                     self.files.add(test)
                     self.dirs.add(os.path.dirname(test))
+                    self.tests.add((test, normalized_path))

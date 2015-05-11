@@ -1130,11 +1130,11 @@ class TreeMetadataEmitter(LoggingMixin):
                 relpath=mozpath.join(manifest_reldir,
                     mozpath.basename(manifest_path)))
 
-        for test in sorted(manifest.files):
+        for test, source_manifest in sorted(manifest.tests):
             obj.tests.append({
                 'path': test,
                 'here': mozpath.dirname(test),
-                'manifest': manifest_full_path,
+                'manifest': source_manifest,
                 'name': mozpath.basename(test),
                 'head': '',
                 'tail': '',
