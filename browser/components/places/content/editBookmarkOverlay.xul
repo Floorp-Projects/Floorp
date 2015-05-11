@@ -14,7 +14,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="editBookmarkPanelContent" flex="1">
-    <hbox id="editBMPanel_selectionCount" hidden="true" pack="center">
+    <hbox id="editBMPanel_selectionCount" pack="center">
       <label id="editBMPanel_itemsCountText"/>
     </hbox>
 
