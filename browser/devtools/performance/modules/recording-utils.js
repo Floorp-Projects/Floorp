@@ -80,9 +80,9 @@ exports.RecordingUtils.offsetAndScaleTimestamps = function(timestamps, timeOffse
 }
 
 /**
- * Cache used in `RecordingUtils.getSamplesFromAllocations`.
+ * Cache used in `RecordingUtils.getProfileThreadFromAllocations`.
  */
-let gSamplesFromAllocationCache = new WeakMap();
+let gProfileThreadFromAllocationCache = new WeakMap();
 
 /**
  * Converts allocation data from the memory actor to something that follows
@@ -92,46 +92,110 @@ let gSamplesFromAllocationCache = new WeakMap();
  *
  * @param object allocations
  *        A list of { sites, timestamps, frames, counts } arrays.
- * @return array
- *         The samples data.
+ * @return object
+ *         The "profile" describing the allocations log.
  */
-exports.RecordingUtils.getSamplesFromAllocations = function(allocations) {
-  let cached = gSamplesFromAllocationCache.get(allocations);
+exports.RecordingUtils.getProfileThreadFromAllocations = function(allocations) {
+  let cached = gProfileThreadFromAllocationCache.get(allocations);
   if (cached) {
     return cached;
   }
 
   let { sites, timestamps, frames, counts } = allocations;
-  let samples = [];
+  let uniqueStrings = new UniqueStrings();
 
-  for (let i = 0, len = sites.length; i < len; i++) {
-    let site = sites[i];
-    let timestamp = timestamps[i];
-    let frame = frames[site];
-    let count = counts[site];
+  // Convert allocation frames to the the stack and frame tables expected by
+  // the profiler format.
+  //
+  // Since the allocations log is already presented as a tree, we would be
+  // wasting time if we jumped through the same hoops as deflateProfile below
+  // and instead use the existing structure of the allocations log to build up
+  // the profile JSON.
+  //
+  // The allocations.frames array corresponds roughly to the profile stack
+  // table: a trie of all stacks. We could work harder to further deduplicate
+  // each individual frame as the profiler does, but it is not necessary for
+  // correctness.
+  let stackTable = new Array(frames.length);
+  let frameTable = new Array(frames.length);
 
-    let sample = { time: timestamp, frames: [] };
-    samples.push(sample);
+  // Array used to concat the location.
+  let locationConcatArray = new Array(5);
 
-    while (frame) {
-      let source = frame.source + ":" + frame.line + ":" + frame.column;
-      let funcName = frame.functionDisplayName || "";
-
-      sample.frames.push({
-        location: funcName ? funcName + " (" + source + ")" : source,
-        allocations: count
-      });
-
-      site = frame.parent;
-      frame = frames[site];
-      count = counts[site];
+  for (let i = 0; i < frames.length; i++) {
+    let frame = frames[i];
+    if (!frame) {
+      stackTable[i] = frameTable[i] = null;
+      continue;
     }
 
-    sample.frames.reverse();
+    let prefix = frame.parent;
+
+    // Schema:
+    //   [prefix, frame]
+    stackTable[i] = [frames[prefix] ? prefix : null, i];
+
+    // Schema:
+    //   [location]
+    //
+    // The only field a frame will have in an allocations profile is location.
+    //
+    // If frame.functionDisplayName is present, the format is
+    //   "functionDisplayName (source:line:column)"
+    // Otherwise, it is
+    //   "source:line:column"
+    //
+    // A static array is used to join to save memory on intermediate strings.
+    locationConcatArray[0] = frame.source;
+    locationConcatArray[1] = ":";
+    locationConcatArray[2] = String(frame.line);
+    locationConcatArray[3] = ":";
+    locationConcatArray[4] = String(frame.column);
+    locationConcatArray[5] = "";
+
+    let location = locationConcatArray.join("");
+    let funcName = frame.functionDisplayName;
+
+    if (funcName) {
+      locationConcatArray[0] = funcName;
+      locationConcatArray[1] = " (";
+      locationConcatArray[2] = location;
+      locationConcatArray[3] = ")";
+      locationConcatArray[4] = "";
+      locationConcatArray[5] = "";
+      location = locationConcatArray.join("");
+    }
+
+    frameTable[i] = [uniqueStrings.getOrAddStringIndex(location)];
   }
 
-  gSamplesFromAllocationCache.set(allocations, samples);
-  return samples;
+  let samples = new Array(sites.length);
+  let writePos = 0;
+  for (let i = 0; i < sites.length; i++) {
+    // Schema:
+    //   [stack, time]
+    //
+    // Originally, sites[i] indexes into the frames array. Note that in the
+    // loop above, stackTable[sites[i]] and frames[sites[i]] index the same
+    // information.
+    let stackIndex = sites[i];
+    if (frames[stackIndex]) {
+      samples[writePos++] = [stackIndex, timestamps[i]];
+    }
+  }
+  samples.length = writePos;
+
+  let thread = {
+    name: "allocations",
+    samples: samplesWithSchema(samples),
+    stackTable: stackTableWithSchema(stackTable),
+    frameTable: frameTableWithSchema(frameTable),
+    stringTable: uniqueStrings.stringTable,
+    allocationsTable: counts
+  };
+
+  gProfileThreadFromAllocationCache.set(allocations, thread);
+  return thread;
 }
 
 /**
@@ -249,19 +313,7 @@ function deflateSamples(samples, uniqueStacks) {
     ];
   }
 
-  let slot = 0;
-  return {
-    schema: {
-      stack: slot++,
-      time: slot++,
-      responsiveness: slot++,
-      rss: slot++,
-      uss: slot++,
-      frameNumber: slot++,
-      power: slot++
-    },
-    data: deflatedSamples
-  };
+  return samplesWithSchema(deflatedSamples);
 }
 
 /**
@@ -321,9 +373,76 @@ function deflateThread(thread, uniqueStacks) {
     markers: deflateMarkers(thread.markers, uniqueStacks),
     stackTable: uniqueStacks.getStackTableWithSchema(),
     frameTable: uniqueStacks.getFrameTableWithSchema(),
-    stringTable: uniqueStacks.stringTable
+    stringTable: uniqueStacks.getStringTable()
   };
 }
+
+function stackTableWithSchema(data) {
+  let slot = 0;
+  return {
+    schema: {
+      prefix: slot++,
+      frame: slot++
+    },
+    data: data
+  };
+}
+
+function frameTableWithSchema(data) {
+  let slot = 0;
+  return {
+    schema: {
+      location: slot++,
+      implementation: slot++,
+      optimizations: slot++,
+      line: slot++,
+      category: slot++
+    },
+    data: data
+  };
+}
+
+function samplesWithSchema(data) {
+  let slot = 0;
+  return {
+    schema: {
+      stack: slot++,
+      time: slot++,
+      responsiveness: slot++,
+      rss: slot++,
+      uss: slot++,
+      frameNumber: slot++,
+      power: slot++
+    },
+    data: data
+  };
+}
+
+/**
+ * A helper class to deduplicate strings.
+ */
+function UniqueStrings() {
+  this.stringTable = [];
+  this._stringHash = Object.create(null);
+}
+
+UniqueStrings.prototype.getOrAddStringIndex = function(s) {
+  if (!s) {
+    return null;
+  }
+
+  let stringHash = this._stringHash;
+  let stringTable = this.stringTable;
+  let index = stringHash[s];
+  if (index !== undefined) {
+    return index;
+  }
+
+  index = stringTable.length;
+  stringHash[s] = index;
+  stringTable.push(s);
+  return index;
+};
 
 /**
  * A helper class to deduplicate old-version profiles.
@@ -372,36 +491,22 @@ function deflateThread(thread, uniqueStacks) {
 function UniqueStacks() {
   this._frameTable = [];
   this._stackTable = [];
-  this.stringTable = [];
   this._frameHash = Object.create(null);
   this._stackHash = Object.create(null);
-  this._stringHash = Object.create(null);
+  this._uniqueStrings = new UniqueStrings();
 }
 
 UniqueStacks.prototype.getStackTableWithSchema = function() {
-  let slot = 0;
-  return {
-    schema: {
-      prefix: slot++,
-      frame: slot++
-    },
-    data: this._stackTable
-  };
+  return stackTableWithSchema(this._stackTable);
 };
 
 UniqueStacks.prototype.getFrameTableWithSchema = function() {
-  let slot = 0;
-  return {
-    schema: {
-      location: slot++,
-      implementation: slot++,
-      optimizations: slot++,
-      line: slot++,
-      category: slot++
-    },
-    data: this._frameTable
-  };
-}
+  return frameTableWithSchema(this._frameTable);
+};
+
+UniqueStacks.prototype.getStringTable = function() {
+  return this._uniqueStrings.stringTable;
+};
 
 UniqueStacks.prototype.getOrAddFrameIndex = function(frame) {
   // Schema:
@@ -457,19 +562,5 @@ UniqueStacks.prototype.getOrAddStackIndex = function(prefixIndex, frameIndex) {
 };
 
 UniqueStacks.prototype.getOrAddStringIndex = function(s) {
-  if (!s) {
-    return null;
-  }
-
-  let stringHash = this._stringHash;
-  let stringTable = this.stringTable;
-  let index = stringHash[s];
-  if (index !== undefined) {
-    return index;
-  }
-
-  index = stringTable.length;
-  stringHash[s] = index;
-  stringTable.push(s);
-  return index;
+  return this._uniqueStrings.getOrAddStringIndex(s);
 };
