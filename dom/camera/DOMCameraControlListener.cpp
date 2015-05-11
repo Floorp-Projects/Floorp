@@ -360,7 +360,7 @@ DOMCameraControlListener::OnTakePictureComplete(const uint8_t* aData, uint32_t a
     RunCallback(nsDOMCameraControl* aDOMCameraControl) override
     {
       nsCOMPtr<nsIDOMBlob> picture =
-        Blob::CreateMemoryBlob(mDOMCameraControl.get(),
+        File::CreateMemoryFile(mDOMCameraControl.get(),
                                static_cast<void*>(mData),
                                static_cast<uint64_t>(mLength),
                                mMimeType);

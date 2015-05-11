@@ -51,8 +51,8 @@ class nsIJSID;
 namespace mozilla {
 
 namespace dom {
-class Blob;
 class BlobSet;
+class File;
 }
 
 // A helper for building up an ArrayBuffer object's data
@@ -352,7 +352,7 @@ private:
     {
       mValue.mArrayBufferView = aArrayBufferView;
     }
-    explicit RequestBody(mozilla::dom::Blob& aBlob) : mType(Blob)
+    explicit RequestBody(mozilla::dom::File& aBlob) : mType(Blob)
     {
       mValue.mBlob = &aBlob;
     }
@@ -386,7 +386,7 @@ private:
     union Value {
       const mozilla::dom::ArrayBuffer* mArrayBuffer;
       const mozilla::dom::ArrayBufferView* mArrayBufferView;
-      mozilla::dom::Blob* mBlob;
+      mozilla::dom::File* mBlob;
       nsIDocument* mDocument;
       const nsAString* mString;
       nsFormData* mFormData;
@@ -450,7 +450,7 @@ public:
   {
     aRv = Send(RequestBody(&aArrayBufferView));
   }
-  void Send(JSContext* /*aCx*/, mozilla::dom::Blob& aBlob, ErrorResult& aRv)
+  void Send(JSContext* /*aCx*/, mozilla::dom::File& aBlob, ErrorResult& aRv)
   {
     aRv = Send(RequestBody(aBlob));
   }
@@ -606,7 +606,7 @@ protected:
                 uint32_t *writeCount);
   nsresult CreateResponseParsedJSON(JSContext* aCx);
   void CreatePartialBlob();
-  bool CreateDOMBlob(nsIRequest *request);
+  bool CreateDOMFile(nsIRequest *request);
   // Change the state of the object with this. The broadcast argument
   // determines if the onreadystatechange listener should be called.
   nsresult ChangeState(uint32_t aState, bool aBroadcast = true);
@@ -708,12 +708,12 @@ protected:
 
   // It is either a cached blob-response from the last call to GetResponse,
   // but is also explicitly set in OnStopRequest.
-  nsRefPtr<mozilla::dom::Blob> mResponseBlob;
+  nsRefPtr<mozilla::dom::File> mResponseBlob;
   // Non-null only when we are able to get a os-file representation of the
   // response, i.e. when loading from a file.
-  nsRefPtr<mozilla::dom::Blob> mDOMBlob;
+  nsRefPtr<mozilla::dom::File> mDOMFile;
   // We stream data to mBlobSet when response type is "blob" or "moz-blob"
-  // and mDOMBlob is null.
+  // and mDOMFile is null.
   nsAutoPtr<mozilla::dom::BlobSet> mBlobSet;
 
   nsString mOverrideMimeType;

@@ -39,16 +39,16 @@ EncodedBufferCache::AppendBuffer(nsTArray<uint8_t> & aBuf)
 
 }
 
-already_AddRefed<dom::Blob>
+already_AddRefed<dom::File>
 EncodedBufferCache::ExtractBlob(nsISupports* aParent,
                                 const nsAString &aContentType)
 {
   MutexAutoLock lock(mMutex);
-  nsRefPtr<dom::Blob> blob;
+  nsRefPtr<dom::File> blob;
   if (mTempFileEnabled) {
     // generate new temporary file to write
-    blob = dom::Blob::CreateTemporaryBlob(aParent, mFD, 0, mDataSize,
-                                          aContentType);
+    blob = dom::File::CreateTemporaryFileBlob(aParent, mFD, 0, mDataSize,
+                                              aContentType);
     // fallback to memory blob
     mTempFileEnabled = false;
     mDataSize = 0;
@@ -63,7 +63,7 @@ EncodedBufferCache::ExtractBlob(nsISupports* aParent,
                mEncodedBuffers.ElementAt(i).Length());
         offset += mEncodedBuffers.ElementAt(i).Length();
       }
-      blob = dom::Blob::CreateMemoryBlob(aParent, blobData, mDataSize,
+      blob = dom::File::CreateMemoryFile(aParent, blobData, mDataSize,
                                          aContentType);
       mEncodedBuffers.Clear();
     } else

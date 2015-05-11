@@ -6090,16 +6090,16 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
 {
   uint32_t blobLen = aData.Length();
   void* blobData = malloc(blobLen);
-  nsRefPtr<Blob> blob;
+  nsRefPtr<File> blob;
   if (blobData) {
     memcpy(blobData, aData.BeginReading(), blobLen);
-    blob = mozilla::dom::Blob::CreateMemoryBlob(aParent, blobData, blobLen,
+    blob = mozilla::dom::File::CreateMemoryFile(aParent, blobData, blobLen,
                                                 EmptyString());
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!ToJSValue(aCx, blob, aBlob)) {
+  if (!GetOrCreateDOMReflector(aCx, blob, aBlob)) {
     return NS_ERROR_FAILURE;
   }
 

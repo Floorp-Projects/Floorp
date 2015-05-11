@@ -52,7 +52,7 @@ FileReaderSync::WrapObject(JSContext* aCx,
 void
 FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
                                   JS::Handle<JSObject*> aScopeObj,
-                                  Blob& aBlob,
+                                  File& aBlob,
                                   JS::MutableHandle<JSObject*> aRetval,
                                   ErrorResult& aRv)
 {
@@ -95,7 +95,7 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
 }
 
 void
-FileReaderSync::ReadAsBinaryString(Blob& aBlob,
+FileReaderSync::ReadAsBinaryString(File& aBlob,
                                    nsAString& aResult,
                                    ErrorResult& aRv)
 {
@@ -125,7 +125,7 @@ FileReaderSync::ReadAsBinaryString(Blob& aBlob,
 }
 
 void
-FileReaderSync::ReadAsText(Blob& aBlob,
+FileReaderSync::ReadAsText(File& aBlob,
                            const Optional<nsAString>& aEncoding,
                            nsAString& aResult,
                            ErrorResult& aRv)
@@ -195,7 +195,7 @@ FileReaderSync::ReadAsText(Blob& aBlob,
 }
 
 void
-FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
+FileReaderSync::ReadAsDataURL(File& aBlob, nsAString& aResult,
                               ErrorResult& aRv)
 {
   nsAutoString scratchResult;

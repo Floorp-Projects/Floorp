@@ -13,12 +13,12 @@
 
 #include "nsCOMArray.h"
 #include "nsIChannel.h"
+#include "nsIDOMFile.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace dom {
 struct ArchiveReaderOptions;
-class Blob;
 class File;
 class FileImpl;
 class GlobalObject;
@@ -40,10 +40,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ArchiveReader)
 
   static already_AddRefed<ArchiveReader>
-  Constructor(const GlobalObject& aGlobal, Blob& aBlob,
+  Constructor(const GlobalObject& aGlobal, File& aBlob,
               const ArchiveReaderOptions& aOptions, ErrorResult& aError);
 
-  ArchiveReader(Blob& aBlob, nsPIDOMWindow* aWindow,
+  ArchiveReader(File& aBlob, nsPIDOMWindow* aWindow,
                 const nsACString& aEncoding);
 
   nsIDOMWindow* GetParentObject() const
@@ -69,7 +69,8 @@ public: // For events:
     return mFileImpl;
   }
 
-  void Ready(nsTArray<nsRefPtr<File>>& aFileList, nsresult aStatus);
+  void Ready(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
+             nsresult aStatus);
 
 private:
   ~ArchiveReader();
@@ -107,7 +108,7 @@ protected:
 
   // Everything related to the blobs and the status:
   struct {
-    nsTArray<nsRefPtr<File>> fileList;
+    nsTArray<nsCOMPtr<nsIDOMFile> > fileList;
     nsresult status;
   } mData;
 

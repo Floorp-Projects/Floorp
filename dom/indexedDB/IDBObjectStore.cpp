@@ -62,7 +62,7 @@ struct IDBObjectStore::StructuredCloneWriteInfo
 {
   struct BlobOrFileInfo
   {
-    nsRefPtr<Blob> mBlob;
+    nsRefPtr<File> mBlob;
     nsRefPtr<FileInfo> mFileInfo;
 
     bool
@@ -300,7 +300,7 @@ StructuredCloneWriteCallback(JSContext* aCx,
   }
 
   {
-    Blob* blob = nullptr;
+    File* blob = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
       uint64_t size;
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetSize(&size)));
@@ -332,16 +332,15 @@ StructuredCloneWriteCallback(JSContext* aCx,
         return false;
       }
 
-      nsRefPtr<File> file = blob->ToFile();
-      if (file) {
+      if (blob->IsFile()) {
         int64_t lastModifiedDate;
         MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-          file->GetMozLastModifiedDate(&lastModifiedDate)));
+          blob->GetMozLastModifiedDate(&lastModifiedDate)));
 
         lastModifiedDate = NativeEndian::swapToLittleEndian(lastModifiedDate);
 
         nsString name;
-        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(file->GetName(name)));
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetName(name)));
 
         NS_ConvertUTF16toUTF8 convName(name);
         uint32_t convNameLength =
@@ -403,11 +402,11 @@ GetAddInfoCallback(JSContext* aCx, void* aClosure)
 }
 
 BlobChild*
-ActorFromRemoteFileImpl(FileImpl* aImpl)
+ActorFromRemoteBlob(File* aBlob)
 {
-  MOZ_ASSERT(aImpl);
+  MOZ_ASSERT(aBlob);
 
-  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aImpl);
+  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob->Impl());
   if (remoteBlob) {
     BlobChild* actor = remoteBlob->GetBlobChild();
     MOZ_ASSERT(actor);
@@ -429,13 +428,13 @@ ActorFromRemoteFileImpl(FileImpl* aImpl)
 }
 
 bool
-ResolveMysteryFile(FileImpl* aImpl,
+ResolveMysteryFile(File* aBlob,
                    const nsString& aName,
                    const nsString& aContentType,
                    uint64_t aSize,
                    uint64_t aLastModifiedDate)
 {
-  BlobChild* actor = ActorFromRemoteFileImpl(aImpl);
+  BlobChild* actor = ActorFromRemoteBlob(aBlob);
   if (actor) {
     return actor->SetMysteryBlobInfo(aName, aContentType,
                                      aSize, aLastModifiedDate);
@@ -444,11 +443,11 @@ ResolveMysteryFile(FileImpl* aImpl,
 }
 
 bool
-ResolveMysteryBlob(FileImpl* aImpl,
+ResolveMysteryBlob(File* aBlob,
                    const nsString& aContentType,
                    uint64_t aSize)
 {
-  BlobChild* actor = ActorFromRemoteFileImpl(aImpl);
+  BlobChild* actor = ActorFromRemoteBlob(aBlob);
   if (actor) {
     return actor->SetMysteryBlobInfo(aContentType, aSize);
   }
@@ -606,7 +605,7 @@ public:
     MOZ_ASSERT(aData.tag == SCTAG_DOM_FILE ||
                aData.tag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
                aData.tag == SCTAG_DOM_BLOB);
-    MOZ_ASSERT(aFile.mBlob);
+    MOZ_ASSERT(aFile.mFile);
 
     // It can happen that this IDB is chrome code, so there is no parent, but
     // still we want to set a correct parent for the new File object.
@@ -628,18 +627,17 @@ public:
     }
 
     MOZ_ASSERT(parent);
+    nsRefPtr<File> file = new File(parent, aFile.mFile->Impl());
 
     if (aData.tag == SCTAG_DOM_BLOB) {
-      if (NS_WARN_IF(!ResolveMysteryBlob(aFile.mBlob->Impl(),
+      if (NS_WARN_IF(!ResolveMysteryBlob(aFile.mFile,
                                          aData.type,
                                          aData.size))) {
         return false;
       }
 
-      MOZ_ASSERT(!aFile.mBlob->IsFile());
-
       JS::Rooted<JS::Value> wrappedBlob(aCx);
-      if (!ToJSValue(aCx, aFile.mBlob, &wrappedBlob)) {
+      if (!GetOrCreateDOMReflector(aCx, aFile.mFile, &wrappedBlob)) {
         return false;
       }
 
@@ -647,7 +645,9 @@ public:
       return true;
     }
 
-    if (NS_WARN_IF(!ResolveMysteryFile(aFile.mBlob->Impl(),
+    MOZ_ASSERT(aFile.mFile->IsFile());
+
+    if (NS_WARN_IF(!ResolveMysteryFile(aFile.mFile,
                                        aData.name,
                                        aData.type,
                                        aData.size,
@@ -655,12 +655,8 @@ public:
       return false;
     }
 
-    MOZ_ASSERT(aFile.mBlob->IsFile());
-    nsRefPtr<File> file = aFile.mBlob->ToFile();
-    MOZ_ASSERT(file);
-
     JS::Rooted<JS::Value> wrappedFile(aCx);
-    if (!ToJSValue(aCx, file, &wrappedFile)) {
+    if (!GetOrCreateDOMReflector(aCx, aFile.mFile, &wrappedFile)) {
       return false;
     }
 
