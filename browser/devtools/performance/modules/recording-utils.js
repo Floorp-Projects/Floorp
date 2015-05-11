@@ -376,6 +376,7 @@ function deflateThread(thread, uniqueStacks) {
     stringTable: uniqueStacks.getStringTable()
   };
 }
+exports.RecordingUtils.deflateThread = deflateThread;
 
 function stackTableWithSchema(data) {
   let slot = 0;
@@ -443,6 +444,8 @@ UniqueStrings.prototype.getOrAddStringIndex = function(s) {
   stringTable.push(s);
   return index;
 };
+
+exports.RecordingUtils.UniqueStrings = UniqueStrings;
 
 /**
  * A helper class to deduplicate old-version profiles.
@@ -564,3 +567,5 @@ UniqueStacks.prototype.getOrAddStackIndex = function(prefixIndex, frameIndex) {
 UniqueStacks.prototype.getOrAddStringIndex = function(s) {
   return this._uniqueStrings.getOrAddStringIndex(s);
 };
+
+exports.RecordingUtils.UniqueStacks = UniqueStacks;
