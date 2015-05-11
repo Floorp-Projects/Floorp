@@ -5,7 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1091883
 -->
 <head>
   <meta charset="utf-8">
-  <meta name="referrer" content="origin-when-crossorigin">
+  <meta name="referrer" content="origin-when-cross-origin">
   <title>Test for Bug 1091883</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -26,7 +26,7 @@ var numOrigins = origins.length;
 // includes a "frame" that includes a "subframe"; and then this test
 // navigates this "subframe" to the "target".  Both the referrer and
 // the triggering principal are this test, i.e., "http://mochi.test:8888".
-// Since the referrer policy is origin-when-crossorigin, we expect to have
+// Since the referrer policy is origin-when-cross-origin, we expect to have
 // a full referrer if and only if the target is also "http://mochi.test:8888";
 // in all other cases, the referrer needs to be the origin alone.
 var numTests = numOrigins * numOrigins * numOrigins;
