@@ -599,11 +599,6 @@
   font-weight: 600;
 }
 
-#jit-optimizations-view .opt-ion-type-site {
-  -moz-margin-start: 4px !important;
-  opacity: 0.6;
-}
-
 #jit-optimizations-view .opt-outcome::before {
   content: "→";
   margin: 4px 0px;

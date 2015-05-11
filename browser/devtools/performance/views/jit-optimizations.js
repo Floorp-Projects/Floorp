@@ -250,17 +250,8 @@ let JITOptimizationsView = {
 
   _createIonNode: function (ionType) {
     let node = document.createElement("span");
-    let icon = document.createElement("span");
-    let typeNode = document.createElement("span");
-    let siteNode = document.createElement("span");
-
-    typeNode.textContent = ionType.mirType;
-    typeNode.className = "opt-ion-type";
-    siteNode.textContent = `(${ionType.site})`;
-    siteNode.className = "opt-ion-type-site";
-    node.appendChild(typeNode);
-    node.appendChild(siteNode);
-
+    node.textContent = `${ionType.site} : ${ionType.mirType}`;
+    node.className = "opt-ion-type";
     return node;
   },
 
