@@ -37,9 +37,7 @@
 
 using namespace mozilla;
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo* gCommandLog;
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -47,10 +45,8 @@ nsXULCommandDispatcher::nsXULCommandDispatcher(nsIDocument* aDocument)
     : mDocument(aDocument), mUpdaters(nullptr)
 {
 
-#ifdef PR_LOGGING
   if (! gCommandLog)
     gCommandLog = PR_NewLogModule("nsXULCommandDispatcher");
-#endif
 }
 
 nsXULCommandDispatcher::~nsXULCommandDispatcher()
