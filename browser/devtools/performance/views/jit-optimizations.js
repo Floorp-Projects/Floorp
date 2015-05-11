@@ -139,7 +139,7 @@ let JITOptimizationsView = {
     this.el.classList.remove("empty");
 
     // An array of sorted OptimizationSites.
-    let sites = frameNode.getOptimizations().getOptimizationSites();
+    let sites = frameNode.getOptimizations().optimizationSites;
 
     for (let site of sites) {
       this._renderSite(view, site, frameData);
@@ -187,7 +187,7 @@ let JITOptimizationsView = {
 
       let ionNode = this._createIonNode(ionType);
       view.add([id, `${id}-types`, { id: `${id}-types-${i}`, node: ionNode }]);
-      for (let observedType of (ionType.types || [])) {
+      for (let observedType of (ionType.typeset || [])) {
         let node = this._createObservedTypeNode(observedType);
         view.add([id, `${id}-types`, `${id}-types-${i}`, { node }]);
       }
