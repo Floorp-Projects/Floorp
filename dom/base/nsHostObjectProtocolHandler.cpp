@@ -17,7 +17,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LoadInfo.h"
 
-using mozilla::dom::FileImpl;
+using mozilla::dom::BlobImpl;
 using mozilla::ErrorResult;
 using mozilla::LoadInfo;
 
@@ -530,7 +530,7 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  nsCOMPtr<FileImpl> blob = do_QueryInterface(info->mObject);
+  nsCOMPtr<BlobImpl> blob = do_QueryInterface(info->mObject);
   if (!blob) {
     return NS_ERROR_DOM_BAD_URI;
   }
@@ -625,13 +625,13 @@ nsFontTableProtocolHandler::GetScheme(nsACString &result)
 }
 
 nsresult
-NS_GetBlobForBlobURI(nsIURI* aURI, FileImpl** aBlob)
+NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob)
 {
   NS_ASSERTION(IsBlobURI(aURI), "Only call this with blob URIs");
 
   *aBlob = nullptr;
 
-  nsCOMPtr<FileImpl> blob = do_QueryInterface(GetDataObject(aURI));
+  nsCOMPtr<BlobImpl> blob = do_QueryInterface(GetDataObject(aURI));
   if (!blob) {
     return NS_ERROR_DOM_BAD_URI;
   }
@@ -643,7 +643,7 @@ NS_GetBlobForBlobURI(nsIURI* aURI, FileImpl** aBlob)
 nsresult
 NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
 {
-  nsRefPtr<FileImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
   nsresult rv = NS_GetBlobForBlobURI(aURI, getter_AddRefs(blobImpl));
   if (NS_FAILED(rv)) {
     return rv;

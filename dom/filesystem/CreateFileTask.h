@@ -17,7 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class Blob;
-class FileImpl;
+class BlobImpl;
 class Promise;
 
 class CreateFileTask final
@@ -75,8 +75,8 @@ private:
   bool mReplace;
 
   // This cannot be a File because this object is created on a different
-  // thread and File is not thread-safe. Let's use the FileImpl instead.
-  nsRefPtr<FileImpl> mTargetFileImpl;
+  // thread and File is not thread-safe. Let's use the BlobImpl instead.
+  nsRefPtr<BlobImpl> mTargetBlobImpl;
 };
 
 } // namespace dom

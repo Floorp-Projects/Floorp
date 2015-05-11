@@ -17,13 +17,13 @@
 #define FILEIMPLSNAPSHOT_IID \
   {0x0dfc11b1, 0x75d3, 0x473b, {0x8c, 0x67, 0xb7, 0x23, 0xf4, 0x67, 0xd6, 0x73}}
 
-class PIFileImplSnapshot : public nsISupports
+class PIBlobImplSnapshot : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(FILEIMPLSNAPSHOT_IID)
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(PIFileImplSnapshot, FILEIMPLSNAPSHOT_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(PIBlobImplSnapshot, FILEIMPLSNAPSHOT_IID)
 
 namespace mozilla {
 namespace dom {
@@ -34,9 +34,9 @@ namespace indexedDB {
 
 class IDBFileHandle;
 
-class FileImplSnapshot final
-  : public FileImplBase
-  , public PIFileImplSnapshot
+class BlobImplSnapshot final
+  : public BlobImplBase
+  , public PIBlobImplSnapshot
 {
   typedef mozilla::dom::MetadataParameters MetadataParameters;
 
@@ -47,7 +47,7 @@ class FileImplSnapshot final
 
 public:
   // Create as a stored file
-  FileImplSnapshot(const nsAString& aName,
+  BlobImplSnapshot(const nsAString& aName,
                    const nsAString& aContentType,
                    MetadataParameters* aMetadataParams,
                    nsIFile* aFile,
@@ -58,12 +58,12 @@ public:
 
 private:
   // Create slice
-  FileImplSnapshot(const FileImplSnapshot* aOther,
+  BlobImplSnapshot(const BlobImplSnapshot* aOther,
                    uint64_t aStart,
                    uint64_t aLength,
                    const nsAString& aContentType);
 
-  ~FileImplSnapshot();
+  ~BlobImplSnapshot();
 
   static void
   AssertSanity()
@@ -84,7 +84,7 @@ private:
     return false;
   }
 
-  virtual already_AddRefed<FileImpl>
+  virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart,
               uint64_t aLength,
               const nsAString& aContentType,

@@ -98,14 +98,14 @@ nsIContentChild::GetOrCreateActorForBlob(Blob* aBlob)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlob);
 
-  nsRefPtr<FileImpl> blobImpl = aBlob->Impl();
+  nsRefPtr<BlobImpl> blobImpl = aBlob->Impl();
   MOZ_ASSERT(blobImpl);
 
-  return GetOrCreateActorForFileImpl(blobImpl);
+  return GetOrCreateActorForBlobImpl(blobImpl);
 }
 
 BlobChild*
-nsIContentChild::GetOrCreateActorForFileImpl(FileImpl* aImpl)
+nsIContentChild::GetOrCreateActorForBlobImpl(BlobImpl* aImpl)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aImpl);

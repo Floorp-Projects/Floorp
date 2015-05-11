@@ -56,7 +56,7 @@ public:
     StackScopedCloneOptions* mOptions;
     AutoObjectVector mReflectors;
     AutoObjectVector mFunctions;
-    nsTArray<nsRefPtr<FileImpl>> mBlobImpls;
+    nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
 };
 
 static JSObject*
@@ -180,7 +180,7 @@ StackScopedCloneWrite(JSContext* cx, JSStructuredCloneWriter* writer,
     {
         Blob* blob = nullptr;
         if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
-            FileImpl* blobImpl = blob->Impl();
+            BlobImpl* blobImpl = blob->Impl();
             MOZ_ASSERT(blobImpl);
 
             if (!cloneData->mBlobImpls.AppendElement(blobImpl))

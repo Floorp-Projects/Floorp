@@ -449,7 +449,7 @@ nsresult
 ExtractFromBlob(const Blob& aBlob, nsIInputStream** aStream,
                 nsCString& aContentType)
 {
-  nsRefPtr<FileImpl> impl = aBlob.Impl();
+  nsRefPtr<BlobImpl> impl = aBlob.Impl();
   nsresult rv = impl->GetInternalStream(aStream);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
