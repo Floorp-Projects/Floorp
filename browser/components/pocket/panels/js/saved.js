@@ -8,6 +8,7 @@ var PKT_SAVED_OVERLAY = function (options)
     this.inited = false;
     this.active = false;
     this.wrapper = null;
+    this.pockethost = "getpocket.com";
     this.savedItemId = 0;
     this.savedUrl = '';
     this.premiumStatus = false;
@@ -16,8 +17,8 @@ var PKT_SAVED_OVERLAY = function (options)
     this.closeValid = true;
     this.mouseInside = false;
     this.autocloseTimer = null;
+    this.inoverflowmenu = false;
     this.dictJSON = {};
-    // TODO: allow the timer to be editable?
     this.autocloseTiming = 3500;
     this.autocloseTimingFinalState = 2000;
     this.mouseInside = false;
@@ -55,6 +56,7 @@ var PKT_SAVED_OVERLAY = function (options)
             myself.startCloseTimer();
             return;
         }
+
         thePKT_SAVED.sendMessage("getSuggestedTags",
         {
             url: myself.savedUrl || window.location.toString()
@@ -252,10 +254,10 @@ var PKT_SAVED_OVERLAY = function (options)
                 myself.checkPlaceholderStatus();
             },
             onShowDropdown: function() {
-               thePKT_SAVED.sendMessage("expandSavePanel");
+            	thePKT_SAVED.sendMessage("expandSavePanel");
             },
             onHideDropdown: function() {
-               thePKT_SAVED.sendMessage("collapseSavePanel");
+            	thePKT_SAVED.sendMessage("collapseSavePanel");
             }
         });
         $('body').on('keydown',function(e) {
@@ -309,6 +311,7 @@ var PKT_SAVED_OVERLAY = function (options)
                     originaltags.push(text);
                 }
             });
+
             thePKT_SAVED.sendMessage("addTags",
             {
                 url: myself.savedUrl || window.location.toString(),
@@ -336,6 +339,7 @@ var PKT_SAVED_OVERLAY = function (options)
                 e.preventDefault();
                 myself.disableInput();
                 $('.pkt_ext_containersaved').find('.pkt_ext_detail h2').text(myself.dictJSON.processingremove);
+
                 thePKT_SAVED.sendMessage("deleteItem",
                 {
                     itemId: myself.savedItemId
@@ -457,7 +461,7 @@ var PKT_SAVED_OVERLAY = function (options)
     }
     this.getTranslations = function()
     {
-        var language = window.navigator.language.toLowerCase();
+        var language = this.locale || '';
         this.dictJSON = {};
 
         var dictsuffix = 'en-US';
@@ -531,11 +535,15 @@ var PKT_SAVED_OVERLAY = function (options)
             dictsuffix = 'pl';
         }
 
-        // TODO: when we add all dictionaries, modify this, but for now hard code to English
-        dictsuffix = 'en';
-
         this.dictJSON = Translations[dictsuffix];
-        
+        if (typeof this.dictJSON !== 'object')
+        {
+            this.dictJSON = Translations['en'];
+        }
+        if (typeof this.dictJSON !== 'object')
+        {
+            this.dictJSON = {};
+        }
     };
 };
 
@@ -553,6 +561,18 @@ PKT_SAVED_OVERLAY.prototype = {
 
         // set host
         this.dictJSON.pockethost = this.pockethost;
+
+        // extra modifier class for collapsed state
+        if (this.inoverflowmenu)
+        {
+            $('body').addClass('pkt_ext_saved_overflow');
+        }
+
+        // extra modifier class for language
+        if (this.locale)
+        {
+            $('body').addClass('pkt_ext_saved_' + this.locale);
+        }
 
         // Create actual content
         $('body').append(Handlebars.templates.saved_shell(this.dictJSON));
@@ -612,6 +632,16 @@ PKT_SAVED.prototype = {
         {
             myself.overlay.pockethost = host[1];
         }
+        var inoverflowmenu = window.location.href.match(/inoverflowmenu=([\w|\.]*)&?/);
+        if (inoverflowmenu && inoverflowmenu.length > 1)
+        {
+            myself.overlay.inoverflowmenu = (inoverflowmenu[1] == 'true');
+        }
+        var locale = window.location.href.match(/locale=([\w|\.]*)&?/);
+        if (locale && locale.length > 1)
+        {
+            myself.overlay.locale = locale[1].toLowerCase();
+        }
 
         myself.overlay.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
 
@@ -638,7 +668,7 @@ PKT_SAVED.prototype = {
                 else
                 {
                     myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved,myself.overlay.dictJSON.errorgeneric);
-                }
+                }         
                 return;
             }
 

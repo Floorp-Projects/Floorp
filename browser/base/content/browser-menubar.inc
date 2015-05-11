@@ -396,6 +396,9 @@
                 command="Browser:ShowAllBookmarks"
                 key="manBookmarkKb"/>
       <menuseparator id="organizeBookmarksSeparator"/>
+      <menuitem id="menu_pocket" label="&pocketMenuitem.label;"
+                oncommand="openUILink(Pocket.listURL, event);"/>
+      <menuseparator id="menu_pocketSeparator"/>
       <menuitem id="menu_bookmarkThisPage"
                 command="Browser:AddBookmarkAs"
                 observes="bookmarkThisPageBroadcaster"
@@ -461,9 +464,6 @@
         </menupopup>
       </menu>
 #endif
-      <menuseparator id="menu_pocketSeparator"/>
-      <menuitem id="menu_pocket" label="&pocketMenuitem.label;"
-                oncommand="openUILink(Pocket.listURL, event);"/>
       <menuseparator id="bookmarksMenuItemsSeparator"/>
       <!-- Bookmarks menu items -->
       <menuseparator builder="end"
