@@ -1394,6 +1394,11 @@ struct nsStylePosition {
   nsStyleGridLine mGridRowStart;
   nsStyleGridLine mGridRowEnd;
 
+  // FIXME: Logical-coordinate equivalents to these WidthDepends... and
+  // HeightDepends... methods have been introduced (see below); we probably
+  // want to work towards removing the physical methods, and using the logical
+  // ones in all cases.
+
   bool WidthDependsOnContainer() const
     {
       return mWidth.GetUnit() == eStyleUnit_Auto ||
@@ -1419,6 +1424,7 @@ struct nsStylePosition {
   // for it, since it is the most common case.
   // FIXME: We should probably change the assumption to be the other way
   // around.
+  // Consider this as part of moving to the logical-coordinate APIs.
   bool HeightDependsOnContainer() const
     {
       return mHeight.GetUnit() == eStyleUnit_Auto || // CSS 2.1, 10.6.4, item (5)
@@ -1436,6 +1442,29 @@ struct nsStylePosition {
   {
     return mOffset.Get(aSide).HasPercent();
   }
+
+  // Logical-coordinate accessors for width and height properties,
+  // given a WritingMode value. The definitions of these methods are
+  // found in WritingModes.h (after the WritingMode class is fully
+  // declared).
+  inline nsStyleCoord& ISize(mozilla::WritingMode aWM);
+  inline nsStyleCoord& MinISize(mozilla::WritingMode aWM);
+  inline nsStyleCoord& MaxISize(mozilla::WritingMode aWM);
+  inline nsStyleCoord& BSize(mozilla::WritingMode aWM);
+  inline nsStyleCoord& MinBSize(mozilla::WritingMode aWM);
+  inline nsStyleCoord& MaxBSize(mozilla::WritingMode aWM);
+  inline const nsStyleCoord& ISize(mozilla::WritingMode aWM) const;
+  inline const nsStyleCoord& MinISize(mozilla::WritingMode aWM) const;
+  inline const nsStyleCoord& MaxISize(mozilla::WritingMode aWM) const;
+  inline const nsStyleCoord& BSize(mozilla::WritingMode aWM) const;
+  inline const nsStyleCoord& MinBSize(mozilla::WritingMode aWM) const;
+  inline const nsStyleCoord& MaxBSize(mozilla::WritingMode aWM) const;
+  inline bool ISizeDependsOnContainer(mozilla::WritingMode aWM) const;
+  inline bool MinISizeDependsOnContainer(mozilla::WritingMode aWM) const;
+  inline bool MaxISizeDependsOnContainer(mozilla::WritingMode aWM) const;
+  inline bool BSizeDependsOnContainer(mozilla::WritingMode aWM) const;
+  inline bool MinBSizeDependsOnContainer(mozilla::WritingMode aWM) const;
+  inline bool MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const;
 
 private:
   static bool WidthCoordDependsOnContainer(const nsStyleCoord &aCoord);
