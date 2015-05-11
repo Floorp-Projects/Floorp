@@ -4432,6 +4432,9 @@ ReflectTrackedOptimizations(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
+    // Suppress GC for the unrooted JitcodeGlobalEntry below.
+    gc::AutoSuppressGC suppress(cx);
+
     jit::JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
     jit::JitcodeGlobalEntry entry;
     jit::IonScript* ion = fun->nonLazyScript()->ionScript();

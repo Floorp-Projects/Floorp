@@ -238,7 +238,7 @@ public:
     SingleLineStyle
   };
 
-private:
+protected:
   const UniquePtr<JSONWriteFunc> mWriter;
   Vector<bool, 8> mNeedComma;     // do we need a comma at depth N?
   Vector<bool, 8> mNeedNewlines;  // do we need newlines at depth N?
