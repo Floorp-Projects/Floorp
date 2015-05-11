@@ -13,10 +13,10 @@ add_task(function*() {
 });
 
 function* performTest() {
-  let out = FlameGraphUtils.createFlameGraphDataFromSamples(TEST_DATA, {
+  let out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, {
     flattenRecursion: true,
-    filterFrames: FrameNode.isContent,
-    showIdleBlocks: "\m/"
+    contentOnly: true,
+    showIdleBlocks: '\m/'
   });
 
   ok(out, "Some data was outputted properly");
@@ -46,7 +46,7 @@ function* performTest() {
   }
 }
 
-let TEST_DATA = [{
+let TEST_DATA = synthesizeProfileForTest([{
   frames: [{
     location: "http://A"
   }, {
@@ -66,11 +66,7 @@ let TEST_DATA = [{
   }],
   time: 50
 }, {
-  frames: [{
-    location: "chrome://D"
-  }, {
-    location: "resource://E"
-  }],
+  frames: [],
   time: 100
 }, {
   frames: [{
@@ -81,7 +77,7 @@ let TEST_DATA = [{
     location: "file://C",
   }],
   time: 150
-}];
+}]);
 
 let EXPECTED_OUTPUT = [{
   blocks: []
@@ -118,6 +114,16 @@ let EXPECTED_OUTPUT = [{
     width: 50,
     height: FLAME_GRAPH_BLOCK_HEIGHT,
     text: "http://A"
+  }, {
+    srcData: {
+      startTime: 0,
+      rawLocation: "file://C"
+    },
+    x: 100,
+    y: FLAME_GRAPH_BLOCK_HEIGHT * 2,
+    width: 50,
+    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    text: "file://C"
   }]
 }, {
   blocks: [{
@@ -136,7 +142,17 @@ let EXPECTED_OUTPUT = [{
 }, {
   blocks: []
 }, {
-  blocks: []
+  blocks: [{
+    srcData: {
+      startTime: 0,
+      rawLocation: "Gecko"
+    },
+    x: 0,
+    y: FLAME_GRAPH_BLOCK_HEIGHT * 3,
+    width: 50,
+    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    text: "Gecko"
+  }]
 }, {
   blocks: []
 }, {
