@@ -893,18 +893,20 @@ imgCacheEntry::UpdateCache(int32_t diff /* = 0 */)
 void
 imgCacheEntry::SetHasNoProxies(bool hasNoProxies)
 {
-  nsRefPtr<ImageURL> uri;
-  mRequest->GetURI(getter_AddRefs(uri));
-  nsAutoCString spec;
-  if (uri) {
-    uri->GetSpec(spec);
-  }
-  if (hasNoProxies) {
-    LOG_FUNC_WITH_PARAM(GetImgLog(), "imgCacheEntry::SetHasNoProxies true",
-                        "uri", spec.get());
-  } else {
-    LOG_FUNC_WITH_PARAM(GetImgLog(), "imgCacheEntry::SetHasNoProxies false",
-                        "uri", spec.get());
+  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+    nsRefPtr<ImageURL> uri;
+    mRequest->GetURI(getter_AddRefs(uri));
+    nsAutoCString spec;
+    if (uri) {
+      uri->GetSpec(spec);
+    }
+    if (hasNoProxies) {
+      LOG_FUNC_WITH_PARAM(GetImgLog(), "imgCacheEntry::SetHasNoProxies true",
+                          "uri", spec.get());
+    } else {
+      LOG_FUNC_WITH_PARAM(GetImgLog(), "imgCacheEntry::SetHasNoProxies false",
+                          "uri", spec.get());
+    }
   }
 
   mHasNoProxies = hasNoProxies;
@@ -1075,15 +1077,17 @@ imgCacheExpirationTracker::NotifyExpired(imgCacheEntry* entry)
   // mechanism doesn't.
   nsRefPtr<imgCacheEntry> kungFuDeathGrip(entry);
 
-  nsRefPtr<imgRequest> req(entry->GetRequest());
-  if (req) {
-    nsRefPtr<ImageURL> uri;
-    req->GetURI(getter_AddRefs(uri));
-    nsAutoCString spec;
-    uri->GetSpec(spec);
-    LOG_FUNC_WITH_PARAM(GetImgLog(),
-                       "imgCacheExpirationTracker::NotifyExpired",
-                       "entry", spec.get());
+  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+    nsRefPtr<imgRequest> req(entry->GetRequest());
+    if (req) {
+      nsRefPtr<ImageURL> uri;
+      req->GetURI(getter_AddRefs(uri));
+      nsAutoCString spec;
+      uri->GetSpec(spec);
+      LOG_FUNC_WITH_PARAM(GetImgLog(),
+                         "imgCacheExpirationTracker::NotifyExpired",
+                         "entry", spec.get());
+    }
   }
 
   // We can be called multiple times on the same entry. Don't do work multiple
@@ -1509,13 +1513,15 @@ imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
 bool
 imgLoader::SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry)
 {
-  nsRefPtr<ImageURL> uri;
-  aRequest->GetURI(getter_AddRefs(uri));
-  nsAutoCString spec;
-  uri->GetSpec(spec);
+  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+    nsRefPtr<ImageURL> uri;
+    aRequest->GetURI(getter_AddRefs(uri));
+    nsAutoCString spec;
+    uri->GetSpec(spec);
 
-  LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
-                             "imgLoader::SetHasNoProxies", "uri", spec.get());
+    LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
+                               "imgLoader::SetHasNoProxies", "uri", spec.get());
+  }
 
   aEntry->SetHasNoProxies(true);
 
@@ -1599,15 +1605,17 @@ imgLoader::CheckCacheLimits(imgCacheTable& cache, imgCacheQueue& queue)
 
     NS_ASSERTION(entry, "imgLoader::CheckCacheLimits -- NULL entry pointer");
 
-    nsRefPtr<imgRequest> req(entry->GetRequest());
-    if (req) {
-      nsRefPtr<ImageURL> uri;
-      req->GetURI(getter_AddRefs(uri));
-      nsAutoCString spec;
-      uri->GetSpec(spec);
-      LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
-                                 "imgLoader::CheckCacheLimits",
-                                 "entry", spec.get());
+    if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+      nsRefPtr<imgRequest> req(entry->GetRequest());
+      if (req) {
+        nsRefPtr<ImageURL> uri;
+        req->GetURI(getter_AddRefs(uri));
+        nsAutoCString spec;
+        uri->GetSpec(spec);
+        LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
+                                   "imgLoader::CheckCacheLimits",
+                                   "entry", spec.get());
+      }
     }
 
     if (entry) {
@@ -1837,7 +1845,7 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
     PR_LOG(GetImgLog(), PR_LOG_DEBUG,
            ("imgLoader::ValidateEntry validating cache entry. "
             "validateRequest = %d", validateRequest));
-  } else if (!key) {
+  } else if (!key && PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
     nsAutoCString spec;
     aURI->GetSpec(spec);
 
@@ -2864,11 +2872,13 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
     uri = imageURL->ToIURI();
   }
 
-  nsAutoCString spec;
-  uri->GetSpec(spec);
-  LOG_MSG_WITH_PARAM(GetImgLog(),
-                     "imgCacheValidator::OnStartRequest creating new request",
-                     "uri", spec.get());
+  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+    nsAutoCString spec;
+    uri->GetSpec(spec);
+    LOG_MSG_WITH_PARAM(GetImgLog(),
+                       "imgCacheValidator::OnStartRequest creating new request",
+                       "uri", spec.get());
+  }
 
   int32_t corsmode = mRequest->GetCORSMode();
   ReferrerPolicy refpol = mRequest->GetReferrerPolicy();
