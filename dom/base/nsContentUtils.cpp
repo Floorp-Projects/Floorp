@@ -7347,27 +7347,27 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
           }
 
           // Otherwise, handle this as a file.
-          nsCOMPtr<FileImpl> fileImpl;
+          nsCOMPtr<BlobImpl> blobImpl;
           nsCOMPtr<nsIFile> file = do_QueryInterface(data);
           if (file) {
-            fileImpl = new FileImplFile(file, false);
+            blobImpl = new BlobImplFile(file, false);
             ErrorResult rv;
-            fileImpl->GetSize(rv);
-            fileImpl->GetLastModified(rv);
+            blobImpl->GetSize(rv);
+            blobImpl->GetLastModified(rv);
           } else {
-            fileImpl = do_QueryInterface(data);
+            blobImpl = do_QueryInterface(data);
           }
-          if (fileImpl) {
+          if (blobImpl) {
             IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
             item->flavor() = nsCString(flavorStr);
             if (aChild) {
               item->data() =
                 mozilla::dom::BlobChild::GetOrCreate(aChild,
-                  static_cast<FileImpl*>(fileImpl.get()));
+                  static_cast<BlobImpl*>(blobImpl.get()));
             } else if (aParent) {
               item->data() =
                 mozilla::dom::BlobParent::GetOrCreate(aParent,
-                  static_cast<FileImpl*>(fileImpl.get()));
+                  static_cast<BlobImpl*>(blobImpl.get()));
             }
           } else {
             // This is a hack to support kFilePromiseMime.
