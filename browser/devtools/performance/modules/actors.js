@@ -168,6 +168,12 @@ ProfilerFrontFacade.prototype = {
    */
   getProfile: Task.async(function *(options) {
     let profilerData = yield (actorCompatibilityBridge("getProfile").call(this, options));
+    // If the backend is not deduped, dedupe it ourselves, as rest of the code
+    // expects a deduped profile.
+    if (profilerData.profile.meta.version === 2) {
+      RecordingUtils.deflateProfile(profilerData.profile);
+    }
+
     // If the backend does not support filtering by start and endtime on platform (< Fx40),
     // do it on the client (much slower).
     if (!this.traits.filterable) {
