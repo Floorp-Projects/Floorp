@@ -25,20 +25,13 @@ function promiseBrowserEvent(browser, eventType) {
   });
 }
 
-function promiseWaitForCondition(win, condition) {
+function promiseNotification(topic) {
   return new Promise((resolve, reject) => {
-    var tries = 0;
-    var interval = win.setInterval(function() {
-      if (tries >= 30) {
-        do_print("Condition didn't pass. Moving on.");
-        moveOn();
-      }
-      if (condition()) {
-        moveOn();
-      }
-      tries++;
-    }, 200);
-    var moveOn = function() { win.clearInterval(interval); resolve(); };
+    function observe(subject, topic, data) {
+      Services.obs.removeObserver(observe, topic);
+      resolve();
+    }
+    Services.obs.addObserver(observe, topic, false);
   });
 }
 
@@ -60,7 +53,7 @@ add_task(function* test_reader_view_visibility() {
 
   // We need to wait for reader content to appear because AboutReader.jsm
   // asynchronously fetches the content after about:reader loads.
-  yield promiseWaitForCondition(gWin, () => title.textContent);
+  yield promiseNotification("AboutReader:Ready");
   do_check_eq(title.textContent, "Article title");
 });
 
