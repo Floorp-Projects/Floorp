@@ -19,24 +19,24 @@
  * password on the auth information object.
  */
 inline void
-NS_SetAuthInfo(nsIAuthInformation* aAuthInfo, const nsString& user,
-               const nsString& password)
+NS_SetAuthInfo(nsIAuthInformation* aAuthInfo, const nsString& aUser,
+               const nsString& aPassword)
 {
   uint32_t flags;
   aAuthInfo->GetFlags(&flags);
   if (flags & nsIAuthInformation::NEED_DOMAIN) {
     // Domain is separated from username by a backslash
-    int32_t idx = user.FindChar(char16_t('\\'));
+    int32_t idx = aUser.FindChar(char16_t('\\'));
     if (idx == kNotFound) {
-      aAuthInfo->SetUsername(user);
+      aAuthInfo->SetUsername(aUser);
     } else {
-      aAuthInfo->SetDomain(Substring(user, 0, idx));
-      aAuthInfo->SetUsername(Substring(user, idx + 1));
+      aAuthInfo->SetDomain(Substring(aUser, 0, idx));
+      aAuthInfo->SetUsername(Substring(aUser, idx + 1));
     }
   } else {
-    aAuthInfo->SetUsername(user);
+    aAuthInfo->SetUsername(aUser);
   }
-  aAuthInfo->SetPassword(password);
+  aAuthInfo->SetPassword(aPassword);
 }
 
 /**
@@ -54,12 +54,13 @@ NS_SetAuthInfo(nsIAuthInformation* aAuthInfo, const nsString& user,
  */
 inline void
 NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
-                   bool machineProcessing, nsCString& host, int32_t* port)
+                   bool aMachineProcessing, nsCString& aHost, int32_t* aPort)
 {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return;
+  }
 
   // Have to distinguish proxy auth and host auth here...
   uint32_t flags;
@@ -74,27 +75,27 @@ NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
 
     nsAutoCString idnhost;
     info->GetHost(idnhost);
-    info->GetPort(port);
+    info->GetPort(aPort);
 
-    if (machineProcessing) {
+    if (aMachineProcessing) {
       nsCOMPtr<nsIIDNService> idnService =
         do_GetService(NS_IDNSERVICE_CONTRACTID);
       if (idnService) {
-        idnService->ConvertUTF8toACE(idnhost, host);
+        idnService->ConvertUTF8toACE(idnhost, aHost);
       } else {
         // Not much we can do here...
-        host = idnhost;
+        aHost = idnhost;
       }
     } else {
-      host = idnhost;
+      aHost = idnhost;
     }
   } else {
-    if (machineProcessing) {
-      uri->GetAsciiHost(host);
-      *port = NS_GetRealPort(uri);
+    if (aMachineProcessing) {
+      uri->GetAsciiHost(aHost);
+      *aPort = NS_GetRealPort(uri);
     } else {
-      uri->GetHost(host);
-      uri->GetPort(port);
+      uri->GetHost(aHost);
+      uri->GetPort(aPort);
     }
   }
 }
@@ -106,14 +107,14 @@ NS_GetAuthHostPort(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
  */
 inline void
 NS_GetAuthKey(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
-              nsCString& key)
+              nsCString& aKey)
 {
   // HTTP does this differently from other protocols
   nsCOMPtr<nsIHttpChannel> http(do_QueryInterface(aChannel));
   if (!http) {
     nsCOMPtr<nsIURI> uri;
     aChannel->GetURI(getter_AddRefs(uri));
-    uri->GetPrePath(key);
+    uri->GetPrePath(aKey);
     return;
   }
 
@@ -125,15 +126,14 @@ NS_GetAuthKey(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
 
   nsAutoString realm;
   aAuthInfo->GetRealm(realm);
-  
+
   // Now assemble the key: host:port (realm)
-  key.Append(host);
-  key.Append(':');
-  key.AppendInt(port);
-  key.AppendLiteral(" (");
-  AppendUTF16toUTF8(realm, key);
-  key.Append(')');
+  aKey.Append(host);
+  aKey.Append(':');
+  aKey.AppendInt(port);
+  aKey.AppendLiteral(" (");
+  AppendUTF16toUTF8(realm, aKey);
+  aKey.Append(')');
 }
 
 #endif
-
