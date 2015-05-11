@@ -124,351 +124,39 @@ nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// mozilla::dom::Blob implementation
+// mozilla::dom::File implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(Blob)
+NS_IMPL_CYCLE_COLLECTION_CLASS(File)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Blob)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(File)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Blob)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(File)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Blob)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(File)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Blob)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(File)
   // This class should not receive any nsIRemoteBlob QI!
   MOZ_ASSERT(!aIID.Equals(NS_GET_IID(nsIRemoteBlob)));
 
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMBlob)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, IsFile())
   NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
   NS_INTERFACE_MAP_ENTRY(nsIMutable)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Blob)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(Blob)
-
-/* static */ Blob*
-Blob::Create(nsISupports* aParent, FileImpl* aImpl)
-{
-  MOZ_ASSERT(aImpl);
-
-  return aImpl->IsFile() ? new File(aParent, aImpl)
-                         : new Blob(aParent, aImpl);
-}
-
-/* static */ already_AddRefed<Blob>
-Blob::Create(nsISupports* aParent, const nsAString& aContentType,
-             uint64_t aLength)
-{
-  nsRefPtr<Blob> blob = Blob::Create(aParent,
-    new FileImplBase(aContentType, aLength));
-  MOZ_ASSERT(!blob->mImpl->IsFile());
-  return blob.forget();
-}
-
-/* static */ already_AddRefed<Blob>
-Blob::Create(nsISupports* aParent, const nsAString& aContentType,
-             uint64_t aStart, uint64_t aLength)
-{
-  nsRefPtr<Blob> blob = Blob::Create(aParent,
-    new FileImplBase(aContentType, aStart, aLength));
-  MOZ_ASSERT(!blob->mImpl->IsFile());
-  return blob.forget();
-}
-
-/* static */ already_AddRefed<Blob>
-Blob::CreateMemoryBlob(nsISupports* aParent, void* aMemoryBuffer,
-                       uint64_t aLength, const nsAString& aContentType)
-{
-  nsRefPtr<Blob> blob = Blob::Create(aParent,
-    new FileImplMemory(aMemoryBuffer, aLength, aContentType));
-  MOZ_ASSERT(!blob->mImpl->IsFile());
-  return blob.forget();
-}
-
-/* static */ already_AddRefed<Blob>
-Blob::CreateTemporaryBlob(nsISupports* aParent, PRFileDesc* aFD,
-                          uint64_t aStartPos, uint64_t aLength,
-                          const nsAString& aContentType)
-{
-  nsRefPtr<Blob> blob = Blob::Create(aParent,
-    new FileImplTemporaryBlob(aFD, aStartPos, aLength, aContentType));
-  MOZ_ASSERT(!blob->mImpl->IsFile());
-  return blob.forget();
-}
-
-Blob::Blob(nsISupports* aParent, FileImpl* aImpl)
-  : mImpl(aImpl)
-  , mParent(aParent)
-{
-  MOZ_ASSERT(mImpl);
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aParent);
-    if (win) {
-      MOZ_ASSERT(win->IsInnerWindow());
-    }
-  }
-#endif
-}
-
-bool
-Blob::IsFile() const
-{
-  return mImpl->IsFile();
-}
-
-const nsTArray<nsRefPtr<FileImpl>>*
-Blob::GetSubBlobImpls() const
-{
-  return mImpl->GetSubBlobImpls();
-}
-
-already_AddRefed<File>
-Blob::ToFile()
-{
-  if (!mImpl->IsFile()) {
-    return nullptr;
-  }
-
-  nsRefPtr<File> file;
-  if (HasFileInterface()) {
-    file = static_cast<File*>(this);
-  } else {
-    file = new File(mParent, mImpl);
-  }
-
-  return file.forget();
-}
-
-already_AddRefed<File>
-Blob::ToFile(const nsAString& aName) const
-{
-  nsAutoTArray<nsRefPtr<FileImpl>, 1> blobImpls;
-  blobImpls.AppendElement(mImpl);
-
-  nsAutoString contentType;
-  mImpl->GetType(contentType);
-
-  nsRefPtr<MultipartFileImpl> impl =
-    new MultipartFileImpl(blobImpls, aName, contentType);
-
-  nsRefPtr<File> file = new File(mParent, impl);
-  return file.forget();
-}
-
-already_AddRefed<Blob>
-Blob::CreateSlice(uint64_t aStart, uint64_t aLength,
-                  const nsAString& aContentType,
-                  ErrorResult& aRv)
-{
-  nsRefPtr<FileImpl> impl = mImpl->CreateSlice(aStart, aLength,
-                                               aContentType, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  nsRefPtr<Blob> blob = Blob::Create(mParent, impl);
-  return blob.forget();
-}
-
-NS_IMETHODIMP
-Blob::GetSize(uint64_t* aSize)
-{
-  MOZ_ASSERT(aSize);
-
-  ErrorResult rv;
-  *aSize = GetSize(rv);
-  return rv.StealNSResult();
-}
-
-uint64_t
-Blob::GetSize(ErrorResult& aRv)
-{
-  return mImpl->GetSize(aRv);
-}
-
-NS_IMETHODIMP
-Blob::GetType(nsAString &aType)
-{
-  mImpl->GetType(aType);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Blob::Slice(int64_t aStart, int64_t aEnd,
-            const nsAString& aContentType, uint8_t aArgc,
-            nsIDOMBlob **aBlob)
-{
-  Optional<int64_t> start;
-  if (aArgc > 0) {
-    start.Construct(aStart);
-  }
-
-  Optional<int64_t> end;
-  if (aArgc > 1) {
-    end.Construct(aEnd);
-  }
-
-  ErrorResult rv;
-  nsRefPtr<Blob> blob = Slice(start, end, aContentType, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  blob.forget(aBlob);
-  return NS_OK;
-}
-
-already_AddRefed<Blob>
-Blob::Slice(const Optional<int64_t>& aStart,
-            const Optional<int64_t>& aEnd,
-            const nsAString& aContentType,
-            ErrorResult& aRv)
-{
-  nsRefPtr<FileImpl> impl =
-    mImpl->Slice(aStart, aEnd, aContentType, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  nsRefPtr<Blob> blob = Blob::Create(mParent, impl);
-  return blob.forget();
-}
-
-NS_IMETHODIMP
-Blob::GetSendInfo(nsIInputStream** aBody,
-                  uint64_t* aContentLength,
-                  nsACString& aContentType,
-                  nsACString& aCharset)
-{
-  return mImpl->GetSendInfo(aBody, aContentLength, aContentType, aCharset);
-}
-
-NS_IMETHODIMP
-Blob::GetMutable(bool* aMutable)
-{
-  return mImpl->GetMutable(aMutable);
-}
-
-NS_IMETHODIMP
-Blob::SetMutable(bool aMutable)
-{
-  return mImpl->SetMutable(aMutable);
-}
-
-JSObject*
-Blob::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return BlobBinding::Wrap(aCx, this, aGivenProto);
-}
-
-/* static */ already_AddRefed<Blob>
-Blob::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
-{
-  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl();
-
-  impl->InitializeBlob();
-  MOZ_ASSERT(!impl->IsFile());
-
-  nsRefPtr<Blob> blob = Blob::Create(aGlobal.GetAsSupports(), impl);
-  return blob.forget();
-}
-
-/* static */ already_AddRefed<Blob>
-Blob::Constructor(
-        const GlobalObject& aGlobal,
-        const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
-        const BlobPropertyBag& aBag,
-        ErrorResult& aRv)
-{
-  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl();
-
-  impl->InitializeBlob(aGlobal.Context(), aData, aBag.mType,
-                       aBag.mEndings == EndingTypes::Native, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  MOZ_ASSERT(!impl->IsFile());
-
-  nsRefPtr<Blob> blob = Blob::Create(aGlobal.GetAsSupports(), impl);
-  return blob.forget();
-}
-
-NS_IMETHODIMP_(int64_t)
-Blob::GetFileId()
-{
-  return mImpl->GetFileId();
-}
-
-NS_IMETHODIMP_(void)
-Blob::AddFileInfo(indexedDB::FileInfo* aFileInfo)
-{
-  mImpl->AddFileInfo(aFileInfo);
-}
-
-indexedDB::FileInfo*
-Blob::GetFileInfo(indexedDB::FileManager* aFileManager)
-{
-  return mImpl->GetFileInfo(aFileManager);
-}
-
-NS_IMETHODIMP_(bool)
-Blob::IsMemoryFile()
-{
-  return mImpl->IsMemoryFile();
-}
-
-NS_IMETHODIMP
-Blob::GetInternalStream(nsIInputStream** aStream)
-{
-  return mImpl->GetInternalStream(aStream);
-}
-
-////////////////////////////////////////////////////////////////////////////
-// mozilla::dom::File implementation
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(File)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(File, Blob)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(File, Blob)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(File)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFile)
-NS_INTERFACE_MAP_END_INHERITING(Blob)
-
-NS_IMPL_ADDREF_INHERITED(File, Blob)
-NS_IMPL_RELEASE_INHERITED(File, Blob)
-
-File::File(nsISupports* aParent, FileImpl* aImpl)
-  : Blob(aParent, aImpl)
-{
-  MOZ_ASSERT(aImpl->IsFile());
-}
-
-/* static */ File*
-File::Create(nsISupports* aParent, FileImpl* aImpl)
-{
-  MOZ_ASSERT(aImpl);
-  MOZ_ASSERT(aImpl->IsFile());
-
-  return new File(aParent, aImpl);
-}
+NS_IMPL_CYCLE_COLLECTING_ADDREF(File)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(File)
 
 /* static */ already_AddRefed<File>
 File::Create(nsISupports* aParent, const nsAString& aName,
@@ -490,6 +178,24 @@ File::Create(nsISupports* aParent, const nsAString& aName,
 }
 
 /* static */ already_AddRefed<File>
+File::Create(nsISupports* aParent, const nsAString& aContentType,
+             uint64_t aLength)
+{
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplBase(aContentType, aLength));
+  return file.forget();
+}
+
+/* static */ already_AddRefed<File>
+File::Create(nsISupports* aParent, const nsAString& aContentType,
+                uint64_t aStart, uint64_t aLength)
+{
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplBase(aContentType, aStart, aLength));
+  return file.forget();
+}
+
+/* static */ already_AddRefed<File>
 File::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
                        uint64_t aLength, const nsAString& aName,
                        const nsAString& aContentType,
@@ -498,6 +204,25 @@ File::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
   nsRefPtr<File> file = new File(aParent,
     new FileImplMemory(aMemoryBuffer, aLength, aName,
                        aContentType, aLastModifiedDate));
+  return file.forget();
+}
+
+/* static */ already_AddRefed<File>
+File::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
+                       uint64_t aLength, const nsAString& aContentType)
+{
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplMemory(aMemoryBuffer, aLength, aContentType));
+  return file.forget();
+}
+
+/* static */ already_AddRefed<File>
+File::CreateTemporaryFileBlob(nsISupports* aParent, PRFileDesc* aFD,
+                              uint64_t aStartPos, uint64_t aLength,
+                              const nsAString& aContentType)
+{
+  nsRefPtr<File> file = new File(aParent,
+    new FileImplTemporaryFileBlob(aFD, aStartPos, aLength, aContentType));
   return file.forget();
 }
 
@@ -547,10 +272,59 @@ File::CreateFromFile(nsISupports* aParent, nsIFile* aFile,
   return file.forget();
 }
 
-JSObject*
-File::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+File::File(nsISupports* aParent, FileImpl* aImpl)
+  : mImpl(aImpl)
+  , mParent(aParent)
 {
-  return FileBinding::Wrap(aCx, this, aGivenProto);
+  MOZ_ASSERT(mImpl);
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aParent);
+    if (win) {
+      MOZ_ASSERT(win->IsInnerWindow());
+    }
+  }
+#endif
+}
+
+const nsTArray<nsRefPtr<FileImpl>>*
+File::GetSubBlobImpls() const
+{
+  return mImpl->GetSubBlobImpls();
+}
+
+bool
+File::IsSizeUnknown() const
+{
+  return mImpl->IsSizeUnknown();
+}
+
+bool
+File::IsDateUnknown() const
+{
+  return mImpl->IsDateUnknown();
+}
+
+bool
+File::IsFile() const
+{
+  return mImpl->IsFile();
+}
+
+already_AddRefed<File>
+File::CreateSlice(uint64_t aStart, uint64_t aLength,
+                  const nsAString& aContentType,
+                  ErrorResult& aRv)
+{
+  nsRefPtr<FileImpl> impl = mImpl->CreateSlice(aStart, aLength,
+                                               aContentType, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsRefPtr<File> file = new File(mParent, impl);
+  return file.forget();
 }
 
 NS_IMETHODIMP
@@ -564,23 +338,6 @@ NS_IMETHODIMP
 File::GetPath(nsAString& aPath)
 {
   return mImpl->GetPath(aPath);
-}
-
-Date
-File::GetLastModifiedDate(ErrorResult& aRv)
-{
-  int64_t value = GetLastModified(aRv);
-  if (aRv.Failed()) {
-    return Date();
-  }
-
-  return Date(value);
-}
-
-int64_t
-File::GetLastModified(ErrorResult& aRv)
-{
-  return mImpl->GetLastModified(aRv);
 }
 
 NS_IMETHODIMP
@@ -598,6 +355,23 @@ File::GetLastModifiedDate(JSContext* aCx,
   }
 
   return NS_OK;
+}
+
+Date
+File::GetLastModifiedDate(ErrorResult& aRv)
+{
+  int64_t value = GetLastModified(aRv);
+  if (aRv.Failed()) {
+    return Date();
+  }
+
+  return Date(value);
+}
+
+int64_t
+File::GetLastModified(ErrorResult& aRv)
+{
+  return mImpl->GetLastModified(aRv);
 }
 
 NS_IMETHODIMP
@@ -620,6 +394,29 @@ File::GetMozFullPathInternal(nsAString& aFileName)
   ErrorResult rv;
   mImpl->GetMozFullPathInternal(aFileName, rv);
   return rv.StealNSResult();
+}
+
+NS_IMETHODIMP
+File::GetSize(uint64_t* aSize)
+{
+  MOZ_ASSERT(aSize);
+
+  ErrorResult rv;
+  *aSize = GetSize(rv);
+  return rv.StealNSResult();
+}
+
+uint64_t
+File::GetSize(ErrorResult& aRv)
+{
+  return mImpl->GetSize(aRv);
+}
+
+NS_IMETHODIMP
+File::GetType(nsAString &aType)
+{
+  mImpl->GetType(aType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -669,6 +466,137 @@ ParseSize(int64_t aSize, int64_t& aStart, int64_t& aEnd)
   }
 }
 
+NS_IMETHODIMP
+File::Slice(int64_t aStart, int64_t aEnd,
+            const nsAString& aContentType, uint8_t aArgc,
+            nsIDOMBlob **aBlob)
+{
+  Optional<int64_t> start;
+  if (aArgc > 0) {
+    start.Construct(aStart);
+  }
+
+  Optional<int64_t> end;
+  if (aArgc > 1) {
+    end.Construct(aEnd);
+  }
+
+  ErrorResult rv;
+  nsRefPtr<File> file = Slice(start, end, aContentType, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
+  file.forget(aBlob);
+  return NS_OK;
+}
+
+already_AddRefed<File>
+File::Slice(const Optional<int64_t>& aStart,
+            const Optional<int64_t>& aEnd,
+            const nsAString& aContentType,
+            ErrorResult& aRv)
+{
+  nsRefPtr<FileImpl> impl =
+    mImpl->Slice(aStart, aEnd, aContentType, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsRefPtr<File> file = new File(mParent, impl);
+  return file.forget();
+}
+
+NS_IMETHODIMP
+File::GetInternalStream(nsIInputStream** aStream)
+{
+  return mImpl->GetInternalStream(aStream);
+}
+
+NS_IMETHODIMP_(int64_t)
+File::GetFileId()
+{
+  return mImpl->GetFileId();
+}
+
+NS_IMETHODIMP_(void)
+File::AddFileInfo(indexedDB::FileInfo* aFileInfo)
+{
+  mImpl->AddFileInfo(aFileInfo);
+}
+
+indexedDB::FileInfo*
+File::GetFileInfo(indexedDB::FileManager* aFileManager)
+{
+  return mImpl->GetFileInfo(aFileManager);
+}
+
+NS_IMETHODIMP
+File::GetSendInfo(nsIInputStream** aBody,
+                  uint64_t* aContentLength,
+                  nsACString& aContentType,
+                  nsACString& aCharset)
+{
+  return mImpl->GetSendInfo(aBody, aContentLength, aContentType, aCharset);
+}
+
+NS_IMETHODIMP
+File::GetMutable(bool* aMutable)
+{
+  return mImpl->GetMutable(aMutable);
+}
+
+NS_IMETHODIMP
+File::SetMutable(bool aMutable)
+{
+  return mImpl->SetMutable(aMutable);
+}
+
+NS_IMETHODIMP_(bool)
+File::IsMemoryFile()
+{
+  return mImpl->IsMemoryFile();
+}
+
+JSObject*
+File::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+{
+  return IsFile() ? FileBinding::Wrap(aCx, this, aGivenProto)
+                  : BlobBinding::Wrap(aCx, this, aGivenProto);
+}
+
+/* static */ already_AddRefed<File>
+File::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+{
+  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl();
+
+  impl->InitializeBlob();
+  MOZ_ASSERT(!impl->IsFile());
+
+  nsRefPtr<File> file = new File(aGlobal.GetAsSupports(), impl);
+  return file.forget();
+}
+
+/* static */ already_AddRefed<File>
+File::Constructor(
+        const GlobalObject& aGlobal,
+        const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
+        const BlobPropertyBag& aBag,
+        ErrorResult& aRv)
+{
+  nsRefPtr<MultipartFileImpl> impl = new MultipartFileImpl();
+
+  impl->InitializeBlob(aGlobal.Context(), aData, aBag.mType,
+                       aBag.mEndings == EndingTypes::Native, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(!impl->IsFile());
+
+  nsRefPtr<File> file = new File(aGlobal.GetAsSupports(), impl);
+  return file.forget();
+}
+
 /* static */ already_AddRefed<File>
 File::Constructor(
         const GlobalObject& aGlobal,
@@ -695,7 +623,7 @@ File::Constructor(
 
 /* static */ already_AddRefed<File>
 File::Constructor(const GlobalObject& aGlobal,
-                  Blob& aData,
+                  File& aData,
                   const ChromeFilePropertyBag& aBag,
                   ErrorResult& aRv)
 {
@@ -1263,14 +1191,14 @@ FileImplMemory::DataOwner::EnsureMemoryReporterRegistered()
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// FileImplTemporaryBlob implementation
+// FileImplTemporaryFileBlob implementation
 
-NS_IMPL_ISUPPORTS_INHERITED0(FileImplTemporaryBlob, FileImpl)
+NS_IMPL_ISUPPORTS_INHERITED0(FileImplTemporaryFileBlob, FileImpl)
 
 already_AddRefed<FileImpl>
-FileImplTemporaryBlob::CreateSlice(uint64_t aStart, uint64_t aLength,
-                                   const nsAString& aContentType,
-                                   ErrorResult& aRv)
+FileImplTemporaryFileBlob::CreateSlice(uint64_t aStart, uint64_t aLength,
+                                       const nsAString& aContentType,
+                                       ErrorResult& aRv)
 {
   if (aStart + aLength > mLength) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -1278,13 +1206,13 @@ FileImplTemporaryBlob::CreateSlice(uint64_t aStart, uint64_t aLength,
   }
 
   nsRefPtr<FileImpl> impl =
-    new FileImplTemporaryBlob(this, aStart + mStartPos,
-                              aLength, aContentType);
+    new FileImplTemporaryFileBlob(this, aStart + mStartPos,
+                                  aLength, aContentType);
   return impl.forget();
 }
 
 nsresult
-FileImplTemporaryBlob::GetInternalStream(nsIInputStream** aStream)
+FileImplTemporaryFileBlob::GetInternalStream(nsIInputStream** aStream)
 {
   nsCOMPtr<nsIInputStream> stream =
     new nsTemporaryFileInputStream(mFileDescOwner, mStartPos, mStartPos + mLength);
@@ -1331,10 +1259,10 @@ FileList::Item(uint32_t aIndex, nsIDOMFile **aFile)
 ////////////////////////////////////////////////////////////////////////////
 // BlobSet implementation
 
-already_AddRefed<Blob>
+already_AddRefed<File>
 BlobSet::GetBlobInternal(nsISupports* aParent, const nsACString& aContentType)
 {
-  nsRefPtr<Blob> blob = Blob::Create(aParent,
+  nsRefPtr<File> blob = new File(aParent,
     new MultipartFileImpl(GetBlobImpls(),
                           NS_ConvertASCIItoUTF16(aContentType)));
   return blob.forget();

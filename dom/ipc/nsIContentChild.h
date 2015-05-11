@@ -32,11 +32,10 @@ class CpowEntry;
 
 namespace dom {
 
-class Blob;
 class BlobChild;
 class BlobConstructorParams;
 class ClonedMessageData;
-class FileImpl;
+class File;
 class IPCTabContext;
 class PBlobChild;
 class PBrowserChild;
@@ -47,8 +46,7 @@ class nsIContentChild : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTCHILD_IID)
 
-  BlobChild* GetOrCreateActorForBlob(Blob* aBlob);
-  BlobChild* GetOrCreateActorForFileImpl(FileImpl* aImpl);
+  BlobChild* GetOrCreateActorForBlob(File* aBlob);
 
   virtual PBlobChild* SendPBlobConstructor(
     PBlobChild* aActor,

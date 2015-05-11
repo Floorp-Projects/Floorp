@@ -31,8 +31,7 @@ public:
   nsresult GetFilename(nsString& aFilename) override;
 
   // From zipItem to File:
-  virtual already_AddRefed<File>
-  GetFile(ArchiveReader* aArchiveReader) override;
+  virtual nsIDOMFile* File(ArchiveReader* aArchiveReader) override;
 
 public: // for the event
   static uint32_t StrToInt32(const uint8_t* aStr);

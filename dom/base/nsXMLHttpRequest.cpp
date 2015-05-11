@@ -428,7 +428,7 @@ nsXMLHttpRequest::ResetResponse()
   mResponseBody.Truncate();
   mResponseText.Truncate();
   mResponseBlob = nullptr;
-  mDOMBlob = nullptr;
+  mDOMFile = nullptr;
   mBlobSet = nullptr;
   mResultArrayBuffer = nullptr;
   mArrayBufferBuilder.reset();
@@ -479,7 +479,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mXMLParserStreamListener)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResponseBlob)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMBlob)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMFile)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationCallbacks)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannelEventSink)
@@ -501,7 +501,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mXMLParserStreamListener)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResponseBlob)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMBlob)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMFile)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNotificationCallbacks)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannelEventSink)
@@ -789,15 +789,15 @@ nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
 void
 nsXMLHttpRequest::CreatePartialBlob()
 {
-  if (mDOMBlob) {
+  if (mDOMFile) {
     // Use progress info to determine whether load is complete, but use
     // mDataAvailable to ensure a slice is created based on the uncompressed
     // data count.
     if (mLoadTotal == mLoadTransferred) {
-      mResponseBlob = mDOMBlob;
+      mResponseBlob = mDOMFile;
     } else {
       ErrorResult rv;
-      mResponseBlob = mDOMBlob->CreateSlice(0, mDataAvailable,
+      mResponseBlob = mDOMFile->CreateSlice(0, mDataAvailable,
                                             EmptyString(), rv);
     }
     return;
@@ -1829,7 +1829,7 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
 
   if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB ||
       xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB) {
-    if (!xmlHttpRequest->mDOMBlob) {
+    if (!xmlHttpRequest->mDOMFile) {
       if (!xmlHttpRequest->mBlobSet) {
         xmlHttpRequest->mBlobSet = new BlobSet();
       }
@@ -1899,7 +1899,7 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
   return rv;
 }
 
-bool nsXMLHttpRequest::CreateDOMBlob(nsIRequest *request)
+bool nsXMLHttpRequest::CreateDOMFile(nsIRequest *request)
 {
   nsCOMPtr<nsIFile> file;
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(request);
@@ -1913,7 +1913,7 @@ bool nsXMLHttpRequest::CreateDOMBlob(nsIRequest *request)
   nsAutoCString contentType;
   mChannel->GetContentType(contentType);
 
-  mDOMBlob = File::CreateFromFile(GetOwner(), file, EmptyString(),
+  mDOMFile = File::CreateFromFile(GetOwner(), file, EmptyString(),
                                   NS_ConvertASCIItoUTF16(contentType));
 
   mBlobSet = nullptr;
@@ -1936,8 +1936,8 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
 
   bool cancelable = false;
   if ((mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB ||
-       mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB) && !mDOMBlob) {
-    cancelable = CreateDOMBlob(request);
+       mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB) && !mDOMFile) {
+    cancelable = CreateDOMFile(request);
     // The nsIStreamListener contract mandates us
     // to read from the stream before returning.
   }
@@ -1949,7 +1949,7 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
 
   if (cancelable) {
     // We don't have to read from the local file for the blob response
-    mDOMBlob->GetSize(&mDataAvailable);
+    mDOMFile->GetSize(&mDataAvailable);
     ChangeState(XML_HTTP_REQUEST_LOADING);
     return request->Cancel(NS_OK);
   }
@@ -2246,12 +2246,12 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   if (NS_SUCCEEDED(status) &&
       (mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB ||
        mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB)) {
-    if (!mDOMBlob) {
-      CreateDOMBlob(request);
+    if (!mDOMFile) {
+      CreateDOMFile(request);
     }
-    if (mDOMBlob) {
-      mResponseBlob = mDOMBlob;
-      mDOMBlob = nullptr;
+    if (mDOMFile) {
+      mResponseBlob = mDOMFile;
+      mDOMFile = nullptr;
     } else {
       // mBlobSet can be null if the channel is non-file non-cacheable
       // and if the response length is zero.

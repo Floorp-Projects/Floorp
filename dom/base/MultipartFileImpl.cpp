@@ -145,8 +145,8 @@ MultipartFileImpl::InitializeBlob(
     const OwningArrayBufferOrArrayBufferViewOrBlobOrString& data = aData[i];
 
     if (data.IsBlob()) {
-      nsRefPtr<Blob> blob = data.GetAsBlob().get();
-      blobSet.AppendBlobImpl(blob->Impl());
+      nsRefPtr<File> file = data.GetAsBlob().get();
+      blobSet.AppendBlobImpl(file->Impl());
     }
 
     else if (data.IsString()) {
@@ -281,7 +281,7 @@ MultipartFileImpl::SetMutable(bool aMutable)
 }
 
 void
-MultipartFileImpl::InitializeChromeFile(Blob& aBlob,
+MultipartFileImpl::InitializeChromeFile(File& aBlob,
                                         const ChromeFilePropertyBag& aBag,
                                         ErrorResult& aRv)
 {

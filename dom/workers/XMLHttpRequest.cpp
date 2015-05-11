@@ -2156,7 +2156,7 @@ XMLHttpRequest::Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(Blob& aBody, ErrorResult& aRv)
+XMLHttpRequest::Send(File& aBody, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   JSContext* cx = mWorkerPrivate->GetJSContext();

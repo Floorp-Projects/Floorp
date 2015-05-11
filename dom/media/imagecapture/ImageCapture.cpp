@@ -172,7 +172,7 @@ ImageCapture::TakePhoto(ErrorResult& aResult)
 }
 
 nsresult
-ImageCapture::PostBlobEvent(Blob* aBlob)
+ImageCapture::PostBlobEvent(File* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!CheckPrincipal()) {

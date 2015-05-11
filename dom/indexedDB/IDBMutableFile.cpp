@@ -340,10 +340,8 @@ IDBMutableFile::CreateFileObject(IDBFileHandle* aFileHandle,
                          aFileHandle,
                          mFileInfo);
 
-  nsRefPtr<File> file = File::Create(GetOwner(), impl);
-  MOZ_ASSERT(file);
-
-  return file.forget();
+  nsCOMPtr<nsIDOMFile> fileSnapshot = new File(GetOwner(), impl);
+  return fileSnapshot.forget();
 }
 
 already_AddRefed<DOMRequest>

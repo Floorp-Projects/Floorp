@@ -308,11 +308,7 @@ DataTransfer::GetFiles(ErrorResult& aRv)
         if (!fileImpl) {
           continue;
         }
-
-        MOZ_ASSERT(fileImpl->IsFile());
-
-        domFile = File::Create(GetParentObject(), fileImpl);
-        MOZ_ASSERT(domFile);
+        domFile = new File(GetParentObject(), static_cast<FileImpl*>(fileImpl.get()));
       }
 
       if (!mFiles->Append(domFile)) {
