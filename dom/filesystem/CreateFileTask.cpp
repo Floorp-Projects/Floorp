@@ -79,7 +79,7 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
   }
 
   BlobParent* bp = static_cast<BlobParent*>(static_cast<PBlobParent*>(data));
-  nsRefPtr<FileImpl> blobImpl = bp->GetBlobImpl();
+  nsRefPtr<BlobImpl> blobImpl = bp->GetBlobImpl();
   MOZ_ASSERT(blobImpl, "blobData should not be null.");
 
   nsresult rv = blobImpl->GetInternalStream(getter_AddRefs(mBlobStream));
@@ -127,7 +127,7 @@ FileSystemResponseValue
 CreateFileTask::GetSuccessRequestResult() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  BlobParent* actor = GetBlobParent(mTargetFileImpl);
+  BlobParent* actor = GetBlobParent(mTargetBlobImpl);
   if (!actor) {
     return FileSystemErrorResponse(NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR);
   }
@@ -142,7 +142,7 @@ CreateFileTask::SetSuccessRequestResult(const FileSystemResponseValue& aValue)
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   FileSystemFileResponse r = aValue;
   BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
-  mTargetFileImpl = actor->GetBlobImpl();
+  mTargetBlobImpl = actor->GetBlobImpl();
 }
 
 nsresult
@@ -259,7 +259,7 @@ CreateFileTask::Work()
       return NS_ERROR_FAILURE;
     }
 
-    mTargetFileImpl = new FileImplFile(file);
+    mTargetBlobImpl = new BlobImplFile(file);
     return NS_OK;
   }
 
@@ -278,7 +278,7 @@ CreateFileTask::Work()
     return NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR;
   }
 
-  mTargetFileImpl = new FileImplFile(file);
+  mTargetBlobImpl = new BlobImplFile(file);
   return NS_OK;
 }
 
@@ -301,7 +301,7 @@ CreateFileTask::HandlerCallback()
     return;
   }
 
-  nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetFileImpl);
+  nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetBlobImpl);
   mPromise->MaybeResolve(blob);
   mPromise = nullptr;
   mBlobData = nullptr;

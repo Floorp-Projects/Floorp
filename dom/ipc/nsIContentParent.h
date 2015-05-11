@@ -35,9 +35,9 @@ namespace dom {
 
 class Blob;
 class BlobConstructorParams;
+class BlobImpl;
 class BlobParent;
 class ContentParent;
-class FileImpl;
 class IPCTabContext;
 class PBlobParent;
 class PBrowserParent;
@@ -52,7 +52,7 @@ public:
   nsIContentParent();
 
   BlobParent* GetOrCreateActorForBlob(Blob* aBlob);
-  BlobParent* GetOrCreateActorForFileImpl(FileImpl* aImpl);
+  BlobParent* GetOrCreateActorForBlobImpl(BlobImpl* aImpl);
 
   virtual ContentParentId ChildID() = 0;
   virtual bool IsForApp() = 0;

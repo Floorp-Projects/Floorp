@@ -152,10 +152,10 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
                                   const int16_t& aResult)
 {
   if (aFiles.type() == MaybeInputFiles::TInputFiles) {
-    const InfallibleTArray<PBlobChild*>& files = aFiles.get_InputFiles().filesChild();
-    for (uint32_t i = 0; i < files.Length(); ++i) {
-      BlobChild* actor = static_cast<BlobChild*>(files[i]);
-      nsRefPtr<FileImpl> blobImpl = actor->GetBlobImpl();
+    const InfallibleTArray<PBlobChild*>& blobs = aFiles.get_InputFiles().blobsChild();
+    for (uint32_t i = 0; i < blobs.Length(); ++i) {
+      BlobChild* actor = static_cast<BlobChild*>(blobs[i]);
+      nsRefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
       NS_ENSURE_TRUE(blobImpl, true);
 
       if (!blobImpl->IsFile()) {

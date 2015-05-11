@@ -19,8 +19,8 @@ namespace mozilla {
 namespace dom {
 struct ArchiveReaderOptions;
 class Blob;
+class BlobImpl;
 class File;
-class FileImpl;
 class GlobalObject;
 } // namespace dom
 } // namespace mozilla
@@ -64,9 +64,9 @@ public: // for the ArchiveRequest:
   nsresult RegisterRequest(ArchiveRequest* aRequest);
 
 public: // For events:
-  FileImpl* GetFileImpl() const
+  BlobImpl* GetBlobImpl() const
   {
-    return mFileImpl;
+    return mBlobImpl;
   }
 
   void Ready(nsTArray<nsRefPtr<File>>& aFileList, nsresult aStatus);
@@ -82,7 +82,7 @@ private:
 
 protected:
   // The archive blob/file
-  nsRefPtr<FileImpl> mFileImpl;
+  nsRefPtr<BlobImpl> mBlobImpl;
 
   // The window is needed by the requests
   nsCOMPtr<nsPIDOMWindow> mWindow;
