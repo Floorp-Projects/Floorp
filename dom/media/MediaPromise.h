@@ -29,8 +29,6 @@ namespace mozilla {
 
 extern PRLogModuleInfo* gMediaPromiseLog;
 
-void EnsureMediaPromiseLog();
-
 #define PROMISE_LOG(x, ...) \
   MOZ_ASSERT(gMediaPromiseLog); \
   PR_LOG(gMediaPromiseLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
