@@ -212,7 +212,7 @@ public:
     PBackgroundChild* backgroundManager = mActor->Manager();
     MOZ_ASSERT(backgroundManager);
 
-    const nsTArray<nsRefPtr<File>>& blobs = mData->mClosure.mBlobs;
+    const nsTArray<nsRefPtr<Blob>>& blobs = mData->mClosure.mBlobs;
 
     if (!blobs.IsEmpty()) {
       message.blobsChild().SetCapacity(blobs.Length());
@@ -541,7 +541,7 @@ BroadcastChannel::PostMessageInternal(JSContext* aCx,
     return;
   }
 
-  const nsTArray<nsRefPtr<File>>& blobs = data->mClosure.mBlobs;
+  const nsTArray<nsRefPtr<Blob>>& blobs = data->mClosure.mBlobs;
   for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
     if (!blobs[i]->Impl()->MayBeClonedToOtherThreads()) {
       aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
