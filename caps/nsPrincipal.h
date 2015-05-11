@@ -15,27 +15,9 @@
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
+#include "mozilla/BasePrincipal.h"
 
-class nsBasePrincipal : public nsJSPrincipals
-{
-public:
-  nsBasePrincipal() {}
-
-protected:
-  virtual ~nsBasePrincipal() {}
-
-public:
-  NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp);
-  NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp);
-public:
-
-  static const char sInvalid[];
-
-protected:
-  nsCOMPtr<nsIContentSecurityPolicy> mCSP;
-};
-
-class nsPrincipal final : public nsBasePrincipal
+class nsPrincipal final : public mozilla::BasePrincipal
 {
 public:
   NS_DECL_NSISERIALIZABLE
@@ -115,7 +97,7 @@ protected:
   uint16_t GetAppStatus();
 };
 
-class nsExpandedPrincipal : public nsIExpandedPrincipal, public nsBasePrincipal
+class nsExpandedPrincipal : public nsIExpandedPrincipal, public mozilla::BasePrincipal
 {
 public:
   explicit nsExpandedPrincipal(nsTArray< nsCOMPtr<nsIPrincipal> > &aWhiteList);
