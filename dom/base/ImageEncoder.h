@@ -116,7 +116,7 @@ class EncodeCompleteCallback
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(EncodeCompleteCallback)
 
-  virtual nsresult ReceiveBlob(already_AddRefed<File> aBlob) = 0;
+  virtual nsresult ReceiveBlob(already_AddRefed<Blob> aBlob) = 0;
 
 protected:
   virtual ~EncodeCompleteCallback() {}

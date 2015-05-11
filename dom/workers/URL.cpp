@@ -880,7 +880,7 @@ URL::SetHash(const nsAString& aHash, ErrorResult& aRv)
 
 // static
 void
-URL::CreateObjectURL(const GlobalObject& aGlobal, File& aBlob,
+URL::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
                      const mozilla::dom::objectURLOptions& aOptions,
                      nsAString& aResult, mozilla::ErrorResult& aRv)
 {
