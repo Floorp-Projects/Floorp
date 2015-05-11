@@ -1132,18 +1132,6 @@ IonBuilder::trackInlineSuccessUnchecked(InliningStatus status)
         trackOptimizationOutcome(TrackedOutcome::Inlined);
 }
 
-JS_PUBLIC_API(void)
-JS::ForEachTrackedOptimizationAttempt(JSRuntime* rt, void* addr, uint8_t index,
-                                      ForEachTrackedOptimizationAttemptOp& op,
-                                      JSScript** scriptOut, jsbytecode** pcOut)
-{
-    JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
-    JitcodeGlobalEntry entry;
-    table->lookupInfallible(addr, &entry, rt);
-    entry.youngestFrameLocationAtAddr(rt, addr, scriptOut, pcOut);
-    entry.trackedOptimizationAttempts(index).forEach(op);
-}
-
 static void
 InterpretedFunctionFilenameAndLineNumber(JSFunction* fun, const char** filename,
                                          Maybe<unsigned>* lineno)
@@ -1261,28 +1249,35 @@ IonTrackedOptimizationsTypeInfo::ForEachOpAdapter::operator()(JS::TrackedTypeSit
     op_(site, StringFromMIRType(mirType));
 }
 
-JS_PUBLIC_API(void)
-JS::ForEachTrackedOptimizationTypeInfo(JSRuntime* rt, void* addr, uint8_t index,
-                                       ForEachTrackedOptimizationTypeInfoOp& op)
+typedef JS::ForEachProfiledFrameOp::FrameHandle FrameHandle;
+
+void
+FrameHandle::updateHasTrackedOptimizations()
 {
-    JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
-    JitcodeGlobalEntry entry;
-    table->lookupInfallible(addr, &entry, rt);
-    IonTrackedOptimizationsTypeInfo::ForEachOpAdapter adapter(op);
-    entry.trackedOptimizationTypeInfo(index).forEach(adapter, entry.allTrackedTypes());
+    // All inlined frames will have the same optimization information by
+    // virtue of sharing the JitcodeGlobalEntry, but such information is
+    // only interpretable on the youngest frame.
+    if (depth() != 0)
+        return;
+    if (!entry_.hasTrackedOptimizations())
+        return;
+    uint32_t entryOffset;
+    optsIndex_ = entry_.trackedOptimizationIndexAtAddr(addr_, &entryOffset);
+    if (optsIndex_.isSome())
+        canonicalAddr_ = (void*)(((uint8_t*) entry_.nativeStartAddr()) + entryOffset);
 }
 
-JS_PUBLIC_API(Maybe<uint8_t>)
-JS::TrackedOptimizationIndexAtAddr(JSRuntime* rt, void* addr, void** entryAddr)
+void
+FrameHandle::forEachOptimizationAttempt(ForEachTrackedOptimizationAttemptOp& op,
+                                        JSScript** scriptOut, jsbytecode** pcOut) const
 {
-    JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
-    JitcodeGlobalEntry entry;
-    table->lookupInfallible(addr, &entry, rt);
-    if (!entry.hasTrackedOptimizations())
-        return Nothing();
-    uint32_t entryOffset = 0;
-    Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(addr, &entryOffset);
-    if (index.isSome())
-        *entryAddr = (void*)(((uint8_t*) entry.nativeStartAddr()) + entryOffset);
-    return index;
+    entry_.trackedOptimizationAttempts(*optsIndex_).forEach(op);
+    entry_.youngestFrameLocationAtAddr(rt_, addr_, scriptOut, pcOut);
+}
+
+void
+FrameHandle::forEachOptimizationTypeInfo(ForEachTrackedOptimizationTypeInfoOp& op) const
+{
+    IonTrackedOptimizationsTypeInfo::ForEachOpAdapter adapter(op);
+    entry_.trackedOptimizationTypeInfo(*optsIndex_).forEach(adapter, entry_.allTrackedTypes());
 }
