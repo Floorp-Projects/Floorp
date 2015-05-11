@@ -258,8 +258,7 @@ imgRequest::RemoveProxy(imgRequestProxy* proxy, nsresult aStatus)
       if (mLoader) {
         mLoader->SetHasNoProxies(this, mCacheEntry);
       }
-    }
-    else {
+    } else if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
       nsAutoCString spec;
       mURI->GetSpec(spec);
       LOG_MSG_WITH_PARAM(GetImgLog(),
