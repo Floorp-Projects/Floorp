@@ -555,9 +555,9 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
       , mFileCallback(aCallback) {}
 
     // This is called on main thread.
-    nsresult ReceiveBlob(already_AddRefed<File> aBlob)
+    nsresult ReceiveBlob(already_AddRefed<Blob> aBlob)
     {
-      nsRefPtr<File> blob = aBlob;
+      nsRefPtr<Blob> blob = aBlob;
       uint64_t size;
       nsresult rv = blob->GetSize(&size);
       if (NS_SUCCEEDED(rv)) {
@@ -567,7 +567,7 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
         }
       }
 
-      nsRefPtr<File> newBlob = new File(mGlobal, blob->Impl());
+      nsRefPtr<Blob> newBlob = Blob::Create(mGlobal, blob->Impl());
 
       mozilla::ErrorResult error;
       mFileCallback->Call(*newBlob, error);

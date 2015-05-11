@@ -82,8 +82,7 @@ GetFileOrDirectoryTask::GetSuccessRequestResult() const
     return FileSystemDirectoryResponse(mTargetRealPath);
   }
 
-  nsRefPtr<File> file = new File(mFileSystem->GetWindow(), mTargetFileImpl);
-  BlobParent* actor = GetBlobParent(file);
+  BlobParent* actor = GetBlobParent(mTargetFileImpl);
   if (!actor) {
     return FileSystemErrorResponse(NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR);
   }
@@ -214,8 +213,8 @@ GetFileOrDirectoryTask::HandlerCallback()
     return;
   }
 
-  nsRefPtr<File> file = new File(mFileSystem->GetWindow(), mTargetFileImpl);
-  mPromise->MaybeResolve(file);
+  nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetFileImpl);
+  mPromise->MaybeResolve(blob);
   mPromise = nullptr;
 }
 
