@@ -235,10 +235,21 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
+      var shortname = mozL10n.get("clientShortname2");
+      var line1 = mozL10n.get("sign_in_again_title_line_one", {
+        clientShortname2: shortname
+      });
+      var line2 = mozL10n.get("sign_in_again_title_line_two2", {
+        clientShortname2: shortname
+      });
+      var useGuestString = mozL10n.get("sign_in_again_use_as_guest_button2", {
+        clientSuperShortname: mozL10n.get("clientSuperShortname")
+      });
+
       return (
         React.createElement("div", {className: "sign-in-request"}, 
-          React.createElement("h1", null, mozL10n.get("sign_in_again_title_line_one")), 
-          React.createElement("h2", null, mozL10n.get("sign_in_again_title_line_two")), 
+          React.createElement("h1", null, line1), 
+          React.createElement("h2", null, line2), 
           React.createElement("div", null, 
             React.createElement("button", {className: "btn btn-info sign-in-request-button", 
                     onClick: this.handleSignInClick}, 
@@ -246,7 +257,7 @@ loop.panel = (function(_, mozL10n) {
             )
           ), 
           React.createElement("a", {onClick: this.handleGuestClick}, 
-            mozL10n.get("sign_in_again_use_as_guest_button")
+            useGuestString
           )
         )
       );
