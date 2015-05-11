@@ -27,4 +27,12 @@ BasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BasePrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
+{
+  *aIsNullPrincipal = false;
+  return NS_OK;
+}
+
+
 } // namespace mozilla

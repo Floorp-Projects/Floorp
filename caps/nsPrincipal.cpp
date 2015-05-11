@@ -415,13 +415,6 @@ nsPrincipal::GetUnknownAppId(bool* aUnknownAppId)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
-{
-  *aIsNullPrincipal = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   // For a file URI, we return the file path.
@@ -921,13 +914,6 @@ NS_IMETHODIMP
 nsExpandedPrincipal::GetUnknownAppId(bool* aUnknownAppId)
 {
   *aUnknownAppId = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExpandedPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
-{
-  *aIsNullPrincipal = false;
   return NS_OK;
 }
 

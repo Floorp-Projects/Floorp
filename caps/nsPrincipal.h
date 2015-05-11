@@ -37,7 +37,6 @@ public:
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
-  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
 
@@ -126,7 +125,6 @@ public:
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
-  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
   virtual void GetScriptLocation(nsACString &aStr) override;

@@ -158,24 +158,10 @@ nsSystemPrincipal::GetUnknownAppId(bool* aUnknownAppId)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
-{
-  *aIsNullPrincipal = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   // No base domain for chrome.
   return NS_OK;
-}
-
-bool
-nsSystemPrincipal::IsOnCSSUnprefixingWhitelist()
-{
-  // chrome stylesheets should not be fed to the CSS Unprefixing Service.
-  return false;
 }
 
 //////////////////////////////////////////
