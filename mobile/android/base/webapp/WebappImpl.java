@@ -186,18 +186,17 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
 
     @Override
     protected void loadStartupTabWithAboutHome(final int flags) {
-        loadStartupTabWithExternalUrl(null, null, flags);
+        loadStartupTab(null, null, flags);
     }
 
-    // Note: there is no support for applicationId in Webapps at
-    // the moment because I don't have time to debug/test.
+    // Note: there is no support for loading with intent extras in
+    // Webapps at the moment because I don't have time to debug/test.
     @Override
-    protected void loadStartupTabWithExternalUrl(final String uri, final String applicationId,
-            int flags) {
+    protected void loadStartupTab(final String uri, final SafeIntent unusedIntent, int flags) {
         // Load a tab so it's available for any code that assumes a tab
         // before the app tab itself is loaded in BrowserApp._loadWebapp.
         flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED | Tabs.LOADURL_EXTERNAL;
-        super.loadStartupTabWithExternalUrl("about:blank", null, flags);
+        super.loadStartupTab("about:blank", null, flags);
     }
 
     private void showSplash() {

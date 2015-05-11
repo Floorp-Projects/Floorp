@@ -20,7 +20,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import android.provider.Browser;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -1436,18 +1435,18 @@ public abstract class GeckoApp
      * Loads the initial tab at Fennec startup. This tab will load with the given
      * external URL. If that URL is invalid, about:home will be loaded.
      *
-     * @param url External URL to load.
-     * @param extraApplicationId Identifies the calling application; delivered with the URL
+     * @param url    External URL to load.
+     * @param intent External intent whose extras modify the request
+     * @param flags  Flags used to load the load
      */
-    protected void loadStartupTabWithExternalUrl(final String url, final String extraApplicationId,
-            final int flags) {
+    protected void loadStartupTab(final String url, final SafeIntent intent, final int flags) {
         // Invalid url
         if (url == null) {
             loadStartupTabWithAboutHome(flags);
             return;
         }
 
-        Tabs.getInstance().loadUrl(url, extraApplicationId, flags);
+        Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
     }
 
     private void initialize() {
@@ -1514,8 +1513,7 @@ public abstract class GeckoApp
             if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
                 flags |= Tabs.LOADURL_PINNED;
             }
-            final String extraApplicationId = intent.getStringExtra(Browser.EXTRA_APPLICATION_ID);
-            loadStartupTabWithExternalUrl(passedUri, extraApplicationId, flags);
+            loadStartupTab(passedUri, intent, flags);
         } else {
             if (!mIsRestoringActivity) {
                 loadStartupTabWithAboutHome(Tabs.LOADURL_NEW_TAB);
@@ -1829,11 +1827,10 @@ public abstract class GeckoApp
 
                         TabQueueHelper.openQueuedUrls(GeckoApp.this, mProfile, TabQueueHelper.FILE_NAME, true);
                     } else {
-                        String uri = intent.getDataString();
-                        final String extraApplicationId = intent.getStringExtra(Browser.EXTRA_APPLICATION_ID);
-                        Tabs.getInstance().loadUrl(uri, extraApplicationId, Tabs.LOADURL_NEW_TAB |
-                                                                            Tabs.LOADURL_USER_ENTERED |
-                                                                            Tabs.LOADURL_EXTERNAL);
+                        final String url = intent.getDataString();
+                        Tabs.getInstance().loadUrlWithIntentExtras(url, intent, Tabs.LOADURL_NEW_TAB |
+                                Tabs.LOADURL_USER_ENTERED |
+                                Tabs.LOADURL_EXTERNAL);
                     }
                 }
             });
