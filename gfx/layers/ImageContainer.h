@@ -454,6 +454,19 @@ public:
   }
 
   /**
+   * An image in the current image list "expires" when the image has an
+   * associated timestamp, and in a SetCurrentImages call the timestamp of the
+   * first new image is non-null and greater than the timestamp associated
+   * with the image. Every expired image that is never composited is counted
+   * as dropped.
+   */
+  uint32_t GetDroppedImageCount()
+  {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    return mDroppedImageCount;
+  }
+
+  /**
    * Increments mPaintCount if this is the first time aPainted has been
    * painted, and sets mPaintTime if the painted image is the current image.
    * current image.  Can be called from any thread.
@@ -485,7 +498,7 @@ private:
   // Private destructor, to discourage deletion outside of Release():
   B2G_ACL_EXPORT ~ImageContainer();
 
-  void SetCurrentImageInternal(Image* aImage);
+  void SetCurrentImageInternal(Image* aImage, const TimeStamp& aTimeStamp);
 
   // This is called to ensure we have an active image, this may not be true
   // when we're storing image information in a RemoteImageData structure.
@@ -509,6 +522,8 @@ private:
   ReentrantMonitor mReentrantMonitor;
 
   nsRefPtr<Image> mActiveImage;
+  TimeStamp mCurrentImageTimeStamp;
+
   // Updates every time mActiveImage changes
   uint32_t mGenerationCounter;
 
@@ -524,8 +539,13 @@ private:
   // See GetPaintDelay. Accessed only with mReentrantMonitor held.
   TimeDuration mPaintDelay;
 
+  // See GetDroppedImageCount. Accessed only with mReentrantMonitor held.
+  uint32_t mDroppedImageCount;
+
   // Denotes whether the previous image was painted.
   bool mPreviousImagePainted;
+
+  bool mCurrentImageComposited;
 
   // This is the image factory used by this container, layer managers using
   // this container can set an alternative image factory that will be used to
@@ -544,6 +564,8 @@ private:
   // frames to the compositor through transactions in the main thread rather than
   // asynchronusly using the ImageBridge IPDL protocol.
   ImageClient* mImageClient;
+
+  nsTArray<FrameID> mFrameIDsNotYetComposited;
 
   // Object must be released on the ImageBridge thread. Field is immutable
   // after creation of the ImageContainer.
