@@ -144,7 +144,7 @@
               flex="1">
           <hbox class="devtools-toolbarbutton-group"
                 pack="center">
-            <toolbarbutton class="record-button"
+            <toolbarbutton class="devtools-toolbarbutton record-button"
                            label="&profilerUI.startRecording;" />
           </hbox>
         </hbox>
@@ -163,7 +163,7 @@
               <vbox>
                 <hbox class="devtools-toolbarbutton-group"
                       pack="center">
-                  <toolbarbutton class="record-button"
+                  <toolbarbutton class="devtools-toolbarbutton record-button"
                                  label="&profilerUI.stopRecording;" />
                 </hbox>
                 <label class="buffer-status-message"
