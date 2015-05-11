@@ -11,24 +11,24 @@
 #include "nsICommandHandler.h"
 #include "nsIDOMWindow.h"
 
-class nsCommandHandler :
-    public nsICommandHandlerInit,
-    public nsICommandHandler
+class nsCommandHandler
+  : public nsICommandHandlerInit
+  , public nsICommandHandler
 {
-    nsIDOMWindow *mWindow;
-
-    nsresult GetCommandHandler(nsICommandHandler **aCommandHandler);
-
 public:
-    nsCommandHandler();
+  nsCommandHandler();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSICOMMANDHANDLERINIT
-    NS_DECL_NSICOMMANDHANDLER
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICOMMANDHANDLERINIT
+  NS_DECL_NSICOMMANDHANDLER
 
 protected:
-    virtual ~nsCommandHandler();
+  virtual ~nsCommandHandler();
+
+private:
+  nsresult GetCommandHandler(nsICommandHandler** aCommandHandler);
+
+  nsIDOMWindow* mWindow;
 };
 
 #endif
-
