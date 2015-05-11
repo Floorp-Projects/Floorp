@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "xpcom-config.h"
-#include <new>    // for placement new
+#include <new>
 #include "nscore.h"
 #include "nsCRT.h"
 
@@ -140,116 +140,114 @@ nsCommandParams::GetISupportsValue(const char* aName, nsISupports** aRetVal)
 }
 
 NS_IMETHODIMP
-nsCommandParams::SetBooleanValue(const char* aName, bool value)
+nsCommandParams::SetBooleanValue(const char* aName, bool aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eBooleanType);
   if (!foundEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  foundEntry->mData.mBoolean = value;
+  foundEntry->mData.mBoolean = aValue;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCommandParams::SetLongValue(const char* aName, int32_t value)
+nsCommandParams::SetLongValue(const char* aName, int32_t aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eLongType);
   if (!foundEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  foundEntry->mData.mLong = value;
+  foundEntry->mData.mLong = aValue;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCommandParams::SetDoubleValue(const char* aName, double value)
+nsCommandParams::SetDoubleValue(const char* aName, double aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eDoubleType);
   if (!foundEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  foundEntry->mData.mDouble = value;
+  foundEntry->mData.mDouble = aValue;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCommandParams::SetStringValue(const char* aName, const nsAString& value)
+nsCommandParams::SetStringValue(const char* aName, const nsAString& aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eWStringType);
   if (!foundEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  foundEntry->mData.mString = new nsString(value);
+  foundEntry->mData.mString = new nsString(aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCommandParams::SetCStringValue(const char* aName, const char* value)
+nsCommandParams::SetCStringValue(const char* aName, const char* aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eStringType);
   if (!foundEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  foundEntry->mData.mCString = new nsCString(value);
+  foundEntry->mData.mCString = new nsCString(aValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCommandParams::SetISupportsValue(const char* aName, nsISupports* value)
+nsCommandParams::SetISupportsValue(const char* aName, nsISupports* aValue)
 {
   HashEntry* foundEntry = GetOrMakeEntry(aName, eISupportsType);
   if (!foundEntry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  foundEntry->mISupports = value;   // addrefs
+  foundEntry->mISupports = aValue; // addrefs
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCommandParams::RemoveValue(const char* aName)
 {
-  // PL_DHashTableRemove doesn't tell us if the entry was really removed, so we
-  // return NS_OK unconditionally.
-  (void)PL_DHashTableRemove(&mValuesHash, (void *)aName);
+  PL_DHashTableRemove(&mValuesHash, (void*)aName);
   return NS_OK;
 }
 
 nsCommandParams::HashEntry*
 nsCommandParams::GetNamedEntry(const char* aName)
 {
-  return (HashEntry *)PL_DHashTableSearch(&mValuesHash, (void *)aName);
+  return (HashEntry*)PL_DHashTableSearch(&mValuesHash, (void*)aName);
 }
 
 nsCommandParams::HashEntry*
-nsCommandParams::GetOrMakeEntry(const char* aName, uint8_t entryType)
+nsCommandParams::GetOrMakeEntry(const char* aName, uint8_t aEntryType)
 {
-  HashEntry *foundEntry =
-    (HashEntry *)PL_DHashTableSearch(&mValuesHash, (void *)aName);
+  HashEntry* foundEntry =
+    (HashEntry*)PL_DHashTableSearch(&mValuesHash, (void*)aName);
   if (foundEntry) { // reuse existing entry
-    foundEntry->Reset(entryType);
+    foundEntry->Reset(aEntryType);
     return foundEntry;
   }
 
-  foundEntry = static_cast<HashEntry*>
-    (PL_DHashTableAdd(&mValuesHash, (void *)aName, fallible));
+  foundEntry = static_cast<HashEntry*>(
+    PL_DHashTableAdd(&mValuesHash, (void*)aName, fallible));
   if (!foundEntry) {
     return nullptr;
   }
 
   // Use placement new. Our ctor does not clobber keyHash, which is important.
-  new (foundEntry) HashEntry(entryType, aName);
+  new (foundEntry) HashEntry(aEntryType, aName);
   return foundEntry;
 }
 
 PLDHashNumber
-nsCommandParams::HashKey(PLDHashTable *aTable, const void *aKey)
+nsCommandParams::HashKey(PLDHashTable* aTable, const void* aKey)
 {
-  return HashString((const char *)aKey);
+  return HashString((const char*)aKey);
 }
 
 bool
-nsCommandParams::HashMatchEntry(PLDHashTable *aTable,
-                                const PLDHashEntryHdr *aEntry, const void *aKey)
+nsCommandParams::HashMatchEntry(PLDHashTable* aTable,
+                                const PLDHashEntryHdr* aEntry, const void* aKey)
 {
   const char* keyString = (const char*)aKey;
   const HashEntry* thisEntry = static_cast<const HashEntry*>(aEntry);
@@ -257,22 +255,21 @@ nsCommandParams::HashMatchEntry(PLDHashTable *aTable,
 }
 
 void
-nsCommandParams::HashMoveEntry(PLDHashTable *aTable,
-                               const PLDHashEntryHdr *aFrom,
-                               PLDHashEntryHdr *aTo)
+nsCommandParams::HashMoveEntry(PLDHashTable* aTable,
+                               const PLDHashEntryHdr* aFrom,
+                               PLDHashEntryHdr* aTo)
 {
   const HashEntry* fromEntry = static_cast<const HashEntry*>(aFrom);
   HashEntry* toEntry = static_cast<HashEntry*>(aTo);
 
   new (toEntry) HashEntry(*fromEntry);
 
-  fromEntry->~HashEntry();      // call dtor explicitly
+  fromEntry->~HashEntry();
 }
 
 void
-nsCommandParams::HashClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aEntry)
+nsCommandParams::HashClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
   HashEntry* thisEntry = static_cast<HashEntry*>(aEntry);
-  thisEntry->~HashEntry();      // call dtor explicitly
+  thisEntry->~HashEntry();
 }
-
