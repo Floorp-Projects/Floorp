@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mp4_demuxer/BufferStream.h"
+#include "MediaData.h"
 #include "MediaResource.h"
 #include <algorithm>
 
@@ -12,6 +13,17 @@ namespace mp4_demuxer {
 
 BufferStream::BufferStream()
   : mStartOffset(0)
+  , mData(new mozilla::MediaLargeByteBuffer)
+{
+}
+
+BufferStream::BufferStream(mozilla::MediaLargeByteBuffer* aBuffer)
+  : mStartOffset(0)
+  , mData(aBuffer)
+{
+}
+
+BufferStream::~BufferStream()
 {
 }
 
@@ -19,12 +31,12 @@ BufferStream::BufferStream()
 BufferStream::ReadAt(int64_t aOffset, void* aData, size_t aLength,
                      size_t* aBytesRead)
 {
-  if (aOffset < mStartOffset || aOffset > mStartOffset + mData.Length()) {
+  if (aOffset < mStartOffset || aOffset > mStartOffset + mData->Length()) {
     return false;
   }
   *aBytesRead =
-    std::min(aLength, size_t(mStartOffset + mData.Length() - aOffset));
-  memcpy(aData, &mData[aOffset - mStartOffset], *aBytesRead);
+    std::min(aLength, size_t(mStartOffset + mData->Length() - aOffset));
+  memcpy(aData, &(*mData)[aOffset - mStartOffset], *aBytesRead);
   return true;
 }
 
@@ -38,7 +50,7 @@ BufferStream::CachedReadAt(int64_t aOffset, void* aData, size_t aLength,
 /*virtual*/ bool
 BufferStream::Length(int64_t* aLength)
 {
-  *aLength = mStartOffset + mData.Length();
+  *aLength = mStartOffset + mData->Length();
   return true;
 }
 
@@ -46,20 +58,20 @@ BufferStream::Length(int64_t* aLength)
 BufferStream::DiscardBefore(int64_t aOffset)
 {
   if (aOffset > mStartOffset) {
-    mData.RemoveElementsAt(0, aOffset - mStartOffset);
+    mData->RemoveElementsAt(0, aOffset - mStartOffset);
     mStartOffset = aOffset;
   }
 }
 
-void
+bool
 BufferStream::AppendBytes(const uint8_t* aData, size_t aLength)
 {
-  mData.AppendElements(aData, aLength);
+  return mData->AppendElements(aData, aLength);
 }
 
 MediaByteRange
 BufferStream::GetByteRange()
 {
-  return MediaByteRange(mStartOffset, mStartOffset + mData.Length());
+  return MediaByteRange(mStartOffset, mStartOffset + mData->Length());
 }
 }
