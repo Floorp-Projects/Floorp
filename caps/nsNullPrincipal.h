@@ -33,17 +33,11 @@ public:
   // This should only be used by deserialization, and the factory constructor.
   // Other consumers should use the Create and CreateWithInheritedAttributes
   // methods.
-  nsNullPrincipal();
+  nsNullPrincipal() {}
 
-  // Our refcount is managed by nsJSPrincipals.  Use this macro to avoid an
-  // extra refcount member.
-
-  // FIXME: bug 327245 -- I sorta wish there were a clean way to share the
-  // nsJSPrincipals munging code between the various principal classes without
-  // giving up the NS_DECL_NSIPRINCIPAL goodness.
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRINCIPAL
   NS_DECL_NSISERIALIZABLE
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   // Returns null on failure.
   static already_AddRefed<nsNullPrincipal> CreateWithInheritedAttributes(nsIPrincipal *aInheritFrom);
@@ -63,7 +57,7 @@ public:
 #endif 
 
  protected:
-  virtual ~nsNullPrincipal();
+  virtual ~nsNullPrincipal() {}
 
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
