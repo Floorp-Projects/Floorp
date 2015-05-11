@@ -451,9 +451,6 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   nsRefPtr<nsFontFaceLoader> fontLoader =
     new nsFontFaceLoader(aUserFontEntry, aFontFaceSrc->mURI, this, channel);
 
-  if (!fontLoader)
-    return NS_ERROR_OUT_OF_MEMORY;
-
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {
     nsAutoCString fontURI, referrerURI;
