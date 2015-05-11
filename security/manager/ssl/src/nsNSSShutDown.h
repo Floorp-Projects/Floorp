@@ -157,8 +157,8 @@ private:
 protected:
   mozilla::Mutex mListLock;
   static nsNSSShutDownList *singleton;
-  uint32_t mActiveSSLSockets;
   PLDHashTable mObjects;
+  uint32_t mActiveSSLSockets;
   PLDHashTable mPK11LogoutCancelObjects;
   nsNSSActivityState mActivityState;
 };
