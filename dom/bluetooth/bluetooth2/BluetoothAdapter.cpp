@@ -1261,7 +1261,7 @@ BluetoothAdapter::Disconnect(BluetoothDevice& aDevice,
 
 already_AddRefed<DOMRequest>
 BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
-                           Blob& aBlob, ErrorResult& aRv)
+                           File& aBlob, ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {

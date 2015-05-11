@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class Blob;
+class File;
 
 namespace indexedDB {
 
@@ -25,7 +25,7 @@ class SerializedStructuredCloneReadInfo;
 
 struct StructuredCloneFile
 {
-  nsRefPtr<Blob> mBlob;
+  nsRefPtr<File> mFile;
   nsRefPtr<FileInfo> mFileInfo;
 
   // In IndexedDatabaseInlines.h

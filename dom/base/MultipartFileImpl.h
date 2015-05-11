@@ -67,7 +67,7 @@ public:
        bool aNativeEOL,
        ErrorResult& aRv);
 
-  void InitializeChromeFile(Blob& aData,
+  void InitializeChromeFile(File& aData,
                             const ChromeFilePropertyBag& aBag,
                             ErrorResult& aRv);
 

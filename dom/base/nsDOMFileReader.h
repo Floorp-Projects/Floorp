@@ -27,7 +27,7 @@
 
 namespace mozilla {
 namespace dom {
-class Blob;
+class File;
 }
 }
 
@@ -38,8 +38,7 @@ class nsDOMFileReader final : public mozilla::dom::FileIOObject,
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;
-  typedef mozilla::dom::Blob Blob;
-
+  typedef mozilla::dom::File File;
 public:
   nsDOMFileReader();
 
@@ -69,17 +68,17 @@ public:
   // WebIDL
   static already_AddRefed<nsDOMFileReader>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
-  void ReadAsArrayBuffer(JSContext* aCx, Blob& aBlob, ErrorResult& aRv)
+  void ReadAsArrayBuffer(JSContext* aCx, File& aBlob, ErrorResult& aRv)
   {
     ReadFileContent(aBlob, EmptyString(), FILE_AS_ARRAYBUFFER, aRv);
   }
 
-  void ReadAsText(Blob& aBlob, const nsAString& aLabel, ErrorResult& aRv)
+  void ReadAsText(File& aBlob, const nsAString& aLabel, ErrorResult& aRv)
   {
     ReadFileContent(aBlob, aLabel, FILE_AS_TEXT, aRv);
   }
 
-  void ReadAsDataURL(Blob& aBlob, ErrorResult& aRv)
+  void ReadAsDataURL(File& aBlob, ErrorResult& aRv)
   {
     ReadFileContent(aBlob, EmptyString(), FILE_AS_DATAURL, aRv);
   }
@@ -103,7 +102,7 @@ public:
   using FileIOObject::SetOnerror;
   IMPL_EVENT_HANDLER(loadend)
 
-  void ReadAsBinaryString(Blob& aBlob, ErrorResult& aRv)
+  void ReadAsBinaryString(File& aBlob, ErrorResult& aRv)
   {
     ReadFileContent(aBlob, EmptyString(), FILE_AS_BINARY, aRv);
   }
@@ -125,14 +124,12 @@ protected:
     FILE_AS_DATAURL
   };
 
-  void ReadFileContent(Blob& aBlob,
+  void ReadFileContent(File& aBlob,
                        const nsAString &aCharset, eDataFormat aDataFormat,
                        ErrorResult& aRv);
-  nsresult GetAsText(nsIDOMBlob *aBlob, const nsACString &aCharset,
-                     const char *aFileData, uint32_t aDataLen,
-                     nsAString &aResult);
-  nsresult GetAsDataURL(nsIDOMBlob *aBlob, const char *aFileData,
-                        uint32_t aDataLen, nsAString &aResult);
+  nsresult GetAsText(nsIDOMBlob *aFile, const nsACString &aCharset,
+                     const char *aFileData, uint32_t aDataLen, nsAString &aResult);
+  nsresult GetAsDataURL(nsIDOMBlob *aFile, const char *aFileData, uint32_t aDataLen, nsAString &aResult);
 
   void FreeFileData() {
     free(mFileData);
@@ -141,7 +138,7 @@ protected:
   }
 
   char *mFileData;
-  nsCOMPtr<nsIDOMBlob> mBlob;
+  nsCOMPtr<nsIDOMBlob> mFile;
   nsCString mCharset;
   uint32_t mDataLen;
 

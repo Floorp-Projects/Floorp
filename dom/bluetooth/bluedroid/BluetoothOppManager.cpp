@@ -413,7 +413,7 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
   MOZ_ASSERT(NS_IsMainThread());
 
   nsRefPtr<FileImpl> impl = aActor->GetBlobImpl();
-  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  nsCOMPtr<nsIDOMBlob> blob = new File(nullptr, impl);
 
   return SendFile(aDeviceAddress, blob.get());
 }
