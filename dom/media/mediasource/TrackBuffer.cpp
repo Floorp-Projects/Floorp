@@ -685,6 +685,15 @@ TrackBuffer::OnMetadataRead(MetadataHolder* aMetadata,
 
   mMetadataRequest.Complete();
 
+  if (mShutdown) {
+    MSE_DEBUG("was shut down while reading metadata. Aborting initialization.");
+    return;
+  }
+  if (mCurrentDecoder != aDecoder) {
+    MSE_DEBUG("append was cancelled. Aborting initialization.");
+    return;
+  }
+
   // Adding an empty buffer will reopen the SourceBufferResource
   if (!aWasEnded) {
     nsRefPtr<MediaLargeByteBuffer> emptyBuffer = new MediaLargeByteBuffer;
@@ -735,6 +744,15 @@ TrackBuffer::OnMetadataNotRead(ReadMetadataFailureReason aReason,
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
 
   mMetadataRequest.Complete();
+
+  if (mShutdown) {
+    MSE_DEBUG("was shut down while reading metadata. Aborting initialization.");
+    return;
+  }
+  if (mCurrentDecoder != aDecoder) {
+    MSE_DEBUG("append was cancelled. Aborting initialization.");
+    return;
+  }
 
   MediaDecoderReader* reader = aDecoder->GetReader();
   reader->SetIdle();
@@ -937,7 +955,6 @@ TrackBuffer::AbortAppendData()
     MOZ_ASSERT(current);
     RemoveDecoder(current);
   }
-  mMetadataRequest.DisconnectIfExists();
   // The SourceBuffer would have disconnected its promise.
   // However we must ensure that the MediaPromiseHolder handle all pending
   // promises.
