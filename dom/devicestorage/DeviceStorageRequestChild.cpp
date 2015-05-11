@@ -104,7 +104,7 @@ DeviceStorageRequestChild::
     {
       BlobResponse r = aValue;
       BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
-      nsRefPtr<BlobImpl> bloblImpl = actor->GetBlobImpl();
+      nsRefPtr<FileImpl> bloblImpl = actor->GetBlobImpl();
       nsRefPtr<Blob> blob = Blob::Create(mRequest->GetParentObject(),
                                          bloblImpl);
 

@@ -611,7 +611,7 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
     for (uint32_t index = 0; index < count; index++) {
       BlobChild* actor = static_cast<BlobChild*>(blobs[index]);
 
-      nsRefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+      nsRefPtr<FileImpl> blobImpl = actor->GetBlobImpl();
       MOZ_ASSERT(blobImpl);
 
       nsRefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);

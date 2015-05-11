@@ -208,9 +208,9 @@ FetchDriver::BasicFetch()
   }
 
   if (scheme.LowerCaseEqualsLiteral("blob")) {
-    nsRefPtr<BlobImpl> blobImpl;
+    nsRefPtr<FileImpl> blobImpl;
     rv = NS_GetBlobForBlobURI(uri, getter_AddRefs(blobImpl));
-    BlobImpl* blob = static_cast<BlobImpl*>(blobImpl.get());
+    FileImpl* blob = static_cast<FileImpl*>(blobImpl.get());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       FailWithNetworkError();
       return rv;

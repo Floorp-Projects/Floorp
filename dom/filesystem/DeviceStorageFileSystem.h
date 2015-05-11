@@ -37,7 +37,7 @@ public:
   GetLocalFile(const nsAString& aRealPath) const override;
 
   virtual bool
-  GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const override;
+  GetRealPath(FileImpl* aFile, nsAString& aRealPath) const override;
 
   virtual const nsAString&
   GetRootName() const override;

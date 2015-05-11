@@ -20,13 +20,13 @@ namespace dom {
 namespace indexedDB {
 
 // Create as a stored file
-BlobImplSnapshot::BlobImplSnapshot(const nsAString& aName,
+FileImplSnapshot::FileImplSnapshot(const nsAString& aName,
                                    const nsAString& aContentType,
                                    MetadataParameters* aMetadataParams,
                                    nsIFile* aFile,
                                    IDBFileHandle* aFileHandle,
                                    FileInfo* aFileInfo)
-  : BlobImplBase(aName,
+  : FileImplBase(aName,
                  aContentType,
                  aMetadataParams->Size(),
                  aMetadataParams->LastModified())
@@ -48,11 +48,11 @@ BlobImplSnapshot::BlobImplSnapshot(const nsAString& aName,
 }
 
 // Create slice
-BlobImplSnapshot::BlobImplSnapshot(const BlobImplSnapshot* aOther,
+FileImplSnapshot::FileImplSnapshot(const FileImplSnapshot* aOther,
                                    uint64_t aStart,
                                    uint64_t aLength,
                                    const nsAString& aContentType)
-  : BlobImplBase(aContentType, aOther->mStart + aStart, aLength)
+  : FileImplBase(aContentType, aOther->mStart + aStart, aLength)
   , mFile(aOther->mFile)
   , mFileHandle(aOther->mFileHandle)
   , mWholeFile(false)
@@ -72,7 +72,7 @@ BlobImplSnapshot::BlobImplSnapshot(const BlobImplSnapshot* aOther,
   mFileInfos.AppendElement(fileInfo);
 }
 
-BlobImplSnapshot::~BlobImplSnapshot()
+FileImplSnapshot::~FileImplSnapshot()
 {
 }
 
@@ -80,7 +80,7 @@ BlobImplSnapshot::~BlobImplSnapshot()
 
 // static
 void
-BlobImplSnapshot::AssertSanity()
+FileImplSnapshot::AssertSanity()
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(NS_IsMainThread());
@@ -88,10 +88,10 @@ BlobImplSnapshot::AssertSanity()
 
 #endif // DEBUG
 
-NS_IMPL_ISUPPORTS_INHERITED(BlobImplSnapshot, BlobImpl, PIBlobImplSnapshot)
+NS_IMPL_ISUPPORTS_INHERITED(FileImplSnapshot, FileImpl, PIFileImplSnapshot)
 
 nsresult
-BlobImplSnapshot::GetInternalStream(nsIInputStream** aStream)
+FileImplSnapshot::GetInternalStream(nsIInputStream** aStream)
 {
   AssertSanity();
 
@@ -110,22 +110,22 @@ BlobImplSnapshot::GetInternalStream(nsIInputStream** aStream)
   return NS_OK;
 }
 
-already_AddRefed<BlobImpl>
-BlobImplSnapshot::CreateSlice(uint64_t aStart,
+already_AddRefed<FileImpl>
+FileImplSnapshot::CreateSlice(uint64_t aStart,
                               uint64_t aLength,
                               const nsAString& aContentType,
                               ErrorResult& aRv)
 {
   AssertSanity();
 
-  nsRefPtr<BlobImpl> impl =
-    new BlobImplSnapshot(this, aStart, aLength, aContentType);
+  nsRefPtr<FileImpl> impl =
+    new FileImplSnapshot(this, aStart, aLength, aContentType);
 
   return impl.forget();
 }
 
 void
-BlobImplSnapshot::GetMozFullPathInternal(nsAString& aFilename,
+FileImplSnapshot::GetMozFullPathInternal(nsAString& aFilename,
                                          ErrorResult& aRv)
 {
   AssertSanity();
@@ -135,7 +135,7 @@ BlobImplSnapshot::GetMozFullPathInternal(nsAString& aFilename,
 }
 
 bool
-BlobImplSnapshot::IsStoredFile() const
+FileImplSnapshot::IsStoredFile() const
 {
   AssertSanity();
 
@@ -143,7 +143,7 @@ BlobImplSnapshot::IsStoredFile() const
 }
 
 bool
-BlobImplSnapshot::IsWholeFile() const
+FileImplSnapshot::IsWholeFile() const
 {
   AssertSanity();
 
@@ -151,7 +151,7 @@ BlobImplSnapshot::IsWholeFile() const
 }
 
 bool
-BlobImplSnapshot::IsSnapshot() const
+FileImplSnapshot::IsSnapshot() const
 {
   AssertSanity();
 

@@ -2917,12 +2917,12 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
             variant->SetAsAString(data);
           } else if (item.data().type() == IPCDataTransferData::TPBlobChild) {
             BlobChild* blob = static_cast<BlobChild*>(item.data().get_PBlobChild());
-            nsRefPtr<BlobImpl> blobImpl = blob->GetBlobImpl();
+            nsRefPtr<FileImpl> fileImpl = blob->GetBlobImpl();
             nsString path;
             ErrorResult result;
-            blobImpl->GetMozFullPathInternal(path, result);
+            fileImpl->GetMozFullPathInternal(path, result);
             if (result.Failed()) {
-              variant->SetAsISupports(blobImpl);
+              variant->SetAsISupports(fileImpl);
             } else {
               nsCOMPtr<nsIFile> file;
               NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(path), true, getter_AddRefs(file));

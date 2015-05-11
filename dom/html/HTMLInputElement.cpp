@@ -218,42 +218,35 @@ class HTMLInputElementState final : public nsISupports
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPUT_ELEMENT_STATE_IID)
     NS_DECL_ISUPPORTS
 
-    bool IsCheckedSet()
-    {
+    bool IsCheckedSet() {
       return mCheckedSet;
     }
 
-    bool GetChecked()
-    {
+    bool GetChecked() {
       return mChecked;
     }
 
-    void SetChecked(bool aChecked)
-    {
+    void SetChecked(bool aChecked) {
       mChecked = aChecked;
       mCheckedSet = true;
     }
 
-    const nsString& GetValue()
-    {
+    const nsString& GetValue() {
       return mValue;
     }
 
-    void SetValue(const nsAString& aValue)
-    {
+    void SetValue(const nsAString& aValue) {
       mValue = aValue;
     }
 
-    const nsTArray<nsRefPtr<BlobImpl>>& GetBlobImpls()
-    {
-      return mBlobImpls;
+    const nsTArray<nsRefPtr<FileImpl>>& GetFileImpls() {
+      return mFileImpls;
     }
 
-    void SetBlobImpls(const nsTArray<nsRefPtr<File>>& aFile)
-    {
-      mBlobImpls.Clear();
+    void SetFileImpls(const nsTArray<nsRefPtr<File>>& aFile) {
+      mFileImpls.Clear();
       for (uint32_t i = 0, len = aFile.Length(); i < len; ++i) {
-        mBlobImpls.AppendElement(aFile[i]->Impl());
+        mFileImpls.AppendElement(aFile[i]->Impl());
       }
     }
 
@@ -261,13 +254,13 @@ class HTMLInputElementState final : public nsISupports
       : mValue()
       , mChecked(false)
       , mCheckedSet(false)
-    {}
+    {};
 
   protected:
     ~HTMLInputElementState() {}
 
     nsString mValue;
-    nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
+    nsTArray<nsRefPtr<FileImpl>> mFileImpls;
     bool mChecked;
     bool mCheckedSet;
 };
@@ -401,9 +394,9 @@ public:
     MOZ_ASSERT(length >= 0);
     if (length > 0) {
       // Note that we leave the trailing "/" on the path.
-      BlobImplFile* blobImpl = static_cast<BlobImplFile*>(domFile->Impl());
-      MOZ_ASSERT(blobImpl);
-      blobImpl->SetPath(Substring(path, 0, uint32_t(length)));
+      FileImplFile* fileImpl = static_cast<FileImplFile*>(domFile->Impl());
+      MOZ_ASSERT(fileImpl);
+      fileImpl->SetPath(Substring(path, 0, uint32_t(length)));
     }
     *aResult = domFile.forget().downcast<nsIDOMFile>().take();
     LookupAndCacheNext();
@@ -5816,7 +5809,7 @@ HTMLInputElement::SaveState()
     case VALUE_MODE_FILENAME:
       if (!mFiles.IsEmpty()) {
         inputState = new HTMLInputElementState();
-        inputState->SetBlobImpls(mFiles);
+        inputState->SetFileImpls(mFiles);
       }
       break;
     case VALUE_MODE_VALUE:
@@ -6022,14 +6015,14 @@ HTMLInputElement::RestoreState(nsPresState* aState)
         break;
       case VALUE_MODE_FILENAME:
         {
-          const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = inputState->GetBlobImpls();
+          const nsTArray<nsRefPtr<FileImpl>>& fileImpls = inputState->GetFileImpls();
 
           nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
           MOZ_ASSERT(global);
 
           nsTArray<nsRefPtr<File>> files;
-          for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
-            nsRefPtr<File> file = File::Create(global, blobImpls[i]);
+          for (uint32_t i = 0, len = fileImpls.Length(); i < len; ++i) {
+            nsRefPtr<File> file = File::Create(global, fileImpls[i]);
             MOZ_ASSERT(file);
 
             files.AppendElement(file);
