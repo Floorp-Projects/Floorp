@@ -84,9 +84,9 @@ void
 _hb_ot_layout_destroy (hb_ot_layout_t *layout)
 {
   for (unsigned int i = 0; i < layout->gsub_lookup_count; i++)
-    layout->gsub_accels[i].fini (layout->gsub->get_lookup (i));
+    layout->gsub_accels[i].fini ();
   for (unsigned int i = 0; i < layout->gpos_lookup_count; i++)
-    layout->gpos_accels[i].fini (layout->gpos->get_lookup (i));
+    layout->gpos_accels[i].fini ();
 
   free (layout->gsub_accels);
   free (layout->gpos_accels);
@@ -699,7 +699,7 @@ hb_ot_layout_lookup_would_substitute_fast (hb_face_t            *face,
 
   const OT::SubstLookup& l = hb_ot_layout_from_face (face)->gsub->get_lookup (lookup_index);
 
-  return l.would_apply (&c, &hb_ot_layout_from_face (face)->gsub_accels[lookup_index].digest);
+  return l.would_apply (&c, &hb_ot_layout_from_face (face)->gsub_accels[lookup_index]);
 }
 
 void
@@ -829,26 +829,83 @@ struct GPOSProxy
 };
 
 
-template <typename Lookup>
-static inline bool apply_once (OT::hb_apply_context_t *c,
-			       const Lookup &lookup)
+template <typename Obj>
+static inline bool
+apply_forward (OT::hb_apply_context_t *c,
+	       const Obj &obj,
+	       const hb_ot_layout_lookup_accelerator_t &accel)
 {
-  if (!c->check_glyph_property (&c->buffer->cur(), c->lookup_props))
-    return false;
-  return lookup.dispatch (c);
+  bool ret = false;
+  hb_buffer_t *buffer = c->buffer;
+  while (buffer->idx < buffer->len)
+  {
+    if (accel.may_have (buffer->cur().codepoint) &&
+	(buffer->cur().mask & c->lookup_mask) &&
+	c->check_glyph_property (&buffer->cur(), c->lookup_props) &&
+	obj.apply (c))
+      ret = true;
+    else
+      buffer->next_glyph ();
+  }
+  return ret;
 }
 
-template <typename Proxy>
+template <typename Obj>
 static inline bool
+apply_backward (OT::hb_apply_context_t *c,
+		const Obj &obj,
+		const hb_ot_layout_lookup_accelerator_t &accel)
+{
+  bool ret = false;
+  hb_buffer_t *buffer = c->buffer;
+  do
+  {
+    if (accel.may_have (buffer->cur().codepoint) &&
+	(buffer->cur().mask & c->lookup_mask) &&
+	c->check_glyph_property (&buffer->cur(), c->lookup_props) &&
+	obj.apply (c))
+      ret = true;
+    /* The reverse lookup doesn't "advance" cursor (for good reason). */
+    buffer->idx--;
+
+  }
+  while ((int) buffer->idx >= 0);
+  return ret;
+}
+
+struct hb_apply_forward_context_t
+{
+  inline const char *get_name (void) { return "APPLY_FORWARD"; }
+  static const unsigned int max_debug_depth = HB_DEBUG_APPLY;
+  typedef bool return_t;
+  template <typename T, typename F>
+  inline bool may_dispatch (const T *obj, const F *format) { return true; }
+  template <typename T>
+  inline return_t dispatch (const T &obj) { return apply_forward (c, obj, accel); }
+  static return_t default_return_value (void) { return false; }
+  bool stop_sublookup_iteration (return_t r HB_UNUSED) const { return true; }
+
+  hb_apply_forward_context_t (OT::hb_apply_context_t *c_,
+			      const hb_ot_layout_lookup_accelerator_t &accel_) :
+				c (c_),
+				accel (accel_),
+				debug_depth (0) {}
+
+  OT::hb_apply_context_t *c;
+  const hb_ot_layout_lookup_accelerator_t &accel;
+  unsigned int debug_depth;
+};
+
+template <typename Proxy>
+static inline void
 apply_string (OT::hb_apply_context_t *c,
 	      const typename Proxy::Lookup &lookup,
 	      const hb_ot_layout_lookup_accelerator_t &accel)
 {
-  bool ret = false;
   hb_buffer_t *buffer = c->buffer;
 
   if (unlikely (!buffer->len || !c->lookup_mask))
-    return false;
+    return;
 
   c->set_lookup (lookup);
 
@@ -859,21 +916,20 @@ apply_string (OT::hb_apply_context_t *c,
       buffer->clear_output ();
     buffer->idx = 0;
 
-    while (buffer->idx < buffer->len)
+    bool ret;
+    if (lookup.get_subtable_count () == 1)
     {
-      if (accel.digest.may_have (buffer->cur().codepoint) &&
-	  (buffer->cur().mask & c->lookup_mask) &&
-	  apply_once (c, lookup))
-	ret = true;
-      else
-	buffer->next_glyph ();
+      hb_apply_forward_context_t c_forward (c, accel);
+      ret = lookup.dispatch (&c_forward);
     }
+    else
+      ret = apply_forward (c, lookup, accel);
     if (ret)
     {
       if (!Proxy::inplace)
 	buffer->swap_buffers ();
       else
-        assert (!buffer->has_separate_output ());
+	assert (!buffer->has_separate_output ());
     }
   }
   else
@@ -882,20 +938,9 @@ apply_string (OT::hb_apply_context_t *c,
     if (Proxy::table_index == 0)
       buffer->remove_output ();
     buffer->idx = buffer->len - 1;
-    do
-    {
-      if (accel.digest.may_have (buffer->cur().codepoint) &&
-	  (buffer->cur().mask & c->lookup_mask) &&
-	  apply_once (c, lookup))
-	ret = true;
-      /* The reverse lookup doesn't "advance" cursor (for good reason). */
-      buffer->idx--;
 
-    }
-    while ((int) buffer->idx >= 0);
+    apply_backward (c, lookup, accel);
   }
-
-  return ret;
 }
 
 template <typename Proxy>

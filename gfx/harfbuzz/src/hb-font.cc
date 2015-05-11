@@ -814,7 +814,7 @@ hb_font_glyph_to_string (hb_font_t *font,
 /**
  * hb_font_glyph_from_string:
  * @font: a font.
- * @s: (array length=len): 
+ * @s: (array length=len) (element-type uint8_t): 
  * @len: 
  * @glyph: (out): 
  *
@@ -854,8 +854,6 @@ hb_font_create (hb_face_t *face)
 
   if (unlikely (!face))
     face = hb_face_get_empty ();
-  if (unlikely (hb_object_is_inert (face)))
-    return hb_font_get_empty ();
   if (!(font = hb_object_create<hb_font_t> ()))
     return hb_font_get_empty ();
 
@@ -880,7 +878,7 @@ hb_font_t *
 hb_font_create_sub_font (hb_font_t *parent)
 {
   if (unlikely (!parent))
-    return hb_font_get_empty ();
+    parent = hb_font_get_empty ();
 
   hb_font_t *font = hb_font_create (parent->face);
 

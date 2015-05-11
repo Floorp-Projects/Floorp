@@ -126,11 +126,15 @@ struct hb_ot_layout_lookup_accelerator_t
     lookup.add_coverage (&digest);
   }
 
-  template <typename TLookup>
-  inline void fini (const TLookup &lookup HB_UNUSED)
+  inline void fini (void)
   {
   }
 
+  inline bool may_have (hb_codepoint_t g) const {
+    return digest.may_have (g);
+  }
+
+  private:
   hb_set_digest_t digest;
 };
 
