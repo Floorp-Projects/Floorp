@@ -295,11 +295,21 @@ protected:
     }
   }
 
-  void UpdateTiming();
-  void UpdateFinishedState(bool aSeekFlag = false);
+  /**
+   * Finishing behavior depends on if changes to timing occurred due
+   * to a seek or regular playback.
+   */
+  enum class SeekFlag {
+    NoSeek,
+    DidSeek
+  };
+
+  void UpdateTiming(SeekFlag aSeekFlag);
+  void UpdateFinishedState(SeekFlag aSeekFlag);
   void UpdateEffect();
   void FlushStyle() const;
   void PostUpdate();
+
   /**
    * Remove this animation from the pending animation tracker and reset
    * mPendingState as necessary. The caller is responsible for resolving or
