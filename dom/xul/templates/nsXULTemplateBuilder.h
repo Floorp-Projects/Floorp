@@ -26,9 +26,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "prlog.h"
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
-#endif
 
 class nsIContent;
 class nsIObserverService;
