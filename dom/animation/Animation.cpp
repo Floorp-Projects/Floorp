@@ -89,7 +89,7 @@ Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
     mReady->MaybeResolve(this);
   }
 
-  UpdateTiming();
+  UpdateTiming(SeekFlag::NoSeek);
   PostUpdate();
 }
 
@@ -130,8 +130,7 @@ Animation::SetCurrentTime(const TimeDuration& aSeekTime)
     CancelPendingTasks();
   }
 
-  UpdateFinishedState(true);
-  UpdateEffect();
+  UpdateTiming(SeekFlag::DidSeek);
   PostUpdate();
 }
 
@@ -237,7 +236,7 @@ Animation::Finish(ErrorResult& aRv)
       mReady->MaybeResolve(this);
     }
   }
-  UpdateFinishedState(true);
+  UpdateTiming(SeekFlag::DidSeek);
   PostUpdate();
 }
 
@@ -315,7 +314,7 @@ Animation::Tick()
     FinishPendingAt(mTimeline->GetCurrentTime().Value());
   }
 
-  UpdateTiming();
+  UpdateTiming(SeekFlag::NoSeek);
 }
 
 void
@@ -536,7 +535,7 @@ Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
     mEffect->ComposeStyle(aStyleRule, aSetProperties);
 
     if (updatedHoldTime) {
-      UpdateTiming();
+      UpdateTiming(SeekFlag::NoSeek);
     }
 
     mFinishedAtLastComposeStyle = (playState == AnimationPlayState::Finished);
@@ -612,7 +611,7 @@ Animation::DoPlay(LimitBehavior aLimitBehavior)
   tracker->AddPlayPending(*this);
 
   // We may have updated the current time when we set the hold time above.
-  UpdateTiming();
+  UpdateTiming(SeekFlag::NoSeek);
 }
 
 // http://w3c.github.io/web-animations/#pause-an-animation
@@ -650,7 +649,7 @@ Animation::DoPause()
   PendingAnimationTracker* tracker = doc->GetOrCreatePendingAnimationTracker();
   tracker->AddPausePending(*this);
 
-  UpdateFinishedState();
+  UpdateTiming(SeekFlag::NoSeek);
 }
 
 void
@@ -678,7 +677,7 @@ Animation::ResumeAt(const TimeDuration& aReadyTime)
   }
   mPendingState = PendingState::NotPending;
 
-  UpdateTiming();
+  UpdateTiming(SeekFlag::NoSeek);
 
   if (mReady) {
     mReady->MaybeResolve(this);
@@ -698,7 +697,7 @@ Animation::PauseAt(const TimeDuration& aReadyTime)
   mStartTime.SetNull();
   mPendingState = PendingState::NotPending;
 
-  UpdateTiming();
+  UpdateTiming(SeekFlag::NoSeek);
 
   if (mReady) {
     mReady->MaybeResolve(this);
@@ -706,16 +705,16 @@ Animation::PauseAt(const TimeDuration& aReadyTime)
 }
 
 void
-Animation::UpdateTiming()
+Animation::UpdateTiming(SeekFlag aSeekFlag)
 {
   // We call UpdateFinishedState before UpdateEffect because the former
   // can change the current time, which is used by the latter.
-  UpdateFinishedState();
+  UpdateFinishedState(aSeekFlag);
   UpdateEffect();
 }
 
 void
-Animation::UpdateFinishedState(bool aSeekFlag)
+Animation::UpdateFinishedState(SeekFlag aSeekFlag)
 {
   Nullable<TimeDuration> currentTime = GetCurrentTime();
   TimeDuration effectEnd = TimeDuration(EffectEnd());
@@ -725,7 +724,7 @@ Animation::UpdateFinishedState(bool aSeekFlag)
     if (mPlaybackRate > 0.0 &&
         !currentTime.IsNull() &&
         currentTime.Value() >= effectEnd) {
-      if (aSeekFlag) {
+      if (aSeekFlag == SeekFlag::DidSeek) {
         mHoldTime = currentTime;
       } else if (!mPreviousCurrentTime.IsNull()) {
         mHoldTime.SetValue(std::max(mPreviousCurrentTime.Value(), effectEnd));
@@ -735,14 +734,14 @@ Animation::UpdateFinishedState(bool aSeekFlag)
     } else if (mPlaybackRate < 0.0 &&
                !currentTime.IsNull() &&
                currentTime.Value().ToMilliseconds() <= 0.0) {
-      if (aSeekFlag) {
+      if (aSeekFlag == SeekFlag::DidSeek) {
         mHoldTime = currentTime;
       } else {
         mHoldTime.SetValue(0);
       }
     } else if (mPlaybackRate != 0.0 &&
                !currentTime.IsNull()) {
-      if (aSeekFlag && !mHoldTime.IsNull()) {
+      if (aSeekFlag == SeekFlag::DidSeek && !mHoldTime.IsNull()) {
         mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
                               (mHoldTime.Value().MultDouble(1 / mPlaybackRate)));
       }
