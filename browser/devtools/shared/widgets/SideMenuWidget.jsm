@@ -10,8 +10,11 @@ const Cu = Components.utils;
 
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
+const {DeferredTask} = Cu.import("resource://gre/modules/DeferredTask.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
+
+const SCROLL_FREQUENCY = 16;
 
 /**
  * A simple side menu, with the ability of grouping menu items.
@@ -113,18 +116,72 @@ SideMenuWidget.prototype = {
       !this._selectedItem &&
       // 3. The new item should be appended at the end of the list.
       (aIndex < 0 || aIndex >= this._orderedMenuElementsArray.length) &&
-      // 4. The list should already be scrolled at the bottom.
-      (this._list.scrollTop + this._list.clientHeight >= this._list.scrollHeight);
+      // 4. We aren't waiting for a scroll to happen.
+      (!this._scrollToBottomTask || !this._scrollToBottomTask.isArmed) &&
+      // 5. The list should already be scrolled at the bottom.
+      this.isScrolledToBottom();
 
     let group = this._getMenuGroupForName(aAttachment.group);
     let item = this._getMenuItemForGroup(group, aContents, aAttachment);
     let element = item.insertSelfAt(aIndex);
 
     if (maintainScrollAtBottom) {
-      this._list.scrollTop = this._list.scrollHeight;
+      this.scrollToBottom();
     }
 
     return element;
+  },
+
+  /**
+   * Checks to see if the list is scrolled all the way to the bottom.
+   * Uses getBoundsWithoutFlushing to limit the performance impact
+   * of this function.
+   *
+   * @return bool
+   */
+  isScrolledToBottom: function() {
+    if (this._list.lastElementChild) {
+      let utils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+      let childRect = utils.getBoundsWithoutFlushing(this._list.lastElementChild);
+      let listRect = utils.getBoundsWithoutFlushing(this._list);
+
+      // Cheap way to check if it's scrolled all the way to the bottom.
+      return (childRect.height + childRect.top) <= listRect.bottom;
+    }
+
+    return false;
+  },
+
+  /**
+   * Scroll the list to the bottom after a timeout.
+   * If the user scrolls in the meantime, cancel this operation.
+   */
+  scrollToBottom: function() {
+    // Lazily attach this functionality to the object, so it won't get
+    // created unless if this scrollToBottom behavior is needed.
+    if (!this._scrollToBottomTask) {
+      // The scroll event fires asynchronously, so we need to keep a bit to
+      // distinguish between user-initiated events and scrollTop assignment.
+      let ignoreNextScroll = false;
+
+      this._scrollToBottomTask = new DeferredTask(() => {
+        ignoreNextScroll = true;
+        this._list.scrollTop = this._list.scrollHeight;
+        this.emit("scroll-to-bottom");
+      }, SCROLL_FREQUENCY);
+
+      // On a user scroll, cancel any pending calls to the scroll function.
+      this._list.addEventListener("scroll", () => {
+        if (!ignoreNextScroll && this._scrollToBottomTask.isArmed &&
+            !this.isScrolledToBottom()) {
+          this._scrollToBottomTask.disarm();
+        }
+        ignoreNextScroll = false;
+      }, true);
+    }
+
+    this._scrollToBottomTask.arm();
   },
 
   /**
