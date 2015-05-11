@@ -86,9 +86,7 @@ nsIScriptSecurityManager* nsXULTemplateBuilder::gScriptSecurityManager;
 nsIPrincipal*             nsXULTemplateBuilder::gSystemPrincipal;
 nsIObserverService*       nsXULTemplateBuilder::gObserverService;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gXULTemplateLog;
-#endif
 
 #define NS_QUERY_PROCESSOR_CONTRACTID_PREFIX "@mozilla.org/xul/xul-query-processor;1?name="
 
@@ -167,10 +165,8 @@ nsXULTemplateBuilder::InitGlobals()
             return rv;
     }
 
-#ifdef PR_LOGGING
     if (! gXULTemplateLog)
         gXULTemplateLog = PR_NewLogModule("nsXULTemplateBuilder");
-#endif
 
     return NS_OK;
 }
@@ -1714,11 +1710,9 @@ nsXULTemplateBuilder::CompileQueries()
         mFlags |= eLoggingEnabled;
     }
 
-#ifdef PR_LOGGING
     // always enable logging if the debug setting is used
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG))
         mFlags |= eLoggingEnabled;
-#endif
 
     nsCOMPtr<nsIDOMNode> rootnode = do_QueryInterface(mRoot);
     nsresult rv =

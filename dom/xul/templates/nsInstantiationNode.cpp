@@ -8,19 +8,15 @@
 #include "nsXULTemplateQueryProcessorRDF.h"
 
 #include "prlog.h"
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
-#endif
 
 nsInstantiationNode::nsInstantiationNode(nsXULTemplateQueryProcessorRDF* aProcessor,
                                          nsRDFQuery* aQuery)
         : mProcessor(aProcessor),
           mQuery(aQuery)
 {
-#ifdef PR_LOGGING
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
            ("nsInstantiationNode[%p] query=%p", this, aQuery));
-#endif
 
     MOZ_COUNT_CTOR(nsInstantiationNode);
 }
