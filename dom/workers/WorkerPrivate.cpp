@@ -69,7 +69,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/Preferences.h"
-#include "MultipartBlobImpl.h"
+#include "MultipartFileImpl.h"
 #include "nsAlgorithm.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollector.h"
@@ -320,8 +320,8 @@ LogErrorToConsole(const nsAString& aMessage,
 }
 
 // Recursive!
-already_AddRefed<BlobImpl>
-EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
+already_AddRefed<FileImpl>
+EnsureBlobForBackgroundManager(FileImpl* aBlobImpl,
                                PBackgroundChild* aManager = nullptr)
 {
   MOZ_ASSERT(aBlobImpl);
@@ -331,9 +331,9 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
     MOZ_ASSERT(aManager);
   }
 
-  nsRefPtr<BlobImpl> blobImpl = aBlobImpl;
+  nsRefPtr<FileImpl> blobImpl = aBlobImpl;
 
-  const nsTArray<nsRefPtr<BlobImpl>>* subBlobImpls =
+  const nsTArray<nsRefPtr<FileImpl>>* subBlobImpls =
     aBlobImpl->GetSubBlobImpls();
 
   if (!subBlobImpls) {
@@ -359,16 +359,16 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
   const uint32_t subBlobCount = subBlobImpls->Length();
   MOZ_ASSERT(subBlobCount);
 
-  nsTArray<nsRefPtr<BlobImpl>> newSubBlobImpls;
+  nsTArray<nsRefPtr<FileImpl>> newSubBlobImpls;
   newSubBlobImpls.SetLength(subBlobCount);
 
   bool newBlobImplNeeded = false;
 
   for (uint32_t index = 0; index < subBlobCount; index++) {
-    const nsRefPtr<BlobImpl>& subBlobImpl = subBlobImpls->ElementAt(index);
+    const nsRefPtr<FileImpl>& subBlobImpl = subBlobImpls->ElementAt(index);
     MOZ_ASSERT(subBlobImpl);
 
-    nsRefPtr<BlobImpl>& newSubBlobImpl = newSubBlobImpls[index];
+    nsRefPtr<FileImpl>& newSubBlobImpl = newSubBlobImpls[index];
 
     newSubBlobImpl = EnsureBlobForBackgroundManager(subBlobImpl, aManager);
     MOZ_ASSERT(newSubBlobImpl);
@@ -386,9 +386,9 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
       nsString name;
       blobImpl->GetName(name);
 
-      blobImpl = new MultipartBlobImpl(newSubBlobImpls, name, contentType);
+      blobImpl = new MultipartFileImpl(newSubBlobImpls, name, contentType);
     } else {
-      blobImpl = new MultipartBlobImpl(newSubBlobImpls, contentType);
+      blobImpl = new MultipartFileImpl(newSubBlobImpls, contentType);
     }
 
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blobImpl->SetMutable(false)));
@@ -405,9 +405,9 @@ ReadBlobOrFileNoWrap(JSContext* aCx,
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aReader);
 
-  nsRefPtr<BlobImpl> blobImpl;
+  nsRefPtr<FileImpl> blobImpl;
   {
-    BlobImpl* rawBlobImpl;
+    FileImpl* rawBlobImpl;
     MOZ_ALWAYS_TRUE(JS_ReadBytes(aReader, &rawBlobImpl, sizeof(rawBlobImpl)));
 
     MOZ_ASSERT(rawBlobImpl);
@@ -511,26 +511,26 @@ ReadFormData(JSContext* aCx,
 bool
 WriteBlobOrFile(JSContext* aCx,
                 JSStructuredCloneWriter* aWriter,
-                BlobImpl* aBlobOrBlobImpl,
+                FileImpl* aBlobOrFileImpl,
                 nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aWriter);
-  MOZ_ASSERT(aBlobOrBlobImpl);
+  MOZ_ASSERT(aBlobOrFileImpl);
 
-  nsRefPtr<BlobImpl> blobImpl = EnsureBlobForBackgroundManager(aBlobOrBlobImpl);
+  nsRefPtr<FileImpl> blobImpl = EnsureBlobForBackgroundManager(aBlobOrFileImpl);
   MOZ_ASSERT(blobImpl);
 
-  aBlobOrBlobImpl = blobImpl;
+  aBlobOrFileImpl = blobImpl;
 
   if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, DOMWORKER_SCTAG_BLOB, 0)) ||
       NS_WARN_IF(!JS_WriteBytes(aWriter,
-                                &aBlobOrBlobImpl,
-                                sizeof(aBlobOrBlobImpl)))) {
+                                &aBlobOrFileImpl,
+                                sizeof(aBlobOrFileImpl)))) {
     return false;
   }
 
-  aClonedObjects.AppendElement(aBlobOrBlobImpl);
+  aClonedObjects.AppendElement(aBlobOrFileImpl);
   return true;
 }
 
@@ -648,7 +648,7 @@ struct WorkerStructuredCloneCallbacks
     {
       nsRefPtr<Blob> blob;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
-        BlobImpl* blobImpl = blob->Impl();
+        FileImpl* blobImpl = blob->Impl();
         MOZ_ASSERT(blobImpl);
 
         if (WriteBlobOrFile(aCx, aWriter, blobImpl, *clonedObjects)) {
@@ -740,7 +740,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
     {
       nsRefPtr<Blob> blob;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
-        BlobImpl* blobImpl = blob->Impl();
+        FileImpl* blobImpl = blob->Impl();
         MOZ_ASSERT(blobImpl);
 
         if (!blobImpl->MayBeClonedToOtherThreads()) {

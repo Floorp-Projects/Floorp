@@ -403,7 +403,7 @@ GetAddInfoCallback(JSContext* aCx, void* aClosure)
 }
 
 BlobChild*
-ActorFromRemoteBlobImpl(BlobImpl* aImpl)
+ActorFromRemoteFileImpl(FileImpl* aImpl)
 {
   MOZ_ASSERT(aImpl);
 
@@ -429,13 +429,13 @@ ActorFromRemoteBlobImpl(BlobImpl* aImpl)
 }
 
 bool
-ResolveMysteryFile(BlobImpl* aImpl,
+ResolveMysteryFile(FileImpl* aImpl,
                    const nsString& aName,
                    const nsString& aContentType,
                    uint64_t aSize,
                    uint64_t aLastModifiedDate)
 {
-  BlobChild* actor = ActorFromRemoteBlobImpl(aImpl);
+  BlobChild* actor = ActorFromRemoteFileImpl(aImpl);
   if (actor) {
     return actor->SetMysteryBlobInfo(aName, aContentType,
                                      aSize, aLastModifiedDate);
@@ -444,11 +444,11 @@ ResolveMysteryFile(BlobImpl* aImpl,
 }
 
 bool
-ResolveMysteryBlob(BlobImpl* aImpl,
+ResolveMysteryBlob(FileImpl* aImpl,
                    const nsString& aContentType,
                    uint64_t aSize)
 {
-  BlobChild* actor = ActorFromRemoteBlobImpl(aImpl);
+  BlobChild* actor = ActorFromRemoteFileImpl(aImpl);
   if (actor) {
     return actor->SetMysteryBlobInfo(aContentType, aSize);
   }

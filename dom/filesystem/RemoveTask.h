@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class BlobImpl;
+class FileImpl;
 class Promise;
 
 class RemoveTask final
@@ -23,7 +23,7 @@ class RemoveTask final
 public:
   RemoveTask(FileSystemBase* aFileSystem,
              const nsAString& aDirPath,
-             BlobImpl* aTargetBlob,
+             FileImpl* aTargetFile,
              const nsAString& aTargetPath,
              bool aRecursive,
              ErrorResult& aRv);
@@ -60,8 +60,8 @@ private:
   nsRefPtr<Promise> mPromise;
   nsString mDirRealPath;
   // This cannot be a File because this object will be used on a different
-  // thread and File is not thread-safe. Let's use the BlobImpl instead.
-  nsRefPtr<BlobImpl> mTargetBlobImpl;
+  // thread and File is not thread-safe. Let's use the FileImpl instead.
+  nsRefPtr<FileImpl> mTargetFileImpl;
   nsString mTargetRealPath;
   bool mRecursive;
   bool mReturnValue;

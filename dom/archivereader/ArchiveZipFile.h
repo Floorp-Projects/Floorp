@@ -19,57 +19,57 @@
 BEGIN_ARCHIVEREADER_NAMESPACE
 
 /**
- * ArchiveZipBlobImpl to BlobImpl
+ * ArchiveZipFileImpl to FileImpl
  */
-class ArchiveZipBlobImpl : public BlobImplBase
+class ArchiveZipFileImpl : public FileImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  ArchiveZipBlobImpl(const nsAString& aName,
+  ArchiveZipFileImpl(const nsAString& aName,
                      const nsAString& aContentType,
                      uint64_t aLength,
                      ZipCentral& aCentral,
-                     BlobImpl* aBlobImpl)
-  : BlobImplBase(aName, aContentType, aLength),
+                     FileImpl* aFileImpl)
+  : FileImplBase(aName, aContentType, aLength),
     mCentral(aCentral),
-    mBlobImpl(aBlobImpl),
+    mFileImpl(aFileImpl),
     mFilename(aName)
   {
-    MOZ_ASSERT(mBlobImpl);
-    MOZ_COUNT_CTOR(ArchiveZipBlobImpl);
+    MOZ_ASSERT(mFileImpl);
+    MOZ_COUNT_CTOR(ArchiveZipFileImpl);
   }
 
-  ArchiveZipBlobImpl(const nsAString& aName,
+  ArchiveZipFileImpl(const nsAString& aName,
                      const nsAString& aContentType,
                      uint64_t aStart,
                      uint64_t aLength,
                      ZipCentral& aCentral,
-                     BlobImpl* aBlobImpl)
-  : BlobImplBase(aContentType, aStart, aLength),
+                     FileImpl* aFileImpl)
+  : FileImplBase(aContentType, aStart, aLength),
     mCentral(aCentral),
-    mBlobImpl(aBlobImpl),
+    mFileImpl(aFileImpl),
     mFilename(aName)
   {
-    MOZ_ASSERT(mBlobImpl);
-    MOZ_COUNT_CTOR(ArchiveZipBlobImpl);
+    MOZ_ASSERT(mFileImpl);
+    MOZ_COUNT_CTOR(ArchiveZipFileImpl);
   }
 
   // Overrides:
   virtual nsresult GetInternalStream(nsIInputStream**) override;
 protected:
-  virtual ~ArchiveZipBlobImpl()
+  virtual ~ArchiveZipFileImpl()
   {
-    MOZ_COUNT_DTOR(ArchiveZipBlobImpl);
+    MOZ_COUNT_DTOR(ArchiveZipFileImpl);
   }
 
-  virtual already_AddRefed<BlobImpl>
+  virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
               mozilla::ErrorResult& aRv) override;
 
 private: // Data
   ZipCentral mCentral;
-  nsRefPtr<BlobImpl> mBlobImpl;
+  nsRefPtr<FileImpl> mFileImpl;
 
   nsString mFilename;
 };

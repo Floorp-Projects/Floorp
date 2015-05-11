@@ -5838,7 +5838,7 @@ class DatabaseFile final
 {
   friend class Database;
 
-  nsRefPtr<BlobImpl> mBlobImpl;
+  nsRefPtr<FileImpl> mBlobImpl;
   nsRefPtr<FileInfo> mFileInfo;
 
 public:
@@ -5884,7 +5884,7 @@ private:
   }
 
   // Called when receiving from the child.
-  DatabaseFile(BlobImpl* aBlobImpl, FileInfo* aFileInfo)
+  DatabaseFile(FileImpl* aBlobImpl, FileInfo* aFileInfo)
     : mBlobImpl(aBlobImpl)
     , mFileInfo(aFileInfo)
   {
@@ -7698,11 +7698,11 @@ private:
 };
 
 class NonMainThreadHackBlobImpl final
-  : public BlobImplFile
+  : public FileImplFile
 {
 public:
   NonMainThreadHackBlobImpl(nsIFile* aFile, FileInfo* aFileInfo)
-    : BlobImplFile(aFile, aFileInfo)
+    : FileImplFile(aFile, aFileInfo)
   {
     // Getting the content type is not currently supported off the main thread.
     // This isn't a problem here because:
@@ -8157,7 +8157,7 @@ ConvertBlobsToActors(PBackgroundParent* aBackgroundActor,
     MOZ_ASSERT(NS_SUCCEEDED(nativeFile->IsFile(&isFile)));
     MOZ_ASSERT(isFile);
 
-    nsRefPtr<BlobImpl> impl =
+    nsRefPtr<FileImpl> impl =
       new NonMainThreadHackBlobImpl(nativeFile, file.mFileInfo);
 
     PBlobParent* actor =
@@ -11841,7 +11841,7 @@ Database::AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBlobParent);
 
-  nsRefPtr<BlobImpl> blobImpl =
+  nsRefPtr<FileImpl> blobImpl =
     static_cast<BlobParent*>(aBlobParent)->GetBlobImpl();
   MOZ_ASSERT(blobImpl);
 
