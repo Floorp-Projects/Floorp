@@ -49,14 +49,14 @@ function ThreadNode(thread, options = {}) {
   this.selfCount = Object.create(null);
   this.selfDuration = Object.create(null);
 
-  let { samples, stackTable, frameTable, stringTable } = thread;
+  let { samples, stackTable, frameTable, stringTable, allocationsTable } = thread;
 
   // Nothing to do if there are no samples.
   if (samples.data.length === 0) {
     return;
   }
 
-  this._buildInverted(samples, stackTable, frameTable, stringTable, options);
+  this._buildInverted(samples, stackTable, frameTable, stringTable, allocationsTable, options);
   if (!options.invertTree) {
     this._uninvert();
   }
@@ -79,6 +79,9 @@ ThreadNode.prototype = {
    *        The table of deduplicated frames from the backend.
    * @param object stringTable
    *        The table of deduplicated strings from the backend.
+   * @param object allocationsTable
+   *        The table of allocation counts from the backend. Indexed by frame
+   *        index.
    * @param object options
    *        Additional supported options
    *          - number startTime [optional]
@@ -86,7 +89,7 @@ ThreadNode.prototype = {
    *          - boolean contentOnly [optional]
    *          - boolean invertTree [optional]
    */
-  _buildInverted: function buildInverted(samples, stackTable, frameTable, stringTable, options) {
+  _buildInverted: function buildInverted(samples, stackTable, frameTable, stringTable, allocationsTable, options) {
     function getOrAddFrameNode(calls, isLeaf, frameKey, inflatedFrame, isMetaCategory, leafTable) {
       // Insert the inflated frame into the call tree at the current level.
       let frameNode;
@@ -215,8 +218,8 @@ ThreadNode.prototype = {
         stackIndex = stackEntry[STACK_PREFIX_SLOT];
 
         // Inflate the frame.
-        let inflatedFrame = getOrAddInflatedFrame(inflatedFrameCache, frameIndex,
-                                                  frameTable, stringTable);
+        let inflatedFrame = getOrAddInflatedFrame(inflatedFrameCache, frameIndex, frameTable,
+                                                  stringTable, allocationsTable);
 
         // Compute the frame key.
         mutableFrameKeyOptions.isRoot = stackIndex === null;
@@ -371,7 +374,7 @@ function FrameNode(frameKey, { location, line, category, allocations, isContent 
   this.location = location;
   this.line = line;
   this.category = category;
-  this.allocations = 0;
+  this.allocations = allocations;
   this.samples = 0;
   this.duration = 0;
   this.calls = [];
