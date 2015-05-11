@@ -39,26 +39,6 @@ loader.lazyGetter(this, "DOMUtils", function () {
 });
 
 /**
- * This regular expression catches all css property names with their trailing
- * spaces and semicolon. This is used to ensure a value is valid for a property
- * name within style="" attributes.
- */
-loader.lazyGetter(this, "REGEX_ALL_CSS_PROPERTIES", function () {
-  let names = DOMUtils.getCSSPropertyNames();
-    let pattern = "^(";
-
-    for (let i = 0; i < names.length; i++) {
-      if (i > 0) {
-        pattern += "|";
-      }
-      pattern += names[i];
-    }
-    pattern += ")\\s*:\\s*";
-
-    return new RegExp(pattern);
-});
-
-/**
  * This module is used to process text for output by developer tools. This means
  * linking JS files with the debugger, CSS files with the style editor, JS
  * functions with the debugger, placing color swatches next to colors and
@@ -72,8 +52,6 @@ loader.lazyGetter(this, "REGEX_ALL_CSS_PROPERTIES", function () {
  *   let parser = new OutputParser();
  *
  *   parser.parseCssProperty("color", "red"); // Returns document fragment.
- *   parser.parseHTMLAttribute("color:red; font-size: 12px;"); // Returns document
- *                                                             // fragment.
  */
 function OutputParser() {
   this.parsed = [];
@@ -100,12 +78,12 @@ OutputParser.prototype = {
   parseCssProperty: function(name, value, options={}) {
     options = this._mergeOptions(options);
 
-    // XXX: This is a quick fix that should stay until bug 977063 gets fixed.
-    // It avoids parsing "linear" as a timing-function in "linear-gradient(...)"
-    options.expectCubicBezier = ["transition", "transition-timing-function",
-      "animation", "animation-timing-function"].indexOf(name) !== -1;
-
+    options.expectCubicBezier =
+      safeCssPropertySupportsType(name, DOMUtils.TYPE_TIMING_FUNCTION);
     options.expectFilter = name === "filter";
+    options.supportsColor =
+      safeCssPropertySupportsType(name, DOMUtils.TYPE_COLOR) ||
+      safeCssPropertySupportsType(name, DOMUtils.TYPE_GRADIENT);
 
     if (this._cssPropertySupportsValue(name, value)) {
       return this._parse(value, options);
@@ -113,24 +91,6 @@ OutputParser.prototype = {
     this._appendTextNode(value);
 
     return this._toDOM();
-  },
-
-  /**
-   * Parse a string.
-   *
-   * @param  {String} value
-   *         Text to parse.
-   * @param  {Object} [options]
-   *         Options object. For valid options and default values see
-   *         _mergeOptions().
-   * @return {DocumentFragment}
-   *         A document fragment. Colors will not be parsed.
-   */
-  parseHTMLAttribute: function(value, options={}) {
-    options.isHTMLAttribute = true;
-    options = this._mergeOptions(options);
-
-    return this._parse(value, options);
   },
 
   /**
@@ -240,20 +200,7 @@ OutputParser.prototype = {
         }
       }
 
-      matched = text.match(REGEX_ALL_CSS_PROPERTIES);
-      if (matched) {
-        let [match] = matched;
-
-        text = this._trimMatchFromStart(text, match);
-        this._appendTextNode(match);
-
-        if (options.isHTMLAttribute) {
-          [text] = this._appendColorOnMatch(text, options);
-        }
-        continue;
-      }
-
-      if (!options.isHTMLAttribute) {
+      if (options.supportsColor) {
         let dirty;
 
         [text, dirty] = this._appendColorOnMatch(text, options);
@@ -588,13 +535,7 @@ OutputParser.prototype = {
    *           - bezierSwatchClass: ""  // The class to use for bezier swatches.
    *           - bezierClass: ""        // The class to use for the bezier value
    *                                    // that follows the swatch.
-   *           - isHTMLAttribute: false // This property indicates whether we
-   *                                    // are parsing an HTML attribute value.
-   *                                    // When the value is passed in from an
-   *                                    // HTML attribute we need to check that
-   *                                    // any CSS property values are supported
-   *                                    // by the property name before
-   *                                    // processing the property value.
+   *           - supportsColor: false   // Does the CSS property support colors?
    *           - urlClass: ""           // The class to be used for url() links.
    *           - baseURI: ""            // A string or nsIURI used to resolve
    *                                    // relative links.
@@ -608,7 +549,7 @@ OutputParser.prototype = {
       colorClass: "",
       bezierSwatchClass: "",
       bezierClass: "",
-      isHTMLAttribute: false,
+      supportsColor: false,
       urlClass: "",
       baseURI: ""
     };
@@ -623,3 +564,20 @@ OutputParser.prototype = {
     return defaults;
   }
 };
+
+/**
+ * A wrapper for DOMUtils.cssPropertySupportsType that ignores invalid
+ * properties.
+ *
+ * @param {String} name The property name.
+ * @param {number} type The type tested for support.
+ * @return {Boolean} Whether the property supports the type.
+ *        If the property is unknown, false is returned.
+ */
+function safeCssPropertySupportsType(name, type) {
+  try {
+    return DOMUtils.cssPropertySupportsType(name, type);
+  } catch(e) {
+    return false;
+  }
+}
