@@ -31,8 +31,10 @@ function resetSelection() {
 }
 
 function runTest() {
-    var rightClick = {type: 'mousedown', button: 2},
-        singleClick = {type: 'mousedown', button: 0};
+    var rightClickDown = {type: 'mousedown', button: 2},
+        rightClickUp = {type: 'mouseup', button: 2},
+        singleClickDown = {type: 'mousedown', button: 0},
+        singleClickUp = {type: 'mouseup', button: 0};
     var selection = window.getSelection();
 
     var div = document.getElementById('display');
@@ -41,22 +43,26 @@ function runTest() {
     var imgselected;
 
     resetSelection();
-    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, rightClick);
+    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, rightClickDown);
+    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, rightClickUp);
     ok(selection.isCollapsed, "selection is not collapsed");
 
     resetSelection();
-    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, singleClick);
+    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, singleClickDown);
+    synthesizeMouse(div, divRect.width - 1, divRect.height - 1, singleClickUp);
     ok(selection.isCollapsed, "selection is not collapsed");
 
     resetSelection();
-    synthesizeMouseAtCenter(img, rightClick);
+    synthesizeMouseAtCenter(img, rightClickDown);
+    synthesizeMouseAtCenter(img, rightClickUp);
     imgselected = selection.anchorNode == img.parentNode &&
                       selection.anchorOffset === 1 &&
                       selection.rangeCount === 1;
     ok(imgselected, "image is not selected");
 
     resetSelection();
-    synthesizeMouseAtCenter(img, singleClick);
+    synthesizeMouseAtCenter(img, singleClickDown);
+    synthesizeMouseAtCenter(img, singleClickUp);
     imgselected = selection.anchorNode == img.parentNode &&
                       selection.anchorOffset === 1 &&
                       selection.rangeCount === 1;
