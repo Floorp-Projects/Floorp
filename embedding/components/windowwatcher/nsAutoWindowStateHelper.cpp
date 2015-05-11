@@ -19,9 +19,9 @@ using namespace mozilla::dom;
  ****************** nsAutoWindowStateHelper *********************
  ****************************************************************/
 
-nsAutoWindowStateHelper::nsAutoWindowStateHelper(nsPIDOMWindow *aWindow)
-  : mWindow(aWindow),
-    mDefaultEnabled(DispatchEventToChrome("DOMWillOpenModalDialog"))
+nsAutoWindowStateHelper::nsAutoWindowStateHelper(nsPIDOMWindow* aWindow)
+  : mWindow(aWindow)
+  , mDefaultEnabled(DispatchEventToChrome("DOMWillOpenModalDialog"))
 {
   if (mWindow) {
     mWindow->EnterModalState();
@@ -40,7 +40,7 @@ nsAutoWindowStateHelper::~nsAutoWindowStateHelper()
 }
 
 bool
-nsAutoWindowStateHelper::DispatchEventToChrome(const char *aEventName)
+nsAutoWindowStateHelper::DispatchEventToChrome(const char* aEventName)
 {
   // XXXbz should we skip dispatching the event if the inner changed?
   // That is, should we store both the inner and the outer?
@@ -60,7 +60,9 @@ nsAutoWindowStateHelper::DispatchEventToChrome(const char *aEventName)
   if (rv.Failed()) {
     return false;
   }
-  NS_ENSURE_TRUE(NS_SUCCEEDED(event->InitEvent(NS_ConvertASCIItoUTF16(aEventName), true, true)), false);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(event->InitEvent(
+                   NS_ConvertASCIItoUTF16(aEventName), true, true)),
+                 false);
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
 
