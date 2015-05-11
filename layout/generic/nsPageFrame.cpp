@@ -22,12 +22,8 @@
 #include "nsIPrintSettings.h"
 
 #include "prlog.h"
-#ifdef PR_LOGGING 
 extern PRLogModuleInfo *GetLayoutPrintingLog();
 #define PR_PL(_p1)  PR_LOG(GetLayoutPrintingLog(), PR_LOG_DEBUG, _p1)
-#else
-#define PR_PL(_p1)
-#endif
 
 using namespace mozilla;
 using namespace mozilla::gfx;

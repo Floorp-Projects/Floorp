@@ -143,7 +143,6 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
   mFontFaceSet->RemoveLoader(this);
 
-#ifdef PR_LOGGING
   if (LOG_ENABLED()) {
     nsAutoCString fontURI;
     mFontURI->GetSpec(fontURI);
@@ -155,7 +154,6 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
            this, fontURI.get(), aStatus));
     }
   }
-#endif
 
   nsPresContext* ctx = mFontFaceSet->GetPresContext();
   NS_ASSERTION(ctx && !ctx->PresShell()->IsDestroying(),
