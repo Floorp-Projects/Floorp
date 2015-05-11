@@ -3140,17 +3140,30 @@ void
 BluetoothServiceBluedroid::BackendErrorNotification(bool aCrashed)
 {
   MOZ_ASSERT(NS_IsMainThread());
- // Recovery step 2 stop bluetooth
- if (aCrashed) {
-  BT_LOGR("Set aRestart = true");
+
+  if (!aCrashed) {
+    return;
+  }
+
+  /*
+   * Reset following profile manager states for unexpected backend crash.
+   * - HFP: connection state and audio state
+   * - A2DP: connection state
+   */
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  NS_ENSURE_TRUE_VOID(hfp);
+  hfp->HandleBackendError();
+  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+  NS_ENSURE_TRUE_VOID(a2dp);
+  a2dp->HandleBackendError();
+
   sIsRestart = true;
-  BT_LOGR("Reocvery step2: stop bluetooth");
+  BT_LOGR("Recovery step2: stop bluetooth");
 #ifdef MOZ_B2G_BT_API_V2
   StopBluetooth(false, nullptr);
 #else
   StopBluetooth(false);
 #endif
- }
 }
 
 void
