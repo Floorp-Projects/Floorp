@@ -93,8 +93,8 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
   _onRerenderPrefChanged: function() {
     let recording = PerformanceController.getCurrentRecording();
     let allocations = recording.getAllocations();
-    let samples = RecordingUtils.getSamplesFromAllocations(allocations);
-    FlameGraphUtils.removeFromCache(samples);
+    let thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
+    FlameGraphUtils.removeFromCache(thread);
   },
 
   /**
