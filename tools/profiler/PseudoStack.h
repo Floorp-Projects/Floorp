@@ -74,13 +74,15 @@ class StackEntry : public js::ProfileEntry
 class ProfilerMarkerPayload;
 template<typename T>
 class ProfilerLinkedList;
-class JSStreamWriter;
+class SpliceableJSONWriter;
+class UniqueStacks;
+
 class ProfilerMarker {
   friend class ProfilerLinkedList<ProfilerMarker>;
 public:
   explicit ProfilerMarker(const char* aMarkerName,
-         ProfilerMarkerPayload* aPayload = nullptr,
-         float aTime = 0);
+                          ProfilerMarkerPayload* aPayload = nullptr,
+                          float aTime = 0);
 
   ~ProfilerMarker();
 
@@ -88,8 +90,7 @@ public:
     return mMarkerName;
   }
 
-  void
-  StreamJSObject(JSStreamWriter& b) const;
+  void StreamJSON(SpliceableJSONWriter& aWriter, UniqueStacks& aUniqueStacks) const;
 
   void SetGeneration(uint32_t aGenID);
 
