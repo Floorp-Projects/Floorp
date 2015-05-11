@@ -102,6 +102,29 @@ function filterObject(obj, filterOut) {
   return ret;
 }
 
+
+/**
+ * This turns a JSON object into a "flat" stringified form, separated into top-level sections.
+ *
+ * For an object like:
+ *   {
+ *     a: {b: "1"},
+ *     c: {d: "2", e: {f: "3"}}
+ *   }
+ * it returns a Map of the form:
+ *   Map([
+ *     ["a", Map(["b","1"])],
+ *     ["c", Map([["d", "2"], ["e.f", "3"]])]
+ *   ])
+ */
+function sectionalizeObject(obj) {
+  let map = new Map();
+  for (let k of Object.keys(obj)) {
+    map.set(k, explodeObject(obj[k]));
+  }
+  return map;
+}
+
 let observer = {
 
   enableTelemetry: bundle.GetStringFromName("enableTelemetry"),
@@ -169,6 +192,52 @@ let GeneralData = {
 
     let dataDiv = document.getElementById("general-data");
     dataDiv.appendChild(table);
+  },
+
+  /**
+   * Helper function for appending a column to the data table.
+   *
+   * @param aRowElement Parent row element
+   * @param aColType Column's tag name
+   * @param aColText Column contents
+   */
+  appendColumn: function(aRowElement, aColType, aColText) {
+    let colElement = document.createElement(aColType);
+    let colTextElement = document.createTextNode(aColText);
+    colElement.appendChild(colTextElement);
+    aRowElement.appendChild(colElement);
+  },
+};
+
+let EnvironmentData = {
+  /**
+   * Renders the environment data
+   */
+  render: function(ping) {
+    setHasData("environment-data-section", true);
+    let dataDiv = document.getElementById("environment-data");
+    let data = sectionalizeObject(ping.environment);
+
+    for (let [section, sectionData] of data) {
+      let table = document.createElement("table");
+      let caption = document.createElement("caption");
+      caption.appendChild(document.createTextNode(section + "\n"));
+      table.appendChild(caption);
+
+      let headings = document.createElement("tr");
+      this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingName") + "\t");
+      this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingValue") + "\t");
+      table.appendChild(headings);
+
+      for (let [path, value] of sectionData) {
+          let row = document.createElement("tr");
+          this.appendColumn(row, "td", path + "\t");
+          this.appendColumn(row, "td", value + "\t");
+          table.appendChild(row);
+      }
+
+      dataDiv.appendChild(table);
+    }
   },
 
   /**
@@ -628,8 +697,10 @@ let Histogram = {
     divStats.appendChild(document.createTextNode(stats));
     outerDiv.appendChild(divStats);
 
-    if (isRTL())
+    if (isRTL()) {
+      hgram.buckets.reverse();
       hgram.values.reverse();
+    }
 
     let textData = this.renderValues(outerDiv, hgram, options);
 
@@ -1141,6 +1212,9 @@ function displayPingData() {
 
   // Show general data.
   GeneralData.render(ping);
+
+  // Show environment data.
+  EnvironmentData.render(ping);
 
   // Show telemetry log.
   TelLog.render(ping);
