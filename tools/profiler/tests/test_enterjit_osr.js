@@ -30,8 +30,8 @@ function run_test() {
                 while (--n); // OSR happens here
                 // Spin in the hope of getting a sample.
             } while (Date.now() - then < delayMS);
-            let pr = p.getProfileData().threads[0].samples;
-            if (pr.length > 0 || delayMS > 30000)
+            let pr = p.getProfileData().threads[0];
+            if (pr.samples.data.length > 0 || delayMS > 30000)
                 return pr;
             delayMS *= 2;
         }
@@ -39,8 +39,9 @@ function run_test() {
 
     var profile = arbitrary_name();
 
-    do_check_neq(profile.length, 0);
-    let stack = profile[profile.length - 1].frames.map(f => f.location);
+    do_check_neq(profile.samples.data.length, 0);
+    var lastSample = profile.samples.data[profile.samples.data.length - 1];
+    var stack = getInflatedStackLocations(profile, lastSample);
     do_print(stack);
 
     // All we can really check here is ensure that there is exactly
