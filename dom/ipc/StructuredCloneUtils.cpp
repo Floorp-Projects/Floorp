@@ -51,11 +51,11 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
     JS::Rooted<JS::Value> val(aCx);
     {
       MOZ_ASSERT(aData < closure->mBlobs.Length());
-      nsRefPtr<Blob> blob = closure->mBlobs[aData];
+      nsRefPtr<File> blob = closure->mBlobs[aData];
 
 #ifdef DEBUG
       {
-        // Blob should not be mutable.
+        // File should not be mutable.
         bool isMutable;
         MOZ_ASSERT(NS_SUCCEEDED(blob->GetMutable(&isMutable)));
         MOZ_ASSERT(!isMutable);
@@ -66,8 +66,8 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
       nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
       MOZ_ASSERT(global);
 
-      nsRefPtr<Blob> newBlob = Blob::Create(global, blob->Impl());
-      if (!ToJSValue(aCx, newBlob, &val)) {
+      nsRefPtr<File> newBlob = new File(global, blob->Impl());
+      if (!GetOrCreateDOMReflector(aCx, newBlob, &val)) {
         return nullptr;
       }
     }
@@ -89,7 +89,7 @@ Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
 
   // See if the wrapped native is a File/Blob.
   {
-    Blob* blob = nullptr;
+    File* blob = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob)) &&
         NS_SUCCEEDED(blob->SetMutable(false)) &&
         JS_WriteUint32Pair(aWriter, SCTAG_DOM_BLOB,

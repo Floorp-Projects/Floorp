@@ -75,8 +75,8 @@ ArchiveZipItem::GetFilename(nsString& aFilename)
 }
 
 // From zipItem to File:
-already_AddRefed<File>
-ArchiveZipItem::GetFile(ArchiveReader* aArchiveReader)
+nsIDOMFile*
+ArchiveZipItem::File(ArchiveReader* aArchiveReader)
 {
   nsString filename;
 
@@ -84,13 +84,11 @@ ArchiveZipItem::GetFile(ArchiveReader* aArchiveReader)
     return nullptr;
   }
 
-  nsRefPtr<dom::File> file = dom::File::Create(aArchiveReader,
+  return new dom::File(aArchiveReader,
     new ArchiveZipFileImpl(filename,
                            NS_ConvertUTF8toUTF16(GetType()),
                            StrToInt32(mCentralStruct.orglen),
                            mCentralStruct, aArchiveReader->GetFileImpl()));
-  MOZ_ASSERT(file);
-  return file.forget();
 }
 
 uint32_t

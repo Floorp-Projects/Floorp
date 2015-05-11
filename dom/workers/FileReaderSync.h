@@ -15,7 +15,7 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-class Blob;
+class File;
 class GlobalObject;
 template<typename> class Optional;
 }
@@ -43,12 +43,12 @@ public:
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
 
   void ReadAsArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aScopeObj,
-                         Blob& aBlob, JS::MutableHandle<JSObject*> aRetval,
+                         File& aBlob, JS::MutableHandle<JSObject*> aRetval,
                          ErrorResult& aRv);
-  void ReadAsBinaryString(Blob& aBlob, nsAString& aResult, ErrorResult& aRv);
-  void ReadAsText(Blob& aBlob, const Optional<nsAString>& aEncoding,
+  void ReadAsBinaryString(File& aBlob, nsAString& aResult, ErrorResult& aRv);
+  void ReadAsText(File& aBlob, const Optional<nsAString>& aEncoding,
                   nsAString& aResult, ErrorResult& aRv);
-  void ReadAsDataURL(Blob& aBlob, nsAString& aResult, ErrorResult& aRv);
+  void ReadAsDataURL(File& aBlob, nsAString& aResult, ErrorResult& aRv);
 };
 
 END_WORKERS_NAMESPACE

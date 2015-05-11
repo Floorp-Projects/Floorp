@@ -105,7 +105,7 @@ ArchiveReaderEvent::RunShare(nsresult aStatus)
 void
 ArchiveReaderEvent::ShareMainThread()
 {
-  nsTArray<nsRefPtr<File>> fileList;
+  nsTArray<nsCOMPtr<nsIDOMFile> > fileList;
 
   if (!NS_FAILED(mStatus)) {
     // This extra step must run in the main thread:
@@ -131,7 +131,7 @@ ArchiveReaderEvent::ShareMainThread()
       }
 
       // This is a File:
-      nsRefPtr<File> file = item->GetFile(mArchiveReader);
+      nsRefPtr<nsIDOMFile> file = item->File(mArchiveReader);
       if (file) {
         fileList.AppendElement(file);
       }

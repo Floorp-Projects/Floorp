@@ -24,7 +24,7 @@ USING_ARCHIVEREADER_NAMESPACE
 
 /* static */ already_AddRefed<ArchiveReader>
 ArchiveReader::Constructor(const GlobalObject& aGlobal,
-                           Blob& aBlob,
+                           File& aBlob,
                            const ArchiveReaderOptions& aOptions,
                            ErrorResult& aError)
 {
@@ -46,7 +46,7 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
   return reader.forget();
 }
 
-ArchiveReader::ArchiveReader(Blob& aBlob, nsPIDOMWindow* aWindow,
+ArchiveReader::ArchiveReader(File& aBlob, nsPIDOMWindow* aWindow,
                              const nsACString& aEncoding)
   : mFileImpl(aBlob.Impl())
   , mWindow(aWindow)
@@ -136,7 +136,7 @@ ArchiveReader::OpenArchive()
 
 // Data received from the dispatched event:
 void
-ArchiveReader::Ready(nsTArray<nsRefPtr<File>>& aFileList,
+ArchiveReader::Ready(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
                      nsresult aStatus)
 {
   mStatus = READY;

@@ -27,7 +27,7 @@ uint32_t CreateFileTask::sOutputBufferSize = 0;
 
 CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
                                const nsAString& aPath,
-                               Blob* aBlobData,
+                               File* aBlobData,
                                InfallibleTArray<uint8_t>& aArrayData,
                                bool replace,
                                ErrorResult& aRv)
@@ -127,7 +127,9 @@ FileSystemResponseValue
 CreateFileTask::GetSuccessRequestResult() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  BlobParent* actor = GetBlobParent(mTargetFileImpl);
+  nsRefPtr<File> file = new File(mFileSystem->GetWindow(),
+                                       mTargetFileImpl);
+  BlobParent* actor = GetBlobParent(file);
   if (!actor) {
     return FileSystemErrorResponse(NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR);
   }
@@ -301,8 +303,8 @@ CreateFileTask::HandlerCallback()
     return;
   }
 
-  nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetFileImpl);
-  mPromise->MaybeResolve(blob);
+  nsCOMPtr<nsIDOMFile> file = new File(mFileSystem->GetWindow(), mTargetFileImpl);
+  mPromise->MaybeResolve(file);
   mPromise = nullptr;
   mBlobData = nullptr;
 }

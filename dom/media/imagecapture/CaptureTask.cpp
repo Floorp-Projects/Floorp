@@ -15,18 +15,18 @@
 namespace mozilla {
 
 nsresult
-CaptureTask::TaskComplete(already_AddRefed<dom::Blob> aBlob, nsresult aRv)
+CaptureTask::TaskComplete(already_AddRefed<dom::File> aBlob, nsresult aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   DetachStream();
 
   nsresult rv;
-  nsRefPtr<dom::Blob> blob(aBlob);
+  nsRefPtr<dom::File> blob(aBlob);
 
   // We have to set the parent because the blob has been generated with a valid one.
   if (blob) {
-    blob = dom::Blob::Create(mImageCapture->GetParentObject(), blob->Impl());
+    blob = new dom::File(mImageCapture->GetParentObject(), blob->Impl());
   }
 
   if (mPrincipalChanged) {
@@ -103,9 +103,9 @@ CaptureTask::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
   public:
     explicit EncodeComplete(CaptureTask* aTask) : mTask(aTask) {}
 
-    nsresult ReceiveBlob(already_AddRefed<dom::Blob> aBlob) override
+    nsresult ReceiveBlob(already_AddRefed<dom::File> aBlob) override
     {
-      nsRefPtr<dom::Blob> blob(aBlob);
+      nsRefPtr<dom::File> blob(aBlob);
       mTask->TaskComplete(blob.forget(), NS_OK);
       mTask = nullptr;
       return NS_OK;

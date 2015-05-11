@@ -2210,7 +2210,7 @@ WebSocket::Send(const nsAString& aData,
 }
 
 void
-WebSocket::Send(Blob& aData, ErrorResult& aRv)
+WebSocket::Send(File& aData, ErrorResult& aRv)
 {
   AssertIsOnTargetThread();
 
