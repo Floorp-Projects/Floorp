@@ -195,6 +195,12 @@ PKT_SIGNUP_OVERLAY.prototype = {
             $('body').addClass('pkt_ext_signup_overflow');
         }
 
+        // extra modifier class for language
+        if (this.locale)
+        {
+            $('body').addClass('pkt_ext_signup_' + this.locale);
+        }
+
         // Create actual content
         if (this.variant == 'storyboard')
         {
