@@ -82,7 +82,7 @@ var ignoreCallees = {
     "z_stream_s.zfree" : true,
     "GrGLInterface.fCallback" : true,
     "std::strstreambuf._M_alloc_fun" : true,
-    "std::strstreambuf._M_free_fun" : true,
+    "std::strstreambuf._M_free_fun" : true
 };
 
 function fieldCallCannotGC(csu, fullfield)

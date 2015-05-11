@@ -7,13 +7,16 @@
 #ifndef MOZ_PROFILE_ENTRY_H
 #define MOZ_PROFILE_ENTRY_H
 
-#include <map>
 #include <ostream>
 #include "GeckoProfiler.h"
 #include "platform.h"
-#include "JSStreamWriter.h"
+#include "ProfileJSONWriter.h"
 #include "ProfilerBacktrace.h"
 #include "nsRefPtr.h"
+#include "nsHashKeys.h"
+#include "nsDataHashtable.h"
+#include "js/ProfilingFrameIterator.h"
+#include "js/TrackedOptimizationInfo.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Vector.h"
@@ -74,24 +77,138 @@ private:
 
 typedef void (*IterateTagsCallback)(const ProfileEntry& entry, const char* tagStringData);
 
-class UniqueJITOptimizations {
- public:
-  bool empty() const {
-    return mOpts.empty();
+class UniqueJSONStrings
+{
+public:
+  UniqueJSONStrings() {
+    mStringTableWriter.StartBareList();
   }
 
-  mozilla::Maybe<unsigned> getIndex(void* addr, JSRuntime* rt);
-  void stream(JSStreamWriter& b, JSRuntime* rt);
+  ~UniqueJSONStrings() {
+    mStringTableWriter.EndBareList();
+  }
 
- private:
-  struct OptimizationKey {
-    void* mEntryAddr;
-    uint8_t mIndex;
-    bool operator<(const OptimizationKey& other) const;
+  void SpliceStringTableElements(SpliceableJSONWriter& aWriter) const {
+    aWriter.Splice(mStringTableWriter.WriteFunc());
+  }
+
+  void WriteProperty(mozilla::JSONWriter& aWriter, const char* aName, const char* aStr) {
+    aWriter.IntProperty(aName, GetOrAddIndex(aStr));
+  }
+
+  void WriteElement(mozilla::JSONWriter& aWriter, const char* aStr) {
+    aWriter.IntElement(GetOrAddIndex(aStr));
+  }
+
+  uint32_t GetOrAddIndex(const char* aStr);
+
+private:
+  SpliceableChunkedJSONWriter mStringTableWriter;
+  nsDataHashtable<nsCharPtrHashKey, uint32_t> mStringToIndexMap;
+};
+
+class UniqueStacks
+{
+public:
+  struct FrameKey {
+    std::string mLocation;
+    mozilla::Maybe<unsigned> mLine;
+    mozilla::Maybe<unsigned> mCategory;
+    mozilla::Maybe<void*> mJITAddress;
+    mozilla::Maybe<uint32_t> mJITDepth;
+
+    explicit FrameKey(const char* aLocation)
+     : mLocation(aLocation)
+    { }
+
+    FrameKey(void* aJITAddress, uint32_t aJITDepth)
+     : mJITAddress(mozilla::Some(aJITAddress))
+     , mJITDepth(mozilla::Some(aJITDepth))
+    { }
+
+    uint32_t Hash() const;
+    bool operator==(const FrameKey& aOther) const;
   };
 
-  mozilla::Vector<OptimizationKey> mOpts;
-  std::map<OptimizationKey, unsigned> mOptToIndexMap;
+  // A FrameKey that holds a scoped reference to a JIT FrameHandle.
+  struct MOZ_STACK_CLASS OnStackFrameKey : public FrameKey {
+    const JS::ForEachProfiledFrameOp::FrameHandle* mJITFrameHandle;
+
+    explicit OnStackFrameKey(const char* aLocation)
+      : FrameKey(aLocation)
+      , mJITFrameHandle(nullptr)
+    { }
+
+    OnStackFrameKey(void* aJITAddress, unsigned aJITDepth)
+      : FrameKey(aJITAddress, aJITDepth)
+      , mJITFrameHandle(nullptr)
+    { }
+
+    OnStackFrameKey(void* aJITAddress, unsigned aJITDepth,
+                    const JS::ForEachProfiledFrameOp::FrameHandle& aJITFrameHandle)
+      : FrameKey(aJITAddress, aJITDepth)
+      , mJITFrameHandle(&aJITFrameHandle)
+    { }
+  };
+
+  struct StackKey {
+    mozilla::Maybe<uint32_t> mPrefixHash;
+    mozilla::Maybe<uint32_t> mPrefix;
+    uint32_t mFrame;
+
+    explicit StackKey(uint32_t aFrame)
+     : mFrame(aFrame)
+    { }
+
+    uint32_t Hash() const;
+    bool operator==(const StackKey& aOther) const;
+  };
+
+  class Stack {
+  public:
+    Stack(UniqueStacks& aUniqueStacks, const OnStackFrameKey& aRoot);
+
+    void AppendFrame(const OnStackFrameKey& aFrame);
+    uint32_t GetOrAddIndex() const;
+
+  private:
+    UniqueStacks& mUniqueStacks;
+    StackKey mStack;
+  };
+
+  explicit UniqueStacks(JSRuntime* aRuntime);
+  ~UniqueStacks();
+
+  Stack BeginStack(const OnStackFrameKey& aRoot);
+  uint32_t LookupJITFrameDepth(void* aAddr);
+  void AddJITFrameDepth(void* aAddr, unsigned depth);
+  void SpliceFrameTableElements(SpliceableJSONWriter& aWriter) const;
+  void SpliceStackTableElements(SpliceableJSONWriter& aWriter) const;
+
+private:
+  uint32_t GetOrAddFrameIndex(const OnStackFrameKey& aFrame);
+  uint32_t GetOrAddStackIndex(const StackKey& aStack);
+  void StreamFrame(const OnStackFrameKey& aFrame);
+  void StreamStack(const StackKey& aStack);
+
+public:
+  UniqueJSONStrings mUniqueStrings;
+
+private:
+  JSRuntime* mRuntime;
+
+  // To avoid incurring JitcodeGlobalTable lookup costs for every JIT frame,
+  // we cache the depth of frames keyed by JIT code address. If an address a
+  // maps to a depth d, then frames keyed by a for depths 0 to d are
+  // guaranteed to be in mFrameToIndexMap.
+  nsDataHashtable<nsVoidPtrHashKey, uint32_t> mJITFrameDepthMap;
+
+  uint32_t mFrameCount;
+  SpliceableChunkedJSONWriter mFrameTableWriter;
+  nsDataHashtable<nsGenericHashKey<FrameKey>, uint32_t> mFrameToIndexMap;
+
+  SpliceableChunkedJSONWriter mStackTableWriter;
+  nsDataHashtable<nsGenericHashKey<StackKey>, uint32_t> mStackToIndexMap;
 };
 
 class ProfileBuffer {
@@ -102,9 +219,10 @@ public:
 
   void addTag(const ProfileEntry& aTag);
   void IterateTagsForThread(IterateTagsCallback aCallback, int aThreadId);
-  void StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, float aSinceTime,
-                               JSRuntime* rt, UniqueJITOptimizations& aUniqueOpts);
-  void StreamMarkersToJSObject(JSStreamWriter& b, int aThreadId, float aSinceTime);
+  void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId, float aSinceTime,
+                           JSRuntime* rt, UniqueStacks& aUniqueStacks);
+  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId, float aSinceTime,
+                           UniqueStacks& aUniqueStacks);
   void DuplicateLastSample(int aThreadId);
 
   void addStoredMarker(ProfilerMarker* aStoredMarker);
@@ -140,6 +258,99 @@ public:
   ProfilerMarkerLinkedList mStoredMarkers;
 };
 
+//
+// ThreadProfile JSON Format
+// -------------------------
+//
+// The profile contains much duplicate information. The output JSON of the
+// profile attempts to deduplicate strings, frames, and stack prefixes, to cut
+// down on size and to increase JSON streaming speed. Deduplicated values are
+// streamed as indices into their respective tables.
+//
+// Further, arrays of objects with the same set of properties (e.g., samples,
+// frames) are output as arrays according to a schema instead of an object
+// with property names. A property that is not present is represented in the
+// array as null or undefined.
+//
+// The format of the thread profile JSON is shown by the following example
+// with 1 sample and 1 marker:
+//
+// {
+//   "name": "Foo",
+//   "tid": 42,
+//   "samples":
+//   {
+//     "schema":
+//     {
+//       "stack": 0,           /* index into stackTable */
+//       "time": 1,            /* number */
+//       "responsiveness": 2,  /* number */
+//       "rss": 3,             /* number */
+//       "uss": 4,             /* number */
+//       "frameNumber": 5,     /* number */
+//       "power": 6            /* number */
+//     },
+//     "data":
+//     [
+//       [ 1, 0.0, 0.0 ]       /* { stack: 1, time: 0.0, responsiveness: 0.0 } */
+//     ]
+//   },
+//
+//   "markers":
+//   {
+//     "schema":
+//     {
+//       "name": 0,            /* index into stringTable */
+//       "time": 1,            /* number */
+//       "data": 2             /* arbitrary JSON */
+//     },
+//     "data":
+//     [
+//       [ 3, 0.1 ]            /* { name: 'example marker', time: 0.1 } */
+//     ]
+//   },
+//
+//   "stackTable":
+//   {
+//     "schema":
+//     {
+//       "prefix": 0,          /* index into stackTable */
+//       "frame": 1            /* index into frameTable */
+//     },
+//     "data":
+//     [
+//       [ null, 0 ],          /* (root) */
+//       [ 0,    1 ]           /* (root) > foo.js */
+//     ]
+//   },
+//
+//   "frameTable":
+//   {
+//     "schema":
+//     {
+//       "location": 0,        /* index into stringTable */
+//       "implementation": 1,  /* index into stringTable */
+//       "optimizations": 2,   /* arbitrary JSON */
+//       "line": 3,            /* number */
+//       "category": 4         /* number */
+//     },
+//     "data":
+//     [
+//       [ 0 ],                /* { location: '(root)' } */
+//       [ 1, 2 ]              /* { location: 'foo.js', implementation: 'baseline' } */
+//     ]
+//   },
+//
+//   "stringTable":
+//   [
+//     "(root)",
+//     "foo.js",
+//     "baseline",
+//     "example marker"
+//   ]
+// }
+//
+
 class ThreadProfile
 {
 public:
@@ -153,13 +364,12 @@ public:
    * expired.
    */
   void addStoredMarker(ProfilerMarker *aStoredMarker);
-
   void IterateTags(IterateTagsCallback aCallback);
   void ToStreamAsJSON(std::ostream& stream, float aSinceTime = 0);
-  JSObject *ToJSObject(JSContext *aCx, float aSinceTime = 0);
+  JSObject* ToJSObject(JSContext *aCx, float aSinceTime = 0);
   PseudoStack* GetPseudoStack();
   mozilla::Mutex* GetMutex();
-  void StreamJSObject(JSStreamWriter& b, float aSinceTime = 0);
+  void StreamJSON(SpliceableJSONWriter& aWriter, float aSinceTime = 0);
 
   /**
    * Call this method when the JS entries inside the buffer are about to
@@ -191,6 +401,10 @@ public:
     return mBuffer->mGeneration;
   }
 
+protected:
+  void StreamSamplesAndMarkers(SpliceableJSONWriter& aWriter, float aSinceTime,
+                               UniqueStacks& aUniqueStacks);
+
 private:
   FRIEND_TEST(ThreadProfile, InsertOneTag);
   FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
@@ -205,9 +419,9 @@ private:
   // stringifying JIT frames). In the case of JSRuntime destruction,
   // FlushSamplesAndMarkers should be called to save them. These are spliced
   // into the final stream.
-  std::string mSavedStreamedSamples;
-  std::string mSavedStreamedMarkers;
-  std::string mSavedStreamedOptimizations;
+  mozilla::UniquePtr<char[]> mSavedStreamedSamples;
+  mozilla::UniquePtr<char[]> mSavedStreamedMarkers;
+  mozilla::Maybe<UniqueStacks> mUniqueStacks;
 
   PseudoStack*   mPseudoStack;
   mozilla::Mutex mMutex;
