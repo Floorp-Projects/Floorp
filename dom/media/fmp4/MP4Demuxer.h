@@ -51,6 +51,7 @@ private:
   nsRefPtr<mp4_demuxer::ResourceStream> mStream;
   nsRefPtr<MediaLargeByteBuffer> mInitData;
   UniquePtr<mp4_demuxer::MP4Metadata> mMetadata;
+  nsTArray<nsRefPtr<MP4TrackDemuxer>> mDemuxers;
 };
 
 class MP4TrackDemuxer : public MediaTrackDemuxer
@@ -76,7 +77,11 @@ public:
 
   virtual int64_t GetEvictionOffset(media::TimeUnit aTime) override;
 
+  virtual void BreakCycles() override;
+
 private:
+  friend class MP4Demuxer;
+  void NotifyDataArrived();
   void UpdateSamples(nsTArray<nsRefPtr<MediaRawData>>& aSamples);
   nsRefPtr<MP4Demuxer> mParent;
   nsRefPtr<mp4_demuxer::Index> mIndex;

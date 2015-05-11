@@ -93,8 +93,10 @@ MP4Demuxer::GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber)
   if (mMetadata->GetNumberTracks(aType) <= aTrackNumber) {
     return nullptr;
   }
-  nsRefPtr<MediaTrackDemuxer> e =
+  nsRefPtr<MP4TrackDemuxer> e =
     new MP4TrackDemuxer(this, aType, aTrackNumber);
+  mDemuxers.AppendElement(e);
+
   return e.forget();
 }
 
@@ -107,7 +109,9 @@ MP4Demuxer::IsSeekable() const
 void
 MP4Demuxer::NotifyDataArrived(uint32_t aLength, int64_t aOffset)
 {
-  // TODO. May not be required for our use
+  for (uint32_t i = 0; i < mDemuxers.Length(); i++) {
+    mDemuxers[i]->NotifyDataArrived();
+  }
 }
 
 UniquePtr<EncryptionInfo>
@@ -155,6 +159,7 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
                                   mInfo->IsAudio(),
                                   &mMonitor);
   mIterator = MakeUnique<mp4_demuxer::SampleIterator>(mIndex);
+  NotifyDataArrived(); // Force update of index
 }
 
 UniquePtr<TrackInfo>
@@ -301,7 +306,6 @@ MP4TrackDemuxer::GetBuffered()
   nsTArray<mp4_demuxer::Interval<int64_t>> timeRanges;
 
   MonitorAutoLock mon(mMonitor);
-  mIndex->UpdateMoofIndex(byteRanges);
   int64_t endComposition =
     mIndex->GetEndCompositionIfBuffered(byteRanges);
 
@@ -318,6 +322,25 @@ MP4TrackDemuxer::GetBuffered()
                           media::TimeUnit::FromMicroseconds(timeRanges[i].end));
   }
   return ranges;
+}
+
+void
+MP4TrackDemuxer::NotifyDataArrived()
+{
+  AutoPinned<MediaResource> resource(mParent->mResource);
+  nsTArray<MediaByteRange> byteRanges;
+  nsresult rv = resource->GetCachedRanges(byteRanges);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  MonitorAutoLock mon(mMonitor);
+  mIndex->UpdateMoofIndex(byteRanges);
+}
+
+void
+MP4TrackDemuxer::BreakCycles()
+{
+  mParent = nullptr;
 }
 
 } // namespace mozilla
