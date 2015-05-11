@@ -914,29 +914,13 @@ MediaStreamGraphImpl::RecomputeBlockingAt(const nsTArray<MediaStream*>& aStreams
                                           GraphTime aEndBlockingDecisions,
                                           GraphTime* aEnd)
 {
-  class MOZ_STACK_CLASS AfterLoop
-  {
-  public:
-    AfterLoop(MediaStream* aStream, GraphTime& aTime)
-      : mStream(aStream)
-      , mTime(aTime)
-    {}
-
-    ~AfterLoop()
-    {
-      mStream->mBlocked.SetAtAndAfter(mTime, mStream->mBlockInThisPhase);
-    }
-
-  private:
-    MediaStream* mStream;
-    GraphTime& mTime;
-  };
-
   for (uint32_t i = 0; i < aStreams.Length(); ++i) {
     MediaStream* stream = aStreams[i];
     stream->mBlockInThisPhase = false;
+  }
 
-    AfterLoop al(stream, aTime);
+  for (uint32_t i = 0; i < aStreams.Length(); ++i) {
+    MediaStream* stream = aStreams[i];
 
     if (stream->mFinished) {
       GraphTime endTime = StreamTimeToGraphTime(stream,
@@ -972,8 +956,12 @@ MediaStreamGraphImpl::RecomputeBlockingAt(const nsTArray<MediaStream*>& aStreams
       continue;
     }
   }
-
   NS_ASSERTION(*aEnd > aTime, "Failed to advance!");
+
+  for (uint32_t i = 0; i < aStreams.Length(); ++i) {
+    MediaStream* stream = aStreams[i];
+    stream->mBlocked.SetAtAndAfter(aTime, stream->mBlockInThisPhase);
+  }
 }
 
 void
