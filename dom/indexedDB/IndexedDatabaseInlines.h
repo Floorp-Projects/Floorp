@@ -36,7 +36,7 @@ inline
 bool
 StructuredCloneFile::operator==(const StructuredCloneFile& aOther) const
 {
-  return this->mBlob == aOther.mBlob &&
+  return this->mFile == aOther.mFile &&
          this->mFileInfo == aOther.mFileInfo;
 }
 

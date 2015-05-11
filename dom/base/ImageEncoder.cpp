@@ -90,8 +90,8 @@ public:
 
     if (!mFailed) {
       // The correct parentObject has to be set by the mEncodeCompleteCallback.
-      nsRefPtr<Blob> blob =
-        Blob::CreateMemoryBlob(nullptr, mImgData, mImgSize, mType);
+      nsRefPtr<File> blob =
+        File::CreateMemoryFile(nullptr, mImgData, mImgSize, mType);
       MOZ_ASSERT(blob);
 
       rv = mEncodeCompleteCallback->ReceiveBlob(blob.forget());

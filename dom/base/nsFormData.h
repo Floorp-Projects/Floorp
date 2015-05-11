@@ -35,9 +35,7 @@ class nsFormData final : public nsIDOMFormData,
 private:
   ~nsFormData() {}
 
-  typedef mozilla::dom::Blob Blob;
   typedef mozilla::dom::File File;
-
   struct FormDataTuple
   {
     nsString name;
@@ -63,11 +61,11 @@ private:
 
   void SetNameFilePair(FormDataTuple* aData,
                        const nsAString& aName,
-                       File* aFile)
+                       File* aBlob)
   {
     MOZ_ASSERT(aData);
     aData->name = aName;
-    aData->fileValue = aFile;
+    aData->fileValue = aBlob;
     aData->valueIsFile = true;
   }
 
@@ -97,13 +95,13 @@ public:
               const mozilla::dom::Optional<mozilla::dom::NonNull<mozilla::dom::HTMLFormElement> >& aFormElement,
               mozilla::ErrorResult& aRv);
   void Append(const nsAString& aName, const nsAString& aValue);
-  void Append(const nsAString& aName, Blob& aBlob,
+  void Append(const nsAString& aName, File& aBlob,
               const mozilla::dom::Optional<nsAString>& aFilename);
   void Delete(const nsAString& aName);
   void Get(const nsAString& aName, mozilla::dom::Nullable<mozilla::dom::OwningFileOrUSVString>& aOutValue);
   void GetAll(const nsAString& aName, nsTArray<mozilla::dom::OwningFileOrUSVString>& aValues);
   bool Has(const nsAString& aName);
-  void Set(const nsAString& aName, Blob& aBlob,
+  void Set(const nsAString& aName, File& aBlob,
            const mozilla::dom::Optional<nsAString>& aFilename);
   void Set(const nsAString& aName, const nsAString& aValue);
 
@@ -118,7 +116,12 @@ public:
     return NS_OK;
   }
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   File* aFile) override;
+                                   File* aBlob) override
+  {
+    FormDataTuple* data = mFormData.AppendElement();
+    SetNameFilePair(data, aName, aBlob);
+    return NS_OK;
+  }
 
   typedef bool (*FormDataEntryCallback)(const nsString& aName, bool aIsFile,
                                         const nsString& aValue,

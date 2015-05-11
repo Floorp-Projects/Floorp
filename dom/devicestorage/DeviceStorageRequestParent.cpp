@@ -523,12 +523,12 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
 
   nsString fullPath;
   mFile->GetFullPath(fullPath);
-  nsRefPtr<FileImpl> blob =
+  nsRefPtr<File> blob = new File(nullptr,
     new FileImplFile(fullPath, mime, mLength, mFile->mFile,
-                     mLastModificationDate);
+                     mLastModificationDate));
 
   ContentParent* cp = static_cast<ContentParent*>(mParent->Manager());
-  BlobParent* actor = cp->GetOrCreateActorForFileImpl(blob);
+  BlobParent* actor = cp->GetOrCreateActorForBlob(blob);
   if (!actor) {
     ErrorResponse response(NS_LITERAL_STRING(POST_ERROR_EVENT_UNKNOWN));
     unused << mParent->Send__delete__(mParent, response);

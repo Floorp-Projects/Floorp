@@ -397,7 +397,7 @@ EnsureBlobForBackgroundManager(FileImpl* aBlobImpl,
   return blobImpl.forget();
 }
 
-already_AddRefed<Blob>
+already_AddRefed<File>
 ReadBlobOrFileNoWrap(JSContext* aCx,
                      JSStructuredCloneReader* aReader,
                      bool aIsMainThread)
@@ -436,7 +436,7 @@ ReadBlobOrFileNoWrap(JSContext* aCx,
     parent = do_QueryObject(globalScope);
   }
 
-  nsRefPtr<Blob> blob = Blob::Create(parent, blobImpl);
+  nsRefPtr<File> blob = new File(parent, blobImpl);
   return blob.forget();
 }
 
@@ -446,7 +446,7 @@ ReadBlobOrFile(JSContext* aCx,
                bool aIsMainThread,
                JS::MutableHandle<JSObject*> aBlobOrFile)
 {
-  nsRefPtr<Blob> blob = ReadBlobOrFileNoWrap(aCx, aReader, aIsMainThread);
+  nsRefPtr<File> blob = ReadBlobOrFileNoWrap(aCx, aReader, aIsMainThread);
   aBlobOrFile.set(blob->WrapObject(aCx, JS::NullPtr()));
 }
 
@@ -495,7 +495,7 @@ ReadFormData(JSContext* aCx,
     if (isFile) {
       // Read out the tag since the blob reader isn't expecting it.
       MOZ_ALWAYS_TRUE(JS_ReadUint32Pair(aReader, &dummy, &dummy));
-      nsRefPtr<Blob> blob = ReadBlobOrFileNoWrap(aCx, aReader, aIsMainThread);
+      nsRefPtr<File> blob = ReadBlobOrFileNoWrap(aCx, aReader, aIsMainThread);
       MOZ_ASSERT(blob);
       formData->Append(name, *blob, thirdArg);
     } else {
@@ -646,7 +646,7 @@ struct WorkerStructuredCloneCallbacks
 
     // See if this is a Blob/File object.
     {
-      nsRefPtr<Blob> blob;
+      nsRefPtr<File> blob;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
         FileImpl* blobImpl = blob->Impl();
         MOZ_ASSERT(blobImpl);
@@ -738,7 +738,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
 
     // See if this is a Blob/File object.
     {
-      nsRefPtr<Blob> blob;
+      nsRefPtr<File> blob;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
         FileImpl* blobImpl = blob->Impl();
         MOZ_ASSERT(blobImpl);

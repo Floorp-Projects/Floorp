@@ -93,7 +93,7 @@ nsIContentChild::DeallocPBlobChild(PBlobChild* aActor)
 }
 
 BlobChild*
-nsIContentChild::GetOrCreateActorForBlob(Blob* aBlob)
+nsIContentChild::GetOrCreateActorForBlob(File* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlob);
@@ -101,16 +101,7 @@ nsIContentChild::GetOrCreateActorForBlob(Blob* aBlob)
   nsRefPtr<FileImpl> blobImpl = aBlob->Impl();
   MOZ_ASSERT(blobImpl);
 
-  return GetOrCreateActorForFileImpl(blobImpl);
-}
-
-BlobChild*
-nsIContentChild::GetOrCreateActorForFileImpl(FileImpl* aImpl)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aImpl);
-
-  BlobChild* actor = BlobChild::GetOrCreate(this, aImpl);
+  BlobChild* actor = BlobChild::GetOrCreate(this, blobImpl);
   NS_ENSURE_TRUE(actor, nullptr);
 
   return actor;

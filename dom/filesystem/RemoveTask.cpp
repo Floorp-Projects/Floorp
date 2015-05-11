@@ -92,10 +92,9 @@ RemoveTask::GetRequestParams(const nsString& aFileSystem) const
   param.directory() = mDirRealPath;
   param.recursive() = mRecursive;
   if (mTargetFileImpl) {
-    nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(),
-                                       mTargetFileImpl);
+    nsRefPtr<File> file = new File(mFileSystem->GetWindow(), mTargetFileImpl);
     BlobChild* actor
-      = ContentChild::GetSingleton()->GetOrCreateActorForBlob(blob);
+      = ContentChild::GetSingleton()->GetOrCreateActorForBlob(file);
     if (actor) {
       param.target() = actor;
     }

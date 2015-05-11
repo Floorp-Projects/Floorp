@@ -102,9 +102,9 @@ ImageCapture::TakePhotoByMediaEngine()
       mPrincipalChanged = true;
     }
 
-    nsresult PhotoComplete(already_AddRefed<Blob> aBlob) override
+    nsresult PhotoComplete(already_AddRefed<File> aBlob) override
     {
-      nsRefPtr<Blob> blob = aBlob;
+      nsRefPtr<File> blob = aBlob;
 
       if (mPrincipalChanged) {
         return PhotoError(NS_ERROR_DOM_SECURITY_ERR);
@@ -172,7 +172,7 @@ ImageCapture::TakePhoto(ErrorResult& aResult)
 }
 
 nsresult
-ImageCapture::PostBlobEvent(Blob* aBlob)
+ImageCapture::PostBlobEvent(File* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!CheckPrincipal()) {

@@ -1405,7 +1405,7 @@ nsDOMCameraControl::OnTakePictureComplete(nsIDOMBlob* aPicture)
     promise->MaybeResolve(picture);
   }
 
-  nsRefPtr<Blob> blob = static_cast<Blob*>(aPicture);
+  nsRefPtr<File> blob = static_cast<File*>(aPicture);
   BlobEventInit eventInit;
   eventInit.mData = blob;
 
