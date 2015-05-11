@@ -4,32 +4,16 @@
 
 <!ENTITY aboutTelemetry.pageTitle "Telemetry Data">
 
-<!ENTITY aboutTelemetry.changeDataChoices "
-  Change
+<!ENTITY aboutTelemetry.telemetryEnabled "
+  Telemetry is <span>enabled</span>.
 ">
 
-<!ENTITY aboutTelemetry.uploadEnabled "
-  FHR data upload is <span>enabled</span>.
-">
-
-<!ENTITY aboutTelemetry.uploadDisabled "
-  FHR data upload is <span>disabled</span>.
-">
-
-<!ENTITY aboutTelemetry.extendedRecordingEnabled "
-  Extended Telemetry recording is <span>enabled</span>.
-">
-
-<!ENTITY aboutTelemetry.extendedRecordingDisabled "
-  Extended Telemetry recording is <span>disabled</span>.
+<!ENTITY aboutTelemetry.telemetryDisabled "
+  Telemetry is <span>disabled</span>.
 ">
 
 <!ENTITY aboutTelemetry.generalDataSection "
   General Data
-">
-
-<!ENTITY aboutTelemetry.environmentDataSection "
-  Environment Data
 ">
 
 <!ENTITY aboutTelemetry.telemetryLogSection "

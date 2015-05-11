@@ -7,7 +7,6 @@
 "use strict";
 
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
-Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
@@ -18,7 +17,6 @@ XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "datareporting", "archived");
 });
 
-const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 
 function run_test() {
   do_get_profile(true);
@@ -166,33 +164,4 @@ add_task(function* test_clientId() {
 
   // Finish setup.
   yield promiseSetup;
-});
-
-add_task(function* test_currentPingData() {
-  yield TelemetrySession.setup();
-
-  // Setup test data.
-  let h = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");
-  h.clear();
-  h.add(1);
-  let k = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_FLAG");
-  k.clear();
-  k.add("a", 1);
-
-  // Get current ping data objects and check that their data is sane.
-  for (let subsession of [true, false]) {
-    let ping = yield TelemetryController.getCurrentPingData(subsession);
-
-    Assert.ok(!!ping, "Should have gotten a ping.");
-    Assert.equal(ping.type, "main", "Ping should have correct type.");
-    Assert.equal(ping.payload.info.reason, subsession ? "gather-payload" : "gather-subsession-payload",
-                 "Ping should have the correct reason.");
-
-    let id = "TELEMETRY_TEST_COUNT";
-    Assert.ok(id in ping.payload.histograms, "Payload should have test count histogram.");
-    Assert.equal(ping.payload.histograms[id].sum, 1, "Test count value should match.");
-    id = "TELEMETRY_TEST_KEYED_FLAG";
-    Assert.ok(id in ping.payload.keyedHistograms, "Payload should have keyed test histogram.");
-    Assert.equal(ping.payload.keyedHistograms[id]["a"].sum, 1, "Keyed test value should match.");
-  }
 });

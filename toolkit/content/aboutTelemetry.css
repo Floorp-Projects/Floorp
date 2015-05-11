@@ -27,16 +27,11 @@ h2 {
   padding: 10px;
 }
 
-.description-enabled,
-.description-disabled {
-  margin: 0px;
-}
-
-.description-enabled > span {
+#description-enabled > span {
   color: green;
 }
 
-.description-disabled > span {
+#description-disabled > span {
   color: red;
 }
 
