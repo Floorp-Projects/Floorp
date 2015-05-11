@@ -13,6 +13,7 @@
 #include "nsUTF8Utils.h"
 #include <intrin.h>
 #include <math.h>
+#include "mozilla/WindowsVersion.h"
 
 #ifndef XRE_DONT_PROTECT_DLL_LOAD
 #include "nsSetDllDirectory.h"
@@ -91,12 +92,12 @@ int wmain(int argc, WCHAR **argv)
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER < 1900 && defined(_M_X64)
-  // Disable CRT use of FMA3 on non-AVX2 processors because of bug 1160148
+  // Disable CRT use of FMA3 on non-AVX2 CPUs and on Win7RTM due to bug 1160148
   int cpuid0[4] = {0};
   int cpuid7[4] = {0};
   __cpuid(cpuid0, 0); // Get the maximum supported CPUID function
   __cpuid(cpuid7, 7); // AVX2 is function 7, subfunction 0, EBX, bit 5
-  if (cpuid0[0] < 7 || !(cpuid7[1] & 0x20)) {
+  if (cpuid0[0] < 7 || !(cpuid7[1] & 0x20) || !mozilla::IsWin7SP1OrLater()) {
     _set_FMA3_enable(0);
   }
 #endif
