@@ -568,6 +568,12 @@ PKT_SAVED_OVERLAY.prototype = {
             $('body').addClass('pkt_ext_saved_overflow');
         }
 
+        // extra modifier class for language
+        if (this.locale)
+        {
+            $('body').addClass('pkt_ext_saved_' + this.locale);
+        }
+
         // Create actual content
         $('body').append(Handlebars.templates.saved_shell(this.dictJSON));
 
