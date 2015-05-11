@@ -128,6 +128,7 @@ MoofParser::HasMetadata()
   BoxContext context(stream, byteRanges);
   for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("moov")) {
+      mInitRange = MediaByteRange(box.Range().mStart, box.Range().mEnd);
       return true;
     }
   }
