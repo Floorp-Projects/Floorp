@@ -83,7 +83,9 @@ JS_EXPORT_API(void)
 JSPrincipals::dump()
 {
     if (debugToken == nsJSPrincipals::DEBUG_TOKEN) {
-        static_cast<nsJSPrincipals *>(this)->dumpImpl();
+      nsAutoCString str;
+      static_cast<nsJSPrincipals *>(this)->GetScriptLocation(str);
+      fprintf(stderr, "nsIPrincipal (%p) = %s\n", static_cast<void*>(this), str.get());
     } else if (debugToken == mozilla::dom::workers::kJSPrincipalsDebugToken) {
         fprintf(stderr, "Web Worker principal singleton (%p)\n", this);
     } else {
