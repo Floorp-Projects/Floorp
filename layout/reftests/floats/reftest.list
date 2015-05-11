@@ -35,6 +35,14 @@ fails == 345369-2.html 345369-2-ref.html
 == float-in-rtl-4b.html float-in-rtl-4-ref.html
 == float-in-rtl-4c.html float-in-rtl-4-ref.html
 == float-in-rtl-4d.html float-in-rtl-4-ref.html
+
+# Testcases that involve vertical writing mode.
+#
+# XXX The default-preferences setting here can be removed after the
+#     pref has been made true by default for all channels (bug 1138384).
+
+default-preferences pref(layout.css.vertical-text.enabled,true)
+
 == float-in-rtl-vlr-1a.html float-in-rtl-vlr-1-ref.html
 == float-in-rtl-vlr-1b.html float-in-rtl-vlr-1-ref.html
 == float-in-rtl-vlr-1c.html float-in-rtl-vlr-1-ref.html
@@ -67,7 +75,7 @@ fails == float-in-rtl-vrl-4a.html float-in-rtl-vrl-4-ref.html # bug 1131451
 fails == float-in-rtl-vrl-4b.html float-in-rtl-vrl-4-ref.html # bug 1131451
 fails == float-in-rtl-vrl-4c.html float-in-rtl-vrl-4-ref.html # bug 1131451
 fails == float-in-rtl-vrl-4d.html float-in-rtl-vrl-4-ref.html # bug 1131451
-pref(layout.css.vertical-text.enabled,true) fuzzy-if(OSX==1010,26,7) fuzzy-if(Android,16,2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
-pref(layout.css.vertical-text.enabled,true) fuzzy-if(OSX==1010,26,7) == orthogonal-floats-1b.html orthogonal-floats-1-ref.html
-pref(layout.css.vertical-text.enabled,true) fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
-pref(layout.css.vertical-text.enabled,true) fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX==1010,26,7) fuzzy-if(Android,16,2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX==1010,26,7) == orthogonal-floats-1b.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
