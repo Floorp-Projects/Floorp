@@ -614,11 +614,11 @@ MediaEngineGonkVideoSource::OnTakePictureComplete(const uint8_t* aData, uint32_t
 
     NS_IMETHOD Run()
     {
-      nsRefPtr<dom::File> blob =
-        dom::File::CreateMemoryFile(nullptr, mPhotoData, mPhotoDataLength, mMimeType);
+      nsRefPtr<dom::Blob> blob =
+        dom::Blob::CreateMemoryBlob(nullptr, mPhotoData, mPhotoDataLength, mMimeType);
       uint32_t callbackCounts = mCallbacks.Length();
       for (uint8_t i = 0; i < callbackCounts; i++) {
-        nsRefPtr<dom::File> tempBlob = blob;
+        nsRefPtr<dom::Blob> tempBlob = blob;
         mCallbacks[i]->PhotoComplete(tempBlob.forget());
       }
       // PhotoCallback needs to dereference on main thread.

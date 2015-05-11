@@ -766,7 +766,7 @@ BluetoothAdapter::IsConnected(const uint16_t aServiceUuid, ErrorResult& aRv)
 
 already_AddRefed<DOMRequest>
 BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
-                           File& aBlob, ErrorResult& aRv)
+                           Blob& aBlob, ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
