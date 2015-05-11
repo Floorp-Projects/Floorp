@@ -4190,12 +4190,8 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     aMargin.ISize(aWM) + aBorder.ISize(aWM) + aPadding.ISize(aWM) -
     boxSizingAdjust.ISize(aWM);
 
-  bool isVertical = aWM.IsVertical();
-
-  const nsStyleCoord* inlineStyleCoord =
-    isVertical ? &(stylePos->mHeight) : &(stylePos->mWidth);
-  const nsStyleCoord* blockStyleCoord =
-    isVertical ? &(stylePos->mWidth) : &(stylePos->mHeight);
+  const nsStyleCoord* inlineStyleCoord = &stylePos->ISize(aWM);
+  const nsStyleCoord* blockStyleCoord = &stylePos->BSize(aWM);
 
   bool isFlexItem = IsFlexItem();
   bool isInlineFlexItem = false;
@@ -4241,8 +4237,7 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
         *inlineStyleCoord);
   }
 
-  const nsStyleCoord& maxISizeCoord =
-    isVertical ? stylePos->mMaxHeight : stylePos->mMaxWidth;
+  const nsStyleCoord& maxISizeCoord = stylePos->MaxISize(aWM);
 
   // Flex items ignore their min & max sizing properties in their
   // flex container's main-axis.  (Those properties get applied later in
@@ -4256,8 +4251,7 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     result.ISize(aWM) = std::min(maxISize, result.ISize(aWM));
   }
 
-  const nsStyleCoord& minISizeCoord =
-    isVertical ? stylePos->mMinHeight : stylePos->mMinWidth;
+  const nsStyleCoord& minISizeCoord = stylePos->MinISize(aWM);
 
   nscoord minISize;
   if (minISizeCoord.GetUnit() != eStyleUnit_Auto &&
@@ -4288,8 +4282,7 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                        *blockStyleCoord);
   }
 
-  const nsStyleCoord& maxBSizeCoord =
-    isVertical ? stylePos->mMaxWidth : stylePos->mMaxHeight;
+  const nsStyleCoord& maxBSizeCoord = stylePos->MaxBSize(aWM);
 
   if (result.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
     if (!nsLayoutUtils::IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM)) &&
@@ -4301,8 +4294,7 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
       result.BSize(aWM) = std::min(maxBSize, result.BSize(aWM));
     }
 
-    const nsStyleCoord& minBSizeCoord =
-      isVertical ? stylePos->mMinWidth : stylePos->mMinHeight;
+    const nsStyleCoord& minBSizeCoord = stylePos->MinBSize(aWM);
 
     if (!nsLayoutUtils::IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM)) &&
         !(isFlexItem && !isInlineFlexItem)) {
@@ -4398,9 +4390,7 @@ nsFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   LogicalSize result(aWM, 0xdeadbeef, NS_UNCONSTRAINEDSIZE);
 
   // don't bother setting it if the result won't be used
-  const nsStyleCoord& inlineStyleCoord =
-    aWM.IsVertical() ? StylePosition()->mHeight : StylePosition()->mWidth;
-  if (inlineStyleCoord.GetUnit() == eStyleUnit_Auto) {
+  if (StylePosition()->ISize(aWM).GetUnit() == eStyleUnit_Auto) {
     nscoord availBased = aAvailableISize - aMargin.ISize(aWM) -
                          aBorder.ISize(aWM) - aPadding.ISize(aWM);
     result.ISize(aWM) = ShrinkWidthToFit(aRenderingContext, availBased);
