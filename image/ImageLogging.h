@@ -11,7 +11,6 @@
 #include "prinrval.h"
 #include "nsString.h"
 
-#if defined(PR_LOGGING)
 // Declared in imgRequest.cpp.
 extern PRLogModuleInfo* GetImgLog();
 
@@ -156,18 +155,6 @@ public:
 #define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv) LogFunc(l, nullptr, s, pn, pv)
 
 #define LOG_MSG(l, s, m) LogMessage(l, this, s, m)
-
-#else
-
-#define LOG_SCOPE(l, s)
-#define LOG_SCOPE_WITH_PARAM(l, s, pn, pv)
-#define LOG_FUNC(l, s)
-#define LOG_FUNC_WITH_PARAM(l, s, pn, pv)
-#define LOG_STATIC_FUNC(l, s)
-#define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv)
-#define LOG_MSG(l, s, m)
-
-#endif // if defined(PR_LOGGING)
 
 #define LOG_MSG_WITH_PARAM LOG_FUNC_WITH_PARAM
 

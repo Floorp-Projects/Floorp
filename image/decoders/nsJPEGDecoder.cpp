@@ -36,7 +36,6 @@ static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
 namespace mozilla {
 namespace image {
 
-#if defined(PR_LOGGING)
 static PRLogModuleInfo*
 GetJPEGLog()
 {
@@ -56,10 +55,6 @@ GetJPEGDecoderAccountingLog()
   }
   return sJPEGDecoderAccountingLog;
 }
-#else
-#define GetJPEGLog()
-#define GetJPEGDecoderAccountingLog()
-#endif
 
 static qcms_profile*
 GetICCProfile(struct jpeg_decompress_struct& info)
