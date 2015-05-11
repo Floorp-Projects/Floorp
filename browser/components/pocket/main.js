@@ -459,11 +459,17 @@ var pktUI = (function() {
      */
     function resizePanel(options) {
         var iframe = getPanelFrame();
-        iframe.width = options.width;
-        iframe.height = options.height;
+        var subview = getSubview();
 
-    	// TODO : Animate the change if given options.animate = true
-    	getPanel().sizeTo(options.width, options.height);
+        if (subview) {
+          // Use the subview's size
+          iframe.style.width = "100%";
+          iframe.style.height = subview.clientHeight + "px";
+        } else {
+          // Set an explicit size, panel will adapt.
+          iframe.style.width  = options.width  + "px";
+          iframe.style.height = options.height + "px";
+        }
     }
 
     /**
@@ -640,16 +646,22 @@ var pktUI = (function() {
     function getPanelFrame() {
     	return document.getElementById('pocket-panel-iframe');
     }
-    
-    function isInOverflowMenu() {
+
+    function getSubview() {
         var frame = getPanelFrame();
         var view = frame;
         while (view && view.localName != "panelview") {
             view = view.parentNode;
         }
 
-        var isSubview = (view && view.getAttribute("current") == "true");
-        return isSubview;
+        if (view && view.getAttribute("current") == "true")
+            return view;
+        return null;
+    }
+
+    function isInOverflowMenu() {
+        var subview = getSubview();
+        return !!subview;
     }
 
     function hasLegacyExtension() {
