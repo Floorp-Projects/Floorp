@@ -1802,7 +1802,7 @@ function setupAppFiles() {
                      inGreDir : true } ];
 
   // On Linux the updater.png must also be copied
-  if (IS_UNIX && !IS_MACOSX) {
+  if (IS_UNIX && !IS_MACOSX && !IS_TOOLKIT_GONK) {
     appFiles.push( { relPath  : "icons/updater.png",
                      inGreDir : true } );
   }
@@ -1889,14 +1889,16 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
     fileRelPath = fileRelPath + ".app";
   }
 
-  Assert.ok(srcFile.exists(), MSG_SHOULD_EXIST);
+  Assert.ok(srcFile.exists(),
+            MSG_SHOULD_EXIST + ", leafName: " + srcFile.leafName);
 
   // Symlink libraries. Note that the XUL library on Mac OS X doesn't have a
   // file extension and shouldSymlink will always be false on Windows.
   let shouldSymlink = (pathParts[pathParts.length - 1] == "XUL" ||
                        fileRelPath.substr(fileRelPath.length - 3) == ".so" ||
                        fileRelPath.substr(fileRelPath.length - 6) == ".dylib");
-  if (!shouldSymlink) {
+  // The tests don't support symlinks on gonk.
+  if (!shouldSymlink || IS_TOOLKIT_GONK) {
     if (!destFile.exists()) {
       try {
         srcFile.copyToFollowingLinks(destFile.parent, destFile.leafName);
@@ -3210,7 +3212,7 @@ function UpdatePrompt(aCallback) {
   let fns = ["checkForUpdates", "showUpdateAvailable", "showUpdateDownloaded",
              "showUpdateError", "showUpdateHistory", "showUpdateInstalled"];
 
-  fns.forEach(function(aPromptFn) {
+  fns.forEach(function UP_fns(aPromptFn) {
     UpdatePrompt.prototype[aPromptFn] = function() {
       if (!this._callback) {
         return;
