@@ -2424,7 +2424,7 @@ MediaStream::AddMainThreadListener(MainThreadMediaStreamListener* aListener)
   class NotifyRunnable final : public nsRunnable
   {
   public:
-    NotifyRunnable(MediaStream* aStream)
+    explicit NotifyRunnable(MediaStream* aStream)
       : mStream(aStream)
     {}
 
