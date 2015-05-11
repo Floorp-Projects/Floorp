@@ -194,8 +194,8 @@ class TableTicker: public Sampler {
 
   void ToStreamAsJSON(std::ostream& stream, float aSinceTime = 0);
   virtual JSObject *ToJSObject(JSContext *aCx, float aSinceTime = 0);
-  void StreamMetaJSCustomObject(JSStreamWriter& b);
-  void StreamTaskTracer(JSStreamWriter& b);
+  void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
+  void StreamTaskTracer(SpliceableJSONWriter& aWriter);
   void FlushOnJSShutdown(JSRuntime* aRuntime);
   bool ProfileJS() const { return mProfileJS; }
   bool ProfileJava() const { return mProfileJava; }
@@ -219,7 +219,7 @@ protected:
   // Not implemented on platforms which do not support backtracing
   void doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample);
 
-  void StreamJSObject(JSStreamWriter& b, float aSinceTime);
+  void StreamJSON(SpliceableJSONWriter& aWriter, float aSinceTime);
 
   // This represent the application's main thread (SAMPLER_INIT)
   ThreadProfile* mPrimaryThreadProfile;
