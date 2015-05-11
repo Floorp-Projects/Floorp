@@ -31,20 +31,22 @@ nsBaseCommandController::~nsBaseCommandController()
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::Init(nsIControllerCommandTable *aCommandTable)
+nsBaseCommandController::Init(nsIControllerCommandTable* aCommandTable)
 {
   nsresult rv = NS_OK;
 
-  if (aCommandTable)
-    mCommandTable = aCommandTable;    // owning addref
-  else
-    mCommandTable = do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
-  
+  if (aCommandTable) {
+    mCommandTable = aCommandTable;
+  } else {
+    mCommandTable =
+      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
+  }
+
   return rv;
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::SetCommandContext(nsISupports *aCommandContext)
+nsBaseCommandController::SetCommandContext(nsISupports* aCommandContext)
 {
   mCommandContextWeakPtr = nullptr;
   mCommandContextRawPtr = nullptr;
@@ -55,8 +57,7 @@ nsBaseCommandController::SetCommandContext(nsISupports *aCommandContext)
       nsresult rv =
         weak->GetWeakReference(getter_AddRefs(mCommandContextWeakPtr));
       NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
+    } else {
       mCommandContextRawPtr = aCommandContext;
     }
   }
@@ -65,32 +66,30 @@ nsBaseCommandController::SetCommandContext(nsISupports *aCommandContext)
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::GetInterface(const nsIID & aIID, void * *result)
+nsBaseCommandController::GetInterface(const nsIID& aIID, void** aResult)
 {
-  NS_ENSURE_ARG_POINTER(result);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  if (NS_SUCCEEDED(QueryInterface(aIID, result)))
+  if (NS_SUCCEEDED(QueryInterface(aIID, aResult))) {
     return NS_OK;
+  }
 
-  if (aIID.Equals(NS_GET_IID(nsIControllerCommandTable)))
-  {
-    if (mCommandTable)
-      return mCommandTable->QueryInterface(aIID, result);
+  if (aIID.Equals(NS_GET_IID(nsIControllerCommandTable))) {
+    if (mCommandTable) {
+      return mCommandTable->QueryInterface(aIID, aResult);
+    }
     return NS_ERROR_NOT_INITIALIZED;
   }
-    
+
   return NS_NOINTERFACE;
 }
-
-
 
 /* =======================================================================
  * nsIController
  * ======================================================================= */
 
 NS_IMETHODIMP
-nsBaseCommandController::IsCommandEnabled(const char *aCommand,
-                                          bool *aResult)
+nsBaseCommandController::IsCommandEnabled(const char* aCommand, bool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);
@@ -106,7 +105,7 @@ nsBaseCommandController::IsCommandEnabled(const char *aCommand,
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::SupportsCommand(const char *aCommand, bool *aResult)
+nsBaseCommandController::SupportsCommand(const char* aCommand, bool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);
@@ -122,7 +121,7 @@ nsBaseCommandController::SupportsCommand(const char *aCommand, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::DoCommand(const char *aCommand)
+nsBaseCommandController::DoCommand(const char* aCommand)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_STATE(mCommandTable);
@@ -137,8 +136,8 @@ nsBaseCommandController::DoCommand(const char *aCommand)
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::DoCommandWithParams(const char *aCommand,
-                                             nsICommandParams *aParams)
+nsBaseCommandController::DoCommandWithParams(const char* aCommand,
+                                             nsICommandParams* aParams)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_STATE(mCommandTable);
@@ -153,8 +152,8 @@ nsBaseCommandController::DoCommandWithParams(const char *aCommand,
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::GetCommandStateWithParams(const char *aCommand,
-                                                   nsICommandParams *aParams)
+nsBaseCommandController::GetCommandStateWithParams(const char* aCommand,
+                                                   nsICommandParams* aParams)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_STATE(mCommandTable);
@@ -169,14 +168,15 @@ nsBaseCommandController::GetCommandStateWithParams(const char *aCommand,
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::OnEvent(const char * aEventName)
+nsBaseCommandController::OnEvent(const char* aEventName)
 {
   NS_ENSURE_ARG_POINTER(aEventName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::GetSupportedCommands(uint32_t* aCount, char*** aCommands)
+nsBaseCommandController::GetSupportedCommands(uint32_t* aCount,
+                                              char*** aCommands)
 {
   NS_ENSURE_STATE(mCommandTable);
   return mCommandTable->GetSupportedCommands(aCount, aCommands);
