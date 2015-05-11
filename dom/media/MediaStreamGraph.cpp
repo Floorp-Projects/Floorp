@@ -400,14 +400,12 @@ MediaStreamGraphImpl::IterationEnd()
 void
 MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime, GraphTime aNextCurrentTime)
 {
-  nsTArray<MediaStream*> streamsReadyToFinish;
-  nsAutoTArray<bool,800> streamHasOutput;
+  nsAutoTArray<MediaStream*, 800> streamsReadyToFinish;
+  nsAutoTArray<MediaStream*, 800> streamsWithOutput;
 
   nsTArray<MediaStream*>* runningAndSuspendedPair[2];
   runningAndSuspendedPair[0] = &mStreams;
   runningAndSuspendedPair[1] = &mSuspendedStreams;
-
-  streamHasOutput.SetLength(mStreams.Length());
 
   for (uint32_t array = 0; array < 2; array++) {
     for (uint32_t i = 0; i < runningAndSuspendedPair[array]->Length(); ++i) {
@@ -445,11 +443,15 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime, Gr
       stream->mBlocked.AdvanceCurrentTime(aNextCurrentTime);
 
       if (runningAndSuspendedPair[array] == &mStreams) {
-        streamHasOutput[i] = blockedTime < aNextCurrentTime - aPrevCurrentTime;
+        bool streamHasOutput = blockedTime < aNextCurrentTime - aPrevCurrentTime;
         // Make this an assertion when bug 957832 is fixed.
         NS_WARN_IF_FALSE(
-          !streamHasOutput[i] || !stream->mNotifiedFinished,
+          !streamHasOutput || !stream->mNotifiedFinished,
           "Shouldn't have already notified of finish *and* have output!");
+
+        if (streamHasOutput) {
+          streamsWithOutput.AppendElement(stream);
+        }
 
         if (stream->mFinished && !stream->mNotifiedFinished) {
           streamsReadyToFinish.AppendElement(stream);
@@ -462,12 +464,8 @@ MediaStreamGraphImpl::UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime, Gr
     }
   }
 
-
-  for (uint32_t i = 0; i < streamHasOutput.Length(); ++i) {
-    if (!streamHasOutput[i]) {
-      continue;
-    }
-    MediaStream* stream = mStreams[i];
+  for (uint32_t i = 0; i < streamsWithOutput.Length(); ++i) {
+    MediaStream* stream = streamsWithOutput[i];
     for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
       MediaStreamListener* l = stream->mListeners[j];
       l->NotifyOutput(this, IterationEnd());
