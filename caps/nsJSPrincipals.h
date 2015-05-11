@@ -9,34 +9,34 @@
 #include "jsapi.h"
 #include "nsIPrincipal.h"
 
-struct nsJSPrincipals : nsIPrincipal, JSPrincipals
+class nsJSPrincipals : public nsIPrincipal, public JSPrincipals
 {
+public:
+  /* SpiderMonkey security callbacks. */
   static bool Subsume(JSPrincipals *jsprin, JSPrincipals *other);
   static void Destroy(JSPrincipals *jsprin);
 
   /*
    * Get a weak reference to nsIPrincipal associated with the given JS
-   * principal.
+   * principal, and vice-versa.
    */
   static nsJSPrincipals* get(JSPrincipals *principals) {
     nsJSPrincipals *self = static_cast<nsJSPrincipals *>(principals);
     MOZ_ASSERT_IF(self, self->debugToken == DEBUG_TOKEN);
     return self;
   }
-  
   static nsJSPrincipals* get(nsIPrincipal *principal) {
     nsJSPrincipals *self = static_cast<nsJSPrincipals *>(principal);
     MOZ_ASSERT_IF(self, self->debugToken == DEBUG_TOKEN);
     return self;
   }
 
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override;
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) override;
+
   nsJSPrincipals() {
     refcount = 0;
     setDebugToken(DEBUG_TOKEN);
-  }
-
-  virtual ~nsJSPrincipals() {
-    setDebugToken(0);
   }
 
   /**
@@ -49,6 +49,12 @@ struct nsJSPrincipals : nsIPrincipal, JSPrincipals
 #endif
 
   static const uint32_t DEBUG_TOKEN = 0x0bf41760;
+
+protected:
+  virtual ~nsJSPrincipals() {
+    setDebugToken(0);
+  }
+
 };
 
 #endif /* nsJSPrincipals_h__ */

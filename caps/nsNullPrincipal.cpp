@@ -37,36 +37,6 @@ NS_IMPL_CI_INTERFACE_GETTER(nsNullPrincipal,
                             nsIPrincipal,
                             nsISerializable)
 
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsNullPrincipal::AddRef()
-{
-  NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
-  nsrefcnt count = ++refcount;
-  NS_LOG_ADDREF(this, count, "nsNullPrincipal", sizeof(*this));
-  return count;
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsNullPrincipal::Release()
-{
-  NS_PRECONDITION(0 != refcount, "dup release");
-  nsrefcnt count = --refcount;
-  NS_LOG_RELEASE(this, count, "nsNullPrincipal");
-  if (count == 0) {
-    delete this;
-  }
-
-  return count;
-}
-
-nsNullPrincipal::nsNullPrincipal()
-{
-}
-
-nsNullPrincipal::~nsNullPrincipal()
-{
-}
-
 /* static */ already_AddRefed<nsNullPrincipal>
 nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 {

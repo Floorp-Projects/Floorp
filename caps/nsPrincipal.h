@@ -11,6 +11,7 @@
 #include "nsJSPrincipals.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
@@ -18,14 +19,12 @@
 class nsBasePrincipal : public nsJSPrincipals
 {
 public:
-  nsBasePrincipal();
+  nsBasePrincipal() {}
 
 protected:
-  virtual ~nsBasePrincipal();
+  virtual ~nsBasePrincipal() {}
 
 public:
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp);
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp);
 public:
@@ -44,8 +43,8 @@ protected:
 class nsPrincipal final : public nsBasePrincipal
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISERIALIZABLE
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;
@@ -133,9 +132,11 @@ protected:
   virtual ~nsExpandedPrincipal();
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
+  NS_IMETHODIMP_(MozExternalRefCountType) AddRef() override { return nsJSPrincipals::AddRef(); };
+  NS_IMETHODIMP_(MozExternalRefCountType) Release() override { return nsJSPrincipals::Release(); };
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;
