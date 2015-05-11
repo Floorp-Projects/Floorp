@@ -13,7 +13,7 @@ add_task(function*() {
 });
 
 function* performTest() {
-  let out = FlameGraphUtils.createFlameGraphDataFromSamples(TEST_DATA, {
+  let out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, {
     flattenRecursion: true
   });
 
@@ -44,14 +44,14 @@ function* performTest() {
   }
 }
 
-let TEST_DATA = [{
+let TEST_DATA = synthesizeProfileForTest([{
   frames: [{
     location: "A (http://path/to/file.js:10:5"
   }, {
     location: "B (http://path/to/file.js:100:5"
   }],
   time: 50,
-}];
+}]);
 
 let EXPECTED_OUTPUT = [{
   blocks: []
@@ -74,7 +74,17 @@ let EXPECTED_OUTPUT = [{
     text: "A (file.js:10)"
   }]
 }, {
-  blocks: []
+  blocks: [{
+    srcData: {
+      startTime: 0,
+      rawLocation: "B (http://path/to/file.js:100:5)"
+    },
+    x: 0,
+    y: FLAME_GRAPH_BLOCK_HEIGHT,
+    width: 50,
+    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    text: "B (file.js:100)"
+  }]
 }, {
   blocks: []
 }, {

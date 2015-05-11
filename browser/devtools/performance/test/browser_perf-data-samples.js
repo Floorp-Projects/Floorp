@@ -23,11 +23,12 @@ function spawnTest () {
   for (let thread of profile.threads) {
     info("Checking thread: " + thread.name);
 
-    for (let sample of thread.samples) {
+    for (let sample of thread.samples.data) {
       sampleCount++;
 
-      if (sample.frames[0].location != "(root)") {
-        ok(false, "The sample " + sample.toSource() + " doesn't have a root node.");
+      let stack = getInflatedStackLocations(thread, sample);
+      if (stack[0] != "(root)") {
+        ok(false, "The sample " + stack.toSource() + " doesn't have a root node.");
       }
     }
   }

@@ -13,14 +13,16 @@ add_task(function*() {
 });
 
 function* performTest() {
-  let out = FlameGraphUtils.createFlameGraphDataFromSamples(TEST_DATA, {
-    filterFrames: FrameNode.isContent
+  let out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA, {
+    contentOnly: true
   });
 
   ok(out, "Some data was outputted properly");
   is(out.length, 10, "The outputted length is correct.");
 
   info("Got flame graph data:\n" + out.toSource() + "\n");
+
+  dump(JSON.stringify(out, undefined, 2));
 
   for (let i = 0; i < out.length; i++) {
     let found = out[i];
@@ -44,7 +46,7 @@ function* performTest() {
   }
 }
 
-let TEST_DATA = [{
+let TEST_DATA = synthesizeProfileForTest([{
   frames: [{
     location: "http://A"
   }, {
@@ -57,7 +59,7 @@ let TEST_DATA = [{
     location: "resource://E"
   }],
   time: 50,
-}];
+}]);
 
 let EXPECTED_OUTPUT = [{
   blocks: []
@@ -92,7 +94,17 @@ let EXPECTED_OUTPUT = [{
 }, {
   blocks: []
 }, {
-  blocks: []
+  blocks: [{
+    srcData: {
+      startTime: 0,
+      rawLocation: "Gecko"
+    },
+    x: 0,
+    y: FLAME_GRAPH_BLOCK_HEIGHT * 3,
+    width: 50,
+    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    text: "Gecko"
+  }]
 }, {
   blocks: []
 }, {

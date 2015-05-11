@@ -9,10 +9,13 @@ function test() {
   let { FrameNode } = devtools.require("devtools/shared/profiler/tree-model");
   let { CATEGORY_OTHER } = devtools.require("devtools/shared/profiler/global");
 
-  let frame1 = new FrameNode({
+  let frame1 = new FrameNode("hello/<.world (http://foo/bar.js:123:987)", {
     location: "hello/<.world (http://foo/bar.js:123:987)",
-    line: 456
-  });
+    line: 456,
+    isContent: FrameNode.isContent({
+      location: "hello/<.world (http://foo/bar.js:123:987)"
+    })
+  }, false);
 
   is(frame1.getInfo().nodeType, "Frame",
     "The first frame node has the correct type.");
@@ -33,10 +36,13 @@ function test() {
   is(frame1.getInfo().isContent, true,
     "The first frame node has the correct content flag.");
 
-  let frame2 = new FrameNode({
+  let frame2 = new FrameNode("hello/<.world (http://foo/bar.js#baz:123:987)", {
     location: "hello/<.world (http://foo/bar.js#baz:123:987)",
-    line: 456
-  });
+    line: 456,
+    isContent: FrameNode.isContent({
+      location: "hello/<.world (http://foo/bar.js#baz:123:987)"
+    })
+  }, false);
 
   is(frame2.getInfo().nodeType, "Frame",
     "The second frame node has the correct type.");
@@ -57,10 +63,13 @@ function test() {
   is(frame2.getInfo().isContent, true,
     "The second frame node has the correct content flag.");
 
-  let frame3 = new FrameNode({
+  let frame3 = new FrameNode("hello/<.world (http://foo/#bar:123:987)", {
     location: "hello/<.world (http://foo/#bar:123:987)",
-    line: 456
-  });
+    line: 456,
+    isContent: FrameNode.isContent({
+      location: "hello/<.world (http://foo/#bar:123:987)"
+    })
+  }, false);
 
   is(frame3.getInfo().nodeType, "Frame",
     "The third frame node has the correct type.");
@@ -81,10 +90,13 @@ function test() {
   is(frame3.getInfo().isContent, true,
     "The third frame node has the correct content flag.");
 
-  let frame4 = new FrameNode({
+  let frame4 = new FrameNode("hello/<.world (http://foo/:123:987)", {
     location: "hello/<.world (http://foo/:123:987)",
-    line: 456
-  });
+    line: 456,
+    isContent: FrameNode.isContent({
+      location: "hello/<.world (http://foo/:123:987)"
+    })
+  }, false);
 
   is(frame4.getInfo().nodeType, "Frame",
     "The fourth frame node has the correct type.");
@@ -105,10 +117,13 @@ function test() {
   is(frame4.getInfo().isContent, true,
     "The fourth frame node has the correct content flag.");
 
-  let frame5 = new FrameNode({
+  let frame5 = new FrameNode("hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)", {
     location: "hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)",
-    line: 456
-  });
+    line: 456,
+    isContent: FrameNode.isContent({
+      location: "hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)"
+    })
+  }, false);
 
   is(frame5.getInfo().nodeType, "Frame",
     "The fifth frame node has the correct type.");
@@ -129,12 +144,15 @@ function test() {
   is(frame5.getInfo().isContent, false,
     "The fifth frame node has the correct content flag.");
 
-  let frame6 = new FrameNode({
+  let frame6 = new FrameNode("Foo::Bar::Baz", {
     location: "Foo::Bar::Baz",
     line: 456,
-    column: 123,
-    category: CATEGORY_OTHER
-  });
+    category: CATEGORY_OTHER,
+    isContent: FrameNode.isContent({
+      location: "Foo::Bar::Baz",
+      category: CATEGORY_OTHER
+    })
+  }, false);
 
   is(frame6.getInfo().nodeType, "Frame",
     "The sixth frame node has the correct type.");
@@ -148,16 +166,17 @@ function test() {
     "The sixth frame node has the correct url.");
   is(frame6.getInfo().line, 456,
     "The sixth frame node has the correct line.");
-  is(frame6.getInfo().column, 123,
-    "The sixth frame node has the correct column.");
   is(frame6.getInfo().categoryData.abbrev, "other",
     "The sixth frame node has the correct category data.");
   is(frame6.getInfo().isContent, false,
     "The sixth frame node has the correct content flag.");
 
-  let frame7 = new FrameNode({
-    location: "EnterJIT"
-  });
+  let frame7 = new FrameNode("EnterJIT", {
+    location: "EnterJIT",
+    isContent: FrameNode.isContent({
+      location: "EnterJIT"
+    })
+  }, false);
 
   is(frame7.getInfo().nodeType, "Frame",
     "The seventh frame node has the correct type.");
@@ -178,19 +197,19 @@ function test() {
   is(frame7.getInfo().isContent, false,
     "The seventh frame node has the correct content flag.");
 
-  let frame8 = new FrameNode({
+  let frame8 = new FrameNode("chrome://browser/content/content.js", {
     location: "chrome://browser/content/content.js",
     line: 456,
     column: 123
-  });
+  }, false);
 
   is(frame8.getInfo().hostName, null,
     "The eighth frame node has the correct host name.");
 
-  let frame9 = new FrameNode({
+  let frame9 = new FrameNode("hello/<.world (resource://gre/foo.js:123:434)", {
     location: "hello/<.world (resource://gre/foo.js:123:434)",
     line: 456
-  });
+  }, false);
 
   is(frame9.getInfo().hostName, null,
     "The ninth frame node has the correct host name.");

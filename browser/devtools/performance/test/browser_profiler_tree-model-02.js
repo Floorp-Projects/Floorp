@@ -10,37 +10,37 @@ function test() {
 
   // Create a root node from a given samples array.
 
-  let root = new ThreadNode(gSamples);
+  let root = getFrameNodePath(new ThreadNode(gThread), "(root)");
 
   // Test the root node.
 
   is(root.duration, 5,
     "The correct duration was calculated for the root node.");
 
-  is(Object.keys(root.calls).length, 1,
+  is(root.calls.length, 1,
     "The correct number of child calls were calculated for the root node.");
-  is(Object.keys(root.calls)[0], "A",
+  ok(getFrameNodePath(root, "A"),
     "The root node's only child call is correct.");
 
   // Test all the descendant nodes.
 
-  is(Object.keys(root.calls.A.calls).length, 1,
-    "The correct number of child calls were calculated for the '.A' node.");
-  is(Object.keys(root.calls.A.calls)[0], "B",
-    "The '.A.B' node's only child call is correct.");
+  is(getFrameNodePath(root, "A").calls.length, 1,
+    "The correct number of child calls were calculated for the 'A' node.");
+  ok(getFrameNodePath(root, "A > B"),
+    "The 'A' node's only child call is correct.");
 
-  is(Object.keys(root.calls.A.calls.B.calls).length, 1,
-    "The correct number of child calls were calculated for the '.A.B' node.");
-  is(Object.keys(root.calls.A.calls.B.calls)[0], "C",
-    "The '.A.B' node's only child call is correct.");
+  is(getFrameNodePath(root, "A > B").calls.length, 1,
+    "The correct number of child calls were calculated for the 'A > B' node.");
+  ok(getFrameNodePath(root, "A > B > C"),
+    "The 'A > B' node's only child call is correct.");
 
-  is(Object.keys(root.calls.A.calls.B.calls.C.calls).length, 0,
-    "The correct number of child calls were calculated for the '.A.B.C' node.");
+  is(getFrameNodePath(root, "A > B > C").calls.length, 0,
+    "The correct number of child calls were calculated for the 'A > B > C' node.");
 
   finish();
 }
 
-let gSamples = [{
+let gThread = synthesizeProfileForTest([{
   time: 5,
   frames: [
     { location: "(root)" },
@@ -56,4 +56,4 @@ let gSamples = [{
     { location: "B" },
     { location: "D" }
   ]
-}];
+}]);
