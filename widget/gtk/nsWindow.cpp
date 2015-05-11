@@ -6596,3 +6596,63 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
 
   return NS_OK;
 }
+
+nsresult
+nsWindow::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+                                           uint32_t aNativeMessage,
+                                           double aDeltaX,
+                                           double aDeltaY,
+                                           double aDeltaZ,
+                                           uint32_t aModifierFlags,
+                                           uint32_t aAdditionalFlags,
+                                           nsIObserver* aObserver)
+{
+  AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+
+  if (!mGdkWindow) {
+    return NS_OK;
+  }
+
+  GdkEvent event;
+  memset(&event, 0, sizeof(GdkEvent));
+  event.type = GDK_SCROLL;
+  event.scroll.window = mGdkWindow;
+  event.scroll.time = GDK_CURRENT_TIME;
+#if (MOZ_WIDGET_GTK == 3)
+  // Get device for event source
+  GdkDisplay* display = gdk_window_get_display(mGdkWindow);
+  GdkDeviceManager *device_manager = gdk_display_get_device_manager(display);
+  event.scroll.device = gdk_device_manager_get_client_pointer(device_manager);
+#endif
+  event.scroll.x_root = aPoint.x;
+  event.scroll.y_root = aPoint.y;
+
+  LayoutDeviceIntPoint pointInWindow = aPoint - WidgetToScreenOffset();
+  event.scroll.x = pointInWindow.x;
+  event.scroll.y = pointInWindow.y;
+
+  // The delta values are backwards on Linux compared to Windows and Cocoa,
+  // hence the negation.
+#if GTK_CHECK_VERSION(3,4,0)
+  // TODO: is this correct? I don't have GTK 3.4+ so I can't check
+  event.scroll.direction = GDK_SCROLL_SMOOTH;
+  event.scroll.delta_x = -aDeltaX;
+  event.scroll.delta_y = -aDeltaY;
+#else
+  if (aDeltaX < 0) {
+    event.scroll.direction = GDK_SCROLL_RIGHT;
+  } else if (aDeltaX > 0) {
+    event.scroll.direction = GDK_SCROLL_LEFT;
+  } else if (aDeltaY < 0) {
+    event.scroll.direction = GDK_SCROLL_DOWN;
+  } else if (aDeltaY > 0) {
+    event.scroll.direction = GDK_SCROLL_UP;
+  } else {
+    return NS_OK;
+  }
+#endif
+
+  gdk_event_put(&event);
+
+  return NS_OK;
+}
