@@ -84,12 +84,12 @@ public:
                                         nsIInputStream** aPostDataStream)
                                                                        override;
 
-  virtual bool SupportsIsindexSubmission()
+  virtual bool SupportsIsindexSubmission() override
   {
     return true;
   }
 
-  virtual nsresult AddIsindex(const nsAString& aValue);
+  virtual nsresult AddIsindex(const nsAString& aValue) override;
 
 protected:
 
