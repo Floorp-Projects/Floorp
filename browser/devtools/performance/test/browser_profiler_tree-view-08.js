@@ -26,7 +26,9 @@ function test() {
    *   - (JS)
    */
 
-  let threadNode = new ThreadNode(gSamples, { contentOnly: true });
+  let threadNode = new ThreadNode(gThread, { contentOnly: true });
+  // Don't display the synthesized (root) and the real (root) node twice.
+  threadNode.calls = threadNode.calls[0].calls;
   let treeRoot = new CallView({ frame: threadNode, autoExpandDepth: 10 });
 
   let container = document.createElement("vbox");
@@ -61,7 +63,7 @@ function test() {
   finish();
 }
 
-let gSamples = [{
+let gThread = synthesizeProfileForTest([{
   time: 5,
   frames: [
     { location: "(root)" },
@@ -101,4 +103,4 @@ let gSamples = [{
     { location: "http://content/A" },
     { location: "contentZ", category: CATEGORY_MASK("gc", 1) },
   ]
-}];
+}]);
