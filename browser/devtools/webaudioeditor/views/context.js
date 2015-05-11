@@ -3,11 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// Previously used `debounce`, but after using an ordered queue
-// for actor events, too many events were queued, causing large
-// render delays, rather than incremental additions in rendering.
-// So now we use `throttle`, which will render at most `n` milliseconds.
-const { throttle } = require("sdk/lang/functional");
+const { debounce } = require("sdk/lang/functional");
 
 // Globals for d3 stuff
 // Default properties of the graph on rerender
@@ -26,8 +22,7 @@ const MARKER_STYLING = {
   dark: "#CED3D9"
 };
 
-// Render graph at most once every 500ms
-const GRAPH_THROTTLE_TIMER = 500;
+const GRAPH_DEBOUNCE_TIMER = 100;
 
 // `gAudioNodes` events that should require the graph
 // to redraw
@@ -46,7 +41,7 @@ let ContextView = {
     this._onStartContext = this._onStartContext.bind(this);
     this._onEvent = this._onEvent.bind(this);
 
-    this.draw = throttle(this.draw.bind(this), GRAPH_THROTTLE_TIMER);
+    this.draw = debounce(this.draw.bind(this), GRAPH_DEBOUNCE_TIMER);
     $("#graph-target").addEventListener("click", this._onGraphClick, false);
 
     window.on(EVENTS.THEME_CHANGE, this._onThemeChange);
