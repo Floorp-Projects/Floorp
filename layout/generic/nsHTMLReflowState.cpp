@@ -394,11 +394,8 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
     // An SVG foreignObject frame is inherently constrained block-size.
     frame->AddStateBits(NS_FRAME_IN_CONSTRAINED_BSIZE);
   } else {
-    const bool vertical = mWritingMode.IsVertical();
-    const nsStyleCoord& bSizeCoord =
-      vertical ? mStylePosition->mWidth : mStylePosition->mHeight;
-    const nsStyleCoord& maxBSizeCoord =
-      vertical ? mStylePosition->mMaxWidth : mStylePosition->mMaxHeight;
+    const nsStyleCoord& bSizeCoord = mStylePosition->BSize(mWritingMode);
+    const nsStyleCoord& maxBSizeCoord = mStylePosition->MaxBSize(mWritingMode);
     if ((bSizeCoord.GetUnit() != eStyleUnit_Auto ||
          maxBSizeCoord.GetUnit() != eStyleUnit_None) &&
          // Don't set NS_FRAME_IN_CONSTRAINED_BSIZE on body or html elements.
@@ -412,10 +409,8 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
       nsIFrame* containingBlk = frame;
       while (containingBlk) {
         const nsStylePosition* stylePos = containingBlk->StylePosition();
-        const nsStyleCoord& bSizeCoord =
-          vertical ? stylePos->mWidth : stylePos->mHeight;
-        const nsStyleCoord& maxBSizeCoord =
-          vertical ? stylePos->mMaxWidth : stylePos->mMaxHeight;
+        const nsStyleCoord& bSizeCoord = stylePos->BSize(mWritingMode);
+        const nsStyleCoord& maxBSizeCoord = stylePos->MaxBSize(mWritingMode);
         if ((bSizeCoord.IsCoordPercentCalcUnit() &&
              !bSizeCoord.HasPercent()) ||
             (maxBSizeCoord.IsCoordPercentCalcUnit() &&
@@ -2429,25 +2424,9 @@ nsHTMLReflowState::CalculateBlockSideMargins(nsIAtom* aFrameType)
 
   // The css2 spec clearly defines how block elements should behave
   // in section 10.3.3.
-  bool isAutoStartMargin, isAutoEndMargin;
   const nsStyleSides& styleSides = mStyleMargin->mMargin;
-  if (cbWM.IsVertical()) {
-    if (cbWM.IsBidiLTR()) {
-      isAutoStartMargin = eStyleUnit_Auto == styleSides.GetTopUnit();
-      isAutoEndMargin = eStyleUnit_Auto == styleSides.GetBottomUnit();
-    } else {
-      isAutoStartMargin = eStyleUnit_Auto == styleSides.GetBottomUnit();
-      isAutoEndMargin = eStyleUnit_Auto == styleSides.GetTopUnit();
-    }
-  } else {
-    if (cbWM.IsBidiLTR()) {
-      isAutoStartMargin = eStyleUnit_Auto == styleSides.GetLeftUnit();
-      isAutoEndMargin = eStyleUnit_Auto == styleSides.GetRightUnit();
-    } else {
-      isAutoStartMargin = eStyleUnit_Auto == styleSides.GetRightUnit();
-      isAutoEndMargin = eStyleUnit_Auto == styleSides.GetLeftUnit();
-    }
-  }
+  bool isAutoStartMargin = eStyleUnit_Auto == styleSides.GetIStartUnit(cbWM);
+  bool isAutoEndMargin = eStyleUnit_Auto == styleSides.GetIEndUnit(cbWM);
   if (!isAutoStartMargin && !isAutoEndMargin) {
     // Neither margin is 'auto' so we're over constrained. Use the
     // 'direction' property of the parent to tell which margin to
