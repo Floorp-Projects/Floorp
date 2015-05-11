@@ -662,8 +662,9 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   }
 
   if (gfxPrefs::AsyncPanZoomEnabled() &&
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_GTK)
-      // For desktop platforms we only want to use APZ in e10s-enabled windows.
+#if !defined(MOZ_B2G) && !defined(MOZ_WIDGET_ANDROID)
+      // For XUL applications (everything but B2G on mobile and desktop, and
+      // Firefox on Android) we only want to use APZ in e10s-enabled windows.
       // If we ever get input events off the main thread we can consider
       // relaxing this requirement.
       aWidget->IsMultiProcessWindow() &&
