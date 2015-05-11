@@ -16,7 +16,6 @@
 // PR LOGGING
 #include "prlog.h"
 
-#ifdef PR_LOGGING
 #define DUMP_LAYOUT_LEVEL 9 // this turns on the dumping of each doucment's layout info
 static PRLogModuleInfo *
 GetPrintingLog()
@@ -27,10 +26,6 @@ GetPrintingLog()
   return sLog;
 }
 #define PR_PL(_p1)  PR_LOG(GetPrintingLog(), PR_LOG_DEBUG, _p1);
-#else
-#define PRT_YESNO(_p)
-#define PR_PL(_p1)
-#endif
 
 //---------------------------------------------------
 //-- nsPrintData Class Impl

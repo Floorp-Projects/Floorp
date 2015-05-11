@@ -36,7 +36,6 @@
 
 using namespace mozilla;
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo* gTouchCaretLog;
 static const char* kTouchCaretLogModuleName = "TouchCaret";
 
@@ -51,10 +50,6 @@ static const char* kTouchCaretLogModuleName = "TouchCaret";
   PR_LOG(gTouchCaretLog, PR_LOG_DEBUG,                                         \
          ("TouchCaret: %s:%d : " message "\n", __FUNCTION__, __LINE__,         \
           ##__VA_ARGS__));
-#else
-#define TOUCHCARET_LOG(message, ...)
-#define TOUCHCARET_LOG_STATIC(message, ...)
-#endif // #ifdef PR_LOGGING
 
 // Click on the boundary of input/textarea will place the caret at the
 // front/end of the content. To advoid this, we need to deflate the content
@@ -75,11 +70,9 @@ TouchCaret::TouchCaret(nsIPresShell* aPresShell)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef PR_LOGGING
   if (!gTouchCaretLog) {
     gTouchCaretLog = PR_NewLogModule(kTouchCaretLogModuleName);
   }
-#endif
 
   TOUCHCARET_LOG("Constructor, PresShell=%p", aPresShell);
 

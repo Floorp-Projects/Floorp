@@ -42,7 +42,6 @@ static const char sPrintOptionsContractID[] = "@mozilla.org/gfx/printsettings-se
 //
 
 #include "prlog.h"
-#ifdef PR_LOGGING 
 PRLogModuleInfo *
 GetLayoutPrintingLog()
 {
@@ -52,9 +51,6 @@ GetLayoutPrintingLog()
   return sLog;
 }
 #define PR_PL(_p1)  PR_LOG(GetLayoutPrintingLog(), PR_LOG_DEBUG, _p1)
-#else
-#define PR_PL(_p1)
-#endif
 
 nsSimplePageSequenceFrame*
 NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)

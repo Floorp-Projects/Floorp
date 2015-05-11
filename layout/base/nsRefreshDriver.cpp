@@ -73,12 +73,8 @@ using namespace mozilla::widget;
 using namespace mozilla::ipc;
 using namespace mozilla::layout;
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo *gLog = nullptr;
 #define LOG(...) PR_LOG(gLog, PR_LOG_NOTICE, (__VA_ARGS__))
-#else
-#define LOG(...) do { } while(0)
-#endif
 
 #define DEFAULT_FRAME_RATE 60
 #define DEFAULT_THROTTLED_FRAME_RATE 1
@@ -902,11 +898,9 @@ GetFirstFrameDelay(imgIRequest* req)
 /* static */ void
 nsRefreshDriver::InitializeStatics()
 {
-#ifdef PR_LOGGING
   if (!gLog) {
     gLog = PR_NewLogModule("nsRefreshDriver");
   }
-#endif
 }
 
 /* static */ void
