@@ -20,7 +20,12 @@ EXPORTS += [
     'nsNullPrincipalURI.h',
 ]
 
+EXPORTS.mozilla = [
+    'BasePrincipal.h'
+]
+
 UNIFIED_SOURCES += [
+    'BasePrincipal.cpp',
     'DomainPolicy.cpp',
     'nsJSPrincipals.cpp',
     'nsNullPrincipal.cpp',
