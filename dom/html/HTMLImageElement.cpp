@@ -591,6 +591,9 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   bool addedToPicture = aParent && aParent->IsHTMLElement(nsGkAtoms::picture) &&
                         HTMLPictureElement::IsPictureEnabled();
   if (addedToPicture) {
+    if (aDocument) {
+      aDocument->AddResponsiveContent(this);
+    }
     QueueImageLoadTask();
   } else if (!InResponsiveMode() &&
              HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
@@ -632,12 +635,18 @@ HTMLImageElement::UnbindFromTree(bool aDeep, bool aNullParent)
     }
   }
 
-  if (aNullParent && GetParent() &&
+  if (GetParent() &&
       GetParent()->IsHTMLElement(nsGkAtoms::picture) &&
       HTMLPictureElement::IsPictureEnabled()) {
+    nsIDocument* doc = GetOurOwnerDoc();
+    if (doc) {
+      doc->RemoveResponsiveContent(this);
+    }
     // Being removed from picture re-triggers selection, even if we
     // weren't using a <source> peer
-    QueueImageLoadTask();
+    if (aNullParent) {
+      QueueImageLoadTask();
+    }
   }
 
   nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
@@ -1062,7 +1071,18 @@ HTMLImageElement::UpdateResponsiveSource()
       // that and keep it if it's still usable.
       mResponsiveSelector->SelectImage(true);
       if (mResponsiveSelector->NumCandidates()) {
-        break;
+        bool isUsableCandidate = true;
+
+        // an otherwise-usable source element may still have a media query that may not
+        // match any more.
+        if (candidateSource->IsHTMLElement(nsGkAtoms::source) &&
+            !SourceElementMatches(candidateSource->AsContent())) {
+          isUsableCandidate = false;
+        }
+
+        if (isUsableCandidate) {
+          break;
+        }
       }
 
       // no longer valid
@@ -1101,6 +1121,31 @@ HTMLImageElement::SupportedPictureSourceType(const nsAString& aType)
 }
 
 bool
+HTMLImageElement::SourceElementMatches(nsIContent* aSourceNode)
+{
+  MOZ_ASSERT(aSourceNode->IsHTMLElement(nsGkAtoms::source));
+
+  DebugOnly<Element *> parent(nsINode::GetParentElement());
+  MOZ_ASSERT(parent && parent->IsHTMLElement(nsGkAtoms::picture));
+  MOZ_ASSERT(IsPreviousSibling(aSourceNode, this));
+  MOZ_ASSERT(HTMLPictureElement::IsPictureEnabled());
+
+  // Check media and type
+  HTMLSourceElement *src = static_cast<HTMLSourceElement*>(aSourceNode);
+  if (!src->MatchesCurrentMedia()) {
+    return false;
+  }
+
+  nsAutoString type;
+  if (aSourceNode->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
+      !SupportedPictureSourceType(type)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool
 HTMLImageElement::TryCreateResponsiveSelector(nsIContent *aSourceNode,
                                               const nsAString *aSrcset,
                                               const nsAString *aSizes)
@@ -1113,20 +1158,7 @@ HTMLImageElement::TryCreateResponsiveSelector(nsIContent *aSourceNode,
   // Skip if this is not a <source> with matching media query
   bool isSourceTag = aSourceNode->IsHTMLElement(nsGkAtoms::source);
   if (isSourceTag) {
-    DebugOnly<Element *> parent(nsINode::GetParentElement());
-    MOZ_ASSERT(parent && parent->IsHTMLElement(nsGkAtoms::picture));
-    MOZ_ASSERT(IsPreviousSibling(aSourceNode, this));
-    MOZ_ASSERT(pictureEnabled);
-
-    // Check media and type
-    HTMLSourceElement *src = static_cast<HTMLSourceElement*>(aSourceNode);
-    if (!src->MatchesCurrentMedia()) {
-      return false;
-    }
-
-    nsAutoString type;
-    if (aSourceNode->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
-        !SupportedPictureSourceType(type)) {
+    if (!SourceElementMatches(aSourceNode)) {
       return false;
     }
   } else if (aSourceNode->IsHTMLElement(nsGkAtoms::img)) {
@@ -1245,6 +1277,12 @@ void
 HTMLImageElement::DestroyContent()
 {
   mResponsiveSelector = nullptr;
+}
+
+void
+HTMLImageElement::MediaFeatureValuesChanged()
+{
+  QueueImageLoadTask();
 }
 
 } // namespace dom
