@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+This checks if the origin-when-crossorigin policy works.
+https://bugzilla.mozilla.org/show_bug.cgi?id=1163743
+-->
+
+<head>
+  <meta charset="utf-8">
+  <title>Test policies for Bug 1163743</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="referrerHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+var advance = function() { tests.next(); };
+
+/**
+ * testing legacy support for origin-when-crossorigin (1163743)
+ */
+var tests = (function() {
+  var iframe = document.getElementById("testframe");
+  const sjs = "/tests/dom/base/test/bug704320.sjs?action=generate-policy-test";
+
+  // origin when crossorigin (trimming whitespace)
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape(' origin-when-crossorigin');
+  yield checkResults("origin-when-cross-origin", ["origin", "full"]);
+
+  // complete.  Be sure to yield so we don't call this twice.
+  yield SimpleTest.finish();
+})();
+
+</script>
+</head>
+
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+
+</body>
+</html>
+
