@@ -680,7 +680,9 @@ SimpleTest.promiseFocus = function *(targetWindow, expectBlankPage)
  * @param callback
  *        function called when load and focus are complete
  * @param targetWindow
- *        optional window to be loaded and focused, defaults to 'window'
+ *        optional window to be loaded and focused, defaults to 'window'.
+ *        This may also be a <browser> element, in which case the window within
+ *        that browser will be focused.
  * @param expectBlankPage
  *        true if targetWindow.location is 'about:blank'. Defaults to false
  */
@@ -817,43 +819,61 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
     // XXXndeakin now sure what this issue with Components.utils is about, but
     // browser tests require the former and plain tests require the latter.
     var Cu = Components.utils || SpecialPowers.Cu;
-    if (Cu.isCrossProcessWrapper(targetWindow)) {
-        // Look for a tabbrowser and see if targetWindow corresponds to one
-        // within that tabbrowser. If not, just return.
-        var tabBrowser = document.getElementsByTagName("tabbrowser")[0] || null;
-        var remoteBrowser = tabBrowser ? tabBrowser.getBrowserForContentWindow(targetWindow.top) : null;
-        if (!remoteBrowser) {
-            SimpleTest.info("child process window cannot be focused");
-            return;
+    var Ci = Components.interfaces || SpecialPowers.Ci;
+
+    var browser = null;
+    if (typeof(XULElement) != "undefined" &&
+        targetWindow instanceof XULElement &&
+        targetWindow.localName == "browser") {
+        browser = targetWindow;
+    }
+
+    var isWrapper = Cu.isCrossProcessWrapper(targetWindow);
+    if (isWrapper || (browser && browser.isRemoteBrowser)) {
+        var mustFocusSubframe = false;
+        if (isWrapper) {
+            // Look for a tabbrowser and see if targetWindow corresponds to one
+            // within that tabbrowser. If not, just return.
+            var tabBrowser = document.getElementsByTagName("tabbrowser")[0] || null;
+            browser = tabBrowser ? tabBrowser.getBrowserForContentWindow(targetWindow.top) : null;
+            if (!browser) {
+                SimpleTest.info("child process window cannot be focused");
+                return;
+            }
+
+            mustFocusSubframe = (targetWindow != targetWindow.top);
         }
 
         // If a subframe in a child process needs to be focused, first focus the
         // parent frame, then send a WaitForFocus:FocusChild message to the child
         // containing the subframe to focus.
-        var mustFocusSubframe = (targetWindow != targetWindow.top);
-        remoteBrowser.messageManager.addMessageListener("WaitForFocus:ChildFocused", function waitTest(msg) {
+        browser.messageManager.addMessageListener("WaitForFocus:ChildFocused", function waitTest(msg) {
             if (mustFocusSubframe) {
                 mustFocusSubframe = false;
                 var mm = gBrowser.selectedBrowser.messageManager;
                 mm.sendAsyncMessage("WaitForFocus:FocusChild", {}, { child: targetWindow } );
             }
             else {
-                remoteBrowser.messageManager.removeMessageListener("WaitForFocus:ChildFocused", waitTest);
-                setTimeout(callback, 0, targetWindow);
+                browser.messageManager.removeMessageListener("WaitForFocus:ChildFocused", waitTest);
+                setTimeout(callback, 0, browser ? browser.contentWindowAsCPOW : targetWindow);
             }
         });
 
-        // Serialize the waitForFocusInner function and run it in the child.
+        // Serialize the waitForFocusInner function and run it in the child process.
         var frameScript = "data:,(" + waitForFocusInner.toString() +
                           ")(content, true, " + expectBlankPage + ");";
-        remoteBrowser.messageManager.loadFrameScript(frameScript, true);
-        remoteBrowser.focus();
-        return;
+        browser.messageManager.loadFrameScript(frameScript, true);
+        browser.focus();
     }
+    else {
+        // Otherwise, this is an attempt to focus a single process or parent window,
+        // so pass false for isChildProcess.
+        if (browser) {
+          targetWindow = browser.contentWindow;
+        }
 
-    // Otherwise, this is an attempt to focus a parent process window, so pass
-    // false for isChildProcess.
-    waitForFocusInner(targetWindow, false, expectBlankPage);
+        waitForFocusInner(targetWindow, false, expectBlankPage);
+    }
 };
 
 SimpleTest.waitForClipboard_polls = 0;
