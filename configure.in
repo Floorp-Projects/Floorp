@@ -413,7 +413,7 @@ MOZ_CHECK_COMPILER_WRAPPER
 
 MOZ_PATH_PROG(RUSTC, rustc)
 MOZ_ARG_ENABLE_BOOL([rust],
-                    [  --enable-rust  Include rust language sources],
+                    [  --enable-rust           Include rust language sources],
                     [MOZ_RUST=1],
                     [MOZ_RUST= ])
 if test -z "$RUSTC" -a -n "$MOZ_RUST"; then
