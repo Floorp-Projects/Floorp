@@ -8,7 +8,6 @@
 
 #include "prlog.h"
 
-#ifdef PR_LOGGING
 class txLog
 {
 public:
@@ -24,10 +23,4 @@ public:
     txLog::xpath = PR_NewLogModule("xpath"); \
     txLog::xslt  = PR_NewLogModule("xslt")
 
-#else
-
-#define TX_LG_IMPL
-#define TX_LG_CREATE
-
-#endif
 #endif
