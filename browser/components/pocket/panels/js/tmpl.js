@@ -52,15 +52,15 @@ templates['signup_shell'] = template({"1":function(depth0,helpers,partials,data)
     + escapeExpression(((helper = (helper = helpers.signupemail || (depth0 != null ? depth0.signupemail : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"signupemail","hash":{},"data":data}) : helper)))
     + "</a></p>\n";
 },"compiler":[6,">= 2.0.0-beta.1"],"main":function(depth0,helpers,partials,data) {
-  var stack1, helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression, buffer = "<div class=\"pkt_ext_introdetail\">\n	<h2 class=\"pkt_ext_logo\">Pocket</h2>\n	<p class=\"pkt_ext_tagline\">"
+  var stack1, helper, functionType="function", helperMissing=helpers.helperMissing, escapeExpression=this.escapeExpression, buffer = "<div class=\"pkt_ext_introdetail pkt_ext_introdetailhero\">\n	<h2 class=\"pkt_ext_logo\">Pocket</h2>\n	<p class=\"pkt_ext_tagline\">"
     + escapeExpression(((helper = (helper = helpers.tagline || (depth0 != null ? depth0.tagline : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"tagline","hash":{},"data":data}) : helper)))
-    + "</p>\n	<p><a class=\"pkt_ext_learnmore\" href=\"http://"
+    + "</p>\n	<p class=\"pkt_ext_learnmorecontainer\"><a class=\"pkt_ext_learnmore\" href=\"http://"
     + escapeExpression(((helper = (helper = helpers.pockethost || (depth0 != null ? depth0.pockethost : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"pockethost","hash":{},"data":data}) : helper)))
     + "?s="
     + escapeExpression(((helper = (helper = helpers.variant || (depth0 != null ? depth0.variant : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"variant","hash":{},"data":data}) : helper)))
     + "&t=wlm&src=ff_learn_more\" target=\"_blank\">"
     + escapeExpression(((helper = (helper = helpers.learnmore || (depth0 != null ? depth0.learnmore : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"learnmore","hash":{},"data":data}) : helper)))
-    + "</a></p>\n	<div class=\"pkt_ext_introimg\"></div>\n</div>\n<div class=\"pkt_ext_signupdetail\">\n	<h4>"
+    + "</a></p>\n	<div class=\"pkt_ext_introimg\"></div>\n</div>\n<div class=\"pkt_ext_signupdetail pkt_ext_signupdetail_hero\">\n	<h4>"
     + escapeExpression(((helper = (helper = helpers.signuptosave || (depth0 != null ? depth0.signuptosave : depth0)) != null ? helper : helperMissing),(typeof helper === functionType ? helper.call(depth0, {"name":"signuptosave","hash":{},"data":data}) : helper)))
     + "</h4>\n";
   stack1 = helpers['if'].call(depth0, (depth0 != null ? depth0.fxasignedin : depth0), {"name":"if","hash":{},"fn":this.program(1, data),"inverse":this.program(3, data),"data":data});

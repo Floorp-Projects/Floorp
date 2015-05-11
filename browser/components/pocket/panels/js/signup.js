@@ -5,8 +5,6 @@ It does not contain any logic for saving or communication with the extension or 
 var PKT_SIGNUP_OVERLAY = function (options) 
 {
     var myself = this;
-    this.baseHost = "getpocket.com";
-
     this.inited = false;
     this.active = false;
     this.delayedStateSaved = false;
@@ -14,12 +12,12 @@ var PKT_SIGNUP_OVERLAY = function (options)
     this.variant = window.___PKT__SIGNUP_VARIANT;
     this.tagline = window.___PKT__SIGNUP_TAGLINE || '';
     this.preventCloseTimerCancel = false;
-    // TODO: populate this with actual translations
     this.translations = {};
     this.closeValid = true;
     this.mouseInside = false;
     this.autocloseTimer = null;
     this.variant = "";
+    this.inoverflowmenu = false;
     this.pockethost = "getpocket.com";
     this.fxasignedin = false;
     this.panelId = 0;
@@ -60,7 +58,7 @@ var PKT_SIGNUP_OVERLAY = function (options)
     };
     this.getTranslations = function()
     {
-        var language = window.navigator.language.toLowerCase();
+        var language = this.locale || '';
         this.dictJSON = {};
 
         var dictsuffix = 'en-US';
@@ -134,11 +132,15 @@ var PKT_SIGNUP_OVERLAY = function (options)
             dictsuffix = 'pl';
         }
 
-        // TODO: when we add all dictionaries, modify this, but for now hard code to English
-        dictsuffix = 'en';
-
         this.dictJSON = Translations[dictsuffix];
-        
+        if (typeof this.dictJSON !== 'object')
+        {
+            this.dictJSON = Translations['en'];
+        }
+        if (typeof this.dictJSON !== 'object')
+        {
+            this.dictJSON = {};
+        }
     };
 };
 
@@ -162,6 +164,16 @@ PKT_SIGNUP_OVERLAY.prototype = {
         {
             this.pockethost = host[1];
         }
+        var inoverflowmenu = window.location.href.match(/inoverflowmenu=([\w|\.]*)&?/);
+        if (inoverflowmenu && inoverflowmenu.length > 1)
+        {
+            this.inoverflowmenu = (inoverflowmenu[1] == 'true');
+        }
+        var locale = window.location.href.match(/locale=([\w|\.]*)&?/);
+        if (locale && locale.length > 1)
+        {
+           this.locale = locale[1].toLowerCase();
+        }
 
         this.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
 
@@ -177,6 +189,18 @@ PKT_SIGNUP_OVERLAY.prototype = {
         this.dictJSON.variant = (this.variant ? this.variant : 'undefined');
         this.dictJSON.pockethost = this.pockethost;
 
+        // extra modifier class for collapsed state
+        if (this.inoverflowmenu)
+        {
+            $('body').addClass('pkt_ext_signup_overflow');
+        }
+
+        // extra modifier class for language
+        if (this.locale)
+        {
+            $('body').addClass('pkt_ext_signup_' + this.locale);
+        }
+
         // Create actual content
         if (this.variant == 'storyboard')
         {
@@ -186,6 +210,7 @@ PKT_SIGNUP_OVERLAY.prototype = {
         {
             $('body').append(Handlebars.templates.signup_shell(this.dictJSON));
         }
+
 
         // tell background we're ready
         thePKT_SIGNUP.sendMessage("show");
