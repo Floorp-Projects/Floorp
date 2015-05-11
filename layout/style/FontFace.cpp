@@ -39,7 +39,10 @@ private:
 void
 FontFaceBufferSource::TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength)
 {
+  MOZ_ASSERT(mFontFace, "only call TakeBuffer once on a given "
+                        "FontFaceBufferSource object");
   mFontFace->TakeBuffer(aBuffer, aLength);
+  mFontFace = nullptr;
 }
 
 // -- Utility functions ------------------------------------------------------
