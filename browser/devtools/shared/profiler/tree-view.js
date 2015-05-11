@@ -125,34 +125,22 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     let selfDuration;
     let totalAllocations;
 
-    if (!this._getChildCalls().length) {
-      if (this.visibleCells.selfPercentage) {
-        selfPercentage = framePercentage;
-      }
-      if (this.visibleCells.selfDuration) {
-        selfDuration = this.frame.duration;
-      }
+    let frameKey = this.frame.key;
+    if (this.visibleCells.selfPercentage) {
+      selfPercentage = this._getPercentage(this.root.frame.selfCount[frameKey]);
+    }
+    if (this.visibleCells.selfDuration) {
+      selfDuration = this.root.frame.selfDuration[frameKey];
+    }
+
+    if (!this.frame.calls.length) {
       if (this.visibleCells.allocations) {
         totalAllocations = this.frame.allocations;
       }
     } else {
-      // Avoid performing costly computations if the respective columns
-      // won't be shown anyway.
-      if (this.visibleCells.selfPercentage) {
-        let childrenPercentage = sum([this._getPercentage(c.samples) for (c of this._getChildCalls())]);
-        selfPercentage = clamp(framePercentage - childrenPercentage, 0, 100);
-      }
-      if (this.visibleCells.selfDuration) {
-        let childrenDuration = sum([c.duration for (c of this._getChildCalls())]);
-        selfDuration = this.frame.duration - childrenDuration;
-      }
       if (this.visibleCells.allocations) {
-        let childrenAllocations = sum([c.allocations for (c of this._getChildCalls())]);
+        let childrenAllocations = this.frame.calls.reduce((acc, node) => acc + node.allocations, 0);
         totalAllocations = this.frame.allocations + childrenAllocations;
-      }
-      if (this.inverted) {
-        selfPercentage = framePercentage - selfPercentage;
-        selfDuration = this.frame.duration - selfDuration;
       }
     }
 
@@ -232,13 +220,6 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   },
 
   /**
-   * Return an array of this frame's child calls.
-   */
-  _getChildCalls: function() {
-    return Object.keys(this.frame.calls).map(k => this.frame.calls[k]);
-  },
-
-  /**
    * Populates this node in the call tree with the corresponding "callees".
    * These are defined in the `frame` data source for this call view.
    * @param array:AbstractTreeItem children
@@ -246,7 +227,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   _populateSelf: function(children) {
     let newLevel = this.level + 1;
 
-    for (let newFrame of this._getChildCalls()) {
+    for (let newFrame of this.frame.calls) {
       children.push(new CallView({
         caller: this,
         frame: newFrame,

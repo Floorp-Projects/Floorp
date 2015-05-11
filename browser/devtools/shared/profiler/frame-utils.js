@@ -35,6 +35,9 @@ const CHAR_CODE_SLASH = "/".charCodeAt(0);
 // The cache used in the `nsIURL` function.
 const gNSURLStore = new Map();
 
+// The cache used to store inflated frames.
+const gInflatedFrameStore = new WeakMap();
+
 /**
  * Parses the raw location of this function call to retrieve the actual
  * function name, source url, host name, line and column.
@@ -98,10 +101,17 @@ exports.parseLocation = function parseLocation(location, fallbackLine, fallbackC
 
         if (!line) {
           line = location.substr(start, length);
-        } else if (!column) {
-          column = location.substr(start, length);
+
+          // Unwind a character due to the isNumeric loop above.
+          --i;
+
+          // There still might be a column number, continue looking.
+          continue;
         }
 
+        column = location.substr(start, length);
+
+        // We've gotten both a line and a column, stop looking.
         break;
       }
     }
@@ -133,8 +143,8 @@ exports.parseLocation = function parseLocation(location, fallbackLine, fallbackC
     fileName: fileName,
     hostName: hostName,
     url: url,
-    line: line,
-    column: column
+    line: line || fallbackLine,
+    column: column || fallbackColumn
   };
 };
 
@@ -170,48 +180,103 @@ function isContent({ location, category }) {
 exports.isContent = isContent;
 
 /**
- * This filters out platform data frames in a sample. With latest performance
- * tool in Fx40, when displaying only content, we still filter out all platform data,
- * except we generalize platform data that are leaves. We do this because of two
- * observations:
+ * Get caches to cache inflated frames and computed frame keys of a frame
+ * table.
  *
- * 1. The leaf is where time is _actually_ being spent, so we _need_ to show it
- * to developers in some way to give them accurate profiling data. We decide to
- * split the platform into various category buckets and just show time spent in
- * each bucket.
- *
- * 2. The calls leading to the leaf _aren't_ where we are spending time, but
- * _do_ give the developer context for how they got to the leaf where they _are_
- * spending time. For non-platform hackers, the non-leaf platform frames don't
- * give any meaningful context, and so we can safely filter them out.
- *
- * Example transformations:
- * Before: PlatformA -> PlatformB -> ContentA -> ContentB
- * After:  ContentA -> ContentB
- *
- * Before: PlatformA -> ContentA -> PlatformB -> PlatformC
- * After:  ContentA -> Category(PlatformC)
+ * @param object framesTable
+ * @return object
  */
-exports.filterPlatformData = function filterPlatformData (frames) {
-  let result = [];
-  let last = frames.length - 1;
-  let frame;
-
-  for (let i = 0; i < frames.length; i++) {
-    frame = frames[i];
-    if (exports.isContent(frame)) {
-      result.push(frame);
-    } else if (last === i) {
-      // Extend here so we're not destructively editing
-      // the original profiler data. Set isMetaCategory `true`,
-      // and ensure we have a category set by default, because that's how
-      // the generalized frame nodes are organized.
-      result.push(extend({ isMetaCategory: true, category: CATEGORY_OTHER }, frame));
-    }
+exports.getInflatedFrameCache = function getInflatedFrameCache(frameTable) {
+  let inflatedCache = gInflatedFrameStore.get(frameTable);
+  if (inflatedCache !== undefined) {
+    return inflatedCache;
   }
 
-  return result;
-}
+  // Fill with nulls to ensure no holes.
+  inflatedCache = Array.from({ length: frameTable.data.length }, () => null);
+  gInflatedFrameStore.set(frameTable, inflatedCache);
+  return inflatedCache;
+};
+
+/**
+ * Get or add an inflated frame to a cache.
+ *
+ * @param object cache
+ * @param number index
+ * @param object frameTable
+ * @param object stringTable
+ */
+exports.getOrAddInflatedFrame = function getOrAddInflatedFrame(cache, index, frameTable, stringTable) {
+  let inflatedFrame = cache[index];
+  if (inflatedFrame === null) {
+    inflatedFrame = cache[index] = new InflatedFrame(index, frameTable, stringTable);
+  }
+  return inflatedFrame;
+};
+
+/**
+ * An intermediate data structured used to hold inflated frames.
+ *
+ * @param number index
+ * @param object frameTable
+ * @param object stringTable
+ */
+function InflatedFrame(index, frameTable, stringTable) {
+  const LOCATION_SLOT = frameTable.schema.location;
+  const OPTIMIZATIONS_SLOT = frameTable.schema.optimizations;
+  const LINE_SLOT = frameTable.schema.line;
+  const CATEGORY_SLOT = frameTable.schema.category;
+
+  let frame = frameTable.data[index];
+  let category = frame[CATEGORY_SLOT];
+  this.location = stringTable[frame[LOCATION_SLOT]];
+  this.optimizations = frame[OPTIMIZATIONS_SLOT];
+  this.line = frame[LINE_SLOT];
+  this.column = undefined;
+  this.category = category;
+  this.metaCategory = category || CATEGORY_OTHER;
+  this.isContent = isContent(this);
+};
+
+/**
+ * Gets the frame key (i.e., equivalence group) according to options. Content
+ * frames are always identified by location. Chrome frames are identified by
+ * location if content-only filtering is off. If content-filtering is on, they
+ * are identified by their category.
+ *
+ * @param object options
+ * @return string
+ */
+InflatedFrame.prototype.getFrameKey = function getFrameKey(options) {
+  if (this.isContent || !options.contentOnly || options.isRoot) {
+    options.isMetaCategoryOut = false;
+    return this.location;
+  }
+
+  if (options.isLeaf) {
+    // We only care about leaf platform frames if we are displaying content
+    // only. If no category is present, give the default category of
+    // CATEGORY_OTHER.
+    //
+    // 1. The leaf is where time is _actually_ being spent, so we _need_ to
+    // show it to developers in some way to give them accurate profiling
+    // data. We decide to split the platform into various category buckets
+    // and just show time spent in each bucket.
+    //
+    // 2. The calls leading to the leaf _aren't_ where we are spending time,
+    // but _do_ give the developer context for how they got to the leaf
+    // where they _are_ spending time. For non-platform hackers, the
+    // non-leaf platform frames don't give any meaningful context, and so we
+    // can safely filter them out.
+    options.isMetaCategoryOut = true;
+    return this.metaCategory;
+  }
+
+  // Return an empty string denoting that this frame should be skipped.
+  return "";
+};
+
+exports.InflatedFrame = InflatedFrame;
 
 /**
  * Helper for getting an nsIURL instance out of a string.
@@ -242,7 +307,7 @@ function nsIURL(url) {
  * returns the same string, or null, if it's an invalid host.
  */
 function getHost (url, hostName) {
-  return isChromeScheme(url) ? null : hostName;
+  return isChromeScheme(url, 0) ? null : hostName;
 }
 
 // For the functions below, we assume that we will never access the location
@@ -265,7 +330,7 @@ function isContentScheme(location, i) {
     if (location.charCodeAt(++i) === CHAR_CODE_T &&
         location.charCodeAt(++i) === CHAR_CODE_T &&
         location.charCodeAt(++i) === CHAR_CODE_P) {
-      if (location.charCodeAt(i) === CHAR_CODE_S) {
+      if (location.charCodeAt(i + 1) === CHAR_CODE_S) {
         ++i;
       }
       return isColonSlashSlash(location, i);
