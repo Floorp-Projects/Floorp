@@ -45,7 +45,7 @@ public:
                                      const Color &aColor,
                                      const Point &aOffset,
                                      Float aSigma,
-                                     CompositionOp aOperator);
+                                     CompositionOp aOperator) { /* Not implemented */ }
 
   virtual void ClearRect(const Rect &aRect);
   virtual void MaskSurface(const Pattern &aSource,
