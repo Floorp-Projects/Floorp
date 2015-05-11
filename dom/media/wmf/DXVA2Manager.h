@@ -40,6 +40,8 @@ public:
 
   virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight) { return S_OK; }
 
+  virtual bool IsD3D11() { return false; }
+
   virtual ~DXVA2Manager();
 
 protected:
