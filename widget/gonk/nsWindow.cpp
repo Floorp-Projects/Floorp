@@ -83,11 +83,13 @@ public:
     {}
 
     NS_IMETHOD Run() {
-        // When the screen is off prevent priority changes.
-        if (mIsOn) {
-          ProcessPriorityManager::Unfreeze();
-        } else {
-          ProcessPriorityManager::Freeze();
+        // Notify observers that the screen state has just changed.
+        nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+        if (observerService) {
+          observerService->NotifyObservers(
+            nullptr, "screen-state-changed",
+            mIsOn ? MOZ_UTF16("on") : MOZ_UTF16("off")
+          );
         }
 
         nsRefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
@@ -99,15 +101,6 @@ public:
             if (nsIWidgetListener* listener = win->GetWidgetListener()) {
                 listener->SizeModeChanged(mIsOn ? nsSizeMode_Fullscreen : nsSizeMode_Minimized);
             }
-        }
-
-        // Notify observers that the screen state has just changed.
-        nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-        if (observerService) {
-          observerService->NotifyObservers(
-            nullptr, "screen-state-changed",
-            mIsOn ? MOZ_UTF16("on") : MOZ_UTF16("off")
-          );
         }
 
         return NS_OK;

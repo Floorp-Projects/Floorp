@@ -221,6 +221,7 @@ private:
 
   void ObserveContentParentCreated(nsISupports* aContentParent);
   void ObserveContentParentDestroyed(nsISupports* aSubject);
+  void ObserveScreenStateChanged(const char16_t* aData);
 
   nsDataHashtable<nsUint64HashKey, nsRefPtr<ParticularProcessPriorityManager> >
     mParticularManagers;
@@ -446,6 +447,7 @@ ProcessPriorityManagerImpl::Init()
   if (os) {
     os->AddObserver(this, "ipc:content-created", /* ownsWeak */ false);
     os->AddObserver(this, "ipc:content-shutdown", /* ownsWeak */ false);
+    os->AddObserver(this, "screen-state-changed", /* ownsWeak */ false);
   }
 }
 
@@ -460,6 +462,8 @@ ProcessPriorityManagerImpl::Observe(
     ObserveContentParentCreated(aSubject);
   } else if (topic.EqualsLiteral("ipc:content-shutdown")) {
     ObserveContentParentDestroyed(aSubject);
+  } else if (topic.EqualsLiteral("screen-state-changed")) {
+    ObserveScreenStateChanged(aData);
   } else {
     MOZ_ASSERT(false);
   }
@@ -544,6 +548,40 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
   }
 }
 
+static PLDHashOperator
+FreezeParticularProcessPriorityManagers(
+  const uint64_t& aKey,
+  nsRefPtr<ParticularProcessPriorityManager> aValue,
+  void* aUserData)
+{
+  aValue->Freeze();
+  return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+UnfreezeParticularProcessPriorityManagers(
+  const uint64_t& aKey,
+  nsRefPtr<ParticularProcessPriorityManager> aValue,
+  void* aUserData)
+{
+  aValue->Unfreeze();
+  return PL_DHASH_NEXT;
+}
+
+void
+ProcessPriorityManagerImpl::ObserveScreenStateChanged(const char16_t* aData)
+{
+  if (NS_LITERAL_STRING("on").Equals(aData)) {
+    sFrozen = false;
+    mParticularManagers.EnumerateRead(
+      &UnfreezeParticularProcessPriorityManagers, nullptr);
+  } else {
+    sFrozen = true;
+    mParticularManagers.EnumerateRead(
+      &FreezeParticularProcessPriorityManagers, nullptr);
+  }
+}
+
 bool
 ProcessPriorityManagerImpl::ChildProcessHasHighPriority( void )
 {
@@ -601,42 +639,6 @@ ProcessPriorityManagerImpl::Notify(const WakeLockInformation& aInfo)
     LOG("Got wake lock changed event. "
         "Now mHighPriorityParent = %d\n", mHighPriority);
   }
-}
-
-static PLDHashOperator
-FreezeParticularProcessPriorityManagers(
-  const uint64_t& aKey,
-  nsRefPtr<ParticularProcessPriorityManager> aValue,
-  void* aUserData)
-{
-  aValue->Freeze();
-  return PL_DHASH_NEXT;
-}
-
-void
-ProcessPriorityManagerImpl::Freeze()
-{
-  sFrozen = true;
-  mParticularManagers.EnumerateRead(&FreezeParticularProcessPriorityManagers,
-                                    nullptr);
-}
-
-static PLDHashOperator
-UnfreezeParticularProcessPriorityManagers(
-  const uint64_t& aKey,
-  nsRefPtr<ParticularProcessPriorityManager> aValue,
-  void* aUserData)
-{
-  aValue->Unfreeze();
-  return PL_DHASH_NEXT;
-}
-
-void
-ProcessPriorityManagerImpl::Unfreeze()
-{
-  sFrozen = false;
-  mParticularManagers.EnumerateRead(&UnfreezeParticularProcessPriorityManagers,
-                                    nullptr);
 }
 
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager,
@@ -851,6 +853,10 @@ ParticularProcessPriorityManager::OnFrameloaderVisibleChanged(nsISupports* aSubj
 {
   nsCOMPtr<nsIFrameLoader> fl = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE_VOID(fl);
+
+  if (mFrozen) {
+    return; // Ignore visibility changes when the screen is off
+  }
 
   TabParent* tp = TabParent::GetFrom(fl);
   if (!tp) {
@@ -1073,7 +1079,6 @@ void
 ParticularProcessPriorityManager::Unfreeze()
 {
   mFrozen = false;
-  ResetPriorityNow();
 }
 
 void
@@ -1378,26 +1383,6 @@ ProcessPriorityManager::AnyProcessHasHighPriority()
   } else {
     return ProcessPriorityManagerChild::Singleton()->
       CurrentProcessIsHighPriority();
-  }
-}
-
-/* static */ void
-ProcessPriorityManager::Freeze()
-{
-  ProcessPriorityManagerImpl* singleton =
-    ProcessPriorityManagerImpl::GetSingleton();
-  if (singleton) {
-    singleton->Freeze();
-  }
-}
-
-/* static */ void
-ProcessPriorityManager::Unfreeze()
-{
-  ProcessPriorityManagerImpl* singleton =
-    ProcessPriorityManagerImpl::GetSingleton();
-  if (singleton) {
-    singleton->Unfreeze();
   }
 }
 
