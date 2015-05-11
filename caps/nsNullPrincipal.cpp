@@ -108,25 +108,6 @@ nsNullPrincipal::GetURI(nsIURI** aURI)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
-{
-  NS_IF_ADDREF(*aCsp = mCSP);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
-{
-  // If CSP was already set, it should not be destroyed!  Instead, it should
-  // get set anew when a new principal is created.
-  if (mCSP)
-    return NS_ERROR_ALREADY_INITIALIZED;
-
-  mCSP = aCsp;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNullPrincipal::GetDomain(nsIURI** aDomain)
 {
   return NS_EnsureSafeToReturn(mURI, aDomain);
@@ -246,12 +227,6 @@ nsNullPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   // For a null principal, we use our unique uuid as the base domain.
   return mURI->GetPath(aBaseDomain);
-}
-
-bool
-nsNullPrincipal::IsOnCSSUnprefixingWhitelist()
-{
-  return false;
 }
 
 /**
