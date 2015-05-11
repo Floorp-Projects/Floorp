@@ -65,10 +65,10 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
    * populate the call tree.
    */
   _prepareCallTree: function (allocations, { startTime, endTime }, options) {
-    let samples = RecordingUtils.getSamplesFromAllocations(allocations);
+    let thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
     let invertTree = PerformanceController.getOption("invert-call-tree");
 
-    let threadNode = new ThreadNode(samples,
+    let threadNode = new ThreadNode(thread,
       { startTime, endTime, invertTree });
 
     // If we have an empty profile (no samples), then don't invert the tree, as
