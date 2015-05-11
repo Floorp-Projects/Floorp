@@ -45,9 +45,9 @@ struct hb_ot_face_metrics_accelerator_t
 
   inline void init (hb_face_t *face,
 		    hb_tag_t _hea_tag, hb_tag_t _mtx_tag,
-		    unsigned int default_advance)
+		    unsigned int default_advance_)
   {
-    this->default_advance = default_advance;
+    this->default_advance = default_advance_;
     this->num_metrics = face->get_num_glyphs ();
 
     hb_blob_t *_hea_blob = OT::Sanitizer<OT::_hea>::sanitize (face->reference_table (_hea_tag));
@@ -114,6 +114,7 @@ struct hb_ot_face_cmap_accelerator_t
     if (!subtable) subtable = cmap->find_subtable (0, 2);
     if (!subtable) subtable = cmap->find_subtable (0, 1);
     if (!subtable) subtable = cmap->find_subtable (0, 0);
+    if (!subtable) subtable = cmap->find_subtable (3, 0);
     /* Meh. */
     if (!subtable) subtable = &OT::Null(OT::CmapSubtable);
 

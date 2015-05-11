@@ -51,7 +51,8 @@ struct CmapSubtableFormat0
     return true;
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this));
   }
@@ -125,7 +126,7 @@ struct CmapSubtableFormat4
     return true;
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c)
+  inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     if (unlikely (!c->check_struct (this)))
@@ -183,7 +184,8 @@ struct CmapSubtableLongGroup
     return 0;
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this));
   }
@@ -210,7 +212,8 @@ struct CmapSubtableTrimmed
     return true;
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) && glyphIdArray.sanitize (c));
   }
@@ -242,7 +245,8 @@ struct CmapSubtableLongSegmented
     return true;
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) && groups.sanitize (c));
   }
@@ -288,7 +292,8 @@ struct UnicodeValueRange
     return 0;
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this));
   }
@@ -309,7 +314,8 @@ struct UVSMapping
     return unicodeValue.cmp (codepoint);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this));
   }
@@ -348,7 +354,8 @@ struct VariationSelectorRecord
     return varSelector.cmp (variation_selector);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c, void *base) {
+  inline bool sanitize (hb_sanitize_context_t *c, const void *base) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) &&
 			 defaultUVS.sanitize (c, base) &&
@@ -373,7 +380,8 @@ struct CmapSubtableFormat14
     return record[record.bsearch(variation_selector)].get_glyph (codepoint, glyph, this);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) &&
 			 record.sanitize (c, this));
@@ -418,7 +426,8 @@ struct CmapSubtable
     }
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     if (!u.format.sanitize (c)) return TRACE_RETURN (false);
     switch (u.format) {
@@ -461,7 +470,8 @@ struct EncodingRecord
     return 0;
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c, void *base) {
+  inline bool sanitize (hb_sanitize_context_t *c, const void *base) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) &&
 			 subtable.sanitize (c, base));
@@ -496,7 +506,8 @@ struct cmap
     return &(this+encodingRecord[result].subtable);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) &&
 			 likely (version == 0) &&
