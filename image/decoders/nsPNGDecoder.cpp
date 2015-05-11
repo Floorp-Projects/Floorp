@@ -22,7 +22,6 @@
 namespace mozilla {
 namespace image {
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetPNGLog()
 {
@@ -42,7 +41,6 @@ GetPNGDecoderAccountingLog()
   }
   return sPNGDecoderAccountingLog;
 }
-#endif
 
 // Limit image dimensions (bug #251381, #591822, and #967656)
 #ifndef MOZ_PNG_MAX_DIMENSION

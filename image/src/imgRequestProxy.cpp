@@ -861,12 +861,10 @@ imgRequestProxy::Notify(int32_t aType, const mozilla::gfx::IntRect* aRect)
 void
 imgRequestProxy::OnLoadComplete(bool aLastPart)
 {
-#ifdef PR_LOGGING
   nsAutoCString name;
   GetName(name);
   LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequestProxy::OnLoadComplete",
                       "name", name.get());
-#endif
   // There's all sorts of stuff here that could kill us (the OnStopRequest call
   // on the listener, the removal from the loadgroup, the release of the
   // listener, etc).  Don't let them do it.
@@ -906,12 +904,10 @@ imgRequestProxy::OnLoadComplete(bool aLastPart)
 void
 imgRequestProxy::BlockOnload()
 {
-#ifdef PR_LOGGING
   nsAutoCString name;
   GetName(name);
   LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequestProxy::BlockOnload",
                       "name", name.get());
-#endif
 
   nsCOMPtr<imgIOnloadBlocker> blocker = do_QueryInterface(mListener);
   if (blocker) {
@@ -922,12 +918,10 @@ imgRequestProxy::BlockOnload()
 void
 imgRequestProxy::UnblockOnload()
 {
-#ifdef PR_LOGGING
   nsAutoCString name;
   GetName(name);
   LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequestProxy::UnblockOnload",
                       "name", name.get());
-#endif
 
   nsCOMPtr<imgIOnloadBlocker> blocker = do_QueryInterface(mListener);
   if (blocker) {
