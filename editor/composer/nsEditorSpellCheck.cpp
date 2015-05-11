@@ -45,6 +45,7 @@
 #include "nsStringFwd.h"                // for nsAFlatString
 #include "nsStyleUtil.h"                // for nsStyleUtil
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType
+#include "nsIPlaintextEditor.h"         // for editor flags
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -603,20 +604,25 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
     } else {
       langCode.Assign(aDictionary);
     }
-    if (mPreferredLang.IsEmpty() ||
-        !nsStyleUtil::DashMatchCompare(mPreferredLang, langCode, comparator)) {
-      // When user sets dictionary manually, we store this value associated
-      // with editor url.
-      StoreCurrentDictionary(mEditor, aDictionary);
-    } else {
-      // If user sets a dictionary matching (even partially), lang defined by
-      // document, we consider content pref has been canceled, and we clear it.
-      ClearCurrentDictionary(mEditor);
-    }
+    uint32_t flags = 0;
+    mEditor->GetFlags(&flags);
+    if (!(flags & nsIPlaintextEditor::eEditorMailMask)) {
+      if (mPreferredLang.IsEmpty() ||
+          !nsStyleUtil::DashMatchCompare(mPreferredLang, langCode, comparator)) {
+        // When user sets dictionary manually, we store this value associated
+        // with editor url.
+        StoreCurrentDictionary(mEditor, aDictionary);
+      } else {
+        // If user sets a dictionary matching (even partially), lang defined by
+        // document, we consider content pref has been canceled, and we clear it.
+        ClearCurrentDictionary(mEditor);
+      }
 
-    // Also store it in as a preference. It will be used as a default value
-    // when everything else fails.
-    Preferences::SetString("spellchecker.dictionary", aDictionary);
+      // Also store it in as a preference. It will be used as a default value
+      // when everything else fails but we don't want this for mail composer
+      // because it has spellchecked dictionary settings in Preferences.
+      Preferences::SetString("spellchecker.dictionary", aDictionary);
+    }
   }
   return mSpellChecker->SetCurrentDictionary(aDictionary);
 }
@@ -694,6 +700,18 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditorSpellCheckCallback* aCallba
     NS_ENSURE_SUCCESS(rv, rv);
     rootContent = do_QueryInterface(rootElement);
   }
+
+  // Try to get topmost document's document element for embedded mail editor.
+  uint32_t flags = 0;
+  mEditor->GetFlags(&flags);
+  if (flags & nsIPlaintextEditor::eEditorMailMask) {
+    nsCOMPtr<nsIDocument> ownerDoc = rootContent->OwnerDoc();
+    NS_ENSURE_TRUE(ownerDoc, NS_ERROR_FAILURE);
+    nsIDocument* parentDoc = ownerDoc->GetParentDocument();
+    if (parentDoc) {
+      rootContent = do_QueryInterface(parentDoc->GetDocumentElement());
+    }
+  }
   NS_ENSURE_TRUE(rootContent, NS_ERROR_FAILURE);
 
   nsRefPtr<DictionaryFetcher> fetcher =
@@ -730,13 +748,19 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
 
   // If we successfully fetched a dictionary from content prefs, do not go
   // further. Use this exact dictionary.
-  nsAutoString dictName(aFetcher->mDictionary);
-  if (!dictName.IsEmpty()) {
-    if (NS_FAILED(SetCurrentDictionary(dictName))) {
-      // may be dictionary was uninstalled ?
-      ClearCurrentDictionary(mEditor);
+  // Don't use content preferences for editor with eEditorMailMask flag.
+  nsAutoString dictName;
+  uint32_t flags;
+  mEditor->GetFlags(&flags);
+  if (!(flags & nsIPlaintextEditor::eEditorMailMask)) {
+    dictName.Assign(aFetcher->mDictionary);
+    if (!dictName.IsEmpty()) {
+      if (NS_FAILED(SetCurrentDictionary(dictName))) {
+        // May be dictionary was uninstalled ?
+        ClearCurrentDictionary(mEditor);
+      }
+      return NS_OK;
     }
-    return NS_OK;
   }
 
   if (mPreferredLang.IsEmpty()) {
