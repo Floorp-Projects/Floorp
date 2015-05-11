@@ -128,7 +128,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
         endFrame = aImportedBy->mFirstNotImported;
     }
 
-#if defined(PR_LOGGING) && defined(TX_TO_STRING)
+#if defined(TX_TO_STRING)
     txPattern* match = 0;
 #endif
 
@@ -149,7 +149,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
                 if (templ.mMatch->matches(aNode, aContext)) {
                     matchTemplate = templ.mFirstInstruction;
                     *aImportFrame = frame;
-#if defined(PR_LOGGING) && defined(TX_TO_STRING)
+#if defined(TX_TO_STRING)
                     match = templ.mMatch;
 #endif
                 }
@@ -157,7 +157,6 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
         }
     }
 
-#ifdef PR_LOGGING
     nsAutoString mode, nodeName;
     if (aMode.mLocalName) {
         aMode.mLocalName->ToString(mode);
@@ -180,7 +179,6 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
                 NS_LossyConvertUTF16toASCII(nodeName).get(),
                 NS_LossyConvertUTF16toASCII(mode).get()));
     }
-#endif
 
     if (!matchTemplate) {
         // Test for these first since a node can be both a text node
