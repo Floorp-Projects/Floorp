@@ -108,3 +108,4 @@ skip-if(B2G||Mulet) == 641444-1.html 641444-1-ref.html # bug 773482 # Initial mu
 == underline-select-1.html underline-select-1-ref.html
 == underline-select-2.html underline-select-2-ref.html
 == 1133392.html 1133392-ref.html
+!= 1159729-offset-adjustment.html 1159729-offset-adjustment-notref.html
