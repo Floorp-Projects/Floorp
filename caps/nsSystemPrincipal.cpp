@@ -37,14 +37,6 @@ nsSystemPrincipal::GetScriptLocation(nsACString &aStr)
     aStr.Assign(SYSTEM_PRINCIPAL_SPEC);
 }
 
-#ifdef DEBUG
-void nsSystemPrincipal::dumpImpl()
-{
-  fprintf(stderr, "nsSystemPrincipal (%p)\n", this);
-}
-#endif 
-
-
 ///////////////////////////////////////
 // Methods implementing nsIPrincipal //
 ///////////////////////////////////////

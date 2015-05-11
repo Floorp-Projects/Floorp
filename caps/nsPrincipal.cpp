@@ -68,15 +68,6 @@ nsBasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
   return NS_OK;
 }
 
-#ifdef DEBUG
-void nsPrincipal::dumpImpl()
-{
-  nsAutoCString str;
-  GetScriptLocation(str);
-  fprintf(stderr, "nsPrincipal (%p) = %s\n", static_cast<void*>(this), str.get());
-}
-#endif 
-
 NS_IMPL_CLASSINFO(nsPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_PRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE_CI(nsPrincipal,
@@ -996,13 +987,6 @@ nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
   }
   aStr.Append(")");
 }
-
-#ifdef DEBUG
-void nsExpandedPrincipal::dumpImpl()
-{
-  fprintf(stderr, "nsExpandedPrincipal (%p)\n", static_cast<void*>(this));
-}
-#endif 
 
 //////////////////////////////////////////
 // Methods implementing nsISerializable //

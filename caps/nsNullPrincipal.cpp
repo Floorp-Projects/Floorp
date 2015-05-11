@@ -75,15 +75,6 @@ nsNullPrincipal::GetScriptLocation(nsACString &aStr)
   mURI->GetSpec(aStr);
 }
 
-#ifdef DEBUG
-void nsNullPrincipal::dumpImpl()
-{
-  nsAutoCString str;
-  mURI->GetSpec(str);
-  fprintf(stderr, "nsNullPrincipal (%p) = %s\n", this, str.get());
-}
-#endif 
-
 /**
  * nsIPrincipal implementation
  */
