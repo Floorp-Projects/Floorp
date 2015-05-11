@@ -59,7 +59,7 @@ var PKT_SAVED_OVERLAY = function (options)
 
         thePKT_SAVED.sendMessage("getSuggestedTags",
         {
-            url: myself.savedUrl || window.location.toString()
+            url: myself.savedUrl
         }, function(resp) 
         {
             $('.pkt_ext_suggestedtag_detail').removeClass('pkt_ext_suggestedtag_detail_loading');
@@ -314,7 +314,7 @@ var PKT_SAVED_OVERLAY = function (options)
 
             thePKT_SAVED.sendMessage("addTags",
             {
-                url: myself.savedUrl || window.location.toString(),
+                url: myself.savedUrl,
                 tags: originaltags   
             }, function(resp)
             {
@@ -411,7 +411,7 @@ var PKT_SAVED_OVERLAY = function (options)
         if (typeof initobj.item == 'object')
         {
             this.savedItemId = initobj.item.item_id;
-            this.savedUrl = initobj.item.resolved_url;
+            this.savedUrl = initobj.item.given_url;
         }
         $('.pkt_ext_containersaved').addClass('pkt_ext_container_detailactive').removeClass('pkt_ext_container_finalstate');
 
