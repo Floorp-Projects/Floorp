@@ -170,7 +170,9 @@ ImageContainer::ImageContainer(Mode flag)
 : mReentrantMonitor("ImageContainer.mReentrantMonitor"),
   mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
+  mDroppedImageCount(0),
   mPreviousImagePainted(false),
+  mCurrentImageComposited(false),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
   mImageClient(nullptr),
@@ -234,14 +236,21 @@ ImageContainer::CreateImage(ImageFormat aFormat)
 }
 
 void
-ImageContainer::SetCurrentImageInternal(Image *aImage)
+ImageContainer::SetCurrentImageInternal(Image *aImage,
+                                        const TimeStamp& aTimeStamp)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   if (mActiveImage != aImage) {
+    if (!mCurrentImageComposited && !mCurrentImageTimeStamp.IsNull() &&
+        (aTimeStamp.IsNull() || aTimeStamp > mCurrentImageTimeStamp)) {
+      mFrameIDsNotYetComposited.AppendElement(mGenerationCounter);
+    }
     mGenerationCounter = ++sGenerationCounter;
+    mCurrentImageComposited = false;
+    mActiveImage = aImage;
+    mCurrentImageTimeStamp = aTimeStamp;
   }
-  mActiveImage = aImage;
   CurrentImageChanged();
 }
 
@@ -249,7 +258,7 @@ void
 ImageContainer::ClearImagesFromImageBridge()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  SetCurrentImageInternal(nullptr);
+  SetCurrentImageInternal(nullptr, TimeStamp());
 }
 
 void
@@ -261,7 +270,7 @@ ImageContainer::SetCurrentImages(const nsTArray<NonOwningImage>& aImages)
     ImageBridgeChild::DispatchImageClientUpdate(mImageClient, this);
   }
   MOZ_ASSERT(aImages.Length() == 1);
-  SetCurrentImageInternal(aImages[0].mImage);
+  SetCurrentImageInternal(aImages[0].mImage, aImages[0].mTimeStamp);
 }
 
  void
@@ -275,7 +284,7 @@ ImageContainer::ClearAllImages()
   }
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  SetCurrentImageInternal(nullptr);
+  SetCurrentImageInternal(nullptr, TimeStamp());
 }
 
 void
@@ -284,7 +293,7 @@ ImageContainer::SetCurrentImageInTransaction(Image *aImage)
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ASSERTION(!mImageClient, "Should use async image transfer with ImageBridge.");
 
-  SetCurrentImageInternal(aImage);
+  SetCurrentImageInternal(aImage, TimeStamp());
 }
 
 bool ImageContainer::IsAsync() const
@@ -343,6 +352,20 @@ void
 ImageContainer::NotifyCompositeInternal(const ImageCompositeNotification& aNotification)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  while (!mFrameIDsNotYetComposited.IsEmpty()) {
+    if (mFrameIDsNotYetComposited[0] <= aNotification.frameID()) {
+      if (mFrameIDsNotYetComposited[0] < aNotification.frameID()) {
+        ++mDroppedImageCount;
+      }
+      mFrameIDsNotYetComposited.RemoveElementAt(0);
+    } else {
+      break;
+    }
+  }
+  if (aNotification.frameID() == mGenerationCounter) {
+    mCurrentImageComposited = true;
+  }
 
   if (!aNotification.imageTimeStamp().IsNull()) {
     mPaintDelay = aNotification.firstCompositeTimeStamp() -
