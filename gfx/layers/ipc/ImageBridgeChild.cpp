@@ -510,25 +510,7 @@ ImageBridgeChild::EndTransaction()
     }
   }
   for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
-    const EditReply& reply = replies[i];
-    switch (reply.type()) {
-    case EditReply::TReturnReleaseFence: {
-      const ReturnReleaseFence& rep = reply.get_ReturnReleaseFence();
-      FenceHandle fence = rep.fence();
-      PTextureChild* child = rep.textureChild();
-
-      if (!fence.IsValid() || !child) {
-        break;
-      }
-      RefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
-      if (texture) {
-        texture->SetReleaseFenceHandle(fence);
-      }
-      break;
-    }
-    default:
-      NS_RUNTIMEABORT("not reached");
-    }
+    NS_RUNTIMEABORT("not reached");
   }
   SendPendingAsyncMessges();
 }
