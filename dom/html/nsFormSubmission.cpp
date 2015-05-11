@@ -83,12 +83,12 @@ public:
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream);
 
-  virtual bool SupportsIsindexSubmission() override
+  virtual bool SupportsIsindexSubmission()
   {
     return true;
   }
 
-  virtual nsresult AddIsindex(const nsAString& aValue) override;
+  virtual nsresult AddIsindex(const nsAString& aValue);
 
 protected:
 
