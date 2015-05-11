@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES.devtools.webaudioeditor += [
-    'modules/queue.js',
     'panel.js'
 ]
 

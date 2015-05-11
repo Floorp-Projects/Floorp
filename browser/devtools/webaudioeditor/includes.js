@@ -16,7 +16,6 @@ const { require } = devtools;
 let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let { EventTarget } = require("sdk/event/target");
 
-const { Queue } = require("devtools/webaudioeditor/queue");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { Class } = require("sdk/core/heritage");
 const EventEmitter = require("devtools/toolkit/event-emitter");
