@@ -49,37 +49,6 @@ static bool URIIsImmutable(nsIURI* aURI)
 // Static member variables
 const char nsBasePrincipal::sInvalid[] = "Invalid";
 
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsBasePrincipal::AddRef()
-{
-  NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
-  // XXXcaa does this need to be threadsafe?  See bug 143559.
-  nsrefcnt count = ++refcount;
-  NS_LOG_ADDREF(this, count, "nsBasePrincipal", sizeof(*this));
-  return count;
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsBasePrincipal::Release()
-{
-  NS_PRECONDITION(0 != refcount, "dup release");
-  nsrefcnt count = --refcount;
-  NS_LOG_RELEASE(this, count, "nsBasePrincipal");
-  if (count == 0) {
-    delete this;
-  }
-
-  return count;
-}
-
-nsBasePrincipal::nsBasePrincipal()
-{
-}
-
-nsBasePrincipal::~nsBasePrincipal(void)
-{
-}
-
 NS_IMETHODIMP
 nsBasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {
@@ -116,8 +85,6 @@ NS_IMPL_QUERY_INTERFACE_CI(nsPrincipal,
 NS_IMPL_CI_INTERFACE_GETTER(nsPrincipal,
                             nsIPrincipal,
                             nsISerializable)
-NS_IMPL_ADDREF_INHERITED(nsPrincipal, nsBasePrincipal)
-NS_IMPL_RELEASE_INHERITED(nsPrincipal, nsBasePrincipal)
 
 // Called at startup:
 /* static */ void
@@ -800,8 +767,6 @@ NS_IMPL_QUERY_INTERFACE_CI(nsExpandedPrincipal,
 NS_IMPL_CI_INTERFACE_GETTER(nsExpandedPrincipal,
                              nsIPrincipal,
                              nsIExpandedPrincipal)
-NS_IMPL_ADDREF_INHERITED(nsExpandedPrincipal, nsBasePrincipal)
-NS_IMPL_RELEASE_INHERITED(nsExpandedPrincipal, nsBasePrincipal)
 
 nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr <nsIPrincipal> > &aWhiteList)
 {

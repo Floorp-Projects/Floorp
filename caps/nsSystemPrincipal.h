@@ -20,13 +20,11 @@
 class nsSystemPrincipal final : public nsJSPrincipals
 {
 public:
-    // Our refcount is managed by nsJSPrincipals.  Use this macro to avoid
-    // an extra refcount member.
-    NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPRINCIPAL
     NS_DECL_NSISERIALIZABLE
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
-    nsSystemPrincipal();
+    nsSystemPrincipal() {}
 
     virtual void GetScriptLocation(nsACString &aStr) override;
 
@@ -35,10 +33,7 @@ public:
 #endif 
 
 protected:
-    virtual ~nsSystemPrincipal(void);
-
-    // XXX Probably unnecessary.  See bug 143559.
-    NS_DECL_OWNINGTHREAD
+    virtual ~nsSystemPrincipal(void) {}
 };
 
 #endif // nsSystemPrincipal_h__
