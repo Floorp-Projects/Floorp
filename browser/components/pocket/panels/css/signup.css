@@ -8,7 +8,8 @@
  *  Core detail
  *  Core detail - storyboard
  *  Buttons
- *  Responsive
+ *  Overflow mode
+ *  Language overrides
  */
 
 /*=Global
@@ -126,7 +127,7 @@
     width: 18px;
     top: 50%;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 1.5dppx) {
+@media (min-resolution: 1.1dppx) {
     .pkt_ext_containersignup .ff_signuphelp {
         background-image: url(../img/signup_help@2x.png);
         background-size: 18px 18px;
@@ -304,4 +305,72 @@
 .pkt_ext_containersignup .btn-disabled .text {
     color: #ccc;
     color: rgba(255,255,255,0.6);
+}
+
+/*=Overflow mode
+--------------------------------------------------------------------------------------- */
+.pkt_ext_signup_overflow .pkt_ext_tagline {
+    margin-bottom: 1em;
+    padding: 0 1em;
+}
+.pkt_ext_signup_overflow .pkt_ext_introimg {
+    background-size: 200px 98px;
+    height: 98px;
+    width: 200px;
+}
+.pkt_ext_signup_overflow .signup-btn-firefox,
+.pkt_ext_signup_overflow .signup-btn-email {
+    font-size: 14px;
+    min-width: 12.6em;
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+}
+.pkt_ext_signup_overflow .signup-btn-firefox .text {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/*=Language overrides
+--------------------------------------------------------------------------------------- */
+.pkt_ext_signup_de .pkt_ext_introstoryone_img {
+    margin-right: -5px;
+    padding-left: 0;
+}
+.pkt_ext_signup_de .pkt_ext_introstorytwo .pkt_ext_tagline,
+.pkt_ext_signup_es .pkt_ext_introstorytwo .pkt_ext_tagline,
+.pkt_ext_signup_ja .pkt_ext_introstorytwo .pkt_ext_tagline,
+.pkt_ext_signup_ru .pkt_ext_introstorytwo .pkt_ext_tagline {
+    margin-bottom: 0.5em;
+}
+.pkt_ext_signup_de .signup-btn-firefox .text,
+.pkt_ext_signup_de .signup-btn-email,
+.pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-firefox .text,
+.pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-email,
+.pkt_ext_signup_ja .signup-btn-firefox .text,
+.pkt_ext_signup_ja .signup-btn-email,
+.pkt_ext_signup_ru .signup-btn-firefox .text,
+.pkt_ext_signup_ru .signup-btn-email {
+    font-size: 15px;
+}
+.pkt_ext_signup_ja .signup-btn-firefox .text,
+.pkt_ext_signup_ru .signup-btn-firefox .text {
+    left: 15px;
+}
+.pkt_ext_signup_de .signup-btn-email,
+.pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-email,
+.pkt_ext_signup_ja .signup-btn-email,
+.pkt_ext_signup_ru .signup-btn-email {
+    min-width: 13em;
+    padding: 0.8533em 1.2667em;
+}
+.pkt_ext_signup_de .pkt_ext_logo,
+.pkt_ext_signup_es .pkt_ext_logo,
+.pkt_ext_signup_ru .pkt_ext_logo {
+    padding-top: 15px;
+}
+.pkt_ext_signup_de .pkt_ext_introdetailhero .pkt_ext_tagline,
+.pkt_ext_signup_es .pkt_ext_introdetailhero .pkt_ext_tagline,
+.pkt_ext_signup_ja .pkt_ext_introdetailhero .pkt_ext_tagline,
+.pkt_ext_signup_ru .pkt_ext_introdetailhero .pkt_ext_tagline {
+    font-size: 13px;
 }
