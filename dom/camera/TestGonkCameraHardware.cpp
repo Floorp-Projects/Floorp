@@ -106,19 +106,19 @@ TestGonkCameraHardwareListener::HandleEvent(nsIDOMEvent* aEvent)
     BlobEvent* event = aEvent->InternalDOMEvent()->AsBlobEvent();
 
     if (!NS_WARN_IF(!event)) {
-      File* file = event->GetData();
+      Blob* blob = event->GetData();
 
-      if (file) {
+      if (blob) {
         static const uint64_t MAX_FILE_SIZE = 2147483647;
         uint64_t dataLength = 0;
-        nsresult rv = file->GetSize(&dataLength);
+        nsresult rv = blob->GetSize(&dataLength);
 
         if (NS_WARN_IF(NS_FAILED(rv) || dataLength > MAX_FILE_SIZE)) {
           return NS_OK;
         }
 
         nsCOMPtr<nsIInputStream> inputStream;
-        rv = file->GetInternalStream(getter_AddRefs(inputStream));
+        rv = blob->GetInternalStream(getter_AddRefs(inputStream));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return NS_OK;
         }
