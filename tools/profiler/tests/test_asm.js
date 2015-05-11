@@ -28,17 +28,18 @@ function run_test() {
             let then = Date.now();
             do {} while (Date.now() - then < delayMS);
 
-            var profile = p.getProfileData().threads[0].samples;
+            var thread0 = p.getProfileData().threads[0];
 
             if (delayMS > 30000)
                 return;
 
             delayMS *= 2;
 
-            if (profile.length == 0)
+            if (thread0.samples.data.length == 0)
                 continue;
 
-            stack = String(profile[profile.length - 1].frames.map(f => f.location));
+            var lastSample = thread0.samples.data[thread0.samples.data.length - 1];
+            stack = String(getInflatedStackLocations(thread0, lastSample));
             if (stack.indexOf("trampoline") !== -1)
                 return;
         }
