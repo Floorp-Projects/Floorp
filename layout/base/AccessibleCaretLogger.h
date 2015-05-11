@@ -10,7 +10,6 @@
 #include "prlog.h"
 
 namespace mozilla {
-#ifdef PR_LOGGING
 
 PRLogModuleInfo* GetAccessibleCaretLog();
 
@@ -22,18 +21,6 @@ PRLogModuleInfo* GetAccessibleCaretLog();
 #define AC_LOGV_BASE(...)                                                      \
   PR_LOG(GetAccessibleCaretLog(), PR_LOG_DEBUG + 1, (__VA_ARGS__));
 #endif
-
-#else
-
-#ifndef AC_LOGV_BASE
-#define AC_LOGV_BASE(...)
-#endif
-
-#ifndef AC_LOGV_BASE
-#define AC_LOGV_BASE(...)
-#endif
-
-#endif // PR_LOGGING
 
 } // namespace mozilla
 
