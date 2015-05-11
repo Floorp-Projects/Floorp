@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/osfile.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -43,9 +42,13 @@ ContentAreaDropListener.prototype =
     // For shortcuts, we want to check for the file type last, so that the
     // url pointed to in one of the url types is found first before the file
     // type, which points to the actual file.
-    let files = dt.files;
-    if (files.length) {
-      return [OS.Path.toFileURI(files[0].mozFullPath), files[0].name];
+    let file = dt.mozGetDataAt("application/x-moz-file", 0);
+    if (file instanceof Ci.nsIFile) {
+      let ioService = Cc["@mozilla.org/network/io-service;1"].
+                        getService(Ci.nsIIOService);
+      let fileHandler = ioService.getProtocolHandler("file")
+                                 .QueryInterface(Ci.nsIFileProtocolHandler);
+      return [fileHandler.getURLSpecFromFile(file), file.leafName];
     }
 
     return [ ];
