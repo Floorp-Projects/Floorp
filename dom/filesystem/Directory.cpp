@@ -100,7 +100,7 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
 {
   nsresult error = NS_OK;
   nsString realPath;
-  nsRefPtr<File> blobData;
+  nsRefPtr<Blob> blobData;
   InfallibleTArray<uint8_t> arrayData;
   bool replace = (aOptions.mIfExists == CreateIfExistsMode::Replace);
 

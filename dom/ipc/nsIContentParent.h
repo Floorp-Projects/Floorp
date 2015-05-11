@@ -33,10 +33,11 @@ class CpowEntry;
 
 namespace dom {
 
+class Blob;
 class BlobConstructorParams;
 class BlobParent;
 class ContentParent;
-class File;
+class FileImpl;
 class IPCTabContext;
 class PBlobParent;
 class PBrowserParent;
@@ -50,7 +51,8 @@ public:
 
   nsIContentParent();
 
-  BlobParent* GetOrCreateActorForBlob(File* aBlob);
+  BlobParent* GetOrCreateActorForBlob(Blob* aBlob);
+  BlobParent* GetOrCreateActorForFileImpl(FileImpl* aImpl);
 
   virtual ContentParentId ChildID() = 0;
   virtual bool IsForApp() = 0;

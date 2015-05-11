@@ -13,7 +13,7 @@
 namespace mozilla {
 
 namespace dom {
-class File;
+class Blob;
 class ImageCapture;
 }
 
@@ -50,7 +50,7 @@ public:
   //
   // Note:
   //   this function should be called on main thread.
-  nsresult TaskComplete(already_AddRefed<dom::File> aBlob, nsresult aRv);
+  nsresult TaskComplete(already_AddRefed<dom::Blob> aBlob, nsresult aRv);
 
   // Add listeners into MediaStream and PrincipalChangeObserver. It should be on
   // main thread only.
