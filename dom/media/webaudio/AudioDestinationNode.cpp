@@ -351,7 +351,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mFramesToProduce(aLength)
   , mAudioChannel(AudioChannel::Normal)
   , mIsOffline(aIsOffline)
-  , mHasFinished(false)
   , mAudioChannelAgentPlaying(false)
   , mExtraCurrentTime(0)
   , mExtraCurrentTimeSinceLastStartedBlocking(0)
@@ -426,15 +425,14 @@ AudioDestinationNode::DestroyMediaStream()
 }
 
 void
-AudioDestinationNode::NotifyMainThreadStateChanged()
+AudioDestinationNode::NotifyMainThreadStreamFinished()
 {
-  if (mStream->IsFinished() && !mHasFinished) {
-    mHasFinished = true;
-    if (mIsOffline) {
-      nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethod(this, &AudioDestinationNode::FireOfflineCompletionEvent);
-      NS_DispatchToCurrentThread(runnable);
-    }
+  MOZ_ASSERT(mStream->IsFinished());
+
+  if (mIsOffline) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &AudioDestinationNode::FireOfflineCompletionEvent);
+    NS_DispatchToCurrentThread(runnable);
   }
 }
 

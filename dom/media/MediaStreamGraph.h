@@ -226,7 +226,7 @@ public:
  */
 class MainThreadMediaStreamListener {
 public:
-  virtual void NotifyMainThreadStateChanged() = 0;
+  virtual void NotifyMainThreadStreamFinished() = 0;
 };
 
 /**
@@ -417,6 +417,7 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
     return mMainThreadFinished;
   }
+
   bool IsDestroyed()
   {
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
@@ -596,6 +597,17 @@ protected:
     mBuffer.ForgetUpTo(aCurrentTime - mBufferStartTime);
   }
 
+  bool ShouldNotifyStreamFinished()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    if (!mMainThreadFinished || mFinishedNotificationSent) {
+      return false;
+    }
+
+    mFinishedNotificationSent = true;
+    return true;
+  }
+
   // This state is all initialized on the main thread but
   // otherwise modified only on the media graph thread.
 
@@ -696,6 +708,7 @@ protected:
   // Main-thread views of state
   StreamTime mMainThreadCurrentTime;
   bool mMainThreadFinished;
+  bool mFinishedNotificationSent;
   bool mMainThreadDestroyed;
 
   // Our media stream graph.  null if destroyed on the graph thread.
