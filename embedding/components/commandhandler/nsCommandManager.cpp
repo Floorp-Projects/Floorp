@@ -24,25 +24,21 @@
 
 #include "nsCommandManager.h"
 
-
 nsCommandManager::nsCommandManager()
-: mWindow(nullptr)
+  : mWindow(nullptr)
 {
-  /* member initializers and constructor code */
 }
 
 nsCommandManager::~nsCommandManager()
 {
-  /* destructor code */
 }
-
 
 static PLDHashOperator
 TraverseCommandObservers(const char* aKey,
                          nsCommandManager::ObserverList* aObservers,
                          void* aClosure)
 {
-  nsCycleCollectionTraversalCallback *cb = 
+  nsCycleCollectionTraversalCallback* cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
 
   int32_t i, numItems = aObservers->Length();
@@ -66,40 +62,32 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCommandManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCommandManager)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCommandManager)
-   NS_INTERFACE_MAP_ENTRY(nsICommandManager)
-   NS_INTERFACE_MAP_ENTRY(nsPICommandUpdater)
-   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICommandManager)
+  NS_INTERFACE_MAP_ENTRY(nsICommandManager)
+  NS_INTERFACE_MAP_ENTRY(nsPICommandUpdater)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICommandManager)
 NS_INTERFACE_MAP_END
 
-#if 0
-#pragma mark -
-#endif
-
-/* void init (in nsIDOMWindow aWindow); */
 NS_IMETHODIMP
-nsCommandManager::Init(nsIDOMWindow *aWindow)
+nsCommandManager::Init(nsIDOMWindow* aWindow)
 {
   NS_ENSURE_ARG_POINTER(aWindow);
-  
+
   NS_ASSERTION(aWindow, "Need non-null window here");
-  mWindow = aWindow;      // weak ptr
+  mWindow = aWindow; // weak ptr
   return NS_OK;
 }
 
-/* void commandStatusChanged (in DOMString aCommandName, in long aChangeFlags); */
 NS_IMETHODIMP
-nsCommandManager::CommandStatusChanged(const char * aCommandName)
+nsCommandManager::CommandStatusChanged(const char* aCommandName)
 {
   ObserverList* commandObservers;
   mObserversTable.Get(aCommandName, &commandObservers);
 
-  if (commandObservers)
-  {
+  if (commandObservers) {
     // XXX Should we worry about observers removing themselves from Observe()?
     int32_t i, numItems = commandObservers->Length();
-    for (i = 0; i < numItems;  ++i)
-    {
+    for (i = 0; i < numItems; ++i) {
       nsCOMPtr<nsIObserver> observer = commandObservers->ElementAt(i);
       // should we get the command state to pass here? This might be expensive.
       observer->Observe(NS_ISUPPORTS_CAST(nsICommandManager*, this),
@@ -115,9 +103,9 @@ nsCommandManager::CommandStatusChanged(const char * aCommandName)
 #pragma mark -
 #endif
 
-/* void addCommandObserver (in nsIObserver aCommandObserver, in wstring aCommandToObserve); */
 NS_IMETHODIMP
-nsCommandManager::AddCommandObserver(nsIObserver *aCommandObserver, const char *aCommandToObserve)
+nsCommandManager::AddCommandObserver(nsIObserver* aCommandObserver,
+                                     const char* aCommandToObserve)
 {
   NS_ENSURE_ARG(aCommandObserver);
 
@@ -125,148 +113,153 @@ nsCommandManager::AddCommandObserver(nsIObserver *aCommandObserver, const char *
 
   // for each command in the table, we make a list of observers for that command
   ObserverList* commandObservers;
-  if (!mObserversTable.Get(aCommandToObserve, &commandObservers))
-  {
+  if (!mObserversTable.Get(aCommandToObserve, &commandObservers)) {
     commandObservers = new ObserverList;
     mObserversTable.Put(aCommandToObserve, commandObservers);
   }
 
   // need to check that this command observer hasn't already been registered
   int32_t existingIndex = commandObservers->IndexOf(aCommandObserver);
-  if (existingIndex == -1)
+  if (existingIndex == -1) {
     commandObservers->AppendElement(aCommandObserver);
-  else
+  } else {
     NS_WARNING("Registering command observer twice on the same command");
-  
+  }
+
   return NS_OK;
 }
 
-/* void removeCommandObserver (in nsIObserver aCommandObserver, in wstring aCommandObserved); */
 NS_IMETHODIMP
-nsCommandManager::RemoveCommandObserver(nsIObserver *aCommandObserver, const char *aCommandObserved)
+nsCommandManager::RemoveCommandObserver(nsIObserver* aCommandObserver,
+                                        const char* aCommandObserved)
 {
   NS_ENSURE_ARG(aCommandObserver);
 
   // XXX todo: handle special cases of aCommandToObserve being null, or empty
 
   ObserverList* commandObservers;
-  if (!mObserversTable.Get(aCommandObserved, &commandObservers))
+  if (!mObserversTable.Get(aCommandObserved, &commandObservers)) {
     return NS_ERROR_UNEXPECTED;
+  }
 
   commandObservers->RemoveElement(aCommandObserver);
 
   return NS_OK;
 }
 
-/* boolean isCommandSupported(in string aCommandName,
-                              in nsIDOMWindow aTargetWindow); */
 NS_IMETHODIMP
-nsCommandManager::IsCommandSupported(const char *aCommandName,
-                                     nsIDOMWindow *aTargetWindow,
-                                     bool *outCommandSupported)
+nsCommandManager::IsCommandSupported(const char* aCommandName,
+                                     nsIDOMWindow* aTargetWindow,
+                                     bool* aResult)
 {
-  NS_ENSURE_ARG_POINTER(outCommandSupported);
+  NS_ENSURE_ARG_POINTER(aResult);
 
   nsCOMPtr<nsIController> controller;
-  GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
-  *outCommandSupported = (controller.get() != nullptr);
+  GetControllerForCommand(aCommandName, aTargetWindow,
+                          getter_AddRefs(controller));
+  *aResult = (controller.get() != nullptr);
   return NS_OK;
 }
 
-/* boolean isCommandEnabled(in string aCommandName,
-                            in nsIDOMWindow aTargetWindow); */
 NS_IMETHODIMP
-nsCommandManager::IsCommandEnabled(const char *aCommandName,
-                                   nsIDOMWindow *aTargetWindow,
-                                   bool *outCommandEnabled)
+nsCommandManager::IsCommandEnabled(const char* aCommandName,
+                                   nsIDOMWindow* aTargetWindow,
+                                   bool* aResult)
 {
-  NS_ENSURE_ARG_POINTER(outCommandEnabled);
-  
-  bool    commandEnabled = false;
-  
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  bool commandEnabled = false;
+
   nsCOMPtr<nsIController> controller;
-  GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
-  if (controller)
-  {
+  GetControllerForCommand(aCommandName, aTargetWindow,
+                          getter_AddRefs(controller));
+  if (controller) {
     controller->IsCommandEnabled(aCommandName, &commandEnabled);
   }
-  *outCommandEnabled = commandEnabled;
+  *aResult = commandEnabled;
   return NS_OK;
 }
 
-/* void getCommandState (in DOMString aCommandName,
-                         in nsIDOMWindow aTargetWindow,
-                         inout nsICommandParams aCommandParams); */
 NS_IMETHODIMP
-nsCommandManager::GetCommandState(const char *aCommandName,
-                                  nsIDOMWindow *aTargetWindow,
-                                  nsICommandParams *aCommandParams)
+nsCommandManager::GetCommandState(const char* aCommandName,
+                                  nsIDOMWindow* aTargetWindow,
+                                  nsICommandParams* aCommandParams)
 {
   nsCOMPtr<nsIController> controller;
   nsAutoString tValue;
-  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
-  if (!controller)
+  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow,
+                                        getter_AddRefs(controller));
+  if (!controller) {
     return NS_ERROR_FAILURE;
+  }
 
-  nsCOMPtr<nsICommandController>  commandController = do_QueryInterface(controller);
-  if (commandController)
-    rv = commandController->GetCommandStateWithParams(aCommandName, aCommandParams);
-  else
+  nsCOMPtr<nsICommandController> commandController =
+    do_QueryInterface(controller);
+  if (commandController) {
+    rv = commandController->GetCommandStateWithParams(aCommandName,
+                                                      aCommandParams);
+  } else {
     rv = NS_ERROR_NOT_IMPLEMENTED;
+  }
   return rv;
 }
 
-/* void doCommand(in string aCommandName,
-                  in nsICommandParams aCommandParams,
-                  in nsIDOMWindow aTargetWindow); */
 NS_IMETHODIMP
-nsCommandManager::DoCommand(const char *aCommandName,
-                            nsICommandParams *aCommandParams,
-                            nsIDOMWindow *aTargetWindow)
+nsCommandManager::DoCommand(const char* aCommandName,
+                            nsICommandParams* aCommandParams,
+                            nsIDOMWindow* aTargetWindow)
 {
   nsCOMPtr<nsIController> controller;
-  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
-  if (!controller)
-	  return NS_ERROR_FAILURE;
+  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow,
+                                        getter_AddRefs(controller));
+  if (!controller) {
+    return NS_ERROR_FAILURE;
+  }
 
-  nsCOMPtr<nsICommandController>  commandController = do_QueryInterface(controller);
-  if (commandController && aCommandParams)
+  nsCOMPtr<nsICommandController> commandController =
+    do_QueryInterface(controller);
+  if (commandController && aCommandParams) {
     rv = commandController->DoCommandWithParams(aCommandName, aCommandParams);
-  else
+  } else {
     rv = controller->DoCommand(aCommandName);
+  }
   return rv;
 }
 
 nsresult
-nsCommandManager::GetControllerForCommand(const char *aCommand, 
-                                          nsIDOMWindow *aTargetWindow,
-                                          nsIController** outController)
+nsCommandManager::GetControllerForCommand(const char* aCommand,
+                                          nsIDOMWindow* aTargetWindow,
+                                          nsIController** aResult)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  *outController = nullptr;
+  *aResult = nullptr;
 
   // check if we're in content or chrome
   // if we're not chrome we must have a target window or we bail
   if (!nsContentUtils::IsCallerChrome()) {
-    if (!aTargetWindow)
+    if (!aTargetWindow) {
       return rv;
+    }
 
     // if a target window is specified, it must be the window we expect
-    if (aTargetWindow != mWindow)
-        return NS_ERROR_FAILURE;
+    if (aTargetWindow != mWindow) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   if (aTargetWindow) {
     // get the controller for this particular window
     nsCOMPtr<nsIControllers> controllers;
     rv = aTargetWindow->GetControllers(getter_AddRefs(controllers));
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
       return rv;
-    if (!controllers)
+    }
+    if (!controllers) {
       return NS_ERROR_FAILURE;
+    }
 
     // dispatch the command
-    return controllers->GetControllerForCommand(aCommand, outController);
+    return controllers->GetControllerForCommand(aCommand, aResult);
   }
 
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
@@ -275,6 +268,5 @@ nsCommandManager::GetControllerForCommand(const char *aCommand,
   NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
 
   // no target window; send command to focus controller
-  return root->GetControllerForCommand(aCommand, outController);
+  return root->GetControllerForCommand(aCommand, aResult);
 }
-
