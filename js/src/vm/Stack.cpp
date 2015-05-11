@@ -1954,22 +1954,3 @@ JS::ProfilingFrameIterator::isJit() const
 {
     return activation_->isJit();
 }
-
-JS_PUBLIC_API(void)
-JS::ForEachProfiledFrame(JSRuntime* rt, void* addr, ForEachProfiledFrameOp& op)
-{
-    jit::JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
-    jit::JitcodeGlobalEntry entry;
-    table->lookupInfallible(addr, &entry, rt);
-
-    // Extract the stack for the entry.  Assume maximum inlining depth is <64
-    const char* labels[64];
-    uint32_t depth = entry.callStackAtAddr(rt, addr, labels, 64);
-    MOZ_ASSERT(depth < 64);
-    for (uint32_t i = depth; i != 0; i--) {
-        // All inlined frames will have the same optimization information by
-        // virtue of sharing the JitcodeGlobalEntry, but such information is
-        // only interpretable on the youngest frame.
-        op(labels[i - 1], i == 1 && entry.hasTrackedOptimizations());
-    }
-}
