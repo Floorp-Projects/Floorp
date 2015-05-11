@@ -12,7 +12,6 @@
 
 using namespace mozilla;
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetPNGEncoderLog()
 {
@@ -22,7 +21,6 @@ GetPNGEncoderLog()
   }
   return sPNGEncoderLog;
 }
-#endif
 
 NS_IMPL_ISUPPORTS(nsPNGEncoder, imgIEncoder, nsIInputStream,
                   nsIAsyncInputStream)
