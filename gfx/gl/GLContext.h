@@ -312,6 +312,13 @@ public:
 
     virtual bool IsCurrent() = 0;
 
+    /**
+     * Get the default framebuffer for this context.
+     */
+    virtual GLuint GetDefaultFramebuffer() {
+        return 0;
+    }
+
 protected:
     bool mInitialized;
     bool mIsOffscreen;
