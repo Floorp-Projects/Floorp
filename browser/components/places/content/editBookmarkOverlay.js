@@ -195,7 +195,7 @@ let gEditItemOverlay = {
     showOrCollapse("locationRow", isURI, "location");
     if (isURI) {
       this._initLocationField();
-      this._locationField.readOnly = !this.readOnly;
+      this._locationField.readOnly = this.readOnly;
     }
 
     // hide the description field for
