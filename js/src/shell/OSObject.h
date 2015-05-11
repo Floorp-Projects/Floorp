@@ -12,21 +12,11 @@
 #include "jsapi.h"
 
 namespace js {
-namespace shell {
 
 /* Define an os object on the given global object. */
 bool
 DefineOS(JSContext* cx, JS::HandleObject global);
 
-enum PathResolutionMode {
-    RootRelative,
-    ScriptRelative
-};
-
-JSString*
-ResolvePath(JSContext* cx, JS::HandleString filenameStr, PathResolutionMode resolveMode);
-
-}
 }
 
 #endif /* shell_OSObject_h */

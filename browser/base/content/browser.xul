@@ -900,6 +900,11 @@
                       command="Browser:ShowAllBookmarks"
                       key="manBookmarkKb"/>
             <menuseparator/>
+            <menuitem id="BMB_pocket"
+                      class="menuitem-iconic bookmark-item subviewbutton"
+                      label="&pocketMenuitem.label;"
+                      oncommand="openUILink(Pocket.listURL, event);"/>
+            <menuseparator id="BMB_pocketSeparator"/>
             <menuitem id="BMB_subscribeToPageMenuitem"
 #ifndef XP_MACOSX
                       class="menuitem-iconic subviewbutton"
@@ -971,11 +976,6 @@
                           label="&readingList.showSidebar.label;"/>
               </menupopup>
             </menu>
-            <menuseparator id="BMB_pocketSeparator"/>
-            <menuitem id="BMB_pocket"
-                      class="menuitem-iconic bookmark-item subviewbutton"
-                      label="&pocketMenuitem.label;"
-                      oncommand="openUILink(Pocket.listURL, event);"/>
             <menuseparator/>
             <!-- Bookmarks menu items will go here -->
             <menuitem id="BMB_bookmarksShowAll"
