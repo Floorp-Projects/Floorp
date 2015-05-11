@@ -23,9 +23,9 @@ exports.RecordingUtils = {};
  */
 exports.RecordingUtils.filterSamples = function(profile, profilerStartTime) {
   let firstThread = profile.threads[0];
-
-  firstThread.samples = firstThread.samples.filter(e => {
-    return e.time >= profilerStartTime;
+  const TIME_SLOT = firstThread.samples.schema.time;
+  firstThread.samples.data = firstThread.samples.data.filter(e => {
+    return e[TIME_SLOT] >= profilerStartTime;
   });
 }
 
@@ -39,9 +39,10 @@ exports.RecordingUtils.filterSamples = function(profile, profilerStartTime) {
  */
 exports.RecordingUtils.offsetSampleTimes = function(profile, timeOffset) {
   let firstThread = profile.threads[0];
-
-  for (let sample of firstThread.samples) {
-    sample.time -= timeOffset;
+  const TIME_SLOT = firstThread.samples.schema.time;
+  let samplesData = firstThread.samples.data;
+  for (let i = 0; i < samplesData.length; i++) {
+    samplesData[i][TIME_SLOT] -= timeOffset;
   }
 }
 
