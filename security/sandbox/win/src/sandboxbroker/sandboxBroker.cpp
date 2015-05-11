@@ -52,9 +52,12 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   }
 
   // Ceate the sandboxed process
-  PROCESS_INFORMATION targetInfo;
+  PROCESS_INFORMATION targetInfo = {0};
   sandbox::ResultCode result;
   result = sBrokerService->SpawnTarget(aPath, aArguments, mPolicy, &targetInfo);
+  if (sandbox::SBOX_ALL_OK != result) {
+    return false;
+  }
 
   // The sandboxed process is started in a suspended state, resume it now that
   // we've set things up.
