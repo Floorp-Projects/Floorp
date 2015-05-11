@@ -524,7 +524,7 @@ private:
     {
       nsCString mFlavor;
       nsString mStringData;
-      nsRefPtr<mozilla::dom::BlobImpl> mBlobData;
+      nsRefPtr<mozilla::dom::FileImpl> mBlobData;
       enum DataType
       {
         eString,

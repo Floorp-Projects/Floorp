@@ -618,11 +618,11 @@ HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  return MozGetAsBlobImpl(aName, aType, aResult);
+  return MozGetAsFileImpl(aName, aType, aResult);
 }
 
 nsresult
-HTMLCanvasElement::MozGetAsBlobImpl(const nsAString& aName,
+HTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
                                     const nsAString& aType,
                                     nsIDOMFile** aResult)
 {

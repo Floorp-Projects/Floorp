@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_MultipartBlobImpl_h
-#define mozilla_dom_MultipartBlobImpl_h
+#ifndef mozilla_dom_MultipartFileImpl_h
+#define mozilla_dom_MultipartFileImpl_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
@@ -18,16 +18,16 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class MultipartBlobImpl final : public BlobImplBase
+class MultipartFileImpl final : public FileImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Create as a file
-  MultipartBlobImpl(const nsTArray<nsRefPtr<BlobImpl>>& aBlobImpls,
+  MultipartFileImpl(const nsTArray<nsRefPtr<FileImpl>>& aBlobImpls,
                     const nsAString& aName,
                     const nsAString& aContentType)
-    : BlobImplBase(aName, aContentType, UINT64_MAX),
+    : FileImplBase(aName, aContentType, UINT64_MAX),
       mBlobImpls(aBlobImpls),
       mIsFromNsIFile(false)
   {
@@ -35,9 +35,9 @@ public:
   }
 
   // Create as a blob
-  MultipartBlobImpl(const nsTArray<nsRefPtr<BlobImpl>>& aBlobImpls,
+  MultipartFileImpl(const nsTArray<nsRefPtr<FileImpl>>& aBlobImpls,
                     const nsAString& aContentType)
-    : BlobImplBase(aContentType, UINT64_MAX),
+    : FileImplBase(aContentType, UINT64_MAX),
       mBlobImpls(aBlobImpls),
       mIsFromNsIFile(false)
   {
@@ -45,15 +45,15 @@ public:
   }
 
   // Create as a file to be later initialized
-  explicit MultipartBlobImpl(const nsAString& aName)
-    : BlobImplBase(aName, EmptyString(), UINT64_MAX),
+  explicit MultipartFileImpl(const nsAString& aName)
+    : FileImplBase(aName, EmptyString(), UINT64_MAX),
       mIsFromNsIFile(false)
   {
   }
 
   // Create as a blob to be later initialized
-  MultipartBlobImpl()
-    : BlobImplBase(EmptyString(), UINT64_MAX),
+  MultipartFileImpl()
+    : FileImplBase(EmptyString(), UINT64_MAX),
       mIsFromNsIFile(false)
   {
   }
@@ -82,7 +82,7 @@ public:
                             bool aIsFromNsIFile,
                             ErrorResult& aRv);
 
-  virtual already_AddRefed<BlobImpl>
+  virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType,
               ErrorResult& aRv) override;
@@ -94,7 +94,7 @@ public:
 
   virtual nsresult GetInternalStream(nsIInputStream** aInputStream) override;
 
-  virtual const nsTArray<nsRefPtr<BlobImpl>>* GetSubBlobImpls() const override
+  virtual const nsTArray<nsRefPtr<FileImpl>>* GetSubBlobImpls() const override
   {
     return &mBlobImpls;
   }
@@ -118,12 +118,12 @@ public:
   virtual bool MayBeClonedToOtherThreads() const override;
 
 protected:
-  virtual ~MultipartBlobImpl() {}
+  virtual ~MultipartFileImpl() {}
 
   void SetLengthAndModifiedDate();
 
-  nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
+  nsTArray<nsRefPtr<FileImpl>> mBlobImpls;
   bool mIsFromNsIFile;
 };
 
-#endif // mozilla_dom_MultipartBlobImpl_h
+#endif // mozilla_dom_MultipartFileImpl_h

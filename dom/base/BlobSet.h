@@ -26,10 +26,10 @@ public:
 
   nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
   nsresult AppendString(const nsAString& aString, bool nativeEOL, JSContext* aCx);
-  nsresult AppendBlobImpl(BlobImpl* aBlobImpl);
-  nsresult AppendBlobImpls(const nsTArray<nsRefPtr<BlobImpl>>& aBlobImpls);
+  nsresult AppendBlobImpl(FileImpl* aBlobImpl);
+  nsresult AppendBlobImpls(const nsTArray<nsRefPtr<FileImpl>>& aBlobImpls);
 
-  nsTArray<nsRefPtr<BlobImpl>>& GetBlobImpls() { Flush(); return mBlobImpls; }
+  nsTArray<nsRefPtr<FileImpl>>& GetBlobImpls() { Flush(); return mBlobImpls; }
 
   already_AddRefed<Blob> GetBlobInternal(nsISupports* aParent,
                                          const nsACString& aContentType);
@@ -68,8 +68,8 @@ protected:
       // If we have some data, create a blob for it
       // and put it on the stack
 
-      nsRefPtr<BlobImpl> blobImpl =
-        new BlobImplMemory(mData, mDataLen, EmptyString());
+      nsRefPtr<FileImpl> blobImpl =
+        new FileImplMemory(mData, mDataLen, EmptyString());
       mBlobImpls.AppendElement(blobImpl);
       mData = nullptr; // The nsDOMMemoryFile takes ownership of the buffer
       mDataLen = 0;
@@ -77,7 +77,7 @@ protected:
     }
   }
 
-  nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
+  nsTArray<nsRefPtr<FileImpl>> mBlobImpls;
   void* mData;
   uint64_t mDataLen;
   uint64_t mDataBufferLen;

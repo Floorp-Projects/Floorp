@@ -30,7 +30,7 @@ class FilePickerParent : public PFilePickerParent
   virtual ~FilePickerParent();
 
   void Done(int16_t aResult);
-  void SendFiles(const nsTArray<nsRefPtr<BlobImpl>>& aDomBlobs);
+  void SendFiles(const nsTArray<nsRefPtr<FileImpl>>& aDomfiles);
 
   virtual bool RecvOpen(const int16_t& aSelectedType,
                         const bool& aAddToRecentDocs,
@@ -65,11 +65,11 @@ class FilePickerParent : public PFilePickerParent
   class FileSizeAndDateRunnable : public nsRunnable
   {
     FilePickerParent* mFilePickerParent;
-    nsTArray<nsRefPtr<BlobImpl>> mBlobs;
+    nsTArray<nsRefPtr<FileImpl>> mFiles;
     nsCOMPtr<nsIEventTarget> mEventTarget;
 
   public:
-    FileSizeAndDateRunnable(FilePickerParent *aFPParent, nsTArray<nsRefPtr<BlobImpl>>& aBlobs);
+    FileSizeAndDateRunnable(FilePickerParent *aFPParent, nsTArray<nsRefPtr<FileImpl>>& aFiles);
     bool Dispatch();
     NS_IMETHOD Run();
     void Destroy();

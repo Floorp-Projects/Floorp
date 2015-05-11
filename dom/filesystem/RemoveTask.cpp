@@ -21,13 +21,13 @@ namespace dom {
 
 RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
                        const nsAString& aDirPath,
-                       BlobImpl* aTargetBlob,
+                       FileImpl* aTargetFile,
                        const nsAString& aTargetPath,
                        bool aRecursive,
                        ErrorResult& aRv)
   : FileSystemTaskBase(aFileSystem)
   , mDirRealPath(aDirPath)
-  , mTargetBlobImpl(aTargetBlob)
+  , mTargetFileImpl(aTargetFile)
   , mTargetRealPath(aTargetPath)
   , mRecursive(aRecursive)
   , mReturnValue(false)
@@ -66,8 +66,8 @@ RemoveTask::RemoveTask(FileSystemBase* aFileSystem,
   }
 
   BlobParent* bp = static_cast<BlobParent*>(static_cast<PBlobParent*>(target));
-  mTargetBlobImpl = bp->GetBlobImpl();
-  MOZ_ASSERT(mTargetBlobImpl);
+  mTargetFileImpl = bp->GetBlobImpl();
+  MOZ_ASSERT(mTargetFileImpl);
 }
 
 RemoveTask::~RemoveTask()
@@ -91,9 +91,9 @@ RemoveTask::GetRequestParams(const nsString& aFileSystem) const
   param.filesystem() = aFileSystem;
   param.directory() = mDirRealPath;
   param.recursive() = mRecursive;
-  if (mTargetBlobImpl) {
+  if (mTargetFileImpl) {
     nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(),
-                                       mTargetBlobImpl);
+                                       mTargetFileImpl);
     BlobChild* actor
       = ContentChild::GetSingleton()->GetOrCreateActorForBlob(blob);
     if (actor) {
@@ -132,8 +132,8 @@ RemoveTask::Work()
   }
 
   // Get the DOM path if a File is passed as the target.
-  if (mTargetBlobImpl) {
-    if (!mFileSystem->GetRealPath(mTargetBlobImpl, mTargetRealPath)) {
+  if (mTargetFileImpl) {
+    if (!mFileSystem->GetRealPath(mTargetFileImpl, mTargetRealPath)) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
     if (!FileSystemUtils::IsDescendantPath(mDirRealPath, mTargetRealPath)) {

@@ -332,8 +332,8 @@ already_AddRefed<nsIDOMFile>
 IDBMutableFile::CreateFileObject(IDBFileHandle* aFileHandle,
                                  MetadataParameters* aMetadataParams)
 {
-  nsRefPtr<BlobImpl> impl =
-    new BlobImplSnapshot(mName,
+  nsRefPtr<FileImpl> impl =
+    new FileImplSnapshot(mName,
                          mType,
                          aMetadataParams,
                          mFile,

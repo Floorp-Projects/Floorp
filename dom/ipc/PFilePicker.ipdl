@@ -14,7 +14,7 @@ namespace dom {
 
 struct InputFiles
 {
-  PBlob[] blobs;
+  PBlob[] files;
 };
 
 union MaybeInputFiles

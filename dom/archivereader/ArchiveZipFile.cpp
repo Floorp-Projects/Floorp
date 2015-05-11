@@ -353,23 +353,23 @@ ArchiveInputStream::SetEOF()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// ArchiveZipBlobImpl
+// ArchiveZipFileImpl
 
 nsresult
-ArchiveZipBlobImpl::GetInternalStream(nsIInputStream** aStream)
+ArchiveZipFileImpl::GetInternalStream(nsIInputStream** aStream)
 {
   if (mLength > INT32_MAX) {
     return NS_ERROR_FAILURE;
   }
 
   ErrorResult rv;
-  uint64_t size = mBlobImpl->GetSize(rv);
+  uint64_t size = mFileImpl->GetSize(rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
 
   nsCOMPtr<nsIInputStream> inputStream;
-  rv = mBlobImpl->GetInternalStream(getter_AddRefs(inputStream));
+  rv = mFileImpl->GetInternalStream(getter_AddRefs(inputStream));
   if (NS_WARN_IF(rv.Failed()) || !inputStream) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -385,16 +385,16 @@ ArchiveZipBlobImpl::GetInternalStream(nsIInputStream** aStream)
   return NS_OK;
 }
 
-already_AddRefed<mozilla::dom::BlobImpl>
-ArchiveZipBlobImpl::CreateSlice(uint64_t aStart,
+already_AddRefed<mozilla::dom::FileImpl>
+ArchiveZipFileImpl::CreateSlice(uint64_t aStart,
                                 uint64_t aLength,
                                 const nsAString& aContentType,
                                 mozilla::ErrorResult& aRv)
 {
-  nsRefPtr<BlobImpl> impl =
-    new ArchiveZipBlobImpl(mFilename, mContentType, aStart, mLength, mCentral,
-                           mBlobImpl);
+  nsRefPtr<FileImpl> impl =
+    new ArchiveZipFileImpl(mFilename, mContentType, aStart, mLength, mCentral,
+                           mFileImpl);
   return impl.forget();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(ArchiveZipBlobImpl, BlobImpl)
+NS_IMPL_ISUPPORTS_INHERITED0(ArchiveZipFileImpl, FileImpl)

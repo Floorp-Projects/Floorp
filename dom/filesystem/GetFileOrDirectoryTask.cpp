@@ -82,7 +82,7 @@ GetFileOrDirectoryTask::GetSuccessRequestResult() const
     return FileSystemDirectoryResponse(mTargetRealPath);
   }
 
-  BlobParent* actor = GetBlobParent(mTargetBlobImpl);
+  BlobParent* actor = GetBlobParent(mTargetFileImpl);
   if (!actor) {
     return FileSystemErrorResponse(NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR);
   }
@@ -99,7 +99,7 @@ GetFileOrDirectoryTask::SetSuccessRequestResult(const FileSystemResponseValue& a
     case FileSystemResponseValue::TFileSystemFileResponse: {
       FileSystemFileResponse r = aValue;
       BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
-      mTargetBlobImpl = actor->GetBlobImpl();
+      mTargetFileImpl = actor->GetBlobImpl();
       mIsDirectory = false;
       break;
     }
@@ -184,7 +184,7 @@ GetFileOrDirectoryTask::Work()
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  mTargetBlobImpl = new BlobImplFile(file);
+  mTargetFileImpl = new FileImplFile(file);
 
   return NS_OK;
 }
@@ -213,7 +213,7 @@ GetFileOrDirectoryTask::HandlerCallback()
     return;
   }
 
-  nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetBlobImpl);
+  nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetFileImpl);
   mPromise->MaybeResolve(blob);
   mPromise = nullptr;
 }

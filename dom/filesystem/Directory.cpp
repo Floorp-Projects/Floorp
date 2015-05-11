@@ -192,12 +192,12 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
 {
   nsresult error = NS_OK;
   nsString realPath;
-  nsRefPtr<BlobImpl> blob;
+  nsRefPtr<FileImpl> file;
 
   // Check and get the target path.
 
   if (aPath.IsFile()) {
-    blob = aPath.GetAsFile().Impl();
+    file = aPath.GetAsFile().Impl();
   } else if (aPath.IsString()) {
     if (!DOMPathToRealPath(aPath.GetAsString(), realPath)) {
       error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
@@ -212,7 +212,7 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
     }
   }
 
-  nsRefPtr<RemoveTask> task = new RemoveTask(mFileSystem, mPath, blob, realPath,
+  nsRefPtr<RemoveTask> task = new RemoveTask(mFileSystem, mPath, file, realPath,
     aRecursive, aRv);
   if (aRv.Failed()) {
     return nullptr;
