@@ -235,9 +235,7 @@
 
     <panelview id="PanelUI-pocketView" flex="1">
       <vbox class="panel-subview-body">
-        <hbox id="pocket-panel-container" align="top" flex="1">
-          <iframe id="pocket-panel-iframe" type="content"/>
-        </hbox>
+        <iframe id="pocket-panel-iframe" type="content"/>
       </vbox>
     </panelview>
 
