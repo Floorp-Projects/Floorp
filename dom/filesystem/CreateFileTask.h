@@ -16,7 +16,7 @@ class nsIInputStream;
 namespace mozilla {
 namespace dom {
 
-class File;
+class Blob;
 class FileImpl;
 class Promise;
 
@@ -26,7 +26,7 @@ class CreateFileTask final
 public:
   CreateFileTask(FileSystemBase* aFileSystem,
                  const nsAString& aPath,
-                 File* aBlobData,
+                 Blob* aBlobData,
                  InfallibleTArray<uint8_t>& aArrayData,
                  bool replace,
                  ErrorResult& aRv);
@@ -68,7 +68,7 @@ private:
   nsString mTargetRealPath;
 
   // Not thread-safe and should be released on main thread.
-  nsRefPtr<File> mBlobData;
+  nsRefPtr<Blob> mBlobData;
 
   nsCOMPtr<nsIInputStream> mBlobStream;
   InfallibleTArray<uint8_t> mArrayData;

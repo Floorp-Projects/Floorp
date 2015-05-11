@@ -1017,7 +1017,7 @@ MediaRecorder::CreateAndDispatchBlobEvent(already_AddRefed<nsIDOMBlob>&& aBlob)
   init.mCancelable = false;
 
   nsCOMPtr<nsIDOMBlob> blob = aBlob;
-  init.mData = static_cast<File*>(blob.get());
+  init.mData = static_cast<Blob*>(blob.get());
 
   nsRefPtr<BlobEvent> event =
     BlobEvent::Constructor(this,
