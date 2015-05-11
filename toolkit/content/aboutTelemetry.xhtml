@@ -29,26 +29,10 @@
 
       <h2 id="page-subtitle"></h2>
 
-      <table id="settings">
-        <tr>
-          <td>
-            <p id="description-upload-enabled" class="description-enabled">&aboutTelemetry.uploadEnabled;</p>
-            <p id="description-upload-disabled" class="description-disabled">&aboutTelemetry.uploadDisabled;</p>
-          </td>
-          <td>
-            <a href="" class="change-data-choices-link">&aboutTelemetry.changeDataChoices;</a>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <p id="description-extended-recording-enabled" class="description-enabled">&aboutTelemetry.extendedRecordingEnabled;</p>
-            <p id="description-extended-recording-disabled" class="description-disabled">&aboutTelemetry.extendedRecordingDisabled;</p>
-          </td>
-          <td>
-            <a href="" class="change-data-choices-link">&aboutTelemetry.changeDataChoices;</a>
-          </td>
-        </tr>
-      </table>
+      <p id="description-enabled">&aboutTelemetry.telemetryEnabled;</p>
+      <p id="description-disabled">&aboutTelemetry.telemetryDisabled;</p>
+
+      <button id="toggle-telemetry" type="button"/>
     </header>
 
     <section id="general-data-section" class="data-section">
@@ -57,15 +41,6 @@
       <span class="toggle-caption">&aboutTelemetry.toggle;</span>
       <span class="empty-caption">&aboutTelemetry.emptySection;</span>
       <div id="general-data" class="data">
-      </div>
-    </section>
-
-    <section id="environment-data-section" class="data-section">
-      <input type="checkbox" class="statebox"/>
-      <h1 class="section-name">&aboutTelemetry.environmentDataSection;</h1>
-      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
-      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
-      <div id="environment-data" class="data">
       </div>
     </section>
 
