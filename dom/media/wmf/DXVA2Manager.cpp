@@ -238,6 +238,8 @@ public:
 
   virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight) override;
 
+  virtual bool IsD3D11() override { return true; }
+
 private:
   HRESULT CreateFormatConverter();
 
