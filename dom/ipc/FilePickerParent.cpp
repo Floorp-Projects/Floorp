@@ -117,9 +117,10 @@ FilePickerParent::SendFiles(const nsTArray<nsRefPtr<FileImpl>>& aFiles)
   InfallibleTArray<PBlobParent*> files;
 
   for (unsigned i = 0; i < aFiles.Length(); i++) {
-    BlobParent* blobParent = parent->GetOrCreateActorForFileImpl(aFiles[i]);
-    if (blobParent) {
-      files.AppendElement(blobParent);
+    nsRefPtr<File> file = new File(nullptr, aFiles[i]);
+    BlobParent* blob = parent->GetOrCreateActorForBlob(file);
+    if (blob) {
+      files.AppendElement(blob);
     }
   }
 

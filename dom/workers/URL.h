@@ -15,7 +15,7 @@
 
 namespace mozilla {
 namespace dom {
-class Blob;
+class File;
 struct objectURLOptions;
 }
 }
@@ -61,7 +61,7 @@ public:
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal,
-                  Blob& aArg, const objectURLOptions& aOptions,
+                  File& aArg, const objectURLOptions& aOptions,
                   nsAString& aResult, ErrorResult& aRv);
 
   static void

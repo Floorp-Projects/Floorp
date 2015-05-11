@@ -105,8 +105,7 @@ DeviceStorageRequestChild::
       BlobResponse r = aValue;
       BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
       nsRefPtr<FileImpl> bloblImpl = actor->GetBlobImpl();
-      nsRefPtr<Blob> blob = Blob::Create(mRequest->GetParentObject(),
-                                         bloblImpl);
+      nsRefPtr<File> blob = new File(mRequest->GetParentObject(), bloblImpl);
 
       AutoJSContext cx;
 

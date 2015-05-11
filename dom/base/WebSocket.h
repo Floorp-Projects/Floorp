@@ -28,7 +28,7 @@ class nsIInputStream;
 namespace mozilla {
 namespace dom {
 
-class Blob;
+class File;
 
 class WebSocketImpl;
 
@@ -121,7 +121,7 @@ public: // WebIDL interface:
   // webIDL: void send(DOMString|Blob|ArrayBufferView data);
   void Send(const nsAString& aData,
             ErrorResult& aRv);
-  void Send(Blob& aData,
+  void Send(File& aData,
             ErrorResult& aRv);
   void Send(const ArrayBuffer& aData,
             ErrorResult& aRv);
