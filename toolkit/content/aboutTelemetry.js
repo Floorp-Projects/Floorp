@@ -126,6 +126,36 @@ function sectionalizeObject(obj) {
   return map;
 }
 
+/**
+ * Obtain the main DOMWindow for the current context.
+ */
+function getMainWindow() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsIDocShellTreeItem)
+               .rootTreeItem
+               .QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindow);
+}
+
+/**
+ * Obtain the DOMWindow that can open a preferences pane.
+ *
+ * This is essentially "get the browser chrome window" with the added check
+ * that the supposed browser chrome window is capable of opening a preferences
+ * pane.
+ *
+ * This may return null if we can't find the browser chrome window.
+ */
+function getMainWindowWithPreferencesPane() {
+  let mainWindow = getMainWindow();
+  if (mainWindow && "openAdvancedPreferences" in mainWindow) {
+    return mainWindow;
+  } else {
+    return null;
+  }
+}
+
 let Settings = {
   SETTINGS: [
     // data upload
@@ -148,6 +178,14 @@ let Settings = {
     for (let s of this.SETTINGS) {
       let setting = s;
       Preferences.observe(setting.pref, this.render, this);
+    }
+
+    let elements = document.getElementsByClassName("change-data-choices-link");
+    for (let el of elements) {
+      el.addEventListener("click", function() {
+        let mainWindow = getMainWindowWithPreferencesPane();
+        mainWindow.openAdvancedPreferences("dataChoicesTab");
+      }, false);
     }
   },
 
