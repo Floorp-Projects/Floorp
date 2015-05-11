@@ -10,47 +10,52 @@ function test() {
   let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
 
   // Create a root node from a given samples array, filtering by time.
-
-  let root = new ThreadNode(gSamples, { startTime: 11, endTime: 18 });
+  //
+  // Filtering from 5 to 18 includes the 2nd and 3rd samples. The 2nd sample
+  // starts exactly on 5 and ends at 11. The 3rd sample starts at 11 and ends
+  // exactly at 18.
+  let startTime = 5;
+  let endTime = 18;
+  let root = getFrameNodePath(new ThreadNode(gThread, { startTime, endTime }), "(root)");
 
   // Test the root node.
 
-  is(root.duration, 18,
+  is(root.duration, endTime - startTime,
     "The correct duration was calculated for the root node.");
 
-  is(Object.keys(root.calls).length, 1,
+  is(root.calls.length, 1,
     "The correct number of child calls were calculated for the root node.");
-  is(Object.keys(root.calls)[0], "A",
+  ok(getFrameNodePath(root, "A"),
     "The root node's only child call is correct.");
 
   // Test all the descendant nodes.
 
-  is(Object.keys(root.calls.A.calls).length, 2,
-    "The correct number of child calls were calculated for the '.A' node.");
-  is(Object.keys(root.calls.A.calls)[0], "B",
-    "The '.A' node's first child call is correct.");
-  is(Object.keys(root.calls.A.calls)[1], "E",
-    "The '.A' node's second child call is correct.");
+  is(getFrameNodePath(root, "A").calls.length, 2,
+    "The correct number of child calls were calculated for the 'A' node.");
+  ok(getFrameNodePath(root, "A > B"),
+    "The 'A' node has a 'B' child call.");
+  ok(getFrameNodePath(root, "A > E"),
+    "The 'A' node has a 'E' child call.");
 
-  is(Object.keys(root.calls.A.calls.B.calls).length, 1,
-    "The correct number of child calls were calculated for the '.A.B' node.");
-  is(Object.keys(root.calls.A.calls.B.calls)[0], "D",
-    "The '.A.B' node's only child call is correct.");
+  is(getFrameNodePath(root, "A > B").calls.length, 1,
+    "The correct number of child calls were calculated for the 'A > B' node.");
+  ok(getFrameNodePath(root, "A > B > D"),
+    "The 'A > B' node's only child call is correct.");
 
-  is(Object.keys(root.calls.A.calls.E.calls).length, 1,
-    "The correct number of child calls were calculated for the '.A.E' node.");
-  is(Object.keys(root.calls.A.calls.E.calls)[0], "F",
-    "The '.A.E' node's only child call is correct.");
+  is(getFrameNodePath(root, "A > E").calls.length, 1,
+    "The correct number of child calls were calculated for the 'A > E' node.");
+  ok(getFrameNodePath(root, "A > E > F"),
+    "The 'A > E' node's only child call is correct.");
 
-  is(Object.keys(root.calls.A.calls.B.calls.D.calls).length, 0,
-    "The correct number of child calls were calculated for the '.A.B.D' node.");
-  is(Object.keys(root.calls.A.calls.E.calls.F.calls).length, 0,
-    "The correct number of child calls were calculated for the '.A.E.F' node.");
+  is(getFrameNodePath(root, "A > B > D").calls.length, 0,
+    "The correct number of child calls were calculated for the 'A > B > D' node.");
+  is(getFrameNodePath(root, "A > E > F").calls.length, 0,
+    "The correct number of child calls were calculated for the 'A > E > F' node.");
 
   finish();
 }
 
-let gSamples = [{
+let gThread = synthesizeProfileForTest([{
   time: 5,
   frames: [
     { location: "(root)" },
@@ -83,4 +88,4 @@ let gSamples = [{
     { location: "C" },
     { location: "D" }
   ]
-}];
+}]);

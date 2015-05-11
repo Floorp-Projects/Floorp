@@ -12,7 +12,9 @@ function test() {
   let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
   let { CallView } = devtools.require("devtools/shared/profiler/tree-view");
 
-  let threadNode = new ThreadNode(gSamples);
+  let threadNode = new ThreadNode(gThread);
+  // Don't display the synthesized (root) and the real (root) node twice.
+  threadNode.calls = threadNode.calls[0].calls;
   let treeRoot = new CallView({ frame: threadNode });
 
   let container = document.createElement("vbox");
@@ -125,7 +127,7 @@ function test() {
   finish();
 }
 
-let gSamples = [{
+let gThread = synthesizeProfileForTest([{
   time: 5,
   frames: [
     { category: CATEGORY_MASK('other'),  location: "(root)" },
@@ -157,4 +159,4 @@ let gSamples = [{
     { category: CATEGORY_MASK('gc', 2),   location: "E (http://foo/bar/baz:90)" },
     { category: CATEGORY_MASK('network'), location: "F (http://foo/bar/baz:99)" }
   ]
-}];
+}]);

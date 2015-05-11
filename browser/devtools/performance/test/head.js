@@ -517,3 +517,66 @@ function forceCC () {
   SpecialPowers.DOMWindowUtils.garbageCollect();
   SpecialPowers.DOMWindowUtils.garbageCollect();
 }
+
+/**
+ * Inflate a particular sample's stack and return an array of strings.
+ */
+function getInflatedStackLocations(thread, sample) {
+  let stackTable = thread.stackTable;
+  let frameTable = thread.frameTable;
+  let stringTable = thread.stringTable;
+  let SAMPLE_STACK_SLOT = thread.samples.schema.stack;
+  let STACK_PREFIX_SLOT = stackTable.schema.prefix;
+  let STACK_FRAME_SLOT = stackTable.schema.frame;
+  let FRAME_LOCATION_SLOT = frameTable.schema.location;
+
+  // Build the stack from the raw data and accumulate the locations in
+  // an array.
+  let stackIndex = sample[SAMPLE_STACK_SLOT];
+  let locations = [];
+  while (stackIndex !== null) {
+    let stackEntry = stackTable.data[stackIndex];
+    let frame = frameTable.data[stackEntry[STACK_FRAME_SLOT]];
+    locations.push(stringTable[frame[FRAME_LOCATION_SLOT]]);
+    stackIndex = stackEntry[STACK_PREFIX_SLOT];
+  }
+
+  // The profiler tree is inverted, so reverse the array.
+  return locations.reverse();
+}
+
+/**
+ * Get a path in a FrameNode call tree.
+ */
+function getFrameNodePath(root, path) {
+  let calls = root.calls;
+  let node;
+  for (let key of path.split(" > ")) {
+    node = calls.find((node) => node.key == key);
+    if (!node) {
+      break;
+    }
+    calls = node.calls;
+  }
+  return node;
+}
+
+/**
+ * Synthesize a profile for testing.
+ */
+function synthesizeProfileForTest(samples) {
+  const { RecordingUtils } = devtools.require("devtools/performance/recording-utils");
+
+  samples.unshift({
+    time: 0,
+    frames: [
+      { location: "(root)" }
+    ]
+  });
+
+  let uniqueStacks = new RecordingUtils.UniqueStacks();
+  return RecordingUtils.deflateThread({
+    samples: samples,
+    markers: []
+  }, uniqueStacks);
+}

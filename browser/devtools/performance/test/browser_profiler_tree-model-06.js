@@ -6,96 +6,174 @@
  * the FrameNodes have the correct optimization data after iterating over samples.
  */
 
+const { RecordingUtils } = devtools.require("devtools/performance/recording-utils");
+
+let gUniqueStacks = new RecordingUtils.UniqueStacks();
+
+function uniqStr(s) {
+  return gUniqueStacks.getOrAddStringIndex(s);
+}
+
 let time = 1;
 
-let samples = [{
-  time: time++,
-  frames: [
-    { location: "(root)" },
-    { location: "A", optsIndex: 0 },
-    { location: "B" },
-    { location: "C" }
-  ]
-}, {
-  time: time++,
-  frames: [
-    { location: "(root)" },
-    { location: "A", optsIndex: 0 },
-    { location: "D" },
-    { location: "C" }
-  ]
-}, {
-  time: time++,
-  frames: [
-    { location: "(root)" },
-    { location: "A", optsIndex: 1 },
-    { location: "E", optsIndex: 2 },
-    { location: "C" }
-  ],
-}, {
-  time: time++,
-  frames: [
-    { location: "(root)" },
-    { location: "A" },
-    { location: "B" },
-    { location: "F" }
-  ]
-}];
+let gThread = RecordingUtils.deflateThread({
+  samples: [{
+    time: 0,
+    frames: [
+      { location: "(root)" }
+    ]
+  }, {
+    time: time++,
+    frames: [
+      { location: "(root)" },
+      { location: "A_O1" },
+      { location: "B" },
+      { location: "C" }
+    ]
+  }, {
+    time: time++,
+    frames: [
+      { location: "(root)" },
+      { location: "A_O1" },
+      { location: "D" },
+      { location: "C" }
+    ]
+  }, {
+    time: time++,
+    frames: [
+      { location: "(root)" },
+      { location: "A_O2" },
+      { location: "E_O3" },
+      { location: "C" }
+    ],
+  }, {
+    time: time++,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B" },
+      { location: "F" }
+    ]
+  }],
+  markers: []
+}, gUniqueStacks);
 
-// Array of OptimizationSites
-let gOpts = [{
+// 3 OptimizationSites
+let gRawSite1 = {
   line: 12,
   column: 2,
-  types: [{ mirType: "Object", site: "A (http://foo/bar/bar:12)", types: [
-    { keyedBy: "constructor", name: "Foo", location: "A (http://foo/bar/baz:12)" },
-    { keyedBy: "primitive", location: "self-hosted" }
-  ]}],
-  attempts: [
-    { outcome: "Failure1", strategy: "SomeGetter1" },
-    { outcome: "Failure2", strategy: "SomeGetter2" },
-    { outcome: "Inlined", strategy: "SomeGetter3" },
-  ]
-}, {
+  types: [{
+    mirType: uniqStr("Object"),
+    site: uniqStr("A (http://foo/bar/bar:12)"),
+    typeset: [{
+        keyedBy: uniqStr("constructor"),
+        name: uniqStr("Foo"),
+        location: uniqStr("A (http://foo/bar/baz:12)")
+    }, {
+        keyedBy: uniqStr("primitive"),
+        location: uniqStr("self-hosted")
+    }]
+  }],
+  attempts: {
+    schema: {
+      outcome: 0,
+      strategy: 1
+    },
+    data: [
+      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
+      [uniqStr("Failure2"), uniqStr("SomeGetter2")],
+      [uniqStr("Inlined"), uniqStr("SomeGetter3")]
+    ]
+  }
+};
+
+let gRawSite2 = {
   line: 34,
-  types: [{ mirType: "Int32", site: "Receiver" }], // use no types
-  attempts: [
-    { outcome: "Failure1", strategy: "SomeGetter1" },
-    { outcome: "Failure2", strategy: "SomeGetter2" },
-    { outcome: "Failure3", strategy: "SomeGetter3" },
-  ]
-}, {
+  types: [{
+    mirType: uniqStr("Int32"),
+    site: uniqStr("Receiver")
+  }],
+  attempts: {
+    schema: {
+      outcome: 0,
+      strategy: 1
+    },
+    data: [
+      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
+      [uniqStr("Failure2"), uniqStr("SomeGetter2")],
+      [uniqStr("Failure3"), uniqStr("SomeGetter3")]
+    ]
+  }
+};
+
+let gRawSite3 = {
   line: 78,
-  types: [{ mirType: "Object", site: "A (http://foo/bar/bar:12)", types: [
-    { keyedBy: "constructor", name: "Foo", location: "A (http://foo/bar/baz:12)" },
-    { keyedBy: "primitive", location: "self-hosted" }
-  ]}],
-  attempts: [
-    { outcome: "Failure1", strategy: "SomeGetter1" },
-    { outcome: "Failure2", strategy: "SomeGetter2" },
-    { outcome: "GenericSuccess", strategy: "SomeGetter3" },
-  ]
-}];
+  types: [{
+    mirType: uniqStr("Object"),
+    site: uniqStr("A (http://foo/bar/bar:12)"),
+    typeset: [{
+      keyedBy: uniqStr("constructor"),
+      name: uniqStr("Foo"),
+      location: uniqStr("A (http://foo/bar/baz:12)")
+    }, {
+      keyedBy: uniqStr("primitive"),
+      location: uniqStr("self-hosted")
+    }]
+  }],
+  attempts: {
+    schema: {
+      outcome: 0,
+      strategy: 1
+    },
+    data: [
+      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
+      [uniqStr("Failure2"), uniqStr("SomeGetter2")],
+      [uniqStr("GenericSuccess"), uniqStr("SomeGetter3")]
+    ]
+  }
+};
+
+gThread.frameTable.data.forEach((frame) => {
+  const LOCATION_SLOT = gThread.frameTable.schema.location;
+  const OPTIMIZATIONS_SLOT = gThread.frameTable.schema.optimizations;
+
+  let l = gThread.stringTable[frame[LOCATION_SLOT]];
+  switch (l) {
+  case "A_O1":
+    frame[LOCATION_SLOT] = uniqStr("A");
+    frame[OPTIMIZATIONS_SLOT] = gRawSite1;
+    break;
+  case "A_O2":
+    frame[LOCATION_SLOT] = uniqStr("A");
+    frame[OPTIMIZATIONS_SLOT] = gRawSite2;
+    break;
+  case "E_O3":
+    frame[LOCATION_SLOT] = uniqStr("E");
+    frame[OPTIMIZATIONS_SLOT] = gRawSite3;
+    break;
+  }
+});
 
 function test() {
   let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
 
-  let root = new ThreadNode(samples, { optimizations: gOpts });
+  let root = new ThreadNode(gThread);
 
-  let A = root.calls.A;
+  let A = getFrameNodePath(root, "(root) > A");
 
   let opts = A.getOptimizations();
-  let sites = opts.getOptimizationSites();
+  let sites = opts.optimizationSites;
   is(sites.length, 2, "Frame A has two optimization sites.");
   is(sites[0].samples, 2, "first opt site has 2 samples.");
   is(sites[1].samples, 1, "second opt site has 1 sample.");
 
-  let E = A.calls.E;
+  let E = getFrameNodePath(A, "E");
   opts = E.getOptimizations();
-  sites = opts.getOptimizationSites();
+  sites = opts.optimizationSites;
   is(sites.length, 1, "Frame E has one optimization site.");
   is(sites[0].samples, 1, "first opt site has 1 samples.");
 
-  let D = A.calls.D;
+  let D = getFrameNodePath(A, "D");
   ok(!D.getOptimizations(),
     "frames that do not have any opts data do not have JITOptimizations instances.");
 
