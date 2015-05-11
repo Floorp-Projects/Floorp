@@ -27,18 +27,14 @@ using namespace mozilla;
 /* Keeps track of whether or not CSP is enabled */
 bool CSPService::sCSPEnabled = true;
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo* gCspPRLog;
-#endif
 
 CSPService::CSPService()
 {
   Preferences::AddBoolVarCache(&sCSPEnabled, "security.csp.enable");
 
-#ifdef PR_LOGGING
   if (!gCspPRLog)
     gCspPRLog = PR_NewLogModule("CSP");
-#endif
 }
 
 CSPService::~CSPService()
@@ -113,14 +109,12 @@ CSPService::ShouldLoad(uint32_t aContentType,
     return NS_ERROR_FAILURE;
   }
 
-#ifdef PR_LOGGING
   {
     nsAutoCString location;
     aContentLocation->GetSpec(location);
     PR_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::ShouldLoad called for %s", location.get()));
   }
-#endif
 
   // default decision, CSP can revise it if there's a policy to enforce
   *aDecision = nsIContentPolicy::ACCEPT;
@@ -210,7 +204,6 @@ CSPService::ShouldLoad(uint32_t aContentType,
     principal->GetCsp(getter_AddRefs(csp));
 
     if (csp) {
-#ifdef PR_LOGGING
       {
         uint32_t numPolicies = 0;
         nsresult rv = csp->GetPolicyCount(&numPolicies);
@@ -224,7 +217,6 @@ CSPService::ShouldLoad(uint32_t aContentType,
           }
         }
       }
-#endif
       // obtain the enforcement decision
       // (don't pass aExtra, we use that slot for redirects)
       csp->ShouldLoad(aContentType,
@@ -236,14 +228,12 @@ CSPService::ShouldLoad(uint32_t aContentType,
                       aDecision);
     }
   }
-#ifdef PR_LOGGING
   else {
     nsAutoCString uriSpec;
     aContentLocation->GetSpec(uriSpec);
     PR_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("COULD NOT get nsINode for location: %s", uriSpec.get()));
   }
-#endif
 
   return NS_OK;
 }
@@ -326,7 +316,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
                   originalUri,    // aMimeTypeGuess
                   &aDecision);
 
-#ifdef PR_LOGGING
   if (newUri) {
     nsAutoCString newUriSpec("None");
     newUri->GetSpec(newUriSpec);
@@ -342,7 +331,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
     PR_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::AsyncOnChannelRedirect CANCELLING request."));
   }
-#endif
 
   // if ShouldLoad doesn't accept the load, cancel the request
   if (!NS_CP_ACCEPTED(aDecision)) {

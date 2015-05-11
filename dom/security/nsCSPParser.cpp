@@ -19,7 +19,6 @@
 
 using namespace mozilla;
 
-#if defined(PR_LOGGING)
 static PRLogModuleInfo*
 GetCspParserLog()
 {
@@ -28,7 +27,6 @@ GetCspParserLog()
     gCspParserPRLog = PR_NewLogModule("CSPParser");
   return gCspParserPRLog;
 }
-#endif
 
 #define CSPPARSERLOG(args) PR_LOG(GetCspParserLog(), 4, args)
 
@@ -1080,7 +1078,6 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
                                         bool aReportOnly,
                                         uint64_t aInnerWindowID)
 {
-#ifdef PR_LOGGING
   {
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, policy: %s",
                  NS_ConvertUTF16toUTF8(aPolicyString).get()));
@@ -1090,7 +1087,6 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, reportOnly: %s",
                  (aReportOnly ? "true" : "false")));
   }
-#endif
 
   NS_ASSERTION(aSelfURI, "Can not parseContentSecurityPolicy without aSelfURI");
 
@@ -1128,14 +1124,12 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
     return nullptr;
   }
 
-#ifdef PR_LOGGING
   {
     nsString parsedPolicy;
     policy->toString(parsedPolicy);
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, parsedPolicy: %s",
                  NS_ConvertUTF16toUTF8(parsedPolicy).get()));
   }
-#endif
 
   return policy;
 }
