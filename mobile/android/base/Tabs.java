@@ -13,9 +13,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
@@ -31,6 +34,7 @@ import android.database.ContentObserver;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
+import android.provider.Browser;
 import android.util.Log;
 
 public class Tabs implements GeckoEventListener {
@@ -813,8 +817,10 @@ public class Tabs implements GeckoEventListener {
         return loadUrl(url, null, -1, null, flags);
     }
 
-    public Tab loadUrl(final String url, final String applicationId, final int flags) {
-        return loadUrl(url, null, -1, applicationId, flags);
+    public Tab loadUrlWithIntentExtras(final String url, final SafeIntent intent, final int flags) {
+        // Note: we don't get the URL from the intent so the calling
+        // method has the opportunity to change the URL if applicable.
+        return loadUrl(url, null, -1, intent, flags);
     }
 
     public Tab loadUrl(final String url, final String searchEngine, final int parentId, final int flags) {
@@ -824,17 +830,17 @@ public class Tabs implements GeckoEventListener {
     /**
      * Loads a tab with the given URL.
      *
-     * @param url           URL of page to load, or search term used if searchEngine is given
-     * @param searchEngine  if given, the search engine with this name is used
-     *                      to search for the url string; if null, the URL is loaded directly
-     * @param parentId      ID of this tab's parent, or -1 if it has no parent
-     * @param applicationId Identity of the calling application
-     * @param flags         flags used to load tab
+     * @param url          URL of page to load, or search term used if searchEngine is given
+     * @param searchEngine if given, the search engine with this name is used
+     *                     to search for the url string; if null, the URL is loaded directly
+     * @param parentId     ID of this tab's parent, or -1 if it has no parent
+     * @param intent       an intent whose extras are used to modify the request
+     * @param flags        flags used to load tab
      *
-     * @return              the Tab if a new one was created; null otherwise
+     * @return             the Tab if a new one was created; null otherwise
      */
     public Tab loadUrl(final String url, final String searchEngine, final int parentId,
-                   final String applicationId, final int flags) {
+                   final SafeIntent intent, final int flags) {
         JSONObject args = new JSONObject();
         Tab tabToSelect = null;
         boolean delayLoad = (flags & LOADURL_DELAY_LOAD) != 0;
@@ -857,11 +863,16 @@ public class Tabs implements GeckoEventListener {
             args.put("desktopMode", desktopMode);
 
             final boolean needsNewTab;
+            final String applicationId = (intent == null) ? null :
+                    intent.getStringExtra(Browser.EXTRA_APPLICATION_ID);
             if (applicationId == null) {
                 needsNewTab = (flags & LOADURL_NEW_TAB) != 0;
             } else {
+                // If you modify this code, be careful that intent != null.
+                final boolean extraCreateNewTab = (Versions.feature12Plus) ?
+                        intent.getBooleanExtra(Browser.EXTRA_CREATE_NEW_TAB, false) : false;
                 final Tab applicationTab = getTabForApplicationId(applicationId);
-                if (applicationTab == null) {
+                if (applicationTab == null || extraCreateNewTab) {
                     needsNewTab = true;
                 } else {
                     needsNewTab = false;
