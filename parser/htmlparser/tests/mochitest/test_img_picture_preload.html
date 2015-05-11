@@ -61,15 +61,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
       if (testDPIs.length) {
         currentDPI = testDPIs.pop();
         info("Starting test for DPI: " + currentDPI);
-        SpecialPowers.pushPrefEnv({'set': [ [ "layout.css.devPixelsPerPx", currentDPI ]] },
-                                  function() {
-          // Clear image cache for next run (we don't try to validate cached items
-          // in preload).
-          SpecialPowers.Cc["@mozilla.org/image/tools;1"]
-                       .getService(SpecialPowers.Ci.imgITools)
-                       .getImgCacheForDocument(iframe.contentDocument)
-                       .clearCache(false);
-          iframe.src = "./file_img_picture_preload.html?" + currentDPI;
+        // To avoid spurious image loads being reported when the resolution changes,
+        // load an intermediate iframe.
+        iframe.src = "about:blank";
+        iframe.addEventListener('load', function on_iframe_load() {
+          iframe.removeEventListener('load', on_iframe_load);
+          SpecialPowers.pushPrefEnv({'set': [ [ "layout.css.devPixelsPerPx", currentDPI ]] },
+                                    function() {
+            // Clear image cache for next run (we don't try to validate cached items
+            // in preload).
+            SpecialPowers.Cc["@mozilla.org/image/tools;1"]
+                         .getService(SpecialPowers.Ci.imgITools)
+                         .getImgCacheForDocument(iframe.contentDocument)
+                         .clearCache(false);
+            iframe.src = "./file_img_picture_preload.html?" + currentDPI;
+          });
         });
       } else {
         SimpleTest.finish();
