@@ -28,7 +28,8 @@ GetCspParserLog()
   return gCspParserPRLog;
 }
 
-#define CSPPARSERLOG(args) PR_LOG(GetCspParserLog(), 4, args)
+#define CSPPARSERLOG(args) PR_LOG(GetCspParserLog(), PR_LOG_DEBUG, args)
+#define CSPPARSERLOGENABLED() PR_LOG_TEST(GetCspParserLog(), PR_LOG_DEBUG)
 
 static const char16_t COLON        = ':';
 static const char16_t SEMICOLON    = ';';
@@ -1078,7 +1079,7 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
                                         bool aReportOnly,
                                         uint64_t aInnerWindowID)
 {
-  {
+  if (CSPPARSERLOGENABLED()) {
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, policy: %s",
                  NS_ConvertUTF16toUTF8(aPolicyString).get()));
     nsAutoCString spec;
@@ -1124,7 +1125,7 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
     return nullptr;
   }
 
-  {
+  if (CSPPARSERLOGENABLED()) {
     nsString parsedPolicy;
     policy->toString(parsedPolicy);
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, parsedPolicy: %s",
