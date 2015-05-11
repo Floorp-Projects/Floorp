@@ -53,7 +53,8 @@ static bool test_pldhash_Init_capacity_ok()
 
 static bool test_pldhash_lazy_storage()
 {
-  PLDHashTable t(PL_DHashGetStubOps(), sizeof(PLDHashEntryStub));
+  PLDHashTable t;
+  PL_DHashTableInit(&t, PL_DHashGetStubOps(), sizeof(PLDHashEntryStub));
 
   // PLDHashTable allocates entry storage lazily. Check that all the non-add
   // operations work appropriately when the table is empty and the storage
@@ -106,6 +107,8 @@ static bool test_pldhash_lazy_storage()
     return false;   // size is non-zero?
   }
 
+  PL_DHashTableFinish(&t);
+
   return true;
 }
 
@@ -128,14 +131,18 @@ static bool test_pldhash_move_semantics()
     nullptr
   };
 
-  PLDHashTable t1(&ops, sizeof(PLDHashEntryStub));
+  PLDHashTable t1, t2;
+  PL_DHashTableInit(&t1, &ops, sizeof(PLDHashEntryStub));
   PL_DHashTableAdd(&t1, (const void*)88);
-  PLDHashTable t2(&ops, sizeof(PLDHashEntryStub));
+  PL_DHashTableInit(&t2, &ops, sizeof(PLDHashEntryStub));
   PL_DHashTableAdd(&t2, (const void*)99);
 
   t1 = mozilla::Move(t1);   // self-move
 
   t1 = mozilla::Move(t2);   // inited overwritten with inited
+
+  PL_DHashTableFinish(&t1);
+  PL_DHashTableFinish(&t2);
 
   PLDHashTable t3, t4;
   PL_DHashTableInit(&t3, &ops, sizeof(PLDHashEntryStub));
@@ -158,7 +165,8 @@ static bool test_pldhash_move_semantics()
   PLDHashTable t7;
   PLDHashTable t8(mozilla::Move(t7));   // new table constructed with uninited
 
-  PLDHashTable t9(&ops, sizeof(PLDHashEntryStub));
+  PLDHashTable t9;
+  PL_DHashTableInit(&t9, &ops, sizeof(PLDHashEntryStub));
   PL_DHashTableAdd(&t9, (const void*)88);
   PLDHashTable t10(mozilla::Move(t9));  // new table constructed with inited
 
