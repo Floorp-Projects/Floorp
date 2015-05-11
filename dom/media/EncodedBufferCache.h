@@ -16,7 +16,7 @@ struct PRFileDesc;
 namespace mozilla {
 
 namespace dom {
-class File;
+class Blob;
 }
 
 /**
@@ -41,7 +41,7 @@ public:
   // aBuf will append to mEncodedBuffers or temporary File, aBuf also be cleared
   void AppendBuffer(nsTArray<uint8_t> & aBuf);
   // Read all buffer from memory or file System, also Remove the temporary file or clean the buffers in memory.
-  already_AddRefed<dom::File> ExtractBlob(nsISupports* aParent, const nsAString &aContentType);
+  already_AddRefed<dom::Blob> ExtractBlob(nsISupports* aParent, const nsAString &aContentType);
 
 private:
   //array for storing the encoded data.
