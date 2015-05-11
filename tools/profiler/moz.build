@@ -15,7 +15,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     EXPORTS += [
         'GeckoProfilerFunc.h',
         'GeckoProfilerImpl.h',
-        'JSStreamWriter.h',
         'ProfilerBacktrace.h',
         'ProfilerMarkers.h',
         'PseudoStack.h',
@@ -25,12 +24,12 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'Profiler.jsm',
     ]
     UNIFIED_SOURCES += [
-        'JSStreamWriter.cpp',
         'nsProfiler.cpp',
         'nsProfilerFactory.cpp',
         'nsProfilerStartParams.cpp',
         'platform.cpp',
         'ProfileEntry.cpp',
+        'ProfileJSONWriter.cpp',
         'ProfilerBacktrace.cpp',
         'ProfilerIOInterposeObserver.cpp',
         'ProfilerMarkers.cpp',

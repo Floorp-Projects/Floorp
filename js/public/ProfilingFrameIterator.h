@@ -152,8 +152,8 @@ struct ForEachProfiledFrameOp
     // lookups on JitcodeGlobalTable.
     class MOZ_STACK_CLASS FrameHandle
     {
-        friend JS_PUBLIC_API(void) JS::ForEachProfiledFrame(JSRuntime* rt, void* addr,
-                                                            ForEachProfiledFrameOp& op);
+        friend JS_PUBLIC_API(void) ForEachProfiledFrame(JSRuntime* rt, void* addr,
+                                                        ForEachProfiledFrameOp& op);
 
         JSRuntime* rt_;
         js::jit::JitcodeGlobalEntry& entry_;

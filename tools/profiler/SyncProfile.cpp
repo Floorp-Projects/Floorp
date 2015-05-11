@@ -51,3 +51,10 @@ SyncProfile::EndUnwind()
   }
 }
 
+// SyncProfiles' stacks are deduplicated in the context of the containing
+// profile in which the backtrace is as a marker payload.
+void
+SyncProfile::StreamJSON(SpliceableJSONWriter& aWriter, UniqueStacks& aUniqueStacks)
+{
+  ThreadProfile::StreamSamplesAndMarkers(aWriter, /* aSinceTime = */ 0, aUniqueStacks);
+}

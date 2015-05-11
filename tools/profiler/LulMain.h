@@ -8,6 +8,7 @@
 #define LulMain_h
 
 #include "LulPlatformMacros.h"
+#include "mozilla/Atomics.h"
 
 // LUL: A Lightweight Unwind Library.
 // This file provides the end-user (external) interface for LUL.

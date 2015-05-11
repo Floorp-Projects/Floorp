@@ -8,7 +8,8 @@
 #define __PROFILER_BACKTRACE_H
 
 class SyncProfile;
-class JSStreamWriter;
+class SpliceableJSONWriter;
+class UniqueStacks;
 
 class ProfilerBacktrace
 {
@@ -16,7 +17,13 @@ public:
   explicit ProfilerBacktrace(SyncProfile* aProfile);
   ~ProfilerBacktrace();
 
-  void StreamJSObject(JSStreamWriter& b);
+  // ProfilerBacktraces' stacks are deduplicated in the context of the
+  // profile that contains the backtrace as a marker payload.
+  //
+  // That is, markers that contain backtraces should not need their own stack,
+  // frame, and string tables. They should instead reuse their parent
+  // profile's tables.
+  void StreamJSON(SpliceableJSONWriter& aWriter, UniqueStacks& aUniqueStacks);
 
 private:
   ProfilerBacktrace(const ProfilerBacktrace&);
