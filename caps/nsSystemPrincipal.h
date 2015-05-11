@@ -28,10 +28,6 @@ public:
 
     virtual void GetScriptLocation(nsACString &aStr) override;
 
-#ifdef DEBUG
-    virtual void dumpImpl() override;
-#endif 
-
 protected:
     virtual ~nsSystemPrincipal(void) {}
 };

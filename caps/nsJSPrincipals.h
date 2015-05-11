@@ -43,11 +43,6 @@ public:
    * Return a string that can be used as JS script filename in error reports.
    */
   virtual void GetScriptLocation(nsACString &aStr) = 0;
-
-#ifdef DEBUG
-  virtual void dumpImpl() = 0;
-#endif
-
   static const uint32_t DEBUG_TOKEN = 0x0bf41760;
 
 protected:

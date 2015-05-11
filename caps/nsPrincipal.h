@@ -32,11 +32,6 @@ public:
   static const char sInvalid[];
 
 protected:
-
-#ifdef DEBUG
-  virtual void dumpImpl() = 0;
-#endif
-
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
 };
 
@@ -63,9 +58,6 @@ public:
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
-#ifdef DEBUG
-  virtual void dumpImpl() override;
-#endif
 
   nsPrincipal();
 
@@ -155,10 +147,6 @@ public:
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
-#ifdef DEBUG
-  virtual void dumpImpl() override;
-#endif
-  
   virtual void GetScriptLocation(nsACString &aStr) override;
 
 private:
