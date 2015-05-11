@@ -4,6 +4,10 @@
 
 <!ENTITY aboutTelemetry.pageTitle "Telemetry Data">
 
+<!ENTITY aboutTelemetry.changeDataChoices "
+  Change
+">
+
 <!ENTITY aboutTelemetry.uploadEnabled "
   FHR data upload is <span>enabled</span>.
 ">
