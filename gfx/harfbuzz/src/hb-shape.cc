@@ -198,9 +198,9 @@ parse_one_feature (const char **pp, const char *end, hb_feature_t *feature)
 
 /**
  * hb_feature_from_string:
- * @str: (array length=len):
+ * @str: (array length=len) (element-type uint8_t):
  * @len: 
- * @feature: (out) (allow-none):
+ * @feature: (out) (optional):
  *
  * 
  *
@@ -279,11 +279,13 @@ hb_feature_to_string (hb_feature_t *feature,
 
 static const char **static_shaper_list;
 
-static inline
+#ifdef HB_USE_ATEXIT
+static
 void free_static_shaper_list (void)
 {
   free (static_shaper_list);
 }
+#endif
 
 /**
  * hb_shape_list_shapers:

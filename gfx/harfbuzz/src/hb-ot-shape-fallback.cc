@@ -441,13 +441,15 @@ _hb_ot_shape_fallback_kern (const hb_ot_shape_plan_t *plan,
   OT::hb_apply_context_t c (1, font, buffer);
   c.set_lookup_mask (plan->kern_mask);
   c.set_lookup_props (OT::LookupFlag::IgnoreMarks);
+  OT::hb_apply_context_t::skipping_iterator_t &skippy_iter = c.iter_input;
+  skippy_iter.init (&c);
 
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
   hb_glyph_position_t *pos = buffer->pos;
   for (unsigned int idx = 0; idx < count;)
   {
-    OT::hb_apply_context_t::skipping_forward_iterator_t skippy_iter (&c, idx, 1);
+    skippy_iter.reset (idx, 1);
     if (!skippy_iter.next ())
     {
       idx++;

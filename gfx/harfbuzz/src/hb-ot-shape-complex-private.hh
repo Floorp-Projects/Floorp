@@ -179,9 +179,12 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
     case HB_SCRIPT_PSALTER_PAHLAVI:
 
       /* For Arabic script, use the Arabic shaper even if no OT script tag was found.
-       * This is because we do fallback shaping for Arabic script (and not others). */
-      if (planner->map.chosen_script[0] != HB_OT_TAG_DEFAULT_SCRIPT ||
-	  planner->props.script == HB_SCRIPT_ARABIC)
+       * This is because we do fallback shaping for Arabic script (and not others).
+       * But note that Arabic shaping is applicable only to horizontal layout; for
+       * vertical text, just use the generic shaper instead. */
+      if ((planner->map.chosen_script[0] != HB_OT_TAG_DEFAULT_SCRIPT ||
+	   planner->props.script == HB_SCRIPT_ARABIC) &&
+	  HB_DIRECTION_IS_HORIZONTAL(planner->props.direction))
 	return &_hb_ot_complex_shaper_arabic;
       else
 	return &_hb_ot_complex_shaper_default;
@@ -259,6 +262,7 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
 
     /* Unicode-4.1 additions */
     case HB_SCRIPT_KHAROSHTHI:
+    case HB_SCRIPT_NEW_TAI_LUE:
     case HB_SCRIPT_SYLOTI_NAGRI:
 
     /* Unicode-5.1 additions */
@@ -339,7 +343,6 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
 
     /* Unicode-4.1 additions */
     case HB_SCRIPT_BUGINESE:
-    case HB_SCRIPT_NEW_TAI_LUE:
 
     /* Unicode-5.1 additions */
     case HB_SCRIPT_CHAM:

@@ -45,13 +45,15 @@ struct head
 {
   static const hb_tag_t tableTag	= HB_OT_TAG_head;
 
-  inline unsigned int get_upem (void) const {
+  inline unsigned int get_upem (void) const
+  {
     unsigned int upem = unitsPerEm;
     /* If no valid head table found, assume 1000, which matches typical Type1 usage. */
     return 16 <= upem && upem <= 16384 ? upem : 1000;
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) && likely (version.major == 1));
   }

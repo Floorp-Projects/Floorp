@@ -78,8 +78,8 @@ _hb_blob_destroy_user_data (hb_blob_t *blob)
 }
 
 /**
- * hb_blob_create: (Xconstructor)
- * @data: (array length=length) (closure user_data) (destroy destroy) (scope notified) (transfer none): Pointer to blob data.
+ * hb_blob_create: (skip)
+ * @data: Pointer to blob data.
  * @length: Length of @data in bytes.
  * @mode: Memory mode for @data.
  * @user_data: Data parameter to pass to @destroy.

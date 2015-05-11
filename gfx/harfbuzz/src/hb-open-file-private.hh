@@ -53,7 +53,8 @@ struct TTCHeader;
 
 typedef struct TableRecord
 {
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this));
   }
@@ -102,7 +103,8 @@ typedef struct OffsetTable
   }
 
   public:
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) && c->check_array (tables, TableRecord::static_size, numTables));
   }
@@ -130,7 +132,8 @@ struct TTCHeaderVersion1
   inline unsigned int get_face_count (void) const { return table.len; }
   inline const OpenTypeFontFace& get_face (unsigned int i) const { return this+table[i]; }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (table.sanitize (c, this));
   }
@@ -169,7 +172,8 @@ struct TTCHeader
     }
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     if (unlikely (!u.header.version.sanitize (c))) return TRACE_RETURN (false);
     switch (u.header.version.major) {
@@ -233,7 +237,8 @@ struct OpenTypeFontFile
     }
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     if (unlikely (!u.tag.sanitize (c))) return TRACE_RETURN (false);
     switch (u.tag) {
