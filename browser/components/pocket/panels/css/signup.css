@@ -8,7 +8,7 @@
  *  Core detail
  *  Core detail - storyboard
  *  Buttons
- *  Responsive
+ *  Overflow mode
  */
 
 /*=Global
@@ -126,7 +126,7 @@
     width: 18px;
     top: 50%;
 }
-@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 1.5dppx) {
+@media (min-resolution: 1.1dppx) {
     .pkt_ext_containersignup .ff_signuphelp {
         background-image: url(../img/signup_help@2x.png);
         background-size: 18px 18px;
@@ -304,4 +304,27 @@
 .pkt_ext_containersignup .btn-disabled .text {
     color: #ccc;
     color: rgba(255,255,255,0.6);
+}
+
+/*=Overflow mode
+--------------------------------------------------------------------------------------- */
+.pkt_ext_signup_overflow .pkt_ext_tagline {
+    margin-bottom: 1em;
+    padding: 0 1em;
+}
+.pkt_ext_signup_overflow .pkt_ext_introimg {
+    background-size: 200px 98px;
+    height: 98px;
+    width: 200px;
+}
+.pkt_ext_signup_overflow .signup-btn-firefox,
+.pkt_ext_signup_overflow .signup-btn-email {
+    font-size: 14px;
+    min-width: 12.6em;
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+}
+.pkt_ext_signup_overflow .signup-btn-firefox .text {
+    padding-left: 0;
+    padding-right: 0;
 }
