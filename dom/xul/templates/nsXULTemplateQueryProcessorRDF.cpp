@@ -1261,7 +1261,7 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
                                                   TestNode* aParentNode,
                                                   TestNode** aResult)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     if (aTag == nsGkAtoms::triple) {
         rv = CompileTripleCondition(aQuery, aCondition, aParentNode, aResult);
@@ -1269,7 +1269,7 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
     else if (aTag == nsGkAtoms::member) {
         rv = CompileMemberCondition(aQuery, aCondition, aParentNode, aResult);
     }
-    else {
+    else if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_ALWAYS)) {
         nsAutoString tagstr;
         aTag->ToString(tagstr);
 
@@ -1278,8 +1278,6 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("xultemplate[%p] unrecognized condition test <%s>",
                 this, tagstrC.get()));
-
-        rv = NS_OK;
     }
 
     return rv;
