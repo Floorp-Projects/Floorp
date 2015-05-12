@@ -65,8 +65,8 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
     nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aContext));
     MOZ_ASSERT(global);
 
-    nsRefPtr<File> blob = new File(global, blobImpl);
-    if (!GetOrCreateDOMReflector(aContext, blob, &content)) {
+    nsRefPtr<Blob> blob = Blob::Create(global, blobImpl);
+    if (!ToJSValue(aContext, blob, &content)) {
       return nullptr;
     }
   }

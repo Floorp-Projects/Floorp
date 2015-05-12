@@ -561,7 +561,8 @@ public:
     nsCOMPtr<nsIGlobalObject> global = mInput->OwnerDoc()->GetScopeObject();
     for (uint32_t i = 0; i < mFileList.Length(); ++i) {
       MOZ_ASSERT(!mFileList[i]->GetParentObject());
-      mFileList[i] = new File(global, mFileList[i]->Impl());
+      mFileList[i] = File::Create(global, mFileList[i]->Impl());
+      MOZ_ASSERT(mFileList[i]);
     }
 
     // The text control frame (if there is one) isn't going to send a change
@@ -2347,7 +2348,10 @@ HTMLInputElement::MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles)
   }
   nsTArray<nsRefPtr<File>> files;
   for (uint32_t i = 0; i < aFiles.Length(); ++i) {
-    files.AppendElement(new File(global, aFiles[i].get()->Impl()));
+    nsRefPtr<File> file = File::Create(global, aFiles[i].get()->Impl());
+    MOZ_ASSERT(file);
+
+    files.AppendElement(file);
   }
   SetFiles(files, true);
 }
@@ -6018,7 +6022,9 @@ HTMLInputElement::RestoreState(nsPresState* aState)
 
           nsTArray<nsRefPtr<File>> files;
           for (uint32_t i = 0, len = fileImpls.Length(); i < len; ++i) {
-            nsRefPtr<File> file = new File(global, fileImpls[i]);
+            nsRefPtr<File> file = File::Create(global, fileImpls[i]);
+            MOZ_ASSERT(file);
+
             files.AppendElement(file);
           }
 

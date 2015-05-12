@@ -158,9 +158,12 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
       nsRefPtr<FileImpl> blobImpl = actor->GetBlobImpl();
       NS_ENSURE_TRUE(blobImpl, true);
 
-      nsCOMPtr<nsIDOMBlob> blob = new File(mParent, blobImpl);
-      nsCOMPtr<nsIDOMFile> file(do_QueryInterface(blob));
-      NS_ENSURE_TRUE(file, true);
+      if (!blobImpl->IsFile()) {
+        return true;
+      }
+
+      nsRefPtr<File> file = File::Create(mParent, blobImpl);
+      MOZ_ASSERT(file);
 
       mDomfiles.AppendObject(file);
     }

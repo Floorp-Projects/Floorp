@@ -31,7 +31,7 @@ public:
 
   nsTArray<nsRefPtr<FileImpl>>& GetBlobImpls() { Flush(); return mBlobImpls; }
 
-  already_AddRefed<File> GetBlobInternal(nsISupports* aParent,
+  already_AddRefed<Blob> GetBlobInternal(nsISupports* aParent,
                                          const nsACString& aContentType);
 
 protected:

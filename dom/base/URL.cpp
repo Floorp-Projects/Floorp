@@ -112,7 +112,7 @@ URL::Constructor(const nsAString& aUrl, nsIURI* aBase, ErrorResult& aRv)
 
 void
 URL::CreateObjectURL(const GlobalObject& aGlobal,
-                     File& aBlob,
+                     Blob& aBlob,
                      const objectURLOptions& aOptions,
                      nsAString& aResult,
                      ErrorResult& aError)
