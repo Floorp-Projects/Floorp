@@ -3,12 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This makefile builds the version of unicharutils_s static library which uses
-# internal linkage. Components that use frozen (external) linkage should use
-# unicharutil_external_s.
-
 ifdef ENABLE_INTL_API
 LOCAL_INCLUDES += $(MOZ_ICU_CFLAGS)
 endif
-
-DIST_INSTALL = 1

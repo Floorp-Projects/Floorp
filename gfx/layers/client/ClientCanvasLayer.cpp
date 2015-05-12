@@ -108,7 +108,6 @@ ClientCanvasLayer::Initialize(const Data& aData)
         }
         break;
       }
-      case mozilla::layers::LayersBackend::LAYERS_D3D10:
       case mozilla::layers::LayersBackend::LAYERS_D3D11: {
 #ifdef XP_WIN
         if (mGLContext->IsANGLE() && DoesD3D11TextureSharingWork(gfxWindowsPlatform::GetPlatform()->GetD3D11Device())) {

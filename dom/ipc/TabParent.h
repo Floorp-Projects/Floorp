@@ -78,6 +78,7 @@ class TabParent final : public PBrowserParent
                       , public nsAPostRefreshObserver
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
+    typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
 
     virtual ~TabParent();
 
@@ -149,12 +150,12 @@ public:
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 InfallibleTArray<nsString>* aJSONRetVal) override;
+                                 nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal) override;
     virtual bool RecvRpcMessage(const nsString& aMessage,
                                 const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
                                 const IPC::Principal& aPrincipal,
-                                InfallibleTArray<nsString>* aJSONRetVal) override;
+                                nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal) override;
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
                                   InfallibleTArray<CpowEntry>&& aCpows,
@@ -424,7 +425,7 @@ protected:
                         const StructuredCloneData* aCloneData,
                         mozilla::jsipc::CpowHolder* aCpows,
                         nsIPrincipal* aPrincipal,
-                        InfallibleTArray<nsString>* aJSONRetVal = nullptr);
+                        nsTArray<OwningSerializedStructuredCloneBuffer>* aJSONRetVal = nullptr);
 
     virtual bool RecvAsyncAuthPrompt(const nsCString& aUri,
                                      const nsString& aRealm,

@@ -13,18 +13,17 @@ const SUCCESSFUL_OUTCOMES = [
  * for a frame (represented by a FrameNode). Requires optimization data from
  * a profile, which is an array of RawOptimizationSites.
  *
- * When the ThreadNode for the profile iterates over the samples' frames, a JITOptimization
- * model is attached to each frame node, with each sample of the frame, usually with each
- * sample containing different optimization information for the same frame (one sample may
- * pick up optimization X on line Y in the frame, with the next sample containing optimization Z
- * on line W in the same frame, as each frame is only function.
+ * When the ThreadNode for the profile iterates over the samples' frames, each
+ * frame's optimizations are accumulated in their respective FrameNodes. Each
+ * FrameNode may contain many different optimization sites. One sample may
+ * pick up optimization X on line Y in the frame, with the next sample
+ * containing optimization Z on line W in the same frame, as each frame is
+ * only function.
  *
- * Each RawOptimizationSite can be sampled multiple times, which multiple calls to
- * JITOptimizations#addOptimizationSite handles. An OptimizationSite contains
- * a record of how many times the RawOptimizationSite was sampled, as well as the unique id
- * based off of the original profiler array, and the RawOptimizationSite itself as a reference.
+ * An OptimizationSite contains a record of how many times the
+ * RawOptimizationSite was sampled, as well as the unique id based off of the
+ * original profiler array, and the RawOptimizationSite itself as a reference.
  * @see browser/devtools/shared/profiler/tree-model.js
- *
  *
  * @struct RawOptimizationSite
  * A structure describing a location in a script that was attempted to be optimized.
@@ -33,8 +32,12 @@ const SUCCESSFUL_OUTCOMES = [
  * profiler after a recording, and our base data structure. Should always be referenced,
  * and unmodified.
  *
+ * Note that propertyName is an index into a string table, which needs to be
+ * provided in order for the raw optimization site to be inflated.
+ *
  * @type {Array<IonType>} types
  * @type {Array<OptimizationAttempt>} attempts
+ * @type {?number} propertyName
  * @type {number} line
  * @type {number} column
  *
@@ -51,7 +54,7 @@ const SUCCESSFUL_OUTCOMES = [
  * Generally the more ObservedTypes, the more deoptimized this OptimizationSite is.
  * There could be no ObservedTypes, in which case `types` is undefined.
  *
- * @type {?Array<ObservedType>} types
+ * @type {?Array<ObservedType>} typeset
  * @type {string} site
  * @type {string} mirType
  *
@@ -111,16 +114,17 @@ const SUCCESSFUL_OUTCOMES = [
  * @type {number} id
  */
 
-const OptimizationSite = exports.OptimizationSite = function (optimizations, optsIndex) {
-  this.id = optsIndex;
-  this.data = optimizations[optsIndex];
-  this.samples = 0;
+const OptimizationSite = exports.OptimizationSite = function (id, opts) {
+  this.id = id;
+  this.data = opts;
+  this.samples = 1;
 };
 
 /**
  * Returns a boolean indicating if the passed in OptimizationSite
  * has a "good" outcome at the end of its attempted strategies.
  *
+ * @param {Array<string>} stringTable
  * @return {boolean}
  */
 
@@ -155,42 +159,55 @@ OptimizationSite.prototype.getIonTypes = function () {
  * Constructor for JITOptimizations. A collection of OptimizationSites for a frame.
  *
  * @constructor
- * @param {Array<RawOptimizationSite>} optimizations
- *        Array of RawOptimizationSites from the profiler. Do not modify this!
+ * @param {Array<RawOptimizationSite>} rawSites
+ *                                     Array of raw optimization sites.
+ * @param {Array<string>} stringTable
+ *                        Array of strings from the profiler used to inflate
+ *                        JIT optimizations. Do not modify this!
  */
 
-const JITOptimizations = exports.JITOptimizations = function (optimizations) {
-  this._opts = optimizations;
-  // Hash of OptimizationSites observed for this frame.
-  this._optSites = {};
-};
+const JITOptimizations = exports.JITOptimizations = function (rawSites, stringTable) {
+  // Build a histogram of optimization sites.
+  let sites = [];
 
-/**
- * Called when a sample detects an optimization on this frame. Takes an `optsIndex`,
- * referring to an optimization in the stored `this._opts` array. Creates a histogram
- * of optimization site data by creating or incrementing an OptimizationSite
- * for each observed optimization.
- *
- * @param {Number} optsIndex
- */
-
-JITOptimizations.prototype.addOptimizationSite = function (optsIndex) {
-  let op = this._optSites[optsIndex] || (this._optSites[optsIndex] = new OptimizationSite(this._opts, optsIndex));
-  op.samples++;
-};
-
-/**
- * Returns an array of OptimizationSites, sorted from most to least times sampled.
- *
- * @return {Array<OptimizationSite>}
- */
-
-JITOptimizations.prototype.getOptimizationSites = function () {
-  let opts = [];
-  for (let opt of Object.keys(this._optSites)) {
-    opts.push(this._optSites[opt]);
+  for (let rawSite of rawSites) {
+    let existingSite = sites.find((site) => site.data === rawSite);
+    if (existingSite) {
+      existingSite.samples++;
+    } else {
+      sites.push(new OptimizationSite(sites.length, rawSite));
+    }
   }
-  return opts.sort((a, b) => b.samples - a.samples);
+
+  // Inflate the optimization information.
+  for (let site of sites) {
+    let data = site.data;
+    let STRATEGY_SLOT = data.attempts.schema.strategy;
+    let OUTCOME_SLOT = data.attempts.schema.outcome;
+
+    site.data = {
+      attempts: data.attempts.data.map((a) => {
+        return {
+          strategy: stringTable[a[STRATEGY_SLOT]],
+          outcome: stringTable[a[OUTCOME_SLOT]]
+        }
+      }),
+
+      types: data.types.map((t) => {
+        return {
+          typeset: maybeTypeset(t.typeset, stringTable),
+          site: stringTable[t.site],
+          mirType: stringTable[t.mirType]
+        };
+      }),
+
+      propertyName: maybeString(stringTable, data.propertyName),
+      line: data.line,
+      column: data.column
+    };
+  }
+
+  this.optimizationSites = sites.sort((a, b) => b.samples - a.samples);;
 };
 
 /**
@@ -203,3 +220,21 @@ JITOptimizations.prototype.getOptimizationSites = function () {
 OptimizationSite.isSuccessfulOutcome = JITOptimizations.isSuccessfulOutcome = function (outcome) {
   return !!~SUCCESSFUL_OUTCOMES.indexOf(outcome);
 };
+
+function maybeString(stringTable, index) {
+  return index ? stringTable[index] : undefined;
+}
+
+function maybeTypeset(typeset, stringTable) {
+  if (!typeset) {
+    return undefined;
+  }
+  return typeset.map((ty) => {
+    return {
+      keyedBy: maybeString(stringTable, ty.keyedBy),
+      name: maybeString(stringTable, ty.name),
+      location: maybeString(stringTable, ty.location),
+      line: ty.line
+    };
+  });
+}

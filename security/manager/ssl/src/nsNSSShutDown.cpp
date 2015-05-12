@@ -39,15 +39,22 @@ static const PLDHashTableOps gSetOps = {
 nsNSSShutDownList *nsNSSShutDownList::singleton = nullptr;
 
 nsNSSShutDownList::nsNSSShutDownList()
-  : mListLock("nsNSSShutDownList.mListLock")
-  , mActiveSSLSockets(0)
-  , mObjects(&gSetOps, sizeof(ObjectHashEntry))
-  , mPK11LogoutCancelObjects(&gSetOps, sizeof(ObjectHashEntry))
+:mListLock("nsNSSShutDownList.mListLock")
 {
+  mActiveSSLSockets = 0;
+  PL_DHashTableInit(&mObjects, &gSetOps, sizeof(ObjectHashEntry));
+  PL_DHashTableInit(&mPK11LogoutCancelObjects, &gSetOps,
+                    sizeof(ObjectHashEntry));
 }
 
 nsNSSShutDownList::~nsNSSShutDownList()
 {
+  if (mObjects.IsInitialized()) {
+    PL_DHashTableFinish(&mObjects);
+  }
+  if (mPK11LogoutCancelObjects.IsInitialized()) {
+    PL_DHashTableFinish(&mPK11LogoutCancelObjects);
+  }
   PR_ASSERT(this == singleton);
   singleton = nullptr;
 }

@@ -167,6 +167,9 @@ private:
       return mValue;
     }
 
+    // Temporary workaround for naughty code.
+    const T& ReadOnWrongThread() { return mValue; }
+
     void Set(const T& aNewValue)
     {
       MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
@@ -247,6 +250,7 @@ public:
 
   // Access to the T.
   const T& Ref() const { return *mImpl; }
+  const T& ReadOnWrongThread() const { return mImpl->ReadOnWrongThread(); }
   operator const T&() const { return Ref(); }
   void Set(const T& aNewValue) { mImpl->Set(aNewValue); }
   Canonical& operator=(const T& aNewValue) { Set(aNewValue); return *this; }

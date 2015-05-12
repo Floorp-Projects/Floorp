@@ -87,6 +87,35 @@ struct SerializedStructuredCloneBuffer
   size_t dataLength;
 };
 
+struct OwningSerializedStructuredCloneBuffer : public SerializedStructuredCloneBuffer
+{
+  OwningSerializedStructuredCloneBuffer()
+  {}
+
+  OwningSerializedStructuredCloneBuffer(const OwningSerializedStructuredCloneBuffer&) = delete;
+
+  explicit OwningSerializedStructuredCloneBuffer(const JSAutoStructuredCloneBuffer& aOther)
+   : SerializedStructuredCloneBuffer(aOther)
+  {}
+
+  ~OwningSerializedStructuredCloneBuffer()
+  {
+    if (data) {
+      js_free(data);
+    }
+  }
+
+  OwningSerializedStructuredCloneBuffer&
+  operator=(const JSAutoStructuredCloneBuffer& aOther)
+  {
+    SerializedStructuredCloneBuffer::operator=(aOther);
+    return *this;
+  }
+
+  OwningSerializedStructuredCloneBuffer&
+  operator=(const OwningSerializedStructuredCloneBuffer& aOther) = delete;
+};
+
 } // namespace mozilla
 
 namespace IPC {
@@ -741,6 +770,31 @@ struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
     LogParam(aParam.dataLength, aLog);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::OwningSerializedStructuredCloneBuffer>
+  : public ParamTraits<mozilla::SerializedStructuredCloneBuffer>
+{
+  typedef mozilla::OwningSerializedStructuredCloneBuffer paramType;
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ParamTraits<mozilla::SerializedStructuredCloneBuffer>::Read(aMsg, aIter, aResult)) {
+      return false;
+    }
+
+    if (aResult->data) {
+      uint64_t* data = static_cast<uint64_t*>(js_malloc(aResult->dataLength));
+      if (!data) {
+        return false;
+      }
+      memcpy(data, aResult->data, aResult->dataLength);
+      aResult->data = data;
+    }
+
+    return true;
   }
 };
 

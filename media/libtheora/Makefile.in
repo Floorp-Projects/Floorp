@@ -6,10 +6,6 @@
 ifdef GNU_AS
 ifeq ($(CPU_ARCH),arm)
 
-# These flags are a lie; they're just used to enable the requisite
-# opcodes; actual arch detection is done at runtime.
-ASFLAGS = -march=armv7-a -mfpu=neon
-
 armfrag-gnu.$(ASM_SUFFIX): armopts-gnu.S
 armidct-gnu.$(ASM_SUFFIX): armopts-gnu.S
 armloop-gnu.$(ASM_SUFFIX): armopts-gnu.S

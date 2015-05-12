@@ -7,26 +7,39 @@
 #ifndef jit_shared_IonAssemblerBuffer_h
 #define jit_shared_IonAssemblerBuffer_h
 
-// needed for the definition of Label :(
+#include "mozilla/Assertions.h"
+
 #include "jit/shared/Assembler-shared.h"
 
 namespace js {
 namespace jit {
 
-// This should theoretically reside inside of AssemblerBuffer, but that won't be
-// nice AssemblerBuffer is templated, BufferOffset would be indirectly.
-//
-// A BufferOffset is the offset into a buffer, expressed in bytes of
-// instructions.
-
+// The offset into a buffer, in bytes.
 class BufferOffset
 {
     int offset;
+
   public:
     friend BufferOffset nextOffset();
-    explicit BufferOffset(int offset_) : offset(offset_) {}
-    // Return the offset as a raw integer.
+
+    BufferOffset()
+      : offset(INT_MIN)
+    { }
+
+    explicit BufferOffset(int offset_)
+      : offset(offset_)
+    { }
+
+    explicit BufferOffset(Label* l)
+      : offset(l->offset())
+    { }
+
+    explicit BufferOffset(RepatchLabel* l)
+      : offset(l->offset())
+    { }
+
     int getOffset() const { return offset; }
+    bool assigned() const { return offset != INT_MIN; }
 
     // A BOffImm is a Branch Offset Immediate. It is an architecture-specific
     // structure that holds the immediate for a pc relative branch. diffB takes
@@ -43,26 +56,31 @@ class BufferOffset
         MOZ_ASSERT(other->bound());
         return BOffImm(offset - other->offset());
     }
-
-    explicit BufferOffset(Label* l) : offset(l->offset()) {
-    }
-    explicit BufferOffset(RepatchLabel* l) : offset(l->offset()) {
-    }
-
-    BufferOffset() : offset(INT_MIN) {}
-    bool assigned() const { return offset != INT_MIN; }
 };
 
 template<int SliceSize>
-struct BufferSlice {
+class BufferSlice
+{
   protected:
     BufferSlice<SliceSize>* prev_;
     BufferSlice<SliceSize>* next_;
-    // How much data has been added to the current node.
-    uint32_t nodeSize_;
+
+    size_t bytelength_;
+
   public:
+    mozilla::Array<uint8_t, SliceSize> instructions;
+
+  public:
+    explicit BufferSlice()
+      : prev_(nullptr), next_(nullptr), bytelength_(0)
+    { }
+
+    size_t length() const { return bytelength_; }
+    static inline size_t Capacity() { return SliceSize; }
+
     BufferSlice* getNext() const { return next_; }
     BufferSlice* getPrev() const { return prev_; }
+
     void setNext(BufferSlice<SliceSize>* next) {
         MOZ_ASSERT(next_ == nullptr);
         MOZ_ASSERT(next->prev_ == nullptr);
@@ -70,223 +88,265 @@ struct BufferSlice {
         next->prev_ = this;
     }
 
-    mozilla::Array<uint8_t, SliceSize> instructions;
-    size_t size() const {
-        return nodeSize_;
-    }
-    explicit BufferSlice() : prev_(nullptr), next_(nullptr), nodeSize_(0) {}
-    void putBlob(uint32_t instSize, uint8_t* inst) {
-        if (inst != nullptr)
-            memcpy(&instructions[size()], inst, instSize);
-        nodeSize_ += instSize;
+    void putBytes(size_t numBytes, const uint8_t* source) {
+        MOZ_ASSERT(bytelength_ + numBytes <= SliceSize);
+        if (source)
+            memcpy(&instructions[length()], source, numBytes);
+        bytelength_ += numBytes;
     }
 };
 
 template<int SliceSize, class Inst>
-struct AssemblerBuffer
+class AssemblerBuffer
 {
-  public:
-    explicit AssemblerBuffer() : head(nullptr), tail(nullptr), m_oom(false),
-                                 m_bail(false), bufferSize(0), lifoAlloc_(8192) {}
-  protected:
     typedef BufferSlice<SliceSize> Slice;
     typedef AssemblerBuffer<SliceSize, Inst> AssemblerBuffer_;
+
+  protected:
+    // Doubly-linked list of BufferSlices, with the most recent in tail position.
     Slice* head;
     Slice* tail;
+
   public:
     bool m_oom;
     bool m_bail;
-    // How much data has been added to the buffer thus far.
+
+    // How many bytes has been committed to the buffer thus far.
+    // Does not include tail.
     uint32_t bufferSize;
     uint32_t lastInstSize;
+
+    // Finger for speeding up accesses.
+    Slice* finger;
+    int finger_offset;
+
+    LifoAlloc lifoAlloc_;
+
+  public:
+    explicit AssemblerBuffer()
+      : head(nullptr),
+        tail(nullptr),
+        m_oom(false),
+        m_bail(false),
+        bufferSize(0),
+        lastInstSize(0),
+        finger(nullptr),
+        finger_offset(0),
+        lifoAlloc_(8192)
+    { }
+
+  public:
     bool isAligned(int alignment) const {
-        // Make sure the requested alignment is a power of two.
         MOZ_ASSERT(IsPowerOfTwo(alignment));
         return !(size() & (alignment - 1));
     }
+
     virtual Slice* newSlice(LifoAlloc& a) {
         Slice* tmp = static_cast<Slice*>(a.alloc(sizeof(Slice)));
         if (!tmp) {
-            m_oom = true;
+            fail_oom();
             return nullptr;
         }
-        new (tmp) Slice;
-        return tmp;
+        return new (tmp) Slice;
     }
+
     bool ensureSpace(int size) {
-        if (tail != nullptr && tail->size() + size <= SliceSize)
+        // Space can exist in the most recent Slice.
+        if (tail && tail->length() + size <= tail->Capacity())
             return true;
-        Slice* tmp = newSlice(lifoAlloc_);
-        if (tmp == nullptr)
-            return false;
-        if (tail != nullptr) {
-            bufferSize += tail->size();
-            tail->setNext(tmp);
-        }
-        tail = tmp;
-        if (head == nullptr) {
-            finger = tmp;
+
+        // Otherwise, a new Slice must be added.
+        Slice* slice = newSlice(lifoAlloc_);
+        if (slice == nullptr)
+            return fail_oom();
+
+        // If this is the first Slice in the buffer, add to head position.
+        if (!head) {
+            head = slice;
+            finger = slice;
             finger_offset = 0;
-            head = tmp;
         }
+
+        // Finish the last Slice and add the new Slice to the linked list.
+        if (tail) {
+            bufferSize += tail->length();
+            tail->setNext(slice);
+        }
+        tail = slice;
+
         return true;
     }
 
     BufferOffset putByte(uint8_t value) {
-        return putBlob(sizeof(value), (uint8_t*)&value);
+        return putBytes(sizeof(value), (uint8_t*)&value);
     }
 
     BufferOffset putShort(uint16_t value) {
-        return putBlob(sizeof(value), (uint8_t*)&value);
+        return putBytes(sizeof(value), (uint8_t*)&value);
     }
 
     BufferOffset putInt(uint32_t value) {
-        return putBlob(sizeof(value), (uint8_t*)&value);
+        return putBytes(sizeof(value), (uint8_t*)&value);
     }
-    BufferOffset putBlob(uint32_t instSize, uint8_t* inst) {
+    BufferOffset putBytes(uint32_t instSize, uint8_t* inst) {
         if (!ensureSpace(instSize))
             return BufferOffset();
+
         BufferOffset ret = nextOffset();
-        tail->putBlob(instSize, inst);
+        tail->putBytes(instSize, inst);
         return ret;
     }
+
     unsigned int size() const {
-        int executableSize;
-        if (tail != nullptr)
-            executableSize = bufferSize + tail->size();
-        else
-            executableSize = bufferSize;
-        return executableSize;
+        if (tail)
+            return bufferSize + tail->length();
+        return bufferSize;
     }
-    bool oom() const {
-        return m_oom || m_bail;
-    }
-    bool bail() const {
-        return m_bail;
-    }
-    void fail_oom() {
+
+    bool oom() const { return m_oom || m_bail; }
+    bool bail() const { return m_bail; }
+
+    bool fail_oom() {
         m_oom = true;
+        return false;
     }
-    void fail_bail() {
+    bool fail_bail() {
         m_bail = true;
+        return false;
     }
-    // Finger for speeding up accesses.
-    Slice* finger;
-    unsigned int finger_offset;
+    void update_finger(Slice* finger_, int fingerOffset_) {
+        finger = finger_;
+        finger_offset = fingerOffset_;
+    }
+
+  private:
+    static const unsigned SliceDistanceRequiringFingerUpdate = 3;
+
+    Inst* getInstForwards(BufferOffset off, Slice* start, int startOffset, bool updateFinger = false) {
+        const int offset = off.getOffset();
+
+        int cursor = startOffset;
+        unsigned slicesSkipped = 0;
+
+        MOZ_ASSERT(offset >= cursor);
+
+        for (Slice *slice = start; slice != nullptr; slice = slice->getNext()) {
+            const int slicelen = slice->length();
+
+            // Is the offset within the bounds of this slice?
+            if (offset < cursor + slicelen) {
+                if (updateFinger || slicesSkipped >= SliceDistanceRequiringFingerUpdate)
+                    update_finger(slice, cursor);
+
+                MOZ_ASSERT(offset - cursor < (int)slice->length());
+                return (Inst*)&slice->instructions[offset - cursor];
+            }
+
+            cursor += slicelen;
+            slicesSkipped++;
+        }
+
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Invalid instruction cursor.");
+    }
+
+    Inst* getInstBackwards(BufferOffset off, Slice* start, int startOffset, bool updateFinger = false) {
+        const int offset = off.getOffset();
+
+        int cursor = startOffset; // First (lowest) offset in the start Slice.
+        unsigned slicesSkipped = 0;
+
+        MOZ_ASSERT(offset < int(cursor + start->length()));
+
+        for (Slice* slice = start; slice != nullptr; ) {
+            // Is the offset within the bounds of this slice?
+            if (offset >= cursor) {
+                if (updateFinger || slicesSkipped >= SliceDistanceRequiringFingerUpdate)
+                    update_finger(slice, cursor);
+
+                MOZ_ASSERT(offset - cursor < (int)slice->length());
+                return (Inst*)&slice->instructions[offset - cursor];
+            }
+
+            // Move the cursor to the start of the previous slice.
+            Slice* prev = slice->getPrev();
+            cursor -= prev->length();
+
+            slice = prev;
+            slicesSkipped++;
+        }
+
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Invalid instruction cursor.");
+    }
+
+  public:
     Inst* getInst(BufferOffset off) {
-        int local_off = off.getOffset();
-        // Don't update the structure's finger in place, so there is the option
-        // to not update it.
-        Slice* cur = nullptr;
-        int cur_off;
-        // Get the offset that we'd be dealing with by walking through
-        // backwards.
-        int end_off = bufferSize - local_off;
-        // If end_off is negative, then it is in the last chunk, and there is no
-        // real work to be done.
-        if (end_off <= 0)
-            return (Inst*)&tail->instructions[-end_off];
-        bool used_finger = false;
-        int finger_off = abs((int)(local_off - finger_offset));
-        if (finger_off < Min(local_off, end_off)) {
-            // The finger offset is minimal, use the finger.
-            cur = finger;
-            cur_off = finger_offset;
-            used_finger = true;
-        } else if (local_off < end_off) {
-            // It is closest to the start.
-            cur = head;
-            cur_off = 0;
-        } else {
-            // It is closest to the end.
-            cur = tail;
-            cur_off = bufferSize;
+        const int offset = off.getOffset();
+
+        // Is the instruction in the last slice?
+        if (offset >= int(bufferSize))
+            return (Inst*)&tail->instructions[offset - bufferSize];
+
+        // How close is this offset to the previous one we looked up?
+        // If it is sufficiently far from the start and end of the buffer,
+        // use the finger to start midway through the list.
+        int finger_dist = abs(offset - finger_offset);
+        if (finger_dist < Min(offset, int(bufferSize - offset))) {
+            if (finger_offset < offset)
+                return getInstForwards(off, finger, finger_offset, true);
+            return getInstBackwards(off, finger, finger_offset, true);
         }
-        int count = 0;
-        if (local_off < cur_off) {
-            for (; cur != nullptr; cur = cur->getPrev(), cur_off -= cur->size()) {
-                if (local_off >= cur_off) {
-                    local_off -= cur_off;
-                    break;
-                }
-                count++;
-            }
-            MOZ_ASSERT(cur != nullptr);
-        } else {
-            for (; cur != nullptr; cur = cur->getNext()) {
-                int cur_size = cur->size();
-                if (local_off < cur_off + cur_size) {
-                    local_off -= cur_off;
-                    break;
-                }
-                cur_off += cur_size;
-                count++;
-            }
-            MOZ_ASSERT(cur != nullptr);
-        }
-        if (count > 2 || used_finger) {
-            finger = cur;
-            finger_offset = cur_off;
-        }
-        // The offset within this node should not be larger than the node
-        // itself.
-        MOZ_ASSERT(local_off < (int)cur->size());
-        return (Inst*)&cur->instructions[local_off];
+
+        // Is the instruction closer to the start or to the end?
+        if (offset < int(bufferSize - offset))
+            return getInstForwards(off, head, 0);
+
+        // The last slice was already checked above, so start at the second-to-last.
+        Slice* prev = tail->getPrev();
+        return getInstBackwards(off, prev, bufferSize - prev->length());
     }
+
     BufferOffset nextOffset() const {
-        if (tail != nullptr)
-            return BufferOffset(bufferSize + tail->size());
-        else
-            return BufferOffset(bufferSize);
-    }
-    BufferOffset prevOffset() const {
-        MOZ_CRASH("Don't current record lastInstSize");
+        if (tail)
+            return BufferOffset(bufferSize + tail->length());
+        return BufferOffset(bufferSize);
     }
 
     // Break the instruction stream so we can go back and edit it at this point
     void perforate() {
-        Slice* tmp = newSlice(lifoAlloc_);
-        if (!tmp) {
-            m_oom = true;
+        Slice* slice = newSlice(lifoAlloc_);
+        if (!slice) {
+            fail_oom();
             return;
         }
-        bufferSize += tail->size();
-        tail->setNext(tmp);
-        tail = tmp;
+
+        bufferSize += tail->length();
+        tail->setNext(slice);
+        tail = slice;
     }
 
-    void executableCopy(uint8_t* dest_) {
-        if (this->oom())
-            return;
-
-        for (Slice* cur = head; cur != nullptr; cur = cur->getNext()) {
-            memcpy(dest_, &cur->instructions, cur->size());
-            dest_ += cur->size();
-        }
-    }
-
-    class AssemblerBufferInstIterator {
-      private:
+    class AssemblerBufferInstIterator
+    {
         BufferOffset bo;
         AssemblerBuffer_* m_buffer;
+
       public:
-        explicit AssemblerBufferInstIterator(BufferOffset off, AssemblerBuffer_* buff)
-            : bo(off), m_buffer(buff)
-        {
-        }
+        explicit AssemblerBufferInstIterator(BufferOffset off, AssemblerBuffer_* buffer)
+          : bo(off), m_buffer(buffer)
+        { }
+
         Inst* next() {
             Inst* i = m_buffer->getInst(bo);
             bo = BufferOffset(bo.getOffset() + i->size());
             return cur();
         }
+
         Inst* cur() {
             return m_buffer->getInst(bo);
         }
     };
-  public:
-    LifoAlloc lifoAlloc_;
 };
 
-} // ion
-} // js
-#endif /* jit_shared_IonAssemblerBuffer_h */
+} // namespace ion
+} // namespace js
+
+#endif // jit_shared_IonAssemblerBuffer_h

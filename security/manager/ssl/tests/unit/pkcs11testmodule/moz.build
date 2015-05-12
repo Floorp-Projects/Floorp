@@ -13,6 +13,6 @@ SharedLibrary('pkcs11testmodule')
 # C_GetFunctionList needs to be exported. As it turns out, it's much easier to
 # just export all the symbols.
 NO_VISIBILITY_FLAGS = True
-NO_DIST_INSTALL = True
+DIST_INSTALL = False
 
 FAIL_ON_WARNINGS = True

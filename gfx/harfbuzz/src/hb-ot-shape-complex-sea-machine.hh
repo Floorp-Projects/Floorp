@@ -1,5 +1,5 @@
 
-#line 1 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 1 "hb-ot-shape-complex-sea-machine.rl"
 /*
  * Copyright © 2011,2012,2013  Google, Inc.
  *
@@ -32,7 +32,7 @@
 #include "hb-private.hh"
 
 
-#line 36 "hb-ot-shape-complex-sea-machine.hh.tmp"
+#line 36 "hb-ot-shape-complex-sea-machine.hh"
 static const unsigned char _sea_syllable_machine_trans_keys[] = {
 	1u, 1u, 1u, 1u, 1u, 29u, 3u, 29u, 3u, 29u, 1u, 1u, 0
 };
@@ -89,11 +89,11 @@ static const int sea_syllable_machine_error = -1;
 static const int sea_syllable_machine_en_main = 2;
 
 
-#line 36 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 36 "hb-ot-shape-complex-sea-machine.rl"
 
 
 
-#line 67 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 67 "hb-ot-shape-complex-sea-machine.rl"
 
 
 #define found_syllable(syllable_type) \
@@ -113,7 +113,7 @@ find_syllables (hb_buffer_t *buffer)
   int cs;
   hb_glyph_info_t *info = buffer->info;
   
-#line 117 "hb-ot-shape-complex-sea-machine.hh.tmp"
+#line 117 "hb-ot-shape-complex-sea-machine.hh"
 	{
 	cs = sea_syllable_machine_start;
 	ts = 0;
@@ -121,7 +121,7 @@ find_syllables (hb_buffer_t *buffer)
 	act = 0;
 	}
 
-#line 88 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 88 "hb-ot-shape-complex-sea-machine.rl"
 
 
   p = 0;
@@ -130,7 +130,7 @@ find_syllables (hb_buffer_t *buffer)
   unsigned int last = 0;
   unsigned int syllable_serial = 1;
   
-#line 134 "hb-ot-shape-complex-sea-machine.hh.tmp"
+#line 134 "hb-ot-shape-complex-sea-machine.hh"
 	{
 	int _slen;
 	int _trans;
@@ -144,7 +144,7 @@ _resume:
 #line 1 "NONE"
 	{ts = p;}
 	break;
-#line 148 "hb-ot-shape-complex-sea-machine.hh.tmp"
+#line 148 "hb-ot-shape-complex-sea-machine.hh"
 	}
 
 	_keys = _sea_syllable_machine_trans_keys + (cs<<1);
@@ -167,30 +167,30 @@ _eof_trans:
 	{te = p+1;}
 	break;
 	case 6:
-#line 63 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 63 "hb-ot-shape-complex-sea-machine.rl"
 	{te = p+1;{ found_syllable (non_sea_cluster); }}
 	break;
 	case 7:
-#line 61 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 61 "hb-ot-shape-complex-sea-machine.rl"
 	{te = p;p--;{ found_syllable (consonant_syllable); }}
 	break;
 	case 8:
-#line 62 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 62 "hb-ot-shape-complex-sea-machine.rl"
 	{te = p;p--;{ found_syllable (broken_cluster); }}
 	break;
 	case 9:
-#line 63 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 63 "hb-ot-shape-complex-sea-machine.rl"
 	{te = p;p--;{ found_syllable (non_sea_cluster); }}
 	break;
 	case 1:
-#line 61 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 61 "hb-ot-shape-complex-sea-machine.rl"
 	{{p = ((te))-1;}{ found_syllable (consonant_syllable); }}
 	break;
 	case 3:
-#line 62 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 62 "hb-ot-shape-complex-sea-machine.rl"
 	{{p = ((te))-1;}{ found_syllable (broken_cluster); }}
 	break;
-#line 194 "hb-ot-shape-complex-sea-machine.hh.tmp"
+#line 194 "hb-ot-shape-complex-sea-machine.hh"
 	}
 
 _again:
@@ -199,7 +199,7 @@ _again:
 #line 1 "NONE"
 	{ts = 0;}
 	break;
-#line 203 "hb-ot-shape-complex-sea-machine.hh.tmp"
+#line 203 "hb-ot-shape-complex-sea-machine.hh"
 	}
 
 	if ( ++p != pe )
@@ -215,7 +215,7 @@ _again:
 
 	}
 
-#line 97 "../../src/hb-ot-shape-complex-sea-machine.rl"
+#line 97 "hb-ot-shape-complex-sea-machine.rl"
 
 }
 

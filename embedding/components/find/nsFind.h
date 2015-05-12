@@ -21,7 +21,7 @@ class nsIContent;
 #define NS_FIND_CONTRACTID "@mozilla.org/embedcomp/rangefind;1"
 
 #define NS_FIND_CID \
- {0x471f4944, 0x1dd2, 0x11b2, {0x87, 0xac, 0x90, 0xbe, 0x0a, 0x51, 0xd6, 0x09}}
+  {0x471f4944, 0x1dd2, 0x11b2, {0x87, 0xac, 0x90, 0xbe, 0x0a, 0x51, 0xd6, 0x09}}
 
 class nsFindContentIterator;
 
@@ -57,7 +57,7 @@ protected:
   bool IsTextNode(nsIDOMNode* aNode);
   bool IsBlockNode(nsIContent* aNode);
   bool SkipNode(nsIContent* aNode);
-  bool IsVisibleNode(nsIDOMNode *aNode);
+  bool IsVisibleNode(nsIDOMNode* aNode);
 
   // Move in the right direction for our search:
   nsresult NextNode(nsIDOMRange* aSearchRange,

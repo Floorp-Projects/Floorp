@@ -99,6 +99,10 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    'AccessibleCaret.cpp',
+    'AccessibleCaretEventHub.cpp',
+    'AccessibleCaretLogger.cpp',
+    'AccessibleCaretManager.cpp',
     'ActiveLayerTracker.cpp',
     'DisplayItemClip.cpp',
     'DisplayListClipState.cpp',
@@ -145,6 +149,9 @@ SOURCES += [
     'nsPresArena.cpp',
     'nsRefreshDriver.cpp',
 ]
+
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['gtest']
 
 FAIL_ON_WARNINGS = True
 

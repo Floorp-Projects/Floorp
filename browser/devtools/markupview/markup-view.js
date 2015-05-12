@@ -500,9 +500,9 @@ MarkupView.prototype = {
         } else {
           let node = this._selectedContainer.node;
           if (node.hidden) {
-            this.walker.unhideNode(node).then(() => this.nodeChanged(node));
+            this.walker.unhideNode(node);
           } else {
-            this.walker.hideNode(node).then(() => this.nodeChanged(node));
+            this.walker.hideNode(node);
           }
         }
         break;
@@ -1202,15 +1202,6 @@ MarkupView.prototype = {
     if (this._selectedContainer) {
       this._selectedContainer.selected = false;
       this._selectedContainer = null;
-    }
-  },
-
-  /**
-   * Called when the markup panel initiates a change on a node.
-   */
-  nodeChanged: function(aNode) {
-    if (aNode === this._inspector.selection.nodeFront) {
-      this._inspector.change("markupview");
     }
   },
 
@@ -2273,13 +2264,9 @@ function TextEditor(aContainer, aNode, aTemplate) {
           longstr.release().then(null, console.error);
 
           this.container.undo.do(() => {
-            this.node.setNodeValue(aVal).then(() => {
-              this.markup.nodeChanged(this.node);
-            });
+            this.node.setNodeValue(aVal);
           }, () => {
-            this.node.setNodeValue(oldValue).then(() => {
-              this.markup.nodeChanged(this.node);
-            });
+            this.node.setNodeValue(oldValue);
           });
         });
       });

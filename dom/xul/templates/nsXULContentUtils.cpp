@@ -67,9 +67,7 @@ nsIRDFService* nsXULContentUtils::gRDF;
 nsIDateTimeFormat* nsXULContentUtils::gFormat;
 nsICollation *nsXULContentUtils::gCollation;
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
-#endif
 
 #define XUL_RESOURCE(ident, uri) nsIRDFResource* nsXULContentUtils::ident
 #define XUL_LITERAL(ident, val) nsIRDFLiteral* nsXULContentUtils::ident

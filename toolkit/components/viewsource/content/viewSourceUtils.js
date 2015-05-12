@@ -18,26 +18,61 @@ var gViewSourceUtils = {
   mnsIWebProgress: Components.interfaces.nsIWebProgress,
   mnsIWebPageDescriptor: Components.interfaces.nsIWebPageDescriptor,
 
-  // Opens view source
-  viewSource: function(aURL, aPageDescriptor, aDocument, aLineNumber)
+  /**
+   * Opens the view source window.
+   *
+   * @param aArgsOrURL (required)
+   *        This is either an Object containing parameters, or a string
+   *        URL for the page we want to view the source of. In the latter
+   *        case we will be paying attention to the other parameters, as
+   *        we will be supporting the old API for this method.
+   *        If aArgsOrURL is an Object, the other parameters will be ignored.
+   *        aArgsOrURL as an Object can include the following properties:
+   *
+   *        URL (required):
+   *          A string URL for the page we'd like to view the source of.
+   *        browser (optional):
+   *          The browser containing the document that we would like to view the
+   *          source of. This is required if outerWindowID is passed.
+   *        outerWindowID (optional):
+   *          The outerWindowID of the content window containing the document that
+   *          we want to view the source of. Pass this if you want to attempt to
+   *          load the document source out of the network cache.
+   *        lineNumber (optional):
+   *          The line number to focus on once the source is loaded.
+   *
+   * @param aPageDescriptor (deprecated, optional)
+   *        Accepted for compatibility reasons, but is otherwise ignored.
+   * @param aDocument (deprecated, optional)
+   *        The content document we would like to view the source of. This
+   *        function will throw if aDocument is a CPOW.
+   * @param aLineNumber (deprecated, optional)
+   *        The line number to focus on once the source is loaded.
+   */
+  viewSource: function(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber)
   {
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch);
-    if (prefs.getBoolPref("view_source.editor.external"))
-      this.openInExternalEditor(aURL, aPageDescriptor, aDocument, aLineNumber);
-    else
-      this.openInInternalViewer(aURL, aPageDescriptor, aDocument, aLineNumber);
+    if (prefs.getBoolPref("view_source.editor.external")) {
+      this.openInExternalEditor(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber);
+    } else {
+      this._openInInternalViewer(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber);
+    }
   },
 
   // Opens the interval view source viewer
-  openInInternalViewer: function(aURL, aPageDescriptor, aDocument, aLineNumber)
+  _openInInternalViewer: function(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber)
   {
     // try to open a view-source window while inheriting the charset (if any)
     var charset = null;
     var isForcedCharset = false;
     if (aDocument) {
+      if (Components.utils.isCrossProcessWrapper(aDocument)) {
+        throw new Error("View Source cannot accept a CPOW as a document.");
+      }
+
       charset = "charset=" + aDocument.characterSet;
-      try { 
+      try {
         isForcedCharset =
           aDocument.defaultView
                    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -49,7 +84,7 @@ var gViewSourceUtils = {
     openDialog("chrome://global/content/viewSource.xul",
                "_blank",
                "all,dialog=no",
-               aURL, charset, aPageDescriptor, aLineNumber, isForcedCharset);
+               aArgsOrURL, charset, aPageDescriptor, aLineNumber, isForcedCharset);
   },
 
   buildEditorArgs: function(aPath, aLineNumber) {

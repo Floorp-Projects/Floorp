@@ -993,7 +993,11 @@ nsContextMenu.prototype = {
 
   // Open new "view source" window with the frame's URL.
   viewFrameSource: function() {
-    BrowserViewSourceOfDocument(this.target.ownerDocument);
+    BrowserViewSourceOfDocument({
+      browser: this.browser,
+      URL: gContextMenuContentData.docLocation,
+      outerWindowID: gContextMenuContentData.frameOuterWindowID,
+    });
   },
 
   viewInfo: function() {
@@ -1599,30 +1603,35 @@ nsContextMenu.prototype = {
   },
 
   addBookmarkForFrame: function CM_addBookmarkForFrame() {
-    var doc = this.target.ownerDocument;
-    var uri = doc.documentURIObject;
+    let uri = gContextMenuContentData.documentURIObject;
+    let mm = this.browser.messageManager;
 
-    var itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
-    if (itemId == -1) {
-      var title = doc.title;
-      var description = PlacesUIUtils.getDescriptionFromDocument(doc);
-      PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                       , type: "bookmark"
-                                       , uri: uri
-                                       , title: title
-                                       , description: description
-                                       , hiddenRows: [ "description"
-                                                     , "location"
-                                                     , "loadInSidebar"
-                                                     , "keyword" ]
-                                       }, window.top);
-    }
-    else {
-      PlacesUIUtils.showBookmarkDialog({ action: "edit"
-                                       , type: "bookmark"
-                                       , itemId: itemId
-                                       }, window.top);
-    }
+    let onMessage = (message) => {
+      mm.removeMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);
+
+      let itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
+      if (itemId == -1) {
+        PlacesUIUtils.showBookmarkDialog({ action: "add"
+                                         , type: "bookmark"
+                                         , uri: uri
+                                         , title: message.data.title
+                                         , description: message.data.description
+                                         , hiddenRows: [ "description"
+                                                       , "location"
+                                                       , "loadInSidebar"
+                                                       , "keyword" ]
+                                         }, window.top);
+      }
+      else {
+        PlacesUIUtils.showBookmarkDialog({ action: "edit"
+                                         , type: "bookmark"
+                                         , itemId: itemId
+                                         }, window.top);
+      }
+    };
+    mm.addMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);
+
+    mm.sendAsyncMessage("ContextMenu:BookmarkFrame", null, { target: this.target });
   },
   markLink: function CM_markLink(origin) {
     // send link to social, if it is the page url linkURI will be null

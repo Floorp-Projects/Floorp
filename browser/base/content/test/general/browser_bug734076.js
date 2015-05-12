@@ -1,104 +1,108 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  waitForExplicitFinish();
-
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  registerCleanupFunction(function () {
-    gBrowser.removeTab(tab);
-  });
+add_task(function* ()
+{
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, null, false);
 
   let browser = tab.linkedBrowser;
   browser.stop(); // stop the about:blank load
 
   let writeDomainURL = encodeURI("data:text/html,<script>document.write(document.domain);</script>");
+
   let tests = [
     {
       name: "view background image",
       url: "http://mochi.test:8888/",
-      go: function (cb) {
-        let contentBody = browser.contentDocument.body;
-        contentBody.style.backgroundImage = "url('" + writeDomainURL + "')";
-        doOnLoad(function () {
-          let domain = browser.contentDocument.body.textContent;
-          is(domain, "", "no domain was inherited for view background image");
-          cb();
-        });
+      element: "body",
+      go: function () {
+        return ContentTask.spawn(gBrowser.selectedBrowser, { writeDomainURL: writeDomainURL }, function* (arg) {
+          let contentBody = content.document.body;
+          contentBody.style.backgroundImage = "url('" + arg.writeDomainURL + "')";
 
-        doContextCommand(contentBody, "context-viewbgimage");
+          return "context-viewbgimage";
+        });
+      },
+      verify: function () {
+        return ContentTask.spawn(gBrowser.selectedBrowser, { }, function* (arg) {
+          return [content.document.body.textContent, "no domain was inherited for view background image"];
+        });
       }
     },
     {
       name: "view image",
       url: "http://mochi.test:8888/",
-      go: function (cb) {
-        doOnLoad(function () {
-          let domain = browser.contentDocument.body.textContent;
-          is(domain, "", "no domain was inherited for view image");
-          cb();
+      element: "img",
+      go: function () {
+        return ContentTask.spawn(gBrowser.selectedBrowser, { writeDomainURL: writeDomainURL }, function* (arg) {
+          let doc = content.document;
+          let img = doc.createElement("img");
+          img.setAttribute("src", arg.writeDomainURL);
+          doc.body.insertBefore(img, doc.body.firstChild);
+
+          return "context-viewimage";
         });
-
-        let doc = browser.contentDocument;
-        let img = doc.createElement("img");
-        img.setAttribute("src", writeDomainURL);
-        doc.body.appendChild(img);
-
-        doContextCommand(img, "context-viewimage");
+      },
+      verify: function () {
+        return ContentTask.spawn(gBrowser.selectedBrowser, { }, function* (arg) {
+          return [content.document.body.textContent, "no domain was inherited for view image"];
+        });
       }
     },
     {
       name: "show only this frame",
       url: "http://mochi.test:8888/",
-      go: function (cb) {
-        doOnLoad(function () {
-          let domain = browser.contentDocument.body.textContent;
-          is(domain, "", "no domain was inherited for 'show only this frame'");
-          cb();
+      element: "iframe",
+      go: function () {
+        return ContentTask.spawn(gBrowser.selectedBrowser, { writeDomainURL: writeDomainURL }, function* (arg) {
+          let doc = content.document;
+          let iframe = doc.createElement("iframe");
+          iframe.setAttribute("src", arg.writeDomainURL);
+          doc.body.insertBefore(iframe, doc.body.firstChild);
+
+          // Wait for the iframe to load.
+          return new Promise(resolve => {
+            iframe.addEventListener("load", function onload() {
+              iframe.removeEventListener("load", onload, true);
+              resolve("context-showonlythisframe");
+            }, true);
+          });
         });
-
-        let doc = browser.contentDocument;
-        let iframe = doc.createElement("iframe");
-        iframe.setAttribute("src", writeDomainURL);
-        doc.body.appendChild(iframe);
-
-        iframe.addEventListener("load", function onload() {
-          doContextCommand(iframe.contentDocument.body,
-                           "context-showonlythisframe");
-        }, false);
+      },
+      verify: function () {
+        return ContentTask.spawn(gBrowser.selectedBrowser, { writeDomainURL: writeDomainURL }, function* (arg) {
+          return [content.document.body.textContent, "no domain was inherited for 'show only this frame'"];
+        });
       }
     }
   ];
 
-  function doOnLoad(cb) {
-    browser.addEventListener("load", function onLoad(e) {
-      if (e.target != browser.contentDocument)
-        return;
-      browser.removeEventListener("load", onLoad, true);
-      cb();
-    }, true);
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+
+  for (let test of tests) {
+    let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    gBrowser.loadURI(test.url);
+    yield loadedPromise;
+
+    info("Run subtest " + test.name);
+    let commandToRun = yield test.go();
+
+    let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
+    yield BrowserTestUtils.synthesizeMouse(test.element, 3, 3,
+          { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+    yield popupShownPromise;
+
+    let loadedAfterCommandPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    document.getElementById(commandToRun).click();
+    yield loadedAfterCommandPromise;
+
+    let result = yield test.verify();
+    ok(!result[0], result[1]);
+
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+    contentAreaContextMenu.hidePopup();
+    yield popupHiddenPromise;
   }
 
-  function doNext() {
-    let test = tests.shift();
-    if (test) {
-      info("Running test: " + test.name);
-      doOnLoad(function () {
-        test.go(function () {
-          executeSoon(doNext);
-        });
-      });
-      browser.contentDocument.location = test.url;
-    } else {
-      executeSoon(finish);
-    }
-  }
-
-  doNext();
-}
-
-function doContextCommand(aNode, aCmd) {
-  EventUtils.sendMouseEvent({ type: "contextmenu" }, aNode);
-  document.getElementById(aCmd).click();
-  document.getElementById("contentAreaContextMenu").hidePopup();
-}
+  gBrowser.removeCurrentTab();
+});

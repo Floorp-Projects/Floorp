@@ -17,7 +17,8 @@ function run_test() {
   createUpdaterINI(false);
   setAppBundleModTime();
 
-  if (IS_UNIX) {
+  // The tests don't support symlinks on gonk.
+  if (IS_UNIX && !IS_TOOLKIT_GONK) {
     removeSymlink();
     createSymlink();
     do_register_cleanup(removeSymlink);
@@ -87,7 +88,8 @@ function finishCheckUpdateApplied() {
 }
 
 function checkUpdate() {
-  if (IS_UNIX) {
+  // The tests don't support symlinks on gonk.
+  if (IS_UNIX && !IS_TOOLKIT_GONK) {
     checkSymlink();
   }
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);

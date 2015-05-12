@@ -202,7 +202,8 @@ class MozbuildSandbox(Sandbox):
 
     def __setitem__(self, key, value):
         if key in self.special_variables or key in self.functions or key in self.subcontext_types:
-            raise KeyError()
+            raise KeyError('Cannot set "%s" because it is a reserved keyword'
+                           % key)
         if key in self.exports:
             self._context[key] = value
             self.exports.remove(key)
@@ -409,8 +410,10 @@ class MozbuildSandbox(Sandbox):
         func, code, path = template
 
         def template_function(*args, **kwargs):
-            context = TemplateContext(self._context._allowed_variables,
-                                      self._context.config)
+            context = TemplateContext(
+                template=func.func_name,
+                allowed_variables=self._context._allowed_variables,
+                config=self._context.config)
             context.add_source(self._context.current_path)
             for p in self._context.all_paths:
                 context.add_source(p)
@@ -681,7 +684,7 @@ class BuildReaderError(Exception):
             self._print_exception(inner, s)
 
     def _print_keyerror(self, inner, s):
-        if inner.args[0] not in ('global_ns', 'local_ns'):
+        if not inner.args or inner.args[0] not in ('global_ns', 'local_ns'):
             self._print_exception(inner, s)
             return
 
@@ -740,7 +743,7 @@ class BuildReaderError(Exception):
         s.write('variables and try again.\n')
 
     def _print_valueerror(self, inner, s):
-        if inner.args[0] not in ('global_ns', 'local_ns'):
+        if not inner.args or inner.args[0] not in ('global_ns', 'local_ns'):
             self._print_exception(inner, s)
             return
 

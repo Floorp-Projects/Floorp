@@ -113,11 +113,16 @@ def get_ip():
         hostname = socket.gethostname()
         try:
             logger.debug('Retrieving IP for %s' % hostname)
-            ip = socket.gethostbyname(hostname)
+            ips = socket.gethostbyname_ex(hostname)[2]
         except socket.gaierror:  # for Mac OS X
             hostname += '.local'
             logger.debug('Retrieving IP for %s' % hostname)
-            ip = socket.gethostbyname(hostname)
+            ips = socket.gethostbyname_ex(hostname)[2]
+        if len(ips) == 1:
+            ip = ips[0]
+        else:
+            logger.debug('Multiple addresses found: %s' % ips)
+            ip = None
     except socket.gaierror:
         # sometimes the hostname doesn't resolve to an ip address, in which
         # case this will always fail

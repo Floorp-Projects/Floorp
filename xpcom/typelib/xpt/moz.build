@@ -36,3 +36,5 @@ if CONFIG['_MSC_VER']:
 # inline operator new definitions that MSVC linker doesn't strip
 # when linking the xpt tests.
 DEFINES['MOZ_NO_MOZALLOC'] = True
+
+DIST_INSTALL = True
