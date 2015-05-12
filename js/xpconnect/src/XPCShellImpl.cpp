@@ -832,24 +832,45 @@ my_GetErrorMessage(void* userRef, const unsigned errorNumber)
     return &jsShell_ErrorFormatString[errorNumber];
 }
 
-static void
-ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
+static bool
+ProcessLine(AutoJSAPI& jsapi, const char* buffer, int startline)
 {
     JSContext* cx = jsapi.cx();
     JS::RootedScript script(cx);
     JS::RootedValue result(cx);
-    int lineno, startline;
-    bool ok, hitEOF;
-    char* bufp, buffer[4096];
-    JSString* str;
+    JS::CompileOptions options(cx);
+    options.setFileAndLine("typein", startline)
+           .setIsRunOnce(true);
+    if (!JS_CompileScript(cx, buffer, strlen(buffer), options, &script))
+        return false;
+    if (compileOnly)
+        return true;
+    if (!JS_ExecuteScript(cx, script, &result))
+        return false;
 
+    if (result.isUndefined())
+        return true;
+    RootedString str(cx);
+    if (!(str = ToString(cx, result)))
+        return false;
+    JSAutoByteString bytes;
+    if (!bytes.encodeLatin1(cx, str))
+        return false;
+
+    fprintf(gOutFile, "%s\n", bytes.ptr());
+    return true;
+}
+
+static void
+ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
+{
+    JSContext* cx = jsapi.cx();
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
     MOZ_ASSERT(global);
 
     if (forceTTY) {
         file = stdin;
-    } else if (!isatty(fileno(file)))
-    {
+    } else if (!isatty(fileno(file))) {
         /*
          * It's not interactive - just execute it.
          *
@@ -867,21 +888,25 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
         }
         ungetc(ch, file);
 
+        JS::RootedScript script(cx);
+        JS::RootedValue unused(cx);
         JS::CompileOptions options(cx);
         options.setUTF8(true)
                .setFileAndLine(filename, 1)
-               .setIsRunOnce(true);
+               .setIsRunOnce(true)
+               .setNoScriptRval(true);
         if (JS::Compile(cx, options, file, &script) && !compileOnly)
-            (void)JS_ExecuteScript(cx, script, &result);
+            (void)JS_ExecuteScript(cx, script, &unused);
 
         return;
     }
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
-    lineno = 1;
-    hitEOF = false;
+    int lineno = 1;
+    bool hitEOF = false;
     do {
-        bufp = buffer;
+        char buffer[4096];
+        char* bufp = buffer;
         *bufp = '\0';
 
         /*
@@ -890,7 +915,7 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
          * cleanly.  This should be whenever we get a complete statement that
          * coincides with the end of a line.
          */
-        startline = lineno;
+        int startline = lineno;
         do {
             if (!GetLine(cx, bufp, file, startline == lineno ? "js> " : "")) {
                 hitEOF = true;
@@ -900,29 +925,8 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
             lineno++;
         } while (!JS_BufferIsCompilableUnit(cx, global, buffer, strlen(buffer)));
 
-        /* Clear any pending exception from previous failed compiles.  */
-        JS_ClearPendingException(cx);
-        JS::CompileOptions options(cx);
-        options.setFileAndLine("typein", startline)
-               .setIsRunOnce(true);
-        if (JS_CompileScript(cx, buffer, strlen(buffer), options, &script)) {
-            JSErrorReporter older;
-
-            if (!compileOnly) {
-                ok = JS_ExecuteScript(cx, script, &result);
-                if (ok && result != JSVAL_VOID) {
-                    /* Suppress error reports from JS::ToString(). */
-                    older = JS_SetErrorReporter(JS_GetRuntime(cx), nullptr);
-                    str = ToString(cx, result);
-                    JS_SetErrorReporter(JS_GetRuntime(cx), older);
-                    JSAutoByteString bytes;
-                    if (str && bytes.encodeLatin1(cx, str))
-                        fprintf(gOutFile, "%s\n", bytes.ptr());
-                    else
-                        ok = false;
-                }
-            }
-        }
+        if (!ProcessLine(jsapi, buffer, startline))
+            jsapi.ClearException(); // Errors from interactive processing are squelched.
     } while (!hitEOF && !gQuitting);
 
     fprintf(gOutFile, "\n");
