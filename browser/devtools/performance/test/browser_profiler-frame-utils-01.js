@@ -14,6 +14,15 @@ const CONTENT_LOCATIONS = [
   "hello/<.world (http://foo/#bar:123:987)",
   "hello/<.world (http://foo/:123:987)",
   "hello/<.world (app://myfxosapp/file.js:100:1)",
+
+  // Test scripts with port numbers (bug 1164131)
+  "hello/<.world (http://localhost:8888/file.js:100:1)",
+  "hello/<.world (http://localhost:8888/file.js:100)",
+
+  // Occurs when executing an inline script on a root html page with port
+  // (I've never seen it with a column number but check anyway) bug 1164131
+  "hello/<.world (http://localhost:8888/:1",
+  "hello/<.world (http://localhost:8888/:100:50",
 ].map(argify);
 
 const CHROME_LOCATIONS = [
@@ -37,15 +46,19 @@ function test() {
   }
 
   // functionName, fileName, hostName, url, line, column
-  const FIELDS = ["functionName", "fileName", "hostName", "url", "line", "column"];
+  const FIELDS = ["functionName", "fileName", "hostName", "url", "line", "column", "host", "port"];
   const PARSED_CONTENT = [
-    ["hello/<.world", "bar.js", "foo", "https://foo/bar.js", 123, 987],
-    ["hello/<.world", "bar.js", "foo", "http://foo/bar.js", 123, 987],
-    ["hello/<.world", "bar.js", "foo", "http://foo/bar.js", 123, null],
-    ["hello/<.world", "bar.js#baz", "foo", "http://foo/bar.js#baz", 123, 987],
-    ["hello/<.world", "#bar", "foo", "http://foo/#bar", 123, 987],
-    ["hello/<.world", "/", "foo", "http://foo/", 123, 987],
-    ["hello/<.world", "file.js", "myfxosapp", "app://myfxosapp/file.js", 100, 1],
+    ["hello/<.world", "bar.js", "foo", "https://foo/bar.js", 123, 987, "foo", null],
+    ["hello/<.world", "bar.js", "foo", "http://foo/bar.js", 123, 987, "foo", null],
+    ["hello/<.world", "bar.js", "foo", "http://foo/bar.js", 123, null, "foo", null],
+    ["hello/<.world", "bar.js#baz", "foo", "http://foo/bar.js#baz", 123, 987, "foo", null],
+    ["hello/<.world", "#bar", "foo", "http://foo/#bar", 123, 987, "foo", null],
+    ["hello/<.world", "/", "foo", "http://foo/", 123, 987, "foo", null],
+    ["hello/<.world", "file.js", "myfxosapp", "app://myfxosapp/file.js", 100, 1, "myfxosapp", null],
+    ["hello/<.world", "file.js", "localhost", "http://localhost:8888/file.js", 100, 1, "localhost:8888", 8888],
+    ["hello/<.world", "file.js", "localhost", "http://localhost:8888/file.js", 100, null, "localhost:8888", 8888],
+    ["hello/<.world", "/", "localhost", "http://localhost:8888/", 1, null, "localhost:8888", 8888],
+    ["hello/<.world", "/", "localhost", "http://localhost:8888/", 100, 50, "localhost:8888", 8888],
   ];
 
   for (let i = 0; i < PARSED_CONTENT.length; i++) {
@@ -56,12 +69,12 @@ function test() {
   }
 
   const PARSED_CHROME = [
-    ["Startup::XRE_InitChildProcess", null, null, null, 456, 123],
-    ["chrome://browser/content/content.js", null, null, null, 456, 123],
-    ["setTimeout_timer", "foo.js", null, "resource://gre/foo.js", 123, 434],
-    ["hello/<.world (jar:file://Users/mcurie/Dev/jetpacks.js)", null, null, null, null, null],
-    ["hello/<.world", "baz.js", "bar", "http://bar/baz.js", 123, 987],
-    ["EnterJIT", null, null, null, null, null],
+    ["Startup::XRE_InitChildProcess", null, null, null, 456, 123, null, null],
+    ["chrome://browser/content/content.js", null, null, null, 456, 123, null, null],
+    ["setTimeout_timer", "foo.js", null, "resource://gre/foo.js", 123, 434, null, null],
+    ["hello/<.world (jar:file://Users/mcurie/Dev/jetpacks.js)", null, null, null, null, null, null, null],
+    ["hello/<.world", "baz.js", "bar", "http://bar/baz.js", 123, 987, "bar", null],
+    ["EnterJIT", null, null, null, null, null, null, null],
   ];
 
   for (let i = 0; i < PARSED_CHROME.length; i++) {
