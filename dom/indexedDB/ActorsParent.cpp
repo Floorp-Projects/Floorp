@@ -6533,7 +6533,7 @@ Database::RecvPBackgroundIDBTransactionConstructor(
     nsRefPtr<TransactionThreadPool> threadPool =
       TransactionThreadPool::Create();
     if (NS_WARN_IF(!threadPool)) {
-      return nullptr;
+      return false;
     }
 
     gTransactionThreadPool = threadPool;
