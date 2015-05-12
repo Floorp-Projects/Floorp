@@ -1304,9 +1304,7 @@ gfxDWriteFontList::GetStandardFamilyName(const nsAString& aFontName,
 }
 
 gfxFontFamily*
-gfxDWriteFontList::FindFamily(const nsAString& aFamily,
-                              nsIAtom* aLanguage,
-                              bool aUseSystemFonts)
+gfxDWriteFontList::FindFamily(const nsAString& aFamily, bool aUseSystemFonts)
 {
     if (!mInitialized) {
         mInitialized = true;
