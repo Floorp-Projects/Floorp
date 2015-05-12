@@ -13,24 +13,23 @@
 
 class nsEmbedStream : public nsISupports
 {
- public:
-
+public:
   nsEmbedStream();
 
-  void      InitOwner      (nsIWebBrowser *aOwner);
-  NS_METHOD Init           (void);
+  void InitOwner(nsIWebBrowser* aOwner);
+  NS_METHOD Init(void);
 
-  NS_METHOD OpenStream     (nsIURI *aBaseURI, const nsACString& aContentType);
-  NS_METHOD AppendToStream (const uint8_t *aData, uint32_t aLen);
-  NS_METHOD CloseStream    (void);
+  NS_METHOD OpenStream(nsIURI* aBaseURI, const nsACString& aContentType);
+  NS_METHOD AppendToStream(const uint8_t* aData, uint32_t aLen);
+  NS_METHOD CloseStream(void);
 
   NS_DECL_ISUPPORTS
 
- protected:
+protected:
   virtual ~nsEmbedStream();
 
- private:
-  nsIWebBrowser            *mOwner;
+private:
+  nsIWebBrowser* mOwner;
   nsCOMPtr<nsIOutputStream> mOutputStream;
 };
 

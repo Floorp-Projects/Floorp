@@ -22,7 +22,6 @@
 namespace mozilla {
 namespace image {
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetPNGLog()
 {
@@ -42,7 +41,6 @@ GetPNGDecoderAccountingLog()
   }
   return sPNGDecoderAccountingLog;
 }
-#endif
 
 // Limit image dimensions (bug #251381, #591822, and #967656)
 #ifndef MOZ_PNG_MAX_DIMENSION
@@ -288,14 +286,12 @@ nsPNGDecoder::InitInternal()
 #endif
 
 #ifdef PNG_READ_CHECK_FOR_INVALID_INDEX_SUPPORTED
-#ifndef PR_LOGGING
   // Disallow palette-index checking, for speed; we would ignore the warning
-  // anyhow unless we have defined PR_LOGGING.  This feature was added at
-  // libpng version 1.5.10 and is disabled in the embedded libpng but enabled
-  // by default in the system libpng.  This call also disables it in the
-  // system libpng, for decoding speed.  Bug #745202.
+  // anyhow.  This feature was added at libpng version 1.5.10 and is disabled
+  // in the embedded libpng but enabled by default in the system libpng.  This
+  // call also disables it in the system libpng, for decoding speed.
+  // Bug #745202.
   png_set_check_for_invalid_index(mPNG, 0);
-#endif
 #endif
 
 #if defined(PNG_SET_OPTION_SUPPORTED) && defined(PNG_sRGB_PROFILE_CHECKS) && \

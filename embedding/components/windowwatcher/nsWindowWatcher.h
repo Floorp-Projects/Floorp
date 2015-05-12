@@ -8,7 +8,7 @@
 
 // {a21bfa01-f349-4394-a84c-8de5cf0737d0}
 #define NS_WINDOWWATCHER_CID \
- {0xa21bfa01, 0xf349, 0x4394, {0xa8, 0x4c, 0x8d, 0xe5, 0xcf, 0x7, 0x37, 0xd0}}
+  {0xa21bfa01, 0xf349, 0x4394, {0xa8, 0x4c, 0x8d, 0xe5, 0xcf, 0x7, 0x37, 0xd0}}
 
 #include "nsCOMPtr.h"
 #include "mozilla/Mutex.h"
@@ -19,21 +19,21 @@
 #include "nsPIWindowWatcher.h"
 #include "nsTArray.h"
 
-class  nsIURI;
-class  nsIDocShellTreeItem;
-class  nsIDocShellTreeOwner;
+class nsIURI;
+class nsIDocShellTreeItem;
+class nsIDocShellTreeOwner;
 class nsPIDOMWindow;
-class  nsWatcherWindowEnumerator;
-class  nsPromptService;
+class nsWatcherWindowEnumerator;
+class nsPromptService;
 struct nsWatcherWindowEntry;
 struct SizeSpec;
 
-class nsWindowWatcher :
-      public nsIWindowWatcher,
-      public nsPIWindowWatcher,
-      public nsIPromptFactory
+class nsWindowWatcher
+  : public nsIWindowWatcher
+  , public nsPIWindowWatcher
+  , public nsIPromptFactory
 {
-friend class nsWatcherWindowEnumerator;
+  friend class nsWatcherWindowEnumerator;
 
 public:
   nsWindowWatcher();
@@ -46,79 +46,78 @@ public:
   NS_DECL_NSPIWINDOWWATCHER
   NS_DECL_NSIPROMPTFACTORY
 
-  static int32_t    GetWindowOpenLocation(nsIDOMWindow *aParent,
-                                          uint32_t aChromeFlags,
-                                          bool aCalledFromJS,
-                                          bool aPositionSpecified,
-                                          bool aSizeSpecified);
+  static int32_t GetWindowOpenLocation(nsIDOMWindow* aParent,
+                                       uint32_t aChromeFlags,
+                                       bool aCalledFromJS,
+                                       bool aPositionSpecified,
+                                       bool aSizeSpecified);
 
 protected:
   virtual ~nsWindowWatcher();
 
   friend class nsPromptService;
-  bool AddEnumerator(nsWatcherWindowEnumerator* inEnumerator);
-  bool RemoveEnumerator(nsWatcherWindowEnumerator* inEnumerator);
+  bool AddEnumerator(nsWatcherWindowEnumerator* aEnumerator);
+  bool RemoveEnumerator(nsWatcherWindowEnumerator* aEnumerator);
 
-  nsWatcherWindowEntry *FindWindowEntry(nsIDOMWindow *aWindow);
-  nsresult RemoveWindow(nsWatcherWindowEntry *inInfo);
+  nsWatcherWindowEntry* FindWindowEntry(nsIDOMWindow* aWindow);
+  nsresult RemoveWindow(nsWatcherWindowEntry* aInfo);
 
   // Get the caller tree item.  Look on the JS stack, then fall back
   // to the parent if there's nothing there.
-  already_AddRefed<nsIDocShellTreeItem>
-    GetCallerTreeItem(nsIDocShellTreeItem* aParentItem);
-  
+  already_AddRefed<nsIDocShellTreeItem> GetCallerTreeItem(
+    nsIDocShellTreeItem* aParentItem);
+
   // Unlike GetWindowByName this will look for a caller on the JS
   // stack, and then fall back on aCurrentWindow if it can't find one.
-  nsPIDOMWindow*
-    SafeGetWindowByName(const nsAString& aName, nsIDOMWindow* aCurrentWindow);
+  nsPIDOMWindow* SafeGetWindowByName(const nsAString& aName,
+                                     nsIDOMWindow* aCurrentWindow);
 
   // Just like OpenWindowJS, but knows whether it got called via OpenWindowJS
   // (which means called from script) or called via OpenWindow.
-  nsresult OpenWindowInternal(nsIDOMWindow *aParent,
-                              const char *aUrl,
-                              const char *aName,
-                              const char *aFeatures,
+  nsresult OpenWindowInternal(nsIDOMWindow* aParent,
+                              const char* aUrl,
+                              const char* aName,
+                              const char* aFeatures,
                               bool aCalledFromJS,
                               bool aDialog,
                               bool aNavigate,
-                              nsITabParent *aOpeningTab,
-                              nsIArray *argv,
-                              nsIDOMWindow **_retval);
+                              nsITabParent* aOpeningTab,
+                              nsIArray* aArgv,
+                              nsIDOMWindow** aResult);
 
-  static nsresult   URIfromURL(const char *aURL,
-                               nsIDOMWindow *aParent,
-                               nsIURI **aURI);
-  
-  static uint32_t   CalculateChromeFlags(nsIDOMWindow *aParent,
-                                         const char *aFeatures,
-                                         bool aFeaturesSpecified,
-                                         bool aDialog,
-                                         bool aChromeURL,
-                                         bool aHasChromeParent,
-                                         bool aOpenedFromRemoteTab);
-  static int32_t    WinHasOption(const char *aOptions, const char *aName,
-                                 int32_t aDefault, bool *aPresenceFlag);
+  static nsresult URIfromURL(const char* aURL,
+                             nsIDOMWindow* aParent,
+                             nsIURI** aURI);
+
+  static uint32_t CalculateChromeFlags(nsIDOMWindow* aParent,
+                                       const char* aFeatures,
+                                       bool aFeaturesSpecified,
+                                       bool aDialog,
+                                       bool aChromeURL,
+                                       bool aHasChromeParent,
+                                       bool aOpenedFromRemoteTab);
+  static int32_t WinHasOption(const char* aOptions, const char* aName,
+                              int32_t aDefault, bool* aPresenceFlag);
   /* Compute the right SizeSpec based on aFeatures */
-  static void       CalcSizeSpec(const char* aFeatures, SizeSpec& aResult);
-  static nsresult   ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
-                                            nsIDOMWindow *aParent,
-                                            bool aWindowIsNew,
-                                            nsIDOMWindow **aOpenedWindow);
-  static void       SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
-                                           nsIDOMWindow *aParent,
-                                           bool aIsCallerChrome,
-                                           const SizeSpec & aSizeSpec);
-  static void       GetWindowTreeItem(nsIDOMWindow *inWindow,
-                                      nsIDocShellTreeItem **outTreeItem);
-  static void       GetWindowTreeOwner(nsIDOMWindow *inWindow,
-                                       nsIDocShellTreeOwner **outTreeOwner);
+  static void CalcSizeSpec(const char* aFeatures, SizeSpec& aResult);
+  static nsresult ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
+                                          nsIDOMWindow* aParent,
+                                          bool aWindowIsNew,
+                                          nsIDOMWindow** aOpenedWindow);
+  static void SizeOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
+                                     nsIDOMWindow* aParent,
+                                     bool aIsCallerChrome,
+                                     const SizeSpec& aSizeSpec);
+  static void GetWindowTreeItem(nsIDOMWindow* aWindow,
+                                nsIDocShellTreeItem** aResult);
+  static void GetWindowTreeOwner(nsIDOMWindow* aWindow,
+                                 nsIDocShellTreeOwner** aResult);
 
   nsTArray<nsWatcherWindowEnumerator*> mEnumeratorList;
-  nsWatcherWindowEntry *mOldestWindow;
-  mozilla::Mutex        mListLock;
+  nsWatcherWindowEntry* mOldestWindow;
+  mozilla::Mutex mListLock;
 
   nsCOMPtr<nsIWindowCreator> mWindowCreator;
 };
 
 #endif
-

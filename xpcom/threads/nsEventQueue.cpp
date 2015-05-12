@@ -119,3 +119,39 @@ nsEventQueue::PutEvent(nsIRunnable* aRunnable)
   LOG(("EVENTQ(%p): notify\n", this));
   mon.NotifyAll();
 }
+
+size_t
+nsEventQueue::Count()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  // It is obvious count is 0 when the queue is empty.
+  if (!mHead) {
+    return 0;
+  }
+
+  /* How we count the number of events in the queue:
+   * 1. Let pageCount(x, y) denote the number of pages excluding the tail page
+   *    where x is the index of head page and y is the index of the tail page.
+   * 2. Then we have pageCount(x, y) = y - x.
+   *
+   * Ex: pageCount(0, 0) = 0 where both head and tail pages point to page 0.
+   *     pageCount(0, 1) = 1 where head points to page 0 and tail points page 1.
+   *
+   * 3. number of events = (EVENTS_PER_PAGE * pageCount(x, y))
+   *      - (empty slots in head page) + (non-empty slots in tail page)
+   *      = (EVENTS_PER_PAGE * pageCount(x, y)) - mOffsetHead + mOffsetTail
+   */
+
+  int count = -mOffsetHead;
+
+  // Compute (EVENTS_PER_PAGE * pageCount(x, y))
+  for (Page* page = mHead; page != mTail; page = page->mNext) {
+    count += EVENTS_PER_PAGE;
+  }
+
+  count += mOffsetTail;
+  MOZ_ASSERT(count >= 0);
+
+  return count;
+}

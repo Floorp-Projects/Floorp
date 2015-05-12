@@ -207,10 +207,10 @@ js::CheckTracedThing(JSTracer* trc, T thing)
     if (isGcMarkingTracer) {
         GCMarker* gcMarker = static_cast<GCMarker*>(trc);
         MOZ_ASSERT_IF(gcMarker->shouldCheckCompartments(),
-                      zone->isCollecting() || rt->isAtomsZone(zone));
+                      zone->isCollecting() || zone->isAtomsZone());
 
         MOZ_ASSERT_IF(gcMarker->markColor() == GRAY,
-                      !zone->isGCMarkingBlack() || rt->isAtomsZone(zone));
+                      !zone->isGCMarkingBlack() || zone->isAtomsZone());
 
         MOZ_ASSERT(!(zone->isGCSweeping() || zone->isGCFinished() || zone->isGCCompacting()));
     }
@@ -315,8 +315,7 @@ AssertZoneIsMarking(JSString* str)
 {
 #ifdef DEBUG
     Zone* zone = TenuredCell::fromPointer(str)->zone();
-    JSRuntime* rt = str->runtimeFromMainThread();
-    MOZ_ASSERT(zone->isGCMarking() || rt->isAtomsZone(zone));
+    MOZ_ASSERT(zone->isGCMarking() || zone->isAtomsZone());
 #endif
 }
 
@@ -325,8 +324,7 @@ AssertZoneIsMarking(JS::Symbol* sym)
 {
 #ifdef DEBUG
     Zone* zone = TenuredCell::fromPointer(sym)->zone();
-    JSRuntime* rt = sym->runtimeFromMainThread();
-    MOZ_ASSERT(zone->isGCMarking() || rt->isAtomsZone(zone));
+    MOZ_ASSERT(zone->isGCMarking() || zone->isAtomsZone());
 #endif
 }
 
@@ -753,7 +751,7 @@ void
 js::GCMarker::traverseEdge(S source, T target)
 {
     MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(target),
-                  runtime()->isAtomsZone(target->zone()) || target->zone() == source->zone());
+                  target->zone()->isAtomsZone() || target->zone() == source->zone());
     traverse(target);
 }
 

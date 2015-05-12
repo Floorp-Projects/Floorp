@@ -47,19 +47,20 @@
 
 /* reference_count */
 
-#define HB_REFERENCE_COUNT_INVALID_VALUE ((hb_atomic_int_t) -1)
-#define HB_REFERENCE_COUNT_INVALID {HB_REFERENCE_COUNT_INVALID_VALUE}
+#define HB_REFERENCE_COUNT_INVALID_VALUE -1
+#define HB_REFERENCE_COUNT_INIT {HB_ATOMIC_INT_INIT(HB_REFERENCE_COUNT_INVALID_VALUE)}
+
 struct hb_reference_count_t
 {
   hb_atomic_int_t ref_count;
 
-  inline void init (int v) { ref_count = v; }
-  inline int inc (void) { return hb_atomic_int_add (const_cast<hb_atomic_int_t &> (ref_count),  1); }
-  inline int dec (void) { return hb_atomic_int_add (const_cast<hb_atomic_int_t &> (ref_count), -1); }
-  inline void finish (void) { ref_count = HB_REFERENCE_COUNT_INVALID_VALUE; }
+  inline void init (int v) { ref_count.set_unsafe (v); }
+  inline int get_unsafe (void) const { return ref_count.get_unsafe (); }
+  inline int inc (void) { return ref_count.inc (); }
+  inline int dec (void) { return ref_count.dec (); }
+  inline void finish (void) { ref_count.set_unsafe (HB_REFERENCE_COUNT_INVALID_VALUE); }
 
-  inline bool is_invalid (void) const { return ref_count == HB_REFERENCE_COUNT_INVALID_VALUE; }
-
+  inline bool is_invalid (void) const { return ref_count.get_unsafe () == HB_REFERENCE_COUNT_INVALID_VALUE; }
 };
 
 
@@ -102,7 +103,7 @@ struct hb_object_header_t
   hb_reference_count_t ref_count;
   hb_user_data_array_t user_data;
 
-#define HB_OBJECT_HEADER_STATIC {HB_REFERENCE_COUNT_INVALID, HB_USER_DATA_ARRAY_INIT}
+#define HB_OBJECT_HEADER_STATIC {HB_REFERENCE_COUNT_INIT, HB_USER_DATA_ARRAY_INIT}
 
   private:
   ASSERT_POD ();
@@ -117,7 +118,7 @@ static inline void hb_object_trace (const Type *obj, const char *function)
   DEBUG_MSG (OBJECT, (void *) obj,
 	     "%s refcount=%d",
 	     function,
-	     obj ? obj->header.ref_count.ref_count : 0);
+	     obj ? obj->header.ref_count.get_unsafe () : 0);
 }
 
 template <typename Type>

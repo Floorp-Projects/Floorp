@@ -117,6 +117,7 @@ EXPORTS += [
     'Latency.h',
     'MediaCache.h',
     'MediaData.h',
+    'MediaDataDemuxer.h',
     'MediaDecoder.h',
     'MediaDecoderOwner.h',
     'MediaDecoderReader.h',

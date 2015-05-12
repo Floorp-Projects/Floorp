@@ -226,7 +226,7 @@ public:
  */
 class MainThreadMediaStreamListener {
 public:
-  virtual void NotifyMainThreadStateChanged() = 0;
+  virtual void NotifyMainThreadStreamFinished() = 0;
 };
 
 /**
@@ -373,20 +373,19 @@ public:
   // A disabled track has video replaced by black, and audio replaced by
   // silence.
   void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
-  // Events will be dispatched by calling methods of aListener. It is the
+
+  // Finish event will be notified by calling methods of aListener. It is the
   // responsibility of the caller to remove aListener before it is destroyed.
-  void AddMainThreadListener(MainThreadMediaStreamListener* aListener)
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
-    mMainThreadListeners.AppendElement(aListener);
-  }
+  void AddMainThreadListener(MainThreadMediaStreamListener* aListener);
   // It's safe to call this even if aListener is not currently a listener;
   // the call will be ignored.
   void RemoveMainThreadListener(MainThreadMediaStreamListener* aListener)
   {
-    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aListener);
     mMainThreadListeners.RemoveElement(aListener);
   }
+
   /**
    * Ensure a runnable will run on the main thread after running all pending
    * updates that were sent from the graph thread or will be sent before the
@@ -417,6 +416,7 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
     return mMainThreadFinished;
   }
+
   bool IsDestroyed()
   {
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
@@ -596,6 +596,27 @@ protected:
     mBuffer.ForgetUpTo(aCurrentTime - mBufferStartTime);
   }
 
+  void NotifyMainThreadListeners()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+
+    for (int32_t i = mMainThreadListeners.Length() - 1; i >= 0; --i) {
+      mMainThreadListeners[i]->NotifyMainThreadStreamFinished();
+    }
+    mMainThreadListeners.Clear();
+  }
+
+  bool ShouldNotifyStreamFinished()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
+    if (!mMainThreadFinished || mFinishedNotificationSent) {
+      return false;
+    }
+
+    mFinishedNotificationSent = true;
+    return true;
+  }
+
   // This state is all initialized on the main thread but
   // otherwise modified only on the media graph thread.
 
@@ -624,6 +645,7 @@ protected:
   TimeVarying<GraphTime,uint32_t,0> mExplicitBlockerCount;
   nsTArray<nsRefPtr<MediaStreamListener> > mListeners;
   nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
+  nsRefPtr<nsRunnable> mNotificationMainThreadRunnable;
   nsTArray<TrackID> mDisabledTrackIDs;
 
   // Precomputed blocking status (over GraphTime).
@@ -696,6 +718,7 @@ protected:
   // Main-thread views of state
   StreamTime mMainThreadCurrentTime;
   bool mMainThreadFinished;
+  bool mFinishedNotificationSent;
   bool mMainThreadDestroyed;
 
   // Our media stream graph.  null if destroyed on the graph thread.

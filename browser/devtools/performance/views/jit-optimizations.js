@@ -139,7 +139,7 @@ let JITOptimizationsView = {
     this.el.classList.remove("empty");
 
     // An array of sorted OptimizationSites.
-    let sites = frameNode.getOptimizations().getOptimizationSites();
+    let sites = frameNode.getOptimizations().optimizationSites;
 
     for (let site of sites) {
       this._renderSite(view, site, frameData);
@@ -187,7 +187,7 @@ let JITOptimizationsView = {
 
       let ionNode = this._createIonNode(ionType);
       view.add([id, `${id}-types`, { id: `${id}-types-${i}`, node: ionNode }]);
-      for (let observedType of (ionType.types || [])) {
+      for (let observedType of (ionType.typeset || [])) {
         let node = this._createObservedTypeNode(observedType);
         view.add([id, `${id}-types`, `${id}-types-${i}`, { node }]);
       }
@@ -250,17 +250,8 @@ let JITOptimizationsView = {
 
   _createIonNode: function (ionType) {
     let node = document.createElement("span");
-    let icon = document.createElement("span");
-    let typeNode = document.createElement("span");
-    let siteNode = document.createElement("span");
-
-    typeNode.textContent = ionType.mirType;
-    typeNode.className = "opt-ion-type";
-    siteNode.textContent = `(${ionType.site})`;
-    siteNode.className = "opt-ion-type-site";
-    node.appendChild(typeNode);
-    node.appendChild(siteNode);
-
+    node.textContent = `${ionType.site} : ${ionType.mirType}`;
+    node.className = "opt-ion-type";
     return node;
   },
 

@@ -222,6 +222,9 @@ struct Zone : public JS::shadow::Zone,
     js::jit::JitZone* getJitZone(JSContext* cx) { return jitZone_ ? jitZone_ : createJitZone(cx); }
     js::jit::JitZone* jitZone() { return jitZone_; }
 
+    bool isAtomsZone() const { return runtimeFromAnyThread()->isAtomsZone(this); }
+    bool isSelfHostingZone() const { return runtimeFromAnyThread()->isSelfHostingZone(this); }
+
 #ifdef DEBUG
     // For testing purposes, return the index of the zone group which this zone
     // was swept in in the last GC.

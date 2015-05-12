@@ -23,15 +23,7 @@ function *promiseTabLoadEvent(tab, url)
 
 // Load a new blank tab
 add_task(function *() {
-  let tab;
-
-  yield new Promise(resolve => {
-    gBrowser.addEventListener("TabSwitchDone", function onSwitch() {
-      gBrowser.removeEventListener("TabSwitchDone", onSwitch);
-      executeSoon(resolve);
-    });
-    tab = gBrowser.selectedTab = gBrowser.addTab();
-  });
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   gURLBar.focus();
 
@@ -59,6 +51,19 @@ add_task(function *() {
   yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW.frames[0]);
 
   is(browser.contentDocumentAsCPOW.activeElement.localName, "iframe", "Child iframe is focused");
+
+  gBrowser.removeCurrentTab();
+});
+
+// Pass a browser to promiseFocus
+add_task(function *() {
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, gBaseURL + "waitForFocusPage.html");
+
+  gURLBar.focus();
+
+  yield SimpleTest.promiseFocus(gBrowser.selectedBrowser);
+
+  is(document.activeElement, gBrowser.selectedBrowser, "Browser is focused when promiseFocus is passed a browser");
 
   gBrowser.removeCurrentTab();
 });

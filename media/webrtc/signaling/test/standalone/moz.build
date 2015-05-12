@@ -55,4 +55,8 @@ if CONFIG['OS_TARGET'] == 'Android':
         'freetype',
     ]
 
+if CONFIG['OS_TARGET'] == 'OpenBSD':
+    OS_LIBS += ['sndio']
+
+
 USE_LIBS += ['mozglue']

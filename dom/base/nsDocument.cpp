@@ -10617,6 +10617,38 @@ nsDocument::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins)
   EnumerateSubDocuments(AllSubDocumentPluginEnum, &aPlugins);
 }
 
+nsresult
+nsDocument::AddResponsiveContent(nsIContent* aContent)
+{
+  MOZ_ASSERT(aContent);
+  MOZ_ASSERT(aContent->IsHTMLElement(nsGkAtoms::img));
+  mResponsiveContent.PutEntry(aContent);
+  return NS_OK;
+}
+
+void
+nsDocument::RemoveResponsiveContent(nsIContent* aContent)
+{
+  MOZ_ASSERT(aContent);
+  mResponsiveContent.RemoveEntry(aContent);
+}
+
+static PLDHashOperator
+NotifyMediaFeatureEnum(nsPtrHashKey<nsIContent>* aContent, void* userArg)
+{
+  nsCOMPtr<nsIContent> content = aContent->GetKey();
+  if (content->IsHTMLElement(nsGkAtoms::img)) {
+    static_cast<HTMLImageElement*>(content.get())->MediaFeatureValuesChanged();
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+nsDocument::NotifyMediaFeatureValuesChanged()
+{
+  mResponsiveContent.EnumerateEntries(NotifyMediaFeatureEnum, nullptr);
+}
+
 PLDHashOperator LockEnumerator(imgIRequest* aKey,
                                uint32_t aData,
                                void*    userArg)

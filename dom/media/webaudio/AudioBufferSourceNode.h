@@ -94,7 +94,7 @@ public:
 
   IMPL_EVENT_HANDLER(ended)
 
-  virtual void NotifyMainThreadStateChanged() override;
+  virtual void NotifyMainThreadStreamFinished() override;
 
   virtual const char* NodeType() const override
   {
@@ -147,7 +147,6 @@ private:
   nsRefPtr<AudioParam> mDetune;
   bool mLoop;
   bool mStartCalled;
-  bool mStopped;
 };
 
 }

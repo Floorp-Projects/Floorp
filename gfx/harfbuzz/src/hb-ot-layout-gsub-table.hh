@@ -97,7 +97,8 @@ struct SingleSubstFormat1
     return TRACE_RETURN (true);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (coverage.sanitize (c, this) && deltaGlyphID.sanitize (c));
   }
@@ -173,7 +174,8 @@ struct SingleSubstFormat2
     return TRACE_RETURN (true);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (coverage.sanitize (c, this) && substitute.sanitize (c));
   }
@@ -223,20 +225,11 @@ struct SingleSubst
   inline typename context_t::return_t dispatch (context_t *c) const
   {
     TRACE_DISPATCH (this, u.format);
+    if (unlikely (!c->may_dispatch (this, &u.format))) TRACE_RETURN (c->default_return_value ());
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     case 2: return TRACE_RETURN (c->dispatch (u.format2));
     default:return TRACE_RETURN (c->default_return_value ());
-    }
-  }
-
-  inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE (this);
-    if (!u.format.sanitize (c)) return TRACE_RETURN (false);
-    switch (u.format) {
-    case 1: return TRACE_RETURN (u.format1.sanitize (c));
-    case 2: return TRACE_RETURN (u.format2.sanitize (c));
-    default:return TRACE_RETURN (true);
     }
   }
 
@@ -312,7 +305,8 @@ struct Sequence
     return TRACE_RETURN (true);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (substitute.sanitize (c));
   }
@@ -384,7 +378,8 @@ struct MultipleSubstFormat1
     return TRACE_RETURN (true);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (coverage.sanitize (c, this) && sequence.sanitize (c, this));
   }
@@ -423,18 +418,10 @@ struct MultipleSubst
   inline typename context_t::return_t dispatch (context_t *c) const
   {
     TRACE_DISPATCH (this, u.format);
+    if (unlikely (!c->may_dispatch (this, &u.format))) TRACE_RETURN (c->default_return_value ());
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     default:return TRACE_RETURN (c->default_return_value ());
-    }
-  }
-
-  inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE (this);
-    if (!u.format.sanitize (c)) return TRACE_RETURN (false);
-    switch (u.format) {
-    case 1: return TRACE_RETURN (u.format1.sanitize (c));
-    default:return TRACE_RETURN (true);
     }
   }
 
@@ -535,7 +522,8 @@ struct AlternateSubstFormat1
     return TRACE_RETURN (true);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (coverage.sanitize (c, this) && alternateSet.sanitize (c, this));
   }
@@ -574,18 +562,10 @@ struct AlternateSubst
   inline typename context_t::return_t dispatch (context_t *c) const
   {
     TRACE_DISPATCH (this, u.format);
+    if (unlikely (!c->may_dispatch (this, &u.format))) TRACE_RETURN (c->default_return_value ());
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     default:return TRACE_RETURN (c->default_return_value ());
-    }
-  }
-
-  inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE (this);
-    if (!u.format.sanitize (c)) return TRACE_RETURN (false);
-    switch (u.format) {
-    case 1: return TRACE_RETURN (u.format1.sanitize (c));
-    default:return TRACE_RETURN (true);
     }
   }
 
@@ -686,7 +666,8 @@ struct Ligature
   }
 
   public:
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (ligGlyph.sanitize (c) && component.sanitize (c));
   }
@@ -764,7 +745,8 @@ struct LigatureSet
     return TRACE_RETURN (true);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (ligature.sanitize (c, this));
   }
@@ -848,7 +830,8 @@ struct LigatureSubstFormat1
     return TRACE_RETURN (true);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (coverage.sanitize (c, this) && ligatureSet.sanitize (c, this));
   }
@@ -890,18 +873,10 @@ struct LigatureSubst
   inline typename context_t::return_t dispatch (context_t *c) const
   {
     TRACE_DISPATCH (this, u.format);
+    if (unlikely (!c->may_dispatch (this, &u.format))) TRACE_RETURN (c->default_return_value ());
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     default:return TRACE_RETURN (c->default_return_value ());
-    }
-  }
-
-  inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE (this);
-    if (!u.format.sanitize (c)) return TRACE_RETURN (false);
-    switch (u.format) {
-    case 1: return TRACE_RETURN (u.format1.sanitize (c));
-    default:return TRACE_RETURN (true);
     }
   }
 
@@ -1017,14 +992,15 @@ struct ReverseChainSingleSubstFormat1
     return TRACE_RETURN (false);
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     if (!(coverage.sanitize (c, this) && backtrack.sanitize (c, this)))
       return TRACE_RETURN (false);
-    OffsetArrayOf<Coverage> &lookahead = StructAfter<OffsetArrayOf<Coverage> > (backtrack);
+    const OffsetArrayOf<Coverage> &lookahead = StructAfter<OffsetArrayOf<Coverage> > (backtrack);
     if (!lookahead.sanitize (c, this))
       return TRACE_RETURN (false);
-    ArrayOf<GlyphID> &substitute = StructAfter<ArrayOf<GlyphID> > (lookahead);
+    const ArrayOf<GlyphID> &substitute = StructAfter<ArrayOf<GlyphID> > (lookahead);
     return TRACE_RETURN (substitute.sanitize (c));
   }
 
@@ -1054,18 +1030,10 @@ struct ReverseChainSingleSubst
   inline typename context_t::return_t dispatch (context_t *c) const
   {
     TRACE_DISPATCH (this, u.format);
+    if (unlikely (!c->may_dispatch (this, &u.format))) TRACE_RETURN (c->default_return_value ());
     switch (u.format) {
     case 1: return TRACE_RETURN (c->dispatch (u.format1));
     default:return TRACE_RETURN (c->default_return_value ());
-    }
-  }
-
-  inline bool sanitize (hb_sanitize_context_t *c) {
-    TRACE_SANITIZE (this);
-    if (!u.format.sanitize (c)) return TRACE_RETURN (false);
-    switch (u.format) {
-    case 1: return TRACE_RETURN (u.format1.sanitize (c));
-    default:return TRACE_RETURN (true);
     }
   }
 
@@ -1101,6 +1069,8 @@ struct SubstLookupSubTable
   inline typename context_t::return_t dispatch (context_t *c, unsigned int lookup_type) const
   {
     TRACE_DISPATCH (this, lookup_type);
+    /* The sub_format passed to may_dispatch is unnecessary but harmless. */
+    if (unlikely (!c->may_dispatch (this, &u.sub_format))) TRACE_RETURN (c->default_return_value ());
     switch (lookup_type) {
     case Single:		return TRACE_RETURN (u.single.dispatch (c));
     case Multiple:		return TRACE_RETURN (u.multiple.dispatch (c));
@@ -1114,28 +1084,9 @@ struct SubstLookupSubTable
     }
   }
 
-  inline bool sanitize (hb_sanitize_context_t *c, unsigned int lookup_type) {
-    TRACE_SANITIZE (this);
-    if (!u.header.sub_format.sanitize (c))
-      return TRACE_RETURN (false);
-    switch (lookup_type) {
-    case Single:		return TRACE_RETURN (u.single.sanitize (c));
-    case Multiple:		return TRACE_RETURN (u.multiple.sanitize (c));
-    case Alternate:		return TRACE_RETURN (u.alternate.sanitize (c));
-    case Ligature:		return TRACE_RETURN (u.ligature.sanitize (c));
-    case Context:		return TRACE_RETURN (u.context.sanitize (c));
-    case ChainContext:		return TRACE_RETURN (u.chainContext.sanitize (c));
-    case Extension:		return TRACE_RETURN (u.extension.sanitize (c));
-    case ReverseChainSingle:	return TRACE_RETURN (u.reverseChainContextSingle.sanitize (c));
-    default:			return TRACE_RETURN (true);
-    }
-  }
-
   protected:
   union {
-  struct {
-    USHORT			sub_format;
-  } header;
+  USHORT			sub_format;
   SingleSubst			single;
   MultipleSubst			multiple;
   AlternateSubst		alternate;
@@ -1146,14 +1097,14 @@ struct SubstLookupSubTable
   ReverseChainSingleSubst	reverseChainContextSingle;
   } u;
   public:
-  DEFINE_SIZE_UNION (2, header.sub_format);
+  DEFINE_SIZE_UNION (2, sub_format);
 };
 
 
 struct SubstLookup : Lookup
 {
   inline const SubstLookupSubTable& get_subtable (unsigned int i) const
-  { return this+CastR<OffsetArrayOf<SubstLookupSubTable> > (subTable)[i]; }
+  { return Lookup::get_subtable<SubstLookupSubTable> (i); }
 
   inline static bool lookup_type_is_reverse (unsigned int lookup_type)
   { return lookup_type == SubstLookupSubTable::ReverseChainSingle; }
@@ -1164,6 +1115,12 @@ struct SubstLookup : Lookup
     if (unlikely (type == SubstLookupSubTable::Extension))
       return CastR<ExtensionSubst> (get_subtable(0)).is_reverse ();
     return lookup_type_is_reverse (type);
+  }
+
+  inline bool apply (hb_apply_context_t *c) const
+  {
+    TRACE_APPLY (this);
+    return TRACE_RETURN (dispatch (c));
   }
 
   inline hb_closure_context_t::return_t closure (hb_closure_context_t *c) const
@@ -1183,39 +1140,24 @@ struct SubstLookup : Lookup
   template <typename set_t>
   inline void add_coverage (set_t *glyphs) const
   {
-    hb_get_coverage_context_t c;
-    const Coverage *last = NULL;
-    unsigned int count = get_subtable_count ();
-    for (unsigned int i = 0; i < count; i++) {
-      const Coverage *coverage = &get_subtable (i).dispatch (&c, get_type ());
-      if (coverage != last) {
-        coverage->add_coverage (glyphs);
-        last = coverage;
-      }
-    }
+    hb_add_coverage_context_t<set_t> c (glyphs);
+    dispatch (&c);
   }
 
-  inline bool would_apply (hb_would_apply_context_t *c, const hb_set_digest_t *digest) const
+  inline bool would_apply (hb_would_apply_context_t *c,
+			   const hb_ot_layout_lookup_accelerator_t *accel) const
   {
     TRACE_WOULD_APPLY (this);
     if (unlikely (!c->len))  return TRACE_RETURN (false);
-    if (!digest->may_have (c->glyphs[0]))  return TRACE_RETURN (false);
+    if (!accel->may_have (c->glyphs[0]))  return TRACE_RETURN (false);
       return TRACE_RETURN (dispatch (c));
-  }
-
-  inline bool apply_once (hb_apply_context_t *c) const
-  {
-    TRACE_APPLY (this);
-    if (!c->check_glyph_property (&c->buffer->cur(), c->lookup_props))
-      return TRACE_RETURN (false);
-    return TRACE_RETURN (dispatch (c));
   }
 
   static bool apply_recurse_func (hb_apply_context_t *c, unsigned int lookup_index);
 
   inline SubstLookupSubTable& serialize_subtable (hb_serialize_context_t *c,
 						  unsigned int i)
-  { return CastR<OffsetArrayOf<SubstLookupSubTable> > (subTable)[i].serialize (c, this); }
+  { return get_subtables<SubstLookupSubTable> ()[i].serialize (c, this); }
 
   inline bool serialize_single (hb_serialize_context_t *c,
 				uint32_t lookup_props,
@@ -1274,24 +1216,13 @@ struct SubstLookup : Lookup
 
   template <typename context_t>
   inline typename context_t::return_t dispatch (context_t *c) const
-  {
-    unsigned int lookup_type = get_type ();
-    TRACE_DISPATCH (this, lookup_type);
-    unsigned int count = get_subtable_count ();
-    for (unsigned int i = 0; i < count; i++) {
-      typename context_t::return_t r = get_subtable (i).dispatch (c, lookup_type);
-      if (c->stop_sublookup_iteration (r))
-        return TRACE_RETURN (r);
-    }
-    return TRACE_RETURN (c->default_return_value ());
-  }
+  { return Lookup::dispatch<SubstLookupSubTable> (c); }
 
-  inline bool sanitize (hb_sanitize_context_t *c)
+  inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     if (unlikely (!Lookup::sanitize (c))) return TRACE_RETURN (false);
-    OffsetArrayOf<SubstLookupSubTable> &list = CastR<OffsetArrayOf<SubstLookupSubTable> > (subTable);
-    if (unlikely (!list.sanitize (c, this, get_type ()))) return TRACE_RETURN (false);
+    if (unlikely (!dispatch (c))) return TRACE_RETURN (false);
 
     if (unlikely (get_type () == SubstLookupSubTable::Extension))
     {
@@ -1324,10 +1255,11 @@ struct GSUB : GSUBGPOS
   static inline void substitute_start (hb_font_t *font, hb_buffer_t *buffer);
   static inline void substitute_finish (hb_font_t *font, hb_buffer_t *buffer);
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     if (unlikely (!GSUBGPOS::sanitize (c))) return TRACE_RETURN (false);
-    OffsetTo<SubstLookupList> &list = CastR<OffsetTo<SubstLookupList> > (lookupList);
+    const OffsetTo<SubstLookupList> &list = CastR<OffsetTo<SubstLookupList> > (lookupList);
     return TRACE_RETURN (list.sanitize (c, this));
   }
   public:
@@ -1362,7 +1294,7 @@ GSUB::substitute_finish (hb_font_t *font HB_UNUSED, hb_buffer_t *buffer HB_UNUSE
 {
   unsigned int type = get_type ();
   if (unlikely (type == SubstLookupSubTable::Extension))
-    return CastR<ExtensionSubst> (get_subtable<SubstLookupSubTable>()).is_reverse ();
+    return CastR<ExtensionSubst> (get_subtable<LookupSubTable>()).is_reverse ();
   return SubstLookup::lookup_type_is_reverse (type);
 }
 
@@ -1380,8 +1312,8 @@ template <typename context_t>
   const SubstLookup &l = gsub.get_lookup (lookup_index);
   unsigned int saved_lookup_props = c->lookup_props;
   c->set_lookup (l);
-  bool ret = l.apply_once (c);
-  c->lookup_props = saved_lookup_props;
+  bool ret = l.dispatch (c);
+  c->set_lookup_props (saved_lookup_props);
   return ret;
 }
 

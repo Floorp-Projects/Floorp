@@ -9,10 +9,14 @@ from marionette import MarionetteTestCase
 from marionette_driver.selection import SelectionManager
 from marionette_driver.gestures import long_press_without_contextmenu
 
-from math import ceil, floor
 
+class CommonCaretsTestCase(object):
+    '''Common test cases for a selection with a two carets.
 
-class SelectionCaretsTest(MarionetteTestCase):
+    To run these test cases, a subclass must inherit from both this class and
+    MarionetteTestCase.
+
+    '''
     _long_press_time = 1        # 1 second
     _input_selector = (By.ID, 'input')
     _textarea_selector = (By.ID, 'textarea')
@@ -25,15 +29,41 @@ class SelectionCaretsTest(MarionetteTestCase):
 
     def setUp(self):
         # Code to execute before a tests are run.
-        MarionetteTestCase.setUp(self)
+        super(CommonCaretsTestCase, self).setUp()
         self.actions = Actions(self.marionette)
 
-    def openTestHtml(self, enabled=True):
+        # The carets to be tested.
+        self.carets_tested_pref = None
+
+        # The carets to be disabled in this test suite.
+        self.carets_disabled_pref = None
+
+    def set_pref(self, pref_name, value):
+        '''Set a preference to value.
+
+        For example:
+        >>> set_pref('layout.accessiblecaret.enabled', True)
+
+        '''
+        pref_name = repr(pref_name)
+        if isinstance(value, bool):
+            value = 'true' if value else 'false'
+        elif isinstance(value, int):
+            value = str(value)
+        else:
+            value = repr(value)
+
+        script = '''SpecialPowers.pushPrefEnv({"set": [[%s, %s]]}, marionetteScriptFinished);''' % (
+            pref_name, value)
+
+        self.marionette.execute_async_script(script)
+
+    def open_test_html(self, enabled=True):
         '''Open html for testing and locate elements, and enable/disable touch
         caret.'''
-        self.marionette.execute_async_script(
-            'SpecialPowers.pushPrefEnv({"set": [["selectioncaret.enabled", %s]]}, marionetteScriptFinished);' %
-            ('true' if enabled else 'false'))
+        self.set_pref(self.carets_tested_pref, enabled)
+        self.set_pref(self.carets_disabled_pref, False)
+
         test_html = self.marionette.absolute_url('test_selectioncarets.html')
         self.marionette.navigate(test_html)
 
@@ -43,12 +73,11 @@ class SelectionCaretsTest(MarionetteTestCase):
         self._contenteditable = self.marionette.find_element(*self._contenteditable_selector)
         self._content = self.marionette.find_element(*self._content_selector)
 
-    def openTestHtml2(self, enabled=True):
+    def open_test_html2(self, enabled=True):
         '''Open html for testing and locate elements, and enable/disable touch
         caret.'''
-        self.marionette.execute_script(
-            'SpecialPowers.setBoolPref("selectioncaret.enabled", %s);' %
-            ('true' if enabled else 'false'))
+        self.set_pref(self.carets_tested_pref, enabled)
+        self.set_pref(self.carets_disabled_pref, False)
 
         test_html2 = self.marionette.absolute_url('test_selectioncarets_multipleline.html')
         self.marionette.navigate(test_html2)
@@ -214,11 +243,11 @@ class SelectionCaretsTest(MarionetteTestCase):
         tilt_left_margin_left = -17
 
         left_caret_left_edge_x = caret3_x + caret_margin_left + tilt_left_margin_left
-        el.tap(ceil(left_caret_left_edge_x), caret3_y)
+        el.tap(left_caret_left_edge_x + 2, caret3_y)
 
         right_caret_right_edge_x = (caret4_x + caret_margin_left +
                                     tilt_right_margin_left + caret_width)
-        el.tap(floor(right_caret_right_edge_x), caret4_y)
+        el.tap(right_caret_right_edge_x - 2, caret4_y)
 
         # Drag the left caret back to the initial selection, the first word.
         self.actions.flick(el, caret3_x, caret3_y, caret1_x, caret1_y).perform()
@@ -229,202 +258,216 @@ class SelectionCaretsTest(MarionetteTestCase):
     # <input> test cases with selection carets enabled
     ########################################################################
     def test_input_long_press_to_select_a_word(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_long_press_to_select_a_word(self._input, self.assertEqual)
 
     def test_input_move_selection_carets(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_move_selection_carets(self._input, self.assertEqual)
 
     def test_input_minimum_select_one_character(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_minimum_select_one_character(self._input, self.assertEqual)
 
     def test_input_focus_obtained_by_long_press_from_textarea(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._textarea, self._input)
 
     def test_input_focus_obtained_by_long_press_from_contenteditable(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._contenteditable, self._input)
 
     def test_input_focus_obtained_by_long_press_from_content_non_editable(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._content, self._input)
 
     def test_input_handle_tilt_when_carets_overlap_to_each_other(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_handle_tilt_when_carets_overlap_to_each_other(self._input, self.assertEqual)
 
     ########################################################################
     # <input> test cases with selection carets disabled
     ########################################################################
     def test_input_long_press_to_select_a_word_disabled(self):
-        self.openTestHtml(enabled=False)
+        self.open_test_html(enabled=False)
         self._test_long_press_to_select_a_word(self._input, self.assertNotEqual)
 
     def test_input_move_selection_carets_disabled(self):
-        self.openTestHtml(enabled=False)
+        self.open_test_html(enabled=False)
         self._test_move_selection_carets(self._input, self.assertNotEqual)
 
     ########################################################################
     # <textarea> test cases with selection carets enabled
     ########################################################################
     def test_textarea_long_press_to_select_a_word(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_long_press_to_select_a_word(self._textarea, self.assertEqual)
 
     def test_textarea_move_selection_carets(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_move_selection_carets(self._textarea, self.assertEqual)
 
     def test_textarea_minimum_select_one_character(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_minimum_select_one_character(self._textarea, self.assertEqual)
 
     def test_textarea_focus_obtained_by_long_press_from_input(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._input, self._textarea)
 
     def test_textarea_focus_obtained_by_long_press_from_contenteditable(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._contenteditable, self._textarea)
 
     def test_textarea_focus_obtained_by_long_press_from_content_non_editable(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._content, self._textarea)
 
     def test_textarea_handle_tilt_when_carets_overlap_to_each_other(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_handle_tilt_when_carets_overlap_to_each_other(self._textarea, self.assertEqual)
 
     ########################################################################
     # <textarea> test cases with selection carets disabled
     ########################################################################
     def test_textarea_long_press_to_select_a_word_disabled(self):
-        self.openTestHtml(enabled=False)
+        self.open_test_html(enabled=False)
         self._test_long_press_to_select_a_word(self._textarea, self.assertNotEqual)
 
     def test_textarea_move_selection_carets_disable(self):
-        self.openTestHtml(enabled=False)
+        self.open_test_html(enabled=False)
         self._test_move_selection_carets(self._textarea, self.assertNotEqual)
 
     ########################################################################
     # <textarea> right-to-left test cases with selection carets enabled
     ########################################################################
     def test_textarea_rtl_long_press_to_select_a_word(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_long_press_to_select_a_word(self._textarea_rtl, self.assertEqual)
 
     def test_textarea_rtl_move_selection_carets(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_move_selection_carets(self._textarea_rtl, self.assertEqual)
 
     def test_textarea_rtl_minimum_select_one_character(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_minimum_select_one_character(self._textarea_rtl, self.assertEqual)
 
     ########################################################################
     # <textarea> right-to-left test cases with selection carets disabled
     ########################################################################
     def test_textarea_rtl_long_press_to_select_a_word_disabled(self):
-        self.openTestHtml(enabled=False)
+        self.open_test_html(enabled=False)
         self._test_long_press_to_select_a_word(self._textarea_rtl, self.assertNotEqual)
 
     def test_textarea_rtl_move_selection_carets_disabled(self):
-        self.openTestHtml(enabled=False)
+        self.open_test_html(enabled=False)
         self._test_move_selection_carets(self._textarea_rtl, self.assertNotEqual)
 
     ########################################################################
     # <div> contenteditable test cases with selection carets enabled
     ########################################################################
     def test_contenteditable_long_press_to_select_a_word(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_long_press_to_select_a_word(self._contenteditable, self.assertEqual)
 
     def test_contenteditable_move_selection_carets(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_move_selection_carets(self._contenteditable, self.assertEqual)
 
     def test_contenteditable_minimum_select_one_character(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_minimum_select_one_character(self._contenteditable, self.assertEqual)
 
     def test_contenteditable_focus_obtained_by_long_press_from_input(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._input, self._contenteditable)
 
     def test_contenteditable_focus_obtained_by_long_press_from_textarea(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._textarea, self._contenteditable)
 
     def test_contenteditable_focus_obtained_by_long_press_from_content_non_editable(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._content, self._contenteditable)
 
     def test_contenteditable_handle_tilt_when_carets_overlap_to_each_other(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_handle_tilt_when_carets_overlap_to_each_other(self._contenteditable, self.assertEqual)
 
     ########################################################################
     # <div> contenteditable test cases with selection carets disabled
     ########################################################################
     def test_contenteditable_long_press_to_select_a_word_disabled(self):
-        self.openTestHtml(enabled=False)
+        self.open_test_html(enabled=False)
         self._test_long_press_to_select_a_word(self._contenteditable, self.assertNotEqual)
 
     def test_contenteditable_move_selection_carets_disabled(self):
-        self.openTestHtml(enabled=False)
+        self.open_test_html(enabled=False)
         self._test_move_selection_carets(self._contenteditable, self.assertNotEqual)
 
     ########################################################################
     # <div> non-editable test cases with selection carets enabled
     ########################################################################
     def test_content_non_editable_long_press_to_select_a_word(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_long_press_to_select_a_word(self._content, self.assertEqual)
 
     def test_content_non_editable_move_selection_carets(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_move_selection_carets(self._content, self.assertEqual)
 
     def test_content_non_editable_minimum_select_one_character_by_selection(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_minimum_select_one_character(self._content, self.assertEqual)
 
     def test_content_non_editable_focus_obtained_by_long_press_from_input(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._input, self._content)
 
     def test_content_non_editable_focus_obtained_by_long_press_from_textarea(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._textarea, self._content)
 
     def test_content_non_editable_focus_obtained_by_long_press_from_contenteditable(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_focus_obtained_by_long_press(self._contenteditable, self._content)
 
     def test_content_non_editable_handle_tilt_when_carets_overlap_to_each_other(self):
-        self.openTestHtml(enabled=True)
+        self.open_test_html()
         self._test_handle_tilt_when_carets_overlap_to_each_other(self._content, self.assertEqual)
 
     ########################################################################
     # <textarea> (multi-lines) test cases with selection carets enabled
     ########################################################################
     def test_textarea2_minimum_select_one_character(self):
-        self.openTestHtml2(enabled=True)
+        self.open_test_html2()
         self._test_minimum_select_one_character(self._textarea2, self.assertEqual)
 
     ########################################################################
     # <div> contenteditable2 (multi-lines) test cases with selection carets enabled
     ########################################################################
     def test_contenteditable2_minimum_select_one_character(self):
-        self.openTestHtml2(enabled=True)
+        self.open_test_html2()
         self._test_minimum_select_one_character(self._contenteditable2, self.assertEqual)
 
     ########################################################################
     # <div> non-editable2 (multi-lines) test cases with selection carets enabled
     ########################################################################
     def test_content_non_editable2_minimum_select_one_character(self):
-        self.openTestHtml2(enabled=True)
+        self.open_test_html2()
         self._test_minimum_select_one_character(self._content2, self.assertEqual)
+
+
+class SelectionCaretsTestCase(CommonCaretsTestCase, MarionetteTestCase):
+    def setUp(self):
+        super(SelectionCaretsTestCase, self).setUp()
+        self.carets_tested_pref = 'selectioncaret.enabled'
+        self.carets_disabled_pref = 'layout.accessiblecaret.enabled'
+
+
+class AccessibleCaretSelectionModeTestCase(CommonCaretsTestCase, MarionetteTestCase):
+    def setUp(self):
+        super(AccessibleCaretSelectionModeTestCase, self).setUp()
+        self.carets_tested_pref = 'layout.accessiblecaret.enabled'
+        self.carets_disabled_pref = 'selectioncaret.enabled'

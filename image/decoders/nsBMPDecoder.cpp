@@ -22,7 +22,6 @@
 namespace mozilla {
 namespace image {
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetBMPLog()
 {
@@ -32,7 +31,6 @@ GetBMPLog()
   }
   return sBMPLog;
 }
-#endif
 
 // Convert from row (1..height) to absolute line (0..height-1)
 #define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))

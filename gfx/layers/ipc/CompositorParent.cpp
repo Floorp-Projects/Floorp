@@ -49,6 +49,7 @@
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsIWidget.h"                  // for nsIWidget
+#include "nsIXULRuntime.h"              // for mozilla::BrowserTabsRemoteAutostart
 #include "nsTArray.h"                   // for nsTArray
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
@@ -662,11 +663,12 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   }
 
   if (gfxPrefs::AsyncPanZoomEnabled() &&
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_GTK)
-      // For desktop platforms we only want to use APZ in e10s-enabled windows.
-      // If we ever get input events off the main thread we can consider
-      // relaxing this requirement.
-      aWidget->IsMultiProcessWindow() &&
+#if !defined(MOZ_B2G) && !defined(MOZ_WIDGET_ANDROID)
+      // For XUL applications (everything but B2G on mobile and desktop, and
+      // Firefox on Android) we only want to use APZ when E10S is enabled. If
+      // we ever get input events off the main thread we can consider relaxing
+      // this requirement.
+      mozilla::BrowserTabsRemoteAutostart() &&
 #endif
       (aWidget->WindowType() == eWindowType_toplevel || aWidget->WindowType() == eWindowType_child)) {
     mApzcTreeManager = new APZCTreeManager();

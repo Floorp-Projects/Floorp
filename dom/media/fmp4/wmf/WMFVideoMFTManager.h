@@ -39,7 +39,9 @@ public:
 
 private:
 
-  bool InitializeDXVA();
+  bool InitializeDXVA(bool aForceD3D9);
+
+  TemporaryRef<MFTDecoder> InitInternal(bool aForceD3D9);
 
   HRESULT ConfigureVideoFrameGeometry();
 
