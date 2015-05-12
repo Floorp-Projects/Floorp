@@ -304,14 +304,14 @@ DataTransfer::GetFiles(ErrorResult& aRv)
       if (file) {
         domFile = File::CreateFromFile(GetParentObject(), file);
       } else {
-        nsCOMPtr<FileImpl> fileImpl = do_QueryInterface(supports);
-        if (!fileImpl) {
+        nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(supports);
+        if (!blobImpl) {
           continue;
         }
 
-        MOZ_ASSERT(fileImpl->IsFile());
+        MOZ_ASSERT(blobImpl->IsFile());
 
-        domFile = File::Create(GetParentObject(), fileImpl);
+        domFile = File::Create(GetParentObject(), blobImpl);
         MOZ_ASSERT(domFile);
       }
 

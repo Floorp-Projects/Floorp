@@ -47,7 +47,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
     blobs.SetCapacity(aData.blobsChild().Length());
 
     for (uint32_t i = 0, len = aData.blobsChild().Length(); i < len; ++i) {
-      nsRefPtr<FileImpl> impl =
+      nsRefPtr<BlobImpl> impl =
         static_cast<BlobChild*>(aData.blobsChild()[i])->GetBlobImpl();
 
       nsRefPtr<Blob> blob = Blob::Create(mBC ? mBC->GetOwner() : nullptr, impl);
