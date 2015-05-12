@@ -74,21 +74,18 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
 void
 ImageClient::RemoveTexture(TextureClient* aTexture)
 {
-  RemoveTextureWithTracker(aTexture, nullptr);
+  RemoveTextureWithWaiter(aTexture);
 }
 
 void
-ImageClient::RemoveTextureWithTracker(TextureClient* aTexture,
-                                      AsyncTransactionTracker* aAsyncTransactionTracker)
+ImageClient::RemoveTextureWithWaiter(TextureClient* aTexture,
+                                     AsyncTransactionWaiter* aAsyncTransactionWaiter)
 {
 #ifdef MOZ_WIDGET_GONK
-  if (aAsyncTransactionTracker ||
+  if (aAsyncTransactionWaiter ||
       GetForwarder()->IsImageBridgeChild()) {
-    RefPtr<AsyncTransactionTracker> request = aAsyncTransactionTracker;
-    if (!request) {
-      // Create AsyncTransactionTracker if it is not provided as argument.
-      request = new RemoveTextureFromCompositableTracker();
-    }
+    RefPtr<AsyncTransactionTracker> request =
+      new RemoveTextureFromCompositableTracker(aAsyncTransactionWaiter);
     // Hold TextureClient until the transaction complete to postpone
     // the TextureClient recycle/delete.
     request->SetTextureClient(aTexture);
@@ -98,11 +95,6 @@ ImageClient::RemoveTextureWithTracker(TextureClient* aTexture,
 #endif
 
   GetForwarder()->RemoveTextureFromCompositable(this, aTexture);
-  if (aAsyncTransactionTracker) {
-    // Do not need to wait a transaction complete message
-    // from the compositor side.
-    aAsyncTransactionTracker->NotifyComplete();
-  }
 }
 
 ImageClientSingle::ImageClientSingle(CompositableForwarder* aFwd,
@@ -117,22 +109,13 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
   return TextureInfo(CompositableType::IMAGE);
 }
 
-already_AddRefed<AsyncTransactionTracker>
-ImageClientSingle::PrepareFlushAllImages()
-{
-  return MakeAndAddRef<RemoveTextureFromCompositableTracker>();
-}
-
 void
 ImageClientSingle::FlushAllImages(bool aExceptFront,
-                                  AsyncTransactionTracker* aAsyncTransactionTracker)
+                                  AsyncTransactionWaiter* aAsyncTransactionWaiter)
 {
   if (!aExceptFront && mFrontBuffer) {
-    RemoveTextureWithTracker(mFrontBuffer, aAsyncTransactionTracker);
+    RemoveTextureWithWaiter(mFrontBuffer, aAsyncTransactionWaiter);
     mFrontBuffer = nullptr;
-  } else if (aAsyncTransactionTracker) {
-    // already flushed
-    aAsyncTransactionTracker->NotifyComplete();
   }
 }
 

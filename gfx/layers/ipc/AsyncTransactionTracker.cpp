@@ -12,29 +12,15 @@
 namespace mozilla {
 namespace layers {
 
-uint64_t AsyncTransactionTracker::sSerialCounter(0);
-Mutex* AsyncTransactionTracker::sLock = nullptr;
-
-AsyncTransactionTracker::AsyncTransactionTracker()
-    : mSerial(GetNextSerial())
-    , mCompletedMonitor("AsyncTransactionTracker.mCompleted")
-    , mCompleted(false)
-{
-}
-
-AsyncTransactionTracker::~AsyncTransactionTracker()
-{
-}
-
 void
-AsyncTransactionTracker::WaitComplete()
+AsyncTransactionWaiter::WaitComplete()
 {
   MOZ_ASSERT(!InImageBridgeChildThread());
 
   MonitorAutoLock mon(mCompletedMonitor);
   int count = 0;
   const int maxCount = 5;
-  while (!mCompleted && (count < maxCount)) {
+  while (mWaitCount > 0 && (count < maxCount)) {
     if (!NS_SUCCEEDED(mCompletedMonitor.Wait(PR_MillisecondsToInterval(10000)))) {
       NS_WARNING("Failed to wait Monitor");
       return;
@@ -45,29 +31,48 @@ AsyncTransactionTracker::WaitComplete()
     count++;
   }
 
-  if (!mCompleted) {
+  if (mWaitCount > 0) {
     printf_stderr("Timeout of waiting transaction complete.");
   }
+}
+
+uint64_t AsyncTransactionTracker::sSerialCounter(0);
+Mutex* AsyncTransactionTracker::sLock = nullptr;
+
+AsyncTransactionTracker::AsyncTransactionTracker(AsyncTransactionWaiter* aWaiter)
+    : mSerial(GetNextSerial())
+    , mWaiter(aWaiter)
+    , mCompleted(false)
+{
+  if (mWaiter) {
+    mWaiter->IncrementWaitCount();
+  }
+}
+
+AsyncTransactionTracker::~AsyncTransactionTracker()
+{
 }
 
 void
 AsyncTransactionTracker::NotifyComplete()
 {
-  MonitorAutoLock mon(mCompletedMonitor);
   MOZ_ASSERT(!mCompleted);
   mCompleted = true;
   Complete();
-  mCompletedMonitor.Notify();
+  if (mWaiter) {
+    mWaiter->DecrementWaitCount();
+  }
 }
 
 void
 AsyncTransactionTracker::NotifyCancel()
 {
-  MonitorAutoLock mon(mCompletedMonitor);
   MOZ_ASSERT(!mCompleted);
   mCompleted = true;
   Cancel();
-  mCompletedMonitor.Notify();
+  if (mWaiter) {
+    mWaiter->DecrementWaitCount();
+  }
 }
 
 uint64_t AsyncTransactionTrackersHolder::sSerialCounter(0);
