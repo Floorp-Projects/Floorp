@@ -30,7 +30,6 @@ DrawTargetCaptureImpl::Init(const IntSize& aSize, DrawTarget* aRefDT)
   }
 
   mRefDT = aRefDT;
-  mFormat = mRefDT->GetFormat();
 
   mSize = aSize;
   return true;
@@ -68,18 +67,6 @@ DrawTargetCaptureImpl::DrawFilter(FilterNode *aNode,
   // @todo XXX - this won't work properly long term yet due to filternodes not
   // being immutable.
   AppendCommand(DrawFilterCommand)(aNode, aSourceRect, aDestPoint, aOptions);
-}
-
-void
-DrawTargetCaptureImpl::DrawSurfaceWithShadow(SourceSurface *aSurface,
-                                             const Point &aDest,
-                                             const Color &aColor,
-                                             const Point &aOffset,
-                                             Float aSigma,
-                                             CompositionOp aOperator)
-{
-  aSurface->GuaranteePersistance();
-  AppendCommand(DrawSurfaceWithShadowCommand)(aSurface, aDest, aColor, aOffset, aSigma, aOperator);
 }
 
 void
@@ -191,7 +178,6 @@ void
 DrawTargetCaptureImpl::SetTransform(const Matrix& aTransform)
 {
   AppendCommand(SetTransformCommand)(aTransform);
-  mTransform = aTransform;
 }
 
 void
