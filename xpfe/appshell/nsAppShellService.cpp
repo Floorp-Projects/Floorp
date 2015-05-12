@@ -534,9 +534,6 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   if (aChromeMask & nsIWebBrowserChrome::CHROME_MAC_SUPPRESS_ANIMATION)
     widgetInitData.mIsAnimationSuppressed = true;
 
-  if (aChromeMask & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW)
-    widgetInitData.mMultiProcessWindow = true;
-
 #ifdef XP_MACOSX
   // Mac OS X sheet support
   // Adding CHROME_OPENAS_CHROME to sheetMask makes modal windows opened from
