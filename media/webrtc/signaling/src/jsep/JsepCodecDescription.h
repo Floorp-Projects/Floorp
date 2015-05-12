@@ -324,8 +324,10 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
         mDefaultPt, SdpRtcpFbAttributeList::kNack, SdpRtcpFbAttributeList::pli);
     rtcpfb.PushEntry(
         mDefaultPt, SdpRtcpFbAttributeList::kCcm, SdpRtcpFbAttributeList::fir);
-    rtcpfb.PushEntry(
-        mDefaultPt, SdpRtcpFbAttributeList::kCcm, SdpRtcpFbAttributeList::tmmbr);
+    if (mUseTmmbr) {
+      rtcpfb.PushEntry(
+          mDefaultPt, SdpRtcpFbAttributeList::kCcm, SdpRtcpFbAttributeList::tmmbr);
+    }
   }
 
   SdpFmtpAttributeList::H264Parameters
@@ -668,6 +670,7 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
   uint32_t mMaxCpb;
   uint32_t mMaxDpb;
   uint32_t mMaxBr;
+  bool     mUseTmmbr;
   std::string mSpropParameterSets;
 };
 
