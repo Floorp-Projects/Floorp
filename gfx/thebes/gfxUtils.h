@@ -293,6 +293,7 @@ public:
     static bool DumpDisplayList();
 
     static bool sDumpPainting;
+    static bool sDumpPaintingIntermediate;
     static bool sDumpPaintingToFile;
     static FILE* sDumpPaintFile;
 };
