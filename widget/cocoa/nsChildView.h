@@ -487,7 +487,6 @@ public:
 #endif
 
   virtual void CreateCompositor() override;
-  virtual bool IsMultiProcessWindow() override;
   virtual void PrepareWindowEffects() override;
   virtual void CleanupWindowEffects() override;
   virtual bool PreRender(LayerManagerComposite* aManager) override;
