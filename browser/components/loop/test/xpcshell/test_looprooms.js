@@ -462,7 +462,7 @@ add_task(function* test_refresh() {
 // Test if push updates function as expected.
 add_task(function* test_roomUpdates() {
   gExpectedUpdates.push("_nxD4V4FflQ");
-  gExpectedLeaves["_nxD4V4FflQ"] = [
+  gExpectedLeaves._nxD4V4FflQ = [
     "2a1787a6-4a73-43b5-ae3e-906ec1e763cb",
     "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
   ];
@@ -471,21 +471,21 @@ add_task(function* test_roomUpdates() {
     gExpectedUpdates.length === 0);
 
   gExpectedUpdates.push("_nxD4V4FflQ");
-  gExpectedJoins["_nxD4V4FflQ"] = ["2a1787a6-4a73-43b5-ae3e-906ec1e763cb"];
+  gExpectedJoins._nxD4V4FflQ = ["2a1787a6-4a73-43b5-ae3e-906ec1e763cb"];
   roomsPushNotification("2", kChannelGuest);
   yield waitForCondition(() => Object.getOwnPropertyNames(gExpectedJoins).length === 0 &&
     gExpectedUpdates.length === 0);
 
   gExpectedUpdates.push("_nxD4V4FflQ");
-  gExpectedJoins["_nxD4V4FflQ"] = ["781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"];
-  gExpectedLeaves["_nxD4V4FflQ"] = ["2a1787a6-4a73-43b5-ae3e-906ec1e763cb"];
+  gExpectedJoins._nxD4V4FflQ = ["781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"];
+  gExpectedLeaves._nxD4V4FflQ = ["2a1787a6-4a73-43b5-ae3e-906ec1e763cb"];
   roomsPushNotification("3", kChannelGuest);
   yield waitForCondition(() => Object.getOwnPropertyNames(gExpectedLeaves).length === 0 &&
     Object.getOwnPropertyNames(gExpectedJoins).length === 0 &&
     gExpectedUpdates.length === 0);
 
   gExpectedUpdates.push("_nxD4V4FflQ");
-  gExpectedJoins["_nxD4V4FflQ"] = [
+  gExpectedJoins._nxD4V4FflQ = [
     "2a1787a6-4a73-43b5-ae3e-906ec1e763cb",
     "5de6281c-6568-455f-af08-c0b0a973100e"];
   roomsPushNotification("4", kChannelGuest);
@@ -507,7 +507,7 @@ add_task(function* test_channelIdsRespected() {
   MozLoopServiceInternal.fxAOAuthProfile = { email: "fake@invalid.com" };
 
   gExpectedUpdates.push("_nxD4V4FflQ");
-  gExpectedLeaves["_nxD4V4FflQ"] = [
+  gExpectedLeaves._nxD4V4FflQ = [
     "2a1787a6-4a73-43b5-ae3e-906ec1e763cb",
     "5de6281c-6568-455f-af08-c0b0a973100e"
   ];

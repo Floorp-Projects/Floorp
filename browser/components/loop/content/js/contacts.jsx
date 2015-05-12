@@ -693,7 +693,7 @@ loop.contacts = (function(_, mozL10n) {
           };
           var tel = this.state.tel.trim();
           if (!!tel) {
-            contact["tel"] = [{
+            contact.tel = [{
               pref: true,
               type: ["fxos"],
               value: tel

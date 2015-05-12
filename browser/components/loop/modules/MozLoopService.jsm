@@ -724,8 +724,9 @@ let MozLoopServiceInternal = {
    * @returns {Map} a map of element ids with localized string values
    */
   get localizedStrings() {
-    if (gLocalizedStrings.size)
+    if (gLocalizedStrings.size) {
       return gLocalizedStrings;
+    }
 
     let stringBundle =
       Services.strings.createBundle("chrome://browser/locale/loop/loop.properties");
@@ -765,7 +766,7 @@ let MozLoopServiceInternal = {
 
         let ai = Services.appinfo;
         let uuid = uuidgen.generateUUID().toString();
-        uuid = uuid.substr(1, uuid.length-2); // remove uuid curly braces
+        uuid = uuid.substr(1, uuid.length - 2); // remove uuid curly braces
 
         let directory = OS.Path.join(OS.Constants.Path.profileDir,
                                      "saved-telemetry-pings");
@@ -895,7 +896,7 @@ let MozLoopServiceInternal = {
             var pair = pc.id.split("(");  //)
             if (pair.length == 2) {
               pc.id = pair[0] + "(session=" + context.sessionId +
-                  (context.callId? " call=" + context.callId : "") + " " + pair[1]; //)
+                  (context.callId ? " call=" + context.callId : "") + " " + pair[1]; //)
             }
           }
 
