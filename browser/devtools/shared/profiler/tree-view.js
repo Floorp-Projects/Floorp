@@ -316,7 +316,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
 
       let hostNode = this.document.createElement("label");
       hostNode.className = "plain call-tree-host";
-      hostNode.setAttribute("value", frameInfo.hostName || "");
+      hostNode.setAttribute("value", frameInfo.host || "");
       cell.appendChild(hostNode);
 
       let spacerNode = this.document.createElement("spacer");

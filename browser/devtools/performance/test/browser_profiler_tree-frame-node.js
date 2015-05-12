@@ -214,5 +214,34 @@ function test() {
   is(frame9.getInfo().hostName, null,
     "The ninth frame node has the correct host name.");
 
+  let frame10 = new FrameNode("main (http://localhost:8888/file.js:123:987)", {
+    location: "main (http://localhost:8888/file.js:123:987)",
+    line: 123,
+    isContent: FrameNode.isContent({
+      location: "main (http://localhost:8888/file.js:123:987)"
+    })
+  }, false);
+
+  is(frame10.getInfo().nodeType, "Frame",
+    "The tenth frame node has the correct type.");
+  is(frame10.getInfo().functionName, "main",
+    "The tenth frame node has the correct function name.");
+  is(frame10.getInfo().fileName, "file.js",
+    "The tenth frame node has the correct file name.");
+  is(frame10.getInfo().hostName, "localhost",
+    "The tenth frame node has the correct host name.");
+  is(frame10.getInfo().url, "http://localhost:8888/file.js",
+    "The tenth frame node has the correct url.");
+  is(frame10.getInfo().line, 123,
+    "The tenth frame node has the correct line.");
+  is(frame10.getInfo().column, 987,
+    "The tenth frame node has the correct column.");
+  is(frame10.getInfo().isContent, true,
+    "The tenth frame node has the correct content flag.");
+  is(frame10.getInfo().host, "localhost:8888",
+    "The tenth frame node has the correct host.");
+  is(frame10.getInfo().port, 8888,
+    "The tenth frame node has the correct port.");
+
   finish();
 }

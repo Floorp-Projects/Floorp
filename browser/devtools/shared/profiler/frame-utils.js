@@ -99,6 +99,13 @@ exports.parseLocation = function parseLocation(location, fallbackLine, fallbackC
           length++;
         }
 
+        // Discard port numbers
+        if (location.charCodeAt(i) === CHAR_CODE_SLASH) {
+          lineAndColumnIndex = -1;
+          --i;
+          continue;
+        }
+
         if (!line) {
           line = location.substr(start, length);
 
@@ -126,26 +133,32 @@ exports.parseLocation = function parseLocation(location, fallbackLine, fallbackC
     }
   }
 
-  let functionName, fileName, hostName;
+  let functionName, fileName, hostName, port, host;
+  line = line || fallbackLine;
+  column = column || fallbackColumn;
 
   // If the URI digged out from the `location` is valid, this is a JS frame.
   if (uri) {
     functionName = location.substring(0, firstParenIndex - 1);
     fileName = (uri.fileName + (uri.ref ? "#" + uri.ref : "")) || "/";
     hostName = getHost(url, uri.host);
+    // nsIURL throws when accessing a piece of a URL that doesn't
+    // exist, because we can't have nice things. Only check this if hostName
+    // exists, to save an extra try/catch.
+    if (hostName) {
+      try {
+        port = uri.port === -1 ? null : uri.port;
+        host = port !== null ? `${hostName}:${port}` : hostName;
+      } catch (e) {
+        host = hostName;
+      }
+    }
   } else {
     functionName = location;
     url = null;
   }
 
-  return {
-    functionName: functionName,
-    fileName: fileName,
-    hostName: hostName,
-    url: url,
-    line: line || fallbackLine,
-    column: column || fallbackColumn
-  };
+  return { functionName, fileName, hostName, host, port, url, line, column };
 };
 
 /**
@@ -301,6 +314,7 @@ function nsIURL(url) {
     // The passed url string is invalid.
     uri = null;
   }
+
   gNSURLStore.set(url, uri);
   return uri;
 };
