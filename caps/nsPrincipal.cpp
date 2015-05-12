@@ -720,9 +720,39 @@ NS_IMPL_CI_INTERFACE_GETTER(nsExpandedPrincipal,
                              nsIPrincipal,
                              nsIExpandedPrincipal)
 
+struct OriginComparator
+{
+  bool LessThan(nsIPrincipal* a, nsIPrincipal* b) const
+  {
+    nsAutoCString originA;
+    nsresult rv = a->GetOrigin(originA);
+    NS_ENSURE_SUCCESS(rv, false);
+    nsAutoCString originB;
+    rv = b->GetOrigin(originB);
+    NS_ENSURE_SUCCESS(rv, false);
+    return originA < originB;
+  }
+
+  bool Equals(nsIPrincipal* a, nsIPrincipal* b) const
+  {
+    nsAutoCString originA;
+    nsresult rv = a->GetOrigin(originA);
+    NS_ENSURE_SUCCESS(rv, false);
+    nsAutoCString originB;
+    rv = b->GetOrigin(originB);
+    NS_ENSURE_SUCCESS(rv, false);
+    return a == b;
+  }
+};
+
 nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr <nsIPrincipal> > &aWhiteList)
 {
-  mPrincipals.AppendElements(aWhiteList);
+  // We force the principals to be sorted by origin so that nsExpandedPrincipal
+  // origins can have a canonical form.
+  OriginComparator c;
+  for (size_t i = 0; i < aWhiteList.Length(); ++i) {
+    mPrincipals.InsertElementSorted(aWhiteList[i], c);
+  }
 }
 
 nsExpandedPrincipal::~nsExpandedPrincipal()
