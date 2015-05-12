@@ -15,6 +15,7 @@ let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dbg_assert } = DevToolsUtils;
 let { TabSources } = require("./utils/TabSources");
 let makeDebugger = require("./utils/make-debugger");
+let { WorkerActorList } = require("devtools/server/actors/worker");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -725,6 +726,10 @@ function TabActor(aConnection)
   this.listenForNewDocShells = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
   this.traits = { reconfigure: true, frames: true };
+
+  this._workerActorList = null;
+  this._workerActorPool = null;
+  this._onWorkerActorListChanged = this._onWorkerActorListChanged.bind(this);
 }
 
 // XXX (bug 710213): TabActor attach/detach/exit/disconnect is a
@@ -1074,6 +1079,37 @@ TabActor.prototype = {
   onListFrames: function BTA_onListFrames(aRequest) {
     let windows = this._docShellsToWindows(this.docShells);
     return { frames: windows };
+  },
+
+  onListWorkers: function BTA_onListWorkers(aRequest) {
+    if (this._workerActorList === null) {
+      this._workerActorList = new WorkerActorList({
+        window: this.window
+      });
+    }
+
+    return this._workerActorList.getList().then((actors) => {
+      let pool = new ActorPool(this.conn);
+      for (let actor of actors) {
+        pool.addActor(actor);
+      }
+
+      this.conn.removeActorPool(this._workerActorPool);
+      this._workerActorPool = pool;
+      this.conn.addActorPool(this._workerActorPool);
+
+      this._workerActorList.onListChanged = this._onWorkerActorListChanged;
+
+      return {
+        "from": this.actorID,
+        "workers": actors.map((actor) => actor.form())
+      };
+    });
+  },
+
+  _onWorkerActorListChanged: function () {
+    this._workerActorList.onListChanged = null;
+    this.conn.sendActorEvent(this.actorID, "workerListChanged");
   },
 
   observe: function (aSubject, aTopic, aData) {
@@ -1769,7 +1805,8 @@ TabActor.prototype.requestTypes = {
   "navigateTo": TabActor.prototype.onNavigateTo,
   "reconfigure": TabActor.prototype.onReconfigure,
   "switchToFrame": TabActor.prototype.onSwitchToFrame,
-  "listFrames": TabActor.prototype.onListFrames
+  "listFrames": TabActor.prototype.onListFrames,
+  "listWorkers": TabActor.prototype.onListWorkers
 };
 
 exports.TabActor = TabActor;

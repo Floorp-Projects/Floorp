@@ -54,8 +54,9 @@ describe("loop.conversationViews", function () {
       send: function() {},
       abort: function() {},
       getResponseHeader: function(header) {
-        if (header === "Content-Type")
+        if (header === "Content-Type") {
           return "audio/ogg";
+        }
       },
       responseType: null,
       response: new ArrayBuffer(10),
@@ -87,7 +88,7 @@ describe("loop.conversationViews", function () {
     };
     sinon.stub(fakeMozLoop, "getLoopPref", function(pref) {
         if (pref === "fake") {
-          return"http://fakeurl";
+          return "http://fakeurl";
         }
 
         return false;

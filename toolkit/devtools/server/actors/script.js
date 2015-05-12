@@ -18,8 +18,6 @@ const PromiseDebugging = require("PromiseDebugging");
 const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
 
-const { defer, resolve, reject, all } = require("devtools/toolkit/deprecated-sync-thenables");
-
 loader.lazyGetter(this, "Debugger", () => {
   let Debugger = require("Debugger");
   hackDebugger(Debugger);
@@ -766,7 +764,7 @@ ThreadActor.prototype = {
           line: originalLocation.originalLine,
           column: originalLocation.originalColumn
         };
-        resolve(onPacket(packet))
+        Promise.resolve(onPacket(packet))
           .then(null, error => {
             reportError(error);
             return {
@@ -941,8 +939,8 @@ ThreadActor.prototype = {
   _handleResumeLimit: function (aRequest) {
     let steppingType = aRequest.resumeLimit.type;
     if (["break", "step", "next", "finish"].indexOf(steppingType) == -1) {
-      return reject({ error: "badParameterType",
-                      message: "Unknown resumeLimit type" });
+      return Promise.reject({ error: "badParameterType",
+                              message: "Unknown resumeLimit type" });
     }
 
     const generatedLocation = this.sources.getFrameLocation(this.youngestFrame);
@@ -1055,7 +1053,7 @@ ThreadActor.prototype = {
       resumeLimitHandled = this._handleResumeLimit(aRequest)
     } else {
       this._clearSteppingHooks(this.youngestFrame);
-      resumeLimitHandled = resolve(true);
+      resumeLimitHandled = Promise.resolve(true);
     }
 
     return resumeLimitHandled.then(() => {
@@ -1317,7 +1315,7 @@ ThreadActor.prototype = {
       promises.push(promise);
     }
 
-    return all(promises).then(function () {
+    return Promise.all(promises).then(function () {
       return { frames: frames };
     });
   },
@@ -1357,8 +1355,8 @@ ThreadActor.prototype = {
       }
     }
 
-    return all([this.sources.createSourceActors(script.source)
-                for (script of sourcesToScripts.values())]);
+    return Promise.all([this.sources.createSourceActors(script.source)
+                       for (script of sourcesToScripts.values())]);
   },
 
   onSources: function (aRequest) {
@@ -2510,7 +2508,7 @@ SourceActor.prototype = {
    * Handler for the "source" packet.
    */
   onSource: function () {
-    return resolve(this._init)
+    return Promise.resolve(this._init)
       .then(this._getSourceText)
       .then(({ content, contentType }) => {
         return {
