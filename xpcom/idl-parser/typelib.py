@@ -63,15 +63,15 @@ def build_interface(iface, ifaces):
 
         if isinstance(type, xpidl.Builtin):
             if type.name == 'string' and size_is != None:
-                  return xpt.StringWithSizeType(size_is, size_is)
+                return xpt.StringWithSizeType(size_is, size_is)
             elif type.name == 'wstring' and size_is != None:
-                  return xpt.WideStringWithSizeType(size_is, size_is)
+                return xpt.WideStringWithSizeType(size_is, size_is)
             else:
-                  tag = TypeMap[type.name]
-                  isPtr = (tag == xpt.Type.Tags.char_ptr or tag == xpt.Type.Tags.wchar_t_ptr)
-                  return xpt.SimpleType(tag,
-                                        pointer=isPtr,
-                                        reference=False)
+                tag = TypeMap[type.name]
+                isPtr = (tag == xpt.Type.Tags.char_ptr or tag == xpt.Type.Tags.wchar_t_ptr)
+                return xpt.SimpleType(tag,
+                                      pointer=isPtr,
+                                      reference=False)
 
         if isinstance(type, xpidl.Array):
             # NB: For an Array<T> we pass down the iid_is to get the type of T.
