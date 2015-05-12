@@ -774,7 +774,19 @@ nsExpandedPrincipal::SetDomain(nsIURI* aDomain)
 NS_IMETHODIMP
 nsExpandedPrincipal::GetOrigin(nsACString& aOrigin)
 {
-  aOrigin.AssignLiteral(EXPANDED_PRINCIPAL_SPEC);
+  aOrigin.AssignLiteral("[Expanded Principal [");
+  for (size_t i = 0; i < mPrincipals.Length(); ++i) {
+    if (i != 0) {
+      aOrigin.AppendLiteral(", ");
+    }
+
+    nsAutoCString subOrigin;
+    nsresult rv = mPrincipals.ElementAt(i)->GetOrigin(subOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aOrigin.Append(subOrigin);
+  }
+
+  aOrigin.Append("]]");
   return NS_OK;
 }
 
