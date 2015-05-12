@@ -976,7 +976,7 @@ IDBDatabase::GetOrCreateFileActorForBlob(Blob* aBlob)
   PBackgroundIDBDatabaseFileChild* actor = nullptr;
 
   if (!mFileActors.Get(weakRef, &actor)) {
-    FileImpl* blobImpl = aBlob->Impl();
+    BlobImpl* blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
     if (mReceivedBlobs.GetEntry(weakRef)) {
@@ -1076,7 +1076,7 @@ IDBDatabase::NoteReceivedBlob(Blob* aBlob)
 
 #ifdef DEBUG
   {
-    nsRefPtr<FileImpl> blobImpl = aBlob->Impl();
+    nsRefPtr<BlobImpl> blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
     nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryObject(blobImpl);

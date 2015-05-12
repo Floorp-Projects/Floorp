@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace dom {
 
+class BlobImpl;
 class BlobParent;
-class FileImpl;
 class FileSystemBase;
 class FileSystemParams;
 
@@ -204,7 +204,7 @@ protected:
   Recv__delete__(const FileSystemResponseValue& value) override;
 
   BlobParent*
-  GetBlobParent(FileImpl* aFile) const;
+  GetBlobParent(BlobImpl* aBlob) const;
 
   nsresult mErrorValue;
 

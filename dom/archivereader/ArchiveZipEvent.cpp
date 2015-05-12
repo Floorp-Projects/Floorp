@@ -85,10 +85,10 @@ ArchiveZipItem::GetFile(ArchiveReader* aArchiveReader)
   }
 
   nsRefPtr<dom::File> file = dom::File::Create(aArchiveReader,
-    new ArchiveZipFileImpl(filename,
+    new ArchiveZipBlobImpl(filename,
                            NS_ConvertUTF8toUTF16(GetType()),
                            StrToInt32(mCentralStruct.orglen),
-                           mCentralStruct, aArchiveReader->GetFileImpl()));
+                           mCentralStruct, aArchiveReader->GetBlobImpl()));
   MOZ_ASSERT(file);
   return file.forget();
 }

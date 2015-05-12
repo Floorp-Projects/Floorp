@@ -2177,7 +2177,7 @@ XMLHttpRequest::Send(Blob& aBody, ErrorResult& aRv)
     return;
   }
 
-  nsRefPtr<FileImpl> blobImpl = aBody.Impl();
+  nsRefPtr<BlobImpl> blobImpl = aBody.Impl();
   MOZ_ASSERT(blobImpl);
 
   aRv = blobImpl->SetMutable(false);

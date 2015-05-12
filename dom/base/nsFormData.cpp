@@ -10,7 +10,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLFormElement.h"
 
-#include "MultipartFileImpl.h"
+#include "MultipartBlobImpl.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
