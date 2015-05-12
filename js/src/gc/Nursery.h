@@ -74,6 +74,11 @@ class TenuringTracer : public JSTracer
 
     void insertIntoFixupList(gc::RelocationOverlay* entry);
 
+    // The store buffers need to be able to call these directly.
+    void traceObject(JSObject* src);
+    void traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_t length);
+    void traceSlots(JS::Value* vp, uint32_t nslots) { traceSlots(vp, vp + nslots); }
+
   private:
     Nursery& nursery() { return nursery_; }
 
@@ -82,9 +87,7 @@ class TenuringTracer : public JSTracer
     size_t moveElementsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
     size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
 
-    void traceObject(JSObject* src);
-    void markSlots(JS::Value* vp, uint32_t nslots) { markSlots(vp, vp + nslots); }
-    void markSlots(JS::Value* vp, JS::Value* end);
+    void traceSlots(JS::Value* vp, JS::Value* end);
     void markTraceList(const int32_t* traceList, uint8_t* memory);
 };
 
