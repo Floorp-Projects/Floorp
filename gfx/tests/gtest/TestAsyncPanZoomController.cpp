@@ -2648,6 +2648,31 @@ TEST_F(APZOverscrollHandoffTester, StuckInOverscroll_Bug1073250) {
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
 
+// Test that flinging in a direction where one component of the fling goes into
+// overscroll but the other doesn't, results in just the one component being
+// handed off to the parent, while the original APZC continues flinging in the
+// other direction.
+TEST_F(APZOverscrollHandoffTester, PartialFlingHandoff) {
+  CreateOverscrollHandoffLayerTree1();
+
+  // Fling up and to the left. The child APZC has room to scroll up, but not
+  // to the left, so the horizontal component of the fling should be handed
+  // off to the parent APZC.
+  Pan(manager, mTime, ScreenPoint(90, 90), ScreenPoint(55, 55));
+
+  nsRefPtr<TestAsyncPanZoomController> parent = ApzcOf(root);
+  nsRefPtr<TestAsyncPanZoomController> child = ApzcOf(layers[1]);
+
+  // Advance the child's fling animation once to give the partial handoff
+  // a chance to occur.
+  mTime += TimeDuration::FromMilliseconds(10);
+  child->AdvanceAnimations(mTime);
+
+  // Assert that partial handoff has occurred.
+  child->AssertStateIsFling();
+  parent->AssertStateIsFling();
+}
+
 // Here we test that if two flings are happening simultaneously, overscroll
 // is handed off correctly for each.
 TEST_F(APZOverscrollHandoffTester, SimultaneousFlings) {
