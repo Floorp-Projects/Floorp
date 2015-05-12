@@ -23,7 +23,7 @@ data from the server.
 
 For the directory source and ping endpoints, the default preference values point
 to Mozilla key-pinned servers with encryption. No cookies are set by the servers
-but not enforced by Firefox.
+and Firefox enforces this by making anonymous requests.
 
 - default directory source endpoint:
   https://tiles.services.mozilla.com/v3/links/fetch/%LOCALE%/%CHANNEL%
