@@ -53,7 +53,7 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
     return nullptr;
   }
 
-  nsRefPtr<FileImpl> blobImpl = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlobImpl();
+  nsRefPtr<BlobImpl> blobImpl = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlobImpl();
 
   // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is
   // called because the static analysis thinks dereferencing XPCOM objects
@@ -65,8 +65,8 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
     nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aContext));
     MOZ_ASSERT(global);
 
-    nsRefPtr<File> blob = new File(global, blobImpl);
-    if (!GetOrCreateDOMReflector(aContext, blob, &content)) {
+    nsRefPtr<Blob> blob = Blob::Create(global, blobImpl);
+    if (!ToJSValue(aContext, blob, &content)) {
       return nullptr;
     }
   }

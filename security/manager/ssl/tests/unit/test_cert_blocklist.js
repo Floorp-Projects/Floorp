@@ -139,7 +139,7 @@ function verify_cert(file, expectedError) {
   let cert_der = readFile(do_get_file(file));
   let ee = certDB.constructX509(cert_der, cert_der.length);
   equal(expectedError, certDB.verifyCertNow(ee, certificateUsageSSLServer,
-                                            NO_FLAGS, {}, {}));
+                                            NO_FLAGS, null, {}, {}));
 }
 
 function load_cert(cert, trust) {

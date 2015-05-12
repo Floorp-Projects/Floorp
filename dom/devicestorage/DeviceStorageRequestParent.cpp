@@ -45,7 +45,7 @@ DeviceStorageRequestParent::Dispatch()
         new DeviceStorageFile(p.type(), p.storageName(), p.relpath());
 
       BlobParent* bp = static_cast<BlobParent*>(p.blobParent());
-      nsRefPtr<FileImpl> blobImpl = bp->GetBlobImpl();
+      nsRefPtr<BlobImpl> blobImpl = bp->GetBlobImpl();
 
       nsCOMPtr<nsIInputStream> stream;
       blobImpl->GetInternalStream(getter_AddRefs(stream));
@@ -68,7 +68,7 @@ DeviceStorageRequestParent::Dispatch()
         new DeviceStorageFile(p.type(), p.storageName(), p.relpath());
 
       BlobParent* bp = static_cast<BlobParent*>(p.blobParent());
-      nsRefPtr<FileImpl> blobImpl = bp->GetBlobImpl();
+      nsRefPtr<BlobImpl> blobImpl = bp->GetBlobImpl();
 
       nsCOMPtr<nsIInputStream> stream;
       blobImpl->GetInternalStream(getter_AddRefs(stream));
@@ -523,12 +523,12 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
 
   nsString fullPath;
   mFile->GetFullPath(fullPath);
-  nsRefPtr<File> blob = new File(nullptr,
-    new FileImplFile(fullPath, mime, mLength, mFile->mFile,
-                     mLastModificationDate));
+  nsRefPtr<BlobImpl> blob =
+    new BlobImplFile(fullPath, mime, mLength, mFile->mFile,
+                     mLastModificationDate);
 
   ContentParent* cp = static_cast<ContentParent*>(mParent->Manager());
-  BlobParent* actor = cp->GetOrCreateActorForBlob(blob);
+  BlobParent* actor = cp->GetOrCreateActorForBlobImpl(blob);
   if (!actor) {
     ErrorResponse response(NS_LITERAL_STRING(POST_ERROR_EVENT_UNKNOWN));
     unused << mParent->Send__delete__(mParent, response);

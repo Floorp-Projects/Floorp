@@ -19,7 +19,7 @@
 
 namespace mozilla {
 namespace dom {
-class File;
+class Blob;
 }
 }
 
@@ -171,7 +171,7 @@ public:
   Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv);
 
   void
-  Send(File& aBody, ErrorResult& aRv);
+  Send(Blob& aBody, ErrorResult& aRv);
 
   void
   Send(nsFormData& aBody, ErrorResult& aRv);

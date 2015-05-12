@@ -95,9 +95,9 @@ struct KnownBlobConstructorParams
 // This may only be used for same-process inter-thread communication!
 struct SameProcessBlobConstructorParams
 {
-  // This member should be reinterpret_cast'd to mozilla::dom::FileImpl. It
+  // This member should be reinterpret_cast'd to mozilla::dom::BlobImpl. It
   // carries a reference.
-  intptr_t addRefedFileImpl;
+  intptr_t addRefedBlobImpl;
 };
 
 union AnyBlobConstructorParams

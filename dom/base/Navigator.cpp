@@ -1213,7 +1213,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
       in = strStream;
 
     } else if (aData.Value().IsBlob()) {
-      File& blob = aData.Value().GetAsBlob();
+      Blob& blob = aData.Value().GetAsBlob();
       rv = blob.GetInternalStream(getter_AddRefs(in));
       if (NS_FAILED(rv)) {
         aRv.Throw(NS_ERROR_FAILURE);

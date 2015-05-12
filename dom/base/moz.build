@@ -237,7 +237,7 @@ UNIFIED_SOURCES += [
     'Link.cpp',
     'MessageChannel.cpp',
     'MessagePortList.cpp',
-    'MultipartFileImpl.cpp',
+    'MultipartBlobImpl.cpp',
     'Navigator.cpp',
     'NodeInfo.cpp',
     'NodeIterator.cpp',

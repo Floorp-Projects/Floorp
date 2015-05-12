@@ -332,16 +332,18 @@ already_AddRefed<nsIDOMFile>
 IDBMutableFile::CreateFileObject(IDBFileHandle* aFileHandle,
                                  MetadataParameters* aMetadataParams)
 {
-  nsRefPtr<FileImpl> impl =
-    new FileImplSnapshot(mName,
+  nsRefPtr<BlobImpl> impl =
+    new BlobImplSnapshot(mName,
                          mType,
                          aMetadataParams,
                          mFile,
                          aFileHandle,
                          mFileInfo);
 
-  nsCOMPtr<nsIDOMFile> fileSnapshot = new File(GetOwner(), impl);
-  return fileSnapshot.forget();
+  nsRefPtr<File> file = File::Create(GetOwner(), impl);
+  MOZ_ASSERT(file);
+
+  return file.forget();
 }
 
 already_AddRefed<DOMRequest>

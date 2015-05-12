@@ -959,7 +959,7 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
 }
 
 PBackgroundIDBDatabaseFileChild*
-IDBDatabase::GetOrCreateFileActorForBlob(File* aBlob)
+IDBDatabase::GetOrCreateFileActorForBlob(Blob* aBlob)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBlob);
@@ -976,7 +976,7 @@ IDBDatabase::GetOrCreateFileActorForBlob(File* aBlob)
   PBackgroundIDBDatabaseFileChild* actor = nullptr;
 
   if (!mFileActors.Get(weakRef, &actor)) {
-    FileImpl* blobImpl = aBlob->Impl();
+    BlobImpl* blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
     if (mReceivedBlobs.GetEntry(weakRef)) {
@@ -1068,7 +1068,7 @@ IDBDatabase::NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor)
 }
 
 void
-IDBDatabase::NoteReceivedBlob(File* aBlob)
+IDBDatabase::NoteReceivedBlob(Blob* aBlob)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBlob);
@@ -1076,7 +1076,7 @@ IDBDatabase::NoteReceivedBlob(File* aBlob)
 
 #ifdef DEBUG
   {
-    nsRefPtr<FileImpl> blobImpl = aBlob->Impl();
+    nsRefPtr<BlobImpl> blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
     nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryObject(blobImpl);

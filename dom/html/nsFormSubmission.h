@@ -48,10 +48,10 @@ public:
    * Submit a name/file pair
    *
    * @param aName the name of the parameter
-   * @param aBlob the file to submit. The file's name will be used
+   * @param aFile the file to submit. The file's name will be used
    */
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   mozilla::dom::File* aBlob) = 0;
+                                   mozilla::dom::File* aFile) = 0;
 
   /**
    * Reports whether the instance supports AddIsindex().
@@ -160,7 +160,7 @@ public:
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override;
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   mozilla::dom::File* aBlob) override;
+                                   mozilla::dom::File* aFile) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream) override;
 

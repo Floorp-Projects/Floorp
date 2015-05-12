@@ -102,13 +102,13 @@ struct MOZ_STACK_CLASS PostMessageData final
     // We need to keep the array alive for the life-time of this
     // PostMessageData.
     if (!aData.blobsParent().IsEmpty()) {
-      mFiles.SetCapacity(aData.blobsParent().Length());
+      mBlobs.SetCapacity(aData.blobsParent().Length());
 
       for (uint32_t i = 0, len = aData.blobsParent().Length(); i < len; ++i) {
-        nsRefPtr<FileImpl> impl =
+        nsRefPtr<BlobImpl> impl =
           static_cast<BlobParent*>(aData.blobsParent()[i])->GetBlobImpl();
        MOZ_ASSERT(impl);
-       mFiles.AppendElement(impl);
+       mBlobs.AppendElement(impl);
       }
     }
   }
@@ -120,7 +120,7 @@ struct MOZ_STACK_CLASS PostMessageData final
 
   BroadcastChannelParent* mParent;
   const ClonedMessageData& mData;
-  nsTArray<nsRefPtr<FileImpl>> mFiles;
+  nsTArray<nsRefPtr<BlobImpl>> mBlobs;
   const nsString mOrigin;
   const nsString mChannel;
   uint64_t mAppId;
