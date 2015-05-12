@@ -121,12 +121,14 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattCharAttribute>
   {
     WriteParam(aMsg, aParam.mId);
     WriteParam(aMsg, aParam.mProperties);
+    WriteParam(aMsg, aParam.mWriteType);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &(aResult->mId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mProperties))) {
+        !ReadParam(aMsg, aIter, &(aResult->mProperties)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mWriteType))) {
       return false;
     }
 
