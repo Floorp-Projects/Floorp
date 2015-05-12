@@ -67,3 +67,13 @@ MOZ_PAY=1
 MOZ_ACTIVITIES=1
 MOZ_JSDOWNLOADS=1
 MOZ_WEBM_ENCODER=1
+
+# Enable checking that add-ons are signed by the trusted root
+MOZ_ADDON_SIGNING=1
+if test "$MOZ_OFFICIAL_BRANDING"; then
+  if test "$MOZ_UPDATE_CHANNEL" = "beta" -o \
+          "$MOZ_UPDATE_CHANNEL" = "release" -o \
+          "$MOZ_UPDATE_CHANNEL" = "esr"; then
+    MOZ_REQUIRE_SIGNING=1
+  fi
+fi
