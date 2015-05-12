@@ -19,9 +19,9 @@ for suffix in so dylib; do
 	so=.libs/libharfbuzz.$suffix
 	if ! test -f "$so"; then continue; fi
 
-	echo "Checking that we are not linking to libstdc++"
-	if ldd $so | grep 'libstdc[+][+]'; then
-		echo "Ouch, linked to libstdc++"
+	echo "Checking that we are not linking to libstdc++ or libc++"
+	if ldd $so | grep 'libstdc[+][+]\|libc[+][+]'; then
+		echo "Ouch, linked to libstdc++ or libc++"
 		stat=1
 	fi
 	tested=true

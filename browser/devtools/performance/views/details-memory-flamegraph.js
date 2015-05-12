@@ -58,8 +58,8 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
     let duration = recording.getDuration();
     let allocations = recording.getAllocations();
 
-    let samples = RecordingUtils.getSamplesFromAllocations(allocations);
-    let data = FlameGraphUtils.createFlameGraphDataFromSamples(samples, {
+    let thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
+    let data = FlameGraphUtils.createFlameGraphDataFromThread(thread, {
       invertStack: PerformanceController.getOption("invert-flame-graph"),
       flattenRecursion: PerformanceController.getOption("flatten-tree-recursion"),
       showIdleBlocks: PerformanceController.getOption("show-idle-blocks") && L10N.getStr("table.idle")
@@ -93,8 +93,8 @@ let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
   _onRerenderPrefChanged: function() {
     let recording = PerformanceController.getCurrentRecording();
     let allocations = recording.getAllocations();
-    let samples = RecordingUtils.getSamplesFromAllocations(allocations);
-    FlameGraphUtils.removeFromCache(samples);
+    let thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
+    FlameGraphUtils.removeFromCache(thread);
   },
 
   /**

@@ -676,7 +676,7 @@ hb_ot_hide_default_ignorables (hb_ot_shape_context_t *c)
 	pos[i].y_advance = 0;
       }
       else
-	continue; /* Delete it. */
+	continue; /* Delete it. XXX Merge clusters? */
     }
     if (j != i)
     {

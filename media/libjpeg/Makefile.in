@@ -5,12 +5,6 @@
 
 AS=$(LIBJPEG_TURBO_AS)
 ASM_SUFFIX=asm
-ASFLAGS=$(LIBJPEG_TURBO_ASFLAGS) -I$(topsrcdir)/media/libjpeg/simd/
-
-ifeq ($(AS),yasm)
-  # yasm doesn't like -c
-  AS_DASH_C_FLAG=
-endif
 
 include $(topsrcdir)/config/rules.mk
 

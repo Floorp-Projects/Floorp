@@ -50,9 +50,9 @@
            oncommand="document.getElementById('FindToolbar').onFindAgainCommand(false);"/>
   <command id="cmd_findPrevious"
            oncommand="document.getElementById('FindToolbar').onFindAgainCommand(true);"/>
-  <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
-  <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
-  <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
+  <command id="cmd_goToLine" oncommand="ViewSourceChrome.promptAndGoToLine();" disabled="true"/>
+  <command id="cmd_highlightSyntax" oncommand="ViewSourceChrome.toggleSyntaxHighlighting();"/>
+  <command id="cmd_wrapLongLines" oncommand="ViewSourceChrome.toggleWrapping();"/>
   <command id="cmd_textZoomReduce" oncommand="ZoomManager.reduce();"/>
   <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.enlarge();"/>
   <command id="cmd_textZoomReset" oncommand="ZoomManager.reset();"/>
@@ -73,19 +73,18 @@
     <key id="key_textZoomReset2" key="&textReset.commandkey2;" command="cmd_textZoomReset" modifiers="accel"/>
   </keyset>
 
-  <menupopup id="viewSourceContextMenu"
-             onpopupshowing="contextMenuShowing();">
+  <menupopup id="viewSourceContextMenu">
     <menuitem id="cMenu_findAgain"/>
     <menuseparator/>
     <menuitem id="cMenu_copy"/>
     <menuitem id="context-copyLink"
               label="&copyLinkCmd.label;"
               accesskey="&copyLinkCmd.accesskey;"
-              oncommand="contextMenuCopyLinkOrEmail();"/>
+              oncommand="ViewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
     <menuitem id="context-copyEmail"
               label="&copyEmailCmd.label;"
               accesskey="&copyEmailCmd.accesskey;"
-              oncommand="contextMenuCopyLinkOrEmail();"/>
+              oncommand="ViewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
     <menuseparator/>
     <menuitem id="cMenu_selectAll"/>
   </menupopup>
@@ -157,7 +156,7 @@
 
   <vbox id="appcontent" flex="1">
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
-             disablehistory="true" context="viewSourceContextMenu"/>
+             disablehistory="true" context="viewSourceContextMenu" />
     <findbar id="FindToolbar" browserid="content"/>
   </vbox>
 

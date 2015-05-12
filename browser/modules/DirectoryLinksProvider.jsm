@@ -1069,7 +1069,7 @@ let DirectoryLinksProvider = {
     let capObject = this._frequencyCaps[url] || this._frequencyCaps[noTrailingSlashUrl];
     // return resolved promise if capObject is not found
     if (!capObject) {
-      return Promise.resolve();;
+      return Promise.resolve();
     }
     // otherwise remove clicked flag
     delete capObject.clicked;

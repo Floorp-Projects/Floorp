@@ -104,6 +104,9 @@ let PerformanceIO = {
       if (recordingData.version === PERF_TOOL_SERIALIZER_LEGACY_VERSION) {
         recordingData = convertLegacyData(recordingData);
       }
+      if (recordingData.profile.meta.version === 2) {
+        RecordingUtils.deflateProfile(recordingData.profile);
+      }
       deferred.resolve(recordingData);
     });
 

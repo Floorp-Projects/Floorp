@@ -6,7 +6,7 @@
 
 #include "ProfilerBacktrace.h"
 
-#include "JSStreamWriter.h"
+#include "ProfileJSONWriter.h"
 #include "SyncProfile.h"
 
 ProfilerBacktrace::ProfilerBacktrace(SyncProfile* aProfile)
@@ -25,8 +25,9 @@ ProfilerBacktrace::~ProfilerBacktrace()
 }
 
 void
-ProfilerBacktrace::StreamJSObject(JSStreamWriter& b)
+ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
+                              UniqueStacks& aUniqueStacks)
 {
   mozilla::MutexAutoLock lock(*mProfile->GetMutex());
-  mProfile->StreamJSObject(b);
+  mProfile->StreamJSON(aWriter, aUniqueStacks);
 }

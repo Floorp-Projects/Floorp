@@ -79,10 +79,9 @@ struct hb_shaper_data_t {
 	HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (HB_SHAPER_DATA_TYPE (shaper, object) *data)
 
 #define HB_SHAPER_DATA_DESTROY(shaper, object) \
-	if (object->shaper_data.shaper && \
-	    object->shaper_data.shaper != HB_SHAPER_DATA_INVALID && \
-	    object->shaper_data.shaper != HB_SHAPER_DATA_SUCCEEDED) \
-	  HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (HB_SHAPER_DATA (shaper, object));
+    if (HB_SHAPER_DATA_TYPE (shaper, object) *data = HB_SHAPER_DATA (shaper, object)) \
+      if (data != HB_SHAPER_DATA_INVALID && data != HB_SHAPER_DATA_SUCCEEDED) \
+        HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (data);
 
 #define HB_SHAPER_DATA_ENSURE_DECLARE(shaper, object) \
 static inline bool \
