@@ -525,6 +525,11 @@ protected:
   const ParentLayerPoint GetVelocityVector() const;
 
   /**
+   * Sets the velocities of each axis.
+   */
+  void SetVelocityVector(const ParentLayerPoint& aVelocityVector);
+
+  /**
    * Gets the first touch point from a MultiTouchInput.  This gets only
    * the first one and assumes the rest are either missing or not relevant.
    */
