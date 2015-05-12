@@ -988,7 +988,8 @@ public:
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
                                 mozilla::ErrorResult& aRv) override;
   using nsIDOMEventTarget::AddSystemEventListener;
-  virtual nsIDOMWindow* GetOwnerGlobal() override;
+  virtual nsIDOMWindow* GetOwnerGlobalForBindings() override;
+  virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   /**
    * Adds a mutation observer to be notified when this node, or any of its
