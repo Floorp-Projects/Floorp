@@ -64,10 +64,10 @@ let inputTests = [
   // 7
   {
     input: "Date.prototype",
-    output: /Object \{.*\}/,
+    output: "Date",
     printOutput: "Invalid Date",
     inspectable: true,
-    variablesViewLabel: "Object",
+    variablesViewLabel: "Date",
   },
 
   // 8
