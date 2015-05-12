@@ -221,7 +221,7 @@ gint
 getStartIndexCB(AtkHyperlink *aLink)
 {
   MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
-  if (maiLink)
+  if (!maiLink)
     return -1;
 
   if (Accessible* hyperlink = maiLink->GetAccHyperlink())
