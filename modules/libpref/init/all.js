@@ -3608,6 +3608,18 @@ pref("intl.ime.use_simple_context_on_password_field", true);
 pref("intl.ime.use_simple_context_on_password_field", false);
 #endif
 
+# enable new platform fontlist for linux on GTK platforms
+# temporary pref to allow flipping back to the existing
+# gfxPangoFontGroup/gfxFontconfigUtils code for handling system fonts
+
+#ifdef MOZ_WIDGET_GTK
+#ifdef RELEASE_BUILD
+pref("gfx.font_rendering.fontconfig.fontlist.enabled", false);
+#else
+pref("gfx.font_rendering.fontconfig.fontlist.enabled", true);
+#endif
+#endif
+
 # XP_UNIX
 #endif
 #endif
