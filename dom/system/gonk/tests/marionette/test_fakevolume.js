@@ -18,12 +18,8 @@ ok(vol, "volume shouldn't be null");
 
 is(volName, vol.name, "name");
 is(mountPoint, vol.mountPoint, "moutnPoint");
-is(Ci.nsIVolume.STATE_INIT, vol.state, "state");
-
-
-let oldMountGen = vol.mountGeneration;
-volumeService.SetFakeVolumeState(volName, Ci.nsIVolume.STATE_MOUNTED);
 is(Ci.nsIVolume.STATE_MOUNTED, vol.state, "state");
-ok(vol.mountGeneration > oldMountGen, "mount generation should be incremented");
+
+ok(vol.mountGeneration > 0, "mount generation should not be zero");
 
 finish();
