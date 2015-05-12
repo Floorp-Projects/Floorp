@@ -28,7 +28,7 @@ public:
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
-  NS_IMETHOD GetOrigin(char** aOrigin) override;
+  NS_IMETHOD GetOrigin(nsACString& aOrigin) override;
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
@@ -70,7 +70,7 @@ public:
   /**
    * Computes the puny-encoded origin of aURI.
    */
-  static nsresult GetOriginForURI(nsIURI* aURI, char **aOrigin);
+  static nsresult GetOriginForURI(nsIURI* aURI, nsACString& aOrigin);
 
   /**
    * Called at startup to setup static data, e.g. about:config pref-observers.
@@ -116,7 +116,7 @@ public:
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
-  NS_IMETHOD GetOrigin(char** aOrigin) override;
+  NS_IMETHOD GetOrigin(nsACString& aOrigin) override;
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
