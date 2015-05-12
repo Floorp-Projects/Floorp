@@ -1427,120 +1427,119 @@ Assembler::as_nop()
 }
 
 static uint32_t
-EncodeAlu(Register dest, Register src1, Operand2 op2, ALUOp op, SetCond_ sc,
-          Assembler::Condition c)
+EncodeAlu(Register dest, Register src1, Operand2 op2, ALUOp op, SBit s, Assembler::Condition c)
 {
-    return (int)op | (int)sc | (int) c | op2.encode() |
+    return (int)op | (int)s | (int)c | op2.encode() |
            ((dest == InvalidReg) ? 0 : RD(dest)) |
            ((src1 == InvalidReg) ? 0 : RN(src1));
 }
 
 BufferOffset
 Assembler::as_alu(Register dest, Register src1, Operand2 op2,
-                  ALUOp op, SetCond_ sc, Condition c)
+                  ALUOp op, SBit s, Condition c)
 {
-    return writeInst(EncodeAlu(dest, src1, op2, op, sc, c));
+    return writeInst(EncodeAlu(dest, src1, op2, op, s, c));
 }
 
 BufferOffset
-Assembler::as_mov(Register dest, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_mov(Register dest, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, InvalidReg, op2, OpMov, sc, c);
+    return as_alu(dest, InvalidReg, op2, OpMov, s, c);
 }
 
 /* static */ void
-Assembler::as_alu_patch(Register dest, Register src1, Operand2 op2, ALUOp op, SetCond_ sc,
+Assembler::as_alu_patch(Register dest, Register src1, Operand2 op2, ALUOp op, SBit s,
                         Condition c, uint32_t* pos)
 {
-    WriteInstStatic(EncodeAlu(dest, src1, op2, op, sc, c), pos);
+    WriteInstStatic(EncodeAlu(dest, src1, op2, op, s, c), pos);
 }
 
 /* static */ void
-Assembler::as_mov_patch(Register dest, Operand2 op2, SetCond_ sc, Condition c, uint32_t* pos)
+Assembler::as_mov_patch(Register dest, Operand2 op2, SBit s, Condition c, uint32_t* pos)
 {
-    as_alu_patch(dest, InvalidReg, op2, OpMov, sc, c, pos);
+    as_alu_patch(dest, InvalidReg, op2, OpMov, s, c, pos);
 }
 
 BufferOffset
-Assembler::as_mvn(Register dest, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_mvn(Register dest, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, InvalidReg, op2, OpMvn, sc, c);
+    return as_alu(dest, InvalidReg, op2, OpMvn, s, c);
 }
 
 // Logical operations.
 BufferOffset
-Assembler::as_and(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_and(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpAnd, sc, c);
+    return as_alu(dest, src1, op2, OpAnd, s, c);
 }
 BufferOffset
-Assembler::as_bic(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_bic(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpBic, sc, c);
+    return as_alu(dest, src1, op2, OpBic, s, c);
 }
 BufferOffset
-Assembler::as_eor(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_eor(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpEor, sc, c);
+    return as_alu(dest, src1, op2, OpEor, s, c);
 }
 BufferOffset
-Assembler::as_orr(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_orr(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpOrr, sc, c);
+    return as_alu(dest, src1, op2, OpOrr, s, c);
 }
 
 // Mathematical operations.
 BufferOffset
-Assembler::as_adc(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_adc(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpAdc, sc, c);
+    return as_alu(dest, src1, op2, OpAdc, s, c);
 }
 BufferOffset
-Assembler::as_add(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_add(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpAdd, sc, c);
+    return as_alu(dest, src1, op2, OpAdd, s, c);
 }
 BufferOffset
-Assembler::as_sbc(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_sbc(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpSbc, sc, c);
+    return as_alu(dest, src1, op2, OpSbc, s, c);
 }
 BufferOffset
-Assembler::as_sub(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_sub(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpSub, sc, c);
+    return as_alu(dest, src1, op2, OpSub, s, c);
 }
 BufferOffset
-Assembler::as_rsb(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_rsb(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpRsb, sc, c);
+    return as_alu(dest, src1, op2, OpRsb, s, c);
 }
 BufferOffset
-Assembler::as_rsc(Register dest, Register src1, Operand2 op2, SetCond_ sc, Condition c)
+Assembler::as_rsc(Register dest, Register src1, Operand2 op2, SBit s, Condition c)
 {
-    return as_alu(dest, src1, op2, OpRsc, sc, c);
+    return as_alu(dest, src1, op2, OpRsc, s, c);
 }
 
 // Test operations.
 BufferOffset
 Assembler::as_cmn(Register src1, Operand2 op2, Condition c)
 {
-    return as_alu(InvalidReg, src1, op2, OpCmn, SetCond, c);
+    return as_alu(InvalidReg, src1, op2, OpCmn, SetCC, c);
 }
 BufferOffset
 Assembler::as_cmp(Register src1, Operand2 op2, Condition c)
 {
-    return as_alu(InvalidReg, src1, op2, OpCmp, SetCond, c);
+    return as_alu(InvalidReg, src1, op2, OpCmp, SetCC, c);
 }
 BufferOffset
 Assembler::as_teq(Register src1, Operand2 op2, Condition c)
 {
-    return as_alu(InvalidReg, src1, op2, OpTeq, SetCond, c);
+    return as_alu(InvalidReg, src1, op2, OpTeq, SetCC, c);
 }
 BufferOffset
 Assembler::as_tst(Register src1, Operand2 op2, Condition c)
 {
-    return as_alu(InvalidReg, src1, op2, OpTst, SetCond, c);
+    return as_alu(InvalidReg, src1, op2, OpTst, SetCC, c);
 }
 
 static MOZ_CONSTEXPR_VAR Register NoAddend = { Registers::pc };
@@ -1621,59 +1620,59 @@ static const int mull_tag = 0x90;
 
 BufferOffset
 Assembler::as_genmul(Register dhi, Register dlo, Register rm, Register rn,
-                     MULOp op, SetCond_ sc, Condition c)
+                     MULOp op, SBit s, Condition c)
 {
 
-    return writeInst(RN(dhi) | maybeRD(dlo) | RM(rm) | rn.code() | op | sc | c | mull_tag);
+    return writeInst(RN(dhi) | maybeRD(dlo) | RM(rm) | rn.code() | op | s | c | mull_tag);
 }
 BufferOffset
-Assembler::as_mul(Register dest, Register src1, Register src2, SetCond_ sc, Condition c)
+Assembler::as_mul(Register dest, Register src1, Register src2, SBit s, Condition c)
 {
-    return as_genmul(dest, InvalidReg, src1, src2, OpmMul, sc, c);
+    return as_genmul(dest, InvalidReg, src1, src2, OpmMul, s, c);
 }
 BufferOffset
 Assembler::as_mla(Register dest, Register acc, Register src1, Register src2,
-                  SetCond_ sc, Condition c)
+                  SBit s, Condition c)
 {
-    return as_genmul(dest, acc, src1, src2, OpmMla, sc, c);
+    return as_genmul(dest, acc, src1, src2, OpmMla, s, c);
 }
 BufferOffset
 Assembler::as_umaal(Register destHI, Register destLO, Register src1, Register src2, Condition c)
 {
-    return as_genmul(destHI, destLO, src1, src2, OpmUmaal, NoSetCond, c);
+    return as_genmul(destHI, destLO, src1, src2, OpmUmaal, LeaveCC, c);
 }
 BufferOffset
 Assembler::as_mls(Register dest, Register acc, Register src1, Register src2, Condition c)
 {
-    return as_genmul(dest, acc, src1, src2, OpmMls, NoSetCond, c);
+    return as_genmul(dest, acc, src1, src2, OpmMls, LeaveCC, c);
 }
 
 BufferOffset
 Assembler::as_umull(Register destHI, Register destLO, Register src1, Register src2,
-                    SetCond_ sc, Condition c)
+                    SBit s, Condition c)
 {
-    return as_genmul(destHI, destLO, src1, src2, OpmUmull, sc, c);
+    return as_genmul(destHI, destLO, src1, src2, OpmUmull, s, c);
 }
 
 BufferOffset
 Assembler::as_umlal(Register destHI, Register destLO, Register src1, Register src2,
-                    SetCond_ sc, Condition c)
+                    SBit s, Condition c)
 {
-    return as_genmul(destHI, destLO, src1, src2, OpmUmlal, sc, c);
+    return as_genmul(destHI, destLO, src1, src2, OpmUmlal, s, c);
 }
 
 BufferOffset
 Assembler::as_smull(Register destHI, Register destLO, Register src1, Register src2,
-                    SetCond_ sc, Condition c)
+                    SBit s, Condition c)
 {
-    return as_genmul(destHI, destLO, src1, src2, OpmSmull, sc, c);
+    return as_genmul(destHI, destLO, src1, src2, OpmSmull, s, c);
 }
 
 BufferOffset
 Assembler::as_smlal(Register destHI, Register destLO, Register src1, Register src2,
-                    SetCond_ sc, Condition c)
+                    SBit s, Condition c)
 {
-    return as_genmul(destHI, destLO, src1, src2, OpmSmlal, sc, c);
+    return as_genmul(destHI, destLO, src1, src2, OpmSmlal, s, c);
 }
 
 BufferOffset
@@ -3025,7 +3024,7 @@ void Assembler::UpdateBoundsCheck(uint32_t heapSize, Instruction* inst)
     Imm8 imm8 = Imm8(heapSize);
     MOZ_ASSERT(!imm8.invalid);
 
-    *inst = InstALU(InvalidReg, index, imm8, OpCmp, SetCond, Always);
+    *inst = InstALU(InvalidReg, index, imm8, OpCmp, SetCC, Always);
     // NOTE: we don't update the Auto Flush Cache!  this function is currently
     // only called from within AsmJSModule::patchHeapAccesses, which does that
     // for us. Don't call this!

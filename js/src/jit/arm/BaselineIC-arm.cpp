@@ -29,8 +29,8 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler& masm)
     // Compare payload regs of R0 and R1.
     Assembler::Condition cond = JSOpToCondition(op, /* signed = */true);
     masm.cmp32(R0.payloadReg(), R1.payloadReg());
-    masm.ma_mov(Imm32(1), R0.payloadReg(), NoSetCond, cond);
-    masm.ma_mov(Imm32(0), R0.payloadReg(), NoSetCond, Assembler::InvertCondition(cond));
+    masm.ma_mov(Imm32(1), R0.payloadReg(), LeaveCC, cond);
+    masm.ma_mov(Imm32(0), R0.payloadReg(), LeaveCC, Assembler::InvertCondition(cond));
 
     // Result is implicitly boxed already.
     masm.tagValue(JSVAL_TYPE_BOOLEAN, R0.payloadReg(), R0);
@@ -57,7 +57,7 @@ ICCompare_Double::Compiler::generateStubCode(MacroAssembler& masm)
 
     masm.compareDouble(FloatReg0, FloatReg1);
     masm.ma_mov(Imm32(0), dest);
-    masm.ma_mov(Imm32(1), dest, NoSetCond, cond);
+    masm.ma_mov(Imm32(1), dest, LeaveCC, cond);
 
     masm.tagValue(JSVAL_TYPE_BOOLEAN, dest, R0);
     EmitReturnFromIC(masm);
@@ -93,7 +93,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
     Label maybeNegZero, revertRegister;
     switch(op_) {
       case JSOP_ADD:
-        masm.ma_add(R0.payloadReg(), R1.payloadReg(), scratchReg, SetCond);
+        masm.ma_add(R0.payloadReg(), R1.payloadReg(), scratchReg, SetCC);
 
         // Just jump to failure on overflow. R0 and R1 are preserved, so we can
         // just jump to the next stub.
@@ -104,7 +104,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
         masm.mov(scratchReg, R0.payloadReg());
         break;
       case JSOP_SUB:
-        masm.ma_sub(R0.payloadReg(), R1.payloadReg(), scratchReg, SetCond);
+        masm.ma_sub(R0.payloadReg(), R1.payloadReg(), scratchReg, SetCC);
         masm.j(Assembler::Overflow, &failure);
         masm.mov(scratchReg, R0.payloadReg());
         break;
