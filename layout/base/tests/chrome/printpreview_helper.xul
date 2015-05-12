@@ -126,7 +126,7 @@ function startTest1() {
   window.frames[0].document.body.firstChild.innerHTML = "Print preview";
 
   printpreview();
-  ctx1.drawWindow(window.frames[1], 0, 0, 300, 300, "rgb(256,256,256)");
+  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(256,256,256)");
   window.frames[0].document.body.firstChild.innerHTML = "Galley presentation";
 
   // Add some elements.
@@ -140,7 +140,7 @@ function startTest1() {
 }
 
 function finalizeTest1() {
-  ctx2.drawWindow(window.frames[1], 0, 0, 300, 300, "rgb(256,256,256)");
+  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(256,256,256)");
   exitprintpreview();
   ok(compareCanvases(), "Canvas should be the same!");
   counter = window.frames[0].counter;
@@ -210,13 +210,13 @@ function compareFormElementPrint(el1, el2, equals) {
   window.frames[0].document.body.firstChild.value =
     window.frames[0].document.body.firstChild.getAttribute('value');
   printpreview();
-  ctx1.drawWindow(window.frames[1], 0, 0, 300, 300, "rgb(256,256,256)");
+  ctx1.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(256,256,256)");
   exitprintpreview();
   window.frames[0].document.body.innerHTML = el2;
   window.frames[0].document.body.firstChild.value =
     window.frames[0].document.body.firstChild.getAttribute('value');
   printpreview();
-  ctx2.drawWindow(window.frames[1], 0, 0, 300, 300, "rgb(256,256,256)");
+  ctx2.drawWindow(window.frames[1], 0, 0, 400, 400, "rgb(256,256,256)");
   exitprintpreview();
   is(compareCanvases(), equals,
      "Comparing print preview didn't succeed [" + el1 + " : " + el2 + "]");
@@ -268,7 +268,7 @@ function runTest6end() {
 <table style="border: 1px solid black;" xmlns="http://www.w3.org/1999/xhtml">
 <tr><th>Print preview canvas 1</th><th>Print preview canvas 2</th></tr>
 <tr>
-<td><canvas height="300" width="300"></canvas></td>
-<td><canvas height="300" width="300"></canvas></td>
+<td><canvas height="400" width="400"></canvas></td>
+<td><canvas height="400" width="400"></canvas></td>
 </tr></table>
 </window>
