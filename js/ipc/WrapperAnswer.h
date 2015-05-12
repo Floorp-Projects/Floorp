@@ -36,9 +36,9 @@ class WrapperAnswer : public virtual JavaScriptShared
     bool RecvDelete(const ObjectId& objId, const JSIDVariant& id, ReturnStatus* rs);
 
     bool RecvHas(const ObjectId& objId, const JSIDVariant& id,
-                 ReturnStatus* rs, bool* bp);
+                 ReturnStatus* rs, bool* foundp);
     bool RecvHasOwn(const ObjectId& objId, const JSIDVariant& id,
-                    ReturnStatus* rs, bool* bp);
+                    ReturnStatus* rs, bool* foundp);
     bool RecvGet(const ObjectId& objId, const ObjectVariant& receiverVar,
                  const JSIDVariant& id,
                  ReturnStatus* rs, JSVariant* result);
