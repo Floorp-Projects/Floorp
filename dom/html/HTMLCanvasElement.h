@@ -232,7 +232,7 @@ protected:
                          const nsAString& aMimeType,
                          const JS::Value& aEncoderOptions,
                          nsAString& aDataURL);
-  nsresult MozGetAsFileImpl(const nsAString& aName,
+  nsresult MozGetAsBlobImpl(const nsAString& aName,
                             const nsAString& aType,
                             nsIDOMFile** aResult);
   void CallPrintCallback();

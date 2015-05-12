@@ -60,7 +60,7 @@ struct
 ConsoleStructuredCloneData
 {
   nsCOMPtr<nsISupports> mParent;
-  nsTArray<nsRefPtr<FileImpl>> mFiles;
+  nsTArray<nsRefPtr<BlobImpl>> mBlobs;
 };
 
 /**
@@ -84,13 +84,13 @@ ConsoleStructuredCloneCallbacksRead(JSContext* aCx,
   MOZ_ASSERT(data);
 
   if (aTag == CONSOLE_TAG_BLOB) {
-    MOZ_ASSERT(data->mFiles.Length() > aIndex);
+    MOZ_ASSERT(data->mBlobs.Length() > aIndex);
 
     JS::Rooted<JS::Value> val(aCx);
     {
-      nsRefPtr<File> file =
-        new File(data->mParent, data->mFiles.ElementAt(aIndex));
-      if (!GetOrCreateDOMReflector(aCx, file, &val)) {
+      nsRefPtr<Blob> blob =
+        Blob::Create(data->mParent, data->mBlobs.ElementAt(aIndex));
+      if (!ToJSValue(aCx, blob, &val)) {
         return nullptr;
       }
     }
@@ -114,14 +114,14 @@ ConsoleStructuredCloneCallbacksWrite(JSContext* aCx,
     static_cast<ConsoleStructuredCloneData*>(aClosure);
   MOZ_ASSERT(data);
 
-  nsRefPtr<File> file;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, file)) &&
-      file->Impl()->MayBeClonedToOtherThreads()) {
-    if (!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_BLOB, data->mFiles.Length())) {
+  nsRefPtr<Blob> blob;
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob)) &&
+      blob->Impl()->MayBeClonedToOtherThreads()) {
+    if (!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_BLOB, data->mBlobs.Length())) {
       return false;
     }
 
-    data->mFiles.AppendElement(file->Impl());
+    data->mBlobs.AppendElement(blob->Impl());
     return true;
   }
 

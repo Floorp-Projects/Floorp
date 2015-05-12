@@ -18,8 +18,8 @@
 //
 // Pinned domain exclude-subdomains.pinning.example.com excludes subdomains
 // - PASS: exclude-subdomains.pinning.example.com serves a correct cert
-// - FAIL: exclude-subdomains.pinning.example.com services an incorrect cert
-// (TODO: test using verifyCertnow)
+// - FAIL: exclude-subdomains.pinning.example.com serves an incorrect cert
+// (TODO: test using verifyCertNow)
 // - PASS: sub.exclude-subdomains.pinning.example.com serves an incorrect cert
 
 "use strict";

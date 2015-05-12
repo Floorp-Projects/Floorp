@@ -10,7 +10,10 @@
 
 #include "gc/Nursery.h"
 
+#include "jscntxt.h"
+
 #include "gc/Heap.h"
+#include "gc/Zone.h"
 #include "js/TracingAPI.h"
 #include "vm/Runtime.h"
 

@@ -2156,7 +2156,7 @@ XMLHttpRequest::Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(File& aBody, ErrorResult& aRv)
+XMLHttpRequest::Send(Blob& aBody, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   JSContext* cx = mWorkerPrivate->GetJSContext();
@@ -2177,7 +2177,7 @@ XMLHttpRequest::Send(File& aBody, ErrorResult& aRv)
     return;
   }
 
-  nsRefPtr<FileImpl> blobImpl = aBody.Impl();
+  nsRefPtr<BlobImpl> blobImpl = aBody.Impl();
   MOZ_ASSERT(blobImpl);
 
   aRv = blobImpl->SetMutable(false);

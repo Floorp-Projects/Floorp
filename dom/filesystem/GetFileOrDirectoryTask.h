@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-class FileImpl;
+class BlobImpl;
 
 class GetFileOrDirectoryTask final
   : public FileSystemTaskBase
@@ -60,8 +60,8 @@ private:
   bool mIsDirectory;
 
   // This cannot be a File bacause this object is created on a different
-  // thread and File is not thread-safe. Let's use the FileImpl instead.
-  nsRefPtr<FileImpl> mTargetFileImpl;
+  // thread and File is not thread-safe. Let's use the BlobImpl instead.
+  nsRefPtr<BlobImpl> mTargetBlobImpl;
 };
 
 } // namespace dom
