@@ -1121,6 +1121,26 @@ BluetoothHfpManager::ToggleCalls()
                              nsITelephonyService::CALL_STATE_CONNECTED;
 }
 
+/*
+ * Reset connection state and audio state to DISCONNECTED to handle backend
+ * error. The state change triggers UI status bar update as ordinary bluetooth
+ * turn-off sequence.
+ */
+void
+BluetoothHfpManager::HandleBackendError()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mConnectionState != HFP_CONNECTION_STATE_DISCONNECTED) {
+    ConnectionStateNotification(HFP_CONNECTION_STATE_DISCONNECTED,
+      mDeviceAddress);
+  }
+
+  if (mAudioState != HFP_AUDIO_STATE_DISCONNECTED) {
+    AudioStateNotification(HFP_AUDIO_STATE_DISCONNECTED, mDeviceAddress);
+  }
+}
+
 class BluetoothHfpManager::ConnectAudioResultHandler final
   : public BluetoothHandsfreeResultHandler
 {

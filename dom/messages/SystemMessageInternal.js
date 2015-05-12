@@ -40,6 +40,7 @@ try {
 }
 
 const kMessages =["SystemMessageManager:GetPendingMessages",
+                  "SystemMessageManager:HasPendingMessages",
                   "SystemMessageManager:Register",
                   "SystemMessageManager:Unregister",
                   "SystemMessageManager:Message:Return:OK",
@@ -419,6 +420,7 @@ SystemMessageInternal.prototype = {
          // TODO: fix bug 988142 to re-enable.
          // "SystemMessageManager:Unregister",
          "SystemMessageManager:GetPendingMessages",
+         "SystemMessageManager:HasPendingMessages",
          "SystemMessageManager:Message:Return:OK",
          "SystemMessageManager:HandleMessagesDone",
          "SystemMessageManager:HandleMessageDone"].indexOf(aMessage.name) != -1) {
@@ -517,6 +519,25 @@ SystemMessageInternal.prototype = {
                                     pageURL: msg.pageURL,
                                     msgQueue: pendingMessages });
         this._refreshCacheInternal(aMessage.target, msg.manifestURL);
+        break;
+      }
+      case "SystemMessageManager:HasPendingMessages":
+      {
+        debug("received SystemMessageManager:HasPendingMessages " + msg.type +
+              " for " + msg.pageURL + " @ " + msg.manifestURL);
+
+        // NB: Sync message SystemMessageManager:HasPendingMessages
+        // should only be used by in-process app. For out-of-process
+        // app, SystemMessageCache should be used.
+
+        // This is a sync call used to return if a page has pending messages.
+        // Find the right page to get its corresponding pending messages.
+        let page = this._findPage(msg.type, msg.pageURL, msg.manifestURL);
+        if (!page) {
+          return false;
+        }
+
+        return page.pendingMessages.length != 0;
         break;
       }
       case "SystemMessageManager:Message:Return:OK":
