@@ -49,6 +49,7 @@
 #include "nativewindow/FakeSurfaceComposer.h"
 #endif
 #include "nsAppShell.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Touch.h"
 #include "nsGkAtoms.h"
 #include "nsIObserverService.h"
@@ -578,7 +579,7 @@ GeckoInputReaderPolicy::setDisplayInfo()
     nsRefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
 
     uint32_t rotation = nsIScreen::ROTATION_0_DEG;
-    nsresult rv = screen->GetRotation(&rotation);
+    DebugOnly<nsresult> rv = screen->GetRotation(&rotation);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     nsIntRect screenBounds = screen->GetNaturalBounds();
 
