@@ -1,0 +1,46 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>API calls request test</p>
+
+    <script type="text/javascript">
+      function get(aAddress, aCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", aAddress, true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            aCallback();
+          }
+        };
+        xhr.send();
+      }
+
+      function performRequests() {
+        get("/api/fileName.xml", function() {
+          get("/api/file%E2%98%A2.xml", function() {
+            get("/api/ascii/get/", function() {
+              get("/api/unicode/%E2%98%A2/", function() {
+                get("/api/search/?q=search%E2%98%A2", function() {
+                  // Done.
+                });
+              });
+            });
+          });
+        });
+      }
+    </script>
+  </body>
+
+</html>
