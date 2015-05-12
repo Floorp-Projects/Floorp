@@ -29,12 +29,18 @@ loop.validate = (function() {
    * @return {String}
    */
   function typeName(obj) {
-    if (obj === null)
+    if (obj === null) {
       return "null";
-    if (typeof obj === "function")
+    }
+
+    if (typeof obj === "function") {
       return obj.name || obj.toString().match(/^function\s?([^\s(]*)/)[1];
-    if (typeof obj.constructor === "function")
+    }
+
+    if (typeof obj.constructor === "function") {
       return typeName(obj.constructor);
+    }
+
     return "unknown";
   }
 
@@ -93,8 +99,9 @@ loop.validate = (function() {
         return typeof values[name] !== "undefined";
       });
       var diff = difference(Object.keys(this.schema), definedProperties);
-      if (diff.length > 0)
+      if (diff.length > 0) {
         throw new TypeError("missing required " + diff.join(", "));
+      }
     },
 
     /**

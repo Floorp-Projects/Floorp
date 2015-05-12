@@ -324,8 +324,9 @@ let LoopCallsInternal = {
    * @return true if the call is opened, false if it is not opened (i.e. busy)
    */
   startDirectCall: function(contact, callType) {
-    if ("id" in this.conversationInProgress)
+    if ("id" in this.conversationInProgress) {
       return false;
+    }
 
     var callData = {
       contact: contact,
