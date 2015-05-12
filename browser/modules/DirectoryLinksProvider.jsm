@@ -9,8 +9,8 @@ this.EXPORTED_SYMBOLS = ["DirectoryLinksProvider"];
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
-const XMLHttpRequest =
-  Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
+
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -269,7 +269,7 @@ let DirectoryLinksProvider = {
     uri = uri.replace("%CHANNEL%", UpdateChannel.get());
 
     let deferred = Promise.defer();
-    let xmlHttp = new XMLHttpRequest();
+    let xmlHttp = this._newXHR();
 
     let self = this;
     xmlHttp.onload = function(aResponse) {
@@ -344,6 +344,13 @@ let DirectoryLinksProvider = {
       return true;
     }
     return false;
+  },
+
+  /**
+   * Create a new XMLHttpRequest that is anonymous, i.e., doesn't send cookies
+   */
+  _newXHR() {
+    return new XMLHttpRequest({mozAnon: true});
   },
 
   /**
@@ -537,7 +544,7 @@ let DirectoryLinksProvider = {
     }
 
     // Package the data to be sent with the ping
-    let ping = new XMLHttpRequest();
+    let ping = this._newXHR();
     ping.open("POST", pingEndPoint + (action == "view" ? "view" : "click"));
     ping.send(JSON.stringify(data));
 
