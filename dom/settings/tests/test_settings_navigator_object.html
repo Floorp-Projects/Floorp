@@ -25,7 +25,7 @@ function testPref() {
   SpecialPowers.pushPrefEnv({
     set: [["dom.mozSettings.enabled", false]]
   }, function() {
-    ise(navigator.mozSettings, undefined, "navigator.mozSettings is undefined");
+    is(navigator.mozSettings, undefined, "navigator.mozSettings is undefined");
     SimpleTest.finish();
   });
 }
@@ -37,7 +37,7 @@ SpecialPowers.pushPermissions([
   {type: "settings-api-write", allow: 0, context: document},
   {type: "settings-clear", allow: 0, context: document}
 ], function() {
-  ise(frames[0].navigator.mozSettings, null, "navigator.mozSettings is null when the page doesn't have permissions");
+  is(frames[0].navigator.mozSettings, null, "navigator.mozSettings is null when the page doesn't have permissions");
   testPref();
 });
 </script>

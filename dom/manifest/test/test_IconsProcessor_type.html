@@ -29,7 +29,7 @@ invalidMimeTypes.forEach((invalidMime) => {
   testIcon.icons[0].type = invalidMime;
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
-  ise(result.icons[0].type, undefined, expected);
+  is(result.icons[0].type, undefined, expected);
 });
 
 var validTypes = [
@@ -45,7 +45,7 @@ validTypes.forEach((validMime) => {
   testIcon.icons[0].type = validMime;
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
-  ise(result.icons[0].type, 'image/jpeg', expected);
+  is(result.icons[0].type, 'image/jpeg', expected);
 });
   </script>
 </head>

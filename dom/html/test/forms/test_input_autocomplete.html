@@ -66,8 +66,8 @@ function checkAutocompleteValues(field, type) {
       field.removeAttribute("autocomplete");
     else
       field.setAttribute("autocomplete", test[0]);
-    ise(field.autocomplete, test[1], "Checking @autocomplete for @type=" + type + " of: " + test[0]);
-    ise(field.autocomplete, test[1], "Checking cached @autocomplete for @type=" + type + " of: " + test[0]);
+    is(field.autocomplete, test[1], "Checking @autocomplete for @type=" + type + " of: " + test[0]);
+    is(field.autocomplete, test[1], "Checking cached @autocomplete for @type=" + type + " of: " + test[0]);
   }
 }
 

@@ -70,7 +70,7 @@ let tests = [
   taskify(function* test_bookmarks_menu() {
     let bookmarksMenuButton = document.getElementById("bookmarks-menu-button");
 
-    ise(bookmarksMenuButton.open, false, "Menu should initially be closed");
+    is(bookmarksMenuButton.open, false, "Menu should initially be closed");
     gContentAPI.showMenu("bookmarks");
 
     yield waitForConditionPromise(() => {

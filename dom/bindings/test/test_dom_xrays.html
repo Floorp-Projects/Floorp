@@ -32,16 +32,16 @@ function checkXrayProperty(obj, name, values)
     var value = values.shift();
     if (typeof value == "undefined") {
       ok(!obj.hasOwnProperty(name), "hasOwnProperty shouldn't see \"" + name + "\" through Xrays");
-      ise(Object.getOwnPropertyDescriptor(obj, name), undefined, "getOwnPropertyDescriptor shouldn't see \"" + name + "\" through Xrays");
+      is(Object.getOwnPropertyDescriptor(obj, name), undefined, "getOwnPropertyDescriptor shouldn't see \"" + name + "\" through Xrays");
       ok(Object.keys(obj).indexOf(name) == -1, "Enumerating the Xray should not return \"" + name + "\"");
     } else {
       ok(obj.hasOwnProperty(name), "hasOwnProperty should see \"" + name + "\" through Xrays");
       var pd = Object.getOwnPropertyDescriptor(obj, name);
       ok(pd, "getOwnPropertyDescriptor should see \"" + name + "\" through Xrays");
       if (pd && pd.get) {
-        ise(pd.get.call(instance), value, "Should get the right value for \"" + name + "\" through Xrays");
+        is(pd.get.call(instance), value, "Should get the right value for \"" + name + "\" through Xrays");
       } else {
-        ise(obj[name], value, "Should get the right value for \"" + name + "\" through Xrays");
+        is(obj[name], value, "Should get the right value for \"" + name + "\" through Xrays");
       }
       if (pd && pd.enumerable) {
         ok(Object.keys(obj).indexOf("" + name) > -1, "Enumerating the Xray should return \"" + name + "\"");
@@ -62,13 +62,13 @@ function test()
   var doc = document.getElementById("t").contentDocument;
 
   var winProto = Object.getPrototypeOf(win);
-  ise(winProto, win.Window.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+  is(winProto, win.Window.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
   var namedPropertiesObject = Object.getPrototypeOf(winProto);
-  ise(Cu.getClassName(namedPropertiesObject, /* unwrap = */ true), "WindowProperties", "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+  is(Cu.getClassName(namedPropertiesObject, /* unwrap = */ true), "WindowProperties", "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
   var eventTargetProto = Object.getPrototypeOf(namedPropertiesObject);
-  ise(eventTargetProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+  is(eventTargetProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
   // Xrays need to filter expandos.
   checkWindowXrayProperty(win, "expando", undefined);
@@ -94,44 +94,44 @@ function test()
   while ((proto = Object.getPrototypeOf(obj))) {
     obj = proto;
   }
-  ise(obj, win.Object.prototype, "Object.prototype should be at the end of the prototype chain");
+  is(obj, win.Object.prototype, "Object.prototype should be at the end of the prototype chain");
 
   // Named properties shouldn't shadow WebIDL- or ECMAScript-defined properties.
   checkWindowXrayProperty(win, "addEventListener", undefined, undefined, undefined, eventTargetProto.addEventListener);
-  ise(win.addEventListener, eventTargetProto.addEventListener, "Named properties shouldn't shadow WebIDL-defined properties");
+  is(win.addEventListener, eventTargetProto.addEventListener, "Named properties shouldn't shadow WebIDL-defined properties");
 
-  ise(win.toString, win.Object.prototype.toString, "Named properties shouldn't shadow ECMAScript-defined properties");
+  is(win.toString, win.Object.prototype.toString, "Named properties shouldn't shadow ECMAScript-defined properties");
 
   // HTMLDocument
   // Unforgeable properties live on the instance.
   checkXrayProperty(doc, "location", [ win.location ]);
-  ise(String(win.location), document.getElementById("t").src,
-      "Should have the right stringification");
+  is(String(win.location), document.getElementById("t").src,
+     "Should have the right stringification");
 
   // HTMLHtmlElement
   var elem = doc.documentElement;
 
   var elemProto = Object.getPrototypeOf(elem);
-  ise(elemProto, win.HTMLHtmlElement.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+  is(elemProto, win.HTMLHtmlElement.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
   elemProto = Object.getPrototypeOf(elemProto);
-  ise(elemProto, win.HTMLElement.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+  is(elemProto, win.HTMLElement.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
   elemProto = Object.getPrototypeOf(elemProto);
-  ise(elemProto, win.Element.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+  is(elemProto, win.Element.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
   elemProto = Object.getPrototypeOf(elemProto);
-  ise(elemProto, win.Node.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+  is(elemProto, win.Node.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
   elemProto = Object.getPrototypeOf(elemProto);
-  ise(elemProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+  is(elemProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
   // Xrays need to filter expandos.
   ok(!("expando" in elem), "Xrays should filter expandos");
 
   // WebIDL-defined properties live on the prototype.
   checkXrayProperty(elem, "version", [ undefined, "" ]);
-  ise(elem.version, "", "WebIDL properties should be exposed through Xrays");
+  is(elem.version, "", "WebIDL properties should be exposed through Xrays");
 
   // HTMLCollection
   var coll = doc.getElementsByTagName("iframe");

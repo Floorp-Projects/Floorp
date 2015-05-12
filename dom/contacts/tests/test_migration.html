@@ -86,7 +86,7 @@ var steps = [
     var req = mozContacts.getCount();
     req.onsuccess = function onsuccess() {
       ok(true, "Could access the mozContacts API");
-      ise(this.result, contactsCount, "Contacts count is correct");
+      is(this.result, contactsCount, "Contacts count is correct");
       next();
     };
 
@@ -104,7 +104,7 @@ var steps = [
     var req = mozContacts.find();
     req.onsuccess = function onsuccess() {
       if (this.result) {
-        ise(this.result.length, contactsCount, "Contacts array length is correct");
+        is(this.result.length, contactsCount, "Contacts array length is correct");
         allContacts = this.result;
         next();
       } else {

@@ -104,8 +104,8 @@ addTest(function checkAuddie() {
   var fnDO = iframeDO.getOwnPropertyDescriptor('auddie').value;
   var AuddieDO = iframeDO.makeDebuggeeValue(doc.getElementById('Auddie'));
 
-  ise(fnDO.class, 'Function',
-      "Script element 'Auddie' defined function 'auddie'.");
+  is(fnDO.class, 'Function',
+     "Script element 'Auddie' defined function 'auddie'.");
   ok(fnDO.script.source.element === AuddieDO,
      "Function auddie's script belongs to script element 'Auddie'");
   is(fnDO.script.source.elementAttributeName, undefined,
@@ -159,18 +159,18 @@ addTest(function XULDocumentScript() {
     var xulDoc = xulFrame.contentWindow.document;
     var xulieDO = xulFrameDO.makeDebuggeeValue(xulDoc.getElementById('xulie'));
     var xulFnDO = xulFrameDO.getOwnPropertyDescriptor('xulScriptFunc').value;
-    ise(typeof xulFnDO, 'object', "XUL script element defined 'xulScriptFunc'");
-    ise(xulFnDO.class, 'Function',
-        "XUL global 'xulScriptFunc' is indeed a function");
+    is(typeof xulFnDO, 'object', "XUL script element defined 'xulScriptFunc'");
+    is(xulFnDO.class, 'Function',
+       "XUL global 'xulScriptFunc' is indeed a function");
 
     // A XUL document's script elements' code gets shared amongst all
     // instantiations of the document, so there's no specific DOM element
     // we can attribute the code to.
-    ise(xulFnDO.script.source.element, undefined,
-        "XUL script code should not be attributed to any individual element");
+    is(xulFnDO.script.source.element, undefined,
+       "XUL script code should not be attributed to any individual element");
 
-    ise(xulFnDO.script.source.introductionType, 'scriptElement',
-        "xulScriptFunc's introduction type is 'scriptElement'");
+    is(xulFnDO.script.source.introductionType, 'scriptElement',
+       "xulScriptFunc's introduction type is 'scriptElement'");
     runNextTest();
   }
 });

@@ -13,13 +13,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1120235
   /** Test for Bug 1120235 **/
   var res, rej;
   var p = new Promise(function(resolve, reject) { res = resolve; rej = reject; });
-  ise(res(1), undefined, "Resolve function should return undefined");
-  ise(rej(2), undefined, "Reject function should return undefined");
+  is(res(1), undefined, "Resolve function should return undefined");
+  is(rej(2), undefined, "Reject function should return undefined");
 
   var thenable = {
     then: function(resolve, reject) {
-      ise(resolve(3), undefined, "Thenable resolve argument should return undefined");
-      ise(reject(4), undefined, "Thenable reject argument should return undefined");
+      is(resolve(3), undefined, "Thenable resolve argument should return undefined");
+      is(reject(4), undefined, "Thenable reject argument should return undefined");
       SimpleTest.finish();
     }
   };

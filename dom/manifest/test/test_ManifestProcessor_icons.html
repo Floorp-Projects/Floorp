@@ -24,7 +24,7 @@ typeTests.forEach((type) => {
   });
   var result = processor.process(data);
   var y = SpecialPowers.unwrap(result.icons);
-  ise(result.icons.length, 0, expected);
+  is(result.icons.length, 0, expected);
 });
   </script>
 </head>
