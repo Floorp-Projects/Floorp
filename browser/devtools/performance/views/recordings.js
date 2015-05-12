@@ -3,6 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+// This should be removed with bug 1163763.
+const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
+const DBG_L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
+
 /**
  * Functions handling the recordings UI.
  */
@@ -16,6 +20,7 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
     this._onSelect = this._onSelect.bind(this);
     this._onRecordingStarted = this._onRecordingStarted.bind(this);
     this._onRecordingStopped = this._onRecordingStopped.bind(this);
+    this._onRecordingWillStop = this._onRecordingWillStop.bind(this);
     this._onRecordingImported = this._onRecordingImported.bind(this);
     this._onSaveButtonClick = this._onSaveButtonClick.bind(this);
     this._onRecordingsCleared = this._onRecordingsCleared.bind(this);
@@ -24,6 +29,7 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
 
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.on(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.on(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
     PerformanceController.on(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.addEventListener("select", this._onSelect, false);
@@ -35,6 +41,7 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
   destroy: function() {
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.off(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.off(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
     PerformanceController.off(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.removeEventListener("select", this._onSelect, false);
@@ -130,6 +137,21 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
     if (!recording.isConsole()) {
       this.forceSelect(recordingItem);
     }
+  },
+
+  /**
+   * Signals that a recording session is ending, and hasn't finished being
+   * processed yet.
+   *
+   * @param RecordingModel recording
+   *        The model of the recording that is being stopped.
+   */
+  _onRecordingWillStop: function(_, recording) {
+    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
+
+    // Mark the corresponding item as loading.
+    let durationNode = $(".recording-item-duration", recordingItem.target);
+    durationNode.setAttribute("value", DBG_L10N.getStr("loadingText"));
   },
 
   /**
