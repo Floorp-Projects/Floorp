@@ -247,9 +247,9 @@ gfxAndroidPlatform::GetFontList(nsIAtom *aLangGroup,
 }
 
 void
-gfxAndroidPlatform::GetSystemFontList(InfallibleTArray<FontListEntry>* retValue)
+gfxAndroidPlatform::GetFontList(InfallibleTArray<FontListEntry>* retValue)
 {
-    gfxFT2FontList::PlatformFontList()->GetSystemFontList(retValue);
+    gfxFT2FontList::PlatformFontList()->GetFontList(retValue);
 }
 
 nsresult
