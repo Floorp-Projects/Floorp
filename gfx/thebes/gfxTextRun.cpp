@@ -3082,10 +3082,7 @@ struct PrefFontCallbackData {
     {
         PrefFontCallbackData *prefFontData = static_cast<PrefFontCallbackData*>(aClosure);
 
-        // map pref lang to langGroup for language-sensitive lookups
-        nsIAtom* lang = gfxPlatform::GetLangGroupForPrefLang(aLang);
-        gfxFontFamily *family =
-            gfxPlatformFontList::PlatformFontList()->FindFamily(aName, lang);
+        gfxFontFamily *family = gfxPlatformFontList::PlatformFontList()->FindFamily(aName);
         if (family) {
             prefFontData->mPrefFamilies.AppendElement(family);
         }
