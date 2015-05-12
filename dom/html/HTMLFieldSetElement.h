@@ -130,9 +130,9 @@ private:
   nsRefPtr<nsContentList> mElements;
 
   // List of elements which have this fieldset as first fieldset ancestor.
-  nsTArray<nsGenericHTMLFormElement*> mDependentElements;
+  nsTArray<nsRefPtr<nsGenericHTMLFormElement>> mDependentElements;
 
-  nsIContent* mFirstLegend;
+  nsCOMPtr<nsIContent> mFirstLegend;
 
   /**
    * Number of invalid and candidate for constraint validation
