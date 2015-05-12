@@ -33,3 +33,7 @@ DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 17
 # Additional debugging info is exposed in debug builds
 if CONFIG['MOZ_EM_DEBUG']:
     DEFINES['MOZ_EM_DEBUG'] = 1
+
+# Add-on signing cannot be preffed off in official beta, release or esr builds
+if CONFIG['MOZ_UPDATE_CHANNEL'] in ('beta', 'release', 'esr') and CONFIG['MOZ_OFFICIAL_BRANDING']:
+    DEFINES['MOZ_REQUIRE_SIGNING'] = 1

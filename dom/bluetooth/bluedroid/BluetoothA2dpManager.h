@@ -63,6 +63,7 @@ public:
   uint64_t GetTotalMediaNumber();
   void GetTitle(nsAString& aTitle);
   void GetArtist(nsAString& aArtist);
+  void HandleBackendError();
 
 protected:
   virtual ~BluetoothA2dpManager();

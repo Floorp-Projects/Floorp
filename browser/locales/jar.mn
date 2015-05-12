@@ -20,7 +20,6 @@
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
     locale/browser/aboutTabCrashed.dtd             (%chrome/browser/aboutTabCrashed.dtd)
 #ifdef MOZ_SERVICES_SYNC
-    locale/browser/syncProgress.dtd                (%chrome/browser/syncProgress.dtd)
     locale/browser/syncCustomize.dtd               (%chrome/browser/syncCustomize.dtd)
     locale/browser/aboutSyncTabs.dtd               (%chrome/browser/aboutSyncTabs.dtd)
 #endif
@@ -46,6 +45,7 @@
     locale/browser/devtools/webaudioeditor.properties   (%chrome/browser/devtools/webaudioeditor.properties)
     locale/browser/devtools/webconsole.properties     (%chrome/browser/devtools/webconsole.properties)
     locale/browser/devtools/inspector.properties      (%chrome/browser/devtools/inspector.properties)
+    locale/browser/devtools/jsonview.properties       (%chrome/browser/devtools/jsonview.properties)
     locale/browser/devtools/tilt.properties           (%chrome/browser/devtools/tilt.properties)
     locale/browser/devtools/shared.properties         (%chrome/browser/devtools/shared.properties)
     locale/browser/devtools/scratchpad.properties     (%chrome/browser/devtools/scratchpad.properties)

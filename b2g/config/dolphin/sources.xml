@@ -12,10 +12,10 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="2eda36a4795012a5d1275b77ebb20ac377c8cd26">
+  <project name="platform_build" path="build" remote="b2g" revision="a8ace1361d702eef293e48f2ea525dac686daa86">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="6089234ace8b294a8feef064387604bae16254e3"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3654ec1d7ce1e0a56a34d5c3b06f6a9b33ff79ad"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="d3868ff4bb3a4b81382795e2784258c210fe6cb8"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -112,7 +112,7 @@
   <project name="platform/ndk" path="ndk" revision="e58ef003be4306bb53a8c11331146f39e4eab31f"/>
   <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="23404f05422c6bf3c39573325a4f4909167671b4"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="c792f0bd9fff7aea2887c60bbb3a9bbdb534ffa3"/>
-  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="f7d9bf71cf6693474f3f2a81a4ba62c0fc5646aa"/>
+  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="6a1bb59af65b6485b1090522f66fac95c3f9e22c"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="cfcef469537869947abb9aa1d656774cc2678d4c"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="5a48c04c4bb5f079bc757e29864a42427378e051"/>
   <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="48d2332e6d8400cdc0de273ceff2abe8aaababf8"/>
