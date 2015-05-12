@@ -88,15 +88,15 @@ private:
 // the common 'Fc' abbreviation but the gfxPangoFontGroup code already
 // defines versions of these, so use the verbose name for now.
 
-class gfxFontConfigFontEntry : public gfxFontEntry {
+class gfxFontconfigFontEntry : public gfxFontEntry {
 public:
     // used for system fonts with explicit patterns
-    explicit gfxFontConfigFontEntry(const nsAString& aFaceName,
+    explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
                                     FcPattern* aFontPattern);
 
     // used for data fonts where the fontentry takes ownership
     // of the font data and the FT_Face
-    explicit gfxFontConfigFontEntry(const nsAString& aFaceName,
+    explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
                                     uint16_t aWeight,
                                     int16_t aStretch,
                                     bool aItalic,
@@ -104,7 +104,7 @@ public:
                                     FT_Face aFace);
 
     // used for @font-face local system fonts with explicit patterns
-    explicit gfxFontConfigFontEntry(const nsAString& aFaceName,
+    explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
                                     FcPattern* aFontPattern,
                                     uint16_t aWeight,
                                     int16_t aStretch,
@@ -123,7 +123,7 @@ public:
     void ReleaseGrFace(gr_face* aFace) override;
 
 protected:
-    virtual ~gfxFontConfigFontEntry();
+    virtual ~gfxFontconfigFontEntry();
 
     gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
                                 bool aNeedsBold) override;
@@ -159,9 +159,9 @@ protected:
     const uint8_t* mFontData;
 };
 
-class gfxFontConfigFontFamily : public gfxFontFamily {
+class gfxFontconfigFontFamily : public gfxFontFamily {
 public:
-    gfxFontConfigFontFamily(const nsAString& aName) :
+    gfxFontconfigFontFamily(const nsAString& aName) :
         gfxFontFamily(aName) { }
 
     void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) override;
@@ -171,14 +171,14 @@ public:
     void AddFontPattern(FcPattern* aFontPattern);
 
 protected:
-    virtual ~gfxFontConfigFontFamily() { }
+    virtual ~gfxFontconfigFontFamily() { }
 
     nsTArray<nsCountedRef<FcPattern> > mFontPatterns;
 };
 
-class gfxFontConfigFont : public gfxFT2FontBase {
+class gfxFontconfigFont : public gfxFT2FontBase {
 public:
-    gfxFontConfigFont(cairo_scaled_font_t *aScaledFont,
+    gfxFontconfigFont(cairo_scaled_font_t *aScaledFont,
                       gfxFontEntry *aFontEntry,
                       const gfxFontStyle *aFontStyle,
                       bool aNeedsBold);
@@ -189,7 +189,7 @@ public:
 #endif
 
 protected:
-    virtual ~gfxFontConfigFont();
+    virtual ~gfxFontconfigFont();
 };
 
 class gfxFcPlatformFontList : public gfxPlatformFontList {
