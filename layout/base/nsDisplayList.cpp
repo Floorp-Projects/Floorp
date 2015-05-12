@@ -4914,6 +4914,17 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
                         0);
   Point3D offsetBetweenOrigins = roundedOrigin + aProperties.mToTransformOrigin;
 
+  if (aOffsetByOrigin) {
+    // We can fold the final translation by roundedOrigin into the first matrix
+    // basis change translation. This is more stable against variation due to
+    // insufficient floating point precision than reversing the translation
+    // afterwards.
+    result.Translate(-aProperties.mToTransformOrigin);
+    result.TranslatePost(offsetBetweenOrigins);
+  } else {
+    result.ChangeBasis(offsetBetweenOrigins);
+  }
+
   if (frame && frame->Preserves3D()) {
     // Include the transform set on our parent
     NS_ASSERTION(frame->GetParent() &&
@@ -4933,27 +4944,9 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
                                           aOrigin - frame->GetPosition(),
                                           aAppUnitsPerPixel, nullptr,
                                           aOutAncestor, !frame->IsTransformed());
-
-    if (aOffsetByOrigin) {
-      result.Translate(-aProperties.mToTransformOrigin);
-      result.TranslatePost(offsetBetweenOrigins);
-    } else {
-      result.ChangeBasis(offsetBetweenOrigins);
-    }
     result = result * parent;
-    return result;
   }
 
-  if (aOffsetByOrigin) {
-    // We can fold the final translation by roundedOrigin into the first matrix
-    // basis change translation. This is more stable against variation due to
-    // insufficient floating point precision than reversing the translation
-    // afterwards.
-    result.Translate(-aProperties.mToTransformOrigin);
-    result.TranslatePost(offsetBetweenOrigins);
-  } else {
-    result.ChangeBasis(offsetBetweenOrigins);
-  }
   return result;
 }
 
