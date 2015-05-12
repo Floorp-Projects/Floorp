@@ -817,7 +817,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 394676-1.xhtml 394676-1-ref.xhtml # bu
 skip-if((B2G&&browserIsRemote)||Mulet) == 395331-1.xml 395331-1-ref.xml # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 == 395390-1.html 395390-1-ref.html
 == 396286-1.html about:blank  # crash test
-== 397428-1.html 397428-1-ref.html
+fuzzy-if(Android,2,140) == 397428-1.html 397428-1-ref.html
 == 397844-1.xhtml 397844-1-ref.xhtml
 == 398092-1.html 398092-1-ref.html
 == 398101-1.html 398101-1-ref.html
