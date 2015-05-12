@@ -195,6 +195,7 @@ toolkit.jar:
   skin/classic/global/in-content/dropdown.svg                        (../../shared/in-content/dropdown.svg)
   skin/classic/global/in-content/help-glyph.svg                      (../../shared/in-content/help-glyph.svg)
   skin/classic/global/in-content/radio.svg                           (../../shared/in-content/radio.svg)
+  skin/classic/global/reader/pocket.svg                              (../../shared/reader/pocket.svg)
   skin/classic/global/reader/RM-Add-24x24.svg                        (../../shared/reader/RM-Add-24x24.svg)
   skin/classic/global/reader/RM-Close-24x24.svg                      (../../shared/reader/RM-Close-24x24.svg)
   skin/classic/global/reader/RM-Delete-24x24.svg                     (../../shared/reader/RM-Delete-24x24.svg)
