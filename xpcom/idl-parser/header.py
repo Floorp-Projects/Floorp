@@ -406,7 +406,7 @@ def write_interface(iface, fd):
 
     for key, group in itertools.groupby(iface.members, key=type):
         if key == xpidl.ConstMember:
-            write_const_decls(group) # iterator of all the consts
+            write_const_decls(group)  # iterator of all the consts
         else:
             for member in group:
                 if key == xpidl.Attribute:
@@ -432,7 +432,7 @@ def write_interface(iface, fd):
     if len(iface.members) == 0:
         fd.write('\\\n  /* no methods! */')
     elif not member.kind in ('attribute', 'method'):
-       fd.write('\\')
+        fd.write('\\')
 
     fd.write(iface_forward % names)
 
