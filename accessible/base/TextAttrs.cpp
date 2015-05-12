@@ -18,6 +18,10 @@
 #include "mozilla/AppUnits.h"
 #include "mozilla/gfx/2D.h"
 
+#if defined(MOZ_WIDGET_GTK)
+#include "gfxPlatformGtk.h" // xxx - for UseFcFontList
+#endif
+
 using namespace mozilla;
 using namespace mozilla::a11y;
 
@@ -628,21 +632,30 @@ TextAttrsMgr::FontWeightTextAttr::
   if (font->IsSyntheticBold())
     return 700;
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
-  // On Linux, font->GetStyle()->weight will give the absolute weight requested
-  // of the font face. The Linux code uses the gfxFontEntry constructor which
-  // doesn't initialize the weight field.
-  return font->GetStyle()->weight;
-#else
-  // On Windows, font->GetStyle()->weight will give the same weight as
-  // fontEntry->Weight(), the weight of the first font in the font group, which
-  // may not be the weight of the font face used to render the characters.
-  // On Mac, font->GetStyle()->weight will just give the same number as
-  // getComputedStyle(). fontEntry->Weight() will give the weight of the font
-  // face used.
-  gfxFontEntry *fontEntry = font->GetFontEntry();
-  return fontEntry->Weight();
+  bool useFontEntryWeight = true;
+
+  // Under Linux, when gfxPangoFontGroup code is used,
+  // font->GetStyle()->weight will give the absolute weight requested of the
+  // font face. The gfxPangoFontGroup code uses the gfxFontEntry constructor
+  // which doesn't initialize the weight field.
+#if defined(MOZ_WIDGET_QT)
+  useFontEntryWeight = false;
+#elif defined(MOZ_WIDGET_GTK)
+  useFontEntryWeight = gfxPlatformGtk::UseFcFontList();
 #endif
+
+  if (useFontEntryWeight) {
+    // On Windows, font->GetStyle()->weight will give the same weight as
+    // fontEntry->Weight(), the weight of the first font in the font group,
+    // which may not be the weight of the font face used to render the
+    // characters. On Mac, font->GetStyle()->weight will just give the same
+    // number as getComputedStyle(). fontEntry->Weight() will give the weight
+    // of the font face used.
+    gfxFontEntry *fontEntry = font->GetFontEntry();
+    return fontEntry->Weight();
+  } else {
+    return font->GetStyle()->weight;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
