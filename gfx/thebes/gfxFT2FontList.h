@@ -134,7 +134,7 @@ public:
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
 
-    void GetFontList(InfallibleTArray<FontListEntry>* retValue);
+    void GetSystemFontList(InfallibleTArray<FontListEntry>* retValue);
 
     static gfxFT2FontList* PlatformFontList() {
         return static_cast<gfxFT2FontList*>(gfxPlatformFontList::PlatformFontList());
