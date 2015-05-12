@@ -142,7 +142,7 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   border-radius: 4px 4px 0 0;
 }
 
-.search-panel-current-engine:not([showonlysettings]) {
+.search-panel-current-engine {
   border-bottom: 1px solid #ccc;
 }
 
@@ -154,6 +154,10 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   margin: 0;
   padding: 3px 6px;
   color: #666;
+}
+
+.search-panel-tree[collapsed=true] + .search-panel-header {
+  border-top: none;
 }
 
 .search-panel-current-input > label {
