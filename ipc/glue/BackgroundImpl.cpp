@@ -845,7 +845,7 @@ BackgroundParent::GetContentParent(PBackgroundParent* aBackgroundActor)
 PBlobParent*
 BackgroundParent::GetOrCreateActorForBlobImpl(
                                             PBackgroundParent* aBackgroundActor,
-                                            FileImpl* aBlobImpl)
+                                            BlobImpl* aBlobImpl)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBackgroundActor);
@@ -921,7 +921,7 @@ BackgroundChild::GetOrCreateActorForBlob(PBackgroundChild* aBackgroundActor,
   MOZ_ASSERT(aBackgroundActor == GetForCurrentThread(),
              "BackgroundChild is bound to a different thread!");
 
-  nsRefPtr<FileImpl> blobImpl = static_cast<File*>(aBlob)->Impl();
+  nsRefPtr<BlobImpl> blobImpl = static_cast<Blob*>(aBlob)->Impl();
   MOZ_ASSERT(blobImpl);
 
   BlobChild* actor = BlobChild::GetOrCreate(aBackgroundActor, blobImpl);

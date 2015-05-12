@@ -287,7 +287,6 @@ MInstruction::foldsToStoredValue(TempAllocator& alloc, MDefinition* loaded)
 
         MOZ_ASSERT(loaded->type() < MIRType_Value);
         MBox* box = MBox::New(alloc, loaded);
-        block()->insertBefore(this, box);
         loaded = box;
     }
 
@@ -2316,7 +2315,6 @@ MMinMax::foldsTo(TempAllocator& alloc)
                 MLimitedTruncate::New(alloc, operand->getOperand(0), MDefinition::NoTruncate);
             block()->insertBefore(this, limit);
             MToDouble* toDouble = MToDouble::New(alloc, limit);
-            block()->insertBefore(this, toDouble);
             return toDouble;
         }
 
@@ -2326,7 +2324,6 @@ MMinMax::foldsTo(TempAllocator& alloc)
                 MLimitedTruncate::New(alloc, operand->getOperand(0), MDefinition::NoTruncate);
             block()->insertBefore(this, limit);
             MToDouble* toDouble = MToDouble::New(alloc, limit);
-            block()->insertBefore(this, toDouble);
             return toDouble;
         }
     }
@@ -4669,7 +4666,8 @@ MTableSwitch::foldsTo(TempAllocator& alloc)
 }
 
 MDefinition*
-MArrayJoin::foldsTo(TempAllocator& alloc) {
+MArrayJoin::foldsTo(TempAllocator& alloc)
+{
     // :TODO: Enable this optimization after fixing Bug 977966 test cases.
     return this;
 

@@ -28,7 +28,7 @@ class EventChainPostVisitor;
 
 namespace dom {
 
-class File;
+class Blob;
 class DOMStringList;
 struct IDBObjectStoreParameters;
 template <class> class Optional;
@@ -177,13 +177,13 @@ public:
   AbortTransactions(bool aShouldWarn);
 
   PBackgroundIDBDatabaseFileChild*
-  GetOrCreateFileActorForBlob(File* aBlob);
+  GetOrCreateFileActorForBlob(Blob* aBlob);
 
   void
   NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor);
 
   void
-  NoteReceivedBlob(File* aBlob);
+  NoteReceivedBlob(Blob* aBlob);
 
   void
   DelayedMaybeExpireFileActors();

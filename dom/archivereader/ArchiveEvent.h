@@ -36,7 +36,7 @@ public:
   virtual nsresult GetFilename(nsString& aFilename) = 0;
 
   // Generate a File
-  virtual nsIDOMFile* File(ArchiveReader* aArchiveReader) = 0;
+  virtual already_AddRefed<File> GetFile(ArchiveReader* aArchiveReader) = 0;
 
 protected:
   virtual ~ArchiveItem();

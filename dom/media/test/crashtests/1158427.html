@@ -5,10 +5,15 @@
 
 function boom()
 {
+  dump("before capture\n");
   document.createElement("audio").mozCaptureStreamUntilEnded();
+  dump("before context\n");
   new window.AudioContext();
+  dump("before mozapps\n");
   navigator.mozApps;
+  dump("before gc\n");
   SpecialPowers.forceCC();
+  dump("after gc\n");
 }
 
 </script>

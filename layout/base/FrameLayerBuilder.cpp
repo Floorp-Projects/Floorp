@@ -307,7 +307,7 @@ public:
   /**
    * Keep track of important decisions for debugging.
    */
-  nsAutoCString mLog;
+  nsCString mLog;
 
   #define FLB_LOG_PAINTED_LAYER_DECISION(pld, ...) \
           if (gfxPrefs::LayersDumpDecision()) { \
@@ -5059,7 +5059,7 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
       nsIFrame* frame = cdi->mItem->Frame();
       frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
 #ifdef MOZ_DUMP_PAINTING
-      if (gfxUtils::sDumpPainting) {
+      if (gfxUtils::sDumpPaintItems) {
         DebugPaintItem(aDrawTarget, aPresContext, cdi->mItem, aBuilder);
       } else {
 #else
