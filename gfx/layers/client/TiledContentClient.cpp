@@ -569,10 +569,12 @@ TileClient::Flip()
   if (mFrontBuffer && mFrontBuffer->GetIPDLActor() &&
       mCompositableClient && mCompositableClient->GetIPDLActor()) {
     // remove old buffer from CompositableHost
-    RefPtr<AsyncTransactionTracker> tracker = new RemoveTextureFromCompositableTracker();
+    RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
+    RefPtr<AsyncTransactionTracker> tracker =
+        new RemoveTextureFromCompositableTracker(waiter);
     // Hold TextureClient until transaction complete.
     tracker->SetTextureClient(mFrontBuffer);
-    mFrontBuffer->SetRemoveFromCompositableTracker(tracker);
+    mFrontBuffer->SetRemoveFromCompositableWaiter(waiter);
     // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
     mManager->AsShadowForwarder()->RemoveTextureFromCompositableAsync(tracker,
                                                                       mCompositableClient,
@@ -667,10 +669,12 @@ TileClient::DiscardFrontBuffer()
     if (mFrontBuffer->GetIPDLActor() &&
         mCompositableClient && mCompositableClient->GetIPDLActor()) {
       // remove old buffer from CompositableHost
-      RefPtr<AsyncTransactionTracker> tracker = new RemoveTextureFromCompositableTracker();
+      RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
+      RefPtr<AsyncTransactionTracker> tracker =
+          new RemoveTextureFromCompositableTracker(waiter);
       // Hold TextureClient until transaction complete.
       tracker->SetTextureClient(mFrontBuffer);
-      mFrontBuffer->SetRemoveFromCompositableTracker(tracker);
+      mFrontBuffer->SetRemoveFromCompositableWaiter(waiter);
       // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
       mManager->AsShadowForwarder()->RemoveTextureFromCompositableAsync(tracker,
                                                                         mCompositableClient,

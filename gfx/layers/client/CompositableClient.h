@@ -34,7 +34,8 @@ class PCompositableChild;
  */
 class RemoveTextureFromCompositableTracker : public AsyncTransactionTracker {
 public:
-  RemoveTextureFromCompositableTracker()
+  explicit RemoveTextureFromCompositableTracker(AsyncTransactionWaiter* aWaiter = nullptr)
+    : AsyncTransactionTracker(aWaiter)
   {
     MOZ_COUNT_CTOR(RemoveTextureFromCompositableTracker);
   }
