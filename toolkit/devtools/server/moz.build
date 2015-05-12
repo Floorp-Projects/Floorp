@@ -72,6 +72,7 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/webbrowser.js',
     'actors/webconsole.js',
     'actors/webgl.js',
+    'actors/worker.js',
 ]
 
 EXTRA_JS_MODULES.devtools.server.actors.utils += [
