@@ -379,6 +379,14 @@
   background-image: url("chrome://global/skin/reader/RM-Plus-24x24.svg");
 }
 
+#pocket-button {
+  background-image: url("chrome://global/skin/reader/pocket.svg#pocket-mark");
+}
+
+#pocket-button:hover:active {
+  background-image: url("chrome://global/skin/reader/pocket.svg#pocket-mark-added");
+}
+
 @media print {
   .toolbar {
     display: none !important;
