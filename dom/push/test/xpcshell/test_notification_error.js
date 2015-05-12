@@ -18,8 +18,7 @@ function run_test() {
 
 add_task(function* test_notification_error() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: 'f04f1e46-9139-4826-b2d1-9411b0821283',
     pushEndpoint: 'https://example.org/update/success-1',
@@ -37,7 +36,7 @@ add_task(function* test_notification_error() {
     version: 3
   }];
   for (let record of records) {
-    yield promiseDB.put(record);
+    yield db.put(record);
   }
 
   let notifyPromise = Promise.all([
@@ -56,11 +55,11 @@ add_task(function* test_notification_error() {
   PushService.init({
     networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
-      getByChannelID(prev, channelID, successCb, failureCb) {
+      getByChannelID(prev, channelID) {
         if (channelID == '3c3930ba-44de-40dc-a7ca-8a133ec1a866') {
-          return failureCb('splines not reticulated');
+          return Promise.reject('splines not reticulated');
         }
-        return prev.call(this, channelID, successCb, failureCb);
+        return prev.call(this, channelID);
       }
     }),
     makeWebSocket(uri) {
@@ -107,19 +106,19 @@ add_task(function* test_notification_error() {
   yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
     'Timed out waiting for acknowledgements');
 
-  let aRecord = yield promiseDB.getByScope('https://example.com/a');
+  let aRecord = yield db.getByScope('https://example.com/a');
   equal(aRecord.channelID, 'f04f1e46-9139-4826-b2d1-9411b0821283',
     'Wrong channel ID for record A');
   strictEqual(aRecord.version, 2,
     'Should return the new version for record A');
 
-  let bRecord = yield promiseDB.getByScope('https://example.com/b');
+  let bRecord = yield db.getByScope('https://example.com/b');
   equal(bRecord.channelID, '3c3930ba-44de-40dc-a7ca-8a133ec1a866',
     'Wrong channel ID for record B');
   strictEqual(bRecord.version, 2,
     'Should return the previous version for record B');
 
-  let cRecord = yield promiseDB.getByScope('https://example.com/c');
+  let cRecord = yield db.getByScope('https://example.com/c');
   equal(cRecord.channelID, 'b63f7bef-0a0d-4236-b41e-086a69dfd316',
     'Wrong channel ID for record C');
   strictEqual(cRecord.version, 4,
