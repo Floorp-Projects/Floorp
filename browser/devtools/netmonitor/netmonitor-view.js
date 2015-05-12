@@ -1425,10 +1425,11 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         }
         let nameWithQuery = this._getUriNameWithQuery(uri);
         let hostPort = this._getUriHostPort(uri);
+        let unicodeUrl = NetworkHelper.convertToUnicode(unescape(uri.spec));
 
         let file = $(".requests-menu-file", target);
         file.setAttribute("value", nameWithQuery);
-        file.setAttribute("tooltiptext", nameWithQuery);
+        file.setAttribute("tooltiptext", unicodeUrl);
 
         let domain = $(".requests-menu-domain", target);
         domain.setAttribute("value", hostPort);
@@ -1906,7 +1907,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     if (!(aUrl instanceof Ci.nsIURL)) {
       aUrl = nsIURL(aUrl);
     }
-    let name = NetworkHelper.convertToUnicode(unescape(aUrl.fileName)) || "/";
+    let name = NetworkHelper.convertToUnicode(unescape(aUrl.fileName || aUrl.filePath || "/"));
     let query = NetworkHelper.convertToUnicode(unescape(aUrl.query));
     return name + (query ? "?" + query : "");
   },
