@@ -295,7 +295,6 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     mBorderStyle = aInitData->mBorderStyle;
     mPopupLevel = aInitData->mPopupLevel;
     mPopupType = aInitData->mPopupHint;
-    mMultiProcessWindow = aInitData->mMultiProcessWindow;
   }
 
   if (aParent) {
@@ -952,11 +951,6 @@ public:
 private:
   nsRefPtr<APZCTreeManager> mTreeManager;
 };
-
-bool nsBaseWidget::IsMultiProcessWindow()
-{
-  return mMultiProcessWindow;
-}
 
 void nsBaseWidget::ConfigureAPZCTreeManager()
 {
