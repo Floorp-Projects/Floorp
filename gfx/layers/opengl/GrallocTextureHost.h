@@ -16,9 +16,7 @@ namespace mozilla {
 namespace layers {
 
 class GrallocTextureHostOGL : public TextureHost
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
                             , public TextureHostOGL
-#endif
 {
   friend class GrallocBufferActor;
 public:
