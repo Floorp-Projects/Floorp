@@ -117,7 +117,7 @@ BroadcastChannelParent::CheckAndDeliver(const ClonedMessageData& aData,
 
     // Ricreate the BlobParent for this new message.
     for (uint32_t i = 0, len = newData.blobsParent().Length(); i < len; ++i) {
-      nsRefPtr<FileImpl> impl =
+      nsRefPtr<BlobImpl> impl =
         static_cast<BlobParent*>(newData.blobsParent()[i])->GetBlobImpl();
 
       PBlobParent* blobParent =

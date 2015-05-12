@@ -99,7 +99,7 @@ nsIGlobalObject::TraverseHostObjectURIs(nsCycleCollectionTraversalCallback &aCb)
     return;
   }
 
-  // Currently we only store FileImpl objects off the the main-thread and they
+  // Currently we only store BlobImpl objects off the the main-thread and they
   // are not CCed.
   if (!NS_IsMainThread()) {
     return;
