@@ -190,16 +190,18 @@ nsContextMenu.prototype = {
         let locale = Cc["@mozilla.org/chrome/chrome-registry;1"].
                      getService(Ci.nsIXULChromeRegistry).
                      getSelectedLocale("browser");
-        let url = "chrome://browser/content/browser-pocket-" + locale + ".properties";
-        let bundle = Services.strings.createBundle(url);
-        let item = document.getElementById("context-pocket");
-        try {
-          item.setAttribute("label", bundle.GetStringFromName("saveToPocketCmd.label"));
-          item.setAttribute("accesskey", bundle.GetStringFromName("saveToPocketCmd.accesskey"));
-        } catch (err) {
-          // GetStringFromName throws when the bundle doesn't exist.  In that
-          // case, the item will retain the browser-pocket.dtd en-US string that
-          // it has in the markup.
+        if (locale != "en-US") {
+          let url = "chrome://browser/content/browser-pocket-" + locale + ".properties";
+          let bundle = Services.strings.createBundle(url);
+          let item = document.getElementById("context-pocket");
+          try {
+            item.setAttribute("label", bundle.GetStringFromName("saveToPocketCmd.label"));
+            item.setAttribute("accesskey", bundle.GetStringFromName("saveToPocketCmd.accesskey"));
+          } catch (err) {
+            // GetStringFromName throws when the bundle doesn't exist.  In that
+            // case, the item will retain the browser-pocket.dtd en-US string that
+            // it has in the markup.
+          }
         }
       }
     }
