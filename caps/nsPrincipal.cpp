@@ -105,13 +105,11 @@ nsPrincipal::GetScriptLocation(nsACString &aStr)
 }
 
 /* static */ nsresult
-nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
+nsPrincipal::GetOriginForURI(nsIURI* aURI, nsACString& aOrigin)
 {
   if (!aURI) {
     return NS_ERROR_FAILURE;
   }
-
-  *aOrigin = nullptr;
 
   nsCOMPtr<nsIURI> origin = NS_GetInnermostURI(aURI);
   if (!origin) {
@@ -146,29 +144,21 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
       hostPort.AppendInt(port, 10);
     }
 
-    nsAutoCString scheme;
-    rv = origin->GetScheme(scheme);
+    rv = origin->GetScheme(aOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    *aOrigin = ToNewCString(scheme + NS_LITERAL_CSTRING("://") + hostPort);
+    aOrigin.AppendLiteral("://");
+    aOrigin.Append(hostPort);
   }
   else {
-    // Some URIs (e.g., nsSimpleURI) don't support asciiHost. Just
-    // get the full spec.
-    nsAutoCString spec;
-    // XXX nsMozIconURI and nsJARURI don't implement this correctly, they
-    // both fall back to GetSpec.  That needs to be fixed.
-    rv = origin->GetAsciiSpec(spec);
+    rv = origin->GetAsciiSpec(aOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    *aOrigin = ToNewCString(spec);
   }
 
-  return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetOrigin(char **aOrigin)
+nsPrincipal::GetOrigin(nsACString& aOrigin)
 {
   return GetOriginForURI(mCodebase, aOrigin);
 }
@@ -752,10 +742,10 @@ nsExpandedPrincipal::SetDomain(nsIURI* aDomain)
 }
 
 NS_IMETHODIMP
-nsExpandedPrincipal::GetOrigin(char** aOrigin)
+nsExpandedPrincipal::GetOrigin(nsACString& aOrigin)
 {
-  *aOrigin = ToNewCString(NS_LITERAL_CSTRING(EXPANDED_PRINCIPAL_SPEC));
-  return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  aOrigin.AssignLiteral(EXPANDED_PRINCIPAL_SPEC);
+  return NS_OK;
 }
 
 typedef nsresult (NS_STDCALL nsIPrincipal::*nsIPrincipalMemFn)(nsIPrincipal* aOther,

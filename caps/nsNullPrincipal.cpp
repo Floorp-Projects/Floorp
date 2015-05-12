@@ -121,19 +121,10 @@ nsNullPrincipal::SetDomain(nsIURI* aDomain)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP 
-nsNullPrincipal::GetOrigin(char** aOrigin)
+NS_IMETHODIMP
+nsNullPrincipal::GetOrigin(nsACString& aOrigin)
 {
-  *aOrigin = nullptr;
-  
-  nsAutoCString str;
-  nsresult rv = mURI->GetSpec(str);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aOrigin = ToNewCString(str);
-  NS_ENSURE_TRUE(*aOrigin, NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
+  return mURI->GetSpec(aOrigin);
 }
 
 NS_IMETHODIMP

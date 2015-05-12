@@ -89,10 +89,10 @@ nsSystemPrincipal::GetURI(nsIURI** aURI)
 }
 
 NS_IMETHODIMP 
-nsSystemPrincipal::GetOrigin(char** aOrigin)
+nsSystemPrincipal::GetOrigin(nsACString& aOrigin)
 {
-    *aOrigin = ToNewCString(NS_LITERAL_CSTRING(SYSTEM_PRINCIPAL_SPEC));
-    return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aOrigin.AssignLiteral(SYSTEM_PRINCIPAL_SPEC);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
