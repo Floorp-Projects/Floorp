@@ -161,7 +161,7 @@ protected:
 
 class gfxFontconfigFontFamily : public gfxFontFamily {
 public:
-    gfxFontconfigFontFamily(const nsAString& aName) :
+    explicit gfxFontconfigFontFamily(const nsAString& aName) :
         gfxFontFamily(aName) { }
 
     void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) override;
