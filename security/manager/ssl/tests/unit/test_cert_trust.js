@@ -34,8 +34,8 @@ function check_cert_err_generic(cert, expected_error, usage) {
   do_print("cert issuer cn=" + cert.issuerCommonName);
   let hasEVPolicy = {};
   let verifiedChain = {};
-  let error = certdb.verifyCertNow(cert, usage,
-                                   NO_FLAGS, verifiedChain, hasEVPolicy);
+  let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, null, verifiedChain,
+                                   hasEVPolicy);
   do_check_eq(error,  expected_error);
 };
 

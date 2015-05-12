@@ -23,6 +23,7 @@
 #include "prerror.h"
 #include "prmem.h"
 #include "prprf.h"
+#include "PublicKeyPinningService.h"
 #include "ScopedNSSTypes.h"
 #include "secerr.h"
 
@@ -708,6 +709,9 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
   if (srv != SECSuccess) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
+  if (CERT_LIST_EMPTY(certList)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
 
   // If the certificate appears to have been issued by a CNNIC root, only allow
   // it if it is on the whitelist.
@@ -752,10 +756,28 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
     }
   }
 
-  Result result = CertListContainsExpectedKeys(certList, mHostname, time,
-                                               mPinningMode);
-  if (result != Success) {
-    return result;
+  bool isBuiltInRoot = false;
+  srv = IsCertBuiltInRoot(root, isBuiltInRoot);
+  if (srv != SECSuccess) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+  bool skipPinningChecksBecauseOfMITMMode =
+    (!isBuiltInRoot && mPinningMode == CertVerifier::pinningAllowUserCAMITM);
+  // If mHostname isn't set, we're not verifying in the context of a TLS
+  // handshake, so don't verify HPKP in those cases.
+  if (mHostname && (mPinningMode != CertVerifier::pinningDisabled) &&
+      !skipPinningChecksBecauseOfMITMMode) {
+    bool enforceTestMode =
+      (mPinningMode == CertVerifier::pinningEnforceTestMode);
+    bool chainHasValidPins;
+    nsresult nsrv = PublicKeyPinningService::ChainHasValidPins(
+      certList, mHostname, time, enforceTestMode, chainHasValidPins);
+    if (NS_FAILED(nsrv)) {
+      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    }
+    if (!chainHasValidPins) {
+      return Result::ERROR_KEY_PINNING_FAILURE;
+    }
   }
 
   if (mBuiltChain) {
