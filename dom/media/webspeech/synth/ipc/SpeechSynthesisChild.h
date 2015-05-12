@@ -48,7 +48,7 @@ public:
   virtual ~SpeechSynthesisRequestChild();
 
 protected:
-  virtual bool RecvOnStart() override;
+  virtual bool RecvOnStart(const nsString& aUri) override;
 
   virtual bool Recv__delete__(const bool& aIsError,
                               const float& aElapsedTime,

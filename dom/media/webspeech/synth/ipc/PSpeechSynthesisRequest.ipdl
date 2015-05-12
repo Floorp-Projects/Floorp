@@ -25,7 +25,7 @@ async protocol PSpeechSynthesisRequest
 
   __delete__(bool aIsError, float aElapsedTime, uint32_t aCharIndex);
 
-  OnStart();
+  OnStart(nsString aUri);
 
   OnPause(float aElapsedTime, uint32_t aCharIndex);
 
