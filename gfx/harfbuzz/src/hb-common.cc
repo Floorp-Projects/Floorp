@@ -57,7 +57,7 @@ _hb_options_init (void)
 
 /**
  * hb_tag_from_string:
- * @str: (array length=len): 
+ * @str: (array length=len) (element-type uint8_t): 
  * @len: 
  *
  * 
@@ -115,7 +115,7 @@ const char direction_strings[][4] = {
 
 /**
  * hb_direction_from_string:
- * @str: (array length=len): 
+ * @str: (array length=len) (element-type uint8_t): 
  * @len: 
  *
  * 
@@ -179,7 +179,7 @@ static const char canon_map[256] = {
   'p', 'q', 'r', 's', 't', 'u', 'v', 'w',  'x', 'y', 'z',  0,   0,   0,   0,   0
 };
 
-static hb_bool_t
+static bool
 lang_equal (hb_language_t  v1,
 	    const void    *v2)
 {
@@ -235,7 +235,7 @@ struct hb_language_item_t {
 static hb_language_item_t *langs;
 
 #ifdef HB_USE_ATEXIT
-static inline
+static
 void free_langs (void)
 {
   while (langs) {
@@ -265,6 +265,7 @@ retry:
   *lang = key;
 
   if (!hb_atomic_ptr_cmpexch (&langs, first_lang, lang)) {
+    lang->finish ();
     free (lang);
     goto retry;
   }
@@ -280,12 +281,12 @@ retry:
 
 /**
  * hb_language_from_string:
- * @str: (array length=len): 
+ * @str: (array length=len) (element-type uint8_t): 
  * @len: 
  *
  * 
  *
- * Return value: 
+ * Return value: (transfer none):
  *
  * Since: 1.0
  **/
@@ -345,7 +346,7 @@ hb_language_get_default (void)
   hb_language_t language = (hb_language_t) hb_atomic_ptr_get (&default_language);
   if (unlikely (language == HB_LANGUAGE_INVALID)) {
     language = hb_language_from_string (setlocale (LC_CTYPE, NULL), -1);
-    hb_atomic_ptr_cmpexch (&default_language, HB_LANGUAGE_INVALID, language);
+    (void) hb_atomic_ptr_cmpexch (&default_language, HB_LANGUAGE_INVALID, language);
   }
 
   return default_language;
@@ -400,7 +401,7 @@ hb_script_from_iso15924_tag (hb_tag_t tag)
 
 /**
  * hb_script_from_string:
- * @s: (array length=len): 
+ * @s: (array length=len) (element-type uint8_t): 
  * @len: 
  *
  * 

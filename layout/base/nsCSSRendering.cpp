@@ -4549,12 +4549,12 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
   }
 
   if (aVertical) {
-    r.y = baseline + floor(aOffset + 0.5); // this will need updating when we
-                                           // support sideways-left orientation
+    r.y = baseline + floor(offset + 0.5); // this will need updating when we
+                                          // support sideways-left orientation
     Swap(r.x, r.y);
     Swap(r.width, r.height);
   } else {
-    r.y = baseline - floor(aOffset + 0.5);
+    r.y = baseline - floor(offset + 0.5);
   }
 
   return r;

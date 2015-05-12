@@ -74,13 +74,6 @@ SuggestAutoComplete.prototype = {
       finalComments = finalComments.concat(comments);
     }
 
-    // If no result, add the search term so that the panel of the new UI is shown anyway.
-    if (!finalResults.length &&
-        Services.prefs.getBoolPref("browser.search.showOneOffButtons")) {
-      finalResults.push(results.term);
-      finalComments.push("");
-    }
-
     // Notify the FE of our new results
     this.onResultsReady(results.term, finalResults, finalComments, results.formHistoryResult);
   },

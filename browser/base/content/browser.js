@@ -2282,62 +2282,71 @@ function readFromClipboard()
   return url;
 }
 
-function BrowserViewSourceOfDocument(aDocument)
-{
-  var pageCookie;
-  var webNav;
+/**
+ * Open the View Source dialog.
+ *
+ * @param aArgsOrDocument
+ *        Either an object or a Document. Passing a Document is deprecated,
+ *        and is not supported with e10s. This function will throw if
+ *        aArgsOrDocument is a CPOW.
+ *
+ *        If aArgsOrDocument is an object, that object can take the
+ *        following properties:
+ *
+ *        browser:
+ *          The browser containing the document that we would like to view the
+ *          source of.
+ *        URL:
+ *          A string URL for the page we'd like to view the source of.
+ *        outerWindowID (optional):
+ *          The outerWindowID of the content window containing the document that
+ *          we want to view the source of. You only need to provide this if you
+ *          want to attempt to retrieve the document source from the network
+ *          cache.
+ *        lineNumber (optional):
+ *          The line number to focus on once the source is loaded.
+ */
+function BrowserViewSourceOfDocument(aArgsOrDocument) {
+  let args;
 
-  // Get the document charset
-  var docCharset = "charset=" + aDocument.characterSet;
-
-  // Get the nsIWebNavigation associated with the document
-  try {
-      var win;
-      var ifRequestor;
-
-      // Get the DOMWindow for the requested document.  If the DOMWindow
-      // cannot be found, then just use the content window...
-      //
-      // XXX:  This is a bit of a hack...
-      win = aDocument.defaultView;
-      if (win == window) {
-        win = content;
-      }
-      ifRequestor = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-
-      webNav = ifRequestor.getInterface(nsIWebNavigation);
-  } catch(err) {
-      // If nsIWebNavigation cannot be found, just get the one for the whole
-      // window...
-      webNav = gBrowser.webNavigation;
-  }
-  //
-  // Get the 'PageDescriptor' for the current document. This allows the
-  // view-source to access the cached copy of the content rather than
-  // refetching it from the network...
-  //
-  try {
-
-#ifdef E10S_TESTING_ONLY
-    // Workaround for bug 988133, which causes a crash if we attempt to load
-    // the document from the cache when the document is a CPOW (which occurs
-    // if we're using remote tabs). This causes us to reload the document from
-    // the network in this case, so it's not a permanent solution, hence hiding
-    // it behind the E10S_TESTING_ONLY ifdef. This is just a band-aid fix until
-    // we can find something better - see bug 1025146.
-    if (!Cu.isCrossProcessWrapper(aDocument)) {
-#endif
-      var PageLoader = webNav.QueryInterface(Components.interfaces.nsIWebPageDescriptor);
-
-      pageCookie = PageLoader.currentDescriptor;
-#ifdef E10S_TESTING_ONLY
+  if (aArgsOrDocument instanceof Document) {
+    let doc = aArgsOrDocument;
+    // Deprecated API - callers should pass args object instead.
+    if (Cu.isCrossProcessWrapper(doc)) {
+      throw new Error("BrowserViewSourceOfDocument cannot accept a CPOW " +
+                      "as a document.");
     }
-#endif
-  } catch(err) {
-    // If no page descriptor is available, just use the view-source URL...
+
+    let requestor = doc.defaultView
+                       .QueryInterface(Ci.nsIInterfaceRequestor);
+    let browser = requestor.getInterface(Ci.nsIWebNavigation)
+                           .QueryInterface(Ci.nsIDocShell)
+                           .chromeEventHandler;
+    let outerWindowID = requestor.getInterface(Ci.nsIDOMWindowUtils)
+                                 .outerWindowID;
+    let URL = browser.currentURI.spec;
+    args = { browser, outerWindowID, URL };
+  } else {
+    args = aArgsOrDocument;
   }
 
-  top.gViewSourceUtils.viewSource(webNav.currentURI.spec, pageCookie, aDocument);
+  top.gViewSourceUtils.viewSource(args);
+}
+
+/**
+ * Opens the View Source dialog for the source loaded in the root
+ * top-level document of the browser. This is really just a
+ * convenience wrapper around BrowserViewSourceOfDocument.
+ *
+ * @param browser
+ *        The browser that we want to load the source of.
+ */
+function BrowserViewSource(browser) {
+  BrowserViewSourceOfDocument({
+    browser: browser,
+    outerWindowID: browser.outerWindowID,
+    URL: browser.currentURI.spec,
+  });
 }
 
 // doc - document to use for source, or null for this window's document

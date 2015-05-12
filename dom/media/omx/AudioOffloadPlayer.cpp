@@ -449,10 +449,7 @@ void AudioOffloadPlayer::NotifyAudioEOS()
 void AudioOffloadPlayer::NotifyPositionChanged()
 {
   nsCOMPtr<nsIRunnable> nsEvent =
-    NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-      mObserver,
-      &MediaOmxCommonDecoder::PlaybackPositionChanged,
-      MediaDecoderEventVisibility::Observable);
+    NS_NewRunnableMethod(mObserver, &MediaOmxCommonDecoder::NotifyOffloadPlayerPositionChanged);
   NS_DispatchToMainThread(nsEvent);
 }
 

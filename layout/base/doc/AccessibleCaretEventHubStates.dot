@@ -1,0 +1,37 @@
+// Steps to generate AccessibleCaretEventHubStates.png
+// 1. Install Graphviz
+// 2. dot -T png -o AccessibleCaretEventHubStates.png AccessibleCaretEventHubStates.dot
+digraph event_hub_states {
+  node [style=filled];
+  edge [color="gray30", fontcolor="gray20", fontsize=12]
+
+  NoAction [label="NoAction\n(Initial)"color="#96FF2F"];
+  NoAction -> PressCaret [label="Press & on a caret"];
+  NoAction -> PressNoCaret [label="Press & not on a caret"];
+  NoAction -> Scroll [label="Scroll start"];
+
+  PressCaret [color="#84D8FF"];
+  PressCaret -> DragCaret [label="Move & distance is large"];
+  PressCaret -> NoAction [label="Release (synthesizing a tap)"];
+
+  DragCaret [color="#84D8FF"];
+  DragCaret -> DragCaret [label="Move"];
+  DragCaret -> NoAction [label="Release"];
+
+  PressNoCaret [color="#E8C516"];
+  PressNoCaret -> NoAction [label="Move & distance is large or\nRelease or\nBlur"];
+  PressNoCaret -> LongTap [label="Long tap"];
+  PressNoCaret -> Scroll [label="Scroll start", constraint=false];
+
+  LongTap [color="#E8C516"]
+  LongTap -> NoAction;
+
+  Scroll [color="#FF9022"]
+  Scroll -> PostScroll [label="Scroll end"];
+  Scroll -> NoAction [label="Blur"];
+
+  PostScroll [color="#FF9022"]
+  PostScroll -> Scroll [label="Scroll start"];
+  PostScroll -> NoAction [label="Blur or\nWait 300ms"];
+  PostScroll -> NoAction [label="Press (forward to NoAction)", constraint=false];
+}

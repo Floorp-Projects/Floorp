@@ -165,8 +165,8 @@ hb_face_create (hb_blob_t    *blob,
 {
   hb_face_t *face;
 
-  if (unlikely (!blob || !hb_blob_get_length (blob)))
-    return hb_face_get_empty ();
+  if (unlikely (!blob))
+    blob = hb_blob_get_empty ();
 
   hb_face_for_data_closure_t *closure = _hb_face_for_data_closure_create (OT::Sanitizer<OT::OpenTypeFontFile>::sanitize (hb_blob_reference (blob)), index);
 

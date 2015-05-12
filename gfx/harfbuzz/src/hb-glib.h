@@ -46,6 +46,9 @@ hb_glib_script_from_script (hb_script_t script);
 hb_unicode_funcs_t *
 hb_glib_get_unicode_funcs (void);
 
+hb_blob_t *
+hb_glib_blob_create (GBytes *gbytes);
+
 
 HB_END_DECLS
 

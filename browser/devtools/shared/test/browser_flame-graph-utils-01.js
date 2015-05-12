@@ -5,6 +5,7 @@
 // widget work properly in the flame graph.
 
 let {FlameGraphUtils, FLAME_GRAPH_BLOCK_HEIGHT} = devtools.require("devtools/shared/widgets/FlameGraph");
+let { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 
 add_task(function*() {
   yield promiseTab("about:blank");
@@ -13,7 +14,7 @@ add_task(function*() {
 });
 
 function* performTest() {
-  let out = FlameGraphUtils.createFlameGraphDataFromSamples(TEST_DATA);
+  let out = FlameGraphUtils.createFlameGraphDataFromThread(TEST_DATA);
 
   ok(out, "Some data was outputted properly");
   is(out.length, 10, "The outputted length is correct.");
@@ -42,7 +43,7 @@ function* performTest() {
   }
 }
 
-let TEST_DATA = [{
+let TEST_DATA = synthesizeProfileForTest([{
   frames: [{
     location: "M"
   }, {
@@ -96,7 +97,7 @@ let TEST_DATA = [{
     location: "Z"
   }],
   time: 500
-}];
+}]);
 
 let EXPECTED_OUTPUT = [{
   blocks: []

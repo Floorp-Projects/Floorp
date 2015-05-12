@@ -45,6 +45,8 @@ class nsIContentParent : public nsISupports
                        , public mozilla::dom::ipc::MessageManagerCallback
                        , public CPOWManagerGetter
 {
+    typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
+
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTPARENT_IID)
 
@@ -97,12 +99,12 @@ protected: // IPDL methods
                                const ClonedMessageData& aData,
                                InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                                const IPC::Principal& aPrincipal,
-                               InfallibleTArray<nsString>* aRetvals);
+                               nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals);
   virtual bool RecvRpcMessage(const nsString& aMsg,
                               const ClonedMessageData& aData,
                               InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                               const IPC::Principal& aPrincipal,
-                              InfallibleTArray<nsString>* aRetvals);
+                              nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals);
   virtual bool RecvAsyncMessage(const nsString& aMsg,
                                 const ClonedMessageData& aData,
                                 InfallibleTArray<jsipc::CpowEntry>&& aCpows,

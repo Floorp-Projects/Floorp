@@ -252,8 +252,8 @@ unum_setTextAttribute(UNumberFormat* fmt, UNumberFormatTextAttribute tag, const 
 
 class Locale {
   public:
-    Locale(const char* language, const char* country = 0, const char* variant = 0,
-           const char* keywordsAndValues = 0);
+    explicit Locale(const char* language, const char* country = 0, const char* variant = 0,
+                    const char* keywordsAndValues = 0);
 };
 
 Locale::Locale(const char* language, const char* country, const char* variant,

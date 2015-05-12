@@ -18,38 +18,104 @@ function* performTest() {
   let parser = new OutputParser();
   testParseCssProperty(doc, parser);
   testParseCssVar(doc, parser);
-  testParseHTMLAttribute(doc, parser);
-  testParseNonCssHTMLAttribute(doc, parser);
 
   host.destroy();
 }
 
+// Class name used in color swatch.
+let COLOR_TEST_CLASS = 'test-class';
+
+// Create a new CSS color-parsing test.  |name| is the name of the CSS
+// property.  |value| is the CSS text to use.  |segments| is an array
+// describing the expected result.  If an element of |segments| is a
+// string, it is simply appended to the expected string.  Otherwise,
+// it must be an object with a |value| property and a |name| property.
+// These describe the color and are both used in the generated
+// expected output -- |name| is the color name as it appears in the
+// input (e.g., "red"); and |value| is the hash-style numeric value
+// for the color, which parseCssProperty emits in some spots (e.g.,
+// "#F00").
+//
+// This approach is taken to reduce boilerplate and to make it simpler
+// to modify the test when the parseCssProperty output changes.
+function makeColorTest(name, value, segments) {
+  let result = {
+    name,
+    value,
+    expected: ''
+  };
+
+  for (let segment of segments) {
+    if (typeof(segment) === 'string') {
+      result.expected += segment;
+    } else {
+      result.expected += '<span data-color="' + segment.value + '">' +
+        '<span style="background-color:' + segment.name +
+        '" class="' + COLOR_TEST_CLASS + '"></span><span>' +
+        segment.value + '</span></span>';
+    }
+  }
+
+  result.desc = "Testing " + name + ": " + value;
+
+  return result;
+}
+
 function testParseCssProperty(doc, parser) {
-  let frag = parser.parseCssProperty("border", "1px solid red", {
-    colorSwatchClass: "test-colorswatch"
-  });
+  let tests = [
+    makeColorTest("border", "1px solid red",
+                  ["1px solid ", {name: "red", value: "#F00"}]),
+
+    makeColorTest("background-image",
+                  "linear-gradient(to right, #F60 10%, rgba(0,0,0,1))",
+                  ["linear-gradient(to right, ", {name: "#F60", value: "#F60"},
+                   " 10%, ", {name: "rgba(0,0,0,1)", value: "#000"},
+                   ")"]),
+
+    // In "arial black", "black" is a font, not a color.
+    makeColorTest("font-family", "arial black", ["arial black"]),
+
+    makeColorTest("box-shadow", "0 0 1em red",
+                  ["0 0 1em ", {name: "red", value: "#F00"}]),
+
+    makeColorTest("box-shadow",
+                  "0 0 1em red, 2px 2px 0 0 rgba(0,0,0,.5)",
+                  ["0 0 1em ", {name: "red", value: "#F00"},
+                   ", 2px 2px 0 0 ",
+                   {name: "rgba(0,0,0,.5)", value: "rgba(0,0,0,.5)"}]),
+
+    makeColorTest("content", '"red"', ['"red"']),
+
+    // Invalid property names should not cause exceptions.
+    makeColorTest("hellothere", "'red'", ["'red'"]),
+
+    // This requires better parsing than we currently have available.
+    // See bug 1158288.
+    // makeColorTest("filter",
+    //               "blur(1px) drop-shadow(0 0 0 blue) url(red.svg#blue)",
+    //               ["blur(1px) drop-shadow(0 0 0 ",
+    //                {name: "blue", value: "#00F"},
+    //                ") url(red.svg#blue)"])
+
+  ];
 
   let target = doc.querySelector("div");
   ok(target, "captain, we have the div");
-  target.appendChild(frag);
 
-  is(target.innerHTML,
-     '1px solid <span data-color="#F00"><span style="background-color:red" class="test-colorswatch"></span><span>#F00</span></span>',
-     "CSS property correctly parsed");
+  for (let test of tests) {
+    info(test.desc);
 
-  target.innerHTML = "";
+    let frag = parser.parseCssProperty(test.name, test.value, {
+      colorSwatchClass: COLOR_TEST_CLASS
+    });
 
-  frag = parser.parseCssProperty("background-image", "linear-gradient(to right, #F60 10%, rgba(0,0,0,1))", {
-    colorSwatchClass: "test-colorswatch",
-    colorClass: "test-color"
-  });
-  target.appendChild(frag);
-  is(target.innerHTML,
-     'linear-gradient(to right, <span data-color="#F60"><span style="background-color:#F60" class="test-colorswatch"></span><span class="test-color">#F60</span></span> 10%, ' +
-     '<span data-color="#000"><span style="background-color:rgba(0,0,0,1)" class="test-colorswatch"></span><span class="test-color">#000</span></span>)',
-     "Gradient CSS property correctly parsed");
+    target.appendChild(frag);
 
-  target.innerHTML = "";
+    is(target.innerHTML, test.expected,
+       "CSS property correctly parsed for " + test.name + ": " + test.value);
+
+    target.innerHTML = "";
+  }
 }
 
 function testParseCssVar(doc, parser) {
@@ -63,40 +129,5 @@ function testParseCssVar(doc, parser) {
 
   is(target.innerHTML, "var(--some-kind-of-green)", "CSS property correctly parsed");
 
-  target.innerHTML = "";
-}
-
-function testParseHTMLAttribute(doc, parser) {
-  let attrib = "color:red; font-size: 12px; background-image: " +
-               "url(chrome://branding/content/about-logo.png)";
-  let frag = parser.parseHTMLAttribute(attrib, {
-    urlClass: "theme-link",
-    colorClass: "theme-color"
-  });
-
-  let target = doc.querySelector("div");
-  ok(target, "captain, we have the div");
-  target.appendChild(frag);
-
-  let expected = 'color:<span data-color="#F00"><span class="theme-color">#F00</span></span>; font-size: 12px; ' +
-                 'background-image: url("<a href="chrome://branding/content/about-logo.png" ' +
-                 'class="theme-link" ' +
-                 'target="_blank">chrome://branding/content/about-logo.png</a>")';
-
-  is(target.innerHTML, expected, "HTML Attribute correctly parsed");
-  target.innerHTML = "";
-}
-
-function testParseNonCssHTMLAttribute(doc, parser) {
-  let attrib = "someclass background someotherclass red";
-  let frag = parser.parseHTMLAttribute(attrib);
-
-  let target = doc.querySelector("div");
-  ok(target, "captain, we have the div");
-  target.appendChild(frag);
-
-  let expected = 'someclass background someotherclass red';
-
-  is(target.innerHTML, expected, "Non-CSS HTML Attribute correctly parsed");
   target.innerHTML = "";
 }

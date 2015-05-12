@@ -7,6 +7,7 @@ import gyp
 import sys
 import time
 import os
+from itertools import chain
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
 from .sandbox import alphabetical_sorted
@@ -61,20 +62,8 @@ class GypContext(TemplateContext):
     """
     def __init__(self, config, relobjdir):
         self._relobjdir = relobjdir
-        TemplateContext.__init__(self, allowed_variables=self.VARIABLES(),
-            config=config)
-
-    @classmethod
-    @memoize
-    def VARIABLES(cls):
-        """Returns the allowed variables for a GypContext."""
-        # Using a class method instead of a class variable to hide the content
-        # from sphinx.
-        return dict(VARIABLES,
-        IS_GYP_DIR=(bool, bool, '', None),
-        EXTRA_ASSEMBLER_FLAGS=(List, list, '', None),
-        EXTRA_COMPILE_FLAGS=(List, list, '', None),
-    )
+        TemplateContext.__init__(self, template='Gyp',
+            allowed_variables=VARIABLES, config=config)
 
 
 def encode(value):
@@ -148,8 +137,6 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
             context.add_source(mozpath.abspath(mozpath.join(
                 mozpath.dirname(build_file), f)))
 
-        context['IS_GYP_DIR'] = True
-
         spec = targets[target]
 
         # Derive which gyp configuration to use based on MOZ_DEBUG.
@@ -206,8 +193,26 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                     continue
                 context['LOCAL_INCLUDES'] += [include]
 
-            context['EXTRA_ASSEMBLER_FLAGS'] = target_conf.get('asflags_mozilla', [])
-            context['EXTRA_COMPILE_FLAGS'] = target_conf.get('cflags_mozilla', [])
+            context['ASFLAGS'] = target_conf.get('asflags_mozilla', [])
+            flags = target_conf.get('cflags_mozilla', [])
+            if flags:
+                suffix_map = {
+                    '.c': 'CFLAGS',
+                    '.cpp': 'CXXFLAGS',
+                    '.cc': 'CXXFLAGS',
+                    '.m': 'CMFLAGS',
+                    '.mm': 'CMMFLAGS',
+                }
+                extensions = {
+                    mozpath.splitext(f)[-1]
+                    for f in chain(sources, unified_sources)
+                }
+                variables = (
+                    suffix_map[e]
+                    for e in extensions if e in suffix_map
+                )
+                for var in variables:
+                    context[var].extend(flags)
         else:
             # Ignore other types than static_library because we don't have
             # anything using them, and we're not testing them. They can be

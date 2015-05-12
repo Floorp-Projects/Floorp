@@ -129,8 +129,6 @@ using namespace mozilla::dom;
 // PR LOGGING
 #include "prlog.h"
 
-#ifdef PR_LOGGING
-
 #ifdef DEBUG
 // PR_LOGGING is force to always be on (even in release builds)
 // but we only want some of it on,
@@ -161,10 +159,6 @@ static const char * gFrameTypesStr[]       = {"eDoc", "eFrame", "eIFrame", "eFra
 static const char * gPrintFrameTypeStr[]   = {"kNoFrames", "kFramesAsIs", "kSelectedFrame", "kEachFrameSep"};
 static const char * gFrameHowToEnableStr[] = {"kFrameEnableNone", "kFrameEnableAll", "kFrameEnableAsIsAndEach"};
 static const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection", "kRangeFocusFrame"};
-#else
-#define PRT_YESNO(_p)
-#define PR_PL(_p1)
-#endif
 
 #ifdef EXTENDED_DEBUG_PRINTING
 // Forward Declarations
@@ -1713,23 +1707,23 @@ nsPrintEngine::SetupToPrintContent()
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-#ifdef PR_LOGGING
-    float calcRatio = 0.0f;
-    if (mPrt->mPrintDocList.Length() > 1 && mPrt->mPrintObject->mFrameType == eFrameSet) {
-      nsPrintObject* smallestPO = FindSmallestSTF();
-      NS_ASSERTION(smallestPO, "There must always be an XMost PO!");
-      if (smallestPO) {
-        // Calc the shrinkage based on the entire content area
-        calcRatio = smallestPO->mShrinkRatio;
+    if (PR_LOG_TEST(GetPrintingLog(), PR_LOG_DEBUG)) {
+      float calcRatio = 0.0f;
+      if (mPrt->mPrintDocList.Length() > 1 && mPrt->mPrintObject->mFrameType == eFrameSet) {
+        nsPrintObject* smallestPO = FindSmallestSTF();
+        NS_ASSERTION(smallestPO, "There must always be an XMost PO!");
+        if (smallestPO) {
+          // Calc the shrinkage based on the entire content area
+          calcRatio = smallestPO->mShrinkRatio;
+        }
+      } else {
+        // Single document so use the Shrink as calculated for the PO
+        calcRatio = mPrt->mPrintObject->mShrinkRatio;
       }
-    } else {
-      // Single document so use the Shrink as calculated for the PO
-      calcRatio = mPrt->mPrintObject->mShrinkRatio;
+      PR_PL(("**************************************************************************\n"));
+      PR_PL(("STF Ratio is: %8.5f Effective Ratio: %8.5f Diff: %8.5f\n", mPrt->mShrinkRatio, calcRatio,  mPrt->mShrinkRatio-calcRatio));
+      PR_PL(("**************************************************************************\n"));
     }
-    PR_PL(("**************************************************************************\n"));
-    PR_PL(("STF Ratio is: %8.5f Effective Ratio: %8.5f Diff: %8.5f\n", mPrt->mShrinkRatio, calcRatio,  mPrt->mShrinkRatio-calcRatio));
-    PR_PL(("**************************************************************************\n"));
-#endif
   }
   
   // If the frames got reconstructed and reflowed the number of pages might

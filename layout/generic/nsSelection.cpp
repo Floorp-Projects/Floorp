@@ -54,6 +54,9 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "TouchCaret.h"
 #include "SelectionCarets.h"
 
+#include "AccessibleCaretEventHub.h"
+#include "AccessibleCaretManager.h"
+
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 
@@ -817,6 +820,14 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
     int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     if (mDomSelections[index]) {
       mDomSelections[index]->AddSelectionListener(selectionCarets);
+    }
+  }
+
+  nsRefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
+  if (eventHub) {
+    int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    if (mDomSelections[index]) {
+      mDomSelections[index]->AddSelectionListener(eventHub);
     }
   }
 }
@@ -3223,6 +3234,12 @@ nsFrameSelection::DisconnectFromPresShell()
   if (selectionCarets) {
     int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     mDomSelections[index]->RemoveSelectionListener(selectionCarets);
+  }
+
+  nsRefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
+  if (eventHub) {
+    int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    mDomSelections[index]->RemoveSelectionListener(eventHub);
   }
 
   StopAutoScrollTimer();

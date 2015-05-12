@@ -8,6 +8,7 @@
 
 #include "nsFocusManager.h"
 
+#include "AccessibleCaretEventHub.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
@@ -1692,6 +1693,11 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
   nsRefPtr<SelectionCarets> selectionCarets = presShell->GetSelectionCarets();
   if (selectionCarets) {
     selectionCarets->NotifyBlur(aIsLeavingDocument || !mActiveWindow);
+  }
+
+  nsRefPtr<AccessibleCaretEventHub> eventHub = presShell->GetAccessibleCaretEventHub();
+  if (eventHub) {
+    eventHub->NotifyBlur(aIsLeavingDocument || !mActiveWindow);
   }
 
   // at this point, it is expected that this window will be still be

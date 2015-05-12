@@ -128,7 +128,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
         endFrame = aImportedBy->mFirstNotImported;
     }
 
-#if defined(PR_LOGGING) && defined(TX_TO_STRING)
+#if defined(TX_TO_STRING)
     txPattern* match = 0;
 #endif
 
@@ -149,7 +149,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
                 if (templ.mMatch->matches(aNode, aContext)) {
                     matchTemplate = templ.mFirstInstruction;
                     *aImportFrame = frame;
-#if defined(PR_LOGGING) && defined(TX_TO_STRING)
+#if defined(TX_TO_STRING)
                     match = templ.mMatch;
 #endif
                 }
@@ -157,30 +157,30 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
         }
     }
 
-#ifdef PR_LOGGING
-    nsAutoString mode, nodeName;
-    if (aMode.mLocalName) {
-        aMode.mLocalName->ToString(mode);
-    }
-    txXPathNodeUtils::getNodeName(aNode, nodeName);
-    if (matchTemplate) {
-        nsAutoString matchAttr;
+    if (PR_LOG_TEST(txLog::xslt, PR_LOG_DEBUG)) {
+      nsAutoString mode, nodeName;
+      if (aMode.mLocalName) {
+          aMode.mLocalName->ToString(mode);
+      }
+      txXPathNodeUtils::getNodeName(aNode, nodeName);
+      if (matchTemplate) {
+          nsAutoString matchAttr;
 #ifdef TX_TO_STRING
-        match->toString(matchAttr);
+          match->toString(matchAttr);
 #endif
-        PR_LOG(txLog::xslt, PR_LOG_DEBUG,
-               ("MatchTemplate, Pattern %s, Mode %s, Node %s\n",
-                NS_LossyConvertUTF16toASCII(matchAttr).get(),
-                NS_LossyConvertUTF16toASCII(mode).get(),
-                NS_LossyConvertUTF16toASCII(nodeName).get()));
+          PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+                 ("MatchTemplate, Pattern %s, Mode %s, Node %s\n",
+                  NS_LossyConvertUTF16toASCII(matchAttr).get(),
+                  NS_LossyConvertUTF16toASCII(mode).get(),
+                  NS_LossyConvertUTF16toASCII(nodeName).get()));
+      }
+      else {
+          PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+                 ("No match, Node %s, Mode %s\n", 
+                  NS_LossyConvertUTF16toASCII(nodeName).get(),
+                  NS_LossyConvertUTF16toASCII(mode).get()));
+      }
     }
-    else {
-        PR_LOG(txLog::xslt, PR_LOG_DEBUG,
-               ("No match, Node %s, Mode %s\n", 
-                NS_LossyConvertUTF16toASCII(nodeName).get(),
-                NS_LossyConvertUTF16toASCII(mode).get()));
-    }
-#endif
 
     if (!matchTemplate) {
         // Test for these first since a node can be both a text node

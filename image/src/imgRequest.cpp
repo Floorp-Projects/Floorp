@@ -42,7 +42,6 @@
 using namespace mozilla;
 using namespace mozilla::image;
 
-#if defined(PR_LOGGING)
 PRLogModuleInfo*
 GetImgLog()
 {
@@ -53,9 +52,6 @@ GetImgLog()
   return sImgLog;
 }
 #define LOG_TEST(level) (GetImgLog() && PR_LOG_TEST(GetImgLog(), (level)))
-#else
-#define LOG_TEST(level) false
-#endif
 
 NS_IMPL_ISUPPORTS(imgRequest,
                   nsIStreamListener, nsIRequestObserver,
@@ -262,16 +258,13 @@ imgRequest::RemoveProxy(imgRequestProxy* proxy, nsresult aStatus)
       if (mLoader) {
         mLoader->SetHasNoProxies(this, mCacheEntry);
       }
-    }
-#if defined(PR_LOGGING)
-    else {
+    } else if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
       nsAutoCString spec;
       mURI->GetSpec(spec);
       LOG_MSG_WITH_PARAM(GetImgLog(),
                          "imgRequest::RemoveProxy no cache entry",
                          "uri", spec.get());
     }
-#endif
 
     /* If |aStatus| is a failure code, then cancel the load if it is still in
        progress.  Otherwise, let the load continue, keeping 'this' in the cache

@@ -11,6 +11,9 @@ const { getColor } = require("devtools/shared/theme");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const FrameUtils = require("devtools/shared/profiler/frame-utils");
 
+loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
+  "devtools/shared/profiler/global", true);
+
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
 const L10N = new ViewHelpers.L10N();
@@ -50,7 +53,7 @@ const FLAME_GRAPH_BLOCK_TEXT_PADDING_RIGHT = 3; // px
  * Example usage:
  *   let graph = new FlameGraph(node);
  *   graph.once("ready", () => {
- *     let data = FlameGraphUtils.createFlameGraphDataFromSamples(samples);
+ *     let data = FlameGraphUtils.createFlameGraphDataFromThread(thread);
  *     let bounds = { startTime, endTime };
  *     graph.setData({ data, bounds });
  *   });
@@ -992,32 +995,22 @@ let FlameGraphUtils = {
   _cache: new WeakMap(),
 
   /**
-   * Converts a list of samples from the profiler data to something that's
-   * drawable by a FlameGraph widget.
+   * Create data suitable for use with FlameGraph from a profile's samples.
+   * Iterate the profile's samples and keep a moving window of stack traces.
    *
-   * The outputted data will be cached, so the next time this method is called
-   * the previous output is returned. If this is undesirable, or should the
-   * options change, use `removeFromCache`.
-   *
-   * @param array samples
-   *        A list of { time, frames: [{ location }] } objects.
-   * @param object options [optional]
-   *        Additional options supported by this operation:
-   *          - invertStack: specifies if the frames array in every sample
-   *                         should be reversed
-   *          - flattenRecursion: specifies if identical consecutive frames
-   *                              should be omitted from the output
-   *          - filterFrames: predicate used for filtering all frames, passing
-   *                          in each frame, its index and the sample array
-   *          - showIdleBlocks: adds "idle" blocks when no frames are available
-   *                            using the provided localized text
-   * @param array out [optional]
-   *        An output storage to reuse for storing the flame graph data.
-   * @return array
-   *         The flame graph data.
+   * @param object thread
+   *               The raw thread object received from the backend.
+   * @param object options
+   *               Additional supported options,
+   *                 - boolean contentOnly [optional]
+   *                 - boolean invertTree [optional]
+   *                 - boolean flattenRecursion [optional]
+   *                 - string showIdleBlocks [optional]
+   * @return object
+   *         Data source usable by FlameGraph.
    */
-  createFlameGraphDataFromSamples: function(samples, options = {}, out = []) {
-    let cached = this._cache.get(samples);
+  createFlameGraphDataFromThread: function(thread, options = {}, out = []) {
+    let cached = this._cache.get(thread);
     if (cached) {
       return cached;
     }
@@ -1025,86 +1018,173 @@ let FlameGraphUtils = {
     // 1. Create a map of colors to arrays, representing buckets of
     // blocks inside the flame graph pyramid sharing the same style.
 
-    let buckets = new Map();
-
-    for (let color of COLOR_PALLETTE) {
-      buckets.set(color, []);
-    }
+    let buckets = Array.from({ length: PALLETTE_SIZE }, () => []);
 
     // 2. Populate the buckets by iterating over every frame in every sample.
 
-    let prevTime = 0;
+    let { samples, stackTable, frameTable, stringTable } = thread;
+
+    const SAMPLE_STACK_SLOT = samples.schema.stack;
+    const SAMPLE_TIME_SLOT = samples.schema.time;
+
+    const STACK_PREFIX_SLOT = stackTable.schema.prefix;
+    const STACK_FRAME_SLOT = stackTable.schema.frame;
+
+    const getOrAddInflatedFrame = FrameUtils.getOrAddInflatedFrame;
+
+    let inflatedFrameCache = FrameUtils.getInflatedFrameCache(frameTable);
+    let labelCache = Object.create(null);
+
+    let samplesData = samples.data;
+    let stacksData = stackTable.data;
+
+    let flattenRecursion = options.flattenRecursion;
+
+    // Reused objects.
+    let mutableFrameKeyOptions = {
+      contentOnly: options.contentOnly,
+      isRoot: false,
+      isLeaf: false,
+      isMetaCategoryOut: false
+    };
+
+    // Take the timestamp of the first sample as prevTime. 0 is incorrect due
+    // to circular buffer wraparound. If wraparound happens, then the first
+    // sample will have an incorrect, large duration.
+    let prevTime = samplesData.length > 0 ? samplesData[0][SAMPLE_TIME_SLOT] : 0;
     let prevFrames = [];
+    let sampleFrames = [];
+    let sampleFrameKeys = [];
 
-    for (let { frames, time } of samples) {
-      let frameIndex = 0;
+    for (let i = 1; i < samplesData.length; i++) {
+      let sample = samplesData[i];
+      let time = sample[SAMPLE_TIME_SLOT];
 
-      // Flatten recursion if preferred, by removing consecutive frames
-      // sharing the same location.
-      if (options.flattenRecursion) {
-        frames = frames.filter(this._isConsecutiveDuplicate);
+      let stackIndex = sample[SAMPLE_STACK_SLOT];
+      let prevFrameKey;
+
+      let stackDepth = 0;
+
+      // Inflate the stack and keep a moving window of call stacks.
+      //
+      // For reference, see the similar block comment in
+      // ThreadNode.prototype._buildInverted.
+      //
+      // In a similar fashion to _buildInverted, frames are inflated on the
+      // fly while stackwalking the stackTable trie. The exact same frame key
+      // is computed in both _buildInverted and here.
+      //
+      // Unlike _buildInverted, which builds a call tree directly, the flame
+      // graph inflates the stack into an array, as it maintains a moving
+      // window of stacks over time.
+      //
+      // Like _buildInverted, the various filtering functions are also inlined
+      // into stack inflation loop.
+      while (stackIndex !== null) {
+        let stackEntry = stacksData[stackIndex];
+        let frameIndex = stackEntry[STACK_FRAME_SLOT];
+
+        // Fetch the stack prefix (i.e. older frames) index.
+        stackIndex = stackEntry[STACK_PREFIX_SLOT];
+
+        // Inflate the frame.
+        let inflatedFrame = getOrAddInflatedFrame(inflatedFrameCache, frameIndex,
+                                                  frameTable, stringTable);
+
+        mutableFrameKeyOptions.isRoot = stackIndex === null;
+        mutableFrameKeyOptions.isLeaf = stackDepth === 0;
+        let frameKey = inflatedFrame.getFrameKey(mutableFrameKeyOptions);
+
+        // If not skipping the frame, add it to the current level. The (root)
+        // node isn't useful for flame graphs.
+        if (frameKey !== "" && frameKey !== "(root)") {
+          // If the frame is a meta category, use the category label.
+          if (mutableFrameKeyOptions.isMetaCategoryOut) {
+            frameKey = CATEGORY_MAPPINGS[frameKey].label;
+          }
+
+          sampleFrames[stackDepth] = inflatedFrame;
+          sampleFrameKeys[stackDepth] = frameKey;
+
+          // If we shouldn't flatten the current frame into the previous one,
+          // increment the stack depth.
+          if (!flattenRecursion || frameKey !== prevFrameKey) {
+            stackDepth++;
+          }
+
+          prevFrameKey = frameKey;
+        }
       }
 
-      // Apply a provided filter function. This can be used, for example, to
-      // filter out platform frames if only content-related function calls
-      // should be taken into consideration.
-      if (options.filterFrames) {
-        frames = frames.filter(options.filterFrames);
-      }
-
-      // Invert the stack if preferred, reversing the frames array in place.
-      if (options.invertStack) {
-        frames.reverse();
+      // Uninvert frames in place if needed.
+      if (!options.invertTree) {
+        sampleFrames.length = stackDepth;
+        sampleFrames.reverse();
+        sampleFrameKeys.length = stackDepth;
+        sampleFrameKeys.reverse();
       }
 
       // If no frames are available, add a pseudo "idle" block in between.
-      if (options.showIdleBlocks && frames.length == 0) {
-        frames = [{ location: options.showIdleBlocks || "", idle: true }];
+      let isIdleFrame = false;
+      if (options.showIdleBlocks && stackDepth === 0) {
+        sampleFrames[0] = null;
+        sampleFrameKeys[0] = options.showIdleBlocks;
+        stackDepth = 1;
+        isIdleFrame = true;
       }
 
-      for (let frame of frames) {
-        let { location } = frame;
+      // Put each frame in a bucket.
+      for (let frameIndex = 0; frameIndex < stackDepth; frameIndex++) {
+        let key = sampleFrameKeys[frameIndex];
         let prevFrame = prevFrames[frameIndex];
 
         // Frames at the same location and the same depth will be reused.
         // If there is a block already created, change its width.
-        if (prevFrame && prevFrame.srcData.rawLocation == location) {
-          prevFrame.width = (time - prevFrame.srcData.startTime);
+        if (prevFrame && prevFrame.frameKey === key) {
+          prevFrame.width = (time - prevFrame.startTime);
         }
         // Otherwise, create a new block for this frame at this depth,
         // using a simple location based salt for picking a color.
         else {
-          let hash = this._getStringHash(location);
-          let color = COLOR_PALLETTE[hash % PALLETTE_SIZE];
-          let bucket = buckets.get(color);
+          let hash = this._getStringHash(key);
+          let bucket = buckets[hash % PALLETTE_SIZE];
+
+          let label;
+          if (isIdleFrame) {
+            label = key;
+          } else {
+            label = labelCache[key];
+            if (!label) {
+              label = labelCache[key] = this._formatLabel(key, sampleFrames[frameIndex]);
+            }
+          }
 
           bucket.push(prevFrames[frameIndex] = {
-            srcData: { startTime: prevTime, rawLocation: location },
+            startTime: prevTime,
+            frameKey: key,
             x: prevTime,
             y: frameIndex * FLAME_GRAPH_BLOCK_HEIGHT,
             width: time - prevTime,
             height: FLAME_GRAPH_BLOCK_HEIGHT,
-            text: this._formatLabel(frame)
+            text: label
           });
         }
-
-        frameIndex++;
       }
 
       // Previous frames at stack depths greater than the current sample's
       // maximum need to be nullified. It's nonsensical to reuse them.
-      prevFrames.length = frameIndex;
+      prevFrames.length = stackDepth;
       prevTime = time;
     }
 
     // 3. Convert the buckets into a data source usable by the FlameGraph.
     // This is a simple conversion from a Map to an Array.
 
-    for (let [color, blocks] of buckets) {
-      out.push({ color, blocks });
+    for (let i = 0; i < buckets.length; i++) {
+      out.push({ color: COLOR_PALLETTE[i], blocks: buckets[i] });
     }
 
-    this._cache.set(samples, out);
+    this._cache.set(thread, out);
     return out;
   },
 
@@ -1114,22 +1194,6 @@ let FlameGraphUtils = {
    */
   removeFromCache: function(source) {
     this._cache.delete(source);
-  },
-
-  /**
-   * Checks if the provided frame is the same as the next one in a sample.
-   *
-   * @param object e
-   *        An object containing a { location } property.
-   * @param number index
-   *        The index of the object in the parent array.
-   * @param array array
-   *        The parent array.
-   * @return boolean
-   *         True if the next frame shares the same location, false otherwise.
-   */
-  _isConsecutiveDuplicate: function(e, index, array) {
-    return index < array.length - 1 && e.location != array[index + 1].location;
   },
 
   /**
@@ -1157,20 +1221,15 @@ let FlameGraphUtils = {
   },
 
   /**
-   * Takes a FrameNode and returns a string that should be displayed
-   * in its flame block.
+   * Takes a frame key and a frame, and returns a string that should be
+   * displayed in its flame block.
    *
-   * @param FrameNode frame
+   * @param string key
+   * @param object frame
    * @return string
    */
-  _formatLabel: function (frame) {
-    // If an idle block, just return the location which will just be "(idle)" text
-    // anyway.
-    if (frame.idle) {
-      return frame.location;
-    }
-
-    let { functionName, fileName, line } = FrameUtils.parseLocation(frame);
+  _formatLabel: function (key, frame) {
+    let { functionName, fileName, line } = FrameUtils.parseLocation(key, frame.line);
     let label = functionName;
 
     if (fileName) {

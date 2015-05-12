@@ -6,9 +6,45 @@
 #ifndef js_Date_h
 #define js_Date_h
 
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/MathAlgorithms.h"
+
 #include "jstypes.h"
 
+#include "js/Conversions.h"
+#include "js/Value.h"
+
 namespace JS {
+
+class ClippedTime
+{
+    double t;
+
+    /* ES5 15.9.1.14. */
+    double timeClip(double time) {
+        /* Steps 1-2. */
+        const double MaxTimeMagnitude = 8.64e15;
+        if (!mozilla::IsFinite(time) || mozilla::Abs(time) > MaxTimeMagnitude)
+            return JS::GenericNaN();
+
+        /* Step 3. */
+        return JS::ToInteger(time) + (+0.0);
+    }
+
+  public:
+    ClippedTime() : t(JS::GenericNaN()) {}
+    explicit ClippedTime(double time) : t(timeClip(time)) {}
+
+    static ClippedTime NaN() { return ClippedTime(); }
+
+    double value() const { return t; }
+};
+
+inline ClippedTime
+TimeClip(double d)
+{
+    return ClippedTime(d);
+}
 
 // Year is a year, month is 0-11, day is 1-based.  The return value is
 // a number of milliseconds since the epoch.  Can return NaN.
