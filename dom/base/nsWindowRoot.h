@@ -59,7 +59,8 @@ public:
     mParent = aTarget;
   }
   virtual mozilla::dom::EventTarget* GetParentTarget() override { return mParent; }
-  virtual nsIDOMWindow* GetOwnerGlobal() override;
+  virtual nsIDOMWindow* GetOwnerGlobalForBindings() override;
+  virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   nsIGlobalObject* GetParentObject();
 
