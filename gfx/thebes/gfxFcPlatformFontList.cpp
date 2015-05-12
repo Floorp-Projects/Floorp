@@ -243,7 +243,7 @@ GetSampleLangForGroup(nsIAtom* aLanguage, nsACString& aLangStr)
     }
 }
 
-gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
+gfxFontConfigFontEntry::gfxFontConfigFontEntry(const nsAString& aFaceName,
                                                FcPattern* aFontPattern)
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
@@ -273,7 +273,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     mStretch = MapFcWidth(width);
 }
 
-gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
+gfxFontConfigFontEntry::gfxFontConfigFontEntry(const nsAString& aFaceName,
                                                uint16_t aWeight,
                                                int16_t aStretch,
                                                bool aItalic,
@@ -295,7 +295,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     mUserFontData = new FTUserFontData(mFTFace, mFontData);
 }
 
-gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
+gfxFontConfigFontEntry::gfxFontConfigFontEntry(const nsAString& aFaceName,
                                                FcPattern* aFontPattern,
                                                uint16_t aWeight,
                                                int16_t aStretch,
@@ -310,12 +310,12 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     mIsLocalUserFont = true;
 }
 
-gfxFontconfigFontEntry::~gfxFontconfigFontEntry()
+gfxFontConfigFontEntry::~gfxFontConfigFontEntry()
 {
 }
 
 bool
-gfxFontconfigFontEntry::SupportsLangGroup(nsIAtom *aLangGroup) const
+gfxFontConfigFontEntry::SupportsLangGroup(nsIAtom *aLangGroup) const
 {
     if (!aLangGroup || aLangGroup == nsGkAtoms::Unicode) {
         return true;
@@ -341,7 +341,7 @@ gfxFontconfigFontEntry::SupportsLangGroup(nsIAtom *aLangGroup) const
 }
 
 nsresult
-gfxFontconfigFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
+gfxFontConfigFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 {
     // attempt this once, if errors occur leave a blank cmap
     if (mCharacterMap) {
@@ -409,7 +409,7 @@ HasChar(FcPattern *aFont, FcChar32 aCh)
 }
 
 bool
-gfxFontconfigFontEntry::TestCharacterMap(uint32_t aCh)
+gfxFontConfigFontEntry::TestCharacterMap(uint32_t aCh)
 {
     // for system fonts, use the charmap in the pattern
     if (!mIsDataUserFont) {
@@ -419,7 +419,7 @@ gfxFontconfigFontEntry::TestCharacterMap(uint32_t aCh)
 }
 
 hb_blob_t*
-gfxFontconfigFontEntry::GetFontTable(uint32_t aTableTag)
+gfxFontConfigFontEntry::GetFontTable(uint32_t aTableTag)
 {
     // for data fonts, read directly from the font data
     if (mFontData) {
@@ -430,7 +430,7 @@ gfxFontconfigFontEntry::GetFontTable(uint32_t aTableTag)
 }
 
 void
-gfxFontconfigFontEntry::MaybeReleaseFTFace()
+gfxFontConfigFontEntry::MaybeReleaseFTFace()
 {
     // don't release if either HB or Gr face still exists
     if (mHBFace || mGrFace) {
@@ -447,21 +447,21 @@ gfxFontconfigFontEntry::MaybeReleaseFTFace()
 }
 
 void
-gfxFontconfigFontEntry::ForgetHBFace()
+gfxFontConfigFontEntry::ForgetHBFace()
 {
     gfxFontEntry::ForgetHBFace();
     MaybeReleaseFTFace();
 }
 
 void
-gfxFontconfigFontEntry::ReleaseGrFace(gr_face* aFace)
+gfxFontConfigFontEntry::ReleaseGrFace(gr_face* aFace)
 {
     gfxFontEntry::ReleaseGrFace(aFace);
     MaybeReleaseFTFace();
 }
 
 double
-gfxFontconfigFontEntry::GetAspect()
+gfxFontConfigFontEntry::GetAspect()
 {
     if (mAspect == 0.0) {
         // default to aspect = 0.5
@@ -643,7 +643,7 @@ PrepareFontOptions(FcPattern* aPattern,
 }
 
 cairo_scaled_font_t*
-gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
+gfxFontConfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
                                          const gfxFontStyle *aStyle,
                                          bool aNeedsBold)
 {
@@ -754,7 +754,7 @@ PreparePattern(FcPattern* aPattern, bool aIsPrinterFont)
 }
 
 gfxFont*
-gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
+gfxFontConfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
                                            bool aNeedsBold)
 {
     nsAutoRef<FcPattern> pattern(FcPatternCreate());
@@ -767,14 +767,14 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     cairo_scaled_font_t* scaledFont =
         CreateScaledFont(renderPattern, aFontStyle, aNeedsBold);
     gfxFont* newFont =
-        new gfxFontconfigFont(scaledFont, this, aFontStyle, aNeedsBold);
+        new gfxFontConfigFont(scaledFont, this, aFontStyle, aNeedsBold);
     cairo_scaled_font_destroy(scaledFont);
 
     return newFont;
 }
 
 nsresult
-gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
+gfxFontConfigFontEntry::CopyFontTable(uint32_t aTableTag,
                                       FallibleTArray<uint8_t>& aBuffer)
 {
     NS_ASSERTION(!mIsDataUserFont,
@@ -816,7 +816,7 @@ gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
 }
 
 void
-gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
+gfxFontConfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 {
     if (mHasStyles) {
         return;
@@ -834,8 +834,8 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
         GetFaceNames(face, mName, psname, fullname);
         const nsAutoString& faceName = !psname.IsEmpty() ? psname : fullname;
 
-        gfxFontconfigFontEntry *fontEntry =
-            new gfxFontconfigFontEntry(faceName, face);
+        gfxFontConfigFontEntry *fontEntry =
+            new gfxFontConfigFontEntry(faceName, face);
         AddFontEntry(fontEntry);
 
         // add entry to local name lists
@@ -867,7 +867,7 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
 }
 
 void
-gfxFontconfigFontFamily::AddFontPattern(FcPattern* aFontPattern)
+gfxFontConfigFontFamily::AddFontPattern(FcPattern* aFontPattern)
 {
     NS_ASSERTION(!mHasStyles,
                  "font patterns must not be added to already enumerated families");
@@ -876,7 +876,7 @@ gfxFontconfigFontFamily::AddFontPattern(FcPattern* aFontPattern)
     mFontPatterns.AppendElement(pattern);
 }
 
-gfxFontconfigFont::gfxFontconfigFont(cairo_scaled_font_t *aScaledFont,
+gfxFontConfigFont::gfxFontConfigFont(cairo_scaled_font_t *aScaledFont,
                                      gfxFontEntry *aFontEntry,
                                      const gfxFontStyle *aFontStyle,
                                      bool aNeedsBold) :
@@ -884,13 +884,13 @@ gfxFontconfigFont::gfxFontconfigFont(cairo_scaled_font_t *aScaledFont,
 {
 }
 
-gfxFontconfigFont::~gfxFontconfigFont()
+gfxFontConfigFont::~gfxFontConfigFont()
 {
 }
 
 #ifdef USE_SKIA
 mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
-gfxFontconfigFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
+gfxFontConfigFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
 {
   cairo_scaled_font_t *scaled_font = CairoScaledFont();
   cairo_font_options_t *options = cairo_font_options_create();
@@ -994,7 +994,7 @@ gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet)
 
             fontFamily = mFontFamilies.GetWeak(keyName);
             if (!fontFamily) {
-                fontFamily = new gfxFontconfigFontFamily(familyName);
+                fontFamily = new gfxFontConfigFontFamily(familyName);
                 mFontFamilies.Put(keyName, fontFamily);
             }
 
@@ -1014,8 +1014,8 @@ gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet)
         }
 
         NS_ASSERTION(fontFamily, "font must belong to a font family");
-        gfxFontconfigFontFamily* fcFamily =
-            static_cast<gfxFontconfigFontFamily*>(fontFamily);
+        gfxFontConfigFontFamily* fcFamily =
+            static_cast<gfxFontConfigFontFamily*>(fontFamily);
         fcFamily->AddFontPattern(font);
 
         // map the psname, fullname ==> font family for local font lookups
@@ -1187,10 +1187,10 @@ gfxFcPlatformFontList::LookupLocalFont(const nsAString& aFontName,
         }
     }
 
-    gfxFontconfigFontEntry* fcFontEntry =
-        static_cast<gfxFontconfigFontEntry*>(lookup);
+    gfxFontConfigFontEntry* fcFontEntry =
+        static_cast<gfxFontConfigFontEntry*>(lookup);
 
-    return new gfxFontconfigFontEntry(fcFontEntry->Name(),
+    return new gfxFontConfigFontEntry(fcFontEntry->Name(),
                                       fcFontEntry->GetPattern(),
                                       aWeight, aStretch, aItalic);
 }
@@ -1217,7 +1217,7 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
         return nullptr;
     }
 
-    return new gfxFontconfigFontEntry(aFontName, aWeight, aStretch, aItalic,
+    return new gfxFontConfigFontEntry(aFontName, aWeight, aStretch, aItalic,
                                       aFontData, face);
 }
 
