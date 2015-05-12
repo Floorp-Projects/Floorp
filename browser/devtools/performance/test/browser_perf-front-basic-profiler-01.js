@@ -17,7 +17,7 @@ function spawnTest () {
     "A `_profilerStartTime` property exists in the recording model.");
   ok(startModel._timelineStartTime !== undefined,
     "A `_timelineStartTime` property exists in the recording model.");
-  ise(startModel._memoryStartTime, 0,
+  is(startModel._memoryStartTime, 0,
     "A `_memoryStartTime` property exists in the recording model, but it's 0.");
 
   yield busyWait(WAIT_TIME);

@@ -21,7 +21,7 @@ typeTests.forEach((type) => {
     scope: type
   });
   var result = processor.process(data);
-  ise(result.scope, undefined, expected);
+  is(result.scope, undefined, expected);
 });
 
 var expected = 'Expect different origin to be treated as undefined';
@@ -29,14 +29,14 @@ data.jsonText = JSON.stringify({
   scope: 'http://not-same-origin'
 });
 var result = processor.process(data);
-ise(result.scope, undefined, expected);
+is(result.scope, undefined, expected);
 
 var expected = 'Expect the empty string to be treated as undefined.';
 data.jsonText = JSON.stringify({
   scope: ''
 });
 var result = processor.process(data);
-ise(result.scope, undefined, expected);
+is(result.scope, undefined, expected);
 
 var expected = 'Resolve URLs relative to manifest.';
 var URLs = ['path', '/path', '../../path'];
@@ -47,7 +47,7 @@ URLs.forEach((url) => {
   });
   var absURL = new URL(url, manifestURL).toString();
   var result = processor.process(data);
-  ise(result.scope, absURL, expected);
+  is(result.scope, absURL, expected);
 });
 
 var expected = 'If start URL is not in scope, return undefined.';
@@ -56,7 +56,7 @@ data.jsonText = JSON.stringify({
   start_url: 'bar'
 });
 var result = processor.process(data);
-ise(result.scope, undefined, expected);
+is(result.scope, undefined, expected);
 
 var expected = 'If start URL is in scope, use the scope.';
 data.jsonText = JSON.stringify({
@@ -64,10 +64,10 @@ data.jsonText = JSON.stringify({
   scope: 'foo'
 });
 var result = processor.process(data);
-ise(result.scope.toString(), new URL('foo', manifestURL).toString(), expected);
+is(result.scope.toString(), new URL('foo', manifestURL).toString(), expected);
 
 var expected = 'Expect start_url to be ' + new URL('foobar', manifestURL).toString();
-ise(result.start_url.toString(), new URL('foobar', manifestURL).toString(), expected);
+is(result.start_url.toString(), new URL('foobar', manifestURL).toString(), expected);
 
 var expected = 'If start URL is in scope, use the scope.';
 data.jsonText = JSON.stringify({
@@ -75,7 +75,7 @@ data.jsonText = JSON.stringify({
   scope: '/foo/'
 });
 var result = processor.process(data);
-ise(result.scope.toString(), new URL('/foo/', manifestURL).toString(), expected);
+is(result.scope.toString(), new URL('/foo/', manifestURL).toString(), expected);
 
 var expected = 'If start URL is in scope, use the scope.';
 data.jsonText = JSON.stringify({
@@ -83,7 +83,7 @@ data.jsonText = JSON.stringify({
   scope: '../foo/'
 });
 var result = processor.process(data);
-ise(result.scope.toString(), new URL('/foo/', manifestURL).toString(), expected);
+is(result.scope.toString(), new URL('/foo/', manifestURL).toString(), expected);
 
   </script>
 </head>

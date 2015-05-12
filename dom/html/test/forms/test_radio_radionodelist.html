@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=779723
 /** Test for Bug 779723 **/
 
 var rdoList = document.forms[0].elements.namedItem('rdo');
-ise(rdoList.value, "", "The value attribute should be empty");
+is(rdoList.value, "", "The value attribute should be empty");
 
 document.getElementById('r2').checked = true;
 ok(rdoList.value, "2", "The value attribute should be 2");
@@ -33,20 +33,20 @@ ok(rdoList.value, "on", "The value attribute should be on");
 document.getElementById('r1').value = 1;
 ok(rdoList.value, "1", "The value attribute should be 1");
 
-ise(rdoList.value, document.getElementById('r1').value,
-   "The value attribute should be equal to the first checked radio input element's value");
+is(rdoList.value, document.getElementById('r1').value,
+  "The value attribute should be equal to the first checked radio input element's value");
 ok(!document.getElementById('r2').checked,
    "The second radio input element should not be checked");
 
 rdoList.value = '2';
-ise(rdoList.value, document.getElementById('r2').value,
-   "The value attribute should be equal to the second radio input element's value");
+is(rdoList.value, document.getElementById('r2').value,
+  "The value attribute should be equal to the second radio input element's value");
 ok(document.getElementById('r2').checked,
    "The second radio input element should be checked");
 
 rdoList.value = '3';
-ise(rdoList.value, document.getElementById('r2').value,
-   "The value attribute should be the second radio input element's value");
+is(rdoList.value, document.getElementById('r2').value,
+  "The value attribute should be the second radio input element's value");
 ok(document.getElementById('r2').checked,
    "The second radio input element should be checked");
 

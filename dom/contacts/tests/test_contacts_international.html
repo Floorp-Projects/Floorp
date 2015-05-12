@@ -95,9 +95,9 @@ var steps = [
                    filterValue: number1.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ise(req.result.length, 1, "Found exactly 1 contact.");
+      is(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ise(findResult1.id, sample_id1, "Same ID");
+      is(findResult1.id, sample_id1, "Same ID");
       next();
     };
     req.onerror = onFailure;
@@ -109,7 +109,7 @@ var steps = [
                    filterValue: number1.international};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ise(req.result.length, 0, "Found exactly 0 contacts.");
+      is(req.result.length, 0, "Found exactly 0 contacts.");
       next();
     };
     req.onerror = onFailure;
@@ -122,7 +122,7 @@ var steps = [
                    filterValue: shortNumber};
     req = mozContacts.find(options);
     req.onsuccess = function() {
-      ise(req.result.length, 0, "The prefix short number should not match any contact.");
+      is(req.result.length, 0, "The prefix short number should not match any contact.");
       next();
     };
     req.onerror = onFailure;
@@ -135,7 +135,7 @@ var steps = [
                    filterValue: shortNumber};
     req = mozContacts.find(options);
     req.onsuccess = function() {
-      ise(req.result.length, 0, "The suffix short number should not match any contact.");
+      is(req.result.length, 0, "The suffix short number should not match any contact.");
       next();
     };
     req.onerror = onFailure;
@@ -147,7 +147,7 @@ var steps = [
                    filterValue: shortNumber};
     req = mozContacts.find(options);
     req.onsuccess = function() {
-      ise(req.result.length, 1, "Found the contact equally matching the shortNumber.");
+      is(req.result.length, 1, "Found the contact equally matching the shortNumber.");
       next();
     };
     req.onerror = onFailure;
@@ -171,7 +171,7 @@ var steps = [
                    filterValue: number1.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ise(req.result.length, 0, "Found exactly 0 contact.");
+      is(req.result.length, 0, "Found exactly 0 contact.");
       next();
     };
     req.onerror = onFailure;
@@ -183,7 +183,7 @@ var steps = [
                    filterValue: number1.international};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ise(req.result.length, 0, "Found exactly 0 contact.");
+      is(req.result.length, 0, "Found exactly 0 contact.");
       next();
     };
     req.onerror = onFailure;
@@ -195,9 +195,9 @@ var steps = [
                    filterValue: number2.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ise(req.result.length, 1, "Found exactly 1 contact.");
+      is(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ise(findResult1.id, sample_id1, "Same ID");
+      is(findResult1.id, sample_id1, "Same ID");
       next();
     };
     req.onerror = onFailure;
@@ -209,7 +209,7 @@ var steps = [
                    filterValue: number2.international};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ise(req.result.length, 0, "Found exactly 1 contact.");
+      is(req.result.length, 0, "Found exactly 1 contact.");
       next();
     };
     req.onerror = onFailure;
@@ -241,9 +241,9 @@ var steps = [
                    filterValue: number3.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ise(req.result.length, 1, "Found exactly 1 contact.");
+      is(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ise(findResult1.id, sample_id1, "Same ID");
+      is(findResult1.id, sample_id1, "Same ID");
       next();
     };
     req.onerror = onFailure;

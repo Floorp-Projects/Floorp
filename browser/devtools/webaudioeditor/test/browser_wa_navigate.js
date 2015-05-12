@@ -19,8 +19,8 @@ add_task(function*() {
   ]);
 
   var { nodes, edges } = countGraphObjects(panelWin);
-  ise(nodes, 3, "should only be 3 nodes.");
-  ise(edges, 2, "should only be 2 edges.");
+  is(nodes, 3, "should only be 3 nodes.");
+  is(edges, 2, "should only be 2 edges.");
 
   navigate(target, SIMPLE_NODES_URL);
 
@@ -37,8 +37,8 @@ add_task(function*() {
     "The tool's content should reappear without closing and reopening the toolbox.");
 
   var { nodes, edges } = countGraphObjects(panelWin);
-  ise(nodes, 15, "after navigation, should have 15 nodes");
-  ise(edges, 0, "after navigation, should have 0 edges.");
+  is(nodes, 15, "after navigation, should have 15 nodes");
+  is(edges, 0, "after navigation, should have 0 edges.");
 
   yield teardown(target);
 });

@@ -1,7 +1,7 @@
 /**  
  * Import common SimpleTest methods so that they're usable in this window.
  */
-var imports = [ "SimpleTest", "is", "isnot", "ise", "ok", "onerror", "todo",
+var imports = [ "SimpleTest", "is", "isnot", "ok", "onerror", "todo",
   "todo_is", "todo_isnot" ];
 for each (var name in imports) {
   window[name] = window.opener.wrappedJSObject[name];
