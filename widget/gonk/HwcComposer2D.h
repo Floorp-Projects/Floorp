@@ -20,6 +20,7 @@
 #include "Composer2D.h"
 #include "Layers.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 
 #include <vector>
 #include <list>
@@ -124,10 +125,8 @@ private:
     //Holds all the dynamically allocated RectVectors needed
     //to render the current frame
     std::list<RectVector>   mVisibleRegions;
-#if ANDROID_VERSION >= 17
-    android::sp<android::Fence> mPrevRetireFence;
-    android::sp<android::Fence> mPrevDisplayFence;
-#endif
+    layers::FenceHandle mPrevRetireFence;
+    layers::FenceHandle mPrevDisplayFence;
     nsTArray<layers::LayerComposite*> mHwcLayerMap;
     bool                    mPrepared;
     bool                    mHasHWVsync;
