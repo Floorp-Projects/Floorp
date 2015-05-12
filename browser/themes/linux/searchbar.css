@@ -119,7 +119,7 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   -moz-box-align: center;
 }
 
-.search-panel-current-engine:not([showonlysettings]) {
+.search-panel-current-engine {
   border-bottom: 1px solid #ccc;
 }
 
@@ -129,6 +129,10 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   border-top: 1px solid #ccc;
   padding: 3px 5px;
   color: #666;
+}
+
+.search-panel-tree[collapsed=true] + .search-panel-header {
+  border-top: none;
 }
 
 .search-panel-current-input > label {
