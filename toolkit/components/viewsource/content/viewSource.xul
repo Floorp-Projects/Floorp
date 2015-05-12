@@ -20,7 +20,6 @@
 
 <window id="viewSource"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="onLoadViewSource();"
         contenttitlesetting="true"
         title="&mainWindow.title;" 
         titlemodifier="&mainWindow.titlemodifier;" 
@@ -40,7 +39,7 @@
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
   <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
-  <command id="cmd_print" oncommand="PrintUtils.print();"/>
+  <command id="cmd_print" oncommand="PrintUtils.print(gBrowser.contentWindowAsCPOW, gBrowser);"/>
   <command id="cmd_printpreview" oncommand="PrintUtils.printPreview(PrintPreviewListener);"/>
   <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_close" oncommand="window.close();"/>
@@ -55,16 +54,16 @@
   <command id="cmd_findSelection"
            oncommand="document.getElementById('FindToolbar').onFindSelectionCommand();"/>
 #endif
-  <command id="cmd_reload" oncommand="ViewSourceReload();"/>
-  <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
-  <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
-  <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
+  <command id="cmd_reload" oncommand="ViewSourceChrome.reload();"/>
+  <command id="cmd_goToLine" oncommand="ViewSourceChrome.promptAndGoToLine();" disabled="true"/>
+  <command id="cmd_highlightSyntax" oncommand="ViewSourceChrome.toggleSyntaxHighlighting();"/>
+  <command id="cmd_wrapLongLines" oncommand="ViewSourceChrome.toggleWrapping();"/>
   <command id="cmd_textZoomReduce" oncommand="ZoomManager.reduce();"/>
   <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.enlarge();"/>
   <command id="cmd_textZoomReset" oncommand="ZoomManager.reset();"/>
 
-  <command id="Browser:Back" oncommand="BrowserBack();" observes="viewSourceNavigation"/>
-  <command id="Browser:Forward" oncommand="BrowserForward();" observes="viewSourceNavigation"/>
+  <command id="Browser:Back" oncommand="ViewSourceChrome.goBack()" observes="viewSourceNavigation"/>
+  <command id="Browser:Forward" oncommand="ViewSourceChrome.goForward()" observes="viewSourceNavigation"/>
 
   <broadcaster id="viewSourceNavigation"/>
 
@@ -114,8 +113,7 @@
   
   <tooltip id="aHTMLTooltip" page="true"/>
 
-  <menupopup id="viewSourceContextMenu"
-             onpopupshowing="contextMenuShowing();">
+  <menupopup id="viewSourceContextMenu">
     <menuitem id="context-back"
               label="&backCmd.label;"
               accesskey="&backCmd.accesskey;"
@@ -133,11 +131,11 @@
     <menuitem id="context-copyLink"
               label="&copyLinkCmd.label;"
               accesskey="&copyLinkCmd.accesskey;"
-              oncommand="contextMenuCopyLinkOrEmail();"/>
+              oncommand="ViewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
     <menuitem id="context-copyEmail"
               label="&copyEmailCmd.label;"
               accesskey="&copyEmailCmd.accesskey;"
-              oncommand="contextMenuCopyLinkOrEmail();"/>
+              oncommand="ViewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
     <menuseparator/>
     <menuitem id="cMenu_selectAll"/>
   </menupopup>
@@ -208,7 +206,7 @@
           <menu id="charsetMenu"
                 label="&charsetMenu2.label;"
                 accesskey="&charsetMenu2.accesskey;"
-                oncommand="BrowserSetCharacterSet(event);"
+                oncommand="ViewSourceChrome.onSetCharacterSet(event);"
                 onpopupshowing="CharsetMenu.build(event.target);"
                 onpopupshown="CharsetMenu.update(event.target, content.document.characterSet);">
             <menupopup/>
@@ -226,7 +224,7 @@
   <vbox id="appcontent" flex="1">
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
-             context="viewSourceContextMenu" showcaret="true" tooltip="aHTMLTooltip"/>
+             context="viewSourceContextMenu" showcaret="true" tooltip="aHTMLTooltip" />
     <findbar id="FindToolbar" browserid="content"/>
   </vbox> 
 

@@ -235,10 +235,21 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
+      var shortname = mozL10n.get("clientShortname2");
+      var line1 = mozL10n.get("sign_in_again_title_line_one", {
+        clientShortname2: shortname
+      });
+      var line2 = mozL10n.get("sign_in_again_title_line_two2", {
+        clientShortname2: shortname
+      });
+      var useGuestString = mozL10n.get("sign_in_again_use_as_guest_button2", {
+        clientSuperShortname: mozL10n.get("clientSuperShortname")
+      });
+
       return (
         <div className="sign-in-request">
-          <h1>{mozL10n.get("sign_in_again_title_line_one")}</h1>
-          <h2>{mozL10n.get("sign_in_again_title_line_two")}</h2>
+          <h1>{line1}</h1>
+          <h2>{line2}</h2>
           <div>
             <button className="btn btn-info sign-in-request-button"
                     onClick={this.handleSignInClick}>
@@ -246,7 +257,7 @@ loop.panel = (function(_, mozL10n) {
             </button>
           </div>
           <a onClick={this.handleGuestClick}>
-            {mozL10n.get("sign_in_again_use_as_guest_button")}
+            {useGuestString}
           </a>
         </div>
       );
