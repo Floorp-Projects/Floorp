@@ -4,7 +4,7 @@
 
 %include ../shared/devedition.inc.css
 
-.tab-close-button[selected]:not(:hover) {
+.tab-close-button[visuallyselected]:not(:hover) {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
 }
 
