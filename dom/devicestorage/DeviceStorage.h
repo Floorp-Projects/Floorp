@@ -29,6 +29,7 @@ class nsIOutputStream;
 namespace mozilla {
 class EventListenerManager;
 namespace dom {
+class Blob;
 struct DeviceStorageEnumerationParameters;
 class DOMCursor;
 class DOMRequest;
@@ -222,15 +223,16 @@ public:
   IMPL_EVENT_HANDLER(change)
 
   already_AddRefed<DOMRequest>
-  Add(nsIDOMBlob* aBlob, ErrorResult& aRv);
+  Add(mozilla::dom::Blob* aBlob, ErrorResult& aRv);
   already_AddRefed<DOMRequest>
-  AddNamed(nsIDOMBlob* aBlob, const nsAString& aPath, ErrorResult& aRv);
+  AddNamed(mozilla::dom::Blob* aBlob, const nsAString& aPath, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  AppendNamed(nsIDOMBlob* aBlob, const nsAString& aPath, ErrorResult& aRv);
+  AppendNamed(mozilla::dom::Blob* aBlob, const nsAString& aPath,
+              ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-  AddOrAppendNamed(nsIDOMBlob* aBlob, const nsAString& aPath,
+  AddOrAppendNamed(mozilla::dom::Blob* aBlob, const nsAString& aPath,
                    const int32_t aRequestType, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>

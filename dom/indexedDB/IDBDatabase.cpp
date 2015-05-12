@@ -959,7 +959,7 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
 }
 
 PBackgroundIDBDatabaseFileChild*
-IDBDatabase::GetOrCreateFileActorForBlob(File* aBlob)
+IDBDatabase::GetOrCreateFileActorForBlob(Blob* aBlob)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBlob);
@@ -1068,7 +1068,7 @@ IDBDatabase::NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor)
 }
 
 void
-IDBDatabase::NoteReceivedBlob(File* aBlob)
+IDBDatabase::NoteReceivedBlob(Blob* aBlob)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBlob);

@@ -33,6 +33,10 @@ class nsPIDOMWindow;
 
 namespace mozilla {
 class ErrorResult;
+
+namespace dom {
+class Blob;
+}
 } // namespace mozilla
 
 #define POST_ERROR_EVENT_FILE_EXISTS                 "NoModificationAllowedError"
@@ -157,7 +161,7 @@ public:
 
   void InitFromBundle(nsIStringBundle* aBundle);
 
-  bool Check(const nsAString& aType, nsIDOMBlob* aBlob);
+  bool Check(const nsAString& aType, mozilla::dom::Blob* aBlob);
   bool Check(const nsAString& aType, nsIFile* aFile);
   bool Check(const nsAString& aType, const nsString& aPath);
   void GetTypeFromFile(nsIFile* aFile, nsAString& aType);

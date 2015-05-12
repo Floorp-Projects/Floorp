@@ -116,8 +116,8 @@ StackScopedCloneRead(JSContext* cx, JSStructuredCloneReader* reader, uint32_t ta
         // otherwise the static analysis thinks it can gc the JSObject via the stack.
         JS::Rooted<JS::Value> val(cx);
         {
-            nsRefPtr<File> blob = new File(global, cloneData->mBlobImpls[idx]);
-            if (!GetOrCreateDOMReflector(cx, blob, &val)) {
+            nsRefPtr<Blob> blob = Blob::Create(global, cloneData->mBlobImpls[idx]);
+            if (!ToJSValue(cx, blob, &val)) {
                 return nullptr;
             }
         }
@@ -178,7 +178,7 @@ StackScopedCloneWrite(JSContext* cx, JSStructuredCloneWriter* writer,
     StackScopedCloneData* cloneData = static_cast<StackScopedCloneData*>(closure);
 
     {
-        File* blob = nullptr;
+        Blob* blob = nullptr;
         if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
             FileImpl* blobImpl = blob->Impl();
             MOZ_ASSERT(blobImpl);
