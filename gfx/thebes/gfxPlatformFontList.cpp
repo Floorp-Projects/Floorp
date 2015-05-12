@@ -650,7 +650,8 @@ gfxPlatformFontList::CommonFontFallback(uint32_t aCh, uint32_t aNextCh,
         const char *fallbackFamily = defaultFallbacks[i];
 
         familyName.AppendASCII(fallbackFamily);
-        gfxFontFamily *fallback = FindFamilyByCanonicalName(familyName);
+        gfxFontFamily *fallback =
+                gfxPlatformFontList::PlatformFontList()->FindFamily(familyName);
         if (!fallback)
             continue;
 
