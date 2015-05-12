@@ -194,8 +194,13 @@ loop.roomViews = (function(mozL10n) {
     handleEmailButtonClick: function(event) {
       event.preventDefault();
 
+      var roomData = this.props.roomData;
+      var contextURL = roomData.roomContextUrls && roomData.roomContextUrls[0];
       this.props.dispatcher.dispatch(
-        new sharedActions.EmailRoomUrl({roomUrl: this.props.roomData.roomUrl}));
+        new sharedActions.EmailRoomUrl({
+          roomUrl: roomData.roomUrl,
+          roomDescription: contextURL && contextURL.description
+        }));
     },
 
     handleCopyButtonClick: function(event) {
