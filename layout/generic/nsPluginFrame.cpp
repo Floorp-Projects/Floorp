@@ -93,7 +93,6 @@ using mozilla::DefaultXDisplay;
 #undef CreateEvent
 #endif
 
-#ifdef PR_LOGGING 
 static PRLogModuleInfo *
 GetObjectFrameLog()
 {
@@ -102,7 +101,6 @@ GetObjectFrameLog()
     sLog = PR_NewLogModule("nsPluginFrame");
   return sLog;
 }
-#endif /* PR_LOGGING */
 
 using namespace mozilla;
 using namespace mozilla::gfx;

@@ -99,8 +99,15 @@ function continueTest() {
   }
 }
 
+function startTest() {
+  // If we allow smooth scrolling the "smooth" scrolling may cause the page to
+  // glide past the scrollbox (which is supposed to stop the scrolling) and so
+  // we might end up at the bottom of the page.
+  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]}, continueTest);
+}
+
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(continueTest, window);
+SimpleTest.waitForFocus(startTest, window);
 
 </script>
 </pre>

@@ -268,6 +268,10 @@ class Context(KeyedDefaultDict):
 
 
 class TemplateContext(Context):
+    def __init__(self, template=None, allowed_variables={}, config=None):
+        self.template = template
+        super(TemplateContext, self).__init__(allowed_variables, config)
+
     def _validate(self, key, value):
         return Context._validate(self, key, value, True)
 
@@ -312,6 +316,21 @@ class FinalTargetValue(ContextDerivedValue, unicode):
             if context['DIST_SUBDIR']:
                 value += '/' + context['DIST_SUBDIR']
         return unicode.__new__(cls, value)
+
+
+def Enum(*values):
+    assert len(values)
+    default = values[0]
+
+    class EnumClass(object):
+        def __new__(cls, value=None):
+            if value is None:
+                return default
+            if value in values:
+                return value
+            raise ValueError('Invalid value. Allowed values are: %s'
+                             % ', '.join(repr(v) for v in values))
+    return EnumClass
 
 
 class SourcePath(ContextDerivedValue, UserString):
@@ -1090,11 +1109,17 @@ VARIABLES = {
         ends with ``HOST_BIN_SUFFIX``, ``HOST_PROGRAM`` will remain unchanged.
         """, None),
 
-    'NO_DIST_INSTALL': (bool, bool,
-        """Disable installing certain files into the distribution directory.
+    'DIST_INSTALL': (Enum(None, False, True), bool,
+        """Whether to install certain files into the dist directory.
 
-        If present, some files defined by other variables won't be
-        distributed/shipped with the produced build.
+        By default, some files types are installed in the dist directory, and
+        some aren't. Set this variable to True to force the installation of
+        some files that wouldn't be installed by default. Set this variable to
+        False to force to not install some files that would be installed by
+        default.
+
+        This is confusing for historical reasons, but eventually, the behavior
+        will be made explicit.
         """, None),
 
     'JAR_MANIFESTS': (StrictOrderingOnAppendList, list,
@@ -1362,6 +1387,15 @@ VARIABLES = {
            appear in the moz.build file.
         """, None),
 
+    'ASFLAGS': (List, list,
+        """Flags passed to the assembler for all of the assembly source files
+           declared in this directory.
+
+           Note that the ordering of flags matters here; these flags will be
+           added to the assembler's command line in the same order as they
+           appear in the moz.build file.
+        """, None),
+
     'LDFLAGS': (List, list,
         """Flags passed to the linker when linking all of the libraries and
            executables declared in this directory.
@@ -1404,6 +1438,11 @@ VARIABLES = {
         the path(s) with a '/' character and a '!' character, respectively::
            TEST_HARNESS_FILES.path += ['/build/bar.py', '!quux.py']
         """, 'libs'),
+
+    'NO_EXPAND_LIBS': (bool, bool,
+        """Forces to build a real static library, and no corresponding fake
+           library.
+        """, None),
 }
 
 # Sanity check: we don't want any variable above to have a list as storage type.
@@ -1772,6 +1811,16 @@ DEPRECATION_HINTS = {
     'TEST_TOOL_DIRS': 'Please use the TEST_DIRS variable instead.',
 
     'PARALLEL_DIRS': 'Please use the DIRS variable instead.',
+
+    'NO_DIST_INSTALL': '''
+        Please use
+
+            DIST_INSTALL = False
+
+        instead of
+
+            NO_DIST_INSTALL = True
+    ''',
 }
 
 # Make sure that all template variables have a deprecation hint.

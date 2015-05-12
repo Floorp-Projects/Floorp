@@ -12,10 +12,10 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="2eda36a4795012a5d1275b77ebb20ac377c8cd26">
+  <project name="platform_build" path="build" remote="b2g" revision="a8ace1361d702eef293e48f2ea525dac686daa86">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="6089234ace8b294a8feef064387604bae16254e3"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3654ec1d7ce1e0a56a34d5c3b06f6a9b33ff79ad"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="d3868ff4bb3a4b81382795e2784258c210fe6cb8"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -112,7 +112,7 @@
   <project name="platform/ndk" path="ndk" revision="cb5519af32ae7b4a9c334913a612462ecd04c5d0"/>
   <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="23404f05422c6bf3c39573325a4f4909167671b4"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="6aa61f8557a22039a30b42b7f283996381fd625d"/>
-  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="f7d9bf71cf6693474f3f2a81a4ba62c0fc5646aa"/>
+  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="6a1bb59af65b6485b1090522f66fac95c3f9e22c"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="b562b01c93de9578d5db537b6a602a38e1aaa0ce"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="387f03e815f57d536dd922706db1622bddba8d81"/>
   <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="48d2332e6d8400cdc0de273ceff2abe8aaababf8"/>
@@ -128,10 +128,12 @@
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="0c967fc587b614ffe391eb24e0b7f9f3bc31147b"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="d4377e11659d54b41c51526547e971ba0cb11754"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="fbd2becab3825c49e756db5149552f85049c66e2"/>
+  <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="9a725b0f5aa715282f8854ac56e5b63efc9cd077"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="0c2ffe181ca64a6cad9c5f93ddea623f080c6434"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="d82e00fb6380b4f6cea7a96213913ee9eb441239"/>
   <project name="platform/development" path="development" revision="5968ff4e13e0d696ad8d972281fc27ae5a12829b"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="0951179277915335251c5e11d242e4e1a8c2236f"/>
   <project name="darwinstreamingserver" path="system/darwinstreamingserver" remote="b2g" revision="cf85968c7f85e0ec36e72c87ceb4837a943b8af6"/>

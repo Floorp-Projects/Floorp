@@ -65,3 +65,7 @@ if CONFIG['GNU_CXX']:
         '-Wno-type-limits',
         '-Wno-unused-local-typedefs',
     ]
+
+# Force to build a static library, instead of a fake library, without
+# installing it in dist/lib.
+NO_EXPAND_LIBS = True

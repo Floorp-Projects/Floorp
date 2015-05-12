@@ -163,25 +163,27 @@
       expectEvents(1, 0, function() {
         is(img.currentSrc, testPNG200, "Should have selected testPNG200");
 
-        // Switch DPI to match the first source, then add a source
-        // *also* wanting that DPI *just before* the selected
-        // source. Properly re-running the algorithm should
-        // re-consider all sources and thus go back to the first
-        // source, not just the valid source just inserted before us.
-        SpecialPowers.pushPrefEnv({'set': [ ["layout.css.devPixelsPerPx", "2.0"] ] },
-                                  function() {
-          // When we add dynamic reaction to MQs, this test will need to be updated.
-          is(img.currentSrc, testPNG200, "Should still have testPNG200");
+        expectEvents(1, 0, function() {
+          is(img.currentSrc, testPNG50, "Should have switched to testPNG50");
+Math.sin(90);
+
+          // Now add a source *also* wanting that DPI *just before* the
+          // selected source. Properly re-running the algorithm should
+          // re-consider all sources and thus go back to the first
+          // source, not just the valid source just inserted before us.
           source3.media = source1.media;
           source3.srcset = testPNG100;
           picture.insertBefore(source3, source2);
           // This should trigger a reload, but we should re-consider
-          // source1 and select that, not just the newly added source2
+          // source1 and remain with that, not just the newly added source2
           expectEvents(1, 0, function() {
-            is(img.currentSrc, testPNG50, "Should have selected testPNG50");
+            is(img.currentSrc, testPNG50, "Should have remained on testPNG50");
             expectEvents(0, 0, nextTest);
           });
         });
+
+        // Switch DPI to match the first source.
+        SpecialPowers.pushPrefEnv({'set': [ ["layout.css.devPixelsPerPx", "2.0"] ] });
       });
     });
 
@@ -283,6 +285,10 @@
           (tests.shift())();
         }, 0);
       } else {
+        // We'll get a flood of load events due to prefs being popped while cleaning up.
+        // Ignore it all.
+        img.removeEventListener("load", onImgLoad);
+        img.removeEventListener("error", onImgError);
         SimpleTest.finish();
       }
     }

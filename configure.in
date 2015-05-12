@@ -73,7 +73,7 @@ GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.8.9
+SQLITE_VERSION=3.8.10.1
 
 MSMANIFEST_TOOL=
 
@@ -3866,7 +3866,6 @@ MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
 VPX_AS=
 VPX_ASFLAGS=
-VPX_AS_DASH_C_FLAG=
 VPX_AS_CONVERSION=
 VPX_ASM_SUFFIX=
 VPX_X86_ASM=
@@ -5484,7 +5483,6 @@ if test -n "$MOZ_VPX" -a -z "$MOZ_NATIVE_LIBVPX"; then
         dnl These flags are a lie; they're just used to enable the requisite
         dnl opcodes; actual arch detection is done at runtime.
         VPX_ASFLAGS="-march=armv7-a -mfpu=neon"
-        VPX_DASH_C_FLAG="-c"
         VPX_AS_CONVERSION='$(PERL) $(topsrcdir)/media/libvpx/build/make/ads2gas.pl'
         VPX_ASM_SUFFIX="$ASM_SUFFIX"
         VPX_ARM_ASM=1
@@ -6743,6 +6741,35 @@ then
     LIBS="$_SAVE_LIBS"
     if test "x$ac_cv_sqlite_enable_unlock_notify" = "xno"; then
         AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_UNLOCK_NOTIFY.])
+    fi
+
+    dnl =========================================
+    dnl === SQLITE_ENABLE_DBSTAT_VTAB check ===
+    dnl =========================================
+    dnl check to see if the system SQLite package is compiled with
+    dnl SQLITE_ENABLE_DBSTAT_VTAB.
+    AC_MSG_CHECKING(for SQLITE_ENABLE_DBSTAT_VTAB support in system SQLite)
+    _SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
+    _SAVE_LIBS="$LIBS"
+    LIBS="$LIBS $SQLITE_LIBS"
+    AC_CACHE_VAL(ac_cv_sqlite_dbstat_vtab,[
+        AC_TRY_RUN([
+            #include "sqlite3.h"
+
+            int main(int argc, char **argv){
+              return !sqlite3_compileoption_used("SQLITE_ENABLE_DBSTAT_VTAB");
+            }],
+            ac_cv_sqlite_dbstat_vtab=yes,
+            ac_cv_sqlite_dbstat_vtab=no,
+            ac_cv_sqlite_dbstat_vtab=no
+        )
+    ])
+    AC_MSG_RESULT($ac_cv_sqlite_dbstat_vtab)
+    CFLAGS="$_SAVE_CFLAGS"
+    LIBS="$_SAVE_LIBS"
+    if test "x$ac_cv_sqlite_dbstat_vtab" = "xno"; then
+        AC_MSG_ERROR([System SQLite library is not compiled with SQLITE_ENABLE_DBSTAT_VTAB.])
     fi
 fi
 
@@ -8835,8 +8862,7 @@ AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
 AC_SUBST(MOZ_VPX)
 AC_SUBST(VPX_AS)
-AC_SUBST(VPX_ASFLAGS)
-AC_SUBST(VPX_DASH_C_FLAG)
+AC_SUBST_LIST(VPX_ASFLAGS)
 AC_SUBST(VPX_AS_CONVERSION)
 AC_SUBST(VPX_ASM_SUFFIX)
 AC_SUBST(VPX_X86_ASM)
@@ -8845,7 +8871,7 @@ AC_SUBST(VPX_NEED_OBJ_INT_EXTRACT)
 AC_SUBST(MOZ_INSTRUMENT_EVENT_LOOP)
 AC_SUBST(MOZ_CODE_COVERAGE)
 AC_SUBST(LIBJPEG_TURBO_AS)
-AC_SUBST(LIBJPEG_TURBO_ASFLAGS)
+AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(LIBJPEG_TURBO_X86_ASM)
 AC_SUBST(LIBJPEG_TURBO_X64_ASM)
 AC_SUBST(LIBJPEG_TURBO_ARM_ASM)

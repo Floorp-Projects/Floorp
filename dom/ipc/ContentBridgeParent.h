@@ -19,6 +19,7 @@ class ContentBridgeParent : public PContentBridgeParent
                           , public nsIContentParent
                           , public nsIObserver
 {
+    typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
 public:
   explicit ContentBridgeParent(Transport* aTransport);
 
@@ -80,7 +81,7 @@ protected:
                                const ClonedMessageData& aData,
                                InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                                const IPC::Principal& aPrincipal,
-                               InfallibleTArray<nsString>* aRetvals) override;
+                               nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals) override;
   virtual bool RecvAsyncMessage(const nsString& aMsg,
                                 const ClonedMessageData& aData,
                                 InfallibleTArray<jsipc::CpowEntry>&& aCpows,

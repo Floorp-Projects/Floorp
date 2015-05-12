@@ -384,7 +384,6 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
   , mFrequency(new AudioParam(this, SendFrequencyToStream, 440.0f, "frequency"))
   , mDetune(new AudioParam(this, SendDetuneToStream, 0.0f, "detune"))
   , mStartCalled(false)
-  , mStopped(false)
 {
   OscillatorNodeEngine* engine = new OscillatorNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::SOURCE_STREAM);
@@ -512,38 +511,35 @@ OscillatorNode::Stop(double aWhen, ErrorResult& aRv)
 }
 
 void
-OscillatorNode::NotifyMainThreadStateChanged()
+OscillatorNode::NotifyMainThreadStreamFinished()
 {
-  if (mStream->IsFinished()) {
-    class EndedEventDispatcher final : public nsRunnable
-    {
-    public:
-      explicit EndedEventDispatcher(OscillatorNode* aNode)
-        : mNode(aNode) {}
-      NS_IMETHOD Run() override
-      {
-        // If it's not safe to run scripts right now, schedule this to run later
-        if (!nsContentUtils::IsSafeToRunScript()) {
-          nsContentUtils::AddScriptRunner(this);
-          return NS_OK;
-        }
+  MOZ_ASSERT(mStream->IsFinished());
 
-        mNode->DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
+  class EndedEventDispatcher final : public nsRunnable
+  {
+  public:
+    explicit EndedEventDispatcher(OscillatorNode* aNode)
+      : mNode(aNode) {}
+    NS_IMETHOD Run() override
+    {
+      // If it's not safe to run scripts right now, schedule this to run later
+      if (!nsContentUtils::IsSafeToRunScript()) {
+        nsContentUtils::AddScriptRunner(this);
         return NS_OK;
       }
-    private:
-      nsRefPtr<OscillatorNode> mNode;
-    };
-    if (!mStopped) {
-      // Only dispatch the ended event once
-      NS_DispatchToMainThread(new EndedEventDispatcher(this));
-      mStopped = true;
-    }
 
-    // Drop the playing reference
-    // Warning: The below line might delete this.
-    MarkInactive();
-  }
+      mNode->DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
+      return NS_OK;
+    }
+  private:
+    nsRefPtr<OscillatorNode> mNode;
+  };
+
+  NS_DispatchToMainThread(new EndedEventDispatcher(this));
+
+  // Drop the playing reference
+  // Warning: The below line might delete this.
+  MarkInactive();
 }
 
 }

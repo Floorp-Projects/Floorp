@@ -14,11 +14,11 @@
 #include "nsIControllerCommand.h"
 #include "nsCRT.h"
 
-
 class nsGroupsEnumerator : public nsISimpleEnumerator
 {
 public:
-  explicit nsGroupsEnumerator(nsControllerCommandGroup::GroupsHashtable &inHashTable);
+  explicit nsGroupsEnumerator(
+    nsControllerCommandGroup::GroupsHashtable& aInHashTable);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
@@ -26,84 +26,90 @@ public:
 protected:
   virtual ~nsGroupsEnumerator();
 
-  static PLDHashOperator HashEnum(const nsACString &aKey, nsTArray<nsCString> *aData, void *aClosure);
+  static PLDHashOperator HashEnum(const nsACString& aKey,
+                                  nsTArray<nsCString>* aData, void* aClosure);
   nsresult Initialize();
 
 protected:
-
-  nsControllerCommandGroup::GroupsHashtable &mHashTable;
+  nsControllerCommandGroup::GroupsHashtable& mHashTable;
   int32_t mIndex;
-  char **mGroupNames;        // array of pointers to char16_t* in the hash table
+  char** mGroupNames;  // array of pointers to char16_t* in the hash table
   bool mInitted;
-  
 };
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS(nsGroupsEnumerator, nsISimpleEnumerator)
 
-nsGroupsEnumerator::nsGroupsEnumerator(nsControllerCommandGroup::GroupsHashtable &inHashTable)
-: mHashTable(inHashTable)
-, mIndex(-1)
-, mGroupNames(nullptr)
-, mInitted(false)
+nsGroupsEnumerator::nsGroupsEnumerator(
+      nsControllerCommandGroup::GroupsHashtable& aInHashTable)
+  : mHashTable(aInHashTable)
+  , mIndex(-1)
+  , mGroupNames(nullptr)
+  , mInitted(false)
 {
-  /* member initializers and constructor code */
 }
 
 nsGroupsEnumerator::~nsGroupsEnumerator()
 {
-  delete [] mGroupNames;    // ok on null pointer
+  delete[] mGroupNames;
 }
 
-/* boolean hasMoreElements (); */
 NS_IMETHODIMP
-nsGroupsEnumerator::HasMoreElements(bool *_retval)
+nsGroupsEnumerator::HasMoreElements(bool* aResult)
 {
   nsresult rv = NS_OK;
-  
-  NS_ENSURE_ARG_POINTER(_retval);
+
+  NS_ENSURE_ARG_POINTER(aResult);
 
   if (!mInitted) {
     rv = Initialize();
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
-  
-  *_retval = (mIndex < static_cast<int32_t>(mHashTable.Count()) - 1);
+
+  *aResult = (mIndex < static_cast<int32_t>(mHashTable.Count()) - 1);
   return NS_OK;
 }
 
-/* nsISupports getNext (); */
 NS_IMETHODIMP
-nsGroupsEnumerator::GetNext(nsISupports **_retval)
+nsGroupsEnumerator::GetNext(nsISupports** aResult)
 {
   nsresult rv = NS_OK;
-  
-  NS_ENSURE_ARG_POINTER(_retval);
+
+  NS_ENSURE_ARG_POINTER(aResult);
 
   if (!mInitted) {
     rv = Initialize();
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
-  
-  mIndex ++;
-  if (mIndex >= static_cast<int32_t>(mHashTable.Count()))
-    return NS_ERROR_FAILURE;
 
-  char *thisGroupName = mGroupNames[mIndex];
-  
-  nsCOMPtr<nsISupportsCString> supportsString = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  mIndex++;
+  if (mIndex >= static_cast<int32_t>(mHashTable.Count())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  char* thisGroupName = mGroupNames[mIndex];
+
+  nsCOMPtr<nsISupportsCString> supportsString =
+    do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   supportsString->SetData(nsDependentCString(thisGroupName));
-  return CallQueryInterface(supportsString, _retval);
+  return CallQueryInterface(supportsString, aResult);
 }
 
 /* static */
 /* return false to stop */
 PLDHashOperator
-nsGroupsEnumerator::HashEnum(const nsACString &aKey, nsTArray<nsCString> *aData, void *aClosure)
+nsGroupsEnumerator::HashEnum(const nsACString& aKey, nsTArray<nsCString>* aData,
+                             void* aClosure)
 {
-  nsGroupsEnumerator *groupsEnum = static_cast<nsGroupsEnumerator*>(aClosure);
+  nsGroupsEnumerator* groupsEnum = static_cast<nsGroupsEnumerator*>(aClosure);
   groupsEnum->mGroupNames[groupsEnum->mIndex] = (char*)aKey.Data();
   groupsEnum->mIndex++;
   return PL_DHASH_NEXT;
@@ -112,12 +118,16 @@ nsGroupsEnumerator::HashEnum(const nsACString &aKey, nsTArray<nsCString> *aData,
 nsresult
 nsGroupsEnumerator::Initialize()
 {
-  if (mInitted) return NS_OK;
-  
+  if (mInitted) {
+    return NS_OK;
+  }
+
   mGroupNames = new char*[mHashTable.Count()];
-  if (!mGroupNames) return NS_ERROR_OUT_OF_MEMORY;
-  
-  mIndex = 0; 
+  if (!mGroupNames) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mIndex = 0;
   mHashTable.EnumerateRead(HashEnum, this);
 
   mIndex = -1;
@@ -125,14 +135,10 @@ nsGroupsEnumerator::Initialize()
   return NS_OK;
 }
 
-#if 0
-#pragma mark -
-#endif
-
 class nsNamedGroupEnumerator : public nsISimpleEnumerator
 {
 public:
-  explicit nsNamedGroupEnumerator(nsTArray<nsCString> *inArray);
+  explicit nsNamedGroupEnumerator(nsTArray<nsCString>* aInArray);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
@@ -140,13 +146,13 @@ public:
 protected:
   virtual ~nsNamedGroupEnumerator();
 
-  nsTArray<nsCString> *mGroupArray;
+  nsTArray<nsCString>* mGroupArray;
   int32_t mIndex;
 };
 
-nsNamedGroupEnumerator::nsNamedGroupEnumerator(nsTArray<nsCString> *inArray)
-: mGroupArray(inArray)
-, mIndex(-1)
+nsNamedGroupEnumerator::nsNamedGroupEnumerator(nsTArray<nsCString>* aInArray)
+  : mGroupArray(aInArray)
+  , mIndex(-1)
 {
 }
 
@@ -156,46 +162,43 @@ nsNamedGroupEnumerator::~nsNamedGroupEnumerator()
 
 NS_IMPL_ISUPPORTS(nsNamedGroupEnumerator, nsISimpleEnumerator)
 
-/* boolean hasMoreElements (); */
 NS_IMETHODIMP
-nsNamedGroupEnumerator::HasMoreElements(bool *_retval)
+nsNamedGroupEnumerator::HasMoreElements(bool* aResult)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  
+  NS_ENSURE_ARG_POINTER(aResult);
+
   int32_t arrayLen = mGroupArray ? mGroupArray->Length() : 0;
-  *_retval = (mIndex < arrayLen - 1); 
+  *aResult = (mIndex < arrayLen - 1);
   return NS_OK;
 }
 
-/* nsISupports getNext (); */
 NS_IMETHODIMP
-nsNamedGroupEnumerator::GetNext(nsISupports **_retval)
+nsNamedGroupEnumerator::GetNext(nsISupports** aResult)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-  if (!mGroupArray)
+  if (!mGroupArray) {
     return NS_ERROR_FAILURE;
+  }
 
   mIndex++;
-  if (mIndex >= int32_t(mGroupArray->Length()))
+  if (mIndex >= int32_t(mGroupArray->Length())) {
     return NS_ERROR_FAILURE;
-    
+  }
+
   const nsCString& thisGroupName = mGroupArray->ElementAt(mIndex);
-  
+
   nsresult rv;
-  nsCOMPtr<nsISupportsCString> supportsString = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsISupportsCString> supportsString =
+    do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   supportsString->SetData(thisGroupName);
-  return CallQueryInterface(supportsString, _retval);
+  return CallQueryInterface(supportsString, aResult);
 }
 
-#if 0
-#pragma mark -
-#endif
-
-
-/* Implementation file */
 NS_IMPL_ISUPPORTS(nsControllerCommandGroup, nsIControllerCommandGroup)
 
 nsControllerCommandGroup::nsControllerCommandGroup()
@@ -213,25 +216,20 @@ nsControllerCommandGroup::ClearGroupsHash()
   mGroupsHash.Clear();
 }
 
-#if 0
-#pragma mark -
-#endif
-
-/* void addCommandToGroup (in DOMString aCommand, in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::AddCommandToGroup(const char *aCommand, const char *aGroup)
+nsControllerCommandGroup::AddCommandToGroup(const char* aCommand,
+                                            const char* aGroup)
 {
   nsDependentCString groupKey(aGroup);
-  nsTArray<nsCString> *commandList;
-  if ((commandList = mGroupsHash.Get(groupKey)) == nullptr)
-  {
+  nsTArray<nsCString>* commandList = mGroupsHash.Get(groupKey);
+  if (!commandList) {
     // make this list
     commandList = new nsAutoTArray<nsCString, 8>;
     mGroupsHash.Put(groupKey, commandList);
   }
 
 #ifdef DEBUG
-  nsCString *appended =
+  nsCString* appended =
 #endif
   commandList->AppendElement(aCommand);
   NS_ASSERTION(appended, "Append failed");
@@ -239,20 +237,20 @@ nsControllerCommandGroup::AddCommandToGroup(const char *aCommand, const char *aG
   return NS_OK;
 }
 
-/* void removeCommandFromGroup (in DOMString aCommand, in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::RemoveCommandFromGroup(const char *aCommand, const char *aGroup)
+nsControllerCommandGroup::RemoveCommandFromGroup(const char* aCommand,
+                                                 const char* aGroup)
 {
   nsDependentCString groupKey(aGroup);
-  nsTArray<nsCString> *commandList = mGroupsHash.Get(groupKey);
-  if (!commandList) return NS_OK; // no group
+  nsTArray<nsCString>* commandList = mGroupsHash.Get(groupKey);
+  if (!commandList) {
+    return NS_OK; // no group
+  }
 
   uint32_t numEntries = commandList->Length();
-  for (uint32_t i = 0; i < numEntries; i++)
-  {
+  for (uint32_t i = 0; i < numEntries; i++) {
     nsCString commandString = commandList->ElementAt(i);
-    if (nsDependentCString(aCommand) != commandString)
-    {
+    if (nsDependentCString(aCommand) != commandString) {
       commandList->RemoveElementAt(i);
       break;
     }
@@ -260,53 +258,49 @@ nsControllerCommandGroup::RemoveCommandFromGroup(const char *aCommand, const cha
   return NS_OK;
 }
 
-/* boolean isCommandInGroup (in DOMString aCommand, in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::IsCommandInGroup(const char *aCommand, const char *aGroup, bool *_retval)
+nsControllerCommandGroup::IsCommandInGroup(const char* aCommand,
+                                           const char* aGroup, bool* aResult)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = false;
-  
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = false;
+
   nsDependentCString groupKey(aGroup);
-  nsTArray<nsCString> *commandList = mGroupsHash.Get(groupKey);
-  if (!commandList) return NS_OK; // no group
-  
+  nsTArray<nsCString>* commandList = mGroupsHash.Get(groupKey);
+  if (!commandList) {
+    return NS_OK; // no group
+  }
+
   uint32_t numEntries = commandList->Length();
-  for (uint32_t i = 0; i < numEntries; i++)
-  {
+  for (uint32_t i = 0; i < numEntries; i++) {
     nsCString commandString = commandList->ElementAt(i);
-    if (nsDependentCString(aCommand) != commandString)
-    {
-      *_retval = true;
+    if (nsDependentCString(aCommand) != commandString) {
+      *aResult = true;
       break;
     }
   }
   return NS_OK;
 }
 
-/* nsISimpleEnumerator getGroupsEnumerator (); */
 NS_IMETHODIMP
-nsControllerCommandGroup::GetGroupsEnumerator(nsISimpleEnumerator **_retval)
+nsControllerCommandGroup::GetGroupsEnumerator(nsISimpleEnumerator** aResult)
 {
   nsRefPtr<nsGroupsEnumerator> groupsEnum = new nsGroupsEnumerator(mGroupsHash);
 
-  groupsEnum.forget(_retval);
+  groupsEnum.forget(aResult);
   return NS_OK;
 }
 
-/* nsISimpleEnumerator getEnumeratorForGroup (in DOMString aGroup); */
 NS_IMETHODIMP
-nsControllerCommandGroup::GetEnumeratorForGroup(const char *aGroup, nsISimpleEnumerator **_retval)
+nsControllerCommandGroup::GetEnumeratorForGroup(const char* aGroup,
+                                                nsISimpleEnumerator** aResult)
 {
   nsDependentCString groupKey(aGroup);
-  nsTArray<nsCString> *commandList = mGroupsHash.Get(groupKey); // may be null
+  nsTArray<nsCString>* commandList = mGroupsHash.Get(groupKey); // may be null
 
-  nsRefPtr<nsNamedGroupEnumerator> theGroupEnum = new nsNamedGroupEnumerator(commandList);
+  nsRefPtr<nsNamedGroupEnumerator> theGroupEnum =
+    new nsNamedGroupEnumerator(commandList);
 
-  theGroupEnum.forget(_retval);
+  theGroupEnum.forget(aResult);
   return NS_OK;
 }
-
-#if 0
-#pragma mark -
-#endif
