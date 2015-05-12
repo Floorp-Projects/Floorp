@@ -7,7 +7,7 @@
 interface nsIMobileCallForwardingOptions;
 interface nsITelephonyCallInfo;
 
-[scriptable, uuid(37fb45bb-ae10-4cfd-b24e-d656a9787a0a)]
+[scriptable, uuid(80faf34e-286b-4487-bd55-135bd92668b9)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -53,20 +53,6 @@ interface nsITelephonyListener : nsISupports
   void supplementaryServiceNotification(in unsigned long clientId,
                                         in long callIndex,
                                         in unsigned short notification);
-
-  /**
-   * Called when RIL error occurs.
-   *
-   * @param clientId
-            Indicate the RIL client, 0 ~ (number of client - 1).
-   * @param callIndex
-   *        Call identifier assigned by the RIL. -1 if no connection
-   * @param error
-   *        Error from RIL.
-   */
-  void notifyError(in unsigned long clientId,
-                   in long callIndex,
-                   in AString error);
 
   /**
    * Called when a waiting call comes in CDMA networks.
@@ -175,20 +161,16 @@ interface nsITelephonyDialCallback : nsITelephonyCallback
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(2b7b3fe7-f1d9-48be-8fd6-aaf890fa73af)]
+[scriptable, uuid(75e4b5e3-6710-4156-bdaa-ba1081f390f4)]
 interface nsITelephonyService : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
   const unsigned short CALL_STATE_DIALING = 1;
   const unsigned short CALL_STATE_ALERTING = 2;
-  const unsigned short CALL_STATE_CONNECTING = 3;
-  const unsigned short CALL_STATE_CONNECTED = 4;
-  const unsigned short CALL_STATE_HOLDING = 5;
-  const unsigned short CALL_STATE_HELD = 6;
-  const unsigned short CALL_STATE_RESUMING = 7;
-  const unsigned short CALL_STATE_DISCONNECTING = 8;
-  const unsigned short CALL_STATE_DISCONNECTED = 9;
-  const unsigned short CALL_STATE_INCOMING = 10;
+  const unsigned short CALL_STATE_CONNECTED = 3;
+  const unsigned short CALL_STATE_HELD = 4;
+  const unsigned short CALL_STATE_DISCONNECTED = 5;
+  const unsigned short CALL_STATE_INCOMING = 6;
 
   const unsigned short NOTIFICATION_REMOTE_HELD = 0;
   const unsigned short NOTIFICATION_REMOTE_RESUMED = 1;

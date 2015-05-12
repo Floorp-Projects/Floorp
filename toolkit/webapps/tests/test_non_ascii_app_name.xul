@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1152552
+-->
+<window title="Mozilla Bug 1152552"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=898647"
+     target="_blank">Mozilla Bug 898647</a>
+  </body>
+
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 1152552 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+
+let manifest = {
+  // Test unicode app names, the hyphen being \u2013
+  name: "Sample hosted app – \u2603 \u26a0",
+};
+
+let app = {
+  name: "Sample hosted app – \u2603 \u26a0",
+  manifestURL: "http://example.com/sample.manifest",
+  manifest: manifest,
+  origin: "http://example.com/",
+  categories: [],
+  installOrigin: "http://example.com/",
+  receipts: [],
+  installTime: Date.now(),
+};
+
+let testAppInfo = new TestAppInfo(app);
+
+let runTest = Task.async(function*() {
+  // Get to a clean state before the test
+  yield testAppInfo.cleanup();
+
+  SimpleTest.registerCleanupFunction(() => testAppInfo.cleanup());
+
+  setDryRunPref();
+
+  let nativeApp = new NativeApp(app, manifest, app.categories);
+  ok(nativeApp, "NativeApp object created");
+
+  info("Test update for an uninstalled application");
+  try {
+    yield nativeApp.prepareUpdate(app, manifest);
+    ok(false, "Didn't thrown");
+  } catch (ex) {
+    is(ex, "The application isn't installed", "Exception thrown");
+  }
+
+  testAppInfo.profileDir = nativeApp.createProfile();
+  ok(testAppInfo.profileDir && testAppInfo.profileDir.exists(), "Profile directory created");
+  ok((yield OS.File.exists(testAppInfo.profilesIni)), "profiles.ini file created");
+
+  // On Mac build servers, we don't have enough privileges to write to /Applications,
+  // so we install apps in a user-owned directory.
+  if (MAC) {
+    yield setMacRootInstallDir(OS.Path.join(OS.Constants.Path.homeDir, "Applications"));
+  }
+
+  // Install application
+  info("Test installation");
+  yield nativeApp.install(app, manifest);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+  ok((yield checkFiles(testAppInfo.installedFiles)), "Files correctly written");
+  is(WebappOSUtils.getInstallPath(app), testAppInfo.installPath, "getInstallPath == installPath");
+
+  let stat = yield OS.File.stat(testAppInfo.installPath);
+  let installTime = stat.lastModificationDate;
+
+  // Wait one second, otherwise the last modification date is the same.
+  yield wait(1000);
+
+  // Reinstall application
+  info("Test reinstallation");
+  yield nativeApp.install(app, manifest);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+  ok((yield checkFiles(testAppInfo.installedFiles)), "Installation not corrupted");
+  ok((yield checkFiles(testAppInfo.tempUpdatedFiles)), "Files correctly written in the update subdirectory");
+
+  yield nativeApp.applyUpdate(app);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+
+  if (MAC) {
+    stat = yield OS.File.stat(testAppInfo.webappINI);
+    is(stat.unixMode, 0o644, "Configuration file permissions correct");
+  } else if (LINUX) {
+    stat = yield OS.File.stat(testAppInfo.desktopINI);
+    is(stat.unixMode, 0o744, "Configuration file permissions correct");
+  }
+
+  ok((yield checkFiles(testAppInfo.installedFiles)), "Installation not corrupted");
+  ok(!(yield OS.File.exists(OS.Path.join(testAppInfo.installPath, "update"))), "Update directory removed");
+  ok((yield checkDateHigherThan(testAppInfo.updatedFiles, installTime)), "Modification date higher");
+
+  stat = yield OS.File.stat(testAppInfo.installPath);
+  installTime = stat.lastModificationDate;
+
+  // Wait one second, otherwise the last modification date is the same.
+  yield wait(1000);
+
+  // Update application
+  info("Test update");
+  yield nativeApp.prepareUpdate(app, manifest);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+  ok((yield checkFiles(testAppInfo.installedFiles)), "Installation not corrupted");
+  ok((yield checkFiles(testAppInfo.tempUpdatedFiles)), "Files correctly written in the update subdirectory");
+
+  yield nativeApp.applyUpdate(app);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+  ok((yield checkFiles(testAppInfo.installedFiles)), "Installation not corrupted");
+  ok(!(yield OS.File.exists(OS.Path.join(testAppInfo.installPath, "update"))), "Update directory removed");
+  ok((yield checkDateHigherThan(testAppInfo.updatedFiles, installTime)), "Modification date higher");
+
+  SimpleTest.finish();
+});
+
+runTest().catch((e) => {
+  ok(false, "Error during test: " + e);
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+</window>
