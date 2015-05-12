@@ -19,8 +19,7 @@ function run_test() {
 
 add_task(function* test_unregister_invalid_json() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: '87902e90-c57e-4d18-8354-013f4a556559',
     pushEndpoint: 'https://example.org/update/1',
@@ -33,7 +32,7 @@ add_task(function* test_unregister_invalid_json() {
     version: 1
   }];
   for (let record of records) {
-    yield promiseDB.put(record);
+    yield db.put(record);
   }
 
   let unregisterDefer = Promise.defer();
@@ -62,13 +61,13 @@ add_task(function* test_unregister_invalid_json() {
   // _sendRequest().
   yield PushNotificationService.unregister(
     'https://example.edu/page/1');
-  let record = yield promiseDB.getByChannelID(
+  let record = yield db.getByChannelID(
     '87902e90-c57e-4d18-8354-013f4a556559');
   ok(!record, 'Failed to delete unregistered record');
 
   yield PushNotificationService.unregister(
     'https://example.net/page/1');
-  record = yield promiseDB.getByChannelID(
+  record = yield db.getByChannelID(
     '057caa8f-9b99-47ff-891c-adad18ce603e');
   ok(!record,
     'Failed to delete unregistered record after receiving invalid JSON');
