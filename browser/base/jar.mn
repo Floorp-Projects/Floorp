@@ -75,7 +75,7 @@ browser.jar:
 *       content/browser/browser.css                   (content/browser.css)
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
-        content/browser/browser-pocket.properties     (content/browser-pocket.properties)
+        content/browser/browser-pocket-en-US.properties (content/browser-pocket-en-US.properties)
         content/browser/browser-pocket.dtd            (content/browser-pocket.dtd)
         content/browser/browser-pocket-de.properties  (content/browser-pocket-de.properties)
         content/browser/browser-pocket-es-ES.properties (content/browser-pocket-es-ES.properties)
