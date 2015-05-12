@@ -58,8 +58,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1019417
     is(names3.indexOf("crossorigin"), -1,
        "Frame with cross-origin changed name should not be in GSP own prop list");
 
-    ise(Object.getOwnPropertyDescriptor(gsp, ""), undefined,
-        "Should not have empty string as a named frame");
+    is(Object.getOwnPropertyDescriptor(gsp, ""), undefined,
+       "Should not have empty string as a named frame");
     isnot(Object.getOwnPropertyDescriptor(gsp, "x"), undefined,
         "Should have about:blank subframe as a named frame");
     isnot(Object.getOwnPropertyDescriptor(gsp, "y"), undefined,
@@ -68,8 +68,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1019417
         "Should have cross-origin subframe as a named frame");
     isnot(Object.getOwnPropertyDescriptor(gsp, "sameorigin"), undefined,
           "Should have same-origin changed name as a named frame");
-    ise(Object.getOwnPropertyDescriptor(gsp, "crossorigin"), undefined,
-        "Should not have cross-origin-origin changed name as a named frame");
+    is(Object.getOwnPropertyDescriptor(gsp, "crossorigin"), undefined,
+       "Should not have cross-origin-origin changed name as a named frame");
     SimpleTest.finish();
   });
   </script>

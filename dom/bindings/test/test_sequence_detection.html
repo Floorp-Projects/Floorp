@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1066432
       testInterfaceJS.testSequenceOverload(nonIterableObject);
       ok(false, "Should have thrown in the overload case");  // see long comment above!
     } catch (e) {
-      ise(e.name, "TypeError", "Should get a TypeError for the overload case");
+      is(e.name, "TypeError", "Should get a TypeError for the overload case");
       ok(e.message.includes("not iterable"),
          "Should have a message about being non-iterable in the overload case");
     }
@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1066432
       testInterfaceJS.testSequenceUnion(nonIterableObject);
       ok(false, "Should have thrown in the union case");
     } catch (e) {
-      ise(e.name, "TypeError", "Should get a TypeError for the union case");
+      is(e.name, "TypeError", "Should get a TypeError for the union case");
       ok(e.message.includes("not iterable"),
          "Should have a message about being non-iterable in the union case");
     }

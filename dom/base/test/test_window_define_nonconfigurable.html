@@ -15,19 +15,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
     Object.defineProperty(window, "nosuchprop", { value: 5 });
     throw "didn't throw";
   } catch (e) {
-    ise(e instanceof TypeError, true,
-        "defineProperty(window) with a non-configurable property should " +
-        "throw a TypeError, instead got: " + e);
-    ise(Object.getOwnPropertyDescriptor(window, "nosuchprop"), undefined,
-        'Window should not have property after an attempt to define it failed');
+    is(e instanceof TypeError, true,
+       "defineProperty(window) with a non-configurable property should " +
+       "throw a TypeError, instead got: " + e);
+    is(Object.getOwnPropertyDescriptor(window, "nosuchprop"), undefined,
+       'Window should not have property after an attempt to define it failed');
   }
 
   Object.defineProperty(window, "nosuchprop", { value: 7, configurable: true });
   var desc = Object.getOwnPropertyDescriptor(window, "nosuchprop");
-  ise(typeof(desc), "object", "Should have a property now");
-  ise(desc.configurable, true, "Property should be configurable");
-  ise(desc.writable, false, "Property should be readonly");
-  ise(desc.value, 7, "Property should have the right value");
+  is(typeof(desc), "object", "Should have a property now");
+  is(desc.configurable, true, "Property should be configurable");
+  is(desc.writable, false, "Property should be readonly");
+  is(desc.value, 7, "Property should have the right value");
   </script>
 </head>
 <body>

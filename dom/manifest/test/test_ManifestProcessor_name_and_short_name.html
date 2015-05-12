@@ -34,7 +34,7 @@ props.forEach((prop) => {
     obj[prop] = trimmableString;
     data.jsonText = JSON.stringify(obj);
     var result = processor.process(data);
-    ise(result[prop], 'pass', assetion);
+    is(result[prop], 'pass', assetion);
   });
 });
 
@@ -72,7 +72,7 @@ props.forEach((prop) => {
     obj[prop] = name;
     data.jsonText = JSON.stringify(obj);
     var result = processor.process(data);
-    ise(result[prop], name, expected);
+    is(result[prop], name, expected);
   });
 });
   </script>

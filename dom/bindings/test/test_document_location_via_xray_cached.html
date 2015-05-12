@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1041731
 function test()
 {
   var loc = document.getElementById("t").contentWindow.document.location;
-  ise(loc.toString, loc.toString, "Unforgeable method on the Xray should be cached");
+  is(loc.toString, loc.toString, "Unforgeable method on the Xray should be cached");
   SimpleTest.finish();
 }
 

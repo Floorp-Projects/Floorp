@@ -454,4 +454,4 @@ CameraTestSuite.prototype = {
   },
 };
 
-ise(SpecialPowers.sanityCheck(), "foo", "SpecialPowers passed sanity check");
+is(SpecialPowers.sanityCheck(), "foo", "SpecialPowers passed sanity check");

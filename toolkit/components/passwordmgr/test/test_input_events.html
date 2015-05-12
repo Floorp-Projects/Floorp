@@ -28,22 +28,22 @@ function onNewEvent(e) {
     onloadFired = true;
   } else if (e.type == "input") {
     if (e.target.name == "uname") {
-      ise(e.target.value, "testuser", "Should get 'testuser' as username");
+      is(e.target.value, "testuser", "Should get 'testuser' as username");
       ok(!usernameInputFired, "Should not have gotten an input event for the username field yet.");
       usernameInputFired = true;
     } else if (e.target.name == "pword") {
-      ise(e.target.value, "testpass", "Should get 'testpass' as password");
+      is(e.target.value, "testpass", "Should get 'testpass' as password");
       ok(!passwordInputFired, "Should not have gotten an input event for the password field yet.");
       passwordInputFired = true;
     }
   } else if (e.type == "change") {
     if (e.target.name == "uname") {
-      ise(e.target.value, "testuser", "Should get 'testuser' as username");
+      is(e.target.value, "testuser", "Should get 'testuser' as username");
       ok(usernameInputFired, "Should get input event before change event for username field.");
       ok(!usernameChangeFired, "Should not have gotten a change event for the username field yet.");
       usernameChangeFired = true;
     } else if (e.target.name == "pword") {
-      ise(e.target.value, "testpass", "Should get 'testpass' as password");
+      is(e.target.value, "testpass", "Should get 'testpass' as password");
       ok(passwordInputFired, "Should get input event before change event for password field.");
       ok(!passwordChangeFired, "Should not have gotten a change event for the password field yet.");
       passwordChangeFired = true;
