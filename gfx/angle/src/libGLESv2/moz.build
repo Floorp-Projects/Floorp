@@ -212,12 +212,9 @@ DEFINES['GL_APICALL'] = ""
 DEFINES['GL_GLEXT_PROTOTYPES'] = ""
 DEFINES['EGLAPI'] = ""
 
-# ANGLE uses the STL, so we can't use our derpy STL wrappers.
-DISABLE_STL_WRAPPING = True
 
 
 LOCAL_INCLUDES += [ '../../include', '../../src' ]
-
 
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
   OS_LIBS += [ 'd3d9', 'dxguid' ]

@@ -54,7 +54,8 @@ typedef OffsetListOf<PosLookup> JstfMax;
 
 struct JstfPriority
 {
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (c->check_struct (this) &&
 			 shrinkageEnableGSUB.sanitize (c, this) &&
@@ -123,7 +124,8 @@ struct JstfPriority
 struct JstfLangSys : OffsetListOf<JstfPriority>
 {
   inline bool sanitize (hb_sanitize_context_t *c,
-			const Record<JstfLangSys>::sanitize_closure_t * = NULL) {
+			const Record<JstfLangSys>::sanitize_closure_t * = NULL) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (OffsetListOf<JstfPriority>::sanitize (c));
   }
@@ -163,7 +165,8 @@ struct JstfScript
   inline const JstfLangSys& get_default_lang_sys (void) const { return this+defaultLangSys; }
 
   inline bool sanitize (hb_sanitize_context_t *c,
-			const Record<JstfScript>::sanitize_closure_t * = NULL) {
+			const Record<JstfScript>::sanitize_closure_t * = NULL) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (extenderGlyphs.sanitize (c, this) &&
 			 defaultLangSys.sanitize (c, this) &&
@@ -206,7 +209,8 @@ struct JSTF
   inline bool find_script_index (hb_tag_t tag, unsigned int *index) const
   { return scriptList.find_index (tag, index); }
 
-  inline bool sanitize (hb_sanitize_context_t *c) {
+  inline bool sanitize (hb_sanitize_context_t *c) const
+  {
     TRACE_SANITIZE (this);
     return TRACE_RETURN (version.sanitize (c) && likely (version.major == 1) &&
 			 scriptList.sanitize (c, this));

@@ -2966,38 +2966,22 @@ nsBlockFrame::IsSelfEmpty()
     return false;
   }
 
+  WritingMode wm = GetWritingMode();
   const nsStylePosition* position = StylePosition();
-  bool vertical = GetWritingMode().IsVertical();
 
-  if (vertical) {
-    if (IsNonAutoNonZeroBSize(position->mMinWidth) ||
-        IsNonAutoNonZeroBSize(position->mWidth)) {
-      return false;
-    }
-  } else {
-    if (IsNonAutoNonZeroBSize(position->mMinHeight) ||
-        IsNonAutoNonZeroBSize(position->mHeight)) {
-      return false;
-    }
+  if (IsNonAutoNonZeroBSize(position->MinBSize(wm)) ||
+      IsNonAutoNonZeroBSize(position->BSize(wm))) {
+    return false;
   }
 
   const nsStyleBorder* border = StyleBorder();
   const nsStylePadding* padding = StylePadding();
 
-  if (vertical) {
-    if (border->GetComputedBorderWidth(NS_SIDE_LEFT) != 0 ||
-        border->GetComputedBorderWidth(NS_SIDE_RIGHT) != 0 ||
-        !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
-        !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetRight())) {
-      return false;
-    }
-  } else {
-    if (border->GetComputedBorderWidth(NS_SIDE_TOP) != 0 ||
-        border->GetComputedBorderWidth(NS_SIDE_BOTTOM) != 0 ||
-        !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetTop()) ||
-        !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBottom())) {
-      return false;
-    }
+  if (border->GetComputedBorderWidth(wm.PhysicalSide(eLogicalSideBStart)) != 0 ||
+      border->GetComputedBorderWidth(wm.PhysicalSide(eLogicalSideBEnd)) != 0 ||
+      !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBStart(wm)) ||
+      !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBEnd(wm))) {
+    return false;
   }
 
   if (HasOutsideBullet() && !BulletIsEmpty()) {

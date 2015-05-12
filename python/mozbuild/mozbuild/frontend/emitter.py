@@ -79,6 +79,7 @@ from .reader import SandboxValidationError
 from .context import (
     Context,
     SubContext,
+    TemplateContext,
 )
 
 
@@ -456,6 +457,13 @@ class TreeMetadataEmitter(LoggingMixin):
                 elif static_lib:
                     static_args['is_sdk'] = True
 
+            if context.get('NO_EXPAND_LIBS'):
+                if not static_lib:
+                    raise SandboxValidationError(
+                        'NO_EXPAND_LIBS can only be set for static libraries.',
+                        context)
+                static_args['no_expand_lib'] = True
+
             if shared_lib and static_lib:
                 if not static_name and not shared_name:
                     raise SandboxValidationError(
@@ -546,15 +554,11 @@ class TreeMetadataEmitter(LoggingMixin):
             'ANDROID_GENERATED_RESFILES',
             'ANDROID_RES_DIRS',
             'DISABLE_STL_WRAPPING',
-            'EXTRA_ASSEMBLER_FLAGS',
-            'EXTRA_COMPILE_FLAGS',
             'EXTRA_COMPONENTS',
             'EXTRA_DSO_LDOPTS',
             'EXTRA_PP_COMPONENTS',
             'FAIL_ON_WARNINGS',
             'USE_STATIC_LIBS',
-            'IS_GYP_DIR',
-            'NO_DIST_INSTALL',
             'PYTHON_UNIT_TESTS',
             'RCFILE',
             'RESFILE',
@@ -575,7 +579,8 @@ class TreeMetadataEmitter(LoggingMixin):
                 for dll in context['DELAYLOAD_DLLS']])
             context['OS_LIBS'].append('delayimp')
 
-        for v in ['CFLAGS', 'CXXFLAGS', 'CMFLAGS', 'CMMFLAGS', 'LDFLAGS']:
+        for v in ['CFLAGS', 'CXXFLAGS', 'CMFLAGS', 'CMMFLAGS', 'ASFLAGS',
+                  'LDFLAGS']:
             if v in context and context[v]:
                 passthru.variables['MOZBUILD_' + v] = context[v]
 
@@ -583,13 +588,22 @@ class TreeMetadataEmitter(LoggingMixin):
         if context['NO_VISIBILITY_FLAGS']:
             passthru.variables['VISIBILITY_FLAGS'] = ''
 
+        if isinstance(context, TemplateContext) and context.template == 'Gyp':
+            passthru.variables['IS_GYP_DIR'] = True
+
+        dist_install = context['DIST_INSTALL']
+        if dist_install is True:
+            passthru.variables['DIST_INSTALL'] = True
+        elif dist_install is False:
+            passthru.variables['NO_DIST_INSTALL'] = True
+
         for obj in self._process_sources(context, passthru):
             yield obj
 
         exports = context.get('EXPORTS')
         if exports:
             yield Exports(context, exports,
-                dist_install=not context.get('NO_DIST_INSTALL', False))
+                dist_install=dist_install is not False)
 
         for obj in self._process_generated_files(context):
             yield obj
@@ -793,10 +807,10 @@ class TreeMetadataEmitter(LoggingMixin):
             raise SandboxValidationError('XPIDL_MODULE cannot be defined '
                 'unless there are XPIDL_SOURCES', context)
 
-        if context['XPIDL_SOURCES'] and context['NO_DIST_INSTALL']:
+        if context['XPIDL_SOURCES'] and context['DIST_INSTALL'] is False:
             self.log(logging.WARN, 'mozbuild_warning', dict(
                 path=context.main_path),
-                '{path}: NO_DIST_INSTALL has no effect on XPIDL_SOURCES.')
+                '{path}: DIST_INSTALL = False has no effect on XPIDL_SOURCES.')
 
         for idl in context['XPIDL_SOURCES']:
             yield XPIDLFile(context, mozpath.join(context.srcdir, idl),

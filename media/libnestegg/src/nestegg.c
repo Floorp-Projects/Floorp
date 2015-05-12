@@ -2187,7 +2187,7 @@ nestegg_track_type(nestegg * ctx, unsigned int track)
   if (type & TRACK_TYPE_AUDIO)
     return NESTEGG_TRACK_AUDIO;
 
-  return -1;
+  return NESTEGG_TRACK_UNKNOWN;
 }
 
 int
@@ -2215,7 +2215,7 @@ nestegg_track_codec_id(nestegg * ctx, unsigned int track)
   if (strcmp(codec_id, TRACK_ID_OPUS) == 0)
     return NESTEGG_CODEC_OPUS;
 
-  return -1;
+  return NESTEGG_CODEC_UNKNOWN;
 }
 
 int

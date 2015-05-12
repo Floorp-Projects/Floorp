@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1135812
+-->
+<head>
+  <title>Test for Bug 1135812</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1135812">Mozilla Bug 1135812</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+
+<iframe style="width: 50px;"
+        srcdoc='<picture><source srcset="data:,a" media="(min-width: 150px)" /><source srcset="data:,b" media="(min-width: 100px)" /><img src="data:,c" /></picture>'></iframe>
+<script>
+    SimpleTest.waitForExplicitFinish();
+    addEventListener('load', function() {
+        var iframe = document.querySelector('iframe');
+        var img = iframe.contentDocument.querySelector('img');
+        is(img.currentSrc, 'data:,c');
+
+        img.onload = function() {
+            is(img.currentSrc, 'data:,a');
+            img.onload = function() {
+                is(img.currentSrc, 'data:,b');
+                SimpleTest.finish();
+            }
+            img.onerror = img.onload;
+            iframe.style.width = '120px';
+        };
+        img.onerror = img.onload;
+
+        iframe.style.width = '200px';
+    }, true);
+</script>
+</pre>
+</body>
+</html>

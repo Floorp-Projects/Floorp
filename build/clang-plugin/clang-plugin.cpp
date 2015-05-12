@@ -421,7 +421,7 @@ bool classHasAddRefRelease(const CXXRecordDecl *D) {
   bool seenRelease = false;
   for (CXXRecordDecl::method_iterator method = D->method_begin();
        method != D->method_end(); ++method) {
-    std::string name = method->getNameAsString();
+    const auto &name = method->getName();
     if (name == "AddRef") {
       seenAddRef = true;
     } else if (name == "Release") {
@@ -588,7 +588,7 @@ AST_MATCHER(MemberExpr, isAddRefOrRelease) {
   ValueDecl *Member = Node.getMemberDecl();
   CXXMethodDecl *Method = dyn_cast<CXXMethodDecl>(Member);
   if (Method) {
-    std::string Name = Method->getNameAsString();
+    const auto &Name = Method->getName();
     return Name == "AddRef" || Name == "Release";
   }
   return false;

@@ -93,9 +93,7 @@ MediaOmxCommonDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   }
   PauseStateMachine();
   if (mLogicallySeeking) {
-    int64_t timeUsecs = 0;
-    SecondsToUsecs(mCurrentTime, timeUsecs);
-    SeekTarget target = SeekTarget(timeUsecs,
+    SeekTarget target = SeekTarget(mLogicalPosition,
                                    SeekTarget::Accurate,
                                    MediaDecoderEventVisibility::Observable);
     mSeekRequest.DisconnectIfExists();
@@ -135,8 +133,7 @@ MediaOmxCommonDecoder::ResumeStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  DECODER_LOG(PR_LOG_DEBUG, ("%s current time %f", __PRETTY_FUNCTION__,
-      mCurrentTime));
+  DECODER_LOG(PR_LOG_DEBUG, ("%s current time %f", __PRETTY_FUNCTION__, mLogicalPosition));
 
   if (mShuttingDown) {
     return;
@@ -148,9 +145,7 @@ MediaOmxCommonDecoder::ResumeStateMachine()
 
   mFallbackToStateMachine = true;
   mAudioOffloadPlayer = nullptr;
-  int64_t timeUsecs = 0;
-  SecondsToUsecs(mCurrentTime, timeUsecs);
-  SeekTarget target = SeekTarget(timeUsecs,
+  SeekTarget target = SeekTarget(mLogicalPosition,
                                  SeekTarget::Accurate,
                                  MediaDecoderEventVisibility::Suppressed);
   // Call Seek of MediaDecoderStateMachine to suppress seek events.
@@ -170,6 +165,7 @@ MediaOmxCommonDecoder::ResumeStateMachine()
       &MediaDecoderStateMachine::SetDormant,
       false);
   GetStateMachine()->TaskQueue()->Dispatch(event);
+  UpdateLogicalPosition();
 }
 
 void
@@ -181,8 +177,6 @@ MediaOmxCommonDecoder::AudioOffloadTearDown()
   // mAudioOffloadPlayer can be null here if ResumeStateMachine was called
   // just before because of some other error.
   if (mAudioOffloadPlayer) {
-    // Audio offload player sent tear down event. Fallback to state machine
-    PlaybackPositionChanged();
     ResumeStateMachine();
   }
 }
@@ -194,8 +188,6 @@ MediaOmxCommonDecoder::AddOutputStream(ProcessedMediaStream* aStream,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mAudioOffloadPlayer) {
-    // Offload player cannot handle MediaStream. Fallback
-    PlaybackPositionChanged();
     ResumeStateMachine();
   }
 
@@ -209,8 +201,6 @@ MediaOmxCommonDecoder::SetPlaybackRate(double aPlaybackRate)
 
   if (mAudioOffloadPlayer &&
       ((aPlaybackRate != 0.0) || (aPlaybackRate != 1.0))) {
-    // Offload player cannot handle playback rate other than 1/0. Fallback
-    PlaybackPositionChanged();
     ResumeStateMachine();
   }
 
@@ -251,29 +241,16 @@ MediaOmxCommonDecoder::CallSeek(const SeekTarget& aTarget)
                   &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
 }
 
-void
-MediaOmxCommonDecoder::PlaybackPositionChanged(MediaDecoderEventVisibility aEventVisibility)
+int64_t
+MediaOmxCommonDecoder::CurrentPosition()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mAudioOffloadPlayer) {
-    MediaDecoder::PlaybackPositionChanged();
-    return;
+    return MediaDecoder::CurrentPosition();
   }
 
-  if (!mOwner || mShuttingDown) {
-    return;
-  }
-
-  double lastTime = mCurrentTime;
-  {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    mCurrentTime = mAudioOffloadPlayer->GetMediaTimeSecs();
-  }
-  if (mOwner &&
-      (aEventVisibility != MediaDecoderEventVisibility::Suppressed) &&
-      lastTime != mCurrentTime) {
-    FireTimeUpdate();
-  }
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  return mAudioOffloadPlayer->GetMediaTimeSecs();
 }
 
 void

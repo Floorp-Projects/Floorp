@@ -164,19 +164,19 @@ ProgressTracker::Notify(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef PR_LOGGING
-  nsRefPtr<Image> image = GetImage();
-  if (image && image->GetURI()) {
-    nsRefPtr<ImageURL> uri(image->GetURI());
-    nsAutoCString spec;
-    uri->GetSpec(spec);
-    LOG_FUNC_WITH_PARAM(GetImgLog(),
-                        "ProgressTracker::Notify async", "uri", spec.get());
-  } else {
-    LOG_FUNC_WITH_PARAM(GetImgLog(),
-                        "ProgressTracker::Notify async", "uri", "<unknown>");
+  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+    nsRefPtr<Image> image = GetImage();
+    if (image && image->GetURI()) {
+      nsRefPtr<ImageURL> uri(image->GetURI());
+      nsAutoCString spec;
+      uri->GetSpec(spec);
+      LOG_FUNC_WITH_PARAM(GetImgLog(),
+                          "ProgressTracker::Notify async", "uri", spec.get());
+    } else {
+      LOG_FUNC_WITH_PARAM(GetImgLog(),
+                          "ProgressTracker::Notify async", "uri", "<unknown>");
+    }
   }
-#endif
 
   aObserver->SetNotificationsDeferred(true);
 
@@ -233,15 +233,15 @@ ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef PR_LOGGING
-  nsRefPtr<Image> image = GetImage();
-  nsAutoCString spec;
-  if (image && image->GetURI()) {
-    image->GetURI()->GetSpec(spec);
+  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+    nsRefPtr<Image> image = GetImage();
+    nsAutoCString spec;
+    if (image && image->GetURI()) {
+      image->GetURI()->GetSpec(spec);
+    }
+    LOG_FUNC_WITH_PARAM(GetImgLog(),
+                        "ProgressTracker::NotifyCurrentState", "uri", spec.get());
   }
-  LOG_FUNC_WITH_PARAM(GetImgLog(),
-                      "ProgressTracker::NotifyCurrentState", "uri", spec.get());
-#endif
 
   aObserver->SetNotificationsDeferred(true);
 
@@ -365,14 +365,12 @@ ProgressTracker::SyncNotify(IProgressObserver* aObserver)
 
   nsRefPtr<Image> image = GetImage();
 
-#ifdef PR_LOGGING
   nsAutoCString spec;
   if (image && image->GetURI()) {
     image->GetURI()->GetSpec(spec);
   }
   LOG_SCOPE_WITH_PARAM(GetImgLog(),
                        "ProgressTracker::SyncNotify", "uri", spec.get());
-#endif
 
   nsIntRect rect;
   if (image) {

@@ -813,10 +813,8 @@ public:
   // thread.
   void SeekingStarted(MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable);
 
-  // Called when the backend has changed the current playback
-  // position. It dispatches a timeupdate event and invalidates the frame.
-  // This must be called on the main thread only.
-  virtual void PlaybackPositionChanged(MediaDecoderEventVisibility aEventVisibility = MediaDecoderEventVisibility::Observable);
+  void UpdateLogicalPosition(MediaDecoderEventVisibility aEventVisibility);
+  void UpdateLogicalPosition() { UpdateLogicalPosition(MediaDecoderEventVisibility::Observable); }
 
   // Find the end of the cached data starting at the current decoder
   // position.
@@ -1072,11 +1070,22 @@ protected:
   // start playing back again.
   int64_t mPlaybackPosition;
 
-  // The current playback position of the media resource in units of
-  // seconds. This is updated approximately at the framerate of the
-  // video (if it is a video) or the callback period of the audio.
-  // It is read and written from the main thread only.
-  double mCurrentTime;
+  // The logical playback position of the media resource in units of
+  // seconds. This corresponds to the "official position" in HTML5. Note that
+  // we need to store this as a double, rather than an int64_t (like
+  // mCurrentPosition), so that |v.currentTime = foo; v.currentTime == foo|
+  // returns true without being affected by rounding errors.
+  double mLogicalPosition;
+
+  // The current playback position of the underlying playback infrastructure.
+  // This corresponds to the "current position" in HTML5.
+  //
+  // NB: Don't use mCurrentPosition directly, but rather CurrentPosition() below.
+  Mirror<int64_t> mCurrentPosition;
+
+  // We allow omx subclasses to substitute an alternative current position for
+  // usage with the audio offload player.
+  virtual int64_t CurrentPosition() { return mCurrentPosition; }
 
   // Volume of playback.  0.0 = muted. 1.0 = full volume.
   Canonical<double> mVolume;

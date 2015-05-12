@@ -101,3 +101,5 @@ if CONFIG['OS_TARGET'] == 'Darwin':
     # because somehow clang doesn't want to accept the __thread keyword
     # for TLS.
     LDFLAGS += ['-Wl,-bind_at_load']
+
+DIST_INSTALL = True

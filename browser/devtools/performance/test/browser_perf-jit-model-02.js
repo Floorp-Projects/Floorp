@@ -6,19 +6,21 @@
  * OptimizationSites methods work as expected.
  */
 
+const { RecordingUtils } = devtools.require("devtools/performance/recording-utils");
+
 function test() {
   let { JITOptimizations, OptimizationSite } = devtools.require("devtools/shared/profiler/jit");
 
-  let jit = new JITOptimizations(gOpts);
+  let rawSites = [];
+  rawSites.push(gRawSite2);
+  rawSites.push(gRawSite2);
+  rawSites.push(gRawSite1);
+  rawSites.push(gRawSite1);
+  rawSites.push(gRawSite2);
+  rawSites.push(gRawSite3);
 
-  jit.addOptimizationSite(1);
-  jit.addOptimizationSite(1);
-  jit.addOptimizationSite(0);
-  jit.addOptimizationSite(0);
-  jit.addOptimizationSite(1);
-  jit.addOptimizationSite(2);
-
-  let sites = jit.getOptimizationSites();
+  let jit = new JITOptimizations(rawSites, gStringTable.stringTable);
+  let sites = jit.optimizationSites;
 
   let [first, second, third] = sites;
 
@@ -40,38 +42,91 @@ function test() {
   finish();
 }
 
-let gOpts = [{
+
+let gStringTable = new RecordingUtils.UniqueStrings();
+
+function uniqStr(s) {
+  return gStringTable.getOrAddStringIndex(s);
+}
+
+let gRawSite1 = {
   line: 12,
   column: 2,
-  types: [{ mirType: "Object", site: "A (http://foo/bar/bar:12)", types: [
-    { keyedBy: "constructor", name: "Foo", location: "A (http://foo/bar/baz:12)" },
-    { keyedBy: "constructor", location: "A (http://foo/bar/baz:12)" }
-  ]}, { mirType: "Int32", site: "A (http://foo/bar/bar:12)", types: [
-    { keyedBy: "primitive", location: "self-hosted" }
-  ]}],
-  attempts: [
-    { outcome: "Failure1", strategy: "SomeGetter1" },
-    { outcome: "Failure1", strategy: "SomeGetter1" },
-    { outcome: "Failure1", strategy: "SomeGetter1" },
-    { outcome: "Failure2", strategy: "SomeGetter2" },
-    { outcome: "Inlined", strategy: "SomeGetter3" },
-  ]
-}, {
+  types: [{
+    mirType: uniqStr("Object"),
+    site: uniqStr("A (http://foo/bar/bar:12)"),
+    typeset: [{
+      keyedBy: uniqStr("constructor"),
+      name: uniqStr("Foo"),
+      location: uniqStr("A (http://foo/bar/baz:12)")
+    }, {
+      keyedBy: uniqStr("constructor"),
+      location: uniqStr("A (http://foo/bar/baz:12)")
+    }]
+  }, {
+    mirType: uniqStr("Int32"),
+    site: uniqStr("A (http://foo/bar/bar:12)"),
+    typeset: [{
+      keyedBy: uniqStr("primitive"),
+      location: uniqStr("self-hosted")
+    }]
+  }],
+  attempts: {
+    schema: {
+      outcome: 0,
+      strategy: 1
+    },
+    data: [
+      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
+      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
+      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
+      [uniqStr("Failure2"), uniqStr("SomeGetter2")],
+      [uniqStr("Inlined"), uniqStr("SomeGetter3")]
+    ]
+  }
+};
+
+let gRawSite2 = {
   line: 34,
-  types: [{ mirType: "Int32", site: "Receiver" }], // use no types
-  attempts: [
-    { outcome: "Failure1", strategy: "SomeGetter1" },
-    { outcome: "Failure2", strategy: "SomeGetter2" },
-  ]
-}, {
+  types: [{
+    mirType: uniqStr("Int32"),
+    site: uniqStr("Receiver")
+  }],
+  attempts: {
+    schema: {
+      outcome: 0,
+      strategy: 1
+    },
+    data: [
+      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
+      [uniqStr("Failure2"), uniqStr("SomeGetter2")]
+    ]
+  }
+};
+
+let gRawSite3 = {
   line: 78,
-  types: [{ mirType: "Object", site: "A (http://foo/bar/bar:12)", types: [
-    { keyedBy: "constructor", name: "Foo", location: "A (http://foo/bar/baz:12)" },
-    { keyedBy: "primitive", location: "self-hosted" }
-  ]}],
-  attempts: [
-    { outcome: "Failure1", strategy: "SomeGetter1" },
-    { outcome: "Failure2", strategy: "SomeGetter2" },
-    { outcome: "GenericSuccess", strategy: "SomeGetter3" },
-  ]
-}];
+  types: [{
+    mirType: uniqStr("Object"),
+    site: uniqStr("A (http://foo/bar/bar:12)"),
+    typeset: [{
+      keyedBy: uniqStr("constructor"),
+      name: uniqStr("Foo"),
+      location: uniqStr("A (http://foo/bar/baz:12)")
+    }, {
+      keyedBy: uniqStr("primitive"),
+      location: uniqStr("self-hosted")
+    }]
+  }],
+  attempts: {
+    schema: {
+      outcome: 0,
+      strategy: 1
+    },
+    data: [
+      [uniqStr("Failure1"), uniqStr("SomeGetter1")],
+      [uniqStr("Failure2"), uniqStr("SomeGetter2")],
+      [uniqStr("GenericSuccess"), uniqStr("SomeGetter3")]
+    ]
+  }
+};

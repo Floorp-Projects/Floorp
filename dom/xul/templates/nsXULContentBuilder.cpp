@@ -446,7 +446,6 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
     nsresult rv;
 
-#ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("nsXULContentBuilder::BuildContentFromTemplate (is unique: %d)",
@@ -461,7 +460,6 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 nsAtomCString(aResourceNode->NodeInfo()->NameAtom()).get(),
                 nsAtomCString(aRealNode->NodeInfo()->NameAtom()).get(), NS_ConvertUTF16toUTF8(id).get()));
     }
-#endif
 
     // Iterate through all of the template children, constructing
     // "real" content model nodes for each "template" child.
@@ -525,7 +523,6 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
         nsIAtom *tag = tmplKid->NodeInfo()->NameAtom();
 
-#ifdef PR_LOGGING
         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("xultemplate[%p]     building %s %s %s",
@@ -533,7 +530,6 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                     (isGenerationElement ? "[resource]" : ""),
                     (isUnique ? "[unique]" : "")));
         }
-#endif
 
         // Set to true if the child we're trying to create now
         // already existed in the content model.
@@ -1077,7 +1073,6 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
                                                         nsIContent** aContainer,
                                                         int32_t* aNewIndexInContainer)
 {
-#ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoString id;
         aResult->GetId(id);
@@ -1085,7 +1080,6 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
                ("nsXULContentBuilder::CreateContainerContentsForQuerySet start for ref %s\n",
                NS_ConvertUTF16toUTF8(id).get()));
     }
-#endif
 
     if (! mQueryProcessor)
         return NS_OK;

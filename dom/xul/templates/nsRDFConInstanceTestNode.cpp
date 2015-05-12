@@ -12,7 +12,6 @@
 #include "nsResourceSet.h"
 
 #include "prlog.h"
-#ifdef PR_LOGGING
 #include "nsXULContentUtils.h"
 extern PRLogModuleInfo* gXULTemplateLog;
 
@@ -25,7 +24,6 @@ TestToString(nsRDFConInstanceTestNode::Test aTest) {
     }
     return "?";
 }
-#endif
 
 nsRDFConInstanceTestNode::nsRDFConInstanceTestNode(TestNode* aParent,
                                                    nsXULTemplateQueryProcessorRDF* aProcessor,
@@ -38,7 +36,6 @@ nsRDFConInstanceTestNode::nsRDFConInstanceTestNode(TestNode* aParent,
       mContainer(aContainer),
       mEmpty(aEmpty)
 {
-#ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoCString props;
 
@@ -70,7 +67,6 @@ nsRDFConInstanceTestNode::nsRDFConInstanceTestNode(TestNode* aParent,
                 TestToString(aContainer),
                 TestToString(aEmpty)));
     }
-#endif
 }
 
 nsresult
@@ -104,7 +100,6 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
             continue;
         }
 
-#ifdef PR_LOGGING
         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             const char* container = "(unbound)";
             valueres->GetValueConst(&container);
@@ -113,7 +108,6 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
                    ("nsRDFConInstanceTestNode[%p]::FilterInstantiations() container=[%s]",
                     this, container));
         }
-#endif
 
         nsCOMPtr<nsIRDFContainer> rdfcontainer;
 
@@ -251,7 +245,6 @@ nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
         canpropagate = mProcessor->ContainmentProperties().Contains(aProperty);
     }
 
-#ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* source;
         aSource->GetValueConst(&source);
@@ -267,7 +260,6 @@ nsRDFConInstanceTestNode::CanPropagate(nsIRDFResource* aSource,
                 this, source, property, NS_ConvertUTF16toUTF8(target).get(),
                 canpropagate ? "true" : "false"));
     }
-#endif
 
     if (canpropagate) {
         aInitialBindings.AddAssignment(mContainerVariable, aSource);
