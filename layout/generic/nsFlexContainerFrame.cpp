@@ -3533,14 +3533,16 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   const FlexboxAxisTracker axisTracker(aReflowState.mStylePosition,
                                        aReflowState.GetWritingMode());
 
-  // If we're being fragmented into a constrained height, subtract off
-  // borderpadding-top from it, to get the available height for our
-  // content box. (Don't subtract if we're skipping top border/padding,
-  // though.)
+  // If we're being fragmented into a constrained BSize, then subtract off
+  // borderpadding BStart from that constrained BSize, to get the available
+  // BSize for our content box. (No need to subtract the borderpadding BStart
+  // if we're already skipping it via GetLogicalSkipSides, though.)
   nscoord availableBSizeForContent = aReflowState.AvailableBSize();
   if (availableBSizeForContent != NS_UNCONSTRAINEDSIZE &&
-      !GetSkipSides().Top()) {
-    availableBSizeForContent -= aReflowState.ComputedPhysicalBorderPadding().top;
+      !(GetLogicalSkipSides(&aReflowState).BStart())) {
+    WritingMode wm = aReflowState.GetWritingMode();
+    availableBSizeForContent -=
+      aReflowState.ComputedLogicalBorderPadding().BStart(wm);
     // (Don't let that push availableBSizeForContent below zero, though):
     availableBSizeForContent = std::max(availableBSizeForContent, 0);
   }
