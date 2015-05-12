@@ -114,7 +114,7 @@ DeviceStorageFileSystem::GetLocalFile(const nsAString& aRealPath) const
 }
 
 bool
-DeviceStorageFileSystem::GetRealPath(FileImpl* aFile, nsAString& aRealPath) const
+DeviceStorageFileSystem::GetRealPath(BlobImpl* aFile, nsAString& aRealPath) const
 {
   MOZ_ASSERT(FileSystemUtils::IsParentProcess(),
              "Should be on parent process!");

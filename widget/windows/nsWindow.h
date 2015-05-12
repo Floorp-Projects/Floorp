@@ -194,6 +194,7 @@ public:
   void                    SetDrawsInTitlebar(bool aState);
   mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
   virtual void            EndRemoteDrawing() override;
+  virtual void UpdateWindowDraggingRegion(const nsIntRegion& aRegion) override;
 
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
   virtual uint32_t        GetMaxTouchPoints() const override;
@@ -518,6 +519,9 @@ protected:
   int32_t               mCaptionHeight;
 
   nsCOMPtr<nsIIdleServiceInternal> mIdleService;
+
+  // Draggable titlebar region maintained by UpdateWindowDraggingRegion
+  nsIntRegion mDraggableRegion;
 
   // Hook Data Memebers for Dropdowns. sProcessHook Tells the
   // hook methods whether they should be processing the hook

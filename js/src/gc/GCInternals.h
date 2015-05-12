@@ -7,6 +7,9 @@
 #ifndef gc_GCInternals_h
 #define gc_GCInternals_h
 
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/PodOperations.h"
+
 #include "jscntxt.h"
 
 #include "gc/Zone.h"
@@ -190,6 +193,28 @@ struct AutoSetThreadIsSweeping
 #else
     AutoSetThreadIsSweeping() {}
 #endif
+};
+
+// Structure for counting how many times objects in a particular group have
+// been tenured during a minor collection.
+struct TenureCount
+{
+    ObjectGroup* group;
+    int count;
+};
+
+// Keep rough track of how many times we tenure objects in particular groups
+// during minor collections, using a fixed size hash for efficiency at the cost
+// of potential collisions.
+struct TenureCountCache
+{
+    TenureCount entries[16];
+
+    TenureCountCache() { mozilla::PodZero(this); }
+
+    TenureCount& findEntry(ObjectGroup* group) {
+        return entries[PointerHasher<ObjectGroup*, 3>::hash(group) % mozilla::ArrayLength(entries)];
+    }
 };
 
 } /* namespace gc */

@@ -122,7 +122,7 @@ ArchiveRequest::OpGetFiles()
 }
 
 nsresult
-ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
+ArchiveRequest::ReaderReady(nsTArray<nsRefPtr<File>>& aFileList,
                             nsresult aStatus)
 {
   if (NS_FAILED(aStatus)) {
@@ -174,7 +174,7 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
 nsresult
 ArchiveRequest::GetFilenamesResult(JSContext* aCx,
                                    JS::Value* aValue,
-                                   nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
+                                   nsTArray<nsRefPtr<File>>& aFileList)
 {
   JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, aFileList.Length()));
   nsresult rv;
@@ -185,7 +185,7 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
 
   JS::Rooted<JSString*> str(aCx);
   for (uint32_t i = 0; i < aFileList.Length(); ++i) {
-    nsCOMPtr<nsIDOMFile> file = aFileList[i];
+    nsRefPtr<File> file = aFileList[i];
 
     nsString filename;
     rv = file->GetName(filename);
@@ -211,18 +211,21 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
 nsresult
 ArchiveRequest::GetFileResult(JSContext* aCx,
                               JS::MutableHandle<JS::Value> aValue,
-                              nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
+                              nsTArray<nsRefPtr<File>>& aFileList)
 {
   for (uint32_t i = 0; i < aFileList.Length(); ++i) {
-    nsCOMPtr<nsIDOMFile> file = aFileList[i];
+    nsRefPtr<File> file = aFileList[i];
 
     nsString filename;
     nsresult rv = file->GetName(filename);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (filename == mFilename) {
-      return nsContentUtils::WrapNative(aCx, file, &NS_GET_IID(nsIDOMFile),
-                                        aValue);
+      if (!ToJSValue(aCx, file, aValue)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      return NS_OK;
     }
   }
 
@@ -232,7 +235,7 @@ ArchiveRequest::GetFileResult(JSContext* aCx,
 nsresult
 ArchiveRequest::GetFilesResult(JSContext* aCx,
                                JS::MutableHandle<JS::Value> aValue,
-                               nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
+                               nsTArray<nsRefPtr<File>>& aFileList)
 {
   JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, aFileList.Length()));
   if (!array) {
@@ -240,13 +243,14 @@ ArchiveRequest::GetFilesResult(JSContext* aCx,
   }
 
   for (uint32_t i = 0; i < aFileList.Length(); ++i) {
-    nsCOMPtr<nsIDOMFile> file = aFileList[i];
+    nsRefPtr<File> file = aFileList[i];
 
     JS::Rooted<JS::Value> value(aCx);
-    nsresult rv = nsContentUtils::WrapNative(aCx, file, &NS_GET_IID(nsIDOMFile),
-                                             &value);
-    if (NS_FAILED(rv) ||
-        !JS_DefineElement(aCx, array, i, value, JSPROP_ENUMERATE)) {
+    if (!ToJSValue(aCx, file, &value)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_DefineElement(aCx, array, i, value, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
   }

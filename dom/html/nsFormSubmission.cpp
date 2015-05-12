@@ -77,18 +77,19 @@ public:
   }
 
   virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue);
+                                    const nsAString& aValue) override;
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   File* aBlob);
+                                   File* aFile) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream);
+                                        nsIInputStream** aPostDataStream)
+                                                                       override;
 
-  virtual bool SupportsIsindexSubmission()
+  virtual bool SupportsIsindexSubmission() override
   {
     return true;
   }
 
-  virtual nsresult AddIsindex(const nsAString& aValue);
+  virtual nsresult AddIsindex(const nsAString& aValue) override;
 
 protected:
 
@@ -165,7 +166,7 @@ nsFSURLEncoded::AddIsindex(const nsAString& aValue)
 
 nsresult
 nsFSURLEncoded::AddNameFilePair(const nsAString& aName,
-                                File* aBlob)
+                                File* aFile)
 {
   if (!mWarnedFileControl) {
     SendJSWarning(mDocument, "ForgotFileEnctypeWarning", nullptr, 0);
@@ -173,8 +174,8 @@ nsFSURLEncoded::AddNameFilePair(const nsAString& aName,
   }
 
   nsAutoString filename;
-  if (aBlob && aBlob->IsFile()) {
-    aBlob->GetName(filename);
+  if (aFile) {
+    aFile->GetName(filename);
   }
 
   return AddNameValuePair(aName, filename);
@@ -439,7 +440,7 @@ nsFSMultipartFormData::AddNameValuePair(const nsAString& aName,
 
 nsresult
 nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
-                                       File* aBlob)
+                                       File* aFile)
 {
   // Encode the control name
   nsAutoCString nameStr;
@@ -448,18 +449,15 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
 
   nsCString filename, contentType;
   nsCOMPtr<nsIInputStream> fileStream;
-  if (aBlob) {
-    // Since Bug 1127150, any Blob received from FormData must be a File
-    // instance with a valid name (possibly "blob").
-    MOZ_ASSERT(aBlob->IsFile());
+  if (aFile) {
     nsAutoString filename16;
-    rv = aBlob->GetName(filename16);
+    rv = aFile->GetName(filename16);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     nsAutoString filepath16;
-    rv = aBlob->GetPath(filepath16);
+    rv = aFile->GetPath(filepath16);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -474,7 +472,7 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
 
     // Get content type
     nsAutoString contentType16;
-    rv = aBlob->GetType(contentType16);
+    rv = aFile->GetType(contentType16);
     if (NS_FAILED(rv) || contentType16.IsEmpty()) {
       contentType16.AssignLiteral("application/octet-stream");
     }
@@ -484,7 +482,7 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
                                         nsLinebreakConverter::eLinebreakSpace));
 
     // Get input stream
-    rv = aBlob->GetInternalStream(getter_AddRefs(fileStream));
+    rv = aFile->GetInternalStream(getter_AddRefs(fileStream));
     NS_ENSURE_SUCCESS(rv, rv);
     if (fileStream) {
       // Create buffered stream (for efficiency)
@@ -519,7 +517,7 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
   // We should not try to append an invalid stream. That will happen for example
   // if we try to update a file that actually do not exist.
   uint64_t size;
-  if (fileStream && NS_SUCCEEDED(aBlob->GetSize(&size))) {
+  if (fileStream && NS_SUCCEEDED(aFile->GetSize(&size))) {
     // We need to dump the data up to this point into the POST data stream here,
     // since we're about to add the file input stream
     AddPostDataStream();
@@ -587,11 +585,12 @@ public:
   }
 
   virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue);
+                                    const nsAString& aValue) override;
   virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   File* aBlob);
+                                   File* aFile) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream);
+                                        nsIInputStream** aPostDataStream)
+                                                                       override;
 
 private:
   nsString mBody;
@@ -612,11 +611,11 @@ nsFSTextPlain::AddNameValuePair(const nsAString& aName,
 
 nsresult
 nsFSTextPlain::AddNameFilePair(const nsAString& aName,
-                               File* aBlob)
+                               File* aFile)
 {
   nsAutoString filename;
-  if (aBlob && aBlob->IsFile()) {
-    aBlob->GetName(filename);
+  if (aFile) {
+    aFile->GetName(filename);
   }
 
   AddNameValuePair(aName, filename);

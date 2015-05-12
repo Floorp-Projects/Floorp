@@ -35,9 +35,6 @@
     // Eslint built-in rules are documented at <http://eslint.org/docs/rules/>
     "camelcase": 0,               // TODO: Remove (use default)
     "consistent-return": 0,       // TODO: Remove (use default)
-    "curly": 0,                   // TODO: Remove (use default)
-    "dot-notation": 0,            // TODO: Remove (use default)
-    "eol-last": 0,                // TODO: Remove (use default)
     "eqeqeq": 0,                  // TBD. Might need to be separate for content & chrome
     "global-strict": 0,           // Leave as zero (this will be unsupported in eslint 1.0.0)
     "key-spacing": 0,             // TODO: Remove (use default)
@@ -60,10 +57,7 @@
     "no-use-before-define": 0,    // TODO: Remove (use default)
     "no-wrap-func": 0,            // TODO: Remove (use default)
     "quotes": 0,                  // [2, "double", "avoid-escape"],
-    "space-infix-ops": 0,         // TODO: Remove (use default)
-    "space-return-throw-case": 0, // TODO: Remove (use default)
     "strict": 0,                  // [2, "function"],
-    "yoda": 0,                    // [2, "never"],
     // eslint-plugin-react rules. These are documented at
     // <https://github.com/yannickcr/eslint-plugin-react#list-of-supported-rules>
     "react/jsx-quotes": [2, "double", "avoid-escape"],

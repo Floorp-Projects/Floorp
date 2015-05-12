@@ -137,7 +137,33 @@ describe("loop.roomViews", function () {
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWith(dispatcher.dispatch,
-          new sharedActions.EmailRoomUrl({roomUrl: "http://invalid"}));
+          new sharedActions.EmailRoomUrl({
+            roomUrl: "http://invalid",
+            roomDescription: undefined
+          }));
+      });
+
+    it("should dispatch a different EmailRoomUrl action for rooms with context",
+      function() {
+        var url = "http://invalid";
+        var description = "Hello, is it me you're looking for?";
+        view = mountTestComponent({
+          roomData: {
+            roomUrl: url,
+            roomContextUrls: [{ description: description }]
+          }
+        });
+
+        var emailBtn = view.getDOMNode().querySelector(".btn-email");
+
+        React.addons.TestUtils.Simulate.click(emailBtn);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWith(dispatcher.dispatch,
+          new sharedActions.EmailRoomUrl({
+            roomUrl: url,
+            roomDescription: description
+          }));
       });
 
     describe("Copy Button", function() {
