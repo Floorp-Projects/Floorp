@@ -756,8 +756,10 @@ ValueNumberer::visitDefinition(MDefinition* def)
         if (sim == nullptr)
             return false;
 
+        bool isNewInstruction = sim->block() == nullptr;
+
         // If |sim| doesn't belong to a block, insert it next to |def|.
-        if (sim->block() == nullptr)
+        if (isNewInstruction)
             def->block()->insertAfter(def->toInstruction(), sim->toInstruction());
 
 #ifdef DEBUG
@@ -783,6 +785,11 @@ ValueNumberer::visitDefinition(MDefinition* def)
 
         // Otherwise, procede to optimize with |sim| in place of |def|.
         def = sim;
+
+        // If the simplified instruction was already part of the graph, then we
+        // probably already visited and optimized this instruction.
+        if (!isNewInstruction)
+            return true;
     }
 
     // Now that foldsTo is done, re-enable the original dependency. Even though
