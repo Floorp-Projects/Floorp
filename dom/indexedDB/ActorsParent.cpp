@@ -7718,6 +7718,7 @@ public:
     // So, this is a hack to keep the nsExternalHelperAppService out of the
     // picture entirely. Eventually we should probably fix this some other way.
     mContentType.Truncate();
+    mIsFile = false;
   }
 
 private:
