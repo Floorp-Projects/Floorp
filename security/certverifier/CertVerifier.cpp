@@ -11,7 +11,6 @@
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "NSSErrorsService.h"
-#include "PublicKeyPinningService.h"
 #include "cert.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
@@ -75,55 +74,6 @@ IsCertBuiltInRoot(CERTCertificate* cert, bool& result) {
     }
   }
   return SECSuccess;
-}
-
-Result
-CertListContainsExpectedKeys(const CERTCertList* certList,
-                             const char* hostname, Time time,
-                             CertVerifier::PinningMode pinningMode)
-{
-  if (pinningMode == CertVerifier::pinningDisabled) {
-    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
-           ("Pinning is disabled; not checking keys."));
-    return Success;
-  }
-
-  if (!certList) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-
-  CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
-  if (CERT_LIST_END(rootNode, certList)) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-
-  bool isBuiltInRoot = false;
-  SECStatus srv = IsCertBuiltInRoot(rootNode->cert, isBuiltInRoot);
-  if (srv != SECSuccess) {
-    return MapPRErrorCodeToResult(PR_GetError());
-  }
-  // If desired, the user can enable "allow user CA MITM mode", in which
-  // case key pinning is not enforced for certificates that chain to trust
-  // anchors that are not in Mozilla's root program
-  if (!isBuiltInRoot && pinningMode == CertVerifier::pinningAllowUserCAMITM) {
-    return Success;
-  }
-
-  bool enforceTestMode = (pinningMode == CertVerifier::pinningEnforceTestMode);
-  bool chainHasValidPins;
-  nsresult rv = PublicKeyPinningService::ChainHasValidPins(certList,
-                                                           hostname,
-                                                           time,
-                                                           enforceTestMode,
-                                                           chainHasValidPins);
-  if (NS_FAILED(rv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-  if (!chainHasValidPins) {
-    return Result::ERROR_KEY_PINNING_FAILURE;
-  }
-
-  return Success;
 }
 
 static Result

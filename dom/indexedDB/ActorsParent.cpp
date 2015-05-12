@@ -5838,7 +5838,7 @@ class DatabaseFile final
 {
   friend class Database;
 
-  nsRefPtr<FileImpl> mBlobImpl;
+  nsRefPtr<BlobImpl> mBlobImpl;
   nsRefPtr<FileInfo> mFileInfo;
 
 public:
@@ -5884,7 +5884,7 @@ private:
   }
 
   // Called when receiving from the child.
-  DatabaseFile(FileImpl* aBlobImpl, FileInfo* aFileInfo)
+  DatabaseFile(BlobImpl* aBlobImpl, FileInfo* aFileInfo)
     : mBlobImpl(aBlobImpl)
     , mFileInfo(aFileInfo)
   {
@@ -7698,11 +7698,11 @@ private:
 };
 
 class NonMainThreadHackBlobImpl final
-  : public FileImplFile
+  : public BlobImplFile
 {
 public:
   NonMainThreadHackBlobImpl(nsIFile* aFile, FileInfo* aFileInfo)
-    : FileImplFile(aFile, aFileInfo)
+    : BlobImplFile(aFile, aFileInfo)
   {
     // Getting the content type is not currently supported off the main thread.
     // This isn't a problem here because:
@@ -7718,6 +7718,7 @@ public:
     // So, this is a hack to keep the nsExternalHelperAppService out of the
     // picture entirely. Eventually we should probably fix this some other way.
     mContentType.Truncate();
+    mIsFile = false;
   }
 
 private:
@@ -8156,7 +8157,7 @@ ConvertBlobsToActors(PBackgroundParent* aBackgroundActor,
     MOZ_ASSERT(NS_SUCCEEDED(nativeFile->IsFile(&isFile)));
     MOZ_ASSERT(isFile);
 
-    nsRefPtr<FileImpl> impl =
+    nsRefPtr<BlobImpl> impl =
       new NonMainThreadHackBlobImpl(nativeFile, file.mFileInfo);
 
     PBlobParent* actor =
@@ -11840,7 +11841,7 @@ Database::AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBlobParent);
 
-  nsRefPtr<FileImpl> blobImpl =
+  nsRefPtr<BlobImpl> blobImpl =
     static_cast<BlobParent*>(aBlobParent)->GetBlobImpl();
   MOZ_ASSERT(blobImpl);
 

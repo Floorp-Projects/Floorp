@@ -2195,20 +2195,22 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock* header, MBoundsCheck* ins)
     if (!SafeAdd(upper->sum.constant(), upperConstant, &upperConstant))
         return false;
 
+    // Hoist the loop invariant lower bounds checks.
     MBoundsCheckLower* lowerCheck = MBoundsCheckLower::New(alloc(), lowerTerm);
     lowerCheck->setMinimum(lowerConstant);
     lowerCheck->computeRange(alloc());
     lowerCheck->collectRangeInfoPreTrunc();
-
-    MBoundsCheck* upperCheck = MBoundsCheck::New(alloc(), upperTerm, length);
-    upperCheck->setMinimum(upperConstant);
-    upperCheck->setMaximum(upperConstant);
-    upperCheck->computeRange(alloc());
-    upperCheck->collectRangeInfoPreTrunc();
-
-    // Hoist the loop invariant upper and lower bounds checks.
     preLoop->insertBefore(preLoop->lastIns(), lowerCheck);
-    preLoop->insertBefore(preLoop->lastIns(), upperCheck);
+
+    // Hoist the loop invariant upper bounds checks.
+    if (upperTerm != length || upperConstant >= 0) {
+        MBoundsCheck* upperCheck = MBoundsCheck::New(alloc(), upperTerm, length);
+        upperCheck->setMinimum(upperConstant);
+        upperCheck->setMaximum(upperConstant);
+        upperCheck->computeRange(alloc());
+        upperCheck->collectRangeInfoPreTrunc();
+        preLoop->insertBefore(preLoop->lastIns(), upperCheck);
+    }
 
     return true;
 }

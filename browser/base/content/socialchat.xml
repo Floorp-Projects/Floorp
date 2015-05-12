@@ -555,8 +555,7 @@
         <parameter name="aCallback"/>
         <body><![CDATA[
           let cb = this.chatboxForURL.get(aURL);
-          if (cb) {
-            cb = cb.get();
+          if (cb && (cb = cb.get())) {
             // A chatbox is still alive to us when it's parented and still has
             // content.
             if (cb.parentNode && cb.contentWindow) {

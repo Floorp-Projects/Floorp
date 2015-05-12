@@ -46,7 +46,7 @@ interface nsIVerifySignedManifestCallback : nsISupports
  * This represents a service to access and manipulate
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(6d27211b-7119-4777-9c62-f29310eeb262)]
+[scriptable, uuid(fbe2a0c8-ec51-4ea4-80b3-e16793141967)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -386,7 +386,8 @@ interface nsIX509CertDB : nsISupports {
    *  @param aCert Obtain the stored trust of this certificate
    *  @param aUsage a integer representing the usage from NSS
    *  @param aFlags flags as described above
-   *  @param verifedChain chain of verification up to the root if success
+   *  @param aHostname the (optional) hostname to verify for
+   *  @param aVerifiedChain chain of verification up to the root if success
    *  @param aHasEVPolicy bool that signified that the cert was an EV cert
    *  @return 0 if success or the value or the error code for the verification
    *          failure
@@ -395,7 +396,8 @@ interface nsIX509CertDB : nsISupports {
     verifyCertNow(in nsIX509Cert aCert,
                   in int64_t /*SECCertificateUsage*/ aUsage,
                   in uint32_t aFlags,
-                  out nsIX509CertList verifiedChain,
+                  in string aHostname,
+                  out nsIX509CertList aVerifiedChain,
                   out bool aHasEVPolicy);
 
   // Clears the OCSP cache for the current certificate verification

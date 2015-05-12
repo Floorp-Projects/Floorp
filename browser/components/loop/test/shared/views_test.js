@@ -33,8 +33,9 @@ describe("loop.shared.views", function() {
       send: function() {},
       abort: function() {},
       getResponseHeader: function(header) {
-        if (header === "Content-Type")
+        if (header === "Content-Type") {
           return "audio/ogg";
+        }
       },
       responseType: null,
       response: new ArrayBuffer(10),
@@ -552,8 +553,9 @@ describe("loop.shared.views", function() {
 
           beforeEach(function() {
             // In standalone, navigator.mozLoop does not exists
-            if (navigator.hasOwnProperty("mozLoop"))
+            if (navigator.hasOwnProperty("mozLoop")) {
               sandbox.stub(navigator, "mozLoop", undefined);
+            }
           });
 
           it("should play a connected sound, once, on session:connected",

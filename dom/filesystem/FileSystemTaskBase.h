@@ -11,11 +11,10 @@
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
 
-class nsIDOMFile;
-
 namespace mozilla {
 namespace dom {
 
+class BlobImpl;
 class BlobParent;
 class FileSystemBase;
 class FileSystemParams;
@@ -205,7 +204,7 @@ protected:
   Recv__delete__(const FileSystemResponseValue& value) override;
 
   BlobParent*
-  GetBlobParent(nsIDOMFile* aFile) const;
+  GetBlobParent(BlobImpl* aBlob) const;
 
   nsresult mErrorValue;
 

@@ -47,23 +47,131 @@ class FileInfo;
 struct BlobPropertyBag;
 struct ChromeFilePropertyBag;
 struct FilePropertyBag;
-class FileImpl;
+class BlobImpl;
+class File;
 class OwningArrayBufferOrArrayBufferViewOrBlobOrString;
 
-class File final : public nsIDOMFile
-                 , public nsIXHRSendable
-                 , public nsIMutable
-                 , public nsSupportsWeakReference
-                 , public nsWrapperCache
+class Blob : public nsIDOMBlob
+           , public nsIXHRSendable
+           , public nsIMutable
+           , public nsSupportsWeakReference
+           , public nsWrapperCache
 {
 public:
   NS_DECL_NSIDOMBLOB
-  NS_DECL_NSIDOMFILE
   NS_DECL_NSIXHRSENDABLE
   NS_DECL_NSIMUTABLE
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(File, nsIDOMFile)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Blob, nsIDOMBlob)
+
+  static Blob*
+  Create(nsISupports* aParent, BlobImpl* aImpl);
+
+  static already_AddRefed<Blob>
+  Create(nsISupports* aParent, const nsAString& aContentType,
+         uint64_t aLength);
+
+  static already_AddRefed<Blob>
+  Create(nsISupports* aParent, const nsAString& aContentType, uint64_t aStart,
+         uint64_t aLength);
+
+  // The returned Blob takes ownership of aMemoryBuffer. aMemoryBuffer will be
+  // freed by free so it must be allocated by malloc or something
+  // compatible with it.
+  static already_AddRefed<Blob>
+  CreateMemoryBlob(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
+                   const nsAString& aContentType);
+
+  static already_AddRefed<Blob>
+  CreateTemporaryBlob(nsISupports* aParent, PRFileDesc* aFD,
+                      uint64_t aStartPos, uint64_t aLength,
+                      const nsAString& aContentType);
+
+  BlobImpl* Impl() const
+  {
+    return mImpl;
+  }
+
+  bool IsFile() const;
+
+  const nsTArray<nsRefPtr<BlobImpl>>* GetSubBlobImpls() const;
+
+  // This method returns null if this Blob is not a File; it returns
+  // the same object in case this Blob already implements the File interface;
+  // otherwise it returns a new File object with the same BlobImpl.
+  already_AddRefed<File> ToFile();
+
+  // This method creates a new File object with the given name and the same
+  // BlobImpl.
+  already_AddRefed<File> ToFile(const nsAString& aName) const;
+
+  already_AddRefed<Blob>
+  CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
+              ErrorResult& aRv);
+
+  // WebIDL methods
+  nsISupports* GetParentObject() const
+  {
+    return mParent;
+  }
+
+  // Blob constructor
+  static already_AddRefed<Blob>
+  Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+
+  // Blob constructor
+  static already_AddRefed<Blob>
+  Constructor(const GlobalObject& aGlobal,
+              const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
+              const BlobPropertyBag& aBag,
+              ErrorResult& aRv);
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+
+  uint64_t GetSize(ErrorResult& aRv);
+
+  // XPCOM GetType is OK
+
+  already_AddRefed<Blob> Slice(const Optional<int64_t>& aStart,
+                               const Optional<int64_t>& aEnd,
+                               const nsAString& aContentType,
+                               ErrorResult& aRv);
+
+protected:
+  // File constructor should never be used directly. Use Blob::Create instead.
+  Blob(nsISupports* aParent, BlobImpl* aImpl);
+  virtual ~Blob() {};
+
+  virtual bool HasFileInterface() const { return false; }
+
+  // The member is the real backend implementation of this File/Blob.
+  // It's thread-safe and not CC-able and it's the only element that is moved
+  // between threads.
+  // Note: we should not store any other state in this class!
+  nsRefPtr<BlobImpl> mImpl;
+
+private:
+  nsCOMPtr<nsISupports> mParent;
+};
+
+class File final : public Blob
+                 , public nsIDOMFile
+{
+  friend class Blob;
+
+public:
+  NS_DECL_NSIDOMFILE
+  NS_FORWARD_NSIDOMBLOB(Blob::)
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(File, Blob);
+
+  // Note: BlobImpl must be a File in order to use this method.
+  // Check impl->IsFile().
+  static File*
+  Create(nsISupports* aParent, BlobImpl* aImpl);
 
   static already_AddRefed<File>
   Create(nsISupports* aParent, const nsAString& aName,
@@ -74,14 +182,6 @@ public:
   Create(nsISupports* aParent, const nsAString& aName,
          const nsAString& aContentType, uint64_t aLength);
 
-  static already_AddRefed<File>
-  Create(nsISupports* aParent, const nsAString& aContentType,
-         uint64_t aLength);
-
-  static already_AddRefed<File>
-  Create(nsISupports* aParent, const nsAString& aContentType, uint64_t aStart,
-         uint64_t aLength);
-
   // The returned File takes ownership of aMemoryBuffer. aMemoryBuffer will be
   // freed by free so it must be allocated by malloc or something
   // compatible with it.
@@ -89,18 +189,6 @@ public:
   CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
                    const nsAString& aName, const nsAString& aContentType,
                    int64_t aLastModifiedDate);
-
-  // The returned File takes ownership of aMemoryBuffer. aMemoryBuffer will be
-  // freed by free so it must be allocated by malloc or something
-  // compatible with it.
-  static already_AddRefed<File>
-  CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
-                   const nsAString& aContentType);
-
-  static already_AddRefed<File>
-  CreateTemporaryFileBlob(nsISupports* aParent, PRFileDesc* aFD,
-                          uint64_t aStartPos, uint64_t aLength,
-                          const nsAString& aContentType);
 
   static already_AddRefed<File>
   CreateFromFile(nsISupports* aParent, nsIFile* aFile, bool aTemporary = false);
@@ -123,41 +211,10 @@ public:
   CreateFromFile(nsISupports* aParent, nsIFile* aFile, const nsAString& aName,
                  const nsAString& aContentType);
 
-  File(nsISupports* aParent, FileImpl* aImpl);
-
-  FileImpl* Impl() const
-  {
-    return mImpl;
-  }
-
-  const nsTArray<nsRefPtr<FileImpl>>* GetSubBlobImpls() const;
-
-  bool IsSizeUnknown() const;
-
-  bool IsDateUnknown() const;
-
-  bool IsFile() const;
-
-  already_AddRefed<File>
-  CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
-              ErrorResult& aRv);
-
   // WebIDL methods
-  nsISupports* GetParentObject() const
-  {
-    return mParent;
-  }
 
-  // Blob constructor
-  static already_AddRefed<File>
-  Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
-
-  // Blob constructor
-  static already_AddRefed<File>
-  Constructor(const GlobalObject& aGlobal,
-              const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
-              const BlobPropertyBag& aBag,
-              ErrorResult& aRv);
+  virtual JSObject* WrapObject(JSContext *cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // File constructor
   static already_AddRefed<File>
@@ -170,7 +227,7 @@ public:
   // File constructor - ChromeOnly
   static already_AddRefed<File>
   Constructor(const GlobalObject& aGlobal,
-              File& aData,
+              Blob& aData,
               const ChromeFilePropertyBag& aBag,
               ErrorResult& aRv);
 
@@ -188,46 +245,34 @@ public:
               const ChromeFilePropertyBag& aBag,
               ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  uint64_t GetSize(ErrorResult& aRv);
-
-  // XPCOM GetType is OK
-
   // XPCOM GetName is OK
 
   int64_t GetLastModified(ErrorResult& aRv);
 
   Date GetLastModifiedDate(ErrorResult& aRv);
 
+
   void GetMozFullPath(nsAString& aFilename, ErrorResult& aRv);
 
-  already_AddRefed<File> Slice(const Optional<int64_t>& aStart,
-                               const Optional<int64_t>& aEnd,
-                               const nsAString& aContentType,
-                               ErrorResult& aRv);
+protected:
+  virtual bool HasFileInterface() const override { return true; }
 
 private:
+  // File constructor should never be used directly. Use Blob::Create or
+  // File::Create.
+  File(nsISupports* aParent, BlobImpl* aImpl);
   ~File() {};
-
-  // The member is the real backend implementation of this File/Blob.
-  // It's thread-safe and not CC-able and it's the only element that is moved
-  // between threads.
-  // Note: we should not store any other state in this class!
-  nsRefPtr<FileImpl> mImpl;
-
-  nsCOMPtr<nsISupports> mParent;
 };
 
 // This is the abstract class for any File backend. It must be nsISupports
 // because this class must be ref-counted and it has to work with IPC.
-class FileImpl : public nsISupports
+class BlobImpl : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(FILEIMPL_IID)
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  FileImpl() {}
+  BlobImpl() {}
 
   virtual void GetName(nsAString& aName) = 0;
 
@@ -245,15 +290,15 @@ public:
 
   virtual void GetType(nsAString& aType) = 0;
 
-  already_AddRefed<FileImpl>
+  already_AddRefed<BlobImpl>
   Slice(const Optional<int64_t>& aStart, const Optional<int64_t>& aEnd,
         const nsAString& aContentType, ErrorResult& aRv);
 
-  virtual already_AddRefed<FileImpl>
+  virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType, ErrorResult& aRv) = 0;
 
-  virtual const nsTArray<nsRefPtr<FileImpl>>*
+  virtual const nsTArray<nsRefPtr<BlobImpl>>*
   GetSubBlobImpls() const = 0;
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) = 0;
@@ -294,15 +339,15 @@ public:
   }
 
 protected:
-  virtual ~FileImpl() {}
+  virtual ~BlobImpl() {}
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(FileImpl, FILEIMPL_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(BlobImpl, FILEIMPL_IID)
 
-class FileImplBase : public FileImpl
+class BlobImplBase : public BlobImpl
 {
 public:
-  FileImplBase(const nsAString& aName, const nsAString& aContentType,
+  BlobImplBase(const nsAString& aName, const nsAString& aContentType,
                uint64_t aLength, int64_t aLastModifiedDate)
     : mIsFile(true)
     , mImmutable(false)
@@ -316,7 +361,7 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  FileImplBase(const nsAString& aName, const nsAString& aContentType,
+  BlobImplBase(const nsAString& aName, const nsAString& aContentType,
                uint64_t aLength)
     : mIsFile(true)
     , mImmutable(false)
@@ -330,7 +375,7 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  FileImplBase(const nsAString& aContentType, uint64_t aLength)
+  BlobImplBase(const nsAString& aContentType, uint64_t aLength)
     : mIsFile(false)
     , mImmutable(false)
     , mContentType(aContentType)
@@ -342,7 +387,7 @@ public:
     mContentType.SetIsVoid(false);
   }
 
-  FileImplBase(const nsAString& aContentType, uint64_t aStart,
+  BlobImplBase(const nsAString& aContentType, uint64_t aStart,
                uint64_t aLength)
     : mIsFile(false)
     , mImmutable(false)
@@ -377,14 +422,14 @@ public:
 
   virtual void GetType(nsAString& aType) override;
 
-  virtual already_AddRefed<FileImpl>
+  virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType, ErrorResult& aRv) override
   {
     return nullptr;
   }
 
-  virtual const nsTArray<nsRefPtr<FileImpl>>*
+  virtual const nsTArray<nsRefPtr<BlobImpl>>*
   GetSubBlobImpls() const override
   {
     return nullptr;
@@ -461,7 +506,7 @@ public:
   }
 
 protected:
-  virtual ~FileImplBase() {}
+  virtual ~BlobImplBase() {}
 
   indexedDB::FileInfo* GetFileInfo() const
   {
@@ -491,22 +536,22 @@ protected:
  * This class may be used off the main thread, and in particular, its
  * constructor and destructor may not run on the same thread.  Be careful!
  */
-class FileImplMemory final : public FileImplBase
+class BlobImplMemory final : public BlobImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  FileImplMemory(void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
+  BlobImplMemory(void* aMemoryBuffer, uint64_t aLength, const nsAString& aName,
                  const nsAString& aContentType, int64_t aLastModifiedDate)
-    : FileImplBase(aName, aContentType, aLength, aLastModifiedDate)
+    : BlobImplBase(aName, aContentType, aLength, aLastModifiedDate)
     , mDataOwner(new DataOwner(aMemoryBuffer, aLength))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  FileImplMemory(void* aMemoryBuffer, uint64_t aLength,
+  BlobImplMemory(void* aMemoryBuffer, uint64_t aLength,
                  const nsAString& aContentType)
-    : FileImplBase(aContentType, aLength)
+    : BlobImplBase(aContentType, aLength)
     , mDataOwner(new DataOwner(aMemoryBuffer, aLength))
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
@@ -514,7 +559,7 @@ public:
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) override;
 
-  virtual already_AddRefed<FileImpl>
+  virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType, ErrorResult& aRv) override;
 
@@ -570,29 +615,29 @@ public:
 
 private:
   // Create slice
-  FileImplMemory(const FileImplMemory* aOther, uint64_t aStart,
+  BlobImplMemory(const BlobImplMemory* aOther, uint64_t aStart,
                  uint64_t aLength, const nsAString& aContentType)
-    : FileImplBase(aContentType, aOther->mStart + aStart, aLength)
+    : BlobImplBase(aContentType, aOther->mStart + aStart, aLength)
     , mDataOwner(aOther->mDataOwner)
   {
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
     mImmutable = aOther->mImmutable;
   }
 
-  ~FileImplMemory() {}
+  ~BlobImplMemory() {}
 
   // Used when backed by a memory store
   nsRefPtr<DataOwner> mDataOwner;
 };
 
-class FileImplTemporaryFileBlob final : public FileImplBase
+class BlobImplTemporaryBlob final : public BlobImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  FileImplTemporaryFileBlob(PRFileDesc* aFD, uint64_t aStartPos,
-                            uint64_t aLength, const nsAString& aContentType)
-    : FileImplBase(aContentType, aLength)
+  BlobImplTemporaryBlob(PRFileDesc* aFD, uint64_t aStartPos,
+                        uint64_t aLength, const nsAString& aContentType)
+    : BlobImplBase(aContentType, aLength)
     , mStartPos(aStartPos)
   {
     mFileDescOwner = new nsTemporaryFileInputStream::FileDescOwner(aFD);
@@ -600,33 +645,33 @@ public:
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) override;
 
-  virtual already_AddRefed<FileImpl>
+  virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType, ErrorResult& aRv) override;
 
 private:
-  FileImplTemporaryFileBlob(const FileImplTemporaryFileBlob* aOther,
-                            uint64_t aStart, uint64_t aLength,
-                            const nsAString& aContentType)
-    : FileImplBase(aContentType, aLength)
+  BlobImplTemporaryBlob(const BlobImplTemporaryBlob* aOther,
+                        uint64_t aStart, uint64_t aLength,
+                        const nsAString& aContentType)
+    : BlobImplBase(aContentType, aLength)
     , mStartPos(aStart)
     , mFileDescOwner(aOther->mFileDescOwner)
   {}
 
-  ~FileImplTemporaryFileBlob() {}
+  ~BlobImplTemporaryBlob() {}
 
   uint64_t mStartPos;
   nsRefPtr<nsTemporaryFileInputStream::FileDescOwner> mFileDescOwner;
 };
 
-class FileImplFile : public FileImplBase
+class BlobImplFile : public BlobImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Create as a file
-  explicit FileImplFile(nsIFile* aFile, bool aTemporary = false)
-    : FileImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
+  explicit BlobImplFile(nsIFile* aFile, bool aTemporary = false)
+    : BlobImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(false)
@@ -638,8 +683,8 @@ public:
     mFile->GetLeafName(mName);
   }
 
-  FileImplFile(nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
-    : FileImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
+  BlobImplFile(nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
+    : BlobImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(true)
@@ -655,9 +700,9 @@ public:
   }
 
   // Create as a file
-  FileImplFile(const nsAString& aName, const nsAString& aContentType,
+  BlobImplFile(const nsAString& aName, const nsAString& aContentType,
                uint64_t aLength, nsIFile* aFile)
-    : FileImplBase(aName, aContentType, aLength, UINT64_MAX)
+    : BlobImplBase(aName, aContentType, aLength, UINT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(false)
@@ -666,10 +711,10 @@ public:
     NS_ASSERTION(mFile, "must have file");
   }
 
-  FileImplFile(const nsAString& aName, const nsAString& aContentType,
+  BlobImplFile(const nsAString& aName, const nsAString& aContentType,
                uint64_t aLength, nsIFile* aFile,
                int64_t aLastModificationDate)
-    : FileImplBase(aName, aContentType, aLength, aLastModificationDate)
+    : BlobImplBase(aName, aContentType, aLength, aLastModificationDate)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(false)
@@ -679,9 +724,9 @@ public:
   }
 
   // Create as a file with custom name
-  FileImplFile(nsIFile* aFile, const nsAString& aName,
+  BlobImplFile(nsIFile* aFile, const nsAString& aName,
                const nsAString& aContentType)
-    : FileImplBase(aName, aContentType, UINT64_MAX, INT64_MAX)
+    : BlobImplBase(aName, aContentType, UINT64_MAX, INT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(false)
@@ -695,10 +740,10 @@ public:
   }
 
   // Create as a stored file
-  FileImplFile(const nsAString& aName, const nsAString& aContentType,
+  BlobImplFile(const nsAString& aName, const nsAString& aContentType,
                uint64_t aLength, nsIFile* aFile,
                indexedDB::FileInfo* aFileInfo)
-    : FileImplBase(aName, aContentType, aLength, UINT64_MAX)
+    : BlobImplBase(aName, aContentType, aLength, UINT64_MAX)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(true)
@@ -709,9 +754,9 @@ public:
   }
 
   // Create as a stored blob
-  FileImplFile(const nsAString& aContentType, uint64_t aLength,
+  BlobImplFile(const nsAString& aContentType, uint64_t aLength,
                nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
-    : FileImplBase(aContentType, aLength)
+    : BlobImplBase(aContentType, aLength)
     , mFile(aFile)
     , mWholeFile(true)
     , mStoredFile(true)
@@ -722,8 +767,8 @@ public:
   }
 
   // Create as a file to be later initialized
-  FileImplFile()
-    : FileImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
+  BlobImplFile()
+    : BlobImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
     , mWholeFile(true)
     , mStoredFile(false)
     , mIsTemporary(false)
@@ -745,9 +790,9 @@ public:
   void SetPath(const nsAString& aFullPath);
 
 protected:
-  virtual ~FileImplFile() {
+  virtual ~BlobImplFile() {
     if (mFile && mIsTemporary) {
-      NS_WARNING("In temporary ~FileImplFile");
+      NS_WARNING("In temporary ~BlobImplFile");
       // Ignore errors if any, not much we can do. Clean-up will be done by
       // https://mxr.mozilla.org/mozilla-central/source/xpcom/io/nsAnonymousTemporaryFile.cpp?rev=6c1c7e45c902#127
 #ifdef DEBUG
@@ -760,9 +805,9 @@ protected:
 
 private:
   // Create slice
-  FileImplFile(const FileImplFile* aOther, uint64_t aStart,
+  BlobImplFile(const BlobImplFile* aOther, uint64_t aStart,
                uint64_t aLength, const nsAString& aContentType)
-    : FileImplBase(aContentType, aOther->mStart + aStart, aLength)
+    : BlobImplBase(aContentType, aOther->mStart + aStart, aLength)
     , mFile(aOther->mFile)
     , mWholeFile(false)
     , mStoredFile(aOther->mStoredFile)
@@ -788,7 +833,7 @@ private:
     }
   }
 
-  virtual already_AddRefed<FileImpl>
+  virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType, ErrorResult& aRv) override;
 
@@ -823,7 +868,8 @@ public:
 
   NS_DECL_NSIDOMFILELIST
 
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext *cx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject()
   {
