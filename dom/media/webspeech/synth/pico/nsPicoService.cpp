@@ -17,7 +17,7 @@
 #include "nsIFile.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
-
+#include "mozilla/Preferences.h"
 #include "mozilla/DebugOnly.h"
 #include <dlfcn.h>
 
@@ -452,6 +452,11 @@ nsPicoService::Observe(nsISupports* aSubject, const char* aTopic,
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(!strcmp(aTopic, "profile-after-change"), NS_ERROR_UNEXPECTED);
+
+  if (!Preferences::GetBool("media.webspeech.synth.enabled") ||
+      Preferences::GetBool("media.webspeech.synth.test")) {
+    return NS_OK;
+  }
 
   DebugOnly<nsresult> rv = NS_NewNamedThread("Pico Worker", getter_AddRefs(mThread));
   MOZ_ASSERT(NS_SUCCEEDED(rv));
