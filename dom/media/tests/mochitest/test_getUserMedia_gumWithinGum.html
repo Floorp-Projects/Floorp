@@ -13,7 +13,7 @@
    * the audio gum call happens within the video gum call.
    */
   runTest(function () {
-    getUserMedia({video: true})
+    return getUserMedia({video: true})
       .then(videoStream => {
         var testVideo = createMediaElement('video', 'testVideo');
         var videoPlayback = new LocalMediaStreamPlayback(testVideo,
@@ -30,8 +30,7 @@
               .then(() => audioStream.stop());
           })
           .then(() => videoStream.stop());
-      })
-      .then(() => SimpleTest.finish(), generateErrorCallback());
+      });
   });
 
 </script>

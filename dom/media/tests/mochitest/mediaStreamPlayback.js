@@ -227,6 +227,6 @@ function createHTML(options) {
   return scriptsReady.then(() => realCreateHTML(options));
 }
 
-function runTest(f) {
-  return scriptsReady.then(() => runTestWhenReady(f));
-}
+var runTest = testFunction => scriptsReady
+  .then(() => runTestWhenReady(testFunction))
+  .then(() => finish());
