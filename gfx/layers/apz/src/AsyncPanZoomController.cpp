@@ -527,8 +527,6 @@ public:
       // We may have reached the end of the scroll range along one axis but
       // not the other. In such a case we only want to hand off the relevant
       // component of the fling.
-      // TODO(botond): If our intention is to continue the other component
-      // in this APZC, we should not be returning 'false'.
       if (FuzzyEqualsAdditive(overscroll.x, 0.0f, COORDINATE_EPSILON)) {
         velocity.x = 0;
       } else if (FuzzyEqualsAdditive(overscroll.y, 0.0f, COORDINATE_EPSILON)) {
@@ -552,7 +550,11 @@ public:
                                               velocity,
                                               mOverscrollHandoffChain));
 
-      return false;
+      // If there is a remaining velocity on this APZC, continue this fling
+      // as well. (This fling and the handed-off fling will run concurrently.)
+      // Note that AdjustDisplacement() will have zeroed out the velocity
+      // along the axes where we're overscrolled.
+      return !IsZero(mApzc.GetVelocityVector());
     }
 
     return true;
@@ -1863,6 +1865,11 @@ ParentLayerPoint AsyncPanZoomController::PanStart() const {
 
 const ParentLayerPoint AsyncPanZoomController::GetVelocityVector() const {
   return ParentLayerPoint(mX.GetVelocity(), mY.GetVelocity());
+}
+
+void AsyncPanZoomController::SetVelocityVector(const ParentLayerPoint& aVelocityVector) {
+  mX.SetVelocity(aVelocityVector.x);
+  mY.SetVelocity(aVelocityVector.y);
 }
 
 void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
