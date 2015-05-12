@@ -967,9 +967,7 @@ nsExpandedPrincipal::IsOnCSSUnprefixingWhitelist()
 void
 nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {
-  aStr.Assign(EXPANDED_PRINCIPAL_SPEC);
-  aStr.AppendLiteral(" (");
-
+  aStr.Assign("[Expanded Principal [");
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {
     if (i != 0) {
       aStr.AppendLiteral(", ");
@@ -981,7 +979,7 @@ nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
     aStr.Append(spec);
 
   }
-  aStr.Append(")");
+  aStr.Append("]]");
 }
 
 //////////////////////////////////////////
