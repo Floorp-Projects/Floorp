@@ -861,7 +861,7 @@ ProcessLine(AutoJSAPI& jsapi, const char* buffer, int startline)
     return true;
 }
 
-static void
+static bool
 ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
 {
     JSContext* cx = jsapi.cx();
@@ -895,10 +895,9 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
                .setFileAndLine(filename, 1)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
-        if (JS::Compile(cx, options, file, &script) && !compileOnly)
-            (void)JS_ExecuteScript(cx, script, &unused);
-
-        return;
+        if (!JS::Compile(cx, options, file, &script))
+            return false;
+        return compileOnly || JS_ExecuteScript(cx, script, &unused);
     }
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
@@ -930,9 +929,10 @@ ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file, bool forceTTY)
     } while (!hitEOF && !gQuitting);
 
     fprintf(gOutFile, "\n");
+    return true;
 }
 
-static void
+static bool
 Process(AutoJSAPI& jsapi, const char* filename, bool forceTTY)
 {
     FILE* file;
@@ -946,21 +946,29 @@ Process(AutoJSAPI& jsapi, const char* filename, bool forceTTY)
                                  JSSMSG_CANT_OPEN,
                                  filename, strerror(errno));
             gExitCode = EXITCODE_FILE_NOT_FOUND;
-            return;
+            return false;
         }
     }
 
-    ProcessFile(jsapi, filename, file, forceTTY);
+    bool ok = ProcessFile(jsapi, filename, file, forceTTY);
     if (file != stdin)
         fclose(file);
+    return ok;
 }
 
 static int
-usage(void)
+usage()
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
     fprintf(gErrFile, "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-WwxiCSsmIp] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
+}
+
+static bool
+printUsageAndSetExitCode()
+{
+    gExitCode = usage();
+    return false;
 }
 
 static void
@@ -990,7 +998,7 @@ ProcessArgsForCompartment(JSContext* cx, char** argv, int argc)
     }
 }
 
-static int
+static bool
 ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirProvider)
 {
     JSContext* cx = jsapi.cx();
@@ -1005,8 +1013,11 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
     rcfile = fopen(rcfilename, "r");
     if (rcfile) {
         printf("[loading '%s'...]\n", rcfilename);
-        ProcessFile(jsapi, rcfilename, rcfile, false);
+        bool ok = ProcessFile(jsapi, rcfilename, rcfile, false);
         fclose(rcfile);
+        if (!ok) {
+            return false;
+        }
     }
 
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
@@ -1062,7 +1073,7 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
         switch (argv[i][1]) {
         case 'v':
             if (++i == argc) {
-                return usage();
+                return printUsageAndSetExitCode();
             }
             JS_SetVersionForCompartment(js::GetContextCompartment(cx),
                                         JSVersion(atoi(argv[i])));
@@ -1082,9 +1093,10 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
             break;
         case 'f':
             if (++i == argc) {
-                return usage();
+                return printUsageAndSetExitCode();
             }
-            Process(jsapi, argv[i], false);
+            if (!Process(jsapi, argv[i], false))
+                return false;
             /*
              * XXX: js -f foo.js should interpret foo.js and then
              * drop into interactive mode, but that breaks test
@@ -1100,7 +1112,7 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
             RootedValue rval(cx);
 
             if (++i == argc) {
-                return usage();
+                return printUsageAndSetExitCode();
             }
 
             JS::CompileOptions opts(cx);
@@ -1126,20 +1138,19 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
           nsCOMPtr<nsIFile> pluginsDir;
           if (NS_FAILED(XRE_GetFileFromPath(pluginPath, getter_AddRefs(pluginsDir)))) {
               fprintf(gErrFile, "Couldn't use given plugins dir.\n");
-              return usage();
+              return printUsageAndSetExitCode();
           }
           aDirProvider->SetPluginDir(pluginsDir);
           break;
         }
         default:
-            return usage();
+            return printUsageAndSetExitCode();
         }
     }
 
     if (filename || isInteractive)
-        Process(jsapi, filename, forceTTY);
-
-    return gExitCode;
+        return Process(jsapi, filename, forceTTY);
+    return true;
 }
 
 /***************************************************************************/
@@ -1272,7 +1283,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
 {
     JSRuntime* rt;
     JSContext* cx;
-    int result;
+    int result = 0;
     nsresult rv;
 
     gErrFile = stderr;
@@ -1550,13 +1561,28 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
                               GetLocationProperty,
                               nullptr);
 
-            // We are almost certainly going to run script here, so we need an
-            // AutoEntryScript. This is Gecko-specific and not in any spec.
-            AutoEntryScript aes(backstagePass, "xpcshell argument processing");
-            result = ProcessArgs(aes, argv, argc, &dirprovider);
+            {
+                // We are almost certainly going to run script here, so we need an
+                // AutoEntryScript. This is Gecko-specific and not in any spec.
+                AutoEntryScript aes(backstagePass, "xpcshell argument processing");
+
+                // If an exception is thrown, we'll set our return code
+                // appropriately, and then let the AutoJSAPI destructor report
+                // the error to the console.
+                aes.TakeOwnershipOfErrorReporting();
+                if (!ProcessArgs(aes, argv, argc, &dirprovider)) {
+                    if (gExitCode) {
+                        result = gExitCode;
+                    } else if (gQuitting || gIgnoreReportedErrors) {
+                        result = 0;
+                    } else {
+                        result = EXITCODE_RUNTIME_ERROR;
+                    }
+                }
+            }
 
             JS_DropPrincipals(rt, gJSPrincipals);
-            JS_SetAllNonReservedSlotsToUndefined(aes.cx(), glob);
+            JS_SetAllNonReservedSlotsToUndefined(cx, glob);
             JS_GC(rt);
         }
         JS_GC(rt);
