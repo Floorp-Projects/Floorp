@@ -69,11 +69,11 @@ private:
 class CreateURLRunnable : public WorkerMainThreadRunnable
 {
 private:
-  FileImpl* mBlobImpl;
+  BlobImpl* mBlobImpl;
   nsAString& mURL;
 
 public:
-  CreateURLRunnable(WorkerPrivate* aWorkerPrivate, FileImpl* aBlobImpl,
+  CreateURLRunnable(WorkerPrivate* aWorkerPrivate, BlobImpl* aBlobImpl,
                     const mozilla::dom::objectURLOptions& aOptions,
                     nsAString& aURL)
   : WorkerMainThreadRunnable(aWorkerPrivate)
@@ -94,7 +94,7 @@ public:
 
     AssertIsOnMainThread();
 
-    nsRefPtr<FileImpl> newBlobImplHolder;
+    nsRefPtr<BlobImpl> newBlobImplHolder;
 
     if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(mBlobImpl)) {
       if (BlobChild* blobChild = remoteBlob->GetBlobChild()) {
@@ -880,14 +880,14 @@ URL::SetHash(const nsAString& aHash, ErrorResult& aRv)
 
 // static
 void
-URL::CreateObjectURL(const GlobalObject& aGlobal, File& aBlob,
+URL::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
                      const mozilla::dom::objectURLOptions& aOptions,
                      nsAString& aResult, mozilla::ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
-  nsRefPtr<FileImpl> blobImpl = aBlob.Impl();
+  nsRefPtr<BlobImpl> blobImpl = aBlob.Impl();
   MOZ_ASSERT(blobImpl);
 
   aRv = blobImpl->SetMutable(false);

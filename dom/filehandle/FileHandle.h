@@ -25,7 +25,7 @@ class nsAString;
 namespace mozilla {
 namespace dom {
 
-class File;
+class Blob;
 class FileHelper;
 class FileRequestBase;
 class FileService;
@@ -240,7 +240,7 @@ protected:
                  ErrorResult& aRv);
 
   static already_AddRefed<nsIInputStream>
-  GetInputStream(const File& aValue, uint64_t* aInputLength,
+  GetInputStream(const Blob& aValue, uint64_t* aInputLength,
                  ErrorResult& aRv);
 
   static already_AddRefed<nsIInputStream>

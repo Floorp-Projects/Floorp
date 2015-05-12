@@ -30,17 +30,12 @@ html xul|scrollbar {
   pointer-events: none;
 }
 
+/* Scrollbar code will reset the margin to the correct side depending on
+   where layout actually puts the scrollbar */
 xul|scrollbar[orient="vertical"] {
-  -moz-margin-start: -8px;
+  margin-left: -8px;
   min-width: 8px;
   max-width: 8px;
-}
-
-/* workaround for bug 1119057: as -moz-margin-start may not work as expected,
- * force a right margin value in RTL mode.  */
-[dir="rtl"] xul|scrollbar[root="true"][orient="vertical"] {
-  -moz-margin-start: unset;
-  margin-right: -8px;
 }
 
 xul|scrollbar[orient="vertical"] xul|thumb {
