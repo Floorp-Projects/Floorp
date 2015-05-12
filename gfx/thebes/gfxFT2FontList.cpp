@@ -1357,7 +1357,7 @@ AddHiddenFamilyToFontList(nsStringHashKey::KeyType aKey,
 }
 
 void
-gfxFT2FontList::GetSystemFontList(InfallibleTArray<FontListEntry>* retValue)
+gfxFT2FontList::GetFontList(InfallibleTArray<FontListEntry>* retValue)
 {
     mFontFamilies.Enumerate(AddFamilyToFontList, retValue);
     mHiddenFontFamilies.Enumerate(AddHiddenFamilyToFontList, retValue);

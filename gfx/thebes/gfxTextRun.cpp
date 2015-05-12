@@ -23,10 +23,6 @@
 #include "mozilla/Likely.h"
 #include "gfx2DGlue.h"
 
-#if defined(MOZ_WIDGET_GTK)
-#include "gfxPlatformGtk.h" // xxx - for UseFcFontList
-#endif
-
 #include "cairo.h"
 
 using namespace mozilla;
@@ -1540,7 +1536,6 @@ gfxFontGroup::gfxFontGroup(const FontFamilyList& aFontFamilyList,
     , mTextPerf(nullptr)
     , mPageLang(gfxPlatform::GetFontPrefLangFor(aStyle->language))
     , mSkipDrawing(false)
-    , mSkipUpdateUserFonts(false)
 {
     // We don't use SetUserFontSet() here, as we want to unconditionally call
     // BuildFontList() rather than only do UpdateUserFonts() if it changed.
@@ -1687,17 +1682,10 @@ void gfxFontGroup::EnumerateFontList(nsIAtom *aLanguage, void *aClosure)
 void
 gfxFontGroup::BuildFontList()
 {
-    bool enumerateFonts = true;
-
-#if defined(MOZ_WIDGET_GTK)
-    // xxx - eliminate this once gfxPangoFontGroup is no longer needed
-    enumerateFonts = gfxPlatformGtk::UseFcFontList();
-#elif defined(MOZ_WIDGET_QT)
-    enumerateFonts = false;
+// gfxPangoFontGroup behaves differently, so this method is a no-op on that platform
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(ANDROID)
+    EnumerateFontList(mStyle.language);
 #endif
-    if (enumerateFonts) {
-        EnumerateFontList(mStyle.language);
-    }
 }
 
 void
@@ -1736,7 +1724,7 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
     // Not known in the user font set ==> check system fonts
     if (!family) {
         gfxPlatformFontList *fontList = gfxPlatformFontList::PlatformFontList();
-        family = fontList->FindFamily(aName, mStyle.language, mStyle.systemFont);
+        family = fontList->FindFamily(aName, mStyle.systemFont);
         if (family) {
             fe = family->FindFontForStyle(mStyle, needsBold);
         }
@@ -2357,11 +2345,13 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
     NS_ASSERTION(aTextRun->GetShapingState() != gfxTextRun::eShapingState_Aborted,
                  "don't call InitScriptRun with aborted shaping state");
 
-    // confirm the load state of userfonts in the list
-    if (!mSkipUpdateUserFonts && mUserFontSet &&
-        mCurrGeneration != mUserFontSet->GetGeneration()) {
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(ANDROID)
+    // non-linux platforms build the fontlist lazily and include userfonts
+    // so need to confirm the load state of userfonts in the list
+    if (mUserFontSet && mCurrGeneration != mUserFontSet->GetGeneration()) {
         UpdateUserFonts();
     }
+#endif
 
     gfxFont *mainFont = GetFirstValidFont();
 
@@ -2617,6 +2607,10 @@ gfxFontGroup::FindNonItalicFaceForChar(gfxFontFamily* aFamily, uint32_t aCh)
     NS_ASSERTION(mStyle.style != NS_FONT_STYLE_NORMAL,
                  "should only be called in the italic/oblique case");
 
+    if (!aFamily->TestCharacterMap(aCh)) {
+        return nullptr;
+    }
+
     gfxFontStyle regularStyle = mStyle;
     regularStyle.style = NS_FONT_STYLE_NORMAL;
     bool needsBold;
@@ -2803,11 +2797,9 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
 
         // If italic, test the regular face to see if it supports the character.
         // Only do this for platform fonts, not userfonts.
-        fe = ff.FontEntry();
         if (mStyle.style != NS_FONT_STYLE_NORMAL &&
-            !fe->mIsUserFontContainer &&
-            !fe->IsUserFont()) {
-            font = FindNonItalicFaceForChar(ff.Family(), aCh);
+            !ff.FontEntry()->IsUserFont()) {
+            font = FindNonItalicFaceForChar(mFonts[i].Family(), aCh);
             if (font) {
                 *aMatchType = gfxTextRange::kFontGroup;
                 return font.forget();
@@ -3090,10 +3082,7 @@ struct PrefFontCallbackData {
     {
         PrefFontCallbackData *prefFontData = static_cast<PrefFontCallbackData*>(aClosure);
 
-        // map pref lang to langGroup for language-sensitive lookups
-        nsIAtom* lang = gfxPlatform::GetLangGroupForPrefLang(aLang);
-        gfxFontFamily *family =
-            gfxPlatformFontList::PlatformFontList()->FindFamily(aName, lang);
+        gfxFontFamily *family = gfxPlatformFontList::PlatformFontList()->FindFamily(aName);
         if (family) {
             prefFontData->mPrefFamilies.AppendElement(family);
         }

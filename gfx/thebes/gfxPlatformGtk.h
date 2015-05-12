@@ -41,13 +41,6 @@ public:
 
     virtual nsresult UpdateFontList() override;
 
-    virtual void
-    GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
-                           int32_t aRunScript,
-                           nsTArray<const char*>& aFontList) override;
-
-    virtual gfxPlatformFontList* CreatePlatformFontList();
-
     virtual nsresult GetStandardFamilyName(const nsAString& aFontName,
                                            nsAString& aFamilyName) override;
 
@@ -108,8 +101,6 @@ public:
 #endif
     }
 
-    static bool UseFcFontList() { return sUseFcFontList; }
-
     bool UseImageOffscreenSurfaces() {
         // We want to turn on image offscreen surfaces ONLY for GTK3 builds
         // since GTK2 theme rendering still requires xlib surfaces per se.
@@ -138,10 +129,6 @@ private:
 #ifdef MOZ_X11
     static bool sUseXRender;
 #endif
-
-    // xxx - this will be removed once the new fontconfig platform font list
-    // replaces gfxPangoFontGroup
-    static bool sUseFcFontList;
 };
 
 #endif /* GFX_PLATFORM_GTK_H */

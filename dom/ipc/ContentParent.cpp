@@ -2548,7 +2548,7 @@ bool
 ContentParent::RecvReadFontList(InfallibleTArray<FontListEntry>* retValue)
 {
 #ifdef ANDROID
-    gfxAndroidPlatform::GetPlatform()->GetSystemFontList(retValue);
+    gfxAndroidPlatform::GetPlatform()->GetFontList(retValue);
 #endif
     return true;
 }
