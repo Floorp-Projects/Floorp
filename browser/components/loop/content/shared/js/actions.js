@@ -362,6 +362,7 @@ loop.shared.actions = (function() {
      */
     EmailRoomUrl: Action.define("emailRoomUrl", {
       roomUrl: String
+      // roomDescription: String, Optional.
     }),
 
     /**

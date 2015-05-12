@@ -177,8 +177,14 @@ describe("loop.shared.utils", function() {
       // fake mozL10n
       sandbox.stub(navigator.mozL10n, "get", function(id) {
         switch(id) {
-          case "share_email_subject5": return "subject";
-          case "share_email_body5":    return "body";
+          case "share_email_subject5":
+            return "subject";
+          case "share_email_body5":
+            return "body";
+          case "share_email_subject_context":
+            return "subject_context";
+          case "share_email_body_context":
+            return "body_context";
         }
       });
       composeEmail = sandbox.spy();
@@ -194,6 +200,13 @@ describe("loop.shared.utils", function() {
       sinon.assert.calledOnce(composeEmail);
       sinon.assert.calledWith(composeEmail,
                               "subject", "body", "fake@invalid.tld");
+    });
+
+    it("should compose a different email when context info is provided", function() {
+      sharedUtils.composeCallUrlEmail("http://invalid", null, "Hello, is me you're looking for?");
+
+      sinon.assert.calledOnce(composeEmail);
+      sinon.assert.calledWith(composeEmail, "subject_context", "body_context");
     });
   });
 
