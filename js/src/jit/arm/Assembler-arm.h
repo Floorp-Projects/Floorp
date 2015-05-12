@@ -274,10 +274,12 @@ enum DTMWriteBack {
     NoWriteBack = 0 << 21
 };
 
-enum SetCond_ {
-    SetCond   = 1 << 20,
-    NoSetCond = 0 << 20
+// Condition code updating mode.
+enum SBit {
+    SetCC   = 1 << 20,  // Set condition code.
+    LeaveCC = 0 << 20   // Leave condition code unchanged.
 };
+
 enum LoadStore {
     IsLoad  = 1 << 20,
     IsStore = 0 << 20
@@ -1366,39 +1368,39 @@ class Assembler : public AssemblerShared
     void nopAlign(int alignment);
     BufferOffset as_nop();
     BufferOffset as_alu(Register dest, Register src1, Operand2 op2,
-                        ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always);
+                        ALUOp op, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_mov(Register dest,
-                        Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                        Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_mvn(Register dest, Operand2 op2,
-                        SetCond_ sc = NoSetCond, Condition c = Always);
+                        SBit s = LeaveCC, Condition c = Always);
 
     static void as_alu_patch(Register dest, Register src1, Operand2 op2,
-                             ALUOp op, SetCond_ sc, Condition c, uint32_t* pos);
+                             ALUOp op, SBit s, Condition c, uint32_t* pos);
     static void as_mov_patch(Register dest,
-                             Operand2 op2, SetCond_ sc, Condition c, uint32_t* pos);
+                             Operand2 op2, SBit s, Condition c, uint32_t* pos);
 
     // Logical operations:
     BufferOffset as_and(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_bic(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_eor(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_orr(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     // Mathematical operations:
     BufferOffset as_adc(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_add(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_sbc(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_sub(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_rsb(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_rsc(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     // Test operations:
     BufferOffset as_cmn(Register src1, Operand2 op2, Condition c = Always);
     BufferOffset as_cmp(Register src1, Operand2 op2, Condition c = Always);
@@ -1420,23 +1422,23 @@ class Assembler : public AssemblerShared
     static void as_movt_patch(Register dest, Imm16 imm, Condition c, Instruction* pos);
 
     BufferOffset as_genmul(Register d1, Register d2, Register rm, Register rn,
-                   MULOp op, SetCond_ sc, Condition c = Always);
+                   MULOp op, SBit s, Condition c = Always);
     BufferOffset as_mul(Register dest, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_mla(Register dest, Register acc, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_umaal(Register dest1, Register dest2, Register src1, Register src2,
                   Condition c = Always);
     BufferOffset as_mls(Register dest, Register acc, Register src1, Register src2,
                 Condition c = Always);
     BufferOffset as_umull(Register dest1, Register dest2, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_umlal(Register dest1, Register dest2, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_smull(Register dest1, Register dest2, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_smlal(Register dest1, Register dest2, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
 
     BufferOffset as_sdiv(Register dest, Register num, Register div, Condition c = Always);
     BufferOffset as_udiv(Register dest, Register num, Register div, Condition c = Always);
@@ -2105,8 +2107,8 @@ class InstALU : public Instruction
     static const int32_t ALUMask = 0xc << 24;
 
   public:
-    InstALU (Register rd, Register rn, Operand2 op2, ALUOp op, SetCond_ sc, Assembler::Condition c)
-        : Instruction(maybeRD(rd) | maybeRN(rn) | op2.encode() | op | sc, c)
+    InstALU (Register rd, Register rn, Operand2 op2, ALUOp op, SBit s, Assembler::Condition c)
+      : Instruction(maybeRD(rd) | maybeRN(rn) | op2.encode() | op | s, c)
     { }
 
     static bool IsTHIS (const Instruction& i);
