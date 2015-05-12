@@ -29,7 +29,8 @@ function run_test() {
 
   // Don't test symlinks on Mac OS X in this test since it tends to timeout.
   // It is tested on Mac OS X in marAppInUseStageSuccessComplete_unix.js
-  if (IS_UNIX && !IS_MACOSX) {
+  // The tests don't support symlinks on gonk.
+  if (IS_UNIX && !IS_MACOSX && !IS_TOOLKIT_GONK) {
     removeSymlink();
     createSymlink();
     do_register_cleanup(removeSymlink);
@@ -87,7 +88,8 @@ function finishCheckUpdateApplied() {
     checkUpdateLogContains("removing old distribution directory");
   }
 
-  if (IS_UNIX && !IS_MACOSX) {
+  // The tests don't support symlinks on gonk.
+  if (IS_UNIX && !IS_MACOSX && !IS_TOOLKIT_GONK) {
     checkSymlink();
   }
   checkAppBundleModTime();

@@ -1149,7 +1149,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         }
         else {
           this.removeAttribute("showonlysettings");
-          tree.collapsed = false;
+          // Uncollapse as long as we have a tree with a view which has >= 1 row.
+          // The autocomplete binding itself will take care of uncollapsing later,
+          // if we currently have no rows but end up having some in the future
+          // when the search string changes
+          tree.collapsed = !tree.view || !tree.view.rowCount;
         }
 
         // Show the current default engine in the top header of the panel.
