@@ -791,6 +791,8 @@ AboutReader.prototype = {
     this._showListIntro();
     this._requestFavicon();
     this._doc.body.classList.add("loaded");
+
+    Services.obs.notifyObservers(null, "AboutReader:Ready", "");
   },
 
   _hideContent: function Reader_hideContent() {

@@ -126,7 +126,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
           );
         }
         case ROOM_STATES.ENDED: {
-          if (this.props.roomUsed)
+          if (this.props.roomUsed) {
             return (
               <div className="ended-conversation">
                 <sharedViews.FeedbackView
@@ -134,6 +134,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
                 />
               </div>
             );
+          }
 
           // In case the room was not used (no one was here), we
           // bypass the feedback form.

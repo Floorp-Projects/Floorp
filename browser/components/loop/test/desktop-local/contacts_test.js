@@ -476,7 +476,7 @@ describe("loop.contacts", function() {
           var contact = {fakeField: [{value: "foobar"}]};
           loop.contacts._setPreferred(contact, "fakeField", "");
 
-          expect(contact["fakeField"][0].value).to.eql("");
+          expect(contact.fakeField[0].value).to.eql("");
        });
 
     it("should set the value on the object if the new value is empty," +
@@ -484,7 +484,7 @@ describe("loop.contacts", function() {
           var contact = {fakeField: [{value: "foobar"}]};
           loop.contacts._setPreferred(contact, "fakeField", "barbaz");
 
-          expect(contact["fakeField"][0].value).to.eql("barbaz");
+          expect(contact.fakeField[0].value).to.eql("barbaz");
        });
   });
 });

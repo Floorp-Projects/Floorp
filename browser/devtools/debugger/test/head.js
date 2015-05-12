@@ -1025,3 +1025,68 @@ function getSourceForm(aSources, aURL) {
   let item = aSources.getItemByValue(getSourceActor(gSources, aURL));
   return item.attachment.source;
 }
+
+function connect(client) {
+  info("Connecting client.");
+  return new Promise(function (resolve) {
+    client.connect(function () {
+      resolve();
+    });
+  });
+}
+
+function close(client) {
+  info("Closing client.\n");
+  return new Promise(function (resolve) {
+    client.close(() => {
+      resolve();
+    });
+  });
+}
+
+function listTabs(client) {
+  info("Listing tabs.");
+  return new Promise(function (resolve) {
+    client.listTabs(function (response) {
+      resolve(response);
+    });
+  });
+}
+
+function findTab(tabs, url) {
+  info("Finding tab with url '" + url + "'.");
+  for (let tab of tabs) {
+    if (tab.url === url) {
+      return tab;
+    }
+  }
+  return null;
+}
+
+function attachTab(client, tab) {
+  info("Attaching to tab with url '" + tab.url + "'.");
+  return new Promise(function (resolve) {
+    client.attachTab(tab.actor, function (response, tabClient) {
+      resolve([response, tabClient]);
+    });
+  });
+}
+
+function listWorkers(tabClient) {
+  info("Listing workers.");
+  return new Promise(function (resolve) {
+    tabClient.listWorkers(function (response) {
+      resolve(response);
+    });
+  });
+}
+
+function waitForWorkerListChanged(tabClient) {
+  info("Waiting for worker list to change.");
+  return new Promise(function (resolve) {
+    tabClient.addListener("workerListChanged", function listener() {
+      tabClient.removeListener("workerListChanged", listener);
+      resolve();
+    });
+  });
+}

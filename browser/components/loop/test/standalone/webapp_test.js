@@ -40,8 +40,9 @@ describe("loop.webapp", function() {
       send: function() {},
       abort: function() {},
       getResponseHeader: function(header) {
-        if (header === "Content-Type")
+        if (header === "Content-Type") {
           return "audio/ogg";
+        }
       },
       responseType: null,
       response: new ArrayBuffer(10),
@@ -1013,8 +1014,9 @@ describe("loop.webapp", function() {
       });
 
       afterEach(function() {
-        if (oldLocalStorageValue !== null)
+        if (oldLocalStorageValue !== null) {
           localStorage.setItem("has-seen-tos", oldLocalStorageValue);
+        }
       });
 
       it("should show the TOS", function() {
