@@ -84,12 +84,10 @@ runTest(function() {
               ['media.getusermedia.screensharing.enabled', false] ]
     }, resolve));
 
-  tests.reduce((p, test) =>
+  return tests.reduce((p, test) =>
     p.then(() => navigator.mediaDevices.getUserMedia(test.constraints))
     .then(() => is(null, test.error, test.message),
-          e => is(e.name, test.error, test.message + ": " + e.message)), p)
-  .catch(e => ok(false, "Unexpected failure: " + e.name + ", " + e.message))
-  .then(SimpleTest.finish);
+          e => is(e.name, test.error, test.message + ": " + e.message)), p);
 });
 
 </script>

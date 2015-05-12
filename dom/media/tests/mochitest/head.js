@@ -115,8 +115,7 @@ function getUserMedia(constraints) {
 }
 
 // These are the promises we use to track that the prerequisites for the test
-// are in place before running it.  Users of this file need to ensure that they
-// also provide a promise called `scriptsReady` as well.
+// are in place before running it.
 var setTestOptions;
 var testConfigured = new Promise(r => setTestOptions = r);
 
@@ -163,15 +162,10 @@ function run_test(is_initiator) {
 
 function runTestWhenReady(testFunc) {
   setupEnvironment();
-  return Promise.all([scriptsReady, testConfigured]).then(() => {
-    try {
-      return testConfigured.then(options => testFunc(options));
-    } catch (e) {
-      ok(false, 'Error executing test: ' + e +
-         ((typeof e.stack === 'string') ?
-          (' ' + e.stack.split('\n').join(' ... ')) : ''));
-    }
-  });
+  return testConfigured.then(options => testFunc(options))
+    .catch(e => ok(false, 'Error executing test: ' + e +
+        ((typeof e.stack === 'string') ?
+        (' ' + e.stack.split('\n').join(' ... ')) : '')));
 }
 
 

@@ -12,14 +12,13 @@
    * call stop() on the stream, and successfully get an ended event fired.
    */
   runTest(function () {
-    getUserMedia({audio: true})
+    return getUserMedia({audio: true})
       .then(stream => {
         var testAudio = createMediaElement('audio', 'testAudio');
         var streamPlayback = new LocalMediaStreamPlayback(testAudio, stream);
 
         return streamPlayback.playMediaWithStreamStop(false);
-      })
-      .then(() => SimpleTest.finish(), generateErrorCallback());
+      });
   });
 
 </script>

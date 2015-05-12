@@ -11,14 +11,14 @@
    * Run a test that we can complete a video playback cycle twice in a row.
    */
   runTest(function () {
-    getUserMedia({video: true, audio: true}).then(stream => {
+    return getUserMedia({video: true, audio: true}).then(stream => {
       var testVideo = createMediaElement('video', 'testVideo');
       var playback = new LocalMediaStreamPlayback(testVideo, stream);
 
       return playback.playMedia(false)
         .then(() => playback.playMedia(true))
         .then(() => stream.stop());
-    }).then(() => SimpleTest.finish(), generateErrorCallback());
+    });
   });
 
 </script>
