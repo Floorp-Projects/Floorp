@@ -4283,7 +4283,7 @@ ContentParent::RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
     if (!principal) {
       return true;
     }
-    principal->GetOrigin(getter_Copies(origin));
+    principal->GetOrigin(origin);
     nsRefPtr<nsGeolocationSettings> gs = nsGeolocationSettings::GetGeolocationSettings();
     if (gs) {
       gs->PutWatchOrigin(mGeolocationWatchID, origin);
