@@ -105,7 +105,6 @@ static FILE* gErrFile = nullptr;
 static FILE* gInFile = nullptr;
 
 static int gExitCode = 0;
-static bool gIgnoreReportedErrors = false;
 static bool gQuitting = false;
 static bool reportWarnings = true;
 static bool compileOnly = false;
@@ -397,21 +396,6 @@ Quit(JSContext* cx, unsigned argc, jsval* vp)
     return false;
 }
 
-// Provide script a way to disable the xpcshell error reporter, preventing
-// reported errors from being logged to the console and also from affecting the
-// exit code returned by the xpcshell binary.
-static bool
-IgnoreReportedErrors(JSContext* cx, unsigned argc, jsval* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 1 || !args[0].isBoolean()) {
-        JS_ReportError(cx, "Bad arguments");
-        return false;
-    }
-    gIgnoreReportedErrors = args[0].toBoolean();
-    return true;
-}
-
 static bool
 DumpXPC(JSContext* cx, unsigned argc, jsval* vp)
 {
@@ -669,7 +653,6 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("readline",        ReadLine,       1,0),
     JS_FS("load",            Load,           1,0),
     JS_FS("quit",            Quit,           0,0),
-    JS_FS("ignoreReportedErrors", IgnoreReportedErrors, 1,0),
     JS_FS("version",         Version,        1,0),
     JS_FS("build",           BuildDate,      0,0),
     JS_FS("dumpXPC",         DumpXPC,        1,0),
@@ -1558,7 +1541,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
                 if (!ProcessArgs(aes, argv, argc, &dirprovider)) {
                     if (gExitCode) {
                         result = gExitCode;
-                    } else if (gQuitting || gIgnoreReportedErrors) {
+                    } else if (gQuitting) {
                         result = 0;
                     } else {
                         result = EXITCODE_RUNTIME_ERROR;
