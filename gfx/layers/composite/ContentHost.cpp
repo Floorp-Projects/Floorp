@@ -261,23 +261,40 @@ ContentHostTexture::Dump(std::stringstream& aStream,
                          bool aDumpHtml)
 {
 #ifdef MOZ_DUMP_PAINTING
-  if (!aDumpHtml) {
-    return;
+  if (aDumpHtml) {
+    aStream << "<ul>";
   }
-  aStream << "<ul>";
   if (mTextureHost) {
     aStream << aPrefix;
-    aStream << "<li> <a href=";
+    if (aDumpHtml) {
+      aStream << "<li> <a href=";
+    } else {
+      aStream << "Front buffer: ";
+    }
     DumpTextureHost(aStream, mTextureHost);
-    aStream << "> Front buffer </a></li> ";
+    if (aDumpHtml) {
+      aStream << "> Front buffer </a></li> ";
+    } else {
+      aStream << "\n";
+    }
   }
   if (mTextureHostOnWhite) {
-    aStream <<  aPrefix;
-    aStream << "<li> <a href=";
+    aStream << aPrefix;
+    if (aDumpHtml) {
+      aStream << "<li> <a href=";
+    } else {
+      aStream << "Front buffer on white: ";
+    }
     DumpTextureHost(aStream, mTextureHostOnWhite);
-    aStream << "> Front buffer on white </a> </li> ";
+    if (aDumpHtml) {
+      aStream << "> Front buffer on white </a> </li> ";
+    } else {
+      aStream << "\n";
+    }
   }
-  aStream << "</ul>";
+  if (aDumpHtml) {
+    aStream << "</ul>";
+  }
 #endif
 }
 
