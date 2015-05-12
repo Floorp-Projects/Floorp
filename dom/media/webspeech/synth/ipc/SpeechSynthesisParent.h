@@ -75,7 +75,7 @@ public:
   SpeechTaskParent(float aVolume, const nsAString& aUtterance)
     : nsSpeechTask(aVolume, aUtterance) {}
 
-  virtual nsresult DispatchStartImpl();
+  virtual nsresult DispatchStartImpl(const nsAString& aUri);
 
   virtual nsresult DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex);
 

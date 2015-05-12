@@ -28,4 +28,7 @@ interface SpeechSynthesisUtterance : EventTarget {
   attribute EventHandler onresume;
   attribute EventHandler onmark;
   attribute EventHandler onboundary;
+
+  [ChromeOnly]
+  readonly attribute DOMString chosenVoiceURI;
 };
