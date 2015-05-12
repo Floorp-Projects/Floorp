@@ -520,35 +520,35 @@ NetworkEventsHandler.prototype = {
    *        The network request information.
    */
   _onNetworkEventUpdate: function(type, { packet, networkInfo }) {
-    let actor = networkInfo.actor;
+    let { actor, request: { url } } = networkInfo;
 
     switch (packet.updateType) {
       case "requestHeaders":
         this.webConsoleClient.getRequestHeaders(actor, this._onRequestHeaders);
-        window.emit(EVENTS.UPDATING_REQUEST_HEADERS, actor);
+        window.emit(EVENTS.UPDATING_REQUEST_HEADERS, [actor, url]);
         break;
       case "requestCookies":
         this.webConsoleClient.getRequestCookies(actor, this._onRequestCookies);
-        window.emit(EVENTS.UPDATING_REQUEST_COOKIES, actor);
+        window.emit(EVENTS.UPDATING_REQUEST_COOKIES, [actor, url]);
         break;
       case "requestPostData":
         this.webConsoleClient.getRequestPostData(actor, this._onRequestPostData);
-        window.emit(EVENTS.UPDATING_REQUEST_POST_DATA, actor);
+        window.emit(EVENTS.UPDATING_REQUEST_POST_DATA, [actor, url]);
         break;
       case "securityInfo":
         NetMonitorView.RequestsMenu.updateRequest(actor, {
           securityState: networkInfo.securityInfo,
         });
         this.webConsoleClient.getSecurityInfo(actor, this._onSecurityInfo);
-        window.emit(EVENTS.UPDATING_SECURITY_INFO, actor);
+        window.emit(EVENTS.UPDATING_SECURITY_INFO, [actor, url]);
         break;
       case "responseHeaders":
         this.webConsoleClient.getResponseHeaders(actor, this._onResponseHeaders);
-        window.emit(EVENTS.UPDATING_RESPONSE_HEADERS, actor);
+        window.emit(EVENTS.UPDATING_RESPONSE_HEADERS, [actor, url]);
         break;
       case "responseCookies":
         this.webConsoleClient.getResponseCookies(actor, this._onResponseCookies);
-        window.emit(EVENTS.UPDATING_RESPONSE_COOKIES, actor);
+        window.emit(EVENTS.UPDATING_RESPONSE_COOKIES, [actor, url]);
         break;
       case "responseStart":
         NetMonitorView.RequestsMenu.updateRequest(actor, {
@@ -559,7 +559,7 @@ NetworkEventsHandler.prototype = {
           statusText: networkInfo.response.statusText,
           headersSize: networkInfo.response.headersSize
         });
-        window.emit(EVENTS.STARTED_RECEIVING_RESPONSE, actor);
+        window.emit(EVENTS.STARTED_RECEIVING_RESPONSE, [actor, url]);
         break;
       case "responseContent":
         NetMonitorView.RequestsMenu.updateRequest(actor, {
@@ -568,14 +568,14 @@ NetworkEventsHandler.prototype = {
           mimeType: networkInfo.response.content.mimeType
         });
         this.webConsoleClient.getResponseContent(actor, this._onResponseContent);
-        window.emit(EVENTS.UPDATING_RESPONSE_CONTENT, actor);
+        window.emit(EVENTS.UPDATING_RESPONSE_CONTENT, [actor, url]);
         break;
       case "eventTimings":
         NetMonitorView.RequestsMenu.updateRequest(actor, {
           totalTime: networkInfo.totalTime
         });
         this.webConsoleClient.getEventTimings(actor, this._onEventTimings);
-        window.emit(EVENTS.UPDATING_EVENT_TIMINGS, actor);
+        window.emit(EVENTS.UPDATING_EVENT_TIMINGS, [actor, url]);
         break;
     }
   },

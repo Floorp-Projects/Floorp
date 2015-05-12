@@ -60,7 +60,7 @@ function checkMenuItems(popupNode, copyLinkExpected, copyEmailExpected, expected
   };
 
   gViewSourceWindow.gBrowser.contentWindow.addEventListener("mousedown", mouseFn, false);
-  EventUtils.synthesizeMouseAtCenter(popupNode, { button: 2 }, gViewSourceWindow.gBrowser.contentWindow);
+  EventUtils.synthesizeMouseAtCenter(popupNode, { type: "contextmenu", button: 2 }, gViewSourceWindow.gBrowser.contentWindow);
   gViewSourceWindow.gBrowser.contentWindow.removeEventListener("mousedown", mouseFn, false);
 
   gContextMenu.openPopup(popupNode, "after_start", 0, 0, false, false, cachedEvent);

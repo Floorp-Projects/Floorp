@@ -13,6 +13,7 @@ const searchIcon = document.getAnonymousElementByAttribute(searchbar, "anonid", 
 const goButton = document.getAnonymousElementByAttribute(searchbar, "anonid", "search-go-button");
 const textbox = searchbar._textbox;
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
+const kValues = ["long text", "long text 2", "long text 3"];
 
 const isWindows = Services.appinfo.OS == "WINNT";
 const mouseDown = isWindows ? 2 : 1;
@@ -44,6 +45,37 @@ function* synthesizeNativeMouseClick(aElement) {
 
 add_task(function* init() {
   yield promiseNewEngine("testEngine.xml");
+
+  // First cleanup the form history in case other tests left things there.
+  yield new Promise((resolve, reject) => {
+    info("cleanup the search history");
+    searchbar.FormHistory.update({op: "remove", fieldname: "searchbar-history"},
+                                 {handleCompletion: resolve,
+                                  handleError: reject});
+  });
+
+  yield new Promise((resolve, reject) => {
+    info("adding search history values: " + kValues);
+    let ops = kValues.map(value => { return {op: "add",
+                                             fieldname: "searchbar-history",
+                                             value: value}
+                                   });
+    searchbar.FormHistory.update(ops, {
+      handleCompletion: function() {
+        registerCleanupFunction(() => {
+          info("removing search history values: " + kValues);
+          let ops =
+            kValues.map(value => { return {op: "remove",
+                                           fieldname: "searchbar-history",
+                                           value: value}
+                                 });
+          searchbar.FormHistory.update(ops);
+        });
+        resolve();
+      },
+      handleError: reject
+    });
+  });
 });
 
 // Adds a task that shouldn't show the search suggestions popup.
