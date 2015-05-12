@@ -2803,11 +2803,9 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
 
         // If italic, test the regular face to see if it supports the character.
         // Only do this for platform fonts, not userfonts.
-        fe = ff.FontEntry();
         if (mStyle.style != NS_FONT_STYLE_NORMAL &&
-            !fe->mIsUserFontContainer &&
-            !fe->IsUserFont()) {
-            font = FindNonItalicFaceForChar(ff.Family(), aCh);
+            !ff.FontEntry()->IsUserFont()) {
+            font = FindNonItalicFaceForChar(mFonts[i].Family(), aCh);
             if (font) {
                 *aMatchType = gfxTextRange::kFontGroup;
                 return font.forget();
