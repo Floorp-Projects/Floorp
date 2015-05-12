@@ -6250,6 +6250,12 @@ var XPInstallObserver = {
   },
 
   onInstallEnded: function(aInstall, aAddon) {
+    // Don't create a notification for distribution add-ons.
+    if (Distribution.pendingAddonInstalls.has(aInstall)) {
+      Distribution.pendingAddonInstalls.delete(aInstall);
+      return;
+    }
+
     let needsRestart = false;
     if (aInstall.existingAddon && (aInstall.existingAddon.pendingOperations & AddonManager.PENDING_UPGRADE))
       needsRestart = true;
@@ -6274,6 +6280,13 @@ var XPInstallObserver = {
   },
 
   onInstallFailed: function(aInstall) {
+    // Don't create a notification for distribution add-ons.
+    if (Distribution.pendingAddonInstalls.has(aInstall)) {
+      Cu.reportError("Error installing distribution add-on: " + aInstall.addon.id);
+      Distribution.pendingAddonInstalls.delete(aInstall);
+      return;
+    }
+
     NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsFail"), "short");
   },
 
@@ -7683,6 +7696,7 @@ var Distribution = {
       case "Distribution:Set":
         // Reload the default prefs so we can observe "prefservice:after-app-defaults"
         Services.prefs.QueryInterface(Ci.nsIObserver).observe(null, "reload-default-prefs", null);
+        this.installDistroAddons();
         break;
 
       case "prefservice:after-app-defaults":
@@ -7805,7 +7819,61 @@ var Distribution = {
         Cu.reportError("Distribution: Could not read from " + aFile.leafName + " file");
       }
     });
-  }
+  },
+
+  // Track pending installs so we can avoid showing notifications for them.
+  pendingAddonInstalls: new Set(),
+
+  installDistroAddons: Task.async(function* () {
+    const PREF_ADDONS_INSTALLED = "distribution.addonsInstalled";
+    try {
+      let installed = Services.prefs.getBoolPref(PREF_ADDONS_INSTALLED);
+      if (installed) {
+        return;
+      }
+    } catch (e) {
+      Services.prefs.setBoolPref(PREF_ADDONS_INSTALLED, true);
+    }
+
+    let distroPath;
+    try {
+      distroPath = FileUtils.getDir("XREAppDist", ["extensions"]).path;
+
+      let info = yield OS.File.stat(distroPath);
+      if (!info.isDir) {
+        return;
+      }
+    } catch (e) {
+      return;
+    }
+
+    let it = new OS.File.DirectoryIterator(distroPath);
+    try {
+      yield it.forEach(entry => {
+        // Only support extensions that are zipped in .xpi files.
+        if (entry.isDir || !entry.name.endsWith(".xpi")) {
+          dump("Ignoring distribution add-on that isn't an XPI: " + entry.path);
+          return;
+        }
+
+        new Promise((resolve, reject) => {
+          AddonManager.getInstallForFile(new FileUtils.File(entry.path), resolve);
+        }).then(install => {
+          let id = entry.name.substring(0, entry.name.length - 4);
+          if (install.addon.id !== id) {
+            Cu.reportError("File entry " + entry.path + " contains an add-on with an incorrect ID");
+            return;
+          }
+          this.pendingAddonInstalls.add(install);
+          install.install();
+        }).catch(e => {
+          Cu.reportError("Error installing distribution add-on: " + entry.path + ": " + e);
+        });
+      });
+    } finally {
+      it.close();
+    }
+  })
 };
 
 var Tabs = {
