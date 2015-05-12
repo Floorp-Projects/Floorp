@@ -15,9 +15,8 @@ function run_test() {
 
 add_task(function* test_unregister_success() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
-  yield promiseDB.put({
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  yield db.put({
     channelID,
     pushEndpoint: 'https://example.org/update/unregister-success',
     scope: 'https://example.com/page/unregister-success',
@@ -42,6 +41,6 @@ add_task(function* test_unregister_success() {
   });
 
   yield PushNotificationService.clearAll();
-  let record = yield promiseDB.getByChannelID(channelID);
+  let record = yield db.getByChannelID(channelID);
   ok(!record, 'Unregister did not remove record');
 });
