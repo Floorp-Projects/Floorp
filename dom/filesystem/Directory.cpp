@@ -100,7 +100,7 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
 {
   nsresult error = NS_OK;
   nsString realPath;
-  nsRefPtr<File> blobData;
+  nsRefPtr<Blob> blobData;
   InfallibleTArray<uint8_t> arrayData;
   bool replace = (aOptions.mIfExists == CreateIfExistsMode::Replace);
 
@@ -192,12 +192,12 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
 {
   nsresult error = NS_OK;
   nsString realPath;
-  nsRefPtr<FileImpl> file;
+  nsRefPtr<BlobImpl> blob;
 
   // Check and get the target path.
 
   if (aPath.IsFile()) {
-    file = aPath.GetAsFile().Impl();
+    blob = aPath.GetAsFile().Impl();
   } else if (aPath.IsString()) {
     if (!DOMPathToRealPath(aPath.GetAsString(), realPath)) {
       error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
@@ -212,7 +212,7 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
     }
   }
 
-  nsRefPtr<RemoveTask> task = new RemoveTask(mFileSystem, mPath, file, realPath,
+  nsRefPtr<RemoveTask> task = new RemoveTask(mFileSystem, mPath, blob, realPath,
     aRecursive, aRv);
   if (aRv.Failed()) {
     return nullptr;

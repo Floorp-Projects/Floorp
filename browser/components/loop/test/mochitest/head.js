@@ -240,14 +240,16 @@ function promiseTabLoadEvent(tab, url, eventType="load") {
     }
 
     let timeout = setTimeout(() => {
-      if (tab.linkedBrowser)
+      if (tab.linkedBrowser) {
         tab.linkedBrowser.removeEventListener(eventType, handle, true);
+      }
       reject(new Error("Timed out while waiting for a '" + eventType + "'' event"));
     }, 30000);
 
     tab.linkedBrowser.addEventListener(eventType, handle, true, true);
-    if (url)
+    if (url) {
       tab.linkedBrowser.loadURI(url);
+    }
   });
 }
 

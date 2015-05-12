@@ -391,8 +391,23 @@ describe("loop.store.RoomStore", function () {
         }));
 
         sinon.assert.calledOnce(sharedUtils.composeCallUrlEmail);
-        sinon.assert.calledWithExactly(sharedUtils.composeCallUrlEmail,
+        sinon.assert.calledWith(sharedUtils.composeCallUrlEmail,
           "http://invalid");
+      });
+
+      it("should call composeUrlEmail differently with context", function() {
+        sandbox.stub(sharedUtils, "composeCallUrlEmail");
+
+        var url = "http://invalid";
+        var description = "Hello, is it me you're looking for?";
+        store.emailRoomUrl(new sharedActions.EmailRoomUrl({
+          roomUrl: url,
+          roomDescription: description
+        }));
+
+        sinon.assert.calledOnce(sharedUtils.composeCallUrlEmail);
+        sinon.assert.calledWithExactly(sharedUtils.composeCallUrlEmail,
+          url, null, description);
       });
     });
 

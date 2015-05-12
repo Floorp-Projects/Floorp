@@ -105,8 +105,9 @@ def may_elfhack(path):
     # elfhack only supports libraries. We should check the ELF header for
     # the right flag, but checking the file extension works too.
     from buildconfig import substs
-    return 'USE_ELF_HACK' in substs and substs['USE_ELF_HACK'] and \
-           path.endswith(substs['DLL_SUFFIX'])
+    return ('USE_ELF_HACK' in substs and substs['USE_ELF_HACK'] and
+        path.endswith(substs['DLL_SUFFIX']) and
+        'COMPILE_ENVIRONMENT' in substs and substs['COMPILE_ENVIRONMENT'])
 
 
 def elfhack(path):

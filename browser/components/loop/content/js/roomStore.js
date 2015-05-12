@@ -334,7 +334,8 @@ loop.store = loop.store || {};
      * @param  {sharedActions.EmailRoomUrl} actionData The action data.
      */
     emailRoomUrl: function(actionData) {
-      loop.shared.utils.composeCallUrlEmail(actionData.roomUrl);
+      loop.shared.utils.composeCallUrlEmail(actionData.roomUrl, null,
+        actionData.roomDescription);
       this._mozLoop.notifyUITour("Loop:RoomURLEmailed");
     },
 

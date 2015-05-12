@@ -432,7 +432,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     AutoTraceSession session(rt, MinorCollecting);
     AutoStopVerifyingBarriers av(rt, false);
     AutoDisableProxyCheck disableStrictProxyChecking(rt);
-    DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
+    mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
 
     // Move objects pointed to by roots from the nursery to the major heap.
     TenuringTracer mover(rt, this);

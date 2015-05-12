@@ -55,10 +55,10 @@ FilePickerParent::~FilePickerParent()
 // the same runnable on the main thread.
 // 3. The main thread sends the results over IPC.
 FilePickerParent::FileSizeAndDateRunnable::FileSizeAndDateRunnable(FilePickerParent *aFPParent,
-                                                                   nsTArray<nsRefPtr<FileImpl>>& aFiles)
+                                                                   nsTArray<nsRefPtr<BlobImpl>>& aBlobs)
  : mFilePickerParent(aFPParent)
 {
-  mFiles.SwapElements(aFiles);
+  mBlobs.SwapElements(aBlobs);
 }
 
 bool
@@ -82,16 +82,16 @@ FilePickerParent::FileSizeAndDateRunnable::Run()
   // results.
   if (NS_IsMainThread()) {
     if (mFilePickerParent) {
-      mFilePickerParent->SendFiles(mFiles);
+      mFilePickerParent->SendFiles(mBlobs);
     }
     return NS_OK;
   }
 
   // We're not on the main thread, so do the stat().
-  for (unsigned i = 0; i < mFiles.Length(); i++) {
+  for (unsigned i = 0; i < mBlobs.Length(); i++) {
     ErrorResult rv;
-    mFiles[i]->GetSize(rv);
-    mFiles[i]->GetLastModified(rv);
+    mBlobs[i]->GetSize(rv);
+    mBlobs[i]->GetLastModified(rv);
   }
 
   // Dispatch ourselves back on the main thread.
@@ -111,22 +111,21 @@ FilePickerParent::FileSizeAndDateRunnable::Destroy()
 }
 
 void
-FilePickerParent::SendFiles(const nsTArray<nsRefPtr<FileImpl>>& aFiles)
+FilePickerParent::SendFiles(const nsTArray<nsRefPtr<BlobImpl>>& aBlobs)
 {
   nsIContentParent* parent = TabParent::GetFrom(Manager())->Manager();
-  InfallibleTArray<PBlobParent*> files;
+  InfallibleTArray<PBlobParent*> blobs;
 
-  for (unsigned i = 0; i < aFiles.Length(); i++) {
-    nsRefPtr<File> file = new File(nullptr, aFiles[i]);
-    BlobParent* blob = parent->GetOrCreateActorForBlob(file);
-    if (blob) {
-      files.AppendElement(blob);
+  for (unsigned i = 0; i < aBlobs.Length(); i++) {
+    BlobParent* blobParent = parent->GetOrCreateActorForBlobImpl(aBlobs[i]);
+    if (blobParent) {
+      blobs.AppendElement(blobParent);
     }
   }
 
-  InputFiles infiles;
-  infiles.filesParent().SwapElements(files);
-  unused << Send__delete__(this, infiles, mResult);
+  InputFiles inblobs;
+  inblobs.blobsParent().SwapElements(blobs);
+  unused << Send__delete__(this, inblobs, mResult);
 }
 
 void
@@ -139,7 +138,7 @@ FilePickerParent::Done(int16_t aResult)
     return;
   }
 
-  nsTArray<nsRefPtr<FileImpl>> files;
+  nsTArray<nsRefPtr<BlobImpl>> blobs;
   if (mMode == nsIFilePicker::modeOpenMultiple) {
     nsCOMPtr<nsISimpleEnumerator> iter;
     NS_ENSURE_SUCCESS_VOID(mFilePicker->GetFiles(getter_AddRefs(iter)));
@@ -151,21 +150,21 @@ FilePickerParent::Done(int16_t aResult)
       if (supports) {
         nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
 
-        nsRefPtr<FileImpl> fileimpl = new FileImplFile(file);
-        files.AppendElement(fileimpl);
+        nsRefPtr<BlobImpl> blobimpl = new BlobImplFile(file);
+        blobs.AppendElement(blobimpl);
       }
     }
   } else {
     nsCOMPtr<nsIFile> file;
     mFilePicker->GetFile(getter_AddRefs(file));
     if (file) {
-      nsRefPtr<FileImpl> fileimpl = new FileImplFile(file);
-      files.AppendElement(fileimpl);
+      nsRefPtr<BlobImpl> blobimpl = new BlobImplFile(file);
+      blobs.AppendElement(blobimpl);
     }
   }
 
   MOZ_ASSERT(!mRunnable);
-  mRunnable = new FileSizeAndDateRunnable(this, files);
+  mRunnable = new FileSizeAndDateRunnable(this, blobs);
   if (!mRunnable->Dispatch()) {
     unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
   }

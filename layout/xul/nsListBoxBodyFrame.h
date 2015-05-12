@@ -72,6 +72,9 @@ public:
   virtual nsIFrame* GetScrollbarBox(bool aVertical) override;
   virtual void ScrollbarActivityStarted() const override {}
   virtual void ScrollbarActivityStopped() const override {}
+  virtual bool IsScrollbarOnRight() const override {
+    return (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR);
+  }
 
 
   // nsIReflowCallback

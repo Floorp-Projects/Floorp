@@ -218,35 +218,42 @@ class HTMLInputElementState final : public nsISupports
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPUT_ELEMENT_STATE_IID)
     NS_DECL_ISUPPORTS
 
-    bool IsCheckedSet() {
+    bool IsCheckedSet()
+    {
       return mCheckedSet;
     }
 
-    bool GetChecked() {
+    bool GetChecked()
+    {
       return mChecked;
     }
 
-    void SetChecked(bool aChecked) {
+    void SetChecked(bool aChecked)
+    {
       mChecked = aChecked;
       mCheckedSet = true;
     }
 
-    const nsString& GetValue() {
+    const nsString& GetValue()
+    {
       return mValue;
     }
 
-    void SetValue(const nsAString& aValue) {
+    void SetValue(const nsAString& aValue)
+    {
       mValue = aValue;
     }
 
-    const nsTArray<nsRefPtr<FileImpl>>& GetFileImpls() {
-      return mFileImpls;
+    const nsTArray<nsRefPtr<BlobImpl>>& GetBlobImpls()
+    {
+      return mBlobImpls;
     }
 
-    void SetFileImpls(const nsTArray<nsRefPtr<File>>& aFile) {
-      mFileImpls.Clear();
+    void SetBlobImpls(const nsTArray<nsRefPtr<File>>& aFile)
+    {
+      mBlobImpls.Clear();
       for (uint32_t i = 0, len = aFile.Length(); i < len; ++i) {
-        mFileImpls.AppendElement(aFile[i]->Impl());
+        mBlobImpls.AppendElement(aFile[i]->Impl());
       }
     }
 
@@ -254,13 +261,13 @@ class HTMLInputElementState final : public nsISupports
       : mValue()
       , mChecked(false)
       , mCheckedSet(false)
-    {};
+    {}
 
   protected:
     ~HTMLInputElementState() {}
 
     nsString mValue;
-    nsTArray<nsRefPtr<FileImpl>> mFileImpls;
+    nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
     bool mChecked;
     bool mCheckedSet;
 };
@@ -394,9 +401,9 @@ public:
     MOZ_ASSERT(length >= 0);
     if (length > 0) {
       // Note that we leave the trailing "/" on the path.
-      FileImplFile* fileImpl = static_cast<FileImplFile*>(domFile->Impl());
-      MOZ_ASSERT(fileImpl);
-      fileImpl->SetPath(Substring(path, 0, uint32_t(length)));
+      BlobImplFile* blobImpl = static_cast<BlobImplFile*>(domFile->Impl());
+      MOZ_ASSERT(blobImpl);
+      blobImpl->SetPath(Substring(path, 0, uint32_t(length)));
     }
     *aResult = domFile.forget().downcast<nsIDOMFile>().take();
     LookupAndCacheNext();
@@ -561,7 +568,8 @@ public:
     nsCOMPtr<nsIGlobalObject> global = mInput->OwnerDoc()->GetScopeObject();
     for (uint32_t i = 0; i < mFileList.Length(); ++i) {
       MOZ_ASSERT(!mFileList[i]->GetParentObject());
-      mFileList[i] = new File(global, mFileList[i]->Impl());
+      mFileList[i] = File::Create(global, mFileList[i]->Impl());
+      MOZ_ASSERT(mFileList[i]);
     }
 
     // The text control frame (if there is one) isn't going to send a change
@@ -2347,7 +2355,10 @@ HTMLInputElement::MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles)
   }
   nsTArray<nsRefPtr<File>> files;
   for (uint32_t i = 0; i < aFiles.Length(); ++i) {
-    files.AppendElement(new File(global, aFiles[i].get()->Impl()));
+    nsRefPtr<File> file = File::Create(global, aFiles[i].get()->Impl());
+    MOZ_ASSERT(file);
+
+    files.AppendElement(file);
   }
   SetFiles(files, true);
 }
@@ -5805,7 +5816,7 @@ HTMLInputElement::SaveState()
     case VALUE_MODE_FILENAME:
       if (!mFiles.IsEmpty()) {
         inputState = new HTMLInputElementState();
-        inputState->SetFileImpls(mFiles);
+        inputState->SetBlobImpls(mFiles);
       }
       break;
     case VALUE_MODE_VALUE:
@@ -6011,14 +6022,16 @@ HTMLInputElement::RestoreState(nsPresState* aState)
         break;
       case VALUE_MODE_FILENAME:
         {
-          const nsTArray<nsRefPtr<FileImpl>>& fileImpls = inputState->GetFileImpls();
+          const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = inputState->GetBlobImpls();
 
           nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
           MOZ_ASSERT(global);
 
           nsTArray<nsRefPtr<File>> files;
-          for (uint32_t i = 0, len = fileImpls.Length(); i < len; ++i) {
-            nsRefPtr<File> file = new File(global, fileImpls[i]);
+          for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
+            nsRefPtr<File> file = File::Create(global, blobImpls[i]);
+            MOZ_ASSERT(file);
+
             files.AppendElement(file);
           }
 
