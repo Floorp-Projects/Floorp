@@ -3648,7 +3648,7 @@ function WidgetGroupWrapper(aWidget) {
   this.isGroup = true;
 
   const kBareProps = ["id", "source", "type", "disabled", "label", "tooltiptext",
-                      "showInPrivateBrowsing"];
+                      "showInPrivateBrowsing", "viewId"];
   for (let prop of kBareProps) {
     let propertyName = prop;
     this.__defineGetter__(propertyName, function() aWidget[propertyName]);
