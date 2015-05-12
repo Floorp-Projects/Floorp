@@ -59,7 +59,7 @@ var ClassToMethodMap =
                */
               "toFixed",
               "toExponential", "toPrecision"],
-    Date:    ["toDateString", "toTimeString", "toLocaleString",
+    Date:    ["toString", "toDateString", "toTimeString", "toLocaleString",
               "toLocaleDateString", "toLocaleTimeString", "valueOf", "getTime",
               "getFullYear", "getUTCFullYear", "getMonth", "getUTCMonth",
               "getDate", "getUTCDate", "getDay", "getUTCDay", "getHours",
