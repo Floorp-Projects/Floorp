@@ -47,6 +47,8 @@ using namespace mozilla::gfx;
 
 Atomic<int32_t> Image::sSerialCounter(0);
 
+Atomic<uint32_t> ImageContainer::sGenerationCounter(0);
+
 already_AddRefed<Image>
 ImageFactory::CreateImage(ImageFormat aFormat,
                           const gfx::IntSize &,
@@ -139,6 +141,7 @@ BufferRecycleBin::GetBuffer(uint32_t aSize)
 
 ImageContainer::ImageContainer(ImageContainer::Mode flag)
 : mReentrantMonitor("ImageContainer.mReentrantMonitor"),
+  mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
   mPreviousImagePainted(false),
   mImageFactory(new ImageFactory()),
@@ -203,6 +206,9 @@ ImageContainer::SetCurrentImageInternal(Image *aImage)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
+  if (mActiveImage != aImage) {
+    mGenerationCounter = ++sGenerationCounter;
+  }
   mActiveImage = aImage;
   CurrentImageChanged();
 }
@@ -283,12 +289,16 @@ ImageContainer::HasCurrentImage()
 }
 
 void
-ImageContainer::GetCurrentImages(nsTArray<OwningImage>* aImages)
+ImageContainer::GetCurrentImages(nsTArray<OwningImage>* aImages,
+                                 uint32_t* aGenerationCounter)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   if (mActiveImage) {
     aImages->AppendElement()->mImage = mActiveImage;
+  }
+  if (aGenerationCounter) {
+    *aGenerationCounter = mGenerationCounter;
   }
 }
 

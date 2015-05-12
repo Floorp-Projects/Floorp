@@ -139,21 +139,24 @@ ImageClientSingle::FlushAllImages(bool aExceptFront,
 bool
 ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags)
 {
-  AutoLockImage autoLock(aContainer);
+  nsAutoTArray<ImageContainer::OwningImage,4> images;
+  uint32_t generationCounter;
+  aContainer->GetCurrentImages(&images, &generationCounter);
 
-  Image *image = autoLock.GetImage();
-  if (!image) {
+  if (mLastUpdateGenerationCounter == generationCounter) {
+    return true;
+  }
+  mLastUpdateGenerationCounter = generationCounter;
+
+  if (images.IsEmpty()) {
     return false;
   }
 
+  Image* image = images[0].mImage;
   // Don't try to update to an invalid image. We return true because the caller
   // would attempt to recreate the ImageClient otherwise, and that isn't going
   // to help.
   if (!image->IsValid()) {
-    return true;
-  }
-
-  if (mLastPaintedImageSerial == image->GetSerial()) {
     return true;
   }
 
@@ -248,9 +251,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   IntRect pictureRect = image->GetPictureRect();
   GetForwarder()->UseTexture(this, texture, &pictureRect);
 
-  mLastPaintedImageSerial = image->GetSerial();
   aContainer->NotifyPaintedImage(image);
-
   texture->SyncWithObject(GetForwarder()->GetSyncObject());
 
   return true;
@@ -274,7 +275,7 @@ ImageClient::ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
 : CompositableClient(aFwd, aFlags)
 , mLayer(nullptr)
 , mType(aType)
-, mLastPaintedImageSerial(0)
+, mLastUpdateGenerationCounter(0)
 {}
 
 ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
@@ -339,9 +340,10 @@ ImageClientOverlay::UpdateImage(ImageContainer* aContainer, uint32_t aContentFla
     return false;
   }
 
-  if (mLastPaintedImageSerial == image->GetSerial()) {
+  if (mLastUpdateGenerationCounter == (uint32_t)image->GetSerial()) {
     return true;
   }
+  mLastUpdateGenerationCounter = (uint32_t)image->GetSerial();
 
   AutoRemoveTexture autoRemoveTexture(this);
   if (image->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
