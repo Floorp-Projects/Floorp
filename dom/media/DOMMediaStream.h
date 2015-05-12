@@ -168,9 +168,9 @@ public:
    */
   void NotifyMediaStreamGraphShutdown();
   /**
-   * Called when the main-thread state of the MediaStream changed.
+   * Called when the main-thread state of the MediaStream goes to finished.
    */
-  void NotifyStreamStateChanged();
+  void NotifyStreamFinished();
 
   // Webrtc allows the remote side to name a stream whatever it wants, and we
   // need to surface this to content.

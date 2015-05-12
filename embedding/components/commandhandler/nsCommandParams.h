@@ -32,11 +32,11 @@ protected:
     uint8_t mEntryType;
     union
     {
-      bool        mBoolean;
-      int32_t     mLong;
-      double      mDouble;
-      nsString*   mString;
-      nsCString*  mCString;
+      bool mBoolean;
+      int32_t mLong;
+      double mDouble;
+      nsString* mString;
+      nsCString* mCString;
     } mData;
 
     nsCOMPtr<nsISupports> mISupports;
@@ -71,17 +71,14 @@ protected:
           mData.mCString = new nsCString(*aRHS.mData.mCString);
           break;
         case eISupportsType:
-          mISupports = aRHS.mISupports.get();    // additional addref
+          mISupports = aRHS.mISupports.get();
           break;
         default:
           NS_ERROR("Unknown type");
       }
     }
 
-    ~HashEntry()
-    {
-      Reset(eNoType);
-    }
+    ~HashEntry() { Reset(eNoType); }
 
     void Reset(uint8_t aNewType)
     {
@@ -102,7 +99,7 @@ protected:
           mData.mString = nullptr;
           break;
         case eISupportsType:
-          mISupports = nullptr;   // clear the nsCOMPtr
+          mISupports = nullptr;
           break;
         case eStringType:
           delete mData.mCString;
@@ -122,7 +119,7 @@ protected:
   static PLDHashNumber HashKey(PLDHashTable* aTable, const void* aKey);
 
   static bool HashMatchEntry(PLDHashTable* aTable,
-                             const PLDHashEntryHdr *aEntry, const void* aKey);
+                             const PLDHashEntryHdr* aEntry, const void* aKey);
 
   static void HashMoveEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aFrom,
                             PLDHashEntryHdr* aTo);

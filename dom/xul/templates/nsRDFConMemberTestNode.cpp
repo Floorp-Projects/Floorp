@@ -13,9 +13,7 @@
 #include "nsXULContentUtils.h"
 
 #include "prlog.h"
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
-#endif
 
 nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
                                                nsXULTemplateQueryProcessorRDF* aProcessor,
@@ -26,7 +24,6 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
       mContainerVariable(aContainerVariable),
       mMemberVariable(aMemberVariable)
 {
-#ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoCString props;
 
@@ -61,7 +58,6 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
                 NS_ConvertUTF16toUTF8(cvar).get(),
                 NS_ConvertUTF16toUTF8(mvar).get()));
     }
-#endif
 }
 
 nsresult
@@ -115,7 +111,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
         hasMemberBinding = inst->mAssignments.GetAssignmentFor(mMemberVariable,
                                                                getter_AddRefs(memberValue));
 
-#ifdef PR_LOGGING
         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             const char* container = "(unbound)";
             if (hasContainerBinding)
@@ -129,7 +124,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                    ("nsRDFConMemberTestNode[%p]: FilterInstantiations() container=[%s] member=[%s]",
                     this, container, NS_ConvertUTF16toUTF8(member).get()));
         }
-#endif
 
         if (hasContainerBinding && hasMemberBinding) {
             // it's a consistency check. see if we have a assignment that is consistent
@@ -221,7 +215,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 if (! node)
                     return NS_ERROR_UNEXPECTED;
 
-#ifdef PR_LOGGING
                 if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                     nsAutoString member;
                     nsXULContentUtils::GetTextForNode(node, member);
@@ -229,7 +222,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                            ("    member => %s", NS_ConvertUTF16toUTF8(member).get()));
                 }
-#endif
 
                 Instantiation newinst = *inst;
                 newinst.AddAssignment(mMemberVariable, node);
@@ -310,7 +302,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                         if (! source)
                             return NS_ERROR_UNEXPECTED;
 
-#ifdef PR_LOGGING
                         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                             const char* container;
                             source->GetValueConst(&container);
@@ -318,7 +309,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                                    ("    container => %s", container));
                         }
-#endif
 
                         // Add a new instantiation
                         Instantiation newinst = *inst;
@@ -382,7 +372,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                         NS_ASSERTION(value != nullptr, "member is not an nsIRDFNode");
                         if (! value) continue;
 
-#ifdef PR_LOGGING
                         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                             nsAutoString s;
                             nsXULContentUtils::GetTextForNode(value, s);
@@ -390,7 +379,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                                    ("    member => %s", NS_ConvertUTF16toUTF8(s).get()));
                         }
-#endif
                     }
                     else {
                         variable = mContainerVariable;
@@ -401,7 +389,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
 
                         value = valueRes;
 
-#ifdef PR_LOGGING
                         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                             const char* s;
                             valueRes->GetValueConst(&s);
@@ -409,7 +396,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                                    ("    container => %s", s));
                         }
-#endif
                     }
 
                     // Copy the original instantiation, and add it to the
@@ -480,7 +466,6 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
         canpropagate = mProcessor->ContainmentProperties().Contains(aProperty);
     }
 
-#ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* source;
         aSource->GetValueConst(&source);
@@ -496,7 +481,6 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
                 this, source, property, NS_ConvertUTF16toUTF8(target).get(),
                 canpropagate ? "true" : "false"));
     }
-#endif
 
     if (canpropagate) {
         aInitialBindings.AddAssignment(mContainerVariable, aSource);

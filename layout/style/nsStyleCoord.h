@@ -11,6 +11,26 @@
 #include "nsCoord.h"
 #include "nsStyleConsts.h"
 
+namespace mozilla {
+class WritingMode;
+
+// Logical axis, edge and side constants for use in various places.
+enum LogicalAxis {
+  eLogicalAxisBlock  = 0x0,
+  eLogicalAxisInline = 0x1
+};
+enum LogicalEdge {
+  eLogicalEdgeStart  = 0x0,
+  eLogicalEdgeEnd    = 0x1
+};
+enum LogicalSide {
+  eLogicalSideBStart = (eLogicalAxisBlock  << 1) | eLogicalEdgeStart,  // 0x0
+  eLogicalSideBEnd   = (eLogicalAxisBlock  << 1) | eLogicalEdgeEnd,    // 0x1
+  eLogicalSideIStart = (eLogicalAxisInline << 1) | eLogicalEdgeStart,  // 0x2
+  eLogicalSideIEnd   = (eLogicalAxisInline << 1) | eLogicalEdgeEnd     // 0x3
+};
+};
+
 enum nsStyleUnit : uint8_t {
   eStyleUnit_Null         = 0,      // (no value) value is not specified
   eStyleUnit_Normal       = 1,      // (no value)
@@ -220,6 +240,24 @@ public:
   inline nsStyleCoord GetTop() const;
   inline nsStyleCoord GetRight() const;
   inline nsStyleCoord GetBottom() const;
+
+  // Methods to access the units and values in terms of logical sides
+  // for a given writing mode.
+  // NOTE: The definitions are in WritingModes.h (after we have the full
+  // declaration of WritingMode available).
+  inline nsStyleUnit GetUnit(mozilla::WritingMode aWritingMode,
+                             mozilla::LogicalSide aSide) const;
+  inline nsStyleUnit GetIStartUnit(mozilla::WritingMode aWritingMode) const;
+  inline nsStyleUnit GetBStartUnit(mozilla::WritingMode aWritingMode) const;
+  inline nsStyleUnit GetIEndUnit(mozilla::WritingMode aWritingMode) const;
+  inline nsStyleUnit GetBEndUnit(mozilla::WritingMode aWritingMode) const;
+
+  inline nsStyleCoord Get(mozilla::WritingMode aWritingMode,
+                          mozilla::LogicalSide aSide) const;
+  inline nsStyleCoord GetIStart(mozilla::WritingMode aWritingMode) const;
+  inline nsStyleCoord GetBStart(mozilla::WritingMode aWritingMode) const;
+  inline nsStyleCoord GetIEnd(mozilla::WritingMode aWritingMode) const;
+  inline nsStyleCoord GetBEnd(mozilla::WritingMode aWritingMode) const;
 
   // Sets each side to null and releases any refcounted objects.  Only use this
   // if the object is initialized (i.e. don't use it in nsStyleSides

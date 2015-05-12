@@ -25,7 +25,7 @@ nsEmbedStream::~nsEmbedStream()
 }
 
 void
-nsEmbedStream::InitOwner(nsIWebBrowser *aOwner)
+nsEmbedStream::InitOwner(nsIWebBrowser* aOwner)
 {
   mOwner = aOwner;
 }
@@ -37,36 +37,38 @@ nsEmbedStream::Init(void)
 }
 
 NS_METHOD
-nsEmbedStream::OpenStream(nsIURI *aBaseURI, const nsACString& aContentType)
+nsEmbedStream::OpenStream(nsIURI* aBaseURI, const nsACString& aContentType)
 {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aBaseURI);
   NS_ENSURE_TRUE(IsASCII(aContentType), NS_ERROR_INVALID_ARG);
 
   // if we're already doing a stream, return an error
-  if (mOutputStream)
+  if (mOutputStream) {
     return NS_ERROR_IN_PROGRESS;
+  }
 
   nsCOMPtr<nsIAsyncInputStream> inputStream;
   nsCOMPtr<nsIAsyncOutputStream> outputStream;
-  rv = NS_NewPipe2(getter_AddRefs(inputStream),
-                   getter_AddRefs(outputStream),
+  rv = NS_NewPipe2(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
                    true, false, 0, UINT32_MAX);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mOwner);
   rv = docShell->LoadStream(inputStream, aBaseURI, aContentType,
                             EmptyCString(), nullptr);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   mOutputStream = outputStream;
   return rv;
 }
 
 NS_METHOD
-nsEmbedStream::AppendToStream(const uint8_t *aData, uint32_t aLen)
+nsEmbedStream::AppendToStream(const uint8_t* aData, uint32_t aLen)
 {
   nsresult rv;
   NS_ENSURE_STATE(mOutputStream);
@@ -74,8 +76,9 @@ nsEmbedStream::AppendToStream(const uint8_t *aData, uint32_t aLen)
   uint32_t bytesWritten = 0;
   rv = mOutputStream->Write(reinterpret_cast<const char*>(aData),
                             aLen, &bytesWritten);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   NS_ASSERTION(bytesWritten == aLen,
                "underlying buffer couldn't handle the write");

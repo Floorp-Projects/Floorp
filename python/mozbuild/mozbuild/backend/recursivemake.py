@@ -73,10 +73,12 @@ from ..makeutil import Makefile
 MOZBUILD_VARIABLES = [
     'ANDROID_GENERATED_RESFILES',
     'ANDROID_RES_DIRS',
+    'ASFLAGS',
     'CMSRCS',
     'CMMSRCS',
     'CPP_UNIT_TESTS',
     'DIRS',
+    'DIST_INSTALL',
     'EXTRA_DSO_LDOPTS',
     'EXTRA_JS_MODULES',
     'EXTRA_PP_COMPONENTS',
@@ -99,6 +101,7 @@ MOZBUILD_VARIABLES = [
     'MAKE_FRAMEWORK',
     'MODULE',
     'NO_DIST_INSTALL',
+    'NO_EXPAND_LIBS',
     'NO_JS_MANIFEST',
     'OS_LIBS',
     'PARALLEL_DIRS',
@@ -1217,6 +1220,8 @@ INSTALL_TARGETS += %(prefix)s
         backend_file.write('REAL_LIBRARY := %s\n' % libdef.lib_name)
         if libdef.is_sdk:
             backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
+        if libdef.no_expand_lib:
+            backend_file.write('NO_EXPAND_LIBS := 1\n')
 
     def _process_host_library(self, libdef, backend_file):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)

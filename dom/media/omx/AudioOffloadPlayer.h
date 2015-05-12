@@ -233,7 +233,7 @@ private:
   // When audio is offloaded, application processor wakes up less frequently
   // (>1sec) But when Player UI is visible we need to update progress bar
   // atleast once in 250ms. Start a timer when player UI becomes visible or
-  // audio starts playing to send PlaybackPositionChanged events once in 250ms.
+  // audio starts playing to send UpdateLogicalPosition events once in 250ms.
   // Stop the timer when UI goes invisible or play state is not playing.
   // Also make sure timer functions are always called from main thread
   nsresult StartTimeUpdate();
@@ -246,7 +246,7 @@ private:
   // (i.e.MediaDecoder)
   void NotifyAudioEOS();
 
-  // Notify position changed event by sending PlaybackPositionChanged event to
+  // Notify position changed event by sending UpdateLogicalPosition event to
   // observer
   void NotifyPositionChanged();
 

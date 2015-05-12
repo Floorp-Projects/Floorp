@@ -451,10 +451,6 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   nsRefPtr<nsFontFaceLoader> fontLoader =
     new nsFontFaceLoader(aUserFontEntry, aFontFaceSrc->mURI, this, channel);
 
-  if (!fontLoader)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-#ifdef PR_LOGGING
   if (LOG_ENABLED()) {
     nsAutoCString fontURI, referrerURI;
     aFontFaceSrc->mURI->GetSpec(fontURI);
@@ -464,7 +460,6 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
          "referrer uri: (%s)\n",
          fontLoader.get(), fontURI.get(), referrerURI.get()));
   }
-#endif
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
@@ -656,14 +651,12 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   // local rules have been rebuilt, so clear the flag
   mUserFontSet->mLocalRulesUsed = false;
 
-#if PR_LOGGING
   if (LOG_ENABLED() && !mRuleFaces.IsEmpty()) {
     LOG(("userfonts (%p) userfont rules update (%s) rule count: %d",
          mUserFontSet.get(),
          (modified ? "modified" : "not modified"),
          mRuleFaces.Length()));
   }
-#endif
 
   return modified;
 }
@@ -1114,11 +1107,9 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   message.AppendLiteral(" source: ");
   message.Append(fontURI);
 
-#ifdef PR_LOGGING
   if (LOG_ENABLED()) {
     LOG(("userfonts (%p) %s", mUserFontSet.get(), message.get()));
   }
-#endif
 
   // try to give the user an indication of where the rule came from
   nsCSSFontFaceRule* rule = FindRuleForUserFontEntry(aUserFontEntry);

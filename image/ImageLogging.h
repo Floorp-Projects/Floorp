@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_image_public_ImageLogging_h
-#define mozilla_image_public_ImageLogging_h
+#ifndef mozilla_image_ImageLogging_h
+#define mozilla_image_ImageLogging_h
 
 #include "prlog.h"
 #include "prinrval.h"
 #include "nsString.h"
 
-#if defined(PR_LOGGING)
 // Declared in imgRequest.cpp.
 extern PRLogModuleInfo* GetImgLog();
 
@@ -157,18 +156,6 @@ public:
 
 #define LOG_MSG(l, s, m) LogMessage(l, this, s, m)
 
-#else
-
-#define LOG_SCOPE(l, s)
-#define LOG_SCOPE_WITH_PARAM(l, s, pn, pv)
-#define LOG_FUNC(l, s)
-#define LOG_FUNC_WITH_PARAM(l, s, pn, pv)
-#define LOG_STATIC_FUNC(l, s)
-#define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv)
-#define LOG_MSG(l, s, m)
-
-#endif // if defined(PR_LOGGING)
-
 #define LOG_MSG_WITH_PARAM LOG_FUNC_WITH_PARAM
 
-#endif // mozilla_image_public_ImageLogging_h
+#endif // mozilla_image_ImageLogging_h

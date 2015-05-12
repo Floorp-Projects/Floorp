@@ -460,14 +460,19 @@ nsPropertiesParser::ParseBuffer(const char16_t* aBuffer,
 
 nsPersistentProperties::nsPersistentProperties()
   : mIn(nullptr)
-  , mTable(&property_HashTableOps, sizeof(PropertyTableEntry), 16)
 {
+  PL_DHashTableInit(&mTable, &property_HashTableOps,
+                    sizeof(PropertyTableEntry), 16);
+
   PL_INIT_ARENA_POOL(&mArena, "PersistentPropertyArena", 2048);
 }
 
 nsPersistentProperties::~nsPersistentProperties()
 {
   PL_FinishArenaPool(&mArena);
+  if (mTable.IsInitialized()) {
+    PL_DHashTableFinish(&mTable);
+  }
 }
 
 nsresult

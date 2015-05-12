@@ -94,11 +94,11 @@ function test_data(client, actor, startTime, callback)
       // Now check the samples. At least one sample is expected to
       // have been in the busy wait above.
       let loc = stack.name + " (" + stack.filename + ":" + funcLine + ")";
-
-      do_check_true(response.profile.threads[0].samples.some(sample => {
-        return typeof sample.frames == "object" &&
-               sample.frames.length != 0 &&
-               sample.frames.some(f => (f.location == loc));
+      let thread0 = response.profile.threads[0];
+      do_check_true(thread0.samples.data.some(sample => {
+        let frames = getInflatedStackLocations(thread0, sample);
+        return frames.length != 0 &&
+               frames.some(location => (location == loc));
       }));
 
       callback();

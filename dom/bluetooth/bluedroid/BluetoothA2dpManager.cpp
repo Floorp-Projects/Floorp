@@ -723,6 +723,19 @@ BluetoothA2dpManager::HandleSinkPropertyChanged(const BluetoothSignal& aSignal)
   }
 }
 
+/*
+ * Reset connection state to DISCONNECTED to handle backend error. The state
+ * change triggers UI status bar update as ordinary bluetooth turn-off sequence.
+ */
+void
+BluetoothA2dpManager::HandleBackendError()
+{
+  if (mSinkState != SinkState::SINK_DISCONNECTED) {
+    ConnectionStateNotification(A2DP_CONNECTION_STATE_DISCONNECTED,
+      mDeviceAddress);
+  }
+}
+
 void
 BluetoothA2dpManager::NotifyConnectionStatusChanged()
 {

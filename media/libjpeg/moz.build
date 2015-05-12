@@ -150,6 +150,9 @@ else: # No SIMD support?
         'jsimd_none.c',
     ]
 
+ASFLAGS += CONFIG['LIBJPEG_TURBO_ASFLAGS']
+ASFLAGS += ['-I%s/media/libjpeg/simd/' % TOPSRCDIR]
+
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 

@@ -253,6 +253,14 @@ hb_buffer_add_utf32 (hb_buffer_t    *buffer,
 		     unsigned int    item_offset,
 		     int             item_length);
 
+/* Allows only access to first 256 Unicode codepoints. */
+void
+hb_buffer_add_latin1 (hb_buffer_t   *buffer,
+		      const uint8_t *text,
+		      int            text_length,
+		      unsigned int   item_offset,
+		      int            item_length);
+
 /* Like add_utf32 but does NOT check for invalid Unicode codepoints. */
 void
 hb_buffer_add_codepoints (hb_buffer_t          *buffer,

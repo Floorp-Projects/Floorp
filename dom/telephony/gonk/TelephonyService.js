@@ -130,10 +130,13 @@ function TelephonyCallInfo(aCall) {
   this.clientId = aCall.clientId;
   this.callIndex = aCall.callIndex;
   this.callState = aCall.state;
+  this.disconnectedReason = aCall.disconnectedReason || "";
+
   this.number = aCall.number;
   this.numberPresentation = aCall.numberPresentation;
   this.name = aCall.name;
   this.namePresentation = aCall.namePresentation;
+
   this.isOutgoing = aCall.isOutgoing;
   this.isEmergency = aCall.isEmergency;
   this.isConference = aCall.isConference;
@@ -154,10 +157,13 @@ TelephonyCallInfo.prototype = {
   clientId: 0,
   callIndex: 0,
   callState: nsITelephonyService.CALL_STATE_UNKNOWN,
+  disconnectedReason: "",
+
   number: "",
   numberPresentation: nsITelephonyService.CALL_PRESENTATION_ALLOWED,
   name: "",
   namePresentation: nsITelephonyService.CALL_PRESENTATION_ALLOWED,
+
   isOutgoing: true,
   isEmergency: false,
   isConference: false,
@@ -1444,10 +1450,6 @@ TelephonyService.prototype = {
    * calls being disconnected as well.
    *
    * @return Array a list of calls we need to fire callStateChange
-   *
-   * TODO: The list currently doesn't contain calls that we fire notifyError
-   * for them. However, after Bug 1147736, notifyError is replaced by
-   * callStateChanged and those calls should be included in the list.
    */
   _disconnectCalls: function(aClientId, aCalls,
                              aFailCause = RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
@@ -1471,7 +1473,7 @@ TelephonyService.prototype = {
 
     disconnectedCalls.forEach(call => {
       call.state = nsITelephonyService.CALL_STATE_DISCONNECTED;
-      call.failCause = aFailCause;
+      call.disconnectedReason = aFailCause;
 
       if (call.parentId) {
         let parentCall = this._currentCalls[aClientId][call.parentId];
@@ -1480,13 +1482,7 @@ TelephonyService.prototype = {
 
       this._notifyCallEnded(call);
 
-      if (call.hangUpLocal || !call.failCause ||
-          call.failCause === RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
-        callsForStateChanged.push(call);
-      } else {
-        this._notifyAllListeners("notifyError",
-                                 [aClientId, call.callIndex, call.failCause]);
-      }
+      callsForStateChanged.push(call);
 
       delete this._currentCalls[aClientId][call.callIndex];
     });

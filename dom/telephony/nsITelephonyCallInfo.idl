@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(3ea2d155-8ea2-42be-85d7-bd8ede8afc40)]
+[scriptable, uuid(e5e1be26-a3d4-49b3-8d9f-c1df5192b364)]
 interface nsITelephonyCallInfo : nsISupports
 {
   /**
@@ -21,6 +21,14 @@ interface nsITelephonyCallInfo : nsISupports
    * One of the nsITelephonyService::CALL_STATE_* values.
    */
   readonly attribute unsigned short callState;
+
+  /**
+   * The disconnectedReason of a call is defualt to an empty string when the
+   * call is "not disconnected", but once the call becomes "disconnected" the
+   * disconnectedReason should be a non-empty string no matter the call is
+   * disconnected for a noraml reason or an error.
+   */
+  readonly attribute DOMString disconnectedReason;
 
   /**
    * Number of the other party.

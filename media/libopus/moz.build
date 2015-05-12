@@ -94,12 +94,18 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     ]]
     # -Os is significantly slower, enable -O3 unless optimization is disabled
     if CONFIG['MOZ_OPTIMIZE']:
-      CFLAGS += [
-        '-O3',
-      ]
-      CXXFLAGS += [
-        '-O3',
-      ]
+        CFLAGS += [
+            '-O3',
+        ]
+        CXXFLAGS += [
+            '-O3',
+        ]
+    # These flags are a lie; they're just used to enable the requisite
+    # opcodes; actual arch detection is done at runtime.
+    ASFLAGS += [
+        '-march=armv7-a',
+        '-mfpu=neon',
+    ]
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:

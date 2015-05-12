@@ -881,14 +881,15 @@ FindScrolledLayerForScrollbar(Layer* aScrollbar, bool* aOutIsAncestor)
 {
   // First check if the scrolled layer is an ancestor of the scrollbar layer.
   LayerMetricsWrapper root(aScrollbar->Manager()->GetRoot());
-  LayerMetricsWrapper scrollbar(aScrollbar);
+  LayerMetricsWrapper prevAncestor(aScrollbar);
   for (LayerMetricsWrapper ancestor(aScrollbar); ancestor; ancestor = ancestor.GetParent()) {
     // Don't walk into remote layer trees; the scrollbar will always be in
     // the same layer space.
     if (ancestor.AsRefLayer()) {
-      root = ancestor;
+      root = prevAncestor;
       break;
     }
+    prevAncestor = ancestor;
 
     if (LayerIsScrollbarTarget(ancestor, aScrollbar)) {
       *aOutIsAncestor = true;
