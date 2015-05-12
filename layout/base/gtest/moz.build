@@ -1,0 +1,24 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    'TestAccessibleCaretEventHub.cpp'
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/docshell/base',
+    '/layout/base'
+]
+
+# Workaround bug 1142396. Suppress the warning from gmock library for clang.
+if CONFIG['CLANG_CXX']:
+    CXXFLAGS += ['-Wno-null-dereference']
+
+FINAL_LIBRARY = 'xul-gtest'
+
+FAIL_ON_WARNINGS = True

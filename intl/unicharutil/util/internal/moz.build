@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# This file builds the version of unicharutils_s static library which uses
+# internal linkage. Components that use frozen (external) linkage should use
+# unicharutil_external_s.
+
 include('../objs.mozbuild')
 
 UNIFIED_SOURCES += intl_unicharutil_util_cppsrcs
@@ -15,3 +19,5 @@ LOCAL_INCLUDES += [
 ]
 
 FAIL_ON_WARNINGS = True
+
+DIST_INSTALL = True

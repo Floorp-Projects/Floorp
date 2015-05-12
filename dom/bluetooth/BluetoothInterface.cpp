@@ -138,20 +138,11 @@ BluetoothInterface::GetInstance()
    */
 
   static const char* const sDefaultBackend[] = {
-#if MOZ_B2G_BT_API_V2
-#ifdef MOZ_B2G_BT_BLUEDROID
-    "bluedroid",
-#endif
-#ifdef MOZ_B2G_BT_DAEMON
-    "bluetoothd",
-#endif
-#else
 #ifdef MOZ_B2G_BT_DAEMON
     "bluetoothd",
 #endif
 #ifdef MOZ_B2G_BT_BLUEDROID
     "bluedroid",
-#endif
 #endif
     nullptr // no default backend; must be final element in array
   };

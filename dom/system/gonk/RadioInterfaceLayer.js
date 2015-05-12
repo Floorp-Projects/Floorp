@@ -2834,8 +2834,11 @@ DataCall.prototype = {
         // the state probably was notified already or need not to be notified.
         if (networkInterface.state == RIL.GECKO_NETWORK_STATE_DISCONNECTED) {
           networkInterface.notifyRILNetworkInterface();
+
           // Clear link info after notifying NetworkManager.
-          this.resetLinkInfo();
+          if (this.requestedNetworkIfaces.length === 0) {
+            this.resetLinkInfo();
+          }
         }
       }, Ci.nsIEventTarget.DISPATCH_NORMAL);
     }

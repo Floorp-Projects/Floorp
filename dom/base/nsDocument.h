@@ -1155,6 +1155,16 @@ public:
   // the frame and any subframes.
   virtual void GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) override;
 
+  // Adds an element to mResponsiveContent when the element is
+  // added to the tree.
+  virtual nsresult AddResponsiveContent(nsIContent* aContent) override;
+  // Removes an element from mResponsiveContent when the element is
+  // removed from the tree.
+  virtual void RemoveResponsiveContent(nsIContent* aContent) override;
+  // Notifies any responsive content added by AddResponsiveContent upon media
+  // features values changing.
+  virtual void NotifyMediaFeatureValuesChanged() override;
+
   virtual nsresult GetStateObject(nsIVariant** aResult) override;
 
   virtual nsDOMNavigationTiming* GetNavigationTiming() const override;
@@ -1753,6 +1763,9 @@ private:
   // AddStyleRelevantLink.
   bool mStyledLinksCleared;
 #endif
+
+  // A set of responsive images keyed by address pointer.
+  nsTHashtable< nsPtrHashKey<nsIContent> > mResponsiveContent;
 
   // Member to store out last-selected stylesheet set.
   nsString mLastStyleSheetSet;

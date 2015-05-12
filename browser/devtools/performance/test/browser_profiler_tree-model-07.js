@@ -13,7 +13,7 @@ function test() {
 
   // Create a root node from a given samples array.
 
-  let root = new ThreadNode(gSamples, { contentOnly: true });
+  let root = getFrameNodePath(new ThreadNode(gThread, { contentOnly: true }), "(root)");
 
   /*
    * should have a tree like:
@@ -26,29 +26,31 @@ function test() {
    *       - D
    *     - E
    *       - F
-   *       - (JS)
+   *         - (JS)
    */
 
   // Test the root node.
 
-  is(Object.keys(root.calls).length, 2, "root has 2 children");
-  ok(root.calls[url("A")], "root has content child");
-  ok(root.calls["64"], "root has platform generalized child");
-  is(Object.keys(root.calls["64"].calls).length, 0, "platform generalized child is a leaf.");
+  is(root.calls.length, 2, "root has 2 children");
+  ok(getFrameNodePath(root, url("A")), "root has content child");
+  ok(getFrameNodePath(root, "64"), "root has platform generalized child");
+  is(getFrameNodePath(root, "64").calls.length, 0, "platform generalized child is a leaf.");
 
-  ok(root.calls[url("A")].calls["128"], "A has platform generalized child of another type");
-  is(Object.keys(root.calls[url("A")].calls["128"].calls).length, 0, "second generalized type is a leaf.");
+  ok(getFrameNodePath(root, `${url("A")} > 128`), "A has platform generalized child of another type");
+  is(getFrameNodePath(root, `${url("A")} > 128`).calls.length, 0, "second generalized type is a leaf.");
 
-  ok(root.calls[url("A")].calls[url("E")].calls[url("F")].calls["64"],
-    "a second leaf of the first generalized type exists deep in the tree.");
-  ok(root.calls[url("A")].calls["128"], "A has platform generalized child of another type");
+  ok(getFrameNodePath(root, `${url("A")} > ${url("E")} > ${url("F")} > 64`),
+     "a second leaf of the first generalized type exists deep in the tree.");
+  ok(getFrameNodePath(root, `${url("A")} > 128`), "A has platform generalized child of another type");
 
-  is(root.calls["64"].category, root.calls[url("A")].calls[url("E")].calls[url("F")].calls["64"].category,
-    "generalized frames of same type are duplicated in top-down view");
+  is(getFrameNodePath(root, "64").category,
+     getFrameNodePath(root, `${url("A")} > ${url("E")} > ${url("F")} > 64`).category,
+     "generalized frames of same type are duplicated in top-down view");
+
   finish();
 }
 
-let gSamples = [{
+let gThread = synthesizeProfileForTest([{
   time: 5,
   frames: [
     { location: "(root)" },
@@ -88,4 +90,4 @@ let gSamples = [{
     { location: "http://content/A" },
     { location: "contentZ", category: CATEGORY_MASK("gc", 1) },
   ]
-}];
+}]);

@@ -993,9 +993,7 @@ PuppetWidget::Paint()
                          nsAutoCString("PuppetWidget"), 0);
 #endif
 
-    if (mozilla::layers::LayersBackend::LAYERS_D3D10 == mLayerManager->GetBackendType()) {
-      mAttachedWidgetListener->PaintWindow(this, region);
-    } else if (mozilla::layers::LayersBackend::LAYERS_CLIENT == mLayerManager->GetBackendType()) {
+    if (mozilla::layers::LayersBackend::LAYERS_CLIENT == mLayerManager->GetBackendType()) {
       // Do nothing, the compositor will handle drawing
       if (mTabChild) {
         mTabChild->NotifyPainted();

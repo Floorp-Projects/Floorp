@@ -2539,20 +2539,28 @@ nsLayoutUtils::ContainsPoint(const nsRect& aRect, const nsPoint& aPoint,
 bool
 nsLayoutUtils::IsRectVisibleInScrollFrames(nsIFrame* aFrame, const nsRect& aRect)
 {
+  return !ClampRectToScrollFrames(aFrame, aRect).IsEmpty();
+}
+
+nsRect
+nsLayoutUtils::ClampRectToScrollFrames(nsIFrame* aFrame, const nsRect& aRect)
+{
   nsIFrame* closestScrollFrame =
     nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::scrollFrame);
 
+  nsRect resultRect = aRect;
+
   while (closestScrollFrame) {
     nsIScrollableFrame* sf = do_QueryFrame(closestScrollFrame);
-    nsRect scrollPortRect = sf->GetScrollPortRect();
 
-    nsRect rectRelativeToScrollFrame = aRect;
-    nsLayoutUtils::TransformRect(aFrame, closestScrollFrame,
-                                 rectRelativeToScrollFrame);
+    nsRect scrollPortRect = sf->GetScrollPortRect();
+    nsLayoutUtils::TransformRect(closestScrollFrame, aFrame, scrollPortRect);
+
+    resultRect = resultRect.Intersect(scrollPortRect);
 
     // Check whether aRect is visible in the scroll frame or not.
-    if (!scrollPortRect.Intersects(rectRelativeToScrollFrame)) {
-      return false;
+    if (resultRect.IsEmpty()) {
+      break;
     }
 
     // Get next ancestor scroll frame.
@@ -2561,7 +2569,7 @@ nsLayoutUtils::IsRectVisibleInScrollFrames(nsIFrame* aFrame, const nsRect& aRect
                                            nsGkAtoms::scrollFrame);
   }
 
-  return true;
+  return resultRect;
 }
 
 bool
@@ -4145,10 +4153,10 @@ GetPercentBSize(const nsStyleCoord& aStyle,
     f = f->GetParent();
   }
 
-  bool isVertical = f->GetWritingMode().IsVertical();
+  WritingMode wm = f->GetWritingMode();
 
   const nsStylePosition *pos = f->StylePosition();
-  const nsStyleCoord bSizeCoord = isVertical ? pos->mWidth : pos->mHeight;
+  const nsStyleCoord& bSizeCoord = pos->BSize(wm);
   nscoord h;
   if (!GetAbsoluteCoord(bSizeCoord, h) &&
       !GetPercentBSize(bSizeCoord, f, h)) {
@@ -4169,16 +4177,15 @@ GetPercentBSize(const nsStyleCoord& aStyle,
     NS_ASSERTION(bSizeCoord.GetUnit() == eStyleUnit_Auto,
                  "Unexpected block-size unit for viewport or canvas or page-content");
     // For the viewport, canvas, and page-content kids, the percentage
-    // basis is just the parent height.
-    h = isVertical ? f->GetSize().width : f->GetSize().height;
+    // basis is just the parent block-size.
+    h = f->BSize(wm);
     if (h == NS_UNCONSTRAINEDSIZE) {
       // We don't have a percentage basis after all
       return false;
     }
   }
 
-  const nsStyleCoord& maxBSizeCoord =
-    isVertical ? pos->mMaxWidth : pos->mMaxHeight;
+  const nsStyleCoord& maxBSizeCoord = pos->MaxBSize(wm);
 
   nscoord maxh;
   if (GetAbsoluteCoord(maxBSizeCoord, maxh) ||
@@ -4191,8 +4198,7 @@ GetPercentBSize(const nsStyleCoord& aStyle,
                  "unknown max block-size unit");
   }
 
-  const nsStyleCoord& minBSizeCoord =
-    isVertical ? pos->mMinWidth : pos->mMinHeight;
+  const nsStyleCoord& minBSizeCoord = pos->MinBSize(wm);
 
   nscoord minh;
   if (GetAbsoluteCoord(minBSizeCoord, minh) ||
@@ -4306,12 +4312,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   const nsStylePosition *stylePos = aFrame->StylePosition();
   uint8_t boxSizing = stylePos->mBoxSizing;
 
-  const nsStyleCoord &styleISize =
-    isVertical ? stylePos->mHeight : stylePos->mWidth;
-  const nsStyleCoord &styleMinISize =
-    isVertical ? stylePos->mMinHeight : stylePos->mMinWidth;
-  const nsStyleCoord &styleMaxISize =
-    isVertical ? stylePos->mMaxHeight : stylePos->mMaxWidth;
+  const nsStyleCoord& styleISize = stylePos->ISize(wm);
+  const nsStyleCoord& styleMinISize = stylePos->MinISize(wm);
+  const nsStyleCoord& styleMaxISize = stylePos->MaxISize(wm);
 
   // We build up two values starting with the content box, and then
   // adding padding, border and margin.  The result is normally
@@ -4390,12 +4393,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
     // since that's what it means in all cases except for on flex items -- and
     // even there, we're supposed to ignore it (i.e. treat it as 0) until the
     // flex container explicitly considers it.
-    const nsStyleCoord &styleBSize =
-      isVertical ? stylePos->mWidth : stylePos->mHeight;
-    const nsStyleCoord &styleMinBSize =
-      isVertical ? stylePos->mMinWidth : stylePos->mMinHeight;
-    const nsStyleCoord &styleMaxBSize =
-      isVertical ? stylePos->mMaxWidth : stylePos->mMaxHeight;
+    const nsStyleCoord& styleBSize = stylePos->BSize(wm);
+    const nsStyleCoord& styleMinBSize = stylePos->MinBSize(wm);
+    const nsStyleCoord& styleMaxBSize = stylePos->MaxBSize(wm);
 
     if (styleBSize.GetUnit() != eStyleUnit_Auto ||
         !(styleMinBSize.GetUnit() == eStyleUnit_Auto ||
@@ -4411,23 +4411,16 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
         case NS_STYLE_BOX_SIZING_BORDER: {
           const nsStyleBorder* styleBorder = aFrame->StyleBorder();
           bSizeTakenByBoxSizing +=
-            isVertical ? styleBorder->GetComputedBorder().LeftRight()
-                       : styleBorder->GetComputedBorder().TopBottom();
+            wm.IsVertical() ? styleBorder->GetComputedBorder().LeftRight()
+                            : styleBorder->GetComputedBorder().TopBottom();
           // fall through
         }
         case NS_STYLE_BOX_SIZING_PADDING: {
           if (!(aFlags & IGNORE_PADDING)) {
-            const nsStylePadding* stylePadding = aFrame->StylePadding();
-            const nsStyleCoord& paddingStart =
-              isVertical ? wm.IsVerticalRL()
-                           ? stylePadding->mPadding.GetRight()
-                           : stylePadding->mPadding.GetLeft()
-                         : stylePadding->mPadding.GetTop();
-            const nsStyleCoord& paddingEnd =
-              isVertical ? wm.IsVerticalRL()
-                           ? stylePadding->mPadding.GetLeft()
-                           : stylePadding->mPadding.GetRight()
-                         : stylePadding->mPadding.GetBottom();
+            const nsStyleSides& stylePadding =
+              aFrame->StylePadding()->mPadding;
+            const nsStyleCoord& paddingStart = stylePadding.GetBStart(wm);
+            const nsStyleCoord& paddingEnd = stylePadding.GetBEnd(wm);
             nscoord pad;
             if (GetAbsoluteCoord(paddingStart, pad) ||
                 GetPercentBSize(paddingStart, aFrame, pad)) {
@@ -4760,10 +4753,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
 
   // If we're a flex item, we'll compute our size a bit differently.
   bool isVertical = aWM.IsVertical();
-  const nsStyleCoord* inlineStyleCoord =
-    isVertical ? &stylePos->mHeight : &stylePos->mWidth;
-  const nsStyleCoord* blockStyleCoord =
-    isVertical ? &stylePos->mWidth : &stylePos->mHeight;
+  const nsStyleCoord* inlineStyleCoord = &stylePos->ISize(aWM);
+  const nsStyleCoord* blockStyleCoord = &stylePos->BSize(aWM);
 
   bool isFlexItem = aFrame->IsFlexItem();
   bool isInlineFlexItem = false;
@@ -4831,8 +4822,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
               boxSizingToMarginEdgeISize, *inlineStyleCoord);
   }
 
-  const nsStyleCoord& maxISizeCoord =
-    isVertical ? stylePos->mMaxHeight : stylePos->mMaxWidth;
+  const nsStyleCoord& maxISizeCoord = stylePos->MaxISize(aWM);
 
   if (maxISizeCoord.GetUnit() != eStyleUnit_None &&
       !(isFlexItem && isInlineFlexItem)) {
@@ -4847,8 +4837,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   // flex container's main-axis.  (Those properties get applied later in
   // the flexbox algorithm.)
 
-  const nsStyleCoord& minISizeCoord =
-    isVertical ? stylePos->mMinHeight : stylePos->mMinWidth;
+  const nsStyleCoord& minISizeCoord = stylePos->MinISize(aWM);
 
   if (minISizeCoord.GetUnit() != eStyleUnit_Auto &&
       !(isFlexItem && isInlineFlexItem)) {
@@ -4870,8 +4859,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
                 *blockStyleCoord);
   }
 
-  const nsStyleCoord& maxBSizeCoord =
-    isVertical ? stylePos->mMaxWidth : stylePos->mMaxHeight;
+  const nsStyleCoord& maxBSizeCoord = stylePos->MaxBSize(aWM);
 
   if (!IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM)) &&
       !(isFlexItem && !isInlineFlexItem)) {
@@ -4881,8 +4869,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
     maxBSize = nscoord_MAX;
   }
 
-  const nsStyleCoord& minBSizeCoord =
-    isVertical ? stylePos->mMinWidth : stylePos->mMinHeight;
+  const nsStyleCoord& minBSizeCoord = stylePos->MinBSize(aWM);
 
   if (!IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM)) &&
       !(isFlexItem && !isInlineFlexItem)) {

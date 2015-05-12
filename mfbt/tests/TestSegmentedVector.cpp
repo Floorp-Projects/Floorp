@@ -80,6 +80,22 @@ void TestBasics()
   }
   MOZ_RELEASE_ASSERT(n == 1000);
 
+  // Pop off all of the elements.
+  MOZ_RELEASE_ASSERT(v.Length() == 1000);
+  for (int len = (int)v.Length(); len > 0; len--) {
+    MOZ_RELEASE_ASSERT(v.GetLast() == len - 1);
+    v.PopLast();
+  }
+  MOZ_RELEASE_ASSERT(v.IsEmpty());
+  MOZ_RELEASE_ASSERT(v.Length() == 0);
+
+  // Fill the vector up again to prepare for the clear.
+  for (i = 0; i < 1000; i++) {
+    v.InfallibleAppend(mozilla::Move(i));
+  }
+  MOZ_RELEASE_ASSERT(!v.IsEmpty());
+  MOZ_RELEASE_ASSERT(v.Length() == 1000);
+
   v.Clear();
   MOZ_RELEASE_ASSERT(v.IsEmpty());
   MOZ_RELEASE_ASSERT(v.Length() == 0);
@@ -115,7 +131,9 @@ void TestConstructorsAndDestructors()
     gDummy = v.Append(mozilla::Move(y));  // move constructor called
     NonPOD z(1);                          // explicit constructor called
     v.InfallibleAppend(mozilla::Move(z)); // move constructor called
-    v.Clear();                            // destructor called 3 times
+    v.PopLast();                          // destructor called 1 time
+    MOZ_RELEASE_ASSERT(gNumDtors == 1);
+    v.Clear();                            // destructor called 2 times
 
     MOZ_RELEASE_ASSERT(gNumDefaultCtors  == 0);
     MOZ_RELEASE_ASSERT(gNumExplicitCtors == 3);

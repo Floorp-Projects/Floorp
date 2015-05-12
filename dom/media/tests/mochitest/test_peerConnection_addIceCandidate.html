@@ -1,0 +1,81 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1087551",
+    title: "addCandidate behavior in different states"
+  });
+
+  var test;
+  runNetworkTest(function () {
+    test = new PeerConnectionTest();
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.chain.removeAfter("PC_LOCAL_GET_ANSWER");
+
+    test.chain.insertAfter("PC_LOCAL_SET_LOCAL_DESCRIPTION", [
+      function PC_LOCAL_ADD_CANDIDATE_EARLY(test) {
+        var candidate = new mozRTCIceCandidate(
+          {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
+           sdpMLineIndex: 0});
+        return test.pcLocal._pc.addIceCandidate(candidate).then(
+          generateErrorCallback("addIceCandidate should have failed."),
+          err => {
+            is(err.name, "InvalidStateError", "Error is InvalidStateError");
+          });
+        }
+    ]);
+    test.chain.insertAfter("PC_REMOTE_SET_LOCAL_DESCRIPTION", [
+      function PC_REMOTE_ADD_CANDIDATE_INVALID_INDEX(test) {
+        var invalid_index = new mozRTCIceCandidate(
+          {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
+           sdpMLineIndex: 2});
+        return test.pcRemote._pc.addIceCandidate(invalid_index)
+        .then(
+          generateErrorCallback("addIceCandidate should have failed."),
+          err => {
+            is(err.name, "InvalidCandidateError", "Error is InvalidCandidateError");
+          }
+        );
+      },
+      function PC_REMOTE_ADD_BOGUS_CANDIDATE(test) {
+        var bogus = new mozRTCIceCandidate(
+          {candidate:"Pony Lords, jump!",
+           sdpMLineIndex: 0});
+        return test.pcRemote._pc.addIceCandidate(bogus)
+        .then(
+          generateErrorCallback("addIceCandidate should have failed."),
+          err => {
+            is(err.name, "InvalidCandidateError", "Error is InvalidCandidateError");
+          }
+        );
+      },
+      function PC_REMOTE_ADD_CANDIDATE_MISSING_INDEX(test) {
+        // Note: it is probably not a good idea to automatically fill a missing
+        //       MLineIndex with a default value of zero, see bug 1157034
+        var broken = new mozRTCIceCandidate(
+          {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host"});
+        return test.pcRemote._pc.addIceCandidate(broken)
+        .then(
+          // FIXME this needs to be updated once bug 1157034 is fixed
+          todo(false, "Missing index in got automatically set to a valid value bz://1157034")
+        );
+      },
+      function PC_REMOTE_ADD_VALID_CANDIDATE(test) {
+        var candidate = new mozRTCIceCandidate(
+          {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
+           sdpMLineIndex: 0});
+        return test.pcRemote._pc.addIceCandidate(candidate)
+        .then(ok(true, "Successfully added valid ICE candidate"));
+      }
+    ]);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

@@ -702,6 +702,21 @@ WindowsDllInterceptor NtDllIntercept;
 NS_EXPORT void
 DllBlocklist_Initialize()
 {
+#if defined(_MSC_VER) && _MSC_VER < 1900 && defined(_M_X64)
+  // The code below is not blocklist-related, but is the best place for it.
+  // This is the earliest place where msvcr120.dll is loaded, and this
+  // codepath is used by both firefox.exe and plugin-container.exe processes.
+
+  // Disable CRT use of FMA3 on non-AVX2 CPUs and on Win7RTM due to bug 1160148
+  int cpuid0[4] = {0};
+  int cpuid7[4] = {0};
+  __cpuid(cpuid0, 0); // Get the maximum supported CPUID function
+  __cpuid(cpuid7, 7); // AVX2 is function 7, subfunction 0, EBX, bit 5
+  if (cpuid0[0] < 7 || !(cpuid7[1] & 0x20) || !IsWin7SP1OrLater()) {
+    _set_FMA3_enable(0);
+  }
+#endif
+
   if (GetModuleHandleA("user32.dll")) {
     sUser32BeforeBlocklist = true;
   }

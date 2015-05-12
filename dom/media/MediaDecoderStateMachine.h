@@ -99,13 +99,6 @@ class AudioSegment;
 class MediaTaskQueue;
 class AudioSink;
 
-// GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount() and conflicts with MediaDecoderStateMachine::GetCurrentTime
-// implementation.
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-
 /*
   The state machine class. This manages the decoding and seeking in the
   MediaDecoderReader on the decode task queue, and A/V sync on the shared
@@ -228,12 +221,6 @@ public:
   // Seeks to the decoder to aTarget asynchronously.
   // Must be called on the state machine thread.
   nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
-
-  // Returns the current playback position in seconds.
-  // Called from the main thread to get the current frame time. The decoder
-  // monitor must be obtained before calling this.
-  double GetCurrentTime() const;
-  int64_t GetCurrentTimeUs() const;
 
   // Clear the flag indicating that a playback position change event
   // is currently queued. This is called from the main thread and must
@@ -662,11 +649,11 @@ protected:
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
   // [mStartTime, mEndTime], and mStartTime will not be 0 if the media does
-  // not start at 0. Note this is different to the value returned
-  // by GetCurrentTime(), which is in the range [0,duration].
+  // not start at 0. Note this is different than the "current playback position",
+  // which is in the range [0,duration].
   int64_t GetMediaTime() const {
     AssertCurrentThreadInMonitor();
-    return mStartTime + mCurrentFrameTime;
+    return mStartTime + mCurrentPosition;
   }
 
   // Returns an upper bound on the number of microseconds of audio that is
@@ -989,11 +976,13 @@ protected:
   // decoder thread has been stopped.
   nsRevocableEventPtr<WakeDecoderRunnable> mPendingWakeDecoder;
 
-  // The time of the current frame in microseconds. This is referenced from
-  // 0 which is the initial playback position. Set by the state machine
-  // thread, and read-only from the main thread to get the current
-  // time value. Synchronised via decoder monitor.
-  int64_t mCurrentFrameTime;
+  // The time of the current frame in microseconds, corresponding to the "current
+  // playback position" in HTML5. This is referenced from 0, which is the initial
+  // playback position.
+  Canonical<int64_t> mCurrentPosition;
+public:
+  AbstractCanonical<int64_t>* CanonicalCurrentPosition() { return &mCurrentPosition; }
+protected:
 
   // The presentation time of the first audio frame that was played in
   // microseconds. We can add this to the audio stream position to determine

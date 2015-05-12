@@ -77,6 +77,7 @@ class ContentParent final : public PContentParent
     typedef mozilla::ipc::TestShellParent TestShellParent;
     typedef mozilla::ipc::URIParams URIParams;
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
+    typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
 
 public:
 #ifdef MOZ_NUWA_PROCESS
@@ -433,7 +434,6 @@ private:
                   ContentParent* aOpener,
                   bool aIsForBrowser,
                   bool aIsForPreallocated,
-                  hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND,
                   bool aIsNuwaProcess = false);
 
 #ifdef MOZ_NUWA_PROCESS
@@ -446,7 +446,11 @@ private:
     // The common initialization for the constructors.
     void InitializeMembers();
 
-    // The common initialization logic shared by all constuctors.
+    // Launch the subprocess and associated initialization.
+    // Returns false if the process fails to start.
+    bool LaunchSubprocess(hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND);
+
+    // Common initialization after sub process launch or adoption.
     void InitInternal(ProcessPriority aPriority,
                       bool aSetupOffMainThreadCompositing,
                       bool aSendRegisteredChrome);
@@ -550,7 +554,8 @@ private:
                                                bool* aIsLangRTL,
                                                InfallibleTArray<nsString>* dictionaries,
                                                ClipboardCapabilities* clipboardCaps,
-                                               DomainPolicyClone* domainPolicy) override;
+                                               DomainPolicyClone* domainPolicy,
+                                               OwningSerializedStructuredCloneBuffer* initialData) override;
 
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;
 
@@ -711,12 +716,12 @@ private:
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 InfallibleTArray<nsString>* aRetvals) override;
+                                 nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals) override;
     virtual bool RecvRpcMessage(const nsString& aMsg,
                                 const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
                                 const IPC::Principal& aPrincipal,
-                                InfallibleTArray<nsString>* aRetvals) override;
+                                nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals) override;
     virtual bool RecvAsyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
                                   InfallibleTArray<CpowEntry>&& aCpows,

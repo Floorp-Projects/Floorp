@@ -111,8 +111,8 @@ _hb_buffer_deserialize_glyphs_text (hb_buffer_t *buffer,
 
   const char *eof = pe, *tok = NULL;
   int cs;
-  hb_glyph_info_t info;
-  hb_glyph_position_t pos;
+  hb_glyph_info_t info = {0};
+  hb_glyph_position_t pos = {0};
   %%{
     write init;
     write exec;

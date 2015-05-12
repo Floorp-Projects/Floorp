@@ -21,14 +21,11 @@
 #include "plhash.h"
 
 #include "prlog.h"
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
 
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsXULContentUtils.h"
-
-#endif
 
 #include "nsRuleNetwork.h"
 #include "nsXULTemplateResultSetRDF.h"

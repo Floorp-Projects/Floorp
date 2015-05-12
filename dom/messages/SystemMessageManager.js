@@ -194,6 +194,14 @@ SystemMessageManager.prototype = {
     }
 
 
+    // Use SystemMessageManager directly when we are in the same process.
+    if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT) {
+      return cpmm.sendSyncMessage("SystemMessageManager:HasPendingMessages",
+                                  { type: aType,
+                                    pageURL: this._pageURL,
+                                    manifestURL: this._manifestURL })[0];
+    }
+
     /*
      * NB: If the system message is fired after we received the cache
      *     and before we registered the pageURL we will get false
