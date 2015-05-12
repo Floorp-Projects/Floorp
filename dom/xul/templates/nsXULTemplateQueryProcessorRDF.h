@@ -29,9 +29,7 @@
 #include "mozilla/Attributes.h"
 
 #include "prlog.h"
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
-#endif
 
 class nsIContent;
 class nsXULTemplateResultRDF;
@@ -256,7 +254,6 @@ public:
 
     nsResourceSet& ContainmentProperties() { return mContainmentProperties; }
 
-#ifdef PR_LOGGING
     nsresult
     Log(const char* aOperation,
         nsIRDFResource* aSource,
@@ -265,10 +262,6 @@ public:
 
 #define LOG(_op, _src, _prop, _targ) \
     Log(_op, _src, _prop, _targ)
-
-#else
-#define LOG(_op, _src, _prop, _targ)
-#endif
 
 protected:
     ~nsXULTemplateQueryProcessorRDF();

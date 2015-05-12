@@ -306,6 +306,15 @@ public:
                                                nsIObserver* aObserver) override
     { return SynthesizeNativeMouseEvent(aPoint, GDK_MOTION_NOTIFY, 0, aObserver); }
 
+    virtual nsresult SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+                                                      uint32_t aNativeMessage,
+                                                      double aDeltaX,
+                                                      double aDeltaY,
+                                                      double aDeltaZ,
+                                                      uint32_t aModifierFlags,
+                                                      uint32_t aAdditionalFlags,
+                                                      nsIObserver* aObserver) override;
+
 protected:
     virtual ~nsWindow();
 

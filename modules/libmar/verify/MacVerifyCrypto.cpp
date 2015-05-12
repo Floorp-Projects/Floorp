@@ -95,7 +95,7 @@ static CSSM_VERSION sCssmVersion = {2, 0};
 static const CSSM_GUID sMozCssmGuid =
   { 0x9243121f, 0x5820, 0x4b41,
     { 0xa6, 0x52, 0xba, 0xb6, 0x3f, 0x9d, 0x3d, 0x7f }};
-static CSSM_CSP_HANDLE sCspHandle = NULL;
+static CSSM_CSP_HANDLE sCspHandle = CSSM_INVALID_HANDLE;
 
 void* cssmMalloc (CSSM_SIZE aSize, void* aAllocRef) {
   (void)aAllocRef;
@@ -410,9 +410,9 @@ CryptoMac_FreePublicKey(CryptoX_PublicKey* aPublicKey)
   if (!aPublicKey || !*aPublicKey) {
     return;
   }
-  if (!OnLionOrLater() && sCspHandle) {
+  if (!OnLionOrLater() && sCspHandle != CSSM_INVALID_HANDLE) {
     CSSM_ModuleDetach(sCspHandle);
-    sCspHandle = NULL;
+    sCspHandle = CSSM_INVALID_HANDLE;
   }
   CFRelease((SecKeyRef)*aPublicKey);
 }

@@ -1,0 +1,4 @@
+<script>
+// Will leak with bug 1161413 patches and without bug 1163446 fix.
+new FontFace("x", new ArrayBuffer(0));
+</script>

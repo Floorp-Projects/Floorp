@@ -125,13 +125,24 @@ MoofParser::HasMetadata()
   byteRanges.AppendElement(MediaByteRange(0, length));
   nsRefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
 
+  MediaByteRange ftyp;
+  MediaByteRange moov;
   BoxContext context(stream, byteRanges);
   for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
+    if (box.IsType("ftyp")) {
+      ftyp = box.Range();
+      continue;
+    }
     if (box.IsType("moov")) {
-      return true;
+      moov = box.Range();
+      break;
     }
   }
-  return false;
+  if (!ftyp.Length() || !moov.Length()) {
+    return false;
+  }
+  mInitRange = ftyp.Extents(moov);
+  return true;
 }
 
 Interval<Microseconds>

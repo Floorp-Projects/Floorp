@@ -25,6 +25,3 @@ testing, may be buggy. Firefox nightlies, for example, can be found at:
     ftp://ftp.mozilla.org/pub/firefox/nightly/latest-trunk/
             - or -
     http://nightly.mozilla.org/
-
-
->>

@@ -44,6 +44,7 @@ CSSUnprefixingService.prototype = {
       "-webkit-box-ordinal-group": "order",
       "-webkit-box-sizing":        "box-sizing",
       "-webkit-transform":         "transform",
+      "-webkit-transform-origin":  "transform-origin",
     };
 
     let unprefixedPropName = propertiesThatAreJustAliases[aPropName];

@@ -16,9 +16,6 @@ TOPLEVEL_BUILD := 1
 
 run_for_side_effects := $(shell echo 'MAKE: $(MAKE)')
 
-DIST_INSTALL = 1
-NO_EXPAND_LIBS = 1
-
 ifdef JS_HAS_CTYPES
 ifdef MOZ_NATIVE_FFI
 LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)

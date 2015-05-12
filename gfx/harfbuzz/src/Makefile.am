@@ -13,6 +13,9 @@ DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 # The following warning options are useful for debugging: -Wpadded
 #AM_CXXFLAGS =
 
+# Convenience targets:
+lib: libharfbuzz.la
+
 lib_LTLIBRARIES = libharfbuzz.la
 
 HBCFLAGS =
