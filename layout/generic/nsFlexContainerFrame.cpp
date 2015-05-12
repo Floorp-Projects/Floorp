@@ -151,6 +151,10 @@ PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
 #define GET_CROSS_COMPONENT(axisTracker_, width_, height_)  \
   (axisTracker_).IsCrossAxisHorizontal() ? (width_) : (height_)
 
+// Logical versions of helper-macros above:
+#define GET_MAIN_COMPONENT_LOGICAL(axisTracker_, isize_, bsize_)  \
+  (axisTracker_).IsRowOriented() ? (isize_) : (bsize_)
+
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
 public:
@@ -185,6 +189,7 @@ public:
   }
 
   bool IsRowOriented() const { return mIsRowOriented; }
+  bool IsColumnOriented() const { return !mIsRowOriented; }
 
   nscoord GetMainComponent(const nsSize& aSize) const {
     return GET_MAIN_COMPONENT(*this, aSize.width, aSize.height);
@@ -3101,20 +3106,21 @@ nsFlexContainerFrame::GenerateFlexLines(
     wrapThreshold = aContentBoxMainSize;
 
     // If the flex container doesn't have a definite content-box main-size
-    // (e.g. if we're 'height:auto'), make sure we at least wrap when we hit
-    // its max main-size.
+    // (e.g. if main axis is vertical & 'height' is 'auto'), make sure we at
+    // least wrap when we hit its max main-size.
     if (wrapThreshold == NS_UNCONSTRAINEDSIZE) {
       const nscoord flexContainerMaxMainSize =
-        GET_MAIN_COMPONENT(aAxisTracker,
-                           aReflowState.ComputedMaxWidth(),
-                           aReflowState.ComputedMaxHeight());
+        GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+                                   aReflowState.ComputedMaxISize(),
+                                   aReflowState.ComputedMaxBSize());
 
       wrapThreshold = flexContainerMaxMainSize;
     }
 
-    // Also: if we're vertical and paginating, we may need to wrap sooner
-    // (before we run off the end of the page)
-    if (!aAxisTracker.IsMainAxisHorizontal() &&
+    // Also: if we're column-oriented and paginating in the block dimension,
+    // we may need to wrap to a new flex line sooner (before we grow past the
+    // available BSize, potentially running off the end of the page).
+    if (aAxisTracker.IsColumnOriented() &&
         aAvailableBSizeForContent != NS_UNCONSTRAINEDSIZE) {
       wrapThreshold = std::min(wrapThreshold, aAvailableBSizeForContent);
     }
