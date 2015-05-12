@@ -13,14 +13,13 @@
    * ended event fired.
    */
   runTest(function () {
-    getUserMedia({video: true, audio: true})
+    return getUserMedia({video: true, audio: true})
       .then(stream => {
         var testVideo = createMediaElement('video', 'testVideo');
         var playback = new LocalMediaStreamPlayback(testVideo, stream);
 
         return playback.playMediaWithStreamStop(false);
-      })
-      .then(() => SimpleTest.finish(), generateErrorCallback());
+      });
   });
 
 </script>
