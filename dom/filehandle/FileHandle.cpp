@@ -622,10 +622,10 @@ FileHandleBase::GetInputStream(const ArrayBuffer& aValue,
 
 // static
 already_AddRefed<nsIInputStream>
-FileHandleBase::GetInputStream(const File& aValue, uint64_t* aInputLength,
+FileHandleBase::GetInputStream(const Blob& aValue, uint64_t* aInputLength,
                                ErrorResult& aRv)
 {
-  File& file = const_cast<File&>(aValue);
+  Blob& file = const_cast<Blob&>(aValue);
   uint64_t length = file.GetSize(aRv);
   if (aRv.Failed()) {
     return nullptr;

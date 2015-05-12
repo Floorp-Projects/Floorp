@@ -10,7 +10,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLFormElement.h"
 
-#include "MultipartFileImpl.h"
+#include "MultipartBlobImpl.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -22,9 +22,10 @@ nsFormData::nsFormData(nsISupports* aOwner)
 }
 
 namespace {
+
 // Implements steps 3 and 4 of the "create an entry" algorithm of FormData.
-File*
-CreateNewFileInstance(File& aBlob, const Optional<nsAString>& aFilename)
+already_AddRefed<File>
+CreateNewFileInstance(Blob& aBlob, const Optional<nsAString>& aFilename)
 {
   // Step 3 "If value is a Blob object and not a File object, set value to
   // a new File object, representing the same bytes, whose name attribute value
@@ -35,25 +36,20 @@ CreateNewFileInstance(File& aBlob, const Optional<nsAString>& aFilename)
   nsAutoString filename;
   if (aFilename.WasPassed()) {
     filename = aFilename.Value();
-  } else if (aBlob.IsFile()) {
+  } else {
     // If value is already a File and filename is not passed, the spec says not
     // to create a new instance.
-    return &aBlob;
-  } else {
+    nsRefPtr<File> file = aBlob.ToFile();
+    if (file) {
+      return file.forget();
+    }
+
     filename = NS_LITERAL_STRING("blob");
   }
 
-  nsAutoTArray<nsRefPtr<FileImpl>, 1> blobImpls;
-  blobImpls.AppendElement(aBlob.Impl());
-
-  nsAutoString contentType;
-  aBlob.GetType(contentType);
-
-  nsRefPtr<MultipartFileImpl> impl =
-    new MultipartFileImpl(blobImpls, filename, contentType);
-
-  return new File(aBlob.GetParentObject(), impl);
+  return aBlob.ToFile(filename);
 }
+
 } // anonymous namespace
 
 // -------------------------------------------------------------------------
@@ -111,7 +107,7 @@ nsFormData::Append(const nsAString& aName, const nsAString& aValue)
 }
 
 void
-nsFormData::Append(const nsAString& aName, File& aBlob,
+nsFormData::Append(const nsAString& aName, Blob& aBlob,
                    const Optional<nsAString>& aFilename)
 {
   nsRefPtr<File> file = CreateNewFileInstance(aBlob, aFilename);
@@ -179,6 +175,14 @@ nsFormData::Has(const nsAString& aName)
   return false;
 }
 
+nsresult
+nsFormData::AddNameFilePair(const nsAString& aName, File* aFile)
+{
+  FormDataTuple* data = mFormData.AppendElement();
+  SetNameFilePair(data, aName, aFile);
+  return NS_OK;
+}
+
 nsFormData::FormDataTuple*
 nsFormData::RemoveAllOthersAndGetFirstFormDataTuple(const nsAString& aName)
 {
@@ -202,7 +206,7 @@ nsFormData::RemoveAllOthersAndGetFirstFormDataTuple(const nsAString& aName)
 }
 
 void
-nsFormData::Set(const nsAString& aName, File& aBlob,
+nsFormData::Set(const nsAString& aName, Blob& aBlob,
                 const Optional<nsAString>& aFilename)
 {
   FormDataTuple* tuple = RemoveAllOthersAndGetFirstFormDataTuple(aName);
@@ -245,7 +249,7 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
     free(iid);
 
     nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(supports);
-    nsRefPtr<File> blob = static_cast<File*>(domBlob.get());
+    nsRefPtr<Blob> blob = static_cast<Blob*>(domBlob.get());
     if (domBlob) {
       Optional<nsAString> temp;
       Append(aName, *blob, temp);

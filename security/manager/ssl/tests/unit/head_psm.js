@@ -127,11 +127,13 @@ function getXPCOMStatusFromNSS(statusNSS) {
   return nssErrorsService.getXPCOMFromNSSError(statusNSS);
 }
 
-function checkCertErrorGeneric(certdb, cert, expectedError, usage) {
+// certdb implements nsIX509CertDB. See nsIX509CertDB.idl for documentation.
+// In particular, hostname is optional.
+function checkCertErrorGeneric(certdb, cert, expectedError, usage, hostname) {
   let hasEVPolicy = {};
   let verifiedChain = {};
-  let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, verifiedChain,
-                                   hasEVPolicy);
+  let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, hostname,
+                                   verifiedChain, hasEVPolicy);
   Assert.equal(error, expectedError,
                "Actual and expected error should match");
 }

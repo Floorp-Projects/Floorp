@@ -170,7 +170,7 @@ class AccessibleCaretEventHub::State
 {
 public:
 #define NS_IMPL_STATE_UTILITIES(aClassName)                                    \
-  virtual const char* Name() const { return #aClassName; }                     \
+  virtual const char* Name() const override { return #aClassName; }            \
   static aClassName* Singleton()                                               \
   {                                                                            \
     static aClassName singleton;                                               \

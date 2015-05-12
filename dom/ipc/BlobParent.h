@@ -34,7 +34,7 @@ class PBackgroundParent;
 namespace dom {
 
 class ContentParent;
-class FileImpl;
+class BlobImpl;
 class nsIContentParent;
 class PBlobStreamParent;
 
@@ -56,7 +56,7 @@ class BlobParent final
   static StaticAutoPtr<IDTable> sIDTable;
   static StaticAutoPtr<Mutex> sIDTableMutex;
 
-  FileImpl* mBlobImpl;
+  BlobImpl* mBlobImpl;
   RemoteBlobImpl* mRemoteBlobImpl;
 
   // One of these will be null and the other non-null.
@@ -86,10 +86,10 @@ public:
 
   // These create functions are called on the sending side.
   static BlobParent*
-  GetOrCreate(nsIContentParent* aManager, FileImpl* aBlobImpl);
+  GetOrCreate(nsIContentParent* aManager, BlobImpl* aBlobImpl);
 
   static BlobParent*
-  GetOrCreate(PBackgroundParent* aManager, FileImpl* aBlobImpl);
+  GetOrCreate(PBackgroundParent* aManager, BlobImpl* aBlobImpl);
 
   // These create functions are called on the receiving side.
   static BlobParent*
@@ -106,7 +106,7 @@ public:
     delete static_cast<BlobParent*>(aActor);
   }
 
-  static already_AddRefed<FileImpl>
+  static already_AddRefed<BlobImpl>
   GetBlobImplForID(const nsID& aID);
 
   bool
@@ -127,8 +127,8 @@ public:
     return mContentManager;
   }
 
-  // Get the FileImpl associated with this actor.
-  already_AddRefed<FileImpl>
+  // Get the BlobImpl associated with this actor.
+  already_AddRefed<BlobImpl>
   GetBlobImpl();
 
   void
@@ -147,11 +147,11 @@ private:
 
   // These constructors are called on the receiving side.
   BlobParent(nsIContentParent* aManager,
-             FileImpl* aBlobImpl,
+             BlobImpl* aBlobImpl,
              IDTableEntry* aIDTableEntry);
 
   BlobParent(PBackgroundParent* aManager,
-             FileImpl* aBlobImpl,
+             BlobImpl* aBlobImpl,
              IDTableEntry* aIDTableEntry);
 
   // Only destroyed by BackgroundParentImpl and ContentParent.
@@ -161,12 +161,12 @@ private:
   CommonInit(IDTableEntry* aIDTableEntry);
 
   void
-  CommonInit(FileImpl* aBlobImpl, IDTableEntry* aIDTableEntry);
+  CommonInit(BlobImpl* aBlobImpl, IDTableEntry* aIDTableEntry);
 
   template <class ParentManagerType>
   static BlobParent*
   GetOrCreateFromImpl(ParentManagerType* aManager,
-                      FileImpl* aBlobImpl);
+                      BlobImpl* aBlobImpl);
 
   template <class ParentManagerType>
   static BlobParent*

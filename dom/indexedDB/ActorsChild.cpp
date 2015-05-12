@@ -611,10 +611,10 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
     for (uint32_t index = 0; index < count; index++) {
       BlobChild* actor = static_cast<BlobChild*>(blobs[index]);
 
-      nsRefPtr<FileImpl> blobImpl = actor->GetBlobImpl();
+      nsRefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
       MOZ_ASSERT(blobImpl);
 
-      nsRefPtr<File> blob = new File(aDatabase->GetOwner(), blobImpl);
+      nsRefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
 
       nsRefPtr<FileInfo> fileInfo;
       if (!fileInfos.IsEmpty()) {
@@ -631,7 +631,7 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
       StructuredCloneFile* file = aFiles.AppendElement();
       MOZ_ASSERT(file);
 
-      file->mFile.swap(blob);
+      file->mBlob.swap(blob);
       file->mFileInfo.swap(fileInfo);
     }
   }

@@ -277,7 +277,7 @@ BuildClonedMessageData(typename BlobTraits<Flavor>::ConcreteContentManagerType* 
   SerializedStructuredCloneBuffer& buffer = aClonedData.data();
   buffer.data = aData.mData;
   buffer.dataLength = aData.mDataLength;
-  const nsTArray<nsRefPtr<File>>& blobs = aData.mClosure.mBlobs;
+  const nsTArray<nsRefPtr<Blob>>& blobs = aData.mClosure.mBlobs;
   if (!blobs.IsEmpty()) {
     typedef typename BlobTraits<Flavor>::ProtocolType ProtocolType;
     InfallibleTArray<ProtocolType*>& blobList = DataBlobs<Flavor>::Blobs(aClonedData);
@@ -329,12 +329,12 @@ UnpackClonedMessageData(const ClonedMessageData& aData)
         static_cast<typename BlobTraits<Flavor>::BlobType*>(blobs[i]);
       MOZ_ASSERT(blob);
 
-      nsRefPtr<FileImpl> blobImpl = blob->GetBlobImpl();
+      nsRefPtr<BlobImpl> blobImpl = blob->GetBlobImpl();
       MOZ_ASSERT(blobImpl);
 
       // This object will be duplicated with a correct parent before being
       // exposed to JS.
-      nsRefPtr<File> domBlob = new File(nullptr, blobImpl);
+      nsRefPtr<Blob> domBlob = Blob::Create(nullptr, blobImpl);
       cloneData.mClosure.mBlobs.AppendElement(domBlob);
     }
   }

@@ -138,7 +138,8 @@ function loadCertificates(certFile) {
     // will see that when they attempt to connect to a site using it and we do
     // normal revocation checking.
     let errorCode = gCertDB.verifyCertNow(cert, 2 /* SSL Server */,
-                                          Ci.nsIX509CertDB.LOCAL_ONLY, {}, {});
+                                          Ci.nsIX509CertDB.LOCAL_ONLY, null,
+                                          {}, {});
     if (errorCode != 0 &&
         errorCode != -8180 /* SEC_ERROR_REVOKED_CERTIFICATE */) {
       continue;

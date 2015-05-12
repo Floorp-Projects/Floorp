@@ -412,7 +412,7 @@ PushMessageData::ArrayBuffer(JSContext* cx, JS::MutableHandle<JSObject*> aRetval
    NS_ABORT();
 }
 
-mozilla::dom::File*
+mozilla::dom::Blob*
 PushMessageData::Blob()
 {
   //todo bug 1149195.  Don't be lazy.

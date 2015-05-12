@@ -1769,6 +1769,19 @@ js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(StoreBuffer* owner, TenuringTracer
         r.front().trace(mover);
 }
 
+namespace js {
+namespace gc {
+template void
+StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeCellEdges>::trace(StoreBuffer*, TenuringTracer&);
+template void
+StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>::trace(StoreBuffer*, TenuringTracer&);
+template void
+StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>::trace(StoreBuffer*, TenuringTracer&);
+template void
+StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>::trace(StoreBuffer*, TenuringTracer&);
+} // namespace js
+} // namespace gc
+
 void
 js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const
 {
@@ -1874,28 +1887,6 @@ js::TenuringTracer::moveToTenured(JSObject* src)
     TracePromoteToTenured(src, dst);
     return dst;
 }
-
-// Structure for counting how many times objects in a particular group have
-// been tenured during a minor collection.
-struct TenureCount
-{
-    ObjectGroup* group;
-    int count;
-};
-
-// Keep rough track of how many times we tenure objects in particular groups
-// during minor collections, using a fixed size hash for efficiency at the cost
-// of potential collisions.
-struct Nursery::TenureCountCache
-{
-    TenureCount entries[16];
-
-    TenureCountCache() { PodZero(this); }
-
-    TenureCount& findEntry(ObjectGroup* group) {
-        return entries[PointerHasher<ObjectGroup*, 3>::hash(group) % ArrayLength(entries)];
-    }
-};
 
 void
 js::Nursery::collectToFixedPoint(TenuringTracer& mover, TenureCountCache& tenureCounts)
