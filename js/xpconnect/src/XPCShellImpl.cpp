@@ -1226,19 +1226,6 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports* aInitialThis,
 
 #endif
 
-static void
-XPCShellErrorReporter(JSContext* cx, const char* message, JSErrorReport* rep)
-{
-    if (gIgnoreReportedErrors)
-        return;
-
-    if (!JSREPORT_IS_WARNING(rep->flags))
-        gExitCode = EXITCODE_RUNTIME_ERROR;
-
-    // Delegate to the system error reporter for heavy lifting.
-    xpc::SystemErrorReporter(cx, message, rep);
-}
-
 static bool
 GetCurrentWorkingDirectory(nsAString& workingDirectory)
 {
@@ -1447,8 +1434,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
         // reason to bother.
         sScriptedInterruptCallback.init(rt, UndefinedValue());
         JS_SetInterruptCallback(rt, XPCShellInterruptCallback);
-
-        JS_SetErrorReporter(rt, XPCShellErrorReporter);
 
         AutoJSAPI jsapi;
         jsapi.Init();
