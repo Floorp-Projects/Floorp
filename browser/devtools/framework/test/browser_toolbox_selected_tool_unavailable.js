@@ -38,6 +38,8 @@ add_task(function*() {
   toolbox = yield gDevTools.showToolbox(target);
   is(toolbox.currentToolId, "webconsole", "web console was selected");
 
+  yield gDevTools.closeToolbox(target);
   gDevTools.unregisterTool(testToolDefinition.id);
+  tab = toolbox = target = null;
   gBrowser.removeCurrentTab();
 });
