@@ -6,6 +6,9 @@
 #ifndef mozilla_net_Http2Stream_h
 #define mozilla_net_Http2Stream_h
 
+// HTTP/2 - RFC7540
+// https://www.rfc-editor.org/rfc/rfc7540.txt
+
 #include "mozilla/Attributes.h"
 #include "nsAHttpTransaction.h"
 #include "nsISupportsPriority.h"
