@@ -180,8 +180,9 @@ protected:
   void* mImplData;
   int32_t mSerial;
   ImageFormat mFormat;
-  static mozilla::Atomic<int32_t> sSerialCounter;
   bool mSent;
+
+  static mozilla::Atomic<int32_t> sSerialCounter;
 };
 
 /**
@@ -380,12 +381,14 @@ public:
    * Copy the current Image list to aImages.
    * This has to add references since otherwise there are race conditions
    * where the current image is destroyed before the caller can add
-   * a reference. This lock strictly guarantees the underlying image remains
-   * valid, it does not mean the current image cannot change.
+   * a reference.
    * Can be called on any thread.
    * May return an empty list to indicate there is no current image.
+   * If aGenerationCounter is non-null, sets *aGenerationCounter to a value
+   * that's unique for this ImageContainer state.
    */
-  void GetCurrentImages(nsTArray<OwningImage>* aImages);
+  void GetCurrentImages(nsTArray<OwningImage>* aImages,
+                        uint32_t* aGenerationCounter = nullptr);
 
   /**
    * Returns the size of the image in pixels.
@@ -486,6 +489,8 @@ private:
   }
 
   nsRefPtr<Image> mActiveImage;
+  // Updates every time mActiveImage changes
+  uint32_t mGenerationCounter;
 
   // Number of contained images that have been painted at least once.  It's up
   // to the ImageContainer implementation to ensure accesses to this are
@@ -516,6 +521,8 @@ private:
   // frames to the compositor through transactions in the main thread rather than
   // asynchronusly using the ImageBridge IPDL protocol.
   ImageClient* mImageClient;
+
+  static mozilla::Atomic<uint32_t> sGenerationCounter;
 };
 
 class AutoLockImage
