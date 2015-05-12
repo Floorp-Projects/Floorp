@@ -13,7 +13,7 @@ describe("loop.standaloneMedia._MultiplexGum", function() {
     navigator.getUserMedia ||
     navigator.mozGetUserMedia ||
     navigator.webkitGetUserMedia ||
-    (window["TBPlugin"] && TBPlugin.getUserMedia);
+    (window.TBPlugin && TBPlugin.getUserMedia);
 
   var sandbox;
   var multiplexGum;

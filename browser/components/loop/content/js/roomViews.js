@@ -461,8 +461,9 @@ loop.roomViews = (function(mozL10n) {
     },
 
     render: function() {
-      if (!this.state.show && !this.state.editMode)
+      if (!this.state.show && !this.state.editMode) {
         return null;
+      }
 
       var url = this._getURL();
       var thumbnail = url && url.thumbnail || "";

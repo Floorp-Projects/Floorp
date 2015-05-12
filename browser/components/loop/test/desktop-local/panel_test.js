@@ -390,8 +390,10 @@ describe("loop.panel", function() {
       beforeEach(function() {
         supportUrl = "https://example.com";
         navigator.mozLoop.getLoopPref = function(pref) {
-          if (pref === "support_url")
+          if (pref === "support_url") {
             return supportUrl;
+          }
+
           return "unseen";
         };
       });
