@@ -365,6 +365,7 @@ public:
     bool UseGDIFontTableAccess() { return mGDIFontTableAccess; }
 
     virtual gfxFontFamily* FindFamily(const nsAString& aFamily,
+                                      nsIAtom* aLanguage = nullptr,
                                       bool aUseSystemFonts = false);
 
     virtual void GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray);
