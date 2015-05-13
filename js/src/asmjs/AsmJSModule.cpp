@@ -1019,7 +1019,7 @@ const Class AsmJSModuleObject::class_ = {
 AsmJSModuleObject*
 AsmJSModuleObject::create(ExclusiveContext* cx, ScopedJSDeletePtr<AsmJSModule>* module)
 {
-    JSObject* obj = NewObjectWithGivenProto(cx, &AsmJSModuleObject::class_, NullPtr());
+    JSObject* obj = NewObjectWithGivenProto(cx, &AsmJSModuleObject::class_, nullptr);
     if (!obj)
         return nullptr;
     AsmJSModuleObject* nobj = &obj->as<AsmJSModuleObject>();

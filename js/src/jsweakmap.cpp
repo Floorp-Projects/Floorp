@@ -392,7 +392,7 @@ WeakMap_set_impl(JSContext* cx, CallArgs args)
 
     if (!args.get(0).isObject()) {
         UniquePtr<char[], JS::FreePolicy> bytes =
-            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, args.get(0), NullPtr());
+            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, args.get(0), nullptr);
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
@@ -577,7 +577,7 @@ WeakMap_construct(JSContext* cx, unsigned argc, Value* vp)
             if (isOriginalAdder) {
                 if (keyVal.isPrimitive()) {
                     UniquePtr<char[], JS::FreePolicy> bytes =
-                        DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, NullPtr());
+                        DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, nullptr);
                     if (!bytes)
                         return false;
                     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());

@@ -445,7 +445,7 @@ public:
     JS::Rooted<JSString*> msg(cx, msgval.toString());
 
     JS::Rooted<JS::Value> error(cx);
-    if (!JS::CreateError(cx, JSEXN_ERR, JS::NullPtr(), fn, aErrorDesc.mLineno,
+    if (!JS::CreateError(cx, JSEXN_ERR, nullptr, fn, aErrorDesc.mLineno,
                          aErrorDesc.mColno, nullptr, msg, &error)) {
       JS_ClearPendingException(cx);
       mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);

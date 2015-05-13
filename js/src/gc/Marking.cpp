@@ -104,9 +104,6 @@ using mozilla::PodCopy;
 //     . . .   Static dispatch                                                                  //
 //     ======  Dispatch through a manual stack.                                                 //
 //                                                                                              //
-void * const js::NullPtr::constNullValue = nullptr;
-
-JS_PUBLIC_DATA(void * const) JS::NullPtr::constNullValue = nullptr;
 
 
 /*** Tracing Invariants **************************************************************************/

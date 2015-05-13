@@ -242,7 +242,7 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
     MOZ_ASSERT(clasp->trace == JS_GlobalObjectTraceHook);
 
-    JSObject* obj = NewObjectWithGivenProto(cx, clasp, NullPtr(), SingletonObject);
+    JSObject* obj = NewObjectWithGivenProto(cx, clasp, nullptr, SingletonObject);
     if (!obj)
         return nullptr;
 
@@ -542,7 +542,7 @@ GlobalObject::getOrCreateDebuggers(JSContext* cx, Handle<GlobalObject*> global)
     if (debuggers)
         return debuggers;
 
-    NativeObject* obj = NewNativeObjectWithGivenProto(cx, &GlobalDebuggees_class, NullPtr());
+    NativeObject* obj = NewNativeObjectWithGivenProto(cx, &GlobalDebuggees_class, nullptr);
     if (!obj)
         return nullptr;
     debuggers = cx->new_<DebuggerVector>();

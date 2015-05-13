@@ -98,7 +98,7 @@ js::NonNullObject(JSContext* cx, const Value& v)
     if (v.isPrimitive()) {
         RootedValue value(cx, v);
         UniquePtr<char[], JS::FreePolicy> bytes =
-            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, NullPtr());
+            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
         if (!bytes)
             return nullptr;
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
@@ -216,7 +216,7 @@ js::GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* me
     HandleValue v = args[0];
     if (!v.isObject()) {
         UniquePtr<char[], JS::FreePolicy> bytes =
-            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
+            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
@@ -264,7 +264,7 @@ js::Throw(JSContext* cx, JSObject* obj, unsigned errorNumber)
     if (js_ErrorFormatString[errorNumber].argCount == 1) {
         RootedValue val(cx, ObjectValue(*obj));
         ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,
-                              JSDVG_IGNORE_STACK, val, NullPtr(),
+                              JSDVG_IGNORE_STACK, val, nullptr,
                               nullptr, nullptr);
     } else {
         MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == 0);
@@ -1717,7 +1717,7 @@ js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj, NewObjectKind newKin
         }
 
         RootedArrayObject clone(cx, NewDenseUnallocatedArray(cx, aobj->length(),
-                                                             NullPtr(), newKind));
+                                                             nullptr, newKind));
         if (!clone || !clone->ensureElements(cx, values.length()))
             return nullptr;
 
@@ -1857,7 +1857,7 @@ js::XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj)
             return false;
 
         if (mode == XDR_DECODE) {
-            obj.set(NewDenseUnallocatedArray(cx, length, NullPtr(), TenuredObject));
+            obj.set(NewDenseUnallocatedArray(cx, length, nullptr, TenuredObject));
             if (!obj)
                 return false;
             aobj = &obj->as<ArrayObject>();
@@ -1999,7 +1999,7 @@ js::CloneObjectLiteral(JSContext* cx, HandleObject srcObj)
     MOZ_ASSERT(srcArray->getElementsHeader()->ownerObject() == srcObj);
 
     size_t length = srcArray->as<ArrayObject>().length();
-    RootedArrayObject res(cx, NewDenseFullyAllocatedArray(cx, length, NullPtr(), TenuredObject));
+    RootedArrayObject res(cx, NewDenseFullyAllocatedArray(cx, length, nullptr, TenuredObject));
     if (!res)
         return nullptr;
 
@@ -2857,7 +2857,7 @@ JSObject::reportReadOnly(JSContext* cx, jsid id, unsigned report)
 {
     RootedValue val(cx, IdToValue(id));
     return ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
-                                 JSDVG_IGNORE_STACK, val, js::NullPtr(),
+                                 JSDVG_IGNORE_STACK, val, nullptr,
                                  nullptr, nullptr);
 }
 
@@ -2866,7 +2866,7 @@ JSObject::reportNotConfigurable(JSContext* cx, jsid id, unsigned report)
 {
     RootedValue val(cx, IdToValue(id));
     return ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
-                                 JSDVG_IGNORE_STACK, val, js::NullPtr(),
+                                 JSDVG_IGNORE_STACK, val, nullptr,
                                  nullptr, nullptr);
 }
 
@@ -2875,7 +2875,7 @@ JSObject::reportNotExtensible(JSContext* cx, unsigned report)
 {
     RootedValue val(cx, ObjectValue(*this));
     return ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
-                                 JSDVG_IGNORE_STACK, val, js::NullPtr(),
+                                 JSDVG_IGNORE_STACK, val, nullptr,
                                  nullptr, nullptr);
 }
 
@@ -3095,7 +3095,7 @@ js::DefineProperty(ExclusiveContext* cx, HandleObject obj, HandleId id, HandleVa
     MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
 
     Rooted<PropertyDescriptor> desc(cx);
-    desc.initFields(NullPtr(), value, attrs, getter, setter);
+    desc.initFields(nullptr, value, attrs, getter, setter);
     if (DefinePropertyOp op = obj->getOps()->defineProperty) {
         if (!cx->shouldBeJSContext())
             return false;
@@ -3502,7 +3502,7 @@ js::ToObjectSlow(JSContext* cx, JS::HandleValue val, bool reportScanStack)
 
     if (val.isNullOrUndefined()) {
         if (reportScanStack) {
-            ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, NullPtr());
+            ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, nullptr);
         } else {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
                                  val.isNull() ? "null" : "undefined", "object");

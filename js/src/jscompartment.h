@@ -383,11 +383,11 @@ struct JSCompartment
     void markCrossCompartmentWrappers(JSTracer* trc);
 
     inline bool wrap(JSContext* cx, JS::MutableHandleValue vp,
-                     JS::HandleObject existing = js::NullPtr());
+                     JS::HandleObject existing = nullptr);
 
     bool wrap(JSContext* cx, js::MutableHandleString strp);
     bool wrap(JSContext* cx, JS::MutableHandleObject obj,
-              JS::HandleObject existingArg = js::NullPtr());
+              JS::HandleObject existingArg = nullptr);
     bool wrap(JSContext* cx, JS::MutableHandle<js::PropertyDescriptor> desc);
 
     template<typename T> bool wrap(JSContext* cx, JS::AutoVectorRooter<T>& vec) {

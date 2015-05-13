@@ -138,7 +138,7 @@ ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id)
     if (!JSID_IS_ATOM(id) || !IsIdentifier(JSID_TO_ATOM(id))) {
         RootedValue val(cx, v);
         ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                              JSDVG_SEARCH_STACK, val, js::NullPtr(), "not an identifier",
+                              JSDVG_SEARCH_STACK, val, nullptr, "not an identifier",
                               nullptr);
         return false;
     }
@@ -705,7 +705,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool frame
 Debugger::slowPathOnDebuggerStatement(JSContext* cx, AbstractFramePtr frame)
 {
     RootedValue rval(cx);
-    JSTrapStatus status = dispatchHook(cx, &rval, OnDebuggerStatement, NullPtr());
+    JSTrapStatus status = dispatchHook(cx, &rval, OnDebuggerStatement, nullptr);
 
     switch (status) {
       case JSTRAP_CONTINUE:
@@ -736,7 +736,7 @@ Debugger::slowPathOnExceptionUnwind(JSContext* cx, AbstractFramePtr frame)
         return JSTRAP_CONTINUE;
 
     RootedValue rval(cx);
-    JSTrapStatus status = dispatchHook(cx, &rval, OnExceptionUnwind, NullPtr());
+    JSTrapStatus status = dispatchHook(cx, &rval, OnExceptionUnwind, nullptr);
 
     switch (status) {
       case JSTRAP_CONTINUE:
@@ -3065,7 +3065,7 @@ Debugger::clearAllBreakpoints(JSContext* cx, unsigned argc, Value* vp)
     THIS_DEBUGGER(cx, argc, vp, "clearAllBreakpoints", args, dbg);
     for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront())
         r.front()->compartment()->clearBreakpointsIn(cx->runtime()->defaultFreeOp(),
-                                                     dbg, NullPtr());
+                                                     dbg, nullptr);
     return true;
 }
 
@@ -4097,7 +4097,7 @@ Debugger::drainTraceLogger(JSContext* cx, unsigned argc, Value* vp)
     /* Add all events to the array. */
     uint32_t index = 0;
     for (EventEntry* eventItem = events; eventItem < events + num; eventItem++, index++) {
-        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, NullPtr()));
+        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr));
         if (!item)
             return false;
 
@@ -4196,7 +4196,7 @@ Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
     /* Add all events to the array. */
     uint32_t index = 0;
     for (EventEntry* eventItem = events; eventItem < events + num; eventItem++) {
-        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, NullPtr()));
+        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr));
         if (!item)
             return false;
 
@@ -6001,7 +6001,7 @@ DebuggerFrame_getArguments(JSContext* cx, unsigned argc, Value* vp)
         Rooted<jsid> id(cx);
         for (unsigned i = 0; i < fargc; i++) {
             RootedFunction getobj(cx);
-            getobj = NewNativeFunction(cx, DebuggerArguments_getArg, 0, js::NullPtr(),
+            getobj = NewNativeFunction(cx, DebuggerArguments_getArg, 0, nullptr,
                                        gc::AllocKind::FUNCTION_EXTENDED);
             if (!getobj)
                 return false;
@@ -6184,7 +6184,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
      * boundaries, and we are putting a DebugScopeProxy or non-syntactic With on
      * the scope chain.
      */
-    Rooted<StaticEvalObject*> staticScope(cx, StaticEvalObject::create(cx, js::NullPtr()));
+    Rooted<StaticEvalObject*> staticScope(cx, StaticEvalObject::create(cx, nullptr));
     if (!staticScope)
         return false;
     CompileOptions options(cx);
@@ -6321,7 +6321,7 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
 
     /* If evalWithBindings, create the inner environment. */
     if (evalWithBindings) {
-        RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, NullPtr()));
+        RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
         if (!nenv)
             return false;
         RootedId id(cx);
@@ -6376,7 +6376,7 @@ DebuggerFrame_eval(JSContext* cx, unsigned argc, Value* vp)
     UpdateFrameIterPc(iter);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
                                args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
-                               args.get(1), args.rval(), dbg, js::NullPtr(), &iter);
+                               args.get(1), args.rval(), dbg, nullptr, &iter);
 }
 
 static bool
@@ -6389,7 +6389,7 @@ DebuggerFrame_evalWithBindings(JSContext* cx, unsigned argc, Value* vp)
     UpdateFrameIterPc(iter);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
                                args[0], EvalHasExtraBindings, args[1], args.get(2),
-                               args.rval(), dbg, js::NullPtr(), &iter);
+                               args.rval(), dbg, nullptr, &iter);
 }
 
 static bool
@@ -7226,11 +7226,11 @@ RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
 
         if (obj->is<GlobalObject>()) {
             ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
-                                  JSDVG_SEARCH_STACK, dbgobj, js::NullPtr(),
+                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
                                   isWrapper, isWindowProxy);
         } else {
             ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                                  JSDVG_SEARCH_STACK, dbgobj, js::NullPtr(),
+                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
                                   "a global object", nullptr);
         }
         return false;

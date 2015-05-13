@@ -91,7 +91,7 @@ public:
     notification->SetStoredState(true);
 
     JSAutoCompartment ac(aCx, mGlobal);
-    JS::Rooted<JSObject*> element(aCx, notification->WrapObject(aCx, JS::NullPtr()));
+    JS::Rooted<JSObject*> element(aCx, notification->WrapObject(aCx, nullptr));
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
     JS::Rooted<JSObject*> notifications(aCx, mNotifications);
