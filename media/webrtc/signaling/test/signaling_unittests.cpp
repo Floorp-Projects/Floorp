@@ -3081,6 +3081,38 @@ TEST_F(SignalingAgentTest, CreateOffer) {
   agent(0)->CreateOffer(options, OFFER_AUDIO);
 }
 
+TEST_F(SignalingAgentTest, SetLocalWithoutCreateOffer) {
+  CreateAgent(TestStunServer::GetInstance()->addr(),
+              TestStunServer::GetInstance()->port());
+  CreateAgent(TestStunServer::GetInstance()->addr(),
+              TestStunServer::GetInstance()->port());
+  OfferOptions options;
+  agent(0)->CreateOffer(options, OFFER_AUDIO);
+  agent(1)->SetLocal(TestObserver::OFFER,
+                     agent(0)->offer(),
+                     true,
+                     PCImplSignalingState::SignalingStable);
+}
+
+TEST_F(SignalingAgentTest, SetLocalWithoutCreateAnswer) {
+  CreateAgent(TestStunServer::GetInstance()->addr(),
+              TestStunServer::GetInstance()->port());
+  CreateAgent(TestStunServer::GetInstance()->addr(),
+              TestStunServer::GetInstance()->port());
+  CreateAgent(TestStunServer::GetInstance()->addr(),
+              TestStunServer::GetInstance()->port());
+  OfferOptions options;
+  agent(0)->CreateOffer(options, OFFER_AUDIO);
+  agent(1)->SetRemote(TestObserver::OFFER, agent(0)->offer());
+  agent(1)->CreateAnswer(ANSWER_AUDIO);
+  agent(2)->SetRemote(TestObserver::OFFER, agent(0)->offer());
+  // Use agent 1's answer on agent 2, should fail
+  agent(2)->SetLocal(TestObserver::ANSWER,
+                     agent(1)->answer(),
+                     true,
+                     PCImplSignalingState::SignalingHaveRemoteOffer);
+}
+
 TEST_F(SignalingAgentTest, CreateOfferSetLocalTrickleTestServer) {
   TestStunServer::GetInstance()->SetActive(false);
   TestStunServer::GetInstance()->SetResponseAddr(
