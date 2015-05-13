@@ -346,17 +346,13 @@ def SourceIndex(fileStream, outputPath, vcs_root):
     pdbStreamFile.close()
     return result
 
-def WorkerInitializer(cls, lock, srcdirRepoInfo):
-    """Windows worker processes won't have run GlobalInit, and due to a lack of fork(),
-    won't inherit the class variables from the parent. They only need a few variables,
-    so we run an initializer to set them. Redundant but harmless on other platforms."""
-    cls.lock = lock
-    cls.srcdirRepoInfo = srcdirRepoInfo
-
-def StartProcessFilesWork(dumper, files, arch_num, arch, vcs_root, after, after_arg):
-    """multiprocessing can't handle methods as Process targets, so we define
-    a simple wrapper function around the work method."""
-    return dumper.ProcessFilesWork(files, arch_num, arch, vcs_root, after, after_arg)
+def StartJob(dumper, lock, srcdirRepoInfo, func_name, args):
+    # Windows worker processes won't have run GlobalInit,
+    # and due to a lack of fork(), won't inherit the class
+    # variables from the parent, so set them here.
+    Dumper.lock = lock
+    Dumper.srcdirRepoInfo = srcdirRepoInfo
+    return getattr(dumper, func_name)(*args)
 
 class Dumper:
     """This class can dump symbols from a file with debug info, and
@@ -426,8 +422,7 @@ class Dumper:
         cls.jobs_condition = Dumper.manager.Condition()
         cls.lock = Dumper.manager.RLock()
         cls.srcdirRepoInfo = Dumper.manager.dict()
-        cls.pool = module.Pool(num_cpus, WorkerInitializer,
-                               (cls, cls.lock, cls.srcdirRepoInfo))
+        cls.pool = module.Pool(num_cpus)
 
     def JobStarted(self, file_key):
         """Increments the number of submitted jobs for the specified key file,
@@ -572,10 +567,10 @@ class Dumper:
                 if self.ShouldProcess(fullpath):
                     self.ProcessFiles((fullpath,))
 
-    def SubmitJob(self, file_key, func, args, callback):
+    def SubmitJob(self, file_key, func_name, args, callback):
         """Submits a job to the pool of workers; increments the number of submitted jobs."""
         self.JobStarted(file_key)
-        res = Dumper.pool.apply_async(func, args=args, callback=callback)
+        res = Dumper.pool.apply_async(StartJob, args=(self, Dumper.lock, Dumper.srcdirRepoInfo, func_name, args), callback=callback)
 
     def ProcessFilesFinished(self, res):
         """Callback from multiprocesing when ProcessFilesWork finishes;
@@ -601,7 +596,7 @@ class Dumper:
         vcs_root = os.environ.get("SRCSRV_ROOT")
         for arch_num, arch in enumerate(self.archs):
             self.files_record[files] = 0 # record that we submitted jobs for this tuple of files
-            self.SubmitJob(files[-1], StartProcessFilesWork, args=(self, files, arch_num, arch, vcs_root, after, after_arg), callback=self.ProcessFilesFinished)
+            self.SubmitJob(files[-1], 'ProcessFilesWork', args=(files, arch_num, arch, vcs_root, after, after_arg), callback=self.ProcessFilesFinished)
 
     def ProcessFilesWork(self, files, arch_num, arch, vcs_root, after, after_arg):
         self.output_pid(sys.stderr, "Worker processing files: %s" % (files,))
@@ -848,11 +843,6 @@ class Dumper_Solaris(Dumper):
             return self.RunFileCommand(file).startswith("ELF")
         return False
 
-def StartProcessFilesWorkMac(dumper, file):
-    """multiprocessing can't handle methods as Process targets, so we define
-    a simple wrapper function around the work method."""
-    return dumper.ProcessFilesWorkMac(file)
-
 def AfterMac(status, dsymbundle):
     """Cleanup function to run on Macs after we process the file(s)."""
     # CopyDebug will already have been run from Dumper.ProcessFiles
@@ -883,7 +873,7 @@ class Dumper_Mac(Dumper):
         # also note, files must be len 1 here, since we're the only ones
         # that ever add more than one file to the list
         self.output_pid(sys.stderr, "Submitting job for Mac pre-processing on file: %s" % (files[0]))
-        self.SubmitJob(files[0], StartProcessFilesWorkMac, args=(self, files[0]), callback=self.ProcessFilesMacFinished)
+        self.SubmitJob(files[0], 'ProcessFilesWorkMac', args=(files[0]), callback=self.ProcessFilesMacFinished)
 
     def ProcessFilesMacFinished(self, result):
         if result['status']:
