@@ -21,11 +21,14 @@ function runTests() {
   Services.prefs.setBoolPref(PRELOAD_PREF, false);
 
   let intro;
+  let brand = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+  let brandShortName = brand.GetStringFromName("brandShortName");
+
   yield addNewTabPageTab();
   intro = getContentDocument().getElementById("newtab-intro-mask");
   is(intro.style.opacity, 1, "intro automatically shown on first opening");
   is(getContentDocument().getElementById("newtab-intro-header").innerHTML,
-     'Welcome to New Tab on <span xmlns="http://www.w3.org/1999/xhtml" class="bold">Firefox!</span>', "we show the first-run intro.");
+     'Welcome to New Tab on <span xmlns="http://www.w3.org/1999/xhtml" class="bold">' + brandShortName + '</span>!', "we show the first-run intro.");
   is(Services.prefs.getBoolPref(INTRO_PREF), true, "newtab remembers that the intro was shown");
   is(Services.prefs.getBoolPref(UPDATE_INTRO_PREF), true, "newtab avoids showing update if intro was shown");
 
@@ -41,7 +44,7 @@ function runTests() {
   intro = getContentDocument().getElementById("newtab-intro-mask");
   is(intro.style.opacity, 1, "intro automatically shown on preloaded opening");
   is(getContentDocument().getElementById("newtab-intro-header").innerHTML,
-     'Welcome to New Tab on <span xmlns="http://www.w3.org/1999/xhtml" class="bold">Firefox!</span>', "we show the first-run intro.");
+     'Welcome to New Tab on <span xmlns="http://www.w3.org/1999/xhtml" class="bold">' + brandShortName + '</span>!', "we show the first-run intro.");
   is(Services.prefs.getBoolPref(INTRO_PREF), true, "newtab remembers that the intro was shown");
   is(Services.prefs.getBoolPref(UPDATE_INTRO_PREF), true, "newtab avoids showing update if intro was shown");
 
