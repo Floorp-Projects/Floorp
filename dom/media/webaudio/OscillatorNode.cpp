@@ -303,7 +303,7 @@ public:
       *aFinished = true;
       return;
     }
-    if (ticks + WEBAUDIO_BLOCK_SIZE < mStart) {
+    if (ticks + WEBAUDIO_BLOCK_SIZE <= mStart) {
       // We're not playing yet.
       ComputeSilence(aOutput);
       return;
