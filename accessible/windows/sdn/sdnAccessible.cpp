@@ -106,8 +106,11 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   // focus events, to correlate back to data nodes in their internal object
   // model.
   Accessible* accessible = GetAccessible();
-  *aUniqueID = - NS_PTR_TO_INT32(accessible ? accessible->UniqueID() :
-                                              static_cast<void*>(this));
+  if (accessible) {
+    *aUniqueID = AccessibleWrap::GetChildIDFor(accessible);
+  } else {
+    *aUniqueID = - NS_PTR_TO_INT32(static_cast<void*>(this));
+  }
 
   *aNumChildren = mNode->GetChildCount();
 
