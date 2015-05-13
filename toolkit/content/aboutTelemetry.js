@@ -269,13 +269,16 @@ let PingPicker = {
       el.addEventListener("change", () => this.onPingSourceChanged(), false);
     }
 
+    document.getElementById("show-subsession-data").addEventListener("change", () => {
+      this._updateCurrentPingData();
+    });
+
     document.getElementById("choose-ping-week").addEventListener("change", () => {
       this._renderPingList();
-      this._updatePingData();
+      this._updateArchivedPingData();
     }, false);
-
     document.getElementById("choose-ping-id").addEventListener("change", () => {
-      this._updatePingData()
+      this._updateArchivedPingData()
     }, false);
 
     document.getElementById("next-ping")
@@ -293,13 +296,26 @@ let PingPicker = {
     this.viewCurrentPingData = el.checked;
 
     if (this.viewCurrentPingData) {
+      document.getElementById("current-ping-picker").classList.remove("hidden");
       document.getElementById("archived-ping-picker").classList.add("hidden");
-      gPingData = TelemetryController.getCurrentPingData(false);
-      displayPingData(gPingData);
+      this._updateCurrentPingData();
     } else {
+      document.getElementById("current-ping-picker").classList.add("hidden");
       this._updateArchivedPingList().then(() =>
         document.getElementById("archived-ping-picker").classList.remove("hidden"));
     }
+  },
+
+  _updateCurrentPingData: function() {
+    const subsession = document.getElementById("show-subsession-data").checked;
+    const ping = TelemetryController.getCurrentPingData(subsession);
+    displayPingData(ping);
+  },
+
+  _updateArchivedPingData: function() {
+    let id = this._getSelectedPingId();
+    TelemetryArchive.promiseArchivedPingById(id)
+                    .then((ping) => displayPingData(ping));
   },
 
   _updateArchivedPingList: function() {
@@ -344,7 +360,7 @@ let PingPicker = {
       this._renderPingList();
 
       // Update the displayed ping.
-      this._updatePingData();
+      this._updateArchivedPingData();
     });
   },
 
@@ -401,12 +417,6 @@ let PingPicker = {
     return selected.getAttribute("value");
   },
 
-  _updatePingData: function() {
-    let id = this._getSelectedPingId();
-    TelemetryArchive.promiseArchivedPingById(id)
-                    .then((ping) => displayPingData(ping));
-  },
-
   _movePingIndex: function(offset) {
     const id = this._getSelectedPingId();
     const index = this._archivedPings.findIndex((p) => p.id == id);
@@ -420,7 +430,7 @@ let PingPicker = {
     options.item(weekIndex).selected = true;
 
     this._renderPingList(ping.id);
-    this._updatePingData();
+    this._updateArchivedPingData();
   },
 };
 
