@@ -99,7 +99,7 @@ automation/l10n-check: automation/pretty-l10n-check
 automation/update-packaging: automation/pretty-update-packaging
 
 automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
-	$(PYTHON) $(topsrcdir)/build/gen_mach_buildprops.py --complete-mar-file $(DIST)/$(COMPLETE_MAR) $(addprefix --partial-mar-file ,$(wildcard $(DIST)/$(PARTIAL_MAR))) --upload-output $(AUTOMATION_UPLOAD_OUTPUT) --upload-files $(abspath $(UPLOAD_FILES))
+	$(PYTHON) $(topsrcdir)/build/gen_mach_buildprops.py --complete-mar-file $(DIST)/$(COMPLETE_MAR) $(addprefix --partial-mar-file ,$(wildcard $(DIST)/$(PARTIAL_MAR))) --upload-output $(AUTOMATION_UPLOAD_OUTPUT) --upload-files $(abspath $(UPLOAD_FILES)) --package $(PACKAGE)
 
 # We need the log from make upload to grep it for urls in order to set
 # properties.
