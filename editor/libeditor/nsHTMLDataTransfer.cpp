@@ -2013,9 +2013,9 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   // if we have context info, create a fragment for that
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMNode> contextLeaf;
-  nsCOMPtr<nsIDOMNode> contextAsNode;
+  nsRefPtr<DocumentFragment> contextAsNode;
   if (!aContextStr.IsEmpty()) {
-    rv = ParseFragment(aContextStr, nullptr, doc, address_of(contextAsNode),
+    rv = ParseFragment(aContextStr, nullptr, doc, getter_AddRefs(contextAsNode),
                        aTrustedInput);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(contextAsNode, NS_ERROR_FAILURE);
@@ -2044,11 +2044,13 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   } else {
     contextAtom = nsGkAtoms::body;
   }
+  nsRefPtr<DocumentFragment> fragment;
   rv = ParseFragment(aInputString,
                      contextAtom,
                      doc,
-                     outFragNode,
+                     getter_AddRefs(fragment),
                      aTrustedInput);
+  *outFragNode = fragment;
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(*outFragNode, NS_ERROR_FAILURE);
 
@@ -2107,7 +2109,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
 nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
                                      nsIAtom* aContextLocalName,
                                      nsIDocument* aTargetDocument,
-                                     nsCOMPtr<nsIDOMNode> *outNode,
+                                     DocumentFragment** aFragment,
                                      bool aTrustedInput)
 {
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
@@ -2127,7 +2129,7 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
                               nsIParserUtils::SanitizerAllowComments);
     sanitizer.Sanitize(fragment);
   }
-  *outNode = fragment.forget();
+  fragment.forget(aFragment);
   return rv;
 }
 
