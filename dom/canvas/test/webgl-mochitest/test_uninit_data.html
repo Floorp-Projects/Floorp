@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv='content-type' content='text/html; charset=utf-8'/>
+
+  <title>Test contents of uninitialized buffers</title>
+
+  <script src='/tests/SimpleTest/SimpleTest.js'></script>
+  <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+  <script src='webgl-util.js'></script>
+</head>
+
+<body>
+<script>
+'use strict';
+
+function TestFB(gl) {
+  var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  ok(status == gl.FRAMEBUFFER_COMPLETE, 'FB should be complete.');
+
+  var pixel = new Uint8Array(4);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+  ok(!pixel[0], 'R channel should be 0, was ' + pixel[0] + '.');
+  ok(!pixel[1], 'G channel should be 0, was ' + pixel[1] + '.');
+  ok(!pixel[2], 'B channel should be 0, was ' + pixel[2] + '.');
+  ok(!pixel[3], 'A channel should be 0, was ' + pixel[3] + '.');
+}
+
+function Test(contextAttribs) {
+  ok(true, '===============================');
+  ok(true, 'Testing ' + JSON.stringify(contextAttribs));
+
+  var c = document.createElement('canvas');
+  var gl = c.getContext('webgl', contextAttribs);
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+
+  var rb = gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+
+  var err = gl.getError();
+  ok(!err, 'Error should be 0x0, was 0x' + err.toString(16));
+  if (err)
+    return;
+
+  var fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+  ok(true, 'Backed with RB');
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rb);
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 1, 1);
+  TestFB(gl);
+
+  ok(true, 'Backed with texture');
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  TestFB(gl);
+
+  err = gl.getError();
+  ok(!err, 'Error should be 0x0, was 0x' + err.toString(16));
+}
+
+// Give ourselves a scope to return early from:
+(function() {
+  // We test multiple configurations because we've had bugs regarding faking RGBX on
+  // ANGLE: With alpha:false, uninitialized buffers were being filled with (0,0,0,1)
+  // instead of (0,0,0,0).
+  Test({alpha: false, antialias: false});
+  Test({alpha: true, antialias: false});
+  Test({alpha: false, antialias: true});
+  Test({alpha: true, antialias: true});
+
+  ok(true, 'Test complete.');
+})();
+
+</script>
+</body>
+</html>
