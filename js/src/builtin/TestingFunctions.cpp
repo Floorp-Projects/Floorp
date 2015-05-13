@@ -423,7 +423,7 @@ IsLazyFunction(JSContext* cx, unsigned argc, Value* vp)
     }
     if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
         JS_ReportError(cx, "The first argument should be a function.");
-        return true;
+        return false;
     }
     args.rval().setBoolean(args[0].toObject().as<JSFunction>().isInterpretedLazy());
     return true;
