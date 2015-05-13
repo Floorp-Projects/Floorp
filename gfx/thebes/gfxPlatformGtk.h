@@ -46,7 +46,7 @@ public:
                            int32_t aRunScript,
                            nsTArray<const char*>& aFontList) override;
 
-    virtual gfxPlatformFontList* CreatePlatformFontList();
+    virtual gfxPlatformFontList* CreatePlatformFontList() override;
 
     virtual nsresult GetStandardFamilyName(const nsAString& aFontName,
                                            nsAString& aFamilyName) override;
