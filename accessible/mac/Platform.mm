@@ -47,6 +47,16 @@ void
 ProxyEvent(ProxyAccessible*, uint32_t)
 {
 }
+
+void
+ProxyStateChangeEvent(ProxyAccessible*, uint64_t, bool)
+{
+}
+
+void
+ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
+{
+}
 }
 }
 

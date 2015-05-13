@@ -502,6 +502,17 @@ EventQueue::SendIPCEvent(AccEvent* aEvent) const
       if (!aEvent->GetAccessible()->IsApplication())
         ipcDoc->SendEvent(id, aEvent->GetEventType());
       break;
+    case nsIAccessibleEvent::EVENT_STATE_CHANGE: {
+      AccStateChangeEvent* event = downcast_accEvent(aEvent);
+      ipcDoc->SendStateChangeEvent(id, event->GetState(),
+                                   event->IsStateEnabled());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
+                                                       AccCaretMoveEvent* event = downcast_accEvent(aEvent);
+                                                       ipcDoc->SendEvent(id, event->GetCaretOffset());
+                                                       break;
+                                                     }
     default:
       ipcDoc->SendEvent(id, aEvent->GetEventType());
   }

@@ -67,6 +67,9 @@ void ProxyDestroyed(ProxyAccessible*);
  * Callied when an event is fired on a proxied accessible.
  */
 void ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType);
+void ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
+                           bool aEnabled);
+void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset);
 } // namespace a11y
 } // namespace mozilla
 
