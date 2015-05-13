@@ -26,8 +26,10 @@ EXTRA_COMPONENTS += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXTRA_COMPONENTS += [
+        '360seProfileMigrator.js',
         'IEProfileMigrator.js',
     ]
+    DEFINES['HAS_360SE_MIGRATOR'] = True
     DEFINES['HAS_IE_MIGRATOR'] = True
 
 EXTRA_PP_COMPONENTS += [
