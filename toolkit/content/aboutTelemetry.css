@@ -27,12 +27,33 @@ h2 {
   padding: 10px;
 }
 
-#description-enabled > span {
+#settings {
+  border: 1px solid lightgrey;
+  padding: 5px;
+}
+
+.description-enabled,
+.description-disabled {
+  margin: 0px;
+}
+
+.description-enabled > span {
   color: green;
 }
 
-#description-disabled > span {
+.description-disabled > span {
   color: red;
+}
+
+#ping-picker {
+  margin-top: 10px;
+  border: 1px solid lightgrey;
+  padding: 5px;
+}
+
+#ping-source-picker {
+  margin-left: 5px;
+  margin-bottom: 10px;
 }
 
 .data-section {

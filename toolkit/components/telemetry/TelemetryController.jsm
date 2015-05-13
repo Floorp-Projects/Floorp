@@ -44,7 +44,6 @@ const PREF_UNIFIED = PREF_BRANCH + "unified";
 const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
 
 const PING_FORMAT_VERSION = 4;
-const PING_TYPE_MAIN = "main";
 
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY = 60000;
@@ -62,6 +61,13 @@ const MIDNIGHT_TOLERANCE_FUZZ_MS = 5 * 60 * 1000;
 // We try to spread "midnight" pings out over this interval.
 const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * 60 * 1000;
 const MIDNIGHT_FUZZING_DELAY_MS = Math.random() * MIDNIGHT_FUZZING_INTERVAL_MS;
+
+// Ping types.
+const PING_TYPE_MAIN = "main";
+
+// Session ping reasons.
+const REASON_GATHER_PAYLOAD = "gather-payload";
+const REASON_GATHER_SUBSESSION_PAYLOAD = "gather-subsession-payload";
 
 XPCOMUtils.defineLazyModuleGetter(this, "ClientID",
                                   "resource://gre/modules/ClientID.jsm");
@@ -82,6 +88,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryArchive",
                                   "resource://gre/modules/TelemetryArchive.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySession",
+                                  "resource://gre/modules/TelemetrySession.jsm");
 
 /**
  * Setup Telemetry logging. This function also gets called when loggin related
@@ -210,6 +218,16 @@ this.TelemetryController = Object.freeze({
     aOptions.addEnvironment = aOptions.addEnvironment || false;
 
     return Impl.submitExternalPing(aType, aPayload, aOptions);
+  },
+
+  /**
+   * Get the current session ping data as it would be sent out or stored.
+   *
+   * @param {bool} aSubsession Whether to get subsession data. Optional, defaults to false.
+   * @return {object} The current ping data in object form.
+   */
+  getCurrentPingData: function(aSubsession = false) {
+    return Impl.getCurrentPingData(aSubsession);
   },
 
   /**
@@ -1188,5 +1206,17 @@ let Impl = {
    */
   promiseInitialized: function() {
     return this._delayedInitTaskDeferred.promise;
+  },
+
+  getCurrentPingData: function(aSubsession) {
+    this._log.trace("getCurrentPingData - subsession: " + aSubsession)
+
+    const reason = aSubsession ? REASON_GATHER_SUBSESSION_PAYLOAD : REASON_GATHER_PAYLOAD;
+    const type = PING_TYPE_MAIN;
+    const payload = TelemetrySession.getPayload(reason);
+    const options = { addClientId: true, addEnvironment: true };
+    const ping = this.assemblePing(type, payload, options);
+
+    return ping;
   },
 };
