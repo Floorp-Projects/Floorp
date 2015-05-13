@@ -3488,9 +3488,8 @@ sdp_result_e sdp_parse_attr_rtr (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char tmp[SDP_MAX_STRING_LEN];
 
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
-        SDP_PRINT("%s Parsing a=%s, %s", sdp_p->debug_str,
-                     sdp_get_attr_name(attr_p->type),
-                     tmp);
+        SDP_PRINT("%s Parsing a=%s", sdp_p->debug_str,
+                  sdp_get_attr_name(attr_p->type));
     }
     /*Default confirm to FALSE. */
     attr_p->attr.rtr.confirm = FALSE;
