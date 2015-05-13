@@ -990,38 +990,40 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
     return;
   }
 
+  if (!aStream->GetStreamBuffer().GetAndResetTracksDirty()) {
+    return;
+  }
+
   nsAutoTArray<bool,2> audioOutputStreamsFound;
   for (uint32_t i = 0; i < aStream->mAudioOutputStreams.Length(); ++i) {
     audioOutputStreamsFound.AppendElement(false);
   }
 
-  if (!aStream->mAudioOutputs.IsEmpty()) {
-    for (StreamBuffer::TrackIter tracks(aStream->GetStreamBuffer(), MediaSegment::AUDIO);
-         !tracks.IsEnded(); tracks.Next()) {
-      uint32_t i;
-      for (i = 0; i < audioOutputStreamsFound.Length(); ++i) {
-        if (aStream->mAudioOutputStreams[i].mTrackID == tracks->GetID()) {
-          break;
-        }
+  for (StreamBuffer::TrackIter tracks(aStream->GetStreamBuffer(), MediaSegment::AUDIO);
+       !tracks.IsEnded(); tracks.Next()) {
+    uint32_t i;
+    for (i = 0; i < audioOutputStreamsFound.Length(); ++i) {
+      if (aStream->mAudioOutputStreams[i].mTrackID == tracks->GetID()) {
+        break;
       }
-      if (i < audioOutputStreamsFound.Length()) {
-        audioOutputStreamsFound[i] = true;
-      } else {
-        MediaStream::AudioOutputStream* audioOutputStream =
-          aStream->mAudioOutputStreams.AppendElement();
-        audioOutputStream->mAudioPlaybackStartTime = aAudioOutputStartTime;
-        audioOutputStream->mBlockedAudioTime = 0;
-        audioOutputStream->mLastTickWritten = 0;
-        audioOutputStream->mTrackID = tracks->GetID();
+    }
+    if (i < audioOutputStreamsFound.Length()) {
+      audioOutputStreamsFound[i] = true;
+    } else {
+      MediaStream::AudioOutputStream* audioOutputStream =
+        aStream->mAudioOutputStreams.AppendElement();
+      audioOutputStream->mAudioPlaybackStartTime = aAudioOutputStartTime;
+      audioOutputStream->mBlockedAudioTime = 0;
+      audioOutputStream->mLastTickWritten = 0;
+      audioOutputStream->mTrackID = tracks->GetID();
 
-        if (!CurrentDriver()->AsAudioCallbackDriver() &&
-            !CurrentDriver()->Switching()) {
-          MonitorAutoLock mon(mMonitor);
-          if (mLifecycleState == LIFECYCLE_RUNNING) {
-            AudioCallbackDriver* driver = new AudioCallbackDriver(this);
-            mMixer.AddCallback(driver);
-            CurrentDriver()->SwitchAtNextIteration(driver);
-          }
+      if (!CurrentDriver()->AsAudioCallbackDriver() &&
+          !CurrentDriver()->Switching()) {
+        MonitorAutoLock mon(mMonitor);
+        if (mLifecycleState == LIFECYCLE_RUNNING) {
+          AudioCallbackDriver* driver = new AudioCallbackDriver(this);
+          mMixer.AddCallback(driver);
+          CurrentDriver()->SwitchAtNextIteration(driver);
         }
       }
     }
