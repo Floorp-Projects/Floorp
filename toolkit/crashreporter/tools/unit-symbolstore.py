@@ -3,12 +3,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os, tempfile, unittest, shutil, struct, platform, subprocess, multiprocessing.dummy
+import concurrent.futures
 import mock
-from mock import patch
-import symbolstore
+import os
+import platform
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+import unittest
 
+from mock import patch
 from mozpack.manifests import InstallManifest
+
+import symbolstore
 
 # Some simple functions to mock out files that the platform-specific dumpers will accept.
 # dump_syms itself will not be run (we mock that call out), but we can't override
@@ -423,12 +432,74 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
                                    file_id[1], file_id[0], file_id[1] + '.sym')
         self.assertEqual(open(symbol_file, 'r').read(), expected_output)
 
+class TestFunctional(HelperMixin, unittest.TestCase):
+    '''Functional tests of symbolstore.py, calling it with a real
+    dump_syms binary and passing in a real binary to dump symbols from.
+
+    Since the rest of the tests in this file mock almost everything and
+    don't use the actual process pool like buildsymbols does, this tests
+    that the way symbolstore.py gets called in buildsymbols works.
+    '''
+    def setUp(self):
+        HelperMixin.setUp(self)
+        import buildconfig
+        self.skip_test = False
+        if buildconfig.substs['MOZ_BUILD_APP'] != 'browser':
+            self.skip_test = True
+        self.topsrcdir = buildconfig.topsrcdir
+        self.script_path = os.path.join(self.topsrcdir, 'toolkit',
+                                        'crashreporter', 'tools',
+                                        'symbolstore.py')
+        if platform.system() in ("Windows", "Microsoft"):
+            self.dump_syms = os.path.join(self.topsrcdir,
+                                          'toolkit',
+                                          'crashreporter',
+                                          'tools',
+                                          'win32',
+                                          'dump_syms_vc{_MSC_VER}.exe'.format(**buildconfig.substs))
+            self.target_bin = os.path.join(buildconfig.topobjdir,
+                                           'browser',
+                                           'app',
+                                           'firefox.pdb')
+        else:
+            self.dump_syms = os.path.join(buildconfig.topobjdir,
+                                          'dist', 'host', 'bin',
+                                          'dump_syms')
+            self.target_bin = os.path.join(buildconfig.topobjdir,
+                                           'dist', 'bin', 'firefox')
+
+
+    def tearDown(self):
+        HelperMixin.tearDown(self)
+
+    def testSymbolstore(self):
+        if self.skip_test:
+            raise unittest.SkipTest('Skipping test in non-Firefox product')
+        output = subprocess.check_output([sys.executable,
+                                          self.script_path,
+                                          '--vcs-info',
+                                          '-s', self.topsrcdir,
+                                          self.dump_syms,
+                                          self.test_dir,
+                                          self.target_bin],
+                                         stderr=open(os.devnull, 'w'))
+        lines = filter(lambda x: x.strip(), output.splitlines())
+        self.assertEqual(1, len(lines),
+                         'should have one filename in the output')
+        symbol_file = os.path.join(self.test_dir, lines[0])
+        self.assertTrue(os.path.isfile(symbol_file))
+        symlines = open(symbol_file, 'r').readlines()
+        file_lines = filter(lambda x: x.startswith('FILE') and 'nsBrowserApp.cpp' in x, symlines)
+        self.assertEqual(len(file_lines), 1,
+                         'should have nsBrowserApp.cpp FILE line')
+        filename = file_lines[0].split(None, 2)[2]
+        self.assertEqual('hg:', filename[:3])
+
+
 if __name__ == '__main__':
-    # use the multiprocessing.dummy module to use threading wrappers so
-    # that our mocking/module-patching works
-    symbolstore.Dumper.GlobalInit(module=multiprocessing.dummy)
+    # use ThreadPoolExecutor to use threading instead of processes so
+    # that our mocking/module-patching works.
+    symbolstore.Dumper.GlobalInit(concurrent.futures.ThreadPoolExecutor)
 
     unittest.main()
 
-    symbolstore.Dumper.pool.close()
-    symbolstore.Dumper.pool.join()
