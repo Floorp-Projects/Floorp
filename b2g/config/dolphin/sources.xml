@@ -43,7 +43,7 @@
   <project name="platform/external/bzip2" path="external/bzip2" revision="1cb636bd8e9e5cdfd5d5b2909a122f6e80db62de"/>
   <project name="platform/external/checkpolicy" path="external/checkpolicy" revision="0d73ef7049feee794f14cf1af88d05dae8139914"/>
   <project name="platform/external/dhcpcd" path="external/dhcpcd" revision="84b7252b0a9d0edc9a1db1e0c518771d26b23058"/>
-  <project name="platform/external/dnsmasq" path="external/dnsmasq" revision="41d356427a632f5336384bfa45c8420ffc274f66"/>
+  <project name="platform/external/dnsmasq" path="external/dnsmasq" revision="c2f655d7b501739e05e263d45cb334f26db78079"/>
   <project name="platform/external/dropbear" path="external/dropbear" revision="a34ddbe3819bc465968f3676c734b405e655f8b7"/>
   <project name="platform/external/e2fsprogs" path="external/e2fsprogs" revision="47478a2944a2a17c7fdebe9d92573db92013125c"/>
   <project name="platform/external/elfutils" path="external/elfutils" revision="b23b2dfb354b3ccf5d1c5d39815f02e7048cf516"/>
