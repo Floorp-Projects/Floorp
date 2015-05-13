@@ -2087,7 +2087,8 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     }
   }
 
-  GetLengthOfDOMNode(*outEndNode, (uint32_t&)*outEndOffset);
+  nsCOMPtr<nsINode> node = do_QueryInterface(*outEndNode);
+  *outEndOffset = node->Length();
   return NS_OK;
 }
 
