@@ -394,6 +394,9 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override;
 
+  virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
+                                       nsDisplayListBuilder* aBuilder) override;
+
   /**
    * Returns an ImageContainer for this image if the image type
    * supports it (TYPE_RASTER only).

@@ -237,7 +237,19 @@ public:
 
   bool IsRasterImage();
   bool IsAnimatedImage();
-  already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager);
+
+  /**
+   * @return true if this nsImageRenderer wraps an image which has an
+   * ImageContainer available.
+   *
+   * If IsContainerAvailable() returns true, GetImage() will return a non-null
+   * imgIContainer which callers can use to retrieve the ImageContainer.
+   */
+  bool IsContainerAvailable(LayerManager* aManager,
+                            nsDisplayListBuilder* aBuilder);
+
+  /// Retrieves the image associated with this nsImageRenderer, if there is one.
+  already_AddRefed<imgIContainer> GetImage();
 
   bool IsReady() { return mIsReady; }
 
