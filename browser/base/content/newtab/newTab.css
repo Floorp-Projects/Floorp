@@ -158,11 +158,22 @@ input[type=button] {
 }
 
 /* CELLS */
-.newtab-cell {
+.newtab-cell,
+.newtab-intro-cell,
+.newtab-intro-cell-hover {
   display: -moz-box;
   height: 210px;
   margin: 20px 10px 35px;
   width: 290px;
+}
+
+.newtab-intro-cell-wrapper {
+  margin-top: -12px;
+}
+
+.newtab-intro-cell,
+.newtab-intro-cell-hover {
+  margin: 0;
 }
 
 /* SITES */
@@ -307,7 +318,8 @@ input[type=button] {
 }
 
 .newtab-control:-moz-focusring,
-.newtab-cell:not([ignorehover]) > .newtab-site:hover > .newtab-control {
+.newtab-cell:not([ignorehover]) > .newtab-site:hover > .newtab-control,
+.newtab-intro-cell-hover .newtab-control {
   opacity: 1;
 }
 
@@ -559,6 +571,11 @@ input[type=button] {
   cursor: pointer;
 }
 
+.newtab-customize-panel-item,
+.newtab-customize-complex-option {
+  width: 100%;
+}
+
 .newtab-customize-panel-item:not([selected]),
 .newtab-customize-panel-subitem:not([selected]){
   color: #7A7A7A;
@@ -573,7 +590,7 @@ input[type=button] {
 .selectable:not([selected]):hover {
   background: url("chrome://global/skin/menu/shared-menu-check-hover.svg") no-repeat #FFFFFF;
   background-size: 16px 16px;
-  background-position: 15px 20px;
+  background-position: 15px 15px;
   color: #171F26;
 }
 
@@ -585,7 +602,7 @@ input[type=button] {
 .newtab-search-panel-engine[selected] {
   background: url("chrome://global/skin/menu/shared-menu-check-active.svg") no-repeat transparent;
   background-size: 16px 16px;
-  background-position: 15px 20px;
+  background-position: 15px 15px;
   color: black;
   font-weight: 600;
 }
@@ -607,7 +624,7 @@ input[type=button] {
 .newtab-customize-panel-subitem {
   font-size: 12px;
   padding-left: 40px;
-  padding-bottom: 20px;
+  padding-bottom: 15px;
   border-bottom: 1px solid threedshadow;
 }
 
@@ -618,7 +635,7 @@ input[type=button] {
 .newtab-customize-panel-superitem {
   line-height: 14px;
   border-bottom: medium none !important;
-  padding: 20px 0px 10px 40px;
+  padding: 15px 0px 10px 40px;
 }
 
 .searchSuggestionTable {
@@ -746,13 +763,35 @@ input[type=button] {
   height: 100%;
 }
 
-#newtab-intro-text {
+#newtab-intro-text,
+#newtab-intro-image {
   height: 100%;
   width: 270px;
   right: 0px;
   position: absolute;
   font-size: 14px;
   line-height: 20px;
+  margin-top: -12px;
+}
+
+#newtab-intro-image {
+  left: 0px;
+  right: auto;
+}
+
+.newtab-intro-image-tile {
+}
+
+.newtab-intro-image-customize {
+  display: block;
+  box-shadow: 3px 3px 5px #888;
+  margin: 0 !important;
+}
+
+.newtab-intro-image-customize .newtab-customize-panel-item:not([selected]):hover {
+  background-color: inherit;
+  color: #7A7A7A;
+  background: none;
 }
 
 #newtab-intro-text > p {
