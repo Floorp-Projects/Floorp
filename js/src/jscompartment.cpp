@@ -749,10 +749,8 @@ AddInnerLazyFunctionsFromScript(JSScript* script, AutoObjectVector& lazyFunction
 }
 
 static bool
-CreateLazyScriptsForCompartment(JSContext* cx)
+AddLazyFunctionsForCompartment(JSContext* cx, AutoObjectVector& lazyFunctions, AllocKind kind)
 {
-    AutoObjectVector lazyFunctions(cx);
-
     // Find all live root lazy functions in the compartment: those which have a
     // source object, indicating that they have a parent, and which do not have
     // an uncompiled enclosing script. The last condition is so that we don't
@@ -762,12 +760,8 @@ CreateLazyScriptsForCompartment(JSContext* cx)
     // Some LazyScripts have a non-null |JSScript* script| pointer. We still
     // want to delazify in that case: this pointer is weak so the JSScript
     // could be destroyed at the next GC.
-    //
-    // Note that while we ideally iterate over LazyScripts, LazyScripts do not
-    // currently stand in 1-1 relation with JSScripts; JSFunctions with the
-    // same LazyScript may create different JSScripts due to relazification of
-    // clones. See bug 1105306.
-    for (gc::ZoneCellIter i(cx->zone(), AllocKind::FUNCTION); !i.done(); i.next()) {
+
+    for (gc::ZoneCellIter i(cx->zone(), kind); !i.done(); i.next()) {
         JSFunction* fun = &i.get<JSObject>()->as<JSFunction>();
 
         // Sweeping is incremental; take care to not delazify functions that
@@ -787,6 +781,22 @@ CreateLazyScriptsForCompartment(JSContext* cx)
             }
         }
     }
+
+    return true;
+}
+
+static bool
+CreateLazyScriptsForCompartment(JSContext* cx)
+{
+    AutoObjectVector lazyFunctions(cx);
+
+    if (!AddLazyFunctionsForCompartment(cx, lazyFunctions, AllocKind::FUNCTION))
+        return false;
+
+    // Methods, for instance {get method() {}}, are extended functions that can
+    // be relazified, so we need to handle those as well.
+    if (!AddLazyFunctionsForCompartment(cx, lazyFunctions, AllocKind::FUNCTION_EXTENDED))
+        return false;
 
     // Create scripts for each lazy function, updating the list of functions to
     // process with any newly exposed inner functions in created scripts.
