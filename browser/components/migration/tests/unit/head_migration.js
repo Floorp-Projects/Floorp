@@ -21,10 +21,10 @@ updateAppInfo();
 /**
  * Migrates the requested resource and waits for the migration to be complete.
  */
-function promiseMigration(migrator, resourceType) {
+function promiseMigration(migrator, resourceType, aProfile = null) {
   // Ensure resource migration is available.
-  let availableSources = migrator.getMigrateData(null, false);
-  Assert.ok((availableSources & resourceType) > 0);
+  let availableSources = migrator.getMigrateData(aProfile, false);
+  Assert.ok((availableSources & resourceType) > 0, "Resource supported by migrator");
 
   return new Promise (resolve => {
     Services.obs.addObserver(function onMigrationEnded() {
@@ -32,6 +32,29 @@ function promiseMigration(migrator, resourceType) {
       resolve();
     }, "Migration:Ended", false);
 
-    migrator.migrate(resourceType, null, null);
+    migrator.migrate(resourceType, null, aProfile);
+  });
+}
+
+/**
+ * Replaces a directory service entry with a given nsIFile.
+ */
+function registerFakePath(key, file) {
+   // Register our own provider for the Library directory.
+  let provider = {
+    getFile(prop, persistent) {
+      persistent.value = true;
+      if (prop == key) {
+        return file;
+      }
+      throw Cr.NS_ERROR_FAILURE;
+    },
+    QueryInterface: XPCOMUtils.generateQI([ Ci.nsIDirectoryServiceProvider ])
+  };
+  Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
+                 .registerProvider(provider);
+  do_register_cleanup(() => {
+    Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
+                   .unregisterProvider(provider);
   });
 }
