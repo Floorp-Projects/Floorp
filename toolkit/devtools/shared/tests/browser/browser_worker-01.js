@@ -19,8 +19,9 @@ const DURATION = 1000;
 
 add_task(function*() {
   // Test both CJS and JSM versions
-  yield testWorker("JSM", () => Cu.import("resource:///modules/devtools/shared/worker.js", {}));
-  yield testWorker("CommonJS", () => devtools.require("devtools/shared/worker"));
+
+  yield testWorker("JSM", () => Cu.import("resource://gre/modules/devtools/shared/worker.js", {}));
+  yield testWorker("CommonJS", () => require("devtools/toolkit/shared/worker"));
 });
 
 function *testWorker (context, workerFactory) {
@@ -34,11 +35,10 @@ function *testWorker (context, workerFactory) {
 
   ok(results.plottedData.length,
     `worker should have returned an object with array properties in ${context}`);
-  
+
   let fn = workerify(function (x) { return x * x });
   is((yield fn(5)), 25, `workerify works in ${context}`);
   fn.destroy();
-
 
   worker.destroy();
 }
