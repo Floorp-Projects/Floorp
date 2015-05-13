@@ -23,14 +23,7 @@ DocAccessibleParent::RecvShowEvent(const ShowEventData& aData)
     return false;
   }
 
-  ProxyAccessible* parent = nullptr;
-  if (aData.ID()) {
-    ProxyEntry* e = mAccessibles.GetEntry(aData.ID());
-    if (e)
-      parent = e->mProxy;
-  } else {
-    parent = this;
-  }
+  ProxyAccessible* parent = GetAccessible(aData.ID());
 
   // XXX This should really never happen, but sometimes we fail to fire the
   // required show events.
@@ -123,18 +116,13 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
 bool
 DocAccessibleParent::RecvEvent(const uint64_t& aID, const uint32_t& aEventType)
 {
-  if (!aID) {
-    ProxyEvent(this, aEventType);
-    return true;
-  }
-
-  ProxyEntry* e = mAccessibles.GetEntry(aID);
-  if (!e) {
+  ProxyAccessible* proxy = GetAccessible(aID);
+  if (!proxy) {
     NS_ERROR("no proxy for event!");
     return true;
   }
 
-  ProxyEvent(e->mProxy, aEventType);
+  ProxyEvent(proxy, aEventType);
   return true;
 }
 
