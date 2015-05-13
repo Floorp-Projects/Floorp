@@ -69,9 +69,15 @@ Cu.import("resource://gre/modules/devtools/event-emitter.js");
  *       This function is called before the editor has been torn down.
  *    {function} destroy:
  *       Called when the editor is destroyed and has been torn down.
- *    {string} advanceChars:
- *       If any characters in advanceChars are typed, focus will advance
- *       to the next element.
+ *    {object} advanceChars:
+ *       This can be either a string or a function.
+ *       If it is a string, then if any characters in it are typed,
+ *       focus will advance to the next element.
+ *       Otherwise, if it is a function, then the function will
+ *       be called with three arguments: a key code, the current text,
+ *       and the insertion point.  If the function returns true,
+ *       then the focus advance takes place.  If it returns false,
+ *       then the character is inserted instead.
  *    {boolean} stopOnReturn:
  *       If true, the return key will not advance the editor to the next
  *       focusable element.
@@ -212,10 +218,15 @@ function InplaceEditor(aOptions, aEvent)
 
   // Pull out character codes for advanceChars, listing the
   // characters that should trigger a blur.
-  this._advanceCharCodes = {};
-  let advanceChars = aOptions.advanceChars || '';
-  for (let i = 0; i < advanceChars.length; i++) {
-    this._advanceCharCodes[advanceChars.charCodeAt(i)] = true;
+  if (typeof(aOptions.advanceChars) === "function") {
+    this._advanceChars = aOptions.advanceChars;
+  } else {
+    let advanceCharcodes = {};
+    let advanceChars = aOptions.advanceChars || '';
+    for (let i = 0; i < advanceChars.length; i++) {
+      advanceCharcodes[advanceChars.charCodeAt(i)] = true;
+    }
+    this._advanceChars = aCharCode => aCharCode in advanceCharcodes;
   }
 
   // Hide the provided element and add our editor.
@@ -931,7 +942,8 @@ InplaceEditor.prototype = {
         aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN &&
         aEvent.shiftKey) {
       prevent = false;
-    } else if (aEvent.charCode in this._advanceCharCodes
+    } else if (this._advanceChars(aEvent.charCode, this.input.value,
+                                 this.input.selectionStart)
        || aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN
        || aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_TAB) {
       prevent = true;
