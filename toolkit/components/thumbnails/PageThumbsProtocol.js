@@ -79,7 +79,9 @@ Protocol.prototype = {
     let {url} = parseURI(aURI);
     let file = PageThumbsStorage.getFilePathForURL(url);
     let fileuri = Services.io.newFileURI(new FileUtils.File(file));
-    return Services.io.newChannelFromURIWithLoadInfo(fileuri, aLoadInfo);
+    let channel = Services.io.newChannelFromURIWithLoadInfo(fileuri, aLoadInfo);
+    channel.originalURI = aURI;
+    return channel;
   },
 
   newChannel: function Proto_newChannel(aURI) {
