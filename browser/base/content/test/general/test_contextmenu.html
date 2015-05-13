@@ -357,8 +357,8 @@ function runTest(testNum) {
         // Context menu for textarea before spell check initialization finishes
         checkContextMenu(["context-undo",                false,
                           "---",                         null,
-                          "context-cut",                 false,
-                          "context-copy",                false,
+                          "context-cut",                 true,
+                          "context-copy",                true,
                           "context-paste",               null,
                           "context-delete",              false,
                           "---",                         null,
@@ -377,8 +377,8 @@ function runTest(testNum) {
                           "---",                 null,
                           "context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,
@@ -409,8 +409,8 @@ function runTest(testNum) {
                           "---",                 null,
                           "context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,
@@ -434,8 +434,8 @@ function runTest(testNum) {
                           "---",                 null,
                           "context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,
@@ -650,8 +650,8 @@ function runTest(testNum) {
         // Context menu for selected text in input[type="password"]
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      true,
                           "---",                 null,
@@ -743,8 +743,8 @@ function runTest(testNum) {
         // Context menu for text input field with spellcheck=false
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,
