@@ -170,6 +170,29 @@ add_task(function* test_clientId() {
   yield promiseSetup;
 });
 
+add_task(function* test_InvalidPingType() {
+  const TYPES = [
+    "a",
+    "-",
+    "¿€€€?",
+    "-foo-",
+    "-moo",
+    "zoo-",
+    ".bar",
+    "asfd.asdf",
+  ];
+
+  for (let type of TYPES) {
+    let histogram = Telemetry.getKeyedHistogramById("TELEMETRY_INVALID_PING_TYPE_SUBMITTED");
+    Assert.equal(histogram.snapshot(type).sum, 0,
+                 "Should not have counted this invalid ping yet: " + type);
+    Assert.ok(promiseRejects(TelemetryController.submitExternalPing(type, {})),
+              "Ping type should have been rejected.");
+    Assert.equal(histogram.snapshot(type).sum, 1,
+                 "Should have counted this as an invalid ping type.");
+  }
+});
+
 add_task(function* test_currentPingData() {
   yield TelemetrySession.setup();
 
