@@ -173,12 +173,8 @@ function getAreaWidgetIds(areaId) {
   return CustomizableUI.getWidgetIdsInArea(areaId);
 }
 
-function simulateItemDrag(toDrag, target) {
-  let docId = toDrag.ownerDocument.documentElement.id;
-  let dragData = [[{type: 'text/toolbarwrapper-id/' + docId,
-                    data: toDrag.id}]];
-  synthesizeDragStart(toDrag.parentNode, dragData);
-  synthesizeDrop(target, target, dragData);
+function simulateItemDrag(aToDrag, aTarget) {
+  synthesizeDrop(aToDrag.parentNode, aTarget);
 }
 
 function endCustomizing(aWindow=window) {
