@@ -36,6 +36,10 @@ Current ping data
 Archived ping data
 ">
 
+<!ENTITY aboutTelemetry.showSubsessionData "
+Show subsession data
+">
+
 <!ENTITY aboutTelemetry.choosePing "
 Choose ping:
 ">
