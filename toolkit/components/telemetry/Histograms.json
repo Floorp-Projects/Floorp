@@ -359,19 +359,6 @@
     "n_values": 10,
     "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach=0, DestructuringForIn=1, LegacyGenerator=2, ExpressionClosure=3, LetBlock=4, LetExpression=5, NoSuchMethod=6, FlagsArgument=7, RegExpSourceProp=8"
   },
-  "TELEMETRY_PING": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Time taken to submit telemetry info (ms)"
-  },
-  "TELEMETRY_SUCCESS": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Successful telemetry submission"
-  },
   "XUL_CACHE_DISABLED": {
     "expires_in_version": "default",
     "kind": "flag",
@@ -4400,6 +4387,26 @@
     "kind": "enumerated",
     "n_values": 30,
     "description": "Number of telemetry pings evicted at startup"
+  },
+  "TELEMETRY_PING": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time taken to submit telemetry info (ms)"
+  },
+  "TELEMETRY_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Successful telemetry submission"
+  },
+  "TELEMETRY_INVALID_PING_TYPE_SUBMITTED": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "Count of individual invalid ping types that were submitted to Telemetry."
   },
   "TELEMETRY_TEST_FLAG": {
     "expires_in_version": "never",
