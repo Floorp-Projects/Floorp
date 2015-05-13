@@ -13,11 +13,6 @@
 #include "nsWindow.h"
 #include <imgIContainer.h>
 
-// This isn't ideal, we should figure out how to export
-// the #defines here; need this to figure out if we have
-// the DirectDraw surface or not.
-#include "cairo-features.h"
-
 class nsWindowGfx {
 public:
   enum IconSizeType {

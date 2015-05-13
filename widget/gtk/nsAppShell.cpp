@@ -73,6 +73,12 @@ nsAppShell::~nsAppShell()
 nsresult
 nsAppShell::Init()
 {
+    // For any versions of Glib before 2.36, g_type_init must be explicitly called
+    // to safely use the library. Failure to do so may cause various failures/crashes
+    // in any code that uses Glib, Gdk, or Gtk. In later versions of Glib, this call
+    // is a no-op.
+    g_type_init();
+
     if (!gWidgetLog)
         gWidgetLog = PR_NewLogModule("Widget");
     if (!gWidgetFocusLog)

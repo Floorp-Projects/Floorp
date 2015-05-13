@@ -47,11 +47,6 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
 
-extern "C" {
-#define PIXMAN_DONT_DEFINE_STDINT
-#include "pixman.h"
-}
-
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;

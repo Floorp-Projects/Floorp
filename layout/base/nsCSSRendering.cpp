@@ -5193,14 +5193,30 @@ nsImageRenderer::IsAnimatedImage()
   return false;
 }
 
-already_AddRefed<mozilla::layers::ImageContainer>
-nsImageRenderer::GetContainer(LayerManager* aManager)
+bool
+nsImageRenderer::IsContainerAvailable(LayerManager* aManager,
+                                      nsDisplayListBuilder* aBuilder)
+{
+  if (mType != eStyleImageType_Image || !mImageContainer) {
+    return false;
+  }
+
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                 ? imgIContainer::FLAG_SYNC_DECODE
+                 : imgIContainer::FLAG_NONE;
+
+  return mImageContainer->IsImageContainerAvailable(aManager, flags);
+}
+
+already_AddRefed<imgIContainer>
+nsImageRenderer::GetImage()
 {
   if (mType != eStyleImageType_Image || !mImageContainer) {
     return nullptr;
   }
 
-  return mImageContainer->GetImageContainer(aManager, imgIContainer::FLAG_NONE);
+  nsCOMPtr<imgIContainer> image = mImageContainer;
+  return image.forget();
 }
 
 #define MAX_BLUR_RADIUS 300

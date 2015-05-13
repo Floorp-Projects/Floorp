@@ -76,6 +76,10 @@
 #include "GLContextProvider.h"
 #include "mozilla/gfx/Logging.h"
 
+#if defined(MOZ_WIDGET_GTK)
+#include "gfxPlatformGtk.h" // xxx - for UseFcFontList
+#endif
+
 #ifdef MOZ_WIDGET_ANDROID
 #include "TexturePoolOGL.h"
 #endif
@@ -382,6 +386,39 @@ static const char *gPrefLangNames[] = {
     "x-unicode",
 };
 
+// this needs to match the list of pref font.default.xx entries listed in all.js!
+// the order *must* match the order in eFontPrefLang
+static nsIAtom* gPrefLangToLangGroups[] = {
+    nsGkAtoms::x_western,
+    nsGkAtoms::Japanese,
+    nsGkAtoms::Taiwanese,
+    nsGkAtoms::Chinese,
+    nsGkAtoms::HongKongChinese,
+    nsGkAtoms::ko,
+    nsGkAtoms::x_cyrillic,
+    nsGkAtoms::el,
+    nsGkAtoms::th,
+    nsGkAtoms::he,
+    nsGkAtoms::ar,
+    nsGkAtoms::x_devanagari,
+    nsGkAtoms::x_tamil,
+    nsGkAtoms::x_armn,
+    nsGkAtoms::x_beng,
+    nsGkAtoms::x_cans,
+    nsGkAtoms::x_ethi,
+    nsGkAtoms::x_geor,
+    nsGkAtoms::x_gujr,
+    nsGkAtoms::x_guru,
+    nsGkAtoms::x_khmr,
+    nsGkAtoms::x_mlym,
+    nsGkAtoms::x_orya,
+    nsGkAtoms::x_telu,
+    nsGkAtoms::x_knda,
+    nsGkAtoms::x_sinh,
+    nsGkAtoms::x_tibt,
+    nsGkAtoms::Unicode
+};
+
 gfxPlatform::gfxPlatform()
   : mTileWidth(-1)
   , mTileHeight(-1)
@@ -503,12 +540,19 @@ gfxPlatform::Init()
 
     nsresult rv;
 
-#if defined(XP_MACOSX) || defined(XP_WIN) || defined(ANDROID) // temporary, until this is implemented on others
-    rv = gfxPlatformFontList::Init();
-    if (NS_FAILED(rv)) {
-        NS_RUNTIMEABORT("Could not initialize gfxPlatformFontList");
-    }
+    bool usePlatformFontList = true;
+#if defined(MOZ_WIDGET_GTK)
+    usePlatformFontList = gfxPlatformGtk::UseFcFontList();
+#elif defined(MOZ_WIDGET_QT)
+    usePlatformFontList = false;
 #endif
+
+    if (usePlatformFontList) {
+        rv = gfxPlatformFontList::Init();
+        if (NS_FAILED(rv)) {
+            NS_RUNTIMEABORT("Could not initialize gfxPlatformFontList");
+        }
+    }
 
     gPlatform->mScreenReferenceSurface =
         gPlatform->CreateOffscreenSurface(IntSize(1, 1),
@@ -1472,6 +1516,19 @@ gfxPlatform::GetFontPrefLangFor(nsIAtom *aLang)
     nsAutoCString lang;
     aLang->ToUTF8String(lang);
     return GetFontPrefLangFor(lang.get());
+}
+
+nsIAtom*
+gfxPlatform::GetLangGroupForPrefLang(eFontPrefLang aLang)
+{
+    // the special CJK set pref lang should be resolved into separate
+    // calls to individual CJK pref langs before getting here
+    NS_ASSERTION(aLang != eFontPrefLang_CJKSet, "unresolved CJK set pref lang");
+
+    if (uint32_t(aLang) < ArrayLength(gPrefLangToLangGroups)) {
+        return gPrefLangToLangGroups[uint32_t(aLang)];
+    }
+    return nsGkAtoms::Unicode;
 }
 
 const char*

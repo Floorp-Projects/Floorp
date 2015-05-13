@@ -15,6 +15,7 @@ import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
+import org.mozilla.gecko.AppConstants;
 
 import android.content.Context;
 import android.graphics.PointF;
@@ -346,6 +347,11 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     private void adjustViewport(DisplayPortMetrics displayPort) {
+        // TODO: APZ For fennec might need margins information to deal with
+        // the dynamic toolbar.
+        if (AppConstants.MOZ_ANDROID_APZ)
+            return;
+
         ImmutableViewportMetrics metrics = getViewportMetrics();
         ImmutableViewportMetrics clampedMetrics = metrics.clamp();
 

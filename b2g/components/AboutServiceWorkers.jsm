@@ -4,7 +4,7 @@
 
 "use strict"
 
-this.EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = ["AboutServiceWorkers"];
 
 const { interfaces: Ci, utils: Cu } = Components;
 
@@ -47,19 +47,6 @@ function serializeServiceWorkerInfo(aServiceWorkerInfo) {
   return result;
 }
 
-function sendResult(aId, aResult) {
-  SystemAppProxy._sendCustomEvent("mozAboutServiceWorkersChromeEvent", {
-    id: aId,
-    result: aResult
-  });
-}
-
-function sendError(aId, aError) {
-  SystemAppProxy._sendCustomEvent("mozAboutServiceWorkersChromeEvent", {
-    id: aId,
-    error: aError
-  });
-}
 
 this.AboutServiceWorkers = {
   get enabled() {
@@ -75,7 +62,21 @@ this.AboutServiceWorkers = {
 
   init: function() {
     SystemAppProxy.addEventListener("mozAboutServiceWorkersContentEvent",
-                                   AboutServiceWorkers);
+                                    AboutServiceWorkers);
+  },
+
+  sendResult: function(aId, aResult) {
+    SystemAppProxy._sendCustomEvent("mozAboutServiceWorkersChromeEvent", {
+      id: aId,
+      result: aResult
+    });
+  },
+
+  sendError: function(aId, aError) {
+    SystemAppProxy._sendCustomEvent("mozAboutServiceWorkersChromeEvent", {
+      id: aId,
+      error: aError
+    });
   },
 
   handleEvent: function(aEvent) {
@@ -88,10 +89,12 @@ this.AboutServiceWorkers = {
       return;
     }
 
+    let self = AboutServiceWorkers;
+
     switch(message.name) {
       case "init":
-        if (!this.enabled) {
-          sendResult({
+        if (!self.enabled) {
+          self.sendResult(message.id, {
             enabled: false,
             registrations: []
           });
@@ -100,7 +103,7 @@ this.AboutServiceWorkers = {
 
         let data = gServiceWorkerManager.getAllRegistrations();
         if (!data) {
-          sendError(message.id, "NoServiceWorkersRegistrations");
+          self.sendError(message.id, "NoServiceWorkersRegistrations");
           return;
         }
 
@@ -116,26 +119,26 @@ this.AboutServiceWorkers = {
           registrations.push(serializeServiceWorkerInfo(info));
         }
 
-        sendResult(message.id, {
-          enabled: this.enabled,
+        self.sendResult(message.id, {
+          enabled: self.enabled,
           registrations: registrations
         });
         break;
 
       case "update":
         if (!message.scope) {
-          sendError(message.id, "MissingScope");
+          self.sendError(message.id, "MissingScope");
           return;
         }
-        gServiceWorkerManager.update(message.scope);
-        sendResult(message.id, true);
+        gServiceWorkerManager.softUpdate(message.scope);
+        self.sendResult(message.id, true);
         break;
 
       case "unregister":
         if (!message.principal ||
             !message.principal.origin ||
             !message.principal.appId) {
-          sendError("MissingPrincipal");
+          self.sendError("MissingPrincipal");
           return;
         }
 
@@ -146,17 +149,17 @@ this.AboutServiceWorkers = {
         );
 
         if (!message.scope) {
-          sendError("MissingScope");
+          self.sendError("MissingScope");
           return;
         }
 
         let serviceWorkerUnregisterCallback = {
           unregisterSucceeded: function() {
-            sendResult(message.id, true);
+            self.sendResult(message.id, true);
           },
 
           unregisterFailed: function() {
-            sendError(message.id, "UnregisterError");
+            self.sendError(message.id, "UnregisterError");
           },
 
           QueryInterface: XPCOMUtils.generateQI([

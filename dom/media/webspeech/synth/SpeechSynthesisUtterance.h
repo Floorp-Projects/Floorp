@@ -71,6 +71,8 @@ public:
 
   void SetPitch(float aPitch);
 
+  void GetChosenVoiceURI(nsString& aResult) const;
+
   enum {
     STATE_NONE,
     STATE_PENDING,
@@ -106,6 +108,8 @@ private:
   float mRate;
 
   float mPitch;
+
+  nsString mChosenVoiceURI;
 
   uint32_t mState;
 

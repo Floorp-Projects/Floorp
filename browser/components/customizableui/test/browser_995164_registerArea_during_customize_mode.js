@@ -18,6 +18,7 @@ add_task(function*() {
   ok(!CustomizableUI.getPlacementOfWidget("sync-button"), "Button moved to the palette");
   ok(gNavToolbox.palette.querySelector("#sync-button"), "Sync button really is in palette.");
 
+  syncButton.scrollIntoView();
   simulateItemDrag(syncButton, toolbar);
   ok(CustomizableUI.getPlacementOfWidget("sync-button"), "Button moved out of palette");
   is(CustomizableUI.getPlacementOfWidget("sync-button").area, TOOLBARID, "Button's back on toolbar");
@@ -49,6 +50,7 @@ add_task(function*() {
   ok(!CustomizableUI.inDefaultState, "Now that the toolbar is registered again, should no longer be in default state.");
   ok(gCustomizeMode.areas.has(toolbar), "Toolbar should be known to customize mode again.");
 
+  syncButton.scrollIntoView();
   simulateItemDrag(syncButton, toolbar);
   ok(CustomizableUI.getPlacementOfWidget("sync-button"), "Button moved out of palette");
   is(CustomizableUI.getPlacementOfWidget("sync-button").area, TOOLBARID, "Button's back on toolbar");
@@ -78,6 +80,7 @@ add_task(function*() {
   ok(gNavToolbox.palette.querySelector("#sync-button"), "Sync button really is in palette.");
   ok(!otherTB.querySelector("#sync-button"), "Sync button is in palette in other window, too.");
 
+  syncButton.scrollIntoView();
   simulateItemDrag(syncButton, toolbar);
   ok(CustomizableUI.getPlacementOfWidget("sync-button"), "Button moved out of palette");
   is(CustomizableUI.getPlacementOfWidget("sync-button").area, TOOLBARID, "Button's back on toolbar");
