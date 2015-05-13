@@ -324,7 +324,7 @@ nsresult nsBidi::SetPara(const char16_t *aText, int32_t aLength,
   if (mIsolateCount <= SIMPLE_ISOLATES_SIZE) {
     mIsolates = mSimpleIsolates;
   } else {
-    if (mIsolateCount <= (int32_t) mIsolatesSize) {
+    if (mIsolateCount * sizeof(Isolate) <= mIsolatesSize) {
       mIsolates = mIsolatesMemory;
     } else {
       if (GETINITIALISOLATESMEMORY(mIsolateCount)) {
