@@ -49,6 +49,37 @@
           </td>
         </tr>
       </table>
+
+      <div id="ping-picker">
+        <div id="ping-source-picker">
+          &aboutTelemetry.pingDataSource;<br/>
+          <input type="radio" id="ping-source-current" name="choose-ping-source" value="current" checked="checked" />
+          &aboutTelemetry.showCurrentPingData;<br />
+          <input type="radio" id="ping-source-archive" name="choose-ping-source" value="archive" />
+          &aboutTelemetry.showArchivedPingData;<br />
+        </div>
+        <div id="archived-ping-picker" class="hidden">
+          &aboutTelemetry.choosePing;<br />
+          <button id="next-ping" type="button">&aboutTelemetry.showPreviousPing;</button>
+          <button id="previous-ping" type="button">&aboutTelemetry.showNextPing;</button><br />
+          <table>
+            <tr>
+                <th>Week</th>
+                <th>Ping</th>
+            </tr>
+            <tr>
+                <td>
+                    <select id="choose-ping-week">
+                    </select>
+                </td>
+                <td>
+                    <select id="choose-ping-id">
+                    </select>
+                </td>
+            </tr>
+          </table>
+        </div>
+      </div>
     </header>
 
     <section id="general-data-section" class="data-section">
