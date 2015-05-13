@@ -1,0 +1,22 @@
+{
+  "profile" : {
+    "info_cache" : {
+      "Default" : {
+        "active_time" : 1430950755.65137,
+        "is_using_default_name" : true,
+        "is_ephemeral" : false,
+        "is_omitted_from_profile_list" : false,
+        "user_name" : "",
+        "background_apps" : false,
+        "is_using_default_avatar" : true,
+        "avatar_icon" : "chrome://theme/IDR_PROFILE_AVATAR_0",
+        "name" : "Person 1"
+      }
+    },
+    "profiles_created" : 1,
+    "last_used" : "Default",
+    "last_active_profiles" : [
+      "Default"
+    ]
+  }
+}
