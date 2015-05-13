@@ -175,7 +175,7 @@ public:
 
   FontFaceSet* Add(FontFace& aFontFace, mozilla::ErrorResult& aRv);
   void Clear();
-  bool Delete(FontFace& aFontFace, mozilla::ErrorResult& aRv);
+  bool Delete(FontFace& aFontFace);
   bool Has(FontFace& aFontFace);
   uint32_t Size();
   mozilla::dom::FontFaceSetIterator* Entries();
