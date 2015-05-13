@@ -11,6 +11,7 @@ this.EXPORTED_SYMBOLS = [
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/LoginManagerParent.jsm");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -27,10 +28,8 @@ this.LoginDoorhangers.FillDoorhanger = function (properties) {
   this.onListDblClick = this.onListDblClick.bind(this);
   this.onListKeyPress = this.onListKeyPress.bind(this);
 
-  this.filterString = properties.filterString;
-
-  if (properties.browser) {
-    this.browser = properties.browser;
+  for (let name of Object.getOwnPropertyNames(properties)) {
+    this[name] = properties[name];
   }
 };
 
@@ -48,20 +47,25 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
    * web page is moved to a different chrome window by the swapDocShells method.
    */
   set browser(browser) {
+    const MAX_DATE_VALUE = new Date(8640000000000000);
+
     this._browser = browser;
 
     let doorhanger = this;
     let PopupNotifications = this.chomeDocument.defaultView.PopupNotifications;
     let notification = PopupNotifications.show(
       browser,
-      "password-fill",
+      "login-fill",
       "",
-      "password-notification-icon",
+      "login-fill-notification-icon",
       null,
       null,
       {
         dismissed: true,
-        persistWhileVisible: true,
+        // This will make the anchor persist forever even if the popup is not
+        // visible. We'll remove the notification manually when the page
+        // changes, after we had time to check its final state asynchronously.
+        timeout: MAX_DATE_VALUE,
         eventCallback: function (topic, otherBrowser) {
           switch (topic) {
             case "shown":
@@ -69,6 +73,8 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
               // be called after the "show" method returns, so the reference to
               // "this.notification" will be available at this point.
               doorhanger.bound = true;
+              doorhanger.promiseHidden =
+                         new Promise(resolve => doorhanger.onUnbind = resolve);
               doorhanger.bind();
               break;
 
@@ -76,11 +82,12 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
             case "removed":
               if (doorhanger.bound) {
                 doorhanger.unbind();
+                doorhanger.onUnbind();
               }
               break;
 
             case "swapping":
-              this._browser = otherBrowser;
+              doorhanger._browser = otherBrowser;
               return true;
           }
           return false;
@@ -115,6 +122,11 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
       PopupNotifications.panel.hidePopup();
     }
   },
+
+  /**
+   * Promise resolved as soon as the notification is hidden.
+   */
+  promiseHidden: Promise.resolve(),
 
   /**
    * Removes the doorhanger from the browser.
@@ -160,6 +172,18 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
   },
 
   /**
+   * Origin for which the manual fill UI should be displayed, for example
+   * "http://www.example.com".
+   */
+  loginFormOrigin: "",
+
+  /**
+   * When no login form is present on the page, we may still display a list of
+   * logins, but we cannot offer manual filling.
+   */
+  loginFormPresent: false,
+
+  /**
    * User-editable string used to filter the list of all logins.
    */
   filterString: "",
@@ -192,6 +216,12 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
       item.classList.add("login-fill-item");
       item.setAttribute("hostname", hostname);
       item.setAttribute("username", username);
+      if (hostname != this.loginFormOrigin) {
+        item.classList.add("different-hostname");
+      }
+      if (!this.loginFormPresent) {
+        item.setAttribute("disabled", "true");
+      }
       this.list.appendChild(item);
     }
   },
@@ -222,6 +252,23 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
     this.fillLogin();
   },
   fillLogin() {
+    if (this.list.selectedItem.hasAttribute("disabled")) {
+      return;
+    }
+    let formLogins = Services.logins.findLogins({}, "", "", null);
+    let login = formLogins.find(login => {
+      return login.hostname == this.list.selectedItem.getAttribute("hostname") &&
+             login.username == this.list.selectedItem.getAttribute("username");
+    });
+    if (login) {
+      LoginManagerParent.fillForm({
+        browser: this.browser,
+        loginFormOrigin: this.loginFormOrigin,
+        login,
+      }).catch(Cu.reportError);
+    } else {
+      Cu.reportError("The selected login has been removed in the meantime.");
+    }
     this.hide();
   },
 };
@@ -238,7 +285,7 @@ this.LoginDoorhangers.FillDoorhanger.prototype = {
  */
 this.LoginDoorhangers.FillDoorhanger.find = function ({ browser }) {
   let PopupNotifications = browser.ownerDocument.defaultView.PopupNotifications;
-  let notification = PopupNotifications.getNotification("password-fill",
+  let notification = PopupNotifications.getNotification("login-fill",
                                                         browser);
   return notification && notification.doorhanger;
 };
