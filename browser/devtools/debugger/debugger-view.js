@@ -422,7 +422,8 @@ let DebuggerView = {
       deferred.resolve([aSource, aText, aContentType]);
     },
     ([, aError]) => {
-      let msg = L10N.getStr("errorLoadingText") + DevToolsUtils.safeErrorString(aError);
+      let url = aError;
+      let msg = L10N.getFormatStr("errorLoadingText2", url);
       this._setEditorText(msg);
       Cu.reportError(msg);
       dumpn(msg);
