@@ -4696,11 +4696,6 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
 
   coords[2] = NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
                                       aAppUnitsPerPixel);
-  if (aBoundsOverride) {
-    // Adjust based on the origin of the override:
-    coords[0] += NSAppUnitsToFloatPixels(aBoundsOverride->x, aAppUnitsPerPixel);
-    coords[1] += NSAppUnitsToFloatPixels(aBoundsOverride->y, aAppUnitsPerPixel);
-  }
 
   return Point3D(coords[0], coords[1], coords[2]);
 }
