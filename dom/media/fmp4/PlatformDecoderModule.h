@@ -179,8 +179,6 @@ public:
 
   virtual void DrainComplete() = 0;
 
-  virtual void NotifyResourcesStatusChanged() {};
-
   virtual void ReleaseMediaResources() {};
 
   virtual bool OnReaderTaskQueue() = 0;

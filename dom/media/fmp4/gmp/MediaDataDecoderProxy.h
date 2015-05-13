@@ -106,10 +106,6 @@ public:
     mProxyCallback->DrainComplete();
   }
 
-  virtual void NotifyResourcesStatusChanged() override {
-    mProxyCallback->NotifyResourcesStatusChanged();
-  }
-
   virtual void ReleaseMediaResources() override {
     mProxyCallback->ReleaseMediaResources();
   }

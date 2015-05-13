@@ -386,7 +386,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     // an encrypted stream and we need to wait for a CDM to be set, we don't
     // need to reinit the demuxer.
     mDemuxerInitialized = true;
-  } else if (mPlatform && !IsWaitingMediaResources()) {
+  } else if (mPlatform) {
     *aInfo = mInfo;
     *aTags = nullptr;
     NS_ENSURE_TRUE(EnsureDecodersSetup(), NS_ERROR_FAILURE);
@@ -464,11 +464,6 @@ MP4Reader::EnsureDecodersSetup()
       // a CDM, we can detect that and notify chrome and show some UI
       // explaining that we failed due to EME being disabled.
       nsRefPtr<CDMProxy> proxy;
-      if (IsWaitingMediaResources()) {
-        return true;
-      }
-      MOZ_ASSERT(!IsWaitingMediaResources());
-
       {
         ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
         proxy = mDecoder->GetCDMProxy();
@@ -529,8 +524,6 @@ MP4Reader::EnsureDecodersSetup()
     nsresult rv = mVideo.mDecoder->Init();
     NS_ENSURE_SUCCESS(rv, false);
   }
-
-  NotifyResourcesStatusChanged();
 
   return true;
 }
@@ -1129,19 +1122,11 @@ void MP4Reader::ReleaseMediaResources()
   }
 }
 
-void MP4Reader::NotifyResourcesStatusChanged()
-{
-  if (mDecoder) {
-    mDecoder->NotifyWaitingForResourcesStatusChanged();
-  }
-}
-
 void
 MP4Reader::SetIdle()
 {
   if (mSharedDecoderManager && mVideo.mDecoder) {
     mSharedDecoderManager->SetIdle(mVideo.mDecoder);
-    NotifyResourcesStatusChanged();
   }
 }
 
