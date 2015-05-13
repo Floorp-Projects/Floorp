@@ -920,8 +920,35 @@ gfxFontConfigFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
 }
 #endif
 
+gfxFcPlatformFontList::gfxFcPlatformFontList()
+    : mLocalNames(64), mGenericMappings(32), mLastConfig(nullptr)
+{
+    // if the rescan interval is set, start the timer
+    int rescanInterval = FcConfigGetRescanInterval(nullptr);
+    if (rescanInterval) {
+        mLastConfig = FcConfigGetCurrent();
+        mCheckFontUpdatesTimer = do_CreateInstance("@mozilla.org/timer;1");
+        if (mCheckFontUpdatesTimer) {
+            mCheckFontUpdatesTimer->
+                InitWithFuncCallback(CheckFontUpdates, this,
+                                     (rescanInterval + 1) * 1000,
+                                     nsITimer::TYPE_REPEATING_SLACK);
+        } else {
+            NS_WARNING("Failure to create font updates timer");
+        }
+    }
+
+#ifdef MOZ_BUNDLED_FONTS
+    mBundledFontsInitialized = false;
+#endif
+}
+
 gfxFcPlatformFontList::~gfxFcPlatformFontList()
 {
+    if (mCheckFontUpdatesTimer) {
+        mCheckFontUpdatesTimer->Cancel();
+        mCheckFontUpdatesTimer = nullptr;
+    }
 }
 
 void
@@ -1008,6 +1035,8 @@ gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet)
 nsresult
 gfxFcPlatformFontList::InitFontList()
 {
+    mLastConfig = FcConfigGetCurrent();
+
     // reset font lists
     gfxPlatformFontList::InitFontList();
 
@@ -1392,6 +1421,21 @@ gfxFcPlatformFontList::FindGenericFamily(const nsAString& aGeneric,
     }
 
     return genericFamily;
+}
+
+/* static */ void
+gfxFcPlatformFontList::CheckFontUpdates(nsITimer *aTimer, void *aThis)
+{
+    // check for font updates
+    FcInitBringUptoDate();
+
+    // update fontlist if current config changed
+    gfxFcPlatformFontList *pfl = static_cast<gfxFcPlatformFontList*>(aThis);
+    FcConfig* current = FcConfigGetCurrent();
+    if (current != pfl->GetLastConfig()) {
+        pfl->UpdateFontList();
+        pfl->ForceGlobalReflow();
+    }
 }
 
 #ifdef MOZ_BUNDLED_FONTS
