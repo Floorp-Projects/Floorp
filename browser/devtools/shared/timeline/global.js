@@ -64,15 +64,20 @@ const TIMELINE_BLUEPRINT = {
     colorName: "highlight-lightorange",
     label: L10N.getStr("timeline.label.parseXML")
   },
+  "GarbageCollection": {
+    group: 1,
+    colorName: "highlight-red",
+    label: L10N.getStr("timeline.label.garbageCollection")
+  },
   "ConsoleTime": {
     group: 2,
     colorName: "highlight-bluegrey",
     label: L10N.getStr("timeline.label.consoleTime")
   },
-  "GarbageCollection": {
-    group: 1,
-    colorName: "highlight-red",
-    label: L10N.getStr("timeline.label.garbageCollection")
+  "TimeStamp": {
+    group: 2,
+    colorName: "highlight-purple",
+    label: L10N.getStr("timeline.label.timestamp")
   },
 };
 

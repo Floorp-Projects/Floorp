@@ -254,10 +254,7 @@ Section "-InstallStartCleanup"
   ${CleanUpdateDirectories} "Mozilla\Firefox" "Mozilla\updates"
 
   ${RemoveDeprecatedFiles}
-
-  StrCpy $R2 "false"
-  StrCpy $R3 "false"
-  ${RemovePrecompleteEntries} "$R2" "$R3"
+  ${RemovePrecompleteEntries} "false"
 
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
     Delete "$INSTDIR\defaults\pref\channel-prefs.js"

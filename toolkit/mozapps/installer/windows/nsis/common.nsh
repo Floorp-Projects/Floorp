@@ -1641,8 +1641,8 @@
 
 !macroend
 
-!define RegisterDLL `!insertmacro RegisterDLL`
-!define UnregisterDLL `!insertmacro UnregisterDLL`
+!define RegisterDLL "!insertmacro RegisterDLL"
+!define UnregisterDLL "!insertmacro UnregisterDLL"
 
 
 ################################################################################
@@ -4332,24 +4332,21 @@
 !macroend
 
 /**
- * Parses the precomplete file to remove an installation's files and directories.
+ * Parses the precomplete file to remove an installation's files and
+ * directories.
  *
- * @param   _PROGRESSBAR
- *          The progress bar to update using PBM_STEPIT. Can also be "false" if
- *          updating a progressbar isn't needed.
- * @param   _INSTALL_STEP_COUNTER
- *          The install step counter to increment. The variable specified in
- *          this parameter is also updated. Can also be "false" if a counter
- *          isn't needed.
- * $R2 = false if all files were deleted or moved to the tobedeleted directory.
+ * @param   _CALLBACK
+ *          The function address of a callback function for progress or "false"
+ *          if there is no callback function.
+ *
+ * $R3 = false if all files were deleted or moved to the tobedeleted directory.
  *       true if file(s) could not be moved to the tobedeleted directory.
- * $R3 = Path to temporary precomplete file.
- * $R4 = File handle for the temporary precomplete file.
- * $R5 = String returned from FileRead.
- * $R6 = First seven characters of the string returned from FileRead.
- * $R7 = Temporary file path used to rename files that are in use.
- * $R8 = _PROGRESSBAR
- * $R9 = _INSTALL_STEP_COUNTER
+ * $R4 = Path to temporary precomplete file.
+ * $R5 = File handle for the temporary precomplete file.
+ * $R6 = String returned from FileRead.
+ * $R7 = First seven characters of the string returned from FileRead.
+ * $R8 = Temporary file path used to rename files that are in use.
+ * $R9 = _CALLBACK
  */
 !macro RemovePrecompleteEntries
 
@@ -4368,95 +4365,89 @@
 
     Function ${_MOZFUNC_UN}RemovePrecompleteEntries
       Exch $R9
-      Exch 1
-      Exch $R8
+      Push $R8
       Push $R7
       Push $R6
       Push $R5
       Push $R4
       Push $R3
-      Push $R2
 
       ${If} ${FileExists} "$INSTDIR\precomplete"
-        StrCpy $R2 "false"
+        StrCpy $R3 "false"
 
         RmDir /r "$INSTDIR\${TO_BE_DELETED}"
         CreateDirectory "$INSTDIR\${TO_BE_DELETED}"
-        GetTempFileName $R3 "$INSTDIR\${TO_BE_DELETED}"
-        Delete "$R3"
-        Rename "$INSTDIR\precomplete" "$R3"
+        GetTempFileName $R4 "$INSTDIR\${TO_BE_DELETED}"
+        Delete "$R4"
+        Rename "$INSTDIR\precomplete" "$R4"
 
         ClearErrors
         ; Rename and then remove files
-        FileOpen $R4 "$R3" r
+        FileOpen $R5 "$R4" r
         ${Do}
-          FileRead $R4 $R5
+          FileRead $R5 $R6
           ${If} ${Errors}
             ${Break}
           ${EndIf}
 
-          ${${_MOZFUNC_UN}TrimNewLines} "$R5" $R5
+          ${${_MOZFUNC_UN}TrimNewLines} "$R6" $R6
           ; Replace all occurrences of "/" with "\".
-          ${${_MOZFUNC_UN}WordReplace} "$R5" "/" "\" "+" $R5
+          ${${_MOZFUNC_UN}WordReplace} "$R6" "/" "\" "+" $R6
 
           ; Copy the first 7 chars
-          StrCpy $R6 "$R5" 7
-          ${If} "$R6" == "remove "
+          StrCpy $R7 "$R6" 7
+          ${If} "$R7" == "remove "
             ; Copy the string starting after the 8th char
-            StrCpy $R5 "$R5" "" 8
+            StrCpy $R6 "$R6" "" 8
             ; Copy all but the last char to remove the double quote.
-            StrCpy $R5 "$R5" -1
-            ${If} ${FileExists} "$INSTDIR\$R5"
+            StrCpy $R6 "$R6" -1
+            ${If} ${FileExists} "$INSTDIR\$R6"
               ${Unless} "$R9" == "false"
-                IntOp $R9 $R9 + 2
-              ${EndUnless}
-              ${Unless} "$R8" == "false"
-                SendMessage $R8 ${PBM_STEPIT} 0 0
-                SendMessage $R8 ${PBM_STEPIT} 0 0
+                Call $R9
               ${EndUnless}
 
               ClearErrors
-              Delete "$INSTDIR\$R5"
+              Delete "$INSTDIR\$R6"
               ${If} ${Errors}
-                GetTempFileName $R7 "$INSTDIR\${TO_BE_DELETED}"
-                Delete "$R7"
+                GetTempFileName $R8 "$INSTDIR\${TO_BE_DELETED}"
+                Delete "$R8"
                 ClearErrors
-                Rename "$INSTDIR\$R5" "$R7"
+                Rename "$INSTDIR\$R6" "$R8"
                 ${Unless} ${Errors}
-                  Delete /REBOOTOK "$R7"
+                  Delete /REBOOTOK "$R8"
 
                   ClearErrors
                 ${EndUnless}
 !ifdef __UNINSTALL__
                 ${If} ${Errors}
-                  Delete /REBOOTOK "$INSTDIR\$R5"
-                  StrCpy $R2 "true"
+                  Delete /REBOOTOK "$INSTDIR\$R6"
+                  StrCpy $R3 "true"
                   ClearErrors
                 ${EndIf}
 !endif
               ${EndIf}
             ${EndIf}
-          ${ElseIf} "$R6" == "rmdir $\""
+          ${ElseIf} "$R7" == "rmdir $\""
             ; Copy the string starting after the 7th char.
-            StrCpy $R5 "$R5" "" 7
+            StrCpy $R6 "$R6" "" 7
             ; Copy all but the last two chars to remove the slash and the double quote.
-            StrCpy $R5 "$R5" -2
-            ${If} ${FileExists} "$INSTDIR\$R5"
+            StrCpy $R6 "$R6" -2
+            ${If} ${FileExists} "$INSTDIR\$R6"
               ; Ignore directory removal errors
-              RmDir "$INSTDIR\$R5"
+              RmDir "$INSTDIR\$R6"
               ClearErrors
             ${EndIf}
           ${EndIf}
         ${Loop}
-        FileClose $R4
+        FileClose $R5
 
         ; Delete the temporary precomplete file
-        Delete /REBOOTOK "$R3"
+        Delete /REBOOTOK "$R4"
 
         RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
 
         ${If} ${RebootFlag}
-        ${AndIf} "$R2" == "false"
+        ${AndIf} "$R3" == "false"
           ; Clear the reboot flag if all files were deleted or moved to the
           ; tobedeleted directory.
           SetRebootFlag false
@@ -4465,14 +4456,12 @@
 
       ClearErrors
 
-      Pop $R2
       Pop $R3
       Pop $R4
       Pop $R5
       Pop $R6
       Pop $R7
-      Exch $R8
-      Exch 1
+      Pop $R8
       Exch $R9
     FunctionEnd
 
@@ -4480,24 +4469,19 @@
   !endif
 !macroend
 
-!macro RemovePrecompleteEntriesCall _PROGRESSBAR _INSTALL_STEP_COUNTER
+!macro RemovePrecompleteEntriesCall _CALLBACK
   !verbose push
-  Push "${_PROGRESSBAR}"
-  Push "${_INSTALL_STEP_COUNTER}"
+  Push "${_CALLBACK}"
   !verbose ${_MOZFUNC_VERBOSE}
   Call RemovePrecompleteEntries
-  Pop ${_INSTALL_STEP_COUNTER}
   !verbose pop
 !macroend
 
-!macro un.RemovePrecompleteEntriesCall _PROGRESSBAR _INSTALL_STEP_COUNTER
+!macro un.RemovePrecompleteEntriesCall _CALLBACK
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_PROGRESSBAR}"
-  Push "${_INSTALL_STEP_COUNTER}"
+  Push "${_CALLBACK}"
   Call un.RemovePrecompleteEntries
-  Pop ${_INSTALL_STEP_COUNTER}
-  Pop $0
   !verbose pop
 !macroend
 
@@ -7328,6 +7312,153 @@
   !endif
 !macroend
 
+################################################################################
+# Helpers for taskbar progress
+
+!ifndef CLSCTX_INPROC_SERVER
+  !define CLSCTX_INPROC_SERVER  1
+!endif
+
+!define CLSID_ITaskbarList {56fdf344-fd6d-11d0-958a-006097c9a090}
+!define IID_ITaskbarList3 {ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf}
+!define ITaskbarList3->SetProgressValue $ITaskbarList3->9
+!define ITaskbarList3->SetProgressState $ITaskbarList3->10
+
+/**
+ * Creates a single uninitialized object of the ITaskbarList class with a
+ * reference to the ITaskbarList3 interface. This object can be used to set
+ * progress and state on the installer's taskbar icon using the helper macros
+ * in this section.
+ */
+!macro ITBL3Create
+
+  !ifndef ${_MOZFUNC_UN}ITBL3Create
+    Var ITaskbarList3
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}ITBL3Create "!insertmacro ${_MOZFUNC_UN}ITBL3CreateCall"
+
+    Function ${_MOZFUNC_UN}ITBL3Create
+      ; Setting to 0 allows the helper macros to detect when the object was not
+      ; created.
+      StrCpy $ITaskbarList3 0
+      ; Don't create when running silently.
+      ${Unless} ${Silent}
+        ; This is only supported on Win 7 and above.
+        ${If} ${AtLeastWin7}
+          System::Call "ole32::CoCreateInstance(g '${CLSID_ITaskbarList}', \
+                                                i 0, \
+                                                i ${CLSCTX_INPROC_SERVER}, \
+                                                g '${IID_ITaskbarList3}', \
+                                                *i .s)"
+          Pop $ITaskbarList3
+        ${EndIf}
+      ${EndUnless}
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro ITBL3CreateCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call ITBL3Create
+  !verbose pop
+!macroend
+
+!macro un.ITBL3CreateCall _PATH_TO_IMAGE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.ITBL3Create
+  !verbose pop
+!macroend
+
+!macro un.ITBL3Create
+  !ifndef un.ITBL3Create
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro ITBL3Create
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Sets the percentage completed on the taskbar process icon progress indicator.
+ *
+ * @param   _COMPLETED
+ *          The proportion of the operation that has been completed in relation
+ *          to _TOTAL.
+ * @param   _TOTAL
+ *          The value _COMPLETED will have when the operation has completed.
+ *
+ * $R8 = _COMPLETED
+ * $R9 = _TOTAL
+ */
+!macro ITBL3SetProgressValueCall _COMPLETED _TOTAL
+  Push ${_COMPLETED}
+  Push ${_TOTAL}
+  ${CallArtificialFunction} ITBL3SetProgressValue_
+!macroend
+
+!define ITBL3SetProgressValue "!insertmacro ITBL3SetProgressValueCall"
+!define un.ITBL3SetProgressValue "!insertmacro ITBL3SetProgressValueCall"
+
+!macro ITBL3SetProgressValue_
+  Exch $R9
+  Exch 1
+  Exch $R8
+  ${If} $ITaskbarList3 <> 0
+    System::Call "${ITaskbarList3->SetProgressValue}(i$HWNDPARENT, l$R8, l$R9)"
+  ${EndIf}
+  Exch $R8
+  Exch 1
+  Exch $R9
+!macroend
+
+; Normal state / no progress bar
+!define TBPF_NOPROGRESS       0x00000000
+; Marquee style progress bar
+!define TBPF_INDETERMINATE    0x00000001
+; Standard progress bar
+!define TBPF_NORMAL           0x00000002
+; Red taskbar button to indicate an error occurred
+!define TBPF_ERROR            0x00000004
+; Yellow taskbar button to indicate user attention (input) is required to
+; resume progress
+!define TBPF_PAUSED           0x00000008
+
+/**
+ * Sets the state on the taskbar process icon progress indicator.
+ *
+ * @param   _STATE
+ *          The state to set on the taskbar icon progress indicator. Only one of
+ *          the states defined above should be specified.
+ *
+ * $R9 = _STATE
+ */
+!macro ITBL3SetProgressStateCall _STATE
+  Push ${_STATE}
+  ${CallArtificialFunction} ITBL3SetProgressState_
+!macroend
+
+!define ITBL3SetProgressState "!insertmacro ITBL3SetProgressStateCall"
+!define un.ITBL3SetProgressState "!insertmacro ITBL3SetProgressStateCall"
+
+!macro ITBL3SetProgressState_
+  Exch $R9
+  ${If} $ITaskbarList3 <> 0
+    System::Call "${ITaskbarList3->SetProgressState}(i$HWNDPARENT, i$R9)"
+  ${EndIf}
+  Exch $R9
+!macroend
 
 ################################################################################
 # Helpers for the new user interface
@@ -7430,7 +7561,7 @@
   Exch $0
   Pop ${HANDLE}
 !macroend
-!define SetStretchedTransparentImage `!insertmacro __SetStretchedTransparentImage`
+!define SetStretchedTransparentImage "!insertmacro __SetStretchedTransparentImage"
 
 /**
  * Removes a single style from a control.

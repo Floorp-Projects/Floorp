@@ -648,7 +648,7 @@ BluetoothAdapter::StopLeScan(BluetoothDiscoveryHandle& aDiscoveryHandle,
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   // Reject the request if there's no ongoing LE Scan using this handle.
-  BT_ENSURE_TRUE_REJECT(!mLeScanHandleArray.Contains(&aDiscoveryHandle),
+  BT_ENSURE_TRUE_REJECT(mLeScanHandleArray.Contains(&aDiscoveryHandle),
                         promise,
                         NS_ERROR_DOM_BLUETOOTH_DONE);
 
