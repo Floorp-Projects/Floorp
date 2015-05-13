@@ -17,8 +17,14 @@ task:
     - 'queue:create-task:aws-provisioner/test-c4-2xlarge'
     - 'docker-worker:cache:tc-vcs'
     - 'docker-worker:cache:linux-cache'
+    - 'docker-worker:capability:device:loopbackVideo'
+    - 'docker-worker:capability:device:loopbackAudio'
 
   payload:
+    capabilities:
+      devices:
+        loopbackVideo: true
+        loopbackAudio: true
     image: '{{#docker_image}}tester{{/docker_image}}'
     maxRunTime: 3600
     cache:
