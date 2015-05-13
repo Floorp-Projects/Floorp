@@ -75,15 +75,17 @@
     if (!queryDialog) {
       let doc = cm.getWrapperElement().ownerDocument;
       let inp = doc.createElement("input");
-      let txt = doc.createTextNode(cm.l10n("findCmd.promptMessage"));
 
-      inp.type = "text";
-      inp.style.width = "10em";
+      inp.type = "search";
+      inp.placeholder = cm.l10n("findCmd.promptMessage");
       inp.style.MozMarginStart = "1em";
+      inp.style.MozMarginEnd = "1em";
+      inp.style.flexGrow = "1";
+      inp.addEventListener("focus", () => inp.select());
 
       queryDialog = doc.createElement("div");
-      queryDialog.appendChild(txt);
       queryDialog.appendChild(inp);
+      queryDialog.style.display = "flex";
     }
     var state = getSearchState(cm);
     if (state.query) return findNext(cm, rev);
