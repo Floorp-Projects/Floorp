@@ -3541,6 +3541,9 @@ nsCycleCollector::CleanupAfterCollection()
   timeLog.Checkpoint("CleanupAfterCollection::telemetry");
 
   if (mJSRuntime) {
+    mJSRuntime->FinalizeDeferredThings(mResults.mAnyManual
+                                       ? CycleCollectedJSRuntime::FinalizeNow
+                                       : CycleCollectedJSRuntime::FinalizeIncrementally);
     mJSRuntime->EndCycleCollectionCallback(mResults);
     timeLog.Checkpoint("CleanupAfterCollection::EndCycleCollectionCallback()");
   }

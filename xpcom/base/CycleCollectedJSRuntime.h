@@ -208,6 +208,7 @@ private:
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);
 
+public:
   enum DeferredFinalizeType {
     FinalizeIncrementally,
     FinalizeNow,
@@ -215,7 +216,6 @@ private:
 
   void FinalizeDeferredThings(DeferredFinalizeType aType);
 
-public:
   // Two conditions, JSOutOfMemory and JSLargeAllocationFailure, are noted in
   // crash reports. Here are the values that can appear in the reports:
   enum class OOMState : uint32_t {
@@ -223,7 +223,7 @@ public:
     OK,
 
     // We are currently reporting the given condition.
-    // 
+    //
     // Suppose a crash report contains "JSLargeAllocationFailure:
     // Reporting". This means we crashed while executing memory-pressure
     // observers, trying to shake loose some memory. The large allocation in

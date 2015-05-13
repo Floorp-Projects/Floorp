@@ -215,7 +215,6 @@ public:
     mRefCnt.RemovePurple();
   }
 
-  static void ClearContentUnbinder();
   static bool CanSkip(nsINode* aNode, bool aRemovingAllowed);
   static bool CanSkipInCC(nsINode* aNode);
   static bool CanSkipThis(nsINode* aNode);
