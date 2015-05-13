@@ -854,6 +854,22 @@ public:
 
   void AppendNewScrollInfoItemForHoisting(nsDisplayScrollInfoLayer* aScrollInfoItem);
 
+  /**
+   * Store the dirty rect of the scrolled contents of aScrollableFrame. This
+   * is a bound for the extents of the new visible region of the scrolled
+   * layer.
+   * @param aScrollableFrame the scrollable frame
+   * @param aDirty           the dirty rect, relative to aScrollableFrame
+   */
+  void StoreDirtyRectForScrolledContents(const nsIFrame* aScrollableFrame, const nsRect& aDirty);
+
+  /**
+   * Retrieve the stored dirty rect for the scrolled contents of aScrollableFrame.
+   * @param  aScrollableFrame the scroll frame
+   * @return                  the dirty rect, relative to aScrollableFrame's *reference frame*
+   */
+  nsRect GetDirtyRectForScrolledContents(const nsIFrame* aScrollableFrame) const;
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -930,6 +946,10 @@ private:
                                  mWillChangeBudget;
   // Assert that we never check the budget before its fully calculated.
   mutable mozilla::DebugOnly<bool> mWillChangeBudgetCalculated;
+
+  // rects are relative to the frame's reference frame
+  nsDataHashtable<nsPtrHashKey<nsIFrame>, nsRect> mDirtyRectForScrolledContents;
+
   // Relative to mCurrentFrame.
   nsRect                         mDirtyRect;
   nsRegion                       mWindowExcludeGlassRegion;
