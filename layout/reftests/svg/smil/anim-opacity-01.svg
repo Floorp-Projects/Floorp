@@ -1,0 +1,23 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="reftest-wait"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="setTimeAndSnapshot(101, false)">
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <title>Testing that opacity changes are reflected in patterns</title>
+
+  <defs>
+    <pattern id="p" width="100%" height="100%">
+      <g>
+        <rect width="100%" height="100%" fill="lime" stroke="lime" stroke-width="1" opacity="0">
+          <animate attributeName="opacity" values="0;1" dur="1s" begin="99s" fill="freeze" />
+        </rect>
+      </g>
+    </pattern>
+  </defs>
+
+  <rect width="100%" height="100%" fill="red"/>
+  <rect width="100%" height="100%" fill="url(#p)"/>
+</svg>
