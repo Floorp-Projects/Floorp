@@ -36,6 +36,9 @@ public:
   virtual BackendType GetBackendType() const override { return BackendType::SKIA; }
   virtual TemporaryRef<SourceSurface> Snapshot() override;
   virtual IntSize GetSize() override { return mSize; }
+  virtual bool LockBits(uint8_t** aData, IntSize* aSize,
+                        int32_t* aStride, SurfaceFormat* aFormat) override;
+  virtual void ReleaseBits(uint8_t* aData) override;
   virtual void Flush() override;
   virtual void DrawSurface(SourceSurface *aSurface,
                            const Rect &aDest,

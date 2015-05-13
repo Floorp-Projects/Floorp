@@ -40,7 +40,7 @@ struct HttpHeapAtom {
     char                 value[1];
 };
 
-static PLDHashTable         sAtomTable;
+static PLDHashTable        *sAtomTable;
 static struct HttpHeapAtom *sHeapAtoms = nullptr;
 static Mutex               *sLock = nullptr;
 
@@ -94,7 +94,7 @@ static const PLDHashTableOps ops = {
 nsresult
 nsHttp::CreateAtomTable()
 {
-    MOZ_ASSERT(!sAtomTable.IsInitialized(), "atom table already initialized");
+    MOZ_ASSERT(!sAtomTable, "atom table already initialized");
 
     if (!sLock) {
         sLock = new Mutex("nsHttp.sLock");
@@ -103,8 +103,8 @@ nsHttp::CreateAtomTable()
     // The initial length for this table is a value greater than the number of
     // known atoms (NUM_HTTP_ATOMS) because we expect to encounter a few random
     // headers right off the bat.
-    PL_DHashTableInit(&sAtomTable, &ops, sizeof(PLDHashEntryStub),
-                      NUM_HTTP_ATOMS + 10);
+    sAtomTable = new PLDHashTable(&ops, sizeof(PLDHashEntryStub),
+                                  NUM_HTTP_ATOMS + 10);
 
     // fill the table with our known atoms
     const char *const atoms[] = {
@@ -116,7 +116,7 @@ nsHttp::CreateAtomTable()
 
     for (int i = 0; atoms[i]; ++i) {
         PLDHashEntryStub *stub = reinterpret_cast<PLDHashEntryStub *>
-            (PL_DHashTableAdd(&sAtomTable, atoms[i], fallible));
+            (PL_DHashTableAdd(sAtomTable, atoms[i], fallible));
         if (!stub)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -130,9 +130,8 @@ nsHttp::CreateAtomTable()
 void
 nsHttp::DestroyAtomTable()
 {
-    if (sAtomTable.IsInitialized()) {
-        PL_DHashTableFinish(&sAtomTable);
-    }
+    delete sAtomTable;
+    sAtomTable = nullptr;
 
     while (sHeapAtoms) {
         HttpHeapAtom *next = sHeapAtoms->next;
@@ -140,10 +139,8 @@ nsHttp::DestroyAtomTable()
         sHeapAtoms = next;
     }
 
-    if (sLock) {
-        delete sLock;
-        sLock = nullptr;
-    }
+    delete sLock;
+    sLock = nullptr;
 }
 
 Mutex *
@@ -158,13 +155,13 @@ nsHttp::ResolveAtom(const char *str)
 {
     nsHttpAtom atom = { nullptr };
 
-    if (!str || !sAtomTable.IsInitialized())
+    if (!str || !sAtomTable)
         return atom;
 
     MutexAutoLock lock(*sLock);
 
     PLDHashEntryStub *stub = reinterpret_cast<PLDHashEntryStub *>
-        (PL_DHashTableAdd(&sAtomTable, str, fallible));
+        (PL_DHashTableAdd(sAtomTable, str, fallible));
     if (!stub)
         return atom;  // out of memory
 

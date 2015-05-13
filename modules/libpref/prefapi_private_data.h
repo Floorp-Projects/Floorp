@@ -10,8 +10,8 @@
 
 #include "mozilla/MemoryReporting.h"
 
-extern PLDHashTable			gHashTable;
-extern bool                 gDirty;
+extern PLDHashTable* gHashTable;
+extern bool gDirty;
 
 namespace mozilla {
 namespace dom {

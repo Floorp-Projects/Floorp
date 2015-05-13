@@ -153,7 +153,7 @@ nsSimpleContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto
 }
 
 // Hashtable for storing nsContentLists
-static PLDHashTable gContentListHashTable;
+static PLDHashTable* gContentListHashTable;
 
 #define RECENTLY_USED_CONTENT_LIST_CACHE_SIZE 31
 static nsContentList*
@@ -215,19 +215,17 @@ NS_GetContentList(nsINode* aRootNode,
   };
 
   // Initialize the hashtable if needed.
-  if (!gContentListHashTable.IsInitialized()) {
-    PL_DHashTableInit(&gContentListHashTable, &hash_table_ops,
-                      sizeof(ContentListHashEntry));
+  if (!gContentListHashTable) {
+    gContentListHashTable =
+      new PLDHashTable(&hash_table_ops, sizeof(ContentListHashEntry));
   }
 
   ContentListHashEntry *entry = nullptr;
   // First we look in our hashtable.  Then we create a content list if needed
-  if (gContentListHashTable.IsInitialized()) {
-    entry = static_cast<ContentListHashEntry *>
-      (PL_DHashTableAdd(&gContentListHashTable, &hashKey, fallible));
-    if (entry)
-      list = entry->mContentList;
-  }
+  entry = static_cast<ContentListHashEntry *>
+    (PL_DHashTableAdd(gContentListHashTable, &hashKey, fallible));
+  if (entry)
+    list = entry->mContentList;
 
   if (!list) {
     // We need to create a ContentList and add it to our new entry, if
@@ -272,7 +270,7 @@ nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx, JS::Handle<JSObje
 }
 
 // Hashtable for storing nsCacheableFuncStringContentList
-static PLDHashTable gFuncStringContentListHashTable;
+static PLDHashTable* gFuncStringContentListHashTable;
 
 struct FuncStringContentListHashEntry : public PLDHashEntryHdr
 {
@@ -321,18 +319,18 @@ GetFuncStringContentList(nsINode* aRootNode,
   };
 
   // Initialize the hashtable if needed.
-  if (!gFuncStringContentListHashTable.IsInitialized()) {
-    PL_DHashTableInit(&gFuncStringContentListHashTable, &hash_table_ops,
-                      sizeof(FuncStringContentListHashEntry));
+  if (!gFuncStringContentListHashTable) {
+    gFuncStringContentListHashTable =
+      new PLDHashTable(&hash_table_ops, sizeof(FuncStringContentListHashEntry));
   }
 
   FuncStringContentListHashEntry *entry = nullptr;
   // First we look in our hashtable.  Then we create a content list if needed
-  if (gFuncStringContentListHashTable.IsInitialized()) {
+  if (gFuncStringContentListHashTable) {
     nsFuncStringCacheKey hashKey(aRootNode, aFunc, aString);
 
     entry = static_cast<FuncStringContentListHashEntry *>
-      (PL_DHashTableAdd(&gFuncStringContentListHashTable, &hashKey, fallible));
+      (PL_DHashTableAdd(gFuncStringContentListHashTable, &hashKey, fallible));
     if (entry) {
       list = entry->mContentList;
 #ifdef DEBUG
@@ -970,13 +968,14 @@ nsContentList::RemoveFromHashtable()
     sRecentlyUsedContentLists[recentlyUsedCacheIndex] = nullptr;
   }
 
-  if (!gContentListHashTable.IsInitialized())
+  if (!gContentListHashTable)
     return;
 
-  PL_DHashTableRemove(&gContentListHashTable, &key);
+  PL_DHashTableRemove(gContentListHashTable, &key);
 
-  if (gContentListHashTable.EntryCount() == 0) {
-    PL_DHashTableFinish(&gContentListHashTable);
+  if (gContentListHashTable->EntryCount() == 0) {
+    delete gContentListHashTable;
+    gContentListHashTable = nullptr;
   }
 }
 
@@ -1008,15 +1007,16 @@ nsCacheableFuncStringContentList::~nsCacheableFuncStringContentList()
 void
 nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable()
 {
-  if (!gFuncStringContentListHashTable.IsInitialized()) {
+  if (!gFuncStringContentListHashTable) {
     return;
   }
 
   nsFuncStringCacheKey key(mRootNode, mFunc, mString);
-  PL_DHashTableRemove(&gFuncStringContentListHashTable, &key);
+  PL_DHashTableRemove(gFuncStringContentListHashTable, &key);
 
-  if (gFuncStringContentListHashTable.EntryCount() == 0) {
-    PL_DHashTableFinish(&gFuncStringContentListHashTable);
+  if (gFuncStringContentListHashTable->EntryCount() == 0) {
+    delete gFuncStringContentListHashTable;
+    gFuncStringContentListHashTable = nullptr;
   }
 }
 

@@ -21,18 +21,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=426308
 
 function startTest() {
   req = new XMLHttpRequest({mozSystem: true});
-  is(req.mozAnon, true, "XMLHttpRequest should be mozAnon");
+  is(req.mozAnon, true, "XMLHttpRequest should be mozAnon (3)");
 
   req = new XMLHttpRequest({mozAnon: true});
-  is(req.mozAnon, true, "XMLHttpRequest should be mozAnon");
-  is(req.mozSystem, false, "XMLHttpRequest should not be mozSystem");
+  is(req.mozAnon, true, "XMLHttpRequest should be mozAnon (4)");
+  is(req.mozSystem, false, "XMLHttpRequest should not be mozSystem (4)");
 
   req = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-  is(req.mozAnon, true, "XMLHttpRequest should be mozAnon");
-  is(req.mozSystem, true, "XMLHttpRequest should be mozSystem");
+  is(req.mozAnon, true, "XMLHttpRequest should be mozAnon (5)");
+  is(req.mozSystem, true, "XMLHttpRequest should be mozSystem (5)");
 
   req = new XMLHttpRequest({mozAnon: false, mozSystem: true});
-  is(req.mozAnon, true, "XMLHttpRequest should be mozAnon");
+  is(req.mozAnon, true, "XMLHttpRequest should be mozAnon (6)");
 
   SimpleTest.finish();
 }
@@ -44,8 +44,8 @@ is(req.mozAnon, true, "XMLHttpRequest should be mozAnon");
 is(req.mozSystem, false, "XMLHttpRequest should not be mozSystem");
 
 req = new XMLHttpRequest({mozAnon: true, mozSystem: true});
-is(req.mozAnon, false, "XMLHttpRequest should be mozAnon");
-is(req.mozSystem, false, "XMLHttpRequest should not be mozSystem");
+is(req.mozAnon, true, "XMLHttpRequest should be mozAnon (2)");
+is(req.mozSystem, false, "XMLHttpRequest should not be mozSystem (2)");
 
 addLoadEvent(function() {
    SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], startTest);

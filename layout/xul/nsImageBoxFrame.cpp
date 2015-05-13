@@ -437,6 +437,36 @@ nsDisplayXULImage::ConfigureLayer(ImageLayer* aLayer,
   aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
 }
 
+bool
+nsDisplayXULImage::CanOptimizeToImageLayer(LayerManager* aManager,
+                                           nsDisplayListBuilder* aBuilder)
+{
+  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                 ? imgIContainer::FLAG_SYNC_DECODE
+                 : imgIContainer::FLAG_NONE;
+
+  return static_cast<nsImageBoxFrame*>(mFrame)
+    ->IsImageContainerAvailable(aManager, flags);
+}
+
+bool
+nsImageBoxFrame::IsImageContainerAvailable(LayerManager* aManager,
+                                           uint32_t aFlags)
+{
+  bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
+  if (hasSubRect || !mImageRequest) {
+    return false;
+  }
+
+  nsCOMPtr<imgIContainer> imgCon;
+  mImageRequest->GetImage(getter_AddRefs(imgCon));
+  if (!imgCon) {
+    return false;
+  }
+  
+  return imgCon->IsImageContainerAvailable(aManager, aFlags);
+}
+
 already_AddRefed<ImageContainer>
 nsDisplayXULImage::GetContainer(LayerManager* aManager,
                                 nsDisplayListBuilder* aBuilder)
@@ -451,17 +481,23 @@ nsDisplayXULImage::GetContainer(LayerManager* aManager,
 already_AddRefed<ImageContainer>
 nsImageBoxFrame::GetContainer(LayerManager* aManager, uint32_t aFlags)
 {
-  bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
-  if (hasSubRect || !mImageRequest) {
+  MOZ_ASSERT(IsImageContainerAvailable(aManager, aFlags),
+             "Should call IsImageContainerAvailable and get true before "
+             "calling GetContainer");
+  if (!mImageRequest) {
+    MOZ_ASSERT_UNREACHABLE("mImageRequest should be available if "
+                           "IsImageContainerAvailable returned true");
     return nullptr;
   }
 
   nsCOMPtr<imgIContainer> imgCon;
   mImageRequest->GetImage(getter_AddRefs(imgCon));
   if (!imgCon) {
+    MOZ_ASSERT_UNREACHABLE("An imgIContainer should be available if "
+                           "IsImageContainerAvailable returned true");
     return nullptr;
   }
-  
+
   return imgCon->GetImageContainer(aManager, aFlags);
 }
 

@@ -54,6 +54,7 @@ class DrawTargetCairo final : public DrawTarget
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetCairo, override)
   friend class BorrowedCairoContext;
+  friend class BorrowedXlibDrawable;
 
   DrawTargetCairo();
   virtual ~DrawTargetCairo();
