@@ -330,7 +330,8 @@ class ObjectGroup : public gc::TenuredCell
     }
 
     bool hasUnanalyzedPreliminaryObjects() {
-        return (newScript() && !newScript()->analyzed()) || maybePreliminaryObjects();
+        return (newScriptDontCheckGeneration() && !newScriptDontCheckGeneration()->analyzed()) ||
+               maybePreliminaryObjectsDontCheckGeneration();
     }
 
     UnboxedLayout* maybeUnboxedLayout() {
