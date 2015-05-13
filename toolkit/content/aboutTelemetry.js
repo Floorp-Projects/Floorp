@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/TelemetryTimestamps.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm");
 Cu.import("resource://gre/modules/TelemetrySession.jsm");
 Cu.import("resource://gre/modules/TelemetryLog.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 const Telemetry = Services.telemetry;
 const bundle = Services.strings.createBundle(
@@ -40,30 +41,6 @@ const EOL = "\n";
 
 // Cached value of document's RTL mode
 let documentRTLMode = "";
-
-/**
- * Helper function for fetching a config pref
- *
- * @param aPrefName Name of config pref to fetch.
- * @param aDefault Default value to return if pref isn't set.
- * @return Value of pref
- */
-function getPref(aPrefName, aDefault) {
-  let result = aDefault;
-
-  try {
-    let prefType = Services.prefs.getPrefType(aPrefName);
-    if (prefType == Ci.nsIPrefBranch.PREF_BOOL) {
-      result = Services.prefs.getBoolPref(aPrefName);
-    } else if (prefType == Ci.nsIPrefBranch.PREF_STRING) {
-      result = Services.prefs.getCharPref(aPrefName);
-    }
-  } catch (e) {
-    // Return default if Prefs service throws exception
-  }
-
-  return result;
-}
 
 /**
  * Helper function for determining whether the document direction is RTL.
@@ -98,7 +75,7 @@ let observer = {
     let enabledElement = document.getElementById("description-enabled");
     let disabledElement = document.getElementById("description-disabled");
     let toggleElement = document.getElementById("toggle-telemetry");
-    if (getPref(PREF_TELEMETRY_ENABLED, false)) {
+    if (Preferences.get(PREF_TELEMETRY_ENABLED, false)) {
       enabledElement.classList.remove("hidden");
       disabledElement.classList.add("hidden");
       toggleElement.innerHTML = this.disableTelemetry;
@@ -220,7 +197,7 @@ let SlowSQL = {
    * Render slow SQL statistics
    */
   render: function SlowSQL_render() {
-    let debugSlowSql = getPref(PREF_DEBUG_SLOW_SQL, false);
+    let debugSlowSql = Preferences.get(PREF_DEBUG_SLOW_SQL, false);
     let {mainThread, otherThreads} =
       Telemetry[debugSlowSql ? "debugSlowSQL" : "slowSQL"];
 
@@ -465,7 +442,7 @@ function SymbolicationRequest_handleSymbolResponse() {
 SymbolicationRequest.prototype.fetchSymbols =
 function SymbolicationRequest_fetchSymbols() {
   let symbolServerURI =
-    getPref(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
+    Preferences.get(PREF_SYMBOL_SERVER_URI, DEFAULT_SYMBOL_SERVER_URI);
   let request = {"memoryMap" : this.memoryMap, "stacks" : this.stacks,
                  "version" : 3};
   let requestJSON = JSON.stringify(request);
@@ -961,7 +938,7 @@ function toggleSection(aEvent) {
  */
 function setupPageHeader()
 {
-  let serverOwner = getPref(PREF_TELEMETRY_SERVER_OWNER, "Mozilla");
+  let serverOwner = Preferences.get(PREF_TELEMETRY_SERVER_OWNER, "Mozilla");
   let brandName = brandBundle.GetStringFromName("brandFullName");
   let subtitleText = bundle.formatStringFromName(
     "pageSubtitle", [serverOwner, brandName], 2);
@@ -986,8 +963,8 @@ function setupListeners() {
 
   document.getElementById("toggle-telemetry").addEventListener("click",
     function () {
-      let value = getPref(PREF_TELEMETRY_ENABLED, false);
-      Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, !value);
+      let value = Preferences.get(PREF_TELEMETRY_ENABLED, false);
+      Preferences.set(PREF_TELEMETRY_ENABLED, !value);
   }, false);
 
   document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
