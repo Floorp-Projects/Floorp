@@ -133,17 +133,6 @@ case "$target" in
         AC_MSG_ERROR([not found. Please check your NDK. With the current configuration, it should be in $android_platform])
     fi
 
-    dnl Old NDK support. If minimum requirement is changed to NDK r8b,
-    dnl please remove this.
-    case "$target_cpu" in
-    i?86)
-        if ! test -e "$android_toolchain"/bin/"$android_tool_prefix"-gcc; then
-            dnl Old NDK toolchain name
-            android_tool_prefix="i686-android-linux"
-        fi
-        ;;
-    esac
-
     dnl set up compilers
     TOOLCHAIN_PREFIX="$android_toolchain/bin/$android_tool_prefix-"
     AS="$android_toolchain"/bin/"$android_tool_prefix"-as
