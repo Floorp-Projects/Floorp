@@ -151,8 +151,8 @@ class CommonCaretTestCase(object):
         # Get touch caret expiration time in millisecond, and convert it to second.
         timeout = self.timeout_ms() / 1000.0
 
-        # Set a 1.5x timeout margin to prevent intermittent test failures.
-        timeout *= 1.5
+        # Set a 3x timeout margin to prevent intermittent test failures.
+        timeout *= 3
 
         # Tap to make touch caret appear. Note: it's strange that when the caret
         # is at the end, the rect of the caret in <textarea> cannot be obtained.
