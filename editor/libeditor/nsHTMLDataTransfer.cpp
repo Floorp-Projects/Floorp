@@ -99,7 +99,7 @@ using namespace mozilla::dom;
 static bool FindIntegerAfterString(const char *aLeadingString, 
                                      nsCString &aCStr, int32_t &foundNumber);
 static nsresult RemoveFragComments(nsCString &theStr);
-static void RemoveBodyAndHead(nsIDOMNode *aNode);
+static void RemoveBodyAndHead(nsINode& aNode);
 static nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult);
 
 nsresult
@@ -1884,39 +1884,34 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
 }
 
 
-void RemoveBodyAndHead(nsIDOMNode *aNode)
+void RemoveBodyAndHead(nsINode& aNode)
 {
-  if (!aNode)
-    return;
-
-  nsCOMPtr<nsIDOMNode> tmp, child, body, head;
+  nsCOMPtr<nsIContent> body, head;
   // find the body and head nodes if any.
   // look only at immediate children of aNode.
-  aNode->GetFirstChild(getter_AddRefs(child));
-  while (child)
-  {
-    if (nsTextEditUtils::IsBody(child))
-    {
+  for (nsCOMPtr<nsIContent> child = aNode.GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsHTMLElement(nsGkAtoms::body)) {
       body = child;
-    } else if (nsEditor::NodeIsType(child, nsGkAtoms::head)) {
+    } else if (child->IsHTMLElement(nsGkAtoms::head)) {
       head = child;
     }
-    child->GetNextSibling(getter_AddRefs(tmp));
-    child = tmp;
   }
-  if (head)
-  {
-    aNode->RemoveChild(head, getter_AddRefs(tmp));
+  if (head) {
+    ErrorResult ignored;
+    aNode.RemoveChild(*head, ignored);
   }
-  if (body)
-  {
-    body->GetFirstChild(getter_AddRefs(child));
-    while (child)
-    {
-      aNode->InsertBefore(child, body, getter_AddRefs(tmp));
-      body->GetFirstChild(getter_AddRefs(child));
+  if (body) {
+    nsCOMPtr<nsIContent> child = body->GetFirstChild();
+    while (child) {
+      ErrorResult ignored;
+      aNode.InsertBefore(*child, body, ignored);
+      child = body->GetFirstChild();
     }
-    aNode->RemoveChild(body, getter_AddRefs(tmp));
+
+    ErrorResult ignored;
+    aNode.RemoveChild(*body, ignored);
   }
 }
 
@@ -2014,7 +2009,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     rv = StripFormattingNodes(*contextAsNode);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    RemoveBodyAndHead(contextAsNode);
+    RemoveBodyAndHead(*contextAsNode);
 
     rv = FindTargetNode(contextAsNode, contextLeaf);
     if (rv == NS_FOUND_TARGET) {
@@ -2044,7 +2039,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(fragment, NS_ERROR_FAILURE);
 
-  RemoveBodyAndHead(fragment);
+  RemoveBodyAndHead(*fragment);
 
   if (contextAsNode) {
     // unite the two trees
