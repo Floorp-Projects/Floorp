@@ -458,6 +458,8 @@ protected:
     bool InitBrowserConfiguration(const nsCString& aURI,
                                   BrowserConfiguration& aConfiguration);
 
+    void SetHasContentOpener(bool aHasContentOpener);
+
     // IME
     static TabParent *mIMETabParent;
     nsString mIMECacheText;
@@ -605,6 +607,7 @@ private:
 
     nsRefPtr<nsIPresShell> mPresShellWithRefreshListener;
 
+    bool mHasContentOpener;
 private:
     // This is used when APZ needs to find the TabParent associated with a layer
     // to dispatch events.
