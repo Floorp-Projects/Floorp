@@ -65,6 +65,7 @@ WEBIDL_FILES = [
     'CameraControl.webidl',
     'CameraManager.webidl',
     'CameraUtil.webidl',
+    'CanvasCaptureMediaStream.webidl',
     'CanvasRenderingContext2D.webidl',
     'CaretPosition.webidl',
     'CDATASection.webidl',

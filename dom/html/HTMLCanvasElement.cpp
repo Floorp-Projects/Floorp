@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/CanvasCaptureMediaStream.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
@@ -403,6 +404,14 @@ HTMLCanvasElement::GetMozPrintCallback() const
     return mOriginalCanvas->GetMozPrintCallback();
   }
   return mPrintCallback;
+}
+
+already_AddRefed<CanvasCaptureMediaStream>
+HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
+                                 ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
 }
 
 nsresult
