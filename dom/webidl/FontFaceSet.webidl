@@ -36,7 +36,7 @@ interface FontFaceSet : EventTarget {
   readonly attribute unsigned long size;
   [Throws] void add(FontFace font);
   boolean has(FontFace font);
-  [Throws] boolean delete(FontFace font);
+  boolean delete(FontFace font);
   void clear();
   [NewObject] FontFaceSetIterator entries();
   // Iterator keys();

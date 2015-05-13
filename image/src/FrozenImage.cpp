@@ -44,6 +44,12 @@ FrozenImage::GetFrame(uint32_t aWhichFrame,
   return InnerImage()->GetFrame(FRAME_FIRST, aFlags);
 }
 
+NS_IMETHODIMP_(bool)
+FrozenImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
+{
+  return false;
+}
+
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 FrozenImage::GetImageContainer(layers::LayerManager* aManager, uint32_t aFlags)
 {

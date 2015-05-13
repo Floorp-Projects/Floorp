@@ -42,20 +42,23 @@ class CommonCaretTestCase(object):
         pref_name = repr(pref_name)
         if isinstance(value, bool):
             value = 'true' if value else 'false'
+            func = 'setBoolPref'
         elif isinstance(value, int):
             value = str(value)
+            func = 'setIntPref'
         else:
             value = repr(value)
+            func = 'setCharPref'
 
-        script = '''SpecialPowers.pushPrefEnv({"set": [[%s, %s]]}, marionetteScriptFinished);''' % (
-            pref_name, value)
-
-        self.marionette.execute_async_script(script)
+        with self.marionette.using_context('chrome'):
+            script = 'Services.prefs.%s(%s, %s)' % (func, pref_name, value)
+            self.marionette.execute_script(script)
 
     def timeout_ms(self):
         'Return touch caret expiration time in milliseconds.'
-        return self.marionette.execute_script(
-            'return SpecialPowers.getIntPref("%s");' % self.caret_timeout_ms_pref)
+        with self.marionette.using_context('chrome'):
+            return self.marionette.execute_script(
+                'return Services.prefs.getIntPref("%s");' % self.caret_timeout_ms_pref)
 
     def open_test_html(self, enabled=True, timeout_ms=0):
         '''Open html for testing and locate elements, enable/disable touch caret, and
@@ -188,11 +191,15 @@ class CommonCaretTestCase(object):
         dest_x, dest_y = 0, 0
         el_center_x, el_center_y = el.rect['x'], el.rect['y']
         self.marionette.execute_script(
-            '''var utils = SpecialPowers.getDOMWindowUtils(window);
+            '''
+            var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIDOMWindowUtils);
             utils.sendWheelEvent(arguments[0], arguments[1],
                                  0, 10, 0, WheelEvent.DOM_DELTA_PIXEL,
-                                 0, 0, 0, 0);''',
-            script_args=[el_center_x, el_center_y]
+                                 0, 0, 0, 0);
+            ''',
+            script_args=[el_center_x, el_center_y],
+            sandbox='system'
         )
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 

@@ -555,15 +555,15 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCou
   *aChildArray = nullptr;
   *aCount = 0;
 
-  if (!gHashTable.IsInitialized())
+  if (!gHashTable->IsInitialized())
     return NS_ERROR_NOT_INITIALIZED;
 
   // this will contain a list of all the pref name strings
   // allocate on the stack for speed
-  
+
   ed.parent = getPrefName(aStartingAt);
   ed.pref_list = &prefArray;
-  PL_DHashTableEnumerate(&gHashTable, pref_enumChild, &ed);
+  PL_DHashTableEnumerate(gHashTable, pref_enumChild, &ed);
 
   // now that we've built up the list, run the callback on
   // all the matching elements

@@ -47,10 +47,14 @@ public:
 
   void BindStream(ProcessedMediaStream* aStream);
 
+  void SetChosenVoiceURI(const nsAString& aUri);
+
 protected:
   virtual ~nsSpeechTask();
 
-  virtual nsresult DispatchStartImpl();
+  nsresult DispatchStartImpl();
+
+  virtual nsresult DispatchStartImpl(const nsAString& aUri);
 
   virtual nsresult DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex);
 
@@ -89,6 +93,8 @@ private:
   nsRefPtr<SpeechSynthesis> mSpeechSynthesis;
 
   bool mIndirectAudio;
+
+  nsString mChosenVoiceURI;
 };
 
 } // namespace dom

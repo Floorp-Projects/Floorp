@@ -34,6 +34,8 @@ public:
   NS_IMETHOD GetIntrinsicRatio(nsSize* aRatio) override;
   NS_IMETHOD_(TemporaryRef<SourceSurface>)
     GetFrame(uint32_t aWhichFrame, uint32_t aFlags) override;
+  NS_IMETHOD_(bool) IsImageContainerAvailable(layers::LayerManager* aManager,
+                                              uint32_t aFlags) override;
   NS_IMETHOD_(already_AddRefed<layers::ImageContainer>)
     GetImageContainer(layers::LayerManager* aManager,
                       uint32_t aFlags) override;

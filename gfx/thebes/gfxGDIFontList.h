@@ -310,6 +310,7 @@ public:
     virtual gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
 
     virtual gfxFontFamily* FindFamily(const nsAString& aFamily,
+                                      nsIAtom* aLanguage = nullptr,
                                       bool aUseSystemFonts = false);
 
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,

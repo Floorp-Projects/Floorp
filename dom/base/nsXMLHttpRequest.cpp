@@ -391,29 +391,33 @@ nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
   }
 
   // Check for permissions.
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetOwner());
-  if (!window || !window->GetDocShell()) {
-    return;
-  }
-
   // Chrome is always allowed access, so do the permission check only
   // for non-chrome pages.
   if (!IsSystemXHR() && aSystem) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    if (!doc) {
+    nsIGlobalObject* global = GetOwnerGlobal();
+    if (NS_WARN_IF(!global)) {
+      SetParameters(aAnon, false);
       return;
     }
 
-    nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+    nsIPrincipal* principal = global->PrincipalOrNull();
+    if (NS_WARN_IF(!principal)) {
+      SetParameters(aAnon, false);
+      return;
+    }
+
     nsCOMPtr<nsIPermissionManager> permMgr =
       services::GetPermissionManager();
-    if (!permMgr)
+    if (NS_WARN_IF(!permMgr)) {
+      SetParameters(aAnon, false);
       return;
+    }
 
     uint32_t permission;
     nsresult rv =
       permMgr->TestPermissionFromPrincipal(principal, "systemXHR", &permission);
     if (NS_FAILED(rv) || permission != nsIPermissionManager::ALLOW_ACTION) {
+      SetParameters(aAnon, false);
       return;
     }
   }

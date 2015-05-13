@@ -8,8 +8,6 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
-
 PRLogModuleInfo*
 GetAccessibleCaretLog()
 {
@@ -21,7 +19,5 @@ GetAccessibleCaretLog()
 
   return log;
 }
-
-#endif // PR_LOGGING
 
 } // namespace mozilla
