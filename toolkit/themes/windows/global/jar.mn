@@ -176,6 +176,7 @@ toolkit.jar:
         skin/classic/global/printpreview/arrow-right-end.png     (printpreview/arrow-right-end.png)
         skin/classic/global/radio/radio-check.gif                (radio/radio-check.gif)
         skin/classic/global/radio/radio-check-dis.gif            (radio/radio-check-dis.gif)
+        skin/classic/global/reader/pocket.svg                    (../../shared/reader/pocket.svg)
         skin/classic/global/reader/RM-Add-24x24.svg              (../../shared/reader/RM-Add-24x24.svg)
         skin/classic/global/reader/RM-Close-24x24.svg            (../../shared/reader/RM-Close-24x24.svg)
         skin/classic/global/reader/RM-Delete-24x24.svg           (../../shared/reader/RM-Delete-24x24.svg)

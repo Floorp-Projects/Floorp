@@ -25,32 +25,27 @@ let gTests = [
     run: function () {
       return new Promise(function(resolve, reject) {
         let tabOpened = false;
-        let properUrl = "http://example.com/browser/browser/base/content/test/general/browser_fxa_oauth.html";
+        let properURL = "http://example.com/browser/browser/base/content/test/general/browser_fxa_oauth.html";
         let queryStrings = [
           "action=signin",
           "client_id=client_id",
           "scope=",
           "state=state",
-          "webChannelId=oauth_client_id"
+          "webChannelId=oauth_client_id",
         ];
         queryStrings.sort();
 
         waitForTab(function (tab) {
           Assert.ok("Tab successfully opened");
+          Assert.ok(gBrowser.currentURI.spec.split("?")[0], properURL, "Check URL without params");
+          let actualURL = new URL(gBrowser.currentURI.spec);
+          let actualQueryStrings = actualURL.search.substring(1).split("&");
+          actualQueryStrings.sort();
+          Assert.equal(actualQueryStrings.length, queryStrings.length, "Check number of params");
 
-          // The order of the queries is unpredictable, so allow for that.
-          let a1 = gBrowser.currentURI.spec.split('?');
-          let a2 = a1[1].split('&');
-          a2.sort();
-          let match = a1.length == 2 &&
-                      a1[0] == properUrl &&
-                      a2.length == queryStrings.length;
           for (let i = 0; i < queryStrings.length; i++) {
-            if (a2[i] !== queryStrings[i]) {
-              match = false;
-            }
+            Assert.equal(actualQueryStrings[i], queryStrings[i], "Check parameter " + i);
           }
-          Assert.ok(match);
 
           tabOpened = true;
         });
@@ -79,6 +74,63 @@ let gTests = [
     }
   },
   {
+    desc: "FxA OAuth - should open a new tab, complete OAuth flow when forcing auth",
+    run: function () {
+      return new Promise(function(resolve, reject) {
+        let tabOpened = false;
+        let properURL = "http://example.com/browser/browser/base/content/test/general/browser_fxa_oauth.html";
+        let queryStrings = [
+          "action=force_auth",
+          "client_id=client_id",
+          "scope=",
+          "state=state",
+          "webChannelId=oauth_client_id",
+          "email=test%40invalid.com",
+        ];
+        queryStrings.sort();
+
+        waitForTab(function (tab) {
+          Assert.ok("Tab successfully opened");
+          Assert.ok(gBrowser.currentURI.spec.split("?")[0], properURL, "Check URL without params");
+
+          let actualURL = new URL(gBrowser.currentURI.spec);
+          let actualQueryStrings = actualURL.search.substring(1).split("&");
+          actualQueryStrings.sort();
+          Assert.equal(actualQueryStrings.length, queryStrings.length, "Check number of params");
+
+          for (let i = 0; i < queryStrings.length; i++) {
+            Assert.equal(actualQueryStrings[i], queryStrings[i], "Check parameter " + i);
+          }
+
+          tabOpened = true;
+        });
+
+        let client = new FxAccountsOAuthClient({
+          parameters: {
+            state: "state",
+            client_id: "client_id",
+            oauth_uri: HTTP_PATH,
+            content_uri: HTTP_PATH,
+            action: "force_auth",
+            email: "test@invalid.com"
+          },
+          authorizationEndpoint: HTTP_ENDPOINT
+        });
+
+        client.onComplete = function(tokenData) {
+          Assert.ok(tabOpened);
+          Assert.equal(tokenData.code, "code1");
+          Assert.equal(tokenData.state, "state");
+          resolve();
+        };
+
+        client.onError = reject;
+
+        client.launchWebFlow();
+      });
+    }
+  },
+  {
     desc: "FxA OAuth - should receive an error when there's a state mismatch",
     run: function () {
       return new Promise(function(resolve, reject) {
@@ -88,7 +140,7 @@ let gTests = [
           Assert.ok("Tab successfully opened");
 
           // It should have passed in the expected non-matching state value.
-          let queryString = gBrowser.currentURI.spec.split('?')[1];
+          let queryString = gBrowser.currentURI.spec.split("?")[1];
           Assert.ok(queryString.indexOf('state=different-state') >= 0);
 
           tabOpened = true;

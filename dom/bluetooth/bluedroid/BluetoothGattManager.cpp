@@ -1423,6 +1423,7 @@ BluetoothGattManager::ScanResultNotification(
   BT_APPEND_NAMED_VALUE(properties, "Address", nsString(aBdAddr));
   BT_APPEND_NAMED_VALUE(properties, "Rssi", static_cast<int32_t>(aRssi));
   BT_APPEND_NAMED_VALUE(properties, "GattAdv", advData);
+  BT_APPEND_NAMED_VALUE(properties, "Type", TYPE_OF_DEVICE_BLE);
 
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);

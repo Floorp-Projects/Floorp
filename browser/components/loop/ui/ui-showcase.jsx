@@ -179,12 +179,12 @@
       ],
       "16x16": ["add", "add-hover", "add-active", "audio", "audio-hover", "audio-active",
         "block", "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
-        "contacts-active", "copy", "checkmark", "google", "google-hover", "google-active",
-        "history", "history-hover", "history-active", "leave", "precall", "precall-hover",
-        "precall-active", "screen-white", "screenmute-white", "settings",
-        "settings-hover", "settings-active", "share-darkgrey", "tag", "tag-hover",
-        "tag-active", "trash", "unblock", "unblock-hover", "unblock-active", "video",
-        "video-hover", "video-active", "tour"
+        "contacts-active", "copy", "checkmark", "delete", "google", "google-hover",
+        "google-active", "history", "history-hover", "history-active", "leave",
+        "precall", "precall-hover", "precall-active", "screen-white", "screenmute-white",
+        "settings", "settings-hover", "settings-active", "share-darkgrey", "tag",
+        "tag-hover", "tag-active", "trash", "unblock", "unblock-hover", "unblock-active",
+        "video", "video-hover", "video-active", "tour"
       ]
     },
 
