@@ -232,7 +232,7 @@ let AlertsHelper = {
   },
 
   showNotification: function(imageURL, title, text, textClickable, cookie,
-                             uid, dir, lang, dataObj, manifestURL, timestamp,
+                             uid, bidi, lang, dataObj, manifestURL, timestamp,
                              behavior) {
     function send(appName, appIcon) {
       SystemAppProxy._sendCustomEvent(kMozChromeNotificationEvent, {
@@ -241,7 +241,7 @@ let AlertsHelper = {
         icon: imageURL,
         title: title,
         text: text,
-        dir: dir,
+        bidi: bidi,
         lang: lang,
         appName: appName,
         appIcon: appIcon,
@@ -276,7 +276,7 @@ let AlertsHelper = {
     let dataObj = this.deserializeStructuredClone(data.dataStr);
     this.registerListener(data.name, data.cookie, data.alertListener);
     this.showNotification(data.imageURL, data.title, data.text,
-                          data.textClickable, data.cookie, data.name, data.dir,
+                          data.textClickable, data.cookie, data.name, data.bidi,
                           data.lang, dataObj, null, data.inPrivateBrowsing);
   },
 
