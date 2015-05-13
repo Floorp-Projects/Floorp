@@ -156,7 +156,7 @@ ReturnedValueMustNotBePrimitive(JSContext* cx, HandleObject proxy, JSAtom* atom,
         if (AtomToPrintableString(cx, atom, &bytes)) {
             RootedValue val(cx, ObjectOrNullValue(proxy));
             ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                              JSDVG_SEARCH_STACK, val, js::NullPtr(), bytes.ptr());
+                              JSDVG_SEARCH_STACK, val, nullptr, bytes.ptr());
         }
         return false;
     }
@@ -532,7 +532,7 @@ js::proxy_createFunction(JSContext* cx, unsigned argc, Value* vp)
     // Stash the call and construct traps on a holder object that we can stick
     // in a slot on the proxy.
     RootedObject ccHolder(cx, JS_NewObjectWithGivenProto(cx, Jsvalify(&CallConstructHolder),
-                                                         js::NullPtr()));
+                                                         nullptr));
     if (!ccHolder)
         return false;
     ccHolder->as<NativeObject>().setReservedSlot(0, ObjectValue(*call));

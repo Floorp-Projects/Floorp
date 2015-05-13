@@ -928,7 +928,7 @@ BuildCStyleTypeSource(JSContext* cx, JSObject* typeObj_, AutoString& source)
       type = CType::GetTypeCode(baseTypeObj);
     } while (type == TYPE_pointer || type == TYPE_array);
     if (type == TYPE_function) {
-      BuildCStyleFunctionTypeSource(cx, baseTypeObj, NullPtr(), ptrCount,
+      BuildCStyleFunctionTypeSource(cx, baseTypeObj, nullptr, ptrCount,
                                     source);
       break;
     }
@@ -943,7 +943,7 @@ BuildCStyleTypeSource(JSContext* cx, JSObject* typeObj_, AutoString& source)
     break;
   }
   case TYPE_function:
-    BuildCStyleFunctionTypeSource(cx, typeObj, NullPtr(), 0, source);
+    BuildCStyleFunctionTypeSource(cx, typeObj, nullptr, 0, source);
     break;
   case TYPE_array:
     MOZ_CRASH("TYPE_array shouldn't appear in function type");
@@ -1071,8 +1071,8 @@ BuildTypeSource(JSContext* cx, JSObject* typeObj_, bool makeShort,
 static bool
 ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
           ConversionType convType,
-          HandleObject funObj = NullPtr(), unsigned argIndex = 0,
-          HandleObject arrObj = NullPtr(), unsigned arrIndex = 0)
+          HandleObject funObj = nullptr, unsigned argIndex = 0,
+          HandleObject arrObj = nullptr, unsigned arrIndex = 0)
 {
   JSAutoByteString valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
@@ -1201,8 +1201,8 @@ ConvError(JSContext* cx, const char* expectedStr, HandleValue actual,
 static bool
 ConvError(JSContext* cx, HandleObject expectedType, HandleValue actual,
           ConversionType convType,
-          HandleObject funObj = NullPtr(), unsigned argIndex = 0,
-          HandleObject arrObj = NullPtr(), unsigned arrIndex = 0)
+          HandleObject funObj = nullptr, unsigned argIndex = 0,
+          HandleObject arrObj = nullptr, unsigned arrIndex = 0)
 {
   MOZ_ASSERT(CType::IsCType(expectedType));
 
@@ -1323,7 +1323,7 @@ ArgumentTypeMismatch(JSContext* cx, const char* arg, const char* func,
 
 static bool
 EmptyFinalizerError(JSContext* cx, ConversionType convType,
-                    HandleObject funObj = NullPtr(), unsigned argIndex = 0)
+                    HandleObject funObj = nullptr, unsigned argIndex = 0)
 {
   JSAutoByteString posBytes;
   const char* posStr;
@@ -1347,7 +1347,7 @@ FieldCountMismatch(JSContext* cx,
                    unsigned expectedCount, HandleObject structObj,
                    unsigned actualCount, HandleValue actual,
                    ConversionType convType,
-                   HandleObject funObj = NullPtr(), unsigned argIndex = 0)
+                   HandleObject funObj = nullptr, unsigned argIndex = 0)
 {
   MOZ_ASSERT(structObj && CType::IsCType(structObj));
 
@@ -1429,7 +1429,7 @@ NonPrimitiveError(JSContext* cx, HandleObject typeObj)
 static bool
 PropNameNonStringError(JSContext* cx, HandleId id, HandleValue actual,
                        ConversionType convType,
-                       HandleObject funObj = NullPtr(), unsigned argIndex = 0)
+                       HandleObject funObj = nullptr, unsigned argIndex = 0)
 {
   JSAutoByteString valBytes;
   const char* valStr = CTypesToSourceForError(cx, actual, valBytes);
@@ -1672,7 +1672,7 @@ InitInt64Class(JSContext* cx,
                const JSFunctionSpec* static_fs)
 {
   // Init type class and constructor
-  RootedObject prototype(cx, JS_InitClass(cx, parent, js::NullPtr(), clasp, construct,
+  RootedObject prototype(cx, JS_InitClass(cx, parent, nullptr, clasp, construct,
                                           0, nullptr, fs, nullptr, static_fs));
   if (!prototype)
     return nullptr;
@@ -2863,8 +2863,8 @@ ImplicitConvert(JSContext* cx,
                 void* buffer,
                 ConversionType convType,
                 bool* freePointer,
-                HandleObject funObj = NullPtr(), unsigned argIndex = 0,
-                HandleObject arrObj = NullPtr(), unsigned arrIndex = 0)
+                HandleObject funObj = nullptr, unsigned argIndex = 0,
+                HandleObject arrObj = nullptr, unsigned arrIndex = 0)
 {
   RootedObject targetType(cx, targetType_);
   MOZ_ASSERT(CType::IsSizeDefined(targetType));
@@ -3865,7 +3865,7 @@ CType::ConstructBasic(JSContext* cx,
   }
 
   // construct a CData object
-  RootedObject result(cx, CData::Create(cx, obj, NullPtr(), nullptr, true));
+  RootedObject result(cx, CData::Create(cx, obj, nullptr, nullptr, true));
   if (!result)
     return false;
 
@@ -4639,7 +4639,7 @@ PointerType::ConstructData(JSContext* cx,
                                "s");
   }
 
-  RootedObject result(cx, CData::Create(cx, obj, NullPtr(), nullptr, true));
+  RootedObject result(cx, CData::Create(cx, obj, nullptr, nullptr, true));
   if (!result)
     return false;
 
@@ -4794,7 +4794,7 @@ PointerType::OffsetBy(JSContext* cx, const CallArgs& args, int offset)
   void* address = data + offset * elementSize;
 
   // Create a PointerType CData object containing the new address.
-  JSObject* result = CData::Create(cx, typeObj, NullPtr(), &address, true);
+  JSObject* result = CData::Create(cx, typeObj, nullptr, &address, true);
   if (!result)
     return false;
 
@@ -4833,7 +4833,7 @@ PointerType::ContentsGetter(JSContext* cx, JS::CallArgs args)
   }
 
   RootedValue result(cx);
-  if (!ConvertToJS(cx, baseType, NullPtr(), data, false, false, &result))
+  if (!ConvertToJS(cx, baseType, nullptr, data, false, false, &result))
     return false;
 
   args.rval().set(result);
@@ -5038,7 +5038,7 @@ ArrayType::ConstructData(JSContext* cx,
       return false;
   }
 
-  JSObject* result = CData::Create(cx, obj, NullPtr(), nullptr, true);
+  JSObject* result = CData::Create(cx, obj, nullptr, nullptr, true);
   if (!result)
     return false;
 
@@ -5269,7 +5269,7 @@ ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval, MutableHandle
   size_t elementSize = CType::GetSize(baseType);
   char* data = static_cast<char*>(CData::GetData(obj)) + elementSize * index;
   if (!ImplicitConvert(cx, vp, baseType, data, ConversionType::Setter,
-                       nullptr, NullPtr(), 0, typeObj, index))
+                       nullptr, nullptr, 0, typeObj, index))
     return false;
   return result.succeed();
 }
@@ -5303,7 +5303,7 @@ ArrayType::AddressOfElement(JSContext* cx, unsigned argc, jsval* vp)
     return false;
 
   // Create a PointerType CData object containing null.
-  RootedObject result(cx, CData::Create(cx, pointerType, NullPtr(), nullptr, true));
+  RootedObject result(cx, CData::Create(cx, pointerType, nullptr, nullptr, true));
   if (!result)
     return false;
 
@@ -5428,7 +5428,7 @@ StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
   // Create a simple StructType with no defined fields. The result will be
   // non-instantiable as CData, will have no 'prototype' property, and will
   // have undefined size and alignment and no ffi_type.
-  RootedObject result(cx, CType::Create(cx, typeProto, NullPtr(), TYPE_struct,
+  RootedObject result(cx, CType::Create(cx, typeProto, nullptr, TYPE_struct,
                                         name.toString(), JSVAL_VOID, JSVAL_VOID, nullptr));
   if (!result)
     return false;
@@ -5751,7 +5751,7 @@ StructType::ConstructData(JSContext* cx,
     return false;
   }
 
-  JSObject* result = CData::Create(cx, obj, NullPtr(), nullptr, true);
+  JSObject* result = CData::Create(cx, obj, nullptr, nullptr, true);
   if (!result)
     return false;
 
@@ -5799,7 +5799,7 @@ StructType::ConstructData(JSContext* cx,
       MOZ_ASSERT(field.mIndex < fields->count());  /* Quantified invariant */
       if (!ImplicitConvert(cx, args[field.mIndex], field.mType,
                            buffer + field.mOffset, ConversionType::Construct,
-                           nullptr, NullPtr(), 0, obj, field.mIndex))
+                           nullptr, nullptr, 0, obj, field.mIndex))
         return false;
     }
 
@@ -5987,7 +5987,7 @@ StructType::FieldSetter(JSContext* cx, unsigned argc, Value* vp)
 
   char* data = static_cast<char*>(CData::GetData(obj)) + field->mOffset;
   return ImplicitConvert(cx, args.get(0), field->mType, data, ConversionType::Setter, nullptr,
-                         NullPtr(), 0, typeObj, field->mIndex);
+                         nullptr, 0, typeObj, field->mIndex);
 }
 
 bool
@@ -6032,7 +6032,7 @@ StructType::AddressOfField(JSContext* cx, unsigned argc, jsval* vp)
     return false;
 
   // Create a PointerType CData object containing null.
-  JSObject* result = CData::Create(cx, pointerType, NullPtr(), nullptr, true);
+  JSObject* result = CData::Create(cx, pointerType, nullptr, nullptr, true);
   if (!result)
     return false;
 
@@ -6665,7 +6665,7 @@ FunctionType::Call(JSContext* cx,
 
   // prepare a JS object from the result
   RootedObject returnType(cx, fninfo->mReturnType);
-  return ConvertToJS(cx, returnType, NullPtr(), returnValue.mData, false, true, args.rval());
+  return ConvertToJS(cx, returnType, nullptr, returnValue.mData, false, true, args.rval());
 }
 
 FunctionInfo*
@@ -6946,7 +6946,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
     // Convert each argument, and have any CData objects created depend on
     // the existing buffers.
     RootedObject argType(cx, fninfo->mArgTypes[i]);
-    if (!ConvertToJS(cx, argType, NullPtr(), args[i], false, false, argv[i]))
+    if (!ConvertToJS(cx, argType, nullptr, args[i], false, false, argv[i]))
       return;
   }
 
@@ -7181,7 +7181,7 @@ CData::ValueGetter(JSContext* cx, JS::CallArgs args)
 
   // Convert the value to a primitive; do not create a new CData object.
   RootedObject ctype(cx, GetCType(obj));
-  return ConvertToJS(cx, ctype, NullPtr(), GetData(obj), true, false, args.rval());
+  return ConvertToJS(cx, ctype, nullptr, GetData(obj), true, false, args.rval());
 }
 
 bool
@@ -7215,7 +7215,7 @@ CData::Address(JSContext* cx, unsigned argc, jsval* vp)
     return false;
 
   // Create a PointerType CData object containing null.
-  JSObject* result = CData::Create(cx, pointerType, NullPtr(), nullptr, true);
+  JSObject* result = CData::Create(cx, pointerType, nullptr, nullptr, true);
   if (!result)
     return false;
 
@@ -7286,7 +7286,7 @@ CData::GetRuntime(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   void* data = static_cast<void*>(cx->runtime());
-  JSObject* result = CData::Create(cx, targetType, NullPtr(), &data, true);
+  JSObject* result = CData::Create(cx, targetType, nullptr, &data, true);
   if (!result)
     return false;
 
@@ -7613,7 +7613,7 @@ CDataFinalizer::GetValue(JSContext* cx, JSObject* obj, MutableHandleValue aResul
   }
 
   RootedObject ctype(cx, GetCType(cx, obj));
-  return ConvertToJS(cx, ctype, /*parent*/NullPtr(), p->cargs, false, true, aResult);
+  return ConvertToJS(cx, ctype, /*parent*/nullptr, p->cargs, false, true, aResult);
 }
 
 /*
@@ -7884,7 +7884,7 @@ CDataFinalizer::Methods::Forget(JSContext* cx, unsigned argc, jsval* vp)
 
   RootedValue valJSData(cx);
   RootedObject ctype(cx, GetCType(cx, obj));
-  if (!ConvertToJS(cx, ctype, NullPtr(), p->cargs, false, true, &valJSData)) {
+  if (!ConvertToJS(cx, ctype, nullptr, p->cargs, false, true, &valJSData)) {
     JS_ReportError(cx, "CDataFinalizer value cannot be represented");
     return false;
   }
@@ -7961,7 +7961,7 @@ CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, jsval* vp)
   JS_SetReservedSlot(objCTypes, SLOT_LASTERROR, INT_TO_JSVAL(lastErrorStatus));
 #endif // defined(XP_WIN)
 
-  if (ConvertToJS(cx, resultType, NullPtr(), p->rvalue, false, true, &result)) {
+  if (ConvertToJS(cx, resultType, nullptr, p->rvalue, false, true, &result)) {
     CDataFinalizer::Cleanup(p, obj);
     args.rval().set(result);
     return true;

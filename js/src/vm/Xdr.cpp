@@ -114,7 +114,7 @@ XDRState<mode>::codeFunction(MutableHandleFunction objp)
     if (!VersionCheck(this))
         return false;
 
-    return XDRInterpretedFunction(this, NullPtr(), NullPtr(), objp);
+    return XDRInterpretedFunction(this, nullptr, nullptr, objp);
 }
 
 template<XDRMode mode>
@@ -127,7 +127,7 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
     if (!VersionCheck(this))
         return false;
 
-    if (!XDRScript(this, NullPtr(), NullPtr(), NullPtr(), scriptp))
+    if (!XDRScript(this, nullptr, nullptr, nullptr, scriptp))
         return false;
 
     return true;

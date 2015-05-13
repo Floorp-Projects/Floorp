@@ -30,7 +30,7 @@ obj_valueOf(JSContext* cx, unsigned argc, JS::Value* vp);
 
 PlainObject*
 ObjectCreateImpl(JSContext* cx, HandleObject proto, NewObjectKind newKind = GenericObject,
-                 HandleObjectGroup group = js::NullPtr());
+                 HandleObjectGroup group = nullptr);
 
 PlainObject*
 ObjectCreateWithTemplate(JSContext* cx, HandlePlainObject templateObj);

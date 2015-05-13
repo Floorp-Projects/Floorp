@@ -121,7 +121,7 @@ bool
 HTMLTrackElement::IsWebVTTEnabled()
 {
   // Our callee does not use its arguments.
-  return HTMLTrackElementBinding::ConstructorEnabled(nullptr, JS::NullPtr());
+  return HTMLTrackElementBinding::ConstructorEnabled(nullptr, nullptr);
 }
 
 TextTrack*

@@ -399,7 +399,7 @@ public:
 
     virtual JSObject* createHolder(JSContext* cx, JSObject* wrapper) override
     {
-        return JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr());
+        return JS_NewObjectWithGivenProto(cx, nullptr, nullptr);
     }
 
     static OpaqueXrayTraits singleton;

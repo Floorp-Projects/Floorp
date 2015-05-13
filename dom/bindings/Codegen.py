@@ -2866,7 +2866,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
             """
             /* Make sure our global is sane.  Hopefully we can remove this sometime */
             if (!(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL)) {
-              return JS::NullPtr();
+              return nullptr;
             }
 
             /* Check to see whether the interface objects are already installed */
@@ -9929,7 +9929,7 @@ class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
             }
             // OK to pass null as "proxy" because it's ignored if
             // shadowPrototypeProperties is true
-            return AppendNamedPropertyIds(cx, JS::NullPtr(), names, true, props);
+            return AppendNamedPropertyIds(cx, nullptr, names, true, props);
             """))
 
 

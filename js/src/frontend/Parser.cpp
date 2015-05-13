@@ -1244,7 +1244,7 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, Hand
         break;
     }
 
-    fun = NewFunctionWithProto(context, nullptr, 0, flags, NullPtr(), atom, proto,
+    fun = NewFunctionWithProto(context, nullptr, 0, flags, nullptr, atom, proto,
                                allocKind, TenuredObject);
     if (!fun)
         return nullptr;
@@ -6593,7 +6593,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
         if (!tokenStream.peekToken(&ignored))
             return null();
 
-        return functionDef(inHandling, yieldHandling, NullPtr(), Arrow, NotGenerator);
+        return functionDef(inHandling, yieldHandling, nullptr, Arrow, NotGenerator);
       }
 
       default:
@@ -7371,7 +7371,7 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
             return null();
     }
 
-    RootedFunction fun(context, newFunction(/* atom = */ NullPtr(), Expression, proto));
+    RootedFunction fun(context, newFunction(/* atom = */ nullptr, Expression, proto));
     if (!fun)
         return null();
 
