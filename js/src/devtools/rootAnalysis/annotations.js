@@ -295,11 +295,16 @@ function listGCTypes() {
     return [
         'JSObject',
         'JSString',
+        'JSFatInlineString',
+        'JSExternalString',
         'js::Shape',
+        'js::AccessorShape',
         'js::BaseShape',
         'JSScript',
+        'js::ObjectGroup',
         'js::LazyScript',
-        'js::ion::IonCode',
+        'js::jit::JitCode',
+        'JS::Symbol',
     ];
 }
 
