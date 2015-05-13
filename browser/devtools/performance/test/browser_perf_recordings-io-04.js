@@ -3,8 +3,72 @@
 
 /**
  * Tests if the performance tool can import profiler data from the
- * original profiler tool and the correct views and graphs are loaded.
+ * original profiler tool (Performance Recording v1, and Profiler data v2) and the correct views and graphs are loaded.
  */
+let { RecordingUtils } = devtools.require("devtools/performance/recording-utils");
+
+let TICKS_DATA = (function () {
+  let ticks = [];
+  for (let i = 0; i < 100; i++) {
+    ticks.push(i * 10);
+  }
+  return ticks;
+})();
+
+let PROFILER_DATA = (function () {
+  let data = {};
+  let threads = data.threads = [];
+  let thread = {};
+  threads.push(thread);
+  thread.name = "Content";
+  thread.samples = [{
+    time: 5,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B" },
+      { location: "C" }
+    ]
+  }, {
+    time: 5 + 6,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B" },
+      { location: "D" }
+    ]
+  }, {
+    time: 5 + 6 + 7,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "E" },
+      { location: "F" }
+    ]
+  }, {
+    time: 20,
+    frames: [
+      { location: "(root)" },
+      { location: "A" },
+      { location: "B" },
+      { location: "C" },
+      { location: "D" },
+      { location: "E" },
+      { location: "F" },
+      { location: "G" }
+    ]
+  }];
+
+  // Handled in other deflating tests
+  thread.markers = [];
+
+  let meta = data.meta = {};
+  meta.version = 2;
+  meta.interval = 1;
+  meta.stackwalk = 0;
+  meta.product = "Firefox";
+  return data;
+})();
 
 let test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
@@ -13,19 +77,13 @@ let test = Task.async(function*() {
   // Enable memory to test the memory-calltree and memory-flamegraph.
   Services.prefs.setBoolPref(MEMORY_PREF, true);
 
-  yield startRecording(panel);
-  yield stopRecording(panel);
-
-  // Get data from the current profiler
-  let data = PerformanceController.getCurrentRecording().getAllData();
-
   // Create a structure from the data that mimics the old profiler's data.
   // Different name for `ticks`, different way of storing time,
   // and no memory, markers data.
   let oldProfilerData = {
-    profilerData: { profile: data.profile },
-    ticksData: data.ticks,
-    recordingDuration: data.duration,
+    profilerData: { profile: PROFILER_DATA },
+    ticksData: TICKS_DATA,
+    recordingDuration: 10000,
     fileType: "Recorded Performance Data",
     version: 1
   };
@@ -64,29 +122,33 @@ let test = Task.async(function*() {
   // Verify imported recording.
 
   let importedData = PerformanceController.getCurrentRecording().getAllData();
+  let expected = Object.create({
+    label: "",
+    duration: 10000,
+    markers: [].toSource(),
+    frames: [].toSource(),
+    memory: [].toSource(),
+    ticks: TICKS_DATA.toSource(),
+    profile: RecordingUtils.deflateProfile(JSON.parse(JSON.stringify(PROFILER_DATA))).toSource(),
+    allocations: ({sites:[], timestamps:[], frames:[], counts:[]}).toSource(),
+    withTicks: true,
+    withMemory: false,
+    sampleFrequency: void 0
+  });
 
-  is(importedData.label, data.label,
-    "The imported legacy data was successfully converted for the current tool (1).");
-  is(importedData.duration, data.duration,
-    "The imported legacy data was successfully converted for the current tool (2).");
-  is(importedData.markers.toSource(), [].toSource(),
-    "The imported legacy data was successfully converted for the current tool (3).");
-  is(importedData.frames.toSource(), [].toSource(),
-    "The imported legacy data was successfully converted for the current tool (4).");
-  is(importedData.memory.toSource(), [].toSource(),
-    "The imported legacy data was successfully converted for the current tool (5).");
-  is(importedData.ticks.toSource(), data.ticks.toSource(),
-    "The imported legacy data was successfully converted for the current tool (6).");
-  is(importedData.allocations.toSource(), ({sites:[], timestamps:[], frames:[], counts:[]}).toSource(),
-    "The imported legacy data was successfully converted for the current tool (7).");
-  is(importedData.profile.toSource(), data.profile.toSource(),
-    "The imported legacy data was successfully converted for the current tool (8).");
-  is(importedData.configuration.withTicks, true,
-    "The imported legacy data was successfully converted for the current tool (9).");
-  is(importedData.configuration.withMemory, false,
-    "The imported legacy data was successfully converted for the current tool (10).");
-  is(importedData.configuration.sampleFrequency, void 0,
-    "The imported legacy data was successfully converted for the current tool (11).");
+  for (let field in expected) {
+    if (!!~["withTicks", "withMemory", "sampleFrequency"].indexOf(field)) {
+      is(importedData.configuration[field], expected[field], `${field} successfully converted in legacy import.`);
+    } else if (field === "profile") {
+      is(importedData.profile.toSource(), expected.profile,
+        `profiler data's samples successfully converted in legacy import.`);
+      is(importedData.profile.meta.version, 3, "Updated meta version to 3.");
+    } else {
+      let data = importedData[field];
+      is(typeof data === "object" ? data.toSource() : data, expected[field],
+        `${field} successfully converted in legacy import.`);
+    }
+  }
 
   yield teardown(panel);
   finish();

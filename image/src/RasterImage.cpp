@@ -805,6 +805,18 @@ RasterImage::GetCurrentImage(ImageContainer* aContainer, uint32_t aFlags)
   return MakePair(result.first(), Move(image));
 }
 
+NS_IMETHODIMP_(bool)
+RasterImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
+{
+  int32_t maxTextureSize = aManager->GetMaxTextureSize();
+  if (!mHasSize ||
+      mSize.width > maxTextureSize ||
+      mSize.height > maxTextureSize) {
+    return false;
+  }
+
+  return true;
+}
 
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 RasterImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)

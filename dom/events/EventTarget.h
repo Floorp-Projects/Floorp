@@ -12,6 +12,7 @@
 #include "nsIAtom.h"
 
 class nsIDOMWindow;
+class nsIGlobalObject;
 
 namespace mozilla {
 
@@ -27,8 +28,8 @@ template <class T> struct Nullable;
 
 // IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID \
-{ 0xce3817d0, 0x177b, 0x402f, \
- { 0xae, 0x75, 0xf8, 0x4e, 0xbe, 0x5a, 0x07, 0xc3 } }
+{ 0x605158a9, 0xe229, 0x45b1, \
+ { 0xbc, 0x12, 0x02, 0x9f, 0xa3, 0xa9, 0x3f, 0xcb } }
 
 class EventTarget : public nsIDOMEventTarget,
                     public nsWrapperCache
@@ -69,7 +70,12 @@ public:
   // Returns an outer window that corresponds to the inner window this event
   // target is associated with.  Will return null if the inner window is not the
   // current inner or if there is no window around at all.
-  virtual nsIDOMWindow* GetOwnerGlobal() = 0;
+  virtual nsIDOMWindow* GetOwnerGlobalForBindings() = 0;
+
+  // The global object this event target is associated with, if any.
+  // This may be an inner window or some other global object.  This
+  // will never be an outer window.
+  virtual nsIGlobalObject* GetOwnerGlobal() const = 0;
 
   /**
    * Get the event listener manager, creating it if it does not already exist.

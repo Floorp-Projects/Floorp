@@ -1305,14 +1305,16 @@ add_task(function test_timeSensetiveSuggestedTiles() {
         if (!deleteFlag) {
           // this is start timeout corresponding to campaign start
           // a seconds must pass and targetedSite must be set
-          do_check_true(timeDelta >= 1000);
+          do_print("TESTING START timeDelta: " + timeDelta);
+          do_check_true(timeDelta >= 1000 / 2); // check for at least half time
           do_check_eq(link.targetedSite, "hrblock.com");
           do_check_true(DirectoryLinksProvider._campaignTimeoutID);
         }
         else {
           // this is the campaign end timeout, so 3 seconds must pass
           // and timeout should be cleared
-          do_check_true(timeDelta >= 3000);
+          do_print("TESTING END timeDelta: " + timeDelta);
+          do_check_true(timeDelta >= 3000 / 2); // check for at least half time
           do_check_false(link.targetedSite);
           do_check_false(DirectoryLinksProvider._campaignTimeoutID);
           resolve();
@@ -1671,4 +1673,8 @@ add_task(function test_DirectoryLinksProvider_ClickRemoval() {
   do_check_false(data["http://bar.com"].hasOwnProperty("clicked"));
 
   yield promiseCleanDirectoryLinksProvider();
+});
+
+add_task(function test_DirectoryLinksProvider_anonymous() {
+  do_check_true(DirectoryLinksProvider._newXHR().mozAnon);
 });

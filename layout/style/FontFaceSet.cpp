@@ -136,15 +136,22 @@ FontFaceSet::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto)
 void
 FontFaceSet::Disconnect()
 {
-  if (mDocument) {
-    mDocument->RemoveSystemEventListener(NS_LITERAL_STRING("DOMContentLoaded"),
-                                         this, false);
+  RemoveDOMContentLoadedListener();
+
+  if (mDocument && mDocument->CSSLoader()) {
     // We're null checking CSSLoader() since FontFaceSet::Disconnect() might be
     // being called during unlink, at which time the loader amy already have
     // been unlinked from the document.
-    if (mDocument->CSSLoader()) {
-      mDocument->CSSLoader()->RemoveObserver(this);
-    }
+    mDocument->CSSLoader()->RemoveObserver(this);
+  }
+}
+
+void
+FontFaceSet::RemoveDOMContentLoadedListener()
+{
+  if (mDocument) {
+    mDocument->RemoveSystemEventListener(NS_LITERAL_STRING("DOMContentLoaded"),
+                                         this, false);
   }
 }
 
@@ -275,7 +282,7 @@ FontFaceSet::Clear()
 }
 
 bool
-FontFaceSet::Delete(FontFace& aFontFace, ErrorResult& aRv)
+FontFaceSet::Delete(FontFace& aFontFace)
 {
   mPresContext->FlushUserFontSet();
 
@@ -1557,7 +1564,7 @@ FontFaceSet::HandleEvent(nsIDOMEvent* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  Disconnect();
+  RemoveDOMContentLoadedListener();
   CheckLoadingFinished();
 
   return NS_OK;

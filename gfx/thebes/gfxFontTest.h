@@ -9,7 +9,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-#include "cairo/cairo.h"
+#include "cairo.h"
 
 struct gfxFontTestItem {
     gfxFontTestItem(const nsCString& fontName,

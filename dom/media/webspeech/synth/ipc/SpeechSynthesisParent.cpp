@@ -120,10 +120,10 @@ SpeechSynthesisRequestParent::RecvCancel()
 // SpeechTaskParent
 
 nsresult
-SpeechTaskParent::DispatchStartImpl()
+SpeechTaskParent::DispatchStartImpl(const nsAString& aUri)
 {
   MOZ_ASSERT(mActor);
-  NS_ENSURE_TRUE(mActor->SendOnStart(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mActor->SendOnStart(nsString(aUri)), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
