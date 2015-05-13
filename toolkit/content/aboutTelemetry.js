@@ -33,11 +33,8 @@ const DEFAULT_SYMBOL_SERVER_URI = "http://symbolapi.mozilla.org";
 // ms idle before applying the filter (allow uninterrupted typing)
 const FILTER_IDLE_TIMEOUT = 500;
 
-#ifdef XP_WIN
-const EOL = "\r\n";
-#else
-const EOL = "\n";
-#endif
+const isWindows = (Services.appinfo.OS == "WINNT");
+const EOL = isWindows ? "\r\n" : "\n";
 
 // Cached value of document's RTL mode
 let documentRTLMode = "";
