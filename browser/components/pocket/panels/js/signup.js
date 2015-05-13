@@ -188,6 +188,7 @@ PKT_SIGNUP_OVERLAY.prototype = {
         this.dictJSON.fxasignedin = this.fxasignedin ? 1 : 0;
         this.dictJSON.variant = (this.variant ? this.variant : 'undefined');
         this.dictJSON.pockethost = this.pockethost;
+        this.dictJSON.showlearnmore = (this.variant.indexOf('_lm') > -1 || this.variant == 'storyboard' || this.variant == 'hero') ? 1 : 0;
 
         // extra modifier class for collapsed state
         if (this.inoverflowmenu)
@@ -202,7 +203,7 @@ PKT_SIGNUP_OVERLAY.prototype = {
         }
 
         // Create actual content
-        if (this.variant == 'storyboard')
+        if (this.variant == 'storyboard' || this.variant == 'storyboard_lm' || this.variant == 'storyboard_nlm')
         {
             $('body').append(Handlebars.templates.signupstoryboard_shell(this.dictJSON));
         }
