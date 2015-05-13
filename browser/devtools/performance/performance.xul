@@ -37,12 +37,12 @@
                 data-pref="show-platform-data"
                 label="&profilerUI.showPlatformData;"
                 tooltiptext="&profilerUI.showPlatformData.tooltiptext;"/>
-      <!-- TODO Re-enable in bug 1163350 -->
-      <!-- <menuitem id="option-enable-memory"
+      <menuitem id="option-enable-memory"
+                class="experimental-option"
                 type="checkbox"
                 data-pref="enable-memory"
                 label="&profilerUI.enableMemory;"
-                tooltiptext="&profilerUI.enableMemory.tooltiptext;"/> -->
+                tooltiptext="&profilerUI.enableMemory.tooltiptext;"/>
       <menuitem id="option-enable-framerate"
                 type="checkbox"
                 data-pref="enable-framerate"
@@ -63,12 +63,12 @@
                 data-pref="flatten-tree-recursion"
                 label="&profilerUI.flattenTreeRecursion;"
                 tooltiptext="&profilerUI.flattenTreeRecursion.tooltiptext;"/>
-      <!-- TODO Re-enable in bug 1163351 -->
-      <!-- <menuitem id="option-show-jit-optimizations"
+      <menuitem id="option-show-jit-optimizations"
+                class="experimental-option"
                 type="checkbox"
                 data-pref="show-jit-optimizations"
                 label="&profilerUI.showJITOptimizations;"
-                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/> -->
+                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/>
     </menupopup>
   </popupset>
 
@@ -96,8 +96,8 @@
       <toolbar id="performance-toolbar" class="devtools-toolbar">
         <hbox id="performance-toolbar-control-other" class="devtools-toolbarbutton-group">
           <toolbarbutton id="filter-button"
-                         popup="performance-filter-menupopup"
                          class="devtools-toolbarbutton"
+                         popup="performance-filter-menupopup"
                          tooltiptext="&profilerUI.options.filter.tooltiptext;"/>
         </hbox>
         <hbox id="performance-toolbar-controls-detail-views" class="devtools-toolbarbutton-group">
