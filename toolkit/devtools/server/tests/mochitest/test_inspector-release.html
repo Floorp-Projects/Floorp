@@ -52,7 +52,18 @@ addTest(function testReleaseSubtree() {
     return list.items();
   }).then((items)=> {
     originalOwnershipSize = assertOwnership();
-    ok(originalOwnershipSize > 26, "Should have at least 26 items in our ownership tree");
+
+    // Here is how the ownership tree is summed up:
+    // #document                      1
+    //   <html>                       1
+    //     <body>                     1
+    //       <div id=longlist>        1
+    //         <div id=a>a</div>   26*2 (each child plus it's singleTextChild)
+    //         ...
+    //         <div id=z>z</div>
+    //                             -----
+    //                               56
+    is(originalOwnershipSize, 56, "Correct number of items in ownership tree");
     firstChild = items[0].actorID;
   }).then(() => {
     // Now get the longlist and release it from the ownership tree.
@@ -61,9 +72,10 @@ addTest(function testReleaseSubtree() {
     longlist = node.actorID;
     return gWalker.releaseNode(node);
   }).then(() => {
-    // Our ownership size should now be 27 fewer (we forgot about #longlist + 26 children)
+    // Our ownership size should now be 53 fewer (we forgot about #longlist + 26 children + 26 singleTextChild nodes)
     let newOwnershipSize = assertOwnership();
-    is(newOwnershipSize, originalOwnershipSize - 27, "Ownership tree should have dropped by 27 nodes");
+    is(newOwnershipSize, originalOwnershipSize - 53,
+      "Ownership tree should be lower");
     // Now verify that some nodes have gone away
     return checkMissing(gClient, longlist);
   }).then(() => {
