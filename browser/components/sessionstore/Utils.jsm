@@ -7,12 +7,21 @@
 this.EXPORTED_SYMBOLS = ["Utils"];
 
 const Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 
 this.Utils = Object.freeze({
   makeURI: function (url) {
     return Services.io.newURI(url, null, null);
+  },
+
+  makeInputStream: function (aString) {
+    let stream = Cc["@mozilla.org/io/string-input-stream;1"].
+                 createInstance(Ci.nsISupportsCString);
+    stream.data = aString;
+    return stream; // XPConnect will QI this to nsIInputStream for us.
   },
 
   /**
