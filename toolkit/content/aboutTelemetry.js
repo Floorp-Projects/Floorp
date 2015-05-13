@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm");
 Cu.import("resource://gre/modules/TelemetrySession.jsm");
+Cu.import("resource://gre/modules/TelemetryArchive.jsm");
+Cu.import("resource://gre/modules/TelemetryUtils.jsm");
 Cu.import("resource://gre/modules/TelemetryLog.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 
@@ -156,6 +158,49 @@ function getMainWindowWithPreferencesPane() {
   }
 }
 
+/**
+ * Remove all child nodes of a document node.
+ */
+function removeAllChildNodes(node) {
+  while (node.hasChildNodes()) {
+    node.removeChild(node.lastChild);
+  }
+}
+
+/**
+ * Pad a number to two digits with leading "0".
+ */
+function padToTwoDigits(n) {
+  return (n > 9) ? n: "0" + n;
+}
+
+/**
+ * Return yesterdays date with the same time.
+ */
+function yesterday(date) {
+  let d = new Date(date);
+  d.setDate(d.getDate() - 1);
+  return d;
+}
+
+/**
+ * This returns a short date string of the form YYYY/MM/DD.
+ */
+function shortDateString(date) {
+  return date.getFullYear()
+         + "/" + padToTwoDigits(date.getMonth() + 1)
+         + "/" + padToTwoDigits(date.getDate());
+}
+
+/**
+ * This returns a short time string of the form hh:mm:ss.
+ */
+function shortTimeString(date) {
+  return padToTwoDigits(date.getHours())
+         + ":" + padToTwoDigits(date.getMinutes())
+         + ":" + padToTwoDigits(date.getSeconds());
+}
+
 let Settings = {
   SETTINGS: [
     // data upload
@@ -212,6 +257,171 @@ let Settings = {
       }
     }
   }
+};
+
+let PingPicker = {
+  viewCurrentPingData: true,
+  _archivedPings: null,
+
+  attachObservers: function() {
+    let elements = document.getElementsByName("choose-ping-source");
+    for (let el of elements) {
+      el.addEventListener("change", () => this.onPingSourceChanged(), false);
+    }
+
+    document.getElementById("choose-ping-week").addEventListener("change", () => {
+      this._renderPingList();
+      this._updatePingData();
+    }, false);
+
+    document.getElementById("choose-ping-id").addEventListener("change", () => {
+      this._updatePingData()
+    }, false);
+
+    document.getElementById("next-ping")
+            .addEventListener("click", () => this._movePingIndex(-1), false);
+    document.getElementById("previous-ping")
+            .addEventListener("click", () => this._movePingIndex(1), false);
+  },
+
+  onPingSourceChanged: function() {
+    this.update();
+  },
+
+  update: function() {
+    let el = document.getElementById("ping-source-current");
+    this.viewCurrentPingData = el.checked;
+
+    if (this.viewCurrentPingData) {
+      document.getElementById("archived-ping-picker").classList.add("hidden");
+      gPingData = TelemetryController.getCurrentPingData(false);
+      displayPingData(gPingData);
+    } else {
+      this._updateArchivedPingList().then(() =>
+        document.getElementById("archived-ping-picker").classList.remove("hidden"));
+    }
+  },
+
+  _updateArchivedPingList: function() {
+    return TelemetryArchive.promiseArchivedPingList().then((pingList) => {
+      // The archived ping list is sorted in ascending timestamp order,
+      // but descending is more practical for the operations we do here.
+      pingList.reverse();
+
+      // Currently about:telemetry can only handle the Telemetry session pings,
+      // so we have to filter out everything else.
+      pingList = pingList.filter(
+        (p) => ["main", "saved-session"].indexOf(p.type) != -1);
+      this._archivedPings = pingList;
+
+      // Collect the start dates for all the weeks we have pings for.
+      let weekStart = (date) => {
+        let weekDay = (date.getDay() + 6) % 7;
+        let monday = new Date(date);
+        monday.setDate(date.getDate() - weekDay);
+        return TelemetryUtils.truncateToDays(monday);
+      };
+
+      let weekStartDates = new Set();
+      for (let p of pingList) {
+        weekStartDates.add(weekStart(new Date(p.timestampCreated)).getTime());
+      }
+
+      // Build a list of the week date ranges we have ping data for.
+      let plusOneWeek = (date) => {
+        let d = date;
+        d.setDate(d.getDate() + 7);
+        return d;
+      };
+
+      this._weeks = [for (startTime of weekStartDates.values()) {
+        startDate: new Date(startTime),
+        endDate: plusOneWeek(new Date(startTime)),
+      }];
+
+      // Render the archive data.
+      this._renderWeeks();
+      this._renderPingList();
+
+      // Update the displayed ping.
+      this._updatePingData();
+    });
+  },
+
+  _renderWeeks: function() {
+    let weekSelector = document.getElementById("choose-ping-week");
+    removeAllChildNodes(weekSelector);
+
+    let index = 0;
+    for (let week of this._weeks) {
+      let text = shortDateString(week.startDate)
+                 + " - " + shortDateString(yesterday(week.endDate));
+
+      let option = document.createElement("option");
+      let content = document.createTextNode(text);
+      option.appendChild(content);
+      weekSelector.appendChild(option);
+    }
+  },
+
+  _getSelectedWeek: function() {
+    let weekSelector = document.getElementById("choose-ping-week");
+    return this._weeks[weekSelector.selectedIndex];
+  },
+
+  _renderPingList: function(id = null) {
+    let pingSelector = document.getElementById("choose-ping-id");
+    removeAllChildNodes(pingSelector);
+
+    let weekRange = this._getSelectedWeek();
+    let pings = this._archivedPings.filter(
+      (p) => p.timestampCreated >= weekRange.startDate.getTime() &&
+             p.timestampCreated < weekRange.endDate.getTime());
+
+    for (let p of pings) {
+      let date = new Date(p.timestampCreated);
+      let text = shortDateString(date)
+                 + " " + shortTimeString(date)
+                 + " - " + p.type;
+
+      let option = document.createElement("option");
+      let content = document.createTextNode(text);
+      option.appendChild(content);
+      option.setAttribute("value", p.id);
+      if (id && p.id == id) {
+        option.selected = true;
+      }
+      pingSelector.appendChild(option);
+    }
+  },
+
+  _getSelectedPingId: function() {
+    let pingSelector = document.getElementById("choose-ping-id");
+    let selected = pingSelector.selectedOptions.item(0);
+    return selected.getAttribute("value");
+  },
+
+  _updatePingData: function() {
+    let id = this._getSelectedPingId();
+    TelemetryArchive.promiseArchivedPingById(id)
+                    .then((ping) => displayPingData(ping));
+  },
+
+  _movePingIndex: function(offset) {
+    const id = this._getSelectedPingId();
+    const index = this._archivedPings.findIndex((p) => p.id == id);
+    const newIndex = Math.min(Math.max(index + offset, 0), this._archivedPings.length - 1);
+    const ping = this._archivedPings[newIndex];
+
+    const weekIndex = this._weeks.findIndex(
+      (week) => ping.timestampCreated >= week.startDate.getTime() &&
+                ping.timestampCreated < week.endDate.getTime());
+    const options = document.getElementById("choose-ping-week").options;
+    options.item(weekIndex).selected = true;
+
+    this._renderPingList(ping.id);
+    this._updatePingData();
+  },
 };
 
 let GeneralData = {
@@ -1119,6 +1329,7 @@ function setupPageHeader()
  */
 function setupListeners() {
   Settings.attachObservers();
+  PingPicker.attachObservers();
 
   // Clean up observers when page is closed
   window.addEventListener("unload",
@@ -1197,8 +1408,8 @@ function onLoad() {
   // Render settings.
   Settings.render();
 
-  // Get the Telemetry Ping payload
-  Telemetry.asyncFetchTelemetryData(displayPingData);
+  // Update ping data when async Telemetry init is finished.
+  Telemetry.asyncFetchTelemetryData(() => PingPicker.update());
 
   // Restore sections states
   let stateboxes = document.getElementsByClassName("statebox");
@@ -1267,9 +1478,8 @@ function sortStartupMilestones(aSimpleMeasurements) {
   return result;
 }
 
-function displayPingData() {
-  gPingData = TelemetryController.getCurrentPingData(false);
-  let ping = gPingData;
+function displayPingData(ping) {
+  gPingData = ping;
 
   const keysHeader = bundle.GetStringFromName("keysHeader");
   const valuesHeader = bundle.GetStringFromName("valuesHeader");
