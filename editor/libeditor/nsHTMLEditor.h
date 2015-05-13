@@ -754,6 +754,9 @@ protected:
   nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
                       nsIAtom* aProperty, const nsAString* aAttribute);
 
+  void SetElementPosition(mozilla::dom::Element& aElement,
+                          int32_t aX, int32_t aY);
+
 // Data members
 protected:
 
