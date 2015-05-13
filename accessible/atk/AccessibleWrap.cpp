@@ -1386,6 +1386,21 @@ a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
 }
 
 void
+a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
+                            bool aEnabled)
+{
+  MaiAtkObject* atkObj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
+  atkObj->FireStateChangeEvent(aState, aEnabled);
+}
+
+void
+a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
+{
+  AtkObject* wrapper = GetWrapperFor(aTarget);
+  g_signal_emit_by_name(wrapper, "text_caret_moved", aOffset);
+}
+
+void
 MaiAtkObject::FireStateChangeEvent(uint64_t aState, bool aEnabled)
 {
     int32_t stateIndex = AtkStateMap::GetStateIndexFor(aState);
