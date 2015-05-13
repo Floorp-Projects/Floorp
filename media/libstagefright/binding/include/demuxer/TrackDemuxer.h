@@ -12,10 +12,10 @@ namespace mozilla {
 class MediaRawData;
 class MediaByteRange;
 
-typedef int64_t Microseconds;
-
 class TrackDemuxer {
 public:
+  typedef int64_t Microseconds;
+
   TrackDemuxer() {}
   virtual ~TrackDemuxer() {}
 
