@@ -198,6 +198,13 @@
         ]]></getter>
       </property>
 
+      <property name="hasContentOpener">
+        <getter><![CDATA[
+          let {frameLoader} = this.QueryInterface(Ci.nsIFrameLoaderOwner);
+          return frameLoader.tabParent.hasContentOpener;
+        ]]></getter>
+      </property>
+
       <field name="_outerWindowID">null</field>
       <property name="outerWindowID"
                 onget="return this._outerWindowID"
