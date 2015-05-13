@@ -83,12 +83,16 @@ class nsCopySupport
      *
      * aClipboardType specifies which clipboard to use, from nsIClipboard.
      *
+     * If aActionTaken is non-NULL, it will be set to true if an action was
+     * taken, whether it be the default action or the default being prevented.
+     *
      * If the event is cancelled or an error occurs, false will be returned.
      */
     static bool FireClipboardEvent(int32_t aType,
                                    int32_t aClipboardType,
                                    nsIPresShell* aPresShell,
-                                   nsISelection* aSelection);
+                                   nsISelection* aSelection,
+                                   bool* aActionTaken = nullptr);
 };
 
 #endif
