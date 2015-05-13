@@ -67,8 +67,20 @@ function testScript(script) {
         document.body.appendChild(iframe);
       }
 
-      navigator.serviceWorker.ready.then(setupSW);
-      navigator.serviceWorker.register("worker_wrapper.js", {scope: "."});
+      navigator.serviceWorker.register("worker_wrapper.js", {scope: "."})
+        .then(function(registration) {
+          if (registration.installing) {
+            var done = false;
+            registration.installing.onstatechange = function() {
+              if (!done) {
+                done = true;
+                setupSW(registration);
+              }
+            };
+          } else {
+            setupSW(registration);
+          }
+        });
     });
   }
 
@@ -104,7 +116,11 @@ function testScript(script) {
       return Promise.resolve();
     })
     .then(function() {
-      SimpleTest.finish();
+      if (parent && parent.finishTest) {
+        parent.finishTest();
+      } else {
+        SimpleTest.finish();
+      }
     });
 }
 
