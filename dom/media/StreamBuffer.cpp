@@ -81,6 +81,10 @@ StreamBuffer::FindTrack(TrackID aID)
     }
 
     if (mTracks[middle]->GetID() > aID) {
+      if (middle == 0) {
+        break;
+      }
+
       right = middle - 1;
     } else {
       left = middle + 1;
