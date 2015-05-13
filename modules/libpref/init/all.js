@@ -3812,6 +3812,7 @@ pref("signon.rememberSignons",              true);
 pref("signon.autofillForms",                true);
 pref("signon.autologin.proxy",              false);
 pref("signon.storeWhenAutocompleteOff",     true);
+pref("signon.ui.experimental",              false);
 pref("signon.debug",                        false);
 
 // Satchel (Form Manager) prefs
