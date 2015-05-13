@@ -866,11 +866,14 @@ function _loadURIWithFlags(browser, uri, params) {
                                                referrer, referrerPolicy,
                                                postdata, null, null);
     } else {
+      if (postData)
+        postData = NetUtil.readInputStreamToString(postData, postData.available());
       LoadInOtherProcess(browser, {
         uri: uri,
         flags: flags,
         referrer: referrer ? referrer.spec : null,
         referrerPolicy: referrerPolicy,
+        postData: postData,
       });
     }
   } catch (e) {
