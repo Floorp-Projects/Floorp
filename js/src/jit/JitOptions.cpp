@@ -161,6 +161,9 @@ JitOptions::JitOptions()
 
     // The bytecode length limit for small function.
     SET_DEFAULT(smallFunctionMaxBytecodeLength_, 100);
+
+    // Toggles whether unboxed plain objects can be created by the VM.
+    SET_DEFAULT(disableUnboxedObjects, false);
 }
 
 bool
