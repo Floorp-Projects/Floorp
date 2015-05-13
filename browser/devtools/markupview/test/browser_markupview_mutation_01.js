@@ -72,11 +72,74 @@ const TEST_DATA = [
       node1.textContent = "newtext";
     },
     check: function*(inspector) {
-      let {children} = yield getContainerForSelector("#node1", inspector);
-      is(children.querySelector(".text").textContent.trim(), "newtext",
-        "The new textcontent was updated");
+      let container = yield getContainerForSelector("#node1", inspector);
+      ok(container.singleTextChild, "Has single text child.");
+      ok(!container.canExpand, "Can't expand container with singleTextChild.");
+      ok(!container.singleTextChild.canExpand, "Can't expand singleTextChild.");
+      is(container.editor.elt.querySelector(".text").textContent.trim(), "newtext",
+        "Single text child editor updated.");
     }
   },
+  {
+    desc: "Adding a second text child",
+    test: () => {
+      let node1 = getNode("#node1");
+      let newText = node1.ownerDocument.createTextNode("more");
+      node1.appendChild(newText);
+    },
+    check: function*(inspector) {
+      let container = yield getContainerForSelector("#node1", inspector);
+      ok(!container.singleTextChild, "Does not have single text child.");
+      ok(container.canExpand, "Can expand container with child nodes.");
+      ok(container.editor.elt.querySelector(".text") == null,
+        "Single text child editor removed.");
+    },
+  },
+  {
+    desc: "Go from 2 to 1 text child",
+    test: () => {
+      let node1 = getNode("#node1");
+      node1.textContent = "newtext";
+    },
+    check: function*(inspector) {
+      let container = yield getContainerForSelector("#node1", inspector);
+      ok(container.singleTextChild, "Has single text child.");
+      ok(!container.canExpand, "Can't expand container with singleTextChild.");
+      ok(!container.singleTextChild.canExpand, "Can't expand singleTextChild.");
+      ok(container.editor.elt.querySelector(".text").textContent.trim(), "newtext",
+        "Single text child editor updated.");
+    },
+  },
+  {
+    desc: "Removing an only text child",
+    test: () => {
+      let node1 = getNode("#node1");
+      node1.innerHTML = "";
+    },
+    check: function*(inspector) {
+      let container = yield getContainerForSelector("#node1", inspector);
+      ok(!container.singleTextChild, "Does not have single text child.");
+      ok(!container.canExpand, "Can't expand empty container.");
+      ok(container.editor.elt.querySelector(".text") == null,
+        "Single text child editor removed.");
+    },
+  },
+  {
+    desc: "Go from 0 to 1 text child",
+    test: () => {
+      let node1 = getNode("#node1");
+      node1.textContent = "newtext";
+    },
+    check: function*(inspector) {
+      let container = yield getContainerForSelector("#node1", inspector);
+      ok(container.singleTextChild, "Has single text child.");
+      ok(!container.canExpand, "Can't expand container with singleTextChild.");
+      ok(!container.singleTextChild.canExpand, "Can't expand singleTextChild.");
+      ok(container.editor.elt.querySelector(".text").textContent.trim(), "newtext",
+        "Single text child editor updated.");
+    },
+  },
+
   {
     desc: "Updating the innerHTML",
     test: () => {
@@ -150,17 +213,20 @@ const TEST_DATA = [
       node20.appendChild(node18);
     },
     check: function*(inspector) {
+      yield inspector.markup.expandAll();
+
       let {children} = yield getContainerForSelector("#node1", inspector);
       is(children.childNodes.length, 2,
         "Node1 now has 2 children (textnode and node20)");
 
       let node20 = children.childNodes[1];
-      let node20Children = node20.querySelector(".children")
-      is(node20Children.childNodes.length, 2, "Node20 has 2 children (21 and 18)");
+      let node20Children = node20.container.children;
+      is(node20Children.childNodes.length, 2,
+          "Node20 has 2 children (21 and 18)");
 
       let node21 = node20Children.childNodes[0];
-      is(node21.querySelector(".children").textContent.trim(), "line21",
-        "Node21 only has a text node child");
+      is(node21.container.editor.elt.querySelector(".text").textContent.trim(), "line21",
+        "Node21 has a single text child");
 
       let node18 = node20Children.childNodes[1];
       is(node18.querySelector(".open .attreditor .attr-value").textContent.trim(),
