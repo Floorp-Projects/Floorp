@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "datareporting", "archived");
 });
 
+const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 
 function run_test() {
   do_get_profile(true);
@@ -164,4 +165,27 @@ add_task(function* test_clientId() {
 
   // Finish setup.
   yield promiseSetup;
+});
+
+add_task(function* test_InvalidPingType() {
+  const TYPES = [
+    "a",
+    "-",
+    "¿€€€?",
+    "-foo-",
+    "-moo",
+    "zoo-",
+    ".bar",
+    "asfd.asdf",
+  ];
+
+  for (let type of TYPES) {
+    let histogram = Telemetry.getKeyedHistogramById("TELEMETRY_INVALID_PING_TYPE_SUBMITTED");
+    Assert.equal(histogram.snapshot(type).sum, 0,
+                 "Should not have counted this invalid ping yet: " + type);
+    Assert.ok(promiseRejects(TelemetryController.submitExternalPing(type, {})),
+              "Ping type should have been rejected.");
+    Assert.equal(histogram.snapshot(type).sum, 1,
+                 "Should have counted this as an invalid ping type.");
+  }
 });
