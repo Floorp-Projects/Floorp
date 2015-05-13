@@ -203,6 +203,11 @@ this.TelemetryController = Object.freeze({
    * Depending on configuration, the ping will be sent to the server (immediately or later)
    * and archived locally.
    *
+   * To identify the different pings and to be able to query them pings have a type.
+   * A type is a string identifier that should be unique to the type ping that is being submitted,
+   * it should only contain alphanumeric characters and '-' for separation, i.e. satisfy:
+   * /^[a-z0-9][a-z0-9-]+[a-z0-9]$/i
+   *
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {Object} [aOptions] Options object.
@@ -575,6 +580,15 @@ let Impl = {
   submitExternalPing: function send(aType, aPayload, aOptions) {
     this._log.trace("submitExternalPing - type: " + aType + ", server: " + this._server +
                     ", aOptions: " + JSON.stringify(aOptions));
+
+    // Enforce the type string to only contain sane characters.
+    const typeUuid = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/i;
+    if (!typeUuid.test(aType)) {
+      this._log.error("submitExternalPing - invalid ping type: " + aType);
+      let histogram = Telemetry.getKeyedHistogramById("TELEMETRY_INVALID_PING_TYPE_SUBMITTED");
+      histogram.add(aType, 1);
+      return Promise.reject(new Error("Invalid type string submitted."));
+    }
 
     const pingData = this.assemblePing(aType, aPayload, aOptions);
     this._log.trace("submitExternalPing - ping assembled, id: " + pingData.id);
