@@ -32,7 +32,7 @@ BEGIN_TEST(testGCCellPtr)
     CHECK(JS_CompileScript(cx, code, strlen(code), opts, &script));
     CHECK(script);
 
-    CHECK(!JS::GCCellPtr::NullPtr());
+    CHECK(!JS::GCCellPtr(nullptr));
 
     CHECK(JS::GCCellPtr(obj.get()));
     CHECK(JS::GCCellPtr(obj.get()).kind() == JSTRACE_OBJECT);
@@ -43,7 +43,7 @@ BEGIN_TEST(testGCCellPtr)
     CHECK(JS::GCCellPtr(JS::StringValue(str)).kind() == JSTRACE_STRING);
 
     CHECK(JS::GCCellPtr(script.get()));
-    CHECK(!JS::GCCellPtr::NullPtr());
+    CHECK(!JS::GCCellPtr(nullptr));
     CHECK(JS::GCCellPtr(script.get()).kind() == JSTRACE_SCRIPT);
 
     JS::GCCellPtr objcell(obj.get());

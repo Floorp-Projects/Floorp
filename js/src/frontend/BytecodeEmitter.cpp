@@ -4372,7 +4372,7 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
             pn = pn_head;
         }
 
-        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, NullPtr(), newKind));
+        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, nullptr, newKind));
         if (!obj)
             return false;
 
@@ -5513,9 +5513,9 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             script->bindings = funbox->bindings;
 
             uint32_t lineNum = parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
-            BytecodeEmitter bce2(this, parser, funbox, script, /* lazyScript = */ js::NullPtr(),
+            BytecodeEmitter bce2(this, parser, funbox, script, /* lazyScript = */ nullptr,
                                  insideEval, evalCaller,
-                                 /* evalStaticScope = */ js::NullPtr(),
+                                 /* evalStaticScope = */ nullptr,
                                  insideNonGlobalEval, lineNum, emitterMode);
             if (!bce2.init())
                 return false;

@@ -1000,7 +1000,7 @@ Java_org_mozilla_gecko_util_NativeJSObject_toString(JNIEnv* env, jobject instanc
 
     if (!object ||
         !CheckJSCall(env,
-            JS_Stringify(cx, &value, JS::NullPtr(), JS::NullHandleValue, AppendJSON, &json))) {
+            JS_Stringify(cx, &value, nullptr, JS::NullHandleValue, AppendJSON, &json))) {
         return nullptr;
     }
     jstring ret = env->NewString(reinterpret_cast<const jchar*>(json.get()), json.Length());

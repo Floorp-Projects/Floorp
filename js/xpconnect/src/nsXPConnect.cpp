@@ -1260,7 +1260,7 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
 NS_IMETHODIMP
 nsXPConnect::WriteScript(nsIObjectOutputStream* stream, JSContext* cx, JSScript* script)
 {
-    return WriteScriptOrFunction(stream, cx, script, NullPtr());
+    return WriteScriptOrFunction(stream, cx, script, nullptr);
 }
 
 NS_IMETHODIMP

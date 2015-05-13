@@ -68,7 +68,7 @@ GeneratorObject::suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame
 
     if (*pc == JSOP_YIELD && genObj->isClosing() && genObj->is<LegacyGeneratorObject>()) {
         RootedValue val(cx, ObjectValue(*frame.callee()));
-        ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_IGNORE_STACK, val, NullPtr());
+        ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_IGNORE_STACK, val, nullptr);
         return false;
     }
 
@@ -312,7 +312,7 @@ GlobalObject::initGeneratorClasses(JSContext* cx, Handle<GlobalObject*> global)
         RootedObject proto(cx, &function.toObject());
         RootedAtom name(cx, cx->names().GeneratorFunction);
         RootedObject genFunction(cx, NewFunctionWithProto(cx, Generator, 1,
-                                                          JSFunction::NATIVE_CTOR, NullPtr(), name,
+                                                          JSFunction::NATIVE_CTOR, nullptr, name,
                                                           proto));
         if (!genFunction)
             return false;

@@ -285,7 +285,7 @@ WrapperPromiseCallback::Call(JSContext* aCx,
       }
 
       JS::Rooted<JS::Value> typeError(aCx);
-      if (!JS::CreateError(aCx, JSEXN_TYPEERR, JS::NullPtr(), fn, lineNumber, 0,
+      if (!JS::CreateError(aCx, JSEXN_TYPEERR, nullptr, fn, lineNumber, 0,
                            nullptr, message, &typeError)) {
         // Out of memory. Promise will stay unresolved.
         JS_ClearPendingException(aCx);

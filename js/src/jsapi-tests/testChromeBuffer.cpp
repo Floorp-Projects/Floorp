@@ -41,7 +41,7 @@ CallTrusted(JSContext* cx, unsigned argc, jsval* vp)
     {
         JSAutoCompartment ac(cx, trusted_glob);
         JS::RootedValue funVal(cx, JS::ObjectValue(*trusted_fun));
-        ok = JS_CallFunctionValue(cx, JS::NullPtr(), funVal, JS::HandleValueArray::empty(), args.rval());
+        ok = JS_CallFunctionValue(cx, nullptr, funVal, JS::HandleValueArray::empty(), args.rval());
     }
     JS_RestoreFrameChain(cx);
     return ok;
@@ -100,7 +100,7 @@ BEGIN_TEST(testChromeBuffer)
         CHECK(JS_DefineProperty(cx, global, "untrusted", fun, JSPROP_ENUMERATE));
 
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, JS::NullPtr(), fun, JS::HandleValueArray(v), &rval));
+        CHECK(JS_CallFunction(cx, nullptr, fun, JS::HandleValueArray(v), &rval));
         CHECK(rval.toInt32() == 100);
         JS::RuntimeOptionsRef(rt) = oldOptions;
     }
@@ -149,7 +149,7 @@ BEGIN_TEST(testChromeBuffer)
         CHECK(JS_DefineProperty(cx, global, "untrusted", fun, JSPROP_ENUMERATE));
 
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, JS::NullPtr(), fun, JS::HandleValueArray(v), &rval));
+        CHECK(JS_CallFunction(cx, nullptr, fun, JS::HandleValueArray(v), &rval));
         bool match;
         CHECK(JS_StringEqualsAscii(cx, rval.toString(), "From trusted: InternalError: too much recursion", &match));
         CHECK(match);
@@ -190,7 +190,7 @@ BEGIN_TEST(testChromeBuffer)
 
         JS::RootedValue arg(cx, JS::ObjectValue(*callTrusted));
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, JS::NullPtr(), fun, JS::HandleValueArray(arg), &rval));
+        CHECK(JS_CallFunction(cx, nullptr, fun, JS::HandleValueArray(arg), &rval));
         CHECK(rval.toInt32() == 42);
     }
 

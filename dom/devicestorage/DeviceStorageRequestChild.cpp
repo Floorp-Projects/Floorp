@@ -110,7 +110,7 @@ DeviceStorageRequestChild::
 
       AutoJSContext cx;
 
-      JS::Rooted<JSObject*> obj(cx, blob->WrapObject(cx, JS::NullPtr()));
+      JS::Rooted<JSObject*> obj(cx, blob->WrapObject(cx, nullptr));
       MOZ_ASSERT(obj);
 
       JS::Rooted<JS::Value> result(cx, JS::ObjectValue(*obj));

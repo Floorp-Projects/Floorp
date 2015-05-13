@@ -3389,7 +3389,7 @@ BaselineCompiler::emit_JSOP_REST()
 {
     frame.syncStack(0);
 
-    ArrayObject* templateObject = NewDenseUnallocatedArray(cx, 0, NullPtr(), TenuredObject);
+    ArrayObject* templateObject = NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject);
     if (!templateObject)
         return false;
     ObjectGroup::fixRestArgumentsGroup(cx, templateObject);

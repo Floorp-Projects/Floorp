@@ -588,7 +588,7 @@ public:
                              aFile.mFileInfo.forget());
     MOZ_ASSERT(mutableFile);
 
-    JS::Rooted<JSObject*> result(aCx, mutableFile->WrapObject(aCx, JS::NullPtr()));
+    JS::Rooted<JSObject*> result(aCx, mutableFile->WrapObject(aCx, nullptr));
     if (NS_WARN_IF(!result)) {
       return false;
     }
