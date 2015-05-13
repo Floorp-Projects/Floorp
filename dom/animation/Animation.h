@@ -243,9 +243,8 @@ public:
    * "Playing" is different to "running". An animation in its delay phase is
    * still running but we only consider it playing when it is in its active
    * interval. This definition is used for fetching the animations that are
-   * are candidates for running on the compositor (since we don't ship
-   * animations to the compositor when they are in their delay phase or
-   * paused).
+   * candidates for running on the compositor (since we don't ship animations
+   * to the compositor when they are in their delay phase or paused).
    */
   bool IsPlaying() const
   {
