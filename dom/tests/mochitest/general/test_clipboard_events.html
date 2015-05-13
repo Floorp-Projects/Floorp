@@ -150,7 +150,7 @@ function test_dom_oncut() {
   content.oncut = function() { oncut_fired = true; };
   try {
     synthesizeKey("x", {accelKey: 1});
-    ok(!oncut_fired, "cut event firing on DOM element")
+    ok(oncut_fired, "cut event firing on DOM element")
     is(getClipboardText(), clipboardInitialValue,
       "cut on DOM element did not modify clipboard");
   } finally {
