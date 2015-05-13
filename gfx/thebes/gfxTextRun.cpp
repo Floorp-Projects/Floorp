@@ -23,6 +23,10 @@
 #include "mozilla/Likely.h"
 #include "gfx2DGlue.h"
 
+#if defined(MOZ_WIDGET_GTK)
+#include "gfxPlatformGtk.h" // xxx - for UseFcFontList
+#endif
+
 #include "cairo.h"
 
 using namespace mozilla;
@@ -1536,6 +1540,7 @@ gfxFontGroup::gfxFontGroup(const FontFamilyList& aFontFamilyList,
     , mTextPerf(nullptr)
     , mPageLang(gfxPlatform::GetFontPrefLangFor(aStyle->language))
     , mSkipDrawing(false)
+    , mSkipUpdateUserFonts(false)
 {
     // We don't use SetUserFontSet() here, as we want to unconditionally call
     // BuildFontList() rather than only do UpdateUserFonts() if it changed.
@@ -1682,10 +1687,17 @@ void gfxFontGroup::EnumerateFontList(nsIAtom *aLanguage, void *aClosure)
 void
 gfxFontGroup::BuildFontList()
 {
-// gfxPangoFontGroup behaves differently, so this method is a no-op on that platform
-#if defined(XP_MACOSX) || defined(XP_WIN) || defined(ANDROID)
-    EnumerateFontList(mStyle.language);
+    bool enumerateFonts = true;
+
+#if defined(MOZ_WIDGET_GTK)
+    // xxx - eliminate this once gfxPangoFontGroup is no longer needed
+    enumerateFonts = gfxPlatformGtk::UseFcFontList();
+#elif defined(MOZ_WIDGET_QT)
+    enumerateFonts = false;
 #endif
+    if (enumerateFonts) {
+        EnumerateFontList(mStyle.language);
+    }
 }
 
 void
@@ -2345,13 +2357,11 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
     NS_ASSERTION(aTextRun->GetShapingState() != gfxTextRun::eShapingState_Aborted,
                  "don't call InitScriptRun with aborted shaping state");
 
-#if defined(XP_MACOSX) || defined(XP_WIN) || defined(ANDROID)
-    // non-linux platforms build the fontlist lazily and include userfonts
-    // so need to confirm the load state of userfonts in the list
-    if (mUserFontSet && mCurrGeneration != mUserFontSet->GetGeneration()) {
+    // confirm the load state of userfonts in the list
+    if (!mSkipUpdateUserFonts && mUserFontSet &&
+        mCurrGeneration != mUserFontSet->GetGeneration()) {
         UpdateUserFonts();
     }
-#endif
 
     gfxFont *mainFont = GetFirstValidFont();
 
@@ -2606,10 +2616,6 @@ gfxFontGroup::FindNonItalicFaceForChar(gfxFontFamily* aFamily, uint32_t aCh)
 {
     NS_ASSERTION(mStyle.style != NS_FONT_STYLE_NORMAL,
                  "should only be called in the italic/oblique case");
-
-    if (!aFamily->TestCharacterMap(aCh)) {
-        return nullptr;
-    }
 
     gfxFontStyle regularStyle = mStyle;
     regularStyle.style = NS_FONT_STYLE_NORMAL;
