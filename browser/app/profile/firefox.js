@@ -1908,7 +1908,7 @@ pref("browser.reader.detectedFirstArticle", false);
 pref("reader.parse-node-limit", 0);
 
 // Enable Service workers for desktop on non-release builds
-#ifdef NIGHTLY_BUILD
+#ifndef RELEASE_BUILD
 pref("dom.serviceWorkers.enabled", true);
 #endif
 
