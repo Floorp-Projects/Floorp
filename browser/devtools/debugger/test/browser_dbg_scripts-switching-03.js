@@ -36,7 +36,7 @@ function showBogusSource() {
 }
 
 function testDebuggerLoadingError() {
-  ok(gEditor.getText().includes(gL10N.getStr("errorLoadingText")),
+  ok(gEditor.getText().includes(gL10N.getFormatStr("errorLoadingText2", "noSuchActor")),
     "The valid error loading message is displayed.");
 }
 

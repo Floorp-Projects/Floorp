@@ -2524,7 +2524,7 @@ SourceActor.prototype = {
         reportError(aError, "Got an exception during SA_onSource: ");
         return {
           "from": this.actorID,
-          "error": "loadSourceError",
+          "error": this.url,
           "message": "Could not load the source for " + this.url + ".\n"
             + DevToolsUtils.safeErrorString(aError)
         };
