@@ -102,6 +102,7 @@ struct CycleCollectorResults
   {
     mForcedGC = false;
     mMergedZones = false;
+    mAnyManual = false;
     mVisitedRefCounted = 0;
     mVisitedGCed = 0;
     mFreedRefCounted = 0;
@@ -114,6 +115,7 @@ struct CycleCollectorResults
 
   bool mForcedGC;
   bool mMergedZones;
+  bool mAnyManual; // true if any slice of the CC was manually triggered, or at shutdown.
   uint32_t mVisitedRefCounted;
   uint32_t mVisitedGCed;
   uint32_t mFreedRefCounted;
