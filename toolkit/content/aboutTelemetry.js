@@ -29,6 +29,7 @@ const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const PREF_DEBUG_SLOW_SQL = "toolkit.telemetry.debugSlowSql";
 const PREF_SYMBOL_SERVER_URI = "profiler.symbolicationUrl";
 const DEFAULT_SYMBOL_SERVER_URI = "http://symbolapi.mozilla.org";
+const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 // ms idle before applying the filter (allow uninterrupted typing)
 const FILTER_IDLE_TIMEOUT = 500;
@@ -125,37 +126,52 @@ function sectionalizeObject(obj) {
   return map;
 }
 
-let observer = {
+let Settings = {
+  SETTINGS: [
+    // data upload
+    {
+      pref: PREF_FHR_UPLOAD_ENABLED,
+      defaultPrefValue: false,
+      descriptionEnabledId: "description-upload-enabled",
+      descriptionDisabledId: "description-upload-disabled",
+    },
+    // extended "Telemetry" recording
+    {
+      pref: PREF_TELEMETRY_ENABLED,
+      defaultPrefValue: false,
+      descriptionEnabledId: "description-extended-recording-enabled",
+      descriptionDisabledId: "description-extended-recording-disabled",
+    },
+  ],
 
-  enableTelemetry: bundle.GetStringFromName("enableTelemetry"),
+  attachObservers: function() {
+    for (let s of this.SETTINGS) {
+      let setting = s;
+      Preferences.observe(setting.pref, this.render, this);
+    }
+  },
 
-  disableTelemetry: bundle.GetStringFromName("disableTelemetry"),
-
-  /**
-   * Observer is called whenever Telemetry is enabled or disabled
-   */
-  observe: function observe(aSubject, aTopic, aData) {
-    if (aData == PREF_TELEMETRY_ENABLED) {
-      this.updatePrefStatus();
+  detachObservers: function() {
+    for (let setting of this.SETTINGS) {
+      Preferences.ignore(setting.pref, this.render, this);
     }
   },
 
   /**
    * Updates the button & text at the top of the page to reflect Telemetry state.
    */
-  updatePrefStatus: function updatePrefStatus() {
-    // Notify user whether Telemetry is enabled
-    let enabledElement = document.getElementById("description-enabled");
-    let disabledElement = document.getElementById("description-disabled");
-    let toggleElement = document.getElementById("toggle-telemetry");
-    if (Preferences.get(PREF_TELEMETRY_ENABLED, false)) {
-      enabledElement.classList.remove("hidden");
-      disabledElement.classList.add("hidden");
-      toggleElement.innerHTML = this.disableTelemetry;
-    } else {
-      enabledElement.classList.add("hidden");
-      disabledElement.classList.remove("hidden");
-      toggleElement.innerHTML = this.enableTelemetry;
+  render: function() {
+    for (let setting of this.SETTINGS) {
+      let enabledElement = document.getElementById(setting.descriptionEnabledId);
+      let disabledElement = document.getElementById(setting.descriptionDisabledId);
+
+      if (Preferences.get(setting.pref, setting.defaultPrefValue)) {
+        enabledElement.classList.remove("hidden");
+        disabledElement.classList.add("hidden");
+      } else {
+        enabledElement.classList.add("hidden");
+        disabledElement.classList.remove("hidden");
+      }
     }
   }
 };
@@ -1064,20 +1080,13 @@ function setupPageHeader()
  * Initializes load/unload, pref change and mouse-click listeners
  */
 function setupListeners() {
-  Services.prefs.addObserver(PREF_TELEMETRY_ENABLED, observer, false);
-  observer.updatePrefStatus();
+  Settings.attachObservers();
 
   // Clean up observers when page is closed
   window.addEventListener("unload",
     function unloadHandler(aEvent) {
       window.removeEventListener("unload", unloadHandler);
-      Services.prefs.removeObserver(PREF_TELEMETRY_ENABLED, observer);
-  }, false);
-
-  document.getElementById("toggle-telemetry").addEventListener("click",
-    function () {
-      let value = Preferences.get(PREF_TELEMETRY_ENABLED, false);
-      Preferences.set(PREF_TELEMETRY_ENABLED, !value);
+      Settings.detachObservers();
   }, false);
 
   document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
@@ -1146,6 +1155,9 @@ function onLoad() {
 
   // Set up event listeners
   setupListeners();
+
+  // Render settings.
+  Settings.render();
 
   // Get the Telemetry Ping payload
   Telemetry.asyncFetchTelemetryData(displayPingData);
