@@ -1078,6 +1078,17 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
         StopPrerollingVideo();
       }
 
+      // Schedule the state machine to send stream data as soon as possible or
+      // the VideoQueue() is empty before the Push().
+      // VideoQueue() is empty implies the state machine thread doesn't have
+      // precise time information about video frames. Once the first video
+      // frame pushed in the queue, schedule the state machine as soon as
+      // possible to render the video frame or delay the state machine thread
+      // accurately.
+      if (mAudioCaptured || VideoQueue().GetSize() == 1) {
+        ScheduleStateMachine();
+      }
+
       // For non async readers, if the requested video sample was slow to
       // arrive, increase the amount of audio we buffer to ensure that we
       // don't run out of audio. This is unnecessary for async readers,
@@ -1096,11 +1107,6 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
                                               mAmpleAudioThresholdUsecs);
         DECODER_LOG("Slow video decode, set mLowAudioThresholdUsecs=%lld mAmpleAudioThresholdUsecs=%lld",
                     mLowAudioThresholdUsecs, mAmpleAudioThresholdUsecs);
-      }
-
-      // Schedule the state machine to send stream data as soon as possible.
-      if (mAudioCaptured) {
-        ScheduleStateMachine();
       }
       return;
     }
@@ -2959,9 +2965,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
     // Current frame has already been presented, wait until it's time to
     // present the next frame.
     if (frame && !currentFrame) {
-      int64_t now = IsPlaying() ? clock_time : mStartTime + mPlayDuration;
-
-      remainingTime = frame->mTime - now;
+      remainingTime = frame->mTime - clock_time;
     }
   }
 
@@ -3041,6 +3045,22 @@ void MediaDecoderStateMachine::AdvanceFrame()
     frameStats.NotifyPresentedFrame();
     remainingTime = currentFrame->GetEndTime() - clock_time;
     currentFrame = nullptr;
+  }
+
+  // The remainingTime is negative (include zero):
+  // 1. When the clock_time is larger than the latest video frame's endtime.
+  // All the video frames should be rendered or dropped, nothing left in
+  // VideoQueue. And since the VideoQueue is empty, we don't need to wake up
+  // statemachine thread immediately, so set the remainingTime to default value.
+  // 2. Current frame's endtime is smaller than clock_time but there still exist
+  // newer frames in queue. Re-calculate the remainingTime.
+  if (remainingTime <= 0) {
+    VideoData* nextFrame = VideoQueue().PeekFront();
+    if (nextFrame) {
+      remainingTime = nextFrame->mTime - clock_time;
+    } else {
+      remainingTime = AUDIO_DURATION_USECS;
+    }
   }
 
   int64_t delay = remainingTime / mPlaybackRate;
