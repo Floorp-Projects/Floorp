@@ -24,6 +24,30 @@
   Extended Telemetry recording is <span>disabled</span>.
 ">
 
+<!ENTITY aboutTelemetry.pingDataSource "
+Ping data source:
+">
+
+<!ENTITY aboutTelemetry.showCurrentPingData "
+Current ping data
+">
+
+<!ENTITY aboutTelemetry.showArchivedPingData "
+Archived ping data
+">
+
+<!ENTITY aboutTelemetry.choosePing "
+Choose ping:
+">
+
+<!ENTITY aboutTelemetry.showPreviousPing "
+&lt;&lt; Previous ping
+">
+
+<!ENTITY aboutTelemetry.showNextPing "
+Next ping &gt;&gt;
+">
+
 <!ENTITY aboutTelemetry.generalDataSection "
   General Data
 ">

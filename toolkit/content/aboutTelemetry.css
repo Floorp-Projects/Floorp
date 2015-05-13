@@ -27,6 +27,11 @@ h2 {
   padding: 10px;
 }
 
+#settings {
+  border: 1px solid lightgrey;
+  padding: 5px;
+}
+
 .description-enabled,
 .description-disabled {
   margin: 0px;
@@ -38,6 +43,17 @@ h2 {
 
 .description-disabled > span {
   color: red;
+}
+
+#ping-picker {
+  margin-top: 10px;
+  border: 1px solid lightgrey;
+  padding: 5px;
+}
+
+#ping-source-picker {
+  margin-left: 5px;
+  margin-bottom: 10px;
 }
 
 .data-section {
