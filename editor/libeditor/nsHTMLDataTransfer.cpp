@@ -769,36 +769,27 @@ nsHTMLEditor::IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink)
 
 
 nsresult
-nsHTMLEditor::StripFormattingNodes(nsIDOMNode *aNode, bool aListOnly)
+nsHTMLEditor::StripFormattingNodes(nsIContent& aNode, bool aListOnly)
 {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (content->TextIsOnlyWhitespace())
-  {
-    nsCOMPtr<nsIDOMNode> parent, ignored;
-    aNode->GetParentNode(getter_AddRefs(parent));
-    if (parent)
-    {
+  if (aNode.TextIsOnlyWhitespace()) {
+    nsCOMPtr<nsINode> parent = aNode.GetParentNode();
+    if (parent) {
       if (!aListOnly || nsHTMLEditUtils::IsList(parent)) {
-        return parent->RemoveChild(aNode, getter_AddRefs(ignored));
+        ErrorResult rv;
+        parent->RemoveChild(aNode, rv);
+        return rv.StealNSResult();
       }
       return NS_OK;
     }
   }
 
-  if (!nsHTMLEditUtils::IsPre(aNode))
-  {
-    nsCOMPtr<nsIDOMNode> child;
-    aNode->GetLastChild(getter_AddRefs(child));
-
-    while (child)
-    {
-      nsCOMPtr<nsIDOMNode> tmp;
-      child->GetPreviousSibling(getter_AddRefs(tmp));
-      nsresult rv = StripFormattingNodes(child, aListOnly);
+  if (!aNode.IsHTMLElement(nsGkAtoms::pre)) {
+    nsCOMPtr<nsIContent> child = aNode.GetLastChild();
+    while (child) {
+      nsCOMPtr<nsIContent> previous = child->GetPreviousSibling();
+      nsresult rv = StripFormattingNodes(*child, aListOnly);
       NS_ENSURE_SUCCESS(rv, rv);
-      child = tmp;
+      child = previous.forget();
     }
   }
   return NS_OK;
@@ -2020,7 +2011,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(contextAsNode, NS_ERROR_FAILURE);
 
-    rv = StripFormattingNodes(contextAsNode);
+    rv = StripFormattingNodes(*contextAsNode);
     NS_ENSURE_SUCCESS(rv, rv);
 
     RemoveBodyAndHead(contextAsNode);
@@ -2062,7 +2053,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     fragment = contextAsNode;
   }
 
-  rv = StripFormattingNodes(fragment, true);
+  rv = StripFormattingNodes(*fragment, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If there was no context, then treat all of the data we did get as the

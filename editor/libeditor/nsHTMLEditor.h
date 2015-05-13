@@ -581,7 +581,7 @@ protected:
                                      bool *aDoContinue);
 
   bool       IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nullptr);
-  nsresult   StripFormattingNodes(nsIDOMNode *aNode, bool aOnlyList = false);
+  nsresult   StripFormattingNodes(nsIContent& aNode, bool aOnlyList = false);
   nsresult   CreateDOMFragmentFromPaste(const nsAString & aInputString,
                                         const nsAString & aContextStr,
                                         const nsAString & aInfoStr,
