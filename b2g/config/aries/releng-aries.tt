@@ -1,0 +1,16 @@
+[
+{
+"size": 135359412,
+"digest": "45e677c9606cc4eec44ef4761df47ff431df1ffad17a5c6d21ce700a1c47f79e87a4aa9f30ae47ff060bd64f5b775d995780d88211f9a759ffa0d076beb4816b",
+"algorithm": "sha512",
+"filename": "backup-aries.tar.xz",
+"comment": "v18D"
+},
+{
+"size": 80458572,
+"digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
+"algorithm": "sha512",
+"filename": "gcc.tar.xz",
+"unpack": "True"
+}
+]

@@ -5,7 +5,6 @@ task:
   metadata:
     name: '[TC] Mulet Mochitests ( {{chunk}} )'
     description: Mulet Mochitest run {{chunk}}
-
   payload:
     command:
       - entrypoint # entrypoint ensures we are running in xvfb
@@ -13,7 +12,6 @@ task:
         python ./mozharness/scripts/desktop_unittest.py
         --no-read-buildbot-config
         --config-file ./mozharness/configs/unittests/linux_unittest.py
-        --config-file ./mozharness_configs/linux_mulet_config.py
         --config-file ./mozharness_configs/remove_executables.py
         --installer-url {{build_url}}
         --test-url {{tests_url}}
