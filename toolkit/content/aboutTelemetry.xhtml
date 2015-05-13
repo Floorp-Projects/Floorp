@@ -29,10 +29,60 @@
 
       <h2 id="page-subtitle"></h2>
 
-      <p id="description-enabled">&aboutTelemetry.telemetryEnabled;</p>
-      <p id="description-disabled">&aboutTelemetry.telemetryDisabled;</p>
+      <table id="settings">
+        <tr>
+          <td>
+            <p id="description-upload-enabled" class="description-enabled">FHR data upload is <span>enabled</span>.</p>
+            <p id="description-upload-disabled" class="description-disabled">FHR data upload is <span>disabled</span>.</p>
+          </td>
+          <td>
+            <a href="" class="change-data-choices-link">Change</a>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p id="description-extended-recording-enabled" class="description-enabled">Extended Telemetry recording is <span>enabled</span>.</p>
+            <p id="description-extended-recording-disabled" class="description-disabled">Extended Telemetry recording is <span>disabled</span>.</p>
+          </td>
+          <td>
+            <a href="" class="change-data-choices-link">Change</a>
+          </td>
+        </tr>
+      </table>
 
-      <button id="toggle-telemetry" type="button"/>
+      <div id="ping-picker">
+        <div id="ping-source-picker">
+          Ping data source:<br/>
+          <input type="radio" id="ping-source-current" name="choose-ping-source" value="current" checked="checked" />
+          Current ping data<br />
+          <input type="radio" id="ping-source-archive" name="choose-ping-source" value="archive" />
+          Archived ping data<br />
+        </div>
+        <div id="current-ping-picker">
+          <input id="show-subsession-data" type="checkbox" />Show subsession data
+        </div>
+        <div id="archived-ping-picker" class="hidden">
+          Choose ping:<br />
+          <button id="next-ping" type="button">&lt;&lt; Previous ping</button>
+          <button id="previous-ping" type="button">Next ping &gt;&gt;</button><br />
+          <table>
+            <tr>
+                <th>Week</th>
+                <th>Ping</th>
+            </tr>
+            <tr>
+                <td>
+                    <select id="choose-ping-week">
+                    </select>
+                </td>
+                <td>
+                    <select id="choose-ping-id">
+                    </select>
+                </td>
+            </tr>
+          </table>
+        </div>
+      </div>
     </header>
 
     <section id="general-data-section" class="data-section">
@@ -41,6 +91,15 @@
       <span class="toggle-caption">&aboutTelemetry.toggle;</span>
       <span class="empty-caption">&aboutTelemetry.emptySection;</span>
       <div id="general-data" class="data">
+      </div>
+    </section>
+
+    <section id="environment-data-section" class="data-section">
+      <input type="checkbox" class="statebox"/>
+      <h1 class="section-name">Environment Data</h1>
+      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
+      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
+      <div id="environment-data" class="data">
       </div>
     </section>
 

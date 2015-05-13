@@ -155,7 +155,6 @@ let TelemetryArchiveImpl = {
       // Add the ping info from scanning to the existing info.
       // We might have pings added before lazily loading this list.
       for (let [id, info] of loadedInfo) {
-        this._log.trace("promiseArchivedPingList - id: " + id + ", info: " + info);
         this._archivedPings.set(id, {
           timestampCreated: info.timestampCreated,
           type: info.type,
