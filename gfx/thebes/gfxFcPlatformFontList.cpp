@@ -17,6 +17,9 @@
 #include "nsILanguageAtomService.h"
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeRange.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include <fontconfig/fcfreetype.h>
 
