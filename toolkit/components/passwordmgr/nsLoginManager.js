@@ -120,8 +120,6 @@ LoginManager.prototype = {
     // Form submit observer checks forms for new logins and pw changes.
     Services.obs.addObserver(this._observer, "xpcom-shutdown", false);
 
-    // TODO: Make this class useful in the child process (in addition to
-    // autoCompleteSearchAsync and fillForm).
     if (Services.appinfo.processType ===
         Services.appinfo.PROCESS_TYPE_DEFAULT) {
       Services.obs.addObserver(this._observer, "passwordmgr-storage-replace",
@@ -577,21 +575,6 @@ LoginManager.prototype = {
 
     return this._getPasswordOrigin(uriString, true);
   },
-
-
-  /*
-   * fillForm
-   *
-   * Fill the form with login information if we can find it.
-   */
-  fillForm : function (form) {
-    log("fillForm processing form[ id:", form.id, "]");
-    return LoginManagerContent._asyncFindLogins(form, { showMasterPassword: true })
-                              .then(function({ form, loginsFound }) {
-      return LoginManagerContent._fillForm(form, true, false, false, loginsFound)[0];
-    });
-  },
-
 }; // end of LoginManager implementation
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([LoginManager]);

@@ -8,9 +8,23 @@
   max-height: 20em;
 }
 
+.login-fill-item[disabled] {
+  color: #888;
+  background-color: #fff;
+}
+
+.login-fill-item[disabled][selected] {
+  background-color: #eef;
+}
+
 .login-hostname {
   margin: 4px;
   font-weight: bold;
+}
+
+.login-fill-item.different-hostname > .login-hostname {
+  color: #888;
+  font-style: italic;
 }
 
 .login-username {
