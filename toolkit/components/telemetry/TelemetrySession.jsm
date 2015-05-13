@@ -2095,15 +2095,9 @@ let Impl = {
   _removeAbortedSessionPing: function() {
     const FILE_PATH = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY,
                                    ABORTED_SESSION_FILE_NAME);
-    try {
-      this._log.trace("_removeAbortedSessionPing - success");
-      return OS.File.remove(FILE_PATH);
-    } catch (ex if ex.becauseNoSuchFile) {
-      this._log.trace("_removeAbortedSessionPing - no such file");
-    } catch (ex) {
-      this._log.error("_removeAbortedSessionPing - error removing ping", ex)
-    }
-    return Promise.resolve();
+    return OS.File.remove(FILE_PATH)
+             .then(() => this._log.trace("_removeAbortedSessionPing - success"))
+             .catch(ex => this._log.error("_removeAbortedSessionPing - error removing ping", ex));
   },
 
   /**
