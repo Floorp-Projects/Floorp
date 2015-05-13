@@ -2050,20 +2050,19 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
                      doc,
                      getter_AddRefs(fragment),
                      aTrustedInput);
-  *outFragNode = fragment;
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(*outFragNode, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(fragment, NS_ERROR_FAILURE);
 
-  RemoveBodyAndHead(*outFragNode);
+  RemoveBodyAndHead(fragment);
 
   if (contextAsNode) {
     // unite the two trees
     nsCOMPtr<nsIDOMNode> junk;
-    contextLeaf->AppendChild(*outFragNode, getter_AddRefs(junk));
-    *outFragNode = contextAsNode;
+    contextLeaf->AppendChild(fragment, getter_AddRefs(junk));
+    fragment = contextAsNode;
   }
 
-  rv = StripFormattingNodes(*outFragNode, true);
+  rv = StripFormattingNodes(fragment, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If there was no context, then treat all of the data we did get as the
@@ -2071,9 +2070,10 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   if (contextLeaf) {
     *outEndNode = *outStartNode = contextLeaf;
   } else {
-    *outEndNode = *outStartNode = *outFragNode;
+    *outEndNode = *outStartNode = fragment;
   }
 
+  *outFragNode = fragment.forget();
   *outStartOffset = 0;
 
   // get the infoString contents
