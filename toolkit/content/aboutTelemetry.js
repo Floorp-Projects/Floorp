@@ -52,6 +52,56 @@ function isRTL() {
   return (documentRTLMode == "rtl");
 }
 
+function isArray(arg) {
+  return Object.prototype.toString.call(arg) === '[object Array]';
+}
+
+function isFlatArray(obj) {
+  if (!isArray(obj)) {
+    return false;
+  }
+  return !obj.some(e => typeof(e) == "object");
+}
+
+/**
+ * This is a helper function for explodeObject.
+ */
+function flattenObject(obj, map, path, array) {
+  for (let k of Object.keys(obj)) {
+    let newPath = [...path, array ? "[" + k + "]" : k];
+    let v = obj[k];
+    if (!v || (typeof(v) != "object")) {
+      map.set(newPath.join("."), v);
+    } else if (isFlatArray(v)) {
+      map.set(newPath.join("."), "[" + v.join(", ") + "]");
+    } else {
+      flattenObject(v, map, newPath, isArray(v));
+    }
+  }
+}
+
+/**
+ * This turns a JSON object into a "flat" stringified form.
+ *
+ * For an object like {a: "1", b: {c: "2", d: "3"}} it returns a Map of the
+ * form Map(["a","1"], ["b.c", "2"], ["b.d", "3"]).
+ */
+function explodeObject(obj) {
+  let map = new Map();
+  flattenObject(obj, map, []);
+  return map;
+}
+
+function filterObject(obj, filterOut) {
+  let ret = {};
+  for (let k of Object.keys(obj)) {
+    if (filterOut.indexOf(k) == -1) {
+      ret[k] = obj[k];
+    }
+  }
+  return ret;
+}
+
 let observer = {
 
   enableTelemetry: bundle.GetStringFromName("enableTelemetry"),
@@ -106,10 +156,16 @@ let GeneralData = {
     this.appendColumn(headings, "th", bundle.GetStringFromName("generalDataHeadingValue") + "\t");
     table.appendChild(headings);
 
-    let row = document.createElement("tr");
-    this.appendColumn(row, "td", "Client ID\t");
-    this.appendColumn(row, "td", aPing.clientId + "\t");
-    table.appendChild(row);
+    // The payload & environment parts are handled by other renderers.
+    let ignoreSections = ["payload", "environment"];
+    let data = explodeObject(filterObject(aPing, ignoreSections));
+
+    for (let [path, value] of data) {
+        let row = document.createElement("tr");
+        this.appendColumn(row, "td", path + "\t");
+        this.appendColumn(row, "td", value + "\t");
+        table.appendChild(row);
+    }
 
     let dataDiv = document.getElementById("general-data");
     dataDiv.appendChild(table);
