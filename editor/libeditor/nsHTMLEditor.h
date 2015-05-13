@@ -54,8 +54,9 @@ struct PropItem;
 
 namespace mozilla {
 namespace dom {
+class DocumentFragment;
 template<class T> class OwningNonNull;
-}
+} // namespace dom
 namespace widget {
 struct IMEState;
 } // namespace widget
@@ -592,7 +593,7 @@ protected:
                                         bool aTrustedInput);
   nsresult   ParseFragment(const nsAString & aStr, nsIAtom* aContextLocalName,
                            nsIDocument* aTargetDoc,
-                           nsCOMPtr<nsIDOMNode> *outNode,
+                           mozilla::dom::DocumentFragment** aFragment,
                            bool aTrustedInput);
   void       CreateListOfNodesToPaste(mozilla::dom::DocumentFragment& aFragment,
                                       nsTArray<mozilla::dom::OwningNonNull<nsINode>>& outNodeList,
