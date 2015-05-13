@@ -123,6 +123,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+    OS_LIBS += CONFIG['XLIBS']
     OS_LIBS += CONFIG['MOZ_GTK3_LIBS']
     USE_LIBS += [
         'freetype',

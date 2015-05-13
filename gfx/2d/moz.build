@@ -79,6 +79,7 @@ if CONFIG['MOZ_ENABLE_SKIA']:
         'image_operations.cpp', # Uses _USE_MATH_DEFINES
     ]
     EXPORTS.mozilla.gfx += [
+        'HelpersCairo.h',
         'HelpersSkia.h',
     ]
 

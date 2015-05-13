@@ -1603,14 +1603,6 @@ nsFtpState::R_opts() {
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
 
-static inline
-uint32_t GetFtpTime()
-{
-    return uint32_t(PR_Now() / PR_USEC_PER_SEC);
-}
-
-uint32_t nsFtpState::mSessionStartTime = GetFtpTime();
-
 nsresult
 nsFtpState::Init(nsFtpChannel *channel)
 {

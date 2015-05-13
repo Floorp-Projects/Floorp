@@ -2296,11 +2296,12 @@ nsDisplayBackgroundImage::ShouldFixToViewport(LayerManager* aManager)
 }
 
 bool
-nsDisplayBackgroundImage::TryOptimizeToImageLayer(LayerManager* aManager,
+nsDisplayBackgroundImage::CanOptimizeToImageLayer(LayerManager* aManager,
                                                   nsDisplayListBuilder* aBuilder)
 {
-  if (!mBackgroundStyle)
+  if (!mBackgroundStyle) {
     return false;
+  }
 
   nsPresContext* presContext = mFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
@@ -2320,13 +2321,14 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(LayerManager* aManager,
                                            borderArea, borderArea, layer);
   nsImageRenderer* imageRenderer = &state.mImageRenderer;
   // We only care about images here, not gradients.
-  if (!imageRenderer->IsRasterImage())
+  if (!imageRenderer->IsRasterImage()) {
     return false;
+  }
 
-  nsRefPtr<ImageContainer> imageContainer = imageRenderer->GetContainer(aManager);
-  // Image is not ready to be made into a layer yet
-  if (!imageContainer)
+  if (!imageRenderer->IsContainerAvailable(aManager, aBuilder)) {
+    // The image is not ready to be made into a layer yet.
     return false;
+  }
 
   // We currently can't handle tiled or partial backgrounds.
   if (!state.mDestArea.IsEqualEdges(state.mFillArea)) {
@@ -2339,9 +2341,11 @@ nsDisplayBackgroundImage::TryOptimizeToImageLayer(LayerManager* aManager,
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   mDestRect =
     LayoutDeviceRect::FromAppUnits(state.mDestArea, appUnitsPerDevPixel);
-  mImageContainer = imageContainer;
 
   // Ok, we can turn this into a layer if needed.
+  mImage = imageRenderer->GetImage();
+  MOZ_ASSERT(mImage);
+
   return true;
 }
 
@@ -2349,12 +2353,23 @@ already_AddRefed<ImageContainer>
 nsDisplayBackgroundImage::GetContainer(LayerManager* aManager,
                                        nsDisplayListBuilder *aBuilder)
 {
-  if (!TryOptimizeToImageLayer(aManager, aBuilder)) {
+  if (!mImage) {
+    MOZ_ASSERT_UNREACHABLE("Must call CanOptimizeToImage() and get true "
+                           "before calling GetContainer()");
     return nullptr;
   }
 
-  nsRefPtr<ImageContainer> container = mImageContainer;
+  if (!mImageContainer) {
+    // We don't have an ImageContainer yet; get it from mImage.
 
+    uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                   ? imgIContainer::FLAG_SYNC_DECODE
+                   : imgIContainer::FLAG_NONE;
+
+    mImageContainer = mImage->GetImageContainer(aManager, flags);
+  }
+
+  nsRefPtr<ImageContainer> container = mImageContainer;
   return container.forget();
 }
 
@@ -2386,19 +2401,24 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  if (!TryOptimizeToImageLayer(aManager, aBuilder)) {
+  if (!CanOptimizeToImageLayer(aManager, aBuilder)) {
     return LAYER_NONE;
   }
 
+  MOZ_ASSERT(mImage);
+
   if (!animated) {
-    mozilla::gfx::IntSize imageSize = mImageContainer->GetCurrentSize();
-    NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
+    int32_t imageWidth;
+    int32_t imageHeight;
+    mImage->GetWidth(&imageWidth);
+    mImage->GetHeight(&imageHeight);
+    NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
 
     const LayerRect destLayerRect = mDestRect * aParameters.Scale();
 
     // Calculate the scaling factor for the frame.
-    const gfxSize scale = gfxSize(destLayerRect.width / imageSize.width,
-                                  destLayerRect.height / imageSize.height);
+    const gfxSize scale = gfxSize(destLayerRect.width / imageWidth,
+                                  destLayerRect.height / imageHeight);
 
     // If we are not scaling at all, no point in separating this into a layer.
     if (scale.width == 1.0f && scale.height == 1.0f) {
@@ -2426,7 +2446,8 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
     if (!layer)
       return nullptr;
   }
-  layer->SetContainer(mImageContainer);
+  nsRefPtr<ImageContainer> imageContainer = GetContainer(aManager, aBuilder);
+  layer->SetContainer(imageContainer);
   ConfigureLayer(layer, aParameters);
   return layer.forget();
 }
@@ -2437,9 +2458,14 @@ nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer,
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
 
-  mozilla::gfx::IntSize imageSize = mImageContainer->GetCurrentSize();
-  NS_ASSERTION(imageSize.width != 0 && imageSize.height != 0, "Invalid image size!");
-  if (imageSize.width > 0 && imageSize.height > 0) {
+  MOZ_ASSERT(mImage);
+  int32_t imageWidth;
+  int32_t imageHeight;
+  mImage->GetWidth(&imageWidth);
+  mImage->GetHeight(&imageHeight);
+  NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
+
+  if (imageWidth > 0 && imageHeight > 0) {
     // We're actually using the ImageContainer. Let our frame know that it
     // should consider itself to have painted successfully.
     nsDisplayBackgroundGeometry::UpdateDrawResult(this, DrawResult::SUCCESS);
@@ -2453,8 +2479,8 @@ nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer,
 
   const LayoutDevicePoint p = mDestRect.TopLeft();
   Matrix transform = Matrix::Translation(p.x, p.y);
-  transform.PreScale(mDestRect.width / imageSize.width,
-                     mDestRect.height / imageSize.height);
+  transform.PreScale(mDestRect.width / imageWidth,
+                     mDestRect.height / imageHeight);
   aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
 }
 

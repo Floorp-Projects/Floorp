@@ -110,9 +110,9 @@ public:
     // initialize font lists
     virtual nsresult InitFontList();
 
-    void GetFontList (nsIAtom *aLangGroup,
-                      const nsACString& aGenericFamily,
-                      nsTArray<nsString>& aListOfFonts);
+    virtual void GetFontList(nsIAtom *aLangGroup,
+                             const nsACString& aGenericFamily,
+                             nsTArray<nsString>& aListOfFonts);
 
     void UpdateFontList();
 
@@ -126,6 +126,7 @@ public:
                           const gfxFontStyle* aStyle);
 
     virtual gfxFontFamily* FindFamily(const nsAString& aFamily,
+                                      nsIAtom* aLanguage = nullptr,
                                       bool aUseSystemFonts = false);
 
     gfxFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, bool& aNeedsBold);
@@ -209,6 +210,18 @@ protected:
     static PLDHashOperator FindFontForCharProc(nsStringHashKey::KeyType aKey,
                                                nsRefPtr<gfxFontFamily>& aFamilyEntry,
                                                void* userArg);
+
+    // Lookup family name in global family list without substitutions or
+    // localized family name lookup. Used for common font fallback families.
+    gfxFontFamily* FindFamilyByCanonicalName(const nsAString& aFamily) {
+        nsAutoString key;
+        gfxFontFamily *familyEntry;
+        GenerateFontListKey(aFamily, key);
+        if ((familyEntry = mFontFamilies.GetWeak(key))) {
+            return CheckFamily(familyEntry);
+        }
+        return nullptr;
+    }
 
     // returns default font for a given character, null otherwise
     gfxFontEntry* CommonFontFallback(uint32_t aCh, uint32_t aNextCh,

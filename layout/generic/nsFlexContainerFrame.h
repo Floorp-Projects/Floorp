@@ -86,7 +86,7 @@ protected:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus,
                     nscoord aContentBoxMainSize,
-                    nscoord aAvailableHeightForContent,
+                    nscoord aAvailableBSizeForContent,
                     nsTArray<StrutInfo>& aStruts,
                     const FlexboxAxisTracker& aAxisTracker);
 
@@ -151,7 +151,7 @@ protected:
   void GenerateFlexLines(nsPresContext* aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nscoord aContentBoxMainSize,
-                         nscoord aAvailableHeightForContent,
+                         nscoord aAvailableBSizeForContent,
                          const nsTArray<StrutInfo>& aStruts,
                          const FlexboxAxisTracker& aAxisTracker,
                          mozilla::LinkedList<FlexLine>& aLines);
@@ -162,7 +162,7 @@ protected:
   nscoord ComputeCrossSize(const nsHTMLReflowState& aReflowState,
                            const FlexboxAxisTracker& aAxisTracker,
                            nscoord aSumLineCrossSizes,
-                           nscoord aAvailableHeightForContent,
+                           nscoord aAvailableBSizeForContent,
                            bool* aIsDefinite,
                            nsReflowStatus& aStatus);
 

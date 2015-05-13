@@ -148,6 +148,35 @@ DrawTargetSkia::Snapshot()
   return snapshot.forget();
 }
 
+bool
+DrawTargetSkia::LockBits(uint8_t** aData, IntSize* aSize,
+                          int32_t* aStride, SurfaceFormat* aFormat)
+{
+  const SkBitmap &bitmap = mCanvas->getDevice()->accessBitmap(false);
+  if (!bitmap.lockPixelsAreWritable()) {
+    return false;
+  }
+
+  MarkChanged();
+
+  bitmap.lockPixels();
+  *aData = reinterpret_cast<uint8_t*>(bitmap.getPixels());
+  *aSize = IntSize(bitmap.width(), bitmap.height());
+  *aStride = int32_t(bitmap.rowBytes());
+  *aFormat = SkiaColorTypeToGfxFormat(bitmap.colorType());
+  return true;
+}
+
+void
+DrawTargetSkia::ReleaseBits(uint8_t* aData)
+{
+  const SkBitmap &bitmap = mCanvas->getDevice()->accessBitmap(false);
+  MOZ_ASSERT(bitmap.lockPixelsAreWritable());
+
+  bitmap.unlockPixels();
+  bitmap.notifyPixelsChanged();
+}
+
 static void
 SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, TempBitmap& aTmpBitmap,
                 Float aAlpha = 1.0)
@@ -688,10 +717,10 @@ DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurfa
     cairo_surface_t* surf = static_cast<cairo_surface_t*>(aSurface.mSurface);
     return new SourceSurfaceCairo(surf, aSurface.mSize, aSurface.mFormat);
 #if USE_SKIA_GPU
-  } else if (aSurface.mType == NativeSurfaceType::OPENGL_TEXTURE) {
+  } else if (aSurface.mType == NativeSurfaceType::OPENGL_TEXTURE && UsingSkiaGPU()) {
     RefPtr<SourceSurfaceSkia> newSurf = new SourceSurfaceSkia();
     unsigned int texture = (unsigned int)((uintptr_t)aSurface.mSurface);
-    if (UsingSkiaGPU() && newSurf->InitFromTexture((DrawTargetSkia*)this, texture, aSurface.mSize, aSurface.mFormat)) {
+    if (newSurf->InitFromTexture((DrawTargetSkia*)this, texture, aSurface.mSize, aSurface.mFormat)) {
       return newSurf;
     }
     return nullptr;

@@ -43,14 +43,15 @@ skip-if(B2G||Mulet) HTTP(..) == src-list-actual-font-ref.html src-list-data-1.ht
 # localized full fontnames should *not* match, only English ones (need locale-invariant key)
 skip HTTP(..) == src-list-local-localized.html src-list-local-localized-ref.html # 486787, 486497
 
-# Postscript name lookup only supported on MacOS/Windows currently
-skip-if(B2G||Mulet) fails-if(Android) random-if(gtk2Widget) == src-list-local-ps.html src-list-local-full-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+# postscript name lookup
+# fontconfig only supports postscript name lookup from 2.10.92, Android/B2G not supported
+skip-if(B2G||Mulet) fails-if(Android) random-if(gtk2Widget) == src-list-local-ps.html src-list-local-full-ref.html # bug 773482
 # Mac-specific test of 100 weight faces
 random-if(!cocoaWidget) == helveticaneue-ultra.html helveticaneue-ultra-ref.html
 
 HTTP(..) == order-1.html order-1-ref.html
-pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == order-2.html order-2-ref.html # bug 1056479
-pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == order-3.html order-3-ref.html # bug 1056479
+pref(layout.css.unicode-range.enabled,true) HTTP(..) == order-2.html order-2-ref.html
+pref(layout.css.unicode-range.enabled,true) HTTP(..) == order-3.html order-3-ref.html
 HTTP(..) == multiple-in-family-1.html multiple-in-family-1-ref.html
 HTTP(..) == multiple-in-family-1b.html multiple-in-family-1-ref.html
 HTTP(..) != multiple-in-family-1.html multiple-in-family-1-notref.html
@@ -59,11 +60,11 @@ HTTP(..) == prop-order-over-rule-order-1b.html prop-order-over-rule-order-2b.htm
 HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.html
 skip-if(B2G||Mulet) HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 
-# unicode-range (Linux implementation - bug 1056479)
-pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == unicoderange-1.html unicoderange-1-ref.html
-pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == unicoderange-2.html unicoderange-2-ref.html
-pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == unicoderange-3.html unicoderange-3-ref.html
-pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == unicoderange-4.html unicoderange-4-ref.html
+# unicode-range
+pref(layout.css.unicode-range.enabled,true) HTTP(..) == unicoderange-1.html unicoderange-1-ref.html
+pref(layout.css.unicode-range.enabled,true) HTTP(..) == unicoderange-2.html unicoderange-2-ref.html
+pref(layout.css.unicode-range.enabled,true) HTTP(..) == unicoderange-3.html unicoderange-3-ref.html
+pref(layout.css.unicode-range.enabled,true) HTTP(..) == unicoderange-4.html unicoderange-4-ref.html
 
 # Dynamic changes
 # we need to skip these because of the bug that's causing order-2.html to fail

@@ -3,6 +3,21 @@
 
 "use strict";
 
+function simulateItemDragAndEnd(aToDrag, aTarget) {
+  var ds = Components.classes["@mozilla.org/widget/dragservice;1"].
+           getService(Components.interfaces.nsIDragService);
+
+  ds.startDragSession();
+  try {
+    var [result, dataTransfer] = ChromeUtils.synthesizeDragOver(aToDrag.parentNode, aTarget);
+    ChromeUtils.synthesizeDropAfterDragOver(result, dataTransfer, aTarget);
+    // Send dragend to move dragging item back to initial place.
+    EventUtils.sendDragEvent({ type: "dragend", dataTransfer: dataTransfer },
+                             aToDrag.parentNode);
+  } finally {
+    ds.endDragSession(true);
+  }
+}
 
 add_task(function* checkNoAddingToPanel() {
   let area = CustomizableUI.AREA_PANEL;
@@ -66,7 +81,7 @@ add_task(function* checkDragging() {
 
   yield startCustomizing();
   for (let id of elementsToMove) {
-    simulateItemDrag(document.getElementById(id), PanelUI.contents);
+    simulateItemDragAndEnd(document.getElementById(id), PanelUI.contents);
   }
 
   assertAreaPlacements(startArea, placementsWithSpecials);

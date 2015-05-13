@@ -238,10 +238,6 @@ bstring.h
 builtin.h
 Button.h
 byteswap.h
-#if MOZ_TREE_CAIRO!=1
-#define WRAP_CAIRO_HEADERS
-#endif
-#ifdef WRAP_CAIRO_HEADERS
 pixman.h
 cairo.h
 cairo-atsui.h
@@ -258,7 +254,6 @@ cairo-xlib-xrender.h
 cairo-directfb.h
 cairo-qpainter.h
 cairo-qt.h
-#endif
 dfiff.h
 exception
 ffi.h

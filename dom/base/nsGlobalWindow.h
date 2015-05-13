@@ -408,13 +408,22 @@ public:
                                 bool aUseCapture,
                                 const mozilla::dom::Nullable<bool>& aWantsUntrusted,
                                 mozilla::ErrorResult& aRv) override;
-  virtual nsIDOMWindow* GetOwnerGlobal() override
+  virtual nsIDOMWindow* GetOwnerGlobalForBindings() override
   {
     if (IsOuterWindow()) {
       return this;
     }
 
     return GetOuterFromCurrentInner(this);
+  }
+
+  virtual nsIGlobalObject* GetOwnerGlobal() const override
+  {
+    if (IsOuterWindow()) {
+      return GetCurrentInnerWindowInternal();
+    }
+
+    return const_cast<nsGlobalWindow*>(this);
   }
 
   // nsPIDOMWindow

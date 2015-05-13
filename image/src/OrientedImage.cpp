@@ -122,6 +122,15 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   return target->Snapshot();
 }
 
+NS_IMETHODIMP_(bool)
+OrientedImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
+{
+  if (mOrientation.IsIdentity()) {
+    return InnerImage()->IsImageContainerAvailable(aManager, aFlags);
+  }
+  return false;
+}
+
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 OrientedImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {

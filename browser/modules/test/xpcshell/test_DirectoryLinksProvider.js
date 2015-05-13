@@ -1674,3 +1674,7 @@ add_task(function test_DirectoryLinksProvider_ClickRemoval() {
 
   yield promiseCleanDirectoryLinksProvider();
 });
+
+add_task(function test_DirectoryLinksProvider_anonymous() {
+  do_check_true(DirectoryLinksProvider._newXHR().mozAnon);
+});

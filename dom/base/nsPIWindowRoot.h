@@ -38,7 +38,6 @@ public:
 
   virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget) = 0;
   virtual mozilla::dom::EventTarget* GetParentTarget() = 0;
-  virtual nsIDOMWindow* GetOwnerGlobal() override = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)

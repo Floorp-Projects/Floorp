@@ -121,7 +121,7 @@ nsShmImage::AsSurface()
 
 #if (MOZ_WIDGET_GTK == 2)
 void
-nsShmImage::Put(GdkWindow* aWindow, GdkRectangle* aRects, GdkRectangle* aEnd)
+nsShmImage::Put(GdkWindow* aWindow, const nsIntRegion& aRegion)
 {
     GdkDrawable* gd;
     gint dx, dy;
@@ -131,7 +131,8 @@ nsShmImage::Put(GdkWindow* aWindow, GdkRectangle* aRects, GdkRectangle* aEnd)
     Drawable d = GDK_DRAWABLE_XID(gd);
 
     GC gc = XCreateGC(dpy, d, 0, nullptr);
-    for (GdkRectangle* r = aRects; r < aEnd; r++) {
+    nsIntRegionRectIterator iter(aRegion);
+    for (const nsIntRect *r = iter.Next(); r; r = iter.Next()) {
         XShmPutImage(dpy, d, gc, mImage,
                      r->x, r->y,
                      r->x - dx, r->y - dy,
@@ -151,20 +152,19 @@ nsShmImage::Put(GdkWindow* aWindow, GdkRectangle* aRects, GdkRectangle* aEnd)
 
 #elif (MOZ_WIDGET_GTK == 3)
 void
-nsShmImage::Put(GdkWindow* aWindow, cairo_rectangle_list_t* aRects)
+nsShmImage::Put(GdkWindow* aWindow, const nsIntRegion& aRegion)
 {
     Display* dpy = gdk_x11_get_default_xdisplay();
     Drawable d = GDK_WINDOW_XID(aWindow);
     int dx = 0, dy = 0;
 
     GC gc = XCreateGC(dpy, d, 0, nullptr);
-    cairo_rectangle_t r;
-    for (int i = 0; i < aRects->num_rectangles; i++) {
-        r = aRects->rectangles[i];
+    nsIntRegionRectIterator iter(aRegion);
+    for (const nsIntRect *r = iter.Next(); r; r = iter.Next()) {
         XShmPutImage(dpy, d, gc, mImage,
-                     r.x, r.y,
-                     r.x - dx, r.y - dy,
-                     r.width, r.height,
+                     r->x, r->y,
+                     r->x - dx, r->y - dy,
+                     r->width, r->height,
                      False);
     }
 
