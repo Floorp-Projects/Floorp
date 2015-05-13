@@ -1634,6 +1634,9 @@ pref("browser.newtab.preload", true);
 // Remembers if the about:newtab intro has been shown
 pref("browser.newtabpage.introShown", false);
 
+// Remembers if the about:newtab update intro has been shown
+pref("browser.newtabpage.updateIntroShown", false);
+
 // Toggles the content of 'about:newtab'. Shows the grid when enabled.
 pref("browser.newtabpage.enabled", true);
 
