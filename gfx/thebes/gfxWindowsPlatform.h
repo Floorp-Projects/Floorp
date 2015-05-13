@@ -246,7 +246,8 @@ public:
 #endif
     ID3D11Device *GetD3D11Device();
     ID3D11Device *GetD3D11ContentDevice();
-    ID3D11Device *GetD3D11MediaDevice();
+    // Device to be used on the ImageBridge thread
+    ID3D11Device *GetD3D11ImageBridgeDevice();
 
     mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
 
@@ -292,11 +293,10 @@ private:
     nsRefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
     mozilla::RefPtr<ID3D11Device> mD3D11Device;
     mozilla::RefPtr<ID3D11Device> mD3D11ContentDevice;
-    mozilla::RefPtr<ID3D11Device> mD3D11MediaDevice;
+    mozilla::RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
     bool mD3D11DeviceInitialized;
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
-    bool mCanInitMediaDevice;
 
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
 };
