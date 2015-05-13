@@ -3290,6 +3290,17 @@ WifiWorker.prototype = {
       }
     }
 
+    function connectToNetwork() {
+      WifiManager.updateNetwork(privnet, (function(ok) {
+        if (!ok) {
+          self._sendMessage(message, false, "Network is misconfigured", msg);
+          return;
+        }
+
+        networkReady();
+      }));
+    }
+
     let ssid = privnet.ssid;
     let networkKey = getNetworkKey(privnet);
     let configured;
@@ -3311,14 +3322,22 @@ WifiWorker.prototype = {
       // it can be sorted correctly in _reprioritizeNetworks() because the
       // function sort network based on priority in configure list.
       configured.priority = privnet.priority;
-      WifiManager.updateNetwork(privnet, (function(ok) {
-        if (!ok) {
-          this._sendMessage(message, false, "Network is misconfigured", msg);
-          return;
-        }
 
-        networkReady();
-      }).bind(this));
+      // When investigating Bug 1123680, we observed that gaia may unexpectedly
+      // request to associate with incorrect password before successfully
+      // forgetting the network. It would cause the network unable to connect
+      // subsequently. Aside from preventing the racing forget/associate, we
+      // also try to disable network prior to updating the network.
+      WifiManager.getNetworkId(dequote(configured.ssid), function(netId) {
+        if (netId) {
+          WifiManager.disableNetwork(netId, function() {
+            connectToNetwork();
+          });
+        }
+        else {
+          connectToNetwork();
+        }
+      });
     } else {
       // networkReady, above, calls saveConfig. We want to remember the new
       // network as being enabled, which isn't the default, so we explicitly
