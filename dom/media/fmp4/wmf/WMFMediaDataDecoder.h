@@ -109,6 +109,10 @@ private:
   bool mIsFlushing;
 
   bool mIsShutDown;
+
+  // For telemetry
+  bool mHasSuccessfulOutput = false;
+  bool mRecordedError = false;
 };
 
 } // namespace mozilla

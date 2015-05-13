@@ -5540,6 +5540,12 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'reconfigure thread' request to go round trip."
   },
+  "MEDIA_WMF_DECODE_ERROR": {
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 256,
+    "description": "WMF media decoder error or success (0) codes."
+  },
   "VIDEO_CANPLAYTYPE_H264_CONSTRAINT_SET_FLAG": {
     "expires_in_version": "50",
     "kind": "enumerated",
