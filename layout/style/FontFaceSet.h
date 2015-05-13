@@ -197,6 +197,8 @@ private:
    */
   void Disconnect();
 
+  void RemoveDOMContentLoadedListener();
+
   /**
    * Returns whether there might be any pending font loads, which should cause
    * the mReady Promise not to be resolved yet.
