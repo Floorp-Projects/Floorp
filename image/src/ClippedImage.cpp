@@ -268,6 +268,15 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
   return mCachedSurface->Surface();
 }
 
+NS_IMETHODIMP_(bool)
+ClippedImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
+{
+  if (!ShouldClip()) {
+    return InnerImage()->IsImageContainerAvailable(aManager, aFlags);
+  }
+  return false;
+}
+
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 ClippedImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
@@ -281,7 +290,7 @@ ClippedImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
     return InnerImage()->GetImageContainer(aManager, aFlags);
   }
 
-  return (nullptr);
+  return nullptr;
 }
 
 static bool
