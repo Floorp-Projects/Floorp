@@ -182,3 +182,7 @@ ul.children + .tag-line::before {
   display: none;
   cursor: pointer;
 }
+
+.editor.text {
+  display: inline-block;
+}
