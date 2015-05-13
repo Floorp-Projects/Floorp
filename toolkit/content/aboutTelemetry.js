@@ -430,7 +430,6 @@ let GeneralData = {
    */
   render: function(aPing) {
     setHasData("general-data-section", true);
-
     let table = document.createElement("table");
 
     let caption = document.createElement("caption");
@@ -455,6 +454,7 @@ let GeneralData = {
     }
 
     let dataDiv = document.getElementById("general-data");
+    removeAllChildNodes(dataDiv);
     dataDiv.appendChild(table);
   },
 
@@ -480,6 +480,7 @@ let EnvironmentData = {
   render: function(ping) {
     setHasData("environment-data-section", true);
     let dataDiv = document.getElementById("environment-data");
+    removeAllChildNodes(dataDiv);
     let data = sectionalizeObject(ping.environment);
 
     for (let [section, sectionData] of data) {
@@ -552,6 +553,7 @@ let TelLog = {
     }
 
     let dataDiv = document.getElementById("telemetry-log");
+    removeAllChildNodes(dataDiv);
     dataDiv.appendChild(table);
   },
 
@@ -589,7 +591,9 @@ let SlowSQL = {
     // We can add the debug SQL data to the current ping later.
     // However, we need to be careful to never send that debug data
     // out due to privacy concerns.
-    let debugSlowSql = Preferences.get(PREF_DEBUG_SLOW_SQL, false);
+    // We want to show the actual ping data for archived pings,
+    // so skip this there.
+    let debugSlowSql = PingPicker.viewCurrentPingData && Preferences.get(PREF_DEBUG_SLOW_SQL, false);
     let {mainThread, otherThreads} =
       debugSlowSql ? Telemetry.debugSlowSQL : aPing.payload.slowSQL;
 
@@ -606,6 +610,7 @@ let SlowSQL = {
     }
 
     let slowSqlDiv = document.getElementById("slow-sql-tables");
+    removeAllChildNodes(slowSqlDiv);
 
     // Main thread
     if (mainThreadCount > 0) {
@@ -683,17 +688,6 @@ let SlowSQL = {
   }
 };
 
-/**
- * Removes child elements from the supplied div
- *
- * @param aDiv Element to be cleared
- */
-function clearDivData(aDiv) {
-  while (aDiv.hasChildNodes()) {
-    aDiv.removeChild(aDiv.lastChild);
-  }
-};
-
 let StackRenderer = {
 
   stackTitle: bundle.GetStringFromName("stackTitle"),
@@ -734,7 +728,7 @@ let StackRenderer = {
   renderStacks: function StackRenderer_renderStacks(aPrefix, aStacks,
                                                     aMemoryMap, aRenderHeader) {
     let div = document.getElementById(aPrefix + '-data');
-    clearDivData(div);
+    removeAllChildNodes(div);
 
     let fetchE = document.getElementById(aPrefix + '-fetch-symbols');
     if (fetchE) {
@@ -801,7 +795,7 @@ function SymbolicationRequest_handleSymbolResponse() {
   let hideElement = document.getElementById(this.prefix + "-hide-symbols");
   hideElement.classList.remove("hidden");
   let div = document.getElementById(this.prefix + "-data");
-  clearDivData(div);
+  removeAllChildNodes(div);
   let errorMessage = bundle.GetStringFromName("errorFetchingSymbols");
 
   if (this.symbolRequest.status != 200) {
@@ -878,7 +872,7 @@ let ThreadHangStats = {
    */
   render: function(aPing) {
     let div = document.getElementById("thread-hang-stats");
-    clearDivData(div);
+    removeAllChildNodes(div);
 
     let stats = aPing.payload.threadHangStats;
     stats.forEach((thread) => {
@@ -1266,17 +1260,25 @@ let AddonDetails = {
 
   /**
    * Render the addon details section as a series of headers followed by key/value tables
-   * @param aSections Object containing the details sections to render
+   * @param aPing A ping object to render the data from.
    */
-  render: function AddonDetails_render(aSections) {
+  render: function AddonDetails_render(aPing) {
     let addonSection = document.getElementById("addon-details");
-    for (let provider in aSections) {
+    removeAllChildNodes(addonSection);
+    let addonDetails = aPing.payload.addonDetails;
+    const hasData = Object.keys(addonDetails).length > 0;
+    setHasData("addon-details-section", hasData);
+    if (!hasData) {
+      return;
+    }
+
+    for (let provider in addonDetails) {
       let providerSection = document.createElement("h2");
       let titleText = bundle.formatStringFromName("addonProvider", [provider], 1);
       providerSection.appendChild(document.createTextNode(titleText));
       addonSection.appendChild(providerSection);
       addonSection.appendChild(
-        KeyValueTable.render(aSections[provider],
+        KeyValueTable.render(addonDetails[provider],
                              this.tableIDTitle, this.tableDetailsTitle));
     }
   }
@@ -1502,36 +1504,44 @@ function displayPingData(ping) {
   // Show thread hang stats
   ThreadHangStats.render(ping);
 
+  // Render Addon details.
+  AddonDetails.render(ping);
+
   // Show simple measurements
   let payload = ping.payload;
   let simpleMeasurements = sortStartupMilestones(payload.simpleMeasurements);
-  if (Object.keys(simpleMeasurements).length) {
-    let simpleSection = document.getElementById("simple-measurements");
+  let hasData = Object.keys(simpleMeasurements).length > 0;
+  setHasData("simple-measurements-section", true);
+  let simpleSection = document.getElementById("simple-measurements");
+  removeAllChildNodes(simpleSection);
+
+  if (hasData) {
     simpleSection.appendChild(KeyValueTable.render(simpleMeasurements,
                                                    keysHeader, valuesHeader));
-    setHasData("simple-measurements-section", true);
   }
 
   LateWritesSingleton.renderLateWrites(payload.lateWrites);
 
   // Show basic system info gathered
-  if (Object.keys(payload.info).length) {
-    let infoSection = document.getElementById("system-info");
+  hasData = Object.keys(payload.info).length > 0;
+  setHasData("system-info-section", hasData);
+  let infoSection = document.getElementById("system-info");
+  removeAllChildNodes(infoSection);
+
+  if (hasData) {
     infoSection.appendChild(KeyValueTable.render(payload.info,
                                                  keysHeader, valuesHeader));
-    setHasData("system-info-section", true);
-  }
-
-  let addonDetails = payload.addonDetails;
-  if (Object.keys(addonDetails).length) {
-    AddonDetails.render(addonDetails);
-    setHasData("addon-details-section", true);
   }
 
   // Show histogram data
+  let hgramDiv = document.getElementById("histograms");
+  removeAllChildNodes(hgramDiv);
+
   let histograms = payload.histograms;
-  if (Object.keys(histograms).length) {
-    let hgramDiv = document.getElementById("histograms");
+  hasData = Object.keys(histograms).length > 0;
+  setHasData("histograms-section", hasData);
+
+  if (hasData) {
     for (let [name, hgram] of Iterator(histograms)) {
       Histogram.render(hgramDiv, name, hgram, {unpacked: true});
     }
@@ -1546,18 +1556,23 @@ function displayPingData(ping) {
   }
 
   // Show keyed histogram data
+  let keyedDiv = document.getElementById("keyed-histograms");
+  removeAllChildNodes(keyedDiv);
+
   let keyedHistograms = payload.keyedHistograms;
-  if (Object.keys(keyedHistograms).length) {
-    let keyedDiv = document.getElementById("keyed-histograms");
+  hasData = Object.keys(keyedHistograms).length > 0;
+  setHasData("keyed-histograms-section", hasData);
+
+  if (hasData) {
     for (let [id, keyed] of Iterator(keyedHistograms)) {
       KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
     }
-
-    setHasData("keyed-histograms-section", true);
   }
 
   // Show addon histogram data
   let addonDiv = document.getElementById("addon-histograms");
+  removeAllChildNodes(addonDiv);
+
   let addonHistogramsRendered = false;
   let addonData = payload.addonHistograms;
   for (let [addon, histograms] of Iterator(addonData)) {
