@@ -2655,15 +2655,8 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   }
 #endif
 
-#ifdef DEBUG
-  {
-    uint32_t appId;
-    nsresult rv = NodePrincipal()->GetAppId(&appId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_ASSERT(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
-               "Document should never have UNKNOWN_APP_ID");
-  }
-#endif
+  MOZ_ASSERT(NodePrincipal()->GetAppId() != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+             "Document should never have UNKNOWN_APP_ID");
 
   MOZ_ASSERT(GetReadyStateEnum() == nsIDocument::READYSTATE_UNINITIALIZED,
              "Bad readyState");
@@ -2864,16 +2857,14 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   if (appStatus != nsIPrincipal::APP_STATUS_NOT_INSTALLED) {
     nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
     if (appsService) {
-      uint32_t appId = 0;
-      if (NS_SUCCEEDED(principal->GetAppId(&appId))) {
-        appsService->GetManifestCSPByLocalId(appId, appManifestCSP);
-        if (!appManifestCSP.IsEmpty()) {
-          applyAppManifestCSP = true;
-        }
-        appsService->GetDefaultCSPByLocalId(appId, appDefaultCSP);
-        if (!appDefaultCSP.IsEmpty()) {
-          applyAppDefaultCSP = true;
-        }
+      uint32_t appId = principal->GetAppId();
+      appsService->GetManifestCSPByLocalId(appId, appManifestCSP);
+      if (!appManifestCSP.IsEmpty()) {
+        applyAppManifestCSP = true;
+      }
+      appsService->GetDefaultCSPByLocalId(appId, appDefaultCSP);
+      if (!appDefaultCSP.IsEmpty()) {
+        applyAppDefaultCSP = true;
       }
     }
   }

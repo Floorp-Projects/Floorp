@@ -8438,13 +8438,8 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     nsCOMPtr<nsIPrincipal> principal = nsContentUtils::SubjectPrincipal();
     MOZ_ASSERT(principal);
 
-    uint32_t appId;
-    if (NS_WARN_IF(NS_FAILED(principal->GetAppId(&appId))))
-      return;
-
-    bool isInBrowser;
-    if (NS_WARN_IF(NS_FAILED(principal->GetIsInBrowserElement(&isInBrowser))))
-      return;
+    uint32_t appId = principal->GetAppId();
+    bool isInBrowser = principal->GetIsInBrowserElement();
 
     // Create a nsIPrincipal inheriting the app/browser attributes from the
     // caller.
