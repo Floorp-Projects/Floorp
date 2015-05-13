@@ -567,6 +567,8 @@ nsSynthVoiceRegistry::Speak(const nsAString& aText,
     return;
   }
 
+  aTask->SetChosenVoiceURI(voice->mUri);
+
   LOG(PR_LOG_DEBUG, ("nsSynthVoiceRegistry::Speak - Using voice URI: %s",
                      NS_ConvertUTF16toUTF8(voice->mUri).get()));
 

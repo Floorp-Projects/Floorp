@@ -542,6 +542,29 @@ test(function(t) {
                 'The currentTime of a cancelled animation should be null');
 }, 'Animation.currentTime after cancelling');
 
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = 'anim 100s';
+
+  var animation = div.getAnimations()[0];
+  animation.ready.then(t.step_func(function() {
+    animation.finish();
+
+    // Initiate a pause then abort it
+    animation.pause();
+    animation.play();
+
+    // Wait to return to running state
+    return animation.ready;
+  })).then(t.step_func(function() {
+    assert_true(animation.currentTime < 100 * 1000,
+                'After aborting a pause when finished, the currentTime should'
+                + ' jump back towards the start of the animation');
+    t.done();
+  }));
+}, 'After aborting a pause when finished, the call to play() should rewind'
+   + ' the current time');
+
 done();
     </script>
   </body>

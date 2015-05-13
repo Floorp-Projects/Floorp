@@ -715,6 +715,12 @@ public:
     return This();
   }
 
+  Derived& ScaleInverseRoundOut (float aXScale, float aYScale)
+  {
+    mImpl.ScaleInverseRoundOut(aXScale, aYScale);
+    return This();
+  }
+
   Derived& Transform (const gfx3DMatrix &aTransform)
   {
     mImpl.Transform(aTransform);

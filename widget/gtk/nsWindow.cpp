@@ -102,10 +102,6 @@ using namespace mozilla::widget;
 #include "nsAutoPtr.h"
 #include "ClientLayerManager.h"
 
-extern "C" {
-#define PIXMAN_DONT_DEFINE_STDINT
-#include "pixman.h"
-}
 #include "gfxPlatformGtk.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
@@ -117,7 +113,6 @@ extern "C" {
 
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
-#include "cairo-xlib.h"
 #endif
   
 #include "nsShmImage.h"
@@ -294,25 +289,6 @@ static GtkWidget *gInvisibleContainer = nullptr;
 // Sometimes this actually also includes the state of the modifier keys, but
 // only the button state bits are used.
 static guint gButtonState;
-
-// nsAutoRef<pixman_region32> uses nsSimpleRef<> to know how to automatically
-// destroy regions.
-template <>
-class nsSimpleRef<pixman_region32> : public pixman_region32 {
-protected:
-    typedef pixman_region32 RawRef;
-
-    nsSimpleRef() { data = nullptr; }
-    explicit nsSimpleRef(const RawRef &aRawRef) : pixman_region32(aRawRef) { }
-
-    static void Release(pixman_region32& region) {
-        pixman_region32_fini(&region);
-    }
-    // Whether this needs to be released:
-    bool HaveResource() const { return data != nullptr; }
-
-    pixman_region32& get() { return *this; }
-};
 
 static inline int32_t
 GetBitmapStride(int32_t width)
@@ -2050,71 +2026,52 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
 #endif // DEBUG
 #endif
 
-struct ExposeRegion
-{
-    nsIntRegion mRegion;
-
 #if (MOZ_WIDGET_GTK == 2)
-    GdkRectangle *mRects;
-    GdkRectangle *mRectsEnd;
+static bool
+ExtractExposeRegion(nsIntRegion& aRegion, GdkEventExpose* aEvent)
+{
+  GdkRectangle* rects;
+  gint nrects;
+  gdk_region_get_rectangles(aEvent->region, &rects, &nrects);
 
-    ExposeRegion() : mRects(nullptr)
-    {
-    }
-    ~ExposeRegion()
-    {
-        g_free(mRects);
-    }
-    bool Init(GdkEventExpose *aEvent)
-    {
-        gint nrects;
-        gdk_region_get_rectangles(aEvent->region, &mRects, &nrects);
+  if (nrects > MAX_RECTS_IN_REGION) {
+      // Just use the bounding box
+      rects[0] = aEvent->area;
+      nrects = 1;
+  }
 
-        if (nrects > MAX_RECTS_IN_REGION) {
-            // Just use the bounding box
-            mRects[0] = aEvent->area;
-            nrects = 1;
-        }
+  for (GdkRectangle* r = rects; r < rects + nrects; r++) {
+      aRegion.Or(aRegion, nsIntRect(r->x, r->y, r->width, r->height));
+      LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
+  }
 
-        mRectsEnd = mRects + nrects;
-
-        for (GdkRectangle *r = mRects; r < mRectsEnd; r++) {
-            mRegion.Or(mRegion, nsIntRect(r->x, r->y, r->width, r->height));
-            LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
-        }
-        return true;
-    }
+  g_free(rects);
+  return true;
+}
 
 #else
 # ifdef cairo_copy_clip_rectangle_list
 #  error "Looks like we're including Mozilla's cairo instead of system cairo"
 # endif
-    cairo_rectangle_list_t *mRects;
+static bool
+ExtractExposeRegion(nsIntRegion& aRegion, cairo_t* cr)
+{
+  cairo_rectangle_list_t* rects = cairo_copy_clip_rectangle_list(cr);
+  if (rects->status != CAIRO_STATUS_SUCCESS) {
+      NS_WARNING("Failed to obtain cairo rectangle list.");
+      return false;
+  }
 
-    ExposeRegion() : mRects(nullptr)
-    {
-    }
-    ~ExposeRegion()
-    {
-        cairo_rectangle_list_destroy(mRects);
-    }
-    bool Init(cairo_t* cr)
-    {
-        mRects = cairo_copy_clip_rectangle_list(cr);
-        if (mRects->status != CAIRO_STATUS_SUCCESS) {
-            NS_WARNING("Failed to obtain cairo rectangle list.");
-            return false;
-        }
+  for (int i = 0; i < rects->num_rectangles; i++)  {
+      const cairo_rectangle_t& r = rects->rectangles[i];
+      aRegion.Or(aRegion, nsIntRect(r.x, r.y, r.width, r.height));
+      LOGDRAW(("\t%d %d %d %d\n", r.x, r.y, r.width, r.height));
+  }
 
-        for (int i = 0; i < mRects->num_rectangles; i++)  {
-            const cairo_rectangle_t& r = mRects->rectangles[i];
-            mRegion.Or(mRegion, nsIntRect(r.x, r.y, r.width, r.height));
-            LOGDRAW(("\t%d %d %d %d\n", r.x, r.y, r.width, r.height));
-        }
-        return true;
-    }
+  cairo_rectangle_list_destroy(rects);
+  return true;
+}
 #endif
-};
 
 #if (MOZ_WIDGET_GTK == 2)
 gboolean
@@ -2137,17 +2094,17 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     if (!listener)
         return FALSE;
 
-    ExposeRegion exposeRegion;
+    nsIntRegion exposeRegion;
 #if (MOZ_WIDGET_GTK == 2)
-    if (!exposeRegion.Init(aEvent)) {
+    if (!ExtractExposeRegion(exposeRegion, aEvent)) {
 #else
-    if (!exposeRegion.Init(cr)) {
+    if (!ExtractExposeRegion(exposeRegion, cr)) {
 #endif
         return FALSE;
     }
 
     gint scale = GdkScaleFactor();
-    nsIntRegion& region = exposeRegion.mRegion;
+    nsIntRegion region = exposeRegion;
     region.ScaleRoundOut(scale, scale);
 
     ClientLayerManager *clientLayers =
@@ -2240,33 +2197,11 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return TRUE;
     }
 
-    gfxASurface* surf;
-#if (MOZ_WIDGET_GTK == 2)
-    surf = GetThebesSurface();
-#else
-    surf = GetThebesSurface(cr);
-#endif
-
-    nsRefPtr<gfxContext> ctx;
-    if (gfxPlatform::GetPlatform()->
-            SupportsAzureContentForType(BackendType::CAIRO)) {
-        IntSize intSize(surf->GetSize().width, surf->GetSize().height);
-        RefPtr<DrawTarget> dt =
-          gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, intSize);
-        ctx = new gfxContext(dt);
-    } else if (gfxPlatform::GetPlatform()->
-                   SupportsAzureContentForType(BackendType::SKIA) &&
-               surf->GetType() == gfxSurfaceType::Image) {
-       gfxImageSurface* imgSurf = static_cast<gfxImageSurface*>(surf);
-       SurfaceFormat format = ImageFormatToSurfaceFormat(imgSurf->Format());
-       IntSize intSize(surf->GetSize().width, surf->GetSize().height);
-       RefPtr<DrawTarget> dt =
-         gfxPlatform::GetPlatform()->CreateDrawTargetForData(
-                        imgSurf->Data(), intSize, imgSurf->Stride(), format);
-       ctx = new gfxContext(dt);
-    } else {
-        MOZ_CRASH("Unexpected content type");
+    RefPtr<DrawTarget> dt = StartRemoteDrawing();
+    if(!dt) {
+        return FALSE;
     }
+    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
 
 #ifdef MOZ_X11
     nsIntRect boundsRect; // for shaped only
@@ -2341,11 +2276,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
 #  ifdef MOZ_HAVE_SHMIMAGE
     if (mShmImage && MOZ_LIKELY(!mIsDestroyed)) {
-#if (MOZ_WIDGET_GTK == 2)
-        mShmImage->Put(mGdkWindow, exposeRegion.mRects, exposeRegion.mRectsEnd);
-#else
-        mShmImage->Put(mGdkWindow, exposeRegion.mRects);
-#endif
+        mShmImage->Put(mGdkWindow, exposeRegion);
     }
 #  endif  // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
@@ -4214,55 +4145,6 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
     return NS_OK;
 }
 
-static pixman_box32
-ToPixmanBox(const nsIntRect& aRect)
-{
-    pixman_box32_t result;
-    result.x1 = aRect.x;
-    result.y1 = aRect.y;
-    result.x2 = aRect.XMost();
-    result.y2 = aRect.YMost();
-    return result;
-}
-
-static nsIntRect
-ToIntRect(const pixman_box32& aBox)
-{
-    nsIntRect result;
-    result.x = aBox.x1;
-    result.y = aBox.y1;
-    result.width = aBox.x2 - aBox.x1;
-    result.height = aBox.y2 - aBox.y1;
-    return result;
-}
-
-static void
-InitRegion(pixman_region32* aRegion,
-           const nsTArray<nsIntRect>& aRects)
-{
-    nsAutoTArray<pixman_box32,10> rects;
-    rects.SetCapacity(aRects.Length());
-    for (uint32_t i = 0; i < aRects.Length (); ++i) {
-        if (!aRects[i].IsEmpty()) {
-            rects.AppendElement(ToPixmanBox(aRects[i]));
-        }
-    }
-
-    pixman_region32_init_rects(aRegion,
-                               rects.Elements(), rects.Length());
-}
-
-static void
-GetIntRects(pixman_region32& aRegion, nsTArray<nsIntRect>* aRects)
-{
-    int nRects;
-    pixman_box32* boxes = pixman_region32_rectangles(&aRegion, &nRects);
-    aRects->SetCapacity(aRects->Length() + nRects);
-    for (int i = 0; i < nRects; ++i) {
-        aRects->AppendElement(ToIntRect(boxes[i]));
-    }
-}
-
 nsresult
 nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                               bool aIntersectWithExisting)
@@ -4274,24 +4156,19 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
         nsAutoTArray<nsIntRect,1> existingRects;
         GetWindowClipRegion(&existingRects);
 
-        nsAutoRef<pixman_region32> existingRegion;
-        InitRegion(&existingRegion, existingRects);
-        nsAutoRef<pixman_region32> newRegion;
-        InitRegion(&newRegion, aRects);
-        nsAutoRef<pixman_region32> intersectRegion;
-        pixman_region32_init(&intersectRegion);
-        pixman_region32_intersect(&intersectRegion,
-                                  &newRegion, &existingRegion);
+        nsIntRegion existingRegion = RegionFromArray(existingRects);
+        nsIntRegion newRegion = RegionFromArray(aRects);
+        nsIntRegion intersectRegion;
+        intersectRegion.And(newRegion, existingRegion);
 
         // If mClipRects is null we haven't set a clip rect yet, so we
         // need to set the clip even if it is equal.
-        if (mClipRects &&
-            pixman_region32_equal(&intersectRegion, &existingRegion)) {
+        if (mClipRects && intersectRegion.IsEqual(existingRegion)) {
             return NS_OK;
         }
 
-        if (!pixman_region32_equal(&intersectRegion, &newRegion)) {
-            GetIntRects(intersectRegion, &intersectRects);
+        if (!intersectRegion.IsEqual(newRegion)) {
+            ArrayFromRegion(intersectRegion, intersectRects);
             newRects = &intersectRects;
         }
     }
@@ -6262,24 +6139,49 @@ nsWindow::StartRemoteDrawing()
     return nullptr;
   }
 
-  IntSize size(surf->GetSize().width, surf->GetSize().height);
+  nsIntSize size = surf->GetSize();
   if (size.width <= 0 || size.height <= 0) {
     return nullptr;
   }
 
-  return gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, size);
+  gfxPlatform *platform = gfxPlatform::GetPlatform();
+  if (platform->SupportsAzureContentForType(BackendType::CAIRO) ||
+      surf->GetType() == gfxSurfaceType::Xlib) {
+    return platform->CreateDrawTargetForSurface(surf, size);
+  } else if (platform->SupportsAzureContentForType(BackendType::SKIA) &&
+             surf->GetType() == gfxSurfaceType::Image) {
+    gfxImageSurface* imgSurf = static_cast<gfxImageSurface*>(surf);
+    SurfaceFormat format = ImageFormatToSurfaceFormat(imgSurf->Format());
+    return platform->CreateDrawTargetForData(
+                     imgSurf->Data(), size, imgSurf->Stride(), format);
+  } else {
+    return nullptr;
+  }
+}
+
+void
+nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget, nsIntRegion& aInvalidRegion)
+{
+#ifdef MOZ_X11
+#  ifdef MOZ_HAVE_SHMIMAGE
+  if (!mGdkWindow || mIsFullyObscured || !mHasMappedToplevel || mIsDestroyed ||
+      !mShmImage)
+    return;
+
+  gint scale = GdkScaleFactor();
+  if (scale != 1) {
+    aInvalidRegion.ScaleInverseRoundOut(scale, scale);
+  }
+
+  mShmImage->Put(mGdkWindow, aInvalidRegion);
+
+#  endif // MOZ_HAVE_SHMIMAGE
+#endif // MOZ_X11
 }
 
 // return the gfxASurface for rendering to this widget
 gfxASurface*
 nsWindow::GetThebesSurface()
-#if (MOZ_WIDGET_GTK == 3)
-{
-    return GetThebesSurface(nullptr);
-}
-gfxASurface*
-nsWindow::GetThebesSurface(cairo_t *cr)
-#endif
 {
     if (!mGdkWindow)
         return nullptr;

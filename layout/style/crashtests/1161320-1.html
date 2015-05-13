@@ -1,0 +1,25 @@
+<!doctype html>
+<html class="reftest-wait">
+<head>
+<meta charset=utf-8>
+<style>
+@keyframes a { }
+body {
+  animation-name: a;
+}
+</style>
+
+<script>
+function boom()
+{
+  var body = document.body;
+  body.style.animationPlayState = 'paused';
+  window.getComputedStyle(body).animationPlayState;
+  body.style.animationPlayState = 'running';
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<body onload="setTimeout(boom, 100);"></body>
+</html>

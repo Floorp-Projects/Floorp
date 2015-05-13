@@ -1714,5 +1714,50 @@ BorrowedCairoContext::ReturnCairoContextToDrawTarget(DrawTarget* aDT,
   cairoDT->mContext = aCairo;
 }
 
+#ifdef MOZ_X11
+bool
+BorrowedXlibDrawable::Init(DrawTarget* aDT)
+{
+  MOZ_ASSERT(aDT, "Caller should check for nullptr");
+  MOZ_ASSERT(!mDT, "Can't initialize twice!");
+  mDT = aDT;
+  mDrawable = None;
+
+#ifdef CAIRO_HAS_XLIB_SURFACE
+  if (aDT->GetBackendType() != BackendType::CAIRO ||
+      aDT->IsDualDrawTarget() ||
+      aDT->IsTiledDrawTarget()) {
+    return false;
+  }
+
+  DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(aDT);
+  cairo_surface_t* surf = cairoDT->mSurface;
+  if (cairo_surface_get_type(surf) != CAIRO_SURFACE_TYPE_XLIB) {
+    return false;
+  }
+
+  cairoDT->WillChange();
+
+  mDisplay = cairo_xlib_surface_get_display(surf);
+  mDrawable = cairo_xlib_surface_get_drawable(surf);
+  mScreen = cairo_xlib_surface_get_screen(surf);
+  mVisual = cairo_xlib_surface_get_visual(surf);
+  mXRenderFormat = cairo_xlib_surface_get_xrender_format(surf);
+
+  return true;
+#else
+  return false;
+#endif
+}
+
+void
+BorrowedXlibDrawable::Finish()
+{
+  if (mDrawable) {
+    mDrawable = None;
+  }
+}
+#endif
+
 }
 }

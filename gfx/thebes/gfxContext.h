@@ -446,6 +446,11 @@ public:
     gfxRect GetClipExtents();
 
     /**
+     * Whether the current clip is not a simple rectangle.
+     */
+    bool HasComplexClip() const;
+
+    /**
      * Returns true if the given rectangle is fully contained in the current clip. 
      * This is conservative; it may return false even when the given rectangle is 
      * fully contained by the current clip.

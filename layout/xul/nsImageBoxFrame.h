@@ -96,6 +96,7 @@ public:
                         const nsRect& aDirtyRect,
                         nsPoint aPt, uint32_t aFlags);
 
+  bool IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags);
   already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
                                                 uint32_t aFlags);
 
@@ -142,6 +143,8 @@ public:
   }
 #endif
 
+  virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
+                                       nsDisplayListBuilder* aBuilder) override;
   virtual already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
                                                         nsDisplayListBuilder* aBuilder) override;
   virtual void ConfigureLayer(ImageLayer* aLayer,

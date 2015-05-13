@@ -116,7 +116,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(e3261ae7-4749-4cf6-bf06-59946233366f)]
+[scriptable, builtinclass, uuid(f5e1230a-3733-477f-b49b-fee8717a786b)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -270,8 +270,17 @@ interface imgIContainer : nsISupports
   [notxpcom] boolean isOpaque();
 
   /**
+   * @return true if getImageContainer() is expected to return a valid
+   *         ImageContainer when passed the given @Manager and @Flags
+   *         parameters.
+   */
+  [noscript, notxpcom] boolean isImageContainerAvailable(in LayerManager aManager,
+                                                         in uint32_t aFlags);
+  /**
    * Attempts to create an ImageContainer (and Image) containing the current
-   * frame. Only valid for RASTER type images.
+   * frame.
+   *
+   * Avoid calling this unless you're actually going to layerize this image.
    *
    * @param aManager The LayerManager which will be used to create the
    *                 ImageContainer.

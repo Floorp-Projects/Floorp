@@ -712,6 +712,12 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
   return result == DrawResult::SUCCESS ? dt->Snapshot() : nullptr;
 }
 
+NS_IMETHODIMP_(bool)
+VectorImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
+{
+  return false;
+}
+
 //******************************************************************************
 /* [noscript] ImageContainer getImageContainer(); */
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)

@@ -9,7 +9,6 @@ XPIDL_SOURCES += [
     'nsIConsoleMessage.idl',
     'nsIConsoleService.idl',
     'nsICycleCollectorListener.idl',
-    'nsIDebug.idl',
     'nsIDebug2.idl',
     'nsIErrorService.idl',
     'nsIException.idl',
