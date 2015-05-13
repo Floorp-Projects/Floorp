@@ -231,6 +231,7 @@ browser.jar:
   skin/classic/browser/feeds/feedIcon16.png                 (feeds/feedIcon16.png)
 * skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
   skin/classic/browser/newtab/controls.svg                  (../shared/newtab/controls.svg)
+  skin/classic/browser/newtab/whimsycorn.png                (../shared/newtab/whimsycorn.png)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
