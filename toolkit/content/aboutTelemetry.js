@@ -36,6 +36,9 @@ const FILTER_IDLE_TIMEOUT = 500;
 const isWindows = (Services.appinfo.OS == "WINNT");
 const EOL = isWindows ? "\r\n" : "\n";
 
+// This is the ping object currently displayed in the page.
+let gPingData = null;
+
 // Cached value of document's RTL mode
 let documentRTLMode = "";
 
@@ -88,7 +91,7 @@ let GeneralData = {
   /**
    * Renders the general data
    */
-  render: function() {
+  render: function(aPing) {
     setHasData("general-data-section", true);
 
     let table = document.createElement("table");
@@ -105,7 +108,7 @@ let GeneralData = {
 
     let row = document.createElement("tr");
     this.appendColumn(row, "td", "Client ID\t");
-    this.appendColumn(row, "td", TelemetryController.clientID + "\t");
+    this.appendColumn(row, "td", aPing.clientId + "\t");
     table.appendChild(row);
 
     let dataDiv = document.getElementById("general-data");
@@ -131,8 +134,8 @@ let TelLog = {
   /**
    * Renders the telemetry log
    */
-  render: function() {
-    let entries =  TelemetryLog.entries();
+  render: function(aPing) {
+    let entries = aPing.payload.log;
 
     if(entries.length == 0) {
         return;
@@ -193,10 +196,13 @@ let SlowSQL = {
   /**
    * Render slow SQL statistics
    */
-  render: function SlowSQL_render() {
+  render: function SlowSQL_render(aPing) {
+    // We can add the debug SQL data to the current ping later.
+    // However, we need to be careful to never send that debug data
+    // out due to privacy concerns.
     let debugSlowSql = Preferences.get(PREF_DEBUG_SLOW_SQL, false);
     let {mainThread, otherThreads} =
-      Telemetry[debugSlowSql ? "debugSlowSQL" : "slowSQL"];
+      debugSlowSql ? Telemetry.debugSlowSQL : aPing.payload.slowSQL;
 
     let mainThreadCount = Object.keys(mainThread).length;
     let otherThreadCount = Object.keys(otherThreads).length;
@@ -461,17 +467,17 @@ let ChromeHangs = {
   /**
    * Renders raw chrome hang data
    */
-  render: function ChromeHangs_render() {
-    let hangs = Telemetry.chromeHangs;
+  render: function ChromeHangs_render(aPing) {
+    let hangs = aPing.payload.chromeHangs;
     let stacks = hangs.stacks;
     let memoryMap = hangs.memoryMap;
 
     StackRenderer.renderStacks("chrome-hangs", stacks, memoryMap,
-			       this.renderHangHeader);
+			       (index) => this.renderHangHeader(aPing, index));
   },
 
-  renderHangHeader: function ChromeHangs_renderHangHeader(aIndex) {
-    let durations = Telemetry.chromeHangs.durations;
+  renderHangHeader: function ChromeHangs_renderHangHeader(aPing, aIndex) {
+    let durations = aPing.payload.chromeHangs.durations;
     StackRenderer.renderHeader("chrome-hangs", [aIndex + 1, durations[aIndex]]);
   }
 };
@@ -481,11 +487,11 @@ let ThreadHangStats = {
   /**
    * Renders raw thread hang stats data
    */
-  render: function() {
+  render: function(aPing) {
     let div = document.getElementById("thread-hang-stats");
     clearDivData(div);
 
-    let stats = Telemetry.threadHangStats;
+    let stats = aPing.payload.threadHangStats;
     stats.forEach((thread) => {
       div.appendChild(this.renderThread(thread));
     });
@@ -966,7 +972,11 @@ function setupListeners() {
 
   document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
     function () {
-      let hangs = Telemetry.chromeHangs;
+      if (!gPingData) {
+        return;
+      }
+
+      let hangs = gPingData.payload.chromeHangs;
       let req = new SymbolicationRequest("chrome-hangs",
                                          ChromeHangs.renderHangHeader,
                                          hangs.memoryMap, hangs.stacks);
@@ -975,12 +985,20 @@ function setupListeners() {
 
   document.getElementById("chrome-hangs-hide-symbols").addEventListener("click",
     function () {
-      ChromeHangs.render();
+      if (!gPingData) {
+        return;
+      }
+
+      ChromeHangs.render(gPingData);
   }, false);
 
   document.getElementById("late-writes-fetch-symbols").addEventListener("click",
     function () {
-      let lateWrites = TelemetrySession.getPayload().lateWrites;
+      if (!gPingData) {
+        return;
+      }
+
+      let lateWrites = gPingData.payload.lateWrites;
       let req = new SymbolicationRequest("late-writes",
                                          LateWritesSingleton.renderHeader,
                                          lateWrites.memoryMap,
@@ -990,8 +1008,11 @@ function setupListeners() {
 
   document.getElementById("late-writes-hide-symbols").addEventListener("click",
     function () {
-      let ping = TelemetrySession.getPayload();
-      LateWritesSingleton.renderLateWrites(ping.lateWrites);
+      if (!gPingData) {
+        return;
+      }
+
+      LateWritesSingleton.renderLateWrites(gPingData.payload.lateWrites);
   }, false);
 
   // Clicking on the section name will toggle its state
@@ -1015,64 +1036,6 @@ function onLoad() {
 
   // Set up event listeners
   setupListeners();
-
-  // Show general data.
-  GeneralData.render();
-
-  // Show telemetry log.
-  TelLog.render();
-
-  // Show slow SQL stats
-  SlowSQL.render();
-
-  // Show chrome hang stacks
-  ChromeHangs.render();
-
-  // Show thread hang stats
-  ThreadHangStats.render();
-
-  // Show histogram data
-  let histograms = Telemetry.histogramSnapshots;
-  if (Object.keys(histograms).length) {
-    let hgramDiv = document.getElementById("histograms");
-    for (let [name, hgram] of Iterator(histograms)) {
-      Histogram.render(hgramDiv, name, hgram);
-    }
-
-    let filterBox = document.getElementById("histograms-filter");
-    filterBox.addEventListener("input", Histogram.histogramFilterChanged, false);
-    if (filterBox.value.trim() != "") { // on load, no need to filter if empty
-      Histogram.filterHistograms(hgramDiv, filterBox.value);
-    }
-
-    setHasData("histograms-section", true);
-  }
-
-  // Show keyed histogram data
-  let keyedHistograms = Telemetry.keyedHistogramSnapshots;
-  if (Object.keys(keyedHistograms).length) {
-    let keyedDiv = document.getElementById("keyed-histograms");
-    for (let [id, keyed] of Iterator(keyedHistograms)) {
-      KeyedHistogram.render(keyedDiv, id, keyed);
-    }
-
-    setHasData("keyed-histograms-section", true);
-  }
-
-  // Show addon histogram data
-  let addonDiv = document.getElementById("addon-histograms");
-  let addonHistogramsRendered = false;
-  let addonData = Telemetry.addonHistogramSnapshots;
-  for (let [addon, histograms] of Iterator(addonData)) {
-    for (let [name, hgram] of Iterator(histograms)) {
-      addonHistogramsRendered = true;
-      Histogram.render(addonDiv, addon + ": " + name, hgram);
-    }
-  }
-
-  if (addonHistogramsRendered) {
-   setHasData("addon-histograms-section", true);
-  }
 
   // Get the Telemetry Ping payload
   Telemetry.asyncFetchTelemetryData(displayPingData);
@@ -1145,13 +1108,30 @@ function sortStartupMilestones(aSimpleMeasurements) {
 }
 
 function displayPingData() {
-  let ping = TelemetrySession.getPayload();
+  gPingData = TelemetryController.getCurrentPingData(false);
+  let ping = gPingData;
 
-  let keysHeader = bundle.GetStringFromName("keysHeader");
-  let valuesHeader = bundle.GetStringFromName("valuesHeader");
+  const keysHeader = bundle.GetStringFromName("keysHeader");
+  const valuesHeader = bundle.GetStringFromName("valuesHeader");
+
+  // Show general data.
+  GeneralData.render(ping);
+
+  // Show telemetry log.
+  TelLog.render(ping);
+
+  // Show slow SQL stats
+  SlowSQL.render(ping);
+
+  // Show chrome hang stacks
+  ChromeHangs.render(ping);
+
+  // Show thread hang stats
+  ThreadHangStats.render(ping);
 
   // Show simple measurements
-  let simpleMeasurements = sortStartupMilestones(ping.simpleMeasurements);
+  let payload = ping.payload;
+  let simpleMeasurements = sortStartupMilestones(payload.simpleMeasurements);
   if (Object.keys(simpleMeasurements).length) {
     let simpleSection = document.getElementById("simple-measurements");
     simpleSection.appendChild(KeyValueTable.render(simpleMeasurements,
@@ -1159,20 +1139,63 @@ function displayPingData() {
     setHasData("simple-measurements-section", true);
   }
 
-  LateWritesSingleton.renderLateWrites(ping.lateWrites);
+  LateWritesSingleton.renderLateWrites(payload.lateWrites);
 
   // Show basic system info gathered
-  if (Object.keys(ping.info).length) {
+  if (Object.keys(payload.info).length) {
     let infoSection = document.getElementById("system-info");
-    infoSection.appendChild(KeyValueTable.render(ping.info,
+    infoSection.appendChild(KeyValueTable.render(payload.info,
                                                  keysHeader, valuesHeader));
     setHasData("system-info-section", true);
   }
 
-  let addonDetails = ping.addonDetails;
+  let addonDetails = payload.addonDetails;
   if (Object.keys(addonDetails).length) {
     AddonDetails.render(addonDetails);
     setHasData("addon-details-section", true);
+  }
+
+  // Show histogram data
+  let histograms = payload.histograms;
+  if (Object.keys(histograms).length) {
+    let hgramDiv = document.getElementById("histograms");
+    for (let [name, hgram] of Iterator(histograms)) {
+      Histogram.render(hgramDiv, name, hgram, {unpacked: true});
+    }
+
+    let filterBox = document.getElementById("histograms-filter");
+    filterBox.addEventListener("input", Histogram.histogramFilterChanged, false);
+    if (filterBox.value.trim() != "") { // on load, no need to filter if empty
+      Histogram.filterHistograms(hgramDiv, filterBox.value);
+    }
+
+    setHasData("histograms-section", true);
+  }
+
+  // Show keyed histogram data
+  let keyedHistograms = payload.keyedHistograms;
+  if (Object.keys(keyedHistograms).length) {
+    let keyedDiv = document.getElementById("keyed-histograms");
+    for (let [id, keyed] of Iterator(keyedHistograms)) {
+      KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
+    }
+
+    setHasData("keyed-histograms-section", true);
+  }
+
+  // Show addon histogram data
+  let addonDiv = document.getElementById("addon-histograms");
+  let addonHistogramsRendered = false;
+  let addonData = payload.addonHistograms;
+  for (let [addon, histograms] of Iterator(addonData)) {
+    for (let [name, hgram] of Iterator(histograms)) {
+      addonHistogramsRendered = true;
+      Histogram.render(addonDiv, addon + ": " + name, hgram, {unpacked: true});
+    }
+  }
+
+  if (addonHistogramsRendered) {
+   setHasData("addon-histograms-section", true);
   }
 }
 
