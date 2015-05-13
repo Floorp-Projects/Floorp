@@ -271,10 +271,8 @@
             &limitCacheSizeBefore.label;
           </label>
           <textbox id="cacheSize" type="number" size="4" max="1024"
-                  preference="browser.cache.disk.capacity"
-                  onsyncfrompreference="return gAdvancedPane.readCacheSize();"
-                  onsynctopreference="return gAdvancedPane.writeCacheSize();"
-                  aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
+                   onchange="gAdvancedPane.updateCacheSizePref();"
+                   aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
           <label id="useCacheAfter" flex="1">&limitCacheSizeAfter.label;</label>
         </hbox>
       </groupbox>
