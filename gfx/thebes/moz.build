@@ -111,6 +111,7 @@ elif CONFIG['MOZ_WIDGET_GTK']:
     ]
 
     SOURCES += [
+        'gfxFcPlatformFontList.cpp',
         'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
