@@ -50,7 +50,7 @@ let Pocket = {
     let window = document.defaultView;
     let iframe = document.getElementById('pocket-panel-iframe');
 
-    iframe.removeEventListener("load", Pocket.onPanelLoaded, true);
+    iframe.removeEventListener("load", Pocket.onFrameLoaded, true);
     window.pktUI.pocketPanelDidShow();
   },
 
