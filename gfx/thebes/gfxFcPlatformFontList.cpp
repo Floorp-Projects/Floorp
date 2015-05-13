@@ -1051,6 +1051,7 @@ gfxFcPlatformFontList::InitFontList()
     AddFontSetFamilies(systemFonts);
 
 #ifdef MOZ_BUNDLED_FONTS
+    ActivateBundledFonts();
     FcFontSet* appFonts = FcConfigGetFonts(nullptr, FcSetApplication);
     AddFontSetFamilies(appFonts);
 #endif
