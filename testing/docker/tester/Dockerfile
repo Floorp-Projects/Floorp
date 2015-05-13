@@ -18,6 +18,7 @@ RUN chmod u+x /usr/local/bin/linux64-minidump_stackwalk
 RUN apt-get install -y python-pip && pip install virtualenv;
 RUN mkdir Documents; mkdir Pictures; mkdir Music; mkdir Videos; mkdir artifacts
 RUN npm install -g taskcluster-vcs@2.3.4
+RUN npm install -g taskcluster-npm-cache@1.1.12
 RUN rm -Rf .cache && mkdir -p .cache
 ENV PATH $PATH:/home/worker/bin
 
