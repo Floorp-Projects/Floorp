@@ -7,5 +7,7 @@
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 EXTRA_JS_MODULES.devtools.shared += [
-  'async-storage.js'
+  'async-storage.js',
+  'worker-helper.js',
+  'worker.js'
 ]
