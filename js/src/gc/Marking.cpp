@@ -1064,6 +1064,64 @@ struct TraverseObjectFunctor
     }
 };
 
+// Call the trace hook set on the object, if present. If further tracing of
+// NativeObject fields is required, this will return the native object.
+enum class CheckGeneration { DoChecks, NoChecks};
+template <typename Functor, typename... Args>
+static inline NativeObject*
+CallTraceHook(Functor f, JSTracer* trc, JSObject* obj, CheckGeneration check, Args&&... args)
+{
+    const Class* clasp = obj->getClass();
+    MOZ_ASSERT(clasp);
+    MOZ_ASSERT(obj->isNative() == clasp->isNative());
+
+    if (!clasp->trace)
+        return &obj->as<NativeObject>();
+
+    // Global objects all have the same trace hook. That hook is safe without barriers
+    // if the global has no custom trace hook of its own, or has been moved to a different
+    // compartment, and so can't have one.
+    MOZ_ASSERT_IF(!(clasp->trace == JS_GlobalObjectTraceHook &&
+                    (!obj->compartment()->options().getTrace() || !obj->isOwnGlobal())),
+                  clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
+
+    if (clasp->trace == InlineTypedObject::obj_trace) {
+        Shape** pshape = obj->as<InlineTypedObject>().addressOfShapeFromGC();
+        f(pshape, mozilla::Forward<Args>(args)...);
+
+        InlineTypedObject& tobj = obj->as<InlineTypedObject>();
+        if (tobj.typeDescr().hasTraceList()) {
+            VisitTraceList(f, tobj.typeDescr().traceList(), tobj.inlineTypedMem(),
+                           mozilla::Forward<Args>(args)...);
+        }
+
+        return nullptr;
+    }
+
+    if (clasp == &UnboxedPlainObject::class_) {
+        JSObject** pexpando = obj->as<UnboxedPlainObject>().addressOfExpando();
+        if (*pexpando)
+            f(pexpando, mozilla::Forward<Args>(args)...);
+
+        UnboxedPlainObject& unboxed = obj->as<UnboxedPlainObject>();
+        const UnboxedLayout& layout = check == CheckGeneration::DoChecks
+                                      ? unboxed.layout()
+                                      : unboxed.layoutDontCheckGeneration();
+        if (layout.traceList()) {
+            VisitTraceList(f, layout.traceList(), unboxed.data(),
+                           mozilla::Forward<Args>(args)...);
+        }
+
+        return nullptr;
+    }
+
+    clasp->trace(trc, obj);
+
+    if (!clasp->isNative())
+        return nullptr;
+    return &obj->as<NativeObject>();
+}
+
 template <typename F, typename... Args>
 static void
 VisitTraceList(F f, const int32_t* traceList, uint8_t* memory, Args&&... args)
@@ -1234,43 +1292,10 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         ObjectGroup* group = obj->groupFromGC();
         traverseEdge(obj, group);
 
-        /* Call the trace hook if necessary. */
-        const Class* clasp = group->clasp();
-        if (clasp->trace) {
-            // Global objects all have the same trace hook. That hook is safe without barriers
-            // if the global has no custom trace hook of its own, or has been moved to a different
-            // compartment, and so can't have one.
-            MOZ_ASSERT_IF(!(clasp->trace == JS_GlobalObjectTraceHook &&
-                            (!obj->compartment()->options().getTrace() || !obj->isOwnGlobal())),
-                          clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
-            if (clasp->trace == InlineTypedObject::obj_trace) {
-                Shape* shape = obj->as<InlineTypedObject>().shapeFromGC();
-                traverseEdge(obj, shape);
-                InlineTypedObject& tobj = obj->as<InlineTypedObject>();
-                if (tobj.typeDescr().hasTraceList()) {
-                    VisitTraceList(TraverseObjectFunctor(), tobj.typeDescr().traceList(),
-                                   tobj.inlineTypedMem(), this, obj);
-                }
-                return;
-            }
-            if (clasp == &UnboxedPlainObject::class_) {
-                JSObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
-                if (expando)
-                    traverseEdge(obj, expando);
-                UnboxedPlainObject& unboxed = obj->as<UnboxedPlainObject>();
-                if (unboxed.layout().traceList()) {
-                    VisitTraceList(TraverseObjectFunctor(), unboxed.layout().traceList(),
-                                   unboxed.data(), this, obj);
-                }
-                return;
-            }
-            clasp->trace(this, obj);
-        }
-
-        if (!clasp->isNative())
+        NativeObject *nobj = CallTraceHook(TraverseObjectFunctor(), this, obj,
+                                           CheckGeneration::DoChecks, this, obj);
+        if (!nobj)
             return;
-
-        NativeObject* nobj = &obj->as<NativeObject>();
 
         Shape* shape = nobj->lastProperty();
         traverseEdge(obj, shape);
@@ -1917,34 +1942,10 @@ struct TenuringFunctor
 void
 js::TenuringTracer::traceObject(JSObject* obj)
 {
-    const Class* clasp = obj->getClass();
-    if (clasp->trace) {
-        if (clasp->trace == InlineTypedObject::obj_trace) {
-            InlineTypedObject& tobj = obj->as<InlineTypedObject>();
-            if (tobj.typeDescr().hasTraceList()) {
-                VisitTraceList(TenuringFunctor(), tobj.typeDescr().traceList(),
-                               tobj.inlineTypedMem(), *this);
-            }
-            return;
-        }
-        if (clasp == &UnboxedPlainObject::class_) {
-            JSObject** pexpando = obj->as<UnboxedPlainObject>().addressOfExpando();
-            if (*pexpando)
-                traverse(pexpando);
-            UnboxedPlainObject& unboxed = obj->as<UnboxedPlainObject>();
-            if (unboxed.layoutDontCheckGeneration().traceList()) {
-                VisitTraceList(TenuringFunctor(), unboxed.layoutDontCheckGeneration().traceList(),
-                               unboxed.data(), *this);
-            }
-            return;
-        }
-        clasp->trace(this, obj);
-    }
-
-    MOZ_ASSERT(obj->isNative() == clasp->isNative());
-    if (!clasp->isNative())
+    NativeObject *nobj = CallTraceHook(TenuringFunctor(), this, obj,
+                                       CheckGeneration::NoChecks, *this);
+    if (!nobj)
         return;
-    NativeObject* nobj = &obj->as<NativeObject>();
 
     // Note: the contents of copy on write elements pointers are filled in
     // during parsing and cannot contain nursery pointers.
