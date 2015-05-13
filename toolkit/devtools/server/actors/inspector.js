@@ -227,6 +227,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     }
 
     let parentNode = this.walker.parentNode(this);
+    let singleTextChild = this.walker.singleTextChild(this);
 
     let form = {
       actor: this.actorID,
@@ -236,6 +237,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       namespaceURI: this.rawNode.namespaceURI,
       nodeName: this.rawNode.nodeName,
       numChildren: this.numChildren,
+      singleTextChild: singleTextChild ? singleTextChild.form() : undefined,
 
       // doctype attributes
       name: this.rawNode.name,
@@ -752,6 +754,13 @@ let NodeFront = protocol.FrontClass(NodeActor, {
       // necessary.
       let parentNodeFront = ctx.marshallPool().ensureParentFront(form.parent);
       this.reparent(parentNodeFront);
+    }
+
+    if (form.singleTextChild) {
+      this.singleTextChild =
+        types.getType("domnode").read(form.singleTextChild, ctx);
+    } else {
+      this.singleTextChild = undefined;
     }
   },
 
@@ -1452,6 +1461,35 @@ var WalkerActor = protocol.ActorClass({
       return this._ref(parent);
     }
     return null;
+  },
+
+  /**
+   * If the given NodeActor only has a single text node as a child,
+   * return that child's NodeActor.
+   *
+   * @param NodeActor node
+   */
+  singleTextChild: function(node) {
+    // Quick checks to prevent creating a new walker if possible.
+    if (node.isBeforePseudoElement ||
+        node.isAfterPseudoElement ||
+        node.rawNode.nodeType != Ci.nsIDOMNode.ELEMENT_NODE ||
+        node.rawNode.children.length > 0) {
+      return undefined;
+    }
+
+    let docWalker = this.getDocumentWalker(node.rawNode);
+    let firstChild = docWalker.firstChild();
+
+    // If the first child isn't a text node, or there are multiple children
+    // then bail out
+    if (!firstChild ||
+        firstChild.nodeType !== Ci.nsIDOMNode.TEXT_NODE ||
+        docWalker.nextSibling()) {
+      return undefined;
+    }
+
+    return this._ref(firstChild);
   },
 
   /**
@@ -2570,6 +2608,8 @@ var WalkerActor = protocol.ActorClass({
    *     seen by the client* that were added to the target node.
    *   removed: array of <domnode actor ID> The list of actors *previously
    *     seen by the client* that were removed from the target node.
+   *   singleTextChild: If the node now has a single text child, it will
+   *     be sent here.
    *
    * Actors that are included in a MutationRecord's `removed` but
    * not in an `added` have been removed from the client's ownership
@@ -2708,6 +2748,11 @@ var WalkerActor = protocol.ActorClass({
 
         mutation.removed = removedActors;
         mutation.added = addedActors;
+
+        let singleTextChild = this.singleTextChild(targetActor);
+        if (singleTextChild) {
+          mutation.singleTextChild = singleTextChild.form();
+        }
       }
       this.queueMutation(mutation);
     }
@@ -3200,6 +3245,14 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
             this._orphaned.delete(addedFront);
             addedFronts.push(addedFront);
           }
+
+          if (change.singleTextChild) {
+            targetFront.singleTextChild =
+              types.getType("domnode").read(change.singleTextChild, this);
+          } else {
+            targetFront.singleTextChild = undefined;
+          }
+
           // Before passing to users, replace the added and removed actor
           // ids with front in the mutation record.
           emittedMutation.added = addedFronts;

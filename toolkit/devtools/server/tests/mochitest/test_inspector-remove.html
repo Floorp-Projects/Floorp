@@ -70,16 +70,29 @@ addTest(function testRemoveSubtree() {
     return gWalker.children(longlist);
   }).then((items)=> {
     originalOwnershipSize = assertOwnership();
-    ok(originalOwnershipSize > 26, "Should have at least 26 items in our ownership tree");
+    // Here is how the ownership tree is summed up:
+    // #document                      1
+    //   <html>                       1
+    //     <body>                     1
+    //       <div id=longlist>        1
+    //         <div id=a>a</div>   26*2 (each child plus it's singleTextChild)
+    //         ...
+    //         <div id=z>z</div>
+    //                             -----
+    //                               56
+    is(originalOwnershipSize, 56, "Correct number of items in ownership tree");
     return gWalker.removeNode(longlist);
   }).then(siblings => {
     is(siblings.previousSibling.rawNode(), previousSibling, "Should have returned the previous sibling.");
     is(siblings.nextSibling.rawNode(), nextSibling, "Should have returned the next sibling.");
     return waitForMutation(gWalker, isChildList);
   }).then(() => {
-    // Our ownership size should now be 25 fewer (we forgot about #longlist + 26 children, but learned about #longlist's prev/next sibling)
+    // Our ownership size should now be 51 fewer (we forgot about #longlist + 26
+    // children + 26 singleTextChild nodes, but learned about #longlist's
+    // prev/next sibling)
     let newOwnershipSize = assertOwnership();
-    is(newOwnershipSize, originalOwnershipSize - 25, "Ownership tree should have dropped by 25 nodes");
+    is(newOwnershipSize, originalOwnershipSize - 51,
+      "Ownership tree should be lower");
     // Now verify that some nodes have gone away
     return checkMissing(gClient, longlistID);
   }).then(runNextTest));
