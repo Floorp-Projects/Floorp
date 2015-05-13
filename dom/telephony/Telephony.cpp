@@ -375,14 +375,10 @@ Telephony::HandleCallInfo(nsITelephonyCallInfo* aInfo)
     nsRefPtr<TelephonyCallId> id = call->Id();
     id->UpdateNumber(number);
 
-    nsAutoString disconnectedReason;
-    aInfo->GetDisconnectedReason(disconnectedReason);
-
     // State changed.
     if (call->CallState() != callState) {
       if (callState == nsITelephonyService::CALL_STATE_DISCONNECTED) {
-        call->UpdateDisconnectedReason(disconnectedReason);
-        call->ChangeState(nsITelephonyService::CALL_STATE_DISCONNECTED);
+        call->ChangeStateInternal(callState, true);
         return NS_OK;
       }
 
@@ -688,6 +684,26 @@ Telephony::SupplementaryServiceNotification(uint32_t aServiceId,
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Telephony::NotifyError(uint32_t aServiceId,
+                       int32_t aCallIndex,
+                       const nsAString& aError)
+{
+  nsRefPtr<TelephonyCall> callToNotify =
+    GetCallFromEverywhere(aServiceId, aCallIndex);
+  if (!callToNotify) {
+    NS_ERROR("Don't call me with a bad call index!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Set the call state to 'disconnected' and remove it from the calls list.
+  callToNotify->UpdateDisconnectedReason(aError);
+  callToNotify->NotifyError(aError);
+  callToNotify->ChangeState(nsITelephonyService::CALL_STATE_DISCONNECTED);
+
   return NS_OK;
 }
 
