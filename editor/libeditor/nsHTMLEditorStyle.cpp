@@ -801,7 +801,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
     bool isSet;
     mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, aProperty,
       aAttribute, isSet, propertyValue, nsHTMLCSSUtils::eSpecified);
-    if (isSet) {
+    if (isSet && content->IsElement()) {
       // yes, tmp has the corresponding css declarations in its style attribute
       // let's remove them
       mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aNode,
@@ -811,7 +811,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
                                                     false);
       // remove the node if it is a span or font, if its style attribute is
       // empty or absent, and if it does not have a class nor an id
-      RemoveElementIfNoStyleOrIdOrClass(aNode);
+      RemoveElementIfNoStyleOrIdOrClass(*content->AsElement());
     }
   }
 
@@ -1792,17 +1792,14 @@ nsHTMLEditor::HasStyleOrIdOrClass(dom::Element* aElement)
 }
 
 nsresult
-nsHTMLEditor::RemoveElementIfNoStyleOrIdOrClass(nsIDOMNode* aElement)
+nsHTMLEditor::RemoveElementIfNoStyleOrIdOrClass(dom::Element& aElement)
 {
-  nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
-
   // early way out if node is not the right kind of element
-  if ((!element->IsHTMLElement(nsGkAtoms::span) &&
-       !element->IsHTMLElement(nsGkAtoms::font)) ||
-      HasStyleOrIdOrClass(element)) {
+  if ((!aElement.IsHTMLElement(nsGkAtoms::span) &&
+       !aElement.IsHTMLElement(nsGkAtoms::font)) ||
+      HasStyleOrIdOrClass(&aElement)) {
     return NS_OK;
   }
 
-  return RemoveContainer(element);
+  return RemoveContainer(&aElement);
 }

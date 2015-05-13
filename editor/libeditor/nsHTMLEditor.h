@@ -725,7 +725,7 @@ protected:
                                  nsAString* outValue,
                                  bool aCheckDefaults = true);
   bool HasStyleOrIdOrClass(mozilla::dom::Element* aElement);
-  nsresult RemoveElementIfNoStyleOrIdOrClass(nsIDOMNode* aElement);
+  nsresult RemoveElementIfNoStyleOrIdOrClass(mozilla::dom::Element& aElement);
 
   // Whether the outer window of the DOM event target has focus or not.
   bool     OurWindowHasFocus();
