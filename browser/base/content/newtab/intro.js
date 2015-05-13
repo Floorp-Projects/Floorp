@@ -18,32 +18,7 @@ const MAX_PARAGRAPH_ID = 9;
 const NUM_INTRO_PAGES = 3;
 
 let gIntro = {
-  _enUSStrings: {
-    "newtab.intro.paragraph2": "In order to provide this service, Mozilla collects and uses certain analytics information relating to your use of the tiles in accordance with our %1$S.",
-    "newtab.intro.paragraph4": "You can turn off this feature by clicking the gear (%1$S) button and selecting 'Show blank page' in the %2$S menu.",
-    "newtab.intro.paragraph5": "New Tab will show the sites you visit most frequently, along with sites we think might be of interest to you. To get started, you'll see several sites from Mozilla.",
-    "newtab.intro.paragraph6": "You can %1$S or %2$S any site by using the controls available on rollover.",
-    "newtab.intro.paragraph7": "Some of the sites you will see may be suggested by Mozilla and may be sponsored by a Mozilla partner. We'll always indicate which sites are sponsored.",
-    "newtab.intro.paragraph8": "Firefox will only show sites that most closely match your interests on the Web. %1$S",
-    "newtab.intro.paragraph9": "Now when you open New Tab, you'll also see sites we think might be interesting to you.",
-    "newtab.intro.controls": "New Tab Controls",
-    "newtab.learn.link2": "More about New Tab",
-    "newtab.privacy.link2": "About your privacy",
-    "newtab.intro.remove": "remove",
-    "newtab.intro.pin": "pin",
-    "newtab.intro.header.welcome": "Welcome to New Tab on %1$S",
-    "newtab.intro.header.update": "New Tab got an update!",
-    "newtab.intro.skip": "Skip this",
-    "newtab.intro.continue": "Continue tour",
-    "newtab.intro.back": "Back",
-    "newtab.intro.next": "Next",
-    "newtab.intro.gotit": "Got it!",
-    "newtab.intro.firefox": "Firefox!"
-  },
-
   _nodeIDSuffixes: [
-    "panel",
-    "what",
     "mask",
     "modal",
     "numerical-progress",
@@ -90,12 +65,8 @@ let gIntro = {
       this._nodes[idSuffix] = document.getElementById("newtab-intro-" + idSuffix);
     }
 
-    if (DirectoryLinksProvider.locale != "en-US") {
-      this._nodes.what.style.display = "block";
-      this._nodes.panel.addEventListener("popupshowing", e => this._setUpPanel());
-      this._nodes.panel.addEventListener("popuphidden", e => this._hidePanel());
-      this._nodes.what.addEventListener("click", e => this.showPanel());
-    }
+    let brand = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+    this._brandShortName = brand.GetStringFromName("brandShortName");
   },
 
   _setImage: function(imageType) {
@@ -129,7 +100,7 @@ let gIntro = {
     let buttonNodes = this._nodes.buttons.getElementsByTagName("input");
     let buttonIDs = this._introPages.buttons[pageNum];
     buttonIDs.forEach((arg, index) => {
-      buttonNodes[index].setAttribute("value", this._newTabString("intro." + arg));
+      buttonNodes[index].setAttribute("value", newTabString("intro." + arg));
     });
   },
 
@@ -176,7 +147,7 @@ let gIntro = {
       let imageClass = "";
       switch (this._imageTypes[type]) {
         case this._imageTypes.COG:
-          image = document.getElementById("newtab-customize-panel2").cloneNode(true);
+          image = document.getElementById("newtab-customize-panel").cloneNode(true);
           image.removeAttribute("hidden");
           image.removeAttribute("type");
           image.classList.add("newtab-intro-image-customize");
@@ -198,7 +169,7 @@ let gIntro = {
             '    </a>' +
             '    <input type="button" class="newtab-control newtab-control-pin"/>' +
             '    <input type="button" class="newtab-control newtab-control-block"/>' + (imageClass ? "" :
-            '    <span class="newtab-sponsored">SUGGESTED</span>') +
+            '    <span class="newtab-sponsored">' + newTabString("suggested.tag") + '</span>') +
             '  </div>' +
             '</div>';
             break;
@@ -212,43 +183,26 @@ let gIntro = {
 
     let substringMappings = {
       "2": [this._link(TILES_PRIVACY_LINK, newTabString("privacy.link"))],
-      "4": [customizeIcon, this._bold(this._newTabString("intro.controls"))],
-      "6": [this._bold(this._newTabString("intro.remove")), this._bold(this._newTabString("intro.pin"))],
+      "4": [customizeIcon, this._bold(newTabString("intro.controls"))],
+      "6": [this._bold(newTabString("intro.paragraph6.remove")), this._bold(newTabString("intro.paragraph6.pin"))],
       "7": [this._link(TILES_INTRO_LINK, newTabString("learn.link"))],
-      "8": [this._link(TILES_INTRO_LINK, newTabString("learn.link"))]
+      "8": [this._brandShortName, this._link(TILES_INTRO_LINK, newTabString("learn.link"))]
     }
 
     for (let i = 1; i <= MAX_PARAGRAPH_ID; i++) {
       try {
-        this._paragraphs.push(this._newTabString("intro.paragraph" + i, substringMappings[i]))
+        this._paragraphs.push(newTabString("intro.paragraph" + i, substringMappings[i]));
       } catch (ex) {
         // Paragraph with this ID doesn't exist so continue
       }
     }
   },
 
-  _newTabString: function(str, substrArr) {
-    let regExp = /%[0-9]\$S/g;
-    let paragraph = this._enUSStrings["newtab." + str];
-
-    if (!paragraph) {
-      throw new Error("Paragraph doesn't exist");
-    }
-
-    let matches;
-    while ((matches = regExp.exec(paragraph)) !== null) {
-      let match = matches[0];
-      let index = match.charAt(1); // Get the digit in the regExp.
-      paragraph = paragraph.replace(match, substrArr[index - 1]);
-    }
-    return paragraph;
-  },
-
   showIfNecessary: function() {
     if (!Services.prefs.getBoolPref(PREF_INTRO_SHOWN)) {
       this._onboardingType = WELCOME;
       this.showPanel();
-    } else if (!Services.prefs.getBoolPref(PREF_UPDATE_INTRO_SHOWN) && DirectoryLinksProvider.locale == "en-US") {
+    } else if (!Services.prefs.getBoolPref(PREF_UPDATE_INTRO_SHOWN)) {
       this._onboardingType = UPDATE;
       this.showPanel();
     }
@@ -257,13 +211,6 @@ let gIntro = {
   },
 
   showPanel: function() {
-    if (DirectoryLinksProvider.locale != "en-US") {
-      // Point the panel at the 'what' link
-      this._nodes.panel.hidden = false;
-      this._nodes.panel.openPopup(this._nodes.what);
-      return;
-    }
-
     this._nodes.mask.style.display = "block";
     this._nodes.mask.style.opacity = 1;
 
@@ -275,33 +222,15 @@ let gIntro = {
     this._goToPage(0);
 
     // Header text
-    let boldSubstr = this._onboardingType == WELCOME ? this._span(this._newTabString("intro.firefox"), "bold") : "";
-    this._nodes.header.innerHTML = this._newTabString("intro.header." + this._onboardingType, [boldSubstr]);
+    let boldSubstr = this._onboardingType == WELCOME ? this._span(this._brandShortName, "bold") : "";
+    this._nodes.header.innerHTML = newTabString("intro.header." + this._onboardingType, [boldSubstr]);
 
     // Footer links
     let footerLinkNodes = this._nodes.footer.getElementsByTagName("li");
-    [this._link(TILES_INTRO_LINK, this._newTabString("learn.link2")),
-     this._link(TILES_PRIVACY_LINK, this._newTabString("privacy.link2")),
+    [this._link(TILES_INTRO_LINK, newTabString("learn.link2")),
+     this._link(TILES_PRIVACY_LINK, newTabString("privacy.link2")),
     ].forEach((arg, index) => {
       footerLinkNodes[index].innerHTML = arg;
     });
   },
-
-  _setUpPanel: function() {
-    // Build the panel if necessary
-    if (this._nodes.panel.childNodes.length == 1) {
-      ['<a href="' + TILES_INTRO_LINK + '">' + newTabString("learn.link") + "</a>",
-       '<a href="' + TILES_PRIVACY_LINK + '">' + newTabString("privacy.link") + "</a>",
-       '<input type="button" class="newtab-customize"/>',
-      ].forEach((arg, index) => {
-        let paragraph = document.createElementNS(HTML_NAMESPACE, "p");
-        this._nodes.panel.appendChild(paragraph);
-        paragraph.innerHTML = newTabString("intro.paragraph" + (index + 1), [arg]);
-      });
-    }
-  },
-
-  _hidePanel: function() {
-    this._nodes.panel.hidden = true;
-  }
 };
