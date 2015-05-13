@@ -55,6 +55,7 @@ input[type=button] {
   position: absolute;
   right: 70px;
   top: 20px;
+  display: none;
 }
 
 #newtab-intro-what:-moz-locale-dir(rtl) {
@@ -157,11 +158,22 @@ input[type=button] {
 }
 
 /* CELLS */
-.newtab-cell {
+.newtab-cell,
+.newtab-intro-cell,
+.newtab-intro-cell-hover {
   display: -moz-box;
   height: 210px;
   margin: 20px 10px 35px;
   width: 290px;
+}
+
+.newtab-intro-cell-wrapper {
+  margin-top: -12px;
+}
+
+.newtab-intro-cell,
+.newtab-intro-cell-hover {
+  margin: 0;
 }
 
 /* SITES */
@@ -306,7 +318,8 @@ input[type=button] {
 }
 
 .newtab-control:-moz-focusring,
-.newtab-cell:not([ignorehover]) > .newtab-site:hover > .newtab-control {
+.newtab-cell:not([ignorehover]) > .newtab-site:hover > .newtab-control,
+.newtab-intro-cell-hover .newtab-control {
   opacity: 1;
 }
 
@@ -558,6 +571,11 @@ input[type=button] {
   cursor: pointer;
 }
 
+.newtab-customize-panel-item,
+.newtab-customize-complex-option {
+  width: 100%;
+}
+
 .newtab-customize-panel-item:not([selected]),
 .newtab-customize-panel-subitem:not([selected]){
   color: #7A7A7A;
@@ -572,7 +590,7 @@ input[type=button] {
 .selectable:not([selected]):hover {
   background: url("chrome://global/skin/menu/shared-menu-check-hover.svg") no-repeat #FFFFFF;
   background-size: 16px 16px;
-  background-position: 15px 20px;
+  background-position: 15px 15px;
   color: #171F26;
 }
 
@@ -584,7 +602,7 @@ input[type=button] {
 .newtab-search-panel-engine[selected] {
   background: url("chrome://global/skin/menu/shared-menu-check-active.svg") no-repeat transparent;
   background-size: 16px 16px;
-  background-position: 15px 20px;
+  background-position: 15px 15px;
   color: black;
   font-weight: 600;
 }
@@ -606,7 +624,7 @@ input[type=button] {
 .newtab-customize-panel-subitem {
   font-size: 12px;
   padding-left: 40px;
-  padding-bottom: 20px;
+  padding-bottom: 15px;
   border-bottom: 1px solid threedshadow;
 }
 
@@ -617,10 +635,244 @@ input[type=button] {
 .newtab-customize-panel-superitem {
   line-height: 14px;
   border-bottom: medium none !important;
-  padding: 20px 0px 10px 40px;
+  padding: 15px 0px 10px 40px;
 }
 
 .searchSuggestionTable {
   font: message-box;
   font-size: 16px;
+}
+
+/**
+ * Onboarding styling
+ */
+
+ #newtab-intro-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #424F5A;
+  z-index:102;
+  background-color: rgba(66,79,90,0.95);
+  transition: opacity .5s linear;
+  overflow: auto;
+  display: none;
+}
+
+#newtab-intro-modal {
+  font-family: "Helvetica";
+  width: 700px;
+  height: 500px;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  background: linear-gradient(#FFFFFF, #F9F9F9);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.7);
+  border-radius: 8px 8px 0px 0px;
+}
+
+#newtab-intro-header {
+  font-size: 28px;
+  color: #737980;
+  text-align: center;
+  top: 50px;
+  position: relative;
+  border-bottom: 2px solid #E0DFE0;
+  padding-bottom: 10px;
+  width: 600px;
+  display: block;
+  margin: 0px auto;
+  font-weight: 100;
+}
+
+#newtab-intro-header .bold {
+  font-weight: 500;
+  color: #343F48;
+}
+
+#newtab-intro-footer {
+  width: 100%;
+  height: 55px;
+  margin: 0px auto;
+  display: block;
+  position: absolute;
+  bottom: 0px;
+  background-color: white;
+  box-shadow: 0 -1px 4px -1px #EBEBEB;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 55px;
+}
+
+#newtab-intro-footer > ul {
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+#newtab-intro-footer > ul > li {
+  display: inline;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+#newtab-intro-footer > ul > li > a {
+  text-decoration: none;
+  color: #4A90E2;
+}
+
+#newtab-intro-footer > ul > li > a:visited {
+  color: #171F26;
+}
+
+#newtab-intro-footer > ul > :first-child {
+  border-right: solid 1px #C1C1C1;
+}
+
+#newtab-intro-body {
+  height: 300px;
+  position: relative;
+  display: block;
+  top: 50px;
+  margin: 25px 50px 30px;
+}
+
+#newtab-intro-content > * {
+  display: inline-block;
+}
+
+#newtab-intro-content {
+  height: 210px;
+  position: relative;
+}
+
+#newtab-intro-buttons {
+  height: 90px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 90px;
+}
+
+#newtab-intro-tile {
+  width: 290px;
+  height: 100%;
+}
+
+#newtab-intro-text,
+#newtab-intro-image {
+  height: 100%;
+  width: 270px;
+  right: 0px;
+  position: absolute;
+  font-size: 14px;
+  line-height: 20px;
+  margin-top: -12px;
+}
+
+#newtab-intro-image {
+  left: 0px;
+  right: auto;
+}
+
+.newtab-intro-image-tile {
+}
+
+.newtab-intro-image-customize {
+  display: block;
+  box-shadow: 3px 3px 5px #888;
+  margin: 0 !important;
+}
+
+.newtab-intro-image-customize .newtab-customize-panel-item:not([selected]):hover {
+  background-color: inherit;
+  color: #7A7A7A;
+  background: none;
+}
+
+#newtab-intro-text > p {
+  margin: 0 0 1em 0;
+}
+
+#newtab-intro-text .newtab-control {
+  background-size: 18px auto;
+  height: 18px;
+  width: 18px;
+  vertical-align: middle;
+  opacity: 1;
+  position: inherit;
+}
+
+#newtab-intro-buttons > input {
+  width: 150px;
+  height: 50px;
+  margin: 0px 5px;
+  vertical-align: bottom;
+  border-radius: 2px;
+  border: solid 1px #2C72E2;
+  background-color: #FFFFFF;
+  color: #4A90E2;
+  -moz-user-focus: normal;
+}
+
+#newtab-intro-buttons > input[default] {
+  background-color: #4A90E2;
+  color: #FFFFFF;
+}
+
+#newtab-intro-buttons > input:hover {
+  background-color: #2C72E2;
+  color: #FFFFFF;
+}
+
+#newtab-intro-progress {
+  position: absolute;
+  width: 100%;
+}
+
+#newtab-intro-numerical-progress {
+  text-align: center;
+  top: 15px;
+  position: relative;
+  font-size: 12px;
+  color: #424F5A;
+}
+
+#newtab-intro-graphical-progress {
+  text-align: left;
+  border-radius: 1.5px;
+  overflow: hidden;
+  position: relative;
+  margin: 10px auto 0px;
+  height: 3px;
+  top: 8px;
+  width: 35px;
+  background-color: #DCDCDC;
+}
+
+#indicator {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  display: inline-block;
+  width: 0%;
+  height: 4px;
+  background: none repeat scroll 0% 0% #FF9500;
+  transition: width 0.3s ease-in-out 0s;
+}
+
+#newtab-intro-numerical-progress[page="0"] + #newtab-intro-graphical-progress > #indicator {
+  width: 33%;
+}
+
+#newtab-intro-numerical-progress[page="1"] + #newtab-intro-graphical-progress > #indicator {
+  width: 66%;
+}
+
+#newtab-intro-numerical-progress[page="2"] + #newtab-intro-graphical-progress > #indicator {
+  width: 100%;
 }
