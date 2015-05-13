@@ -7415,8 +7415,7 @@
   Exch $R9
   Exch 1
   Exch $R8
-  ${If} ${AtLeastWin7}
-  ${AndIf} $ITaskbarList3 <> 0
+  ${If} $ITaskbarList3 <> 0
     System::Call "${ITaskbarList3->SetProgressValue}(i$HWNDPARENT, l$R8, l$R9)"
   ${EndIf}
   Exch $R8
@@ -7455,8 +7454,7 @@
 
 !macro ITBL3SetProgressState_
   Exch $R9
-  ${If} ${AtLeastWin7}
-  ${AndIf} $ITaskbarList3 <> 0
+  ${If} $ITaskbarList3 <> 0
     System::Call "${ITaskbarList3->SetProgressState}(i$HWNDPARENT, i$R9)"
   ${EndIf}
   Exch $R9
