@@ -1,0 +1,24 @@
+<html>
+<head>
+<script>
+function boom() {
+  var r0=new AudioContext();
+
+  var cm=r0.createChannelMerger(20);
+
+  var o1=r0.createOscillator();
+  var o2=r0.createOscillator();
+
+  var pw=r0.createPeriodicWave(new Float32Array(4),new Float32Array(4));
+  o2.setPeriodicWave(pw);
+
+  o1.connect(cm);
+  cm.connect(o2.frequency);
+
+  o1.start();
+  o2.start(0.476);
+}
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
