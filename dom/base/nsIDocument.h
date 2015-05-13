@@ -2872,7 +2872,7 @@ protected:
   nsTArray<nsWeakPtr> mBlockedTrackingNodes;
 
   // Weak reference to mScriptGlobalObject QI:d to nsPIDOMWindow,
-  // updated on every set of mSecriptGlobalObject.
+  // updated on every set of mScriptGlobalObject.
   nsPIDOMWindow *mWindow;
 
   nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
