@@ -4,10 +4,10 @@
 "use strict";
 
 /**
- * Import `createTask` to communicate with `devtools/shared/worker`.
+ * Import `createTask` to communicate with `devtools/toolkit/shared/worker`.
  */
 importScripts("resource://gre/modules/workers/require.js");
-const { createTask } = require("resource:///modules/devtools/shared/worker-helper");
+const { createTask } = require("resource://gre/modules/devtools/shared/worker-helper");
 
 /**
  * @see LineGraphWidget.prototype.setDataFromTimestamps in Graphs.jsm

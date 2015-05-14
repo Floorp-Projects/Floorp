@@ -65,7 +65,7 @@ function checkParseOk(spec, valueInUnits, units) {
   if (typeof units == "undefined") {
     units = "";
   }
-  ise(rect.x.baseVal.unitType, unitMapping[units], spec + " (unit)");
+  is(rect.x.baseVal.unitType, unitMapping[units], spec + " (unit)");
 }
 
 function checkParseFail(spec) {

@@ -29,7 +29,7 @@ function testWidthHeight(attr) {
   is(element.getAttribute(attr), '12', 'setting ' + attr + ' changes the content attribute');
 
   element.removeAttribute(attr);
-  ise(element.getAttribute(attr), null);
+  is(element.getAttribute(attr), null);
 
   element = document.createElement('input');
   element.type = 'image';
@@ -46,7 +46,7 @@ function testWidthHeight(attr) {
   is(element.getAttribute(attr), '12', 'setting ' + attr + ' changes the content attribute');
 
   element.removeAttribute(attr);
-  ise(element.getAttribute(attr), null);
+  is(element.getAttribute(attr), null);
 }
 
 // .accept

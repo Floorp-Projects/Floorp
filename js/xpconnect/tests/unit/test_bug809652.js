@@ -40,7 +40,6 @@ function run_test() {
   checkThrows("Date.prototype.getYear.call(d)", sb);
   checkThrows("Date.prototype.valueOf.call(d)", sb);
   checkThrows("d.valueOf()", sb);
-  checkThrows("Date.prototype.toString.call(d)", sb);
   checkThrows("d.toString()", sb);
 
   /* Typed arrays. */

@@ -454,21 +454,27 @@ const size_t JSCLASS_CACHED_PROTO_WIDTH = 6;
 
 struct ClassSpec
 {
-    ClassObjectCreationOp createConstructor;
-    ClassObjectCreationOp createPrototype;
-    const JSFunctionSpec* constructorFunctions;
-    const JSPropertySpec* constructorProperties;
-    const JSFunctionSpec* prototypeFunctions;
-    const JSPropertySpec* prototypeProperties;
-    FinishClassInitOp finishInit;
+    // All properties except flags should be accessed through accessor.
+    ClassObjectCreationOp createConstructor_;
+    ClassObjectCreationOp createPrototype_;
+    const JSFunctionSpec* constructorFunctions_;
+    const JSPropertySpec* constructorProperties_;
+    const JSFunctionSpec* prototypeFunctions_;
+    const JSPropertySpec* prototypeProperties_;
+    FinishClassInitOp finishInit_;
     uintptr_t flags;
 
     static const size_t ParentKeyWidth = JSCLASS_CACHED_PROTO_WIDTH;
 
     static const uintptr_t ParentKeyMask = (1 << ParentKeyWidth) - 1;
     static const uintptr_t DontDefineConstructor = 1 << ParentKeyWidth;
+    static const uintptr_t IsDelegated = 1 << (ParentKeyWidth + 1);
 
-    bool defined() const { return !!createConstructor; }
+    bool defined() const { return !!createConstructor_; }
+
+    bool delegated() const {
+        return (flags & IsDelegated);
+    }
 
     bool dependent() const {
         MOZ_ASSERT(defined());
@@ -483,6 +489,47 @@ struct ClassSpec
     bool shouldDefineConstructor() const {
         MOZ_ASSERT(defined());
         return !(flags & DontDefineConstructor);
+    }
+
+    const ClassSpec* delegatedClassSpec() const {
+        MOZ_ASSERT(delegated());
+        return reinterpret_cast<ClassSpec*>(createConstructor_);
+    }
+
+    ClassObjectCreationOp createConstructorHook() const {
+        if (delegated())
+            return delegatedClassSpec()->createConstructorHook();
+        return createConstructor_;
+    }
+    ClassObjectCreationOp createPrototypeHook() const {
+        if (delegated())
+            return delegatedClassSpec()->createPrototypeHook();
+        return createPrototype_;
+    }
+    const JSFunctionSpec* constructorFunctions() const {
+        if (delegated())
+            return delegatedClassSpec()->constructorFunctions();
+        return constructorFunctions_;
+    }
+    const JSPropertySpec* constructorProperties() const {
+        if (delegated())
+            return delegatedClassSpec()->constructorProperties();
+        return constructorProperties_;
+    }
+    const JSFunctionSpec* prototypeFunctions() const {
+        if (delegated())
+            return delegatedClassSpec()->prototypeFunctions();
+        return prototypeFunctions_;
+    }
+    const JSPropertySpec* prototypeProperties() const {
+        if (delegated())
+            return delegatedClassSpec()->prototypeProperties();
+        return prototypeProperties_;
+    }
+    FinishClassInitOp finishInitHook() const {
+        if (delegated())
+            return delegatedClassSpec()->finishInitHook();
+        return finishInit_;
     }
 };
 
@@ -523,6 +570,10 @@ struct ClassExtension
      */
     JSObjectMovedOp objectMovedOp;
 };
+
+inline ClassObjectCreationOp DELEGATED_CLASSSPEC(const ClassSpec* spec) {
+    return reinterpret_cast<ClassObjectCreationOp>(const_cast<ClassSpec*>(spec));
+}
 
 #define JS_NULL_CLASS_SPEC  {nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr}
 #define JS_NULL_CLASS_EXT   {nullptr,nullptr,false,nullptr,nullptr}

@@ -21,13 +21,8 @@
 PRLogModuleInfo *gLoadManagerLog = nullptr;
 #undef LOG
 #undef LOG_ENABLED
-#if defined(PR_LOGGING)
 #define LOG(args) PR_LOG(gLoadManagerLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gLoadManagerLog, 5)
-#else
-#define LOG(args)
-#define LOG_ENABLED() (false)
-#endif
 
 namespace mozilla {
 
@@ -50,10 +45,8 @@ LoadManagerSingleton::LoadManagerSingleton(int aLoadMeasurementInterval,
     mHighLoadThreshold(aHighLoadThreshold),
     mLowLoadThreshold(aLowLoadThreshold)
 {
-#if defined(PR_LOGGING)
   if (!gLoadManagerLog)
     gLoadManagerLog = PR_NewLogModule("LoadManager");
-#endif
   LOG(("LoadManager - Initializing (%dms x %d, %f, %f)",
        mLoadMeasurementInterval, mAveragingMeasurements,
        mHighLoadThreshold, mLowLoadThreshold));

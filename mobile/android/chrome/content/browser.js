@@ -4223,7 +4223,8 @@ Tab.prototype = {
       }
 
       case "DOMFormHasPassword": {
-        LoginManagerContent.onFormPassword(aEvent);
+        LoginManagerContent.onDOMFormHasPassword(aEvent,
+                                                 this.browser.contentWindow);
         break;
       }
 
@@ -4365,7 +4366,9 @@ Tab.prototype = {
       }
 
       case "pageshow": {
-        // only send pageshow for the top-level document
+        LoginManagerContent.onPageShow(aEvent, this.browser.contentWindow);
+
+        // The rest of this only handles pageshow for the top-level document.
         if (aEvent.originalTarget.defaultView != this.browser.contentWindow)
           return;
 

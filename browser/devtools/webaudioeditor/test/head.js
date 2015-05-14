@@ -278,7 +278,7 @@ function checkVariableView (view, index, hash, description = "") {
         "Passing property value of " + value + " for " + variable + " " + description);
     }
     else {
-      ise(value, hash[variable],
+      is(value, hash[variable],
         "Correct property value of " + hash[variable] + " for " + variable + " " + description);
     }
   });

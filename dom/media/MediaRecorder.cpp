@@ -31,12 +31,8 @@
 #undef LOG
 #endif
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gMediaRecorderLog;
 #define LOG(type, msg) PR_LOG(gMediaRecorderLog, type, msg)
-#else
-#define LOG(type, msg)
-#endif
 
 namespace mozilla {
 
@@ -759,11 +755,9 @@ MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaStream,
   MOZ_ASSERT(aOwnerWindow);
   MOZ_ASSERT(aOwnerWindow->IsInnerWindow());
   mDOMStream = &aSourceMediaStream;
-#ifdef PR_LOGGING
   if (!gMediaRecorderLog) {
     gMediaRecorderLog = PR_NewLogModule("MediaRecorder");
   }
-#endif
   RegisterActivityObserver();
 }
 
@@ -792,11 +786,9 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
                                                 aSrcOutput);
   }
   mAudioNode = &aSrcAudioNode;
-  #ifdef PR_LOGGING
   if (!gMediaRecorderLog) {
     gMediaRecorderLog = PR_NewLogModule("MediaRecorder");
   }
-  #endif
   RegisterActivityObserver();
 }
 

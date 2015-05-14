@@ -999,7 +999,7 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
 }
 
 .room-context-thumbnail {
-  width: 100px;
+  width: 16px;
   -moz-margin-end: 1ch;
   margin-bottom: 1em;
   order: 1;

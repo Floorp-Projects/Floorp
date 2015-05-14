@@ -16,7 +16,6 @@
 #include "nsIDocument.h"
 
 #undef LOG
-#ifdef PR_LOGGING
 PRLogModuleInfo*
 GetSpeechSynthLog()
 {
@@ -29,9 +28,6 @@ GetSpeechSynthLog()
   return sLog;
 }
 #define LOG(type, msg) PR_LOG(GetSpeechSynthLog(), type, msg)
-#else
-#define LOG(type, msg)
-#endif
 
 namespace mozilla {
 namespace dom {

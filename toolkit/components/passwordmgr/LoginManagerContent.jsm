@@ -164,7 +164,7 @@ var LoginManagerContent = {
     return deferred.promise;
   },
 
-  receiveMessage: function (msg) {
+  receiveMessage: function (msg, window) {
     // Convert an array of logins in simple JS-object form to an array of
     // nsILoginInfo objects.
     function jsLoginsToXPCOM(logins) {
@@ -177,6 +177,16 @@ var LoginManagerContent = {
                        login.passwordField);
         return formLogin;
       });
+    }
+
+    if (msg.name == "RemoteLogins:fillForm") {
+      this.fillForm({
+        topDocument: window.document,
+        loginFormOrigin: msg.data.loginFormOrigin,
+        loginsFound: jsLoginsToXPCOM(msg.data.logins),
+        recipes: msg.data.recipes,
+      });
+      return;
     }
 
     let request = this._takeRequest(msg);
@@ -253,35 +263,145 @@ var LoginManagerContent = {
                              messageData);
   },
 
-  /*
-   * onFormPassword
-   *
-   * Called when an <input type="password"> element is added to the page
-   */
-  onFormPassword: function (event) {
-    if (!event.isTrusted)
+  onDOMFormHasPassword(event, window) {
+    if (!event.isTrusted) {
       return;
+    }
+
     let form = event.target;
 
-    let doc = form.ownerDocument;
-    let win = doc.defaultView;
-    let messageManager = messageManagerFromWindow(win);
+    // Always record the most recently added form with a password field.
+    this.stateForDocument(form.ownerDocument).loginForm = form;
+
+    this._updateLoginFormPresence(window);
+
+    let messageManager = messageManagerFromWindow(window);
     messageManager.sendAsyncMessage("LoginStats:LoginEncountered");
 
-    if (!gEnabled)
+    if (!gEnabled) {
       return;
+    }
 
-    log("onFormPassword for", form.ownerDocument.documentURI);
+    log("onDOMFormHasPassword for", form.ownerDocument.documentURI);
     this._getLoginDataFromParent(form, { showMasterPassword: true })
         .then(this.loginsFound.bind(this))
         .then(null, Cu.reportError);
+  },
+
+  onPageShow(event, window) {
+    this._updateLoginFormPresence(window);
+  },
+
+  /**
+   * Maps all DOM content documents in this content process, including those in
+   * frames, to the current state used by the Login Manager.
+   */
+  loginFormStateByDocument: new WeakMap(),
+
+  /**
+   * Retrieves a reference to the state object associated with the given
+   * document. This is initialized to an empty object.
+   */
+  stateForDocument(document) {
+    let loginFormState = this.loginFormStateByDocument.get(document);
+    if (!loginFormState) {
+      loginFormState = {};
+      this.loginFormStateByDocument.set(document, loginFormState);
+    }
+    return loginFormState;
+  },
+
+  /**
+   * Compute whether there is a login form on any frame of the current page, and
+   * notify the parent process. This is one of the factors used to control the
+   * visibility of the password fill doorhanger anchor.
+   */
+  _updateLoginFormPresence(topWindow) {
+    // For the login form presence notification, we currently support only one
+    // origin for each browser, so the form origin will always match the origin
+    // of the top level document.
+    let loginFormOrigin =
+        LoginUtils._getPasswordOrigin(topWindow.document.documentURI);
+
+    // Returns the first known loginForm present in this window or in any
+    // same-origin subframes. Returns null if no loginForm is currently present.
+    let getFirstLoginForm = thisWindow => {
+      let loginForm = this.stateForDocument(thisWindow.document).loginForm;
+      if (loginForm) {
+        return loginForm;
+      }
+      for (let i = 0; i < thisWindow.frames.length; i++) {
+        let frame = thisWindow.frames[i];
+        if (LoginUtils._getPasswordOrigin(frame.document.documentURI) !=
+            loginFormOrigin) {
+          continue;
+        }
+        let loginForm = getFirstLoginForm(frame);
+        if (loginForm) {
+          return loginForm;
+        }
+      }
+      return null;
+    };
+
+    // Store the actual form to use on the state for the top-level document.
+    let topState = this.stateForDocument(topWindow.document);
+    topState.loginFormForFill = getFirstLoginForm(topWindow);
+
+    // Determine whether to show the anchor icon for the current tab.
+    let messageManager = messageManagerFromWindow(topWindow);
+    messageManager.sendAsyncMessage("RemoteLogins:updateLoginFormPresence", {
+      loginFormOrigin,
+      loginFormPresent: !!topState.loginFormForFill,
+    });
+  },
+
+  /**
+   * Perform a password fill upon user request coming from the parent process.
+   * The fill will be in the form previously identified during page navigation.
+   *
+   * @param An object with the following properties:
+   *        {
+   *          topDocument:
+   *            DOM document currently associated to the the top-level window
+   *            for which the fill is requested. This may be different from the
+   *            document that originally caused the login UI to be displayed.
+   *          loginFormOrigin:
+   *            String with the origin for which the login UI was displayed.
+   *            This must match the origin of the form used for the fill.
+   *          loginsFound:
+   *            Array containing the login to fill. While other messages may
+   *            have more logins, for this use case this is expected to have
+   *            exactly one element. The origin of the login may be different
+   *            from the origin of the form used for the fill.
+   *          recipes:
+   *            Fill recipes transmitted together with the original message.
+   *        }
+   */
+  fillForm({ topDocument, loginFormOrigin, loginsFound, recipes }) {
+    let topState = this.stateForDocument(topDocument);
+    if (!topState.loginFormForFill) {
+      log("fillForm: There is no login form anymore. The form may have been",
+          "removed or the document may have changed.");
+      return;
+    }
+    if (LoginUtils._getPasswordOrigin(topDocument.documentURI) !=
+        loginFormOrigin) {
+      log("fillForm: The requested origin doesn't match the one form the",
+          "document. This may mean we navigated to a document from a different",
+          "site before we had a chance to indicate this change in the user",
+          "interface.");
+      return;
+    }
+    this._fillForm(topState.loginFormForFill, true, true, true, true,
+                   loginsFound, recipes);
   },
 
   loginsFound: function({ form, loginsFound, recipes }) {
     let doc = form.ownerDocument;
     let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
-    this._fillForm(form, autofillForm, false, false, loginsFound, recipes);
+    this._fillForm(form, autofillForm, false, false, false, loginsFound, recipes);
   },
 
   /*
@@ -324,7 +444,7 @@ var LoginManagerContent = {
     if (usernameField == acInputField && passwordField) {
       this._getLoginDataFromParent(acForm, { showMasterPassword: false })
           .then(({ form, loginsFound, recipes }) => {
-            this._fillForm(form, true, true, true, loginsFound, recipes);
+            this._fillForm(form, true, false, true, true, loginsFound, recipes);
           })
           .then(null, Cu.reportError);
     } else {
@@ -626,6 +746,8 @@ var LoginManagerContent = {
    *
    * @param {HTMLFormElement} form
    * @param {bool} autofillForm denotes if we should fill the form in automatically
+   * @param {bool} clobberUsername controls if an existing username can be
+   *                               overwritten
    * @param {bool} clobberPassword controls if an existing password value can be
    *                               overwritten
    * @param {bool} userTriggered is an indication of whether this filling was triggered by
@@ -633,7 +755,7 @@ var LoginManagerContent = {
    * @param {nsILoginInfo[]} foundLogins is an array of nsILoginInfo that could be used for the form
    * @param {Set} recipes that could be used to affect how the form is filled
    */
-  _fillForm : function (form, autofillForm, clobberPassword,
+  _fillForm : function (form, autofillForm, clobberUsername, clobberPassword,
                         userTriggered, foundLogins, recipes) {
     let ignoreAutocomplete = true;
     const AUTOFILL_RESULT = {
@@ -737,7 +859,9 @@ var LoginManagerContent = {
 
       // Select a login to use for filling in the form.
       var selectedLogin;
-      if (usernameField && (usernameField.value || usernameField.disabled || usernameField.readOnly)) {
+      if (!clobberUsername && usernameField && (usernameField.value ||
+                                                usernameField.disabled ||
+                                                usernameField.readOnly)) {
         // If username was specified in the field, it's disabled or it's readOnly, only fill in the
         // password if we find a matching login.
         var username = usernameField.value.toLowerCase();

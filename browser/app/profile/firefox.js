@@ -1632,6 +1632,9 @@ pref("browser.newtab.preload", true);
 // Remembers if the about:newtab intro has been shown
 pref("browser.newtabpage.introShown", false);
 
+// Remembers if the about:newtab update intro has been shown
+pref("browser.newtabpage.updateIntroShown", false);
+
 // Toggles the content of 'about:newtab'. Shows the grid when enabled.
 pref("browser.newtabpage.enabled", true);
 
@@ -1907,14 +1910,9 @@ pref("browser.reader.detectedFirstArticle", false);
 // Don't limit how many nodes we care about on desktop:
 pref("reader.parse-node-limit", 0);
 
-// Enable Service workers for desktop on non-release builds
-#ifdef NIGHTLY_BUILD
-pref("dom.serviceWorkers.enabled", true);
-#endif
-
 pref("browser.pocket.enabled", true);
 pref("browser.pocket.api", "api.getpocket.com");
 pref("browser.pocket.site", "getpocket.com");
 pref("browser.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
 pref("browser.pocket.useLocaleList", true);
-pref("browser.pocket.enabledLocales", "en-US de es-ES ja ru");
+pref("browser.pocket.enabledLocales", "en-US de es-ES ja ja-JP-mac ru");

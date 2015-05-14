@@ -19,8 +19,8 @@ add_task(function*() {
   ]);
 
   let { nodes, edges } = countGraphObjects(panelWin);
-  ise(nodes, 3, "should only be 3 nodes.");
-  ise(edges, 2, "should only be 2 edges.");
+  is(nodes, 3, "should only be 3 nodes.");
+  is(edges, 2, "should only be 2 edges.");
 
   reload(target);
 
@@ -30,8 +30,8 @@ add_task(function*() {
   ]);
 
   ({ nodes, edges } = countGraphObjects(panelWin));
-  ise(nodes, 3, "after reload, should only be 3 nodes.");
-  ise(edges, 2, "after reload, should only be 2 edges.");
+  is(nodes, 3, "after reload, should only be 3 nodes.");
+  is(edges, 2, "after reload, should only be 2 edges.");
 
   yield teardown(target);
 });

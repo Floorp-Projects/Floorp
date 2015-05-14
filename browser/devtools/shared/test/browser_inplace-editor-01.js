@@ -17,6 +17,7 @@ add_task(function*() {
   yield testReturnCommit(doc);
   yield testBlurCommit(doc);
   yield testAdvanceCharCommit(doc);
+  yield testAdvanceCharsFunction(doc);
 
   host.destroy();
   gBrowser.removeCurrentTab();
@@ -86,6 +87,37 @@ function testAdvanceCharCommit(doc) {
       }
     },
     done: onDone("Test", true, def)
+  }, doc);
+
+  return def.promise;
+}
+
+function testAdvanceCharsFunction(doc) {
+  info("Testing advanceChars as a function");
+  let def = promise.defer();
+
+  let firstTime = true;
+
+  createInplaceEditorAndClick({
+    initial: "",
+    advanceChars: function(aCharCode, aText, aInsertionPoint) {
+      if (aCharCode !== Components.interfaces.nsIDOMKeyEvent.DOM_VK_COLON) {
+        return false;
+      }
+      if (firstTime) {
+        firstTime = false;
+        return false;
+      }
+
+      // Just to make sure we check it somehow.
+      return aText.length > 0;
+    },
+    start: function(editor) {
+      for each (let ch in ":Test:") {
+        EventUtils.sendChar(ch);
+      }
+    },
+    done: onDone(":Test", true, def)
   }, doc);
 
   return def.promise;
