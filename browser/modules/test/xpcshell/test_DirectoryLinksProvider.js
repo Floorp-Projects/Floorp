@@ -1118,6 +1118,30 @@ add_task(function test_DirectoryLinksProvider_getAllowedImages() {
   do_check_eq(links[1].imageURI, data["directory"][5].imageURI);
 });
 
+add_task(function test_DirectoryLinksProvider_getAllowedImages_base() {
+  let data = {"directory": [
+    {url: "http://example1.com", imageURI: "https://example.com"},
+    {url: "http://example2.com", imageURI: "https://tiles.cdn.mozilla.net"},
+    {url: "http://example3.com", imageURI: "https://tiles2.cdn.mozilla.net"},
+    {url: "http://example4.com", enhancedImageURI: "https://mozilla.net"},
+    {url: "http://example5.com", imageURI: "data:text/plain,hi"},
+  ]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  // Pretend we're using the default pref to trigger base matching
+  DirectoryLinksProvider.__linksURLModified = false;
+
+  let links = yield fetchData();
+  do_check_eq(links.length, 4);
+
+  // The only remaining images should be https with mozilla.net or data URI
+  do_check_eq(links[0].url, data["directory"][1].url);
+  do_check_eq(links[1].url, data["directory"][2].url);
+  do_check_eq(links[2].url, data["directory"][3].url);
+  do_check_eq(links[3].url, data["directory"][4].url);
+});
+
 add_task(function test_DirectoryLinksProvider_getAllowedEnhancedImages() {
   let data = {"directory": [
     {url: "http://example.com", enhancedImageURI: "ftp://example.com"},
