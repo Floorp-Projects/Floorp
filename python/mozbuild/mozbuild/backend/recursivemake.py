@@ -457,7 +457,11 @@ class RecursiveMakeBackend(CommonBackend):
             variables = [suffix_map[obj.canonical_suffix]]
             if isinstance(obj, GeneratedSources):
                 variables.append('GARBAGE')
+                base = backend_file.objdir
+            else:
+                base = backend_file.srcdir
             for f in sorted(obj.files):
+                f = mozpath.relpath(f, base)
                 for var in variables:
                     backend_file.write('%s += %s\n' % (var, f))
         elif isinstance(obj, HostSources):
@@ -468,7 +472,8 @@ class RecursiveMakeBackend(CommonBackend):
             }
             var = suffix_map[obj.canonical_suffix]
             for f in sorted(obj.files):
-                backend_file.write('%s += %s\n' % (var, f))
+                backend_file.write('%s += %s\n' % (
+                    var, mozpath.relpath(f, backend_file.srcdir)))
         elif isinstance(obj, VariablePassthru):
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
