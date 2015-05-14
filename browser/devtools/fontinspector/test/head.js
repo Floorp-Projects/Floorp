@@ -13,6 +13,8 @@ const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {})
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 
+const BASE_URI = "http://mochi.test:8888/browser/browser/devtools/fontinspector/test/"
+
 // All test are asynchronous
 waitForExplicitFinish();
 
@@ -96,6 +98,52 @@ let openInspector = Task.async(function*(cb) {
       inspector: inspector
     };
   }
+});
+
+/**
+ * Adds a new tab with the given URL, opens the inspector and selects the
+ * font-inspector tab.
+ *
+ * @return Object
+ *  {
+ *    toolbox,
+ *    inspector,
+ *    fontInspector
+ *  }
+ */
+let openFontInspectorForURL = Task.async(function* (url) {
+  info("Opening tab " + url);
+  yield loadTab(url);
+
+  let { toolbox, inspector } = yield openInspector();
+
+  /**
+   * Call selectNode to trigger font-inspector update so that we don't timeout
+   * if following conditions hold
+   * a) the initial 'fontinspector-updated' was emitted while we were waiting
+   *    for openInspector to resolve
+   * b) the font-inspector tab was selected by default which means the call to
+   *    select will not trigger another update.
+   *
+   * selectNode calls setNodeFront which always emits 'new-node' which calls
+   * FontInspector.update that emits the 'fontinspector-updated' event.
+   */
+  let updated = inspector.once("fontinspector-updated");
+
+  yield selectNode("body", inspector);
+  inspector.sidebar.select("fontinspector");
+
+  info("Waiting for font-inspector to update.");
+  yield updated;
+
+  info("Font Inspector ready.");
+
+  let { fontInspector } = inspector.sidebar.getWindowForTab("fontinspector");
+  return {
+    fontInspector,
+    inspector,
+    toolbox
+  };
 });
 
 /**
