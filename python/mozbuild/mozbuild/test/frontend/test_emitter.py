@@ -818,7 +818,9 @@ class TestEmitterBasic(unittest.TestCase):
         }
         for suffix, files in expected.items():
             sources = suffix_map[suffix]
-            self.assertEqual(sources.files, files)
+            self.assertEqual(
+                sources.files,
+                [mozpath.join(reader.config.topsrcdir, f) for f in files])
             self.assertTrue(sources.have_unified_mapping)
 
     def test_unified_sources_non_unified(self):
@@ -840,7 +842,9 @@ class TestEmitterBasic(unittest.TestCase):
         }
         for suffix, files in expected.items():
             sources = suffix_map[suffix]
-            self.assertEqual(sources.files, files)
+            self.assertEqual(
+                sources.files,
+                [mozpath.join(reader.config.topsrcdir, f) for f in files])
             self.assertFalse(sources.have_unified_mapping)
 
     def test_dist_files(self):
