@@ -19,7 +19,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIEncodedChannel.h"
 #include "nsIUploadChannel.h"
-#include "nsICacheInfoChannel.h"
+#include "nsICachingChannel.h"
 #include "nsIFileChannel.h"
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
@@ -1274,7 +1274,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
         }
 
         // Cache key
-        nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(httpChannel));
+        nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(httpChannel));
         if (cacheChannel && cacheKey)
         {
             cacheChannel->SetCacheKey(cacheKey);
