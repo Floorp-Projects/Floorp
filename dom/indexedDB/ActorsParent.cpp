@@ -216,11 +216,11 @@ const uint32_t kConnectionIdleCloseMS = 10 * 1000; // 10 seconds
 // The length of time that idle threads will stay alive before being shut down.
 const uint32_t kConnectionThreadIdleMS = 30 * 1000; // 30 seconds
 
-#define SAVEPOINT_CLAUSE "SAVEPOINT sp;"
+const char kSavepointClause[] = "SAVEPOINT sp;";
 
 const uint32_t kFileCopyBufferSize = 32768;
 
-#define JOURNAL_DIRECTORY_NAME "journals"
+const char kJournalDirectoryName[] = "journals";
 
 const char kFileManagerDirectoryNameSuffix[] = ".files";
 const char kSQLiteJournalSuffix[] = ".sqlite-journal";
@@ -231,9 +231,15 @@ const char kPrefIndexedDBEnabled[] = "dom.indexedDB.enabled";
 
 #define IDB_PREFIX "indexedDB"
 
-#define PERMISSION_STRING_CHROME_BASE IDB_PREFIX "-chrome-"
-#define PERMISSION_STRING_CHROME_READ_SUFFIX "-read"
-#define PERMISSION_STRING_CHROME_WRITE_SUFFIX "-write"
+#ifdef MOZ_CHILD_PERMISSIONS
+const char kPermissionString[] = IDB_PREFIX;
+#endif // MOZ_CHILD_PERMISSIONS
+
+const char kPermissionStringChromeBase[] = IDB_PREFIX "-chrome-";
+const char kPermissionStringChromeReadSuffix[] = "-read";
+const char kPermissionStringChromeWriteSuffix[] = "-write";
+
+#undef IDB_PREFIX
 
 enum AppId {
   kNoAppId = nsIScriptSecurityManager::NO_APP_ID,
@@ -4374,6 +4380,18 @@ public:
   GetCachedStatement(const nsACString& aQuery,
                      CachedStatement* aCachedStatement);
 
+  template <size_t N>
+  nsresult
+  GetCachedStatement(const char (&aQuery)[N],
+                     CachedStatement* aCachedStatement)
+  {
+    static_assert(N > 1, "Must have a non-empty string!");
+    AssertIsOnConnectionThread();
+    MOZ_ASSERT(aCachedStatement);
+
+    return GetCachedStatement(NS_LITERAL_CSTRING(aQuery), aCachedStatement);
+  }
+
   nsresult
   BeginWriteTransaction();
 
@@ -8329,7 +8347,7 @@ DatabaseConnection::Init()
   MOZ_ASSERT(!mInWriteTransaction);
 
   CachedStatement stmt;
-  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("BEGIN"), &stmt);
+  nsresult rv = GetCachedStatement("BEGIN", &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8396,7 +8414,7 @@ DatabaseConnection::BeginWriteTransaction()
 
   // Release our read locks.
   CachedStatement rollbackStmt;
-  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("ROLLBACK"), &rollbackStmt);
+  nsresult rv = GetCachedStatement("ROLLBACK", &rollbackStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8424,7 +8442,7 @@ DatabaseConnection::BeginWriteTransaction()
   }
 
   CachedStatement beginStmt;
-  rv = GetCachedStatement(NS_LITERAL_CSTRING("BEGIN IMMEDIATE"), &beginStmt);
+  rv = GetCachedStatement("BEGIN IMMEDIATE", &beginStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8473,7 +8491,7 @@ DatabaseConnection::RollbackWriteTransaction()
   }
 
   DatabaseConnection::CachedStatement stmt;
-  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("ROLLBACK"), &stmt);
+  nsresult rv = GetCachedStatement("ROLLBACK", &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -8504,7 +8522,7 @@ DatabaseConnection::FinishWriteTransaction()
   mInWriteTransaction = false;
 
   CachedStatement stmt;
-  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING("BEGIN"), &stmt);
+  nsresult rv = GetCachedStatement("BEGIN", &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -8528,7 +8546,7 @@ DatabaseConnection::StartSavepoint()
                  js::ProfileEntry::Category::STORAGE);
 
   CachedStatement stmt;
-  nsresult rv = GetCachedStatement(NS_LITERAL_CSTRING(SAVEPOINT_CLAUSE), &stmt);
+  nsresult rv = GetCachedStatement(kSavepointClause, &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8562,7 +8580,7 @@ DatabaseConnection::ReleaseSavepoint()
 
   CachedStatement stmt;
   nsresult rv = GetCachedStatement(
-    NS_LITERAL_CSTRING("RELEASE " SAVEPOINT_CLAUSE),
+    NS_LITERAL_CSTRING("RELEASE ") + NS_LITERAL_CSTRING(kSavepointClause),
     &stmt);
   if (NS_SUCCEEDED(rv)) {
     rv = stmt->Execute();
@@ -8600,7 +8618,7 @@ DatabaseConnection::RollbackSavepoint()
 
   CachedStatement stmt;
   nsresult rv = GetCachedStatement(
-    NS_LITERAL_CSTRING("ROLLBACK TO " SAVEPOINT_CLAUSE),
+    NS_LITERAL_CSTRING("ROLLBACK TO ") + NS_LITERAL_CSTRING(kSavepointClause),
     &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -8622,14 +8640,22 @@ DatabaseConnection::Checkpoint(bool aIdle)
                  "DatabaseConnection::Checkpoint",
                  js::ProfileEntry::Category::STORAGE);
 
-  CachedStatement stmt;
-  nsresult rv =
-    GetCachedStatement(aIdle ?
+  nsAutoCString checkpointMode;
+  if (aIdle) {
     // When idle we want to reclaim disk space.
-      NS_LITERAL_CSTRING("PRAGMA wal_checkpoint(TRUNCATE)") :
+    checkpointMode.AssignLiteral("TRUNCATE");
+  } else {
     // We're being called at the end of a READ_WRITE_FLUSH transaction so make
     // sure that the database is completely checkpointed and flushed to disk.
-      NS_LITERAL_CSTRING("PRAGMA wal_checkpoint(FULL)"),
+    checkpointMode.AssignLiteral("FULL");
+  }
+
+  CachedStatement stmt;
+  nsresult rv =
+    GetCachedStatement(
+      NS_LITERAL_CSTRING("PRAGMA wal_checkpoint(") +
+      checkpointMode +
+      NS_LITERAL_CSTRING(")"),
       &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -9219,10 +9245,10 @@ DatabaseUpdateFunction::UpdateInternal(int64_t aId,
 
   nsresult rv;
   if (!mUpdateStatement) {
-    rv = connection->GetCachedStatement(NS_LITERAL_CSTRING(
+    rv = connection->GetCachedStatement(
       "UPDATE file "
       "SET refcount = refcount + :delta "
-      "WHERE id = :id"),
+      "WHERE id = :id",
       &mUpdateStatement);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -9254,10 +9280,10 @@ DatabaseUpdateFunction::UpdateInternal(int64_t aId,
 
   if (rows > 0) {
     if (!mSelectStatement) {
-      rv = connection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = connection->GetCachedStatement(
         "SELECT id "
         "FROM file "
-        "WHERE id = :id"),
+        "WHERE id = :id",
         &mSelectStatement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -9287,9 +9313,9 @@ DatabaseUpdateFunction::UpdateInternal(int64_t aId,
   }
 
   if (!mInsertStatement) {
-    rv = connection->GetCachedStatement(NS_LITERAL_CSTRING(
+    rv = connection->GetCachedStatement(
       "INSERT INTO file (id, refcount) "
-      "VALUES(:id, :delta)"),
+      "VALUES(:id, :delta)",
       &mInsertStatement);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -14244,7 +14270,8 @@ FileManager::Init(nsIFile* aDirectory,
     return rv;
   }
 
-  rv = journalDirectory->Append(NS_LITERAL_STRING(JOURNAL_DIRECTORY_NAME));
+  NS_ConvertASCIItoUTF16 dirName(NS_LITERAL_CSTRING(kJournalDirectoryName));
+  rv = journalDirectory->Append(dirName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -14496,7 +14523,8 @@ FileManager::InitDirectory(nsIFile* aDirectory,
     return rv;
   }
 
-  rv = journalDirectory->Append(NS_LITERAL_STRING(JOURNAL_DIRECTORY_NAME));
+  NS_ConvertASCIItoUTF16 dirName(NS_LITERAL_CSTRING(kJournalDirectoryName));
+  rv = journalDirectory->Append(dirName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -14679,7 +14707,7 @@ FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
       return rv;
     }
 
-    if (leafName.EqualsLiteral(JOURNAL_DIRECTORY_NAME)) {
+    if (leafName.EqualsLiteral(kJournalDirectoryName)) {
       continue;
     }
 
@@ -15248,7 +15276,7 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
           return rv;
         }
 
-        if (!leafName.EqualsLiteral(JOURNAL_DIRECTORY_NAME)) {
+        if (!leafName.EqualsLiteral(kJournalDirectoryName)) {
           NS_WARNING("Unknown directory found!");
         }
       }
@@ -16016,19 +16044,19 @@ DatabaseOperationBase::InsertIndexTableRows(
     if (stmt) {
       stmt.Reset();
     } else if (info.mUnique) {
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "INSERT INTO unique_index_data "
           "(index_id, value, object_store_id, object_data_key) "
-          "VALUES (:index_id, :value, :object_store_id, :object_data_key);"),
+          "VALUES (:index_id, :value, :object_store_id, :object_data_key);",
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "INSERT OR IGNORE INTO index_data "
           "(index_id, value, object_data_key, object_store_id) "
-          "VALUES (:index_id, :value, :object_data_key, :object_store_id);"),
+          "VALUES (:index_id, :value, :object_data_key, :object_store_id);",
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -16118,20 +16146,20 @@ DatabaseOperationBase::DeleteIndexDataTableRows(
     if (stmt) {
       stmt.Reset();
     } else if (indexValue.mUnique) {
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "DELETE FROM unique_index_data "
           "WHERE index_id = :index_id "
-          "AND value = :value;"),
+          "AND value = :value;",
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "DELETE FROM index_data "
           "WHERE index_id = :index_id "
           "AND value = :value "
-          "AND object_data_key = :object_data_key;"),
+          "AND object_data_key = :object_data_key;",
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -16194,11 +16222,11 @@ DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
   DatabaseConnection::CachedStatement selectStmt;
 
   if (singleRowOnly) {
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    rv = aConnection->GetCachedStatement(
       "SELECT index_data_values "
         "FROM object_data "
         "WHERE object_store_id = :object_store_id "
-        "AND key = :key;"),
+        "AND key = :key;",
       &selectStmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -16271,10 +16299,10 @@ DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     if (deleteStmt) {
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(deleteStmt->Reset()));
     } else {
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "DELETE FROM object_data "
           "WHERE object_store_id = :object_store_id "
-          "AND key = :key;"),
+          "AND key = :key;",
         &deleteStmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -16335,11 +16363,11 @@ DatabaseOperationBase::UpdateIndexValues(
   MOZ_ASSERT(!indexDataValuesLength == !(indexDataValues.get()));
 
   DatabaseConnection::CachedStatement updateStmt;
-  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+  rv = aConnection->GetCachedStatement(
     "UPDATE object_data "
       "SET index_data_values = :index_data_values "
       "WHERE object_store_id = :object_store_id "
-      "AND key = :key;"),
+      "AND key = :key;",
     &updateStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -16396,10 +16424,10 @@ DatabaseOperationBase::ObjectStoreHasIndexes(DatabaseConnection* aConnection,
   DatabaseConnection::CachedStatement stmt;
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    aConnection->GetCachedStatement(
       "SELECT id "
         "FROM object_store_index "
-        "WHERE object_store_id = :object_store_id;"),
+        "WHERE object_store_id = :object_store_id;",
       &stmt)));
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
@@ -16758,10 +16786,10 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
       // Check to make sure that the child process has access to the database it
       // is accessing.
       NS_NAMED_LITERAL_CSTRING(permissionStringBase,
-                               PERMISSION_STRING_CHROME_BASE);
+                               kPermissionStringChromeBase);
       NS_ConvertUTF16toUTF8 databaseName(mCommonParams.metadata().name());
-      NS_NAMED_LITERAL_CSTRING(readSuffix, PERMISSION_STRING_CHROME_READ_SUFFIX);
-      NS_NAMED_LITERAL_CSTRING(writeSuffix, PERMISSION_STRING_CHROME_WRITE_SUFFIX);
+      NS_NAMED_LITERAL_CSTRING(readSuffix, kPermissionStringChromeReadSuffix);
+      NS_NAMED_LITERAL_CSTRING(writeSuffix, kPermissionStringChromeWriteSuffix);
 
       const nsAutoCString permissionStringWrite =
         permissionStringBase + databaseName + writeSuffix;
@@ -16850,7 +16878,7 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
       }
 
       uint32_t intPermission =
-        mozilla::CheckPermission(aContentParent, principal, IDB_PREFIX);
+        mozilla::CheckPermission(aContentParent, principal, kPermissionString);
 
       permission =
         PermissionRequestBase::PermissionValueForIntPermission(intPermission);
@@ -18343,17 +18371,18 @@ VersionChangeOp::DoDatabaseWork(DatabaseConnection* aConnection)
     return rv;
   }
 
+  NS_NAMED_LITERAL_CSTRING(version, "version");
+
   DatabaseConnection::CachedStatement updateStmt;
   rv = aConnection->GetCachedStatement(
     NS_LITERAL_CSTRING("UPDATE database "
-                       "SET version = :version"),
+                       "SET version = :") + version,
     &updateStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("version"),
-                                   int64_t(mRequestedVersion));
+  rv = updateStmt->BindInt64ByName(version, int64_t(mRequestedVersion));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -19395,7 +19424,7 @@ CommitOp::AssertForeignKeyConsistency(DatabaseConnection* aConnection)
 
   DatabaseConnection::CachedStatement pragmaStmt;
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    aConnection->GetCachedStatement(NS_LITERAL_CSTRING("PRAGMA foreign_keys;"), &pragmaStmt)));
+    aConnection->GetCachedStatement("PRAGMA foreign_keys;", &pragmaStmt)));
 
   bool hasResult;
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(pragmaStmt->ExecuteStep(&hasResult)));
@@ -19409,7 +19438,7 @@ CommitOp::AssertForeignKeyConsistency(DatabaseConnection* aConnection)
 
   DatabaseConnection::CachedStatement checkStmt;
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    aConnection->GetCachedStatement(NS_LITERAL_CSTRING("PRAGMA foreign_key_check;"), &checkStmt)));
+    aConnection->GetCachedStatement("PRAGMA foreign_key_check;", &checkStmt)));
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(checkStmt->ExecuteStep(&hasResult)));
 
@@ -19462,7 +19491,7 @@ CommitOp::Run()
             AssertForeignKeyConsistency(connection);
 
             DatabaseConnection::CachedStatement stmt;
-            mResultCode = connection->GetCachedStatement(NS_LITERAL_CSTRING("COMMIT"), &stmt);
+            mResultCode = connection->GetCachedStatement("COMMIT", &stmt);
             NS_WARN_IF_FALSE(NS_SUCCEEDED(mResultCode),
                              "Failed to get 'COMMIT' statement!");
 
@@ -19613,10 +19642,10 @@ CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
     // have thrown an error long before now...
     DatabaseConnection::CachedStatement stmt;
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      aConnection->GetCachedStatement(
         "SELECT name "
           "FROM object_store "
-          "WHERE name = :name;"),
+          "WHERE name = :name;",
         &stmt)));
 
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
@@ -19635,9 +19664,9 @@ CreateObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
   }
 
   DatabaseConnection::CachedStatement stmt;
-  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+  rv = aConnection->GetCachedStatement(
     "INSERT INTO object_store (id, auto_increment, name, key_path) "
-    "VALUES (:id, :auto_increment, :name, :key_path)"),
+    "VALUES (:id, :auto_increment, :name, :key_path)",
     &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -19713,9 +19742,9 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
     // Make sure |mIsLastObjectStore| is telling the truth.
     DatabaseConnection::CachedStatement stmt;
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      aConnection->GetCachedStatement(
         "SELECT id "
-          "FROM object_store;"),
+          "FROM object_store;",
         &stmt)));
 
     bool foundThisObjectStore = false;
@@ -19760,8 +19789,8 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
   if (mIsLastObjectStore) {
     // We can just delete everything if this is the last object store.
     DatabaseConnection::CachedStatement stmt;
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM index_data;"),
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM index_data;",
       &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -19772,8 +19801,8 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
       return rv;
     }
 
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM unique_index_data;"),
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM unique_index_data;",
       &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -19784,8 +19813,8 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
       return rv;
     }
 
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM object_data;"),
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM object_data;",
       &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -19796,8 +19825,8 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
       return rv;
     }
 
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM object_store_index;"),
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM object_store_index;",
       &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -19808,8 +19837,8 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
       return rv;
     }
 
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM object_store;"),
+    rv = aConnection->GetCachedStatement(
+      "DELETE FROM object_store;",
       &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -19831,9 +19860,9 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
 
       // Now clean up the object store index table.
       DatabaseConnection::CachedStatement stmt;
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "DELETE FROM object_store_index "
-          "WHERE object_store_id = :object_store_id;"),
+          "WHERE object_store_id = :object_store_id;",
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -19853,9 +19882,9 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
       // We only have to worry about object data if this object store has no
       // indexes.
       DatabaseConnection::CachedStatement stmt;
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "DELETE FROM object_data "
-          "WHERE object_store_id = :object_store_id;"),
+          "WHERE object_store_id = :object_store_id;",
         &stmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -19874,9 +19903,9 @@ DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection)
     }
 
     DatabaseConnection::CachedStatement stmt;
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    rv = aConnection->GetCachedStatement(
       "DELETE FROM object_store "
-        "WHERE id = :object_store_id;"),
+        "WHERE id = :object_store_id;",
       &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -19998,11 +20027,11 @@ CreateIndexOp::InsertDataFromObjectStoreInternal(
   MOZ_ASSERT(storageConnection);
 
   DatabaseConnection::CachedStatement stmt;
-  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+  nsresult rv = aConnection->GetCachedStatement(
     "UPDATE object_data "
       "SET index_data_values = update_index_data_values "
         "(key, index_data_values, file_ids, data) "
-      "WHERE object_store_id = :object_store_id;"),
+      "WHERE object_store_id = :object_store_id;",
     &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -20079,11 +20108,11 @@ CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
     // we should have thrown an error long before now...
     DatabaseConnection::CachedStatement stmt;
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      aConnection->GetCachedStatement(
         "SELECT name "
           "FROM object_store_index "
           "WHERE object_store_id = :osid "
-          "AND name = :name;"),
+          "AND name = :name;",
         &stmt)));
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
       stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStoreId)));
@@ -20104,10 +20133,10 @@ CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   }
 
   DatabaseConnection::CachedStatement stmt;
-  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+  rv = aConnection->GetCachedStatement(
     "INSERT INTO object_store_index (id, name, key_path, unique_index, "
                                     "multientry, object_store_id) "
-    "VALUES (:id, :name, :key_path, :unique, :multientry, :osid)"),
+    "VALUES (:id, :name, :key_path, :unique, :multientry, :osid)",
     &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -20509,11 +20538,11 @@ DeleteIndexOp::RemoveReferencesToIndex(
     // There is no need to parse the previous entry in the index_data_values
     // column if this is the last index. Simply set it to NULL.
     DatabaseConnection::CachedStatement stmt;
-    nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    nsresult rv = aConnection->GetCachedStatement(
       "UPDATE object_data "
         "SET index_data_values = NULL "
         "WHERE object_store_id = :object_store_id "
-        "AND key = :key;"),
+        "AND key = :key;",
       &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -20607,10 +20636,10 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
     // Make sure |mIsLastIndex| is telling the truth.
     DatabaseConnection::CachedStatement stmt;
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-      aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      aConnection->GetCachedStatement(
         "SELECT id "
           "FROM object_store_index "
-          "WHERE object_store_id = :object_store_id;"),
+          "WHERE object_store_id = :object_store_id;",
         &stmt)));
 
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
@@ -20660,15 +20689,15 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   // The cost of having an index on this field is too high.
   if (mUnique) {
     if (mIsLastIndex) {
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "/* do not warn (bug someone else) */ "
         "SELECT value, object_data_key "
           "FROM unique_index_data "
           "WHERE index_id = :index_id "
-          "ORDER BY object_data_key ASC;"),
+          "ORDER BY object_data_key ASC;",
         &selectStmt);
     } else {
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "/* do not warn (bug out) */ "
         "SELECT unique_index_data.value, "
                "unique_index_data.object_data_key, "
@@ -20678,21 +20707,21 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
           "ON unique_index_data.object_data_key = object_data.key "
           "WHERE unique_index_data.index_id = :index_id "
           "AND object_data.object_store_id = :object_store_id "
-          "ORDER BY unique_index_data.object_data_key ASC;"),
+          "ORDER BY unique_index_data.object_data_key ASC;",
         &selectStmt);
     }
   } else {
     if (mIsLastIndex) {
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "/* do not warn (bug me not) */ "
         "SELECT value, object_data_key "
           "FROM index_data "
           "WHERE index_id = :index_id "
           "AND object_store_id = :object_store_id "
-          "ORDER BY object_data_key ASC;"),
+          "ORDER BY object_data_key ASC;",
         &selectStmt);
     } else {
-      rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+      rv = aConnection->GetCachedStatement(
         "/* do not warn (bug off) */ "
         "SELECT index_data.value, "
                "index_data.object_data_key, "
@@ -20702,7 +20731,7 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
           "ON index_data.object_data_key = object_data.key "
           "WHERE index_data.index_id = :index_id "
           "AND object_data.object_store_id = :object_store_id "
-          "ORDER BY index_data.object_data_key ASC;"),
+          "ORDER BY index_data.object_data_key ASC;",
         &selectStmt);
     }
   }
@@ -20803,17 +20832,17 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
         MOZ_ALWAYS_TRUE(NS_SUCCEEDED(deleteIndexRowStmt->Reset()));
     } else {
       if (mUnique) {
-        rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+        rv = aConnection->GetCachedStatement(
           "DELETE FROM unique_index_data "
             "WHERE index_id = :index_id "
-            "AND value = :value;"),
+            "AND value = :value;",
           &deleteIndexRowStmt);
       } else {
-        rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+        rv = aConnection->GetCachedStatement(
           "DELETE FROM index_data "
             "WHERE index_id = :index_id "
             "AND value = :value "
-            "AND object_data_key = :object_data_key;"),
+            "AND object_data_key = :object_data_key;",
           &deleteIndexRowStmt);
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -20861,9 +20890,9 @@ DeleteIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   }
 
   DatabaseConnection::CachedStatement deleteStmt;
-  rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+  rv = aConnection->GetCachedStatement(
     "DELETE FROM object_store_index "
-      "WHERE id = :index_id;"),
+      "WHERE id = :index_id;",
     &deleteStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -20995,11 +21024,11 @@ ObjectStoreAddOrPutRequestOp::RemoveOldIndexDataValues(
   MOZ_ASSERT(mObjectStoreHasIndexes);
 
   DatabaseConnection::CachedStatement indexValuesStmt;
-  nsresult rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+  nsresult rv = aConnection->GetCachedStatement(
     "SELECT index_data_values "
       "FROM object_data "
       "WHERE object_store_id = :object_store_id "
-      "AND key = :key;"),
+      "AND key = :key;",
     &indexValuesStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -21244,16 +21273,16 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   // detectable errors rather than corrupting data.
   DatabaseConnection::CachedStatement stmt;
   if (!mOverwrite || keyUnset) {
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    rv = aConnection->GetCachedStatement(
       "INSERT INTO object_data "
         "(object_store_id, key, file_ids, data) "
-        "VALUES (:osid, :key, :file_ids, :data);"),
+        "VALUES (:osid, :key, :file_ids, :data);",
       &stmt);
   } else {
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    rv = aConnection->GetCachedStatement(
       "INSERT OR REPLACE INTO object_data "
         "(object_store_id, key, file_ids, data) "
-        "VALUES (:osid, :key, :file_ids, :data);"),
+        "VALUES (:osid, :key, :file_ids, :data);",
     &stmt);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -22008,9 +22037,9 @@ ObjectStoreClearRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     }
   } else {
     DatabaseConnection::CachedStatement stmt;
-    rv = aConnection->GetCachedStatement(NS_LITERAL_CSTRING(
+    rv = aConnection->GetCachedStatement(
       "DELETE FROM object_data "
-        "WHERE object_store_id = :object_store_id;"),
+        "WHERE object_store_id = :object_store_id;",
       &stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

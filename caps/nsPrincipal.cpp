@@ -790,7 +790,7 @@ nsPrincipal::IsOnCSSUnprefixingWhitelist()
 
 /************************************************************************************************************************/
 
-#define EXPANDED_PRINCIPAL_SPEC "[Expanded Principal]"
+static const char EXPANDED_PRINCIPAL_SPEC[] = "[Expanded Principal]";
 
 NS_IMPL_CLASSINFO(nsExpandedPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_EXPANDEDPRINCIPAL_CID)
@@ -1015,7 +1015,8 @@ nsExpandedPrincipal::IsOnCSSUnprefixingWhitelist()
 void
 nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {
-  aStr.AssignLiteral(EXPANDED_PRINCIPAL_SPEC " (");
+  aStr.Assign(EXPANDED_PRINCIPAL_SPEC);
+  aStr.AppendLiteral(" (");
 
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {
     if (i != 0) {

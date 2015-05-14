@@ -612,12 +612,6 @@ RemoteOpenFileChild::RenameTo(nsIFile *newParentDir, const nsAString &newName)
 }
 
 NS_IMETHODIMP
-RemoteOpenFileChild::RenameToNative(nsIFile *newParentDir, const nsACString &newName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 RemoteOpenFileChild::Remove(bool recursive)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
