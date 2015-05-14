@@ -791,7 +791,6 @@ pref("media.useAudioChannelService", false);
 pref("gfx.canvas.azure.backends", "skia");
 pref("gfx.canvas.azure.accelerated", true);
 
-pref("general.useragent.override.youtube.com", "Android; Tablet;#Android; Mobile;");
 
 // When true, phone number linkification is enabled.
 pref("browser.ui.linkify.phone", false);
