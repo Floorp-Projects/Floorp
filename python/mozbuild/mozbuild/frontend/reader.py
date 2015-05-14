@@ -296,8 +296,8 @@ class MozbuildSandbox(Sandbox):
     def _include(self, path):
         """Include and exec another file within the context of this one."""
 
-        # path is a SourcePath, and needs to be coerced to unicode.
-        self.exec_file(unicode(path))
+        # path is a SourcePath
+        self.exec_file(path.full_path)
 
     def _warning(self, message):
         # FUTURE consider capturing warnings in a variable instead of printing.
@@ -1099,7 +1099,8 @@ class BuildReader(object):
                 if d in recurse_info:
                     raise SandboxValidationError(
                         'Directory (%s) registered multiple times in %s' % (
-                            mozpath.relpath(d, context.srcdir), var), context)
+                            mozpath.relpath(d.full_path, context.srcdir), var),
+                        context)
 
                 recurse_info[d] = {}
                 for key in sandbox.metadata:
@@ -1109,7 +1110,7 @@ class BuildReader(object):
                     recurse_info[d][key] = dict(sandbox.metadata[key])
 
         for path, child_metadata in recurse_info.items():
-            child_path = path.join('moz.build')
+            child_path = path.join('moz.build').full_path
 
             # Ensure we don't break out of the topsrcdir. We don't do realpath
             # because it isn't necessary. If there are symlinks in the srcdir,
