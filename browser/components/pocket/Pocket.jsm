@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
 
 let Pocket = {
   get site() Services.prefs.getCharPref("browser.pocket.site"),
-  get listURL() { return "https://" + Pocket.site; },
+  get listURL() { return "https://" + Pocket.site + "/?src=ff_ext"; },
 
   /**
    * Functions related to the Pocket panel UI.
