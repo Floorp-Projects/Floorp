@@ -61,7 +61,7 @@ nsNullPrincipal::Init(uint32_t aAppId, bool aInMozBrowser)
 {
   MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
   mAppId = aAppId;
-  mInMozBrowser = aInMozBrowser;
+  mIsInBrowserElement = aInMozBrowser;
 
   mURI = nsNullPrincipalURI::Create();
   NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
@@ -172,41 +172,6 @@ nsNullPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsP
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::GetJarPrefix(nsACString& aJarPrefix)
-{
-  aJarPrefix.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetAppStatus(uint16_t* aAppStatus)
-{
-  *aAppStatus = nsScriptSecurityManager::AppStatusForPrincipal(this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetAppId(uint32_t* aAppId)
-{
-  *aAppId = mAppId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
-{
-  *aIsInBrowserElement = mInMozBrowser;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetUnknownAppId(bool* aUnknownAppId)
-{
-  *aUnknownAppId = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNullPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
 {
   *aIsNullPrincipal = true;
@@ -233,7 +198,7 @@ nsNullPrincipal::Read(nsIObjectInputStream* aStream)
   nsresult rv = aStream->Read32(&mAppId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aStream->ReadBoolean(&mInMozBrowser);
+  rv = aStream->ReadBoolean(&mIsInBrowserElement);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -243,7 +208,7 @@ NS_IMETHODIMP
 nsNullPrincipal::Write(nsIObjectOutputStream* aStream)
 {
   aStream->Write32(mAppId);
-  aStream->WriteBoolean(mInMozBrowser);
+  aStream->WriteBoolean(mIsInBrowserElement);
   return NS_OK;
 }
 

@@ -32,11 +32,6 @@ public:
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
-  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) override;
-  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) override;
-  NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
-  NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
-  NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
 
@@ -79,8 +74,6 @@ public:
 
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
-  uint32_t mAppId;
-  bool mInMozBrowser;
   // If mCodebaseImmutable is true, mCodebase is non-null and immutable
   bool mCodebaseImmutable;
   bool mDomainImmutable;
@@ -89,11 +82,6 @@ public:
 
 protected:
   virtual ~nsPrincipal();
-
-  /**
-   * Returns the app status of the principal based on mAppId and mInMozBrowser.
-   */
-  uint16_t GetAppStatus();
 };
 
 class nsExpandedPrincipal : public nsIExpandedPrincipal, public mozilla::BasePrincipal
@@ -120,11 +108,6 @@ public:
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
-  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) override;
-  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) override;
-  NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
-  NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
-  NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
   virtual void GetScriptLocation(nsACString &aStr) override;
