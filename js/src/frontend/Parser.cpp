@@ -3664,7 +3664,7 @@ Parser<ParseHandler>::deprecatedLetBlock(YieldHandling yieldHandling)
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_LET);
 
-    Node vars = variables(yieldHandling, PNK_LET, nullptr, blockObj, DontHoistVars);
+    Node vars = variables(yieldHandling, PNK_LET, NotInForInit, nullptr, blockObj, DontHoistVars);
     if (!vars)
         return null();
 
@@ -3760,8 +3760,9 @@ Parser<ParseHandler>::newBindingNode(PropertyName* name, bool functionScope, Var
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::variables(YieldHandling yieldHandling,
-                                ParseNodeKind kind, bool* psimple,
-                                StaticBlockObject* blockObj, VarContext varContext)
+                                ParseNodeKind kind,
+                                ForInitLocation location,
+                                bool* psimple, StaticBlockObject* blockObj, VarContext varContext)
 {
     /*
      * The four options here are:
@@ -3823,7 +3824,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                     return null();
 
                 bool parsingForInOrOfInit = false;
-                if (pc->parsingForInit) {
+                if (location == InForInit) {
                     bool isForIn, isForOf;
                     if (!matchInOrOf(&isForIn, &isForOf))
                         return null();
@@ -3845,14 +3846,14 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
 
                 MUST_MATCH_TOKEN(TOK_ASSIGN, JSMSG_BAD_DESTRUCT_DECL);
 
-                Node init = assignExpr(pc->parsingForInit ? InProhibited : InAllowed,
+                Node init = assignExpr(location == InForInit ? InProhibited : InAllowed,
                                        yieldHandling);
                 if (!init)
                     return null();
 
                 // Ban the nonsensical |for (var V = E1 in E2);| where V is a
                 // destructuring pattern.  See bug 1164741 for background.
-                if (pc->parsingForInit && kind == PNK_VAR) {
+                if (location == InForInit && kind == PNK_VAR) {
                     TokenKind afterInit;
                     if (!tokenStream.peekToken(&afterInit))
                         return null();
@@ -3913,7 +3914,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                 if (bindBeforeInitializer && !data.binder(&data, name, this))
                     return null();
 
-                Node init = assignExpr(pc->parsingForInit ? InProhibited : InAllowed,
+                Node init = assignExpr(location == InForInit ? InProhibited : InAllowed,
                                        yieldHandling);
                 if (!init)
                     return null();
@@ -3925,7 +3926,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                 // initializer while ES6 doesn't; ignoring it seems the best
                 // way to incrementally move to ES6 semantics.
                 bool performAssignment = true;
-                if (pc->parsingForInit && kind == PNK_VAR) {
+                if (location == InForInit && kind == PNK_VAR) {
                     TokenKind afterInit;
                     if (!tokenStream.peekToken(&afterInit))
                         return null();
@@ -3947,7 +3948,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                         return null();
                 }
             } else {
-                if (data.isConst && !pc->parsingForInit) {
+                if (data.isConst && location == NotInForInit) {
                     report(ParseError, false, null(), JSMSG_BAD_CONST_DECL);
                     return null();
                 }
@@ -4126,9 +4127,8 @@ Parser<FullParseHandler>::lexicalDeclaration(YieldHandling yieldHandling, bool i
     else if (isConst)
         kind = PNK_CONST;
 
-    ParseNode* pn = variables(yieldHandling, kind, nullptr,
-                              CurrentLexicalStaticBlock(pc),
-                              HoistVars);
+    ParseNode* pn = variables(yieldHandling, kind, NotInForInit,
+                              nullptr, CurrentLexicalStaticBlock(pc), HoistVars);
     if (!pn)
         return null();
     pn->pn_xflags = PNX_POPVAR;
@@ -4498,7 +4498,8 @@ Parser<FullParseHandler>::exportDeclaration()
             return null();
         break;
 
-      case TOK_VAR: kid = variables(YieldIsName, PNK_VAR);
+      case TOK_VAR:
+        kid = variables(YieldIsName, PNK_VAR, NotInForInit);
         if (!kid)
             return null();
         kid->pn_xflags = PNX_POPVAR;
@@ -4772,7 +4773,7 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
             if (tt == TOK_VAR) {
                 isForDecl = true;
                 tokenStream.consumeKnownToken(tt);
-                pn1 = variables(yieldHandling, PNK_VAR);
+                pn1 = variables(yieldHandling, PNK_VAR, InForInit);
             } else if (tt == TOK_LET || tt == TOK_CONST) {
                 handler.disableSyntaxParser();
                 bool constDecl = tt == TOK_CONST;
@@ -4781,9 +4782,8 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
                 blockObj = StaticBlockObject::create(context);
                 if (!blockObj)
                     return null();
-                pn1 = variables(yieldHandling,
-                                constDecl ? PNK_CONST : PNK_LET, nullptr, blockObj,
-                                DontHoistVars);
+                pn1 = variables(yieldHandling, constDecl ? PNK_CONST : PNK_LET, InForInit,
+                                nullptr, blockObj, DontHoistVars);
             } else {
                 pn1 = expr(InProhibited, yieldHandling);
             }
@@ -5113,7 +5113,7 @@ Parser<SyntaxParseHandler>::forStatement(YieldHandling yieldHandling)
             if (tt == TOK_VAR) {
                 isForDecl = true;
                 tokenStream.consumeKnownToken(tt);
-                lhsNode = variables(yieldHandling, PNK_VAR, &simpleForDecl);
+                lhsNode = variables(yieldHandling, PNK_VAR, InForInit, &simpleForDecl);
             }
             else if (tt == TOK_CONST || tt == TOK_LET) {
                 JS_ALWAYS_FALSE(abortIfSyntaxParser());
@@ -6063,7 +6063,7 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
 
       // VariableStatement[?Yield]
       case TOK_VAR: {
-        Node pn = variables(yieldHandling, PNK_VAR);
+        Node pn = variables(yieldHandling, PNK_VAR, NotInForInit);
         if (!pn)
             return null();
 
