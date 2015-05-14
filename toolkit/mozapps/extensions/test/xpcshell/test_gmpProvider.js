@@ -9,6 +9,9 @@ let GMPScope = Cu.import("resource://gre/modules/addons/GMPProvider.jsm");
 XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
   () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
 
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+
 let gMockAddons = new Map();
 let gMockEmeAddons = new Map();
 
@@ -216,11 +219,41 @@ add_task(function* test_autoUpdatePrefPersistance() {
   }
 });
 
+function createMockPluginFilesIfNeeded(aFile, aPluginId) {
+  function createFile(aFileName) {
+    let f = aFile.clone();
+    f.append(aFileName);
+    if (!f.exists()) {
+      f.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+    }
+  };
+
+  // Note: we can't use Services.appInfo.OS, as that's "XPCShell" in our tests.
+  let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+  let isOSX = ("nsILocalFileMac" in Components.interfaces);
+  let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Components.classes);
+
+  let libName = "";
+  if (isWindows) {
+    libName = aPluginId.substring(4) + ".dll";
+  } else if (isOSX) {
+    libName = "lib" + aPluginId.substring(4) + ".dylib";
+  } else if (isLinux) {
+    libName = aPluginId.substring(4) + ".so";
+  } else {
+    // FAIL!
+    return;
+  }
+  createFile(libName);
+  createFile(aPluginId.substring(4) + ".info");
+}
+
 add_task(function* test_pluginRegistration() {
   const TEST_VERSION = "1.2.3.4";
 
+  let profD = do_get_profile();
   for (let addon of gMockAddons.values()) {
-    let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    let file = profD.clone();
     file.append(addon.id);
     file.append(TEST_VERSION);
 
@@ -229,17 +262,41 @@ add_task(function* test_pluginRegistration() {
     let clearPaths = () => { addedPaths = []; removedPaths = []; }
 
     let MockGMPService = {
-      addPluginDirectory: path => addedPaths.push(path),
-      removePluginDirectory: path => removedPaths.push(path),
-      removeAndDeletePluginDirectory: path => removedPaths.push(path),
+      addPluginDirectory: path => {
+        if (!addedPaths.includes(path)) {
+          addedPaths.push(path);
+        }
+      },
+      removePluginDirectory: path => {
+        if (!removedPaths.includes(path)) {
+          removedPaths.push(path);
+        }
+      },
+      removeAndDeletePluginDirectory: path => {
+        if (!removedPaths.includes(path)) {
+          removedPaths.push(path);
+        }
+      },
     };
 
     GMPScope.gmpService = MockGMPService;
     gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), true);
 
-    // Check that the plugin gets registered after startup.
+    // Test that plugin registration fails if the plugin dynamic library and
+    // info files are not present.
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
-                      TEST_VERSION);
+                       TEST_VERSION);
+    clearPaths();
+    yield promiseRestartManager();
+    Assert.equal(addedPaths.indexOf(file.path), -1);
+    Assert.deepEqual(removedPaths, [file.path]);
+
+    // Create dummy GMP library/info files, and test that plugin registration
+    // succeeds during startup, now that we've added GMP info/lib files.
+    createMockPluginFilesIfNeeded(file, addon.id);
+
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
+                       TEST_VERSION);
     clearPaths();
     yield promiseRestartManager();
     Assert.notEqual(addedPaths.indexOf(file.path), -1);
@@ -259,7 +316,7 @@ add_task(function* test_pluginRegistration() {
 
     // Changing the pref mid-session should cause unregistration and registration.
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
-                      TEST_VERSION);
+                       TEST_VERSION);
     clearPaths();
     const TEST_VERSION_2 = "5.6.7.8";
     let file2 = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -272,7 +329,7 @@ add_task(function* test_pluginRegistration() {
 
     // Disabling the plugin should cause unregistration.
     gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
-                      TEST_VERSION);
+                       TEST_VERSION);
     clearPaths();
     gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), false);
     Assert.deepEqual(addedPaths, []);
