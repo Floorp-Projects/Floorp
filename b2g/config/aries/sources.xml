@@ -35,6 +35,7 @@
   <project name="device/sample" path="device/sample" revision="9c19bbbe0793ebdc427277dc37f9bb4ae20bccb2"/>
   <project name="platform/abi/cpp" path="abi/cpp" revision="18f1b5e28734183ff8073fe86dc46bc4ebba8a59"/>
   <project name="platform/bionic" path="bionic" revision="e36fba720d5327bf5532dfcde013239080f38b56"/>
+  <project name="platform/bootable/recovery" path="bootable/recovery" revision="dc8da21282a0c68328d05268433d19b0f2f6a15c"/>
   <project name="platform/external/aac" path="external/aac" revision="fa3eba16446cc8f2f5e2dfc20d86a49dbd37299e"/>
   <project name="platform/external/bison" path="external/bison" revision="c2418b886165add7f5a31fc5609f0ce2d004a90e"/>
   <project name="platform/external/bsdiff" path="external/bsdiff" revision="23e322ab19fb7d74c2c37e40ce364d9f709bdcee"/>
@@ -119,24 +120,23 @@
   <project name="platform/external/icu4c" path="external/icu4c" revision="d3ec7428eb276db43b7ed0544e09344a6014806c"/>
   <project name="platform/hardware/libhardware_legacy" path="hardware/libhardware_legacy" revision="76c4bf4bc430a1b8317f2f21ef735867733e50cc"/>
   <project name="platform/system/media" path="system/media" revision="c1332c21c608f4932a6d7e83450411cde53315ef"/>
-  <!--original fetch url was git://github.com/t2m-foxfone/-->
-  <remote fetch="https://git.mozilla.org/external/t2m-foxfone" name="t2m"/>
   <default remote="caf" revision="LNX.LA.3.5.2.1.1" sync-j="4"/>
-  <!-- Flame specific things -->
+  <!-- Platform common things -->
+  <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="f4e8f3b19fedc7e08c455de93fe4cef90744c169"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="2501e5940ba69ece7654ff85611c76ae5bda299c"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="040bb1e9ac8a5b6dd756fdd696aa37a8868b5c67"/>
-  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="0865bc4134b67220df4058625fba29305d6b10c3"/>
-  <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="fda40423ffa573dc6cafd3780515010cb2a086be"/>
-  <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="d5e53ed6f22fa06052351dc03510af9473af01ea"/>
+  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="5ada05ac150f643ef19e87015df7e106b88effe7"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="d61fc97258c8b0c362430dd2eb195dcc4d266f14"/>
-  <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
-  <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="t2m" revision="4186bdecb4dae911b39a8202252cc2310d91b0be"/>
+  <project name="init_sh" path="external/init_sh" remote="b2g" revision="3bdd26e092db9c47c5beb04b4809a35f8f767b8a"/>
+  <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="0a01977f34d6e86fe23d6c0ec75e96ba988bbebb"/>
   <project name="platform_external_libnfc-pn547" path="external/libnfc-pn547" remote="b2g" revision="5bb999b84b8adc14f6bea004d523ba258dea8188"/>
-  <project name="platform/frameworks/av" path="frameworks/av" revision="65f5144987afff35a932262c0c5fad6ecce0c04a"/>
+  <project name="timekeep" path="external/timekeep" remote="b2g" revision="58e9fd70a62d2c0ebf9bc2bd99439dcc5be8cad8"/>
+  <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="a920312eb6299b6cc11f7136254c4b0ba7a663be"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="da8e6bc53c8bc669da0bb627904d08aa293f2497"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="a46a9f1ac0ed5662d614c277cbb14eb3f332f365"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="7196881a0e9dd7bfbbcf0af64c8064e70f0fa094"/>
+  <project name="platform/hardware/broadcom/wlan" path="hardware/broadcom/wlan" revision="15a9b66de9b7d84c7ea63df3a834f095bca9e493"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="8d7676dfb68ee0cd069affedd5d1e97316a184ba"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="2a1ded216a91bf62a72b1640cf01ab4998f37028"/>
   <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="a74adcf8d88320d936daa8d20ce88ca0107fb916"/>
@@ -148,6 +148,10 @@
   <project name="platform/system/core" path="system/core" revision="42839aedcf70bf6bc92a3b7ea4a5cc9bf9aef3f9"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="d82e00fb6380b4f6cea7a96213913ee9eb441239"/>
   <project name="platform/system/qcom" path="system/qcom" revision="63e3f6f176caad587d42bba4c16b66d953fb23c2"/>
-  <project name="platform/vendor/qcom-opensource/wlan/prima" path="vendor/qcom/opensource/wlan/prima" revision="d8952a42771045fca73ec600e2b42a4c7129d723"/>
-  <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="4c187c1f3a0dffd8e51a961735474ea703535b99"/>
+  <project name="platform/vendor/qcom/copper" path="device/qcom/msm8974" revision="ec7bc1a26610922156d7d412b4d3de6b4adb93da"/>
+  <project name="vendor_broadcom_wlan" path="vendor/broadcom/wlan" remote="b2g" revision="114b9491a8a919687da4e22fbd89fab511d6d8d7"/>
+  <!-- Shinano specific things -->
+  <project name="device-shinano" path="device/sony/shinano" remote="b2g" revision="65bdce6f5851d4fb760aa84eec0db2adca49fabf"/>
+  <!-- Aries specific things -->
+  <project name="device-aries" path="device/sony/aries" remote="b2g" revision="3af1ede0d0956cfbf9c549df7cd9a6807a9efdf2"/>
 </manifest>
