@@ -25,12 +25,8 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gWMFByteStreamLog = nullptr;
 #define WMF_BS_LOG(...) PR_LOG(gWMFByteStreamLog, PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define WMF_BS_LOG(...)
-#endif
 
 WMFByteStream::WMFByteStream(MediaResource* aResource,
                              WMFSourceReaderCallback* aSourceReaderCallback)
@@ -43,11 +39,9 @@ WMFByteStream::WMFByteStream(MediaResource* aResource,
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
   NS_ASSERTION(mSourceReaderCallback, "Must have a source reader callback.");
 
-#ifdef PR_LOGGING
   if (!gWMFByteStreamLog) {
     gWMFByteStreamLog = PR_NewLogModule("WMFByteStream");
   }
-#endif
   WMF_BS_LOG("[%p] WMFByteStream CTOR", this);
   MOZ_COUNT_CTOR(WMFByteStream);
 }

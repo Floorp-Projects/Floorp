@@ -51,8 +51,8 @@ function promiseLoadSubDialog(aURL) {
         return;
       content.gSubDialog._frame.removeEventListener("load", load);
 
-      ise(content.gSubDialog._frame.contentWindow.location.toString(), aURL,
-          "Check the proper URL is loaded");
+      is(content.gSubDialog._frame.contentWindow.location.toString(), aURL,
+         "Check the proper URL is loaded");
 
       // Check visibility
       is_element_visible(content.gSubDialog._overlay, "Overlay is visible");
@@ -66,7 +66,7 @@ function promiseLoadSubDialog(aURL) {
           expectedStyleSheetURLs.splice(i, 1);
         }
       }
-      ise(expectedStyleSheetURLs.length, 0, "All expectedStyleSheetURLs should have been found");
+      is(expectedStyleSheetURLs.length, 0, "All expectedStyleSheetURLs should have been found");
 
       resolve(content.gSubDialog._frame.contentWindow);
     });

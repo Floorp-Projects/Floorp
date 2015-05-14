@@ -21,7 +21,7 @@ builds:
       opt:
         task: tasks/builds/mulet_linux.yml
   emulator-l:
-    platfoms:
+    platforms:
       - b2g
     types:
       opt:
@@ -29,7 +29,7 @@ builds:
       debug:
         task: tasks/builds/b2g_emulator_l_debug.yml
   emulator-kk:
-    platfoms:
+    platforms:
       - b2g
     types:
       opt:
@@ -37,19 +37,19 @@ builds:
       debug:
         task: tasks/builds/b2g_emulator_kk_debug.yml
   emulator-x86-l:
-    platfoms:
+    platforms:
       - b2g
     types:
       opt:
         task: tasks/builds/b2g_emulator_x86_l_opt.yml
   emulator-x86-kk:
-    platfoms:
+    platforms:
       - b2g
     types:
       opt:
         task: tasks/builds/b2g_emulator_x86_kk_opt.yml
   emulator-jb:
-    platfoms:
+    platforms:
       - b2g
     types:
       opt:
@@ -57,7 +57,7 @@ builds:
       debug:
         task: tasks/builds/b2g_emulator_jb_debug.yml
   emulator:
-    platfoms:
+    platforms:
       - b2g
     types:
       opt:

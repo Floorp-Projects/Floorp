@@ -65,14 +65,9 @@ using safe_browsing::ClientDownloadRequest_SignatureInfo;
 #define PREF_DOWNLOAD_ALLOW_TABLE "urlclassifier.downloadAllowTable"
 
 // NSPR_LOG_MODULES=ApplicationReputation:5
-#if defined(PR_LOGGING)
 PRLogModuleInfo *ApplicationReputationService::prlog = nullptr;
 #define LOG(args) PR_LOG(ApplicationReputationService::prlog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(ApplicationReputationService::prlog, 4)
-#else
-#define LOG(args)
-#define LOG_ENABLED() (false)
-#endif
+#define LOG_ENABLED() PR_LOG_TEST(ApplicationReputationService::prlog, PR_LOG_DEBUG)
 
 class PendingDBLookup;
 
@@ -746,9 +741,7 @@ PendingLookup::OnComplete(bool shouldBlock, nsresult rv)
 {
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SHOULD_BLOCK,
     shouldBlock);
-#if defined(PR_LOGGING)
   double t = (TimeStamp::Now() - mStartTime).ToMilliseconds();
-#endif
   if (shouldBlock) {
     LOG(("Application Reputation check failed, blocking bad binary in %f ms "
          "[this = %p]", t, this));
@@ -1103,11 +1096,9 @@ ApplicationReputationService::GetSingleton()
 
 ApplicationReputationService::ApplicationReputationService()
 {
-#if defined(PR_LOGGING)
   if (!prlog) {
     prlog = PR_NewLogModule("ApplicationReputation");
   }
-#endif
   LOG(("Application reputation service started up"));
 }
 

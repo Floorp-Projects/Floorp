@@ -1986,8 +1986,12 @@ ContainerState::GetLayerCreationHint(const nsIFrame* aAnimatedGeometryRoot)
     return LayerManager::SCROLLABLE;
   }
   nsIFrame* animatedGeometryRootParent = aAnimatedGeometryRoot->GetParent();
-  if (animatedGeometryRootParent &&
-      animatedGeometryRootParent->GetType() == nsGkAtoms::scrollFrame) {
+  nsIScrollableFrame* scrollable = do_QueryFrame(animatedGeometryRootParent);
+  if (scrollable && scrollable->WantAsyncScroll()) {
+    // WantAsyncScroll() returns false when the frame has overflow:hidden,
+    // so we won't create tiled layers for overflow:hidden frames even if
+    // they have a display port. The main purpose of the WantAsyncScroll check
+    // is to allow the B2G camera app to use hardware composer for compositing.
     return LayerManager::SCROLLABLE;
   }
   return LayerManager::NONE;
@@ -2375,7 +2379,7 @@ bool
 PaintedLayerData::CanOptimizeToImageLayer(nsDisplayListBuilder* aBuilder)
 {
   if (!mImage) {
-    return nullptr;
+    return false;
   }
 
   return mImage->CanOptimizeToImageLayer(mLayer->Manager(), aBuilder);

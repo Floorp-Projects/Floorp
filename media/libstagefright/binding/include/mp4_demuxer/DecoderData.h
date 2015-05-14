@@ -75,7 +75,6 @@ public:
   virtual bool IsValid() const override;
 };
 
-typedef int64_t Microseconds;
 }
 
 #endif

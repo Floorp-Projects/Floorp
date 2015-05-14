@@ -181,10 +181,12 @@ typedef RectTyped<UnknownUnits> Rect;
 template<class units>
 IntRectTyped<units> RoundedToInt(const RectTyped<units>& aRect)
 {
-  return IntRectTyped<units>(int32_t(floorf(aRect.x + 0.5f)),
-                             int32_t(floorf(aRect.y + 0.5f)),
-                             int32_t(floorf(aRect.width + 0.5f)),
-                             int32_t(floorf(aRect.height + 0.5f)));
+  RectTyped<units> copy(aRect);
+  copy.Round();
+  return IntRectTyped<units>(int32_t(copy.x),
+                             int32_t(copy.y),
+                             int32_t(copy.width),
+                             int32_t(copy.height));
 }
 
 template<class units>

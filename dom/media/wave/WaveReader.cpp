@@ -23,16 +23,11 @@ namespace mozilla {
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
 #ifdef SEEK_LOGGING
 #define SEEK_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
 #else
-#define SEEK_LOG(type, msg)
-#endif
-#else
-#define LOG(type, msg)
 #define SEEK_LOG(type, msg)
 #endif
 

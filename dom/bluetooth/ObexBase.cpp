@@ -8,36 +8,81 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+//
+// Internal functions
+//
+
+/**
+ * Append byte array and length to header
+ */
 int
-AppendHeaderName(uint8_t* aRetBuf, int aBufferSize, const char* aName,
-                 int aLength)
+AppendHeader(uint8_t aHeaderId, uint8_t* aRetBuf, int aBufferSize,
+             const uint8_t* aData, int aLength)
 {
   int headerLength = aLength + 3;
 
-  aRetBuf[0] = ObexHeaderId::Name;
+  aRetBuf[0] = aHeaderId;
   aRetBuf[1] = (headerLength & 0xFF00) >> 8;
   aRetBuf[2] = headerLength & 0x00FF;
-
-  memcpy(&aRetBuf[3], aName, (aLength < aBufferSize - 3)? aLength
-                                                        : aBufferSize - 3);
+  memcpy(&aRetBuf[3], aData, (aLength < aBufferSize - 3) ? aLength
+                                                         : aBufferSize - 3);
 
   return headerLength;
 }
 
+/**
+ * Append 4-byte integer to header
+ */
 int
-AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aData,
+AppendHeader(uint8_t aHeaderId, uint8_t* aRetBuf, int aValue)
+{
+  aRetBuf[0] = aHeaderId;
+  aRetBuf[1] = (aValue & 0xFF000000) >> 24;
+  aRetBuf[2] = (aValue & 0x00FF0000) >> 16;
+  aRetBuf[3] = (aValue & 0x0000FF00) >> 8;
+  aRetBuf[4] = aValue & 0x000000FF;
+
+  return 5;
+}
+
+//
+// Exposed functions
+//
+
+int
+AppendHeaderName(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aName,
                  int aLength)
 {
-  int headerLength = aLength + 3;
+  return AppendHeader(ObexHeaderId::Name, aRetBuf, aBufferSize,
+                      aName, aLength);
+}
 
-  aRetBuf[0] = ObexHeaderId::Body;
-  aRetBuf[1] = (headerLength & 0xFF00) >> 8;
-  aRetBuf[2] = headerLength & 0x00FF;
+int
+AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aBody,
+                 int aLength)
+{
+  return AppendHeader(ObexHeaderId::Body, aRetBuf, aBufferSize,
+                      aBody, aLength);
+}
 
-  memcpy(&aRetBuf[3], aData, (aLength < aBufferSize - 3)? aLength
-                                                        : aBufferSize - 3);
+int
+AppendHeaderWho(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aWho,
+                int aLength)
+{
+  return AppendHeader(ObexHeaderId::Who, aRetBuf, aBufferSize,
+                      aWho, aLength);
+}
 
-  return headerLength;
+int
+AppendHeaderLength(uint8_t* aRetBuf, int aObjectLength)
+{
+  return AppendHeader(ObexHeaderId::Length, aRetBuf, aObjectLength);
+}
+
+int
+AppendHeaderConnectionId(uint8_t* aRetBuf, int aConnectionId)
+{
+  return AppendHeader(ObexHeaderId::ConnectionId, aRetBuf, aConnectionId);
 }
 
 int
@@ -48,30 +93,6 @@ AppendHeaderEndOfBody(uint8_t* aRetBuf)
   aRetBuf[2] = 0x03;
 
   return 3;
-}
-
-int
-AppendHeaderLength(uint8_t* aRetBuf, int aObjectLength)
-{
-  aRetBuf[0] = ObexHeaderId::Length;
-  aRetBuf[1] = (aObjectLength & 0xFF000000) >> 24;
-  aRetBuf[2] = (aObjectLength & 0x00FF0000) >> 16;
-  aRetBuf[3] = (aObjectLength & 0x0000FF00) >> 8;
-  aRetBuf[4] = aObjectLength & 0x000000FF;
-
-  return 5;
-}
-
-int
-AppendHeaderConnectionId(uint8_t* aRetBuf, int aConnectionId)
-{
-  aRetBuf[0] = ObexHeaderId::ConnectionId;
-  aRetBuf[1] = (aConnectionId & 0xFF000000) >> 24;
-  aRetBuf[2] = (aConnectionId & 0x00FF0000) >> 16;
-  aRetBuf[3] = (aConnectionId & 0x0000FF00) >> 8;
-  aRetBuf[4] = aConnectionId & 0x000000FF;
-
-  return 5;
 }
 
 void
@@ -119,7 +140,7 @@ ParseHeaders(const uint8_t* aHeaderStart,
         break;
     }
 
-    // Length check to prevent from memory pollusion.
+    // Length check to prevent from memory pollution.
     if (ptr + contentLength > aHeaderStart + aTotalLength) {
       // Severe error occurred. We can't even believe the received data, so
       // clear all headers.

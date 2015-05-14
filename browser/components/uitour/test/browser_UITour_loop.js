@@ -31,7 +31,7 @@ let tests = [
   taskify(function* test_gettingStartedClicked_linkOpenedWithExpectedParams() {
     Services.prefs.setBoolPref("loop.gettingStarted.seen", false);
     Services.prefs.setCharPref("loop.gettingStarted.url", "http://example.com");
-    ise(loopButton.open, false, "Menu should initially be closed");
+    is(loopButton.open, false, "Menu should initially be closed");
     loopButton.click();
 
     yield waitForConditionPromise(() => {
@@ -69,7 +69,7 @@ let tests = [
 
     UITour.pageIDsForSession.clear();
     Services.prefs.setCharPref("loop.gettingStarted.url", "http://example.com");
-    ise(loopButton.open, false, "Menu should initially be closed");
+    is(loopButton.open, false, "Menu should initially be closed");
     loopButton.click();
 
     yield waitForConditionPromise(() => {
@@ -106,7 +106,7 @@ let tests = [
   taskify(function* test_menu_show_hide() {
     // The targets to highlight only appear after getting started is launched.
     Services.prefs.setBoolPref("loop.gettingStarted.seen", true);
-    ise(loopButton.open, false, "Menu should initially be closed");
+    is(loopButton.open, false, "Menu should initially be closed");
     gContentAPI.showMenu("loop");
 
     yield waitForConditionPromise(() => {
@@ -301,7 +301,7 @@ let tests = [
     LoopRooms.open("fakeTourRoom");
   }),
   taskify(function* test_arrow_panel_position() {
-    ise(loopButton.open, false, "Menu should initially be closed");
+    is(loopButton.open, false, "Menu should initially be closed");
     let popup = document.getElementById("UITourTooltip");
 
     yield showMenuPromise("loop");
@@ -344,7 +344,7 @@ let tests = [
     let observationPromise = new Promise((resolve) => {
       gContentAPI.observe((event, params) => {
         is(event, "Loop:IncomingConversation", "Page should have been notified about incoming conversation");
-        ise(params.conversationOpen, false, "conversationOpen should be false");
+        is(params.conversationOpen, false, "conversationOpen should be false");
         is(gBrowser.selectedTab, gTestTab, "The same tab should be selected");
         resolve();
       });

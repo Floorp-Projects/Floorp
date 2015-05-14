@@ -43,14 +43,11 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 #undef LOG
 #endif
 
-#if defined(PR_LOGGING)
 //
 // set NSPR_LOG_MODULES=nsJarProtocol:5
 //
 static PRLogModuleInfo *gJarProtocolLog = nullptr;
-#endif
 
-// If you ever want to define PR_FORCE_LOGGING in this file, see bug 545995
 #define LOG(args)     PR_LOG(gJarProtocolLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gJarProtocolLog, 4)
 
@@ -203,10 +200,8 @@ nsJARChannel::nsJARChannel()
     , mOpeningRemote(false)
     , mEnsureChildFd(false)
 {
-#if defined(PR_LOGGING)
     if (!gJarProtocolLog)
         gJarProtocolLog = PR_NewLogModule("nsJarProtocol");
-#endif
 
     // hold an owning reference to the jar handler
     NS_ADDREF(gJarHandler);
@@ -263,9 +258,7 @@ nsJARChannel::Init(nsIURI *uri)
         return NS_ERROR_INVALID_ARG;
     }
 
-#if defined(PR_LOGGING)
     mJarURI->GetSpec(mSpec);
-#endif
     return rv;
 }
 
@@ -1182,9 +1175,7 @@ nsJARChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
                                nsIInputStream *stream,
                                uint64_t offset, uint32_t count)
 {
-#if defined(PR_LOGGING)
     LOG(("nsJARChannel::OnDataAvailable [this=%x %s]\n", this, mSpec.get()));
-#endif
 
     nsresult rv;
 

@@ -48,9 +48,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941315
   function runTests() {
     [testSimpleDuration, testMin, testMax, testRepeatDur, testRepeatCount]
       .forEach(function(test) {
-        ise(b.getStartTime(), 100, "initial state before running " + test.name);
+        is(b.getStartTime(), 100, "initial state before running " + test.name);
         test();
-        ise(b.getStartTime(), 100, "final state after running " + test.name);
+        is(b.getStartTime(), 100, "final state after running " + test.name);
       });
     SimpleTest.finish();
   }
@@ -58,11 +58,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941315
   function testSimpleDuration() {
     // Verify a valid value updates as expected
     a.setAttribute("dur", "50s");
-    ise(b.safeGetStartTime(), 50, "valid simple duration");
+    is(b.safeGetStartTime(), 50, "valid simple duration");
 
     // Check an invalid value also causes the model to be updated
     a.setAttribute("dur", "abc"); // -> indefinite
-    ise(b.safeGetStartTime(), "none", "invalid simple duration");
+    is(b.safeGetStartTime(), "none", "invalid simple duration");
 
     // Restore state
     a.setAttribute("dur", "100s");
@@ -70,40 +70,40 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941315
 
   function testMin() {
     a.setAttribute("min", "200s");
-    ise(b.safeGetStartTime(), 200, "valid min duration");
+    is(b.safeGetStartTime(), 200, "valid min duration");
 
     a.setAttribute("min", "abc"); // -> indefinite
-    ise(b.safeGetStartTime(), 100, "invalid min duration");
+    is(b.safeGetStartTime(), 100, "invalid min duration");
 
     a.removeAttribute("min");
   }
 
   function testMax() {
     a.setAttribute("max", "50s");
-    ise(b.safeGetStartTime(), 50, "valid max duration");
+    is(b.safeGetStartTime(), 50, "valid max duration");
 
     a.setAttribute("max", "abc"); // -> indefinite
-    ise(b.safeGetStartTime(), 100, "invalid max duration");
+    is(b.safeGetStartTime(), 100, "invalid max duration");
 
     a.removeAttribute("max");
   }
 
   function testRepeatDur() {
     a.setAttribute("repeatDur", "200s");
-    ise(b.safeGetStartTime(), 200, "valid repeatDur duration");
+    is(b.safeGetStartTime(), 200, "valid repeatDur duration");
 
     a.setAttribute("repeatDur", "abc"); // -> indefinite
-    ise(b.safeGetStartTime(), 100, "invalid repeatDur duration");
+    is(b.safeGetStartTime(), 100, "invalid repeatDur duration");
 
     a.removeAttribute("repeatDur");
   }
 
   function testRepeatCount() {
     a.setAttribute("repeatCount", "2");
-    ise(b.safeGetStartTime(), 200, "valid repeatCount duration");
+    is(b.safeGetStartTime(), 200, "valid repeatCount duration");
 
     a.setAttribute("repeatCount", "abc"); // -> indefinite
-    ise(b.safeGetStartTime(), 100, "invalid repeatCount duration");
+    is(b.safeGetStartTime(), 100, "invalid repeatCount duration");
 
     a.removeAttribute("repeatCount");
   }

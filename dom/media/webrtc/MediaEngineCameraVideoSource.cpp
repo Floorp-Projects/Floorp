@@ -15,14 +15,9 @@ using dom::OwningDoubleOrConstrainDoubleRange;
 using dom::ConstrainDoubleRange;
 using dom::MediaTrackConstraintSet;
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
 #define LOGFRAME(msg) PR_LOG(GetMediaManagerLog(), 6, msg)
-#else
-#define LOG(msg)
-#define LOGFRAME(msg)
-#endif
 
 // guts for appending data to the MSG track
 bool MediaEngineCameraVideoSource::AppendToTrack(SourceMediaStream* aSource,
@@ -200,7 +195,6 @@ void
 MediaEngineCameraVideoSource::LogConstraints(
     const MediaTrackConstraintSet& aConstraints, bool aAdvanced)
 {
-#ifdef PR_LOGGING
   NormalizedConstraintSet c(aConstraints, aAdvanced);
   LOG(((c.mWidth.mIdeal.WasPassed()?
         "Constraints: width: { min: %d, max: %d, ideal: %d }" :
@@ -217,7 +211,6 @@ MediaEngineCameraVideoSource::LogConstraints(
         "             frameRate: { min: %f, max: %f }"),
        c.mFrameRate.mMin, c.mFrameRate.mMax,
        c.mFrameRate.mIdeal.WasPassed()? c.mFrameRate.mIdeal.Value() : 0));
-#endif
 }
 
 bool
@@ -225,18 +218,18 @@ MediaEngineCameraVideoSource::ChooseCapability(
     const dom::MediaTrackConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs)
 {
-#ifdef PR_LOGGING
-  LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
-       aPrefs.GetWidth(), aPrefs.GetHeight(),
-       aPrefs.mFPS, aPrefs.mMinFPS));
-  LogConstraints(aConstraints, false);
-  if (aConstraints.mAdvanced.WasPassed()) {
-    LOG(("Advanced array[%u]:", aConstraints.mAdvanced.Value().Length()));
-    for (auto& advanced : aConstraints.mAdvanced.Value()) {
-      LogConstraints(advanced, true);
+  if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
+    LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
+         aPrefs.GetWidth(), aPrefs.GetHeight(),
+         aPrefs.mFPS, aPrefs.mMinFPS));
+    LogConstraints(aConstraints, false);
+    if (aConstraints.mAdvanced.WasPassed()) {
+      LOG(("Advanced array[%u]:", aConstraints.mAdvanced.Value().Length()));
+      for (auto& advanced : aConstraints.mAdvanced.Value()) {
+        LogConstraints(advanced, true);
+      }
     }
   }
-#endif
 
   size_t num = NumCapabilities();
 

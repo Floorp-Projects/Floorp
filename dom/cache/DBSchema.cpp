@@ -28,11 +28,11 @@ namespace dom {
 namespace cache {
 namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 7;
+const int32_t kMaxWipeSchemaVersion = 8;
 
 namespace {
 
-const int32_t kLatestSchemaVersion = 7;
+const int32_t kLatestSchemaVersion = 8;
 const int32_t kMaxEntriesPerStatement = 255;
 
 } // anonymous namespace
@@ -343,12 +343,12 @@ InitializeConnection(mozIStorageConnection* aConn)
   // need to happen regardless of the schema.
 
   nsAutoCString pragmas(
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
-    // Switch the journaling mode to TRUNCATE to avoid changing the directory
-    // structure at the conclusion of every transaction for devices with slower
-    // file systems.
-    "PRAGMA journal_mode = TRUNCATE; "
-#endif
+    "PRAGMA journal_mode = WAL; "
+    // Use default mozStorage 32kb page size for now
+    // WAL journal can grow to 512kb before being flushed to disk
+    "PRAGMA wal_autocheckpoint = 16; "
+    // Always truncate the journal back to 512kb after large transactions
+    "PRAGMA journal_size_limit = 524288; "
     "PRAGMA foreign_keys = ON; "
 
     // Note, the default encoding of UTF-8 is preferred.  mozStorage does all

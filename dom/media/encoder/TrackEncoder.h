@@ -129,11 +129,9 @@ protected:
    */
   bool mCanceled;
 
-#ifdef PR_LOGGING
   // How many times we have tried to initialize the encoder.
   uint32_t mAudioInitCounter;
   uint32_t mVideoInitCounter;
-#endif
 };
 
 class AudioTrackEncoder : public TrackEncoder

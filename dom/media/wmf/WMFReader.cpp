@@ -34,12 +34,8 @@ using mozilla::layers::LayersBackend;
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(...) PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define DECODER_LOG(...)
-#endif
 
 // Uncomment to enable verbose per-sample logging.
 //#define LOG_SAMPLE_DECODE 1

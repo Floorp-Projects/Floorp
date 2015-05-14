@@ -76,12 +76,12 @@ function checkTransform(transform, expected, spec, index) {
 
   // Compare type
   if (typeof expected.type != "undefined") {
-    ise(transform.type, typeMapping[expected.type], name + " - transform type");
+    is(transform.type, typeMapping[expected.type], name + " - transform type");
   }
 
   // Compare angle
   if (typeof expected.angle != "undefined") {
-    ise(transform.angle, expected.angle, name + " - angle");
+    is(transform.angle, expected.angle, name + " - angle");
   }
 
   // Compare matrix values (roughly)

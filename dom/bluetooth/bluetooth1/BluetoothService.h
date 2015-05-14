@@ -394,7 +394,6 @@ protected:
   static BluetoothService*
   Create();
 
-
   typedef nsClassHashtable<nsStringHashKey, BluetoothSignalObserverList >
   BluetoothSignalObserverTable;
 

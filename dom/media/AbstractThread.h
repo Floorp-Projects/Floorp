@@ -40,7 +40,7 @@ public:
   // if the caller is not running in an AbstractThread.
   static AbstractThread* GetCurrent() { return sCurrentThreadTLS.get(); }
 
-  AbstractThread(bool aRequireTailDispatch) : mRequireTailDispatch(aRequireTailDispatch) {}
+  AbstractThread(bool aSupportsTailDispatch) : mSupportsTailDispatch(aSupportsTailDispatch) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractThread);
 
@@ -63,9 +63,12 @@ public:
   // threads which support it.
   virtual TaskDispatcher& TailDispatcher() = 0;
 
-  // Returns true if this task queue requires all dispatches performed by its
-  // tasks to go through the tail dispatcher.
-  bool RequiresTailDispatch() const { return mRequireTailDispatch; }
+  // Returns true if this supports the tail dispatcher.
+  bool SupportsTailDispatch() const { return mSupportsTailDispatch; }
+
+  // Returns true if this thread requires all dispatches originating from
+  // aThread go through the tail dispatcher.
+  bool RequiresTailDispatch(AbstractThread* aThread) const;
 
   virtual MediaTaskQueue* AsTaskQueue() { MOZ_CRASH("Not a task queue!"); }
   virtual nsIThread* AsXPCOMThread() { MOZ_CRASH("Not an XPCOM thread!"); }
@@ -82,7 +85,7 @@ protected:
 
   // True if we want to require that every task dispatched from tasks running in
   // this queue go through our queue's tail dispatcher.
-  const bool mRequireTailDispatch;
+  const bool mSupportsTailDispatch;
 };
 
 } // namespace mozilla

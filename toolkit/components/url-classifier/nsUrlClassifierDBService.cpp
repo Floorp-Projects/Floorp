@@ -55,14 +55,9 @@ using namespace mozilla;
 using namespace mozilla::safebrowsing;
 
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
-#if defined(PR_LOGGING)
 PRLogModuleInfo *gUrlClassifierDbServiceLog = nullptr;
 #define LOG(args) PR_LOG(gUrlClassifierDbServiceLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierDbServiceLog, 4)
-#else
-#define LOG(args)
-#define LOG_ENABLED() (false)
-#endif
+#define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierDbServiceLog, PR_LOG_DEBUG)
 
 // Prefs for implementing nsIURIClassifier to block page loads
 #define CHECK_MALWARE_PREF      "browser.safebrowsing.malware.enabled"
@@ -237,12 +232,10 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-#if defined(PR_LOGGING)
   PRIntervalTime clockStart = 0;
   if (LOG_ENABLED()) {
     clockStart = PR_IntervalNow();
   }
-#endif
 
   nsAutoPtr<LookupResultArray> results(new LookupResultArray());
   if (!results) {
@@ -259,13 +252,11 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
   LOG(("Found %d results.", results->Length()));
 
 
-#if defined(PR_LOGGING)
   if (LOG_ENABLED()) {
     PRIntervalTime clockEnd = PR_IntervalNow();
     LOG(("query took %dms\n",
          PR_IntervalToMilliseconds(clockEnd - clockStart)));
   }
-#endif
 
   nsAutoPtr<LookupResultArray> completes(new LookupResultArray());
 
@@ -1089,10 +1080,8 @@ nsUrlClassifierDBService::ReadTablesFromPrefs()
 nsresult
 nsUrlClassifierDBService::Init()
 {
-#if defined(PR_LOGGING)
   if (!gUrlClassifierDbServiceLog)
     gUrlClassifierDbServiceLog = PR_NewLogModule("UrlClassifierDbService");
-#endif
   MOZ_ASSERT(NS_IsMainThread(), "Must initialize DB service on main thread");
   nsCOMPtr<nsIXULRuntime> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
   if (appInfo) {

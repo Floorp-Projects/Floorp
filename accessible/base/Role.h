@@ -981,7 +981,13 @@ enum Role {
    */
   RADIO_GROUP = 168,
 
-  LAST_ROLE = RADIO_GROUP
+  /**
+   * A text container exposing brief amount of information. See related
+   * TEXT_CONTAINER role.
+   */
+  TEXT = 169,
+
+  LAST_ROLE = TEXT
 };
 
 } // namespace role

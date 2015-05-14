@@ -527,12 +527,10 @@ GDIFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
     EnumFontFamiliesExW(hdc, &logFont,
                         (FONTENUMPROCW)GDIFontFamily::FamilyAddStylesProc,
                         (LPARAM)this, 0);
-#ifdef PR_LOGGING
     if (LOG_FONTLIST_ENABLED() && mAvailableFonts.Length() == 0) {
         LOG_FONTLIST(("(fontlist) no styles available in family \"%s\"",
                       NS_ConvertUTF16toUTF8(mName).get()));
     }
-#endif
 
     ReleaseDC(nullptr, hdc);
 

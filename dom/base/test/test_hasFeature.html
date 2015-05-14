@@ -54,10 +54,10 @@ function testAPIs() {
   });
   Promise.all(promises).then(function(values) {
     for (var i = 0; i < values.length; ++i) {
-      ise(values[i], APIEndPoints[i].enabled,
-          "Endpoint " + APIEndPoints[i].name + " resolved with the correct value. " +
-          "If this is failing because you're changing how an API is exposed, you " +
-          "must contact the Marketplace team to let them know about the change.");
+      is(values[i], APIEndPoints[i].enabled,
+         "Endpoint " + APIEndPoints[i].name + " resolved with the correct value. " +
+         "If this is failing because you're changing how an API is exposed, you " +
+         "must contact the Marketplace team to let them know about the change.");
     }
     SimpleTest.finish();
   }, function() {

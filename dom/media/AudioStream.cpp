@@ -28,13 +28,9 @@ namespace mozilla {
 #undef LOG
 #endif
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gAudioStreamLog = nullptr;
 // For simple logs
 #define LOG(x) PR_LOG(gAudioStreamLog, PR_LOG_DEBUG, x)
-#else
-#define LOG(x)
-#endif
 
 /**
  * When MOZ_DUMP_AUDIO is set in the environment (to anything),
@@ -1071,11 +1067,8 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
     // we start getting callbacks.
     // Simple version - contract on first callback only.
     if (mLatencyRequest == LowLatency) {
-#ifdef PR_LOGGING
       uint32_t old_len = mBuffer.Length();
-#endif
       available = mBuffer.ContractTo(FramesToBytes(aFrames));
-#ifdef PR_LOGGING
       TimeStamp now = TimeStamp::Now();
       if (!mStartTime.IsNull()) {
         int64_t timeMs = (now - mStartTime).ToMilliseconds();
@@ -1093,7 +1086,6 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
                  mReadPoint, BytesToFrames(old_len - available), mOutRate));
         mReadPoint += BytesToFrames(old_len - available);
       }
-#endif
     }
     mState = RUNNING;
   }

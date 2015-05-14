@@ -54,6 +54,12 @@ DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
     return;
   }
 
+  rv = dbDir->Append(NS_LITERAL_STRING("cache"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aResolver->Resolve(rv);
+    return;
+  }
+
   nsCOMPtr<mozIStorageConnection> conn;
 
   // Attempt to reuse the connection opened by a previous Action.
@@ -63,12 +69,6 @@ DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
 
   // If there is no previous Action, then we must open one.
   if (!conn) {
-    rv = dbDir->Append(NS_LITERAL_STRING("cache"));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aResolver->Resolve(rv);
-      return;
-    }
-
     rv = OpenConnection(aQuotaInfo, dbDir, getter_AddRefs(conn));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aResolver->Resolve(rv);
@@ -186,6 +186,9 @@ DBAction::WipeDatabase(nsIFile* aDBFile, nsIFile* aDBDir)
 {
   nsresult rv = aDBFile->Remove(false);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // Note, the -wal journal file will be automatically deleted by sqlite when
+  // the new database is created.  No need to explicitly delete it here.
 
   // Delete the morgue as well.
   rv = BodyDeleteDir(aDBDir);

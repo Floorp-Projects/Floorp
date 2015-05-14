@@ -63,12 +63,11 @@ HyperTextAccessible::NativeRole()
   if (r != roles::NOTHING)
     return r;
 
-  // Treat block frames as paragraphs
-  nsIFrame *frame = GetFrame();
-  if (frame && frame->GetType() == nsGkAtoms::blockFrame)
-    return roles::PARAGRAPH;
+  nsIFrame* frame = GetFrame();
+  if (frame && frame->GetType() == nsGkAtoms::inlineFrame)
+    return roles::TEXT;
 
-  return roles::TEXT_CONTAINER; // In ATK this works
+  return roles::TEXT_CONTAINER;
 }
 
 uint64_t

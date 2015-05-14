@@ -16,30 +16,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=891952
       var all = document.all;
       is(all["content"], $("content"), "Should find the content");
       ok(!("" in all), "Should not have an empty string prop on document.all");
-      ise(all[""], undefined, "Should not get empty string on document.all");
-      ise(all.namedItem(""), null,
-          "namedItem for empty string should return null on document.all");
+      is(all[""], undefined, "Should not get empty string on document.all");
+      is(all.namedItem(""), null,
+         "namedItem for empty string should return null on document.all");
 
       var divs = document.getElementsByTagName("div");
       ok(!("" in divs), "Should not have an empty string prop on getElementsByTagName");
-      ise(divs[""], undefined, "Should not get empty string on getElementsByTagName");
-      ise(divs.namedItem(""), null,
-          "namedItem for empty string should return null on getElementsByTagName");
+      is(divs[""], undefined, "Should not get empty string on getElementsByTagName");
+      is(divs.namedItem(""), null,
+         "namedItem for empty string should return null on getElementsByTagName");
       var forms = document.forms;
       ok(!("" in forms), "Should not have an empty string prop on document.forms");
-      ise(forms[""], undefined, "Should not get empty string on document.forms");
-      ise(forms.namedItem(""), null,
-          "namedItem for empty string should return null on document.forms");
+      is(forms[""], undefined, "Should not get empty string on document.forms");
+      is(forms.namedItem(""), null,
+         "namedItem for empty string should return null on document.forms");
 
       var form = $("form");
       ok(!("" in form), "Should not have an empty string prop on form");
-      ise(form[""], undefined, "Should not get empty string on form");
+      is(form[""], undefined, "Should not get empty string on form");
 
       var formEls = $("form").elements;
       ok(!("" in formEls), "Should not have an empty string prop on form.elements");
-      ise(formEls[""], undefined, "Should not get empty string on form.elements");
-      ise(formEls.namedItem(""), null,
-          "namedItem for empty string should return null on form.elements");
+      is(formEls[""], undefined, "Should not get empty string on form.elements");
+      is(formEls.namedItem(""), null,
+         "namedItem for empty string should return null on form.elements");
       SimpleTest.finish();
     });
 

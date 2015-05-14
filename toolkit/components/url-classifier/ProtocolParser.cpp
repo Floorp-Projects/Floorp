@@ -14,13 +14,8 @@
 
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
 extern PRLogModuleInfo *gUrlClassifierDbServiceLog;
-#if defined(PR_LOGGING)
 #define LOG(args) PR_LOG(gUrlClassifierDbServiceLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierDbServiceLog, 4)
-#else
-#define LOG(args)
-#define LOG_ENABLED() (false)
-#endif
+#define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierDbServiceLog, PR_LOG_DEBUG)
 
 namespace mozilla {
 namespace safebrowsing {

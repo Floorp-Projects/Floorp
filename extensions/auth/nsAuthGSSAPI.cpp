@@ -227,13 +227,15 @@ gssInit()
     return NS_OK;
 }
 
-#if defined( PR_LOGGING )
-
 // Generate proper GSSAPI error messages from the major and
 // minor status codes.
 void
 LogGssError(OM_uint32 maj_stat, OM_uint32 min_stat, const char *prefix)
 {
+    if (!PR_LOG_TEST(gNegotiateLog, PR_LOG_DEBUG)) {
+        return;
+    }
+
     OM_uint32 new_stat;
     OM_uint32 msg_ctx = 0;
     gss_buffer_desc status1_string;
@@ -269,12 +271,6 @@ LogGssError(OM_uint32 maj_stat, OM_uint32 min_stat, const char *prefix)
 
     LOG(("%s\n", errorStr.get()));
 }
-
-#else /* PR_LOGGING */
-
-#define LogGssError(x,y,z)
-
-#endif /* PR_LOGGING */
 
 //-----------------------------------------------------------------------------
 

@@ -324,7 +324,7 @@ class StartRequestEvent : public ChannelEvent
                     const nsCString& securityInfoSerialization,
                     const NetAddr& selfAddr,
                     const NetAddr& peerAddr,
-                    const HttpChannelCacheKey& cacheKey)
+                    const uint32_t& cacheKey)
   : mChild(child)
   , mChannelStatus(channelStatus)
   , mResponseHead(responseHead)
@@ -362,7 +362,7 @@ class StartRequestEvent : public ChannelEvent
   nsCString mSecurityInfoSerialization;
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
-  HttpChannelCacheKey mCacheKey;
+  uint32_t mCacheKey;
 };
 
 bool
@@ -378,7 +378,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const NetAddr& selfAddr,
                                      const NetAddr& peerAddr,
                                      const int16_t& redirectCount,
-                                     const HttpChannelCacheKey& cacheKey)
+                                     const uint32_t& cacheKey)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -419,7 +419,7 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
                                  const nsCString& securityInfoSerialization,
                                  const NetAddr& selfAddr,
                                  const NetAddr& peerAddr,
-                                 const HttpChannelCacheKey& cacheKey)
+                                 const uint32_t& cacheKey)
 {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
@@ -447,11 +447,22 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   mCacheExpirationTime = cacheExpirationTime;
   mCachedCharset = cachedCharset;
 
-  nsRefPtr<nsHttpChannelCacheKey> tmpKey = new nsHttpChannelCacheKey();
-  tmpKey->SetData(cacheKey.postId(), cacheKey.key());
-  CallQueryInterface(tmpKey.get(), getter_AddRefs(mCacheKey));
-
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
+
+  nsresult rv;
+  nsCOMPtr<nsISupportsPRUint32> container =
+    do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    Cancel(rv);
+    return;
+  }
+
+  rv = container->SetData(cacheKey);
+  if (NS_FAILED(rv)) {
+    Cancel(rv);
+    return;
+  }
+  mCacheKey = container;
 
   // replace our request headers with what actually got sent in the parent
   mRequestHead.Headers() = requestHeaders;
@@ -1657,19 +1668,19 @@ HttpChannelChild::ContinueAsyncOpen()
   openArgs.allowSpdy() = mAllowSpdy;
   openArgs.allowAltSvc() = mAllowAltSvc;
 
+  uint32_t cacheKey = 0;
   if (mCacheKey) {
-    uint32_t postId;
-    nsAutoCString key;
-    nsresult rv = static_cast<nsHttpChannelCacheKey *>(
-      static_cast<nsISupportsPRUint32 *>(mCacheKey.get()))->GetData(&postId,
-                                                                    key);
+    nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(mCacheKey);
+    if (!container) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    nsresult rv = container->GetData(&cacheKey);
     if (NS_FAILED(rv)) {
       return rv;
     }
-    openArgs.cacheKey() = HttpChannelCacheKey(postId, key);
-  } else {
-    openArgs.cacheKey() = mozilla::void_t();
   }
+  openArgs.cacheKey() = cacheKey;
 
   propagateLoadInfo(mLoadInfo, openArgs);
 

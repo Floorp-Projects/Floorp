@@ -69,8 +69,7 @@
        fmt "\n", \
        NameWithComma().get(), \
        static_cast<uint64_t>(ChildID()), Pid(), ##__VA_ARGS__)
-
-#elif defined(PR_LOGGING)
+#else
   static PRLogModuleInfo*
   GetPPMLog()
   {
@@ -87,9 +86,6 @@
             ("ProcessPriorityManager[%schild-id=%" PRIu64 ", pid=%d] - " fmt, \
             NameWithComma().get(), \
             static_cast<uint64_t>(ChildID()), Pid(), ##__VA_ARGS__))
-#else
-#define LOG(fmt, ...)
-#define LOGP(fmt, ...)
 #endif
 
 using namespace mozilla;

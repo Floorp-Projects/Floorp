@@ -2246,12 +2246,7 @@ OnSystemError(nsGonkCameraControl* gc,
               CameraControlListener::SystemContext aWhere,
               int32_t aArg1, int32_t aArg2)
 {
-#ifdef PR_LOGGING
   DOM_CAMERA_LOGE("OnSystemError : aWhere=%d, aArg1=%d, aArg2=%d\n", aWhere, aArg1, aArg2);
-#else
-  unused << aArg1;
-  unused << aArg2;
-#endif
   gc->OnSystemError(aWhere, NS_ERROR_FAILURE);
 }
 

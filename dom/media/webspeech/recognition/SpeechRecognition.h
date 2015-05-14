@@ -44,12 +44,8 @@ namespace dom {
 class GlobalObject;
 class SpeechEvent;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* GetSpeechRecognitionLog();
 #define SR_LOG(...) PR_LOG(GetSpeechRecognitionLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define SR_LOG(...)
-#endif
 
 already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService();
 

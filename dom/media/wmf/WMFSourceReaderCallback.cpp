@@ -9,12 +9,8 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo* gWMFSourceReaderCallbackLog = nullptr;
 #define WMF_CB_LOG(...) PR_LOG(gWMFSourceReaderCallbackLog, PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define WMF_CB_LOG(...)
-#endif
 
 // IUnknown Methods
 STDMETHODIMP
@@ -44,11 +40,9 @@ WMFSourceReaderCallback::WMFSourceReaderCallback()
   , mSample(nullptr)
   , mReadFinished(false)
 {
-#ifdef PR_LOGGING
   if (!gWMFSourceReaderCallbackLog) {
     gWMFSourceReaderCallbackLog = PR_NewLogModule("WMFSourceReaderCallback");
   }
-#endif
 }
 
 HRESULT

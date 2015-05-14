@@ -130,7 +130,7 @@ private:
       : AbstractCanonical<T>(aThread), WatchTarget(aName), mValue(aInitialValue)
     {
       MIRROR_LOG("%s [%p] initialized", mName, this);
-      MOZ_ASSERT(aThread->RequiresTailDispatch(), "Can't get coherency without tail dispatch");
+      MOZ_ASSERT(aThread->SupportsTailDispatch(), "Can't get coherency without tail dispatch");
     }
 
     void AddMirror(AbstractMirror<T>* aMirror) override
@@ -303,6 +303,7 @@ private:
       : AbstractMirror<T>(aThread), WatchTarget(aName), mValue(aInitialValue)
     {
       MIRROR_LOG("%s [%p] initialized", mName, this);
+      MOZ_ASSERT(aThread->SupportsTailDispatch(), "Can't get coherency without tail dispatch");
     }
 
     operator const T&()
@@ -334,6 +335,7 @@ private:
       MIRROR_LOG("%s [%p] Connecting to %p", mName, this, aCanonical);
       MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
       MOZ_ASSERT(!IsConnected());
+      MOZ_ASSERT(OwnerThread()->RequiresTailDispatch(aCanonical->OwnerThread()), "Can't get coherency without tail dispatch");
 
       nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
                                   (aCanonical, &AbstractCanonical<T>::AddMirror, this);

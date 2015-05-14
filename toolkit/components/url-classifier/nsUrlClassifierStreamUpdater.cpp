@@ -24,13 +24,8 @@ static const char* gQuitApplicationMessage = "quit-application";
 #undef LOG
 
 // NSPR_LOG_MODULES=UrlClassifierStreamUpdater:5
-#if defined(PR_LOGGING)
 static const PRLogModuleInfo *gUrlClassifierStreamUpdaterLog = nullptr;
 #define LOG(args) PR_LOG(gUrlClassifierStreamUpdaterLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
-
 
 // This class does absolutely nothing, except pass requests onto the DBService.
 
@@ -42,10 +37,8 @@ nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
   : mIsUpdating(false), mInitialized(false), mDownloadError(false),
     mBeganStream(false), mChannel(nullptr)
 {
-#if defined(PR_LOGGING)
   if (!gUrlClassifierStreamUpdaterLog)
     gUrlClassifierStreamUpdaterLog = PR_NewLogModule("UrlClassifierStreamUpdater");
-#endif
   LOG(("nsUrlClassifierStreamUpdater init [this=%p]", this));
 }
 

@@ -112,11 +112,8 @@ RefTimeToSeconds(const REFERENCE_TIME aRefTime)
   return double(aRefTime) / 10000000;
 }
 
-
-#if defined(PR_LOGGING)
 const char*
 GetDirectShowGuidName(const GUID& aGuid);
-#endif
 
 } // namespace mozilla
 
