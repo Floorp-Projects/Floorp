@@ -40,7 +40,7 @@ function onAttach(aState, aResponse)
     tests.push(function() {
       aState.client.evaluateJS("throw " + value + ";", function(aResponse) {
         let exception = aResponse.exception;
-        ise(exception, value, "response.exception for throw " + value);
+        is(exception, value, "response.exception for throw " + value);
         nextTest();
       });
     });

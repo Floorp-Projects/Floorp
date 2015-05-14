@@ -56,7 +56,6 @@ class nsIPrincipal;
   case nsIContentPolicy:: name :   \
     return #name
 
-#ifdef PR_LOGGING
 /**
  * Returns a string corresponding to the name of the response constant, or
  * "<Unknown Response>" if an unknown response value is given.
@@ -118,8 +117,6 @@ NS_CP_ContentTypeName(uint32_t contentType)
     return "<Unknown Type>";
   }
 }
-
-#endif // defined(PR_LOGGING)
 
 #undef CASE_RETURN
 

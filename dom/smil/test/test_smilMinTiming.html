@@ -48,42 +48,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948245
     // In the extended period (t=150s) we should not be animating or filling
     // since the default fill mode is "none".
     animation.ownerSVGElement.setCurrentTime(150);
-    ise(rect.x.animVal.value, 0,
-        "Shouldn't fill in extended period with fill='none'");
+    is(rect.x.animVal.value, 0,
+       "Shouldn't fill in extended period with fill='none'");
 
     // If we set the fill mode we should start filling.
     animation.setAttribute("fill", "freeze");
-    ise(rect.x.animVal.value, 100,
-        "Should fill in extended period with fill='freeze'");
+    is(rect.x.animVal.value, 100,
+       "Should fill in extended period with fill='freeze'");
 
     // If we unset the fill attribute we should stop filling.
     animation.removeAttribute("fill");
-    ise(rect.x.animVal.value, 0, "Shouldn't fill after unsetting fill");
+    is(rect.x.animVal.value, 0, "Shouldn't fill after unsetting fill");
 
     // If we jump back into the repeated interval (at t=50s) we should be
     // animating.
     animation.ownerSVGElement.setCurrentTime(50);
-    ise(rect.x.animVal.value, 50, "Should be active in repeating interval");
+    is(rect.x.animVal.value, 50, "Should be active in repeating interval");
 
     // If we jump to the boundary at the start of the extended period we should
     // not be filling (since we removed the fill attribute above).
     animation.ownerSVGElement.setCurrentTime(100);
-    ise(rect.x.animVal.value, 0,
-        "Shouldn't fill after seeking to boundary of extended period");
+    is(rect.x.animVal.value, 0,
+       "Shouldn't fill after seeking to boundary of extended period");
 
     // If we apply a fill mode at this boundary point we should do regular fill
     // behavior of using the last value in the interpolation range.
     animation.setAttribute("fill", "freeze");
-    ise(rect.x.animVal.value, 100,
-        "Should fill at boundary to extended period");
+    is(rect.x.animVal.value, 100,
+       "Should fill at boundary to extended period");
 
     // Check that if we seek past the interval we fill with the value at the end
     // of the _repeat_duration_ not the value at the end of the
     // _active_duration_.
     animation.setAttribute("repeatCount", "1.5");
     animation.ownerSVGElement.setCurrentTime(225);
-    ise(rect.x.animVal.value, 50,
-        "Should fill with the end of the repeat duration value");
+    is(rect.x.animVal.value, 50,
+       "Should fill with the end of the repeat duration value");
 
     SimpleTest.finish();
   }

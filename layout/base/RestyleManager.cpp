@@ -257,7 +257,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       // painting is suppressed.
       needInvalidatingPaint = true;
       aFrame->InvalidateFrameSubtree();
-      if (aChange & nsChangeHint_UpdateEffects &&
+      if ((aChange & nsChangeHint_UpdateEffects) &&
           aFrame->IsFrameOfType(nsIFrame::eSVG) &&
           !(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
         // Need to update our overflow rects:
@@ -802,7 +802,10 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           nsSVGEffects::UpdateEffects(cont);
         }
       }
-      if (hint & nsChangeHint_InvalidateRenderingObservers) {
+      if ((hint & nsChangeHint_InvalidateRenderingObservers) ||
+          ((hint & nsChangeHint_UpdateOpacityLayer) &&
+           frame->IsFrameOfType(nsIFrame::eSVG) &&
+           !(frame->GetStateBits() & NS_STATE_IS_OUTER_SVG))) {
         nsSVGEffects::InvalidateRenderingObservers(frame);
       }
       if (hint & nsChangeHint_NeedReflow) {

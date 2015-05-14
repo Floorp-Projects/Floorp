@@ -28,9 +28,7 @@
 #include "prlog.h"
 
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gStorageLog;
-#endif
 
 namespace mozilla {
 namespace storage {
@@ -606,14 +604,12 @@ Statement::ExecuteStep(bool *_moreResults)
   }
   int srv = mDBConnection->stepStatement(mNativeConnection, mDBStatement);
 
-#ifdef PR_LOGGING
-  if (srv != SQLITE_ROW && srv != SQLITE_DONE) {
+  if (srv != SQLITE_ROW && srv != SQLITE_DONE && PR_LOG_TEST(gStorageLog, PR_LOG_DEBUG)) {
       nsAutoCString errStr;
       (void)mDBConnection->GetLastErrorString(errStr);
       PR_LOG(gStorageLog, PR_LOG_DEBUG,
              ("Statement::ExecuteStep error: %s", errStr.get()));
   }
-#endif
 
   // SQLITE_ROW and SQLITE_DONE are non-errors
   if (srv == SQLITE_ROW) {

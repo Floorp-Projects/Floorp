@@ -32,11 +32,11 @@ interface nsICacheInfoChannel : nsISupports
    * for this channel.  Holding a reference to this key does NOT prevent
    * the cached data from being removed.
    *
-   * A cache key retrieved from a particular instance of nsICachingChannel
-   * could be set on another instance of nsICachingChannel provided the
+   * A cache key retrieved from a particular instance of nsICacheInfoChannel
+   * could be set on another instance of nsICacheInfoChannel provided the
    * underlying implementations are compatible and provided the new 
    * channel instance was created with the same URI.  The implementation of
-   * nsICachingChannel would be expected to use the cache entry identified
+   * nsICacheInfoChannel would be expected to use the cache entry identified
    * by the cache token.  Depending on the value of nsIRequest::loadFlags,
    * the cache entry may be validated, overwritten, or simply read.
    *

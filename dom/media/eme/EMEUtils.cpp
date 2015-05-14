@@ -8,8 +8,6 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
-
 PRLogModuleInfo* GetEMELog() {
   static PRLogModuleInfo* log = nullptr;
   if (!log) {
@@ -25,8 +23,6 @@ PRLogModuleInfo* GetEMEVerboseLog() {
   }
   return log;
 }
-
-#endif
 
 static bool
 ContainsOnlyDigits(const nsAString& aString)

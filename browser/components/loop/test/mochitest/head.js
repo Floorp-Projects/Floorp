@@ -157,18 +157,18 @@ function* resetFxA() {
 }
 
 function checkFxAOAuthTokenData(aValue) {
-  ise(MozLoopServiceInternal.fxAOAuthTokenData, aValue, "fxAOAuthTokenData should be " + aValue);
+  is(MozLoopServiceInternal.fxAOAuthTokenData, aValue, "fxAOAuthTokenData should be " + aValue);
 }
 
 function checkLoggedOutState() {
   let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-  ise(global.gFxAOAuthClientPromise, null, "gFxAOAuthClientPromise should be cleared");
-  ise(MozLoopService.userProfile, null, "fxAOAuthProfile should be cleared");
-  ise(global.gFxAOAuthClient, null, "gFxAOAuthClient should be cleared");
+  is(global.gFxAOAuthClientPromise, null, "gFxAOAuthClientPromise should be cleared");
+  is(MozLoopService.userProfile, null, "fxAOAuthProfile should be cleared");
+  is(global.gFxAOAuthClient, null, "gFxAOAuthClient should be cleared");
   checkFxAOAuthTokenData(null);
   const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
-  ise(Services.prefs.getPrefType(fxASessionPref), Services.prefs.PREF_INVALID,
-      "FxA hawk session should be cleared anyways");
+  is(Services.prefs.getPrefType(fxASessionPref), Services.prefs.PREF_INVALID,
+     "FxA hawk session should be cleared anyways");
 }
 
 function promiseDeletedOAuthParams(baseURL) {

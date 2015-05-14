@@ -15,7 +15,6 @@
 #include "mozilla/DebugOnly.h"
 #include "prlog.h"
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* GetAppleMediaLog() {
   static PRLogModuleInfo* log = nullptr;
   if (!log) {
@@ -23,7 +22,6 @@ PRLogModuleInfo* GetAppleMediaLog() {
   }
   return log;
 }
-#endif
 
 namespace mozilla {
 

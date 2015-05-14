@@ -10868,11 +10868,6 @@ IonBuilder::getPropTryInlineAccess(bool* emitted, MDefinition* obj, PropertyName
 {
     MOZ_ASSERT(*emitted == false);
 
-    if (obj->type() != MIRType_Object) {
-        trackOptimizationOutcome(TrackedOutcome::NotObject);
-        return true;
-    }
-
     BaselineInspector::ReceiverVector receivers(alloc());
     BaselineInspector::ObjectGroupVector convertUnboxedGroups(alloc());
     if (!inspector->maybeInfoForPropertyOp(pc, receivers, convertUnboxedGroups))
