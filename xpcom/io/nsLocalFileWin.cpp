@@ -2269,6 +2269,18 @@ nsLocalFile::RenameTo(nsIFile* aNewParentDir, const nsAString& aNewName)
 }
 
 NS_IMETHODIMP
+nsLocalFile::RenameToNative(nsIFile* aNewParentDir, const nsACString& aNewName)
+{
+  nsAutoString tmp;
+  nsresult rv = NS_CopyNativeToUnicode(aNewName, tmp);
+  if (NS_SUCCEEDED(rv)) {
+    return RenameTo(aNewParentDir, tmp);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsLocalFile::Load(PRLibrary** aResult)
 {
   // Check we are correctly initialized.

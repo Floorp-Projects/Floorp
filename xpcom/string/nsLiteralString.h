@@ -30,8 +30,8 @@
 #define NS_LITERAL_STRING_INIT(n,s)               n(MOZ_UTF16(s))
 #define NS_NAMED_LITERAL_STRING(n,s)              const nsLiteralString n(MOZ_UTF16(s))
 
-#define NS_LITERAL_CSTRING(s)                     static_cast<const nsLiteralCString&>(nsLiteralCString(s))
-#define NS_LITERAL_CSTRING_INIT(n,s)              n(s)
-#define NS_NAMED_LITERAL_CSTRING(n,s)             const nsLiteralCString n(s)
+#define NS_LITERAL_CSTRING(s)                     static_cast<const nsLiteralCString&>(nsLiteralCString("" s))
+#define NS_LITERAL_CSTRING_INIT(n,s)              n("" s)
+#define NS_NAMED_LITERAL_CSTRING(n,s)             const nsLiteralCString n("" s)
 
 #endif /* !defined(nsLiteralString_h___) */
