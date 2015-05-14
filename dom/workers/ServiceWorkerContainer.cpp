@@ -50,6 +50,13 @@ ServiceWorkerContainer::DisconnectFromOwner()
 }
 
 void
+ServiceWorkerContainer::ControllerChanged(ErrorResult& aRv)
+{
+  mControllerWorker = nullptr;
+  aRv = DispatchTrustedEvent(NS_LITERAL_STRING("controllerchange"));
+}
+
+void
 ServiceWorkerContainer::RemoveReadyPromise()
 {
   nsCOMPtr<nsPIDOMWindow> window = GetOwner();
