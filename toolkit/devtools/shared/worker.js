@@ -23,7 +23,7 @@ let MESSAGE_COUNTER = 0;
 /**
  * Creates a wrapper around a ChromeWorker, providing easy
  * communication to offload demanding tasks. The corresponding URL
- * must implement the interface provided by `devtools/shared/worker-helper`.
+ * must implement the interface provided by `devtools/toolkit/shared/worker-helper`.
  *
  * @see `./browser/devtools/shared/widgets/GraphsWorker.js`
  *
@@ -81,7 +81,7 @@ DevToolsWorker.prototype.destroy = function DevToolsWorkerDestroy () {
 /**
  * Takes a function and returns a Worker-wrapped version of the same function.
  * Returns a promise upon resolution.
- * @see `./browser/devtools/shared/test/browser_devtools-worker-03.js
+ * @see `./toolkit/devtools/shared/tests/browser/browser_devtools-worker-03.js
  *
  * * * * ! ! ! This should only be used for tests or A/B testing performance ! ! ! * * * * * *
  *
@@ -126,7 +126,7 @@ exports.workerify = workerify;
  */
 function createWorkerString (fn) {
   return `importScripts("resource://gre/modules/workers/require.js");
-    const { createTask } = require("resource:///modules/devtools/shared/worker-helper");
+    const { createTask } = require("resource://gre/modules/devtools/shared/worker-helper");
     createTask(self, "workerifiedTask", ${fn.toString()});
   `;
 }

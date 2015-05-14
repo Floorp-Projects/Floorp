@@ -1080,6 +1080,8 @@ if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
   }
 
   if (isEnabledForLocale) {
+    if (browserLocale == "ja-JP-mac")
+      browserLocale = "ja";
     let url = "chrome://browser/content/browser-pocket-" + browserLocale + ".properties";
     let strings = Services.strings.createBundle(url);
     let label;
@@ -1090,7 +1092,7 @@ if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
     } catch (err) {
       // GetStringFromName throws when the bundle doesn't exist.  In that case,
       // fall back to the en-US browser-pocket.properties.
-      url = "chrome://browser/content/browser-pocket.properties";
+      url = "chrome://browser/content/browser-pocket-en-US.properties";
       strings = Services.strings.createBundle(url);
       label = strings.GetStringFromName("pocket-button.label");
       tooltiptext = strings.GetStringFromName("pocket-button.tooltiptext");
