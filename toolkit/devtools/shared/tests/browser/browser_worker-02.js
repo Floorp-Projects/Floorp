@@ -3,7 +3,8 @@
 
 // Tests errors are handled properly by the DevToolsWorker.
 
-const { DevToolsWorker } = devtools.require("devtools/shared/worker");
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { DevToolsWorker } = devtools.require("devtools/toolkit/shared/worker");
 const WORKER_URL = "resource:///modules/devtools/GraphsWorker.js";
 
 add_task(function*() {

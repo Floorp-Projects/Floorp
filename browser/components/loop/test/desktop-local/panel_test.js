@@ -794,10 +794,12 @@ describe("loop.panel", function() {
     it("should dispatch a CreateRoom action with context when clicking on the " +
        "Start a conversation button", function() {
       fakeMozLoop.userProfile = {email: fakeEmail};
+      var favicon = "data:image/x-icon;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
       fakeMozLoop.getSelectedTabMetadata = function (callback) {
         callback({
           url: "http://invalid.com",
           description: "fakeSite",
+          favicon: favicon,
           previews: ["fakeimage.png"]
         });
       };
@@ -810,8 +812,7 @@ describe("loop.panel", function() {
       var node = view.getDOMNode();
 
       // Select the checkbox
-      TestUtils.Simulate.change(node.querySelector(".context-checkbox"),
-        {"target": {"checked": true}});
+      TestUtils.Simulate.click(node.querySelector(".checkbox-wrapper"));
 
       TestUtils.Simulate.click(node.querySelector(".new-room-button"));
 
@@ -821,7 +822,7 @@ describe("loop.panel", function() {
         urls: [{
           location: "http://invalid.com",
           description: "fakeSite",
-          thumbnail: "fakeimage.png"
+          thumbnail: favicon
         }]
       }));
     });
@@ -848,8 +849,8 @@ describe("loop.panel", function() {
       // Simulate being visible
       view.onDocumentVisible();
 
-      var contextEnabledCheckbox = view.getDOMNode().querySelector(".context-enabled");
-      expect(contextEnabledCheckbox).to.not.equal(null);
+      var contextContent = view.getDOMNode().querySelector(".context-content");
+      expect(contextContent).to.not.equal(null);
     });
 
     it("should not show context information when a URL is unavailable", function() {
@@ -885,6 +886,26 @@ describe("loop.panel", function() {
 
       var contextHostname = view.getDOMNode().querySelector(".context-url");
       expect(contextHostname.textContent).eql("www.example.com");
+    });
+
+    it("should show the favicon when available", function() {
+      var favicon = "data:image/x-icon;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+      fakeMozLoop.getSelectedTabMetadata = function (callback) {
+        callback({
+          url: "https://www.example.com:1234",
+          description: "fake description",
+          favicon: favicon,
+          previews: ["foo.gif"]
+        });
+      };
+
+      var view = createTestComponent();
+
+      // Simulate being visible.
+      view.onDocumentVisible();
+
+      var contextPreview = view.getDOMNode().querySelector(".context-preview");
+      expect(contextPreview.src).eql(favicon);
     });
   });
 

@@ -60,9 +60,7 @@ EXTRA_JS_MODULES.devtools.shared += [
     'telemetry.js',
     'theme-switching.js',
     'theme.js',
-    'undo.js',
-    'worker-helper.js',
-    'worker.js',
+    'undo.js'
 ]
 
 EXTRA_JS_MODULES.devtools.shared.widgets += [

@@ -7,6 +7,7 @@
 "use strict";
 
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
@@ -17,9 +18,12 @@ XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "datareporting", "archived");
 });
 
+const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
+const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 
 function run_test() {
   do_get_profile(true);
+  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   run_next_test();
 }
 
@@ -164,4 +168,56 @@ add_task(function* test_clientId() {
 
   // Finish setup.
   yield promiseSetup;
+});
+
+add_task(function* test_InvalidPingType() {
+  const TYPES = [
+    "a",
+    "-",
+    "¿€€€?",
+    "-foo-",
+    "-moo",
+    "zoo-",
+    ".bar",
+    "asfd.asdf",
+  ];
+
+  for (let type of TYPES) {
+    let histogram = Telemetry.getKeyedHistogramById("TELEMETRY_INVALID_PING_TYPE_SUBMITTED");
+    Assert.equal(histogram.snapshot(type).sum, 0,
+                 "Should not have counted this invalid ping yet: " + type);
+    Assert.ok(promiseRejects(TelemetryController.submitExternalPing(type, {})),
+              "Ping type should have been rejected.");
+    Assert.equal(histogram.snapshot(type).sum, 1,
+                 "Should have counted this as an invalid ping type.");
+  }
+});
+
+add_task(function* test_currentPingData() {
+  yield TelemetrySession.setup();
+
+  // Setup test data.
+  let h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTOUT");
+  h.clear();
+  h.add(1);
+  let k = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
+  k.clear();
+  k.add("a", 1);
+
+  // Get current ping data objects and check that their data is sane.
+  for (let subsession of [true, false]) {
+    let ping = TelemetryController.getCurrentPingData(subsession);
+
+    Assert.ok(!!ping, "Should have gotten a ping.");
+    Assert.equal(ping.type, "main", "Ping should have correct type.");
+    const expectedReason = subsession ? "gather-subsession-payload" : "gather-payload";
+    Assert.equal(ping.payload.info.reason, expectedReason, "Ping should have the correct reason.");
+
+    let id = "TELEMETRY_TEST_RELEASE_OPTOUT";
+    Assert.ok(id in ping.payload.histograms, "Payload should have test count histogram.");
+    Assert.equal(ping.payload.histograms[id].sum, 1, "Test count value should match.");
+    id = "TELEMETRY_TEST_KEYED_RELEASE_OPTOUT";
+    Assert.ok(id in ping.payload.keyedHistograms, "Payload should have keyed test histogram.");
+    Assert.equal(ping.payload.keyedHistograms[id]["a"].sum, 1, "Keyed test value should match.");
+  }
 });
