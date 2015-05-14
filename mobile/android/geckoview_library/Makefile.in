@@ -31,6 +31,8 @@ include $(topsrcdir)/config/rules.mk
 
 _ABS_DIST = $(abspath $(DIST))
 
+DIST_FILES = $(addprefix $(_ABS_DIST)/bin/, libmozglue.so $(MOZ_CHILD_PROCESS_NAME) $(MOZ_CHILD_PROCESS_NAME_PIE))
+
 package: local.properties project.properties AndroidManifest.xml FORCE
 	# Make directory for the zips
 	$(MKDIR) -p $(_ABS_DIST)/geckoview_library
@@ -46,9 +48,8 @@ package: local.properties project.properties AndroidManifest.xml FORCE
 	cp $(DEPTH)/mobile/android/base/*.jar libs/
 	$(RM) libs/gecko-R.jar
 
-	# Copy the SOs. The latter should be $(MOZ_CHILD_PROCESS_NAME), but
-	# it includes a "lib/" prefix.
-	cp $(_ABS_DIST)/bin/libmozglue.so $(_ABS_DIST)/bin/libplugin-container.so libs/$(ANDROID_CPU_ARCH)/
+	# Copy the SOs.
+	cp $(DIST_FILES) libs/$(ANDROID_CPU_ARCH)/
 
 	# Copy the resources
 	$(RM) -rf res
