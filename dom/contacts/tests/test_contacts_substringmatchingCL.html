@@ -54,9 +54,9 @@ var steps = [
       filterValue: number.international
     });
     req.onsuccess = function () {
-      ise(req.result.length, 1, "Found exactly 1 contact.");
+      is(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ise(findResult1.id, sample_id1, "Same ID");
+      is(findResult1.id, sample_id1, "Same ID");
       next();
     };
     req.onerror = onFailure;
@@ -69,7 +69,7 @@ var steps = [
       filterValue: number.local
     });
     req.onsuccess = function () {
-      ise(req.result.length, 1, "Found 0 contacts.");
+      is(req.result.length, 1, "Found 0 contacts.");
       next();
     };
     req.onerror = onFailure;
@@ -92,7 +92,7 @@ var steps = [
     ok(true, "Retrieving all contacts");
     req = mozContacts.find({});
     req.onsuccess = function () {
-      ise(req.result.length, 1, "One contact.");
+      is(req.result.length, 1, "One contact.");
       findResult1 = req.result[0];
       next();
     };
@@ -106,10 +106,10 @@ var steps = [
       filterValue: number.international.slice(-8)
     });
     req.onsuccess = function () {
-      ise(req.result.length, 1, "Found exactly 1 contact.");
+      is(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ise(findResult1.id, sample_id1, "Same ID");
-      ise(findResult1.tel[0].value, number.international, "Same Value");
+      is(findResult1.id, sample_id1, "Same ID");
+      is(findResult1.tel[0].value, number.international, "Same Value");
       next();
     };
     req.onerror = onFailure;
@@ -122,10 +122,10 @@ var steps = [
       filterValue: number.international.slice(-9)
     });
     req.onsuccess = function () {
-      ise(req.result.length, 1, "Found exactly 1 contact.");
+      is(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ise(findResult1.id, sample_id1, "Same ID");
-      ise(findResult1.tel[0].value, number.international, "Same Value");
+      is(findResult1.id, sample_id1, "Same ID");
+      is(findResult1.tel[0].value, number.international, "Same Value");
       next();
     };
     req.onerror = onFailure;
@@ -138,7 +138,7 @@ var steps = [
       filterValue: number.international.slice(-6)
     });
     req.onsuccess = function () {
-      ise(req.result.length, 0, "Found exactly zero contacts.");
+      is(req.result.length, 0, "Found exactly zero contacts.");
       next();
     };
     req.onerror = onFailure;
@@ -161,7 +161,7 @@ var steps = [
     ok(true, "Retrieving all contacts");
     req = mozContacts.find({});
     req.onsuccess = function () {
-      ise(req.result.length, 1, "One contact.");
+      is(req.result.length, 1, "One contact.");
       findResult1 = req.result[0];
       next();
     };
@@ -175,10 +175,10 @@ var steps = [
       filterValue: "022" + landlineNumber.slice(-7)
     });
     req.onsuccess = function () {
-      ise(req.result.length, 1, "Found exactly 1 contact.");
+      is(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ise(findResult1.id, sample_id1, "Same ID");
-      ise(findResult1.tel[0].value, landlineNumber, "Same Value");
+      is(findResult1.id, sample_id1, "Same ID");
+      is(findResult1.tel[0].value, landlineNumber, "Same Value");
       next();
     };
     req.onerror = onFailure;

@@ -1577,8 +1577,6 @@ public abstract class GeckoApp
                     rec.recordJavaStartupTime(javaDuration);
                 }
 
-                UpdateServiceHelper.registerForUpdates(GeckoApp.this);
-
                 // Kick off our background services. We do this by invoking the broadcast
                 // receiver, which uses the system alarm infrastructure to perform tasks at
                 // intervals.
@@ -1588,6 +1586,14 @@ public abstract class GeckoApp
                 }
             }
         }, 50);
+
+        final int updateServiceDelay = 30 * 1000;
+        ThreadUtils.getBackgroundHandler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                UpdateServiceHelper.registerForUpdates(GeckoApp.this);
+            }
+        }, updateServiceDelay);
 
         if (mIsRestoringActivity) {
             Tab selectedTab = Tabs.getInstance().getSelectedTab();

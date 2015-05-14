@@ -3863,10 +3863,6 @@ DebuggerServer.ObjectActorPreviewers = {
   }],
 
   Date: [function({obj, threadActor}, aGrip) {
-    if (!obj.proto || obj.proto.class != "Date") {
-      return false;
-    }
-
     let time = Date.prototype.getTime.call(obj.unsafeDereference());
 
     aGrip.preview = {

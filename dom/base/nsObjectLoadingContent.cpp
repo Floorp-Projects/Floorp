@@ -106,7 +106,6 @@ static const char *kPrefJavaMIME = "plugin.java.mime";
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo*
 GetObjectLog()
 {
@@ -115,7 +114,6 @@ GetObjectLog()
     sLog = PR_NewLogModule("objlc");
   return sLog;
 }
-#endif
 
 #define LOG(args) PR_LOG(GetObjectLog(), PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(GetObjectLog(), PR_LOG_DEBUG)

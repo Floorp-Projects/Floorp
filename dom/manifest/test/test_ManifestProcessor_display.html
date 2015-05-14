@@ -22,7 +22,7 @@ typeTests.forEach((type) => {
     display: type
   });
   var result = processor.process(data);
-  ise(result.display, 'browser', expected);
+  is(result.display, 'browser', expected);
 });
 
 /*Test valid modes*/
@@ -33,7 +33,7 @@ validModes.forEach((mode) => {
     display: mode
   });
   var result = processor.process(data);
-  ise(result.display, mode, expected);
+  is(result.display, mode, expected);
 });
 
 //trim tests
@@ -44,7 +44,7 @@ validModes.forEach((display) => {
     display: expandedDisplay
   });
   var result = processor.process(data);
-  ise(result.display, display, expected);
+  is(result.display, display, expected);
 });
 
 //Unknown modes
@@ -55,7 +55,7 @@ invalidModes.forEach((invalidMode) => {
     display: invalidMode
   });
   var result = processor.process(data);
-  ise(result.display, 'browser', expected);
+  is(result.display, 'browser', expected);
 });
   </script>
 </head>

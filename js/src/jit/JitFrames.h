@@ -18,8 +18,6 @@
 namespace js {
 namespace jit {
 
-typedef void * CalleeToken;
-
 enum CalleeTokenTag
 {
     CalleeToken_Function = 0x0, // untagged

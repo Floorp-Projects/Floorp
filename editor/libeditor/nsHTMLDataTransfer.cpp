@@ -99,7 +99,7 @@ using namespace mozilla::dom;
 static bool FindIntegerAfterString(const char *aLeadingString, 
                                      nsCString &aCStr, int32_t &foundNumber);
 static nsresult RemoveFragComments(nsCString &theStr);
-static void RemoveBodyAndHead(nsIDOMNode *aNode);
+static void RemoveBodyAndHead(nsINode& aNode);
 static nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult);
 
 nsresult
@@ -769,36 +769,27 @@ nsHTMLEditor::IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink)
 
 
 nsresult
-nsHTMLEditor::StripFormattingNodes(nsIDOMNode *aNode, bool aListOnly)
+nsHTMLEditor::StripFormattingNodes(nsIContent& aNode, bool aListOnly)
 {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (content->TextIsOnlyWhitespace())
-  {
-    nsCOMPtr<nsIDOMNode> parent, ignored;
-    aNode->GetParentNode(getter_AddRefs(parent));
-    if (parent)
-    {
+  if (aNode.TextIsOnlyWhitespace()) {
+    nsCOMPtr<nsINode> parent = aNode.GetParentNode();
+    if (parent) {
       if (!aListOnly || nsHTMLEditUtils::IsList(parent)) {
-        return parent->RemoveChild(aNode, getter_AddRefs(ignored));
+        ErrorResult rv;
+        parent->RemoveChild(aNode, rv);
+        return rv.StealNSResult();
       }
       return NS_OK;
     }
   }
 
-  if (!nsHTMLEditUtils::IsPre(aNode))
-  {
-    nsCOMPtr<nsIDOMNode> child;
-    aNode->GetLastChild(getter_AddRefs(child));
-
-    while (child)
-    {
-      nsCOMPtr<nsIDOMNode> tmp;
-      child->GetPreviousSibling(getter_AddRefs(tmp));
-      nsresult rv = StripFormattingNodes(child, aListOnly);
+  if (!aNode.IsHTMLElement(nsGkAtoms::pre)) {
+    nsCOMPtr<nsIContent> child = aNode.GetLastChild();
+    while (child) {
+      nsCOMPtr<nsIContent> previous = child->GetPreviousSibling();
+      nsresult rv = StripFormattingNodes(*child, aListOnly);
       NS_ENSURE_SUCCESS(rv, rv);
-      child = tmp;
+      child = previous.forget();
     }
   }
   return NS_OK;
@@ -1893,39 +1884,34 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
 }
 
 
-void RemoveBodyAndHead(nsIDOMNode *aNode)
+void RemoveBodyAndHead(nsINode& aNode)
 {
-  if (!aNode)
-    return;
-
-  nsCOMPtr<nsIDOMNode> tmp, child, body, head;
+  nsCOMPtr<nsIContent> body, head;
   // find the body and head nodes if any.
   // look only at immediate children of aNode.
-  aNode->GetFirstChild(getter_AddRefs(child));
-  while (child)
-  {
-    if (nsTextEditUtils::IsBody(child))
-    {
+  for (nsCOMPtr<nsIContent> child = aNode.GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsHTMLElement(nsGkAtoms::body)) {
       body = child;
-    } else if (nsEditor::NodeIsType(child, nsGkAtoms::head)) {
+    } else if (child->IsHTMLElement(nsGkAtoms::head)) {
       head = child;
     }
-    child->GetNextSibling(getter_AddRefs(tmp));
-    child = tmp;
   }
-  if (head)
-  {
-    aNode->RemoveChild(head, getter_AddRefs(tmp));
+  if (head) {
+    ErrorResult ignored;
+    aNode.RemoveChild(*head, ignored);
   }
-  if (body)
-  {
-    body->GetFirstChild(getter_AddRefs(child));
-    while (child)
-    {
-      aNode->InsertBefore(child, body, getter_AddRefs(tmp));
-      body->GetFirstChild(getter_AddRefs(child));
+  if (body) {
+    nsCOMPtr<nsIContent> child = body->GetFirstChild();
+    while (child) {
+      ErrorResult ignored;
+      aNode.InsertBefore(*child, body, ignored);
+      child = body->GetFirstChild();
     }
-    aNode->RemoveChild(body, getter_AddRefs(tmp));
+
+    ErrorResult ignored;
+    aNode.RemoveChild(*body, ignored);
   }
 }
 
@@ -2006,27 +1992,24 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
                                                   bool aTrustedInput)
 {
   NS_ENSURE_TRUE(outFragNode && outStartNode && outEndNode, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  nsCOMPtr<nsIDOMNode> contextAsNode, tmp;
-  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   // if we have context info, create a fragment for that
-  nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
-  nsCOMPtr<nsIDOMNode> contextLeaf, junk;
-  if (!aContextStr.IsEmpty())
-  {
-    rv = ParseFragment(aContextStr, nullptr, doc, address_of(contextAsNode),
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMNode> contextLeaf;
+  nsRefPtr<DocumentFragment> contextAsNode;
+  if (!aContextStr.IsEmpty()) {
+    rv = ParseFragment(aContextStr, nullptr, doc, getter_AddRefs(contextAsNode),
                        aTrustedInput);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(contextAsNode, NS_ERROR_FAILURE);
 
-    rv = StripFormattingNodes(contextAsNode);
+    rv = StripFormattingNodes(*contextAsNode);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    RemoveBodyAndHead(contextAsNode);
+    RemoveBodyAndHead(*contextAsNode);
 
     rv = FindTargetNode(contextAsNode, contextLeaf);
     if (rv == NS_FOUND_TARGET) {
@@ -2047,64 +2030,65 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   } else {
     contextAtom = nsGkAtoms::body;
   }
+  nsRefPtr<DocumentFragment> fragment;
   rv = ParseFragment(aInputString,
                      contextAtom,
                      doc,
-                     outFragNode,
+                     getter_AddRefs(fragment),
                      aTrustedInput);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(*outFragNode, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(fragment, NS_ERROR_FAILURE);
 
-  RemoveBodyAndHead(*outFragNode);
+  RemoveBodyAndHead(*fragment);
 
-  if (contextAsNode)
-  {
+  if (contextAsNode) {
     // unite the two trees
-    contextLeaf->AppendChild(*outFragNode, getter_AddRefs(junk));
-    *outFragNode = contextAsNode;
+    nsCOMPtr<nsIDOMNode> junk;
+    contextLeaf->AppendChild(fragment, getter_AddRefs(junk));
+    fragment = contextAsNode;
   }
 
-  rv = StripFormattingNodes(*outFragNode, true);
+  rv = StripFormattingNodes(*fragment, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If there was no context, then treat all of the data we did get as the
   // pasted data.
-  if (contextLeaf)
+  if (contextLeaf) {
     *outEndNode = *outStartNode = contextLeaf;
-  else
-    *outEndNode = *outStartNode = *outFragNode;
+  } else {
+    *outEndNode = *outStartNode = fragment;
+  }
 
+  *outFragNode = fragment.forget();
   *outStartOffset = 0;
 
   // get the infoString contents
-  nsAutoString numstr1, numstr2;
-  if (!aInfoStr.IsEmpty())
-  {
-    int32_t sep, num;
-    sep = aInfoStr.FindChar((char16_t)',');
-    numstr1 = Substring(aInfoStr, 0, sep);
-    numstr2 = Substring(aInfoStr, sep+1, aInfoStr.Length() - (sep+1));
+  if (!aInfoStr.IsEmpty()) {
+    int32_t sep = aInfoStr.FindChar((char16_t)',');
+    nsAutoString numstr1(Substring(aInfoStr, 0, sep));
+    nsAutoString numstr2(Substring(aInfoStr, sep+1, aInfoStr.Length() - (sep+1)));
 
     // Move the start and end children.
     nsresult err;
-    num = numstr1.ToInteger(&err);
-    while (num--)
-    {
+    int32_t num = numstr1.ToInteger(&err);
+
+    nsCOMPtr<nsIDOMNode> tmp;
+    while (num--) {
       (*outStartNode)->GetFirstChild(getter_AddRefs(tmp));
       NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
       tmp.swap(*outStartNode);
     }
 
     num = numstr2.ToInteger(&err);
-    while (num--)
-    {
+    while (num--) {
       (*outEndNode)->GetLastChild(getter_AddRefs(tmp));
       NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
       tmp.swap(*outEndNode);
     }
   }
 
-  GetLengthOfDOMNode(*outEndNode, (uint32_t&)*outEndOffset);
+  nsCOMPtr<nsINode> node = do_QueryInterface(*outEndNode);
+  *outEndOffset = node->Length();
   return NS_OK;
 }
 
@@ -2112,7 +2096,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
 nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
                                      nsIAtom* aContextLocalName,
                                      nsIDocument* aTargetDocument,
-                                     nsCOMPtr<nsIDOMNode> *outNode,
+                                     DocumentFragment** aFragment,
                                      bool aTrustedInput)
 {
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
@@ -2132,7 +2116,7 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
                               nsIParserUtils::SanitizerAllowComments);
     sanitizer.Sanitize(fragment);
   }
-  *outNode = fragment.forget();
+  fragment.forget(aFragment);
   return rv;
 }
 

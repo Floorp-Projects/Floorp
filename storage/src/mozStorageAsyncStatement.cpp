@@ -27,9 +27,7 @@
 
 #include "prlog.h"
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo *gStorageLog;
-#endif
 
 namespace mozilla {
 namespace storage {

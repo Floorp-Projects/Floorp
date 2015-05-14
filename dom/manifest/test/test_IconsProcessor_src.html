@@ -38,7 +38,7 @@ var noSrc = {
 var expected = `Expect icons without a src prop to be filtered out.`;
 data.jsonText = JSON.stringify(noSrc);
 var result = processor.process(data);
-ise(result.icons.length, 0, expected);
+is(result.icons.length, 0, expected);
 
 var invalidSrc = {
   icons: [{
@@ -59,7 +59,7 @@ var invalidSrc = {
 var expected = `Expect icons with invalid src prop to be filtered out.`;
 data.jsonText = JSON.stringify(noSrc);
 var result = processor.process(data);
-ise(result.icons.length, 0, expected);
+is(result.icons.length, 0, expected);
 
 var expected = `Expect icon's src to be a string.`;
 var withSrc = {
@@ -69,7 +69,7 @@ var withSrc = {
 };
 data.jsonText = JSON.stringify(withSrc);
 var result = processor.process(data);
-ise(typeof result.icons[0].src, "string", expected);
+is(typeof result.icons[0].src, "string", expected);
 
 var expected = `Expect only icons with a src prop to be kept.`;
 var withSrc = {
@@ -84,12 +84,12 @@ var withSrc = {
 };
 data.jsonText = JSON.stringify(withSrc);
 var result = processor.process(data);
-ise(result.icons.length, 2, expected);
+is(result.icons.length, 2, expected);
 
 var expectedURL = new URL('pass', manifestURL);
 for (var icon of result.icons) {
   var expected = `Expect src prop to be ${expectedURL.toString()}`;
-  ise(icon.src.toString(), expectedURL.toString(), expected);
+  is(icon.src.toString(), expectedURL.toString(), expected);
 }
 
 //Resolve URLs relative to manfiest
@@ -104,7 +104,7 @@ URLs.forEach((url) => {
   });
   var absURL = new URL(url, manifestURL).toString();
   var result = processor.process(data);
-  ise(result.icons[0].src.toString(), absURL, expected);
+  is(result.icons[0].src.toString(), absURL, expected);
 });
   </script>
 </head>

@@ -54,8 +54,9 @@ struct PropItem;
 
 namespace mozilla {
 namespace dom {
+class DocumentFragment;
 template<class T> class OwningNonNull;
-}
+} // namespace dom
 namespace widget {
 struct IMEState;
 } // namespace widget
@@ -580,7 +581,7 @@ protected:
                                      bool *aDoContinue);
 
   bool       IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nullptr);
-  nsresult   StripFormattingNodes(nsIDOMNode *aNode, bool aOnlyList = false);
+  nsresult   StripFormattingNodes(nsIContent& aNode, bool aOnlyList = false);
   nsresult   CreateDOMFragmentFromPaste(const nsAString & aInputString,
                                         const nsAString & aContextStr,
                                         const nsAString & aInfoStr,
@@ -592,7 +593,7 @@ protected:
                                         bool aTrustedInput);
   nsresult   ParseFragment(const nsAString & aStr, nsIAtom* aContextLocalName,
                            nsIDocument* aTargetDoc,
-                           nsCOMPtr<nsIDOMNode> *outNode,
+                           mozilla::dom::DocumentFragment** aFragment,
                            bool aTrustedInput);
   void       CreateListOfNodesToPaste(mozilla::dom::DocumentFragment& aFragment,
                                       nsTArray<mozilla::dom::OwningNonNull<nsINode>>& outNodeList,
@@ -673,6 +674,10 @@ protected:
                              nsIAtom *aProperty, 
                              const nsAString *aAttribute, 
                              const bool aChildrenOnly = false);
+  nsresult RemoveStyleInside(nsIContent& aNode,
+                             nsIAtom* aProperty,
+                             const nsAString* aAttribute,
+                             const bool aChildrenOnly = false);
   nsresult RemoveInlinePropertyImpl(nsIAtom* aProperty,
                                     const nsAString* aAttribute);
 
@@ -724,7 +729,7 @@ protected:
                                  nsAString* outValue,
                                  bool aCheckDefaults = true);
   bool HasStyleOrIdOrClass(mozilla::dom::Element* aElement);
-  nsresult RemoveElementIfNoStyleOrIdOrClass(nsIDOMNode* aElement);
+  nsresult RemoveElementIfNoStyleOrIdOrClass(mozilla::dom::Element& aElement);
 
   // Whether the outer window of the DOM event target has focus or not.
   bool     OurWindowHasFocus();
@@ -752,6 +757,9 @@ protected:
 
   nsresult ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
                       nsIAtom* aProperty, const nsAString* aAttribute);
+
+  void SetElementPosition(mozilla::dom::Element& aElement,
+                          int32_t aX, int32_t aY);
 
 // Data members
 protected:

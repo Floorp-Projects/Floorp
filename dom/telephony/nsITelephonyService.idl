@@ -7,7 +7,7 @@
 interface nsIMobileCallForwardingOptions;
 interface nsITelephonyCallInfo;
 
-[scriptable, uuid(80faf34e-286b-4487-bd55-135bd92668b9)]
+[scriptable, uuid(37fb45bb-ae10-4cfd-b24e-d656a9787a0a)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -53,6 +53,20 @@ interface nsITelephonyListener : nsISupports
   void supplementaryServiceNotification(in unsigned long clientId,
                                         in long callIndex,
                                         in unsigned short notification);
+
+  /**
+   * Called when RIL error occurs.
+   *
+   * @param clientId
+            Indicate the RIL client, 0 ~ (number of client - 1).
+   * @param callIndex
+   *        Call identifier assigned by the RIL. -1 if no connection
+   * @param error
+   *        Error from RIL.
+   */
+  void notifyError(in unsigned long clientId,
+                   in long callIndex,
+                   in AString error);
 
   /**
    * Called when a waiting call comes in CDMA networks.

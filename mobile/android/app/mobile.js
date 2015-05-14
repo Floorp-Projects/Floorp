@@ -572,6 +572,9 @@ pref("media.fragmented-mp4.enabled", true);
 pref("media.fragmented-mp4.android-media-codec.enabled", true);
 pref("media.fragmented-mp4.android-media-codec.preferred", true);
 
+// Enable MSE
+pref("media.mediasource.enabled", true);
+
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
 pref("image.decode-only-on-draw.enabled", true);
@@ -876,8 +879,3 @@ pref("toolkit.telemetry.unified", false);
 
 // Selection carets never fall-back to internal LongTap detector.
 pref("selectioncaret.detects.longtap", false);
-
-// Enable Service workers for Android on non-release builds
-#ifdef NIGHTLY_BUILD
-pref("dom.serviceWorkers.enabled", true);
-#endif

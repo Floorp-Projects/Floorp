@@ -10,12 +10,8 @@
 #include <sys/sysctl.h>
 #endif
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaStreamGraphLog;
 #define STREAM_LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
-#else
-#define STREAM_LOG(type, msg)
-#endif
 
 // We don't use NSPR log here because we want this interleaved with adb logcat
 // on Android/B2G

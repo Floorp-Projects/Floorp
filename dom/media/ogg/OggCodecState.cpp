@@ -32,12 +32,8 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
-#else
-#define LOG(type, msg)
-#endif
 
 /** Decoder base class for Ogg-encapsulated streams. */
 OggCodecState*

@@ -71,7 +71,6 @@ using namespace mozilla;
 #define USE_EXECV
 #endif
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo *
 GetUpdateLog()
 {
@@ -80,7 +79,6 @@ GetUpdateLog()
     sUpdateLog = PR_NewLogModule("updatedriver");
   return sUpdateLog;
 }
-#endif
 #define LOG(args) PR_LOG(GetUpdateLog(), PR_LOG_DEBUG, args)
 
 #ifdef XP_WIN

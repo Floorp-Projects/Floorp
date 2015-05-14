@@ -70,7 +70,7 @@
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
         children: [
           {
-            role: ROLE_TEXT_CONTAINER,
+            role: ROLE_TEXT,
             children: [ { role: ROLE_TEXT_LEAF } ]
           }
         ]
@@ -81,7 +81,7 @@
       // HTML:address
 
       obj = {
-        todo_role: ROLE_PARAGRAPH,
+        role: ROLE_TEXT_CONTAINER,
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
       };
       testElm("address", obj);
@@ -188,7 +188,7 @@
       testElm("blockquote", obj);
 
       //////////////////////////////////////////////////////////////////////////
-      // HTML:br
+      // HTML:br contained by paragraph
 
       obj = {
         role: ROLE_PARAGRAPH,
@@ -1062,7 +1062,7 @@
       // HTML:pre
 
       obj = {
-        role: ROLE_PARAGRAPH,
+        role: ROLE_TEXT_CONTAINER,
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
       };
       testElm("pre", obj);
@@ -1087,7 +1087,7 @@
       // HTML:q
 
       obj = {
-        role: ROLE_TEXT_CONTAINER,
+        role: ROLE_TEXT,
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
         children: [
           { role: ROLE_STATICTEXT }, // left quote
@@ -1233,7 +1233,7 @@
       // HTML:time
 
       obj = {
-        role: ROLE_TEXT_CONTAINER,
+        role: ROLE_TEXT,
         attributes: { "xml-roles": "time", "datetime": "2001-05-15 19:00" },
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
       };

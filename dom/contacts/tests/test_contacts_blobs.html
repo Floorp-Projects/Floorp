@@ -96,8 +96,8 @@ function verifyBlob(blob1, blob2, isLast)
      "blob1 is an instance of File");
   isnot(blob2 instanceof File, true,
      "blob2 is an instance of File");
-  ise(blob1.size, blob2.size, "Same size");
-  ise(blob1.type, blob2.type, "Same type");
+  is(blob1.size, blob2.size, "Same size");
+  is(blob1.type, blob2.type, "Same type");
 
   var buffer1;
   var buffer2;
@@ -125,7 +125,7 @@ function verifyBlobArray(blobs1, blobs2)
 {
   is(blobs1 instanceof Array, true, "blobs1 is an array object");
   is(blobs2 instanceof Array, true, "blobs2 is an array object");
-  ise(blobs1.length, blobs2.length, "Same length");
+  is(blobs1.length, blobs2.length, "Same length");
 
   if (!blobs1.length) {
     next();

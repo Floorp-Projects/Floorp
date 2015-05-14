@@ -18,8 +18,6 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
-
 PRLogModuleInfo* GetICLog()
 {
   static PRLogModuleInfo* log = nullptr;
@@ -28,8 +26,6 @@ PRLogModuleInfo* GetICLog()
   }
   return log;
 }
-
-#endif
 
 namespace dom {
 

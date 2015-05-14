@@ -164,6 +164,9 @@ class IDLObject(object):
     def isUnion(self):
         return False
 
+    def isTypedef(self):
+        return False
+
     def getUserData(self, key, default):
         return self.userData.get(key, default)
 
@@ -1789,11 +1792,11 @@ class IDLType(IDLObject):
 
     def treatNonCallableAsNull(self):
         assert self.tag() == IDLType.Tags.callback
-        return self.nullable() and self.inner._treatNonCallableAsNull
+        return self.nullable() and self.inner.callback._treatNonCallableAsNull
 
     def treatNonObjectAsNull(self):
         assert self.tag() == IDLType.Tags.callback
-        return self.nullable() and self.inner._treatNonObjectAsNull
+        return self.nullable() and self.inner.callback._treatNonObjectAsNull
 
     def addExtendedAttributes(self, attrs):
         assert len(attrs) == 0
@@ -1833,11 +1836,17 @@ class IDLUnresolvedType(IDLType):
 
         assert obj
         if obj.isType():
-            # obj itself might not be complete; deal with that.
-            assert obj != self
-            if not obj.isComplete():
-                obj = obj.complete(scope)
-            return obj
+            print obj
+        assert not obj.isType()
+        if obj.isTypedef():
+            assert self.name.name == obj.identifier.name
+            typedefType = IDLTypedefType(self.location, obj.innerType,
+                                         obj.identifier)
+            assert not typedefType.isComplete()
+            return typedefType.complete(scope)
+        elif obj.isCallback() and not obj.isInterface():
+            assert self.name.name == obj.identifier.name
+            return IDLCallbackType(self.location, obj)
 
         if self._promiseInnerType and not self._promiseInnerType.isComplete():
             self._promiseInnerType = self._promiseInnerType.complete(scope)
@@ -2358,23 +2367,17 @@ class IDLArrayType(IDLType):
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
 
-class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
+class IDLTypedefType(IDLType):
     def __init__(self, location, innerType, name):
-        IDLType.__init__(self, location, innerType.name)
-
-        identifier = IDLUnresolvedIdentifier(location, name)
-
-        IDLObjectWithIdentifier.__init__(self, location, None, identifier)
-
+        IDLType.__init__(self, location, name)
         self.inner = innerType
-        self.name = name
         self.builtin = False
 
     def __eq__(self, other):
         return isinstance(other, IDLTypedefType) and self.inner == other.inner
 
     def __str__(self):
-        return self.identifier.name
+        return self.name
 
     def nullable(self):
         return self.inner.nullable()
@@ -2442,16 +2445,6 @@ class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
         assert self.inner.isComplete()
         return self.inner
 
-    def finish(self, parentScope):
-        # Maybe the IDLObjectWithIdentifier for the typedef should be
-        # a separate thing from the type?  If that happens, we can
-        # remove some hackery around avoiding isInterface() in
-        # Configuration.py.
-        self.complete(parentScope)
-
-    def validate(self):
-        pass
-
     # Do we need a resolveType impl?  I don't think it's particularly useful....
 
     def tag(self):
@@ -2465,6 +2458,31 @@ class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
 
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
+
+class IDLTypedef(IDLObjectWithIdentifier):
+    def __init__(self, location, parentScope, innerType, name):
+        identifier = IDLUnresolvedIdentifier(location, name)
+        IDLObjectWithIdentifier.__init__(self, location, parentScope, identifier)
+        self.innerType = innerType
+
+    def __str__(self):
+        return "Typedef %s %s" % (self.identifier.name, self.innerType)
+
+    def finish(self, parentScope):
+        if not self.innerType.isComplete():
+            self.innerType = self.innerType.complete(parentScope)
+
+    def validate(self):
+        pass
+
+    def isTypedef(self):
+        return True
+
+    def addExtendedAttributes(self, attrs):
+        assert len(attrs) == 0
+
+    def _getDependentObjects(self):
+        return self.innerType._getDependentObjects()
 
 class IDLWrapperType(IDLType):
     def __init__(self, location, inner, promiseInnerType=None):
@@ -3655,11 +3673,9 @@ class IDLArgument(IDLObjectWithIdentifier):
     def canHaveMissingValue(self):
         return self.optional and not self.defaultValue
 
-class IDLCallbackType(IDLType, IDLObjectWithScope):
+class IDLCallback(IDLObjectWithScope):
     def __init__(self, location, parentScope, identifier, returnType, arguments):
         assert isinstance(returnType, IDLType)
-
-        IDLType.__init__(self, location, identifier.name)
 
         self._returnType = returnType
         # Clone the list
@@ -3679,9 +3695,6 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
 
     def signatures(self):
         return [(self._returnType, self._arguments)]
-
-    def tag(self):
-        return IDLType.Tags.callback
 
     def finish(self, scope):
         if not self._returnType.isComplete():
@@ -3706,14 +3719,6 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
     def validate(self):
         pass
 
-    def isDistinguishableFrom(self, other):
-        if other.isUnion():
-            # Just forward to the union; it'll deal
-            return other.isDistinguishableFrom(self)
-        return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isNonCallbackInterface() or other.isDate() or
-                other.isSequence())
-
     def addExtendedAttributes(self, attrs):
         unhandledAttrs = []
         for attr in attrs:
@@ -3731,6 +3736,28 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
 
     def _getDependentObjects(self):
         return set([self._returnType] + self._arguments)
+
+class IDLCallbackType(IDLType):
+    def __init__(self, location, callback):
+        IDLType.__init__(self, location, callback.identifier.name)
+        self.callback = callback
+
+    def isCallback(self):
+        return True
+
+    def tag(self):
+        return IDLType.Tags.callback
+
+    def isDistinguishableFrom(self, other):
+        if other.isUnion():
+            # Just forward to the union; it'll deal
+            return other.isDistinguishableFrom(self)
+        return (other.isPrimitive() or other.isString() or other.isEnum() or
+                other.isNonCallbackInterface() or other.isDate() or
+                other.isSequence())
+
+    def _getDependentObjects(self):
+        return self.callback._getDependentObjects()
 
 class IDLMethodOverload:
     """
@@ -4738,8 +4765,8 @@ class Parser(Tokenizer):
             CallbackRest : IDENTIFIER EQUALS ReturnType LPAREN ArgumentList RPAREN SEMICOLON
         """
         identifier = IDLUnresolvedIdentifier(self.getLocation(p, 1), p[1])
-        p[0] = IDLCallbackType(self.getLocation(p, 1), self.globalScope(),
-                               identifier, p[3], p[5])
+        p[0] = IDLCallback(self.getLocation(p, 1), self.globalScope(),
+                           identifier, p[3], p[5])
 
     def p_ExceptionMembers(self, p):
         """
@@ -4752,8 +4779,8 @@ class Parser(Tokenizer):
         """
             Typedef : TYPEDEF Type IDENTIFIER SEMICOLON
         """
-        typedef = IDLTypedefType(self.getLocation(p, 1), p[2], p[3])
-        typedef.resolve(self.globalScope())
+        typedef = IDLTypedef(self.getLocation(p, 1), self.globalScope(),
+                             p[2], p[3])
         p[0] = typedef
 
     def p_ImplementsStatement(self, p):
@@ -5488,8 +5515,12 @@ class Parser(Tokenizer):
         try:
             if self.globalScope()._lookupIdentifier(p[1]):
                 obj = self.globalScope()._lookupIdentifier(p[1])
-                if obj.isType():
-                    type = obj
+                assert not obj.isType()
+                if obj.isTypedef():
+                    type = IDLTypedefType(self.getLocation(p, 1), obj.innerType,
+                                          obj.identifier.name)
+                elif obj.isCallback() and not obj.isInterface():
+                    type = IDLCallbackType(self.getLocation(p, 1), obj)
                 else:
                     type = IDLWrapperType(self.getLocation(p, 1), p[1])
                 p[0] = self.handleModifiers(type, p[2])
@@ -5825,9 +5856,7 @@ class Parser(Tokenizer):
         for x in xrange(IDLBuiltinType.Types.ArrayBuffer, IDLBuiltinType.Types.Float64Array + 1):
             builtin = BuiltinTypes[x]
             name = builtin.name
-
-            typedef = IDLTypedefType(BuiltinLocation("<builtin type>"), builtin, name)
-            typedef.resolve(scope)
+            typedef = IDLTypedef(BuiltinLocation("<builtin type>"), scope, builtin, name)
 
     @ staticmethod
     def handleModifiers(type, modifiers):

@@ -56,15 +56,9 @@
 // NSPR_LOG_MODULES=LoadManager:5
 #undef LOG
 #undef LOG_ENABLED
-#if defined(PR_LOGGING)
 #define LOG(args) PR_LOG(gLoadManagerLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gLoadManagerLog, 4)
 #define LOG_MANY_ENABLED() PR_LOG_TEST(gLoadManagerLog, 5)
-#else
-#define LOG(args)
-#define LOG_ENABLED() (false)
-#define LOG_MANY_ENABLED() (false)
-#endif
 
 namespace mozilla {
 

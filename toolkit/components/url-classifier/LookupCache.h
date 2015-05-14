@@ -101,7 +101,7 @@ public:
   nsresult GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes);
   void ClearCompleteCache();
 
-#if DEBUG && defined(PR_LOGGING)
+#if DEBUG
   void Dump();
 #endif
   nsresult WriteFile();

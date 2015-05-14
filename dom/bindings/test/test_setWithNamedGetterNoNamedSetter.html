@@ -22,15 +22,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1043690
   /** Test for Bug 1043690 **/
   var f = document.querySelector("form");
   var i = document.querySelector("input");
-  ise(f.getAttribute("action"), null, "Should have no action attribute");
-  ise(f.action, i, "form.action should be the input");
+  is(f.getAttribute("action"), null, "Should have no action attribute");
+  is(f.action, i, "form.action should be the input");
   f.action = "http://example.org";
-  ise(f.getAttribute("action"), "http://example.org",
-      "Should have an action attribute now");
-  ise(f.action, i, "form.action should still be the input");
+  is(f.getAttribute("action"), "http://example.org",
+     "Should have an action attribute now");
+  is(f.action, i, "form.action should still be the input");
   i.remove();
-  ise(f.action, "http://example.org/",
-      "form.action should no longer be shadowed");
+  is(f.action, "http://example.org/",
+     "form.action should no longer be shadowed");
 
 
   </script>

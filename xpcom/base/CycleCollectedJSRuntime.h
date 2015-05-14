@@ -102,6 +102,7 @@ struct CycleCollectorResults
   {
     mForcedGC = false;
     mMergedZones = false;
+    mAnyManual = false;
     mVisitedRefCounted = 0;
     mVisitedGCed = 0;
     mFreedRefCounted = 0;
@@ -114,6 +115,7 @@ struct CycleCollectorResults
 
   bool mForcedGC;
   bool mMergedZones;
+  bool mAnyManual; // true if any slice of the CC was manually triggered, or at shutdown.
   uint32_t mVisitedRefCounted;
   uint32_t mVisitedGCed;
   uint32_t mFreedRefCounted;
@@ -206,6 +208,7 @@ private:
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);
 
+public:
   enum DeferredFinalizeType {
     FinalizeIncrementally,
     FinalizeNow,
@@ -213,7 +216,6 @@ private:
 
   void FinalizeDeferredThings(DeferredFinalizeType aType);
 
-public:
   // Two conditions, JSOutOfMemory and JSLargeAllocationFailure, are noted in
   // crash reports. Here are the values that can appear in the reports:
   enum class OOMState : uint32_t {
@@ -221,7 +223,7 @@ public:
     OK,
 
     // We are currently reporting the given condition.
-    // 
+    //
     // Suppose a crash report contains "JSLargeAllocationFailure:
     // Reporting". This means we crashed while executing memory-pressure
     // observers, trying to shake loose some memory. The large allocation in

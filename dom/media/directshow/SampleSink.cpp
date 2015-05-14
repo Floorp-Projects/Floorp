@@ -14,12 +14,8 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* GetDirectShowLog();
 #define LOG(...) PR_LOG(GetDirectShowLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define LOG(...)
-#endif
 
 SampleSink::SampleSink()
   : mMonitor("SampleSink"),
@@ -69,13 +65,13 @@ SampleSink::Receive(IMediaSample* aSample)
     mon.Wait();
   }
 
-#ifdef PR_LOGGING
-  REFERENCE_TIME start = 0, end = 0;
-  HRESULT hr = aSample->GetMediaTime(&start, &end);
-  LOG("SampleSink::Receive() [%4.2lf-%4.2lf]",
-      (double)RefTimeToUsecs(start) / USECS_PER_S,
-      (double)RefTimeToUsecs(end) / USECS_PER_S);
-#endif
+  if (PR_LOG_TEST(GetDirectShowLog(), PR_LOG_DEBUG)) {
+    REFERENCE_TIME start = 0, end = 0;
+    HRESULT hr = aSample->GetMediaTime(&start, &end);
+    LOG("SampleSink::Receive() [%4.2lf-%4.2lf]",
+        (double)RefTimeToUsecs(start) / USECS_PER_S,
+        (double)RefTimeToUsecs(end) / USECS_PER_S);
+  }
 
   mSample = aSample;
   // Notify the signal, to awaken the consumer thread in WaitForSample()
@@ -106,13 +102,13 @@ SampleSink::Extract(RefPtr<IMediaSample>& aOutSample)
   }
   aOutSample = mSample;
 
-#ifdef PR_LOGGING
-  int64_t start = 0, end = 0;
-  mSample->GetMediaTime(&start, &end);
-  LOG("SampleSink::Extract() [%4.2lf-%4.2lf]",
-      (double)RefTimeToUsecs(start) / USECS_PER_S,
-      (double)RefTimeToUsecs(end) / USECS_PER_S);
-#endif
+  if (PR_LOG_TEST(GetDirectShowLog(), PR_LOG_DEBUG)) {
+    int64_t start = 0, end = 0;
+    mSample->GetMediaTime(&start, &end);
+    LOG("SampleSink::Extract() [%4.2lf-%4.2lf]",
+        (double)RefTimeToUsecs(start) / USECS_PER_S,
+        (double)RefTimeToUsecs(end) / USECS_PER_S);
+  }
 
   mSample = nullptr;
   // Notify the signal, to awaken the producer thread in Receive()

@@ -38,27 +38,27 @@ let gTests = [{
     let dialog = yield dialogPromise;
 
     // Check focus is in the textbox
-    ise(dialog.document.activeElement.value, "Default text", "Textbox with correct text is focused");
+    is(dialog.document.activeElement.value, "Default text", "Textbox with correct text is focused");
 
     // Titlebar
-    ise(content.document.getElementById("dialogTitle").textContent, "Sample sub-dialog",
-       "Dialog title should be correct initially");
+    is(content.document.getElementById("dialogTitle").textContent, "Sample sub-dialog",
+      "Dialog title should be correct initially");
     let receivedEvent = waitForEvent(gBrowser.selectedBrowser, "DOMTitleChanged");
     dialog.document.title = "Updated title";
     // Wait for the title change listener
     yield receivedEvent;
-    ise(content.document.getElementById("dialogTitle").textContent, "Updated title",
-       "Dialog title should be updated with changes");
+    is(content.document.getElementById("dialogTitle").textContent, "Updated title",
+      "Dialog title should be updated with changes");
 
     let closingPromise = promiseDialogClosing(dialog);
 
     // Accept the dialog
     dialog.document.documentElement.acceptDialog();
     let closingEvent = yield closingPromise;
-    ise(closingEvent.detail.button, "accept", "closing event should indicate button was 'accept'");
+    is(closingEvent.detail.button, "accept", "closing event should indicate button was 'accept'");
 
     yield deferredClose.promise;
-    ise(rv.acceptCount, 1, "return value should have been updated");
+    is(rv.acceptCount, 1, "return value should have been updated");
   },
 },
 {
@@ -76,10 +76,10 @@ let gTests = [{
     dialog.document.documentElement.cancelDialog();
 
     let closingEvent = yield closingPromise;
-    ise(closingEvent.detail.button, "cancel", "closing event should indicate button was 'cancel'");
+    is(closingEvent.detail.button, "cancel", "closing event should indicate button was 'cancel'");
 
     yield deferredClose.promise;
-    ise(rv.acceptCount, 0, "return value should NOT have been updated");
+    is(rv.acceptCount, 0, "return value should NOT have been updated");
   },
 },
 {
@@ -96,10 +96,10 @@ let gTests = [{
     dialog.window.close();
 
     let closingEvent = yield closingPromise;
-    ise(closingEvent.detail.button, null, "closing event should indicate no button was clicked");
+    is(closingEvent.detail.button, null, "closing event should indicate no button was clicked");
 
     yield deferredClose.promise;
-    ise(rv.acceptCount, 0, "return value should NOT have been updated");
+    is(rv.acceptCount, 0, "return value should NOT have been updated");
   },
 },
 {
@@ -115,7 +115,7 @@ let gTests = [{
                                              content.window);
 
     yield deferredClose.promise;
-    ise(rv.acceptCount, 0, "return value should NOT have been updated");
+    is(rv.acceptCount, 0, "return value should NOT have been updated");
   },
 },
 {
@@ -131,7 +131,7 @@ let gTests = [{
     content.gSubDialog._frame.goBack();
 
     yield deferredClose.promise;
-    ise(rv.acceptCount, 0, "return value should NOT have been updated");
+    is(rv.acceptCount, 0, "return value should NOT have been updated");
   },
 },
 {
@@ -146,7 +146,7 @@ let gTests = [{
     EventUtils.synthesizeKey("VK_ESCAPE", {}, content.window);
 
     yield deferredClose.promise;
-    ise(rv.acceptCount, 0, "return value should NOT have been updated");
+    is(rv.acceptCount, 0, "return value should NOT have been updated");
   },
 },
 {
@@ -157,8 +157,8 @@ let gTests = [{
                                              (aEvent) => dialogClosingCallback(deferredClose, aEvent));
     let dialog = yield dialogPromise;
 
-    ise(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
-    ise(content.gSubDialog._frame.style.height, "5em", "Height should be set on the frame from the dialog");
+    is(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
+    is(content.gSubDialog._frame.style.height, "5em", "Height should be set on the frame from the dialog");
 
     content.gSubDialog.close();
     yield deferredClose.promise;
@@ -194,10 +194,10 @@ let gTests = [{
 
     let dialog = yield dialogPromise;
 
-    ise(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
+    is(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
     let docEl = content.gSubDialog._frame.contentDocument.documentElement;
     ok(docEl.scrollHeight > oldHeight, "Content height increased (from " + oldHeight + " to " + docEl.scrollHeight + ").");
-    ise(content.gSubDialog._frame.style.height, docEl.scrollHeight + "px", "Height on the frame should be higher now");
+    is(content.gSubDialog._frame.style.height, docEl.scrollHeight + "px", "Height on the frame should be higher now");
 
     content.gSubDialog.close();
     yield deferredClose.promise;
@@ -217,7 +217,7 @@ let gTests = [{
 
     let dialog = yield dialogPromise;
 
-    ise(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
+    is(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
     let newHeight = content.gSubDialog._frame.contentDocument.documentElement.scrollHeight;
     ok(parseInt(content.gSubDialog._frame.style.height) < window.innerHeight,
        "Height on the frame should be smaller than window's innerHeight");
@@ -261,10 +261,10 @@ function dialogClosingCallback(aPromise, aEvent) {
   waitForEvent(content.gSubDialog._frame, "load", 4000).then((aEvt) => {
     info("Load event happened: " + !(aEvt instanceof Error));
     is_element_hidden(content.gSubDialog._overlay, "Overlay is not visible");
-    ise(content.gSubDialog._frame.getAttribute("style"), "",
-        "Check that inline styles were cleared");
-    ise(content.gSubDialog._frame.contentWindow.location.toString(), "about:blank",
-       "Check the sub-dialog was unloaded");
+    is(content.gSubDialog._frame.getAttribute("style"), "",
+       "Check that inline styles were cleared");
+    is(content.gSubDialog._frame.contentWindow.location.toString(), "about:blank",
+      "Check the sub-dialog was unloaded");
     if (gTeardownAfterClose) {
       content.close();
       finish();

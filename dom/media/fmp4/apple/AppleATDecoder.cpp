@@ -12,12 +12,8 @@
 #include "AppleATDecoder.h"
 #include "prlog.h"
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* GetAppleMediaLog();
 #define LOG(...) PR_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define LOG(...)
-#endif
 #define FourCC2Str(n) ((char[5]){(char)(n >> 24), (char)(n >> 16), (char)(n >> 8), (char)(n), 0})
 
 namespace mozilla {

@@ -8,7 +8,6 @@
 #include "MediaData.h"
 #include "prlog.h"
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* GetSourceBufferResourceLog();
 
 /* Polyfill __func__ on MSVC to pass to the log. */
@@ -18,10 +17,6 @@ extern PRLogModuleInfo* GetSourceBufferResourceLog();
 
 #define SBR_DEBUG(arg, ...) PR_LOG(GetSourceBufferResourceLog(), PR_LOG_DEBUG, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #define SBR_DEBUGV(arg, ...) PR_LOG(GetSourceBufferResourceLog(), PR_LOG_DEBUG+1, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#else
-#define SBR_DEBUG(...)
-#define SBR_DEBUGV(...)
-#endif
 
 namespace mozilla {
 

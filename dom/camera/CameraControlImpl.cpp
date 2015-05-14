@@ -92,7 +92,6 @@ CameraControlImpl::OnHardwareStateChange(CameraControlListener::HardwareState aN
     return;
   }
 
-#ifdef PR_LOGGING
   const char* state[] = { "uninitialized", "closed", "open", "failed" };
   MOZ_ASSERT(aNewState >= 0);
   if (static_cast<unsigned int>(aNewState) < sizeof(state) / sizeof(state[0])) {
@@ -101,7 +100,6 @@ CameraControlImpl::OnHardwareStateChange(CameraControlListener::HardwareState aN
   } else {
     DOM_CAMERA_LOGE("OnHardwareStateChange: got invalid HardwareState value %d\n", aNewState);
   }
-#endif
 
   mHardwareState = aNewState;
   mHardwareStateChangeReason = aReason;
@@ -221,7 +219,6 @@ CameraControlImpl::OnPreviewStateChange(CameraControlListener::PreviewState aNew
     return;
   }
 
-#ifdef PR_LOGGING
   const char* state[] = { "stopped", "paused", "started" };
   MOZ_ASSERT(aNewState >= 0);
   if (static_cast<unsigned int>(aNewState) < sizeof(state) / sizeof(state[0])) {
@@ -229,7 +226,6 @@ CameraControlImpl::OnPreviewStateChange(CameraControlListener::PreviewState aNew
   } else {
     DOM_CAMERA_LOGE("OnPreviewStateChange: got unknown PreviewState value %d\n", aNewState);
   }
-#endif
 
   mPreviewState = aNewState;
 
@@ -280,7 +276,6 @@ CameraControlImpl::OnUserError(CameraControlListener::UserContext aContext,
   //  the Camera Thread.
   RwLockAutoEnterRead lock(mListenerLock);
 
-#ifdef PR_LOGGING
   const char* context[] = {
     "StartCamera",
     "StopCamera",
@@ -305,7 +300,6 @@ CameraControlImpl::OnUserError(CameraControlListener::UserContext aContext,
     DOM_CAMERA_LOGE("CameraControlImpl::OnUserError : aContext=%d, aError=0x%x\n",
       aContext, aError);
   }
-#endif
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];
@@ -321,7 +315,6 @@ CameraControlImpl::OnSystemError(CameraControlListener::SystemContext aContext,
   //  the Camera Thread.
   RwLockAutoEnterRead lock(mListenerLock);
 
-#ifdef PR_LOGGING
   const char* context[] = {
     "Camera Service"
   };
@@ -332,7 +325,6 @@ CameraControlImpl::OnSystemError(CameraControlListener::SystemContext aContext,
     DOM_CAMERA_LOGE("CameraControlImpl::OnSystemError : aContext=%d, aError=0x%x\n",
       aContext, aError);
   }
-#endif
 
   for (uint32_t i = 0; i < mListeners.Length(); ++i) {
     CameraControlListener* l = mListeners[i];

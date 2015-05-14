@@ -14,10 +14,10 @@ add_task(function*() {
 
   let freq = yield oscNode.getParam("frequency");
   info(typeof freq);
-  ise(freq, 440, "AudioNode:getParam correctly fetches AudioParam");
+  is(freq, 440, "AudioNode:getParam correctly fetches AudioParam");
 
   let type = yield oscNode.getParam("type");
-  ise(type, "sine", "AudioNode:getParam correctly fetches non-AudioParam");
+  is(type, "sine", "AudioNode:getParam correctly fetches non-AudioParam");
 
   type = yield oscNode.getParam("not-a-valid-param");
   ok(type.type === "undefined",
@@ -25,12 +25,12 @@ add_task(function*() {
 
   let resSuccess = yield oscNode.setParam("frequency", 220);
   freq = yield oscNode.getParam("frequency");
-  ise(freq, 220, "AudioNode:setParam correctly sets a `number` AudioParam");
+  is(freq, 220, "AudioNode:setParam correctly sets a `number` AudioParam");
   is(resSuccess, undefined, "AudioNode:setParam returns undefined for correctly set AudioParam");
 
   resSuccess = yield oscNode.setParam("type", "square");
   type = yield oscNode.getParam("type");
-  ise(type, "square", "AudioNode:setParam correctly sets a `string` non-AudioParam");
+  is(type, "square", "AudioNode:setParam correctly sets a `string` non-AudioParam");
   is(resSuccess, undefined, "AudioNode:setParam returns undefined for correctly set AudioParam");
 
   try {
@@ -40,7 +40,7 @@ add_task(function*() {
     ok(/is not a finite floating-point/.test(e.message), "AudioNode:setParam returns error with correct message when attempting an invalid assignment");
     is(e.type, "TypeError", "AudioNode:setParam returns error with correct type when attempting an invalid assignment");
     freq = yield oscNode.getParam("frequency");
-    ise(freq, 220, "AudioNode:setParam does not modify value when an error occurs");
+    is(freq, 220, "AudioNode:setParam does not modify value when an error occurs");
   }
 
   yield removeTab(target.tab);

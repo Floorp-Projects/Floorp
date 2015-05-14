@@ -130,7 +130,6 @@ private:
   nsString mChangedResource;
 };
 
-#if defined(PR_LOGGING)
 static PRLogModuleInfo* GetFileWatcherContextLog()
 {
   static PRLogModuleInfo *gNativeWatcherPRLog;
@@ -139,7 +138,6 @@ static PRLogModuleInfo* GetFileWatcherContextLog()
   }
   return gNativeWatcherPRLog;
 }
-#endif
 
 #define FILEWATCHERLOG(...) PR_LOG(GetFileWatcherContextLog(), PR_LOG_DEBUG, (__VA_ARGS__))
 

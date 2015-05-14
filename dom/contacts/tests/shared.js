@@ -249,7 +249,7 @@ function checkStrArray(str1, str2, msg) {
   }
   str1 = optArray(str1).map(normalize_falsy).filter(v => v != "");
   str2 = optArray(str2).map(normalize_falsy).filter(v => v != "");
-  ise(JSON.stringify(str1), JSON.stringify(str2), msg);
+  is(JSON.stringify(str1), JSON.stringify(str2), msg);
 }
 
 function checkPref(pref1, pref2) {
@@ -260,7 +260,7 @@ function checkPref(pref1, pref2) {
       pref2 = false;
     }
   }
-  ise(!!pref1, !!pref2, "Same pref");
+  is(!!pref1, !!pref2, "Same pref");
 }
 
 function checkAddress(adr1, adr2) {
@@ -332,7 +332,7 @@ function checkArrayField(array1, array2, func, msg) {
     ok(true, msg);
     return;
   }
-  ise(array1.length, array2.length, "Same length");
+  is(array1.length, array2.length, "Same length");
   for (var i = 0; i < array1.length; ++i) {
     func(array1[i], array2[i], msg);
   }

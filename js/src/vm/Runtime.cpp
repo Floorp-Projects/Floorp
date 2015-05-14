@@ -126,6 +126,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     asmJSActivationStack_(nullptr),
     asyncStackForNewActivations(nullptr),
     asyncCauseForNewActivations(nullptr),
+    entryMonitor(nullptr),
     parentRuntime(parentRuntime),
     interrupt_(false),
     telemetryCallback(nullptr),

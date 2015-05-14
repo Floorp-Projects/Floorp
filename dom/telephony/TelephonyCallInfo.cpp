@@ -15,13 +15,10 @@ NS_IMPL_ISUPPORTS(TelephonyCallInfo, nsITelephonyCallInfo)
 TelephonyCallInfo::TelephonyCallInfo(uint32_t aClientId,
                                      uint32_t aCallIndex,
                                      uint16_t aCallState,
-                                     const nsAString& aDisconnectedReason,
-
                                      const nsAString& aNumber,
                                      uint16_t aNumberPresentation,
                                      const nsAString& aName,
                                      uint16_t aNamePresentation,
-
                                      bool aIsOutgoing,
                                      bool aIsEmergency,
                                      bool aIsConference,
@@ -30,13 +27,10 @@ TelephonyCallInfo::TelephonyCallInfo(uint32_t aClientId,
   : mClientId(aClientId),
     mCallIndex(aCallIndex),
     mCallState(aCallState),
-    mDisconnectedReason(aDisconnectedReason),
-
     mNumber(aNumber),
     mNumberPresentation(aNumberPresentation),
     mName(aName),
     mNamePresentation(aNamePresentation),
-
     mIsOutgoing(aIsOutgoing),
     mIsEmergency(aIsEmergency),
     mIsConference(aIsConference),
@@ -63,13 +57,6 @@ NS_IMETHODIMP
 TelephonyCallInfo::GetCallState(uint16_t* aCallState)
 {
   *aCallState = mCallState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TelephonyCallInfo::GetDisconnectedReason(nsAString& aDisconnectedReason)
-{
-  aDisconnectedReason = mDisconnectedReason;
   return NS_OK;
 }
 

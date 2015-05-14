@@ -442,6 +442,20 @@ function testModeCorsPreflightEnumValue() {
   }
 }
 
+// HEAD/GET Requests are not allowed to have a body even when copying another
+// Request.
+function testBug1154268() {
+  var r1 = new Request("/index.html", { method: "POST", body: "Hi there" });
+  ["HEAD", "GET"].forEach(function(method) {
+    try {
+      var r2 = new Request(r1, { method: method });
+      ok(false, method + " Request copied from POST Request with body should fail.");
+    } catch (e) {
+      is(e.name, "TypeError", method + " Request copied from POST Request with body should fail.");
+    }
+  });
+}
+
 function runTest() {
   testDefaultCtor();
   testSimpleUrlParse();
@@ -450,6 +464,7 @@ function runTest() {
   testBug1109574();
   testHeaderGuard();
   testModeCorsPreflightEnumValue();
+  testBug1154268();
 
   return Promise.resolve()
     .then(testBodyCreation)

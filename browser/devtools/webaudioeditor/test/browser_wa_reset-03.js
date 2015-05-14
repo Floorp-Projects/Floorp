@@ -36,7 +36,7 @@ add_task(function*() {
   nodeIds = actors.map(actor => actor.actorID);
 
   ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
-  ise(InspectorView.getCurrentAudioNode(), null,
+  is(InspectorView.getCurrentAudioNode(), null,
     "InspectorView has no current node set on reset.");
 
   yield clickGraphNode(panelWin, nodeIds[2], true);

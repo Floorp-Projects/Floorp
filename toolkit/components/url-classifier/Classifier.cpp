@@ -17,13 +17,8 @@
 
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
 extern PRLogModuleInfo *gUrlClassifierDbServiceLog;
-#if defined(PR_LOGGING)
 #define LOG(args) PR_LOG(gUrlClassifierDbServiceLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierDbServiceLog, 4)
-#else
-#define LOG(args)
-#define LOG_ENABLED() (false)
-#endif
+#define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierDbServiceLog, PR_LOG_DEBUG)
 
 #define STORE_DIRECTORY      NS_LITERAL_CSTRING("safebrowsing")
 #define TO_DELETE_DIR_SUFFIX NS_LITERAL_CSTRING("-to_delete")
@@ -255,7 +250,7 @@ Classifier::Check(const nsACString& aSpec,
       continue;
     }
 
-#if DEBUG && defined(PR_LOGGING)
+#if DEBUG
     if (LOG_ENABLED()) {
       nsAutoCString checking;
       lookupHash.ToHexString(checking);
@@ -263,6 +258,7 @@ Classifier::Check(const nsACString& aSpec,
            checking.get(), lookupHash.ToUint32()));
     }
 #endif
+
     for (uint32_t i = 0; i < cacheArray.Length(); i++) {
       LookupCache *cache = cacheArray[i];
       bool has, complete;
@@ -304,12 +300,10 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
 {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_UPDATE_TIME> timer;
 
-#if defined(PR_LOGGING)
   PRIntervalTime clockStart = 0;
-  if (LOG_ENABLED() || true) {
+  if (LOG_ENABLED()) {
     clockStart = PR_IntervalNow();
   }
-#endif
 
   LOG(("Backup before update."));
 
@@ -350,13 +344,11 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
 
   LOG(("Done applying updates."));
 
-#if defined(PR_LOGGING)
-  if (LOG_ENABLED() || true) {
+  if (LOG_ENABLED()) {
     PRIntervalTime clockEnd = PR_IntervalNow();
     LOG(("update took %dms\n",
          PR_IntervalToMilliseconds(clockEnd - clockStart)));
   }
-#endif
 
   return NS_OK;
 }
@@ -676,7 +668,7 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
   rv = prefixSet->Build(store.AddPrefixes(), store.AddCompletes());
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(DEBUG) && defined(PR_LOGGING)
+#if defined(DEBUG)
   prefixSet->Dump();
 #endif
   rv = prefixSet->WriteFile();

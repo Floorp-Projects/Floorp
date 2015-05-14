@@ -422,6 +422,16 @@ TelephonyIPCService::NotifyConferenceError(const nsAString& aName,
 }
 
 NS_IMETHODIMP
+TelephonyIPCService::NotifyError(uint32_t aClientId, int32_t aCallIndex,
+                                  const nsAString& aError)
+{
+  for (uint32_t i = 0; i < mListeners.Length(); i++) {
+    mListeners[i]->NotifyError(aClientId, aCallIndex, aError);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TelephonyIPCService::SupplementaryServiceNotification(uint32_t aClientId,
                                                        int32_t aCallIndex,
                                                        uint16_t aNotification)

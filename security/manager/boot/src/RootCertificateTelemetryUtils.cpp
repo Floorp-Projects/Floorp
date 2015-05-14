@@ -17,10 +17,15 @@
 #define UNKNOWN_ROOT  0
 #define HASH_FAILURE -1
 
-namespace mozilla { namespace psm { 
+namespace mozilla { namespace psm {
 
-PRLogModuleInfo* gPublicKeyPinningTelemetryLog =
-  PR_NewLogModule("PublicKeyPinningTelemetryService");
+static PRLogModuleInfo*
+PublicKeyPinningTelemetryLog()
+{
+  static PRLogModuleInfo* sPublicKeyPinningTelemetryLog =
+    PR_NewLogModule("PublicKeyPinningTelemetryService");
+  return sPublicKeyPinningTelemetryLog;
+}
 
 // Used in the BinarySearch method, this does a memcmp between the pointer
 // provided to its construtor and whatever the binary search is looking for.
@@ -60,7 +65,7 @@ RootCABinNumber(const SECItem* cert)
   // Compare against list of stored hashes
   size_t idx;
 
-  PR_LOG(gPublicKeyPinningTelemetryLog, PR_LOG_DEBUG,
+  PR_LOG(PublicKeyPinningTelemetryLog(), PR_LOG_DEBUG,
            ("pkpinTelem: First bytes %02hx %02hx %02hx %02hx\n",
             digest.get().data[0], digest.get().data[1], digest.get().data[2], digest.get().data[3]));
 
@@ -69,7 +74,7 @@ RootCABinNumber(const SECItem* cert)
             reinterpret_cast<const uint8_t*>(digest.get().data), digest.get().len),
          &idx)) {
 
-    PR_LOG(gPublicKeyPinningTelemetryLog, PR_LOG_DEBUG,
+    PR_LOG(PublicKeyPinningTelemetryLog(), PR_LOG_DEBUG,
           ("pkpinTelem: Telemetry index was %lu, bin is %d\n",
            idx, ROOT_TABLE[idx].binNumber));
     return (int32_t) ROOT_TABLE[idx].binNumber;

@@ -126,9 +126,7 @@ bool CubebLatencyPrefSet()
 
 void InitLibrary()
 {
-#ifdef PR_LOGGING
   gAudioStreamLog = PR_NewLogModule("AudioStream");
-#endif
   PrefChanged(PREF_VOLUME_SCALE, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_VOLUME_SCALE);
   PrefChanged(PREF_CUBEB_LATENCY, nullptr);

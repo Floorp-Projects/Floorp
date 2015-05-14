@@ -15,8 +15,6 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.pushPrefEnv({"set": [["dom.workers.websocket.enabled", true]]},
-function() {
   var worker = new Worker("websocket_loadgroup_worker.js");
 
   var stopped = false;
@@ -55,9 +53,7 @@ function() {
   }
 
   runTest();
-});
-
-SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>

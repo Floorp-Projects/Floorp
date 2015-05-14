@@ -111,18 +111,18 @@ function checkChangeIsDisabled(aWindow, aNext)
   }
 
   function changeTest() {
-    ise(getProp("innerWidth"), originalWidth,
-        "Window width shouldn't have changed");
-    ise(getProp("innerHeight"), originalHeight,
-        "Window height shouldn't have changed");
-    ise(getProp("screenX"), originalX,
-        "Window x position shouldn't have changed");
-    ise(getProp("screenY"), originalY,
-        "Window y position shouldn't have changed");
-    ise(getProp("outerWidth"), oWidth,
-        "Window outerWidth shouldn't have changed");
-    ise(getProp("outerHeight"), oHeight,
-        "Window outerHeight shouldn't have changed");
+    is(getProp("innerWidth"), originalWidth,
+       "Window width shouldn't have changed");
+    is(getProp("innerHeight"), originalHeight,
+       "Window height shouldn't have changed");
+    is(getProp("screenX"), originalX,
+       "Window x position shouldn't have changed");
+    is(getProp("screenY"), originalY,
+       "Window y position shouldn't have changed");
+    is(getProp("outerWidth"), oWidth,
+       "Window outerWidth shouldn't have changed");
+    is(getProp("outerHeight"), oHeight,
+       "Window outerHeight shouldn't have changed");
   }
 
   /**

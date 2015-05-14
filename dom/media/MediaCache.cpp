@@ -24,12 +24,8 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gMediaCacheLog;
 #define CACHE_LOG(type, msg) PR_LOG(gMediaCacheLog, type, msg)
-#else
-#define CACHE_LOG(type, msg)
-#endif
 
 // Readahead blocks for non-seekable streams will be limited to this
 // fraction of the cache space. We don't normally evict such blocks
@@ -587,11 +583,9 @@ MediaCache::Init()
   rv = mFileCache->Open(fileDesc);
   NS_ENSURE_SUCCESS(rv,rv);
 
-#ifdef PR_LOGGING
   if (!gMediaCacheLog) {
     gMediaCacheLog = PR_NewLogModule("MediaCache");
   }
-#endif
 
   MediaCacheFlusher::Init();
 
