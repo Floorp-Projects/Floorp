@@ -758,11 +758,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('generated-sources')
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 7)
-
-        # GENERATED_SOURCES automatically generate GARBAGE definitions.
-        garbage = [o for o in objs if isinstance(o, VariablePassthru)]
-        self.assertEqual(len(garbage), 1)
+        self.assertEqual(len(objs), 6)
 
         generated_sources = [o for o in objs if isinstance(o, GeneratedSources)]
         self.assertEqual(len(generated_sources), 6)
