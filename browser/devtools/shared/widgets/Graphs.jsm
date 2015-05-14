@@ -9,7 +9,7 @@ Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
-const {DevToolsWorker} = Cu.import("resource:///modules/devtools/shared/worker.js", {});
+const {DevToolsWorker} = Cu.import("resource://gre/modules/devtools/shared/worker.js", {});
 
 this.EXPORTED_SYMBOLS = [
   "GraphCursor",

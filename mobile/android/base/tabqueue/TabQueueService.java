@@ -202,7 +202,13 @@ public class TabQueueService extends Service {
     }
 
     private void removeView() {
-        windowManager.removeView(toastLayout);
+        try {
+            windowManager.removeView(toastLayout);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            // This can happen if the Service is killed by the system.  If this happens the View will have already
+            // been removed but the runnable will have been kept alive.
+            Log.e(LOGTAG, "Error removing Tab Queue toast from service", e);
+        }
     }
 
     private void addURLToTabQueue(final Intent intent, final String filename) {
