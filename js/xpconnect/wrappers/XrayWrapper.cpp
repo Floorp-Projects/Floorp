@@ -504,7 +504,7 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
 
     // Scan through the functions. Indexed array properties are handled above.
     const JSFunctionSpec* fsMatch = nullptr;
-    for (const JSFunctionSpec* fs = clasp->spec.prototypeFunctions; fs && fs->name; ++fs) {
+    for (const JSFunctionSpec* fs = clasp->spec.prototypeFunctions(); fs && fs->name; ++fs) {
         if (PropertySpecNameEqualsId(fs->name, id)) {
             fsMatch = fs;
             break;
@@ -532,7 +532,7 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
 
     // Scan through the properties.
     const JSPropertySpec* psMatch = nullptr;
-    for (const JSPropertySpec* ps = clasp->spec.prototypeProperties; ps && ps->name; ++ps) {
+    for (const JSPropertySpec* ps = clasp->spec.prototypeProperties(); ps && ps->name; ++ps) {
         if (PropertySpecNameEqualsId(ps->name, id)) {
             psMatch = ps;
             break;
@@ -765,14 +765,14 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
     MOZ_ASSERT(clasp->spec.defined());
 
     // Convert the method and property names to jsids and pass them to the caller.
-    for (const JSFunctionSpec* fs = clasp->spec.prototypeFunctions; fs && fs->name; ++fs) {
+    for (const JSFunctionSpec* fs = clasp->spec.prototypeFunctions(); fs && fs->name; ++fs) {
         jsid id;
         if (!PropertySpecNameToPermanentId(cx, fs->name, &id))
             return false;
         if (!MaybeAppend(id, flags, props))
             return false;
     }
-    for (const JSPropertySpec* ps = clasp->spec.prototypeProperties; ps && ps->name; ++ps) {
+    for (const JSPropertySpec* ps = clasp->spec.prototypeProperties(); ps && ps->name; ++ps) {
         jsid id;
         if (!PropertySpecNameToPermanentId(cx, ps->name, &id))
             return false;

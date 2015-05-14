@@ -103,7 +103,6 @@ namespace mozilla {
 #undef LOG
 #endif
 
-#ifdef PR_LOGGING
 PRLogModuleInfo*
 GetMediaManagerLog()
 {
@@ -113,9 +112,6 @@ GetMediaManagerLog()
   return sLog;
 }
 #define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
-#else
-#define LOG(msg)
-#endif
 
 using dom::MediaStreamConstraints;
 using dom::MediaTrackConstraintSet;

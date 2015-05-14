@@ -166,19 +166,9 @@ CreateScopeKey(nsIPrincipal* aPrincipal,
     key.Append(nsPrintfCString(":%d", port));
   }
 
-  bool unknownAppId;
-  rv = aPrincipal->GetUnknownAppId(&unknownAppId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!unknownAppId) {
-    uint32_t appId;
-    rv = aPrincipal->GetAppId(&appId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool isInBrowserElement;
-    rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+  if (!aPrincipal->GetUnknownAppId()) {
+    uint32_t appId = aPrincipal->GetAppId();
+    bool isInBrowserElement = aPrincipal->GetIsInBrowserElement();
     if (appId == nsIScriptSecurityManager::NO_APP_ID && !isInBrowserElement) {
       aKey.Assign(key);
       return NS_OK;
@@ -221,19 +211,9 @@ CreateQuotaDBKey(nsIPrincipal* aPrincipal,
 
   CreateReversedDomain(eTLDplusOne, subdomainsDBKey);
 
-  bool unknownAppId;
-  rv = aPrincipal->GetUnknownAppId(&unknownAppId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!unknownAppId) {
-    uint32_t appId;
-    rv = aPrincipal->GetAppId(&appId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool isInBrowserElement;
-    rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+  if (!aPrincipal->GetUnknownAppId()) {
+    uint32_t appId = aPrincipal->GetAppId();
+    bool isInBrowserElement = aPrincipal->GetIsInBrowserElement();
     if (appId == nsIScriptSecurityManager::NO_APP_ID && !isInBrowserElement) {
       aKey.Assign(subdomainsDBKey);
       return NS_OK;

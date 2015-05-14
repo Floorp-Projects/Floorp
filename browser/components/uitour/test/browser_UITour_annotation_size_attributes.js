@@ -26,8 +26,8 @@ let tests = [
       gContentAPI.showHighlight("urlbar");
       waitForElementToBeVisible(highlight, function checkPanelAttributes() {
         SimpleTest.executeSoon(() => {
-          ise(highlight.height, "", "Highlight panel should have no explicit height set");
-          ise(highlight.width, "", "Highlight panel should have no explicit width set");
+          is(highlight.height, "", "Highlight panel should have no explicit height set");
+          is(highlight.width, "", "Highlight panel should have no explicit width set");
           done();
         });
       }, "Highlight should be moved to the urlbar");
@@ -40,8 +40,8 @@ let tests = [
       gContentAPI.showInfo("urlbar", "new title", "new text");
       waitForElementToBeVisible(tooltip, function checkPanelAttributes() {
         SimpleTest.executeSoon(() => {
-          ise(tooltip.height, "", "Info panel should have no explicit height set");
-          ise(tooltip.width, "", "Info panel should have no explicit width set");
+          is(tooltip.height, "", "Info panel should have no explicit height set");
+          is(tooltip.width, "", "Info panel should have no explicit width set");
           done();
         });
       }, "Tooltip should be moved to the urlbar");

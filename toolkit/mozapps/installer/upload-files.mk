@@ -647,10 +647,6 @@ GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 
 PKG_ARG = , '$(pkg)'
 
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-ELF_HACK_FLAGS = --fill
-endif
-
 # MOZ_PKG_MANIFEST is the canonical way to define the package manifest (which
 # the packager will preprocess), but for a smooth transition, we derive it
 # from the now deprecated MOZ_PKG_MANIFEST_P when MOZ_PKG_MANIFEST is not
@@ -678,8 +674,6 @@ endif
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 OPTIMIZEJARS = 1
 endif
-
-export NO_PKG_FILES USE_ELF_HACK ELF_HACK_FLAGS
 
 # A js binary is needed to perform verification of JavaScript minification.
 # We can only use the built binary when not cross-compiling. Environments
