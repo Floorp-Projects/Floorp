@@ -50,11 +50,6 @@ public:
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
-  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) override;
-  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) override;
-  NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
-  NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
-  NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
 
@@ -76,8 +71,6 @@ public:
 
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
-  uint32_t mAppId;
-  bool mInMozBrowser;
 };
 
 #endif // nsNullPrincipal_h__

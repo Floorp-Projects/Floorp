@@ -69,9 +69,7 @@ nsPrincipal::InitializeStatics()
 }
 
 nsPrincipal::nsPrincipal()
-  : mAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID)
-  , mInMozBrowser(false)
-  , mCodebaseImmutable(false)
+  : mCodebaseImmutable(false)
   , mDomainImmutable(false)
   , mInitialized(false)
 { }
@@ -93,7 +91,7 @@ nsPrincipal::Init(nsIURI *aCodebase,
   mCodebaseImmutable = URIIsImmutable(mCodebase);
 
   mAppId = aAppId;
-  mInMozBrowser = aInMozBrowser;
+  mIsInBrowserElement = aInMozBrowser;
 
   return NS_OK;
 }
@@ -362,49 +360,6 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetJarPrefix(nsACString& aJarPrefix)
-{
-  MOZ_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
-  mozilla::GetJarPrefix(mAppId, mInMozBrowser, aJarPrefix);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrincipal::GetAppStatus(uint16_t* aAppStatus)
-{
-  *aAppStatus = GetAppStatus();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrincipal::GetAppId(uint32_t* aAppId)
-{
-  if (mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    MOZ_ASSERT(false);
-    *aAppId = nsIScriptSecurityManager::NO_APP_ID;
-    return NS_OK;
-  }
-
-  *aAppId = mAppId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
-{
-  *aIsInBrowserElement = mInMozBrowser;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrincipal::GetUnknownAppId(bool* aUnknownAppId)
-{
-  *aUnknownAppId = mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   // For a file URI, we return the file path.
@@ -508,7 +463,7 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   }
 
   aStream->Write32(mAppId);
-  aStream->WriteBoolean(mInMozBrowser);
+  aStream->WriteBoolean(mIsInBrowserElement);
 
   rv = NS_WriteOptionalCompoundObject(aStream, mCSP,
                                       NS_GET_IID(nsIContentSecurityPolicy),
@@ -521,16 +476,6 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   // on the deserialized URIs in Read().
 
   return NS_OK;
-}
-
-uint16_t
-nsPrincipal::GetAppStatus()
-{
-  if (mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    NS_WARNING("Asking for app status on a principal with an unknown app id");
-    return nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  }
-  return nsScriptSecurityManager::AppStatusForPrincipal(this);
 }
 
 // Helper-function to indicate whether the CSS Unprefixing Service
@@ -913,41 +858,6 @@ NS_IMETHODIMP
 nsExpandedPrincipal::GetWhiteList(nsTArray<nsCOMPtr<nsIPrincipal> >** aWhiteList)
 {
   *aWhiteList = &mPrincipals;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExpandedPrincipal::GetJarPrefix(nsACString& aJarPrefix)
-{
-  aJarPrefix.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExpandedPrincipal::GetAppStatus(uint16_t* aAppStatus)
-{
-  *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExpandedPrincipal::GetAppId(uint32_t* aAppId)
-{
-  *aAppId = nsIScriptSecurityManager::NO_APP_ID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExpandedPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
-{
-  *aIsInBrowserElement = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExpandedPrincipal::GetUnknownAppId(bool* aUnknownAppId)
-{
-  *aUnknownAppId = false;
   return NS_OK;
 }
 
