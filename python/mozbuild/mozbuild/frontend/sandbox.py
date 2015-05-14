@@ -151,7 +151,7 @@ class Sandbox(dict):
 
         self.exec_source(source, path)
 
-    def exec_source(self, source, path=''):
+    def exec_source(self, source, path='', becomes_current_path=True):
         """Execute Python code within a string.
 
         The passed string should contain Python code to be executed. The string
@@ -161,7 +161,7 @@ class Sandbox(dict):
         does not perform extra path normalization. This can cause relative
         paths to behave weirdly.
         """
-        if path:
+        if path and becomes_current_path:
             self._context.push_source(path)
 
         old_sandbox = self._context._sandbox
@@ -193,16 +193,24 @@ class Sandbox(dict):
 
             if self._last_name_error is not None:
                 actual = self._last_name_error
-
-            raise SandboxExecutionError(self._context.source_stack,
-                type(actual), actual, sys.exc_info()[2])
+            source_stack = self._context.source_stack
+            if not becomes_current_path:
+                # Add current file to the stack because it wasn't added before
+                # sandbox execution.
+                source_stack.append(path)
+            raise SandboxExecutionError(source_stack, type(actual), actual,
+                                        sys.exc_info()[2])
 
         except Exception as e:
             # Need to copy the stack otherwise we get a reference and that is
             # mutated during the finally.
             exc = sys.exc_info()
-            raise SandboxExecutionError(self._context.source_stack, exc[0],
-                exc[1], exc[2])
+            source_stack = self._context.source_stack
+            if not becomes_current_path:
+                # Add current file to the stack because it wasn't added before
+                # sandbox execution.
+                source_stack.append(path)
+            raise SandboxExecutionError(source_stack, exc[0], exc[1], exc[2])
         finally:
             self._context._sandbox = old_sandbox
             if path:

@@ -382,7 +382,7 @@ SOURCES += ['hoge.cpp']
 
         self.assertEqual(sandbox2._context, {
             'SOURCES': ['qux.cpp', 'bar.cpp', 'foo.cpp', 'hoge.cpp'],
-            'DIRS': [sandbox.normalize_path('foo')],
+            'DIRS': [sandbox2.normalize_path('foo')],
         })
 
         sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
