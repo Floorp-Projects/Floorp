@@ -36,6 +36,16 @@ assertError("for each (const x in foo);", SyntaxError);
 assertError("for each (const {a:x,b:y,c:z} in foo);", SyntaxError);
 assertError("for each (const [x,y,z] in foo);", SyntaxError);
 
+assertError("for (x = 22 in foo);", SyntaxError);-
+assertError("for ({a:x,b:y,c:z} = 22 in foo);", SyntaxError);
+assertError("for ([x,y,z] = 22 in foo);", SyntaxError);
+assertError("for (const x = 22 in foo);", SyntaxError);
+assertError("for (const {a:x,b:y,c:z} = 22 in foo);", SyntaxError);
+assertError("for (const [x,y,z] = 22 in foo);", SyntaxError);
+assertError("for each (const x = 22 in foo);", SyntaxError);
+assertError("for each (const {a:x,b:y,c:z} = 22 in foo);", SyntaxError);
+assertError("for each (const [x,y,z] = 22 in foo);", SyntaxError);
+
 }
 
 runtest(test);
