@@ -9,16 +9,14 @@
 const TESTCASE_URI = TEST_BASE_HTTP + "minified.html";
 
 const PRETTIFIED_SOURCE = "" +
-"body\{\r?\n" +                   // body{
+"body \{\r?\n" +                   // body{
   "\tbackground\:white;\r?\n" +   //   background:white;
 "\}\r?\n" +                       // }
-"\r?\n" +                         //
-"div\{\r?\n" +                    // div{
+"div \{\r?\n" +                    // div{
   "\tfont\-size\:4em;\r?\n" +     //   font-size:4em;
   "\tcolor\:red\r?\n" +           //   color:red
 "\}\r?\n" +                       // }
-"\r?\n" +                         //
-"span\{\r?\n" +                   // span{
+"span \{\r?\n" +                   // span{
   "\tcolor\:green;\r?\n"          //   color:green;
 "\}\r?\n";                        // }
 
