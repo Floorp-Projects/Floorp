@@ -78,7 +78,7 @@ var PKT_SAVED_OVERLAY = function (options)
             }
             else if (resp.status == 'error') {
                 var msg = $('<p class="suggestedtag_msg">');
-                msg.text(resp.error);
+                msg.text(resp.error.message);
                 $('.pkt_ext_suggestedtag_detail').append(msg);
                 this.suggestedTagsLoaded = true;
                 if (!myself.mouseInside) {
@@ -315,7 +315,7 @@ var PKT_SAVED_OVERLAY = function (options)
             thePKT_SAVED.sendMessage("addTags",
             {
                 url: myself.savedUrl,
-                tags: originaltags   
+                tags: originaltags
             }, function(resp)
             {
                 if (resp.status == 'success') 
@@ -324,7 +324,7 @@ var PKT_SAVED_OVERLAY = function (options)
                 }
                 else if (resp.status == 'error') 
                 {
-                    $('.pkt_ext_edit_msg').addClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text(resp.error);
+                    $('.pkt_ext_edit_msg').addClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text(resp.error.message);
                 }
             });
         });
@@ -348,7 +348,7 @@ var PKT_SAVED_OVERLAY = function (options)
                         myself.showStateFinalMsg(myself.dictJSON.pageremoved);
                     }
                     else if (resp.status == 'error') {
-                        $('.pkt_ext_edit_msg').addClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text(resp.error);
+                        $('.pkt_ext_edit_msg').addClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text(resp.error.message);
                     }
                 });
             }
