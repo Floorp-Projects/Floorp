@@ -875,6 +875,6 @@ pref("toolkit.telemetry.unified", false);
 pref("selectioncaret.detects.longtap", false);
 
 // Enable Service workers for Android on non-release builds
-#ifndef RELEASE_BUILD
+#ifdef NIGHTLY_BUILD
 pref("dom.serviceWorkers.enabled", true);
 #endif
