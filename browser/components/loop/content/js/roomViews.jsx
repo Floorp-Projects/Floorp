@@ -313,7 +313,7 @@ loop.roomViews = (function(mozL10n) {
         if (nextProps.editMode) {
           this.props.mozLoop.getSelectedTabMetadata(function(metadata) {
             var previewImage = metadata.favicon || "";
-            var description = metadata.description || metadata.title;
+            var description = metadata.title || metadata.description;
             var url = metadata.url;
             this.setState({
               availableContext: {
