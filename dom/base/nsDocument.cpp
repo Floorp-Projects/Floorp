@@ -2864,14 +2864,17 @@ nsDocument::InitCSP(nsIChannel* aChannel)
       !applyLoopCSP &&
       cspHeaderValue.IsEmpty() &&
       cspROHeaderValue.IsEmpty()) {
-    nsCOMPtr<nsIURI> chanURI;
-    aChannel->GetURI(getter_AddRefs(chanURI));
-    nsAutoCString aspec;
-    chanURI->GetAsciiSpec(aspec);
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-           ("no CSP for document, %s, %s",
-            aspec.get(),
-            applyAppDefaultCSP ? "is app" : "not an app"));
+    if (PR_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
+      nsCOMPtr<nsIURI> chanURI;
+      aChannel->GetURI(getter_AddRefs(chanURI));
+      nsAutoCString aspec;
+      chanURI->GetAsciiSpec(aspec);
+      PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+             ("no CSP for document, %s, %s",
+              aspec.get(),
+              applyAppDefaultCSP ? "is app" : "not an app"));
+    }
+
     return NS_OK;
   }
 

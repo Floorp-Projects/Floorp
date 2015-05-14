@@ -105,6 +105,10 @@ static void webm_log(nestegg * context,
                      unsigned int severity,
                      char const * format, ...)
 {
+  if (!PR_LOG_TEST(gNesteggLog, PR_LOG_DEBUG)) {
+    return;
+  }
+
   va_list args;
   char msg[256];
   const char * sevStr;
