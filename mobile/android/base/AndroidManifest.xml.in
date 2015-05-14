@@ -254,7 +254,8 @@
         <!-- The main reason for the Tab Queue build flag is to not mess with the VIEW intent filter
              before the rest of the plumbing is in place -->
 
-        <service android:name="org.mozilla.gecko.tabqueue.TabQueueService" />
+        <service android:name="org.mozilla.gecko.tabqueue.TabQueueService"
+                 android:taskAffinity="@ANDROID_PACKAGE_NAME@.TABQUEUE" />
 
         <activity android:name="org.mozilla.gecko.tabqueue.TabQueuePrompt"
                   android:launchMode="singleTop"
@@ -263,6 +264,7 @@
         <activity android:name="org.mozilla.gecko.tabqueue.TabQueueDispatcher"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:launchMode="singleTask"
+                  android:excludeFromRecents="true"
                   android:theme="@style/TabQueueActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

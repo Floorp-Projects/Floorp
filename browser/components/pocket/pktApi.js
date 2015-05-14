@@ -49,11 +49,8 @@ var pktApi = (function() {
      */
 
     // Base url for all api calls
-    // TODO: This is a dev server and will be changed before launch
-    var pocketAPIhost = Services.prefs.getCharPref("browser.pocket.api");
-    var pocketSiteHost = Services.prefs.getCharPref("browser.pocket.site");
-
-    // Base url for all api calls
+    var pocketAPIhost = Services.prefs.getCharPref("browser.pocket.api"); 	// api.getpocket.com
+    var pocketSiteHost = Services.prefs.getCharPref("browser.pocket.site"); // getpocket.com
     var baseAPIUrl = "https://" + pocketAPIhost + "/v3";
 
 
@@ -85,6 +82,23 @@ var pktApi = (function() {
             }
         return out;
     }
+
+    var parseJSON = function(jsonString){
+        try {
+            var o = JSON.parse(jsonString);
+
+            // Handle non-exception-throwing cases:
+            // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
+            // but... JSON.parse(null) returns 'null', and typeof null === "object", 
+            // so we must check for that, too.
+            if (o && typeof o === "object" && o !== null) {
+                return o;
+            }
+        }
+        catch (e) { }
+
+        return undefined;
+    };
 
     /**
      * Settings
@@ -174,6 +188,29 @@ var pktApi = (function() {
     }
 
     /**
+     * Get the current premium status of the user
+     * @return {number | undefined} Premium status of user
+     */
+    function getPremiumStatus() {
+        var premiumStatus = getSetting("premium_status");
+        if (typeof premiumStatus === "undefined") {
+            // Premium status is not in settings try get it from cookie
+            var pocketCookies = getCookiesFromPocket();
+            premiumStatus = pocketCookies['ps'];
+        }
+        return premiumStatus;
+    }
+
+    /**
+     * Helper method to check if a user is premium or not
+     * @return {Boolean} Boolean if user is premium or not
+     */
+    function isPremiumUser() {
+        return getPremiumStatus() == 1;
+    }
+
+
+    /**
      * Returns users logged in status
      * @return {Boolean} Users logged in status
      */
@@ -210,7 +247,9 @@ var pktApi = (function() {
 
         var url = baseAPIUrl + options.path;
         var data = options.data || {};
-        data.locale_lang = window.navigator.language;
+        data.locale_lang = Cc["@mozilla.org/chrome/chrome-registry;1"].
+             getService(Ci.nsIXULChromeRegistry).
+             getSelectedLocale("browser");
         data.consumer_key = oAuthConsumerKey;
 
         var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
@@ -218,11 +257,16 @@ var pktApi = (function() {
 		request.onreadystatechange = function(e){
 			if (request.readyState == 4) {
 				if (request.status === 200) {
-                    if (options.success) {
-                        options.success(JSON.parse(request.response), request);
+                    // There could still be an error if the response is no valid json
+                    // or does not have status = 1
+                    var response = parseJSON(request.response);
+                    if (options.success && response && response.status == 1) {
+                        options.success(response, request);
+                        return;
                     }
-                    return;
                 }
+
+                // Handle error case
                 if (options.error) {
                     // In case the user did revoke the access token or it's not
                     // valid anymore clear the user data
@@ -231,7 +275,11 @@ var pktApi = (function() {
                     }
 
                     // Handle error message
-                    var errorMessage = request.getResponseHeader("X-Error") || request.statusText;
+                    var errorMessage;
+                    if (request.status !== 200) {
+                        errorMessage = request.getResponseHeader("X-Error") || request.statusText;
+                        errorMessage = JSON.parse('"' + errorMessage + '"');
+                    }
                     var error = {message: errorMessage};
                     options.error(error, request);
                 }
@@ -510,13 +558,6 @@ var pktApi = (function() {
     }
 
     /**
-     * Helper method to check if a user is premium or not
-     */
-    function isPremiumUser() {
-        return getSetting('premium_status') == 1;
-    }
-
-    /**
      * Fetch suggested tags for a given item id
      * @param  {string} itemId Item id of
      * @param  {Object | undefined} options Can provide an actionInfo object
@@ -565,14 +606,22 @@ var pktApi = (function() {
     function getSignupAB() {
         if (!getSetting('signupAB'))
         {
-            var rand = (Math.floor(Math.random()*2+1));
-            if (rand == 2)
+            var rand = (Math.floor(Math.random()*100+1));
+            if (rand > 95)
             {
-                setSetting('signupAB','storyboard');
+                setSetting('signupAB','storyboard_nlm');
+            }
+            else if (rand > 90)
+            {
+                setSetting('signupAB','hero_nlm');
+            }
+            else if (rand > 45)
+            {
+                setSetting('signupAB','storyboard_lm');
             }
             else
             {
-                setSetting('signupAB','hero');
+                setSetting('signupAB','hero_lm');
             }
 
         }

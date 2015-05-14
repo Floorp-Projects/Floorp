@@ -17,7 +17,7 @@ let snippet =
 '         "name": "Demo Social Service",' +
 '         "origin": "https://example.com",' +
 '         "iconURL": "chrome://branding/content/icon16.png",' +
-'         "icon32URL": "chrome://branding/content/favicon32.png",' +
+'         "icon32URL": "chrome://branding/content/icon32.png",' +
 '         "icon64URL": "chrome://branding/content/icon64.png",' +
 '         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
@@ -29,7 +29,7 @@ let snippet =
 '       }' +
 '     </script>' +
 '     <div id="activationSnippet" onclick="activateProvider(this)">' +
-'     <img src="chrome://branding/content/favicon32.png"></img>' +
+'     <img src="chrome://branding/content/icon32.png"></img>' +
 '     </div>';
 
 // enable one-click activation
@@ -39,7 +39,7 @@ let snippet2 =
 '         "name": "Demo Social Service",' +
 '         "origin": "https://example.com",' +
 '         "iconURL": "chrome://branding/content/icon16.png",' +
-'         "icon32URL": "chrome://branding/content/favicon32.png",' +
+'         "icon32URL": "chrome://branding/content/icon32.png",' +
 '         "icon64URL": "chrome://branding/content/icon64.png",' +
 '         "sidebarURL": "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
@@ -52,18 +52,14 @@ let snippet2 =
 '       }' +
 '     </script>' +
 '     <div id="activationSnippet" onclick="activateProvider(this)">' +
-'     <img src="chrome://branding/content/favicon32.png"></img>' +
+'     <img src="chrome://branding/content/icon32.png"></img>' +
 '     </div>';
 
 let gTests = [
 
 {
   desc: "Test activation with enable panel",
-  setup: function (aSnippetsMap)
-  {
-    // This must be some incorrect xhtml code.
-    aSnippetsMap.set("snippets", snippet);
-  },
+  snippet: snippet,
   run: function (aSnippetsMap)
   {
     let deferred = Promise.defer();
@@ -81,7 +77,6 @@ let gTests = [
       gBrowser.removeTab(gBrowser.selectedTab);
       SocialService.uninstallProvider(SocialSidebar.provider.origin, function () {
         info("provider uninstalled");
-        aSnippetsMap.delete("snippets");
         deferred.resolve(true);
       });
     });
@@ -91,11 +86,7 @@ let gTests = [
 
 {
   desc: "Test activation bypassing enable panel",
-  setup: function (aSnippetsMap)
-  {
-    // This must be some incorrect xhtml code.
-    aSnippetsMap.set("snippets", snippet2);
-  },
+  snippet: snippet2,
   run: function (aSnippetsMap)
   {
     let deferred = Promise.defer();
@@ -113,7 +104,6 @@ let gTests = [
       gBrowser.removeTab(gBrowser.selectedTab);
       SocialService.uninstallProvider(SocialSidebar.provider.origin, function () {
         info("provider uninstalled");
-        aSnippetsMap.delete("snippets");
         deferred.resolve(true);
       });
     });
@@ -136,7 +126,7 @@ function test()
       let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
 
       // Add an event handler to modify the snippets map once it's ready.
-      let snippetsPromise = promiseSetupSnippetsMap(tab, test.setup);
+      let snippetsPromise = promiseSetupSnippetsMap(tab, test.snippet);
 
       // Start loading about:home and wait for it to complete.
       yield promiseTabLoadEvent(tab, "about:home", "AboutHomeLoadSnippetsCompleted");
@@ -196,32 +186,45 @@ function promiseTabLoadEvent(aTab, aURL, aEventType="load")
  *        The setup function to be run.
  * @return {Promise} resolved when the snippets are ready.  Gets the snippets map.
  */
-function promiseSetupSnippetsMap(aTab, aSetupFn)
+function promiseSetupSnippetsMap(aTab, aSnippet)
 {
-  let deferred = Promise.defer();
   info("Waiting for snippets map");
-  aTab.linkedBrowser.addEventListener("AboutHomeLoadSnippets", function load(event) {
-    aTab.linkedBrowser.removeEventListener("AboutHomeLoadSnippets", load, true);
 
-    let cw = aTab.linkedBrowser.contentWindow.wrappedJSObject;
-    // The snippets should already be ready by this point. Here we're
-    // just obtaining a reference to the snippets map.
-    cw.ensureSnippetsMapThen(function (aSnippetsMap) {
-      aSnippetsMap = Cu.waiveXrays(aSnippetsMap);
-      info("Got snippets map: " +
-           "{ last-update: " + aSnippetsMap.get("snippets-last-update") +
-           ", cached-version: " + aSnippetsMap.get("snippets-cached-version") +
-           " }");
-      // Don't try to update.
-      aSnippetsMap.set("snippets-last-update", Date.now());
-      aSnippetsMap.set("snippets-cached-version", AboutHomeUtils.snippetsVersion);
-      // Clear snippets.
-      aSnippetsMap.delete("snippets");
-      aSetupFn(aSnippetsMap);
-      deferred.resolve(aSnippetsMap);
-    });
-  }, true, true);
-  return deferred.promise;
+  return ContentTask.spawn(aTab.linkedBrowser,
+                    {snippetsVersion: AboutHomeUtils.snippetsVersion,
+                     snippet: aSnippet},
+                    function*(arg) {
+
+    let obj = {};
+    Cu.import("resource://gre/modules/Promise.jsm", obj);
+    let deferred = obj.Promise.defer();
+
+    addEventListener("AboutHomeLoadSnippets", function load(event) {
+      removeEventListener("AboutHomeLoadSnippets", load, true);
+
+      let cw = content.window.wrappedJSObject;
+
+      // The snippets should already be ready by this point. Here we're
+      // just obtaining a reference to the snippets map.
+      cw.ensureSnippetsMapThen(function (aSnippetsMap) {
+        aSnippetsMap = Cu.waiveXrays(aSnippetsMap);
+        console.log("Got snippets map: " +
+             "{ last-update: " + aSnippetsMap.get("snippets-last-update") +
+             ", cached-version: " + aSnippetsMap.get("snippets-cached-version") +
+             " }");
+        // Don't try to update.
+        aSnippetsMap.set("snippets-last-update", Date.now());
+        aSnippetsMap.set("snippets-cached-version", arg.snippetsVersion);
+        // Clear snippets.
+        aSnippetsMap.delete("snippets");
+        aSnippetsMap.set("snippets", arg.snippet);
+        deferred.resolve();
+      });
+    }, true, true);
+
+    return deferred.promise;
+
+  });
 }
 
 
@@ -233,7 +236,7 @@ function sendActivationEvent(tab, callback) {
   if (doc.defaultView.frames[0])
     doc = doc.defaultView.frames[0].document;
   let button = doc.getElementById("activationSnippet");
-  EventUtils.synthesizeMouseAtCenter(button, {}, doc.defaultView);
+  BrowserTestUtils.synthesizeMouseAtCenter(button, {}, tab.linkedBrowser);
   executeSoon(callback);
 }
 

@@ -6,36 +6,7 @@
 
 "use strict";
 
-const cssTokenizer  = require("devtools/sourceeditor/css-tokenizer");
-
-/**
- * Returns the string enclosed in quotes
- */
-function quoteString(string) {
-  let hasDoubleQuotes = string.includes('"');
-  let hasSingleQuotes = string.includes("'");
-
-  let quote = '"';
-  if (hasDoubleQuotes && !hasSingleQuotes) {
-    quote = "'";
-  }
-
-  // Quote special characters as specified by the CSS grammar.
-  // See http://www.w3.org/TR/CSS2/syndata.html#tokenization
-  // and http://www.w3.org/TR/CSS2/syndata.html#strings
-  return quote +
-    string.replace(/[\\"]/g, match => {
-      switch (match) {
-      case '\\':
-        return '\\\\';
-      case '"':
-        if (quote == '"')
-          return '\\"';
-        return match;
-      }
-    }) +
-    quote;
-}
+const {cssTokenizer} = require("devtools/sourceeditor/css-tokenizer");
 
 /**
  * Returns an array of CSS declarations given an string.
@@ -52,6 +23,10 @@ function quoteString(string) {
  *         [{"name": string, "value": string, "priority": string}, ...]
  */
 function parseDeclarations(inputString) {
+  if (inputString === null || inputString === undefined) {
+    throw new Error("empty input string");
+  }
+
   let tokens = cssTokenizer(inputString);
 
   let declarations = [{name: "", value: "", priority: ""}];
@@ -60,7 +35,7 @@ function parseDeclarations(inputString) {
   for (let token of tokens) {
     lastProp = declarations[declarations.length - 1];
 
-    if (token.tokenType === ":") {
+    if (token.tokenType === "symbol" && token.text === ":") {
       if (!lastProp.name) {
         // Set the current declaration name if there's no name yet
         lastProp.name = current.trim();
@@ -71,63 +46,29 @@ function parseDeclarations(inputString) {
         // with colons)
         current += ":";
       }
-    } else if (token.tokenType === ";") {
+    } else if (token.tokenType === "symbol" && token.text === ";") {
       lastProp.value = current.trim();
       current = "";
       hasBang = false;
       declarations.push({name: "", value: "", priority: ""});
-    } else {
-      switch(token.tokenType) {
-        case "IDENT":
-          if (token.value === "important" && hasBang) {
-            lastProp.priority = "important";
-            hasBang = false;
-          } else {
-            if (hasBang) {
-              current += "!";
-            }
-            current += token.value;
-          }
-          break;
-        case "WHITESPACE":
-          current += " ";
-          break;
-        case "DIMENSION":
-          current += token.repr;
-          break;
-        case "HASH":
-          current += "#" + token.value;
-          break;
-        case "URL":
-          current += "url(" + quoteString(token.value) + ")";
-          break;
-        case "FUNCTION":
-          current += token.value + "(";
-          break;
-        case "(":
-        case ")":
-          current += token.tokenType;
-          break;
-        case "EOF":
-          break;
-        case "DELIM":
-          if (token.value === "!") {
-            hasBang = true;
-          } else {
-            current += token.value;
-          }
-          break;
-        case "STRING":
-          current += quoteString(token.value);
-          break;
-        case "{":
-        case "}":
-          current += token.tokenType;
-          break;
-        default:
-          current += token.value;
-          break;
+    } else if (token.tokenType === "ident") {
+      if (token.text === "important" && hasBang) {
+        lastProp.priority = "important";
+        hasBang = false;
+      } else {
+        if (hasBang) {
+          current += "!";
+        }
+        current += token.text;
       }
+    } else if (token.tokenType === "symbol" && token.text === "!") {
+      hasBang = true;
+    } else if (token.tokenType === "whitespace") {
+      current += " ";
+    } else if (token.tokenType === "comment") {
+      // For now, just ignore.
+    } else {
+      current += inputString.substring(token.startOffset, token.endOffset);
     }
   }
 
