@@ -1,16 +1,20 @@
 <div class="pkt_ext_introdetail pkt_ext_introdetailhero">
 	<h2 class="pkt_ext_logo">Pocket</h2>
 	<p class="pkt_ext_tagline">{{tagline}}</p>
-	<p class="pkt_ext_learnmorecontainer"><a class="pkt_ext_learnmore" href="http://{{pockethost}}?s={{variant}}&t=wlm&src=ff_learn_more" target="_blank">{{learnmore}}</a></p>
+	{{#if showlearnmore}}
+	<p class="pkt_ext_learnmorecontainer"><a class="pkt_ext_learnmore" href="https://{{pockethost}}?s=ffi&t=learnmore&v={{variant}}" target="_blank">{{learnmore}}</a></p>
+	{{else}}
+	<p class="pkt_ext_learnmorecontainer"><a class="pkt_ext_learnmore pkt_ext_learnmoreinactive" href="#">{{learnmore}}</a></p>
+	{{/if}}
 	<div class="pkt_ext_introimg"></div>
 </div>
 <div class="pkt_ext_signupdetail pkt_ext_signupdetail_hero">
 	<h4>{{signuptosave}}</h4>
 	{{#if fxasignedin}}
-	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s={{variant}}&t=wlm" target=_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signinfirefox}}</span></a></p>
+	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s=ffi&t=signupff&v={{variant}}" target="_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signinfirefox}}</span></a></p>
 	{{else}}
-	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s={{variant}}&t=wlm" target=_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signupfirefox}}</span></a></p>
-	<p class="btn-container"><a href="http://{{pockethost}}/signup?force=email&src=extension&s={{variant}}&t=wlm" target="_blank" class="btn btn-secondary signup-btn-email signup-btn-initstate">{{signupemail}}</a></p>
+	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s=ffi&t=signupff&v={{variant}}" target="_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signupfirefox}}</span></a></p>
+	<p class="btn-container"><a href="https://{{pockethost}}/signup?force=email&src=extension&s=ffi&t=signupemail&v={{variant}}" target="_blank" class="btn btn-secondary signup-btn-email signup-btn-initstate">{{signupemail}}</a></p>
 	{{/if}}
-	<p class="alreadyhave">{{alreadyhaveacct}} <a href="http://{{pockethost}}/login?ep=3&src=extension&s={{variant}}&t=wlm" target="_blank">{{loginnow}}</a>.</p>
+	<p class="alreadyhave">{{alreadyhaveacct}} <a href="https://{{pockethost}}/login?ep=3&src=extension&s=ffi&t=login&v={{variant}}" target="_blank">{{loginnow}}</a>.</p>
 </div>
