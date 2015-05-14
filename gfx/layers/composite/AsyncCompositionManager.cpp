@@ -735,12 +735,11 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     // result.
     const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().yScale * asyncZoomY);
 
-    const LayoutDeviceToParentLayerScale nonLayoutScale = effectiveZoom /
-        metrics.GetDevPixelsPerCSSPixel();
     // Here we convert the scrollbar thumb ratio into a true unitless ratio by
     // dividing out the conversion factor from the scrollframe's parent's space
     // to the scrollframe's space.
-    const float ratio = aScrollbar->GetScrollbarThumbRatio() / nonLayoutScale.scale;
+    const float ratio = aScrollbar->GetScrollbarThumbRatio() /
+        (metrics.GetPresShellResolution() * asyncZoomY);
     ParentLayerCoord yTranslation = -asyncScrollY * ratio;
 
     // The scroll thumb additionally needs to be translated to compensate for
@@ -784,9 +783,8 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
 
     const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().xScale * asyncZoomX);
 
-    const LayoutDeviceToParentLayerScale nonLayoutScale = effectiveZoom /
-        metrics.GetDevPixelsPerCSSPixel();
-    const float ratio = aScrollbar->GetScrollbarThumbRatio() / nonLayoutScale.scale;
+    const float ratio = aScrollbar->GetScrollbarThumbRatio() /
+        (metrics.GetPresShellResolution() * asyncZoomX);
     ParentLayerCoord xTranslation = -asyncScrollX * ratio;
 
     const CSSCoord thumbOrigin = (metrics.GetScrollOffset().x * ratio);
