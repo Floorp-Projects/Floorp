@@ -246,6 +246,11 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   max-width: @standaloneSubviewWidth@;
 }
 
+/* Bug 1164419 - increase Pocket panel size to accomidate wider Russian text. */
+panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-viewstack > .panel-mainview:not([panelid="PanelUI-popup"]) {
+  max-width: 33em; /* standaloneSubviewWidth + 3 */
+}
+
 panelview:not([mainview]) .toolbarbutton-text,
 .cui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;
