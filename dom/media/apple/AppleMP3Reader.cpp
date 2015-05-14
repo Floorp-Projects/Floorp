@@ -21,16 +21,10 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define LOGE(...) PR_LOG(gMediaDecoderLog, PR_LOG_ERROR, (__VA_ARGS__))
 #define LOGW(...) PR_LOG(gMediaDecoderLog, PR_LOG_WARNING, (__VA_ARGS__))
 #define LOGD(...) PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define LOGE(...)
-#define LOGW(...)
-#define LOGD(...)
-#endif
 
 #define PROPERTY_ID_FORMAT "%c%c%c%c"
 #define PROPERTY_ID_PRINT(x) ((x) >> 24), \
