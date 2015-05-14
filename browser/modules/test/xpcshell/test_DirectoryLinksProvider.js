@@ -409,6 +409,9 @@ add_task(function test_updateSuggestedTile() {
 });
 
 add_task(function test_suggestedLinksMap() {
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "testing map";
+
   let data = {"suggested": [suggestedTile1, suggestedTile2, suggestedTile3, suggestedTile4], "directory": [someOtherSite]};
   let dataURI = 'data:application/json,' + JSON.stringify(data);
 
@@ -427,17 +430,24 @@ add_task(function test_suggestedLinksMap() {
     "1040.com": [suggestedTile1, suggestedTile3],
     "taxslayer.com": [suggestedTile1, suggestedTile2, suggestedTile3],
     "freetaxusa.com": [suggestedTile2, suggestedTile3],
+    "sponsoredtarget.com": [suggestedTile4],
   };
-  do_check_eq([...DirectoryLinksProvider._suggestedLinks.keys()].indexOf("sponsoredtarget.com"), -1);
+
+  let suggestedSites = [...DirectoryLinksProvider._suggestedLinks.keys()];
+  do_check_eq(suggestedSites.indexOf("sponsoredtarget.com"), 5);
+  do_check_eq(suggestedSites.length, Object.keys(expected_data).length);
 
   DirectoryLinksProvider._suggestedLinks.forEach((suggestedLinks, site) => {
     let suggestedLinksItr = suggestedLinks.values();
     for (let link of expected_data[site]) {
-      isIdentical(suggestedLinksItr.next().value, link);
+      let linkCopy = JSON.parse(JSON.stringify(link));
+      linkCopy.targetedName = "testing map";
+      isIdentical(suggestedLinksItr.next().value, linkCopy);
     }
   })
 
   yield promiseCleanDirectoryLinksProvider();
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
 });
 
 add_task(function test_topSitesWithSuggestedLinks() {
