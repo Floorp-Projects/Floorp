@@ -9,12 +9,8 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaStreamGraphLog;
 #define STREAM_LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
-#else
-#define STREAM_LOG(type, msg)
-#endif
 
 #ifdef DEBUG
 void

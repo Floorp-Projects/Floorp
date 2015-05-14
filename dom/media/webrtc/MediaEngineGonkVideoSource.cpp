@@ -25,14 +25,9 @@ using namespace mozilla::gfx;
 using namespace android;
 
 #undef LOG
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
 #define LOGFRAME(msg) PR_LOG(GetMediaManagerLog(), 6, msg)
-#else
-#define LOG(msg)
-#define LOGFRAME(msg)
-#endif
 
 class MediaBufferListener : public GonkCameraSource::DirectBufferListener {
 public:

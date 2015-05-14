@@ -54,7 +54,6 @@ using namespace mozilla::gfx;
 #undef DECODER_LOG
 #undef VERBOSE_LOG
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 extern PRLogModuleInfo* gMediaSampleLog;
 #define LOG(m, l, x, ...) \
@@ -65,11 +64,6 @@ extern PRLogModuleInfo* gMediaSampleLog;
   LOG(gMediaDecoderLog, PR_LOG_DEBUG+1, x, ##__VA_ARGS__)
 #define SAMPLE_LOG(x, ...) \
   LOG(gMediaSampleLog, PR_LOG_DEBUG, x, ##__VA_ARGS__)
-#else
-#define DECODER_LOG(x, ...)
-#define VERBOSE_LOG(x, ...)
-#define SAMPLE_LOG(x, ...)
-#endif
 
 // Somehow MSVC doesn't correctly delete the comma before ##__VA_ARGS__
 // when __VA_ARGS__ expands to nothing. This is a workaround for it.
@@ -2915,17 +2909,13 @@ void MediaDecoderStateMachine::AdvanceFrame()
   nsRefPtr<VideoData> currentFrame;
   if (VideoQueue().GetSize() > 0) {
     VideoData* frame = VideoQueue().PeekFront();
-#ifdef PR_LOGGING
     int32_t droppedFrames = 0;
-#endif
     while (IsRealTime() || clock_time >= frame->mTime) {
       mVideoFrameEndTime = frame->GetEndTime();
       if (currentFrame) {
         mDecoder->NotifyDecodedFrames(0, 0, 1);
-#ifdef PR_LOGGING
         VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld (%d so far)",
                     currentFrame->mTime, clock_time, ++droppedFrames);
-#endif
       }
       currentFrame = frame;
       nsRefPtr<VideoData> releaseMe = PopVideo();
@@ -3249,12 +3239,10 @@ void MediaDecoderStateMachine::StartBuffering()
   SetState(DECODER_STATE_BUFFERING);
   DECODER_LOG("Changed state from DECODING to BUFFERING, decoded for %.3lfs",
               decodeDuration.ToSeconds());
-#ifdef PR_LOGGING
   MediaDecoder::Statistics stats = mDecoder->GetStatistics();
   DECODER_LOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
               stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
               stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
-#endif
 }
 
 void MediaDecoderStateMachine::SetPlayStartTime(const TimeStamp& aTimeStamp)

@@ -16,7 +16,6 @@
 #endif
 #include "SourceBufferResource.h"
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaSourceLog();
 
 /* Polyfill __func__ on MSVC to pass to the log. */
@@ -27,9 +26,6 @@ extern PRLogModuleInfo* GetMediaSourceLog();
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 #define MSE_DEBUG(name, arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (TOSTRING(name) "(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
-#else
-#define MSE_DEBUG(...)
-#endif
 
 namespace mozilla {
 
