@@ -54,11 +54,9 @@ public:
 
   // Returns null on failure.
   static already_AddRefed<nsNullPrincipal>
-    Create(uint32_t aAppId = nsIScriptSecurityManager::NO_APP_ID,
-           bool aInMozBrowser = false);
+    Create(const OriginAttributes& aOriginAttributes = OriginAttributes());
 
-  nsresult Init(uint32_t aAppId = nsIScriptSecurityManager::NO_APP_ID,
-                bool aInMozBrowser = false);
+  nsresult Init(const OriginAttributes& aOriginAttributes = OriginAttributes());
 
   virtual void GetScriptLocation(nsACString &aStr) override;
 
