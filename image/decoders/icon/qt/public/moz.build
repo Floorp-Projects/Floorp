@@ -4,14 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
-    'nsBMPEncoder.cpp',
+XPIDL_SOURCES += [
+    'nsGtkQtIconsConverter.idl',
 ]
 
-FAIL_ON_WARNINGS = True
+XPIDL_MODULE = 'gtkqticonsconverter'
 
-LOCAL_INCLUDES += [
-    '/image/src',
-]
-
-FINAL_LIBRARY = 'xul'
