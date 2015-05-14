@@ -437,7 +437,7 @@ def write_interface(iface, fd):
     fd.write(iface_forward % names)
 
     def emitTemplate(forward_infallible, tmpl, tmpl_notxpcom=None):
-        if tmpl_notxpcom == None:
+        if tmpl_notxpcom is None:
             tmpl_notxpcom = tmpl
         for member in iface.members:
             if isinstance(member, xpidl.Attribute):
