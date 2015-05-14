@@ -84,7 +84,7 @@
       }
     }
 
-    function removeTextData(aID)
+    function removeTextData(aID, aRole)
     {
       this.containerNode = getNode(aID);
       this.textNode = this.containerNode.firstChild;
@@ -96,7 +96,7 @@
       this.invoke = function removeTextData_invoke()
       {
         var tree = {
-          role: ROLE_PARAGRAPH,
+          role: aRole,
           children: [
             {
               role: ROLE_TEXT_LEAF,
@@ -112,7 +112,7 @@
       this.finalCheck = function removeTextData_finalCheck()
       {
         var tree = {
-          role: ROLE_PARAGRAPH,
+          role: aRole,
           children: []
         };
         testAccessibleTree(this.containerNode, tree);
@@ -147,8 +147,8 @@
       gQueue.push(new setOnClickNRoleAttrs("span"));
 
       // text data removal of text node should remove its text accessible
-      gQueue.push(new removeTextData("p"));
-      gQueue.push(new removeTextData("pre"));
+      gQueue.push(new removeTextData("p", ROLE_PARAGRAPH));
+      gQueue.push(new removeTextData("pre", ROLE_TEXT_CONTAINER));
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }

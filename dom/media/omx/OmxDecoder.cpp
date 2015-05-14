@@ -37,12 +37,8 @@
 #define OD_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "OmxDecoder", __VA_ARGS__)
 
 #undef LOG
-#ifdef PR_LOGGING
 PRLogModuleInfo *gOmxDecoderLog;
 #define LOG(type, msg...) PR_LOG(gOmxDecoderLog, type, (msg))
-#else
-#define LOG(x...)
-#endif
 
 using namespace MPAPI;
 using namespace mozilla;
@@ -113,11 +109,9 @@ static sp<IOMX> GetOMX()
 }
 
 bool OmxDecoder::Init(sp<MediaExtractor>& extractor) {
-#ifdef PR_LOGGING
   if (!gOmxDecoderLog) {
     gOmxDecoderLog = PR_NewLogModule("OmxDecoder");
   }
-#endif
 
   sp<MetaData> meta = extractor->getMetaData();
 

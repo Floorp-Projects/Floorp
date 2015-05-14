@@ -22,16 +22,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
       ok(e instanceof Error, "Should have an Error here");
       ok(!(e instanceof DOMException), "Should not have DOMException here");
       ok(!("code" in e), "Should not have a 'code' property");
-      ise(e.name, "Error", "Should not have an interesting name here");
-      ise(e.message, "We are a DOMError", "Should have the right message");
-      ise(e.stack,
-          "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:20:7\n",
-          "Exception stack should still only show our code");
-      ise(e.fileName,
-          "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
-          "Should have the right file name");
-      ise(e.lineNumber, 20, "Should have the right line number");
-      ise(e.columnNumber, 6, "Should have the right column number");
+      is(e.name, "Error", "Should not have an interesting name here");
+      is(e.message, "We are a DOMError", "Should have the right message");
+      is(e.stack,
+         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:20:7\n",
+         "Exception stack should still only show our code");
+      is(e.fileName,
+         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         "Should have the right file name");
+      is(e.lineNumber, 20, "Should have the right line number");
+      is(e.columnNumber, 6, "Should have the right column number");
     }
 
     try {
@@ -39,18 +39,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
     } catch (e) {
       ok(e instanceof Error, "Should also have an Error here");
       ok(e instanceof DOMException, "Should have DOMException here");
-      ise(e.name, "NotSupportedError", "Should have the right name here");
-      ise(e.message, "We are a DOMException",
-          "Should also have the right message");
-      ise(e.code, DOMException.NOT_SUPPORTED_ERR,
-          "Should have the right 'code'");
-      ise(e.stack,
-          "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:38:7\n",
-          "Exception stack should still only show our code");
-      ise(e.filename,
-          "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
-          "Should still have the right file name");
-      ise(e.lineNumber, 38, "Should still have the right line number");
+      is(e.name, "NotSupportedError", "Should have the right name here");
+      is(e.message, "We are a DOMException",
+         "Should also have the right message");
+      is(e.code, DOMException.NOT_SUPPORTED_ERR,
+         "Should have the right 'code'");
+      is(e.stack,
+         "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:38:7\n",
+         "Exception stack should still only show our code");
+      is(e.filename,
+         "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
+         "Should still have the right file name");
+      is(e.lineNumber, 38, "Should still have the right line number");
       todo_is(e.columnNumber, 7,
               "No column number support for DOMException yet");
     }

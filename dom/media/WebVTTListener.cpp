@@ -28,22 +28,16 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebVTTListener)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebVTTListener)
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gTextTrackLog;
 # define VTT_LOG(...) PR_LOG(gTextTrackLog, PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-# define VTT_LOG(msg)
-#endif
 
 WebVTTListener::WebVTTListener(HTMLTrackElement* aElement)
   : mElement(aElement)
 {
   MOZ_ASSERT(mElement, "Must pass an element to the callback");
-#ifdef PR_LOGGING
   if (!gTextTrackLog) {
     gTextTrackLog = PR_NewLogModule("TextTrack");
   }
-#endif
   VTT_LOG("WebVTTListener created.");
 }
 

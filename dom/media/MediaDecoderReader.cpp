@@ -20,13 +20,9 @@ namespace mozilla {
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(x, ...) \
   PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, ("Decoder=%p " x, mDecoder, ##__VA_ARGS__))
-#else
-#define DECODER_LOG(x, ...)
-#endif
 
 // Same workaround as MediaDecoderStateMachine.cpp.
 #define DECODER_WARN_HELPER(a, b) NS_WARNING b

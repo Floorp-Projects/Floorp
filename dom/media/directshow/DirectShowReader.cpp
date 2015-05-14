@@ -17,8 +17,6 @@
 namespace mozilla {
 
 
-#ifdef PR_LOGGING
-
 PRLogModuleInfo*
 GetDirectShowLog() {
   static PRLogModuleInfo* log = nullptr;
@@ -29,10 +27,6 @@ GetDirectShowLog() {
 }
 
 #define LOG(...) PR_LOG(GetDirectShowLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-
-#else
-#define LOG(...)
-#endif
 
 DirectShowReader::DirectShowReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),

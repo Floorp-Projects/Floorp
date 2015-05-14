@@ -33,10 +33,13 @@
 #include "prlog.h"
 #include "nsServiceManagerUtils.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
+
 struct JSContext;
 class JSObject;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* GetMediaSourceLog()
 {
   static PRLogModuleInfo* sLogModule;
@@ -57,10 +60,6 @@ PRLogModuleInfo* GetMediaSourceAPILog()
 
 #define MSE_DEBUG(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("MediaSource(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #define MSE_API(arg, ...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, ("MediaSource(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#else
-#define MSE_DEBUG(...)
-#define MSE_API(...)
-#endif
 
 // Arbitrary limit.
 static const unsigned int MAX_SOURCE_BUFFERS = 16;
@@ -92,7 +91,12 @@ IsTypeSupported(const nsAString& aType)
     if (mimeType.EqualsASCII(gMediaSourceTypes[i])) {
       if ((mimeType.EqualsASCII("video/mp4") ||
            mimeType.EqualsASCII("audio/mp4")) &&
-          !Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
+          (!Preferences::GetBool("media.mediasource.mp4.enabled", false)
+#ifdef MOZ_WIDGET_ANDROID
+          // MP4 won't work unless we have JellyBean+
+          || AndroidBridge::Bridge()->GetAPIVersion() < 16
+#endif
+          )) {
         break;
       }
       if ((mimeType.EqualsASCII("video/webm") ||

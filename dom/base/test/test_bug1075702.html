@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1075702
     test1.addEventListener("DOMAttrModified", mutationHandler, true);
     var removedNodeAccordingToRemoveNamedItemNS = test1.attributes.removeNamedItemNS(null, "x");
     test1.removeEventListener("DOMAttrModified", mutationHandler, true);
-    ise(removedNodeAccordingToEvent, removedNodeAccordingToRemoveNamedItemNS, "Node removed according to event is not same as node removed by removeNamedItemNS.");
+    is(removedNodeAccordingToEvent, removedNodeAccordingToRemoveNamedItemNS, "Node removed according to event is not same as node removed by removeNamedItemNS.");
   }
 
   testremoveNamedItemNS();
@@ -59,7 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1075702
     test2.addEventListener("DOMAttrModified", mutationHandler, true);
     var removedNodeAccordingToRemoveNamedItem = test2.attributes.removeNamedItem("x");
     test2.removeEventListener("DOMAttrModified", mutationHandler, true);
-    ise(removedNodeAccordingToEvent, removedNodeAccordingToRemoveNamedItem, "Node removed according to event is not same as node removed by removeNamedItem.");
+    is(removedNodeAccordingToEvent, removedNodeAccordingToRemoveNamedItem, "Node removed according to event is not same as node removed by removeNamedItem.");
   }
 
   testremoveNamedItem();

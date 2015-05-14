@@ -10,12 +10,8 @@
 
 #include "prlog.h"
 
-#ifdef PR_LOGGING
 PRLogModuleInfo *gI420ColorConverterHelperLog;
 #define LOG(msg...) PR_LOG(gI420ColorConverterHelperLog, PR_LOG_WARNING, (msg))
-#else
-#define LOG(x...)
-#endif
 
 namespace android {
 
@@ -23,11 +19,9 @@ I420ColorConverterHelper::I420ColorConverterHelper()
   : mHandle(nullptr)
   , mConverter({nullptr, nullptr, nullptr, nullptr, nullptr})
 {
-#ifdef PR_LOGGING
   if (!gI420ColorConverterHelperLog) {
     gI420ColorConverterHelperLog = PR_NewLogModule("I420ColorConverterHelper");
   }
-#endif
 }
 
 I420ColorConverterHelper::~I420ColorConverterHelper()

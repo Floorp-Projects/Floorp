@@ -15,6 +15,9 @@
 #include "BluetoothManager.h"
 #include "BluetoothOppManager.h"
 #include "BluetoothParent.h"
+#if defined(MOZ_B2G_BT_BLUEDROID)
+#include "BluetoothPbapManager.h"
+#endif
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothServiceChildProcess.h"
 #include "BluetoothUtils.h"
@@ -408,35 +411,32 @@ BluetoothService::StopBluetooth(bool aIsStartup)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  BluetoothProfileManagerBase* profile;
-  profile = BluetoothHfpManager::Get();
-  NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
-  if (profile->IsConnected()) {
-    profile->Disconnect(nullptr);
-  } else {
-    profile->Reset();
-  }
+  static BluetoothProfileManagerBase* sProfiles[] = {
+    BluetoothHfpManager::Get(),
+    BluetoothA2dpManager::Get(),
+    BluetoothOppManager::Get(),
+#if defined(MOZ_B2G_BT_BLUEDROID)
+    BluetoothPbapManager::Get(),
+#endif
+    BluetoothHidManager::Get()
+  };
 
-  profile = BluetoothOppManager::Get();
-  NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
-  if (profile->IsConnected()) {
-    profile->Disconnect(nullptr);
-  }
+  // Disconnect all connected profiles
+  for (uint8_t i = 0; i < MOZ_ARRAY_LENGTH(sProfiles); i++) {
+    nsCString profileName;
+    sProfiles[i]->GetName(profileName);
 
-  profile = BluetoothA2dpManager::Get();
-  NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
-  if (profile->IsConnected()) {
-    profile->Disconnect(nullptr);
-  } else {
-    profile->Reset();
-  }
+    if (NS_WARN_IF(!sProfiles[i])) {
+      BT_LOGR("Profile manager [%s] is null", profileName.get());
+      return NS_ERROR_FAILURE;
+    }
 
-  profile = BluetoothHidManager::Get();
-  NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
-  if (profile->IsConnected()) {
-    profile->Disconnect(nullptr);
-  } else {
-    profile->Reset();
+    if (sProfiles[i]->IsConnected()) {
+      sProfiles[i]->Disconnect(nullptr);
+    } else if (!profileName.EqualsLiteral("OPP") &&
+               !profileName.EqualsLiteral("PBAP")) {
+      sProfiles[i]->Reset();
+    }
   }
 
   mAdapterAddedReceived = false;

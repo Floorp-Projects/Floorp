@@ -20,13 +20,9 @@
 #include "VideoUtils.h"
 #include "gfxPlatform.h"
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* GetAppleMediaLog();
 #define LOG(...) PR_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
 //#define LOG_MEDIA_SHA1
-#else
-#define LOG(...)
-#endif
 
 #ifdef LOG_MEDIA_SHA1
 #include "mozilla/SHA1.h"

@@ -39,10 +39,10 @@ function testtag_notificationbox(nb)
 {
   testtag_notificationbox_State(nb, "initial", null, 0);
 
-  SimpleTest.ise(nb.notificationsHidden, false, "initial notificationsHidden");
-  SimpleTest.ise(nb.removeAllNotifications(false), undefined, "initial removeAllNotifications");
+  SimpleTest.is(nb.notificationsHidden, false, "initial notificationsHidden");
+  SimpleTest.is(nb.removeAllNotifications(false), undefined, "initial removeAllNotifications");
   testtag_notificationbox_State(nb, "initial removeAllNotifications", null, 0);
-  SimpleTest.ise(nb.removeAllNotifications(true), undefined, "initial removeAllNotifications immediate");
+  SimpleTest.is(nb.removeAllNotifications(true), undefined, "initial removeAllNotifications immediate");
   testtag_notificationbox_State(nb, "initial removeAllNotifications immediate", null, 0);
 
   runTimedTests(tests, -1, nb, null);
@@ -73,7 +73,7 @@ var tests =
       // append a new notification
       var ntf = nb.appendNotification("Notification", "note", "happy.png",
                                       nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons);
-      SimpleTest.ise(ntf && ntf.localName == "notification", true, "append notification");
+      SimpleTest.is(ntf && ntf.localName == "notification", true, "append notification");
       return ntf;
     },
     result: function(nb, ntf) {
@@ -83,10 +83,10 @@ var tests =
 
       // check the getNotificationWithValue method
       var ntf_found = nb.getNotificationWithValue("note");
-      SimpleTest.ise(ntf, ntf_found, "getNotificationWithValue note");
+      SimpleTest.is(ntf, ntf_found, "getNotificationWithValue note");
 
       var none_found = nb.getNotificationWithValue("notenone");
-      SimpleTest.ise(none_found, null, "getNotificationWithValue null");
+      SimpleTest.is(none_found, null, "getNotificationWithValue null");
       return ntf;
     }
   },
@@ -104,7 +104,7 @@ var tests =
       try {
         nb.removeNotification(ntf);
       } catch (ex) { exh = true; }
-      SimpleTest.ise(exh, true, "removeNotification again");
+      SimpleTest.is(exh, true, "removeNotification again");
       testtag_notificationbox_State(nb, "removeNotification again", null, 0);
 
     }
@@ -116,7 +116,7 @@ var tests =
                                       nb.PRIORITY_INFO_LOW,
                                       testtag_notificationbox_buttons,
                                       notification_eventCallback);
-      SimpleTest.ise(ntf && ntf.localName == "notification", true, "append notification with callback");
+      SimpleTest.is(ntf && ntf.localName == "notification", true, "append notification with callback");
       return ntf;
     },
     result: function(nb, ntf) {
@@ -162,12 +162,12 @@ var tests =
       testtag_notification_State(nb, ntf, "append", "Notification", "note",
                                  "happy.png", nb.PRIORITY_WARNING_LOW);
       var button = ntf.querySelector(".notification-button");
-      SimpleTest.ise(button.type, "menu-button", "Button type should be set");
+      SimpleTest.is(button.type, "menu-button", "Button type should be set");
       var menuPopup = button.getElementsByTagNameNS(NSXUL, "menupopup");
-      SimpleTest.ise(menuPopup.length, 1, "There should be a menu attached");
+      SimpleTest.is(menuPopup.length, 1, "There should be a menu attached");
       var menuItem = menuPopup[0].firstChild;
-      SimpleTest.ise(menuItem.localName, "menuitem", "There should be a menu item");
-      SimpleTest.ise(menuItem.getAttribute("label"), "Menu Item", "Label should match");
+      SimpleTest.is(menuItem.localName, "menuitem", "There should be a menu item");
+      SimpleTest.is(menuItem.getAttribute("label"), "Menu Item", "Label should match");
       // Clean up.
       nb.removeNotification(ntf);
 
@@ -184,7 +184,7 @@ var tests =
           // append a new notification
           ntf = nb.appendNotification("Notification", "note", "happy.png",
                             nb.PRIORITY_INFO_LOW, testtag_notificationbox_buttons);
-          SimpleTest.ise(ntf && ntf.localName == "notification", true, "append notification");
+          SimpleTest.is(ntf && ntf.localName == "notification", true, "append notification");
 
           // Test persistence
           ntf.persistence++;
@@ -205,14 +205,14 @@ var tests =
           testtag_notificationbox_State(nb, "notification added", ntf, 1);
           testtag_notification_State(nb, ntf, "append", "Notification", "note",
                                      "happy.png", nb.PRIORITY_INFO_LOW);
-          SimpleTest.ise(ntf.persistence, 1, "persistence is 1");
+          SimpleTest.is(ntf.persistence, 1, "persistence is 1");
 
           return [++idx, ntf];
         case 2:
           testtag_notificationbox_State(nb, "first removeTransientNotifications", ntf, 1);
           testtag_notification_State(nb, ntf, "append", "Notification", "note",
                                      "happy.png", nb.PRIORITY_INFO_LOW);
-          SimpleTest.ise(ntf.persistence, 0, "persistence is now 0");
+          SimpleTest.is(ntf.persistence, 0, "persistence is now 0");
 
           return [++idx, ntf];
         case 3:
@@ -227,7 +227,7 @@ var tests =
       // append another notification
       var ntf = nb.appendNotification("Notification", "note", "happy.png",
                                       nb.PRIORITY_INFO_MEDIUM, testtag_notificationbox_buttons);
-      SimpleTest.ise(ntf && ntf.localName == "notification", true, "append notification again");
+      SimpleTest.is(ntf && ntf.localName == "notification", true, "append notification again");
       return ntf;
     },
     result: function(nb, ntf) {
@@ -257,9 +257,9 @@ var tests =
     result: function(nb, ntf) {
       // test the removeAllNotifications method
       testtag_notificationbox_State(nb, "append info_high", ntf, 1);
-      SimpleTest.ise(ntf.priority, nb.PRIORITY_INFO_HIGH,
+      SimpleTest.is(ntf.priority, nb.PRIORITY_INFO_HIGH,
                     "notification.priority " + nb.PRIORITY_INFO_HIGH);
-      SimpleTest.ise(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
+      SimpleTest.is(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
     }
   },
   {
@@ -278,7 +278,7 @@ var tests =
       return ntf;
     },
     result: function(nb, ntf) {
-      SimpleTest.ise(nb.currentNotification == ntf ?
+      SimpleTest.is(nb.currentNotification == ntf ?
                     nb.currentNotification.value : null, "10", "appendNotification order");
       return 1;
     }
@@ -310,8 +310,8 @@ var tests =
     },
     result: function(nb, arr) {
       // arr is [testindex, expectedvalue]
-      SimpleTest.ise(nb.currentNotification.value, "" + arr[1], "close order " + arr[0]);
-      SimpleTest.ise(nb.allNotifications.length, 10 - arr[0], "close order " + arr[0] + " count");
+      SimpleTest.is(nb.currentNotification.value, "" + arr[1], "close order " + arr[0]);
+      SimpleTest.is(nb.allNotifications.length, 10 - arr[0], "close order " + arr[0] + " count");
       if (arr[0] == 6)
         this.repeat = false;
       return ++arr[0];
@@ -323,13 +323,13 @@ var tests =
       try {
         nb.appendNotification("no", "no", "no", 0, null);
       } catch (ex) { exh = true; }
-      SimpleTest.ise(exh, true, "appendNotification priority too low");
+      SimpleTest.is(exh, true, "appendNotification priority too low");
 
       exh = false;
       try {
         nb.appendNotification("no", "no", "no", 11, null);
       } catch (ex) { exh = true; }
-      SimpleTest.ise(exh, true, "appendNotification priority too high");
+      SimpleTest.is(exh, true, "appendNotification priority too high");
 
       // check that the other priority types work properly
       runTimedTests(appendPriorityTests, -1, nb, nb.PRIORITY_WARNING_LOW);
@@ -342,11 +342,11 @@ var appendPriorityTests = [
     test: function(nb, priority) {
       var ntf = nb.appendNotification("Notification", "note", "happy.png",
                                       priority, testtag_notificationbox_buttons);
-      SimpleTest.ise(ntf && ntf.localName == "notification", true, "append notification " + priority);
+      SimpleTest.is(ntf && ntf.localName == "notification", true, "append notification " + priority);
       return [ntf, priority];
     },
     result: function(nb, obj) {
-      SimpleTest.ise(obj[0].priority, obj[1], "notification.priority " + obj[1]);
+      SimpleTest.is(obj[0].priority, obj[1], "notification.priority " + obj[1]);
       return obj[1];
     }
   },
@@ -370,18 +370,18 @@ var appendPriorityTests = [
 
 function testtag_notificationbox_State(nb, testid, expecteditem, expectedcount)
 {
-  SimpleTest.ise(nb.currentNotification, expecteditem, testid + " currentNotification");
-  SimpleTest.ise(nb.allNotifications ? nb.allNotifications.length : "no value",
+  SimpleTest.is(nb.currentNotification, expecteditem, testid + " currentNotification");
+  SimpleTest.is(nb.allNotifications ? nb.allNotifications.length : "no value",
                 expectedcount, testid + " allNotifications");
 }
 
 function testtag_notification_State(nb, ntf, testid, label, value, image, priority)
 {
-  SimpleTest.ise(ntf.control, nb, testid + " notification.control");
-  SimpleTest.ise(ntf.label, label, testid + " notification.label");
-  SimpleTest.ise(ntf.value, value, testid + " notification.value");
-  SimpleTest.ise(ntf.image, image, testid + " notification.image");
-  SimpleTest.ise(ntf.priority, priority, testid + " notification.priority");
+  SimpleTest.is(ntf.control, nb, testid + " notification.control");
+  SimpleTest.is(ntf.label, label, testid + " notification.label");
+  SimpleTest.is(ntf.value, value, testid + " notification.value");
+  SimpleTest.is(ntf.image, image, testid + " notification.image");
+  SimpleTest.is(ntf.priority, priority, testid + " notification.priority");
 
   var type;
   switch (priority) {
@@ -403,7 +403,7 @@ function testtag_notification_State(nb, ntf, testid, label, value, image, priori
       break;
   }
 
-  SimpleTest.ise(ntf.type, type, testid + " notification.type");
+  SimpleTest.is(ntf.type, type, testid + " notification.type");
 }
 
 function checkPopupTest(nb, ntf)

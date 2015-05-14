@@ -364,7 +364,11 @@ android::sp<android::GraphicBuffer>
 SharedBufferManagerParent::GetGraphicBuffer(GrallocBufferRef aRef)
 {
   MonitorAutoLock lock(*sManagerMonitor.get());
-  return GetInstance(aRef.mOwner)->GetGraphicBuffer(aRef.mKey);
+  SharedBufferManagerParent* parent = GetInstance(aRef.mOwner);
+  if (!parent) {
+    return nullptr;
+  }
+  return parent->GetGraphicBuffer(aRef.mKey);
 }
 #endif
 

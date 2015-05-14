@@ -14,13 +14,8 @@
 #include "nsQueryObject.h"
 
 #undef LOG
-#if defined(PR_LOGGING)
 PRLogModuleInfo *gMediaChildLog;
 #define LOG(args) PR_LOG(gMediaChildLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
-
 
 namespace mozilla {
 namespace media {
@@ -104,11 +99,9 @@ SanitizeOriginKeys(const uint64_t& aSinceWhen)
 
 Child::Child()
 {
-#if defined(PR_LOGGING)
   if (!gMediaChildLog) {
     gMediaChildLog = PR_NewLogModule("MediaChild");
   }
-#endif
   LOG(("media::Child: %p", this));
   MOZ_COUNT_CTOR(Child);
 }

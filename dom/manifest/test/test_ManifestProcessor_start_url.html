@@ -21,7 +21,7 @@ typeTests.forEach((type) => {
     start_url: type
   });
   var result = processor.process(data);
-  ise(result.start_url.toString(), docURL.toString(), expected);
+  is(result.start_url.toString(), docURL.toString(), expected);
 });
 
 //Not same origin
@@ -30,7 +30,7 @@ data.jsonText = JSON.stringify({
   start_url: 'http://not-same-origin'
 });
 var result = processor.process(data);
-ise(result.start_url.toString(), docURL.toString(), expected);
+is(result.start_url.toString(), docURL.toString(), expected);
 
 //Empty string test
 var expected = `Expect empty string for start_url to become document's URL.`;
@@ -38,7 +38,7 @@ data.jsonText = JSON.stringify({
   start_url: ''
 });
 var result = processor.process(data);
-ise(result.start_url.toString(), docURL.toString(), expected);
+is(result.start_url.toString(), docURL.toString(), expected);
 
 //Resolve URLs relative to manfiest
 var URLs = ['path', '/path', '../../path',
@@ -53,7 +53,7 @@ URLs.forEach((url) => {
   });
   var absURL = new URL(url, manifestURL).toString();
   var result = processor.process(data);
-  ise(result.start_url.toString(), absURL, expected);
+  is(result.start_url.toString(), absURL, expected);
 });
   </script>
 </head>

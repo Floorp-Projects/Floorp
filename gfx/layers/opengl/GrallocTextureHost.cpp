@@ -231,6 +231,9 @@ GrallocTextureHostOGL::GetRenderState()
 TemporaryRef<gfx::DataSourceSurface>
 GrallocTextureHostOGL::GetAsSurface() {
   android::GraphicBuffer* graphicBuffer = GetGraphicBufferFromDesc(mGrallocHandle).get();
+  if (!graphicBuffer) {
+    return nullptr;
+  }
   uint8_t* grallocData;
   graphicBuffer->lock(GRALLOC_USAGE_SW_READ_OFTEN, reinterpret_cast<void**>(&grallocData));
   RefPtr<gfx::DataSourceSurface> grallocTempSurf =

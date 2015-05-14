@@ -14,39 +14,39 @@ let { WebAudioFront } =
 function* testTarget (client, target) {
   yield target.makeRemote();
 
-  ise(target.hasActor("timeline"), true, "target.hasActor() true when actor exists.");
-  ise(target.hasActor("webaudio"), true, "target.hasActor() true when actor exists.");
-  ise(target.hasActor("notreal"), false, "target.hasActor() false when actor does not exist.");
+  is(target.hasActor("timeline"), true, "target.hasActor() true when actor exists.");
+  is(target.hasActor("webaudio"), true, "target.hasActor() true when actor exists.");
+  is(target.hasActor("notreal"), false, "target.hasActor() false when actor does not exist.");
   // Create a front to ensure the actor is loaded
   let front = new WebAudioFront(target.client, target.form);
 
   let desc = yield target.getActorDescription("webaudio");
-  ise(desc.typeName, "webaudio",
+  is(desc.typeName, "webaudio",
     "target.getActorDescription() returns definition data for corresponding actor");
-  ise(desc.events["start-context"]["type"], "startContext",
+  is(desc.events["start-context"]["type"], "startContext",
     "target.getActorDescription() returns event data for corresponding actor");
 
   desc = yield target.getActorDescription("nope");
-  ise(desc, undefined, "target.getActorDescription() returns undefined for non-existing actor");
+  is(desc, undefined, "target.getActorDescription() returns undefined for non-existing actor");
   desc = yield target.getActorDescription();
-  ise(desc, undefined, "target.getActorDescription() returns undefined for undefined actor");
+  is(desc, undefined, "target.getActorDescription() returns undefined for undefined actor");
 
   let hasMethod = yield target.actorHasMethod("audionode", "getType");
-  ise(hasMethod, true,
+  is(hasMethod, true,
     "target.actorHasMethod() returns true for existing actor with method");
   hasMethod = yield target.actorHasMethod("audionode", "nope");
-  ise(hasMethod, false,
+  is(hasMethod, false,
     "target.actorHasMethod() returns false for existing actor with no method");
   hasMethod = yield target.actorHasMethod("nope", "nope");
-  ise(hasMethod, false,
+  is(hasMethod, false,
     "target.actorHasMethod() returns false for non-existing actor with no method");
   hasMethod = yield target.actorHasMethod();
-  ise(hasMethod, false,
+  is(hasMethod, false,
     "target.actorHasMethod() returns false for undefined params");
 
-  ise(target.getTrait("customHighlighters"), true,
+  is(target.getTrait("customHighlighters"), true,
     "target.getTrait() returns boolean when trait exists");
-  ise(target.getTrait("giddyup"), undefined,
+  is(target.getTrait("giddyup"), undefined,
     "target.getTrait() returns undefined when trait does not exist");
 
   close(target, client);

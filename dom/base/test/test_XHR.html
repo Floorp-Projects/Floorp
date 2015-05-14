@@ -107,7 +107,7 @@ function checkResponseXMLAccessThrows(xhr) {
 function checkSetResponseType(xhr, type) {
   var didthrow = false;
   try { xhr.responseType = type; } catch (e) { didthrow = true; }
-  ise(xhr.responseType, type, "responseType should be " + type);
+  is(xhr.responseType, type, "responseType should be " + type);
   ok(!didthrow, "should not have thrown when setting responseType");
 }
 function checkSetResponseTypeThrows(xhr, type) {

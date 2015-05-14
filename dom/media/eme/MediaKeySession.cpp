@@ -138,24 +138,24 @@ MediaKeySession::UpdateKeyStatusMap()
 
   mKeyStatusMap->Update(keyStatuses);
 
-#ifdef PR_LOGGING
-  nsAutoCString message(
-    nsPrintfCString("MediaKeySession[%p,'%s'] key statuses change {",
-                    this, NS_ConvertUTF16toUTF8(mSessionId).get()));
-  for (const CDMCaps::KeyStatus& status : keyStatuses) {
-    nsAutoCString base64KeyId;
-    nsDependentCSubstring rawKeyId(reinterpret_cast<const char*>(status.mId.Elements()),
-                                   status.mId.Length());
-    nsresult rv = Base64Encode(rawKeyId, base64KeyId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
+  if (EME_LOG_ENABLED()) {
+    nsAutoCString message(
+      nsPrintfCString("MediaKeySession[%p,'%s'] key statuses change {",
+                      this, NS_ConvertUTF16toUTF8(mSessionId).get()));
+    for (const CDMCaps::KeyStatus& status : keyStatuses) {
+      nsAutoCString base64KeyId;
+      nsDependentCSubstring rawKeyId(reinterpret_cast<const char*>(status.mId.Elements()),
+                                     status.mId.Length());
+      nsresult rv = Base64Encode(rawKeyId, base64KeyId);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+      message.Append(nsPrintfCString(" (%s,%s)", base64KeyId.get(),
+        MediaKeyStatusValues::strings[status.mStatus].value));
     }
-    message.Append(nsPrintfCString(" (%s,%s)", base64KeyId.get(),
-      MediaKeyStatusValues::strings[status.mStatus].value));
+    message.Append(" }");
+    EME_LOG(message.get());
   }
-  message.Append(" }");
-  EME_LOG(message.get());
-#endif
 }
 
 MediaKeyStatusMap*
@@ -193,17 +193,17 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
     return promise.forget();
   }
 
-#ifdef PR_LOGGING
   // Convert initData to base64 for easier logging.
   // Note: UpdateSession() Move()s the data out of the array, so we have
   // to copy it here.
   nsAutoCString base64InitData;
-  nsDependentCSubstring rawInitData(reinterpret_cast<const char*>(data.Elements()),
-    data.Length());
-  if (NS_FAILED(Base64Encode(rawInitData, base64InitData))) {
-    NS_WARNING("Failed to base64 encode initData for logging");
+  if (EME_LOG_ENABLED()) {
+    nsDependentCSubstring rawInitData(reinterpret_cast<const char*>(data.Elements()),
+      data.Length());
+    if (NS_FAILED(Base64Encode(rawInitData, base64InitData))) {
+      NS_WARNING("Failed to base64 encode initData for logging");
+    }
   }
-#endif
 
   PromiseId pid = mKeys->StorePromise(promise);
   mKeys->GetCDMProxy()->CreateSession(Token(),
@@ -280,17 +280,17 @@ MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResu
   }
 
 
-#ifdef PR_LOGGING
   // Convert response to base64 for easier logging.
   // Note: UpdateSession() Move()s the data out of the array, so we have
   // to copy it here.
   nsAutoCString base64Response;
-  nsDependentCSubstring rawResponse(reinterpret_cast<const char*>(data.Elements()),
-    data.Length());
-  if (NS_FAILED(Base64Encode(rawResponse, base64Response))) {
-    NS_WARNING("Failed to base64 encode response for logging");
+  if (EME_LOG_ENABLED()) {
+    nsDependentCSubstring rawResponse(reinterpret_cast<const char*>(data.Elements()),
+      data.Length());
+    if (NS_FAILED(Base64Encode(rawResponse, base64Response))) {
+      NS_WARNING("Failed to base64 encode response for logging");
+    }
   }
-#endif
 
   PromiseId pid = mKeys->StorePromise(promise);
   mKeys->GetCDMProxy()->UpdateSession(mSessionId,
@@ -382,18 +382,18 @@ void
 MediaKeySession::DispatchKeyMessage(MediaKeyMessageType aMessageType,
                                     const nsTArray<uint8_t>& aMessage)
 {
-#ifdef PR_LOGGING
-  nsAutoCString base64MsgData;
-  nsDependentCSubstring rawMsgData(reinterpret_cast<const char*>(aMessage.Elements()),
-                                   aMessage.Length());
-  if (NS_FAILED(Base64Encode(rawMsgData, base64MsgData))) {
-    NS_WARNING("Failed to base64 encode message for logging");
+  if (EME_LOG_ENABLED()) {
+    nsAutoCString base64MsgData;
+    nsDependentCSubstring rawMsgData(reinterpret_cast<const char*>(aMessage.Elements()),
+                                     aMessage.Length());
+    if (NS_FAILED(Base64Encode(rawMsgData, base64MsgData))) {
+      NS_WARNING("Failed to base64 encode message for logging");
+    }
+    EME_LOG("MediaKeySession[%p,'%s'] DispatchKeyMessage() type=%s message(base64)='%s'",
+            this, NS_ConvertUTF16toUTF8(mSessionId).get(),
+            MediaKeyMessageTypeValues::strings[uint32_t(aMessageType)].value,
+            base64MsgData.get());
   }
-  EME_LOG("MediaKeySession[%p,'%s'] DispatchKeyMessage() type=%s message(base64)='%s'",
-          this, NS_ConvertUTF16toUTF8(mSessionId).get(),
-          MediaKeyMessageTypeValues::strings[uint32_t(aMessageType)].value,
-          base64MsgData.get());
-#endif
 
   nsRefPtr<MediaKeyMessageEvent> event(
     MediaKeyMessageEvent::Constructor(this, aMessageType, aMessage));

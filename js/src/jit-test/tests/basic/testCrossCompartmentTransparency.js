@@ -15,7 +15,7 @@ var proxyStr = "Proxy.create(                              "+
 var proxy1 = g1.eval(proxyStr);
 var proxy2 = g2.eval(proxyStr);
 
-function test(str, f) {
+function test(str, f, isGeneric = false) {
     "use strict";
 
     var x = f(eval(str));
@@ -29,7 +29,7 @@ function test(str, f) {
         assertEq(Object.prototype.toString.call(e), "[object Error]");
         threw = true;
     }
-    assertEq(threw, true);
+    assertEq(threw, !isGeneric);
     threw = false;
     try {
         f(g2.eval("new Object()"));
@@ -37,7 +37,7 @@ function test(str, f) {
         assertEq(Object.prototype.toString.call(e), "[object Error]");
         threw = true;
     }
-    assertEq(threw, true);
+    assertEq(threw, !isGeneric);
     threw = false;
     try {
         f(proxy1);
@@ -45,7 +45,7 @@ function test(str, f) {
         assertEq(Object.prototype.toString.call(e), "[object Error]");
         threw = true;
     }
-    assertEq(threw, true);
+    assertEq(threw, !isGeneric);
     threw = false;
     try {
         f(proxy2);
@@ -53,7 +53,7 @@ function test(str, f) {
         assertEq(Object.prototype.toString.call(e), "[object Error]");
         threw = true;
     }
-    assertEq(threw, true);
+    assertEq(threw, !isGeneric);
 }
 
 test("new Boolean(true)", b => Boolean.prototype.toSource.call(b));
@@ -153,7 +153,7 @@ test("new Date()", d => justDontThrow(Date.prototype.toLocaleFormat.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.toTimeString.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.toDateString.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.toSource.call(d)));
-test("new Date()", d => justDontThrow(Date.prototype.toString.call(d)));
+test("new Date()", d => justDontThrow(Date.prototype.toString.call(d)), true);
 test("new Date()", d => justDontThrow(Date.prototype.valueOf.call(d)));
 
 throw "done";

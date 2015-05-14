@@ -500,7 +500,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
 
     AddPositioningOffset(x, y);
     SnapToGrid(x, y);
-    SetElementPosition(aElement, x, y);
+    SetElementPosition(*element, x, y);
 
     // we may need to create a br if the positioned element is alone in its
     // container
@@ -579,11 +579,17 @@ nsHTMLEditor::SetElementPosition(nsIDOMElement *aElement, int32_t aX, int32_t aY
 {
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_STATE(element);
-  nsAutoEditBatch batchIt(this);
 
-  mHTMLCSSUtils->SetCSSPropertyPixels(*element, *nsGkAtoms::left, aX);
-  mHTMLCSSUtils->SetCSSPropertyPixels(*element, *nsGkAtoms::top, aY);
+  SetElementPosition(*element, aX, aY);
   return NS_OK;
+}
+
+void
+nsHTMLEditor::SetElementPosition(dom::Element& aElement, int32_t aX, int32_t aY)
+{
+  nsAutoEditBatch batchIt(this);
+  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::left, aX);
+  mHTMLCSSUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::top, aY);
 }
 
 // self-explanatory

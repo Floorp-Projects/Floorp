@@ -120,11 +120,9 @@
 #define PNG_SETJMP_SUPPORTED
 #define PNG_STDIO_SUPPORTED
 
-#ifdef PR_LOGGING
 #define PNG_CHECK_cHRM_SUPPORTED
 #define PNG_ERROR_TEXT_SUPPORTED
 #define PNG_WARNINGS_SUPPORTED
-#endif
 
 /* Mangle names of exported libpng functions so different libpng versions
    can coexist. It is recommended that if you do this, you give your
@@ -659,7 +657,6 @@
 #define png_realloc_array                         MOZ_PNG_realloc_array
 #define png_zstream_error                         MOZ_PNG_zstream_error
 
-#if defined(PR_LOGGING)
 #ifndef png_warning
 #  define png_warning                     MOZ_PNG_warning
 #endif
@@ -674,7 +671,6 @@
 #define png_warning_parameter           MOZ_PNG_warn_param
 #define png_warning_parameter_signed    MOZ_PNG_warn_param_signed
 #define png_warning_parameter_unsigned  MOZ_PNG_warn_param_unsigned
-#endif
 
 #if defined(PNG_READ_PACK_SUPPORTED) || defined(PNG_WRITE_PACK_SUPPORTED)
 #define png_set_packing  MOZ_PNG_set_packing

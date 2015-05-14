@@ -19,7 +19,7 @@ namespace mozilla {
 // Define to trace what's on...
 //#define DEBUG_SOURCE_TRACE 1
 
-#if defined(PR_LOGGING) && defined (DEBUG_SOURCE_TRACE)
+#if defined (DEBUG_SOURCE_TRACE)
 PRLogModuleInfo* GetDirectShowLog();
 #define DIRECTSHOW_LOG(...) PR_LOG(GetDirectShowLog(), PR_LOG_DEBUG, (__VA_ARGS__))
 #else

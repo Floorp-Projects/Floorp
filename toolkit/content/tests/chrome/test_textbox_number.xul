@@ -61,14 +61,14 @@ function doTests() {
   ok(n1.spinButtons != null && n1.spinButtons.localName == "spinbuttons", "spinButtons set");
   isnot(n1.decimalSymbol, "", "n1.decimalSymbol is set to something");
   n1.decimalSymbol = ".";
-  SimpleTest.ise(n1.decimalSymbol, ".", "n1.decimalSymbol set to '.'");
-  SimpleTest.ise(n1.wrapAround, false, "wrapAround defaults to false");
-  SimpleTest.ise(n1.increment, 1, "increment defaults to 1");
-  SimpleTest.ise(n1.decimalPlaces, 0, "decimalPlaces defaults to 0");
+  SimpleTest.is(n1.decimalSymbol, ".", "n1.decimalSymbol set to '.'");
+  SimpleTest.is(n1.wrapAround, false, "wrapAround defaults to false");
+  SimpleTest.is(n1.increment, 1, "increment defaults to 1");
+  SimpleTest.is(n1.decimalPlaces, 0, "decimalPlaces defaults to 0");
 
-  SimpleTest.ise(n2.wrapAround, true, "wrapAround when set to true");
-  SimpleTest.ise(n3.increment, 3, "increment when set to 1");
-  SimpleTest.ise(n7.decimalPlaces, 2, "decimalPlaces when set to 2");
+  SimpleTest.is(n2.wrapAround, true, "wrapAround when set to true");
+  SimpleTest.is(n3.increment, 3, "increment when set to 1");
+  SimpleTest.is(n7.decimalPlaces, 2, "decimalPlaces when set to 2");
 
   // test changing the value
   n1.value = "1700";
@@ -139,7 +139,7 @@ function doTests() {
   n7.min = 2.7;
   n7.value = 10.1;
   n7.increment = 4.3;
-  SimpleTest.ise(n7.increment, 4.3, "increment changed");
+  SimpleTest.is(n7.increment, 4.3, "increment changed");
   testIncreaseDecrease(n7, "integer with increment", 4.3, 2, 2.7, 10.1);
 
   n2.value = n2.min;
@@ -149,7 +149,7 @@ function doTests() {
   testVals(n2, "integer wraparound decrease method", n2.min);
 
   n7.wrapAround = true;
-  SimpleTest.ise(n7.wrapAround, true, "change wrapAround");
+  SimpleTest.is(n7.wrapAround, true, "change wrapAround");
   n7.value = n7.min + 0.01;
   n7.decrease();
   testVals(n7, "decimal wraparound decrease method", n7.max, n7.max.toFixed(2));
@@ -168,12 +168,12 @@ function doTests() {
   testVals(n1, "set decimalPlaces Infinity set value,", 10.678123);
 
   n1.decimalSymbol = ",";
-  SimpleTest.ise(n1.decimalSymbol, ",", "n1.decimalSymbol set to ','");
+  SimpleTest.is(n1.decimalSymbol, ",", "n1.decimalSymbol set to ','");
   n1.value = "9.67";
   testVals(n1, "set decimalPlaces set value,", 9.67);
 
   n1.decimalSymbol = ".";
-  SimpleTest.ise(n1.decimalSymbol, ".", "n1.decimalSymbol set back to '.'");
+  SimpleTest.is(n1.decimalSymbol, ".", "n1.decimalSymbol set back to '.'");
   n1.decimalPlaces = 0;
 
   // UI tests
@@ -285,19 +285,19 @@ function testVals(nb, name, valueNumber, valueFieldNumber) {
   if (valueFieldNumber === undefined)
     valueFieldNumber = "" + valueNumber;
 
-  SimpleTest.ise(nb.value, "" + valueNumber, name + " value is '" + valueNumber + "'");
-  SimpleTest.ise(nb.valueNumber, valueNumber, name + " valueNumber is " + valueNumber);
+  SimpleTest.is(nb.value, "" + valueNumber, name + " value is '" + valueNumber + "'");
+  SimpleTest.is(nb.valueNumber, valueNumber, name + " valueNumber is " + valueNumber);
 
   // This value format depends on the localized decimal symbol.
   var localizedValue = valueFieldNumber.replace(/\./, nb.decimalSymbol);
-  SimpleTest.ise(nb.inputField.value, localizedValue,
+  SimpleTest.is(nb.inputField.value, localizedValue,
       name + " inputField value is '" + localizedValue + "'");
 }
 
 function testValsMinMax(nb, name, valueNumber, min, max, valueFieldNumber) {
   testVals(nb, name, valueNumber, valueFieldNumber);
-  SimpleTest.ise(nb.min, min, name + " min is " + min);
-  SimpleTest.ise(nb.max, max, name + " max is " + max);
+  SimpleTest.is(nb.min, min, name + " min is " + min);
+  SimpleTest.is(nb.max, max, name + " max is " + max);
 }
 
 function testIncreaseDecrease(nb, testid, increment, fixedCount, min, max)

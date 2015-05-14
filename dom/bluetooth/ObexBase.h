@@ -199,24 +199,11 @@ public:
     }
   }
 
-  void GetBodyLength(int* aRetBodyLength) const
-  {
-    int length = mHeaders.Length();
-    *aRetBodyLength = 0;
-
-    for (int i = 0; i < length; ++i) {
-      if (mHeaders[i]->mId == ObexHeaderId::Body ||
-          mHeaders[i]->mId == ObexHeaderId::EndOfBody) {
-        *aRetBodyLength = mHeaders[i]->mDataLength;
-        return;
-      }
-    }
-  }
-
-  void GetBody(uint8_t** aRetBody) const
+  void GetBody(uint8_t** aRetBody, int* aRetBodyLength) const
   {
     int length = mHeaders.Length();
     *aRetBody = nullptr;
+    *aRetBodyLength = 0;
 
     for (int i = 0; i < length; ++i) {
       if (mHeaders[i]->mId == ObexHeaderId::Body ||
@@ -224,6 +211,24 @@ public:
         uint8_t* ptr = mHeaders[i]->mData.get();
         *aRetBody = new uint8_t[mHeaders[i]->mDataLength];
         memcpy(*aRetBody, ptr, mHeaders[i]->mDataLength);
+        *aRetBodyLength = mHeaders[i]->mDataLength;
+        return;
+      }
+    }
+  }
+
+  void GetTarget(uint8_t** aRetTarget, int* aRetTargetLength) const
+  {
+    int length = mHeaders.Length();
+    *aRetTarget = nullptr;
+    *aRetTargetLength = 0;
+
+    for (int i = 0; i < length; ++i) {
+      if (mHeaders[i]->mId == ObexHeaderId::Target) {
+        uint8_t* ptr = mHeaders[i]->mData.get();
+        *aRetTarget = new uint8_t[mHeaders[i]->mDataLength];
+        memcpy(*aRetTarget, ptr, mHeaders[i]->mDataLength);
+        *aRetTargetLength = mHeaders[i]->mDataLength;
         return;
       }
     }
@@ -251,13 +256,15 @@ private:
   nsTArray<nsAutoPtr<ObexHeader> > mHeaders;
 };
 
-int AppendHeaderName(uint8_t* aRetBuf, int aBufferSize, const char* aName,
+int AppendHeaderName(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aName,
                      int aLength);
-int AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aData,
+int AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aBody,
                      int aLength);
-int AppendHeaderEndOfBody(uint8_t* aRetBuf);
+int AppendHeaderWho(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aWho,
+                    int aLength);
 int AppendHeaderLength(uint8_t* aRetBuf, int aObjectLength);
 int AppendHeaderConnectionId(uint8_t* aRetBuf, int aConnectionId);
+int AppendHeaderEndOfBody(uint8_t* aRetBuf);
 void SetObexPacketInfo(uint8_t* aRetBuf, uint8_t aOpcode, int aPacketLength);
 
 /**

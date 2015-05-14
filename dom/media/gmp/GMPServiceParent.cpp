@@ -40,13 +40,8 @@ namespace mozilla {
 #undef LOG
 #endif
 
-#ifdef PR_LOGGING
 #define LOGD(msg) PR_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
 #define LOG(level, msg) PR_LOG(GetGMPLog(), (level), msg)
-#else
-#define LOGD(msg)
-#define LOG(leve1, msg)
-#endif
 
 #ifdef __CLASS__
 #undef __CLASS__
@@ -305,10 +300,8 @@ GeckoMediaPluginServiceParent::GetContentParentFrom(const nsACString& aNodeId,
 {
   nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId, aAPI, aTags);
 
-#ifdef PR_LOGGING
   nsCString api = aTags[0];
   LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
-#endif
 
   if (!gmp) {
     return false;
@@ -1439,10 +1432,8 @@ GMPServiceParent::RecvLoadGMP(const nsCString& aNodeId,
 {
   nsRefPtr<GMPParent> gmp = mService->SelectPluginForAPI(aNodeId, aAPI, aTags);
 
-#ifdef PR_LOGGING
   nsCString api = aTags[0];
   LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
-#endif
 
   if (!gmp || !gmp->EnsureProcessLoaded(aId)) {
     return false;

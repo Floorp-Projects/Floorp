@@ -19,17 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1094549
 <pre id="test">
 <script type="application/javascript">
 
-function onTimeout() {
-  ok(false, "timed out without getting an error event");
-  SimpleTest.finish();
-}
-
-// We expect this test to finish very soon.
-// A timeout of 90s should be enough for the slow B2G emulator.
-var timer = setTimeout(onTimeout, 90000);
+// Shorter timeout for this test should finish soon.
+SimpleTest.requestLongerTimeout(0.3);
 
 function finish(v) {
-  clearTimeout(timer);
   isnot(v.error, null, "should've got an error event");
   SimpleTest.finish();
 }

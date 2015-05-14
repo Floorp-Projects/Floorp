@@ -29,11 +29,17 @@ endif
 	$(call MAKE_SIGN_EME_VOUCHER,$(DEPTH)/installer-stage/core)
 	@(cd $(DEPTH)/installer-stage/core && $(CREATE_PRECOMPLETE_CMD))
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+ELF_HACK_FLAGS = --fill
+endif
+export USE_ELF_HACK ELF_HACK_FLAGS
+
 # Override the value of OMNIJAR_NAME from config.status with the value
 # set earlier in this file.
 
 stage-package: $(MOZ_PKG_MANIFEST)
 	OMNIJAR_NAME=$(OMNIJAR_NAME) \
+	NO_PKG_FILES="$(NO_PKG_FILES)" \
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.py $(DEFINES) \
 		--format $(MOZ_PACKAGER_FORMAT) \
 		$(addprefix --removals ,$(MOZ_PKG_REMOVALS)) \

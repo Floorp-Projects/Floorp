@@ -151,7 +151,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Response",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "ServiceWorkerRegistration", nightly: true, b2g: false },
+    { name: "ServiceWorkerRegistration", disabled: true, b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "TextDecoder",
 // IMPORTANT: Do not change this list without review from a DOM peer!

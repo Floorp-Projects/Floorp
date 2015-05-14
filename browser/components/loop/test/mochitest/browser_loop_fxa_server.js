@@ -68,10 +68,10 @@ add_task(function* token_request() {
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
   let request = yield promiseToken("my_code", params.state);
-  ise(request.status, 200, "Check token response status");
-  ise(request.response.access_token, "my_code_access_token", "Check access_token");
-  ise(request.response.scope, "profile", "Check scope");
-  ise(request.response.token_type, "bearer", "Check token_type");
+  is(request.status, 200, "Check token response status");
+  is(request.response.access_token, "my_code_access_token", "Check access_token");
+  is(request.response.scope, "profile", "Check scope");
+  is(request.response.token_type, "bearer", "Check token_type");
 });
 
 add_task(function* token_request_invalid_state() {
@@ -84,8 +84,8 @@ add_task(function* token_request_invalid_state() {
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
   let request = yield promiseToken("my_code", "my_state");
-  ise(request.status, 400, "Check token response status");
-  ise(request.response, null, "Check token response body");
+  is(request.status, 400, "Check token response status");
+  is(request.response, null, "Check token response body");
 });
 
 

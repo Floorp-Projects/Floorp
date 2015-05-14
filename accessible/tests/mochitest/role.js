@@ -111,6 +111,7 @@ const ROLE_STATUSBAR = nsIAccessibleRole.ROLE_STATUSBAR;
 const ROLE_SWITCH = nsIAccessibleRole.ROLE_SWITCH;
 const ROLE_TABLE = nsIAccessibleRole.ROLE_TABLE;
 const ROLE_TERM = nsIAccessibleRole.ROLE_TERM;
+const ROLE_TEXT = nsIAccessibleRole.ROLE_TEXT;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 const ROLE_TOGGLE_BUTTON = nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
