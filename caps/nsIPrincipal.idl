@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(7e024afa-afd4-48e7-ba11-1c7b9620b1b2)]
+[scriptable, builtinclass, uuid(74fb6760-4ae7-4ec7-8ac7-06817c60a93a)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -156,6 +156,37 @@ interface nsIPrincipal : nsISerializable
      * it might be crypto-hashed at some point.
      */
     readonly attribute AUTF8String jarPrefix;
+
+    /**
+     * A dictionary of the non-default origin attributes associated with this
+     * nsIPrincipal.
+     *
+     * Attributes are tokens that are taken into account when determining whether
+     * two principals are same-origin - if any attributes differ, the principals
+     * are cross-origin, even if the scheme, host, and port are the same.
+     * Attributes should also be considered for all security and bucketing decisions,
+     * even those which make non-standard comparisons (like cookies, which ignore
+     * scheme, or quotas, which ignore subdomains).
+     *
+     * If you're looking for an easy-to-use canonical stringification of the origin
+     * attributes, see |originSuffix| below.
+     */
+    [implicit_jscontext]
+    readonly attribute jsval originAttributes;
+
+    /**
+     * A string of the form !key1=value1&key2=value2, where each pair represents
+     * an attribute with a non-default value. If all attributes have default
+     * values, this is the empty string.
+     *
+     * The value of .originSuffix is automatically serialized into .origin, so any
+     * consumers using that are automatically origin-attribute-aware. Consumers with
+     * special requirements must inspect and compare .originSuffix manually.
+     *
+     * originsuffix are intended to be a replacement for jarPrefix, which will
+     * eventually be removed.
+     */
+    readonly attribute AUTF8String originSuffix;
 
     /**
      * The base domain of the codebase URI to which this principal pertains
