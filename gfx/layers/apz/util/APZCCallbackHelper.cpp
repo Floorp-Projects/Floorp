@@ -196,14 +196,16 @@ APZCCallbackHelper::UpdateRootFrame(nsIPresShell* aPresShell,
   CSSSize scrollPort = aMetrics.CalculateCompositedSizeInCssPixels();
   nsLayoutUtils::SetScrollPositionClampingScrollPortSize(aPresShell, scrollPort);
 
-  nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
-  ScrollFrame(content, aMetrics);
-
   // The pres shell resolution is updated by the the async zoom since the
   // last paint.
   presShellResolution = aMetrics.GetPresShellResolution()
                       * aMetrics.GetAsyncZoom().scale;
   nsLayoutUtils::SetResolutionAndScaleTo(aPresShell, presShellResolution);
+
+  // Do this as late as possible since scrolling can flush layout. It also
+  // adjusts the display port margins, so do it before we set those.
+  nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
+  ScrollFrame(content, aMetrics);
 
   SetDisplayPortMargins(aPresShell, content, aMetrics);
 }

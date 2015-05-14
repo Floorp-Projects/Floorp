@@ -702,13 +702,13 @@ var steps = [
       impp: [{value: undefined}],
       tel: [{value: undefined}],
     });
-    ise(c.adr[0].streetAddress, undefined, "adr.streetAddress is undefined");
-    ise(c.adr[0].locality, undefined, "adr.locality is undefined");
-    ise(c.adr[0].pref, undefined, "adr.pref is undefined");
-    ise(c.email[0].value, undefined, "email.value is undefined");
-    ise(c.url[0].value, undefined, "url.value is undefined");
-    ise(c.impp[0].value, undefined, "impp.value is undefined");
-    ise(c.tel[0].value, undefined, "tel.value is undefined");
+    is(c.adr[0].streetAddress, undefined, "adr.streetAddress is undefined");
+    is(c.adr[0].locality, undefined, "adr.locality is undefined");
+    is(c.adr[0].pref, undefined, "adr.pref is undefined");
+    is(c.email[0].value, undefined, "email.value is undefined");
+    is(c.url[0].value, undefined, "url.value is undefined");
+    is(c.impp[0].value, undefined, "impp.value is undefined");
+    is(c.tel[0].value, undefined, "tel.value is undefined");
     next();
   },
   function() {
@@ -764,7 +764,7 @@ var steps = [
     req.onsuccess = function() {
       req = navigator.mozContacts.find(defaultOptions);
       req.onsuccess = function() {
-        ise(req.result.length, 1, "Got 1 contact");
+        is(req.result.length, 1, "Got 1 contact");
         checkContacts(req.result[0], properties1);
         next();
       };
@@ -788,7 +788,7 @@ var steps = [
     ok(true, "mozContact.init works as expected");
     var c = new mozContact({name: ["Foo"]});
     c.init({name: ["Bar"]});
-    ise(c.name[0], "Bar", "Same name");
+    is(c.name[0], "Bar", "Same name");
     next();
   },
   function() {
@@ -801,7 +801,7 @@ var steps = [
     ok(true, "mozContact.init resets properties");
     var c = new mozContact({jobTitle: ["Software Engineer"]});
     c.init({nickname: ["Jobless Johnny"]});
-    ise(c.nickname[0], "Jobless Johnny", "Same nickname");
+    is(c.nickname[0], "Jobless Johnny", "Same nickname");
     ok(!c.jobTitle, "jobTitle is not set");
     next();
   },
@@ -818,7 +818,7 @@ var steps = [
           filterValue: c.id
         });
         req.onsuccess = function() {
-          ise(req.result.length, 0, "Successfully removed contact by ID");
+          is(req.result.length, 0, "Successfully removed contact by ID");
           next();
         };
         req.onerror = onFailure;

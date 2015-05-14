@@ -36,7 +36,6 @@
 struct JSContext;
 class JSObject;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* GetMediaSourceLog()
 {
   static PRLogModuleInfo* sLogModule;
@@ -57,10 +56,6 @@ PRLogModuleInfo* GetMediaSourceAPILog()
 
 #define MSE_DEBUG(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("MediaSource(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #define MSE_API(arg, ...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, ("MediaSource(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#else
-#define MSE_DEBUG(...)
-#define MSE_API(...)
-#endif
 
 // Arbitrary limit.
 static const unsigned int MAX_SOURCE_BUFFERS = 16;

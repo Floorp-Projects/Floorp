@@ -297,7 +297,7 @@ function testRotateFromVector()
   } catch (e) {
     exn = e;
   }
-  ise(exn, null, "did not throw exception with zero coord for rotateFromVector");
+  is(exn, null, "did not throw exception with zero coord for rotateFromVector");
 
   // Test bad input (2)
   exn = null;
@@ -306,7 +306,7 @@ function testRotateFromVector()
   } catch (e) {
     exn = e;
   }
-  ise(exn, null, "did not throw exception with zero coord for rotateFromVector");
+  is(exn, null, "did not throw exception with zero coord for rotateFromVector");
 }
 
 // DOMMatrix flipX();
@@ -470,7 +470,7 @@ function testCreateMatrix3D()
   // Should be initialised to identity
   cmpMatrix(m, [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
             "DOMMatrix should produce identity matrix");
-  ise(m.is2D, false, "should produce 3d matrix");
+  is(m.is2D, false, "should produce 3d matrix");
 }
 
 // DOMMatrix multiply(in DOMMatrix secondMatrix);

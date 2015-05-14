@@ -20,12 +20,8 @@
 #include "prlog.h"
 
 #undef LOG
-#if defined(PR_LOGGING)
 PRLogModuleInfo *gMediaParentLog;
 #define LOG(args) PR_LOG(gMediaParentLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
 
 // A file in the profile dir is used to persist mOriginKeys used to anonymize
 // deviceIds to be unique per origin, to avoid them being supercookies.
@@ -422,10 +418,8 @@ Parent::Parent()
   : mSingleton(ParentSingleton::Get())
   , mDestroyed(false)
 {
-#if defined(PR_LOGGING)
   if (!gMediaParentLog)
     gMediaParentLog = PR_NewLogModule("MediaParent");
-#endif
   LOG(("media::Parent: %p", this));
 
   MOZ_COUNT_CTOR(Parent);

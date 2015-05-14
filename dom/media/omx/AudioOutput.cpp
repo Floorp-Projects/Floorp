@@ -22,13 +22,9 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gAudioOffloadPlayerLog;
 #define AUDIO_OFFLOAD_LOG(type, msg) \
   PR_LOG(gAudioOffloadPlayerLog, type, msg)
-#else
-#define AUDIO_OFFLOAD_LOG(type, msg)
-#endif
 
 using namespace android;
 
@@ -39,11 +35,9 @@ AudioOutput::AudioOutput(int aSessionId, int aUid) :
   mUid(aUid),
   mSessionId(aSessionId)
 {
-#ifdef PR_LOGGING
   if (!gAudioOffloadPlayerLog) {
     gAudioOffloadPlayerLog = PR_NewLogModule("AudioOffloadPlayer");
   }
-#endif
 }
 
 AudioOutput::~AudioOutput()

@@ -129,6 +129,8 @@ private:
 
   void MarkChanged();
 
+  bool ShouldLCDRenderText(FontType aFontType, AntialiasMode aAntialiasMode);
+
   SkRect SkRectCoveringWholeSurface() const;
 
   bool UsingSkiaGPU() const;
