@@ -3498,7 +3498,7 @@ Checker.prototype = {
       let buildType = sysLibs.libcutils.property_get("ro.build.type");
       url = url.replace(/%PRODUCT_MODEL%/g,
                         sysLibs.libcutils.property_get("ro.product.model"));
-      if (buildType == "user") {
+      if (buildType == "user" || buildType == "userdebug") {
         url = url.replace(/%PRODUCT_DEVICE%/g, productDevice);
       } else {
         url = url.replace(/%PRODUCT_DEVICE%/g, productDevice + "-" + buildType);
