@@ -717,19 +717,23 @@ loop.panel = (function(_, mozL10n) {
 
     onDocumentVisible: function() {
       this.props.mozLoop.getSelectedTabMetadata(function callback(metadata) {
-        var previewImage = metadata.previews.length ? metadata.previews[0] : "";
+        var previewImage = metadata.favicon || "";
         var description = metadata.description || metadata.title;
         var url = metadata.url;
-        this.setState({previewImage: previewImage,
-                       description: description,
-                       url: url});
+        this.setState({
+          previewImage: previewImage,
+          description: description,
+          url: url
+        });
       }.bind(this));
     },
 
     onDocumentHidden: function() {
-      this.setState({previewImage: "",
-                     description: "",
-                     url: ""});
+      this.setState({
+        previewImage: "",
+        description: "",
+        url: ""
+      });
     },
 
     onCheckboxChange: function(event) {
