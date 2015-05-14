@@ -50,25 +50,21 @@ using namespace mozilla::gfx;
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractThreadDispatchInstead
 
 // avoid redefined macro in unified build
+#undef LOG
 #undef DECODER_LOG
 #undef VERBOSE_LOG
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
+extern PRLogModuleInfo* gMediaSampleLog;
+#define LOG(m, l, x, ...) \
+  PR_LOG(m, l, ("Decoder=%p " x, mDecoder.get(), ##__VA_ARGS__))
 #define DECODER_LOG(x, ...) \
-  PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, ("Decoder=%p " x, mDecoder.get(), ##__VA_ARGS__))
-#define VERBOSE_LOG(x, ...)                            \
-    PR_BEGIN_MACRO                                     \
-      if (!PR_GetEnv("MOZ_QUIET")) {                   \
-        DECODER_LOG(x, ##__VA_ARGS__);                 \
-      }                                                \
-    PR_END_MACRO
-#define SAMPLE_LOG(x, ...)                             \
-    PR_BEGIN_MACRO                                     \
-      if (PR_GetEnv("MEDIA_LOG_SAMPLES")) {            \
-        DECODER_LOG(x, ##__VA_ARGS__);                 \
-      }                                                \
-    PR_END_MACRO
+  LOG(gMediaDecoderLog, PR_LOG_DEBUG, x, ##__VA_ARGS__)
+#define VERBOSE_LOG(x, ...) \
+  LOG(gMediaDecoderLog, PR_LOG_DEBUG+1, x, ##__VA_ARGS__)
+#define SAMPLE_LOG(x, ...) \
+  LOG(gMediaSampleLog, PR_LOG_DEBUG, x, ##__VA_ARGS__)
 #else
 #define DECODER_LOG(x, ...)
 #define VERBOSE_LOG(x, ...)
@@ -3457,6 +3453,7 @@ uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
 } // namespace mozilla
 
 // avoid redefined macro in unified build
+#undef LOG
 #undef DECODER_LOG
 #undef VERBOSE_LOG
 #undef DECODER_WARN

@@ -120,6 +120,7 @@ StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 PRLogModuleInfo* gStateWatchingLog;
 PRLogModuleInfo* gMediaPromiseLog;
 PRLogModuleInfo* gMediaTimerLog;
+PRLogModuleInfo* gMediaSampleLog;
 
 void
 MediaDecoder::InitStatics()
@@ -131,6 +132,7 @@ MediaDecoder::InitStatics()
   gMediaPromiseLog = PR_NewLogModule("MediaPromise");
   gStateWatchingLog = PR_NewLogModule("StateWatching");
   gMediaTimerLog = PR_NewLogModule("MediaTimer");
+  gMediaSampleLog = PR_NewLogModule("MediaSample");
 }
 
 NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
