@@ -6,6 +6,12 @@
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm");
 Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
+  "resource:///modules/Pocket.jsm");
 
 var gContextMenuContentData = null;
 
@@ -178,36 +184,47 @@ nsContextMenu.prototype = {
                      CastingApps.getServicesForVideo(this.target).length > 0;
     this.setItemAttr("context-castvideo", "disabled", !shouldShowCast);
 
-    let canPocket = false;
-    if (shouldShow && window.gBrowser &&
-        this.browser.getTabBrowser() == window.gBrowser) {
-      let uri = this.browser.currentURI;
-      canPocket =
-        CustomizableUI.getPlacementOfWidget("pocket-button") &&
-        (uri.schemeIs("http") || uri.schemeIs("https") ||
-         (uri.schemeIs("about") && ReaderMode.getOriginalUrl(uri.spec)));
-      if (canPocket) {
-        let locale = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                     getService(Ci.nsIXULChromeRegistry).
-                     getSelectedLocale("browser");
-        if (locale != "en-US") {
-          if (locale == "ja-JP-mac")
-            locale = "ja";
-          let url = "chrome://browser/content/browser-pocket-" + locale + ".properties";
-          let bundle = Services.strings.createBundle(url);
-          let item = document.getElementById("context-pocket");
-          try {
-            item.setAttribute("label", bundle.GetStringFromName("saveToPocketCmd.label"));
-            item.setAttribute("accesskey", bundle.GetStringFromName("saveToPocketCmd.accesskey"));
-          } catch (err) {
-            // GetStringFromName throws when the bundle doesn't exist.  In that
-            // case, the item will retain the browser-pocket.dtd en-US string that
-            // it has in the markup.
-          }
+    this.initPocketItems();
+  },
+
+  initPocketItems: function CM_initPocketItems() {
+    var showSaveCurrentPageToPocket = !(this.onTextInput || this.onLink ||
+                                        this.isContentSelected || this.onImage ||
+                                        this.onCanvas || this.onVideo || this.onAudio);
+    let targetURI = (this.onSaveableLink || this.onPlainTextLink) ? this.linkURI : this.browser.currentURI;
+    let canPocket = CustomizableUI.getPlacementOfWidget("pocket-button") &&
+                    window.pktApi && window.pktApi.isUserLoggedIn();
+    canPocket = canPocket && (targetURI.schemeIs("http") || targetURI.schemeIs("https") ||
+                              (targetURI.schemeIs("about") && ReaderMode.getOriginalUrl(targetURI.spec)));
+    canPocket = canPocket && window.gBrowser && this.browser.getTabBrowser() == window.gBrowser;
+
+    if (canPocket) {
+      let locale = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                   getService(Ci.nsIXULChromeRegistry).
+                   getSelectedLocale("browser");
+      if (locale != "en-US") {
+        if (locale == "ja-JP-mac")
+          locale = "ja";
+        let url = "chrome://browser/content/browser-pocket-" + locale + ".properties";
+        let bundle = Services.strings.createBundle(url);
+        let saveToPocketItem = document.getElementById("context-pocket");
+        let saveLinkToPocketItem = document.getElementById("context-savelinktopocket");
+        try {
+          saveToPocketItem.setAttribute("label", bundle.GetStringFromName("saveToPocketCmd.label"));
+          saveToPocketItem.setAttribute("accesskey", bundle.GetStringFromName("saveToPocketCmd.accesskey"));
+          saveLinkToPocketItem.setAttribute("label", bundle.GetStringFromName("saveLinkToPocketCmd.label"));
+          saveLinkToPocketItem.setAttribute("accesskey", bundle.GetStringFromName("saveLinkToPocketCmd.accesskey"));
+        } catch (err) {
+          // GetStringFromName throws when the bundle doesn't exist.  In that
+          // case, the item will retain the browser-pocket.dtd en-US string that
+          // it has in the markup.
         }
       }
     }
-    this.showItem("context-pocket", canPocket && window.pktApi && window.pktApi.isUserLoggedIn());
+    this.showItem("context-pocket", canPocket && showSaveCurrentPageToPocket);
+    let showSaveLinkToPocket = canPocket && !showSaveCurrentPageToPocket &&
+                               (this.onSaveableLink || this.onPlainTextLink);
+    this.showItem("context-savelinktopocket", showSaveLinkToPocket);
   },
 
   initViewItems: function CM_initViewItems() {
@@ -1652,20 +1669,12 @@ nsContextMenu.prototype = {
     saveDocument(this.browser.contentDocumentAsCPOW);
   },
 
-  saveToPocket: function CM_saveToPocket() {
-    let pocketWidget = document.getElementById("pocket-button");
-    let placement = CustomizableUI.getPlacementOfWidget("pocket-button");
-    if (!placement)
-      return;
+  saveLinkToPocket: function CM_saveLinkToPocket() {
+    Pocket.savePage(this.browser, this.linkURL);
+  },
 
-    if (placement.area == CustomizableUI.AREA_PANEL) {
-      PanelUI.show().then(function() {
-        pocketWidget = document.getElementById("pocket-button");
-        pocketWidget.doCommand();
-      });
-    } else {
-      pocketWidget.doCommand();
-    }
+  savePageToPocket: function CM_saveToPocket() {
+    Pocket.savePage(this.browser, this.browser.currentURI.spec, this.browser.contentTitle);
   },
 
   printFrame: function CM_printFrame() {

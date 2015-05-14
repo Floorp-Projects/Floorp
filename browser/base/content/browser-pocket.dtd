@@ -7,4 +7,6 @@
 
 <!ENTITY saveToPocketCmd.label     "Save Page to Pocket">
 <!ENTITY saveToPocketCmd.accesskey "k">
+<!ENTITY saveLinkToPocketCmd.label     "Save Link to Pocket">
+<!ENTITY saveLinkToPocketCmd.accesskey "o">
 <!ENTITY pocketMenuitem.label      "View Pocket List">
