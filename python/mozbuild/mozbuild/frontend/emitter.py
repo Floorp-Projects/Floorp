@@ -712,15 +712,33 @@ class TreeMetadataEmitter(LoggingMixin):
         return sub
 
     def _process_sources(self, context, passthru):
+        all_sources = {}
+        all_flags = {}
+        for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES',
+                       'GENERATED_SOURCES'):
+            srcs = all_sources[symbol] = []
+            context_srcs = context.get(symbol, [])
+            for f in context_srcs:
+                if symbol.startswith('GENERATED_'):
+                    full_path = mozpath.join(context.objdir, f)
+                else:
+                    full_path = mozpath.join(context.srcdir, f)
+                full_path = mozpath.normpath(full_path)
+                srcs.append(full_path)
+                if symbol == 'SOURCES':
+                    flags = context_srcs[f]
+                    if flags:
+                        all_flags[full_path] = flags
+
         for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
-            for src in (context[symbol] or []):
-                if not os.path.exists(mozpath.join(context.srcdir, src)):
+            for src in all_sources[symbol]:
+                if not os.path.exists(src):
                     raise SandboxValidationError('File listed in %s does not '
                         'exist: \'%s\'' % (symbol, src), context)
 
         no_pgo = context.get('NO_PGO')
-        sources = context.get('SOURCES', [])
-        no_pgo_sources = [f for f in sources if sources[f].no_pgo]
+        no_pgo_sources = [f for f, flags in all_flags.iteritems()
+                          if flags.no_pgo]
         if no_pgo:
             if no_pgo_sources:
                 raise SandboxValidationError('NO_PGO and SOURCES[...].no_pgo '
@@ -770,27 +788,26 @@ class TreeMetadataEmitter(LoggingMixin):
 
             # First ensure that we haven't been given filetypes that we don't
             # recognize.
-            for f in context[variable]:
+            for f in all_sources[variable]:
                 ext = mozpath.splitext(f)[1]
                 if ext not in allowed_suffixes:
                     raise SandboxValidationError(
                         '%s has an unknown file type.' % f, context)
 
             # Now sort the files to let groupby work.
-            sorted_files = sorted(context[variable], key=canonical_suffix_for_file)
-            for canonical_suffix, files in itertools.groupby(sorted_files, canonical_suffix_for_file):
-                if variable.startswith('UNIFIED_'):
-                    files = [mozpath.normpath(mozpath.join(context.srcdir, f))
-                             for f in files]
+            sorted_files = sorted(all_sources[variable],
+                                  key=canonical_suffix_for_file)
+            for canonical_suffix, files in itertools.groupby(
+                    sorted_files, canonical_suffix_for_file):
                 arglist = [context, list(files), canonical_suffix]
                 if variable.startswith('UNIFIED_') and 'FILES_PER_UNIFIED_FILE' in context:
                     arglist.append(context['FILES_PER_UNIFIED_FILE'])
                 yield klass(*arglist)
 
-        sources_with_flags = [f for f in sources if sources[f].flags]
-        for f in sources_with_flags:
-            ext = mozpath.splitext(f)[1]
-            yield PerSourceFlag(context, f, sources[f].flags)
+        for f, flags in all_flags.iteritems():
+            if flags.flags:
+                ext = mozpath.splitext(f)[1]
+                yield PerSourceFlag(context, f, flags.flags)
 
     def _process_xpidl(self, context):
         # XPIDL source files get processed and turned into .h and .xpt files.
