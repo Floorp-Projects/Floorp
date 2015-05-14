@@ -30,13 +30,9 @@ using namespace layers;
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define LOG(type, msg, ...) \
   PR_LOG(gMediaDecoderLog, type, ("GStreamerReader(%p) " msg, this, ##__VA_ARGS__))
-#else
-#define LOG(type, msg, ...)
-#endif
 
 #if DEBUG
 static const unsigned int MAX_CHANNELS = 4;

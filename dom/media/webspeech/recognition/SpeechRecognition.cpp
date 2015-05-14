@@ -48,7 +48,6 @@ static const uint32_t kSPEECH_DETECTION_TIMEOUT_MS = 10000;
 // kSAMPLE_RATE frames = 1s, kESTIMATION_FRAMES frames = 300ms
 static const uint32_t kESTIMATION_SAMPLES = 300 * kSAMPLE_RATE / 1000;
 
-#ifdef PR_LOGGING
 PRLogModuleInfo*
 GetSpeechRecognitionLog()
 {
@@ -60,9 +59,6 @@ GetSpeechRecognitionLog()
   return sLog;
 }
 #define SR_LOG(...) PR_LOG(GetSpeechRecognitionLog(), PR_LOG_DEBUG, (__VA_ARGS__))
-#else
-#define SR_LOG(...)
-#endif
 
 already_AddRefed<nsISpeechRecognitionService>
 GetSpeechRecognitionService()

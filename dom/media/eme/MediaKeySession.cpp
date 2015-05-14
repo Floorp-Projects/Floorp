@@ -138,7 +138,6 @@ MediaKeySession::UpdateKeyStatusMap()
 
   mKeyStatusMap->Update(keyStatuses);
 
-#ifdef PR_LOGGING
   nsAutoCString message(
     nsPrintfCString("MediaKeySession[%p,'%s'] key statuses change {",
                     this, NS_ConvertUTF16toUTF8(mSessionId).get()));
@@ -155,7 +154,6 @@ MediaKeySession::UpdateKeyStatusMap()
   }
   message.Append(" }");
   EME_LOG(message.get());
-#endif
 }
 
 MediaKeyStatusMap*
@@ -193,7 +191,6 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
     return promise.forget();
   }
 
-#ifdef PR_LOGGING
   // Convert initData to base64 for easier logging.
   // Note: UpdateSession() Move()s the data out of the array, so we have
   // to copy it here.
@@ -203,7 +200,6 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
   if (NS_FAILED(Base64Encode(rawInitData, base64InitData))) {
     NS_WARNING("Failed to base64 encode initData for logging");
   }
-#endif
 
   PromiseId pid = mKeys->StorePromise(promise);
   mKeys->GetCDMProxy()->CreateSession(Token(),
@@ -280,7 +276,6 @@ MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResu
   }
 
 
-#ifdef PR_LOGGING
   // Convert response to base64 for easier logging.
   // Note: UpdateSession() Move()s the data out of the array, so we have
   // to copy it here.
@@ -290,7 +285,6 @@ MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResu
   if (NS_FAILED(Base64Encode(rawResponse, base64Response))) {
     NS_WARNING("Failed to base64 encode response for logging");
   }
-#endif
 
   PromiseId pid = mKeys->StorePromise(promise);
   mKeys->GetCDMProxy()->UpdateSession(mSessionId,
@@ -382,7 +376,6 @@ void
 MediaKeySession::DispatchKeyMessage(MediaKeyMessageType aMessageType,
                                     const nsTArray<uint8_t>& aMessage)
 {
-#ifdef PR_LOGGING
   nsAutoCString base64MsgData;
   nsDependentCSubstring rawMsgData(reinterpret_cast<const char*>(aMessage.Elements()),
                                    aMessage.Length());
@@ -393,7 +386,6 @@ MediaKeySession::DispatchKeyMessage(MediaKeyMessageType aMessageType,
           this, NS_ConvertUTF16toUTF8(mSessionId).get(),
           MediaKeyMessageTypeValues::strings[uint32_t(aMessageType)].value,
           base64MsgData.get());
-#endif
 
   nsRefPtr<MediaKeyMessageEvent> event(
     MediaKeyMessageEvent::Constructor(this, aMessageType, aMessage));
