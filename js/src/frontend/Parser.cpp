@@ -6294,12 +6294,6 @@ BinaryOpParseNodeKindToJSOp(ParseNodeKind pnk)
     return ParseNodeKindToJSOp[pnk - PNK_BINOP_FIRST];
 }
 
-static bool
-IsBinaryOpToken(TokenKind tok, bool parsingForInit)
-{
-    return tok == TOK_IN ? !parsingForInit : TokenKindIsBinaryOp(tok);
-}
-
 static ParseNodeKind
 BinaryOpTokenKindToParseNodeKind(TokenKind tok)
 {
@@ -6377,10 +6371,8 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
         if (!tokenStream.getToken(&tok))
             return null();
 
-        // FIXME: Change this to use |inHandling == InAllowed|, not
-        // |pc->parsingForInit|.
         ParseNodeKind pnk;
-        if (IsBinaryOpToken(tok, oldParsingForInit)) {
+        if (tok == TOK_IN ? inHandling == InAllowed : TokenKindIsBinaryOp(tok)) {
             pnk = BinaryOpTokenKindToParseNodeKind(tok);
         } else {
             tok = TOK_EOF;
