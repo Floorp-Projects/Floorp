@@ -50,21 +50,6 @@ var FullScreen = {
       this._fullScrToggler.addEventListener("dragenter", this._expandCallback, false);
     }
 
-    // On OS X Lion we don't want to hide toolbars when entering fullscreen, unless
-    // we're entering DOM fullscreen, in which case we should hide the toolbars.
-    // If we're leaving fullscreen, then we'll go through the exit code below to
-    // make sure toolbars are made visible in the case of DOM fullscreen.
-    if (enterFS && this.useLionFullScreen) {
-      if (document.mozFullScreen) {
-        this.showXULChrome("toolbar", false);
-      }
-      else {
-        gNavToolbox.setAttribute("inFullscreen", true);
-        document.documentElement.setAttribute("inFullscreen", true);
-      }
-      return;
-    }
-
     // show/hide menubars, toolbars (except the full screen toolbar)
     this.showXULChrome("toolbar", !enterFS);
 
@@ -238,9 +223,14 @@ var FullScreen = {
     if (!gPrefService.getBoolPref("browser.fullscreen.autohide"))
       return false;
 
-    // a popup menu is open in chrome: don't collapse chrome
-    if (!forceHide && this._isPopupOpen)
-      return false;
+    if (!forceHide) {
+      // a popup menu is open in chrome: don't collapse chrome
+      if (this._isPopupOpen)
+        return false;
+      // On OS X Lion we don't want to hide toolbars.
+      if (this.useLionFullScreen)
+        return false;
+    }
 
     // a textbox in chrome is focused (location bar anyone?): don't collapse chrome
     if (document.commandDispatcher.focusedElement &&
@@ -448,7 +438,7 @@ var FullScreen = {
 
     // Track whether mouse is near the toolbox
     this._isChromeCollapsed = false;
-    if (trackMouse) {
+    if (trackMouse && !this.useLionFullScreen) {
       let rect = gBrowser.mPanelContainer.getBoundingClientRect();
       this._mouseTargetRect = {
         top: rect.top + 50,
