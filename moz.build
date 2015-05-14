@@ -40,7 +40,7 @@ if not CONFIG['LIBXUL_SDK']:
         'mozglue',
     ]
 
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android' and int(CONFIG['MOZ_ANDROID_MIN_SDK_VERSION']) < 11:
         DIRS += ['other-licenses/android']
 
 if not CONFIG['JS_STANDALONE']:
