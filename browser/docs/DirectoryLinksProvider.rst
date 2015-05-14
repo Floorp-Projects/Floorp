@@ -90,7 +90,9 @@ Users can turn off the ping with in-new-tab-page controls.
 
 As the new tab page is rendered, any images for tiles are downloaded if not
 already cached. The default servers hosting the images are Mozilla CDN that
-don't use cookies: https://tiles.cdn.mozilla.net/
+don't use cookies: https://tiles.cdn.mozilla.net/ and Firefox enforces that the
+images come from mozilla.net or data URIs when using the default directory
+source.
 
 
 Source JSON Format
