@@ -294,7 +294,7 @@ var pktUI = (function() {
             {
             	startheight = overflowMenuHeight;
             }
-            else if (pktApi.getSignupAB() == 'storyboard')
+            else if (pktApi.getSignupAB().indexOf('storyboard') > -1)
             {
                 startheight = 460;
                 if (fxasignedin == '1')
