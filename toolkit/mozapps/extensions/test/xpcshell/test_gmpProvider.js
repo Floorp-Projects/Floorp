@@ -22,6 +22,7 @@ for (let plugin of GMPScope.GMP_PLUGINS) {
       isInstalled: false,
       nameId: plugin.name,
       descriptionId: plugin.description,
+      missingKey: plugin.missingKey,
   });
   gMockAddons.set(mockAddon.id, mockAddon);
   if (mockAddon.id.indexOf("gmp-eme-") == 0) {
@@ -287,7 +288,20 @@ add_task(function* test_pluginRegistration() {
       },
     };
 
+    let reportedKeys = [];
+
+    let MockTelemetry = {
+      getHistogramById: key => {
+        return {
+          add: value => {
+            reportedKeys.push(key);
+          }
+        }
+      }
+    };
+
     GMPScope.gmpService = MockGMPService;
+    GMPScope.telemetryService = MockTelemetry;
     gPrefs.setBoolPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), true);
 
     // Test that plugin registration fails if the plugin dynamic library and
@@ -298,6 +312,10 @@ add_task(function* test_pluginRegistration() {
     yield promiseRestartManager();
     Assert.equal(addedPaths.indexOf(file.path), -1);
     Assert.deepEqual(removedPaths, [file.path]);
+
+    // Test that the GMPProvider tried to report via telemetry that the
+    // addon's lib file is missing.
+    Assert.deepEqual(reportedKeys, [addon.missingKey]);
 
     // Create dummy GMP library/info files, and test that plugin registration
     // succeeds during startup, now that we've added GMP info/lib files.
