@@ -34,9 +34,7 @@ public:
   nsPrincipal();
 
   // Init() must be called before the principal is in a usable state.
-  nsresult Init(nsIURI* aCodebase,
-                uint32_t aAppId,
-                bool aInMozBrowser);
+  nsresult Init(nsIURI* aCodebase, const OriginAttributes& aOriginAttributes);
 
   virtual void GetScriptLocation(nsACString& aStr) override;
   void SetURI(nsIURI* aURI);

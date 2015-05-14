@@ -41,27 +41,25 @@ NS_IMPL_CI_INTERFACE_GETTER(nsNullPrincipal,
 nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 {
   nsRefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
-  nsresult rv = nullPrin->Init(aInheritFrom->GetAppId(),
-                               aInheritFrom->GetIsInBrowserElement());
+  nsresult rv = nullPrin->Init(Cast(aInheritFrom)->OriginAttributesRef());
   return NS_SUCCEEDED(rv) ? nullPrin.forget() : nullptr;
 }
 
 /* static */ already_AddRefed<nsNullPrincipal>
-nsNullPrincipal::Create(uint32_t aAppId, bool aInMozBrowser)
+nsNullPrincipal::Create(const OriginAttributes& aOriginAttributes)
 {
   nsRefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
-  nsresult rv = nullPrin->Init(aAppId, aInMozBrowser);
+  nsresult rv = nullPrin->Init(aOriginAttributes);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return nullPrin.forget();
 }
 
 nsresult
-nsNullPrincipal::Init(uint32_t aAppId, bool aInMozBrowser)
+nsNullPrincipal::Init(const OriginAttributes& aOriginAttributes)
 {
-  MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-  mAppId = aAppId;
-  mIsInBrowserElement = aInMozBrowser;
+  mOriginAttributes = aOriginAttributes;
+  MOZ_ASSERT(AppId() != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
   mURI = nsNullPrincipalURI::Create();
   NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
@@ -164,10 +162,10 @@ nsNullPrincipal::Read(nsIObjectInputStream* aStream)
   // that the Init() method has already been invoked by the time we deserialize.
   // This is in contrast to nsPrincipal, which uses NS_GENERIC_FACTORY_CONSTRUCTOR,
   // in which case ::Read needs to invoke Init().
-  nsresult rv = aStream->Read32(&mAppId);
+  nsresult rv = aStream->Read32(&mOriginAttributes.mAppId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aStream->ReadBoolean(&mIsInBrowserElement);
+  rv = aStream->ReadBoolean(&mOriginAttributes.mIsInBrowserElement);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -176,8 +174,8 @@ nsNullPrincipal::Read(nsIObjectInputStream* aStream)
 NS_IMETHODIMP
 nsNullPrincipal::Write(nsIObjectOutputStream* aStream)
 {
-  aStream->Write32(mAppId);
-  aStream->WriteBoolean(mIsInBrowserElement);
+  aStream->Write32(AppId());
+  aStream->WriteBoolean(IsInBrowserElement());
   return NS_OK;
 }
 
