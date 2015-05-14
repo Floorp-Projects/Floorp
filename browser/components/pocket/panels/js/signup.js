@@ -187,6 +187,7 @@ PKT_SIGNUP_OVERLAY.prototype = {
         this.getTranslations();
         this.dictJSON.fxasignedin = this.fxasignedin ? 1 : 0;
         this.dictJSON.variant = (this.variant ? this.variant : 'undefined');
+        this.dictJSON.variant += this.fxasignedin ? '_fxa' : '_nonfxa';
         this.dictJSON.pockethost = this.pockethost;
         this.dictJSON.showlearnmore = (this.variant.indexOf('_lm') > -1 || this.variant == 'storyboard' || this.variant == 'hero') ? 1 : 0;
 
