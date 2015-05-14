@@ -995,50 +995,172 @@ CssLogic.prettifyCSS = function(text, ruleCount) {
     return text;
   }
 
-  let parts = [];    // indented parts
-  let partStart = 0; // start offset of currently parsed part
+  // We reformat the text using a simple state machine.  The
+  // reformatting preserves most of the input text, changing only
+  // whitespace.  The rules are:
+  //
+  // * After a "{" or ";" symbol, ensure there is a newline and
+  //   indentation before the next non-comment, non-whitespace token.
+  // * Additionally after a "{" symbol, increase the indentation.
+  // * A "}" symbol ensures there is a preceding newline, and
+  //   decreases the indentation level.
+  // * Ensure there is whitespace before a "{".
+  //
+  // This approach can be confused sometimes, but should do ok on a
+  // minified file.
   let indent = "";
   let indentLevel = 0;
+  let tokens = domUtils.getCSSLexer(text);
+  let result = "";
+  let pushbackToken = undefined;
 
-  for (let i = 0; i < text.length; i++) {
-    let c = text[i];
-    let shouldIndent = false;
-
-    switch (c) {
-      case "}":
-        if (i - partStart > 1) {
-          // there's more than just } on the line, add line
-          parts.push(indent + text.substring(partStart, i));
-          partStart = i;
-        }
-        indent = TAB_CHARS.repeat(--indentLevel);
-        /* fallthrough */
-      case ";":
-      case "{":
-        shouldIndent = true;
-        break;
+  // A helper function that reads tokens, looking for the next
+  // non-comment, non-whitespace token.  Comment and whitespace tokens
+  // are appended to |result|.  If this encounters EOF, it returns
+  // null.  Otherwise it returns the last whitespace token that was
+  // seen.  This function also updates |pushbackToken|.
+  let readUntilSignificantToken = () => {
+    while (true) {
+      let token = tokens.nextToken();
+      if (!token || token.tokenType !== "whitespace") {
+        pushbackToken = token;
+        return token;
+      }
+      // Saw whitespace.  Before committing to it, check the next
+      // token.
+      let nextToken = tokens.nextToken();
+      if (!nextToken || nextToken.tokenType !== "comment") {
+        pushbackToken = nextToken;
+        return token;
+      }
+      // Saw whitespace + comment.  Update the result and continue.
+      result = result + text.substring(token.startOffset, nextToken.endOffset);
     }
+  };
 
-    if (shouldIndent) {
-      let la = text[i+1]; // one-character lookahead
-      if (!/\n/.test(la) || /^\s+$/.test(text.substring(i+1, text.length))) {
-        // following character should be a new line, but isn't,
-        // or it's whitespace at the end of the file
-        parts.push(indent + text.substring(partStart, i + 1));
-        if (c == "}") {
-          parts.push(""); // for extra line separator
-        }
-        partStart = i + 1;
+  // State variables for readUntilNewlineNeeded.
+  //
+  // Starting index of the accumulated tokens.
+  let startIndex;
+  // Ending index of the accumulated tokens.
+  let endIndex;
+  // True if any non-whitespace token was seen.
+  let anyNonWS;
+  // True if the terminating token is "}".
+  let isCloseBrace;
+  // True if the token just before the terminating token was
+  // whitespace.
+  let lastWasWS;
+
+  // A helper function that reads tokens until there is a reason to
+  // insert a newline.  This updates the state variables as needed.
+  // If this encounters EOF, it returns null.  Otherwise it returns
+  // the final token read.  Note that if the returned token is "{",
+  // then it will not be included in the computed start/end token
+  // range.  This is used to handle whitespace insertion before a "{".
+  let readUntilNewlineNeeded = () => {
+    let token;
+    while (true) {
+      if (pushbackToken) {
+        token = pushbackToken;
+        pushbackToken = undefined;
       } else {
-        return text; // assume it is not minified, early exit
+        token = tokens.nextToken();
+      }
+      if (!token) {
+        endIndex = text.length;
+        break;
+      }
+
+      // A "}" symbol must be inserted later, to deal with indentation
+      // and newline.
+      if (token.tokenType === "symbol" && token.text === "}") {
+        isCloseBrace = true;
+        break;
+      } else if (token.tokenType === "symbol" && token.text === "{") {
+        break;
+      }
+
+      if (token.tokenType !== "whitespace") {
+        anyNonWS = true;
+      }
+
+      if (startIndex === undefined) {
+        startIndex = token.startOffset;
+      }
+      endIndex = token.endOffset;
+
+      if (token.tokenType === "symbol" && token.text === ';') {
+        break;
+      }
+
+      lastWasWS = token.tokenType === "whitespace";
+    }
+    return token;
+  };
+
+  while (true) {
+    // Set the initial state.
+    startIndex = undefined;
+    endIndex = undefined;
+    anyNonWS = false;
+    isCloseBrace = false;
+    lastWasWS = false;
+
+    // Read tokens until we see a reason to insert a newline.
+    let token = readUntilNewlineNeeded();
+
+    // Append any saved up text to the result, applying indentation.
+    if (startIndex !== undefined) {
+      if (isCloseBrace && !anyNonWS) {
+        // If we saw only whitespace followed by a "}", then we don't
+        // need anything here.
+      } else {
+        result = result + indent + text.substring(startIndex, endIndex);
+        if (isCloseBrace)
+          result += CssLogic.LINE_SEPARATOR;
       }
     }
 
-    if (c == "{") {
+    if (isCloseBrace) {
+      indent = TAB_CHARS.repeat(--indentLevel);
+      result = result + indent + '}';
+    }
+
+    if (!token) {
+      break;
+    }
+
+    if (token.tokenType === "symbol" && token.text === '{') {
+      if (!lastWasWS) {
+        result += ' ';
+      }
+      result += '{';
       indent = TAB_CHARS.repeat(++indentLevel);
     }
+
+    // Now it is time to insert a newline.  However first we want to
+    // deal with any trailing comments.
+    token = readUntilSignificantToken();
+
+    // "Early" bail-out if the text does not appear to be minified.
+    // Here we ignore the case where whitespace appears at the end of
+    // the text.
+    if (pushbackToken && token && token.tokenType === "whitespace" &&
+        /\n/g.test(text.substring(token.startOffset, token.endOffset))) {
+      return text;
+    }
+
+    // Finally time for that newline.
+    result = result + CssLogic.LINE_SEPARATOR;
+
+    // Maybe we hit EOF.
+    if (!pushbackToken) {
+      break;
+    }
   }
-  return parts.join(CssLogic.LINE_SEPARATOR);
+
+  return result;
 };
 
 /**
