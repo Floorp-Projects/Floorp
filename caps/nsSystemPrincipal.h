@@ -37,11 +37,6 @@ public:
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
-  NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) override;
-  NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) override;
-  NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
-  NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
-  NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
 
   nsSystemPrincipal() {}
