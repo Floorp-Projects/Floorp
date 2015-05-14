@@ -573,7 +573,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let selected = this.selectedItem.attachment;
     let params = nsIURL(selected.url).query.split("&");
     let string = params.join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n");
-    clipboardHelper.copyString(params.join("\n"), document);
+    clipboardHelper.copyString(string, document);
   },
 
   /**
