@@ -10,13 +10,32 @@
 #include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"
 
+#include "mozilla/dom/ToJSValue.h"
+
 namespace mozilla {
+
+void
+BasePrincipal::OriginAttributes::CreateSuffix(nsACString& aStr)
+{
+  aStr.Truncate();
+  MOZ_RELEASE_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+  int attrCount = 0;
+
+  if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
+    aStr.Append(attrCount++ ? "&appId=" : "!appId=");
+    aStr.AppendInt(mAppId);
+  }
+
+  if (mInBrowser) {
+    aStr.Append(attrCount++ ? "&inBrowser=1" : "!inBrowser=1");
+  }
+}
 
 void
 BasePrincipal::OriginAttributes::Serialize(nsIObjectOutputStream* aStream) const
 {
   aStream->Write32(mAppId);
-  aStream->WriteBoolean(mIsInBrowserElement);
+  aStream->WriteBoolean(mInBrowser);
 }
 
 nsresult
@@ -25,7 +44,7 @@ BasePrincipal::OriginAttributes::Deserialize(nsIObjectInputStream* aStream)
   nsresult rv = aStream->Read32(&mAppId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aStream->ReadBoolean(&mIsInBrowserElement);
+  rv = aStream->ReadBoolean(&mInBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -101,6 +120,22 @@ BasePrincipal::GetJarPrefix(nsACString& aJarPrefix)
   MOZ_ASSERT(AppId() != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
   mozilla::GetJarPrefix(AppId(), IsInBrowserElement(), aJarPrefix);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
+{
+  if (NS_WARN_IF(!ToJSValue(aCx, mOriginAttributes, aVal))) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetOriginSuffix(nsACString& aOriginAttributes)
+{
+  mOriginAttributes.CreateSuffix(aOriginAttributes);
   return NS_OK;
 }
 

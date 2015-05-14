@@ -11,6 +11,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSPrincipals.h"
 
+#include "mozilla/dom/SystemDictionariesBinding.h"
+
 class nsIObjectOutputStream;
 class nsIObjectInputStream;
 
@@ -39,6 +41,8 @@ public:
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) final;
+  NS_IMETHOD GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) final;
+  NS_IMETHOD GetOriginSuffix(nsACString& aOriginSuffix) final;
   NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) final;
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) final;
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) final;
@@ -48,25 +52,28 @@ public:
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
 
-  struct OriginAttributes {
-    // NB: If you add any members here, you need to update Serialize/Deserialize
-    // and bump the CIDs of all the principal implementations that invoke those
-    // methods.
-    uint32_t mAppId;
-    bool mIsInBrowserElement;
+  struct OriginAttributes : public dom::OriginAttributesDictionary {
+    OriginAttributes() {}
+    OriginAttributes(uint32_t aAppId, bool aInBrowser)
+    {
+      mAppId = aAppId;
+      mInBrowser = aInBrowser;
+    }
 
-    OriginAttributes() : mAppId(nsIScriptSecurityManager::NO_APP_ID), mIsInBrowserElement(false) {}
-    OriginAttributes(uint32_t aAppId, bool aIsInBrowserElement)
-      : mAppId(aAppId), mIsInBrowserElement(aIsInBrowserElement) {}
     bool operator==(const OriginAttributes& aOther) const
     {
       return mAppId == aOther.mAppId &&
-             mIsInBrowserElement == aOther.mIsInBrowserElement;
+             mInBrowser == aOther.mInBrowser;
     }
     bool operator!=(const OriginAttributes& aOther) const
     {
       return !(*this == aOther);
     }
+
+    // Serializes non-default values into the suffix format, i.e.
+    // |!key1=value1&key2=value2|. If there are no non-default attributes, this
+    // returns an empty string.
+    void CreateSuffix(nsACString& aStr);
 
     void Serialize(nsIObjectOutputStream* aStream) const;
     nsresult Deserialize(nsIObjectInputStream* aStream);
@@ -74,7 +81,7 @@ public:
 
   const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
-  bool IsInBrowserElement() const { return mOriginAttributes.mIsInBrowserElement; }
+  bool IsInBrowserElement() const { return mOriginAttributes.mInBrowser; }
 
 protected:
   virtual ~BasePrincipal() {}
