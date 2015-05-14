@@ -15,15 +15,7 @@ interface CloseEvent : Event
 {
   readonly attribute boolean wasClean;
   readonly attribute unsigned short code;
-  readonly attribute DOMString? reason;
-
-  [Throws]
-  void initCloseEvent(DOMString aType,
-                      boolean aCanBubble,
-                      boolean aCancelable,
-                      boolean aWasClean,
-                      unsigned short aReasonCode,
-                      DOMString? aReason);
+  readonly attribute DOMString reason;
 };
 
 dictionary CloseEventInit : EventInit
