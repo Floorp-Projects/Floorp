@@ -33,6 +33,10 @@
 #include "prlog.h"
 #include "nsServiceManagerUtils.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
+
 struct JSContext;
 class JSObject;
 
@@ -87,7 +91,12 @@ IsTypeSupported(const nsAString& aType)
     if (mimeType.EqualsASCII(gMediaSourceTypes[i])) {
       if ((mimeType.EqualsASCII("video/mp4") ||
            mimeType.EqualsASCII("audio/mp4")) &&
-          !Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
+          (!Preferences::GetBool("media.mediasource.mp4.enabled", false)
+#ifdef MOZ_WIDGET_ANDROID
+          // MP4 won't work unless we have JellyBean+
+          || AndroidBridge::Bridge()->GetAPIVersion() < 16
+#endif
+          )) {
         break;
       }
       if ((mimeType.EqualsASCII("video/webm") ||
