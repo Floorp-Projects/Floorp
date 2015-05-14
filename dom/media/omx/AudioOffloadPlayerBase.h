@@ -54,7 +54,7 @@ public:
 
   virtual void SetVolume(double aVolume) {}
 
-  virtual double GetMediaTimeSecs() { return 0; }
+  virtual int64_t GetMediaTimeUs() { return 0; }
 
   // To update progress bar when the element is visible
   virtual void SetElementVisibility(bool aIsVisible) {}
