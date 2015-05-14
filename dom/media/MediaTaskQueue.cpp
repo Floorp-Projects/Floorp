@@ -45,7 +45,7 @@ MediaTaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
 {
   nsCOMPtr<nsIRunnable> r = aRunnable;
   AbstractThread* currentThread;
-  if (aReason != TailDispatch && (currentThread = GetCurrent()) && currentThread->RequiresTailDispatch()) {
+  if (aReason != TailDispatch && (currentThread = GetCurrent()) && RequiresTailDispatch(currentThread)) {
     currentThread->TailDispatcher().AddTask(this, r.forget(), aFailureHandling);
     return NS_OK;
   }
