@@ -28,6 +28,13 @@ public:
     , mIsInBrowserElement(false)
   {}
 
+  enum DocumentDomainConsideration { DontConsiderDocumentDomain, ConsiderDocumentDomain};
+  bool Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration);
+
+  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) final;
+  NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) final;
+  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) final;
+  NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
@@ -39,8 +46,12 @@ public:
 
   virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }
 
+  static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
+
 protected:
   virtual ~BasePrincipal() {}
+
+  virtual bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsider) = 0;
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   uint32_t mAppId;

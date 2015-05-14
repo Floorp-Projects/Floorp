@@ -40,15 +40,11 @@ public:
   NS_DECL_NSISERIALIZABLE
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
-  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) override;
-  NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetOrigin(nsACString& aOrigin) override;
-  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
-  NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
@@ -68,6 +64,11 @@ public:
 
  protected:
   virtual ~nsNullPrincipal() {}
+
+  bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration) override
+  {
+    return aOther == this;
+  }
 
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
