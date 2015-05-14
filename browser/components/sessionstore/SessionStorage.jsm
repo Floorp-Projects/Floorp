@@ -74,7 +74,7 @@ let SessionStorageInternal = {
 
       // Get the root domain of the current history entry
       // and use that as a key for the per-host storage data.
-      let origin = principal.jarPrefix + principal.origin;
+      let origin = principal.jarPrefix + principal.originNoSuffix;
       if (visitedOrigins.has(origin)) {
         // Don't read a host twice.
         return;
