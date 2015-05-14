@@ -413,6 +413,18 @@ def ContextDerivedTypedList(type, base_class=List):
 
     return _TypedList
 
+@memoize
+def ContextDerivedTypedListWithItems(type, base_class=List):
+    """Specialized TypedList for use with ContextDerivedValue types.
+    """
+    class _TypedListWithItems(ContextDerivedTypedList(type, base_class)):
+        def __getitem__(self, name):
+            if not isinstance(name, type):
+                name = self.TYPE(name)
+            return super(_TypedListWithItems, self).__getitem__(name)
+
+    return _TypedListWithItems
+
 
 BugzillaComponent = TypedNamedTuple('BugzillaComponent',
                         [('product', unicode), ('component', unicode)])
