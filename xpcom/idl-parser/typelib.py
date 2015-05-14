@@ -62,9 +62,9 @@ def build_interface(iface, ifaces):
             type = type.realtype
 
         if isinstance(type, xpidl.Builtin):
-            if type.name == 'string' and size_is != None:
+            if type.name == 'string' and size_is is not None:
                 return xpt.StringWithSizeType(size_is, size_is)
-            elif type.name == 'wstring' and size_is != None:
+            elif type.name == 'wstring' and size_is is not None:
                 return xpt.WideStringWithSizeType(size_is, size_is)
             else:
                 tag = TypeMap[type.name]
@@ -100,7 +100,7 @@ def build_interface(iface, ifaces):
                 return xpt.SimpleType(TypeMap[type.specialtype],
                                       pointer=isPtr,
                                       reference=isRef)
-            elif iid_is != None:
+            elif iid_is is not None:
                 return xpt.InterfaceIsType(iid_is)
             else:
                 # void ptr
