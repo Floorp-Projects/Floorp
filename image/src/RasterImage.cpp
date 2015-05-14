@@ -947,6 +947,10 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
              mFrameCount < aNewFrameCount,
              "Frame count running backwards");
 
+  if (mError) {
+    return;  // We're in an error state, possibly due to OOM. Bail.
+  }
+
   if (aNewFrameCount > mFrameCount) {
     mFrameCount = aNewFrameCount;
 
