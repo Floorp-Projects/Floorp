@@ -13,8 +13,8 @@
 
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.pushPrefEnv({ set: [["dom.workers.sharedWorkers.enabled", true],
-                                  ["dom.workers.websocket.enabled", true]]}, function() {
+SpecialPowers.pushPrefEnv({ set: [["dom.workers.sharedWorkers.enabled", true]]},
+function() {
   var sw = new SharedWorker('webSocket_sharedWorker.js');
   sw.port.onmessage = function(event) {
     if (event.data.type == 'finish') {
