@@ -54,6 +54,12 @@ OriginAttributes::Deserialize(nsIObjectInputStream* aStream)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+BasePrincipal::GetOrigin(nsACString& aOrigin)
+{
+  return GetOriginInternal(aOrigin);
+}
+
 bool
 BasePrincipal::Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration)
 {
