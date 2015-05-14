@@ -4552,7 +4552,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
         oom = !label || !log.append(mozilla::Move(label));
     }
 
-    void Exit(JSContext* cx) {
+    void Exit(JSContext* cx) override {
         MOZ_ASSERT(enteredWithoutExit);
         enteredWithoutExit = false;
     }
