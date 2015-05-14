@@ -431,7 +431,7 @@ class MozbuildSandbox(Sandbox):
             for k, v in inspect.getcallargs(func, *args, **kwargs).items():
                 sandbox[k] = v
 
-            sandbox.exec_source(code, path)
+            sandbox.exec_source(code, path, becomes_current_path=False)
 
             # This is gross, but allows the merge to happen. Eventually, the
             # merging will go away and template contexts emitted independently.
