@@ -35,16 +35,11 @@
 
 #undef LOG
 
-#ifdef PR_LOGGING
 #include "prprf.h"
 #define LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
 #ifdef SEEK_LOGGING
 #define SEEK_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
 #else
-#define SEEK_LOG(type, msg)
-#endif
-#else
-#define LOG(type, msg)
 #define SEEK_LOG(type, msg)
 #endif
 
@@ -110,7 +105,10 @@ static void webm_log(nestegg * context,
                      unsigned int severity,
                      char const * format, ...)
 {
-#ifdef PR_LOGGING
+  if (!PR_LOG_TEST(gNesteggLog, PR_LOG_DEBUG)) {
+    return;
+  }
+
   va_list args;
   char msg[256];
   const char * sevStr;
@@ -143,7 +141,6 @@ static void webm_log(nestegg * context,
   PR_LOG(gNesteggLog, PR_LOG_DEBUG, (msg));
 
   va_end(args);
-#endif
 }
 
 ogg_packet InitOggPacket(const unsigned char* aData, size_t aLength,
@@ -184,11 +181,9 @@ WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
   , mPaddingDiscarded(false)
 {
   MOZ_COUNT_CTOR(WebMReader);
-#ifdef PR_LOGGING
   if (!gNesteggLog) {
     gNesteggLog = PR_NewLogModule("Nestegg");
   }
-#endif
   // Zero these member vars to avoid crashes in VP8 destroy and Vorbis clear
   // functions when destructor is called before |Init|.
   memset(&mVorbisBlock, 0, sizeof(vorbis_block));
@@ -1048,7 +1043,7 @@ bool WebMReader::ShouldSkipVideoFrame(int64_t aTimeThreshold)
 bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold)
 {
   if (!(aKeyframeSkip && ShouldSkipVideoFrame(aTimeThreshold))) {
-    LOG(PR_LOG_DEBUG, ("Reader [%p]: set the aKeyframeSkip to false.",this));
+    LOG(PR_LOG_DEBUG+1, ("Reader [%p]: set the aKeyframeSkip to false.",this));
     aKeyframeSkip = false;
   }
   return mVideoDecoder->DecodeVideoFrame(aKeyframeSkip, aTimeThreshold);

@@ -11,9 +11,7 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
-#endif
 
 NS_IMPL_ISUPPORTS0(BufferDecoder)
 
@@ -23,11 +21,9 @@ BufferDecoder::BufferDecoder(MediaResource* aResource)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(BufferDecoder);
-#ifdef PR_LOGGING
   if (!gMediaDecoderLog) {
     gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
   }
-#endif
 }
 
 BufferDecoder::~BufferDecoder()

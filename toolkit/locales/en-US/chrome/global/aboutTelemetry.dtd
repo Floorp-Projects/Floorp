@@ -4,16 +4,60 @@
 
 <!ENTITY aboutTelemetry.pageTitle "Telemetry Data">
 
-<!ENTITY aboutTelemetry.telemetryEnabled "
-  Telemetry is <span>enabled</span>.
+<!ENTITY aboutTelemetry.changeDataChoices "
+  Change
 ">
 
-<!ENTITY aboutTelemetry.telemetryDisabled "
-  Telemetry is <span>disabled</span>.
+<!ENTITY aboutTelemetry.uploadEnabled "
+  FHR data upload is <span>enabled</span>.
+">
+
+<!ENTITY aboutTelemetry.uploadDisabled "
+  FHR data upload is <span>disabled</span>.
+">
+
+<!ENTITY aboutTelemetry.extendedRecordingEnabled "
+  Extended Telemetry recording is <span>enabled</span>.
+">
+
+<!ENTITY aboutTelemetry.extendedRecordingDisabled "
+  Extended Telemetry recording is <span>disabled</span>.
+">
+
+<!ENTITY aboutTelemetry.pingDataSource "
+Ping data source:
+">
+
+<!ENTITY aboutTelemetry.showCurrentPingData "
+Current ping data
+">
+
+<!ENTITY aboutTelemetry.showArchivedPingData "
+Archived ping data
+">
+
+<!ENTITY aboutTelemetry.showSubsessionData "
+Show subsession data
+">
+
+<!ENTITY aboutTelemetry.choosePing "
+Choose ping:
+">
+
+<!ENTITY aboutTelemetry.showPreviousPing "
+&lt;&lt; Previous ping
+">
+
+<!ENTITY aboutTelemetry.showNextPing "
+Next ping &gt;&gt;
 ">
 
 <!ENTITY aboutTelemetry.generalDataSection "
   General Data
+">
+
+<!ENTITY aboutTelemetry.environmentDataSection "
+  Environment Data
 ">
 
 <!ENTITY aboutTelemetry.telemetryLogSection "

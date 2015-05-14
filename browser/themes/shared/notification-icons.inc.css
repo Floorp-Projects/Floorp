@@ -140,6 +140,12 @@
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
 }
 
+#login-fill-notification-icon {
+  /* Temporary icon until the capture and fill doorhangers are unified. */
+  list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
+  transform: scaleX(-1);
+}
+
 .webapps-notification-icon,
 #webapps-notification-icon {
   list-style-image: url(chrome://global/skin/icons/webapps-16.png);
@@ -311,6 +317,7 @@
     list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
   }
 
+  #login-fill-notification-icon,
   #password-notification-icon {
     list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16@2x.png);
   }

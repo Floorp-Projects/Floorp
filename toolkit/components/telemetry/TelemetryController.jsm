@@ -44,7 +44,6 @@ const PREF_UNIFIED = PREF_BRANCH + "unified";
 const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
 
 const PING_FORMAT_VERSION = 4;
-const PING_TYPE_MAIN = "main";
 
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY = 60000;
@@ -62,6 +61,13 @@ const MIDNIGHT_TOLERANCE_FUZZ_MS = 5 * 60 * 1000;
 // We try to spread "midnight" pings out over this interval.
 const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * 60 * 1000;
 const MIDNIGHT_FUZZING_DELAY_MS = Math.random() * MIDNIGHT_FUZZING_INTERVAL_MS;
+
+// Ping types.
+const PING_TYPE_MAIN = "main";
+
+// Session ping reasons.
+const REASON_GATHER_PAYLOAD = "gather-payload";
+const REASON_GATHER_SUBSESSION_PAYLOAD = "gather-subsession-payload";
 
 XPCOMUtils.defineLazyModuleGetter(this, "ClientID",
                                   "resource://gre/modules/ClientID.jsm");
@@ -82,6 +88,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryArchive",
                                   "resource://gre/modules/TelemetryArchive.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySession",
+                                  "resource://gre/modules/TelemetrySession.jsm");
 
 /**
  * Setup Telemetry logging. This function also gets called when loggin related
@@ -195,6 +203,11 @@ this.TelemetryController = Object.freeze({
    * Depending on configuration, the ping will be sent to the server (immediately or later)
    * and archived locally.
    *
+   * To identify the different pings and to be able to query them pings have a type.
+   * A type is a string identifier that should be unique to the type ping that is being submitted,
+   * it should only contain alphanumeric characters and '-' for separation, i.e. satisfy:
+   * /^[a-z0-9][a-z0-9-]+[a-z0-9]$/i
+   *
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {Object} [aOptions] Options object.
@@ -210,6 +223,16 @@ this.TelemetryController = Object.freeze({
     aOptions.addEnvironment = aOptions.addEnvironment || false;
 
     return Impl.submitExternalPing(aType, aPayload, aOptions);
+  },
+
+  /**
+   * Get the current session ping data as it would be sent out or stored.
+   *
+   * @param {bool} aSubsession Whether to get subsession data. Optional, defaults to false.
+   * @return {object} The current ping data in object form.
+   */
+  getCurrentPingData: function(aSubsession = false) {
+    return Impl.getCurrentPingData(aSubsession);
   },
 
   /**
@@ -557,6 +580,15 @@ let Impl = {
   submitExternalPing: function send(aType, aPayload, aOptions) {
     this._log.trace("submitExternalPing - type: " + aType + ", server: " + this._server +
                     ", aOptions: " + JSON.stringify(aOptions));
+
+    // Enforce the type string to only contain sane characters.
+    const typeUuid = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/i;
+    if (!typeUuid.test(aType)) {
+      this._log.error("submitExternalPing - invalid ping type: " + aType);
+      let histogram = Telemetry.getKeyedHistogramById("TELEMETRY_INVALID_PING_TYPE_SUBMITTED");
+      histogram.add(aType, 1);
+      return Promise.reject(new Error("Invalid type string submitted."));
+    }
 
     const pingData = this.assemblePing(aType, aPayload, aOptions);
     this._log.trace("submitExternalPing - ping assembled, id: " + pingData.id);
@@ -1188,5 +1220,17 @@ let Impl = {
    */
   promiseInitialized: function() {
     return this._delayedInitTaskDeferred.promise;
+  },
+
+  getCurrentPingData: function(aSubsession) {
+    this._log.trace("getCurrentPingData - subsession: " + aSubsession)
+
+    const reason = aSubsession ? REASON_GATHER_SUBSESSION_PAYLOAD : REASON_GATHER_PAYLOAD;
+    const type = PING_TYPE_MAIN;
+    const payload = TelemetrySession.getPayload(reason);
+    const options = { addClientId: true, addEnvironment: true };
+    const ping = this.assemblePing(type, payload, options);
+
+    return ping;
   },
 };

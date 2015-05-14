@@ -151,7 +151,7 @@ public class AsyncUploader extends AsyncTask<Void, Void, SyncSummary> {
         long uploadedWifis = 0;
 
         if (!mUploadArgs.mShouldIgnoreWifiStatus && mUploadArgs.mUseWifiOnly &&
-               mUploadArgs.mNetworkUtils.isWifiAvailable()) {
+               !mUploadArgs.mNetworkUtils.isWifiAvailable()) {
             if (AppGlobals.isDebug) {
                 Log.d(LOG_TAG, "not on WiFi, not sending");
             }

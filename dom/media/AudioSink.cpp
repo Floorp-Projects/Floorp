@@ -10,20 +10,11 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define SINK_LOG(msg, ...) \
   PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, ("AudioSink=%p " msg, this, ##__VA_ARGS__))
-#define SINK_LOG_V(msg, ...)                      \
-  PR_BEGIN_MACRO                                  \
-    if (!PR_GetEnv("MOZ_QUIET")) {                \
-      SINK_LOG(msg, ##__VA_ARGS__); \
-    }                                             \
-  PR_END_MACRO
-#else
-#define SINK_LOG(msg, ...)
-#define SINK_LOG_V(msg, ...)
-#endif
+#define SINK_LOG_V(msg, ...) \
+  PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG+1, ("AudioSink=%p " msg, this, ##__VA_ARGS__))
 
 AudioSink::OnAudioEndTimeUpdateTask::OnAudioEndTimeUpdateTask(
                                      MediaDecoderStateMachine* aStateMachine)

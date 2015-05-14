@@ -20,7 +20,7 @@ DIRS += [
     'styleinspector',
     'tern',
     'transport',
-    'webconsole',
+    'webconsole'
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']

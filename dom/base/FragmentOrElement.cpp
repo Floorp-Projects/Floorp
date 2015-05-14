@@ -13,6 +13,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/SegmentedVector.h"
 #include "mozilla/StaticPtr.h"
 
 #include "mozilla/dom/FragmentOrElement.h"
@@ -1225,24 +1226,12 @@ FragmentOrElement::FireNodeInserted(nsIDocument* aDoc,
 
 //----------------------------------------------------------------------
 
-// nsISupports implementation
-
-#define SUBTREE_UNBINDINGS_PER_RUNNABLE 500
-
-class ContentUnbinder : public nsRunnable
+class ContentUnbinder
 {
-public:
-  ContentUnbinder()
-  {
-    mLast = this;
-  }
+  static const size_t kSegmentSize = sizeof(void*) * 512;
+  typedef SegmentedVector<nsCOMPtr<nsIContent>, kSegmentSize, InfallibleAllocPolicy> ContentArray;
 
-  ~ContentUnbinder()
-  {
-    Run();
-  }
-
-  void UnbindSubtree(nsIContent* aNode)
+  static void UnbindSubtree(nsIContent* aNode)
   {
     if (aNode->NodeType() != nsIDOMNode::ELEMENT_NODE &&
         aNode->NodeType() != nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
@@ -1268,75 +1257,55 @@ public:
     }
   }
 
-  NS_IMETHOD Run()
+  // These two methods are based on DeferredFinalizerImpl.
+
+  static void*
+  AppendContentUnbinderPointer(void* aData, void* aObject)
   {
+    ContentArray* contentArray = static_cast<ContentArray*>(aData);
+    if (!contentArray) {
+      contentArray = new ContentArray();
+    }
+
+    contentArray->InfallibleAppend(dont_AddRef(static_cast<nsIContent*>(aObject)));
+    return contentArray;
+  }
+
+  static bool
+  DeferredFinalize(uint32_t aSliceBudget, void* aData)
+  {
+    MOZ_ASSERT(aSliceBudget > 0, "nonsensical/useless call with aSliceBudget == 0");
     nsAutoScriptBlocker scriptBlocker;
-    uint32_t len = mSubtreeRoots.Length();
-    if (len) {
-      PRTime start = PR_Now();
-      for (uint32_t i = 0; i < len; ++i) {
-        UnbindSubtree(mSubtreeRoots[i]);
-      }
-      mSubtreeRoots.Clear();
-      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_CONTENT_UNBIND,
-                            uint32_t(PR_Now() - start) / PR_USEC_PER_MSEC);
+    ContentArray* contentArray = static_cast<ContentArray*>(aData);
+
+    size_t numToRemove = contentArray->Length();
+    if (aSliceBudget < numToRemove) {
+      numToRemove = aSliceBudget;
     }
+
+    for (size_t i = 0; i < numToRemove; ++i) {
+      nsCOMPtr<nsIContent> element = contentArray->GetLast().forget();
+      contentArray->PopLast();
+      UnbindSubtree(element);
+    }
+
     nsCycleCollector_dispatchDeferredDeletion();
-    if (this == sContentUnbinder) {
-      sContentUnbinder = nullptr;
-      if (mNext) {
-        nsRefPtr<ContentUnbinder> next;
-        next.swap(mNext);
-        sContentUnbinder = next;
-        next->mLast = mLast;
-        mLast = nullptr;
-        NS_DispatchToMainThread(next);
-      }
+
+    if (contentArray->Length() == 0) {
+      delete contentArray;
+      return true;
     }
-    return NS_OK;
+    return false;
   }
 
-  static void UnbindAll()
+public:
+  static void
+  Append(nsIContent* aSubtreeRoot)
   {
-    nsRefPtr<ContentUnbinder> ub = sContentUnbinder;
-    sContentUnbinder = nullptr;
-    while (ub) {
-      ub->Run();
-      ub = ub->mNext;
-    }
+    nsCOMPtr<nsIContent> root = aSubtreeRoot;
+    mozilla::DeferredFinalize(AppendContentUnbinderPointer, DeferredFinalize, root.forget().take());
   }
-
-  static void Append(nsIContent* aSubtreeRoot)
-  {
-    if (!sContentUnbinder) {
-      sContentUnbinder = new ContentUnbinder();
-      nsCOMPtr<nsIRunnable> e = sContentUnbinder;
-      NS_DispatchToMainThread(e);
-    }
-
-    if (sContentUnbinder->mLast->mSubtreeRoots.Length() >=
-        SUBTREE_UNBINDINGS_PER_RUNNABLE) {
-      sContentUnbinder->mLast->mNext = new ContentUnbinder();
-      sContentUnbinder->mLast = sContentUnbinder->mLast->mNext;
-    }
-    sContentUnbinder->mLast->mSubtreeRoots.AppendElement(aSubtreeRoot);
-  }
-
-private:
-  nsAutoTArray<nsCOMPtr<nsIContent>,
-               SUBTREE_UNBINDINGS_PER_RUNNABLE> mSubtreeRoots;
-  nsRefPtr<ContentUnbinder>                     mNext;
-  ContentUnbinder*                              mLast;
-  static ContentUnbinder*                       sContentUnbinder;
 };
-
-ContentUnbinder* ContentUnbinder::sContentUnbinder = nullptr;
-
-void
-FragmentOrElement::ClearContentUnbinder()
-{
-  ContentUnbinder::UnbindAll();
-}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FragmentOrElement)
 

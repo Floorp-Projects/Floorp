@@ -229,30 +229,59 @@ body {
   -moz-margin-start: 0;
 }
 
-.new-room-view > .context > .context-preview {
-  float: right;
-  width: 100px;
-  max-height: 200px;
-  -moz-margin-start: 10px;
-  margin-bottom: 10px;
+.new-room-view > .context > .checkbox-wrapper {
+  margin-bottom: .5em;
 }
 
-body[dir=rtl] .new-room-view > .context > .context-preview {
+.new-room-view > .context > .checkbox-wrapper > .checkbox {
+  border-color: #0096dd;
+  background-color: #fff;
+}
+
+.new-room-view > .context > .checkbox-wrapper > .checkbox.checked {
+  background-image: url("../shared/img/check.svg#check-blue");
+}
+
+.new-room-view > .context > .checkbox-wrapper > label {
+  color: #3c3c3c;
+  font-weight: 700;
+}
+
+.new-room-view > .context > .context-content {
+  border: 1px solid #0096dd;
+  border-radius: 3px;
+  background: #fff;
+  padding: .8em;
+  display: flex;
+  flex-flow: row nowrap;
+  line-height: 1.1em;
+}
+
+.new-room-view > .context > .context-content > .context-preview {
+  float: left;
+  width: 16px;
+  max-height: 16px;
+  -moz-margin-end: .8em;
+  flex: 0 1 auto;
+}
+
+body[dir=rtl] .new-room-view > .context > .context-content > .context-preview {
   float: left;
 }
 
-.new-room-view > .context > .context-preview[src=""] {
+.new-room-view > .context > .context-content > .context-preview[src=""] {
   display: none;
 }
 
-.new-room-view > .context > .context-description {
+.new-room-view > .context > .context-content > .context-description {
+  flex: 0 1 auto;
   display: block;
-  color: #707070;
 }
 
-.new-room-view > .context > .context-url {
+.new-room-view > .context > .context-content > .context-description > .context-url {
   display: block;
   color: #59A1D7;
+  font-weight: 700;
   clear: both;
 }
 

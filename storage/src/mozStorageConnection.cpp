@@ -47,9 +47,7 @@
 // Maximum size of the pages cache per connection.
 #define MAX_CACHE_SIZE_KIBIBYTES 2048 // 2 MiB
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gStorageLog = nullptr;
-#endif
 
 // Checks that the protected code is running on the main-thread only if the
 // connection was also opened on it.
@@ -152,13 +150,11 @@ Module gModules[] = {
 ////////////////////////////////////////////////////////////////////////////////
 //// Local Functions
 
-#ifdef PR_LOGGING
 void tracefunc (void *aClosure, const char *aStmt)
 {
   PR_LOG(gStorageLog, PR_LOG_DEBUG, ("sqlite3_trace on %p for '%s'", aClosure,
                                      aStmt));
 }
-#endif
 
 struct FFEArguments
 {
@@ -664,7 +660,6 @@ Connection::initializeInternal(nsIFile* aDatabaseFile)
   // Properly wrap the database handle's mutex.
   sharedDBMutex.initWithMutex(sqlite3_db_mutex(mDBConn));
 
-#ifdef PR_LOGGING
   if (!gStorageLog)
     gStorageLog = ::PR_NewLogModule("mozStorage");
 
@@ -679,7 +674,6 @@ Connection::initializeInternal(nsIFile* aDatabaseFile)
     PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
                                         leafName.get(), this));
   }
-#endif
 
   int64_t pageSize = Service::getDefaultPageSize();
 
@@ -903,13 +897,13 @@ Connection::internalClose(sqlite3 *aNativeConnection)
   }
 #endif // DEBUG
 
-#ifdef PR_LOGGING
-  nsAutoCString leafName(":memory");
-  if (mDatabaseFile)
-      (void)mDatabaseFile->GetNativeLeafName(leafName);
-  PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Closing connection to '%s'",
-                                      leafName.get()));
-#endif
+  if (PR_LOG_TEST(gStorageLog, PR_LOG_NOTICE)) {
+    nsAutoCString leafName(":memory");
+    if (mDatabaseFile)
+        (void)mDatabaseFile->GetNativeLeafName(leafName);
+    PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Closing connection to '%s'",
+                                        leafName.get()));
+  }
 
   // At this stage, we may still have statements that need to be
   // finalized. Attempt to close the database connection. This will

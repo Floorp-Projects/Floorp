@@ -18,6 +18,7 @@ loop.panel = (function(_, mozL10n) {
   var sharedUtils = loop.shared.utils;
   var Button = sharedViews.Button;
   var ButtonGroup = sharedViews.ButtonGroup;
+  var Checkbox = sharedViews.Checkbox;
   var ContactsList = loop.contacts.ContactsList;
   var ContactDetailsForm = loop.contacts.ContactDetailsForm;
 
@@ -717,23 +718,27 @@ loop.panel = (function(_, mozL10n) {
 
     onDocumentVisible: function() {
       this.props.mozLoop.getSelectedTabMetadata(function callback(metadata) {
-        var previewImage = metadata.previews.length ? metadata.previews[0] : "";
-        var description = metadata.description || metadata.title;
+        var previewImage = metadata.favicon || "";
+        var description = metadata.title || metadata.description;
         var url = metadata.url;
-        this.setState({previewImage: previewImage,
-                       description: description,
-                       url: url});
+        this.setState({
+          previewImage: previewImage,
+          description: description,
+          url: url
+        });
       }.bind(this));
     },
 
     onDocumentHidden: function() {
-      this.setState({previewImage: "",
-                     description: "",
-                     url: ""});
+      this.setState({
+        previewImage: "",
+        description: "",
+        url: ""
+      });
     },
 
-    onCheckboxChange: function(event) {
-      this.setState({checked: event.target.checked});
+    onCheckboxChange: function(newState) {
+      this.setState({checked: newState.checked});
     },
 
     handleCreateButtonClick: function() {
@@ -770,14 +775,15 @@ loop.panel = (function(_, mozL10n) {
       return (
         <div className="new-room-view">
           <div className={contextClasses}>
-            <label className="context-enabled">
-              <input className="context-checkbox"
-                     type="checkbox" onChange={this.onCheckboxChange}/>
-              {mozL10n.get("context_offer_label")}
-            </label>
-            <img className="context-preview" src={this.state.previewImage}/>
-            <span className="context-description">{this.state.description}</span>
-            <span className="context-url">{hostname}</span>
+            <Checkbox label={mozL10n.get("context_inroom_label")}
+                      onChange={this.onCheckboxChange} />
+            <div className="context-content">
+              <img className="context-preview" src={this.state.previewImage}/>
+              <span className="context-description">
+                {this.state.description}
+                <span className="context-url">{hostname}</span>
+              </span>
+            </div>
           </div>
           <button className="btn btn-info new-room-button"
                   onClick={this.handleCreateButtonClick}
