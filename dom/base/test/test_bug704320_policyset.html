@@ -37,7 +37,7 @@ var tests = (function() {
   yield iframe.src = sjs + "&policy=" + escape('default');
 
   // check the first test (two images, no referrers)
-  yield checkResults("default", ["full"]);
+  yield checkIndividualResults("default", ["full"]);
 
   // check invalid policy
   // According to the spec section 6.4, if there is a policy token
@@ -45,7 +45,7 @@ var tests = (function() {
   // should be the policy used.
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape('invalid-policy');
-  yield checkResults("invalid", ["none"]);
+  yield checkIndividualResults("invalid", ["none"]);
 
   // whitespace checks.
   // according to the spec section 4.1, the content attribute's value
@@ -53,20 +53,20 @@ var tests = (function() {
   // trailing whitespace.
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape('default   ');
-  yield checkResults("trailing whitespace", ["full"]);
+  yield checkIndividualResults("trailing whitespace", ["full"]);
 
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape(' origin\f');
-  yield checkResults("trailing form feed", ["origin"]);
+  yield checkIndividualResults("trailing form feed", ["origin"]);
 
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape('\f origin');
-  yield checkResults("leading form feed", ["origin"]);
+  yield checkIndividualResults("leading form feed", ["origin"]);
 
   // origin when cross-origin (trimming whitespace)
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape(' origin-when-cross-origin');
-  yield checkResults("origin-when-cross-origin", ["origin", "full"]);
+  yield checkIndividualResults("origin-when-cross-origin", ["origin", "full"]);
 
   // according to the spec section 4.1:
   // "If the meta element lacks a content attribute, or if that attribute’s
@@ -77,16 +77,16 @@ var tests = (function() {
   // http://www.w3.org/html/wg/drafts/html/CR/infrastructure.html#space-character
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape(' \t  ');
-  yield checkResults("basic whitespace only policy", ["full"]);
+  yield checkIndividualResults("basic whitespace only policy", ["full"]);
 
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape(' \f\r\n\t  ');
-  yield checkResults("whitespace only policy", ["full"]);
+  yield checkIndividualResults("whitespace only policy", ["full"]);
 
   // and double-check that no-referrer works.
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape('no-referrer');
-  yield checkResults("no-referrer", ["none"]);
+  yield checkIndividualResults("no-referrer", ["none"]);
 
   // complete.  Be sure to yield so we don't call this twice.
   yield SimpleTest.finish();
