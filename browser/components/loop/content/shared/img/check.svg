@@ -26,6 +26,9 @@
       stroke: rgba(255,255,255,.4);
       stroke-width: 0.5;
     }
+    use[id$="-blue"] {
+      fill: #0096dd;
+    }
   </style>
   <defs style="display: none;">
     <path id="check-shape" d="M 9.39,16.5 16.28,6 14.77,4.5 9.37,12.7 6.28,9.2 4.7,10.7 z"/>
@@ -33,4 +36,5 @@
   <use id="check"          xlink:href="#check-shape"/>
   <use id="check-active"   xlink:href="#check-shape"/>
   <use id="check-disabled" xlink:href="#check-shape"/>
+  <use id="check-blue"     xlink:href="#check-shape"/>
 </svg>

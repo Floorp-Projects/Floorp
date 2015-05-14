@@ -810,8 +810,7 @@ describe("loop.panel", function() {
       var node = view.getDOMNode();
 
       // Select the checkbox
-      TestUtils.Simulate.change(node.querySelector(".context-checkbox"),
-        {"target": {"checked": true}});
+      TestUtils.Simulate.click(node.querySelector(".checkbox-wrapper"));
 
       TestUtils.Simulate.click(node.querySelector(".new-room-button"));
 
@@ -848,8 +847,8 @@ describe("loop.panel", function() {
       // Simulate being visible
       view.onDocumentVisible();
 
-      var contextEnabledCheckbox = view.getDOMNode().querySelector(".context-enabled");
-      expect(contextEnabledCheckbox).to.not.equal(null);
+      var contextContent = view.getDOMNode().querySelector(".context-content");
+      expect(contextContent).to.not.equal(null);
     });
 
     it("should not show context information when a URL is unavailable", function() {
