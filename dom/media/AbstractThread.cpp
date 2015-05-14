@@ -51,7 +51,7 @@ public:
   {
     nsCOMPtr<nsIRunnable> r = aRunnable;
     AbstractThread* currentThread;
-    if (aReason != TailDispatch && (currentThread = GetCurrent()) && currentThread->RequiresTailDispatch()) {
+    if (aReason != TailDispatch && (currentThread = GetCurrent()) && RequiresTailDispatch(currentThread)) {
       currentThread->TailDispatcher().AddTask(this, r.forget(), aFailureHandling);
       return;
     }
@@ -100,6 +100,14 @@ private:
   nsRefPtr<nsIThread> mTarget;
   Maybe<AutoTaskDispatcher> mTailDispatcher;
 };
+
+bool
+AbstractThread::RequiresTailDispatch(AbstractThread* aThread) const
+{
+  // We require tail dispatch if both the source and destination
+  // threads support it.
+  return SupportsTailDispatch() && aThread->SupportsTailDispatch();
+}
 
 AbstractThread*
 AbstractThread::MainThread()
