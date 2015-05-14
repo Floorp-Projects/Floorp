@@ -131,6 +131,13 @@ void InitLibrary()
   Preferences::RegisterCallback(PrefChanged, PREF_VOLUME_SCALE);
   PrefChanged(PREF_CUBEB_LATENCY, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
+
+  // Ensure the first call to cubeb_init is made from the main thread.
+  MOZ_ASSERT(NS_IsMainThread() && !sCubebContext);
+  cubeb * context;
+  if (cubeb_init(&context, "FirstInitContext") == CUBEB_OK) {
+    cubeb_destroy(context);
+  }
 }
 
 void ShutdownLibrary()
