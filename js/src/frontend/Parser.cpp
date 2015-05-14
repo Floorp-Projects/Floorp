@@ -4756,20 +4756,15 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
         if (tt == TOK_SEMI) {
             pn1 = nullptr;
         } else {
-            /*
-             * Set pn1 to a var list or an initializing expression.
-             *
-             * Set the parsingForInit flag during parsing of the first clause
-             * of the for statement.  This flag will be used by the RelExpr
-             * production; if it is set, then the 'in' keyword will not be
-             * recognized as an operator, leaving it available to be parsed as
-             * part of a for/in loop.
-             *
-             * A side effect of this restriction is that (unparenthesized)
-             * expressions involving an 'in' operator are illegal in the init
-             * clause of an ordinary for loop.
-             */
-            pc->parsingForInit = true;
+            // Set pn1 to a variable list or an initializing expression.
+            //
+            // Pass |InForInit| to Parser::variables when parsing declarations
+            // to trigger |for|-specific parsing for that one position.  In a
+            // normal variable declaration, any initializer may be an |in|
+            // expression.  But for declarations at the start of a for-loop
+            // head, initializers can't contain |in|.  (Such syntax conflicts
+            // with ES5's |for (var i = 0 in foo)| syntax, removed in ES6, that
+            // we "support" by ignoring the |= 0|.)
             if (tt == TOK_VAR) {
                 isForDecl = true;
                 tokenStream.consumeKnownToken(tt);
@@ -4785,9 +4780,12 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
                 pn1 = variables(yieldHandling, constDecl ? PNK_CONST : PNK_LET, InForInit,
                                 nullptr, blockObj, DontHoistVars);
             } else {
+                // Pass |InProhibited| when parsing an expression so that |in|
+                // isn't parsed in a RelationalExpression as a binary operator.
+                // In this context, |in| is part of a for-in loop -- *not* part
+                // of a binary expression.
                 pn1 = expr(InProhibited, yieldHandling);
             }
-            pc->parsingForInit = false;
             if (!pn1)
                 return null();
         }
@@ -4844,12 +4842,8 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
     ParseNode* forLetImpliedBlock = nullptr;
     ParseNode* forLetDecl = nullptr;
 
-    /*
-     * We can be sure that it's a for/in loop if there's still an 'in'
-     * keyword here, even if JavaScript recognizes 'in' as an operator,
-     * as we've excluded 'in' from being parsed in RelExpr by setting
-     * pc->parsingForInit.
-     */
+    // If there's an |in| keyword here, it's a for-in loop, by dint of careful
+    // parsing of |pn1|.
     StmtInfoPC letStmt(context); /* used if blockObj != nullptr. */
     ParseNode* pn2;      /* forHead->pn_kid2 */
     ParseNode* pn3;      /* forHead->pn_kid3 */
@@ -5109,7 +5103,6 @@ Parser<SyntaxParseHandler>::forStatement(YieldHandling yieldHandling)
             lhsNode = null();
         } else {
             /* Set lhsNode to a var list or an initializing expression. */
-            pc->parsingForInit = true;
             if (tt == TOK_VAR) {
                 isForDecl = true;
                 tokenStream.consumeKnownToken(tt);
@@ -5124,16 +5117,11 @@ Parser<SyntaxParseHandler>::forStatement(YieldHandling yieldHandling)
             }
             if (!lhsNode)
                 return null();
-            pc->parsingForInit = false;
         }
     }
 
-    /*
-     * We can be sure that it's a for/in loop if there's still an 'in'
-     * keyword here, even if JavaScript recognizes 'in' as an operator,
-     * as we've excluded 'in' from being parsed in RelExpr by setting
-     * pc->parsingForInit.
-     */
+    // If there's an |in| keyword here, it's a for-in loop, by dint of careful
+    // parsing of |pn1|.
     bool isForIn = false, isForOf = false;
     if (lhsNode) {
         if (!matchInOrOf(&isForIn, &isForOf))
@@ -6356,9 +6344,6 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
     ParseNodeKind kindStack[PRECEDENCE_CLASSES];
     int depth = 0;
 
-    bool oldParsingForInit = pc->parsingForInit;
-    pc->parsingForInit = false;
-
     Node pn;
     for (;;) {
         pn = unaryExpr(yieldHandling, invoked);
@@ -6406,7 +6391,6 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
     }
 
     MOZ_ASSERT(depth == 0);
-    pc->parsingForInit = oldParsingForInit;
     return pn;
 }
 
@@ -6419,15 +6403,7 @@ Parser<ParseHandler>::condExpr1(InHandling inHandling, YieldHandling yieldHandli
     if (!condition || !tokenStream.isCurrentTokenType(TOK_HOOK))
         return condition;
 
-    /*
-     * Always accept the 'in' operator in the middle clause of a ternary,
-     * where it's unambiguous, even if we might be parsing the init of a
-     * for statement.
-     */
-    bool oldParsingForInit = pc->parsingForInit;
-    pc->parsingForInit = false;
     Node thenExpr = assignExpr(InAllowed, yieldHandling);
-    pc->parsingForInit = oldParsingForInit;
     if (!thenExpr)
         return null();
 
@@ -8801,16 +8777,7 @@ Parser<ParseHandler>::parenExprOrGeneratorComprehension(YieldHandling yieldHandl
     if (matched)
         return generatorComprehension(begin);
 
-    /*
-     * Always accept the 'in' operator in a parenthesized expression,
-     * where it's unambiguous, even if we might be parsing the init of a
-     * for statement.
-     */
-    bool oldParsingForInit = pc->parsingForInit;
-    pc->parsingForInit = false;
     Node pn = expr(InAllowed, yieldHandling, PredictInvoked);
-    pc->parsingForInit = oldParsingForInit;
-
     if (!pn)
         return null();
 
@@ -8878,16 +8845,7 @@ Parser<ParseHandler>::exprInParens(InHandling inHandling, YieldHandling yieldHan
     uint32_t begin = pos().begin;
     uint32_t startYieldOffset = pc->lastYieldOffset;
 
-    /*
-     * Always accept the 'in' operator in a parenthesized expression,
-     * where it's unambiguous, even if we might be parsing the init of a
-     * for statement.
-     */
-    bool oldParsingForInit = pc->parsingForInit;
-    pc->parsingForInit = false;
     Node pn = expr(inHandling, yieldHandling, PredictInvoked);
-    pc->parsingForInit = oldParsingForInit;
-
     if (!pn)
         return null();
 

@@ -70,9 +70,6 @@ struct GenericParseContext
     // The following flags are set when parsing enters a particular region of
     // source code, and cleared when that region is exited.
 
-    // true while parsing init expr of for; exclude 'in'
-    bool parsingForInit:1;
-
     // true while we are within a with-statement in the current ParseContext
     // chain (which stops at the top-level or an eval()
     bool parsingWith:1;
@@ -82,7 +79,6 @@ struct GenericParseContext
         sc(sc),
         funHasReturnExpr(false),
         funHasReturnVoid(false),
-        parsingForInit(false),
         parsingWith(parent ? parent->parsingWith : false)
     {}
 };
