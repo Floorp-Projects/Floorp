@@ -779,6 +779,9 @@ class TreeMetadataEmitter(LoggingMixin):
             # Now sort the files to let groupby work.
             sorted_files = sorted(context[variable], key=canonical_suffix_for_file)
             for canonical_suffix, files in itertools.groupby(sorted_files, canonical_suffix_for_file):
+                if variable.startswith('UNIFIED_'):
+                    files = [mozpath.normpath(mozpath.join(context.srcdir, f))
+                             for f in files]
                 arglist = [context, list(files), canonical_suffix]
                 if variable.startswith('UNIFIED_') and 'FILES_PER_UNIFIED_FILE' in context:
                     arglist.append(context['FILES_PER_UNIFIED_FILE'])
