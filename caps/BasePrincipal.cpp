@@ -9,6 +9,44 @@
 
 namespace mozilla {
 
+bool
+BasePrincipal::Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration)
+{
+  MOZ_RELEASE_ASSERT(aOther, "The caller is performing a nonsensical security check!");
+  return SubsumesInternal(aOther, aConsideration);
+}
+
+NS_IMETHODIMP
+BasePrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
+{
+
+  *aResult = Subsumes(aOther, DontConsiderDocumentDomain) &&
+             Cast(aOther)->Subsumes(this, DontConsiderDocumentDomain);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
+{
+  *aResult = Subsumes(aOther, ConsiderDocumentDomain) &&
+             Cast(aOther)->Subsumes(this, ConsiderDocumentDomain);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
+{
+  *aResult = Subsumes(aOther, DontConsiderDocumentDomain);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
+{
+  *aResult = Subsumes(aOther, ConsiderDocumentDomain);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 BasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {

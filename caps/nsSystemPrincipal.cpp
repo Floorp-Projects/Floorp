@@ -42,33 +42,6 @@ nsSystemPrincipal::GetScriptLocation(nsACString &aStr)
 ///////////////////////////////////////
 
 NS_IMETHODIMP
-nsSystemPrincipal::Equals(nsIPrincipal *other, bool *result)
-{
-    *result = (other == this);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::EqualsConsideringDomain(nsIPrincipal *other, bool *result)
-{
-    return Equals(other, result);
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::Subsumes(nsIPrincipal *other, bool *result)
-{
-    *result = true;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::SubsumesConsideringDomain(nsIPrincipal *other, bool *result)
-{
-    *result = true;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::CheckMayLoad(nsIURI* uri, bool aReport, bool aAllowIfInheritsPrincipal)
 {
     return NS_OK;
