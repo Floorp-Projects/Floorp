@@ -235,6 +235,11 @@ private:
   nsCString mScriptSpec;
   nsString mCacheName;
   ServiceWorkerState mState;
+
+  // This id is shared with WorkerPrivate to match requests issued by service
+  // workers to their corresponding serviceWorkerInfo.
+  uint64_t mServiceWorkerID;
+
   // We hold rawptrs since the ServiceWorker constructor and destructor ensure
   // addition and removal.
   // There is a high chance of there being at least one ServiceWorker
@@ -243,6 +248,11 @@ private:
 
   ~ServiceWorkerInfo()
   { }
+
+  // Generates a unique id for the service worker, with zero being treated as
+  // invalid.
+  uint64_t
+  GetNextID() const;
 
 public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerInfo)
@@ -272,6 +282,7 @@ public:
     , mScriptSpec(aScriptSpec)
     , mCacheName(aCacheName)
     , mState(ServiceWorkerState::EndGuard_)
+    , mServiceWorkerID(GetNextID())
   {
     MOZ_ASSERT(mRegistration);
     MOZ_ASSERT(!aCacheName.IsEmpty());
@@ -287,6 +298,12 @@ public:
   CacheName() const
   {
     return mCacheName;
+  }
+
+  uint64_t
+  ID() const
+  {
+    return mServiceWorkerID;
   }
 
   void
@@ -364,6 +381,9 @@ public:
 
   nsRefPtrHashtable<nsISupportsHashKey, ServiceWorkerRegistrationInfo> mControlledDocuments;
 
+  // Set of all documents that may be controlled by a service worker.
+  nsTHashtable<nsISupportsHashKey> mAllDocuments;
+
   // Maps scopes to job queues.
   nsClassHashtable<nsCStringHashKey, ServiceWorkerJobQueue> mJobQueues;
 
@@ -411,6 +431,13 @@ public:
   void
   GetAllClients(const nsCString& aScope,
                 nsTArray<ServiceWorkerClientInfo>& aControlledDocuments);
+
+  void
+  MaybeClaimClient(nsIDocument* aDocument,
+                   ServiceWorkerRegistrationInfo* aWorkerRegistration);
+
+  nsresult
+  ClaimClients(const nsCString& aScope, uint64_t aId);
 
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
@@ -465,6 +492,13 @@ private:
   void
   InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
                                             WhichServiceWorker aWhichOnes);
+
+  void
+  StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
+                            nsIDocument* aDoc);
+
+  void
+  StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetServiceWorkerRegistrationInfo(nsPIDOMWindow* aWindow);

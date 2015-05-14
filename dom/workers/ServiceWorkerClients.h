@@ -36,7 +36,7 @@ public:
   OpenWindow(const nsAString& aUrl);
 
   already_AddRefed<Promise>
-  Claim();
+  Claim(ErrorResult& aRv);
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
