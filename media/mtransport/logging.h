@@ -29,8 +29,11 @@
 
 #define MOZ_MTLOG(level, b) \
   do {                                                                  \
-    std::stringstream str;                                              \
-    str << b;                                                           \
-    PR_LOG(getLogModule(), level, ("%s", str.str().c_str())); } while(0)
+    if (PR_LOG_TEST(getLogModule(), level)) {                           \
+      std::stringstream str;                                            \
+      str << b;                                                         \
+      PR_LOG(getLogModule(), level, ("%s", str.str().c_str()));         \
+    }                                                                   \
+  } while(0)
 
 #endif // logging_h__
