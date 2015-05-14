@@ -69,9 +69,7 @@ private:
                                     mozilla::net::MemoryDownloader::Data aData)
         override;
 
-#if defined(PR_LOGGING)
     nsCString                       mSpec;
-#endif
 
     bool                            mOpened;
 

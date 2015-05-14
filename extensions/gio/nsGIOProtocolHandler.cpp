@@ -28,12 +28,8 @@
 //-----------------------------------------------------------------------------
 
 // NSPR_LOG_MODULES=gio:5
-#ifdef PR_LOGGING
 static PRLogModuleInfo *sGIOLog;
 #define LOG(args) PR_LOG(sGIOLog, PR_LOG_DEBUG, args)
-#else
-#define LOG(args)
-#endif
 
 
 //-----------------------------------------------------------------------------
@@ -906,9 +902,7 @@ NS_IMPL_ISUPPORTS(nsGIOProtocolHandler, nsIProtocolHandler, nsIObserver)
 nsresult
 nsGIOProtocolHandler::Init()
 {
-#ifdef PR_LOGGING
   sGIOLog = PR_NewLogModule("gio");
-#endif
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)
