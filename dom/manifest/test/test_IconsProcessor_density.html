@@ -35,7 +35,7 @@ iconDensityValueTests.forEach((density) => {
   testIcon.icons[0].density = density;
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
-  ise(result.icons[0].density, 1.0, expected);
+  is(result.icons[0].density, 1.0, expected);
 });
 
 testIcon = {
@@ -51,7 +51,7 @@ parseFloatTests.forEach((testNumber) => {
   testIcon.icons[0].density = testNumber;
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
-  ise(result.icons[0].density, parseFloat(testNumber), expected);
+  is(result.icons[0].density, parseFloat(testNumber), expected);
 });
   </script>
 </head>

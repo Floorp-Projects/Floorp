@@ -155,7 +155,7 @@ struct DrawSurfaceOptions {
  * matching DrawTarget. Not adhering to this condition will make a draw call
  * fail.
  */
-class GradientStops : public RefCounted<GradientStops>
+class GradientStops : public external::AtomicRefCounted<GradientStops>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStops)
@@ -318,7 +318,7 @@ class DrawTargetCaptureImpl;
  * which may be used as a source in a SurfacePattern or a DrawSurface call.
  * They cannot be drawn to directly.
  */
-class SourceSurface : public RefCounted<SourceSurface>
+class SourceSurface : public external::AtomicRefCounted<SourceSurface>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurface)
@@ -476,7 +476,7 @@ class FlattenedPath;
 /** The path class is used to create (sets of) figures of any shape that can be
  * filled or stroked to a DrawTarget
  */
-class Path : public RefCounted<Path>
+class Path : public external::AtomicRefCounted<Path>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(Path)
@@ -577,7 +577,7 @@ struct GlyphBuffer
  * at a particular size. It is passed into text drawing calls to describe
  * the font used for the drawing call.
  */
-class ScaledFont : public RefCounted<ScaledFont>
+class ScaledFont : public external::AtomicRefCounted<ScaledFont>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFont)
@@ -622,7 +622,7 @@ protected:
  * parameters. This is because different platforms have unique rendering
  * parameters.
  */
-class GlyphRenderingOptions : public RefCounted<GlyphRenderingOptions>
+class GlyphRenderingOptions : public external::AtomicRefCounted<GlyphRenderingOptions>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptions)
@@ -641,7 +641,7 @@ class DrawTargetCapture;
  * may be used either through a Snapshot or by flushing the target and directly
  * accessing the backing store a DrawTarget was created with.
  */
-class DrawTarget : public RefCounted<DrawTarget>
+class DrawTarget : public external::AtomicRefCounted<DrawTarget>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTarget)

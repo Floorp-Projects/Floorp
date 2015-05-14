@@ -23,14 +23,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=707564
 function test()
 {
   var nav = document.getElementById("t1").contentWindow.navigator;
-  ise(nav.foopy, undefined, "We should have an Xray now");
+  is(nav.foopy, undefined, "We should have an Xray now");
   is(nav.wrappedJSObject.foopy, 5, "We should have the right navigator object");
   var props = Object.getOwnPropertyNames(nav);
   isnot(props.indexOf("mozApps"), -1,
         "Should enumerate a mozApps property on navigator xray");
 
   var nav = document.getElementById("t2").contentWindow.navigator;
-  ise(nav.foopy, undefined, "We should have an Xray now again");
+  is(nav.foopy, undefined, "We should have an Xray now again");
   is(nav.wrappedJSObject.foopy, 5, "We should have the right navigator object again");
   var found = false;
   for (var name in nav) {

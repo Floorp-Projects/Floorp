@@ -24,12 +24,8 @@ extern "C" {
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define OPUS_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
-#else
-#define OPUS_LOG(type, msg)
-#endif
 
 OpusParser::OpusParser():
   mRate(0),

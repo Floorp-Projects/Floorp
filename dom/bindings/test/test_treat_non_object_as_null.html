@@ -17,13 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=952365
     
     (function() {
        onvolumechange = x;
-       ise(onvolumechange, x,
-           "Should preserve an object value when assigning to event handler");
+       is(onvolumechange, x,
+          "Should preserve an object value when assigning to event handler");
        // Test that we don't try to actually call the non-callable object
        window.dispatchEvent(new Event("volumechange"));
        onvolumechange = 5;
-       ise(onvolumechange, null,
-           "Non-object values should become null when assigning to event handler");
+       is(onvolumechange, null,
+          "Non-object values should become null when assigning to event handler");
     })();
   </script>
 </head>

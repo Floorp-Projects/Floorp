@@ -137,7 +137,6 @@ public:
   MediaEngineWebRTCAudioSource(nsIThread* aThread, webrtc::VoiceEngine* aVoiceEnginePtr,
                                int aIndex, const char* name, const char* uuid)
     : MediaEngineAudioSource(kReleased)
-    , mSamples(0)
     , mVoiceEngine(aVoiceEnginePtr)
     , mMonitor("WebRTCMic.Monitor")
     , mThread(aThread)
@@ -198,12 +197,6 @@ public:
 
 protected:
   ~MediaEngineWebRTCAudioSource() { Shutdown(); }
-
-  // mSamples is an int to avoid conversions when comparing/etc to
-  // samplingFreq & length. Making mSamples protected instead of private is a
-  // silly way to avoid -Wunused-private-field warnings when PR_LOGGING is not
-  // #defined. mSamples is not actually expected to be used by a derived class.
-  int mSamples;
 
 private:
   void Init();

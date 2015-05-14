@@ -7,6 +7,7 @@
 typedef long myLong;
 typedef TestInterface AnotherNameForTestInterface;
 typedef TestInterface? NullableTestInterface;
+typedef CustomEventInit TestDictionaryTypedef;
 
 interface TestExternalInterface;
 
@@ -1019,6 +1020,7 @@ dictionary Dict : ParentDict {
   required object requiredObject;
 
   CustomEventInit customEventInit;
+  TestDictionaryTypedef dictionaryTypedef;
 };
 
 dictionary ParentDict : GrandparentDict {

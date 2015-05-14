@@ -14,10 +14,6 @@ class nsINode;
 class nsHTMLEditUtils
 {
 public:
-  // from nsTextEditRules:
-  static bool IsBig(nsIDOMNode *aNode);
-  static bool IsSmall(nsIDOMNode *aNode);
-
   // from nsHTMLEditRules:
   static bool IsInlineStyle(nsINode* aNode);
   static bool IsInlineStyle(nsIDOMNode *aNode);

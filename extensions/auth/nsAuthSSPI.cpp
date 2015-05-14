@@ -478,12 +478,11 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                                             &ignored);
     if (rc == SEC_I_CONTINUE_NEEDED || rc == SEC_E_OK) {
 
-#ifdef PR_LOGGING
         if (rc == SEC_E_OK)
             LOG(("InitializeSecurityContext: succeeded.\n"));
         else
             LOG(("InitializeSecurityContext: continue.\n"));
-#endif
+
         if (sspi_cbt)
             free(sspi_cbt);
             
