@@ -301,7 +301,7 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_UPDATE_TIME> timer;
 
   PRIntervalTime clockStart = 0;
-  if (LOG_ENABLED() || true) {
+  if (LOG_ENABLED()) {
     clockStart = PR_IntervalNow();
   }
 
@@ -344,7 +344,7 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
 
   LOG(("Done applying updates."));
 
-  if (LOG_ENABLED() || true) {
+  if (LOG_ENABLED()) {
     PRIntervalTime clockEnd = PR_IntervalNow();
     LOG(("update took %dms\n",
          PR_IntervalToMilliseconds(clockEnd - clockStart)));
