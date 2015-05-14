@@ -10,6 +10,7 @@ describe("loop.roomViews", function () {
 
   var sandbox, dispatcher, roomStore, activeRoomStore, fakeWindow,
     fakeMozLoop, fakeContextURL;
+  var favicon = "data:image/x-icon;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -20,10 +21,22 @@ describe("loop.roomViews", function () {
       getAudioBlob: sinon.stub(),
       getLoopPref: sinon.stub(),
       getSelectedTabMetadata: sinon.stub().callsArgWith(0, {
+        favicon: favicon,
         previews: [],
         title: ""
       }),
-      isSocialShareButtonAvailable: sinon.stub()
+      isSocialShareButtonAvailable: sinon.stub(),
+      rooms: {
+        get: sinon.stub().callsArgWith(1, null, {
+          roomToken: "fakeToken",
+          roomName: "fakeName",
+          decryptedContext: {
+            roomName: "fakeName",
+            urls: []
+          }
+        }),
+        update: sinon.stub().callsArgWith(2, null)
+      }
     };
 
     fakeWindow = {
@@ -49,7 +62,7 @@ describe("loop.roomViews", function () {
       sdkDriver: {}
     });
     roomStore = new loop.store.RoomStore(dispatcher, {
-      mozLoop: {},
+      mozLoop: fakeMozLoop,
       activeRoomStore: activeRoomStore
     });
 
@@ -722,6 +735,32 @@ describe("loop.roomViews", function () {
 
         var checkbox = view.getDOMNode().querySelector(".checkbox");
         expect(checkbox.classList.contains("disabled")).to.eql(true);
+      });
+
+      it("should render the editMode view when the edit button is clicked", function(next) {
+        var roomName = "Hello, is it me you're looking for?";
+        view = mountTestComponent({
+          roomData: {
+            roomToken: "fakeToken",
+            roomName: roomName,
+            roomContextUrls: [fakeContextURL]
+          }
+        });
+
+        // Switch to editMode via setting the prop, since we can control that
+        // better.
+        view.setProps({ editMode: true }, function() {
+          // First check if availableContext is set correctly.
+          expect(view.state.availableContext).to.not.eql(null);
+          expect(view.state.availableContext.previewImage).to.eql(favicon);
+
+          var node = view.getDOMNode();
+          expect(node.querySelector(".room-context-name").value).to.eql(roomName);
+          expect(node.querySelector(".room-context-url").value).to.eql(fakeContextURL.location);
+          expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
+
+          next();
+        });
       });
     });
 
