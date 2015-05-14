@@ -167,13 +167,11 @@ protected:
 
 // General purpose runnable with an eye toward lambdas
 
-namespace CallbackRunnable
-{
 template<typename OnRunType>
-class Impl : public nsRunnable
+class LambdaRunnable : public nsRunnable
 {
 public:
-  explicit Impl(OnRunType& aOnRun) : mOnRun(aOnRun) {}
+  explicit LambdaRunnable(OnRunType& aOnRun) : mOnRun(aOnRun) {}
 private:
   NS_IMETHODIMP
   Run()
@@ -184,11 +182,10 @@ private:
 };
 
 template<typename OnRunType>
-Impl<OnRunType>*
-New(OnRunType aOnRun)
+LambdaRunnable<OnRunType>*
+NewRunnableFrom(OnRunType aOnRun)
 {
-  return new Impl<OnRunType>(aOnRun);
-}
+  return new LambdaRunnable<OnRunType>(aOnRun);
 }
 
 }
