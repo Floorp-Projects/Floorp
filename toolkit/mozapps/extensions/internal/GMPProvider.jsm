@@ -48,7 +48,8 @@ const GMP_PLUGINS = [
     // localisation.
     licenseURL:      "chrome://mozapps/content/extensions/OpenH264-license.txt",
     homepageURL:     "http://www.openh264.org/",
-    optionsURL:      "chrome://mozapps/content/extensions/gmpPrefs.xul"
+    optionsURL:      "chrome://mozapps/content/extensions/gmpPrefs.xul",
+    missingKey:      "VIDEO_OPENH264_GMP_DISAPPEARED",
   },
   {
     id:              EME_ADOBE_ID,
@@ -62,13 +63,16 @@ const GMP_PLUGINS = [
     licenseURL:      "http://help.adobe.com/en_US/primetime/drm/HTML5_CDM_EULA/index.html",
     homepageURL:     "http://help.adobe.com/en_US/primetime/drm/HTML5_CDM",
     optionsURL:      "chrome://mozapps/content/extensions/gmpPrefs.xul",
-    isEME:           true
+    isEME:           true,
+    missingKey:      "VIDEO_ADOBE_GMP_DISAPPEARED",
   }];
 
 XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
   () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
 XPCOMUtils.defineLazyGetter(this, "gmpService",
   () => Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(Ci.mozIGeckoMediaPluginChromeService));
+
+XPCOMUtils.defineLazyGetter(this, "telemetryService", () => Services.telemetry);
 
 let messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
                        .getService(Ci.nsIMessageListenerManager);
@@ -138,6 +142,10 @@ GMPWrapper.prototype = {
                                                 null, this._plugin.id));
     }
     return this._gmpPath;
+  },
+
+  get missingKey() {
+    return this._plugin.missingKey;
   },
 
   get id() { return this._plugin.id; },
@@ -512,6 +520,7 @@ let GMPProvider = {
         if (!wrapper.validate()) {
           this._log.info("startup - gmp " + plugin.id +
                          " missing lib and/or info files, uninstalling");
+          telemetryService.getHistogramById(wrapper.missingKey).add(true);
           wrapper.uninstallPlugin();
           continue;
         }
@@ -630,6 +639,7 @@ let GMPProvider = {
         optionsURL: aPlugin.optionsURL,
         wrapper: null,
         isEME: aPlugin.isEME,
+        missingKey: aPlugin.missingKey,
       };
       plugin.fullDescription = this.generateFullDescription(aPlugin);
       plugin.wrapper = new GMPWrapper(plugin);
