@@ -108,6 +108,9 @@
 .pkt_ext_containersignup .pkt_ext_learnmore {
     font-size: 12px;
 }
+.pkt_ext_containersignup .pkt_ext_learnmoreinactive {
+    visibility: hidden;
+}
 .pkt_ext_signupdetail h4 {
     font-size: 12px;
     font-weight: normal;
@@ -355,6 +358,20 @@
 .pkt_ext_signup_ja .signup-btn-firefox .text,
 .pkt_ext_signup_ru .signup-btn-firefox .text {
     left: 15px;
+}
+.pkt_ext_signup_de .signup-btn-firefox .logo,
+.pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-firefox .logo,
+.pkt_ext_signup_ja .signup-btn-firefox .logo,
+.pkt_ext_signup_ru .signup-btn-firefox .logo {
+    height: 2.4em;
+}
+@media (min-resolution: 1.1dppx) {
+    .pkt_ext_signup_de .signup-btn-firefox .logo,
+    .pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-firefox .logo,
+    .pkt_ext_signup_ja .signup-btn-firefox .logo,
+    .pkt_ext_signup_ru .signup-btn-firefox .logo {
+        height: 2.5em;
+    }
 }
 .pkt_ext_signup_de .signup-btn-email,
 .pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-email,
