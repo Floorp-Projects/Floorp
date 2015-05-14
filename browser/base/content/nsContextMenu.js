@@ -191,6 +191,8 @@ nsContextMenu.prototype = {
                      getService(Ci.nsIXULChromeRegistry).
                      getSelectedLocale("browser");
         if (locale != "en-US") {
+          if (locale == "ja-JP-mac")
+            locale = "ja";
           let url = "chrome://browser/content/browser-pocket-" + locale + ".properties";
           let bundle = Services.strings.createBundle(url);
           let item = document.getElementById("context-pocket");
