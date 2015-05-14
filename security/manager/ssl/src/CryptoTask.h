@@ -50,7 +50,7 @@ public:
   {
     static_assert(LEN <= 15,
                   "Thread name must be no more than 15 characters");
-    return Dispatch(NS_LITERAL_CSTRING(taskThreadName));
+    return Dispatch(nsDependentCString(taskThreadName, LEN - 1));
   }
 
   nsresult Dispatch(const nsACString& taskThreadName);
