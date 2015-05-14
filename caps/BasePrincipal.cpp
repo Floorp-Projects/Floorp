@@ -57,6 +57,17 @@ OriginAttributes::Deserialize(nsIObjectInputStream* aStream)
 NS_IMETHODIMP
 BasePrincipal::GetOrigin(nsACString& aOrigin)
 {
+  nsresult rv = GetOriginInternal(aOrigin);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString suffix;
+  mOriginAttributes.CreateSuffix(suffix);
+  aOrigin.Append(suffix);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetOriginNoSuffix(nsACString& aOrigin)
+{
   return GetOriginInternal(aOrigin);
 }
 

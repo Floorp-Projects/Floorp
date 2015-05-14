@@ -156,7 +156,7 @@ GetHostForPrincipal(nsIPrincipal* aPrincipal, nsACString& aHost)
   }
 
   // Some entries like "file://" uses the origin.
-  rv = aPrincipal->GetOrigin(aHost);
+  rv = aPrincipal->GetOriginNoSuffix(aHost);
   if (NS_SUCCEEDED(rv) && !aHost.IsEmpty()) {
     return NS_OK;
   }
