@@ -41,8 +41,7 @@ TestDescription.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationChannelDescription]),
 }
 
-function loopOfferAnser()
-{
+function loopOfferAnser() {
   const CONTROLLER_CONTROL_CHANNEL_PORT = 36777;
   const PRESENTER_CONTROL_CHANNEL_PORT = 36888;
 
@@ -58,8 +57,6 @@ function loopOfferAnser()
                                    'presenterControlChannelClose']);
   let controllerDevice, controllerControlChannel;
   let presenterDevice, presenterControlChannel;
-
-  Services.prefs.setBoolPref("dom.presentation.tcp_server.debug", true);
 
   tps = Cc["@mozilla.org/presentation-device/tcp-presentation-server;1"]
         .createInstance(Ci.nsITCPPresentationServer);
@@ -171,20 +168,50 @@ function loopOfferAnser()
   };
 }
 
-function shutdown()
-{
+function shutdownAndOneMoreLoop() {
+  const PRESENTER_CONTROL_CHANNEL_PORT = 36888;
+
+  let isFirstClose = true;
+  let expectedReason;
   tps.listener = {
     onClose: function(aReason) {
-      Assert.equal(aReason, Cr.NS_OK, 'TCPPresentationServer close success');
-      Services.prefs.clearUserPref("dom.presentation.tcp_server.debug");
-      run_next_test();
+      expectedReason = isFirstClose ? Cr.NS_ERROR_ABORT // non-manually closed
+                                    : Cr.NS_OK;         // manually closed
+      Assert.equal(aReason, expectedReason, 'TCPPresentationServer close as expected');
+      if (isFirstClose){
+        isFirstClose = false;
+        try {
+          tps.init('controllerID', PRESENTER_CONTROL_CHANNEL_PORT);
+          tps.close();
+        } catch (e) {
+          Assert.ok(false, 'TCP presentation init fail:' + e);
+          run_next_test();
+        }
+      } else {
+        run_next_test();
+      }
     },
   }
-  tps.close();
+
+  // A fake event to pretend the server socket is closed non-manually
+  tps.QueryInterface(Ci.nsIServerSocketListener)
+     .onStopListening(null, Cr.NS_ERROR_ABORT);
 }
 
+function setPref() {
+  Services.prefs.setBoolPref("dom.presentation.tcp_server.debug", true);
+  run_next_test();
+}
+
+function clearPref() {
+  Services.prefs.clearUserPref("dom.presentation.tcp_server.debug");
+  run_next_test();
+}
+
+add_test(setPref);
 add_test(loopOfferAnser);
-add_test(shutdown);
+add_test(shutdownAndOneMoreLoop);
+add_test(clearPref);
 
 function run_test() {
   run_next_test();
