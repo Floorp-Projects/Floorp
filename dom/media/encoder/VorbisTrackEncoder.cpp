@@ -17,23 +17,17 @@ static const float BASE_QUALITY = 0.4f;
 namespace mozilla {
 
 #undef LOG
-#ifdef PR_LOGGING
 PRLogModuleInfo* gVorbisTrackEncoderLog;
 #define VORBISLOG(msg, ...) PR_LOG(gVorbisTrackEncoderLog, PR_LOG_DEBUG, \
                              (msg, ##__VA_ARGS__))
-#else
-#define VORBISLOG(msg, ...)
-#endif
 
 VorbisTrackEncoder::VorbisTrackEncoder()
   : AudioTrackEncoder()
 {
   MOZ_COUNT_CTOR(VorbisTrackEncoder);
-#ifdef PR_LOGGING
   if (!gVorbisTrackEncoderLog) {
     gVorbisTrackEncoderLog = PR_NewLogModule("VorbisTrackEncoder");
   }
-#endif
 }
 
 VorbisTrackEncoder::~VorbisTrackEncoder()

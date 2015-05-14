@@ -530,7 +530,10 @@ function test_newChannel_with_string()
                                    null,      // aTriggeringPrincipal
                                    Ci.nsILoadInfo.SEC_NORMAL,
                                    Ci.nsIContentPolicy.TYPE_OTHER);
-  let NetUtilChannel = NetUtil.newChannel(TEST_SPEC);
+  let NetUtilChannel = NetUtil.newChannel({
+    uri: TEST_SPEC,
+    loadUsingSystemPrincipal: true
+  });
   do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
 
   run_next_test();
@@ -549,29 +552,10 @@ function test_newChannel_with_nsIURI()
                                                         null,      // aTriggeringPrincipal
                                                         Ci.nsILoadInfo.SEC_NORMAL,
                                                         Ci.nsIContentPolicy.TYPE_OTHER);
-  let NetUtilChannel = NetUtil.newChannel(uri);
-  do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
-
-  run_next_test();
-}
-
-function test_newChannel_with_nsIFile()
-{
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
-  file.append("NetUtil-test-file.tmp");
-
-  // Check that we get the same URI back from channel the IO service creates and
-  // the channel the utility method creates.
-  let uri = NetUtil.newURI(file);
-  let iosChannel = NetUtil.ioService.newChannelFromURI2(uri,
-                                                        null,      // aLoadingNode
-                                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                                        null,      // aTriggeringPrincipal
-                                                        Ci.nsILoadInfo.SEC_NORMAL,
-                                                        Ci.nsIContentPolicy.TYPE_OTHER);
-  let NetUtilChannel = NetUtil.newChannel(file);
+  let NetUtilChannel = NetUtil.newChannel({
+    uri: uri,
+    loadUsingSystemPrincipal: true
+  });
   do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
 
   run_next_test();
@@ -802,7 +786,6 @@ function test_readInputStreamToString_invalid_sequence()
   test_newChannel_no_specifier,
   test_newChannel_with_string,
   test_newChannel_with_nsIURI,
-  test_newChannel_with_nsIFile,
   test_newChannel_with_options,
   test_newChannel_with_wrong_options,
   test_readInputStreamToString,

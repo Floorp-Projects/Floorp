@@ -312,8 +312,8 @@ loop.roomViews = (function(mozL10n) {
         // checkbox will be disabled in that case.
         if (nextProps.editMode) {
           this.props.mozLoop.getSelectedTabMetadata(function(metadata) {
-            var previewImage = metadata.previews.length ? metadata.previews[0] : "";
-            var description = metadata.description || metadata.title;
+            var previewImage = metadata.favicon || "";
+            var description = metadata.title || metadata.description;
             var url = metadata.url;
             this.setState({
               availableContext: {
@@ -480,8 +480,10 @@ loop.roomViews = (function(mozL10n) {
         locationData = checkboxLabel = sharedUtils.formatURL(location);
       }
       if (!checkboxLabel) {
-        checkboxLabel = sharedUtils.formatURL((this.state.availableContext ?
-          this.state.availableContext.url : ""));
+        try {
+          checkboxLabel = sharedUtils.formatURL((this.state.availableContext ?
+            this.state.availableContext.url : ""));
+        } catch (ex) {}
       }
 
       var cx = React.addons.classSet;

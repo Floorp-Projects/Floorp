@@ -49,9 +49,15 @@ addMessageListener("ContextMenu:DoCustomCommand", function(message) {
   PageMenuChild.executeMenu(message.data);
 });
 
+addMessageListener("RemoteLogins:fillForm", function(message) {
+  LoginManagerContent.receiveMessage(message, content);
+});
 addEventListener("DOMFormHasPassword", function(event) {
+  LoginManagerContent.onDOMFormHasPassword(event, content);
   InsecurePasswordUtils.checkForInsecurePasswords(event.target);
-  LoginManagerContent.onFormPassword(event);
+});
+addEventListener("pageshow", function(event) {
+  LoginManagerContent.onPageShow(event, content);
 });
 addEventListener("DOMAutoComplete", function(event) {
   LoginManagerContent.onUsernameInput(event);

@@ -689,7 +689,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MediaRecorder",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MediaSource", android: false, linux: false, release: false},
+    {name: "MediaSource", android: true, linux: false, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MediaStream",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -915,11 +915,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Selection",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorker", nightly: true, b2g: false},
+    {name: "ServiceWorker", disabled: true, b2g: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorkerContainer", nightly: true, b2g: false},
+    {name: "ServiceWorkerContainer", disabled: true, b2g: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ServiceWorkerRegistration", nightly: true, b2g: false},
+    {name: "ServiceWorkerRegistration", disabled: true, b2g: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SettingsLock",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -933,9 +933,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SimpleTest", xbl: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SourceBuffer", android: false, linux: false, release: false},
+    {name: "SourceBuffer", android: true, linux: false, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SourceBufferList", android: false, linux: false, release: false},
+    {name: "SourceBufferList", android: true, linux: false, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SpeechSynthesisEvent", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1287,7 +1287,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ValidityState",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VideoPlaybackQuality", android: false, linux: false, release: false},
+    {name: "VideoPlaybackQuality", android: true, linux: false, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "VideoStreamTrack",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1390,8 +1390,8 @@ function createInterfaceMap(isXBLScope) {
   var isB2G = !isDesktop && !navigator.userAgent.includes("Android");
   var isMac = /Mac OS/.test(navigator.oscpu);
   var isWindows = /Windows/.test(navigator.oscpu);
-  var isLinux = /Linux/.test(navigator.oscpu);
   var isAndroid = navigator.userAgent.includes("Android");
+  var isLinux = /Linux/.test(navigator.oscpu) && !isAndroid;
   var hasPermission = function (aPermissions) {
     var result = false;
     for (var p of aPermissions) {

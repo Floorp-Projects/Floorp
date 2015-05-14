@@ -14,7 +14,8 @@
 #
 #   Parameters accepted:
 #     -c           : Copy debug info files to the same directory structure
-#                    as sym files
+#                    as sym files. On Windows, this will also copy
+#                    binaries into the symbol store.
 #     -a "<archs>" : Run dump_syms -a <arch> for each space separated
 #                    cpu architecture in <archs> (only on OS X)
 #     -s <srcdir>  : Use <srcdir> as the top source directory to
@@ -535,7 +536,7 @@ class Dumper:
         return ""
 
     # subclasses override this if they want to support this
-    def CopyDebug(self, file, debug_file, guid):
+    def CopyDebug(self, file, debug_file, guid, code_file, code_id):
         pass
 
     def Finish(self, stop_pool=True):
@@ -609,6 +610,7 @@ class Dumper:
         result = { 'status' : False, 'after' : after, 'after_arg' : after_arg, 'files' : files }
 
         sourceFileStream = ''
+        code_id, code_file = None, None
         for file in files:
             # files is a tuple of files, containing fallbacks in case the first file doesn't process successfully
             try:
@@ -638,9 +640,10 @@ class Dumper:
                             # FILE index filename
                             (x, index, filename) = line.rstrip().split(None, 2)
                             filename = os.path.normpath(self.FixFilenameCase(filename))
+                            # We want original file paths for the source server.
+                            sourcepath = filename
                             if filename in self.file_mapping:
                                 filename = self.file_mapping[filename]
-                            sourcepath = filename
                             if self.vcsinfo:
                                 (filename, rootname) = GetVCSFilename(filename, self.srcdirs)
                                 # sets vcs_root in case the loop through files were to end on an empty rootname
@@ -652,6 +655,14 @@ class Dumper:
                                 (ver, checkout, source_file, revision) = filename.split(":", 3)
                                 sourceFileStream += sourcepath + "*" + source_file + '*' + revision + "\r\n"
                             f.write("FILE %s %s\n" % (index, filename))
+                        elif line.startswith("INFO CODE_ID "):
+                            # INFO CODE_ID code_id code_file
+                            # This gives some info we can use to
+                            # store binaries in the symbol store.
+                            bits = line.rstrip().split(None, 3)
+                            if len(bits) == 4:
+                                code_id, code_file = bits[2:]
+                            f.write(line)
                         else:
                             # pass through all other lines unchanged
                             f.write(line)
@@ -667,7 +678,8 @@ class Dumper:
                         self.SourceServerIndexing(file, guid, sourceFileStream, vcs_root)
                     # only copy debug the first time if we have multiple architectures
                     if self.copy_debug and arch_num == 0:
-                        self.CopyDebug(file, debug_file, guid)
+                        self.CopyDebug(file, debug_file, guid,
+                                       code_file, code_id)
             except StopIteration:
                 pass
             except Exception as e:
@@ -719,26 +731,53 @@ class Dumper_Win32(Dumper):
         self.fixedFilenameCaseCache[file] = result
         return result
 
-    def CopyDebug(self, file, debug_file, guid):
+    def CopyDebug(self, file, debug_file, guid, code_file, code_id):
+        def compress(path):
+            compressed_file = path[:-1] + '_'
+            # ignore makecab's output
+            success = subprocess.call(["makecab.exe", "/D",
+                                       "CompressionType=LZX", "/D",
+                                       "CompressionMemory=21",
+                                       path, compressed_file],
+                                      stdout=open("NUL:","w"),
+                                      stderr=subprocess.STDOUT)
+            if success == 0 and os.path.exists(compressed_file):
+                os.unlink(path)
+                return True
+            return False
+
         rel_path = os.path.join(debug_file,
                                 guid,
                                 debug_file).replace("\\", "/")
         full_path = os.path.normpath(os.path.join(self.symbol_path,
                                                   rel_path))
         shutil.copyfile(file, full_path)
-        # try compressing it
-        compressed_file = os.path.splitext(full_path)[0] + ".pd_"
-        # ignore makecab's output
-        success = subprocess.call(["makecab.exe", "/D", "CompressionType=LZX", "/D",
-                                   "CompressionMemory=21",
-                                   full_path, compressed_file],
-                                  stdout=open("NUL:","w"), stderr=subprocess.STDOUT)
-        if success == 0 and os.path.exists(compressed_file):
-            os.unlink(full_path)
-            self.output(sys.stdout, os.path.splitext(rel_path)[0] + ".pd_")
+        if compress(full_path):
+            self.output(sys.stdout, rel_path[:-1] + '_')
         else:
             self.output(sys.stdout, rel_path)
-        
+
+        # Copy the binary file as well
+        if code_file and code_id:
+            full_code_path = os.path.join(os.path.dirname(file),
+                                          code_file)
+            if os.path.exists(full_code_path):
+                rel_path = os.path.join(code_file,
+                                        code_id,
+                                        code_file).replace("\\", "/")
+                full_path = os.path.normpath(os.path.join(self.symbol_path,
+                                                          rel_path))
+                try:
+                    os.makedirs(os.path.dirname(full_path))
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
+                shutil.copyfile(full_code_path, full_path)
+                if compress(full_path):
+                    self.output(sys.stdout, rel_path[:-1] + '_')
+                else:
+                    self.output(sys.stdout, rel_path)
+
     def SourceServerIndexing(self, debug_file, guid, sourceFileStream, vcs_root):
         # Creates a .pdb.stream file in the mozilla\objdir to be used for source indexing
         debug_file = os.path.abspath(debug_file)
@@ -769,7 +808,7 @@ class Dumper_Linux(Dumper):
             return self.RunFileCommand(file).startswith("ELF")
         return False
 
-    def CopyDebug(self, file, debug_file, guid):
+    def CopyDebug(self, file, debug_file, guid, code_file, code_id):
         # We want to strip out the debug info, and add a
         # .gnu_debuglink section to the object, so the debugger can
         # actually load our debug info later.
@@ -880,7 +919,7 @@ class Dumper_Mac(Dumper):
         result['files'] = (dsymbundle, file)
         return result
 
-    def CopyDebug(self, file, debug_file, guid):
+    def CopyDebug(self, file, debug_file, guid, code_file, code_id):
         """ProcessFiles has already produced a dSYM bundle, so we should just
         copy that to the destination directory. However, we'll package it
         into a .tar.bz2 because the debug symbols are pretty huge, and

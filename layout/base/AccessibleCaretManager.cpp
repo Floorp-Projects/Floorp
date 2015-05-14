@@ -21,8 +21,6 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
-
 #undef AC_LOG
 #define AC_LOG(message, ...)                                                   \
   AC_LOG_BASE("AccessibleCaretManager (%p): " message, this, ##__VA_ARGS__);
@@ -30,8 +28,6 @@ namespace mozilla {
 #undef AC_LOGV
 #define AC_LOGV(message, ...)                                                  \
   AC_LOGV_BASE("AccessibleCaretManager (%p): " message, this, ##__VA_ARGS__);
-
-#endif // #ifdef PR_LOGGING
 
 using namespace dom;
 using Appearance = AccessibleCaret::Appearance;

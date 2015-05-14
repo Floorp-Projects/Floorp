@@ -119,6 +119,7 @@ TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
     } else {
       mTelephony->RemoveCall(this);
     }
+    UpdateDisconnectedReason(NS_LITERAL_STRING("NormalCallClearingError"));
   } else if (!mLive) {
     mLive = true;
     if (mGroup) {
@@ -195,23 +196,16 @@ TelephonyCall::NotifyError(const nsAString& aError)
 void
 TelephonyCall::UpdateDisconnectedReason(const nsAString& aDisconnectedReason)
 {
-  NS_ASSERTION(Substring(aDisconnectedReason,
-                         aDisconnectedReason.Length() - 5).EqualsLiteral("Error"),
+  NS_ASSERTION(Substring(aDisconnectedReason, aDisconnectedReason.Length() - 5).EqualsLiteral("Error"),
                "Disconnected reason should end with 'Error'");
 
-  if (!mDisconnectedReason.IsNull()) {
-    return;
-  }
-
-  // There is no 'Error' suffix in the corresponding enum. We should skip
-  // that part for comparison.
-  CONVERT_STRING_TO_NULLABLE_ENUM(
-      Substring(aDisconnectedReason, 0, aDisconnectedReason.Length() - 5),
-      TelephonyCallDisconnectedReason,
-      mDisconnectedReason);
-
-  if (!aDisconnectedReason.EqualsLiteral("NormalCallClearingError")) {
-    NotifyError(aDisconnectedReason);
+  if (mDisconnectedReason.IsNull()) {
+    // There is no 'Error' suffix in the corresponding enum. We should skip
+    // that part for comparison.
+    CONVERT_STRING_TO_NULLABLE_ENUM(
+        Substring(aDisconnectedReason, 0, aDisconnectedReason.Length() - 5),
+        TelephonyCallDisconnectedReason,
+        mDisconnectedReason);
   }
 }
 

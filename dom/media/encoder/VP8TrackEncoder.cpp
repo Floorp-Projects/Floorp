@@ -15,14 +15,10 @@
 
 namespace mozilla {
 
-#ifdef PR_LOGGING
 PRLogModuleInfo* gVP8TrackEncoderLog;
 #define VP8LOG(msg, ...) PR_LOG(gVP8TrackEncoderLog, PR_LOG_DEBUG, \
                                   (msg, ##__VA_ARGS__))
 // Debug logging macro with object pointer and class name.
-#else
-#define VP8LOG(msg, ...)
-#endif
 
 #define DEFAULT_BITRATE 2500 // in kbit/s
 #define DEFAULT_ENCODE_FRAMERATE 30
@@ -38,11 +34,9 @@ VP8TrackEncoder::VP8TrackEncoder()
   , mVPXImageWrapper(new vpx_image_t())
 {
   MOZ_COUNT_CTOR(VP8TrackEncoder);
-#ifdef PR_LOGGING
   if (!gVP8TrackEncoderLog) {
     gVP8TrackEncoderLog = PR_NewLogModule("VP8TrackEncoder");
   }
-#endif
 }
 
 VP8TrackEncoder::~VP8TrackEncoder()

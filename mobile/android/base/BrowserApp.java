@@ -914,8 +914,9 @@ public class BrowserApp extends GeckoApp
         checkFirstrun(this, new SafeIntent(getIntent()));
     }
 
-    private void processTabQueue() {
-        if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_ANDROID_TAB_QUEUE) {
+    @Override
+    protected void processTabQueue() {
+        if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_ANDROID_TAB_QUEUE && mInitialized) {
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
@@ -927,7 +928,8 @@ public class BrowserApp extends GeckoApp
         }
     }
 
-    private void openQueuedTabs() {
+    @Override
+    protected void openQueuedTabs() {
         ThreadUtils.assertNotOnUiThread();
 
         int queuedTabCount = TabQueueHelper.getTabQueueLength(BrowserApp.this);

@@ -6685,11 +6685,7 @@ nsDocShell::DoAppRedirectIfNeeded(nsIURI* aURI,
                                   nsIDocShellLoadInfo* aLoadInfo,
                                   bool aFirstParty)
 {
-  uint32_t appId;
-  nsresult rv = GetAppId(&appId);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
+  uint32_t appId = nsIDocShell::GetAppId();
 
   if (appId != nsIScriptSecurityManager::NO_APP_ID &&
       appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
@@ -6697,7 +6693,7 @@ nsDocShell::DoAppRedirectIfNeeded(nsIURI* aURI,
       do_GetService(APPS_SERVICE_CONTRACTID);
     NS_ASSERTION(appsService, "No AppsService available");
     nsCOMPtr<nsIURI> redirect;
-    rv = appsService->GetRedirect(appId, aURI, getter_AddRefs(redirect));
+    nsresult rv = appsService->GetRedirect(appId, aURI, getter_AddRefs(redirect));
     if (NS_SUCCEEDED(rv) && redirect) {
       rv = LoadURI(redirect, aLoadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
                    aFirstParty);
@@ -13845,9 +13841,7 @@ nsDocShell::GetAppId(uint32_t* aAppId)
 NS_IMETHODIMP
 nsDocShell::GetAppManifestURL(nsAString& aAppManifestURL)
 {
-  uint32_t appId;
-  GetAppId(&appId);
-
+  uint32_t appId = nsIDocShell::GetAppId();
   if (appId != nsIScriptSecurityManager::NO_APP_ID &&
       appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
     nsCOMPtr<nsIAppsService> appsService =

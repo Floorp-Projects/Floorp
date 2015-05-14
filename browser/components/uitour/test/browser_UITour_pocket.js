@@ -16,7 +16,7 @@ function test() {
 
 let tests = [
   taskify(function* test_menu_show_navbar() {
-    ise(button.open, false, "Menu should initially be closed");
+    is(button.open, false, "Menu should initially be closed");
     gContentAPI.showMenu("pocket");
 
     // The panel gets created dynamically.
@@ -36,7 +36,7 @@ let tests = [
   taskify(function* test_menu_show_appMenu() {
     CustomizableUI.addWidgetToArea("pocket-button", CustomizableUI.AREA_PANEL);
 
-    ise(PanelUI.multiView.hasAttribute("panelopen"), false, "Multiview should initially be closed");
+    is(PanelUI.multiView.hasAttribute("panelopen"), false, "Multiview should initially be closed");
     gContentAPI.showMenu("pocket");
 
     yield waitForConditionPromise(() => {
