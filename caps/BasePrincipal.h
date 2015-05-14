@@ -23,10 +23,7 @@ namespace mozilla {
 class BasePrincipal : public nsJSPrincipals
 {
 public:
-  BasePrincipal()
-    : mAppId(nsIScriptSecurityManager::NO_APP_ID)
-    , mIsInBrowserElement(false)
-  {}
+  BasePrincipal() {}
 
   enum DocumentDomainConsideration { DontConsiderDocumentDomain, ConsiderDocumentDomain};
   bool Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration);
@@ -48,14 +45,35 @@ public:
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
 
+  struct OriginAttributes {
+    uint32_t mAppId;
+    bool mIsInBrowserElement;
+
+    OriginAttributes() : mAppId(nsIScriptSecurityManager::NO_APP_ID), mIsInBrowserElement(false) {}
+    OriginAttributes(uint32_t aAppId, bool aIsInBrowserElement)
+      : mAppId(aAppId), mIsInBrowserElement(aIsInBrowserElement) {}
+    bool operator==(const OriginAttributes& aOther) const
+    {
+      return mAppId == aOther.mAppId &&
+             mIsInBrowserElement == aOther.mIsInBrowserElement;
+    }
+    bool operator!=(const OriginAttributes& aOther) const
+    {
+      return !(*this == aOther);
+    }
+  };
+
+  const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
+  uint32_t AppId() const { return mOriginAttributes.mAppId; }
+  bool IsInBrowserElement() const { return mOriginAttributes.mIsInBrowserElement; }
+
 protected:
   virtual ~BasePrincipal() {}
 
   virtual bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsider) = 0;
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
-  uint32_t mAppId;
-  bool mIsInBrowserElement;
+  OriginAttributes mOriginAttributes;
 };
 
 } // namespace mozilla

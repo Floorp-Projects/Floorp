@@ -78,9 +78,7 @@ nsPrincipal::~nsPrincipal()
 { }
 
 nsresult
-nsPrincipal::Init(nsIURI *aCodebase,
-                  uint32_t aAppId,
-                  bool aInMozBrowser)
+nsPrincipal::Init(nsIURI *aCodebase, const OriginAttributes& aOriginAttributes)
 {
   NS_ENSURE_STATE(!mInitialized);
   NS_ENSURE_ARG(aCodebase);
@@ -89,9 +87,7 @@ nsPrincipal::Init(nsIURI *aCodebase,
 
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
-
-  mAppId = aAppId;
-  mIsInBrowserElement = aInMozBrowser;
+  mOriginAttributes = aOriginAttributes;
 
   return NS_OK;
 }
@@ -172,8 +168,8 @@ nsPrincipal::SubsumesInternal(nsIPrincipal* aOther,
     return true;
   }
 
-  if (!nsScriptSecurityManager::AppAttributesEqual(this, aOther)) {
-      return false;
+  if (OriginAttributesRef() != Cast(aOther)->OriginAttributesRef()) {
+    return false;
   }
 
   // If either the subject or the object has changed its principal by
@@ -380,7 +376,8 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   // This may be null.
   nsCOMPtr<nsIContentSecurityPolicy> csp = do_QueryInterface(supports, &rv);
 
-  rv = Init(codebase, appId, inMozBrowser);
+  OriginAttributes attrs(appId, inMozBrowser);
+  rv = Init(codebase, attrs);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = SetCsp(csp);
@@ -414,8 +411,8 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
     return rv;
   }
 
-  aStream->Write32(mAppId);
-  aStream->WriteBoolean(mIsInBrowserElement);
+  aStream->Write32(AppId());
+  aStream->WriteBoolean(IsInBrowserElement());
 
   rv = NS_WriteOptionalCompoundObject(aStream, mCSP,
                                       NS_GET_IID(nsIContentSecurityPolicy),
