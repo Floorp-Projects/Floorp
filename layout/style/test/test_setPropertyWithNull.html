@@ -14,21 +14,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830260
     var div = document.createElement("div");
     div.style.color = "green";
     div.style.color = "null";
-    ise(div.style.color, "green", 'Assigning "null" as a color should not parse');
+    is(div.style.color, "green", 'Assigning "null" as a color should not parse');
     div.style.setProperty("color", "null");
-    ise(div.style.color, "green",
-        'Passing "null" as a color to setProperty should not parse');
+    is(div.style.color, "green",
+       'Passing "null" as a color to setProperty should not parse');
 
     div.style.setProperty("color", null);
-    ise(div.style.color, "",
-        'Passing null as a color to setProperty should remove the property');
+    is(div.style.color, "",
+       'Passing null as a color to setProperty should remove the property');
 
     div.style.color = "green";
-    ise(div.style.color, "green", 'Assigning "green" as a color should parse');
+    is(div.style.color, "green", 'Assigning "green" as a color should parse');
 
     div.style.color = null;
-    ise(div.style.color, "",
-        'Assigning null as a color should remove the property');
+    is(div.style.color, "",
+       'Assigning null as a color should remove the property');
 
 
 

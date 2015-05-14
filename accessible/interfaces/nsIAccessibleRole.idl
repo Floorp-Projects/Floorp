@@ -8,7 +8,7 @@
 /**
  * Defines cross platform (Gecko) roles.
  */
-[scriptable, uuid(00f9e831-3198-40b7-9186-5251474d4d7a)]
+[scriptable, uuid(94add87a-190c-443e-9549-d11131affb2a)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -974,4 +974,10 @@ interface nsIAccessibleRole : nsISupports
    * A group containing radio buttons
    */
   const unsigned long ROLE_RADIO_GROUP = 168;
+
+  /**
+   * A text container exposing brief amount of information. See related
+   * TEXT_CONTAINER role.
+   */
+  const unsigned long ROLE_TEXT = 169;
 };

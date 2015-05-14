@@ -15,20 +15,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
   SimpleTest.waitForExplicitFinish();
 
   function checkExn(lineNumber, name, message, code, filename, testNumber, stack, exn) {
-    ise(exn.lineNumber, lineNumber,
-        "Should have the right line number in test " + testNumber);
-    ise(exn.name, name,
-        "Should have the right exception name in test " + testNumber);
-    ise("filename" in exn ? exn.filename : exn.fileName, filename,
-        "Should have the right file name in test " + testNumber);
-    ise(exn.message, message,
-        "Should have the right message in test " + testNumber);
-    ise(exn.code, code, "Should have the right .code in test " + testNumber);
+    is(exn.lineNumber, lineNumber,
+       "Should have the right line number in test " + testNumber);
+    is(exn.name, name,
+       "Should have the right exception name in test " + testNumber);
+    is("filename" in exn ? exn.filename : exn.fileName, filename,
+       "Should have the right file name in test " + testNumber);
+    is(exn.message, message,
+       "Should have the right message in test " + testNumber);
+    is(exn.code, code, "Should have the right .code in test " + testNumber);
     if (message === "") {
-      ise(exn.name, "NS_ERROR_UNEXPECTED",
-          "Should have one of our synthetic exceptions in test " + testNumber);
+      is(exn.name, "NS_ERROR_UNEXPECTED",
+         "Should have one of our synthetic exceptions in test " + testNumber);
     }
-    ise(exn.stack, stack, "Should have the right stack in test " + testNumber);
+    is(exn.stack, stack, "Should have the right stack in test " + testNumber);
   }
 
   function ensurePromiseFail(testNumber, value) {

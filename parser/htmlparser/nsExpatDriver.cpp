@@ -33,7 +33,6 @@
 
 static const char16_t kUTF16[] = { 'U', 'T', 'F', '-', '1', '6', '\0' };
 
-#ifdef PR_LOGGING
 static PRLogModuleInfo *
 GetExpatDriverLog()
 {
@@ -42,7 +41,6 @@ GetExpatDriverLog()
     sLog = PR_NewLogModule("expatdriver");
   return sLog;
 }
-#endif
 
 /***************************** EXPAT CALL BACKS ******************************/
 // The callback handlers that get called from the expat parser.
@@ -1080,7 +1078,6 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
       buffer = nullptr;
       length = 0;
 
-#if defined(PR_LOGGING) || defined (DEBUG)
       if (blocked) {
         PR_LOG(GetExpatDriverLog(), PR_LOG_DEBUG,
                ("Resuming Expat, will parse data remaining in Expat's "
@@ -1097,7 +1094,6 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
                 NS_ConvertUTF16toUTF8(currentExpatPosition.get(),
                                       mExpatBuffered).get()));
       }
-#endif
     }
     else {
       buffer = start.get();

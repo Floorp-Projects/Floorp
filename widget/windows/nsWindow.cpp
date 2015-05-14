@@ -404,6 +404,8 @@ nsWindow::nsWindow() : nsWindowBase()
 
   mIdleService = nullptr;
 
+  ::InitializeCriticalSection(&mPresentLock);
+
   sInstanceCount++;
 }
 
@@ -439,6 +441,7 @@ nsWindow::~nsWindow()
       sIsOleInitialized = FALSE;
     }
   }
+  ::DeleteCriticalSection(&mPresentLock);
 
   NS_IF_RELEASE(mNativeDragTarget);
 }
@@ -4701,12 +4704,19 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       {
         // From msdn, the way around this is to disable the visible state
         // temporarily. We need the text to be set but we don't want the
-        // redraw to occur.
+        // redraw to occur. However, we need to make sure that we don't
+        // do this at the same time that a Present is happening.
+        //
+        // To do this we take mPresentLock in nsWindow::PreRender and
+        // if that lock is taken we wait before doing WM_SETTEXT
+        EnterCriticalSection(&mPresentLock);
         DWORD style = GetWindowLong(mWnd, GWL_STYLE);
         SetWindowLong(mWnd, GWL_STYLE, style & ~WS_VISIBLE);
         *aRetValue = CallWindowProcW(GetPrevWindowProc(), mWnd,
                                      msg, wParam, lParam);
         SetWindowLong(mWnd, GWL_STYLE, style);
+        LeaveCriticalSection(&mPresentLock);
+
         return true;
       }
 
@@ -7554,6 +7564,21 @@ void nsWindow::PickerClosed()
   if (!mPickerDisplayCount && mDestroyCalled) {
     Destroy();
   }
+}
+
+bool nsWindow::PreRender(LayerManagerComposite*)
+{
+  // This can block waiting for WM_SETTEXT to finish
+  // Using PreRender is unnecessarily pessimistic because
+  // we technically only need to block during the present call
+  // not all of compositor rendering
+  EnterCriticalSection(&mPresentLock);
+  return true;
+}
+
+void nsWindow::PostRender(LayerManagerComposite*)
+{
+  LeaveCriticalSection(&mPresentLock);
 }
 
 /**************************************************************

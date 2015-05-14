@@ -23,6 +23,8 @@ namespace js {
 namespace js {
 namespace jit {
 
+typedef void * CalleeToken;
+
 enum FrameType
 {
     // A JS frame is analagous to a js::InterpreterFrame, representing one scripted

@@ -28,7 +28,7 @@ function simplePostTest() {
   var x = new XMLHttpRequest();
   x.open("POST", "echo.sjs");
   x.onload = function() {
-      ise(x.responseText, "somedata", "Should have processed POST");
+      is(x.responseText, "somedata", "Should have processed POST");
       undefinedPostTest();
     }
     x.send({toString: function() { return "somedata"; }});
@@ -38,7 +38,7 @@ function undefinedPostTest() {
   var x = new XMLHttpRequest();
   x.open("POST", "echo.sjs");
   x.onload = function() {
-      ise(x.responseText, "undefined", "Should have processed POST");
+      is(x.responseText, "undefined", "Should have processed POST");
       nullPostTest();
     }
     x.send({toString: function() { return undefined; }});
@@ -48,7 +48,7 @@ function nullPostTest() {
   var x = new XMLHttpRequest();
   x.open("POST", "echo.sjs");
   x.onload = function() {
-      ise(x.responseText, "null", "Should have processed POST");
+      is(x.responseText, "null", "Should have processed POST");
       testExceptionInToString();
     }
     x.send({toString: function() { return null; }});
@@ -64,7 +64,7 @@ function testExceptionInToString() {
   try {
     x.send({toString: function() { throw "dummy"; }});
   } catch(ex) {
-    ise(ex, "dummy");
+    is(ex, "dummy");
     SimpleTest.finish();
   }
 }

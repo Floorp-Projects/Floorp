@@ -148,7 +148,7 @@ class DrawFilterCommand : public DrawingCommand
 public:
   DrawFilterCommand(FilterNode* aFilter, const Rect& aSourceRect,
                     const Point& aDestPoint, const DrawOptions& aOptions)
-    : DrawingCommand(CommandType::DRAWSURFACE)
+    : DrawingCommand(CommandType::DRAWFILTER)
     , mFilter(aFilter), mSourceRect(aSourceRect)
     , mDestPoint(aDestPoint), mOptions(aOptions)
   {
@@ -164,6 +164,36 @@ private:
   Rect mSourceRect;
   Point mDestPoint;
   DrawOptions mOptions;
+};
+
+class DrawSurfaceWithShadowCommand : public DrawingCommand
+{
+public:
+  DrawSurfaceWithShadowCommand(SourceSurface* aSurface, const Point& aDest,
+                               const Color& aColor, const Point& aOffset,
+                               Float aSigma, CompositionOp aOperator)
+    : DrawingCommand(CommandType::DRAWSURFACEWITHSHADOW)
+    , mSurface(aSurface)
+    , mDest(aDest)
+    , mColor(aColor)
+    , mOffset(aOffset)
+    , mSigma(aSigma)
+    , mOperator(aOperator)
+  {
+  }
+
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  {
+    aDT->DrawSurfaceWithShadow(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
+  }
+
+private:
+  RefPtr<SourceSurface> mSurface;
+  Point mDest;
+  Color mColor;
+  Point mOffset;
+  Float mSigma;
+  CompositionOp mOperator;
 };
 
 class ClearRectCommand : public DrawingCommand
