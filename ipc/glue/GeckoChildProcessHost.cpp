@@ -57,6 +57,10 @@ using mozilla::ipc::GeckoChildProcessHost;
 static const int kMagicAndroidSystemPropFd = 5;
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
+
 static const bool kLowRightsSubprocesses =
   // We currently only attempt to drop privileges on gonk, because we
   // have no plugins or extensions to worry about breaking.
@@ -164,7 +168,17 @@ GeckoChildProcessHost::GetPathToBinary(FilePath& exePath)
     exePath = exePath.DirName();
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  exePath = exePath.AppendASCII("lib");
+
+  // We must use the PIE binary on 5.0 and higher
+  const char* processName = mozilla::AndroidBridge::Bridge()->GetAPIVersion() >= 21 ?
+    MOZ_CHILD_PROCESS_NAME_PIE : MOZ_CHILD_PROCESS_NAME;
+
+  exePath = exePath.AppendASCII(processName);
+#else
   exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
+#endif
 }
 
 #ifdef MOZ_WIDGET_COCOA
