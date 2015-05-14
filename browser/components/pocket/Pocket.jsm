@@ -25,7 +25,7 @@ let Pocket = {
   onPanelViewShowing(event) {
     let document = event.target.ownerDocument;
     let window = document.defaultView;
-    let iframe = document.getElementById('pocket-panel-iframe');
+    let iframe = window.pktUI.getPanelFrame();
 
     let urlToSave = Pocket._urlToSave;
     let titleToSave = Pocket._titleToSave;
@@ -55,7 +55,7 @@ let Pocket = {
   onFrameLoaded(event) {
     let document = event.currentTarget.ownerDocument;
     let window = document.defaultView;
-    let iframe = document.getElementById('pocket-panel-iframe');
+    let iframe = window.pktUI.getPanelFrame();
 
     iframe.removeEventListener("load", Pocket.onFrameLoaded, true);
     window.pktUI.pocketPanelDidShow();

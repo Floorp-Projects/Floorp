@@ -644,7 +644,15 @@ var pktUI = (function() {
     }
 
     function getPanelFrame() {
-    	return document.getElementById('pocket-panel-iframe');
+        var frame = document.getElementById('pocket-panel-iframe');
+        if (!frame) {
+            var frameParent = document.getElementById("PanelUI-pocketView").firstChild;
+            frame = document.createElement("iframe");
+            frame.id = 'pocket-panel-iframe';
+            frame.setAttribute("type", "content");
+            frameParent.appendChild(frame);
+        }
+        return frame;
     }
 
     function getSubview() {
@@ -779,6 +787,7 @@ var pktUI = (function() {
      */
     return {
     	onLoad: onLoad,
+    	getPanelFrame: getPanelFrame,
 
     	pocketButtonOnCommand: pocketButtonOnCommand,
     	pocketPanelDidShow: pocketPanelDidShow,
@@ -841,7 +850,7 @@ var pktUIMessaging = (function() {
 
         if (!isPanelIdValid(panelId)) { return; };
 
-        var panelFrame = document.getElementById('pocket-panel-iframe');
+        var panelFrame = pktUI.getPanelFrame();
         if (!isPocketPanelFrameValid(panelFrame)) { return; }
 
         var doc = panelFrame.contentWindow.document;
