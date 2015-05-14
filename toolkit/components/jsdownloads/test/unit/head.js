@@ -534,7 +534,7 @@ function promiseVerifyContents(aPath, aExpectedContents)
 
     let deferred = Promise.defer();
     NetUtil.asyncFetch(
-      file,
+      { uri: NetUtil.newURI(file), loadUsingSystemPrincipal: true },
       function(aInputStream, aStatus) {
         do_check_true(Components.isSuccessCode(aStatus));
         let contents = NetUtil.readInputStreamToString(aInputStream,
