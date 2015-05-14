@@ -48,11 +48,10 @@ class Configuration:
                         "%s\n"
                         "%s" %
                         (thing.location, thing.implementor.location))
-            # Some toplevel things are sadly types, and those have an
-            # isInterface that doesn't mean the same thing as IDLObject's
-            # isInterface()...
-            if (not isinstance(thing, IDLInterface) and
-                not isinstance(thing, IDLExternalInterface)):
+
+            assert not thing.isType();
+
+            if not thing.isInterface():
                 continue
             iface = thing
             self.interfaces[iface.identifier.name] = iface
@@ -800,9 +799,9 @@ def findCallbacksAndDictionaries(inputTypes):
     def doFindCallbacksAndDictionaries(types, callbacks, dictionaries):
         unhandledTypes = set()
         for type in types:
-            if type.isCallback() and type not in callbacks:
-                unhandledTypes |= getFlatTypes(getTypesFromCallback(type))
-                callbacks.add(type)
+            if type.isCallback() and type.callback not in callbacks:
+                unhandledTypes |= getFlatTypes(getTypesFromCallback(type.callback))
+                callbacks.add(type.callback)
             elif type.isDictionary() and type.inner not in dictionaries:
                 d = type.inner
                 unhandledTypes |= getFlatTypes(getTypesFromDictionary(d))
