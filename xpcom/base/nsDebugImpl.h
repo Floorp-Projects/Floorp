@@ -12,9 +12,7 @@
 class nsDebugImpl : public nsIDebug2
 {
 public:
-  nsDebugImpl()
-  {
-  }
+  nsDebugImpl() = default;
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDEBUG2
 

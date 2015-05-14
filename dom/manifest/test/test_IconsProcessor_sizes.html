@@ -66,10 +66,10 @@ validSizes.forEach(({
   var sizes = result.icons[0].sizes;
   for (var expectedSize of expect) {
     var expected = `Expect sizes to contain ${expectedSize}`;
-    ise(sizes.has(expectedSize), true, expected);
+    is(sizes.has(expectedSize), true, expected);
   }
   expected = `Expect the size of the set to be ${expect.length}.`;
-  ise(sizes.size, expect.length, expected);
+  is(sizes.size, expect.length, expected);
 });
 
 var testIcon = {
@@ -86,7 +86,7 @@ invalidSizes.forEach((invalidSize) => {
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
   var sizes = result.icons[0].sizes;
-  ise(sizes.size, 0, expected);
+  is(sizes.size, 0, expected);
 });
 
 typeTests.forEach((type) => {
@@ -95,7 +95,7 @@ typeTests.forEach((type) => {
   data.jsonText = JSON.stringify(testIcon);
   var result = processor.process(data);
   var sizes = result.icons[0].sizes;
-  ise(sizes.size, 0, expected);
+  is(sizes.size, 0, expected);
 });
   </script>
 </head>

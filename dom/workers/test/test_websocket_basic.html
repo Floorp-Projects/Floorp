@@ -15,8 +15,6 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.pushPrefEnv({"set": [["dom.workers.websocket.enabled", true]]},
-function() {
   var worker = new Worker("websocket_basic_worker.js");
 
   worker.onmessage = function(event) {
@@ -51,9 +49,7 @@ function() {
   }
 
   runTest();
-});
-
-SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>

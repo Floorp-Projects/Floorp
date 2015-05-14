@@ -464,7 +464,7 @@ public:
     // mData may be nullptr
     MOZ_ASSERT(mTarget);
     MOZ_ASSERT(mAction);
-    MOZ_ASSERT(mQuotaInfo.mDir);
+    // mQuotaInfo.mDir may be nullptr if QuotaInitRunnable failed
     MOZ_ASSERT(mInitiatingThread);
   }
 

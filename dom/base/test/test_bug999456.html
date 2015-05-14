@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=999456
 
   SimpleTest.waitForExplicitFinish();
   addEventListener("load", function (e) {
-    ise(e.cancelable, false, "Load events should not be cancelable");
+    is(e.cancelable, false, "Load events should not be cancelable");
     SimpleTest.finish();
   });
 

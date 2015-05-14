@@ -115,7 +115,7 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
     data.result.setInt32(data.numActualArgs);
     {
         AssertCompartmentUnchanged pcc(cx);
-        JitActivation activation(cx);
+        JitActivation activation(cx, data.calleeToken);
 
         if (data.osrFrame)
             data.osrFrame->setRunningInJit();
