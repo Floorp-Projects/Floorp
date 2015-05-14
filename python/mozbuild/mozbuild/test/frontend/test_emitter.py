@@ -751,9 +751,11 @@ class TestEmitterBasic(unittest.TestCase):
         }
         for suffix, files in expected.items():
             sources = suffix_map[suffix]
-            self.assertEqual(sources.files, files)
+            self.assertEqual(
+                sources.files,
+                [mozpath.join(reader.config.topsrcdir, f) for f in files])
 
-    def test_sources(self):
+    def test_generated_sources(self):
         """Test that GENERATED_SOURCES works properly."""
         reader = self.reader('generated-sources')
         objs = self.read_topsrcdir(reader)
@@ -776,7 +778,9 @@ class TestEmitterBasic(unittest.TestCase):
         }
         for suffix, files in expected.items():
             sources = suffix_map[suffix]
-            self.assertEqual(sources.files, files)
+            self.assertEqual(
+                sources.files,
+                [mozpath.join(reader.config.topobjdir, f) for f in files])
 
     def test_host_sources(self):
         """Test that HOST_SOURCES works properly."""
@@ -797,7 +801,9 @@ class TestEmitterBasic(unittest.TestCase):
         }
         for suffix, files in expected.items():
             sources = suffix_map[suffix]
-            self.assertEqual(sources.files, files)
+            self.assertEqual(
+                sources.files,
+                [mozpath.join(reader.config.topsrcdir, f) for f in files])
 
     def test_unified_sources(self):
         """Test that UNIFIED_SOURCES works properly."""
