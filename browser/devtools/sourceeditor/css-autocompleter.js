@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Cc, Ci, Cu } = require('chrome');
-const cssTokenizer  = require("devtools/sourceeditor/css-tokenizer");
+const {cssTokenizer, cssTokenizerWithLineColumn}  =
+      require("devtools/sourceeditor/css-tokenizer");
 const promise = Cu.import("resource://gre/modules/Promise.jsm");
 
 /**
@@ -180,18 +181,17 @@ CSSCompleter.prototype = {
     else {
       this.nullStates = [];
     }
-    let tokens = cssTokenizer(source, {loc:true});
+    let tokens = cssTokenizerWithLineColumn(source);
     let tokIndex = tokens.length - 1;
-    if (tokens[tokIndex].loc.end.line < line ||
-       (tokens[tokIndex].loc.end.line === line &&
-        tokens[tokIndex].loc.end.column < ch)) {
-      // If the last token is not an EOF, we didn't tokenize it correctly.
-      // This special case is handled in case we couldn't tokenize, but the last
-      // token that *could be tokenized* was an identifier.
+    if (tokIndex >=0 &&
+        (tokens[tokIndex].loc.end.line < line ||
+         (tokens[tokIndex].loc.end.line === line &&
+          tokens[tokIndex].loc.end.column < ch))) {
+      // If the last token ends before the cursor location, we didn't
+      // tokenize it correctly.  This special case can happen if the
+      // final token is a comment.
       return null;
     }
-    // Since last token is EOF, the cursor token is last - 1
-    tokIndex--;
 
     let cursor = 0;
     // This will maintain a stack of paired elements like { & }, @m & }, : & ; etc
@@ -202,13 +202,14 @@ CSSCompleter.prototype = {
         case CSS_STATES.property:
           // From CSS_STATES.property, we can either go to CSS_STATES.value state
           // when we hit the first ':' or CSS_STATES.selector if "}" is reached.
-          switch(token.tokenType) {
+          if (token.tokenType === "symbol") {
+            switch(token.text) {
             case ":":
               scopeStack.push(":");
-              if (tokens[cursor - 2].tokenType != "WHITESPACE")
-                propertyName = tokens[cursor - 2].value;
+              if (tokens[cursor - 2].tokenType != "whitespace")
+                propertyName = tokens[cursor - 2].text;
               else
-                propertyName = tokens[cursor - 3].value;
+                propertyName = tokens[cursor - 3].text;
               _state = CSS_STATES.value;
               break;
 
@@ -224,13 +225,15 @@ CSSCompleter.prototype = {
                 }
               }
               break;
+            }
           }
           break;
 
         case CSS_STATES.value:
           // From CSS_STATES.value, we can go to one of CSS_STATES.property,
           // CSS_STATES.frame, CSS_STATES.selector and CSS_STATES.null
-          switch(token.tokenType) {
+          if (token.tokenType === "symbol") {
+            switch(token.text) {
             case ";":
               if (/[:]/.test(peek(scopeStack))) {
                 scopeStack.pop();
@@ -253,13 +256,14 @@ CSSCompleter.prototype = {
                 }
               }
               break;
+            }
           }
           break;
 
         case CSS_STATES.selector:
           // From CSS_STATES.selector, we can only go to CSS_STATES.property when
           // we hit "{"
-          if (token.tokenType == "{") {
+          if (token.tokenType === "symbol" && token.text == "{") {
             scopeStack.push("{");
             _state = CSS_STATES.property;
             selectors.push(selector);
@@ -271,76 +275,71 @@ CSSCompleter.prototype = {
             case SELECTOR_STATES.class:
             case SELECTOR_STATES.tag:
               switch(token.tokenType) {
-                case "HASH":
+                case "hash":
+                case "id":
                   selectorState = SELECTOR_STATES.id;
-                  selector += "#" + token.value;
+                  selector += "#" + token.text;
                   break;
 
-                case "DELIM":
-                  if (token.value == ".") {
+                case "symbol":
+                  if (token.text == ".") {
                     selectorState = SELECTOR_STATES.class;
                     selector += ".";
                     if (cursor <= tokIndex &&
-                        tokens[cursor].tokenType == "IDENT") {
+                        tokens[cursor].tokenType == "ident") {
                       token = tokens[cursor++];
-                      selector += token.value;
+                      selector += token.text;
                     }
-                  } else if (token.value == "#") {
+                  } else if (token.text == "#") {
                     selectorState = SELECTOR_STATES.id;
                     selector += "#";
-                  } else if (/[>~+]/.test(token.value)) {
+                  } else if (/[>~+]/.test(token.text)) {
                     selectorState = SELECTOR_STATES.null;
-                    selector += token.value;
-                  } else if (token.value == ",") {
+                    selector += token.text;
+                  } else if (token.text == ",") {
                     selectorState = SELECTOR_STATES.null;
                     selectors.push(selector);
                     selector = "";
-                  }
-                  break;
-
-                case ":":
-                  selectorState = SELECTOR_STATES.pseudo;
-                  selector += ":";
-                  if (cursor > tokIndex)
-                    break;
-
-                  token = tokens[cursor++];
-                  switch(token.tokenType) {
-                    case "FUNCTION":
-                      if (token.value == "not") {
-                        selectorBeforeNot = selector;
-                        selector = "";
-                        scopeStack.push("(");
-                      } else {
-                        selector += token.value + "(";
-                      }
-                      selectorState = SELECTOR_STATES.null;
+                  } else if (token.text == ":") {
+                    selectorState = SELECTOR_STATES.pseudo;
+                    selector += ":";
+                    if (cursor > tokIndex)
                       break;
 
-                    case "IDENT":
-                      selector += token.value;
-                      break;
+                    token = tokens[cursor++];
+                    switch(token.tokenType) {
+                      case "function":
+                        if (token.text == "not") {
+                          selectorBeforeNot = selector;
+                          selector = "";
+                          scopeStack.push("(");
+                        } else {
+                          selector += token.text + "(";
+                        }
+                        selectorState = SELECTOR_STATES.null;
+                        break;
+
+                      case "ident":
+                        selector += token.text;
+                        break;
+                    }
+                  } else if (token.text == "[") {
+                    selectorState = SELECTOR_STATES.attribute;
+                    scopeStack.push("[");
+                    selector += "[";
+                  } else if (token.text == ")") {
+                    if (peek(scopeStack) == "(") {
+                      scopeStack.pop();
+                      selector = selectorBeforeNot + "not(" + selector + ")";
+                      selectorBeforeNot = null;
+                    } else {
+                      selector += ")";
+                    }
+                    selectorState = SELECTOR_STATES.null;
                   }
                   break;
 
-                case "[":
-                  selectorState = SELECTOR_STATES.attribute;
-                  scopeStack.push("[");
-                  selector += "[";
-                  break;
-
-                case ")":
-                  if (peek(scopeStack) == "(") {
-                    scopeStack.pop();
-                    selector = selectorBeforeNot + "not(" + selector + ")";
-                    selectorBeforeNot = null;
-                  } else {
-                    selector += ")";
-                  }
-                  selectorState = SELECTOR_STATES.null;
-                  break;
-
-                case "WHITESPACE":
+                case "whitespace":
                   selectorState = SELECTOR_STATES.null;
                   selector && (selector += " ");
                   break;
@@ -351,83 +350,78 @@ CSSCompleter.prototype = {
               // From SELECTOR_STATES.null state, we can go to one of
               // SELECTOR_STATES.id, SELECTOR_STATES.class or SELECTOR_STATES.tag
               switch(token.tokenType) {
-                case "HASH":
+                case "hash":
+                case "id":
                   selectorState = SELECTOR_STATES.id;
-                  selector += "#" + token.value;
+                  selector += "#" + token.text;
                   break;
 
-                case "IDENT":
+                case "ident":
                   selectorState = SELECTOR_STATES.tag;
-                  selector += token.value;
+                  selector += token.text;
                   break;
 
-                case "DELIM":
-                  if (token.value == ".") {
+                case "symbol":
+                  if (token.text == ".") {
                     selectorState = SELECTOR_STATES.class;
                     selector += ".";
                     if (cursor <= tokIndex &&
-                        tokens[cursor].tokenType == "IDENT") {
+                        tokens[cursor].tokenType == "ident") {
                       token = tokens[cursor++];
-                      selector += token.value;
+                      selector += token.text;
                     }
-                  } else if (token.value == "#") {
+                  } else if (token.text == "#") {
                     selectorState = SELECTOR_STATES.id;
                     selector += "#";
-                  } else if (token.value == "*") {
+                  } else if (token.text == "*") {
                     selectorState = SELECTOR_STATES.tag;
                     selector += "*";
-                  } else if (/[>~+]/.test(token.value)) {
-                    selector += token.value;
-                  } else if (token.value == ",") {
+                  } else if (/[>~+]/.test(token.text)) {
+                    selector += token.text;
+                  } else if (token.text == ",") {
                     selectorState = SELECTOR_STATES.null;
                     selectors.push(selector);
                     selector = "";
-                  }
-                  break;
-
-                case ":":
-                  selectorState = SELECTOR_STATES.pseudo;
-                  selector += ":";
-                  if (cursor > tokIndex)
-                    break;
-
-                  token = tokens[cursor++];
-                  switch(token.tokenType) {
-                    case "FUNCTION":
-                      if (token.value == "not") {
-                        selectorBeforeNot = selector;
-                        selector = "";
-                        scopeStack.push("(");
-                      } else {
-                        selector += token.value + "(";
-                      }
-                      selectorState = SELECTOR_STATES.null;
+                  } else if (token.text == ":") {
+                    selectorState = SELECTOR_STATES.pseudo;
+                    selector += ":";
+                    if (cursor > tokIndex)
                       break;
 
-                    case "IDENT":
-                      selector += token.value;
-                      break;
+                    token = tokens[cursor++];
+                    switch(token.tokenType) {
+                      case "function":
+                        if (token.text == "not") {
+                          selectorBeforeNot = selector;
+                          selector = "";
+                          scopeStack.push("(");
+                        } else {
+                          selector += token.text + "(";
+                        }
+                        selectorState = SELECTOR_STATES.null;
+                        break;
+
+                      case "ident":
+                        selector += token.text;
+                        break;
+                    }
+                  } else if (token.text == "[") {
+                    selectorState = SELECTOR_STATES.attribute;
+                    scopeStack.push("[");
+                    selector += "[";
+                  } else if (token.text == ")") {
+                    if (peek(scopeStack) == "(") {
+                      scopeStack.pop();
+                      selector = selectorBeforeNot + "not(" + selector + ")";
+                      selectorBeforeNot = null;
+                    } else {
+                      selector += ")";
+                    }
+                    selectorState = SELECTOR_STATES.null;
                   }
                   break;
 
-                case "[":
-                  selectorState = SELECTOR_STATES.attribute;
-                  scopeStack.push("[");
-                  selector += "[";
-                  break;
-
-                case ")":
-                  if (peek(scopeStack) == "(") {
-                    scopeStack.pop();
-                    selector = selectorBeforeNot + "not(" + selector + ")";
-                    selectorBeforeNot = null;
-                  } else {
-                    selector += ")";
-                  }
-                  selectorState = SELECTOR_STATES.null;
-                  break;
-
-                case "WHITESPACE":
+                case "whitespace":
                   selector && (selector += " ");
                   break;
               }
@@ -435,49 +429,45 @@ CSSCompleter.prototype = {
 
             case SELECTOR_STATES.pseudo:
               switch(token.tokenType) {
-                case "DELIM":
-                  if (/[>~+]/.test(token.value)) {
+                case "symbol":
+                  if (/[>~+]/.test(token.text)) {
                     selectorState = SELECTOR_STATES.null;
-                    selector += token.value;
-                  } else if (token.value == ",") {
+                    selector += token.text;
+                  } else if (token.text == ",") {
                     selectorState = SELECTOR_STATES.null;
                     selectors.push(selector);
                     selector = "";
+                  } else if (token.text == ":") {
+                    selectorState = SELECTOR_STATES.pseudo;
+                    selector += ":";
+                    if (cursor > tokIndex)
+                      break;
+
+                    token = tokens[cursor++];
+                    switch(token.tokenType) {
+                      case "function":
+                        if (token.text == "not") {
+                          selectorBeforeNot = selector;
+                          selector = "";
+                          scopeStack.push("(");
+                        } else {
+                          selector += token.text + "(";
+                        }
+                        selectorState = SELECTOR_STATES.null;
+                        break;
+
+                      case "ident":
+                        selector += token.text;
+                        break;
+                    }
+                  } else if (token.text == "[") {
+                    selectorState = SELECTOR_STATES.attribute;
+                    scopeStack.push("[");
+                    selector += "[";
                   }
                   break;
 
-                case ":":
-                  selectorState = SELECTOR_STATES.pseudo;
-                  selector += ":";
-                  if (cursor > tokIndex)
-                    break;
-
-                  token = tokens[cursor++];
-                  switch(token.tokenType) {
-                    case "FUNCTION":
-                      if (token.value == "not") {
-                        selectorBeforeNot = selector;
-                        selector = "";
-                        scopeStack.push("(");
-                      } else {
-                        selector += token.value + "(";
-                      }
-                      selectorState = SELECTOR_STATES.null;
-                      break;
-
-                    case "IDENT":
-                      selector += token.value;
-                      break;
-                  }
-                  break;
-
-                case "[":
-                  selectorState = SELECTOR_STATES.attribute;
-                  scopeStack.push("[");
-                  selector += "[";
-                  break;
-
-                case "WHITESPACE":
+                case "whitespace":
                   selectorState = SELECTOR_STATES.null;
                   selector && (selector += " ");
                   break;
@@ -486,31 +476,28 @@ CSSCompleter.prototype = {
 
             case SELECTOR_STATES.attribute:
               switch(token.tokenType) {
-                case "DELIM":
-                  if (/[~|^$*]/.test(token.value)) {
-                    selector += token.value;
+                case "symbol":
+                  if (/[~|^$*]/.test(token.text)) {
+                    selector += token.text;
                     token = tokens[cursor++];
-                  }
-                  if(token.value == "=") {
+                  } else if (token.text == "=") {
                     selectorState = SELECTOR_STATES.value;
-                    selector += token.value;
+                    selector += token.text;
+                  } else if (token.text == "]") {
+                    if (peek(scopeStack) == "[")
+                      scopeStack.pop();
+
+                    selectorState = SELECTOR_STATES.null;
+                    selector += "]";
                   }
                   break;
 
-                case "IDENT":
-                case "STRING":
-                  selector += token.value;
+                case "ident":
+                case "string":
+                  selector += token.text;
                   break;
 
-                case "]":
-                  if (peek(scopeStack) == "[")
-                    scopeStack.pop();
-
-                  selectorState = SELECTOR_STATES.null;
-                  selector += "]";
-                  break;
-
-                case "WHITESPACE":
+                case "whitespace":
                   selector && (selector += " ");
                   break;
               }
@@ -518,20 +505,22 @@ CSSCompleter.prototype = {
 
             case SELECTOR_STATES.value:
               switch(token.tokenType) {
-                case "STRING":
-                case "IDENT":
-                  selector += token.value;
+                case "string":
+                case "ident":
+                  selector += token.text;
                   break;
 
-                case "]":
-                  if (peek(scopeStack) == "[")
-                    scopeStack.pop();
+                case "symbol":
+                  if (token.text == "]") {
+                    if (peek(scopeStack) == "[")
+                      scopeStack.pop();
 
-                  selectorState = SELECTOR_STATES.null;
-                  selector += "]";
+                    selectorState = SELECTOR_STATES.null;
+                    selector += "]";
+                  }
                   break;
 
-                case "WHITESPACE":
+                case "whitespace":
                   selector && (selector += " ");
                   break;
               }
@@ -543,81 +532,75 @@ CSSCompleter.prototype = {
           // From CSS_STATES.null state, we can go to either CSS_STATES.media or
           // CSS_STATES.selector.
           switch(token.tokenType) {
-            case "HASH":
+            case "hash":
+            case "id":
               selectorState = SELECTOR_STATES.id;
-              selector = "#" + token.value;
+              selector = "#" + token.text;
               _state = CSS_STATES.selector;
               break;
 
-            case "IDENT":
+            case "ident":
               selectorState = SELECTOR_STATES.tag;
-              selector = token.value;
+              selector = token.text;
               _state = CSS_STATES.selector;
               break;
 
-            case "DELIM":
-              if (token.value == ".") {
+            case "symbol":
+              if (token.text == ".") {
                 selectorState = SELECTOR_STATES.class;
                 selector = ".";
                 _state = CSS_STATES.selector;
                 if (cursor <= tokIndex &&
-                    tokens[cursor].tokenType == "IDENT") {
+                    tokens[cursor].tokenType == "ident") {
                   token = tokens[cursor++];
-                  selector += token.value;
+                  selector += token.text;
                 }
-              } else if (token.value == "#") {
+              } else if (token.text == "#") {
                 selectorState = SELECTOR_STATES.id;
                 selector = "#";
                 _state = CSS_STATES.selector;
-              } else if (token.value == "*") {
+              } else if (token.text == "*") {
                 selectorState = SELECTOR_STATES.tag;
                 selector = "*";
                 _state = CSS_STATES.selector;
+              } else if (token.text == ":") {
+                _state = CSS_STATES.selector;
+                selectorState = SELECTOR_STATES.pseudo;
+                selector += ":";
+                if (cursor > tokIndex)
+                  break;
+
+                token = tokens[cursor++];
+                switch(token.tokenType) {
+                  case "function":
+                    if (token.text == "not") {
+                      selectorBeforeNot = selector;
+                      selector = "";
+                      scopeStack.push("(");
+                    } else {
+                      selector += token.text + "(";
+                    }
+                    selectorState = SELECTOR_STATES.null;
+                    break;
+
+                  case "ident":
+                    selector += token.text;
+                    break;
+                }
+              } else if (token.text == "[") {
+                _state = CSS_STATES.selector;
+                selectorState = SELECTOR_STATES.attribute;
+                scopeStack.push("[");
+                selector += "[";
+              } else if (token.text == "}") {
+                if (peek(scopeStack) == "@m")
+                  scopeStack.pop();
               }
               break;
 
-            case ":":
-              _state = CSS_STATES.selector;
-              selectorState = SELECTOR_STATES.pseudo;
-              selector += ":";
-              if (cursor > tokIndex)
-                break;
-
-              token = tokens[cursor++];
-              switch(token.tokenType) {
-                case "FUNCTION":
-                  if (token.value == "not") {
-                    selectorBeforeNot = selector;
-                    selector = "";
-                    scopeStack.push("(");
-                  } else {
-                    selector += token.value + "(";
-                  }
-                  selectorState = SELECTOR_STATES.null;
-                  break;
-
-                case "IDENT":
-                  selector += token.value;
-                  break;
-              }
-              break;
-
-            case "[":
-              _state = CSS_STATES.selector;
-              selectorState = SELECTOR_STATES.attribute;
-              scopeStack.push("[");
-              selector += "[";
-              break;
-
-            case "AT-KEYWORD":
-              _state = token.value.startsWith("m") ? CSS_STATES.media
+            case "at":
+              _state = token.text.startsWith("m") ? CSS_STATES.media
                                                    : CSS_STATES.keyframes;
-              break;
-
-            case "}":
-              if (peek(scopeStack) == "@m")
-                scopeStack.pop();
-
               break;
           }
           break;
@@ -625,7 +608,7 @@ CSSCompleter.prototype = {
         case CSS_STATES.media:
           // From CSS_STATES.media, we can only go to CSS_STATES.null state when
           // we hit the first '{'
-          if (token.tokenType == "{") {
+          if (token.tokenType == "symbol" && token.text == "{") {
             scopeStack.push("@m");
             _state = CSS_STATES.null;
           }
@@ -634,7 +617,7 @@ CSSCompleter.prototype = {
         case CSS_STATES.keyframes:
           // From CSS_STATES.keyframes, we can only go to CSS_STATES.frame state
           // when we hit the first '{'
-          if (token.tokenType == "{") {
+          if (token.tokenType == "symbol" && token.text == "{") {
             scopeStack.push("@k");
             _state = CSS_STATES.frame;
           }
@@ -643,14 +626,16 @@ CSSCompleter.prototype = {
         case CSS_STATES.frame:
           // From CSS_STATES.frame, we can either go to CSS_STATES.property state
           // when we hit the first '{' or to CSS_STATES.selector when we hit '}'
-          if (token.tokenType == "{") {
-            scopeStack.push("f");
-            _state = CSS_STATES.property;
-          } else if (token.tokenType == "}") {
-            if (peek(scopeStack) == "@k")
-              scopeStack.pop();
+          if (token.tokenType == "symbol") {
+            if (token.text == "{") {
+              scopeStack.push("f");
+              _state = CSS_STATES.property;
+            } else if (token.text == "}") {
+              if (peek(scopeStack) == "@k")
+                scopeStack.pop();
 
-            _state = CSS_STATES.null;
+              _state = CSS_STATES.null;
+            }
           }
           break;
       }
@@ -682,10 +667,14 @@ CSSCompleter.prototype = {
     }
     this.selectors = selectors;
 
-    if (token && token.tokenType != "WHITESPACE") {
-      this.completing = ((token.value || token.repr || token.tokenType) + "")
-                          .slice(0, ch - token.loc.start.column)
-                          .replace(/^[.#]$/, "");
+    if (token && token.tokenType != "whitespace") {
+      let text;
+      if (token.tokenType == "dimension" || !token.text)
+        text = source.substring(token.startOffset, token.endOffset);
+      else
+        text = token.text;
+      this.completing = (text.slice(0, ch - token.loc.start.column)
+                         .replace(/^[.#]$/, ""));
     } else {
       this.completing = "";
     }
@@ -695,7 +684,7 @@ CSSCompleter.prototype = {
       this.completing = "";
 
     // Special check for !important; case.
-    if (token && tokens[cursor - 2] && tokens[cursor - 2].value == "!" &&
+    if (token && tokens[cursor - 2] && tokens[cursor - 2].text == "!" &&
         this.completing == "important".slice(0, this.completing.length)) {
       this.completing = "!" + this.completing;
     }
@@ -989,38 +978,41 @@ CSSCompleter.prototype = {
         if (line == caret.line)
           lineText = lineText.substring(caret.ch);
 
-        let tokens = cssTokenizer(lineText, {loc: true});
+        let prevToken = undefined;
+        let tokens = cssTokenizer(lineText);
         let found = false;
         let ech = line == caret.line ? caret.ch : 0;
-        for (let i = 0; i < tokens.length; i++) {
-          let token = tokens[i];
+        for (let token of tokens) {
           // If the line is completely spaces, handle it differently
           if (lineText.trim() == "") {
             limitedSource += lineText;
           } else {
             limitedSource += sourceArray[line]
-                              .substring(ech + token.loc.start.column,
-                                         ech + token.loc.end.column);
+                              .substring(ech + token.startOffset,
+                                         ech + token.endOffset);
           }
 
           // Whitespace cannot change state.
-          if (token.tokenType == "WHITESPACE")
+          if (token.tokenType == "whitespace") {
+            prevToken = token;
             continue;
+          }
 
           let state = this.resolveState(limitedSource, {
             line: line,
-            ch: token.loc.end.column + ech
+            ch: token.endOffset + ech
           });
           if (check(state)) {
-            if (tokens[i - 1] && tokens[i - 1].tokenType == "WHITESPACE")
-              token = tokens[i - 1];
+            if (prevToken && prevToken.tokenType == "whitespace")
+              token = prevToken;
             location = {
               line: line,
-              ch: token.loc.start.column + ech
+              ch: token.startOffset + ech
             };
             found = true;
             break;
           }
+          prevToken = token;
         }
         limitedSource += "\n";
         if (found)
@@ -1047,33 +1039,33 @@ CSSCompleter.prototype = {
         if (line == caret.line)
           lineText = lineText.substring(0, caret.ch);
 
-        let tokens = cssTokenizer(lineText, {loc: true});
+        let tokens = Array.from(cssTokenizer(lineText));
         let found = false;
         let ech = 0;
-        for (let i = tokens.length - 2; i >= 0; i--) {
+        for (let i = tokens.length - 1; i >= 0; i--) {
           let token = tokens[i];
           // If the line is completely spaces, handle it differently
           if (lineText.trim() == "") {
             limitedSource = limitedSource.slice(0, -1 * lineText.length);
           } else {
-            let length = token.loc.end.column - token.loc.start.column;
+            let length = token.endOffset - token.startOffset;
             limitedSource = limitedSource.slice(0, -1 * length);
           }
 
           // Whitespace cannot change state.
-          if (token.tokenType == "WHITESPACE")
+          if (token.tokenType == "whitespace")
             continue;
 
           let state = this.resolveState(limitedSource, {
             line: line,
-            ch: token.loc.start.column
+            ch: token.startOffset
           });
           if (check(state)) {
-            if (tokens[i + 1] && tokens[i + 1].tokenType == "WHITESPACE")
+            if (tokens[i + 1] && tokens[i + 1].tokenType == "whitespace")
               token = tokens[i + 1];
             location = {
               line: line,
-              ch: isValue ? token.loc.end.column: token.loc.start.column
+              ch: isValue ? token.endOffset: token.startOffset
             };
             found = true;
             break;
@@ -1121,21 +1113,23 @@ CSSCompleter.prototype = {
     }
     else if (state == CSS_STATES.property) {
       // A property can only be a single word and thus very easy to calculate.
-      let tokens = cssTokenizer(sourceArray[line], {loc: true});
+      let tokens = cssTokenizer(sourceArray[line]);
       for (let token of tokens) {
-        if (token.loc.start.column <= ch && token.loc.end.column >= ch) {
+        // Note that, because we're tokenizing a single line, the
+        // token's offset is also the column number.
+        if (token.startOffset <= ch && token.endOffset >= ch) {
           return {
             state: state,
-            propertyName: token.value,
+            propertyName: token.text,
             selectors: this.selectors,
             loc: {
               start: {
                 line: line,
-                ch: token.loc.start.column
+                ch: token.startOffset
               },
               end: {
                 line: line,
-                ch: token.loc.end.column
+                ch: token.endOffset
               }
             }
           };
