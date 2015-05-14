@@ -108,7 +108,7 @@ class TestEmitterBasic(unittest.TestCase):
 
         self.assertEqual(objs[3].affected_tiers, {'misc'})
 
-        dirs = [o.dirs for o in objs]
+        dirs = [[d.full_path for d in o.dirs] for o in objs]
         self.assertEqual(dirs, [
             [
                 mozpath.join(reader.config.topsrcdir, 'foo'),
@@ -132,9 +132,9 @@ class TestEmitterBasic(unittest.TestCase):
             reldir = o.relativedir
 
             if reldir == '':
-                self.assertEqual(o.dirs, [
+                self.assertEqual([d.full_path for d in o.dirs], [
                     mozpath.join(reader.config.topsrcdir, 'regular')])
-                self.assertEqual(o.test_dirs, [
+                self.assertEqual([d.full_path for d in o.test_dirs], [
                     mozpath.join(reader.config.topsrcdir, 'test')])
 
     def test_config_file_substitution(self):
