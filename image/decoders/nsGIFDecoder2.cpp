@@ -824,10 +824,15 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
       mGIFStruct.is_transparent = *q & 0x1;
       mGIFStruct.tpixel = q[3];
       mGIFStruct.disposal_method = ((*q) >> 2) & 0x7;
-      // Some specs say 3rd bit (value 4), other specs say value 3
-      // Let's choose 3 (the more popular)
+
       if (mGIFStruct.disposal_method == 4) {
+        // Some specs say 3rd bit (value 4), other specs say value 3.
+        // Let's choose 3 (the more popular).
         mGIFStruct.disposal_method = 3;
+      } else if (mGIFStruct.disposal_method > 4) {
+        // This GIF is using a disposal method which is undefined in the spec.
+        // Treat it as DisposalMethod::NOT_SPECIFIED.
+        mGIFStruct.disposal_method = 0;
       }
 
       {
