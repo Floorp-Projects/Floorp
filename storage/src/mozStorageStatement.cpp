@@ -604,7 +604,7 @@ Statement::ExecuteStep(bool *_moreResults)
   }
   int srv = mDBConnection->stepStatement(mNativeConnection, mDBStatement);
 
-  if (srv != SQLITE_ROW && srv != SQLITE_DONE) {
+  if (srv != SQLITE_ROW && srv != SQLITE_DONE && PR_LOG_TEST(gStorageLog, PR_LOG_DEBUG)) {
       nsAutoCString errStr;
       (void)mDBConnection->GetLastErrorString(errStr);
       PR_LOG(gStorageLog, PR_LOG_DEBUG,
