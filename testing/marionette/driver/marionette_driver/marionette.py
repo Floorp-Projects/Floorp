@@ -787,15 +787,43 @@ class Marionette(object):
                     typing.append(val[i])
         return typing
 
-    def push_permission(self, perm_type, allow):
+    def get_permission(self, perm):
+        with self.using_context('content'):
+            value = self.execute_script("""
+                let value = {
+                              'url': document.nodePrincipal.URI.spec,
+                              'appId': document.nodePrincipal.appId,
+                              'isInBrowserElement': document.nodePrincipal.isInBrowserElement,
+                              'type': arguments[0]
+                            };
+                return value;
+                """, script_args=[perm], sandbox='system')
+
+        with self.using_context('chrome'):
+            permission = self.execute_script("""
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                let perm = arguments[0];
+                let secMan = Services.scriptSecurityManager;
+                let principal = secMan.getAppCodebasePrincipal(
+                                Services.io.newURI(perm.url, null, null),
+                                perm.appId, perm.isInBrowserElement);
+                let testPerm = Services.perms.testPermissionFromPrincipal(
+                               principal, perm.type);
+                return testPerm;
+                """, script_args=[value])
+        return permission
+
+    def push_permission(self, perm, allow):
         with self.using_context('content'):
             perm = self.execute_script("""
                 let allow = arguments[0];
-                if (allow) {
-                  allow = Components.interfaces.nsIPermissionManager.ALLOW_ACTION;
-                }
-                else {
-                  allow = Components.interfaces.nsIPermissionManager.DENY_ACTION;
+                if (typeof(allow) == "boolean") {
+                    if (allow) {
+                      allow = Components.interfaces.nsIPermissionManager.ALLOW_ACTION;
+                    }
+                    else {
+                      allow = Components.interfaces.nsIPermissionManager.DENY_ACTION;
+                    }
                 }
                 let perm_type = arguments[1];
 
@@ -821,35 +849,59 @@ class Marionette(object):
                               'action': allow
                             };
                 return value;
-                """, script_args=[allow, perm_type], sandbox='system')
+                """, script_args=[allow, perm], sandbox='system')
+
+        current_perm = self.get_permission(perm['type'])
+        if current_perm == perm['action']:
+            with self.using_context('content'):
+                self.execute_script("""
+                    Components.utils.import("resource://gre/modules/Services.jsm");
+                    Services.obs.removeObserver(window.wrappedJSObject.permObserver, "perm-changed");
+                    """, sandbox='system')
+            return
 
         with self.using_context('chrome'):
-            waiting = self.execute_script("""
+            self.execute_script("""
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
                 let secMan = Services.scriptSecurityManager;
                 let principal = secMan.getAppCodebasePrincipal(Services.io.newURI(perm.url, null, null),
                                 perm.appId, perm.isInBrowserElement);
-                let testPerm = Services.perms.testPermissionFromPrincipal(principal, perm.type, perm.action);
-                if (testPerm == perm.action) {
-                  return false;
-                }
                 Services.perms.addFromPrincipal(principal, perm.type, perm.action);
                 return true;
                 """, script_args=[perm])
 
         with self.using_context('content'):
-            if waiting:
-                self.execute_async_script("""
-                    waitFor(marionetteScriptFinished, function() {
-                      return window.wrappedJSObject.permChanged;
-                    });
-                    """, sandbox='system')
-            else:
-                self.execute_script("""
-                    Components.utils.import("resource://gre/modules/Services.jsm");
-                    Services.obs.removeObserver(window.wrappedJSObject.permObserver, "perm-changed");
-                    """, sandbox='system')
+            self.execute_async_script("""
+                waitFor(marionetteScriptFinished, function() {
+                  return window.wrappedJSObject.permChanged;
+                });
+                """, sandbox='system')
+
+    @contextmanager
+    def using_permissions(self, perms):
+        '''
+        Sets permissions for code being executed in a `with` block,
+        and restores them on exit.
+
+        :param perms: A dict containing one or more perms and their
+        values to be set.
+
+        Usage example::
+
+          with marionette.using_permissions({'systemXHR': True}):
+              ... do stuff ...
+        '''
+        original_perms = {}
+        for perm in perms:
+            original_perms[perm] = self.get_permission(perm)
+            self.push_permission(perm, perms[perm])
+
+        try:
+            yield
+        finally:
+            for perm in original_perms:
+                self.push_permission(perm, original_perms[perm])
 
     def enforce_gecko_prefs(self, prefs):
         """
