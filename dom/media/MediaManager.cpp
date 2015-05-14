@@ -2288,7 +2288,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     // cleared until the lambda function clears it.
 
     MediaManager::GetMessageLoop()->PostTask(FROM_HERE, new ShutdownTask(
-        media::CallbackRunnable::New([this]() mutable {
+        media::NewRunnableFrom([this]() mutable {
       // Close off any remaining active windows.
       MutexAutoLock lock(mMutex);
       GetActiveWindows()->Clear();
