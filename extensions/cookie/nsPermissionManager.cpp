@@ -356,10 +356,10 @@ nsPermissionManager::AppClearDataObserverInit()
 ////////////////////////////////////////////////////////////////////////////////
 // nsPermissionManager Implementation
 
-static const char kPermissionsFileName[] = "permissions.sqlite";
+#define PERMISSIONS_FILE_NAME "permissions.sqlite"
 #define HOSTS_SCHEMA_VERSION 4
 
-static const char kHostpermFileName[] = "hostperm.1";
+#define HOSTPERM_FILE_NAME "hostperm.1"
 
 // Default permissions are read from a URL - this is the preference we read
 // to find that URL. If not set, don't use any default permissions.
@@ -453,7 +453,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
   }
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
-  rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
+  rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(PERMISSIONS_FILE_NAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRemoveFile) {
@@ -1861,7 +1861,7 @@ nsPermissionManager::Import()
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(permissionsFile));
   if (NS_FAILED(rv)) return rv;
 
-  rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(kHostpermFileName));
+  rv = permissionsFile->AppendNative(NS_LITERAL_CSTRING(HOSTPERM_FILE_NAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInputStream> fileInputStream;

@@ -81,7 +81,7 @@ StartupCache::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
-static const char sStartupCacheName[] = "startupCache." SC_WORDSIZE "." SC_ENDIAN;
+#define STARTUP_CACHE_NAME "startupCache." SC_WORDSIZE "." SC_ENDIAN
 
 StartupCache*
 StartupCache::GetSingleton()
@@ -196,7 +196,7 @@ StartupCache::Init()
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)
       return rv;
 
-    rv = file->AppendNative(NS_LITERAL_CSTRING(sStartupCacheName));
+    rv = file->AppendNative(NS_LITERAL_CSTRING(STARTUP_CACHE_NAME));
 
     NS_ENSURE_SUCCESS(rv, rv);
 

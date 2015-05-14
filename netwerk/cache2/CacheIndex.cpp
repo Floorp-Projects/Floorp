@@ -28,9 +28,9 @@
 #define kIndexVersion          0x00000001
 #define kUpdateIndexStartDelay 50000 // in milliseconds
 
-const char kIndexName[]     = "index";
-const char kTempIndexName[] = "index.tmp";
-const char kJournalName[]   = "index.log";
+#define INDEX_NAME      "index"
+#define TEMP_INDEX_NAME "index.tmp"
+#define JOURNAL_NAME    "index.log"
 
 namespace mozilla {
 namespace net {
@@ -1039,7 +1039,7 @@ CacheIndex::RemoveAll()
     } else {
       // We don't have a handle to index file, so get the file here, but delete
       // it outside the lock. Ignore the result since this is not fatal.
-      index->GetFile(NS_LITERAL_CSTRING(kIndexName), getter_AddRefs(file));
+      index->GetFile(NS_LITERAL_CSTRING(INDEX_NAME), getter_AddRefs(file));
     }
 
     if (index->mJournalHandle) {
@@ -1572,7 +1572,7 @@ CacheIndex::WriteIndexToDisk()
   mProcessEntries = mIndexStats.ActiveEntriesCount();
 
   mIndexFileOpener = new FileOpenHelper(this);
-  rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kTempIndexName),
+  rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(TEMP_INDEX_NAME),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::CREATE,
                                     mIndexFileOpener);
@@ -1823,9 +1823,9 @@ CacheIndex::RemoveIndexFromDisk()
 {
   LOG(("CacheIndex::RemoveIndexFromDisk()"));
 
-  RemoveFile(NS_LITERAL_CSTRING(kIndexName));
-  RemoveFile(NS_LITERAL_CSTRING(kTempIndexName));
-  RemoveFile(NS_LITERAL_CSTRING(kJournalName));
+  RemoveFile(NS_LITERAL_CSTRING(INDEX_NAME));
+  RemoveFile(NS_LITERAL_CSTRING(TEMP_INDEX_NAME));
+  RemoveFile(NS_LITERAL_CSTRING(JOURNAL_NAME));
 }
 
 class WriteLogHelper
@@ -1940,14 +1940,14 @@ CacheIndex::WriteLogToDisk()
   MOZ_ASSERT(mPendingUpdates.Count() == 0);
   MOZ_ASSERT(mState == SHUTDOWN);
 
-  RemoveFile(NS_LITERAL_CSTRING(kTempIndexName));
+  RemoveFile(NS_LITERAL_CSTRING(TEMP_INDEX_NAME));
 
   nsCOMPtr<nsIFile> indexFile;
-  rv = GetFile(NS_LITERAL_CSTRING(kIndexName), getter_AddRefs(indexFile));
+  rv = GetFile(NS_LITERAL_CSTRING(INDEX_NAME), getter_AddRefs(indexFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> logFile;
-  rv = GetFile(NS_LITERAL_CSTRING(kJournalName), getter_AddRefs(logFile));
+  rv = GetFile(NS_LITERAL_CSTRING(JOURNAL_NAME), getter_AddRefs(logFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mIndexStats.Log();
@@ -2017,36 +2017,36 @@ CacheIndex::ReadIndexFromDisk()
   ChangeState(READING);
 
   mIndexFileOpener = new FileOpenHelper(this);
-  rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kIndexName),
+  rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(INDEX_NAME),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::OPEN,
                                     mIndexFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ReadIndexFromDisk() - CacheFileIOManager::OpenFile() "
-         "failed [rv=0x%08x, file=%s]", rv, kIndexName));
+         "failed [rv=0x%08x, file=%s]", rv, INDEX_NAME));
     FinishRead(false);
     return;
   }
 
   mJournalFileOpener = new FileOpenHelper(this);
-  rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kJournalName),
+  rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(JOURNAL_NAME),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::OPEN,
                                     mJournalFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ReadIndexFromDisk() - CacheFileIOManager::OpenFile() "
-         "failed [rv=0x%08x, file=%s]", rv, kJournalName));
+         "failed [rv=0x%08x, file=%s]", rv, JOURNAL_NAME));
     FinishRead(false);
   }
 
   mTmpFileOpener = new FileOpenHelper(this);
-  rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kTempIndexName),
+  rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(TEMP_INDEX_NAME),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::OPEN,
                                     mTmpFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ReadIndexFromDisk() - CacheFileIOManager::OpenFile() "
-         "failed [rv=0x%08x, file=%s]", rv, kTempIndexName));
+         "failed [rv=0x%08x, file=%s]", rv, TEMP_INDEX_NAME));
     FinishRead(false);
   }
 }
@@ -2425,8 +2425,8 @@ CacheIndex::FinishRead(bool aSucceeded)
     (aSucceeded && mIndexOnDiskIsValid && mJournalReadSuccessfully));
 
   if (mState == SHUTDOWN) {
-    RemoveFile(NS_LITERAL_CSTRING(kTempIndexName));
-    RemoveFile(NS_LITERAL_CSTRING(kJournalName));
+    RemoveFile(NS_LITERAL_CSTRING(TEMP_INDEX_NAME));
+    RemoveFile(NS_LITERAL_CSTRING(JOURNAL_NAME));
   } else {
     if (mIndexHandle && !mIndexOnDiskIsValid) {
       CacheFileIOManager::DoomFile(mIndexHandle, nullptr);
@@ -2571,7 +2571,7 @@ CacheIndex::SetupDirectoryEnumerator()
   rv = mCacheDirectory->Clone(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING(kEntriesDir));
+  rv = file->AppendNative(NS_LITERAL_CSTRING(ENTRIES_DIR));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
@@ -3367,7 +3367,7 @@ CacheIndex::OnFileOpenedInternal(FileOpenHelper *aOpener,
         if (mJournalHandle) { // this shouldn't normally happen
           LOG(("CacheIndex::OnFileOpenedInternal() - Unexpected state, all "
                "files [%s, %s, %s] should never exist. Removing whole index.",
-               kIndexName, kJournalName, kTempIndexName));
+               INDEX_NAME, JOURNAL_NAME, TEMP_INDEX_NAME));
           FinishRead(false);
           break;
         }
@@ -3377,7 +3377,7 @@ CacheIndex::OnFileOpenedInternal(FileOpenHelper *aOpener,
         // Rename journal to make sure we update index on next start in case
         // firefox crashes
         rv = CacheFileIOManager::RenameFile(
-          mJournalHandle, NS_LITERAL_CSTRING(kTempIndexName), this);
+          mJournalHandle, NS_LITERAL_CSTRING(TEMP_INDEX_NAME), this);
         if (NS_FAILED(rv)) {
           LOG(("CacheIndex::OnFileOpenedInternal() - CacheFileIOManager::"
                "RenameFile() failed synchronously [rv=0x%08x]", rv));
@@ -3435,7 +3435,7 @@ CacheIndex::OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
       } else {
         if (mSkipEntries == mProcessEntries) {
           rv = CacheFileIOManager::RenameFile(mIndexHandle,
-                                              NS_LITERAL_CSTRING(kIndexName),
+                                              NS_LITERAL_CSTRING(INDEX_NAME),
                                               this);
           if (NS_FAILED(rv)) {
             LOG(("CacheIndex::OnDataWritten() - CacheFileIOManager::"
