@@ -32,9 +32,9 @@ class CacheFile;
 class CacheFileHandlesEntry;
 #endif
 
-#define ENTRIES_DIR "entries"
-#define DOOMED_DIR  "doomed"
-#define TRASH_DIR   "trash"
+const char kEntriesDir[] = "entries";
+const char kDoomedDir[]  = "doomed";
+const char kTrashDir[]   = "trash";
 
 
 class CacheFileHandle : public nsISupports

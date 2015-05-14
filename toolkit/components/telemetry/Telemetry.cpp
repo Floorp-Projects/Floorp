@@ -84,8 +84,10 @@ using base::Histogram;
 using base::LinearHistogram;
 using base::StatisticsRecorder;
 
-#define KEYED_HISTOGRAM_NAME_SEPARATOR "#"
-#define SUBSESSION_HISTOGRAM_PREFIX "sub#"
+const char KEYED_HISTOGRAM_NAME_SEPARATOR[] = "#";
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+const char SUBSESSION_HISTOGRAM_PREFIX[] = "sub#";
+#endif
 
 enum reflectStatus {
   REFLECT_OK,
@@ -869,7 +871,7 @@ IsExpired(const Histogram *histogram){
 bool
 IsValidHistogramName(const nsACString& name)
 {
-  return !FindInReadable(NS_LITERAL_CSTRING(KEYED_HISTOGRAM_NAME_SEPARATOR), name);
+  return !FindInReadable(nsCString(KEYED_HISTOGRAM_NAME_SEPARATOR), name);
 }
 
 bool
@@ -4146,11 +4148,11 @@ KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
   nsCString histogramName;
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
   if (subsession) {
-    histogramName.AppendLiteral(SUBSESSION_HISTOGRAM_PREFIX);
+    histogramName.Append(SUBSESSION_HISTOGRAM_PREFIX);
   }
 #endif
   histogramName.Append(mName);
-  histogramName.AppendLiteral(KEYED_HISTOGRAM_NAME_SEPARATOR);
+  histogramName.Append(KEYED_HISTOGRAM_NAME_SEPARATOR);
   histogramName.Append(key);
 
   Histogram* h;

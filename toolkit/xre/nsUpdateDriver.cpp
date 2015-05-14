@@ -82,16 +82,16 @@ GetUpdateLog()
 #define LOG(args) PR_LOG(GetUpdateLog(), PR_LOG_DEBUG, args)
 
 #ifdef XP_WIN
-#define UPDATER_BIN "updater.exe"
+static const char kUpdaterBin[] = "updater.exe";
 #else
-#define UPDATER_BIN "updater"
+static const char kUpdaterBin[] = "updater";
 #endif
-#define UPDATER_INI "updater.ini"
+static const char kUpdaterINI[] = "updater.ini";
 #ifdef XP_MACOSX
-#define UPDATER_APP "updater.app"
+static const char kUpdaterApp[] = "updater.app";
 #endif
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
-#define UPDATER_PNG "updater.png"
+static const char kUpdaterPNG[] = "updater.png";
 #endif
 
 #if defined(MOZ_WIDGET_GONK)
@@ -330,8 +330,9 @@ IsOlderVersion(nsIFile *versionFile, const char *appVersion)
 }
 
 static bool
-CopyFileIntoUpdateDir(nsIFile *parentDir, const nsACString& leaf, nsIFile *updateDir)
+CopyFileIntoUpdateDir(nsIFile *parentDir, const char *leafName, nsIFile *updateDir)
 {
+  nsDependentCString leaf(leafName);
   nsCOMPtr<nsIFile> file;
 
   // Make sure there is not an existing file in the target location.
@@ -363,19 +364,19 @@ CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
 {
   // Copy the updater application from the GRE and the updater ini from the app
 #if defined(XP_MACOSX)
-  if (!CopyFileIntoUpdateDir(appDir, NS_LITERAL_CSTRING(UPDATER_APP), updateDir))
+  if (!CopyFileIntoUpdateDir(appDir, kUpdaterApp, updateDir))
     return false;
-  CopyFileIntoUpdateDir(greDir, NS_LITERAL_CSTRING(UPDATER_INI), updateDir);
+  CopyFileIntoUpdateDir(greDir, kUpdaterINI, updateDir);
 #else
-  if (!CopyFileIntoUpdateDir(greDir, NS_LITERAL_CSTRING(UPDATER_BIN), updateDir))
+  if (!CopyFileIntoUpdateDir(greDir, kUpdaterBin, updateDir))
     return false;
-  CopyFileIntoUpdateDir(appDir, NS_LITERAL_CSTRING(UPDATER_INI), updateDir);
+  CopyFileIntoUpdateDir(appDir, kUpdaterINI, updateDir);
 #endif
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(ANDROID)
   nsCOMPtr<nsIFile> iconDir;
   appDir->Clone(getter_AddRefs(iconDir));
   iconDir->AppendNative(NS_LITERAL_CSTRING("icons"));
-  if (!CopyFileIntoUpdateDir(iconDir, NS_LITERAL_CSTRING(UPDATER_PNG), updateDir))
+  if (!CopyFileIntoUpdateDir(iconDir, kUpdaterPNG, updateDir))
     return false;
 #endif
   // Finally, return the location of the updater binary.
@@ -383,7 +384,7 @@ CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
   if (NS_FAILED(rv))
     return false;
 #if defined(XP_MACOSX)
-  rv  = updater->AppendNative(NS_LITERAL_CSTRING(UPDATER_APP));
+  rv  = updater->AppendNative(NS_LITERAL_CSTRING(kUpdaterApp));
   nsresult tmp = updater->AppendNative(NS_LITERAL_CSTRING("Contents"));
   if (NS_FAILED(tmp)) {
     rv = tmp;
@@ -392,7 +393,7 @@ CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
   if (NS_FAILED(tmp) || NS_FAILED(rv))
     return false;
 #endif
-  rv = updater->AppendNative(NS_LITERAL_CSTRING(UPDATER_BIN));
+  rv = updater->AppendNative(NS_LITERAL_CSTRING(kUpdaterBin));
   return NS_SUCCEEDED(rv); 
 }
 
@@ -500,7 +501,8 @@ SwitchToUpdatedApp(nsIFile *greDir, nsIFile *updateDir,
     return;
   }
 
-  rv = updater->AppendNative(NS_LITERAL_CSTRING(UPDATER_BIN));
+  nsDependentCString leaf(kUpdaterBin);
+  rv = updater->AppendNative(leaf);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -768,7 +770,8 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
     return;
   }
 
-  rv = updater->AppendNative(NS_LITERAL_CSTRING(UPDATER_BIN));
+  nsDependentCString leaf(kUpdaterBin);
+  rv = updater->AppendNative(leaf);
   if (NS_FAILED(rv)) {
     return;
   }

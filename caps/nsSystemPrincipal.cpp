@@ -51,12 +51,12 @@ nsSystemPrincipal::Release()
   return count;
 }
 
-#define SYSTEM_PRINCIPAL_SPEC "[System Principal]"
+static const char SYSTEM_PRINCIPAL_SPEC[] = "[System Principal]";
 
 void
 nsSystemPrincipal::GetScriptLocation(nsACString &aStr)
 {
-    aStr.AssignLiteral(SYSTEM_PRINCIPAL_SPEC);
+    aStr.Assign(SYSTEM_PRINCIPAL_SPEC);
 }
 
 #ifdef DEBUG
