@@ -149,8 +149,8 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, nsACString& aOrigin)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPrincipal::GetOrigin(nsACString& aOrigin)
+nsresult
+nsPrincipal::GetOriginInternal(nsACString& aOrigin)
 {
   return GetOriginForURI(mCodebase, aOrigin);
 }
@@ -660,8 +660,8 @@ nsExpandedPrincipal::SetDomain(nsIURI* aDomain)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsExpandedPrincipal::GetOrigin(nsACString& aOrigin)
+nsresult
+nsExpandedPrincipal::GetOriginInternal(nsACString& aOrigin)
 {
   aOrigin.AssignLiteral("[Expanded Principal [");
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {
