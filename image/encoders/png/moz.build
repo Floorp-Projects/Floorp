@@ -11,7 +11,7 @@ SOURCES += [
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
-    '/image',
+    '/image/src',
 ]
 
 FINAL_LIBRARY = 'xul'
