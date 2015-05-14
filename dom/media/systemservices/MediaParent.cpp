@@ -104,10 +104,7 @@ class ParentSingleton : public nsISupports
   class OriginKeysLoader : public OriginKeysTable
   {
   public:
-    OriginKeysLoader()
-    {
-      Load();
-    }
+    OriginKeysLoader() {}
 
     nsresult
     GetOriginKey(const nsACString& aOrigin, nsCString& result)
@@ -123,13 +120,7 @@ class ParentSingleton : public nsISupports
     already_AddRefed<nsIFile>
     GetFile()
     {
-      if (!mProfileDir) {
-        nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                             getter_AddRefs(mProfileDir));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return nullptr;
-        }
-      }
+      MOZ_ASSERT(mProfileDir);
       nsCOMPtr<nsIFile> file;
       nsresult rv = mProfileDir->Clone(getter_AddRefs(file));
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -317,6 +308,17 @@ class ParentSingleton : public nsISupports
       return NS_OK;
     }
 
+    void
+    SetProfileDir(nsIFile* aProfileDir)
+    {
+      MOZ_ASSERT(!NS_IsMainThread());
+      bool first = !mProfileDir;
+      mProfileDir = aProfileDir;
+      // Load from disk when we first get a profileDir, but not subsequently.
+      if (first) {
+        Load();
+      }
+    }
   private:
     nsCOMPtr<nsIFile> mProfileDir;
   };
@@ -355,25 +357,60 @@ Parent::RecvGetOriginKey(const uint32_t& aRequestId,
                          const nsCString& aOrigin,
                          const bool& aPrivateBrowsing)
 {
-  // Hand over to stream-transport thread.
+  // TODO: Replace all this when moving MediaParent to PContent soon (1037389)
 
-  nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-  MOZ_ASSERT(sts);
   nsRefPtr<ParentSingleton> singleton(mSingleton);
+  nsCOMPtr<nsIThread> returnThread = NS_GetCurrentThread();
+  nsRefPtr<Pledge<nsCString>> p = new Pledge<nsCString>();
+  nsresult rv;
 
-  nsRefPtr<PledgeRunnable<nsCString>> p = PledgeRunnable<nsCString>::New(
-      [singleton, aOrigin, aPrivateBrowsing](nsCString& aResult) {
-    if (aPrivateBrowsing) {
-      singleton->mPrivateBrowsingOriginKeys.GetOriginKey(aOrigin, aResult);
-    } else {
-      singleton->mOriginKeys.GetOriginKey(aOrigin, aResult);
+  // First, over to main thread to get profile dir.
+
+  rv = NS_DispatchToMainThread(NewRunnableFrom([p, returnThread, singleton, aOrigin,
+                                                aPrivateBrowsing]() -> nsresult {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIFile> profileDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                         getter_AddRefs(profileDir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Then from there over to stream-transport thread to do the actual file io.
+
+    nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    MOZ_ASSERT(sts);
+    rv = sts->Dispatch(NewRunnableFrom([profileDir, p, returnThread, singleton,
+                                        aOrigin, aPrivateBrowsing]() -> nsresult {
+      MOZ_ASSERT(!NS_IsMainThread());
+      singleton->mOriginKeys.SetProfileDir(profileDir);
+      nsCString result;
+      if (aPrivateBrowsing) {
+        singleton->mPrivateBrowsingOriginKeys.GetOriginKey(aOrigin, result);
+      } else {
+        singleton->mOriginKeys.GetOriginKey(aOrigin, result);
+      }
+
+      // Pass result back to original thread.
+      nsresult rv;
+      rv = returnThread->Dispatch(NewRunnableFrom([p, result]() -> nsresult {
+        p->Resolve(result);
+        return NS_OK;
+      }), NS_DISPATCH_NORMAL);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      return NS_OK;
+    }), NS_DISPATCH_NORMAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
     return NS_OK;
-  });
-  nsresult rv = sts->Dispatch(p, NS_DISPATCH_NORMAL);
+  }));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
+
   nsRefPtr<media::Parent> keepAlive(this);
   p->Then([this, keepAlive, aRequestId](const nsCString& aKey) mutable {
     if (!mDestroyed) {
@@ -387,19 +424,36 @@ Parent::RecvGetOriginKey(const uint32_t& aRequestId,
 bool
 Parent::RecvSanitizeOriginKeys(const uint64_t& aSinceWhen)
 {
-  // Hand over to stream-transport thread.
-
-  nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-  MOZ_ASSERT(sts);
   nsRefPtr<ParentSingleton> singleton(mSingleton);
 
-  nsRefPtr<PledgeRunnable<bool>> p = PledgeRunnable<bool>::New(
-      [singleton, aSinceWhen](bool) {
-    singleton->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
-    singleton->mOriginKeys.Clear(aSinceWhen);
+  // First, over to main to get profile dir.
+  nsresult rv;
+
+  rv = NS_DispatchToMainThread(NewRunnableFrom([singleton,
+                                                aSinceWhen]() -> nsresult {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIFile> profileDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                         getter_AddRefs(profileDir));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    // Then from there over to stream-transport thread to do the file io.
+
+    nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    MOZ_ASSERT(sts);
+    rv = sts->Dispatch(NewRunnableFrom([profileDir, singleton, aSinceWhen]() -> nsresult {
+      MOZ_ASSERT(!NS_IsMainThread());
+      singleton->mOriginKeys.SetProfileDir(profileDir);
+      singleton->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
+      singleton->mOriginKeys.Clear(aSinceWhen);
+      return NS_OK;
+    }), NS_DISPATCH_NORMAL);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     return NS_OK;
-  });
-  nsresult rv = sts->Dispatch(p, NS_DISPATCH_NORMAL);
+  }));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
