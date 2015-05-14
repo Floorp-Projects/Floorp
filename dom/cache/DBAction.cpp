@@ -187,6 +187,9 @@ DBAction::WipeDatabase(nsIFile* aDBFile, nsIFile* aDBDir)
   nsresult rv = aDBFile->Remove(false);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
+  // Note, the -wal journal file will be automatically deleted by sqlite when
+  // the new database is created.  No need to explicitly delete it here.
+
   // Delete the morgue as well.
   rv = BodyDeleteDir(aDBDir);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
