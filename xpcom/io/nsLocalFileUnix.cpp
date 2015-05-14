@@ -2154,12 +2154,6 @@ nsLocalFile::MoveTo(nsIFile* aNewParentDir, const nsAString& aNewName)
 NS_IMETHODIMP
 nsLocalFile::RenameTo(nsIFile* aNewParentDir, const nsAString& aNewName)
 {
-  SET_UCS_2ARGS_2(RenameToNative, aNewParentDir, aNewName);
-}
-
-NS_IMETHODIMP
-nsLocalFile::RenameToNative(nsIFile* aNewParentDir, const nsACString& aNewName)
-{
   nsresult rv;
 
   // check to make sure that this has been initialized properly
@@ -2167,7 +2161,12 @@ nsLocalFile::RenameToNative(nsIFile* aNewParentDir, const nsACString& aNewName)
 
   // check to make sure that we have a new parent
   nsAutoCString newPathName;
-  rv = GetNativeTargetPathName(aNewParentDir, aNewName, newPathName);
+  nsAutoCString newNativeName;
+  rv = NS_CopyUnicodeToNative(aNewName, newNativeName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = GetNativeTargetPathName(aNewParentDir, newNativeName, newPathName);
   if (NS_FAILED(rv)) {
     return rv;
   }

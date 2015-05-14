@@ -111,12 +111,12 @@ const char kChromeOrigin[] = "chrome";
 const char kAboutHomeOrigin[] = "moz-safe-about:home";
 const char kIndexedDBOriginPrefix[] = "indexeddb://";
 
-#define INDEXEDDB_DIRECTORY_NAME "indexedDB"
-#define STORAGE_DIRECTORY_NAME "storage"
-#define PERSISTENT_DIRECTORY_NAME "persistent"
-#define PERMANENT_DIRECTORY_NAME "permanent"
-#define TEMPORARY_DIRECTORY_NAME "temporary"
-#define DEFAULT_DIRECTORY_NAME "default"
+const char kIndexedDBDirectoryName[] = "indexedDB";
+const char kStorageDirectoryName[] = "storage";
+const char kPersistentDirectoryName[] = "persistent";
+const char kPermanentDirectoryName[] = "permanent";
+const char kTemporaryDirectoryName[] = "temporary";
+const char kDefaultDirectoryName[] = "default";
 
 enum AppId {
   kNoAppId = nsIScriptSecurityManager::NO_APP_ID,
@@ -801,7 +801,7 @@ IsTreatedAsTemporary(PersistenceType aPersistenceType,
 
 nsresult
 CloneStoragePath(nsIFile* aBaseDir,
-                 const nsAString& aStorageName,
+                 const nsACString& aStorageName,
                  nsAString& aStoragePath)
 {
   nsresult rv;
@@ -812,7 +812,8 @@ CloneStoragePath(nsIFile* aBaseDir,
     return rv;
   }
 
-  rv = storageDir->Append(aStorageName);
+  NS_ConvertASCIItoUTF16 dirName(aStorageName);
+  rv = storageDir->Append(dirName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1426,28 +1427,29 @@ QuotaManager::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = CloneStoragePath(baseDir,
-                          NS_LITERAL_STRING(INDEXEDDB_DIRECTORY_NAME),
+                          NS_LITERAL_CSTRING(kIndexedDBDirectoryName),
                           mIndexedDBPath);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = baseDir->Append(NS_LITERAL_STRING(STORAGE_DIRECTORY_NAME));
+    NS_ConvertASCIItoUTF16 dirName(NS_LITERAL_CSTRING(kStorageDirectoryName));
+    rv = baseDir->Append(dirName);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = baseDir->GetPath(mStoragePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = CloneStoragePath(baseDir,
-                          NS_LITERAL_STRING(PERMANENT_DIRECTORY_NAME),
+                          NS_LITERAL_CSTRING(kPermanentDirectoryName),
                           mPermanentStoragePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = CloneStoragePath(baseDir,
-                          NS_LITERAL_STRING(TEMPORARY_DIRECTORY_NAME),
+                          NS_LITERAL_CSTRING(kTemporaryDirectoryName),
                           mTemporaryStoragePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = CloneStoragePath(baseDir,
-                          NS_LITERAL_STRING(DEFAULT_DIRECTORY_NAME),
+                          NS_LITERAL_CSTRING(kDefaultDirectoryName),
                           mDefaultStoragePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2131,7 +2133,8 @@ QuotaManager::MaybeUpgradeIndexedDBDirectory()
   rv = persistentStorageDir->InitWithPath(mStoragePath);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = persistentStorageDir->Append(NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
+  NS_ConvertASCIItoUTF16 dirName(NS_LITERAL_CSTRING(kPersistentDirectoryName));
+  rv = persistentStorageDir->Append(dirName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = persistentStorageDir->Exists(&exists);
@@ -2152,7 +2155,7 @@ QuotaManager::MaybeUpgradeIndexedDBDirectory()
   // However there's a theoretical possibility that the indexedDB directory
   // is on different volume, but it should be rare enough that we don't have
   // to worry about it.
-  rv = indexedDBDir->MoveTo(storageDir, NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
+  rv = indexedDBDir->MoveTo(storageDir, dirName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2176,7 +2179,8 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
     return rv;
   }
 
-  rv = persistentStorageDir->Append(NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
+  NS_ConvertASCIItoUTF16 dirName(NS_LITERAL_CSTRING(kPersistentDirectoryName));
+  rv = persistentStorageDir->Append(dirName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2271,7 +2275,8 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
   }
 
   // And finally rename persistent to default.
-  rv = persistentStorageDir->RenameTo(nullptr, NS_LITERAL_STRING(DEFAULT_DIRECTORY_NAME));
+  NS_ConvertASCIItoUTF16 defDirName(NS_LITERAL_CSTRING(kDefaultDirectoryName));
+  rv = persistentStorageDir->RenameTo(nullptr, defDirName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2480,7 +2485,7 @@ QuotaManager::GetStorageId(PersistenceType aPersistenceType,
   str.Append('*');
   str.AppendInt(aClientType);
   str.Append('*');
-  AppendUTF16toUTF8(aName, str);
+  str.Append(NS_ConvertUTF16toUTF8(aName));
 
   aDatabaseId = str;
 }

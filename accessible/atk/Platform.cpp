@@ -361,12 +361,13 @@ dbus_done:
 #endif
 
   //check gconf-2 setting
-#define GCONF_A11Y_KEY "/desktop/gnome/interface/accessibility"
+static const char sGconfAccessibilityKey[] =
+    "/desktop/gnome/interface/accessibility";
   nsresult rv = NS_OK;
   nsCOMPtr<nsIGConfService> gconf =
     do_GetService(NS_GCONFSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && gconf)
-    gconf->GetBool(NS_LITERAL_CSTRING(GCONF_A11Y_KEY), &sShouldEnable);
+    gconf->GetBool(NS_LITERAL_CSTRING(sGconfAccessibilityKey), &sShouldEnable);
 
   return sShouldEnable;
 }
