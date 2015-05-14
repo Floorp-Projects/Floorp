@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(74fb6760-4ae7-4ec7-8ac7-06817c60a93a)]
+[scriptable, builtinclass, uuid(147839d5-e799-4280-831a-dd45946385f9)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -64,15 +64,6 @@ interface nsIPrincipal : nsISerializable
      * Setting this has no effect on the URI.
      */
     [noscript] attribute nsIURI domain;
-
-    /**
-     * The origin of this principal's codebase URI.
-     * An origin is defined as: scheme + host + port.
-     */
-    // XXXcaa this should probably be turned into an nsIURI.
-    // The system principal's origin should be some caps namespace
-    // with a chrome URI.  All of chrome should probably be the same.
-    readonly attribute ACString origin;
 
     /**
      * Returns whether the other principal is equal to or weaker than this
@@ -173,6 +164,24 @@ interface nsIPrincipal : nsISerializable
      */
     [implicit_jscontext]
     readonly attribute jsval originAttributes;
+
+    /**
+     * A canonical representation of the origin for this principal. This
+     * consists of a base string (which, for codebase principals, is of the
+     * format scheme://host:port), concatenated with |originAttributes| (see
+     * below).
+     *
+     * We maintain the invariant that principalA.equals(principalB) if and only
+     * if principalA.origin == principalB.origin.
+     */
+    readonly attribute ACString origin;
+
+    /**
+     * The base part of |origin| without the concatenation with |originSuffix|.
+     * This doesn't have the important invariants described above with |origin|,
+     * and as such should only be used for legacy situations.
+     */
+    readonly attribute ACString originNoSuffix;
 
     /**
      * A string of the form !key1=value1&key2=value2, where each pair represents
