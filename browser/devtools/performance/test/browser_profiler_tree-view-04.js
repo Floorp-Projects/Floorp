@@ -26,8 +26,6 @@ function test() {
     "The root node's 'category' attribute is correct.");
   is(treeRoot.target.getAttribute("tooltiptext"), "",
     "The root node's 'tooltiptext' attribute is correct.");
-  ok(treeRoot.target.querySelector(".call-tree-category").hidden,
-    "The root node's category label cell should be hidden.");
 
   let A = treeRoot.getChild();
   let B = A.getChild();
