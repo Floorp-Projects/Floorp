@@ -5,9 +5,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/BasePrincipal.h"
+
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"
 
 namespace mozilla {
+
+void
+BasePrincipal::OriginAttributes::Serialize(nsIObjectOutputStream* aStream) const
+{
+  aStream->Write32(mAppId);
+  aStream->WriteBoolean(mIsInBrowserElement);
+}
+
+nsresult
+BasePrincipal::OriginAttributes::Deserialize(nsIObjectInputStream* aStream)
+{
+  nsresult rv = aStream->Read32(&mAppId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->ReadBoolean(&mIsInBrowserElement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 bool
 BasePrincipal::Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration)
