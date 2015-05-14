@@ -232,6 +232,10 @@ gssInit()
 void
 LogGssError(OM_uint32 maj_stat, OM_uint32 min_stat, const char *prefix)
 {
+    if (!PR_LOG_TEST(gNegotiateLog, PR_LOG_DEBUG)) {
+        return;
+    }
+
     OM_uint32 new_stat;
     OM_uint32 msg_ctx = 0;
     gss_buffer_desc status1_string;
