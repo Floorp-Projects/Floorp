@@ -507,13 +507,15 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
   bool consumed =
     sActiveIMEContentObserver->OnMouseButtonEvent(aPresContext, internalEvent);
 
-  nsAutoString eventType;
-  aMouseEvent->GetType(eventType);
-  PR_LOG(sISMLog, PR_LOG_ALWAYS,
-    ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
-     "mouse event (type=%s, button=%d) is %s",
-     NS_ConvertUTF16toUTF8(eventType).get(), internalEvent->button,
-     consumed ? "consumed" : "not consumed"));
+  if (PR_LOG_TEST(sISMLog, PR_LOG_ALWAYS)) {
+    nsAutoString eventType;
+    aMouseEvent->GetType(eventType);
+    PR_LOG(sISMLog, PR_LOG_ALWAYS,
+      ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
+       "mouse event (type=%s, button=%d) is %s",
+       NS_ConvertUTF16toUTF8(eventType).get(), internalEvent->button,
+       consumed ? "consumed" : "not consumed"));
+  }
 
   return consumed;
 }

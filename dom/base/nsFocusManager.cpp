@@ -77,16 +77,16 @@ using namespace mozilla::widget;
 PRLogModuleInfo* gFocusLog;
 PRLogModuleInfo* gFocusNavigationLog;
 
-#define LOGFOCUS(args) PR_LOG(gFocusLog, 4, args)
-#define LOGFOCUSNAVIGATION(args) PR_LOG(gFocusNavigationLog, 4, args)
+#define LOGFOCUS(args) PR_LOG(gFocusLog, PR_LOG_DEBUG, args)
+#define LOGFOCUSNAVIGATION(args) PR_LOG(gFocusNavigationLog, PR_LOG_DEBUG, args)
 
 #define LOGTAG(log, format, content)                            \
-  {                                                             \
+  if (PR_LOG_TEST(log, PR_LOG_DEBUG)) {                         \
     nsAutoCString tag(NS_LITERAL_CSTRING("(none)"));            \
     if (content) {                                              \
       content->NodeInfo()->NameAtom()->ToUTF8String(tag);       \
     }                                                           \
-    PR_LOG(log, 4, (format, tag.get()));                        \
+    PR_LOG(log, PR_LOG_DEBUG, (format, tag.get()));             \
   }
 
 #define LOGCONTENT(format, content) LOGTAG(gFocusLog, format, content)

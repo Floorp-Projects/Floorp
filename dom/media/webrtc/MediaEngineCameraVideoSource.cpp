@@ -218,14 +218,16 @@ MediaEngineCameraVideoSource::ChooseCapability(
     const dom::MediaTrackConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs)
 {
-  LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
-       aPrefs.GetWidth(), aPrefs.GetHeight(),
-       aPrefs.mFPS, aPrefs.mMinFPS));
-  LogConstraints(aConstraints, false);
-  if (aConstraints.mAdvanced.WasPassed()) {
-    LOG(("Advanced array[%u]:", aConstraints.mAdvanced.Value().Length()));
-    for (auto& advanced : aConstraints.mAdvanced.Value()) {
-      LogConstraints(advanced, true);
+  if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
+    LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
+         aPrefs.GetWidth(), aPrefs.GetHeight(),
+         aPrefs.mFPS, aPrefs.mMinFPS));
+    LogConstraints(aConstraints, false);
+    if (aConstraints.mAdvanced.WasPassed()) {
+      LOG(("Advanced array[%u]:", aConstraints.mAdvanced.Value().Length()));
+      for (auto& advanced : aConstraints.mAdvanced.Value()) {
+        LogConstraints(advanced, true);
+      }
     }
   }
 
