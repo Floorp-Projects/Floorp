@@ -20,6 +20,8 @@
 #include <stagefright/foundation/ADebug.h>
 #include "AudioOutput.h"
 
+#include "prlog.h"
+
 namespace mozilla {
 
 extern PRLogModuleInfo* gAudioOffloadPlayerLog;
