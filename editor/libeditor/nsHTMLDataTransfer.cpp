@@ -303,6 +303,11 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
                            streamEndParentNode, streamEndOffset);
 
   if (nodeList.Length() == 0) {
+    // We aren't inserting anything, but if aDeleteSelection is set, we do want
+    // to delete everything.
+    if (aDeleteSelection) {
+      return DeleteSelection(eNone, eStrip);
+    }
     return NS_OK;
   }
 
