@@ -577,6 +577,83 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Extracts any urlencoded form data sections (e.g. "?foo=bar&baz=42") from a
+   * POST request.
+   *
+   * @param object aHeaders
+   *        The "requestHeaders".
+   * @param object aUploadHeaders
+   *        The "requestHeadersFromUploadStream".
+   * @param object aPostData
+   *        The "requestPostData".
+   * @return array
+   *        A promise that is resolved with the extracted form data.
+   */
+  _getFormDataSections: Task.async(function*(aHeaders, aUploadHeaders, aPostData) {
+    let formDataSections = [];
+
+    let { headers: requestHeaders } = aHeaders;
+    let { headers: payloadHeaders } = aUploadHeaders;
+    let allHeaders = [...payloadHeaders, ...requestHeaders];
+
+    let contentTypeHeader = allHeaders.find(e => e.name.toLowerCase() == "content-type");
+    let contentTypeLongString = contentTypeHeader ? contentTypeHeader.value : "";
+    let contentType = yield gNetwork.getString(contentTypeLongString);
+
+    if (contentType.includes("x-www-form-urlencoded")) {
+      let postDataLongString = aPostData.postData.text;
+      let postData = yield gNetwork.getString(postDataLongString);
+
+      for (let section of postData.split(/\r\n|\r|\n/)) {
+        // Before displaying it, make sure this section of the POST data
+        // isn't a line containing upload stream headers.
+        if (payloadHeaders.every(header => !section.startsWith(header.name))) {
+          formDataSections.push(section);
+        }
+      }
+    }
+
+    return formDataSections;
+  }),
+
+  /**
+   * Copy the request form data parameters (or raw payload) from the currently selected item.
+   */
+  copyPostData: Task.async(function*() {
+    let selected = this.selectedItem.attachment;
+    let view = this;
+
+    // Try to extract any form data parameters.
+    let formDataSections = yield view._getFormDataSections(
+      selected.requestHeaders,
+      selected.requestHeadersFromUploadStream,
+      selected.requestPostData);
+
+    let params = [];
+    formDataSections.forEach(section => {
+      let paramsArray = parseQueryString(section);
+      if (paramsArray) {
+        params = [...params, ...paramsArray];
+      }
+    });
+
+    let string = params
+      .map(param => param.name + (param.value ? "=" + param.value : ""))
+      .join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n");
+
+    // Fall back to raw payload.
+    if (!string) {
+      let postData = selected.requestPostData.postData.text;
+      string = yield gNetwork.getString(postData);
+      if (Services.appinfo.OS !== "WINNT") {
+        string = string.replace(/\r/g, "");
+      }
+    }
+
+    clipboardHelper.copyString(string, document);
+  }),
+
+  /**
    * Copy a cURL command from the currently selected item.
    */
   copyAsCurl: function() {
@@ -1844,6 +1921,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let copyUrlParamsElement = $("#request-menu-context-copy-url-params");
     copyUrlParamsElement.hidden = !selectedItem || !nsIURL(selectedItem.attachment.url).query;
 
+    let copyPostDataElement = $("#request-menu-context-copy-post-data");
+    copyPostDataElement.hidden = !selectedItem || !selectedItem.attachment.requestPostData;
+
     let copyAsCurlElement = $("#request-menu-context-copy-as-curl");
     copyAsCurlElement.hidden = !selectedItem || !selectedItem.attachment.responseContent;
 
@@ -2451,19 +2531,19 @@ NetworkDetailsView.prototype = {
   /**
    * Sets the network request headers shown in this view.
    *
-   * @param object aHeadersResponse
+   * @param object aHeaders
    *        The "requestHeaders" message received from the server.
-   * @param object aHeadersFromUploadStream
+   * @param object aUploadHeaders
    *        The "requestHeadersFromUploadStream" inferred from the POST payload.
    * @return object
    *        A promise that resolves when request headers are set.
    */
-  _setRequestHeaders: Task.async(function*(aHeadersResponse, aHeadersFromUploadStream) {
-    if (aHeadersResponse && aHeadersResponse.headers.length) {
-      yield this._addHeaders(this._requestHeaders, aHeadersResponse);
+  _setRequestHeaders: Task.async(function*(aHeaders, aUploadHeaders) {
+    if (aHeaders && aHeaders.headers.length) {
+      yield this._addHeaders(this._requestHeaders, aHeaders);
     }
-    if (aHeadersFromUploadStream && aHeadersFromUploadStream.headers.length) {
-      yield this._addHeaders(this._requestHeadersFromUpload, aHeadersFromUploadStream);
+    if (aUploadHeaders && aUploadHeaders.headers.length) {
+      yield this._addHeaders(this._requestHeadersFromUpload, aUploadHeaders);
     }
   }),
 
@@ -2591,40 +2671,28 @@ NetworkDetailsView.prototype = {
   /**
    * Sets the network request post params shown in this view.
    *
-   * @param object aHeadersResponse
+   * @param object aHeaders
    *        The "requestHeaders" message received from the server.
-   * @param object aHeadersFromUploadStream
+   * @param object aUploadHeaders
    *        The "requestHeadersFromUploadStream" inferred from the POST payload.
-   * @param object aPostDataResponse
+   * @param object aPostData
    *        The "requestPostData" message received from the server.
    * @return object
    *        A promise that is resolved when the request post params are set.
    */
-  _setRequestPostParams: Task.async(function*(aHeadersResponse, aHeadersFromUploadStream, aPostDataResponse) {
-    if (!aHeadersResponse || !aHeadersFromUploadStream || !aPostDataResponse) {
+  _setRequestPostParams: Task.async(function*(aHeaders, aUploadHeaders, aPostData) {
+    if (!aHeaders || !aUploadHeaders || !aPostData) {
       return;
     }
 
-    let { headers: requestHeaders } = aHeadersResponse;
-    let { headers: payloadHeaders } = aHeadersFromUploadStream;
-    let allHeaders = [...payloadHeaders, ...requestHeaders];
+    let formDataSections = yield RequestsMenuView.prototype._getFormDataSections(
+      aHeaders, aUploadHeaders, aPostData);
 
-    let contentTypeHeader = allHeaders.find(e => e.name.toLowerCase() == "content-type");
-    let contentTypeLongString = contentTypeHeader ? contentTypeHeader.value : "";
-    let postDataLongString = aPostDataResponse.postData.text;
-
-    let postData = yield gNetwork.getString(postDataLongString);
-    let contentType = yield gNetwork.getString(contentTypeLongString);
-
-    // Handle query strings (e.g. "?foo=bar&baz=42").
-    if (contentType.includes("x-www-form-urlencoded")) {
-      for (let section of postData.split(/\r\n|\r|\n/)) {
-        // Before displaying it, make sure this section of the POST data
-        // isn't a line containing upload stream headers.
-        if (payloadHeaders.every(header => !section.startsWith(header.name))) {
-          this._addParams(this._paramsFormData, section);
-        }
-      }
+    // Handle urlencoded form data sections (e.g. "?foo=bar&baz=42").
+    if (formDataSections.length > 0) {
+      formDataSections.forEach(section => {
+        this._addParams(this._paramsFormData, section);
+      });
     }
     // Handle actual forms ("multipart/form-data" content type).
     else {
@@ -2638,6 +2706,9 @@ NetworkDetailsView.prototype = {
 
       $("#request-post-data-textarea-box").hidden = false;
       let editor = yield NetMonitorView.editor("#request-post-data-textarea");
+      let postDataLongString = aPostData.postData.text;
+      let postData = yield gNetwork.getString(postDataLongString);
+
       // Most POST bodies are usually JSON, so they can be neatly
       // syntax highlighted as JS. Otheriwse, fall back to plain text.
       try {
