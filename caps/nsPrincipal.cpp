@@ -15,8 +15,6 @@
 #include "nsIURI.h"
 #include "nsJSPrincipals.h"
 #include "nsIEffectiveTLDService.h"
-#include "nsIObjectInputStream.h"
-#include "nsIObjectOutputStream.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIProtocolHandler.h"
 #include "nsError.h"
@@ -362,12 +360,8 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
 
   domain = do_QueryInterface(supports);
 
-  uint32_t appId;
-  rv = aStream->Read32(&appId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool inMozBrowser;
-  rv = aStream->ReadBoolean(&inMozBrowser);
+  OriginAttributes attrs;
+  rv = attrs.Deserialize(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
@@ -376,7 +370,6 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   // This may be null.
   nsCOMPtr<nsIContentSecurityPolicy> csp = do_QueryInterface(supports, &rv);
 
-  OriginAttributes attrs(appId, inMozBrowser);
   rv = Init(codebase, attrs);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -411,8 +404,7 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
     return rv;
   }
 
-  aStream->Write32(AppId());
-  aStream->WriteBoolean(IsInBrowserElement());
+  OriginAttributesRef().Serialize(aStream);
 
   rv = NS_WriteOptionalCompoundObject(aStream, mCSP,
                                       NS_GET_IID(nsIContentSecurityPolicy),
