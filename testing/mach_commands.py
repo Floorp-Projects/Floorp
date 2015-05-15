@@ -289,6 +289,9 @@ class MachCommands(MachCommandBase):
 
         return 0 if result else 1
 
+def executable_name(name):
+    return name + '.exe' if sys.platform.startswith('win') else name
+
 @CommandProvider
 class CheckSpiderMonkeyCommand(MachCommandBase):
     @Command('check-spidermonkey', category='testing', description='Run SpiderMonkey tests (JavaScript engine).')
@@ -298,11 +301,7 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         import subprocess
         import sys
 
-        bin_suffix = ''
-        if sys.platform.startswith('win'):
-            bin_suffix = '.exe'
-
-        js = os.path.join(self.bindir, 'js%s' % bin_suffix)
+        js = os.path.join(self.bindir, executable_name('js'))
 
         print('Running jit-tests')
         jittest_cmd = [os.path.join(self.topsrcdir, 'js', 'src', 'jit-test', 'jit_test.py'),
@@ -318,7 +317,7 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         jstest_result = subprocess.call(jstest_cmd)
 
         print('running jsapi-tests')
-        jsapi_tests_cmd = [os.path.join(self.bindir, 'jsapi-tests%s' % bin_suffix)]
+        jsapi_tests_cmd = [os.path.join(self.bindir, executable_name('jsapi-tests'))]
         jsapi_tests_result = subprocess.call(jsapi_tests_cmd)
 
         print('running check-style')
@@ -328,3 +327,26 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         all_passed = jittest_result and jstest_result and jsapi_tests_result and check_style_result
 
         return all_passed
+
+@CommandProvider
+class JsapiTestsCommand(MachCommandBase):
+    @Command('jsapi-tests', category='testing', description='Run jsapi tests (JavaScript engine).')
+    @CommandArgument('test_name', nargs='?', metavar='N',
+        help='Test to run. Can be a prefix or omitted. If omitted, the entire ' \
+             'test suite is executed.')
+
+    def run_jsapitests(self, **params):
+        import subprocess
+
+        bin_suffix = ''
+        if sys.platform.startswith('win'):
+            bin_suffix = '.exe'
+
+        print('running jsapi-tests')
+        jsapi_tests_cmd = [os.path.join(self.bindir, executable_name('jsapi-tests'))]
+        if params['test_name']:
+            jsapi_tests_cmd.append(params['test_name'])
+
+        jsapi_tests_result = subprocess.call(jsapi_tests_cmd)
+
+        return jsapi_tests_result
