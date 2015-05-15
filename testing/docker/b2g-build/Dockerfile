@@ -8,6 +8,8 @@ RUN yum install -y epel-release && \
   yum makecache && \
   yum install -y \
   # From Building B2G docs
+  # cmake \
+  # cmake: is disabled intentionally to work around: bug 1141417
   GConf2-devel \
   alsa-lib-devel \
   autoconf213 \
@@ -15,21 +17,20 @@ RUN yum install -y epel-release && \
   bison \
   bzip2 \
   ccache \
-  # cmake: is disabled intentionally to work around: bug 1141417
-  # cmake \
   curl \
   curl-devel \
   dbus-devel \
   dbus-glib-devel \
   dbus-glib-devel \
   dbus-python \
+  expat-devel \
   file \
   flex \
   gawk \
   gcc473_0moz1 \
+  gettext-devel \
   glibc-devel \
   glibc-devel.i686 \
-  glibc-static \
   glibc-static \
   gstreamer-devel \
   gstreamer-plugins-base-devel \
@@ -48,7 +49,6 @@ RUN yum install -y epel-release && \
   make \
   mesa-libGL-devel \
   mesa-libGL-devel.i686 \
-  mozilla-git \
   mozilla-python27 \
   mozilla-python27-mercurial \
   mpfr-devel.x86_64 \
@@ -56,9 +56,11 @@ RUN yum install -y epel-release && \
   ncurses:-devel \
   openssh-clients \
   openssl-devel \
+  openssl-devel \
   patch \
   perl-DBI \
   perl-Digest-SHA \
+  perl-ExtUtils-MakeMaker \
   pulseaudio-libs-devel \
   readline-devel.i686 \
   rsync \
@@ -98,6 +100,14 @@ RUN useradd -d /home/worker -s /bin/bash -m worker
 
 # Terrible symlink hacks so cc points to the gcc version we intend to use...
 RUN ls -lah /tools/gcc-4.7.3-0moz1/bin && ln -s /tools/gcc-4.7.3-0moz1/bin/gcc /tools/gcc-4.7.3-0moz1/bin/cc
+
+# Terrible Hack to correctly install git-2.4.1
+RUN mkdir -p /tmp/git && cd /tmp/git && \
+    curl -L https://s3-us-west-2.amazonaws.com/test-caching/git-2.4.1.tar.gz | tar -xz && \
+    cd git* && \
+    make prefix=/usr/local/ all -j10 && \
+    make prefix=/usr/local/ install && \
+    rm -Rf /tmp/git
 
 # Install node from node's own dist...
 ENV NODE_VERSION v0.10.36
