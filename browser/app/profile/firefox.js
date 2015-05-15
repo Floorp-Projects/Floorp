@@ -1332,6 +1332,8 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #ifdef MOZ_DEV_EDITION
 sticky_pref("lightweightThemes.selectedThemeID", "firefox-devedition@mozilla.org");
 sticky_pref("browser.devedition.theme.enabled", true);
+#else
+sticky_pref("lightweightThemes.selectedThemeID", "");
 #endif
 
 // Developer edition promo preferences
