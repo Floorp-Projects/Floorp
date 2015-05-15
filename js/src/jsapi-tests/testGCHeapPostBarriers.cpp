@@ -8,8 +8,6 @@
 #include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
 
-using mozilla::UniquePtr;
-
 BEGIN_TEST(testGCHeapPostBarriers)
 {
 #ifdef JS_GC_ZEAL
@@ -46,8 +44,8 @@ TestHeapPostBarriers(T initialObj)
     CHECK(js::gc::IsInsideNursery(initialObj));
 
     /* Construct Heap<> wrapper. */
-    UniquePtr<JS::Heap<T>> heapData(new JS::Heap<T>);
-    CHECK(heapData.get());
+    JS::Heap<T>* heapData = new JS::Heap<T>();
+    CHECK(heapData);
     CHECK(Passthrough(heapData->get() == nullptr));
     *heapData = initialObj;
 
@@ -66,6 +64,7 @@ TestHeapPostBarriers(T initialObj)
     CHECK(value.isInt32());
     CHECK(value.toInt32() == 42);
 
+    delete heapData;
     return true;
 }
 
