@@ -3069,9 +3069,18 @@ pref("intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_first_char"
 pref("intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_caret", true);
 #endif
 
+// If composition_font is set, Gecko sets the font to IME.  IME may use
+// the fonts on their window like candidate window.  If they are empty,
+// Gecko uses the system default font which is set to the IM context.
+// The font name must not start with '@'.  When the writing mode is vertical,
+// Gecko inserts '@' to the start of the font name automatically.
+// FYI: Changing these prefs requires to restart.
+pref("intl.imm.composition_font", "");
+
 // Even if IME claims that they support vertical writing mode but it may not
 // support vertical writing mode for its candidate window.  This pref allows
 // to ignore the claim.
+// FYI: Changing this pref requires to restart.
 pref("intl.imm.vertical_writing.always_assume_not_supported", false);
 
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.

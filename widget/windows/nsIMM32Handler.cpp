@@ -11,6 +11,7 @@
 #include "nsWindowDefs.h"
 #include "WinUtils.h"
 #include "KeyboardLayout.h"
+#include "WritingModes.h"
 #include <algorithm>
 
 #include "mozilla/MiscEvents.h"
@@ -113,6 +114,7 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 #define IMEMOUSE_WUP        0x10    // wheel up
 #define IMEMOUSE_WDOWN      0x20    // wheel down
 
+nsString nsIMM32Handler::sIMEName;
 UINT nsIMM32Handler::sCodePage = 0;
 DWORD nsIMM32Handler::sIMEProperty = 0;
 DWORD nsIMM32Handler::sIMEUIProperty = 0;
@@ -202,21 +204,18 @@ nsIMM32Handler::IsVerticalWritingSupported()
 /* static */ void
 nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
 {
-#ifdef PR_LOGGING
-  nsAutoString IMEName;
-  if (PR_LOG_TEST(gIMM32Log, PR_LOG_ALWAYS)) {
-    UINT IMENameLength = ::ImmGetDescriptionW(aKeyboardLayout, nullptr, 0);
-    if (IMENameLength) {
-      // Add room for the terminating null character
-      IMEName.SetLength(++IMENameLength);
-      IMENameLength =
-        ::ImmGetDescriptionW(aKeyboardLayout, IMEName.BeginWriting(),
-                             IMENameLength);
-      // Adjust the length to ignore the terminating null character
-      IMEName.SetLength(IMENameLength);
-    }
+  UINT IMENameLength = ::ImmGetDescriptionW(aKeyboardLayout, nullptr, 0);
+  if (IMENameLength) {
+    // Add room for the terminating null character
+    sIMEName.SetLength(++IMENameLength);
+    IMENameLength =
+      ::ImmGetDescriptionW(aKeyboardLayout, sIMEName.BeginWriting(),
+                           IMENameLength);
+    // Adjust the length to ignore the terminating null character
+    sIMEName.SetLength(IMENameLength);
+  } else {
+    sIMEName.Truncate();
   }
-#endif // #ifdef PR_LOGGING
 
   WORD langID = LOWORD(aKeyboardLayout);
   ::GetLocaleInfoW(MAKELCID(langID, SORT_DEFAULT),
@@ -227,7 +226,7 @@ nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x (\"%s\"), sCodePage=%lu, "
      "sIMEProperty=%s, sIMEUIProperty=%s",
-     aKeyboardLayout, NS_ConvertUTF16toUTF8(IMEName).get(),
+     aKeyboardLayout, NS_ConvertUTF16toUTF8(sIMEName).get(),
      sCodePage, GetIMEGeneralPropertyName(sIMEProperty).get(),
      GetIMEUIPropertyName(sIMEUIProperty).get()));
 }
@@ -872,6 +871,9 @@ nsIMM32Handler::OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
   mComposingWindow = aWindow;
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
   SetIMERelatedWindowsPosOnPlugin(aWindow, IMEContext);
+  // On widnowless plugin, we should assume that the focused editor is always
+  // in horizontal writing mode.
+  AdjustCompositionFont(IMEContext, WritingMode());
   aResult.mConsumed =
     aWindow->DispatchPluginEvent(WM_IME_STARTCOMPOSITION, wParam, lParam,
                                  false);
@@ -1047,6 +1049,8 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
       ("IMM32: HandleStartComposition, FAILED (NS_QUERY_SELECTED_TEXT)\n"));
     return;
   }
+
+  AdjustCompositionFont(aIMEContext, selection.GetWritingMode());
 
   mCompositionStart = selection.mReply.mOffset;
 
@@ -2116,6 +2120,118 @@ nsIMM32Handler::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
 
   if (aNewOriginWidget)
     aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffsetUntyped());
+}
+
+static void
+SetHorizontalFontToLogFont(const nsAString& aFontFace,
+                           LOGFONTW& aLogFont)
+{
+  aLogFont.lfEscapement = aLogFont.lfOrientation = 0;
+  if (NS_WARN_IF(aFontFace.Length() > LF_FACESIZE - 1)) {
+    memcpy(aLogFont.lfFaceName, L"System", sizeof(L"System"));
+    return;
+  }
+  memcpy(aLogFont.lfFaceName, aFontFace.BeginReading(),
+         aFontFace.Length() * sizeof(wchar_t));
+  aLogFont.lfFaceName[aFontFace.Length()] = 0;
+}
+
+static void
+SetVerticalFontToLogFont(const nsAString& aFontFace,
+                         LOGFONTW& aLogFont)
+{
+  aLogFont.lfEscapement = aLogFont.lfOrientation = 2700;
+  if (NS_WARN_IF(aFontFace.Length() > LF_FACESIZE - 2)) {
+    memcpy(aLogFont.lfFaceName, L"@System", sizeof(L"@System"));
+    return;
+  }
+  aLogFont.lfFaceName[0] = '@';
+  memcpy(&aLogFont.lfFaceName[1], aFontFace.BeginReading(),
+         aFontFace.Length() * sizeof(wchar_t));
+  aLogFont.lfFaceName[aFontFace.Length() + 1] = 0;
+}
+
+void
+nsIMM32Handler::AdjustCompositionFont(const nsIMEContext& aIMEContext,
+                                      const WritingMode& aWritingMode)
+{
+  // An instance of nsIMM32Handler is destroyed when active IME is changed.
+  // Therefore, we need to store the information which are set to the IM
+  // context to static variables since IM context is never recreated.
+  static bool sCompositionFontsInitialized = false;
+  static nsString sCompositionFont =
+    Preferences::GetString("intl.imm.composition_font");
+
+  // If composition font is customized by pref, we need to modify the
+  // composition font of the IME context at first time even if the writing mode
+  // is horizontal.
+  bool setCompositionFontForcibly =
+    !sCompositionFontsInitialized && !sCompositionFont.IsEmpty();
+
+  static WritingMode sCurrentWritingMode;
+  static nsString sCurrentIMEName;
+  if (!setCompositionFontForcibly &&
+      sCurrentWritingMode == aWritingMode &&
+      sCurrentIMEName == sIMEName) {
+    // Nothing to do if writing mode isn't being changed.
+    return;
+  }
+
+  // Decide composition fonts for both horizontal writing mode and vertical
+  // writing mode.  If the font isn't specified by the pref, use default
+  // font which is already set to the IM context.  And also in vertical writing
+  // mode, insert '@' to the start of the font.
+  if (!sCompositionFontsInitialized) {
+    sCompositionFontsInitialized = true;
+    // sCompositionFontH must not start with '@' and its length is less than
+    // LF_FACESIZE since it needs to end with null terminating character.
+    if (sCompositionFont.IsEmpty() ||
+        sCompositionFont.Length() > LF_FACESIZE - 1 ||
+        sCompositionFont[0] == '@') {
+      LOGFONTW defaultLogFont;
+      if (NS_WARN_IF(!::ImmGetCompositionFont(aIMEContext.get(),
+                                              &defaultLogFont))) {
+        PR_LOG(gIMM32Log, PR_LOG_ERROR,
+          ("IMM32: AdjustCompositionFont, ::ImmGetCompositionFont() failed"));
+        sCompositionFont.AssignLiteral("System");
+      } else {
+        // The font face is typically, "System".
+        sCompositionFont.Assign(defaultLogFont.lfFaceName);
+      }
+    }
+
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: AdjustCompositionFont, sCompositionFont=\"%s\" is initialized",
+       NS_ConvertUTF16toUTF8(sCompositionFont).get()));
+  }
+
+  sCurrentWritingMode = aWritingMode;
+  sCurrentIMEName = sIMEName;
+
+  LOGFONTW logFont;
+  memset(&logFont, 0, sizeof(logFont));
+  if (!::ImmGetCompositionFont(aIMEContext.get(), &logFont)) {
+    PR_LOG(gIMM32Log, PR_LOG_ERROR,
+      ("IMM32: AdjustCompositionFont, ::ImmGetCompositionFont() failed"));
+    logFont.lfFaceName[0] = 0;
+  }
+  // Need to reset some information which should be recomputed with new font.
+  logFont.lfWidth = 0;
+  logFont.lfWeight = FW_DONTCARE;
+  logFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
+  logFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+  logFont.lfPitchAndFamily = DEFAULT_PITCH;
+
+  if (!mIsComposingOnPlugin &&
+      aWritingMode.IsVertical() && IsVerticalWritingSupported()) {
+    SetVerticalFontToLogFont(sCompositionFont, logFont);
+  } else {
+    SetHorizontalFontToLogFont(sCompositionFont, logFont);
+  }
+  PR_LOG(gIMM32Log, PR_LOG_WARNING,
+    ("IMM32: AdjustCompositionFont, calling ::ImmSetCompositionFont(\"%s\")",
+     NS_ConvertUTF16toUTF8(nsDependentString(logFont.lfFaceName)).get()));
+  ::ImmSetCompositionFontW(aIMEContext.get(), &logFont);
 }
 
 /* static */ nsresult
