@@ -2346,11 +2346,6 @@ ContentPermissionPrompt.prototype = {
    */
   _showPrompt: function CPP_showPrompt(aRequest, aMessage, aPermission, aActions,
                                        aNotificationId, aAnchorId, aOptions) {
-    function onFullScreen() {
-      popup.remove();
-    }
-
-
     var browser = this._getBrowserForRequest(aRequest);
     var chromeWin = browser.ownerDocument.defaultView;
     var requestPrincipal = aRequest.principal;
@@ -2397,43 +2392,15 @@ ContentPermissionPrompt.prototype = {
                        popupNotificationActions[0] : null;
     var secondaryActions = popupNotificationActions.splice(1);
 
-    // Only allow exactly one permission rquest here.
+    // Only allow exactly one permission request here.
     let types = aRequest.types.QueryInterface(Ci.nsIArray);
     if (types.length != 1) {
       aRequest.cancel();
       return;
     }
 
-    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
-
-    if (perm.type == "pointerLock") {
-      // If there's no mainAction, this is the autoAllow warning prompt.
-      let autoAllow = !mainAction;
-
-      if (!aOptions)
-        aOptions = {};
-
-      aOptions.removeOnDismissal = autoAllow;
-      aOptions.eventCallback = type => {
-        if (type == "removed") {
-          browser.removeEventListener("mozfullscreenchange", onFullScreen, true);
-          if (autoAllow) {
-            aRequest.allow();
-          }
-        }
-      }
-
-    }
-
-    var popup = chromeWin.PopupNotifications.show(browser, aNotificationId, aMessage, aAnchorId,
-                                                  mainAction, secondaryActions, aOptions);
-    if (perm.type == "pointerLock") {
-      // pointerLock is automatically allowed in fullscreen mode (and revoked
-      // upon exit), so if the page enters fullscreen mode after requesting
-      // pointerLock (but before the user has granted permission), we should
-      // remove the now-impotent notification.
-      browser.addEventListener("mozfullscreenchange", onFullScreen, true);
-    }
+    return chromeWin.PopupNotifications.show(browser, aNotificationId, aMessage, aAnchorId,
+                                             mainAction, secondaryActions, aOptions);
   },
 
   _promptPush : function(aRequest) {
@@ -2591,12 +2558,34 @@ ContentPermissionPrompt.prototype = {
       ];
     }
 
-    this._showPrompt(aRequest, message, "pointerLock", actions, "pointerLock",
-                     "pointerLock-notification-icon", null);
+    function onFullScreen() {
+      notification.remove();
+    }
+
+    let options = {};
+    options.removeOnDismissal = autoAllow;
+    options.eventCallback = type => {
+      if (type == "removed") {
+        notification.browser.removeEventListener("mozfullscreenchange", onFullScreen, true);
+        if (autoAllow) {
+          aRequest.allow();
+        }
+      }
+    }
+
+    let notification =
+      this._showPrompt(aRequest, message, "pointerLock", actions, "pointerLock",
+                       "pointerLock-notification-icon", options);
+
+    // pointerLock is automatically allowed in fullscreen mode (and revoked
+    // upon exit), so if the page enters fullscreen mode after requesting
+    // pointerLock (but before the user has granted permission), we should
+    // remove the now-impotent notification.
+    notification.browser.addEventListener("mozfullscreenchange", onFullScreen, true);
   },
 
   prompt: function CPP_prompt(request) {
-    // Only allow exactly one permission rquest here.
+    // Only allow exactly one permission request here.
     let types = request.types.QueryInterface(Ci.nsIArray);
     if (types.length != 1) {
       request.cancel();
