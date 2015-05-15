@@ -21,6 +21,7 @@
 #include "SerializedLoadContext.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsProxyRelease.h"
+#include "nsContentSecurityManager.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::dom;
@@ -622,6 +623,15 @@ WyciwygChannelChild::Open(nsIInputStream **_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+WyciwygChannelChild::Open2(nsIInputStream** aStream)
+{
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Open(aStream);
+}
+
 static mozilla::dom::TabChild*
 GetTabChild(nsIChannel* aChannel)
 {
@@ -670,6 +680,15 @@ WyciwygChannelChild::AsyncOpen(nsIStreamListener *aListener, nsISupports *aConte
   mState = WCC_OPENED;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+WyciwygChannelChild::AsyncOpen2(nsIStreamListener *aListener)
+{
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return AsyncOpen(listener, nullptr);
 }
 
 //-----------------------------------------------------------------------------

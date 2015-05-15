@@ -118,6 +118,7 @@ public:
   NS_IMETHOD GetContentLength(int64_t *aContentLength) override;
   NS_IMETHOD SetContentLength(int64_t aContentLength) override;
   NS_IMETHOD Open(nsIInputStream **aResult) override;
+  NS_IMETHOD Open2(nsIInputStream **aResult) override;
 
   // nsIEncodedChannel
   NS_IMETHOD GetApplyConversion(bool *value) override;
