@@ -346,6 +346,11 @@
   <string name="doorhanger_login_edit_password_hint">&doorhanger_login_edit_password_hint;</string>
   <string name="doorhanger_login_edit_toggle">&doorhanger_login_edit_toggle;</string>
   <string name="doorhanger_login_edit_toast_error">&doorhanger_login_edit_toast_error;</string>
+  <string name="doorhanger_login_select_message">&doorhanger_login_select_message;</string>
+  <string name="doorhanger_login_select_toast_copy">&doorhanger_login_select_toast_copy;</string>
+  <string name="doorhanger_login_select_toast_copy_error">&doorhanger_login_select_toast_copy_error;</string>
+  <string name="doorhanger_login_select_action_text">&doorhanger_login_select_action_text;</string>
+  <string name="doorhanger_login_select_title">&doorhanger_login_select_title;</string>
 
   <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
@@ -375,6 +380,7 @@
   <string name="button_yes">&button_yes;</string>
   <string name="button_no">&button_no;</string>
   <string name="button_remember">&button_remember;</string>
+  <string name="button_copy">&button_copy;</string>
 
   <string name="firstrun_panel_title_welcome">&firstrun_panel_title_welcome;</string>
 

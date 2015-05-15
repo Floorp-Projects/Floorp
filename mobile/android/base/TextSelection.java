@@ -37,6 +37,7 @@ import android.view.View;
 
 class TextSelection extends Layer implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTextSelection";
+    private static final int SHUTDOWN_DELAY_MS = 250;
 
     private final TextSelectionHandle anchorHandle;
     private final TextSelectionHandle caretHandle;
@@ -91,6 +92,9 @@ class TextSelection extends Layer implements GeckoEventListener {
             Log.e(LOGTAG, "Failed to initialize text selection because at least one handle is null");
         } else {
             EventDispatcher.getInstance().registerGeckoThreadListener(this,
+                "TextSelection:ActionbarInit",
+                "TextSelection:ActionbarStatus",
+                "TextSelection:ActionbarUninit",
                 "TextSelection:ShowHandles",
                 "TextSelection:HideHandles",
                 "TextSelection:PositionHandles",
@@ -101,6 +105,9 @@ class TextSelection extends Layer implements GeckoEventListener {
 
     void destroy() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+            "TextSelection:ActionbarInit",
+            "TextSelection:ActionbarStatus",
+            "TextSelection:ActionbarUninit",
             "TextSelection:ShowHandles",
             "TextSelection:HideHandles",
             "TextSelection:PositionHandles",
@@ -167,7 +174,7 @@ class TextSelection extends Layer implements GeckoEventListener {
                         }
 
                         mActionModeTimerTask = new ActionModeTimerTask();
-                        mActionModeTimer.schedule(mActionModeTimerTask, 250);
+                        mActionModeTimer.schedule(mActionModeTimerTask, SHUTDOWN_DELAY_MS);
 
                         anchorHandle.setVisibility(View.GONE);
                         caretHandle.setVisibility(View.GONE);
@@ -185,7 +192,28 @@ class TextSelection extends Layer implements GeckoEventListener {
                             handle.setVisibility(position.getBoolean("hidden") ? View.GONE : View.VISIBLE);
                             handle.positionFromGecko(left, top, rtl);
                         }
+
+                    } else if (event.equals("TextSelection:ActionbarInit")) {
+                        // Init / Open the action bar. Note the current selectionID,
+                        // cancel any pending actionBar close.
+                        selectionID = message.getString("selectionID");
+                        mCurrentItems = null;
+                        if (mActionModeTimerTask != null) {
+                            mActionModeTimerTask.cancel();
+                        }
+
+                    } else if (event.equals("TextSelection:ActionbarStatus")) {
+                        // Update the actionBar actions as provided by Gecko.
+                        showActionMode(message.getJSONArray("actions"));
+
+                    } else if (event.equals("TextSelection:ActionbarUninit")) {
+                        // Uninit the actionbar. Schedule a cancellable close
+                        // action to avoid UI jank. (During SelectionAll for ex).
+                        mCurrentItems = null;
+                        mActionModeTimerTask = new ActionModeTimerTask();
+                        mActionModeTimer.schedule(mActionModeTimerTask, SHUTDOWN_DELAY_MS);
                     }
+
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "JSON exception", e);
                 }
