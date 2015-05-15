@@ -2001,7 +2001,8 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
   nsIntRect r;
   // Get first character rect of current a normal selected text or a composing
   // string.
-  bool ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r);
+  WritingMode writingMode;
+  bool ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r, &writingMode);
   NS_ENSURE_TRUE(ret, false);
   nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
   nsIntRect firstSelectedCharRect;
@@ -2032,37 +2033,93 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
       ("IMM32: SetIMERelatedWindowsPos, Set candidate window\n"));
 
     // Get a rect of first character in current target in composition string.
+    nsIntRect firstTargetCharRect, lastTargetCharRect;
     if (mIsComposing && !mCompositionString.IsEmpty()) {
       // If there are no targetted selection, we should use it's first character
       // rect instead.
-      uint32_t offset;
-      if (!GetTargetClauseRange(&offset)) {
+      uint32_t offset, length;
+      if (!GetTargetClauseRange(&offset, &length)) {
         PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
           ("IMM32: SetIMERelatedWindowsPos, FAILED, by GetTargetClauseRange\n"));
         return false;
       }
       ret = GetCharacterRectOfSelectedTextAt(aWindow,
-                                             offset - mCompositionStart, r);
+                                             offset - mCompositionStart,
+                                             firstTargetCharRect, &writingMode);
       NS_ENSURE_TRUE(ret, false);
+      if (length) {
+        ret = GetCharacterRectOfSelectedTextAt(aWindow,
+                offset + length - 1 - mCompositionStart, lastTargetCharRect);
+        NS_ENSURE_TRUE(ret, false);
+      } else {
+        lastTargetCharRect = firstTargetCharRect;
+      }
     } else {
       // If there are no composition string, we should use a first character
       // rect.
-      ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r);
+      ret = GetCharacterRectOfSelectedTextAt(aWindow, 0,
+                                             firstTargetCharRect, &writingMode);
       NS_ENSURE_TRUE(ret, false);
+      lastTargetCharRect = firstTargetCharRect;
     }
-    nsIntRect firstTargetCharRect;
-    ResolveIMECaretPos(toplevelWindow, r, aWindow, firstTargetCharRect);
+    ResolveIMECaretPos(toplevelWindow, firstTargetCharRect,
+                       aWindow, firstTargetCharRect);
+    ResolveIMECaretPos(toplevelWindow, lastTargetCharRect,
+                       aWindow, lastTargetCharRect);
+    nsIntRect targetClauseRect;
+    targetClauseRect.UnionRect(firstTargetCharRect, lastTargetCharRect);
 
-    // Move the candidate window to first character position of the target.
+    // Move the candidate window to proper position from the target clause as
+    // far as possible.
     CANDIDATEFORM candForm;
     candForm.dwIndex = 0;
-    candForm.dwStyle = CFS_EXCLUDE;
-    candForm.ptCurrentPos.x = firstTargetCharRect.x;
-    candForm.ptCurrentPos.y = firstTargetCharRect.y;
-    candForm.rcArea.right = candForm.rcArea.left = candForm.ptCurrentPos.x;
-    candForm.rcArea.top = candForm.ptCurrentPos.y;
-    candForm.rcArea.bottom = candForm.ptCurrentPos.y +
-                               firstTargetCharRect.height;
+    if (!writingMode.IsVertical() || IsVerticalWritingSupported()) {
+      candForm.dwStyle = CFS_EXCLUDE;
+      // Candidate window shouldn't overlap the target clause in any writing
+      // mode.
+      candForm.rcArea.left = targetClauseRect.x;
+      candForm.rcArea.right = targetClauseRect.XMost();
+      candForm.rcArea.top = targetClauseRect.y;
+      candForm.rcArea.bottom = targetClauseRect.YMost();
+      if (!writingMode.IsVertical()) {
+        // In horizontal layout, current point of interest should be top-left
+        // of the first character.
+        candForm.ptCurrentPos.x = firstTargetCharRect.x;
+        candForm.ptCurrentPos.y = firstTargetCharRect.y;
+      } else if (writingMode.IsVerticalRL()) {
+        // In vertical layout (RL), candidate window should be positioned right
+        // side of target clause.  However, we don't set vertical writing font
+        // to the IME.  Therefore, the candidate window may be positioned
+        // bottom-left of target clause rect with these information.
+        candForm.ptCurrentPos.x = targetClauseRect.x;
+        candForm.ptCurrentPos.y = targetClauseRect.y;
+      } else {
+        MOZ_ASSERT(writingMode.IsVerticalLR(), "Did we miss some causes?");
+        // In vertical layout (LR), candidate window should be poisitioned left
+        // side of target clause.  Although, we don't set vertical writing font
+        // to the IME, the candidate window may be positioned bottom-right of
+        // the target clause rect with these information.
+        candForm.ptCurrentPos.x = targetClauseRect.XMost();
+        candForm.ptCurrentPos.y = targetClauseRect.y;
+      }
+    } else {
+      // If vertical writing is not supported by IME, let's set candidate
+      // window position to the bottom-left of the target clause because
+      // the position must be the safest position to prevent the candidate
+      // window to overlap with the target clause.
+      candForm.dwStyle = CFS_CANDIDATEPOS;
+      candForm.ptCurrentPos.x = targetClauseRect.x;
+      candForm.ptCurrentPos.y = targetClauseRect.YMost();
+    }
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: SetIMERelatedWindowsPos, Calling ImmSetCandidateWindow()... "
+       "ptCurrentPos={ x=%d, y=%d }, "
+       "rcArea={ left=%d, top=%d, right=%d, bottom=%d }, "
+       "writingMode=%s",
+       candForm.ptCurrentPos.x, candForm.ptCurrentPos.y,
+       candForm.rcArea.left, candForm.rcArea.top,
+       candForm.rcArea.right, candForm.rcArea.bottom,
+       GetWritingModeName(writingMode).get()));
     ::ImmSetCandidateWindow(aIMEContext.get(), &candForm);
   } else {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -2074,7 +2131,9 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
     // automatically. So, we don't need to set it.
     COMPOSITIONFORM compForm;
     compForm.dwStyle = CFS_POINT;
-    compForm.ptCurrentPos.x = firstSelectedCharRect.x;
+    compForm.ptCurrentPos.x =
+      !writingMode.IsVerticalLR() ? firstSelectedCharRect.x :
+                                    firstSelectedCharRect.XMost();
     compForm.ptCurrentPos.y = firstSelectedCharRect.y;
     ::ImmSetCompositionWindow(aIMEContext.get(), &compForm);
   }
