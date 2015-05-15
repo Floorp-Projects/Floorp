@@ -18,7 +18,7 @@ interface nsIStkTimer;
  * This StkCmdFactory provides series factory methods to create objects defined
  * in nsIStkProactiveCmd.idl and MozStkCommandEvent.webidl.
  */
-[scriptable, uuid(c507a2fc-0057-11e5-a245-63b36b054bcc)]
+[scriptable, uuid(743536c4-006f-11e5-a3f7-bf7a7fd59b9b)]
 interface nsIStkCmdFactory : nsISupports
 {
   /**
@@ -40,6 +40,23 @@ interface nsIStkCmdFactory : nsISupports
   jsval createCommandMessage(in nsIStkProactiveCmd aStkProactiveCmd);
 
   /**
+   * @param  aStkProactiveCmd
+   *         a nsIStkProactiveCmd instance.
+   *
+   * @return a JSON string which complies with 'dictionary MozStkCommand'
+   *         in MozStkCommandEvent.webidl
+   */
+  AString deflateCommand(in nsIStkProactiveCmd aStkProactiveCmd);
+
+  /**
+   * @param  a JSON string which complies with 'dictionary MozStkCommand'
+   *         in MozStkCommandEvent.webidl
+   *
+   * @return a nsIStkProactiveCmd instance.
+   */
+  nsIStkProactiveCmd inflateCommand(in AString aJSON);
+
+  /**
    * @param aResponseMessage
    *        A JS object which complies with 'dictionary MozStkResponse'
    *        in MozStkCommandEvent.webidl
@@ -58,6 +75,23 @@ interface nsIStkCmdFactory : nsISupports
   jsval createResponseMessage(in nsIStkTerminalResponse aStkTerminalResponse);
 
   /**
+   * @param  aStkTerminalResponse
+   *         a nsIStkTerminalResponse instance.
+   *
+   * @return a JSON string which complies with 'dictionary MozStkResponse'
+   *         in MozStkCommandEvent.webidl
+   */
+  AString deflateResponse(in nsIStkTerminalResponse aStkTerminalResponse);
+
+  /**
+   * @param  a JSON string which complies with 'dictionary MozStkResponse'
+   *         in MozStkCommandEvent.webidl
+   *
+   * @return a nsIStkTerminalResponse instance.
+   */
+  nsIStkTerminalResponse inflateResponse(in AString aJSON);
+
+  /**
    * @param aEventMessage
    *        A JS object which complies with 'dictionary MozStkXxxEvent'
    *        in MozStkCommandEvent.webidl
@@ -74,6 +108,23 @@ interface nsIStkCmdFactory : nsISupports
    *         in MozStkCommandEvent.webidl
    */
   jsval createEventMessage(in nsIStkDownloadEvent aStkDownloadEvent);
+
+  /**
+   * @param  aStkDownloadEvent
+   *         a nsIStkDownloadEvent instance.
+   *
+   * @return a JSON string which complies with 'dictionary MozStkXxxEvent'
+   *         in MozStkCommandEvent.webidl
+   */
+  AString deflateDownloadEvent(in nsIStkDownloadEvent aStkDownloadEvent);
+
+  /**
+   * @param  a JSON string which complies with 'dictionary MozStkXxxEvent'
+   *         in MozStkCommandEvent.webidl
+   *
+   * @return a nsIStkDownloadEvent instance.
+   */
+  nsIStkDownloadEvent inflateDownloadEvent(in AString aJSON);
 
   /**
    * @param aStkTimerMessage
