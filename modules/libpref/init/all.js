@@ -3090,6 +3090,13 @@ pref("intl.imm.composition_font.japanist_2003", "MS PGothic");
 // FYI: Changing this pref requires to restart.
 pref("intl.imm.vertical_writing.always_assume_not_supported", false);
 
+// We cannot retrieve active IME name with IMM32 API if a TIP of TSF is active.
+// This pref can specify active IME name when Japanese TIP is active.
+// For example:
+//   Google Japanese Input: "Google 日本語入力 IMM32 モジュール"
+//   ATOK 2011: "ATOK 2011" (similarly, e.g., ATOK 2013 is "ATOK 2013")
+pref("intl.imm.japanese.assume_active_tip_name_as", "");
+
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
 pref("ui.panel.default_level_parent", false);
 
