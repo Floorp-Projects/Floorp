@@ -68,7 +68,7 @@ matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
     return (strcmp(prefEntry->key, otherKey) == 0);
 }
 
-PLDHashTable*       gHashTable;
+PLDHashTable        gHashTable;
 static PLArenaPool  gPrefNameArena;
 bool                gDirty = false;
 
@@ -149,10 +149,9 @@ static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, u
 
 nsresult PREF_Init()
 {
-    if (!gHashTable) {
-        gHashTable = new PLDHashTable(&pref_HashTableOps,
-                                      sizeof(PrefHashEntry),
-                                      PREF_HASHTABLE_INITIAL_LENGTH);
+    if (!gHashTable.IsInitialized()) {
+        PL_DHashTableInit(&gHashTable, &pref_HashTableOps,
+                          sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
 
         PL_INIT_ARENA_POOL(&gPrefNameArena, "PrefNameArena",
                            PREFNAME_ARENA_SIZE);
@@ -183,9 +182,8 @@ void PREF_Cleanup()
 /* Frees up all the objects except the callback list. */
 void PREF_CleanupPrefs()
 {
-    if (gHashTable) {
-        delete gHashTable;
-        gHashTable = nullptr;
+    if (gHashTable.IsInitialized()) {
+        PL_DHashTableFinish(&gHashTable);
         PL_FinishArenaPool(&gPrefNameArena);
     }
 }
@@ -468,7 +466,7 @@ pref_CompareStrings(const void *v1, const void *v2, void *unused)
 
 bool PREF_HasUserPref(const char *pref_name)
 {
-    if (!gHashTable)
+    if (!gHashTable.IsInitialized())
         return false;
 
     PrefHashEntry *pref = pref_HashTableLookup(pref_name);
@@ -482,7 +480,7 @@ bool PREF_HasUserPref(const char *pref_name)
 nsresult
 PREF_CopyCharPref(const char *pref_name, char ** return_buffer, bool get_default)
 {
-    if (!gHashTable)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv = NS_ERROR_UNEXPECTED;
@@ -506,7 +504,7 @@ PREF_CopyCharPref(const char *pref_name, char ** return_buffer, bool get_default
 
 nsresult PREF_GetIntPref(const char *pref_name,int32_t * return_int, bool get_default)
 {
-    if (!gHashTable)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv = NS_ERROR_UNEXPECTED;
@@ -530,7 +528,7 @@ nsresult PREF_GetIntPref(const char *pref_name,int32_t * return_int, bool get_de
 
 nsresult PREF_GetBoolPref(const char *pref_name, bool * return_value, bool get_default)
 {
-    if (!gHashTable)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv = NS_ERROR_UNEXPECTED;
@@ -581,7 +579,7 @@ PREF_DeleteBranch(const char *branch_name)
 
     int len = (int)strlen(branch_name);
 
-    if (!gHashTable)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     /* The following check insures that if the branch name already has a "."
@@ -594,7 +592,7 @@ PREF_DeleteBranch(const char *branch_name)
     if ((len > 1) && branch_name[len - 1] != '.')
         branch_dot += '.';
 
-    PL_DHashTableEnumerate(gHashTable, pref_DeleteItem,
+    PL_DHashTableEnumerate(&gHashTable, pref_DeleteItem,
                            (void*) branch_dot.get());
     gDirty = true;
     return NS_OK;
@@ -604,7 +602,7 @@ PREF_DeleteBranch(const char *branch_name)
 nsresult
 PREF_ClearUserPref(const char *pref_name)
 {
-    if (!gHashTable)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     PrefHashEntry* pref = pref_HashTableLookup(pref_name);
@@ -613,7 +611,7 @@ PREF_ClearUserPref(const char *pref_name)
         pref->flags &= ~PREF_USERSET;
 
         if (!(pref->flags & PREF_HAS_DEFAULT)) {
-            PL_DHashTableRemove(gHashTable, pref_name);
+            PL_DHashTableRemove(&gHashTable, pref_name);
         }
 
         pref_DoCallback(pref_name);
@@ -649,11 +647,11 @@ PREF_ClearAllUserPrefs()
     MOZ_ASSERT(NS_IsMainThread());
 #endif
 
-    if (!gHashTable)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     std::vector<std::string> prefStrings;
-    PL_DHashTableEnumerate(gHashTable, pref_ClearUserPref, static_cast<void*>(&prefStrings));
+    PL_DHashTableEnumerate(&gHashTable, pref_ClearUserPref, static_cast<void*>(&prefStrings));
 
     for (std::string& prefString : prefStrings) {
         pref_DoCallback(prefString.c_str());
@@ -665,7 +663,7 @@ PREF_ClearAllUserPrefs()
 
 nsresult PREF_LockPref(const char *key, bool lockit)
 {
-    if (!gHashTable)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_NOT_INITIALIZED;
 
     PrefHashEntry* pref = pref_HashTableLookup(key);
@@ -736,7 +734,7 @@ PrefHashEntry* pref_HashTableLookup(const void *key)
     MOZ_ASSERT(NS_IsMainThread());
 #endif
 
-    return static_cast<PrefHashEntry*>(PL_DHashTableSearch(gHashTable, key));
+    return static_cast<PrefHashEntry*>(PL_DHashTableSearch(&gHashTable, key));
 }
 
 nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t flags)
@@ -745,11 +743,11 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
     MOZ_ASSERT(NS_IsMainThread());
 #endif
 
-    if (!gHashTable)
+    if (!gHashTable.IsInitialized())
         return NS_ERROR_OUT_OF_MEMORY;
 
     PrefHashEntry* pref = static_cast<PrefHashEntry*>
-        (PL_DHashTableAdd(gHashTable, key, fallible));
+        (PL_DHashTableAdd(&gHashTable, key, fallible));
 
     if (!pref)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -841,7 +839,8 @@ pref_SizeOfPrivateData(MallocSizeOf aMallocSizeOf)
 PrefType
 PREF_GetPrefType(const char *pref_name)
 {
-    if (gHashTable) {
+    if (gHashTable.IsInitialized())
+    {
         PrefHashEntry* pref = pref_HashTableLookup(pref_name);
         if (pref)
         {
@@ -862,7 +861,7 @@ bool
 PREF_PrefIsLocked(const char *pref_name)
 {
     bool result = false;
-    if (gIsAnyPrefLocked && gHashTable) {
+    if (gIsAnyPrefLocked && gHashTable.IsInitialized()) {
         PrefHashEntry* pref = pref_HashTableLookup(pref_name);
         if (pref && PREF_IS_LOCKED(pref))
             result = true;
