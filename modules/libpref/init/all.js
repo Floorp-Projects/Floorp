@@ -3077,6 +3077,13 @@ pref("intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_caret", tru
 // FYI: Changing these prefs requires to restart.
 pref("intl.imm.composition_font", "");
 
+// Japanist 2003's candidate window is broken if the font is "@System" which
+// is default composition font for vertical writing mode.
+// You can specify font to use on candidate window of Japanist 2003.
+// This value must not start with '@'.
+// FYI: Changing this pref requires to restart.
+pref("intl.imm.composition_font.japanist_2003", "MS PGothic");
+
 // Even if IME claims that they support vertical writing mode but it may not
 // support vertical writing mode for its candidate window.  This pref allows
 // to ignore the claim.

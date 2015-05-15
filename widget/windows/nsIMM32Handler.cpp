@@ -180,6 +180,13 @@ nsIMM32Handler::IsTopLevelWindowOfComposition(nsWindow* aWindow)
   return WinUtils::GetTopLevelHWND(wnd, true) == aWindow->GetWindowHandle();
 }
 
+/* static */
+bool
+nsIMM32Handler::IsJapanist2003Active()
+{
+  return sIMEName.EqualsLiteral("Japanist 2003");
+}
+
 /* static */ bool
 nsIMM32Handler::ShouldDrawCompositionStringOurselves()
 {
@@ -2205,6 +2212,21 @@ nsIMM32Handler::AdjustCompositionFont(const nsIMEContext& aIMEContext,
        NS_ConvertUTF16toUTF8(sCompositionFont).get()));
   }
 
+  static nsString sCompositionFontForJapanist2003;
+  if (IsJapanist2003Active() && sCompositionFontForJapanist2003.IsEmpty()) {
+    const char* kCompositionFontForJapanist2003 =
+      "intl.imm.composition_font.japanist_2003";
+    sCompositionFontForJapanist2003 =
+      Preferences::GetString(kCompositionFontForJapanist2003);
+    // If the font name is not specified properly, let's use
+    // "MS PGothic" instead.
+    if (sCompositionFontForJapanist2003.IsEmpty() ||
+        sCompositionFontForJapanist2003.Length() > LF_FACESIZE - 2 ||
+        sCompositionFontForJapanist2003[0] == '@') {
+      sCompositionFontForJapanist2003.AssignLiteral("MS PGothic");
+    }
+  }
+
   sCurrentWritingMode = aWritingMode;
   sCurrentIMEName = sIMEName;
 
@@ -2224,9 +2246,13 @@ nsIMM32Handler::AdjustCompositionFont(const nsIMEContext& aIMEContext,
 
   if (!mIsComposingOnPlugin &&
       aWritingMode.IsVertical() && IsVerticalWritingSupported()) {
-    SetVerticalFontToLogFont(sCompositionFont, logFont);
+    SetVerticalFontToLogFont(
+      IsJapanist2003Active() ? sCompositionFontForJapanist2003 :
+                               sCompositionFont, logFont);
   } else {
-    SetHorizontalFontToLogFont(sCompositionFont, logFont);
+    SetHorizontalFontToLogFont(
+      IsJapanist2003Active() ? sCompositionFontForJapanist2003 :
+                               sCompositionFont, logFont);
   }
   PR_LOG(gIMM32Log, PR_LOG_WARNING,
     ("IMM32: AdjustCompositionFont, calling ::ImmSetCompositionFont(\"%s\")",
