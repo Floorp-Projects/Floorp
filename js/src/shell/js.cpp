@@ -2098,14 +2098,14 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun, bool l
             Sprint(sp, " LAMBDA");
         if (fun->isHeavyweight())
             Sprint(sp, " HEAVYWEIGHT");
+        if (fun->isConstructor())
+            Sprint(sp, " CONSTRUCTOR");
         if (fun->isExprBody())
             Sprint(sp, " EXPRESSION_CLOSURE");
         if (fun->isFunctionPrototype())
             Sprint(sp, " Function.prototype");
         if (fun->isSelfHostedBuiltin())
             Sprint(sp, " SELF_HOSTED");
-        if (fun->isSelfHostedConstructor())
-            Sprint(sp, " SELF_HOSTED_CTOR");
         if (fun->isArrow())
             Sprint(sp, " ARROW");
         Sprint(sp, "\n");

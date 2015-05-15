@@ -2331,7 +2331,7 @@ CheckIsValidConstructible(Value calleev)
 {
     JSObject* callee = &calleev.toObject();
     if (callee->is<JSFunction>())
-        MOZ_ASSERT(callee->as<JSFunction>().isNativeConstructor());
+        MOZ_ASSERT(callee->as<JSFunction>().isConstructor());
     else
         MOZ_ASSERT(callee->constructHook() != nullptr);
 }
