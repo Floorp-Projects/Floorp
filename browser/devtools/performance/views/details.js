@@ -92,12 +92,9 @@ let DetailsView = {
     let invalidCurrentView = false;
 
     for (let [name, { view }] of Iterator(this.components)) {
-      // TODO bug 1160313 get rid of retro mode checks.
-      let isRetro = PerformanceController.getOption("retro-mode");
-      let isSupported = isRetro ? name === "js-calltree" : this._isViewSupported(name, true);
+      let isSupported = this._isViewSupported(name, true);
 
-      // TODO bug 1160313 hide all view buttons, but let js-calltree still be "supported"
-      $(`toolbarbutton[data-view=${name}]`).hidden = isRetro ? true : !isSupported;
+      $(`toolbarbutton[data-view=${name}]`).hidden = !isSupported;
 
       // If the view is currently selected and not supported, go back to the
       // default view.

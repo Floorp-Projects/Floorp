@@ -1449,14 +1449,6 @@ pref("devtools.performance.ui.show-idle-blocks", true);
 pref("devtools.performance.ui.enable-memory", false);
 pref("devtools.performance.ui.enable-framerate", true);
 pref("devtools.performance.ui.show-jit-optimizations", false);
-// If in aurora/dev edition (40.0, will revert for 40.1), set default
-// to retro mode.
-// TODO bug 1160313
-#ifdef MOZ_DEV_EDITION
-  pref("devtools.performance.ui.retro-mode", true);
-#else
-  pref("devtools.performance.ui.retro-mode", false);
-#endif
 
 // The default cache UI setting
 pref("devtools.cache.disabled", false);

@@ -26,9 +26,6 @@ loader.lazyRequireGetter(this, "MarkersOverview",
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
 
-// TODO get rid of retro mode in bug 1160313
-loader.lazyRequireGetter(this, "Services");
-
 /**
  * For line graphs
  */
@@ -168,24 +165,6 @@ const GRAPH_DEFINITIONS = {
   }
 };
 
-// TODO get rid of retro mode in bug 1160313
-const GRAPH_DEFINITIONS_RETRO = {
-  memory: {
-    constructor: MemoryGraph,
-    selector: "#memory-overview",
-  },
-  framerate: {
-    constructor: FramerateGraph,
-    selector: "#time-framerate",
-    needsBlueprints: true,
-    primaryLink: true
-  },
-  timeline: {
-    constructor: TimelineGraph,
-    selector: "#markers-overview",
-  }
-};
-
 /**
  * A controller for orchestrating the performance's tool overview graphs. Constructs,
  * syncs, toggles displays and defines the memory, framerate and timeline view.
@@ -198,9 +177,7 @@ const GRAPH_DEFINITIONS_RETRO = {
 function GraphsController ({ definition, root, getBlueprint, getTheme }) {
   this._graphs = {};
   this._enabled = new Set();
-  // TODO get rid of retro mode in bug 1160313
-  let RETRO_MODE = Services.prefs.getBoolPref("devtools.performance.ui.retro-mode");
-  this._definition = definition || (RETRO_MODE ? GRAPH_DEFINITIONS_RETRO : GRAPH_DEFINITIONS);
+  this._definition = definition || GRAPH_DEFINITIONS;
   this._root = root;
   this._getBlueprint = getBlueprint;
   this._getTheme = getTheme;
