@@ -62,27 +62,40 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
    * @param boolean aIsBlackBoxed
    *        Whether or not the frame is black boxed.
    */
-  addFrame: function(aTitle, aUrl, aLine, aDepth, aIsBlackBoxed) {
+  addFrame: function(aFrame, aLine, aDepth, aIsBlackBoxed) {
+    let { source } = aFrame;
+
+    // The source may not exist in the source listing yet because it's
+    // an unnamed eval source, which we hide, so we need to add it
+    if(!DebuggerView.Sources.getItemByValue(source.actor)) {
+      DebuggerView.Sources.addSource(source, { force: true });
+    }
+
+    let location = DebuggerView.Sources.getDisplayURL(source);
+    let title = StackFrameUtils.getFrameTitle(aFrame);
+
     // Blackboxed stack frames are collapsed into a single entry in
     // the view. By convention, only the first frame is displayed.
     if (aIsBlackBoxed) {
-      if (this._prevBlackBoxedUrl == aUrl) {
+      if (this._prevBlackBoxedUrl == location) {
         return;
       }
-      this._prevBlackBoxedUrl = aUrl;
+      this._prevBlackBoxedUrl = location;
     } else {
       this._prevBlackBoxedUrl = null;
     }
 
     // Create the element node for the stack frame item.
-    let frameView = this._createFrameView.apply(this, arguments);
+    let frameView = this._createFrameView(
+      title, location, aLine, aDepth, aIsBlackBoxed
+    );
 
     // Append a stack frame item to this container.
     this.push([frameView], {
       index: 0, /* specifies on which position should the item be appended */
       attachment: {
-        title: aTitle,
-        url: aUrl,
+        title: title,
+        url: location,
         line: aLine,
         depth: aDepth
       },
@@ -92,7 +105,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     });
 
     // Mirror this newly inserted item inside the "Call Stack" tab.
-    this._mirror.addFrame(aTitle, aUrl, aLine, aDepth);
+    this._mirror.addFrame(title, location, aLine, aDepth);
   },
 
   /**

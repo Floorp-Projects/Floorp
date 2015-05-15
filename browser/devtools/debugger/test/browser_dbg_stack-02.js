@@ -41,7 +41,7 @@ function performTest() {
   is(gFrames.getItemAtIndex(1).attachment.title,
     "(eval)", "Newest frame name should be correct.");
   is(gFrames.getItemAtIndex(1).attachment.url,
-     TAB_URL, "Newest frame url should be correct.");
+     'SCRIPT0', "Newest frame url should be correct.");
   is(gClassicFrames.getItemAtIndex(1).attachment.depth,
     1, "Newest frame name is mirrored correctly.");
 
