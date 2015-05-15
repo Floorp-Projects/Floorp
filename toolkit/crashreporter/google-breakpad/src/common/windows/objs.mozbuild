@@ -11,5 +11,5 @@ lobjs_common = [
 
 subdir = 'toolkit/crashreporter/google-breakpad/src/common/windows'
 objs_common = [
-    '%s/%s/%s' % (TOPSRCDIR, subdir, s) for s in lobjs_common
+    '/%s/%s' % (subdir, s) for s in lobjs_common
 ]

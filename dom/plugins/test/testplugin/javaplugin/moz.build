@@ -6,5 +6,5 @@
 
 SharedLibrary('nptestjava')
 
-relative_path = '..'
+relative_path = 'javaplugin'
 include('../testplugin.mozbuild')

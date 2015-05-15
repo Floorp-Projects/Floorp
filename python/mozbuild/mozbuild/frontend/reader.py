@@ -66,6 +66,7 @@ from .context import (
     FUNCTIONS,
     VARIABLES,
     DEPRECATION_HINTS,
+    SourcePath,
     SPECIAL_VARIABLES,
     SUBCONTEXTS,
     SubContext,
@@ -1067,8 +1068,8 @@ class BuildReader(object):
             from .gyp_reader import read_from_gyp
             non_unified_sources = set()
             for s in gyp_dir.non_unified_sources:
-                source = mozpath.normpath(mozpath.join(curdir, s))
-                if not os.path.exists(source):
+                source = SourcePath(context, s)
+                if not os.path.exists(source.full_path):
                     raise SandboxValidationError('Cannot find %s.' % source,
                         context)
                 non_unified_sources.add(source)
