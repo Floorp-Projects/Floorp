@@ -578,7 +578,7 @@ impl MarionetteConnection {
 
     pub fn connect(&mut self) -> IoResult<()> {
         let timeout = 60 * 1000; // milliseconds
-        let poll_interval = 100 * 1000; // milliseconds
+        let poll_interval = 100; // milliseconds
         let poll_attempts = timeout / poll_interval;
         let mut poll_attempt = 0;
         loop {
