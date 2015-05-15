@@ -97,7 +97,7 @@ static GType GetAtkTypeForMai(MaiInterfaceType type)
   return G_TYPE_INVALID;
 }
 
-static const char* kNonUserInputEvent = ":system";
+#define NON_USER_EVENT ":system"
     
 static const GInterfaceInfo atk_if_infos[] = {
     {(GInterfaceInitFunc)componentInterfaceInitCB,
@@ -1475,7 +1475,7 @@ AccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
     // see bug 619002
     signal_name = g_strconcat(isInserted ? "text_changed::insert" :
                               "text_changed::delete",
-                              isFromUserInput ? "" : kNonUserInputEvent, nullptr);
+                              isFromUserInput ? "" : NON_USER_EVENT, nullptr);
     g_signal_emit_by_name(aObject, signal_name, start, length);
   } else {
     nsAutoString text;
@@ -1490,6 +1490,14 @@ AccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
   return NS_OK;
 }
 
+#define ADD_EVENT "children_changed::add"
+#define HIDE_EVENT "children_changed::remove"
+
+static const char *kMutationStrings[2][2] = {
+  { HIDE_EVENT NON_USER_EVENT, ADD_EVENT NON_USER_EVENT },
+  { HIDE_EVENT, ADD_EVENT },
+};
+
 nsresult
 AccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
                                      AtkObject* aObject, bool aIsAdded)
@@ -1499,10 +1507,8 @@ AccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
     NS_ENSURE_STATE(parentObject);
 
     bool isFromUserInput = aEvent->IsFromUserInput();
-    char *signal_name = g_strconcat(aIsAdded ? "children_changed::add" :  "children_changed::remove",
-                                    isFromUserInput ? "" : kNonUserInputEvent, nullptr);
+    const char *signal_name = kMutationStrings[isFromUserInput][aIsAdded];
     g_signal_emit_by_name(parentObject, signal_name, indexInParent, aObject, nullptr);
-    g_free(signal_name);
 
     return NS_OK;
 }
