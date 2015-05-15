@@ -18,6 +18,35 @@ class nsIObjectInputStream;
 
 namespace mozilla {
 
+class OriginAttributes : public dom::OriginAttributesDictionary
+{
+public:
+  OriginAttributes() {}
+  OriginAttributes(uint32_t aAppId, bool aInBrowser)
+  {
+    mAppId = aAppId;
+    mInBrowser = aInBrowser;
+  }
+
+  bool operator==(const OriginAttributes& aOther) const
+  {
+    return mAppId == aOther.mAppId &&
+           mInBrowser == aOther.mInBrowser;
+  }
+  bool operator!=(const OriginAttributes& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  // Serializes non-default values into the suffix format, i.e.
+  // |!key1=value1&key2=value2|. If there are no non-default attributes, this
+  // returns an empty string.
+  void CreateSuffix(nsACString& aStr);
+
+  void Serialize(nsIObjectOutputStream* aStream) const;
+  nsresult Deserialize(nsIObjectInputStream* aStream);
+};
+
 /*
  * Base class from which all nsIPrincipal implementations inherit. Use this for
  * default implementations and other commonalities between principal
@@ -51,33 +80,7 @@ public:
   virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
-
-  struct OriginAttributes : public dom::OriginAttributesDictionary {
-    OriginAttributes() {}
-    OriginAttributes(uint32_t aAppId, bool aInBrowser)
-    {
-      mAppId = aAppId;
-      mInBrowser = aInBrowser;
-    }
-
-    bool operator==(const OriginAttributes& aOther) const
-    {
-      return mAppId == aOther.mAppId &&
-             mInBrowser == aOther.mInBrowser;
-    }
-    bool operator!=(const OriginAttributes& aOther) const
-    {
-      return !(*this == aOther);
-    }
-
-    // Serializes non-default values into the suffix format, i.e.
-    // |!key1=value1&key2=value2|. If there are no non-default attributes, this
-    // returns an empty string.
-    void CreateSuffix(nsACString& aStr);
-
-    void Serialize(nsIObjectOutputStream* aStream) const;
-    nsresult Deserialize(nsIObjectInputStream* aStream);
-  };
+  static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(nsIURI* aURI, OriginAttributes& aAttrs);
 
   const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }

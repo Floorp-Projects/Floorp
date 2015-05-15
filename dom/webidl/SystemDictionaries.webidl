@@ -12,9 +12,9 @@
  * attributes.
  *
  * IMPORTANT: If you add any members here, you need to update the
- * CreateSuffix, Serialize, and Deserialize implementations in BasePrincipal,
- * and bump the CIDs of all the principal implementations that invoke those
- * methods.
+ * methods on mozilla::OriginAttributes, and bump the CIDs of all
+ * the principal implementations that use OriginAttributes in their
+ * nsISerializable implementations.
  */
 dictionary OriginAttributesDictionary {
   unsigned long appId = 0;
