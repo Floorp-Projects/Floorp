@@ -26,11 +26,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1155034
 
 /** Test for Bug 1155034 **/
 
-synthAddVoice('TestSpeechServiceNoAudio', 'Female 1', 'en-GB', true);
-
 function test_with_events() {
   info('test_with_events');
   var utterance = new SpeechSynthesisUtterance("never end, callback events");
+  utterance.lang = 'it-IT-noend';
 
   utterance.addEventListener('start', function(e) {
     speechSynthesis.pause();
@@ -38,20 +37,20 @@ function test_with_events() {
   });
 
   utterance.addEventListener('pause', function(e) {
-    ok(e.charIndex, 1, 'pause event charIndex matches service arguments');
-    ok(e.elapsedTime, 1.23, 'pause event elapsedTime matches service arguments');
+    is(e.charIndex, 1, 'pause event charIndex matches service arguments');
+    is(e.elapsedTime, 1.5, 'pause event elapsedTime matches service arguments');
     speechSynthesis.resume();
   });
 
   utterance.addEventListener('resume', function(e) {
-    ok(e.charIndex, 1, 'resume event charIndex matches service arguments');
-    ok(e.elapsedTime, 1.23, 'resume event elapsedTime matches service arguments');
+    is(e.charIndex, 1, 'resume event charIndex matches service arguments');
+    is(e.elapsedTime, 1.5, 'resume event elapsedTime matches service arguments');
     speechSynthesis.cancel();
   });
 
   utterance.addEventListener('end', function(e) {
     ok(e.charIndex, 1, 'resume event charIndex matches service arguments');
-    ok(e.elapsedTime, 1.23, 'end event elapsedTime matches service arguments');
+    ok(e.elapsedTime, 1.5, 'end event elapsedTime matches service arguments');
     test_no_events();
   });
 
@@ -60,12 +59,11 @@ function test_with_events() {
 
 function test_no_events() {
   var utterance = new SpeechSynthesisUtterance("never end");
-
+  utterance.lang = "it-IT-noevents-noend";
   utterance.addEventListener('start', function(e) {
     speechSynthesis.pause();
     // Wait to see if we get some bad events we didn't expect.
     setTimeout(function() {
-      synthCleanup();
       SimpleTest.finish();
     }, 1000);
   });

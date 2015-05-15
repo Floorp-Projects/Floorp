@@ -32,3 +32,9 @@ function MapForEach(callbackfn, thisArg = undefined) {
         callFunction(callbackfn, thisArg, entry[1], entry[0], M);
     }
 }
+
+// ES6 final draft 23.1.2.2.
+function MapSpecies() {
+    // Step 1.
+    return this;
+}

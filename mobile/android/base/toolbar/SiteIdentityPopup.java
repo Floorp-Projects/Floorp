@@ -4,7 +4,14 @@
 
 package org.mozilla.gecko.toolbar;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.widget.Toast;
+import org.json.JSONException;
+import org.json.JSONArray;
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -14,6 +21,8 @@ import org.mozilla.gecko.SiteIdentity.MixedMode;
 import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
 import org.mozilla.gecko.widget.DoorHanger.OnButtonClickListener;
@@ -27,13 +36,15 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import org.mozilla.gecko.widget.DoorhangerConfig;
+import org.mozilla.gecko.widget.SiteLogins;
 
 /**
  * SiteIdentityPopup is a singleton class that displays site identity data in
  * an arrow panel popup hanging from the lock icon in the browser toolbar.
  */
-public class SiteIdentityPopup extends AnchoredPopup {
-    public static enum ButtonType { DISABLE, ENABLE, KEEP_BLOCKING };
+public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListener {
+
+    public static enum ButtonType { DISABLE, ENABLE, KEEP_BLOCKING, CANCEL, COPY };
 
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
@@ -42,6 +53,9 @@ public class SiteIdentityPopup extends AnchoredPopup {
 
     private static final String TRACKING_CONTENT_SUPPORT_URL =
         "https://support.mozilla.org/kb/firefox-android-tracking-protection";
+
+    // Placeholder string.
+    private final static String FORMAT_S = "%s";
 
     private SiteIdentity mSiteIdentity;
 
@@ -59,13 +73,15 @@ public class SiteIdentityPopup extends AnchoredPopup {
 
     private DoorHanger mMixedContentNotification;
     private DoorHanger mTrackingContentNotification;
+    private DoorHanger mSelectLoginDoorhanger;
 
-    private final OnButtonClickListener mButtonClickListener;
+    private final OnButtonClickListener mContentButtonClickListener;
 
     public SiteIdentityPopup(Context context) {
         super(context);
 
-        mButtonClickListener = new PopupButtonListener();
+        mContentButtonClickListener = new ContentNotificationButtonListener();
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Doorhanger:Logins");
     }
 
     @Override
@@ -114,6 +130,133 @@ public class SiteIdentityPopup extends AnchoredPopup {
         }
     }
 
+    @Override
+    public void handleMessage(String event, JSONObject geckoObject) {
+        if ("Doorhanger:Logins".equals(event)) {
+            try {
+                final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+                if (selectedTab != null) {
+                    final JSONObject data = geckoObject.getJSONObject("data");
+                    addLoginsToTab(data);
+                }
+                if (isShowing()) {
+                    addSelectLoginDoorhanger(selectedTab);
+                }
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Error accessing logins in Doorhanger:Logins message", e);
+            }
+        }
+    }
+
+    private void addLoginsToTab(JSONObject data) throws JSONException {
+        final JSONObject titleObj = data.getJSONObject("title");
+        final JSONArray logins = data.getJSONArray("logins");
+
+        final SiteLogins siteLogins = new SiteLogins(titleObj, logins);
+        Tabs.getInstance().getSelectedTab().setSiteLogins(siteLogins);
+    }
+
+    private void addSelectLoginDoorhanger(Tab tab) throws JSONException {
+        final SiteLogins siteLogins = tab.getSiteLogins();
+        if (siteLogins == null) {
+            return;
+        }
+
+        final JSONArray logins = siteLogins.getLogins();
+        if (logins.length() == 0) {
+            return;
+        }
+
+        final JSONObject login = (JSONObject) logins.get(0);
+
+        // Create button click listener for copying a password to the clipboard.
+        final OnButtonClickListener buttonClickListener = new OnButtonClickListener() {
+            @Override
+            public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
+                try {
+                    final int buttonId = response.getInt("callback");
+                    if (buttonId == ButtonType.COPY.ordinal()) {
+                        final ClipboardManager manager = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                        String password;
+                        if (response.has("password")) {
+                            // Click listener being called from List Dialog.
+                            password = response.optString("password");
+                        } else {
+                            password = login.getString("password");
+                        }
+                        if (AppConstants.Versions.feature11Plus) {
+                            manager.setPrimaryClip(ClipData.newPlainText("password", password));
+                        } else {
+                            manager.setText(password);
+                        }
+                        Toast.makeText(mContext, R.string.doorhanger_login_select_toast_copy, Toast.LENGTH_SHORT).show();
+                    }
+                    dismiss();
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error handling Select login button click", e);
+                    Toast.makeText(mContext, R.string.doorhanger_login_select_toast_copy_error, Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.LOGIN, buttonClickListener);
+
+        // Set buttons.
+        config.appendButton(mContext.getString(R.string.button_cancel), ButtonType.CANCEL.ordinal());
+        config.appendButton(mContext.getString(R.string.button_copy), ButtonType.COPY.ordinal());
+
+        // Set message.
+        String username = ((JSONObject) logins.get(0)).getString("username");
+        if (TextUtils.isEmpty(username)) {
+            username = mContext.getString(R.string.doorhanger_login_no_username);
+        }
+
+        final String message = mContext.getString(R.string.doorhanger_login_select_message).replace(FORMAT_S, username);
+        config.setMessage(message);
+
+        // Set options.
+        final JSONObject options = new JSONObject();
+        final JSONObject titleObj = siteLogins.getTitle();
+        options.put("title", titleObj);
+
+        // Add action text only if there are other logins to select.
+        if (logins.length() > 1) {
+
+            final JSONObject actionText = new JSONObject();
+            actionText.put("type", "SELECT");
+
+            final JSONObject bundle = new JSONObject();
+            bundle.put("logins", logins);
+
+            actionText.put("bundle", bundle);
+            options.put("actionText", actionText);
+        }
+
+        config.setOptions(options);
+
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!mInflated) {
+                    init();
+                }
+
+                removeSelectLoginDoorhanger();
+
+                mSelectLoginDoorhanger = DoorHanger.Get(mContext, config);
+                mContent.addView(mSelectLoginDoorhanger);
+                mDivider.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void removeSelectLoginDoorhanger() {
+        if (mSelectLoginDoorhanger != null) {
+            mContent.removeView(mSelectLoginDoorhanger);
+            mSelectLoginDoorhanger = null;
+        }
+    }
+
     private void toggleIdentityKnownContainerVisibility(final boolean isIdentityKnown) {
         if (isIdentityKnown) {
             mIdentityKnownContainer.setVisibility(View.VISIBLE);
@@ -152,7 +295,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
         // Remove any existing mixed content notification.
         removeMixedContentNotification();
 
-        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.MIXED_CONTENT, mButtonClickListener);
+        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.MIXED_CONTENT, mContentButtonClickListener);
         int icon;
         if (blocked) {
             icon = R.drawable.shield_enabled_doorhanger;
@@ -169,7 +312,6 @@ public class SiteIdentityPopup extends AnchoredPopup {
         mMixedContentNotification = DoorHanger.Get(mContext, config);
         mMixedContentNotification.setIcon(icon);
 
-
         mContent.addView(mMixedContentNotification);
         mDivider.setVisibility(View.VISIBLE);
     }
@@ -185,7 +327,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
         // Remove any existing tracking content notification.
         removeTrackingContentNotification();
 
-        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.TRACKING, mButtonClickListener);
+        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.TRACKING, mContentButtonClickListener);
 
         int icon;
         if (blocked) {
@@ -260,6 +402,12 @@ public class SiteIdentityPopup extends AnchoredPopup {
             addTrackingContentNotification(trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED);
         }
 
+        try {
+            addSelectLoginDoorhanger(selectedTab);
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error adding selectLogin doorhanger", e);
+        }
+
         showDividers();
 
         super.show();
@@ -289,15 +437,20 @@ public class SiteIdentityPopup extends AnchoredPopup {
         }
     }
 
+    void destroy() {
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Doorhanger:Logins");
+    }
+
     @Override
     public void dismiss() {
         super.dismiss();
         removeMixedContentNotification();
         removeTrackingContentNotification();
+        removeSelectLoginDoorhanger();
         mDivider.setVisibility(View.GONE);
     }
 
-    private class PopupButtonListener implements OnButtonClickListener {
+    private class ContentNotificationButtonListener implements OnButtonClickListener {
         @Override
         public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
             GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", response.toString());

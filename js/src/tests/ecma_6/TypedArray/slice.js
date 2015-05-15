@@ -68,8 +68,8 @@ for (var constructor of constructors) {
     mathConstructor.constructor = Math.sin;
     assertDeepEq(mathConstructor.slice(4), new constructor(4));
 
-    assertEq("species" in Symbol, false,
-             "you've implemented @@species -- add real tests here!");
+    assertEq(Symbol.species in Int8Array, false,
+             "you've implemented %TypedArray%[@@species] -- add real tests here!");
 }
 
 if (typeof reportCompare === "function")

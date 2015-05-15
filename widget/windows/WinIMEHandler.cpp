@@ -180,6 +180,7 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
         // composition window position.
         if (IsIMMActive()) {
           nsIMM32Handler::OnUpdateComposition(aWindow);
+          nsIMM32Handler::OnSelectionChange(aWindow, aIMENotification);
         }
         return rv;
       }
@@ -237,6 +238,9 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
     case NOTIFY_IME_OF_POSITION_CHANGE:
     case NOTIFY_IME_OF_COMPOSITION_UPDATE:
       nsIMM32Handler::OnUpdateComposition(aWindow);
+      return NS_OK;
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      nsIMM32Handler::OnSelectionChange(aWindow, aIMENotification);
       return NS_OK;
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
       return nsIMM32Handler::OnMouseButtonEvent(aWindow, aIMENotification);

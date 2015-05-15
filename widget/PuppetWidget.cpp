@@ -886,19 +886,12 @@ PuppetWidget::NotifyIMEOfSelectionChange(
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
-  nsEventStatus status;
-  WidgetQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, this);
-  InitEvent(queryEvent, nullptr);
-  DispatchEvent(&queryEvent, status);
-
-  if (queryEvent.mSucceeded) {
-    mTabChild->SendNotifyIMESelection(
-      mIMELastReceivedSeqno,
-      queryEvent.GetSelectionStart(),
-      queryEvent.GetSelectionEnd(),
-      queryEvent.GetWritingMode(),
-      aIMENotification.mSelectionChangeData.mCausedByComposition);
-  }
+  mTabChild->SendNotifyIMESelection(
+    mIMELastReceivedSeqno,
+    aIMENotification.mSelectionChangeData.StartOffset(),
+    aIMENotification.mSelectionChangeData.EndOffset(),
+    aIMENotification.mSelectionChangeData.GetWritingMode(),
+    aIMENotification.mSelectionChangeData.mCausedByComposition);
   return NS_OK;
 }
 

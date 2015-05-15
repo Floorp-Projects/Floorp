@@ -385,13 +385,6 @@ status_t AudioOffloadPlayer::DoSeek()
   return OK;
 }
 
-double AudioOffloadPlayer::GetMediaTimeSecs()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return (static_cast<double>(GetMediaTimeUs()) /
-      static_cast<double>(USECS_PER_S));
-}
-
 int64_t AudioOffloadPlayer::GetMediaTimeUs()
 {
   android::Mutex::Autolock autoLock(mLock);

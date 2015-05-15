@@ -46,6 +46,9 @@ using namespace mozilla::gfx;
 // an insignificant dot
 static const int32_t kMinBidiIndicatorPixels = 2;
 
+/*static*/ bool nsCaret::sSelectionCaretEnabled = false;
+/*static*/ bool nsCaret::sSelectionCaretsAffectCaret = false;
+
 /**
  * Find the first frame in an in-order traversal of the frame subtree rooted
  * at aFrame which is either a text frame logically at the end of a line,
@@ -143,6 +146,15 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
   mShowDuringSelection =
     LookAndFeel::GetInt(LookAndFeel::eIntID_ShowCaretDuringSelection,
                         mShowDuringSelection ? 1 : 0) != 0;
+
+  static bool addedCaretPref = false;
+  if (!addedCaretPref) {
+    Preferences::AddBoolVarCache(&sSelectionCaretEnabled,
+      "selectioncaret.enabled");
+    Preferences::AddBoolVarCache(&sSelectionCaretsAffectCaret,
+      "selectioncaret.visibility.affectscaret");
+    addedCaretPref = true;
+  }
 
   // get the selection from the pres shell, and set ourselves up as a selection
   // listener
@@ -253,7 +265,8 @@ bool nsCaret::IsVisible()
     return false;
   }
 
-  if (!mShowDuringSelection) {
+  if (!mShowDuringSelection &&
+      !(sSelectionCaretEnabled && sSelectionCaretsAffectCaret)) {
     Selection* selection = GetSelectionInternal();
     if (!selection) {
       return false;
@@ -261,6 +274,20 @@ bool nsCaret::IsVisible()
     bool isCollapsed;
     if (NS_FAILED(selection->GetIsCollapsed(&isCollapsed)) || !isCollapsed) {
       return false;
+    }
+  }
+
+  // The Android IME can have a visible caret when there is a composition
+  // selection, due to auto-suggest/auto-correct styling (underlining),
+  // but never when the SelectionCarets are visible.
+  if (sSelectionCaretEnabled && sSelectionCaretsAffectCaret) {
+    nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
+    if (selCon) {
+      bool visible = false;
+      selCon->GetSelectionCaretsVisibility(&visible);
+      if (visible) {
+        return false;
+      }
     }
   }
 
