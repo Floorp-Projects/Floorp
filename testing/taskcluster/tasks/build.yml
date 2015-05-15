@@ -25,8 +25,8 @@ task:
     # the board.
     - 'docker-worker:cache:tc-vcs'
     - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
-    - 'queue:define-task:aws-provisioner/build-c4-2xlarge'
-    - 'queue:create-task:aws-provisioner/build-c4-2xlarge'
+    - 'queue:define-task:aws-provisioner-v1/build-c4-2xlarge'
+    - 'queue:create-task:aws-provisioner-v1/build-c4-2xlarge'
 
 
   payload:
