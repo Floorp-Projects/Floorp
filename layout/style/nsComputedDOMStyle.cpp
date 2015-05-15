@@ -1279,6 +1279,16 @@ nsComputedDOMStyle::DoGetTransform()
   return MatrixToCSSValue(matrix);
 }
 
+CSSValue*
+nsComputedDOMStyle::DoGetTransformBox()
+{
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mTransformBox,
+                                     nsCSSProps::kTransformBoxKTable));
+  return val;
+}
+
 /* static */ nsROCSSPrimitiveValue*
 nsComputedDOMStyle::MatrixToCSSValue(gfx3DMatrix& matrix)
 {
