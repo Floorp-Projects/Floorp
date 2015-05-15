@@ -882,3 +882,18 @@ pref("selectioncaret.detects.longtap", false);
 
 // Selection carets override caret visibility.
 pref("selectioncaret.visibility.affectscaret", true);
+
+// Turn off touch caret by default.
+pref("touchcaret.enabled", false);
+
+// TouchCaret never auto-hides.
+pref("touchcaret.expiration.time", 0);
+
+// Touch caret stays visible under a wider range of conditions
+// than the default b2g. We can display the caret in empty editables
+// for example, and do not auto-hide until loss of focus.
+pref("touchcaret.extendedvisibility", true);
+
+// The TouchCaret and the SelectionCarets will indicate when the
+// TextSelection actionbar is to be openned or closed.
+pref("caret.manages-android-actionbar", true);
