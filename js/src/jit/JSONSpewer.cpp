@@ -398,3 +398,12 @@ JSONSpewer::endFunction()
     endList();
     endObject();
 }
+
+void
+JSONSpewer::spewDebuggerGraph(MIRGraph* graph)
+{
+    beginObject();
+    spewMIR(graph);
+    spewLIR(graph);
+    endObject();
+}

@@ -41,11 +41,13 @@
 #include "jit/Sink.h"
 #include "jit/StupidAllocator.h"
 #include "jit/ValueNumbering.h"
+#include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/TraceLogging.h"
 
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
+#include "vm/Debugger-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -392,6 +394,49 @@ JitCompartment::ensureIonStubsExist(JSContext* cx)
     return true;
 }
 
+// This function initializes the values which are given to the Debugger
+// onIonCompilation hook, if the compilation was successful, and if Ion
+// compilations of this compartment are watched by any debugger.
+//
+// This function must be called in the same AutoEnterAnalysis section as the
+// CodeGenerator::link. Failing to do so might leave room to interleave other
+// allocations which can invalidate any JSObject / JSFunction referenced by the
+// MIRGraph.
+//
+// This function ignores any allocation failure and returns whether the
+// Debugger::onIonCompilation should be called.
+static inline bool
+PrepareForDebuggerOnIonCompilationHook(JSContext* cx, bool success, jit::MIRGraph& graph,
+                                       AutoScriptVector* scripts, LSprinter* spew)
+{
+    if (!success)
+        return false;
+
+    if (!Debugger::observesIonCompilation(cx))
+        return false;
+
+    // fireOnIonCompilation failures are ignored, do the same here.
+    if (!scripts->reserve(graph.numBlocks())) {
+        cx->clearPendingException();
+        return false;
+    }
+
+    // Collect the list of scripts which are inlined in the MIRGraph.
+    for (jit::MBasicBlockIterator block(graph.begin()); block != graph.end(); block++)
+        scripts->infallibleAppend(block->info().script());
+
+    // Spew the JSON graph made for the Debugger at the end of the LifoAlloc
+    // used by the compiler. This would not prevent unexpected GC from the
+    // compartment of the Debuggee, but do them as part of the compartment of
+    // the Debugger when the content is copied over to a JSString.
+    jit::JSONSpewer spewer(*spew);
+    spewer.spewDebuggerGraph(&graph);
+    if (spew->hadOutOfMemory())
+        return false;
+
+    return true;
+}
+
 void
 jit::FinishOffThreadBuilder(JSContext* cx, IonBuilder* builder)
 {
@@ -472,32 +517,46 @@ jit::LazyLinkTopActivation(JSContext* cx)
     IonBuilder* builder = calleeScript->ionScript()->pendingBuilder();
     calleeScript->setPendingIonBuilder(cx, nullptr);
 
-    AutoEnterAnalysis enterTypes(cx);
     RootedScript script(cx, builder->script());
+
+    // See PrepareForDebuggerOnIonCompilationHook
+    bool callOnIonCompilation = false;
+    AutoScriptVector debugScripts(cx);
+    LSprinter debugPrinter(builder->alloc().lifoAlloc());
 
     // Remove from pending.
     builder->remove();
 
-    if (CodeGenerator* codegen = builder->backgroundCodegen()) {
+    CodeGenerator* codegen = builder->backgroundCodegen();
+    JitContext jctx(cx, &builder->alloc());
+    bool success = false;
+    if (codegen) {
+        AutoEnterAnalysis enterTypes(cx);
         js::TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
         TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
         AutoTraceLog logScript(logger, event);
         AutoTraceLog logLink(logger, TraceLogger_IonLinking);
-
-        JitContext jctx(cx, &builder->alloc());
 
         // Root the assembler until the builder is finished below. As it
         // was constructed off thread, the assembler has not been rooted
         // previously, though any GC activity would discard the builder.
         codegen->masm.constructRoot(cx);
 
-        if (!codegen->link(cx, builder->constraints())) {
+        success = codegen->link(cx, builder->constraints());
+        if (!success) {
             // Silently ignore OOM during code generation. The assembly code
             // doesn't has code to handle it after linking happened. So it's
             // not OK to throw a catchable exception from there.
             cx->clearPendingException();
         }
+
+        callOnIonCompilation = PrepareForDebuggerOnIonCompilationHook(
+            cx, success, builder->graph(), &debugScripts, &debugPrinter);
     }
+
+    // Without AutoEnterAnalysis scope.
+    if (callOnIonCompilation)
+        Debugger::onIonCompilation(cx, debugScripts, debugPrinter);
 
     FinishOffThreadBuilder(cx, builder);
 
@@ -1633,7 +1692,6 @@ AttachFinishedCompilations(JSContext* cx)
     if (!ion)
         return;
 
-    AutoEnterAnalysis enterTypes(cx);
     AutoLockHelperThreadState lock;
 
     GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList();
@@ -1685,9 +1743,17 @@ AttachFinishedCompilations(JSContext* cx)
             }
         }
 
-        if (CodeGenerator* codegen = builder->backgroundCodegen()) {
-            RootedScript script(cx, builder->script());
-            JitContext jctx(cx, &builder->alloc());
+        // See PrepareForDebuggerOnIonCompilationHook
+        bool callOnIonCompilation = false;
+        AutoScriptVector debugScripts(cx);
+        LSprinter debugPrinter(builder->alloc().lifoAlloc());
+
+        RootedScript script(cx, builder->script());
+        CodeGenerator* codegen = builder->backgroundCodegen();
+        JitContext jctx(cx, &builder->alloc());
+        bool success = false;
+        if (codegen) {
+            AutoEnterAnalysis enterTypes(cx);
             TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
             AutoTraceLog logScript(logger, event);
             AutoTraceLog logLink(logger, TraceLogger_IonLinking);
@@ -1697,7 +1763,6 @@ AttachFinishedCompilations(JSContext* cx)
             // previously, though any GC activity would discard the builder.
             codegen->masm.constructRoot(cx);
 
-            bool success;
             {
                 AutoUnlockHelperThreadState unlock;
                 success = codegen->link(cx, builder->constraints());
@@ -1710,6 +1775,15 @@ AttachFinishedCompilations(JSContext* cx)
                 // exception from there.
                 cx->clearPendingException();
             }
+
+            callOnIonCompilation = PrepareForDebuggerOnIonCompilationHook(
+                cx, success, builder->graph(), &debugScripts, &debugPrinter);
+        }
+
+        if (callOnIonCompilation) {
+            // Without AutoEnterAnalysis scope.
+            AutoUnlockHelperThreadState unlock;
+            Debugger::onIonCompilation(cx, debugScripts, debugPrinter);
         }
 
         FinishOffThreadBuilder(cx, builder);
@@ -1862,8 +1936,6 @@ IonCompile(JSContext* cx, JSScript* script,
 
     JitContext jctx(cx, temp);
 
-    AutoEnterAnalysis enter(cx);
-
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
         return AbortReason_Alloc;
 
@@ -1920,8 +1992,12 @@ IonCompile(JSContext* cx, JSScript* script,
 
     SpewBeginFunction(builder, builderScript);
 
-    bool succeeded = builder->build();
-    builder->clearForBackEnd();
+    bool succeeded;
+    {
+        AutoEnterAnalysis enter(cx);
+        succeeded = builder->build();
+        builder->clearForBackEnd();
+    }
 
     if (!succeeded) {
         AbortReason reason = builder->abortReason();
@@ -1985,15 +2061,29 @@ IonCompile(JSContext* cx, JSScript* script,
         return AbortReason_NoAbort;
     }
 
-    ScopedJSDeletePtr<CodeGenerator> codegen(CompileBackEnd(builder));
-    if (!codegen) {
-        JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");
-        return AbortReason_Disable;
+    // See PrepareForDebuggerOnIonCompilationHook
+    bool callOnIonCompilation = false;
+    AutoScriptVector debugScripts(cx);
+    LSprinter debugPrinter(builder->alloc().lifoAlloc());
+
+    ScopedJSDeletePtr<CodeGenerator> codegen;
+    {
+        AutoEnterAnalysis enter(cx);
+        codegen = CompileBackEnd(builder);
+        if (!codegen) {
+            JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");
+            return AbortReason_Disable;
+        }
+
+        succeeded = codegen->link(cx, builder->constraints());
+        callOnIonCompilation = PrepareForDebuggerOnIonCompilationHook(
+            cx, succeeded, builder->graph(), &debugScripts, &debugPrinter);
     }
 
-    bool success = codegen->link(cx, builder->constraints());
+    if (callOnIonCompilation)
+        Debugger::onIonCompilation(cx, debugScripts, debugPrinter);
 
-    if (success)
+    if (succeeded)
         return AbortReason_NoAbort;
     if (cx->isExceptionPending())
         return AbortReason_Error;
