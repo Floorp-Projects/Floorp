@@ -7,12 +7,19 @@
 # a copy of the MPL was not distributed with this file, You can obtain one
 # at http://mozilla.org/MPL/2.0/.
 #
-# Creates an Adobe Access signed voucher for any executable
+# Creates an Adobe Access signed voucher for x32/x64 windows executables
 #   Notes: This is currently python2.7 due to mozilla build system requirements
+
+from __future__ import print_function
 
 import argparse, bitstring, pprint, hashlib, os, subprocess, sys, tempfile
 from pyasn1.codec.der import encoder as der_encoder
 from pyasn1.type import univ, namedtype, namedval, constraint
+
+# Defined in WinNT.h from the Windows SDK
+IMAGE_SCN_MEM_EXECUTE = 0x20000000
+IMAGE_REL_BASED_HIGHLOW = 3
+IMAGE_REL_BASED_DIR64 = 10
 
 
 # CodeSectionDigest ::= SEQUENCE {
@@ -28,8 +35,8 @@ class CodeSectionDigest(univ.Sequence):
 
 
 # CodeSegmentDigest ::= SEQUENCE {
-#	 offset				INTEGER -- TEXT segment's file offset in the signed binary
-#	 codeSectionDigests			SET OF CodeSectionDigests
+#    offset				INTEGER -- TEXT segment's file offset in the signed binary
+#    codeSectionDigests			SET OF CodeSectionDigests
 # }
 
 class SetOfCodeSectionDigest(univ.SetOf):
@@ -99,6 +106,7 @@ def meets_requirements(items, requirements):
 
 
 # return total number of bytes read from items_in excluding leaves
+# TODO: research replacing this with the python built-in struct module
 def parse_items(stream, items_in, items_out):
 	bits_read = 0
 	total_bits_read = 0
@@ -315,17 +323,18 @@ class COFFFileHeader:
 
 				if offset == 0 and i > 0: continue
 
-				assert(typ == 3)
+				assert(typ == IMAGE_REL_BASED_HIGHLOW or typ == IMAGE_REL_BASED_DIR64)
 
 				cur_pos = stream.bitpos
 				sh, value_bytepos = self.get_rva_section(page_rva + offset)
 				stream.bytepos = value_bytepos
-				value = stream.read('uintle:32')
+				value = stream.read('uintle:32' if typ == IMAGE_REL_BASED_HIGHLOW else 'uintle:64')
 
 				# remove BaseAddress
 				value -= self.OptionalHeader.items['ImageBase']
 
-				stream.overwrite(bitstring.BitArray(uint=value, length=4 * 8), pos=value_bytepos * 8)
+				bit_size = (4 if typ == IMAGE_REL_BASED_HIGHLOW else 8) * 8
+				stream.overwrite(bitstring.BitArray(uint=value, length=bit_size), pos=value_bytepos * 8)
 				stream.pos = cur_pos
 
 		stream.bitpos = orig_pos
@@ -345,15 +354,56 @@ def create_temp_file(suffix=""):
 	fd, path = tempfile.mkstemp(suffix=suffix)
 	os.close(fd)
 	return path
-	
-# TIPS:
-#  How to convert PFX to PEM: openssl pkcs12 -in build/certificates/testPKI/IV.pfx -out build/certificates/testPKI/IV.cert.pem
+
+
+class ExpandPath(argparse.Action):
+	def __call__(self, parser, namespace, values, option_string=None):
+		setattr(namespace, self.dest, os.path.abspath(os.path.expanduser(values)))
+
+
+# this does a naming trick since windows doesn't allow multiple usernames for the same server
+def get_password(service_name, user_name):
+	try:
+		import keyring
+
+		# windows doesn't allow multiple usernames for the same server, argh
+		if sys.platform == "win32":
+			password = keyring.get_password(service_name + "-" + user_name, user_name)
+		else:
+			password = keyring.get_password(service_name, user_name)
+
+		return password
+	except:
+	    # This allows for manual testing where you do not wish to cache the password on the system 
+		print("Missing keyring module...getting password manually")
+
+	return None
+
+
+def openssl_cmd(app_args, args, password_in, password_out):
+	password = get_password(app_args.password_service, app_args.password_user) if (password_in or password_out) else None
+	env = None
+	args = [app_args.openssl_path] + args
+
+	if password is not None:
+		env = os.environ.copy()
+		env["COFF_PW"] = password
+
+		if password_in: args += ["-passin", "env:COFF_PW"]
+		if password_out: args += ["-passout", "env:COFF_PW", "-password", "env:COFF_PW"]
+
+	p = subprocess.Popen(args, env=env)
+	assert p.wait() == 0
+
+
 def main():
 	parser = argparse.ArgumentParser(description='PE/COFF Signer')
-	parser.add_argument('-input', required=True, help="File to parse.")
-	parser.add_argument('-output', required=True, help="File to write to.")
-	parser.add_argument('-openssl_path',help="Path to OpenSSL to create signed voucher")
-	parser.add_argument('-signer_cert',help="Path to certificate to use to sign voucher.  Must be PEM encoded.")
+	parser.add_argument('-input', action=ExpandPath, required=True, help="File to parse.")
+	parser.add_argument('-output', action=ExpandPath, required=True, help="File to write to.")
+	parser.add_argument('-openssl_path', action=ExpandPath, help="Path to OpenSSL to create signed voucher")
+	parser.add_argument('-signer_pfx', action=ExpandPath, help="Path to certificate to use to sign voucher.  Must contain full certificate chain.")
+	parser.add_argument('-password_service', help="Name of Keyring/Wallet service/host")
+	parser.add_argument('-password_user', help="Name of Keyring/Wallet user name")
 	parser.add_argument('-verbose', action='store_true', help="Verbose output.")
 	app_args = parser.parse_args()
 
@@ -385,7 +435,7 @@ def main():
 
 	arch_digest.setComponentByName('cpuSubType', CPUSubType('IMAGE_UNUSED'))
 
-	text_section_headers = list(filter(lambda x: (x.items['Characteristics'] & 0x20000000) == 0x20000000, coff_header.section_headers))
+	text_section_headers = list(filter(lambda x: (x.items['Characteristics'] & IMAGE_SCN_MEM_EXECUTE) == IMAGE_SCN_MEM_EXECUTE, coff_header.section_headers))
 
 	code_segment_digests = SetOfCodeSegmentDigest()
 	code_segment_idx = 0
@@ -432,23 +482,38 @@ def main():
 
 	# sign with openssl if specified
 	if app_args.openssl_path is not None:
-		assert app_args.signer_cert is not None
-		
+		assert app_args.signer_pfx is not None
+
 		out_base, out_ext = os.path.splitext(app_args.output)
 		signed_path = out_base + ".signed" + out_ext
-		
+
 		# http://stackoverflow.com/questions/12507277/how-to-fix-unable-to-write-random-state-in-openssl
-		temp_file = None
+		temp_files = []
 		if sys.platform == "win32" and "RANDFILE" not in os.environ:
 			temp_file = create_temp_file()
+			temp_files += [temp_file]
 			os.environ["RANDFILE"] = temp_file
-			
+
 		try:
-			subprocess.check_call([app_args.openssl_path, "cms", "-sign", "-nodetach", "-md", "sha256", "-binary", "-in", app_args.output, "-outform", "der", "-out", signed_path, "-signer", app_args.signer_cert], )
+			# create PEM from PFX
+			pfx_pem_path = create_temp_file(".pem")
+			temp_files += [pfx_pem_path]
+			print("Extracting PEM from PFX to:" + pfx_pem_path)
+			openssl_cmd(app_args, ["pkcs12", "-in", app_args.signer_pfx, "-out", pfx_pem_path], True, True)
+
+			# extract CA certs
+			pfx_cert_path = create_temp_file(".cert")
+			temp_files += [pfx_cert_path]
+			print("Extracting cert from PFX to:" + pfx_cert_path)
+			openssl_cmd(app_args, ["pkcs12", "-in", app_args.signer_pfx, "-cacerts", "-nokeys", "-out", pfx_cert_path], True, False)
+
+			# we embed the public keychain for client validation
+			openssl_cmd(app_args, ["cms", "-sign", "-nodetach", "-md", "sha256", "-binary", "-in", app_args.output, "-outform", "der", "-out", signed_path, "-signer", pfx_pem_path, "-certfile", pfx_cert_path], True, False)
 		finally:
-			if temp_file is not None: 
-				del os.environ["RANDFILE"]
-				os.unlink(temp_file)
+			for t in temp_files:
+				if "RANDFILE" in os.environ and t == os.environ["RANDFILE"]:
+					del os.environ["RANDFILE"]
+				os.unlink(t)
 
 if __name__ == '__main__':
 	main()
