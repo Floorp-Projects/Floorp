@@ -616,4 +616,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
 
         return false;
     }
+
+    void destroy() {
+        mSiteIdentityPopup.destroy();
+    }
 }

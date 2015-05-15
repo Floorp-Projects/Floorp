@@ -12,11 +12,11 @@ function debug(msg) {
 }
 
 function netErrorURL() {
-  let uri = "app://system.gaiamobile.org/net_error.html";
-  try {
-    uri = Services.prefs.getCharPref("b2g.neterror.url");
-  } catch(e) {}
-  return uri;
+  let systemManifestURL = Services.prefs.getCharPref("b2g.system_manifest_url");
+  systemManifestURL = Services.io.newURI(systemManifestURL, null, null);
+  let netErrorURL = Services.prefs.getCharPref("b2g.neterror.url");
+  netErrorURL = Services.io.newURI(netErrorURL, null, systemManifestURL);
+  return netErrorURL.spec;
 }
 
 let modules = {

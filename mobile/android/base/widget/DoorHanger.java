@@ -100,11 +100,6 @@ public abstract class DoorHanger extends LinearLayout {
         mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
         mMessage = (TextView) findViewById(R.id.doorhanger_message);
 
-        // TODO: Bug 1149359 - split this into DoorHanger subclasses.
-        if (type == Type.TRACKING || type == Type.MIXED_CONTENT) {
-            mMessage.setTextAppearance(getContext(), R.style.TextAppearance_DoorHanger_Small);
-        }
-
         mType = type;
 
         mButtonsContainer = (LinearLayout) findViewById(R.id.doorhanger_buttons);
@@ -132,7 +127,6 @@ public abstract class DoorHanger extends LinearLayout {
 
     protected void setButtons(DoorhangerConfig config) {
         final JSONArray buttons = config.getButtons();
-        final OnButtonClickListener listener = config.getButtonClickListener();
         for (int i = 0; i < buttons.length(); i++) {
             try {
                 final JSONObject buttonObject = buttons.getJSONObject(i);
@@ -214,7 +208,14 @@ public abstract class DoorHanger extends LinearLayout {
         mButtonsContainer.addView(button, sButtonParams);
     }
 
-    protected abstract Button createButtonInstance(String text, int id);
+    protected Button createButtonInstance(String text, int id) {
+        final Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
+        button.setText(text);
+        button.setOnClickListener(makeOnButtonClickListener(id));
+        return button;
+    }
+
+    protected abstract OnClickListener makeOnButtonClickListener(final int id);
 
     /*
      * Checks with persistence and timeout options to see if it's okay to remove a doorhanger.
