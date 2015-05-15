@@ -26,6 +26,11 @@ using namespace dom;
 
 NS_IMPL_ISUPPORTS(AccessibleCaret::DummyTouchListener, nsIDOMEventListener)
 
+float AccessibleCaret::sWidth = 0.0f;
+float AccessibleCaret::sHeight = 0.0f;
+float AccessibleCaret::sMarginLeft = 0.0f;
+float AccessibleCaret::sBarWidth = 0.0f;
+
 // -----------------------------------------------------------------------------
 // Implementation of AccessibleCaret methods
 
@@ -40,6 +45,15 @@ AccessibleCaret::AccessibleCaret(nsIPresShell* aPresShell)
   MOZ_ASSERT(mPresShell->GetCanvasFrame()->GetCustomContentContainer());
 
   InjectCaretElement(mPresShell->GetDocument());
+
+  static bool prefsAdded = false;
+  if (!prefsAdded) {
+    Preferences::AddFloatVarCache(&sWidth, "layout.accessiblecaret.width");
+    Preferences::AddFloatVarCache(&sHeight, "layout.accessiblecaret.height");
+    Preferences::AddFloatVarCache(&sMarginLeft, "layout.accessiblecaret.margin-left");
+    Preferences::AddFloatVarCache(&sBarWidth, "layout.accessiblecaret.bar.width");
+    prefsAdded = true;
+  }
 }
 
 AccessibleCaret::~AccessibleCaret()
@@ -215,13 +229,13 @@ AccessibleCaret::SetPosition(nsIFrame* aFrame, int32_t aOffset)
 
   mImaginaryCaretRect = imaginaryCaretRect;
 
-  // SetCaretElementPosition() and SetSelectionBarElementPosition() require the
+  // SetCaretElementStyle() and SetSelectionBarElementStyle() require the
   // input rect relative to container frame.
   nsRect imaginaryCaretRectInContainerFrame = imaginaryCaretRectInFrame;
   nsLayoutUtils::TransformRect(aFrame, CustomContentContainerFrame(),
                                imaginaryCaretRectInContainerFrame);
-  SetCaretElementPosition(imaginaryCaretRectInContainerFrame);
-  SetSelectionBarElementPosition(imaginaryCaretRectInContainerFrame);
+  SetCaretElementStyle(imaginaryCaretRectInContainerFrame);
+  SetSelectionBarElementStyle(imaginaryCaretRectInContainerFrame);
 
   return PositionChangedResult::Changed;
 }
@@ -236,13 +250,19 @@ AccessibleCaret::CustomContentContainerFrame() const
 }
 
 void
-AccessibleCaret::SetCaretElementPosition(const nsRect& aRect)
+AccessibleCaret::SetCaretElementStyle(const nsRect& aRect)
 {
   nsPoint position = CaretElementPosition(aRect);
   nsAutoString styleStr;
   styleStr.AppendPrintf("left: %dpx; top: %dpx;",
                         nsPresContext::AppUnitsToIntCSSPixels(position.x),
                         nsPresContext::AppUnitsToIntCSSPixels(position.y));
+
+  float zoomLevel = GetZoomLevel();
+  styleStr.AppendPrintf(" width: %.2fpx; height: %.2fpx; margin-left: %.2fpx",
+                        sWidth / zoomLevel,
+                        sHeight / zoomLevel,
+                        sMarginLeft / zoomLevel);
 
   ErrorResult rv;
   CaretElement()->SetAttribute(NS_LITERAL_STRING("style"), styleStr, rv);
@@ -252,18 +272,33 @@ AccessibleCaret::SetCaretElementPosition(const nsRect& aRect)
 }
 
 void
-AccessibleCaret::SetSelectionBarElementPosition(const nsRect& aRect)
+AccessibleCaret::SetSelectionBarElementStyle(const nsRect& aRect)
 {
   int32_t height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
   nsAutoString barStyleStr;
   barStyleStr.AppendPrintf("margin-top: -%dpx; height: %dpx;",
                            height, height);
 
+  float zoomLevel = GetZoomLevel();
+  barStyleStr.AppendPrintf(" width: %.2fpx;", sBarWidth / zoomLevel);
+
   ErrorResult rv;
   SelectionBarElement()->SetAttribute(NS_LITERAL_STRING("style"), barStyleStr, rv);
   MOZ_ASSERT(!rv.Failed());
 
   AC_LOG("Set bar style: %s", NS_ConvertUTF16toUTF8(barStyleStr).get());
+}
+
+float
+AccessibleCaret::GetZoomLevel()
+{
+  // Full zoom on desktop.
+  float fullZoom = mPresShell->GetPresContext()->GetFullZoom();
+
+  // Pinch-zoom on B2G.
+  float resolution = mPresShell->GetCumulativeResolution();
+
+  return fullZoom * resolution;
 }
 
 } // namespace mozilla

@@ -321,12 +321,6 @@ div:-moz-native-anonymous.moz-accessiblecaret > div.bar {
   z-index: 2147483647;
 }
 
-div:-moz-native-anonymous.moz-accessiblecaret {
-  width: 44px;
-  height: 47px;
-  margin-left: -23px;
-}
-
 div:-moz-native-anonymous.moz-accessiblecaret > div.image {
   background-position: center center;
   background-size: 100% 100%;
@@ -340,7 +334,6 @@ div:-moz-native-anonymous.moz-accessiblecaret > div.image {
 
 div:-moz-native-anonymous.moz-accessiblecaret > div.bar {
   margin-left: 49%;
-  width: 2px;
   background-color: #008aa0;
 }
 

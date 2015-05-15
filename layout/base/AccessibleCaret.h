@@ -129,8 +129,11 @@ public:
 
 private:
   // Argument aRect should be relative to CustomContentContainerFrame().
-  void SetCaretElementPosition(const nsRect& aRect);
-  void SetSelectionBarElementPosition(const nsRect& aRect);
+  void SetCaretElementStyle(const nsRect& aRect);
+  void SetSelectionBarElementStyle(const nsRect& aRect);
+
+  // Get current zoom level.
+  float GetZoomLevel();
 
   // Element which contains the caret image for 'Contains' test.
   dom::Element* CaretImageElement() const
@@ -201,6 +204,12 @@ private:
   // A no-op touch-start listener which prevents APZ from panning when dragging
   // the caret.
   nsRefPtr<DummyTouchListener> mDummyTouchListener{new DummyTouchListener()};
+
+  // Static class variables
+  static float sWidth;
+  static float sHeight;
+  static float sMarginLeft;
+  static float sBarWidth;
 
 }; // class AccessibleCaret
 
