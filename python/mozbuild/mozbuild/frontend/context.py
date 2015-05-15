@@ -211,33 +211,6 @@ class Context(KeyedDefaultDict):
 
         return KeyedDefaultDict.__setitem__(self, key, value)
 
-    def resolve_path(self, path):
-        """Resolves a path using moz.build conventions.
-
-        Paths may be relative to the current srcdir or objdir, or to the
-        environment's topsrcdir or topobjdir.  Different resolution contexts
-        are denoted by characters at the beginning of the path:
-
-            * '/' - relative to topsrcdir;
-            * '!/' - relative to topobjdir;
-            * '!' - relative to objdir; and
-            * any other character - relative to srcdir.
-        """
-        if path.startswith('/'):
-            resolved = mozpath.join(self.config.topsrcdir, path[1:])
-        elif path.startswith('!/'):
-            resolved = mozpath.join(self.config.topobjdir, path[2:])
-        elif path.startswith('!'):
-            resolved = mozpath.join(self.objdir, path[1:])
-        else:
-            resolved = mozpath.join(self.srcdir, path)
-
-        return mozpath.normpath(resolved)
-
-    @staticmethod
-    def is_objdir_path(path):
-        return path[0] == '!'
-
     def update(self, iterable={}, **kwargs):
         """Like dict.update(), but using the context's setitem.
 
