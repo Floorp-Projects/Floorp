@@ -2103,6 +2103,11 @@ inline int CheckIsSetterOp(JSSetterOp op);
      { nullptr, JS_CAST_STRING_TO(getterName, const JSJitInfo*) },  \
      { nullptr, JS_CAST_STRING_TO(setterName, const JSJitInfo*) } }
 #define JS_PS_END { nullptr, 0, JSNATIVE_WRAPPER(nullptr), JSNATIVE_WRAPPER(nullptr) }
+#define JS_SELF_HOSTED_SYM_GET(symbol, getterName, flags) \
+    {reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
+     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_GETTER), \
+     { { nullptr, JS_CAST_STRING_TO(getterName, const JSJitInfo*) } }, \
+     JSNATIVE_WRAPPER(nullptr) }
 
 /*
  * To define a native function, set call to a JSNativeWrapper. To define a
@@ -4355,12 +4360,13 @@ GetSymbolDescription(HandleSymbol symbol);
 enum class SymbolCode : uint32_t {
     iterator,                       // Symbol.iterator
     match,                          // Symbol.match
+    species,                        // Symbol.species
     InSymbolRegistry = 0xfffffffe,  // created by Symbol.for() or JS::GetSymbolFor()
     UniqueSymbol = 0xffffffff       // created by Symbol() or JS::NewSymbol()
 };
 
 /* For use in loops that iterate over the well-known symbols. */
-const size_t WellKnownSymbolLimit = 2;
+const size_t WellKnownSymbolLimit = 3;
 
 /*
  * Return the SymbolCode telling what sort of symbol `symbol` is.

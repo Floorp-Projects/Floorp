@@ -1050,9 +1050,15 @@ const JSFunctionSpec MapObject::methods[] = {
     JS_FS_END
 };
 
+const JSPropertySpec MapObject::staticProperties[] = {
+    JS_SELF_HOSTED_SYM_GET(species, "MapSpecies", 0),
+    JS_PS_END
+};
+
 static JSObject*
 InitClass(JSContext* cx, Handle<GlobalObject*> global, const Class* clasp, JSProtoKey key, Native construct,
-          const JSPropertySpec* properties, const JSFunctionSpec* methods)
+          const JSPropertySpec* properties, const JSFunctionSpec* methods,
+          const JSPropertySpec* staticProperties)
 {
     RootedNativeObject proto(cx, global->createBlankPrototype(cx, clasp));
     if (!proto)
@@ -1061,6 +1067,7 @@ InitClass(JSContext* cx, Handle<GlobalObject*> global, const Class* clasp, JSPro
 
     Rooted<JSFunction*> ctor(cx, global->createConstructor(cx, construct, ClassName(key, cx), 0));
     if (!ctor ||
+        !JS_DefineProperties(cx, ctor, staticProperties) ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndFunctions(cx, proto, properties, methods) ||
         !GlobalObject::initBuiltinConstructor(cx, global, key, ctor, proto))
@@ -1075,7 +1082,8 @@ MapObject::initClass(JSContext* cx, JSObject* obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     RootedObject proto(cx,
-        InitClass(cx, global, &class_, JSProto_Map, construct, properties, methods));
+        InitClass(cx, global, &class_, JSProto_Map, construct, properties, methods,
+                  staticProperties));
     if (proto) {
         // Define the "entries" method.
         JSFunction* fun = JS_DefineFunction(cx, proto, "entries", entries, 0, 0);
@@ -1782,12 +1790,18 @@ const JSFunctionSpec SetObject::methods[] = {
     JS_FS_END
 };
 
+const JSPropertySpec SetObject::staticProperties[] = {
+    JS_SELF_HOSTED_SYM_GET(species, "SetSpecies", 0),
+    JS_PS_END
+};
+
 JSObject*
 SetObject::initClass(JSContext* cx, JSObject* obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     RootedObject proto(cx,
-        InitClass(cx, global, &class_, JSProto_Set, construct, properties, methods));
+        InitClass(cx, global, &class_, JSProto_Set, construct, properties, methods,
+                  staticProperties));
     if (proto) {
         // Define the "values" method.
         JSFunction* fun = JS_DefineFunction(cx, proto, "values", values, 0, 0);

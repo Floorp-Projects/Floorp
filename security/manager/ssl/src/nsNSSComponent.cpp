@@ -181,15 +181,17 @@ bool EnsureNSSInitialized(EnsureNSSOperator op)
 }
 
 static void
-GetOCSPBehaviorFromPrefs(/*out*/ CertVerifier::OcspDownloadConfig* odc,
-                         /*out*/ CertVerifier::OcspStrictConfig* osc,
-                         /*out*/ CertVerifier::OcspGetConfig* ogc,
-                         const MutexAutoLock& /*proofOfLock*/)
+GetRevocationBehaviorFromPrefs(/*out*/ CertVerifier::OcspDownloadConfig* odc,
+                               /*out*/ CertVerifier::OcspStrictConfig* osc,
+                               /*out*/ CertVerifier::OcspGetConfig* ogc,
+                               /*out*/ uint32_t* certShortLifetimeInDays,
+                               const MutexAutoLock& /*proofOfLock*/)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(odc);
   MOZ_ASSERT(osc);
   MOZ_ASSERT(ogc);
+  MOZ_ASSERT(certShortLifetimeInDays);
 
   // 0 = disabled, otherwise enabled
   *odc = Preferences::GetInt("security.OCSP.enabled", 1)
@@ -204,6 +206,13 @@ GetOCSPBehaviorFromPrefs(/*out*/ CertVerifier::OcspDownloadConfig* odc,
   *ogc = Preferences::GetBool("security.OCSP.GET.enabled", false)
        ? CertVerifier::ocspGetEnabled
        : CertVerifier::ocspGetDisabled;
+
+  // If we pass in just 0 as the second argument to Preferences::GetUint, there
+  // are two function signatures that match (given that 0 can be intepreted as
+  // a null pointer). Thus the compiler will complain without the cast.
+  *certShortLifetimeInDays =
+    Preferences::GetUint("security.pki.cert_short_lifetime_in_days",
+                         static_cast<uint32_t>(0));
 
   SSL_ClearSessionCache();
 }
@@ -875,9 +884,13 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
   CertVerifier::OcspDownloadConfig odc;
   CertVerifier::OcspStrictConfig osc;
   CertVerifier::OcspGetConfig ogc;
+  uint32_t certShortLifetimeInDays;
 
-  GetOCSPBehaviorFromPrefs(&odc, &osc, &ogc, lock);
-  mDefaultCertVerifier = new SharedCertVerifier(odc, osc, ogc, pinningMode);
+  GetRevocationBehaviorFromPrefs(&odc, &osc, &ogc, &certShortLifetimeInDays,
+                                 lock);
+  mDefaultCertVerifier = new SharedCertVerifier(odc, osc, ogc,
+                                                certShortLifetimeInDays,
+                                                pinningMode);
 }
 
 // Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
@@ -1344,6 +1357,7 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
     } else if (prefName.EqualsLiteral("security.OCSP.enabled") ||
                prefName.EqualsLiteral("security.OCSP.require") ||
                prefName.EqualsLiteral("security.OCSP.GET.enabled") ||
+               prefName.EqualsLiteral("security.pki.cert_short_lifetime_in_days") ||
                prefName.EqualsLiteral("security.ssl.enable_ocsp_stapling") ||
                prefName.EqualsLiteral("security.cert_pinning.enforcement_level")) {
       MutexAutoLock lock(mutex);
