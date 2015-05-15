@@ -49,6 +49,13 @@ function resetPrefs() {
   Services.prefs.setIntPref("bootstraptest.uninstall_newversion", -1);
 }
 
+function clearCache(file) {
+  if (TEST_UNPACKED)
+    return;
+
+  Services.obs.notifyObservers(file, "flush-cache-entry", null);
+}
+
 function getActiveVersion() {
   return Services.prefs.getIntPref("bootstraptest.active_version");
 }
@@ -67,7 +74,7 @@ function run_test() {
 
 // Injecting into profile (bootstrap)
 add_task(function*() {
-  manuallyInstall(do_get_file(DATA + ADDONS.bootstrap.unsigned), profileDir, ID);
+  let file = manuallyInstall(do_get_file(DATA + ADDONS.bootstrap.unsigned), profileDir, ID);
 
   startupManager();
 
@@ -83,12 +90,13 @@ add_task(function*() {
   yield promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(getFileForAddon(profileDir, ID).exists());
+  do_check_false(file.exists());
+  clearCache(file);
 });
 
 add_task(function*() {
-  manuallyInstall(do_get_file(DATA + ADDONS.bootstrap.signed), profileDir, ID);
-  breakAddon(getFileForAddon(profileDir, ID));
+  let file = manuallyInstall(do_get_file(DATA + ADDONS.bootstrap.signed), profileDir, ID);
+  breakAddon(file);
 
   startupManager();
 
@@ -104,11 +112,12 @@ add_task(function*() {
   yield promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(getFileForAddon(profileDir, ID).exists());
+  do_check_false(file.exists());
+  clearCache(file);
 });
 
 add_task(function*() {
-  manuallyInstall(do_get_file(DATA + ADDONS.bootstrap.badid), profileDir, ID);
+  let file = manuallyInstall(do_get_file(DATA + ADDONS.bootstrap.badid), profileDir, ID);
 
   startupManager();
 
@@ -124,17 +133,18 @@ add_task(function*() {
   yield promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(getFileForAddon(profileDir, ID).exists());
+  do_check_false(file.exists());
+  clearCache(file);
 });
 
 // Installs a signed add-on then modifies it in place breaking its signing
 add_task(function*() {
-  manuallyInstall(do_get_file(DATA + ADDONS.bootstrap.signed), profileDir, ID);
+  let file = manuallyInstall(do_get_file(DATA + ADDONS.bootstrap.signed), profileDir, ID);
 
   // Make it appear to come from the past so when we modify it later it is
   // detected during startup. Obviously malware can bypass this method of
   // detection but the periodic scan will catch that
-  yield promiseSetExtensionModifiedTime(getFileForAddon(profileDir, ID).path, Date.now() - 600000);
+  yield promiseSetExtensionModifiedTime(file.path, Date.now() - 600000);
 
   startupManager();
   let addon = yield promiseAddonByID(ID);
@@ -147,7 +157,8 @@ add_task(function*() {
   yield promiseShutdownManager();
   do_check_eq(getActiveVersion(), 0);
 
-  breakAddon(getFileForAddon(profileDir, ID));
+  clearCache(file);
+  breakAddon(file);
   resetPrefs();
 
   startupManager();
@@ -167,12 +178,13 @@ add_task(function*() {
   yield promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(getFileForAddon(profileDir, ID).exists());
+  do_check_false(file.exists());
+  clearCache(file);
 });
 
 // Injecting into profile (non-bootstrap)
 add_task(function*() {
-  manuallyInstall(do_get_file(DATA + ADDONS.nonbootstrap.unsigned), profileDir, ID);
+  let file = manuallyInstall(do_get_file(DATA + ADDONS.nonbootstrap.unsigned), profileDir, ID);
 
   startupManager();
 
@@ -188,12 +200,13 @@ add_task(function*() {
   yield promiseRestartManager();
   yield promiseShutdownManager();
 
-  do_check_false(getFileForAddon(profileDir, ID).exists());
+  do_check_false(file.exists());
+  clearCache(file);
 });
 
 add_task(function*() {
-  manuallyInstall(do_get_file(DATA + ADDONS.nonbootstrap.signed), profileDir, ID);
-  breakAddon(getFileForAddon(profileDir, ID));
+  let file = manuallyInstall(do_get_file(DATA + ADDONS.nonbootstrap.signed), profileDir, ID);
+  breakAddon(file);
 
   startupManager();
 
@@ -209,11 +222,12 @@ add_task(function*() {
   yield promiseRestartManager();
   yield promiseShutdownManager();
 
-  do_check_false(getFileForAddon(profileDir, ID).exists());
+  do_check_false(file.exists());
+  clearCache(file);
 });
 
 add_task(function*() {
-  manuallyInstall(do_get_file(DATA + ADDONS.nonbootstrap.badid), profileDir, ID);
+  let file = manuallyInstall(do_get_file(DATA + ADDONS.nonbootstrap.badid), profileDir, ID);
 
   startupManager();
 
@@ -229,17 +243,18 @@ add_task(function*() {
   yield promiseRestartManager();
   yield promiseShutdownManager();
 
-  do_check_false(getFileForAddon(profileDir, ID).exists());
+  do_check_false(file.exists());
+  clearCache(file);
 });
 
 // Installs a signed add-on then modifies it in place breaking its signing
 add_task(function*() {
-  manuallyInstall(do_get_file(DATA + ADDONS.nonbootstrap.signed), profileDir, ID);
+  let file = manuallyInstall(do_get_file(DATA + ADDONS.nonbootstrap.signed), profileDir, ID);
 
   // Make it appear to come from the past so when we modify it later it is
   // detected during startup. Obviously malware can bypass this method of
   // detection but the periodic scan will catch that
-  yield promiseSetExtensionModifiedTime(getFileForAddon(profileDir, ID).path, Date.now() - 60000);
+  yield promiseSetExtensionModifiedTime(file.path, Date.now() - 60000);
 
   startupManager();
   let addon = yield promiseAddonByID(ID);
@@ -251,7 +266,8 @@ add_task(function*() {
 
   yield promiseShutdownManager();
 
-  breakAddon(getFileForAddon(profileDir, ID));
+  clearCache(file);
+  breakAddon(file);
 
   startupManager();
 
@@ -270,7 +286,8 @@ add_task(function*() {
   yield promiseRestartManager();
   yield promiseShutdownManager();
 
-  do_check_false(getFileForAddon(profileDir, ID).exists());
+  do_check_false(file.exists());
+  clearCache(file);
 });
 
 // Stage install then modify before startup (non-bootstrap)
@@ -291,8 +308,7 @@ add_task(function*() {
   let addon = yield promiseAddonByID(ID);
   do_check_eq(addon, null);
 
-  let install = getFileForAddon(profileDir, ID);
-  do_check_false(install.exists());
+  clearCache(staged);
 
   yield promiseShutdownManager();
 });
@@ -312,8 +328,8 @@ add_task(function*() {
   do_check_eq(addon, null);
   do_check_eq(getActiveVersion(), -1);
 
-  let install = getFileForAddon(profileDir, ID);
-  do_check_false(install.exists());
+  do_check_false(file.exists());
+  clearCache(file);
 
   yield promiseShutdownManager();
   resetPrefs();

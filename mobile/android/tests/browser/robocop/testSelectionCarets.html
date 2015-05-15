@@ -1,0 +1,35 @@
+﻿<html>
+  <head>
+    <title>ActionBar Handler and SelectionCarets tests</title>
+    <meta name="viewport"
+      content="initial-scale=1, allowZoom=no, maximum-scale=1,
+               user-scalable=no, width=device-width">
+  </head>
+
+  <body>
+    <div id="LTRcontenteditable"
+      style="direction: ltr; width: 10em; height: 2em; word-wrap: break-word;
+      overflow: auto; -moz-user-select:text"
+      contenteditable="true">Find my book</div>
+    <div id="RTLcontenteditable"
+      style="direction: rtl; width: 10em; height: 2em; word-wrap: break-word;
+      overflow: auto; -moz-user-select:text"
+      contenteditable="true">איפה האוטו שלי</div>
+
+    <div id="LTRtextContent"
+      style="direction: ltr; width: 10em; height: 2em; word-wrap: break-word;
+      overflow: auto; -moz-user-select:text">Open the door</div>
+    <div id="RTLtextContent"
+      style="direction: rtl; width: 10em; height: 2em; word-wrap: break-word;
+      overflow: auto; -moz-user-select:text">תן לי מים</div>
+
+    <input id="LTRinput" style="direction: ltr;" value="Type something">
+    <input id="RTLinput" style="direction: rtl;" value="לרוץ במעלה הגבעה">
+    <br>
+
+    <textarea id="LTRtextarea" style="direction: ltr;"
+      rows="3" cols="8">Words in a box</textarea>
+    <textarea id="RTLtextarea" style="direction: rtl;"
+      rows="3" cols="8">הספר הוא טוב</textarea>
+  </body>
+</html>

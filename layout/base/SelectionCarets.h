@@ -101,11 +101,6 @@ public:
     return sSelectionCaretsInflateSize;
   }
 
-private:
-  virtual ~SelectionCarets();
-
-  SelectionCarets() = delete;
-
   /**
    * Set visibility for selection caret.
    */
@@ -115,6 +110,11 @@ private:
    * Update selection caret position base on current selection range.
    */
   void UpdateSelectionCarets();
+
+private:
+  virtual ~SelectionCarets();
+
+  SelectionCarets() = delete;
 
   /**
    * Select a word base on current position, which activates only if element is
@@ -267,6 +267,11 @@ private:
   // Preference
   static int32_t sSelectionCaretsInflateSize;
   static bool sSelectionCaretDetectsLongTap;
+  static bool sCaretManagesAndroidActionbar;
+  static bool sSelectionCaretObservesCompositions;
+
+  // Unique ID of current Mobile ActionBar view.
+  uint32_t mActionBarViewID;
 };
 } // namespace mozilla
 

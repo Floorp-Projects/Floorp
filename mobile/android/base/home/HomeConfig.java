@@ -107,6 +107,7 @@ public final class HomeConfig {
         private final List<ViewConfig> mViews;
         private final AuthConfig mAuthConfig;
         private final EnumSet<Flags> mFlags;
+        private final int mPosition;
 
         static final String JSON_KEY_TYPE = "type";
         static final String JSON_KEY_TITLE = "title";
@@ -116,6 +117,7 @@ public final class HomeConfig {
         static final String JSON_KEY_AUTH_CONFIG = "authConfig";
         static final String JSON_KEY_DEFAULT = "default";
         static final String JSON_KEY_DISABLED = "disabled";
+        static final String JSON_KEY_POSITION = "position";
 
         public enum Flags {
             DEFAULT_PANEL,
@@ -171,6 +173,8 @@ public final class HomeConfig {
                 mFlags.add(Flags.DISABLED_PANEL);
             }
 
+            mPosition = json.optInt(JSON_KEY_POSITION, -1);
+
             validate();
         }
 
@@ -187,6 +191,7 @@ public final class HomeConfig {
             mAuthConfig = (AuthConfig) in.readParcelable(getClass().getClassLoader());
 
             mFlags = (EnumSet<Flags>) in.readSerializable();
+            mPosition = in.readInt();
 
             validate();
         }
@@ -207,6 +212,7 @@ public final class HomeConfig {
 
             mAuthConfig = panelConfig.mAuthConfig;
             mFlags = panelConfig.mFlags.clone();
+            mPosition = panelConfig.mPosition;
 
             validate();
         }
@@ -216,11 +222,11 @@ public final class HomeConfig {
         }
 
         public PanelConfig(PanelType type, String title, String id, EnumSet<Flags> flags) {
-            this(type, title, id, null, null, null, flags);
+            this(type, title, id, null, null, null, flags, -1);
         }
 
         public PanelConfig(PanelType type, String title, String id, LayoutType layoutType,
-                List<ViewConfig> views, AuthConfig authConfig, EnumSet<Flags> flags) {
+                List<ViewConfig> views, AuthConfig authConfig, EnumSet<Flags> flags, int position) {
             mType = type;
             mTitle = title;
             mId = id;
@@ -228,6 +234,7 @@ public final class HomeConfig {
             mViews = views;
             mAuthConfig = authConfig;
             mFlags = flags;
+            mPosition = position;
 
             validate();
         }
@@ -314,6 +321,10 @@ public final class HomeConfig {
             return mAuthConfig;
         }
 
+        public int getPosition() {
+            return mPosition;
+        }
+
         public JSONObject toJSON() throws JSONException {
             final JSONObject json = new JSONObject();
 
@@ -349,6 +360,8 @@ public final class HomeConfig {
             if (mFlags.contains(Flags.DISABLED_PANEL)) {
                 json.put(JSON_KEY_DISABLED, true);
             }
+
+            json.put(JSON_KEY_POSITION, mPosition);
 
             return json;
         }
@@ -390,6 +403,7 @@ public final class HomeConfig {
             dest.writeTypedList(mViews);
             dest.writeParcelable(mAuthConfig, 0);
             dest.writeSerializable(mFlags);
+            dest.writeInt(mPosition);
         }
 
         public static final Creator<PanelConfig> CREATOR = new Creator<PanelConfig>() {
@@ -1272,7 +1286,13 @@ public final class HomeConfig {
             final String id = panelConfig.getId();
             if (!mConfigMap.containsKey(id)) {
                 mConfigMap.put(id, panelConfig);
-                mConfigOrder.add(id);
+
+                final int position = panelConfig.getPosition();
+                if (position < 0 || position >= mConfigOrder.size()) {
+                    mConfigOrder.add(id);
+                } else {
+                    mConfigOrder.add(position, id);
+                }
 
                 mEnabledCount++;
                 if (mEnabledCount == 1 || panelConfig.isDefault()) {
