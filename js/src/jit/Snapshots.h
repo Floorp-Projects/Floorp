@@ -19,8 +19,6 @@
 #include "js/HashTable.h"
 
 namespace js {
-class GenericPrinter;
-
 namespace jit {
 
 class RValueAllocation;
@@ -167,7 +165,7 @@ class RValueAllocation
     static void writePayload(CompactBufferWriter& writer, PayloadType t,
                              Payload p);
     static void writePadding(CompactBufferWriter& writer);
-    static void dumpPayload(GenericPrinter& out, PayloadType t, Payload p);
+    static void dumpPayload(FILE* fp, PayloadType t, Payload p);
     static bool equalPayloads(PayloadType t, Payload lhs, Payload rhs);
 
     RValueAllocation(Mode mode, Payload a1, Payload a2)
@@ -336,7 +334,7 @@ class RValueAllocation
     }
 
   public:
-    void dump(GenericPrinter& out) const;
+    void dump(FILE* fp) const;
 
   public:
     bool operator==(const RValueAllocation& rhs) const {

@@ -81,7 +81,7 @@ struct SymbolicBound : public TempObject
     // Computed symbolic bound, see above.
     LinearSum sum;
 
-    void dump(GenericPrinter& out) const;
+    void print(Sprinter& sp) const;
     void dump() const;
 };
 
@@ -450,7 +450,8 @@ class Range : public TempObject {
         return r;
     }
 
-    void dump(GenericPrinter& out) const;
+    void print(Sprinter& sp) const;
+    void dump(FILE* fp) const;
     void dump() const;
     bool update(const Range* other);
 
