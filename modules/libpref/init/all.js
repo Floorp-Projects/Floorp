@@ -4563,6 +4563,15 @@ pref("selectioncaret.detects.longtap", true);
 // Selection carets do not affect caret visibility.
 pref("selectioncaret.visibility.affectscaret", false);
 
+// The Touch caret by default observes the b2g visibility rules, and
+// not the extended Android visibility rules that allow for touchcaret
+// display in empty editable fields, for example.
+pref("touchcaret.extendedvisibility", false);
+
+// Desktop and b2g don't need to open or close the Android
+// TextSelection (Actionbar) utility.
+pref("caret.manages-android-actionbar", false);
+
 // New implementation to unify touch-caret and selection-carets.
 pref("layout.accessiblecaret.enabled", false);
 

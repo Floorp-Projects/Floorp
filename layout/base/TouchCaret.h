@@ -60,6 +60,11 @@ public:
     return mVisible;
   }
 
+  /**
+   * Open or close the Android TextSelection ActionBar based on visibility.
+   */
+  static void UpdateAndroidActionBarVisibility(bool aVisibility, uint32_t& aViewID);
+
 private:
   // Hide default constructor.
   TouchCaret() = delete;
@@ -280,10 +285,16 @@ private:
   // Preference
   static int32_t sTouchCaretInflateSize;
   static int32_t sTouchCaretExpirationTime;
+  static bool sCaretManagesAndroidActionbar;
+  static bool sTouchcaretExtendedvisibility;
 
   // The auto scroll timer's interval in miliseconds.
   friend class SelectionCarets;
   static const int32_t sAutoScrollTimerDelay = 30;
+
+  // Unique ID of current Mobile ActionBar view.
+  static uint32_t sActionBarViewCount;
+  uint32_t mActionBarViewID;
 };
 } //namespace mozilla
 #endif //mozilla_TouchCaret_h__
