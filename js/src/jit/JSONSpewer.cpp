@@ -66,15 +66,27 @@ JSONSpewer::beginListProperty(const char* name)
 }
 
 void
+JSONSpewer::beginStringProperty(const char* name)
+{
+    property(name);
+    out_.printf("\"");
+}
+
+void
+JSONSpewer::endStringProperty()
+{
+    out_.printf("\"");
+}
+
+void
 JSONSpewer::stringProperty(const char* name, const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
 
-    property(name);
-    out_.printf("\"");
+    beginStringProperty(name);
     out_.vprintf(format, ap);
-    out_.printf("\"");
+    endStringProperty();
 
     va_end(ap);
 }
@@ -221,10 +233,10 @@ JSONSpewer::spewMDef(MDefinition* def)
         isTruncated = static_cast<MBinaryArithInstruction*>(def)->isTruncated();
 
     if (def->type() != MIRType_None && def->range()) {
-        Sprinter sp(GetJitContext()->cx);
-        sp.init();
-        def->range()->dump(sp);
-        stringProperty("type", "%s : %s%s", sp.string(), StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
+        beginStringProperty("type");
+        def->range()->dump(out_);
+        out_.printf(" : %s%s", StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
+        endStringProperty();
     } else {
         stringProperty("type", "%s%s", StringFromMIRType(def->type()), (isTruncated ? " (t)" : ""));
     }
