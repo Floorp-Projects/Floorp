@@ -408,6 +408,7 @@ package-tests: \
   stage-jittest \
   stage-web-platform-tests \
   stage-luciddream \
+  test-packages-manifest \
   $(NULL)
 ifdef MOZ_WEBRTC
 package-tests: stage-steeplechase
@@ -416,6 +417,10 @@ else
 # This staging area has been built for us by universal/flight.mk
 PKG_STAGE = $(DIST)/universal/test-stage
 endif
+
+test-packages-manifest:
+	@rm -f $(MOZ_TEST_PACKAGES_FILE)
+	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py --common $(TEST_PACKAGE) --jsshell $(JSSHELL_NAME) --dest-file $(MOZ_TEST_PACKAGES_FILE)
 
 package-tests:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
@@ -596,5 +601,6 @@ stage-instrumentation-tests: make-stage-dir
   stage-web-platform-tests \
   stage-instrumentation-tests \
   stage-luciddream \
+  test-packages-manifest \
   $(NULL)
 
