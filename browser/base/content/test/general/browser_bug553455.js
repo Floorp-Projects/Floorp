@@ -205,7 +205,7 @@ function test_blocked_install() {
   wait_for_notification("addon-install-blocked", function(aPanel) {
     let notification = aPanel.childNodes[0];
     is(notification.button.label, "Allow", "Should have seen the right button");
-    is(notification.getAttribute("originhost"), "example.com",
+    is(notification.getAttribute("origin"), "example.com",
        "Should have seen the right origin host");
     is(notification.getAttribute("label"),
        gApp + " prevented this site from asking you to install software on your computer.",
