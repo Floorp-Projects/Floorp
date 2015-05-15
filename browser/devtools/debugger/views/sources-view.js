@@ -9,7 +9,7 @@ const KNOWN_SOURCE_GROUPS = {
   "Add-on SDK": "resource://gre/modules/commonjs/",
 };
 
-KNOWN_SOURCE_GROUPS[L10N.getStr("evalGroupLabel")] = "eval";
+KNOWN_SOURCE_GROUPS[L10N.getStr("anonymousSourcesLabel")] = "anonymous";
 
 /**
  * Functions handling the sources UI.
@@ -53,6 +53,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       showArrows: true
     });
 
+    this._unnamedSourceIndex = 0;
     this.emptyText = L10N.getStr("noSourcesText");
     this._blackBoxCheckboxTooltip = L10N.getStr("blackBoxCheckboxTooltip");
 
@@ -121,6 +122,11 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._newTabMenuItem.removeEventListener("command", this._onNewTabCommand, false);
   },
 
+  empty: function() {
+    WidgetMethods.empty.call(this);
+    this._unnamedSourceIndex = 0;
+  },
+
   /**
    * Add commands that XUL can fire.
    */
@@ -161,7 +167,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    *        - staged: true to stage the item to be appended later
    */
   addSource: function(aSource, aOptions = {}) {
-    if (!aSource.url) {
+    if (!aSource.url && !aOptions.force) {
       // We don't show any unnamed eval scripts yet (see bug 1124106)
       return;
     }
@@ -195,14 +201,24 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
   _parseUrl: function(aSource) {
     let fullUrl = aSource.url;
-    let url = fullUrl.split(" -> ").pop();
-    let label = aSource.addonPath ? aSource.addonPath : SourceUtils.getSourceLabel(url);
-    let group = aSource.addonID ? aSource.addonID : SourceUtils.getSourceGroup(url);
+    let url, unicodeUrl, label, group;
+
+    if(!fullUrl) {
+      unicodeUrl = 'SCRIPT' + this._unnamedSourceIndex++;
+      label = unicodeUrl;
+      group = L10N.getStr("anonymousSourcesLabel");
+    }
+    else {
+      let url = fullUrl.split(" -> ").pop();
+      label = aSource.addonPath ? aSource.addonPath : SourceUtils.getSourceLabel(url);
+      group = aSource.addonID ? aSource.addonID : SourceUtils.getSourceGroup(url);
+      unicodeUrl = NetworkHelper.convertToUnicode(unescape(fullUrl));
+    }
 
     return {
       label: label,
       group: group,
-      unicodeUrl: NetworkHelper.convertToUnicode(unescape(fullUrl))
+      unicodeUrl: unicodeUrl
     };
   },
 
@@ -640,6 +656,13 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       }
     }
     return aLocation.actor;
+  },
+
+  getDisplayURL: function(source) {
+    if(!source.url) {
+      return this.getItemByValue(source.actor).attachment.label;
+    }
+    return NetworkHelper.convertToUnicode(unescape(source.url))
   },
 
   /**
