@@ -382,18 +382,13 @@ static inline void LogRendertraceRect(const ScrollableLayerGuid& aGuid, const ch
 #endif
 }
 
-static TimeStamp sFrameTime;
-
 // Counter used to give each APZC a unique id
 static uint32_t sAsyncPanZoomControllerCount = 0;
 
 TimeStamp
-AsyncPanZoomController::GetFrameTime()
+AsyncPanZoomController::GetFrameTime() const
 {
-  if (sFrameTime.IsNull()) {
-    return TimeStamp::Now();
-  }
-  return sFrameTime;
+  return TimeStamp::Now();
 }
 
 class MOZ_STACK_CLASS StateChangeNotificationBlocker {
@@ -432,7 +427,7 @@ public:
     , mOverscrollHandoffChain(aOverscrollHandoffChain)
   {
     MOZ_ASSERT(mOverscrollHandoffChain);
-    TimeStamp now = AsyncPanZoomController::GetFrameTime();
+    TimeStamp now = aApzc.GetFrameTime();
 
     // Drop any velocity on axes where we don't have room to scroll anyways
     // (in this APZC, or an APZC further in the handoff chain).
@@ -774,11 +769,6 @@ private:
   AsyncPanZoomController& mApzc;
   AxisPhysicsMSDModel mXAxisModel, mYAxisModel;
 };
-
-void
-AsyncPanZoomController::SetFrameTime(const TimeStamp& aTime) {
-  sFrameTime = aTime;
-}
 
 /*static*/ void
 AsyncPanZoomController::InitializeGlobalState()
