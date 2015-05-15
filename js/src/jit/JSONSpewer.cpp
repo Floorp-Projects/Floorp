@@ -398,13 +398,3 @@ JSONSpewer::endFunction()
     endList();
     endObject();
 }
-
-void
-JSONSpewer::dump(Fprinter& file)
-{
-    if (!out_.hadOutOfMemory())
-        out_.exportInto(file);
-    else
-        file.put("{}");
-    out_.clear();
-}

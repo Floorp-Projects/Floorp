@@ -68,14 +68,6 @@ C1Spewer::endFunction()
 {
 }
 
-void
-C1Spewer::dump(Fprinter& file)
-{
-    if (!out_.hadOutOfMemory())
-        out_.exportInto(file);
-    out_.clear();
-}
-
 static void
 DumpDefinition(GenericPrinter& out, MDefinition* def)
 {

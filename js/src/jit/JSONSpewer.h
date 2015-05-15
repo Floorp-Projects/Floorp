@@ -9,7 +9,6 @@
 
 #include <stdio.h>
 
-#include "jit/JitAllocPolicy.h"
 #include "js/TypeDecls.h"
 #include "vm/Printer.h"
 
@@ -27,7 +26,7 @@ class JSONSpewer
   private:
     int indentLevel_;
     bool first_;
-    LSprinter out_;
+    GenericPrinter& out_;
 
     void indent();
 
@@ -43,10 +42,10 @@ class JSONSpewer
     void endList();
 
   public:
-    explicit JSONSpewer(TempAllocator *alloc)
+    explicit JSONSpewer(GenericPrinter& out)
       : indentLevel_(0),
         first_(true),
-        out_(alloc->lifoAlloc())
+        out_(out)
     { }
 
     void beginFunction(JSScript* script);
@@ -59,8 +58,6 @@ class JSONSpewer
     void spewIntervals(BacktrackingAllocator* regalloc);
     void endPass();
     void endFunction();
-
-    void dump(Fprinter& file);
 };
 
 } // namespace jit
