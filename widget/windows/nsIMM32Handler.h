@@ -159,6 +159,7 @@ protected:
   static bool IsComposingWindow(nsWindow* aWindow);
 
   static bool ShouldDrawCompositionStringOurselves();
+  static bool IsVerticalWritingSupported();
   static void InitKeyboardLayout(HKL aKeyboardLayout);
   static UINT GetKeyboardCodePage();
 
@@ -361,6 +362,8 @@ protected:
 
   static UINT sCodePage;
   static DWORD sIMEProperty;
+  static DWORD sIMEUIProperty;
+  static bool sAssumeVerticalWritingModeNotSupported;
 };
 
 #endif // nsIMM32Handler_h__
