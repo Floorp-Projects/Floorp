@@ -599,9 +599,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return info_.script()->strict();
     }
 
-    void dumpStack(FILE* fp);
+    void dumpStack(GenericPrinter& out);
+    void dumpStack();
 
-    void dump(FILE* fp);
+    void dump(GenericPrinter& out);
     void dump();
 
     // Track bailouts by storing the current pc in MIR instruction added at
@@ -809,7 +810,7 @@ class MIRGraph
         hasTryBlock_ = true;
     }
 
-    void dump(FILE* fp);
+    void dump(GenericPrinter& out);
     void dump();
 };
 
