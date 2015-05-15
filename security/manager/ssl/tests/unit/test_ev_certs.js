@@ -48,22 +48,13 @@ function start_ocsp_responder(expectedCertNames) {
 
 function check_cert_err(cert_name, expected_error) {
   let cert = certdb.findCertByNickname(null, cert_name);
-  let hasEVPolicy = {};
-  let verifiedChain = {};
-  let error = certdb.verifyCertNow(cert, certificateUsageSSLServer, NO_FLAGS,
-                                   null, verifiedChain, hasEVPolicy);
-  do_check_eq(error,  expected_error);
+  checkCertErrorGeneric(certdb, cert, expected_error, certificateUsageSSLServer);
 }
 
 
 function check_ee_for_ev(cert_name, expected_ev) {
-    let cert = certdb.findCertByNickname(null, cert_name);
-    let hasEVPolicy = {};
-    let verifiedChain = {};
-    let error = certdb.verifyCertNow(cert, certificateUsageSSLServer, NO_FLAGS,
-                                     null, verifiedChain, hasEVPolicy);
-    do_check_eq(hasEVPolicy.value, expected_ev);
-    do_check_eq(error, PRErrorCodeSuccess);
+  let cert = certdb.findCertByNickname(null, cert_name);
+  checkEVStatus(certdb, cert, certificateUsageSSLServer, expected_ev);
 }
 
 function run_test() {
