@@ -1373,6 +1373,7 @@ class JSScript : public js::gc::TenuredCell
         if (hasIonScript())
             js::jit::IonScript::writeBarrierPre(zone(), ion);
         ion = ionScript;
+        resetWarmUpResetCounter();
         MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
         updateBaselineOrIonRaw(maybecx);
     }

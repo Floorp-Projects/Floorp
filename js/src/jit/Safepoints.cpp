@@ -205,13 +205,12 @@ SafepointWriter::writeValueSlots(LSafepoint* safepoint)
 static void
 DumpNunboxPart(const LAllocation& a)
 {
-    Fprinter& out = JitSpewPrinter();
     if (a.isStackSlot()) {
-        out.printf("stack %d", a.toStackSlot()->slot());
+        fprintf(JitSpewFile, "stack %d", a.toStackSlot()->slot());
     } else if (a.isArgument()) {
-        out.printf("arg %d", a.toArgument()->index());
+        fprintf(JitSpewFile, "arg %d", a.toArgument()->index());
     } else {
-        out.printf("reg %s", a.toGeneralReg()->reg().name());
+        fprintf(JitSpewFile, "reg %s", a.toGeneralReg()->reg().name());
     }
 }
 #endif // DEBUG
@@ -296,12 +295,11 @@ SafepointWriter::writeNunboxParts(LSafepoint* safepoint)
             if (entry.type.isUse() || entry.payload.isUse())
                 continue;
             JitSpewHeader(JitSpew_Safepoints);
-            Fprinter& out = JitSpewPrinter();
-            out.printf("    nunbox (type in ");
+            fprintf(JitSpewFile, "    nunbox (type in ");
             DumpNunboxPart(entry.type);
-            out.printf(", payload in ");
+            fprintf(JitSpewFile, ", payload in ");
             DumpNunboxPart(entry.payload);
-            out.printf(")\n");
+            fprintf(JitSpewFile, ")\n");
         }
     }
 # endif

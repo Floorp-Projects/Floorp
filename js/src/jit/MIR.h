@@ -281,7 +281,7 @@ class MNode : public TempObject
 
     virtual bool writeRecoverData(CompactBufferWriter& writer) const;
 
-    virtual void dump(GenericPrinter& out) const = 0;
+    virtual void dump(FILE* fp) const = 0;
     virtual void dump() const = 0;
 
   protected:
@@ -445,12 +445,12 @@ class MDefinition : public MNode
     virtual const char* opName() const = 0;
     virtual void accept(MDefinitionVisitor* visitor) = 0;
 
-    void printName(GenericPrinter& out) const;
-    static void PrintOpcodeName(GenericPrinter& out, Opcode op);
-    virtual void printOpcode(GenericPrinter& out) const;
-    void dump(GenericPrinter& out) const override;
+    void printName(FILE* fp) const;
+    static void PrintOpcodeName(FILE* fp, Opcode op);
+    virtual void printOpcode(FILE* fp) const;
+    void dump(FILE* fp) const override;
     void dump() const override;
-    void dumpLocation(GenericPrinter& out) const;
+    void dumpLocation(FILE* fp) const;
     void dumpLocation() const;
 
     // For LICM.
@@ -753,7 +753,9 @@ class MDefinition : public MNode
 
     void setVirtualRegister(uint32_t vreg) {
         virtualRegister_ = vreg;
+#ifdef DEBUG
         setLoweredUnchecked();
+#endif
     }
     uint32_t virtualRegister() const {
         MOZ_ASSERT(isLowered());
@@ -1329,7 +1331,7 @@ class MConstant : public MNullaryInstruction
         return ToBoolean(HandleValue::fromMarkedLocation(&value_));
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     HashNumber valueHash() const override;
     bool congruentTo(const MDefinition* ins) const override;
@@ -1720,7 +1722,7 @@ class MSimdInsertElement
         return binaryCongruentTo(ins) && lane_ == ins->toSimdInsertElement()->lane();
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     ALLOW_CLONE(MSimdInsertElement)
 };
@@ -2046,7 +2048,7 @@ class MSimdUnaryArith
         return congruentIfOperandsEqual(ins) && ins->toSimdUnaryArith()->operation() == operation();
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     ALLOW_CLONE(MSimdUnaryArith);
 };
@@ -2133,7 +2135,7 @@ class MSimdBinaryComp
                operation_ == other->operation();
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     ALLOW_CLONE(MSimdBinaryComp)
 };
@@ -2202,7 +2204,7 @@ class MSimdBinaryArith
         return operation_ == ins->toSimdBinaryArith()->operation();
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     ALLOW_CLONE(MSimdBinaryArith)
 };
@@ -2267,7 +2269,7 @@ class MSimdBinaryBitwise
         return operation_ == ins->toSimdBinaryBitwise()->operation();
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     ALLOW_CLONE(MSimdBinaryBitwise)
 };
@@ -2324,7 +2326,7 @@ class MSimdShift
         MOZ_CRASH("unexpected operation");
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     bool congruentTo(const MDefinition* ins) const override {
         if (!binaryCongruentTo(ins))
@@ -2427,7 +2429,7 @@ class MParameter : public MNullaryInstruction
     int32_t index() const {
         return index_;
     }
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     HashNumber valueHash() const override;
     bool congruentTo(const MDefinition* ins) const override;
@@ -2493,7 +2495,7 @@ class MControlInstruction : public MInstruction
         return true;
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 };
 
 class MTableSwitch final
@@ -4263,7 +4265,7 @@ class MCompare
         return AliasSet::None();
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
     void collectRangeInfoPreTrunc() override;
 
     void trySpecializeFloat32(TempAllocator& alloc) override;
@@ -4442,7 +4444,7 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
     void makeInfallible() {
         // Should only be called if we're already Infallible or TypeBarrier
         MOZ_ASSERT(mode() != Fallible);
@@ -4554,7 +4556,7 @@ class MAssertRange
         return AliasSet::None();
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 };
 
 // Caller-side allocation of |this| for |new|:
@@ -6088,7 +6090,7 @@ class MMathFunction
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     static const char* FunctionName(Function function);
 
@@ -6908,7 +6910,7 @@ class MBeta
 
   public:
     INSTRUCTION_HEADER(Beta)
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
     static MBeta* New(TempAllocator& alloc, MDefinition* val, const Range* comp)
     {
         return new(alloc) MBeta(val, comp);
@@ -7659,7 +7661,7 @@ class MConstantElements : public MNullaryInstruction
         return value_;
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     HashNumber valueHash() const override {
         return (HashNumber)(size_t) value_;
@@ -9240,7 +9242,7 @@ class MLoadUnboxedScalar
         return congruentIfOperandsEqual(other);
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
 
     void computeRange(TempAllocator& alloc) override;
 
@@ -12055,7 +12057,7 @@ class MTypeBarrier
         return new(alloc) MTypeBarrier(def, types, kind);
     }
 
-    void printOpcode(GenericPrinter& out) const override;
+    void printOpcode(FILE* fp) const override;
     bool congruentTo(const MDefinition* def) const override;
 
     AliasSet getAliasSet() const override {
@@ -12441,7 +12443,7 @@ class MResumePoint final :
         return stores_.end();
     }
 
-    virtual void dump(GenericPrinter& out) const override;
+    virtual void dump(FILE* fp) const override;
     virtual void dump() const override;
 };
 

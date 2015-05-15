@@ -4172,28 +4172,27 @@ LIRGenerator::visitNurseryObject(MNurseryObject* ins)
 static void
 SpewResumePoint(MBasicBlock* block, MInstruction* ins, MResumePoint* resumePoint)
 {
-    Fprinter& out = JitSpewPrinter();
-    out.printf("Current resume point %p details:\n", (void*)resumePoint);
-    out.printf("    frame count: %u\n", resumePoint->frameCount());
+    fprintf(JitSpewFile, "Current resume point %p details:\n", (void*)resumePoint);
+    fprintf(JitSpewFile, "    frame count: %u\n", resumePoint->frameCount());
 
     if (ins) {
-        out.printf("    taken after: ");
-        ins->printName(out);
+        fprintf(JitSpewFile, "    taken after: ");
+        ins->printName(JitSpewFile);
     } else {
-        out.printf("    taken at block %d entry", block->id());
+        fprintf(JitSpewFile, "    taken at block %d entry", block->id());
     }
-    out.printf("\n");
+    fprintf(JitSpewFile, "\n");
 
-    out.printf("    pc: %p (script: %p, offset: %d)\n",
+    fprintf(JitSpewFile, "    pc: %p (script: %p, offset: %d)\n",
             (void*)resumePoint->pc(),
             (void*)resumePoint->block()->info().script(),
             int(resumePoint->block()->info().script()->pcToOffset(resumePoint->pc())));
 
     for (size_t i = 0, e = resumePoint->numOperands(); i < e; i++) {
         MDefinition* in = resumePoint->getOperand(i);
-        out.printf("    slot%u: ", (unsigned)i);
-        in->printName(out);
-        out.printf("\n");
+        fprintf(JitSpewFile, "    slot%u: ", (unsigned)i);
+        in->printName(JitSpewFile);
+        fprintf(JitSpewFile, "\n");
     }
 }
 

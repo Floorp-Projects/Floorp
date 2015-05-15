@@ -16,8 +16,6 @@
 #include "jit/MIR.h"
 #include "jit/Recover.h"
 
-#include "vm/Printer.h"
-
 using namespace js;
 using namespace js::jit;
 
@@ -421,43 +419,43 @@ ValTypeToString(JSValueType type)
 }
 
 void
-RValueAllocation::dumpPayload(GenericPrinter& out, PayloadType type, Payload p)
+RValueAllocation::dumpPayload(FILE* fp, PayloadType type, Payload p)
 {
     switch (type) {
       case PAYLOAD_NONE:
         break;
       case PAYLOAD_INDEX:
-        out.printf("index %u", p.index);
+        fprintf(fp, "index %u", p.index);
         break;
       case PAYLOAD_STACK_OFFSET:
-        out.printf("stack %d", p.stackOffset);
+        fprintf(fp, "stack %d", p.stackOffset);
         break;
       case PAYLOAD_GPR:
-        out.printf("reg %s", p.gpr.name());
+        fprintf(fp, "reg %s", p.gpr.name());
         break;
       case PAYLOAD_FPU:
-        out.printf("reg %s", p.fpu.name());
+        fprintf(fp, "reg %s", p.fpu.name());
         break;
       case PAYLOAD_PACKED_TAG:
-        out.printf("%s", ValTypeToString(p.type));
+        fprintf(fp, "%s", ValTypeToString(p.type));
         break;
     }
 }
 
 void
-RValueAllocation::dump(GenericPrinter& out) const
+RValueAllocation::dump(FILE* fp) const
 {
     const Layout& layout = layoutFromMode(mode());
-    out.printf("%s", layout.name);
+    fprintf(fp, "%s", layout.name);
 
     if (layout.type1 != PAYLOAD_NONE)
-        out.printf(" (");
-    dumpPayload(out, layout.type1, arg1_);
+        fprintf(fp, " (");
+    dumpPayload(fp, layout.type1, arg1_);
     if (layout.type2 != PAYLOAD_NONE)
-        out.printf(", ");
-    dumpPayload(out, layout.type2, arg2_);
+        fprintf(fp, ", ");
+    dumpPayload(fp, layout.type2, arg2_);
     if (layout.type1 != PAYLOAD_NONE)
-        out.printf(")");
+        fprintf(fp, ")");
 }
 
 bool
@@ -550,13 +548,12 @@ SnapshotReader::spewBailingFrom() const
 {
     if (JitSpewEnabled(JitSpew_IonBailouts)) {
         JitSpewHeader(JitSpew_IonBailouts);
-        Fprinter& out = JitSpewPrinter();
-        out.printf(" bailing from bytecode: %s, MIR: ", js_CodeName[pcOpcode_]);
-        MDefinition::PrintOpcodeName(out, MDefinition::Opcode(mirOpcode_));
-        out.printf(" [%u], LIR: ", mirId_);
-        LInstruction::printName(out, LInstruction::Opcode(lirOpcode_));
-        out.printf(" [%u]", lirId_);
-        out.printf("\n");
+        fprintf(JitSpewFile, " bailing from bytecode: %s, MIR: ", js_CodeName[pcOpcode_]);
+        MDefinition::PrintOpcodeName(JitSpewFile, MDefinition::Opcode(mirOpcode_));
+        fprintf(JitSpewFile, " [%u], LIR: ", mirId_);
+        LInstruction::printName(JitSpewFile, LInstruction::Opcode(lirOpcode_));
+        fprintf(JitSpewFile, " [%u]", lirId_);
+        fprintf(JitSpewFile, "\n");
     }
 }
 #endif
@@ -669,10 +666,9 @@ SnapshotWriter::add(const RValueAllocation& alloc)
 
     if (JitSpewEnabled(JitSpew_IonSnapshots)) {
         JitSpewHeader(JitSpew_IonSnapshots);
-        Fprinter& out = JitSpewPrinter();
-        out.printf("    slot %u (%d): ", allocWritten_, offset);
-        alloc.dump(out);
-        out.printf("\n");
+        fprintf(JitSpewFile, "    slot %u (%d): ", allocWritten_, offset);
+        alloc.dump(JitSpewFile);
+        fprintf(JitSpewFile, "\n");
     }
 
     allocWritten_++;
