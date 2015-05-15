@@ -30,7 +30,6 @@
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
 #include "vm/SavedStacks.h"
-#include "vm/Stack.h"
 #include "vm/TraceLogging.h"
 
 #include "jscntxtinlines.h"
@@ -1546,26 +1545,18 @@ js::testingFunc_inIon(JSContext* cx, unsigned argc, jsval* vp)
         return true;
     }
 
-    ScriptFrameIter iter(cx);
-    if (iter.isIon()) {
-        // Reset the counter of the IonScript's script.
-        JitFrameIterator jitIter(cx);
-        ++jitIter;
-        jitIter.script()->resetWarmUpResetCounter();
-    } else {
-        // Check if we missed multiple attempts at compiling the innermost script.
-        JSScript* script = cx->currentScript();
-        if (script && script->getWarmUpResetCount() >= 20) {
-            JSString* error = JS_NewStringCopyZ(cx, "Compilation is being repeatedly prevented. Giving up.");
-            if (!error)
-                return false;
+    JSScript* script = cx->currentScript();
+    if (script && script->getWarmUpResetCount() >= 20) {
+        JSString* error = JS_NewStringCopyZ(cx, "Compilation is being repeatedly prevented. Giving up.");
+        if (!error)
+            return false;
 
-            args.rval().setString(error);
-            return true;
-        }
+        args.rval().setString(error);
+        return true;
     }
 
-    args.rval().setBoolean(iter.isIon());
+    // false when not in ionMonkey
+    args.rval().setBoolean(false);
     return true;
 }
 

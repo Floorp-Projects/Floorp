@@ -16,51 +16,67 @@
 #include "jit/LIR.h"
 #include "jit/MIRGraph.h"
 
-#include "vm/Printer.h"
-
 using namespace js;
 using namespace js::jit;
 
-void
-C1Spewer::beginFunction(MIRGraph* graph, JSScript* script)
+bool
+C1Spewer::init(const char* path)
 {
+    spewout_ = fopen(path, "w");
+    return spewout_ != nullptr;
+}
+
+void
+C1Spewer::beginFunction(MIRGraph* graph, HandleScript script)
+{
+    if (!spewout_)
+        return;
+
     this->graph  = graph;
 
-    out_.printf("begin_compilation\n");
+    fprintf(spewout_, "begin_compilation\n");
     if (script) {
-        out_.printf("  name \"%s:%" PRIuSIZE "\"\n", script->filename(), script->lineno());
-        out_.printf("  method \"%s:%" PRIuSIZE "\"\n", script->filename(), script->lineno());
+        fprintf(spewout_, "  name \"%s:%" PRIuSIZE "\"\n", script->filename(), script->lineno());
+        fprintf(spewout_, "  method \"%s:%" PRIuSIZE "\"\n", script->filename(), script->lineno());
     } else {
-        out_.printf("  name \"asm.js compilation\"\n");
-        out_.printf("  method \"asm.js compilation\"\n");
+        fprintf(spewout_, "  name \"asm.js compilation\"\n");
+        fprintf(spewout_, "  method \"asm.js compilation\"\n");
     }
-    out_.printf("  date %d\n", (int)time(nullptr));
-    out_.printf("end_compilation\n");
+    fprintf(spewout_, "  date %d\n", (int)time(nullptr));
+    fprintf(spewout_, "end_compilation\n");
 }
 
 void
 C1Spewer::spewPass(const char* pass)
 {
-    out_.printf("begin_cfg\n");
-    out_.printf("  name \"%s\"\n", pass);
+    if (!spewout_)
+        return;
+
+    fprintf(spewout_, "begin_cfg\n");
+    fprintf(spewout_, "  name \"%s\"\n", pass);
 
     for (MBasicBlockIterator block(graph->begin()); block != graph->end(); block++)
-        spewPass(out_, *block);
+        spewPass(spewout_, *block);
 
-    out_.printf("end_cfg\n");
+    fprintf(spewout_, "end_cfg\n");
+    fflush(spewout_);
 }
 
 void
 C1Spewer::spewIntervals(const char* pass, BacktrackingAllocator* regalloc)
 {
-    out_.printf("begin_intervals\n");
-    out_.printf(" name \"%s\"\n", pass);
+    if (!spewout_)
+        return;
+
+    fprintf(spewout_, "begin_intervals\n");
+    fprintf(spewout_, " name \"%s\"\n", pass);
 
     size_t nextId = 0x4000;
     for (MBasicBlockIterator block(graph->begin()); block != graph->end(); block++)
-        spewIntervals(out_, *block, regalloc, nextId);
+        spewIntervals(spewout_, *block, regalloc, nextId);
 
-    out_.printf("end_intervals\n");
+    fprintf(spewout_, "end_intervals\n");
+    fflush(spewout_);
 }
 
 void
@@ -68,28 +84,35 @@ C1Spewer::endFunction()
 {
 }
 
-static void
-DumpDefinition(GenericPrinter& out, MDefinition* def)
+void
+C1Spewer::finish()
 {
-    out.printf("      ");
-    out.printf("%u %u ", def->id(), unsigned(def->useCount()));
-    def->printName(out);
-    out.printf(" ");
-    def->printOpcode(out);
-    out.printf(" <|@\n");
+    if (spewout_)
+        fclose(spewout_);
 }
 
 static void
-DumpLIR(GenericPrinter& out, LNode* ins)
+DumpDefinition(FILE* fp, MDefinition* def)
 {
-    out.printf("      ");
-    out.printf("%d ", ins->id());
-    ins->dump(out);
-    out.printf(" <|@\n");
+    fprintf(fp, "      ");
+    fprintf(fp, "%u %u ", def->id(), unsigned(def->useCount()));
+    def->printName(fp);
+    fprintf(fp, " ");
+    def->printOpcode(fp);
+    fprintf(fp, " <|@\n");
+}
+
+static void
+DumpLIR(FILE* fp, LNode* ins)
+{
+    fprintf(fp, "      ");
+    fprintf(fp, "%d ", ins->id());
+    ins->dump(fp);
+    fprintf(fp, " <|@\n");
 }
 
 void
-C1Spewer::spewIntervals(GenericPrinter& out, BacktrackingAllocator* regalloc, LNode* ins, size_t& nextId)
+C1Spewer::spewIntervals(FILE* fp, BacktrackingAllocator* regalloc, LNode* ins, size_t& nextId)
 {
     for (size_t k = 0; k < ins->numDefs(); k++) {
         uint32_t id = ins->getDef(k)->virtualRegister();
@@ -98,102 +121,102 @@ C1Spewer::spewIntervals(GenericPrinter& out, BacktrackingAllocator* regalloc, LN
         for (size_t i = 0; i < vreg->numIntervals(); i++) {
             LiveInterval* live = vreg->getInterval(i);
             if (live->numRanges()) {
-                out.printf("%d object \"", (i == 0) ? id : int32_t(nextId++));
-                out.printf("%s", live->getAllocation()->toString());
-                out.printf("\" %d -1", id);
+                fprintf(fp, "%d object \"", (i == 0) ? id : int32_t(nextId++));
+                fprintf(fp, "%s", live->getAllocation()->toString());
+                fprintf(fp, "\" %d -1", id);
                 for (size_t j = 0; j < live->numRanges(); j++) {
-                    out.printf(" [%u, %u[", live->getRange(j)->from.bits(),
-                               live->getRange(j)->to.bits());
+                    fprintf(fp, " [%u, %u[", live->getRange(j)->from.bits(),
+                            live->getRange(j)->to.bits());
                 }
                 for (UsePositionIterator usePos(live->usesBegin()); usePos != live->usesEnd(); usePos++)
-                    out.printf(" %u M", usePos->pos.bits());
-                out.printf(" \"\"\n");
+                    fprintf(fp, " %u M", usePos->pos.bits());
+                fprintf(fp, " \"\"\n");
             }
         }
     }
 }
 
 void
-C1Spewer::spewIntervals(GenericPrinter& out, MBasicBlock* block, BacktrackingAllocator* regalloc, size_t& nextId)
+C1Spewer::spewIntervals(FILE* fp, MBasicBlock* block, BacktrackingAllocator* regalloc, size_t& nextId)
 {
     LBlock* lir = block->lir();
     if (!lir)
         return;
 
     for (size_t i = 0; i < lir->numPhis(); i++)
-        spewIntervals(out, regalloc, lir->getPhi(i), nextId);
+        spewIntervals(fp, regalloc, lir->getPhi(i), nextId);
 
     for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++)
-        spewIntervals(out, regalloc, *ins, nextId);
+        spewIntervals(fp, regalloc, *ins, nextId);
 }
 
 void
-C1Spewer::spewPass(GenericPrinter& out, MBasicBlock* block)
+C1Spewer::spewPass(FILE* fp, MBasicBlock* block)
 {
-    out.printf("  begin_block\n");
-    out.printf("    name \"B%d\"\n", block->id());
-    out.printf("    from_bci -1\n");
-    out.printf("    to_bci -1\n");
+    fprintf(fp, "  begin_block\n");
+    fprintf(fp, "    name \"B%d\"\n", block->id());
+    fprintf(fp, "    from_bci -1\n");
+    fprintf(fp, "    to_bci -1\n");
 
-    out.printf("    predecessors");
+    fprintf(fp, "    predecessors");
     for (uint32_t i = 0; i < block->numPredecessors(); i++) {
         MBasicBlock* pred = block->getPredecessor(i);
-        out.printf(" \"B%d\"", pred->id());
+        fprintf(fp, " \"B%d\"", pred->id());
     }
-    out.printf("\n");
+    fprintf(fp, "\n");
 
-    out.printf("    successors");
+    fprintf(fp, "    successors");
     for (uint32_t i = 0; i < block->numSuccessors(); i++) {
         MBasicBlock* successor = block->getSuccessor(i);
-        out.printf(" \"B%d\"", successor->id());
+        fprintf(fp, " \"B%d\"", successor->id());
     }
-    out.printf("\n");
+    fprintf(fp, "\n");
 
-    out.printf("    xhandlers\n");
-    out.printf("    flags\n");
+    fprintf(fp, "    xhandlers\n");
+    fprintf(fp, "    flags\n");
 
     if (block->lir() && block->lir()->begin() != block->lir()->end()) {
-        out.printf("    first_lir_id %d\n", block->lir()->firstId());
-        out.printf("    last_lir_id %d\n", block->lir()->lastId());
+        fprintf(fp, "    first_lir_id %d\n", block->lir()->firstId());
+        fprintf(fp, "    last_lir_id %d\n", block->lir()->lastId());
     }
 
-    out.printf("    begin_states\n");
+    fprintf(fp, "    begin_states\n");
 
     if (block->entryResumePoint()) {
-        out.printf("      begin_locals\n");
-        out.printf("        size %d\n", (int)block->numEntrySlots());
-        out.printf("        method \"None\"\n");
+        fprintf(fp, "      begin_locals\n");
+        fprintf(fp, "        size %d\n", (int)block->numEntrySlots());
+        fprintf(fp, "        method \"None\"\n");
         for (uint32_t i = 0; i < block->numEntrySlots(); i++) {
             MDefinition* ins = block->getEntrySlot(i);
-            out.printf("        ");
-            out.printf("%d ", i);
+            fprintf(fp, "        ");
+            fprintf(fp, "%d ", i);
             if (ins->isUnused())
-                out.printf("unused");
+                fprintf(fp, "unused");
             else
-                ins->printName(out);
-            out.printf("\n");
+                ins->printName(fp);
+            fprintf(fp, "\n");
         }
-        out.printf("      end_locals\n");
+        fprintf(fp, "      end_locals\n");
     }
-    out.printf("    end_states\n");
+    fprintf(fp, "    end_states\n");
 
-    out.printf("    begin_HIR\n");
+    fprintf(fp, "    begin_HIR\n");
     for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++)
-        DumpDefinition(out, *phi);
+        DumpDefinition(fp, *phi);
     for (MInstructionIterator i(block->begin()); i != block->end(); i++)
-        DumpDefinition(out, *i);
-    out.printf("    end_HIR\n");
+        DumpDefinition(fp, *i);
+    fprintf(fp, "    end_HIR\n");
 
     if (block->lir()) {
-        out.printf("    begin_LIR\n");
+        fprintf(fp, "    begin_LIR\n");
         for (size_t i = 0; i < block->lir()->numPhis(); i++)
-            DumpLIR(out, block->lir()->getPhi(i));
+            DumpLIR(fp, block->lir()->getPhi(i));
         for (LInstructionIterator i(block->lir()->begin()); i != block->lir()->end(); i++)
-            DumpLIR(out, *i);
-        out.printf("    end_LIR\n");
+            DumpLIR(fp, *i);
+        fprintf(fp, "    end_LIR\n");
     }
 
-    out.printf("  end_block\n");
+    fprintf(fp, "  end_block\n");
 }
 
 #endif /* DEBUG */

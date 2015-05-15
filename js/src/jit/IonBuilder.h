@@ -871,6 +871,7 @@ class IonBuilder
     InliningStatus inlineBailout(CallInfo& callInfo);
     InliningStatus inlineAssertFloat32(CallInfo& callInfo);
     InliningStatus inlineAssertRecoveredOnBailout(CallInfo& callInfo);
+    InliningStatus inlineTrue(CallInfo& callInfo);
 
     // Bind function.
     InliningStatus inlineBoundFunction(CallInfo& callInfo, JSFunction* target);

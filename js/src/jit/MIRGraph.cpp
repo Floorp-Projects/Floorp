@@ -48,8 +48,7 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     usesSignalHandlersForAsmJSOOB_(usesSignalHandlersForAsmJSOOB),
 #endif
-    options(options),
-    gs_(alloc)
+    options(options)
 { }
 
 bool
@@ -1517,6 +1516,19 @@ MBasicBlock::specializePhis()
     return true;
 }
 
+void
+MBasicBlock::dumpStack(FILE* fp)
+{
+#ifdef DEBUG
+    fprintf(fp, " %-3s %-16s %-6s %-10s\n", "#", "name", "copyOf", "first/next");
+    fprintf(fp, "-------------------------------------------\n");
+    for (uint32_t i = 0; i < stackPosition_; i++) {
+        fprintf(fp, " %-3d", i);
+        fprintf(fp, " %-16p\n", (void*)slots_[i]);
+    }
+#endif
+}
+
 MTest*
 MBasicBlock::immediateDominatorBranch(BranchDirection* pdirection)
 {
@@ -1546,33 +1558,12 @@ MBasicBlock::immediateDominatorBranch(BranchDirection* pdirection)
 }
 
 void
-MBasicBlock::dumpStack(GenericPrinter& out)
-{
-#ifdef DEBUG
-    out.printf(" %-3s %-16s %-6s %-10s\n", "#", "name", "copyOf", "first/next");
-    out.printf("-------------------------------------------\n");
-    for (uint32_t i = 0; i < stackPosition_; i++) {
-        out.printf(" %-3d", i);
-        out.printf(" %-16p\n", (void*)slots_[i]);
-    }
-#endif
-}
-
-void
-MBasicBlock::dumpStack()
-{
-    Fprinter out(stderr);
-    dumpStack(out);
-    out.finish();
-}
-
-void
-MIRGraph::dump(GenericPrinter& out)
+MIRGraph::dump(FILE* fp)
 {
 #ifdef DEBUG
     for (MBasicBlockIterator iter(begin()); iter != end(); iter++) {
-        iter->dump(out);
-        out.printf("\n");
+        iter->dump(fp);
+        fprintf(fp, "\n");
     }
 #endif
 }
@@ -1580,32 +1571,31 @@ MIRGraph::dump(GenericPrinter& out)
 void
 MIRGraph::dump()
 {
-    Fprinter out(stderr);
-    dump(out);
-    out.finish();
+    dump(stderr);
 }
 
 void
-MBasicBlock::dump(GenericPrinter& out)
+MBasicBlock::dump(FILE* fp)
 {
 #ifdef DEBUG
-    out.printf("block%u:%s%s%s\n", id(),
-               isLoopHeader() ? " (loop header)" : "",
-               unreachable() ? " (unreachable)" : "",
-               isMarked() ? " (marked)" : "");
-    if (MResumePoint* resume = entryResumePoint())
-        resume->dump(out);
-    for (MPhiIterator iter(phisBegin()); iter != phisEnd(); iter++)
-        iter->dump(out);
-    for (MInstructionIterator iter(begin()); iter != end(); iter++)
-        iter->dump(out);
+    fprintf(fp, "block%u:%s%s%s\n", id(),
+            isLoopHeader() ? " (loop header)" : "",
+            unreachable() ? " (unreachable)" : "",
+            isMarked() ? " (marked)" : "");
+    if (MResumePoint* resume = entryResumePoint()) {
+        resume->dump();
+    }
+    for (MPhiIterator iter(phisBegin()); iter != phisEnd(); iter++) {
+        iter->dump(fp);
+    }
+    for (MInstructionIterator iter(begin()); iter != end(); iter++) {
+        iter->dump(fp);
+    }
 #endif
 }
 
 void
 MBasicBlock::dump()
 {
-    Fprinter out(stderr);
-    dump(out);
-    out.finish();
+    dump(stderr);
 }

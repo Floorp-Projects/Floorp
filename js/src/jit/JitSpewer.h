@@ -77,7 +77,7 @@ namespace jit {
     /* Information about compiled scripts */\
     _(IonScripts)                           \
     /* Info about failing to log script */  \
-    _(IonSyncLogs)                          \
+    _(IonLogs)                              \
     /* Information during MIR building */   \
     _(IonMIR)                               \
     /* Information during bailouts */       \
@@ -103,52 +103,44 @@ static const int NULL_ID = -1;
 
 #ifdef DEBUG
 
-// Class made to hold the MIR and LIR graphs of an AsmJS / Ion compilation.
-class GraphSpewer
+class IonSpewer
 {
   private:
-    MIRGraph* graph_;
-    LSprinter c1Printer_;
-    LSprinter jsonPrinter_;
-    C1Spewer c1Spewer_;
-    JSONSpewer jsonSpewer_;
+    MIRGraph* graph;
+    C1Spewer c1Spewer;
+    JSONSpewer jsonSpewer;
+    bool inited_;
 
   public:
-    explicit GraphSpewer(TempAllocator *alloc)
-      : graph_(nullptr),
-        c1Printer_(alloc->lifoAlloc()),
-        jsonPrinter_(alloc->lifoAlloc()),
-        c1Spewer_(c1Printer_),
-        jsonSpewer_(jsonPrinter_)
+    IonSpewer()
+      : graph(nullptr), inited_(false)
     { }
 
-    bool isSpewing() const {
-        return graph_;
-    }
-    void init(MIRGraph* graph, JSScript* function);
-    void beginFunction(JSScript* function);
+    // File output is terminated safely upon destruction.
+    ~IonSpewer();
+
+    bool init();
+    void beginFunction(MIRGraph* graph, JS::HandleScript);
+    bool isSpewingFunction() const;
     void spewPass(const char* pass);
     void spewPass(const char* pass, BacktrackingAllocator* ra);
     void endFunction();
-
-    void dump(Fprinter& c1, Fprinter& json);
 };
 
-void SpewBeginFunction(MIRGenerator* mir, JSScript* function);
-class AutoSpewEndFunction
+class IonSpewFunction
 {
-  private:
-    MIRGenerator* mir_;
-
   public:
-    explicit AutoSpewEndFunction(MIRGenerator* mir)
-      : mir_(mir)
-    { }
-    ~AutoSpewEndFunction();
+    IonSpewFunction(MIRGraph* graph, JS::HandleScript function);
+    ~IonSpewFunction();
 };
+
+void IonSpewNewFunction(MIRGraph* graph, JS::HandleScript function);
+void IonSpewPass(const char* pass);
+void IonSpewPass(const char* pass, BacktrackingAllocator* ra);
+void IonSpewEndFunction();
 
 void CheckLogging();
-Fprinter& JitSpewPrinter();
+extern FILE* JitSpewFile;
 void JitSpew(JitSpewChannel channel, const char* fmt, ...);
 void JitSpewStart(JitSpewChannel channel, const char* fmt, ...);
 void JitSpewCont(JitSpewChannel channel, const char* fmt, ...);
@@ -162,42 +154,22 @@ void JitSpewDef(JitSpewChannel channel, const char* str, MDefinition* def);
 
 void EnableChannel(JitSpewChannel channel);
 void DisableChannel(JitSpewChannel channel);
-void EnableIonDebugSyncLogging();
-void EnableIonDebugAsyncLogging();
+void EnableIonDebugLogging();
 
 #else
 
-class GraphSpewer
-{
-  public:
-    GraphSpewer(TempAllocator *alloc) { }
-
-    bool isSpewing() { return false; }
-    void init(MIRGraph* graph, JSScript* function) { }
-    void beginFunction(JSScript* function) { }
-    void spewPass(const char* pass) { }
-    void spewPass(const char* pass, BacktrackingAllocator* ra) { }
-    void endFunction() { }
-
-    void dump(Fprinter& c1, Fprinter& json) { }
-};
-
-static inline void SpewBeginFunction(MIRGenerator* mir, JSScript* function)
+static inline void IonSpewNewFunction(MIRGraph* graph, JS::HandleScript function)
 { }
-
-class AutoSpewEndFunction
-{
-  public:
-    explicit AutoSpewEndFunction(MIRGenerator* mir) { }
-    ~AutoSpewEndFunction() { }
-};
+static inline void IonSpewPass(const char* pass)
+{ }
+static inline void IonSpewPass(const char* pass, BacktrackingAllocator* ra)
+{ }
+static inline void IonSpewEndFunction()
+{ }
 
 static inline void CheckLogging()
 { }
-static inline Fprinter& JitSpewPrinter()
-{
-    MOZ_CRASH("No empty backend for JitSpewPrinter");
-}
+static FILE* const JitSpewFile = nullptr;
 static inline void JitSpew(JitSpewChannel, const char* fmt, ...)
 { }
 static inline void JitSpewStart(JitSpewChannel channel, const char* fmt, ...)
@@ -220,9 +192,7 @@ static inline void EnableChannel(JitSpewChannel)
 { }
 static inline void DisableChannel(JitSpewChannel)
 { }
-static inline void EnableIonDebugSyncLogging()
-{ }
-static inline void EnableIonDebugAsyncLogging()
+static inline void EnableIonDebugLogging()
 { }
 
 #endif /* DEBUG */

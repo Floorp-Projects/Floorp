@@ -61,7 +61,7 @@ CheckUsesAreFloat32Consumers(MInstruction* ins)
 }
 
 void
-MDefinition::PrintOpcodeName(GenericPrinter& out, MDefinition::Opcode op)
+MDefinition::PrintOpcodeName(FILE* fp, MDefinition::Opcode op)
 {
     static const char * const names[] =
     {
@@ -72,7 +72,7 @@ MDefinition::PrintOpcodeName(GenericPrinter& out, MDefinition::Opcode op)
     const char* name = names[op];
     size_t len = strlen(name);
     for (size_t i = 0; i < len; i++)
-        out.printf("%c", tolower(name[i]));
+        fprintf(fp, "%c", tolower(name[i]));
 }
 
 const Value&
@@ -209,10 +209,10 @@ EvaluateExactReciprocal(TempAllocator& alloc, MDiv* ins)
 }
 
 void
-MDefinition::printName(GenericPrinter& out) const
+MDefinition::printName(FILE* fp) const
 {
-    PrintOpcodeName(out, op());
-    out.printf("%u", id());
+    PrintOpcodeName(fp, op());
+    fprintf(fp, "%u", id());
 }
 
 HashNumber
@@ -439,42 +439,40 @@ MTest::filtersUndefinedOrNull(bool trueBranch, MDefinition** subject, bool* filt
 }
 
 void
-MDefinition::printOpcode(GenericPrinter& out) const
+MDefinition::printOpcode(FILE* fp) const
 {
-    PrintOpcodeName(out, op());
+    PrintOpcodeName(fp, op());
     for (size_t j = 0, e = numOperands(); j < e; j++) {
-        out.printf(" ");
+        fprintf(fp, " ");
         if (getUseFor(j)->hasProducer())
-            getOperand(j)->printName(out);
+            getOperand(j)->printName(fp);
         else
-            out.printf("(null)");
+            fprintf(fp, "(null)");
     }
 }
 
 void
-MDefinition::dump(GenericPrinter& out) const
+MDefinition::dump(FILE* fp) const
 {
-    printName(out);
-    out.printf(" = ");
-    printOpcode(out);
-    out.printf("\n");
+    printName(fp);
+    fprintf(fp, " = ");
+    printOpcode(fp);
+    fprintf(fp, "\n");
 
     if (isInstruction()) {
         if (MResumePoint* resume = toInstruction()->resumePoint())
-            resume->dump(out);
+            resume->dump(fp);
     }
 }
 
 void
 MDefinition::dump() const
 {
-    Fprinter out(stderr);
-    dump(out);
-    out.finish();
+    dump(stderr);
 }
 
 void
-MDefinition::dumpLocation(GenericPrinter& out) const
+MDefinition::dumpLocation(FILE* fp) const
 {
     MResumePoint* rp = nullptr;
     const char* linkWord = nullptr;
@@ -489,7 +487,7 @@ MDefinition::dumpLocation(GenericPrinter& out) const
     while (rp) {
         JSScript* script = rp->block()->info().script();
         uint32_t lineno = PCToLineNumber(rp->block()->info().script(), rp->pc());
-        out.printf("  %s %s:%d\n", linkWord, script->filename(), lineno);
+        fprintf(fp, "  %s %s:%d\n", linkWord, script->filename(), lineno);
         rp = rp->caller();
         linkWord = "in";
     }
@@ -498,9 +496,7 @@ MDefinition::dumpLocation(GenericPrinter& out) const
 void
 MDefinition::dumpLocation() const
 {
-    Fprinter out(stderr);
-    dumpLocation(out);
-    out.finish();
+    dumpLocation(stderr);
 }
 
 #ifdef DEBUG
@@ -757,72 +753,72 @@ MConstant::congruentTo(const MDefinition* ins) const
 }
 
 void
-MConstant::printOpcode(GenericPrinter& out) const
+MConstant::printOpcode(FILE* fp) const
 {
-    PrintOpcodeName(out, op());
-    out.printf(" ");
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " ");
     switch (type()) {
       case MIRType_Undefined:
-        out.printf("undefined");
+        fprintf(fp, "undefined");
         break;
       case MIRType_Null:
-        out.printf("null");
+        fprintf(fp, "null");
         break;
       case MIRType_Boolean:
-        out.printf(value().toBoolean() ? "true" : "false");
+        fprintf(fp, value().toBoolean() ? "true" : "false");
         break;
       case MIRType_Int32:
-        out.printf("0x%x", value().toInt32());
+        fprintf(fp, "0x%x", value().toInt32());
         break;
       case MIRType_Double:
-        out.printf("%f", value().toDouble());
+        fprintf(fp, "%f", value().toDouble());
         break;
       case MIRType_Float32:
       {
         float val = value().toDouble();
-        out.printf("%f", val);
+        fprintf(fp, "%f", val);
         break;
       }
       case MIRType_Object:
         if (value().toObject().is<JSFunction>()) {
             JSFunction* fun = &value().toObject().as<JSFunction>();
             if (fun->displayAtom()) {
-                out.put("function ");
-                EscapedStringPrinter(out, fun->displayAtom(), 0);
+                fputs("function ", fp);
+                FileEscapedString(fp, fun->displayAtom(), 0);
             } else {
-                out.put("unnamed function");
+                fputs("unnamed function", fp);
             }
             if (fun->hasScript()) {
                 JSScript* script = fun->nonLazyScript();
-                out.printf(" (%s:%" PRIuSIZE ")",
+                fprintf(fp, " (%s:%" PRIuSIZE ")",
                         script->filename() ? script->filename() : "", script->lineno());
             }
-            out.printf(" at %p", (void*) fun);
+            fprintf(fp, " at %p", (void*) fun);
             break;
         }
-        out.printf("object %p (%s)", (void*)&value().toObject(),
+        fprintf(fp, "object %p (%s)", (void*)&value().toObject(),
                 value().toObject().getClass()->name);
         break;
       case MIRType_Symbol:
-        out.printf("symbol at %p", (void*)value().toSymbol());
+        fprintf(fp, "symbol at %p", (void*)value().toSymbol());
         break;
       case MIRType_String:
-        out.printf("string %p", (void*)value().toString());
+        fprintf(fp, "string %p", (void*)value().toString());
         break;
       case MIRType_MagicOptimizedArguments:
-        out.printf("magic lazyargs");
+        fprintf(fp, "magic lazyargs");
         break;
       case MIRType_MagicHole:
-        out.printf("magic hole");
+        fprintf(fp, "magic hole");
         break;
       case MIRType_MagicIsConstructing:
-        out.printf("magic is-constructing");
+        fprintf(fp, "magic is-constructing");
         break;
       case MIRType_MagicOptimizedOut:
-        out.printf("magic optimized-out");
+        fprintf(fp, "magic optimized-out");
         break;
       case MIRType_MagicUninitializedLexical:
-        out.printf("magic uninitialized-lexical");
+        fprintf(fp, "magic uninitialized-lexical");
         break;
       default:
         MOZ_CRASH("unexpected type");
@@ -1005,43 +1001,43 @@ MSimdGeneralShuffle::foldsTo(TempAllocator& alloc)
 
 template <typename T>
 static void
-PrintOpcodeOperation(T* mir, GenericPrinter& out)
+PrintOpcodeOperation(T* mir, FILE* fp)
 {
-    mir->MDefinition::printOpcode(out);
-    out.printf(" (%s)", T::OperationName(mir->operation()));
+    mir->MDefinition::printOpcode(fp);
+    fprintf(fp, " (%s)", T::OperationName(mir->operation()));
 }
 
 void
-MSimdBinaryArith::printOpcode(GenericPrinter& out) const
+MSimdBinaryArith::printOpcode(FILE* fp) const
 {
-    PrintOpcodeOperation(this, out);
+    PrintOpcodeOperation(this, fp);
 }
 void
-MSimdBinaryBitwise::printOpcode(GenericPrinter& out) const
+MSimdBinaryBitwise::printOpcode(FILE* fp) const
 {
-    PrintOpcodeOperation(this, out);
+    PrintOpcodeOperation(this, fp);
 }
 void
-MSimdUnaryArith::printOpcode(GenericPrinter& out) const
+MSimdUnaryArith::printOpcode(FILE* fp) const
 {
-    PrintOpcodeOperation(this, out);
+    PrintOpcodeOperation(this, fp);
 }
 void
-MSimdBinaryComp::printOpcode(GenericPrinter& out) const
+MSimdBinaryComp::printOpcode(FILE* fp) const
 {
-    PrintOpcodeOperation(this, out);
+    PrintOpcodeOperation(this, fp);
 }
 void
-MSimdShift::printOpcode(GenericPrinter& out) const
+MSimdShift::printOpcode(FILE* fp) const
 {
-    PrintOpcodeOperation(this, out);
+    PrintOpcodeOperation(this, fp);
 }
 
 void
-MSimdInsertElement::printOpcode(GenericPrinter& out) const
+MSimdInsertElement::printOpcode(FILE* fp) const
 {
-    MDefinition::printOpcode(out);
-    out.printf(" (%s)", MSimdInsertElement::LaneName(lane()));
+    MDefinition::printOpcode(fp);
+    fprintf(fp, " (%s)", MSimdInsertElement::LaneName(lane()));
 }
 
 MCloneLiteral*
@@ -1051,40 +1047,42 @@ MCloneLiteral::New(TempAllocator& alloc, MDefinition* obj)
 }
 
 void
-MControlInstruction::printOpcode(GenericPrinter& out) const
+MControlInstruction::printOpcode(FILE* fp) const
 {
-    MDefinition::printOpcode(out);
+    MDefinition::printOpcode(fp);
     for (size_t j = 0; j < numSuccessors(); j++)
-        out.printf(" block%u", getSuccessor(j)->id());
+        fprintf(fp, " block%u", getSuccessor(j)->id());
 }
 
 void
-MCompare::printOpcode(GenericPrinter& out) const
+MCompare::printOpcode(FILE* fp) const
 {
-    MDefinition::printOpcode(out);
-    out.printf(" %s", js_CodeName[jsop()]);
+    MDefinition::printOpcode(fp);
+    fprintf(fp, " %s", js_CodeName[jsop()]);
 }
 
 void
-MConstantElements::printOpcode(GenericPrinter& out) const
+MConstantElements::printOpcode(FILE* fp) const
 {
-    PrintOpcodeName(out, op());
-    out.printf(" %p", value());
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " %p", value());
 }
 
 void
-MLoadUnboxedScalar::printOpcode(GenericPrinter& out) const
+MLoadUnboxedScalar::printOpcode(FILE* fp) const
 {
-    MDefinition::printOpcode(out);
-    out.printf(" %s", ScalarTypeDescr::typeName(indexType()));
+    MDefinition::printOpcode(fp);
+    fprintf(fp, " %s", ScalarTypeDescr::typeName(indexType()));
 }
 
 void
-MAssertRange::printOpcode(GenericPrinter& out) const
+MAssertRange::printOpcode(FILE* fp) const
 {
-    MDefinition::printOpcode(out);
-    out.put(" ");
-    assertedRange()->dump(out);
+    MDefinition::printOpcode(fp);
+    Sprinter sp(GetJitContext()->cx);
+    sp.init();
+    assertedRange()->print(sp);
+    fprintf(fp, " %s", sp.string());
 }
 
 const char*
@@ -1121,10 +1119,10 @@ MMathFunction::FunctionName(Function function)
 }
 
 void
-MMathFunction::printOpcode(GenericPrinter& out) const
+MMathFunction::printOpcode(FILE* fp) const
 {
-    MDefinition::printOpcode(out);
-    out.printf(" %s", FunctionName(function()));
+    MDefinition::printOpcode(fp);
+    fprintf(fp, " %s", FunctionName(function()));
 }
 
 MDefinition*
@@ -1229,13 +1227,13 @@ MParameter::New(TempAllocator& alloc, int32_t index, TemporaryTypeSet* types)
 }
 
 void
-MParameter::printOpcode(GenericPrinter& out) const
+MParameter::printOpcode(FILE* fp) const
 {
-    PrintOpcodeName(out, op());
+    PrintOpcodeName(fp, op());
     if (index() == THIS_SLOT)
-        out.printf(" THIS_SLOT");
+        fprintf(fp, " THIS_SLOT");
     else
-        out.printf(" %d", index());
+        fprintf(fp, " %d", index());
 }
 
 HashNumber
@@ -1487,37 +1485,37 @@ MGoto::New(TempAllocator& alloc, MBasicBlock* target)
 }
 
 void
-MUnbox::printOpcode(GenericPrinter& out) const
+MUnbox::printOpcode(FILE* fp) const
 {
-    PrintOpcodeName(out, op());
-    out.printf(" ");
-    getOperand(0)->printName(out);
-    out.printf(" ");
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " ");
+    getOperand(0)->printName(fp);
+    fprintf(fp, " ");
 
     switch (type()) {
-      case MIRType_Int32: out.printf("to Int32"); break;
-      case MIRType_Double: out.printf("to Double"); break;
-      case MIRType_Boolean: out.printf("to Boolean"); break;
-      case MIRType_String: out.printf("to String"); break;
-      case MIRType_Symbol: out.printf("to Symbol"); break;
-      case MIRType_Object: out.printf("to Object"); break;
+      case MIRType_Int32: fprintf(fp, "to Int32"); break;
+      case MIRType_Double: fprintf(fp, "to Double"); break;
+      case MIRType_Boolean: fprintf(fp, "to Boolean"); break;
+      case MIRType_String: fprintf(fp, "to String"); break;
+      case MIRType_Symbol: fprintf(fp, "to Symbol"); break;
+      case MIRType_Object: fprintf(fp, "to Object"); break;
       default: break;
     }
 
     switch (mode()) {
-      case Fallible: out.printf(" (fallible)"); break;
-      case Infallible: out.printf(" (infallible)"); break;
-      case TypeBarrier: out.printf(" (typebarrier)"); break;
+      case Fallible: fprintf(fp, " (fallible)"); break;
+      case Infallible: fprintf(fp, " (infallible)"); break;
+      case TypeBarrier: fprintf(fp, " (typebarrier)"); break;
       default: break;
     }
 }
 
 void
-MTypeBarrier::printOpcode(GenericPrinter& out) const
+MTypeBarrier::printOpcode(FILE* fp) const
 {
-    PrintOpcodeName(out, op());
-    out.printf(" ");
-    getOperand(0)->printName(out);
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " ");
+    getOperand(0)->printName(fp);
 }
 
 bool
@@ -3227,41 +3225,39 @@ MResumePoint::addStore(TempAllocator& alloc, MDefinition* store, const MResumePo
 }
 
 void
-MResumePoint::dump(GenericPrinter& out) const
+MResumePoint::dump(FILE* fp) const
 {
-    out.printf("resumepoint mode=");
+    fprintf(fp, "resumepoint mode=");
 
     switch (mode()) {
       case MResumePoint::ResumeAt:
-        out.printf("At");
+        fprintf(fp, "At");
         break;
       case MResumePoint::ResumeAfter:
-        out.printf("After");
+        fprintf(fp, "After");
         break;
       case MResumePoint::Outer:
-        out.printf("Outer");
+        fprintf(fp, "Outer");
         break;
     }
 
     if (MResumePoint* c = caller())
-        out.printf(" (caller in block%u)", c->block()->id());
+        fprintf(fp, " (caller in block%u)", c->block()->id());
 
     for (size_t i = 0; i < numOperands(); i++) {
-        out.printf(" ");
+        fprintf(fp, " ");
         if (operands_[i].hasProducer())
-            getOperand(i)->printName(out);
+            getOperand(i)->printName(fp);
         else
-            out.printf("(null)");
+            fprintf(fp, "(null)");
     }
-    out.printf("\n");
+    fprintf(fp, "\n");
 }
 
 void
 MResumePoint::dump() const
 {
-    Fprinter out(stderr);
-    dump(out);
-    out.finish();
+    dump(stderr);
 }
 
 bool
@@ -3904,12 +3900,18 @@ MNot::trySpecializeFloat32(TempAllocator& alloc)
 }
 
 void
-MBeta::printOpcode(GenericPrinter& out) const
+MBeta::printOpcode(FILE* fp) const
 {
-    MDefinition::printOpcode(out);
+    MDefinition::printOpcode(fp);
 
-    out.printf(" ");
-    comparison_->dump(out);
+    if (JitContext* context = MaybeGetJitContext()) {
+        Sprinter sp(context->cx);
+        sp.init();
+        comparison_->print(sp);
+        fprintf(fp, " %s", sp.string());
+    } else {
+        fprintf(fp, " ???");
+    }
 }
 
 bool

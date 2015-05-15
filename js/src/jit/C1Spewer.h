@@ -12,7 +12,6 @@
 #include "NamespaceImports.h"
 
 #include "js/RootingAPI.h"
-#include "vm/Printer.h"
 
 namespace js {
 namespace jit {
@@ -25,22 +24,24 @@ class LNode;
 class C1Spewer
 {
     MIRGraph* graph;
-    GenericPrinter& out_;
+    FILE* spewout_;
 
   public:
-    explicit C1Spewer(GenericPrinter& out)
-      : graph(nullptr), out_(out)
+    C1Spewer()
+      : graph(nullptr), spewout_(nullptr)
     { }
 
-    void beginFunction(MIRGraph* graph, JSScript* script);
+    bool init(const char* path);
+    void beginFunction(MIRGraph* graph, HandleScript script);
     void spewPass(const char* pass);
     void spewIntervals(const char* pass, BacktrackingAllocator* regalloc);
     void endFunction();
+    void finish();
 
   private:
-    void spewPass(GenericPrinter& out, MBasicBlock* block);
-    void spewIntervals(GenericPrinter& out, BacktrackingAllocator* regalloc, LNode* ins, size_t& nextId);
-    void spewIntervals(GenericPrinter& out, MBasicBlock* block, BacktrackingAllocator* regalloc, size_t& nextId);
+    void spewPass(FILE* fp, MBasicBlock* block);
+    void spewIntervals(FILE* fp, BacktrackingAllocator* regalloc, LNode* ins, size_t& nextId);
+    void spewIntervals(FILE* fp, MBasicBlock* block, BacktrackingAllocator* regalloc, size_t& nextId);
 };
 
 } // namespace jit
