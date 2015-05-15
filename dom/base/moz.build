@@ -423,7 +423,7 @@ LOCAL_INCLUDES += [
     '/dom/xslt/xpath',
     '/dom/xul',
     '/gfx/2d',
-    '/image/src',
+    '/image',
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',
     '/layout/base',
