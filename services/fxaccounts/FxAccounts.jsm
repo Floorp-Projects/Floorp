@@ -1200,7 +1200,7 @@ FxAccountsInternal.prototype = {
   // the current account's profile image.
   // if settingToEdit is set, the profile page should hightlight that setting
   // for the user to edit.
-  promiseAccountsChangeProfileURI: function(settingToEdit = null) {
+  promiseAccountsChangeProfileURI: function(entrypoint, settingToEdit = null) {
     let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.uri");
 
     if (settingToEdit) {
@@ -1220,13 +1220,16 @@ FxAccountsInternal.prototype = {
       let newQueryPortion = url.indexOf("?") == -1 ? "?" : "&";
       newQueryPortion += "email=" + encodeURIComponent(accountData.email);
       newQueryPortion += "&uid=" + encodeURIComponent(accountData.uid);
+      if (entrypoint) {
+        newQueryPortion += "&entrypoint=" + encodeURIComponent(entrypoint);
+      }
       return url + newQueryPortion;
     }).then(result => currentState.resolve(result));
   },
 
   // Returns a promise that resolves with the URL to use to manage the current
   // user's FxA acct.
-  promiseAccountsManageURI: function() {
+  promiseAccountsManageURI: function(entrypoint) {
     let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.uri");
     if (this._requireHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
       throw new Error("Firefox Accounts server must use HTTPS");
@@ -1242,6 +1245,9 @@ FxAccountsInternal.prototype = {
       let newQueryPortion = url.indexOf("?") == -1 ? "?" : "&";
       newQueryPortion += "uid=" + encodeURIComponent(accountData.uid) +
                          "&email=" + encodeURIComponent(accountData.email);
+      if (entrypoint) {
+        newQueryPortion += "&entrypoint=" + encodeURIComponent(entrypoint);
+      }
       return url + newQueryPortion;
     }).then(result => currentState.resolve(result));
   },
