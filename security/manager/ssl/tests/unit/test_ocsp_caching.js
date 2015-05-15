@@ -47,6 +47,39 @@ function run_test() {
 }
 
 function add_tests() {
+  // Test that verifying a certificate with a "short lifetime" doesn't result
+  // in OCSP fetching. Due to longevity requirements in our testing
+  // infrastructure, the certificate we encounter is valid for a very long
+  // time, so we have to define a "short lifetime" as something very long.
+  add_test(function() {
+    Services.prefs.setIntPref("security.pki.cert_short_lifetime_in_days",
+                              12000);
+    run_next_test();
+  });
+  add_connection_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
+                      clearSessionCache);
+  add_test(function() {
+    Assert.equal(0, gFetchCount,
+                 "expected zero OCSP requests for a short-lived certificate");
+    Services.prefs.setIntPref("security.pki.cert_short_lifetime_in_days", 100);
+    run_next_test();
+  });
+  // If a "short lifetime" is something more reasonable, ensure that we do OCSP
+  // fetching for this long-lived certificate.
+  add_connection_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
+                      clearSessionCache);
+  add_test(function() {
+    Assert.equal(1, gFetchCount,
+                 "expected one OCSP request for a long-lived certificate");
+    Services.prefs.clearUserPref("security.pki.cert_short_lifetime_in_days");
+    run_next_test();
+  });
+
+  //---------------------------------------------------------------------------
+
+  // Reset state
+  add_test(function() { clearOCSPCache(); gFetchCount = 0; run_next_test(); });
+
   // This test assumes that OCSPStaplingServer uses the same cert for
   // ocsp-stapling-unknown.example.com and ocsp-stapling-none.example.com.
 
