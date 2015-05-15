@@ -19,13 +19,13 @@ function test() {
   treeRoot.attachTo(container);
 
   let categories = container.querySelectorAll(".call-tree-category");
-  is(categories.length, 7,
+  is(categories.length, 5,
     "The call tree displays a correct number of categories.");
   ok(!container.hasAttribute("categories-hidden"),
     "All categories should be visible in the tree.");
 
   treeRoot.toggleCategories(false);
-  is(categories.length, 7,
+  is(categories.length, 5,
     "The call tree displays the same number of categories.");
   ok(container.hasAttribute("categories-hidden"),
     "All categories should now be hidden in the tree.");
