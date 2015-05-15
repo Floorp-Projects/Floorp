@@ -55,6 +55,29 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
 XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
                                   "resource:///modules/Pocket.jsm");
 
+// Can't use XPCOMUtils for these because the scripts try to define the variables
+// on window, and so the defineProperty inside defineLazyGetter fails.
+Object.defineProperty(window, "pktApi", {
+  get: function() {
+    // Avoid this getter running again:
+    delete window.pktApi;
+    Services.scriptloader.loadSubScript("chrome://browser/content/pocket/pktApi.js", window);
+    return window.pktApi;
+  },
+  configurable: true,
+  enumerable: true
+});
+Object.defineProperty(window, "pktUI", {
+  get: function() {
+    // Avoid this getter running again:
+    delete window.pktUI;
+    Services.scriptloader.loadSubScript("chrome://browser/content/pocket/main.js", window);
+    return window.pktUI;
+  },
+  configurable: true,
+  enumerable: true
+});
+
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
 var gLastBrowserCharset = null;
@@ -4171,7 +4194,6 @@ var XULBrowserWindow = {
         BookmarkingUI.onLocationChange();
         SocialUI.updateState(location);
         UITour.onLocationChange(location);
-        Pocket.onLocationChange(browser, aLocationURI);
       }
 
       // Utility functions for disabling find
