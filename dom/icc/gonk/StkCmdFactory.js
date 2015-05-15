@@ -1152,7 +1152,16 @@ function StkLocalInfoResponse(aStkLocalInfoResponseMessage) {
   }
 
   if (localInfo.date) {
-    this.date = localInfo.date.getTime();
+    if (localInfo.date instanceof Date) {
+      this.date = localInfo.date.getTime();
+    } else {
+      // JSON is adopted as our IPDL protocol, so Date object will be presented as
+      // a String in ISO8601 format by JSON.
+      // For the conversion between Date and JSON, please see:
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toJSON#Example:_Using_toJSON
+      this.date = new Date(localInfo.date).getTime();
+    }
+
     return;
   }
 
@@ -1474,6 +1483,14 @@ StkProactiveCmdFactory.prototype = {
     return new msgType(cmd);
   },
 
+  deflateCommand: function(aStkProactiveCmd) {
+    return JSON.stringify(this.createCommandMessage(aStkProactiveCmd));
+  },
+
+  inflateCommand: function(aJSON) {
+    return this.createCommand(JSON.parse(aJSON));
+  },
+
   createResponse: function(aResponseMessage) {
     if (!aResponseMessage || aResponseMessage.resultCode === undefined) {
       throw new Error("Invalid response message: " + JSON.stringify(aResponseMessage));
@@ -1537,6 +1554,14 @@ StkProactiveCmdFactory.prototype = {
     return new StkResponseMessage(aStkTerminalResponse);
   },
 
+  deflateResponse: function(aStkTerminalResponse) {
+    return JSON.stringify(this.createResponseMessage(aStkTerminalResponse));
+  },
+
+  inflateResponse: function(aJSON) {
+    return this.createResponse(JSON.parse(aJSON));
+  },
+
   createEvent: function(aEventMessage) {
     let eventType = EventPrototypes[aEventMessage.eventType];
 
@@ -1564,6 +1589,14 @@ StkProactiveCmdFactory.prototype = {
     }
 
     return new eventType(event);
+  },
+
+  deflateDownloadEvent: function(aStkDownloadEvent) {
+    return JSON.stringify(this.createEventMessage(aStkDownloadEvent));
+  },
+
+  inflateDownloadEvent: function(aJSON) {
+    return this.createEvent(JSON.parse(aJSON));
   },
 
   createTimer: function(aStkTimerMessage) {
