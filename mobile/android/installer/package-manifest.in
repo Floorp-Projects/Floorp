@@ -546,6 +546,20 @@
 @BINPATH@/res/html/*
 @BINPATH@/res/language.properties
 @BINPATH@/res/entityTables/*
+#ifdef NIGHTLY_BUILD
+@BINPATH@/res/text_caret.png
+@BINPATH@/res/text_caret@1.5x.png
+@BINPATH@/res/text_caret@2.25x.png
+@BINPATH@/res/text_caret@2x.png
+@BINPATH@/res/text_caret_tilt_left.png
+@BINPATH@/res/text_caret_tilt_left@1.5x.png
+@BINPATH@/res/text_caret_tilt_left@2.25x.png
+@BINPATH@/res/text_caret_tilt_left@2x.png
+@BINPATH@/res/text_caret_tilt_right.png
+@BINPATH@/res/text_caret_tilt_right@1.5x.png
+@BINPATH@/res/text_caret_tilt_right@2.25x.png
+@BINPATH@/res/text_caret_tilt_right@2x.png
+#endif
 
 #ifndef MOZ_ANDROID_EXCLUDE_FONTS
 @BINPATH@/res/fonts/*

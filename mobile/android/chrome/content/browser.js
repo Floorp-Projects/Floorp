@@ -154,6 +154,12 @@ let lazilyLoadedObserverScripts = [
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
   ["Reader", ["Reader:FetchContent", "Reader:Added", "Reader:Removed"], "chrome://browser/content/Reader.js"],
 ];
+if (AppConstants.NIGHTLY_BUILD) {
+  lazilyLoadedObserverScripts.push(
+    ["ActionBarHandler", ["ActionBar:OpenNew", "ActionBar:Close", "TextSelection:Get"],
+      "chrome://browser/content/ActionBarHandler.js"]
+  );
+}
 if (AppConstants.MOZ_WEBRTC) {
   lazilyLoadedObserverScripts.push(
     ["WebrtcUI", ["getUserMedia:request", "recording-device-events"], "chrome://browser/content/WebrtcUI.js"])
