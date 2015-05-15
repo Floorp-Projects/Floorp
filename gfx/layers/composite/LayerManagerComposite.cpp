@@ -283,7 +283,12 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
     mInvalidRegion.Or(mInvalidRegion, mRenderBounds);
   }
 
-  if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
+  if (mInvalidRegion.IsEmpty() && !mTarget) {
+    // Composition requested, but nothing has changed. Don't do any work.
+    return;
+  }
+
+ if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     MOZ_ASSERT(!aTimeStamp.IsNull());
     // Set composition timestamp here because we need it in
     // ComputeEffectiveTransforms (so the correct video frame size is picked)
