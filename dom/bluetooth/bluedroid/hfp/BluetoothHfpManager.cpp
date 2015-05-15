@@ -227,7 +227,6 @@ BluetoothHfpManager::Cleanup()
 void
 BluetoothHfpManager::Reset()
 {
-  mFirstCKPD = false;
   // Phone & Device CIND
   ResetCallArray();
   // Clear Sco state
@@ -1315,8 +1314,6 @@ BluetoothHfpManager::OnConnect(const nsAString& aErrorStr)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mFirstCKPD = true;
-
   /**
    * On the one hand, notify the controller that we've done for outbound
    * connections. On the other hand, we do nothing for inbound connections.
@@ -1658,16 +1655,7 @@ BluetoothHfpManager::KeyPressedNotification(const nsAString& aBdAddress)
        * If there's no SCO, set up a SCO link.
        */
       ConnectSco();
-    } else if (mFirstCKPD) {
-      /*
-       * Bluetooth HSP spec 4.2 & 4.3
-       * The SCO link connection may be set up prior to receiving the AT+CKPD=200
-       * command from the HS.
-       *
-       * Once FxOS initiates a SCO connection before receiving the
-       * AT+CKPD=200, we should ignore this key press.
-       */
-     } else {
+    } else {
       /*
        * Bluetooth HSP spec 4.5
        * There are two ways to release SCO: sending CHUP to dialer or closing
@@ -1676,10 +1664,8 @@ BluetoothHfpManager::KeyPressedNotification(const nsAString& aBdAddress)
        */
       NotifyDialer(NS_LITERAL_STRING("CHUP"));
     }
-    mFirstCKPD = false;
   } else {
     // BLDN
-    mDialingRequestProcessed = false;
 
     NotifyDialer(NS_LITERAL_STRING("BLDN"));
 
