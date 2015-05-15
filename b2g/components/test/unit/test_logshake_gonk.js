@@ -52,8 +52,6 @@ add_test(function setup_sdcard() {
   let vol = volumeService.getVolumeByName(volName);
   ok(vol, "volume shouldn't be null");
   equal(volName, vol.name, "name");
-
-  volumeService.SetFakeVolumeState(volName, Ci.nsIVolume.STATE_MOUNTED);
   equal(Ci.nsIVolume.STATE_MOUNTED, vol.state, "state");
 
   run_next_test();
