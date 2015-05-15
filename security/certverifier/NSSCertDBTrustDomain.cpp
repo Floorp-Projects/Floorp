@@ -460,12 +460,25 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
 
   Duration shortLifetime(mCertShortLifetimeInDays * Time::ONE_DAY_IN_SECONDS);
 
-  if ((mOCSPFetching == NeverFetchOCSP) ||
-      (validityDuration < shortLifetime) ||
-      (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-       (mOCSPFetching == FetchOCSPForDVHardFail ||
-        mOCSPFetching == FetchOCSPForDVSoftFail ||
-        blocklistIsFresh))) {
+  // In general, we will not do a live OCSP fetch if:
+  // (a) We have been configured not to, or
+  // (b) The certificate is sufficiently short-lived
+  // (c) We are validating a CA certificate for DV
+  bool willNotFetch = (mOCSPFetching == NeverFetchOCSP) ||
+                      (validityDuration < shortLifetime) ||
+                      ((endEntityOrCA == EndEntityOrCA::MustBeCA) &&
+                       ((mOCSPFetching == FetchOCSPForDVHardFail) ||
+                        (mOCSPFetching == FetchOCSPForDVSoftFail) ||
+                        blocklistIsFresh));
+#ifdef MOZ_FENNEC
+  // For Fennec, we will use stapled or cached OCSP, but we will not do
+  // a live fetch for any non-EV validation.
+  willNotFetch = (mOCSPFetching == NeverFetchOCSP) ||
+                 ((mOCSPFetching != LocalOnlyOCSPForEV) &&
+                  (mOCSPFetching != FetchOCSPForEV));
+#endif
+
+  if (willNotFetch) {
     // We're not going to be doing any fetching, so if there was a cached
     // "unknown" response, say so.
     if (cachedResponseResult == Result::ERROR_OCSP_UNKNOWN_CERT) {
