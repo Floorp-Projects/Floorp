@@ -16,12 +16,84 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
 
+#ifndef IME_PROP_ACCEPT_WIDE_VKEY
+#define IME_PROP_ACCEPT_WIDE_VKEY 0x20
+#endif
+
 using namespace mozilla;
 using namespace mozilla::widget;
 
 static nsIMM32Handler* gIMM32Handler = nullptr;
 
 PRLogModuleInfo* gIMM32Log = nullptr;
+
+static void
+HandleSeparator(nsACString& aDesc)
+{
+  if (!aDesc.IsEmpty()) {
+    aDesc.AppendLiteral(" | ");
+  }
+}
+
+class GetIMEGeneralPropertyName : public nsAutoCString
+{
+public:
+  GetIMEGeneralPropertyName(DWORD aFlags)
+  {
+    if (!aFlags) {
+      AppendLiteral("no flags");
+      return;
+    }
+    if (aFlags & IME_PROP_AT_CARET) {
+      AppendLiteral("IME_PROP_AT_CARET");
+    }
+    if (aFlags & IME_PROP_SPECIAL_UI) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_SPECIAL_UI");
+    }
+    if (aFlags & IME_PROP_CANDLIST_START_FROM_1) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_CANDLIST_START_FROM_1");
+    }
+    if (aFlags & IME_PROP_UNICODE) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_UNICODE");
+    }
+    if (aFlags & IME_PROP_COMPLETE_ON_UNSELECT) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_COMPLETE_ON_UNSELECT");
+    }
+    if (aFlags & IME_PROP_ACCEPT_WIDE_VKEY) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_ACCEPT_WIDE_VKEY");
+    }
+  }
+  virtual ~GetIMEGeneralPropertyName() {}
+};
+
+class GetIMEUIPropertyName : public nsAutoCString
+{
+public:
+  GetIMEUIPropertyName(DWORD aFlags)
+  {
+    if (!aFlags) {
+      AppendLiteral("no flags");
+      return;
+    }
+    if (aFlags & UI_CAP_2700) {
+      AppendLiteral("UI_CAP_2700");
+    }
+    if (aFlags & UI_CAP_ROT90) {
+      HandleSeparator(*this);
+      AppendLiteral("UI_CAP_ROT90");
+    }
+    if (aFlags & UI_CAP_ROTANY) {
+      HandleSeparator(*this);
+      AppendLiteral("UI_CAP_ROTANY");
+    }
+  }
+  virtual ~GetIMEUIPropertyName() {}
+};
 
 static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 
@@ -43,6 +115,8 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 
 UINT nsIMM32Handler::sCodePage = 0;
 DWORD nsIMM32Handler::sIMEProperty = 0;
+DWORD nsIMM32Handler::sIMEUIProperty = 0;
+bool nsIMM32Handler::sAssumeVerticalWritingModeNotSupported = false;
 
 /* static */ void
 nsIMM32Handler::EnsureHandlerInstance()
@@ -61,6 +135,9 @@ nsIMM32Handler::Initialize()
   if (!sWM_MSIME_MOUSE) {
     sWM_MSIME_MOUSE = ::RegisterWindowMessage(RWM_MOUSE);
   }
+  sAssumeVerticalWritingModeNotSupported =
+    Preferences::GetBool(
+      "intl.imm.vertical_writing.always_assume_not_supported", false);
   InitKeyboardLayout(::GetKeyboardLayout(0));
 }
 
@@ -111,18 +188,48 @@ nsIMM32Handler::ShouldDrawCompositionStringOurselves()
           (sIMEProperty & IME_PROP_AT_CARET);
 }
 
+/* static */ bool
+nsIMM32Handler::IsVerticalWritingSupported()
+{
+  // Even if IME claims that they support vertical writing mode but it may not
+  // support vertical writing mode for its candidate window.
+  if (sAssumeVerticalWritingModeNotSupported) {
+    return false;
+  }
+  return !!(sIMEUIProperty & (UI_CAP_2700 | UI_CAP_ROT90 | UI_CAP_ROTANY));
+}
+
 /* static */ void
 nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
 {
+#ifdef PR_LOGGING
+  nsAutoString IMEName;
+  if (PR_LOG_TEST(gIMM32Log, PR_LOG_ALWAYS)) {
+    UINT IMENameLength = ::ImmGetDescriptionW(aKeyboardLayout, nullptr, 0);
+    if (IMENameLength) {
+      // Add room for the terminating null character
+      IMEName.SetLength(++IMENameLength);
+      IMENameLength =
+        ::ImmGetDescriptionW(aKeyboardLayout, IMEName.BeginWriting(),
+                             IMENameLength);
+      // Adjust the length to ignore the terminating null character
+      IMEName.SetLength(IMENameLength);
+    }
+  }
+#endif // #ifdef PR_LOGGING
+
   WORD langID = LOWORD(aKeyboardLayout);
   ::GetLocaleInfoW(MAKELCID(langID, SORT_DEFAULT),
                    LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
                    (PWSTR)&sCodePage, sizeof(sCodePage) / sizeof(WCHAR));
   sIMEProperty = ::ImmGetProperty(aKeyboardLayout, IGP_PROPERTY);
+  sIMEUIProperty = ::ImmGetProperty(aKeyboardLayout, IGP_UI);
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x, sCodePage=%lu, "
-     "sIMEProperty=%08x",
-     aKeyboardLayout, sCodePage, sIMEProperty));
+    ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x (\"%s\"), sCodePage=%lu, "
+     "sIMEProperty=%s, sIMEUIProperty=%s",
+     aKeyboardLayout, NS_ConvertUTF16toUTF8(IMEName).get(),
+     sCodePage, GetIMEGeneralPropertyName(sIMEProperty).get(),
+     GetIMEUIPropertyName(sIMEUIProperty).get()));
 }
 
 /* static */ UINT

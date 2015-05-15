@@ -3069,6 +3069,11 @@ pref("intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_first_char"
 pref("intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_caret", true);
 #endif
 
+// Even if IME claims that they support vertical writing mode but it may not
+// support vertical writing mode for its candidate window.  This pref allows
+// to ignore the claim.
+pref("intl.imm.vertical_writing.always_assume_not_supported", false);
+
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.
 pref("ui.panel.default_level_parent", false);
 
