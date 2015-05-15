@@ -11,7 +11,6 @@
 #include "nsWindowDefs.h"
 #include "WinUtils.h"
 #include "KeyboardLayout.h"
-#include "WritingModes.h"
 #include <algorithm>
 
 #include "mozilla/MiscEvents.h"
@@ -132,6 +131,7 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 #define IMEMOUSE_WUP        0x10    // wheel up
 #define IMEMOUSE_WDOWN      0x20    // wheel down
 
+WritingMode nsIMM32Handler::sWritingModeOfCompositionFont;
 nsString nsIMM32Handler::sIMEName;
 UINT nsIMM32Handler::sCodePage = 0;
 DWORD nsIMM32Handler::sIMEProperty = 0;
@@ -158,7 +158,7 @@ nsIMM32Handler::Initialize()
   sAssumeVerticalWritingModeNotSupported =
     Preferences::GetBool(
       "intl.imm.vertical_writing.always_assume_not_supported", false);
-  InitKeyboardLayout(::GetKeyboardLayout(0));
+  InitKeyboardLayout(nullptr, ::GetKeyboardLayout(0));
 }
 
 /* static */ void
@@ -241,7 +241,8 @@ nsIMM32Handler::IsVerticalWritingSupported()
 }
 
 /* static */ void
-nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
+nsIMM32Handler::InitKeyboardLayout(nsWindow* aWindow,
+                                   HKL aKeyboardLayout)
 {
   UINT IMENameLength = ::ImmGetDescriptionW(aKeyboardLayout, nullptr, 0);
   if (IMENameLength) {
@@ -269,6 +270,13 @@ nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
   if (sCodePage == 932 && sIMEName.IsEmpty()) {
     sIMEName =
       Preferences::GetString("intl.imm.japanese.assume_active_tip_name_as");
+  }
+
+  // Whether the IME supports vertical writing mode might be changed or
+  // some IMEs may need specific font for their UI.  Therefore, we should
+  // update composition font forcibly here.
+  if (aWindow) {
+    MaybeAdjustCompositionFont(aWindow, sWritingModeOfCompositionFont, true);
   }
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -421,7 +429,16 @@ nsIMM32Handler::OnSelectionChange(nsWindow* aWindow,
   if (aIMENotification.mSelectionChangeData.mCausedByComposition) {
     return;
   }
+  MaybeAdjustCompositionFont(aWindow,
+    aIMENotification.mSelectionChangeData.GetWritingMode());
+}
 
+// static
+void
+nsIMM32Handler::MaybeAdjustCompositionFont(nsWindow* aWindow,
+                                           const WritingMode& aWritingMode,
+                                           bool aForceUpdate)
+{
   switch (sCodePage) {
     case 932: // Japanese Shift-JIS
     case 936: // Simlified Chinese GBK
@@ -430,14 +447,16 @@ nsIMM32Handler::OnSelectionChange(nsWindow* aWindow,
       EnsureHandlerInstance();
       break;
     default:
-      return;
+      // If there is no instance of nsIMM32Hander, we shouldn't waste footprint.
+      if (!gIMM32Handler) {
+        return;
+      }
   }
 
   // Like Navi-Bar of ATOK, some IMEs may require proper composition font even
   // before sending WM_IME_STARTCOMPOSITION.
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
-  gIMM32Handler->AdjustCompositionFont(IMEContext,
-                   aIMENotification.mSelectionChangeData.GetWritingMode());
+  gIMM32Handler->AdjustCompositionFont(IMEContext, aWritingMode, aForceUpdate);
 }
 
 /* static */ bool
@@ -452,7 +471,7 @@ nsIMM32Handler::ProcessInputLangChangeMessage(nsWindow* aWindow,
   if (gIMM32Handler) {
     gIMM32Handler->OnInputLangChange(aWindow, wParam, lParam, aResult);
   }
-  InitKeyboardLayout(reinterpret_cast<HKL>(lParam));
+  InitKeyboardLayout(aWindow, reinterpret_cast<HKL>(lParam));
   // We can release the instance here, because the instance may be never
   // used. E.g., the new keyboard layout may not use IME, or it may use TSF.
   Terminate();
@@ -2330,7 +2349,8 @@ SetVerticalFontToLogFont(const nsAString& aFontFace,
 
 void
 nsIMM32Handler::AdjustCompositionFont(const nsIMEContext& aIMEContext,
-                                      const WritingMode& aWritingMode)
+                                      const WritingMode& aWritingMode,
+                                      bool aForceUpdate)
 {
   // An instance of nsIMM32Handler is destroyed when active IME is changed.
   // Therefore, we need to store the information which are set to the IM
@@ -2342,13 +2362,13 @@ nsIMM32Handler::AdjustCompositionFont(const nsIMEContext& aIMEContext,
   // If composition font is customized by pref, we need to modify the
   // composition font of the IME context at first time even if the writing mode
   // is horizontal.
-  bool setCompositionFontForcibly =
-    !sCompositionFontsInitialized && !sCompositionFont.IsEmpty();
+  bool setCompositionFontForcibly = aForceUpdate ||
+    (!sCompositionFontsInitialized && !sCompositionFont.IsEmpty());
 
   static WritingMode sCurrentWritingMode;
   static nsString sCurrentIMEName;
   if (!setCompositionFontForcibly &&
-      sCurrentWritingMode == aWritingMode &&
+      sWritingModeOfCompositionFont == aWritingMode &&
       sCurrentIMEName == sIMEName) {
     // Nothing to do if writing mode isn't being changed.
     return;
@@ -2397,7 +2417,7 @@ nsIMM32Handler::AdjustCompositionFont(const nsIMEContext& aIMEContext,
     }
   }
 
-  sCurrentWritingMode = aWritingMode;
+  sWritingModeOfCompositionFont = aWritingMode;
   sCurrentIMEName = sIMEName;
 
   LOGFONTW logFont;
