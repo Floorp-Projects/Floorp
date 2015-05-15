@@ -281,10 +281,14 @@ protected:
                                const nsIMEContext& aIMEContext);
   void SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
                                        const nsIMEContext& aIMEContext);
-  bool GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
-                                          uint32_t aOffset,
-                                          nsIntRect &aCharRect);
-  bool GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect);
+  bool GetCharacterRectOfSelectedTextAt(
+         nsWindow* aWindow,
+         uint32_t aOffset,
+         nsIntRect& aCharRect,
+         mozilla::WritingMode* aWritingMode = nullptr);
+  bool GetCaretRect(nsWindow* aWindow,
+                    nsIntRect& aCaretRect,
+                    mozilla::WritingMode* aWritingMode = nullptr);
   void GetCompositionString(const nsIMEContext &aIMEContext,
                             DWORD aIndex,
                             nsAString& aCompositionString) const;

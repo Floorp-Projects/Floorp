@@ -96,6 +96,24 @@ public:
   virtual ~GetIMEUIPropertyName() {}
 };
 
+class GetWritingModeName : public nsAutoCString
+{
+public:
+  GetWritingModeName(const WritingMode& aWritingMode)
+  {
+    if (!aWritingMode.IsVertical()) {
+      Assign("Horizontal");
+      return;
+    }
+    if (aWritingMode.IsVerticalLR()) {
+      Assign("Vertical (LR)");
+      return;
+    }
+    Assign("Vertical (RL)");
+  }
+  virtual ~GetWritingModeName() {}
+};
+
 static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 
 //-------------------------------------------------------------------------
@@ -1879,7 +1897,8 @@ nsIMM32Handler::ConvertToANSIString(const nsAFlatString& aStr, UINT aCodePage,
 bool
 nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
                                                  uint32_t aOffset,
-                                                 nsIntRect &aCharRect)
+                                                 nsIntRect& aCharRect,
+                                                 WritingMode* aWritingMode)
 {
   nsIntPoint point(0, 0);
 
@@ -1916,21 +1935,29 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     aWindow->DispatchWindowEvent(&charRect);
     if (charRect.mSucceeded) {
       aCharRect = LayoutDevicePixel::ToUntyped(charRect.mReply.mRect);
+      if (aWritingMode) {
+        *aWritingMode = charRect.GetWritingMode();
+      }
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: GetCharacterRectOfSelectedTextAt, aOffset=%lu, SUCCEEDED\n",
          aOffset));
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-        ("IMM32: GetCharacterRectOfSelectedTextAt, aCharRect={ x: %ld, y: %ld, width: %ld, height: %ld }\n",
-         aCharRect.x, aCharRect.y, aCharRect.width, aCharRect.height));
+        ("IMM32: GetCharacterRectOfSelectedTextAt, "
+         "aCharRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
+         "charRect.GetWritingMode()=%s",
+         aCharRect.x, aCharRect.y, aCharRect.width, aCharRect.height,
+         GetWritingModeName(charRect.GetWritingMode()).get()));
       return true;
     }
   }
 
-  return GetCaretRect(aWindow, aCharRect);
+  return GetCaretRect(aWindow, aCharRect, aWritingMode);
 }
 
 bool
-nsIMM32Handler::GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect)
+nsIMM32Handler::GetCaretRect(nsWindow* aWindow,
+                             nsIntRect& aCaretRect,
+                             WritingMode* aWritingMode)
 {
   nsIntPoint point(0, 0);
 
@@ -1955,9 +1982,15 @@ nsIMM32Handler::GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect)
     return false;
   }
   aCaretRect = LayoutDevicePixel::ToUntyped(caretRect.mReply.mRect);
+  if (aWritingMode) {
+    *aWritingMode = caretRect.GetWritingMode();
+  }
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: GetCaretRect, SUCCEEDED, aCaretRect={ x: %ld, y: %ld, width: %ld, height: %ld }\n",
-     aCaretRect.x, aCaretRect.y, aCaretRect.width, aCaretRect.height));
+    ("IMM32: GetCaretRect, SUCCEEDED, "
+     "aCaretRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
+     "caretRect.GetWritingMode()=%s",
+     aCaretRect.x, aCaretRect.y, aCaretRect.width, aCaretRect.height,
+     GetWritingModeName(caretRect.GetWritingMode()).get()));
   return true;
 }
 
