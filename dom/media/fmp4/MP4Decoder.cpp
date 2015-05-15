@@ -299,6 +299,7 @@ MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend)
 /* static */ bool
 MP4Decoder::CanCreateH264Decoder()
 {
+#ifdef XP_WIN
   static bool haveCachedResult = false;
   static bool result = false;
   if (haveCachedResult) {
@@ -313,8 +314,12 @@ MP4Decoder::CanCreateH264Decoder()
   }
   haveCachedResult = true;
   return result;
+#else
+  return IsEnabled();
+#endif
 }
 
+#ifdef XP_WIN
 static already_AddRefed<MediaDataDecoder>
 CreateTestAACDecoder(AudioInfo& aConfig)
 {
@@ -346,9 +351,12 @@ static const uint8_t sTestAACExtraData[] = {
 
 static const uint8_t sTestAACConfig[] = { 0x13, 0x90 };
 
+#endif // XP_WIN
+
 /* static */ bool
 MP4Decoder::CanCreateAACDecoder()
 {
+#ifdef XP_WIN
   static bool haveCachedResult = false;
   static bool result = false;
   if (haveCachedResult) {
@@ -372,6 +380,9 @@ MP4Decoder::CanCreateAACDecoder()
   }
   haveCachedResult = true;
   return result;
+#else
+  return IsEnabled();
+#endif
 }
 
 } // namespace mozilla
