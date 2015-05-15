@@ -8,7 +8,10 @@ task:
     name: '[TC] B2G Aries Nightly (userdebug)'
   scopes:
     - 'docker-worker:cache:build-aries-lightsaber-nightly-debug'
-
+  extra:
+    treeherder:
+      collection:
+        debug: true
   payload:
     cache:
       build-aries-lightsaber-nightly-debug: /home/worker/workspace
