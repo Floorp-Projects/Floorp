@@ -23,8 +23,8 @@ class BasePrincipal : public nsJSPrincipals
 {
 public:
   BasePrincipal() {}
-  NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp);
-  NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp);
+  NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
+  NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
 
   virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }

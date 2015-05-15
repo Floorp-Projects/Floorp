@@ -35,8 +35,8 @@ public:
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
-  NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp);
-  NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp);
+  NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
+  NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
   NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) override;
   NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) override;
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
