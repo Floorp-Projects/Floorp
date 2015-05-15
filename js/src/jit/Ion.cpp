@@ -528,9 +528,9 @@ jit::LazyLinkTopActivation(JSContext* cx)
     builder->remove();
 
     CodeGenerator* codegen = builder->backgroundCodegen();
-    JitContext jctx(cx, &builder->alloc());
     bool success = false;
     if (codegen) {
+        JitContext jctx(cx, &builder->alloc());
         AutoEnterAnalysis enterTypes(cx);
         js::TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
         TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
@@ -1750,9 +1750,9 @@ AttachFinishedCompilations(JSContext* cx)
 
         RootedScript script(cx, builder->script());
         CodeGenerator* codegen = builder->backgroundCodegen();
-        JitContext jctx(cx, &builder->alloc());
         bool success = false;
         if (codegen) {
+            JitContext jctx(cx, &builder->alloc());
             AutoEnterAnalysis enterTypes(cx);
             TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
             AutoTraceLog logScript(logger, event);
