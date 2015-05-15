@@ -1713,8 +1713,11 @@ nsDocument::~nsDocument()
 
   // Kill the subdocument map, doing this will release its strong
   // references, if any.
-  delete mSubDocuments;
-  mSubDocuments = nullptr;
+  if (mSubDocuments) {
+    PL_DHashTableDestroy(mSubDocuments);
+
+    mSubDocuments = nullptr;
+  }
 
   // Destroy link map now so we don't waste time removing
   // links one by one
@@ -2118,8 +2121,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
     tmp->mStyleSheetSetList = nullptr;
   }
 
-  delete tmp->mSubDocuments;
-  tmp->mSubDocuments = nullptr;
+  if (tmp->mSubDocuments) {
+    PL_DHashTableDestroy(tmp->mSubDocuments);
+    tmp->mSubDocuments = nullptr;
+  }
 
   tmp->mFrameRequestCallbacks.Clear();
 
@@ -2315,8 +2320,11 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 
   // Delete references to sub-documents and kill the subdocument map,
   // if any. It holds strong references
-  delete mSubDocuments;
-  mSubDocuments = nullptr;
+  if (mSubDocuments) {
+    PL_DHashTableDestroy(mSubDocuments);
+
+    mSubDocuments = nullptr;
+  }
 
   // Destroy link map now so we don't waste time removing
   // links one by one
@@ -3997,7 +4005,7 @@ nsDocument::SetSubDocumentFor(Element* aElement, nsIDocument* aSubDoc)
         SubDocInitEntry
       };
 
-      mSubDocuments = new PLDHashTable(&hash_table_ops, sizeof(SubDocMapEntry));
+      mSubDocuments = PL_NewDHashTable(&hash_table_ops, sizeof(SubDocMapEntry));
     }
 
     // Add a mapping to the hash table
