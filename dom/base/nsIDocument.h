@@ -1161,10 +1161,7 @@ public:
    *
    * Note that the fullscreen leaf is the bottom-most document which is
    * fullscreen, it may have non-fullscreen child documents. The fullscreen
-   * root is usually the chrome document, but if fullscreen is content-only,
-   * (see the comment in nsContentUtils.h on IsFullscreenApiContentOnly())
-   * the fullscreen root will be a direct child of the chrome document, and
-   * there may be other branches of the same doctree that are fullscreen.
+   * root is normally the chrome document.
    *
    * If aRunAsync is true, fullscreen is executed asynchronously.
    *

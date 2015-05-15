@@ -4,6 +4,7 @@
 var names = [
     "iterator",
     "match",
+    "species",
 ];
 
 for (var name of names) {

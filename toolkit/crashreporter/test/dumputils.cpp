@@ -73,8 +73,10 @@ DumpCheckMemory(const char* dump_file)
   FILE *fp = fopen("crash-addr", "r");
   if (!fp)
     return false;
-  if (fscanf(fp, "%p", &addr) != 1)
+  if (fscanf(fp, "%p", &addr) != 1) {
+    fclose(fp);
     return false;
+  }
   fclose(fp);
 
   remove("crash-addr");
