@@ -2490,6 +2490,12 @@ pref("svg.marker-improvements.enabled", true);
 // See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
 pref("svg.new-getBBox.enabled", false);
 
+#ifdef RELEASE_BUILD
+pref("svg.transform-origin.enabled", false);
+#else
+pref("svg.transform-origin.enabled", true);
+#endif // RELEASE_BUILD
+
 // Default font types and sizes by locale
 pref("font.default.ar", "sans-serif");
 pref("font.minimum-size.ar", 0);
