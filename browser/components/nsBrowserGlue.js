@@ -2488,12 +2488,16 @@ ContentPermissionPrompt.prototype = {
       },
     }];
 
+    let options = {
+      learnMoreURL: Services.urlFormatter.formatURLPref("browser.geolocation.warning.infoURL"),
+    };
+
     if (requestingURI.schemeIs("file")) {
-      message = gBrowserBundle.formatStringFromName("geolocation.shareWithFile",
-                                                    [requestingURI.path], 1);
+      options.displayOrigin = requestingURI.path;
+      message = gBrowserBundle.GetStringFromName("geolocation.shareWithFile2");
     } else {
-      message = gBrowserBundle.formatStringFromName("geolocation.shareWithSite",
-                                                    [requestingURI.host], 1);
+      options.displayOrigin = requestingURI.host;
+      message = gBrowserBundle.GetStringFromName("geolocation.shareWithSite2");
       // Always share location action.
       actions.push({
         stringId: "geolocation.alwaysShareLocation",
@@ -2514,10 +2518,6 @@ ContentPermissionPrompt.prototype = {
         },
       });
     }
-
-    var options = {
-                    learnMoreURL: Services.urlFormatter.formatURLPref("browser.geolocation.warning.infoURL"),
-                  };
 
     secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_GEOLOCATION_REQUEST);
 
