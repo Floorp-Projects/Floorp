@@ -185,8 +185,8 @@ fails == flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html # 
 
 # Tests for combined influence of 'writing-mode' & 'direction' on flex axes
 test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-001.html flexbox-writing-mode-001-ref.html
-test-pref(layout.css.vertical-text.enabled,true) fails == flexbox-writing-mode-002.html flexbox-writing-mode-002-ref.html # bug 1149383
-test-pref(layout.css.vertical-text.enabled,true) fails == flexbox-writing-mode-003.html flexbox-writing-mode-003-ref.html # bug 1149383
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-002.html flexbox-writing-mode-002-ref.html
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-003.html flexbox-writing-mode-003-ref.html
 test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-004.html flexbox-writing-mode-004-ref.html
-test-pref(layout.css.vertical-text.enabled,true) fails == flexbox-writing-mode-005.html flexbox-writing-mode-005-ref.html # bug 1149383
-test-pref(layout.css.vertical-text.enabled,true) fails == flexbox-writing-mode-006.html flexbox-writing-mode-006-ref.html # bug 1149383
+test-pref(layout.css.vertical-text.enabled,true) fails == flexbox-writing-mode-005.html flexbox-writing-mode-005-ref.html # bug 1131451
+test-pref(layout.css.vertical-text.enabled,true) fails == flexbox-writing-mode-006.html flexbox-writing-mode-006-ref.html # bug 1131451
