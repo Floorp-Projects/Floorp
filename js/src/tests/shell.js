@@ -535,8 +535,6 @@ function BigO(data)
     }
     return deriv;
   }
-
-  return 0;
 }
 
 function compareSource(expect, actual, summary)
