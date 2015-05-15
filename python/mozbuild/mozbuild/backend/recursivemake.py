@@ -939,7 +939,8 @@ class RecursiveMakeBackend(CommonBackend):
 INSTALL_TARGETS += %(prefix)s
 """ % { 'prefix': prefix,
         'dest': '$(DEPTH)/_tests/%s' % path,
-        'files': ' '.join(files) })
+        'files': ' '.join(mozpath.relpath(f, backend_file.objdir)
+                          for f in files) })
 
     def _process_resources(self, obj, resources, backend_file):
         dep_path = mozpath.join(self.environment.topobjdir, '_build_manifests', '.deps', 'install')
