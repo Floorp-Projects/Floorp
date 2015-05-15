@@ -48,9 +48,9 @@ WeakMapBase::trace(JSTracer* tracer)
     MOZ_ASSERT(isInList());
     if (tracer->isMarkingTracer()) {
         // We don't trace any of the WeakMap entries at this time, just record
-        // record the fact that the WeakMap has been marked. Enties are marked
+        // record the fact that the WeakMap has been marked. Entries are marked
         // in the iterative marking phase by markAllIteratively(), which happens
-        // when many keys as possible have been marked already.
+        // when as many keys as possible have been marked already.
         MOZ_ASSERT(tracer->eagerlyTraceWeakMaps() == DoNotTraceWeakMaps);
         marked = true;
     } else {
