@@ -155,6 +155,9 @@ PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
 #define GET_MAIN_COMPONENT_LOGICAL(axisTracker_, isize_, bsize_)  \
   (axisTracker_).IsRowOriented() ? (isize_) : (bsize_)
 
+#define GET_CROSS_COMPONENT_LOGICAL(axisTracker_, inline_, block_)  \
+  (axisTracker_).IsRowOriented() ? (block_) : (inline_)
+
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
 public:
@@ -1055,15 +1058,15 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
 
   // MAIN SIZES (flex base size, min/max size)
   // -----------------------------------------
-  nscoord flexBaseSize = GET_MAIN_COMPONENT(aAxisTracker,
-                                            childRS.ComputedWidth(),
-                                            childRS.ComputedHeight());
-  nscoord mainMinSize = GET_MAIN_COMPONENT(aAxisTracker,
-                                           childRS.ComputedMinWidth(),
-                                           childRS.ComputedMinHeight());
-  nscoord mainMaxSize = GET_MAIN_COMPONENT(aAxisTracker,
-                                           childRS.ComputedMaxWidth(),
-                                           childRS.ComputedMaxHeight());
+  nscoord flexBaseSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+                                                    childRS.ComputedISize(),
+                                                    childRS.ComputedBSize());
+  nscoord mainMinSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+                                                   childRS.ComputedMinISize(),
+                                                   childRS.ComputedMinBSize());
+  nscoord mainMaxSize = GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+                                                   childRS.ComputedMaxISize(),
+                                                   childRS.ComputedMaxBSize());
   // This is enforced by the nsHTMLReflowState where these values come from:
   MOZ_ASSERT(mainMinSize <= mainMaxSize, "min size is larger than max size");
 
@@ -1072,15 +1075,18 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   // Grab the cross size from the reflow state. This might be the right value,
   // or we might resolve it to something else in SizeItemInCrossAxis(); hence,
   // it's tentative. See comment under "Cross Size Determination" for more.
-  nscoord tentativeCrossSize = GET_CROSS_COMPONENT(aAxisTracker,
-                                                   childRS.ComputedWidth(),
-                                                   childRS.ComputedHeight());
-  nscoord crossMinSize = GET_CROSS_COMPONENT(aAxisTracker,
-                                             childRS.ComputedMinWidth(),
-                                             childRS.ComputedMinHeight());
-  nscoord crossMaxSize = GET_CROSS_COMPONENT(aAxisTracker,
-                                             childRS.ComputedMaxWidth(),
-                                             childRS.ComputedMaxHeight());
+  nscoord tentativeCrossSize =
+    GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+                                childRS.ComputedISize(),
+                                childRS.ComputedBSize());
+  nscoord crossMinSize =
+    GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+                                childRS.ComputedMinISize(),
+                                childRS.ComputedMinBSize());
+  nscoord crossMaxSize =
+    GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+                                childRS.ComputedMaxISize(),
+                                childRS.ComputedMaxBSize());
 
   // SPECIAL-CASE FOR WIDGET-IMPOSED SIZES
   // Check if we're a themed widget, in which case we might have a minimum
@@ -1199,17 +1205,17 @@ CrossSizeToUseWithRatio(const FlexItem& aFlexItem,
 
   if (IsCrossSizeDefinite(aItemReflowState, aAxisTracker)) {
     // Definite cross size.
-    return GET_CROSS_COMPONENT(aAxisTracker,
-                               aItemReflowState.ComputedWidth(),
-                               aItemReflowState.ComputedHeight());
+    return GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+                                       aItemReflowState.ComputedISize(),
+                                       aItemReflowState.ComputedBSize());
   }
 
   if (aMinSizeFallback) {
     // Indefinite cross-size, and we're resolving main min-size, so we'll fall
     // back to ussing the cross min-size (which should be definite).
-    return GET_CROSS_COMPONENT(aAxisTracker,
-                               aItemReflowState.ComputedMinWidth(),
-                               aItemReflowState.ComputedMinHeight());
+    return GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+                                       aItemReflowState.ComputedMinISize(),
+                                       aItemReflowState.ComputedMinBSize());
   }
 
   // Indefinite cross-size.
@@ -1269,9 +1275,9 @@ PartiallyResolveAutoMinSize(const FlexItem& aFlexItem,
 
   // * the computed max-width (max-height), if that value is definite:
   nscoord maxSize =
-    GET_MAIN_COMPONENT(aAxisTracker,
-                       aItemReflowState.ComputedMaxWidth(),
-                       aItemReflowState.ComputedMaxHeight());
+    GET_MAIN_COMPONENT_LOGICAL(aAxisTracker,
+                               aItemReflowState.ComputedMaxISize(),
+                               aItemReflowState.ComputedMaxBSize());
   if (maxSize != NS_UNCONSTRAINEDSIZE) {
     minMainSize = std::min(minMainSize, maxSize);
   }
@@ -1373,9 +1379,9 @@ nsFlexContainerFrame::
     // XXXdholbert Maybe this should share logic with ComputeCrossSize()...
     // Alternately, maybe tentative container cross size should be passed down.
     nscoord containerCrossSize =
-      GET_CROSS_COMPONENT(aAxisTracker,
-                          flexContainerRS->ComputedWidth(),
-                          flexContainerRS->ComputedHeight());
+      GET_CROSS_COMPONENT_LOGICAL(aAxisTracker,
+                                  flexContainerRS->ComputedISize(),
+                                  flexContainerRS->ComputedBSize());
     // Is container's cross size "definite"?
     // (Container's cross size is definite if cross-axis is horizontal, or if
     // cross-axis is vertical and the cross-size is not NS_AUTOHEIGHT.)
