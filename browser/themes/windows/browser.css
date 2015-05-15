@@ -2172,10 +2172,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   outline: 1px dotted -moz-DialogText;
 }
 
-#pointerLock-cancel {
-  margin: 0px;
-}
-
 /* Translation infobar */
 
 %include ../shared/translation/infobar.inc.css
