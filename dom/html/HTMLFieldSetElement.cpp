@@ -19,6 +19,8 @@ namespace dom {
 
 HTMLFieldSetElement::HTMLFieldSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
+  , mElements(nullptr)
+  , mFirstLegend(nullptr)
   , mInvalidElementsCount(0)
 {
   // <fieldset> is always barred from constraint validation.
@@ -39,8 +41,7 @@ HTMLFieldSetElement::~HTMLFieldSetElement()
 // nsISupports
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLFieldSetElement, nsGenericHTMLFormElement,
-                                   mValidity, mElements, mDependentElements,
-                                   mFirstLegend)
+                                   mValidity, mElements)
 
 NS_IMPL_ADDREF_INHERITED(HTMLFieldSetElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLFieldSetElement, Element)
