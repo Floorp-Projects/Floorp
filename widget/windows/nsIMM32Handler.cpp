@@ -1514,18 +1514,46 @@ nsIMM32Handler::HandleQueryCharPosition(nsWindow* aWindow,
   // even if the content of the popup window has focus.
   ResolveIMECaretPos(aWindow->GetTopLevelWindow(false),
                      r, nullptr, screenRect);
+
+  // XXX This might need to check writing mode.  However, MSDN doesn't explain
+  //     how to set the values in vertical writing mode. Additionally, IME
+  //     doesn't work well with top-left of the character (this is explicitly
+  //     documented) and its horizontal width.  So, it might be better to set
+  //     top-right corner of the character and horizontal width, but we're not
+  //     sure if it doesn't cause any problems with a lot of IMEs...
   pCharPosition->pt.x = screenRect.x;
   pCharPosition->pt.y = screenRect.y;
 
   pCharPosition->cLineHeight = r.height;
 
-  // XXX we should use NS_QUERY_EDITOR_RECT event here.
-  ::GetWindowRect(aWindow->GetWindowHandle(), &pCharPosition->rcDocument);
+  WidgetQueryContentEvent editorRect(true, NS_QUERY_EDITOR_RECT, aWindow);
+  aWindow->InitEvent(editorRect);
+  aWindow->DispatchWindowEvent(&editorRect);
+  if (NS_WARN_IF(!editorRect.mSucceeded)) {
+    PR_LOG(gIMM32Log, PR_LOG_ERROR,
+      ("IMM32: HandleQueryCharPosition, NS_QUERY_EDITOR_RECT failed"));
+    ::GetWindowRect(aWindow->GetWindowHandle(), &pCharPosition->rcDocument);
+  } else {
+    nsIntRect editorRectInWindow =
+      LayoutDevicePixel::ToUntyped(editorRect.mReply.mRect);
+    nsWindow* window = editorRect.mReply.mFocusedWidget ?
+      static_cast<nsWindow*>(editorRect.mReply.mFocusedWidget) : aWindow;
+    nsIntRect editorRectInScreen;
+    ResolveIMECaretPos(window, editorRectInWindow, nullptr, editorRectInScreen);
+    ::SetRect(&pCharPosition->rcDocument,
+              editorRectInScreen.x, editorRectInScreen.y,
+              editorRectInScreen.XMost(), editorRectInScreen.YMost());
+  }
 
   *oResult = TRUE;
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: HandleQueryCharPosition, SUCCEEDED\n"));
+    ("IMM32: HandleQueryCharPosition, SUCCEEDED, pCharPosition={ pt={ x=%d, "
+     "y=%d }, cLineHeight=%d, rcDocument={ left=%d, top=%d, right=%d, "
+     "bottom=%d } }",
+     pCharPosition->pt.x, pCharPosition->pt.y, pCharPosition->cLineHeight,
+     pCharPosition->rcDocument.left, pCharPosition->rcDocument.top,
+     pCharPosition->rcDocument.right, pCharPosition->rcDocument.bottom));
   return true;
 }
 
