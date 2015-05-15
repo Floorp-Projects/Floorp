@@ -1398,24 +1398,6 @@ static mozilla::ThreadLocal<CollectorData*> sCollectorData;
 // Utility functions
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_NEVER_INLINE static void
-Fault(const char* aMsg, const void* aPtr = nullptr)
-{
-  if (aPtr) {
-    printf("Fault in cycle collector: %s (ptr: %p)\n", aMsg, aPtr);
-  } else {
-    printf("Fault in cycle collector: %s\n", aMsg);
-  }
-
-  NS_RUNTIMEABORT("cycle collector fault");
-}
-
-static void
-Fault(const char* aMsg, PtrInfo* aPi)
-{
-  Fault(aMsg, aPi->mPointer);
-}
-
 static inline void
 ToParticipant(nsISupports* aPtr, nsXPCOMCycleCollectionParticipant** aCp)
 {
@@ -2255,9 +2237,7 @@ CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
 
     if (pi->mParticipant) {
       nsresult rv = pi->mParticipant->Traverse(pi->mPointer, *this);
-      if (NS_FAILED(rv)) {
-        Fault("script pointer traversal failed", pi);
-      }
+      MOZ_RELEASE_ASSERT(!NS_FAILED(rv), "Cycle collector Traverse method failed");
     }
 
     if (mCurrNode->AtBlockEnd()) {
@@ -2313,12 +2293,9 @@ CCGraphBuilder::NoteNativeRoot(void* aRoot,
 NS_IMETHODIMP_(void)
 CCGraphBuilder::DescribeRefCountedNode(nsrefcnt aRefCount, const char* aObjName)
 {
-  if (aRefCount == 0) {
-    Fault("zero refcount", mCurrPi);
-  }
-  if (aRefCount == UINT32_MAX) {
-    Fault("overflowing refcount", mCurrPi);
-  }
+  MOZ_RELEASE_ASSERT(aRefCount != 0, "CCed refcounted object has zero refcount");
+  MOZ_RELEASE_ASSERT(aRefCount != UINT32_MAX, "CCed refcounted object has overflowing refcount");
+
   mResults.mVisitedRefCounted++;
 
   if (mListener) {
@@ -3132,12 +3109,10 @@ nsCycleCollector::ScanWhiteNodes(bool aFullySynchGraphBuild)
       continue;
     }
 
-    if (MOZ_LIKELY(pi->mInternalRefs < pi->mRefCount)) {
-      // This node will get marked black in the next pass.
-      continue;
-    }
+    MOZ_RELEASE_ASSERT(pi->mInternalRefs < pi->mRefCount,
+                       "Cycle collector found more references to an object than its refcount");
 
-    Fault("Traversed refs exceed refcount", pi);
+    // This node will get marked black in the next pass.
   }
 }
 
@@ -3403,10 +3378,7 @@ nsCycleCollector::~nsCycleCollector()
 void
 nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime* aJSRuntime)
 {
-  if (mJSRuntime) {
-    Fault("multiple registrations of cycle collector JS runtime", aJSRuntime);
-  }
-
+  MOZ_RELEASE_ASSERT(!mJSRuntime, "Multiple registrations of JS runtime in cycle collector");
   mJSRuntime = aJSRuntime;
 
   // We can't register as a reporter in nsCycleCollector() because that runs
@@ -3422,10 +3394,7 @@ nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime* aJSRuntime)
 void
 nsCycleCollector::ForgetJSRuntime()
 {
-  if (!mJSRuntime) {
-    Fault("forgetting non-registered cycle collector JS runtime");
-  }
-
+  MOZ_RELEASE_ASSERT(mJSRuntime, "Forgetting JS runtime in cycle collector before a JS runtime was registered");
   mJSRuntime = nullptr;
 }
 
@@ -3449,9 +3418,9 @@ nsCycleCollector::Suspect(void* aPtr, nsCycleCollectionParticipant* aParti,
 {
   CheckThreadSafety();
 
-  // Re-entering ::Suspect during collection used to be a fault, but
-  // we are canonicalizing nsISupports pointers using QI, so we will
-  // see some spurious refcount traffic here.
+  // Re-entering ::Suspect during collection used to be a fatal error,
+  // but we are canonicalizing nsISupports pointers using QI, so we
+  // will see some spurious refcount traffic here.
 
   if (MOZ_UNLIKELY(mScanInProgress)) {
     return;
