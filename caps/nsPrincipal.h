@@ -34,7 +34,7 @@ public:
   nsPrincipal();
 
   // Init() must be called before the principal is in a usable state.
-  nsresult Init(nsIURI* aCodebase, const OriginAttributes& aOriginAttributes);
+  nsresult Init(nsIURI* aCodebase, const mozilla::OriginAttributes& aOriginAttributes);
 
   virtual void GetScriptLocation(nsACString& aStr) override;
   void SetURI(nsIURI* aURI);
