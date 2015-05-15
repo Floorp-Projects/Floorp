@@ -636,7 +636,25 @@ var shell = {
       }
       delete shell.pendingChromeEvents;
     });
-  }
+
+    shell.handleCmdLine();
+  },
+
+  handleCmdLine: function shell_handleCmdLine() {
+    let b2gcmds = Cc["@mozilla.org/commandlinehandler/general-startup;1?type=b2gcmds"]
+                    .getService(Ci.nsISupports);
+    let args = b2gcmds.wrappedJSObject.cmdLine;
+    try {
+      // Returns null if -url is not present
+      let url = args.handleFlagWithParam("url", false);
+      if (url) {
+        this.sendChromeEvent({type: "mozbrowseropenwindow", url});
+        args.preventDefault = true;
+      }
+    } catch(e) {
+      // Throws if -url is present with no params
+    }
+  },
 };
 
 Services.obs.addObserver(function onFullscreenOriginChange(subject, topic, data) {
