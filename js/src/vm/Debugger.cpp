@@ -540,33 +540,15 @@ Debugger::hasAnyLiveHooks() const
 /* static */ JSTrapStatus
 Debugger::slowPathOnEnterFrame(JSContext* cx, AbstractFramePtr frame)
 {
-    // Build the list of recipients.
-    AutoValueVector triggered(cx);
-    Handle<GlobalObject*> global = cx->global();
-
-    if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
-        for (Debugger** p = debuggers->begin(); p != debuggers->end(); p++) {
-            Debugger* dbg = *p;
-            if (dbg->observesFrame(frame) && dbg->observesEnterFrame() &&
-                !triggered.append(ObjectValue(*dbg->toJSObject())))
-            {
-                cx->clearPendingException();
-                return JSTRAP_ERROR;
-            }
-        }
-    }
-
-    JSTrapStatus status = JSTRAP_CONTINUE;
     RootedValue rval(cx);
-    // Deliver the event, checking again as in dispatchHook.
-    for (Value* p = triggered.begin(); p != triggered.end(); p++) {
-        Debugger* dbg = Debugger::fromJSObject(&p->toObject());
-        if (dbg->debuggees.has(global) && dbg->observesEnterFrame()) {
-            status = dbg->fireEnterFrame(cx, frame, &rval);
-            if (status != JSTRAP_CONTINUE)
-                break;
-        }
-    }
+    JSTrapStatus status = dispatchHook(
+        cx,
+        [frame](Debugger* dbg) -> bool {
+            return dbg->observesFrame(frame) && dbg->observesEnterFrame();
+        },
+        [&](Debugger* dbg) -> JSTrapStatus {
+            return dbg->fireEnterFrame(cx, frame, &rval);
+        });
 
     switch (status) {
       case JSTRAP_CONTINUE:
@@ -705,7 +687,12 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool frame
 Debugger::slowPathOnDebuggerStatement(JSContext* cx, AbstractFramePtr frame)
 {
     RootedValue rval(cx);
-    JSTrapStatus status = dispatchHook(cx, &rval, OnDebuggerStatement, NullPtr());
+    JSTrapStatus status = dispatchHook(
+        cx,
+        [](Debugger* dbg) -> bool { return dbg->getHook(OnDebuggerStatement); },
+        [&](Debugger* dbg) -> JSTrapStatus {
+            return dbg->fireDebuggerStatement(cx, &rval);
+        });
 
     switch (status) {
       case JSTRAP_CONTINUE:
@@ -736,7 +723,12 @@ Debugger::slowPathOnExceptionUnwind(JSContext* cx, AbstractFramePtr frame)
         return JSTRAP_CONTINUE;
 
     RootedValue rval(cx);
-    JSTrapStatus status = dispatchHook(cx, &rval, OnExceptionUnwind, NullPtr());
+    JSTrapStatus status = dispatchHook(
+        cx,
+        [](Debugger* dbg) -> bool { return dbg->getHook(OnExceptionUnwind); },
+        [&](Debugger* dbg) -> JSTrapStatus {
+            return dbg->fireExceptionUnwind(cx, &rval);
+        });
 
     switch (status) {
       case JSTRAP_CONTINUE:
@@ -1292,14 +1284,11 @@ Debugger::fireOnGarbageCollectionHook(JSContext* cx,
         handleUncaughtException(ac, true);
 }
 
+template <typename HookIsEnabledFun /* bool (Debugger*) */,
+          typename FireHookFun /* JSTrapStatus (Debugger*) */>
 /* static */ JSTrapStatus
-Debugger::dispatchHook(JSContext* cx, MutableHandleValue vp, Hook which, HandleObject payload)
+Debugger::dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled, FireHookFun fireHook)
 {
-    MOZ_ASSERT(which == OnDebuggerStatement ||
-               which == OnExceptionUnwind ||
-               which == OnNewPromise ||
-               which == OnPromiseSettled);
-
     /*
      * Determine which debuggers will receive this event, and in what order.
      * Make a copy of the list, since the original is mutable and we will be
@@ -1313,7 +1302,7 @@ Debugger::dispatchHook(JSContext* cx, MutableHandleValue vp, Hook which, HandleO
     if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
         for (Debugger** p = debuggers->begin(); p != debuggers->end(); p++) {
             Debugger* dbg = *p;
-            if (dbg->enabled && dbg->getHook(which)) {
+            if (dbg->enabled && hookIsEnabled(dbg)) {
                 if (!triggered.append(ObjectValue(*dbg->toJSObject())))
                     return JSTRAP_ERROR;
             }
@@ -1326,23 +1315,8 @@ Debugger::dispatchHook(JSContext* cx, MutableHandleValue vp, Hook which, HandleO
      */
     for (Value* p = triggered.begin(); p != triggered.end(); p++) {
         Debugger* dbg = Debugger::fromJSObject(&p->toObject());
-        if (dbg->debuggees.has(global) && dbg->enabled && dbg->getHook(which)) {
-            JSTrapStatus st;
-            switch (which) {
-              case OnDebuggerStatement:
-                st = dbg->fireDebuggerStatement(cx, vp);
-                break;
-              case OnExceptionUnwind:
-                st = dbg->fireExceptionUnwind(cx, vp);
-                break;
-              case OnNewPromise:
-              case OnPromiseSettled:
-                st = dbg->firePromiseHook(cx, which, payload, vp);
-                break;
-              default:
-                MOZ_ASSERT_UNREACHABLE("Unexpected debugger hook");
-                st = JSTRAP_CONTINUE;
-            }
+        if (dbg->debuggees.has(global) && dbg->enabled && hookIsEnabled(dbg)) {
+            JSTrapStatus st = fireHook(dbg);
             if (st != JSTRAP_CONTINUE)
                 return st;
         }
@@ -1353,39 +1327,22 @@ Debugger::dispatchHook(JSContext* cx, MutableHandleValue vp, Hook which, HandleO
 void
 Debugger::slowPathOnNewScript(JSContext* cx, HandleScript script)
 {
-    Rooted<GlobalObject*> global(cx, &script->global());
-
-    /*
-     * Build the list of recipients based on the debuggers observing the
-     * script's compartment.
-     */
-    AutoValueVector triggered(cx);
-    GlobalObject::DebuggerVector* debuggers = global->getDebuggers();
-    if (debuggers) {
-        for (Debugger** p = debuggers->begin(); p != debuggers->end(); p++) {
-            Debugger* dbg = *p;
-            if (dbg->observesNewScript() && dbg->observesScript(script)) {
-                if (!triggered.append(ObjectValue(*dbg->toJSObject()))) {
-                    ReportOutOfMemory(cx);
-                    return;
-                }
-            }
-        }
-    }
-
-    /*
-     * Deliver the event to each debugger, checking again as in
-     * Debugger::dispatchHook.
-     */
-    for (Value* p = triggered.begin(); p != triggered.end(); p++) {
-        Debugger* dbg = Debugger::fromJSObject(&p->toObject());
-        if (dbg->debuggees.has(global) &&
-            dbg->enabled &&
-            dbg->getHook(OnNewScript))
-        {
+    JSTrapStatus status = dispatchHook(
+        cx,
+        [script](Debugger* dbg) -> bool {
+            return dbg->observesNewScript() && dbg->observesScript(script);
+        },
+        [&](Debugger* dbg) -> JSTrapStatus {
             dbg->fireNewScript(cx, script);
-        }
+            return JSTRAP_CONTINUE;
+        });
+
+    if (status == JSTRAP_ERROR) {
+        ReportOutOfMemory(cx);
+        return;
     }
+
+    MOZ_ASSERT(status == JSTRAP_CONTINUE);
 }
 
 /* static */ JSTrapStatus
@@ -1748,9 +1705,24 @@ Debugger::slowPathPromiseHook(JSContext* cx, Hook hook, HandleObject promise)
     MOZ_ASSERT(hook == OnNewPromise || hook == OnPromiseSettled);
     RootedValue rval(cx);
 
+    JSTrapStatus status = dispatchHook(
+        cx,
+        [hook](Debugger* dbg) -> bool { return dbg->getHook(hook); },
+        [&](Debugger* dbg) -> JSTrapStatus {
+            (void) dbg->firePromiseHook(cx, hook, promise, &rval);
+            return JSTRAP_CONTINUE;
+        });
+
+    if (status == JSTRAP_ERROR) {
+        // The dispatch hook function might fail to append into the list of
+        // Debuggers which are watching for the hook.
+        cx->clearPendingException();
+        return;
+    }
+
     // Promise hooks are infallible and we ignore errors from uncaught
     // exceptions by design.
-    (void) dispatchHook(cx, &rval, hook, promise);
+    MOZ_ASSERT(status == JSTRAP_CONTINUE);
 }
 
 
