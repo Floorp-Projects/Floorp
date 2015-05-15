@@ -57,8 +57,6 @@ static const char* kSelectionCaretsLogModuleName = "SelectionCarets";
 // We treat mouse/touch move as "REAL" move event once its move distance
 // exceed this value, in CSS pixel.
 static const int32_t kMoveStartTolerancePx = 5;
-// Time for trigger scroll end event, in miliseconds.
-static const int32_t kScrollEndTimerDelay = 300;
 
 NS_IMPL_ISUPPORTS(SelectionCarets,
                   nsIReflowObserver,
@@ -1286,10 +1284,11 @@ SelectionCarets::LaunchScrollEndDetector()
 
   MOZ_ASSERT(mScrollEndDetectorTimer);
 
-  SELECTIONCARETS_LOG("Will fire scroll end after %d ms", kScrollEndTimerDelay);
+  SELECTIONCARETS_LOG("Will fire scroll end after %d ms",
+    TouchCaret::sScrollEndTimerDelay);
   mScrollEndDetectorTimer->InitWithFuncCallback(FireScrollEnd,
                                                 this,
-                                                kScrollEndTimerDelay,
+                                                TouchCaret::sScrollEndTimerDelay,
                                                 nsITimer::TYPE_ONE_SHOT);
 }
 
