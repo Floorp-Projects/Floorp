@@ -115,9 +115,10 @@ SpewRange(MDefinition* def)
 #ifdef DEBUG
     if (JitSpewEnabled(JitSpew_Range) && def->type() != MIRType_None && def->range()) {
         JitSpewHeader(JitSpew_Range);
-        def->printName(JitSpewFile);
-        fprintf(JitSpewFile, " has range ");
-        def->range()->dump(JitSpewFile);
+        Fprinter& out = JitSpewPrinter();
+        def->printName(out);
+        out.printf(" has range ");
+        def->range()->dump(out);
     }
 #endif
 }
@@ -281,8 +282,9 @@ RangeAnalysis::addBetaNodes()
 
         if (JitSpewEnabled(JitSpew_Range)) {
             JitSpewHeader(JitSpew_Range);
-            fprintf(JitSpewFile, "Adding beta node for %d with range ", val->id());
-            comp.dump(JitSpewFile);
+            Fprinter& out = JitSpewPrinter();
+            out.printf("Adding beta node for %d with range ", val->id());
+            comp.dump(out);
         }
 
         MBeta* beta = MBeta::New(alloc(), val, new(alloc()) Range(comp));
@@ -320,20 +322,20 @@ RangeAnalysis::removeBetaNodes()
 }
 
 void
-SymbolicBound::print(Sprinter& sp) const
+SymbolicBound::dump(GenericPrinter& out) const
 {
     if (loop)
-        sp.printf("[loop] ");
-    sum.print(sp);
+        out.printf("[loop] ");
+    sum.dump(out);
 }
 
 void
 SymbolicBound::dump() const
 {
-    Sprinter sp(GetJitContext()->cx);
-    sp.init();
-    print(sp);
-    fprintf(stderr, "%s\n", sp.string());
+    Fprinter out(stderr);
+    dump(out);
+    out.printf("\n");
+    out.finish();
 }
 
 // Test whether the given range's exponent tells us anything that its lower
@@ -356,41 +358,41 @@ IsExponentInteresting(const Range* r)
 }
 
 void
-Range::print(Sprinter& sp) const
+Range::dump(GenericPrinter& out) const
 {
     assertInvariants();
 
     // Floating-point or Integer subset.
     if (canHaveFractionalPart_)
-        sp.printf("F");
+        out.printf("F");
     else
-        sp.printf("I");
+        out.printf("I");
 
-    sp.printf("[");
+    out.printf("[");
 
     if (!hasInt32LowerBound_)
-        sp.printf("?");
+        out.printf("?");
     else
-        sp.printf("%d", lower_);
+        out.printf("%d", lower_);
     if (symbolicLower_) {
-        sp.printf(" {");
-        symbolicLower_->print(sp);
-        sp.printf("}");
+        out.printf(" {");
+        symbolicLower_->dump(out);
+        out.printf("}");
     }
 
-    sp.printf(", ");
+    out.printf(", ");
 
     if (!hasInt32UpperBound_)
-        sp.printf("?");
+        out.printf("?");
     else
-        sp.printf("%d", upper_);
+        out.printf("%d", upper_);
     if (symbolicUpper_) {
-        sp.printf(" {");
-        symbolicUpper_->print(sp);
-        sp.printf("}");
+        out.printf(" {");
+        symbolicUpper_->dump(out);
+        out.printf("}");
     }
 
-    sp.printf("]");
+    out.printf("]");
 
     bool includesNaN = max_exponent_ == IncludesInfinityAndNaN;
     bool includesNegativeInfinity = max_exponent_ >= IncludesInfinity && !hasInt32LowerBound_;
@@ -402,55 +404,49 @@ Range::print(Sprinter& sp) const
         includesPositiveInfinity ||
         includesNegativeZero)
     {
-        sp.printf(" (");
+        out.printf(" (");
         bool first = true;
         if (includesNaN) {
             if (first)
                 first = false;
             else
-                sp.printf(" ");
-            sp.printf("U NaN");
+                out.printf(" ");
+            out.printf("U NaN");
         }
         if (includesNegativeInfinity) {
             if (first)
                 first = false;
             else
-                sp.printf(" ");
-            sp.printf("U -Infinity");
+                out.printf(" ");
+            out.printf("U -Infinity");
         }
         if (includesPositiveInfinity) {
             if (first)
                 first = false;
             else
-                sp.printf(" ");
-            sp.printf("U Infinity");
+                out.printf(" ");
+            out.printf("U Infinity");
         }
         if (includesNegativeZero) {
             if (first)
                 first = false;
             else
-                sp.printf(" ");
-            sp.printf("U -0");
+                out.printf(" ");
+            out.printf("U -0");
         }
-        sp.printf(")");
+        out.printf(")");
     }
     if (max_exponent_ < IncludesInfinity && IsExponentInteresting(this))
-        sp.printf(" (< pow(2, %d+1))", max_exponent_);
-}
-
-void
-Range::dump(FILE* fp) const
-{
-    Sprinter sp(GetJitContext()->cx);
-    sp.init();
-    print(sp);
-    fprintf(fp, "%s\n", sp.string());
+        out.printf(" (< pow(2, %d+1))", max_exponent_);
 }
 
 void
 Range::dump() const
 {
-    dump(stderr);
+    Fprinter out(stderr);
+    dump(out);
+    out.printf("\n");
+    out.finish();
 }
 
 Range*
@@ -1871,7 +1867,7 @@ RangeAnalysis::analyzeLoop(MBasicBlock* header)
     if (JitSpewEnabled(JitSpew_Range)) {
         Sprinter sp(GetJitContext()->cx);
         sp.init();
-        iterationBound->boundSum.print(sp);
+        iterationBound->boundSum.dump(sp);
         JitSpew(JitSpew_Range, "computed symbolic bound on backedges: %s",
                 sp.string());
     }
