@@ -3190,12 +3190,20 @@ nsFlexContainerFrame::GetMainSizeFromReflowState(
   const nsHTMLReflowState& aReflowState,
   const FlexboxAxisTracker& aAxisTracker)
 {
-  if (aAxisTracker.IsMainAxisHorizontal()) {
-    // Horizontal case is easy -- our main size is our computed width
-    // (which is already resolved).
+  if (aAxisTracker.IsRowOriented()) {
+    // Row-oriented --> our main axis is the inline axis, so our main size
+    // is our inline size (which should already be resolved).
+    // XXXdholbert ISize may be (wrongly) unconstrained right now: bug 1163238
+    // Uncomment when that's fixed:
+    /*
+    NS_WARN_IF_FALSE(aReflowState.ComputedISize() != NS_UNCONSTRAINEDSIZE,
+                     "Unconstrained inline size; this should only result from "
+                     "huge sizes (not intrinsic sizing w/ orthogonal flows)");
+    */
     return aReflowState.ComputedISize();
   }
 
+  // Note: This may be unconstrained, if our block size is "auto":
   return GetEffectiveComputedBSize(aReflowState);
 }
 
@@ -3221,6 +3229,8 @@ GetLargestLineMainSize(const FlexLine* aFirstLine)
  *
  * Guaranteed to return a definite length, i.e. not NS_UNCONSTRAINEDSIZE,
  * aside from cases with huge lengths which happen to compute to that value.
+ * XXXdholbert (this^ isn't quite true, if we're row-oriented and in an
+ * orthogonal flow, per mentions of bug 1163238 in GetMainSizeFromReflowState.)
  *
  * (Note: This function should be structurally similar to 'ComputeCrossSize()',
  * except that here, the caller has already grabbed the tentative size from the
@@ -3236,31 +3246,30 @@ ResolveFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
 {
   MOZ_ASSERT(aFirstLine, "null first line pointer");
 
-  if (aAxisTracker.IsMainAxisHorizontal()) {
-    // Horizontal case is easy -- our main size should already be resolved
-    // before we get a call to Reflow. We don't have to worry about doing
-    // page-breaking or shrinkwrapping in the horizontal axis.
+  if (aAxisTracker.IsRowOriented()) {
+    // Row-oriented --> our main axis is the inline axis, so our main size
+    // is our inline size (which should already be resolved).
     return aTentativeMainSize;
   }
 
   if (aTentativeMainSize != NS_INTRINSICSIZE) {
-    // Vertical case, with fixed height:
+    // Column-oriented case, with fixed BSize:
     if (aAvailableBSizeForContent == NS_UNCONSTRAINEDSIZE ||
         aTentativeMainSize < aAvailableBSizeForContent) {
       // Not in a fragmenting context, OR no need to fragment because we have
-      // more available height than we need. Either way, just use our fixed
-      // height.  (Note that the reflow state has already done the appropriate
-      // min/max-height clamping.)
+      // more available BSize than we need. Either way, we don't need to clamp.
+      // (Note that the reflow state has already done the appropriate
+      // min/max-BSize clamping.)
       return aTentativeMainSize;
     }
 
-    // Fragmenting *and* our fixed height is too tall for available height:
+    // Fragmenting *and* our fixed BSize is larger than available BSize:
     // Mark incomplete so we get a next-in-flow, and take up all of the
-    // available height (or the amount of height required by our children, if
-    // that's larger; but of course not more than our own computed height).
+    // available BSize (or the amount of BSize required by our children, if
+    // that's larger; but of course not more than our own computed BSize).
     // XXXdholbert For now, we don't support pushing children to our next
-    // continuation or splitting children, so "amount of height required by
-    // our children" is just the main-size (height) of our longest flex line.
+    // continuation or splitting children, so "amount of BSize required by
+    // our children" is just the main-size (BSize) of our longest flex line.
     NS_FRAME_SET_INCOMPLETE(aStatus);
     nscoord largestLineOuterSize = GetLargestLineMainSize(aFirstLine);
 
@@ -3270,14 +3279,14 @@ ResolveFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
     return std::min(aTentativeMainSize, largestLineOuterSize);
   }
 
-  // Vertical case, with auto-height:
-  // Resolve auto-height to the largest FlexLine-length, clamped to our
-  // computed min/max main-size properties (min-height & max-height).
+  // Column-oriented case, with auto BSize:
+  // Resolve auto BSize to the largest FlexLine length, clamped to our
+  // computed min/max main-size properties.
   // XXXdholbert Handle constrained-aAvailableBSizeForContent case here.
   nscoord largestLineOuterSize = GetLargestLineMainSize(aFirstLine);
   return NS_CSS_MINMAX(largestLineOuterSize,
-                       aReflowState.ComputedMinHeight(),
-                       aReflowState.ComputedMaxHeight());
+                       aReflowState.ComputedMinBSize(),
+                       aReflowState.ComputedMaxBSize());
 }
 
 nscoord
@@ -3290,33 +3299,40 @@ nsFlexContainerFrame::ComputeCrossSize(const nsHTMLReflowState& aReflowState,
 {
   MOZ_ASSERT(aIsDefinite, "outparam pointer must be non-null");
 
-  if (aAxisTracker.IsCrossAxisHorizontal()) {
-    // Cross axis is horizontal: our cross size is our computed width
-    // (which is already resolved).
+  if (aAxisTracker.IsColumnOriented()) {
+    // Column-oriented --> our cross axis is the inline axis, so our cross size
+    // is our inline size (which should already be resolved).
+    // XXXdholbert ISize may be (wrongly) unconstrained right now: bug 1163238.
+    // Uncomment when that's fixed:
+    /*
+    NS_WARN_IF_FALSE(aReflowState.ComputedISize() != NS_UNCONSTRAINEDSIZE,
+                     "Unconstrained inline size; this should only result from "
+                     "huge sizes (not intrinsic sizing w/ orthogonal flows)");
+    */
     *aIsDefinite = true;
     return aReflowState.ComputedISize();
   }
 
   nscoord effectiveComputedBSize = GetEffectiveComputedBSize(aReflowState);
   if (effectiveComputedBSize != NS_INTRINSICSIZE) {
-    // Cross-axis is vertical, and we have a fixed height:
+    // Row-oriented case (cross axis is block-axis), with fixed BSize:
     *aIsDefinite = true;
     if (aAvailableBSizeForContent == NS_UNCONSTRAINEDSIZE ||
         effectiveComputedBSize < aAvailableBSizeForContent) {
       // Not in a fragmenting context, OR no need to fragment because we have
-      // more available height than we need. Either way, just use our fixed
-      // height.  (Note that the reflow state has already done the appropriate
-      // min/max-height clamping.)
+      // more available BSize than we need. Either way, just use our fixed
+      // BSize.  (Note that the reflow state has already done the appropriate
+      // min/max-BSize clamping.)
       return effectiveComputedBSize;
     }
 
-    // Fragmenting *and* our fixed height is too tall for available height:
+    // Fragmenting *and* our fixed BSize is too tall for available BSize:
     // Mark incomplete so we get a next-in-flow, and take up all of the
-    // available height (or the amount of height required by our children, if
-    // that's larger; but of course not more than our own computed height).
+    // available BSize (or the amount of BSize required by our children, if
+    // that's larger; but of course not more than our own computed BSize).
     // XXXdholbert For now, we don't support pushing children to our next
-    // continuation or splitting children, so "amount of height required by
-    // our children" is just our line-height.
+    // continuation or splitting children, so "amount of BSize required by
+    // our children" is just the sum of our FlexLines' BSizes (cross sizes).
     NS_FRAME_SET_INCOMPLETE(aStatus);
     if (aSumLineCrossSizes <= aAvailableBSizeForContent) {
       return aAvailableBSizeForContent;
@@ -3324,13 +3340,14 @@ nsFlexContainerFrame::ComputeCrossSize(const nsHTMLReflowState& aReflowState,
     return std::min(effectiveComputedBSize, aSumLineCrossSizes);
   }
 
-  // Cross axis is vertical and we have auto-height: shrink-wrap our line(s),
-  // subject to our min-size / max-size constraints in that (vertical) axis.
+  // Row-oriented case (cross axis is block axis), with auto BSize:
+  // Shrink-wrap our line(s), subject to our min-size / max-size
+  // constraints in that (block) axis.
   // XXXdholbert Handle constrained-aAvailableBSizeForContent case here.
   *aIsDefinite = false;
   return NS_CSS_MINMAX(aSumLineCrossSizes,
-                       aReflowState.ComputedMinHeight(),
-                       aReflowState.ComputedMaxHeight());
+                       aReflowState.ComputedMinBSize(),
+                       aReflowState.ComputedMaxBSize());
 }
 
 void
