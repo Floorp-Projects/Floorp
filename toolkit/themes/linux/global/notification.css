@@ -67,12 +67,12 @@ notification[type="critical"] {
   max-width: 24em;
 }
 
-.popup-notification-originHost:not([value]),
+.popup-notification-origin:not([value]),
 .popup-notification-learnmore-link:not([href]) {
   display: none;
 }
 
-.popup-notification-originHost {
+.popup-notification-origin {
   margin-bottom: .3em !important;
 }
 

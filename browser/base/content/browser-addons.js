@@ -49,7 +49,7 @@ const gXPInstallObserver = {
     };
 
     try {
-      options.originHost = installInfo.originatingURI.host;
+      options.displayOrigin = installInfo.originatingURI.host;
     } catch (e) {
       // originatingURI might be missing or 'host' might throw for non-nsStandardURL nsIURIs.
     }
@@ -78,7 +78,7 @@ const gXPInstallObserver = {
                               action, null, options);
       break; }
     case "addon-install-blocked": {
-      if (!options.originHost) {
+      if (!options.displayOrigin) {
         // Need to deal with missing originatingURI and with about:/data: URIs more gracefully,
         // see bug 1063418 - but for now, bail:
         return;
@@ -138,7 +138,7 @@ const gXPInstallObserver = {
     case "addon-install-failed": {
       // TODO This isn't terribly ideal for the multiple failure case
       for (let install of installInfo.installs) {
-        let host = options.originHost;
+        let host = options.displayOrigin;
         if (!host)
           host = (install.sourceURI instanceof Ci.nsIStandardURL) &&
                  install.sourceURI.host;

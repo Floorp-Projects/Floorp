@@ -105,12 +105,12 @@ notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
   max-width: 24em;
 }
 
-.popup-notification-originHost:not([value]),
+.popup-notification-origin:not([value]),
 .popup-notification-learnmore-link:not([href]) {
   display: none;
 }
 
-.popup-notification-originHost {
+.popup-notification-origin {
   margin-bottom: .3em !important;
   -moz-margin-start: 0 !important; /* override default label margin to match description margin */
 }
