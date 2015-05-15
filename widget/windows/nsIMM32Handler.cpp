@@ -268,6 +268,7 @@ nsIMM32Handler::GetIMEUpdatePreference()
 {
   return nsIMEUpdatePreference(
     nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE |
+    nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
     nsIMEUpdatePreference::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR);
 }
 
@@ -389,6 +390,32 @@ nsIMM32Handler::OnUpdateComposition(nsWindow* aWindow)
   gIMM32Handler->SetIMERelatedWindowsPos(aWindow, IMEContext);
 }
 
+// static
+void
+nsIMM32Handler::OnSelectionChange(nsWindow* aWindow,
+                                  const IMENotification& aIMENotification)
+{
+  if (aIMENotification.mSelectionChangeData.mCausedByComposition) {
+    return;
+  }
+
+  switch (sCodePage) {
+    case 932: // Japanese Shift-JIS
+    case 936: // Simlified Chinese GBK
+    case 949: // Korean
+    case 950: // Traditional Chinese Big5
+      EnsureHandlerInstance();
+      break;
+    default:
+      return;
+  }
+
+  // Like Navi-Bar of ATOK, some IMEs may require proper composition font even
+  // before sending WM_IME_STARTCOMPOSITION.
+  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  gIMM32Handler->AdjustCompositionFont(IMEContext,
+                   aIMENotification.mSelectionChangeData.GetWritingMode());
+}
 
 /* static */ bool
 nsIMM32Handler::ProcessInputLangChangeMessage(nsWindow* aWindow,
