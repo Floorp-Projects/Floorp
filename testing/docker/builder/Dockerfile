@@ -1,4 +1,4 @@
-FROM          quay.io/mozilla/b2g-build:0.2.7
+FROM          quay.io/mozilla/b2g-build:0.2.8
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
 ENV PYTHONPATH /tools/tools/lib/python:$PYTHONPATH
