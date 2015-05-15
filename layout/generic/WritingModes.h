@@ -30,6 +30,10 @@
 
 namespace mozilla {
 
+namespace widget {
+struct IMENotification;
+} // namespace widget
+
 // Physical axis constants.
 enum PhysicalAxis {
   eAxisVertical      = 0x0,
@@ -475,6 +479,10 @@ private:
   friend class LogicalRect;
 
   friend struct IPC::ParamTraits<WritingMode>;
+  // IMENotification cannot store this class directly since this has some
+  // constructors.  Therefore, it stores mWritingMode and recreate the
+  // instance from it.
+  friend struct widget::IMENotification;
 
   /**
    * Return a WritingMode representing an unknown value.
