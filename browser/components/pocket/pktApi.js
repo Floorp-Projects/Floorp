@@ -604,28 +604,21 @@ var pktApi = (function() {
      * Helper function to get current signup AB group the user is in
      */
     function getSignupAB() {
-        if (!getSetting('signupAB'))
+    	var setting = getSetting('signupAB');
+        if (!setting || setting.contains('hero'))
         {
             var rand = (Math.floor(Math.random()*100+1));
-            if (rand > 95)
+            if (rand > 90)
             {
-                setSetting('signupAB','storyboard_nlm');
-            }
-            else if (rand > 90)
-            {
-                setSetting('signupAB','hero_nlm');
-            }
-            else if (rand > 45)
-            {
-                setSetting('signupAB','storyboard_lm');
+            	setting = 'storyboard_nlm';
             }
             else
             {
-                setSetting('signupAB','hero_lm');
+            	setting = 'storyboard_lm';
             }
-
+            setSetting('signupAB',setting);
         }
-        return getSetting('signupAB');
+        return setting;
     }
 
     /**
