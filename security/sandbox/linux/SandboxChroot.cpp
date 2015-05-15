@@ -78,8 +78,19 @@ OpenDeletedDirectory()
   // the program (nor need it to be cleaned up if something goes wrong
   // here, because mkdtemp will choose a fresh name), so /tmp as
   // specified by FHS is adequate.
-  char path[] = "/tmp/mozsandbox.XXXXXX";
-  if (!mkdtemp(path)) {
+  //
+  // However, this needs a filesystem where a deleted directory can
+  // still be used, and /tmp is sometimes not that; e.g., aufs(5),
+  // often used for containers, will cause the chroot() to fail with
+  // ESTALE (bug 1162965).  So this uses /dev/shm if possible instead.
+  char tmpPath[] = "/tmp/mozsandbox.XXXXXX";
+  char shmPath[] = "/dev/shm/mozsandbox.XXXXXX";
+  char* path;
+  if (mkdtemp(shmPath)) {
+    path = shmPath;
+  } else if (mkdtemp(tmpPath)) {
+    path = tmpPath;
+  } else {
     SANDBOX_LOG_ERROR("mkdtemp: %s", strerror(errno));
     return -1;
   }

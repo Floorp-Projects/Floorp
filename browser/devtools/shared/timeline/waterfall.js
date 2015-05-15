@@ -22,7 +22,7 @@ loader.lazyRequireGetter(this, "EventEmitter",
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-const WATERFALL_SIDEBAR_WIDTH = 150; // px
+const WATERFALL_SIDEBAR_WIDTH = 200; // px
 
 const WATERFALL_IMMEDIATE_DRAW_MARKERS_COUNT = 30;
 const WATERFALL_FLUSH_OUTSTANDING_MARKERS_DELAY = 75; // ms

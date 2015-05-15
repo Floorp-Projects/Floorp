@@ -25,12 +25,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525444
 
 /** Test for Bug 525444 **/
 
-synthAddVoice('TestSpeechServiceNoAudio', 'Bob Marley', 'en-JM', true);
-synthAddVoice('TestSpeechServiceNoAudio', 'Amy Winehouse', 'en-GB', true);
-synthAddVoice('TestSpeechServiceNoAudio', 'Leonard Cohen', 'en-CA', true);
-synthAddVoice('TestSpeechServiceNoAudio', 'Celine Dion', 'fr-CA', true);
-synthAddVoice('TestSpeechServiceNoAudio', 'Julieta Venegas', 'es-MX', true);
-
 ok(SpeechSynthesis, "SpeechSynthesis exists in global scope");
 ok(SpeechSynthesisVoice, "SpeechSynthesisVoice exists in global scope");
 ok(SpeechSynthesisEvent, "SpeechSynthesisEvent exists in global scope");
@@ -74,8 +68,6 @@ ok(voices1.length == voices2.length, "Voice count matches");
 for (var i in voices1) {
   ok(voices1[i] == voices2[i], "Voice instance matches");
 }
-
-synthCleanup();
 
 SimpleTest.finish();
 </script>

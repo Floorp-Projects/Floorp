@@ -79,6 +79,7 @@ public:
     return mUpdatePreference.WantDuringDeactive();
   }
   nsIWidget* GetWidget() const { return mWidget; }
+  nsPresContext* GetPresContext() const;
   nsresult GetSelectionAndRoot(nsISelection** aSelection,
                                nsIContent** aRoot) const;
 
