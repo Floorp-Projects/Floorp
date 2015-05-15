@@ -20,9 +20,24 @@ EncodedBufferCache::AppendBuffer(nsTArray<uint8_t> & aBuf)
   mEncodedBuffers.AppendElement()->SwapElements(aBuf);
 
   if (!mTempFileEnabled && mDataSize > mMaxMemoryStorage) {
-    nsresult rv = NS_OpenAnonymousTemporaryFile(&mFD);
+    nsresult rv;
+    PRFileDesc* tempFD = nullptr;
+    {
+      // Release the mMutex because there is a sync dispatch to mainthread in
+      // NS_OpenAnonymousTemporaryFile.
+      MutexAutoUnlock unlock(mMutex);
+      rv = NS_OpenAnonymousTemporaryFile(&tempFD);
+    }
     if (!NS_FAILED(rv)) {
-      mTempFileEnabled = true;
+      // Check the mDataSize again since we release the mMutex before.
+      if (mDataSize > mMaxMemoryStorage) {
+        mFD = tempFD;
+        mTempFileEnabled = true;
+      } else {
+        // Close the tempFD because the data had been taken during the
+        // MutexAutoUnlock.
+        PR_Close(tempFD);
+      }
     }
   }
 
