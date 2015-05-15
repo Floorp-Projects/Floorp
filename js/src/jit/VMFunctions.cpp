@@ -552,7 +552,7 @@ CreateThis(JSContext* cx, HandleObject callee, MutableHandleValue rval)
 
     if (callee->is<JSFunction>()) {
         JSFunction* fun = &callee->as<JSFunction>();
-        if (fun->isInterpretedConstructor()) {
+        if (fun->isInterpreted() && fun->isConstructor()) {
             JSScript* script = fun->getOrCreateScript(cx);
             if (!script || !script->ensureHasTypes(cx))
                 return false;

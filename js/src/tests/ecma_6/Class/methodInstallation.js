@@ -60,12 +60,14 @@ for (let a of [testClass,
     assertEq(aGetDesc.configurable, true);
     assertEq(aGetDesc.enumerable, true);
     aGetDesc.get();
+    assertThrowsInstanceOf(() => new aGetDesc.get, TypeError);
     assertEq(getterCalled, true);
 
     var aSetDesc = Object.getOwnPropertyDescriptor(a.prototype, \"setter\");
     assertEq(aSetDesc.configurable, true);
     assertEq(aSetDesc.enumerable, true);
     aSetDesc.set();
+    assertThrowsInstanceOf(() => new aSetDesc.set, TypeError);
     assertEq(setterCalled, true);
     assertDeepEq(aSetDesc, Object.getOwnPropertyDescriptor(a.prototype, \"setter\"));
 
@@ -75,6 +77,7 @@ for (let a of [testClass,
     assertEq(aStaticMethDesc.enumerable, true);
     assertEq(aStaticMethDesc.writable, true);
     aStaticMethDesc.value();
+    assertThrowsInstanceOf(() => new aStaticMethDesc.value, TypeError);
     assertEq(staticMethodCalled, true);
 
     assertEq(Object.getOwnPropertyDescriptor(new a(), \"staticGetter\"), undefined);
@@ -82,6 +85,7 @@ for (let a of [testClass,
     assertEq(aStaticGetDesc.configurable, true);
     assertEq(aStaticGetDesc.enumerable, true);
     aStaticGetDesc.get();
+    assertThrowsInstanceOf(() => new aStaticGetDesc.get, TypeError);
     assertEq(staticGetterCalled, true);
 
     assertEq(Object.getOwnPropertyDescriptor(new a(), \"staticSetter\"), undefined);
@@ -89,6 +93,7 @@ for (let a of [testClass,
     assertEq(aStaticSetDesc.configurable, true);
     assertEq(aStaticSetDesc.enumerable, true);
     aStaticSetDesc.set();
+    assertThrowsInstanceOf(() => new aStaticSetDesc.set, TypeError);
     assertEq(staticSetterCalled, true);
 
     assertEq([...new a()].join(), "cow,pig");

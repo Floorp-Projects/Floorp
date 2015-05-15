@@ -1240,7 +1240,7 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, Hand
         flags = JSFunction::INTERPRETED_SETTER;
         break;
       default:
-        flags = JSFunction::INTERPRETED;
+        flags = JSFunction::INTERPRETED_NORMAL;
         break;
     }
 

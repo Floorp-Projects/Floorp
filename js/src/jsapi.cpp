@@ -3420,7 +3420,7 @@ JS_IsNativeFunction(JSObject* funobj, JSNative call)
 extern JS_PUBLIC_API(bool)
 JS_IsConstructor(JSFunction* fun)
 {
-    return fun->isNativeConstructor() || fun->isInterpretedConstructor();
+    return fun->isConstructor();
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4061,7 +4061,7 @@ CompileFunction(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
             return false;
     }
 
-    fun.set(NewScriptedFunction(cx, 0, JSFunction::INTERPRETED, funAtom,
+    fun.set(NewScriptedFunction(cx, 0, JSFunction::INTERPRETED_NORMAL, funAtom,
                                 gc::AllocKind::FUNCTION, TenuredObject,
                                 enclosingDynamicScope));
     if (!fun)
