@@ -2387,51 +2387,14 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
     MOZ_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
     MOZ_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
 
-    // Emit code for the following test:
-    //
-    // bool isInterpretedConstructor() const {
-    //     return isInterpreted() && !isFunctionPrototype() && !isArrow() &&
-    //         (!isSelfHostedBuiltin() || isSelfHostedConstructor());
-    // }
-
     // First, ensure it's a scripted function.
     load32(Address(fun, JSFunction::offsetOfNargs()), scratch);
     int32_t bits = IMM32_16ADJ(JSFunction::INTERPRETED);
     branchTest32(Assembler::Zero, scratch, Imm32(bits), label);
 
-    // Common case: if IS_FUN_PROTO, ARROW and SELF_HOSTED are not set,
-    // the function is an interpreted constructor and we're done.
-    Label done, moreChecks;
-
-    // Start with the easy ones. Check IS_FUN_PROTO and SELF_HOSTED.
-    bits = IMM32_16ADJ( (JSFunction::IS_FUN_PROTO | JSFunction::SELF_HOSTED) );
-    branchTest32(Assembler::NonZero, scratch, Imm32(bits), &moreChecks);
-
-    // Check !isArrow()
-    bits = IMM32_16ADJ(JSFunction::FUNCTION_KIND_MASK);
-    and32(Imm32(bits), scratch);
-
-    bits = IMM32_16ADJ(JSFunction::ARROW_KIND);
-    branch32(Assembler::NotEqual, scratch, Imm32(bits), &done);
-
-    // Reload the smashed flags and nargs for more checks.
-    load32(Address(fun, JSFunction::offsetOfNargs()), scratch);
-
-    {
-        bind(&moreChecks);
-        // The callee is either Function.prototype, an arrow function or
-        // self-hosted. None of these are constructible, except self-hosted
-        // constructors, so branch to |label| if SELF_HOSTED_CTOR is not set.
-        bits = IMM32_16ADJ(JSFunction::SELF_HOSTED_CTOR);
-        branchTest32(Assembler::Zero, scratch, Imm32(bits), label);
-
-#ifdef DEBUG
-        bits = IMM32_16ADJ(JSFunction::IS_FUN_PROTO);
-        branchTest32(Assembler::Zero, scratch, Imm32(bits), &done);
-        assumeUnreachable("Function.prototype should not have the SELF_HOSTED_CTOR flag");
-#endif
-    }
-    bind(&done);
+    // Check if the CONSTRUCTOR bit is set.
+    bits = IMM32_16ADJ(JSFunction::CONSTRUCTOR);
+    branchTest32(Assembler::Zero, scratch, Imm32(bits), label);
 }
 
 void
