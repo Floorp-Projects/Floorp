@@ -991,7 +991,7 @@ pref("gfx.canvas.max-size-for-skia-gl", -1);
 pref("gfx.gralloc.fence-with-readpixels", true);
 
 // The url of the page used to display network error details.
-pref("b2g.neterror.url", "app://system.gaiamobile.org/net_error.html");
+pref("b2g.neterror.url", "net_error.html");
 
 // The origin used for the shared themes uri space.
 pref("b2g.theme.origin", "app://theme.gaiamobile.org");
