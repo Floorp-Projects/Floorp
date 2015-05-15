@@ -164,6 +164,7 @@ protected:
   static bool IsComposingWindow(nsWindow* aWindow);
 
   static bool IsJapanist2003Active();
+  static bool IsGoogleJapaneseInputActive();
 
   static bool ShouldDrawCompositionStringOurselves();
   static bool IsVerticalWritingSupported();

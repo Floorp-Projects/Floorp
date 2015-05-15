@@ -206,6 +206,15 @@ nsIMM32Handler::IsJapanist2003Active()
 }
 
 /* static */ bool
+nsIMM32Handler::IsGoogleJapaneseInputActive()
+{
+  // NOTE: Even on Windows for en-US, the name of Google Japanese Input is
+  //       written in Japanese.
+  return sIMEName.Equals(L"Google \x65E5\x672C\x8A9E\x5165\x529B "
+                         L"IMM32 \x30E2\x30B8\x30E5\x30FC\x30EB");
+}
+
+/* static */ bool
 nsIMM32Handler::ShouldDrawCompositionStringOurselves()
 {
   // If current IME has special UI or its composition window should not
@@ -221,6 +230,11 @@ nsIMM32Handler::IsVerticalWritingSupported()
   // Even if IME claims that they support vertical writing mode but it may not
   // support vertical writing mode for its candidate window.
   if (sAssumeVerticalWritingModeNotSupported) {
+    return false;
+  }
+  // Google Japanese Input doesn't support vertical writing mode.  We should
+  // return false if it's active IME.
+  if (IsGoogleJapaneseInputActive()) {
     return false;
   }
   return !!(sIMEUIProperty & (UI_CAP_2700 | UI_CAP_ROT90 | UI_CAP_ROTANY));
@@ -248,6 +262,15 @@ nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
                    (PWSTR)&sCodePage, sizeof(sCodePage) / sizeof(WCHAR));
   sIMEProperty = ::ImmGetProperty(aKeyboardLayout, IGP_PROPERTY);
   sIMEUIProperty = ::ImmGetProperty(aKeyboardLayout, IGP_UI);
+
+  // If active IME is a TIP of TSF, we cannot retrieve the name with IMM32 API.
+  // For hacking some bugs of some TIP, we should set an IME name from the
+  // pref.
+  if (sCodePage == 932 && sIMEName.IsEmpty()) {
+    sIMEName =
+      Preferences::GetString("intl.imm.japanese.assume_active_tip_name_as");
+  }
+
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x (\"%s\"), sCodePage=%lu, "
      "sIMEProperty=%s, sIMEUIProperty=%s",
