@@ -110,3 +110,44 @@ f.os2_typolinegap = lineheight - (f.os2_typoascent - f.os2_typodescent)
 f.hhea_linegap = lineheight - 800
 
 f.generate("markA-lineheight" + str(lineheight) + ".ttf")
+
+# Fonts with known winHeight and typoLineHeight such that winHeight is much
+# larger than typoLineHeight.
+f = fontforge.font()
+typoLineHeight = 2700
+winHeight = 6000
+n = "MarkA-lineheight" + str(winHeight)
+n = n + "-typolineheight" + str(typoLineHeight)
+f.fontname = n
+f.familyname = n
+f.fullname = n
+f.copyright = "Copyright (c) 2008-2015 Mozilla Corporation"
+
+g = f.createChar(ord(" "), "space")
+g.width = 1000
+g = f.createChar(ord("A"), "A")
+g.importOutlines("mark-glyph.svg")
+g.width = 1500
+
+f.os2_typoascent_add = False
+f.os2_typoascent = 800
+f.os2_typodescent_add = False
+f.os2_typodescent = -200
+f.os2_typolinegap = typoLineHeight - (f.os2_typoascent - f.os2_typodescent)
+
+f.hhea_ascent = winHeight / 2
+f.hhea_ascent_add = False
+f.hhea_descent = winHeight / 2
+f.hhea_descent_add = False
+f.hhea_linegap = 0
+
+f.os2_winascent = winHeight / 2
+f.os2_winascent_add = False
+f.os2_windescent = winHeight / 2
+f.os2_windescent_add = False
+
+f.os2_use_typo_metrics = True
+f.generate("markA-lineheight" + str(winHeight) +
+           "-typolineheight" + str(typoLineHeight) + ".otf")
+f.generate("markA-lineheight" + str(winHeight) +
+           "-typolineheight" + str(typoLineHeight) + ".ttf")
