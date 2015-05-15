@@ -36,7 +36,7 @@ WheelScrollAnimation::Update(TimeStamp aTime, nsPoint aDelta, const nsSize& aCur
 bool
 WheelScrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta)
 {
-  TimeStamp now = AsyncPanZoomController::GetFrameTime();
+  TimeStamp now = mApzc.GetFrameTime();
   CSSToParentLayerScale2D zoom = aFrameMetrics.GetZoom();
 
   // If the animation is finished, make sure the final position is correct by
