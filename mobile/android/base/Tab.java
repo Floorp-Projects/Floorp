@@ -23,6 +23,7 @@ import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.RemoteFavicon;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.Layer;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -146,6 +147,7 @@ public class Tab {
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.CLOSED);
     }
 
+    @RobocopTarget
     public int getId() {
         return mId;
     }
