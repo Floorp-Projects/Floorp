@@ -41,6 +41,11 @@ RematerializedFrame::RematerializedFrame(JSContext* cx, uint8_t* top, unsigned n
     numActualArgs_(numActualArgs),
     script_(iter.script())
 {
+    if (iter.isFunctionFrame())
+        callee_ = iter.callee(fallback);
+    else
+        callee_ = nullptr;
+
     CopyValueToRematerializedFrame op(slots_);
     iter.readFrameArgsAndLocals(cx, op, op, &scopeChain_, &hasCallObj_, &returnValue_,
                                 &argsObj_, &thisValue_, ReadFrame_Actuals,
@@ -149,6 +154,8 @@ RematerializedFrame::mark(JSTracer* trc)
 {
     TraceRoot(trc, &script_, "remat ion frame script");
     TraceRoot(trc, &scopeChain_, "remat ion frame scope chain");
+    if (callee_)
+        TraceRoot(trc, &callee_, "remat ion frame callee");
     TraceRoot(trc, &returnValue_, "remat ion frame return value");
     TraceRoot(trc, &thisValue_, "remat ion frame this");
     TraceRootRange(trc, numActualArgs_ + script_->nfixed(), slots_, "remat ion frame stack");
