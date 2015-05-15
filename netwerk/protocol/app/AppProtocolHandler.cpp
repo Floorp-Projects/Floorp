@@ -14,6 +14,7 @@
 #include "nsILoadInfo.h"
 #include "nsXULAppAPI.h"
 #include "nsPrincipal.h"
+#include "nsContentSecurityManager.h"
 
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
@@ -99,6 +100,15 @@ NS_IMETHODIMP DummyChannel::Open(nsIInputStream**)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+DummyChannel::Open2(nsIInputStream** aStream)
+{
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Open(aStream);
+}
+
 NS_IMETHODIMP DummyChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports* aContext)
 {
   mListener = aListener;
@@ -114,6 +124,15 @@ NS_IMETHODIMP DummyChannel::AsyncOpen(nsIStreamListener* aListener, nsISupports*
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+DummyChannel::AsyncOpen2(nsIStreamListener* aListener)
+{
+  nsCOMPtr<nsIStreamListener> listener = aListener;
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return AsyncOpen(listener, nullptr);
 }
 
 // nsIJarChannel, needed for XHR to turn NS_ERROR_FILE_NOT_FOUND into
