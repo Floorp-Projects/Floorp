@@ -427,13 +427,16 @@ let Activities = {
         break;
 
       case "Activities:Register":
-        let self = this;
         this.db.add(msg,
           function onSuccess(aEvent) {
+            debug("Activities:Register:OK");
+            Services.obs.notifyObservers(null, "new-activity-registered-success", null);
             mm.sendAsyncMessage("Activities:Register:OK", null);
           },
           function onError(aEvent) {
             msg.error = "REGISTER_ERROR";
+            debug("Activities:Register:KO");
+            Services.obs.notifyObservers(null, "new-activity-registered-failure", null);
             mm.sendAsyncMessage("Activities:Register:KO", msg);
           });
         break;
