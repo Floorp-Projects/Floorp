@@ -886,14 +886,31 @@ JS::FormatStackDump(JSContext* cx, char* buf, bool showArgs, bool showLocals, bo
     return buf;
 }
 
-struct DumpHeapTracer : public JS::CallbackTracer
+struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
 {
     FILE*  output;
 
-    DumpHeapTracer(FILE* fp, JSRuntime* rt, JSTraceCallback callback,
-                   WeakMapTraceKind weakTraceKind)
-      : JS::CallbackTracer(rt, callback, weakTraceKind), output(fp)
+    DumpHeapTracer(FILE* fp, JSRuntime* rt, JSTraceCallback callback)
+      : JS::CallbackTracer(rt, callback, DoNotTraceWeakMaps),
+        js::WeakMapTracer(rt, DumpWeakMap), output(fp)
     {}
+
+private:
+    static void
+    DumpWeakMap(js::WeakMapTracer* trc, JSObject* map,
+                JS::GCCellPtr key, JS::GCCellPtr value)
+    {
+        DumpHeapTracer* tracer =
+            static_cast<DumpHeapTracer*>(trc);
+
+        JSObject* kdelegate = nullptr;
+        if (key.isObject()) {
+            kdelegate = js::GetWeakmapKeyDelegate(key.toObject());
+        }
+
+        fprintf(tracer->output, "WeakMapEntry map=%p key=%p keyDelegate=%p value=%p\n",
+                map, key.asCell(), kdelegate, value.asCell());
+    }
 };
 
 static char
@@ -976,8 +993,12 @@ js::DumpHeapComplete(JSRuntime* rt, FILE* fp, js::DumpHeapNurseryBehaviour nurse
     if (nurseryBehaviour == js::CollectNurseryBeforeDump)
         rt->gc.evictNursery(JS::gcreason::API);
 
-    DumpHeapTracer dtrc(fp, rt, DumpHeapVisitRoot, TraceWeakMapKeysValues);
+    DumpHeapTracer dtrc(fp, rt, DumpHeapVisitRoot);
+    fprintf(dtrc.output, "# Roots.\n");
     TraceRuntime(&dtrc);
+
+    fprintf(dtrc.output, "# Weak maps.\n");
+    WeakMapBase::traceAllMappings(&dtrc);
 
     fprintf(dtrc.output, "==========\n");
 
