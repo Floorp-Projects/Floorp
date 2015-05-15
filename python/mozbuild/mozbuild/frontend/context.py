@@ -664,7 +664,7 @@ VARIABLES = {
         populated by calling add_android_eclipse{_library}_project().
         """, 'export'),
 
-    'SOURCES': (StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List}), list,
+    'SOURCES': (ContextDerivedTypedListWithItems(SourcePath, StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List})), list,
         """Source code files.
 
         This variable contains a list of source code files to compile.
@@ -683,7 +683,7 @@ VARIABLES = {
 
         """, 'None'),
 
-    'UNIFIED_SOURCES': (StrictOrderingOnAppendList, list,
+    'UNIFIED_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Source code files that can be compiled together.
 
         This variable contains a list of source code files to compile,
@@ -916,7 +916,7 @@ VARIABLES = {
         files by the compiler.
         """, None),
 
-    'HOST_SOURCES': (StrictOrderingOnAppendList, list,
+    'HOST_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Source code files to compile with the host compiler.
 
         This variable contains a list of source code files to compile.

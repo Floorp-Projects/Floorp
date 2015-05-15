@@ -720,10 +720,10 @@ class TreeMetadataEmitter(LoggingMixin):
             context_srcs = context.get(symbol, [])
             for f in context_srcs:
                 if symbol.startswith('GENERATED_'):
-                    full_path = mozpath.join(context.objdir, f)
+                    full_path = mozpath.normpath(
+                        mozpath.join(context.objdir, f))
                 else:
-                    full_path = mozpath.join(context.srcdir, f)
-                full_path = mozpath.normpath(full_path)
+                    full_path = f.full_path
                 srcs.append(full_path)
                 if symbol == 'SOURCES':
                     flags = context_srcs[f]

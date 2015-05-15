@@ -12,6 +12,7 @@ import mozpack.path as mozpath
 from mozpack.files import FileFinder
 from .sandbox import alphabetical_sorted
 from .context import (
+    SourcePath,
     TemplateContext,
     VARIABLES,
 )
@@ -156,13 +157,20 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
             # The context expects an unicode string.
             context['LIBRARY_NAME'] = name.decode('utf-8')
             # gyp files contain headers and asm sources in sources lists.
-            sources = set(mozpath.normpath(mozpath.join(context.srcdir, f))
-                for f in spec.get('sources', [])
-                if mozpath.splitext(f)[-1] != '.h')
-            asm_sources = set(f for f in sources if f.endswith('.S'))
+            sources = []
+            unified_sources = []
+            extensions = set()
+            for f in spec.get('sources', []):
+                ext = mozpath.splitext(f)[-1]
+                extensions.add(ext)
+                s = SourcePath(context, f)
+                if ext == '.h':
+                    continue
+                if ext != '.S' and s not in non_unified_sources:
+                    unified_sources.append(s)
+                else:
+                    sources.append(s)
 
-            unified_sources = sources - non_unified_sources - asm_sources
-            sources -= unified_sources
             # The context expects alphabetical order when adding sources
             context['SOURCES'] = alphabetical_sorted(sources)
             context['UNIFIED_SOURCES'] = alphabetical_sorted(unified_sources)
@@ -200,10 +208,6 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                     '.cc': 'CXXFLAGS',
                     '.m': 'CMFLAGS',
                     '.mm': 'CMMFLAGS',
-                }
-                extensions = {
-                    mozpath.splitext(f)[-1]
-                    for f in chain(sources, unified_sources)
                 }
                 variables = (
                     suffix_map[e]

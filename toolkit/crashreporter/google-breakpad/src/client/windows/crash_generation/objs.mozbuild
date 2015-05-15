@@ -13,5 +13,5 @@ lobjs_crash_generation = [
 
 subdir = 'toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation'
 objs_crash_generation = [
-    '%s/%s/%s' % (TOPSRCDIR, subdir, s) for s in lobjs_crash_generation
+    '/%s/%s' % (subdir, s) for s in lobjs_crash_generation
 ]
