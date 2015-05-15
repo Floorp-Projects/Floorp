@@ -2165,18 +2165,15 @@ CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
     mJSZoneParticipant = aJSRuntime->ZoneParticipant();
   }
 
-  uint32_t flags = 0;
-  if (!flags && mListener) {
-    flags = nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO;
+  if (mListener) {
+    mFlags |= nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO;
     bool all = false;
     mListener->GetWantAllTraces(&all);
     if (all) {
-      flags |= nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
+      mFlags |= nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
       mWantAllTraces = true; // for nsCycleCollectionNoteRootCallback
     }
   }
-
-  mFlags |= flags;
 
   mMergeZones = mMergeZones && MOZ_LIKELY(!WantAllTraces());
 
