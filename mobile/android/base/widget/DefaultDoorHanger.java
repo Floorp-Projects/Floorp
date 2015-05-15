@@ -6,7 +6,6 @@
 package org.mozilla.gecko.widget;
 
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.widget.Button;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.prompts.PromptInput;
@@ -112,11 +111,8 @@ public class DefaultDoorHanger extends DoorHanger {
     }
 
     @Override
-    protected Button createButtonInstance(final String text, final int id) {
-        final Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
-        button.setText(text);
-
-        button.setOnClickListener(new Button.OnClickListener() {
+    protected OnClickListener makeOnButtonClickListener(final int id) {
+        return new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final JSONObject response = new JSONObject();
@@ -149,14 +145,13 @@ public class DefaultDoorHanger extends DoorHanger {
                                 response.put("inputs", inputs);
                             }
                     }
-                    mOnButtonClickListener.onButtonClick(response, DefaultDoorHanger.this);
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "Error creating onClick response", e);
                 }
-            }
-        });
 
-        return button;
+                mOnButtonClickListener.onButtonClick(response, DefaultDoorHanger.this);
+            }
+        };
     }
 
     private void styleInput(PromptInput input, View view) {

@@ -123,8 +123,8 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
     root.attachTo(this.container);
 
     // When platform data isn't shown, hide the cateogry labels, since they're
-    // only available for C++ frames.
-    root.toggleCategories(options.contentOnly);
+    // only available for C++ frames. Pass *false* to make them invisible.
+    root.toggleCategories(!options.contentOnly);
 
     // Return the CallView for tests
     return root;
