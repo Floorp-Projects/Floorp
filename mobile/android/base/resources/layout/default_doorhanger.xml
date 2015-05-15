@@ -5,10 +5,6 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <LinearLayout android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:orientation="vertical">
-
     <TextView android:id="@+id/doorhanger_message"
               android:focusable="true"
               android:layout_width="match_parent"
@@ -30,7 +26,5 @@
               android:checked="true"
               android:textColor="@color/placeholder_active_grey"
               android:visibility="gone"/>
-
-    </LinearLayout>
 
 </merge>
