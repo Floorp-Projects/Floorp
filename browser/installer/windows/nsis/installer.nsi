@@ -201,6 +201,7 @@ Section "-InstallStartCleanup"
   SetOutPath "$INSTDIR"
   ${StartInstallLog} "${BrandFullName}" "${AB_CD}" "${AppVersion}" "${GREVersion}"
 
+  StrCpy $R9 "true"
   StrCpy $PreventRebootRequired "false"
   ${GetParameters} $R8
   ${GetOptions} "$R8" "/INI=" $R7
