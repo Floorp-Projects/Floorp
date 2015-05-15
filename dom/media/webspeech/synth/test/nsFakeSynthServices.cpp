@@ -64,7 +64,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(FakeSynthCallback, nsISpeechTaskCallback)
 
-  NS_IMETHOD OnPause()
+  NS_IMETHOD OnPause() override
   {
     if (mTask) {
       mTask->DispatchPause(1.5, 1);
@@ -73,7 +73,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD OnResume()
+  NS_IMETHOD OnResume() override
   {
     if (mTask) {
       mTask->DispatchResume(1.5, 1);
@@ -82,7 +82,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD OnCancel()
+  NS_IMETHOD OnCancel() override
   {
     if (mTask) {
       mTask->DispatchEnd(1.5, 1);
