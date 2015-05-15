@@ -7604,9 +7604,7 @@ ParseFunction(ModuleCompiler& m, ParseNode** fnOut)
     if (!funpc.init(tokenStream))
         return false;
 
-    if (!m.parser().functionArgsAndBodyGeneric(InAllowed, YieldIsName, fn, fun, Normal,
-                                               Statement))
-    {
+    if (!m.parser().functionArgsAndBodyGeneric(InAllowed, YieldIsName, fn, fun, Statement)) {
         if (tokenStream.hadError() || directives == newDirectives)
             return false;
 
