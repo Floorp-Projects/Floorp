@@ -21,7 +21,9 @@ function test() {
   treeRoot.autoExpandDepth = 0;
   treeRoot.attachTo(container);
 
-  let $$fun = node => container.querySelectorAll(".call-tree-cell[type=function] > " + node);
+  let $$ = node => container.querySelectorAll(node);
+  let $fun = (node, ancestor) => (ancestor || container).querySelector(".call-tree-cell[type=function] > " + node);
+  let $$fun = (node, ancestor) => (ancestor || container).querySelectorAll(".call-tree-cell[type=function] > " + node);
   let $$dur = i => container.querySelectorAll(".call-tree-cell[type=duration]")[i];
   let $$perc = i => container.querySelectorAll(".call-tree-cell[type=percentage]")[i];
   let $$sampl = i => container.querySelectorAll(".call-tree-cell[type=samples]")[i];
@@ -39,13 +41,13 @@ function test() {
     "The root's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[0].getAttribute("value"), "(root)",
     "The root's function cell displays the correct name.");
-  is($$fun(".call-tree-url")[0].getAttribute("value"), "",
-    "The root's function cell displays the correct url.");
-  is($$fun(".call-tree-line")[0].getAttribute("value"), "",
-    "The root's function cell displays the correct line.");
-  is($$fun(".call-tree-host")[0].getAttribute("value"), "",
+  is($$fun(".call-tree-url")[0], null,
+    "The root's function cell displays no url.");
+  is($$fun(".call-tree-line")[0], null,
+    "The root's function cell displays no line.");
+  is($$fun(".call-tree-host")[0], null,
     "The root's function cell displays the correct host.");
-  is($$fun(".call-tree-category")[0].getAttribute("value"), "",
+  is($$fun(".call-tree-category")[0], null,
     "The root's function cell displays the correct category.");
 
   treeRoot.expand();
@@ -63,17 +65,17 @@ function test() {
     "The .A node's percentage cell displays the correct value.");
   is($$sampl(1).getAttribute("value"), "4",
     "The .A node's samples cell displays the correct value.");
-  is($$fun(".call-tree-name")[1].getAttribute("value"), "A",
+  is($fun(".call-tree-name", $$(".call-tree-item")[1]).getAttribute("value"), "A",
     "The .A node's function cell displays the correct name.");
-  is($$fun(".call-tree-url")[1].getAttribute("value"), "baz",
+  is($fun(".call-tree-url", $$(".call-tree-item")[1]).getAttribute("value"), "baz",
     "The .A node's function cell displays the correct url.");
-  ok($$fun(".call-tree-url")[1].getAttribute("tooltiptext").includes("http://foo/bar/baz"),
+  ok($fun(".call-tree-url", $$(".call-tree-item")[1]).getAttribute("tooltiptext").includes("http://foo/bar/baz"),
     "The .A node's function cell displays the correct url tooltiptext.");
-  is($$fun(".call-tree-line")[1].getAttribute("value"), ":12",
+  is($fun(".call-tree-line", $$(".call-tree-item")[1]).getAttribute("value"), ":12",
     "The .A node's function cell displays the correct line.");
-  is($$fun(".call-tree-host")[1].getAttribute("value"), "foo",
+  is($fun(".call-tree-host", $$(".call-tree-item")[1]).getAttribute("value"), "foo",
     "The .A node's function cell displays the correct host.");
-  is($$fun(".call-tree-category")[1].getAttribute("value"), "Gecko",
+  is($fun(".call-tree-category", $$(".call-tree-item")[1]).getAttribute("value"), "Gecko",
     "The .A node's function cell displays the correct category.");
 
   let A = treeRoot.getChild();
@@ -92,17 +94,17 @@ function test() {
     "The .A.B node's percentage cell displays the correct value.");
   is($$sampl(2).getAttribute("value"), "3",
     "The .A.B node's samples cell displays the correct value.");
-  is($$fun(".call-tree-name")[2].getAttribute("value"), "B",
+  is($fun(".call-tree-name", $$(".call-tree-item")[2]).getAttribute("value"), "B",
     "The .A.B node's function cell displays the correct name.");
-  is($$fun(".call-tree-url")[2].getAttribute("value"), "baz",
+  is($fun(".call-tree-url", $$(".call-tree-item")[2]).getAttribute("value"), "baz",
     "The .A.B node's function cell displays the correct url.");
-  ok($$fun(".call-tree-url")[2].getAttribute("tooltiptext").includes("http://foo/bar/baz"),
+  ok($fun(".call-tree-url", $$(".call-tree-item")[2]).getAttribute("tooltiptext").includes("http://foo/bar/baz"),
     "The .A.B node's function cell displays the correct url tooltiptext.");
-  is($$fun(".call-tree-line")[2].getAttribute("value"), ":34",
+  is($fun(".call-tree-line", $$(".call-tree-item")[2]).getAttribute("value"), ":34",
     "The .A.B node's function cell displays the correct line.");
-  is($$fun(".call-tree-host")[2].getAttribute("value"), "foo",
+  is($fun(".call-tree-host", $$(".call-tree-item")[2]).getAttribute("value"), "foo",
     "The .A.B node's function cell displays the correct host.");
-  is($$fun(".call-tree-category")[2].getAttribute("value"), "Styles",
+  is($fun(".call-tree-category", $$(".call-tree-item")[2]).getAttribute("value"), "Styles",
     "The .A.B node's function cell displays the correct category.");
 
   is($$dur(3).getAttribute("value"), "7 ms",
@@ -111,17 +113,17 @@ function test() {
     "The .A.E node's percentage cell displays the correct value.");
   is($$sampl(3).getAttribute("value"), "1",
     "The .A.E node's samples cell displays the correct value.");
-  is($$fun(".call-tree-name")[3].getAttribute("value"), "E",
+  is($fun(".call-tree-name", $$(".call-tree-item")[3]).getAttribute("value"), "E",
     "The .A.E node's function cell displays the correct name.");
-  is($$fun(".call-tree-url")[3].getAttribute("value"), "baz",
+  is($fun(".call-tree-url", $$(".call-tree-item")[3]).getAttribute("value"), "baz",
     "The .A.E node's function cell displays the correct url.");
-  ok($$fun(".call-tree-url")[3].getAttribute("tooltiptext").includes("http://foo/bar/baz"),
+  ok($fun(".call-tree-url", $$(".call-tree-item")[3]).getAttribute("tooltiptext").includes("http://foo/bar/baz"),
     "The .A.E node's function cell displays the correct url tooltiptext.");
-  is($$fun(".call-tree-line")[3].getAttribute("value"), ":90",
+  is($fun(".call-tree-line", $$(".call-tree-item")[3]).getAttribute("value"), ":90",
     "The .A.E node's function cell displays the correct line.");
-  is($$fun(".call-tree-host")[3].getAttribute("value"), "foo",
+  is($fun(".call-tree-host", $$(".call-tree-item")[3]).getAttribute("value"), "foo",
     "The .A.E node's function cell displays the correct host.");
-  is($$fun(".call-tree-category")[3].getAttribute("value"), "GC",
+  is($fun(".call-tree-category", $$(".call-tree-item")[3]).getAttribute("value"), "GC",
     "The .A.E node's function cell displays the correct category.");
 
   finish();
