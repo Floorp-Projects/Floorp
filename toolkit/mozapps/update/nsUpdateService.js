@@ -2313,6 +2313,8 @@ UpdateService.prototype = {
       Services.prefs.setIntPref(PREF_APP_UPDATE_CERT_ERRORS, errCount);
       maxErrors = getPref("getIntPref", PREF_APP_UPDATE_CERT_MAXERRORS, 5);
     } else {
+      // Send the actual error code to telemetry
+      AUSTLMY.pingCheckExError(this._pingSuffix, update.errorCode);
       update.errorCode = BACKGROUNDCHECK_MULTIPLE_FAILURES;
       errCount = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDERRORS, 0);
       errCount++;
@@ -2336,7 +2338,6 @@ UpdateService.prototype = {
           break;
         default:
           checkCode = AUSTLMY.CHK_GENERAL_ERROR_PROMPT;
-          AUSTLMY.pingCheckExError(this._pingSuffix, update.errorCode);
       }
     } else {
       switch (update.errorCode) {
@@ -2348,7 +2349,6 @@ UpdateService.prototype = {
           break;
         default:
           checkCode = AUSTLMY.CHK_GENERAL_ERROR_SILENT;
-          AUSTLMY.pingCheckExError(this._pingSuffix, update.errorCode);
       }
     }
     AUSTLMY.pingCheckCode(this._pingSuffix, checkCode);
