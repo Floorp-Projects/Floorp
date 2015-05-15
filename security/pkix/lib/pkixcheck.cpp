@@ -125,7 +125,9 @@ CheckSignatureAlgorithm(TrustDomain& trustDomain,
 // 4.1.2.5 Validity
 
 Result
-CheckValidity(Input encodedValidity, Time time)
+CheckValidity(Input encodedValidity, Time time,
+              /*optional out*/ Time* notBeforeOut,
+              /*optional out*/ Time* notAfterOut)
 {
   Reader validity(encodedValidity);
   Time notBefore(Time::uninitialized);
@@ -154,6 +156,12 @@ CheckValidity(Input encodedValidity, Time time)
     return Result::ERROR_EXPIRED_CERTIFICATE;
   }
 
+  if (notBeforeOut) {
+    *notBeforeOut = notBefore;
+  }
+  if (notAfterOut) {
+    *notAfterOut = notAfter;
+  }
   return Success;
 }
 

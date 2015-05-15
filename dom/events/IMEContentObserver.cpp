@@ -32,6 +32,7 @@
 #include "nsPresContext.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
+#include "WritingModes.h"
 
 namespace mozilla {
 
@@ -247,6 +248,12 @@ IMEContentObserver::UnregisterObservers(bool aPostEvent)
   }
 }
 
+nsPresContext*
+IMEContentObserver::GetPresContext() const
+{
+  return mESM ? mESM->GetPresContext() : nullptr;
+}
+
 void
 IMEContentObserver::Destroy()
 {
@@ -331,12 +338,39 @@ public:
 
   NS_IMETHOD Run()
   {
-    if (mDispatcher->GetWidget()) {
-      IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-      notification.mSelectionChangeData.mCausedByComposition =
-         mCausedByComposition;
-      mDispatcher->GetWidget()->NotifyIME(notification);
+    nsCOMPtr<nsIWidget> widget = mDispatcher->GetWidget();
+    nsPresContext* presContext = mDispatcher->GetPresContext();
+    if (!widget || !presContext) {
+      return NS_OK;
     }
+
+    // XXX Cannot we cache some information for reducing the cost to compute
+    //     selection offset and writing mode?
+    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, widget);
+    ContentEventHandler handler(presContext);
+    handler.OnQuerySelectedText(&selection);
+    if (NS_WARN_IF(!selection.mSucceeded)) {
+      return NS_OK;
+    }
+
+    // The widget might be destroyed during querying the content since it
+    // causes flushing layout.
+    widget = mDispatcher->GetWidget();
+    if (!widget || NS_WARN_IF(widget->Destroyed())) {
+      return NS_OK;
+    }
+
+    IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
+    notification.mSelectionChangeData.mOffset =
+      selection.mReply.mOffset;
+    notification.mSelectionChangeData.mLength =
+      selection.mReply.mString.Length();
+    notification.mSelectionChangeData.SetWritingMode(
+                                        selection.GetWritingMode());
+    notification.mSelectionChangeData.mReversed = selection.mReply.mReversed;
+    notification.mSelectionChangeData.mCausedByComposition =
+      mCausedByComposition;
+    widget->NotifyIME(notification);
     return NS_OK;
   }
 

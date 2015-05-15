@@ -108,6 +108,7 @@ class MapObject : public NativeObject {
   private:
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
+    static const JSPropertySpec staticProperties[];
     ValueMap* getData() { return static_cast<ValueMap*>(getPrivate()); }
     static ValueMap & extract(HandleObject o);
     static ValueMap & extract(CallReceiver call);
@@ -153,6 +154,7 @@ class SetObject : public NativeObject {
   private:
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
+    static const JSPropertySpec staticProperties[];
     ValueSet* getData() { return static_cast<ValueSet*>(getPrivate()); }
     static ValueSet & extract(CallReceiver call);
     static void mark(JSTracer* trc, JSObject* obj);

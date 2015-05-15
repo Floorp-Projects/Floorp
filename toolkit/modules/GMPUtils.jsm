@@ -89,8 +89,8 @@ this.GMPPrefs = {
   KEY_CERTS_BRANCH:             "media.gmp-manager.certs.",
   KEY_PROVIDER_ENABLED:         "media.gmp-provider.enabled",
   KEY_LOG_BASE:                 "media.gmp.log.",
-  KEY_LOGGING_LEVEL:            this.KEY_LOG_BASE + "level",
-  KEY_LOGGING_DUMP:             this.KEY_LOG_BASE + "dump",
+  KEY_LOGGING_LEVEL:            "media.gmp.log.level",
+  KEY_LOGGING_DUMP:             "media.gmp.log.dump",
 
   /**
    * Obtains the specified preference in relation to the specified plugin.

@@ -244,7 +244,7 @@ MediaOmxCommonDecoder::CurrentPosition()
   }
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  return mAudioOffloadPlayer->GetMediaTimeSecs();
+  return mAudioOffloadPlayer->GetMediaTimeUs();
 }
 
 void

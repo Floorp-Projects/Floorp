@@ -1053,6 +1053,7 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
       NS_ENSURE_SUCCESS(rv, rv);
       aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
         caretRect.ToOutsidePixels(caretFrame->PresContext()->AppUnitsPerDevPixel()));
+      aEvent->mReply.mWritingMode = caretFrame->GetWritingMode();
       aEvent->mReply.mOffset = aEvent->mInput.mOffset;
       aEvent->mSucceeded = true;
       return NS_OK;
@@ -1086,6 +1087,7 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
 
   aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
       rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
+  aEvent->mReply.mWritingMode = frame->GetWritingMode();
   aEvent->mSucceeded = true;
   return NS_OK;
 }
