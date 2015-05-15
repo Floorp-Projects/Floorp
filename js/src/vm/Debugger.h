@@ -546,8 +546,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                                             int64_t when, GlobalObject::DebuggerVector& dbgs);
     static void slowPathPromiseHook(JSContext* cx, Hook hook, HandleObject promise);
-    static JSTrapStatus dispatchHook(JSContext* cx, MutableHandleValue vp, Hook which,
-                                     HandleObject payload);
+    template <typename HookIsEnabledFun /* bool (Debugger*) */,
+              typename FireHookFun /* JSTrapStatus (Debugger*) */>
+    static JSTrapStatus dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
+                                     FireHookFun fireHook);
 
     JSTrapStatus fireDebuggerStatement(JSContext* cx, MutableHandleValue vp);
     JSTrapStatus fireExceptionUnwind(JSContext* cx, MutableHandleValue vp);
