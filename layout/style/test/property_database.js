@@ -5266,6 +5266,17 @@ if (SpecialPowers.getBoolPref("svg.paint-order.enabled")) {
   };
 }
 
+if (SpecialPowers.getBoolPref("svg.transform-origin.enabled")) {
+  gCSSProperties["transform-box"] = {
+    domProp: "transformBox",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "border-box" ],
+    other_values: [ "fill-box", "view-box" ],
+    invalid_values: []
+  };
+}
+
 if (SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
   gCSSProperties["clip-path"] = {
     domProp: "clipPath",
