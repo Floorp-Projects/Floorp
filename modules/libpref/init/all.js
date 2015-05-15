@@ -4560,6 +4560,9 @@ pref("selectioncaret.inflatesize.threshold", 40);
 // Selection carets will fall-back to internal LongTap detector.
 pref("selectioncaret.detects.longtap", true);
 
+// Selection carets do not affect caret visibility.
+pref("selectioncaret.visibility.affectscaret", false);
+
 // New implementation to unify touch-caret and selection-carets.
 pref("layout.accessiblecaret.enabled", false);
 

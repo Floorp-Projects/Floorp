@@ -879,3 +879,6 @@ pref("toolkit.telemetry.unified", false);
 
 // Selection carets never fall-back to internal LongTap detector.
 pref("selectioncaret.detects.longtap", false);
+
+// Selection carets override caret visibility.
+pref("selectioncaret.visibility.affectscaret", true);
