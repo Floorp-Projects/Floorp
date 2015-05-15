@@ -1325,7 +1325,7 @@ private:
   void CheckThreadSafety();
   void ShutdownCollect();
 
-  void FixGrayBits(bool aForceGC);
+  void FixGrayBits(bool aForceGC, TimeLog& aTimeLog);
   bool ShouldMergeZones(ccType aCCType);
 
   void BeginCollection(ccType aCCType, nsICycleCollectorListener* aManualListener);
@@ -3481,7 +3481,7 @@ nsCycleCollector::CheckThreadSafety()
 // and also when UnmarkGray has run out of stack.  We also force GCs on shut
 // down to collect cycles involving both DOM and JS.
 void
-nsCycleCollector::FixGrayBits(bool aForceGC)
+nsCycleCollector::FixGrayBits(bool aForceGC, TimeLog& aTimeLog)
 {
   CheckThreadSafety();
 
@@ -3491,6 +3491,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 
   if (!aForceGC) {
     mJSRuntime->FixWeakMappingGrayBits();
+    aTimeLog.Checkpoint("FixWeakMappingGrayBits");
 
     bool needGC = !mJSRuntime->AreGCGrayBitsValid();
     // Only do a telemetry ping for non-shutdown CCs.
@@ -3501,10 +3502,9 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
     mResults.mForcedGC = true;
   }
 
-  TimeLog timeLog;
   mJSRuntime->GarbageCollect(aForceGC ? JS::gcreason::SHUTDOWN_CC :
                                         JS::gcreason::CC_FORCED);
-  timeLog.Checkpoint("GC()");
+  aTimeLog.Checkpoint("FixGrayBits GC");
 }
 
 void
@@ -3772,9 +3772,10 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     // hijinks from ForgetSkippable and compartmental GCs.
     mListener->GetWantAllTraces(&forceGC);
   }
-  FixGrayBits(forceGC);
+  FixGrayBits(forceGC, timeLog);
 
   FreeSnowWhite(true);
+  timeLog.Checkpoint("BeginCollection FreeSnowWhite");
 
   if (mListener && NS_FAILED(mListener->Begin())) {
     mListener = nullptr;
@@ -3790,6 +3791,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
   MOZ_ASSERT(!mBuilder, "Forgot to clear mBuilder");
   mBuilder = new CCGraphBuilder(mGraph, mResults, mJSRuntime, mListener,
                                 mergeZones);
+  timeLog.Checkpoint("BeginCollection prepare graph builder");
 
   if (mJSRuntime) {
     mJSRuntime->TraverseRoots(*mBuilder);
