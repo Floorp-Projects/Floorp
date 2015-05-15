@@ -58,6 +58,8 @@ class JSONSpewer
     void spewIntervals(BacktrackingAllocator* regalloc);
     void endPass();
     void endFunction();
+
+    void spewDebuggerGraph(MIRGraph* mir);
 };
 
 } // namespace jit
