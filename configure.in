@@ -166,24 +166,6 @@ if test -z "$PERL" -o "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
 
-if test -n "$GAIADIR" -a ! -d "$GAIADIR" ; then
-    AC_MSG_ERROR([GAIADIR '$GAIADIR' isn't a valid directory])
-fi
-
-AC_SUBST(GAIADIR)
-if test -n "$GAIADIR" ; then
-    AC_DEFINE(PACKAGE_GAIA)
-fi
-
-if test -n "$FXOS_SIMULATOR" -a -z "$GAIADIR" ; then
-    AC_MSG_ERROR([FXOS_SIMULATOR=1 requires GAIADIR to be defined])
-fi
-
-if test -n "$FXOS_SIMULATOR" ; then
-    AC_DEFINE(FXOS_SIMULATOR)
-    AC_SUBST(FXOS_SIMULATOR)
-fi
-
 if test -n "$MOZTTDIR" -a ! -d "$MOZTTDIR" ; then
     AC_MSG_ERROR([MOZTTDIR '$MOZTTDIR' isn't a valid directory])
 fi
@@ -7471,6 +7453,29 @@ if test -n "$MOZ_DISABLE_STARTUPCACHE"; then
   AC_DEFINE(MOZ_DISABLE_STARTUPCACHE)
 fi
 AC_SUBST(MOZ_DISABLE_STARTUPCACHE)
+
+dnl ========================================================
+dnl = Enable packaging Gaia with B2G desktop
+dnl ========================================================
+if test x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
+    if test -n "$GAIADIR" -a ! -d "$GAIADIR" ; then
+        AC_MSG_ERROR([GAIADIR '$GAIADIR' isn't a valid directory])
+    fi
+
+    AC_SUBST(GAIADIR)
+    if test -n "$GAIADIR" ; then
+        AC_DEFINE(PACKAGE_GAIA)
+    fi
+
+    if test -n "$FXOS_SIMULATOR" -a -z "$GAIADIR" ; then
+        AC_MSG_ERROR([FXOS_SIMULATOR=1 requires GAIADIR to be defined])
+    fi
+
+    if test -n "$FXOS_SIMULATOR" ; then
+        AC_DEFINE(FXOS_SIMULATOR)
+        AC_SUBST(FXOS_SIMULATOR)
+    fi
+fi
 
 dnl ========================================================
 dnl = Enable Radio Interface for B2G (Gonk usually)
