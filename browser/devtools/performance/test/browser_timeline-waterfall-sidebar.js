@@ -9,6 +9,7 @@ function spawnTest () {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView } = panel.panelWin;
   let { L10N, TIMELINE_BLUEPRINT } = devtools.require("devtools/shared/timeline/global");
+  let { getMarkerLabel } = devtools.require("devtools/shared/timeline/marker-utils");
 
   yield startRecording(panel);
   ok(true, "Recording has started.");
@@ -38,20 +39,14 @@ function spawnTest () {
     bar.click();
     let m = markers[i];
 
-    let name = TIMELINE_BLUEPRINT[m.name].label;
-
-    is($("#waterfall-details .marker-details-type").getAttribute("value"), name,
+    is($("#waterfall-details .marker-details-type").getAttribute("value"), getMarkerLabel(m),
       "sidebar title matches markers name");
 
-    let printedStartTime = $(".marker-details-start .marker-details-labelvalue").getAttribute("value");
-    let printedEndTime = $(".marker-details-end .marker-details-labelvalue").getAttribute("value");
-    let printedDuration= $(".marker-details-duration .marker-details-labelvalue").getAttribute("value");
+    let printedDuration = $(".marker-details-duration .marker-details-labelvalue").getAttribute("value");
 
     let toMs = ms => L10N.getFormatStrWithNumbers("timeline.tick", ms);
 
     // Values are rounded. We don't use a strict equality.
-    is(toMs(m.start), printedStartTime, "sidebar start time is valid");
-    is(toMs(m.end), printedEndTime, "sidebar end time is valid");
     is(toMs(m.end - m.start), printedDuration, "sidebar duration is valid");
   }
   yield teardown(panel);

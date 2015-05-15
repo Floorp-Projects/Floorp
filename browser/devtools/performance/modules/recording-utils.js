@@ -209,7 +209,9 @@ exports.RecordingUtils.getProfileThreadFromAllocations = function(allocations) {
  *         The filtered timeline blueprint.
  */
 exports.RecordingUtils.getFilteredBlueprint = function({ blueprint, hiddenMarkers }) {
-  let filteredBlueprint = Cu.cloneInto(blueprint, {});
+  // Clone functions here just to prevent an error, as the blueprint
+  // contains functions (even though we do not use them).
+  let filteredBlueprint = Cu.cloneInto(blueprint, {}, { cloneFunctions: true });
   let maybeRemovedGroups = new Set();
   let removedGroups = new Set();
 
