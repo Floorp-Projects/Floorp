@@ -32,7 +32,10 @@ class JSFunction : public js::NativeObject
         NormalFunction = 0,
         Arrow,                      /* ES6 '(args) => body' syntax */
         Method,                     /* ES6 MethodDefinition */
-        AsmJS                       /* function is an asm.js module or exported function */
+        Getter,
+        Setter,
+        AsmJS,                      /* function is an asm.js module or exported function */
+        FunctionKindLimit
     };
 
     enum Flags {
@@ -57,16 +60,22 @@ class JSFunction : public js::NativeObject
         RESOLVED_NAME    = 0x1000,  /* f.name has been resolved (see fun_resolve). */
 
         FUNCTION_KIND_SHIFT = 13,
-        FUNCTION_KIND_MASK  = 0x3 << FUNCTION_KIND_SHIFT,
+        FUNCTION_KIND_MASK  = 0x7 << FUNCTION_KIND_SHIFT,
 
         ASMJS_KIND = AsmJS << FUNCTION_KIND_SHIFT,
         ARROW_KIND = Arrow << FUNCTION_KIND_SHIFT,
+        METHOD_KIND = Method << FUNCTION_KIND_SHIFT,
+        GETTER_KIND = Getter << FUNCTION_KIND_SHIFT,
+        SETTER_KIND = Setter << FUNCTION_KIND_SHIFT,
 
         /* Derived Flags values for convenience: */
         NATIVE_FUN = 0,
         ASMJS_CTOR = ASMJS_KIND | NATIVE_CTOR,
         ASMJS_LAMBDA_CTOR = ASMJS_KIND | NATIVE_CTOR | LAMBDA,
-        INTERPRETED_METHOD = INTERPRETED | (Method << FUNCTION_KIND_SHIFT),
+        INTERPRETED_METHOD = INTERPRETED | METHOD_KIND,
+        INTERPRETED_CLASS_CONSTRUCTOR = INTERPRETED | METHOD_KIND,
+        INTERPRETED_GETTER = INTERPRETED | GETTER_KIND,
+        INTERPRETED_SETTER = INTERPRETED | SETTER_KIND,
         INTERPRETED_LAMBDA = INTERPRETED | LAMBDA,
         INTERPRETED_LAMBDA_ARROW = INTERPRETED | LAMBDA | ARROW_KIND,
         STABLE_ACROSS_CLONES = NATIVE_CTOR | IS_FUN_PROTO | EXPR_BODY | HAS_GUESSED_ATOM |
@@ -76,6 +85,8 @@ class JSFunction : public js::NativeObject
 
     static_assert((INTERPRETED | INTERPRETED_LAZY) == js::JS_FUNCTION_INTERPRETED_BITS,
                   "jsfriendapi.h's JSFunction::INTERPRETED-alike is wrong");
+    static_assert(((FunctionKindLimit - 1) << FUNCTION_KIND_SHIFT) <= FUNCTION_KIND_MASK,
+                  "FunctionKind doesn't fit into flags_");
 
   private:
     uint16_t        nargs_;       /* number of formal arguments
@@ -152,7 +163,15 @@ class JSFunction : public js::NativeObject
 
     // Arrow functions store their lexical |this| in the first extended slot.
     bool isArrow()                  const { return kind() == Arrow; }
+    // Every class-constructor is also a method.
     bool isMethod()                 const { return kind() == Method; }
+
+    bool isGetter()                 const { return kind() == Getter; }
+    bool isSetter()                 const { return kind() == Setter; }
+
+    bool isClassConstructor() const {
+        return kind() == Method && isInterpretedConstructor();
+    }
 
     bool hasResolvedLength()        const { return flags() & RESOLVED_LENGTH; }
     bool hasResolvedName()          const { return flags() & RESOLVED_NAME; }
