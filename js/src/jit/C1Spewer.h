@@ -11,6 +11,7 @@
 
 #include "NamespaceImports.h"
 
+#include "jit/JitAllocPolicy.h"
 #include "js/RootingAPI.h"
 #include "vm/Printer.h"
 
@@ -25,19 +26,19 @@ class LNode;
 class C1Spewer
 {
     MIRGraph* graph;
-    Fprinter out_;
+    LSprinter out_;
 
   public:
-    C1Spewer()
-      : graph(nullptr), out_()
+    explicit C1Spewer(TempAllocator *alloc)
+      : graph(nullptr), out_(alloc->lifoAlloc())
     { }
 
-    bool init(const char* path);
-    void beginFunction(MIRGraph* graph, HandleScript script);
+    void beginFunction(MIRGraph* graph, JSScript* script);
     void spewPass(const char* pass);
     void spewIntervals(const char* pass, BacktrackingAllocator* regalloc);
     void endFunction();
-    void finish();
+
+    void dump(Fprinter &file);
 
   private:
     void spewPass(GenericPrinter& out, MBasicBlock* block);

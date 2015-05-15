@@ -245,6 +245,14 @@ class MIRGenerator
     }
     bool needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const;
     size_t foldableOffsetRange(const MAsmJSHeapAccess* access) const;
+
+  private:
+    GraphSpewer gs_;
+
+  public:
+    GraphSpewer& graphSpewer() {
+        return gs_;
+    }
 };
 
 } // namespace jit
