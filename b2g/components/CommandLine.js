@@ -15,6 +15,10 @@ function CommandlineHandler() {
 CommandlineHandler.prototype = {
     handle: function(cmdLine) {
       this.cmdLine = cmdLine;
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
+      if (win && win.shell) {
+        win.shell.handleCmdLine();
+      }
     },
 
     helpInfo: "",
