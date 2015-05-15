@@ -18,6 +18,9 @@
 class nsWindow;
 
 namespace mozilla {
+
+class WritingMode;
+
 namespace widget {
 
 struct MSGResult;
@@ -283,6 +286,12 @@ protected:
   void GetCompositionString(const nsIMEContext &aIMEContext,
                             DWORD aIndex,
                             nsAString& aCompositionString) const;
+
+  /**
+   * AdjustCompositionFont() makes IME vertical writing mode if it's supported.
+   */
+  void AdjustCompositionFont(const nsIMEContext& aIMEContext,
+                             const mozilla::WritingMode& aWritingMode);
   /**
    *  Get the current target clause of composition string.
    *  If there are one or more characters whose attribute is ATTR_TARGET_*,
@@ -360,6 +369,7 @@ protected:
   bool mIsComposingOnPlugin;
   bool mNativeCaretIsCreated;
 
+  static nsString sIMEName;
   static UINT sCodePage;
   static DWORD sIMEProperty;
   static DWORD sIMEUIProperty;
