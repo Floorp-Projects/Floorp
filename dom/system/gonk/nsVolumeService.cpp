@@ -439,7 +439,7 @@ NS_IMETHODIMP
 nsVolumeService::CreateFakeVolume(const nsAString& name, const nsAString& path)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    nsRefPtr<nsVolume> vol = new nsVolume(name, path, nsIVolume::STATE_MOUNTED,
+    nsRefPtr<nsVolume> vol = new nsVolume(name, path, nsIVolume::STATE_INIT,
                                           -1    /* mountGeneration */,
                                           true  /* isMediaPresent */,
                                           false /* isSharing */,
@@ -448,6 +448,7 @@ nsVolumeService::CreateFakeVolume(const nsAString& name, const nsAString& path)
                                           false /* isUnmounting */,
                                           false /* isRemovable */,
                                           false /* isHotSwappable */);
+    vol->SetState(nsIVolume::STATE_MOUNTED);
     vol->LogState();
     UpdateVolume(vol.get());
     return NS_OK;
