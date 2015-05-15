@@ -353,11 +353,7 @@ nsBaseAppShell::RunSyncSectionsInternal(bool aStable,
 
   // We don't support re-entering sync sections. This effectively means that
   // sync sections may not spin the event loop.
-  //
-  // Disabled temorarily on android - see bug 1163814.
-#ifndef ANDROID
   MOZ_RELEASE_ASSERT(!mRunningSyncSections);
-#endif
   mRunningSyncSections = true;
 
   // We've got synchronous sections. Run all of them that are are awaiting a
