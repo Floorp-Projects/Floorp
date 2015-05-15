@@ -8,7 +8,7 @@
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
 
-[scriptable, uuid(74fdaac3-e5ce-4944-becc-c08c168f673c)]
+[scriptable, uuid(b0cd9d34-8dba-4b1d-8126-ca21826dbf35)]
 interface nsIGfxInfo : nsISupports
 {
   /*
@@ -96,7 +96,7 @@ interface nsIGfxInfo : nsISupports
    * A set of return values from GetFeatureStatus
    */
 
-  /* The driver is save to the best of our knowledge */
+  /* The driver is safe to the best of our knowledge */
   const long FEATURE_STATUS_OK = 1;
   /* We don't know the status of the feature yet. The analysis probably hasn't finished yet. */
   const long FEATURE_STATUS_UNKNOWN = 2;
@@ -110,6 +110,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_DISCOURAGED = 5;
   /* This feature is blocked on this OS version. */
   const long FEATURE_BLOCKED_OS_VERSION = 6;
+  /* This feature is blocked because of mismatched driver versions. */
+  const long FEATURE_BLOCKED_MISMATCHED_VERSION = 7;
 
   /**
    * Ask about a feature, and return the status of that feature
