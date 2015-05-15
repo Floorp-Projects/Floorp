@@ -56,17 +56,26 @@ static const char* kTouchCaretLogModuleName = "TouchCaret";
 // boundary by 61 app units (1 pixel + 1 app unit).
 static const int32_t kBoundaryAppUnits = 61;
 
-NS_IMPL_ISUPPORTS(TouchCaret, nsISelectionListener)
+NS_IMPL_ISUPPORTS(TouchCaret,
+                  nsISelectionListener,
+                  nsIScrollObserver,
+                  nsISupportsWeakReference)
 
 /*static*/ int32_t TouchCaret::sTouchCaretInflateSize = 0;
 /*static*/ int32_t TouchCaret::sTouchCaretExpirationTime = 0;
+/*static*/ bool TouchCaret::sCaretManagesAndroidActionbar = false;
+/*static*/ bool TouchCaret::sTouchcaretExtendedvisibility = false;
+
+/*static*/ uint32_t TouchCaret::sActionBarViewCount = 0;
 
 TouchCaret::TouchCaret(nsIPresShell* aPresShell)
   : mState(TOUCHCARET_NONE),
     mActiveTouchId(-1),
     mCaretCenterToDownPointOffsetY(0),
+    mInAsyncPanZoomGesture(false),
     mVisible(false),
-    mIsValidTap(false)
+    mIsValidTap(false),
+    mActionBarViewID(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -82,12 +91,53 @@ TouchCaret::TouchCaret(nsIPresShell* aPresShell)
                                 "touchcaret.inflatesize.threshold");
     Preferences::AddIntVarCache(&sTouchCaretExpirationTime,
                                 "touchcaret.expiration.time");
+    Preferences::AddBoolVarCache(&sCaretManagesAndroidActionbar,
+                                 "caret.manages-android-actionbar");
+    Preferences::AddBoolVarCache(&sTouchcaretExtendedvisibility,
+                                 "touchcaret.extendedvisibility");
     addedTouchCaretPref = true;
   }
 
   // The presshell owns us, so no addref.
   mPresShell = do_GetWeakReference(aPresShell);
   MOZ_ASSERT(mPresShell, "Hey, pres shell should support weak refs");
+}
+
+void
+TouchCaret::Init()
+{
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell) {
+    return;
+  }
+
+  nsPresContext* presContext = presShell->GetPresContext();
+  MOZ_ASSERT(presContext, "PresContext should be given in PresShell::Init()");
+
+  nsIDocShell* docShell = presContext->GetDocShell();
+  if (!docShell) {
+    return;
+  }
+
+  docShell->AddWeakScrollObserver(this);
+  mDocShell = static_cast<nsDocShell*>(docShell);
+}
+
+void
+TouchCaret::Terminate()
+{
+  nsRefPtr<nsDocShell> docShell(mDocShell.get());
+  if (docShell) {
+    docShell->RemoveWeakScrollObserver(this);
+  }
+
+  if (mScrollEndDetectorTimer) {
+    mScrollEndDetectorTimer->Cancel();
+    mScrollEndDetectorTimer = nullptr;
+  }
+
+  mDocShell = WeakPtr<nsDocShell>();
+  mPresShell = nullptr;
 }
 
 TouchCaret::~TouchCaret()
@@ -174,6 +224,38 @@ TouchCaret::SetVisibility(bool aVisible)
 
   // Set touch caret expiration time.
   mVisible ? LaunchExpirationTimer() : CancelExpirationTimer();
+
+  // If after a TouchCaret visibility change we become hidden, ensure
+  // the Android ActionBar handler is notified to close the current view.
+  if (!mVisible && sCaretManagesAndroidActionbar) {
+    UpdateAndroidActionBarVisibility(false, mActionBarViewID);
+  }
+}
+
+/**
+ * Open or close the Android TextSelection ActionBar, based on visibility.
+ * Each time we're called to open the actionbar, we increment / assign a
+ * unique view ID and return it to the caller. The ID is returned on calls
+ * to close the actionbar to ensure we don't close the shared view if it
+ * was already force closed by a subsequent callers open request.
+ */
+/* static */void
+TouchCaret::UpdateAndroidActionBarVisibility(bool aVisibility, uint32_t& aViewID)
+{
+  // Are we openning a new view?
+  if (aVisibility) {
+    // Assign a new view ID.
+    aViewID = ++sActionBarViewCount;
+  }
+
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    nsString topic = (aVisibility) ?
+      NS_LITERAL_STRING("ActionBar:OpenNew") : NS_LITERAL_STRING("ActionBar:Close");
+    nsAutoString viewCount;
+    viewCount.AppendInt(aViewID);
+    os->NotifyObservers(nullptr, NS_ConvertUTF16toUTF8(topic).get(), viewCount.get());
+  }
 }
 
 nsRect
@@ -362,9 +444,98 @@ TouchCaret::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel,
     SetVisibility(false);
   } else {
     SyncVisibilityWithCaret();
+
+    // Is the TouchCaret visible and we're showing/hiding the actionbar?
+    if (mVisible && sCaretManagesAndroidActionbar) {
+      // A selection change due to touch tap opens the actionbar.
+      if (aReason & nsISelectionListener::MOUSEUP_REASON) {
+        UpdateAndroidActionBarVisibility(true, mActionBarViewID);
+      } else {
+        // Update the ActionBar state for caret-specific selection changes.
+        // Ignore transient selection composition changes that occur while
+        // the TouchCaret is also visible.
+        bool isCollapsed;
+        if (NS_SUCCEEDED(aSel->GetIsCollapsed(&isCollapsed)) && isCollapsed) {
+          nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+          if (os) {
+            os->NotifyObservers(nullptr, "ActionBar:UpdateState", nullptr);
+          }
+        }
+      }
+    }
   }
 
   return NS_OK;
+}
+
+/**
+ * Used to update caret position after PanZoom stops for
+ * extended caret visibility. Never needed by MOZ_WIDGET_GONK.
+ */
+void
+TouchCaret::AsyncPanZoomStarted()
+{
+  if (mVisible) {
+    if (sTouchcaretExtendedvisibility) {
+      mInAsyncPanZoomGesture = true;
+    }
+  }
+}
+
+void
+TouchCaret::AsyncPanZoomStopped()
+{
+  if (mInAsyncPanZoomGesture) {
+    mInAsyncPanZoomGesture = false;
+    UpdatePosition();
+  }
+}
+
+/**
+ * Used to update caret position after Scroll stops for
+ * extended caret visibility. Never needed by MOZ_WIDGET_GONK.
+ */
+void
+TouchCaret::ScrollPositionChanged()
+{
+  if (mVisible) {
+    if (sTouchcaretExtendedvisibility) {
+      // Launch scroll end detector.
+      LaunchScrollEndDetector();
+    }
+  }
+}
+
+void
+TouchCaret::LaunchScrollEndDetector()
+{
+  if (!mScrollEndDetectorTimer) {
+    mScrollEndDetectorTimer = do_CreateInstance("@mozilla.org/timer;1");
+  }
+  MOZ_ASSERT(mScrollEndDetectorTimer);
+
+  mScrollEndDetectorTimer->InitWithFuncCallback(FireScrollEnd,
+                                                this,
+                                                sScrollEndTimerDelay,
+                                                nsITimer::TYPE_ONE_SHOT);
+}
+
+void
+TouchCaret::CancelScrollEndDetector()
+{
+  if (mScrollEndDetectorTimer) {
+    mScrollEndDetectorTimer->Cancel();
+  }
+}
+
+
+/* static */void
+TouchCaret::FireScrollEnd(nsITimer* aTimer, void* aTouchCaret)
+{
+  nsRefPtr<TouchCaret> self = static_cast<TouchCaret*>(aTouchCaret);
+  NS_PRECONDITION(aTimer == self->mScrollEndDetectorTimer,
+                  "Unexpected timer");
+  self->UpdatePosition();
 }
 
 void
@@ -447,14 +618,20 @@ TouchCaret::IsDisplayable()
     TOUCHCARET_LOG("Focus frame is not valid!");
     return false;
   }
-  if (focusRect.IsEmpty()) {
-    TOUCHCARET_LOG("Focus rect is empty!");
-    return false;
-  }
 
   dom::Element* editingHost = focusFrame->GetContent()->GetEditingHost();
   if (!editingHost) {
     TOUCHCARET_LOG("Cannot get editing host!");
+    return false;
+  }
+
+  // No further checks required if extended TouchCaret visibility.
+  if (sTouchcaretExtendedvisibility) {
+    return true;
+  }
+
+  if (focusRect.IsEmpty()) {
+    TOUCHCARET_LOG("Focus rect is empty!");
     return false;
   }
 
@@ -837,6 +1014,12 @@ TouchCaret::HandleMouseDownEvent(WidgetMouseEvent* aEvent)
           CancelExpirationTimer();
           status = nsEventStatus_eConsumeNoDefault;
         } else {
+          // Mousedown events that miss HitTest can be caused by soft-keyboard
+          // auto-suggestions. If extended visibility, update the caret position.
+          if (sTouchcaretExtendedvisibility) {
+            UpdatePositionIfNeeded();
+            break;
+          }
           // Set touch caret invisible if HisTest fails. Bypass event.
           SetVisibility(false);
           status = nsEventStatus_eIgnore;
@@ -897,8 +1080,14 @@ TouchCaret::HandleTouchDownEvent(WidgetTouchEvent* aEvent)
         // No touch is on the touch caret. Set touch caret invisible, and bypass
         // the event.
         if (mActiveTouchId == -1) {
-          SetVisibility(false);
-          status = nsEventStatus_eIgnore;
+          // Check touch caret visibility style.
+          if (sTouchcaretExtendedvisibility) {
+            // Update position on events associated with scroll and pan-zoom.
+            UpdatePositionIfNeeded();
+          } else {
+            SetVisibility(false);
+            status = nsEventStatus_eIgnore;
+          }
         }
       }
       break;

@@ -854,6 +854,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     public void onDestroy() {
         Tabs.unregisterOnTabsChangedListener(this);
+        urlDisplayLayout.destroy();
     }
 
     public boolean openOptionsMenu() {

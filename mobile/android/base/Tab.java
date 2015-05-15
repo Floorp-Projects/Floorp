@@ -23,6 +23,7 @@ import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.RemoteFavicon;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.Layer;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -36,6 +37,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+import org.mozilla.gecko.widget.SiteLogins;
 
 public class Tab {
     private static final String LOGTAG = "GeckoTab";
@@ -57,6 +59,7 @@ public class Tab {
     private boolean mHasFeeds;
     private boolean mHasOpenSearch;
     private final SiteIdentity mSiteIdentity;
+    private SiteLogins mSiteLogins;
     private BitmapDrawable mThumbnail;
     private final int mParentId;
     private final boolean mExternal;
@@ -144,6 +147,7 @@ public class Tab {
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.CLOSED);
     }
 
+    @RobocopTarget
     public int getId() {
         return mId;
     }
@@ -278,6 +282,10 @@ public class Tab {
 
     public SiteIdentity getSiteIdentity() {
         return mSiteIdentity;
+    }
+
+    public SiteLogins getSiteLogins() {
+        return mSiteLogins;
     }
 
     public boolean isBookmark() {
@@ -494,6 +502,10 @@ public class Tab {
         mSiteIdentity.update(identityData);
     }
 
+    public void setSiteLogins(SiteLogins siteLogins) {
+        mSiteLogins = siteLogins;
+    }
+
     void updateBookmark() {
         if (getURL() == null) {
             return;
@@ -691,6 +703,7 @@ public class Tab {
         setHasFeeds(false);
         setHasOpenSearch(false);
         mSiteIdentity.reset();
+        setSiteLogins(null);
         setZoomConstraints(new ZoomConstraints(true));
         setHasTouchListeners(false);
         setBackgroundColor(DEFAULT_BACKGROUND_COLOR);

@@ -245,6 +245,9 @@ public:
   NS_IMETHOD CheckVisibility(nsIDOMNode *node, int16_t startOffset, int16_t EndOffset, bool* _retval) override;
   virtual nsresult CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset, int16_t aEndOffset, bool* aRetval) override;
 
+  NS_IMETHOD GetSelectionCaretsVisibility(bool* aOutVisibility) override;
+  NS_IMETHOD SetSelectionCaretsVisibility(bool aVisibility) override;
+
 private:
   nsRefPtr<nsFrameSelection> mFrameSelection;
   nsCOMPtr<nsIContent>       mLimiter;
@@ -638,6 +641,36 @@ nsTextInputSelectionImpl::CheckVisibility(nsIDOMNode *node, int16_t startOffset,
   }
   return NS_ERROR_FAILURE;
 
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::GetSelectionCaretsVisibility(bool* aOutVisibility)
+{
+  if (!mPresShellWeak) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult result;
+  nsCOMPtr<nsISelectionController> shell = do_QueryReferent(mPresShellWeak, &result);
+  if (shell) {
+    return shell->GetSelectionCaretsVisibility(aOutVisibility);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::SetSelectionCaretsVisibility(bool aVisibility)
+{
+  if (!mPresShellWeak) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult result;
+  nsCOMPtr<nsISelectionController> shell = do_QueryReferent(mPresShellWeak, &result);
+  if (shell) {
+    return shell->SetSelectionCaretsVisibility(aVisibility);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult

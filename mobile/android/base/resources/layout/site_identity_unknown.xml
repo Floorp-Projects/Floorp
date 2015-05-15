@@ -12,15 +12,13 @@
 
     <TextView android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:textSize="14sp"
-              android:textColor="@color/placeholder_active_grey"
+              android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
               android:text="@string/identity_no_info"/>
 
     <TextView android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:textSize="14sp"
-              android:textColor="@color/placeholder_active_grey"
+              android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
               android:text="@string/identity_not_encrypted"
-              android:paddingTop="12dip"/>
+              android:paddingTop="@dimen/doorhanger_section_padding_small"/>
 
 </LinearLayout>
