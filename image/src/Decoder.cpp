@@ -166,15 +166,7 @@ Decoder::Resume()
 {
   DecodePool* decodePool = DecodePool::Singleton();
   MOZ_ASSERT(decodePool);
-
-  nsCOMPtr<nsIEventTarget> target = decodePool->GetEventTarget();
-  if (MOZ_UNLIKELY(!target)) {
-    // We're shutting down and the DecodePool's thread pool has been destroyed.
-    return;
-  }
-
-  nsCOMPtr<nsIRunnable> worker = decodePool->CreateDecodeWorker(this);
-  target->Dispatch(worker, nsIEventTarget::DISPATCH_NORMAL);
+  decodePool->AsyncDecode(this);
 }
 
 bool

@@ -302,7 +302,7 @@ this.LightweightThemeManager = {
     if (aData)
       _prefs.setCharPref("selectedThemeID", aData.id);
     else
-      _prefs.deleteBranch("selectedThemeID");
+      _prefs.setCharPref("selectedThemeID", "");
 
     _notifyWindows(aData);
     Services.obs.notifyObservers(null, "lightweight-theme-changed", null);

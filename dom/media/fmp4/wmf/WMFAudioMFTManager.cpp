@@ -205,6 +205,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
   aOutData = nullptr;
   RefPtr<IMFSample> sample;
   HRESULT hr;
+  bool alreadyDidTypeChange = false;
   while (true) {
     hr = mDecoder->Output(&sample);
     if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
@@ -213,6 +214,8 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
     if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
       hr = UpdateOutputType();
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+      NS_ENSURE_FALSE(alreadyDidTypeChange, MF_E_TRANSFORM_STREAM_CHANGE);
+      alreadyDidTypeChange = true;
       continue;
     }
     break;

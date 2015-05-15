@@ -26,8 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 
 /** Test for Bug 525444 **/
 
-synthAddVoice('TestSpeechServiceWithAudio', 'Male 1', 'en-GB', true);
-
 var gotStartEvent = false;
 var gotBoundaryEvent = false;
 var utterance = new SpeechSynthesisUtterance("Hello, world!");
@@ -42,7 +40,6 @@ utterance.addEventListener('end', function(e) {
   ok(!speechSynthesis.pending, "speechSynthesis has no other utterances queued.");
   ok(gotStartEvent, "Got 'start' event.");
   info('end ' + e.elapsedTime);
-  synthCleanup();
   SimpleTest.finish();
 });
 

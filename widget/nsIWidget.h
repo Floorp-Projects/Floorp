@@ -38,6 +38,7 @@ class   nsIScreen;
 
 namespace mozilla {
 class CompositorVsyncDispatcher;
+class WritingMode;
 namespace dom {
 class TabChild;
 }
@@ -595,6 +596,10 @@ struct IMENotification
   {
     switch (aMessage) {
       case NOTIFY_IME_OF_SELECTION_CHANGE:
+        mSelectionChangeData.mOffset = UINT32_MAX;
+        mSelectionChangeData.mLength = 0;
+        mSelectionChangeData.mWritingMode = 0;
+        mSelectionChangeData.mReversed = false;
         mSelectionChangeData.mCausedByComposition = false;
         break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
@@ -618,13 +623,40 @@ struct IMENotification
 
   IMEMessage mMessage;
 
+  // NOTIFY_IME_OF_SELECTION_CHANGE specific data
+  struct SelectionChangeData
+  {
+    // Selection range.
+    uint32_t mOffset;
+    uint32_t mLength;
+
+    // Writing mode at the selection.
+    uint8_t mWritingMode;
+
+    bool mReversed;
+    bool mCausedByComposition;
+
+    void SetWritingMode(const WritingMode& aWritingMode);
+    WritingMode GetWritingMode() const;
+
+    uint32_t StartOffset() const
+    {
+      return mOffset + (mReversed ? mLength : 0);
+    }
+    uint32_t EndOffset() const
+    {
+      return mOffset + (mReversed ? 0 : mLength);
+    }
+    bool IsInInt32Range() const
+    {
+      return mOffset + mLength <= INT32_MAX;
+    }
+  };
+
   union
   {
     // NOTIFY_IME_OF_SELECTION_CHANGE specific data
-    struct
-    {
-      bool mCausedByComposition;
-    } mSelectionChangeData;
+    SelectionChangeData mSelectionChangeData;
 
     // NOTIFY_IME_OF_TEXT_CHANGE specific data
     struct

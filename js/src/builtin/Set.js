@@ -32,3 +32,9 @@ function SetForEach(callbackfn, thisArg = undefined) {
         callFunction(callbackfn, thisArg, value, value, S);
     }
 }
+
+// ES6 final draft 23.2.2.2.
+function SetSpecies() {
+    // Step 1.
+    return this;
+}
