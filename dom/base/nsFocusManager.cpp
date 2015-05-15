@@ -1231,16 +1231,15 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
   // key input if a windowed plugin is focused, so just exit fullscreen
   // to guard against phishing.
 #ifndef XP_MACOSX
-  nsIDocument* fullscreenAncestor;
   if (contentToFocus &&
-      (fullscreenAncestor = nsContentUtils::GetFullscreenAncestor(contentToFocus->OwnerDoc())) &&
+      nsContentUtils::GetRootDocument(contentToFocus->OwnerDoc())->IsFullScreenDoc() &&
       nsContentUtils::HasPluginWithUncontrolledEventDispatch(contentToFocus)) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("DOM"),
                                     contentToFocus->OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "FocusedWindowedPluginWhileFullScreen");
-    nsIDocument::ExitFullscreen(fullscreenAncestor, /* async */ true);
+    nsIDocument::ExitFullscreen(contentToFocus->OwnerDoc(), /* async */ true);
   }
 #endif
 

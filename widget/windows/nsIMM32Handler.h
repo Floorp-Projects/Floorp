@@ -14,6 +14,7 @@
 #include "nsIWidget.h"
 #include "mozilla/EventForwards.h"
 #include "nsRect.h"
+#include "WritingModes.h"
 
 class nsWindow;
 
@@ -143,6 +144,8 @@ public:
   static void CommitComposition(nsWindow* aWindow, bool aForce = false);
   static void CancelComposition(nsWindow* aWindow, bool aForce = false);
   static void OnUpdateComposition(nsWindow* aWindow);
+  static void OnSelectionChange(nsWindow* aWindow,
+                                const IMENotification& aIMENotification);
 
   static nsIMEUpdatePreference GetIMEUpdatePreference();
 
@@ -158,8 +161,13 @@ protected:
   static bool IsComposingOnPlugin();
   static bool IsComposingWindow(nsWindow* aWindow);
 
+  static bool IsJapanist2003Active();
+  static bool IsGoogleJapaneseInputActive();
+
   static bool ShouldDrawCompositionStringOurselves();
-  static void InitKeyboardLayout(HKL aKeyboardLayout);
+  static bool IsVerticalWritingSupported();
+  // aWindow can be nullptr if it's called without receiving WM_INPUTLANGCHANGE.
+  static void InitKeyboardLayout(nsWindow* aWindow, HKL aKeyboardLayout);
   static UINT GetKeyboardCodePage();
 
   /**
@@ -275,13 +283,37 @@ protected:
                                const nsIMEContext& aIMEContext);
   void SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
                                        const nsIMEContext& aIMEContext);
-  bool GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
-                                          uint32_t aOffset,
-                                          nsIntRect &aCharRect);
-  bool GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect);
+  bool GetCharacterRectOfSelectedTextAt(
+         nsWindow* aWindow,
+         uint32_t aOffset,
+         nsIntRect& aCharRect,
+         mozilla::WritingMode* aWritingMode = nullptr);
+  bool GetCaretRect(nsWindow* aWindow,
+                    nsIntRect& aCaretRect,
+                    mozilla::WritingMode* aWritingMode = nullptr);
   void GetCompositionString(const nsIMEContext &aIMEContext,
                             DWORD aIndex,
                             nsAString& aCompositionString) const;
+
+  /**
+   * AdjustCompositionFont() makes IME vertical writing mode if it's supported.
+   * If aForceUpdate is true, it will update composition font even if writing
+   * mode isn't being changed.
+   */
+  void AdjustCompositionFont(const nsIMEContext& aIMEContext,
+                             const mozilla::WritingMode& aWritingMode,
+                             bool aForceUpdate = false);
+
+  /**
+   * MaybeAdjustCompositionFont() calls AdjustCompositionFont() when the
+   * locale of active IME is CJK.  Note that this creates an instance even
+   * when there is no composition but the locale is CJK.
+   */
+  static void MaybeAdjustCompositionFont(
+                nsWindow* aWindow,
+                const mozilla::WritingMode& aWritingMode,
+                bool aForceUpdate = false);
+
   /**
    *  Get the current target clause of composition string.
    *  If there are one or more characters whose attribute is ATTR_TARGET_*,
@@ -359,8 +391,12 @@ protected:
   bool mIsComposingOnPlugin;
   bool mNativeCaretIsCreated;
 
+  static mozilla::WritingMode sWritingModeOfCompositionFont;
+  static nsString sIMEName;
   static UINT sCodePage;
   static DWORD sIMEProperty;
+  static DWORD sIMEUIProperty;
+  static bool sAssumeVerticalWritingModeNotSupported;
 };
 
 #endif // nsIMM32Handler_h__

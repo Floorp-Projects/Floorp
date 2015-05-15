@@ -1894,6 +1894,15 @@ TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
         (updatePreference.WantChangesCausedByComposition() ||
          !aCausedByComposition)) {
       IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
+      notification.mSelectionChangeData.mOffset =
+        std::min(mIMESelectionAnchor, mIMESelectionFocus);
+      notification.mSelectionChangeData.mLength =
+        mIMESelectionAnchor > mIMESelectionFocus ?
+          mIMESelectionAnchor - mIMESelectionFocus :
+          mIMESelectionFocus - mIMESelectionAnchor;
+      notification.mSelectionChangeData.mReversed =
+        mIMESelectionFocus < mIMESelectionAnchor;
+      notification.mSelectionChangeData.SetWritingMode(mWritingMode);
       notification.mSelectionChangeData.mCausedByComposition =
         aCausedByComposition;
       widget->NotifyIME(notification);

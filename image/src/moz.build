@@ -68,6 +68,8 @@ LOCAL_INCLUDES += [
     '/layout/svg',
     # For URI-related functionality
     '/netwerk/base',
+    # DecodePool uses thread-related facilities.
+    '/xpcom/threads',
 ]
 
 # Because imgFrame.cpp includes "cairo.h"

@@ -16,12 +16,102 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
 
+#ifndef IME_PROP_ACCEPT_WIDE_VKEY
+#define IME_PROP_ACCEPT_WIDE_VKEY 0x20
+#endif
+
 using namespace mozilla;
 using namespace mozilla::widget;
 
 static nsIMM32Handler* gIMM32Handler = nullptr;
 
 PRLogModuleInfo* gIMM32Log = nullptr;
+
+static void
+HandleSeparator(nsACString& aDesc)
+{
+  if (!aDesc.IsEmpty()) {
+    aDesc.AppendLiteral(" | ");
+  }
+}
+
+class GetIMEGeneralPropertyName : public nsAutoCString
+{
+public:
+  GetIMEGeneralPropertyName(DWORD aFlags)
+  {
+    if (!aFlags) {
+      AppendLiteral("no flags");
+      return;
+    }
+    if (aFlags & IME_PROP_AT_CARET) {
+      AppendLiteral("IME_PROP_AT_CARET");
+    }
+    if (aFlags & IME_PROP_SPECIAL_UI) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_SPECIAL_UI");
+    }
+    if (aFlags & IME_PROP_CANDLIST_START_FROM_1) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_CANDLIST_START_FROM_1");
+    }
+    if (aFlags & IME_PROP_UNICODE) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_UNICODE");
+    }
+    if (aFlags & IME_PROP_COMPLETE_ON_UNSELECT) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_COMPLETE_ON_UNSELECT");
+    }
+    if (aFlags & IME_PROP_ACCEPT_WIDE_VKEY) {
+      HandleSeparator(*this);
+      AppendLiteral("IME_PROP_ACCEPT_WIDE_VKEY");
+    }
+  }
+  virtual ~GetIMEGeneralPropertyName() {}
+};
+
+class GetIMEUIPropertyName : public nsAutoCString
+{
+public:
+  GetIMEUIPropertyName(DWORD aFlags)
+  {
+    if (!aFlags) {
+      AppendLiteral("no flags");
+      return;
+    }
+    if (aFlags & UI_CAP_2700) {
+      AppendLiteral("UI_CAP_2700");
+    }
+    if (aFlags & UI_CAP_ROT90) {
+      HandleSeparator(*this);
+      AppendLiteral("UI_CAP_ROT90");
+    }
+    if (aFlags & UI_CAP_ROTANY) {
+      HandleSeparator(*this);
+      AppendLiteral("UI_CAP_ROTANY");
+    }
+  }
+  virtual ~GetIMEUIPropertyName() {}
+};
+
+class GetWritingModeName : public nsAutoCString
+{
+public:
+  GetWritingModeName(const WritingMode& aWritingMode)
+  {
+    if (!aWritingMode.IsVertical()) {
+      Assign("Horizontal");
+      return;
+    }
+    if (aWritingMode.IsVerticalLR()) {
+      Assign("Vertical (LR)");
+      return;
+    }
+    Assign("Vertical (RL)");
+  }
+  virtual ~GetWritingModeName() {}
+};
 
 static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 
@@ -41,8 +131,12 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 #define IMEMOUSE_WUP        0x10    // wheel up
 #define IMEMOUSE_WDOWN      0x20    // wheel down
 
+WritingMode nsIMM32Handler::sWritingModeOfCompositionFont;
+nsString nsIMM32Handler::sIMEName;
 UINT nsIMM32Handler::sCodePage = 0;
 DWORD nsIMM32Handler::sIMEProperty = 0;
+DWORD nsIMM32Handler::sIMEUIProperty = 0;
+bool nsIMM32Handler::sAssumeVerticalWritingModeNotSupported = false;
 
 /* static */ void
 nsIMM32Handler::EnsureHandlerInstance()
@@ -61,7 +155,10 @@ nsIMM32Handler::Initialize()
   if (!sWM_MSIME_MOUSE) {
     sWM_MSIME_MOUSE = ::RegisterWindowMessage(RWM_MOUSE);
   }
-  InitKeyboardLayout(::GetKeyboardLayout(0));
+  sAssumeVerticalWritingModeNotSupported =
+    Preferences::GetBool(
+      "intl.imm.vertical_writing.always_assume_not_supported", false);
+  InitKeyboardLayout(nullptr, ::GetKeyboardLayout(0));
 }
 
 /* static */ void
@@ -101,6 +198,22 @@ nsIMM32Handler::IsTopLevelWindowOfComposition(nsWindow* aWindow)
   return WinUtils::GetTopLevelHWND(wnd, true) == aWindow->GetWindowHandle();
 }
 
+/* static */
+bool
+nsIMM32Handler::IsJapanist2003Active()
+{
+  return sIMEName.EqualsLiteral("Japanist 2003");
+}
+
+/* static */ bool
+nsIMM32Handler::IsGoogleJapaneseInputActive()
+{
+  // NOTE: Even on Windows for en-US, the name of Google Japanese Input is
+  //       written in Japanese.
+  return sIMEName.Equals(L"Google \x65E5\x672C\x8A9E\x5165\x529B "
+                         L"IMM32 \x30E2\x30B8\x30E5\x30FC\x30EB");
+}
+
 /* static */ bool
 nsIMM32Handler::ShouldDrawCompositionStringOurselves()
 {
@@ -111,18 +224,67 @@ nsIMM32Handler::ShouldDrawCompositionStringOurselves()
           (sIMEProperty & IME_PROP_AT_CARET);
 }
 
-/* static */ void
-nsIMM32Handler::InitKeyboardLayout(HKL aKeyboardLayout)
+/* static */ bool
+nsIMM32Handler::IsVerticalWritingSupported()
 {
+  // Even if IME claims that they support vertical writing mode but it may not
+  // support vertical writing mode for its candidate window.
+  if (sAssumeVerticalWritingModeNotSupported) {
+    return false;
+  }
+  // Google Japanese Input doesn't support vertical writing mode.  We should
+  // return false if it's active IME.
+  if (IsGoogleJapaneseInputActive()) {
+    return false;
+  }
+  return !!(sIMEUIProperty & (UI_CAP_2700 | UI_CAP_ROT90 | UI_CAP_ROTANY));
+}
+
+/* static */ void
+nsIMM32Handler::InitKeyboardLayout(nsWindow* aWindow,
+                                   HKL aKeyboardLayout)
+{
+  UINT IMENameLength = ::ImmGetDescriptionW(aKeyboardLayout, nullptr, 0);
+  if (IMENameLength) {
+    // Add room for the terminating null character
+    sIMEName.SetLength(++IMENameLength);
+    IMENameLength =
+      ::ImmGetDescriptionW(aKeyboardLayout, sIMEName.BeginWriting(),
+                           IMENameLength);
+    // Adjust the length to ignore the terminating null character
+    sIMEName.SetLength(IMENameLength);
+  } else {
+    sIMEName.Truncate();
+  }
+
   WORD langID = LOWORD(aKeyboardLayout);
   ::GetLocaleInfoW(MAKELCID(langID, SORT_DEFAULT),
                    LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
                    (PWSTR)&sCodePage, sizeof(sCodePage) / sizeof(WCHAR));
   sIMEProperty = ::ImmGetProperty(aKeyboardLayout, IGP_PROPERTY);
+  sIMEUIProperty = ::ImmGetProperty(aKeyboardLayout, IGP_UI);
+
+  // If active IME is a TIP of TSF, we cannot retrieve the name with IMM32 API.
+  // For hacking some bugs of some TIP, we should set an IME name from the
+  // pref.
+  if (sCodePage == 932 && sIMEName.IsEmpty()) {
+    sIMEName =
+      Preferences::GetString("intl.imm.japanese.assume_active_tip_name_as");
+  }
+
+  // Whether the IME supports vertical writing mode might be changed or
+  // some IMEs may need specific font for their UI.  Therefore, we should
+  // update composition font forcibly here.
+  if (aWindow) {
+    MaybeAdjustCompositionFont(aWindow, sWritingModeOfCompositionFont, true);
+  }
+
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x, sCodePage=%lu, "
-     "sIMEProperty=%08x",
-     aKeyboardLayout, sCodePage, sIMEProperty));
+    ("IMM32: InitKeyboardLayout, aKeyboardLayout=%08x (\"%s\"), sCodePage=%lu, "
+     "sIMEProperty=%s, sIMEUIProperty=%s",
+     aKeyboardLayout, NS_ConvertUTF16toUTF8(sIMEName).get(),
+     sCodePage, GetIMEGeneralPropertyName(sIMEProperty).get(),
+     GetIMEUIPropertyName(sIMEUIProperty).get()));
 }
 
 /* static */ UINT
@@ -137,6 +299,7 @@ nsIMM32Handler::GetIMEUpdatePreference()
 {
   return nsIMEUpdatePreference(
     nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE |
+    nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
     nsIMEUpdatePreference::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR);
 }
 
@@ -258,6 +421,43 @@ nsIMM32Handler::OnUpdateComposition(nsWindow* aWindow)
   gIMM32Handler->SetIMERelatedWindowsPos(aWindow, IMEContext);
 }
 
+// static
+void
+nsIMM32Handler::OnSelectionChange(nsWindow* aWindow,
+                                  const IMENotification& aIMENotification)
+{
+  if (aIMENotification.mSelectionChangeData.mCausedByComposition) {
+    return;
+  }
+  MaybeAdjustCompositionFont(aWindow,
+    aIMENotification.mSelectionChangeData.GetWritingMode());
+}
+
+// static
+void
+nsIMM32Handler::MaybeAdjustCompositionFont(nsWindow* aWindow,
+                                           const WritingMode& aWritingMode,
+                                           bool aForceUpdate)
+{
+  switch (sCodePage) {
+    case 932: // Japanese Shift-JIS
+    case 936: // Simlified Chinese GBK
+    case 949: // Korean
+    case 950: // Traditional Chinese Big5
+      EnsureHandlerInstance();
+      break;
+    default:
+      // If there is no instance of nsIMM32Hander, we shouldn't waste footprint.
+      if (!gIMM32Handler) {
+        return;
+      }
+  }
+
+  // Like Navi-Bar of ATOK, some IMEs may require proper composition font even
+  // before sending WM_IME_STARTCOMPOSITION.
+  nsIMEContext IMEContext(aWindow->GetWindowHandle());
+  gIMM32Handler->AdjustCompositionFont(IMEContext, aWritingMode, aForceUpdate);
+}
 
 /* static */ bool
 nsIMM32Handler::ProcessInputLangChangeMessage(nsWindow* aWindow,
@@ -271,7 +471,7 @@ nsIMM32Handler::ProcessInputLangChangeMessage(nsWindow* aWindow,
   if (gIMM32Handler) {
     gIMM32Handler->OnInputLangChange(aWindow, wParam, lParam, aResult);
   }
-  InitKeyboardLayout(reinterpret_cast<HKL>(lParam));
+  InitKeyboardLayout(aWindow, reinterpret_cast<HKL>(lParam));
   // We can release the instance here, because the instance may be never
   // used. E.g., the new keyboard layout may not use IME, or it may use TSF.
   Terminate();
@@ -765,6 +965,9 @@ nsIMM32Handler::OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
   mComposingWindow = aWindow;
   nsIMEContext IMEContext(aWindow->GetWindowHandle());
   SetIMERelatedWindowsPosOnPlugin(aWindow, IMEContext);
+  // On widnowless plugin, we should assume that the focused editor is always
+  // in horizontal writing mode.
+  AdjustCompositionFont(IMEContext, WritingMode());
   aResult.mConsumed =
     aWindow->DispatchPluginEvent(WM_IME_STARTCOMPOSITION, wParam, lParam,
                                  false);
@@ -940,6 +1143,8 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
       ("IMM32: HandleStartComposition, FAILED (NS_QUERY_SELECTED_TEXT)\n"));
     return;
   }
+
+  AdjustCompositionFont(aIMEContext, selection.GetWritingMode());
 
   mCompositionStart = selection.mReply.mOffset;
 
@@ -1351,18 +1556,46 @@ nsIMM32Handler::HandleQueryCharPosition(nsWindow* aWindow,
   // even if the content of the popup window has focus.
   ResolveIMECaretPos(aWindow->GetTopLevelWindow(false),
                      r, nullptr, screenRect);
+
+  // XXX This might need to check writing mode.  However, MSDN doesn't explain
+  //     how to set the values in vertical writing mode. Additionally, IME
+  //     doesn't work well with top-left of the character (this is explicitly
+  //     documented) and its horizontal width.  So, it might be better to set
+  //     top-right corner of the character and horizontal width, but we're not
+  //     sure if it doesn't cause any problems with a lot of IMEs...
   pCharPosition->pt.x = screenRect.x;
   pCharPosition->pt.y = screenRect.y;
 
   pCharPosition->cLineHeight = r.height;
 
-  // XXX we should use NS_QUERY_EDITOR_RECT event here.
-  ::GetWindowRect(aWindow->GetWindowHandle(), &pCharPosition->rcDocument);
+  WidgetQueryContentEvent editorRect(true, NS_QUERY_EDITOR_RECT, aWindow);
+  aWindow->InitEvent(editorRect);
+  aWindow->DispatchWindowEvent(&editorRect);
+  if (NS_WARN_IF(!editorRect.mSucceeded)) {
+    PR_LOG(gIMM32Log, PR_LOG_ERROR,
+      ("IMM32: HandleQueryCharPosition, NS_QUERY_EDITOR_RECT failed"));
+    ::GetWindowRect(aWindow->GetWindowHandle(), &pCharPosition->rcDocument);
+  } else {
+    nsIntRect editorRectInWindow =
+      LayoutDevicePixel::ToUntyped(editorRect.mReply.mRect);
+    nsWindow* window = editorRect.mReply.mFocusedWidget ?
+      static_cast<nsWindow*>(editorRect.mReply.mFocusedWidget) : aWindow;
+    nsIntRect editorRectInScreen;
+    ResolveIMECaretPos(window, editorRectInWindow, nullptr, editorRectInScreen);
+    ::SetRect(&pCharPosition->rcDocument,
+              editorRectInScreen.x, editorRectInScreen.y,
+              editorRectInScreen.XMost(), editorRectInScreen.YMost());
+  }
 
   *oResult = TRUE;
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: HandleQueryCharPosition, SUCCEEDED\n"));
+    ("IMM32: HandleQueryCharPosition, SUCCEEDED, pCharPosition={ pt={ x=%d, "
+     "y=%d }, cLineHeight=%d, rcDocument={ left=%d, top=%d, right=%d, "
+     "bottom=%d } }",
+     pCharPosition->pt.x, pCharPosition->pt.y, pCharPosition->cLineHeight,
+     pCharPosition->rcDocument.left, pCharPosition->rcDocument.top,
+     pCharPosition->rcDocument.right, pCharPosition->rcDocument.bottom));
   return true;
 }
 
@@ -1761,7 +1994,8 @@ nsIMM32Handler::ConvertToANSIString(const nsAFlatString& aStr, UINT aCodePage,
 bool
 nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
                                                  uint32_t aOffset,
-                                                 nsIntRect &aCharRect)
+                                                 nsIntRect& aCharRect,
+                                                 WritingMode* aWritingMode)
 {
   nsIntPoint point(0, 0);
 
@@ -1798,21 +2032,29 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     aWindow->DispatchWindowEvent(&charRect);
     if (charRect.mSucceeded) {
       aCharRect = LayoutDevicePixel::ToUntyped(charRect.mReply.mRect);
+      if (aWritingMode) {
+        *aWritingMode = charRect.GetWritingMode();
+      }
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: GetCharacterRectOfSelectedTextAt, aOffset=%lu, SUCCEEDED\n",
          aOffset));
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-        ("IMM32: GetCharacterRectOfSelectedTextAt, aCharRect={ x: %ld, y: %ld, width: %ld, height: %ld }\n",
-         aCharRect.x, aCharRect.y, aCharRect.width, aCharRect.height));
+        ("IMM32: GetCharacterRectOfSelectedTextAt, "
+         "aCharRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
+         "charRect.GetWritingMode()=%s",
+         aCharRect.x, aCharRect.y, aCharRect.width, aCharRect.height,
+         GetWritingModeName(charRect.GetWritingMode()).get()));
       return true;
     }
   }
 
-  return GetCaretRect(aWindow, aCharRect);
+  return GetCaretRect(aWindow, aCharRect, aWritingMode);
 }
 
 bool
-nsIMM32Handler::GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect)
+nsIMM32Handler::GetCaretRect(nsWindow* aWindow,
+                             nsIntRect& aCaretRect,
+                             WritingMode* aWritingMode)
 {
   nsIntPoint point(0, 0);
 
@@ -1837,9 +2079,15 @@ nsIMM32Handler::GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect)
     return false;
   }
   aCaretRect = LayoutDevicePixel::ToUntyped(caretRect.mReply.mRect);
+  if (aWritingMode) {
+    *aWritingMode = caretRect.GetWritingMode();
+  }
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: GetCaretRect, SUCCEEDED, aCaretRect={ x: %ld, y: %ld, width: %ld, height: %ld }\n",
-     aCaretRect.x, aCaretRect.y, aCaretRect.width, aCaretRect.height));
+    ("IMM32: GetCaretRect, SUCCEEDED, "
+     "aCaretRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
+     "caretRect.GetWritingMode()=%s",
+     aCaretRect.x, aCaretRect.y, aCaretRect.width, aCaretRect.height,
+     GetWritingModeName(caretRect.GetWritingMode()).get()));
   return true;
 }
 
@@ -1850,7 +2098,8 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
   nsIntRect r;
   // Get first character rect of current a normal selected text or a composing
   // string.
-  bool ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r);
+  WritingMode writingMode;
+  bool ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r, &writingMode);
   NS_ENSURE_TRUE(ret, false);
   nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
   nsIntRect firstSelectedCharRect;
@@ -1881,37 +2130,93 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
       ("IMM32: SetIMERelatedWindowsPos, Set candidate window\n"));
 
     // Get a rect of first character in current target in composition string.
+    nsIntRect firstTargetCharRect, lastTargetCharRect;
     if (mIsComposing && !mCompositionString.IsEmpty()) {
       // If there are no targetted selection, we should use it's first character
       // rect instead.
-      uint32_t offset;
-      if (!GetTargetClauseRange(&offset)) {
+      uint32_t offset, length;
+      if (!GetTargetClauseRange(&offset, &length)) {
         PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
           ("IMM32: SetIMERelatedWindowsPos, FAILED, by GetTargetClauseRange\n"));
         return false;
       }
       ret = GetCharacterRectOfSelectedTextAt(aWindow,
-                                             offset - mCompositionStart, r);
+                                             offset - mCompositionStart,
+                                             firstTargetCharRect, &writingMode);
       NS_ENSURE_TRUE(ret, false);
+      if (length) {
+        ret = GetCharacterRectOfSelectedTextAt(aWindow,
+                offset + length - 1 - mCompositionStart, lastTargetCharRect);
+        NS_ENSURE_TRUE(ret, false);
+      } else {
+        lastTargetCharRect = firstTargetCharRect;
+      }
     } else {
       // If there are no composition string, we should use a first character
       // rect.
-      ret = GetCharacterRectOfSelectedTextAt(aWindow, 0, r);
+      ret = GetCharacterRectOfSelectedTextAt(aWindow, 0,
+                                             firstTargetCharRect, &writingMode);
       NS_ENSURE_TRUE(ret, false);
+      lastTargetCharRect = firstTargetCharRect;
     }
-    nsIntRect firstTargetCharRect;
-    ResolveIMECaretPos(toplevelWindow, r, aWindow, firstTargetCharRect);
+    ResolveIMECaretPos(toplevelWindow, firstTargetCharRect,
+                       aWindow, firstTargetCharRect);
+    ResolveIMECaretPos(toplevelWindow, lastTargetCharRect,
+                       aWindow, lastTargetCharRect);
+    nsIntRect targetClauseRect;
+    targetClauseRect.UnionRect(firstTargetCharRect, lastTargetCharRect);
 
-    // Move the candidate window to first character position of the target.
+    // Move the candidate window to proper position from the target clause as
+    // far as possible.
     CANDIDATEFORM candForm;
     candForm.dwIndex = 0;
-    candForm.dwStyle = CFS_EXCLUDE;
-    candForm.ptCurrentPos.x = firstTargetCharRect.x;
-    candForm.ptCurrentPos.y = firstTargetCharRect.y;
-    candForm.rcArea.right = candForm.rcArea.left = candForm.ptCurrentPos.x;
-    candForm.rcArea.top = candForm.ptCurrentPos.y;
-    candForm.rcArea.bottom = candForm.ptCurrentPos.y +
-                               firstTargetCharRect.height;
+    if (!writingMode.IsVertical() || IsVerticalWritingSupported()) {
+      candForm.dwStyle = CFS_EXCLUDE;
+      // Candidate window shouldn't overlap the target clause in any writing
+      // mode.
+      candForm.rcArea.left = targetClauseRect.x;
+      candForm.rcArea.right = targetClauseRect.XMost();
+      candForm.rcArea.top = targetClauseRect.y;
+      candForm.rcArea.bottom = targetClauseRect.YMost();
+      if (!writingMode.IsVertical()) {
+        // In horizontal layout, current point of interest should be top-left
+        // of the first character.
+        candForm.ptCurrentPos.x = firstTargetCharRect.x;
+        candForm.ptCurrentPos.y = firstTargetCharRect.y;
+      } else if (writingMode.IsVerticalRL()) {
+        // In vertical layout (RL), candidate window should be positioned right
+        // side of target clause.  However, we don't set vertical writing font
+        // to the IME.  Therefore, the candidate window may be positioned
+        // bottom-left of target clause rect with these information.
+        candForm.ptCurrentPos.x = targetClauseRect.x;
+        candForm.ptCurrentPos.y = targetClauseRect.y;
+      } else {
+        MOZ_ASSERT(writingMode.IsVerticalLR(), "Did we miss some causes?");
+        // In vertical layout (LR), candidate window should be poisitioned left
+        // side of target clause.  Although, we don't set vertical writing font
+        // to the IME, the candidate window may be positioned bottom-right of
+        // the target clause rect with these information.
+        candForm.ptCurrentPos.x = targetClauseRect.XMost();
+        candForm.ptCurrentPos.y = targetClauseRect.y;
+      }
+    } else {
+      // If vertical writing is not supported by IME, let's set candidate
+      // window position to the bottom-left of the target clause because
+      // the position must be the safest position to prevent the candidate
+      // window to overlap with the target clause.
+      candForm.dwStyle = CFS_CANDIDATEPOS;
+      candForm.ptCurrentPos.x = targetClauseRect.x;
+      candForm.ptCurrentPos.y = targetClauseRect.YMost();
+    }
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: SetIMERelatedWindowsPos, Calling ImmSetCandidateWindow()... "
+       "ptCurrentPos={ x=%d, y=%d }, "
+       "rcArea={ left=%d, top=%d, right=%d, bottom=%d }, "
+       "writingMode=%s",
+       candForm.ptCurrentPos.x, candForm.ptCurrentPos.y,
+       candForm.rcArea.left, candForm.rcArea.top,
+       candForm.rcArea.right, candForm.rcArea.bottom,
+       GetWritingModeName(writingMode).get()));
     ::ImmSetCandidateWindow(aIMEContext.get(), &candForm);
   } else {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -1923,7 +2228,9 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
     // automatically. So, we don't need to set it.
     COMPOSITIONFORM compForm;
     compForm.dwStyle = CFS_POINT;
-    compForm.ptCurrentPos.x = firstSelectedCharRect.x;
+    compForm.ptCurrentPos.x =
+      !writingMode.IsVerticalLR() ? firstSelectedCharRect.x :
+                                    firstSelectedCharRect.XMost();
     compForm.ptCurrentPos.y = firstSelectedCharRect.y;
     ::ImmSetCompositionWindow(aIMEContext.get(), &compForm);
   }
@@ -2009,6 +2316,138 @@ nsIMM32Handler::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
 
   if (aNewOriginWidget)
     aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffsetUntyped());
+}
+
+static void
+SetHorizontalFontToLogFont(const nsAString& aFontFace,
+                           LOGFONTW& aLogFont)
+{
+  aLogFont.lfEscapement = aLogFont.lfOrientation = 0;
+  if (NS_WARN_IF(aFontFace.Length() > LF_FACESIZE - 1)) {
+    memcpy(aLogFont.lfFaceName, L"System", sizeof(L"System"));
+    return;
+  }
+  memcpy(aLogFont.lfFaceName, aFontFace.BeginReading(),
+         aFontFace.Length() * sizeof(wchar_t));
+  aLogFont.lfFaceName[aFontFace.Length()] = 0;
+}
+
+static void
+SetVerticalFontToLogFont(const nsAString& aFontFace,
+                         LOGFONTW& aLogFont)
+{
+  aLogFont.lfEscapement = aLogFont.lfOrientation = 2700;
+  if (NS_WARN_IF(aFontFace.Length() > LF_FACESIZE - 2)) {
+    memcpy(aLogFont.lfFaceName, L"@System", sizeof(L"@System"));
+    return;
+  }
+  aLogFont.lfFaceName[0] = '@';
+  memcpy(&aLogFont.lfFaceName[1], aFontFace.BeginReading(),
+         aFontFace.Length() * sizeof(wchar_t));
+  aLogFont.lfFaceName[aFontFace.Length() + 1] = 0;
+}
+
+void
+nsIMM32Handler::AdjustCompositionFont(const nsIMEContext& aIMEContext,
+                                      const WritingMode& aWritingMode,
+                                      bool aForceUpdate)
+{
+  // An instance of nsIMM32Handler is destroyed when active IME is changed.
+  // Therefore, we need to store the information which are set to the IM
+  // context to static variables since IM context is never recreated.
+  static bool sCompositionFontsInitialized = false;
+  static nsString sCompositionFont =
+    Preferences::GetString("intl.imm.composition_font");
+
+  // If composition font is customized by pref, we need to modify the
+  // composition font of the IME context at first time even if the writing mode
+  // is horizontal.
+  bool setCompositionFontForcibly = aForceUpdate ||
+    (!sCompositionFontsInitialized && !sCompositionFont.IsEmpty());
+
+  static WritingMode sCurrentWritingMode;
+  static nsString sCurrentIMEName;
+  if (!setCompositionFontForcibly &&
+      sWritingModeOfCompositionFont == aWritingMode &&
+      sCurrentIMEName == sIMEName) {
+    // Nothing to do if writing mode isn't being changed.
+    return;
+  }
+
+  // Decide composition fonts for both horizontal writing mode and vertical
+  // writing mode.  If the font isn't specified by the pref, use default
+  // font which is already set to the IM context.  And also in vertical writing
+  // mode, insert '@' to the start of the font.
+  if (!sCompositionFontsInitialized) {
+    sCompositionFontsInitialized = true;
+    // sCompositionFontH must not start with '@' and its length is less than
+    // LF_FACESIZE since it needs to end with null terminating character.
+    if (sCompositionFont.IsEmpty() ||
+        sCompositionFont.Length() > LF_FACESIZE - 1 ||
+        sCompositionFont[0] == '@') {
+      LOGFONTW defaultLogFont;
+      if (NS_WARN_IF(!::ImmGetCompositionFont(aIMEContext.get(),
+                                              &defaultLogFont))) {
+        PR_LOG(gIMM32Log, PR_LOG_ERROR,
+          ("IMM32: AdjustCompositionFont, ::ImmGetCompositionFont() failed"));
+        sCompositionFont.AssignLiteral("System");
+      } else {
+        // The font face is typically, "System".
+        sCompositionFont.Assign(defaultLogFont.lfFaceName);
+      }
+    }
+
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: AdjustCompositionFont, sCompositionFont=\"%s\" is initialized",
+       NS_ConvertUTF16toUTF8(sCompositionFont).get()));
+  }
+
+  static nsString sCompositionFontForJapanist2003;
+  if (IsJapanist2003Active() && sCompositionFontForJapanist2003.IsEmpty()) {
+    const char* kCompositionFontForJapanist2003 =
+      "intl.imm.composition_font.japanist_2003";
+    sCompositionFontForJapanist2003 =
+      Preferences::GetString(kCompositionFontForJapanist2003);
+    // If the font name is not specified properly, let's use
+    // "MS PGothic" instead.
+    if (sCompositionFontForJapanist2003.IsEmpty() ||
+        sCompositionFontForJapanist2003.Length() > LF_FACESIZE - 2 ||
+        sCompositionFontForJapanist2003[0] == '@') {
+      sCompositionFontForJapanist2003.AssignLiteral("MS PGothic");
+    }
+  }
+
+  sWritingModeOfCompositionFont = aWritingMode;
+  sCurrentIMEName = sIMEName;
+
+  LOGFONTW logFont;
+  memset(&logFont, 0, sizeof(logFont));
+  if (!::ImmGetCompositionFont(aIMEContext.get(), &logFont)) {
+    PR_LOG(gIMM32Log, PR_LOG_ERROR,
+      ("IMM32: AdjustCompositionFont, ::ImmGetCompositionFont() failed"));
+    logFont.lfFaceName[0] = 0;
+  }
+  // Need to reset some information which should be recomputed with new font.
+  logFont.lfWidth = 0;
+  logFont.lfWeight = FW_DONTCARE;
+  logFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
+  logFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+  logFont.lfPitchAndFamily = DEFAULT_PITCH;
+
+  if (!mIsComposingOnPlugin &&
+      aWritingMode.IsVertical() && IsVerticalWritingSupported()) {
+    SetVerticalFontToLogFont(
+      IsJapanist2003Active() ? sCompositionFontForJapanist2003 :
+                               sCompositionFont, logFont);
+  } else {
+    SetHorizontalFontToLogFont(
+      IsJapanist2003Active() ? sCompositionFontForJapanist2003 :
+                               sCompositionFont, logFont);
+  }
+  PR_LOG(gIMM32Log, PR_LOG_WARNING,
+    ("IMM32: AdjustCompositionFont, calling ::ImmSetCompositionFont(\"%s\")",
+     NS_ConvertUTF16toUTF8(nsDependentString(logFont.lfFaceName)).get()));
+  ::ImmSetCompositionFontW(aIMEContext.get(), &logFont);
 }
 
 /* static */ nsresult
