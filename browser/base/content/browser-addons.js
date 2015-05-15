@@ -54,22 +54,6 @@ const gXPInstallObserver = {
       // originatingURI might be missing or 'host' might throw for non-nsStandardURL nsIURIs.
     }
 
-    let cancelInstallation = () => {
-      if (installInfo) {
-        for (let install of installInfo.installs)
-          install.cancel();
-      }
-
-      if (aTopic == "addon-install-confirmation")
-        this.acceptInstallation = null;
-
-      let tab = gBrowser.getTabForBrowser(browser);
-      if (tab)
-        tab.removeEventListener("TabClose", cancelInstallation);
-
-      window.removeEventListener("unload", cancelInstallation);
-    };
-
     switch (aTopic) {
     case "addon-install-disabled": {
       notificationID = "xpinstall-disabled";
@@ -136,9 +120,6 @@ const gXPInstallObserver = {
           case "removed":
             options.contentWindow = null;
             options.sourceURI = null;
-
-            gBrowser.getTabForBrowser(browser).removeEventListener("TabClose", cancelInstallation);
-            window.removeEventListener("unload", cancelInstallation);
             break;
         }
       };
@@ -153,9 +134,6 @@ const gXPInstallObserver = {
       let acceptButton = document.getElementById("addon-progress-accept");
       acceptButton.label = gNavigatorBundle.getString("addonInstall.acceptButton.label");
       acceptButton.accessKey = gNavigatorBundle.getString("addonInstall.acceptButton.accesskey");
-
-      gBrowser.getTabForBrowser(browser).addEventListener("TabClose", cancelInstallation);
-      window.addEventListener("unload", cancelInstallation);
       break; }
     case "addon-install-failed": {
       // TODO This isn't terribly ideal for the multiple failure case
@@ -192,7 +170,11 @@ const gXPInstallObserver = {
       options.eventCallback = (aEvent) => {
         switch (aEvent) {
           case "removed":
-            cancelInstallation();
+            if (installInfo) {
+              for (let install of installInfo.installs)
+                install.cancel();
+            }
+            this.acceptInstallation = null;
             break;
           case "shown":
             let addonList = document.getElementById("addon-install-confirmation-content");
@@ -261,12 +243,8 @@ const gXPInstallObserver = {
 
       let showNotification = () => {
         let tab = gBrowser.getTabForBrowser(browser);
-        if (tab) {
+        if (tab)
           gBrowser.selectedTab = tab;
-          tab.addEventListener("TabClose", cancelInstallation);
-        }
-
-        window.addEventListener("unload", cancelInstallation);
 
         if (PopupNotifications.isPanelOpen) {
           let rect = document.getElementById("addon-progress-notification").getBoundingClientRect();
