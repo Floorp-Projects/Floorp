@@ -10,8 +10,9 @@ extern crate regex;
 #[macro_use]
 extern crate webdriver;
 
+use std::borrow::ToOwned;
 use std::process::exit;
-use std::net::SocketAddr;
+use std::net::{SocketAddr, SocketAddrV4, Ipv4Addr};
 use std::str::FromStr;
 use std::path::Path;
 
@@ -31,10 +32,9 @@ macro_rules! try_opt {
 
 mod marionette;
 
-static DEFAULT_ADDR: &'static str = "127.0.0.1:4444";
-
 struct Options {
     binary: String,
+    webdriver_host: String,
     webdriver_port: u16,
     marionette_port: u16,
     connect_existing: bool
@@ -42,7 +42,8 @@ struct Options {
 
 fn parse_args() -> Options {
     let mut opts = Options {
-        binary: "".to_string(),
+        binary: "".to_owned(),
+        webdriver_host: "127.0.0.1".to_owned(),
         webdriver_port: 4444u16,
         marionette_port: 2828u16,
         connect_existing: false
@@ -54,6 +55,9 @@ fn parse_args() -> Options {
         parser.refer(&mut opts.binary)
             .add_option(&["-b", "--binary"], Store,
                         "Path to the Firefox binary");
+        parser.refer(&mut opts.webdriver_host)
+            .add_option(&["--webdriver-host"], Store,
+                        "Host to run webdriver server on");
         parser.refer(&mut opts.webdriver_port)
             .add_option(&["--webdriver-port"], Store,
                         "Port to run webdriver on");
@@ -68,31 +72,19 @@ fn parse_args() -> Options {
     opts
 }
 
-
-// Valid addresses to parse are "HOST:PORT" or ":PORT".
-// If the host isn't specified, 127.0.0.1 will be assumed.
-fn parse_addr(s: &str) -> Result<SocketAddr, String> {
-    let mut parts: Vec<&str> = s.splitn(1, ':').collect();
-    if parts.len() == 2 {
-        parts[0] = "127.0.0.1";
-    }
-    let full_addr = parts.connect(":");
-    match FromStr::from_str(&full_addr[..]) {
-        Ok(addr) => Ok(addr),
-        Err(_) => Err(format!("illegal address: {}", s))
-    }
-}
-
 fn main() {
     env_logger::init().unwrap();
     let opts = parse_args();
-    let addr = match parse_addr(DEFAULT_ADDR) {
-        Ok(x) => x,
-        Err(e) => {
-            println!("{}", e);
+
+    let host = &opts.webdriver_host[..];
+    let port = opts.webdriver_port;
+    let addr = Ipv4Addr::from_str(host).map(
+        |x| SocketAddr::V4(SocketAddrV4::new(x, port))).unwrap_or_else(
+        |_| {
+            println!("Invalid host address");
             exit(1);
         }
-    };
+        );
 
     let launcher = if opts.connect_existing {
         BrowserLauncher::None
@@ -100,7 +92,8 @@ fn main() {
         BrowserLauncher::BinaryLauncher(Path::new(&opts.binary).to_path_buf())
     };
 
-    let settings = MarionetteSettings::new(opts.marionette_port, launcher);
+    let settings = MarionetteSettings::new(opts.marionette_port,
+                                           launcher);
 
     //TODO: what if binary isn't a valid path?
     start(addr, MarionetteHandler::new(settings));
