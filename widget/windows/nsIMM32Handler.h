@@ -161,6 +161,8 @@ protected:
   static bool IsComposingOnPlugin();
   static bool IsComposingWindow(nsWindow* aWindow);
 
+  static bool IsJapanist2003Active();
+
   static bool ShouldDrawCompositionStringOurselves();
   static bool IsVerticalWritingSupported();
   static void InitKeyboardLayout(HKL aKeyboardLayout);
