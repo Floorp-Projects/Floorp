@@ -12,9 +12,11 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
+#include "nsRefPtr.h"
 
 class nsIThread;
 class nsIThreadPool;
@@ -23,6 +25,7 @@ namespace mozilla {
 namespace image {
 
 class Decoder;
+class DecodePoolImpl;
 
 /**
  * DecodePool is a singleton class that manages decoding of raster images. It
@@ -64,15 +67,6 @@ public:
   void SyncDecodeIfPossible(Decoder* aDecoder);
 
   /**
-   * Returns an event target interface to the DecodePool's underlying thread
-   * pool. Callers can use this event target to submit work to the image
-   * decoding thread pool.
-   *
-   * @return An nsIEventTarget interface to the thread pool.
-   */
-  already_AddRefed<nsIEventTarget> GetEventTarget();
-
-  /**
    * Returns an event target interface to the DecodePool's I/O thread. Callers
    * who want to deliver data to workers on the DecodePool can use this event
    * target.
@@ -81,17 +75,8 @@ public:
    */
   already_AddRefed<nsIEventTarget> GetIOEventTarget();
 
-  /**
-   * Creates a worker which can be used to attempt further decoding using the
-   * provided decoder.
-   *
-   * @return The new worker, which should be posted to the event target returned
-   *         by GetEventTarget.
-   */
-  already_AddRefed<nsIRunnable> CreateDecodeWorker(Decoder* aDecoder);
-
 private:
-  friend class DecodeWorker;
+  friend class DecodePoolWorker;
 
   DecodePool();
   virtual ~DecodePool();
@@ -102,9 +87,11 @@ private:
 
   static StaticRefPtr<DecodePool> sSingleton;
 
-  // mMutex protects mThreadPool and mIOThread.
+  nsRefPtr<DecodePoolImpl>    mImpl;
+
+  // mMutex protects mThreads and mIOThread.
   Mutex                     mMutex;
-  nsCOMPtr<nsIThreadPool>   mThreadPool;
+  nsCOMArray<nsIThread>     mThreads;
   nsCOMPtr<nsIThread>       mIOThread;
 };
 

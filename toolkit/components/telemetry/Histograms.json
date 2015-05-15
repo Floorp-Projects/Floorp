@@ -5561,6 +5561,12 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'reconfigure thread' request to go round trip."
   },
+  "MEDIA_WMF_DECODE_ERROR": {
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 256,
+    "description": "WMF media decoder error or success (0) codes."
+  },
   "VIDEO_CANPLAYTYPE_H264_CONSTRAINT_SET_FLAG": {
     "expires_in_version": "50",
     "kind": "enumerated",
@@ -7539,6 +7545,20 @@
     "kind": "enumerated",
     "n_values": 5,
     "description": "MSE video state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4"
+  },
+  "VIDEO_ADOBE_GMP_DISAPPEARED": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "expires_in_version": "42",
+    "kind": "flag",
+    "description": "Whether or not the Adobe EME GMP was expected to be resident on disk but mysteriously isn't.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "VIDEO_OPENH264_GMP_DISAPPEARED": {
+    "alert_emails": ["cpearce@mozilla.com", "rjesup@mozilla.com"],
+    "expires_in_version": "42",
+    "kind": "flag",
+    "description": "Whether or not the OpenH264 GMP was expected to be resident on disk but mysteriously isn't.",
+    "releaseChannelCollection": "opt-out"
   },
   "FX_SANITIZE_TOTAL": {
     "alert_emails": ["firefox-dev@mozilla.org", "gavin@mozilla.com"],
