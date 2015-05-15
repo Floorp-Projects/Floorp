@@ -277,39 +277,49 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     return cell;
   },
   _appendFunctionDetailsCells: function(cell, frameInfo) {
-    let urlNode = this.document.createElement("label");
-    urlNode.className = "plain call-tree-url";
-    urlNode.setAttribute("flex", "1");
-    urlNode.setAttribute("crop", "end");
-    urlNode.setAttribute("value", frameInfo.fileName || "");
-    urlNode.setAttribute("tooltiptext", URL_LABEL_TOOLTIP + " → " + frameInfo.url);
-    urlNode.addEventListener("mousedown", this._onUrlClick);
-    cell.appendChild(urlNode);
+    if (frameInfo.fileName) {
+      let urlNode = this.document.createElement("label");
+      urlNode.className = "plain call-tree-url";
+      urlNode.setAttribute("flex", "1");
+      urlNode.setAttribute("crop", "end");
+      urlNode.setAttribute("value", frameInfo.fileName);
+      urlNode.setAttribute("tooltiptext", URL_LABEL_TOOLTIP + " → " + frameInfo.url);
+      urlNode.addEventListener("mousedown", this._onUrlClick);
+      cell.appendChild(urlNode);
+    }
 
-    let lineNode = this.document.createElement("label");
-    lineNode.className = "plain call-tree-line";
-    lineNode.setAttribute("value", frameInfo.line ? ":" + frameInfo.line : "");
-    cell.appendChild(lineNode);
+    if (frameInfo.line) {
+      let lineNode = this.document.createElement("label");
+      lineNode.className = "plain call-tree-line";
+      lineNode.setAttribute("value", ":" + frameInfo.line);
+      cell.appendChild(lineNode);
+    }
 
-    let columnNode = this.document.createElement("label");
-    columnNode.className = "plain call-tree-column";
-    columnNode.setAttribute("value", frameInfo.column ? ":" + frameInfo.column : "");
-    cell.appendChild(columnNode);
+    if (frameInfo.column) {
+      let columnNode = this.document.createElement("label");
+      columnNode.className = "plain call-tree-column";
+      columnNode.setAttribute("value", ":" + frameInfo.column);
+      cell.appendChild(columnNode);
+    }
 
-    let hostNode = this.document.createElement("label");
-    hostNode.className = "plain call-tree-host";
-    hostNode.setAttribute("value", frameInfo.host || "");
-    cell.appendChild(hostNode);
+    if (frameInfo.host) {
+      let hostNode = this.document.createElement("label");
+      hostNode.className = "plain call-tree-host";
+      hostNode.setAttribute("value", frameInfo.host);
+      cell.appendChild(hostNode);
+    }
 
-    let spacerNode = this.document.createElement("spacer");
-    spacerNode.setAttribute("flex", "10000");
-    cell.appendChild(spacerNode);
+    if (frameInfo.categoryData.label) {
+      let spacerNode = this.document.createElement("spacer");
+      spacerNode.setAttribute("flex", "10000");
+      cell.appendChild(spacerNode);
 
-    let categoryNode = this.document.createElement("label");
-    categoryNode.className = "plain call-tree-category";
-    categoryNode.style.color = frameInfo.categoryData.color;
-    categoryNode.setAttribute("value", frameInfo.categoryData.label || "");
-    cell.appendChild(categoryNode);
+      let categoryNode = this.document.createElement("label");
+      categoryNode.className = "plain call-tree-category";
+      categoryNode.style.color = frameInfo.categoryData.color;
+      categoryNode.setAttribute("value", frameInfo.categoryData.label);
+      cell.appendChild(categoryNode);
+    }
   },
 
   /**
