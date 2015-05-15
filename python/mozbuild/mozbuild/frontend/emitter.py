@@ -80,6 +80,8 @@ from .context import (
     Context,
     ObjDirPath,
     SourcePath,
+    ObjDirPath,
+    Path,
     SubContext,
     TemplateContext,
 )
@@ -892,27 +894,28 @@ class TreeMetadataEmitter(LoggingMixin):
                     'Cannot install files to the root of TEST_HARNESS_FILES', context)
 
             for s in strings:
-                if context.is_objdir_path(s):
-                    if s.startswith('!/'):
-                        objdir_files[path].append('$(DEPTH)/%s' % s[2:])
+                # Ideally, TEST_HARNESS_FILES would expose Path instances, but
+                # subclassing HierarchicalStringList to be ContextDerived is
+                # painful, so until we actually kill HierarchicalStringList,
+                # just do Path manipulation here.
+                p = Path(context, s)
+                if isinstance(p, ObjDirPath):
+                    objdir_files[path].append(p.full_path)
+                elif '*' in s:
+                    resolved = p.full_path
+                    if s[0] == '/':
+                        pattern_start = resolved.index('*')
+                        base_path = mozpath.dirname(resolved[:pattern_start])
+                        pattern = resolved[len(base_path)+1:]
                     else:
-                        objdir_files[path].append(s[1:])
+                        base_path = context.srcdir
+                        pattern = s
+                    srcdir_pattern_files[path].append((base_path, pattern));
+                elif not os.path.exists(p.full_path):
+                    raise SandboxValidationError(
+                        'File listed in TEST_HARNESS_FILES does not exist: %s' % s, context)
                 else:
-                    resolved = context.resolve_path(s)
-                    if '*' in s:
-                        if s[0] == '/':
-                            pattern_start = resolved.index('*')
-                            base_path = mozpath.dirname(resolved[:pattern_start])
-                            pattern = resolved[len(base_path)+1:]
-                        else:
-                            base_path = context.srcdir
-                            pattern = s
-                        srcdir_pattern_files[path].append((base_path, pattern));
-                    elif not os.path.exists(resolved):
-                        raise SandboxValidationError(
-                            'File listed in TEST_HARNESS_FILES does not exist: %s' % s, context)
-                    else:
-                        srcdir_files[path].append(resolved)
+                    srcdir_files[path].append(p.full_path)
 
         yield TestHarnessFiles(context, srcdir_files,
                                srcdir_pattern_files, objdir_files)
