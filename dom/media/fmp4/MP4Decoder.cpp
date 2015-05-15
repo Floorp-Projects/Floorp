@@ -241,6 +241,7 @@ MP4Decoder::IsEnabled()
          HavePlatformMPEGDecoders();
 }
 
+#ifdef XP_WIN
 static const uint8_t sTestH264ExtraData[] = {
   0x01, 0x64, 0x00, 0x0a, 0xff, 0xe1, 0x00, 0x17, 0x67, 0x64,
   0x00, 0x0a, 0xac, 0xd9, 0x44, 0x26, 0x84, 0x00, 0x00, 0x03,
@@ -273,10 +274,12 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
 
   return decoder.forget();
 }
+#endif
 
 /* static */ bool
 MP4Decoder::CanCreateH264Decoder()
 {
+#ifdef XP_WIN
   static bool haveCachedResult = false;
   static bool result = false;
   if (haveCachedResult) {
@@ -291,8 +294,12 @@ MP4Decoder::CanCreateH264Decoder()
   }
   haveCachedResult = true;
   return result;
+#else
+  return IsEnabled();
+#endif
 }
 
+#ifdef XP_WIN
 static already_AddRefed<MediaDataDecoder>
 CreateTestAACDecoder(mp4_demuxer::AudioDecoderConfig& aConfig)
 {
@@ -324,9 +331,12 @@ static const uint8_t sTestAACExtraData[] = {
 
 static const uint8_t sTestAACConfig[] = { 0x13, 0x90 };
 
+#endif // XP_WIN
+
 /* static */ bool
 MP4Decoder::CanCreateAACDecoder()
 {
+#ifdef XP_WIN
   static bool haveCachedResult = false;
   static bool result = false;
   if (haveCachedResult) {
@@ -350,6 +360,9 @@ MP4Decoder::CanCreateAACDecoder()
   }
   haveCachedResult = true;
   return result;
+#else
+  return IsEnabled();
+#endif
 }
 
 } // namespace mozilla
