@@ -3000,7 +3000,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return "passwords";
           if (type == "editBookmarkPanel")
             return "bookmarks";
-          if (type == "addon-install-complete") {
+          if (type == "addon-install-complete" || type == "addon-install-restart") {
             if (!Services.prefs.prefHasUserValue("services.sync.username"))
               return "addons";
             if (!Services.prefs.getBoolPref("services.sync.engine.addons"))

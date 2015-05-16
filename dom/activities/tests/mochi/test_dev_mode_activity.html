@@ -184,8 +184,14 @@ function continueTest() {
   }
 }
 
+var obsService = Cc["@mozilla.org/observer-service;1"]
+                   .getService(Ci.nsIObserverService);
+
+obsService.addObserver(continueTest, "new-activity-registered-success", false);
+obsService.addObserver(continueTest, "new-activity-registered-failure", false);
+
 /**
-  * Test exporting and importing hosted and packaged apps.
+  * Test dev mode activity.
   */
 function runTest() {
   SpecialPowers.setAllAppsLaunchable(true);
@@ -227,6 +233,9 @@ function runTest() {
   var systemApp = request.result;
   ok(systemApp, "systemApp is non-null");
 
+  // yielding for the activity install observer.
+  yield undefined;
+
   activity = new MozActivity({ name: "import-app" });
   activity.onerror = function() {
     ok(true, "2) No dev mode, system app installed");
@@ -241,6 +250,9 @@ function runTest() {
   var otherApp = request.result;
   ok(otherApp, "otherApp is non-null");
 
+  // yielding for the activity install observer.
+  yield undefined;
+
   activity = new MozActivity({ name: "import-app" });
   activity.onerror = function() {
     ok(true, "3) No dev mode, system app and other app installed");
@@ -249,7 +261,7 @@ function runTest() {
   activity.onsuccess = unexpectedSuccess("3) No dev mode, system app and other app installed");
   yield undefined;
 
-  // 4) Dev mode, no system app installed.
+  // 4) Dev mode, system app and other app installed.
   SpecialPowers.pushPrefEnv(
         {'set': [["dom.apps.developer_mode", true]]},
         continueTest);
@@ -260,8 +272,8 @@ function runTest() {
     ok(true, "4) Dev mode, system app and other app installed");
     continueTest();
   }
-  activity.onerror = function(aError) {
-    ok(false, "Got error: " + aError.name);
+  activity.onerror = function(aEvent) {
+    ok(false, "4) Got error: " + aEvent.error.name);
     finish();
   }
   yield undefined;

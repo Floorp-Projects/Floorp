@@ -26,7 +26,7 @@ function test() {
     "The root node's 'category' attribute is correct.");
   is(treeRoot.target.getAttribute("tooltiptext"), "",
     "The root node's 'tooltiptext' attribute is correct.");
-  ok(treeRoot.target.querySelector(".call-tree-category").hidden,
+  is(treeRoot.target.querySelector(".call-tree-category"), null,
     "The root node's category label cell should be hidden.");
 
   let A = treeRoot.getChild();
@@ -37,7 +37,7 @@ function test() {
     "The .A.B.D node's 'origin' attribute is correct.");
   is(D.target.getAttribute("category"), "gc",
     "The .A.B.D node's 'category' attribute is correct.");
-  is(D.target.getAttribute("tooltiptext"), "D (http://foo/bar/baz:78)",
+  is(D.target.getAttribute("tooltiptext"), "D (http://foo/bar/baz:78:1337)",
     "The .A.B.D node's 'tooltiptext' attribute is correct.");
   ok(!A.target.querySelector(".call-tree-category").hidden,
     "The .A.B.D node's category label cell should not be hidden.");
@@ -72,7 +72,7 @@ function test() {
   is(functionCell.childNodes[4].className, "plain call-tree-column",
     "The fifth node displayed for function cells is correct.");
   is(functionCell.childNodes[5].className, "plain call-tree-host",
-    "The fifth node displayed for function cells is correct.");
+    "The sixth node displayed for function cells is correct.");
   is(functionCell.childNodes[6].tagName, "spacer",
     "The seventh node displayed for function cells is correct.");
   is(functionCell.childNodes[7].className, "plain call-tree-category",
@@ -95,7 +95,7 @@ let gThread = synthesizeProfileForTest([{
     { category: CATEGORY_MASK('other'),  location: "(root)" },
     { category: CATEGORY_MASK('other'),  location: "A (http://foo/bar/baz:12)" },
     { category: CATEGORY_MASK('css'),    location: "B (http://foo/bar/baz:34)" },
-    { category: CATEGORY_MASK('gc', 1),  location: "D (http://foo/bar/baz:78)" }
+    { category: CATEGORY_MASK('gc', 1),  location: "D (http://foo/bar/baz:78:1337)" }
   ]
 }, {
   time: 5 + 1 + 2,
@@ -103,7 +103,7 @@ let gThread = synthesizeProfileForTest([{
     { category: CATEGORY_MASK('other'),  location: "(root)" },
     { category: CATEGORY_MASK('other'),  location: "A (http://foo/bar/baz:12)" },
     { category: CATEGORY_MASK('css'),    location: "B (http://foo/bar/baz:34)" },
-    { category: CATEGORY_MASK('gc', 1),  location: "D (http://foo/bar/baz:78)" }
+    { category: CATEGORY_MASK('gc', 1),  location: "D (http://foo/bar/baz:78:1337)" }
   ]
 }, {
   time: 5 + 1 + 2 + 7,
