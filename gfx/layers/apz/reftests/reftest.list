@@ -1,0 +1,8 @@
+# The following tests test the async positioning of the scrollbars.
+# Basic root-frame scrollbar with async scrolling
+skip-if(!asyncPanZoom) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html
+skip-if(!asyncPanZoom) == async-scrollbar-1-h.html async-scrollbar-1-h-ref.html
+skip-if(!asyncPanZoom) == async-scrollbar-1-vh.html async-scrollbar-1-vh-ref.html
+skip-if(!asyncPanZoom) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html
+skip-if(!asyncPanZoom) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl-ref.html
+skip-if(!asyncPanZoom) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl-ref.html
