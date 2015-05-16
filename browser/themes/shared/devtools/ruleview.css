@@ -264,3 +264,8 @@
 .ruleview-selectorhighlighter.highlighted {
   background-position: -16px 0;
 }
+
+#ruleview-add-rule-button::before {
+  background-image: url("chrome://browser/skin/devtools/add.svg");
+  background-size: cover;
+}
