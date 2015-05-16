@@ -2606,7 +2606,7 @@ QuotaManager::GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
   }
 
   nsCString origin;
-  rv = aPrincipal->GetOrigin(getter_Copies(origin));
+  rv = aPrincipal->GetOrigin(origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (origin.EqualsLiteral(kChromeOrigin)) {

@@ -1431,7 +1431,7 @@ nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
     PL_DHashTableEnumerate(children, EnqueueRuleNodeChildren,
                            &destroyQueueTail);
     *destroyQueueTail = nullptr; // ensure null-termination
-    delete children;
+    PL_DHashTableDestroy(children);
   } else if (HaveChildren()) {
     *destroyQueueTail = ChildrenList();
     do {
@@ -1614,7 +1614,7 @@ nsRuleNode::ConvertChildrenToHash(int32_t aNumKids)
 {
   NS_ASSERTION(!ChildrenAreHashed() && HaveChildren(),
                "must have a non-empty list of children");
-  PLDHashTable *hash = new PLDHashTable(&ChildrenHashOps,
+  PLDHashTable *hash = PL_NewDHashTable(&ChildrenHashOps,
                                         sizeof(ChildrenHashEntry),
                                         aNumKids);
   for (nsRuleNode* curr = ChildrenList(); curr; curr = curr->mNextSibling) {
@@ -9372,7 +9372,7 @@ nsRuleNode::SweepChildren(nsTArray<nsRuleNode*>& aSweepQueue)
     PL_DHashTableEnumerate(children, SweepHashEntry, &survivorsWithChildren);
     childrenDestroyed = oldChildCount - children->EntryCount();
     if (childrenDestroyed == oldChildCount) {
-      delete children;
+      PL_DHashTableDestroy(children);
       mChildren.asVoid = nullptr;
     }
   } else {

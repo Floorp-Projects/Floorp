@@ -328,7 +328,6 @@ class CompExprTransplanter;
 
 enum LetContext { LetExpression, LetStatement };
 enum VarContext { HoistVars, DontHoistVars };
-enum FunctionType { Getter, Setter, Normal };
 enum PropListType { ObjectLiteral, ClassBody };
 
 // Specify a value for an ES6 grammar parametrization.  We have no enum for
@@ -504,8 +503,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                       FunctionBodyType type);
 
     bool functionArgsAndBodyGeneric(InHandling inHandling, YieldHandling yieldHandling, Node pn,
-                                    HandleFunction fun, FunctionType type,
-                                    FunctionSyntaxKind kind);
+                                    HandleFunction fun, FunctionSyntaxKind kind);
 
     // Determine whether |yield| is a valid name in the current context, or
     // whether it's prohibited due to strictness, JS version, or occurrence
@@ -594,19 +592,19 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool checkAndMarkSuperScope();
 
     bool methodDefinition(YieldHandling yieldHandling, PropListType listType, Node propList,
-                          Node propname, FunctionType type, GeneratorKind generatorKind,
+                          Node propname, FunctionSyntaxKind kind, GeneratorKind generatorKind,
                           bool isStatic, JSOp Op);
 
     /*
      * Additional JS parsers.
      */
-    bool functionArguments(YieldHandling yieldHandling, FunctionSyntaxKind kind, FunctionType type,
-                           Node* list, Node funcpn, bool* hasRest);
+    bool functionArguments(YieldHandling yieldHandling, FunctionSyntaxKind kind, Node* list,
+                           Node funcpn, bool* hasRest);
 
     Node functionDef(InHandling inHandling, YieldHandling uieldHandling, HandlePropertyName name,
-                     FunctionType type, FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                     FunctionSyntaxKind kind, GeneratorKind generatorKind,
                      InvokedPrediction invoked = PredictUninvoked);
-    bool functionArgsAndBody(InHandling inHandling, Node pn, HandleFunction fun, FunctionType type,
+    bool functionArgsAndBody(InHandling inHandling, Node pn, HandleFunction fun,
                              FunctionSyntaxKind kind, GeneratorKind generatorKind,
                              Directives inheritedDirectives, Directives* newDirectives);
 

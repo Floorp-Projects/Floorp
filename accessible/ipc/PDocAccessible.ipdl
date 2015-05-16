@@ -56,6 +56,8 @@ parent:
   Event(uint64_t aID, uint32_t type);
   ShowEvent(ShowEventData data);
   HideEvent(uint64_t aRootID);
+  StateChangeEvent(uint64_t aID, uint64_t aState, bool aEnabled);
+  CaretMoveEvent(uint64_t aID, int32_t aOffset);
 
   /*
    * Tell the parent document to bind the existing document as a new child

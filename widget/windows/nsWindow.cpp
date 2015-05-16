@@ -191,12 +191,6 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 
-namespace mozilla {
-namespace widget {
-  extern int32_t IsTouchDeviceSupportPresent();
-}
-}
-
 /**************************************************************
  **************************************************************
  **
@@ -3562,10 +3556,7 @@ nsWindow::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
 uint32_t
 nsWindow::GetMaxTouchPoints() const
 {
-  if (IsWin7OrLater() && IsTouchDeviceSupportPresent()) {
-    return GetSystemMetrics(SM_MAXIMUMTOUCHES);
-  }
-  return 0;
+  return WinUtils::GetMaxTouchPoints();
 }
 
 /**************************************************************

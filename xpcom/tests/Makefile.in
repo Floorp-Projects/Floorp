@@ -5,9 +5,6 @@
 # Make sure we have symbols in case we need to debug these.
 MOZ_DEBUG_SYMBOLS = 1
 
-# Don't add our test-only .xpt files to the normal manifests
-NO_INTERFACES_MANIFEST = 1
-
 include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(SIMPLE_PROGRAMS))

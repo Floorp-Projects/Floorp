@@ -275,8 +275,8 @@ GeckoMediaPluginService::GetThread(nsIThread** aThread)
     InitializePlugins();
   }
 
-  NS_ADDREF(mGMPThread);
-  *aThread = mGMPThread;
+  nsCOMPtr<nsIThread> copy = mGMPThread;
+  copy.forget(aThread);
 
   return NS_OK;
 }

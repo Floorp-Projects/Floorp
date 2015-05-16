@@ -19,7 +19,7 @@
 }
 
 .tab-close-button[pinned],
-.tabbrowser-tabs[closebuttons="activetab"] > * > * > * > .tab-close-button:not([selected="true"]) {
+.tabbrowser-tabs[closebuttons="activetab"] > * > * > * > .tab-close-button:not([visuallyselected="true"]) {
   display: none;
 }
 

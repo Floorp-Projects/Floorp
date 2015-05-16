@@ -45,28 +45,38 @@ class XPIDLManager(object):
 
         self.idls = {}
         self.modules = {}
+        self.interface_manifests = {}
+        self.chrome_manifests = set()
 
-    def register_idl(self, source, module, install_target, allow_existing=False):
+    def register_idl(self, idl, allow_existing=False):
         """Registers an IDL file with this instance.
 
         The IDL file will be built, installed, etc.
         """
-        basename = mozpath.basename(source)
+        basename = mozpath.basename(idl.source_path)
         root = mozpath.splitext(basename)[0]
+        xpt = '%s.xpt' % idl.module
+        manifest = mozpath.join(idl.install_target, 'components', 'interfaces.manifest')
+        chrome_manifest = mozpath.join(idl.install_target, 'chrome.manifest')
 
         entry = {
-            'source': source,
-            'module': module,
+            'source': idl.source_path,
+            'module': idl.module,
             'basename': basename,
             'root': root,
+            'manifest': manifest,
         }
 
         if not allow_existing and entry['basename'] in self.idls:
             raise Exception('IDL already registered: %s' % entry['basename'])
 
         self.idls[entry['basename']] = entry
-        t = self.modules.setdefault(entry['module'], (install_target, set()))
+        t = self.modules.setdefault(entry['module'], (idl.install_target, set()))
         t[1].add(entry['root'])
+
+        if idl.add_to_manifest:
+            self.interface_manifests.setdefault(manifest, set()).add(xpt)
+            self.chrome_manifests.add(chrome_manifest)
 
 
 class WebIDLCollection(object):
@@ -190,8 +200,7 @@ class CommonBackend(BuildBackend):
                     topsrcdir=obj.topsrcdir)
 
         elif isinstance(obj, XPIDLFile):
-            self._idl_manager.register_idl(obj.source_path, obj.module,
-                obj.install_target)
+            self._idl_manager.register_idl(obj)
 
         elif isinstance(obj, ConfigFileSubstitution):
             # Do not handle ConfigFileSubstitution for Makefiles. Leave that

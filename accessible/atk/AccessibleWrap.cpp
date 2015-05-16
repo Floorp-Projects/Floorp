@@ -1128,7 +1128,12 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 
     switch (type) {
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
-        return FireAtkStateChangeEvent(aEvent, atkObj);
+      {
+        AccStateChangeEvent* event = downcast_accEvent(aEvent);
+        MAI_ATK_OBJECT(atkObj)->FireStateChangeEvent(event->GetState(),
+                                                     event->IsStateEnabled());
+        break;
+      }
 
     case nsIAccessibleEvent::EVENT_TEXT_REMOVED:
     case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
@@ -1353,21 +1358,52 @@ void
 a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
 {
   AtkObject* wrapper = GetWrapperFor(aTarget);
-  if (aEventType == nsIAccessibleEvent::EVENT_FOCUS) {
+
+  switch (aEventType) {
+  case nsIAccessibleEvent::EVENT_FOCUS:
     atk_focus_tracker_notify(wrapper);
     atk_object_notify_state_change(wrapper, ATK_STATE_FOCUSED, true);
+    break;
+  case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
+    g_signal_emit_by_name(wrapper, "load_complete");
+    break;
+  case nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD:
+    g_signal_emit_by_name(wrapper, "reload");
+    break;
+  case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED:
+    g_signal_emit_by_name(wrapper, "load_stopped");
+    break;
+  case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
+    atk_focus_tracker_notify(wrapper); // fire extra focus event
+    atk_object_notify_state_change(wrapper, ATK_STATE_VISIBLE, true);
+    atk_object_notify_state_change(wrapper, ATK_STATE_SHOWING, true);
+    break;
+  case nsIAccessibleEvent::EVENT_MENUPOPUP_END:
+    atk_object_notify_state_change(wrapper, ATK_STATE_VISIBLE, false);
+    atk_object_notify_state_change(wrapper, ATK_STATE_SHOWING, false);
+    break;
   }
 }
 
-nsresult
-AccessibleWrap::FireAtkStateChangeEvent(AccEvent* aEvent,
-                                        AtkObject* aObject)
+void
+a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
+                            bool aEnabled)
 {
-    AccStateChangeEvent* event = downcast_accEvent(aEvent);
-    NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
+  MaiAtkObject* atkObj = MAI_ATK_OBJECT(GetWrapperFor(aTarget));
+  atkObj->FireStateChangeEvent(aState, aEnabled);
+}
 
-    bool isEnabled = event->IsStateEnabled();
-    int32_t stateIndex = AtkStateMap::GetStateIndexFor(event->GetState());
+void
+a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
+{
+  AtkObject* wrapper = GetWrapperFor(aTarget);
+  g_signal_emit_by_name(wrapper, "text_caret_moved", aOffset);
+}
+
+void
+MaiAtkObject::FireStateChangeEvent(uint64_t aState, bool aEnabled)
+{
+    int32_t stateIndex = AtkStateMap::GetStateIndexFor(aState);
     if (stateIndex >= 0) {
         NS_ASSERTION(gAtkStateMap[stateIndex].stateMapEntryType != kNoSuchState,
                      "No such state");
@@ -1377,16 +1413,14 @@ AccessibleWrap::FireAtkStateChangeEvent(AccEvent* aEvent,
                          "State changes should not fired for this state");
 
             if (gAtkStateMap[stateIndex].stateMapEntryType == kMapOpposite)
-                isEnabled = !isEnabled;
+                aEnabled = !aEnabled;
 
             // Fire state change for first state if there is one to map
-            atk_object_notify_state_change(aObject,
+            atk_object_notify_state_change(&parent,
                                            gAtkStateMap[stateIndex].atkState,
-                                           isEnabled);
+                                           aEnabled);
         }
     }
-
-    return NS_OK;
 }
 
 nsresult

@@ -8,6 +8,7 @@
 #define mozilla_layers_Axis_h
 
 #include <sys/types.h>                  // for int32_t
+#include "APZUtils.h"
 #include "Units.h"
 #include "mozilla/TimeStamp.h"          // for TimeDuration
 #include "nsTArray.h"                   // for nsTArray
@@ -16,14 +17,6 @@ namespace mozilla {
 namespace layers {
 
 const float EPSILON = 0.0001f;
-
-// Epsilon to be used when comparing 'float' coordinate values
-// with FuzzyEqualsAdditive. The rationale is that 'float' has 7 decimal
-// digits of precision, and coordinate values should be no larger than in the
-// ten thousands. Note also that the smallest legitimate difference in page
-// coordinates is 1 app unit, which is 1/60 of a (CSS pixel), so this epsilon
-// isn't too large.
-const float COORDINATE_EPSILON = 0.01f;
 
 /**
  * Compare two coordinates for equality, accounting for rounding error.
