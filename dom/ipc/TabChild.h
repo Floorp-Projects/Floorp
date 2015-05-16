@@ -474,7 +474,6 @@ public:
     static TabChild* GetFrom(uint64_t aLayersId);
 
     void DidComposite(uint64_t aTransactionId);
-    void ClearCachedResources();
 
     static inline TabChild*
     GetFrom(nsIDOMWindow* aWindow)

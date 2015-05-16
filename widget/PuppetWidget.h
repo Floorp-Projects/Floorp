@@ -280,18 +280,6 @@ private:
     PuppetWidget* mWidget;
   };
 
-  class MemoryPressureObserver : public nsIObserver {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-    explicit MemoryPressureObserver(PuppetWidget* aWidget) : mWidget(aWidget) {}
-    void Remove();
-  private:
-    virtual ~MemoryPressureObserver() {}
-    PuppetWidget* mWidget;
-  };
-  friend class MemoryPressureObserver;
-
   // TabChild normally holds a strong reference to this PuppetWidget
   // or its root ancestor, but each PuppetWidget also needs a
   // reference back to TabChild (e.g. to delegate nsIWidget IME calls
@@ -304,7 +292,6 @@ private:
   nsRefPtr<PuppetWidget> mChild;
   nsIntRegion mDirtyRegion;
   nsRevocableEventPtr<PaintTask> mPaintTask;
-  nsRefPtr<MemoryPressureObserver> mMemoryPressureObserver;
   // XXX/cjones: keeping this around until we teach LayerManager to do
   // retained-content-only transactions
   mozilla::RefPtr<DrawTarget> mDrawTarget;
