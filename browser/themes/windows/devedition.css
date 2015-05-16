@@ -10,6 +10,27 @@
   --chrome-nav-bar-separator-color: rgba(10, 31, 51, 0.35);
 }
 
+/* The window background is white due to no accentcolor in the lightweight
+   theme. It can't be changed to transparent when there is no compositor
+   (Win XP or 7 in classic / basic theme), or else dragging and focus become
+   broken. So instead just show the normal titlebar in that case, and override
+   the window color as transparent when the compositor is available. */
+@media not all and (-moz-windows-compositor) {
+  #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
+    visibility: visible;
+  }
+
+  #main-window {
+    background: var(--chrome-background-color) !important;
+  }
+}
+
+@media (-moz-windows-compositor) {
+  #main-window {
+    background: transparent !important;
+  }
+}
+
 #TabsToolbar::after {
   display: none;
 }
