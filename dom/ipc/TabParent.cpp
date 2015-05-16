@@ -2511,6 +2511,18 @@ TabParent::RecvGetDefaultScale(double* aValue)
 }
 
 bool
+TabParent::RecvGetMaxTouchPoints(uint32_t* aTouchPoints)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    *aTouchPoints = widget->GetMaxTouchPoints();
+  } else {
+    *aTouchPoints = 0;
+  }
+  return true;
+}
+
+bool
 TabParent::RecvGetWidgetNativeData(WindowsHandle* aValue)
 {
   *aValue = 0;
@@ -3097,15 +3109,16 @@ public:
   NS_IMETHOD SetOriginalURI(nsIURI*) NO_IMPL
   NS_IMETHOD GetURI(nsIURI** aUri) override
   {
-    NS_IF_ADDREF(mUri);
-    *aUri = mUri;
+    nsCOMPtr<nsIURI> copy = mUri;
+    copy.forget(aUri);
     return NS_OK;
   }
   NS_IMETHOD GetOwner(nsISupports**) NO_IMPL
   NS_IMETHOD SetOwner(nsISupports*) NO_IMPL
   NS_IMETHOD GetLoadInfo(nsILoadInfo** aLoadInfo) override
   {
-    NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+    nsCOMPtr<nsILoadInfo> copy = mLoadInfo;
+    copy.forget(aLoadInfo);
     return NS_OK;
   }
   NS_IMETHOD SetLoadInfo(nsILoadInfo* aLoadInfo) override

@@ -1325,7 +1325,9 @@ private:
   void CheckThreadSafety();
   void ShutdownCollect();
 
-  void FixGrayBits(bool aForceGC);
+  void FixGrayBits(bool aForceGC, TimeLog& aTimeLog);
+  bool IsIncrementalGCInProgress();
+  void FinishAnyIncrementalGCInProgress();
   bool ShouldMergeZones(ccType aCCType);
 
   void BeginCollection(ccType aCCType, nsICycleCollectorListener* aManualListener);
@@ -1395,24 +1397,6 @@ static mozilla::ThreadLocal<CollectorData*> sCollectorData;
 ////////////////////////////////////////////////////////////////////////
 // Utility functions
 ////////////////////////////////////////////////////////////////////////
-
-MOZ_NEVER_INLINE static void
-Fault(const char* aMsg, const void* aPtr = nullptr)
-{
-  if (aPtr) {
-    printf("Fault in cycle collector: %s (ptr: %p)\n", aMsg, aPtr);
-  } else {
-    printf("Fault in cycle collector: %s\n", aMsg);
-  }
-
-  NS_RUNTIMEABORT("cycle collector fault");
-}
-
-static void
-Fault(const char* aMsg, PtrInfo* aPi)
-{
-  Fault(aMsg, aPi->mPointer);
-}
 
 static inline void
 ToParticipant(nsISupports* aPtr, nsXPCOMCycleCollectionParticipant** aCp)
@@ -2165,18 +2149,15 @@ CCGraphBuilder::CCGraphBuilder(CCGraph& aGraph,
     mJSZoneParticipant = aJSRuntime->ZoneParticipant();
   }
 
-  uint32_t flags = 0;
-  if (!flags && mListener) {
-    flags = nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO;
+  if (mListener) {
+    mFlags |= nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO;
     bool all = false;
     mListener->GetWantAllTraces(&all);
     if (all) {
-      flags |= nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
+      mFlags |= nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
       mWantAllTraces = true; // for nsCycleCollectionNoteRootCallback
     }
   }
-
-  mFlags |= flags;
 
   mMergeZones = mMergeZones && MOZ_LIKELY(!WantAllTraces());
 
@@ -2256,9 +2237,7 @@ CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
 
     if (pi->mParticipant) {
       nsresult rv = pi->mParticipant->Traverse(pi->mPointer, *this);
-      if (NS_FAILED(rv)) {
-        Fault("script pointer traversal failed", pi);
-      }
+      MOZ_RELEASE_ASSERT(!NS_FAILED(rv), "Cycle collector Traverse method failed");
     }
 
     if (mCurrNode->AtBlockEnd()) {
@@ -2314,12 +2293,9 @@ CCGraphBuilder::NoteNativeRoot(void* aRoot,
 NS_IMETHODIMP_(void)
 CCGraphBuilder::DescribeRefCountedNode(nsrefcnt aRefCount, const char* aObjName)
 {
-  if (aRefCount == 0) {
-    Fault("zero refcount", mCurrPi);
-  }
-  if (aRefCount == UINT32_MAX) {
-    Fault("overflowing refcount", mCurrPi);
-  }
+  MOZ_RELEASE_ASSERT(aRefCount != 0, "CCed refcounted object has zero refcount");
+  MOZ_RELEASE_ASSERT(aRefCount != UINT32_MAX, "CCed refcounted object has overflowing refcount");
+
   mResults.mVisitedRefCounted++;
 
   if (mListener) {
@@ -3133,12 +3109,10 @@ nsCycleCollector::ScanWhiteNodes(bool aFullySynchGraphBuild)
       continue;
     }
 
-    if (MOZ_LIKELY(pi->mInternalRefs < pi->mRefCount)) {
-      // This node will get marked black in the next pass.
-      continue;
-    }
+    MOZ_RELEASE_ASSERT(pi->mInternalRefs < pi->mRefCount,
+                       "Cycle collector found more references to an object than its refcount");
 
-    Fault("Traversed refs exceed refcount", pi);
+    // This node will get marked black in the next pass.
   }
 }
 
@@ -3404,10 +3378,7 @@ nsCycleCollector::~nsCycleCollector()
 void
 nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime* aJSRuntime)
 {
-  if (mJSRuntime) {
-    Fault("multiple registrations of cycle collector JS runtime", aJSRuntime);
-  }
-
+  MOZ_RELEASE_ASSERT(!mJSRuntime, "Multiple registrations of JS runtime in cycle collector");
   mJSRuntime = aJSRuntime;
 
   // We can't register as a reporter in nsCycleCollector() because that runs
@@ -3423,10 +3394,7 @@ nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime* aJSRuntime)
 void
 nsCycleCollector::ForgetJSRuntime()
 {
-  if (!mJSRuntime) {
-    Fault("forgetting non-registered cycle collector JS runtime");
-  }
-
+  MOZ_RELEASE_ASSERT(mJSRuntime, "Forgetting JS runtime in cycle collector before a JS runtime was registered");
   mJSRuntime = nullptr;
 }
 
@@ -3450,9 +3418,9 @@ nsCycleCollector::Suspect(void* aPtr, nsCycleCollectionParticipant* aParti,
 {
   CheckThreadSafety();
 
-  // Re-entering ::Suspect during collection used to be a fault, but
-  // we are canonicalizing nsISupports pointers using QI, so we will
-  // see some spurious refcount traffic here.
+  // Re-entering ::Suspect during collection used to be a fatal error,
+  // but we are canonicalizing nsISupports pointers using QI, so we
+  // will see some spurious refcount traffic here.
 
   if (MOZ_UNLIKELY(mScanInProgress)) {
     return;
@@ -3484,7 +3452,7 @@ nsCycleCollector::CheckThreadSafety()
 // and also when UnmarkGray has run out of stack.  We also force GCs on shut
 // down to collect cycles involving both DOM and JS.
 void
-nsCycleCollector::FixGrayBits(bool aForceGC)
+nsCycleCollector::FixGrayBits(bool aForceGC, TimeLog& aTimeLog)
 {
   CheckThreadSafety();
 
@@ -3494,6 +3462,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 
   if (!aForceGC) {
     mJSRuntime->FixWeakMappingGrayBits();
+    aTimeLog.Checkpoint("FixWeakMappingGrayBits");
 
     bool needGC = !mJSRuntime->AreGCGrayBitsValid();
     // Only do a telemetry ping for non-shutdown CCs.
@@ -3504,10 +3473,25 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
     mResults.mForcedGC = true;
   }
 
-  TimeLog timeLog;
   mJSRuntime->GarbageCollect(aForceGC ? JS::gcreason::SHUTDOWN_CC :
                                         JS::gcreason::CC_FORCED);
-  timeLog.Checkpoint("GC()");
+  aTimeLog.Checkpoint("FixGrayBits GC");
+}
+
+bool
+nsCycleCollector::IsIncrementalGCInProgress()
+{
+  return mJSRuntime && JS::IsIncrementalGCInProgress(mJSRuntime->Runtime());
+}
+
+void
+nsCycleCollector::FinishAnyIncrementalGCInProgress()
+{
+  if (IsIncrementalGCInProgress()) {
+    NS_WARNING("Finishing incremental GC in progress during CC");
+    JS::PrepareForIncrementalGC(mJSRuntime->Runtime());
+    JS::FinishIncrementalGC(mJSRuntime->Runtime(), JS::gcreason::CC_FORCED);
+  }
 }
 
 void
@@ -3553,6 +3537,8 @@ nsCycleCollector::CleanupAfterCollection()
 void
 nsCycleCollector::ShutdownCollect()
 {
+  FinishAnyIncrementalGCInProgress();
+
   SliceBudget unlimitedBudget;
   uint32_t i;
   for (i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
@@ -3585,6 +3571,8 @@ nsCycleCollector::Collect(ccType aCCType,
     return false;
   }
   mActivelyCollecting = true;
+
+  MOZ_ASSERT(!IsIncrementalGCInProgress());
 
   bool startedIdle = (mIncrementalPhase == IdlePhase);
   bool collectedAny = false;
@@ -3775,13 +3763,25 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     // hijinks from ForgetSkippable and compartmental GCs.
     mListener->GetWantAllTraces(&forceGC);
   }
-  FixGrayBits(forceGC);
+
+  // BeginCycleCollectionCallback() might have started an IGC, and we need
+  // to finish it before we run FixGrayBits.
+  FinishAnyIncrementalGCInProgress();
+  timeLog.Checkpoint("Pre-FixGrayBits finish IGC");
+
+  FixGrayBits(forceGC, timeLog);
 
   FreeSnowWhite(true);
+  timeLog.Checkpoint("BeginCollection FreeSnowWhite");
 
   if (mListener && NS_FAILED(mListener->Begin())) {
     mListener = nullptr;
   }
+
+  // FreeSnowWhite could potentially have started an IGC, which we need
+  // to finish before we look at any JS roots.
+  FinishAnyIncrementalGCInProgress();
+  timeLog.Checkpoint("Post-FreeSnowWhite finish IGC");
 
   // Set up the data structures for building the graph.
   mGraph.Init();
@@ -3793,6 +3793,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
   MOZ_ASSERT(!mBuilder, "Forgot to clear mBuilder");
   mBuilder = new CCGraphBuilder(mGraph, mResults, mJSRuntime, mListener,
                                 mergeZones);
+  timeLog.Checkpoint("BeginCollection prepare graph builder");
 
   if (mJSRuntime) {
     mJSRuntime->TraverseRoots(*mBuilder);

@@ -76,6 +76,11 @@ struct MaiAtkObject
    * Shutdown this AtkObject.
    */
   void Shutdown();
+
+  /*
+   * Notify atk of a state change on this AtkObject.
+   */
+  void FireStateChangeEvent(uint64_t aState, bool aEnabled);
 };
 
 #endif /* __NS_MAI_H__ */

@@ -11,48 +11,24 @@
 #include "nsJSPrincipals.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
+#include "mozilla/BasePrincipal.h"
 
-class nsBasePrincipal : public nsJSPrincipals
+class nsPrincipal final : public mozilla::BasePrincipal
 {
 public:
-  nsBasePrincipal();
-
-protected:
-  virtual ~nsBasePrincipal();
-
-public:
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
-  NS_IMETHOD_(MozExternalRefCountType) Release(void);
-  NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp);
-  NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp);
-public:
-
-  static const char sInvalid[];
-
-protected:
-
-#ifdef DEBUG
-  virtual void dumpImpl() = 0;
-#endif
-
-  nsCOMPtr<nsIContentSecurityPolicy> mCSP;
-};
-
-class nsPrincipal final : public nsBasePrincipal
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISERIALIZABLE
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
-  NS_IMETHOD GetOrigin(char** aOrigin) override;
+  NS_IMETHOD GetOrigin(nsACString& aOrigin) override;
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
@@ -61,12 +37,8 @@ public:
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
-  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
-#ifdef DEBUG
-  virtual void dumpImpl() override;
-#endif
 
   nsPrincipal();
 
@@ -98,7 +70,7 @@ public:
   /**
    * Computes the puny-encoded origin of aURI.
    */
-  static nsresult GetOriginForURI(nsIURI* aURI, char **aOrigin);
+  static nsresult GetOriginForURI(nsIURI* aURI, nsACString& aOrigin);
 
   /**
    * Called at startup to setup static data, e.g. about:config pref-observers.
@@ -124,7 +96,7 @@ protected:
   uint16_t GetAppStatus();
 };
 
-class nsExpandedPrincipal : public nsIExpandedPrincipal, public nsBasePrincipal
+class nsExpandedPrincipal : public nsIExpandedPrincipal, public mozilla::BasePrincipal
 {
 public:
   explicit nsExpandedPrincipal(nsTArray< nsCOMPtr<nsIPrincipal> > &aWhiteList);
@@ -133,16 +105,18 @@ protected:
   virtual ~nsExpandedPrincipal();
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
+  NS_IMETHODIMP_(MozExternalRefCountType) AddRef() override { return nsJSPrincipals::AddRef(); };
+  NS_IMETHODIMP_(MozExternalRefCountType) Release() override { return nsJSPrincipals::Release(); };
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
-  NS_IMETHOD GetOrigin(char** aOrigin) override;
+  NS_IMETHOD GetOrigin(nsACString& aOrigin) override;
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
@@ -151,13 +125,8 @@ public:
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) override;
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) override;
   NS_IMETHOD GetUnknownAppId(bool* aUnknownAppId) override;
-  NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
-#ifdef DEBUG
-  virtual void dumpImpl() override;
-#endif
-  
   virtual void GetScriptLocation(nsACString &aStr) override;
 
 private:

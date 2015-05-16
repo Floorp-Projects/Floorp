@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(264fe8ca-c382-11e4-95a6-782bcbaebb28)]
+[scriptable, builtinclass, uuid(7e024afa-afd4-48e7-ba11-1c7b9620b1b2)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -72,7 +72,7 @@ interface nsIPrincipal : nsISerializable
     // XXXcaa this should probably be turned into an nsIURI.
     // The system principal's origin should be some caps namespace
     // with a chrome URI.  All of chrome should probably be the same.
-    readonly attribute string origin;
+    readonly attribute ACString origin;
 
     /**
      * Returns whether the other principal is equal to or weaker than this

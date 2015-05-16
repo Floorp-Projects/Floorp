@@ -722,9 +722,10 @@ js::Invoke(JSContext* cx, CallArgs args, MaybeConstruct construct)
 
     /* Invoke native functions. */
     JSFunction* fun = &args.callee().as<JSFunction>();
-    MOZ_ASSERT_IF(construct, !fun->isNativeConstructor());
-    if (fun->isNative())
+    if (fun->isNative()) {
+        MOZ_ASSERT_IF(construct, !fun->isConstructor());
         return CallJSNative(cx, fun->native(), args);
+    }
 
     if (!fun->getOrCreateScript(cx))
         return false;
@@ -801,11 +802,11 @@ js::InvokeConstructor(JSContext* cx, CallArgs args)
     if (callee.is<JSFunction>()) {
         RootedFunction fun(cx, &callee.as<JSFunction>());
 
-        if (fun->isNativeConstructor())
-            return CallJSNativeConstructor(cx, fun->native(), args);
-
-        if (!fun->isInterpretedConstructor())
+        if (!fun->isConstructor())
             return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, CONSTRUCT);
+
+        if (fun->isNative())
+            return CallJSNativeConstructor(cx, fun->native(), args);
 
         if (!Invoke(cx, args, CONSTRUCT))
             return false;
@@ -2947,7 +2948,7 @@ CASE(JSOP_FUNCALL)
     bool isFunction = IsFunctionObject(args.calleev(), fun.address());
 
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
-    if (!isFunction || !fun->isInterpretedConstructor()) {
+    if (!isFunction || !fun->isInterpreted() || !fun->isConstructor()) {
         if (construct) {
             if (!InvokeConstructor(cx, args))
                 goto error;

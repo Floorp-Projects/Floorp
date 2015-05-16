@@ -29,28 +29,6 @@ NS_IMPL_CI_INTERFACE_GETTER(nsSystemPrincipal,
                             nsIPrincipal,
                             nsISerializable)
 
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsSystemPrincipal::AddRef()
-{
-  NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
-  nsrefcnt count = ++refcount;
-  NS_LOG_ADDREF(this, count, "nsSystemPrincipal", sizeof(*this));
-  return count;
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsSystemPrincipal::Release()
-{
-  NS_PRECONDITION(0 != refcount, "dup release");
-  nsrefcnt count = --refcount;
-  NS_LOG_RELEASE(this, count, "nsSystemPrincipal");
-  if (count == 0) {
-    delete this;
-  }
-
-  return count;
-}
-
 static const char SYSTEM_PRINCIPAL_SPEC[] = "[System Principal]";
 
 void
@@ -58,14 +36,6 @@ nsSystemPrincipal::GetScriptLocation(nsACString &aStr)
 {
     aStr.Assign(SYSTEM_PRINCIPAL_SPEC);
 }
-
-#ifdef DEBUG
-void nsSystemPrincipal::dumpImpl()
-{
-  fprintf(stderr, "nsSystemPrincipal (%p)\n", this);
-}
-#endif 
-
 
 ///////////////////////////////////////
 // Methods implementing nsIPrincipal //
@@ -119,10 +89,10 @@ nsSystemPrincipal::GetURI(nsIURI** aURI)
 }
 
 NS_IMETHODIMP 
-nsSystemPrincipal::GetOrigin(char** aOrigin)
+nsSystemPrincipal::GetOrigin(nsACString& aOrigin)
 {
-    *aOrigin = ToNewCString(NS_LITERAL_CSTRING(SYSTEM_PRINCIPAL_SPEC));
-    return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aOrigin.AssignLiteral(SYSTEM_PRINCIPAL_SPEC);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -188,24 +158,10 @@ nsSystemPrincipal::GetUnknownAppId(bool* aUnknownAppId)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
-{
-  *aIsNullPrincipal = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   // No base domain for chrome.
   return NS_OK;
-}
-
-bool
-nsSystemPrincipal::IsOnCSSUnprefixingWhitelist()
-{
-  // chrome stylesheets should not be fed to the CSS Unprefixing Service.
-  return false;
 }
 
 //////////////////////////////////////////
@@ -224,16 +180,4 @@ nsSystemPrincipal::Write(nsIObjectOutputStream* aStream)
 {
     // no-op: CID is sufficient to identify the mSystemPrincipal singleton
     return NS_OK;
-}
-
-/////////////////////////////////////////////
-// Constructor, Destructor, initialization //
-/////////////////////////////////////////////
-
-nsSystemPrincipal::nsSystemPrincipal()
-{
-}
-
-nsSystemPrincipal::~nsSystemPrincipal()
-{
 }

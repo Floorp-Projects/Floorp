@@ -251,7 +251,7 @@ GetRetainedImageFromSourceSurface(SourceSurface *aSurface)
       if (!data) {
         MOZ_CRASH("unsupported source surface");
       }
-      data->AddRef();
+      data.get()->AddRef();
       return CreateCGImage(releaseDataSurface, data.get(),
                            data->GetData(), data->GetSize(),
                            data->Stride(), data->GetFormat());

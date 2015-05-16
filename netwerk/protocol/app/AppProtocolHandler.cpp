@@ -387,7 +387,7 @@ AppProtocolHandler::NewChannel2(nsIURI* aUri,
 
   if (Preferences::GetBool("dom.mozApps.themable")) {
     nsAutoCString origin;
-    nsPrincipal::GetOriginForURI(aUri, getter_Copies(origin));
+    nsPrincipal::GetOriginForURI(aUri, origin);
     nsAdoptingCString themeOrigin;
     themeOrigin = Preferences::GetCString("b2g.theme.origin");
     if (themeOrigin.Equals(origin)) {

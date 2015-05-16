@@ -63,22 +63,10 @@ static int32_t GetSystemParam(long flag, int32_t def)
     return ::SystemParametersInfo(flag, 0, &value, 0) ? value : def;
 }
 
-namespace mozilla {
-namespace widget {
-// This is in use here and in dom/events/TouchEvent.cpp
-int32_t IsTouchDeviceSupportPresent()
-{
-  int32_t touchCapabilities;
-  touchCapabilities = ::GetSystemMetrics(SM_DIGITIZER);
-  return ((touchCapabilities & NID_READY) && 
-          (touchCapabilities & (NID_EXTERNAL_TOUCH | NID_INTEGRATED_TOUCH)));
-}
-} }
-
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::TOUCH_ENABLED_DEVICE,
-                                 IsTouchDeviceSupportPresent());
+                                 WinUtils::IsTouchDeviceSupportPresent());
 }
 
 nsLookAndFeel::~nsLookAndFeel()
@@ -396,7 +384,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         aResult = !IsAppThemed();
         break;
     case eIntID_TouchEnabled:
-        aResult = IsTouchDeviceSupportPresent();
+        aResult = WinUtils::IsTouchDeviceSupportPresent();
         break;
     case eIntID_WindowsDefaultTheme:
         aResult = nsUXThemeData::IsDefaultWindowTheme();

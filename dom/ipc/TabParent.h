@@ -216,6 +216,7 @@ public:
     virtual bool RecvGetTabOffset(LayoutDeviceIntPoint* aPoint) override;
     virtual bool RecvGetDPI(float* aValue) override;
     virtual bool RecvGetDefaultScale(double* aValue) override;
+    virtual bool RecvGetMaxTouchPoints(uint32_t* aTouchPoints) override;
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue) override;
     virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
                                 const ViewID& aViewId,
