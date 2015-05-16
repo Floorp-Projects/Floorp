@@ -112,7 +112,7 @@
 #add-filter {
   -moz-appearance: none;
   background: url(chrome://browser/skin/devtools/add.svg);
-  background-size: 18px;
+  background-size: cover;
   border: none;
   width: 16px;
   height: 16px;
