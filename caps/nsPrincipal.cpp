@@ -709,8 +709,6 @@ nsPrincipal::IsOnCSSUnprefixingWhitelist()
 
 /************************************************************************************************************************/
 
-static const char EXPANDED_PRINCIPAL_SPEC[] = "[Expanded Principal]";
-
 NS_IMPL_CLASSINFO(nsExpandedPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_EXPANDEDPRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE_CI(nsExpandedPrincipal,

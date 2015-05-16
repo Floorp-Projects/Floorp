@@ -29,10 +29,9 @@ nsIRDFService*  nsWindowDataSource::gRDFService = nullptr;
 
 uint32_t nsWindowDataSource::gRefCnt = 0;
 
-static const char kURINC_WindowRoot[] = "NC:WindowMediatorRoot";
-
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, KeyIndex);
+#define URINC_WINDOWROOT "NC:WindowMediatorRoot"
+#define URINC_NAME       NC_NAMESPACE_URI "Name"
+#define URINC_KEYINDEX   NC_NAMESPACE_URI "KeyIndex"
 
 nsresult
 nsWindowDataSource::Init()
@@ -43,9 +42,9 @@ nsWindowDataSource::Init()
         rv = CallGetService("@mozilla.org/rdf/rdf-service;1", &gRDFService);
         if (NS_FAILED(rv)) return rv;
 
-        gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_WindowRoot), &kNC_WindowRoot);
-        gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_Name),       &kNC_Name);
-        gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_KeyIndex),   &kNC_KeyIndex);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(URINC_WINDOWROOT), &kNC_WindowRoot);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(URINC_NAME),       &kNC_Name);
+        gRDFService->GetResource(NS_LITERAL_CSTRING(URINC_KEYINDEX),   &kNC_KeyIndex);
     }
 
     mInner = do_CreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource", &rv);
