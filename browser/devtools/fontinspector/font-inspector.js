@@ -6,8 +6,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+const { utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -24,7 +23,7 @@ function FontInspector(inspector, window)
 }
 
 FontInspector.prototype = {
-  init: function FI_init() {
+  init: function() {
     this.update = this.update.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
     this.inspector.selection.on("new-node", this.onNewNode);
@@ -38,7 +37,7 @@ FontInspector.prototype = {
   /**
    * Is the fontinspector visible in the sidebar?
    */
-  isActive: function FI_isActive() {
+  isActive: function() {
     return this.inspector.sidebar &&
            this.inspector.sidebar.getCurrentTabID() == "fontinspector";
   },
@@ -46,7 +45,7 @@ FontInspector.prototype = {
   /**
    * Remove listeners.
    */
-  destroy: function FI_destroy() {
+  destroy: function() {
     this.chromeDoc = null;
     this.inspector.sidebar.off("fontinspector-selected", this.onNewNode);
     this.inspector.selection.off("new-node", this.onNewNode);
@@ -56,7 +55,7 @@ FontInspector.prototype = {
   /**
    * Selection 'new-node' event handler.
    */
-  onNewNode: function FI_onNewNode() {
+  onNewNode: function() {
     if (this.isActive() &&
         this.inspector.selection.isConnected() &&
         this.inspector.selection.isElementNode()) {
@@ -70,7 +69,7 @@ FontInspector.prototype = {
   /**
    * Hide the font list. No node are selected.
    */
-  dim: function FI_dim() {
+  dim: function() {
     this.chromeDoc.body.classList.add("dim");
     this.chromeDoc.querySelector("#all-fonts").innerHTML = "";
   },
@@ -78,7 +77,7 @@ FontInspector.prototype = {
   /**
    * Show the font list. A node is selected.
    */
-  undim: function FI_undim() {
+  undim: function() {
     this.chromeDoc.body.classList.remove("dim");
   },
 
@@ -104,16 +103,17 @@ FontInspector.prototype = {
     let options = {
       includePreviews: true,
       previewFillStyle: fillStyle
-    }
+    };
+
     let fonts = [];
-    if (showAllFonts){
+    if (showAllFonts) {
       fonts = yield this.pageStyle.getAllUsedFontFaces(options)
                       .then(null, console.error);
-    }
-    else{
+    } else {
       fonts = yield this.pageStyle.getUsedFontFaces(node, options)
                       .then(null, console.error);
     }
+
     if (!fonts || !fonts.length) {
       return;
     }
@@ -140,7 +140,7 @@ FontInspector.prototype = {
   /**
    * Display the information of one font.
    */
-  render: function FI_render(font) {
+  render: function(font) {
     let s = this.chromeDoc.querySelector("#template > section");
     s = s.cloneNode(true);
 
@@ -178,17 +178,17 @@ FontInspector.prototype = {
   /**
    * Show all fonts for the document (including iframes)
    */
-  showAll: function FI_showAll() {
+  showAll: function() {
     this.update(true);
   },
-}
+};
 
 window.setPanel = function(panel) {
   window.fontInspector = new FontInspector(panel, window);
-}
+};
 
 window.onunload = function() {
   if (window.fontInspector) {
     window.fontInspector.destroy();
   }
-}
+};
