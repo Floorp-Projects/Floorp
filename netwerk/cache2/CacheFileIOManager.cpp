@@ -2802,7 +2802,7 @@ CacheFileIOManager::EvictAllInternal()
     return rv;
   }
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING(kEntriesDir));
+  rv = file->AppendNative(NS_LITERAL_CSTRING(ENTRIES_DIR));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2817,7 +2817,7 @@ CacheFileIOManager::EvictAllInternal()
   NS_DispatchToMainThread(r);
 
   // Create a new empty entries directory
-  rv = CheckAndCreateDir(mCacheDirectory, kEntriesDir, false);
+  rv = CheckAndCreateDir(mCacheDirectory, ENTRIES_DIR, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3013,7 +3013,7 @@ CacheFileIOManager::TrashDirectory(nsIFile *aFile)
 
   srand(static_cast<unsigned>(PR_Now()));
   while (true) {
-    leaf = kTrashDir;
+    leaf = TRASH_DIR;
     leaf.AppendInt(rand());
     rv = trash->SetNativeLeafName(leaf);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3256,11 +3256,11 @@ CacheFileIOManager::FindTrashDirToRemove()
       continue;
     }
 
-    if (leafName.Length() < strlen(kTrashDir)) {
+    if (leafName.Length() < strlen(TRASH_DIR)) {
       continue;
     }
 
-    if (!StringBeginsWith(leafName, NS_LITERAL_CSTRING(kTrashDir))) {
+    if (!StringBeginsWith(leafName, NS_LITERAL_CSTRING(TRASH_DIR))) {
       continue;
     }
 
@@ -3422,7 +3422,7 @@ CacheFileIOManager::GetFile(const SHA1Sum::Hash *aHash, nsIFile **_retval)
   rv = mCacheDirectory->Clone(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING(kEntriesDir));
+  rv = file->AppendNative(NS_LITERAL_CSTRING(ENTRIES_DIR));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString leafName;
@@ -3458,7 +3458,7 @@ CacheFileIOManager::GetDoomedFile(nsIFile **_retval)
   rv = mCacheDirectory->Clone(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING(kDoomedDir));
+  rv = file->AppendNative(NS_LITERAL_CSTRING(DOOMED_DIR));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = file->AppendNative(NS_LITERAL_CSTRING("dummyleaf"));
@@ -3586,11 +3586,11 @@ CacheFileIOManager::CreateCacheTree()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ensure entries directory exists
-  rv = CheckAndCreateDir(mCacheDirectory, kEntriesDir, false);
+  rv = CheckAndCreateDir(mCacheDirectory, ENTRIES_DIR, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ensure doomed directory exists
-  rv = CheckAndCreateDir(mCacheDirectory, kDoomedDir, true);
+  rv = CheckAndCreateDir(mCacheDirectory, DOOMED_DIR, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mTreeCreated = true;
@@ -3782,8 +3782,8 @@ CacheFileIOManager::SyncRemoveAllCacheFiles()
 
   nsresult rv;
 
-  SyncRemoveDir(mCacheDirectory, kEntriesDir);
-  SyncRemoveDir(mCacheDirectory, kDoomedDir);
+  SyncRemoveDir(mCacheDirectory, ENTRIES_DIR);
+  SyncRemoveDir(mCacheDirectory, DOOMED_DIR);
 
   // Clear any intermediate state of trash dir enumeration.
   mFailedTrashDirs.Clear();

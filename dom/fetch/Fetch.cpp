@@ -1527,7 +1527,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
       data.Adopt(reinterpret_cast<char*>(aResult), aResultLength);
       autoFree.Reset();
 
-      NS_NAMED_LITERAL_CSTRING(formDataMimeType, NS_LITERAL_CSTRING("multipart/form-data"));
+      NS_NAMED_LITERAL_CSTRING(formDataMimeType, "multipart/form-data");
 
       // Allow semicolon separated boundary/encoding suffix like multipart/form-data; boundary=
       // but disallow multipart/form-datafoobar.
@@ -1550,7 +1550,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
         MOZ_ASSERT(fd);
         localPromise->MaybeResolve(fd);
       } else {
-        NS_NAMED_LITERAL_CSTRING(urlDataMimeType, NS_LITERAL_CSTRING("application/x-www-form-urlencoded"));
+        NS_NAMED_LITERAL_CSTRING(urlDataMimeType, "application/x-www-form-urlencoded");
         bool isValidUrlEncodedMimeType = StringBeginsWith(mMimeType, urlDataMimeType);
 
         if (isValidUrlEncodedMimeType && mMimeType.Length() > urlDataMimeType.Length()) {
