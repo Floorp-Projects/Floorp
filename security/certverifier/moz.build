@@ -71,7 +71,4 @@ if CONFIG['_MSC_VER']:
 
 FAIL_ON_WARNINGS = True
 
-if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
-    DEFINES['MOZ_FENNEC'] = True
-
 FINAL_LIBRARY = 'xul'
