@@ -37,7 +37,6 @@ class Pledge
   };
 
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Pledge);
   explicit Pledge() : mDone(false), mResult(NS_OK) {}
 
   template<typename OnSuccessType>
@@ -78,12 +77,13 @@ public:
     }
   }
 
+protected:
   void Resolve(const ValueType& aValue)
   {
     mValue = aValue;
     Resolve();
   }
-protected:
+
   void Resolve()
   {
     if (!mDone) {
@@ -108,20 +108,72 @@ protected:
 
   ValueType mValue;
 protected:
-  ~Pledge() {};
   bool mDone;
   nsresult mResult;
 private:
   nsAutoPtr<FunctorsBase> mFunctors;
 };
 
-// General purpose runnable with an eye toward lambdas
+// General purpose runnable that also acts as a Pledge for the resulting value.
+// Use PledgeRunnable<>::New() factory function to use with lambdas.
 
-template<typename OnRunType>
-class LambdaRunnable : public nsRunnable
+template<typename ValueType>
+class PledgeRunnable : public Pledge<ValueType>, public nsRunnable
 {
 public:
-  explicit LambdaRunnable(OnRunType& aOnRun) : mOnRun(aOnRun) {}
+  template<typename OnRunType>
+  static PledgeRunnable<ValueType>*
+  New(OnRunType aOnRun)
+  {
+    class P : public PledgeRunnable<ValueType>
+    {
+    public:
+      explicit P(OnRunType& aOnRun)
+      : mOriginThread(NS_GetCurrentThread())
+      , mOnRun(aOnRun)
+      , mHasRun(false) {}
+    private:
+      virtual ~P() {}
+      NS_IMETHODIMP
+      Run()
+      {
+        if (!mHasRun) {
+          P::mResult = mOnRun(P::mValue);
+          mHasRun = true;
+          return mOriginThread->Dispatch(this, NS_DISPATCH_NORMAL);
+        }
+        bool on;
+        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(mOriginThread->IsOnCurrentThread(&on)));
+        MOZ_RELEASE_ASSERT(on);
+
+        if (NS_SUCCEEDED(P::mResult)) {
+          P::Resolve();
+        } else {
+          P::Reject(P::mResult);
+        }
+        return NS_OK;
+      }
+      nsCOMPtr<nsIThread> mOriginThread;
+      OnRunType mOnRun;
+      bool mHasRun;
+    };
+
+    return new P(aOnRun);
+  }
+
+protected:
+  virtual ~PledgeRunnable() {}
+};
+
+// General purpose runnable with an eye toward lambdas
+
+namespace CallbackRunnable
+{
+template<typename OnRunType>
+class Impl : public nsRunnable
+{
+public:
+  explicit Impl(OnRunType& aOnRun) : mOnRun(aOnRun) {}
 private:
   NS_IMETHODIMP
   Run()
@@ -132,10 +184,11 @@ private:
 };
 
 template<typename OnRunType>
-LambdaRunnable<OnRunType>*
-NewRunnableFrom(OnRunType aOnRun)
+Impl<OnRunType>*
+New(OnRunType aOnRun)
 {
-  return new LambdaRunnable<OnRunType>(aOnRun);
+  return new Impl<OnRunType>(aOnRun);
+}
 }
 
 }
