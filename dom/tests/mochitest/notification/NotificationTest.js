@@ -44,6 +44,19 @@ var NotificationTest = (function () {
     })(tests);
   }
 
+  function fakeApp(aManifest) {
+    var aApp = {
+      "origin": "{mochitest}",
+      "manifestURL": aManifest
+    };
+
+    SpecialPowers.injectApp("{mochitest}", aApp);
+  }
+
+  function unfakeApp() {
+    SpecialPowers.rejectApp("{mochitest}");
+  }
+
   var fakeCustomData = (function () {
     var buffer = new ArrayBuffer(2);
     var dv = new DataView(buffer).setInt16(0, 42, true);
@@ -106,6 +119,10 @@ var NotificationTest = (function () {
     },
 
     info: info,
+
+    fakeApp: fakeApp,
+
+    unfakeApp: unfakeApp,
 
     customDataMatches: function(dataObj) {
       var url = "http://www.domain.com";

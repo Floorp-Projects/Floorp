@@ -24,6 +24,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
+XPCOMUtils.defineLazyServiceGetter(this, "notificationStorage",
+                                   "@mozilla.org/notificationStorage;1",
+                                   "nsINotificationStorage");
+
 const NOTIFICATION_STORE_DIR = OS.Constants.Path.profileDir;
 const NOTIFICATION_STORE_PATH =
         OS.Path.join(NOTIFICATION_STORE_DIR, "notificationstore.json");
@@ -77,14 +81,29 @@ let NotificationDB = {
     }
   },
 
+  filterNonAppNotifications: function(notifications) {
+    let origins = Object.keys(notifications);
+    for (let origin of origins) {
+      let canPut = notificationStorage.canPut(origin);
+      if (!canPut) {
+        if (DEBUG) debug("Origin " + origin + " is not linked to an app manifest, deleting.");
+	delete notifications[origin];
+      }
+    }
+    return notifications;
+  },
+
   // Attempt to read notification file, if it's not there we will create it.
   load: function() {
     var promise = OS.File.read(NOTIFICATION_STORE_PATH, { encoding: "utf-8"});
     return promise.then(
       function onSuccess(data) {
         if (data.length > 0) {
-          this.notifications = JSON.parse(data);
+	  // Preprocessing phase intends to cleanly separate any migration-related
+          // tasks.
+	  this.notifications = this.filterNonAppNotifications(JSON.parse(data));
         }
+
         // populate the list of notifications by tag
         if (this.notifications) {
           for (var origin in this.notifications) {
@@ -97,6 +116,7 @@ let NotificationDB = {
             }
           }
         }
+
         this.loaded = true;
       }.bind(this),
 
