@@ -246,7 +246,7 @@ public:
     if (!str.empty()) {
       WriteLog(str);
     }
-    mMessage.clear();
+    mMessage.str("");
   }
 
   Log &operator <<(char aChar) {
