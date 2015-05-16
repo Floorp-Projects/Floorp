@@ -282,6 +282,13 @@ this.ReaderMode = {
       dump("Reader: " + msg);
   },
 
+  _blockedHosts: [
+    "twitter.com",
+    "mail.google.com",
+    "github.com",
+    "reddit.com",
+  ],
+
   _shouldCheckUri: function (uri) {
     if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
       this.log("Not parsing URI scheme: " + uri.scheme);
@@ -294,6 +301,12 @@ this.ReaderMode = {
       // If this doesn't work, presumably the URL is not well-formed or something
       return false;
     }
+    // Sadly, some high-profile pages have false positives, so bail early for those:
+    let asciiHost = uri.asciiHost;
+    if (this._blockedHosts.some(blockedHost => asciiHost.endsWith(blockedHost))) {
+      return false;
+    }
+
     if (!uri.filePath || uri.filePath == "/") {
       this.log("Not parsing home page: " + uri.spec);
       return false;

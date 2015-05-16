@@ -18,6 +18,9 @@ task:
         buildbot_step 'Build' ./build-lightsaber-nightly.sh $HOME/workspace
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       symbol: B
       groupSymbol: Aries
