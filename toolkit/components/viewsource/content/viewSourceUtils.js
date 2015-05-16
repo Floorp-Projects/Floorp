@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * To keep the global namespace safe, don't define global variables and 
+ * To keep the global namespace safe, don't define global variables and
  * functions in this file.
  *
  * This file silently depends on contentAreaUtils.js for
@@ -205,7 +205,7 @@ var gViewSourceUtils = {
   internalViewerFallback: function(result, data)
   {
     if (!result) {
-      this.openInInternalViewer(data.url, data.pageDescriptor, data.doc, data.lineNumber);
+      this._openInInternalViewer(data.url, data.pageDescriptor, data.doc, data.lineNumber);
     }
   },
 

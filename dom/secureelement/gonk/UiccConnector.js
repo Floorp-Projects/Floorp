@@ -20,7 +20,7 @@
 /* globals Components, XPCOMUtils, SE, dump, libcutils, Services,
    iccProvider, iccService, SEUtils */
 
-const { interfaces: Ci, utils: Cu } = Components;
+const { interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -73,7 +73,8 @@ function UiccConnector() {
 }
 
 UiccConnector.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISecureElementConnector]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISecureElementConnector,
+                                         Ci.nsIIccListener]),
   classID: UICCCONNECTOR_CID,
   classInfo: XPCOMUtils.generateCI({
     classID: UICCCONNECTOR_CID,
@@ -84,6 +85,7 @@ UiccConnector.prototype = {
                  Ci.nsIObserver]
   }),
 
+  _SEListeners: [],
   _isPresent: false,
 
   _init: function() {
@@ -113,8 +115,18 @@ UiccConnector.prototype = {
     ];
 
     let cardState = iccService.getIccByServiceId(PREFERRED_UICC_CLIENTID).cardState;
-    this._isPresent = cardState !== null &&
+    let uiccPresent = cardState !== null &&
                       uiccNotReadyStates.indexOf(cardState) == -1;
+
+    if (this._isPresent === uiccPresent) {
+      return;
+    }
+
+    debug("Uicc presence changed " + this._isPresent + " -> " + uiccPresent);
+    this._isPresent = uiccPresent;
+    this._SEListeners.forEach((listener) => {
+      listener.notifySEPresenceChanged(SE.TYPE_UICC, this._isPresent);
+    });
   },
 
   // See GP Spec, 11.1.4 Class Byte Coding
@@ -305,6 +317,23 @@ UiccConnector.prototype = {
     });
   },
 
+  registerListener: function(listener) {
+    if (this._SEListeners.indexOf(listener) !== -1) {
+      throw Cr.NS_ERROR_UNEXPECTED;
+    }
+
+    this._SEListeners.push(listener);
+    // immediately notify listener about the current state
+    listener.notifySEPresenceChanged(SE.TYPE_UICC, this._isPresent);
+  },
+
+  unregisterListener: function(listener) {
+    let idx = this._SEListeners.indexOf(listener);
+    if (idx !== -1) {
+      this._listeners.splice(idx, 1);
+    }
+  },
+
   /**
    * nsIIccListener interface methods.
    */
@@ -315,6 +344,7 @@ UiccConnector.prototype = {
   notifyIccInfoChanged: function() {},
 
   notifyCardStateChanged: function() {
+    debug("Card state changed, updating UICC presence.");
     this._updatePresenceState();
   },
 

@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Testing mozResendAllNotifications() resend behavior for Pages</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="MockServices.js"></script>
+  <script type="text/javascript" src="NotificationTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1159128">Bug 1159128</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script type="text/javascript">
+  var info = NotificationTest.info;
+  var notifications = [];
+
+  SimpleTest.requestFlakyTimeout("untriaged");
+
+  var steps = [
+    function (done) {
+      if (window.Notification) {
+        SpecialPowers.pushPrefEnv({"set": [
+          ["dom.ignore_webidl_scope_checks", true],
+          ]}, done);
+      } else {
+        ok(true, "Notifications are not enabled on the platform.");
+        done();
+      }
+    },
+
+    function (done) {
+      info("Test that we have mozChromeNotifications API");
+      ok(('mozChromeNotifications' in navigator), "should have mozChromeNotifications API");
+      ok(('mozResendAllNotifications' in navigator.mozChromeNotifications), "should have mozResendAllNotifications()");
+      done();
+    },
+
+    function (done) {
+      info("Making sure we have no previous notification pending");
+      var promise = Notification.get();
+      promise.then(function (notifications) {
+        is(notifications.length, 0, "notifications are all cleaned");
+        done();
+      });
+    },
+
+    // The notification is expected to be created and living properly
+    // so it will be accessible via Notification.get(), but NotificationStorage
+    // should not have sent it to NotificationDB.
+    function (done) {
+      info("Sending one notification");
+      var notif = new Notification("title");
+      ok(notif, "Notification object is valid");
+      notifications.push(notif);
+
+      var promise = Notification.get();
+      promise.then(function (notifications) {
+        is(notifications.length, 1, "one notification has been sent");
+        done();
+      });
+    },
+
+    // mozResendAllNotifications will poke directly NotificationDB, so we
+    // expect our notification to NOT have been put there and thus not being
+    // resent.
+    function (done) {
+      info("Trying to resend the notification");
+      var notif = notifications.pop();
+      notif.onclose = function() {
+        done();
+      };
+
+      navigator.mozChromeNotifications.mozResendAllNotifications(function(number) {
+        is(number, 0, "No notification resent");
+        notif.close();
+      });
+    }
+  ];
+
+  MockServices.register();
+  NotificationTest.run(steps, function () {
+    MockServices.unregister();
+  });
+</script>
+</body>
+</html>

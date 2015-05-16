@@ -23,6 +23,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
+XPCOMUtils.defineLazyServiceGetter(this, "appsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
+
 const kMessageNotificationGetAllOk = "Notification:GetAll:Return:OK";
 const kMessageNotificationGetAllKo = "Notification:GetAll:Return:KO";
 const kMessageNotificationSaveKo   = "Notification:Save:Return:KO";
@@ -45,6 +49,7 @@ function NotificationStorage() {
   this._requestCount = 0;
 
   Services.obs.addObserver(this, "xpcom-shutdown", false);
+
   // Register for message listeners.
   this.registerListeners();
 }
@@ -65,10 +70,17 @@ NotificationStorage.prototype = {
 
   observe: function(aSubject, aTopic, aData) {
     if (DEBUG) debug("Topic: " + aTopic);
-    if (aTopic == "xpcom-shutdown") {
+    if (aTopic === "xpcom-shutdown") {
       Services.obs.removeObserver(this, "xpcom-shutdown");
       this.unregisterListeners();
     }
+  },
+
+  canPut: function(aOrigin) {
+    if (DEBUG) debug("Querying appService for: " + aOrigin);
+    let rv = !!appsService.getAppByManifestURL(aOrigin);
+    if (DEBUG) debug("appService returned: " + rv);
+    return rv;
   },
 
   put: function(origin, id, title, dir, lang, body, tag, icon, alertName,
@@ -105,10 +117,12 @@ NotificationStorage.prototype = {
       this._byTag[origin][tag] = notification;
     };
 
-    cpmm.sendAsyncMessage("Notification:Save", {
-      origin: origin,
-      notification: notification
-    });
+    if (this.canPut(origin)) {
+      cpmm.sendAsyncMessage("Notification:Save", {
+        origin: origin,
+        notification: notification
+      });
+    }
   },
 
   get: function(origin, tag, callback) {
