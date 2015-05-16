@@ -41,7 +41,7 @@ interface nsINotificationStorageCallback : nsISupports
 /**
  * Interface for notification persistence layer.
  */
-[scriptable, uuid(f5145be6-e34b-468b-84da-c8c4c1ad60fe)]
+[scriptable, uuid(cac01fb0-c2eb-4252-b2f4-5b1fac933bd4)]
 interface nsINotificationStorage : nsISupports
 {
 
@@ -94,6 +94,20 @@ interface nsINotificationStorage : nsISupports
    */
   void delete(in DOMString origin,
               in DOMString id);
+
+  /**
+   * Notifications are not supposed to be persistent, according to spec, at
+   * least for now. But we want to be able to have this behavior on B2G. Thus,
+   * this method will check if the origin sending the notifications is a valid
+   * registered app with a manifest or not. Hence, a webpage that has none
+   * will have its notification sent and available (via Notification.get())
+   * during the life time of the page.
+   *
+   * @param origin: Origin from which the notification is sent.
+   *
+   * @return boolean
+   */
+  boolean canPut(in DOMString origin);
 };
 
 %{C++

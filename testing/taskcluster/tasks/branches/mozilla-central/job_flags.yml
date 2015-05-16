@@ -52,6 +52,20 @@ builds:
         task: tasks/builds/b2g_emulator_ics_opt.yml
       debug:
         task: tasks/builds/b2g_emulator_ics_debug.yml
+  aries-nightly:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_lightsaber_nightly_opt.yml
+      debug:
+        task: tasks/builds/b2g_aries_lightsaber_nightly_debug.yml
+  aries-eng:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_lightsaber_eng.yml
 
 tests:
   cppunit:
