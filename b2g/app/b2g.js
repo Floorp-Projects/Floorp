@@ -1140,6 +1140,3 @@ pref("dom.activities.developer_mode_only", "import-app");
 // mulet apparently loads firefox.js as well as b2g.js, so we have to explicitly
 // disable serviceworkers here to get them disabled in mulet.
 pref("dom.serviceWorkers.enabled", false);
-
-// Retain at most 10 processes' layers buffers
-pref("layers.compositor-lru-size", 10);
