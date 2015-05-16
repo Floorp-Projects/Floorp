@@ -15,10 +15,12 @@
 // Test to ensure NetworkStats is enabled but mozNetworkStats.getAvailableNetworks
 // does not work in content because mozNetworkStats is null when no permission.
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({"set": [['dom.mozNetworkStats.enabled', true]]}, runTest);
-  function runTest() {
-    SpecialPowers.removePermission("networkstats-manage", document);
+  SpecialPowers.pushPrefEnv({"set": [['dom.mozNetworkStats.enabled', true]]},
+                            function() {
+    SpecialPowers.pushPermissions([{ 'type': 'networkstats-manage', 'allow': 0, 'context': window.document }], runTest);
+  });
 
+  function runTest() {
     ok(SpecialPowers.getBoolPref("dom.mozNetworkStats.enabled"),
       "Preference 'dom.mozNetworkStats.enabled' is true.");
 
