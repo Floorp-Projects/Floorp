@@ -478,9 +478,9 @@
       <xul:vbox>
         <xul:hbox align="start">
           <xul:vbox flex="1">
-            <xul:label class="popup-notification-originHost header"
-                       xbl:inherits="value=originhost"
-                       crop="end"/>
+            <xul:label class="popup-notification-origin header"
+                       xbl:inherits="value=origin,tooltiptext=origin"
+                       crop="center"/>
             <xul:description class="popup-notification-description"
                              xbl:inherits="xbl:text=label,popupid"/>
           </xul:vbox>
