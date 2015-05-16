@@ -36,7 +36,7 @@ def attlistToIDL(attlist):
         return ''
 
     attlist = list(attlist)
-    attlist.sort(cmp=lambda a,b: cmp(a[0], b[0]))
+    attlist.sort(cmp=lambda a, b: cmp(a[0], b[0]))
 
     return '[%s] ' % ','.join(["%s%s" % (name, value is not None and '(%s)' % value or '')
                               for name, value, aloc in attlist])
@@ -1059,7 +1059,7 @@ class IDLParser(object):
     t_NUMBER = r'-?\d+'
     t_HEXNUM = r'0x%s+' % hexchar
     t_LSHIFT = r'<<'
-    t_RSHIFT=  r'>>'
+    t_RSHIFT = r'>>'
 
     literals = '"(){}[],;:=|+-*'
 
