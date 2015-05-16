@@ -284,6 +284,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mNeedLayerTreeReadyNotification(false)
   , mCursor(nsCursor(-1))
   , mTabSetsCursor(false)
+  , mHasContentOpener(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -609,6 +610,11 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
   NS_ENSURE_SUCCESS(rv, false);
 
   TabParent* newTab = TabParent::GetFrom(aNewTab);
+  MOZ_ASSERT(newTab);
+
+  // Content has requested that we open this new content window, so
+  // we must have an opener.
+  newTab->SetHasContentOpener(true);
 
   nsCOMPtr<nsIContent> frame(do_QueryInterface(mFrameElement));
 
@@ -2904,6 +2910,19 @@ TabParent::GetTabId(uint64_t* aId)
 {
   *aId = GetTabId();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TabParent::GetHasContentOpener(bool* aResult)
+{
+  *aResult = mHasContentOpener;
+  return NS_OK;
+}
+
+void
+TabParent::SetHasContentOpener(bool aHasContentOpener)
+{
+  mHasContentOpener = aHasContentOpener;
 }
 
 class LayerTreeUpdateRunnable final

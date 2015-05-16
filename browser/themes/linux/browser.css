@@ -1167,10 +1167,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   list-style-image: url(moz-icon://stock/gtk-dialog-question?size=16);
 }
 
-#pointerLock-cancel {
-  margin: 0px;
-}
-
 /* Translation infobar */
 
 %include ../shared/translation/infobar.inc.css
