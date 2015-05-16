@@ -101,6 +101,9 @@ XPIDL_SOURCES += [
     'NotXPCOMTest.idl',
 ]
 
+# Don't add our test-only .xpt files to the normal manifests
+XPIDL_NO_MANIFEST = True
+
 LOCAL_INCLUDES += [
     '../ds',
 ]

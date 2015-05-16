@@ -19,6 +19,30 @@
 // for mozilla::dom::workers::kJSPrincipalsDebugToken
 #include "mozilla/dom/workers/Workers.h"
 
+NS_IMETHODIMP_(MozExternalRefCountType)
+nsJSPrincipals::AddRef()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
+  nsrefcnt count = ++refcount;
+  NS_LOG_ADDREF(this, count, "nsJSPrincipals", sizeof(*this));
+  return count;
+}
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+nsJSPrincipals::Release()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_PRECONDITION(0 != refcount, "dup release");
+  nsrefcnt count = --refcount;
+  NS_LOG_RELEASE(this, count, "nsJSPrincipals");
+  if (count == 0) {
+    delete this;
+  }
+
+  return count;
+}
+
 /* static */ bool
 nsJSPrincipals::Subsume(JSPrincipals *jsprin, JSPrincipals *other)
 {
@@ -59,7 +83,9 @@ JS_EXPORT_API(void)
 JSPrincipals::dump()
 {
     if (debugToken == nsJSPrincipals::DEBUG_TOKEN) {
-        static_cast<nsJSPrincipals *>(this)->dumpImpl();
+      nsAutoCString str;
+      static_cast<nsJSPrincipals *>(this)->GetScriptLocation(str);
+      fprintf(stderr, "nsIPrincipal (%p) = %s\n", static_cast<void*>(this), str.get());
     } else if (debugToken == mozilla::dom::workers::kJSPrincipalsDebugToken) {
         fprintf(stderr, "Web Worker principal singleton (%p)\n", this);
     } else {

@@ -14,6 +14,7 @@ interface Clients {
   [Throws]
   Promise<sequence<Client>?> matchAll(optional ClientQueryOptions options);
   Promise<WindowClient> openWindow(USVString url);
+  [Throws]
   Promise<void> claim();
 };
 

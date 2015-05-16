@@ -46,68 +46,6 @@ static bool URIIsImmutable(nsIURI* aURI)
     !isMutable;
 }
 
-// Static member variables
-const char nsBasePrincipal::sInvalid[] = "Invalid";
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsBasePrincipal::AddRef()
-{
-  NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
-  // XXXcaa does this need to be threadsafe?  See bug 143559.
-  nsrefcnt count = ++refcount;
-  NS_LOG_ADDREF(this, count, "nsBasePrincipal", sizeof(*this));
-  return count;
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsBasePrincipal::Release()
-{
-  NS_PRECONDITION(0 != refcount, "dup release");
-  nsrefcnt count = --refcount;
-  NS_LOG_RELEASE(this, count, "nsBasePrincipal");
-  if (count == 0) {
-    delete this;
-  }
-
-  return count;
-}
-
-nsBasePrincipal::nsBasePrincipal()
-{
-}
-
-nsBasePrincipal::~nsBasePrincipal(void)
-{
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
-{
-  NS_IF_ADDREF(*aCsp = mCSP);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
-{
-  // If CSP was already set, it should not be destroyed!  Instead, it should
-  // get set anew when a new principal is created.
-  if (mCSP)
-    return NS_ERROR_ALREADY_INITIALIZED;
-
-  mCSP = aCsp;
-  return NS_OK;
-}
-
-#ifdef DEBUG
-void nsPrincipal::dumpImpl()
-{
-  nsAutoCString str;
-  GetScriptLocation(str);
-  fprintf(stderr, "nsPrincipal (%p) = %s\n", static_cast<void*>(this), str.get());
-}
-#endif 
-
 NS_IMPL_CLASSINFO(nsPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_PRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE_CI(nsPrincipal,
@@ -116,8 +54,6 @@ NS_IMPL_QUERY_INTERFACE_CI(nsPrincipal,
 NS_IMPL_CI_INTERFACE_GETTER(nsPrincipal,
                             nsIPrincipal,
                             nsISerializable)
-NS_IMPL_ADDREF_INHERITED(nsPrincipal, nsBasePrincipal)
-NS_IMPL_RELEASE_INHERITED(nsPrincipal, nsBasePrincipal)
 
 // Called at startup:
 /* static */ void
@@ -169,13 +105,11 @@ nsPrincipal::GetScriptLocation(nsACString &aStr)
 }
 
 /* static */ nsresult
-nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
+nsPrincipal::GetOriginForURI(nsIURI* aURI, nsACString& aOrigin)
 {
   if (!aURI) {
     return NS_ERROR_FAILURE;
   }
-
-  *aOrigin = nullptr;
 
   nsCOMPtr<nsIURI> origin = NS_GetInnermostURI(aURI);
   if (!origin) {
@@ -210,29 +144,21 @@ nsPrincipal::GetOriginForURI(nsIURI* aURI, char **aOrigin)
       hostPort.AppendInt(port, 10);
     }
 
-    nsAutoCString scheme;
-    rv = origin->GetScheme(scheme);
+    rv = origin->GetScheme(aOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    *aOrigin = ToNewCString(scheme + NS_LITERAL_CSTRING("://") + hostPort);
+    aOrigin.AppendLiteral("://");
+    aOrigin.Append(hostPort);
   }
   else {
-    // Some URIs (e.g., nsSimpleURI) don't support asciiHost. Just
-    // get the full spec.
-    nsAutoCString spec;
-    // XXX nsMozIconURI and nsJARURI don't implement this correctly, they
-    // both fall back to GetSpec.  That needs to be fixed.
-    rv = origin->GetAsciiSpec(spec);
+    rv = origin->GetAsciiSpec(aOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    *aOrigin = ToNewCString(spec);
   }
 
-  return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetOrigin(char **aOrigin)
+nsPrincipal::GetOrigin(nsACString& aOrigin)
 {
   return GetOriginForURI(mCodebase, aOrigin);
 }
@@ -475,13 +401,6 @@ NS_IMETHODIMP
 nsPrincipal::GetUnknownAppId(bool* aUnknownAppId)
 {
   *aUnknownAppId = mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
-{
-  *aIsNullPrincipal = false;
   return NS_OK;
 }
 
@@ -800,12 +719,40 @@ NS_IMPL_QUERY_INTERFACE_CI(nsExpandedPrincipal,
 NS_IMPL_CI_INTERFACE_GETTER(nsExpandedPrincipal,
                              nsIPrincipal,
                              nsIExpandedPrincipal)
-NS_IMPL_ADDREF_INHERITED(nsExpandedPrincipal, nsBasePrincipal)
-NS_IMPL_RELEASE_INHERITED(nsExpandedPrincipal, nsBasePrincipal)
+
+struct OriginComparator
+{
+  bool LessThan(nsIPrincipal* a, nsIPrincipal* b) const
+  {
+    nsAutoCString originA;
+    nsresult rv = a->GetOrigin(originA);
+    NS_ENSURE_SUCCESS(rv, false);
+    nsAutoCString originB;
+    rv = b->GetOrigin(originB);
+    NS_ENSURE_SUCCESS(rv, false);
+    return originA < originB;
+  }
+
+  bool Equals(nsIPrincipal* a, nsIPrincipal* b) const
+  {
+    nsAutoCString originA;
+    nsresult rv = a->GetOrigin(originA);
+    NS_ENSURE_SUCCESS(rv, false);
+    nsAutoCString originB;
+    rv = b->GetOrigin(originB);
+    NS_ENSURE_SUCCESS(rv, false);
+    return a == b;
+  }
+};
 
 nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr <nsIPrincipal> > &aWhiteList)
 {
-  mPrincipals.AppendElements(aWhiteList);
+  // We force the principals to be sorted by origin so that nsExpandedPrincipal
+  // origins can have a canonical form.
+  OriginComparator c;
+  for (size_t i = 0; i < aWhiteList.Length(); ++i) {
+    mPrincipals.InsertElementSorted(aWhiteList[i], c);
+  }
 }
 
 nsExpandedPrincipal::~nsExpandedPrincipal()
@@ -825,10 +772,22 @@ nsExpandedPrincipal::SetDomain(nsIURI* aDomain)
 }
 
 NS_IMETHODIMP
-nsExpandedPrincipal::GetOrigin(char** aOrigin)
+nsExpandedPrincipal::GetOrigin(nsACString& aOrigin)
 {
-  *aOrigin = ToNewCString(NS_LITERAL_CSTRING(EXPANDED_PRINCIPAL_SPEC));
-  return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  aOrigin.AssignLiteral("[Expanded Principal [");
+  for (size_t i = 0; i < mPrincipals.Length(); ++i) {
+    if (i != 0) {
+      aOrigin.AppendLiteral(", ");
+    }
+
+    nsAutoCString subOrigin;
+    nsresult rv = mPrincipals.ElementAt(i)->GetOrigin(subOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aOrigin.Append(subOrigin);
+  }
+
+  aOrigin.Append("]]");
+  return NS_OK;
 }
 
 typedef nsresult (NS_STDCALL nsIPrincipal::*nsIPrincipalMemFn)(nsIPrincipal* aOther,
@@ -991,13 +950,6 @@ nsExpandedPrincipal::GetUnknownAppId(bool* aUnknownAppId)
 }
 
 NS_IMETHODIMP
-nsExpandedPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
-{
-  *aIsNullPrincipal = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsExpandedPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   return NS_ERROR_NOT_AVAILABLE;
@@ -1015,9 +967,7 @@ nsExpandedPrincipal::IsOnCSSUnprefixingWhitelist()
 void
 nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {
-  aStr.Assign(EXPANDED_PRINCIPAL_SPEC);
-  aStr.AppendLiteral(" (");
-
+  aStr.Assign("[Expanded Principal [");
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {
     if (i != 0) {
       aStr.AppendLiteral(", ");
@@ -1029,15 +979,8 @@ nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
     aStr.Append(spec);
 
   }
-  aStr.Append(")");
+  aStr.Append("]]");
 }
-
-#ifdef DEBUG
-void nsExpandedPrincipal::dumpImpl()
-{
-  fprintf(stderr, "nsExpandedPrincipal (%p)\n", static_cast<void*>(this));
-}
-#endif 
 
 //////////////////////////////////////////
 // Methods implementing nsISerializable //

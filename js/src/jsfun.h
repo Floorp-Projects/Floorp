@@ -32,12 +32,15 @@ class JSFunction : public js::NativeObject
         NormalFunction = 0,
         Arrow,                      /* ES6 '(args) => body' syntax */
         Method,                     /* ES6 MethodDefinition */
-        AsmJS                       /* function is an asm.js module or exported function */
+        Getter,
+        Setter,
+        AsmJS,                      /* function is an asm.js module or exported function */
+        FunctionKindLimit
     };
 
     enum Flags {
         INTERPRETED      = 0x0001,  /* function has a JSScript and environment. */
-        NATIVE_CTOR      = 0x0002,  /* native that can be called as a constructor */
+        CONSTRUCTOR      = 0x0002,  /* function that can be called as a constructor */
         EXTENDED         = 0x0004,  /* structure is FunctionExtended */
         IS_FUN_PROTO     = 0x0008,  /* function is Function.prototype for some global object */
         EXPR_BODY        = 0x0010,  /* arrow function with expression body or
@@ -49,33 +52,42 @@ class JSFunction : public js::NativeObject
                                        function-statement) */
         SELF_HOSTED      = 0x0080,  /* function is self-hosted builtin and must not be
                                        decompilable nor constructible. */
-        SELF_HOSTED_CTOR = 0x0100,  /* function is self-hosted builtin constructor and
-                                       must be constructible but not decompilable. */
+        // Free bit
         HAS_REST         = 0x0200,  /* function has a rest (...) parameter */
         INTERPRETED_LAZY = 0x0400,  /* function is interpreted but doesn't have a script yet */
         RESOLVED_LENGTH  = 0x0800,  /* f.length has been resolved (see fun_resolve). */
         RESOLVED_NAME    = 0x1000,  /* f.name has been resolved (see fun_resolve). */
 
         FUNCTION_KIND_SHIFT = 13,
-        FUNCTION_KIND_MASK  = 0x3 << FUNCTION_KIND_SHIFT,
+        FUNCTION_KIND_MASK  = 0x7 << FUNCTION_KIND_SHIFT,
 
         ASMJS_KIND = AsmJS << FUNCTION_KIND_SHIFT,
         ARROW_KIND = Arrow << FUNCTION_KIND_SHIFT,
+        METHOD_KIND = Method << FUNCTION_KIND_SHIFT,
+        GETTER_KIND = Getter << FUNCTION_KIND_SHIFT,
+        SETTER_KIND = Setter << FUNCTION_KIND_SHIFT,
 
         /* Derived Flags values for convenience: */
         NATIVE_FUN = 0,
+        NATIVE_CTOR = NATIVE_FUN | CONSTRUCTOR,
         ASMJS_CTOR = ASMJS_KIND | NATIVE_CTOR,
         ASMJS_LAMBDA_CTOR = ASMJS_KIND | NATIVE_CTOR | LAMBDA,
-        INTERPRETED_METHOD = INTERPRETED | (Method << FUNCTION_KIND_SHIFT),
-        INTERPRETED_LAMBDA = INTERPRETED | LAMBDA,
+        INTERPRETED_METHOD = INTERPRETED | METHOD_KIND,
+        INTERPRETED_CLASS_CONSTRUCTOR = INTERPRETED | METHOD_KIND | CONSTRUCTOR,
+        INTERPRETED_GETTER = INTERPRETED | GETTER_KIND,
+        INTERPRETED_SETTER = INTERPRETED | SETTER_KIND,
+        INTERPRETED_LAMBDA = INTERPRETED | LAMBDA | CONSTRUCTOR,
         INTERPRETED_LAMBDA_ARROW = INTERPRETED | LAMBDA | ARROW_KIND,
-        STABLE_ACROSS_CLONES = NATIVE_CTOR | IS_FUN_PROTO | EXPR_BODY | HAS_GUESSED_ATOM |
-                               LAMBDA | SELF_HOSTED | SELF_HOSTED_CTOR | HAS_REST |
-                               FUNCTION_KIND_MASK
+        INTERPRETED_NORMAL = INTERPRETED | CONSTRUCTOR,
+
+        STABLE_ACROSS_CLONES = IS_FUN_PROTO | CONSTRUCTOR | EXPR_BODY | HAS_GUESSED_ATOM |
+                               LAMBDA | SELF_HOSTED |  HAS_REST | FUNCTION_KIND_MASK
     };
 
     static_assert((INTERPRETED | INTERPRETED_LAZY) == js::JS_FUNCTION_INTERPRETED_BITS,
                   "jsfriendapi.h's JSFunction::INTERPRETED-alike is wrong");
+    static_assert(((FunctionKindLimit - 1) << FUNCTION_KIND_SHIFT) <= FUNCTION_KIND_MASK,
+                  "FunctionKind doesn't fit into flags_");
 
   private:
     uint16_t        nargs_;       /* number of formal arguments
@@ -135,8 +147,9 @@ class JSFunction : public js::NativeObject
     bool isInterpreted()            const { return flags() & (INTERPRETED | INTERPRETED_LAZY); }
     bool isNative()                 const { return !isInterpreted(); }
 
+    bool isConstructor()            const { return flags() & CONSTRUCTOR; }
+
     /* Possible attributes of a native function: */
-    bool isNativeConstructor()      const { return flags() & NATIVE_CTOR; }
     bool isAsmJSNative()            const { return kind() == AsmJS; }
 
     /* Possible attributes of an interpreted function: */
@@ -145,14 +158,21 @@ class JSFunction : public js::NativeObject
     bool hasGuessedAtom()           const { return flags() & HAS_GUESSED_ATOM; }
     bool isLambda()                 const { return flags() & LAMBDA; }
     bool isSelfHostedBuiltin()      const { return flags() & SELF_HOSTED; }
-    bool isSelfHostedConstructor()  const { return flags() & SELF_HOSTED_CTOR; }
     bool hasRest()                  const { return flags() & HAS_REST; }
     bool isInterpretedLazy()        const { return flags() & INTERPRETED_LAZY; }
     bool hasScript()                const { return flags() & INTERPRETED; }
 
     // Arrow functions store their lexical |this| in the first extended slot.
     bool isArrow()                  const { return kind() == Arrow; }
+    // Every class-constructor is also a method.
     bool isMethod()                 const { return kind() == Method; }
+
+    bool isGetter()                 const { return kind() == Getter; }
+    bool isSetter()                 const { return kind() == Setter; }
+
+    bool isClassConstructor() const {
+        return kind() == Method && isConstructor();
+    }
 
     bool hasResolvedLength()        const { return flags() & RESOLVED_LENGTH; }
     bool hasResolvedName()          const { return flags() & RESOLVED_NAME; }
@@ -168,12 +188,7 @@ class JSFunction : public js::NativeObject
     bool isBuiltin() const {
         return (isNative() && !isAsmJSNative()) || isSelfHostedBuiltin();
     }
-    bool isInterpretedConstructor() const {
-        // Note: the JITs inline this check, so be careful when making changes
-        // here. See MacroAssembler::branchIfNotInterpretedConstructor.
-        return isInterpreted() && !isFunctionPrototype() && !isArrow() &&
-               (!isSelfHostedBuiltin() || isSelfHostedConstructor());
-    }
+
     bool isNamedLambda() const {
         return isLambda() && displayAtom() && !hasGuessedAtom();
     }
@@ -194,6 +209,13 @@ class JSFunction : public js::NativeObject
         this->flags_ |= static_cast<uint16_t>(kind) << FUNCTION_KIND_SHIFT;
     }
 
+    // Make the function constructible.
+    void setIsConstructor() {
+        MOZ_ASSERT(!isConstructor());
+        MOZ_ASSERT(isSelfHostedBuiltin());
+        flags_ |= CONSTRUCTOR;
+    }
+
     // Can be called multiple times by the parser.
     void setArgCount(uint16_t nargs) {
         this->nargs_ = nargs;
@@ -207,11 +229,8 @@ class JSFunction : public js::NativeObject
     void setIsSelfHostedBuiltin() {
         MOZ_ASSERT(!isSelfHostedBuiltin());
         flags_ |= SELF_HOSTED;
-    }
-
-    void setIsSelfHostedConstructor() {
-        MOZ_ASSERT(!isSelfHostedConstructor());
-        flags_ |= SELF_HOSTED_CTOR;
+        // Self-hosted functions should not be constructable.
+        flags_ &= ~CONSTRUCTOR;
     }
 
     void setIsFunctionPrototype() {

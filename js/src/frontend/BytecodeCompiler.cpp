@@ -282,7 +282,9 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
         return nullptr;
 
     bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
-    bool allowSuperProperty = savedCallerFun && evalCaller->functionOrCallerFunction()->isMethod();
+    bool allowSuperProperty = savedCallerFun && (evalCaller->functionOrCallerFunction()->isMethod() ||
+                                                 evalCaller->functionOrCallerFunction()->isGetter() ||
+                                                 evalCaller->functionOrCallerFunction()->isSetter());
 
     Directives directives(options.strictOption);
     GlobalSharedContext globalsc(cx, directives, options.extraWarningsOption, allowSuperProperty);

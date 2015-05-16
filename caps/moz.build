@@ -6,6 +6,8 @@
 
 TEST_DIRS += ['tests/mochitest']
 
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
 XPIDL_SOURCES += [
     'nsIDomainPolicy.idl',
     'nsIPrincipal.idl',
@@ -20,7 +22,12 @@ EXPORTS += [
     'nsNullPrincipalURI.h',
 ]
 
+EXPORTS.mozilla = [
+    'BasePrincipal.h'
+]
+
 UNIFIED_SOURCES += [
+    'BasePrincipal.cpp',
     'DomainPolicy.cpp',
     'nsJSPrincipals.cpp',
     'nsNullPrincipal.cpp',

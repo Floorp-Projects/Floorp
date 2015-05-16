@@ -2756,9 +2756,7 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
     // Don't optimize if we're constructing and the callee is not a
     // constructor, so that CallKnown does not have to handle this case
     // (it should always throw).
-    if (nativeCallInfo.constructing() && !scriptedTarget->isInterpretedConstructor() &&
-        !scriptedTarget->isNativeConstructor())
-    {
+    if (nativeCallInfo.constructing() && !scriptedTarget->isConstructor()) {
         return InliningStatus_NotInlined;
     }
 

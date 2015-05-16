@@ -2033,8 +2033,7 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
     Preferences::GetBool("media.navigator.streams.fake", false);
 
   nsCString origin;
-  nsPrincipal::GetOriginForURI(aWindow->GetDocumentURI(),
-                               getter_Copies(origin));
+  nsPrincipal::GetOriginForURI(aWindow->GetDocumentURI(), origin);
   bool inPrivateBrowsing;
   {
     nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();

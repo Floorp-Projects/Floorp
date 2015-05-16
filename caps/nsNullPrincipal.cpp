@@ -37,36 +37,6 @@ NS_IMPL_CI_INTERFACE_GETTER(nsNullPrincipal,
                             nsIPrincipal,
                             nsISerializable)
 
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsNullPrincipal::AddRef()
-{
-  NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
-  nsrefcnt count = ++refcount;
-  NS_LOG_ADDREF(this, count, "nsNullPrincipal", sizeof(*this));
-  return count;
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsNullPrincipal::Release()
-{
-  NS_PRECONDITION(0 != refcount, "dup release");
-  nsrefcnt count = --refcount;
-  NS_LOG_RELEASE(this, count, "nsNullPrincipal");
-  if (count == 0) {
-    delete this;
-  }
-
-  return count;
-}
-
-nsNullPrincipal::nsNullPrincipal()
-{
-}
-
-nsNullPrincipal::~nsNullPrincipal()
-{
-}
-
 /* static */ already_AddRefed<nsNullPrincipal>
 nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 {
@@ -105,15 +75,6 @@ nsNullPrincipal::GetScriptLocation(nsACString &aStr)
   mURI->GetSpec(aStr);
 }
 
-#ifdef DEBUG
-void nsNullPrincipal::dumpImpl()
-{
-  nsAutoCString str;
-  mURI->GetSpec(str);
-  fprintf(stderr, "nsNullPrincipal (%p) = %s\n", this, str.get());
-}
-#endif 
-
 /**
  * nsIPrincipal implementation
  */
@@ -147,25 +108,6 @@ nsNullPrincipal::GetURI(nsIURI** aURI)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
-{
-  NS_IF_ADDREF(*aCsp = mCSP);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
-{
-  // If CSP was already set, it should not be destroyed!  Instead, it should
-  // get set anew when a new principal is created.
-  if (mCSP)
-    return NS_ERROR_ALREADY_INITIALIZED;
-
-  mCSP = aCsp;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNullPrincipal::GetDomain(nsIURI** aDomain)
 {
   return NS_EnsureSafeToReturn(mURI, aDomain);
@@ -179,19 +121,10 @@ nsNullPrincipal::SetDomain(nsIURI* aDomain)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP 
-nsNullPrincipal::GetOrigin(char** aOrigin)
+NS_IMETHODIMP
+nsNullPrincipal::GetOrigin(nsACString& aOrigin)
 {
-  *aOrigin = nullptr;
-  
-  nsAutoCString str;
-  nsresult rv = mURI->GetSpec(str);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aOrigin = ToNewCString(str);
-  NS_ENSURE_TRUE(*aOrigin, NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
+  return mURI->GetSpec(aOrigin);
 }
 
 NS_IMETHODIMP
@@ -285,12 +218,6 @@ nsNullPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   // For a null principal, we use our unique uuid as the base domain.
   return mURI->GetPath(aBaseDomain);
-}
-
-bool
-nsNullPrincipal::IsOnCSSUnprefixingWhitelist()
-{
-  return false;
 }
 
 /**

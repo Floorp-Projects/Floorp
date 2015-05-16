@@ -1,0 +1,172 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1130684 - Test service worker clients claim onactivate </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration_1;
+  var registration_2;
+  var client;
+
+  function register_1() {
+    return navigator.serviceWorker.register("claim_worker_1.js",
+                                            { scope: "./" })
+      .then((swr) => registration_1 = swr);
+  }
+
+  function register_2() {
+    return navigator.serviceWorker.register("claim_worker_2.js",
+                                            { scope: "./claim_clients/client.html" })
+      .then((swr) => registration_2 = swr);
+  }
+
+  function unregister(reg) {
+    return reg.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+  function createClient() {
+    var p = new Promise(function(res, rej) {
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          res();
+        }
+      }
+    });
+
+    content = document.getElementById("content");
+    ok(content, "parent exists.");
+
+    client = document.createElement("iframe");
+    client.setAttribute('src', "claim_clients/client.html");
+    content.appendChild(client);
+
+    return p;
+  }
+
+  function testController() {
+    ok(navigator.serviceWorker.controller.scriptURL.match("claim_worker_1"),
+        "Controlling service worker has the correct url.");
+  }
+
+  function testClientWasClaimed(expected) {
+    var resolveClientMessage, resolveClientControllerChange;
+    var messageFromClient = new Promise(function(res, rej) {
+      resolveClientMessage = res;
+    });
+    var controllerChangeFromClient = new Promise(function(res, rej) {
+      resolveClientControllerChange = res;
+    });
+    window.onmessage = function(e) {
+      if (!e.data.event) {
+        ok(false, "Unknown message received: " + e.data);
+      }
+
+      if (e.data.event === "controllerchange") {
+        ok(e.data.controller,
+           "Client was claimed and received controllerchange event.");
+        resolveClientControllerChange();
+      }
+
+      if (e.data.event === "message") {
+        ok(e.data.data.resolve_value === undefined,
+            "Claim should resolve with undefined.");
+        ok(e.data.data.message === expected.message,
+           "Client received message from claiming worker.");
+        ok(e.data.data.match_count_before === expected.match_count_before,
+            "MatchAll clients count before claim should be " + expected.match_count_before);
+        ok(e.data.data.match_count_after === expected.match_count_after,
+            "MatchAll clients count after claim should be " + expected.match_count_after);
+        resolveClientMessage();
+      }
+    }
+
+    return Promise.all([messageFromClient, controllerChangeFromClient])
+      .then(() => window.onmessage = null);
+  }
+
+  function testClaimFirstWorker() {
+    // wait for the worker to control us
+    var controllerChange = new Promise(function(res, rej) {
+      navigator.serviceWorker.oncontrollerchange = function(e) {
+        ok(true, "controller changed event received.");
+        res();
+      };
+    });
+
+    var messageFromWorker = new Promise(function(res, rej) {
+      navigator.serviceWorker.onmessage = function(e) {
+        ok(e.data.resolve_value === undefined,
+            "Claim should resolve with undefined.");
+        ok(e.data.message === "claim_worker_1",
+            "Received message from claiming worker.");
+        ok(e.data.match_count_before === 0,
+            "Worker doesn't control any client before claim.");
+        ok(e.data.match_count_after === 2, "Worker should claim 2 clients.");
+        res();
+      }
+    });
+
+    var clientClaim = testClientWasClaimed({
+      message: "claim_worker_1",
+      match_count_before: 0,
+      match_count_after: 2
+    });
+
+    return Promise.all([controllerChange, messageFromWorker, clientClaim])
+      .then(testController);
+  }
+
+  function testClaimSecondWorker() {
+    navigator.serviceWorker.oncontrollerchange = function(e) {
+      ok(false, "Claim_worker_2 shouldn't claim this window.");
+    }
+
+    navigator.serviceWorker.onmessage = function(e) {
+      ok(false, "Claim_worker_2 shouldn't claim this window.");
+    }
+
+    var clientClaim = testClientWasClaimed({
+      message: "claim_worker_2",
+      match_count_before: 0,
+      match_count_after: 1
+    });
+
+    return clientClaim.then(testController);
+  }
+
+  function runTest() {
+    createClient()
+      .then(register_1)
+      .then(testClaimFirstWorker)
+      .then(register_2)
+      .then(testClaimSecondWorker)
+      .then(function() { return unregister(registration_1); })
+      .then(function() { return unregister(registration_2); })
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
