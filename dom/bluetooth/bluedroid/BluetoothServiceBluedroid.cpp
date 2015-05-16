@@ -633,6 +633,7 @@ static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetDeviceRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
 static bool sAdapterDiscoverable(false);
+static bool sAdapterDiscovering(false);
 static bool sIsRestart(false);
 static bool sIsFirstTimeToggleOffBt(false);
 static uint32_t sAdapterDiscoverableTimeout(0);
@@ -2490,8 +2491,9 @@ BluetoothServiceBluedroid::AdapterPropertiesNotification(
  *
  *   (1) automatically by Bluedroid when BT is turning on, or
  *   (2) as result of remote device properties update during discovery, or
- *   (3) as result of GetRemoteDeviceProperties, or
- *   (4) as result of GetRemoteServices.
+ *   (3) as result of CreateBond, or
+ *   (4) as result of GetRemoteDeviceProperties, or
+ *   (5) as result of GetRemoteServices.
  */
 void
 BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
@@ -2665,15 +2667,17 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
     /**
      * This is possible when
      *
-     *  (1) the callback is called after Bluetooth is turned on, or
-     *  (2) remote device properties get updated during discovery.
-     *
-     * For (2), fire 'devicefound' again to update device name.
-     * See bug 1076553 for more information.
+     *  (1) the callback is called when BT is turning on, or
+     *  (2) remote device properties get updated during discovery, or
+     *  (3) as result of CreateBond
      */
-    DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("DeviceFound"),
-                                     NS_LITERAL_STRING(KEY_ADAPTER),
-                                     BluetoothValue(props)));
+    if (sAdapterDiscovering) {
+      // Fire 'devicefound' again to update device name for (2).
+      // See bug 1076553 for more information.
+      DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("DeviceFound"),
+                                       NS_LITERAL_STRING(KEY_ADAPTER),
+                                       BluetoothValue(props)));
+    }
     return;
   }
 
@@ -2812,16 +2816,17 @@ BluetoothServiceBluedroid::DiscoveryStateChangedNotification(bool aState)
 #else
   MOZ_ASSERT(NS_IsMainThread());
 
-  bool isDiscovering = (aState == true);
+  sAdapterDiscovering = aState;
 
   DistributeSignal(
     BluetoothSignal(NS_LITERAL_STRING(DISCOVERY_STATE_CHANGED_ID),
-                    NS_LITERAL_STRING(KEY_ADAPTER), isDiscovering));
+                    NS_LITERAL_STRING(KEY_ADAPTER), sAdapterDiscovering));
 
   // Distribute "PropertyChanged" signal to notice adapter this change since
   // Bluedroid don' treat "discovering" as a property of adapter.
   InfallibleTArray<BluetoothNamedValue> props;
-  BT_APPEND_NAMED_VALUE(props, "Discovering", BluetoothValue(isDiscovering));
+  BT_APPEND_NAMED_VALUE(props, "Discovering",
+                        BluetoothValue(sAdapterDiscovering));
   DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("PropertyChanged"),
                                    NS_LITERAL_STRING(KEY_ADAPTER),
                                    BluetoothValue(props)));
