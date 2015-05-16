@@ -54,6 +54,22 @@ const gXPInstallObserver = {
       // originatingURI might be missing or 'host' might throw for non-nsStandardURL nsIURIs.
     }
 
+    let cancelInstallation = () => {
+      if (installInfo) {
+        for (let install of installInfo.installs)
+          install.cancel();
+      }
+
+      if (aTopic == "addon-install-confirmation")
+        this.acceptInstallation = null;
+
+      let tab = gBrowser.getTabForBrowser(browser);
+      if (tab)
+        tab.removeEventListener("TabClose", cancelInstallation);
+
+      window.removeEventListener("unload", cancelInstallation);
+    };
+
     switch (aTopic) {
     case "addon-install-disabled": {
       notificationID = "xpinstall-disabled";
@@ -170,11 +186,7 @@ const gXPInstallObserver = {
       options.eventCallback = (aEvent) => {
         switch (aEvent) {
           case "removed":
-            if (installInfo) {
-              for (let install of installInfo.installs)
-                install.cancel();
-            }
-            this.acceptInstallation = null;
+            cancelInstallation();
             break;
           case "shown":
             let addonList = document.getElementById("addon-install-confirmation-content");
@@ -243,8 +255,12 @@ const gXPInstallObserver = {
 
       let showNotification = () => {
         let tab = gBrowser.getTabForBrowser(browser);
-        if (tab)
+        if (tab) {
           gBrowser.selectedTab = tab;
+          tab.addEventListener("TabClose", cancelInstallation);
+        }
+
+        window.addEventListener("unload", cancelInstallation);
 
         if (PopupNotifications.isPanelOpen) {
           let rect = document.getElementById("addon-progress-notification").getBoundingClientRect();
