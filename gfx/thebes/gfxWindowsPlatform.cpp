@@ -411,6 +411,7 @@ NS_IMPL_ISUPPORTS(D3D9SharedTextureReporter, nsIMemoryReporter)
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mD3D11DeviceInitialized(false)
   , mIsWARP(false)
+  , mCanInitMediaDevice(false)
   , mHasDeviceReset(false)
 {
     mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
@@ -1599,15 +1600,55 @@ gfxWindowsPlatform::GetD3D11ContentDevice()
 }
 
 ID3D11Device*
-gfxWindowsPlatform::GetD3D11ImageBridgeDevice()
+gfxWindowsPlatform::GetD3D11MediaDevice()
 {
-  if (mD3D11DeviceInitialized) {
-    return mD3D11ImageBridgeDevice;
+  if (mD3D11MediaDevice) {
+    return mD3D11MediaDevice;
   }
 
-  InitD3D11Devices();
+  if (!mCanInitMediaDevice) {
+    return nullptr;
+  }
 
-  return mD3D11ImageBridgeDevice;
+  mCanInitMediaDevice = false;
+
+  nsModuleHandle d3d11Module(LoadLibrarySystem32(L"d3d11.dll"));
+  decltype(D3D11CreateDevice)* d3d11CreateDevice = (decltype(D3D11CreateDevice)*)
+    GetProcAddress(d3d11Module, "D3D11CreateDevice");
+  MOZ_ASSERT(d3d11CreateDevice);
+
+  nsTArray<D3D_FEATURE_LEVEL> featureLevels;
+  if (IsWin8OrLater()) {
+    featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_1);
+  }
+  featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_0);
+  featureLevels.AppendElement(D3D_FEATURE_LEVEL_10_1);
+  featureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
+  featureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
+
+  RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
+  MOZ_ASSERT(adapter);
+
+  HRESULT hr = E_INVALIDARG;
+
+  MOZ_SEH_TRY{
+    hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+                           D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+                           featureLevels.Elements(), featureLevels.Length(),
+                           D3D11_SDK_VERSION, byRef(mD3D11MediaDevice), nullptr, nullptr);
+  } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    mD3D11MediaDevice = nullptr;
+  }
+
+  d3d11Module.disown();
+
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+
+  mD3D11MediaDevice->SetExceptionMode(0);
+
+  return mD3D11MediaDevice;
 }
 
 
@@ -1735,11 +1776,19 @@ bool DoesD3D11DeviceWork(ID3D11Device *device)
 
 // See bug 1083071. On some drivers, Direct3D 11 CreateShaderResourceView fails
 // with E_OUTOFMEMORY.
-bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, ID3D11Device *dest, DXGI_FORMAT format)
+bool DoesD3D11TextureSharingWork(ID3D11Device *device)
 {
+  static bool checked = false;
+  static bool result = false;
+
+  if (checked)
+      return result;
+  checked = true;
+
   if (gfxPrefs::Direct2DForceEnabled() ||
       gfxPrefs::LayersAccelerationForceEnabled())
   {
+    result = true;
     return true;
   }
 
@@ -1764,7 +1813,7 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, ID3D11Device *des
   desc.Height = 32;
   desc.MipLevels = 1;
   desc.ArraySize = 1;
-  desc.Format = format;
+  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
   desc.SampleDesc.Count = 1;
   desc.SampleDesc.Quality = 0;
   desc.Usage = D3D11_USAGE_DEFAULT;
@@ -1789,8 +1838,8 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, ID3D11Device *des
 
   nsRefPtr<ID3D11Resource> sharedResource;
   nsRefPtr<ID3D11Texture2D> sharedTexture;
-  if (FAILED(dest->OpenSharedResource(shareHandle, __uuidof(ID3D11Resource),
-                                      getter_AddRefs(sharedResource))))
+  if (FAILED(device->OpenSharedResource(shareHandle, __uuidof(ID3D11Resource),
+                                        getter_AddRefs(sharedResource))))
   {
     return false;
   }
@@ -1804,27 +1853,15 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, ID3D11Device *des
   RefPtr<ID3D11ShaderResourceView> sharedView;
 
   // This if(FAILED()) is the one that actually fails on systems affected by bug 1083071.
-  if (FAILED(dest->CreateShaderResourceView(sharedTexture, NULL, byRef(sharedView)))) {
+  if (FAILED(device->CreateShaderResourceView(sharedTexture, NULL, byRef(sharedView)))) {
 #if defined(MOZ_CRASHREPORTER)
     CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("CreateShaderResourceView failed\n"));
 #endif
     return false;
   }
 
+  result = true;
   return true;
-}
-
-bool DoesD3D11TextureSharingWork(ID3D11Device *device)
-{
-  static bool checked;
-  static bool result;
-
-  if (checked)
-    return result;
-  checked = true;
-
-  result = DoesD3D11TextureSharingWorkInternal(device, device, DXGI_FORMAT_B8G8R8A8_UNORM);
-  return result;
 }
 
 void
@@ -1987,27 +2024,7 @@ gfxWindowsPlatform::InitD3D11Devices()
   }
 
   if (!useWARP) {
-    hr = E_INVALIDARG;
-
-    MOZ_SEH_TRY{
-      hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-                             D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-                             featureLevels.Elements(), featureLevels.Length(),
-                             D3D11_SDK_VERSION, byRef(mD3D11ImageBridgeDevice), nullptr, nullptr);
-    } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-      mD3D11ImageBridgeDevice = nullptr;
-    }
-
-    if (FAILED(hr)) {
-      d3d11Module.disown();
-      return;
-    }
-
-    mD3D11ImageBridgeDevice->SetExceptionMode(0);
-
-    if (!DoesD3D11TextureSharingWorkInternal(mD3D11ImageBridgeDevice, mD3D11Device, DXGI_FORMAT_A8_UNORM)) {
-      mD3D11ImageBridgeDevice = nullptr;
-    }
+    mCanInitMediaDevice = true;
   }
 
   // We leak these everywhere and we need them our entire runtime anyway, let's

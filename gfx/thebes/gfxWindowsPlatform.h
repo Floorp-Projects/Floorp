@@ -244,8 +244,7 @@ public:
 #endif
     ID3D11Device *GetD3D11Device();
     ID3D11Device *GetD3D11ContentDevice();
-    // Device to be used on the ImageBridge thread
-    ID3D11Device *GetD3D11ImageBridgeDevice();
+    ID3D11Device *GetD3D11MediaDevice();
 
     // Create a D3D11 device to be used for DXVA decoding.
     mozilla::TemporaryRef<ID3D11Device> CreateD3D11DecoderDevice();
@@ -295,10 +294,11 @@ private:
     nsRefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
     mozilla::RefPtr<ID3D11Device> mD3D11Device;
     mozilla::RefPtr<ID3D11Device> mD3D11ContentDevice;
-    mozilla::RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
+    mozilla::RefPtr<ID3D11Device> mD3D11MediaDevice;
     bool mD3D11DeviceInitialized;
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
+    bool mCanInitMediaDevice;
     bool mHasDeviceReset;
     DeviceResetReason mDeviceResetReason;
 
