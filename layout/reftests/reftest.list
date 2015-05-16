@@ -388,3 +388,6 @@ include invalidation/reftest.list
 
 # encodings
 include ../../dom/encoding/test/reftest/reftest.list
+
+# APZ/async positioning tests
+include ../../gfx/layers/apz/reftests/reftest.list
