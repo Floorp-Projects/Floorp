@@ -18,7 +18,15 @@ const PERCENTAGE_UNITS = L10N.getStr("table.percentage");
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
 const CALL_TREE_INDENTATION = 16; // px
 
-const DEFAULT_SORTING_PREDICATE = (a, b) => a.frame.samples < b.frame.samples ? 1 : -1;
+const DEFAULT_SORTING_PREDICATE = (frameA, frameB) => {
+  let dataA = frameA.getDisplayedData();
+  let dataB = frameB.getDisplayedData();
+
+  return this.inverted
+    ? (dataA.selfPercentage < dataB.selfPercentage ? 1 : -1)
+    : (dataA.samples < dataB.samples ? 1 : -1);
+};
+
 const DEFAULT_AUTO_EXPAND_DEPTH = 3; // depth
 const DEFAULT_VISIBLE_CELLS = {
   duration: true,
@@ -118,72 +126,43 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   _displaySelf: function(document, arrowNode) {
     this.document = document;
 
+    let displayedData = this.getDisplayedData();
     let frameInfo = this.frame.getInfo();
-    let framePercentage = this._getPercentage(this.frame.samples);
-
-    let selfPercentage;
-    let selfDuration;
-    let totalAllocations;
-
-    let frameKey = this.frame.key;
-    if (this.visibleCells.selfPercentage) {
-      selfPercentage = this._getPercentage(this.root.frame.selfCount[frameKey]);
-    }
-    if (this.visibleCells.selfDuration) {
-      selfDuration = this.root.frame.selfDuration[frameKey];
-    }
-
-    if (!this.frame.calls.length) {
-      if (this.visibleCells.allocations) {
-        totalAllocations = this.frame.allocations;
-      }
-    } else {
-      if (this.visibleCells.allocations) {
-        let childrenAllocations = this.frame.calls.reduce((acc, node) => acc + node.allocations, 0);
-        totalAllocations = this.frame.allocations + childrenAllocations;
-      }
-    }
 
     if (this.visibleCells.duration) {
-      var durationCell = this._createTimeCell(this.frame.duration);
+      var durationCell = this._createTimeCell(displayedData.totalDuration);
     }
     if (this.visibleCells.selfDuration) {
-      var selfDurationCell = this._createTimeCell(selfDuration, true);
+      var selfDurationCell = this._createTimeCell(displayedData.selfDuration, true);
     }
     if (this.visibleCells.percentage) {
-      var percentageCell = this._createExecutionCell(framePercentage);
+      var percentageCell = this._createExecutionCell(displayedData.totalPercentage);
     }
     if (this.visibleCells.selfPercentage) {
-      var selfPercentageCell = this._createExecutionCell(selfPercentage, true);
+      var selfPercentageCell = this._createExecutionCell(displayedData.selfPercentage, true);
     }
     if (this.visibleCells.allocations) {
-      var allocationsCell = this._createAllocationsCell(totalAllocations);
+      var allocationsCell = this._createAllocationsCell(displayedData.totalAllocations);
     }
     if (this.visibleCells.selfAllocations) {
-      var selfAllocationsCell = this._createAllocationsCell(this.frame.allocations, true);
+      var selfAllocationsCell = this._createAllocationsCell(displayedData.selfAllocations, true);
     }
     if (this.visibleCells.samples) {
-      var samplesCell = this._createSamplesCell(this.frame.samples);
+      var samplesCell = this._createSamplesCell(displayedData.samples);
     }
     if (this.visibleCells.function) {
-      var functionCell = this._createFunctionCell(arrowNode, frameInfo, this.level);
+      var functionCell = this._createFunctionCell(arrowNode, displayedData.name, frameInfo, this.level);
     }
 
     let targetNode = document.createElement("hbox");
     targetNode.className = "call-tree-item";
     targetNode.setAttribute("origin", frameInfo.isContent ? "content" : "chrome");
     targetNode.setAttribute("category", frameInfo.categoryData.abbrev || "");
-    targetNode.setAttribute("tooltiptext", frameInfo.isMetaCategory ? frameInfo.categoryData.label :
-                                           this.frame.location || "");
+    targetNode.setAttribute("tooltiptext", displayedData.tooltiptext);
+
     if (this.hidden) {
       targetNode.style.display = "none";
     }
-
-    let isRoot = frameInfo.nodeType == "Thread";
-    if (isRoot) {
-      functionCell.querySelector(".call-tree-category").hidden = true;
-    }
-
     if (this.visibleCells.duration) {
       targetNode.appendChild(durationCell);
     }
@@ -213,13 +192,6 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   },
 
   /**
-   * Calculate what percentage of all samples the given number of samples is.
-   */
-  _getPercentage: function(samples) {
-    return samples / this.root.frame.samples * 100;
-  },
-
-  /**
    * Populates this node in the call tree with the corresponding "callees".
    * These are defined in the `frame` data source for this call view.
    * @param array:AbstractTreeItem children
@@ -238,7 +210,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
 
     // Sort the "callees" asc. by samples, before inserting them in the tree,
     // if no other sorting predicate was specified on this on the root item.
-    children.sort(this.sortingPredicate);
+    children.sort(this.sortingPredicate.bind(this));
   },
 
   /**
@@ -277,7 +249,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     cell.setAttribute("value", count || "");
     return cell;
   },
-  _createFunctionCell: function(arrowNode, frameInfo, frameLevel) {
+  _createFunctionCell: function(arrowNode, frameName, frameInfo, frameLevel) {
     let cell = this.document.createElement("hbox");
     cell.className = "call-tree-cell";
     cell.style.MozMarginStart = (frameLevel * CALL_TREE_INDENTATION) + "px";
@@ -288,37 +260,56 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     nameNode.className = "plain call-tree-name";
     nameNode.setAttribute("flex", "1");
     nameNode.setAttribute("crop", "end");
-    nameNode.setAttribute("value", frameInfo.isMetaCategory
-                                     ? frameInfo.categoryData.label
-                                     : frameInfo.functionName || "");
+    nameNode.setAttribute("value", frameName);
     cell.appendChild(nameNode);
 
     // Don't render detailed labels for meta category frames
     if (!frameInfo.isMetaCategory) {
+      this._appendFunctionDetailsCells(cell, frameInfo);
+    }
+
+    // Don't render an expando-arrow for leaf nodes.
+    let hasDescendants = Object.keys(this.frame.calls).length > 0;
+    if (!hasDescendants) {
+      arrowNode.setAttribute("invisible", "");
+    }
+
+    return cell;
+  },
+  _appendFunctionDetailsCells: function(cell, frameInfo) {
+    if (frameInfo.fileName) {
       let urlNode = this.document.createElement("label");
       urlNode.className = "plain call-tree-url";
       urlNode.setAttribute("flex", "1");
       urlNode.setAttribute("crop", "end");
-      urlNode.setAttribute("value", frameInfo.fileName || "");
+      urlNode.setAttribute("value", frameInfo.fileName);
       urlNode.setAttribute("tooltiptext", URL_LABEL_TOOLTIP + " → " + frameInfo.url);
       urlNode.addEventListener("mousedown", this._onUrlClick);
       cell.appendChild(urlNode);
+    }
 
+    if (frameInfo.line) {
       let lineNode = this.document.createElement("label");
       lineNode.className = "plain call-tree-line";
-      lineNode.setAttribute("value", frameInfo.line ? ":" + frameInfo.line : "");
+      lineNode.setAttribute("value", ":" + frameInfo.line);
       cell.appendChild(lineNode);
+    }
 
+    if (frameInfo.column) {
       let columnNode = this.document.createElement("label");
       columnNode.className = "plain call-tree-column";
-      columnNode.setAttribute("value", frameInfo.column ? ":" + frameInfo.column : "");
+      columnNode.setAttribute("value", ":" + frameInfo.column);
       cell.appendChild(columnNode);
+    }
 
+    if (frameInfo.host) {
       let hostNode = this.document.createElement("label");
       hostNode.className = "plain call-tree-host";
-      hostNode.setAttribute("value", frameInfo.host || "");
+      hostNode.setAttribute("value", frameInfo.host);
       cell.appendChild(hostNode);
+    }
 
+    if (frameInfo.categoryData.label) {
       let spacerNode = this.document.createElement("spacer");
       spacerNode.setAttribute("flex", "10000");
       cell.appendChild(spacerNode);
@@ -326,16 +317,65 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       let categoryNode = this.document.createElement("label");
       categoryNode.className = "plain call-tree-category";
       categoryNode.style.color = frameInfo.categoryData.color;
-      categoryNode.setAttribute("value", frameInfo.categoryData.label || "");
+      categoryNode.setAttribute("value", frameInfo.categoryData.label);
       cell.appendChild(categoryNode);
     }
+  },
 
-    let hasDescendants = Object.keys(this.frame.calls).length > 0;
-    if (hasDescendants == false) {
-      arrowNode.setAttribute("invisible", "");
+  /**
+   * Gets the data displayed about this tree item, based on the FrameNode
+   * model associated with this view.
+   *
+   * @return object
+   */
+  getDisplayedData: function() {
+    if (this._cachedDisplayedData) {
+      return this._cachedDisplayedData;
     }
 
-    return cell;
+    let data = this._cachedDisplayedData = Object.create(null);
+    let frameInfo = this.frame.getInfo();
+
+    // Self/total duration.
+    if (this.visibleCells.duration) {
+      data.totalDuration = this.frame.duration;
+    }
+    if (this.visibleCells.selfDuration) {
+      data.selfDuration = this.root.frame.selfDuration[this.frame.key];
+    }
+
+    // Self/total samples percentage.
+    if (this.visibleCells.percentage) {
+      data.totalPercentage = this.frame.samples / this.root.frame.samples * 100;
+    }
+    if (this.visibleCells.selfPercentage) {
+      data.selfPercentage = this.root.frame.selfCount[this.frame.key] / this.root.frame.samples * 100;
+    }
+
+    // Self/total allocations count.
+    if (this.visibleCells.allocations) {
+      let childrenAllocations = this.frame.calls.reduce((acc, node) => acc + node.allocations, 0);
+      data.totalAllocations = this.frame.allocations + childrenAllocations;
+    }
+    if (this.visibleCells.selfAllocations) {
+      data.selfAllocations = this.frame.allocations;
+    }
+
+    // Raw samples.
+    if (this.visibleCells.samples) {
+      data.samples = this.frame.samples;
+    }
+
+    // Frame name (function location or some meta information).
+    data.name = frameInfo.isMetaCategory
+      ? frameInfo.categoryData.label
+      : frameInfo.functionName || "";
+
+    data.tooltiptext = frameInfo.isMetaCategory
+      ? frameInfo.categoryData.label
+      : this.frame.location || "";
+
+    return this._cachedDisplayedData;
   },
 
   /**
