@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(b19038ba-0d75-40d2-be35-742e26d33bf9)]
+[scriptable, uuid(4d4576eb-ecfe-47b9-93b8-4121518621ad)]
 interface nsITabParent : nsISupports
 {
   void injectTouchEvent(in AString aType,
@@ -26,4 +26,6 @@ interface nsITabParent : nsISupports
   void setIsDocShellActive(in bool aIsActive);
 
   readonly attribute uint64_t tabId;
+
+  readonly attribute boolean hasContentOpener;
 };

@@ -328,7 +328,7 @@ let ViewSourceChrome = {
   _loadViewSourceDeprecated() {
     Deprecated.warning("The arguments you're passing to viewSource.xul " +
                        "are using an out-of-date API.",
-                       "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                       "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
     // Parse the 'arguments' supplied with the dialog.
     //    arg[0] - URL string.
     //    arg[1] - Charset value in the form 'charset=xxx'.
@@ -844,35 +844,35 @@ function ViewSourceSavePage()
 this.__defineGetter__("gLastLineFound", function () {
   Deprecated.warning("gLastLineFound is deprecated - please use " +
                      "ViewSourceChrome.lastLineFound instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   return ViewSourceChrome.lastLineFound;
 });
 
 function onLoadViewSource() {
   Deprecated.warning("onLoadViewSource() is deprecated - please use " +
                      "ViewSourceChrome.onXULLoaded() instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   ViewSourceChrome.onXULLoaded();
 }
 
 function isHistoryEnabled() {
   Deprecated.warning("isHistoryEnabled() is deprecated - please use " +
                      "ViewSourceChrome.historyEnabled instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   return ViewSourceChrome.historyEnabled;
 }
 
 function ViewSourceClose() {
   Deprecated.warning("ViewSourceClose() is deprecated - please use " +
                      "ViewSourceChrome.close() instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   ViewSourceChrome.close();
 }
 
 function ViewSourceReload() {
   Deprecated.warning("ViewSourceReload() is deprecated - please use " +
                      "ViewSourceChrome.reload() instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   ViewSourceChrome.reload();
 }
 
@@ -880,7 +880,7 @@ function getWebNavigation()
 {
   Deprecated.warning("getWebNavigation() is deprecated - please use " +
                      "ViewSourceChrome.webNav instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   // The original implementation returned null if anything threw during
   // the getting of the webNavigation.
   try {
@@ -893,7 +893,7 @@ function getWebNavigation()
 function viewSource(url) {
   Deprecated.warning("viewSource() is deprecated - please use " +
                      "ViewSourceChrome.loadURL() instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   ViewSourceChrome.loadURL(url);
 }
 
@@ -901,7 +901,7 @@ function ViewSourceGoToLine()
 {
   Deprecated.warning("ViewSourceGoToLine() is deprecated - please use " +
                      "ViewSourceChrome.promptAndGoToLine() instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   ViewSourceChrome.promptAndGoToLine();
 }
 
@@ -909,27 +909,27 @@ function goToLine(line)
 {
   Deprecated.warning("goToLine() is deprecated - please use " +
                      "ViewSourceChrome.goToLine() instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   ViewSourceChrome.goToLine(line);
 }
 
 function BrowserForward(aEvent) {
   Deprecated.warning("BrowserForward() is deprecated - please use " +
                      "ViewSourceChrome.goForward() instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   ViewSourceChrome.goForward();
 }
 
 function BrowserBack(aEvent) {
   Deprecated.warning("BrowserBack() is deprecated - please use " +
                      "ViewSourceChrome.goBack() instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   ViewSourceChrome.goBack();
 }
 
 function UpdateBackForwardCommands() {
   Deprecated.warning("UpdateBackForwardCommands() is deprecated - please use " +
                      "ViewSourceChrome.updateCommands() instead.",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/ViewSource");
+                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   ViewSourceChrome.updateCommands();
 }
