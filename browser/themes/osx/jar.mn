@@ -23,6 +23,14 @@ browser.jar:
   skin/classic/browser/aboutTabCrashed.css                  (../shared/aboutTabCrashed.css)
   skin/classic/browser/actionicon-tab.png
   skin/classic/browser/actionicon-tab@2x.png
+  skin/classic/browser/addons/addon-install-blocked.svg     (../shared/addons/addon-install-blocked.svg)
+  skin/classic/browser/addons/addon-install-confirm.svg     (../shared/addons/addon-install-confirm.svg)
+  skin/classic/browser/addons/addon-install-downloading.svg (../shared/addons/addon-install-downloading.svg)
+  skin/classic/browser/addons/addon-install-error.svg       (../shared/addons/addon-install-error.svg)
+  skin/classic/browser/addons/addon-install-installed.svg   (../shared/addons/addon-install-installed.svg)
+  skin/classic/browser/addons/addon-install-restart.svg     (../shared/addons/addon-install-restart.svg)
+  skin/classic/browser/addons/addon-install-warning.svg     (../shared/addons/addon-install-warning.svg)
+  skin/classic/browser/addons/addon-install-anchor.svg      (../shared/addons/addon-install-anchor.svg)
 * skin/classic/browser/browser.css                          (browser.css)
 * skin/classic/browser/devedition.css
 * skin/classic/browser/browser-lightweightTheme.css
@@ -425,7 +433,6 @@ browser.jar:
 * skin/classic/browser/devtools/netmonitor.css              (devtools/netmonitor.css)
 * skin/classic/browser/devtools/profiler.css                (devtools/profiler.css)
 * skin/classic/browser/devtools/performance.css             (devtools/performance.css)
-* skin/classic/browser/devtools/timeline.css                (devtools/timeline.css)
   skin/classic/browser/devtools/timeline-filter.svg         (../shared/devtools/images/timeline-filter.svg)
 * skin/classic/browser/devtools/scratchpad.css              (devtools/scratchpad.css)
 * skin/classic/browser/devtools/shadereditor.css            (devtools/shadereditor.css)
