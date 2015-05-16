@@ -29,12 +29,12 @@ NS_IMPL_CI_INTERFACE_GETTER(nsSystemPrincipal,
                             nsIPrincipal,
                             nsISerializable)
 
-static const char SYSTEM_PRINCIPAL_SPEC[] = "[System Principal]";
+#define SYSTEM_PRINCIPAL_SPEC "[System Principal]"
 
 void
 nsSystemPrincipal::GetScriptLocation(nsACString &aStr)
 {
-    aStr.Assign(SYSTEM_PRINCIPAL_SPEC);
+    aStr.AssignLiteral(SYSTEM_PRINCIPAL_SPEC);
 }
 
 ///////////////////////////////////////

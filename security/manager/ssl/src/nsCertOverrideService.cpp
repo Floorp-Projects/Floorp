@@ -29,7 +29,7 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-static const char kCertOverrideFileName[] = "cert_override.txt";
+#define CERT_OVERRIDE_FILE_NAME "cert_override.txt"
 
 void
 nsCertOverride::convertBitsToString(OverrideBits ob, nsACString &str)
@@ -144,7 +144,7 @@ nsCertOverrideService::Observe(nsISupports     *,
 
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mSettingsFile));
     if (NS_SUCCEEDED(rv)) {
-      mSettingsFile->AppendNative(NS_LITERAL_CSTRING(kCertOverrideFileName));
+      mSettingsFile->AppendNative(NS_LITERAL_CSTRING(CERT_OVERRIDE_FILE_NAME));
     } else {
       mSettingsFile = nullptr;
     }

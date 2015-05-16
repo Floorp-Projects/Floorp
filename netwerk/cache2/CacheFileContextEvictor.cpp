@@ -20,9 +20,9 @@
 namespace mozilla {
 namespace net {
 
-const char kContextEvictionPrefix[] = "ce_";
+#define CONTEXT_EVICTION_PREFIX "ce_"
 const uint32_t kContextEvictionPrefixLength =
-  sizeof(kContextEvictionPrefix) - 1;
+  sizeof(CONTEXT_EVICTION_PREFIX) - 1;
 
 bool CacheFileContextEvictor::sDiskAlreadySearched = false;
 
@@ -56,7 +56,7 @@ CacheFileContextEvictor::Init(nsIFile *aCacheDirectory)
     return rv;
   }
 
-  rv = mEntriesDir->AppendNative(NS_LITERAL_CSTRING(kEntriesDir));
+  rv = mEntriesDir->AppendNative(NS_LITERAL_CSTRING(ENTRIES_DIR));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -346,7 +346,7 @@ CacheFileContextEvictor::LoadEvictInfoFromDisk()
       continue;
     }
 
-    if (!StringBeginsWith(leaf, NS_LITERAL_CSTRING(kContextEvictionPrefix))) {
+    if (!StringBeginsWith(leaf, NS_LITERAL_CSTRING(CONTEXT_EVICTION_PREFIX))) {
       continue;
     }
 
@@ -395,7 +395,7 @@ CacheFileContextEvictor::GetContextFile(nsILoadContextInfo *aLoadContextInfo,
   nsresult rv;
 
   nsAutoCString leafName;
-  leafName.Assign(NS_LITERAL_CSTRING(kContextEvictionPrefix));
+  leafName.AssignLiteral(CONTEXT_EVICTION_PREFIX);
 
   nsAutoCString keyPrefix;
   CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, keyPrefix);
