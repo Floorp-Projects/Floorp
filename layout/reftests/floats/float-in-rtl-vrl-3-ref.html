@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="vrl">
+<html>
 <head>
 <title>Bug 1114329 testcase</title>
 <style>
@@ -10,16 +10,16 @@
 }
 </style>
 </head>
-<body>
- <div style="height:600px; direction: rtl;">
+<body dir=rtl>
+ <div style="height:600px;">
   <div style="height:0px;width:0px;overflow:visible">
-    <div style="height:100px;width:120px;background:rgba(0,255,0,0.8);display:inline-block;position:relative;bottom:200px;"></div>
+    <div style="height:100px;width:120px;background:rgba(0,255,0,0.8);display:inline-block;margin-top:300px;"></div>
   </div>
   <div style="height:0px;width:0px;overflow:visible">
-    <div style="height:100px;width:150px;background:rgba(255,0,0,0.8);display:inline-block;position:relative;bottom:100px;"></div>
+    <div style="height:100px;width:150px;background:rgba(255,0,0,0.8);display:inline-block;margin-top:400px;"></div>
   </div>
-  <div style="background:silver;padding-top:calc(100% - 100px);">
-This text should appear BELOW the green and red blocks.
+  <div dir=ltr class="vrl" style="background:silver; height: 100%;">
+    <div style="padding-top:500px; direction:rtl">This text should appear BELOW the green and red blocks.</div>
   </div>
  </div>
 </body>

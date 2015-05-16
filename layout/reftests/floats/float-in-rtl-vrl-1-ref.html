@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="vrl">
+<html>
 <head>
 <title>Bug 1114329 testcase</title>
 <style>
@@ -7,20 +7,18 @@
    writing-mode: vertical-rl;
    -webkit-writing-mode: vertical-rl;
    writing-mode: tb-rl;
-   direction: ltr;
 }
 </style>
 </head>
-<body dir="rtl">
-<div dir="ltr">
+<body dir=rtl>
   <div style="height:0px;width:0px;overflow:visible">
-    <div style="height:100px;width:120px;background:rgba(0,255,0,0.8);display:inline-block;position:relative;top:200px;"></div>
+    <div style="height:100px;width:120px;background:rgba(0,255,0,0.8);display:inline-block;margin-top:200px;"></div>
   </div>
   <div style="height:0px;width:0px;overflow:visible">
-    <div style="height:100px;width:150px;background:rgba(255,0,0,0.8);display:inline-block;position:relative;top:100px;"></div>
+    <div style="height:100px;width:150px;background:rgba(255,0,0,0.8);display:inline-block;margin-top:100px;"></div>
   </div>
-  <div style="background:silver;padding-bottom:calc(100% - 100px);">
-This text should appear ABOVE the red and green blocks.
+  <div dir=ltr class="vrl" style="background:silver; height: calc(100vh - 16px);">
+    <div style="height:100px;">This text should appear ABOVE the red and green blocks.</div>
   </div>
 </body>
 </html>
