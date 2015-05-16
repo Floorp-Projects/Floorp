@@ -2,7 +2,7 @@ $inherits:
   from: 'tasks/builds/b2g_aries_lightsaber_nightly_base.yml'
   variables:
     build_name: 'aries'
-    build_type: 'nightly-user'
+    build_type: 'opt'
 task:
   metadata:
     name: '[TC] B2G Aries Nightly (user)'

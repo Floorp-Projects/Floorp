@@ -46,7 +46,13 @@ interface nsISEChannelCallback : nsISupports
   void notifyError(in DOMString error);
 };
 
-[scriptable, uuid(88e23684-0de3-4792-83a0-0eb67a6ca448)]
+[scriptable, uuid(417f59ee-f582-45b9-9a4e-e9dcefecb4f7)]
+interface nsISEListener : nsISupports
+{
+  void notifySEPresenceChanged(in DOMString seType, in boolean isPresent);
+};
+
+[scriptable, uuid(3cef313a-1d01-432d-9cd2-6610a80911f3)]
 interface nsISecureElementConnector : nsISupports
 {
    /**
@@ -101,4 +107,18 @@ interface nsISecureElementConnector : nsISupports
     */
    void closeChannel(in long channel,
                      in nsISEChannelCallback callback);
+
+   /**
+    * Register a Secure Element listener
+    *
+    * @param listener
+    */
+   void registerListener(in nsISEListener listener);
+
+   /**
+    * Unregister a Secure Element listener
+    *
+    * @param listener
+    */
+   void unregisterListener(in nsISEListener listener);
 };

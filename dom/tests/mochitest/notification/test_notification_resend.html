@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Testing mozResendAllNotifications() resend behavior</title>
+  <title>Testing mozResendAllNotifications() resend behavior for Apps</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="MockServices.js"></script>
   <script type="text/javascript" src="NotificationTest.js"></script>
@@ -22,17 +22,6 @@
 
   var steps = [
     function (done) {
-      if (window.Notification) {
-        SpecialPowers.pushPrefEnv({"set": [
-          ["dom.ignore_webidl_scope_checks", true],
-          ]}, done);
-      } else {
-        ok(true, "Notifications are not enabled on the platform.");
-        done();
-      }
-    },
-
-    function (done) {
       info("Set manifestURL");
       var request = window.navigator.mozApps.getSelf();
       request.onsuccess = function() {
@@ -44,6 +33,18 @@
         info("Value of manifestURL is: " + manifestURL);
         done();
       };
+    },
+
+    function (done) {
+      if (window.Notification) {
+        NotificationTest.fakeApp(manifestURL);
+        SpecialPowers.pushPrefEnv({"set": [
+          ["dom.ignore_webidl_scope_checks", true],
+          ]}, done);
+      } else {
+        ok(true, "Notifications are not enabled on the platform.");
+        done();
+      }
     },
 
     function (done) {
@@ -194,11 +195,12 @@
 
         notif2.close();
       });
-    }
+    },
   ];
 
   MockServices.register();
   NotificationTest.run(steps, function () {
+    NotificationTest.unfakeApp();
     MockServices.unregister();
   });
 </script>
