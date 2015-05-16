@@ -618,6 +618,35 @@ function test_localfile() {
   gBrowser.loadURI(path);
 },
 
+function test_tabclose() {
+  if (!Preferences.get("xpinstall.customConfirmationUI", false)) {
+    runNextTest();
+    return;
+  }
+
+  // Wait for the progress notification
+  wait_for_progress_notification(aPanel => {
+    // Wait for the install confirmation dialog
+    wait_for_install_dialog(() => {
+      AddonManager.getAllInstalls(aInstalls => {
+        is(aInstalls.length, 1, "Should be one pending install");
+
+        wait_for_notification_close(() => {
+          AddonManager.getAllInstalls(aInstalls => {
+            is(aInstalls.length, 0, "Should be no pending install since the tab is closed");
+            runNextTest();
+          });
+        });
+
+        gBrowser.removeTab(gBrowser.selectedTab);
+      });
+    });
+  });
+
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(TESTROOT + "unsigned.xpi");
+},
+
 function test_wronghost() {
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.addEventListener("load", function() {
