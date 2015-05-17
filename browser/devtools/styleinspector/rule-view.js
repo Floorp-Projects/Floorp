@@ -29,8 +29,19 @@ const PREF_ENABLE_MDN_DOCS_TOOLTIP = "devtools.inspector.mdnDocsTooltip.enabled"
 const PROPERTY_NAME_CLASS = "ruleview-propertyname";
 const FILTER_CHANGED_TIMEOUT = 150;
 
-// This is used to parse user input when filtering.
-const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
+/**
+ * These regular expressions are adapted from firebug's css.js, and are
+ * used to parse CSSStyleDeclaration's cssText attribute.
+ */
+
+// Used to split on css line separators
+const CSS_LINE_RE = /(?:[^;\(]*(?:\([^\)]*?\))?[^;\(]*)*;?/g;
+
+// Used to parse a single property line.
+const CSS_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*(?:! (important))?;?$/;
+
+// Used to parse an external resource from a property value
+const CSS_RESOURCE_RE = /url\([\'\"]?(.*?)[\'\"]?\)/;
 
 const IOService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
@@ -2092,7 +2103,7 @@ CssRuleView.prototype = {
     // Parse search value as a single property line and extract the property
     // name and value. Otherwise, use the search value as both the name and
     // value.
-    let propertyMatch = FILTER_PROP_RE.exec(aValue);
+    let propertyMatch = CSS_PROP_RE.exec(aValue);
     let name = propertyMatch ? propertyMatch[1] : aValue;
     let value = propertyMatch ? propertyMatch[2] : aValue;
 
@@ -2835,6 +2846,22 @@ TextPropertyEditor.prototype = {
       relativePath = this.sheetURI.resolve(relativePath);
     }
     return relativePath;
+  },
+
+  /**
+   * Check the property value to find an external resource (if any).
+   * @return {string} the URI in the property value, or null if there is no match.
+   */
+  getResourceURI: function() {
+    let val = this.prop.value;
+    let uriMatch = CSS_RESOURCE_RE.exec(val);
+    let uri = null;
+
+    if (uriMatch && uriMatch[1]) {
+      uri = uriMatch[1];
+    }
+
+    return uri;
   },
 
   /**
