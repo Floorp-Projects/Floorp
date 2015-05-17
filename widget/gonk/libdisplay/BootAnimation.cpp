@@ -470,12 +470,52 @@ AsBackgroundFill(const png_color_16& color16, int outputFormat)
     }
 }
 
+void
+ShowSolidColorFrame(GonkDisplay *aDisplay,
+                    const gralloc_module_t *grallocModule,
+                    int32_t aFormat)
+{
+    LOGW("Show solid color frame for bootAnim");
+
+    ANativeWindowBuffer *buffer = aDisplay->DequeueBuffer();
+    void *mappedAddress = nullptr;
+
+    if (!buffer) {
+        LOGW("Failed to get an ANativeWindowBuffer");
+        return;
+    }
+
+    if (!grallocModule->lock(grallocModule, buffer->handle,
+                             GRALLOC_USAGE_SW_READ_NEVER |
+                             GRALLOC_USAGE_SW_WRITE_OFTEN |
+                             GRALLOC_USAGE_HW_FB,
+                             0, 0, buffer->width, buffer->height, &mappedAddress)) {
+        // Just show a black solid color frame.
+        memset(mappedAddress, 0, buffer->height * buffer->stride * GetFormatBPP(aFormat));
+        grallocModule->unlock(grallocModule, buffer->handle);
+    }
+
+    aDisplay->QueueBuffer(buffer);
+}
+
 static void *
 AnimationThread(void *)
 {
+    GonkDisplay *display = GetGonkDisplay();
+    int32_t format = display->surfaceformat;
+
+    const hw_module_t *module = nullptr;
+    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module)) {
+        LOGW("Could not get gralloc module");
+        return nullptr;
+    }
+    const gralloc_module_t *grmodule =
+        reinterpret_cast<gralloc_module_t const*>(module);
+
     ZipReader reader;
     if (!reader.OpenArchive("/system/media/bootanimation.zip")) {
         LOGW("Could not open boot animation");
+        ShowSolidColorFrame(display, grmodule, format);
         return nullptr;
     }
 
@@ -491,19 +531,9 @@ AnimationThread(void *)
 
     if (!file) {
         LOGW("Could not find desc.txt in boot animation");
+        ShowSolidColorFrame(display, grmodule, format);
         return nullptr;
     }
-
-    GonkDisplay *display = GetGonkDisplay();
-    int format = display->surfaceformat;
-
-    hw_module_t const *module;
-    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module)) {
-        LOGW("Could not get gralloc module");
-        return nullptr;
-    }
-    gralloc_module_t const *grmodule =
-        reinterpret_cast<gralloc_module_t const*>(module);
 
     string descCopy;
     descCopy.append(file->GetData(), entry->GetDataSize());
@@ -512,6 +542,7 @@ AnimationThread(void *)
     const char *end;
     bool headerRead = true;
     vector<AnimationPart> parts;
+    bool animPlayed = false;
 
     /*
      * bootanimation.zip
@@ -642,6 +673,7 @@ AnimationThread(void *)
                          frameDelayUs, tv2.tv_usec);
                 }
 
+                animPlayed = true;
                 display->QueueBuffer(buf);
 
                 if (part.count && j >= part.count) {
@@ -651,6 +683,10 @@ AnimationThread(void *)
             }
             usleep(frameDelayUs * part.pause);
         }
+    }
+
+    if (!animPlayed) {
+        ShowSolidColorFrame(display, grmodule, format);
     }
 
     return nullptr;
