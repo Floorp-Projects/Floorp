@@ -9,56 +9,75 @@
 #define IPC_FencerUtils_h
 
 #include "ipc/IPCMessageUtils.h"
+#include "nsRefPtr.h"             // for nsRefPtr
 
-/**
- * FenceHandle is used for delivering Fence object via ipc.
- */
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
-# include "mozilla/layers/FenceUtilsGonk.h"
-#else
 namespace mozilla {
 namespace layers {
 
-struct FenceHandleFromChild;
+class FenceHandle {
+public:
+  class FdObj {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FdObj)
+    friend class FenceHandle;
+  public:
+    FdObj()
+      : mFd(-1) {}
+    explicit FdObj(int aFd)
+      : mFd(aFd) {}
+    int GetAndResetFd()
+    {
+      int fd = mFd;
+      mFd = -1;
+      return fd;
+    }
 
-struct FenceHandle {
-  FenceHandle() {}
-  explicit FenceHandle(const FenceHandleFromChild& aFenceHandle) {}
-  bool operator==(const FenceHandle&) const { return false; }
-  bool IsValid() const { return false; }
-  void Merge(const FenceHandle& aFenceHandle) {}
-};
+  private:
+    virtual ~FdObj() {
+      if (mFd != -1) {
+        close(mFd);
+      }
+    }
 
-struct FenceHandleFromChild {
-  FenceHandleFromChild() {}
-  explicit FenceHandleFromChild(const FenceHandle& aFence) {}
-  bool operator==(const FenceHandle&) const { return false; }
-  bool operator==(const FenceHandleFromChild&) const { return false; }
-  bool IsValid() const { return false; }
+    int mFd;
+  };
+
+  FenceHandle();
+
+  explicit FenceHandle(FdObj* aFdObj);
+
+  bool operator==(const FenceHandle& aOther) const {
+    return mFence.get() == aOther.mFence.get();
+  }
+
+  bool IsValid() const
+  {
+    return (mFence->mFd != -1);
+  }
+
+  void Merge(const FenceHandle& aFenceHandle);
+
+  void TransferToAnotherFenceHandle(FenceHandle& aFenceHandle);
+
+  already_AddRefed<FdObj> GetAndResetFdObj();
+
+  already_AddRefed<FdObj> GetDupFdObj();
+
+private:
+  nsRefPtr<FdObj> mFence;
 };
 
 } // namespace layers
 } // namespace mozilla
-#endif // MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
 
 namespace IPC {
 
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
-#else
 template <>
 struct ParamTraits<mozilla::layers::FenceHandle> {
   typedef mozilla::layers::FenceHandle paramType;
-  static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, void**, paramType*) { return false; }
-};
 
-template <>
-struct ParamTraits<mozilla::layers::FenceHandleFromChild> {
-  typedef mozilla::layers::FenceHandleFromChild paramType;
-  static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, void**, paramType*) { return false; }
+  static void Write(Message* aMsg, const paramType& aParam);
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult);
 };
-#endif // MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
 
 } // namespace IPC
 
