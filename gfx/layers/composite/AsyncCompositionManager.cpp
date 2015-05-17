@@ -831,17 +831,18 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     Matrix4x4 contentTransform = aContent.GetTransform();
     Matrix4x4 contentUntransform = contentTransform.Inverse();
 
-    compensation = compensation
-                 * contentTransform
-                 * asyncUntransform
-                 * contentUntransform;
+    Matrix4x4 asyncCompensation = contentTransform
+                                * asyncUntransform
+                                * contentUntransform;
+
+    compensation = compensation * asyncCompensation;
 
     // We also need to make a corresponding change on the clip rect of all the
     // layers on the ancestor chain from the scrollbar layer up to but not
     // including the layer with the async transform. Otherwise the scrollbar
     // shifts but gets clipped and so appears to flicker.
     for (Layer* ancestor = aScrollbar; ancestor != aContent.GetLayer(); ancestor = ancestor->GetParent()) {
-      TransformClipRect(ancestor, compensation);
+      TransformClipRect(ancestor, asyncCompensation);
     }
   }
   transform = transform * compensation;
