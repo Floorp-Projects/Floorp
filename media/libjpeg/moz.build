@@ -13,62 +13,6 @@ EXPORTS += [
     'jpeglib.h',
 ]
 
-if CONFIG['LIBJPEG_TURBO_X64_ASM']:
-    SOURCES += [
-        'simd/jccolor-sse2-64.asm',
-        'simd/jcgray-sse2-64.asm',
-        'simd/jcsample-sse2-64.asm',
-        'simd/jdcolor-sse2-64.asm',
-        'simd/jdmerge-sse2-64.asm',
-        'simd/jdsample-sse2-64.asm',
-        'simd/jfdctflt-sse-64.asm',
-        'simd/jfdctfst-sse2-64.asm',
-        'simd/jfdctint-sse2-64.asm',
-        'simd/jidctflt-sse2-64.asm',
-        'simd/jidctfst-sse2-64.asm',
-        'simd/jidctint-sse2-64.asm',
-        'simd/jidctred-sse2-64.asm',
-        'simd/jquantf-sse2-64.asm',
-        'simd/jquanti-sse2-64.asm',
-]
-
-if CONFIG['LIBJPEG_TURBO_X86_ASM']:
-    SOURCES += [
-        'simd/jccolor-mmx.asm',
-        'simd/jccolor-sse2.asm',
-        'simd/jcgray-mmx.asm',
-        'simd/jcgray-sse2.asm',
-        'simd/jcsample-mmx.asm',
-        'simd/jcsample-sse2.asm',
-        'simd/jdcolor-mmx.asm',
-        'simd/jdcolor-sse2.asm',
-        'simd/jdmerge-mmx.asm',
-        'simd/jdmerge-sse2.asm',
-        'simd/jdsample-mmx.asm',
-        'simd/jdsample-sse2.asm',
-        'simd/jfdctflt-3dn.asm',
-        'simd/jfdctflt-sse.asm',
-        'simd/jfdctfst-mmx.asm',
-        'simd/jfdctfst-sse2.asm',
-        'simd/jfdctint-mmx.asm',
-        'simd/jfdctint-sse2.asm',
-        'simd/jidctflt-3dn.asm',
-        'simd/jidctflt-sse.asm',
-        'simd/jidctflt-sse2.asm',
-        'simd/jidctfst-mmx.asm',
-        'simd/jidctfst-sse2.asm',
-        'simd/jidctint-mmx.asm',
-        'simd/jidctint-sse2.asm',
-        'simd/jidctred-mmx.asm',
-        'simd/jidctred-sse2.asm',
-        'simd/jquant-3dn.asm',
-        'simd/jquant-mmx.asm',
-        'simd/jquant-sse.asm',
-        'simd/jquantf-sse2.asm',
-        'simd/jquanti-sse2.asm',
-        'simd/jsimdcpu.asm',
-]
-
 SOURCES += [
     'jcomapi.c',
     'jdapimin.c',
@@ -122,29 +66,78 @@ SOURCES += [
     'jctrans.c',
 ]
 
-if CONFIG['LIBJPEG_TURBO_ARM_ASM']:
-    SOURCES += [
-        'simd/jsimd_arm.c',
-        'simd/jsimd_arm_neon.S',
-    ]
-elif CONFIG['LIBJPEG_TURBO_ARM64_ASM']:
-    SOURCES += [
-        'simd/jsimd_arm64.c',
-        'simd/jsimd_arm64_neon.S',
-    ]
-elif CONFIG['LIBJPEG_TURBO_MIPS_ASM']:
-    SOURCES += [
-        'simd/jsimd_mips.c',
-        'simd/jsimd_mips_dspr2.S',
-    ]
-elif CONFIG['LIBJPEG_TURBO_X64_ASM']:
-    SOURCES += [
-        'simd/jsimd_x86_64.c',
-    ]
-elif CONFIG['LIBJPEG_TURBO_X86_ASM']:
-    SOURCES += [
-        'simd/jsimd_i386.c',
-    ]
+if CONFIG['LIBJPEG_TURBO_AS']:
+    if CONFIG['CPU_ARCH'] == 'arm':
+        SOURCES += [
+            'simd/jsimd_arm.c',
+            'simd/jsimd_arm_neon.S',
+        ]
+    elif CONFIG['CPU_ARCH'] == 'aarch64':
+        SOURCES += [
+            'simd/jsimd_arm64.c',
+            'simd/jsimd_arm64_neon.S',
+        ]
+    elif CONFIG['CPU_ARCH'] == 'mips':
+        SOURCES += [
+            'simd/jsimd_mips.c',
+            'simd/jsimd_mips_dspr2.S',
+        ]
+    elif CONFIG['CPU_ARCH'] == 'x86_64':
+        SOURCES += [
+            'simd/jccolor-sse2-64.asm',
+            'simd/jcgray-sse2-64.asm',
+            'simd/jcsample-sse2-64.asm',
+            'simd/jdcolor-sse2-64.asm',
+            'simd/jdmerge-sse2-64.asm',
+            'simd/jdsample-sse2-64.asm',
+            'simd/jfdctflt-sse-64.asm',
+            'simd/jfdctfst-sse2-64.asm',
+            'simd/jfdctint-sse2-64.asm',
+            'simd/jidctflt-sse2-64.asm',
+            'simd/jidctfst-sse2-64.asm',
+            'simd/jidctint-sse2-64.asm',
+            'simd/jidctred-sse2-64.asm',
+            'simd/jquantf-sse2-64.asm',
+            'simd/jquanti-sse2-64.asm',
+            'simd/jsimd_x86_64.c',
+        ]
+    elif CONFIG['CPU_ARCH'] == 'x86':
+        SOURCES += [
+            'simd/jccolor-mmx.asm',
+            'simd/jccolor-sse2.asm',
+            'simd/jcgray-mmx.asm',
+            'simd/jcgray-sse2.asm',
+            'simd/jcsample-mmx.asm',
+            'simd/jcsample-sse2.asm',
+            'simd/jdcolor-mmx.asm',
+            'simd/jdcolor-sse2.asm',
+            'simd/jdmerge-mmx.asm',
+            'simd/jdmerge-sse2.asm',
+            'simd/jdsample-mmx.asm',
+            'simd/jdsample-sse2.asm',
+            'simd/jfdctflt-3dn.asm',
+            'simd/jfdctflt-sse.asm',
+            'simd/jfdctfst-mmx.asm',
+            'simd/jfdctfst-sse2.asm',
+            'simd/jfdctint-mmx.asm',
+            'simd/jfdctint-sse2.asm',
+            'simd/jidctflt-3dn.asm',
+            'simd/jidctflt-sse.asm',
+            'simd/jidctflt-sse2.asm',
+            'simd/jidctfst-mmx.asm',
+            'simd/jidctfst-sse2.asm',
+            'simd/jidctint-mmx.asm',
+            'simd/jidctint-sse2.asm',
+            'simd/jidctred-mmx.asm',
+            'simd/jidctred-sse2.asm',
+            'simd/jquant-3dn.asm',
+            'simd/jquant-mmx.asm',
+            'simd/jquant-sse.asm',
+            'simd/jquantf-sse2.asm',
+            'simd/jquanti-sse2.asm',
+            'simd/jsimd_i386.c',
+            'simd/jsimdcpu.asm',
+        ]
 else: # No SIMD support?
     SOURCES += [
         'jsimd_none.c',
