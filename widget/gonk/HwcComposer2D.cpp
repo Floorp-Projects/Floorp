@@ -177,7 +177,9 @@ HwcComposer2D::GetInstance()
 bool
 HwcComposer2D::EnableVsync(bool aEnable)
 {
-#if ANDROID_VERSION >= 17
+    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
+    // with JellyBean.
+#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
     MOZ_ASSERT(NS_IsMainThread());
     if (!mHasHWVsync) {
       return false;
@@ -208,9 +210,9 @@ HwcComposer2D::RegisterHwcEventCallback()
     device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, false);
     device->registerProcs(device, &sHWCProcs);
 
-// Only support actual hardware vsync on kitkat due to innaccurate timings
-// with JellyBean, and HwcComposer bugs with L. Reenable for L later
-#if ANDROID_VERSION == 19
+    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
+    // with JellyBean.
+#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
     mHasHWVsync = gfxPrefs::HardwareVsyncEnabled();
 #else
     mHasHWVsync = false;
@@ -221,8 +223,15 @@ HwcComposer2D::RegisterHwcEventCallback()
 void
 HwcComposer2D::Vsync(int aDisplay, nsecs_t aVsyncTimestamp)
 {
+    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
+    // with JellyBean.
+#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
     TimeStamp vsyncTime = mozilla::TimeStamp::FromSystemTime(aVsyncTimestamp);
     gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().NotifyVsync(vsyncTime);
+#else
+    // If this device doesn't support vsync, this function should not be used.
+    MOZ_ASSERT(false);
+#endif
 }
 
 // Called on the "invalidator" thread (run from HAL).
