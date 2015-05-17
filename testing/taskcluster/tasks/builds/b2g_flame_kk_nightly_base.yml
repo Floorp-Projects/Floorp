@@ -1,21 +1,13 @@
 $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
-  variables:
-    build_name: 'flame-kk-nightly'
-    build_type: 'opt'
 task:
   workerType: balrog
   scopes:
-    - 'docker-worker:cache:build-flame-kk-nightly'
     - 'docker-worker:feature:balrogVPNProxy'
-  metadata:
-    name: '[TC] B2G Flame KK Nightly'
 
   payload:
     features:
       balrogVPNProxy: true
-    cache:
-      build-flame-kk-nightly: /home/worker/object-folder
     env:
       TARGET: 'flame-kk'
       DEBUG: 0
@@ -35,3 +27,4 @@ task:
     locations:
       img: 'private/build/flame-kk.zip'
       mar: 'public/build/b2g-flame-gecko-update.mar'
+
