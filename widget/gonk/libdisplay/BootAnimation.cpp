@@ -286,6 +286,31 @@ TransformTo565(png_structp png_ptr, png_row_infop row_info, png_bytep data)
     }
 }
 
+static uint16_t
+GetFormatBPP(int aFormat)
+{
+    uint16_t bpp = 0;
+
+    switch (aFormat) {
+    case HAL_PIXEL_FORMAT_BGRA_8888:
+    case HAL_PIXEL_FORMAT_RGBA_8888:
+    case HAL_PIXEL_FORMAT_RGBX_8888:
+        bpp = 4;
+        break;
+    case HAL_PIXEL_FORMAT_RGB_888:
+        bpp = 3;
+        break;
+    default:
+        LOGW("Unknown pixel format %d. Assuming RGB 565.", aFormat);
+        // FALL THROUGH
+    case HAL_PIXEL_FORMAT_RGB_565:
+        bpp = 2;
+        break;
+    }
+
+    return bpp;
+}
+
 void
 AnimationFrame::ReadPngFrame(int outputFormat)
 {
@@ -358,24 +383,23 @@ AnimationFrame::ReadPngFrame(int outputFormat)
         path, width, height, has_bgcolor ? "yes" : "no",
         bgcolor.red, bgcolor.green, bgcolor.blue, bgcolor.gray);
 
+    bytepp = GetFormatBPP(outputFormat);
+
     switch (outputFormat) {
     case HAL_PIXEL_FORMAT_BGRA_8888:
         png_set_bgr(pngread);
         // FALL THROUGH
     case HAL_PIXEL_FORMAT_RGBA_8888:
     case HAL_PIXEL_FORMAT_RGBX_8888:
-        bytepp = 4;
         png_set_filler(pngread, 0xFF, PNG_FILLER_AFTER);
         break;
     case HAL_PIXEL_FORMAT_RGB_888:
-        bytepp = 3;
         png_set_strip_alpha(pngread);
         break;
     default:
         LOGW("Unknown pixel format %d. Assuming RGB 565.", outputFormat);
         // FALL THROUGH
     case HAL_PIXEL_FORMAT_RGB_565:
-        bytepp = 2;
         png_set_strip_alpha(pngread);
         png_set_read_user_transform_fn(pngread, TransformTo565);
         break;
