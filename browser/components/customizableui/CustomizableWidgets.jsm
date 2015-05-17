@@ -1106,13 +1106,8 @@ if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
       viewId: "PanelUI-pocketView",
       label: label,
       tooltiptext: tooltiptext,
-      // Use forwarding functions here to avoid loading Pocket.jsm on startup:
-      onViewShowing: function() {
-        return Pocket.onPanelViewShowing.apply(this, arguments);
-      },
-      onViewHiding: function() {
-        return Pocket.onPanelViewHiding.apply(this, arguments);
-      },
+      onViewShowing: Pocket.onPanelViewShowing,
+      onViewHiding: Pocket.onPanelViewHiding,
 
       // If the user has the "classic" Pocket add-on installed, use that instead
       // and destroy the widget.
