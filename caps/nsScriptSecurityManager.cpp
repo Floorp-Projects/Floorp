@@ -281,29 +281,21 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
     NS_ENSURE_SUCCESS(app->GetAppStatus(&status),
                       nsIPrincipal::APP_STATUS_NOT_INSTALLED);
 
-    nsAutoCString origin;
-    NS_ENSURE_SUCCESS(aPrin->GetOrigin(origin),
-                      nsIPrincipal::APP_STATUS_NOT_INSTALLED);
     nsString appOrigin;
     NS_ENSURE_SUCCESS(app->GetOrigin(appOrigin),
                       nsIPrincipal::APP_STATUS_NOT_INSTALLED);
-
-    // We go from string -> nsIURI -> origin to be sure we
-    // compare two punny-encoded origins.
     nsCOMPtr<nsIURI> appURI;
     NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(appURI), appOrigin),
                       nsIPrincipal::APP_STATUS_NOT_INSTALLED);
 
-    nsAutoCString appOriginPunned;
-    NS_ENSURE_SUCCESS(nsPrincipal::GetOriginForURI(appURI, appOriginPunned),
-                      nsIPrincipal::APP_STATUS_NOT_INSTALLED);
-
-    if (!appOriginPunned.Equals(origin)) {
-        return nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-    }
-
-    return status;
-
+    // The app could contain a cross-origin iframe - make sure that the content
+    // is actually same-origin with the app.
+    MOZ_ASSERT(inMozBrowser == false, "Checked this above");
+    OriginAttributes attrs(appId, false);
+    nsCOMPtr<nsIPrincipal> appPrin = BasePrincipal::CreateCodebasePrincipal(appURI, attrs);
+    NS_ENSURE_TRUE(appPrin, nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+    return aPrin->Equals(appPrin) ? status
+                                  : nsIPrincipal::APP_STATUS_NOT_INSTALLED;
 }
 
 /*
