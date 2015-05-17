@@ -25,8 +25,7 @@ let performanceStatsService =
 
 
 const PROPERTIES_NUMBERED = ["totalUserTime", "totalSystemTime", "totalCPOWTime", "ticks"];
-const PROPERTIES_META_IMMUTABLE = ["name", "addonId", "isSystem"];
-const PROPERTIES_META = [...PROPERTIES_META_IMMUTABLE, "windowId", "title"];
+const PROPERTIES_META = ["name", "addonId", "isSystem"];
 const PROPERTIES_FLAT = [...PROPERTIES_NUMBERED, ...PROPERTIES_META];
 
 /**
@@ -41,15 +40,6 @@ const PROPERTIES_FLAT = [...PROPERTIES_NUMBERED, ...PROPERTIES_META];
  * - for a webpage, the url of the page.
  *
  * @field {string} addonId The identifier of the addon (e.g. "myaddon@foo.bar").
- *
- * @field {string|null} title The title of the webpage to which this code
- *  belongs. Note that this is the title of the entire webpage (i.e. the tab),
- *  even if the code is executed in an iframe. Also note that this title may
- *  change over time.
- *
- * @field {number} windowId The outer window ID of the top-level nsIDOMWindow
- *  to which this code belongs. May be 0 if the code doesn't belong to any
- *  nsIDOMWindow.
  *
  * @field {boolean} isSystem `true` if the component is a system component (i.e.
  *  an add-on or platform-code), `false` otherwise (i.e. a webpage).
