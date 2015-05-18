@@ -184,7 +184,7 @@ LogManager.prototype = {
       return observer;
     }
 
-    this._observeConsolePref = setupAppender(consoleAppender, "log.appender.console", Log.Level.Error, true);
+    this._observeConsolePref = setupAppender(consoleAppender, "log.appender.console", Log.Level.Fatal, true);
     this._observeDumpPref = setupAppender(dumpAppender, "log.appender.dump", Log.Level.Error, true);
 
     // The file appender doesn't get the special singleton behaviour.

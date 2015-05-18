@@ -685,9 +685,12 @@ ErrorHandler.prototype = {
    * and refresh the input & output streams.
    */
   resetFileLog: function resetFileLog() {
-    let onComplete = () => {
+    let onComplete = logType => {
       Svc.Obs.notify("weave:service:reset-file-log");
       this._log.trace("Notified: " + Date.now());
+      if (logType == this._logManager.ERROR_LOG_WRITTEN) {
+        Cu.reportError("Sync encountered an error - see about:sync-log for the log file.");
+      }
     };
     // Note we do not return the promise here - the caller doesn't need to wait
     // for this to complete.
