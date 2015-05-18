@@ -11,6 +11,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/fallible.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -793,6 +794,9 @@ class nsTArray_Impl
   : public nsTArray_base<Alloc, typename nsTArray_CopyChooser<E>::Type>
   , public nsTArray_TypedBase<E, nsTArray_Impl<E, Alloc>>
 {
+private:
+  typedef nsTArrayFallibleAllocator FallibleAlloc;
+
 public:
   typedef typename nsTArray_CopyChooser<E>::Type     copy_type;
   typedef nsTArray_base<Alloc, copy_type>            base_type;
@@ -1532,10 +1536,17 @@ public:
   // will not reduce the number of elements in this array.
   // @param aCapacity The desired capacity of this array.
   // @return True if the operation succeeded; false if we ran out of memory
-  typename Alloc::ResultType SetCapacity(size_type aCapacity)
+  template<typename ActualAlloc = Alloc>
+  typename ActualAlloc::ResultType SetCapacity(size_type aCapacity)
   {
-    return Alloc::Result(this->template EnsureCapacity<Alloc>(
+    return ActualAlloc::Result(this->template EnsureCapacity<ActualAlloc>(
       aCapacity, sizeof(elem_type)));
+  }
+
+  /* MOZ_WARN_UNUSED_RESULT */
+  bool SetCapacity(size_type aCapacity, const mozilla::fallible_t&)
+  {
+    return SetCapacity<FallibleAlloc>(aCapacity);
   }
 
   // This method modifies the length of the array.  If the new length is
