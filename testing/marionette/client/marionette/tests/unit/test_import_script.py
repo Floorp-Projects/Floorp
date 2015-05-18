@@ -17,17 +17,17 @@ class TestImportScript(MarionetteTestCase):
 
     def check_file_exists(self):
         return self.marionette.execute_script("""
-          let FileUtils = SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
+          let FileUtils = Components.utils.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
           let importedScripts = FileUtils.getFile('TmpD', ['marionetteContentScripts']);
           return importedScripts.exists();
-        """, special_powers=True)
+        """, sandbox='system')
 
     def get_file_size(self):
         return self.marionette.execute_script("""
-          let FileUtils = SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
+          let FileUtils = Components.utils.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
           let importedScripts = FileUtils.getFile('TmpD', ['marionetteContentScripts']);
           return importedScripts.fileSize;
-        """, special_powers=True)
+        """, sandbox='system')
 
     def test_import_script(self):
         js = os.path.abspath(os.path.join(__file__, os.path.pardir, "importscript.js"))
