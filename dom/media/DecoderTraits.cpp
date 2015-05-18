@@ -71,7 +71,9 @@
 #ifdef MOZ_FMP4
 #include "MP4Reader.h"
 #include "MP4Decoder.h"
+#include "MP4Demuxer.h"
 #endif
+#include "MediaFormatReader.h"
 
 namespace mozilla
 {
@@ -659,7 +661,9 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   }
 #ifdef MOZ_FMP4
   if (IsMP4SupportedType(aType)) {
-    decoderReader = new MP4Reader(aDecoder);
+    decoderReader = Preferences::GetBool("media.format-reader.mp4", true) ?
+      static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()))) :
+      static_cast<MediaDecoderReader*>(new MP4Reader(aDecoder));
   } else
 #endif
 #ifdef MOZ_GSTREAMER

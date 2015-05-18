@@ -17,7 +17,6 @@
 extern "C" {
 #include "opus/opus_multistream.h"
 }
-#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/TimeStamp.h"
 #include "VorbisUtils.h"
 #include "MediaMetadataManager.h"
@@ -1853,29 +1852,31 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
   return NS_OK;
 }
 
-nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
+media::TimeIntervals OggReader::GetBuffered()
 {
   MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
   {
     mozilla::ReentrantMonitorAutoEnter mon(mMonitor);
-    if (mIsChained)
-      return NS_ERROR_FAILURE;
+    if (mIsChained) {
+      return media::TimeIntervals::Invalid();
+    }
   }
 #ifdef OGG_ESTIMATE_BUFFERED
-  return MediaDecoderReader::GetBuffered(aBuffered);
+  return MediaDecoderReader::GetBuffered();
 #else
+  media::TimeIntervals buffered;
   // HasAudio and HasVideo are not used here as they take a lock and cause
   // a deadlock. Accessing mInfo doesn't require a lock - it doesn't change
   // after metadata is read.
   if (!mInfo.HasValidMedia()) {
     // No need to search through the file if there are no audio or video tracks
-    return NS_OK;
+    return buffered;
   }
 
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
   nsTArray<MediaByteRange> ranges;
   nsresult res = resource->GetCachedRanges(ranges);
-  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_SUCCESS(res, media::TimeIntervals::Invalid());
 
   // Traverse across the buffered byte ranges, determining the time ranges
   // they contain. MediaResource::GetNextCachedData(offset) returns -1 when
@@ -1909,7 +1910,7 @@ nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
                                     &page,
                                     discard);
       if (res == PAGE_SYNC_ERROR) {
-        return NS_ERROR_FAILURE;
+        return media::TimeIntervals::Invalid();
       } else if (res == PAGE_SYNC_END_OF_RANGE) {
         // Hit the end of range without reading a page, give up trying to
         // find a start time for this buffered range, skip onto the next one.
@@ -1949,7 +1950,7 @@ nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
         // prevents us searching through the rest of the media when we
         // may not be able to extract timestamps from it.
         SetChained(true);
-        return NS_OK;
+        return buffered;
       }
     }
 
@@ -1957,14 +1958,15 @@ nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
       // We were able to find a start time for that range, see if we can
       // find an end time.
       int64_t endTime = RangeEndTime(startOffset, endOffset, true);
-      if (endTime != -1) {
-        aBuffered->Add((startTime - mStartTime) / static_cast<double>(USECS_PER_S),
-                       (endTime - mStartTime) / static_cast<double>(USECS_PER_S));
+      if (endTime > startTime) {
+        buffered += media::TimeInterval(
+           media::TimeUnit::FromMicroseconds(startTime - mStartTime),
+           media::TimeUnit::FromMicroseconds(endTime - mStartTime));
       }
     }
   }
 
-  return NS_OK;
+  return buffered;
 #endif
 }
 

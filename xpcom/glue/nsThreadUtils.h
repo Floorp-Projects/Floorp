@@ -521,9 +521,24 @@ struct NonnsISupportsPointerStorageClass
                          StorePtrPassByPtr<TWithoutPointer>>
 {};
 
+template<typename>
+struct SFINAE1True : mozilla::TrueType
+{};
+
+template<class T>
+static auto HasRefCountMethodsTest(int)
+    -> SFINAE1True<decltype(mozilla::DeclVal<T>().AddRef(),
+                            mozilla::DeclVal<T>().Release())>;
+template<class>
+static auto HasRefCountMethodsTest(long) -> mozilla::FalseType;
+
+template<class T>
+struct HasRefCountMethods : decltype(HasRefCountMethodsTest<T>(0))
+{};
+
 template<typename TWithoutPointer>
 struct PointerStorageClass
-  : mozilla::Conditional<mozilla::IsBaseOf<nsISupports, TWithoutPointer>::value,
+  : mozilla::Conditional<HasRefCountMethods<TWithoutPointer>::value,
                          StorensRefPtrPassByPtr<TWithoutPointer>,
                          typename NonnsISupportsPointerStorageClass<
                            TWithoutPointer
@@ -566,7 +581,8 @@ struct NonParameterStorageClass
 
 // Choose storage&passing strategy based on preferred storage type:
 // - If IsParameterStorageClass<T>::value is true, use as-is.
-// - nsISupports* -> StorensRefPtrPassByPtr<T>   : Store nsRefPtr<T>, pass T*
+// - RC*       -> StorensRefPtrPassByPtr<RC>     : Store nsRefPtr<RC>, pass RC*
+//   ^^ RC quacks like a ref-counted type (i.e., has AddRef and Release methods)
 // - const T*  -> StoreConstPtrPassByConstPtr<T> : Store const T*, pass const T*
 // - T*        -> StorePtrPassByPtr<T>           : Store T*, pass T*.
 // - const T&  -> StoreConstRefPassByConstLRef<T>: Store const T&, pass const T&.

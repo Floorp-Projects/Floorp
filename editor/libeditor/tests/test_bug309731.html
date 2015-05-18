@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=309731
+-->
+<head>
+  <title>Test for Bug 309731</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=309731">Mozilla Bug 309731</a>
+<p id="display"></p>
+
+<div id="content">
+  <div id="input" contentEditable="true"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 309731 **/
+
+function selectNode(node) {
+  getSelection().selectAllChildren(node);
+}
+
+function selectInNode(node) {
+  getSelection().collapse(node, 0);
+}
+
+function doTest() {
+  var input = document.getElementById("input");
+
+  is(input.textContent, "", "Input node starts empty");
+
+  selectInNode(input);
+  ok(document.execCommand("inserthtml", false, ""), "execCommand should return true");
+  is(input.textContent, "", "empty inserthtml with empty selection shouldn't change contents");
+
+  selectInNode(input);
+  ok(document.execCommand("inserthtml", false, "foo"), "execCommand should return true");
+  is(input.textContent, "foo", "'foo'inserthtml with empty selection should add foo to contents");
+
+  selectNode(input);
+  ok(document.execCommand("inserthtml", false, "bar"), "execCommand should return true");
+  is(input.textContent, "bar", "'bar' inserthtml with complete selection should replace contents with bar");
+
+  selectNode(input);
+  ok(document.execCommand("inserthtml", false, ""), "execCommand should return true");
+  is(input.textContent, "", "empty inserthtml with complete selection should delete everything");
+}
+
+doTest();
+
+</script>
+</pre>
+</body>
+</html>

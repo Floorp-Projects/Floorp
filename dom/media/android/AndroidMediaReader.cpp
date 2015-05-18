@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "AndroidMediaReader.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/gfx/Point.h"
 #include "MediaResource.h"
 #include "VideoUtils.h"

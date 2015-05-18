@@ -7,6 +7,8 @@
 #include "MP4Decoder.h"
 #include "MP4Reader.h"
 #include "MediaDecoderStateMachine.h"
+#include "MediaFormatReader.h"
+#include "MP4Demuxer.h"
 #include "mozilla/Preferences.h"
 #include "nsCharSeparatedTokenizer.h"
 #ifdef MOZ_EME
@@ -16,13 +18,6 @@
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
-#include "WMFDecoderModule.h"
-#endif
-#ifdef MOZ_FFMPEG
-#include "FFmpegRuntimeLinker.h"
-#endif
-#ifdef MOZ_APPLEMEDIA
-#include "apple/AppleDecoderModule.h"
 #endif
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsIGfxInfo.h"
@@ -34,7 +29,13 @@ namespace mozilla {
 
 MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
 {
-  return new MediaDecoderStateMachine(this, new MP4Reader(this));
+  bool useFormatDecoder =
+    Preferences::GetBool("media.format-reader.mp4", true);
+  nsRefPtr<MediaDecoderReader> reader = useFormatDecoder ?
+    static_cast<MediaDecoderReader*>(new MediaFormatReader(this, new MP4Demuxer(GetResource()))) :
+    static_cast<MediaDecoderReader*>(new MP4Reader(this));
+
+  return new MediaDecoderStateMachine(this, reader);
 }
 
 #ifdef MOZ_EME
@@ -168,13 +169,7 @@ IsFFmpegAvailable()
 #ifndef MOZ_FFMPEG
   return false;
 #else
-  if (!Preferences::GetBool("media.fragmented-mp4.ffmpeg.enabled", false)) {
-    return false;
-  }
-
-  // If we can link to FFmpeg, then we can almost certainly play H264 and AAC
-  // with it.
-  return FFmpegRuntimeLinker::Link();
+  return Preferences::GetBool("media.fragmented-mp4.ffmpeg.enabled", false);
 #endif
 }
 
@@ -185,11 +180,7 @@ IsAppleAvailable()
   // Not the right platform.
   return false;
 #else
-  if (!Preferences::GetBool("media.apple.mp4.enabled", false)) {
-    // Disabled by preference.
-    return false;
-  }
-  return NS_SUCCEEDED(AppleDecoderModule::CanDecode());
+  return Preferences::GetBool("media.apple.mp4.enabled", false);
 #endif
 }
 

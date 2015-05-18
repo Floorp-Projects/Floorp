@@ -18,13 +18,15 @@
     var constraints = {audio: true};
 
     SimpleTest.waitForExplicitFinish();
-    navigator.mozGetUserMedia(constraints, aStream => {
-      checkMediaStreamTracks(constraints, aStream);
+    return new Promise(resolve =>
+      navigator.mozGetUserMedia(constraints, stream => {
+        checkMediaStreamTracks(constraints, stream);
 
-      var playback = new LocalMediaStreamPlayback(testAudio, aStream);
-      return playback.playMedia(false)
-        .then(() => SimpleTest.finish(), generateErrorCallback());
-    }, generateErrorCallback());
+        var playback = new LocalMediaStreamPlayback(testAudio, stream);
+        return playback.playMedia(false)
+          .then(() => resolve(), generateErrorCallback());
+      }, generateErrorCallback())
+    );
   });
 
 </script>

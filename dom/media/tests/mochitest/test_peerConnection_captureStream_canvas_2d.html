@@ -1,0 +1,55 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+createHTML({
+  bug: "1032848",
+  title: "Canvas(2D)::CaptureStream as video-only input to peerconnection",
+  visible: true
+});
+
+runNetworkTest(() => {
+  var test = new PeerConnectionTest();
+  var vremote;
+  var h = new CaptureStreamTestHelper2D();
+  var canvas = document.createElement('canvas');
+  canvas.id = 'source_canvas';
+  canvas.width = canvas.height = 10;
+  document.getElementById('content').appendChild(canvas);
+
+  test.setMediaConstraints([{video: true}], []);
+  test.chain.replace("PC_LOCAL_GUM", [
+    function DRAW_LOCAL_GREEN(test) {
+      h.drawColor(canvas, h.green);
+    },
+    function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
+      var stream = canvas.captureStream(10);
+      test.pcLocal.attachMedia(stream, 'video', 'local');
+    }
+  ]);
+  test.chain.append([
+    function FIND_REMOTE_VIDEO() {
+      vremote = document.getElementById('pcRemote_remote1_video');
+      ok(!!vremote, "Should have remote video element for pcRemote");
+    },
+    function WAIT_FOR_REMOTE_GREEN() {
+      return h.waitForPixel(vremote, h.green, 128, "pcRemote's remote should become green");
+    },
+    function DRAW_LOCAL_RED() {
+      h.drawColor(canvas, h.red);
+    },
+    function WAIT_FOR_REMOTE_RED() {
+      return h.waitForPixel(vremote, h.red, 128, "pcRemote's remote should become red");
+    }
+  ]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>

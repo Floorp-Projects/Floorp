@@ -109,6 +109,8 @@ const IDLE_TIMEOUT_SECONDS = 5 * 60;
 // in case of aborted sessions (currently 5 minutes).
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 
+const TOPIC_CYCLE_COLLECTOR_BEGIN = "cycle-collector-begin";
+
 var gLastMemoryPoll = null;
 
 let gWasDebuggerAttached = false;
@@ -1400,15 +1402,23 @@ let Impl = {
   attachObservers: function attachObservers() {
     if (!this._initialized)
       return;
-    Services.obs.addObserver(this, "cycle-collector-begin", false);
     Services.obs.addObserver(this, "idle-daily", false);
+    if (Telemetry.canRecordExtended) {
+      Services.obs.addObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN, false);
+    }
   },
 
   detachObservers: function detachObservers() {
     if (!this._initialized)
       return;
     Services.obs.removeObserver(this, "idle-daily");
-    Services.obs.removeObserver(this, "cycle-collector-begin");
+    try {
+      // Tests may flip Telemetry.canRecordExtended on and off. Just try to remove this
+      // observer and catch if it fails because the observer was not added.
+      Services.obs.removeObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN);
+    } catch (e) {
+      this._log.warn("detachObservers - Failed to remove " + TOPIC_CYCLE_COLLECTOR_BEGIN, e);
+    }
   },
 
   /**
@@ -1724,7 +1734,10 @@ let Impl = {
       this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
     }
 
-    this._log.trace("observe - " + aTopic + " notified.");
+    // Prevent the cycle collector begin topic from cluttering the log.
+    if (aTopic != TOPIC_CYCLE_COLLECTOR_BEGIN) {
+      this._log.trace("observe - " + aTopic + " notified.");
+    }
 
     switch (aTopic) {
     case "profile-after-change":
@@ -1742,7 +1755,7 @@ let Impl = {
         this.sendContentProcessPing(REASON_SAVED_SESSION);
       }
       break;
-    case "cycle-collector-begin":
+    case TOPIC_CYCLE_COLLECTOR_BEGIN:
       let now = new Date();
       if (!gLastMemoryPoll
           || (TELEMETRY_INTERVAL <= now - gLastMemoryPoll)) {

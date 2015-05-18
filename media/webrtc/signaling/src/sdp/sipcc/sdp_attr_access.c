@@ -746,7 +746,6 @@ static boolean sdp_attr_is_simple_u32(sdp_attr_e attr_type) {
         (attr_type != SDP_ATTR_TC1_WINDOW_SIZE) &&
         (attr_type != SDP_ATTR_TC2_PAYLOAD_BYTES) &&
         (attr_type != SDP_ATTR_TC2_WINDOW_SIZE) &&
-        (attr_type != SDP_ATTR_RTCP) &&
         (attr_type != SDP_ATTR_FRAMERATE)) {
         return FALSE;
     }

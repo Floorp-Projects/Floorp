@@ -27,47 +27,54 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,test rule view add rule");
-
-  info("Creating the test document");
-  content.document.body.innerHTML = PAGE_CONTENT;
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
 
   info("Opening the rule-view");
   let {toolbox, inspector, view} = yield openRuleView();
 
   info("Iterating over the test data");
   for (let data of TEST_DATA) {
-    yield runTestData(inspector, view, data);
+    yield runTestData(inspector, view, data, "context-menu");
+    yield runTestData(inspector, view, data, "button");
   }
 });
 
-function* runTestData(inspector, view, data) {
+function* runTestData(inspector, view, data, method) {
   let {node, expected} = data;
   info("Selecting the test element");
   yield selectNode(node, inspector);
 
-  info("Waiting for context menu to be shown");
-  let onPopup = once(view._contextmenu, "popupshown");
-  let win = view.doc.defaultView;
-
-  EventUtils.synthesizeMouseAtCenter(view.element,
-    {button: 2, type: "contextmenu"}, win);
-  yield onPopup;
-
-  ok(!view.menuitemAddRule.hidden, "Add rule is visible");
-
-  info("Waiting for rule view to change");
-  let onRuleViewChanged = once(view, "ruleview-changed");
-
-  info("Adding the new rule");
-  view.menuitemAddRule.click();
-  yield onRuleViewChanged;
-  view._contextmenu.hidePopup();
+  yield addNewRule(inspector, view, method);
 
   yield testNewRule(view, expected, 1);
 
   info("Resetting page content");
   content.document.body.innerHTML = PAGE_CONTENT;
+}
+
+function* addNewRule(inspector, view, method) {
+  if (method == "context-menu") {
+    info("Waiting for context menu to be shown");
+    let onPopup = once(view._contextmenu, "popupshown");
+    let win = view.doc.defaultView;
+
+    EventUtils.synthesizeMouseAtCenter(view.element,
+      {button: 2, type: "contextmenu"}, win);
+    yield onPopup;
+
+    ok(!view.menuitemAddRule.hidden, "Add rule is visible");
+
+    info("Adding the new rule");
+    view.menuitemAddRule.click();
+    view._contextmenu.hidePopup();
+  }
+  else {
+    info("Adding the new rule using the button");
+    view.addRuleButton.click();
+  }
+  info("Waiting for rule view to change");
+  let onRuleViewChanged = once(view, "ruleview-changed");
+  yield onRuleViewChanged;
 }
 
 function* testNewRule(view, expected, index) {

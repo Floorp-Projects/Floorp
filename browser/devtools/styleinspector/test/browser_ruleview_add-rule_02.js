@@ -18,10 +18,7 @@ let PAGE_CONTENT = [
 ].join("\n");
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,test rule view add rule");
-
-  info("Creating the test document");
-  content.document.body.innerHTML = PAGE_CONTENT;
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
 
   info("Opening the rule-view");
   let {toolbox, inspector, view} = yield openRuleView();
@@ -29,23 +26,13 @@ add_task(function*() {
   info("Selecting the test element");
   yield selectNode("#testid", inspector);
 
-  info("Waiting for context menu to be shown");
-  let onPopup = once(view._contextmenu, "popupshown");
-  let win = view.doc.defaultView;
-
-  EventUtils.synthesizeMouseAtCenter(view.element,
-    {button: 2, type: "contextmenu"}, win);
-  yield onPopup;
-
-  ok(!view.menuitemAddRule.hidden, "Add rule is visible");
-
   info("Waiting for rule view to change");
   let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Adding the new rule");
-  view.menuitemAddRule.click();
+  view.addRuleButton.click();
+
   yield onRuleViewChanged;
-  view._contextmenu.hidePopup();
 
   yield testEditSelector(view, "span");
 

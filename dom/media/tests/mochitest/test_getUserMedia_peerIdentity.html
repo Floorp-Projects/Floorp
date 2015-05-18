@@ -26,11 +26,8 @@ function theTest() {
   };
 
   // both without and with the constraint
-  testPeerIdentityConstraint(false)
-    .then(() => testPeerIdentityConstraint(true))
-    .catch(e => ok(false, 'error in test: ' + e))
-    .then(() => SimpleTest.finish())
-    .catch(e => ok(false, 'something is really messed up: ' + e));
+  return testPeerIdentityConstraint(false)
+    .then(() => testPeerIdentityConstraint(true));
 }
 
 runTest(theTest);

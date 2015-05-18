@@ -28,11 +28,7 @@ function createCanvas(width, height) {
   return c;
 }
 
-function testCanvasDrawImage(v) {
-  var c = createCanvas(v.width, v.height);
-  var ctx = c.getContext("2d");
-  ctx.drawImage(v, 0, 0);
-
+function checkGetImageData(ctx, v) {
   try {
     var data = ctx.getImageData(0, 0, 1, 1);
     ok(true, "drawImage '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' worked");
@@ -42,22 +38,54 @@ function testCanvasDrawImage(v) {
   }
 }
 
+function checkGetImageDataTainted(ctx, v) {
+  try {
+    var data = ctx.getImageData(0, 0, 1, 1);
+    ok(false, "changing the CORS mode should not allow reading data from remote videos");
+  } catch (error) {
+    ok(error.name === "SecurityError", "changing the CORS mode, drawImage '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' failed");
+  }
+}
+
+function checkCaptureStream(c, v) {
+  try {
+    var stream = c.captureStream(0);
+    ok(true, "drawImage '" + v.src + "' then captureStream with crossOrigin='" + v.crossOrigin + "' worked");
+  } catch(error) {
+    ok(!v.crossOrigin && error.name === "SecurityError", "drawImage '" + v.src + "' then captureStream with crossOrigin='" + v.crossOrigin + "' failed");
+    v.tainted = true;
+  }
+}
+
+function checkCaptureStreamTainted(c, v) {
+  try {
+    var stream = c.captureStream(0);
+    ok(false, "changing the CORS mode should not allow capturing a stream from remote videos");
+  } catch (error) {
+    ok(error.name === "SecurityError", "changing the CORS mode, drawImage '" + v.src + "' then captureStream with crossOrigin='" + v.crossOrigin + "' failed");
+  }
+}
+
+function testCanvasDrawImage(v) {
+  var c = createCanvas(v.width, v.height);
+  var ctx = c.getContext("2d");
+  ctx.drawImage(v, 0, 0);
+
+  checkGetImageData(ctx, v);
+  checkCaptureStream(c, v);
+}
+
 function testCanvasCreatePattern(v) {
   var c = createCanvas(v.width, v.height);
   var ctx = c.getContext("2d");
   ctx.fillStyle = ctx.createPattern(v, "");
   ctx.fillRect(0, 0, c.width, c.height);
 
-  try {
-    var data = ctx.getImageData(0, 0, 1, 1);
-    ok(true, "createPattern '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' worked");
-  } catch(error) {
-    ok(!v.crossOrigin && error.name === "SecurityError", "createPattern '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' failed");
-    v.tainted = true;
-  }
+  checkGetImageData(ctx, v);
+  checkCaptureStream(c, v);
 }
 
-function testWebGL(v) {
+function testWebGL(gl, v) {
   var tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
 
@@ -75,12 +103,8 @@ function testTaintedCanvas(v) {
   var ctx = c.getContext("2d");
   ctx.drawImage(v, 0, 0);
 
-  try {
-    var data = ctx.getImageData(0, 0, 1, 1);
-    ok(false, "changing the CORS mode should not allow reading data from remote videos");
-  } catch (error) {
-    ok(error.name === "SecurityError", "changing the CORS mode, drawImage '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' failed");
-  }
+  checkGetImageDataTainted(ctx, v);
+  checkCaptureStreamTainted(c, v);
 }
 
 function vidDataSuccess(e) {
@@ -88,8 +112,8 @@ function vidDataSuccess(e) {
 
   testCanvasDrawImage(e.target);
   testCanvasCreatePattern(e.target);
-  if (gl) {
-    testWebGL(e.target);
+  if (document.gl) {
+    testWebGL(document.gl, e.target);
   }
   // If we change the CORS mode after loading the file without CORS it should still throw a security error
   if (e.target.tainted) {
@@ -121,7 +145,7 @@ function startTest(test, token) {
     v.crossOrigin = test.cors;
   }
   v.token = token;
-  manager.started(token);
+  document.manager.started(token);
   v.autoplay = true;
   v.preload = "auto";
   v.style.display = "none";
@@ -140,53 +164,59 @@ function startTest(test, token) {
 function doneTest(e) {
   var v = e.target;
   v.parentNode.removeChild(v);
-  manager.finished(v.token);
+  document.manager.finished(v.token);
 }
 
-var videoFile = getPlayableVideo(gSmallTests);
-if (!videoFile) {
-  SimpleTest.finish();
+function beginTest() {
+  var videoFile = getPlayableVideo(gSmallTests);
+  if (!videoFile) {
+    SimpleTest.finish();
+  }
+  videoFile = "?name=tests/dom/media/test/" + videoFile.name + "&type=" + videoFile.type;
+
+  document.manager = new MediaTestManager;
+  var corsTests = [];
+
+  const host = "http://example.com/tests/dom/canvas/test/crossorigin/video.sjs";
+  const serverAttrValues = [
+    [ "&cors=none", "none" ],
+    [ "&cors=anonymous", "anonymous" ],
+    [ "&cors=use-credentials", "use-credentials" ]
+  ];
+  const clientAttrValues = [
+    [ "missing-value-default", "none" ],
+    [ "", "anonymous" ],
+    [ "just-crossOrigin-without-value", "anonymous" ],
+    [ "anonymous", "anonymous" ],
+    [ "use-credentials", "use-credentials" ],
+    [ "foobar", "anonymous" ]
+  ];
+
+  // Build the video file test array
+  for (var i = 0; i < serverAttrValues.length; i++) {
+    for (var n = 0; n < clientAttrValues.length; n++) {
+      corsTests.push({
+        name: host + videoFile + serverAttrValues[i][0],
+        nameIntent: serverAttrValues[i][1],
+        cors: clientAttrValues[n][0],
+        corsIntent: clientAttrValues[n][1]
+      });
+    }
+  }
+  try {
+    document.gl = createCanvas(16, 16).getContext("experimental-webgl");
+  } catch (ex) {
+    // Mac OS X 10.5 doesn't support WebGL, so we won't run the WebGL tests
+  }
+  document.manager.runTests(corsTests, startTest);
 }
-videoFile = "?name=tests/dom/media/test/" + videoFile.name + "&type=" + videoFile.type;
 
-var gl;
-try {
-  gl = createCanvas(16, 16).getContext("experimental-webgl");
-} catch (ex) {
-  // Mac OS X 10.5 doesn't support WebGL, so we won't run the WebGL tests
-}
-
-var manager = new MediaTestManager;
-var corsTests = [];
-
-const host = "http://example.com/tests/dom/canvas/test/crossorigin/video.sjs";
-const serverAttrValues = [
-  [ "&cors=none", "none" ],
-  [ "&cors=anonymous", "anonymous" ],
-  [ "&cors=use-credentials", "use-credentials" ]
+var prefs = [
+  [ "canvas.capturestream.enabled", true ],
 ];
-const clientAttrValues = [
-  [ "missing-value-default", "none" ],
-  [ "", "anonymous" ],
-  [ "just-crossOrigin-without-value", "anonymous" ],
-  [ "anonymous", "anonymous" ],
-  [ "use-credentials", "use-credentials" ],
-  [ "foobar", "anonymous" ]
-];
 
-// Build the video file test array
-for (var i = 0; i < serverAttrValues.length; i++) {
-	for (var n = 0; n < clientAttrValues.length; n++) {
-		corsTests.push({
-      name: host + videoFile + serverAttrValues[i][0],
-      nameIntent: serverAttrValues[i][1],
-      cors: clientAttrValues[n][0],
-      corsIntent: clientAttrValues[n][1]
-    });
-	}
-}
-
-manager.runTests(corsTests, startTest);
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
 
 </script>
 </pre>

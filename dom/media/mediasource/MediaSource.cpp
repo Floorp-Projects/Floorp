@@ -16,7 +16,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/mozalloc.h"
 #include "nsContentTypeParser.h"
 #include "nsContentUtils.h"
@@ -379,7 +378,9 @@ MediaSource::Enabled(JSContext* cx, JSObject* aGlobal)
 
    return eTLDplusOne.EqualsLiteral("youtube.com") ||
           eTLDplusOne.EqualsLiteral("youtube-nocookie.com") ||
-          eTLDplusOne.EqualsLiteral("netflix.com");
+          eTLDplusOne.EqualsLiteral("netflix.com") ||
+          eTLDplusOne.EqualsLiteral("dailymotion.com") ||
+          eTLDplusOne.EqualsLiteral("dmcdn.net");
 }
 
 bool

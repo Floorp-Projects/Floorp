@@ -60,7 +60,7 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
   if (aRv.Failed()) {
     return;
   }
-  mClosed = mKeys->MakePromise(aRv);
+  mClosed = MakePromise(aRv);
 }
 
 void MediaKeySession::SetSessionId(const nsAString& aSessionId)
@@ -169,7 +169,7 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
                                  const ArrayBufferViewOrArrayBuffer& aInitData,
                                  ErrorResult& aRv)
 {
-  nsRefPtr<Promise> promise(mKeys->MakePromise(aRv));
+  nsRefPtr<Promise> promise(MakePromise(aRv));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -224,7 +224,7 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
 already_AddRefed<Promise>
 MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
 {
-  nsRefPtr<Promise> promise(mKeys->MakePromise(aRv));
+  nsRefPtr<Promise> promise(MakePromise(aRv));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -265,7 +265,7 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
 already_AddRefed<Promise>
 MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResult& aRv)
 {
-  nsRefPtr<Promise> promise(mKeys->MakePromise(aRv));
+  nsRefPtr<Promise> promise(MakePromise(aRv));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -310,7 +310,7 @@ MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResu
 already_AddRefed<Promise>
 MediaKeySession::Close(ErrorResult& aRv)
 {
-  nsRefPtr<Promise> promise(mKeys->MakePromise(aRv));
+  nsRefPtr<Promise> promise(MakePromise(aRv));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -352,7 +352,7 @@ MediaKeySession::IsClosed() const
 already_AddRefed<Promise>
 MediaKeySession::Remove(ErrorResult& aRv)
 {
-  nsRefPtr<Promise> promise(mKeys->MakePromise(aRv));
+  nsRefPtr<Promise> promise(MakePromise(aRv));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -432,6 +432,18 @@ uint32_t
 MediaKeySession::Token() const
 {
   return mToken;
+}
+
+already_AddRefed<Promise>
+MediaKeySession::MakePromise(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    NS_WARNING("Passed non-global to MediaKeys ctor!");
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+  return Promise::Create(global, aRv);
 }
 
 } // namespace dom

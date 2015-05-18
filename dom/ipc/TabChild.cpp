@@ -88,6 +88,7 @@
 #include "nsNetUtil.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptError.h"
+#include "mozilla/EventForwards.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
@@ -2379,7 +2380,8 @@ TabChild::GetPresShellResolution() const
 bool
 TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
                              const ScrollableLayerGuid& aGuid,
-                             const uint64_t& aInputBlockId)
+                             const uint64_t& aInputBlockId,
+                             const nsEventStatus& aApzResponse)
 {
   TABC_LOG("Receiving touch event of type %d\n", aEvent.message);
 
@@ -2407,17 +2409,17 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
     return true;
   }
 
-  mAPZEventState->ProcessTouchEvent(localEvent, aGuid, aInputBlockId,
-                                    nsEventStatus_eIgnore);
+  mAPZEventState->ProcessTouchEvent(localEvent, aGuid, aInputBlockId, aApzResponse);
   return true;
 }
 
 bool
 TabChild::RecvRealTouchMoveEvent(const WidgetTouchEvent& aEvent,
                                  const ScrollableLayerGuid& aGuid,
-                                 const uint64_t& aInputBlockId)
+                                 const uint64_t& aInputBlockId,
+                                 const nsEventStatus& aApzResponse)
 {
-  return RecvRealTouchEvent(aEvent, aGuid, aInputBlockId);
+  return RecvRealTouchEvent(aEvent, aGuid, aInputBlockId, aApzResponse);
 }
 
 bool

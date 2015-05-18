@@ -30,12 +30,6 @@
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsISupportsImpl.h"            // for TextureImage::Release, etc
 #include "OGLShaderProgram.h"           // for ShaderProgramType, etc
-#ifdef MOZ_WIDGET_GONK
-#include <ui/GraphicBuffer.h>
-#if ANDROID_VERSION >= 17
-#include <ui/Fence.h>
-#endif
-#endif
 
 class nsIntRegion;
 
@@ -134,40 +128,30 @@ private:
 class TextureHostOGL
 {
 public:
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-
   /**
    * Store a fence that will signal when the current buffer is no longer being read.
    * Similar to android's GLConsumer::setReleaseFence()
    */
-  virtual bool SetReleaseFence(const android::sp<android::Fence>& aReleaseFence);
+  virtual bool SetReleaseFence(const FenceHandle& aReleaseFence);
 
   /**
    * Return a releaseFence's Fence and clear a reference to the Fence.
    */
-  virtual android::sp<android::Fence> GetAndResetReleaseFence();
+  virtual FenceHandle GetAndResetReleaseFence();
 
-  virtual void SetAcquireFence(const android::sp<android::Fence>& aAcquireFence);
+  virtual void SetAcquireFence(const FenceHandle& aAcquireFence);
 
   /**
    * Return a acquireFence's Fence and clear a reference to the Fence.
    */
-  virtual android::sp<android::Fence> GetAndResetAcquireFence();
+  virtual FenceHandle GetAndResetAcquireFence();
 
   virtual void WaitAcquireFenceSyncComplete();
 
 protected:
-  android::sp<android::Fence> mReleaseFence;
+  FenceHandle mReleaseFence;
 
-  android::sp<android::Fence> mAcquireFence;
-
-  /**
-   * Hold previous ReleaseFence to prevent Fence delivery failure via gecko IPC.
-   * Fence is a kernel object and its lifetime is managed by a reference count.
-   * Until the Fence is delivered to client side, need to hold Fence on host side.
-   */
-  android::sp<android::Fence> mPrevReleaseFence;
-#endif
+  FenceHandle mAcquireFence;
 };
 
 /**

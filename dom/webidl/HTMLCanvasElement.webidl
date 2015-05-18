@@ -43,6 +43,9 @@ partial interface HTMLCanvasElement {
   [ChromeOnly]
   void mozFetchAsStream(nsIInputStreamCallback callback, optional DOMString? type = null);
            attribute PrintCallback? mozPrintCallback;
+
+  [Throws, UnsafeInPrerendering, Pref="canvas.capturestream.enabled"]
+  CanvasCaptureMediaStream captureStream(optional double frameRate);
 };
 
 [ChromeOnly]

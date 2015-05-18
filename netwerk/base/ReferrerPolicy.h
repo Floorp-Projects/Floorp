@@ -21,7 +21,7 @@ enum ReferrerPolicy {
   RP_No_Referrer_When_Downgrade  = nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
   RP_Default                     = nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
 
-  /* spec tokens: origin-when-crossorigin */
+  /* spec tokens: origin-when-cross-origin */
   RP_Origin_When_Crossorigin     = nsIHttpChannel::REFERRER_POLICY_ORIGIN_WHEN_XORIGIN,
 
   /* spec tokens: always unsafe-url */
@@ -44,7 +44,8 @@ ReferrerPolicyFromString(const nsAString& content)
       content.LowerCaseEqualsLiteral("no-referrer-when-downgrade")) {
     return RP_No_Referrer_When_Downgrade;
   }
-  if (content.LowerCaseEqualsLiteral("origin-when-crossorigin")) {
+  if (content.LowerCaseEqualsLiteral("origin-when-cross-origin") ||
+      content.LowerCaseEqualsLiteral("origin-when-crossorigin")) {
     return RP_Origin_When_Crossorigin;
   }
   if (content.LowerCaseEqualsLiteral("always") ||
@@ -64,6 +65,7 @@ IsValidReferrerPolicy(const nsAString& content)
       || content.LowerCaseEqualsLiteral("origin")
       || content.LowerCaseEqualsLiteral("default")
       || content.LowerCaseEqualsLiteral("no-referrer-when-downgrade")
+      || content.LowerCaseEqualsLiteral("origin-when-cross-origin")
       || content.LowerCaseEqualsLiteral("origin-when-crossorigin")
       || content.LowerCaseEqualsLiteral("always")
       || content.LowerCaseEqualsLiteral("unsafe-url");

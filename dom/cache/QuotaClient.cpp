@@ -110,7 +110,7 @@ public:
   InitOrigin(PersistenceType aPersistenceType, const nsACString& aGroup,
              const nsACString& aOrigin, UsageInfo* aUsageInfo) override
   {
-    return NS_OK;
+    return GetUsageForOrigin(aPersistenceType, aGroup, aOrigin, aUsageInfo);
   }
 
   virtual nsresult
