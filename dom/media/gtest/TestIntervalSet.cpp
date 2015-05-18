@@ -258,6 +258,39 @@ TEST(IntervalSet, IntersectionUnorderedNonNormalizedIntervalSet)
   GeneratePermutations(i0, i1);
 }
 
+TEST(IntervalSet, IntersectionNonNormalizedInterval)
+{
+  media::IntervalSet<int> i0;
+  i0 += IntInterval(5, 10);
+  i0 += IntInterval(8, 25);
+  i0 += IntInterval(30, 60);
+
+  media::Interval<int> i1(9, 15);
+  i0.Intersection(i1);
+  EXPECT_EQ(1u, i0.Length());
+  EXPECT_EQ(i0[0].mStart, i1.mStart);
+  EXPECT_EQ(i0[0].mEnd, i1.mEnd);
+}
+
+TEST(IntervalSet, IntersectionUnorderedNonNormalizedInterval)
+{
+  media::IntervalSet<int> i0;
+  i0 += IntInterval(1, 3);
+  i0 += IntInterval(1, 10);
+  i0 += IntInterval(9, 12);
+  i0 += IntInterval(12, 15);
+  i0 += IntInterval(8, 25);
+  i0 += IntInterval(30, 60);
+  i0 += IntInterval(5, 10);
+  i0 += IntInterval(30, 60);
+
+  media::Interval<int> i1(9, 15);
+  i0.Intersection(i1);
+  EXPECT_EQ(1u, i0.Length());
+  EXPECT_EQ(i0[0].mStart, i1.mStart);
+  EXPECT_EQ(i0[0].mEnd, i1.mEnd);
+}
+
 static media::IntervalSet<int> Duplicate(const media::IntervalSet<int>& aValue)
 {
   media::IntervalSet<int> value(aValue);
@@ -296,6 +329,81 @@ TEST(IntervalSet, Normalize)
   EXPECT_EQ(2u, ti.Length());
   ti += media::TimeInterval(ti.Start(0), ti.End(0), media::TimeUnit::FromMicroseconds(35000));
   EXPECT_EQ(1u, ti.Length());
+}
+
+TEST(IntervalSet, ContainValue)
+{
+  media::IntervalSet<int> i0;
+  i0 += IntInterval(0, 10);
+  i0 += IntInterval(15, 20);
+  i0 += IntInterval(30, 50);
+  EXPECT_TRUE(i0.Contains(0)); // start is inclusive.
+  EXPECT_TRUE(i0.Contains(17));
+  EXPECT_FALSE(i0.Contains(20)); // end boundary is exclusive.
+  EXPECT_FALSE(i0.Contains(25));
+}
+
+TEST(IntervalSet, ContainValueWithFuzz)
+{
+  media::IntervalSet<int> i0;
+  i0 += IntInterval(0, 10);
+  i0 += IntInterval(15, 20, 1);
+  i0 += IntInterval(30, 50);
+  EXPECT_TRUE(i0.Contains(0)); // start is inclusive.
+  EXPECT_TRUE(i0.Contains(17));
+  EXPECT_TRUE(i0.Contains(20)); // end boundary is exclusive but we have a fuzz of 1.
+  EXPECT_FALSE(i0.Contains(25));
+}
+
+TEST(IntervalSet, ContainInterval)
+{
+  media::IntervalSet<int> i0;
+  i0 += IntInterval(0, 10);
+  i0 += IntInterval(15, 20);
+  i0 += IntInterval(30, 50);
+  EXPECT_TRUE(i0.Contains(IntInterval(2, 8)));
+  EXPECT_TRUE(i0.Contains(IntInterval(31, 50)));
+  EXPECT_TRUE(i0.Contains(IntInterval(0, 10)));
+  EXPECT_FALSE(i0.Contains(IntInterval(0, 11)));
+  EXPECT_TRUE(i0.Contains(IntInterval(0, 5)));
+  EXPECT_FALSE(i0.Contains(IntInterval(8, 15)));
+  EXPECT_FALSE(i0.Contains(IntInterval(15, 30)));
+  EXPECT_FALSE(i0.Contains(IntInterval(30, 55)));
+}
+
+TEST(IntervalSet, ContainIntervalWithFuzz)
+{
+  media::IntervalSet<int> i0;
+  i0 += IntInterval(0, 10);
+  i0 += IntInterval(15, 20);
+  i0 += IntInterval(30, 50);
+  EXPECT_TRUE(i0.Contains(IntInterval(2, 8)));
+  EXPECT_TRUE(i0.Contains(IntInterval(31, 50)));
+  EXPECT_TRUE(i0.Contains(IntInterval(0, 11, 1)));
+  EXPECT_TRUE(i0.Contains(IntInterval(0, 5)));
+  EXPECT_FALSE(i0.Contains(IntInterval(8, 15)));
+  EXPECT_FALSE(i0.Contains(IntInterval(15, 21)));
+  EXPECT_FALSE(i0.Contains(IntInterval(15, 30)));
+  EXPECT_FALSE(i0.Contains(IntInterval(30, 55)));
+
+  media::IntervalSet<int> i1;
+  i1 += IntInterval(0, 10, 1);
+  i1 += IntInterval(15, 20, 1);
+  i1 += IntInterval(30, 50, 1);
+  EXPECT_TRUE(i1.Contains(IntInterval(2, 8)));
+  EXPECT_TRUE(i1.Contains(IntInterval(29, 51)));
+  EXPECT_TRUE(i1.Contains(IntInterval(0, 11, 1)));
+  EXPECT_TRUE(i1.Contains(IntInterval(15, 21)));
+}
+
+TEST(IntervalSet, Span)
+{
+  IntInterval i0(0,10);
+  IntInterval i1(20,30);
+  IntInterval i{i0.Span(i1)};
+
+  EXPECT_EQ(i.mStart, 0);
+  EXPECT_EQ(i.mEnd, 30);
 }
 
 TEST(IntervalSet, Union)
@@ -374,12 +482,24 @@ TEST(IntervalSet, UnionFuzz)
   i0 += IntInterval(5, 10, 1);
   i0 += IntInterval(11, 25, 0);
   i0 += IntInterval(40, 60, 1);
+  EXPECT_EQ(2u, i0.Length());
+  EXPECT_EQ(5, i0[0].mStart);
+  EXPECT_EQ(25, i0[0].mEnd);
+  EXPECT_EQ(40, i0[1].mStart);
+  EXPECT_EQ(60, i0[1].mEnd);
 
   media::IntervalSet<int> i1;
   i1.Add(IntInterval(7, 15, 1));
   i1.Add(IntInterval(16, 27, 1));
   i1.Add(IntInterval(45, 50, 1));
   i1.Add(IntInterval(53, 57, 1));
+  EXPECT_EQ(3u, i1.Length());
+  EXPECT_EQ(7, i1[0].mStart);
+  EXPECT_EQ(27, i1[0].mEnd);
+  EXPECT_EQ(45, i1[1].mStart);
+  EXPECT_EQ(50, i1[1].mEnd);
+  EXPECT_EQ(53, i1[2].mStart);
+  EXPECT_EQ(57, i1[2].mEnd);
 
   media::IntervalSet<int> i = media::Union(i0, i1);
 
@@ -390,12 +510,6 @@ TEST(IntervalSet, UnionFuzz)
 
   EXPECT_EQ(40, i[1].mStart);
   EXPECT_EQ(60, i[1].mEnd);
-
-  EXPECT_EQ(2u, i0.Length());
-  EXPECT_EQ(5, i0[0].mStart);
-  EXPECT_EQ(25, i0[0].mEnd);
-  EXPECT_EQ(40, i0[1].mStart);
-  EXPECT_EQ(60, i0[1].mEnd);
 }
 
 TEST(IntervalSet, Contiguous)

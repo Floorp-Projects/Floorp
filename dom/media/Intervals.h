@@ -473,7 +473,20 @@ public:
     }
   }
 
-  bool Contains(const T& aX) {
+  bool Contains(const ElemType& aInterval) const {
+    for (const auto& interval : mIntervals) {
+      if (aInterval.LeftOf(interval)) {
+        // Will never succeed.
+        return false;
+      }
+      if (interval.Contains(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool Contains(const T& aX) const {
     for (const auto& interval : mIntervals) {
       if (interval.Contains(aX)) {
         return true;
@@ -482,7 +495,7 @@ public:
     return false;
   }
 
-  bool ContainsStrict(const T& aX) {
+  bool ContainsStrict(const T& aX) const {
     for (const auto& interval : mIntervals) {
       if (interval.ContainsStrict(aX)) {
         return true;
