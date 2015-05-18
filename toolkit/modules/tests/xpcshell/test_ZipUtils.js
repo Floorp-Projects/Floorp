@@ -5,11 +5,12 @@
 
 const ARCHIVE = "zips/zen.zip";
 const SUBDIR = "zen";
-const ENTRIES = ["beyond.txt", "waterwood.txt"];
+const SYMLINK = "beyond_link";
+const ENTRIES = ["beyond.txt", SYMLINK, "waterwood.txt"];
 
 Components.utils.import("resource://gre/modules/ZipUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
-
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const archive = do_get_file(ARCHIVE, false);
 const dir = do_get_profile().clone();
@@ -31,6 +32,19 @@ function ensureExtracted(target) {
   }
 }
 
+function ensureHasSymlink(target) {
+  // Just bail out if running on Windows, since symlinks do not exists there.
+  if (Services.appinfo.OS === "WINNT") {
+    return;
+  }
+
+  let entry = target.clone();
+  entry.append(SYMLINK);
+
+  do_print("ENTRY " + entry.path);
+  do_check_true(entry.exists());
+  do_check_true(entry.isSymlink());
+}
 
 add_task(function test_extractFiles() {
   let target = dir.clone();
@@ -43,6 +57,7 @@ add_task(function test_extractFiles() {
   }
 
   ensureExtracted(target);
+  ensureHasSymlink(target);
 });
 
 add_task(function test_extractFilesAsync() {

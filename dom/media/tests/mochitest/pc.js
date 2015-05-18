@@ -1322,6 +1322,10 @@ PeerConnectionWrapper.prototype = {
     this.endOfTrickleIce.then(() => {
       this._pc.onicecandidate = () =>
         ok(false, this.label + " received ICE candidate after end of trickle");
+      var localSdp = this._pc.getLocalDescription();
+      ok(localSdp.includes("a=end-of-candidates"));
+      ok(localSdp.includes("a=rtcp:"));
+      ok(!localSdp.includes("c=IN IP4 0.0.0.0"));
     });
 
     this._pc.onicecandidate = anEvent => {

@@ -6,7 +6,6 @@
 #include "GStreamerMozVideoBuffer.h"
 #include "GStreamerFormatHelper.h"
 #include "VideoUtils.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/Endian.h"
 #include "mozilla/Preferences.h"
 

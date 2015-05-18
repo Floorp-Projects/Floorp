@@ -96,7 +96,14 @@ struct ParamTraits<mozilla::dom::AudioChannelState>
                                     mozilla::dom::AUDIO_CHANNEL_STATE_LAST>
 { };
 
-}
 
+template <>
+struct ParamTraits<nsEventStatus>
+  : public ContiguousEnumSerializer<nsEventStatus,
+                                    nsEventStatus_eIgnore,
+                                    nsEventStatus_eSentinel>
+{ };
+
+}
 
 #endif

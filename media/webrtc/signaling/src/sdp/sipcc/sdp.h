@@ -877,6 +877,13 @@ typedef struct sdp_fmtp_fb {
                                            fields. */
 } sdp_fmtp_fb_t;
 
+typedef struct sdp_rtcp {
+   sdp_nettype_e     nettype;
+   sdp_addrtype_e    addrtype;
+   char              addr[SDP_MAX_STRING_LEN+1];
+   uint16_t          port;
+} sdp_rtcp_t;
+
 /*
  * b=<bw-modifier>:<val>
  *
@@ -1015,6 +1022,7 @@ typedef struct sdp_attr {
         char                  unknown[SDP_MAX_STRING_LEN+1];
         sdp_source_filter_t   source_filter;
         sdp_fmtp_fb_t         rtcp_fb;
+        sdp_rtcp_t            rtcp;
         sdp_setup_type_e      setup;
         sdp_connection_type_e connection;
         sdp_extmap_t          extmap;

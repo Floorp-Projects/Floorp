@@ -10,6 +10,7 @@ namespace layers {
 
 ScrollableLayerGuid InputAPZContext::sGuid;
 uint64_t InputAPZContext::sBlockId = 0;
+nsEventStatus InputAPZContext::sApzResponse = nsEventStatus_eIgnore;
 bool InputAPZContext::sRoutedToChildProcess = false;
 
 /*static*/ ScrollableLayerGuid
@@ -24,6 +25,12 @@ InputAPZContext::GetInputBlockId()
   return sBlockId;
 }
 
+/*static*/ nsEventStatus
+InputAPZContext::GetApzResponse()
+{
+  return sApzResponse;
+}
+
 /*static*/ void
 InputAPZContext::SetRoutedToChildProcess()
 {
@@ -31,13 +38,16 @@ InputAPZContext::SetRoutedToChildProcess()
 }
 
 InputAPZContext::InputAPZContext(const ScrollableLayerGuid& aGuid,
-                                 const uint64_t& aBlockId)
+                                 const uint64_t& aBlockId,
+                                 const nsEventStatus& aApzResponse)
   : mOldGuid(sGuid)
   , mOldBlockId(sBlockId)
+  , mOldApzResponse(sApzResponse)
   , mOldRoutedToChildProcess(sRoutedToChildProcess)
 {
   sGuid = aGuid;
   sBlockId = aBlockId;
+  sApzResponse = aApzResponse;
   sRoutedToChildProcess = false;
 }
 
@@ -45,6 +55,7 @@ InputAPZContext::~InputAPZContext()
 {
   sGuid = mOldGuid;
   sBlockId = mOldBlockId;
+  sApzResponse = mOldApzResponse;
   sRoutedToChildProcess = mOldRoutedToChildProcess;
 }
 

@@ -345,6 +345,7 @@ public:
     virtual bool RecvAppInfo(const nsCString& version, const nsCString& buildID,
                              const nsCString& name, const nsCString& UAName,
                              const nsCString& ID, const nsCString& vendor) override;
+    virtual bool RecvAppInit() override;
 
     virtual bool RecvLastPrivateDocShellDestroyed() override;
 

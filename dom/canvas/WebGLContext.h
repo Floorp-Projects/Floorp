@@ -310,6 +310,8 @@ public:
 
     bool IsPremultAlpha() const { return mOptions.premultipliedAlpha; }
 
+    bool IsPreservingDrawingBuffer() const { return mOptions.preserveDrawingBuffer; }
+
     bool PresentScreenBuffer();
 
     // a number that increments every time we have an event that causes

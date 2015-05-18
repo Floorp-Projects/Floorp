@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Copyright © 2015, Deutsche Telekom, Inc. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(7baedd2a-3189-4b03-b2a3-34016043b5e2)]
+interface nsIAccessRulesManager : nsISupports
+{
+  /* Wildcard: rule allows all applications to access an SE applet */
+  const unsigned short ALLOW_ALL = 1;
+  /* Wildcard: rule denies all applications to access an SE applet */
+  const unsigned short DENY_ALL = 2;
+  /* Wildcard: rule allows application(s) access to all SE applets */
+  const unsigned short ALL_APPLET = 3;
+
+  /**
+   * Initiates Access Rules Manager, this should perform the initial
+   * reading of rules from access rule source
+   * @return Promise which is resolved if init is successful or rejected
+   *         otherwise
+   */
+  jsval init();
+
+  /**
+   * Retrieves all access rules.
+   *
+   * Rules are stored in an array. Each rule contains the following properties:
+   *  - applet - describes an SE applet referenced by this rule. Might equal
+   *             to an applet AID (as a byte array), or to a wildcard "all"
+   *             meaning all applets.
+   *  - application - describes an application referenced by this rule. Might
+   *                  be an array of developer certificate hashes (each as
+   *                  a byte array) in which case it lists all applications
+   *                  allowed access. Alternatively, might equal to wildcard
+   *                  "allowed-all" or "denied-all".
+   *
+   * Example rule format:
+   *   [{ applet: ALL_APPLET,
+   *      application: [[0x01, 0x02, ..., 0x20],
+   *                    [0x20, 0x19, ...., 0x01]],
+   *    { applet: [0x00, 0x01, ..., 0x05],
+   *      application: ALLOW_ALL}}]
+   *
+   * @return Promise which resolves with Array containing parsed access rules
+   */
+  jsval getAccessRules();
+};

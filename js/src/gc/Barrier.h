@@ -104,7 +104,7 @@
  * reference them. The solution is to maintain information about these pointers,
  * and mark their targets when we start a minor collection.
  *
- * The pointers can be thoughs of as edges in object graph, and the set of edges
+ * The pointers can be thought of as edges in object graph, and the set of edges
  * from the tenured generation into the nursery is know as the remembered set.
  * Post barriers are used to track this remembered set.
  *
