@@ -605,7 +605,7 @@ class TypedObject : public JSObject
     static bool GetBuffer(JSContext* cx, unsigned argc, Value* vp);
     static bool GetByteOffset(JSContext* cx, unsigned argc, Value* vp);
 
-    Shape** addressOfShapeFromGC() { return shape_.unsafeGet(); }
+    Shape* shapeFromGC() { return shape_; }
 };
 
 typedef Handle<TypedObject*> HandleTypedObject;
