@@ -1310,32 +1310,48 @@ public:
   // Insert a new element without copy-constructing. This is useful to avoid
   // temporaries.
   // @return A pointer to the newly inserted element, or null on OOM.
+  template<typename ActualAlloc = Alloc>
   elem_type* InsertElementAt(index_type aIndex)
   {
-    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+    if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
           Length() + 1, sizeof(elem_type)))) {
       return nullptr;
     }
-    this->template ShiftData<Alloc>(aIndex, 0, 1, sizeof(elem_type),
-                                    MOZ_ALIGNOF(elem_type));
+    this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(elem_type),
+                                          MOZ_ALIGNOF(elem_type));
     elem_type* elem = Elements() + aIndex;
     elem_traits::Construct(elem);
     return elem;
   }
 
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* InsertElementAt(index_type aIndex, const mozilla::fallible_t&)
+  {
+    return InsertElementAt<FallibleAlloc>(aIndex);
+  }
+
   // Insert a new element, move constructing if possible.
-  template<class Item>
+  template<class Item, typename ActualAlloc = Alloc>
   elem_type* InsertElementAt(index_type aIndex, Item&& aItem)
   {
-    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+    if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
           Length() + 1, sizeof(elem_type)))) {
       return nullptr;
     }
-    this->template ShiftData<Alloc>(aIndex, 0, 1, sizeof(elem_type),
-                                    MOZ_ALIGNOF(elem_type));
+    this->template ShiftData<ActualAlloc>(aIndex, 0, 1, sizeof(elem_type),
+                                          MOZ_ALIGNOF(elem_type));
     elem_type* elem = Elements() + aIndex;
     elem_traits::Construct(elem, mozilla::Forward<Item>(aItem));
     return elem;
+  }
+
+  template<class Item>
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* InsertElementAt(index_type aIndex, Item&& aItem,
+                             const mozilla::fallible_t&)
+  {
+    return InsertElementAt<Item, FallibleAlloc>(aIndex,
+                                                mozilla::Forward<Item>(aItem));
   }
 
   // This method searches for the smallest index of an element that is strictly
