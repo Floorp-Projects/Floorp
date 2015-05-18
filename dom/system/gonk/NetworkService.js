@@ -649,6 +649,17 @@ NetworkService.prototype = {
     });
   },
 
+  stopDhcp: function(interfaceName, callback) {
+    let params = {
+      cmd: "stopDhcp",
+      ifname: interfaceName
+    };
+
+    this.controlMessage(params, function(result) {
+      callback.nativeCommandResult(!result.error);
+    });
+  },
+
   enableInterface: function(interfaceName, callback) {
     let params = {
       cmd: "enableInterface",
