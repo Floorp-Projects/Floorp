@@ -213,10 +213,10 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxContext      *aContext,
     AutoFallibleTArray<float,SMALL_GLYPH_RUN> xLocs;
     AutoFallibleTArray<float,SMALL_GLYPH_RUN> yLocs;
 
-    if (!clusters.SetLength(aLength) ||
-        !gids.SetLength(glyphCount) ||
-        !xLocs.SetLength(glyphCount) ||
-        !yLocs.SetLength(glyphCount))
+    if (!clusters.SetLength(aLength, fallible) ||
+        !gids.SetLength(glyphCount, fallible) ||
+        !xLocs.SetLength(glyphCount, fallible) ||
+        !yLocs.SetLength(glyphCount, fallible))
     {
         return NS_ERROR_OUT_OF_MEMORY;
     }

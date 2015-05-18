@@ -1534,7 +1534,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext     *aContext,
     uint32_t wordLength = aLength;
     static const int32_t NO_GLYPH = -1;
     AutoFallibleTArray<int32_t,SMALL_GLYPH_RUN> charToGlyphArray;
-    if (!charToGlyphArray.SetLength(wordLength)) {
+    if (!charToGlyphArray.SetLength(wordLength, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
