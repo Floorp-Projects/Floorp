@@ -11,6 +11,9 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 const { AddonWatcher } = Cu.import("resource://gre/modules/AddonWatcher.jsm", {});
 const { PerformanceStats } = Cu.import("resource://gre/modules/PerformanceStats.jsm", {});
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+
+const UPDATE_TOPIC = "about:performance-update-immediately";
 
 /**
  * The various measures we display.
@@ -277,7 +280,7 @@ function updateLiveData() {
           _el.textContent = a ? a.name : _item.name
         });
       } else {
-        el.textContent = item.name;
+        el.textContent = item.title || item.name;
       }
     }
   } catch (ex) {
@@ -294,5 +297,8 @@ function go() {
   document.getElementById("intervalDropdown").addEventListener("change", () => AutoUpdate.updateRefreshRate());
 
   State.update();
-  setTimeout(update, 1000);
+  let observer = update;
+  
+  Services.obs.addObserver(update, UPDATE_TOPIC, false);
+  window.addEventListener("unload", () => Services.obs.removeObserver(update, UPDATE_TOPIC));
 }
