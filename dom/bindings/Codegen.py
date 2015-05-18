@@ -5602,7 +5602,7 @@ class CGArgumentConverter(CGThing):
             rooterDecl +
             dedent("""
                 if (${argc} > ${index}) {
-                  if (!${declName}.SetCapacity(${argc} - ${index})) {
+                  if (!${declName}.SetCapacity(${argc} - ${index}, mozilla::fallible)) {
                     JS_ReportOutOfMemory(cx);
                     return false;
                   }

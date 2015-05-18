@@ -543,7 +543,7 @@ MediaRawData::EnsureCapacity(size_t aSize)
   if (mData && mBuffer->Capacity() >= aSize + RAW_DATA_ALIGNMENT * 2) {
     return true;
   }
-  if (!mBuffer->SetCapacity(aSize + RAW_DATA_ALIGNMENT * 2)) {
+  if (!mBuffer->SetCapacity(aSize + RAW_DATA_ALIGNMENT * 2, fallible)) {
     return false;
   }
   // Find alignment address.

@@ -387,7 +387,7 @@ Dashboard::GetSockets(SocketData *aSocketData)
     Sequence<mozilla::dom::SocketElement> &sockets = dict.mSockets.Value();
 
     uint32_t length = socketData->mData.Length();
-    if (!sockets.SetCapacity(length)) {
+    if (!sockets.SetCapacity(length, fallible)) {
             JS_ReportOutOfMemory(cx);
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -457,7 +457,7 @@ Dashboard::GetHttpConnections(HttpData *aHttpData)
     Sequence<HttpConnectionElement> &connections = dict.mConnections.Value();
 
     uint32_t length = httpData->mData.Length();
-    if (!connections.SetCapacity(length)) {
+    if (!connections.SetCapacity(length, fallible)) {
             JS_ReportOutOfMemory(cx);
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -478,9 +478,10 @@ Dashboard::GetHttpConnections(HttpData *aHttpData)
         Sequence<HttpConnInfo> &idle = connection.mIdle.Value();
         Sequence<HalfOpenInfoDict> &halfOpens = connection.mHalfOpens.Value();
 
-        if (!active.SetCapacity(httpData->mData[i].active.Length()) ||
-            !idle.SetCapacity(httpData->mData[i].idle.Length()) ||
-            !halfOpens.SetCapacity(httpData->mData[i].halfOpens.Length())) {
+        if (!active.SetCapacity(httpData->mData[i].active.Length(), fallible) ||
+            !idle.SetCapacity(httpData->mData[i].idle.Length(), fallible) ||
+            !halfOpens.SetCapacity(httpData->mData[i].halfOpens.Length(),
+                                   fallible)) {
                 JS_ReportOutOfMemory(cx);
                 return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -619,7 +620,7 @@ Dashboard::GetWebSocketConnections(WebSocketRequest *aWsRequest)
 
     mozilla::MutexAutoLock lock(mWs.lock);
     uint32_t length = mWs.data.Length();
-    if (!websockets.SetCapacity(length)) {
+    if (!websockets.SetCapacity(length, fallible)) {
         JS_ReportOutOfMemory(cx);
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -692,7 +693,7 @@ Dashboard::GetDNSCacheEntries(DnsData *dnsData)
     Sequence<mozilla::dom::DnsCacheEntry> &entries = dict.mEntries.Value();
 
     uint32_t length = dnsData->mData.Length();
-    if (!entries.SetCapacity(length)) {
+    if (!entries.SetCapacity(length, fallible)) {
         JS_ReportOutOfMemory(cx);
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -702,7 +703,7 @@ Dashboard::GetDNSCacheEntries(DnsData *dnsData)
         entry.mHostaddr.Construct();
 
         Sequence<nsString> &addrs = entry.mHostaddr.Value();
-        if (!addrs.SetCapacity(dnsData->mData[i].hostaddr.Length())) {
+        if (!addrs.SetCapacity(dnsData->mData[i].hostaddr.Length(), fallible)) {
             JS_ReportOutOfMemory(cx);
             return NS_ERROR_OUT_OF_MEMORY;
         }

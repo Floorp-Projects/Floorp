@@ -60,7 +60,7 @@ public:
   }
 
   bool SetCapacity(uint32_t size) {
-    return mNumbers.SetCapacity(size);
+    return mNumbers.SetCapacity(size, fallible);
   }
 
   void Compact() {

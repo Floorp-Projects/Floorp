@@ -348,10 +348,10 @@ MobileMessageCursorChild::DoNotifyResult(const nsTArray<MobileMessageData>& aDat
   MOZ_ASSERT(length);
 
   AutoFallibleTArray<nsISupports*, 1> autoArray;
-  NS_ENSURE_TRUE_VOID(autoArray.SetCapacity(length));
+  NS_ENSURE_TRUE_VOID(autoArray.SetCapacity(length, fallible));
 
   AutoFallibleTArray<nsCOMPtr<nsISupports>, 1> messages;
-  NS_ENSURE_TRUE_VOID(messages.SetCapacity(length));
+  NS_ENSURE_TRUE_VOID(messages.SetCapacity(length, fallible));
 
   for (uint32_t i = 0; i < length; i++) {
     nsCOMPtr<nsISupports> message = CreateMessageFromMessageData(aDataArray[i]);
@@ -369,10 +369,10 @@ MobileMessageCursorChild::DoNotifyResult(const nsTArray<ThreadData>& aDataArray)
   MOZ_ASSERT(length);
 
   AutoFallibleTArray<nsISupports*, 1> autoArray;
-  NS_ENSURE_TRUE_VOID(autoArray.SetCapacity(length));
+  NS_ENSURE_TRUE_VOID(autoArray.SetCapacity(length, fallible));
 
   AutoFallibleTArray<nsCOMPtr<nsISupports>, 1> threads;
-  NS_ENSURE_TRUE_VOID(threads.SetCapacity(length));
+  NS_ENSURE_TRUE_VOID(threads.SetCapacity(length, fallible));
 
   for (uint32_t i = 0; i < length; i++) {
     nsCOMPtr<nsISupports> thread = new MobileMessageThread(aDataArray[i]);
