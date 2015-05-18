@@ -438,10 +438,9 @@ DOMSVGPathSegList::ReplaceItem(DOMSVGPathSeg& aNewItem,
   float segAsRaw[1 + NS_SVG_PATH_SEG_MAX_ARGS];
   domItem->ToSVGPathSegEncodedData(segAsRaw);
 
-  bool ok = !!InternalList().mData.ReplaceElementsAt(
-                  internalIndex, 1 + oldArgCount,
-                  segAsRaw, 1 + newArgCount);
-  if (!ok) {
+  if (!InternalList().mData.ReplaceElementsAt(internalIndex, 1 + oldArgCount,
+                                              segAsRaw, 1 + newArgCount,
+                                              fallible)) {
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
