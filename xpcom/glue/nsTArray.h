@@ -1557,16 +1557,23 @@ public:
   // @return True if the operation succeeded; false otherwise.
   // See also TruncateLength if the new length is guaranteed to be smaller than
   // the old.
-  typename Alloc::ResultType SetLength(size_type aNewLen)
+  template<typename ActualAlloc = Alloc>
+  typename ActualAlloc::ResultType SetLength(size_type aNewLen)
   {
     size_type oldLen = Length();
     if (aNewLen > oldLen) {
-      return Alloc::ConvertBoolToResultType(
-        InsertElementsAt(oldLen, aNewLen - oldLen) != nullptr);
+      return ActualAlloc::ConvertBoolToResultType(
+        InsertElementsAt<ActualAlloc>(oldLen, aNewLen - oldLen) != nullptr);
     }
 
     TruncateLength(aNewLen);
-    return Alloc::ConvertBoolToResultType(true);
+    return ActualAlloc::ConvertBoolToResultType(true);
+  }
+
+  /* MOZ_WARN_UNUSED_RESULT */
+  bool SetLength(size_type aNewLen, const mozilla::fallible_t&)
+  {
+    return SetLength<FallibleAlloc>(aNewLen);
   }
 
   // This method modifies the length of the array, but may only be
