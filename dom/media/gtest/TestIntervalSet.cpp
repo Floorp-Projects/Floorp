@@ -515,6 +515,20 @@ TEST(IntervalSet, TimeRangesMicroseconds)
     EXPECT_EQ(tr->End(index, rv), i[index].mEnd.ToSeconds());
     EXPECT_EQ(tr->End(index, rv), i.End(index).ToSeconds());
   }
+
+  // Check infinity values aren't lost in the conversion.
+  tr = new dom::TimeRanges();
+  tr->Add(0, 30);
+  tr->Add(50, std::numeric_limits<double>::infinity());
+  media::TimeIntervals i_oo{media::TimeIntervals::FromTimeRanges(tr)};
+  nsRefPtr<dom::TimeRanges> tr2 = new dom::TimeRanges();
+  i_oo.ToTimeRanges(tr2);
+  EXPECT_EQ(tr->Length(), tr2->Length());
+  for (dom::TimeRanges::index_type index = 0; index < tr->Length(); index++) {
+    ErrorResult rv;
+    EXPECT_EQ(tr->Start(index, rv), tr2->Start(index, rv));
+    EXPECT_EQ(tr->End(index, rv), tr2->End(index, rv));
+  }
 }
 
 template<typename T>
