@@ -1379,7 +1379,7 @@ pref("devtools.toolbox.splitconsoleHeight", 100);
 
 // Toolbox Button preferences
 pref("devtools.command-button-pick.enabled", true);
-pref("devtools.command-button-frames.enabled", false);
+pref("devtools.command-button-frames.enabled", true);
 pref("devtools.command-button-splitconsole.enabled", true);
 pref("devtools.command-button-paintflashing.enabled", false);
 pref("devtools.command-button-tilt.enabled", false);
