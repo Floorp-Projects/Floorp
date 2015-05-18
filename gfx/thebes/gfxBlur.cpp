@@ -165,56 +165,40 @@ struct BlurCacheKey : public PLDHashEntryHdr {
   typedef const BlurCacheKey* KeyTypePointer;
   enum { ALLOW_MEMMOVE = true };
 
-  IntSize mMinSize;
+  gfxRect mRect;
   gfxIntSize mBlurRadius;
-  gfxRGBA mShadowColor;
+  gfxRect mSkipRect;
   BackendType mBackend;
-  RectCornerRadii mCornerRadii;
 
-  BlurCacheKey(IntSize aMinimumSize, gfxIntSize aBlurRadius,
-               RectCornerRadii* aCornerRadii, gfxRGBA aShadowColor,
-               BackendType aBackend)
-    : mMinSize(aMinimumSize)
+  BlurCacheKey(const gfxRect& aRect, const gfxIntSize &aBlurRadius, const gfxRect& aSkipRect, BackendType aBackend)
+    : mRect(aRect)
     , mBlurRadius(aBlurRadius)
-    , mShadowColor(aShadowColor)
+    , mSkipRect(aSkipRect)
     , mBackend(aBackend)
-    , mCornerRadii(aCornerRadii ? *aCornerRadii : RectCornerRadii())
   { }
 
   explicit BlurCacheKey(const BlurCacheKey* aOther)
-    : mMinSize(aOther->mMinSize)
+    : mRect(aOther->mRect)
     , mBlurRadius(aOther->mBlurRadius)
-    , mShadowColor(aOther->mShadowColor)
+    , mSkipRect(aOther->mSkipRect)
     , mBackend(aOther->mBackend)
-    , mCornerRadii(aOther->mCornerRadii)
   { }
 
   static PLDHashNumber
   HashKey(const KeyTypePointer aKey)
   {
-    PLDHashNumber hash = 0;
-    hash = AddToHash(hash, aKey->mMinSize.width, aKey->mMinSize.height);
+    PLDHashNumber hash = HashBytes(&aKey->mRect.x, 4 * sizeof(gfxFloat));
     hash = AddToHash(hash, aKey->mBlurRadius.width, aKey->mBlurRadius.height);
-
-    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.r, sizeof(gfxFloat)));
-    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.g, sizeof(gfxFloat)));
-    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.b, sizeof(gfxFloat)));
-    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.a, sizeof(gfxFloat)));
-
-    for (int i = 0; i < 4; i++) {
-      hash = AddToHash(hash, aKey->mCornerRadii[i].width, aKey->mCornerRadii[i].height);
-    }
-
+    hash = AddToHash(hash, HashBytes(&aKey->mSkipRect.x, 4 * sizeof(gfxFloat)));
     hash = AddToHash(hash, (uint32_t)aKey->mBackend);
     return hash;
   }
 
   bool KeyEquals(KeyTypePointer aKey) const
   {
-    if (aKey->mMinSize == mMinSize &&
+    if (aKey->mRect.IsEqualInterior(mRect) &&
         aKey->mBlurRadius == mBlurRadius &&
-        aKey->mCornerRadii == mCornerRadii &&
-        aKey->mShadowColor == mShadowColor &&
+        aKey->mSkipRect.IsEqualInterior(mSkipRect) &&
         aKey->mBackend == mBackend) {
       return true;
     }
@@ -231,15 +215,17 @@ struct BlurCacheKey : public PLDHashEntryHdr {
  * to the cache entry to be able to be tracked by the nsExpirationTracker.
  * */
 struct BlurCacheData {
-  BlurCacheData(SourceSurface* aBlur, IntMargin aExtendDestBy, const BlurCacheKey& aKey)
+  BlurCacheData(SourceSurface* aBlur, const IntPoint& aTopLeft, const gfxRect& aDirtyRect, const BlurCacheKey& aKey)
     : mBlur(aBlur)
-    , mExtendDest(aExtendDestBy)
+    , mTopLeft(aTopLeft)
+    , mDirtyRect(aDirtyRect)
     , mKey(aKey)
   {}
 
   BlurCacheData(const BlurCacheData& aOther)
     : mBlur(aOther.mBlur)
-    , mExtendDest(aOther.mExtendDest)
+    , mTopLeft(aOther.mTopLeft)
+    , mDirtyRect(aOther.mDirtyRect)
     , mKey(aOther.mKey)
   { }
 
@@ -249,7 +235,8 @@ struct BlurCacheData {
 
   nsExpirationState mExpirationState;
   RefPtr<SourceSurface> mBlur;
-  IntMargin mExtendDest;
+  IntPoint mTopLeft;
+  gfxRect mDirtyRect;
   BlurCacheKey mKey;
 };
 
@@ -273,18 +260,19 @@ class BlurCache final : public nsExpirationTracker<BlurCacheData,4>
       mHashEntries.Remove(aObject->mKey);
     }
 
-    BlurCacheData* Lookup(const IntSize aMinSize,
+    BlurCacheData* Lookup(const gfxRect& aRect,
                           const gfxIntSize& aBlurRadius,
-                          RectCornerRadii* aCornerRadii,
-                          const gfxRGBA& aShadowColor,
-                          BackendType aBackendType)
+                          const gfxRect& aSkipRect,
+                          BackendType aBackendType,
+                          const gfxRect* aDirtyRect)
     {
       BlurCacheData* blur =
-        mHashEntries.Get(BlurCacheKey(aMinSize, aBlurRadius,
-                                      aCornerRadii, aShadowColor,
-                                      aBackendType));
+        mHashEntries.Get(BlurCacheKey(aRect, aBlurRadius, aSkipRect, aBackendType));
 
       if (blur) {
+        if (aDirtyRect && !blur->mDirtyRect.Contains(*aDirtyRect)) {
+          return nullptr;
+        }
         MarkUsed(blur);
       }
 
@@ -319,11 +307,65 @@ class BlurCache final : public nsExpirationTracker<BlurCacheData,4>
 
 static BlurCache* gBlurCache = nullptr;
 
+SourceSurface*
+GetCachedBlur(DrawTarget *aDT,
+              const gfxRect& aRect,
+              const gfxIntSize& aBlurRadius,
+              const gfxRect& aSkipRect,
+              const gfxRect& aDirtyRect,
+              IntPoint* aTopLeft)
+{
+  if (!gBlurCache) {
+    gBlurCache = new BlurCache();
+  }
+  BlurCacheData* cached = gBlurCache->Lookup(aRect, aBlurRadius, aSkipRect,
+                                             aDT->GetBackendType(),
+                                             &aDirtyRect);
+  if (cached) {
+    *aTopLeft = cached->mTopLeft;
+    return cached->mBlur;
+  }
+  return nullptr;
+}
+
+void
+CacheBlur(DrawTarget *aDT,
+          const gfxRect& aRect,
+          const gfxIntSize& aBlurRadius,
+          const gfxRect& aSkipRect,
+          SourceSurface* aBlur,
+          const IntPoint& aTopLeft,
+          const gfxRect& aDirtyRect)
+{
+  // If we already had a cached value with this key, but an incorrect dirty region then just update
+  // the existing entry
+  if (BlurCacheData* cached = gBlurCache->Lookup(aRect, aBlurRadius, aSkipRect,
+                                                 aDT->GetBackendType(),
+                                                 nullptr)) {
+    cached->mBlur = aBlur;
+    cached->mTopLeft = aTopLeft;
+    cached->mDirtyRect = aDirtyRect;
+    return;
+  }
+
+  BlurCacheKey key(aRect, aBlurRadius, aSkipRect, aDT->GetBackendType());
+  BlurCacheData* data = new BlurCacheData(aBlur, aTopLeft, aDirtyRect, key);
+  if (!gBlurCache->RegisterEntry(data)) {
+    delete data;
+  }
+}
+
+void
+gfxAlphaBoxBlur::ShutdownBlurCache()
+{
+  delete gBlurCache;
+  gBlurCache = nullptr;
+}
+
 static IntSize
-ComputeMinSizeForShadowShape(RectCornerRadii* aCornerRadii,
-                             gfxIntSize aBlurRadius,
-                             IntMargin& aSlice,
-                             const IntSize& aRectSize)
+ComputeMinimalSizeForShadowShape(RectCornerRadii* aCornerRadii,
+                                 gfxIntSize aBlurRadius,
+                                 IntMargin& aSlice)
 {
   float cornerWidth = 0;
   float cornerHeight = 0;
@@ -341,45 +383,8 @@ ComputeMinSizeForShadowShape(RectCornerRadii* aCornerRadii,
                      ceil(cornerWidth) + aBlurRadius.width);
 
   // Include 1 pixel for the stretchable strip in the middle.
-  IntSize minSize(aSlice.LeftRight() + 1,
-                      aSlice.TopBottom() + 1);
-
-  // If aRectSize is smaller than minSize, the border-image approach won't
-  // work; there's no way to squeeze parts of the min box-shadow source
-  // image such that the result looks correct. So we need to adjust minSize
-  // in such a way that we can later draw it without stretching in the affected
-  // dimension. We also need to adjust "slice" to ensure that we're not trying
-  // to slice away more than we have.
-  if (aRectSize.width < minSize.width) {
-    minSize.width = aRectSize.width;
-    aSlice.left = 0;
-    aSlice.right = 0;
-  }
-  if (aRectSize.height < minSize.height) {
-    minSize.height = aRectSize.height;
-    aSlice.top = 0;
-    aSlice.bottom = 0;
-  }
-
-  MOZ_ASSERT(aSlice.LeftRight() <= minSize.width);
-  MOZ_ASSERT(aSlice.TopBottom() <= minSize.height);
-  return minSize;
-}
-
-void
-CacheBlur(DrawTarget& aDT,
-          const IntSize& aMinSize,
-          const gfxIntSize& aBlurRadius,
-          RectCornerRadii* aCornerRadii,
-          const gfxRGBA& aShadowColor,
-          IntMargin aExtendDest,
-          SourceSurface* aBoxShadow)
-{
-  BlurCacheKey key(aMinSize, aBlurRadius, aCornerRadii, aShadowColor, aDT.GetBackendType());
-  BlurCacheData* data = new BlurCacheData(aBoxShadow, aExtendDest, key);
-  if (!gBlurCache->RegisterEntry(data)) {
-    delete data;
-  }
+  return IntSize(aSlice.LeftRight() + 1,
+                 aSlice.TopBottom() + 1);
 }
 
 // Blurs a small surface and creates the mask.
@@ -392,12 +397,33 @@ CreateBlurMask(const IntSize& aRectSize,
                DrawTarget& aDestDrawTarget)
 {
   IntMargin slice;
-  IntSize minSize =
-    ComputeMinSizeForShadowShape(aCornerRadii, aBlurRadius, slice, aRectSize);
-  IntRect minRect(IntPoint(), minSize);
+  IntSize minimalSize =
+    ComputeMinimalSizeForShadowShape(aCornerRadii, aBlurRadius, slice);
+
+  // If aRectSize is smaller than minimalSize, the border-image approach won't
+  // work; there's no way to squeeze parts of the minimal box-shadow source
+  // image such that the result looks correct. So we need to adjust minimalSize
+  // in such a way that we can later draw it without stretching in the affected
+  // dimension. We also need to adjust "slice" to ensure that we're not trying
+  // to slice away more than we have.
+  if (aRectSize.width < minimalSize.width) {
+    minimalSize.width = aRectSize.width;
+    slice.left = 0;
+    slice.right = 0;
+  }
+  if (aRectSize.height < minimalSize.height) {
+    minimalSize.height = aRectSize.height;
+    slice.top = 0;
+    slice.bottom = 0;
+  }
+
+  MOZ_ASSERT(slice.LeftRight() <= minimalSize.width);
+  MOZ_ASSERT(slice.TopBottom() <= minimalSize.height);
+
+  IntRect minimalRect(IntPoint(), minimalSize);
 
   gfxAlphaBoxBlur blur;
-  gfxContext* blurCtx = blur.Init(ThebesRect(Rect(minRect)), gfxIntSize(),
+  gfxContext* blurCtx = blur.Init(ThebesRect(Rect(minimalRect)), gfxIntSize(),
                                   aBlurRadius, nullptr, nullptr);
   if (!blurCtx) {
     return nullptr;
@@ -408,21 +434,21 @@ CreateBlurMask(const IntSize& aRectSize,
 
   if (aCornerRadii) {
     RefPtr<Path> roundedRect =
-      MakePathForRoundedRect(*blurDT, Rect(minRect), *aCornerRadii);
+      MakePathForRoundedRect(*blurDT, Rect(minimalRect), *aCornerRadii);
     blurDT->Fill(roundedRect, black);
   } else {
-    blurDT->FillRect(Rect(minRect), black);
+    blurDT->FillRect(Rect(minimalRect), black);
   }
 
   IntPoint topLeft;
   RefPtr<SourceSurface> result = blur.DoBlur(&aDestDrawTarget, &topLeft);
 
-  IntRect expandedMinRect(topLeft, result->GetSize());
-  aExtendDestBy = expandedMinRect - minRect;
+  IntRect expandedMinimalRect(topLeft, result->GetSize());
+  aExtendDestBy = expandedMinimalRect - minimalRect;
   aSliceBorder = slice + aExtendDestBy;
 
-  MOZ_ASSERT(aSliceBorder.LeftRight() <= expandedMinRect.width);
-  MOZ_ASSERT(aSliceBorder.TopBottom() <= expandedMinRect.height);
+  MOZ_ASSERT(aSliceBorder.LeftRight() <= expandedMinimalRect.width);
+  MOZ_ASSERT(aSliceBorder.TopBottom() <= expandedMinimalRect.height);
 
   return result.forget();
 }
@@ -438,51 +464,6 @@ CreateBoxShadow(SourceSurface* aBlurMask, const gfxRGBA& aShadowColor)
   ColorPattern shadowColor(ToDeviceColor(aShadowColor));
   boxShadowDT->MaskSurface(shadowColor, aBlurMask, Point(0, 0));
   return boxShadowDT->Snapshot();
-}
-
-SourceSurface*
-GetBlur(DrawTarget& aDT,
-              const IntSize& aRectSize,
-              const gfxIntSize& aBlurRadius,
-              RectCornerRadii* aCornerRadii,
-              const gfxRGBA& aShadowColor,
-              IntMargin& aExtendDestBy,
-              IntMargin& aSlice)
-{
-  if (!gBlurCache) {
-    gBlurCache = new BlurCache();
-  }
-
-  IntSize minSize =
-    ComputeMinSizeForShadowShape(aCornerRadii, aBlurRadius, aSlice, aRectSize);
-
-  BlurCacheData* cached = gBlurCache->Lookup(minSize, aBlurRadius,
-                                             aCornerRadii, aShadowColor,
-                                             aDT.GetBackendType());
-  if (cached) {
-    // See CreateBlurMask() for these values
-    aExtendDestBy = cached->mExtendDest;
-    aSlice = aSlice + aExtendDestBy;
-    return cached->mBlur;
-  }
-
-  RefPtr<SourceSurface> blurMask =
-    CreateBlurMask(aRectSize, aCornerRadii, aBlurRadius, aExtendDestBy, aSlice, aDT);
-
-  if (!blurMask) {
-    return nullptr;
-  }
-
-  RefPtr<SourceSurface> boxShadow = CreateBoxShadow(blurMask, aShadowColor);
-  CacheBlur(aDT, minSize, aBlurRadius, aCornerRadii, aShadowColor, aExtendDestBy, boxShadow);
-  return boxShadow;
-}
-
-void
-gfxAlphaBoxBlur::ShutdownBlurCache()
-{
-  delete gBlurCache;
-  gBlurCache = nullptr;
 }
 
 static Rect
@@ -523,7 +504,7 @@ RepeatOrStretchSurface(DrawTarget& aDT, SourceSurface* aSurface,
  * the space between the corners.
  */
 /* static */ void
-gfxAlphaBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
+gfxAlphaBoxBlur::BlurRectangle(gfxContext *aDestinationCtx,
                                const gfxRect& aRect,
                                RectCornerRadii* aCornerRadii,
                                const gfxPoint& aBlurStdDev,
@@ -532,19 +513,20 @@ gfxAlphaBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
                                const gfxRect& aSkipRect)
 {
   DrawTarget& destDrawTarget = *aDestinationCtx->GetDrawTarget();
+
   gfxIntSize blurRadius = CalculateBlurRadius(aBlurStdDev);
 
   IntRect rect = RoundedToInt(ToRect(aRect));
   IntMargin extendDestBy;
   IntMargin slice;
-
-  RefPtr<SourceSurface> boxShadow = GetBlur(destDrawTarget,
-                                            rect.Size(), blurRadius,
-                                            aCornerRadii, aShadowColor,
-                                            extendDestBy, slice);
-  if (!boxShadow) {
+  RefPtr<SourceSurface> blurMask =
+    CreateBlurMask(rect.Size(), aCornerRadii, blurRadius, extendDestBy, slice,
+                   destDrawTarget);
+  if (!blurMask) {
     return;
   }
+
+  RefPtr<SourceSurface> boxShadow = CreateBoxShadow(blurMask, aShadowColor);
 
   destDrawTarget.PushClipRect(ToRect(aDirtyRect));
 
