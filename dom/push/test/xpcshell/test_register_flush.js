@@ -24,15 +24,14 @@ function run_test() {
 
 add_task(function* test_register_flush() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let record = {
     channelID: '9bcc7efb-86c7-4457-93ea-e24e6eb59b74',
     pushEndpoint: 'https://example.org/update/1',
     scope: 'https://example.com/page/1',
     version: 2
   };
-  yield promiseDB.put(record);
+  yield db.put(record);
 
   let notifyPromise = promiseObserverNotification('push-notification');
 
@@ -89,14 +88,14 @@ add_task(function* test_register_flush() {
   yield waitForPromise(ackDefer.promise, DEFAULT_TIMEOUT,
      'Timed out waiting for acknowledgements');
 
-  let prevRecord = yield promiseDB.getByChannelID(
+  let prevRecord = yield db.getByChannelID(
     '9bcc7efb-86c7-4457-93ea-e24e6eb59b74');
   equal(prevRecord.pushEndpoint, 'https://example.org/update/1',
     'Wrong existing push endpoint');
   strictEqual(prevRecord.version, 3,
     'Should record version updates sent before register responses');
 
-  let registeredRecord = yield promiseDB.getByChannelID(newRecord.channelID);
+  let registeredRecord = yield db.getByChannelID(newRecord.channelID);
   equal(registeredRecord.pushEndpoint, 'https://example.org/update/2',
     'Wrong new push endpoint');
   ok(!registeredRecord.version, 'Should not record premature updates');

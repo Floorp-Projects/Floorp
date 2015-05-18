@@ -89,151 +89,161 @@ this.PushDB.prototype = {
   /*
    * @param aChannelRecord
    *        The record to be added.
-   * @param aSuccessCb
-   *        Callback function to invoke with result ID.
-   * @param aErrorCb [optional]
-   *        Callback function to invoke when there was an error.
    */
-  put: function(aChannelRecord, aSuccessCb, aErrorCb) {
+  put: function(aChannelRecord) {
     debug("put()" + JSON.stringify(aChannelRecord));
 
-    this.newTxn(
-      "readwrite",
-      kPUSHDB_STORE_NAME,
-      function txnCb(aTxn, aStore) {
-        debug("Going to put " + aChannelRecord.channelID);
-        aStore.put(aChannelRecord).onsuccess = function setTxnResult(aEvent) {
-          debug("Request successful. Updated record ID: " +
-                aEvent.target.result);
-        };
-      },
-      aSuccessCb,
-      aErrorCb
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readwrite",
+        kPUSHDB_STORE_NAME,
+        function txnCb(aTxn, aStore) {
+          debug("Going to put " + aChannelRecord.channelID);
+          aStore.put(aChannelRecord).onsuccess = function setTxnResult(aEvent) {
+            debug("Request successful. Updated record ID: " +
+                  aEvent.target.result);
+          };
+        },
+        resolve,
+        reject
+      )
     );
   },
 
   /*
    * @param aChannelID
    *        The ID of record to be deleted.
-   * @param aSuccessCb
-   *        Callback function to invoke with result.
-   * @param aErrorCb [optional]
-   *        Callback function to invoke when there was an error.
+
    */
-  delete: function(aChannelID, aSuccessCb, aErrorCb) {
+  delete: function(aChannelID) {
     debug("delete()");
 
-    this.newTxn(
-      "readwrite",
-      kPUSHDB_STORE_NAME,
-      function txnCb(aTxn, aStore) {
-        debug("Going to delete " + aChannelID);
-        aStore.delete(aChannelID);
-      },
-      aSuccessCb,
-      aErrorCb
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readwrite",
+        kPUSHDB_STORE_NAME,
+        function txnCb(aTxn, aStore) {
+          debug("Going to delete " + aChannelID);
+          aStore.delete(aChannelID);
+        },
+        resolve,
+        reject
+      )
     );
   },
 
-  clearAll: function clear(aSuccessCb, aErrorCb) {
-    this.newTxn(
-      "readwrite",
-      kPUSHDB_STORE_NAME,
-      function (aTxn, aStore) {
-        debug("Going to clear all!");
-        aStore.clear();
-      },
-      aSuccessCb,
-      aErrorCb
+  clearAll: function clear() {
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readwrite",
+        kPUSHDB_STORE_NAME,
+        function (aTxn, aStore) {
+          debug("Going to clear all!");
+          aStore.clear();
+        },
+        resolve,
+        reject
+      )
     );
   },
 
-  getByPushEndpoint: function(aPushEndpoint, aSuccessCb, aErrorCb) {
+  getByPushEndpoint: function(aPushEndpoint) {
     debug("getByPushEndpoint()");
 
-    this.newTxn(
-      "readonly",
-      kPUSHDB_STORE_NAME,
-      function txnCb(aTxn, aStore) {
-        aTxn.result = undefined;
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readonly",
+        kPUSHDB_STORE_NAME,
+        function txnCb(aTxn, aStore) {
+          aTxn.result = undefined;
 
-        let index = aStore.index("pushEndpoint");
-        index.get(aPushEndpoint).onsuccess = function setTxnResult(aEvent) {
-          aTxn.result = aEvent.target.result;
-          debug("Fetch successful " + aEvent.target.result);
-        }
-      },
-      aSuccessCb,
-      aErrorCb
+          let index = aStore.index("pushEndpoint");
+          index.get(aPushEndpoint).onsuccess = function setTxnResult(aEvent) {
+            aTxn.result = aEvent.target.result;
+            debug("Fetch successful " + aEvent.target.result);
+          }
+        },
+        resolve,
+        reject
+      )
     );
   },
 
-  getByChannelID: function(aChannelID, aSuccessCb, aErrorCb) {
+  getByChannelID: function(aChannelID) {
     debug("getByChannelID()");
 
-    this.newTxn(
-      "readonly",
-      kPUSHDB_STORE_NAME,
-      function txnCb(aTxn, aStore) {
-        aTxn.result = undefined;
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readonly",
+        kPUSHDB_STORE_NAME,
+        function txnCb(aTxn, aStore) {
+          aTxn.result = undefined;
 
-        aStore.get(aChannelID).onsuccess = function setTxnResult(aEvent) {
-          aTxn.result = aEvent.target.result;
-          debug("Fetch successful " + aEvent.target.result);
-        }
-      },
-      aSuccessCb,
-      aErrorCb
+          aStore.get(aChannelID).onsuccess = function setTxnResult(aEvent) {
+            aTxn.result = aEvent.target.result;
+            debug("Fetch successful " + aEvent.target.result);
+          }
+        },
+        resolve,
+        reject
+      )
     );
   },
 
 
-  getByScope: function(aScope, aSuccessCb, aErrorCb) {
+  getByScope: function(aScope) {
     debug("getByScope() " + aScope);
 
-    this.newTxn(
-      "readonly",
-      kPUSHDB_STORE_NAME,
-      function txnCb(aTxn, aStore) {
-        aTxn.result = undefined;
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readonly",
+        kPUSHDB_STORE_NAME,
+        function txnCb(aTxn, aStore) {
+          aTxn.result = undefined;
 
-        let index = aStore.index("scope");
-        index.get(aScope).onsuccess = function setTxnResult(aEvent) {
-          aTxn.result = aEvent.target.result;
-          debug("Fetch successful " + aEvent.target.result);
-        }
-      },
-      aSuccessCb,
-      aErrorCb
+          let index = aStore.index("scope");
+          index.get(aScope).onsuccess = function setTxnResult(aEvent) {
+            aTxn.result = aEvent.target.result;
+            debug("Fetch successful " + aEvent.target.result);
+          }
+        },
+        resolve,
+        reject
+      )
     );
   },
 
-  getAllChannelIDs: function(aSuccessCb, aErrorCb) {
+  getAllChannelIDs: function() {
     debug("getAllChannelIDs()");
 
-    this.newTxn(
-      "readonly",
-      kPUSHDB_STORE_NAME,
-      function txnCb(aTxn, aStore) {
-        aStore.mozGetAll().onsuccess = function(event) {
-          aTxn.result = event.target.result;
-        }
-      },
-      aSuccessCb,
-      aErrorCb
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readonly",
+        kPUSHDB_STORE_NAME,
+        function txnCb(aTxn, aStore) {
+          aStore.mozGetAll().onsuccess = function(event) {
+            aTxn.result = event.target.result;
+          }
+        },
+        resolve,
+        reject
+      )
     );
   },
 
-  drop: function(aSuccessCb, aErrorCb) {
+  drop: function() {
     debug("drop()");
-    this.newTxn(
-      "readwrite",
-      kPUSHDB_STORE_NAME,
-      function txnCb(aTxn, aStore) {
-        aStore.clear();
-      },
-      aSuccessCb,
-      aErrorCb
+
+    return new Promise((resolve, reject) =>
+      this.newTxn(
+        "readwrite",
+        kPUSHDB_STORE_NAME,
+        function txnCb(aTxn, aStore) {
+          aStore.clear();
+        },
+        resolve,
+        reject
+      )
     );
   }
 };
@@ -400,21 +410,31 @@ this.PushService = {
           return;
         }
 
-        this._db.getByScope(scope, function(record) {
-          this._db.delete(records.channelID, null, function() {
-              debug("webapps-clear-data: " + scope +
-                    " Could not delete entry " + records.channelID);
+        this._db.getByScope(scope)
+          .then(record => {
+            this._db.delete(records.channelID)
+              .then(_ => {
+                // courtesy, but don't establish a connection
+                // just for it
+                if (this._ws) {
+                  debug("Had a connection, so telling the server");
+                  this._send("unregister", {channelID: records.channelID});
+                }
+              }, err => {
+                debug("webapps-clear-data: " + scope +
+                      " Could not delete entry " + records.channelID);
 
-            // courtesy, but don't establish a connection
-            // just for it
-            if (this._ws) {
-              debug("Had a connection, so telling the server");
-              this._send("unregister", {channelID: records.channelID});
-            }
-          }.bind(this), function() {
+                // courtesy, but don't establish a connection
+                // just for it
+                if (this._ws) {
+                  debug("Had a connection, so telling the server");
+                  this._send("unregister", {channelID: records.channelID});
+                }
+                throw "Database error";
+              });
+          }, _ => {
             debug("webapps-clear-data: Error in getByScope(" + scope + ")");
           });
-        });
 
         break;
     }
@@ -954,11 +974,12 @@ this.PushService = {
       this._beginWSSetup();
       return;
     }
-    this._db.getAllChannelIDs(function(channelIDs) {
-      if (channelIDs.length > 0) {
-        this._beginWSSetup();
-      }
-    }.bind(this));
+    this._db.getAllChannelIDs()
+      .then(channelIDs => {
+        if (channelIDs.length > 0) {
+          this._beginWSSetup();
+        }
+      });
   },
 
   /** |delay| should be in milliseconds. */
@@ -1354,18 +1375,18 @@ this.PushService = {
       debug("Could not get channelID " + aChannelIDFromServer + " from DB");
     }
 
-    this._db.getByChannelID(aChannelID,
-                            compareRecordVersionAndNotify.bind(this),
-                            recoverNoSuchChannelID.bind(this));
+    this._db.getByChannelID(aChannelID)
+      .then(compareRecordVersionAndNotify.bind(this),
+            err => recoverNoSuchChannelID(err));
   },
 
   // Fires a push-register system message to all applications that have
   // registration.
   _notifyAllAppsRegister: function() {
     debug("notifyAllAppsRegister()");
-    return new Promise((resolve, reject) => {
-      // records are objects describing the registration as stored in IndexedDB.
-      this._db.getAllChannelIDs(records => {
+    // records are objects describing the registration as stored in IndexedDB.
+    return this._db.getAllChannelIDs()
+      .then(records => {
         let scopes = new Set();
         for (let record of records) {
           scopes.add(record.scope);
@@ -1380,9 +1401,7 @@ this.PushService = {
           );
           globalMM.broadcastAsyncMessage('pushsubscriptionchanged', scope);
         }
-        resolve();
-      }, reject);
-    });
+      });
   },
 
   _notifyApp: function(aPushRecord) {
@@ -1428,15 +1447,11 @@ this.PushService = {
 
   _updatePushRecord: function(aPushRecord) {
     debug("updatePushRecord()");
-    let deferred = Promise.defer();
-    this._db.put(aPushRecord, deferred.resolve, deferred.reject);
-    return deferred.promise;
+    return this._db.put(aPushRecord);
   },
 
   _dropRegistration: function() {
-    let deferred = Promise.defer();
-    this._db.drop(deferred.resolve, deferred.reject);
-    return deferred.promise;
+    return this._db.drop();
   },
 
   receiveMessage: function(aMessage) {
@@ -1474,11 +1489,8 @@ this.PushService = {
   },
 
   _register: function(aPageRecord) {
-    let recordPromise = new Promise((resolve, reject) =>
-      this._db.getByScope(aPageRecord.scope, resolve, reject));
-
-    return recordPromise.then(
-      pushRecord => {
+    return this._db.getByScope(aPageRecord.scope)
+      .then(pushRecord => {
         if (pushRecord == null) {
           let channelID = this._generateID();
           return this._registerWithServer(channelID, aPageRecord);
@@ -1603,33 +1615,24 @@ this.PushService = {
   _unregister: function(aPageRecord) {
     debug("unregisterWithServer()");
 
-    let deferred = Promise.defer();
-    let fail = function(error) {
-      debug("unregister() fail() error " + error);
-      deferred.reject(error);
-    };
-
     if (!aPageRecord.scope) {
-      fail("NotFoundError");
-      return deferred.promise;
+      return Promise.reject("NotFoundError");
     }
 
-    this._db.getByScope(aPageRecord.scope, function(record) {
-      // If the endpoint didn't exist, let's just fail.
-      if (record === undefined) {
-        fail("NotFoundError");
-        return;
-      }
+    return this._db.getByScope(aPageRecord.scope)
+      .then(record => {
+        // If the endpoint didn't exist, let's just fail.
+        if (record === undefined) {
+          throw "NotFoundError";
+        }
 
-      this._db.delete(record.channelID, function() {
-        // Let's be nice to the server and try to inform it, but we don't care
-        // about the reply.
-        this._send("unregister", {channelID: record.channelID});
-        deferred.resolve();
-      }.bind(this), fail);
-    }.bind(this), fail);
-
-    return deferred.promise;
+        this._db.delete(record.channelID)
+          .then(_ =>
+            // Let's be nice to the server and try to inform it, but we don't care
+            // about the reply.
+            this._send("unregister", {channelID: record.channelID})
+          );
+      });
   },
 
   unregister: function(aPageRecord, aMessageManager) {
@@ -1652,23 +1655,19 @@ this.PushService = {
   },
 
   _clearAll: function _clearAll() {
-    return new Promise((resolve, reject) => {
-      this._db.clearAll(() => resolve(),
-                        () => reject("Database error"));
-    });
+    return this._db.clearAll();
   },
-  
+
   /**
    * Called on message from the child process
    */
   _registration: function(aPageRecord) {
-    return new Promise((resolve, reject) => {
-      if (!aPageRecord.scope) {
-        reject("Database error");
-        return;
-      }
-      this._db.getByScope(aPageRecord.scope,
-        pushRecord => {
+    if (!aPageRecord.scope) {
+      return Promise.reject("Database error");
+    }
+
+    return this._db.getByScope(aPageRecord.scope)
+        .then(pushRecord => {
           let registration = null;
           if (pushRecord) {
             registration = {
@@ -1678,11 +1677,10 @@ this.PushService = {
               pushCount: pushRecord.pushCount
             };
           }
-          resolve(registration);
-        },
-        () => reject("Database error")
-      );
-    });
+          return registration;
+        }, _ => {
+          throw "Database error";
+        });
   },
 
   registration: function(aPageRecord, aMessageManager) {
@@ -1751,8 +1749,9 @@ this.PushService = {
         };
       }
 
-      this._db.getAllChannelIDs(sendHelloMessage.bind(this),
-                                sendHelloMessage.bind(this));
+      this._db.getAllChannelIDs()
+        .then(sendHelloMessage.bind(this),
+              sendHelloMessage.bind(this));
     });
   },
 

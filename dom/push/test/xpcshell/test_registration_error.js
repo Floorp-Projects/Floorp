@@ -15,13 +15,13 @@ function run_test() {
 
 add_task(function* test_registrations_error() {
   let db = new PushDB();
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
   PushService.init({
     networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
-      getByScope(prev, scope, successCb, failureCb) {
-        failureCb('oops');
+      getByScope(prev, scope) {
+        return Promise.reject('oops');
       }
     }),
     makeWebSocket(uri) {

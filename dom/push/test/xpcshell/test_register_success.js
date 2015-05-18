@@ -23,8 +23,7 @@ function run_test() {
 
 add_task(function* test_register_success() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
   PushService._generateID = () => channelID;
   PushService.init({
@@ -66,7 +65,7 @@ add_task(function* test_register_success() {
   equal(newRecord.scope, 'https://example.org/1',
     'Wrong scope in registration record');
 
-  let record = yield promiseDB.getByChannelID(channelID);
+  let record = yield db.getByChannelID(channelID);
   equal(record.channelID, channelID,
     'Wrong channel ID in database record');
   equal(record.pushEndpoint, 'https://example.com/update/1',

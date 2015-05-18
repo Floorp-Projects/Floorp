@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_FilePickerParent_h
 #define mozilla_dom_FilePickerParent_h
 
-#include "nsIDOMFile.h"
 #include "nsIEventTarget.h"
 #include "nsIFilePicker.h"
 #include "nsCOMArray.h"

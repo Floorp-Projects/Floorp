@@ -16,11 +16,10 @@
  */
 
 interface nsIDOMBlob;
-interface nsIDOMFile;
 interface nsIVariant;
 interface nsIInputStreamCallback;
 
-[uuid(8978d1c5-2981-4678-a1c3-b0b7bae04fbc)]
+[uuid(2c984658-2e7c-4774-8ac5-cf1b39f8bec3)]
 interface nsIDOMHTMLCanvasElement : nsISupports
 {
   attribute unsigned long width;
@@ -38,7 +37,8 @@ interface nsIDOMHTMLCanvasElement : nsISupports
   // Valid calls are
   // mozGetAsFile(name);              -- defaults to image/png
   // mozGetAsFile(name, type);        -- uses given type
-  nsIDOMFile mozGetAsFile(in DOMString name, [optional] in DOMString type);
+  // The return value is a File object.
+  nsISupports mozGetAsFile(in DOMString name, [optional] in DOMString type);
 
   // A Mozilla-only extension to get a canvas context backed by double-buffered
   // shared memory. Only privileged callers can call this.

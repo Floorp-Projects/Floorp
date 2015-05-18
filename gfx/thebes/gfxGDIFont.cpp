@@ -304,6 +304,39 @@ gfxGDIFont::Initialize()
             mMetrics->maxAdvance = mMetrics->aveCharWidth;
         }
 
+        // For fonts with USE_TYPO_METRICS set in the fsSelection field,
+        // let the OS/2 sTypo* metrics override the previous values.
+        // (see http://www.microsoft.com/typography/otspec/os2.htm#fss)
+        // Using the equivalent values from oMetrics provides inconsistent
+        // results with CFF fonts, so we instead rely on OS2Table.
+        gfxFontEntry::AutoTable os2Table(mFontEntry,
+                                         TRUETYPE_TAG('O','S','/','2'));
+        if (os2Table) {
+            uint32_t len;
+            const OS2Table *os2 =
+                reinterpret_cast<const OS2Table*>(hb_blob_get_data(os2Table,
+                                                                   &len));
+            if (len >= offsetof(OS2Table, sTypoLineGap) + sizeof(int16_t)) {
+                const uint16_t kUseTypoMetricsMask = 1 << 7;
+                if ((uint16_t(os2->fsSelection) & kUseTypoMetricsMask)) {
+                    double ascent = int16_t(os2->sTypoAscender);
+                    double descent = int16_t(os2->sTypoDescender);
+                    double lineGap = int16_t(os2->sTypoLineGap);
+                    mMetrics->maxAscent = ROUND(ascent * mFUnitsConvFactor);
+                    mMetrics->maxDescent = -ROUND(descent * mFUnitsConvFactor);
+                    mMetrics->maxHeight =
+                        mMetrics->maxAscent + mMetrics->maxDescent;
+                    mMetrics->internalLeading =
+                        mMetrics->maxHeight - mMetrics->emHeight;
+                    gfxFloat lineHeight =
+                        ROUND((ascent - descent + lineGap) * mFUnitsConvFactor);
+                    lineHeight = std::max(lineHeight, mMetrics->maxHeight);
+                    mMetrics->externalLeading =
+                        lineHeight - mMetrics->maxHeight;
+                }
+            }
+        }
+
         // Cache the width of a single space.
         SIZE size;
         GetTextExtentPoint32W(dc.GetDC(), L" ", 1, &size);
