@@ -654,7 +654,7 @@ MediaRawDataWriter::Replace(const uint8_t* aData, size_t aSize)
 
   // We ensure sufficient capacity above so this shouldn't fail.
   MOZ_ALWAYS_TRUE(mBuffer->ReplaceElementsAt(mTarget->mPadding, mTarget->mSize,
-                                             aData, aSize));
+                                             aData, aSize, fallible));
   mTarget->mSize = mSize = aSize;
   return true;
 }
