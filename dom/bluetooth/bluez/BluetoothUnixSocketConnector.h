@@ -41,18 +41,6 @@ public:
                               socklen_t* aAddressLength,
                               int& aStreamFd) override;
 
-  // Deprecated
-
-  virtual int Create() override;
-  virtual bool CreateAddr(bool aIsServer,
-                          socklen_t& aAddrSize,
-                          mozilla::ipc::sockaddr_any& aAddr,
-                          const char* aAddress) override;
-  virtual bool SetUp(int aFd) override;
-  virtual bool SetUpListenSocket(int aFd) override;
-  virtual void GetSocketAddr(const mozilla::ipc::sockaddr_any& aAddr,
-                             nsAString& aAddrStr) override;
-
 private:
   nsresult CreateSocket(int& aFd) const;
   nsresult SetSocketFlags(int aFd) const;
