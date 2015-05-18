@@ -152,7 +152,7 @@ ReadBuffer(JSStructuredCloneReader* aReader, CryptoBuffer& aBuffer)
   }
 
   if (length > 0) {
-    if (!aBuffer.SetLength(length)) {
+    if (!aBuffer.SetLength(length, fallible)) {
       return false;
     }
     ret = JS_ReadBytes(aReader, aBuffer.Elements(), aBuffer.Length());

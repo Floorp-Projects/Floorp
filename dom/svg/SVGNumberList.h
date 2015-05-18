@@ -91,7 +91,7 @@ protected:
    * increased, in which case the list will be left unmodified.
    */
   bool SetLength(uint32_t aNumberOfItems) {
-    return mNumbers.SetLength(aNumberOfItems);
+    return mNumbers.SetLength(aNumberOfItems, fallible);
   }
 
 private:

@@ -132,7 +132,7 @@ DOMSVGTransformList::InternalListLengthWillChange(uint32_t aNewLength)
     }
   }
 
-  if (!mItems.SetLength(aNewLength)) {
+  if (!mItems.SetLength(aNewLength, fallible)) {
     // We silently ignore SetLength OOM failure since being out of sync is safe
     // so long as we have *fewer* items than our internal list.
     mItems.Clear();

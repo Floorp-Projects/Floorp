@@ -175,7 +175,7 @@ public:
     if (initSegment || !HasCompleteInitData()) {
       if (mParser.mInitEndOffset > 0) {
         MOZ_ASSERT(mParser.mInitEndOffset <= mResource->GetLength());
-        if (!mInitData->SetLength(mParser.mInitEndOffset)) {
+        if (!mInitData->SetLength(mParser.mInitEndOffset, fallible)) {
           // Super unlikely OOM
           return false;
         }
@@ -306,7 +306,7 @@ public:
       const MediaByteRange& range = mParser->mInitRange;
       uint32_t length = range.mEnd - range.mStart;
       if (length) {
-        if (!mInitData->SetLength(length)) {
+        if (!mInitData->SetLength(length, fallible)) {
           // Super unlikely OOM
           return false;
         }

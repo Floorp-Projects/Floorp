@@ -968,7 +968,7 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
   }
 
   FallibleTArray<nsRefPtr<BlobImpl>> fallibleBlobImpls;
-  if (NS_WARN_IF(!fallibleBlobImpls.SetLength(aBlobDatas.Length()))) {
+  if (NS_WARN_IF(!fallibleBlobImpls.SetLength(aBlobDatas.Length(), fallible))) {
     return nullptr;
   }
 
