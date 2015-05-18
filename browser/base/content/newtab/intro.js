@@ -165,7 +165,7 @@ let gIntro = {
             '  <div class="newtab-site newtab-intro-image-tile" type="sponsored">' +
             '    <a class="newtab-link">' +
             '      <span class="newtab-thumbnail"/>' +
-            '      <span class="newtab-title">Example Title</span>' +
+            '      <span class="newtab-title">mozilla.org</span>' +
             '    </a>' +
             '    <input type="button" class="newtab-control newtab-control-pin"/>' +
             '    <input type="button" class="newtab-control newtab-control-block"/>' +
