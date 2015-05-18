@@ -610,6 +610,11 @@ JsepSessionImpl::GetIdsFromMsid(const Sdp& sdp,
 
   for (auto i = allMsids.begin(); i != allMsids.end(); ++i) {
     if (allMsidsAreWebrtc || webrtcMsids.count(i->identifier)) {
+      if (i->appdata.empty()) {
+        JSEP_SET_ERROR("Invalid webrtc msid at level " << msection.GetLevel()
+                       << ": Missing track id.");
+        return NS_ERROR_INVALID_ARG;
+      }
       if (!found) {
         *streamId = i->identifier;
         *trackId = i->appdata;
@@ -1556,6 +1561,9 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
       (*i)->mState = JsepTransport::kJsepTransportClosed;
     }
   }
+
+  mGeneratedLocalDescription.reset();
+
   return NS_OK;
 }
 
@@ -2100,7 +2108,11 @@ nsresult
 JsepSessionImpl::ValidateLocalDescription(const Sdp& description)
 {
   // TODO(bug 1095226): Better checking.
-  // (Also, at what point do we clear out the generated offer?)
+  if (!mGeneratedLocalDescription) {
+    JSEP_SET_ERROR("Calling SetLocal without first calling CreateOffer/Answer"
+                   " is not supported.");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (description.GetMediaSectionCount() !=
       mGeneratedLocalDescription->GetMediaSectionCount()) {
@@ -2559,9 +2571,32 @@ JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
   return AddCandidateToSdp(sdp, candidate, mid, level);
 }
 
+static void SetDefaultAddresses(const std::string& defaultCandidateAddr,
+                                uint16_t defaultCandidatePort,
+                                const std::string& defaultRtcpCandidateAddr,
+                                uint16_t defaultRtcpCandidatePort,
+                                SdpMediaSection* msection)
+{
+  msection->GetConnection().SetAddress(defaultCandidateAddr);
+  msection->SetPort(defaultCandidatePort);
+  if (!defaultRtcpCandidateAddr.empty()) {
+    sdp::AddrType ipVersion = sdp::kIPv4;
+    if (defaultRtcpCandidateAddr.find(':') != std::string::npos) {
+      ipVersion = sdp::kIPv6;
+    }
+    msection->GetAttributeList().SetAttribute(new SdpRtcpAttribute(
+          defaultRtcpCandidatePort,
+          sdp::kInternet,
+          ipVersion,
+          defaultRtcpCandidateAddr));
+  }
+}
+
 nsresult
 JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
                                       uint16_t defaultCandidatePort,
+                                      const std::string& defaultRtcpCandidateAddr,
+                                      uint16_t defaultRtcpCandidatePort,
                                       uint16_t level)
 {
   mLastError.clear();
@@ -2604,13 +2639,19 @@ JsepSessionImpl::EndOfLocalCandidates(const std::string& defaultCandidateAddr,
           MOZ_ASSERT(false);
           continue;
         }
-        bundledMsection->GetConnection().SetAddress(defaultCandidateAddr);
-        bundledMsection->SetPort(defaultCandidatePort);
+        SetDefaultAddresses(defaultCandidateAddr,
+                            defaultCandidatePort,
+                            defaultRtcpCandidateAddr,
+                            defaultRtcpCandidatePort,
+                            bundledMsection);
       }
     }
 
-    msection.GetConnection().SetAddress(defaultCandidateAddr);
-    msection.SetPort(defaultCandidatePort);
+    SetDefaultAddresses(defaultCandidateAddr,
+                        defaultCandidatePort,
+                        defaultRtcpCandidateAddr,
+                        defaultRtcpCandidatePort,
+                        &msection);
 
     // TODO(bug 1095793): Will this have an mid someday?
 

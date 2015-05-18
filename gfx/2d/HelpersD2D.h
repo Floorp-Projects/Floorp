@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <dwrite.h>
+#include <VersionHelpers.h>
 #include "2D.h"
 #include "Logging.h"
 #include "Tools.h"
@@ -269,6 +270,41 @@ static inline D2D1_BLEND_MODE D2DBlendMode(CompositionOp aOp)
     return D2D1_BLEND_MODE_LUMINOSITY;
   default:
     return D2D1_BLEND_MODE_MULTIPLY;
+  }
+}
+
+static inline bool D2DSupportsPrimitiveBlendMode(CompositionOp aOp)
+{
+  switch (aOp) {
+    case CompositionOp::OP_OVER:
+//  case CompositionOp::OP_SOURCE:
+      return true;
+//  case CompositionOp::OP_DARKEN:
+    case CompositionOp::OP_ADD:
+      return IsWindows8Point1OrGreater();
+    default:
+      return false;
+  }
+}
+
+static inline D2D1_PRIMITIVE_BLEND D2DPrimitiveBlendMode(CompositionOp aOp)
+{
+  switch (aOp) {
+    case CompositionOp::OP_OVER:
+      return D2D1_PRIMITIVE_BLEND_SOURCE_OVER;
+    // D2D1_PRIMITIVE_BLEND_COPY should leave pixels out of the source's
+    // bounds unchanged, but doesn't- breaking unbounded ops.
+    // D2D1_PRIMITIVE_BLEND_MIN doesn't quite work like darken either, as it
+    // accounts for the source alpha.
+    //
+    // case CompositionOp::OP_SOURCE:
+    //   return D2D1_PRIMITIVE_BLEND_COPY;
+    // case CompositionOp::OP_DARKEN:
+    //   return D2D1_PRIMITIVE_BLEND_MIN;
+    case CompositionOp::OP_ADD:
+      return D2D1_PRIMITIVE_BLEND_ADD;
+    default:
+      return D2D1_PRIMITIVE_BLEND_SOURCE_OVER;
   }
 }
 

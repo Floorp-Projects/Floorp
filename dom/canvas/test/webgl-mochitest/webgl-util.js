@@ -34,19 +34,19 @@ WebGLUtil = (function() {
   // ---------------------------------------------------------------------------
   // WebGL helpers
 
-  function getWebGL(canvasId, requireConformant) {
+  function getWebGL(canvasId, requireConformant, attributes) {
     // `requireConformant` will default to falsey if it is not supplied.
 
     var canvas = document.getElementById(canvasId);
 
     var gl = null;
     try {
-      gl = canvas.getContext('webgl');
+      gl = canvas.getContext('webgl', attributes);
     } catch(e) {}
 
     if (!gl && !requireConformant) {
       try {
-        gl = canvas.getContext('experimental-webgl');
+        gl = canvas.getContext('experimental-webgl', attributes);
       } catch(e) {}
     }
 

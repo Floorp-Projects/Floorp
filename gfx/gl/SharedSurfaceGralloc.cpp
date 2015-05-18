@@ -194,9 +194,7 @@ SharedSurface_Gralloc::Fence()
             int fenceFd = mEGL->fDupNativeFenceFDANDROID(mEGL->Display(), sync);
             if (fenceFd != -1) {
                 mEGL->fDestroySync(mEGL->Display(), sync);
-                android::sp<android::Fence> fence(new android::Fence(fenceFd));
-                FenceHandle handle = FenceHandle(fence);
-                mTextureClient->SetAcquireFenceHandle(handle);
+                mTextureClient->SetAcquireFenceHandle(FenceHandle(new FenceHandle::FdObj(fenceFd)));
             } else {
                 mSync = sync;
             }

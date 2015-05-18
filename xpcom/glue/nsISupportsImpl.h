@@ -29,6 +29,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
 #include "mozilla/MacroForEach.h"
+#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 template <typename T>
@@ -62,9 +63,7 @@ struct HasDangerousPublicDestructor
   namespace mozilla {
     struct IsDestructibleFallbackImpl
     {
-      template<typename T> static T&& Declval();
-
-      template<typename T, typename = decltype(Declval<T>().~T())>
+      template<typename T, typename = decltype(DeclVal<T>().~T())>
       static TrueType Test(int);
 
       template<typename>

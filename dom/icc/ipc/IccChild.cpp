@@ -265,6 +265,26 @@ IccChild::GetServiceStateEnabled(uint32_t aService,
     ? NS_OK : NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+IccChild::IccOpenChannel(const nsAString& aAid, nsIIccChannelCallback* aCallback)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+IccChild::IccExchangeAPDU(int32_t aChannel, uint8_t aCla, uint8_t aIns, uint8_t aP1,
+                          uint8_t aP2, int16_t aP3, const nsAString & aData,
+                          nsIIccChannelCallback* aCallback)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+IccChild::IccCloseChannel(int32_t aChannel, nsIIccChannelCallback* aCallback)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /**
  * PIccRequestChild Implementation.
  */

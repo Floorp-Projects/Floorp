@@ -8,6 +8,8 @@
 #include "mozilla/TypeTraits.h"
 
 using mozilla::AddLvalueReference;
+using mozilla::AddRvalueReference;
+using mozilla::DeclVal;
 using mozilla::IsArray;
 using mozilla::IsBaseOf;
 using mozilla::IsClass;
@@ -370,6 +372,36 @@ static_assert(IsSame<AddLvalueReference<void>::Type, void>::value,
               "void shouldn't be transformed by AddLvalueReference");
 static_assert(IsSame<AddLvalueReference<struct S1&&>::Type, struct S1&>::value,
               "not reference-collapsing struct S1&& & to struct S1& correctly");
+
+static_assert(IsSame<AddRvalueReference<int>::Type, int&&>::value,
+              "not adding && to int correctly");
+static_assert(IsSame<AddRvalueReference<volatile int&>::Type, volatile int&>::value,
+              "not adding && to volatile int& correctly");
+static_assert(IsSame<AddRvalueReference<const int&&>::Type, const int&&>::value,
+              "not adding && to volatile int& correctly");
+static_assert(IsSame<AddRvalueReference<void*>::Type, void*&&>::value,
+              "not adding && to void* correctly");
+static_assert(IsSame<AddRvalueReference<void>::Type, void>::value,
+              "void shouldn't be transformed by AddRvalueReference");
+static_assert(IsSame<AddRvalueReference<struct S1&>::Type, struct S1&>::value,
+              "not reference-collapsing struct S1& && to struct S1& correctly");
+
+struct TestWithDefaultConstructor
+{
+  int foo() const { return 0; }
+};
+struct TestWithNoDefaultConstructor
+{
+  explicit TestWithNoDefaultConstructor(int) {}
+  int foo() const { return 1; }
+};
+
+static_assert(IsSame<decltype(TestWithDefaultConstructor().foo()), int>::value,
+              "decltype should work using a struct with a default constructor");
+static_assert(IsSame<decltype(DeclVal<TestWithDefaultConstructor>().foo()), int>::value,
+              "decltype should work using a DeclVal'd struct with a default constructor");
+static_assert(IsSame<decltype(DeclVal<TestWithNoDefaultConstructor>().foo()), int>::value,
+              "decltype should work using a DeclVal'd struct without a default constructor");
 
 static_assert(IsSame<MakeSigned<const unsigned char>::Type, const signed char>::value,
               "const unsigned char won't signify correctly");

@@ -49,19 +49,19 @@ let _referrerTests = [
     rel: "noreferrer",
     result: ""  // rel=noreferrer trumps meta-referrer
   },
-  // 3. Origin-when-crossorigin policy - this depends on the triggering
+  // 3. Origin-when-cross-origin policy - this depends on the triggering
   //    principal.  We expect full referrer for same-origin requests,
   //    and origin referrer for cross-origin requests.
   {
     fromScheme: "https://",
     toScheme: "https://",
-    policy: "origin-when-crossorigin",
+    policy: "origin-when-cross-origin",
     result: "https://test1.example.com/browser"  // same origin
   },
   {
     fromScheme: "http://",
     toScheme: "https://",
-    policy: "origin-when-crossorigin",
+    policy: "origin-when-cross-origin",
     result: "http://test1.example.com"  // cross origin
   },
 ];

@@ -12,9 +12,9 @@ FAIL_ON_WARNINGS = True
 
 # Decoders need RasterImage.h
 LOCAL_INCLUDES += [
-    '../bmp',
-    '../png',
-    '/image/src',
+    '/image',
+    '/image/encoders/bmp',
+    '/image/encoders/png',
 ]
 
 FINAL_LIBRARY = 'xul'

@@ -60,6 +60,7 @@ using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 using nsIWidget::TouchPointerState from "nsIWidget.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 using struct mozilla::OwningSerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
+using nsEventStatus from "mozilla/EventForwards.h";
 
 namespace mozilla {
 namespace dom {
@@ -594,8 +595,14 @@ child:
     RealMouseButtonEvent(WidgetMouseEvent event);
     RealKeyEvent(WidgetKeyboardEvent event, MaybeNativeKeyBinding keyBinding);
     MouseWheelEvent(WidgetWheelEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    RealTouchEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    RealTouchMoveEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+    RealTouchEvent(WidgetTouchEvent aEvent,
+                   ScrollableLayerGuid aGuid,
+                   uint64_t aInputBlockId,
+                   nsEventStatus aApzResponse);
+    RealTouchMoveEvent(WidgetTouchEvent aEvent,
+                       ScrollableLayerGuid aGuid,
+                       uint64_t aInputBlockId,
+                       nsEventStatus aApzResponse);
     RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction, uint32_t aDropEffect);
 
     /**

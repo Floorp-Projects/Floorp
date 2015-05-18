@@ -7,28 +7,32 @@
 #define mozilla_layers_InputAPZContext_h
 
 #include "FrameMetrics.h"
+#include "mozilla/EventForwards.h"
 
 namespace mozilla {
 namespace layers {
 
-// InputAPZContext is used to communicate the ScrollableLayerGuid and input
-// block ID from nsIWidget to RenderFrameParent. It is conceptually attached
-// to any WidgetInputEvent that has been processed by APZ directly from a
-// widget.
+// InputAPZContext is used to communicate the ScrollableLayerGuid,
+// input block ID, APZ response from nsIWidget to RenderFrameParent.
+// It is conceptually attached to any WidgetInputEvent
+// that has been processed by APZ directly from a widget.
 class MOZ_STACK_CLASS InputAPZContext
 {
 private:
   static ScrollableLayerGuid sGuid;
   static uint64_t sBlockId;
+  static nsEventStatus sApzResponse;
   static bool sRoutedToChildProcess;
 
 public:
   static ScrollableLayerGuid GetTargetLayerGuid();
   static uint64_t GetInputBlockId();
+  static nsEventStatus GetApzResponse();
   static void SetRoutedToChildProcess();
 
   InputAPZContext(const ScrollableLayerGuid& aGuid,
-                    const uint64_t& aBlockId);
+                  const uint64_t& aBlockId,
+                  const nsEventStatus& aApzResponse);
   ~InputAPZContext();
 
   bool WasRoutedToChildProcess();
@@ -36,6 +40,7 @@ public:
 private:
   ScrollableLayerGuid mOldGuid;
   uint64_t mOldBlockId;
+  nsEventStatus mOldApzResponse;
   bool mOldRoutedToChildProcess;
 };
 

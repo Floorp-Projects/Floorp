@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['build', 'src', 'decoders', 'encoders']
+DIRS += ['build', 'decoders', 'encoders']
 
 with Files('**'):
     BUG_COMPONENT = ('Core', 'ImageLib')
@@ -35,4 +35,72 @@ XPIDL_MODULE = 'imglib2'
 
 EXPORTS += [
     'ImageLogging.h',
+    'ImageOps.h',
+    'ImageRegion.h',
+    'imgLoader.h',
+    'imgRequest.h',
+    'imgRequestProxy.h',
+    'IProgressObserver.h',
+    'Orientation.h',
+    'SurfaceCache.h',
 ]
+
+UNIFIED_SOURCES += [
+    'ClippedImage.cpp',
+    'DecodePool.cpp',
+    'Decoder.cpp',
+    'DynamicImage.cpp',
+    'FrameAnimator.cpp',
+    'FrozenImage.cpp',
+    'Image.cpp',
+    'ImageFactory.cpp',
+    'ImageMetadata.cpp',
+    'ImageOps.cpp',
+    'ImageWrapper.cpp',
+    'imgFrame.cpp',
+    'imgTools.cpp',
+    'MultipartImage.cpp',
+    'OrientedImage.cpp',
+    'ScriptedNotificationObserver.cpp',
+    'ShutdownTracker.cpp',
+    'SourceBuffer.cpp',
+    'SurfaceCache.cpp',
+    'SVGDocumentWrapper.cpp',
+    'VectorImage.cpp',
+]
+if CONFIG['MOZ_ENABLE_SKIA']:
+    UNIFIED_SOURCES += [ 'Downscaler.cpp']
+
+# These files can't be unified because of ImageLogging.h #include order issues.
+SOURCES += [
+    'imgLoader.cpp',
+    'imgRequest.cpp',
+    'imgRequestProxy.cpp',
+    'ProgressTracker.cpp',
+    'RasterImage.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    # Because SVGDocumentWrapper.cpp includes "mozilla/dom/SVGSVGElement.h"
+    '/dom/base',
+    '/dom/svg',
+    # Access to Skia headers for Downscaler
+    '/gfx/2d',
+    # We need to instantiate the decoders
+    '/image/decoders',
+    # Because VectorImage.cpp includes nsSVGUtils.h and nsSVGEffects.h
+    '/layout/svg',
+    # For URI-related functionality
+    '/netwerk/base',
+    # DecodePool uses thread-related facilities.
+    '/xpcom/threads',
+]
+
+# Because imgFrame.cpp includes "cairo.h"
+CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']

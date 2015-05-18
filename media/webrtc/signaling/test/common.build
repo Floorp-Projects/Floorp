@@ -25,6 +25,7 @@ LOCAL_INCLUDES += [
     '/media/mtransport/third_party/nrappkit/src/event',
     '/media/mtransport/third_party/nrappkit/src/log',
     '/media/mtransport/third_party/nrappkit/src/plugin',
+    '/media/mtransport/third_party/nrappkit/src/port/generic/include',
     '/media/mtransport/third_party/nrappkit/src/registry',
     '/media/mtransport/third_party/nrappkit/src/share',
     '/media/mtransport/third_party/nrappkit/src/stats',
@@ -74,7 +75,6 @@ if CONFIG['OS_TARGET'] == 'Darwin':
 if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
-        '/media/mtransport/third_party/nrappkit/src/port/generic/include',
     ]
 
 USE_LIBS += [
