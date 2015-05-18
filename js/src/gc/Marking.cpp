@@ -1058,36 +1058,6 @@ js::GCMarker::lazilyMarkChildren(ObjectGroup* group)
         traverseEdge(group, static_cast<JSObject*>(fun));
 }
 
-struct TraverseObjectFunctor
-{
-    template <typename T>
-    void operator()(T* thing, GCMarker* gcmarker, JSObject* src) {
-        gcmarker->traverseEdge(src, *thing);
-    }
-};
-
-template <typename F, typename... Args>
-static void
-VisitTraceList(F f, const int32_t* traceList, uint8_t* memory, Args&&... args)
-{
-    while (*traceList != -1) {
-        f(reinterpret_cast<JSString**>(memory + *traceList), mozilla::Forward<Args>(args)...);
-        traceList++;
-    }
-    traceList++;
-    while (*traceList != -1) {
-        JSObject** objp = reinterpret_cast<JSObject**>(memory + *traceList);
-        if (*objp)
-            f(objp, mozilla::Forward<Args>(args)...);
-        traceList++;
-    }
-    traceList++;
-    while (*traceList != -1) {
-        f(reinterpret_cast<Value*>(memory + *traceList), mozilla::Forward<Args>(args)...);
-        traceList++;
-    }
-}
-
 
 /*** Mark-stack Marking ***************************************************************************/
 
@@ -1145,6 +1115,9 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
     HeapSlot* vp;
     HeapSlot* end;
     JSObject* obj;
+
+    const int32_t* unboxedTraceList;
+    uint8_t* unboxedMemory;
 
     // Decode
     uintptr_t addr = stack.pop();
@@ -1223,6 +1196,29 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
     }
     return;
 
+  scan_unboxed:
+    {
+        while (*unboxedTraceList != -1) {
+            JSString* str = *reinterpret_cast<JSString**>(unboxedMemory + *unboxedTraceList);
+            traverseEdge(obj, str);
+            unboxedTraceList++;
+        }
+        unboxedTraceList++;
+        while (*unboxedTraceList != -1) {
+            JSObject* obj2 = *reinterpret_cast<JSObject**>(unboxedMemory + *unboxedTraceList);
+            if (obj2)
+                traverseEdge(obj, obj2);
+            unboxedTraceList++;
+        }
+        unboxedTraceList++;
+        while (*unboxedTraceList != -1) {
+            const Value& v = *reinterpret_cast<Value*>(unboxedMemory + *unboxedTraceList);
+            traverseEdge(obj, v);
+            unboxedTraceList++;
+        }
+        return;
+    }
+
   scan_obj:
     {
         AssertZoneIsMarking(obj);
@@ -1248,23 +1244,23 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
             if (clasp->trace == InlineTypedObject::obj_trace) {
                 Shape* shape = obj->as<InlineTypedObject>().shapeFromGC();
                 traverseEdge(obj, shape);
-                InlineTypedObject& tobj = obj->as<InlineTypedObject>();
-                if (tobj.typeDescr().hasTraceList()) {
-                    VisitTraceList(TraverseObjectFunctor(), tobj.typeDescr().traceList(),
-                                   tobj.inlineTypedMem(), this, obj);
-                }
-                return;
+                TypeDescr* descr = &obj->as<InlineTypedObject>().typeDescr();
+                if (!descr->hasTraceList())
+                    return;
+                unboxedTraceList = descr->traceList();
+                unboxedMemory = obj->as<InlineTypedObject>().inlineTypedMem();
+                goto scan_unboxed;
             }
             if (clasp == &UnboxedPlainObject::class_) {
                 JSObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
                 if (expando)
                     traverseEdge(obj, expando);
-                UnboxedPlainObject& unboxed = obj->as<UnboxedPlainObject>();
-                if (unboxed.layout().traceList()) {
-                    VisitTraceList(TraverseObjectFunctor(), unboxed.layout().traceList(),
-                                   unboxed.data(), this, obj);
-                }
-                return;
+                const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layout();
+                unboxedTraceList = layout.traceList();
+                if (!unboxedTraceList)
+                    return;
+                unboxedMemory = obj->as<UnboxedPlainObject>().data();
+                goto scan_unboxed;
             }
             clasp->trace(this, obj);
         }
@@ -1907,14 +1903,6 @@ js::Nursery::collectToFixedPoint(TenuringTracer& mover, TenureCountCache& tenure
     }
 }
 
-struct TenuringFunctor
-{
-    template <typename T>
-    void operator()(T* thing, TenuringTracer& mover) {
-        mover.traverse(thing);
-    }
-};
-
 // Visit all object children of the object and trace them.
 void
 js::TenuringTracer::traceObject(JSObject* obj)
@@ -1922,22 +1910,18 @@ js::TenuringTracer::traceObject(JSObject* obj)
     const Class* clasp = obj->getClass();
     if (clasp->trace) {
         if (clasp->trace == InlineTypedObject::obj_trace) {
-            InlineTypedObject& tobj = obj->as<InlineTypedObject>();
-            if (tobj.typeDescr().hasTraceList()) {
-                VisitTraceList(TenuringFunctor(), tobj.typeDescr().traceList(),
-                               tobj.inlineTypedMem(), *this);
-            }
+            TypeDescr* descr = &obj->as<InlineTypedObject>().typeDescr();
+            if (descr->hasTraceList())
+                markTraceList(descr->traceList(), obj->as<InlineTypedObject>().inlineTypedMem());
             return;
         }
         if (clasp == &UnboxedPlainObject::class_) {
             JSObject** pexpando = obj->as<UnboxedPlainObject>().addressOfExpando();
             if (*pexpando)
                 traverse(pexpando);
-            UnboxedPlainObject& unboxed = obj->as<UnboxedPlainObject>();
-            if (unboxed.layout().traceList()) {
-                VisitTraceList(TenuringFunctor(), unboxed.layout().traceList(), unboxed.data(),
-                               *this);
-            }
+            const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layoutDontCheckGeneration();
+            if (layout.traceList())
+                markTraceList(layout.traceList(), obj->as<UnboxedPlainObject>().data());
             return;
         }
         clasp->trace(this, obj);
@@ -1975,6 +1959,27 @@ js::TenuringTracer::traceSlots(Value* vp, Value* end)
 {
     for (; vp != end; ++vp)
         traverse(vp);
+}
+
+void
+js::TenuringTracer::markTraceList(const int32_t* traceList, uint8_t* memory)
+{
+    while (*traceList != -1) {
+        // Strings are not in the nursery and do not need tracing.
+        traceList++;
+    }
+    traceList++;
+    while (*traceList != -1) {
+        JSObject** pobj = reinterpret_cast<JSObject**>(memory + *traceList);
+        traverse(pobj);
+        traceList++;
+    }
+    traceList++;
+    while (*traceList != -1) {
+        Value* pslot = reinterpret_cast<Value*>(memory + *traceList);
+        traverse(pslot);
+        traceList++;
+    }
 }
 
 size_t
