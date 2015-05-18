@@ -7,6 +7,8 @@
 #include "MP4Decoder.h"
 #include "MP4Reader.h"
 #include "MediaDecoderStateMachine.h"
+#include "MediaFormatReader.h"
+#include "MP4Demuxer.h"
 #include "mozilla/Preferences.h"
 #include "nsCharSeparatedTokenizer.h"
 #ifdef MOZ_EME
@@ -34,7 +36,13 @@ namespace mozilla {
 
 MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
 {
-  return new MediaDecoderStateMachine(this, new MP4Reader(this));
+  bool useFormatDecoder =
+    Preferences::GetBool("media.format-reader.mp4", false);
+  nsRefPtr<MediaDecoderReader> reader = useFormatDecoder ?
+    static_cast<MediaDecoderReader*>(new MediaFormatReader(this, new MP4Demuxer(GetResource()))) :
+    static_cast<MediaDecoderReader*>(new MP4Reader(this));
+
+  return new MediaDecoderStateMachine(this, reader);
 }
 
 #ifdef MOZ_EME
