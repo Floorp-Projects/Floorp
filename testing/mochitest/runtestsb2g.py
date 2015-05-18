@@ -220,6 +220,21 @@ class B2GMochitest(MochitestUtilsMixin):
                 Services.io.offline = false;
                 """)
 
+            self.marionette.execute_script("""
+                let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+                Services.prefs.setBoolPref(SECURITY_PREF, true);
+
+                if (!testUtils.hasOwnProperty("specialPowersObserver")) {
+                  let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                    .getService(Components.interfaces.mozIJSSubScriptLoader);
+                  loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
+                    testUtils);
+                  testUtils.specialPowersObserver = new testUtils.SpecialPowersObserver();
+                  testUtils.specialPowersObserver.init();
+                  testUtils.specialPowersObserver._loadFrameScript();
+                }
+                """)
+
             if options.chrome:
                 self.app_ctx.dm.removeDir(self.remote_chrome_test_dir)
                 self.app_ctx.dm.mkDir(self.remote_chrome_test_dir)
