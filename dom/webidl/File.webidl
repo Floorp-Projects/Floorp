@@ -45,6 +45,8 @@ partial interface File {
   readonly attribute Date lastModifiedDate;
 
   [GetterThrows, ChromeOnly]
-  readonly attribute DOMString mozFullPath;
+  readonly attribute DOMString path;
 
+  [GetterThrows, ChromeOnly]
+  readonly attribute DOMString mozFullPath;
 };

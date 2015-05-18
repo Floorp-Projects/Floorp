@@ -148,7 +148,7 @@ partial interface HTMLInputElement {
   [GetterThrows]
   readonly attribute long                  textLength;
 
-  [ChromeOnly]
+  [Throws, ChromeOnly]
   sequence<DOMString> mozGetFileNameArray();
 
   [ChromeOnly, Throws]

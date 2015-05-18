@@ -12,15 +12,13 @@
 #include "BluetoothProfileManagerBase.h"
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
-#include "nsIDOMFile.h"
 #include "nsIObserver.h"
 #include "nsTObserverArray.h"
 #include "nsThreadUtils.h"
 
-class nsIDOMBlob;
-
 namespace mozilla {
 namespace dom {
+class Blob;
 class BlobChild;
 class BlobParent;
 }
@@ -295,7 +293,7 @@ public:
 
   virtual void
   SendFile(const nsAString& aDeviceAddress,
-           nsIDOMBlob* aBlob,
+           Blob* aBlob,
            BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void

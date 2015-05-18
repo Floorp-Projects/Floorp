@@ -94,12 +94,11 @@ function verifyBlob(blob1, blob2, fileId, blobReadHandler)
 {
   is(blob1 instanceof Components.interfaces.nsIDOMBlob, true,
      "Instance of nsIDOMBlob");
-  is(blob1 instanceof Components.interfaces.nsIDOMFile,
-     blob2 instanceof Components.interfaces.nsIDOMFile,
-     "Instance of nsIDOMFile");
+  is(blob1 instanceof File, blob2 instanceof File,
+     "Instance of DOM File");
   is(blob1.size, blob2.size, "Correct size");
   is(blob1.type, blob2.type, "Correct type");
-  if (blob2 instanceof Components.interfaces.nsIDOMFile) {
+  if (blob2 instanceof File) {
     is(blob1.name, blob2.name, "Correct name");
   }
   is(utils.getFileId(blob1), fileId, "Correct file id");
