@@ -47,10 +47,10 @@ let gIntro = {
    * on each page of the intro.
    */
   _introPages: {
-    "welcome": [[0,1],[2,3],[4,5]],
+    "welcome": [[0,1],[2,5],[4,3]],
     "update": [[6,5],[4,3],[0,1]],
     "buttons": [["skip", "continue"],["back", "next"],["back", "gotit"]],
-    "welcome-images": ["cog", "pin-remove", "suggested"],
+    "welcome-images": ["cog", "suggested", "pin-remove"],
     "update-images": ["suggested", "pin-remove", "cog"]
   },
 
@@ -168,8 +168,9 @@ let gIntro = {
             '      <span class="newtab-title">Example Title</span>' +
             '    </a>' +
             '    <input type="button" class="newtab-control newtab-control-pin"/>' +
-            '    <input type="button" class="newtab-control newtab-control-block"/>' + (imageClass ? "" :
-            '    <span class="newtab-sponsored">' + newTabString("suggested.tag") + '</span>') +
+            '    <input type="button" class="newtab-control newtab-control-block"/>' +
+            '    <span class="newtab-sponsored">' +
+                   newTabString(imageClass ? "sponsored.button" : "suggested.tag") + '</span>' +
             '  </div>' +
             '</div>';
             break;
