@@ -6,8 +6,7 @@
 
 #if !defined(GonkMediaDataDecoder_h_)
 #define GonkMediaDataDecoder_h_
-#include "mozilla/RefPtr.h"
-#include "MP4Reader.h"
+#include "PlatformDecoderModule.h"
 
 namespace android {
 class MediaCodecProxy;
