@@ -9,8 +9,7 @@ EXPORTS.mozilla.ipc += [
 ]
 
 SOURCES += [
-  'KeyStore.cpp',
-  'KeyStoreConnector.cpp'
+  'KeyStore.cpp'
 ]
 
 FAIL_ON_WARNINGS = True
