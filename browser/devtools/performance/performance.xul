@@ -155,6 +155,13 @@
             <hbox id="time-framerate"/>
           </vbox>
           <deck id="details-pane-container" flex="1">
+            <hbox id="loading-notice"
+                  class="notice-container devtools-throbber"
+                  align="center"
+                  pack="center"
+                  flex="1">
+              <label value="&profilerUI.loadingNotice;"/>
+            </hbox>
             <hbox id="recording-notice"
                   class="notice-container"
                   align="center"
