@@ -277,16 +277,16 @@ public:
     return mState == DECODER_STATE_SEEKING;
   }
 
-  nsresult GetBuffered(dom::TimeRanges* aBuffered) {
+  media::TimeIntervals GetBuffered() {
     // It's possible for JS to query .buffered before we've determined the start
     // time from metadata, in which case the reader isn't ready to be asked this
     // question.
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     if (mStartTime < 0) {
-      return NS_OK;
+      return media::TimeIntervals();
     }
 
-    return mReader->GetBuffered(aBuffered);
+    return mReader->GetBuffered();
   }
 
   size_t SizeOfVideoQueue() {

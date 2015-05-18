@@ -17,10 +17,6 @@
 
 namespace mozilla {
 
-namespace dom {
-class TimeRanges;
-}
-
 #if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
 #define READER_DORMANT_HEURISTIC
 #else
@@ -81,7 +77,7 @@ public:
                                  uint32_t aLength,
                                  int64_t aOffset) override;
 
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
+  virtual media::TimeIntervals GetBuffered() override;
 
   // For Media Resource Management
   virtual void SetIdle() override;

@@ -29,10 +29,6 @@ struct GstURIDecodeBin;
 
 namespace mozilla {
 
-namespace dom {
-class TimeRanges;
-}
-
 class AbstractMediaDecoder;
 
 class GStreamerReader : public MediaDecoderReader
@@ -53,7 +49,7 @@ public:
                                 MetadataTags** aTags) override;
   virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
+  virtual media::TimeIntervals GetBuffered() override;
 
   virtual void NotifyDataArrived(const char *aBuffer,
                                  uint32_t aLength,

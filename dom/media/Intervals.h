@@ -513,8 +513,8 @@ public:
   void Shift(const T& aOffset)
   {
     for (auto& interval : mIntervals) {
-      interval.mStart += aOffset;
-      interval.mEnd += aOffset;
+      interval.mStart = interval.mStart + aOffset;
+      interval.mEnd = interval.mEnd + aOffset;
     }
   }
 

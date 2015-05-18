@@ -8,13 +8,21 @@
 #define TIME_UNITS_H
 
 #include "Intervals.h"
-#include "VideoUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/TimeRanges.h"
 
 namespace mozilla {
 namespace media {
+
+// Number of microseconds per second. 1e6.
+static const int64_t USECS_PER_S = 1000000;
+
+// Number of microseconds per millisecond.
+static const int64_t USECS_PER_MS = 1000;
+
+// Number of nanoseconds per second. 1e9.
+static const int64_t NSECS_PER_S = 1000000000;
 
 struct Microseconds {
   Microseconds()
@@ -89,12 +97,20 @@ public:
     return TimeUnit(aValue.mValue);
   }
 
+  static TimeUnit FromNanoseconds(int64_t aValue) {
+    return TimeUnit(aValue / 1000);
+  }
+
   static TimeUnit FromInfinity() {
     return TimeUnit(INT64_MAX);
   }
 
   int64_t ToMicroseconds() const {
     return mValue.value();
+  }
+
+  int64_t ToNanoseconds() const {
+    return mValue.value() * 1000;
   }
 
   double ToSeconds() const {
@@ -197,6 +213,17 @@ public:
   explicit TimeIntervals(BaseType::ElemType&& aOther)
     : BaseType(Move(aOther))
   {}
+
+  static TimeIntervals Invalid()
+  {
+    return TimeIntervals(TimeInterval(TimeUnit::FromMicroseconds(INT64_MIN),
+                                      TimeUnit::FromMicroseconds(INT64_MIN)));
+  }
+  bool IsInvalid()
+  {
+    return Length() == 1 && Start(0).ToMicroseconds() == INT64_MIN &&
+      End(0).ToMicroseconds() == INT64_MIN;
+  }
 
   TimeIntervals() = default;
 

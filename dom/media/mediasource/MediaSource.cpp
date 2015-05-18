@@ -16,7 +16,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/mozalloc.h"
 #include "nsContentTypeParser.h"
 #include "nsContentUtils.h"

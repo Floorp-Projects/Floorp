@@ -19,10 +19,6 @@
 
 namespace mozilla {
 
-namespace dom {
-class TimeRanges;
-}
-
 typedef std::deque<nsRefPtr<MediaRawData>> MediaSampleQueue;
 
 class MP4Stream;
@@ -68,7 +64,7 @@ public:
   virtual int64_t GetEvictionOffset(double aTime) override;
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) override;
 
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
+  virtual media::TimeIntervals GetBuffered() override;
 
   // For Media Resource Management
   virtual void SetIdle() override;
