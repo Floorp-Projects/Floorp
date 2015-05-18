@@ -58,20 +58,9 @@ interface nsIDOMBlob : nsISupports
 // nsIDOMBlob to Blob safely.  Our chain is:
 //  - Blob -> nsIDOMBlob
 //  - File -> nsIDOMFile and Blob
-[scriptable, builtinclass, uuid(cc28cf12-f1d4-44ff-843f-9289aa14613b)]
+[scriptable, builtinclass, uuid(26e292a6-f5aa-4560-b523-ae22a4c7dfca)]
 interface nsIDOMFile : nsISupports
 {
-  readonly attribute DOMString name;
-
-  readonly attribute DOMString path;
-
-  [implicit_jscontext]
-  readonly attribute jsval lastModifiedDate;
-
-  readonly attribute DOMString mozFullPath;
-
-  // This performs no security checks!
-  [noscript] readonly attribute DOMString mozFullPathInternal;
-
-  [noscript] readonly attribute int64_t mozLastModifiedDate;
+  // Empty interface used by addons and some test to check if the object is a
+  // blob or file. This interface will be removed by bug 1163388
 };

@@ -58,6 +58,7 @@
 #include "nsIContentViewer.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/DOMRect.h"
 #include <algorithm>
 
@@ -2858,15 +2859,13 @@ nsDOMWindowUtils::GetFilePath(JS::HandleValue aFile, JSContext* aCx,
 
   JSObject* obj = aFile.toObjectOrNull();
 
-  nsISupports* nativeObj =
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, obj);
-
-  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(nativeObj);
-  if (file) {
+  File* file = nullptr;
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(File, obj, file))) {
     nsString filePath;
-    nsresult rv = file->GetMozFullPathInternal(filePath);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    ErrorResult rv;
+    file->GetMozFullPathInternal(filePath, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
 
     _retval = filePath;
