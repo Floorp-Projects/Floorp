@@ -33,7 +33,6 @@
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TouchEvents.h"
-#include "Layers.h"
 #include "TouchCaret.h"
 #include "nsFrameSelection.h"
 
@@ -117,9 +116,7 @@ SelectionCarets::Init()
   }
 
 #if defined(MOZ_WIDGET_GONK)
-  if (layers::LayerManager* lm = mPresShell->GetLayerManager()) {
-    mUseAsyncPanZoom = lm->AsyncPanZoomEnabled();
-  }
+  mUseAsyncPanZoom = gfxPrefs::AsyncPanZoomEnabled();
 #endif
 
   docShell->AddWeakReflowObserver(this);
