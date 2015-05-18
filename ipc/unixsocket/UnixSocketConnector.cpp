@@ -5,20 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "UnixSocketConnector.h"
-#include "nsISupportsImpl.h" // For MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 
 namespace mozilla {
 namespace ipc {
 
-UnixSocketConnector::UnixSocketConnector()
-{
-  MOZ_COUNT_CTOR(UnixSocketConnector);
-}
-
 UnixSocketConnector::~UnixSocketConnector()
-{
-  MOZ_COUNT_DTOR(UnixSocketConnector);
-}
+{ }
 
 }
 }
