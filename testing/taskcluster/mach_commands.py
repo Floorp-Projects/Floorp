@@ -54,7 +54,7 @@ def load_mozharness_info():
 
 def docker_image(name):
     ''' Determine the docker tag/revision from an in tree docker file '''
-    repository_path = os.path.join(DOCKER_ROOT, name, 'REPOSITORY')
+    repository_path = os.path.join(DOCKER_ROOT, name, 'REGISTRY')
     repository = REGISTRY
 
     version = open(os.path.join(DOCKER_ROOT, name, 'VERSION')).read().strip()
