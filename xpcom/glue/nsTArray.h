@@ -1589,14 +1589,21 @@ public:
   // constructor.
   // @param aMinLen The desired minimum length of this array.
   // @return True if the operation succeeded; false otherwise.
-  typename Alloc::ResultType EnsureLengthAtLeast(size_type aMinLen)
+  template<typename ActualAlloc = Alloc>
+  typename ActualAlloc::ResultType EnsureLengthAtLeast(size_type aMinLen)
   {
     size_type oldLen = Length();
     if (aMinLen > oldLen) {
-      return Alloc::ConvertBoolToResultType(!!InsertElementsAt(oldLen,
-                                                               aMinLen - oldLen));
+      return ActualAlloc::ConvertBoolToResultType(
+        !!InsertElementsAt<ActualAlloc>(oldLen, aMinLen - oldLen));
     }
-    return Alloc::ConvertBoolToResultType(true);
+    return ActualAlloc::ConvertBoolToResultType(true);
+  }
+
+  /* MOZ_WARN_UNUSED_RESULT */
+  bool EnsureLengthAtLeast(size_type aMinLen, const mozilla::fallible_t&)
+  {
+    return EnsureLengthAtLeast<FallibleAlloc>(aMinLen);
   }
 
   // This method inserts elements into the array, constructing
