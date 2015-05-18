@@ -28,7 +28,6 @@
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsZipArchive.h"
-#include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
 #include "nsWindowMemoryReporter.h"
 #include "nsDOMClassInfo.h"

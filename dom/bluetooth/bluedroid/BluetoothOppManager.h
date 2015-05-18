@@ -14,13 +14,13 @@
 #include "mozilla/ipc/SocketBase.h"
 #include "nsCOMArray.h"
 
-class nsIDOMBlob;
 class nsIOutputStream;
 class nsIInputStream;
 class nsIVolumeMountLock;
 
 namespace mozilla {
 namespace dom {
+class Blob;
 class BlobParent;
 }
 }
@@ -55,7 +55,7 @@ public:
   bool Listen();
 
   bool SendFile(const nsAString& aDeviceAddress, BlobParent* aActor);
-  bool SendFile(const nsAString& aDeviceAddress, nsIDOMBlob* aBlob);
+  bool SendFile(const nsAString& aDeviceAddress, Blob* aBlob);
   bool StopSendingFile();
   bool ConfirmReceivingFile(bool aConfirm);
 
@@ -102,7 +102,7 @@ private:
   void NotifyAboutFileChange();
   bool AcquireSdcardMountLock();
   void SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
-  void AppendBlobToSend(const nsAString& aDeviceAddress, nsIDOMBlob* aBlob);
+  void AppendBlobToSend(const nsAString& aDeviceAddress, Blob* aBlob);
   void DiscardBlobsToSend();
   bool ProcessNextBatch();
   void ConnectInternal(const nsAString& aDeviceAddress);
@@ -199,7 +199,7 @@ private:
   nsAutoArrayPtr<uint8_t> mReceivedDataBuffer;
 
   int mCurrentBlobIndex;
-  nsCOMPtr<nsIDOMBlob> mBlob;
+  nsRefPtr<Blob> mBlob;
   nsTArray<SendFileBatch> mBatches;
 
   /**

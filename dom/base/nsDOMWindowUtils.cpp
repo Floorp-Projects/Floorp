@@ -2593,7 +2593,7 @@ nsDOMWindowUtils::GetContainerElement(nsIDOMElement** aResult)
 
 NS_IMETHODIMP
 nsDOMWindowUtils::WrapDOMFile(nsIFile *aFile,
-                              nsIDOMFile **aDOMFile)
+                              nsISupports **aDOMFile)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
@@ -2609,8 +2609,8 @@ nsDOMWindowUtils::WrapDOMFile(nsIFile *aFile,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<File> file = File::CreateFromFile(innerWindow, aFile);
-  file.forget(aDOMFile);
+  nsCOMPtr<nsIDOMBlob> blob = File::CreateFromFile(innerWindow, aFile);
+  blob.forget(aDOMFile);
   return NS_OK;
 }
 

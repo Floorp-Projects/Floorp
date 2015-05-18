@@ -8,7 +8,6 @@
 
 interface nsIFile;
 interface nsIURI;
-interface nsIDOMFile;
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 
@@ -24,7 +23,7 @@ interface nsIFilePickerShownCallback : nsISupports
   void done(in short aResult);
 };
 
-[scriptable, uuid(f93509a0-0434-11e3-8ffd-0800200c9a66)]
+[scriptable, uuid(9840d564-42c8-4d78-9a4d-71002343c918)]
 interface nsIFilePicker : nsISupports
 {
   const short modeOpen        = 0;              // Load a file or directory
@@ -143,11 +142,11 @@ interface nsIFilePicker : nsISupports
   readonly attribute nsISimpleEnumerator files;
 
  /**
-  * Get the nsIDOMFile for the file.
+  * Get the DOM File for the file.
   *
   * @return Returns the file currently selected as File
   */
-  readonly attribute nsIDOMFile domfile;
+  readonly attribute nsISupports domfile;
 
  /**
   * Get the enumerator for the selected files

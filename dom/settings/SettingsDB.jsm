@@ -8,7 +8,7 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
-Cu.importGlobalProperties(['Blob']);
+Cu.importGlobalProperties(['Blob', 'File']);
 Cu.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["SettingsDB", "SETTINGSDB_NAME", "SETTINGSSTORE_NAME"];
@@ -209,7 +209,7 @@ SettingsDB.prototype = {
       return "primitive";
     } else if (Array.isArray(aObject)) {
       return "array";
-    } else if (aObject instanceof Ci.nsIDOMFile) {
+    } else if (aObject instanceof File) {
       return "file";
     } else if (aObject instanceof Ci.nsIDOMBlob) {
       return "blob";

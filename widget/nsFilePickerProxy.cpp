@@ -165,7 +165,7 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
       nsRefPtr<File> file = File::Create(mParent, blobImpl);
       MOZ_ASSERT(file);
 
-      mDomfiles.AppendObject(file);
+      mDomfiles.AppendElement(file);
     }
   }
 
@@ -178,7 +178,7 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
 }
 
 NS_IMETHODIMP
-nsFilePickerProxy::GetDomfile(nsIDOMFile** aDomfile)
+nsFilePickerProxy::GetDomfile(nsISupports** aDomfile)
 {
   *aDomfile = nullptr;
   if (mDomfiles.IsEmpty()) {
@@ -186,13 +186,55 @@ nsFilePickerProxy::GetDomfile(nsIDOMFile** aDomfile)
   }
 
   MOZ_ASSERT(mDomfiles.Length() == 1);
-  nsCOMPtr<nsIDOMFile> domfile = mDomfiles[0];
-  domfile.forget(aDomfile);
+  nsCOMPtr<nsIDOMBlob> blob = mDomfiles[0].get();
+  blob.forget(aDomfile);
   return NS_OK;
 }
+
+namespace {
+
+class SimpleEnumerator final : public nsISimpleEnumerator
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit SimpleEnumerator(const nsTArray<nsRefPtr<File>>& aFiles)
+    : mFiles(aFiles)
+    , mIndex(0)
+  {}
+
+  NS_IMETHOD
+  HasMoreElements(bool* aRetvalue) override
+  {
+    MOZ_ASSERT(aRetvalue);
+    *aRetvalue = mFiles.Length() >= mIndex;
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetNext(nsISupports** aSupports) override
+  {
+    nsCOMPtr<nsIDOMBlob> blob = mFiles[mIndex++].get();
+    blob.forget(aSupports);
+    return NS_OK;
+  }
+
+private:
+  ~SimpleEnumerator()
+  {}
+
+  nsTArray<nsRefPtr<File>> mFiles;
+  uint32_t mIndex;
+};
+
+NS_IMPL_ISUPPORTS(SimpleEnumerator, nsISimpleEnumerator)
+
+} // anonymous namespace
 
 NS_IMETHODIMP
 nsFilePickerProxy::GetDomfiles(nsISimpleEnumerator** aDomfiles)
 {
-  return NS_NewArrayEnumerator(aDomfiles, mDomfiles);
+  nsRefPtr<SimpleEnumerator> enumerator = new SimpleEnumerator(mDomfiles);
+  enumerator.forget(aDomfiles);
+  return NS_OK;
 }

@@ -53,14 +53,3 @@ interface nsIDOMBlob : nsISupports
   // Return true if this blob is a memory file.
   [notxpcom] bool isMemoryFile();
 };
-
-// We want to avoid multiple inheritance of nsIDOMBlob so we can downcast from
-// nsIDOMBlob to Blob safely.  Our chain is:
-//  - Blob -> nsIDOMBlob
-//  - File -> nsIDOMFile and Blob
-[scriptable, builtinclass, uuid(26e292a6-f5aa-4560-b523-ae22a4c7dfca)]
-interface nsIDOMFile : nsISupports
-{
-  // Empty interface used by addons and some test to check if the object is a
-  // blob or file. This interface will be removed by bug 1163388
-};

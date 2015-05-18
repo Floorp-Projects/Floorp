@@ -18,7 +18,6 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsIDOMFile;
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -28,6 +27,7 @@ class ErrorResult;
 namespace dom {
 
 class DOMRequest;
+class File;
 class MetadataParameters;
 
 namespace indexedDB {
@@ -83,7 +83,7 @@ public:
     return mFileInfo;
   }
 
-  already_AddRefed<nsIDOMFile>
+  already_AddRefed<File>
   CreateFileObject(IDBFileHandle* aFileHandle,
                    MetadataParameters* aMetadataParams);
 

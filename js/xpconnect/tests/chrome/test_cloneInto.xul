@@ -49,7 +49,7 @@
     if (Array.isArray(a))
       return 'array';
 
-    if (a instanceof Ci.nsIDOMFile)
+    if (a instanceof File)
       return 'file';
 
     if (a instanceof Ci.nsIDOMBlob)
