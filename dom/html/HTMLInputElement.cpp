@@ -405,7 +405,9 @@ public:
       MOZ_ASSERT(blobImpl);
       blobImpl->SetPath(Substring(path, 0, uint32_t(length)));
     }
-    *aResult = domFile.forget().downcast<nsIDOMFile>().take();
+
+    nsCOMPtr<nsIDOMBlob> blob = domFile.get();
+    blob.forget(aResult);
     LookupAndCacheNext();
     return NS_OK;
   }
@@ -488,7 +490,7 @@ NS_IMPL_ISUPPORTS(DirPickerRecursiveFileEnumerator, nsISimpleEnumerator)
 
 /**
  * This may return nullptr if aDomFile's implementation of
- * nsIDOMFile::mozFullPathInternal does not successfully return a non-empty
+ * File::mozFullPathInternal does not successfully return a non-empty
  * string that is a valid path. This can happen on Firefox OS, for example,
  * where the file picker can create Blobs.
  */
@@ -537,9 +539,9 @@ public:
       nsCOMPtr<nsISupports> tmp;
       while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
         iter->GetNext(getter_AddRefs(tmp));
-        nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(tmp);
-        MOZ_ASSERT(domFile);
-        mFileList.AppendElement(static_cast<File*>(domFile.get()));
+        nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(tmp);
+        MOZ_ASSERT(domBlob);
+        mFileList.AppendElement(static_cast<File*>(domBlob.get()));
         mFileListLength = mFileList.Length();
         if (mCanceled) {
           MOZ_ASSERT(!mInput, "This is bad - how did this happen?");
@@ -696,20 +698,23 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 
     while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
       iter->GetNext(getter_AddRefs(tmp));
-      nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(tmp);
-      NS_WARN_IF_FALSE(domFile,
+      nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(tmp);
+      NS_WARN_IF_FALSE(domBlob,
                        "Null file object from FilePicker's file enumerator?");
-      if (domFile) {
-        newFiles.AppendElement(static_cast<File*>(domFile.get()));
+      if (domBlob) {
+        newFiles.AppendElement(static_cast<File*>(domBlob.get()));
       }
     }
   } else {
     MOZ_ASSERT(mode == static_cast<int16_t>(nsIFilePicker::modeOpen));
-    nsCOMPtr<nsIDOMFile> domFile;
-    nsresult rv = mFilePicker->GetDomfile(getter_AddRefs(domFile));
+    nsCOMPtr<nsISupports> tmp;
+    nsresult rv = mFilePicker->GetDomfile(getter_AddRefs(tmp));
     NS_ENSURE_SUCCESS(rv, rv);
-    if (domFile) {
-      newFiles.AppendElement(static_cast<File*>(domFile.get()));
+
+    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(tmp);
+    if (blob) {
+      nsRefPtr<File> file = static_cast<Blob*>(blob.get())->ToFile();
+      newFiles.AppendElement(file);
     }
   }
 

@@ -27,7 +27,6 @@
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIDOMFile.h"
 #include "nsIPrincipal.h"
 
 namespace mozilla {
@@ -328,7 +327,7 @@ IDBMutableFile::GetFileId() const
   return mFileInfo->Id();
 }
 
-already_AddRefed<nsIDOMFile>
+already_AddRefed<File>
 IDBMutableFile::CreateFileObject(IDBFileHandle* aFileHandle,
                                  MetadataParameters* aMetadataParams)
 {
@@ -393,12 +392,10 @@ GetFileHelper::GetSuccessResult(JSContext* aCx,
 
   auto fileHandle = static_cast<IDBFileHandle*>(mFileHandle.get());
 
-  nsCOMPtr<nsIDOMFile> domFile =
+  nsRefPtr<File> domFile =
     mMutableFile->CreateFileObject(fileHandle, mParams);
 
-  nsresult rv =
-    nsContentUtils::WrapNative(aCx, domFile, &NS_GET_IID(nsIDOMFile), aVal);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (!ToJSValue(aCx, domFile, aVal)) {
     return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
   }
 

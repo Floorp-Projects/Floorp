@@ -96,7 +96,7 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMFile> domFile = File::CreateFromFile(mParent, localFile);
+    nsCOMPtr<nsIDOMBlob> domFile = File::CreateFromFile(mParent, localFile);
     domFile.forget(aResult);
     return NS_OK;
   }
@@ -311,7 +311,7 @@ nsBaseFilePicker::GetMode(int16_t* aMode)
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetDomfile(nsIDOMFile** aDomfile)
+nsBaseFilePicker::GetDomfile(nsISupports** aDomfile)
 {
   nsCOMPtr<nsIFile> localFile;
   nsresult rv = GetFile(getter_AddRefs(localFile));
@@ -322,7 +322,7 @@ nsBaseFilePicker::GetDomfile(nsIDOMFile** aDomfile)
     return NS_OK;
   }
 
-  nsRefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
+  nsCOMPtr<nsIDOMBlob> domFile = File::CreateFromFile(mParent, localFile);
   domFile.forget(aDomfile);
   return NS_OK;
 }
