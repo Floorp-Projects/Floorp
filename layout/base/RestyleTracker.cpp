@@ -96,6 +96,30 @@ struct RestyleCollector {
 #endif
 };
 
+class RestyleTimelineMarker : public TimelineMarker
+{
+public:
+  RestyleTimelineMarker(nsDocShell* aDocShell,
+                        TracingMetadata aMetaData,
+                        nsRestyleHint aRestyleHint)
+    : TimelineMarker(aDocShell, "Styles", aMetaData)
+  {
+    if (aRestyleHint) {
+      mRestyleHint.AssignWithConversion(RestyleManager::RestyleHintToString(aRestyleHint));
+    }
+  }
+
+  virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker) override
+  {
+    if (GetMetaData() == TRACING_INTERVAL_START) {
+      aMarker.mRestyleHint.Construct(mRestyleHint);
+    }
+  }
+
+private:
+  nsAutoString mRestyleHint;
+};
+
 static PLDHashOperator
 CollectRestyles(nsISupports* aElement,
                 nsAutoPtr<RestyleTracker::RestyleData>& aData,
@@ -201,6 +225,13 @@ RestyleTracker::DoProcessRestyles()
 {
   PROFILER_LABEL("RestyleTracker", "ProcessRestyles",
     js::ProfileEntry::Category::CSS);
+
+  bool isTimelineRecording = false;
+  nsDocShell* docShell =
+    static_cast<nsDocShell*>(mRestyleManager->PresContext()->GetDocShell());
+  if (docShell) {
+    docShell->GetRecordProfileTimelineMarkers(&isTimelineRecording);
+  }
 
   // Create a ReframingStyleContexts struct on the stack and put it in our
   // mReframingStyleContexts for almost all of the remaining scope of
@@ -311,6 +342,14 @@ RestyleTracker::DoProcessRestyles()
           continue;
         }
 
+        if (isTimelineRecording) {
+          mozilla::UniquePtr<TimelineMarker> marker =
+            MakeUnique<RestyleTimelineMarker>(docShell,
+                                              TRACING_INTERVAL_START,
+                                              data->mRestyleHint);
+          docShell->AddProfileTimelineMarker(Move(marker));
+        }
+
 #if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
         Maybe<GeckoProfilerTracingRAII> profilerRAII;
         if (profiler_feature_active("restyle")) {
@@ -319,6 +358,14 @@ RestyleTracker::DoProcessRestyles()
 #endif
         ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint);
         AddRestyleRootsIfAwaitingRestyle(data->mDescendants);
+
+        if (isTimelineRecording) {
+          mozilla::UniquePtr<TimelineMarker> marker =
+            MakeUnique<RestyleTimelineMarker>(docShell,
+                                              TRACING_INTERVAL_END,
+                                              data->mRestyleHint);
+          docShell->AddProfileTimelineMarker(Move(marker));
+        }
       }
 
       if (mHaveLaterSiblingRestyles) {
@@ -359,9 +406,25 @@ RestyleTracker::DoProcessRestyles()
             profilerRAII.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
           }
 #endif
+          if (isTimelineRecording) {
+            mozilla::UniquePtr<TimelineMarker> marker =
+              MakeUnique<RestyleTimelineMarker>(docShell,
+                                                TRACING_INTERVAL_START,
+                                                currentRestyle->mRestyleHint);
+            docShell->AddProfileTimelineMarker(Move(marker));
+          }
+
           ProcessOneRestyle(currentRestyle->mElement,
                             currentRestyle->mRestyleHint,
                             currentRestyle->mChangeHint);
+
+          if (isTimelineRecording) {
+            mozilla::UniquePtr<TimelineMarker> marker =
+              MakeUnique<RestyleTimelineMarker>(docShell,
+                                                TRACING_INTERVAL_END,
+                                                currentRestyle->mRestyleHint);
+            docShell->AddProfileTimelineMarker(Move(marker));
+          }
         }
       }
     }

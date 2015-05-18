@@ -1662,11 +1662,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           if (!mStyleFlushObservers.Contains(shell))
             continue;
 
-          nsRefPtr<nsDocShell> docShell = GetDocShell(shell->GetPresContext());
-          if (docShell) {
-            docShell->AddProfileTimelineMarker("Styles", TRACING_INTERVAL_START);
-          }
-
           if (!tracingStyleFlush) {
             tracingStyleFlush = true;
             profiler_tracing("Paint", "Styles", mStyleCause, TRACING_INTERVAL_START);
@@ -1685,10 +1680,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
             presContext->NotifyFontFaceSetOnRefresh();
           }
           NS_RELEASE(shell);
-
-          if (docShell) {
-            docShell->AddProfileTimelineMarker("Styles", TRACING_INTERVAL_END);
-          }
         }
 
         if (tracingStyleFlush) {
