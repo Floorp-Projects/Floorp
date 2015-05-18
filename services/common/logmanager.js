@@ -45,15 +45,97 @@ let consoleAppender;
 // A set of all preference roots used by all instances.
 let allBranches = new Set();
 
+// A storage appender that is flushable to a file on disk.  Policies for
+// when to flush, to what file, log rotation etc are up to the consumer
+// (although it does maintain a .sawError property to help the consumer decide
+// based on its policies)
+function FlushableStorageAppender(formatter) {
+  Log.StorageStreamAppender.call(this, formatter);
+  this.sawError = false;
+}
+
+FlushableStorageAppender.prototype = {
+  __proto__: Log.StorageStreamAppender.prototype,
+
+  append(message) {
+    if (message.level >= Log.Level.Error) {
+      this.sawError = true;
+    }
+    Log.StorageStreamAppender.prototype.append.call(this, message);
+  },
+
+  reset() {
+    Log.StorageStreamAppender.prototype.reset.call(this);
+    this.sawError = false;
+  },
+
+  // Flush the current stream to a file. Somewhat counter-intuitively, you
+  // must pass a log which will be written to with details of the operation.
+  flushToFile: Task.async(function* (subdirArray, filename, log) {
+    let inStream = this.getInputStream();
+    this.reset();
+    if (!inStream) {
+      log.debug("Failed to flush log to a file - no input stream");
+      return;
+    }
+    log.debug("Flushing file log");
+    log.trace("Beginning stream copy to " + filename + ": " + Date.now());
+    try {
+      yield this._copyStreamToFile(inStream, subdirArray, filename, log);
+      log.trace("onCopyComplete", Date.now());
+    } catch (ex) {
+      log.error("Failed to copy log stream to file", ex);
+    }
+  }),
+
+  /**
+   * Copy an input stream to the named file, doing everything off the main
+   * thread.
+   * subDirArray is an array of path components, relative to the profile
+   * directory, where the file will be created.
+   * outputFileName is the filename to create.
+   * Returns a promise that is resolved on completion or rejected with an error.
+   */
+  _copyStreamToFile: Task.async(function* (inputStream, subdirArray, outputFileName, log) {
+    // The log data could be large, so we don't want to pass it all in a single
+    // message, so use BUFFER_SIZE chunks.
+    const BUFFER_SIZE = 8192;
+
+    // get a binary stream
+    let binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
+    binaryStream.setInputStream(inputStream);
+
+    let outputDirectory = OS.Path.join(OS.Constants.Path.profileDir, ...subdirArray);
+    yield OS.File.makeDir(outputDirectory, { ignoreExisting: true, from: OS.Constants.Path.profileDir });
+    let fullOutputFileName = OS.Path.join(outputDirectory, outputFileName);
+    let output = yield OS.File.open(fullOutputFileName, { write: true} );
+    try {
+      while (true) {
+        let available = binaryStream.available();
+        if (!available) {
+          break;
+        }
+        let chunk = binaryStream.readByteArray(Math.min(available, BUFFER_SIZE));
+        yield output.write(new Uint8Array(chunk));
+      }
+    } finally {
+      try {
+        binaryStream.close(); // inputStream is closed by the binaryStream
+        yield output.close();
+      } catch (ex) {
+        log.error("Failed to close the input stream", ex);
+      }
+    }
+    log.trace("finished copy to", fullOutputFileName);
+  }),
+}
+
 // The public LogManager object.
 function LogManager(prefRoot, logNames, logFilePrefix) {
   this.init(prefRoot, logNames, logFilePrefix);
 }
 
 LogManager.prototype = {
-  REASON_SUCCESS: "success",
-  REASON_ERROR: "error",
-
   _cleaningUpFileLogs: false,
 
   _prefObservers: [],
@@ -106,7 +188,7 @@ LogManager.prototype = {
     this._observeDumpPref = setupAppender(dumpAppender, "log.appender.dump", Log.Level.Error, true);
 
     // The file appender doesn't get the special singleton behaviour.
-    let fapp = this._fileAppender = new Log.StorageStreamAppender(formatter);
+    let fapp = this._fileAppender = new FlushableStorageAppender(formatter);
     // the stream gets a default of Debug as the user must go out of their way
     // to see the stuff spewed to it.
     this._observeStreamPref = setupAppender(fapp, "log.appender.file.level", Log.Level.Debug);
@@ -150,109 +232,62 @@ LogManager.prototype = {
     return ["weave", "logs"];
   },
 
-  /**
-   * Copy an input stream to the named file, doing everything off the main
-   * thread.
-   * outputFileName is a string with the tail of the filename - the file will
-   * be created in the log directory.
-   * Returns a promise that is resolved<undefined> on completion or rejected if
-   * there is an error.
-   */
-  _copyStreamToFile: Task.async(function* (inputStream, outputFileName) {
-    // The log data could be large, so we don't want to pass it all in a single
-    // message, so use BUFFER_SIZE chunks.
-    const BUFFER_SIZE = 8192;
-
-    // get a binary stream
-    let binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
-    binaryStream.setInputStream(inputStream);
-    // We assume the profile directory exists, but not that the dirs under it do.
-    let profd = FileUtils.getDir("ProfD", []);
-    let outputFile = FileUtils.getDir("ProfD", this._logFileSubDirectoryEntries);
-    yield OS.File.makeDir(outputFile.path, { ignoreExisting: true, from: profd.path });
-    outputFile.append(outputFileName);
-    let output = yield OS.File.open(outputFile.path, { write: true} );
-    try {
-      while (true) {
-        let available = binaryStream.available();
-        if (!available) {
-          break;
-        }
-        let chunk = binaryStream.readByteArray(Math.min(available, BUFFER_SIZE));
-        yield output.write(new Uint8Array(chunk));
-      }
-    } finally {
-      try {
-        binaryStream.close(); // inputStream is closed by the binaryStream
-        yield output.close();
-      } catch (ex) {
-        this._log.error("Failed to close the input stream", ex);
-      }
-    }
-    this._log.trace("finished copy to", outputFile.path);
-  }),
+  // Result values for resetFileLog.
+  SUCCESS_LOG_WRITTEN: "success-log-written",
+  ERROR_LOG_WRITTEN: "error-log-written",
 
   /**
    * Possibly generate a log file for all accumulated log messages and refresh
    * the input & output streams.
-   * Returns a promise that resolves on completion or rejects if the file could
-   * not be written.
+   * Whether a "success" or "error" log is written is determined based on
+   * whether an "Error" log entry was written to any of the logs.
+   * Returns a promise that resolves on completion with either null (for no
+   * file written or on error), SUCCESS_LOG_WRITTEN if a "success" log was
+   * written, or ERROR_LOG_WRITTEN if an "error" log was written.
    */
-  resetFileLog: Task.async(function* (reason) {
+  resetFileLog: Task.async(function* () {
     try {
       let flushToFile;
       let reasonPrefix;
-      switch (reason) {
-        case this.REASON_SUCCESS:
-          flushToFile = this._prefs.get("log.appender.file.logOnSuccess", false);
-          reasonPrefix = "success";
-          break;
-        case this.REASON_ERROR:
-          flushToFile = this._prefs.get("log.appender.file.logOnError", true);
-          reasonPrefix = "error";
-          break;
-        default:
-          throw new Error("Invalid reason");
+      let reason;
+      if (this._fileAppender.sawError) {
+        reason = this.ERROR_LOG_WRITTEN;
+        flushToFile = this._prefs.get("log.appender.file.logOnError", true);
+        reasonPrefix = "error";
+      } else {
+        reason = this.SUCCESS_LOG_WRITTEN;
+        flushToFile = this._prefs.get("log.appender.file.logOnSuccess", false);
+        reasonPrefix = "success";
       }
 
       // might as well avoid creating an input stream if we aren't going to use it.
       if (!flushToFile) {
         this._fileAppender.reset();
-        return;
+        return null;
       }
 
-      let inStream = this._fileAppender.getInputStream();
-      this._fileAppender.reset();
-      if (inStream) {
-        this._log.debug("Flushing file log");
-        // We have reasonPrefix at the start of the filename so all "error"
-        // logs are grouped in about:sync-log.
-        let filename = reasonPrefix + "-" + this.logFilePrefix + "-" + Date.now() + ".txt";
-        this._log.trace("Beginning stream copy to " + filename + ": " +
-                        Date.now());
-        try {
-          yield this._copyStreamToFile(inStream, filename);
-          this._log.trace("onCopyComplete", Date.now());
-        } catch (ex) {
-          this._log.error("Failed to copy log stream to file", ex);
-          return;
-        }
-        // It's not completely clear to markh why we only do log cleanups
-        // for errors, but for now the Sync semantics have been copied...
-        // (one theory is that only cleaning up on error makes it less
-        // likely old error logs would be removed, but that's not true if
-        // there are occasional errors - let's address this later!)
-        if (reason == this.REASON_ERROR && !this._cleaningUpFileLogs) {
-          this._log.trace("Scheduling cleanup.");
-          // Note we don't return/yield or otherwise wait on this promise - it
-          // continues in the background
-          this.cleanupLogs().catch(err => {
-            this._log.error("Failed to cleanup logs", err);
-          });
-        }
+      // We have reasonPrefix at the start of the filename so all "error"
+      // logs are grouped in about:sync-log.
+      let filename = reasonPrefix + "-" + this.logFilePrefix + "-" + Date.now() + ".txt";
+      yield this._fileAppender.flushToFile(this._logFileSubDirectoryEntries, filename, this._log);
+
+      // It's not completely clear to markh why we only do log cleanups
+      // for errors, but for now the Sync semantics have been copied...
+      // (one theory is that only cleaning up on error makes it less
+      // likely old error logs would be removed, but that's not true if
+      // there are occasional errors - let's address this later!)
+      if (reason == this.ERROR_LOG_WRITTEN && !this._cleaningUpFileLogs) {
+        this._log.trace("Scheduling cleanup.");
+        // Note we don't return/yield or otherwise wait on this promise - it
+        // continues in the background
+        this.cleanupLogs().catch(err => {
+          this._log.error("Failed to cleanup logs", err);
+        });
       }
+      return reason;
     } catch (ex) {
-      this._log.error("Failed to resetFileLog", ex)
+      this._log.error("Failed to resetFileLog", ex);
+      return null;
     }
   }),
 
