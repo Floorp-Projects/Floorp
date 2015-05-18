@@ -28,4 +28,8 @@ EXPORTS += [
     'nsPerformanceStats.h'
 ]
 
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
 FINAL_LIBRARY = 'xul'
