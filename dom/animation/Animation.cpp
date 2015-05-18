@@ -120,10 +120,14 @@ Animation::SetCurrentTime(const TimeDuration& aSeekTime)
   SilentlySetCurrentTime(aSeekTime);
 
   if (mPendingState == PendingState::PausePending) {
-    CancelPendingTasks();
+    // Finish the pause operation
+    mHoldTime.SetValue(aSeekTime);
+    mStartTime.SetNull();
+
     if (mReady) {
       mReady->MaybeResolve(this);
     }
+    CancelPendingTasks();
   }
 
   UpdateFinishedState(true);
