@@ -88,6 +88,7 @@ class TenuringTracer : public JSTracer
     size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src, gc::AllocKind dstKind);
 
     void traceSlots(JS::Value* vp, JS::Value* end);
+    void markTraceList(const int32_t* traceList, uint8_t* memory);
 };
 
 class Nursery
