@@ -135,7 +135,6 @@ public:
   nsEventStatus DispatchInputEvent(WidgetInputEvent* aEvent) override;
   void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
                               const nsTArray<ScrollableLayerGuid>& aTargets) const override;
-  bool AsyncPanZoomEnabled() const override;
 
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener,
                                  bool aDoCapture) override
