@@ -350,8 +350,8 @@ public:
     if (mMode == PAINTING) {
       // Note: this is the only place that gets to query LayoutEventRegionsEnabled
       // 'directly' - other code should call this function.
-      return gfxPrefs::LayoutEventRegionsEnabledDoNotUseDirectly() ||
-             mAsyncPanZoomEnabled;
+      return (gfxPrefs::LayoutEventRegionsEnabledDoNotUseDirectly() ||
+              gfxPrefs::AsyncPanZoomEnabled());
     }
     return false;
   }
@@ -976,7 +976,6 @@ private:
   bool                           mWindowDraggingAllowed;
   bool                           mIsBuildingForPopup;
   bool                           mForceLayerForScrollParent;
-  bool                           mAsyncPanZoomEnabled;
 };
 
 class nsDisplayItem;

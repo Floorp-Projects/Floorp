@@ -116,9 +116,7 @@ SelectionCarets::Init()
   }
 
 #if defined(MOZ_WIDGET_GONK)
-  if (LayerManager* lm = mPresShell->GetLayerManager()) {
-    mUseAsyncPanZoom = lm->AsyncPanZoomEnabled();
-  }
+  mUseAsyncPanZoom = gfxPrefs::AsyncPanZoomEnabled();
 #endif
 
   docShell->AddWeakReflowObserver(this);
