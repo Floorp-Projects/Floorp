@@ -19,6 +19,7 @@
 
 #include "KeyStore.h"
 #include "jsfriendapi.h"
+#include "KeyStoreConnector.h"
 #include "MainThreadUtils.h" // For NS_IsMainThread.
 #include "nsICryptoHash.h"
 
@@ -304,7 +305,6 @@ static const char *CA_BEGIN = "-----BEGIN ",
 namespace mozilla {
 namespace ipc {
 
-static const char* KEYSTORE_SOCKET_PATH = "/dev/socket/keystore";
 static const char* KEYSTORE_ALLOWED_USERS[] = {
   "root",
   "wifi",
@@ -672,76 +672,6 @@ checkPermission(uid_t uid)
   return false;
 }
 
-int
-KeyStoreConnector::Create()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  int fd;
-
-  unlink(KEYSTORE_SOCKET_PATH);
-
-  fd = socket(AF_LOCAL, SOCK_STREAM, 0);
-
-  if (fd < 0) {
-    NS_WARNING("Could not open keystore socket!");
-    return -1;
-  }
-
-  return fd;
-}
-
-bool
-KeyStoreConnector::CreateAddr(bool aIsServer,
-                              socklen_t& aAddrSize,
-                              sockaddr_any& aAddr,
-                              const char* aAddress)
-{
-  // Keystore socket must be server
-  MOZ_ASSERT(aIsServer);
-
-  aAddr.un.sun_family = AF_LOCAL;
-  if(strlen(KEYSTORE_SOCKET_PATH) > sizeof(aAddr.un.sun_path)) {
-      NS_WARNING("Address too long for socket struct!");
-      return false;
-  }
-  strcpy((char*)&aAddr.un.sun_path, KEYSTORE_SOCKET_PATH);
-  aAddrSize = strlen(KEYSTORE_SOCKET_PATH) + offsetof(struct sockaddr_un, sun_path) + 1;
-
-  return true;
-}
-
-bool
-KeyStoreConnector::SetUp(int aFd)
-{
-  // Socket permission check.
-  struct ucred userCred;
-  socklen_t len = sizeof(struct ucred);
-
-  if (getsockopt(aFd, SOL_SOCKET, SO_PEERCRED, &userCred, &len)) {
-    return false;
-  }
-
-  return ::checkPermission(userCred.uid);
-}
-
-bool
-KeyStoreConnector::SetUpListenSocket(int aFd)
-{
-  // Allow access of wpa_supplicant(different user, differnt group)
-  chmod(KEYSTORE_SOCKET_PATH, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
-
-  return true;
-}
-
-void
-KeyStoreConnector::GetSocketAddr(const sockaddr_any& aAddr,
-                                 nsAString& aAddrStr)
-{
-  // Unused.
-  MOZ_CRASH("This should never be called!");
-}
-
 //
 // KeyStore::ListenSocket
 //
@@ -818,7 +748,7 @@ KeyStore::StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 ConnectionOrientedSocketIO*
 KeyStore::StreamSocket::GetIO()
 {
-  return PrepareAccept(new KeyStoreConnector());
+  return PrepareAccept(new KeyStoreConnector(KEYSTORE_ALLOWED_USERS));
 }
 
 //
@@ -877,7 +807,8 @@ KeyStore::Listen()
   if (!mListenSocket) {
     // We only ever allocate one |ListenSocket|...
     mListenSocket = new ListenSocket(this);
-    mListenSocket->Listen(new KeyStoreConnector(), mStreamSocket);
+    mListenSocket->Listen(new KeyStoreConnector(KEYSTORE_ALLOWED_USERS),
+                          mStreamSocket);
   } else {
     // ... but keep it open.
     mListenSocket->Listen(mStreamSocket);
