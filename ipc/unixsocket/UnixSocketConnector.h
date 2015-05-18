@@ -7,7 +7,6 @@
 #ifndef mozilla_ipc_unixsocketconnector_h
 #define mozilla_ipc_unixsocketconnector_h
 
-#include <sys/socket.h>
 #include "mozilla/ipc/UnixSocketWatcher.h"
 #include "nsString.h"
 
@@ -17,7 +16,7 @@ namespace ipc {
 /**
  * |UnixSocketConnector| defines the socket creation and connection/listening
  * functions for |UnixSocketConsumer|, et al. Due to the fact that socket setup
- * can vary between protocols (Unix sockets, TCP sockets, Bluetooth sockets, etc),
+ * can vary between protocols (unix sockets, tcp sockets, bluetooth sockets, etc),
  * this allows the user to create whatever connection mechanism they need while
  * still depending on libevent for non-blocking communication handling.
  */
@@ -27,57 +26,57 @@ public:
   virtual ~UnixSocketConnector();
 
   /**
-   * Converts an address to a human-readable string.
+   * Establishs a file descriptor for a socket.
    *
-   * @param aAddress A socket address
-   * @param aAddressLength The number of valid bytes in |aAddress|
-   * @param[out] aAddressString The resulting string
-   * @return NS_OK on success, or an XPCOM error code otherwise.
+   * @return File descriptor for socket
    */
-  virtual nsresult ConvertAddressToString(const struct sockaddr& aAddress,
-                                          socklen_t aAddressLength,
-                                          nsACString& aAddressString) = 0;
+  virtual int Create() = 0;
 
   /**
-   * Creates a listening socket. I/O thread only.
+   * Since most socket specifics are related to address formation into a
+   * sockaddr struct, this function is defined by subclasses and fills in the
+   * structure as needed for whatever connection it is trying to build
    *
-   * @param[out] aAddress The listening socket's address
-   * @param[out] aAddressLength The number of valid bytes in |aAddress|
-   * @param[out] aListenFd The socket's file descriptor
-   * @return NS_OK on success, or an XPCOM error code otherwise.
+   * @param aIsServer True is we are acting as a server socket
+   * @param aAddrSize Size of the struct
+   * @param aAddr Struct to fill
+   * @param aAddress If aIsServer is false, Address to connect to. nullptr otherwise.
+   *
+   * @return True if address is filled correctly, false otherwise
    */
-  virtual nsresult CreateListenSocket(struct sockaddr* aAddress,
-                                      socklen_t* aAddressLength,
-                                      int& aListenFd) = 0;
+  virtual bool CreateAddr(bool aIsServer,
+                          socklen_t& aAddrSize,
+                          sockaddr_any& aAddr,
+                          const char* aAddress) = 0;
 
   /**
-   * Accepts a stream socket from a listening socket. I/O thread only.
+   * Does any socket type specific setup that may be needed, only for socket
+   * created by ConnectSocket()
    *
-   * @param aListenFd The listening socket
-   * @param[out] aAddress Returns the stream socket's address
-   * @param[out] aAddressLength Returns the number of valid bytes in |aAddress|
-   * @param[out] aStreamFd The stream socket's file descriptor
-   * @return NS_OK on success, or an XPCOM error code otherwise.
+   * @param aFd File descriptor for opened socket
+   *
+   * @return true is successful, false otherwise
    */
-  virtual nsresult AcceptStreamSocket(int aListenFd,
-                                      struct sockaddr* aAddress,
-                                      socklen_t* aAddressLen,
-                                      int& aStreamFd) = 0;
+  virtual bool SetUp(int aFd) = 0;
 
   /**
-   * Creates a stream socket. I/O thread only.
+   * Perform socket setup for socket created by ListenSocket(), after listen().
    *
-   * @param[in|out] aAddress The stream socket's address
-   * @param[in|out] aAddressLength The number of valid bytes in |aAddress|
-   * @param[out] aStreamFd The socket's file descriptor
-   * @return NS_OK on success, or an XPCOM error code otherwise.
+   * @param aFd File descriptor for opened socket
+   *
+   * @return true is successful, false otherwise
    */
-  virtual nsresult CreateStreamSocket(struct sockaddr* aAddress,
-                                      socklen_t* aAddressLength,
-                                      int& aStreamFd) = 0;
+  virtual bool SetUpListenSocket(int aFd) = 0;
 
-protected:
-  UnixSocketConnector();
+  /**
+   * Get address of socket we're currently connected to. Return null string if
+   * not connected.
+   *
+   * @param aAddr Address struct
+   * @param aAddrStr String to store address to
+   */
+  virtual void GetSocketAddr(const sockaddr_any& aAddr,
+                             nsAString& aAddrStr) = 0;
 };
 
 }

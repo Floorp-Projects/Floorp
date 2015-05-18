@@ -12,7 +12,6 @@
 #include "mozilla/dom/NfcOptionsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/RootedDictionary.h"
-#include "mozilla/ipc/NfcConnector.h"
 #include "mozilla/unused.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
@@ -313,8 +312,7 @@ NfcService::Start(nsINfcGonkEventListener* aListener)
 
   mListenSocket = new NfcListenSocket(this);
 
-  bool success = mListenSocket->Listen(new NfcConnector(mListenSocketName),
-                                       mConsumer);
+  bool success = mListenSocket->Listen(new NfcConnector(), mConsumer);
   if (!success) {
     mConsumer = nullptr;
     return NS_ERROR_FAILURE;
