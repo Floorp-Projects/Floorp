@@ -42,7 +42,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "finalizer",
 // and that we can release/close the probes it holds.
 const FINALIZATION_TOPIC = "performancemonitor-finalize";
 
-const PROPERTIES_META_IMMUTABLE = ["name", "addonId", "isSystem"];
+const PROPERTIES_META_IMMUTABLE = ["name", "addonId", "isSystem", "groupId"];
 const PROPERTIES_META = [...PROPERTIES_META_IMMUTABLE, "windowId", "title"];
 
 /**
