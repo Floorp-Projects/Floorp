@@ -1134,6 +1134,11 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     return NS_ERROR_FAILURE;
   }
 
+  if (mAudioTrack == mVideoTrack) {
+    NS_WARNING("Combined audio/video sourcebuffer, this is an unsupported "
+               "configuration, only using video track");
+    mAudioTrack = nullptr;
+  }
   if (mAudioTrack) {
     MOZ_ASSERT(mAudioTrack->IsReady());
     mAudioSourceDecoder = mAudioTrack->Decoders()[0];
