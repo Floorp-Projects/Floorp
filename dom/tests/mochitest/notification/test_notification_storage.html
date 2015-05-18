@@ -15,12 +15,13 @@
 
   SimpleTest.requestFlakyTimeout("untriaged");
 
-  function deleteAllNotifications() {
+  function deleteAllNotifications(done) {
     var promise = Notification.get();
     promise.then(function (notifications) {
       notifications.forEach(function(notification) {
         notification.close();
       });
+      done();
     });
   }
 
@@ -120,10 +121,10 @@
       var promise = Notification.get();
       promise.then(function (notifications) {
         is(notifications.length, 3, "should return 3 notifications");
-        done();
         n1.close();
         n2.close();
         n3.close();
+        done();
       });
     },
 
@@ -134,13 +135,17 @@
       var n = new Notification("test-title" + Math.random());
       n.onclose = function() {
         Notification.get().then(function(notifications) {
-            is(notifications.length, 0, "should return 0 notifications");
-            done();
+          is(notifications.length, 0, "should return 0 notifications");
+          done();
         });
-      }
-      window.setTimeout(function() {
+      };
+      info("Installing 'onshow' for " + n.title);
+      n.onshow = function() {
+        info("Triggered 'onshow' for " + n.title);
+        window.setTimeout(function() {
           NotificationTest.fireCloseEvent(n.title);
-      }, 100);
+        }, 100);
+      };
     }
   ];
 

@@ -384,7 +384,6 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   if (!strcmp("alertclickcallback", aTopic)) {
-
     nsCOMPtr<nsIDOMEvent> event;
     NS_NewDOMEvent(getter_AddRefs(event), mNotification, nullptr, nullptr);
     nsresult rv = event->InitEvent(NS_LITERAL_STRING("click"), false, true);
