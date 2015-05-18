@@ -1014,7 +1014,7 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
                                            nsEventStatus aApzResponse)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  InputAPZContext context(aGuid, aInputBlockId);
+  InputAPZContext context(aGuid, aInputBlockId, aApzResponse);
 
   // If this is a touch event and APZ has targeted it to an APZC in the root
   // process, apply that APZC's callback-transform before dispatching the

@@ -445,7 +445,7 @@ MarkObjectGroupFlags(ExclusiveContext* cx, JSObject* obj, ObjectGroupFlags flags
 }
 
 inline void
-MarkObjectGroupUnknownProperties(JSContext* cx, ObjectGroup* obj)
+MarkObjectGroupUnknownProperties(ExclusiveContext* cx, ObjectGroup* obj)
 {
     if (!obj->unknownProperties())
         obj->markUnknown(cx);

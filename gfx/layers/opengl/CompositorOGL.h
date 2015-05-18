@@ -32,9 +32,6 @@
 #include "nsThreadUtils.h"              // for nsRunnable
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType
 #include "nscore.h"                     // for NS_IMETHOD
-#ifdef MOZ_WIDGET_GONK
-#include <ui/GraphicBuffer.h>
-#endif
 #include "gfxVR.h"
 
 class nsIWidget;

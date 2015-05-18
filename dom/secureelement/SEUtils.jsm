@@ -50,6 +50,67 @@ this.SEUtils = {
 
     return true;
   },
+
+  ensureIsArray: function ensureIsArray(obj) {
+    return Array.isArray(obj) ? obj : [obj];
+  },
+
+  /**
+   * parseTLV is intended primarily to be used to parse Global Platform Device
+   * Technology secure element access control data.
+   *
+   * The parsed result value is an internal format only.
+   *
+   * All tags will be treated as simple Tag Length Values (TLV), (i.e. with a
+   * plain value, not subject to further unpacking), unless those tags are
+   * listed in the containerTags array.
+   *
+   * @param bytes - byte array
+   * @param containerTags - byte array of tags
+   */
+  parseTLV: function parseTLV(bytes, containerTags) {
+    let result = {};
+
+    if (typeof bytes === "string") {
+      bytes = this.hexStringToByteArray(bytes);
+    }
+
+    if (!Array.isArray(bytes)) {
+      debug("Passed value is not an array nor a string.");
+      return null;
+    }
+
+    for (let pos = 0; pos < bytes.length; ) {
+      let tag = bytes[pos],
+          length = bytes[pos + 1],
+          value = bytes.slice(pos + 2, pos + 2 + length),
+          parsed = null;
+
+      // Support for 0xFF padded files (GPD 7.1.2)
+      if (tag === 0xFF) {
+        break;
+      }
+
+      if (containerTags.indexOf(tag) >= 0) {
+        parsed = this.parseTLV(value, containerTags);
+      } else {
+        parsed = value;
+      }
+
+      // Internal parsed format.
+      if (!result[tag]) {
+        result[tag] = parsed;
+      } else if (Array.isArray(result[tag])) {
+        result[tag].push(parsed);
+      } else {
+        result[tag] = [result[tag], parsed];
+      }
+
+      pos = pos + 2 + length;
+    }
+
+    return result;
+  }
 };
 
 this.EXPORTED_SYMBOLS = ["SEUtils"];

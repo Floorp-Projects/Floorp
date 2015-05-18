@@ -183,9 +183,9 @@ body {
 
 .computedview-colorswatch {
   border-radius: 50%;
-  width: 1em;
-  height: 1em;
-  vertical-align: text-top;
+  width: 0.9em;
+  height: 0.9em;
+  vertical-align: middle;
   -moz-margin-end: 5px;
   display: inline-block;
   position: relative;

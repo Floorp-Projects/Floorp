@@ -10,7 +10,6 @@
 #include "WMFByteStream.h"
 #include "WMFSourceReaderCallback.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/Preferences.h"
 #include "DXVA2Manager.h"

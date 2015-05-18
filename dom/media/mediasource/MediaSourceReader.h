@@ -112,7 +112,7 @@ public:
   nsresult ResetDecode() override;
 
   // Acquires the decoder monitor, and is thus callable on any thread.
-  nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
+  media::TimeIntervals GetBuffered() override;
 
   already_AddRefed<SourceBufferDecoder> CreateSubDecoder(const nsACString& aType,
                                                          int64_t aTimestampOffset /* microseconds */);

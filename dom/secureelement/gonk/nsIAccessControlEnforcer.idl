@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Copyright © 2015, Deutsche Telekom, Inc. */
+
+#include "nsISupports.idl"
+
+interface nsIVariant;
+
+[scriptable, uuid(4994a960-26d9-4d71-82dd-4505bd97bf2a)]
+interface nsIAccessControlEnforcer : nsISupports
+{
+  /**
+   * Determines whether application identified by its ID should be allowed
+   * to access Secure Element's applet identified by its AID. Decision
+   * is made according to the GPD specification.
+   *
+   * @param  localId
+   *         ID of an application accessing SE
+   * @param  seType
+   *         Type of the SE.
+   * @param  aid
+   *         AID of a SE applet
+   * @return Promise which is resolved to true if access should be allowed,
+   *         false otherwise, and rejected if the application contains
+   *         no developer certificate.
+   */
+  jsval isAccessAllowed(in unsigned long localId,
+                        in DOMString seType,
+                        in DOMString aid);
+};

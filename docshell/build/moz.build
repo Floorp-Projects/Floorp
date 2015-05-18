@@ -13,12 +13,12 @@ SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../base',
-    '../shistory/src/',
+    '/docshell/base',
+    '/docshell/shistory',
     '/uriloader/base',
     '/uriloader/exthandler',
     '/uriloader/prefetch',
-    ]
+]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     LOCAL_INCLUDES += ['/uriloader/exthandler/mac']

@@ -44,60 +44,20 @@
   
     var theWindow = window;
 
-    var useJSTransfer = false;
-    try {
-      // This method throws an exception if the old Download Manager is disabled.
-      Services.downloads.activeDownloadCount;
-    } catch (ex) {
-      useJSTransfer = true;
-    }
-
-    if (useJSTransfer) {
-      var Downloads = SpecialPowers.Cu.import("resource://gre/modules/Downloads.jsm").Downloads;
-      Downloads.getList(Downloads.PUBLIC).then(list => {
-        list = SpecialPowers.wrap(list);
-        list.addView({
-          onDownloadAdded: function (aDownload) {
-            list.removeView(this);
-            SpecialPowers.wrap(aDownload).whenSucceeded().then(() => {
-              list.removeFinished();
-              theWindow.location = "bug383369step2.html";
-            });
-          },
-        });
-        window.location = "download.auto";
-      }).then(null, SpecialPowers.Cu.reportError);
-
-      return;
-    }
-
-    var downloadManager = SpecialPowers.Cc["@mozilla.org/download-manager;1"]
-      .getService(SpecialPowers.Ci.nsIDownloadManager);
-    var observer = {
-      observe: function(subject, topic, data) {
-        switch (topic) {
-        case "dl-done":
-        case "dl-failed":
-        case "dl-blocked":
-        case "dl-dirty":
-          downloadManager.cleanUp();
-          theWindow.location = "bug383369step2.html";
-          observerService.removeObserver(this, "dl-done");
-          observerService.removeObserver(this, "dl-failed");
-          observerService.removeObserver(this, "dl-blocked");
-          observerService.removeObserver(this, "dl-dirty");
-          break;
-        }
-      }
-    };
-    var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
-      .getService(SpecialPowers.Ci.nsIObserverService);
-    observerService.addObserver(observer, "dl-done", false);
-    observerService.addObserver(observer, "dl-failed", false);
-    observerService.addObserver(observer, "dl-blocked", false);
-    observerService.addObserver(observer, "dl-dirty", false);
-
-    window.location = "download.auto";
+    var Downloads = SpecialPowers.Cu.import("resource://gre/modules/Downloads.jsm").Downloads;
+    Downloads.getList(Downloads.PUBLIC).then(list => {
+      list = SpecialPowers.wrap(list);
+      list.addView({
+        onDownloadAdded: function (aDownload) {
+          list.removeView(this);
+          SpecialPowers.wrap(aDownload).whenSucceeded().then(() => {
+            list.removeFinished();
+            theWindow.location = "bug383369step2.html";
+          });
+        },
+      });
+      window.location = "download.auto";
+    }).then(null, SpecialPowers.Cu.reportError);
   }
 
   function afterNavigationTest()

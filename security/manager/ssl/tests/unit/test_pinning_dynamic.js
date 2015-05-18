@@ -27,12 +27,12 @@ function loadCert(cert_name, trust_string) {
 
 function checkOK(cert, hostname) {
   return checkCertErrorGeneric(certdb, cert, PRErrorCodeSuccess,
-                               certificateUsageSSLServer, hostname);
+                               certificateUsageSSLServer, {}, hostname);
 }
 
 function checkFail(cert, hostname) {
   return checkCertErrorGeneric(certdb, cert, MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE,
-                               certificateUsageSSLServer, hostname);
+                               certificateUsageSSLServer, {}, hostname);
 }
 
 const NON_ISSUED_KEY_HASH = "KHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN=";

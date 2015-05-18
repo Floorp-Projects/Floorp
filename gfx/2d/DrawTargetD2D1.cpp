@@ -944,12 +944,16 @@ DrawTargetD2D1::PrepareForDrawing(CompositionOp aOp, const Pattern &aPattern)
 {
   MarkChanged();
 
-  if (aOp == CompositionOp::OP_OVER && IsPatternSupportedByD2D(aPattern)) {
+  if (D2DSupportsPrimitiveBlendMode(aOp) && IsPatternSupportedByD2D(aPattern)) {
     // It's important to do this before FlushTransformToDC! As this will cause
     // the transform to become dirty.
     PushAllClips();
 
     FlushTransformToDC();
+
+    if (aOp != CompositionOp::OP_OVER)
+      mDC->SetPrimitiveBlend(D2DPrimitiveBlendMode(aOp));
+
     return;
   }
 
@@ -967,7 +971,9 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 {
   bool patternSupported = IsPatternSupportedByD2D(aPattern);
 
-  if (aOp == CompositionOp::OP_OVER && patternSupported) {
+  if (D2DSupportsPrimitiveBlendMode(aOp) && patternSupported) {
+    if (aOp != CompositionOp::OP_OVER)
+      mDC->SetPrimitiveBlend(D2D1_PRIMITIVE_BLEND_SOURCE_OVER);
     return;
   }
 

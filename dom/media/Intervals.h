@@ -118,7 +118,7 @@ public:
   bool Contains(const SelfType& aOther) const
   {
     return (mStart - mFuzz <= aOther.mStart + aOther.mFuzz) &&
-      (aOther.mEnd + aOther.mFuzz <= mEnd - mFuzz);
+      (aOther.mEnd - aOther.mFuzz <= mEnd + mFuzz);
   }
 
   bool ContainsStrict(const SelfType& aOther) const
@@ -127,6 +127,13 @@ public:
   }
 
   bool Intersects(const SelfType& aOther) const
+  {
+    return (mStart - mFuzz < aOther.mEnd + aOther.mFuzz) &&
+      (aOther.mStart - aOther.mFuzz < mEnd + mFuzz);
+  }
+
+  // Same as Intersects, but including the boundaries.
+  bool Touches(const SelfType& aOther) const
   {
     return (mStart - mFuzz <= aOther.mEnd + aOther.mFuzz) &&
       (aOther.mStart - aOther.mFuzz <= mEnd + mFuzz);
@@ -139,7 +146,17 @@ public:
     return mEnd <= aOther.mStart && aOther.mStart - mEnd <= mFuzz + aOther.mFuzz;
   }
 
-  SelfType Union(const SelfType& aOther) const
+  bool RightOf(const SelfType& aOther) const
+  {
+    return aOther.mEnd - aOther.mFuzz <= mStart + mFuzz;
+  }
+
+  bool LeftOf(const SelfType& aOther) const
+  {
+    return mEnd - mFuzz <= aOther.mStart + aOther.mFuzz;
+  }
+
+  SelfType Span(const SelfType& aOther) const
   {
     SelfType result(*this);
     if (aOther.mStart < mStart) {
@@ -176,6 +193,11 @@ public:
     return mStart == mEnd;
   }
 
+  void SetFuzz(const T& aFuzz)
+  {
+    mFuzz = aFuzz;
+  }
+
   T mStart;
   T mEnd;
   T mFuzz;
@@ -183,6 +205,8 @@ public:
 private:
 };
 
+// An IntervalSet in a collection of Intervals. The IntervalSet is always
+// normalized.
 template<typename T>
 class IntervalSet
 {
@@ -205,18 +229,22 @@ public:
   }
 
   IntervalSet(SelfType&& aOther)
-    : mIntervals(Move(aOther.mIntervals))
   {
+    mIntervals.MoveElementsFrom(Move(aOther.mIntervals));
   }
 
   explicit IntervalSet(const ElemType& aOther)
   {
-    mIntervals.AppendElement(aOther);
+    if (!aOther.IsEmpty()) {
+      mIntervals.AppendElement(aOther);
+    }
   }
 
   explicit IntervalSet(ElemType&& aOther)
   {
-    mIntervals.AppendElement(Move(aOther));
+    if (!aOther.IsEmpty()) {
+      mIntervals.AppendElement(Move(aOther));
+    }
   }
 
   SelfType& operator= (const SelfType& aOther)
@@ -247,19 +275,55 @@ public:
     return *this;
   }
 
-  // + and += operator will append the provided interval or intervalset.
-  // Note that the result is not normalized. Call Normalize() as required.
-  // Alternatively, use Union()
-
   SelfType& Add(const SelfType& aIntervals)
   {
     mIntervals.AppendElements(aIntervals.mIntervals);
+    Normalize();
     return *this;
   }
 
   SelfType& Add(const ElemType& aInterval)
   {
-    mIntervals.AppendElement(aInterval);
+    if (aInterval.IsEmpty()) {
+      return *this;
+    }
+    if (mIntervals.IsEmpty()) {
+      mIntervals.AppendElement(aInterval);
+      return *this;
+    }
+    // Most of our actual usage is adding an interval that will be outside the
+    // range. We can speed up normalization here.
+    if (aInterval.RightOf(mIntervals.LastElement()) &&
+        !aInterval.Touches(mIntervals.LastElement())) {
+      mIntervals.AppendElement(aInterval);
+      return *this;
+    }
+
+    ContainerType normalized;
+    ElemType current(aInterval);
+    bool inserted = false;
+    IndexType i = 0;
+    for (; i < mIntervals.Length(); i++) {
+      ElemType& interval = mIntervals[i];
+      if (current.Touches(interval)) {
+        current = current.Span(interval);
+      } else if (current.LeftOf(interval)) {
+        normalized.AppendElement(Move(current));
+        inserted = true;
+        break;
+      } else {
+        normalized.AppendElement(Move(interval));
+      }
+    }
+    if (!inserted) {
+      normalized.AppendElement(Move(current));
+    }
+    for (; i < mIntervals.Length(); i++) {
+      normalized.AppendElement(Move(mIntervals[i]));
+    }
+    mIntervals.Clear();
+    mIntervals.MoveElementsFrom(Move(normalized));
+
     return *this;
   }
 
@@ -299,18 +363,15 @@ public:
   }
 
   // Mutate this IntervalSet to be the union of this and aOther.
-  // Resulting IntervalSet is normalized.
   SelfType& Union(const SelfType& aOther)
   {
     Add(aOther);
-    Normalize();
     return *this;
   }
 
   SelfType& Union(const ElemType& aInterval)
   {
     Add(aInterval);
-    Normalize();
     return *this;
   }
 
@@ -331,8 +392,8 @@ public:
         j++;
       }
     }
-
-    mIntervals = intersection;
+    mIntervals.Clear();
+    mIntervals.MoveElementsFrom(Move(intersection));
     return *this;
   }
 
@@ -417,7 +478,20 @@ public:
     }
   }
 
-  bool Contains(const T& aX) {
+  bool Contains(const ElemType& aInterval) const {
+    for (const auto& interval : mIntervals) {
+      if (aInterval.LeftOf(interval)) {
+        // Will never succeed.
+        return false;
+      }
+      if (interval.Contains(aInterval)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool Contains(const T& aX) const {
     for (const auto& interval : mIntervals) {
       if (interval.Contains(aX)) {
         return true;
@@ -426,7 +500,7 @@ public:
     return false;
   }
 
-  bool ContainsStrict(const T& aX) {
+  bool ContainsStrict(const T& aX) const {
     for (const auto& interval : mIntervals) {
       if (interval.ContainsStrict(aX)) {
         return true;
@@ -435,45 +509,25 @@ public:
     return false;
   }
 
-  void Normalize()
+  // Shift all values by aOffset.
+  void Shift(const T& aOffset)
   {
-    if (mIntervals.Length() >= 2) {
-      ContainerType normalized;
-
-      mIntervals.Sort(CompareIntervals());
-
-      // This merges the intervals.
-      ElemType current(mIntervals[0]);
-      for (IndexType i = 1; i < mIntervals.Length(); i++) {
-        if (current.Contains(mIntervals[i])) {
-          continue;
-        }
-        if (current.Intersects(mIntervals[i])) {
-          current = current.Union(mIntervals[i]);
-        } else {
-          normalized.AppendElement(current);
-          current = mIntervals[i];
-        }
-      }
-
-      normalized.AppendElement(current);
-
-      mIntervals = normalized;
+    for (auto& interval : mIntervals) {
+      interval.mStart = interval.mStart + aOffset;
+      interval.mEnd = interval.mEnd + aOffset;
     }
   }
 
-  // Shift all values by aOffset.
-  void Shift(T aOffset)
-  {
+  void SetFuzz(const T& aFuzz) {
     for (auto& interval : mIntervals) {
-      interval.mStart += aOffset;
-      interval.mEnd += aOffset;
+      interval.SetFuzz(aFuzz);
     }
+    Normalize();
   }
 
   static const IndexType NoIndex = IndexType(-1);
 
-  IndexType Find(T aValue) const
+  IndexType Find(const T& aValue) const
   {
     for (IndexType i = 0; i < mIntervals.Length(); i++) {
       if (mIntervals[i].Contains(aValue)) {
@@ -487,6 +541,31 @@ protected:
   ContainerType mIntervals;
 
 private:
+  void Normalize()
+  {
+    if (mIntervals.Length() >= 2) {
+      ContainerType normalized;
+
+      mIntervals.Sort(CompareIntervals());
+
+      // This merges the intervals.
+      ElemType current(mIntervals[0]);
+      for (IndexType i = 1; i < mIntervals.Length(); i++) {
+        ElemType& interval = mIntervals[i];
+        if (current.Touches(interval)) {
+          current = current.Span(interval);
+        } else {
+          normalized.AppendElement(Move(current));
+          current = Move(interval);
+        }
+      }
+      normalized.AppendElement(Move(current));
+
+      mIntervals.Clear();
+      mIntervals.MoveElementsFrom(Move(normalized));
+    }
+  }
+
   struct CompareIntervals
   {
     bool Equals(const ElemType& aT1, const ElemType& aT2) const

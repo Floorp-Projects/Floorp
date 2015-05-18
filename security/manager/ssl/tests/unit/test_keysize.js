@@ -49,9 +49,7 @@ function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
   loadCert(intFullName, ",,");
   let eeCert = certFromFile(eeFullName + ".der");
 
-  do_print("cert cn=" + eeCert.commonName);
   do_print("cert o=" + eeCert.organization);
-  do_print("cert issuer cn=" + eeCert.issuerCommonName);
   do_print("cert issuer o=" + eeCert.issuerOrganization);
   checkCertErrorGeneric(certdb, eeCert, eeExpectedError,
                         certificateUsageSSLServer);

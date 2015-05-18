@@ -18,7 +18,6 @@
     const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
     if (IsMacOSX10_6orOlder() || isWinXP) {
         ok(true, "Screensharing disabled for OSX10.6 and WinXP");
-        SimpleTest.finish();
         return;
     }
     var testVideo = createMediaElement('video', 'testVideo');
@@ -30,12 +29,12 @@
       fake: false
     };
 
-    getUserMedia(constraints).then(aStream => {
-      checkMediaStreamTracks(constraints, aStream);
+    return getUserMedia(constraints).then(stream => {
+      checkMediaStreamTracks(constraints, stream);
 
-      var playback = new LocalMediaStreamPlayback(testVideo, aStream);
+      var playback = new LocalMediaStreamPlayback(testVideo, stream);
       return playback.playMediaWithStreamStop(false);
-    }).then(() => SimpleTest.finish(), generateErrorCallback());
+    });
 
   });
 
