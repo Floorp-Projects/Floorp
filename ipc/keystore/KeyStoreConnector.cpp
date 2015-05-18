@@ -11,7 +11,6 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 #include "nsISupportsImpl.h" // For MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
-#include "nsThreadUtils.h" // For NS_IsMainThread.
 
 #ifdef MOZ_WIDGET_GONK
 #include <android/log.h>
@@ -225,96 +224,6 @@ KeyStoreConnector::CreateStreamSocket(struct sockaddr* aAddress,
 {
   MOZ_CRASH("|KeyStoreConnector| does not support creating stream sockets.");
   return NS_ERROR_FAILURE;
-}
-
-// Deprecated
-
-static const char* KEYSTORE_ALLOWED_USERS[] = {
-  "root",
-  "wifi",
-  NULL
-};
-
-static bool checkPermission(uid_t uid)
-{
-  struct passwd *userInfo = getpwuid(uid);
-  for (const char **user = KEYSTORE_ALLOWED_USERS; *user; user++ ) {
-    if (!strcmp(*user, userInfo->pw_name)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-int
-KeyStoreConnector::Create()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  int fd;
-
-  unlink(KEYSTORE_SOCKET_PATH);
-
-  fd = socket(AF_LOCAL, SOCK_STREAM, 0);
-
-  if (fd < 0) {
-    NS_WARNING("Could not open keystore socket!");
-    return -1;
-  }
-
-  return fd;
-}
-
-bool
-KeyStoreConnector::CreateAddr(bool aIsServer,
-                              socklen_t& aAddrSize,
-                              sockaddr_any& aAddr,
-                              const char* aAddress)
-{
-  // Keystore socket must be server
-  MOZ_ASSERT(aIsServer);
-
-  aAddr.un.sun_family = AF_LOCAL;
-  if(strlen(KEYSTORE_SOCKET_PATH) > sizeof(aAddr.un.sun_path)) {
-      NS_WARNING("Address too long for socket struct!");
-      return false;
-  }
-  strcpy((char*)&aAddr.un.sun_path, KEYSTORE_SOCKET_PATH);
-  aAddrSize = strlen(KEYSTORE_SOCKET_PATH) + offsetof(struct sockaddr_un, sun_path) + 1;
-
-  return true;
-}
-
-bool
-KeyStoreConnector::SetUp(int aFd)
-{
-  // Socket permission check.
-  struct ucred userCred;
-  socklen_t len = sizeof(struct ucred);
-
-  if (getsockopt(aFd, SOL_SOCKET, SO_PEERCRED, &userCred, &len)) {
-    return false;
-  }
-
-  return checkPermission(userCred.uid);
-}
-
-bool
-KeyStoreConnector::SetUpListenSocket(int aFd)
-{
-  // Allow access of wpa_supplicant(different user, differnt group)
-  chmod(KEYSTORE_SOCKET_PATH, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
-
-  return true;
-}
-
-void
-KeyStoreConnector::GetSocketAddr(const sockaddr_any& aAddr,
-                                 nsAString& aAddrStr)
-{
-  // Unused.
-  MOZ_CRASH("This should never be called!");
 }
 
 }
