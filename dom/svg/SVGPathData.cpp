@@ -81,7 +81,7 @@ SVGPathData::AppendSeg(uint32_t aType, ...)
 {
   uint32_t oldLength = mData.Length();
   uint32_t newLength = oldLength + 1 + SVGPathSegUtils::ArgCountForType(aType);
-  if (!mData.SetLength(newLength)) {
+  if (!mData.SetLength(newLength, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

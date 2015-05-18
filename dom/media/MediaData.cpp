@@ -625,7 +625,8 @@ MediaRawDataWriter::SetSize(size_t aSize)
 
   // Pad our buffer. We ensure sufficient capacity above so this shouldn't fail.
   MOZ_ALWAYS_TRUE(
-    mBuffer->SetLength(aSize + mTarget->mPadding + RAW_DATA_ALIGNMENT));
+    mBuffer->SetLength(aSize + mTarget->mPadding + RAW_DATA_ALIGNMENT,
+                       fallible));
   mTarget->mSize = mSize = aSize;
   return true;
 }

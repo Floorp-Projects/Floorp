@@ -289,7 +289,7 @@ template<class T>
 nsresult
 ReadTArray(nsIInputStream* aStream, FallibleTArray<T>* aArray, uint32_t aNumElements)
 {
-  if (!aArray->SetLength(aNumElements))
+  if (!aArray->SetLength(aNumElements, fallible))
     return NS_ERROR_OUT_OF_MEMORY;
 
   void *buffer = aArray->Elements();

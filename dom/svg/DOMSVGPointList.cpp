@@ -166,7 +166,7 @@ DOMSVGPointList::InternalListWillChangeTo(const SVGPointList& aNewValue)
     }
   }
 
-  if (!mItems.SetLength(newLength)) {
+  if (!mItems.SetLength(newLength, fallible)) {
     // We silently ignore SetLength OOM failure since being out of sync is safe
     // so long as we have *fewer* items than our internal list.
     mItems.Clear();
