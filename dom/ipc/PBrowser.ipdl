@@ -515,7 +515,8 @@ parent:
 
     sync GetRenderFrameInfo(PRenderFrame aRenderFrame)
         returns (TextureFactoryIdentifier textureFactoryIdentifier,
-                 uint64_t layersId);
+                 uint64_t layersId,
+                 bool asyncPanZoomEnabled);
 
     /**
      * Sent by the child to the parent to inform it that an update to the
@@ -545,7 +546,8 @@ child:
          TextureFactoryIdentifier textureFactoryIdentifier,
          uint64_t layersId,
          nullable PRenderFrame renderFrame,
-         bool parentIsActive);
+         bool parentIsActive,
+         bool asyncPanZoomEnabled);
 
     LoadURL(nsCString uri, BrowserConfiguration config);
 

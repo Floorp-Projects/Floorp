@@ -299,6 +299,7 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
   , mBackgroundColor(gfxRGBA(1, 1, 1))
+  , mAsyncPanZoomEnabled(false)
 {
   *aSuccess = false;
   if (!mFrameLoader) {
@@ -308,6 +309,9 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   *aId = 0;
 
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
+
+  mAsyncPanZoomEnabled = lm && lm->AsyncPanZoomEnabled();
+
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
     *aTextureFactoryIdentifier =
@@ -325,7 +329,7 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
         static_cast<ClientLayerManager*>(lm.get());
       clientManager->GetRemoteRenderer()->SendNotifyChildCreated(mLayersId);
     }
-    if (gfxPrefs::AsyncPanZoomEnabled()) {
+    if (mAsyncPanZoomEnabled) {
       mContentController = new RemoteContentController(this);
       CompositorParent::SetControllerForLayerTree(mLayersId, mContentController);
     }
@@ -346,7 +350,7 @@ RenderFrameParent::GetApzcTreeManager()
   // created and the static getter knows which CompositorParent is
   // instantiated with this layers ID. That's why try to fetch it when
   // we first need it and cache the result.
-  if (!mApzcTreeManager && gfxPrefs::AsyncPanZoomEnabled()) {
+  if (!mApzcTreeManager && mAsyncPanZoomEnabled) {
     mApzcTreeManager = CompositorParent::GetAPZCTreeManager(mLayersId);
   }
   return mApzcTreeManager.get();
