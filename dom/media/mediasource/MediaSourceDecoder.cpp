@@ -7,7 +7,6 @@
 
 #include "prlog.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaSource.h"
 #include "MediaSourceReader.h"
@@ -63,26 +62,30 @@ MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
   return ScheduleStateMachine();
 }
 
-nsresult
-MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
+media::TimeIntervals
+MediaSourceDecoder::GetSeekable()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mMediaSource) {
-    return NS_ERROR_FAILURE;
+    NS_WARNING("MediaSource element isn't attached");
+    return media::TimeIntervals::Invalid();
   }
 
+  media::TimeIntervals seekable;
   double duration = mMediaSource->Duration();
   if (IsNaN(duration)) {
     // Return empty range.
   } else if (duration > 0 && mozilla::IsInfinite(duration)) {
-    nsRefPtr<dom::TimeRanges> bufferedRanges = new dom::TimeRanges();
-    mReader->GetBuffered(bufferedRanges);
-    aSeekable->Add(bufferedRanges->GetStartTime(), bufferedRanges->GetEndTime());
+    media::TimeIntervals buffered = mReader->GetBuffered();
+    if (buffered.Length()) {
+      seekable += media::TimeInterval(buffered.GetStart(), buffered.GetEnd());
+    }
   } else {
-    aSeekable->Add(0, duration);
+    seekable += media::TimeInterval(media::TimeUnit::FromSeconds(0),
+                                    media::TimeUnit::FromSeconds(duration));
   }
-  MSE_DEBUG("ranges=%s", DumpTimeRanges(aSeekable).get());
-  return NS_OK;
+  MSE_DEBUG("ranges=%s", DumpTimeRanges(seekable).get());
+  return seekable;
 }
 
 void
@@ -336,22 +339,24 @@ MediaSourceDecoder::SelectDecoder(int64_t aTarget,
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
+  media::TimeUnit target{media::TimeUnit::FromMicroseconds(aTarget)};
+  media::TimeUnit tolerance{media::TimeUnit::FromMicroseconds(aTolerance + aTarget)};
+
+  // aTolerance gives a slight bias toward the start of a range only.
   // Consider decoders in order of newest to oldest, as a newer decoder
   // providing a given buffered range is expected to replace an older one.
   for (int32_t i = aTrackDecoders.Length() - 1; i >= 0; --i) {
     nsRefPtr<SourceBufferDecoder> newDecoder = aTrackDecoders[i];
 
-    nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-    newDecoder->GetBuffered(ranges);
-    if (ranges->Find(double(aTarget) / USECS_PER_S,
-                     double(aTolerance) / USECS_PER_S) == dom::TimeRanges::NoIndex) {
-      MSE_DEBUGV("SelectDecoder(%lld fuzz:%lld) newDecoder=%p (%d/%d) target not in ranges=%s",
-                 aTarget, aTolerance, newDecoder.get(), i+1,
-                 aTrackDecoders.Length(), DumpTimeRanges(ranges).get());
-      continue;
+    media::TimeIntervals ranges = newDecoder->GetBuffered();
+    for (uint32_t j = 0; j < ranges.Length(); j++) {
+      if (target < ranges.End(j) && tolerance >= ranges.Start(j)) {
+        return newDecoder.forget();
+      }
     }
-
-    return newDecoder.forget();
+    MSE_DEBUGV("SelectDecoder(%lld fuzz:%lld) newDecoder=%p (%d/%d) target not in ranges=%s",
+               aTarget, aTolerance, newDecoder.get(), i+1,
+               aTrackDecoders.Length(), DumpTimeRanges(ranges).get());
   }
 
   return nullptr;

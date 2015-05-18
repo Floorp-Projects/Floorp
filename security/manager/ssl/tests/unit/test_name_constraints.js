@@ -20,18 +20,8 @@ function load_cert(cert_name, trust_string) {
   return certFromFile(cert_filename);
 }
 
-function check_cert_err_generic(cert, expected_error, usage) {
-  do_print("cert cn=" + cert.commonName);
-  do_print("cert issuer cn=" + cert.issuerCommonName);
-  let hasEVPolicy = {};
-  let verifiedChain = {};
-  let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, null, verifiedChain,
-                                   hasEVPolicy);
-  do_check_eq(error,  expected_error);
-}
-
 function check_cert_err(cert, expected_error) {
-  check_cert_err_generic(cert, expected_error, certificateUsageSSLServer)
+  checkCertErrorGeneric(certdb, cert, expected_error, certificateUsageSSLServer);
 }
 
 function check_ok(x) {
@@ -39,7 +29,7 @@ function check_ok(x) {
 }
 
 function check_ok_ca (x) {
-  return check_cert_err_generic(x, PRErrorCodeSuccess, certificateUsageSSLCA);
+  checkCertErrorGeneric(certdb, x, PRErrorCodeSuccess, certificateUsageSSLCA);
 }
 
 function check_fail(x) {
@@ -47,7 +37,8 @@ function check_fail(x) {
 }
 
 function check_fail_ca(x) {
-  return check_cert_err_generic(x, SEC_ERROR_CERT_NOT_IN_NAME_SPACE, certificateUsageSSLCA);
+  checkCertErrorGeneric(certdb, x, SEC_ERROR_CERT_NOT_IN_NAME_SPACE,
+                        certificateUsageSSLCA);
 }
 
 function run_test() {
@@ -266,8 +257,10 @@ function run_test() {
   // NSS get it right.
   {
     let cert = certFromFile('cn-www.foo.org-int-nc-perm-foo.com-ca-nc.der');
-    check_cert_err_generic(cert, SEC_ERROR_CERT_NOT_IN_NAME_SPACE, certificateUsageSSLServer);
-    check_cert_err_generic(cert, PRErrorCodeSuccess, certificateUsageSSLClient);
+    checkCertErrorGeneric(certdb, cert, SEC_ERROR_CERT_NOT_IN_NAME_SPACE,
+                          certificateUsageSSLServer);
+    checkCertErrorGeneric(certdb, cert, PRErrorCodeSuccess,
+                          certificateUsageSSLClient);
   }
 
   // DCISS tests

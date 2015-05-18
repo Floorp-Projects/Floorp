@@ -12,12 +12,9 @@
 #include "MediaPromise.h"
 #include "MediaQueue.h"
 #include "AudioCompactor.h"
+#include "TimeUnits.h"
 
 namespace mozilla {
-
-namespace dom {
-class TimeRanges;
-}
 
 class MediaDecoderReader;
 class SharedDecoderManager;
@@ -226,7 +223,7 @@ public:
   // The OggReader relies on this base implementation not performing I/O,
   // since in FirefoxOS we can't do I/O on the main thread, where this is
   // called.
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered);
+  virtual media::TimeIntervals GetBuffered();
 
   virtual int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio);
 

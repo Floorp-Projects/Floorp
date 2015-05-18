@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/CanvasCaptureMediaStream.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
@@ -403,6 +404,53 @@ HTMLCanvasElement::GetMozPrintCallback() const
     return mOriginalCanvas->GetMozPrintCallback();
   }
   return mPrintCallback;
+}
+
+already_AddRefed<CanvasCaptureMediaStream>
+HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
+                                 ErrorResult& aRv)
+{
+  if (IsWriteOnly()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  nsIDOMWindow* window = OwnerDoc()->GetInnerWindow();
+  if (!window) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (!mCurrentContext) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+    return nullptr;
+  }
+
+  if (mCurrentContextType != CanvasContextType::Canvas2D) {
+    WebGLContext* gl = static_cast<WebGLContext*>(mCurrentContext.get());
+    if (!gl->IsPreservingDrawingBuffer()) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+  }
+
+  nsRefPtr<CanvasCaptureMediaStream> stream =
+    CanvasCaptureMediaStream::CreateSourceStream(window, this);
+  if (!stream) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<nsIPrincipal> principal = NodePrincipal();
+  stream->CombineWithPrincipal(principal);
+
+  TrackID videoTrackId = 1;
+  nsresult rv = stream->Init(aFrameRate, videoTrackId);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+  return stream.forget();
 }
 
 nsresult

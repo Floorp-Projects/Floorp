@@ -58,7 +58,6 @@ typedef Observer<SwitchEvent> SwitchObserver;
 enum ProcessPriority {
   PROCESS_PRIORITY_UNKNOWN = -1,
   PROCESS_PRIORITY_BACKGROUND,
-  PROCESS_PRIORITY_BACKGROUND_HOMESCREEN,
   PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE,
   PROCESS_PRIORITY_FOREGROUND_KEYBOARD,
   // The special class for the preallocated process, high memory priority but

@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/webgl-mochitest/webgl-util.js"></script>
+</head>
+<body>
+<pre id="test">
+<script id="v-shader" type="x-shader/x-vertex">
+  attribute vec2 aPosition;
+  void main() {
+   gl_Position = vec4(aPosition, 0, 1);
+}
+</script>
+<script id="f-shader" type="x-shader/x-fragment">
+  precision mediump float;
+  uniform vec4 uColor;
+  void main() { gl_FragColor = uColor; }
+</script>
+<script type="application/javascript;version=1.8">
+createHTML({
+  bug: "1032848",
+  title: "Canvas(WebGL)::CaptureStream as video-only input to peerconnection"
+});
+
+runNetworkTest(() => {
+  var test = new PeerConnectionTest();
+  var vremote;
+  var h = new CaptureStreamTestHelperWebGL();
+  var canvas = document.createElement('canvas');
+  canvas.id = 'source_canvas';
+  canvas.width = canvas.height = 10;
+  document.getElementById('content').appendChild(canvas);
+
+  var gl = WebGLUtil.getWebGL(canvas.id, false, { preserveDrawingBuffer: true });
+  if (!gl) {
+    todo(false, "WebGL unavailable.");
+    networkTestFinished();
+    return;
+  }
+
+  var errorFunc = str => ok(false, 'Error: ' + str);
+  WebGLUtil.setErrorFunc(errorFunc);
+  WebGLUtil.setWarningFunc(errorFunc);
+
+  test.setMediaConstraints([{video: true}], []);
+  test.chain.replace("PC_LOCAL_GUM", [
+    function WEBGL_SETUP(test) {
+      var program = WebGLUtil.createProgramByIds(gl, 'v-shader', 'f-shader');
+
+      if (!program) {
+        ok(false, "Program should link");
+        return Promise.reject();
+      }
+      gl.useProgram(program);
+
+      var uColorLocation = gl.getUniformLocation(program, "uColor");
+      h.setFragmentColorLocation(uColorLocation);
+
+      var squareBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, squareBuffer);
+
+      var vertices = [ 0,  0,
+                      -1,  0,
+                       0,  1,
+                      -1,  1 ];
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+      squareBuffer.itemSize = 2;
+      squareBuffer.numItems = 4;
+
+      program.aPosition = gl.getAttribLocation(program, "aPosition");
+      gl.enableVertexAttribArray(program.aPosition);
+      gl.vertexAttribPointer(program.aPosition, squareBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    },
+    function DRAW_LOCAL_GREEN(test) {
+      h.drawColor(canvas, h.green);
+    },
+    function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
+      test.pcLocal.canvasStream = canvas.captureStream(0.0);
+      is(test.pcLocal.canvasStream.canvas, canvas, "Canvas attribute is correct");
+      test.pcLocal.attachMedia(test.pcLocal.canvasStream, 'video', 'local');
+    }
+  ]);
+  test.chain.append([
+    function FIND_REMOTE_VIDEO() {
+      vremote = document.getElementById('pcRemote_remote1_video');
+      ok(!!vremote, "Should have remote video element for pcRemote");
+    },
+    function WAIT_FOR_REMOTE_GREEN() {
+      return h.waitForPixel(vremote, h.green, 128, "pcRemote's remote should become green");
+    },
+    function DRAW_LOCAL_RED() {
+      h.drawColor(canvas, h.red);
+    },
+    function REQUEST_FRAME(test) {
+      test.pcLocal.canvasStream.requestFrame();
+    },
+    function WAIT_FOR_REMOTE_RED() {
+      return h.waitForPixel(vremote, h.red, 128, "pcRemote's remote should become red");
+    }
+  ]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>

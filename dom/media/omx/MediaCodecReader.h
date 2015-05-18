@@ -439,25 +439,17 @@ private:
   int64_t mNextParserPosition;
   int64_t mParsedDataLength;
   nsAutoPtr<MP3FrameParser> mMP3FrameParser;
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
   // mReleaseIndex corresponding to a graphic buffer, and the mReleaseFence is
   // the graohic buffer's fence. We must wait for the fence signaled by
   // compositor, otherwise we will see the flicker because the HW decoder and
   // compositor use the buffer concurrently.
   struct ReleaseItem {
-    ReleaseItem(size_t aIndex, const android::sp<android::Fence>& aFence)
+    ReleaseItem(size_t aIndex, const FenceHandle& aFence)
     : mReleaseIndex(aIndex)
     , mReleaseFence(aFence) {}
     size_t mReleaseIndex;
-    android::sp<android::Fence> mReleaseFence;
+    FenceHandle mReleaseFence;
   };
-#else
-  struct ReleaseItem {
-    ReleaseItem(size_t aIndex)
-    : mReleaseIndex(aIndex) {}
-    size_t mReleaseIndex;
-  };
-#endif
   nsTArray<ReleaseItem> mPendingReleaseItems;
 };
 

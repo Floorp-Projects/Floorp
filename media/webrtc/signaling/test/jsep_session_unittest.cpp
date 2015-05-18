@@ -36,9 +36,19 @@ static const char* kCandidates[] = {
   "0 1 UDP 9999 192.168.0.1 2001 typ host",
   "0 1 UDP 9999 192.168.0.2 2002 typ srflx raddr 10.252.34.97 rport 53594",
   // Mix up order
-  "0 1 UDP 9999 192.168.1.2 2012 typ srflx raddr 10.252.34.97 rport 53594",
+  "0 1 UDP 9999 192.168.1.2 2012 typ srflx raddr 10.252.34.97 rport 53595",
   "0 1 UDP 9999 192.168.1.1 2010 typ host",
   "0 1 UDP 9999 192.168.1.1 2011 typ host"
+};
+
+static const char* kRtcpCandidates[] = {
+  "0 2 UDP 9999 192.168.0.1 3000 typ host",
+  "0 2 UDP 9999 192.168.0.1 3001 typ host",
+  "0 2 UDP 9999 192.168.0.2 3002 typ srflx raddr 10.252.34.97 rport 53596",
+  // Mix up order
+  "0 2 UDP 9999 192.168.1.2 3012 typ srflx raddr 10.252.34.97 rport 53597",
+  "0 2 UDP 9999 192.168.1.1 3010 typ host",
+  "0 2 UDP 9999 192.168.1.1 3011 typ host"
 };
 
 static std::string kAEqualsCandidate("a=candidate:");
@@ -573,21 +583,21 @@ protected:
   GatherCandidates(JsepSession& session)
   {
     bool skipped;
-    session.AddLocalIceCandidate(
-        kAEqualsCandidate + kCandidates[0], "", 0, &skipped);
-    session.AddLocalIceCandidate(
-        kAEqualsCandidate + kCandidates[1], "", 0, &skipped);
-    session.AddLocalIceCandidate(
-        kAEqualsCandidate + kCandidates[2], "", 0, &skipped);
-    session.EndOfLocalCandidates("192.168.0.2", 2002, 0);
+    for (size_t i = 0; i < 3; ++i) {
+      session.AddLocalIceCandidate(
+          kAEqualsCandidate + kCandidates[i], "", 0, &skipped);
+      session.AddLocalIceCandidate(
+          kAEqualsCandidate + kRtcpCandidates[i], "", 0, &skipped);
+    }
+    session.EndOfLocalCandidates("192.168.0.2", 2002, "192.168.0.2", 3002, 0);
 
-    session.AddLocalIceCandidate(
-        kAEqualsCandidate + kCandidates[3], "", 1, &skipped);
-    session.AddLocalIceCandidate(
-        kAEqualsCandidate + kCandidates[4], "", 1, &skipped);
-    session.AddLocalIceCandidate(
-        kAEqualsCandidate + kCandidates[5], "", 1, &skipped);
-    session.EndOfLocalCandidates("192.168.1.2", 2012, 1);
+    for (size_t i = 3; i < 6; ++i) {
+      session.AddLocalIceCandidate(
+          kAEqualsCandidate + kCandidates[i], "", 1, &skipped);
+      session.AddLocalIceCandidate(
+          kAEqualsCandidate + kRtcpCandidates[i], "", 1, &skipped);
+    }
+    session.EndOfLocalCandidates("192.168.1.2", 2012, "192.168.1.2", 3012, 1);
 
     std::cerr << "local SDP after candidates: "
               << session.GetLocalDescription();
@@ -596,13 +606,19 @@ protected:
   void
   TrickleCandidates(JsepSession& session)
   {
-    session.AddRemoteIceCandidate(kAEqualsCandidate + kCandidates[0], "", 0);
-    session.AddRemoteIceCandidate(kAEqualsCandidate + kCandidates[1], "", 0);
-    session.AddRemoteIceCandidate(kAEqualsCandidate + kCandidates[2], "", 0);
+    for (size_t i = 0; i < 3; ++i) {
+      session.AddRemoteIceCandidate(
+          kAEqualsCandidate + kCandidates[i], "", 0);
+      session.AddRemoteIceCandidate(
+          kAEqualsCandidate + kRtcpCandidates[i], "", 0);
+    }
 
-    session.AddRemoteIceCandidate(kAEqualsCandidate + kCandidates[3], "", 1);
-    session.AddRemoteIceCandidate(kAEqualsCandidate + kCandidates[4], "", 1);
-    session.AddRemoteIceCandidate(kAEqualsCandidate + kCandidates[5], "", 1);
+    for (size_t i = 3; i < 6; ++i) {
+      session.AddRemoteIceCandidate(
+          kAEqualsCandidate + kCandidates[i], "", 1);
+      session.AddRemoteIceCandidate(
+          kAEqualsCandidate + kRtcpCandidates[i], "", 1);
+    }
 
     std::cerr << "remote SDP after candidates: "
               << session.GetRemoteDescription();
@@ -650,17 +666,28 @@ protected:
     if (local) {
       ASSERT_EQ("192.168.0.2", msection_0.GetConnection().GetAddress());
       ASSERT_EQ(2002U, msection_0.GetPort());
-      // TODO: Check end-of-candidates. Issue 200
+      ASSERT_TRUE(msection_0.GetAttributeList().HasAttribute(
+            SdpAttribute::kRtcpAttribute));
+      auto& rtcpAttr = msection_0.GetAttributeList().GetRtcp();
+      ASSERT_EQ(3002U, rtcpAttr.mPort);
+      ASSERT_EQ(sdp::kInternet, rtcpAttr.mNetType);
+      ASSERT_EQ(sdp::kIPv4, rtcpAttr.mAddrType);
+      ASSERT_EQ("192.168.0.2", rtcpAttr.mAddress);
+      ASSERT_TRUE(msection_0.GetAttributeList().HasAttribute(
+            SdpAttribute::kEndOfCandidatesAttribute));
     }
 
     auto& attrs_0 = msection_0.GetAttributeList();
     ASSERT_TRUE(attrs_0.HasAttribute(SdpAttribute::kCandidateAttribute));
 
     auto& candidates_0 = attrs_0.GetCandidate();
-    ASSERT_EQ(3U, candidates_0.size());
+    ASSERT_EQ(6U, candidates_0.size());
     ASSERT_EQ(kCandidates[0], candidates_0[0]);
-    ASSERT_EQ(kCandidates[1], candidates_0[1]);
-    ASSERT_EQ(kCandidates[2], candidates_0[2]);
+    ASSERT_EQ(kRtcpCandidates[0], candidates_0[1]);
+    ASSERT_EQ(kCandidates[1], candidates_0[2]);
+    ASSERT_EQ(kRtcpCandidates[1], candidates_0[3]);
+    ASSERT_EQ(kCandidates[2], candidates_0[4]);
+    ASSERT_EQ(kRtcpCandidates[2], candidates_0[5]);
 
     if (parsed->GetMediaSectionCount() > 1) {
       auto& msection_1 = parsed->GetMediaSection(1);
@@ -668,17 +695,26 @@ protected:
       if (local) {
         ASSERT_EQ("192.168.1.2", msection_1.GetConnection().GetAddress());
         ASSERT_EQ(2012U, msection_1.GetPort());
-        // TODO: Check end-of-candidates. Issue 200
+        auto& rtcpAttr = msection_1.GetAttributeList().GetRtcp();
+        ASSERT_EQ(3012U, rtcpAttr.mPort);
+        ASSERT_EQ(sdp::kInternet, rtcpAttr.mNetType);
+        ASSERT_EQ(sdp::kIPv4, rtcpAttr.mAddrType);
+        ASSERT_EQ("192.168.1.2", rtcpAttr.mAddress);
+        ASSERT_TRUE(msection_0.GetAttributeList().HasAttribute(
+              SdpAttribute::kEndOfCandidatesAttribute));
       }
 
       auto& attrs_1 = msection_1.GetAttributeList();
       ASSERT_TRUE(attrs_1.HasAttribute(SdpAttribute::kCandidateAttribute));
 
       auto& candidates_1 = attrs_1.GetCandidate();
-      ASSERT_EQ(3U, candidates_1.size());
+      ASSERT_EQ(6U, candidates_1.size());
       ASSERT_EQ(kCandidates[3], candidates_1[0]);
-      ASSERT_EQ(kCandidates[4], candidates_1[1]);
-      ASSERT_EQ(kCandidates[5], candidates_1[2]);
+      ASSERT_EQ(kRtcpCandidates[3], candidates_1[1]);
+      ASSERT_EQ(kCandidates[4], candidates_1[2]);
+      ASSERT_EQ(kRtcpCandidates[4], candidates_1[3]);
+      ASSERT_EQ(kCandidates[5], candidates_1[4]);
+      ASSERT_EQ(kRtcpCandidates[5], candidates_1[5]);
     }
   }
 

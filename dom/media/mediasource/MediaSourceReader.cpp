@@ -7,9 +7,9 @@
 
 #include <cmath>
 #include "prlog.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "DecoderTraits.h"
 #include "MediaDecoderOwner.h"
+#include "MediaFormatReader.h"
 #include "MediaSourceDecoder.h"
 #include "MediaSourceUtils.h"
 #include "SourceBufferDecoder.h"
@@ -19,6 +19,7 @@
 #ifdef MOZ_FMP4
 #include "SharedDecoderManager.h"
 #include "MP4Decoder.h"
+#include "MP4Demuxer.h"
 #include "MP4Reader.h"
 #endif
 
@@ -33,8 +34,6 @@ extern PRLogModuleInfo* GetMediaSourceLog();
 // switching to the new stream. This value is based on the end of frame
 // default value used in Blink, kDefaultBufferDurationInMs.
 #define EOS_FUZZ_US 125000
-
-using mozilla::dom::TimeRanges;
 
 namespace mozilla {
 
@@ -244,10 +243,9 @@ static void
 AdjustEndTime(int64_t* aEndTime, SourceBufferDecoder* aDecoder)
 {
   if (aDecoder) {
-    nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-    aDecoder->GetBuffered(ranges);
-    if (ranges->Length() > 0) {
-      int64_t end = std::ceil(ranges->GetEndTime() * USECS_PER_S);
+    media::TimeIntervals ranges = aDecoder->GetBuffered();
+    if (ranges.Length()) {
+      int64_t end = ranges.GetEnd().ToMicroseconds();
       *aEndTime = std::max(*aEndTime, end);
     }
   }
@@ -599,9 +597,8 @@ MediaSourceReader::SwitchAudioSource(int64_t* aTarget)
     // A decoder buffered range is continuous. We would have failed the exact
     // search but succeeded the fuzzy one if our target was shortly before
     // start time.
-    nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-    newDecoder->GetBuffered(ranges);
-    int64_t startTime = ranges->GetStartTime() * USECS_PER_S;
+    media::TimeIntervals ranges = newDecoder->GetBuffered();
+    int64_t startTime = ranges.GetStart().ToMicroseconds();
     if (*aTarget < startTime) {
       *aTarget = startTime;
     }
@@ -645,9 +642,8 @@ MediaSourceReader::SwitchVideoSource(int64_t* aTarget)
     // A decoder buffered range is continuous. We would have failed the exact
     // search but succeeded the fuzzy one if our target was shortly before
     // start time.
-    nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-    newDecoder->GetBuffered(ranges);
-    int64_t startTime = ranges->GetStartTime() * USECS_PER_S;
+    media::TimeIntervals ranges = newDecoder->GetBuffered();
+    int64_t startTime = ranges.GetStart().ToMicroseconds();
     if (*aTarget < startTime) {
       *aTarget = startTime;
     }
@@ -688,7 +684,12 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
   if ((aType.LowerCaseEqualsLiteral("video/mp4") ||
        aType.LowerCaseEqualsLiteral("audio/mp4")) &&
       MP4Decoder::IsEnabled() && aDecoder) {
-    return new MP4Reader(aDecoder);
+    bool useFormatDecoder =
+      Preferences::GetBool("media.mediasource.format-reader.mp4", true);
+    MediaDecoderReader* reader = useFormatDecoder ?
+      static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()))) :
+      static_cast<MediaDecoderReader*>(new MP4Reader(aDecoder));
+    return reader;
   }
 #endif
   return DecoderTraits::CreateReader(aType, aDecoder);
@@ -996,44 +997,38 @@ MediaSourceReader::DoVideoSeek()
   MSE_DEBUG("reader=%p", GetVideoReader());
 }
 
-nsresult
-MediaSourceReader::GetBuffered(dom::TimeRanges* aBuffered)
+media::TimeIntervals
+MediaSourceReader::GetBuffered()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  MOZ_ASSERT(aBuffered->Length() == 0);
-  if (mTrackBuffers.IsEmpty()) {
-    return NS_OK;
+  media::TimeIntervals buffered;
+
+  media::TimeUnit highestEndTime;
+  nsTArray<media::TimeIntervals> activeRanges;
+  // Must set the capacity of the nsTArray first: bug #1164444
+  activeRanges.SetCapacity(mTrackBuffers.Length());
+
+  for (const auto& trackBuffer : mTrackBuffers) {
+    activeRanges.AppendElement(trackBuffer->Buffered());
+    highestEndTime = std::max(highestEndTime, activeRanges.LastElement().GetEnd());
   }
 
-  double highestEndTime = 0;
+  buffered +=
+    media::TimeInterval(media::TimeUnit::FromMicroseconds(0), highestEndTime);
 
-  nsTArray<nsRefPtr<TimeRanges>> activeRanges;
-  for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
-    nsRefPtr<TimeRanges> r = new TimeRanges();
-    mTrackBuffers[i]->Buffered(r);
-    activeRanges.AppendElement(r);
-    highestEndTime = std::max(highestEndTime, activeRanges.LastElement()->GetEndTime());
-  }
-
-  TimeRanges* intersectionRanges = aBuffered;
-  intersectionRanges->Add(0, highestEndTime);
-
-  for (uint32_t i = 0; i < activeRanges.Length(); ++i) {
-    TimeRanges* sourceRanges = activeRanges[i];
-
-    if (IsEnded()) {
+  for (auto& range : activeRanges) {
+    if (IsEnded() && range.Length()) {
       // Set the end time on the last range to highestEndTime by adding a
       // new range spanning the current end time to highestEndTime, which
       // Normalize() will then merge with the old last range.
-      sourceRanges->Add(sourceRanges->GetEndTime(), highestEndTime);
-      sourceRanges->Normalize();
+      range +=
+        media::TimeInterval(range.GetEnd(), highestEndTime);
     }
-
-    intersectionRanges->Intersection(sourceRanges);
+    buffered.Intersection(range);
   }
 
-  MSE_DEBUG("ranges=%s", DumpTimeRanges(intersectionRanges).get());
-  return NS_OK;
+  MSE_DEBUG("ranges=%s", DumpTimeRanges(buffered).get());
+  return buffered;
 }
 
 already_AddRefed<SourceBufferDecoder>
@@ -1049,15 +1044,15 @@ MediaSourceReader::FirstDecoder(MediaData::Type aType)
   }
 
   nsRefPtr<SourceBufferDecoder> firstDecoder;
-  double lowestStartTime = PositiveInfinity<double>();
+  media::TimeUnit lowestStartTime{media::TimeUnit::FromInfinity()};
+
 
   for (uint32_t i = 0; i < decoders.Length(); ++i) {
-    nsRefPtr<TimeRanges> r = new TimeRanges();
-    decoders[i]->GetBuffered(r);
-    double start = r->GetStartTime();
-    if (start < 0) {
+    media::TimeIntervals r = decoders[i]->GetBuffered();
+    if (!r.Length()) {
       continue;
     }
+    media::TimeUnit start = r.GetStart();
     if (start < lowestStartTime) {
       firstDecoder = decoders[i];
       lowestStartTime = start;
@@ -1127,6 +1122,11 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     return NS_ERROR_FAILURE;
   }
 
+  if (mAudioTrack == mVideoTrack) {
+    NS_WARNING("Combined audio/video sourcebuffer, this is an unsupported "
+               "configuration, only using video track");
+    mAudioTrack = nullptr;
+  }
   if (mAudioTrack) {
     MOZ_ASSERT(mAudioTrack->IsReady());
     mAudioSourceDecoder = mAudioTrack->Decoders()[0];
@@ -1212,9 +1212,8 @@ MediaSourceReader::IsNearEnd(MediaData::Type aType, int64_t aTime)
   }
   TrackBuffer* trackBuffer =
     aType == MediaData::AUDIO_DATA ? mAudioTrack : mVideoTrack;
-  nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
-  trackBuffer->Buffered(buffered);
-  return aTime >= (buffered->GetEndTime() * USECS_PER_S - EOS_FUZZ_US);
+  media::TimeIntervals buffered = trackBuffer->Buffered();
+  return aTime >= buffered.GetEnd().ToMicroseconds() - EOS_FUZZ_US;
 }
 
 int64_t
@@ -1223,10 +1222,9 @@ MediaSourceReader::LastSampleTime(MediaData::Type aType)
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   TrackBuffer* trackBuffer =
-  aType == MediaData::AUDIO_DATA ? mAudioTrack : mVideoTrack;
-  nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
-  trackBuffer->Buffered(buffered);
-  return buffered->GetEndTime() * USECS_PER_S - 1;
+    aType == MediaData::AUDIO_DATA ? mAudioTrack : mVideoTrack;
+  media::TimeIntervals buffered = trackBuffer->Buffered();
+  return buffered.GetEnd().ToMicroseconds() - 1;
 }
 
 void
@@ -1247,8 +1245,7 @@ MediaSourceReader::GetMozDebugReaderData(nsAString& aString)
     for (int32_t i = mAudioTrack->Decoders().Length() - 1; i >= 0; --i) {
       nsRefPtr<MediaDecoderReader> newReader = mAudioTrack->Decoders()[i]->GetReader();
 
-      nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-      mAudioTrack->Decoders()[i]->GetBuffered(ranges);
+      media::TimeIntervals ranges = mAudioTrack->Decoders()[i]->GetBuffered();
       result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s size=%lld\n",
                                 i, newReader.get(), DumpTimeRanges(ranges).get(),
                                 newReader.get() == GetAudioReader() ? "true" : "false",
@@ -1261,8 +1258,7 @@ MediaSourceReader::GetMozDebugReaderData(nsAString& aString)
     for (int32_t i = mVideoTrack->Decoders().Length() - 1; i >= 0; --i) {
       nsRefPtr<MediaDecoderReader> newReader = mVideoTrack->Decoders()[i]->GetReader();
 
-      nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-      mVideoTrack->Decoders()[i]->GetBuffered(ranges);
+      media::TimeIntervals ranges = mVideoTrack->Decoders()[i]->GetBuffered();
       result += nsPrintfCString("\t\tReader %d: %p ranges=%s active=%s size=%lld\n",
                                 i, newReader.get(), DumpTimeRanges(ranges).get(),
                                 newReader.get() == GetVideoReader() ? "true" : "false",

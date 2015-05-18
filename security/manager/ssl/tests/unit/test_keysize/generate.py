@@ -20,15 +20,6 @@ ca_ext_text = ('basicConstraints = critical, CA:TRUE\n' +
                'keyUsage = keyCertSign, cRLSign\n')
 ee_ext_text = ''
 
-aia_prefix = 'authorityInfoAccess = OCSP;URI:http://www.example.com:8888/'
-aia_suffix = '/\n'
-
-mozilla_testing_ev_policy = ('certificatePolicies = @v3_ca_ev_cp\n\n' +
-                             '[ v3_ca_ev_cp ]\n' +
-                             'policyIdentifier = ' +
-                             '1.3.6.1.4.1.13769.666.666.666.1.500.9.1\n\n' +
-                             'CPS.1 = "http://mytestdomain.local/cps"')
-
 generated_ev_root_filenames = []
 generated_certs = []
 
@@ -73,8 +64,8 @@ def generate_and_maybe_import_cert(key_type, cert_name_prefix, cert_name_suffix,
                       (key_type, key_size))
     if generate_ev:
         cert_name = 'ev_' + cert_name
-        ev_ext_text = (aia_prefix + cert_name + aia_suffix +
-                       mozilla_testing_ev_policy)
+        ev_ext_text = (CertUtils.aia_prefix + cert_name + CertUtils.aia_suffix +
+                       CertUtils.mozilla_testing_ev_policy)
         subject_string += ' (EV)'
 
     # Use the organization field to store the cert nickname for easier debugging

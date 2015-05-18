@@ -502,18 +502,17 @@ private:
 
     // Update state prior to routing an APZ-aware event to the child process.
     // |aOutTargetGuid| will contain the identifier
-    // of the APZC instance that handled the event. aOutTargetGuid may be
-    // null.
+    // of the APZC instance that handled the event. aOutTargetGuid may be null.
     // |aOutInputBlockId| will contain the identifier of the input block
-    // that this event was added to, if there was one. aOutInputBlockId may
-    // be null.
+    // that this event was added to, if there was one. aOutInputBlockId may be null.
+    // |aOutApzResponse| will contain the response that the APZ gave when processing
+    // the input block; this is used for generating appropriate pointercancel events.
     void ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
-                                     uint64_t* aOutInputBlockId);
-    // When true, we've initiated normal shutdown and notified our
-    // managing PContent.
+                                     uint64_t* aOutInputBlockId,
+                                     nsEventStatus* aOutApzResponse);
+    // When true, we've initiated normal shutdown and notified our managing PContent.
     bool mMarkedDestroying;
-    // When true, the TabParent is invalid and we should not send IPC messages
-    // anymore.
+    // When true, the TabParent is invalid and we should not send IPC messages anymore.
     bool mIsDestroyed;
     // Whether we have already sent a FileDescriptor for the app package.
     bool mAppPackageFileDescriptorSent;

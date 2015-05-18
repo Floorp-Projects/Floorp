@@ -18,13 +18,13 @@
     var testVideo = createMediaElement('video', 'testVideo');
     var constraints = {video: true};
 
-    getUserMedia(constraints).then(aStream => {
-      checkMediaStreamTracks(constraints, aStream);
+    return getUserMedia(constraints).then(stream => {
+      checkMediaStreamTracks(constraints, stream);
 
-      var playback = new LocalMediaStreamPlayback(testVideo, aStream);
+      var playback = new LocalMediaStreamPlayback(testVideo, stream);
       var video = playback.mediaElement;
 
-      video.mozSrcObject = aStream;
+      video.mozSrcObject = stream;
       return new Promise(resolve => {
         ok(playback.mediaElement.paused,
            "Media element should be paused before play()ing");
@@ -34,7 +34,7 @@
           resolve();
         });
       });
-    }).then(() => SimpleTest.finish(), generateErrorCallback());
+    });
   });
 
 </script>

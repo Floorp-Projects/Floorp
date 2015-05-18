@@ -21,7 +21,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/mozalloc.h"
 #include "VideoUtils.h"
-#include "mozilla/dom/TimeRanges.h"
+#include "TimeUnits.h"
 #include "nsDeque.h"
 #include "AudioSegment.h"
 #include "VideoSegment.h"
@@ -38,6 +38,7 @@
 #include "gfx2DGlue.h"
 #include "nsPrintfCString.h"
 #include "DOMMediaStream.h"
+#include "DecodedStream.h"
 
 #include <algorithm>
 
@@ -1712,17 +1713,13 @@ void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
   //
   // Make sure to only do this if we have a start time, otherwise the reader
   // doesn't know how to compute GetBuffered.
-  nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
-  if (mDecoder->IsInfinite() && (mStartTime != -1) &&
-      NS_SUCCEEDED(mDecoder->GetBuffered(buffered)))
-  {
-    uint32_t length = 0;
-    buffered->GetLength(&length);
-    if (length) {
-      double end = 0;
-      buffered->End(length - 1, &end);
+  media::TimeIntervals buffered{mDecoder->GetBuffered()};
+  if (mDecoder->IsInfinite() && (mStartTime != -1) && !buffered.IsInvalid()) {
+    bool exists;
+    media::TimeUnit end{buffered.GetEnd(&exists)};
+    if (exists) {
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      mEndTime = std::max<int64_t>(mEndTime, end * USECS_PER_S);
+      mEndTime = std::max<int64_t>(mEndTime, end.ToMicroseconds());
     }
   }
 }
@@ -2148,9 +2145,10 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
     return false;
   }
 
-  nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
-  nsresult rv = mReader->GetBuffered(buffered.get());
-  NS_ENSURE_SUCCESS(rv, false);
+  media::TimeIntervals buffered{mReader->GetBuffered()};
+  if (buffered.IsInvalid()) {
+    return false;
+  }
 
   int64_t endOfDecodedVideoData = INT64_MAX;
   if (HasVideo() && !VideoQueue().AtEndOfStream()) {
@@ -2164,10 +2162,13 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
     endOfDecodedAudioData = mDecodedAudioEndTime;
   }
   int64_t endOfDecodedData = std::min(endOfDecodedVideoData, endOfDecodedAudioData);
-
-  return endOfDecodedData != INT64_MAX &&
-         !buffered->Contains(static_cast<double>(endOfDecodedData) / USECS_PER_S,
-                             static_cast<double>(std::min(endOfDecodedData + aUsecs, GetDuration())) / USECS_PER_S);
+  if (GetDuration() < endOfDecodedData) {
+    // Our duration is not up to date. No point buffering.
+    return false;
+  }
+  media::TimeInterval interval(media::TimeUnit::FromMicroseconds(endOfDecodedData),
+                               media::TimeUnit::FromMicroseconds(std::min(endOfDecodedData + aUsecs, GetDuration())));
+  return endOfDecodedData != INT64_MAX && !buffered.Contains(interval);
 }
 
 void

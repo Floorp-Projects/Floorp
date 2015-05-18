@@ -46,9 +46,6 @@ const RILCONTENTHELPER_CID =
 const RIL_IPC_MSG_NAMES = [
   "RIL:StkCommand",
   "RIL:StkSessionEnd",
-  "RIL:IccOpenChannel",
-  "RIL:IccCloseChannel",
-  "RIL:IccExchangeAPDU",
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
 ];
@@ -89,7 +86,6 @@ function RILContentHelper() {
   this.initDOMRequestHelper(/* aWindow */ null, RIL_IPC_MSG_NAMES);
   this._windowsMap = [];
   this._iccListeners = [];
-  this._iccChannelCallback = [];
 
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
@@ -169,60 +165,6 @@ RILContentHelper.prototype = {
       clientId: clientId,
       data: {
         event: event
-      }
-    });
-  },
-
-  iccOpenChannel: function(clientId, aid, callback) {
-    let requestId = UUIDGenerator.generateUUID().toString();
-    this._addIccChannelCallback(requestId, callback);
-
-    cpmm.sendAsyncMessage("RIL:IccOpenChannel", {
-      clientId: clientId,
-      data: {
-        requestId: requestId,
-        aid: aid
-      }
-    });
-  },
-
-  iccExchangeAPDU: function(clientId, channel, cla, ins, p1, p2, p3, data, callback) {
-    let requestId = UUIDGenerator.generateUUID().toString();
-    this._addIccChannelCallback(requestId, callback);
-
-    if (!data) {
-      if (DEBUG) debug('data is not set , p3 : ' + p3);
-    }
-
-    let apdu = {
-      cla: cla,
-      command: ins,
-      p1: p1,
-      p2: p2,
-      p3: p3,
-      data: data
-    };
-
-    //Potentially you need serialization here and can't pass the jsval through
-    cpmm.sendAsyncMessage("RIL:IccExchangeAPDU", {
-      clientId: clientId,
-      data: {
-        requestId: requestId,
-        channel: channel,
-        apdu: apdu
-      }
-    });
-  },
-
-  iccCloseChannel: function(clientId, channel, callback) {
-    let requestId = UUIDGenerator.generateUUID().toString();
-    this._addIccChannelCallback(requestId, callback);
-
-    cpmm.sendAsyncMessage("RIL:IccCloseChannel", {
-      clientId: clientId,
-      data: {
-        requestId: requestId,
-        channel: channel
       }
     });
   },
@@ -328,24 +270,6 @@ RILContentHelper.prototype = {
       listeners.splice(index, 1);
       if (DEBUG) debug("Unregistered listener: " + listener);
     }
-  },
-
-  _iccChannelCallback: null,
-
-  _addIccChannelCallback: function(requestId, channelCb) {
-    let cbInterfaces = this._iccChannelCallback;
-    if (!cbInterfaces[requestId] && channelCb) {
-      cbInterfaces[requestId] = channelCb;
-      return;
-    }
-
-    if (DEBUG) debug("Unable to add channelCbInterface for requestId : " + requestId);
-  },
-
-  _getIccChannelCallback: function(requestId) {
-    let cb = this._iccChannelCallback[requestId];
-    delete this._iccChannelCallback[requestId];
-    return cb;
   },
 
   registerIccMsg: function(clientId, listener) {
@@ -454,15 +378,6 @@ RILContentHelper.prototype = {
       case "RIL:StkSessionEnd":
         this._deliverEvent(clientId, "_iccListeners", "notifyStkSessionEnd", null);
         break;
-      case "RIL:IccOpenChannel":
-        this.handleIccOpenChannel(data);
-        break;
-      case "RIL:IccCloseChannel":
-        this.handleIccCloseChannel(data);
-        break;
-      case "RIL:IccExchangeAPDU":
-        this.handleIccExchangeAPDU(data);
-        break;
       case "RIL:ReadIccContacts":
         this.handleReadIccContacts(data);
         break;
@@ -470,48 +385,6 @@ RILContentHelper.prototype = {
         this.handleUpdateIccContact(data);
         break;
     }
-  },
-
-  handleSimpleRequest: function(requestId, errorMsg, result) {
-    if (errorMsg) {
-      this.fireRequestError(requestId, errorMsg);
-    } else {
-      this.fireRequestSuccess(requestId, result);
-    }
-  },
-
-  handleIccOpenChannel: function(message) {
-    let requestId = message.requestId;
-    let callback = this._getIccChannelCallback(requestId);
-    if (!callback) {
-      return;
-    }
-
-    return !message.errorMsg ? callback.notifyOpenChannelSuccess(message.channel) :
-                               callback.notifyError(message.errorMsg);
-  },
-
-  handleIccCloseChannel: function(message) {
-    let requestId = message.requestId;
-    let callback = this._getIccChannelCallback(requestId);
-    if (!callback) {
-      return;
-    }
-
-    return !message.errorMsg ? callback.notifyCloseChannelSuccess() :
-                               callback.notifyError(message.errorMsg);
-  },
-
-  handleIccExchangeAPDU: function(message) {
-    let requestId = message.requestId;
-    let callback = this._getIccChannelCallback(requestId);
-    if (!callback) {
-      return;
-    }
-
-    return !message.errorMsg ?
-           callback.notifyExchangeAPDUResponse(message.sw1, message.sw2, message.simResponse) :
-           callback.notifyError(message.errorMsg);
   },
 
   handleReadIccContacts: function(message) {

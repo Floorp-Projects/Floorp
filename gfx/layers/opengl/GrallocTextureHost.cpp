@@ -266,14 +266,7 @@ GrallocTextureHostOGL::UnbindTextureSource()
 FenceHandle
 GrallocTextureHostOGL::GetAndResetReleaseFenceHandle()
 {
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  android::sp<android::Fence> fence = GetAndResetReleaseFence();
-  if (fence.get() && fence->isValid()) {
-    FenceHandle handle = FenceHandle(fence);
-    return handle;
-  }
-#endif
-  return FenceHandle();
+  return GetAndResetReleaseFence();
 }
 
 GLenum GetTextureTarget(gl::GLContext* aGL, android::PixelFormat aFormat) {

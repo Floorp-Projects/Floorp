@@ -59,6 +59,6 @@ HeapReceiverGuard::trace(JSTracer* trc)
 {
     if (shape_)
         TraceEdge(trc, &shape_, "receiver_guard_shape");
-    else
+    if (group_)
         TraceEdge(trc, &group_, "receiver_guard_group");
 }

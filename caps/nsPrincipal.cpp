@@ -600,6 +600,10 @@ IsOnFullDomainWhitelist(nsIURI* aURI)
     NS_LITERAL_CSTRING("mw.nikkei.com"),
     NS_LITERAL_CSTRING("www.nhk.or.jp"),
     NS_LITERAL_CSTRING("www.tokyo-sports.co.jp"),
+    NS_LITERAL_CSTRING("www.bellemaison.jp"),
+    NS_LITERAL_CSTRING("www.kuronekoyamato.co.jp"),
+    NS_LITERAL_CSTRING("s.tsite.jp"),
+    NS_LITERAL_CSTRING("formassist.jp"), // for orico.jp
   };
   static const size_t sNumFullDomainsOnWhitelist =
     MOZ_ARRAY_LENGTH(sFullDomainsOnWhitelist);

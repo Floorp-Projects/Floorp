@@ -272,6 +272,10 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
   mozilla_sampler_tracing(aCategory, aInfo, aMetaData);
 }
 
+#define SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
+#define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)
+#define SAMPLER_APPEND_LINE_NUMBER(id) SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
+
 // Uncomment this to turn on systrace or build with
 // ac_add_options --enable-systace
 //#define MOZ_USE_SYSTRACE
@@ -293,7 +297,7 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 // atrace_end with defined HAVE_ANDROID_OS again. Then there is no build-break.
 # undef _LIBS_CUTILS_TRACE_H
 # include <utils/Trace.h>
-# define MOZ_PLATFORM_TRACING(name) ATRACE_NAME(name);
+# define MOZ_PLATFORM_TRACING(name) android::ScopedTrace SAMPLER_APPEND_LINE_NUMBER(scopedTrace)(ATRACE_TAG, name);
 # ifdef REMOVE_HAVE_ANDROID_OS
 #  undef HAVE_ANDROID_OS
 #  undef REMOVE_HAVE_ANDROID_OS
@@ -304,10 +308,6 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
-
-#define SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
-#define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)
-#define SAMPLER_APPEND_LINE_NUMBER(id) SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
 
 #define PROFILER_LABEL(name_space, info, category) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__)
 #define PROFILER_LABEL_FUNC(category) MOZ_PLATFORM_TRACING(SAMPLE_FUNCTION_NAME) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(SAMPLE_FUNCTION_NAME, category, __LINE__)

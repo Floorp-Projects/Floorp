@@ -117,10 +117,6 @@ HwcComposer2D::HwcComposer2D()
     , mMaxLayerCount(0)
     , mColorFill(false)
     , mRBSwapSupport(false)
-#if ANDROID_VERSION >= 17
-    , mPrevRetireFence(Fence::NO_FENCE)
-    , mPrevDisplayFence(Fence::NO_FENCE)
-#endif
     , mPrepared(false)
     , mHasHWVsync(false)
     , mLock("mozilla.HwcComposer2D.mLock")
@@ -181,7 +177,9 @@ HwcComposer2D::GetInstance()
 bool
 HwcComposer2D::EnableVsync(bool aEnable)
 {
-#if ANDROID_VERSION >= 17
+    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
+    // with JellyBean.
+#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
     MOZ_ASSERT(NS_IsMainThread());
     if (!mHasHWVsync) {
       return false;
@@ -212,9 +210,9 @@ HwcComposer2D::RegisterHwcEventCallback()
     device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, false);
     device->registerProcs(device, &sHWCProcs);
 
-// Only support actual hardware vsync on kitkat due to innaccurate timings
-// with JellyBean, and HwcComposer bugs with L. Reenable for L later
-#if ANDROID_VERSION == 19
+    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
+    // with JellyBean.
+#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
     mHasHWVsync = gfxPrefs::HardwareVsyncEnabled();
 #else
     mHasHWVsync = false;
@@ -225,8 +223,15 @@ HwcComposer2D::RegisterHwcEventCallback()
 void
 HwcComposer2D::Vsync(int aDisplay, nsecs_t aVsyncTimestamp)
 {
+    // Only support hardware vsync on kitkat, L and up due to inaccurate timings
+    // with JellyBean.
+#if (ANDROID_VERSION == 19 || ANDROID_VERSION >= 21)
     TimeStamp vsyncTime = mozilla::TimeStamp::FromSystemTime(aVsyncTimestamp);
     gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().NotifyVsync(vsyncTime);
+#else
+    // If this device doesn't support vsync, this function should not be used.
+    MOZ_ASSERT(false);
+#endif
 }
 
 // Called on the "invalidator" thread (run from HAL).
@@ -857,22 +862,23 @@ HwcComposer2D::Commit()
         if (!texture) {
             continue;
         }
-        sp<Fence> fence = texture->GetAndResetAcquireFence();
-        if (fence.get() && fence->isValid()) {
-            mList->hwLayers[j].acquireFenceFd = fence->dup();
+        FenceHandle fence = texture->GetAndResetAcquireFence();
+        if (fence.IsValid()) {
+            nsRefPtr<FenceHandle::FdObj> fdObj = fence.GetAndResetFdObj();
+            mList->hwLayers[j].acquireFenceFd = fdObj->GetAndResetFd();
         }
     }
 
     int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
 
-    mPrevDisplayFence = mPrevRetireFence;
-    mPrevRetireFence = Fence::NO_FENCE;
+    mPrevRetireFence.TransferToAnotherFenceHandle(mPrevDisplayFence);
 
     for (uint32_t j=0; j < (mList->numHwLayers - 1); j++) {
         if (mList->hwLayers[j].releaseFenceFd >= 0) {
             int fd = mList->hwLayers[j].releaseFenceFd;
             mList->hwLayers[j].releaseFenceFd = -1;
-            sp<Fence> fence = new Fence(fd);
+            nsRefPtr<FenceHandle::FdObj> fdObj = new FenceHandle::FdObj(fd);
+            FenceHandle fence(fdObj);
 
             LayerRenderState state = mHwcLayerMap[j]->GetLayer()->GetRenderState();
             if (!state.mTexture) {
@@ -883,11 +889,11 @@ HwcComposer2D::Commit()
                 continue;
             }
             texture->SetReleaseFence(fence);
-       }
-   }
+        }
+    }
 
     if (mList->retireFenceFd >= 0) {
-        mPrevRetireFence = new Fence(mList->retireFenceFd);
+        mPrevRetireFence = FenceHandle(new FenceHandle::FdObj(mList->retireFenceFd));
     }
 
     mPrepared = false;

@@ -1885,25 +1885,25 @@ bool
 js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
                               ObjectGroup* group, PreliminaryObjectArray* objects)
 {
-    // Unboxed objects are nightly only for now. The getenv() call will be
+    bool isArray = !templateShape;
+
+    // Unboxed arrays are nightly only for now. The getenv() call will be
     // removed when they are on by default. See bug 1153266.
+    if (isArray) {
 #ifdef NIGHTLY_BUILD
-    if (templateShape) {
-        if (!getenv("JS_OPTION_USE_UNBOXED_OBJECTS")) {
-            if (!group->runtimeFromAnyThread()->options().unboxedObjects())
+        if (!getenv("JS_OPTION_USE_UNBOXED_ARRAYS")) {
+            if (!group->runtimeFromAnyThread()->options().unboxedArrays())
                 return true;
         }
+#else
+        return true;
+#endif
     } else {
-        if (!group->runtimeFromAnyThread()->options().unboxedArrays())
+        if (jit::js_JitOptions.disableUnboxedObjects)
             return true;
     }
-#else
-    return true;
-#endif
 
     MOZ_ASSERT_IF(templateShape, !templateShape->getObjectFlags());
-
-    bool isArray = !templateShape;
 
     if (group->runtimeFromAnyThread()->isSelfHostingGlobal(cx->global()))
         return true;
