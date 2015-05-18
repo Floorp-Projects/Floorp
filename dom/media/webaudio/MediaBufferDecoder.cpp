@@ -100,6 +100,7 @@ public:
     , mLength(aLength)
     , mDecodeJob(aDecodeJob)
     , mPhase(PhaseEnum::Decode)
+    , mFirstFrameDecoded(false)
   {
     MOZ_ASSERT(aBuffer);
     MOZ_ASSERT(NS_IsMainThread());
@@ -153,6 +154,7 @@ private:
   nsRefPtr<MediaDecoderReader> mDecoderReader;
   MediaInfo mMediaInfo;
   MediaQueue<AudioData> mAudioQueue;
+  bool mFirstFrameDecoded;
 };
 
 NS_IMETHODIMP
@@ -249,7 +251,7 @@ MediaDecodeTask::Decode()
 
   // Tell the decoder reader that we are not going to play the data directly,
   // and that we should not reject files with more channels than the audio
-  // bakend support.
+  // backend support.
   mDecoderReader->SetIgnoreAudioOutputFormat();
 
   nsAutoPtr<MetadataTags> tags;
@@ -282,6 +284,10 @@ MediaDecodeTask::SampleDecoded(AudioData* aData)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   mAudioQueue.Push(aData);
+  if (!mFirstFrameDecoded) {
+    mDecoderReader->ReadUpdatedMetadata(&mMediaInfo);
+    mFirstFrameDecoded = true;
+  }
   RequestSample();
 }
 
