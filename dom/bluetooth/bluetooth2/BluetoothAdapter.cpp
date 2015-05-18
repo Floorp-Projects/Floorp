@@ -983,7 +983,7 @@ BluetoothAdapter::IsBluetoothCertifiedApp()
   nsAutoCString appOrigin;
 
   doc->NodePrincipal()->GetAppStatus(&appStatus);
-  doc->NodePrincipal()->GetOrigin(getter_Copies(appOrigin));
+  doc->NodePrincipal()->GetOrigin(appOrigin);
 
   return appStatus == nsIPrincipal::APP_STATUS_CERTIFIED &&
          appOrigin.EqualsLiteral(BLUETOOTH_APP_ORIGIN);
