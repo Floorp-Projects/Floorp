@@ -257,7 +257,7 @@ ClientTiledPaintedLayer::UseProgressiveDraw() {
     return false;
   }
 
-  if (ClientManager()->AsyncPanZoomEnabled()) {
+  if (gfxPrefs::AsyncPanZoomEnabled()) {
     LayerMetricsWrapper scrollAncestor;
     GetAncestorLayers(&scrollAncestor, nullptr, nullptr);
     MOZ_ASSERT(scrollAncestor); // because mPaintData.mCriticalDisplayPort is non-empty

@@ -8,7 +8,6 @@
 
 #include "AccessibleCaretLogger.h"
 #include "AccessibleCaretManager.h"
-#include "Layers.h"
 #include "gfxPrefs.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -412,9 +411,7 @@ AccessibleCaretEventHub::Init(nsIPresShell* aPresShell)
   }
 
 #if defined(MOZ_WIDGET_GONK)
-  if (layers::LayerManager* lm = mPresShell->GetLayerManager()) {
-    mUseAsyncPanZoom = lm->AsyncPanZoomEnabled();
-  }
+  mUseAsyncPanZoom = gfxPrefs::AsyncPanZoomEnabled();
 #endif
 
   docShell->AddWeakReflowObserver(this);
