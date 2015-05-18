@@ -214,7 +214,8 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
    */
   _onSaveButtonClick: function (e) {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, L10N.getStr("recordingsList.saveDialogTitle"), Ci.nsIFilePicker.modeSave);
+    // TODO localize? in bug 1163763
+    fp.init(window, "Save recording…", Ci.nsIFilePicker.modeSave);
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogAllFilter"), "*.*");
     fp.defaultString = "profile.json";
