@@ -30,7 +30,7 @@ namespace mozilla {
 MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
 {
   bool useFormatDecoder =
-    Preferences::GetBool("media.format-reader.mp4", false);
+    Preferences::GetBool("media.format-reader.mp4", true);
   nsRefPtr<MediaDecoderReader> reader = useFormatDecoder ?
     static_cast<MediaDecoderReader*>(new MediaFormatReader(this, new MP4Demuxer(GetResource()))) :
     static_cast<MediaDecoderReader*>(new MP4Reader(this));
