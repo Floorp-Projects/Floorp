@@ -38,7 +38,6 @@ public:
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
   static void Init();
-  static nsresult CanDecode();
 
 private:
   friend class InitTask;

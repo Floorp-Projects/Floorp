@@ -58,6 +58,8 @@ FFmpegRuntimeLinker::Link()
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
 
+  MOZ_ASSERT(NS_IsMainThread());
+
   for (size_t i = 0; i < ArrayLength(sLibs); i++) {
     const AvFormatLib* lib = &sLibs[i];
     sLinkedLib = dlopen(lib->Name, RTLD_NOW | RTLD_LOCAL);

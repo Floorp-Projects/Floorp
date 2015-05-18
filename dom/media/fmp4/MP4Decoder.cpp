@@ -18,13 +18,6 @@
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
-#include "WMFDecoderModule.h"
-#endif
-#ifdef MOZ_FFMPEG
-#include "FFmpegRuntimeLinker.h"
-#endif
-#ifdef MOZ_APPLEMEDIA
-#include "apple/AppleDecoderModule.h"
 #endif
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsIGfxInfo.h"
@@ -176,13 +169,7 @@ IsFFmpegAvailable()
 #ifndef MOZ_FFMPEG
   return false;
 #else
-  if (!Preferences::GetBool("media.fragmented-mp4.ffmpeg.enabled", false)) {
-    return false;
-  }
-
-  // If we can link to FFmpeg, then we can almost certainly play H264 and AAC
-  // with it.
-  return FFmpegRuntimeLinker::Link();
+  return Preferences::GetBool("media.fragmented-mp4.ffmpeg.enabled", false);
 #endif
 }
 
@@ -193,11 +180,7 @@ IsAppleAvailable()
   // Not the right platform.
   return false;
 #else
-  if (!Preferences::GetBool("media.apple.mp4.enabled", false)) {
-    // Disabled by preference.
-    return false;
-  }
-  return NS_SUCCEEDED(AppleDecoderModule::CanDecode());
+  return Preferences::GetBool("media.apple.mp4.enabled", false);
 #endif
 }
 

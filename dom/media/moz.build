@@ -27,6 +27,7 @@ DIRS += [
     'imagecapture',
     'mediasource',
     'ogg',
+    'platforms',
     'systemservices',
     'webaudio',
     'webrtc',
