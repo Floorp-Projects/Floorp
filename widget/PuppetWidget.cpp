@@ -354,7 +354,7 @@ PuppetWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
 nsEventStatus
 PuppetWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
 {
-  if (!gfxPrefs::AsyncPanZoomEnabled()) {
+  if (!AsyncPanZoomEnabled()) {
     nsEventStatus status = nsEventStatus_eIgnore;
     DispatchEvent(aEvent, status);
     return status;
@@ -491,6 +491,12 @@ PuppetWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
   if (mTabChild) {
     mTabChild->SendSetTargetAPZC(aInputBlockId, aTargets);
   }
+}
+
+bool
+PuppetWidget::AsyncPanZoomEnabled() const
+{
+  return mTabChild && mTabChild->AsyncPanZoomEnabled();
 }
 
 NS_IMETHODIMP_(bool)
