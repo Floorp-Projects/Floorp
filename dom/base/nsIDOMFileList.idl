@@ -5,11 +5,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMFile;
-
-[uuid(283aa7b2-da81-4c72-aea2-9797b440fe34)]
+[uuid(57128a85-34de-42db-a252-84dd57724a59)]
 interface nsIDOMFileList : nsISupports
 {
   readonly attribute unsigned long length;
-  nsIDOMFile item(in unsigned long index);
+  // returns a DOM File object
+  nsISupports item(in unsigned long index);
 };

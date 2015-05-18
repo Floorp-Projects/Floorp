@@ -20,7 +20,7 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMFile.h"
+#include "nsIDOMBlob.h"
 #include "nsIDOMFileList.h"
 #include "nsIFile.h"
 #include "nsIMutable.h"
@@ -157,17 +157,10 @@ private:
 };
 
 class File final : public Blob
-                 , public nsIDOMFile
 {
   friend class Blob;
 
 public:
-  NS_DECL_NSIDOMFILE
-  NS_FORWARD_NSIDOMBLOB(Blob::)
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(File, Blob);
-
   // Note: BlobImpl must be a File in order to use this method.
   // Check impl->IsFile().
   static File*

@@ -439,22 +439,6 @@ Blob::GetInternalStream(nsIInputStream** aStream)
 ////////////////////////////////////////////////////////////////////////////
 // mozilla::dom::File implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(File)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(File, Blob)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(File, Blob)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(File)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFile)
-NS_INTERFACE_MAP_END_INHERITING(Blob)
-
-NS_IMPL_ADDREF_INHERITED(File, Blob)
-NS_IMPL_RELEASE_INHERITED(File, Blob)
-
 File::File(nsISupports* aParent, BlobImpl* aImpl)
   : Blob(aParent, aImpl)
 {
@@ -1282,9 +1266,9 @@ FileList::GetLength(uint32_t* aLength)
 }
 
 NS_IMETHODIMP
-FileList::Item(uint32_t aIndex, nsIDOMFile **aFile)
+FileList::Item(uint32_t aIndex, nsISupports** aFile)
 {
-  nsRefPtr<File> file = Item(aIndex);
+  nsCOMPtr<nsIDOMBlob> file = Item(aIndex);
   file.forget(aFile);
   return NS_OK;
 }
