@@ -18,7 +18,7 @@ namespace mozilla {
 nsresult
 SVGLengthList::CopyFrom(const SVGLengthList& rhs)
 {
-  if (!mLengths.SetCapacity(rhs.Length())) {
+  if (!mLengths.SetCapacity(rhs.Length(), fallible)) {
     // Yes, we do want fallible alloc here
     return NS_ERROR_OUT_OF_MEMORY;
   }

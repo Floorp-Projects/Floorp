@@ -56,7 +56,7 @@ public:
   }
 
   bool SetCapacity(uint32_t size) {
-    return mStrings.SetCapacity(size);
+    return mStrings.SetCapacity(size, fallible);
   }
 
   void Compact() {

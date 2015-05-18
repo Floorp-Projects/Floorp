@@ -162,8 +162,8 @@ UTF8InputStream::UTF8InputStream() :
 nsresult
 UTF8InputStream::Init(nsIInputStream* aStream)
 {
-  if (!mByteData.SetCapacity(STRING_BUFFER_SIZE) ||
-      !mUnicharData.SetCapacity(STRING_BUFFER_SIZE)) {
+  if (!mByteData.SetCapacity(STRING_BUFFER_SIZE, mozilla::fallible) ||
+      !mUnicharData.SetCapacity(STRING_BUFFER_SIZE, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   mInput = aStream;

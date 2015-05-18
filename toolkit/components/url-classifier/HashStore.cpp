@@ -704,7 +704,7 @@ ByteSliceRead(nsIInputStream* aInStream, FallibleTArray<uint32_t>* aData, uint32
   rv = ReadTArray(aInStream, &slice4, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aData->SetCapacity(count)) {
+  if (!aData->SetCapacity(count, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -725,7 +725,7 @@ HashStore::ReadAddPrefixes()
   nsresult rv = ByteSliceRead(mInputStream, &chunks, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mAddPrefixes.SetCapacity(count)) {
+  if (!mAddPrefixes.SetCapacity(count, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   for (uint32_t i = 0; i < count; i++) {
@@ -754,7 +754,7 @@ HashStore::ReadSubPrefixes()
   rv = ByteSliceRead(mInputStream, &prefixes, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mSubPrefixes.SetCapacity(count)) {
+  if (!mSubPrefixes.SetCapacity(count, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   for (uint32_t i = 0; i < count; i++) {

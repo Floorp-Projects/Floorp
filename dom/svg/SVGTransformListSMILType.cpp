@@ -50,7 +50,7 @@ SVGTransformListSMILType::Assign(nsSMILValue& aDest,
   TransformArray* dstTransforms = static_cast<TransformArray*>(aDest.mU.mPtr);
 
   // Before we assign, ensure we have sufficient memory
-  bool result = dstTransforms->SetCapacity(srcTransforms->Length());
+  bool result = dstTransforms->SetCapacity(srcTransforms->Length(), fallible);
   NS_ENSURE_TRUE(result,NS_ERROR_OUT_OF_MEMORY);
 
   *dstTransforms = *srcTransforms;
@@ -336,7 +336,7 @@ SVGTransformListSMILType::AppendTransforms(const SVGTransformList& aList,
 
   TransformArray& transforms = *static_cast<TransformArray*>(aValue.mU.mPtr);
 
-  if (!transforms.SetCapacity(transforms.Length() + aList.Length()))
+  if (!transforms.SetCapacity(transforms.Length() + aList.Length(), fallible))
     return false;
 
   for (uint32_t i = 0; i < aList.Length(); ++i) {
@@ -358,7 +358,7 @@ SVGTransformListSMILType::GetTransforms(const nsSMILValue& aValue,
     *static_cast<const TransformArray*>(aValue.mU.mPtr);
 
   aTransforms.Clear();
-  if (!aTransforms.SetCapacity(smilTransforms.Length()))
+  if (!aTransforms.SetCapacity(smilTransforms.Length(), fallible))
       return false;
 
   for (uint32_t i = 0; i < smilTransforms.Length(); ++i) {

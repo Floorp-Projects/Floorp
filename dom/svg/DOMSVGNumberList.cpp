@@ -239,7 +239,7 @@ DOMSVGNumberList::InsertItemBefore(DOMSVGNumber& aItem,
   nsRefPtr<DOMSVGNumber> domItem = aItem.HasOwner() ? aItem.Clone() : &aItem;
 
   // Ensure we have enough memory so we can avoid complex error handling below:
-  if (!mItems.SetCapacity(mItems.Length() + 1) ||
+  if (!mItems.SetCapacity(mItems.Length() + 1, fallible) ||
       !InternalList().SetCapacity(InternalList().Length() + 1)) {
     error.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
