@@ -11,6 +11,16 @@ if [ ! -d $HOME/.ssh ]; then
 fi
 
 aws s3 cp s3://b2g-nightly-credentials/balrog_credentials .
+mar_file=b2g-${TARGET%%-*}-gecko-update.mar
+
+# We need different platform names for each variant (user, userdebug and
+# eng). We do not append variant suffix for "user" to keep compability with
+# verions already installed in the phones.
+if [ $VARIANT == "user" ]; then
+  PLATFORM=$TARGET
+else
+  PLATFORM=$TARGET-$VARIANT
+fi
 
 ./mozharness/scripts/b2g_build.py \
   --config b2g/taskcluster-phone-nightly.py \
@@ -26,8 +36,8 @@ aws s3 cp s3://b2g-nightly-credentials/balrog_credentials .
   --checkout-revision=$GECKO_HEAD_REV \
   --base-repo=$GECKO_BASE_REPOSITORY \
   --repo=$GECKO_HEAD_REPOSITORY \
-  --platform $TARGET \
-  --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/b2g-${TARGET%%-*}-gecko-update.mar \
+  --platform $PLATFORM \
+  --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/$mar_file
 
 # Don't cache backups
 rm -rf $WORKSPACE/B2G/backup-*
@@ -36,7 +46,7 @@ rm -f balrog_credentials
 mkdir -p $HOME/artifacts
 mkdir -p $HOME/artifacts-public
 
-mv $WORKSPACE/B2G/upload-public/b2g-flame-gecko-update.mar $HOME/artifacts-public/b2g-flame-gecko-update.mar
+mv $WORKSPACE/B2G/upload-public/$mar_file $HOME/artifacts-public/
 mv $WORKSPACE/B2G/upload/sources.xml $HOME/artifacts/sources.xml
 #mv $WORKSPACE/B2G/upload/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
 mv $WORKSPACE/B2G/upload/b2g-*.android-arm.tar.gz $HOME/artifacts/b2g-android-arm.tar.gz
