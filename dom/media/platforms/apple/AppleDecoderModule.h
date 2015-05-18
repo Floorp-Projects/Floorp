@@ -40,10 +40,6 @@ public:
   static void Init();
 
 private:
-  friend class InitTask;
-  friend class LinkTask;
-  friend class UnlinkTask;
-
   static bool sInitialized;
   static bool sIsVTAvailable;
   static bool sIsVTHWAvailable;
