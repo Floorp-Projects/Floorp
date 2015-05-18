@@ -281,9 +281,9 @@ let PingPicker = {
       this._updateArchivedPingData()
     }, false);
 
-    document.getElementById("next-ping")
+    document.getElementById("newer-ping")
             .addEventListener("click", () => this._movePingIndex(-1), false);
-    document.getElementById("previous-ping")
+    document.getElementById("older-ping")
             .addEventListener("click", () => this._movePingIndex(1), false);
   },
 
