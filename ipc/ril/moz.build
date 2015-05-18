@@ -10,6 +10,7 @@ EXPORTS.mozilla.ipc += [
 
 SOURCES += [
     'Ril.cpp',
+    'RilConnector.cpp'
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
