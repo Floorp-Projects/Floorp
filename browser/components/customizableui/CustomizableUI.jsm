@@ -2176,9 +2176,9 @@ let CustomizableUIInternal = {
     // current placement settings.
 
     // This allows a widget to be both built-in by default but also able to be
-    // destroyed based on criteria that may not be available when the widget is
-    // created -- for example, because some other feature in the browser
-    // supersedes the widget.
+    // destroyed and removed from the area based on criteria that may not be
+    // available when the widget is created -- for example, because some other
+    // feature in the browser supersedes the widget.
     let conditionalDestroyPromise = aData.conditionalDestroyPromise || null;
     delete aData.conditionalDestroyPromise;
 
@@ -2195,6 +2195,7 @@ let CustomizableUIInternal = {
       conditionalDestroyPromise.then(shouldDestroy => {
         if (shouldDestroy) {
           this.destroyWidget(widget.id);
+          this.removeWidgetFromArea(widget.id);
         }
       }, err => {
         Cu.reportError(err);
