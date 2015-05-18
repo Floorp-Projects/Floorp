@@ -151,6 +151,8 @@ private:
   gfxRGBA mBackgroundColor;
 
   nsRegion mTouchRegion;
+
+  bool mAsyncPanZoomEnabled;
 };
 
 } // namespace layout
