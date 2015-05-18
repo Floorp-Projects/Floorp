@@ -29,19 +29,6 @@ function loadCert(certName, trustString) {
   return certFromFile(certFilename);
 }
 
-function checkEVStatus(cert, usage, isEVExpected) {
-  do_print("cert cn=" + cert.commonName);
-  do_print("cert o=" + cert.organization);
-  do_print("cert issuer cn=" + cert.issuerCommonName);
-  do_print("cert issuer o=" + cert.issuerOrganization);
-  let hasEVPolicy = {};
-  let verifiedChain = {};
-  let error = certDB.verifyCertNow(cert, usage, NO_FLAGS, null, verifiedChain,
-                                   hasEVPolicy);
-  equal(hasEVPolicy.value, isEVExpected);
-  equal(error, PRErrorCodeSuccess);
-}
-
 /**
  * Adds a single EV key size test.
  *
@@ -69,7 +56,7 @@ function addKeySizeTestForEV(expectedNamesForOCSP,
     for (let intCertFileName of intCertFileNames) {
       loadCert(intCertFileName, ",,");
     }
-    checkEVStatus(certFromFile(endEntityCertFileName + ".der"),
+    checkEVStatus(certDB, certFromFile(endEntityCertFileName + ".der"),
                   certificateUsageSSLServer, expectedResult);
 
     ocspResponder.stop(run_next_test);

@@ -453,6 +453,11 @@ pref("media.mediasource.whitelist", false);
 pref("media.mediasource.mp4.enabled", true);
 pref("media.mediasource.webm.enabled", false);
 
+// Enable new MediaFormatReader architecture for mp4 in MSE
+pref("media.mediasource.format-reader.mp4", true);
+// Enable new MediaFormatReader architecture for plain mp4.
+pref("media.format-reader.mp4", true);
+
 #ifdef MOZ_WEBSPEECH
 pref("media.webspeech.recognition.enable", false);
 pref("media.webspeech.synth.enabled", false);
@@ -695,6 +700,8 @@ pref("canvas.hitregions.enabled", false);
 pref("canvas.filters.enabled", false);
 // Add support for canvas path objects
 pref("canvas.path.enabled", true);
+// captureStream() on canvas disabled by default
+pref("canvas.capturestream.enabled", false);
 
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug

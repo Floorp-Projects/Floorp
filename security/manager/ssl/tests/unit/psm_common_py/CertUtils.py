@@ -10,6 +10,15 @@ import pexpect
 import time
 import sys
 
+aia_prefix = 'authorityInfoAccess = OCSP;URI:http://www.example.com:8888/'
+aia_suffix = '/\n'
+
+mozilla_testing_ev_policy = ('certificatePolicies = @v3_ca_ev_cp\n\n' +
+                             '[ v3_ca_ev_cp ]\n' +
+                             'policyIdentifier = ' +
+                             '1.3.6.1.4.1.13769.666.666.666.1.500.9.1\n\n' +
+                             'CPS.1 = "http://mytestdomain.local/cps"')
+
 def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
                           ext_text, signer_key_filename = "",
                           signer_cert_filename = "",

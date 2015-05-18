@@ -8,9 +8,9 @@
 #include "gfx2DGlue.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaResource.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "nsError.h"
 #include "OggReader.h"
+#include "TimeUnits.h"
 #include "VorbisUtils.h"
 #include "WebMBufferedParser.h"
 

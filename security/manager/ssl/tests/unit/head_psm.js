@@ -35,20 +35,15 @@ const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
 const PRErrorCodeSuccess = 0;
 
 // Sort in numerical order
-const SEC_ERROR_INVALID_ARGS                            = SEC_ERROR_BASE +   5; // -8187
 const SEC_ERROR_INVALID_TIME                            = SEC_ERROR_BASE +   8;
 const SEC_ERROR_BAD_DER                                 = SEC_ERROR_BASE +   9;
 const SEC_ERROR_EXPIRED_CERTIFICATE                     = SEC_ERROR_BASE +  11;
 const SEC_ERROR_REVOKED_CERTIFICATE                     = SEC_ERROR_BASE +  12; // -8180
 const SEC_ERROR_UNKNOWN_ISSUER                          = SEC_ERROR_BASE +  13;
-const SEC_ERROR_BAD_DATABASE                            = SEC_ERROR_BASE +  18;
 const SEC_ERROR_UNTRUSTED_ISSUER                        = SEC_ERROR_BASE +  20; // -8172
 const SEC_ERROR_UNTRUSTED_CERT                          = SEC_ERROR_BASE +  21; // -8171
 const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE              = SEC_ERROR_BASE +  30; // -8162
-const SEC_ERROR_EXTENSION_VALUE_INVALID                 = SEC_ERROR_BASE +  34; // -8158
-const SEC_ERROR_EXTENSION_NOT_FOUND                     = SEC_ERROR_BASE +  35; // -8157
 const SEC_ERROR_CA_CERT_INVALID                         = SEC_ERROR_BASE +  36;
-const SEC_ERROR_INVALID_KEY                             = SEC_ERROR_BASE +  40; // -8152
 const SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION              = SEC_ERROR_BASE +  41;
 const SEC_ERROR_INADEQUATE_KEY_USAGE                    = SEC_ERROR_BASE +  90; // -8102
 const SEC_ERROR_INADEQUATE_CERT_TYPE                    = SEC_ERROR_BASE +  91; // -8101
@@ -68,7 +63,6 @@ const SEC_ERROR_OCSP_INVALID_SIGNING_CERT               = SEC_ERROR_BASE + 144;
 const SEC_ERROR_POLICY_VALIDATION_FAILED                = SEC_ERROR_BASE + 160; // -8032
 const SEC_ERROR_OCSP_BAD_SIGNATURE                      = SEC_ERROR_BASE + 157;
 const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED       = SEC_ERROR_BASE + 176;
-const SEC_ERROR_APPLICATION_CALLBACK_ERROR              = SEC_ERROR_BASE + 178;
 
 const SSL_ERROR_BAD_CERT_DOMAIN                         = SSL_ERROR_BASE +  12;
 const SSL_ERROR_BAD_CERT_ALERT                          = SSL_ERROR_BASE +  17;
@@ -129,13 +123,25 @@ function getXPCOMStatusFromNSS(statusNSS) {
 
 // certdb implements nsIX509CertDB. See nsIX509CertDB.idl for documentation.
 // In particular, hostname is optional.
-function checkCertErrorGeneric(certdb, cert, expectedError, usage, hostname) {
-  let hasEVPolicy = {};
+function checkCertErrorGeneric(certdb, cert, expectedError, usage,
+                               /*optional*/ hasEVPolicy,
+                               /*optional*/ hostname) {
+  do_print(`cert cn=${cert.commonName}`);
+  do_print(`cert issuer cn=${cert.issuerCommonName}`);
   let verifiedChain = {};
   let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, hostname,
-                                   verifiedChain, hasEVPolicy);
+                                   verifiedChain, hasEVPolicy || {});
   Assert.equal(error, expectedError,
                "Actual and expected error should match");
+}
+
+function checkEVStatus(certDB, cert, usage, isEVExpected) {
+  do_print(`cert o=${cert.organization}`);
+  do_print(`cert issuer o=${cert.issuerOrganization}`);
+  let hasEVPolicy = {};
+  checkCertErrorGeneric(certDB, cert, PRErrorCodeSuccess, usage, hasEVPolicy);
+  Assert.equal(hasEVPolicy.value, isEVExpected,
+               "Actual and expected EV status should match");
 }
 
 function _getLibraryFunctionWithNoArguments(functionName, libraryName) {
@@ -393,8 +399,8 @@ function _setupTLSServerTest(serverBinName)
                  .getService(Ci.nsIEnvironment);
   let greBinDir = directoryService.get("GreBinD", Ci.nsIFile);
   envSvc.set("DYLD_LIBRARY_PATH", greBinDir.path);
-  // Android libraries are in /data/local/xpcb, but "GreBinD" does not return
-  // this path on Android, so hard code it here.
+  // TODO(bug 1107794): Android libraries are in /data/local/xpcb, but "GreBinD"
+  // does not return this path on Android, so hard code it here.
   envSvc.set("LD_LIBRARY_PATH", greBinDir.path + ":/data/local/xpcb");
   envSvc.set("MOZ_TLS_SERVER_DEBUG_LEVEL", "3");
   envSvc.set("MOZ_TLS_SERVER_CALLBACK_PORT", CALLBACK_PORT);

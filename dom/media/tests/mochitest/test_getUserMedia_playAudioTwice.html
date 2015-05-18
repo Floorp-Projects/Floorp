@@ -11,14 +11,14 @@
    * Run a test that we can complete an audio playback cycle twice in a row.
    */
   runTest(function () {
-    getUserMedia({audio: true}).then(audioStream => {
+    return getUserMedia({audio: true}).then(audioStream => {
       var testAudio = createMediaElement('audio', 'testAudio');
       var playback = new LocalMediaStreamPlayback(testAudio, audioStream);
 
       return playback.playMedia(false)
         .then(() => playback.playMedia(true))
         .then(() => audioStream.stop());
-    }).then(() => SimpleTest.finish(), generateErrorCallback());
+    });
   });
 </script>
 </pre>

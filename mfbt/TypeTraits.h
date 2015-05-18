@@ -755,8 +755,8 @@ struct AddLvalueReferenceHelper<T, TIsNotVoid>
 
 /**
  * AddLvalueReference adds an lvalue & reference to T if one isn't already
- * present.  (Note: adding an lvalue reference to an rvalue && reference in
- * essence replaces the && with a &&, per C+11 reference collapsing rules.  For
+ * present. (Note: adding an lvalue reference to an rvalue && reference in
+ * essence replaces the && with a &&, per C+11 reference collapsing rules. For
  * example, int&& would become int&.)
  *
  * The final computed type will only *not* be an lvalue reference if T is void.
@@ -771,6 +771,56 @@ template<typename T>
 struct AddLvalueReference
   : detail::AddLvalueReferenceHelper<T>
 {};
+
+namespace detail {
+
+template<typename T, Voidness V = IsVoid<T>::value ? TIsVoid : TIsNotVoid>
+struct AddRvalueReferenceHelper;
+
+template<typename T>
+struct AddRvalueReferenceHelper<T, TIsVoid>
+{
+  typedef void Type;
+};
+
+template<typename T>
+struct AddRvalueReferenceHelper<T, TIsNotVoid>
+{
+  typedef T&& Type;
+};
+
+} // namespace detail
+
+/**
+ * AddRvalueReference adds an rvalue && reference to T if one isn't already
+ * present. (Note: adding an rvalue reference to an lvalue & reference in
+ * essence keeps the &, per C+11 reference collapsing rules. For example,
+ * int& would remain int&.)
+ *
+ * The final computed type will only *not* be a reference if T is void.
+ *
+ * mozilla::AddRvalueReference<int>::Type is int&&;
+ * mozilla::AddRvalueRference<volatile int&>::Type is volatile int&;
+ * mozilla::AddRvalueRference<const int&&>::Type is const int&&;
+ * mozilla::AddRvalueReference<void*>::Type is void*&&;
+ * mozilla::AddRvalueReference<void>::Type is void;
+ * mozilla::AddRvalueReference<struct S&>::Type is struct S&.
+ */
+template<typename T>
+struct AddRvalueReference
+  : detail::AddRvalueReferenceHelper<T>
+{};
+
+/* 20.2.4 Function template declval [declval] */
+
+/**
+ * DeclVal simplifies the definition of expressions which occur as unevaluated
+ * operands. It converts T to a reference type, making it possible to use in
+ * decltype expressions even if T does not have a default constructor, e.g.:
+ * decltype(DeclVal<TWithNoDefaultConstructor>().foo())
+ */
+template<typename T>
+typename AddRvalueReference<T>::Type DeclVal();
 
 /* 20.9.7.3 Sign modifications [meta.trans.sign] */
 
