@@ -213,17 +213,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'opengl/GrallocTextureHost.cpp',
     ]
     LOCAL_INCLUDES += ['/widget/gonk']
+    CXXFLAGS += [
+         '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+             'system/core/libsync/include'
+         ]
+    ]
     SOURCES += [
         'ipc/ShadowLayerUtilsGralloc.cpp',
     ]
-
-    if CONFIG['ANDROID_VERSION'] >= '17':
-        EXPORTS.mozilla.layers += [
-            'ipc/FenceUtilsGonk.h',
-        ]
-        SOURCES += [
-            'ipc/FenceUtilsGonk.cpp',
-        ]
 
 UNIFIED_SOURCES += [
     'apz/src/APZCTreeManager.cpp',
@@ -295,6 +292,7 @@ UNIFIED_SOURCES += [
     'ipc/CompositorBench.cpp',
     'ipc/CompositorChild.cpp',
     'ipc/CompositorParent.cpp',
+    'ipc/FenceUtils.cpp',
     'ipc/ImageBridgeChild.cpp',
     'ipc/ImageBridgeParent.cpp',
     'ipc/ISurfaceAllocator.cpp',

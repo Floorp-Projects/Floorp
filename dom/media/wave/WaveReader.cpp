@@ -7,7 +7,6 @@
 #include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
 #include "WaveReader.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "MediaDecoderStateMachine.h"
 #include "VideoUtils.h"
 #include "nsISeekableStream.h"
@@ -275,15 +274,12 @@ WaveReader::Seek(int64_t aTarget, int64_t aEndTime)
   }
 }
 
-static double RoundToUsecs(double aSeconds) {
-  return floor(aSeconds * USECS_PER_S) / USECS_PER_S;
-}
-
-nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered)
+media::TimeIntervals WaveReader::GetBuffered()
 {
   if (!mInfo.HasAudio()) {
-    return NS_OK;
+    return media::TimeIntervals();
   }
+  media::TimeIntervals buffered;
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
   int64_t startOffset = resource->GetNextCachedData(mWavePCMOffset);
   while (startOffset >= 0) {
@@ -295,11 +291,12 @@ nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered)
     // We need to round the buffered ranges' times to microseconds so that they
     // have the same precision as the currentTime and duration attribute on
     // the media element.
-    aBuffered->Add(RoundToUsecs(BytesToTime(startOffset - mWavePCMOffset)),
-                   RoundToUsecs(BytesToTime(endOffset - mWavePCMOffset)));
+    buffered += media::TimeInterval(
+      media::TimeUnit::FromSeconds(BytesToTime(startOffset - mWavePCMOffset)),
+      media::TimeUnit::FromSeconds(BytesToTime(endOffset - mWavePCMOffset)));
     startOffset = resource->GetNextCachedData(endOffset);
   }
-  return NS_OK;
+  return buffered;
 }
 
 bool

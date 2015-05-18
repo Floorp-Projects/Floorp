@@ -219,6 +219,39 @@ public:
 
 NS_IMPL_ISUPPORTS(ThreadUtilsObject, IThreadUtilsObject)
 
+class ThreadUtilsRefCountedFinal final
+{
+public:
+  ThreadUtilsRefCountedFinal() : m_refCount(0) {}
+  ~ThreadUtilsRefCountedFinal() {}
+  // 'AddRef' and 'Release' methods with different return types, to verify
+  // that the return type doesn't influence storage selection.
+  long AddRef(void) { return ++m_refCount; }
+  void Release(void) { --m_refCount; }
+private:
+  long m_refCount;
+};
+
+class ThreadUtilsRefCountedBase
+{
+public:
+  ThreadUtilsRefCountedBase() : m_refCount(0) {}
+  virtual ~ThreadUtilsRefCountedBase() {}
+  // 'AddRef' and 'Release' methods with different return types, to verify
+  // that the return type doesn't influence storage selection.
+  virtual void AddRef(void) { ++m_refCount; }
+  virtual MozExternalRefCountType Release(void) { return --m_refCount; }
+private:
+  MozExternalRefCountType m_refCount;
+};
+
+class ThreadUtilsRefCountedDerived
+  : public ThreadUtilsRefCountedBase
+{};
+
+class ThreadUtilsNonRefCounted
+{};
+
 } // namespace TestThreadUtils;
 
 TEST(ThreadUtils, main)
@@ -275,11 +308,11 @@ TEST(ThreadUtils, main)
   static_assert(
       mozilla::IsSame< ::detail::ParameterStorage<int>::Type,
                       StoreCopyPassByValue<int>>::value,
-      "ns::detail::ParameterStorage<int>::Type should be StoreCopyPassByValue<int>");
+      "detail::ParameterStorage<int>::Type should be StoreCopyPassByValue<int>");
   static_assert(
       mozilla::IsSame< ::detail::ParameterStorage<StoreCopyPassByValue<int>>::Type,
                       StoreCopyPassByValue<int>>::value,
-      "ns::detail::ParameterStorage<StoreCopyPassByValue<int>>::Type should be StoreCopyPassByValue<int>");
+      "detail::ParameterStorage<StoreCopyPassByValue<int>>::Type should be StoreCopyPassByValue<int>");
 
   r = NS_NewRunnableMethodWithArgs<int>(rpt, &ThreadUtilsObject::Test1i, 12);
   r->Run();
@@ -322,22 +355,22 @@ TEST(ThreadUtils, main)
   // Raw pointer, possible cv-qualified.
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int*>::Type,
                                 StorePtrPassByPtr<int>>::value,
-                "ns::detail::ParameterStorage<int*>::Type should be StorePtrPassByPtr<int>");
+                "detail::ParameterStorage<int*>::Type should be StorePtrPassByPtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int* const>::Type,
                                 StorePtrPassByPtr<int>>::value,
-                "ns::detail::ParameterStorage<int* const>::Type should be StorePtrPassByPtr<int>");
+                "detail::ParameterStorage<int* const>::Type should be StorePtrPassByPtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int* volatile>::Type,
                                 StorePtrPassByPtr<int>>::value,
-                "ns::detail::ParameterStorage<int* volatile>::Type should be StorePtrPassByPtr<int>");
+                "detail::ParameterStorage<int* volatile>::Type should be StorePtrPassByPtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int* const volatile>::Type,
                                 StorePtrPassByPtr<int>>::value,
-                "ns::detail::ParameterStorage<int* const volatile>::Type should be StorePtrPassByPtr<int>");
+                "detail::ParameterStorage<int* const volatile>::Type should be StorePtrPassByPtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int*>::Type::stored_type,
                                 int*>::value,
-                "ns::detail::ParameterStorage<int*>::Type::stored_type should be int*");
+                "detail::ParameterStorage<int*>::Type::stored_type should be int*");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int*>::Type::passed_type,
                                 int*>::value,
-                "ns::detail::ParameterStorage<int*>::Type::passed_type should be int*");
+                "detail::ParameterStorage<int*>::Type::passed_type should be int*");
   {
     int i = 12;
     r = NS_NewRunnableMethodWithArgs<int*>(rpt, &ThreadUtilsObject::Test1pi, &i);
@@ -349,22 +382,22 @@ TEST(ThreadUtils, main)
   // Raw pointer to const.
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<const int*>::Type,
                                 StoreConstPtrPassByConstPtr<int>>::value,
-                "ns::detail::ParameterStorage<const int*>::Type should be StoreConstPtrPassByConstPtr<int>");
+                "detail::ParameterStorage<const int*>::Type should be StoreConstPtrPassByConstPtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<const int* const>::Type,
                                 StoreConstPtrPassByConstPtr<int>>::value,
-                "ns::detail::ParameterStorage<const int* const>::Type should be StoreConstPtrPassByConstPtr<int>");
+                "detail::ParameterStorage<const int* const>::Type should be StoreConstPtrPassByConstPtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<const int* volatile>::Type,
                                 StoreConstPtrPassByConstPtr<int>>::value,
-                "ns::detail::ParameterStorage<const int* volatile>::Type should be StoreConstPtrPassByConstPtr<int>");
+                "detail::ParameterStorage<const int* volatile>::Type should be StoreConstPtrPassByConstPtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<const int* const volatile>::Type,
                                 StoreConstPtrPassByConstPtr<int>>::value,
-                "ns::detail::ParameterStorage<const int* const volatile>::Type should be StoreConstPtrPassByConstPtr<int>");
+                "detail::ParameterStorage<const int* const volatile>::Type should be StoreConstPtrPassByConstPtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<const int*>::Type::stored_type,
                                 const int*>::value,
-                "ns::detail::ParameterStorage<const int*>::Type::stored_type should be const int*");
+                "detail::ParameterStorage<const int*>::Type::stored_type should be const int*");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<const int*>::Type::passed_type,
                                 const int*>::value,
-                "ns::detail::ParameterStorage<const int*>::Type::passed_type should be const int*");
+                "detail::ParameterStorage<const int*>::Type::passed_type should be const int*");
   {
     int i = 1201;
     r = NS_NewRunnableMethodWithArgs<const int*>(rpt, &ThreadUtilsObject::Test1pci, &i);
@@ -408,10 +441,10 @@ TEST(ThreadUtils, main)
   // nsRefPtr to pointer.
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<StorensRefPtrPassByPtr<SpyWithISupports>>::Type,
                                 StorensRefPtrPassByPtr<SpyWithISupports>>::value,
-                "ns::detail::ParameterStorage<StorensRefPtrPassByPtr<SpyWithISupports>>::Type should be StorensRefPtrPassByPtr<SpyWithISupports>");
+                "ParameterStorage<StorensRefPtrPassByPtr<SpyWithISupports>>::Type should be StorensRefPtrPassByPtr<SpyWithISupports>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<SpyWithISupports*>::Type,
                                 StorensRefPtrPassByPtr<SpyWithISupports>>::value,
-                "ns::detail::ParameterStorage<SpyWithISupports*>::Type should be StorensRefPtrPassByPtr<SpyWithISupports>");
+                "ParameterStorage<SpyWithISupports*>::Type should be StorensRefPtrPassByPtr<SpyWithISupports>");
   static_assert(mozilla::IsSame<StorensRefPtrPassByPtr<SpyWithISupports>::stored_type,
                                 nsRefPtr<SpyWithISupports>>::value,
                 "StorensRefPtrPassByPtr<SpyWithISupports>::stored_type should be nsRefPtr<SpyWithISupports>");
@@ -420,19 +453,42 @@ TEST(ThreadUtils, main)
                 "StorensRefPtrPassByPtr<SpyWithISupports>::passed_type should be SpyWithISupports*");
   // (more nsRefPtr tests below)
 
+  // nsRefPtr for ref-countable classes that do not derive from ISupports.
+  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedFinal>::value,
+                "ThreadUtilsRefCountedFinal has AddRef() and Release()");
+  static_assert(mozilla::IsSame< ::detail::ParameterStorage<ThreadUtilsRefCountedFinal*>::Type,
+                                StorensRefPtrPassByPtr<ThreadUtilsRefCountedFinal>>::value,
+                "ParameterStorage<ThreadUtilsRefCountedFinal*>::Type should be StorensRefPtrPassByPtr<ThreadUtilsRefCountedFinal>");
+  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedBase>::value,
+                "ThreadUtilsRefCountedBase has AddRef() and Release()");
+  static_assert(mozilla::IsSame< ::detail::ParameterStorage<ThreadUtilsRefCountedBase*>::Type,
+                                StorensRefPtrPassByPtr<ThreadUtilsRefCountedBase>>::value,
+                "ParameterStorage<ThreadUtilsRefCountedBase*>::Type should be StorensRefPtrPassByPtr<ThreadUtilsRefCountedBase>");
+  static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedDerived>::value,
+                "ThreadUtilsRefCountedDerived has AddRef() and Release()");
+  static_assert(mozilla::IsSame< ::detail::ParameterStorage<ThreadUtilsRefCountedDerived*>::Type,
+                                StorensRefPtrPassByPtr<ThreadUtilsRefCountedDerived>>::value,
+                "ParameterStorage<ThreadUtilsRefCountedDerived*>::Type should be StorensRefPtrPassByPtr<ThreadUtilsRefCountedDerived>");
+
+  static_assert(!::detail::HasRefCountMethods<ThreadUtilsNonRefCounted>::value,
+                "ThreadUtilsNonRefCounted doesn't have AddRef() and Release()");
+  static_assert(!mozilla::IsSame< ::detail::ParameterStorage<ThreadUtilsNonRefCounted*>::Type,
+                                 StorensRefPtrPassByPtr<ThreadUtilsNonRefCounted>>::value,
+                "ParameterStorage<ThreadUtilsNonRefCounted*>::Type should NOT be StorensRefPtrPassByPtr<ThreadUtilsNonRefCounted>");
+
   // Lvalue reference.
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int&>::Type,
                                 StoreRefPassByLRef<int>>::value,
-                "ns::detail::ParameterStorage<int&>::Type should be StoreRefPassByLRef<int>");
+                "ParameterStorage<int&>::Type should be StoreRefPassByLRef<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int&>::Type::stored_type,
                                 StoreRefPassByLRef<int>::stored_type>::value,
-                "ns::detail::ParameterStorage<int&>::Type::stored_type should be StoreRefPassByLRef<int>::stored_type");
+                "ParameterStorage<int&>::Type::stored_type should be StoreRefPassByLRef<int>::stored_type");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int&>::Type::stored_type,
                                 int&>::value,
-                "ns::detail::ParameterStorage<int&>::Type::stored_type should be int&");
+                "ParameterStorage<int&>::Type::stored_type should be int&");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int&>::Type::passed_type,
                                 int&>::value,
-                "ns::detail::ParameterStorage<int&>::Type::passed_type should be int&");
+                "ParameterStorage<int&>::Type::passed_type should be int&");
   {
     int i = 13;
     r = NS_NewRunnableMethodWithArgs<int&>(rpt, &ThreadUtilsObject::Test1ri, i);
@@ -444,16 +500,16 @@ TEST(ThreadUtils, main)
   // Rvalue reference -- Actually storing a copy and then moving it.
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int&&>::Type,
                                 StoreCopyPassByRRef<int>>::value,
-                "ns::detail::ParameterStorage<int&&>::Type should be StoreCopyPassByRRef<int>");
+                "ParameterStorage<int&&>::Type should be StoreCopyPassByRRef<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int&&>::Type::stored_type,
                                 StoreCopyPassByRRef<int>::stored_type>::value,
-                "ns::detail::ParameterStorage<int&&>::Type::stored_type should be StoreCopyPassByRRef<int>::stored_type");
+                "ParameterStorage<int&&>::Type::stored_type should be StoreCopyPassByRRef<int>::stored_type");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int&&>::Type::stored_type,
                                 int>::value,
-                "ns::detail::ParameterStorage<int&&>::Type::stored_type should be int");
+                "ParameterStorage<int&&>::Type::stored_type should be int");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int&&>::Type::passed_type,
                                 int&&>::value,
-                "ns::detail::ParameterStorage<int&&>::Type::passed_type should be int&&");
+                "ParameterStorage<int&&>::Type::passed_type should be int&&");
   {
     int i = 14;
     r = NS_NewRunnableMethodWithArgs<int&&>(
@@ -466,16 +522,16 @@ TEST(ThreadUtils, main)
   // Null unique pointer, by semi-implicit store&move with "T&&" syntax.
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<mozilla::UniquePtr<int>&&>::Type,
                                 StoreCopyPassByRRef<mozilla::UniquePtr<int>>>::value,
-                "ns::detail::ParameterStorage<UniquePtr<int>&&>::Type should be StoreCopyPassByRRef<UniquePtr<int>>");
+                "ParameterStorage<UniquePtr<int>&&>::Type should be StoreCopyPassByRRef<UniquePtr<int>>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<mozilla::UniquePtr<int>&&>::Type::stored_type,
                                 StoreCopyPassByRRef<mozilla::UniquePtr<int>>::stored_type>::value,
-                "ns::detail::ParameterStorage<UniquePtr<int>&&>::Type::stored_type should be StoreCopyPassByRRef<UniquePtr<int>>::stored_type");
+                "ParameterStorage<UniquePtr<int>&&>::Type::stored_type should be StoreCopyPassByRRef<UniquePtr<int>>::stored_type");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<mozilla::UniquePtr<int>&&>::Type::stored_type,
                                 mozilla::UniquePtr<int>>::value,
-                "ns::detail::ParameterStorage<UniquePtr<int>&&>::Type::stored_type should be UniquePtr<int>");
+                "ParameterStorage<UniquePtr<int>&&>::Type::stored_type should be UniquePtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<mozilla::UniquePtr<int>&&>::Type::passed_type,
                                 mozilla::UniquePtr<int>&&>::value,
-                "ns::detail::ParameterStorage<UniquePtr<int>&&>::Type::passed_type should be UniquePtr<int>&&");
+                "ParameterStorage<UniquePtr<int>&&>::Type::passed_type should be UniquePtr<int>&&");
   {
     mozilla::UniquePtr<int> upi;
     r = NS_NewRunnableMethodWithArgs<mozilla::UniquePtr<int>&&>(
@@ -489,16 +545,16 @@ TEST(ThreadUtils, main)
   // Null unique pointer, by explicit store&move with "StoreCopyPassByRRef<T>" syntax.
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<StoreCopyPassByRRef<mozilla::UniquePtr<int>>>::Type::stored_type,
                                 StoreCopyPassByRRef<mozilla::UniquePtr<int>>::stored_type>::value,
-                "ns::detail::ParameterStorage<StoreCopyPassByRRef<UniquePtr<int>>>::Type::stored_type should be StoreCopyPassByRRef<UniquePtr<int>>::stored_type");
+                "ParameterStorage<StoreCopyPassByRRef<UniquePtr<int>>>::Type::stored_type should be StoreCopyPassByRRef<UniquePtr<int>>::stored_type");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<StoreCopyPassByRRef<mozilla::UniquePtr<int>>>::Type::stored_type,
                                 StoreCopyPassByRRef<mozilla::UniquePtr<int>>::stored_type>::value,
-                "ns::detail::ParameterStorage<StoreCopyPassByRRef<UniquePtr<int>>>::Type::stored_type should be StoreCopyPassByRRef<UniquePtr<int>>::stored_type");
+                "ParameterStorage<StoreCopyPassByRRef<UniquePtr<int>>>::Type::stored_type should be StoreCopyPassByRRef<UniquePtr<int>>::stored_type");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<StoreCopyPassByRRef<mozilla::UniquePtr<int>>>::Type::stored_type,
                                 mozilla::UniquePtr<int>>::value,
-                "ns::detail::ParameterStorage<StoreCopyPassByRRef<UniquePtr<int>>>::Type::stored_type should be UniquePtr<int>");
+                "ParameterStorage<StoreCopyPassByRRef<UniquePtr<int>>>::Type::stored_type should be UniquePtr<int>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<StoreCopyPassByRRef<mozilla::UniquePtr<int>>>::Type::passed_type,
                                 mozilla::UniquePtr<int>&&>::value,
-                "ns::detail::ParameterStorage<StoreCopyPassByRRef<UniquePtr<int>>>::Type::passed_type should be UniquePtr<int>&&");
+                "ParameterStorage<StoreCopyPassByRRef<UniquePtr<int>>>::Type::passed_type should be UniquePtr<int>&&");
   {
     mozilla::UniquePtr<int> upi;
     r = NS_NewRunnableMethodWithArgs

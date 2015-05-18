@@ -6,7 +6,6 @@
 
 #include "nsAlgorithm.h"
 #include "WebMBufferedParser.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "nsThreadUtils.h"
 #include <algorithm>
 

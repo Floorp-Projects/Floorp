@@ -1484,10 +1484,12 @@ HTMLMediaElement::Seek(double aTime,
 
   // Clamp the seek target to inside the seekable ranges.
   nsRefPtr<dom::TimeRanges> seekable = new dom::TimeRanges();
-  if (NS_FAILED(mDecoder->GetSeekable(seekable))) {
+  media::TimeIntervals seekableIntervals = mDecoder->GetSeekable();
+  if (seekableIntervals.IsInvalid()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
+  seekableIntervals.ToTimeRanges(seekable);
   uint32_t length = 0;
   seekable->GetLength(&length);
   if (!length) {
@@ -1601,9 +1603,8 @@ HTMLMediaElement::Seekable() const
 {
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
   if (mDecoder && mReadyState > nsIDOMHTMLMediaElement::HAVE_NOTHING) {
-    mDecoder->GetSeekable(ranges);
+    mDecoder->GetSeekable().ToTimeRanges(ranges);
   }
-  ranges->Normalize();
   return ranges.forget();
 }
 
@@ -4169,12 +4170,12 @@ HTMLMediaElement::Buffered() const
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
   if (mReadyState > nsIDOMHTMLMediaElement::HAVE_NOTHING) {
     if (mDecoder) {
-      // If GetBuffered fails we ignore the error result and just return the
-      // time ranges we found up till the error.
-      mDecoder->GetBuffered(ranges);
+      media::TimeIntervals buffered = mDecoder->GetBuffered();
+      if (!buffered.IsInvalid()) {
+        buffered.ToTimeRanges(ranges);
+      }
     }
   }
-  ranges->Normalize();
   return ranges.forget();
 }
 

@@ -284,7 +284,7 @@ nsresult RawReader::SeekInternal(int64_t aTime)
   return NS_OK;
 }
 
-nsresult RawReader::GetBuffered(dom::TimeRanges* aBuffered)
+media::TimeIntervals RawReader::GetBuffered()
 {
-  return NS_OK;
+  return media::TimeIntervals();
 }

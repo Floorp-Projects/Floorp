@@ -24,12 +24,6 @@ class ContainerParser;
 class MediaSourceDecoder;
 class MediaLargeByteBuffer;
 
-namespace dom {
-
-class TimeRanges;
-
-} // namespace dom
-
 class TrackBuffer final {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TrackBuffer);
@@ -56,10 +50,9 @@ public:
   // of the buffer through to aTime.
   void EvictBefore(double aTime);
 
-  // Returns the highest end time of all of the buffered ranges in the
-  // decoders managed by this TrackBuffer, and returns the union of the
-  // decoders buffered ranges in aRanges. This may be called on any thread.
-  double Buffered(dom::TimeRanges* aRanges);
+  // Returns the union of the decoders buffered ranges in aRanges.
+  // This may be called on any thread.
+  media::TimeIntervals Buffered();
 
   // Mark the current decoder's resource as ended, clear mCurrentDecoder and
   // reset mLast{Start,End}Timestamp.  Main thread only.
@@ -99,8 +92,8 @@ public:
   // Implementation is only partial, we can only trim a buffer.
   // Returns true if data was evicted.
   // Times are in microseconds.
-  bool RangeRemoval(mozilla::media::Microseconds aStart,
-                    mozilla::media::Microseconds aEnd);
+  bool RangeRemoval(mozilla::media::TimeUnit aStart,
+                    mozilla::media::TimeUnit aEnd);
 
   // Abort any pending appendBuffer by rejecting any pending promises.
   void AbortAppendData();

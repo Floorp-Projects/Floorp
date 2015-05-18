@@ -286,6 +286,31 @@ TransformTo565(png_structp png_ptr, png_row_infop row_info, png_bytep data)
     }
 }
 
+static uint16_t
+GetFormatBPP(int aFormat)
+{
+    uint16_t bpp = 0;
+
+    switch (aFormat) {
+    case HAL_PIXEL_FORMAT_BGRA_8888:
+    case HAL_PIXEL_FORMAT_RGBA_8888:
+    case HAL_PIXEL_FORMAT_RGBX_8888:
+        bpp = 4;
+        break;
+    case HAL_PIXEL_FORMAT_RGB_888:
+        bpp = 3;
+        break;
+    default:
+        LOGW("Unknown pixel format %d. Assuming RGB 565.", aFormat);
+        // FALL THROUGH
+    case HAL_PIXEL_FORMAT_RGB_565:
+        bpp = 2;
+        break;
+    }
+
+    return bpp;
+}
+
 void
 AnimationFrame::ReadPngFrame(int outputFormat)
 {
@@ -358,24 +383,23 @@ AnimationFrame::ReadPngFrame(int outputFormat)
         path, width, height, has_bgcolor ? "yes" : "no",
         bgcolor.red, bgcolor.green, bgcolor.blue, bgcolor.gray);
 
+    bytepp = GetFormatBPP(outputFormat);
+
     switch (outputFormat) {
     case HAL_PIXEL_FORMAT_BGRA_8888:
         png_set_bgr(pngread);
         // FALL THROUGH
     case HAL_PIXEL_FORMAT_RGBA_8888:
     case HAL_PIXEL_FORMAT_RGBX_8888:
-        bytepp = 4;
         png_set_filler(pngread, 0xFF, PNG_FILLER_AFTER);
         break;
     case HAL_PIXEL_FORMAT_RGB_888:
-        bytepp = 3;
         png_set_strip_alpha(pngread);
         break;
     default:
         LOGW("Unknown pixel format %d. Assuming RGB 565.", outputFormat);
         // FALL THROUGH
     case HAL_PIXEL_FORMAT_RGB_565:
-        bytepp = 2;
         png_set_strip_alpha(pngread);
         png_set_read_user_transform_fn(pngread, TransformTo565);
         break;
@@ -446,12 +470,52 @@ AsBackgroundFill(const png_color_16& color16, int outputFormat)
     }
 }
 
+void
+ShowSolidColorFrame(GonkDisplay *aDisplay,
+                    const gralloc_module_t *grallocModule,
+                    int32_t aFormat)
+{
+    LOGW("Show solid color frame for bootAnim");
+
+    ANativeWindowBuffer *buffer = aDisplay->DequeueBuffer();
+    void *mappedAddress = nullptr;
+
+    if (!buffer) {
+        LOGW("Failed to get an ANativeWindowBuffer");
+        return;
+    }
+
+    if (!grallocModule->lock(grallocModule, buffer->handle,
+                             GRALLOC_USAGE_SW_READ_NEVER |
+                             GRALLOC_USAGE_SW_WRITE_OFTEN |
+                             GRALLOC_USAGE_HW_FB,
+                             0, 0, buffer->width, buffer->height, &mappedAddress)) {
+        // Just show a black solid color frame.
+        memset(mappedAddress, 0, buffer->height * buffer->stride * GetFormatBPP(aFormat));
+        grallocModule->unlock(grallocModule, buffer->handle);
+    }
+
+    aDisplay->QueueBuffer(buffer);
+}
+
 static void *
 AnimationThread(void *)
 {
+    GonkDisplay *display = GetGonkDisplay();
+    int32_t format = display->surfaceformat;
+
+    const hw_module_t *module = nullptr;
+    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module)) {
+        LOGW("Could not get gralloc module");
+        return nullptr;
+    }
+    const gralloc_module_t *grmodule =
+        reinterpret_cast<gralloc_module_t const*>(module);
+
     ZipReader reader;
     if (!reader.OpenArchive("/system/media/bootanimation.zip")) {
         LOGW("Could not open boot animation");
+        ShowSolidColorFrame(display, grmodule, format);
         return nullptr;
     }
 
@@ -467,19 +531,9 @@ AnimationThread(void *)
 
     if (!file) {
         LOGW("Could not find desc.txt in boot animation");
+        ShowSolidColorFrame(display, grmodule, format);
         return nullptr;
     }
-
-    GonkDisplay *display = GetGonkDisplay();
-    int format = display->surfaceformat;
-
-    hw_module_t const *module;
-    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module)) {
-        LOGW("Could not get gralloc module");
-        return nullptr;
-    }
-    gralloc_module_t const *grmodule =
-        reinterpret_cast<gralloc_module_t const*>(module);
 
     string descCopy;
     descCopy.append(file->GetData(), entry->GetDataSize());
@@ -488,6 +542,7 @@ AnimationThread(void *)
     const char *end;
     bool headerRead = true;
     vector<AnimationPart> parts;
+    bool animPlayed = false;
 
     /*
      * bootanimation.zip
@@ -618,6 +673,7 @@ AnimationThread(void *)
                          frameDelayUs, tv2.tv_usec);
                 }
 
+                animPlayed = true;
                 display->QueueBuffer(buf);
 
                 if (part.count && j >= part.count) {
@@ -627,6 +683,10 @@ AnimationThread(void *)
             }
             usleep(frameDelayUs * part.pause);
         }
+    }
+
+    if (!animPlayed) {
+        ShowSolidColorFrame(display, grmodule, format);
     }
 
     return nullptr;

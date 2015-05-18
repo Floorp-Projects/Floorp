@@ -110,71 +110,50 @@ FlagsToGLFlags(TextureFlags aFlags)
   return static_cast<gl::TextureImage::Flags>(result);
 }
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
 bool
-TextureHostOGL::SetReleaseFence(const android::sp<android::Fence>& aReleaseFence)
+TextureHostOGL::SetReleaseFence(const FenceHandle& aReleaseFence)
 {
-  if (!aReleaseFence.get() || !aReleaseFence->isValid()) {
+  if (!aReleaseFence.IsValid()) {
     // HWC might not provide Fence.
     // In this case, HWC implicitly handles buffer's fence.
     return false;
   }
 
-  if (!mReleaseFence.get()) {
-    mReleaseFence = aReleaseFence;
-  } else {
-    android::sp<android::Fence> mergedFence = android::Fence::merge(
-                  android::String8::format("TextureHostOGL"),
-                  mReleaseFence, aReleaseFence);
-    if (!mergedFence.get()) {
-      // synchronization is broken, the best we can do is hope fences
-      // signal in order so the new fence will act like a union.
-      // This error handling is same as android::ConsumerBase does.
-      mReleaseFence = aReleaseFence;
-      return false;
-    }
-    mReleaseFence = mergedFence;
-  }
+  mReleaseFence.Merge(aReleaseFence);
+
   return true;
 }
 
-android::sp<android::Fence>
+FenceHandle
 TextureHostOGL::GetAndResetReleaseFence()
 {
-  // Hold previous ReleaseFence to prevent Fence delivery failure via gecko IPC.
-  mPrevReleaseFence = mReleaseFence;
-  // Reset current ReleaseFence.
-  mReleaseFence = android::Fence::NO_FENCE;
-  return mPrevReleaseFence;
+  FenceHandle fence;
+  mReleaseFence.TransferToAnotherFenceHandle(fence);
+  return fence;
 }
 
 void
-TextureHostOGL::SetAcquireFence(const android::sp<android::Fence>& aAcquireFence)
+TextureHostOGL::SetAcquireFence(const FenceHandle& aAcquireFence)
 {
   mAcquireFence = aAcquireFence;
 }
 
-android::sp<android::Fence>
+FenceHandle
 TextureHostOGL::GetAndResetAcquireFence()
 {
-  android::sp<android::Fence> fence = mAcquireFence;
-  // Reset current AcquireFence.
-  mAcquireFence = android::Fence::NO_FENCE;
-  return fence;
+  nsRefPtr<FenceHandle::FdObj> fdObj = mAcquireFence.GetAndResetFdObj();
+  return FenceHandle(fdObj);
 }
 
 void
 TextureHostOGL::WaitAcquireFenceSyncComplete()
 {
-  if (!mAcquireFence.get() || !mAcquireFence->isValid()) {
+  if (!mAcquireFence.IsValid()) {
     return;
   }
 
-  int fenceFd = mAcquireFence->dup();
-  if (fenceFd == -1) {
-    NS_WARNING("failed to dup fence fd");
-    return;
-  }
+  nsRefPtr<FenceHandle::FdObj> fence = mAcquireFence.GetAndResetFdObj();
+  int fenceFd = fence->GetAndResetFd();
 
   EGLint attribs[] = {
               LOCAL_EGL_SYNC_NATIVE_FENCE_FD_ANDROID, fenceFd,
@@ -200,10 +179,7 @@ TextureHostOGL::WaitAcquireFenceSyncComplete()
     NS_ERROR("failed to wait native fence sync");
   }
   MOZ_ALWAYS_TRUE( sEGLLibrary.fDestroySync(EGL_DISPLAY(), sync) );
-  mAcquireFence = nullptr;
 }
-
-#endif
 
 bool
 TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,

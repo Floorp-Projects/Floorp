@@ -23,7 +23,9 @@ enum nsEventStatus
   // The event is consumed, don't do default processing
   nsEventStatus_eConsumeNoDefault,
   // The event is consumed, but do default processing
-  nsEventStatus_eConsumeDoDefault
+  nsEventStatus_eConsumeDoDefault,
+  // Value is not for use, only for serialization
+  nsEventStatus_eSentinel
 };
 
 namespace mozilla {

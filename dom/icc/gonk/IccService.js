@@ -482,6 +482,60 @@ Icc.prototype = {
 
       aCallback.notifySuccessWithBoolean(aResponse.result);
     });
+  },
+
+  iccOpenChannel: function(aAid, aCallback) {
+    this._radioInterface.sendWorkerMessage("iccOpenChannel",
+                                           { aid: aAid },
+                                           (aResponse) => {
+      if (aResponse.errorMsg) {
+        aCallback.notifyError(aResponse.errorMsg);
+        return;
+      }
+
+      aCallback.notifyOpenChannelSuccess(aResponse.channel);
+    });
+  },
+
+  iccExchangeAPDU: function(aChannel, aCla, aIns, aP1, aP2, aP3, aData, aCallback) {
+    if (!aData) {
+      if (DEBUG) debug('data is not set , aP3 : ' + aP3);
+    }
+
+    let apdu = {
+      cla: aCla,
+      command: aIns,
+      p1: aP1,
+      p2: aP2,
+      p3: aP3,
+      data: aData
+    };
+
+    this._radioInterface.sendWorkerMessage("iccExchangeAPDU",
+                                           { channel: aChannel, apdu: apdu },
+                                           (aResponse) => {
+      if (aResponse.errorMsg) {
+        aCallback.notifyError(aResponse.errorMsg);
+        return;
+      }
+
+      aCallback.notifyExchangeAPDUResponse(aResponse.sw1,
+                                           aResponse.sw2,
+                                           aResponse.simResponse);
+    });
+  },
+
+  iccCloseChannel: function(aChannel, aCallback) {
+    this._radioInterface.sendWorkerMessage("iccCloseChannel",
+                                           { channel: aChannel },
+                                           (aResponse) => {
+      if (aResponse.errorMsg) {
+        aCallback.notifyError(aResponse.errorMsg);
+        return;
+      }
+
+      aCallback.notifyCloseChannelSuccess();
+    });
   }
 };
 

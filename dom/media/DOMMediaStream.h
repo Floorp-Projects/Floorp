@@ -36,6 +36,7 @@ class MediaStreamGraph;
 
 namespace dom {
 class AudioNode;
+class HTMLCanvasElement;
 class MediaStreamTrack;
 class AudioStreamTrack;
 class VideoStreamTrack;

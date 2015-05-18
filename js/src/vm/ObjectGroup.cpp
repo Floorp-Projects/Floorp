@@ -43,8 +43,12 @@ ObjectGroup::ObjectGroup(const Class* clasp, TaggedProto proto, JSCompartment* c
 void
 ObjectGroup::finalize(FreeOp* fop)
 {
+    if (newScriptDontCheckGeneration())
+        newScriptDontCheckGeneration()->clear();
     fop->delete_(newScriptDontCheckGeneration());
     fop->delete_(maybeUnboxedLayoutDontCheckGeneration());
+    if (maybePreliminaryObjectsDontCheckGeneration())
+        maybePreliminaryObjectsDontCheckGeneration()->clear();
     fop->delete_(maybePreliminaryObjectsDontCheckGeneration());
 }
 

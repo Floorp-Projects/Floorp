@@ -38,8 +38,6 @@
 #undef LOG
 #endif
 
-#include <utility>
-
 // Use LOGP inside a ParticularProcessPriorityManager method; use LOG
 // everywhere else.  LOGP prints out information about the particular process
 // priority manager.
@@ -204,26 +202,6 @@ public:
    */
   void Unfreeze();
 
-  /**
-   * Return the number of processes that have
-   * PROCESS_PRIORITY_FOREGROUND priority.
-   */
-  uint32_t NumberOfForegroundProcesses();
-
-  /**
-   * Register a priority change to be performed at later time.
-   */
-  void ScheduleDelayedSetPriority(
-    ParticularProcessPriorityManager* aParticularManager,
-    hal::ProcessPriority aPriority);
-
-  /**
-   * Perform the registered priority change unless
-   * aLastParticularManager is the same as the registered one.
-   */
-  void PerformDelayedSetPriority(
-    ParticularProcessPriorityManager* aLastParticularManager);
-
 private:
   static bool sPrefListenersRegistered;
   static bool sInitialized;
@@ -243,6 +221,7 @@ private:
 
   void ObserveContentParentCreated(nsISupports* aContentParent);
   void ObserveContentParentDestroyed(nsISupports* aSubject);
+  void ObserveScreenStateChanged(const char16_t* aData);
 
   nsDataHashtable<nsUint64HashKey, nsRefPtr<ParticularProcessPriorityManager> >
     mParticularManagers;
@@ -258,10 +237,6 @@ private:
 
   /** Contains a pseudo-LRU list of foreground processes */
   ProcessLRUPool mForegroundLRUPool;
-
-  /** Contains the delayed priority change request */
-  std::pair<nsRefPtr<ParticularProcessPriorityManager>, hal::ProcessPriority>
-    mDelayedSetPriority;
 };
 
 /**
@@ -451,7 +426,6 @@ ProcessPriorityManagerImpl::ProcessPriorityManagerImpl()
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   RegisterWakeLockObserver(this);
-  mDelayedSetPriority = std::make_pair(nullptr, PROCESS_PRIORITY_UNKNOWN);
 }
 
 ProcessPriorityManagerImpl::~ProcessPriorityManagerImpl()
@@ -473,6 +447,7 @@ ProcessPriorityManagerImpl::Init()
   if (os) {
     os->AddObserver(this, "ipc:content-created", /* ownsWeak */ false);
     os->AddObserver(this, "ipc:content-shutdown", /* ownsWeak */ false);
+    os->AddObserver(this, "screen-state-changed", /* ownsWeak */ false);
   }
 }
 
@@ -487,6 +462,8 @@ ProcessPriorityManagerImpl::Observe(
     ObserveContentParentCreated(aSubject);
   } else if (topic.EqualsLiteral("ipc:content-shutdown")) {
     ObserveContentParentDestroyed(aSubject);
+  } else if (topic.EqualsLiteral("screen-state-changed")) {
+    ObserveScreenStateChanged(aData);
   } else {
     MOZ_ASSERT(false);
   }
@@ -568,10 +545,40 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
     if (mHighPriorityChildIDs.Contains(childID)) {
       mHighPriorityChildIDs.RemoveEntry(childID);
     }
+  }
+}
 
-    if (mDelayedSetPriority.first == pppm) {
-      mDelayedSetPriority = std::make_pair(nullptr, PROCESS_PRIORITY_UNKNOWN);
-    }
+static PLDHashOperator
+FreezeParticularProcessPriorityManagers(
+  const uint64_t& aKey,
+  nsRefPtr<ParticularProcessPriorityManager> aValue,
+  void* aUserData)
+{
+  aValue->Freeze();
+  return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+UnfreezeParticularProcessPriorityManagers(
+  const uint64_t& aKey,
+  nsRefPtr<ParticularProcessPriorityManager> aValue,
+  void* aUserData)
+{
+  aValue->Unfreeze();
+  return PL_DHASH_NEXT;
+}
+
+void
+ProcessPriorityManagerImpl::ObserveScreenStateChanged(const char16_t* aData)
+{
+  if (NS_LITERAL_STRING("on").Equals(aData)) {
+    sFrozen = false;
+    mParticularManagers.EnumerateRead(
+      &UnfreezeParticularProcessPriorityManagers, nullptr);
+  } else {
+    sFrozen = true;
+    mParticularManagers.EnumerateRead(
+      &FreezeParticularProcessPriorityManagers, nullptr);
   }
 }
 
@@ -631,91 +638,6 @@ ProcessPriorityManagerImpl::Notify(const WakeLockInformation& aInfo)
 
     LOG("Got wake lock changed event. "
         "Now mHighPriorityParent = %d\n", mHighPriority);
-  }
-}
-
-static PLDHashOperator
-FreezeParticularProcessPriorityManagers(
-  const uint64_t& aKey,
-  nsRefPtr<ParticularProcessPriorityManager> aValue,
-  void* aUserData)
-{
-  aValue->Freeze();
-  return PL_DHASH_NEXT;
-}
-
-void
-ProcessPriorityManagerImpl::Freeze()
-{
-  sFrozen = true;
-  mParticularManagers.EnumerateRead(&FreezeParticularProcessPriorityManagers,
-                                    nullptr);
-}
-
-static PLDHashOperator
-UnfreezeParticularProcessPriorityManagers(
-  const uint64_t& aKey,
-  nsRefPtr<ParticularProcessPriorityManager> aValue,
-  void* aUserData)
-{
-  aValue->Unfreeze();
-  return PL_DHASH_NEXT;
-}
-
-void
-ProcessPriorityManagerImpl::Unfreeze()
-{
-  sFrozen = false;
-  mParticularManagers.EnumerateRead(&UnfreezeParticularProcessPriorityManagers,
-                                    nullptr);
-}
-
-static PLDHashOperator
-CountNumberOfForegroundProcesses(
-  const uint64_t& aKey,
-  nsRefPtr<ParticularProcessPriorityManager> aValue,
-  void* aUserData)
-{
-  uint32_t* accumulator = static_cast<uint32_t*>(aUserData);
-  if (aValue->CurrentPriority() == PROCESS_PRIORITY_FOREGROUND ||
-      aValue->CurrentPriority() == PROCESS_PRIORITY_FOREGROUND_HIGH) {
-    (*accumulator)++;
-  }
-  return PL_DHASH_NEXT;
-}
-
-uint32_t
-ProcessPriorityManagerImpl::NumberOfForegroundProcesses()
-{
-  uint32_t accumulator = 0;
-  mParticularManagers.EnumerateRead(&CountNumberOfForegroundProcesses,
-                                    &accumulator);
-  return accumulator;
-}
-
-void
-ProcessPriorityManagerImpl::ScheduleDelayedSetPriority(
-  ParticularProcessPriorityManager* aParticularManager,
-  ProcessPriority aPriority)
-{
-  mDelayedSetPriority = std::make_pair(aParticularManager, aPriority);
-}
-
-void
-ProcessPriorityManagerImpl::PerformDelayedSetPriority(
-  ParticularProcessPriorityManager* aLastParticularManager)
-{
-  nsRefPtr<ParticularProcessPriorityManager> pppm = mDelayedSetPriority.first;
-  ProcessPriority priority = mDelayedSetPriority.second;
-
-  mDelayedSetPriority = std::make_pair(nullptr, PROCESS_PRIORITY_UNKNOWN);
-
-  if (pppm == aLastParticularManager) {
-    return;
-  }
-
-  if (pppm && priority != PROCESS_PRIORITY_UNKNOWN) {
-    pppm->SetPriorityNow(priority);
   }
 }
 
@@ -932,6 +854,10 @@ ParticularProcessPriorityManager::OnFrameloaderVisibleChanged(nsISupports* aSubj
   nsCOMPtr<nsIFrameLoader> fl = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE_VOID(fl);
 
+  if (mFrozen) {
+    return; // Ignore visibility changes when the screen is off
+  }
+
   TabParent* tp = TabParent::GetFrom(fl);
   if (!tp) {
     return;
@@ -1086,9 +1012,7 @@ ParticularProcessPriorityManager::ComputePriority()
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
-  return HasAppType("homescreen") ?
-         PROCESS_PRIORITY_BACKGROUND_HOMESCREEN :
-         PROCESS_PRIORITY_BACKGROUND;
+  return PROCESS_PRIORITY_BACKGROUND;
 }
 
 void
@@ -1125,20 +1049,6 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
 
   ProcessPriority oldPriority = mPriority;
 
-  if (oldPriority == PROCESS_PRIORITY_FOREGROUND &&
-      aPriority < PROCESS_PRIORITY_FOREGROUND &&
-      ProcessPriorityManagerImpl::GetSingleton()->
-        NumberOfForegroundProcesses() == 1) {
-    LOGP("Attempting to demote the last foreground process is delayed.");
-
-    ProcessPriorityManagerImpl::GetSingleton()->
-      ScheduleDelayedSetPriority(this, aPriority);
-
-    FireTestOnlyObserverNotification("process-priority-delayed",
-      ProcessPriorityToString(aPriority));
-    return;
-  }
-
   mPriority = aPriority;
   hal::SetProcessPriority(Pid(), mPriority);
 
@@ -1155,12 +1065,6 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
 
   FireTestOnlyObserverNotification("process-priority-set",
     ProcessPriorityToString(mPriority));
-
-  if (aPriority >= PROCESS_PRIORITY_FOREGROUND) {
-    LOGP("More than one foreground processes. Run delayed priority change");
-    ProcessPriorityManagerImpl::GetSingleton()->
-      PerformDelayedSetPriority(this);
-  }
 }
 
 void
@@ -1173,7 +1077,6 @@ void
 ParticularProcessPriorityManager::Unfreeze()
 {
   mFrozen = false;
-  ResetPriorityNow();
 }
 
 void
@@ -1478,26 +1381,6 @@ ProcessPriorityManager::AnyProcessHasHighPriority()
   } else {
     return ProcessPriorityManagerChild::Singleton()->
       CurrentProcessIsHighPriority();
-  }
-}
-
-/* static */ void
-ProcessPriorityManager::Freeze()
-{
-  ProcessPriorityManagerImpl* singleton =
-    ProcessPriorityManagerImpl::GetSingleton();
-  if (singleton) {
-    singleton->Freeze();
-  }
-}
-
-/* static */ void
-ProcessPriorityManager::Unfreeze()
-{
-  ProcessPriorityManagerImpl* singleton =
-    ProcessPriorityManagerImpl::GetSingleton();
-  if (singleton) {
-    singleton->Unfreeze();
   }
 }
 

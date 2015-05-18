@@ -439,6 +439,10 @@
 @RESPATH@/components/TCPPresentationServer.js
 
 #ifdef MOZ_SECUREELEMENT
+@RESPATH@/components/ACEService.js
+@RESPATH@/components/ACEService.manifest
+@RESPATH@/components/GPAccessRulesManager.js
+@RESPATH@/components/GPAccessRulesManager.manifest
 @RESPATH@/components/SecureElement.js
 @RESPATH@/components/SecureElement.manifest
 @RESPATH@/components/UiccConnector.js
@@ -511,6 +515,8 @@
 @RESPATH@/components/RILSystemMessengerHelper.manifest
 @RESPATH@/components/TelephonyAudioService.js
 @RESPATH@/components/TelephonyAudioService.manifest
+@RESPATH@/components/USSDReceivedWrapper.js
+@RESPATH@/components/USSDReceivedWrapper.manifest
 #ifndef DISABLE_MOZ_RIL_GEOLOC
 @RESPATH@/components/TelephonyService.js
 @RESPATH@/components/TelephonyService.manifest

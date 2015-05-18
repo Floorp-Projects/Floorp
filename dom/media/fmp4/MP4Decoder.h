@@ -38,8 +38,7 @@ public:
                                  bool& aOutContainsH264,
                                  bool& aOutContainsMP3);
 
-  // Returns true if the MP4 backend is preffed on, and we're running on a
-  // platform that is likely to have decoders for the contained formats.
+  // Returns true if the MP4 backend is preffed on.
   static bool IsEnabled();
 
   static bool IsVideoAccelerated(layers::LayersBackend aBackend);

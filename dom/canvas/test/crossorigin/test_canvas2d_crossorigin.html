@@ -73,6 +73,17 @@ function testImage(url, crossOriginAttribute, expected_error) {
                 "drawImage then get image data on " + url +
                 " with crossOrigin=" + this.crossOrigin);
 
+    try {
+      c.captureStream(0);
+      actual_error = OK;
+    } catch (e) {
+      actual_error = e.name;
+    }
+
+    verifyError(actual_error, expected_error,
+                "drawImage then capture stream on " + url +
+                " with crossOrigin=" + this.crossOrigin);
+
     // Now test patterns
     c = document.createElement("canvas");
     c.width = this.width;
@@ -89,6 +100,17 @@ function testImage(url, crossOriginAttribute, expected_error) {
 
     verifyError(actual_error, expected_error,
                 "createPattern+fill then get image data on " + url +
+                " with crossOrigin=" + this.crossOrigin);
+
+    try {
+      c.captureStream(0);
+      actual_error = OK;
+    } catch (e) {
+      actual_error = e.name;
+    }
+
+    verifyError(actual_error, expected_error,
+                "createPattern+fill then capture stream on " + url +
                 " with crossOrigin=" + this.crossOrigin);
 
     testDone();
@@ -130,56 +152,64 @@ const attrValues = [
   [ "foobar", "anonymous" ]
 ];
 
-for (var imgIdx = 0; imgIdx < imageFiles.length; ++imgIdx) {
-  for (var hostnameIdx = 0; hostnameIdx < hostnames.length; ++hostnameIdx) {
-    var hostnameData = hostnames[hostnameIdx];
-    var url = "http://" + hostnameData[0] + testPath + imageFiles[imgIdx][0];
-    for (var attrValIdx = 0; attrValIdx < attrValues.length; ++attrValIdx) {
-      var attrValData = attrValues[attrValIdx];
-      // Now compute the expected result
-      var expected_error;
-      if (hostnameData[1] == "same-origin") {
-        // Same-origin; these should all Just Work
-        expected_error = OK;
-      } else {
-        // Cross-origin
-        is(hostnameData[1], "cross-origin",
-           "what sort of host is " + hostnameData[0]);
-        var CORSMode = attrValData[1];
-        if (CORSMode == "none") {
-          // Doesn't matter what headers the server sends; we're not
-          // using CORS on our end.
-          expected_error = "SecurityError";
+function beginTest() {
+  for (var imgIdx = 0; imgIdx < imageFiles.length; ++imgIdx) {
+    for (var hostnameIdx = 0; hostnameIdx < hostnames.length; ++hostnameIdx) {
+      var hostnameData = hostnames[hostnameIdx];
+      var url = "http://" + hostnameData[0] + testPath + imageFiles[imgIdx][0];
+      for (var attrValIdx = 0; attrValIdx < attrValues.length; ++attrValIdx) {
+        var attrValData = attrValues[attrValIdx];
+        // Now compute the expected result
+        var expected_error;
+        if (hostnameData[1] == "same-origin") {
+          // Same-origin; these should all Just Work
+          expected_error = OK;
         } else {
-          // Check whether the server will let us talk to them
-          var CORSHeaders = imageFiles[imgIdx][1];
-          // We're going to look for CORS headers from the server
-          if (CORSHeaders == "none") {
-            // No CORS headers from server; load will fail.
-            expected_error = BAD_URI_ERR;
-          } else if (CORSHeaders == "allow-all-anon") {
-            // Server only allows anonymous requests
-            if (CORSMode == "anonymous") {
-              expected_error = OK;
-            } else {
-              is(CORSMode, "use-credentials",
-                 "What other CORS modes are there?");
-              // A load with credentials against a server that only
-              // allows anonymous loads will fail.
-              expected_error = BAD_URI_ERR;
-            }
+          // Cross-origin
+          is(hostnameData[1], "cross-origin",
+             "what sort of host is " + hostnameData[0]);
+          var CORSMode = attrValData[1];
+          if (CORSMode == "none") {
+            // Doesn't matter what headers the server sends; we're not
+            // using CORS on our end.
+            expected_error = "SecurityError";
           } else {
-            is(CORSHeaders, "allow-single-server-creds",
-               "What other CORS headers could there be?");
-            // Our server should allow both anonymous and non-anonymous requests
-            expected_error = OK;
+            // Check whether the server will let us talk to them
+            var CORSHeaders = imageFiles[imgIdx][1];
+            // We're going to look for CORS headers from the server
+            if (CORSHeaders == "none") {
+              // No CORS headers from server; load will fail.
+              expected_error = BAD_URI_ERR;
+            } else if (CORSHeaders == "allow-all-anon") {
+              // Server only allows anonymous requests
+              if (CORSMode == "anonymous") {
+                expected_error = OK;
+              } else {
+                is(CORSMode, "use-credentials",
+                   "What other CORS modes are there?");
+                // A load with credentials against a server that only
+                // allows anonymous loads will fail.
+                expected_error = BAD_URI_ERR;
+              }
+            } else {
+              is(CORSHeaders, "allow-single-server-creds",
+                 "What other CORS headers could there be?");
+              // Our server should allow both anonymous and non-anonymous requests
+              expected_error = OK;
+            }
           }
         }
+        testImage(url, attrValData[0], expected_error);
       }
-      testImage(url, attrValData[0], expected_error);
     }
   }
 }
+
+var prefs = [
+  [ "canvas.capturestream.enabled", true ],
+];
+SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
+
 </script>
 </pre>
 </body>

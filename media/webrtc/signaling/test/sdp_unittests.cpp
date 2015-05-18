@@ -1159,6 +1159,7 @@ const std::string kBasicAudioVideoOffer =
 "a=candidate:2 2 UDP 1694236670 24.6.134.204 55428 typ srflx raddr 10.0.0.36 rport 55428" CRLF
 "a=candidate:6 2 UDP 16515070 162.222.183.171 50340 typ relay raddr 162.222.183.171 rport 50340" CRLF
 "a=candidate:0 2 UDP 2130379006 10.0.0.36 55428 typ host" CRLF
+"a=rtcp:62454 IN IP4 162.222.183.171" CRLF
 "a=end-of-candidates" CRLF
 "a=ssrc:5150" CRLF
 "m=video 9 RTP/SAVPF 120 121" CRLF
@@ -1188,6 +1189,7 @@ const std::string kBasicAudioVideoOffer =
 "a=candidate:2 1 UDP 1694236671 24.6.134.204 59530 typ srflx raddr 10.0.0.36 rport 59530" CRLF
 "a=candidate:3 1 UDP 100401151 162.222.183.171 62935 typ relay raddr 162.222.183.171 rport 62935" CRLF
 "a=candidate:3 2 UDP 100401150 162.222.183.171 61026 typ relay raddr 162.222.183.171 rport 61026" CRLF
+"a=rtcp:61026" CRLF
 "a=end-of-candidates" CRLF
 "a=ssrc:1111 foo" CRLF
 "a=ssrc:1111 foo:bar" CRLF
@@ -1973,6 +1975,31 @@ TEST_P(NewSdpTest, CheckRtcpFb) {
   CheckRtcpFb(rtcpfbs[16], "97",  SdpRtcpFbAttributeList::kNack, "pli");
   CheckRtcpFb(rtcpfbs[17], "97", SdpRtcpFbAttributeList::kCcm, "fir");
   CheckRtcpFb(rtcpfbs[18], "*", SdpRtcpFbAttributeList::kCcm, "tmmbr");
+}
+
+TEST_P(NewSdpTest, CheckRtcp) {
+  ParseSdp(kBasicAudioVideoOffer);
+  ASSERT_TRUE(!!mSdp);
+  ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
+
+  ASSERT_FALSE(mSdp->GetAttributeList().HasAttribute(
+        SdpAttribute::kRtcpAttribute));
+  ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kRtcpAttribute));
+  ASSERT_TRUE(mSdp->GetMediaSection(1).GetAttributeList().HasAttribute(
+        SdpAttribute::kRtcpAttribute));
+  ASSERT_FALSE(mSdp->GetMediaSection(2).GetAttributeList().HasAttribute(
+        SdpAttribute::kRtcpAttribute));
+
+  auto& rtcpAttr_0 = mSdp->GetMediaSection(0).GetAttributeList().GetRtcp();
+  ASSERT_EQ(62454U, rtcpAttr_0.mPort);
+  ASSERT_EQ(sdp::kInternet, rtcpAttr_0.mNetType);
+  ASSERT_EQ(sdp::kIPv4, rtcpAttr_0.mAddrType);
+  ASSERT_EQ("162.222.183.171", rtcpAttr_0.mAddress);
+
+  auto& rtcpAttr_1 = mSdp->GetMediaSection(1).GetAttributeList().GetRtcp();
+  ASSERT_EQ(61026U, rtcpAttr_1.mPort);
+  ASSERT_EQ("", rtcpAttr_1.mAddress);
 }
 
 TEST_P(NewSdpTest, CheckSctpmap) {

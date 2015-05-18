@@ -29,7 +29,7 @@ class SourceSurface;
 }
 
 namespace dom {
-
+class CanvasCaptureMediaStream;
 class File;
 class FileCallback;
 class HTMLCanvasPrintState;
@@ -125,6 +125,9 @@ public:
   }
   PrintCallback* GetMozPrintCallback() const;
   void SetMozPrintCallback(PrintCallback* aCallback);
+
+  already_AddRefed<CanvasCaptureMediaStream>
+  CaptureStream(const Optional<double>& aFrameRate, ErrorResult& aRv);
 
   /**
    * Get the size in pixels of this canvas element

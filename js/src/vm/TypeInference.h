@@ -806,6 +806,10 @@ class PreliminaryObjectArrayWithTemplate : public PreliminaryObjectArray
       : shape_(shape)
     {}
 
+    void clear() {
+        shape_.init(nullptr);
+    }
+
     Shape* shape() {
         return shape_;
     }
@@ -912,6 +916,13 @@ class TypeNewScript
     ~TypeNewScript() {
         js_delete(preliminaryObjects);
         js_free(initializerList);
+    }
+
+    void clear() {
+        function_.init(nullptr);
+        templateObject_.init(nullptr);
+        initializedShape_.init(nullptr);
+        initializedGroup_.init(nullptr);
     }
 
     static void writeBarrierPre(TypeNewScript* newScript);
