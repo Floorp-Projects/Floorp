@@ -59,7 +59,7 @@ public:
   bool operator==(const SVGLengthList& rhs) const;
 
   bool SetCapacity(uint32_t size) {
-    return mLengths.SetCapacity(size);
+    return mLengths.SetCapacity(size, fallible);
   }
 
   void Compact() {

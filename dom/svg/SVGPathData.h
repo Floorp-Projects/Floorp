@@ -135,7 +135,7 @@ public:
   }
 
   bool SetCapacity(uint32_t aSize) {
-    return mData.SetCapacity(aSize);
+    return mData.SetCapacity(aSize, fallible);
   }
 
   void Compact() {

@@ -370,8 +370,9 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
   uint32_t argCount = SVGPathSegUtils::ArgCountForType(domItem->Type());
 
   // Ensure we have enough memory so we can avoid complex error handling below:
-  if (!mItems.SetCapacity(mItems.Length() + 1) ||
-      !InternalList().mData.SetCapacity(InternalList().mData.Length() + 1 + argCount)) {
+  if (!mItems.SetCapacity(mItems.Length() + 1, fallible) ||
+      !InternalList().mData.SetCapacity(InternalList().mData.Length() + 1 + argCount,
+                                        fallible)) {
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }

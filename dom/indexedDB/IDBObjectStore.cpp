@@ -1206,7 +1206,7 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
     const uint32_t count = blobOrFileInfos.Length();
 
     FallibleTArray<DatabaseFileOrMutableFileId> fileActorOrMutableFileIds;
-    if (NS_WARN_IF(!fileActorOrMutableFileIds.SetCapacity(count))) {
+    if (NS_WARN_IF(!fileActorOrMutableFileIds.SetCapacity(count, fallible))) {
       aRv = NS_ERROR_OUT_OF_MEMORY;
       return nullptr;
     }
