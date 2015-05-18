@@ -45,7 +45,6 @@ this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 const FRAME_SCRIPT = "chrome://marionette/content/listener.js";
 const BROWSER_STARTUP_FINISHED = "browser-delayed-startup-finished";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
 const CLICK_TO_START_PREF = "marionette.debugging.clicktostart";
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
 
@@ -53,7 +52,6 @@ const logger = Log.repository.getLogger("Marionette");
 const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 const globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
     .getService(Ci.nsIMessageBroadcaster);
-let specialpowers = {};
 
 // This is used to prevent newSession from returning before the telephony
 // API's are ready; see bug 792647.  This assumes that marionette-server.js
@@ -130,7 +128,6 @@ this.GeckoDriver = function(appName, device, emulator) {
   this.currentFrameElement = null;
   this.testName = null;
   this.mozBrowserClose = null;
-  this.enabled_security_pref = false;
   this.sandboxes = {};
   // frame ID of the current remote frame, used for mozbrowserclose events
   this.oopFrameId = null;
@@ -510,25 +507,6 @@ GeckoDriver.prototype.newSession = function(cmd, resp) {
   this.setSessionCapabilities(cmd.parameters.capabilities);
   this.scriptTimeout = 10000;
 
-  // SpecialPowers requires insecure automation-only features that we
-  // put behind a pref
-  let sec = false;
-  try {
-    sec = Services.prefs.getBoolPref(SECURITY_PREF);
-  } catch (e) {}
-  if (!sec) {
-    this.enabled_security_pref = true;
-    Services.prefs.setBoolPref(SECURITY_PREF, true);
-  }
-
-  if (!specialpowers.hasOwnProperty("specialPowersObserver")) {
-    loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
-        specialpowers);
-    specialpowers.specialPowersObserver = new specialpowers.SpecialPowersObserver();
-    specialpowers.specialPowersObserver.init();
-    specialpowers.specialPowersObserver._loadFrameScript();
-  }
-
   let registerBrowsers = this.registerPromise();
   let browserListening = this.listeningPromise();
 
@@ -705,15 +683,14 @@ GeckoDriver.prototype.getContext = function(cmd, resp) {
  *     Window in which we will execute code.
  * @param {Marionette} mn
  *     Marionette test instance.
- * @param {Object} args
- *     Arguments given by client.
- * @param {boolean} sp
- *     True to enable special powers in the sandbox, false not to.
+ * @param {string} sandboxName
+ *     The name for the sandbox.  If 'system', create the sandbox
+ *     with elevated privileges.
  *
  * @return {nsIXPCComponents_utils_Sandbox}
  *     Returns the sandbox.
  */
-GeckoDriver.prototype.createExecuteSandbox = function(win, mn, sp, sandboxName) {
+GeckoDriver.prototype.createExecuteSandbox = function(win, mn, sandboxName) {
   let principal = win;
   if (sandboxName == 'system') {
     principal = Cc["@mozilla.org/systemprincipal;1"].
@@ -734,15 +711,6 @@ GeckoDriver.prototype.createExecuteSandbox = function(win, mn, sp, sandboxName) 
   });
 
   sb.isSystemMessageListenerReady = () => systemMessageListenerReady;
-
-  if (sp) {
-    let pow = [
-      "chrome://specialpowers/content/specialpowersAPI.js",
-      "chrome://specialpowers/content/SpecialPowersObserverAPI.js",
-      "chrome://specialpowers/content/ChromePowers.js",
-    ];
-    pow.map(s => loader.loadSubScript(s, sb));
-  }
 
   this.sandboxes[sandboxName] = sb;
 };
@@ -821,7 +789,6 @@ GeckoDriver.prototype.execute = function(cmd, resp, directInject) {
        script,
        newSandbox,
        args,
-       specialPowers,
        filename,
        line} = cmd.parameters;
   let sandboxName = cmd.parameters.sandbox || 'default';
@@ -839,7 +806,6 @@ GeckoDriver.prototype.execute = function(cmd, resp, directInject) {
       args: args,
       newSandbox: newSandbox,
       timeout: scriptTimeout,
-      specialPowers: specialPowers,
       filename: filename,
       line: line,
       sandboxName: sandboxName
@@ -880,7 +846,6 @@ GeckoDriver.prototype.execute = function(cmd, resp, directInject) {
     this.createExecuteSandbox(
         win,
         marionette,
-        specialPowers,
         sandboxName);
     if (!this.sandboxes[sandboxName]) {
       return;
@@ -957,7 +922,6 @@ GeckoDriver.prototype.executeJSScript = function(cmd, resp) {
         timeout: cmd.parameters.scriptTimeout ?
             cmd.parameters.scriptTimeout : this.scriptTimeout,
         inactivityTimeout: cmd.parameters.inactivityTimeout,
-        specialPowers: cmd.parameters.specialPowers,
         filename: cmd.parameters.filename,
         line: cmd.parameters.line,
         sandboxName: cmd.parameters.sandbox || 'default',
@@ -987,7 +951,6 @@ GeckoDriver.prototype.executeWithCallback = function(cmd, resp, directInject) {
       newSandbox,
       inactivityTimeout,
       scriptTimeout,
-      specialPowers,
       filename,
       line} = cmd.parameters;
   let sandboxName = cmd.parameters.sandbox || 'default';
@@ -1007,7 +970,6 @@ GeckoDriver.prototype.executeWithCallback = function(cmd, resp, directInject) {
       newSandbox: newSandbox,
       timeout: scriptTimeout,
       inactivityTimeout: inactivityTimeout,
-      specialPowers: specialPowers,
       filename: filename,
       line: line,
       sandboxName: sandboxName,
@@ -1085,8 +1047,7 @@ GeckoDriver.prototype.executeWithCallback = function(cmd, resp, directInject) {
           scriptTimeout,
           this.heartbeatCallback,
           this.testName);
-      this.createExecuteSandbox(win, marionette,
-                                specialPowers, sandboxName);
+      this.createExecuteSandbox(win, marionette, sandboxName);
     }
     if (!this.sandboxes[sandboxName]) {
       return;
@@ -2439,7 +2400,6 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
       winEn.getNext().messageManager.removeDelayedFrameScript(FRAME_SCRIPT);
     }
 
-    this.curBrowser.frameManager.removeSpecialPowers();
     this.curBrowser.frameManager.removeMessageManagerListeners(
         globalMessageManager);
   }
@@ -2878,6 +2838,23 @@ GeckoDriver.prototype.receiveMessage = function(message) {
           cookieToDelete.path,
           false);
       return true;
+
+    case "Marionette:getFiles":
+      // Generates file objects to send back to the content script
+      // for handling file uploads.
+      let val = message.json.value;
+      let command_id = message.json.command_id;
+      Cu.importGlobalProperties(["File"]);
+      try {
+        let file = new File(val);
+        this.sendAsync("receiveFiles",
+                       {file: file, command_id: command_id});
+      } catch (e) {
+        let err = `File not found: ${val}`;
+        this.sendAsync("receiveFiles",
+                       {error: err, command_id: command_id});
+      }
+      break;
 
     case "Marionette:emitTouchEvent":
       globalMessageManager.broadcastAsyncMessage(

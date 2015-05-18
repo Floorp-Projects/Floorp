@@ -502,6 +502,24 @@ setReq.onerror = function() {
             'iframe[src*="app://test-container.gaiamobile.org/index.html"]'
         ))
 
+    def setup_SpecialPowers_observer(self):
+        self.marionette.set_context("chrome")
+        self.marionette.execute_script("""
+            let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+            Components.utils.import("resource://gre/modules/Services.jsm");
+            Services.prefs.setBoolPref(SECURITY_PREF, true);
+
+            if (!testUtils.hasOwnProperty("specialPowersObserver")) {
+              let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                .getService(Components.interfaces.mozIJSSubScriptLoader);
+              loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
+                testUtils);
+              testUtils.specialPowersObserver = new testUtils.SpecialPowersObserver();
+              testUtils.specialPowersObserver.init();
+              testUtils.specialPowersObserver._loadFrameScript();
+            }
+            """)
+
     def run_js_test(self, filename, marionette=None):
         '''
         Run a JavaScript test file and collect its set of assertions
@@ -537,6 +555,23 @@ setReq.onerror = function() {
             context = context.group(3)
         else:
             context = 'content'
+
+        if 'SpecialPowers' in js:
+            self.setup_SpecialPowers_observer()
+
+            if context == 'content':
+                js = "var SpecialPowers = window.wrappedJSObject.SpecialPowers;\n" + js
+            else:
+                marionette.execute_script("""
+                if (typeof(SpecialPowers) == 'undefined') {
+                  let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                    .getService(Components.interfaces.mozIJSSubScriptLoader);
+                  loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
+                  loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
+                  loader.loadSubScript("chrome://specialpowers/content/ChromePowers.js");
+                }
+                """)
+
         marionette.set_context(context)
 
         if context != 'chrome':
@@ -555,7 +590,6 @@ setReq.onerror = function() {
             results = marionette.execute_js_script(
                 js,
                 args,
-                special_powers=True,
                 inactivity_timeout=inactivity_timeout,
                 filename=os.path.basename(filename)
             )
