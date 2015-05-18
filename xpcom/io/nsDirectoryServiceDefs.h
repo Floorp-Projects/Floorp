@@ -131,7 +131,7 @@
   #define NS_WIN_LOCAL_APPDATA_DIR            "LocalAppData"
 #if defined(MOZ_CONTENT_SANDBOX)
   #define NS_WIN_LOCAL_APPDATA_LOW_DIR        "LocalAppDataLow"
-  #define NS_WIN_LOW_INTEGRITY_TEMP           "LowTmpD"
+  #define NS_WIN_LOW_INTEGRITY_TEMP_BASE      "LowTmpDBase"
 #endif
   #define NS_WIN_PRINTHOOD                    "PrntHd"
   #define NS_WIN_COOKIES_DIR                  "CookD"

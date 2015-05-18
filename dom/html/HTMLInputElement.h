@@ -713,7 +713,7 @@ public:
 
   int32_t GetTextLength(ErrorResult& aRv);
 
-  void MozGetFileNameArray(nsTArray< nsString >& aFileNames);
+  void MozGetFileNameArray(nsTArray<nsString>& aFileNames, ErrorResult& aRv);
 
   void MozSetFileNameArray(const Sequence< nsString >& aFileNames, ErrorResult& aRv);
   void MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles);

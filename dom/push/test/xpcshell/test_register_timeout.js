@@ -26,8 +26,7 @@ add_task(function* test_register_timeout() {
   let registers = 0;
 
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
   PushService._generateID = () => channelID;
   PushService.init({
@@ -90,7 +89,7 @@ add_task(function* test_register_timeout() {
     'Wrong error for request timeout'
   );
 
-  let record = yield promiseDB.getByChannelID(channelID);
+  let record = yield db.getByChannelID(channelID);
   ok(!record, 'Should not store records for timed-out responses');
 
   yield waitForPromise(

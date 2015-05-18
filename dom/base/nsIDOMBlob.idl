@@ -53,25 +53,3 @@ interface nsIDOMBlob : nsISupports
   // Return true if this blob is a memory file.
   [notxpcom] bool isMemoryFile();
 };
-
-// We want to avoid multiple inheritance of nsIDOMBlob so we can downcast from
-// nsIDOMBlob to Blob safely.  Our chain is:
-//  - Blob -> nsIDOMBlob
-//  - File -> nsIDOMFile and Blob
-[scriptable, builtinclass, uuid(cc28cf12-f1d4-44ff-843f-9289aa14613b)]
-interface nsIDOMFile : nsISupports
-{
-  readonly attribute DOMString name;
-
-  readonly attribute DOMString path;
-
-  [implicit_jscontext]
-  readonly attribute jsval lastModifiedDate;
-
-  readonly attribute DOMString mozFullPath;
-
-  // This performs no security checks!
-  [noscript] readonly attribute DOMString mozFullPathInternal;
-
-  [noscript] readonly attribute int64_t mozLastModifiedDate;
-};
