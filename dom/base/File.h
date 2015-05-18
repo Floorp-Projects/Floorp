@@ -245,14 +245,17 @@ public:
               const ChromeFilePropertyBag& aBag,
               ErrorResult& aRv);
 
-  // XPCOM GetName is OK
+  void GetName(nsAString& aName);
 
   int64_t GetLastModified(ErrorResult& aRv);
 
   Date GetLastModifiedDate(ErrorResult& aRv);
 
+  void GetPath(nsAString& aName, ErrorResult& aRv);
 
   void GetMozFullPath(nsAString& aFilename, ErrorResult& aRv);
+
+  void GetMozFullPathInternal(nsAString& aName, ErrorResult& aRv);
 
 protected:
   virtual bool HasFileInterface() const override { return true; }
@@ -276,7 +279,7 @@ public:
 
   virtual void GetName(nsAString& aName) = 0;
 
-  virtual nsresult GetPath(nsAString& aName) = 0;
+  virtual void GetPath(nsAString& aName, ErrorResult& aRv) = 0;
 
   virtual int64_t GetLastModified(ErrorResult& aRv) = 0;
 
@@ -404,7 +407,7 @@ public:
 
   virtual void GetName(nsAString& aName) override;
 
-  virtual nsresult GetPath(nsAString& aName) override;
+  virtual void GetPath(nsAString& aName, ErrorResult& aRv) override;
 
   virtual int64_t GetLastModified(ErrorResult& aRv) override;
 

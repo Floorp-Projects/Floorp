@@ -493,18 +493,23 @@ NS_IMPL_ISUPPORTS(DirPickerRecursiveFileEnumerator, nsISimpleEnumerator)
  * where the file picker can create Blobs.
  */
 static already_AddRefed<nsIFile>
-DOMFileToLocalFile(nsIDOMFile* aDomFile)
+DOMFileToLocalFile(File* aDomFile)
 {
   nsString path;
-  nsresult rv = aDomFile->GetMozFullPathInternal(path);
-  if (NS_FAILED(rv) || path.IsEmpty()) {
+  ErrorResult rv;
+  aDomFile->GetMozFullPathInternal(path, rv);
+  if (rv.Failed() || path.IsEmpty()) {
+    rv.SuppressException();
     return nullptr;
   }
 
   nsCOMPtr<nsIFile> localFile;
   rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(path), true,
                              getter_AddRefs(localFile));
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
+    return nullptr;
+  }
 
   return localFile.forget();
 }
@@ -969,7 +974,11 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
       aType != FILE_PICKER_DIRECTORY) {
     nsString path;
 
-    oldFiles[0]->GetMozFullPathInternal(path);
+    ErrorResult error;
+    oldFiles[0]->GetMozFullPathInternal(path, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
 
     nsCOMPtr<nsIFile> localFile;
     rv = NS_NewLocalFile(path, false, getter_AddRefs(localFile));
@@ -1708,7 +1717,12 @@ HTMLInputElement::GetValueInternal(nsAString& aValue) const
         // XXX We'd love to assert that this can't happen, but some mochitests
         // use SpecialPowers to circumvent our more sane security model.
         if (!mFiles.IsEmpty()) {
-          return mFiles[0]->GetMozFullPath(aValue);
+          ErrorResult rv;
+          mFiles[0]->GetMozFullPath(aValue, rv);
+          if (NS_WARN_IF(rv.Failed())) {
+            return rv.StealNSResult();
+          }
+          return NS_OK;
         }
         else {
           aValue.Truncate();
@@ -1716,8 +1730,10 @@ HTMLInputElement::GetValueInternal(nsAString& aValue) const
 #endif
       } else {
         // Just return the leaf name
-        if (mFiles.IsEmpty() || NS_FAILED(mFiles[0]->GetName(aValue))) {
+        if (mFiles.IsEmpty()) {
           aValue.Truncate();
+        } else {
+          mFiles[0]->GetName(aValue);
         }
       }
 
@@ -2307,11 +2323,16 @@ HTMLInputElement::FlushFrames()
 }
 
 void
-HTMLInputElement::MozGetFileNameArray(nsTArray< nsString >& aArray)
+HTMLInputElement::MozGetFileNameArray(nsTArray<nsString>& aArray,
+                                      ErrorResult& aRv)
 {
   for (uint32_t i = 0; i < mFiles.Length(); i++) {
     nsString str;
-    mFiles[i]->GetMozFullPathInternal(str);
+    mFiles[i]->GetMozFullPathInternal(str, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+
     aArray.AppendElement(str);
   }
 }
@@ -2326,8 +2347,12 @@ HTMLInputElement::MozGetFileNameArray(uint32_t* aLength, char16_t*** aFileNames)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
+  ErrorResult rv;
   nsTArray<nsString> array;
-  MozGetFileNameArray(array);
+  MozGetFileNameArray(array, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
 
   *aLength = array.Length();
   char16_t** ret =
@@ -2687,7 +2712,11 @@ HTMLInputElement::AfterSetFiles(bool aSetValueChanged)
   if (mFiles.IsEmpty()) {
     mFirstFilePath.Truncate();
   } else {
-    mFiles[0]->GetMozFullPath(mFirstFilePath);
+    ErrorResult rv;
+    mFiles[0]->GetMozFullPath(mFirstFilePath, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+    }
   }
 #endif
 
