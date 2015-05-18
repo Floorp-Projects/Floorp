@@ -380,12 +380,14 @@ protected:
   // @param aCapacity The requested number of array elements.
   // @param aElemSize The size of an array element.
   // @return False if insufficient memory is available; true otherwise.
-  typename Alloc::ResultTypeProxy EnsureCapacity(size_type aCapacity,
-                                                 size_type aElemSize);
+  template<typename ActualAlloc>
+  typename ActualAlloc::ResultTypeProxy EnsureCapacity(size_type aCapacity,
+                                                       size_type aElemSize);
 
   // Resize the storage to the minimum required amount.
   // @param aElemSize  The size of an array element.
   // @param aElemAlign The alignment in bytes of an array element.
+  template<typename ActualAlloc>
   void ShrinkCapacity(size_type aElemSize, size_t aElemAlign);
 
   // This method may be called to resize a "gap" in the array by shifting
@@ -396,6 +398,7 @@ protected:
   // @param aNewLen    The desired length of the gap.
   // @param aElemSize  The size of an array element.
   // @param aElemAlign The alignment in bytes of an array element.
+  template<typename ActualAlloc>
   void ShiftData(index_type aStart, size_type aOldLen, size_type aNewLen,
                  size_type aElemSize, size_t aElemAlign);
 
@@ -421,12 +424,12 @@ protected:
   // @param aCount the number of slots to insert
   // @param aElementSize the size of an array element.
   // @param aElemAlign the alignment in bytes of an array element.
+  template<typename ActualAlloc>
   bool InsertSlotsAt(index_type aIndex, size_type aCount,
                      size_type aElementSize, size_t aElemAlign);
 
-protected:
-  template<class Allocator>
-  typename Alloc::ResultTypeProxy
+  template<typename ActualAlloc, class Allocator>
+  typename ActualAlloc::ResultTypeProxy
   SwapArrayElements(nsTArray_base<Allocator, Copy>& aOther,
                     size_type aElemSize,
                     size_t aElemAlign);
@@ -446,6 +449,7 @@ protected:
 
   // Helper function for SwapArrayElements. Ensures that if the array
   // is an nsAutoTArray that it doesn't use the built-in buffer.
+  template<typename ActualAlloc>
   bool EnsureNotUsingAutoArrayBuffer(size_type aElemSize);
 
   // Returns true if this nsTArray is an nsAutoTArray with a built-in buffer.
@@ -1219,13 +1223,13 @@ public:
                                const Item* aArray, size_type aArrayLen)
   {
     // Adjust memory allocation up-front to catch errors.
-    if (!Alloc::Successful(this->EnsureCapacity(Length() + aArrayLen - aCount,
-                                                sizeof(elem_type)))) {
+    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+          Length() + aArrayLen - aCount, sizeof(elem_type)))) {
       return nullptr;
     }
     DestructRange(aStart, aCount);
-    this->ShiftData(aStart, aCount, aArrayLen,
-                    sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    this->template ShiftData<Alloc>(aStart, aCount, aArrayLen,
+                                    sizeof(elem_type), MOZ_ALIGNOF(elem_type));
     AssignRange(aStart, aArrayLen, aArray);
     return Elements() + aStart;
   }
@@ -1274,11 +1278,12 @@ public:
   // @return A pointer to the newly inserted element, or null on OOM.
   elem_type* InsertElementAt(index_type aIndex)
   {
-    if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
-                                                sizeof(elem_type)))) {
+    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+          Length() + 1, sizeof(elem_type)))) {
       return nullptr;
     }
-    this->ShiftData(aIndex, 0, 1, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    this->template ShiftData<Alloc>(aIndex, 0, 1, sizeof(elem_type),
+                                    MOZ_ALIGNOF(elem_type));
     elem_type* elem = Elements() + aIndex;
     elem_traits::Construct(elem);
     return elem;
@@ -1288,11 +1293,12 @@ public:
   template<class Item>
   elem_type* InsertElementAt(index_type aIndex, Item&& aItem)
   {
-    if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
-                                                sizeof(elem_type)))) {
+    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+          Length() + 1, sizeof(elem_type)))) {
       return nullptr;
     }
-    this->ShiftData(aIndex, 0, 1, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    this->template ShiftData<Alloc>(aIndex, 0, 1, sizeof(elem_type),
+                                    MOZ_ALIGNOF(elem_type));
     elem_type* elem = Elements() + aIndex;
     elem_traits::Construct(elem, mozilla::Forward<Item>(aItem));
     return elem;
@@ -1358,8 +1364,8 @@ public:
   template<class Item>
   elem_type* AppendElements(const Item* aArray, size_type aArrayLen)
   {
-    if (!Alloc::Successful(this->EnsureCapacity(Length() + aArrayLen,
-                                                sizeof(elem_type)))) {
+    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+          Length() + aArrayLen, sizeof(elem_type)))) {
       return nullptr;
     }
     index_type len = Length();
@@ -1379,8 +1385,8 @@ public:
   template<class Item>
   elem_type* AppendElement(Item&& aItem)
   {
-    if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
-                                                sizeof(elem_type)))) {
+    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+          Length() + 1, sizeof(elem_type)))) {
       return nullptr;
     }
     elem_type* elem = Elements() + Length();
@@ -1394,8 +1400,8 @@ public:
   // @return A pointer to the newly appended elements, or null on OOM.
   elem_type* AppendElements(size_type aCount)
   {
-    if (!Alloc::Successful(this->EnsureCapacity(Length() + aCount,
-                                                sizeof(elem_type)))) {
+    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+          Length() + aCount, sizeof(elem_type)))) {
       return nullptr;
     }
     elem_type* elems = Elements() + Length();
@@ -1421,14 +1427,15 @@ public:
     MOZ_ASSERT(&aArray != this, "argument must be different aArray");
     index_type len = Length();
     index_type otherLen = aArray.Length();
-    if (!Alloc::Successful(this->EnsureCapacity(len + otherLen,
-                                                sizeof(elem_type)))) {
+    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+          len + otherLen, sizeof(elem_type)))) {
       return nullptr;
     }
     copy_type::CopyElements(Elements() + len, aArray.Elements(), otherLen,
                             sizeof(elem_type));
     this->IncrementLength(otherLen);
-    aArray.ShiftData(0, otherLen, 0, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    aArray.template ShiftData<Alloc>(0, otherLen, 0, sizeof(elem_type),
+                                     MOZ_ALIGNOF(elem_type));
     return Elements() + len;
   }
   template<class Item, class Allocator>
@@ -1447,8 +1454,8 @@ public:
     // Check that the previous assert didn't overflow
     MOZ_ASSERT(aStart <= aStart + aCount, "Start index plus length overflows");
     DestructRange(aStart, aCount);
-    this->ShiftData(aStart, aCount, 0,
-                    sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    this->template ShiftData<Alloc>(aStart, aCount, 0,
+                                    sizeof(elem_type), MOZ_ALIGNOF(elem_type));
   }
 
   // A variation on the RemoveElementsAt method defined above.
@@ -1511,8 +1518,8 @@ public:
   template<class Allocator>
   typename Alloc::ResultType SwapElements(nsTArray_Impl<E, Allocator>& aOther)
   {
-    return Alloc::Result(this->SwapArrayElements(aOther, sizeof(elem_type),
-                                                 MOZ_ALIGNOF(elem_type)));
+    return Alloc::Result(this->template SwapArrayElements<Alloc>(
+      aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type)));
   }
 
   //
@@ -1527,7 +1534,8 @@ public:
   // @return True if the operation succeeded; false if we ran out of memory
   typename Alloc::ResultType SetCapacity(size_type aCapacity)
   {
-    return Alloc::Result(this->EnsureCapacity(aCapacity, sizeof(elem_type)));
+    return Alloc::Result(this->template EnsureCapacity<Alloc>(
+      aCapacity, sizeof(elem_type)));
   }
 
   // This method modifies the length of the array.  If the new length is
@@ -1587,8 +1595,9 @@ public:
   // @param aCount the number of elements to insert
   elem_type* InsertElementsAt(index_type aIndex, size_type aCount)
   {
-    if (!base_type::InsertSlotsAt(aIndex, aCount, sizeof(elem_type),
-                                  MOZ_ALIGNOF(elem_type))) {
+    if (!base_type::template InsertSlotsAt<Alloc>(aIndex, aCount,
+                                                  sizeof(elem_type),
+                                                  MOZ_ALIGNOF(elem_type))) {
       return nullptr;
     }
 
@@ -1613,8 +1622,9 @@ public:
   elem_type* InsertElementsAt(index_type aIndex, size_type aCount,
                               const Item& aItem)
   {
-    if (!base_type::InsertSlotsAt(aIndex, aCount, sizeof(elem_type),
-                                  MOZ_ALIGNOF(elem_type))) {
+    if (!base_type::template InsertSlotsAt<Alloc>(aIndex, aCount,
+                                                  sizeof(elem_type),
+                                                  MOZ_ALIGNOF(elem_type))) {
       return nullptr;
     }
 
@@ -1631,7 +1641,8 @@ public:
   // This method may be called to minimize the memory used by this array.
   void Compact()
   {
-    ShrinkCapacity(sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    this->template ShrinkCapacity<Alloc>(sizeof(elem_type),
+                                         MOZ_ALIGNOF(elem_type));
   }
 
   //
@@ -1694,8 +1705,8 @@ public:
   template<class Item, class Comparator>
   elem_type* PushHeap(const Item& aItem, const Comparator& aComp)
   {
-    if (!base_type::InsertSlotsAt(Length(), 1, sizeof(elem_type),
-                                  MOZ_ALIGNOF(elem_type))) {
+    if (!base_type::template InsertSlotsAt<Alloc>(Length(), 1, sizeof(elem_type),
+                                                  MOZ_ALIGNOF(elem_type))) {
       return nullptr;
     }
     // Sift up the new node
