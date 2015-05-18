@@ -901,6 +901,7 @@ MediaFormatReader::Update(TrackType aTrack)
   LOGV("Update(%s) ni=%d no=%d", TrackTypeToStr(aTrack), needInput, needOutput);
 
   if (decoder.mDemuxEOS && !decoder.mDemuxEOSServiced) {
+    decoder.mOutputRequested = true;
     decoder.mDecoder->Drain();
     decoder.mDemuxEOSServiced = true;
   }
