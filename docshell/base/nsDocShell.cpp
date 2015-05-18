@@ -13858,7 +13858,14 @@ nsDocShell::GetAppManifestURL(nsAString& aAppManifestURL)
 NS_IMETHODIMP
 nsDocShell::GetAsyncPanZoomEnabled(bool* aOut)
 {
-  *aOut = Preferences::GetBool("layers.async-pan-zoom.enabled", false);
+  if (nsIPresShell* presShell = GetPresShell()) {
+    if (layers::LayerManager* lm = presShell->GetLayerManager()) {
+      *aOut = lm->AsyncPanZoomEnabled();
+      return NS_OK;
+    }
+  }
+
+  *aOut = false;
   return NS_OK;
 }
 
