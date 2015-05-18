@@ -235,9 +235,8 @@ public:
 
   bool IsInitialized() const { return !!mOps; }
 
-  // These should be used rarely.
+  // This should be used rarely.
   const PLDHashTableOps* const Ops() { return mOps; }
-  void SetOps(const PLDHashTableOps* aOps) { mOps = aOps; }
 
   /*
    * Size in entries (gross, not net of free and removed sentinels) for table.
