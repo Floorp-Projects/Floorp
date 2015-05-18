@@ -134,6 +134,11 @@ Site.prototype = {
     this.node.setAttribute("type", this.link.type);
 
     if (this.link.targetedSite) {
+      if (this.node.getAttribute("type") != "sponsored") {
+        this._querySelector(".newtab-sponsored").textContent =
+          newTabString("suggested.tag");
+      }
+
       this.node.setAttribute("suggested", true);
       let targetedSite = `<strong> ${this.link.targetedName} </strong>`;
       this._querySelector(".newtab-suggested").innerHTML =
