@@ -14,7 +14,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
-#include "gfxUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -362,147 +361,6 @@ gfxAlphaBoxBlur::ShutdownBlurCache()
   gBlurCache = nullptr;
 }
 
-static IntSize
-ComputeMinimalSizeForShadowShape(RectCornerRadii* aCornerRadii,
-                                 gfxIntSize aBlurRadius,
-                                 IntMargin& aSlice)
-{
-  float cornerWidth = 0;
-  float cornerHeight = 0;
-  if (aCornerRadii) {
-    RectCornerRadii corners = *aCornerRadii;
-    for (size_t i = 0; i < 4; i++) {
-      cornerWidth = std::max(cornerWidth, corners[i].width);
-      cornerHeight = std::max(cornerHeight, corners[i].height);
-    }
-  }
-
-  aSlice = IntMargin(ceil(cornerHeight) + aBlurRadius.height,
-                     ceil(cornerWidth) + aBlurRadius.width,
-                     ceil(cornerHeight) + aBlurRadius.height,
-                     ceil(cornerWidth) + aBlurRadius.width);
-
-  // Include 1 pixel for the stretchable strip in the middle.
-  return IntSize(aSlice.LeftRight() + 1,
-                 aSlice.TopBottom() + 1);
-}
-
-// Blurs a small surface and creates the mask.
-static TemporaryRef<SourceSurface>
-CreateBlurMask(const IntSize& aRectSize,
-               RectCornerRadii* aCornerRadii,
-               gfxIntSize aBlurRadius,
-               IntMargin& aExtendDestBy,
-               IntMargin& aSliceBorder,
-               DrawTarget& aDestDrawTarget)
-{
-  IntMargin slice;
-  IntSize minimalSize =
-    ComputeMinimalSizeForShadowShape(aCornerRadii, aBlurRadius, slice);
-
-  // If aRectSize is smaller than minimalSize, the border-image approach won't
-  // work; there's no way to squeeze parts of the minimal box-shadow source
-  // image such that the result looks correct. So we need to adjust minimalSize
-  // in such a way that we can later draw it without stretching in the affected
-  // dimension. We also need to adjust "slice" to ensure that we're not trying
-  // to slice away more than we have.
-  if (aRectSize.width < minimalSize.width) {
-    minimalSize.width = aRectSize.width;
-    slice.left = 0;
-    slice.right = 0;
-  }
-  if (aRectSize.height < minimalSize.height) {
-    minimalSize.height = aRectSize.height;
-    slice.top = 0;
-    slice.bottom = 0;
-  }
-
-  MOZ_ASSERT(slice.LeftRight() <= minimalSize.width);
-  MOZ_ASSERT(slice.TopBottom() <= minimalSize.height);
-
-  IntRect minimalRect(IntPoint(), minimalSize);
-
-  gfxAlphaBoxBlur blur;
-  gfxContext* blurCtx = blur.Init(ThebesRect(Rect(minimalRect)), gfxIntSize(),
-                                  aBlurRadius, nullptr, nullptr);
-  if (!blurCtx) {
-    return nullptr;
-  }
-
-  DrawTarget* blurDT = blurCtx->GetDrawTarget();
-  ColorPattern black(Color(0.f, 0.f, 0.f, 1.f));
-
-  if (aCornerRadii) {
-    RefPtr<Path> roundedRect =
-      MakePathForRoundedRect(*blurDT, Rect(minimalRect), *aCornerRadii);
-    blurDT->Fill(roundedRect, black);
-  } else {
-    blurDT->FillRect(Rect(minimalRect), black);
-  }
-
-  IntPoint topLeft;
-  RefPtr<SourceSurface> result = blur.DoBlur(&aDestDrawTarget, &topLeft);
-
-  IntRect expandedMinimalRect(topLeft, result->GetSize());
-  aExtendDestBy = expandedMinimalRect - minimalRect;
-  aSliceBorder = slice + aExtendDestBy;
-
-  MOZ_ASSERT(aSliceBorder.LeftRight() <= expandedMinimalRect.width);
-  MOZ_ASSERT(aSliceBorder.TopBottom() <= expandedMinimalRect.height);
-
-  return result.forget();
-}
-
-static TemporaryRef<SourceSurface>
-CreateBoxShadow(SourceSurface* aBlurMask, const gfxRGBA& aShadowColor)
-{
-  IntSize blurredSize = aBlurMask->GetSize();
-  gfxPlatform* platform = gfxPlatform::GetPlatform();
-  RefPtr<DrawTarget> boxShadowDT =
-    platform->CreateOffscreenContentDrawTarget(blurredSize, SurfaceFormat::B8G8R8A8);
-
-  ColorPattern shadowColor(ToDeviceColor(aShadowColor));
-  boxShadowDT->MaskSurface(shadowColor, aBlurMask, Point(0, 0));
-  return boxShadowDT->Snapshot();
-}
-
-static Rect
-RectWithEdgesTRBL(Float aTop, Float aRight, Float aBottom, Float aLeft)
-{
-  return Rect(aLeft, aTop, aRight - aLeft, aBottom - aTop);
-}
-
-static void
-RepeatOrStretchSurface(DrawTarget& aDT, SourceSurface* aSurface,
-                       const Rect& aDest, const Rect& aSrc)
-{
-  if (!aDT.GetTransform().IsRectilinear() &&
-      aDT.GetBackendType() != BackendType::CAIRO) {
-    // Use stretching if possible, since it leads to less seams when the
-    // destination is transformed. However, don't do this if we're using cairo,
-    // because if cairo is using pixman it won't render anything for large
-    // stretch factors because pixman's internal fixed point precision is not
-    // high enough to handle those scale factors.
-    aDT.DrawSurface(aSurface, aDest, aSrc);
-    return;
-  }
-
-  SurfacePattern pattern(aSurface, ExtendMode::REPEAT,
-                         Matrix::Translation(aDest.TopLeft() - aSrc.TopLeft()),
-                         Filter::GOOD, RoundedToInt(aSrc));
-  aDT.FillRect(aDest, pattern);
-}
-
-/***
- * We draw a blurred a rectangle by only blurring a smaller rectangle and
- * splitting the rectangle into 9 parts.
- * First, a small minimum source rect is calculated and used to create a blur
- * mask since the actual blurring itself is expensive. Next, we use the mask
- * with the given shadow color to create a minimally-sized box shadow of the
- * right color. Finally, we cut out the 9 parts from the box-shadow source and
- * paint each part in the right place, stretching the non-corner parts to fill
- * the space between the corners.
- */
 /* static */ void
 gfxAlphaBoxBlur::BlurRectangle(gfxContext *aDestinationCtx,
                                const gfxRect& aRect,
@@ -512,104 +370,43 @@ gfxAlphaBoxBlur::BlurRectangle(gfxContext *aDestinationCtx,
                                const gfxRect& aDirtyRect,
                                const gfxRect& aSkipRect)
 {
-  DrawTarget& destDrawTarget = *aDestinationCtx->GetDrawTarget();
+  DrawTarget& aDrawTarget = *aDestinationCtx->GetDrawTarget();
 
   gfxIntSize blurRadius = CalculateBlurRadius(aBlurStdDev);
 
-  IntRect rect = RoundedToInt(ToRect(aRect));
-  IntMargin extendDestBy;
-  IntMargin slice;
-  RefPtr<SourceSurface> blurMask =
-    CreateBlurMask(rect.Size(), aCornerRadii, blurRadius, extendDestBy, slice,
-                   destDrawTarget);
-  if (!blurMask) {
-    return;
+  IntPoint topLeft;
+  RefPtr<SourceSurface> surface = GetCachedBlur(&aDrawTarget, aRect, blurRadius, aSkipRect, aDirtyRect, &topLeft);
+  if (!surface) {
+    // Create the temporary surface for blurring
+    gfxAlphaBoxBlur blur;
+    gfxContext* blurCtx = blur.Init(aRect, gfxIntSize(), blurRadius, &aDirtyRect, &aSkipRect);
+    if (!blurCtx) {
+      return;
+    }
+    DrawTarget* blurDT = blurCtx->GetDrawTarget();
+
+    Rect shadowGfxRect = ToRect(aRect);
+    shadowGfxRect.Round();
+
+    ColorPattern black(Color(0.f, 0.f, 0.f, 1.f)); // For masking, so no ToDeviceColor!
+    if (aCornerRadii) {
+      RefPtr<Path> roundedRect = MakePathForRoundedRect(*blurDT,
+                                                        shadowGfxRect,
+                                                        *aCornerRadii);
+      blurDT->Fill(roundedRect, black);
+    } else {
+      blurDT->FillRect(shadowGfxRect, black);
+    }
+
+    surface = blur.DoBlur(&aDrawTarget, &topLeft);
+    if (!surface) {
+      return;
+    }
+    CacheBlur(&aDrawTarget, aRect, blurRadius, aSkipRect, surface, topLeft, aDirtyRect);
   }
 
-  RefPtr<SourceSurface> boxShadow = CreateBoxShadow(blurMask, aShadowColor);
-
-  destDrawTarget.PushClipRect(ToRect(aDirtyRect));
-
-  // Copy the right parts from boxShadow into destDrawTarget. The middle parts
-  // will be stretched, border-image style.
-
-  Rect srcOuter(Point(), Size(boxShadow->GetSize()));
-  Rect srcInner = srcOuter;
-  srcInner.Deflate(Margin(slice));
-
-  rect.Inflate(extendDestBy);
-  Rect dstOuter(rect);
-  Rect dstInner(rect);
-  dstInner.Deflate(Margin(slice));
-
-  // Corners: top left, top right, bottom left, bottom right
-  destDrawTarget.DrawSurface(boxShadow,
-                             RectWithEdgesTRBL(dstOuter.Y(), dstInner.X(),
-                                               dstInner.Y(), dstOuter.X()),
-                             RectWithEdgesTRBL(srcOuter.Y(), srcInner.X(),
-                                               srcInner.Y(), srcOuter.X()));
-  destDrawTarget.DrawSurface(boxShadow,
-                             RectWithEdgesTRBL(dstOuter.Y(), dstOuter.XMost(),
-                                               dstInner.Y(), dstInner.XMost()),
-                             RectWithEdgesTRBL(srcOuter.Y(), srcOuter.XMost(),
-                                               srcInner.Y(), srcInner.XMost()));
-  destDrawTarget.DrawSurface(boxShadow,
-                             RectWithEdgesTRBL(dstInner.YMost(), dstInner.X(),
-                                               dstOuter.YMost(), dstOuter.X()),
-                             RectWithEdgesTRBL(srcInner.YMost(), srcInner.X(),
-                                               srcOuter.YMost(), srcOuter.X()));
-  destDrawTarget.DrawSurface(boxShadow,
-                             RectWithEdgesTRBL(dstInner.YMost(), dstOuter.XMost(),
-                                               dstOuter.YMost(), dstInner.XMost()),
-                             RectWithEdgesTRBL(srcInner.YMost(), srcOuter.XMost(),
-                                               srcOuter.YMost(), srcInner.XMost()));
-
-  // Edges: top, left, right, bottom
-  RepeatOrStretchSurface(destDrawTarget, boxShadow,
-                         RectWithEdgesTRBL(dstOuter.Y(), dstInner.XMost(),
-                                           dstInner.Y(), dstInner.X()),
-                         RectWithEdgesTRBL(srcOuter.Y(), srcInner.XMost(),
-                                           srcInner.Y(), srcInner.X()));
-  RepeatOrStretchSurface(destDrawTarget, boxShadow,
-                         RectWithEdgesTRBL(dstInner.Y(), dstInner.X(),
-                                           dstInner.YMost(), dstOuter.X()),
-                         RectWithEdgesTRBL(srcInner.Y(), srcInner.X(),
-                                           srcInner.YMost(), srcOuter.X()));
-  RepeatOrStretchSurface(destDrawTarget, boxShadow,
-                         RectWithEdgesTRBL(dstInner.Y(), dstOuter.XMost(),
-                                           dstInner.YMost(), dstInner.XMost()),
-                         RectWithEdgesTRBL(srcInner.Y(), srcOuter.XMost(),
-                                           srcInner.YMost(), srcInner.XMost()));
-  RepeatOrStretchSurface(destDrawTarget, boxShadow,
-                         RectWithEdgesTRBL(dstInner.YMost(), dstInner.XMost(),
-                                           dstOuter.YMost(), dstInner.X()),
-                         RectWithEdgesTRBL(srcInner.YMost(), srcInner.XMost(),
-                                           srcOuter.YMost(), srcInner.X()));
-
-  // Middle part
-  RepeatOrStretchSurface(destDrawTarget, boxShadow,
-                         RectWithEdgesTRBL(dstInner.Y(), dstInner.XMost(),
-                                           dstInner.YMost(), dstInner.X()),
-                         RectWithEdgesTRBL(srcInner.Y(), srcInner.XMost(),
-                                           srcInner.YMost(), srcInner.X()));
-
-  // A note about anti-aliasing and seems between adjacent parts:
-  // We don't explicitly disable anti-aliasing in the DrawSurface calls above,
-  // so if there's a transform on destDrawTarget that is not pixel-aligned,
-  // there will be seams between adjacent parts of the box-shadow. It's hard to
-  // avoid those without the use of an intermediate surface.
-  // You might think that we could avoid those by just turning of AA, but there
-  // is a problem with that: Box-shadow rendering needs to clip out the
-  // element's border box, and we'd like that clip to have anti-aliasing -
-  // especially if the element has rounded corners! So we can't do that unless
-  // we have a way to say "Please anti-alias the clip, but don't antialias the
-  // destination rect of the DrawSurface call".
-  // On OS X there is an additional problem with turning off AA: CoreGraphics
-  // will not just fill the pixels that have their pixel center inside the
-  // filled shape. Instead, it will fill all the pixels which are partially
-  // covered by the shape. So for pixels on the edge between two adjacent parts,
-  // all those pixels will be painted to by both parts, which looks very bad.
-
-  destDrawTarget.PopClip();
+  aDestinationCtx->SetColor(aShadowColor);
+  Rect dirtyRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  DrawBlur(aDestinationCtx, surface, topLeft, &dirtyRect);
 }
 
