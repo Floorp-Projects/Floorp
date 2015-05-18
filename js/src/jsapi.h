@@ -1137,8 +1137,7 @@ class JS_PUBLIC_API(RuntimeOptions) {
         ion_(true),
         asmJS_(true),
         nativeRegExp_(true),
-        unboxedObjects_(false), // Not enabled by default yet
-        unboxedArrays_(false), // Ditto
+        unboxedArrays_(false),
         werror_(false),
         strictMode_(false),
         extraWarnings_(false),
@@ -1179,12 +1178,6 @@ class JS_PUBLIC_API(RuntimeOptions) {
     bool nativeRegExp() const { return nativeRegExp_; }
     RuntimeOptions& setNativeRegExp(bool flag) {
         nativeRegExp_ = flag;
-        return *this;
-    }
-
-    bool unboxedObjects() const { return unboxedObjects_; }
-    RuntimeOptions& setUnboxedObjects(bool flag) {
-        unboxedObjects_ = flag;
         return *this;
     }
 
@@ -1239,7 +1232,6 @@ class JS_PUBLIC_API(RuntimeOptions) {
     bool ion_ : 1;
     bool asmJS_ : 1;
     bool nativeRegExp_ : 1;
-    bool unboxedObjects_ : 1;
     bool unboxedArrays_ : 1;
     bool werror_ : 1;
     bool strictMode_ : 1;

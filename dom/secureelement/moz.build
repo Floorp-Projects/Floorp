@@ -13,14 +13,21 @@ if CONFIG['MOZ_SECUREELEMENT']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_SECUREELEMENT']:
     EXTRA_COMPONENTS += [
+        'gonk/ACEService.js',
+        'gonk/ACEService.manifest',
+        'gonk/GPAccessRulesManager.js',
+        'gonk/GPAccessRulesManager.manifest',
         'gonk/SecureElement.js',
         'gonk/SecureElement.manifest',
     ]
     XPIDL_MODULE = 'dom_secureelement'
     XPIDL_SOURCES += [
+        'gonk/nsIAccessControlEnforcer.idl',
+        'gonk/nsIAccessRulesManager.idl',
         'gonk/nsISecureElementConnector.idl',
     ]
     EXTRA_JS_MODULES += [
+        'gonk/gp_consts.js',
         'gonk/se_consts.js',
         'SEUtils.jsm'
     ]

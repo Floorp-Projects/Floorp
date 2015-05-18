@@ -235,17 +235,21 @@ TCPPresentationServer.prototype = {
   onStopListening: function(aServerSocket, aStatus) {
     DEBUG && log("TCPPresentationServer - onStopListening: " + aStatus);
 
-    // manually closed
-    if (aStatus === Cr.NS_BINDING_ABORTED) {
+    if (this._serverSocket) {
+      DEBUG && log("TCPPresentationServer - should be non-manually closed");
+      this.close();
+    } else if (aStatus === Cr.NS_BINDING_ABORTED) {
+      DEBUG && log("TCPPresentationServer - should be manually closed");
       aStatus = Cr.NS_OK;
     }
+
     this._listener && this._listener.onClose(aStatus);
-    this._serverSocket = null;
   },
 
   close: function() {
-    DEBUG && log("TCPPresentationServer - close signalling channel");
+    DEBUG && log("TCPPresentationServer - close");
     if (this._serverSocket) {
+      DEBUG && log("TCPPresentationServer - close server socket");
       this._serverSocket.close();
       this._serverSocket = null;
     }

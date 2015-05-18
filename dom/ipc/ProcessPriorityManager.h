@@ -74,17 +74,6 @@ public:
    */
   static bool AnyProcessHasHighPriority();
 
-  /**
-   * Prevents processes from changing priority until unfrozen.
-   */
-  static void Freeze();
-
-  /**
-   * Allow process' priorities to change again.  This will immediately adjust
-   * processes whose priority change did not happen because of the freeze.
-   */
-  static void Unfreeze();
-
 private:
   ProcessPriorityManager();
   DISALLOW_EVIL_CONSTRUCTORS(ProcessPriorityManager);

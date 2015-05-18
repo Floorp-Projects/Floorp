@@ -33,17 +33,6 @@ addEventListener('unload', function() {
                                               isInBrowserElement: true });
 });
 
-// ProcessPriorityManager requires at least one process in foreground
-// so that other processes can transit freely between foreground and
-// background.
-function setupTest() {
-  var foreground = document.createElement('iframe');
-  foreground.setAttribute('mozbrowser', true);
-  foreground.src = browserElementTestHelpers.emptyPage;
-  expectMozbrowserEvent(foreground, 'loadend').then(runTest);
-  document.body.appendChild(foreground);
-}
-
 function runTest() {
   var iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', true);
@@ -73,7 +62,7 @@ addEventListener('testready', function() {
   // set the timeout to a large value.
   SpecialPowers.pushPrefEnv(
     {set: [["dom.ipc.systemMessageCPULockTimeoutSec", 99999]]},
-    setupTest);
+    runTest);
 });
 
 </script>

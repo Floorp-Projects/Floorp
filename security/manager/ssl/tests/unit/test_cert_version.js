@@ -18,22 +18,12 @@ function load_cert(cert_name, trust_string) {
   addCertFromFile(certdb, "test_cert_version/" + cert_filename, trust_string);
 }
 
-function check_cert_err_generic(cert, expected_error, usage) {
-  do_print("cert cn=" + cert.commonName);
-  do_print("cert issuer cn=" + cert.issuerCommonName);
-  let hasEVPolicy = {};
-  let verifiedChain = {};
-  let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, null, verifiedChain,
-                                   hasEVPolicy);
-  do_check_eq(error, expected_error);
-}
-
 function check_cert_err(cert, expected_error) {
-  check_cert_err_generic(cert, expected_error, certificateUsageSSLServer)
+  checkCertErrorGeneric(certdb, cert, expected_error, certificateUsageSSLServer);
 }
 
 function check_ca_err(cert, expected_error) {
-  check_cert_err_generic(cert, expected_error, certificateUsageSSLCA)
+  checkCertErrorGeneric(certdb, cert, expected_error, certificateUsageSSLCA);
 }
 
 function check_ok(x) {
@@ -41,7 +31,7 @@ function check_ok(x) {
 }
 
 function check_ok_ca(x) {
-  return check_cert_err_generic(x, PRErrorCodeSuccess, certificateUsageSSLCA);
+  checkCertErrorGeneric(certdb, x, PRErrorCodeSuccess, certificateUsageSSLCA);
 }
 
 function run_test() {
