@@ -3,24 +3,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsapi.h"
 #include "nsPerformanceStats.h"
+
 #include "nsMemory.h"
 #include "nsLiteralString.h"
 #include "nsCRTGlue.h"
-#include "nsIJSRuntimeService.h"
 #include "nsServiceManagerUtils.h"
+
 #include "nsCOMArray.h"
 #include "nsIMutableArray.h"
+
+#include "jsapi.h"
 #include "nsJSUtils.h"
 #include "xpcpublic.h"
 #include "jspubtd.h"
+#include "nsIJSRuntimeService.h"
+
+#include "nsIDOMWindow.h"
+#include "nsGlobalWindow.h"
 
 class nsPerformanceStats: public nsIPerformanceStats {
 public:
-  nsPerformanceStats(nsAString& aName, nsAString& aAddonId, bool aIsSystem, js::PerformanceData& aPerformanceData)
+  nsPerformanceStats(const nsAString& aName,
+                     const nsAString& aAddonId,
+                     const nsAString& aTitle,
+                     const uint64_t aWindowId,
+                     const bool aIsSystem,
+                     const js::PerformanceData& aPerformanceData)
     : mName(aName)
     , mAddonId(aAddonId)
+    , mTitle(aTitle)
+    , mWindowId(aWindowId)
     , mIsSystem(aIsSystem)
     , mPerformanceData(aPerformanceData)
   {
@@ -40,6 +53,24 @@ public:
     aAddonId.Assign(mAddonId);
     return NS_OK;
   };
+
+  /* readonly attribute uint64_t windowId; */
+  NS_IMETHOD GetWindowId(uint64_t *aWindowId) override {
+    *aWindowId = mWindowId;
+    return NS_OK;
+  }
+
+  /* readonly attribute AString title; */
+  NS_IMETHOD GetTitle(nsAString & aTitle) override {
+    aTitle.Assign(mTitle);
+    return NS_OK;
+  }
+
+  /* readonly attribute bool isSystem; */
+  NS_IMETHOD GetIsSystem(bool *_retval) override {
+    *_retval = mIsSystem;
+    return NS_OK;
+  }
 
   /* readonly attribute unsigned long long totalUserTime; */
   NS_IMETHOD GetTotalUserTime(uint64_t *aTotalUserTime) override {
@@ -78,16 +109,13 @@ public:
     return NS_OK;
   };
 
-  /* readonly attribute bool isSystem; */
-  NS_IMETHOD GetIsSystem(bool *_retval) override {
-    *_retval = mIsSystem;
-    return NS_OK;
-  }
-
 private:
   nsString mName;
   nsString mAddonId;
+  nsString mTitle;
+  uint64_t mWindowId;
   bool mIsSystem;
+
   js::PerformanceData mPerformanceData;
 
   virtual ~nsPerformanceStats() {}
@@ -103,15 +131,45 @@ public:
   NS_DECL_NSIPERFORMANCESNAPSHOT
 
   nsPerformanceSnapshot();
-  nsresult Init();
+  nsresult Init(JSContext*);
 private:
   virtual ~nsPerformanceSnapshot();
 
   /**
-   * Import a `PerformanceStats` as a `nsIPerformanceStats`.
+   * Import a `js::PerformanceStats` as a `nsIPerformanceStats`.
+   *
+   * Precondition: this method assumes that we have entered the JSCompartment for which data `c`
+   * has been collected.
+   *
+   * `cx` may be `nullptr` if we are importing the statistics for the
+   * entire process, rather than the statistics for a specific set of
+   * compartments.
    */
-  already_AddRefed<nsIPerformanceStats> ImportStats(js::PerformanceStats* c);
+  already_AddRefed<nsIPerformanceStats> ImportStats(JSContext* cx, const js::PerformanceData& data);
 
+  /**
+   * Callbacks for iterating through the `PerformanceStats` of a runtime.
+   */
+  bool IterPerformanceStatsCallbackInternal(JSContext* cx, const js::PerformanceData& stats);
+  static bool IterPerformanceStatsCallback(JSContext* cx, const js::PerformanceData& stats, void* self);
+
+  // If the context represents a window, extract the title and window ID.
+  // Otherwise, extract "" and 0.
+  static void GetWindowData(JSContext*,
+                            nsString& title,
+                            uint64_t* windowId);
+
+  // If the context presents an add-on, extract the addon ID.
+  // Otherwise, extract "".
+  static void GetAddonId(JSContext*,
+                         JS::Handle<JSObject*> global,
+                         nsAString& addonId);
+
+  // Determine whether a context is part of the system principals.
+  static bool GetIsSystem(JSContext*,
+                          JS::Handle<JSObject*> global);
+
+private:
   nsCOMArray<nsIPerformanceStats> mComponentsData;
   nsCOMPtr<nsIPerformanceStats> mProcessData;
 };
@@ -126,36 +184,119 @@ nsPerformanceSnapshot::~nsPerformanceSnapshot()
 {
 }
 
-already_AddRefed<nsIPerformanceStats>
-nsPerformanceSnapshot::ImportStats(js::PerformanceStats* c) {
-  nsString addonId;
-  if (c->addonId) {
-    AssignJSFlatString(addonId, (JSFlatString*)c->addonId);
+/* static */ void
+nsPerformanceSnapshot::GetWindowData(JSContext* cx,
+                                     nsString& title,
+                                     uint64_t* windowId)
+{
+  MOZ_ASSERT(windowId);
+
+  title.SetIsVoid(true);
+  *windowId = 0;
+
+  nsCOMPtr<nsPIDOMWindow> win = xpc::CurrentWindowOrNull(cx);
+  if (!win) {
+    return;
   }
-  nsCString cname(c->name);
-  NS_ConvertUTF8toUTF16 name(cname);
-  nsCOMPtr<nsIPerformanceStats> result = new nsPerformanceStats(name, addonId, c->isSystem, c->performance);
+
+  nsCOMPtr<nsIDOMWindow> top;
+  nsresult rv = win->GetTop(getter_AddRefs(top));
+  if (!top || NS_FAILED(rv)) {
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> ptop = do_QueryInterface(top);
+  if (!ptop) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = ptop->GetExtantDoc();
+  if (!doc) {
+    return;
+  }
+
+  doc->GetTitle(title);
+  *windowId = ptop->WindowID();
+}
+
+/* static */ void
+nsPerformanceSnapshot::GetAddonId(JSContext*,
+                                  JS::Handle<JSObject*> global,
+                                  nsAString& addonId)
+{
+  addonId.AssignLiteral("");
+
+  JSAddonId* jsid = AddonIdOfObject(global);
+  if (!jsid) {
+    return;
+  }
+  AssignJSFlatString(addonId, (JSFlatString*)jsid);
+}
+
+/* static */ bool
+nsPerformanceSnapshot::GetIsSystem(JSContext*,
+                                   JS::Handle<JSObject*> global)
+{
+  return nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(global));
+}
+
+already_AddRefed<nsIPerformanceStats>
+nsPerformanceSnapshot::ImportStats(JSContext* cx, const js::PerformanceData& performance) {
+  JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+
+  if (!global) {
+    // While it is possible for a compartment to have no global
+    // (e.g. atoms), this compartment is not very interesting for us.
+    return nullptr;
+  }
+
+  nsString addonId;
+  GetAddonId(cx, global, addonId);
+
+  nsString title;
+  uint64_t windowId;
+  GetWindowData(cx, title, &windowId);
+
+  nsAutoString name;
+  nsAutoCString cname;
+  xpc::GetCurrentCompartmentName(cx, cname);
+  name.Assign(NS_ConvertUTF8toUTF16(cname));
+
+  bool isSystem = GetIsSystem(cx, global);
+
+  nsCOMPtr<nsIPerformanceStats> result =
+    new nsPerformanceStats(name, addonId, title, windowId, isSystem, performance);
   return result.forget();
 }
 
-nsresult
-nsPerformanceSnapshot::Init() {
-  JSRuntime* rt;
-  nsCOMPtr<nsIJSRuntimeService> svc(do_GetService("@mozilla.org/js/xpc/RuntimeService;1"));
-  NS_ENSURE_TRUE(svc, NS_ERROR_FAILURE);
-  svc->GetRuntime(&rt);
-  js::PerformanceStats processStats;
-  js::PerformanceStatsVector componentsStats;
-  if (!js::GetPerformanceStats(rt, componentsStats, processStats)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+/*static*/ bool
+nsPerformanceSnapshot::IterPerformanceStatsCallback(JSContext* cx, const js::PerformanceData& stats, void* self) {
+  return reinterpret_cast<nsPerformanceSnapshot*>(self)->IterPerformanceStatsCallbackInternal(cx, stats);
+}
+
+bool
+nsPerformanceSnapshot::IterPerformanceStatsCallbackInternal(JSContext* cx, const js::PerformanceData& stats) {
+  nsCOMPtr<nsIPerformanceStats> result = ImportStats(cx, stats);
+  if (result) {
+    mComponentsData.AppendElement(result);
   }
 
-  size_t num = componentsStats.length();
-  for (size_t pos = 0; pos < num; pos++) {
-    nsCOMPtr<nsIPerformanceStats> stats = ImportStats(&componentsStats[pos]);
-    mComponentsData.AppendObject(stats);
+  return true;
+}
+
+nsresult
+nsPerformanceSnapshot::Init(JSContext* cx) {
+  js::PerformanceData processStats;
+  if (!js::IterPerformanceStats(cx, nsPerformanceSnapshot::IterPerformanceStatsCallback, &processStats, this)) {
+    return NS_ERROR_UNEXPECTED;
   }
-  mProcessData = ImportStats(&processStats);
+
+  mProcessData = new nsPerformanceStats(NS_LITERAL_STRING("<process>"), // name
+                                        NS_LITERAL_STRING(""),          // add-on id
+                                        NS_LITERAL_STRING(""),          // title
+                                        0,                              // window id
+                                        true,                           // isSystem
+                                        processStats);
   return NS_OK;
 }
 
@@ -209,10 +350,10 @@ NS_IMETHODIMP nsPerformanceStatsService::SetIsStopwatchActive(JSContext* cx, boo
 }
 
 /* readonly attribute nsIPerformanceSnapshot snapshot; */
-NS_IMETHODIMP nsPerformanceStatsService::GetSnapshot(nsIPerformanceSnapshot * *aSnapshot)
+NS_IMETHODIMP nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerformanceSnapshot * *aSnapshot)
 {
   nsRefPtr<nsPerformanceSnapshot> snapshot = new nsPerformanceSnapshot();
-  nsresult rv = snapshot->Init();
+  nsresult rv = snapshot->Init(cx);
   if (NS_FAILED(rv)) {
     return rv;
   }
