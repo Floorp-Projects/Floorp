@@ -691,7 +691,7 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
        aType.LowerCaseEqualsLiteral("audio/mp4")) &&
       MP4Decoder::IsEnabled() && aDecoder) {
     bool useFormatDecoder =
-      Preferences::GetBool("media.mediasource.format-reader.mp4", false);
+      Preferences::GetBool("media.mediasource.format-reader.mp4", true);
     MediaDecoderReader* reader = useFormatDecoder ?
       static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()))) :
       static_cast<MediaDecoderReader*>(new MP4Reader(aDecoder));
