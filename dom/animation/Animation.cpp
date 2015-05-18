@@ -202,7 +202,7 @@ Animation::GetFinished(ErrorResult& aRv)
   }
   if (!mFinished) {
     aRv.Throw(NS_ERROR_FAILURE);
-  } else if (IsFinished()) {
+  } else if (PlayState() == AnimationPlayState::Finished) {
     mFinished->MaybeResolve(this);
   }
   return mFinished;
@@ -768,7 +768,7 @@ Animation::UpdateFinishedState(SeekFlag aSeekFlag)
     }
   }
 
-  bool currentFinishedState = IsFinished();
+  bool currentFinishedState = PlayState() == AnimationPlayState::Finished;
   if (currentFinishedState && !mIsPreviousStateFinished) {
     if (mFinished) {
       mFinished->MaybeResolve(this);
@@ -834,19 +834,6 @@ Animation::CancelPendingTasks()
 
   mPendingState = PendingState::NotPending;
   mPendingReadyTime.SetNull();
-}
-
-bool
-Animation::IsFinished() const
-{
-  // Unfortunately there's some weirdness in the spec at the moment where if
-  // you're finished and paused, the playState is paused. This prevents us
-  // from just checking |PlayState() == AnimationPlayState::Finished| here,
-  // and we need this much more messy check to see if we're finished.
-  Nullable<TimeDuration> currentTime = GetCurrentTime();
-  return !currentTime.IsNull() &&
-      ((mPlaybackRate > 0.0 && currentTime.Value() >= EffectEnd()) ||
-       (mPlaybackRate < 0.0 && currentTime.Value().ToMilliseconds() <= 0.0));
 }
 
 bool
