@@ -1222,36 +1222,66 @@ public:
   // @param aArrayLen The number of values to copy into this array.
   // @return          A pointer to the new elements in the array, or null if
   //                  the operation failed due to insufficient memory.
-  template<class Item>
+  template<class Item, typename ActualAlloc = Alloc>
   elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
                                const Item* aArray, size_type aArrayLen)
   {
     // Adjust memory allocation up-front to catch errors.
-    if (!Alloc::Successful(this->template EnsureCapacity<Alloc>(
+    if (!ActualAlloc::Successful(this->template EnsureCapacity<ActualAlloc>(
           Length() + aArrayLen - aCount, sizeof(elem_type)))) {
       return nullptr;
     }
     DestructRange(aStart, aCount);
-    this->template ShiftData<Alloc>(aStart, aCount, aArrayLen,
-                                    sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    this->template ShiftData<ActualAlloc>(aStart, aCount, aArrayLen,
+                                          sizeof(elem_type),
+                                          MOZ_ALIGNOF(elem_type));
     AssignRange(aStart, aArrayLen, aArray);
     return Elements() + aStart;
   }
 
-  // A variation on the ReplaceElementsAt method defined above.
+
   template<class Item>
+  /* MOZ_WARN_UNUSED_RESULT */
   elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                               const nsTArray<Item>& aArray)
+                               const Item* aArray, size_type aArrayLen,
+                               const mozilla::fallible_t&)
   {
-    return ReplaceElementsAt(aStart, aCount, aArray.Elements(), aArray.Length());
+    return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount,
+                                                  aArray, aArrayLen);
   }
 
   // A variation on the ReplaceElementsAt method defined above.
+  template<class Item, typename ActualAlloc = Alloc>
+  elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
+                               const nsTArray<Item>& aArray)
+  {
+    return ReplaceElementsAt<Item, ActualAlloc>(
+      aStart, aCount, aArray.Elements(), aArray.Length());
+  }
+
   template<class Item>
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
+                               const nsTArray<Item>& aArray,
+                               const mozilla::fallible_t&)
+  {
+    return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aArray);
+  }
+
+  // A variation on the ReplaceElementsAt method defined above.
+  template<class Item, typename ActualAlloc = Alloc>
   elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
                                const Item& aItem)
   {
-    return ReplaceElementsAt(aStart, aCount, &aItem, 1);
+    return ReplaceElementsAt<Item, ActualAlloc>(aStart, aCount, &aItem, 1);
+  }
+
+  template<class Item>
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
+                               const Item& aItem, const mozilla::fallible_t&)
+  {
+    return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aItem);
   }
 
   // A variation on the ReplaceElementsAt method defined above.
