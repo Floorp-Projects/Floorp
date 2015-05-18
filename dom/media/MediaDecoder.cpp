@@ -12,7 +12,6 @@
 #include "nsTArray.h"
 #include "VideoUtils.h"
 #include "MediaDecoderStateMachine.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "ImageContainer.h"
 #include "MediaResource.h"
 #include "nsError.h"
@@ -1292,22 +1291,21 @@ bool MediaDecoder::IsMediaSeekable()
   return mMediaSeekable;
 }
 
-nsresult MediaDecoder::GetSeekable(dom::TimeRanges* aSeekable)
+media::TimeIntervals MediaDecoder::GetSeekable()
 {
-  double initialTime = 0.0;
-
   // We can seek in buffered range if the media is seekable. Also, we can seek
   // in unbuffered ranges if the transport level is seekable (local file or the
   // server supports range requests, etc.)
   if (!IsMediaSeekable()) {
-    return NS_OK;
+    return media::TimeIntervals();
   } else if (!IsTransportSeekable()) {
-    return GetBuffered(aSeekable);
+    return GetBuffered();
   } else {
-    double end = IsInfinite() ? std::numeric_limits<double>::infinity()
-                              : initialTime + GetDuration();
-    aSeekable->Add(initialTime, end);
-    return NS_OK;
+    return media::TimeIntervals(
+      media::TimeInterval(media::TimeUnit::FromMicroseconds(0),
+                          IsInfinite() ?
+                            media::TimeUnit::FromInfinity() :
+                            media::TimeUnit::FromSeconds(GetDuration())));
   }
 }
 
@@ -1453,9 +1451,9 @@ void MediaDecoder::Invalidate()
 
 // Constructs the time ranges representing what segments of the media
 // are buffered and playable.
-nsresult MediaDecoder::GetBuffered(dom::TimeRanges* aBuffered) {
-  NS_ENSURE_TRUE(mDecoderStateMachine && !mShuttingDown, NS_ERROR_FAILURE);
-  return mDecoderStateMachine->GetBuffered(aBuffered);
+media::TimeIntervals MediaDecoder::GetBuffered() {
+  NS_ENSURE_TRUE(mDecoderStateMachine && !mShuttingDown, media::TimeIntervals::Invalid());
+  return mDecoderStateMachine->GetBuffered();
 }
 
 size_t MediaDecoder::SizeOfVideoQueue() {

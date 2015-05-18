@@ -18,7 +18,6 @@
 #include "SharedThreadPool.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
 #include "SharedDecoderManager.h"
@@ -1073,12 +1072,13 @@ MP4Reader::GetEvictionOffset(double aTime)
   return mDemuxer->GetEvictionOffset(aTime * 1000000.0);
 }
 
-nsresult
-MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
+media::TimeIntervals
+MP4Reader::GetBuffered()
 {
   MonitorAutoLock mon(mDemuxerMonitor);
+  media::TimeIntervals buffered;
   if (!mIndexReady) {
-    return NS_OK;
+    return buffered;
   }
   UpdateIndex();
   MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
@@ -1091,12 +1091,13 @@ MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
     nsTArray<Interval<Microseconds>> timeRanges;
     mDemuxer->ConvertByteRangesToTime(ranges, &timeRanges);
     for (size_t i = 0; i < timeRanges.Length(); i++) {
-      aBuffered->Add((timeRanges[i].start - mStartTime) / 1000000.0,
-                     (timeRanges[i].end - mStartTime) / 1000000.0);
+      buffered += media::TimeInterval(
+        media::TimeUnit::FromMicroseconds(timeRanges[i].start - mStartTime),
+        media::TimeUnit::FromMicroseconds(timeRanges[i].end - mStartTime));
     }
   }
 
-  return NS_OK;
+  return buffered;
 }
 
 bool MP4Reader::IsDormantNeeded()
