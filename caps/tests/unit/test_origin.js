@@ -3,8 +3,15 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/BrowserUtils.jsm");
 var ssm = Services.scriptSecurityManager;
 function makeURI(uri) { return Services.io.newURI(uri, null, null); }
+
+function checkThrows(f) {
+  var threw = false;
+  try { f(); } catch (e) { threw = true }
+  do_check_true(threw);
+}
 
 function checkCrossOrigin(a, b) {
   do_check_false(a.equals(b));
@@ -22,6 +29,11 @@ function checkOriginAttributes(prin, appId, inBrowser, suffix) {
   do_check_eq(prin.originAttributes.appId, appId || 0);
   do_check_eq(prin.originAttributes.inBrowser, inBrowser || false);
   do_check_eq(prin.originSuffix, suffix || '');
+  if (!prin.isNullPrincipal && !prin.origin.startsWith('[')) {
+    do_check_true(BrowserUtils.principalFromOrigin(prin.origin).equals(prin));
+  } else {
+    checkThrows(() => BrowserUtils.principalFromOrigin(prin.origin));
+  }
 }
 
 function run_test() {
