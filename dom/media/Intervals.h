@@ -193,6 +193,11 @@ public:
     return mStart == mEnd;
   }
 
+  void SetFuzz(const T& aFuzz)
+  {
+    mFuzz = aFuzz;
+  }
+
   T mStart;
   T mEnd;
   T mFuzz;
@@ -505,7 +510,7 @@ public:
   }
 
   // Shift all values by aOffset.
-  void Shift(T aOffset)
+  void Shift(const T& aOffset)
   {
     for (auto& interval : mIntervals) {
       interval.mStart += aOffset;
@@ -513,9 +518,16 @@ public:
     }
   }
 
+  void SetFuzz(const T& aFuzz) {
+    for (auto& interval : mIntervals) {
+      interval.SetFuzz(aFuzz);
+    }
+    Normalize();
+  }
+
   static const IndexType NoIndex = IndexType(-1);
 
-  IndexType Find(T aValue) const
+  IndexType Find(const T& aValue) const
   {
     for (IndexType i = 0; i < mIntervals.Length(); i++) {
       if (mIntervals[i].Contains(aValue)) {
