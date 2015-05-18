@@ -744,7 +744,7 @@ function BuildConditionSandbox(aURL) {
     sandbox.Mulet = gB2GisMulet;
 
     try {
-        sandbox.asyncPanZoom = gContainingWindow.document.docShell.asyncPanZoomEnabled;
+        sandbox.asyncPanZoom = prefs.getBoolPref("layers.async-pan-zoom.enabled");
     } catch (e) {
         sandbox.asyncPanZoom = false;
     }

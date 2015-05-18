@@ -1329,12 +1329,6 @@ LayerComposite::SetLayerManager(LayerManagerComposite* aManager)
   mCompositor = aManager->GetCompositor();
 }
 
-bool
-LayerManagerComposite::AsyncPanZoomEnabled() const
-{
-  return mCompositor->GetWidget()->AsyncPanZoomEnabled();
-}
-
 nsIntRegion
 LayerComposite::GetFullyRenderedRegion() {
   if (TiledLayerComposer* tiled = GetTiledLayerComposer()) {
