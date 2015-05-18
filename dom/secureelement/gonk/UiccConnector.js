@@ -18,7 +18,7 @@
 "use strict";
 
 /* globals Components, XPCOMUtils, SE, dump, libcutils, Services,
-   iccProvider, iccService, SEUtils */
+   iccService, SEUtils */
 
 const { interfaces: Ci, utils: Cu, results: Cr } = Components;
 
@@ -43,10 +43,6 @@ function debug(s) {
 XPCOMUtils.defineLazyModuleGetter(this, "SEUtils",
                                   "resource://gre/modules/SEUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "iccProvider",
-                                   "@mozilla.org/ril/content-helper;1",
-                                   "nsIIccProvider");
-
 XPCOMUtils.defineLazyServiceGetter(this, "iccService",
                                    "@mozilla.org/icc/iccservice;1",
                                    "nsIIccService");
@@ -65,7 +61,7 @@ const PREFERRED_UICC_CLIENTID =
   libcutils.property_get("ro.moz.se.def_client_id", "0");
 
 /**
- * 'UiccConnector' object is a wrapper over iccProvider's channel management
+ * 'UiccConnector' object is a wrapper over iccService's channel management
  * related interfaces that implements nsISecureElementConnector interface.
  */
 function UiccConnector() {
@@ -174,8 +170,8 @@ UiccConnector.prototype = {
 
   _doIccExchangeAPDU: function(channel, cla, ins, p1, p2, p3,
                                data, appendResp, callback) {
-    iccProvider.iccExchangeAPDU(PREFERRED_UICC_CLIENTID, channel, cla & 0xFC,
-                                ins, p1, p2, p3, data, {
+    let icc = iccService.getIccByServiceId(PREFERRED_UICC_CLIENTID);
+    icc.iccExchangeAPDU(channel, cla & 0xFC, ins, p1, p2, p3, data, {
       notifyExchangeAPDUResponse: (sw1, sw2, response) => {
         debug("sw1 : " + sw1 + ", sw2 : " + sw2 + ", response : " + response);
 
@@ -242,7 +238,8 @@ UiccConnector.prototype = {
     // some erroneous conditions such as gecko restart /, crash it can read
     // the persistent storage to check if there are any held resources
     // (opened channels) and close them.
-    iccProvider.iccOpenChannel(PREFERRED_UICC_CLIENTID, aid, {
+    let icc = iccService.getIccByServiceId(PREFERRED_UICC_CLIENTID);
+    icc.iccOpenChannel(aid, {
       notifyOpenChannelSuccess: (channel) => {
         this._doGetOpenResponse(channel, 0x00, function(result) {
           if (callback) {
@@ -299,7 +296,8 @@ UiccConnector.prototype = {
       return;
     }
 
-    iccProvider.iccCloseChannel(PREFERRED_UICC_CLIENTID, channel, {
+    let icc = iccService.getIccByServiceId(PREFERRED_UICC_CLIENTID);
+    icc.iccCloseChannel(channel, {
       notifyCloseChannelSuccess: function() {
         debug("closeChannel successfully closed the channel # : " + channel);
         if (callback) {

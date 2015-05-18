@@ -1,17 +1,9 @@
+/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-let tempScope = {};
-let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let TargetFactory = devtools.TargetFactory;
-
-let TEST_URI = "http://mochi.test:8888/browser/browser/devtools/fontinspector/test/browser_fontinspector.html";
-
-let view, viewDoc;
-
-const BASE_URI = "http://mochi.test:8888/browser/browser/devtools/fontinspector/test/"
-
+const TEST_URI = BASE_URI + "browser_fontinspector.html";
 const FONTS = [
   {name: "Ostrich Sans Medium", remote: true, url: BASE_URI + "ostrich-regular.ttf",
    format: "truetype", cssName: "bar"},
@@ -24,33 +16,17 @@ const FONTS = [
 ];
 
 add_task(function*() {
-  yield loadTab(TEST_URI);
-  let {toolbox, inspector} = yield openInspector();
+  let { inspector, fontInspector } = yield openFontInspectorForURL(TEST_URI);
+  ok(!!fontInspector, "Font inspector document is alive.");
 
-  info("Selecting the test node");
-  yield selectNode("body", inspector);
+  let viewDoc = fontInspector.chromeDoc;
 
-  let updated = inspector.once("fontinspector-updated");
-  inspector.sidebar.select("fontinspector");
-  yield updated;
-
-  info("Font Inspector ready");
-
-  view = inspector.sidebar.getWindowForTab("fontinspector");
-  viewDoc = view.document;
-
-  ok(!!view.fontInspector, "Font inspector document is alive.");
-
-  yield testBodyFonts(inspector);
-
-  yield testDivFonts(inspector);
-
-  yield testShowAllFonts(inspector);
-
-  view = viewDoc = null;
+  yield testBodyFonts(inspector, viewDoc);
+  yield testDivFonts(inspector, viewDoc);
+  yield testShowAllFonts(inspector, viewDoc);
 });
 
-function* testBodyFonts(inspector) {
+function* testBodyFonts(inspector, viewDoc) {
   let s = viewDoc.querySelectorAll("#all-fonts > section");
   is(s.length, 5, "Found 5 fonts");
 
@@ -89,7 +65,7 @@ function* testBodyFonts(inspector) {
      "Arial", "local font has right css name");
 }
 
-function* testDivFonts(inspector) {
+function* testDivFonts(inspector, viewDoc) {
   let updated = inspector.once("fontinspector-updated");
   yield selectNode("div", inspector);
   yield updated;
@@ -100,7 +76,7 @@ function* testDivFonts(inspector) {
     "The DIV font has the right name");
 }
 
-function* testShowAllFonts(inspector) {
+function* testShowAllFonts(inspector, viewDoc) {
   info("testing showing all fonts");
 
   let updated = inspector.once("fontinspector-updated");

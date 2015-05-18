@@ -1,5 +1,3 @@
 component {67d26434-d063-4d28-9f48-5b3189788155} TelephonyService.js
 contract @mozilla.org/telephony/gonktelephonyservice;1 {67d26434-d063-4d28-9f48-5b3189788155}
 
-component {d03684ed-ede4-4210-8206-f4f32772d9f5} TelephonyService.js
-contract @mozilla.org/dom/system-messages/wrapper/ussd-received;1 {d03684ed-ede4-4210-8206-f4f32772d9f5}

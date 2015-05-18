@@ -63,6 +63,44 @@ interface nsIIccCallback : nsISupports
   void notifyCardLockError(in DOMString aErrorMsg, in long aRetryCount);
 };
 
+[scriptable, uuid(6136acab-b50e-494a-a86d-df392a032897)]
+interface nsIIccChannelCallback : nsISupports
+{
+  /**
+   * Callback function to notify on successfully opening a logical channel.
+   *
+   * @param channel
+   *        The Channel Number/Handle that is successfully opened.
+   */
+  void notifyOpenChannelSuccess(in long channel);
+
+  /**
+   * Callback function to notify on successfully closing the logical channel.
+   *
+   */
+  void notifyCloseChannelSuccess();
+
+  /**
+   * Callback function to notify the status of 'iccExchangeAPDU' command.
+   *
+   * @param sw1
+   *        Response's First Status Byte
+   * @param sw2
+   *        Response's Second Status Byte
+   * @param data
+   *        Response's data
+   */
+  void notifyExchangeAPDUResponse(in octet sw1,
+                                  in octet sw2,
+                                  in DOMString data);
+
+  /**
+   * Callback function to notify error
+   *
+   */
+  void notifyError(in DOMString error);
+};
+
 %{C++
 #define ICC_SERVICE_CID \
   { 0xbab0277a, 0x900e, 0x11e4, { 0x80, 0xc7, 0xdb, 0xd7, 0xad, 0x05, 0x24, 0x01 } }
@@ -97,7 +135,7 @@ NS_CreateIccService();
 /**
  * XPCOM component that provides the access to the selected ICC.
  */
-[scriptable, uuid(20a99186-e4cb-11e4-a5f9-938abcf7c826)]
+[scriptable, uuid(6ad6b686-f52d-11e4-942d-db2884bd9242)]
 interface nsIIcc : nsISupports
 {
   /**
@@ -331,4 +369,61 @@ interface nsIIcc : nsISupports
    */
   void getServiceStateEnabled(in unsigned long aService,
                               in nsIIccCallback aCallback);
+
+  /**
+   * Open Secure Card Icc communication channel
+   *
+   * @param aAid
+   *        Card Application Id in this UICC.
+   * @param aCallback
+   *        An instance of nsIIccChannelCallback.
+   *        nsIIccChannelCallback::notifyOpenChannelSuccess() if success.
+   *        nsIIccChannelCallback::notifyError(), otherwise.
+   */
+  void iccOpenChannel(in DOMString aAid,
+                      in nsIIccChannelCallback aCallback);
+
+  /**
+   * Exchange Command APDU (C-APDU) with UICC on the given logical channel.
+   * Note that 'P3' parameter could be Le/Lc depending on command APDU case.
+   * For Case 1 scenario (when only command header is present), the value
+   * of 'P3' should be set to '-1' explicitly.
+   * Refer to 3G TS 31.101 , 10.2 'Command APDU Structure' for all the cases.
+   *
+   * @param aChannel
+   *        given logical channel.
+   * @param aCla
+   *        APDU class.
+   * @param aIns
+   *        Instruction code.
+   * @param aP1, aP2, aP3
+   *        P1, P2, P3 parameters in APDU.
+   * @param aData
+   *        The hex data to be sent by this PDU.
+   * @param aCallback
+   *        An instance of nsIIccChannelCallback.
+   *        nsIIccChannelCallback::notifyExchangeAPDUResponse() if success.
+   *        nsIIccChannelCallback::notifyError(), otherwise.
+   */
+  void iccExchangeAPDU(in long aChannel,
+                       in octet aCla,
+                       in octet aIns,
+                       in octet aP1,
+                       in octet aP2,
+                       in short aP3,
+                       in DOMString aData,
+                       in nsIIccChannelCallback aCallback);
+
+  /**
+   * Close Secure Card Icc communication channel
+   *
+   * @param aChannel
+   *        Channel to be closed.
+   * @param aCallback
+   *        An instance of nsIIccChannelCallback.
+   *        nsIIccChannelCallback::notifyCloseChannelSuccess() if success.
+   *        nsIIccChannelCallback::notifyError(), otherwise.
+   */
+  void iccCloseChannel(in long aChannel,
+                       in nsIIccChannelCallback aCallback);
 };
