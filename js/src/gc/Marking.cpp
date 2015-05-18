@@ -1266,7 +1266,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
             JSObject* obj2 = &v.toObject();
             MOZ_ASSERT(obj->compartment() == obj2->compartment());
             if (mark(obj2)) {
-                // Save the rest of this value array for later and start scanning obj2's children.
+                // Save the rest of this value array for later and start scanning obj2's children.N
                 pushValueArray(obj, vp, end);
                 obj = obj2;
                 goto scan_obj;
