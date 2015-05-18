@@ -108,8 +108,15 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     }
 
     ~UnboxedLayout() {
+        if (newScript_)
+            newScript_->clear();
         js_delete(newScript_);
         js_free(traceList_);
+
+        nativeGroup_.init(nullptr);
+        nativeShape_.init(nullptr);
+        replacementNewGroup_.init(nullptr);
+        constructorCode_.init(nullptr);
     }
 
     bool isArray() {
