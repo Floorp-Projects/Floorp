@@ -27,16 +27,16 @@ wish to use a specialized or pre-existing profile, you can create a
 
 .. code-block:: python
 
-    from mozprofile import Profile
+    from mozprofile import FirefoxProfile
     from mozrunner import FirefoxRunner
     import os
 
     binary = 'path/to/firefox/binary'
     profile_path = 'path/to/profile'
     if os.path.exists(profile_path):
-        profile = Profile.clone(path_from=profile_path)
+        profile = FirefoxProfile.clone(path_from=profile_path)
     else:
-        profile = Profile(profile=profile_path)
+        profile = FirefoxProfile(profile=profile_path)
     runner = FirefoxRunner(binary=binary, profile=profile)
     runner.start()
     runner.wait()

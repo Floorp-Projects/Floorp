@@ -98,6 +98,7 @@ namespace mozilla {
 class AudioSegment;
 class MediaTaskQueue;
 class AudioSink;
+class DecodedStreamData;
 
 /*
   The state machine class. This manages the decoding and seeking in the
@@ -117,10 +118,9 @@ class MediaDecoderStateMachine
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
 public:
   typedef MediaDecoderOwner::NextFrameStatus NextFrameStatus;
-  typedef MediaDecoder::DecodedStreamData DecodedStreamData;
   MediaDecoderStateMachine(MediaDecoder* aDecoder,
-                               MediaDecoderReader* aReader,
-                               bool aRealTime = false);
+                           MediaDecoderReader* aReader,
+                           bool aRealTime = false);
 
   nsresult Init(MediaDecoderStateMachine* aCloneDonor);
 
@@ -277,16 +277,16 @@ public:
     return mState == DECODER_STATE_SEEKING;
   }
 
-  nsresult GetBuffered(dom::TimeRanges* aBuffered) {
+  media::TimeIntervals GetBuffered() {
     // It's possible for JS to query .buffered before we've determined the start
     // time from metadata, in which case the reader isn't ready to be asked this
     // question.
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     if (mStartTime < 0) {
-      return NS_OK;
+      return media::TimeIntervals();
     }
 
-    return mReader->GetBuffered(aBuffered);
+    return mReader->GetBuffered();
   }
 
   size_t SizeOfVideoQueue() {

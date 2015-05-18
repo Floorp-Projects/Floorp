@@ -67,6 +67,9 @@ struct JitOptions
     uint32_t osrPcMismatchesBeforeRecompile;
     uint32_t smallFunctionMaxBytecodeLength_;
 
+    // The options below affect the rest of the VM, and not just the JIT.
+    bool disableUnboxedObjects;
+
     JitOptions();
     bool isSmallFunction(JSScript* script) const;
     void setEagerCompilation();

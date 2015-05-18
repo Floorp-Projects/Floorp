@@ -1106,7 +1106,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
     if (NS_FAILED(rv)) return rv;
 
     // It's ok to send referrer for https-to-http scenarios if the referrer
-    // policy is "unsafe-url", "origin", or "origin-when-crossorigin".
+    // policy is "unsafe-url", "origin", or "origin-when-cross-origin".
     if (referrerPolicy != REFERRER_POLICY_UNSAFE_URL &&
 	referrerPolicy != REFERRER_POLICY_ORIGIN_WHEN_XORIGIN &&
         referrerPolicy != REFERRER_POLICY_ORIGIN) {

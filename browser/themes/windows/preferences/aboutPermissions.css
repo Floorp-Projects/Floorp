@@ -2,13 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/inContentUI.css");
+@import url("chrome://global/skin/in-content/common.css");
 
+#permissions-content {
+  padding-top: 48px;
+  -moz-padding-end: 0; /* no padding to move the scroll bar to the edge */
+}
 
 /* sites box */
 
 #sites-box {
-  padding: 10px;
   width: 25em;
 }
 
@@ -17,9 +20,6 @@
 }
 
 #sites-list {
-  -moz-appearance: none;
-  border: 1px solid rgba(0, 0, 0, 0.32);
-  background-color: rgba(255, 255, 255, 0.4);
   margin: 5px 0 0 0;
 }
 
@@ -42,13 +42,17 @@
 /* permissions box */
 
 #permissions-box {
-  padding-top: 10px;
+  -moz-padding-start: 10px;
+}
+
+#permissions-list {
   overflow-y: auto;
+  padding-top: 5px;
+  -moz-padding-end: 44px;
 }
 
 #site-description {
   font-size: 125%;
-  -moz-margin-start: 6px; /* to match button margin */
 }
 
 #site-label {
@@ -57,10 +61,22 @@
   margin-bottom: 0;
 }
 
+#site-visit-count {
+  margin-bottom: 0;
+}
+
 #defaults-description {
   font-size: 125%;
   font-weight: bold;
-  -moz-margin-start: 6px;
+}
+
+#header-deck {
+  -moz-margin-end: 44px;
+}
+
+#site-header,
+#defaults-header {
+  margin-bottom: 1px;
 }
 
 .pref-item {
@@ -112,12 +128,16 @@
 
 .pref-title {
   font-size: 125%;
+  -moz-margin-start: 4px;
   margin-bottom: 0;
   font-weight: bold;
 }
 
 .pref-menulist {
-  margin-left: 6px;
-  margin-right: 6px;
-  min-width: 10em; /* native menulists ellipsize their longest entries by default on many themes */
+  min-width: 10em;
+ }
+
+#cookies-label,
+#passwords-label {
+  -moz-margin-start: 4px; /* align with the menulists */
 }

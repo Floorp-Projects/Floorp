@@ -18,11 +18,12 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsQtNetworkLinkService();
-  virtual ~nsQtNetworkLinkService();
 
   nsresult Init();
   nsresult Shutdown();
 
+private:
+  virtual ~nsQtNetworkLinkService();
 };
 
 #endif /* NSQTNETWORKLINKSERVICE_H_ */

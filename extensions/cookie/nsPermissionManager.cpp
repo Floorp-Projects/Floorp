@@ -589,9 +589,6 @@ nsPermissionManager::InitDB(bool aRemoveFile)
     }
   }
 
-  // make operations on the table asynchronous, for performance
-  mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous = OFF"));
-
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_hosts "

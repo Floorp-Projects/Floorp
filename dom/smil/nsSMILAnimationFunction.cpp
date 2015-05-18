@@ -780,10 +780,10 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
       mValueNeedsReparsingEverySample = true;
     }
 
-    if (!parseOk)
+    if (!parseOk || !result.SetCapacity(2)) {
       return NS_ERROR_FAILURE;
+    }
 
-    result.SetCapacity(2);
     if (!to.IsNull()) {
       if (!from.IsNull()) {
         result.AppendElement(from);

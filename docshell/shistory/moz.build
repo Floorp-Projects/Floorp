@@ -4,5 +4,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
+XPIDL_SOURCES += [
+    'nsIBFCacheEntry.idl',
+    'nsISHContainer.idl',
+    'nsISHEntry.idl',
+    'nsISHistory.idl',
+    'nsISHistoryInternal.idl',
+    'nsISHistoryListener.idl',
+    'nsISHTransaction.idl',
+]
 
+XPIDL_MODULE = 'shistory'
+
+EXPORTS += [
+    'nsSHEntryShared.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsSHEntry.cpp',
+    'nsSHEntryShared.cpp',
+    'nsSHistory.cpp',
+    'nsSHTransaction.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+LOCAL_INCLUDES += [
+    '/docshell/base',
+]
+
+FINAL_LIBRARY = 'xul'

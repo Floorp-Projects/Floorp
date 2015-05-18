@@ -18,13 +18,14 @@ Object.defineProperty(this, "TiltManager", {
 
 exports.items = [
 {
-  name: 'tilt',
+  name: "tilt",
   description: l10n.lookup("tiltDesc"),
   manual: l10n.lookup("tiltManual"),
   hidden: true
 },
 {
-  name: 'tilt open',
+  name: "tilt open",
+  runAt: "client",
   description: l10n.lookup("tiltOpenDesc"),
   manual: l10n.lookup("tiltOpenManual"),
   hidden: true,
@@ -42,6 +43,7 @@ exports.items = [
 },
 {
   name: "tilt toggle",
+  runAt: "client",
   buttonId: "command-button-tilt",
   buttonClass: "command-button command-button-invertable",
   tooltipText: l10n.lookup("tiltToggleTooltip"),
@@ -82,7 +84,8 @@ exports.items = [
   }
 },
 {
-  name: 'tilt translate',
+  name: "tilt translate",
+  runAt: "client",
   description: l10n.lookup("tiltTranslateDesc"),
   manual: l10n.lookup("tiltTranslateManual"),
   hidden: true,
@@ -115,7 +118,8 @@ exports.items = [
   }
 },
 {
-  name: 'tilt rotate',
+  name: "tilt rotate",
+  runAt: "client",
   description: l10n.lookup("tiltRotateDesc"),
   manual: l10n.lookup("tiltRotateManual"),
   hidden: true,
@@ -155,7 +159,8 @@ exports.items = [
   }
 },
 {
-  name: 'tilt zoom',
+  name: "tilt zoom",
+  runAt: "client",
   description: l10n.lookup("tiltZoomDesc"),
   manual: l10n.lookup("tiltZoomManual"),
   hidden: true,
@@ -181,7 +186,8 @@ exports.items = [
   }
 },
 {
-  name: 'tilt reset',
+  name: "tilt reset",
+  runAt: "client",
   description: l10n.lookup("tiltResetDesc"),
   manual: l10n.lookup("tiltResetManual"),
   hidden: true,
@@ -199,7 +205,8 @@ exports.items = [
   }
 },
 {
-  name: 'tilt close',
+  name: "tilt close",
+  runAt: "client",
   description: l10n.lookup("tiltCloseDesc"),
   manual: l10n.lookup("tiltCloseManual"),
   hidden: true,

@@ -179,12 +179,10 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       if (maybeFence.type() == MaybeFence::TFenceHandle) {
         FenceHandle fence = maybeFence.get_FenceHandle();
         if (fence.IsValid() && tex) {
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
           TextureHostOGL* hostOGL = tex->AsHostOGL();
           if (hostOGL) {
-            hostOGL->SetAcquireFence(fence.mFence);
+            hostOGL->SetAcquireFence(fence);
           }
-#endif
         }
       }
 

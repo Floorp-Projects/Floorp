@@ -172,7 +172,7 @@ public:
   virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
+  virtual media::TimeIntervals GetBuffered() override;
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength,
                                  int64_t aOffset) override;
   virtual int64_t GetEvictionOffset(double aTime) override;

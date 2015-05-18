@@ -2426,6 +2426,18 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     // must come after the Open() call above.
     ProcessPriorityManager::SetProcessPriority(this, aInitialPriority);
 
+    if (gAppData) {
+        nsCString version(gAppData->version);
+        nsCString buildID(gAppData->buildID);
+        nsCString name(gAppData->name);
+        nsCString UAName(gAppData->UAName);
+        nsCString ID(gAppData->ID);
+        nsCString vendor(gAppData->vendor);
+
+        // Sending all information to content process.
+        unused << SendAppInfo(version, buildID, name, UAName, ID, vendor);
+    }
+
     if (aSetupOffMainThreadCompositing) {
         // NB: internally, this will send an IPC message to the child
         // process to get it to create the CompositorChild.  This
@@ -2457,15 +2469,8 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     }
 
     if (gAppData) {
-        nsCString version(gAppData->version);
-        nsCString buildID(gAppData->buildID);
-        nsCString name(gAppData->name);
-        nsCString UAName(gAppData->UAName);
-        nsCString ID(gAppData->ID);
-        nsCString vendor(gAppData->vendor);
-
         // Sending all information to content process.
-        unused << SendAppInfo(version, buildID, name, UAName, ID, vendor);
+        unused << SendAppInit();
     }
 
     nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();

@@ -1,0 +1,2 @@
+component {3e046b4b-9e66-439a-97e0-98a69f39f55f} GPAccessRulesManager.js
+contract @mozilla.org/secureelement/access-control/rules-manager;1 {3e046b4b-9e66-439a-97e0-98a69f39f55f}
