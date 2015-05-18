@@ -1699,37 +1699,4 @@ TelephonyService.prototype = {
   }
 };
 
-/**
- * This implements nsISystemMessagesWrapper.wrapMessage(), which provides a
- * plugable way to wrap a "ussd-received" type system message.
- *
- * Please see SystemMessageManager.js to know how it customizes the wrapper.
- */
-function USSDReceivedWrapper() {
-  if (DEBUG) debug("USSDReceivedWrapper()");
-}
-USSDReceivedWrapper.prototype = {
-  // nsISystemMessagesWrapper implementation.
-  wrapMessage: function(aMessage, aWindow) {
-    if (DEBUG) debug("wrapMessage: " + JSON.stringify(aMessage));
-
-    let session = aMessage.sessionEnded ? null :
-      new aWindow.USSDSession(aMessage.serviceId);
-
-    let event = new aWindow.USSDReceivedEvent("ussdreceived", {
-      serviceId: aMessage.serviceId,
-      message: aMessage.message,
-      session: session
-    });
-
-    return event;
-  },
-
-  classDescription: "USSDReceivedWrapper",
-  classID: Components.ID("{d03684ed-ede4-4210-8206-f4f32772d9f5}"),
-  contractID: "@mozilla.org/dom/system-messages/wrapper/ussd-received;1",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemMessagesWrapper])
-};
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelephonyService,
-                                                    USSDReceivedWrapper]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TelephonyService]);

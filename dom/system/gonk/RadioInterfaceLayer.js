@@ -93,9 +93,6 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:SendStkMenuSelection",
   "RIL:SendStkTimerExpiration",
   "RIL:SendStkEventDownload",
-  "RIL:IccOpenChannel",
-  "RIL:IccExchangeAPDU",
-  "RIL:IccCloseChannel",
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
   "RIL:RegisterIccMsg",
@@ -1731,15 +1728,6 @@ RadioInterface.prototype = {
         break;
       case "RIL:SendStkEventDownload":
         this.workerMessenger.send("sendStkEventDownload", msg.json.data);
-        break;
-      case "RIL:IccOpenChannel":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccOpenChannel");
-        break;
-      case "RIL:IccCloseChannel":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccCloseChannel");
-        break;
-      case "RIL:IccExchangeAPDU":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccExchangeAPDU");
         break;
       case "RIL:ReadIccContacts":
         this.workerMessenger.sendWithIPCMessage(msg, "readICCContacts");
