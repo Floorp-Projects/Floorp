@@ -142,7 +142,8 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
   }
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
   double highestEndTime = mTrackBuffer->Buffered(ranges);
-  if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
+  if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended &&
+      highestEndTime > 0) {
     // Set the end time on the last range to highestEndTime by adding a
     // new range spanning the current end time to highestEndTime, which
     // Normalize() will then merge with the old last range.
