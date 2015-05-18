@@ -1028,7 +1028,7 @@ MediaSourceReader::GetBuffered(dom::TimeRanges* aBuffered)
   for (uint32_t i = 0; i < activeRanges.Length(); ++i) {
     TimeRanges* sourceRanges = activeRanges[i];
 
-    if (IsEnded()) {
+    if (IsEnded() && sourceRanges->GetEndTime() >= 0) {
       // Set the end time on the last range to highestEndTime by adding a
       // new range spanning the current end time to highestEndTime, which
       // Normalize() will then merge with the old last range.
