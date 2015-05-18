@@ -61,11 +61,16 @@ struct Microseconds {
   int64_t mValue;
 };
 
+// TimeUnit at present uses a CheckedInt64 as storage.
+// INT64_MAX has the special meaning of being +oo.
 class TimeUnit final {
 public:
   static TimeUnit FromSeconds(double aValue) {
     MOZ_ASSERT(!IsNaN(aValue));
 
+    if (mozilla::IsInfinite<double>(aValue)) {
+      return FromInfinity();
+    }
     double val = aValue * USECS_PER_S;
     if (val >= double(INT64_MAX)) {
       return FromMicroseconds(INT64_MAX);
@@ -84,12 +89,23 @@ public:
     return TimeUnit(aValue.mValue);
   }
 
+  static TimeUnit FromInfinity() {
+    return TimeUnit(INT64_MAX);
+  }
+
   int64_t ToMicroseconds() const {
     return mValue.value();
   }
 
   double ToSeconds() const {
+    if (IsInfinite()) {
+      return PositiveInfinity<double>();
+    }
     return double(mValue.value()) / USECS_PER_S;
+  }
+
+  bool IsInfinite() const {
+    return mValue.value() == INT64_MAX;
   }
 
   bool operator == (const TimeUnit& aOther) const {
@@ -111,9 +127,16 @@ public:
     return !(*this >= aOther);
   }
   TimeUnit operator + (const TimeUnit& aOther) const {
+    if (IsInfinite() || aOther.IsInfinite()) {
+      return FromInfinity();
+    }
     return TimeUnit(mValue + aOther.mValue);
   }
   TimeUnit operator - (const TimeUnit& aOther) const {
+    if (IsInfinite() && !aOther.IsInfinite()) {
+      return FromInfinity();
+    }
+    MOZ_ASSERT(!IsInfinite() && !aOther.IsInfinite());
     return TimeUnit(mValue - aOther.mValue);
   }
 
