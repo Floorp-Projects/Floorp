@@ -139,7 +139,7 @@ public:
     return mEnd <= aOther.mStart && aOther.mStart - mEnd <= mFuzz + aOther.mFuzz;
   }
 
-  SelfType Union(const SelfType& aOther) const
+  SelfType Span(const SelfType& aOther) const
   {
     SelfType result(*this);
     if (aOther.mStart < mStart) {
@@ -449,7 +449,7 @@ public:
           continue;
         }
         if (current.Intersects(mIntervals[i])) {
-          current = current.Union(mIntervals[i]);
+          current = current.Span(mIntervals[i]);
         } else {
           normalized.AppendElement(current);
           current = mIntervals[i];
