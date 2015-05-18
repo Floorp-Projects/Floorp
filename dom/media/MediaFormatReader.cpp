@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/Preferences.h"
 #include "nsPrintfCString.h"
 #include "nsSize.h"
@@ -1245,8 +1244,8 @@ MediaFormatReader::GetEvictionOffset(double aTime)
   return std::min(audioOffset, videoOffset);
 }
 
-nsresult
-MediaFormatReader::GetBuffered(dom::TimeRanges* aBuffered)
+media::TimeIntervals
+MediaFormatReader::GetBuffered()
 {
   media::TimeIntervals videoti;
   media::TimeIntervals audioti;
@@ -1270,14 +1269,14 @@ MediaFormatReader::GetBuffered(dom::TimeRanges* aBuffered)
   }
   if (HasAudio() && HasVideo()) {
     videoti.Intersection(audioti);
-    videoti.ToTimeRanges(aBuffered);
+    return videoti;
   } else if (HasAudio()) {
-    audioti.ToTimeRanges(aBuffered);
+    return audioti;
   } else if (HasVideo()) {
-    videoti.ToTimeRanges(aBuffered);
+    return videoti;
   }
 
-  return NS_OK;
+  return media::TimeIntervals();
 }
 
 bool MediaFormatReader::IsDormantNeeded()

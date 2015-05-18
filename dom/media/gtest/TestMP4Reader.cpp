@@ -10,7 +10,7 @@
 #include "MockMediaResource.h"
 #include "MockMediaDecoderOwner.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/TimeRanges.h"
+#include "TimeUnits.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -87,15 +87,10 @@ TEST(MP4Reader, BufferedRange)
   // Video 3-4 sec, audio 2.986666-4.010666 sec
   b->resource->MockAddBufferedRange(248400, 327455);
 
-  nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
-  EXPECT_EQ(1U, ranges->Length());
-  double start = 0;
-  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
-  EXPECT_NEAR(270000 / 90000.0, start, 0.000001);
-  double end = 0;
-  EXPECT_EQ(NS_OK, ranges->End(0, &end));
-  EXPECT_NEAR(360000 / 90000.0, end, 0.000001);
+  media::TimeIntervals ranges = b->reader->GetBuffered();
+  EXPECT_EQ(1U, ranges.Length());
+  EXPECT_NEAR(270000 / 90000.0, ranges.Start(0).ToSeconds(), 0.000001);
+  EXPECT_NEAR(360000 / 90000.0, ranges.End(0).ToSeconds(), 0.000001);
 }
 
 TEST(MP4Reader, BufferedRangeMissingLastByte)
@@ -108,15 +103,10 @@ TEST(MP4Reader, BufferedRangeMissingLastByte)
   b->resource->MockAddBufferedRange(248400, 324912);
   b->resource->MockAddBufferedRange(324913, 327455);
 
-  nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
-  EXPECT_EQ(1U, ranges->Length());
-  double start = 0;
-  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
-  EXPECT_NEAR(270000.0 / 90000.0, start, 0.000001);
-  double end = 0;
-  EXPECT_EQ(NS_OK, ranges->End(0, &end));
-  EXPECT_NEAR(357000 / 90000.0, end, 0.000001);
+  media::TimeIntervals ranges = b->reader->GetBuffered();
+  EXPECT_EQ(1U, ranges.Length());
+  EXPECT_NEAR(270000.0 / 90000.0, ranges.Start(0).ToSeconds(), 0.000001);
+  EXPECT_NEAR(357000 / 90000.0, ranges.End(0).ToSeconds(), 0.000001);
 }
 
 TEST(MP4Reader, BufferedRangeSyncFrame)
@@ -129,15 +119,10 @@ TEST(MP4Reader, BufferedRangeSyncFrame)
   b->resource->MockClearBufferedRanges();
   b->resource->MockAddBufferedRange(146336, 327455);
 
-  nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
-  EXPECT_EQ(1U, ranges->Length());
-  double start = 0;
-  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
-  EXPECT_NEAR(270000.0 / 90000.0, start, 0.000001);
-  double end = 0;
-  EXPECT_EQ(NS_OK, ranges->End(0, &end));
-  EXPECT_NEAR(360000 / 90000.0, end, 0.000001);
+  media::TimeIntervals ranges = b->reader->GetBuffered();
+  EXPECT_EQ(1U, ranges.Length());
+  EXPECT_NEAR(270000.0 / 90000.0, ranges.Start(0).ToSeconds(), 0.000001);
+  EXPECT_NEAR(360000 / 90000.0, ranges.End(0).ToSeconds(), 0.000001);
 }
 
 TEST(MP4Reader, CompositionOrder)
@@ -187,23 +172,14 @@ TEST(MP4Reader, CompositionOrder)
   b->resource->MockAddBufferedRange(12616, 13196);
   b->resource->MockAddBufferedRange(13220, 13901);
 
-  nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
-  EXPECT_EQ(2U, ranges->Length());
+  media::TimeIntervals ranges = b->reader->GetBuffered();
+  EXPECT_EQ(2U, ranges.Length());
 
-  double start = 0;
-  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
-  EXPECT_NEAR(166.0 / 2500.0, start, 0.000001);
-  double end = 0;
-  EXPECT_EQ(NS_OK, ranges->End(0, &end));
-  EXPECT_NEAR(332.0 / 2500.0, end, 0.000001);
+  EXPECT_NEAR(166.0 / 2500.0, ranges.Start(0).ToSeconds(), 0.000001);
+  EXPECT_NEAR(332.0 / 2500.0, ranges.End(0).ToSeconds(), 0.000001);
 
-  start = 0;
-  EXPECT_EQ(NS_OK, ranges->Start(1, &start));
-  EXPECT_NEAR(581.0 / 2500.0, start, 0.000001);
-  end = 0;
-  EXPECT_EQ(NS_OK, ranges->End(1, &end));
-  EXPECT_NEAR(11255.0 / 44100.0, end, 0.000001);
+  EXPECT_NEAR(581.0 / 2500.0, ranges.Start(1).ToSeconds(), 0.000001);
+  EXPECT_NEAR(11255.0 / 44100.0, ranges.End(1).ToSeconds(), 0.000001);
 }
 
 TEST(MP4Reader, Normalised)
@@ -237,14 +213,9 @@ TEST(MP4Reader, Normalised)
   b->resource->MockClearBufferedRanges();
   b->resource->MockAddBufferedRange(48, 13901);
 
-  nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
-  EXPECT_EQ(1U, ranges->Length());
+  media::TimeIntervals ranges = b->reader->GetBuffered();
+  EXPECT_EQ(1U, ranges.Length());
 
-  double start = 0;
-  EXPECT_EQ(NS_OK, ranges->Start(0, &start));
-  EXPECT_NEAR(166.0 / 2500.0, start, 0.000001);
-  double end = 0;
-  EXPECT_EQ(NS_OK, ranges->End(0, &end));
-  EXPECT_NEAR(11255.0 / 44100.0, end, 0.000001);
+  EXPECT_NEAR(166.0 / 2500.0, ranges.Start(0).ToSeconds(), 0.000001);
+  EXPECT_NEAR(11255.0 / 44100.0, ranges.End(0).ToSeconds(), 0.000001);
 }

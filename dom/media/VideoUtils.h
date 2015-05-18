@@ -23,6 +23,7 @@
 #include "prtime.h"
 #include "AudioSampleFormat.h"
 #include "mozilla/RefPtr.h"
+#include "TimeUnits.h"
 
 using mozilla::CheckedInt64;
 using mozilla::CheckedUint64;
@@ -115,19 +116,14 @@ void DeleteOnMainThread(nsAutoPtr<T>& aObject) {
 
 class MediaResource;
 
-namespace dom {
-class TimeRanges;
-}
-
 // Estimates the buffered ranges of a MediaResource using a simple
 // (byteOffset/length)*duration method. Probably inaccurate, but won't
 // do file I/O, and can be used when we don't have detailed knowledge
 // of the byte->time mapping of a resource. aDurationUsecs is the duration
 // of the media in microseconds. Estimated buffered ranges are stored in
 // aOutBuffered. Ranges are 0-normalized, i.e. in the range of (0,duration].
-void GetEstimatedBufferedTimeRanges(mozilla::MediaResource* aStream,
-                                    int64_t aDurationUsecs,
-                                    mozilla::dom::TimeRanges* aOutBuffered);
+media::TimeIntervals GetEstimatedBufferedTimeRanges(mozilla::MediaResource* aStream,
+                                                    int64_t aDurationUsecs);
 
 // Converts from number of audio frames (aFrames) to microseconds, given
 // the specified audio rate (aRate). Stores result in aOutUsecs. Returns true
