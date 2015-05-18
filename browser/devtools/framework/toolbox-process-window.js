@@ -54,7 +54,6 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.performance.ui.show-platform-data", true);
   Services.prefs.setBoolPref("devtools.inspector.showAllAnonymousContent", true);
   Services.prefs.setBoolPref("browser.dom.window.dump.enabled", true);
-  Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 }
 
 window.addEventListener("load", function() {
