@@ -319,7 +319,8 @@ public:
                           const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const uint64_t& aLayersId,
                           PRenderFrameChild* aRenderFrame,
-                          const bool& aParentIsActive) override;
+                          const bool& aParentIsActive,
+                          const bool& aAsyncPanZoomEnabled) override;
     virtual bool RecvUpdateDimensions(const nsIntRect& rect,
                                       const ScreenIntSize& size,
                                       const ScreenOrientation& orientation,
@@ -504,6 +505,7 @@ public:
     {
       return mParentIsActive;
     }
+    bool AsyncPanZoomEnabled() { return mAsyncPanZoomEnabled; }
 
 protected:
     virtual ~TabChild();
@@ -560,7 +562,8 @@ private:
     // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
     void DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                     const uint64_t& aLayersId,
-                    PRenderFrameChild* aRenderFrame);
+                    PRenderFrameChild* aRenderFrame,
+                    bool aAsyncPanZoomEnabled);
 
     void ApplyShowInfo(const ShowInfo& aInfo);
 
@@ -640,6 +643,7 @@ private:
     double mDefaultScale;
     bool mIPCOpen;
     bool mParentIsActive;
+    bool mAsyncPanZoomEnabled;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

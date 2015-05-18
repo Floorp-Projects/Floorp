@@ -47,10 +47,15 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
 
   // We default to the static globals.
   bool isDiscardable = gfxPrefs::ImageMemDiscardable();
-  bool doDecodeOnlyOnDraw = gfxPrefs::ImageDecodeOnlyOnDrawEnabled() &&
-                            gfxPrefs::AsyncPanZoomEnabled();
   bool doDecodeImmediately = gfxPrefs::ImageDecodeImmediatelyEnabled();
   bool doDownscaleDuringDecode = gfxPrefs::ImageDownscaleDuringDecodeEnabled();
+
+  // We use the compositor APZ pref here since we don't have a widget to test.
+  // It's safe since this is an optimization, and the only platform
+  // ImageDecodeOnlyOnDraw is disabled on is B2G (where APZ is enabled in all
+  // widgets anyway).
+  bool doDecodeOnlyOnDraw = gfxPrefs::ImageDecodeOnlyOnDrawEnabled() &&
+                            gfxPrefs::AsyncPanZoomEnabledDoNotUseDirectly();
 
   // We want UI to be as snappy as possible and not to flicker. Disable
   // discarding and decode-only-on-draw for chrome URLS.
