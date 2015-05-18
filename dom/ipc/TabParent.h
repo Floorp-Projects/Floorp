@@ -448,8 +448,7 @@ protected:
 
     virtual bool RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
                                         TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                        uint64_t* aLayersId,
-                                        bool* aAsyncPanZoomEnabled) override;
+                                        uint64_t* aLayersId) override;
 
     virtual bool RecvSetDimensions(const uint32_t& aFlags,
                                    const int32_t& aX, const int32_t& aY,
@@ -500,8 +499,6 @@ private:
     nsresult UpdatePosition();
 
     CSSPoint AdjustTapToChildWidget(const CSSPoint& aPoint);
-
-    bool AsyncPanZoomEnabled() const;
 
     // Update state prior to routing an APZ-aware event to the child process.
     // |aOutTargetGuid| will contain the identifier

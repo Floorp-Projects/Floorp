@@ -662,9 +662,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
     sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
   }
 
-  // The Compositor uses the APZ pref directly since it needs to know whether
-  // to attempt to create the APZ machinery at all.
-  if (gfxPrefs::AsyncPanZoomEnabledDoNotUseDirectly() &&
+  if (gfxPrefs::AsyncPanZoomEnabled() &&
 #if !defined(MOZ_B2G) && !defined(MOZ_WIDGET_ANDROID)
       // For XUL applications (everything but B2G on mobile and desktop, and
       // Firefox on Android) we only want to use APZ when E10S is enabled. If
