@@ -3421,6 +3421,16 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     this.tabActor = tabActor;
   },
 
+  destroy: function () {
+    protocol.Actor.prototype.destroy.call(this);
+  },
+
+  // Forces destruction of the actor and all its children
+  // like highlighter, walker and style actors.
+  disconnect: function() {
+    this.destroy();
+  },
+
   get window() this.tabActor.window,
 
   getWalker: method(function(options={}) {
