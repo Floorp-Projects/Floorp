@@ -81,6 +81,9 @@ PlatformDecoderModule::Init()
 #ifdef MOZ_APPLEMEDIA
   AppleDecoderModule::Init();
 #endif
+#ifdef MOZ_FFMPEG
+  FFmpegRuntimeLinker::Link();
+#endif
 }
 
 #ifdef MOZ_EME

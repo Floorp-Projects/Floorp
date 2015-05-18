@@ -8,7 +8,6 @@
 #define GonkVideoDecoderManager_h_
 
 #include <set>
-#include "MP4Reader.h"
 #include "nsRect.h"
 #include "GonkMediaDataDecoder.h"
 #include "mozilla/RefPtr.h"

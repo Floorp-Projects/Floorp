@@ -8,7 +8,6 @@
 #define GonkAudioDecoderManager_h_
 
 #include "mozilla/RefPtr.h"
-#include "MP4Reader.h"
 #include "GonkMediaDataDecoder.h"
 
 using namespace android;

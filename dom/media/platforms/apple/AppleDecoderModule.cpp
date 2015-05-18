@@ -121,23 +121,6 @@ public:
   }
 };
 
-/* static */
-nsresult
-AppleDecoderModule::CanDecode()
-{
-  if (!sInitialized) {
-    // Note: We can be called on the main thread from MP4Decoder::CanHandleMediaType().
-    if (NS_IsMainThread()) {
-      Init();
-    } else {
-      nsCOMPtr<nsIRunnable> task(new InitTask());
-      NS_DispatchToMainThread(task, NS_DISPATCH_SYNC);
-    }
-  }
-
-  return (sIsVDAAvailable || sIsVTAvailable) ? NS_OK : NS_ERROR_NO_INTERFACE;
-}
-
 nsresult
 AppleDecoderModule::Startup()
 {
