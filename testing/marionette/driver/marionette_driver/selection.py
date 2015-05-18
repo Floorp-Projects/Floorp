@@ -37,8 +37,7 @@ class SelectionManager(object):
         if self._input_or_textarea():
             # We must unwrap sel so that DOMRect could be returned to Python
             # side.
-            return '''var sel = SpecialPowers.wrap(arguments[0]).editor.selection;
-                   sel = SpecialPowers.unwrap(sel);'''
+            return '''var sel = arguments[0].editor.selection;'''
         else:
             return '''var sel = window.getSelection();'''
 
@@ -50,7 +49,8 @@ class SelectionManager(object):
 
         for i in range(offset):
             self.element.marionette.execute_script(
-                cmd, script_args=[self.element, direction])
+                cmd, script_args=[self.element, direction],
+                sandbox='system')
 
     def move_caret_to_front(self):
         '''Move caret in the element to the front of the content.'''
@@ -83,13 +83,17 @@ class SelectionManager(object):
         '''
         cmd = self.js_selection_cmd() +\
             '''return sel.getRangeAt(%d).getClientRects();''' % idx
-        return self.element.marionette.execute_script(cmd, script_args=[self.element])
+        return self.element.marionette.execute_script(cmd,
+                                                      script_args=[self.element],
+                                                      sandbox='system')
 
     def range_count(self):
         '''Get selection's range count'''
         cmd = self.js_selection_cmd() +\
             '''return sel.rangeCount;'''
-        return self.element.marionette.execute_script(cmd, script_args=[self.element])
+        return self.element.marionette.execute_script(cmd,
+                                                      script_args=[self.element],
+                                                      sandbox='system')
 
     def _selection_location_helper(self, location_type):
         '''Return the start and end location of the selection in the element.
@@ -200,4 +204,6 @@ class SelectionManager(object):
         '''Return the selected portion of the content in the element.'''
         cmd = self.js_selection_cmd() +\
             '''return sel.toString();'''
-        return self.element.marionette.execute_script(cmd, script_args=[self.element])
+        return self.element.marionette.execute_script(cmd,
+                                                      script_args=[self.element],
+                                                      sandbox='system')
