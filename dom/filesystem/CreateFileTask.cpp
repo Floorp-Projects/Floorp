@@ -40,8 +40,8 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
   GetOutputBufferSize();
   if (aBlobData) {
     if (FileSystemUtils::IsParentProcess()) {
-      nsresult rv = aBlobData->GetInternalStream(getter_AddRefs(mBlobStream));
-      NS_WARN_IF(NS_FAILED(rv));
+      aBlobData->GetInternalStream(getter_AddRefs(mBlobStream), aRv);
+      NS_WARN_IF(aRv.Failed());
     } else {
       mBlobData = aBlobData;
     }
@@ -56,8 +56,8 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
 }
 
 CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
-                       const FileSystemCreateFileParams& aParam,
-                       FileSystemRequestParent* aParent)
+                               const FileSystemCreateFileParams& aParam,
+                               FileSystemRequestParent* aParent)
   : FileSystemTaskBase(aFileSystem, aParam, aParent)
   , mReplace(false)
 {
@@ -82,8 +82,11 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
   nsRefPtr<BlobImpl> blobImpl = bp->GetBlobImpl();
   MOZ_ASSERT(blobImpl, "blobData should not be null.");
 
-  nsresult rv = blobImpl->GetInternalStream(getter_AddRefs(mBlobStream));
-  NS_WARN_IF(NS_FAILED(rv));
+  ErrorResult rv;
+  blobImpl->GetInternalStream(getter_AddRefs(mBlobStream), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
+  }
 }
 
 CreateFileTask::~CreateFileTask()

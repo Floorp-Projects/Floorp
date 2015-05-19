@@ -5,51 +5,8 @@
 
 #include "nsISupports.idl"
 
-%{C++
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
-class FileInfo;
-class FileManager;
-}
-}
-}
-
-%}
-
-[ptr] native FileInfo(mozilla::dom::indexedDB::FileInfo);
-[ptr] native FileManager(mozilla::dom::indexedDB::FileManager);
-
-interface nsIDOMFileError;
-interface nsIInputStream;
-interface nsIURI;
-interface nsIPrincipal;
-interface nsIDOMBlob;
-
-[scriptable, builtinclass, uuid(6ef56697-7c9c-41ac-83df-e01c079fb1d1)]
+[scriptable, builtinclass, uuid(f344146a-ee1f-417e-8a68-6984ca56f0ae)]
 interface nsIDOMBlob : nsISupports
 {
-  readonly attribute unsigned long long size;
-  readonly attribute DOMString type;
-
-  [noscript] readonly attribute nsIInputStream internalStream;
-
-  [optional_argc] nsIDOMBlob slice([optional] in long long start,
-                                   [optional] in long long end,
-                                   [optional] in DOMString contentType);
-
-  // Get internal id of stored file. Returns -1 if it is not a stored file.
-  // Intended only for testing. It can be called on any thread.
-  [notxpcom] long long getFileId();
-
-  // Called when the blob was successfully stored in a database or when
-  // the blob is initialized from a database. It can be called on any thread.
-  [notxpcom] void addFileInfo(in FileInfo aFileInfo);
-
-  // Called before the blob is stored in a database to decide if it can be
-  // shared or needs to be copied. It can be called on any thread.
-  [notxpcom] FileInfo getFileInfo(in FileManager aFileManager);
-
-  // Return true if this blob is a memory file.
-  [notxpcom] bool isMemoryFile();
+  // Just an empty interface.
 };

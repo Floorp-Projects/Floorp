@@ -302,13 +302,14 @@ StructuredCloneWriteCallback(JSContext* aCx,
   {
     Blob* blob = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
-      uint64_t size;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetSize(&size)));
+      ErrorResult rv;
+      uint64_t size = blob->GetSize(rv);
+      MOZ_ASSERT(!rv.Failed());
 
       size = NativeEndian::swapToLittleEndian(size);
 
       nsString type;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetType(type)));
+      blob->GetType(type);
 
       NS_ConvertUTF16toUTF8 convType(type);
       uint32_t convTypeLength =

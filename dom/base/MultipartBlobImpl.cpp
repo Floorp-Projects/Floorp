@@ -25,30 +25,36 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS_INHERITED0(MultipartBlobImpl, BlobImpl)
 
-nsresult
-MultipartBlobImpl::GetInternalStream(nsIInputStream** aStream)
+void
+MultipartBlobImpl::GetInternalStream(nsIInputStream** aStream,
+                                     ErrorResult& aRv)
 {
-  nsresult rv;
   *aStream = nullptr;
 
   nsCOMPtr<nsIMultiplexInputStream> stream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
-  NS_ENSURE_TRUE(stream, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!stream)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   uint32_t i;
   for (i = 0; i < mBlobImpls.Length(); i++) {
     nsCOMPtr<nsIInputStream> scratchStream;
     BlobImpl* blobImpl = mBlobImpls.ElementAt(i).get();
 
-    rv = blobImpl->GetInternalStream(getter_AddRefs(scratchStream));
-    NS_ENSURE_SUCCESS(rv, rv);
+    blobImpl->GetInternalStream(getter_AddRefs(scratchStream), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
 
-    rv = stream->AppendStream(scratchStream);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aRv = stream->AppendStream(scratchStream);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
   }
 
   stream.forget(aStream);
-  return NS_OK;
 }
 
 already_AddRefed<BlobImpl>
@@ -359,8 +365,7 @@ MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
   nsRefPtr<File> blob = File::CreateFromFile(aWindow, aFile, aBag.mTemporary);
 
   // Pre-cache size.
-  uint64_t unused;
-  aRv = blob->GetSize(&unused);
+  blob->GetSize(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

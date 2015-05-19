@@ -47,8 +47,10 @@ DeviceStorageRequestParent::Dispatch()
       BlobParent* bp = static_cast<BlobParent*>(p.blobParent());
       nsRefPtr<BlobImpl> blobImpl = bp->GetBlobImpl();
 
+      ErrorResult rv;
       nsCOMPtr<nsIInputStream> stream;
-      blobImpl->GetInternalStream(getter_AddRefs(stream));
+      blobImpl->GetInternalStream(getter_AddRefs(stream), rv);
+      MOZ_ASSERT(!rv.Failed());
 
       nsRefPtr<CancelableRunnable> r = new WriteFileEvent(this, dsf, stream,
                                                           DEVICE_STORAGE_REQUEST_CREATE);
@@ -70,8 +72,10 @@ DeviceStorageRequestParent::Dispatch()
       BlobParent* bp = static_cast<BlobParent*>(p.blobParent());
       nsRefPtr<BlobImpl> blobImpl = bp->GetBlobImpl();
 
+      ErrorResult rv;
       nsCOMPtr<nsIInputStream> stream;
-      blobImpl->GetInternalStream(getter_AddRefs(stream));
+      blobImpl->GetInternalStream(getter_AddRefs(stream), rv);
+      MOZ_ASSERT(!rv.Failed());
 
       nsRefPtr<CancelableRunnable> r = new WriteFileEvent(this, dsf, stream,
                                                           DEVICE_STORAGE_REQUEST_APPEND);
