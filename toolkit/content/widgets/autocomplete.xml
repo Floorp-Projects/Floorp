@@ -485,7 +485,7 @@
             case KeyEvent.DOM_VK_BACK_SPACE:
               if (aEvent.shiftKey)
 #endif
-              cancel = this.mController.handleDelete();
+              cancel = this.handleDelete();
               break;
             case KeyEvent.DOM_VK_DOWN:
             case KeyEvent.DOM_VK_UP:
@@ -511,6 +511,12 @@
       <method name="handleEnter">
         <body><![CDATA[
           return this.mController.handleEnter(false);
+        ]]></body>
+      </method>
+
+      <method name="handleDelete">
+        <body><![CDATA[
+          return this.mController.handleDelete();
         ]]></body>
       </method>
 
