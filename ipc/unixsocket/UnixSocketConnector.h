@@ -36,7 +36,7 @@ public:
    */
   virtual nsresult ConvertAddressToString(const struct sockaddr& aAddress,
                                           socklen_t aAddressLength,
-                                          nsACString& aAddressString);
+                                          nsACString& aAddressString) = 0;
 
   /**
    * Creates a listening socket. I/O thread only.
@@ -48,7 +48,7 @@ public:
    */
   virtual nsresult CreateListenSocket(struct sockaddr* aAddress,
                                       socklen_t* aAddressLength,
-                                      int& aListenFd);
+                                      int& aListenFd) = 0;
 
   /**
    * Accepts a stream socket from a listening socket. I/O thread only.
@@ -62,7 +62,7 @@ public:
   virtual nsresult AcceptStreamSocket(int aListenFd,
                                       struct sockaddr* aAddress,
                                       socklen_t* aAddressLen,
-                                      int& aStreamFd);
+                                      int& aStreamFd) = 0;
 
   /**
    * Creates a stream socket. I/O thread only.
@@ -74,68 +74,7 @@ public:
    */
   virtual nsresult CreateStreamSocket(struct sockaddr* aAddress,
                                       socklen_t* aAddressLength,
-                                      int& aStreamFd);
-
-  /**
-   * Establishs a file descriptor for a socket.
-   *
-   * @deprecated
-   *
-   * @return File descriptor for socket
-   */
-  virtual int Create() = 0;
-
-  /**
-   * Since most socket specifics are related to address formation into a
-   * sockaddr struct, this function is defined by subclasses and fills in the
-   * structure as needed for whatever connection it is trying to build
-   *
-   * @deprecated
-   *
-   * @param aIsServer True is we are acting as a server socket
-   * @param aAddrSize Size of the struct
-   * @param aAddr Struct to fill
-   * @param aAddress If aIsServer is false, Address to connect to. nullptr otherwise.
-   *
-   * @return True if address is filled correctly, false otherwise
-   */
-  virtual bool CreateAddr(bool aIsServer,
-                          socklen_t& aAddrSize,
-                          sockaddr_any& aAddr,
-                          const char* aAddress) = 0;
-
-  /**
-   * Does any socket type specific setup that may be needed, only for socket
-   * created by ConnectSocket()
-   *
-   * @param aFd File descriptor for opened socket
-   *
-   * @return true is successful, false otherwise
-   */
-  virtual bool SetUp(int aFd) = 0;
-
-  /**
-   * Perform socket setup for socket created by ListenSocket(), after listen().
-   *
-   * @deprecated
-   *
-   * @param aFd File descriptor for opened socket
-   *
-   * @return true is successful, false otherwise
-   */
-  virtual bool SetUpListenSocket(int aFd) = 0;
-
-  /**
-   * Get address of socket we're currently connected to. Return null string if
-   * not connected.
-   *
-   * @deprecated
-   *
-   * @param aAddr Address struct
-   * @param aAddrStr String to store address to
-   */
-  virtual void GetSocketAddr(const sockaddr_any& aAddr,
-                             nsAString& aAddrStr) = 0;
+                                      int& aStreamFd) = 0;
 
 protected:
   UnixSocketConnector();
