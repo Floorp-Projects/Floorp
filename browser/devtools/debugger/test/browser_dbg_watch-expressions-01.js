@@ -108,9 +108,7 @@ function test() {
   function addAndCheckCustomExpression(aTotal, aIndex, aString, noBlur) {
     addAndCheckExpressions(aTotal, aIndex, "", true);
 
-    for (let i = 0; i < aString.length; i++) {
-      EventUtils.sendChar(aString[i], gDebugger);
-    }
+    EventUtils.sendString(aString, gDebugger);
 
     gEditor.focus();
 

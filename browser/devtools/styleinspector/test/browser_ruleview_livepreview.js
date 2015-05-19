@@ -47,9 +47,7 @@ function* testLivePreviewData(data, ruleView, selector) {
   is(inplaceEditor(propEditor.valueSpan), editor, "The focused editor is the value");
 
   info("Enter a value in the editor")
-  for (let ch of data.value) {
-    EventUtils.sendChar(ch, ruleView.doc.defaultView);
-  }
+  EventUtils.sendString(data.value, ruleView.doc.defaultView);
   if (data.escape) {
     EventUtils.synthesizeKey("VK_ESCAPE", {});
   } else {
