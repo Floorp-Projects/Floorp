@@ -10,18 +10,14 @@ from mozpack.copier import Jarrer
 from mozpack.errors import errors
 
 import argparse
-import buildconfig
 import mozpack.path as mozpath
-import os
 import sys
-import tempfile
 
 def main(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-dir",
-                        default=os.path.join(buildconfig.topobjdir,
-                                             "dist", "bin"),
-                        help="Store paths relative to this directory")
+    parser.add_argument("-C", metavar='DIR', default=".",
+                        help="Change to given directory before considering "
+                        "other paths")
     parser.add_argument("zip", help="Path to zip file to write")
     parser.add_argument("input", nargs="+",
                         help="Path to files to add to zip")
@@ -30,12 +26,11 @@ def main(args):
     jarrer = Jarrer(optimize=False)
 
     with errors.accumulate():
-        finder = FileFinder(args.base_dir)
-        for i in args.input:
-            path = mozpath.relpath(i, args.base_dir)
+        finder = FileFinder(args.C)
+        for path in args.input:
             for p, f in finder.find(path):
                 jarrer.add(p, f)
-        jarrer.copy(args.zip)
+        jarrer.copy(mozpath.join(args.C, args.zip))
 
 
 if __name__ == '__main__':
