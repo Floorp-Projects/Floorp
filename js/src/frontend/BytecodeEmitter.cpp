@@ -2032,6 +2032,50 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      // Strict equality operations and logical operators are well-behaved and
+      // perform no conversions.
+      case PNK_OR:
+      case PNK_AND:
+      case PNK_STRICTEQ:
+      case PNK_STRICTNE:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        for (ParseNode* item = pn->pn_head; item; item = item->pn_next) {
+            if (!checkSideEffects(item, answer))
+                return false;
+            if (*answer)
+                return true;
+        }
+        return true;
+
+      // Most other binary operations (parsed as lists in SpiderMonkey) may
+      // perform conversions triggering side effects.  Math operations perform
+      // ToNumber and may fail invoking invalid user-defined toString/valueOf:
+      // |5 < { toString: null }|.  |instanceof| throws if provided a
+      // non-object constructor: |null instanceof null|.  |in| throws if given
+      // a non-object RHS: |5 in null|.
+      case PNK_BITOR:
+      case PNK_BITXOR:
+      case PNK_BITAND:
+      case PNK_EQ:
+      case PNK_NE:
+      case PNK_LT:
+      case PNK_LE:
+      case PNK_GT:
+      case PNK_GE:
+      case PNK_INSTANCEOF:
+      case PNK_IN:
+      case PNK_LSH:
+      case PNK_RSH:
+      case PNK_URSH:
+      case PNK_ADD:
+      case PNK_SUB:
+      case PNK_STAR:
+      case PNK_DIV:
+      case PNK_MOD:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        *answer = true;
+        return true;
+
       case PNK_COLON:
       case PNK_CASE:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
@@ -2104,29 +2148,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_CLASS:
       case PNK_IF:
       case PNK_TRY:
-      case PNK_OR:
-      case PNK_AND:
-      case PNK_BITOR:
-      case PNK_BITXOR:
-      case PNK_BITAND:
-      case PNK_STRICTEQ:
-      case PNK_EQ:
-      case PNK_STRICTNE:
-      case PNK_NE:
-      case PNK_LT:
-      case PNK_LE:
-      case PNK_GT:
-      case PNK_GE:
-      case PNK_INSTANCEOF:
-      case PNK_IN:
-      case PNK_LSH:
-      case PNK_RSH:
-      case PNK_URSH:
-      case PNK_ADD:
-      case PNK_SUB:
-      case PNK_STAR:
-      case PNK_DIV:
-      case PNK_MOD:
       case PNK_COMMA:
       case PNK_NEW:
       case PNK_CALL:
