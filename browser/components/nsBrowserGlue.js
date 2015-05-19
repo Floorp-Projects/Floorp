@@ -2398,7 +2398,7 @@ ContentPermissionPrompt.prototype = {
     if (!aOptions)
       aOptions = {};
     aOptions.displayOrigin = (requestPrincipal.URI instanceof Ci.nsIFileURL) ?
-                             requestPrincipal.URI.path :
+                             requestPrincipal.URI.file.path :
                              requestPrincipal.URI.host;
 
     return chromeWin.PopupNotifications.show(browser, aNotificationId, aMessage, aAnchorId,
