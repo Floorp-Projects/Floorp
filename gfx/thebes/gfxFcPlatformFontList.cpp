@@ -722,6 +722,8 @@ static void ApplyGdkScreenFontOptions(FcPattern *aPattern);
 static void
 PreparePattern(FcPattern* aPattern, bool aIsPrinterFont)
 {
+    FcConfigSubstitute(nullptr, aPattern, FcMatchPattern);
+
     // This gets cairo_font_options_t for the Screen.  We should have
     // different font options for printing (no hinting) but we are not told
     // what we are measuring for.
