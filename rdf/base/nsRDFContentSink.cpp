@@ -53,7 +53,7 @@
 #include "nsRDFCID.h"
 #include "nsTArray.h"
 #include "nsXPIDLString.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "rdf.h"
 #include "rdfutil.h"
 #include "nsReadableUtils.h"

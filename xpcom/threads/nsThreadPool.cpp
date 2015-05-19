@@ -11,7 +11,7 @@
 #include "nsMemory.h"
 #include "nsAutoPtr.h"
 #include "prinrval.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 using namespace mozilla;
 

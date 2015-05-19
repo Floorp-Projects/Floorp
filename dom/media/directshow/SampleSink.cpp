@@ -8,7 +8,7 @@
 #include "AudioSinkFilter.h"
 #include "AudioSinkInputPin.h"
 #include "VideoUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 using namespace mozilla::media;
 

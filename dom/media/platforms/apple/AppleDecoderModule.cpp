@@ -13,7 +13,7 @@
 #include "AppleVTLinker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/DebugOnly.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 PRLogModuleInfo* GetAppleMediaLog() {
   static PRLogModuleInfo* log = nullptr;

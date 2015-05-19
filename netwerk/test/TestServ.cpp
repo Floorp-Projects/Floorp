@@ -11,7 +11,7 @@
 #include "nsNetUtil.h"
 #include "nsStringAPI.h"
 #include "nsCOMPtr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 //
 // set NSPR_LOG_MODULES=Test:5

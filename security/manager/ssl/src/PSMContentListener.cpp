@@ -24,7 +24,7 @@
 #include "nsNetUtil.h"
 #include "nsNSSHelper.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 extern PRLogModuleInfo* gPIPNSSLog;
 

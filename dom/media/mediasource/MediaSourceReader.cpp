@@ -6,7 +6,7 @@
 #include "MediaSourceReader.h"
 
 #include <cmath>
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "DecoderTraits.h"
 #include "MediaDecoderOwner.h"
 #include "MediaFormatReader.h"

@@ -11,7 +11,7 @@
 #include "nsIServiceManager.h"
 #include "nsDebug.h"
 #include "prlink.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 static PRLogModuleInfo* sIdleLog = nullptr;
 

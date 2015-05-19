@@ -30,7 +30,7 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 #include "plstr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
 #include "secmime.h"

@@ -39,7 +39,7 @@
 #include <netdb.h>
 #include "nsPrintfCString.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "prio.h"
 #include "prnetdb.h"

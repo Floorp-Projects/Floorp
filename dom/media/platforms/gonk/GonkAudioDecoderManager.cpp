@@ -12,7 +12,7 @@
 #include "mp4_demuxer/Adts.h"
 #include "VideoUtils.h"
 #include "nsTArray.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "stagefright/MediaBuffer.h"
 #include "stagefright/MetaData.h"
 #include "stagefright/MediaErrors.h"

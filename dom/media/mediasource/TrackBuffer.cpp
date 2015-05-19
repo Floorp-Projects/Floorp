@@ -20,7 +20,7 @@
 #include "nsError.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 extern PRLogModuleInfo* GetMediaSourceLog();
 

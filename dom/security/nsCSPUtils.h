@@ -14,7 +14,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 /* =============== Logging =================== */
 

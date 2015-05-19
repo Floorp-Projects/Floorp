@@ -15,7 +15,7 @@
 #include "Layers.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "MediaInfo.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "gfx2DGlue.h"
 #include "gfxWindowsPlatform.h"
 #include "IMFYCbCrImage.h"

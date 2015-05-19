@@ -18,7 +18,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nscore.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #define UNIMPLEMENTED() { /* Logging this is too spammy to do by default */ }
 

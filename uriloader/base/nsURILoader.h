@@ -16,7 +16,7 @@
 #include "nsIWeakReference.h"
 #include "mozilla/Attributes.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 class nsDocumentOpenInfo;
 

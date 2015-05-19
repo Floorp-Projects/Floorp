@@ -25,7 +25,7 @@
 #include "mozStorageStatement.h"
 #include "nsDOMClassInfo.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 extern PRLogModuleInfo *gStorageLog;
 

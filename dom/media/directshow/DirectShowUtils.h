@@ -17,7 +17,7 @@
 #undef GetPrevSibling
 
 #include "DShowTools.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 

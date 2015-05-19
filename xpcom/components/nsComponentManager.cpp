@@ -77,7 +77,7 @@
 
 #include "mozilla/Omnijar.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 using namespace mozilla;
 

@@ -10,7 +10,7 @@
 #include "WMFUtils.h"
 #include "nsTArray.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 PRLogModuleInfo* GetDemuxerLog();
 #define LOG(...) PR_LOG(GetDemuxerLog(), PR_LOG_DEBUG, (__VA_ARGS__))

@@ -24,7 +24,7 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 class nsJARInputThunk;
 

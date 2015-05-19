@@ -127,7 +127,7 @@ using namespace mozilla::dom;
 
 //-----------------------------------------------------
 // PR LOGGING
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #ifdef DEBUG
 // PR_LOGGING is force to always be on (even in release builds)

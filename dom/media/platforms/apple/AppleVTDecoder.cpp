@@ -16,7 +16,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "VideoUtils.h"
 #include "gfxPlatform.h"
 

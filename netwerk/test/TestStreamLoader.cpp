@@ -2,7 +2,7 @@
 #include "TestCommon.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Attributes.h"
 #include "nsIScriptSecurityManager.h"
 

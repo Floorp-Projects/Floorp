@@ -9,7 +9,7 @@
 #include "nsRequestObserverProxy.h"
 #include "nsIRequest.h"
 #include "nsAutoPtr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 using namespace mozilla;
 

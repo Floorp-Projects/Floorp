@@ -20,7 +20,7 @@
 #include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "nsAutoLock.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include <algorithm>
 
 ////////////////////////////////////////////////////////////////////////////////

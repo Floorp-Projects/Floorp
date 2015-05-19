@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include <algorithm>
 

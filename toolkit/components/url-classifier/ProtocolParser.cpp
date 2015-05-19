@@ -6,7 +6,7 @@
 #include "ProtocolParser.h"
 #include "LookupCache.h"
 #include "nsNetCID.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prnetdb.h"
 #include "prprf.h"
 

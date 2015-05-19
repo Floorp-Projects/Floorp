@@ -131,7 +131,7 @@ using namespace mozilla::dom;
 
 //-----------------------------------------------------
 // PR LOGGING
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #ifdef NS_PRINTING
 static PRLogModuleInfo *

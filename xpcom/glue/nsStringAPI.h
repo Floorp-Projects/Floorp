@@ -21,7 +21,7 @@
 
 #include "nsXPCOMStrings.h"
 #include "nsISupportsImpl.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsTArray.h"
 
 /**

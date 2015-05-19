@@ -10,7 +10,7 @@
 #include "mp4_demuxer/Adts.h"
 #include "MediaInfo.h"
 #include "AppleATDecoder.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 PRLogModuleInfo* GetAppleMediaLog();
 #define LOG(...) PR_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))

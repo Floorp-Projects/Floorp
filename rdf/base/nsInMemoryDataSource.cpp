@@ -63,7 +63,7 @@
 #include "rdfutil.h"
 #include "pldhash.h"
 #include "plstr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "rdf.h"
 
 #include "rdfIDataSource.h"
