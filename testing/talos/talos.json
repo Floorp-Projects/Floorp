@@ -1,11 +1,11 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.3dc0c42bd761.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.ccab6c42b5da.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "c1da803b295e"
+        "talos_revision": "ccab6c42b5da"
     },
     "extra_options": {
         "android": [ "--apkPath=%(apk_path)s" ]
@@ -162,10 +162,10 @@
             "tests": ["ts_paint"]
         },
         "remote-tsvgx": {
-            "tests": ["tsvgx"],
+            "tests": ["tsvgm"],
             "talos_options": [
                 "--noChrome",
-                "--tppagecycles", "10"
+                "--tppagecycles", "7"
             ]
         },
         "remote-tcanvasmark": {
