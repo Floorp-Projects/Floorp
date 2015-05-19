@@ -5,6 +5,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-whitespace-handling-2.xhtml  grid-whitespace-handling-2-ref.xhtml
 == grid-placement-definite-001.html grid-placement-definite-001-ref.html
 == grid-placement-definite-002.html grid-placement-definite-002-ref.html
+== grid-placement-definite-003.html grid-placement-definite-003-ref.html
 == grid-placement-auto-row-sparse-001.html grid-placement-auto-row-sparse-001-ref.html
 == grid-placement-auto-row-dense-001.html grid-placement-auto-row-dense-001-ref.html
 == grid-placement-auto-col-sparse-001.html grid-placement-auto-col-sparse-001-ref.html
