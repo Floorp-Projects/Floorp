@@ -1,7 +1,8 @@
 [
 {
-"size": 80729933,
-"digest": "ccd13527c0ba3979f4030eae713e6529e916a701b9b16a371256d92618e914fb0fd2ba70547efca0e93d02010c89eeb7c222d40a9b6f26fab80911386cdfecc7",
+"size": 357533004,
+"visibility": "internal",
+"digest": "9b24b6db45ca4f6418d18119e3d2dd48e2a352e977ebf4fd0b2a8c4103fd0735eacb0f7360ff3a2eda6777fdd1029325ca23b8a4c34542b3b1fa487ff633647c",
 "algorithm": "sha512",
 "filename": "android-ndk.tar.bz2"
 },
