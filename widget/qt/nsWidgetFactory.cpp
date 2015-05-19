@@ -46,6 +46,8 @@
 
 #if defined(MOZ_X11)
 #include "GfxInfoX11.h"
+#else
+#include "GfxInfo.h"
 #endif
 
 using namespace mozilla::widget;
@@ -66,14 +68,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceQt, Init)
 #endif
 
-#if defined(MOZ_X11)
 namespace mozilla {
 namespace widget {
 // This constructor should really be shared with all platforms.
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
 }
 }
-#endif
 
 
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
@@ -86,9 +86,7 @@ NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARD_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
-#if defined(MOZ_X11)
 NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
-#endif
 #ifdef NS_PRINTING
 NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTER_ENUMERATOR_CID);
@@ -108,9 +106,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerQtConstructor },
     { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
     { &kNS_WINDOW_CID, false, nullptr, nsWindowConstructor },
-#if defined(MOZ_X11)
     { &kNS_GFXINFO_CID, false, nullptr, mozilla::widget::GfxInfoConstructor },
-#endif
 #ifdef NS_PRINTING
     { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecQtConstructor },
     { &kNS_PRINTDIALOGSERVICE_CID, false, nullptr, nsPrintDialogServiceQtConstructor },
@@ -132,9 +128,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/widgets/child_window/qt;1", &kNS_CHILD_CID },
     { "@mozilla.org/widgets/window/qt;1", &kNS_WINDOW_CID },
     { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
-#if defined(MOZ_X11)
     { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
-#endif
 #ifdef NS_PRINTING
     { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },
     { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID },
