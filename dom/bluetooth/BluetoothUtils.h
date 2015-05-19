@@ -177,15 +177,6 @@ void
 DispatchReplyError(BluetoothReplyRunnable* aRunnable,
                    const enum BluetoothStatus aStatus);
 
-#if MOZ_B2G_BT_API_V2
-// TODO: remove with bluetooth1
-#else
-void
-DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
-                       const BluetoothValue& aValue,
-                       const nsAString& aErrorStr);
-#endif
-
 void
 DispatchStatusChangedEvent(const nsAString& aType,
                            const nsAString& aDeviceAddress,
