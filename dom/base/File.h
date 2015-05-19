@@ -110,11 +110,26 @@ public:
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
               ErrorResult& aRv);
 
+  void
+  GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv);
+
+  int64_t
+  GetFileId();
+
+  indexedDB::FileInfo*
+  GetFileInfo(indexedDB::FileManager* aFileManager);
+
+  void
+  AddFileInfo(indexedDB::FileInfo* aFileInfo);
+
   // WebIDL methods
   nsISupports* GetParentObject() const
   {
     return mParent;
   }
+
+  bool
+  IsMemoryFile() const;
 
   // Blob constructor
   static already_AddRefed<Blob>
@@ -132,7 +147,7 @@ public:
 
   uint64_t GetSize(ErrorResult& aRv);
 
-  // XPCOM GetType is OK
+  void GetType(nsAString& aType);
 
   already_AddRefed<Blob> Slice(const Optional<int64_t>& aStart,
                                const Optional<int64_t>& aEnd,
@@ -297,7 +312,8 @@ public:
   virtual const nsTArray<nsRefPtr<BlobImpl>>*
   GetSubBlobImpls() const = 0;
 
-  virtual nsresult GetInternalStream(nsIInputStream** aStream) = 0;
+  virtual void GetInternalStream(nsIInputStream** aStream,
+                                 ErrorResult& aRv) = 0;
 
   virtual int64_t GetFileId() = 0;
 
@@ -431,9 +447,10 @@ public:
     return nullptr;
   }
 
-  virtual nsresult GetInternalStream(nsIInputStream** aStream) override
+  virtual void GetInternalStream(nsIInputStream** aStream,
+                                 ErrorResult& aRv) override
   {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   }
 
   virtual int64_t GetFileId() override;
@@ -553,7 +570,8 @@ public:
     NS_ASSERTION(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  virtual nsresult GetInternalStream(nsIInputStream** aStream) override;
+  virtual void GetInternalStream(nsIInputStream** aStream,
+                                 ErrorResult& aRv) override;
 
   virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
@@ -639,7 +657,8 @@ public:
     mFileDescOwner = new nsTemporaryFileInputStream::FileDescOwner(aFD);
   }
 
-  virtual nsresult GetInternalStream(nsIInputStream** aStream) override;
+  virtual void GetInternalStream(nsIInputStream** aStream,
+                                 ErrorResult& aRv) override;
 
   virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
@@ -781,7 +800,8 @@ public:
   virtual void SetLastModified(int64_t aLastModified) override;
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
                                       ErrorResult& aRv) override;
-  virtual nsresult GetInternalStream(nsIInputStream**) override;
+  virtual void GetInternalStream(nsIInputStream** aInputStream,
+                                 ErrorResult& aRv) override;
 
   void SetPath(const nsAString& aFullPath);
 

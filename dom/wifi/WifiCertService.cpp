@@ -14,6 +14,7 @@
 #include "mozilla/Endian.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "cert.h"
 #include "certdb.h"
@@ -39,7 +40,7 @@ StaticRefPtr<WifiCertService> gWifiCertService;
 class ImportCertTask final: public CryptoTask
 {
 public:
-  ImportCertTask(int32_t aId, nsIDOMBlob* aCertBlob,
+  ImportCertTask(int32_t aId, Blob* aCertBlob,
                  const nsAString& aCertPassword,
                  const nsAString& aCertNickname)
     : mBlob(aCertBlob)
@@ -240,24 +241,26 @@ private:
     NS_ENSURE_ARG_POINTER(mBlob);
 
     static const uint64_t MAX_FILE_SIZE = 16384;
-    uint64_t size;
-    nsresult rv = mBlob->GetSize(&size);
-    if (NS_FAILED(rv)) {
-      return rv;
+
+    ErrorResult rv;
+    uint64_t size = mBlob->GetSize(rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
+
     if (size > MAX_FILE_SIZE) {
       return NS_ERROR_FILE_TOO_BIG;
     }
 
     nsCOMPtr<nsIInputStream> inputStream;
-    rv = mBlob->GetInternalStream(getter_AddRefs(inputStream));
-    if (NS_FAILED(rv)) {
-      return rv;
+    mBlob->GetInternalStream(getter_AddRefs(inputStream), rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
 
     rv = NS_ReadInputStreamToString(inputStream, aBuf, (uint32_t)size);
-    if (NS_FAILED(rv)) {
-      return rv;
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
     }
 
     return NS_OK;
@@ -299,7 +302,7 @@ private:
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMBlob> mBlob;
+  nsRefPtr<Blob> mBlob;
   nsString mPassword;
   WifiCertServiceResultOptions mResult;
 };
@@ -460,7 +463,8 @@ WifiCertService::ImportCert(int32_t aId, nsIDOMBlob* aCertBlob,
                             const nsAString& aCertPassword,
                             const nsAString& aCertNickname)
 {
-  RefPtr<CryptoTask> task = new ImportCertTask(aId, aCertBlob, aCertPassword,
+  nsRefPtr<Blob> blob = static_cast<Blob*>(aCertBlob);
+  RefPtr<CryptoTask> task = new ImportCertTask(aId, blob, aCertPassword,
                                                aCertNickname);
   return task->Dispatch("WifiImportCert");
 }
