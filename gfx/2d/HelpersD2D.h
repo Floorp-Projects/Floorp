@@ -11,7 +11,7 @@
 #include <vector>
 
 #include <dwrite.h>
-#include <VersionHelpers.h>
+#include <versionhelpers.h>
 #include "2D.h"
 #include "Logging.h"
 #include "Tools.h"
