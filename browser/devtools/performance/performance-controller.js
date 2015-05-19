@@ -191,6 +191,11 @@ let PerformanceController = {
     this._onRecordingStateChange = this._onRecordingStateChange.bind(this);
     this._onProfilerStatusUpdated = this._onProfilerStatusUpdated.bind(this);
 
+    // Store data regarding if e10s is enabled.
+    this._e10s = Services.appinfo.browserTabsRemoteAutostart;
+
+    this._setMultiprocessAttributes();
+
     // All boolean prefs should be handled via the OptionsView in the
     // ToolbarView, so that they may be accessible via the "gear" menu.
     // Every other pref should be registered here.
@@ -511,6 +516,44 @@ let PerformanceController = {
       return false;
     }
     return true;
+  },
+
+  /**
+   * Returns an object with `supported` and `enabled` properties indicating
+   * whether or not the platform is capable of turning on e10s and whether or not
+   * it's already enabled, respectively.
+   *
+   * @return {object}
+   */
+  getMultiprocessStatus: function () {
+    // If testing, set both supported and enabled to true so we
+    // have realtime rendering tests in non-e10s. This function is
+    // overridden wholesale in tests when we want to test multiprocess support
+    // specifically.
+    if (gDevTools.testing) {
+      return { supported: true, enabled: true };
+    }
+    let supported = SYSTEM.MULTIPROCESS_SUPPORTED;
+    // This is only checked on tool startup -- requires a restart if
+    // e10s subsequently enabled.
+    let enabled = this._e10s;
+    return { supported, enabled };
+  },
+
+  /**
+   * Called on init, sets an `e10s` attribute on the main view container with
+   * "disabled" if e10s is possible on the platform and just not on, or "unsupported"
+   * if e10s is not possible on the platform. If e10s is on, no attribute is set.
+   */
+  _setMultiprocessAttributes: function () {
+    let { enabled, supported } = this.getMultiprocessStatus();
+    if (!enabled && supported) {
+      $("#performance-view").setAttribute("e10s", "disabled");
+    }
+    // Could be a chance where the directive goes away yet e10s is still on
+    else if (!enabled && !supported) {
+      $("#performance-view").setAttribute("e10s", "unsupported");
+    }
   },
 
   toString: () => "[object PerformanceController]"

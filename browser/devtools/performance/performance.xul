@@ -14,6 +14,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://browser/content/devtools/theme-switching.js"/>
+  <script type="application/javascript" src="performance/system.js"/>
   <script type="application/javascript" src="performance/performance-controller.js"/>
   <script type="application/javascript" src="performance/performance-view.js"/>
   <script type="application/javascript" src="performance/recording-model.js"/>
@@ -173,6 +174,10 @@
                   <toolbarbutton class="devtools-toolbarbutton record-button"
                                  label="&profilerUI.stopRecording;" />
                 </hbox>
+                <label class="realtime-disabled-message"
+                       value="Realtime recording data disabled on non-multiprocess Firefox."/>
+                <label class="realtime-disabled-on-e10s-message"
+                       value="Enable multiprocess Firefox in preferences for rendering recording data in realtime."/>
                 <label class="buffer-status-message"
                        tooltiptext="&profilerUI.bufferStatusTooltip;"/>
                 <label class="buffer-status-message-full"
@@ -195,6 +200,10 @@
                       <label class="console-profile-command" />
                       <label value="&profilerUI.console.stopCommandEnd;" />
                     </hbox>
+                    <label class="realtime-disabled-message"
+                           value="Realtime recording data disabled on non-multiprocess Firefox."/>
+                    <label class="realtime-disabled-on-e10s-message"
+                           value="Enable multiprocess Firefox in preferences for rendering recording data in realtime."/>
                     <label class="buffer-status-message"
                            tooltiptext="&profilerUI.bufferStatusTooltip;"/>
                     <label class="buffer-status-message-full"
