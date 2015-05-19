@@ -161,6 +161,15 @@ BasePrincipal::GetOriginSuffix(nsACString& aOriginAttributes)
 }
 
 NS_IMETHODIMP
+BasePrincipal::GetCookieJar(nsACString& aCookieJar)
+{
+  // We just forward to .jarPrefix for now, which is a nice compact
+  // stringification of the (appId, inBrowser) tuple. This will eventaully be
+  // swapped out for an origin attribute - see the comment in nsIPrincipal.idl.
+  return GetJarPrefix(aCookieJar);
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetAppStatus(uint16_t* aAppStatus)
 {
   if (AppId() == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
