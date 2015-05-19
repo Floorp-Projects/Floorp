@@ -1,8 +1,9 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>Test for Login Manager</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <script type="text/javascript" src="notification_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -16,7 +17,7 @@ Login Manager test: notifications
 </div>
 
 <pre id="test">
-<script class="testbody" type="text/javascript">
+<script class="testbody" type="application/javascript;version=1.8">
 
 /** Test for Login Manager: notifications. **/
 
@@ -53,6 +54,8 @@ var subtests = [
                    "subtst_notifications_2pw_0un.html",  // 26
                    "subtst_notifications_2pw_0un.html",  // 27
                    "subtst_notifications_2pw_0un.html",  // 28
+                   "http://example.org" + testpath + "subtst_notifications_2pw_1un_1text.html", // 29
+                   "http://example.org" + testpath + "subtst_notifications_2pw_1un_1text.html", // 30
                ];
 
 
@@ -472,6 +475,44 @@ function checkTest() {
         pwmgr.removeLogin(login2);
         break;
 
+      case 29: {
+        // Check that we capture the proper fields when a field recipe is in use.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
+
+        // Sanity check, no logins should exist yet.
+        let logins = pwmgr.getAllLogins();
+        is(logins.length, 0, "Should not have any logins yet");
+
+        clickPopupButton(popup, kRememberButton);
+        break;
+      }
+
+      case 30: {
+        // Same subtest, make sure we didn't prompt for an existing login.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
+
+        // Check to make sure we updated the timestamps and use count on the
+        // existing login that was submitted for this form.
+        let logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should only have 1 login");
+        ok(SpecialPowers.call_Instanceof(logins[0], Ci.nsILoginMetaInfo), "metainfo QI");
+        is(logins[0].username, "notifyu1", "check .username for existing login submission");
+        is(logins[0].password, "notifyp1", "check .password for existing login submission");
+        is(logins[0].timesUsed, 2, "check .timesUsed for existing login submission");
+        ok(logins[0].timeLastUsed > logins[0].timeCreated, "timeLastUsed bumped");
+        ok(logins[0].timeCreated == logins[0].timePasswordChanged, "timeChanged not updated");
+
+        // remove the added login
+        pwmgr.removeAllLogins();
+        break;
+      }
+
       default:
         ok(false, "Unexpected call to checkTest for test #" + testNum);
 
@@ -509,6 +550,9 @@ var login1B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888"
 var login2B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
                               "", "notifyp1B", "", "pass");
 
+var parentScriptURL = SimpleTest.getTestFileURL("pwmgr_common.js");
+var mm = SpecialPowers.loadChromeScript(parentScriptURL);
+
 var iframe = document.getElementById("iframe");
 iframe.onload = handleLoad;
 
@@ -518,8 +562,20 @@ var popupNotifications = getPopupNotifications(window.top);
 ok(popupNotifications, "Got popupNotifications");
 
 var testNum = 1;
-ok(true, "Starting test #" + testNum);
-iframe.src = subtests[testNum-1];
+
+// Load recipes for this test.
+mm.sendAsyncMessage("loadRecipes", {
+  siteRecipes: [{
+    hosts: ["example.org"],
+    usernameSelector: "#user",
+    passwordSelector: "#pass",
+  }],
+});
+
+mm.addMessageListener("loadedRecipes", function loadedRecipes() {
+  ok(true, "Starting test #" + testNum);
+  iframe.src = subtests[testNum-1];
+})
 
 SimpleTest.waitForExplicitFinish();
 </script>
