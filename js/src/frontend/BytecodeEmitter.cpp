@@ -2093,6 +2093,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_DIV:
       case PNK_MOD:
         MOZ_ASSERT(pn->isArity(PN_LIST));
+        MOZ_ASSERT(pn->pn_count >= 2);
         *answer = true;
         return true;
 
@@ -2214,6 +2215,15 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      // Shorthands could trigger getters: the |x| in the object literal in
+      // |with ({ get x() { throw 42; } }) ({ x });|, for example, triggers
+      // one.  (Of course, it isn't necessary to use |with| for a shorthand to
+      // trigger a getter.)
+      case PNK_SHORTHAND:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
       case PNK_FUNCTION:
         MOZ_ASSERT(pn->isArity(PN_CODE));
         /*
@@ -2265,29 +2275,47 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         }
         return checkSideEffects(pn->pn_kid3, answer);
 
-      case PNK_EXPORT_BATCH_SPEC:
-      case PNK_FRESHENBLOCK:
-      case PNK_SHORTHAND:
       case PNK_SWITCH:
       case PNK_LETBLOCK:
-      case PNK_CLASSMETHOD:
-      case PNK_CLASSNAMES:
-      case PNK_ARGSBODY:
-      case PNK_ARRAYCOMP:
-      case PNK_CLASSMETHODLIST:
-      case PNK_TEMPLATE_STRING_LIST:
-      case PNK_EXPORT_SPEC_LIST:
-      case PNK_IMPORT_SPEC_LIST:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        if (!checkSideEffects(pn->pn_left, answer))
+            return false;
+        return *answer || checkSideEffects(pn->pn_right, answer);
+
       case PNK_LABEL:
       case PNK_LEXICALSCOPE:
+        MOZ_ASSERT(pn->isArity(PN_NAME));
+        return checkSideEffects(pn->expr(), answer);
+
+      // We could methodically check every interpolated expression, but it's
+      // probably not worth the trouble.  Treat template strings as effect-free
+      // only if they don't contain any substitutions.
+      case PNK_TEMPLATE_STRING_LIST:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        MOZ_ASSERT(pn->pn_count > 0);
+        MOZ_ASSERT((pn->pn_count % 2) == 1,
+                   "template strings must alternate template and substitution "
+                   "parts");
+        *answer = pn->pn_count > 1;
+        return true;
+
+      case PNK_EXPORT_BATCH_SPEC:
+      case PNK_ARGSBODY:
+      case PNK_ARRAYCOMP:
+      case PNK_EXPORT_SPEC_LIST:
+      case PNK_IMPORT_SPEC_LIST:
       case PNK_EXPORT_SPEC:
       case PNK_IMPORT_SPEC:
       case PNK_CALLSITEOBJ:
         break; // for now
 
-      case PNK_FORIN:
-      case PNK_FOROF:
-      case PNK_FORHEAD:
+      case PNK_FORIN:           // by PNK_FOR
+      case PNK_FOROF:           // by PNK_FOR
+      case PNK_FORHEAD:         // by PNK_FOR
+      case PNK_FRESHENBLOCK:    // by PNK_FOR
+      case PNK_CLASSMETHOD:     // by PNK_CLASS
+      case PNK_CLASSNAMES:      // by PNK_CLASS
+      case PNK_CLASSMETHODLIST: // by PNK_CLASS
         MOZ_CRASH("handled by parent nodes");
 
       case PNK_LIMIT: // invalid sentinel value
