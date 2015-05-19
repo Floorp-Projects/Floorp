@@ -111,18 +111,12 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 #ifdef DEBUG
   , mOnStateLocationChangeReentranceDetection(0)
 #endif
+  , mTransferringRequests(&gMapOps, sizeof(RequestHashEntry))
 {
   ResetStateTracking();
-  
+
   if (!gSecureDocLog)
     gSecureDocLog = PR_NewLogModule("nsSecureBrowserUI");
-}
-
-nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
-{
-  if (mTransferringRequests.IsInitialized()) {
-    PL_DHashTableFinish(&mTransferringRequests);
-  }
 }
 
 NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
@@ -379,10 +373,7 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
   ReentrantMonitorAutoEnter lock(mReentrantMonitor);
 
   mDocumentRequestsInProgress = 0;
-  if (mTransferringRequests.IsInitialized()) {
-    PL_DHashTableFinish(&mTransferringRequests);
-  }
-  PL_DHashTableInit(&mTransferringRequests, &gMapOps, sizeof(RequestHashEntry));
+  mTransferringRequests.Clear();
 }
 
 void
