@@ -29,6 +29,7 @@
 
 #include "jit/CompileInfo-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -9368,7 +9369,9 @@ IonBuilder::jsop_length_fastPath()
         }
 
         // Compute the length for unboxed array objects.
-        if (UnboxedArrayElementType(constraints(), obj, nullptr) != JSVAL_TYPE_MAGIC) {
+        if (UnboxedArrayElementType(constraints(), obj, nullptr) != JSVAL_TYPE_MAGIC &&
+            !objTypes->hasObjectFlags(constraints(), OBJECT_FLAG_LENGTH_OVERFLOW))
+        {
             current->pop();
 
             MUnboxedArrayLength* length = MUnboxedArrayLength::New(alloc(), obj);

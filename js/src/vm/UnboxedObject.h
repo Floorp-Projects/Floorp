@@ -35,6 +35,12 @@ UnboxedTypeNeedsPreBarrier(JSValueType type)
     return type == JSVAL_TYPE_STRING || type == JSVAL_TYPE_OBJECT;
 }
 
+static inline bool
+UnboxedTypeNeedsPostBarrier(JSValueType type)
+{
+    return type == JSVAL_TYPE_OBJECT;
+}
+
 // Class tracking information specific to unboxed objects.
 class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
 {
@@ -437,9 +443,17 @@ class UnboxedArrayObject : public JSObject
 
     bool setElement(ExclusiveContext* cx, size_t index, const Value& v);
     bool initElement(ExclusiveContext* cx, size_t index, const Value& v);
+    void initElementNoTypeChange(size_t index, const Value& v);
     Value getElement(size_t index);
 
-    bool appendElementNoTypeChange(ExclusiveContext* cx, size_t index, const Value& v);
+    template <JSValueType Type> inline bool setElementSpecific(ExclusiveContext* cx, size_t index,
+                                                               const Value& v);
+    template <JSValueType Type> inline void setElementNoTypeChangeSpecific(size_t index, const Value& v);
+    template <JSValueType Type> inline bool initElementSpecific(ExclusiveContext* cx, size_t index,
+                                                                const Value& v);
+    template <JSValueType Type> inline void initElementNoTypeChangeSpecific(size_t index, const Value& v);
+    template <JSValueType Type> inline Value getElementSpecific(size_t index);
+    template <JSValueType Type> inline void triggerPreBarrier(size_t index);
 
     bool growElements(ExclusiveContext* cx, size_t cap);
     void shrinkElements(ExclusiveContext* cx, size_t cap);
@@ -457,20 +471,22 @@ class UnboxedArrayObject : public JSObject
         return offsetof(UnboxedArrayObject, inlineElements_);
     }
 
-  private:
-    void setInlineElements() {
-        elements_ = &inlineElements_[0];
+    void setLengthInt32(uint32_t length) {
+        MOZ_ASSERT(length <= INT32_MAX);
+        length_ = length;
     }
 
-    void setLength(uint32_t len) {
-        MOZ_ASSERT(len <= INT32_MAX);
-        length_ = len;
-    }
+    inline void setLength(ExclusiveContext* cx, uint32_t len);
 
     void setInitializedLength(uint32_t initlen) {
         MOZ_ASSERT(initlen <= InitializedLengthMask);
         capacityIndexAndInitializedLength_ =
             (capacityIndexAndInitializedLength_ & CapacityMask) | initlen;
+    }
+
+  private:
+    void setInlineElements() {
+        elements_ = &inlineElements_[0];
     }
 
     void setCapacityIndex(uint32_t index) {
