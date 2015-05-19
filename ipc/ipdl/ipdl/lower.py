@@ -343,7 +343,7 @@ def _callCxxArrayLength(arr):
 
 def _callCxxCheckedArraySetLength(arr, lenexpr, sel='.'):
     ifbad = StmtIf(ExprNot(ExprCall(ExprSelect(arr, sel, 'SetLength'),
-                                    args=[ lenexpr ])))
+                                    args=[ lenexpr, ExprVar('mozilla::fallible') ])))
     ifbad.addifstmt(_fatalError('Error setting the array length'))
     ifbad.addifstmt(StmtReturn.FALSE)
     return ifbad

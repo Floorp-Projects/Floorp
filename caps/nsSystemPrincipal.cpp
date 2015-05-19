@@ -42,33 +42,6 @@ nsSystemPrincipal::GetScriptLocation(nsACString &aStr)
 ///////////////////////////////////////
 
 NS_IMETHODIMP
-nsSystemPrincipal::Equals(nsIPrincipal *other, bool *result)
-{
-    *result = (other == this);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::EqualsConsideringDomain(nsIPrincipal *other, bool *result)
-{
-    return Equals(other, result);
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::Subsumes(nsIPrincipal *other, bool *result)
-{
-    *result = true;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::SubsumesConsideringDomain(nsIPrincipal *other, bool *result)
-{
-    *result = true;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::CheckMayLoad(nsIURI* uri, bool aReport, bool aAllowIfInheritsPrincipal)
 {
     return NS_OK;
@@ -119,41 +92,6 @@ nsSystemPrincipal::GetDomain(nsIURI** aDomain)
 NS_IMETHODIMP
 nsSystemPrincipal::SetDomain(nsIURI* aDomain)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::GetJarPrefix(nsACString& aJarPrefix)
-{
-  aJarPrefix.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::GetAppStatus(uint16_t* aAppStatus)
-{
-  *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::GetAppId(uint32_t* aAppId)
-{
-  *aAppId = nsIScriptSecurityManager::NO_APP_ID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
-{
-  *aIsInBrowserElement = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::GetUnknownAppId(bool* aUnknownAppId)
-{
-  *aUnknownAppId = false;
   return NS_OK;
 }
 

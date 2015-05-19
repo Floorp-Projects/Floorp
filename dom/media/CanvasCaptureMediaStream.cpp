@@ -226,7 +226,7 @@ public:
   }
 
   NS_IMETHODIMP
-  Notify(nsITimer* aTimer)
+  Notify(nsITimer* aTimer) override
   {
     nsresult rv = TakeSnapshot();
     if (NS_FAILED(rv)) {

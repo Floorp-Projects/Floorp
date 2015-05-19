@@ -352,7 +352,7 @@ MediaDecodeTask::FinishDecode()
   // write fewer bytes than mResampledFrames to the output buffer, in which
   // case mWriteIndex will tell us how many valid samples we have.
   bool memoryAllocationSuccess = true;
-  if (!mDecodeJob.mChannelBuffers.SetLength(channelCount)) {
+  if (!mDecodeJob.mChannelBuffers.SetLength(channelCount, fallible)) {
     memoryAllocationSuccess = false;
   } else {
     for (uint32_t i = 0; i < channelCount; ++i) {

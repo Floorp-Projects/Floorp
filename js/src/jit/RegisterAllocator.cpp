@@ -191,8 +191,8 @@ AllocationIntegrityState::checkIntegrity(LBlock* block, LInstruction* ins,
         if (ins->isMoveGroup()) {
             LMoveGroup* group = ins->toMoveGroup();
             for (int i = group->numMoves() - 1; i >= 0; i--) {
-                if (*group->getMove(i).to() == alloc) {
-                    alloc = *group->getMove(i).from();
+                if (group->getMove(i).to() == alloc) {
+                    alloc = group->getMove(i).from();
                     break;
                 }
             }
@@ -412,8 +412,8 @@ AllocationIntegrityState::dump()
                 LMoveGroup* group = ins->toMoveGroup();
                 for (int i = group->numMoves() - 1; i >= 0; i--) {
                     // Use two printfs, as LAllocation::toString is not reentrant.
-                    fprintf(stderr, " [%s", group->getMove(i).from()->toString());
-                    fprintf(stderr, " -> %s]", group->getMove(i).to()->toString());
+                    fprintf(stderr, " [%s", group->getMove(i).from().toString());
+                    fprintf(stderr, " -> %s]", group->getMove(i).to().toString());
                 }
                 fprintf(stderr, "\n");
                 continue;
@@ -552,8 +552,8 @@ RegisterAllocator::dumpInstructions()
                 LMoveGroup* group = ins->toMoveGroup();
                 for (int i = group->numMoves() - 1; i >= 0; i--) {
                     // Use two printfs, as LAllocation::toString is not reentant.
-                    fprintf(stderr, " [%s", group->getMove(i).from()->toString());
-                    fprintf(stderr, " -> %s]", group->getMove(i).to()->toString());
+                    fprintf(stderr, " [%s", group->getMove(i).from().toString());
+                    fprintf(stderr, " -> %s]", group->getMove(i).to().toString());
                 }
                 fprintf(stderr, "\n");
                 continue;

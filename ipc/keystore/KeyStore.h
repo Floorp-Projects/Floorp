@@ -12,7 +12,6 @@
 #include "cert.h"
 #include "mozilla/ipc/ListenSocket.h"
 #include "mozilla/ipc/StreamSocket.h"
-#include "mozilla/ipc/UnixSocketConnector.h"
 #include "nsNSSShutDown.h"
 
 namespace mozilla {
@@ -78,26 +77,6 @@ typedef enum {
   STATE_READ_PARAM_DATA,
   STATE_PROCESSING
 } ProtocolHandlerState;
-
-class KeyStoreConnector : public mozilla::ipc::UnixSocketConnector
-{
-public:
-  KeyStoreConnector()
-  {}
-
-  virtual ~KeyStoreConnector()
-  {}
-
-  virtual int Create();
-  virtual bool CreateAddr(bool aIsServer,
-                          socklen_t& aAddrSize,
-                          sockaddr_any& aAddr,
-                          const char* aAddress);
-  virtual bool SetUp(int aFd);
-  virtual bool SetUpListenSocket(int aFd);
-  virtual void GetSocketAddr(const sockaddr_any& aAddr,
-                             nsAString& aAddrStr);
-};
 
 class KeyStore final : public nsNSSShutDownObject
 {

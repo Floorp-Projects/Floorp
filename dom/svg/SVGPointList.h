@@ -68,7 +68,7 @@ public:
   }
 
   bool SetCapacity(uint32_t aSize) {
-    return mItems.SetCapacity(aSize);
+    return mItems.SetCapacity(aSize, fallible);
   }
 
   void Compact() {
@@ -99,7 +99,7 @@ protected:
    * increased, in which case the list will be left unmodified.
    */
   bool SetLength(uint32_t aNumberOfItems) {
-    return mItems.SetLength(aNumberOfItems);
+    return mItems.SetLength(aNumberOfItems, fallible);
   }
 
 private:

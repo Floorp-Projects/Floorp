@@ -184,4 +184,30 @@ OutputStreamData::Init(MediaDecoder* aDecoder, ProcessedMediaStream* aStream)
   aStream->AddListener(mListener);
 }
 
+DecodedStreamData*
+DecodedStream::GetData()
+{
+  return mData.get();
+}
+
+void
+DecodedStream::DestroyData()
+{
+  mData = nullptr;
+}
+
+void
+DecodedStream::RecreateData(MediaDecoder* aDecoder, int64_t aInitialTime,
+                            SourceMediaStream* aStream)
+{
+  MOZ_ASSERT(!mData);
+  mData.reset(new DecodedStreamData(aDecoder, aInitialTime, aStream));
+}
+
+nsTArray<OutputStreamData>&
+DecodedStream::OutputStreams()
+{
+  return mOutputStreams;
+}
+
 } // namespace mozilla
