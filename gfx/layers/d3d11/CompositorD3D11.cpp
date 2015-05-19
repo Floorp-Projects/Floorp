@@ -537,9 +537,20 @@ CompositorD3D11::SetRenderTarget(CompositingRenderTarget* aRenderTarget)
   MOZ_ASSERT(aRenderTarget);
   CompositingRenderTargetD3D11* newRT =
     static_cast<CompositingRenderTargetD3D11*>(aRenderTarget);
-  mCurrentRT = newRT;
-  mCurrentRT->BindRenderTarget(mContext);
-  PrepareViewport(newRT->GetSize());
+  if (mCurrentRT != newRT) {
+    mCurrentRT = newRT;
+    mCurrentRT->BindRenderTarget(mContext);
+  }
+
+  if (newRT->HasComplexProjection()) {
+    gfx::Matrix4x4 projection;
+    bool depthEnable;
+    float zNear, zFar;
+    newRT->GetProjection(projection, depthEnable, zNear, zFar);
+    PrepareViewport(newRT->GetSize(), projection, zNear, zFar);
+  } else {
+    PrepareViewport(newRT->GetSize());
+  }
 }
 
 void
@@ -1107,16 +1118,6 @@ CompositorD3D11::EndFrame()
 void
 CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize)
 {
-  D3D11_VIEWPORT viewport;
-  viewport.MaxDepth = 1.0f;
-  viewport.MinDepth = 0.0f;
-  viewport.Width = aSize.width;
-  viewport.Height = aSize.height;
-  viewport.TopLeftX = 0;
-  viewport.TopLeftY = 0;
-
-  mContext->RSSetViewports(1, &viewport);
-
   // This view matrix translates coordinates from 0..width and 0..height to
   // -1..1 on the X axis, and -1..1 on the Y axis (flips the Y coordinate)
   Matrix viewMatrix = Matrix::Translation(-1.0, 1.0);
@@ -1126,7 +1127,25 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize)
   Matrix4x4 projection = Matrix4x4::From2D(viewMatrix);
   projection._33 = 0.0f;
 
-  memcpy(&mVSConstants.projection, &projection, sizeof(mVSConstants.projection));
+  PrepareViewport(aSize, projection, 0.0f, 1.0f);
+}
+
+void
+CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
+                                 const gfx::Matrix4x4& aProjection,
+                                 float aZNear, float aZFar)
+{
+  D3D11_VIEWPORT viewport;
+  viewport.MaxDepth = aZFar;
+  viewport.MinDepth = aZNear;
+  viewport.Width = aSize.width;
+  viewport.Height = aSize.height;
+  viewport.TopLeftX = 0;
+  viewport.TopLeftY = 0;
+
+  mContext->RSSetViewports(1, &viewport);
+
+  memcpy(&mVSConstants.projection, &aProjection._11, sizeof(mVSConstants.projection));
 }
 
 void
