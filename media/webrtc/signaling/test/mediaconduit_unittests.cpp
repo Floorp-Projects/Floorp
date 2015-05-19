@@ -301,12 +301,15 @@ void AudioSendAndReceive::GenerateAndReadSamples()
    FILE* inFile = fopen( iFile.c_str(), "wb+");
    if(!inFile) {
      cerr << "Input File Creation Failed " << endl;
+     free(inbuf);
      return;
    }
 
    FILE* outFile = fopen( oFile.c_str(), "wb+");
    if(!outFile) {
      cerr << "Output File Creation Failed " << endl;
+     free(inbuf);
+     fclose(inFile);
      return;
    }
 
@@ -323,6 +326,8 @@ void AudioSendAndReceive::GenerateAndReadSamples()
    {
     if(!memcpy(audioInput.get(), inbuf, sampleLengthInBytes))
     {
+      free(inbuf);
+      fclose(outFile);
       return;
     }
 
@@ -350,6 +355,7 @@ void AudioSendAndReceive::GenerateAndReadSamples()
    }while(numSamplesReadFromInput < SAMPLES);
 
    FinishWaveHeader(outFile);
+   free(inbuf);
    fclose(outFile);
 }
 
