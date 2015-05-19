@@ -85,6 +85,7 @@
 #include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
 #include "prthread.h"
+#include "nsThread.h"
 #include "xpcpublic.h"
 
 #ifdef ANDROID
@@ -5106,6 +5107,17 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
     {
       MutexAutoLock lock(mMutex);
 
+#ifdef MOZ_NUWA_PROCESS
+      {
+        nsThread *thr = static_cast<nsThread*>(NS_GetCurrentThread());
+        ReentrantMonitorAutoEnter mon(thr->ThreadStatusMonitor());
+        if (mControlQueue.IsEmpty() &&
+            !(normalRunnablesPending = NS_HasPendingEvents(mThread))) {
+          thr->SetIdle();
+        }
+      }
+#endif // MOZ_NUWA_PROCESS
+
       while (mControlQueue.IsEmpty() &&
              !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty()) &&
              !(normalRunnablesPending = NS_HasPendingEvents(mThread))) {
@@ -5641,15 +5653,6 @@ WorkerPrivate::WaitForWorkerEvents(PRIntervalTime aInterval)
 
   // The main thread may be waiting so we must notify.
   mMemoryReportCondVar.Notify();
-
-#ifdef MOZ_NUWA_PROCESS
-  {
-    MOZ_ASSERT(mThread);
-
-    ReentrantMonitorAutoEnter mon(mThread->ThreadStatusMonitor());
-    mThread->SetIdle();
-  }
-#endif // MOZ_NUWA_PROCESS
 
   // Now wait for an actual worker event.
   mCondVar.Wait(aInterval);
