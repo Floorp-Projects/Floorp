@@ -34,7 +34,7 @@
 using namespace mozilla;
 using mozilla::dom::NodeInfo;
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 static PRLogModuleInfo* gNodeInfoManagerLeakPRLog;
 

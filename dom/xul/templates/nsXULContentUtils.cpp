@@ -45,7 +45,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsGkAtoms.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prtime.h"
 #include "rdf.h"
 #include "nsContentUtils.h"

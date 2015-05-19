@@ -7,7 +7,7 @@
 #if !defined(MediaPromise_h_)
 #define MediaPromise_h_
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "AbstractThread.h"
 

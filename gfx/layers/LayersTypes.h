@@ -16,7 +16,7 @@
 #include <ui/GraphicBuffer.h>
 #endif
 #include <stdio.h>            // FILE
-#include "prlog.h"            // for PR_LOG
+#include "mozilla/Logging.h"            // for PR_LOG
 #ifndef MOZ_LAYERS_HAVE_LOG
 #  define MOZ_LAYERS_HAVE_LOG
 #endif

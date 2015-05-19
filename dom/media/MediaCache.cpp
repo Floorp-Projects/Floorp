@@ -11,7 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "MediaResource.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "FileBlockCache.h"
 #include "nsAnonymousTemporaryFile.h"

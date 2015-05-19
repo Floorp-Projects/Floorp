@@ -49,7 +49,7 @@
 #include "pldhash.h"
 #include "plhash.h"
 #include "plstr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prprf.h"
 #include "prmem.h"
 #include "rdf.h"

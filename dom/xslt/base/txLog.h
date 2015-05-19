@@ -6,7 +6,7 @@
 #ifndef txLog_h__
 #define txLog_h__
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 class txLog
 {

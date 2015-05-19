@@ -16,7 +16,7 @@
 
 #include "nsEscape.h"
 #include "nsDirectoryIndexStream.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prtime.h"
 static PRLogModuleInfo* gLog;
 

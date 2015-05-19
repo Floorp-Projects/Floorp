@@ -18,7 +18,7 @@
 #include "nsQAppInstance.h"
 
 #ifdef MOZ_LOGGING
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #endif
 
 PRLogModuleInfo *gWidgetLog = nullptr;

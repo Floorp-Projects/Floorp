@@ -10,7 +10,7 @@
 
 #include "nsISeekableStream.h"
 #include "nsISupports.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "MediaData.h"
 
 PRLogModuleInfo* GetSourceBufferResourceLog()

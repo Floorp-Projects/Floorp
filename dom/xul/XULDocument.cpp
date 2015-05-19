@@ -50,7 +50,7 @@
 #include "nsPIWindowRoot.h"
 #include "nsXULCommandDispatcher.h"
 #include "nsXULElement.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "rdf.h"
 #include "nsIFrame.h"
 #include "nsXBLService.h"

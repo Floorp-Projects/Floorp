@@ -7,7 +7,7 @@
 #include "mp4_demuxer/SinfParser.h"
 #include <limits>
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #if defined(MOZ_FMP4)
 extern PRLogModuleInfo* GetDemuxerLog();

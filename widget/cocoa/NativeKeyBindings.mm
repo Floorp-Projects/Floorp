@@ -7,7 +7,7 @@
 
 #include "nsTArray.h"
 #include "nsCocoaUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "mozilla/TextEvents.h"
 
 namespace mozilla {

@@ -17,7 +17,7 @@
 #include "nsILineInputStream.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISupportsImpl.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #undef LOG
 PRLogModuleInfo *gMediaParentLog;

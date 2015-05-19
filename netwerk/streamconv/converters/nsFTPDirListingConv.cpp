@@ -6,7 +6,7 @@
 #include "nsFTPDirListingConv.h"
 #include "nsMemory.h"
 #include "plstr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"
 #include "nsStringStream.h"

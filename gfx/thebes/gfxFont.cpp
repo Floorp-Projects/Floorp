@@ -10,7 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "nsExpirationTracker.h"
 #include "nsITimer.h"

@@ -21,7 +21,7 @@
 
 #ifdef MOZ_LOGGING
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsTArray.h"
 
 extern PRLogModuleInfo *gWidgetLog;

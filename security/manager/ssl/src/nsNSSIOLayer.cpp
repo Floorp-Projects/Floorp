@@ -14,7 +14,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Telemetry.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prmem.h"
 #include "prnetdb.h"
 #include "nsIPrefService.h"

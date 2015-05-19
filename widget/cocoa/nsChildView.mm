@@ -5,7 +5,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include <unistd.h>
 #include <math.h>

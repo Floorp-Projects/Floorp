@@ -29,7 +29,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsServiceManagerUtils.h"
 
 #ifdef MOZ_WIDGET_ANDROID

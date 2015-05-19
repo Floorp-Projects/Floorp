@@ -6,7 +6,7 @@
 
 #include "nsEventQueue.h"
 #include "nsAutoPtr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsThreadUtils.h"
 #include "prthread.h"
 #include "mozilla/ChaosMode.h"

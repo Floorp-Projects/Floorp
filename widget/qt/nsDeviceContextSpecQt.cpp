@@ -10,7 +10,7 @@
 #define SET_PRINTER_FEATURES_VIA_PREFS 1
 #define PRINTERFEATURES_PREF "print.tmp.printerfeatures"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "plstr.h"
 

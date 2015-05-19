@@ -5,7 +5,7 @@
 #ifndef Cache2Log__h__
 #define Cache2Log__h__
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 namespace net {

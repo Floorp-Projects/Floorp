@@ -9,7 +9,7 @@
 #include "mozilla/RefPtr.h"
 #include "DirectShowUtils.h"
 #include "MP3FrameParser.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include <algorithm>
 
 using namespace mozilla::media;

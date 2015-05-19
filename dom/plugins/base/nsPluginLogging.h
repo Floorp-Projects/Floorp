@@ -8,7 +8,7 @@
 #ifndef nsPluginLogging_h__
 #define nsPluginLogging_h__
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #ifndef PLUGIN_LOGGING    // allow external override
 #define PLUGIN_LOGGING 1  // master compile-time switch for pluging logging

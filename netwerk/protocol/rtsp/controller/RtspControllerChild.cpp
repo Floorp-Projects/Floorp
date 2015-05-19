@@ -14,7 +14,7 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsStringStream.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 PRLogModuleInfo* gRtspChildLog = nullptr;
 #undef LOG

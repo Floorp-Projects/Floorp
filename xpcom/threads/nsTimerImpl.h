@@ -13,7 +13,7 @@
 
 #include "nsCOMPtr.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
 

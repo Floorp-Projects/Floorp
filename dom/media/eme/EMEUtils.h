@@ -7,7 +7,7 @@
 #ifndef EME_LOG_H_
 #define EME_LOG_H_
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsString.h"
 
 namespace mozilla {

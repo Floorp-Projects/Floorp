@@ -8,7 +8,7 @@
 
 #include <cstdarg>
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #ifdef ANDROID
 #include <android/log.h>
 #endif

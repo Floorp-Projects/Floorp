@@ -77,7 +77,7 @@
 #endif
 #include "AccessCheck.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prthread.h"
 
 #include "mozilla/Preferences.h"

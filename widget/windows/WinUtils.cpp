@@ -20,7 +20,7 @@
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "nsString.h"
 #include "nsDirectoryServiceUtils.h"

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "pk11pub.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "ScopedNSSTypes.h"
 #include "secoidt.h"
 

@@ -16,7 +16,7 @@
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsIClassInfoImpl.h"
 #include "nsAlgorithm.h"
 #include "nsMemory.h"

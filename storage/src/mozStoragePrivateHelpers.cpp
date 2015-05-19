@@ -23,7 +23,7 @@
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageBindingParams.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 extern PRLogModuleInfo* gStorageLog;
 
 namespace mozilla {

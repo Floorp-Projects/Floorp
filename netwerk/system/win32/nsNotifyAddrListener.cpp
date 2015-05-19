@@ -19,7 +19,7 @@
 #include <netioapi.h>
 #include <iprtrmib.h>
 #include "plstr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
