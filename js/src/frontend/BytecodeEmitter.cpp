@@ -1931,6 +1931,12 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      // Watch out for getters!
+      case PNK_SUPERPROP:
+        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        *answer = true;
+        return true;
+
       // Unary cases with side effects only if the child has them.
       case PNK_TYPEOFEXPR:
       case PNK_VOID:
@@ -2007,13 +2013,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = false;
         return true;
 
-      case PNK_SUPERPROP:
-      case PNK_BREAK:
-      case PNK_CONTINUE:
-      case PNK_EXPORT_BATCH_SPEC:
-      case PNK_FRESHENBLOCK:
-      case PNK_EXPORT:
-      case PNK_EXPORT_DEFAULT:
+      // Binary cases with obvious side effects.
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
       case PNK_SUBASSIGN:
@@ -2026,8 +2026,40 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_MULASSIGN:
       case PNK_DIVASSIGN:
       case PNK_MODASSIGN:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      // More getters.
       case PNK_ELEM:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      // Again, getters.
       case PNK_SUPERELEM:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
+
+      // These affect visible names in this code, or in other code.
+      case PNK_IMPORT:
+      case PNK_EXPORT_FROM:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      // Likewise.
+      case PNK_EXPORT:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
+
+      case PNK_BREAK:
+      case PNK_CONTINUE:
+      case PNK_EXPORT_BATCH_SPEC:
+      case PNK_FRESHENBLOCK:
+      case PNK_EXPORT_DEFAULT:
       case PNK_COLON:
       case PNK_CASE:
       case PNK_SHORTHAND:
@@ -2043,8 +2075,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_YIELD_STAR:
       case PNK_YIELD:
       case PNK_RETURN:
-      case PNK_IMPORT:
-      case PNK_EXPORT_FROM:
       case PNK_CONDITIONAL:
       case PNK_FORIN:
       case PNK_FOROF:
