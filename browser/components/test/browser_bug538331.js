@@ -303,8 +303,7 @@ const BG_NOTIFY_TESTS = [
 // _showUpdateNotification in nsBrowserGlue.js
 function testShowNotification()
 {
-  let gTestBrowser = gBrowser.selectedBrowser;
-  let notifyBox = gBrowser.getNotificationBox(gTestBrowser);
+  let notifyBox = document.getElementById("high-priority-global-notificationbox");
 
   // Catches any windows opened by these tests (e.g. alert windows) and closes
   // them
