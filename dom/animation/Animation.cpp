@@ -267,9 +267,9 @@ Animation::Play(ErrorResult& aRv, LimitBehavior aLimitBehavior)
 }
 
 void
-Animation::Pause()
+Animation::Pause(ErrorResult& aRv)
 {
-  DoPause();
+  DoPause(aRv);
   PostUpdate();
 }
 
@@ -639,10 +639,23 @@ Animation::DoPlay(ErrorResult& aRv, LimitBehavior aLimitBehavior)
 
 // http://w3c.github.io/web-animations/#pause-an-animation
 void
-Animation::DoPause()
+Animation::DoPause(ErrorResult& aRv)
 {
   if (IsPausedOrPausing()) {
     return;
+  }
+
+  // If we are transitioning from idle, fill in the current time
+  if (GetCurrentTime().IsNull()) {
+    if (mPlaybackRate >= 0.0) {
+      mHoldTime.SetValue(TimeDuration(0));
+    } else {
+      if (EffectEnd() == TimeDuration::Forever()) {
+        aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+        return;
+      }
+      mHoldTime.SetValue(TimeDuration(EffectEnd()));
+    }
   }
 
   bool reuseReadyPromise = false;

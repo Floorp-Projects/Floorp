@@ -66,7 +66,7 @@ public:
 
   virtual dom::Promise* GetReady(ErrorResult& aRv) override;
   virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) override;
-  virtual void Pause() override;
+  virtual void Pause(ErrorResult& aRv) override;
 
   virtual dom::AnimationPlayState PlayStateFromJS() const override;
   virtual void PlayFromJS(ErrorResult& aRv) override;

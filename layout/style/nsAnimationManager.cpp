@@ -44,10 +44,10 @@ CSSAnimation::Play(ErrorResult &aRv, LimitBehavior aLimitBehavior)
 }
 
 void
-CSSAnimation::Pause()
+CSSAnimation::Pause(ErrorResult& aRv)
 {
   mPauseShouldStick = true;
-  Animation::Pause();
+  Animation::Pause(aRv);
 }
 
 AnimationPlayState
@@ -89,7 +89,20 @@ CSSAnimation::PauseFromStyle()
   }
 
   mIsStylePaused = true;
-  DoPause();
+  ErrorResult rv;
+  DoPause(rv);
+  // pause() should only throw when *all* of the following conditions are true:
+  // - we are in the idle state, and
+  // - we have a negative playback rate, and
+  // - we have an infinitely repeating animation
+  // The first two conditions will never happen under regular style processing
+  // but could happen if an author made modifications to the Animation object
+  // and then updated animation-play-state. It's an unusual case and there's
+  // no obvious way to pass on the exception information so we just silently
+  // fail for now.
+  if (rv.Failed()) {
+    NS_WARNING("Unexpected exception pausing animation - silently failing");
+  }
 }
 
 void
