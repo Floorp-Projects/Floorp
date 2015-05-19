@@ -1572,7 +1572,7 @@ UnifiedComplete.prototype = {
         // Autocomplete often fallbacks to a table scan due to lack of text
         // indices.  A larger cache helps reducing IO and improving performance.
         // The value used here is larger than the default Storage value defined
-        // as MAX_CACHE_SIZE_BYTES in storage/src/mozStorageConnection.cpp.
+        // as MAX_CACHE_SIZE_BYTES in storage/mozStorageConnection.cpp.
         yield conn.execute("PRAGMA cache_size = -6144"); // 6MiB
 
         yield SwitchToTabStorage.initDatabase(conn);

@@ -146,7 +146,7 @@ function run_test()
   setup();
 
   // function JSValStorageStatementBinder in
-  // storage/src/mozStorageStatementParams.cpp tells us that the following types
+  // storage/mozStorageStatementParams.cpp tells us that the following types
   // and only the following types are valid as statement parameters:
   var vals = [
     1337,       // int
