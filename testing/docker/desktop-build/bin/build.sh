@@ -1,6 +1,6 @@
 #! /bin/bash -vex
 
-set -x
+set -v -x -e
 
 # Inputs, with defaults
 
