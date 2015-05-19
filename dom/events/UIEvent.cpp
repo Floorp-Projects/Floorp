@@ -114,7 +114,7 @@ DevPixelsToCSSPixels(const LayoutDeviceIntPoint& aPoint,
 nsIntPoint
 UIEvent::GetMovementPoint()
 {
-  if (mPrivateDataDuplicated || mEventIsInternal) {
+  if (mPrivateDataDuplicated) {
     return mMovementPoint;
   }
 

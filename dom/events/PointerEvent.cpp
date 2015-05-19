@@ -82,7 +82,7 @@ PointerEvent::Constructor(EventTarget* aOwner,
                     aParam.mScreenY, aParam.mClientX, aParam.mClientY,
                     false, false, false, false, aParam.mButton,
                     aParam.mRelatedTarget);
-  e->InitializeExtraMouseEventDictionaryMembers(aParam);
+  e->InitModifiers(aParam);
 
   WidgetPointerEvent* widgetEvent = e->mEvent->AsPointerEvent();
   widgetEvent->pointerId = aParam.mPointerId;
