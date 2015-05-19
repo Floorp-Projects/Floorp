@@ -114,7 +114,7 @@ public:
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     nsTArray<ServiceWorkerClientInfo> result;
 
-    swm->GetAllClients(mScope, result);
+    swm->GetAllClients(mWorkerPrivate->GetPrincipal(), mScope, result);
     nsRefPtr<ResolvePromiseWorkerRunnable> r =
       new ResolvePromiseWorkerRunnable(mWorkerPrivate, mPromiseProxy, result);
 
@@ -197,7 +197,9 @@ public:
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
 
-    nsresult rv = swm->ClaimClients(mScope, mServiceWorkerID);
+    nsresult rv =
+      swm->ClaimClients(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(),
+                        mScope, mServiceWorkerID);
 
     MutexAutoLock lock(mPromiseProxy->GetCleanUpLock());
     if (mPromiseProxy->IsClean()) {
