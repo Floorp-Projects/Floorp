@@ -515,6 +515,7 @@ IsOnBaseDomainWhitelist(nsIURI* aURI)
     // 0th entry only active when testing:
     NS_LITERAL_CSTRING("test2.example.org"),
     NS_LITERAL_CSTRING("tbcdn.cn"), // for m.taobao.com
+    NS_LITERAL_CSTRING("alicdn.com"), // for m.taobao.com
     NS_LITERAL_CSTRING("dpfile.com"), // for m.dianping.com
     NS_LITERAL_CSTRING("hao123img.com"), // for hao123.com
   };
