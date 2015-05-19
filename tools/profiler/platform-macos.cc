@@ -56,37 +56,10 @@ struct SamplerRegistry {
 
 Sampler *SamplerRegistry::sampler = NULL;
 
-// The following variables are used to communicate between the signal
-// sender thread and the signal handler on the sampled thread.
-//
-// sCurrentThreadProfile is used to pass the current thread profile INTO
-// the signal handler.  sSignalHandlingDone is used by the handler to
-// indicate when it's finished.  The signal-sender thread spins on
-// sSignalHandlingDone (using sched_yield).  This is to avoid usage of
-// synchronization primitives like condvars in the signal handler code.
-static mozilla::Atomic<ThreadProfile*> sCurrentThreadProfile;
-static mozilla::Atomic<bool> sSignalHandlingDone;
-
 #ifdef DEBUG
 // 0 is never a valid thread id on MacOSX since a pthread_t is a pointer.
 static const pthread_t kNoThread = (pthread_t) 0;
 #endif
-
-static void SetSampleContext(TickSample* sample, void* context)
-{
-  // Extracting the sample from the context is extremely machine dependent.
-  ucontext_t* ucontext = reinterpret_cast<ucontext_t*>(context);
-  mcontext_t& mcontext = ucontext->uc_mcontext;
-#if defined(SPS_PLAT_amd64_darwin)
-  sample->pc = reinterpret_cast<Address>(mcontext->__ss.__rip);
-  sample->sp = reinterpret_cast<Address>(mcontext->__ss.__rsp);
-  sample->fp = reinterpret_cast<Address>(mcontext->__ss.__rbp);
-#elif defined(SPS_PLAT_x86_darwin)
-  sample->pc = reinterpret_cast<Address>(mcontext->__ss.__eip);
-  sample->sp = reinterpret_cast<Address>(mcontext->__ss.__esp);
-  sample->fp = reinterpret_cast<Address>(mcontext->__ss.__ebp);
-#endif
-}
 
 void OS::Startup() {
 }
@@ -157,48 +130,6 @@ void Thread::Start() {
 
 void Thread::Join() {
   pthread_join(thread_, NULL);
-}
-
-
-namespace {
-
-void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
-  if (!Sampler::GetActiveSampler()) {
-    sSignalHandlingDone = true;
-    return;
-  }
-
-  TickSample sample_obj;
-  TickSample* sample = &sample_obj;
-  sample->context = context;
-
-  // If profiling, we extract the current pc and sp.
-  if (Sampler::GetActiveSampler()->IsProfiling()) {
-    SetSampleContext(sample, context);
-  }
-  sample->threadProfile = sCurrentThreadProfile;
-  sample->timestamp = mozilla::TimeStamp::Now();
-  sample->rssMemory = sample->threadProfile->mRssMemory;
-  sample->ussMemory = sample->threadProfile->mUssMemory;
-
-  Sampler::GetActiveSampler()->Tick(sample);
-
-  sCurrentThreadProfile = NULL;
-  sSignalHandlingDone = true;
-}
-
-} // namespace
-
-static void ProfilerSignalThread(ThreadProfile *profile,
-                                 bool isFirstProfiledThread)
-{
-  if (isFirstProfiledThread && Sampler::GetActiveSampler()->ProfileMemory()) {
-    profile->mRssMemory = nsMemoryReporterManager::ResidentFast();
-    profile->mUssMemory = nsMemoryReporterManager::ResidentUnique();
-  } else {
-    profile->mRssMemory = 0;
-    profile->mUssMemory = 0;
-  }
 }
 
 class PlatformData : public Malloced {
@@ -294,9 +225,6 @@ class SamplerThread : public Thread {
           info->Profile()->GetThreadResponsiveness()->Update();
 
           ThreadProfile* thread_profile = info->Profile();
-          sCurrentThreadProfile = thread_profile;
-
-          ProfilerSignalThread(sCurrentThreadProfile, isFirstProfiledThread);
 
           SampleContext(SamplerRegistry::sampler, thread_profile,
                         isFirstProfiledThread);
@@ -317,15 +245,62 @@ class SamplerThread : public Thread {
   void SampleContext(Sampler* sampler, ThreadProfile* thread_profile,
                      bool isFirstProfiledThread)
   {
-    pthread_t profiled_pthread =
-      thread_profile->GetPlatformData()->profiled_pthread();
+    thread_act_t profiled_thread =
+      thread_profile->GetPlatformData()->profiled_thread();
 
-    MOZ_ASSERT(sSignalHandlingDone == false);
-    pthread_kill(profiled_pthread, SIGPROF);
-    while (!sSignalHandlingDone) {
-      sched_yield();
+    TickSample sample_obj;
+    TickSample* sample = &sample_obj;
+
+    if (isFirstProfiledThread && Sampler::GetActiveSampler()->ProfileMemory()) {
+      sample->rssMemory = nsMemoryReporterManager::ResidentFast();
+    } else {
+      sample->rssMemory = 0;
     }
-    sSignalHandlingDone = false;
+
+    // Unique Set Size is not supported on Mac.
+    sample->ussMemory = 0;
+
+    // We're using thread_suspend on OS X because pthread_kill (which is what
+    // we're using on Linux) has less consistent performance and causes
+    // strange crashes, see bug 1166778 and bug 1166808.
+
+    if (KERN_SUCCESS != thread_suspend(profiled_thread)) return;
+
+#if V8_HOST_ARCH_X64
+    thread_state_flavor_t flavor = x86_THREAD_STATE64;
+    x86_thread_state64_t state;
+    mach_msg_type_number_t count = x86_THREAD_STATE64_COUNT;
+#if __DARWIN_UNIX03
+#define REGISTER_FIELD(name) __r ## name
+#else
+#define REGISTER_FIELD(name) r ## name
+#endif  // __DARWIN_UNIX03
+#elif V8_HOST_ARCH_IA32
+    thread_state_flavor_t flavor = i386_THREAD_STATE;
+    i386_thread_state_t state;
+    mach_msg_type_number_t count = i386_THREAD_STATE_COUNT;
+#if __DARWIN_UNIX03
+#define REGISTER_FIELD(name) __e ## name
+#else
+#define REGISTER_FIELD(name) e ## name
+#endif  // __DARWIN_UNIX03
+#else
+#error Unsupported Mac OS X host architecture.
+#endif  // V8_HOST_ARCH
+
+    if (thread_get_state(profiled_thread,
+                         flavor,
+                         reinterpret_cast<natural_t*>(&state),
+                         &count) == KERN_SUCCESS) {
+      sample->pc = reinterpret_cast<Address>(state.REGISTER_FIELD(ip));
+      sample->sp = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
+      sample->fp = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
+      sample->timestamp = mozilla::TimeStamp::Now();
+      sample->threadProfile = thread_profile;
+
+      sampler->Tick(sample);
+    }
+    thread_resume(profiled_thread);
   }
 
   int intervalMicro_;
@@ -358,29 +333,8 @@ Sampler::~Sampler() {
 
 void Sampler::Start() {
   ASSERT(!IsActive());
-
-  // Initialize signal handler communication
-  sCurrentThreadProfile = NULL;
-  sSignalHandlingDone = false;
-
-  // Request profiling signals.
-  LOG("Request signal");
-  struct sigaction sa;
-  sa.sa_sigaction = ProfilerSignalHandler;
-  sigemptyset(&sa.sa_mask);
-  sa.sa_flags = SA_RESTART | SA_SIGINFO;
-  if (sigaction(SIGPROF, &sa, &old_sigprof_signal_handler_) != 0) {
-    LOG("Error installing signal");
-    return;
-  }
-  signal_handler_installed_ = true;
-
-  // Start a thread that sends SIGPROF signal to VM thread.
-  // Sending the signal ourselves instead of relying on itimer provides
-  // much better accuracy.
   SetActive(true);
   SamplerThread::AddActiveSampler(this);
-  LOG("Profiler thread started");
 }
 
 
@@ -388,12 +342,6 @@ void Sampler::Stop() {
   ASSERT(IsActive());
   SetActive(false);
   SamplerThread::RemoveActiveSampler(this);
-
-  // Restore old signal handler
-  if (signal_handler_installed_) {
-    sigaction(SIGPROF, &old_sigprof_signal_handler_, 0);
-    signal_handler_installed_ = false;
-  }
 }
 
 pthread_t
