@@ -36,7 +36,7 @@
 #undef LOG
 #ifdef MOZ_LOGGING
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsTArray.h"
 #include "Units.h"
 

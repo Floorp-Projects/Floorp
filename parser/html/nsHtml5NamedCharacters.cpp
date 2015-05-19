@@ -25,7 +25,7 @@
 #include "nscore.h"
 #include "nsDebug.h"
 #include "mozilla/ArrayUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "nsHtml5NamedCharacters.h"
 

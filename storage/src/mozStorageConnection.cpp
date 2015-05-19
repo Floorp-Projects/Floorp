@@ -37,7 +37,7 @@
 #include "mozStorageHelper.h"
 #include "GeckoProfiler.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prprf.h"
 #include "nsProxyRelease.h"
 #include <algorithm>

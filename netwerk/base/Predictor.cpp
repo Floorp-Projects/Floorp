@@ -32,7 +32,7 @@
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
 #endif
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"

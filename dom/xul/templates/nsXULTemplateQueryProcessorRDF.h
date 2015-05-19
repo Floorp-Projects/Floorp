@@ -28,7 +28,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 extern PRLogModuleInfo* gXULTemplateLog;
 
 class nsIContent;

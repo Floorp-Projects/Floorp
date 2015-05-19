@@ -355,7 +355,7 @@ nsStringBuffer::SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSiz
 // Check that internal and external strings have the same size.
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=430581
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsXPCOMStrings.h"
 
 static_assert(sizeof(nsStringContainer_base) == sizeof(nsSubstring),

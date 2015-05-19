@@ -7,7 +7,7 @@
 #ifndef RTSPPRLOG_H
 #define RTSPPRLOG_H
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 extern PRLogModuleInfo* gRtspLog;
 

@@ -35,7 +35,7 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "IDBEvents.h"
 #include "IDBFactory.h"

@@ -25,7 +25,7 @@
 #include "nsPIWindowRoot.h"
 #include "nsRDFCID.h"
 #include "nsXULCommandDispatcher.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"

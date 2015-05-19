@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OpenSLESProvider.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsDebug.h"
 
 #include <dlfcn.h>

@@ -9,7 +9,7 @@
 #include "MediaCodecProxy.h"
 #include "MediaData.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include <android/log.h>
 #define GMDD_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkMediaDataDecoder", __VA_ARGS__)
 

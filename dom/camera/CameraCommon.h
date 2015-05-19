@@ -15,7 +15,7 @@
 #endif
 #endif
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 extern PRLogModuleInfo* GetCameraLog();
 #define DOM_CAMERA_LOG( type, ... ) PR_LOG(GetCameraLog(), (PRLogModuleLevel)type, ( __VA_ARGS__ ))

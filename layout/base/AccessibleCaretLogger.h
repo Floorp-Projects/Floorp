@@ -7,7 +7,7 @@
 #ifndef AccessibleCaretLog_h
 #define AccessibleCaretLog_h
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 

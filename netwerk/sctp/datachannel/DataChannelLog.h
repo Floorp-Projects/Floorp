@@ -8,7 +8,7 @@
 #define DataChannelLog_h
 
 #include "base/basictypes.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 extern PRLogModuleInfo* GetDataChannelLog();
 extern PRLogModuleInfo* GetSCTPLog();

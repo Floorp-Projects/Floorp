@@ -24,7 +24,7 @@
 #include "nsNSSShutDown.h"
 #include "nsUnicharUtils.h"
 #include "pk11pub.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prsystem.h"
 
 static bool sNTLMv1Forced = false;

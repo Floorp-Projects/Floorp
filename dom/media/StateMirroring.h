@@ -16,7 +16,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsISupportsImpl.h"
 
 /*

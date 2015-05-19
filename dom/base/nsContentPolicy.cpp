@@ -8,7 +8,7 @@
  * Implementation of the "@mozilla.org/layout/content-policy;1" contract.
  */
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "nsISupports.h"
 #include "nsXPCOM.h"

@@ -8,7 +8,7 @@
 #include "nsIRDFDelegateFactory.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 

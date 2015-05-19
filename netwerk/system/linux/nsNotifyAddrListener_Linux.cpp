@@ -19,7 +19,7 @@
 #include "nsNotifyAddrListener_Linux.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"

@@ -12,7 +12,7 @@
 #include "jArray.h"
 #include "nscore.h"
 #include "nsDebug.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsMemory.h"
 
 class nsHtml5NamedCharactersAccel

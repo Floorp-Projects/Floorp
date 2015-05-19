@@ -13,7 +13,7 @@
 #include "VideoUtils.h"
 #include "nsThreadUtils.h"
 #include "Layers.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "stagefright/MediaBuffer.h"
 #include "stagefright/MetaData.h"
 #include "stagefright/MediaErrors.h"

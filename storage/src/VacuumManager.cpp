@@ -13,7 +13,7 @@
 #include "nsIObserverService.h"
 #include "nsIFile.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prtime.h"
 
 #include "mozStorageConnection.h"

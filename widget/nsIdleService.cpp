@@ -13,7 +13,7 @@
 #include "nsCOMArray.h"
 #include "nsXULAppAPI.h"
 #include "prinrval.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prtime.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Services.h"

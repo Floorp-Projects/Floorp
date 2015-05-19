@@ -23,7 +23,7 @@
 #include "harfbuzz/hb.h"
 
 #include "plbase64.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #define LOG(log, args) PR_LOG(gfxPlatform::GetLog(log), \
                                PR_LOG_DEBUG, args)

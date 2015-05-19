@@ -86,7 +86,7 @@
 #include "prthread.h"
 #include "rdf.h"
 #include "rdfutil.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsNameSpaceMap.h"
 #include "nsCRT.h"
 #include "nsCycleCollectionParticipant.h"

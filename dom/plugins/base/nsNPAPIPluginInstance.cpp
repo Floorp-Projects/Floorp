@@ -10,7 +10,7 @@
 #include "base/basictypes.h"
 #endif
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prmem.h"
 #include "nscore.h"
 #include "prenv.h"

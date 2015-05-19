@@ -12,7 +12,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/Likely.h"
 #include "nsBox.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "nsIPresShell.h"
 #include "nsHTMLReflowState.h"

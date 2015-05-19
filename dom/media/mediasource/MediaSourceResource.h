@@ -9,7 +9,7 @@
 
 #include "MediaResource.h"
 #include "mozilla/Monitor.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 extern PRLogModuleInfo* GetMediaSourceLog();
 

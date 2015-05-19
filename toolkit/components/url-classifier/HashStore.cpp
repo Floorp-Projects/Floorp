@@ -35,7 +35,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsNetUtil.h"
 #include "nsCheckSummedOutputStream.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "zlib.h"
 
 // Main store for SafeBrowsing protocol data. We store

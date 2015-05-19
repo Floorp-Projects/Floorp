@@ -9,7 +9,7 @@
 #include "mozilla/unused.h"
 #include "GMPMessageUtils.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 
