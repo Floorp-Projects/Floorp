@@ -102,7 +102,7 @@ public:
   void Cancel();
   virtual void Finish(ErrorResult& aRv);
   virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior);
-  virtual void Pause();
+  virtual void Pause(ErrorResult& aRv);
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
   // Wrapper functions for Animation DOM methods when called
@@ -126,7 +126,7 @@ public:
    * in future we will likely have to flush style in
    * CSSAnimation::PauseFromJS so we leave it for now.
    */
-  void PauseFromJS() { Pause(); }
+  void PauseFromJS(ErrorResult& aRv) { Pause(aRv); }
   // Wrapper functions for Animation DOM methods when called from style.
   //
   // Typically these DOM methods also notify style of changes but when
@@ -284,7 +284,7 @@ protected:
   void SilentlySetPlaybackRate(double aPlaybackRate);
   void DoCancel();
   void DoPlay(ErrorResult& aRv, LimitBehavior aLimitBehavior);
-  void DoPause();
+  void DoPause(ErrorResult& aRv);
   void ResumeAt(const TimeDuration& aReadyTime);
   void PauseAt(const TimeDuration& aReadyTime);
   void FinishPendingAt(const TimeDuration& aReadyTime)
@@ -337,7 +337,7 @@ protected:
   Nullable<TimeDuration> mPreviousCurrentTime; // Animation timescale
   double mPlaybackRate;
 
-  // A Promise that is replaced on each call to Play() (and in future Pause())
+  // A Promise that is replaced on each call to Play()
   // and fulfilled when Play() is successfully completed.
   // This object is lazily created by GetReady.
   // See http://w3c.github.io/web-animations/#current-ready-promise
