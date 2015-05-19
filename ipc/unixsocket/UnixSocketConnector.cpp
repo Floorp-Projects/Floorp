@@ -9,6 +9,9 @@
 namespace mozilla {
 namespace ipc {
 
+UnixSocketConnector::UnixSocketConnector()
+{ }
+
 UnixSocketConnector::~UnixSocketConnector()
 { }
 
