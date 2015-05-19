@@ -31,6 +31,12 @@ const GRAPH_REQUIREMENTS = {
 let OverviewView = {
 
   /**
+   * How frequently we attempt to render the graphs. Overridden
+   * in tests.
+   */
+  OVERVIEW_UPDATE_INTERVAL: OVERVIEW_UPDATE_INTERVAL,
+
+  /**
    * Sets up the view with event binding.
    */
   initialize: function () {
@@ -45,6 +51,9 @@ let OverviewView = {
       this.disable();
       return;
     }
+
+    // Store info on multiprocess support.
+    this._multiprocessData = PerformanceController.getMultiprocessStatus();
 
     this._onRecordingWillStart = this._onRecordingWillStart.bind(this);
     this._onRecordingStarted = this._onRecordingStarted.bind(this);
@@ -173,6 +182,7 @@ let OverviewView = {
     if (this.isDisabled()) {
       return;
     }
+
     let recording = PerformanceController.getCurrentRecording();
     yield this.graphs.render(recording.getAllData(), resolution);
 
@@ -197,7 +207,7 @@ let OverviewView = {
     // Check here to see if there's still a _timeoutId, incase
     // `stop` was called before the _prepareNextTick call was executed.
     if (this.isRendering()) {
-      this._timeoutId = setTimeout(this._onRecordingTick, OVERVIEW_UPDATE_INTERVAL);
+      this._timeoutId = setTimeout(this._onRecordingTick, this.OVERVIEW_UPDATE_INTERVAL);
     }
   },
 
@@ -255,7 +265,7 @@ let OverviewView = {
    * Start the polling for rendering the overview graph.
    */
   _startPolling: function () {
-    this._timeoutId = setTimeout(this._onRecordingTick, OVERVIEW_UPDATE_INTERVAL);
+    this._timeoutId = setTimeout(this._onRecordingTick, this.OVERVIEW_UPDATE_INTERVAL);
   },
 
   /**
@@ -341,6 +351,35 @@ let OverviewView = {
   },
 
   /**
+   * Fetch the multiprocess status and if e10s is not currently on, disable
+   * realtime rendering.
+   *
+   * @return {boolean}
+   */
+  isRealtimeRenderingEnabled: function () {
+    return this._multiprocessData.enabled;
+  },
+
+  /**
+   * Show the graphs overview panel when a recording is finished
+   * when non-realtime graphs are enabled. Also set the graph visibility
+   * so the performance graphs know which graphs to render.
+   *
+   * @param {RecordingModel} recording
+   */
+  _showGraphsPanel: function (recording) {
+    this._setGraphVisibilityFromRecordingFeatures(recording);
+    $("#overview-pane").hidden = false;
+  },
+
+  /**
+   * Hide the graphs container completely.
+   */
+  _hideGraphsPanel: function () {
+    $("#overview-pane").hidden = true;
+  },
+
+  /**
    * Called when `devtools.theme` changes.
    */
   _onThemeChanged: function (_, theme) {
@@ -361,12 +400,26 @@ let OverviewView = {
  * @return {function}
  */
 function OverviewViewOnStateChange (fn) {
-  return function _onRecordingStateChange () {
+  return function _onRecordingStateChange (eventName, recording) {
     let currentRecording = PerformanceController.getCurrentRecording();
 
-    // All these methods require a recording to exist.
-    if (!currentRecording) {
+    // All these methods require a recording to exist selected and
+    // from the event name, since there is a delay between starting
+    // a recording and changing the selection.
+    if (!currentRecording || !recording) {
       return;
+    }
+
+    // If realtime rendering is not enabed (e10s not on), then
+    // show the disabled message, or the full graphs if the recording is completed
+    if (!this.isRealtimeRenderingEnabled()) {
+      if (recording.isRecording()) {
+        this._hideGraphsPanel();
+        // Abort, as we do not want to change polling status.
+        return;
+      } else {
+        this._showGraphsPanel(recording);
+      }
     }
 
     if (this.isRendering() && !currentRecording.isRecording()) {
