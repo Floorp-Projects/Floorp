@@ -13994,18 +13994,19 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  if (!doc) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsCOMPtr<nsIServiceWorkerManager> swm = services::GetServiceWorkerManager();
   if (!swm) {
     return NS_OK;
   }
 
   if (aIsNavigate) {
-    return swm->IsAvailableForURI(aURI, aShouldIntercept);
-  }
-
-  nsCOMPtr<nsIDocument> doc = GetDocument();
-  if (!doc) {
-    return NS_ERROR_NOT_AVAILABLE;
+    nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+    return swm->IsAvailableForURI(principal, aURI, aShouldIntercept);
   }
 
   return swm->IsControlled(doc, aShouldIntercept);
@@ -14024,13 +14025,9 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
   nsresult rv = aChannel->GetIsNavigation(&isNavigation);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> doc;
-
-  if (!isNavigation) {
-    doc = GetDocument();
-    if (!doc) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  if (!doc) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   bool isReload = mLoadType & LOAD_CMD_RELOAD;
