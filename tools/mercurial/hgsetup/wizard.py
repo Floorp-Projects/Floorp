@@ -406,11 +406,11 @@ class MercurialSetupWizard(object):
             if not self._prompt_yn(prompt_text):
                 print('')
                 return
-            print('Activated %s extension.\n' % name)
         if not path:
             path = os.path.join(self.vcs_tools_dir, 'hgext', name)
-            self.update_vcs_tools = True
+        self.update_vcs_tools = True
         c.activate_extension(name, path)
+        print('Activated %s extension.\n' % name)
 
     def _prompt(self, msg, allow_empty=False):
         print(msg)
