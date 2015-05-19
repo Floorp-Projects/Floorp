@@ -1153,8 +1153,7 @@ nsCacheService::Init()
     }
 
     // initialize hashtable for active cache entries
-    rv = mActiveEntries.Init();
-    if (NS_FAILED(rv)) return rv;
+    mActiveEntries.Init();
 
     // create profile/preference observer
     if (!mObserver) {

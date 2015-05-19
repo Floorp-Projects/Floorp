@@ -55,9 +55,9 @@ nsMemoryCacheDevice::Init()
 {
     if (mInitialized)  return NS_ERROR_ALREADY_INITIALIZED;
 
-    nsresult  rv = mMemCacheEntries.Init();
-    mInitialized = NS_SUCCEEDED(rv);
-    return rv;
+    mMemCacheEntries.Init();
+    mInitialized = true;
+    return NS_OK;
 }
 
 
