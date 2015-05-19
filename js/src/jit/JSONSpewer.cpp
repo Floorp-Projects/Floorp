@@ -396,12 +396,12 @@ JSONSpewer::spewLIR(MIRGraph* mir)
 }
 
 void
-JSONSpewer::spewIntervals(BacktrackingAllocator* regalloc)
+JSONSpewer::spewRanges(BacktrackingAllocator* regalloc)
 {
     if (!fp_)
         return;
 
-    beginObjectProperty("intervals");
+    beginObjectProperty("ranges");
     beginListProperty("blocks");
 
     for (size_t bno = 0; bno < regalloc->graph.numBlocks(); bno++) {
@@ -417,27 +417,17 @@ JSONSpewer::spewIntervals(BacktrackingAllocator* regalloc)
 
                 beginObject();
                 integerProperty("vreg", id);
-                beginListProperty("intervals");
+                beginListProperty("ranges");
 
-                for (size_t i = 0; i < vreg->numIntervals(); i++) {
-                    LiveInterval* live = vreg->getInterval(i);
+                for (LiveRange::RegisterLinkIterator iter = vreg->rangesBegin(); iter; iter++) {
+                    LiveRange* range = LiveRange::get(*iter);
 
-                    if (live->numRanges()) {
-                        beginObject();
-                        property("allocation");
-                        fprintf(fp_, "\"%s\"", live->getAllocation()->toString());
-                        beginListProperty("ranges");
-
-                        for (size_t j = 0; j < live->numRanges(); j++) {
-                            beginObject();
-                            integerProperty("start", live->getRange(j)->from.bits());
-                            integerProperty("end", live->getRange(j)->to.bits());
-                            endObject();
-                        }
-
-                        endList();
-                        endObject();
-                    }
+                    beginObject();
+                    property("allocation");
+                    fprintf(fp_, "\"%s\"", range->bundle()->allocation().toString());
+                    integerProperty("start", range->from().bits());
+                    integerProperty("end", range->to().bits());
+                    endObject();
                 }
 
                 endList();
