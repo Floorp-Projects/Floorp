@@ -632,7 +632,6 @@ child:
     InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action);
 
     EndDragSession(bool aDoneDrag, bool aUserCancelled);
-    NuwaFreeze();
 
     async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, OptionalURIParams aDomain);
 
@@ -899,9 +898,6 @@ parent:
     async SystemMessageHandled();
 
     NuwaReady();
-    // Sent when nuwa finished its initialization process and is waiting for
-    // parent's signal to make it freeze.
-    NuwaWaitForFreeze();
 
     sync AddNewProcess(uint32_t pid, ProtocolFdMapping[] aFds);
 
