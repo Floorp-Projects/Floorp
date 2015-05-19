@@ -30,13 +30,11 @@ public:
 
   StreamSocketIO(MessageLoop* mIOLoop,
                  StreamSocket* aStreamSocket,
-                 UnixSocketConnector* aConnector,
-                 const nsACString& aAddress);
+                 UnixSocketConnector* aConnector);
   StreamSocketIO(MessageLoop* mIOLoop, int aFd,
                  ConnectionStatus aConnectionStatus,
                  StreamSocket* aStreamSocket,
-                 UnixSocketConnector* aConnector,
-                 const nsACString& aAddress);
+                 UnixSocketConnector* aConnector);
   ~StreamSocketIO();
 
   void GetSocketAddr(nsAString& aAddrStr) const;
@@ -98,9 +96,6 @@ public:
 private:
   void FireSocketError();
 
-  // Set up flags on file descriptor.
-  static bool SetSocketFlags(int aFd);
-
   /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
    * directly from main thread. All non-main-thread accesses should happen with
@@ -119,19 +114,14 @@ private:
   bool mShuttingDownOnIOThread;
 
   /**
-   * Address we are connecting to, assuming we are creating a client connection.
+   * Number of valid bytes in |mAddress|
    */
-  nsCString mAddress;
+  socklen_t mAddressLength;
 
   /**
-   * Size of the socket address struct
+   * Address structure of the socket currently in use
    */
-  socklen_t mAddrSize;
-
-  /**
-   * Address struct of the socket currently in use
-   */
-  sockaddr_any mAddr;
+  struct sockaddr_storage mAddress;
 
   /**
    * Task member for delayed connect task. Should only be access on main thread.
@@ -146,13 +136,12 @@ private:
 
 StreamSocketIO::StreamSocketIO(MessageLoop* mIOLoop,
                                StreamSocket* aStreamSocket,
-                               UnixSocketConnector* aConnector,
-                               const nsACString& aAddress)
+                               UnixSocketConnector* aConnector)
   : UnixSocketWatcher(mIOLoop)
   , mStreamSocket(aStreamSocket)
   , mConnector(aConnector)
   , mShuttingDownOnIOThread(false)
-  , mAddress(aAddress)
+  , mAddressLength(0)
   , mDelayedConnectTask(nullptr)
 {
   MOZ_ASSERT(mStreamSocket);
@@ -162,13 +151,12 @@ StreamSocketIO::StreamSocketIO(MessageLoop* mIOLoop,
 StreamSocketIO::StreamSocketIO(MessageLoop* mIOLoop, int aFd,
                                ConnectionStatus aConnectionStatus,
                                StreamSocket* aStreamSocket,
-                               UnixSocketConnector* aConnector,
-                               const nsACString& aAddress)
+                               UnixSocketConnector* aConnector)
   : UnixSocketWatcher(mIOLoop, aFd, aConnectionStatus)
   , mStreamSocket(aStreamSocket)
   , mConnector(aConnector)
   , mShuttingDownOnIOThread(false)
-  , mAddress(aAddress)
+  , mAddressLength(0)
   , mDelayedConnectTask(nullptr)
 {
   MOZ_ASSERT(mStreamSocket);
@@ -189,7 +177,16 @@ StreamSocketIO::GetSocketAddr(nsAString& aAddrStr) const
     aAddrStr.Truncate();
     return;
   }
-  mConnector->GetSocketAddr(mAddr, aAddrStr);
+
+  nsCString addressString;
+  nsresult rv = mConnector->ConvertAddressToString(
+    *reinterpret_cast<const struct sockaddr*>(&mAddress), mAddressLength,
+    addressString);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  aAddrStr.Assign(NS_ConvertUTF8toUTF16(addressString));
 }
 
 StreamSocket*
@@ -239,34 +236,21 @@ StreamSocketIO::Connect()
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(mConnector);
 
-  if (!IsOpen()) {
-    int fd = mConnector->Create();
-    if (fd < 0) {
-      NS_WARNING("Cannot create socket fd!");
-      FireSocketError();
-      return;
-    }
-    if (!SetSocketFlags(fd)) {
-      NS_WARNING("Cannot set socket flags!");
-      FireSocketError();
-      return;
-    }
-    if (!mConnector->SetUp(GetFd())) {
-      NS_WARNING("Could not set up socket!");
-      FireSocketError();
-      return;
-    }
-    if (!mConnector->CreateAddr(false, mAddrSize, mAddr, mAddress.get())) {
-      NS_WARNING("Cannot create socket address!");
-      FireSocketError();
-      return;
-    }
-    SetFd(fd);
+  MOZ_ASSERT(!IsOpen());
+
+  struct sockaddr* address = reinterpret_cast<struct sockaddr*>(&mAddress);
+  mAddressLength = sizeof(mAddress);
+
+  int fd;
+  nsresult rv = mConnector->CreateStreamSocket(address, &mAddressLength, fd);
+  if (NS_FAILED(rv)) {
+    FireSocketError();
+    return;
   }
+  SetFd(fd);
 
   // calls OnConnected() on success, or OnError() otherwise
-  nsresult rv = UnixSocketWatcher::Connect(
-    reinterpret_cast<struct sockaddr*>(&mAddr), mAddrSize);
+  rv = UnixSocketWatcher::Connect(address, mAddressLength);
   NS_WARN_IF(NS_FAILED(rv));
 }
 
@@ -354,41 +338,6 @@ StreamSocketIO::FireSocketError()
     new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR));
 }
 
-bool
-StreamSocketIO::SetSocketFlags(int aFd)
-{
-  static const int reuseaddr = 1;
-
-  // Set socket addr to be reused even if kernel is still waiting to close
-  int res = setsockopt(aFd, SOL_SOCKET, SO_REUSEADDR,
-                       &reuseaddr, sizeof(reuseaddr));
-  if (res < 0) {
-    return false;
-  }
-
-  // Set close-on-exec bit.
-  int flags = TEMP_FAILURE_RETRY(fcntl(aFd, F_GETFD));
-  if (-1 == flags) {
-    return false;
-  }
-  flags |= FD_CLOEXEC;
-  if (-1 == TEMP_FAILURE_RETRY(fcntl(aFd, F_SETFD, flags))) {
-    return false;
-  }
-
-  // Set non-blocking status flag.
-  flags = TEMP_FAILURE_RETRY(fcntl(aFd, F_GETFL));
-  if (-1 == flags) {
-    return false;
-  }
-  flags |= O_NONBLOCK;
-  if (-1 == TEMP_FAILURE_RETRY(fcntl(aFd, F_SETFL, flags))) {
-    return false;
-  }
-
-  return true;
-}
-
 // |ConnectionOrientedSocketIO|
 
 nsresult
@@ -398,21 +347,11 @@ StreamSocketIO::Accept(int aFd,
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTING);
 
-  // File-descriptor setup
-
-  if (!SetSocketFlags(aFd)) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!mConnector->SetUp(aFd)) {
-    NS_WARNING("Could not set up socket!");
-    return NS_ERROR_FAILURE;
-  }
-
   SetSocket(aFd, SOCKET_IS_CONNECTED);
 
   // Address setup
-  memcpy(&mAddr, aAddr, aAddrLen);
-  mAddrSize = aAddrLen;
+  mAddressLength = aAddrLen;
+  memcpy(&mAddress, aAddr, mAddressLength);
 
   // Signal success
   NS_DispatchToMainThread(
@@ -652,9 +591,8 @@ StreamSocket::Connect(UnixSocketConnector* aConnector,
     return false;
   }
 
-  nsCString addr(aAddress);
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  mIO = new StreamSocketIO(ioLoop, this, connector.forget(), addr);
+  mIO = new StreamSocketIO(ioLoop, this, connector.forget());
   SetConnectionStatus(SOCKET_CONNECTING);
   if (aDelayMs > 0) {
     StreamSocketIO::DelayedConnectTask* connectTask =
@@ -681,7 +619,7 @@ StreamSocket::PrepareAccept(UnixSocketConnector* aConnector)
 
   mIO = new StreamSocketIO(XRE_GetIOMessageLoop(),
                            -1, UnixSocketWatcher::SOCKET_IS_CONNECTING,
-                           this, connector.forget(), EmptyCString());
+                           this, connector.forget());
   return mIO;
 }
 

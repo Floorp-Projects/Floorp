@@ -31,7 +31,7 @@ The above merge way ensures the correct scope of 'strict mode.'
 """
 
 
-from marionette_test import MarionetteTestCase
+from marionette.marionette_test import MarionetteTestCase
 import bisect
 import inspect
 import os
