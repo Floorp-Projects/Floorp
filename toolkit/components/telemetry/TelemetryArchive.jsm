@@ -60,13 +60,6 @@ this.TelemetryArchive = {
   promiseArchivePing: function(ping) {
     return TelemetryArchiveImpl.promiseArchivePing(ping);
   },
-
-  /**
-   * Used in tests only to fake a restart of the module.
-   */
-  _testReset: function() {
-    TelemetryArchiveImpl._testReset();
-  },
 };
 
 /**
@@ -81,23 +74,12 @@ function shouldArchivePings() {
 let TelemetryArchiveImpl = {
   _logger: null,
 
-  // Tracks the archived pings in a Map of (id -> {timestampCreated, type}).
-  // We use this to cache info on archived pings to avoid scanning the disk more than once.
-  _archivedPings: new Map(),
-  // Whether we already scanned the archived pings on disk.
-  _scannedArchiveDirectory: false,
-
   get _log() {
     if (!this._logger) {
       this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
     }
 
     return this._logger;
-  },
-
-  _testReset: function() {
-    this._archivedPings = new Map();
-    this._scannedArchiveDirectory = false;
   },
 
   promiseArchivePing: function(ping) {
@@ -113,27 +95,11 @@ let TelemetryArchiveImpl = {
       }
     }
 
-    const creationDate = new Date(ping.creationDate);
-    if (this._archivedPings.has(ping.id)) {
-      const data = this._archivedPings.get(ping.id);
-      if (data.timestampCreated > creationDate.getTime()) {
-        this._log.error("promiseArchivePing - trying to overwrite newer ping with the same id");
-        return Promise.reject(new Error("trying to overwrite newer ping with the same id"));
-      } else {
-        this._log.warn("promiseArchivePing - overwriting older ping with the same id");
-      }
-    }
-
-    this._archivedPings.set(ping.id, {
-      timestampCreated: creationDate.getTime(),
-      type: ping.type,
-    });
-
     return TelemetryStorage.saveArchivedPing(ping);
   },
 
-  _buildArchivedPingList: function() {
-    let list = [for (p of this._archivedPings) {
+  _buildArchivedPingList: function(archivedPingsMap) {
+    let list = [for (p of archivedPingsMap) {
       id: p[0],
       timestampCreated: p[1].timestampCreated,
       type: p[1].type,
@@ -147,33 +113,13 @@ let TelemetryArchiveImpl = {
   promiseArchivedPingList: function() {
     this._log.trace("promiseArchivedPingList");
 
-    if (this._scannedArchiveDirectory) {
-      return Promise.resolve(this._buildArchivedPingList())
-    }
-
-    return TelemetryStorage.loadArchivedPingList().then((loadedInfo) => {
-      // Add the ping info from scanning to the existing info.
-      // We might have pings added before lazily loading this list.
-      for (let [id, info] of loadedInfo) {
-        this._archivedPings.set(id, {
-          timestampCreated: info.timestampCreated,
-          type: info.type,
-        });
-      }
-
-      this._scannedArchiveDirectory = true;
-      return this._buildArchivedPingList();
+    return TelemetryStorage.loadArchivedPingList().then(loadedInfo => {
+      return this._buildArchivedPingList(loadedInfo);
     });
   },
 
   promiseArchivedPingById: function(id) {
     this._log.trace("promiseArchivedPingById - id: " + id);
-    const data = this._archivedPings.get(id);
-    if (!data) {
-      this._log.trace("promiseArchivedPingById - no ping with id: " + id);
-      return Promise.reject(new Error("TelemetryArchive.promiseArchivedPingById - no ping with id " + id));
-    }
-
-    return TelemetryStorage.loadArchivedPing(id, data.timestampCreated, data.type);
+    return TelemetryStorage.loadArchivedPing(id);
   },
 };
