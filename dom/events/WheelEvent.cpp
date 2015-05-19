@@ -164,7 +164,8 @@ WheelEvent::Constructor(const GlobalObject& aGlobal,
                           aParam.mButton, aParam.mRelatedTarget,
                           EmptyString(), aParam.mDeltaX,
                           aParam.mDeltaY, aParam.mDeltaZ, aParam.mDeltaMode);
-  e->InitializeExtraMouseEventDictionaryMembers(aParam);
+  e->InitModifiers(aParam);
+  e->mEvent->AsWheelEvent()->buttons = aParam.mButtons;
   e->SetTrusted(trusted);
   return e.forget();
 }
