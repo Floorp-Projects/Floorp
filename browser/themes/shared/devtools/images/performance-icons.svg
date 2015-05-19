@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px">
 <style>
   g {
-    fill: #edf0f1;
+    fill: #babec3;
   }
   g:not(:target) {
     display: none;
