@@ -1939,6 +1939,12 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      // Again, getters.
+      case PNK_DOT:
+        MOZ_ASSERT(pn->isArity(PN_NAME));
+        *answer = true;
+        return true;
+
       // Unary cases with side effects only if the child has them.
       case PNK_TYPEOFEXPR:
       case PNK_VOID:
@@ -2038,6 +2044,12 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_AND:
       case PNK_STRICTEQ:
       case PNK_STRICTNE:
+      // Any subexpression of a comma expression could be effectful.
+      case PNK_COMMA:
+        MOZ_ASSERT(pn->pn_count > 0);
+      // Subcomponents of a literal may be effectful.
+      case PNK_ARRAY:
+      case PNK_OBJECT:
         MOZ_ASSERT(pn->isArity(PN_LIST));
         for (ParseNode* item = pn->pn_head; item; item = item->pn_next) {
             if (!checkSideEffects(item, answer))
@@ -2132,6 +2144,42 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      case PNK_CONDITIONAL:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (!checkSideEffects(pn->pn_kid1, answer))
+            return false;
+        if (*answer)
+            return true;
+        if (!checkSideEffects(pn->pn_kid2, answer))
+            return false;
+        if (*answer)
+            return true;
+        return checkSideEffects(pn->pn_kid3, answer);
+
+      case PNK_IF:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (!checkSideEffects(pn->pn_kid1, answer))
+            return false;
+        if (*answer)
+            return true;
+        if (!checkSideEffects(pn->pn_kid2, answer))
+            return false;
+        if (*answer)
+            return true;
+        if (ParseNode* elseNode = pn->pn_kid3) {
+            if (!checkSideEffects(elseNode, answer))
+                return false;
+        }
+        return true;
+
+      // Function calls can invoke non-local code.
+      case PNK_NEW:
+      case PNK_CALL:
+      case PNK_TAGGED_TEMPLATE:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        *answer = true;
+        return true;
+
       case PNK_EXPORT_BATCH_SPEC:
       case PNK_FRESHENBLOCK:
       case PNK_SHORTHAND:
@@ -2144,27 +2192,18 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_YIELD_STAR:
       case PNK_YIELD:
       case PNK_RETURN:
-      case PNK_CONDITIONAL:
       case PNK_CLASS:
-      case PNK_IF:
       case PNK_TRY:
-      case PNK_COMMA:
-      case PNK_NEW:
-      case PNK_CALL:
       case PNK_GENEXP:
-      case PNK_ARRAY:
       case PNK_STATEMENTLIST:
       case PNK_ARGSBODY:
       case PNK_ARRAYCOMP:
-      case PNK_OBJECT:
       case PNK_CLASSMETHODLIST:
       case PNK_TEMPLATE_STRING_LIST:
-      case PNK_TAGGED_TEMPLATE:
       case PNK_EXPORT_SPEC_LIST:
       case PNK_IMPORT_SPEC_LIST:
       case PNK_CATCHLIST:
       case PNK_LABEL:
-      case PNK_DOT:
       case PNK_LEXICALSCOPE:
       case PNK_NAME:
       case PNK_FUNCTION:
