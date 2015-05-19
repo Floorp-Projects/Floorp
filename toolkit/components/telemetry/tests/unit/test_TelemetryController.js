@@ -21,7 +21,6 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 
 const PING_FORMAT_VERSION = 4;
 const TEST_PING_TYPE = "test-ping-type";
-const TEST_PING_RETENTION = 180;
 
 const PLATFORM_VERSION = "1.9.2";
 const APP_VERSION = "1";
@@ -50,7 +49,6 @@ function sendPing(aSendClientId, aSendEnvironment) {
   let options = {
     addClientId: aSendClientId,
     addEnvironment: aSendEnvironment,
-    retentionDays: TEST_PING_RETENTION,
   };
   return TelemetryController.submitExternalPing(TEST_PING_TYPE, {}, options);
 }
