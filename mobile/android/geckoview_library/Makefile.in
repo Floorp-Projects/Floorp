@@ -36,8 +36,7 @@ package: local.properties project.properties AndroidManifest.xml FORCE
 	$(MKDIR) -p $(_ABS_DIST)/geckoview_library
 
 	# Zip the assets into $(DIST)/geckoview_library/geckoview_assets.zip
-	cd $(_ABS_DIST)/$(MOZ_APP_NAME) && \
-	$(ZIP) -q -r $(_ABS_DIST)/geckoview_library/geckoview_assets.zip assets
+	$(call py_action,zip,-C $(_ABS_DIST)/$(MOZ_APP_NAME) $(_ABS_DIST)/geckoview_library/geckoview_assets.zip assets)
 
 	# Make empty directories to fit an Android project structure
 	$(MKDIR) -p bin gen libs/$(ANDROID_CPU_ARCH) src
