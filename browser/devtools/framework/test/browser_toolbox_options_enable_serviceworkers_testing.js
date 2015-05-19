@@ -37,11 +37,15 @@ function start() {
 
 function testSelectTool(aToolbox) {
   toolbox = aToolbox;
-  toolbox.once("options-selected", testRegisterFails);
+  toolbox.once("options-selected", () => {
+    testRegisterFails().then(testRegisterInstallingWorker);
+  });
   toolbox.selectTool("options");
 }
 
 function testRegisterFails() {
+  let deferred = promise.defer();
+
   let output = doc.getElementById("output");
   let button = doc.getElementById("button");
 
@@ -50,7 +54,7 @@ function testRegisterFails() {
     is(output.textContent,
        "SecurityError",
        "SecurityError expected");
-    testRegisterInstallingWorker();
+    deferred.resolve();
   }
 
   if (output.textContent !== "No output") {
@@ -61,6 +65,8 @@ function testRegisterFails() {
     button.removeEventListener('click', onClick);
     doTheCheck();
   });
+
+  return deferred.promise;
 }
 
 function testRegisterInstallingWorker() {
@@ -73,7 +79,7 @@ function testRegisterInstallingWorker() {
       is(output.textContent,
          "Installing worker/",
          "Installing worker expected");
-      toggleServiceWorkersTestingCheckbox().then(finishUp);
+      testRegisterFailsWhenToolboxCloses();
     }
 
     if (output.textContent !== "No output") {
@@ -85,6 +91,30 @@ function testRegisterInstallingWorker() {
       doTheCheck();
     });
   });
+}
+
+// Workers should be turned back off when we closes the toolbox
+function testRegisterFailsWhenToolboxCloses() {
+  info("Testing it disable worker when closing the toolbox");
+  toolbox.destroy()
+         .then(reload)
+         .then(testRegisterFails)
+         .then(finishUp);
+}
+
+function reload() {
+  let deferred = promise.defer();
+
+  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
+    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
+    doc = content.document;
+    deferred.resolve();
+  }, true);
+
+  let mm = getFrameScript();
+  mm.sendAsyncMessage("devtools:test:reload");
+
+  return deferred.promise;
 }
 
 function toggleServiceWorkersTestingCheckbox() {
@@ -101,24 +131,13 @@ function toggleServiceWorkersTestingCheckbox() {
     info("Checking checkbox to enable service workers testing");
   }
 
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    doc = content.document;
-    deferred.resolve();
-  }, true);
-
   cbx.click();
 
-  let mm = getFrameScript();
-  mm.sendAsyncMessage("devtools:test:reload");
-
-  return deferred.promise;
+  return reload();
 }
 
 function finishUp() {
-  toolbox.destroy().then(function() {
-    gBrowser.removeCurrentTab();
-    toolbox = doc = null;
-    finish();
-  });
+  gBrowser.removeCurrentTab();
+  toolbox = doc = null;
+  finish();
 }

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.importGlobalProperties(['Blob']);
+Components.utils.importGlobalProperties(['Blob', 'File']);
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -31,7 +31,7 @@ BlobComponent.prototype =
     // do some tests
     do_check_true(f1 instanceof Ci.nsIDOMBlob, "Should be a DOM Blob");
 
-    do_check_true(!(f1 instanceof Ci.nsIDOMFile), "Should not be a DOM File");
+    do_check_true(!(f1 instanceof File), "Should not be a DOM File");
 
     do_check_true(f1.type == "text/xml", "Wrong type");
 

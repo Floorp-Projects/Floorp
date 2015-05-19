@@ -4161,7 +4161,7 @@ BluetoothDBusService::SendFile(const nsAString& aDeviceAddress,
 
 void
 BluetoothDBusService::SendFile(const nsAString& aDeviceAddress,
-                               nsIDOMBlob* aBlob,
+                               Blob* aBlob,
                                BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());

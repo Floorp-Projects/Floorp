@@ -18,8 +18,7 @@ function run_test() {
 
 add_task(function* test_register_case() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
   PushService.init({
     networkInfo: new MockDesktopNetworkInfo(),
@@ -56,7 +55,7 @@ add_task(function* test_register_case() {
   equal(newRecord.scope, 'https://example.net/case',
     'Wrong scope in registration record');
 
-  let record = yield promiseDB.getByChannelID(newRecord.channelID);
+  let record = yield db.getByChannelID(newRecord.channelID);
   equal(record.pushEndpoint, 'https://example.com/update/case',
     'Wrong push endpoint in database record');
   equal(record.scope, 'https://example.net/case',

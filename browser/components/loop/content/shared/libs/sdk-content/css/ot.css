@@ -865,6 +865,12 @@
   display: block;
 }
 
+.OT_audio-only.OT_publisher .OT_video-element,
+.OT_audio-only.OT_subscriber .OT_video-element {
+  display: none;
+}
+
+
 .OT_video-disabled-indicator {
   opacity: 1;
   border: none;
