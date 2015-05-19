@@ -760,7 +760,7 @@ nsDOMMutationObserver::HandleMutation()
 
   mozilla::dom::Sequence<mozilla::dom::OwningNonNull<nsDOMMutationRecord> >
     mutations;
-  if (mutations.SetCapacity(mPendingMutationCount)) {
+  if (mutations.SetCapacity(mPendingMutationCount, mozilla::fallible)) {
     // We can't use TakeRecords easily here, because it deals with a
     // different type of array, and we want to optimize out any extra copying.
     nsRefPtr<nsDOMMutationRecord> current;

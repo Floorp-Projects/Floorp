@@ -295,7 +295,7 @@ void MediaDecoder::ConnectDecodedStreamToOutputStream(OutputStreamData* aStream)
 
   // The output stream must stay in sync with the decoded stream, so if
   // either stream is blocked, we block the other.
-  aStream->mPort = aStream->mStream->AllocateInputPort(mDecodedStream->mStream,
+  aStream->mPort = aStream->mStream->AllocateInputPort(GetDecodedStream()->mStream,
       MediaInputPort::FLAG_BLOCK_INPUT | MediaInputPort::FLAG_BLOCK_OUTPUT);
   // Unblock the output stream now. While it's connected to mDecodedStream,
   // mDecodedStream is responsible for controlling blocking.
@@ -307,11 +307,11 @@ void MediaDecoder::UpdateDecodedStream()
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
 
-  if (mDecodedStream) {
+  if (GetDecodedStream()) {
     bool blockForPlayState = mPlayState != PLAY_STATE_PLAYING || mLogicallySeeking;
-    if (mDecodedStream->mHaveBlockedForPlayState != blockForPlayState) {
-      mDecodedStream->mStream->ChangeExplicitBlockerCount(blockForPlayState ? 1 : -1);
-      mDecodedStream->mHaveBlockedForPlayState = blockForPlayState;
+    if (GetDecodedStream()->mHaveBlockedForPlayState != blockForPlayState) {
+      GetDecodedStream()->mStream->ChangeExplicitBlockerCount(blockForPlayState ? 1 : -1);
+      GetDecodedStream()->mHaveBlockedForPlayState = blockForPlayState;
     }
   }
 }
@@ -328,8 +328,9 @@ void MediaDecoder::DestroyDecodedStream()
 
   // All streams are having their SourceMediaStream disconnected, so they
   // need to be explicitly blocked again.
-  for (int32_t i = mOutputStreams.Length() - 1; i >= 0; --i) {
-    OutputStreamData& os = mOutputStreams[i];
+  auto& outputStreams = OutputStreams();
+  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
+    OutputStreamData& os = outputStreams[i];
     // Explicitly remove all existing ports.
     // This is not strictly necessary but it's good form.
     MOZ_ASSERT(os.mPort, "Double-delete of the ports!");
@@ -340,32 +341,32 @@ void MediaDecoder::DestroyDecodedStream()
     // be careful not to send any messages after the Destroy().
     if (os.mStream->IsDestroyed()) {
       // Probably the DOM MediaStream was GCed. Clean up.
-      mOutputStreams.RemoveElementAt(i);
+      outputStreams.RemoveElementAt(i);
     } else {
       os.mStream->ChangeExplicitBlockerCount(1);
     }
   }
 
-  mDecodedStream = nullptr;
+  mDecodedStream.DestroyData();
 }
 
 void MediaDecoder::UpdateStreamBlockingForStateMachinePlaying()
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
-  if (!mDecodedStream) {
+  if (!GetDecodedStream()) {
     return;
   }
   bool blockForStateMachineNotPlaying =
     mDecoderStateMachine && !mDecoderStateMachine->IsPlaying() &&
     mDecoderStateMachine->GetState() != MediaDecoderStateMachine::DECODER_STATE_COMPLETED;
-  if (blockForStateMachineNotPlaying != mDecodedStream->mHaveBlockedForStateMachineNotPlaying) {
-    mDecodedStream->mHaveBlockedForStateMachineNotPlaying = blockForStateMachineNotPlaying;
+  if (blockForStateMachineNotPlaying != GetDecodedStream()->mHaveBlockedForStateMachineNotPlaying) {
+    GetDecodedStream()->mHaveBlockedForStateMachineNotPlaying = blockForStateMachineNotPlaying;
     int32_t delta = blockForStateMachineNotPlaying ? 1 : -1;
     if (NS_IsMainThread()) {
-      mDecodedStream->mStream->ChangeExplicitBlockerCount(delta);
+      GetDecodedStream()->mStream->ChangeExplicitBlockerCount(delta);
     } else {
       nsCOMPtr<nsIRunnable> runnable =
-          NS_NewRunnableMethodWithArg<int32_t>(mDecodedStream->mStream.get(),
+          NS_NewRunnableMethodWithArg<int32_t>(GetDecodedStream()->mStream.get(),
               &MediaStream::ChangeExplicitBlockerCount, delta);
       NS_DispatchToMainThread(runnable);
     }
@@ -380,28 +381,27 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
   DECODER_LOG("RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
 
   if (!aGraph) {
-    aGraph = mDecodedStream->mStream->Graph();
+    aGraph = GetDecodedStream()->mStream->Graph();
   }
   DestroyDecodedStream();
 
-  mDecodedStream = new DecodedStreamData(this,
-                                         aStartTimeUSecs,
-                                         aGraph->CreateSourceStream(nullptr));
+  mDecodedStream.RecreateData(this, aStartTimeUSecs, aGraph->CreateSourceStream(nullptr));
 
   // Note that the delay between removing ports in DestroyDecodedStream
   // and adding new ones won't cause a glitch since all graph operations
   // between main-thread stable states take effect atomically.
-  for (int32_t i = mOutputStreams.Length() - 1; i >= 0; --i) {
-    OutputStreamData& os = mOutputStreams[i];
+  auto& outputStreams = OutputStreams();
+  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
+    OutputStreamData& os = outputStreams[i];
     MOZ_ASSERT(!os.mStream->IsDestroyed(),
         "Should've been removed in DestroyDecodedStream()");
     ConnectDecodedStreamToOutputStream(&os);
   }
   UpdateStreamBlockingForStateMachinePlaying();
 
-  mDecodedStream->mHaveBlockedForPlayState = mPlayState != PLAY_STATE_PLAYING;
-  if (mDecodedStream->mHaveBlockedForPlayState) {
-    mDecodedStream->mStream->ChangeExplicitBlockerCount(1);
+  GetDecodedStream()->mHaveBlockedForPlayState = mPlayState != PLAY_STATE_PLAYING;
+  if (GetDecodedStream()->mHaveBlockedForPlayState) {
+    GetDecodedStream()->mStream->ChangeExplicitBlockerCount(1);
   }
 }
 
@@ -419,7 +419,7 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
     if (!GetDecodedStream()) {
       RecreateDecodedStream(mLogicalPosition, aStream->Graph());
     }
-    OutputStreamData* os = mOutputStreams.AppendElement();
+    OutputStreamData* os = OutputStreams().AppendElement();
     os->Init(this, aStream);
     ConnectDecodedStreamToOutputStream(os);
     if (aFinishWhenEnded) {

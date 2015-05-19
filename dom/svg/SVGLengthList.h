@@ -59,7 +59,7 @@ public:
   bool operator==(const SVGLengthList& rhs) const;
 
   bool SetCapacity(uint32_t size) {
-    return mLengths.SetCapacity(size);
+    return mLengths.SetCapacity(size, fallible);
   }
 
   void Compact() {
@@ -90,7 +90,7 @@ protected:
    * increased, in which case the list will be left unmodified.
    */
   bool SetLength(uint32_t aNumberOfItems) {
-    return mLengths.SetLength(aNumberOfItems);
+    return mLengths.SetLength(aNumberOfItems, fallible);
   }
 
 private:
