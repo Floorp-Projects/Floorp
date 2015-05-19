@@ -6766,7 +6766,7 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
         if (propdef->pn_right->isKind(PNK_FUNCTION) &&
             propdef->pn_right->pn_funbox->needsHomeObject())
         {
-            MOZ_ASSERT(propdef->pn_right->pn_funbox->function()->isMethod());
+            MOZ_ASSERT(propdef->pn_right->pn_funbox->function()->allowSuperProperty());
             if (!emit2(JSOP_INITHOMEOBJECT, isIndex))
                 return false;
         }

@@ -174,6 +174,10 @@ class JSFunction : public js::NativeObject
         return kind() == Method && isConstructor();
     }
 
+    bool allowSuperProperty() const {
+        return isMethod() || isGetter() || isSetter();
+    }
+
     bool hasResolvedLength()        const { return flags() & RESOLVED_LENGTH; }
     bool hasResolvedName()          const { return flags() & RESOLVED_NAME; }
 
