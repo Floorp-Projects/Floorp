@@ -201,10 +201,25 @@ let AboutHome = {
 
           // Trigger a search through nsISearchEngine.getSubmission()
           let submission = engine.getSubmission(data.searchTerms, null, "homepage");
-          let where = data.useNewTab ? "tabshifted" : "current";
-          window.openUILinkIn(submission.uri.spec, where, false,
-                              submission.postData);
+          let where = window.whereToOpenLink(data.originalEvent);
 
+          // There is a chance that by the time we receive the search message, the
+          // user has switched away from the tab that triggered the search. If,
+          // based on the event, we need to load the search in the same tab that
+          // triggered it (i.e. where == "current"), openUILinkIn will not work
+          // because that tab is no longer the current one. For this case we
+          // manually load the URI in the target browser.
+          if (where == "current") {
+            aMessage.target.loadURIWithFlags(submission.uri.spec,
+                                             Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+                                             null, null, submission.postData);
+          } else {
+            let params = {
+              postData: submission.postData,
+              inBackground: Services.prefs.getBoolPref("browser.tabs.loadInBackground"),
+            };
+            window.openLinkIn(submission.uri.spec, where, params);
+          }
           // Used for testing
           let mm = aMessage.target.messageManager;
           mm.sendAsyncMessage("AboutHome:SearchTriggered", aMessage.data.searchData);
