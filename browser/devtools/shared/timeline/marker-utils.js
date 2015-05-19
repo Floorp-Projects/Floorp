@@ -138,9 +138,12 @@ const DOM = exports.DOM = {
    */
   buildDuration: function (doc, marker) {
     let label = L10N.getStr("timeline.markerDetail.duration");
-    let value = L10N.getFormatStrWithNumbers("timeline.tick", marker.end - marker.start);
-    let el = DOM.buildNameValueLabel(doc, label, value);
+    let start = L10N.getFormatStrWithNumbers("timeline.tick", marker.start);
+    let end = L10N.getFormatStrWithNumbers("timeline.tick", marker.end);
+    let duration = L10N.getFormatStrWithNumbers("timeline.tick", marker.end - marker.start);
+    let el = DOM.buildNameValueLabel(doc, label, duration);
     el.classList.add("marker-details-duration");
+    el.setAttribute("tooltiptext", `${start} → ${end}`);
     return el;
   },
 

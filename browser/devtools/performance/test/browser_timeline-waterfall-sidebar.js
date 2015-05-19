@@ -42,12 +42,17 @@ function spawnTest () {
     is($("#waterfall-details .marker-details-type").getAttribute("value"), getMarkerLabel(m),
       "sidebar title matches markers name");
 
+    let tooltip = $(".marker-details-duration").getAttribute("tooltiptext");
     let printedDuration = $(".marker-details-duration .marker-details-labelvalue").getAttribute("value");
 
     let toMs = ms => L10N.getFormatStrWithNumbers("timeline.tick", ms);
 
     // Values are rounded. We don't use a strict equality.
     is(toMs(m.end - m.start), printedDuration, "sidebar duration is valid");
+    // For some reason, anything that creates "→" here turns it into a "â" for some reason.
+    // So just check that start and end time are in there somewhere.
+    ok(tooltip.indexOf(toMs(m.start)) !== -1, "tooltip has start time");
+    ok(tooltip.indexOf(toMs(m.end)) !== -1, "tooltip has end time");
   }
   yield teardown(panel);
   finish();
