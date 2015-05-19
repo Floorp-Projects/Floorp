@@ -409,10 +409,17 @@ NS_IMPL_ADDREF(nsProtocolProxyService)
 NS_IMPL_RELEASE(nsProtocolProxyService)
 NS_IMPL_CLASSINFO(nsProtocolProxyService, nullptr, nsIClassInfo::SINGLETON,
                   NS_PROTOCOLPROXYSERVICE_CID)
-NS_IMPL_QUERY_INTERFACE_CI(nsProtocolProxyService,
-                           nsIProtocolProxyService,
-                           nsIProtocolProxyService2,
-                           nsIObserver)
+
+// NS_IMPL_QUERY_INTERFACE_CI with the nsProtocolProxyService QI change
+NS_INTERFACE_MAP_BEGIN(nsProtocolProxyService)
+NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyService)
+NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyService2)
+NS_INTERFACE_MAP_ENTRY(nsIObserver)
+if ( aIID.Equals(NS_GET_IID(nsProtocolProxyService)) )  foundInterface = static_cast<nsIProtocolProxyService2*>(this); else
+NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProtocolProxyService)
+NS_IMPL_QUERY_CLASSINFO(nsProtocolProxyService)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_CI_INTERFACE_GETTER(nsProtocolProxyService,
                             nsIProtocolProxyService,
                             nsIProtocolProxyService2)
