@@ -175,7 +175,9 @@ class NameResolver
      * assign to the function's displayAtom field
      */
     bool resolveFun(ParseNode* pn, HandleAtom prefix, MutableHandleAtom retAtom) {
-        MOZ_ASSERT(pn != nullptr && pn->isKind(PNK_FUNCTION));
+        MOZ_ASSERT(pn != nullptr);
+        MOZ_ASSERT(pn->isKind(PNK_FUNCTION));
+        MOZ_ASSERT(pn->isArity(PN_CODE));
         RootedFunction fun(cx, pn->pn_funbox->function());
 
         StringBuffer buf(cx);
@@ -335,7 +337,8 @@ class NameResolver
         if (cur == nullptr)
             return true;
 
-        if (cur->isKind(PNK_FUNCTION) && cur->isArity(PN_CODE)) {
+        MOZ_ASSERT(cur->isKind(PNK_FUNCTION) == cur->isArity(PN_CODE));
+        if (cur->isKind(PNK_FUNCTION)) {
             RootedAtom prefix2(cx);
             if (!resolveFun(cur, prefix, &prefix2))
                 return false;
