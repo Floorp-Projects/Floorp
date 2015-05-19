@@ -127,8 +127,6 @@ public:
     }
 #endif
 
-    NS_SetIgnoreStatusOfCurrentThread();
-
     int lowMemFd = open("/sys/kernel/mm/lowmemkiller/notify_trigger_active",
                         O_RDONLY | O_CLOEXEC);
     NS_ENSURE_STATE(lowMemFd != -1);

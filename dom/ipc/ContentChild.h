@@ -379,8 +379,6 @@ public:
 
     virtual bool RecvNotifyPhoneStateChange(const nsString& state) override;
 
-    virtual bool RecvNuwaFreeze() override;
-
     void AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS);
     void RemoveIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS);
     virtual bool RecvNotifyIdleObserver(const uint64_t& aObserver,

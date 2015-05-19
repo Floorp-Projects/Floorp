@@ -103,12 +103,6 @@ this.DOMApplicationRegistry = {
       this.cpmm.addMessageListener(aMsgName, this);
     }).bind(this));
 
-    this.resetList();
-
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
-  },
-
-  resetList: function() {
     this.cpmm.sendAsyncMessage("Webapps:RegisterForMessages", {
       messages: APPS_IPC_MSG_NAMES
     });
@@ -116,7 +110,6 @@ this.DOMApplicationRegistry = {
     // We need to prime the cache with the list of apps.
     let list = this.cpmm.sendSyncMessage("Webapps:GetList", { })[0];
     this.webapps = list.webapps;
-
     // We need a fast mapping from localId -> app, so we add an index.
     // We also add the manifest to the app object.
     this.localIdIndex = { };
@@ -125,6 +118,8 @@ this.DOMApplicationRegistry = {
       this.localIdIndex[app.localId] = app;
       app.manifest = list.manifests[id];
     }
+
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
   observe: function(aSubject, aTopic, aData) {
