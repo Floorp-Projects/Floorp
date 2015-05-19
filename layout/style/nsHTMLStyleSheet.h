@@ -159,8 +159,8 @@ private:
   nsRefPtr<TableQuirkColorRule> mTableQuirkColorRule;
   nsRefPtr<TableTHRule>   mTableTHRule;
 
-  PLDHashTable2           mMappedAttrTable;
-  PLDHashTable2           mLangRuleTable;
+  PLDHashTable            mMappedAttrTable;
+  PLDHashTable            mLangRuleTable;
 };
 
 #endif /* !defined(nsHTMLStyleSheet_h_) */

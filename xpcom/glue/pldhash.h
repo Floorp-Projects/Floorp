@@ -341,9 +341,6 @@ private:
   PLDHashTable& operator=(const PLDHashTable& aOther) = delete;
 };
 
-// XXX: this is a temporary typedef that will be removed shortly.
-typedef PLDHashTable PLDHashTable2;
-
 /*
  * Compute the hash code for a given key to be looked up, added, or removed
  * from aTable.  A hash code may have any PLDHashNumber value.

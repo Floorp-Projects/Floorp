@@ -16,7 +16,7 @@ protected:
         nsIContent*     mTemplate;
     };
 
-    PLDHashTable2 mTable;
+    PLDHashTable mTable;
 
 public:
     nsTemplateMap() : mTable(PL_DHashGetStubOps(), sizeof(Entry)) { }

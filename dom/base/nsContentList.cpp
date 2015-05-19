@@ -153,7 +153,7 @@ nsSimpleContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto
 }
 
 // Hashtable for storing nsContentLists
-static PLDHashTable2* gContentListHashTable;
+static PLDHashTable* gContentListHashTable;
 
 #define RECENTLY_USED_CONTENT_LIST_CACHE_SIZE 31
 static nsContentList*
@@ -217,7 +217,7 @@ NS_GetContentList(nsINode* aRootNode,
   // Initialize the hashtable if needed.
   if (!gContentListHashTable) {
     gContentListHashTable =
-      new PLDHashTable2(&hash_table_ops, sizeof(ContentListHashEntry));
+      new PLDHashTable(&hash_table_ops, sizeof(ContentListHashEntry));
   }
 
   ContentListHashEntry *entry = nullptr;
@@ -270,7 +270,7 @@ nsCacheableFuncStringHTMLCollection::WrapObject(JSContext *cx, JS::Handle<JSObje
 }
 
 // Hashtable for storing nsCacheableFuncStringContentList
-static PLDHashTable2* gFuncStringContentListHashTable;
+static PLDHashTable* gFuncStringContentListHashTable;
 
 struct FuncStringContentListHashEntry : public PLDHashEntryHdr
 {
@@ -321,7 +321,7 @@ GetFuncStringContentList(nsINode* aRootNode,
   // Initialize the hashtable if needed.
   if (!gFuncStringContentListHashTable) {
     gFuncStringContentListHashTable =
-      new PLDHashTable2(&hash_table_ops, sizeof(FuncStringContentListHashEntry));
+      new PLDHashTable(&hash_table_ops, sizeof(FuncStringContentListHashEntry));
   }
 
   FuncStringContentListHashEntry *entry = nullptr;
