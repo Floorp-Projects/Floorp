@@ -9,8 +9,6 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
-const REGEX_HSL_3_TUPLE  = /^\bhsl\(([\d.]+),\s*([\d.]+%),\s*([\d.]+%)\)$/i;
-
 const SPECIALVALUES = new Set([
   "currentcolor",
   "initial",
@@ -162,9 +160,9 @@ CssColor.prototype = {
     if (this.hasAlpha) {
       return this.rgba;
     }
-    return this.rgb.replace(/\brgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)/gi, function(_, r, g, b) {
-      return "#" + ((1 << 24) + (r << 16) + (g << 8) + (b << 0)).toString(16).substr(-6).toUpperCase();
-    });
+
+    let tuple = this._getRGBATuple();
+    return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) + (tuple.b << 0)).toString(16).substr(-6).toUpperCase();
   },
 
   get rgb() {
@@ -211,7 +209,7 @@ CssColor.prototype = {
     if (this.hasAlpha) {
       return this.hsla;
     }
-    return this._hslNoAlpha();
+    return this._hsl();
   },
 
   get hsla() {
@@ -225,9 +223,9 @@ CssColor.prototype = {
     }
     if (this.hasAlpha) {
       let a = this._getRGBATuple().a;
-      return this._hslNoAlpha().replace("hsl", "hsla").replace(")", ", " + a + ")");
+      return this._hsl(a);
     }
-    return this._hslNoAlpha().replace("hsl", "hsla").replace(")", ", 1)");
+    return this._hsl(1);
   },
 
   /**
@@ -320,19 +318,19 @@ CssColor.prototype = {
     return tuple;
   },
 
-  _hslNoAlpha: function() {
-    let {r, g, b} = this._getRGBATuple();
-
-    if (this.authored.startsWith("hsl(")) {
-      // We perform string manipulations on our output so let's ensure that it
-      // is formatted as we expect.
-      let [, h, s, l] = this.authored.match(REGEX_HSL_3_TUPLE);
-      return "hsl(" + h + ", " + s + ", " + l + ")";
+  _hsl: function(maybeAlpha) {
+    if (this.authored.startsWith("hsl(") && maybeAlpha === undefined) {
+      // We can use it as-is.
+      return this.authored;
     }
 
+    let {r, g, b} = this._getRGBATuple();
     let [h,s,l] = rgbToHsl([r,g,b]);
-
-    return "hsl(" + h + ", " + s + "%, " + l + "%)";
+    if (maybeAlpha !== undefined) {
+      return "hsla(" + h + ", " + s + "%, " + l + "%, " + maybeAlpha + ")";
+    } else {
+      return "hsl(" + h + ", " + s + "%, " + l + "%)";
+    }
   },
 
   /**
