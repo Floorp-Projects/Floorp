@@ -233,7 +233,7 @@ public:
       return mIsForBrowser;
     }
 #ifdef MOZ_NUWA_PROCESS
-    bool IsNuwaProcess() const;
+    bool IsNuwaProcess();
 #endif
 
     GeckoChildProcessHost* Process() {
@@ -247,11 +247,7 @@ public:
     }
 
     bool NeedsPermissionsUpdate() const {
-#ifdef MOZ_NUWA_PROCESS
-        return !IsNuwaProcess() && mSendPermissionUpdates;
-#else
         return mSendPermissionUpdates;
-#endif
     }
 
     bool NeedsDataStoreInfos() const {
@@ -782,8 +778,6 @@ private:
     virtual bool RecvSystemMessageHandled() override;
 
     virtual bool RecvNuwaReady() override;
-
-    virtual bool RecvNuwaWaitForFreeze() override;
 
     virtual bool RecvAddNewProcess(const uint32_t& aPid,
                                    InfallibleTArray<ProtocolFdMapping>&& aFds) override;
