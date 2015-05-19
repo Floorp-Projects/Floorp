@@ -22,6 +22,7 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/ipc/NfcConnector.h"
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 
 using namespace mozilla::ipc;
@@ -59,74 +60,6 @@ private:
 
 namespace mozilla {
 namespace ipc {
-
-//
-// NfcConnector
-//
-
-int
-NfcConnector::Create()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  int fd = socket(AF_LOCAL, SOCK_STREAM, 0);
-  if (fd < 0) {
-    NS_WARNING("Could not open nfc socket!");
-    return -1;
-  }
-
-  if (!SetUp(fd)) {
-    NS_WARNING("Could not set up socket!");
-  }
-  return fd;
-}
-
-bool
-NfcConnector::CreateAddr(bool aIsServer,
-                         socklen_t& aAddrSize,
-                         sockaddr_any& aAddr,
-                         const char* aAddress)
-{
-  static const size_t sNameOffset = 1;
-
-  nsDependentCString socketName("nfcd");
-
-  size_t namesiz = socketName.Length() + 1; /* include trailing '\0' */
-
-  if ((sNameOffset + namesiz) > sizeof(aAddr.un.sun_path)) {
-    NS_WARNING("Address too long for socket struct!");
-    return false;
-  }
-
-  memset(aAddr.un.sun_path, '\0', sNameOffset); // abstract socket
-  memcpy(aAddr.un.sun_path + sNameOffset, socketName.get(), namesiz);
-  aAddr.un.sun_family = AF_UNIX;
-
-  aAddrSize = offsetof(struct sockaddr_un, sun_path) + sNameOffset + namesiz;
-
-  return true;
-}
-
-bool
-NfcConnector::SetUp(int aFd)
-{
-  // Nothing to do here.
-  return true;
-}
-
-bool
-NfcConnector::SetUpListenSocket(int aFd)
-{
-  // Nothing to do here.
-  return true;
-}
-
-void
-NfcConnector::GetSocketAddr(const sockaddr_any& aAddr,
-                            nsAString& aAddrStr)
-{
-  MOZ_CRASH("This should never be called!");
-}
 
 //
 // NfcListenSocket
@@ -231,7 +164,7 @@ NfcConsumer::OnDisconnect()
 ConnectionOrientedSocketIO*
 NfcConsumer::GetIO()
 {
-  return PrepareAccept(new NfcConnector());
+  return PrepareAccept(new NfcConnector(NS_LITERAL_CSTRING("nfcd")));
 }
 
 } // namespace ipc
