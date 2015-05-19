@@ -89,7 +89,6 @@ BluetoothOppManager::Observe(nsISupports* aSubject,
 {
   MOZ_ASSERT(sBluetoothOppManager);
 
-  // if state of any volume was changed
   if (!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
     HandleVolumeStateChanged(aSubject);
     return NS_OK;
@@ -314,31 +313,25 @@ BluetoothOppManager::HandleVolumeStateChanged(nsISupports* aSubject)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // We will disconnect OPP connection no matter which volume becomes non
-  // STATE_MOUNTED, since user may select files scattered in multiple volumes
-  // in a single transfer, (e.g., user selects 2 files to transfer, one is in
-  // internal volume and the other is in external volume).
-
   if (!mConnected) {
     return;
   }
 
-  // get volume interface and state
+  /**
+   * Disconnect ongoing OPP connection when a volume becomes non-mounted, in
+   * case files of transfer are located on that volume. |OnSocketDisconnect|
+   * will handle incomplete file transfers.
+   */
+
   nsCOMPtr<nsIVolume> vol = do_QueryInterface(aSubject);
   if (!vol) {
     return;
   }
+
   int32_t state;
   vol->GetState(&state);
   if (nsIVolume::STATE_MOUNTED != state) {
-    // Here is for unexpected physical removal of any storage.
-    // By checking the volume state change, we should release the unavailable
-    // storage to prevent being killed by vold.
-    // Disconnect any connected OPP connection since volume state becomes
-    // non STATE_MOUNTED. Then |OnSocketDisconnect| would also be called to
-    // handle remaining files during send(|DiscardBlobsToSend|) or
-    // receive(|DeleteReceivedFile|).
-    BT_LOGR("Volume state is not STATE_MOUNTED. Abort any ongoing OPP connection.");
+    BT_LOGR("Volume becomes non-mounted. Abort ongoing OPP connection");
     Disconnect(nullptr);
   }
 }
@@ -1573,10 +1566,12 @@ BluetoothOppManager::AcquireSdcardMountLock()
   nsCOMPtr<nsIVolumeService> volumeSrv =
     do_GetService(NS_VOLUMESERVICE_CONTRACTID);
   NS_ENSURE_TRUE(volumeSrv, false);
-  nsresult rv;
-  rv = volumeSrv->CreateMountLock(NS_LITERAL_STRING("sdcard"),
-                                  getter_AddRefs(mMountLock));
-  NS_ENSURE_SUCCESS(rv, false);
+
+  NS_ENSURE_SUCCESS(
+    volumeSrv->CreateMountLock(NS_LITERAL_STRING("sdcard"),
+                               getter_AddRefs(mMountLock)),
+    false);
+
   return true;
 }
 
