@@ -1307,7 +1307,4 @@
 #     starting with an empty iframe here in browser.xul from a Ts standpoint.
 </deck>
 
-<script type="application/javascript" src="chrome://browser/content/pocket/pktApi.js"/>
-<script type="application/javascript" src="chrome://browser/content/pocket/main.js"/>
-
 </window>
