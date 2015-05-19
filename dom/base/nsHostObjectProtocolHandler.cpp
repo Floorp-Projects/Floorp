@@ -205,9 +205,9 @@ class BlobURLsReporter final : public nsIMemoryReporter
                                         void* aUserArg)
   {
     EnumArg* envp = static_cast<EnumArg*>(aUserArg);
-    nsCOMPtr<nsIDOMBlob> blob;
+    nsCOMPtr<nsIDOMBlob> tmp = do_QueryInterface(aInfo->mObject);
+    nsRefPtr<Blob> blob = static_cast<Blob*>(tmp.get());
 
-    blob = do_QueryInterface(aInfo->mObject);
     if (blob) {
       NS_NAMED_LITERAL_CSTRING
         (desc, "A blob URL allocated with URL.createObjectURL; the referenced "
@@ -226,7 +226,10 @@ class BlobURLsReporter final : public nsIMemoryReporter
       bool isMemoryFile = blob->IsMemoryFile();
 
       if (isMemoryFile) {
-        if (NS_FAILED(blob->GetSize(&size))) {
+        ErrorResult rv;
+        size = blob->GetSize(rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          rv.SuppressException();
           size = 0;
         }
       }
@@ -544,9 +547,12 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
   }
 #endif
 
+  ErrorResult rv;
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = blob->GetInternalStream(getter_AddRefs(stream));
-  NS_ENSURE_SUCCESS(rv, rv);
+  blob->GetInternalStream(getter_AddRefs(stream), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
@@ -555,7 +561,9 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
                                         EmptyCString(), // aContentType
                                         EmptyCString(), // aContentCharset
                                         aLoadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
 
   nsString type;
   blob->GetType(type);
@@ -566,10 +574,9 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     channel->SetContentDispositionFilename(filename);
   }
 
-  ErrorResult error;
-  uint64_t size = blob->GetSize(error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+  uint64_t size = blob->GetSize(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
   channel->SetOriginalURI(uri);
@@ -644,12 +651,18 @@ nsresult
 NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
 {
   nsRefPtr<BlobImpl> blobImpl;
-  nsresult rv = NS_GetBlobForBlobURI(aURI, getter_AddRefs(blobImpl));
-  if (NS_FAILED(rv)) {
-    return rv;
+  ErrorResult rv;
+  rv = NS_GetBlobForBlobURI(aURI, getter_AddRefs(blobImpl));
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
-  return blobImpl->GetInternalStream(aStream);
+  blobImpl->GetInternalStream(aStream, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  return NS_OK;
 }
 
 nsresult

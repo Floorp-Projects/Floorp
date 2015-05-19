@@ -128,10 +128,10 @@ protected:
   void ReadFileContent(Blob& aBlob,
                        const nsAString &aCharset, eDataFormat aDataFormat,
                        ErrorResult& aRv);
-  nsresult GetAsText(nsIDOMBlob *aBlob, const nsACString &aCharset,
+  nsresult GetAsText(Blob *aBlob, const nsACString &aCharset,
                      const char *aFileData, uint32_t aDataLen,
                      nsAString &aResult);
-  nsresult GetAsDataURL(nsIDOMBlob *aBlob, const char *aFileData,
+  nsresult GetAsDataURL(Blob *aBlob, const char *aFileData,
                         uint32_t aDataLen, nsAString &aResult);
 
   void FreeFileData() {
@@ -141,7 +141,7 @@ protected:
   }
 
   char *mFileData;
-  nsCOMPtr<nsIDOMBlob> mBlob;
+  nsRefPtr<Blob> mBlob;
   nsCString mCharset;
   uint32_t mDataLen;
 

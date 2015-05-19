@@ -110,16 +110,19 @@ TestGonkCameraHardwareListener::HandleEvent(nsIDOMEvent* aEvent)
 
       if (blob) {
         static const uint64_t MAX_FILE_SIZE = 2147483647;
-        uint64_t dataLength = 0;
-        nsresult rv = blob->GetSize(&dataLength);
 
-        if (NS_WARN_IF(NS_FAILED(rv) || dataLength > MAX_FILE_SIZE)) {
+        ErrorResult rv;
+        uint64_t dataLength = blob->GetSize(rv);
+
+        if (NS_WARN_IF(rv.Failed()) || NS_WARN_IF(dataLength > MAX_FILE_SIZE)) {
+          rv.SuppressException();
           return NS_OK;
         }
 
         nsCOMPtr<nsIInputStream> inputStream;
-        rv = blob->GetInternalStream(getter_AddRefs(inputStream));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
+        blob->GetInternalStream(getter_AddRefs(inputStream), rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          rv.SuppressException();
           return NS_OK;
         }
 
@@ -127,7 +130,8 @@ TestGonkCameraHardwareListener::HandleEvent(nsIDOMEvent* aEvent)
         rv = NS_ReadInputStreamToBuffer(inputStream,
                                         reinterpret_cast<void**>(&data),
                                         static_cast<uint32_t>(dataLength));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
+        if (NS_WARN_IF(rv.Failed())) {
+          rv.SuppressException();
           delete [] data;
           return NS_OK;
         }

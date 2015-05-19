@@ -693,18 +693,19 @@ private:
     return sliceImpl.forget();
   }
 
-  virtual nsresult
-  GetInternalStream(nsIInputStream** aStream) override
+  virtual void
+  GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv) override
   {
-    NS_ENSURE_ARG_POINTER(aStream);
-
-    nsString emptyString;
-    nsresult rv = NS_NewStringInputStream(aStream, emptyString);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (NS_WARN_IF(!aStream)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
     }
 
-    return NS_OK;
+    nsString emptyString;
+    aRv = NS_NewStringInputStream(aStream, emptyString);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
   }
 };
 
@@ -752,14 +753,16 @@ private:
     MOZ_CRASH("Not implemented");
   }
 
-  virtual nsresult
-  GetInternalStream(nsIInputStream** aStream) override
+  virtual void
+  GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv) override
   {
-    NS_ENSURE_ARG_POINTER(aStream);
+    if (NS_WARN_IF(!aStream)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
 
     nsCOMPtr<nsIInputStream> inputStream = mInputStream;
     inputStream.forget(aStream);
-    return NS_OK;
   }
 };
 
@@ -1092,9 +1095,10 @@ BlobDataFromBlobImpl(BlobImpl* aBlobImpl, BlobData& aBlobData)
 
   MOZ_ASSERT(aBlobImpl->IsMemoryFile());
 
+  ErrorResult rv;
   nsCOMPtr<nsIInputStream> inputStream;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    aBlobImpl->GetInternalStream(getter_AddRefs(inputStream))));
+  aBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
+  MOZ_ALWAYS_TRUE(!rv.Failed());
 
   DebugOnly<bool> isNonBlocking;
   MOZ_ASSERT(NS_SUCCEEDED(inputStream->IsNonBlocking(&isNonBlocking)));
@@ -1922,8 +1926,8 @@ public:
               const nsAString& aContentType,
               ErrorResult& aRv) override;
 
-  virtual nsresult
-  GetInternalStream(nsIInputStream** aStream) override;
+  virtual void
+  GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
   virtual int64_t
   GetFileId() override;
@@ -2094,8 +2098,8 @@ public:
   virtual const nsTArray<nsRefPtr<BlobImpl>>*
   GetSubBlobImpls() const override;
 
-  virtual nsresult
-  GetInternalStream(nsIInputStream** aStream) override;
+  virtual void
+  GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
   virtual int64_t
   GetFileId() override;
@@ -2361,29 +2365,31 @@ RemoteBlobImpl::CreateSlice(uint64_t aStart,
   return slice.forget();
 }
 
-nsresult
+void
 BlobChild::
-RemoteBlobImpl::GetInternalStream(nsIInputStream** aStream)
+RemoteBlobImpl::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
   // May be called on any thread.
   if (mSameProcessBlobImpl) {
     MOZ_ASSERT(gProcessType == GeckoProcessType_Default);
 
     nsCOMPtr<nsIInputStream> realStream;
-    nsresult rv =
-      mSameProcessBlobImpl->GetInternalStream(getter_AddRefs(realStream));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    mSameProcessBlobImpl->GetInternalStream(getter_AddRefs(realStream), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
     }
 
     nsRefPtr<BlobInputStreamTether> tether =
       new BlobInputStreamTether(realStream, mSameProcessBlobImpl);
     tether.forget(aStream);
-    return NS_OK;
+    return;
   }
 
   nsRefPtr<CreateStreamHelper> helper = new CreateStreamHelper(this);
-  return helper->GetStream(aStream);
+  aRv = helper->GetStream(aStream);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 }
 
 int64_t
@@ -2808,11 +2814,11 @@ RemoteBlobImpl::GetSubBlobImpls() const
   return mBlobImpl->GetSubBlobImpls();
 }
 
-nsresult
+void
 BlobParent::
-RemoteBlobImpl::GetInternalStream(nsIInputStream** aStream)
+RemoteBlobImpl::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
-  return mBlobImpl->GetInternalStream(aStream);
+  mBlobImpl->GetInternalStream(aStream, aRv);
 }
 
 int64_t
@@ -3316,8 +3322,9 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
   if (gProcessType == GeckoProcessType_Default) {
     nsCOMPtr<PIBlobImplSnapshot> snapshot = do_QueryInterface(aBlobImpl);
     if (snapshot) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        aBlobImpl->GetInternalStream(getter_AddRefs(snapshotInputStream))));
+      ErrorResult rv;
+      aBlobImpl->GetInternalStream(getter_AddRefs(snapshotInputStream), rv);
+      MOZ_ALWAYS_TRUE(!rv.Failed());
     }
   }
 
@@ -4273,7 +4280,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  errorResult = blobImpl->GetInternalStream(getter_AddRefs(stream));
+  blobImpl->GetInternalStream(getter_AddRefs(stream), errorResult);
   if (NS_WARN_IF(errorResult.Failed())) {
     return false;
   }

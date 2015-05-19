@@ -1953,7 +1953,12 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request,
 
   if (cancelable) {
     // We don't have to read from the local file for the blob response
-    mDOMBlob->GetSize(&mDataAvailable);
+    ErrorResult error;
+    mDataAvailable = mDOMBlob->GetSize(error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+
     ChangeState(XML_HTTP_REQUEST_LOADING);
     return request->Cancel(NS_OK);
   }
