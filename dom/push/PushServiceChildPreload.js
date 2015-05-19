@@ -10,11 +10,9 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "nsIServiceWorkerManager");
 
 addMessageListener("push", function (aMessage) {
-  let principal = content.document.nodePrincipal;
-  swm.sendPushEvent(principal, aMessage.data.scope, aMessage.data.payload);
+  swm.sendPushEvent(aMessage.data.scope, aMessage.data.payload);
 });
 
 addMessageListener("pushsubscriptionchange", function (aMessage) {
-  let principal = content.document.nodePrincipal;
-  swm.sendPushSubscriptionChangeEvent(principal, aMessage.data);
+  swm.sendPushSubscriptionChangeEvent(aMessage.data);
 });
