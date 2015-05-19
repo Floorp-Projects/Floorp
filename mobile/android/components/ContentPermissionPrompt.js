@@ -120,7 +120,8 @@ ContentPermissionPrompt.prototype = {
         }
 
         request.allow();
-      }
+      },
+      positive: true
     }];
 
     let requestor = chromeWin.BrowserApp.manifest ? "'" + chromeWin.BrowserApp.manifest.name + "'" : request.principal.URI.host;
