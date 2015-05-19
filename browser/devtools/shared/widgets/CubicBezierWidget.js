@@ -28,6 +28,10 @@
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const {setTimeout, clearTimeout} = require("sdk/timers");
 const {PREDEFINED, PRESETS, DEFAULT_PRESET_CATEGORY} = require("devtools/shared/widgets/CubicBezierPresets");
+const {Cc, Ci} = require('chrome');
+loader.lazyGetter(this, "DOMUtils", () => {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+});
 
 /**
  * CubicBezier data structure helper
@@ -439,12 +443,7 @@ CubicBezierWidget.prototype = {
     value = value.trim();
 
     // Try with one of the predefined values
-    let coordinates = PREDEFINED[value];
-
-    // Otherwise parse the coordinates from the cubic-bezier function
-    if (!coordinates && value.startsWith("cubic-bezier")) {
-      coordinates = value.replace(/cubic-bezier|\(|\)/g, "").split(",").map(parseFloat);
-    }
+    let coordinates = parseTimingFunction(value);
 
     this.presets.refreshMenu(coordinates);
     this.coordinates = coordinates;
@@ -760,7 +759,7 @@ TimingFunctionPreviewWidget.prototype = {
 
     clearTimeout(this.autoRestartAnimation);
 
-    if (isValidTimingFunction(value)) {
+    if (parseTimingFunction(value)) {
       this.dot.style.animationTimingFunction = value;
       this.restartAnimation();
     }
@@ -811,23 +810,53 @@ function distance(x1, y1, x2, y2) {
 }
 
 /**
- * Checks whether a string is a valid timing-function value
+ * Parse a string to see whether it is a valid timing function.
+ * If it is, return the coordinates as an array.
+ * Otherwise, return undefined.
  * @param {String} value
- * @return {Boolean}
+ * @return {Array} of coordinates, or undefined
  */
-function isValidTimingFunction(value) {
-  // Either it's a predefined value
+function parseTimingFunction(value) {
   if (value in PREDEFINED) {
-    return true;
+    return PREDEFINED[value];
   }
 
-  // Or it has to match a cubic-bezier expression
-  if (value.match(/^cubic-bezier\(([0-9.\- ]+,){3}[0-9.\- ]+\)/)) {
-    return true;
+  let tokenStream = DOMUtils.getCSSLexer(value);
+  let getNextToken = () => {
+    while (true) {
+      let token = tokenStream.nextToken();
+      if (!token || (token.tokenType !== "whitespace" &&
+                     token.tokenType !== "comment")) {
+        return token;
+      }
+    }
+  };
+
+  let token = getNextToken();
+  if (token.tokenType !== "function" || token.text !== "cubic-bezier") {
+    return undefined;
   }
 
-  return false;
+  let result = [];
+  for (let i = 0; i < 4; ++i) {
+    token = getNextToken();
+    if (!token || token.tokenType !== "number") {
+      return undefined;
+    }
+    result.push(token.number);
+
+    token = getNextToken();
+    if (!token || token.tokenType !== "symbol" ||
+        token.text !== (i == 3 ? ")" : ",")) {
+      return undefined;
+    }
+  }
+
+  return result;
 }
+
+// This is exported for testing.
+exports._parseTimingFunction = parseTimingFunction;
 
 /**
  * Removes a class from a node and adds it to another.
