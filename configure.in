@@ -4478,7 +4478,7 @@ then
             if test "$NS_PRINTING"; then
                 PKG_CHECK_MODULES(MOZ_QT_WIDGETS, Qt5PrintSupport, ,
                 [
-                  AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qtbase widgets development package])
+                  AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qt5 printsupport development package])
                 ])
                 MOZ_QT_LIBS="$MOZ_QT_LIBS $MOZ_QT_WIDGETS_LIBS"
                 MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $MOZ_QT_WIDGETS_CFLAGS"

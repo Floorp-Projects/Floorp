@@ -630,7 +630,7 @@ nsWindow::Invalidate(const nsIntRect &aRect)
 LayoutDeviceIntPoint
 nsWindow::WidgetToScreenOffset()
 {
-    NS_ENSURE_TRUE(mWidget, nsIntPoint(0,0));
+    NS_ENSURE_TRUE(mWidget, LayoutDeviceIntPoint(0,0));
 
     QPoint origin(0, 0);
     origin = mWidget->mapToGlobal(origin);
@@ -1505,7 +1505,7 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
         aRect.MoveTo(pos.x(), pos.y());
     }
     else {
-        aRect.MoveTo(WidgetToScreenOffset());
+        aRect.MoveTo(WidgetToScreenOffsetUntyped());
     }
     LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
          aRect.x, aRect.y,
