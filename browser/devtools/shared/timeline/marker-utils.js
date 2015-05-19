@@ -29,6 +29,35 @@ function getMarkerLabel (marker) {
 exports.getMarkerLabel = getMarkerLabel;
 
 /**
+ * Returns the correct generic name for a marker class, like "Function Call"
+ * being the general class for JS markers, rather than "setTimeout", etc.
+ *
+ * @param {string} type
+ * @return {string}
+ */
+function getMarkerClassName (type) {
+  let blueprint = TIMELINE_BLUEPRINT[type];
+  // Either use the label function in the blueprint, or use it directly
+  // as a string.
+  let className = typeof blueprint.label === "function" ? blueprint.label() : blueprint.label;
+
+  // If no class name found, attempt to throw a descriptive error how the marker
+  // implementor can fix this.
+  if (!className) {
+    let message = `Could not find marker class name for "${type}".`;
+    if (typeof blueprint.label === "function") {
+      message += ` The following function must return a class name string when no marker passed: ${blueprint.label}`;
+    } else {
+      message += ` ${type}.label must be defined in the marker blueprint.`;
+    }
+    throw new Error(message);
+  }
+
+  return className;
+}
+exports.getMarkerClassName = getMarkerClassName;
+
+/**
  * Returns an array of objects with key/value pairs of what should be rendered
  * in the marker details view.
  *
