@@ -14,6 +14,7 @@ const { Cu } = require("chrome");
 const { ViewHelpers } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 const STRINGS_URI = "chrome://browser/locale/devtools/filterwidget.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const {cssTokenizer} = require("devtools/sourceeditor/css-tokenizer");
 
 const DEFAULT_FILTER_TYPE = "length";
 const UNIT_MAPPING = {
@@ -750,41 +751,46 @@ function swapArrayIndices(array, a, b) {
   */
 function tokenizeComputedFilter(css) {
   let filters = [];
-  let current = "";
   let depth = 0;
 
   if (css === "none") {
     return filters;
   }
 
-  while (css.length) {
-    const char = css[0];
+  let state = "initial";
+  let name;
+  let contents;
+  for (let token of cssTokenizer(css)) {
+    switch (state) {
+      case "initial":
+        if (token.tokenType === "function") {
+          name = token.text;
+          contents = "";
+          state = "function";
+          depth = 1;
+        } else if (token.tokenType === "url" || token.tokenType === "bad_url") {
+          filters.push({name: "url", value: token.text});
+          // Leave state as "initial" because the URL token includes
+          // the trailing close paren.
+        }
+        break;
 
-    switch (char) {
-      case "(":
-        depth++;
-        if (depth === 1) {
-          filters.push({name: current.trim()});
-          current = "";
-        } else {
-          current += char;
+      case "function":
+        if (token.tokenType === "symbol" && token.text === ")") {
+          --depth;
+          if (depth === 0) {
+            filters.push({name: name, value: contents});
+            state = "initial";
+            break;
+          }
         }
-      break;
-      case ")":
-        depth--;
-        if (depth === 0) {
-          filters[filters.length - 1].value = current.trim();
-          current = "";
-        } else {
-          current += char;
+        contents += css.substring(token.startOffset, token.endOffset);
+        if (token.tokenType === "function" ||
+            (token.tokenType === "symbol" && token.text === "(")) {
+          ++depth;
         }
-      break;
-      default:
-        current += char;
-      break;
+        break;
     }
-
-    css = css.slice(1);
   }
 
   return filters;
