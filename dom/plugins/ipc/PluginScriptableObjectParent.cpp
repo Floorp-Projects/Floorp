@@ -824,7 +824,7 @@ PluginScriptableObjectParent::AnswerInvoke(const PluginIdentifier& aId,
   AutoFallibleTArray<NPVariant, 10> convertedArgs;
   uint32_t argCount = aArgs.Length();
 
-  if (!convertedArgs.SetLength(argCount)) {
+  if (!convertedArgs.SetLength(argCount, fallible)) {
     *aResult = void_t();
     *aSuccess = false;
     return true;
@@ -907,7 +907,7 @@ PluginScriptableObjectParent::AnswerInvokeDefault(InfallibleTArray<Variant>&& aA
   AutoFallibleTArray<NPVariant, 10> convertedArgs;
   uint32_t argCount = aArgs.Length();
 
-  if (!convertedArgs.SetLength(argCount)) {
+  if (!convertedArgs.SetLength(argCount, fallible)) {
     *aResult = void_t();
     *aSuccess = false;
     return true;
@@ -1227,7 +1227,7 @@ PluginScriptableObjectParent::AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
   AutoFallibleTArray<NPVariant, 10> convertedArgs;
   uint32_t argCount = aArgs.Length();
 
-  if (!convertedArgs.SetLength(argCount)) {
+  if (!convertedArgs.SetLength(argCount, fallible)) {
     *aResult = void_t();
     *aSuccess = false;
     return true;

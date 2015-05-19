@@ -62,7 +62,7 @@ public:
       // These allocations might fail if content provides a huge number of
       // channels or size, but it's OK since we'll deal with the failure
       // gracefully.
-      if (mInputChannels.SetLength(mNumberOfChannels)) {
+      if (mInputChannels.SetLength(mNumberOfChannels, fallible)) {
         for (uint32_t i = 0; i < mNumberOfChannels; ++i) {
           mInputChannels[i] = new (fallible) float[mLength];
           if (!mInputChannels[i]) {

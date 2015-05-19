@@ -17,8 +17,6 @@
 #include "nsMemory.h"
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIObjectInputStream.h"
-#include "nsIObjectOutputStream.h"
 #include "nsNetCID.h"
 #include "nsError.h"
 #include "nsIScriptSecurityManager.h"
@@ -41,27 +39,25 @@ NS_IMPL_CI_INTERFACE_GETTER(nsNullPrincipal,
 nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 {
   nsRefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
-  nsresult rv = nullPrin->Init(aInheritFrom->GetAppId(),
-                               aInheritFrom->GetIsInBrowserElement());
+  nsresult rv = nullPrin->Init(Cast(aInheritFrom)->OriginAttributesRef());
   return NS_SUCCEEDED(rv) ? nullPrin.forget() : nullptr;
 }
 
 /* static */ already_AddRefed<nsNullPrincipal>
-nsNullPrincipal::Create(uint32_t aAppId, bool aInMozBrowser)
+nsNullPrincipal::Create(const OriginAttributes& aOriginAttributes)
 {
   nsRefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
-  nsresult rv = nullPrin->Init(aAppId, aInMozBrowser);
+  nsresult rv = nullPrin->Init(aOriginAttributes);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return nullPrin.forget();
 }
 
 nsresult
-nsNullPrincipal::Init(uint32_t aAppId, bool aInMozBrowser)
+nsNullPrincipal::Init(const OriginAttributes& aOriginAttributes)
 {
-  MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-  mAppId = aAppId;
-  mInMozBrowser = aInMozBrowser;
+  mOriginAttributes = aOriginAttributes;
+  MOZ_ASSERT(AppId() != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
   mURI = nsNullPrincipalURI::Create();
   NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
@@ -78,21 +74,6 @@ nsNullPrincipal::GetScriptLocation(nsACString &aStr)
 /**
  * nsIPrincipal implementation
  */
-
-NS_IMETHODIMP
-nsNullPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
-{
-  // Just equal to ourselves.  Note that nsPrincipal::Equals will return false
-  // for us since we have a unique domain/origin/etc.
-  *aResult = (aOther == this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
-{
-  return Equals(aOther, aResult);
-}
 
 NS_IMETHODIMP
 nsNullPrincipal::GetHashValue(uint32_t *aResult)
@@ -128,22 +109,6 @@ nsNullPrincipal::GetOrigin(nsACString& aOrigin)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
-{
-  // We don't subsume anything except ourselves.  Note that nsPrincipal::Equals
-  // will return false for us, since we're not about:blank and not Equals to
-  // reasonable nsPrincipals.
-  *aResult = (aOther == this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
-{
-  return Subsumes(aOther, aResult);
-}
-
-NS_IMETHODIMP
 nsNullPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrincipal)
  {
   if (aAllowIfInheritsPrincipal) {
@@ -172,41 +137,6 @@ nsNullPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsP
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::GetJarPrefix(nsACString& aJarPrefix)
-{
-  aJarPrefix.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetAppStatus(uint16_t* aAppStatus)
-{
-  *aAppStatus = nsScriptSecurityManager::AppStatusForPrincipal(this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetAppId(uint32_t* aAppId)
-{
-  *aAppId = mAppId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
-{
-  *aIsInBrowserElement = mInMozBrowser;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetUnknownAppId(bool* aUnknownAppId)
-{
-  *aUnknownAppId = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNullPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
 {
   *aIsNullPrincipal = true;
@@ -230,20 +160,13 @@ nsNullPrincipal::Read(nsIObjectInputStream* aStream)
   // that the Init() method has already been invoked by the time we deserialize.
   // This is in contrast to nsPrincipal, which uses NS_GENERIC_FACTORY_CONSTRUCTOR,
   // in which case ::Read needs to invoke Init().
-  nsresult rv = aStream->Read32(&mAppId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aStream->ReadBoolean(&mInMozBrowser);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return mOriginAttributes.Deserialize(aStream);
 }
 
 NS_IMETHODIMP
 nsNullPrincipal::Write(nsIObjectOutputStream* aStream)
 {
-  aStream->Write32(mAppId);
-  aStream->WriteBoolean(mInMozBrowser);
+  OriginAttributesRef().Serialize(aStream);
   return NS_OK;
 }
 
