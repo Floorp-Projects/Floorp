@@ -13,8 +13,8 @@ elif CONFIG['TARGET_CPU'].startswith('arm'):
 else:
     cpu = CONFIG['TARGET_CPU']
 
-GENERATED_SOURCES += [
-    "%s.c" % cpu,
+SOURCES += [
+    "!%s.c" % cpu,
 ]
 
 NO_PGO = True

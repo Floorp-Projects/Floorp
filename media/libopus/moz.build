@@ -89,9 +89,9 @@ else:
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     SOURCES += celt_sources_arm
-    GENERATED_SOURCES += [ '%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
-        'celt_pitch_xcorr_arm-gnu',
-    ]]
+    SOURCES += [
+        '!celt_pitch_xcorr_arm-gnu.%s' % CONFIG['ASM_SUFFIX']
+    ]
     # -Os is significantly slower, enable -O3 unless optimization is disabled
     if CONFIG['MOZ_OPTIMIZE']:
         CFLAGS += [

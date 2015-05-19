@@ -78,6 +78,8 @@ from .reader import SandboxValidationError
 
 from .context import (
     Context,
+    ObjDirPath,
+    SourcePath,
     SubContext,
     TemplateContext,
 )
@@ -712,29 +714,33 @@ class TreeMetadataEmitter(LoggingMixin):
         return sub
 
     def _process_sources(self, context, passthru):
-        all_sources = {}
+        sources = defaultdict(list)
+        gen_sources = defaultdict(list)
         all_flags = {}
-        for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES',
-                       'GENERATED_SOURCES'):
-            srcs = all_sources[symbol] = []
+        for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
+            srcs = sources[symbol]
+            gen_srcs = gen_sources[symbol]
             context_srcs = context.get(symbol, [])
             for f in context_srcs:
-                if symbol.startswith('GENERATED_'):
-                    full_path = mozpath.normpath(
-                        mozpath.join(context.objdir, f))
+                full_path = f.full_path
+                if isinstance(f, SourcePath):
+                    srcs.append(full_path)
                 else:
-                    full_path = f.full_path
-                srcs.append(full_path)
+                    assert isinstance(f, ObjDirPath)
+                    gen_srcs.append(full_path)
                 if symbol == 'SOURCES':
                     flags = context_srcs[f]
                     if flags:
                         all_flags[full_path] = flags
 
-        for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
-            for src in all_sources[symbol]:
-                if not os.path.exists(src):
+                if isinstance(f, SourcePath) and not os.path.exists(full_path):
                     raise SandboxValidationError('File listed in %s does not '
-                        'exist: \'%s\'' % (symbol, src), context)
+                        'exist: \'%s\'' % (symbol, full_path), context)
+
+        # HOST_SOURCES and UNIFIED_SOURCES only take SourcePaths, so
+        # there should be no generated source in here
+        assert not gen_sources['HOST_SOURCES']
+        assert not gen_sources['UNIFIED_SOURCES']
 
         no_pgo = context.get('NO_PGO')
         no_pgo_sources = [f for f, flags in all_flags.iteritems()
@@ -777,32 +783,33 @@ class TreeMetadataEmitter(LoggingMixin):
         # kinds that can be listed therein.
         all_suffixes = list(suffix_map.keys())
         varmap = dict(
-            SOURCES=(Sources, all_suffixes),
-            HOST_SOURCES=(HostSources, ['.c', '.mm', '.cpp']),
-            UNIFIED_SOURCES=(UnifiedSources, ['.c', '.mm', '.cpp']),
-            GENERATED_SOURCES=(GeneratedSources, all_suffixes),
+            SOURCES=(Sources, GeneratedSources, all_suffixes),
+            HOST_SOURCES=(HostSources, None, ['.c', '.mm', '.cpp']),
+            UNIFIED_SOURCES=(UnifiedSources, None, ['.c', '.mm', '.cpp']),
         )
 
-        for variable, (klass, suffixes) in varmap.items():
+        for variable, (klass, gen_klass, suffixes) in varmap.items():
             allowed_suffixes = set().union(*[suffix_map[s] for s in suffixes])
 
             # First ensure that we haven't been given filetypes that we don't
             # recognize.
-            for f in all_sources[variable]:
+            for f in itertools.chain(sources[variable], gen_sources[variable]):
                 ext = mozpath.splitext(f)[1]
                 if ext not in allowed_suffixes:
                     raise SandboxValidationError(
                         '%s has an unknown file type.' % f, context)
 
-            # Now sort the files to let groupby work.
-            sorted_files = sorted(all_sources[variable],
-                                  key=canonical_suffix_for_file)
-            for canonical_suffix, files in itertools.groupby(
-                    sorted_files, canonical_suffix_for_file):
-                arglist = [context, list(files), canonical_suffix]
-                if variable.startswith('UNIFIED_') and 'FILES_PER_UNIFIED_FILE' in context:
-                    arglist.append(context['FILES_PER_UNIFIED_FILE'])
-                yield klass(*arglist)
+            for srcs, cls in ((sources[variable], klass),
+                              (gen_sources[variable], gen_klass)):
+                # Now sort the files to let groupby work.
+                sorted_files = sorted(srcs, key=canonical_suffix_for_file)
+                for canonical_suffix, files in itertools.groupby(
+                        sorted_files, canonical_suffix_for_file):
+                    arglist = [context, list(files), canonical_suffix]
+                    if (variable.startswith('UNIFIED_') and
+                            'FILES_PER_UNIFIED_FILE' in context):
+                        arglist.append(context['FILES_PER_UNIFIED_FILE'])
+                    yield cls(*arglist)
 
         for f, flags in all_flags.iteritems():
             if flags.flags:

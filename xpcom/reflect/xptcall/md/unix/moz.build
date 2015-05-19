@@ -11,10 +11,8 @@ if CONFIG['OS_ARCH'] == 'Darwin':
     ]
     if CONFIG['OS_TEST'] == 'powerpc':
         SOURCES += [
+            '!xptcstubs_asm_ppc_darwin.s',
             'xptcinvoke_asm_ppc_rhapsody.s',
-        ]
-        GENERATED_SOURCES += [
-            'xptcstubs_asm_ppc_darwin.s',
         ]
     if '86' in CONFIG['OS_TEST'] and CONFIG['OS_TEST'] != 'x86_64':
         DEFINES['MOZ_NEED_LEADING_UNDERSCORE'] = True
@@ -179,15 +177,14 @@ if CONFIG['OS_ARCH'] == 'Linux':
 if CONFIG['OS_ARCH'] == 'AIX':
     if CONFIG['HAVE_64BIT_BUILD']:
         SOURCES += [
+            '!xptcstubs_asm_ppc_aix64.s',
             'xptcinvoke_asm_ppc_aix64.s',
             'xptcinvoke_ppc_aix64.cpp',
             'xptcstubs_ppc_aix64.cpp',
         ]
-        GENERATED_SOURCES += [
-            'xptcstubs_asm_ppc_aix64.s',
-        ]
     else:
         SOURCES += [
+            '!xptcstubs_asm_ppc_aix.s',
             'xptcinvoke_ppc_aix.cpp',
             'xptcstubs_ppc_aix.cpp',
         ]
@@ -199,9 +196,6 @@ if CONFIG['OS_ARCH'] == 'AIX':
             SOURCES += [
                 'xptcinvoke_asm_ppc_aix.s',
             ]
-        GENERATED_SOURCES += [
-            'xptcstubs_asm_ppc_aix.s',
-        ]
 
 if CONFIG['OS_TEST'] == 'powerpc':
     if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD'):

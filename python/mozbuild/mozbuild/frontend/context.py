@@ -664,18 +664,11 @@ VARIABLES = {
         populated by calling add_android_eclipse{_library}_project().
         """, 'export'),
 
-    'SOURCES': (ContextDerivedTypedListWithItems(SourcePath, StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List})), list,
+    'SOURCES': (ContextDerivedTypedListWithItems(Path, StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List})), list,
         """Source code files.
 
         This variable contains a list of source code files to compile.
         Accepts assembler, C, C++, Objective C/C++.
-        """, None),
-
-    'GENERATED_SOURCES': (StrictOrderingOnAppendList, list,
-        """Generated source code files.
-
-        This variable contains a list of generated source code files to
-        compile. Accepts assembler, C, C++, Objective C/C++.
         """, None),
 
     'FILES_PER_UNIFIED_FILE': (int, int,
@@ -690,15 +683,6 @@ VARIABLES = {
         that can be concatenated all together and built as a single source
         file. This can help make the build faster and reduce the debug info
         size.
-        """, None),
-
-    'GENERATED_UNIFIED_SOURCES': (StrictOrderingOnAppendList, list,
-        """Generated source code files that can be compiled together.
-
-        This variable contains a list of generated source code files to
-        compile, that can be concatenated all together, with UNIFIED_SOURCES,
-        and built as a single source file. This can help make the build faster
-        and reduce the debug info size.
         """, None),
 
     'GENERATED_FILES': (StrictOrderingOnAppendListWithFlagsFactory({
