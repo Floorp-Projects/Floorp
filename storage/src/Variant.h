@@ -262,7 +262,6 @@ struct variant_storage_traits<uint8_t[], false>
   static inline void storage_conversion(ConstructorType aBlob, StorageType* _outData)
   {
     _outData->Clear();
-    _outData->SetCapacity(aBlob.second);
     (void)_outData->AppendElements(static_cast<const uint8_t *>(aBlob.first),
                                    aBlob.second);
   }
