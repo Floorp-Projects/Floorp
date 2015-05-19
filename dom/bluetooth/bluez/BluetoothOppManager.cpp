@@ -724,19 +724,13 @@ bool
 BluetoothOppManager::ExtractBlobHeaders()
 {
   RetrieveSentFileName();
+  mBlob->GetType(mContentType);
 
-  nsresult rv = mBlob->GetType(mContentType);
-  if (NS_FAILED(rv)) {
-    BT_WARNING("Can't get content type");
+  ErrorResult rv;
+  uint64_t fileLength = mBlob->GetSize(rv);
+  if (NS_WARN_IF(rv.Failed())) {
     SendDisconnectRequest();
-    return false;
-  }
-
-  uint64_t fileLength;
-  rv = mBlob->GetSize(&fileLength);
-  if (NS_FAILED(rv)) {
-    BT_WARNING("Can't get file size");
-    SendDisconnectRequest();
+    rv.SuppressException();
     return false;
   }
 
@@ -753,9 +747,9 @@ BluetoothOppManager::ExtractBlobHeaders()
 
   mFileLength = fileLength;
   rv = NS_NewThread(getter_AddRefs(mReadFileThread));
-  if (NS_FAILED(rv)) {
-    BT_WARNING("Can't create thread");
+  if (NS_WARN_IF(rv.Failed())) {
     SendDisconnectRequest();
+    rv.SuppressException();
     return false;
   }
 
@@ -1094,12 +1088,12 @@ BluetoothOppManager::ClientDataHandler(UnixSocketBuffer* aMessage)
       mUpdateProgressCounter = mSentFileLength / kUpdateProgressBase + 1;
     }
 
-    nsresult rv;
+    ErrorResult rv;
     if (!mInputStream) {
-      rv = mBlob->GetInternalStream(getter_AddRefs(mInputStream));
-      if (NS_FAILED(rv)) {
-        BT_WARNING("Can't get internal stream of blob");
+      mBlob->GetInternalStream(getter_AddRefs(mInputStream), rv);
+      if (NS_WARN_IF(rv.Failed())) {
         SendDisconnectRequest();
+        rv.SuppressException();
         return;
       }
     }
@@ -1107,9 +1101,10 @@ BluetoothOppManager::ClientDataHandler(UnixSocketBuffer* aMessage)
     nsRefPtr<ReadFileTask> task = new ReadFileTask(mInputStream,
                                                    mRemoteMaxPacketLength);
     rv = mReadFileThread->Dispatch(task, NS_DISPATCH_NORMAL);
-    if (NS_FAILED(rv)) {
-      BT_WARNING("Cannot dispatch read file task!");
+    if (NS_WARN_IF(rv.Failed())) {
       SendDisconnectRequest();
+      rv.SuppressException();
+      return;
     }
   } else {
     BT_WARNING("Unhandled ObexRequestCode");
