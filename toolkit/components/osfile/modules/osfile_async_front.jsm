@@ -1012,10 +1012,15 @@ File.removeEmptyDir = function removeEmptyDir(path, options) {
  * Remove an existing file.
  *
  * @param {string} path The name of the file.
+ * @param {*=} options Additional options.
+ *   - {bool} ignoreAbsent If |false|, throw an error if the file does
+ *     not exist. |true| by default.
+ *
+ * @throws {OS.File.Error} In case of I/O error.
  */
-File.remove = function remove(path) {
+File.remove = function remove(path, options) {
   return Scheduler.post("remove",
-    [Type.path.toMsg(path)]);
+    [Type.path.toMsg(path), options], path);
 };
 
 
