@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>WebGL2 test: Alpha and Luminance Textures</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+<script id="vs" type="x-shader/x-vertex">
+#version 300 es
+in vec2 aTexCoord;
+out vec2 vTexCoord;
+
+void main() {
+  vec2 pos = vec2(2.0)*aTexCoord - vec2(1.0);
+  gl_Position = vec4(pos, 0.0, 1.0);
+  vTexCoord = aTexCoord;
+}
+</script>
+<script id="fs-alpha" type="x-shader/x-fragment">
+#version 300 es
+precision mediump float;
+in vec2 vTexCoord;
+
+out vec4 oFragColor;
+
+uniform sampler2D uTex;
+
+bool compare(in vec4 test, in float ref) {
+  float lo = (ref - 0.1) / 255.0;
+  float hi = (ref + 0.1) / 255.0;
+
+  return (test.rgb == vec3(0) &&
+          lo < test.a && test.a < hi);
+}
+
+void main() {
+  vec4 tex = texture(uTex, vTexCoord);
+
+  oFragColor = compare(tex, 128) ? vec4(0.0, 1.0, 0.0, 1.0)
+                                 : vec4(1.0, 0.0, 0.0, 1.0);
+}
+</script>
+<script id="fs-lum" type="x-shader/x-fragment">
+#version 300 es
+precision mediump float;
+in vec2 vTexCoord;
+
+out vec4 oFragColor;
+
+uniform sampler2D uTex;
+
+bool compare(vec4 test, float ref) {
+  float lo = (ref - 0.1) / 255.0;
+  float hi = (ref + 0.1) / 255.0;
+
+  return (lo < test.r && test.r < hi &&
+          lo < test.g && test.g < hi &&
+          lo < test.b && test.b < hi &&
+          test.a == 1);
+}
+
+void main() {
+  vec4 tex = texture(uTex, vTexCoord);
+
+  oFragColor = compare(tex, 128) ? vec4(0.0, 1.0, 0.0, 1.0)
+                                 : vec4(1.0, 0.0, 0.0, 1.0);
+}
+</script>
+<script id="fs-lumalpha" type="x-shader/x-fragment">
+#version 300 es
+precision mediump float;
+in vec2 vTexCoord;
+
+out vec4 oFragColor;
+
+uniform sampler2D uTex;
+
+bool compare(in vec4 test, in float ref) {
+  float lo = (ref - 0.1) / 255.0;
+  float hi = (ref + 0.1) / 255.0;
+
+  return (lo < test.r && test.r < hi &&
+          lo < test.g && test.g < hi &&
+          lo < test.b && test.b < hi &&
+          lo < test.a && test.a < hi);
+}
+
+void main() {
+  vec4 tex = texture(uTex, vTexCoord);
+
+  oFragColor = compare(tex, 128) ? vec4(0.0, 1.0, 0.0, 1.0)
+                                 : vec4(1.0, 0.0, 0.0, 1.0);
+}
+</script>
+<body>
+<canvas id="c" width="32" height="32"></canvas>
+<script>
+  WebGLUtil.withWebGL2('c', function(gl) {
+
+    function testPixel(x, y, refData, func, infoString) {
+      var pixel = new Uint8Array(4);
+      gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+      var pixelMatches = (pixel[0] == refData[0] &&
+                          pixel[1] == refData[1] &&
+                          pixel[2] == refData[2] &&
+                          pixel[3] == refData[3]);
+      func(pixelMatches, infoString);
+    }
+
+    function testTexture(details) {
+      var prog = WebGLUtil.createProgramByIds(gl, 'vs', details.frag);
+      if (!prog) {
+        ok(false, 'Program linking should succeed.');
+        return false;
+      }
+
+      prog.aTexCoord = gl.getAttribLocation(prog, "aTexCoord");
+      ok(prog.aTexCoord >= 0, '`aTexCoord` should be valid.');
+
+      var tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, details.format, 2, 2, 0,
+                    details.format, gl.UNSIGNED_BYTE, details.pixels);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+      gl.useProgram(prog);
+      gl.vertexAttribPointer(prog.aTexCoord, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(prog.aTexCoord);
+
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      testPixel(0, 0, [0, 255, 0, 255], ok, 'Should be green after drawing.');
+      return true;
+    }
+
+    gl.disable(gl.DEPTH_TEST);
+
+    var vertData = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertData);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0, 0, 1, 0, 0, 1, 1, 1 ]), gl.STATIC_DRAW);
+
+    gl.clearColor(0, 0, 1, 1);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+
+    var details = [
+      { frag: 'fs-alpha', format: gl.ALPHA, pixels: new Uint8Array([ 128, 128, 128, 128 ]) },
+      { frag: 'fs-lum', format: gl.LUMINANCE, pixels: new Uint8Array([ 128, 128, 128, 128 ]) },
+      { frag: 'fs-lumalpha', format: gl.LUMINANCE_ALPHA, pixels: new Uint8Array([ 128, 128, 128, 128, 128, 128, 128, 128 ]) }
+    ];
+
+    for (var i = 0; i < details.length; i++) {
+      if (!testTexture(details[i])) {
+        return;
+      }
+    }
+    ok(true, 'Test complete.');
+  }, function() {
+    SimpleTest.finish();
+  });
+
+  SimpleTest.waitForExplicitFinish();
+</script>
