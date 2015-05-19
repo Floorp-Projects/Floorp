@@ -14,6 +14,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://browser/content/devtools/theme-switching.js"/>
+  <script type="application/javascript" src="performance/system.js"/>
   <script type="application/javascript" src="performance/performance-controller.js"/>
   <script type="application/javascript" src="performance/performance-view.js"/>
   <script type="application/javascript" src="performance/recording-model.js"/>
@@ -37,12 +38,12 @@
                 data-pref="show-platform-data"
                 label="&profilerUI.showPlatformData;"
                 tooltiptext="&profilerUI.showPlatformData.tooltiptext;"/>
-      <!-- TODO Re-enable in bug 1163350 -->
-      <!-- <menuitem id="option-enable-memory"
+      <menuitem id="option-enable-memory"
+                class="experimental-option"
                 type="checkbox"
                 data-pref="enable-memory"
                 label="&profilerUI.enableMemory;"
-                tooltiptext="&profilerUI.enableMemory.tooltiptext;"/> -->
+                tooltiptext="&profilerUI.enableMemory.tooltiptext;"/>
       <menuitem id="option-enable-framerate"
                 type="checkbox"
                 data-pref="enable-framerate"
@@ -63,12 +64,12 @@
                 data-pref="flatten-tree-recursion"
                 label="&profilerUI.flattenTreeRecursion;"
                 tooltiptext="&profilerUI.flattenTreeRecursion.tooltiptext;"/>
-      <!-- TODO Re-enable in bug 1163351 -->
-      <!-- <menuitem id="option-show-jit-optimizations"
+      <menuitem id="option-show-jit-optimizations"
+                class="experimental-option"
                 type="checkbox"
                 data-pref="show-jit-optimizations"
                 label="&profilerUI.showJITOptimizations;"
-                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/> -->
+                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/>
     </menupopup>
   </popupset>
 
@@ -96,8 +97,8 @@
       <toolbar id="performance-toolbar" class="devtools-toolbar">
         <hbox id="performance-toolbar-control-other" class="devtools-toolbarbutton-group">
           <toolbarbutton id="filter-button"
-                         popup="performance-filter-menupopup"
                          class="devtools-toolbarbutton"
+                         popup="performance-filter-menupopup"
                          tooltiptext="&profilerUI.options.filter.tooltiptext;"/>
         </hbox>
         <hbox id="performance-toolbar-controls-detail-views" class="devtools-toolbarbutton-group">
@@ -155,6 +156,13 @@
             <hbox id="time-framerate"/>
           </vbox>
           <deck id="details-pane-container" flex="1">
+            <hbox id="loading-notice"
+                  class="notice-container devtools-throbber"
+                  align="center"
+                  pack="center"
+                  flex="1">
+              <label value="&profilerUI.loadingNotice;"/>
+            </hbox>
             <hbox id="recording-notice"
                   class="notice-container"
                   align="center"
@@ -166,6 +174,10 @@
                   <toolbarbutton class="devtools-toolbarbutton record-button"
                                  label="&profilerUI.stopRecording;" />
                 </hbox>
+                <label class="realtime-disabled-message"
+                       value="Realtime recording data disabled on non-multiprocess Firefox."/>
+                <label class="realtime-disabled-on-e10s-message"
+                       value="Enable multiprocess Firefox in preferences for rendering recording data in realtime."/>
                 <label class="buffer-status-message"
                        tooltiptext="&profilerUI.bufferStatusTooltip;"/>
                 <label class="buffer-status-message-full"
@@ -188,6 +200,10 @@
                       <label class="console-profile-command" />
                       <label value="&profilerUI.console.stopCommandEnd;" />
                     </hbox>
+                    <label class="realtime-disabled-message"
+                           value="Realtime recording data disabled on non-multiprocess Firefox."/>
+                    <label class="realtime-disabled-on-e10s-message"
+                           value="Enable multiprocess Firefox in preferences for rendering recording data in realtime."/>
                     <label class="buffer-status-message"
                            tooltiptext="&profilerUI.bufferStatusTooltip;"/>
                     <label class="buffer-status-message-full"

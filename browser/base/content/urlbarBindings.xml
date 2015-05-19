@@ -866,6 +866,23 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
+      <method name="handleDelete">
+        <body><![CDATA[
+          // When UnifiedComplete is enabled, we arrange for the popup to
+          // always have a "special" first item that's always selected. The
+          // autocomplete controller's handleDelete() implementation will
+          // remove the selected entry from the popup in that case.
+          // So when our first special item is selected, we call handleText
+          // instead so it acts as a delete on the text value instead of
+          // removing that item.
+          if (Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete") &&
+              this.popup.selectedIndex == 0) {
+            return this.mController.handleText();
+          }
+          return this.mController.handleDelete();
+        ]]></body>
+      </method>
+
     </implementation>
 
     <handlers>
