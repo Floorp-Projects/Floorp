@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = ["DirectoryLinksProvider"];
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
+const ParserUtils =  Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils);
 const XMLHttpRequest =
   Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
 
@@ -610,7 +611,12 @@ let DirectoryLinksProvider = {
           return;
         }
 
-        link.targetedName = name;
+        let sanitizeFlags = ParserUtils.SanitizerCidEmbedsOnly |
+          ParserUtils.SanitizerDropForms |
+          ParserUtils.SanitizerDropNonCSSPresentation;
+
+        link.explanation = link.explanation ? ParserUtils.convertToPlainText(link.explanation, sanitizeFlags, 0) : "";
+        link.targetedName = ParserUtils.convertToPlainText(link.adgroup_name, sanitizeFlags, 0) || name;
         link.lastVisitDate = rawLinks.suggested.length - position;
 
         // We cache suggested tiles here but do not push any of them in the links list yet.

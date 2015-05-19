@@ -104,6 +104,16 @@ let suggestedTile4 = {
     "sponsoredtarget.com"
   ]
 }
+let suggestedTile5 = {
+  url: "http://eviltile.com",
+  type: "affiliate",
+  lastVisitDate: 5,
+  explanation: "This is an evil tile <form><button formaction='javascript:alert(1)''>X</button></form> muhahaha",
+  adgroup_name: "WE ARE EVIL <link rel='import' href='test.svg'/>",
+  frecent_sites: [
+    "eviltarget.com"
+  ]
+}
 let someOtherSite = {url: "http://someothersite.com", title: "Not_A_Suggested_Site"};
 
 function getHttpHandler(path) {
@@ -442,6 +452,7 @@ add_task(function test_suggestedLinksMap() {
     for (let link of expected_data[site]) {
       let linkCopy = JSON.parse(JSON.stringify(link));
       linkCopy.targetedName = "testing map";
+      linkCopy.explanation = "";
       isIdentical(suggestedLinksItr.next().value, linkCopy);
     }
   })
@@ -1683,4 +1694,26 @@ add_task(function test_DirectoryLinksProvider_ClickRemoval() {
   do_check_false(data["http://bar.com"].hasOwnProperty("clicked"));
 
   yield promiseCleanDirectoryLinksProvider();
+});
+
+add_task(function test_sanitizeExplanation() {
+  // Note: this is a basic test to ensure we applied sanitization to the link explanation.
+  // Full testing for appropriate sanitization is done in parser/xml/test/unit/test_sanitizer.js.
+
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "testing map";
+
+  let data = {"suggested": [suggestedTile5]};
+  let dataURI = 'data:application/json,' + encodeURIComponent(JSON.stringify(data));
+
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+  let links = yield fetchData();
+
+  let suggestedSites = [...DirectoryLinksProvider._suggestedLinks.keys()];
+  do_check_eq(suggestedSites.indexOf("eviltarget.com"), 0);
+  do_check_eq(suggestedSites.length, 1);
+
+  let suggestedLink = [...DirectoryLinksProvider._suggestedLinks.get(suggestedSites[0]).values()][0];
+  do_check_eq(suggestedLink.explanation, "This is an evil tile X muhahaha");
+  do_check_eq(suggestedLink.targetedName, "WE ARE EVIL ");
 });
