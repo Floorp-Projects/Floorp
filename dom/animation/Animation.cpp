@@ -260,9 +260,9 @@ Animation::Finish(ErrorResult& aRv)
 }
 
 void
-Animation::Play(LimitBehavior aLimitBehavior)
+Animation::Play(ErrorResult& aRv, LimitBehavior aLimitBehavior)
 {
-  DoPlay(aLimitBehavior);
+  DoPlay(aRv, aLimitBehavior);
   PostUpdate();
 }
 
@@ -563,15 +563,9 @@ Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
 
 // http://w3c.github.io/web-animations/#play-an-animation
 void
-Animation::DoPlay(LimitBehavior aLimitBehavior)
+Animation::DoPlay(ErrorResult& aRv, LimitBehavior aLimitBehavior)
 {
   bool abortedPause = mPendingState == PendingState::PausePending;
-
-  bool reuseReadyPromise = false;
-  if (mPendingState != PendingState::NotPending) {
-    CancelPendingTasks();
-    reuseReadyPromise = true;
-  }
 
   Nullable<TimeDuration> currentTime = GetCurrentTime();
   if (mPlaybackRate > 0.0 &&
@@ -585,9 +579,19 @@ Animation::DoPlay(LimitBehavior aLimitBehavior)
               (aLimitBehavior == LimitBehavior::AutoRewind &&
                (currentTime.Value().ToMilliseconds() <= 0.0 ||
                 currentTime.Value() > EffectEnd())))) {
+    if (EffectEnd() == TimeDuration::Forever()) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
     mHoldTime.SetValue(TimeDuration(EffectEnd()));
   } else if (mPlaybackRate == 0.0 && currentTime.IsNull()) {
     mHoldTime.SetValue(TimeDuration(0));
+  }
+
+  bool reuseReadyPromise = false;
+  if (mPendingState != PendingState::NotPending) {
+    CancelPendingTasks();
+    reuseReadyPromise = true;
   }
 
   // If the hold time is null then we're either already playing normally (and

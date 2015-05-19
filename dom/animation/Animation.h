@@ -101,7 +101,7 @@ public:
   virtual Promise* GetFinished(ErrorResult& aRv);
   void Cancel();
   virtual void Finish(ErrorResult& aRv);
-  virtual void Play(LimitBehavior aLimitBehavior);
+  virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior);
   virtual void Pause();
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
@@ -117,7 +117,10 @@ public:
   void SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
                               ErrorResult& aRv);
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
-  virtual void PlayFromJS() { Play(LimitBehavior::AutoRewind); }
+  virtual void PlayFromJS(ErrorResult& aRv)
+  {
+    Play(aRv, LimitBehavior::AutoRewind);
+  }
   /**
    * PauseFromJS is currently only here for symmetry with PlayFromJS but
    * in future we will likely have to flush style in
@@ -280,7 +283,7 @@ protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void SilentlySetPlaybackRate(double aPlaybackRate);
   void DoCancel();
-  void DoPlay(LimitBehavior aLimitBehavior);
+  void DoPlay(ErrorResult& aRv, LimitBehavior aLimitBehavior);
   void DoPause();
   void ResumeAt(const TimeDuration& aReadyTime);
   void PauseAt(const TimeDuration& aReadyTime);
