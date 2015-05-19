@@ -100,7 +100,7 @@ protected:
   nsCOMPtr<nsISSLStatus> mSSLStatus;
   nsCOMPtr<nsISupports> mCurrentToplevelSecurityInfo;
 
-  PLDHashTable2 mTransferringRequests;
+  PLDHashTable mTransferringRequests;
 };
 
 

@@ -749,7 +749,7 @@ public:
 
 private:
     mozilla::scache::StartupCache* mCache;
-    PLDHashTable2 mMap;
+    PLDHashTable mMap;
     bool mWriteNeeded;
 
     PLDHashTableOps mOps;
