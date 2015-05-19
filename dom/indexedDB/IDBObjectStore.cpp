@@ -1178,7 +1178,8 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
   }
 
   FallibleTArray<uint8_t> cloneData;
-  if (NS_WARN_IF(!cloneData.SetLength(cloneWriteInfo.mCloneBuffer.nbytes()))) {
+  if (NS_WARN_IF(!cloneData.SetLength(cloneWriteInfo.mCloneBuffer.nbytes(),
+                                      fallible))) {
     aRv = NS_ERROR_OUT_OF_MEMORY;
     return nullptr;
   }
@@ -1206,7 +1207,7 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
     const uint32_t count = blobOrFileInfos.Length();
 
     FallibleTArray<DatabaseFileOrMutableFileId> fileActorOrMutableFileIds;
-    if (NS_WARN_IF(!fileActorOrMutableFileIds.SetCapacity(count))) {
+    if (NS_WARN_IF(!fileActorOrMutableFileIds.SetCapacity(count, fallible))) {
       aRv = NS_ERROR_OUT_OF_MEMORY;
       return nullptr;
     }
