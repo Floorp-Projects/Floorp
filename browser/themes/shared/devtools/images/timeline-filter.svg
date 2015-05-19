@@ -15,7 +15,7 @@ use:not(:target) {
 }
 
 use {
-  fill: #EDF0F1;
+  fill: #babec3;
 }
 
 use[id$="-disabled"] {
