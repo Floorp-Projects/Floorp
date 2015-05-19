@@ -100,6 +100,7 @@ browser.jar:
     content/browser/devtools/webaudioeditor/views/properties.js        (webaudioeditor/views/properties.js)
     content/browser/devtools/webaudioeditor/views/automation.js        (webaudioeditor/views/automation.js)
     content/browser/devtools/performance.xul                           (performance/performance.xul)
+*   content/browser/devtools/performance/system.js                     (performance/system.js)
     content/browser/devtools/performance/performance-controller.js     (performance/performance-controller.js)
     content/browser/devtools/performance/performance-view.js           (performance/performance-view.js)
     content/browser/devtools/performance/views/overview.js             (performance/views/overview.js)
