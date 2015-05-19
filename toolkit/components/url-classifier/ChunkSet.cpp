@@ -81,7 +81,7 @@ ChunkSet::Remove(const ChunkSet& aOther)
     }
   }
 
-  if (!mChunks.SetLength(addIter - mChunks.Elements())) {
+  if (!mChunks.SetLength(addIter - mChunks.Elements(), fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

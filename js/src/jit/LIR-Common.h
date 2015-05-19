@@ -58,27 +58,21 @@ class LOsiPoint : public LInstructionHelper<0, 0, 0>
 
 class LMove
 {
-    LAllocation* from_;
-    LAllocation* to_;
+    LAllocation from_;
+    LAllocation to_;
     LDefinition::Type type_;
 
   public:
-    LMove(LAllocation* from, LAllocation* to, LDefinition::Type type)
+    LMove(LAllocation from, LAllocation to, LDefinition::Type type)
       : from_(from),
         to_(to),
         type_(type)
     { }
 
-    LAllocation* from() {
+    LAllocation from() const {
         return from_;
     }
-    const LAllocation* from() const {
-        return from_;
-    }
-    LAllocation* to() {
-        return to_;
-    }
-    const LAllocation* to() const {
+    LAllocation to() const {
         return to_;
     }
     LDefinition::Type type() const {
@@ -109,10 +103,10 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
     void printOperands(FILE* fp);
 
     // Add a move which takes place simultaneously with all others in the group.
-    bool add(LAllocation* from, LAllocation* to, LDefinition::Type type);
+    bool add(LAllocation from, LAllocation to, LDefinition::Type type);
 
     // Add a move which takes place after existing moves in the group.
-    bool addAfter(LAllocation* from, LAllocation* to, LDefinition::Type type);
+    bool addAfter(LAllocation from, LAllocation to, LDefinition::Type type);
 
     size_t numMoves() const {
         return moves_.length();
@@ -137,7 +131,7 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
     bool uses(Register reg) {
         for (size_t i = 0; i < numMoves(); i++) {
             LMove move = getMove(i);
-            if (*move.from() == LGeneralReg(reg) || *move.to() == LGeneralReg(reg))
+            if (move.from() == LGeneralReg(reg) || move.to() == LGeneralReg(reg))
                 return true;
         }
         return false;

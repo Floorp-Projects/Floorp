@@ -45,8 +45,8 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
     mConverter = EncodingUtils::DecoderForEncoding(encoding);
  
     // set up our buffers
-    if (!mByteData.SetCapacity(aBufferSize) ||
-        !mUnicharData.SetCapacity(aBufferSize)) {
+    if (!mByteData.SetCapacity(aBufferSize, mozilla::fallible) ||
+        !mUnicharData.SetCapacity(aBufferSize, mozilla::fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 

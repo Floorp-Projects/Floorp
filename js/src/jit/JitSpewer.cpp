@@ -177,11 +177,11 @@ IonSpewer::spewPass(const char* pass, BacktrackingAllocator* ra)
         return;
 
     c1Spewer.spewPass(pass);
-    c1Spewer.spewIntervals(pass, ra);
+    c1Spewer.spewRanges(pass, ra);
     jsonSpewer.beginPass(pass);
     jsonSpewer.spewMIR(graph);
     jsonSpewer.spewLIR(graph);
-    jsonSpewer.spewIntervals(ra);
+    jsonSpewer.spewRanges(ra);
     jsonSpewer.endPass();
 }
 

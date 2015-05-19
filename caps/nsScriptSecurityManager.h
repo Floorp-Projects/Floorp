@@ -80,22 +80,6 @@ public:
         return sStrictFileOriginPolicy;
     }
 
-    /**
-     * Returns true if the two principals share the same app attributes.
-     *
-     * App attributes are appId and the inBrowserElement flag.
-     * Two principals have the same app attributes if those information are
-     * equals.
-     * This method helps keeping principals from different apps isolated from
-     * each other. Also, it helps making sure mozbrowser (web views) and their
-     * parent are isolated from each other. All those entities do not share the
-     * same data (cookies, IndexedDB, localStorage, etc.) so we shouldn't allow
-     * violating that principle.
-     */
-    static bool
-    AppAttributesEqual(nsIPrincipal* aFirst,
-                       nsIPrincipal* aSecond);
-
     void DeactivateDomainPolicy();
 
 private:
