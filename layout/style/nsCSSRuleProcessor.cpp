@@ -450,10 +450,10 @@ protected:
 
   int32_t     mRuleCount;
 
-  PLDHashTable2 mIdTable;
-  PLDHashTable2 mClassTable;
-  PLDHashTable2 mTagTable;
-  PLDHashTable2 mNameSpaceTable;
+  PLDHashTable mIdTable;
+  PLDHashTable mClassTable;
+  PLDHashTable mTagTable;
+  PLDHashTable mNameSpaceTable;
   RuleValueList mUniversalRules;
 
   struct EnumData {
@@ -892,14 +892,14 @@ struct RuleCascadeData {
     mPseudoElementRuleHashes[nsCSSPseudoElements::ePseudo_PseudoElementCount];
   nsTArray<nsCSSRuleProcessor::StateSelector>  mStateSelectors;
   EventStates              mSelectorDocumentStates;
-  PLDHashTable2            mClassSelectors;
-  PLDHashTable2            mIdSelectors;
+  PLDHashTable             mClassSelectors;
+  PLDHashTable             mIdSelectors;
   nsTArray<nsCSSSelector*> mPossiblyNegatedClassSelectors;
   nsTArray<nsCSSSelector*> mPossiblyNegatedIDSelectors;
-  PLDHashTable2            mAttributeSelectors;
-  PLDHashTable2            mAnonBoxRules;
+  PLDHashTable             mAttributeSelectors;
+  PLDHashTable             mAnonBoxRules;
 #ifdef MOZ_XUL
-  PLDHashTable2            mXULTreeRules;
+  PLDHashTable             mXULTreeRules;
 #endif
 
   nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
@@ -3321,7 +3321,7 @@ struct CascadeEnumData {
   PLArenaPool mArena;
   // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
   // provide a getter that gives me a *reference* to the value.
-  PLDHashTable2 mRulesByWeight; // of PerWeightDataListItem linked lists
+  PLDHashTable mRulesByWeight; // of PerWeightDataListItem linked lists
   uint8_t mSheetType;
 };
 

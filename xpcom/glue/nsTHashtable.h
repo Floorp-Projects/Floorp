@@ -328,7 +328,7 @@ public:
 #endif
 
 protected:
-  PLDHashTable2 mTable;
+  PLDHashTable mTable;
 
   static const void* s_GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 

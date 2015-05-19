@@ -52,7 +52,7 @@ public:
     void Clear() { mMap.Clear(); }
 
 protected:
-    PLDHashTable2 mMap;
+    PLDHashTable mMap;
 
     struct Entry : public PLDHashEntryHdr {
         nsIContent*      mContent;

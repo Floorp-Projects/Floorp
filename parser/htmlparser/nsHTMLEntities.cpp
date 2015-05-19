@@ -65,8 +65,8 @@ static const PLDHashTableOps UnicodeToEntityOps = {
   nullptr,
 };
 
-static PLDHashTable2* gEntityToUnicode;
-static PLDHashTable2* gUnicodeToEntity;
+static PLDHashTable* gEntityToUnicode;
+static PLDHashTable* gUnicodeToEntity;
 static nsrefcnt gTableRefCnt = 0;
 
 #define HTML_ENTITY(_name, _value) { #_name, _value },
@@ -81,12 +81,12 @@ nsresult
 nsHTMLEntities::AddRefTable(void)
 {
   if (!gTableRefCnt) {
-    gEntityToUnicode = new PLDHashTable2(&EntityToUnicodeOps,
-                                         sizeof(EntityNodeEntry),
-                                         NS_HTML_ENTITY_COUNT);
-    gUnicodeToEntity = new PLDHashTable2(&UnicodeToEntityOps,
-                                         sizeof(EntityNodeEntry),
-                                         NS_HTML_ENTITY_COUNT);
+    gEntityToUnicode = new PLDHashTable(&EntityToUnicodeOps,
+                                        sizeof(EntityNodeEntry),
+                                        NS_HTML_ENTITY_COUNT);
+    gUnicodeToEntity = new PLDHashTable(&UnicodeToEntityOps,
+                                        sizeof(EntityNodeEntry),
+                                        NS_HTML_ENTITY_COUNT);
     for (const EntityNode *node = gEntityArray,
                  *node_end = ArrayEnd(gEntityArray);
          node < node_end; ++node) {
