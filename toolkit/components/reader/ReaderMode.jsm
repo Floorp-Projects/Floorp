@@ -347,7 +347,7 @@ this.ReaderMode = {
     let serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
                      createInstance(Ci.nsIDOMSerializer);
     let serializedDoc = serializer.serializeToString(doc);
-    TelemetryStopwatch.finish("READER_MOD_SERIALIZE_DOM_MS");
+    TelemetryStopwatch.finish("READER_MODE_SERIALIZE_DOM_MS");
 
     TelemetryStopwatch.start("READER_MODE_WORKER_PARSE_MS");
     let article = null;
