@@ -309,11 +309,11 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       cell.appendChild(hostNode);
     }
 
-    if (frameInfo.categoryData.label) {
-      let spacerNode = this.document.createElement("spacer");
-      spacerNode.setAttribute("flex", "10000");
-      cell.appendChild(spacerNode);
+    let spacerNode = this.document.createElement("spacer");
+    spacerNode.setAttribute("flex", "10000");
+    cell.appendChild(spacerNode);
 
+    if (frameInfo.categoryData.label) {
       let categoryNode = this.document.createElement("label");
       categoryNode.className = "plain call-tree-category";
       categoryNode.style.color = frameInfo.categoryData.color;
