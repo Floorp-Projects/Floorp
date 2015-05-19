@@ -548,14 +548,10 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                  src.GetName());
     dest->SetEffect(destEffect);
 
-    // Even in the case where we call PauseFromStyle below, we still need to
-    // call PlayFromStyle first. This is because a newly-created animation is
-    // idle and has no effect until it is played (or otherwise given a start
-    // time).
-    dest->PlayFromStyle();
-
     if (src.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
       dest->PauseFromStyle();
+    } else {
+      dest->PlayFromStyle();
     }
 
     // While current drafts of css3-animations say that later keyframes
