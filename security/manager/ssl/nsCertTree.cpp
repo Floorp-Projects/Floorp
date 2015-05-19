@@ -149,7 +149,10 @@ nsCertTreeDispInfo::GetHostPort(nsAString &aHostPort)
 
 NS_IMPL_ISUPPORTS(nsCertTree, nsICertTree, nsITreeView)
 
-nsCertTree::nsCertTree() : mTreeArray(nullptr)
+nsCertTree::nsCertTree()
+  : mTreeArray(nullptr)
+  , mCompareCache(&gMapOps, sizeof(CompareCacheHashEntryPtr),
+                  kInitialCacheLength)
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -165,22 +168,11 @@ nsCertTree::nsCertTree() : mTreeArray(nullptr)
 
 void nsCertTree::ClearCompareHash()
 {
-  if (mCompareCache.IsInitialized()) {
-    PL_DHashTableFinish(&mCompareCache);
-  }
-}
-
-nsresult nsCertTree::InitCompareHash()
-{
-  ClearCompareHash();
-  PL_DHashTableInit(&mCompareCache, &gMapOps,
-                    sizeof(CompareCacheHashEntryPtr), 64);
-  return NS_OK;
+  mCompareCache.ClearAndPrepareForLength(kInitialCacheLength);
 }
 
 nsCertTree::~nsCertTree()
 {
-  ClearCompareHash();
   delete [] mTreeArray;
 }
 
@@ -661,11 +653,11 @@ nsCertTree::LoadCertsFromCache(nsIX509CertList *aCache, uint32_t aType)
     mTreeArray = nullptr;
     mNumRows = 0;
   }
-  nsresult rv = InitCompareHash();
-  if (NS_FAILED(rv)) return rv;
+  ClearCompareHash();
 
-  rv = GetCertsByTypeFromCache(aCache, aType, 
-                               GetCompareFuncFromCertType(aType), &mCompareCache);
+  nsresult rv = GetCertsByTypeFromCache(aCache, aType,
+                                        GetCompareFuncFromCertType(aType),
+                                        &mCompareCache);
   if (NS_FAILED(rv)) return rv;
   return UpdateUIContents();
 }
@@ -679,11 +671,10 @@ nsCertTree::LoadCerts(uint32_t aType)
     mTreeArray = nullptr;
     mNumRows = 0;
   }
-  nsresult rv = InitCompareHash();
-  if (NS_FAILED(rv)) return rv;
+  ClearCompareHash();
 
-  rv = GetCertsByType(aType, 
-                      GetCompareFuncFromCertType(aType), &mCompareCache);
+  nsresult rv = GetCertsByType(aType, GetCompareFuncFromCertType(aType),
+                               &mCompareCache);
   if (NS_FAILED(rv)) return rv;
   return UpdateUIContents();
 }
