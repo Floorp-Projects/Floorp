@@ -225,19 +225,13 @@ ServiceWorkerContainer::GetScopeForUrl(const nsAString& aUrl,
                                        nsString& aScope,
                                        ErrorResult& aRv)
 {
-  nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
-  MOZ_ASSERT(doc);
-
-  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  MOZ_ASSERT(principal);
-
   nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
   if (!swm) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  aRv = swm->GetScopeForUrl(principal, aUrl, aScope);
+  aRv = swm->GetScopeForUrl(aUrl, aScope);
 }
 
 } // namespace dom
