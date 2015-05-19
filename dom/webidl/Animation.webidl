@@ -33,7 +33,7 @@ interface Animation {
   void cancel ();
   [Throws]
   void finish ();
-  [BinaryName="playFromJS"]
+  [Throws, BinaryName="playFromJS"]
   void play ();
   [BinaryName="pauseFromJS"]
   void pause ();

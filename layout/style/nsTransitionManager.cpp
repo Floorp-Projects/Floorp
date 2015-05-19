@@ -93,10 +93,10 @@ CSSTransition::PlayStateFromJS() const
 }
 
 void
-CSSTransition::PlayFromJS()
+CSSTransition::PlayFromJS(ErrorResult& aRv)
 {
   FlushStyle();
-  Animation::PlayFromJS();
+  Animation::PlayFromJS(aRv);
 }
 
 CommonAnimationManager*
