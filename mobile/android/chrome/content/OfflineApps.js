@@ -39,7 +39,8 @@ var OfflineApps = {
       label: strings.GetStringFromName("offlineApps.allow"),
       callback: function() {
         OfflineApps.allowSite(aContentWindow.document);
-      }
+      },
+      positive: true
     }];
 
     let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name + "'" : host;
