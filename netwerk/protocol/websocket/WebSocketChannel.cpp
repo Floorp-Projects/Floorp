@@ -281,9 +281,13 @@ public:
       }
     }
 
-    // Delays disabled, or no previous failure, or we're reconnecting after scheduled
-    // delay interval has passed: connect.
-    ws->BeginOpen();
+    // Delays disabled, or no previous failure, or we're reconnecting after
+    // scheduled delay interval has passed: connect.
+    // Post an event to avoid potential re-entering of nsWSAdmissionManager and
+    // its lock.
+    NS_DispatchToMainThread(
+      NS_NewRunnableMethod(ws, &WebSocketChannel::BeginOpen),
+                           NS_DISPATCH_NORMAL);
   }
 
   // Remove() also deletes all expired entries as it iterates: better for
