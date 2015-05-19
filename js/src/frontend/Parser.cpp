@@ -1235,9 +1235,11 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, Hand
         break;
       case Getter:
         flags = JSFunction::INTERPRETED_GETTER;
+        allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case Setter:
         flags = JSFunction::INTERPRETED_SETTER;
+        allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       default:
         flags = JSFunction::INTERPRETED_NORMAL;
