@@ -14,9 +14,7 @@ function run_test() {
   removeCacheFile();
   do_load_manifest("data/chrome.manifest");
 
-  let url  = "chrome://testsearchplugin/locale/searchplugins/";
-  Services.prefs.setCharPref("browser.search.jarURIs", url);
-  Services.prefs.setBoolPref("browser.search.loadFromJars", true);
+  configureToLoadJarEngines();
 
   updateAppInfo();
 
@@ -56,4 +54,3 @@ add_test(function test_identifier() {
     run_next_test();
   });
 });
-
