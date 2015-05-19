@@ -19,6 +19,7 @@
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "nsIDOMElement.h"
 #include "nsILinkHandler.h"
+#include "nsINodeList.h"
 #include "nsNodeUtils.h"
 #include "nsAttrAndChildArray.h"
 #include "mozFlushType.h"
