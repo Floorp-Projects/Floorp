@@ -112,6 +112,11 @@
   background: var(--theme-selection-background);
 }
 
+.record-button[locked] {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
 #performance-view .realtime-disabled-message,
 #performance-view .realtime-disabled-on-e10s-message {
   display: none;
@@ -156,10 +161,6 @@
 
 #main-record-button[checked] {
   list-style-image: url(profiler-stopwatch-checked.svg);
-}
-
-#main-record-button[locked] {
-  pointer-events: none;
 }
 
 #main-record-button .button-icon {
