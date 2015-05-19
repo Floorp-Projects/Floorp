@@ -236,98 +236,35 @@ ServiceWorkerRegistrationMainThread::InvalidateWorkers(WhichServiceWorker aWhich
 namespace {
 
 void
-UpdateInternal(nsIPrincipal* aPrincipal, const nsAString& aScope)
+UpdateInternal(const nsAString& aScope)
 {
   AssertIsOnMainThread();
   nsCOMPtr<nsIServiceWorkerManager> swm =
     mozilla::services::GetServiceWorkerManager();
   MOZ_ASSERT(swm);
   // The spec defines ServiceWorkerRegistration.update() exactly as Soft Update.
-  swm->SoftUpdate(aPrincipal, aScope);
+  swm->SoftUpdate(aScope);
 }
 
-// This Runnable needs to have a valid WorkerPrivate. For this reason it is also
-// a WorkerFeature that is registered before dispatching itself to the
-// main-thread and it's removed with ReleaseRunnable when the operation is
-// completed. This will keep the worker alive as long as necessary.
 class UpdateRunnable final : public nsRunnable
-                           , public WorkerFeature
 {
 public:
-  UpdateRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aScope)
-    : mWorkerPrivate(aWorkerPrivate)
-    , mScope(aScope)
+  explicit UpdateRunnable(const nsAString& aScope)
+    : mScope(aScope)
   {}
 
   NS_IMETHOD
   Run() override
   {
     AssertIsOnMainThread();
-    UpdateInternal(mWorkerPrivate->GetPrincipal(), mScope);
-
-    class ReleaseRunnable final : public MainThreadWorkerControlRunnable
-    {
-      nsRefPtr<UpdateRunnable> mRunnable;
-
-    public:
-      ReleaseRunnable(WorkerPrivate* aWorkerPrivate,
-                      UpdateRunnable* aRunnable)
-        : MainThreadWorkerControlRunnable(aWorkerPrivate)
-        , mRunnable(aRunnable)
-      {
-        MOZ_ASSERT(aRunnable);
-      }
-
-      virtual bool
-      WorkerRun(JSContext* aCx,
-                workers::WorkerPrivate* aWorkerPrivate) override
-      {
-        MOZ_ASSERT(aWorkerPrivate);
-        aWorkerPrivate->AssertIsOnWorkerThread();
-
-        aWorkerPrivate->RemoveFeature(aCx, mRunnable);
-        return true;
-      }
-
-    private:
-      ~ReleaseRunnable()
-      {}
-    };
-
-    nsRefPtr<WorkerControlRunnable> runnable =
-      new ReleaseRunnable(mWorkerPrivate, this);
-    runnable->Dispatch(nullptr);
-
+    UpdateInternal(mScope);
     return NS_OK;
-  }
-
-  virtual bool Notify(JSContext* aCx, workers::Status aStatus) override
-  {
-    // We don't care about the notification. We just want to keep the
-    // mWorkerPrivate alive.
-    return true;
-  }
-
-  bool
-  Dispatch()
-  {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-
-    JSContext* cx = mWorkerPrivate->GetJSContext();
-
-    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(cx, this))) {
-      return false;
-    }
-
-    NS_SUCCEEDED(NS_DispatchToMainThread(this));
-    return true;
   }
 
 private:
   ~UpdateRunnable()
   {}
 
-  WorkerPrivate* mWorkerPrivate;
   const nsString mScope;
 };
 
@@ -520,13 +457,7 @@ public:
 void
 ServiceWorkerRegistrationMainThread::Update()
 {
-  nsCOMPtr<nsIDocument> doc = GetOwner()->GetExtantDoc();
-  MOZ_ASSERT(doc);
-
-  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  MOZ_ASSERT(principal);
-
-  UpdateInternal(principal, mScope);
+  UpdateInternal(mScope);
 }
 
 already_AddRefed<Promise>
@@ -808,12 +739,13 @@ ServiceWorkerRegistrationWorkerThread::GetActive()
 void
 ServiceWorkerRegistrationWorkerThread::Update()
 {
+#ifdef DEBUG
   WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(worker);
   worker->AssertIsOnWorkerThread();
-
-  nsRefPtr<UpdateRunnable> r = new UpdateRunnable(worker, mScope);
-  r->Dispatch();
+#endif
+  nsCOMPtr<nsIRunnable> r = new UpdateRunnable(mScope);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
 }
 
 already_AddRefed<Promise>

@@ -364,8 +364,18 @@ public:
     return res;
   }
 
-  struct RegistrationDataPerPrincipal;
-  nsClassHashtable<nsCStringHashKey, RegistrationDataPerPrincipal> mRegistrationInfos;
+  // Ordered list of scopes for glob matching.
+  // Each entry is an absolute URL representing the scope.
+  //
+  // An array is used for now since the number of controlled scopes per
+  // domain is expected to be relatively low. If that assumption was proved
+  // wrong this should be replaced with a better structure to avoid the
+  // memmoves associated with inserting stuff in the middle of the array.
+  nsTArray<nsCString> mOrderedScopes;
+
+  // Scope to registration.
+  // The scope should be a fully qualified valid URL.
+  nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistrationInfo> mServiceWorkerRegistrationInfos;
 
   nsTObserverArray<ServiceWorkerRegistrationListener*> mServiceWorkerRegistrationListeners;
 
@@ -380,7 +390,12 @@ public:
   nsDataHashtable<nsCStringHashKey, bool> mSetOfScopesBeingUpdated;
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetRegistration(nsIPrincipal* aPrincipal, const nsCString& aScope) const;
+  GetRegistration(const nsCString& aScope) const
+  {
+    nsRefPtr<ServiceWorkerRegistrationInfo> reg;
+    mServiceWorkerRegistrationInfos.Get(aScope, getter_AddRefs(reg));
+    return reg.forget();
+  }
 
   ServiceWorkerRegistrationInfo*
   CreateNewRegistration(const nsCString& aScope, nsIPrincipal* aPrincipal);
@@ -414,8 +429,7 @@ public:
               uint32_t aFlags);
 
   void
-  GetAllClients(nsIPrincipal* aPrincipal,
-                const nsCString& aScope,
+  GetAllClients(const nsCString& aScope,
                 nsTArray<ServiceWorkerClientInfo>& aControlledDocuments);
 
   void
@@ -423,7 +437,7 @@ public:
                    ServiceWorkerRegistrationInfo* aWorkerRegistration);
 
   nsresult
-  ClaimClients(nsIPrincipal* aPrincipal, const nsCString& aScope, uint64_t aId);
+  ClaimClients(const nsCString& aScope, uint64_t aId);
 
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
@@ -473,8 +487,7 @@ private:
                            nsISupports** aServiceWorker);
 
   already_AddRefed<ServiceWorker>
-  CreateServiceWorkerForScope(nsIPrincipal* aPrincipal,
-                              const nsACString& aScope);
+  CreateServiceWorkerForScope(const nsACString& aScope);
 
   void
   InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
@@ -494,29 +507,16 @@ private:
   GetServiceWorkerRegistrationInfo(nsIDocument* aDoc);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal, nsIURI* aURI);
-
-  // This method generates a key using appId and isInElementBrowser from the
-  // principal. We don't use the origin because it can simple change during the
-  // loading.
-  static nsresult
-  PrincipalToScopeKey(nsIPrincipal* aPrincipal, nsACString& aPrincipalKey);
+  GetServiceWorkerRegistrationInfo(nsIURI* aURI);
 
   static void
-  AddScopeAndRegistration(nsIPrincipal* aPrincipal, const nsACString& aScope,
-                          ServiceWorkerRegistrationInfo* aRegistation);
+  AddScope(nsTArray<nsCString>& aList, const nsACString& aScope);
 
-  static bool
-  FindScopeForPath(nsIPrincipal* aPrincipal, const nsACString& aPath,
-                   RegistrationDataPerPrincipal** aData, nsACString& aMatch);
-
-#ifdef DEBUG
-  static bool
-  HasScope(nsIPrincipal* aPrincipal, const nsACString& aScope);
-#endif
+  static nsCString
+  FindScopeForPath(nsTArray<nsCString>& aList, const nsACString& aPath);
 
   static void
-  RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* aRegistration);
+  RemoveScope(nsTArray<nsCString>& aList, const nsACString& aScope);
 
   void
   QueueFireEventOnServiceWorkerRegistrations(ServiceWorkerRegistrationInfo* aRegistration,

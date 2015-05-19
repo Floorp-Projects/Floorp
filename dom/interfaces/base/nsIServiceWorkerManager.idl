@@ -20,7 +20,7 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   void unregisterFailed();
 };
 
-[scriptable, builtinclass, uuid(103763c8-53ba-42e4-8b26-e601d5bc4afe)]
+[scriptable, builtinclass, uuid(8ce0d197-5740-4ddf-aa4a-e5a63e611d03)]
 interface nsIServiceWorkerInfo : nsISupports
 {
   readonly attribute nsIPrincipal principal;
@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(f9375a26-6f56-417a-b4f7-7ddffa4bd873)]
+[scriptable, builtinclass, uuid(384c9aec-29e5-4bdb-abc2-fba10da83e17)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -67,7 +67,7 @@ interface nsIServiceWorkerManager : nsISupports
   void removeReadyPromise(in nsIDOMWindow aWindow);
 
   // Returns true if a ServiceWorker is available for the scope of aURI.
-  bool isAvailableForURI(in nsIPrincipal aPrincipal, in nsIURI aURI);
+  bool isAvailableForURI(in nsIURI aURI);
 
   // Returns true if a given document is currently controlled by a ServiceWorker
   bool isControlled(in nsIDocument aDocument);
@@ -109,7 +109,7 @@ interface nsIServiceWorkerManager : nsISupports
   /*
    * This implements the soft update algorithm.
    */
-  void softUpdate(in nsIPrincipal aPrincipal, in DOMString aScope);
+  void softUpdate(in DOMString aScope);
 
   /*
    * Clears ServiceWorker registrations from memory and disk for the specified
@@ -128,16 +128,14 @@ interface nsIServiceWorkerManager : nsISupports
   void removeAll();
 
   // Testing
-  DOMString getScopeForUrl(in nsIPrincipal aPrincipal, in DOMString aPath);
+  DOMString getScopeForUrl(in DOMString path);
 
   // This is meant to be used only by about:serviceworkers. It returns an array
   // of nsIServiceWorkerInfo.
   nsIArray getAllRegistrations();
 
-  void sendPushEvent(in nsIPrincipal aPrincipal, in ACString aScope,
-                     in DOMString aData);
-  void sendPushSubscriptionChangeEvent(in nsIPrincipal aPrincipal,
-                                       in ACString scope);
+  void sendPushEvent(in ACString scope, in DOMString data);
+  void sendPushSubscriptionChangeEvent(in ACString scope);
 
   void updateAllRegistrations();
 };
