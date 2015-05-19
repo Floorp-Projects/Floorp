@@ -29,13 +29,8 @@ const PREF_ENABLE_MDN_DOCS_TOOLTIP = "devtools.inspector.mdnDocsTooltip.enabled"
 const PROPERTY_NAME_CLASS = "ruleview-propertyname";
 const FILTER_CHANGED_TIMEOUT = 150;
 
-/**
- * These regular expressions are adapted from firebug's css.js, and are
- * used to parse CSSStyleDeclaration's cssText attribute.
- */
-
-// Used to parse a single property line.
-const CSS_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*(?:! (important))?;?$/;
+// This is used to parse user input when filtering.
+const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
 
 const IOService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
@@ -2104,7 +2099,7 @@ CssRuleView.prototype = {
     // Parse search value as a single property line and extract the property
     // name and value. Otherwise, use the search value as both the name and
     // value.
-    let propertyMatch = CSS_PROP_RE.exec(aValue);
+    let propertyMatch = FILTER_PROP_RE.exec(aValue);
     let name = propertyMatch ? propertyMatch[1] : aValue;
     let value = propertyMatch ? propertyMatch[2] : aValue;
 
