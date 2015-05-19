@@ -75,7 +75,7 @@ add_task(function* test_archivedPings() {
   yield checkLoadingPings();
 
   // Check that we find the archived pings again by scanning after a restart.
-  TelemetryArchive._testReset();
+  TelemetryController.reset();
 
   let pingList = yield TelemetryArchive.promiseArchivedPingList();
   Assert.deepEqual(expectedPingList, pingList,
@@ -129,7 +129,7 @@ add_task(function* test_archivedPings() {
   expectedPingList.sort((a, b) => a.timestampCreated - b.timestampCreated);
 
   // Reset the TelemetryArchive so we scan the archived dir again.
-  yield TelemetryArchive._testReset();
+  yield TelemetryController.reset();
 
   // Check that we are still picking up the valid archived pings on disk,
   // plus the valid ones above.
@@ -142,6 +142,53 @@ add_task(function* test_archivedPings() {
             "Should have rejected invalid ping");
   Assert.ok((yield promiseRejects(TelemetryArchive.promiseArchivedPingById(FAKE_ID2))),
             "Should have rejected invalid ping");
+});
+
+add_task(function* test_archiveCleanup() {
+  const PING_TYPE = "foo";
+
+  // Create a ping which should be pruned because it is past the retention period.
+  fakeNow(2010, 1, 1, 1, 0, 0);
+  const PING_ID1 = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+  // Create a ping which should be kept because it is within the retention period.
+  fakeNow(2010, 2, 1, 1, 0, 0);
+  const PING_ID2 = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+  // Create a ping which should be kept because it is within the retention period.
+  fakeNow(2010, 3, 1, 1, 0, 0);
+  const PING_ID3 = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+
+  // Move the current date 180 days ahead of the PING_ID1 ping.
+  fakeNow(2010, 7, 1, 1, 0, 0);
+  // Reset TelemetryArchive and TelemetryController to start the startup cleanup.
+  yield TelemetryController.reset();
+  // Wait for the cleanup to finish.
+  yield TelemetryStorage.testCleanupTaskPromise();
+  // Then scan the archived dir.
+  let pingList = yield TelemetryArchive.promiseArchivedPingList();
+
+  // The PING_ID1 ping should be removed and the other 2 kept.
+  Assert.ok((yield promiseRejects(TelemetryArchive.promiseArchivedPingById(PING_ID1))),
+            "Old pings should be removed from the archive");
+  Assert.ok((yield TelemetryArchive.promiseArchivedPingById(PING_ID2)),
+            "Recent pings should be kept in the archive");
+  Assert.ok((yield TelemetryArchive.promiseArchivedPingById(PING_ID3)),
+            "Recent pings should be kept in the archive");
+
+  // Move the current date 180 days ahead of the PING_ID2 ping.
+  fakeNow(2010, 8, 1, 1, 0, 0);
+  // Reset TelemetryController but not the TelemetryArchive: the cleanup task will update
+  // the existing archive cache.
+  yield TelemetryController.reset();
+  // Wait for the cleanup to finish.
+  yield TelemetryStorage.testCleanupTaskPromise();
+  // Then scan the archived dir again.
+  pingList = yield TelemetryArchive.promiseArchivedPingList();
+
+  // The PING_ID2 ping should be removed and PING_ID3 kept.
+  Assert.ok((yield promiseRejects(TelemetryArchive.promiseArchivedPingById(PING_ID2))),
+            "Old pings should be removed from the archive");
+  Assert.ok((yield TelemetryArchive.promiseArchivedPingById(PING_ID3)),
+            "Recent pings should be kept in the archive");
 });
 
 add_task(function* test_clientId() {
