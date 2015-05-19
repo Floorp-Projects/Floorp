@@ -44,6 +44,11 @@ if CONFIG['MOZ_X11']:
     LOCAL_INCLUDES += [
         '../x11',
     ]
+else:
+    SOURCES += [
+        'GfxInfo.cpp',
+    ]
+
 
 #DEFINES['DEBUG_WIDGETS'] = True
 
