@@ -174,6 +174,7 @@ this.TelemetryController = Object.freeze({
    */
   reset: function() {
     Impl._clientID = null;
+    TelemetryStorage.reset();
     return this.setup();
   },
   /**
@@ -1060,6 +1061,10 @@ let Impl = {
         // Load the ClientID and update the cache.
         this._clientID = yield ClientID.getClientID();
         Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+
+        // Purge the pings archive by removing outdated pings. We don't wait for this
+        // task to complete, but TelemetryStorage blocks on it during shutdown.
+        TelemetryStorage.runCleanPingArchiveTask();
 
         Telemetry.asyncFetchTelemetryData(function () {});
         this._delayedInitTaskDeferred.resolve();
