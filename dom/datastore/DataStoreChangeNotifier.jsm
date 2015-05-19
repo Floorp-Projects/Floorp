@@ -146,14 +146,7 @@ this.DataStoreChangeNotifier = {
 
     // No check has to be done when the message is 'child-process-shutdown'.
     if (aMessage.name != "child-process-shutdown") {
-      if (!("principal" in aMessage)) {
-        return;
-      }
-      let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                     .getService(Ci.nsIScriptSecurityManager);
-      let uri = Services.io.newURI(aMessage.principal.origin, null, null);
-      let principal = secMan.getAppCodebasePrincipal(uri,
-        aMessage.principal.appId, aMessage.principal.isInBrowserElement);
+      let principal = aMessage.principal;
       if (!principal || !dataStoreService.checkPermission(principal)) {
         return;
       }
