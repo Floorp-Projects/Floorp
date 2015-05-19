@@ -570,8 +570,9 @@ pref("apz.test.logging_enabled", false);
 pref("gfx.hidpi.enabled", 2);
 #endif
 
-#if !defined(MOZ_WIDGET_ANDROID)
-// Containerless scrolling for root frames does not yet pass tests on Android.
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+// Containerless scrolling for root frames does not yet pass tests on Android
+// or B2G.
 pref("layout.scroll.root-frame-containers", false);
 #endif
 
