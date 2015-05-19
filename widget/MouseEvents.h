@@ -115,6 +115,7 @@ public:
   int16_t button;
 
   enum buttonsFlag {
+    eNoButtonFlag     = 0x00,
     eLeftButtonFlag   = 0x01,
     eRightButtonFlag  = 0x02,
     eMiddleButtonFlag = 0x04,
