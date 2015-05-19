@@ -14,6 +14,8 @@ Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
 
+Cu.importGlobalProperties(['File']);
+
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
 
@@ -284,7 +286,7 @@ this.ImportExport = {
       throw "NoBlobFound";
     }
 
-    let isFileBlob = aBlob instanceof Ci.nsIDOMFile;
+    let isFileBlob = aBlob instanceof File;
     // We can't QI the DOMFile to nsIFile, so we need to create one.
     let zipFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     if (!isFileBlob) {
@@ -498,7 +500,7 @@ this.ImportExport = {
       throw "NoBlobFound";
     }
 
-    let isFileBlob = aBlob instanceof Ci.nsIDOMFile;
+    let isFileBlob = aBlob instanceof File;
     // We can't QI the DOMFile to nsIFile, so we need to create one.
     let zipFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     if (!isFileBlob) {

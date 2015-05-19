@@ -1,6 +1,8 @@
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
+Cu.importGlobalProperties(['File']);
+
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 
 // Load a duplicated copy of the jsm to prevent messing with the currently running one
@@ -25,7 +27,7 @@ function next() {
 let steps = [
   function getScreenshot() {
     let screenshot = Screenshot.get();
-    assert.ok(screenshot instanceof Ci.nsIDOMFile,
+    assert.ok(screenshot instanceof File,
               "Screenshot.get() returns a File");
     next();
   },

@@ -219,6 +219,13 @@ RunProcesses(int argc, const char *argv[], FdArray& aReservedFds)
                                     aReservedFds);
   }
 
+  // Reap zombie child process.
+  struct sigaction sa;
+  sa.sa_handler = SIG_IGN;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGCHLD, &sa, nullptr);
+
   // The b2g process
   int childPid = pid;
   XRE_ProcLoaderClientInit(childPid, parentSock, aReservedFds);

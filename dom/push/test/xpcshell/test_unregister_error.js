@@ -15,9 +15,8 @@ function run_test() {
 
 add_task(function* test_unregister_error() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
-  yield promiseDB.put({
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  yield db.put({
     channelID: channelID,
     pushEndpoint: 'https://example.org/update/failure',
     scope: 'https://example.net/page/failure',
@@ -56,7 +55,7 @@ add_task(function* test_unregister_error() {
   yield PushNotificationService.unregister(
     'https://example.net/page/failure');
 
-  let result = yield promiseDB.getByChannelID(channelID);
+  let result = yield db.getByChannelID(channelID);
   ok(!result, 'Deleted push record exists');
 
   // Make sure we send a request to the server.

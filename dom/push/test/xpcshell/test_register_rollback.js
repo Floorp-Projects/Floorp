@@ -23,7 +23,7 @@ function run_test() {
 
 add_task(function* test_register_rollback() {
   let db = new PushDB();
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
   let handshakes = 0;
   let registers = 0;
@@ -32,8 +32,8 @@ add_task(function* test_register_rollback() {
   PushService.init({
     networkInfo: new MockDesktopNetworkInfo(),
     db: makeStub(db, {
-      put(prev, record, successCb, failureCb) {
-        failureCb('universe has imploded');
+      put(prev, record) {
+        return Promise.reject('universe has imploded');
       }
     }),
     makeWebSocket(uri) {

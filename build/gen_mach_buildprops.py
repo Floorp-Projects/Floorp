@@ -40,7 +40,7 @@ def getMarProperties(filename, partial=False):
         '%sMarHash' % martype: mar_hash,
     }
 
-def getUrlProperties(filename):
+def getUrlProperties(filename, package):
     # let's create a switch case using name-spaces/dict
     # rather than a long if/else with duplicate code
     property_conditions = [
@@ -57,9 +57,7 @@ def getUrlProperties(filename):
         ('codeCoverageURL', lambda m: m.endswith('code-coverage-gcno.zip')),
         ('sdkUrl', lambda m: m.endswith(('sdk.tar.bz2', 'sdk.zip'))),
         ('testPackagesUrl', lambda m: m.endswith('test_packages.json')),
-        # packageUrl must be last!
-        ('packageUrl', lambda m: (not m.endswith('.json') and
-                                  not m.endswith('tests.zip'))),
+        ('packageUrl', lambda m: m.endswith(package)),
     ]
     url_re = re.compile(r'''^(https?://.*?\.(?:tar\.bz2|dmg|zip|apk|rpm|mar|tar\.gz|json))$''')
     properties = {}
@@ -102,10 +100,13 @@ if __name__ == '__main__':
     parser.add_argument("--upload-files", required=True, nargs="+",
                         action="store", dest="upload_files",
                         help="List of files to be uploaded.")
+    parser.add_argument("--package", required=True,
+                        action="store", dest="package",
+                        help="Filename of the build package")
     args = parser.parse_args()
 
     json_data = getMarProperties(args.complete_mar_file)
-    json_data.update(getUrlProperties(args.upload_output))
+    json_data.update(getUrlProperties(args.upload_output, args.package))
     if args.partial_mar_file:
         json_data.update(getMarProperties(args.partial_mar_file, partial=True))
 
@@ -119,6 +120,7 @@ if __name__ == '__main__':
             json_data['partialInfo'] = getPartialInfo(json_data)
 
     json_data['uploadFiles'] = args.upload_files
+    json_data['packageFilename'] = args.package
 
     with open('mach_build_properties.json', 'w') as outfile:
         json.dump(json_data, outfile, indent=4)

@@ -956,6 +956,11 @@ gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet)
     // excluding non-scalable fonts such as X11 bitmap fonts, which
     // Chrome Skia/Webkit code does also.
 
+    if (!aFontSet) {
+        NS_WARNING("AddFontSetFamilies called with a null font set.");
+        return;
+    }
+
     FcChar8* lastFamilyName = (FcChar8*)"";
     gfxFontFamily* fontFamily = nullptr;
     nsAutoString familyName;

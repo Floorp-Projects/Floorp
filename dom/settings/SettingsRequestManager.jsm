@@ -8,6 +8,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.importGlobalProperties(['File']);
+
 this.EXPORTED_SYMBOLS = ["SettingsRequestManager"];
 
 Cu.import("resource://gre/modules/SettingsDB.jsm");
@@ -245,7 +247,7 @@ let SettingsRequestManager = {
       if (!aValue || !aValue.constructor) {
         return false;
       }
-      return (aValue.constructor.name == "Date") || (aValue instanceof Ci.nsIDOMFile) ||
+      return (aValue.constructor.name == "Date") || (aValue instanceof File) ||
              (aValue instanceof Ci.nsIDOMBlob);
     }
     // We need to serialize settings objects, otherwise they can change between

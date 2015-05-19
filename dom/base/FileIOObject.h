@@ -9,7 +9,6 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsIFile.h"
-#include "nsIDOMFile.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"

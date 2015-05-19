@@ -69,47 +69,49 @@ class GlobalObject : public NativeObject
      */
     static const unsigned STANDARD_CLASS_SLOTS  = JSProto_LIMIT * 3;
 
-    /* Various function values needed by the engine. */
-    static const unsigned EVAL                    = APPLICATION_SLOTS + STANDARD_CLASS_SLOTS;
-    static const unsigned CREATE_DATAVIEW_FOR_THIS = EVAL + 1;
-    static const unsigned THROWTYPEERROR          = CREATE_DATAVIEW_FOR_THIS + 1;
+    enum : unsigned {
+        /* Various function values needed by the engine. */
+        EVAL = APPLICATION_SLOTS + STANDARD_CLASS_SLOTS,
+        CREATE_DATAVIEW_FOR_THIS,
+        THROWTYPEERROR,
 
-    /*
-     * Instances of the internal createArrayFromBuffer function used by the
-     * typed array code, one per typed array element type.
-     */
-    static const unsigned FROM_BUFFER_UINT8 = THROWTYPEERROR + 1;
-    static const unsigned FROM_BUFFER_INT8 = FROM_BUFFER_UINT8 + 1;
-    static const unsigned FROM_BUFFER_UINT16 = FROM_BUFFER_INT8 + 1;
-    static const unsigned FROM_BUFFER_INT16 = FROM_BUFFER_UINT16 + 1;
-    static const unsigned FROM_BUFFER_UINT32 = FROM_BUFFER_INT16 + 1;
-    static const unsigned FROM_BUFFER_INT32 = FROM_BUFFER_UINT32 + 1;
-    static const unsigned FROM_BUFFER_FLOAT32 = FROM_BUFFER_INT32 + 1;
-    static const unsigned FROM_BUFFER_FLOAT64 = FROM_BUFFER_FLOAT32 + 1;
-    static const unsigned FROM_BUFFER_UINT8CLAMPED = FROM_BUFFER_FLOAT64 + 1;
+        /*
+         * Instances of the internal createArrayFromBuffer function used by the
+         * typed array code, one per typed array element type.
+         */
+        FROM_BUFFER_UINT8,
+        FROM_BUFFER_INT8,
+        FROM_BUFFER_UINT16,
+        FROM_BUFFER_INT16,
+        FROM_BUFFER_UINT32,
+        FROM_BUFFER_INT32,
+        FROM_BUFFER_FLOAT32,
+        FROM_BUFFER_FLOAT64,
+        FROM_BUFFER_UINT8CLAMPED,
 
-    /* One-off properties stored after slots for built-ins. */
-    static const unsigned ARRAY_ITERATOR_PROTO  = FROM_BUFFER_UINT8CLAMPED + 1;
-    static const unsigned STRING_ITERATOR_PROTO  = ARRAY_ITERATOR_PROTO + 1;
-    static const unsigned LEGACY_GENERATOR_OBJECT_PROTO = STRING_ITERATOR_PROTO + 1;
-    static const unsigned STAR_GENERATOR_OBJECT_PROTO = LEGACY_GENERATOR_OBJECT_PROTO + 1;
-    static const unsigned MAP_ITERATOR_PROTO      = STAR_GENERATOR_OBJECT_PROTO + 1;
-    static const unsigned SET_ITERATOR_PROTO      = MAP_ITERATOR_PROTO + 1;
-    static const unsigned COLLATOR_PROTO          = SET_ITERATOR_PROTO + 1;
-    static const unsigned NUMBER_FORMAT_PROTO     = COLLATOR_PROTO + 1;
-    static const unsigned DATE_TIME_FORMAT_PROTO  = NUMBER_FORMAT_PROTO + 1;
-    static const unsigned REGEXP_STATICS          = DATE_TIME_FORMAT_PROTO + 1;
-    static const unsigned WARNED_ONCE_FLAGS       = REGEXP_STATICS + 1;
-    static const unsigned RUNTIME_CODEGEN_ENABLED = WARNED_ONCE_FLAGS + 1;
-    static const unsigned DEBUGGERS               = RUNTIME_CODEGEN_ENABLED + 1;
-    static const unsigned INTRINSICS              = DEBUGGERS + 1;
-    static const unsigned FLOAT32X4_TYPE_DESCR    = INTRINSICS + 1;
-    static const unsigned FLOAT64X2_TYPE_DESCR    = FLOAT32X4_TYPE_DESCR + 1;
-    static const unsigned INT32X4_TYPE_DESCR      = FLOAT64X2_TYPE_DESCR + 1;
-    static const unsigned FOR_OF_PIC_CHAIN        = INT32X4_TYPE_DESCR + 1;
+        /* One-off properties stored after slots for built-ins. */
+        ARRAY_ITERATOR_PROTO,
+        STRING_ITERATOR_PROTO,
+        LEGACY_GENERATOR_OBJECT_PROTO,
+        STAR_GENERATOR_OBJECT_PROTO,
+        MAP_ITERATOR_PROTO,
+        SET_ITERATOR_PROTO,
+        COLLATOR_PROTO,
+        NUMBER_FORMAT_PROTO,
+        DATE_TIME_FORMAT_PROTO,
+        REGEXP_STATICS,
+        WARNED_ONCE_FLAGS,
+        RUNTIME_CODEGEN_ENABLED,
+        DEBUGGERS,
+        INTRINSICS,
+        FLOAT32X4_TYPE_DESCR,
+        FLOAT64X2_TYPE_DESCR,
+        INT32X4_TYPE_DESCR,
+        FOR_OF_PIC_CHAIN,
 
-    /* Total reserved-slot count for global objects. */
-    static const unsigned RESERVED_SLOTS = FOR_OF_PIC_CHAIN + 1;
+        /* Total reserved-slot count for global objects. */
+        RESERVED_SLOTS
+    };
 
     /*
      * The slot count must be in the public API for JSCLASS_GLOBAL_FLAGS, and

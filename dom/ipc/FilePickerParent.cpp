@@ -8,7 +8,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsNetCID.h"
 #include "nsIDocument.h"
-#include "nsIDOMFile.h"
 #include "nsIDOMWindow.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
