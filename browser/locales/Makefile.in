@@ -5,9 +5,6 @@
 
 include $(topsrcdir)/config/config.mk
 
-vpath %.xml @srcdir@/en-US/searchplugins
-vpath %.xml $(LOCALE_SRCDIR)/searchplugins
-
 ifdef LOCALE_MERGEDIR
 vpath crashreporter%.ini $(LOCALE_MERGEDIR)/browser/crashreporter
 endif
@@ -72,13 +69,18 @@ STUB_HOOK = $(NSINSTALL) -D '$(_ABS_DIST)/$(PKG_INST_PATH)'; \
 endif
 
 SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt)) ddg
-SEARCHPLUGINS_PATH := $(FINAL_TARGET)/searchplugins
+SEARCHPLUGINS_PATH := .deps/generated_$(AB_CD)
 SEARCHPLUGINS_TARGET := libs searchplugins
 SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_NAMES)),$(or $(wildcard $(call EN_US_OR_L10N_FILE,searchplugins/$(plugin))),$(info Missing searchplugin: $(plugin))))
 # Some locale-specific search plugins may have preprocessor directives, but the
 # default en-US ones do not.
 SEARCHPLUGINS_FLAGS := --silence-missing-directive-warnings
 PP_TARGETS += SEARCHPLUGINS
+
+list-txt = $(SEARCHPLUGINS_PATH)/list.txt
+GARBAGE += $(list-txt)
+
+libs:: searchplugins
 
 # Required for l10n.mk - defines a list of app sub dirs that should
 # be included in langpack xpis.
@@ -87,6 +89,11 @@ DIST_SUBDIRS = $(DIST_SUBDIR)
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/toolkit/locales/l10n.mk
+
+$(list-txt): $(call mkdir_deps,$(SEARCHPLUGINS_PATH)) $(if $(IS_LANGUAGE_REPACK),FORCE)
+	$(RM) $(list-txt)
+	$(foreach plugin,$(SEARCHPLUGINS_NAMES),printf '$(plugin)\n' >> $(list-txt);)
+searchplugins:: $(list-txt)
 
 $(STAGEDIST): $(DIST)/branding
 
@@ -126,6 +133,7 @@ ifdef MOZ_WEBAPP_RUNTIME
 endif
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 
@@ -158,8 +166,7 @@ clobber-zip:
 	  $(STAGEDIST)/webapprt/chrome/$(AB_CD).jar \
 	  $(STAGEDIST)/webapprt/chrome/$(AB_CD).manifest \
 	  $(STAGEDIST)/$(PREF_DIR)/firefox-l10n.js
-	$(RM) -rf  $(STAGEDIST)/searchplugins \
-	  $(STAGEDIST)/dictionaries \
+	$(RM) -rf  $(STAGEDIST)/dictionaries \
 	  $(STAGEDIST)/hyphenation \
 	  $(STAGEDIST)/defaults/profile \
 	  $(STAGEDIST)/chrome/$(AB_CD) \

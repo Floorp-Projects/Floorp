@@ -53,7 +53,6 @@
 @RESPATH@/dictionaries/*
 @RESPATH@/hyphenation/*
 @RESPATH@/browser/@PREF_DIR@/firefox-l10n.js
-@RESPATH@/browser/searchplugins/*
 #ifdef HAVE_MAKENSISU
 @BINPATH@/uninstall/helper.exe
 #endif

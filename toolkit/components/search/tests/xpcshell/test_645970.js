@@ -12,10 +12,7 @@ function run_test() {
 
   do_load_manifest("data/chrome.manifest");
 
-  let url  = "chrome://testsearchplugin/locale/searchplugins/";
-  Services.prefs.setCharPref("browser.search.jarURIs", url);
-
-  Services.prefs.setBoolPref("browser.search.loadFromJars", true);
+  configureToLoadJarEngines();
 
   // The search service needs to be started after the jarURIs pref has been
   // set in order to initiate it correctly
@@ -23,4 +20,3 @@ function run_test() {
   do_check_neq(engine, null);
   Services.obs.notifyObservers(null, "quit-application", null);
 }
-
