@@ -287,20 +287,7 @@ this.RequestSyncService = {
     }
 
     // The principal is used to validate the message.
-    if (!aMessage.principal) {
-      return;
-    }
-
-    let uri = Services.io.newURI(aMessage.principal.origin, null, null);
-
-    let principal;
-    try {
-      principal = secMan.getAppCodebasePrincipal(uri,
-        aMessage.principal.appId, aMessage.principal.isInBrowserElement);
-    } catch(e) {
-      return;
-    }
-
+    let principal = aMessage.principal;
     if (!principal) {
       return;
     }
