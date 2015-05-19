@@ -45,7 +45,8 @@ var PluginHelper = {
             Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.ALLOW_ACTION);
 
           PluginHelper.playAllPlugins(aTab.browser.contentWindow);
-        }
+        },
+        positive: true
       }
     ];
 

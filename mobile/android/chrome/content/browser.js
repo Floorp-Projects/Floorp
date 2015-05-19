@@ -3064,7 +3064,8 @@ var LightWeightThemeWebInstaller = {
       label: allowButtonText,
       callback: function () {
         LightWeightThemeWebInstaller._install(data);
-      }
+      },
+      positive: true
     }];
 
     NativeWindow.doorhanger.show(message, "Personas", buttons, BrowserApp.selectedTab.id);
@@ -6259,7 +6260,8 @@ var XPInstallObserver = {
               // Kick off the install
               installInfo.install();
               return false;
-            }
+            },
+            positive: true
           }];
         }
         NativeWindow.doorhanger.show(message, aTopic, buttons, tab.id);
@@ -6353,7 +6355,8 @@ var XPInstallObserver = {
           let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
           appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
         }
-      }
+      },
+      positive: true
     }];
 
     let message = Strings.browser.GetStringFromName("notificationRestart.normal");
@@ -6663,7 +6666,8 @@ var PopupBlockerObserver = {
                 PopupBlockerObserver.allowPopupsForSite(true);
 
               PopupBlockerObserver.showPopupsForSite();
-            }
+            },
+            positive: true
           }
         ];
 
@@ -6779,7 +6783,8 @@ var IndexedDB = {
       callback: function() {
         clearTimeout(timeoutId);
         observer.observe(null, responseTopic, Ci.nsIPermissionManager.ALLOW_ACTION);
-      }
+      },
+      positive: true
     }];
 
     let options = { checkbox: Strings.browser.GetStringFromName("offlineApps.dontAskAgain") };
