@@ -1,25 +1,27 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_BluetoothUnixSocketConnector_h
-#define mozilla_dom_bluetooth_BluetoothUnixSocketConnector_h
+#ifndef mozilla_ipc_RilConnector_h
+#define mozilla_ipc_RilConnector_h
 
-#include "BluetoothCommon.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
 
-BEGIN_BLUETOOTH_NAMESPACE
+namespace mozilla {
+namespace ipc {
 
-class BluetoothUnixSocketConnector final
-  : public mozilla::ipc::UnixSocketConnector
+/**
+ * |RilConnector| creates sockets for connecting to rild.
+ */
+class RilConnector final : public UnixSocketConnector
 {
 public:
-  BluetoothUnixSocketConnector(const nsACString& aAddressString,
-                               BluetoothSocketType aType,
-                               int aChannel, bool aAuth, bool aEncrypt);
-  ~BluetoothUnixSocketConnector();
+  RilConnector(const nsACString& aAddressString,
+               unsigned long aClientId);
+  ~RilConnector();
 
   // Methods for |UnixSocketConnector|
   //
@@ -42,20 +44,17 @@ public:
                               int& aStreamFd) override;
 
 private:
-  nsresult CreateSocket(int& aFd) const;
+  nsresult CreateSocket(int aDomain, int& aFd) const;
   nsresult SetSocketFlags(int aFd) const;
-  nsresult CreateAddress(struct sockaddr& aAddress,
+  nsresult CreateAddress(int aDomain,
+                         struct sockaddr& aAddress,
                          socklen_t& aAddressLength) const;
-  static nsresult ConvertAddressString(const char* aAddressString,
-                                       bdaddr_t& aAddress);
 
   nsCString mAddressString;
-  BluetoothSocketType mType;
-  int mChannel;
-  bool mAuth;
-  bool mEncrypt;
+  unsigned long mClientId;
 };
 
-END_BLUETOOTH_NAMESPACE
+}
+}
 
 #endif

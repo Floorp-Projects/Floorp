@@ -11,7 +11,6 @@
 
 #include <mozilla/ipc/ListenSocket.h>
 #include <mozilla/ipc/StreamSocket.h>
-#include <mozilla/ipc/UnixSocketConnector.h>
 
 namespace mozilla {
 namespace ipc {
@@ -42,23 +41,6 @@ public:
 
 private:
   NfcSocketListener* mListener;
-};
-
-class NfcConnector final : public mozilla::ipc::UnixSocketConnector
-{
-public:
-  NfcConnector()
-  { }
-
-  int Create() override;
-  bool CreateAddr(bool aIsServer,
-                  socklen_t& aAddrSize,
-                  sockaddr_any& aAddr,
-                  const char* aAddress) override;
-  bool SetUp(int aFd) override;
-  bool SetUpListenSocket(int aFd) override;
-  void GetSocketAddr(const sockaddr_any& aAddr,
-                     nsAString& aAddrStr) override;
 };
 
 class NfcConsumer final : public mozilla::ipc::StreamSocket

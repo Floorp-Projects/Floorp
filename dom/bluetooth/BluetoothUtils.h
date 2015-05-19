@@ -127,7 +127,6 @@ BroadcastSystemMessage(const nsAString& aType,
 // Dispatch bluetooth reply to main thread
 //
 
-#ifdef MOZ_B2G_BT_API_V2
 /**
  * Dispatch successful bluetooth reply with NO value to reply request.
  *
@@ -177,19 +176,6 @@ DispatchReplyError(BluetoothReplyRunnable* aRunnable,
 void
 DispatchReplyError(BluetoothReplyRunnable* aRunnable,
                    const enum BluetoothStatus aStatus);
-#else
-// TODO: remove with bluetooth1
-void
-DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
-                       const BluetoothValue& aValue,
-                       const nsAString& aErrorStr);
-
-// TODO: remove with bluetooth1
-void
-DispatchStatusChangedEvent(const nsAString& aType,
-                           const nsAString& aDeviceAddress,
-                           bool aStatus);
-#endif
 
 void
 DispatchStatusChangedEvent(const nsAString& aType,
