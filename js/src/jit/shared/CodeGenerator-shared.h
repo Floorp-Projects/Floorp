@@ -235,10 +235,13 @@ class CodeGeneratorShared : public LElementVisitor
         return offset;
     }
 
+    inline int32_t ToStackOffset(LAllocation a) const {
+        if (a.isArgument())
+            return ArgToStackOffset(a.toArgument()->index());
+        return SlotToStackOffset(a.toStackSlot()->slot());
+    }
     inline int32_t ToStackOffset(const LAllocation* a) const {
-        if (a->isArgument())
-            return ArgToStackOffset(a->toArgument()->index());
-        return SlotToStackOffset(a->toStackSlot()->slot());
+        return ToStackOffset(*a);
     }
 
     uint32_t frameSize() const {

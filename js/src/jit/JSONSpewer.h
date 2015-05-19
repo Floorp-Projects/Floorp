@@ -61,7 +61,7 @@ class JSONSpewer
     void spewMIR(MIRGraph* mir);
     void spewLIns(LNode* ins);
     void spewLIR(MIRGraph* mir);
-    void spewIntervals(BacktrackingAllocator* regalloc);
+    void spewRanges(BacktrackingAllocator* regalloc);
     void endPass();
     void endFunction();
     void finish();

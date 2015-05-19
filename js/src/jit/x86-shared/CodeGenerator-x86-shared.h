@@ -115,7 +115,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         return ToOperand(def->output());
     }
 
-    MoveOperand toMoveOperand(const LAllocation* a) const;
+    MoveOperand toMoveOperand(LAllocation a) const;
 
     void bailoutIf(Assembler::Condition condition, LSnapshot* snapshot);
     void bailoutIf(Assembler::DoubleCondition condition, LSnapshot* snapshot);
