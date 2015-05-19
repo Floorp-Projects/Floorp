@@ -420,7 +420,6 @@ DispatchToBtThread(nsIRunnable* aRunnable)
   return sBluetoothThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }
 
-#ifdef MOZ_B2G_BT_API_V2
 static void
 DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
                        const BluetoothValue& aValue,
@@ -432,9 +431,6 @@ DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
     DispatchReplySuccess(aRunnable, aValue);
   }
 }
-#else
-// Missing in bluetooth1
-#endif
 
 BluetoothDBusService::BluetoothDBusService()
 {
@@ -4698,14 +4694,14 @@ BluetoothDBusService::UpdateNotification(ControlEventId aEventId,
 void
 BluetoothDBusService::StartLeScanInternal(
   const nsTArray<nsString>& aServiceUuids,
-  BluetoothReplyRunnable* aRunnable);
+  BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::StopLeScanInternal(
   const nsAString& aAppUuid,
-  BluetoothReplyRunnable* aRunnable);
+  BluetoothReplyRunnable* aRunnable)
 {
 }
 
