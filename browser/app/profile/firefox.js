@@ -1210,6 +1210,9 @@ pref("security.sandbox.content.level", 1);
 pref("security.sandbox.content.level", 0);
 #endif
 
+// ID (a UUID when set by gecko) that is used as a per profile suffix to a low
+// integrity temp directory.
+pref("security.sandbox.content.tempDirSuffix", "");
 
 #if defined(MOZ_STACKWALKING)
 // This controls the depth of stack trace that is logged when Windows sandbox

@@ -93,7 +93,7 @@ nsFilePicker.prototype = {
   /* readonly attribute nsISimpleEnumerator files; */
   get files()  { return this.mFilesEnumerator; },
 
-  /* readonly attribute nsIDOMFile domfile; */
+  /* readonly attribute DOM File domfile; */
   get domfile()  {
     let enumerator = this.domfiles;
     return enumerator ? enumerator.mFiles[0] : null;

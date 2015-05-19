@@ -18,7 +18,6 @@
 #include "nsAttrValueInlines.h"
 #include "nsISaveAsCharset.h"
 #include "nsIFile.h"
-#include "nsIDOMFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsStringStream.h"
 #include "nsIURI.h"
@@ -451,15 +450,13 @@ nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
   nsCOMPtr<nsIInputStream> fileStream;
   if (aFile) {
     nsAutoString filename16;
-    rv = aFile->GetName(filename16);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    aFile->GetName(filename16);
 
+    ErrorResult error;
     nsAutoString filepath16;
-    rv = aFile->GetPath(filepath16);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    aFile->GetPath(filepath16, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
     }
 
     if (!filepath16.IsEmpty()) {

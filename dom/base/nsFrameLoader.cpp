@@ -23,7 +23,6 @@
 #include "nsIContentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMFile.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"

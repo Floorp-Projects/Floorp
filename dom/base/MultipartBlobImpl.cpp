@@ -366,8 +366,7 @@ MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
   }
 
   // Pre-cache modified date.
-  int64_t unusedDate;
-  aRv = blob->GetMozLastModifiedDate(&unusedDate);
+  blob->GetLastModified(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

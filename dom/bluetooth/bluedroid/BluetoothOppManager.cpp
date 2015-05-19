@@ -72,14 +72,14 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothOppManager::SendFileBatch final
 {
 public:
-  SendFileBatch(const nsAString& aDeviceAddress, nsIDOMBlob* aBlob)
+  SendFileBatch(const nsAString& aDeviceAddress, Blob* aBlob)
     : mDeviceAddress(aDeviceAddress)
   {
     mBlobs.AppendElement(aBlob);
   }
 
   nsString mDeviceAddress;
-  nsCOMArray<nsIDOMBlob> mBlobs;
+  nsTArray<nsRefPtr<Blob>> mBlobs;
 };
 
 NS_IMETHODIMP
@@ -420,7 +420,7 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 
 bool
 BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
-                              nsIDOMBlob* aBlob)
+                              Blob* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -434,7 +434,7 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 
 void
 BluetoothOppManager::AppendBlobToSend(const nsAString& aDeviceAddress,
-                                      nsIDOMBlob* aBlob)
+                                      Blob* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -794,7 +794,7 @@ BluetoothOppManager::RetrieveSentFileName()
 {
   mFileName.Truncate();
 
-  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(mBlob);
+  nsRefPtr<File> file = static_cast<Blob*>(mBlob.get())->ToFile();
   if (file) {
     file->GetName(mFileName);
   }

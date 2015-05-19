@@ -210,7 +210,7 @@ interface nsINfcContentHelper : nsISupports
    *
    * @param blob
    *        Raw data of the file to be sent. This object represents a file-like
-   *        (nsIDOMFile) object of immutable, raw data. The blob data needs
+   *        (DOM File) object of immutable, raw data. The blob data needs
    *        to be 'object wrapped' before calling this interface.
    *
    * @param sessionToken

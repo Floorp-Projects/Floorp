@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.importGlobalProperties(['Blob']);
+Components.utils.importGlobalProperties(['Blob', 'File']);
 
 const Ci = Components.interfaces;
 
@@ -15,7 +15,7 @@ function run_test() {
   // do some tests
   do_check_true(f1 instanceof Ci.nsIDOMBlob, "Should be a DOM Blob");
 
-  do_check_true(!(f1 instanceof Ci.nsIDOMFile), "Should not be a DOM File");
+  do_check_true(!(f1 instanceof File), "Should not be a DOM File");
 
   do_check_true(f1.type == "text/xml", "Wrong type");
 

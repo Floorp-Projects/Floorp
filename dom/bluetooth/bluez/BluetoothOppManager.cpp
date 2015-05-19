@@ -73,16 +73,17 @@ namespace {
   static bool sInShutdown = false;
 }
 
-class mozilla::dom::bluetooth::SendFileBatch {
+class mozilla::dom::bluetooth::SendFileBatch
+{
 public:
-  SendFileBatch(const nsAString& aDeviceAddress, nsIDOMBlob* aBlob)
+  SendFileBatch(const nsAString& aDeviceAddress, Blob* aBlob)
     : mDeviceAddress(aDeviceAddress)
   {
     mBlobs.AppendElement(aBlob);
   }
 
   nsString mDeviceAddress;
-  nsCOMArray<nsIDOMBlob> mBlobs;
+  nsTArray<nsRefPtr<Blob>> mBlobs;
 };
 
 NS_IMETHODIMP
@@ -385,14 +386,14 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
   MOZ_ASSERT(NS_IsMainThread());
 
   nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  nsCOMPtr<nsIDOMBlob> blob = Blob::Create(nullptr, impl);
+  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
-  return SendFile(aDeviceAddress, blob.get());
+  return SendFile(aDeviceAddress, blob);
 }
 
 bool
 BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
-                              nsIDOMBlob* aBlob)
+                              Blob* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -406,7 +407,7 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 
 void
 BluetoothOppManager::AppendBlobToSend(const nsAString& aDeviceAddress,
-                                      nsIDOMBlob* aBlob)
+                                      Blob* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -766,7 +767,7 @@ BluetoothOppManager::RetrieveSentFileName()
 {
   mFileName.Truncate();
 
-  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(mBlob);
+  nsRefPtr<File> file = mBlob->ToFile();
   if (file) {
     file->GetName(mFileName);
   }

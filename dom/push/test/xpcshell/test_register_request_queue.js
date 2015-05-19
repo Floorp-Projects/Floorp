@@ -19,8 +19,7 @@ function run_test() {
 
 add_task(function* test_register_request_queue() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
   let helloDefer = Promise.defer();
   let onHello = after(2, function onHello(request) {
