@@ -3721,8 +3721,17 @@ public:
 
     const nsACString& GetLocation() {
         if (location.IsEmpty() && locationURI) {
-            if (NS_FAILED(locationURI->GetSpec(location)))
+
+            nsCOMPtr<nsIXPConnectWrappedJS> jsLocationURI =
+                 do_QueryInterface(locationURI);
+            if (jsLocationURI) {
+                // We cannot call into JS-implemented nsIURI objects, because
+                // we are iterating over the JS heap at this point.
+                location =
+                    NS_LITERAL_CSTRING("<JS-implemented nsIURI location>");
+            } else if (NS_FAILED(locationURI->GetSpec(location))) {
                 location = NS_LITERAL_CSTRING("<unknown location>");
+            }
         }
         return location;
     }
