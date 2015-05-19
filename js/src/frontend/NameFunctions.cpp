@@ -302,8 +302,8 @@ class NameResolver
         parents[nparents++] = cur;
 
         switch (cur->getKind()) {
-          case PNK_SUPERPROP:
-          case PNK_SUPERELEM:
+          // Nodes with no children that might require name resolution need no
+          // further work.
           case PNK_NOP:
           case PNK_STRING:
           case PNK_TEMPLATE_STRING:
@@ -320,14 +320,19 @@ class NameResolver
           case PNK_DEBUGGER:
           case PNK_EXPORT_BATCH_SPEC:
           case PNK_FRESHENBLOCK:
+          case PNK_SUPERPROP:
+            MOZ_ASSERT(cur->isArity(PN_NULLARY));
+            goto done;
+
+          // Nodes with a single non-null child requiring name resolution.
           case PNK_TYPEOF:
           case PNK_VOID:
           case PNK_NOT:
           case PNK_BITNOT:
           case PNK_THROW:
           case PNK_DELETE:
-          case PNK_POS:
           case PNK_NEG:
+          case PNK_POS:
           case PNK_PREINCREMENT:
           case PNK_POSTINCREMENT:
           case PNK_PREDECREMENT:
@@ -336,8 +341,23 @@ class NameResolver
           case PNK_ARRAYPUSH:
           case PNK_SPREAD:
           case PNK_MUTATEPROTO:
+          case PNK_SUPERELEM:
           case PNK_EXPORT:
+            MOZ_ASSERT(cur->isArity(PN_UNARY));
+            if (!resolve(cur->pn_kid, prefix))
+                return false;
+            goto done;
+
+          // Nodes with a single nullable child.
           case PNK_SEMI:
+            MOZ_ASSERT(cur->isArity(PN_UNARY));
+            if (ParseNode* expr = cur->pn_kid) {
+                if (!resolve(expr, prefix))
+                    return false;
+            }
+            goto done;
+
+          // Binary nodes with two non-null children.
           case PNK_ASSIGN:
           case PNK_ADDASSIGN:
           case PNK_SUBASSIGN:
@@ -350,10 +370,10 @@ class NameResolver
           case PNK_MULASSIGN:
           case PNK_DIVASSIGN:
           case PNK_MODASSIGN:
-          case PNK_ELEM:
-          case PNK_LETEXPR:
           case PNK_IMPORT_SPEC:
           case PNK_EXPORT_SPEC:
+          case PNK_ELEM:
+          case PNK_LETEXPR:
           case PNK_COLON:
           case PNK_CASE:
           case PNK_SHORTHAND:
@@ -363,7 +383,21 @@ class NameResolver
           case PNK_LETBLOCK:
           case PNK_FOR:
           case PNK_CLASSMETHOD:
+            MOZ_ASSERT(cur->isArity(PN_BINARY));
+            if (!resolve(cur->pn_left, prefix))
+                return false;
+            if (!resolve(cur->pn_right, prefix))
+                return false;
+            goto done;
+
           case PNK_WITH:
+            MOZ_ASSERT(cur->isArity(PN_BINARY_OBJ));
+            if (!resolve(cur->pn_left, prefix))
+                return false;
+            if (!resolve(cur->pn_right, prefix))
+                return false;
+            goto done;
+
           case PNK_CLASSNAMES:
           case PNK_OBJECT_PROPERTY_NAME:
           case PNK_CLASS:
@@ -428,8 +462,13 @@ class NameResolver
           case PNK_IMPORT:
           case PNK_EXPORT_FROM:
           case PNK_NAME:
+            break; // for now
+
           case PNK_FUNCTION:
-            break;
+            MOZ_ASSERT(cur->isArity(PN_CODE));
+            if (!resolve(cur->pn_body, prefix))
+                return false;
+            goto done;
 
           case PNK_LIMIT: // invalid sentinel value
             MOZ_CRASH("invalid node kind");
@@ -481,6 +520,7 @@ class NameResolver
             break;
         }
 
+      done:
         nparents--;
         return true;
     }
