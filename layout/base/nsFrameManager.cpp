@@ -76,6 +76,17 @@ static const PLDHashTableOps PlaceholderMapOps = {
   nullptr
 };
 
+nsFrameManagerBase::nsFrameManagerBase()
+  : mPresShell(nullptr)
+  , mStyleSet(nullptr)
+  , mRootFrame(nullptr)
+  , mPlaceholderMap(&PlaceholderMapOps, sizeof(PlaceholderMapEntry))
+  , mUndisplayedMap(nullptr)
+  , mDisplayContentsMap(nullptr)
+  , mIsDestroyingFrames(false)
+{
+}
+
 //----------------------------------------------------------------------
 
 // XXXldb This seems too complicated for what I think it's doing, and it
@@ -155,7 +166,7 @@ nsFrameManager::GetPlaceholderFrameFor(const nsIFrame* aFrame)
 
   if (mPlaceholderMap.IsInitialized()) {
     PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
-                                            (PL_DHashTableSearch(const_cast<PLDHashTable*>(&mPlaceholderMap),
+                                            (PL_DHashTableSearch(const_cast<PLDHashTable2*>(&mPlaceholderMap),
                                 aFrame));
     if (entry) {
       return entry->placeholderFrame;
@@ -171,10 +182,6 @@ nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
   NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
   NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
-  if (!mPlaceholderMap.IsInitialized()) {
-    PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps,
-                      sizeof(PlaceholderMapEntry));
-  }
   PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
     (PL_DHashTableAdd(&mPlaceholderMap,
                       aPlaceholderFrame->GetOutOfFlowFrame(), fallible));
@@ -214,7 +221,7 @@ nsFrameManager::ClearPlaceholderFrameMap()
 {
   if (mPlaceholderMap.IsInitialized()) {
     PL_DHashTableEnumerate(&mPlaceholderMap, UnregisterPlaceholders, nullptr);
-    PL_DHashTableFinish(&mPlaceholderMap);
+    mPlaceholderMap.Clear();
   }
 }
 
