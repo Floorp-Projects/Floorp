@@ -11,28 +11,18 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 const MAX_ITERATIONS = 100;
-const REGEX_QUOTES = /^".*?"|^".*|^'.*?'|^'.*/;
-const REGEX_WHITESPACE = /^\s+/;
-const REGEX_FIRST_WORD_OR_CHAR = /^\w+|^./;
-const REGEX_CUBIC_BEZIER = /^linear|^ease-in-out|^ease-in|^ease-out|^ease|^cubic-bezier\(([0-9.\- ]+,){3}[0-9.\- ]+\)/;
 
-// CSS variable names are identifiers which the spec defines as follows:
-//   In CSS, identifiers (including element names, classes, and IDs in
-//   selectors) can contain only the characters [a-zA-Z0-9] and ISO 10646
-//   characters U+00A0 and higher, plus the hyphen (-) and the underscore (_).
-const REGEX_CSS_VAR = /^\bvar\(\s*--[-_a-zA-Z0-9\u00A0-\u10FFFF]+\s*\)/;
+const BEZIER_KEYWORDS = ["linear", "ease-in-out", "ease-in", "ease-out", "ease"];
 
-/**
- * This regex matches:
- *  - #F00
- *  - #FF0000
- *  - hsl()
- *  - hsla()
- *  - rgb()
- *  - rgba()
- *  - color names
- */
-const REGEX_ALL_COLORS = /^#[0-9a-fA-F]{3}\b|^#[0-9a-fA-F]{6}\b|^hsl\(.*?\)|^hsla\(.*?\)|^rgba?\(.*?\)|^[a-zA-Z-]+/;
+// Functions that accept a color argument.
+const COLOR_TAKING_FUNCTIONS = ["linear-gradient",
+                                "-moz-linear-gradient",
+                                "repeating-linear-gradient",
+                                "-moz-repeating-linear-gradient",
+                                "radial-gradient",
+                                "-moz-radial-gradient",
+                                "repeating-radial-gradient",
+                                "-moz-repeating-radial-gradient"];
 
 loader.lazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
@@ -94,29 +84,44 @@ OutputParser.prototype = {
   },
 
   /**
-   * Matches the beginning of the provided string to a css background-image url
-   * and return both the whole url(...) match and the url itself.
-   * This isn't handled via a regular expression to make sure we can match urls
-   * that contain parenthesis easily
+   * Given an initial FUNCTION token, read tokens from |tokenStream|
+   * and collect all the (non-comment) text.  Return the collected
+   * text.  The function token and the close paren are included in the
+   * result.
+   *
+   * @param  {CSSToken} initialToken
+   *         The FUNCTION token.
+   * @param  {String} text
+   *         The original CSS text.
+   * @param  {CSSLexer} tokenStream
+   *         The token stream from which to read.
+   * @return {String}
+   *         The text of body of the function call.
    */
-  _matchBackgroundUrl: function(text) {
-    let startToken = "url(";
-    if (text.indexOf(startToken) !== 0) {
-      return null;
+  _collectFunctionText: function(initialToken, text, tokenStream) {
+    let result = text.substring(initialToken.startOffset,
+                                initialToken.endOffset);
+    let depth = 1;
+    while (depth > 0) {
+      let token = tokenStream.nextToken();
+      if (!token) {
+        break;
+      }
+      if (token.tokenType === "comment") {
+        continue;
+      }
+      result += text.substring(token.startOffset, token.endOffset);
+      if (token.tokenType === "symbol") {
+        if (token.text === "(") {
+          ++depth;
+        } else if (token.text === ")") {
+          --depth;
+        }
+      } else if (token.tokenType === "function") {
+        ++depth;
+      }
     }
-
-    let uri = text.substring(startToken.length).trim();
-    let quote = uri.substring(0, 1);
-    if (quote === "'" || quote === '"') {
-      uri = uri.substring(1, uri.search(new RegExp(quote + "\\s*\\)")));
-    } else {
-      uri = uri.substring(0, uri.indexOf(")"));
-      quote = "";
-    }
-    let end = startToken + quote + uri;
-    text = text.substring(0, text.indexOf(")", end.length) + 1);
-
-    return [text, uri.trim()];
+    return result;
   },
 
   /**
@@ -133,140 +138,94 @@ OutputParser.prototype = {
   _parse: function(text, options={}) {
     text = text.trim();
     this.parsed.length = 0;
-    let i = 0;
 
-    while (text.length > 0) {
-      let matched = null;
-
-      // Prevent this loop from slowing down the browser with too
-      // many nodes being appended into output. In practice it is very unlikely
-      // that this will ever happen.
-      i++;
-      if (i > MAX_ITERATIONS) {
-        this._appendTextNode(text);
-        text = "";
-        break;
-      }
-
-      if (options.expectFilter) {
-        this._appendFilter(text, options);
-        break;
-      }
-
-      matched = text.match(REGEX_QUOTES);
-      if (matched) {
-        let match = matched[0];
-
-        text = this._trimMatchFromStart(text, match);
-        this._appendTextNode(match);
-        continue;
-      }
-
-      matched = text.match(REGEX_CSS_VAR);
-      if (matched) {
-        let match = matched[0];
-
-        text = this._trimMatchFromStart(text, match);
-        this._appendTextNode(match);
-        continue;
-      }
-
-      matched = text.match(REGEX_WHITESPACE);
-      if (matched) {
-        let match = matched[0];
-
-        text = this._trimMatchFromStart(text, match);
-        this._appendTextNode(match);
-        continue;
-      }
-
-      matched = this._matchBackgroundUrl(text);
-      if (matched) {
-        let [match, url] = matched;
-        text = this._trimMatchFromStart(text, match);
-
-        this._appendURL(match, url, options);
-        continue;
-      }
-
-      if (options.expectCubicBezier) {
-        matched = text.match(REGEX_CUBIC_BEZIER);
-        if (matched) {
-          let match = matched[0];
-          text = this._trimMatchFromStart(text, match);
-
-          this._appendCubicBezier(match, options);
+    if (options.expectFilter) {
+      this._appendFilter(text, options);
+    } else {
+      let tokenStream = DOMUtils.getCSSLexer(text);
+      let i = 0;
+      while (true) {
+        let token = tokenStream.nextToken();
+        if (!token)
+          break;
+        if (token.tokenType === "comment") {
           continue;
         }
-      }
 
-      if (options.supportsColor) {
-        let dirty;
-
-        [text, dirty] = this._appendColorOnMatch(text, options);
-
-        if (dirty) {
+        // Prevent this loop from slowing down the browser with too
+        // many nodes being appended into output. In practice it is very unlikely
+        // that this will ever happen.
+        i++;
+        if (i > MAX_ITERATIONS) {
+          this._appendTextNode(text.substring(token.startOffset,
+                                              token.endOffset));
           continue;
         }
-      }
 
-      // This test must always be last as it indicates use of an unknown
-      // character that needs to be removed to prevent infinite loops.
-      matched = text.match(REGEX_FIRST_WORD_OR_CHAR);
-      if (matched) {
-        let match = matched[0];
+        switch (token.tokenType) {
+          case "function": {
+            if (COLOR_TAKING_FUNCTIONS.indexOf(token.text) >= 0) {
+              // The function can accept a color argument, and we know
+              // it isn't special in some other way.  So, we let it
+              // through to the ordinary parsing loop so that colors
+              // can be handled in a single place.
+              this._appendTextNode(text.substring(token.startOffset,
+                                                  token.endOffset));
+            } else {
+              let functionText = this._collectFunctionText(token, text,
+                                                           tokenStream);
 
-        text = this._trimMatchFromStart(text, match);
-        this._appendTextNode(match);
+              if (options.expectCubicBezier && token.text === "cubic-bezier") {
+                this._appendCubicBezier(functionText, options);
+              } else if (options.supportsColor &&
+                         DOMUtils.isValidCSSColor(functionText)) {
+                this._appendColor(functionText, options);
+              } else {
+                this._appendTextNode(functionText);
+              }
+            }
+            break;
+          }
+
+          case "ident":
+            if (options.expectCubicBezier &&
+                BEZIER_KEYWORDS.indexOf(token.text) >= 0) {
+              this._appendCubicBezier(token.text, options);
+            } else if (options.supportsColor &&
+                       DOMUtils.isValidCSSColor(token.text)) {
+              this._appendColor(token.text, options);
+            } else {
+              this._appendTextNode(text.substring(token.startOffset,
+                                                  token.endOffset));
+            }
+            break;
+
+          case "id":
+          case "hash": {
+            let original = text.substring(token.startOffset, token.endOffset);
+            if (options.supportsColor && DOMUtils.isValidCSSColor(original)) {
+              this._appendColor(original, options);
+            } else {
+              this._appendTextNode(original);
+            }
+            break;
+          }
+
+          case "url":
+          case "bad_url":
+            this._appendURL(text.substring(token.startOffset, token.endOffset),
+                            token.text, options);
+            break;
+
+          default:
+            this._appendTextNode(text.substring(token.startOffset,
+                                                token.endOffset));
+            break;
+        }
       }
     }
 
     return this._toDOM();
-  },
-
-  /**
-   * Convenience function to make the parser a little more readable.
-   *
-   * @param  {String} text
-   *         Main text
-   * @param  {String} match
-   *         Text to remove from the beginning
-   *
-   * @return {String}
-   *         The string passed as 'text' with 'match' stripped from the start.
-   */
-  _trimMatchFromStart: function(text, match) {
-    return text.substr(match.length);
-  },
-
-  /**
-   * Check if there is a color match and append it if it is valid.
-   *
-   * @param  {String} text
-   *         Main text
-   * @param  {Object} options
-   *         Options object. For valid options and default values see
-   *         _mergeOptions().
-   *
-   * @return {Array}
-   *         An array containing the remaining text and a dirty flag. This array
-   *         is designed for deconstruction using [text, dirty].
-   */
-  _appendColorOnMatch: function(text, options) {
-    let dirty;
-    let matched = text.match(REGEX_ALL_COLORS);
-
-    if (matched) {
-      let match = matched[0];
-      if (this._appendColor(match, options)) {
-        text = this._trimMatchFromStart(text, match);
-        dirty = true;
-      }
-    } else {
-      dirty = false;
-    }
-
-    return [text, dirty];
   },
 
   /**
