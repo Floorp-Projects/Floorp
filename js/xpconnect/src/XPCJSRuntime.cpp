@@ -280,6 +280,16 @@ TryParseLocationURICandidate(const nsACString& uristr,
             StringBeginsWith(uristr, kToolkit) ||
             StringBeginsWith(uristr, kBrowser))
             return false;
+
+        // -- GROSS HACK ALERT --
+        // The Yandex Elements 8.10.2 extension implements its own "xb://" URL
+        // scheme. If we call NS_NewURI() on an "xb://..." URL, we'll end up
+        // calling into the extension's own JS-implemented nsIProtocolHandler
+        // object, which we can't allow while we're iterating over the JS heap.
+        // So just skip any such URL.
+        // -- GROSS HACK ALERT --
+        if (StringBeginsWith(uristr, NS_LITERAL_CSTRING("xb")))
+            return false;
     }
 
     nsCOMPtr<nsIURI> uri;
