@@ -646,7 +646,8 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress,
   MOZ_ASSERT(!aDeviceAddress.IsEmpty());
 
   nsAutoPtr<BluetoothUnixSocketConnector> c(
-    new BluetoothUnixSocketConnector(mType, aChannel, mAuth, mEncrypt));
+    new BluetoothUnixSocketConnector(NS_ConvertUTF16toUTF8(aDeviceAddress),
+                                     mType, aChannel, mAuth, mEncrypt));
 
   if (!ConnectSocket(c.forget(),
                      NS_ConvertUTF16toUTF8(aDeviceAddress).BeginReading())) {
@@ -668,7 +669,8 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
   MOZ_ASSERT(NS_IsMainThread());
 
   nsAutoPtr<BluetoothUnixSocketConnector> c(
-    new BluetoothUnixSocketConnector(mType, aChannel, mAuth, mEncrypt));
+    new BluetoothUnixSocketConnector(NS_LITERAL_CSTRING(BLUETOOTH_ADDRESS_NONE),
+                                     mType, aChannel, mAuth, mEncrypt));
 
   if (!ListenSocket(c.forget())) {
     nsAutoString addr;
