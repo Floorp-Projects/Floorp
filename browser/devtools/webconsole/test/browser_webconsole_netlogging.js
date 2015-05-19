@@ -184,11 +184,13 @@ function testFormSubmission()
 
     executeSoon(testNetworkPanel);
   };
-
-  let form = content.document.querySelector("form");
-  ok(form, "we have the HTML form");
-  form.submit();
+  ContentTask.spawn(gBrowser.selectedBrowser, { }, `function()
+  {
+    let form = content.document.querySelector("form");
+    form.submit();
+  }`);
 }
+
 
 function testNetworkPanel()
 {
