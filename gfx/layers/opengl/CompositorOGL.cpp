@@ -444,43 +444,54 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
 }
 
 void
-CompositorOGL::PrepareViewport(const gfx::IntSize& aSize)
+CompositorOGL::PrepareViewport(CompositingRenderTargetOGL* aRenderTarget)
 {
+  MOZ_ASSERT(aRenderTarget);
+  const gfx::IntSize& size = aRenderTarget->mInitParams.mSize;
+
   // Set the viewport correctly.
-  mGLContext->fViewport(0, 0, aSize.width, aSize.height);
+  mGLContext->fViewport(0, 0, size.width, size.height);
 
-  mViewportSize = aSize;
+  mViewportSize = size;
 
-  // We flip the view matrix around so that everything is right-side up; we're
-  // drawing directly into the window's back buffer, so this keeps things
-  // looking correct.
-  // XXX: We keep track of whether the window size changed, so we could skip
-  // this update if it hadn't changed since the last call.
+  if (!aRenderTarget->HasComplexProjection()) {
+    // We flip the view matrix around so that everything is right-side up; we're
+    // drawing directly into the window's back buffer, so this keeps things
+    // looking correct.
+    // XXX: We keep track of whether the window size changed, so we could skip
+    // this update if it hadn't changed since the last call.
 
-  // Matrix to transform (0, 0, aWidth, aHeight) to viewport space (-1.0, 1.0,
-  // 2, 2) and flip the contents.
-  Matrix viewMatrix;
-  if (mGLContext->IsOffscreen() && !gIsGtest) {
-    // In case of rendering via GL Offscreen context, disable Y-Flipping
-    viewMatrix.PreTranslate(-1.0, -1.0);
-    viewMatrix.PreScale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
+    // Matrix to transform (0, 0, aWidth, aHeight) to viewport space (-1.0, 1.0,
+    // 2, 2) and flip the contents.
+    Matrix viewMatrix;
+    if (mGLContext->IsOffscreen() && !gIsGtest) {
+      // In case of rendering via GL Offscreen context, disable Y-Flipping
+      viewMatrix.PreTranslate(-1.0, -1.0);
+      viewMatrix.PreScale(2.0f / float(size.width), 2.0f / float(size.height));
+    } else {
+      viewMatrix.PreTranslate(-1.0, 1.0);
+      viewMatrix.PreScale(2.0f / float(size.width), 2.0f / float(size.height));
+      viewMatrix.PreScale(1.0f, -1.0f);
+    }
+
+    MOZ_ASSERT(mCurrentRenderTarget, "No destination");
+    // If we're drawing directly to the window then we want to offset
+    // drawing by the render offset.
+    if (!mTarget && mCurrentRenderTarget->IsWindow()) {
+      viewMatrix.PreTranslate(mRenderOffset.x, mRenderOffset.y);
+    }
+
+    Matrix4x4 matrix3d = Matrix4x4::From2D(viewMatrix);
+    matrix3d._33 = 0.0f;
+    mProjMatrix = matrix3d;
+    mGLContext->fDepthRange(0.0f, 1.0f);
   } else {
-    viewMatrix.PreTranslate(-1.0, 1.0);
-    viewMatrix.PreScale(2.0f / float(aSize.width), 2.0f / float(aSize.height));
-    viewMatrix.PreScale(1.0f, -1.0f);
+    // XXX take into account mRenderOffset
+    bool depthEnable;
+    float zNear, zFar;
+    aRenderTarget->GetProjection(mProjMatrix, depthEnable, zNear, zFar);
+    mGLContext->fDepthRange(zNear, zFar);
   }
-
-  MOZ_ASSERT(mCurrentRenderTarget, "No destination");
-  // If we're drawing directly to the window then we want to offset
-  // drawing by the render offset.
-  if (!mTarget && mCurrentRenderTarget->IsWindow()) {
-    viewMatrix.PreTranslate(mRenderOffset.x, mRenderOffset.y);
-  }
-
-  Matrix4x4 matrix3d = Matrix4x4::From2D(viewMatrix);
-  matrix3d._33 = 0.0f;
-
-  mProjMatrix = matrix3d;
 }
 
 already_AddRefed<CompositingRenderTarget>
@@ -541,10 +552,14 @@ CompositorOGL::SetRenderTarget(CompositingRenderTarget *aSurface)
     = static_cast<CompositingRenderTargetOGL*>(aSurface);
   if (mCurrentRenderTarget != surface) {
     mCurrentRenderTarget = surface;
-    mContextStateTracker.PopOGLSection(gl(), "Frame");
+    if (mCurrentRenderTarget) {
+      mContextStateTracker.PopOGLSection(gl(), "Frame");
+    }
     mContextStateTracker.PushOGLSection(gl(), "Frame");
     surface->BindRenderTarget();
   }
+
+  PrepareViewport(mCurrentRenderTarget);
 }
 
 CompositingRenderTarget*
@@ -645,22 +660,23 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   TexturePoolOGL::Fill(gl());
 #endif
 
-  mCurrentRenderTarget =
-    CompositingRenderTargetOGL::RenderTargetForWindow(this,
-                                                      IntSize(width, height));
-  mCurrentRenderTarget->BindRenderTarget();
-
-  mContextStateTracker.PushOGLSection(gl(), "Frame");
-#ifdef DEBUG
-  mWindowRenderTarget = mCurrentRenderTarget;
-#endif
-
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
+  // Make sure SCISSOR is enabled before setting the render target, since the RT
+  // assumes scissor is enabled while it does clears.
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
+
+  RefPtr<CompositingRenderTargetOGL> rt =
+    CompositingRenderTargetOGL::RenderTargetForWindow(this,
+                                                      IntSize(width, height));
+  SetRenderTarget(rt);
+
+#ifdef DEBUG
+  mWindowRenderTarget = mCurrentRenderTarget;
+#endif
 
   if (aClipRectOut && !aClipRectIn) {
     aClipRectOut->SetRect(0, 0, width, height);

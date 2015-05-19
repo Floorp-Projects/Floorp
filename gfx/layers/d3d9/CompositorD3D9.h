@@ -71,7 +71,7 @@ public:
 
   virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) override {}
 
-  virtual void PrepareViewport(const gfx::IntSize& aSize) override;
+  virtual void PrepareViewport(const gfx::IntSize& aSize);
 
   virtual bool SupportsPartialTextureUpdate() override{ return true; }
 
