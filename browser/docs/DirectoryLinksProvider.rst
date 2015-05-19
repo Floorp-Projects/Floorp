@@ -130,8 +130,10 @@ Below is an example directory source file::
       ],
       "suggested": [
           {
+              "adgroup_name": "open-source browser",
               "bgColor": "#cae1f4",
               "directoryId": 702,
+              "explanation": "Suggested for %1$S enthusiasts who visit sites like %2$S",
               "frecent_sites": [
                   "addons.mozilla.org",
                   "air.mozilla.org",
@@ -180,6 +182,11 @@ Suggested Link Object Extras
 
 A suggested link has additional values:
 
+- ``adgroup_name`` - string to override the hardcoded display name of the
+  triggering set of sites in Firefox.
+- ``explanation`` - string to override the default explanation that appears
+  below a Suggested Tile. %1$S is replaced by the triggering adgroup name and
+  %2$S is replaced by the triggering site.
 - ``frecent_sites`` - array of strings of the sites that can trigger showing a
   Suggested Tile if the user has the site in one of the top 100 most-frecent
   pages. Only preapproved array of strings that are hardcoded into the
