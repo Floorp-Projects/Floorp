@@ -35,7 +35,7 @@ MP4Demuxer::Init()
     return InitPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA, __func__);
   }
 
-  if (!mInitData->SetLength(br.Length())) {
+  if (!mInitData->SetLength(br.Length(), fallible)) {
     // OOM
     return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }

@@ -1009,11 +1009,11 @@ CodeGeneratorARM::visitPowHalfD(LPowHalfD* ins)
 }
 
 MoveOperand
-CodeGeneratorARM::toMoveOperand(const LAllocation* a) const
+CodeGeneratorARM::toMoveOperand(LAllocation a) const
 {
-    if (a->isGeneralReg())
+    if (a.isGeneralReg())
         return MoveOperand(ToRegister(a));
-    if (a->isFloatReg())
+    if (a.isFloatReg())
         return MoveOperand(ToFloatRegister(a));
     int32_t offset = ToStackOffset(a);
     MOZ_ASSERT((offset & 3) == 0);

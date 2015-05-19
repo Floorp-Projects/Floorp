@@ -46,7 +46,7 @@ nsresult
 nsHyphenator::Hyphenate(const nsAString& aString,
                         FallibleTArray<bool>& aHyphens)
 {
-  if (!aHyphens.SetLength(aString.Length())) {
+  if (!aHyphens.SetLength(aString.Length(), mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   memset(aHyphens.Elements(), false, aHyphens.Length() * sizeof(bool));
