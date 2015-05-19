@@ -121,24 +121,108 @@ async_test(function(t) {
                   'should be set back to zero');
     t.done();
   }));
-}, 'Test finishing of reversed animation with with a current time less ' +
-   'than zero');
+}, 'Test finishing of reversed animation with a current time less than zero');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL + ' paused';
+  var animation = div.getAnimations()[0];
+
+  animation.ready.then(t.step_func(function() {
+    animation.finish();
+    assert_equals(animation.playState, 'finished',
+                  'The play state of a paused animation should become ' +
+                  '"finished" after finish() is called');
+    assert_approx_equals(animation.startTime,
+                         animation.timeline.currentTime - ANIM_DURATION,
+                         0.0001,
+                         'The start time of a paused animation should be set ' +
+                         'after calling finish()');
+    t.done();
+  }));
+}, 'Test finish() while paused');
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL + ' paused';
+  var animation = div.getAnimations()[0];
+
+  // Update playbackRate so we can test that the calculated startTime
+  // respects it
+  animation.playbackRate = 2;
+
+  // While animation is still pause-pending call finish()
+  animation.finish();
+
+  assert_equals(animation.playState, 'finished',
+                'The play state of a pause-pending animation should become ' +
+                '"finished" after finish() is called');
+  assert_approx_equals(animation.startTime,
+                       animation.timeline.currentTime - ANIM_DURATION / 2,
+                       0.0001,
+                       'The start time of a pause-pending animation should ' +
+                       'be set after calling finish()');
+}, 'Test finish() while pause-pending with positive playbackRate');
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL + ' paused';
+  var animation = div.getAnimations()[0];
+
+  animation.playbackRate = -2;
+  animation.finish();
+
+  assert_equals(animation.playState, 'finished',
+                'The play state of a pause-pending animation should become ' +
+                '"finished" after finish() is called');
+  assert_equals(animation.startTime, animation.timeline.currentTime,
+                'The start time of a pause-pending animation should be ' +
+                'set after calling finish()');
+}, 'Test finish() while pause-pending with negative playbackRate');
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  animation.playbackRate = 0.5;
+  animation.finish();
+
+  assert_equals(animation.playState, 'finished',
+                'The play state of a play-pending animation should become ' +
+                '"finished" after finish() is called');
+  assert_approx_equals(animation.startTime,
+                       animation.timeline.currentTime - ANIM_DURATION / 0.5,
+                       0.0001,
+                       'The start time of a play-pending animation should ' +
+                       'be set after calling finish()');
+}, 'Test finish() while play-pending');
+
+// FIXME: Add a test for when we are play-pending without an active timeline.
+// - In that case even after calling finish() we should still be pending but
+//   the current time should be updated
 
 async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = ANIM_PROP_VAL;
   var animation = div.getAnimations()[0];
 
-  animation.pause();
-
   animation.ready.then(t.step_func(function() {
+    // Trigger pause
+    animation.pause();
+    // Then abort
+    animation.play();
+
+    // We are now in the unusual situation of being play-pending whilst having
+    // a resolved start time. Check that finish() still triggers a transition
+    // to the finished state immediately.
     animation.finish();
-    assert_equals(animation.playState, 'paused',
-                  'The play state of a paused animation should remain ' +
-                  '"paused" even after finish() is called');
+    assert_equals(animation.playState, 'finished',
+                  'After aborting a pause then calling finish() the play ' +
+                  'state of an animation should become "finished" immediately');
     t.done();
   }));
-}, 'Test paused state after finishing of animation');
+}, 'Test finish() during aborted pause');
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});

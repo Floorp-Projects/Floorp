@@ -230,7 +230,26 @@ Animation::Finish(ErrorResult& aRv)
 
   SetCurrentTime(limit);
 
-  if (mPendingState == PendingState::PlayPending) {
+  // If we are paused or play-pending we need to fill in the start time in
+  // order to transition to the finished state.
+  //
+  // We only do this, however, if we have an active timeline. If we have an
+  // inactive timeline we can't transition into the finished state just like
+  // we can't transition to the running state (this finished state is really
+  // a substate of the running state).
+  if (mStartTime.IsNull() &&
+      mTimeline &&
+      !mTimeline->GetCurrentTime().IsNull()) {
+    mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
+                        limit.MultDouble(1.0 / mPlaybackRate));
+  }
+
+  // If we just resolved the start time for a pause-pending animation, we need
+  // to clear the task. We don't do this as a branch of the above however since
+  // we can have a play-pending animation with a resolved start time if we
+  // aborted a pause operation.
+  if (mPendingState == PendingState::PlayPending &&
+      !mStartTime.IsNull()) {
     CancelPendingTasks();
     if (mReady) {
       mReady->MaybeResolve(this);
