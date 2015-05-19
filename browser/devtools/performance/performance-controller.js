@@ -454,6 +454,11 @@ let PerformanceController = {
    * @param {RecordingModel} model
    */
   _onRecordingStateChange: function (state, model) {
+    // If we get a state change for a recording that isn't being tracked in the front,
+    // just ignore it. This can occur when stopping a profile via console that was cleared.
+    if (state !== "recording-starting" && this.getRecordings().indexOf(model) === -1) {
+      return;
+    }
     switch (state) {
       // Fired when a RecordingModel was just created from the front
       case "recording-starting":
