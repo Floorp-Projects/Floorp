@@ -4,7 +4,8 @@
 // Tests that the text displayed is the function name, file name and line number
 // if applicable.
 
-let {FlameGraphUtils, FLAME_GRAPH_BLOCK_HEIGHT} = devtools.require("devtools/shared/widgets/FlameGraph");
+let {FlameGraphUtils} = devtools.require("devtools/shared/widgets/FlameGraph");
+let {PALLETTE_SIZE} = devtools.require("devtools/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");
@@ -18,7 +19,7 @@ function* performTest() {
   });
 
   ok(out, "Some data was outputted properly");
-  is(out.length, 10, "The outputted length is correct.");
+  is(out.length, PALLETTE_SIZE, "The outputted length is correct.");
 
   info("Got flame graph data:\n" + out.toSource() + "\n");
 
@@ -63,26 +64,42 @@ let EXPECTED_OUTPUT = [{
   blocks: []
 }, {
   blocks: [{
-    srcData: {
-      startTime: 0,
-      rawLocation: "A (http://path/to/file.js:10:5)"
-    },
+    startTime: 0,
+    frameKey: "A (http://path/to/file.js:10:5",
     x: 0,
     y: 0,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "A (file.js:10)"
   }]
 }, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
   blocks: [{
-    srcData: {
-      startTime: 0,
-      rawLocation: "B (http://path/to/file.js:100:5)"
-    },
+    startTime: 0,
+    frameKey: "B (http://path/to/file.js:100:5",
     x: 0,
-    y: FLAME_GRAPH_BLOCK_HEIGHT,
+    y: 15,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "B (file.js:100)"
   }]
 }, {
