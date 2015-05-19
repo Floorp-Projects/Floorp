@@ -646,11 +646,7 @@ static void ReadProfilerVars(const char* fileName, const char** features,
   }
 }
 
-
-static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
-  // XXX: Everything we do here is NOT async signal safe. We risk nasty things
-  // like deadlocks but we typically only do this once so it tends to be ok.
-  // See bug 909403
+static void DoStartTask() {
   uint32_t featureCount = 0;
   uint32_t threadCount = 0;
 
@@ -672,6 +668,20 @@ static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
 
   freeArray(threadNames, threadCount);
   freeArray(features, featureCount);
+}
+
+static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
+  class StartTask : public nsRunnable {
+  public:
+    NS_IMETHOD Run() {
+      DoStartTask();
+      return NS_OK;
+    }
+  };
+  // XXX: technically NS_DispatchToMainThread is NOT async signal safe. We risk
+  // nasty things like deadlocks, but the probability is very low and we
+  // typically only do this once so it tends to be ok. See bug 909403.
+  NS_DispatchToMainThread(new StartTask());
 }
 
 void OS::Startup()
