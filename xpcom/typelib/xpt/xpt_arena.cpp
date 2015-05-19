@@ -187,7 +187,9 @@ XPT_ArenaMalloc(XPTArena *arena, size_t size)
         while (bytes > new_space - block_header_size)
             new_space += arena->block_size;
 
-        new_block = (BLK_HDR*) calloc(new_space/arena->alignment, 
+        fprintf(stderr, "NEW ARENA: %s - %d\n", arena->name,
+                (new_space/arena->alignment) * arena->alignment);
+        new_block = (BLK_HDR*) calloc(new_space/arena->alignment,
                                       arena->alignment);
         if (!new_block) {
             arena->next = NULL;
