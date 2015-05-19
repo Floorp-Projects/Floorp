@@ -660,7 +660,9 @@ nsUDPSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
 
   PRNetAddr prClientAddr;
   uint32_t count;
-  char buff[1500];
+  // Bug 1165423 - using 8k here because the packet could be larger
+  // than the MTU with fragmentation
+  char buff[8 * 1024];
   count = PR_RecvFrom(mFD, buff, sizeof(buff), 0, &prClientAddr, PR_INTERVAL_NO_WAIT);
 
   if (count < 1) {

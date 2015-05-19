@@ -172,7 +172,7 @@ ToJSValue(JSContext* aCx,
 }
 
 // Accept objects that inherit from nsISupports but not nsWrapperCache (e.g.
-// nsIDOMFile).
+// DOM File).
 template <class T>
 MOZ_WARN_UNUSED_RESULT
 typename EnableIf<!IsBaseOf<nsWrapperCache, T>::value &&

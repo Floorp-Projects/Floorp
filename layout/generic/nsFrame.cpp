@@ -1478,7 +1478,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   nsIntRect pxRect =
     mVisibleRect.ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
   Rect rect(pxRect.x, pxRect.y, pxRect.width, pxRect.height);
-  MaybeSnapToDevicePixels(rect, aDrawTarget);
+  MaybeSnapToDevicePixels(rect, aDrawTarget, true);
 
   aDrawTarget.FillRect(rect, color);
 }

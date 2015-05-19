@@ -6,8 +6,6 @@
 
 #include "InternalResponse.h"
 
-#include "nsIDOMFile.h"
-
 #include "mozilla/dom/InternalHeaders.h"
 #include "nsStreamUtils.h"
 #include "nsSerializationHelper.h"

@@ -12,12 +12,6 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_flame_kk_opt.yml
-  flame-kk-eng:
-    platforms:
-      - b2g
-    types:
-      opt:
-        task: tasks/builds/b2g_flame_kk_eng.yml
 
 tests:
   gaia-ui-test-sanity:

@@ -19,7 +19,6 @@ task:
       VARIANT: eng
       GAIA_OPTIMIZE: '1'
       B2G_SYSTEM_APPS: '1'
-      B2G_UPDATER: '1'
     command:
       - >
         checkout-gecko workspace &&
