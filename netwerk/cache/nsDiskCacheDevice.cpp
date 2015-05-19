@@ -384,13 +384,11 @@ nsDiskCacheDevice::Init()
         NS_ERROR("Disk cache already initialized!");
         return NS_ERROR_UNEXPECTED;
     }
-       
+
     if (!mCacheDirectory)
         return NS_ERROR_FAILURE;
 
-    rv = mBindery.Init();
-    if (NS_FAILED(rv))
-        return rv;
+    mBindery.Init();
 
     // Open Disk Cache
     rv = OpenDiskCache();
