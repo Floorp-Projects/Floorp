@@ -276,6 +276,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor)
   if (node->IsElement()) {
     ErrorResult rv;
     mDocChangeRange->SelectNode(*node, rv);
+    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
     AdjustSpecialBreaks();
   }
 
