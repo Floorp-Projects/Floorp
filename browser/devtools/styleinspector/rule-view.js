@@ -34,14 +34,8 @@ const FILTER_CHANGED_TIMEOUT = 150;
  * used to parse CSSStyleDeclaration's cssText attribute.
  */
 
-// Used to split on css line separators
-const CSS_LINE_RE = /(?:[^;\(]*(?:\([^\)]*?\))?[^;\(]*)*;?/g;
-
 // Used to parse a single property line.
 const CSS_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*(?:! (important))?;?$/;
-
-// Used to parse an external resource from a property value
-const CSS_RESOURCE_RE = /url\([\'\"]?(.*?)[\'\"]?\)/;
 
 const IOService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
@@ -2853,22 +2847,6 @@ TextPropertyEditor.prototype = {
       relativePath = this.sheetURI.resolve(relativePath);
     }
     return relativePath;
-  },
-
-  /**
-   * Check the property value to find an external resource (if any).
-   * @return {string} the URI in the property value, or null if there is no match.
-   */
-  getResourceURI: function() {
-    let val = this.prop.value;
-    let uriMatch = CSS_RESOURCE_RE.exec(val);
-    let uri = null;
-
-    if (uriMatch && uriMatch[1]) {
-      uri = uriMatch[1];
-    }
-
-    return uri;
   },
 
   /**

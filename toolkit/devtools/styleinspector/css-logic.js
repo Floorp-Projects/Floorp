@@ -42,14 +42,6 @@ const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
-const RX_UNIVERSAL_SELECTOR = /\s*\*\s*/g;
-const RX_NOT = /:not\((.*?)\)/g;
-const RX_PSEUDO_CLASS_OR_ELT = /(:[\w-]+\().*?\)/g;
-const RX_CONNECTORS = /\s*[\s>+~]\s*/g;
-const RX_ID = /\s*#\w+\s*/g;
-const RX_CLASS_OR_ATTRIBUTE = /\s*(?:\.\w+|\[.+?\])\s*/g;
-const RX_PSEUDO = /\s*:?:([\w-]+)(\(?\)?)\s*/g;
-
 // This should be ok because none of the functions that use this should be used
 // on the worker thread, where Cu is not available.
 if (Cu) {
