@@ -263,7 +263,6 @@ public:
      * on the critical path.
      */
     static void PreloadSlowThings();
-    static void PostForkPreload();
 
     /** Return a TabChild with the given attributes. */
     static already_AddRefed<TabChild>
