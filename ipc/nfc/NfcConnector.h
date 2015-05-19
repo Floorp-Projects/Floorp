@@ -1,25 +1,27 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp: */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_bluetooth_BluetoothUnixSocketConnector_h
-#define mozilla_dom_bluetooth_BluetoothUnixSocketConnector_h
+#ifndef mozilla_ipc_NfcConnector_h
+#define mozilla_ipc_NfcConnector_h
 
-#include "BluetoothCommon.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
 
-BEGIN_BLUETOOTH_NAMESPACE
+namespace mozilla {
+namespace ipc {
 
-class BluetoothUnixSocketConnector final
-  : public mozilla::ipc::UnixSocketConnector
+/**
+ * |NfcConnector| creates sockets for communicating with
+ * the NFC daemon.
+ */
+class NfcConnector final : public UnixSocketConnector
 {
 public:
-  BluetoothUnixSocketConnector(const nsACString& aAddressString,
-                               BluetoothSocketType aType,
-                               int aChannel, bool aAuth, bool aEncrypt);
-  ~BluetoothUnixSocketConnector();
+  NfcConnector(const nsACString& aAddressString);
+  ~NfcConnector();
 
   // Methods for |UnixSocketConnector|
   //
@@ -46,16 +48,11 @@ private:
   nsresult SetSocketFlags(int aFd) const;
   nsresult CreateAddress(struct sockaddr& aAddress,
                          socklen_t& aAddressLength) const;
-  static nsresult ConvertAddressString(const char* aAddressString,
-                                       bdaddr_t& aAddress);
 
   nsCString mAddressString;
-  BluetoothSocketType mType;
-  int mChannel;
-  bool mAuth;
-  bool mEncrypt;
 };
 
-END_BLUETOOTH_NAMESPACE
+}
+}
 
 #endif

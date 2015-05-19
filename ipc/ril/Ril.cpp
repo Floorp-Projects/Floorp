@@ -21,9 +21,9 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/ipc/UnixSocketConnector.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h" // For NS_IsMainThread.
+#include "RilConnector.h"
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::ipc;
@@ -31,10 +31,6 @@ using namespace mozilla::ipc;
 namespace {
 
 static const char RIL_SOCKET_NAME[] = "/dev/socket/rilproxy";
-
-// Network port to connect to for adb forwarded sockets when doing
-// desktop development.
-static const uint32_t RIL_TEST_PORT = 6200;
 
 static nsTArray<nsRefPtr<mozilla::ipc::RilConsumer> > sRilConsumers;
 
@@ -199,109 +195,6 @@ DispatchRILEvent::RunTask(JSContext* aCx)
   return JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
 }
 
-class RilConnector final : public mozilla::ipc::UnixSocketConnector
-{
-public:
-  RilConnector(unsigned long aClientId)
-    : mClientId(aClientId)
-  { }
-
-  int Create() override;
-  bool CreateAddr(bool aIsServer,
-                  socklen_t& aAddrSize,
-                  sockaddr_any& aAddr,
-                  const char* aAddress) override;
-  bool SetUp(int aFd) override;
-  bool SetUpListenSocket(int aFd) override;
-  void GetSocketAddr(const sockaddr_any& aAddr,
-                     nsAString& aAddrStr) override;
-
-private:
-  unsigned long mClientId;
-};
-
-int
-RilConnector::Create()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  int fd = -1;
-
-#if defined(MOZ_WIDGET_GONK)
-  fd = socket(AF_LOCAL, SOCK_STREAM, 0);
-#else
-  // If we can't hit a local loopback, fail later in connect.
-  fd = socket(AF_INET, SOCK_STREAM, 0);
-#endif
-
-  if (fd < 0) {
-    NS_WARNING("Could not open ril socket!");
-    return -1;
-  }
-
-  if (!SetUp(fd)) {
-    NS_WARNING("Could not set up socket!");
-  }
-  return fd;
-}
-
-bool
-RilConnector::CreateAddr(bool aIsServer,
-                         socklen_t& aAddrSize,
-                         sockaddr_any& aAddr,
-                         const char* aAddress)
-{
-  // We never open ril socket as server.
-  MOZ_ASSERT(!aIsServer);
-  uint32_t af;
-#if defined(MOZ_WIDGET_GONK)
-  af = AF_LOCAL;
-#else
-  af = AF_INET;
-#endif
-  switch (af) {
-  case AF_LOCAL:
-    aAddr.un.sun_family = af;
-    if(strlen(aAddress) > sizeof(aAddr.un.sun_path)) {
-      NS_WARNING("Address too long for socket struct!");
-      return false;
-    }
-    strcpy((char*)&aAddr.un.sun_path, aAddress);
-    aAddrSize = strlen(aAddress) + offsetof(struct sockaddr_un, sun_path) + 1;
-    break;
-  case AF_INET:
-    aAddr.in.sin_family = af;
-    aAddr.in.sin_port = htons(RIL_TEST_PORT + mClientId);
-    aAddr.in.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    aAddrSize = sizeof(sockaddr_in);
-    break;
-  default:
-    NS_WARNING("Socket type not handled by connector!");
-    return false;
-  }
-  return true;
-}
-
-bool
-RilConnector::SetUp(int aFd)
-{
-  // Nothing to do here.
-  return true;
-}
-
-bool
-RilConnector::SetUpListenSocket(int aFd)
-{
-  // Nothing to do here.
-  return true;
-}
-
-void
-RilConnector::GetSocketAddr(const sockaddr_any& aAddr, nsAString& aAddrStr)
-{
-  MOZ_CRASH("This should never be called!");
-}
-
 } // anonymous namespace
 
 namespace mozilla {
@@ -324,7 +217,7 @@ RilConsumer::RilConsumer(unsigned long aClientId,
     mAddress = addr_un.sun_path;
   }
 
-  Connect(new RilConnector(mClientId), mAddress.get());
+  Connect(new RilConnector(mAddress, mClientId), mAddress.get());
 }
 
 nsresult
@@ -396,7 +289,7 @@ RilConsumer::OnDisconnect()
 {
   CHROMIUM_LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
   if (!mShutdown) {
-    Connect(new RilConnector(mClientId), mAddress.get(),
+    Connect(new RilConnector(mAddress, mClientId), mAddress.get(),
             GetSuggestedConnectDelayMs());
   }
 }
@@ -404,7 +297,7 @@ RilConsumer::OnDisconnect()
 ConnectionOrientedSocketIO*
 RilConsumer::GetIO()
 {
-  return PrepareAccept(new RilConnector(mClientId));
+  return PrepareAccept(new RilConnector(mAddress, mClientId));
 }
 
 } // namespace ipc
