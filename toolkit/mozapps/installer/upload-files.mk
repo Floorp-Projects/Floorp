@@ -115,7 +115,7 @@ JSSHELL_BINS += \
 endif # Darwin
 endif # WINNT
 endif # MOZ_STATIC_JS
-MAKE_JSSHELL  = $(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/dozip.py $(PKG_JSSHELL) $(abspath $(JSSHELL_BINS))
+MAKE_JSSHELL  = $(call py_action,zip,$(PKG_JSSHELL) $(abspath $(JSSHELL_BINS)))
 endif # LIBXUL_SDK
 
 _ABS_DIST = $(abspath $(DIST))
