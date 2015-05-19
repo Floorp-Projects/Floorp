@@ -725,7 +725,15 @@ function TabActor(aConnection)
   // Used on b2g to catch activity frames and in chrome to list all frames
   this.listenForNewDocShells = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
-  this.traits = { reconfigure: true, frames: true };
+  this.traits = {
+    reconfigure: true,
+    // Supports frame listing via `listFrames` request and `frameUpdate` events
+    // as well as frame switching via `switchToFrame` request
+    frames: true,
+    // Do not require to send reconfigure request to reset the document state
+    // to what it was before using the TabActor
+    noTabReconfigureOnClose: true
+  };
 
   this._workerActorList = null;
   this._workerActorPool = null;
@@ -1300,6 +1308,7 @@ TabActor.prototype = {
     // during Firefox shutdown.
     if (this.docShell) {
       this._progressListener.unwatch(this.docShell);
+      this._restoreDocumentSettings();
     }
     if (this._progressListener) {
       this._progressListener.destroy();
@@ -1390,14 +1399,19 @@ TabActor.prototype = {
   onReconfigure: function (aRequest) {
     let options = aRequest.options || {};
 
-    this._toggleDevtoolsSettings(options);
+    if (!this.docShell) {
+      // The tab is already closed.
+      return {};
+    }
+    this._toggleDevToolsSettings(options);
+
     return {};
   },
 
   /**
    * Handle logic to enable/disable JS/cache/Service Worker testing.
    */
-  _toggleDevtoolsSettings: function(options) {
+  _toggleDevToolsSettings: function(options) {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
     let reload = false;
@@ -1430,6 +1444,16 @@ TabActor.prototype = {
   },
 
   /**
+   * Opposite of the _toggleDevToolsSettings method, that reset document state
+   * when closing the toolbox.
+   */
+  _restoreDocumentSettings: function () {
+    this._restoreJavascript();
+    this._setCacheDisabled(false);
+    this._setServiceWorkersTestingEnabled(false);
+  },
+
+  /**
    * Disable or enable the cache via docShell.
    */
   _setCacheDisabled: function(disabled) {
@@ -1437,29 +1461,46 @@ TabActor.prototype = {
     let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
                   Ci.nsIRequest.INHIBIT_CACHING;
 
-    if (this.docShell) {
-      this.docShell.defaultLoadFlags = disabled ? disable : enable;
-    }
+    this.docShell.defaultLoadFlags = disabled ? disable : enable;
   },
 
   /**
    * Disable or enable JS via docShell.
    */
+  _wasJavascriptEnabled: null,
   _setJavascriptEnabled: function(allow) {
-    if (this.docShell) {
-      this.docShell.allowJavascript = allow;
+    if (this._wasJavascriptEnabled === null) {
+      this._wasJavascriptEnabled = this.docShell.allowJavascript;
     }
+    this.docShell.allowJavascript = allow;
+  },
+
+  /**
+   * Restore JS state, before the actor modified it.
+   */
+  _restoreJavascript: function () {
+    if (this._wasJavascriptEnabled !== null) {
+      this._setJavascriptEnabled(this._wasJavascriptEnabled);
+      this._wasJavascriptEnabled = null;
+    }
+  },
+
+  /**
+   * Return JS allowed status.
+   */
+  _getJavascriptEnabled: function() {
+    if (!this.docShell) {
+      // The tab is already closed.
+      return null;
+    }
+
+    return this.docShell.allowJavascript;
   },
 
   /**
    * Disable or enable the service workers testing features.
    */
   _setServiceWorkersTestingEnabled: function(enabled) {
-    if (!this.docShell) {
-      // The tab is already closed.
-      return null;
-    }
-
     let windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDOMWindowUtils);
     windowUtils.serviceWorkersTestingEnabled = enabled;
@@ -1477,18 +1518,6 @@ TabActor.prototype = {
     let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
                   Ci.nsIRequest.INHIBIT_CACHING;
     return this.docShell.defaultLoadFlags === disable;
-  },
-
-  /**
-   * Return JS allowed status.
-   */
-  _getJavascriptEnabled: function() {
-    if (!this.docShell) {
-      // The tab is already closed.
-      return null;
-    }
-
-    return this.docShell.allowJavascript;
   },
 
   /**
