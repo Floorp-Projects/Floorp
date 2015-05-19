@@ -330,31 +330,6 @@ DispatchReplyError(BluetoothReplyRunnable* aRunnable,
   NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(aRunnable)));
 }
 
-#if MOZ_B2G_BT_API_V2
-// TODO: remove with bluetooth1
-#else
-void
-DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
-                       const BluetoothValue& aValue,
-                       const nsAString& aErrorStr)
-{
-  // Reply will be deleted by the runnable after running on main thread
-  BluetoothReply* reply;
-  if (!aErrorStr.IsEmpty()) {
-    nsString err(aErrorStr);
-    reply = new BluetoothReply(BluetoothReplyError(err));
-  } else {
-    MOZ_ASSERT(aValue.type() != BluetoothValue::T__None);
-    reply = new BluetoothReply(BluetoothReplySuccess(aValue));
-  }
-
-  aRunnable->SetReply(reply);
-  if (NS_FAILED(NS_DispatchToMainThread(aRunnable))) {
-    BT_WARNING("Failed to dispatch to main thread!");
-  }
-}
-#endif
-
 void
 DispatchStatusChangedEvent(const nsAString& aType,
                            const nsAString& aAddress,
