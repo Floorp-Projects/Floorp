@@ -20,8 +20,8 @@ UNIFIED_SOURCES += [
     'xpcAccessibleValue.cpp',
 ]
 
-GENERATED_SOURCES += [
-    'xpcAccEvents.cpp',
+SOURCES += [
+    '!xpcAccEvents.cpp',
 ]
 
 LOCAL_INCLUDES += [
