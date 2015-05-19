@@ -35,7 +35,7 @@ interface Animation {
   void finish ();
   [Throws, BinaryName="playFromJS"]
   void play ();
-  [BinaryName="pauseFromJS"]
+  [Throws, BinaryName="pauseFromJS"]
   void pause ();
   /*
   void reverse ();
