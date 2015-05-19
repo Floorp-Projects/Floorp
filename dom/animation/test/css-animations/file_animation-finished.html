@@ -276,11 +276,11 @@ async_test(function(t) {
     animation.cancel();
     assert_not_equals(animation.finished, previousFinishedPromise,
                       'A new finished promise should be created when'
-                      + ' cancelling a finished player');
+                      + ' cancelling a finished animation');
   })).then(t.step_func(function() {
     t.done();
   }));
-}, 'cancelling an already-finished player replaces the finished promise');
+}, 'cancelling an already-finished animation replaces the finished promise');
 
 async_test(function(t) {
   var div = addDiv(t);
@@ -303,7 +303,7 @@ async_test(function(t) {
   assert_not_equals(animation.finished, previousFinishedPromise,
                     'A redundant call to cancel() should still generate a new'
                     + ' finished promise');
-}, 'cancelling an idle player still replaces the finished promise');
+}, 'cancelling an idle animation still replaces the finished promise');
 
 async_test(function(t) {
   var div = addDiv(t);
