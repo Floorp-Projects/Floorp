@@ -217,8 +217,8 @@ if (this.Components) {
    removeEmptyDir: function removeEmptyDir(path, options) {
      return File.removeEmptyDir(Type.path.fromMsg(path), options);
    },
-   remove: function remove(path) {
-     return File.remove(Type.path.fromMsg(path));
+   remove: function remove(path, options) {
+     return File.remove(Type.path.fromMsg(path), options);
    },
    open: function open(path, mode, options) {
      let filePath = Type.path.fromMsg(path);
