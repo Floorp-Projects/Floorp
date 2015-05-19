@@ -48,12 +48,6 @@ using mozilla::PodArrayZero;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 
-static inline jsid
-id_prototype(JSContext* cx)
-{
-    return NameToId(cx->names().prototype);
-}
-
 #ifdef DEBUG
 
 static inline jsid

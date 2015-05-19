@@ -309,18 +309,18 @@ js::intrinsic_NewDenseArray(JSContext* cx, unsigned argc, Value* vp)
         return false;
     buffer->setGroup(newgroup);
 
-    NativeObject::EnsureDenseResult edr = buffer->ensureDenseElements(cx, length, 0);
+    DenseElementResult edr = buffer->ensureDenseElements(cx, length, 0);
     switch (edr) {
-      case NativeObject::ED_OK:
+      case DenseElementResult::Success:
         args.rval().setObject(*buffer);
         return true;
 
-      case NativeObject::ED_SPARSE: // shouldn't happen!
+      case DenseElementResult::Incomplete: // shouldn't happen!
         MOZ_ASSERT(!"%EnsureDenseArrayElements() would yield sparse array");
         JS_ReportError(cx, "%EnsureDenseArrayElements() would yield sparse array");
         break;
 
-      case NativeObject::ED_FAILED:
+      case DenseElementResult::Failure:
         break;
     }
     return false;
