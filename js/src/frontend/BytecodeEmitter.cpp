@@ -2299,15 +2299,14 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = pn->pn_count > 1;
         return true;
 
-      case PNK_EXPORT_BATCH_SPEC:
-      case PNK_ARGSBODY:
       case PNK_ARRAYCOMP:
-      case PNK_EXPORT_SPEC_LIST:
-      case PNK_IMPORT_SPEC_LIST:
-      case PNK_EXPORT_SPEC:
-      case PNK_IMPORT_SPEC:
-      case PNK_CALLSITEOBJ:
-        break; // for now
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        MOZ_ASSERT(pn->pn_count == 1);
+        return checkSideEffects(pn->pn_head, answer);
+
+      case PNK_ARGSBODY:
+        *answer = true;
+        return true;
 
       case PNK_FORIN:           // by PNK_FOR
       case PNK_FOROF:           // by PNK_FOR
@@ -2316,6 +2315,12 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_CLASSMETHOD:     // by PNK_CLASS
       case PNK_CLASSNAMES:      // by PNK_CLASS
       case PNK_CLASSMETHODLIST: // by PNK_CLASS
+      case PNK_IMPORT_SPEC_LIST: // by PNK_IMPORT
+      case PNK_IMPORT_SPEC:      // by PNK_IMPORT
+      case PNK_EXPORT_BATCH_SPEC:// by PNK_EXPORT
+      case PNK_EXPORT_SPEC_LIST: // by PNK_EXPORT
+      case PNK_EXPORT_SPEC:      // by PNK_EXPORT
+      case PNK_CALLSITEOBJ:      // by PNK_TAGGED_TEMPLATE
         MOZ_CRASH("handled by parent nodes");
 
       case PNK_LIMIT: // invalid sentinel value
