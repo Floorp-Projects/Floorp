@@ -230,7 +230,7 @@ public:
 
 private:
   ~Connection();
-  nsresult initializeInternal();
+  nsresult initializeInternal(nsIFile *aDatabaseFile);
 
   /**
    * Sets the database into a closed state so no further actions can be
@@ -287,12 +287,6 @@ private:
   sqlite3 *mDBConn;
   nsCOMPtr<nsIFileURL> mFileURL;
   nsCOMPtr<nsIFile> mDatabaseFile;
-
-  /**
-   * The filename that will be reported to telemetry for this connection. By
-   * default this will be the leaf of the path to the database file.
-  */
-  nsCString mTelemetryFilename;
 
   /**
    * Lazily created thread for asynchronous statement execution.  Consumers
