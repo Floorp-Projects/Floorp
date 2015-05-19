@@ -880,13 +880,22 @@
 
 .line-graph-widget-gutter {
   position: absolute;
-  background: rgba(255,255,255,0.75);
   width: 10px;
   height: 100%;
   top: 0;
   left: 0;
-  border-right: 1px solid rgba(255,255,255,0.25);
   pointer-events: none;
+  -moz-border-end: 1px solid;
+}
+
+.theme-light .line-graph-widget-gutter {
+  background: rgba(255,255,255,0.75);
+  -moz-border-end-color: rgba(255,255,255,0.25);
+}
+
+.theme-dark .line-graph-widget-gutter {
+  background: rgba(0,0,0,0.5);
+  -moz-border-end-color: rgba(0,0,0,0.25);
 }
 
 .line-graph-widget-gutter-line {
@@ -909,7 +918,6 @@
 
 .line-graph-widget-tooltip {
   position: absolute;
-  background: rgba(255,255,255,0.9);
   border-radius: 2px;
   line-height: 15px;
   -moz-padding-start: 6px;
@@ -918,6 +926,14 @@
   font-size: 80%;
   z-index: 1;
   pointer-events: none;
+}
+
+.theme-light .line-graph-widget-tooltip {
+  background: rgba(255,255,255,0.75);
+}
+
+.theme-dark .line-graph-widget-tooltip {
+  background: rgba(0,0,0,0.5);
 }
 
 .line-graph-widget-tooltip[with-arrows=true]::before {
@@ -929,13 +945,29 @@
 }
 
 .line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
-  -moz-border-end: 3px solid rgba(255,255,255,0.75);
+  -moz-border-end: 3px solid;
   left: -3px;
 }
 
 .line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
-  -moz-border-start: 3px solid rgba(255,255,255,0.75);
+  -moz-border-start: 3px solid;
   right: -3px;
+}
+
+.theme-light .line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
+  -moz-border-end-color: rgba(255,255,255,0.75);
+}
+
+.theme-dark .line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
+  -moz-border-end-color: rgba(0,0,0,0.5);
+}
+
+.theme-light .line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
+  -moz-border-start-color: rgba(255,255,255,0.75);
+}
+
+.theme-dark .line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
+  -moz-border-start-color: rgba(0,0,0,0.5);
 }
 
 .line-graph-widget-tooltip[type=maximum] {
@@ -951,7 +983,7 @@
 }
 
 .line-graph-widget-tooltip > [text=info] {
-  color: #18191a;
+  color: var(--theme-content-color1);
 }
 
 .line-graph-widget-tooltip > [text=value] {
@@ -960,27 +992,35 @@
 
 .line-graph-widget-tooltip > [text=metric] {
   -moz-margin-start: 1px;
-  color: #667380;
+  color: var(--theme-content-color3);
 }
 
-.line-graph-widget-tooltip > [text=value],
-.line-graph-widget-tooltip > [text=metric] {
-  text-shadow: 1px  0px rgba(255,255,255,0.6),
-              -1px  0px rgba(255,255,255,0.6),
-               0px -1px rgba(255,255,255,0.6),
-               0px  1px rgba(255,255,255,0.6);
+.theme-light .line-graph-widget-tooltip > [text=value],
+.theme-light .line-graph-widget-tooltip > [text=metric] {
+  text-shadow: 1px  0px rgba(255,255,255,0.5),
+              -1px  0px rgba(255,255,255,0.5),
+               0px -1px rgba(255,255,255,0.5),
+               0px  1px rgba(255,255,255,0.5);
+}
+
+.theme-dark .line-graph-widget-tooltip > [text=value],
+.theme-dark .line-graph-widget-tooltip > [text=metric] {
+  text-shadow: 1px  0px rgba(0,0,0,0.5),
+              -1px  0px rgba(0,0,0,0.5),
+               0px -1px rgba(0,0,0,0.5),
+               0px  1px rgba(0,0,0,0.5);
 }
 
 .line-graph-widget-tooltip[type=maximum] > [text=value] {
-  color: #2cbb0f;
+  color: var(--theme-highlight-green);
 }
 
 .line-graph-widget-tooltip[type=minimum] > [text=value] {
-  color: #ed2655;
+  color: var(--theme-highlight-red);
 }
 
 .line-graph-widget-tooltip[type=average] > [text=value] {
-  color: #d97e00;
+  color: var(--theme-highlight-orange);
 }
 
 /* Bar graph widget */
