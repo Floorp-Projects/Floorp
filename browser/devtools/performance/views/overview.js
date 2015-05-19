@@ -407,6 +407,12 @@ function OverviewViewOnStateChange (fn) {
     // from the event name, since there is a delay between starting
     // a recording and changing the selection.
     if (!currentRecording || !recording) {
+      // If no recording (this can occur when having a console.profile recording, and
+      // we do not stop it from the backend), and we are still rendering updates,
+      // stop that.
+      if (this.isRendering()) {
+        this._stopPolling();
+      }
       return;
     }
 
