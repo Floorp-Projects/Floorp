@@ -234,7 +234,14 @@ ElementStyle.prototype = {
 
         return null;
       });
-    }).then(null, promiseWarn);
+    }).then(null, e => {
+      // populate is often called after a setTimeout,
+      // the connection may already be closed.
+      if (this.destroyed) {
+        return;
+      }
+      return promiseWarn(e);
+    });
     this.populated = populated;
     return this.populated;
   },

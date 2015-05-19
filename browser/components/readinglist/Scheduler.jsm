@@ -293,7 +293,11 @@ InternalScheduler.prototype = {
       // the last success.
       prefs.set("lastSync", new Date().toString());
       this.state = this.STATE_OK;
-      this._logManager.resetFileLog(this._logManager.REASON_SUCCESS);
+      this._logManager.resetFileLog().then(result => {
+        if (result == this._logManager.ERROR_LOG_WRITTEN) {
+          Cu.reportError("Reading List sync encountered an error - see about:sync-log for the log file.");
+        }
+      });
       Services.obs.notifyObservers(null, "readinglist:sync:finish", null);
       this._currentErrorBackoff = 0; // error retry interval is reset on success.
       return intervals.schedule;
@@ -307,7 +311,11 @@ InternalScheduler.prototype = {
         this._currentErrorBackoff = 0; // error retry interval is reset on success.
         this.log.info("Can't sync due to FxA account state " + err.message);
         this.state = this.STATE_OK;
-        this._logManager.resetFileLog(this._logManager.REASON_SUCCESS);
+        this._logManager.resetFileLog().then(result => {
+          if (result == this._logManager.ERROR_LOG_WRITTEN) {
+            Cu.reportError("Reading List sync encountered an error - see about:sync-log for the log file.");
+          }
+        });
         Services.obs.notifyObservers(null, "readinglist:sync:finish", null);
         // it's unfortunate that we are probably going to hit this every
         // 2 hours, but it should be invisible to the user.
@@ -317,7 +325,7 @@ InternalScheduler.prototype = {
                    this.STATE_ERROR_AUTHENTICATION : this.STATE_ERROR_OTHER;
       this.log.error("Sync failed, now in state '${state}': ${err}",
                      {state: this.state, err});
-      this._logManager.resetFileLog(this._logManager.REASON_ERROR);
+      this._logManager.resetFileLog();
       Services.obs.notifyObservers(null, "readinglist:sync:error", null);
       // We back-off on error retries until it hits our normally scheduled interval.
       this._currentErrorBackoff = this._currentErrorBackoff == 0 ? intervals.retry :

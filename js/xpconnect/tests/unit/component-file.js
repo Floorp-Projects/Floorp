@@ -36,8 +36,8 @@ FileComponent.prototype =
     var f2 = new File(file);
 
     // do some tests
-    do_check_true(f1 instanceof Ci.nsIDOMFile, "Should be a DOM File");
-    do_check_true(f2 instanceof Ci.nsIDOMFile, "Should be a DOM File");
+    do_check_true(f1 instanceof File, "Should be a DOM File");
+    do_check_true(f2 instanceof File, "Should be a DOM File");
 
     do_check_true(f1.name == "xpcshell.ini", "Should be the right file");
     do_check_true(f2.name == "xpcshell.ini", "Should be the right file");

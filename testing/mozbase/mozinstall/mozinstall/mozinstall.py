@@ -82,10 +82,7 @@ def get_binary(path, app_name):
                     break
 
     if not binary:
-        # The expected binary has not been found. Make sure we clean the
-        # install folder to remove any traces
-        mozfile.remove(path)
-
+        # The expected binary has not been found.
         raise InvalidBinary('"%s" does not contain a valid binary.' % path)
 
     return binary

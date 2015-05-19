@@ -177,7 +177,6 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
                                    nsTArray<nsRefPtr<File>>& aFileList)
 {
   JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, aFileList.Length()));
-  nsresult rv;
 
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -188,14 +187,12 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
     nsRefPtr<File> file = aFileList[i];
 
     nsString filename;
-    rv = file->GetName(filename);
-    NS_ENSURE_SUCCESS(rv, rv);
+    file->GetName(filename);
 
     str = JS_NewUCStringCopyZ(aCx, filename.get());
     NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
-    if (NS_FAILED(rv) ||
-        !JS_DefineElement(aCx, array, i, str, JSPROP_ENUMERATE)) {
+    if (!JS_DefineElement(aCx, array, i, str, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -217,8 +214,7 @@ ArchiveRequest::GetFileResult(JSContext* aCx,
     nsRefPtr<File> file = aFileList[i];
 
     nsString filename;
-    nsresult rv = file->GetName(filename);
-    NS_ENSURE_SUCCESS(rv, rv);
+    file->GetName(filename);
 
     if (filename == mFilename) {
       if (!ToJSValue(aCx, file, aValue)) {

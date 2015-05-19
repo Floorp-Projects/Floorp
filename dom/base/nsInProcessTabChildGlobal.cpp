@@ -26,6 +26,7 @@
 using mozilla::dom::StructuredCloneData;
 using mozilla::dom::StructuredCloneClosure;
 using namespace mozilla;
+using namespace mozilla::dom;
 
 bool
 nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,

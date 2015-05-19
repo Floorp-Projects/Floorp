@@ -439,22 +439,6 @@ Blob::GetInternalStream(nsIInputStream** aStream)
 ////////////////////////////////////////////////////////////////////////////
 // mozilla::dom::File implementation
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(File)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(File, Blob)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(File, Blob)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(File)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFile)
-NS_INTERFACE_MAP_END_INHERITING(Blob)
-
-NS_IMPL_ADDREF_INHERITED(File, Blob)
-NS_IMPL_RELEASE_INHERITED(File, Blob)
-
 File::File(nsISupports* aParent, BlobImpl* aImpl)
   : Blob(aParent, aImpl)
 {
@@ -553,17 +537,16 @@ File::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return FileBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
+void
 File::GetName(nsAString& aFileName)
 {
   mImpl->GetName(aFileName);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-File::GetPath(nsAString& aPath)
+void
+File::GetPath(nsAString& aPath, ErrorResult& aRv)
 {
-  return mImpl->GetPath(aPath);
+  mImpl->GetPath(aPath, aRv);
 }
 
 Date
@@ -583,53 +566,16 @@ File::GetLastModified(ErrorResult& aRv)
   return mImpl->GetLastModified(aRv);
 }
 
-NS_IMETHODIMP
-File::GetLastModifiedDate(JSContext* aCx,
-                          JS::MutableHandle<JS::Value> aDate)
-{
-  ErrorResult rv;
-  Date value = GetLastModifiedDate(rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  if (!value.ToDateObject(aCx, aDate)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-File::GetMozFullPath(nsAString& aFileName)
-{
-  ErrorResult rv;
-  GetMozFullPath(aFileName, rv);
-  return rv.StealNSResult();
-}
-
 void
 File::GetMozFullPath(nsAString& aFilename, ErrorResult& aRv)
 {
   mImpl->GetMozFullPath(aFilename, aRv);
 }
 
-NS_IMETHODIMP
-File::GetMozFullPathInternal(nsAString& aFileName)
+void
+File::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv)
 {
-  ErrorResult rv;
-  mImpl->GetMozFullPathInternal(aFileName, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-File::GetMozLastModifiedDate(int64_t* aDate)
-{
-  MOZ_ASSERT(aDate);
-
-  ErrorResult rv;
-  *aDate = GetLastModified(rv);
-  return rv.StealNSResult();
+  mImpl->GetMozFullPathInternal(aFileName, aRv);
 }
 
 // Makes sure that aStart and aEnd is less then or equal to aSize and greater
@@ -817,12 +763,11 @@ BlobImplBase::GetName(nsAString& aName)
   aName = mName;
 }
 
-nsresult
-BlobImplBase::GetPath(nsAString& aPath)
+void
+BlobImplBase::GetPath(nsAString& aPath, ErrorResult& aRv)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
   aPath = mPath;
-  return NS_OK;
 }
 
 void
@@ -1321,9 +1266,9 @@ FileList::GetLength(uint32_t* aLength)
 }
 
 NS_IMETHODIMP
-FileList::Item(uint32_t aIndex, nsIDOMFile **aFile)
+FileList::Item(uint32_t aIndex, nsISupports** aFile)
 {
-  nsRefPtr<File> file = Item(aIndex);
+  nsCOMPtr<nsIDOMBlob> file = Item(aIndex);
   file.forget(aFile);
   return NS_OK;
 }

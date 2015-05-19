@@ -19,8 +19,7 @@ function run_test() {
 
 add_task(function* test_notification_incomplete() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: '123',
     pushEndpoint: 'https://example.org/update/1',
@@ -43,7 +42,7 @@ add_task(function* test_notification_incomplete() {
     version: 10
   }];
   for (let record of records) {
-    promiseDB.put(record);
+    db.put(record);
   }
 
   Services.obs.addObserver(function observe(subject, topic, data) {
@@ -102,7 +101,7 @@ add_task(function* test_notification_incomplete() {
   yield waitForPromise(notificationDefer.promise, DEFAULT_TIMEOUT,
     'Timed out waiting for incomplete notifications');
 
-  let storeRecords = yield promiseDB.getAllChannelIDs();
+  let storeRecords = yield db.getAllChannelIDs();
   storeRecords.sort(({pushEndpoint: a}, {pushEndpoint: b}) =>
     compareAscending(a, b));
   recordsAreEqual(records, storeRecords);

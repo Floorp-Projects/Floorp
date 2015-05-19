@@ -17,7 +17,6 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "nsIAppShell.h"
-#include "nsIDOMFile.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTHashtable.h"

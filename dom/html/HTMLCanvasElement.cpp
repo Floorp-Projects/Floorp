@@ -647,16 +647,22 @@ HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
                                 const nsAString& aType,
                                 ErrorResult& aRv)
 {
-  nsCOMPtr<nsIDOMFile> file;
+  nsCOMPtr<nsISupports> file;
   aRv = MozGetAsFile(aName, aType, getter_AddRefs(file));
-  nsRefPtr<File> tmp = static_cast<File*>(file.get());
-  return tmp.forget();
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(file);
+  nsRefPtr<Blob> domBlob = static_cast<Blob*>(blob.get());
+  MOZ_ASSERT(domBlob->IsFile());
+  return domBlob->ToFile();
 }
 
 NS_IMETHODIMP
 HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
                                 const nsAString& aType,
-                                nsIDOMFile** aResult)
+                                nsISupports** aResult)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eMozGetAsFile);
 
@@ -672,7 +678,7 @@ HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
 nsresult
 HTMLCanvasElement::MozGetAsBlobImpl(const nsAString& aName,
                                     const nsAString& aType,
-                                    nsIDOMFile** aResult)
+                                    nsISupports** aResult)
 {
   nsCOMPtr<nsIInputStream> stream;
   nsAutoString type(aType);
@@ -696,7 +702,7 @@ HTMLCanvasElement::MozGetAsBlobImpl(const nsAString& aName,
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(OwnerDoc()->GetScopeObject());
 
   // The File takes ownership of the buffer
-  nsRefPtr<File> file =
+  nsCOMPtr<nsIDOMBlob> file =
     File::CreateMemoryFile(win, imgData, (uint32_t)imgSize, aName, type,
                            PR_Now());
 
