@@ -107,6 +107,10 @@ function testInitializingUntrustedEvent()
     }
     is(e.isTrusted, false, description + "isTrusted returns wrong value");
     is(e.buttons, 0, description + "buttons returns wrong value");
+    is(e.movementX, 0, description + "movementX returns wrong value");
+    is(e.movementY, 0, description + "movementY returns wrong value");
+    is(e.movementX, e.mozMovementX);
+    is(e.movementY, e.mozMovementY);
 
     // getModifierState() tests
     is(e.getModifierState("Shift"), kTest.shiftKey,
