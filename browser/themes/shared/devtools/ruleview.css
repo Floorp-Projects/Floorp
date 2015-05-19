@@ -16,15 +16,15 @@
 }
 
 .ruleview-rule-source {
-  -moz-padding-start: 5px;
   text-align: end;
   float: right;
   -moz-user-select: none;
+  margin-bottom: 2px;
 }
 
-.ruleview-rule-source,
 .ruleview-rule-source > label {
   cursor: pointer;
+  margin: 0;
 }
 
 .ruleview-rule-source[unselectable],
