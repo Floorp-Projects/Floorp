@@ -3,7 +3,8 @@
 
 // Tests if (idle) nodes are added when necessary in the flame graph data.
 
-let {FlameGraphUtils, FLAME_GRAPH_BLOCK_HEIGHT} = devtools.require("devtools/shared/widgets/FlameGraph");
+let {FlameGraphUtils} = devtools.require("devtools/shared/widgets/FlameGraph");
+let {PALLETTE_SIZE} = devtools.require("devtools/shared/widgets/FlameGraph");
 let {FrameNode} = devtools.require("devtools/shared/profiler/tree-model");
 
 add_task(function*() {
@@ -20,7 +21,7 @@ function* performTest() {
   });
 
   ok(out, "Some data was outputted properly");
-  is(out.length, 10, "The outputted length is correct.");
+  is(out.length, PALLETTE_SIZE, "The outputted length is correct.");
 
   info("Got flame graph data:\n" + out.toSource() + "\n");
 
@@ -85,98 +86,102 @@ let EXPECTED_OUTPUT = [{
   blocks: []
 }, {
   blocks: [{
-    srcData: {
-      startTime: 0,
-      rawLocation: "http://A"
-    },
+    startTime: 0,
+    frameKey: "http://A",
     x: 0,
     y: 0,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "http://A"
   }, {
-    srcData: {
-      startTime: 0,
-      rawLocation: "file://C"
-    },
-    x: 0,
-    y: FLAME_GRAPH_BLOCK_HEIGHT * 2,
-    width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
-    text: "file://C"
-  }, {
-    srcData: {
-      startTime: 100,
-      rawLocation: "http://A"
-    },
+    startTime: 100,
+    frameKey: "http://A",
     x: 100,
     y: 0,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "http://A"
-  }, {
-    srcData: {
-      startTime: 0,
-      rawLocation: "file://C"
-    },
-    x: 100,
-    y: FLAME_GRAPH_BLOCK_HEIGHT * 2,
-    width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
-    text: "file://C"
-  }]
-}, {
-  blocks: [{
-    srcData: {
-      startTime: 50,
-      rawLocation: "\m/"
-    },
-    x: 50,
-    y: 0,
-    width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
-    text: "\m/"
   }]
 }, {
   blocks: []
 }, {
   blocks: []
 }, {
+  blocks: []
+}, {
   blocks: [{
-    srcData: {
-      startTime: 0,
-      rawLocation: "Gecko"
-    },
+    startTime: 0,
+    frameKey: "Gecko",
     x: 0,
-    y: FLAME_GRAPH_BLOCK_HEIGHT * 3,
+    y: 45,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "Gecko"
   }]
 }, {
   blocks: []
 }, {
   blocks: [{
-    srcData: {
-      startTime: 0,
-      rawLocation: "https://B"
-    },
+    startTime: 0,
+    frameKey: "https://B",
     x: 0,
-    y: FLAME_GRAPH_BLOCK_HEIGHT,
+    y: 15,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "https://B"
   }, {
-    srcData: {
-      startTime: 100,
-      rawLocation: "https://B"
-    },
+    startTime: 100,
+    frameKey: "https://B",
     x: 100,
-    y: FLAME_GRAPH_BLOCK_HEIGHT,
+    y: 15,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "https://B"
   }]
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: [{
+    startTime: 0,
+    frameKey: "file://C",
+    x: 0,
+    y: 30,
+    width: 50,
+    height: 15,
+    text: "file://C"
+  }, {
+    startTime: 100,
+    frameKey: "file://C",
+    x: 100,
+    y: 30,
+    width: 50,
+    height: 15,
+    text: "file://C"
+  }]
+}, {
+  blocks: [{
+    startTime: 50,
+    frameKey: "m/",
+    x: 50,
+    y: 0,
+    width: 50,
+    height: 15,
+    text: "m/"
+  }]
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
 }, {
   blocks: []
 }];

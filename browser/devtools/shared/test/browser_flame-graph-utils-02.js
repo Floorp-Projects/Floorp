@@ -3,7 +3,8 @@
 
 // Tests consecutive duplicate frames are removed from the flame graph data.
 
-let {FlameGraphUtils, FLAME_GRAPH_BLOCK_HEIGHT} = devtools.require("devtools/shared/widgets/FlameGraph");
+let {FlameGraphUtils} = devtools.require("devtools/shared/widgets/FlameGraph");
+let {PALLETTE_SIZE} = devtools.require("devtools/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");
@@ -17,7 +18,7 @@ function* performTest() {
   });
 
   ok(out, "Some data was outputted properly");
-  is(out.length, 10, "The outputted length is correct.");
+  is(out.length, PALLETTE_SIZE, "The outputted length is correct.");
 
   info("Got flame graph data:\n" + out.toSource() + "\n");
 
@@ -66,40 +67,54 @@ let EXPECTED_OUTPUT = [{
   blocks: []
 }, {
   blocks: [{
-    srcData: {
-      startTime: 0,
-      rawLocation: "A"
-    },
+    startTime: 0,
+    frameKey: "A",
     x: 0,
     y: 0,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "A"
   }]
 }, {
   blocks: [{
-    srcData: {
-      startTime: 0,
-      rawLocation: "B"
-    },
+    startTime: 0,
+    frameKey: "B",
     x: 0,
-    y: FLAME_GRAPH_BLOCK_HEIGHT,
+    y: 15,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "B"
   }]
 }, {
   blocks: [{
-    srcData: {
-      startTime: 0,
-      rawLocation: "C"
-    },
+    startTime: 0,
+    frameKey: "C",
     x: 0,
-    y: FLAME_GRAPH_BLOCK_HEIGHT * 2,
+    y: 30,
     width: 50,
-    height: FLAME_GRAPH_BLOCK_HEIGHT,
+    height: 15,
     text: "C"
   }]
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
 }, {
   blocks: []
 }, {
