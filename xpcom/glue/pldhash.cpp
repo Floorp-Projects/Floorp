@@ -38,7 +38,7 @@
  * allowed (and therefore the level is 0 or 1, depending on whether they
  * incremented it).
  *
- * Only PL_DHashTableFinish needs to allow this special value.
+ * Only Finish() needs to allow this special value.
  */
 #define IMMUTABLE_RECURSION_LEVEL UINT32_MAX
 
@@ -169,22 +169,6 @@ SizeOfEntryStore(uint32_t aCapacity, uint32_t aEntrySize, uint32_t* aNbytes)
   return uint64_t(*aNbytes) == nbytes64;   // returns false on overflow
 }
 
-PLDHashTable*
-PL_NewDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
-                 uint32_t aLength)
-{
-  PLDHashTable* table = new PLDHashTable();
-  PL_DHashTableInit(table, aOps, aEntrySize, aLength);
-  return table;
-}
-
-void
-PL_DHashTableDestroy(PLDHashTable* aTable)
-{
-  PL_DHashTableFinish(aTable);
-  delete aTable;
-}
-
 /*
  * Compute max and min load numbers (entry counts).  We have a secondary max
  * that allows us to overload a table reasonably if it cannot be grown further
@@ -257,20 +241,6 @@ PLDHashTable::Init(const PLDHashTableOps* aOps,
 #ifdef DEBUG
   mRecursionLevel = 0;
 #endif
-}
-
-void
-PL_DHashTableInit(PLDHashTable* aTable, const PLDHashTableOps* aOps,
-                  uint32_t aEntrySize, uint32_t aLength)
-{
-  aTable->Init(aOps, aEntrySize, aLength);
-}
-
-void
-PL_DHashTableInit(PLDHashTable2* aTable, const PLDHashTableOps* aOps,
-                  uint32_t aEntrySize, uint32_t aLength)
-{
-  aTable->Init(aOps, aEntrySize, aLength);
 }
 
 PLDHashTable2::PLDHashTable2(const PLDHashTableOps* aOps, uint32_t aEntrySize,
@@ -381,18 +351,6 @@ PLDHashTable::Finish()
   /* Free entry storage last. */
   free(mEntryStore);
   mEntryStore = nullptr;
-}
-
-void
-PL_DHashTableFinish(PLDHashTable* aTable)
-{
-  aTable->Finish();
-}
-
-void
-PL_DHashTableFinish(PLDHashTable2* aTable)
-{
-  aTable->Finish();
 }
 
 PLDHashTable2::~PLDHashTable2()
