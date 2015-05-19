@@ -43,18 +43,6 @@ public:
                               socklen_t* aAddressLength,
                               int& aStreamFd) override;
 
-  // Deprecated
-
-  int Create() override;
-  bool CreateAddr(bool aIsServer,
-                  socklen_t& aAddrSize,
-                  sockaddr_any& aAddr,
-                  const char* aAddress) override;
-  bool SetUp(int aFd) override;
-  bool SetUpListenSocket(int aFd) override;
-  void GetSocketAddr(const sockaddr_any& aAddr,
-                     nsAString& aAddrStr) override;
-
 private:
   nsresult CreateSocket(int& aFd) const;
   nsresult SetSocketFlags(int aFd) const;
