@@ -1996,6 +1996,12 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      case PNK_YIELD_STAR:
+      case PNK_YIELD:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
       // Deletion generally has side effects, even if isolated cases have none.
       case PNK_DELETENAME:
       case PNK_DELETEPROP:
@@ -2088,6 +2094,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      case PNK_DEFAULT:
       case PNK_COLON:
       case PNK_CASE:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
@@ -2188,9 +2195,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_CLASSMETHOD:
       case PNK_WITH:
       case PNK_CLASSNAMES:
-      case PNK_DEFAULT:
-      case PNK_YIELD_STAR:
-      case PNK_YIELD:
       case PNK_RETURN:
       case PNK_CLASS:
       case PNK_TRY:
