@@ -19,8 +19,7 @@ function run_test() {
 
 add_task(function* test_register_invalid_channel() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
   PushService._generateID = () => channelID;
   PushService.init({
@@ -55,6 +54,6 @@ add_task(function* test_register_invalid_channel() {
     'Wrong error for invalid channel ID'
   );
 
-  let record = yield promiseDB.getByChannelID(channelID);
+  let record = yield db.getByChannelID(channelID);
   ok(!record, 'Should not store records for error responses');
 });

@@ -20,8 +20,7 @@ function run_test() {
 
 add_task(function* test_notification_ack() {
   let db = new PushDB();
-  let promiseDB = promisifyDatabase(db);
-  do_register_cleanup(() => cleanupDatabase(db));
+  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: '21668e05-6da8-42c9-b8ab-9cc3f4d5630c',
     pushEndpoint: 'https://example.com/update/1',
@@ -39,7 +38,7 @@ add_task(function* test_notification_ack() {
     version: 3
   }];
   for (let record of records) {
-    yield promiseDB.put(record);
+    yield db.put(record);
   }
 
   let notifyPromise = Promise.all([

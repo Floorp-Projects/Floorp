@@ -1753,7 +1753,8 @@ Toolbox.prototype = {
 
     // Now that we are closing the toolbox we can re-enable the cache settings
     // and disable the service workers testing settings for the current tab.
-    if (this.target.activeTab) {
+    // FF41+ automatically cleans up state in actor on disconnect.
+    if (this.target.activeTab && !this.target.activeTab.traits.noTabReconfigureOnClose) {
       this.target.activeTab.reconfigure({
         "cacheDisabled": false,
         "serviceWorkersTestingEnabled": false

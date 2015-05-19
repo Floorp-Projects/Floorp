@@ -1827,7 +1827,7 @@ BluetoothServiceBluedroid::SendFile(const nsAString& aDeviceAddress,
 
 void
 BluetoothServiceBluedroid::SendFile(const nsAString& aDeviceAddress,
-                                    nsIDOMBlob* aBlob,
+                                    Blob* aBlob,
                                     BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());

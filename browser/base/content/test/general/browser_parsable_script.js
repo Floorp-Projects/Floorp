@@ -77,8 +77,8 @@ add_task(function* checkAllTheJS() {
                " browser/base/content/test/general/browser_parsable_script.js");
       return;
     }
-    // Request a 10 minutes timeout (30 seconds * 20) for debug builds.
-    requestLongerTimeout(20);
+    // Request a 15 minutes timeout (30 seconds * 30) for debug builds.
+    requestLongerTimeout(30);
   }
 
   let uris;
