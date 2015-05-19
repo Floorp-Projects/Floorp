@@ -398,7 +398,107 @@ class NameResolver
                 return false;
             goto done;
 
-          case PNK_CLASSNAMES:
+          case PNK_DEFAULT:
+            MOZ_ASSERT(cur->isArity(PN_BINARY));
+            MOZ_ASSERT(!cur->pn_left);
+            if (!resolve(cur->pn_right, prefix))
+                return false;
+            goto done;
+
+          case PNK_YIELD_STAR:
+            MOZ_ASSERT(cur->isArity(PN_BINARY));
+            MOZ_ASSERT(cur->pn_right->isKind(PNK_NAME));
+            MOZ_ASSERT(!cur->pn_right->isAssigned());
+            if (!resolve(cur->pn_left, prefix))
+                return false;
+            goto done;
+
+          case PNK_YIELD:
+            MOZ_ASSERT(cur->isArity(PN_BINARY));
+            if (cur->pn_left) {
+                if (!resolve(cur->pn_left, prefix))
+                    return false;
+            }
+            MOZ_ASSERT((cur->pn_right->isKind(PNK_NAME) && !cur->pn_right->isAssigned()) ||
+                       (cur->pn_right->isKind(PNK_ASSIGN) &&
+                        cur->pn_right->pn_left->isKind(PNK_NAME) &&
+                        cur->pn_right->pn_right->isKind(PNK_GENERATOR)));
+            goto done;
+
+          case PNK_RETURN:
+            MOZ_ASSERT(cur->isArity(PN_BINARY));
+            if (ParseNode* returnValue = cur->pn_left) {
+                if (!resolve(returnValue, prefix))
+                    return false;
+            }
+#ifdef DEBUG
+            if (ParseNode* internalAssignForGenerators = cur->pn_right) {
+                MOZ_ASSERT(internalAssignForGenerators->isKind(PNK_NAME));
+                MOZ_ASSERT(internalAssignForGenerators->pn_atom == cx->names().dotGenRVal);
+                MOZ_ASSERT(internalAssignForGenerators->isAssigned());
+            }
+#endif
+            goto done;
+
+          case PNK_IMPORT:
+          case PNK_EXPORT_FROM:
+            MOZ_ASSERT(cur->isArity(PN_BINARY));
+            // The left halves of these nodes don't contain any unconstrained
+            // expressions, but it's very hard to assert this to safely rely on
+            // it.  So recur anyway.
+            if (!resolve(cur->pn_left, prefix))
+                return false;
+            MOZ_ASSERT(cur->pn_right->isKind(PNK_STRING));
+            goto done;
+
+          // Ternary nodes with three expression children.
+          case PNK_CONDITIONAL:
+            MOZ_ASSERT(cur->isArity(PN_TERNARY));
+            if (!resolve(cur->pn_kid1, prefix))
+                return false;
+            if (!resolve(cur->pn_kid2, prefix))
+                return false;
+            if (!resolve(cur->pn_kid3, prefix))
+                return false;
+            goto done;
+
+          // The first part of a for-in/of is the declaration in the loop (or
+          // null if no declaration).  The latter two parts are the location
+          // assigned each loop and the value being looped over; obviously,
+          // either might contain functions to name.  Declarations may (through
+          // computed property names, and possibly through [deprecated!]
+          // initializers) also contain functions to name.
+          case PNK_FORIN:
+          case PNK_FOROF:
+            MOZ_ASSERT(cur->isArity(PN_TERNARY));
+            if (ParseNode* decl = cur->pn_kid1) {
+                if (!resolve(decl, prefix))
+                    return false;
+            }
+            if (!resolve(cur->pn_kid2, prefix))
+                return false;
+            if (!resolve(cur->pn_kid3, prefix))
+                return false;
+            goto done;
+
+          // Every part of a for(;;) head may contain a function needing name
+          // resolution.
+          case PNK_FORHEAD:
+            MOZ_ASSERT(cur->isArity(PN_TERNARY));
+            if (ParseNode* init = cur->pn_kid1) {
+                if (!resolve(init, prefix))
+                    return false;
+            }
+            if (ParseNode* cond = cur->pn_kid2) {
+                if (!resolve(cond, prefix))
+                    return false;
+            }
+            if (ParseNode* step = cur->pn_kid3) {
+                if (!resolve(step, prefix))
+                    return false;
+            }
+            goto done;
+
           case PNK_OBJECT_PROPERTY_NAME:
           case PNK_CLASS:
           case PNK_CLASSMETHODLIST:
@@ -444,24 +544,15 @@ class NameResolver
           case PNK_EXPORT_SPEC_LIST:
           case PNK_SEQ:
           case PNK_ARGSBODY:
-          case PNK_DEFAULT:
-          case PNK_FORHEAD:
-          case PNK_CONDITIONAL:
-          case PNK_FORIN:
-          case PNK_FOROF:
           case PNK_IF:
           case PNK_TRY:
           case PNK_CATCH:
-          case PNK_YIELD_STAR:
-          case PNK_YIELD:
-          case PNK_RETURN:
           case PNK_LABEL:
           case PNK_DOT:
           case PNK_LEXICALSCOPE:
           case PNK_ARRAYCOMP:
-          case PNK_IMPORT:
-          case PNK_EXPORT_FROM:
           case PNK_NAME:
+          case PNK_CLASSNAMES:
             break; // for now
 
           case PNK_FUNCTION:
