@@ -417,7 +417,7 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
     // Draw a translation delay warning overlay
     int width;
     int border;
-    if ((now - mWarnTime).ToMilliseconds() < kVisualWarningDuration) {
+    if (!mWarnTime.IsNull() && (now - mWarnTime).ToMilliseconds() < kVisualWarningDuration) {
       EffectChain effects;
 
       // Black blorder
