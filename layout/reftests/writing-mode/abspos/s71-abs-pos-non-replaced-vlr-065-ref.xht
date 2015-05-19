@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+ <head>
+
+  <title>CSS Writing Modes Test: absolutely positioned non-replaced element - 'direction: ltr' and  'width' is 'auto', 'left' and 'right' are not 'auto'</title>
+
+
+
+  <link type="text/css" rel="stylesheet" href="support/ahem.css" />
+
+  <style type="text/css"><![CDATA[
+  div#containing-block
+    {
+      -ah-writing-mode: initial;
+      -webkit-writing-mode: initial;
+      writing-mode: initial;
+      direction: ltr;
+      color: transparent;
+      font: 80px/1 Ahem;
+      height: 320px;
+      position: relative;
+      width: 320px;
+    }
+
+  div#containing-block > span
+    {
+      background-color: red;
+      color: green;
+      position: absolute;
+      left: 2em; top: 1em;
+    }
+
+
+
+  ]]></style>
+
+ </head>
+
+ <body>
+
+  <p><img src="support/pass-cdts-abs-pos-non-replaced.png" width="246" height="36" alt="Image download support must be enabled" /></p>
+
+  <div id="containing-block">1 2 34<span>X</span></div>
+
+ </body>
+</html>
