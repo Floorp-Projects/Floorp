@@ -22,6 +22,8 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
  *   - label: the label used in the waterfall to identify the marker. Can be a
  *            string or just a function that accepts the marker and returns a string,
  *            if you want to use a dynamic property for the main label.
+ *            If you use a function for a label, it *must* handle the case where
+ *            no marker is provided for a main label to describe all markers of this type.
  *   - colorName: the label of the DevTools color used for this marker. If adding
  *                a new color, be sure to check that there's an entry for
  *                `.marker-details-bullet.{COLORNAME}` for the equivilent entry
@@ -78,7 +80,7 @@ const TIMELINE_BLUEPRINT = {
   "Javascript": {
     group: 1,
     colorName: "highlight-lightorange",
-    label: (marker) => marker.causeName,
+    label: getJSLabel,
   },
   "Parse HTML": {
     group: 1,
@@ -131,7 +133,7 @@ function getEventPhaseName (marker) {
   }
 }
 
-function getGCLabel (marker) {
+function getGCLabel (marker={}) {
   let label = L10N.getStr("timeline.label.garbageCollection");
   // Only if a `nonincrementalReason` exists, do we want to label
   // this as a non incremental GC event.
@@ -139,6 +141,13 @@ function getGCLabel (marker) {
     label = `${label} (Non-incremental)`;
   }
   return label;
+}
+
+function getJSLabel (marker={}) {
+  if ("causeName" in marker) {
+    return marker.causeName;
+  }
+  return L10N.getStr("timeline.label.javascript2");
 }
 
 // Exported symbols.
