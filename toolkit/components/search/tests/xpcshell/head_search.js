@@ -72,6 +72,31 @@ function dumpn(text)
 }
 
 /**
+ * Configure preferences to load engines from
+ * chrome://testsearchplugin/locale/searchplugins/
+ * unless the loadFromJars parameter is set to false.
+ */
+function configureToLoadJarEngines(loadFromJars = true)
+{
+  let defaultBranch = Services.prefs.getDefaultBranch(null);
+
+  let url = "chrome://testsearchplugin/locale/searchplugins/";
+  defaultBranch.setCharPref("browser.search.jarURIs", url);
+
+  defaultBranch.setBoolPref("browser.search.loadFromJars", loadFromJars);
+
+  // Give the pref a user set value that is the opposite of the default,
+  // to ensure user set values are ignored.
+  Services.prefs.setBoolPref("browser.search.loadFromJars", !loadFromJars)
+
+  // Ensure a test engine exists in the app dir anyway.
+  let dir = Services.dirsvc.get(NS_APP_SEARCH_DIR, Ci.nsIFile);
+  if (!dir.exists())
+    dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  do_get_file("data/engine-app.xml").copyTo(dir, "app.xml");
+}
+
+/**
  * Clean the profile of any metadata files left from a previous run.
  */
 function removeMetadata()

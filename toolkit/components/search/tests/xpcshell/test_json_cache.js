@@ -28,6 +28,10 @@ function getDir(aKey, aIFace) {
   return _dirSvc.get(aKey, aIFace || Ci.nsIFile);
 }
 
+function makeURI(uri) {
+  return Services.io.newURI(uri, null, null);
+}
+
 let cacheTemplate, appPluginsPath, profPlugins;
 
 /**
@@ -51,12 +55,59 @@ function run_test() {
   let engineTemplateFile = do_get_file("data/engine.xml");
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
-  // Add the app's searchplugins directory to the cache so it won't be ignored.
-  let appSearchPlugins = getDir(NS_APP_SEARCH_DIR);
-  appPluginsPath = appSearchPlugins.path;
-  cacheTemplate.directories[appPluginsPath] = {};
-  cacheTemplate.directories[appPluginsPath].lastModifiedTime = appSearchPlugins.lastModifiedTime;
-  cacheTemplate.directories[appPluginsPath].engines = [];
+  // Add the application's built-in plugin locations to the cache so it won't be ignored.
+  let filesToIgnore = []
+  let defaultBranch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
+
+  let loadFromJARs = false;
+  try {
+    loadFromJARs = defaultBranch.getBoolPref("loadFromJars");
+  } catch (ex) {}
+
+  if (!loadFromJARs) {
+    filesToIgnore.push(getDir(NS_APP_SEARCH_DIR));
+  } else {
+    let rootURIPref = defaultBranch.getCharPref("jarURIs");
+    let rootURIs = rootURIPref.split(",");
+    for (let root of rootURIs) {
+      let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                        getService(Ci.nsIChromeRegistry);
+      let chromeURI = chromeReg.convertChromeURL(makeURI(root));
+      if (chromeURI instanceof Ci.nsIJARURI) {
+        // JAR packaging, we only need the parent jar file.
+        let fileURI = chromeURI; // flat packaging
+        while (fileURI instanceof Ci.nsIJARURI)
+          fileURI = fileURI.JARFile;
+        fileURI.QueryInterface(Ci.nsIFileURL);
+        filesToIgnore.push(fileURI.file);
+      } else {
+        // flat packaging, we need to find each .xml file.
+        let listURL = root + "list.txt";
+        let chan = NetUtil.ioService.newChannelFromURI2(makeURI(listURL),
+                                                        null, // aLoadingNode
+                                                        Services.scriptSecurityManager.getSystemPrincipal(),
+                                                        null, // aTriggeringPrincipal
+                                                        Ci.nsILoadInfo.SEC_NORMAL,
+                                                        Ci.nsIContentPolicy.TYPE_OTHER);
+        let sis = Cc["@mozilla.org/scriptableinputstream;1"].
+                  createInstance(Ci.nsIScriptableInputStream);
+        sis.init(chan.open());
+        let list = sis.read(sis.available());
+        let names = list.split("\n").filter(n => !!n);
+        for (let name of names) {
+          let uri = chromeReg.convertChromeURL(makeURI(root + name + ".xml"));
+          filesToIgnore.push(uri.QueryInterface(Ci.nsIFileURL).file);
+        }
+      }
+    }
+  }
+
+  for (let file of filesToIgnore) {
+    cacheTemplate.directories[file.path] = {
+      lastModifiedTime: file.lastModifiedTime,
+      engines: []
+    };
+  }
 
   // Replace the profile placeholder with the correct path.
   profPlugins = engineFile.parent.path;
@@ -160,8 +211,12 @@ add_test(function test_cache_write() {
         // Check that the search.json cache matches the template
 
         let cacheWritten = readJSONFile(cache);
-        // Delete the app search plugins directory from the template since it's not currently written out.
-        delete cacheTemplate.directories[appPluginsPath];
+
+        // Delete the empty dirs from the template since they are not written out.
+        for (let dir of Object.keys(cacheTemplate.directories)) {
+          if (!cacheTemplate.directories[dir].engines.length)
+            delete cacheTemplate.directories[dir];
+        }
 
         do_print("Check search.json");
         isSubObjectOf(cacheTemplate, cacheWritten);
