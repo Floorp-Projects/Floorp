@@ -1,0 +1,61 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Cache with QuotaManager Restart</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+function resetStorage() {
+  return new Promise(function(resolve, reject) {
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var appId, inBrowser;
+    var nsIPrincipal = SpecialPowers.Components.interfaces.nsIPrincipal;
+    if (principal.appId != nsIPrincipal.UNKNOWN_APP_ID &&
+        principal.appId != nsIPrincipal.NO_APP_ID) {
+      appId = principal.appId;
+      inBrowser = principal.isInBrowserElement;
+    }
+    SpecialPowers.resetStorageForURI(document.documentURI, resolve, appId,
+                                     inBrowser);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true],
+          ["dom.quotaManager.testing", true]],
+}, function() {
+  var name = 'foo';
+  var url = './test_cache_add.js';
+  var cache;
+  caches.open(name).then(function(c) {
+    cache = c;
+    return cache.add(url);
+  }).then(function() {
+    return resetStorage();
+  }).then(function() {
+    return cache.match(url).then(function(resp) {
+      ok(false, 'old cache reference should not work after reset');
+    }).catch(function(err) {
+      ok(true, 'old cache reference should not work after reset');
+    });
+  }).then(function() {
+    return caches.open(name);
+  }).then(function(c) {
+    cache = c;
+    return cache.match(url);
+  }).then(function(resp) {
+    ok(!!resp, 'cache should work after QM reset');
+    return caches.delete(name);
+  }).then(function(success) {
+    ok(success, 'cache should be deleted');
+    SimpleTest.finish();
+  });
+});
+</script>
+</body>
+</html>
