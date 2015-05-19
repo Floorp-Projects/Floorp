@@ -2,29 +2,29 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-GENERATED_SOURCES += [
-    'a.cpp',
-    'b.cc',
-    'c.cxx',
+SOURCES += [
+    '!a.cpp',
+    '!b.cc',
+    '!c.cxx',
 ]
 
-GENERATED_SOURCES += [
-    'd.c',
+SOURCES += [
+    '!d.c',
 ]
 
-GENERATED_SOURCES += [
-    'e.m',
+SOURCES += [
+    '!e.m',
 ]
 
-GENERATED_SOURCES += [
-    'f.mm',
+SOURCES += [
+    '!f.mm',
 ]
 
-GENERATED_SOURCES += [
-    'g.S',
+SOURCES += [
+    '!g.S',
 ]
 
-GENERATED_SOURCES += [
-    'h.s',
-    'i.asm',
+SOURCES += [
+    '!h.s',
+    '!i.asm',
 ]
