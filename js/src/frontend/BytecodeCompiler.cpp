@@ -21,6 +21,7 @@
 #include "jsscriptinlines.h"
 
 #include "frontend/Parser-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::frontend;

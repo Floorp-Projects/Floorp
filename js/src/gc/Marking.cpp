@@ -39,6 +39,7 @@ using mozilla::DebugOnly;
 using mozilla::IsBaseOf;
 using mozilla::IsSame;
 using mozilla::MakeRange;
+using mozilla::PodCopy;
 
 // Tracing Overview
 // ================

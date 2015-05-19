@@ -1552,7 +1552,7 @@ JitcodeIonTable::WriteIonTable(CompactBufferWriter& writer,
 } // namespace jit
 } // namespace js
 
-JS::ForEachProfiledFrameOp::FrameHandle::FrameHandle(JSRuntime* rt, JitcodeGlobalEntry& entry,
+JS::ForEachProfiledFrameOp::FrameHandle::FrameHandle(JSRuntime* rt, js::jit::JitcodeGlobalEntry& entry,
                                                      void* addr, const char* label, uint32_t depth)
   : rt_(rt),
     entry_(entry),

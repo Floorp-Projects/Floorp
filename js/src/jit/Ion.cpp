@@ -46,6 +46,10 @@
 
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
+
+#include "jit/JitFrames-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
