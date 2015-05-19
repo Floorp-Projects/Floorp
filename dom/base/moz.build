@@ -380,8 +380,6 @@ EXTRA_COMPONENTS += [
     'contentAreaDropListener.manifest',
     'messageWakeupService.js',
     'messageWakeupService.manifest',
-    'SiteSpecificUserAgent.js',
-    'SiteSpecificUserAgent.manifest',
     'SlowScriptDebug.js',
     'SlowScriptDebug.manifest',
 ]
