@@ -1663,6 +1663,10 @@ nsPluginHost::GetSpecialType(const nsACString & aMIMEType)
     return eSpecialType_PDF;
   }
 
+  if (aMIMEType.LowerCaseEqualsASCII("application/vnd.unity")) {
+    return eSpecialType_Unity;
+  }
+
   // Java registers variants of its MIME with parameters, e.g.
   // application/x-java-vm;version=1.3
   const nsACString &noParam = Substring(aMIMEType, 0, aMIMEType.FindChar(';'));

@@ -286,6 +286,8 @@ public:
         // NPN_GetValue(NPNVdocumentOrigin) call before trying to dereference
         // its char* output.
         QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN        = 1 << 11,
+        // Win: Addresses a Unity bug with mouse capture.
+        QUIRK_UNITY_FIXUP_MOUSE_CAPTURE                 = 1 << 12,
     };
 
     int GetQuirks() { return mQuirks; }
