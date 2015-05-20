@@ -50,8 +50,6 @@ function sendSyncMsg(msg, data) {
 let CERTIFICATE_ERROR_PAGE_PREF = 'security.alternate_certificate_error_page';
 
 const OBSERVED_EVENTS = [
-  'ask-parent-to-exit-fullscreen',
-  'ask-parent-to-rollback-fullscreen',
   'xpcom-shutdown',
   'activity-done'
 ];
@@ -153,6 +151,11 @@ BrowserElementChild.prototype = {
 
     addEventListener("MozDOMFullscreen:NewOrigin",
                      this._mozFullscreenOriginChange.bind(this),
+                     /* useCapture = */ true,
+                     /* wantsUntrusted = */ false);
+
+    addEventListener("MozDOMFullscreen:Exited",
+                     this._mozExitedDomFullscreen.bind(this),
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
@@ -268,12 +271,6 @@ BrowserElementChild.prototype = {
     if (topic == 'activity-done' && docShell !== subject)
       return;
     switch (topic) {
-      case 'ask-parent-to-exit-fullscreen':
-        sendAsyncMsg('exit-fullscreen');
-        break;
-      case 'ask-parent-to-rollback-fullscreen':
-        sendAsyncMsg('rollback-fullscreen');
-        break;
       case 'activity-done':
         sendAsyncMsg('activitydone', { success: (data == 'activity-success') });
         break;
@@ -970,6 +967,10 @@ BrowserElementChild.prototype = {
     sendAsyncMsg("fullscreen-origin-change", {
       origin: e.target.nodePrincipal.origin
     });
+  },
+
+  _mozExitedDomFullscreen: function(e) {
+    sendAsyncMsg("exited-dom-fullscreen");
   },
 
   _getContentDimensions: function() {

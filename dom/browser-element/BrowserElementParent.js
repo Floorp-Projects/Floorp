@@ -85,7 +85,6 @@ function BrowserElementParent() {
   this._pendingSetInputMethodActive = [];
   this._nextPaintListeners = [];
 
-  Services.obs.addObserver(this, 'ask-children-to-exit-fullscreen', /* ownsWeak = */ true);
   Services.obs.addObserver(this, 'oop-frameloader-crashed', /* ownsWeak = */ true);
   Services.obs.addObserver(this, 'copypaste-docommand', /* ownsWeak = */ true);
 }
@@ -130,6 +129,11 @@ BrowserElementParent.prototype = {
     BrowserElementPromptService.mapFrameToBrowserElementParent(this._frameElement, this);
     this._setupMessageListener();
     this._registerAppManifest();
+
+    let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                .getService(Ci.nsIEventListenerService);
+    els.addSystemEventListener(this._window.document, "mozfullscreenchange",
+                               this._fullscreenChange.bind(this), true);
   },
 
   _runPendingAPICall: function() {
@@ -193,8 +197,7 @@ BrowserElementParent.prototype = {
       "got-can-go-forward": this._gotDOMRequestResult,
       "entered-dom-fullscreen": this._enteredDomFullscreen,
       "fullscreen-origin-change": this._fullscreenOriginChange,
-      "rollback-fullscreen": this._remoteFrameFullscreenReverted,
-      "exit-fullscreen": this._exitFullscreen,
+      "exited-dom-fullscreen": this._exitedDomFullscreen,
       "got-visible": this._gotDOMRequestResult,
       "visibilitychange": this._childVisibilityChange,
       "got-set-input-method-active": this._gotDOMRequestResult,
@@ -937,10 +940,6 @@ BrowserElementParent.prototype = {
     this._fireEventFromMsg(data);
   },
 
-  _exitFullscreen: function() {
-    this._windowUtils.exitFullscreen();
-  },
-
   _enteredDomFullscreen: function() {
     this._windowUtils.remoteFrameFullscreenChanged(this._frameElement);
   },
@@ -950,8 +949,16 @@ BrowserElementParent.prototype = {
       this._frameElement, "fullscreen-origin-change", data.json.origin);
   },
 
-  _remoteFrameFullscreenReverted: function(data) {
+  _exitedDomFullscreen: function(data) {
     this._windowUtils.remoteFrameFullscreenReverted();
+  },
+
+  _fullscreenChange: function(evt) {
+    if (this._isAlive() && evt.target == this._window.document) {
+      if (!this._window.document.mozFullScreen) {
+        this._sendAsyncMsg("exit-fullscreen");
+      }
+    }
   },
 
   _fireFatalError: function() {
@@ -965,13 +972,6 @@ BrowserElementParent.prototype = {
     case 'oop-frameloader-crashed':
       if (this._isAlive() && subject == this._frameLoader) {
         this._fireFatalError();
-      }
-      break;
-    case 'ask-children-to-exit-fullscreen':
-      if (this._isAlive() &&
-          this._frameElement.ownerDocument == subject &&
-          this._frameLoader.QueryInterface(Ci.nsIFrameLoader).tabParent) {
-        this._sendAsyncMsg('exit-fullscreen');
       }
       break;
     case 'copypaste-docommand':
