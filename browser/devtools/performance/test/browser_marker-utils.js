@@ -9,9 +9,11 @@ function spawnTest () {
   let { TIMELINE_BLUEPRINT } = devtools.require("devtools/shared/timeline/global");
   let Utils = devtools.require("devtools/shared/timeline/marker-utils");
 
+  Services.prefs.setBoolPref(PLATFORM_DATA_PREF, false);
+
   is(Utils.getMarkerLabel({ name: "DOMEvent" }), "DOM Event",
     "getMarkerLabel() returns a simple label");
-  is(Utils.getMarkerLabel({ name: "Javascript", causeName: "js" }), "js",
+  is(Utils.getMarkerLabel({ name: "Javascript", causeName: "setTimeout handler" }), "setTimeout",
     "getMarkerLabel() returns a label defined via function");
 
   ok(Utils.getMarkerFields({ name: "Paint" }).length === 0,
@@ -27,11 +29,17 @@ function spawnTest () {
   is(fields[0].value, "mouseclick", "getMarkerFields() returns an array with proper value");
 
   fields = Utils.getMarkerFields({ name: "DOMEvent", eventPhase: Ci.nsIDOMEvent.AT_TARGET, type: "mouseclick" });
-  is(fields.length, 2, "getMarkerFields() returns multiple fields when they exist");
-  is(fields[0].label, "Event Type:", "getMarkerFields() returns an array with proper label (ordered)");
-  is(fields[0].value, "mouseclick", "getMarkerFields() returns an array with proper value (ordered)");
-  is(fields[1].label, "Phase:", "getMarkerFields() returns an array with proper label (ordered)");
-  is(fields[1].value, "Target", "getMarkerFields() uses the `formatter` function when available");
+  is(fields.length, 2, "getMarkerFields() returns multiple fields when using a fields function");
+  is(fields[0].label, "Event Type:", "getMarkerFields() correctly returns fields via function (1)");
+  is(fields[0].value, "mouseclick", "getMarkerFields() correctly returns fields via function (2)");
+  is(fields[1].label, "Phase:", "getMarkerFields() correctly returns fields via function (3)");
+  is(fields[1].value, "Target", "getMarkerFields() correctly returns fields via function (4)");
+
+  is(Utils.getMarkerFields({ name: "Javascript", causeName: "Some Platform Field" })[0].value, "(Gecko)",
+    "Correctly obfuscates JS markers when platform data is off.");
+  Services.prefs.setBoolPref(PLATFORM_DATA_PREF, true);
+  is(Utils.getMarkerFields({ name: "Javascript", causeName: "Some Platform Field" })[0].value, "Some Platform Field",
+    "Correctly deobfuscates JS markers when platform data is on.");
 
   is(Utils.getMarkerClassName("Javascript"), "Function Call",
     "getMarkerClassName() returns correct string when defined via function");

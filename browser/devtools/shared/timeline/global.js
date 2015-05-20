@@ -4,14 +4,33 @@
 "use strict";
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
+loader.lazyRequireGetter(this, "ViewHelpers",
+  "resource:///modules/devtools/ViewHelpers.jsm", true);
+loader.lazyRequireGetter(this, "Services");
 
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+// String used to fill in platform data when it should be hidden.
+const GECKO_SYMBOL = "(Gecko)";
 
 /**
  * Localization convenience methods.
  */
 const STRINGS_URI = "chrome://browser/locale/devtools/timeline.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
+
+/**
+ * Monitor "show-platform-data" pref.
+ */
+const prefs = new ViewHelpers.Prefs("devtools.performance.ui", {
+  showPlatformData: ["Bool", "show-platform-data"]
+});
+
+let SHOW_PLATFORM_DATA = Services.prefs.getBoolPref("devtools.performance.ui.show-platform-data");
+prefs.registerObserver();
+prefs.on("pref-changed", (_,  prefName, prefValue) => {
+  if (prefName === "showPlatformData") {
+    SHOW_PLATFORM_DATA = prefValue;
+  }
+});
 
 /**
  * A simple schema for mapping markers to the timeline UI. The keys correspond
@@ -38,9 +57,9 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
  *             - property: The property that must exist on the marker to render, and
  *                         the value of the property will be displayed.
  *             - label: The name of the property that should be displayed.
- *             - formatter: If a formatter is provided, instead of directly using the `property`
- *                          property on the marker, the marker is passed into the formatter
- *                          function to determine the display value.
+ *
+ *             Can also be a function that returns an object. Each key in the object
+ *             will be rendered as a field, with its value rendering as the value.
  *
  * Whenever this is changed, browser_timeline_waterfall-styles.js *must* be
  * updated as well.
@@ -69,19 +88,13 @@ const TIMELINE_BLUEPRINT = {
     group: 1,
     colorName: "graphs-yellow",
     label: L10N.getStr("timeline.label.domevent"),
-    fields: [{
-      property: "type",
-      label: L10N.getStr("timeline.markerDetail.DOMEventType")
-    }, {
-      property: "eventPhase",
-      label: L10N.getStr("timeline.markerDetail.DOMEventPhase"),
-      formatter: getEventPhaseName
-    }]
+    fields: getDOMEventFields,
   },
   "Javascript": {
     group: 1,
     colorName: "graphs-yellow",
     label: getJSLabel,
+    fields: getJSFields,
   },
   "Parse HTML": {
     group: 1,
@@ -128,16 +141,6 @@ const TIMELINE_BLUEPRINT = {
  * A series of formatters used by the blueprint.
  */
 
-function getEventPhaseName (marker) {
-  if (marker.eventPhase === Ci.nsIDOMEvent.AT_TARGET) {
-    return L10N.getStr("timeline.markerDetail.DOMEventTargetPhase");
-  } else if (marker.eventPhase === Ci.nsIDOMEvent.CAPTURING_PHASE) {
-    return L10N.getStr("timeline.markerDetail.DOMEventCapturingPhase");
-  } else if (marker.eventPhase === Ci.nsIDOMEvent.BUBBLING_PHASE) {
-    return L10N.getStr("timeline.markerDetail.DOMEventBubblingPhase");
-  }
-}
-
 function getGCLabel (marker={}) {
   let label = L10N.getStr("timeline.label.garbageCollection");
   // Only if a `nonincrementalReason` exists, do we want to label
@@ -148,11 +151,62 @@ function getGCLabel (marker={}) {
   return label;
 }
 
+/**
+ * Mapping of JS marker causes to a friendlier form. Only
+ * markers that are considered "from content" should be labeled here.
+ */
+const JS_MARKER_MAP = {
+  "<script> element":          "Script Tag",
+  "setInterval handler":       "setInterval",
+  "setTimeout handler":        "setTimeout",
+  "FrameRequestCallback":      "requestAnimationFrame",
+  "promise callback":          "Promise Callback",
+  "promise initializer":       "Promise Init",
+  "Worker runnable":           "Worker",
+  "javascript: URI":           "JavaScript URI",
+  // As far as I know, the difference between these two
+  // event handler markers are differences in their webidl implementation.
+  "EventHandlerNonNull":       "Event Handler",
+  "EventListener.handleEvent": "Event Handler",
+};
+
 function getJSLabel (marker={}) {
+  let generic = L10N.getStr("timeline.label.javascript2");
   if ("causeName" in marker) {
-    return marker.causeName;
+    return JS_MARKER_MAP[marker.causeName] || generic;
   }
-  return L10N.getStr("timeline.label.javascript2");
+  return generic;
+}
+
+/**
+ * Returns a hash for computing a fields object for a JS marker. If the cause
+ * is considered content (so an entry exists in the JS_MARKER_MAP), do not display it
+ * since it's redundant with the label. Otherwise for Gecko code, either display
+ * the cause, or "(Gecko)", depending on if "show-platform-data" is set.
+ */
+function getJSFields (marker) {
+  if ("causeName" in marker && !JS_MARKER_MAP[marker.causeName]) {
+    return { Reason: (SHOW_PLATFORM_DATA ? marker.causeName : GECKO_SYMBOL) };
+  }
+}
+
+function getDOMEventFields (marker) {
+  let fields = Object.create(null);
+  if ("type" in marker) {
+    fields[L10N.getStr("timeline.markerDetail.DOMEventType")] = marker.type;
+  }
+  if ("eventPhase" in marker) {
+    let phase;
+    if (marker.eventPhase === Ci.nsIDOMEvent.AT_TARGET) {
+      phase = L10N.getStr("timeline.markerDetail.DOMEventTargetPhase");
+    } else if (marker.eventPhase === Ci.nsIDOMEvent.CAPTURING_PHASE) {
+      phase = L10N.getStr("timeline.markerDetail.DOMEventCapturingPhase");
+    } else if (marker.eventPhase === Ci.nsIDOMEvent.BUBBLING_PHASE) {
+      phase = L10N.getStr("timeline.markerDetail.DOMEventBubblingPhase");
+    }
+    fields[L10N.getStr("timeline.markerDetail.DOMEventPhase")] = phase;
+  }
+  return fields;
 }
 
 function getStylesFields (marker) {
