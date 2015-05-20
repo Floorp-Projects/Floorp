@@ -20,6 +20,12 @@ struct PRLibrary;
 struct nsPluginInfo;
 class nsNPAPIPlugin;
 
+namespace mozilla {
+namespace dom {
+struct FakePluginTagInit;
+} // namespace dom
+} // namespace mozilla
+
 // An interface representing plugin tags internally.
 #define NS_IINTERNALPLUGINTAG_IID \
 { 0xe8fdd227, 0x27da, 0x46ee,     \
@@ -194,12 +200,18 @@ public:
   NS_DECL_NSIPLUGINTAG
   NS_DECL_NSIFAKEPLUGINTAG
 
-  nsFakePluginTag();
+  static nsresult Create(const mozilla::dom::FakePluginTagInit& aInitDictionary,
+                         nsFakePluginTag** aPluginTag);
 
   bool IsEnabled() override;
   const nsCString& GetNiceFileName() override;
 
+  bool HandlerURIMatches(nsIURI* aURI);
+
+  nsIURI* HandlerURI() const { return mHandlerURI; }
+
 private:
+  nsFakePluginTag();
   virtual ~nsFakePluginTag();
 
   // The URI of the handler for our fake plugin.
