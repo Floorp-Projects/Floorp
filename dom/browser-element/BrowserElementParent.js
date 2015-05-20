@@ -191,7 +191,8 @@ BrowserElementParent.prototype = {
       "got-contentdimensions": this._gotDOMRequestResult,
       "got-can-go-back": this._gotDOMRequestResult,
       "got-can-go-forward": this._gotDOMRequestResult,
-      "fullscreen-origin-change": this._remoteFullscreenOriginChange,
+      "entered-dom-fullscreen": this._enteredDomFullscreen,
+      "fullscreen-origin-change": this._fullscreenOriginChange,
       "rollback-fullscreen": this._remoteFrameFullscreenReverted,
       "exit-fullscreen": this._exitFullscreen,
       "got-visible": this._gotDOMRequestResult,
@@ -940,9 +941,13 @@ BrowserElementParent.prototype = {
     this._windowUtils.exitFullscreen();
   },
 
-  _remoteFullscreenOriginChange: function(data) {
-    let origin = data.json._payload_;
-    this._windowUtils.remoteFrameFullscreenChanged(this._frameElement, origin);
+  _enteredDomFullscreen: function() {
+    this._windowUtils.remoteFrameFullscreenChanged(this._frameElement);
+  },
+
+  _fullscreenOriginChange: function(data) {
+    Services.obs.notifyObservers(
+      this._frameElement, "fullscreen-origin-change", data.json.origin);
   },
 
   _remoteFrameFullscreenReverted: function(data) {
