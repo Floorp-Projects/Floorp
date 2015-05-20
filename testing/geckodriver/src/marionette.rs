@@ -203,7 +203,13 @@ impl WebDriverHandler for MarionetteHandler {
         match self.connection.lock() {
             Ok(ref mut connection) => {
                 match connection.as_mut() {
-                    Some(conn) => conn.send_message(msg),
+                    Some(conn) => {
+                        let mut result = conn.send_message(msg);
+                        if let Err(ref mut x) = result {
+                            x.set_delete_session();
+                        };
+                        result
+                    },
                     None => panic!()
                 }
             },
