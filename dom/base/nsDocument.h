@@ -1179,8 +1179,8 @@ public:
   virtual bool IsFullscreenLeaf() override;
   virtual bool IsFullScreenDoc() override;
   virtual void SetApprovedForFullscreen(bool aIsApproved) override;
-  virtual nsresult RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
-                                                const nsAString& aNewOrigin) override;
+  virtual nsresult
+    RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement) override;
 
   virtual nsresult RemoteFrameFullscreenReverted() override;
   virtual nsIDocument* GetFullscreenRoot() override;

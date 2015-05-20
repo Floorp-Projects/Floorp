@@ -11357,18 +11357,6 @@ nsDocument::RestorePreviousFullScreenState()
           asyncDispatcher->PostDOMEvent();
         }
       }
-
-      if (!nsContentUtils::HaveEqualPrincipals(doc, fullScreenDoc)) {
-        // The origin which is fullscreen changed. Send a notification to
-        // the root process so that a warning or approval UI can be shown
-        // as necessary.
-        nsAutoString origin;
-        nsContentUtils::GetUTFOrigin(doc->NodePrincipal(), origin);
-        nsIDocument* root = nsContentUtils::GetRootDocument(doc);
-        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-        os->NotifyObservers(root, "fullscreen-origin-change", origin.get());
-      }
-
       break;
     }
   }
@@ -11631,31 +11619,16 @@ IsInActiveTab(nsIDocument* aDoc)
   return activeWindow == rootWin;
 }
 
-nsresult nsDocument::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
-                                                  const nsAString& aOrigin)
+nsresult nsDocument::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement)
 {
   // Ensure the frame element is the fullscreen element in this document.
   // If the frame element is already the fullscreen element in this document,
   // this has no effect.
   nsCOMPtr<nsIContent> content(do_QueryInterface(aFrameElement));
   FullScreenOptions opts;
-  RequestFullScreen(content->AsElement(),
-                    opts,
+  RequestFullScreen(content->AsElement(), opts,
                     /* aWasCallerChrome */ false,
                     /* aNotifyOnOriginChange */ false);
-
-  // Origin changed in child process, send notifiction, so that chrome can
-  // update the UI to reflect the fullscreen origin change if necessary.
-  // The BrowserElementChild listens on this, and forwards it over its
-  // parent process, where it is redispatched. Chrome (in the root process,
-  // which could be *this* process) listens for this notification so that
-  // it can show a warning or approval UI.
-  if (!aOrigin.IsEmpty()) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    os->NotifyObservers(nsContentUtils::GetRootDocument(this),
-                        "fullscreen-origin-change",
-                        PromiseFlatString(aOrigin).get());
-  }
 
   return NS_OK;
 }
@@ -11860,21 +11833,6 @@ nsDocument::RequestFullScreen(Element* aElement,
   NS_ASSERTION(c->AsElement() == aElement,
     "GetMozFullScreenElement should match GetFullScreenElement()");
 #endif
-
-  // The origin which is fullscreen changed, send a notifiction so that the
-  // root document knows the origin of the document which requested fullscreen.
-  // This is used for the fullscreen approval UI. If we're in a child
-  // process, the root BrowserElementChild listens for this notification,
-  // and forwards it across to its BrowserElementParent, which
-  // re-broadcasts the message for the root document in its process.
-  if (aNotifyOnOriginChange &&
-      !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    nsIDocument* root = nsContentUtils::GetRootDocument(this);
-    nsAutoString origin;
-    nsContentUtils::GetUTFOrigin(NodePrincipal(), origin);
-    os->NotifyObservers(root, "fullscreen-origin-change", origin.get());
-  }
 
   // Make the window full-screen. Note we must make the state changes above
   // before making the window full-screen, as then the document reports as
