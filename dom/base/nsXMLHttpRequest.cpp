@@ -1839,9 +1839,7 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
   } else if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT &&
              xmlHttpRequest->mResponseXML) {
     // Copy for our own use
-    uint32_t previousLength = xmlHttpRequest->mResponseBody.Length();
-    xmlHttpRequest->mResponseBody.Append(fromRawSegment,count);
-    if (count > 0 && xmlHttpRequest->mResponseBody.Length() == previousLength) {
+    if (!xmlHttpRequest->mResponseBody.Append(fromRawSegment, count, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
