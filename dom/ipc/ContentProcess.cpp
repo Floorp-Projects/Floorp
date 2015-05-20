@@ -64,56 +64,6 @@ SetUpSandboxEnvironment()
     return;
   }
 }
-
-#if defined(NIGHTLY_BUILD)
-static void
-CleanUpOldSandboxEnvironment()
-{
-  // Temporary code to clean up the old low integrity temp directories.
-  // The removal of this is tracked by bug 1165818.
-  nsCOMPtr<nsIFile> lowIntegrityMozilla;
-  nsresult rv = NS_GetSpecialDirectory(NS_WIN_LOCAL_APPDATA_LOW_DIR,
-                              getter_AddRefs(lowIntegrityMozilla));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  rv = lowIntegrityMozilla->Append(NS_LITERAL_STRING(MOZ_USER_DIR));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> iter;
-  rv = lowIntegrityMozilla->GetDirectoryEntries(getter_AddRefs(iter));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  bool more;
-  nsCOMPtr<nsISupports> elem;
-  while (NS_SUCCEEDED(iter->HasMoreElements(&more)) && more) {
-    rv = iter->GetNext(getter_AddRefs(elem));
-    if (NS_FAILED(rv)) {
-      break;
-    }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(elem);
-    if (!file) {
-      continue;
-    }
-
-    nsAutoString leafName;
-    rv = file->GetLeafName(leafName);
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-
-    if (leafName.Find(NS_LITERAL_STRING("MozTemp-{")) == 0) {
-      file->Remove(/* aRecursive */ true);
-    }
-  }
-}
-#endif
 #endif
 
 void
@@ -138,12 +88,11 @@ ContentProcess::Init()
     return true;
 }
 
+// Note: CleanUp() never gets called in non-debug builds because we exit early
+// in ContentChild::ActorDestroy().
 void
 ContentProcess::CleanUp()
 {
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX) && defined(NIGHTLY_BUILD)
-    CleanUpOldSandboxEnvironment();
-#endif
     mXREEmbed.Stop();
 }
 

@@ -694,6 +694,47 @@ CleanUpSandboxEnvironment()
   // Get and remove the low integrity Mozilla temp directory.
   // This function already warns if the deletion fails.
   unused << GetAndCleanLowIntegrityTemp(tempDirSuffix);
+
+#if defined(NIGHTLY_BUILD)
+  // Temporary code to clean up the old low integrity temp directories.
+  // The removal of this is tracked by bug 1165818.
+  nsCOMPtr<nsIFile> lowIntegrityMozilla;
+  nsresult rv = NS_GetSpecialDirectory(NS_WIN_LOW_INTEGRITY_TEMP_BASE,
+                              getter_AddRefs(lowIntegrityMozilla));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsISimpleEnumerator> iter;
+  rv = lowIntegrityMozilla->GetDirectoryEntries(getter_AddRefs(iter));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  bool more;
+  nsCOMPtr<nsISupports> elem;
+  while (NS_SUCCEEDED(iter->HasMoreElements(&more)) && more) {
+    rv = iter->GetNext(getter_AddRefs(elem));
+    if (NS_FAILED(rv)) {
+      break;
+    }
+
+    nsCOMPtr<nsIFile> file = do_QueryInterface(elem);
+    if (!file) {
+      continue;
+    }
+
+    nsAutoString leafName;
+    rv = file->GetLeafName(leafName);
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    if (leafName.Find(NS_LITERAL_STRING("MozTemp-{")) == 0) {
+      file->Remove(/* aRecursive */ true);
+    }
+  }
+#endif
 }
 #endif
 
