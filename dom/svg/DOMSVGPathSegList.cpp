@@ -541,7 +541,9 @@ DOMSVGPathSegList::
   MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
              "animVal list not in sync!");
 
-  animVal->mItems.InsertElementAt(aIndex, ItemProxy(nullptr, aInternalIndex));
+  MOZ_ALWAYS_TRUE(animVal->mItems.InsertElementAt(aIndex,
+                                                  ItemProxy(nullptr,
+                                                            aInternalIndex)));
 
   animVal->UpdateListIndicesFromIndex(aIndex + 1, 1 + aArgCountForItem);
 }
