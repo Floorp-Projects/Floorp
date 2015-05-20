@@ -18,7 +18,7 @@ Cu.import("resource:///modules/loop/LoopCalls.jsm");
 Cu.import("resource:///modules/loop/LoopRooms.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 const { MozLoopServiceInternal } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-const { LoopRoomsInternal } = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
+const { LoopRoomsInternal, timerHandlers } = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "MozLoopPushHandler",
                                   "resource:///modules/loop/MozLoopPushHandler.jsm");
