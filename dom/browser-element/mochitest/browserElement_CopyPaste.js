@@ -21,6 +21,7 @@ var defaultData;
 var pasteData;
 var focusScript;
 var createEmbededFrame = false;
+var testAccessibleCaret = false;
 
 function copyToClipboard(str) {
   gTextarea.value = str;
@@ -160,16 +161,24 @@ function dispatchTest(e) {
       break;
     default:
       if (createEmbededFrame || browserElementTestHelpers.getOOPByDefaultPref()) {
-        SimpleTest.finish();
+        if (testAccessibleCaret) {
+          SimpleTest.finish();
+          return;
+        } else {
+          testAccessibleCaret = true;
+          createEmbededFrame = false;
+          browserElementTestHelpers.setSelectionChangeEnabledPref(false);
+          browserElementTestHelpers.setAccessibleCaretEnabledPref(true);
+        }
       } else {
         createEmbededFrame = true;
-
-        // clean up and run test again.
-        document.body.removeChild(iframeOuter);
-        document.body.removeChild(gTextarea);
-        state = 0;
-        runTest();
       }
+
+      // clean up and run test again.
+      document.body.removeChild(iframeOuter);
+      document.body.removeChild(gTextarea);
+      state = 0;
+      runTest();
       break;
   }
 }
@@ -183,14 +192,17 @@ function isChildProcess() {
 function testSelectAll(e) {
   // Skip mozbrowser test if we're at child process.
   if (!isChildProcess()) {
-    iframeOuter.addEventListener("mozbrowserselectionstatechanged", function selectchangeforselectall(e) {
-      if (e.detail.states.indexOf('selectall') == 0) {
-        iframeOuter.removeEventListener("mozbrowserselectionstatechanged", selectchangeforselectall, true);
+    let eventName = testAccessibleCaret ? "mozbrowsercaretstatechanged" : "mozbrowserselectionstatechanged";
+    iframeOuter.addEventListener(eventName, function selectchangeforselectall(e) {
+      if (!e.detail.states || e.detail.states.indexOf('selectall') == 0) {
+        iframeOuter.removeEventListener(eventName, selectchangeforselectall, true);
         ok(true, "got mozbrowserselectionstatechanged event." + stateMeaning);
         ok(e.detail, "event.detail is not null." + stateMeaning);
         ok(e.detail.width != 0, "event.detail.width is not zero" + stateMeaning);
         ok(e.detail.height != 0, "event.detail.height is not zero" + stateMeaning);
-        ok(e.detail.states, "event.detail.state " + e.detail.states);
+        if (!testAccessibleCaret) {
+          ok(e.detail.states, "event.detail.state " + e.detail.states);
+        }
         SimpleTest.executeSoon(function() { testCopy1(e); });
       }
     }, true);
