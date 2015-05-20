@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 const {MozLoopService, LOOP_SESSION_TYPE} = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
@@ -34,6 +35,13 @@ this.EXPORTED_SYMBOLS = ["LoopRooms", "roomsPushNotification"];
 
 // The maximum number of clients that we support currently.
 const CLIENT_MAX_SIZE = 2;
+
+// Wait at least 5 seconds before doing opportunistic encryption.
+const MIN_TIME_BEFORE_ENCRYPTION = 5 * 1000;
+// Wait at maximum of 30 minutes before doing opportunistic encryption.
+const MAX_TIME_BEFORE_ENCRYPTION = 30 * 60 * 1000;
+// Wait time between individual re-encryption cycles (1 second).
+const TIME_BETWEEN_ENCRYPTIONS = 1000;
 
 const roomsPushNotification = function(version, channelID) {
   return LoopRoomsInternal.onNotification(version, channelID);
@@ -118,6 +126,23 @@ const checkForParticipantsUpdate = function(room, updatedRoom) {
 };
 
 /**
+ * These are wrappers which can be overriden by tests to allow us to manually
+ * handle the timeouts.
+ */
+let timerHandlers = {
+  /**
+   * Wrapper for setTimeout.
+   *
+   * @param  {Function} callback The callback function.
+   * @param  {Number}   delay    The delay in milliseconds.
+   * @return {Number}            The timer identifier.
+   */
+  startTimer(callback, delay) {
+    return setTimeout(callback, delay);
+  }
+};
+
+/**
  * The Rooms class.
  *
  * Each method that is a member of this class requires the last argument to be a
@@ -135,6 +160,19 @@ let LoopRoomsInternal = {
       gRoomsCache = new LoopRoomsCache();
     }
     return gRoomsCache;
+  },
+
+  /**
+   * @var {Object} encryptionQueue  This stores the list of rooms awaiting
+   *                                encryption and associated timers.
+   */
+  encryptionQueue: {
+    queue: [],
+    timer: null,
+    reset: function() {
+      this.queue = [];
+      this.timer = null;
+    }
   },
 
   /**
@@ -158,6 +196,64 @@ let LoopRoomsInternal = {
       count += room.participants.length;
     }
     return count;
+  },
+
+  /**
+   * Processes the encryption queue. Takes the next item off the queue,
+   * restarts the timer if necessary.
+   *
+   * Although this is only called from a timer callback, it is an async function
+   * so that tests can call it and be deterministic.
+   */
+  processEncryptionQueue: Task.async(function* () {
+    let roomToken = this.encryptionQueue.queue.shift();
+
+    // Performed in sync fashion so that we don't queue a timer until it has
+    // completed, and to make it easier to run tests.
+    let roomData = this.rooms.get(roomToken);
+
+    if (roomData) {
+      try {
+        // Passing the empty object for roomData is enough for the room to be
+        // re-encrypted.
+        yield LoopRooms.promise("update", roomToken, {});
+      } catch (error) {
+        MozLoopService.log.error("Upgrade encryption of room failed", error);
+        // No need to remove the room from the list as that's done in the shift above.
+      }
+    }
+
+    if (this.encryptionQueue.queue.length) {
+      this.encryptionQueue.timer =
+        timerHandlers.startTimer(this.processEncryptionQueue.bind(this), TIME_BETWEEN_ENCRYPTIONS);
+    } else {
+      this.encryptionQueue.timer = null;
+    }
+  }),
+
+  /**
+   * Queues a room for encryption sometime in the future. This is done so as
+   * not to overload the server or the browser when we initially request the
+   * list of rooms.
+   *
+   * @param {String} roomToken The token for the room that needs encrypting.
+   */
+  queueForEncryption: function(roomToken) {
+    if (!this.encryptionQueue.queue.includes(roomToken)) {
+      this.encryptionQueue.queue.push(roomToken);
+    }
+
+    // Set up encryption to happen at a random time later. There's a minimum
+    // wait time - we don't need to do this straight away, so no need if the user
+    // is starting up. We then add a random factor on top of that. This is to
+    // try and avoid any potential with a set of clients being restarted at the
+    // same time and flooding the server.
+    if (!this.encryptionQueue.timer) {
+      let waitTime = (MAX_TIME_BEFORE_ENCRYPTION - MIN_TIME_BEFORE_ENCRYPTION) *
+        Math.random() + MIN_TIME_BEFORE_ENCRYPTION;
+      this.encryptionQueue.timer =
+        timerHandlers.startTimer(this.processEncryptionQueue.bind(this), waitTime);
+    }
   },
 
   /**
@@ -312,7 +408,9 @@ let LoopRoomsInternal = {
     if (fallback) {
       // Fallback decryption succeeded, so we need to re-encrypt the room key and
       // save the data back again.
-      // XXX Bug 1152764 will implement this or make it a separate bug.
+      MozLoopService.log.debug("Fell back to saved key, queuing for encryption",
+        roomData.roomToken);
+      this.queueForEncryption(roomData.roomToken);
     } else if (!savedRoomKey || key != savedRoomKey) {
       // Decryption succeeded, but we don't have the right key saved.
       try {
@@ -370,6 +468,10 @@ let LoopRoomsInternal = {
         roomName: room.roomName
       };
       delete room.roomName;
+
+      // This room doesn't have context, so we'll save it for a later encryption
+      // cycle.
+      this.queueForEncryption(room.roomToken);
 
       this.saveAndNotifyUpdate(room, isUpdate);
     } else {
@@ -725,13 +827,16 @@ let LoopRoomsInternal = {
   update: function(roomToken, roomData, callback) {
     let room = this.rooms.get(roomToken);
     let url = "/rooms/" + encodeURIComponent(roomToken);
-
     if (!room.decryptedContext) {
       room.decryptedContext = {
         roomName: roomData.roomName || room.roomName
       };
     } else {
-      room.decryptedContext.roomName = roomData.roomName || room.roomName;
+      // room.roomName is the final fallback as this is pre-encryption support.
+      // Bug 1166283 is tracking the removal of the fallback.
+      room.decryptedContext.roomName = roomData.roomName ||
+                                       room.decryptedContext.roomName ||
+                                       room.roomName;
     }
     if (roomData.urls && roomData.urls.length) {
       // For now we only support adding one URL to the room context.
