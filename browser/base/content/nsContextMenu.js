@@ -1630,30 +1630,17 @@ nsContextMenu.prototype = {
     let onMessage = (message) => {
       mm.removeMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);
 
-      let itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
-      if (itemId == -1) {
-        PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                         , type: "bookmark"
-                                         , uri: uri
-                                         , title: message.data.title
-                                         , description: message.data.description
-                                         , hiddenRows: [ "description"
-                                                       , "location"
-                                                       , "loadInSidebar"
-                                                       , "keyword" ]
-                                         }, window.top);
-      }
-      else {
-        PlacesUIUtils.showBookmarkDialog({ action: "edit"
-                                         , type: "bookmark"
-                                         , itemId: itemId
-                                         }, window.top);
-      }
+      window.top.PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksMenuFolderId,
+                                                uri.spec,
+                                                message.data.title,
+                                                message.data.description)
+                                  .catch(Components.utils.reportError);
     };
     mm.addMessageListener("ContextMenu:BookmarkFrame:Result", onMessage);
 
     mm.sendAsyncMessage("ContextMenu:BookmarkFrame", null, { target: this.target });
   },
+
   markLink: function CM_markLink(origin) {
     // send link to social, if it is the page url linkURI will be null
     SocialMarks.markLink(origin, this.linkURI ? this.linkURI.spec : null, this.target);
