@@ -58,7 +58,7 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
         return ToOperand(def->output());
     }
 
-    MoveOperand toMoveOperand(const LAllocation* a) const;
+    MoveOperand toMoveOperand(LAllocation a) const;
 
     template <typename T1, typename T2>
     void bailoutCmp32(Assembler::Condition c, T1 lhs, T2 rhs, LSnapshot* snapshot) {

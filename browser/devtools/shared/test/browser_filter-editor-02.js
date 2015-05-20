@@ -47,7 +47,7 @@ add_task(function*() {
       expected: [
         {
           label: "url",
-          value: "\"chrome://browser/content/devtools/example.svg\"",
+          value: "chrome://browser/content/devtools/example.svg",
           unit: null
         }
       ]

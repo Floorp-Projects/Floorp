@@ -101,8 +101,8 @@ public:
   virtual Promise* GetFinished(ErrorResult& aRv);
   void Cancel();
   virtual void Finish(ErrorResult& aRv);
-  virtual void Play(LimitBehavior aLimitBehavior);
-  virtual void Pause();
+  virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior);
+  virtual void Pause(ErrorResult& aRv);
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
   // Wrapper functions for Animation DOM methods when called
@@ -117,13 +117,16 @@ public:
   void SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
                               ErrorResult& aRv);
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
-  virtual void PlayFromJS() { Play(LimitBehavior::AutoRewind); }
+  virtual void PlayFromJS(ErrorResult& aRv)
+  {
+    Play(aRv, LimitBehavior::AutoRewind);
+  }
   /**
    * PauseFromJS is currently only here for symmetry with PlayFromJS but
    * in future we will likely have to flush style in
    * CSSAnimation::PauseFromJS so we leave it for now.
    */
-  void PauseFromJS() { Pause(); }
+  void PauseFromJS(ErrorResult& aRv) { Pause(aRv); }
   // Wrapper functions for Animation DOM methods when called from style.
   //
   // Typically these DOM methods also notify style of changes but when
@@ -243,9 +246,8 @@ public:
    * "Playing" is different to "running". An animation in its delay phase is
    * still running but we only consider it playing when it is in its active
    * interval. This definition is used for fetching the animations that are
-   * are candidates for running on the compositor (since we don't ship
-   * animations to the compositor when they are in their delay phase or
-   * paused).
+   * candidates for running on the compositor (since we don't ship animations
+   * to the compositor when they are in their delay phase or paused).
    */
   bool IsPlaying() const
   {
@@ -281,8 +283,8 @@ protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void SilentlySetPlaybackRate(double aPlaybackRate);
   void DoCancel();
-  void DoPlay(LimitBehavior aLimitBehavior);
-  void DoPause();
+  void DoPlay(ErrorResult& aRv, LimitBehavior aLimitBehavior);
+  void DoPause(ErrorResult& aRv);
   void ResumeAt(const TimeDuration& aReadyTime);
   void PauseAt(const TimeDuration& aReadyTime);
   void FinishPendingAt(const TimeDuration& aReadyTime)
@@ -296,19 +298,27 @@ protected:
     }
   }
 
-  void UpdateTiming();
-  void UpdateFinishedState(bool aSeekFlag = false);
+  /**
+   * Finishing behavior depends on if changes to timing occurred due
+   * to a seek or regular playback.
+   */
+  enum class SeekFlag {
+    NoSeek,
+    DidSeek
+  };
+
+  void UpdateTiming(SeekFlag aSeekFlag);
+  void UpdateFinishedState(SeekFlag aSeekFlag);
   void UpdateEffect();
   void FlushStyle() const;
   void PostUpdate();
+
   /**
    * Remove this animation from the pending animation tracker and reset
    * mPendingState as necessary. The caller is responsible for resolving or
    * aborting the mReady promise as necessary.
    */
   void CancelPendingTasks();
-
-  bool IsFinished() const;
 
   bool IsPossiblyOrphanedPendingAnimation() const;
   StickyTimeDuration EffectEnd() const;
@@ -327,7 +337,7 @@ protected:
   Nullable<TimeDuration> mPreviousCurrentTime; // Animation timescale
   double mPlaybackRate;
 
-  // A Promise that is replaced on each call to Play() (and in future Pause())
+  // A Promise that is replaced on each call to Play()
   // and fulfilled when Play() is successfully completed.
   // This object is lazily created by GetReady.
   // See http://w3c.github.io/web-animations/#current-ready-promise

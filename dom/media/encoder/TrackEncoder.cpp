@@ -5,7 +5,7 @@
 #include "TrackEncoder.h"
 #include "AudioChannelFormat.h"
 #include "MediaStreamGraph.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "VideoUtils.h"
 
 #undef LOG

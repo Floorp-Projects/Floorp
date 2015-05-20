@@ -110,7 +110,7 @@ public:
   }
 
 private:
-  AutoFallibleTArray<Storage,2> mContents;
+  nsAutoTArray<Storage, 2> mContents;
 };
 
 /**

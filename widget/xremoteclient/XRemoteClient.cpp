@@ -12,7 +12,7 @@
 #include "prprf.h"
 #include "plstr.h"
 #include "prsystem.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prenv.h"
 #include "prdtoa.h"
 #include <stdlib.h>

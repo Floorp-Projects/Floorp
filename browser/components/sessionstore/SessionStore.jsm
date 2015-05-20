@@ -812,7 +812,7 @@ let SessionStoreInternal = {
         this.onBrowserCrashed(win, target);
         break;
       case "XULFrameLoaderCreated":
-        if (target.tagName == "browser" && target.frameLoader) {
+        if (target.tagName == "browser" && target.frameLoader && target.permanentKey) {
           this._lastKnownFrameLoader.set(target.permanentKey, target.frameLoader);
         }
         break;

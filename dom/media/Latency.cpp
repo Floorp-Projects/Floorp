@@ -6,7 +6,7 @@
 
 #include "Latency.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include <cmath>
 #include <algorithm>
 

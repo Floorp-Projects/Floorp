@@ -7,7 +7,7 @@
 #ifndef mozilla_image_ImageLogging_h
 #define mozilla_image_ImageLogging_h
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prinrval.h"
 #include "nsString.h"
 

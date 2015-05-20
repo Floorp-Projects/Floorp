@@ -18,7 +18,7 @@
 
 #include "nsError.h"
 #include "nsString.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include <windows.h>

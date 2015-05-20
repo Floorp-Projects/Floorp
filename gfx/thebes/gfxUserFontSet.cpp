@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
@@ -370,7 +370,7 @@ CopyWOFFMetadata(const uint8_t* aFontData,
     if (metaOffset >= aLength || metaCompLen > aLength - metaOffset) {
         return;
     }
-    if (!aMetadata->SetLength(woff->metaCompLen)) {
+    if (!aMetadata->SetLength(woff->metaCompLen, fallible)) {
         return;
     }
     memcpy(aMetadata->Elements(), aFontData + metaOffset, metaCompLen);

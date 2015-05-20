@@ -31,7 +31,7 @@
 #include "nsCRT.h"
 #include "nsXULAppAPI.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prinit.h"
 
 #include "mozilla/MemoryReporting.h"

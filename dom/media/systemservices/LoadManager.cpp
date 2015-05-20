@@ -6,7 +6,7 @@
 #include "LoadManager.h"
 #include "LoadMonitor.h"
 #include "nsString.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prtime.h"
 #include "prinrval.h"
 #include "prsystem.h"

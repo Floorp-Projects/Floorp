@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "MediaSourceDecoder.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaSource.h"

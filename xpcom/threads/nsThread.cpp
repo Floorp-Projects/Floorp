@@ -21,7 +21,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "pratom.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsIObserverService.h"
 #if !defined(MOZILLA_XPCOMRT_API)
 #include "mozilla/HangMonitor.h"

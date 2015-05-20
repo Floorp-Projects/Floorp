@@ -26,7 +26,14 @@ add_task(function* () {
 
   // Set a new title.
   yield ContentTask.spawn(browser, null, function* () {
-    content.document.title = "new title";
+    return new Promise(resolve => {
+      addEventListener("DOMTitleChanged", function onTitleChanged() {
+        removeEventListener("DOMTitleChanged", onTitleChanged);
+        resolve();
+      });
+
+      content.document.title = "new title";
+    });
   });
 
   // Remove the tab.

@@ -18,7 +18,7 @@
 #include "nsAutoPtr.h"
 #include "nsCocoaFeatures.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "VideoUtils.h"
 #include <algorithm>
 #include "gfxPlatform.h"

@@ -383,6 +383,10 @@ pref("browser.helperApps.deleteTempFileOnExit", true);
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
 
+// Tell the search service to load search plugins from the locale JAR
+pref("browser.search.loadFromJars", true);
+pref("browser.search.jarURIs", "chrome://browser/locale/searchplugins/");
+
 // pointer to the default engine name
 pref("browser.search.defaultenginename",      "chrome://browser-region/locale/region.properties");
 
@@ -1454,6 +1458,13 @@ pref("devtools.performance.ui.show-idle-blocks", true);
 pref("devtools.performance.ui.enable-memory", false);
 pref("devtools.performance.ui.enable-framerate", true);
 pref("devtools.performance.ui.show-jit-optimizations", false);
+
+// Enable experimental options in the UI only in Nightly
+#if defined(NIGHTLY_BUILD)
+pref("devtools.performance.ui.experimental", true);
+#else
+pref("devtools.performance.ui.experimental", false);
+#endif
 
 // The default cache UI setting
 pref("devtools.cache.disabled", false);

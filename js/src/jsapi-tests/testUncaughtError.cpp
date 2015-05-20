@@ -22,7 +22,7 @@ BEGIN_TEST(testUncaughtError)
         return false;
 
     Rooted<Value> err(cx);
-    if (!CreateError(cx, JSEXN_TYPEERR, JS::NullPtr(), empty, 0, 0, nullptr, empty, &err))
+    if (!CreateError(cx, JSEXN_TYPEERR, nullptr, empty, 0, 0, nullptr, empty, &err))
         return false;
 
     Rooted<JSObject*> errObj(cx, &err.toObject());

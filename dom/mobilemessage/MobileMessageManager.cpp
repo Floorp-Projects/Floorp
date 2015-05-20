@@ -356,7 +356,7 @@ MobileMessageManager::Delete(const Sequence<OwningLongOrMozSmsMessageOrMozMmsMes
 {
   const uint32_t size = aParams.Length();
   FallibleTArray<int32_t> idArray;
-  if (!idArray.SetLength(size)) {
+  if (!idArray.SetLength(size, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }

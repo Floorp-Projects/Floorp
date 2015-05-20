@@ -780,7 +780,7 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
       mValueNeedsReparsingEverySample = true;
     }
 
-    if (!parseOk || !result.SetCapacity(2)) {
+    if (!parseOk || !result.SetCapacity(2, mozilla::fallible)) {
       return NS_ERROR_FAILURE;
     }
 

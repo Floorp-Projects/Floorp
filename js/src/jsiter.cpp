@@ -457,7 +457,7 @@ GetCustomIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandle
             return false;
         RootedValue val(cx, ObjectValue(*obj));
         ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                          -1, val, js::NullPtr(), bytes.ptr());
+                          -1, val, nullptr, bytes.ptr());
         return false;
     }
     objp.set(&rval.toObject());

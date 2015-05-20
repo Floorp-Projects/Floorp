@@ -266,6 +266,20 @@ PL_DHashTableInit(PLDHashTable* aTable, const PLDHashTableOps* aOps,
   aTable->Init(aOps, aEntrySize, aLength);
 }
 
+void
+PL_DHashTableInit(PLDHashTable2* aTable, const PLDHashTableOps* aOps,
+                  uint32_t aEntrySize, uint32_t aLength)
+{
+  aTable->Init(aOps, aEntrySize, aLength);
+}
+
+PLDHashTable2::PLDHashTable2(const PLDHashTableOps* aOps, uint32_t aEntrySize,
+                             uint32_t aLength)
+  : PLDHashTable()
+{
+  PLDHashTable::Init(aOps, aEntrySize, aLength);
+}
+
 PLDHashTable& PLDHashTable::operator=(PLDHashTable&& aOther)
 {
   if (this == &aOther) {
@@ -373,6 +387,17 @@ void
 PL_DHashTableFinish(PLDHashTable* aTable)
 {
   aTable->Finish();
+}
+
+void
+PL_DHashTableFinish(PLDHashTable2* aTable)
+{
+  aTable->Finish();
+}
+
+PLDHashTable2::~PLDHashTable2()
+{
+  PLDHashTable::Finish();
 }
 
 // If |IsAdd| is true, the return value is always non-null and it may be a

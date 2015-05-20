@@ -520,7 +520,7 @@ struct ParamTraits<FallibleTArray<E> >
 
       memcpy(elements, outdata, pickledLength);
     } else {
-      if (!aResult->SetCapacity(length)) {
+      if (!aResult->SetCapacity(length, mozilla::fallible)) {
         return false;
       }
 

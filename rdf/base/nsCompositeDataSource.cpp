@@ -42,7 +42,7 @@
 
 #include "nsEnumeratorUtils.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prprf.h"
 #include <stdio.h>
 PRLogModuleInfo* nsRDFLog = nullptr;

@@ -3504,7 +3504,9 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     }
 
     this._highlighterPromise = this.getWalker().then(walker => {
-      return HighlighterActor(this, autohide);
+      let highlighter = HighlighterActor(this, autohide);
+      this.manage(highlighter);
+      return highlighter;
     });
     return this._highlighterPromise;
   }, {

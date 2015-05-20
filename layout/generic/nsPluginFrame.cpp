@@ -65,7 +65,7 @@
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG 1 /* Allow logging in the release build */
 #endif /* MOZ_LOGGING */
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #ifdef XP_MACOSX
 #include "gfxQuartzNativeDrawing.h"
