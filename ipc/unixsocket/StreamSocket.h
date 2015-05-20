@@ -56,6 +56,12 @@ public:
                int aDelayMs = 0);
 
   /**
+   * Queues the internal representation of socket for deletion. Can be called
+   * from main thread.
+   */
+  void Close();
+
+  /**
    * Get the current sockaddr for the socket
    */
   void GetSocketAddr(nsAString& aAddrStr);
@@ -68,7 +74,7 @@ public:
   // Methods for |SocketBase|
   //
 
-  void Close() override;
+  void CloseSocket() override;
 
 protected:
   virtual ~StreamSocket();
