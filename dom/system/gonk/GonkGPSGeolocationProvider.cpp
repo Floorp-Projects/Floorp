@@ -44,6 +44,7 @@
 #include "nsIMobileNetworkInfo.h"
 #include "nsIRadioInterfaceLayer.h"
 #include "nsIIccService.h"
+#include "nsIDataCallManager.h"
 #endif
 
 #ifdef AGPS_TYPE_INVALID
