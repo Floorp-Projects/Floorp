@@ -150,6 +150,22 @@ function getJSLabel (marker={}) {
   return L10N.getStr("timeline.label.javascript2");
 }
 
+function getStylesFields (marker) {
+  if ("restyleHint" in marker) {
+    return { "Restyle Hint": marker.restyleHint.replace(/eRestyle_/g, "") };
+  }
+}
+
+/**
+ * Takes a main label (like "Timestamp") and a property,
+ * and returns a marker that will print out the property
+ * value for a marker if it exists ("Timestamp (rendering)"),
+ * or just the main label if it does not.
+ */
+function sublabelForProperty (mainLabel, prop) {
+  return (marker={}) => marker[prop] ? `${mainLabel} (${marker[prop]})` : mainLabel;
+}
+
 // Exported symbols.
 exports.L10N = L10N;
 exports.TIMELINE_BLUEPRINT = TIMELINE_BLUEPRINT;
