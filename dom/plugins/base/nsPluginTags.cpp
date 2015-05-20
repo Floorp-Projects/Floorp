@@ -139,6 +139,39 @@ GetStatePrefNameForPlugin(nsPluginTag* aTag)
   return MakePrefNameForPlugin("state", aTag);
 }
 
+/* nsIInternalPluginTag */
+nsIInternalPluginTag::nsIInternalPluginTag(const char* aName,
+                                           const char* aDescription,
+                                           const char* aFileName,
+                                           const char* aVersion)
+  : mName(aName)
+  , mDescription(aDescription)
+  , mFileName(aFileName)
+  , mVersion(aVersion)
+{
+}
+
+nsIInternalPluginTag::nsIInternalPluginTag(const char* aName,
+                                           const char* aDescription,
+                                           const char* aFileName,
+                                           const char* aVersion,
+                                           const nsTArray<nsCString>& aMimeTypes,
+                                           const nsTArray<nsCString>& aMimeDescriptions,
+                                           const nsTArray<nsCString>& aExtensions)
+  : mName(aName)
+  , mDescription(aDescription)
+  , mFileName(aFileName)
+  , mVersion(aVersion)
+  , mMimeTypes(aMimeTypes)
+  , mMimeDescriptions(aMimeDescriptions)
+  , mExtensions(aExtensions)
+{
+}
+
+nsIInternalPluginTag::~nsIInternalPluginTag()
+{
+}
+
 /* nsPluginTag */
 
 uint32_t nsPluginTag::sNextId;
@@ -146,17 +179,15 @@ uint32_t nsPluginTag::sNextId;
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo,
                          int64_t aLastModifiedTime,
                          bool fromExtension)
-  : mId(sNextId++),
+  : nsIInternalPluginTag(aPluginInfo->fName, aPluginInfo->fDescription,
+                         aPluginInfo->fFileName, aPluginInfo->fVersion),
+    mId(sNextId++),
     mContentProcessRunningCount(0),
     mHadLocalInstance(false),
-    mName(aPluginInfo->fName),
-    mDescription(aPluginInfo->fDescription),
     mLibrary(nullptr),
     mIsJavaPlugin(false),
     mIsFlashPlugin(false),
-    mFileName(aPluginInfo->fFileName),
     mFullPath(aPluginInfo->fFullPath),
-    mVersion(aPluginInfo->fVersion),
     mLastModifiedTime(aLastModifiedTime),
     mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
     mCachedBlocklistStateValid(false),
@@ -182,16 +213,13 @@ nsPluginTag::nsPluginTag(const char* aName,
                          int64_t aLastModifiedTime,
                          bool fromExtension,
                          bool aArgsAreUTF8)
-  : mId(sNextId++),
+  : nsIInternalPluginTag(aName, aDescription, aFileName, aVersion),
+    mId(sNextId++),
     mContentProcessRunningCount(0),
-    mName(aName),
-    mDescription(aDescription),
     mLibrary(nullptr),
     mIsJavaPlugin(false),
     mIsFlashPlugin(false),
-    mFileName(aFileName),
     mFullPath(aFullPath),
-    mVersion(aVersion),
     mLastModifiedTime(aLastModifiedTime),
     mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
     mCachedBlocklistStateValid(false),
@@ -217,18 +245,13 @@ nsPluginTag::nsPluginTag(uint32_t aId,
                          bool aIsFlashPlugin,
                          int64_t aLastModifiedTime,
                          bool aFromExtension)
-  : mId(aId),
+  : nsIInternalPluginTag(aName, aDescription, aFileName, aVersion, aMimeTypes,
+                         aMimeDescriptions, aExtensions),
+    mId(aId),
     mContentProcessRunningCount(0),
-    mName(aName),
-    mDescription(aDescription),
-    mMimeTypes(aMimeTypes),
-    mMimeDescriptions(aMimeDescriptions),
-    mExtensions(aExtensions),
     mLibrary(nullptr),
     mIsJavaPlugin(aIsJavaPlugin),
     mIsFlashPlugin(aIsFlashPlugin),
-    mFileName(aFileName),
-    mVersion(aVersion),
     mLastModifiedTime(aLastModifiedTime),
     mNiceFileName(),
     mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
@@ -242,7 +265,7 @@ nsPluginTag::~nsPluginTag()
   NS_ASSERTION(!mNext, "Risk of exhausting the stack space, bug 486349");
 }
 
-NS_IMPL_ISUPPORTS(nsPluginTag, nsIPluginTag)
+NS_IMPL_ISUPPORTS(nsPluginTag, nsIPluginTag, nsIInternalPluginTag)
 
 void nsPluginTag::InitMime(const char* const* aMimeTypes,
                            const char* const* aMimeDescriptions,

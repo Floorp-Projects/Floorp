@@ -1673,8 +1673,8 @@ nsNPAPIPluginInstance::CarbonNPAPIFailure()
 static bool
 GetJavaVersionFromMimetype(nsPluginTag* pluginTag, nsCString& version)
 {
-  for (uint32_t i = 0; i < pluginTag->mMimeTypes.Length(); ++i) {
-    nsCString type = pluginTag->mMimeTypes[i];
+  for (uint32_t i = 0; i < pluginTag->MimeTypes().Length(); ++i) {
+    nsCString type = pluginTag->MimeTypes()[i];
     nsAutoCString jpi("application/x-java-applet;jpi-version=");
 
     int32_t idx = type.Find(jpi, false, 0, -1);
