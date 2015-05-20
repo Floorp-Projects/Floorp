@@ -57,6 +57,7 @@ const NFC_CID =
 const NFC_IPC_MSG_ENTRIES = [
   { permission: null,
     messages: ["NFC:AddEventListener",
+               "NFC:RemoveEventListener",
                "NFC:QueryInfo",
                "NFC:CallDefaultFoundHandler",
                "NFC:CallDefaultLostHandler"] },
@@ -256,10 +257,14 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     removeEventListener: function removeEventListener(target) {
       for (let id in this.eventListeners) {
         if (target == this.eventListeners[id]) {
-          delete this.eventListeners[id];
+          this.removeEventListenerById(id);
           break;
         }
       }
+    },
+
+    removeEventListenerById: function removeEventListenerById(id) {
+      delete this.eventListeners[id];
     },
 
     checkP2PRegistration: function checkP2PRegistration(message) {
@@ -384,6 +389,9 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           return null;
         case "NFC:AddEventListener":
           this.addEventListener(message.target, message.data.tabId);
+          return null;
+        case "NFC:RemoveEventListener":
+          this.removeEventListenerById(message.data.tabId);
           return null;
         case "NFC:RegisterPeerReadyTarget":
           this.registerPeerReadyTarget(message.target, message.data.appId);

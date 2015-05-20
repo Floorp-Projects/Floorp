@@ -345,6 +345,7 @@ MozNFCImpl.prototype = {
   _nfcContentHelper: null,
   window: null,
   _tabId: null,
+  _innerWindowId: null,
   _rfState: null,
   _contentObj: null,
   nfcPeer: null,
@@ -354,11 +355,18 @@ MozNFCImpl.prototype = {
   init: function init(aWindow) {
     debug("MozNFCImpl init called");
     this.window = aWindow;
+    let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils);
+    this._innerWindowId = util.currentInnerWindowID;
+
     this.defineEventHandlerGetterSetter("ontagfound");
     this.defineEventHandlerGetterSetter("ontaglost");
     this.defineEventHandlerGetterSetter("onpeerready");
     this.defineEventHandlerGetterSetter("onpeerfound");
     this.defineEventHandlerGetterSetter("onpeerlost");
+
+    Services.obs.addObserver(this, "inner-window-destroyed",
+                             /* weak-ref */ false);
 
     if (this._nfcContentHelper) {
       this._tabId = this.getTabId(aWindow);
@@ -439,6 +447,19 @@ MozNFCImpl.prototype = {
 
   get enabled() {
     return this._rfState != RFState.IDLE;
+  },
+
+  observe: function observe(subject, topic, data) {
+    if (topic !== "inner-window-destroyed") {
+      return;
+    }
+
+    let wId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    if (wId != this._innerWindowId) {
+      return;
+    }
+
+    this._nfcContentHelper.removeEventListener(this._tabId);
   },
 
   defineEventHandlerGetterSetter: function defineEventHandlerGetterSetter(name) {
@@ -699,7 +720,8 @@ MozNFCImpl.prototype = {
   contractID: "@mozilla.org/nfc/manager;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
                                          Ci.nsIDOMGlobalPropertyInitializer,
-                                         Ci.nsINfcEventListener]),
+                                         Ci.nsINfcEventListener,
+                                         Ci.nsIObserver]),
 };
 
 function NFCSendFileWrapper() {

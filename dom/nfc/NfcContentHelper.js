@@ -194,6 +194,12 @@ NfcContentHelper.prototype = {
     cpmm.sendAsyncMessage("NFC:AddEventListener", { tabId: tabId });
   },
 
+  removeEventListener: function removeEventListener(tabId) {
+    delete this.eventListeners[tabId];
+
+    cpmm.sendAsyncMessage("NFC:RemoveEventListener", { tabId: tabId });
+  },
+
   registerTargetForPeerReady: function registerTargetForPeerReady(appId) {
     cpmm.sendAsyncMessage("NFC:RegisterPeerReadyTarget", { appId: appId });
   },
