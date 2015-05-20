@@ -43,7 +43,8 @@ BEGIN_TEST(testXDR_bug506491)
         "function makeClosure(s, name, value) {\n"
         "    eval(s);\n"
         "    Math.sin(value);\n"
-        "    return let (n = name, v = value) function () { return String(v); };\n"
+        "    let n = name, v = value;\n"
+        "    return function () { return String(v); };\n"
         "}\n"
         "var f = makeClosure('0;', 'status', 'ok');\n";
 

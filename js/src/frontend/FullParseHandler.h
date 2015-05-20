@@ -591,14 +591,6 @@ class FullParseHandler
         block->pn_expr = body;
     }
 
-    ParseNode* newLetExpression(ParseNode* vars, ParseNode* block, const TokenPos& pos) {
-        ParseNode* letExpr = newBinary(PNK_LETEXPR, vars, block);
-        if (!letExpr)
-            return nullptr;
-        letExpr->pn_pos = pos;
-        return letExpr;
-    }
-
     ParseNode* newLetBlock(ParseNode* vars, ParseNode* block, const TokenPos& pos) {
         ParseNode* letBlock = newBinary(PNK_LETBLOCK, vars, block);
         if (!letBlock)

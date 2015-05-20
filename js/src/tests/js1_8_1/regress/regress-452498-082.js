@@ -73,21 +73,6 @@ function test()
   }
 
 // =====
-
-  if (typeof window == 'undefined')
-    global = this;
-  else
-    global = window;
-
-  try
-  {
-    eval('(function(){with(global){1e-81; }for(let [x, x3] = global -= x in []) function(){}})();');
-  }
-  catch(ex)
-  {
-  }
-
-// =====
   try
   {
     eval(
@@ -113,11 +98,6 @@ function test()
   catch(ex)
   {
   }
-
-// =====
-
-  var f = new Function("try { with({}) x = x; } catch(\u3056 if (function(){x = x2;})()) { let([] = [1.2e3.valueOf(\"number\")]) ((function(){})()); } ");
-  "" + f;
 
 // =====
 
