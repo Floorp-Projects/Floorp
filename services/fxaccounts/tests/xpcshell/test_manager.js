@@ -21,7 +21,13 @@ let deletedOnServer = false;
 let certExpired = false;
 
 // Mock RP
-let principal = {origin: 'app://settings.gaiamobile.org', appId: 27}
+function makePrincipal(origin, appId) {
+  let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                 .getService(Ci.nsIScriptSecurityManager);
+  let uri = Services.io.newURI(origin, null, null);
+  return secMan.getAppCodebasePrincipal(uri, appId, false);
+}
+let principal = makePrincipal('app://settings.gaiamobile.org', 27, false);
 
 // For override FxAccountsUIGlue.
 let fakeFxAccountsUIGlueCID;
@@ -443,15 +449,10 @@ add_test(function(test_getAssertion_refreshAuth) {
 add_test(function(test_getAssertion_no_permissions) {
   do_print("= getAssertion no permissions =");
 
-  let noPermissionsPrincipal = {origin: 'app://dummy', appId: 28};
-  let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                 .getService(Ci.nsIScriptSecurityManager);
-  let uri = Services.io.newURI(noPermissionsPrincipal.origin, null, null);
-  let _principal = secMan.getAppCodebasePrincipal(uri,
-    noPermissionsPrincipal.appId, false);
+  let noPermissionsPrincipal = makePrincipal('app://dummy', 28);
   let permMan = Cc["@mozilla.org/permissionmanager;1"]
                   .getService(Ci.nsIPermissionManager);
-  permMan.addFromPrincipal(_principal, FXACCOUNTS_PERMISSION,
+  permMan.addFromPrincipal(noPermissionsPrincipal, FXACCOUNTS_PERMISSION,
                            Ci.nsIPermissionManager.DENY_ACTION);
 
   FxAccountsUIGlue._activeSession = {
@@ -477,15 +478,10 @@ add_test(function(test_getAssertion_no_permissions) {
 add_test(function(test_getAssertion_permission_prompt_action) {
   do_print("= getAssertion PROMPT_ACTION permission =");
 
-  let promptPermissionsPrincipal = {origin: 'app://dummy-prompt', appId: 29};
-  let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                 .getService(Ci.nsIScriptSecurityManager);
-  let uri = Services.io.newURI(promptPermissionsPrincipal.origin, null, null);
-  let _principal = secMan.getAppCodebasePrincipal(uri,
-    promptPermissionsPrincipal.appId, false);
+  let promptPermissionsPrincipal = makePrincipal('app://dummy-prompt', 29);
   let permMan = Cc["@mozilla.org/permissionmanager;1"]
                   .getService(Ci.nsIPermissionManager);
-  permMan.addFromPrincipal(_principal, FXACCOUNTS_PERMISSION,
+  permMan.addFromPrincipal(promptPermissionsPrincipal, FXACCOUNTS_PERMISSION,
                            Ci.nsIPermissionManager.PROMPT_ACTION);
 
   FxAccountsUIGlue._activeSession = {
@@ -501,7 +497,7 @@ add_test(function(test_getAssertion_permission_prompt_action) {
       do_check_eq(result, "assertion");
 
       let permission = permMan.testPermissionFromPrincipal(
-        _principal,
+        promptPermissionsPrincipal,
         FXACCOUNTS_PERMISSION
       );
       do_check_eq(permission, Ci.nsIPermissionManager.ALLOW_ACTION);
@@ -518,15 +514,10 @@ add_test(function(test_getAssertion_permission_prompt_action) {
 add_test(function(test_getAssertion_permission_prompt_action_refreshing) {
   do_print("= getAssertion PROMPT_ACTION permission already refreshing =");
 
-  let promptPermissionsPrincipal = {origin: 'app://dummy-prompt-2', appId: 30};
-  let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                 .getService(Ci.nsIScriptSecurityManager);
-  let uri = Services.io.newURI(promptPermissionsPrincipal.origin, null, null);
-  let _principal = secMan.getAppCodebasePrincipal(uri,
-    promptPermissionsPrincipal.appId, false);
+  let promptPermissionsPrincipal = makePrincipal('app://dummy-prompt-2', 30);
   let permMan = Cc["@mozilla.org/permissionmanager;1"]
                   .getService(Ci.nsIPermissionManager);
-  permMan.addFromPrincipal(_principal, FXACCOUNTS_PERMISSION,
+  permMan.addFromPrincipal(promptPermissionsPrincipal, FXACCOUNTS_PERMISSION,
                            Ci.nsIPermissionManager.PROMPT_ACTION);
 
   FxAccountsUIGlue._activeSession = {
@@ -544,7 +535,7 @@ add_test(function(test_getAssertion_permission_prompt_action_refreshing) {
       do_check_null(result);
 
       let permission = permMan.testPermissionFromPrincipal(
-        _principal,
+        promptPermissionsPrincipal,
         FXACCOUNTS_PERMISSION
       );
       do_check_eq(permission, Ci.nsIPermissionManager.PROMPT_ACTION);
