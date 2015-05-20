@@ -9,16 +9,16 @@ var FullScreen = {
   init: function() {
     // called when we go into full screen, even if initiated by a web page script
     window.addEventListener("fullscreen", this, true);
-    window.messageManager.addMessageListener("MozEnteredDomFullscreen", this);
-    window.messageManager.addMessageListener("MozExitedDomFullscreen", this);
+    window.messageManager.addMessageListener("DOMFullscreen:Entered", this);
+    window.messageManager.addMessageListener("DOMFullscreen:Exited", this);
 
     if (window.fullScreen)
       this.toggle();
   },
 
   uninit: function() {
-    window.messageManager.removeMessageListener("MozEnteredDomFullscreen", this);
-    window.messageManager.removeMessageListener("MozExitedDomFullscreen", this);
+    window.messageManager.removeMessageListener("DOMFullscreen:Entered", this);
+    window.messageManager.removeMessageListener("DOMFullscreen:Exited", this);
     this.cleanup();
   },
 
@@ -94,7 +94,7 @@ var FullScreen = {
 
   receiveMessage: function(aMessage) {
     switch (aMessage.name) {
-      case "MozEnteredDomFullscreen": {
+      case "DOMFullscreen:Entered": {
         // If we're a multiprocess browser, then the request to enter
         // fullscreen did not bubble up to the root browser document -
         // it stopped at the root of the content document. That means
@@ -110,7 +110,7 @@ var FullScreen = {
         this.enterDomFullscreen(browser, data.origin);
         break;
       }
-      case "MozExitedDomFullscreen": {
+      case "DOMFullscreen:Exited": {
         document.documentElement.removeAttribute("inDOMFullscreen");
         this.cleanupDomFullscreen();
         this.showNavToolbox();
