@@ -76,7 +76,6 @@ private:
   BluetoothOppManager();
   bool Init();
   void HandleShutdown();
-
   void HandleVolumeStateChanged(nsISupports* aSubject);
 
   void StartFileTransfer();
@@ -145,12 +144,6 @@ private:
   int mPutPacketReceivedLength;
   int mBodySegmentLength;
   int mUpdateProgressCounter;
-
-  /**
-   * When it is true and the target service on target device couldn't be found,
-   * refreshing SDP records is necessary.
-   */
-  bool mNeedsUpdatingSdpRecords;
 
   /**
    * Set when StopSendingFile() is called.

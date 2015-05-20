@@ -166,10 +166,21 @@ Services.prefs.addObserver("signon.debug", prefChanged, false);
 prefChanged();
 
 var LoginManagerParent = {
+  /**
+   * Reference to the default LoginRecipesParent (instead of the initialization promise) for
+   * synchronous access. This is a temporary hack and new consumers should yield on
+   * recipeParentPromise instead.
+   *
+   * @type LoginRecipesParent
+   * @deprecated
+   */
+  _recipeManager: null,
+
   init: function() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
     mm.addMessageListener("RemoteLogins:findLogins", this);
+    mm.addMessageListener("RemoteLogins:findRecipes", this);
     mm.addMessageListener("RemoteLogins:onFormSubmit", this);
     mm.addMessageListener("RemoteLogins:autoCompleteLogins", this);
     mm.addMessageListener("RemoteLogins:updateLoginFormPresence", this);
@@ -179,8 +190,8 @@ var LoginManagerParent = {
 
     XPCOMUtils.defineLazyGetter(this, "recipeParentPromise", () => {
       const { LoginRecipesParent } = Cu.import("resource://gre/modules/LoginRecipes.jsm", {});
-      let parent = new LoginRecipesParent();
-      return parent.initializationPromise;
+      this._recipeManager = new LoginRecipesParent();
+      return this._recipeManager.initializationPromise;
     });
 
   },
@@ -207,6 +218,11 @@ var LoginManagerParent = {
                                   data.requestId,
                                   msg.target.messageManager);
         break;
+      }
+
+      case "RemoteLogins:findRecipes": {
+        let formHost = (new URL(data.formOrigin)).host;
+        return this._recipeManager.getRecipesForHost(formHost);
       }
 
       case "RemoteLogins:onFormSubmit": {

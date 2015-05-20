@@ -2,8 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <g fill="#edf0f1">
-    <rect x="2" y="7" width="12" height="2" />
-    <rect x="7" y="2" width="2" height="12" />
+  <g fill="#babec3">
+    <rect x="3" y="7" width="10" height="2" />
+    <rect x="7" y="3" width="2" height="10" />
   </g>
 </svg>

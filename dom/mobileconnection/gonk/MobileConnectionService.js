@@ -42,6 +42,7 @@ const LTECELLINFO_CID =
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID  = "nsPref:changed";
 const NS_NETWORK_ACTIVE_CHANGED_TOPIC_ID = "network-active-changed";
+const NS_DATA_CALL_ERROR_TOPIC_ID        = "data-call-error";
 
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 
@@ -1126,6 +1127,7 @@ function MobileConnectionService() {
 
   Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
   Services.obs.addObserver(this, NS_NETWORK_ACTIVE_CHANGED_TOPIC_ID, false);
+  Services.obs.addObserver(this, NS_DATA_CALL_ERROR_TOPIC_ID, false);
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   debug("init complete");
@@ -1148,6 +1150,7 @@ MobileConnectionService.prototype = {
   _shutdown: function() {
     Services.prefs.removeObserver(kPrefRilDebuggingEnabled, this);
     Services.obs.removeObserver(this, NS_NETWORK_ACTIVE_CHANGED_TOPIC_ID);
+    Services.obs.removeObserver(this, NS_DATA_CALL_ERROR_TOPIC_ID);
     Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   },
 
@@ -1417,6 +1420,15 @@ MobileConnectionService.prototype = {
           // Update connected flag only.
           provider.updateDataInfo({});
         }
+        break;
+      case NS_DATA_CALL_ERROR_TOPIC_ID:
+        let network = aSubject;
+        try {
+          if (network instanceof Ci.nsIRilNetworkInterface) {
+            let rilNetwork = network.QueryInterface(Ci.nsIRilNetworkInterface);
+            this.notifyDataError(rilNetwork.serviceId, rilNetwork);
+          }
+        } catch (e) {}
         break;
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
         if (aData === kPrefRilDebuggingEnabled) {

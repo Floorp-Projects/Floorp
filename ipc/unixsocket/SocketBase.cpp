@@ -340,7 +340,7 @@ SocketIORequestClosingRunnable::Run()
   SocketBase* socketBase = io->GetSocketBase();
   MOZ_ASSERT(socketBase);
 
-  socketBase->CloseSocket();
+  socketBase->Close();
 
   return NS_OK;
 }

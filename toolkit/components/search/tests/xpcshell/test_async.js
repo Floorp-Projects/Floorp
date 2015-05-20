@@ -9,9 +9,7 @@ function run_test() {
 
   do_load_manifest("data/chrome.manifest");
 
-  let url  = "chrome://testsearchplugin/locale/searchplugins/";
-  Services.prefs.setCharPref("browser.search.jarURIs", url);
-  Services.prefs.setBoolPref("browser.search.loadFromJars", true);
+  configureToLoadJarEngines();
 
   do_check_false(Services.search.isInitialized);
 
@@ -19,18 +17,14 @@ function run_test() {
     do_check_true(Components.isSuccessCode(aStatus));
     do_check_true(Services.search.isInitialized);
 
-    // test engines from dir are loaded.
+    // test engines from dir are not loaded.
     let engines = Services.search.getEngines();
-    do_check_true(engines.length > 1);
+    do_check_eq(engines.length, 1);
 
     // test jar engine is loaded ok.
     let engine = Services.search.getEngineByName("bug645970");
     do_check_neq(engine, null);
 
-    Services.prefs.clearUserPref("browser.search.jarURIs");
-    Services.prefs.clearUserPref("browser.search.loadFromJars");
-
     do_test_finished();
   });
 }
-

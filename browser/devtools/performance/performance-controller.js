@@ -33,6 +33,8 @@ devtools.lazyRequireGetter(this, "Waterfall",
   "devtools/shared/timeline/waterfall", true);
 devtools.lazyRequireGetter(this, "MarkerDetails",
   "devtools/shared/timeline/marker-details", true);
+devtools.lazyRequireGetter(this, "MarkerUtils",
+  "devtools/shared/timeline/marker-utils");
 devtools.lazyRequireGetter(this, "CallView",
   "devtools/shared/profiler/tree-view", true);
 devtools.lazyRequireGetter(this, "ThreadNode",
