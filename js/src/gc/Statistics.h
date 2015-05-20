@@ -240,8 +240,8 @@ struct Statistics
 
     int64_t startupTime;
 
+    /* File pointer used for MOZ_GCTIMER output. */
     FILE* fp;
-    bool fullFormat;
 
     /*
      * GCs can't really nest, but a second GC can be triggered from within the
