@@ -666,11 +666,9 @@ AudioContext::Shutdown()
 {
   mIsShutDown = true;
 
-  // We mute rather than suspending, because the delay between the ::Shutdown
-  // call and the CC would make us overbuffer in the MediaStreamGraph.
-  // See bug 936784 for details.
   if (!mIsOffline) {
-    Mute();
+    ErrorResult dummy;
+    nsRefPtr<Promise> ignored = Close(dummy);
   }
 
   // Release references to active nodes.
