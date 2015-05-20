@@ -11219,11 +11219,13 @@ ExitFullscreenInDocTree(nsIDocument* aMaybeNotARootDoc)
   NS_ASSERTION(!root->IsFullScreenDoc(),
     "Fullscreen root should no longer be a fullscreen doc...");
 
-  // Dispatch MozExitedDomFullscreen to the last document in
+  // Dispatch MozDOMFullscreen:Exited to the last document in
   // the list since we want this event to follow the same path
-  // MozEnteredDomFullscreen dispatched.
-  nsRefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-    changed.LastElement(), NS_LITERAL_STRING("MozExitedDomFullscreen"), true, true);
+  // MozDOMFullscreen:Entered dispatched.
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(changed.LastElement(),
+                             NS_LITERAL_STRING("MozDOMFullscreen:Exited"),
+                             true, true);
   asyncDispatcher->PostDOMEvent();
   // Move the top-level window out of fullscreen mode.
   SetWindowFullScreen(root, false);
@@ -11350,7 +11352,7 @@ nsDocument::RestorePreviousFullScreenState()
              !static_cast<nsDocument*>(doc)->mIsApprovedForFullscreen)) {
           nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
             new AsyncEventDispatcher(doc,
-                  NS_LITERAL_STRING("MozEnteredDomFullscreen"),
+                  NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
                   true,
                   true);
           asyncDispatcher->PostDOMEvent();
@@ -11378,7 +11380,7 @@ nsDocument::RestorePreviousFullScreenState()
     NS_ASSERTION(!nsContentUtils::GetRootDocument(this)->IsFullScreenDoc(),
                  "Should have cleared all docs' stacks");
     nsRefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      this, NS_LITERAL_STRING("MozExitedDomFullscreen"), true, true);
+      this, NS_LITERAL_STRING("MozDOMFullscreen:Exited"), true, true);
     asyncDispatcher->PostDOMEvent();
     SetWindowFullScreen(this, false);
   }
@@ -11828,7 +11830,7 @@ nsDocument::RequestFullScreen(Element* aElement,
       !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
     nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(this,
-                               NS_LITERAL_STRING("MozEnteredDomFullscreen"),
+                               NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
                                true,
                                true);
     asyncDispatcher->PostDOMEvent();
