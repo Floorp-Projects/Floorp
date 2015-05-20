@@ -41,16 +41,17 @@ const TEST_DATA = [
       name: "emMmiErrorInvalidPassword"
     }
   },
-  // TODO: Bug 906603 - B2G RIL: Support Change Call Barring Password on Emulator.
-  // Currently emulator doesn't support REQUEST_CHANGE_BARRING_PASSWORD, so we
-  // expect to get a 'RequestNotSupported' error here.
+  // Expect to succeed.
   {
-    password: "0000",
+    password: "0000",  // 0000 is the default password for call barring
     newPassword: "1234",
-    newPasswordAgain: "1234",
-    expectedError: {
-      name: "RequestNotSupported"
-    }
+    newPasswordAgain: "1234"
+  },
+  // Restore to the default password
+  {
+    password: "1234",
+    newPassword: "0000",
+    newPasswordAgain: "0000"
   }
 ];
 
