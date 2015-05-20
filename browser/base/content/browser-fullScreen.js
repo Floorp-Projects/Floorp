@@ -93,29 +93,34 @@ var FullScreen = {
   },
 
   receiveMessage: function(aMessage) {
-    if (aMessage.name == "MozEnteredDomFullscreen") {
-      // If we're a multiprocess browser, then the request to enter fullscreen
-      // did not bubble up to the root browser document - it stopped at the root
-      // of the content document. That means we have to kick off the switch to
-      // fullscreen here at the operating system level in the parent process
-      // ourselves.
-      let data = aMessage.data;
-      let browser = aMessage.target;
-      if (gMultiProcessBrowser && browser.getAttribute("remote") == "true") {
-        let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils);
-        windowUtils.remoteFrameFullscreenChanged(browser, data.origin);
+    switch (aMessage.name) {
+      case "MozEnteredDomFullscreen": {
+        // If we're a multiprocess browser, then the request to enter
+        // fullscreen did not bubble up to the root browser document -
+        // it stopped at the root of the content document. That means
+        // we have to kick off the switch to fullscreen here at the
+        // operating system level in the parent process ourselves.
+        let data = aMessage.data;
+        let browser = aMessage.target;
+        if (gMultiProcessBrowser && browser.getAttribute("remote") == "true") {
+          let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDOMWindowUtils);
+          windowUtils.remoteFrameFullscreenChanged(browser, data.origin);
+        }
+        this.enterDomFullscreen(browser, data.origin);
+        break;
       }
-      this.enterDomFullscreen(browser, data.origin);
-    } else if (aMessage.name == "MozExitedDomFullscreen") {
-      document.documentElement.removeAttribute("inDOMFullscreen");
-      this.cleanupDomFullscreen();
-      this.showNavToolbox();
-      // If we are still in fullscreen mode, re-hide
-      // the toolbox with animation.
-      if (window.fullScreen) {
-        this._shouldAnimate = true;
-        this.hideNavToolbox();
+      case "MozExitedDomFullscreen": {
+        document.documentElement.removeAttribute("inDOMFullscreen");
+        this.cleanupDomFullscreen();
+        this.showNavToolbox();
+        // If we are still in fullscreen mode, re-hide
+        // the toolbox with animation.
+        if (window.fullScreen) {
+          this._shouldAnimate = true;
+          this.hideNavToolbox();
+        }
+        break;
       }
     }
   },
