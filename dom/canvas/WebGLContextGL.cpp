@@ -159,9 +159,11 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb)
     if (!wfb) {
         gl->fBindFramebuffer(target, 0);
     } else {
-        wfb->BindTo(target);
-        GLuint framebuffername = wfb->GLName();
+        GLuint framebuffername = wfb->mGLName;
         gl->fBindFramebuffer(target, framebuffername);
+#ifdef ANDROID
+        wfb->mIsFB = true;
+#endif
     }
 
     switch (target) {
@@ -1691,9 +1693,22 @@ WebGLContext::IsFramebuffer(WebGLFramebuffer* fb)
     if (IsContextLost())
         return false;
 
-    return ValidateObjectAllowDeleted("isFramebuffer", fb) &&
-        !fb->IsDeleted() &&
-        fb->HasEverBeenBound();
+    if (!ValidateObjectAllowDeleted("isFramebuffer", fb))
+        return false;
+
+    if (fb->IsDeleted())
+        return false;
+
+#ifdef ANDROID
+    if (gl->WorkAroundDriverBugs() &&
+        gl->Renderer() == GLRenderer::AndroidEmulator)
+    {
+        return fb->mIsFB;
+    }
+#endif
+
+    MakeContextCurrent();
+    return gl->fIsFramebuffer(fb->mGLName);
 }
 
 bool

@@ -404,14 +404,18 @@ WebGLFramebuffer::AttachPoint::FinalizeAttachment(gl::GLContext* gl,
 // WebGLFramebuffer
 
 WebGLFramebuffer::WebGLFramebuffer(WebGLContext* webgl, GLuint fbo)
-    : WebGLBindableName<FBTarget>(fbo)
-    , WebGLContextBoundObject(webgl)
+    : WebGLContextBoundObject(webgl)
+    , mGLName(fbo)
     , mStatus(0)
     , mReadBufferMode(LOCAL_GL_COLOR_ATTACHMENT0)
     , mColorAttachment0(this, LOCAL_GL_COLOR_ATTACHMENT0)
     , mDepthAttachment(this, LOCAL_GL_DEPTH_ATTACHMENT)
     , mStencilAttachment(this, LOCAL_GL_STENCIL_ATTACHMENT)
     , mDepthStencilAttachment(this, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
+#ifdef ANDROID
+    , mIsFB(false)
+#endif
+
 {
     mContext->mFramebuffers.insertBack(this);
 }
@@ -432,6 +436,10 @@ WebGLFramebuffer::Delete()
     mContext->MakeContextCurrent();
     mContext->gl->fDeleteFramebuffers(1, &mGLName);
     LinkedListElement<WebGLFramebuffer>::removeFrom(mContext->mFramebuffers);
+
+#ifdef ANDROID
+    mIsFB = false;
+#endif
 }
 
 void
