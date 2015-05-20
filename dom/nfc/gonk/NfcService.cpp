@@ -312,14 +312,15 @@ NfcService::Start(nsINfcGonkEventListener* aListener)
   mListenSocketName = BASE_SOCKET_NAME;
 
   mListenSocket = new NfcListenSocket(this);
-  nsresult rv = mListenSocket->Listen(new NfcConnector(mListenSocketName),
-                                      mConsumer);
-  if (NS_FAILED(rv)) {
+
+  bool success = mListenSocket->Listen(new NfcConnector(mListenSocketName),
+                                       mConsumer);
+  if (!success) {
     mConsumer = nullptr;
-    return rv;
+    return NS_ERROR_FAILURE;
   }
 
-  rv = NS_NewNamedThread("NfcThread", getter_AddRefs(mThread));
+  nsresult rv = NS_NewNamedThread("NfcThread", getter_AddRefs(mThread));
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't create Nfc worker thread.");
     mListenSocket->Close();
