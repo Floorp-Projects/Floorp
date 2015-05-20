@@ -38,6 +38,8 @@ public:
   {
     nsIFrame* parent = GetParent();
     MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableFrame);
+    MOZ_ASSERT(!parent->GetPrevInFlow(),
+               "Col group should always be in a first-in-flow table frame");
     return static_cast<nsTableFrame*>(parent);
   }
 
