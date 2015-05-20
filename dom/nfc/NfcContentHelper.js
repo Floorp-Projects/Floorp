@@ -72,6 +72,7 @@ function NfcContentHelper() {
 
   this._requestMap = [];
   this.initDOMRequestHelper(/* window */ null, NFC_IPC_MSG_NAMES);
+  this.eventListeners = {};
 }
 
 NfcContentHelper.prototype = {
@@ -90,7 +91,7 @@ NfcContentHelper.prototype = {
   }),
 
   _requestMap: null,
-  eventListener: null,
+  eventListeners: null,
 
   queryRFState: function queryRFState() {
     return cpmm.sendSyncMessage("NFC:QueryInfo")[0].rfState;
@@ -189,7 +190,7 @@ NfcContentHelper.prototype = {
       };
     }
 
-    this.eventListener = listener;
+    this.eventListeners[tabId] = listener;
     cpmm.sendAsyncMessage("NFC:AddEventListener", { tabId: tabId });
   },
 
@@ -281,44 +282,7 @@ NfcContentHelper.prototype = {
         this.handleGeneralResponse(result);
         break;
       case "NFC:DOMEvent":
-        switch (result.event) {
-          case NFC.PEER_EVENT_READY:
-            this.eventListener.notifyPeerFound(result.sessionToken, /* isPeerReady */ true);
-            break;
-          case NFC.PEER_EVENT_FOUND:
-            this.eventListener.notifyPeerFound(result.sessionToken);
-            break;
-          case NFC.PEER_EVENT_LOST:
-            this.eventListener.notifyPeerLost(result.sessionToken);
-            break;
-          case NFC.TAG_EVENT_FOUND:
-            let ndefInfo = null;
-            if (result.tagType !== undefined &&
-                result.maxNDEFSize !== undefined &&
-                result.isReadOnly !== undefined &&
-                result.isFormatable !== undefined) {
-              ndefInfo = new TagNDEFInfo(result.tagType,
-                                         result.maxNDEFSize,
-                                         result.isReadOnly,
-                                         result.isFormatable);
-            }
-
-            let tagInfo = new TagInfo(result.techList, result.tagId);
-            this.eventListener.notifyTagFound(result.sessionToken,
-                                              tagInfo,
-                                              ndefInfo,
-                                              result.records);
-            break;
-          case NFC.TAG_EVENT_LOST:
-            this.eventListener.notifyTagLost(result.sessionToken);
-            break;
-          case NFC.RF_EVENT_STATE_CHANGED:
-            this.eventListener.notifyRFStateChanged(result.rfState);
-            break;
-          case NFC.FOCUS_CHANGED:
-            this.eventListener.notifyFocusChanged(result.focus);
-            break;
-        }
+        this.handleDOMEvent(result);
         break;
     }
   },
@@ -395,6 +359,53 @@ NfcContentHelper.prototype = {
 
     callback.notifySuccessWithByteArray(result.response);
   },
+
+  handleDOMEvent: function handleDOMEvent(result) {
+    let listener = this.eventListeners[result.tabId];
+    if (!listener) {
+      debug("no listener for tabId " + result.tabId);
+      return;
+    }
+
+    switch (result.event) {
+      case NFC.PEER_EVENT_READY:
+        listener.notifyPeerFound(result.sessionToken, /* isPeerReady */ true);
+        break;
+      case NFC.PEER_EVENT_FOUND:
+        listener.notifyPeerFound(result.sessionToken);
+        break;
+      case NFC.PEER_EVENT_LOST:
+        listener.notifyPeerLost(result.sessionToken);
+        break;
+      case NFC.TAG_EVENT_FOUND:
+        let ndefInfo = null;
+        if (result.tagType !== undefined &&
+            result.maxNDEFSize !== undefined &&
+            result.isReadOnly !== undefined &&
+            result.isFormatable !== undefined) {
+          ndefInfo = new TagNDEFInfo(result.tagType,
+                                     result.maxNDEFSize,
+                                     result.isReadOnly,
+                                     result.isFormatable);
+        }
+
+        let tagInfo = new TagInfo(result.techList, result.tagId);
+        listener.notifyTagFound(result.sessionToken,
+                                          tagInfo,
+                                          ndefInfo,
+                                          result.records);
+        break;
+      case NFC.TAG_EVENT_LOST:
+        listener.notifyTagLost(result.sessionToken);
+        break;
+      case NFC.RF_EVENT_STATE_CHANGED:
+        listener.notifyRFStateChanged(result.rfState);
+        break;
+      case NFC.FOCUS_CHANGED:
+        listener.notifyFocusChanged(result.focus);
+        break;
+    }
+  }
 };
 
 function TagNDEFInfo(tagType, maxNDEFSize, isReadOnly, isFormatable) {
