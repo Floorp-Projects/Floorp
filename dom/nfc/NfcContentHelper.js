@@ -90,16 +90,10 @@ NfcContentHelper.prototype = {
   }),
 
   _requestMap: null,
-  _rfState: null,
   eventListener: null,
 
-  init: function init(aWindow) {
-    let info = cpmm.sendSyncMessage("NFC:QueryInfo")[0];
-    this._rfState = info.rfState;
-  },
-
   queryRFState: function queryRFState() {
-    return this._rfState;
+    return cpmm.sendSyncMessage("NFC:QueryInfo")[0].rfState;
   },
 
   setFocusApp: function setFocusApp(tabId, isFocus) {
@@ -319,8 +313,7 @@ NfcContentHelper.prototype = {
             this.eventListener.notifyTagLost(result.sessionToken);
             break;
           case NFC.RF_EVENT_STATE_CHANGED:
-            this._rfState = result.rfState;
-            this.eventListener.notifyRFStateChanged(this._rfState);
+            this.eventListener.notifyRFStateChanged(result.rfState);
             break;
           case NFC.FOCUS_CHANGED:
             this.eventListener.notifyFocusChanged(result.focus);
