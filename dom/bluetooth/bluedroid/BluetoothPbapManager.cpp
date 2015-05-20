@@ -157,7 +157,7 @@ BluetoothPbapManager::Listen()
    * BT restarts.
    */
   if (mServerSocket) {
-    mServerSocket->CloseSocket();
+    mServerSocket->Close();
     mServerSocket = nullptr;
   }
 
@@ -511,7 +511,7 @@ void
 BluetoothPbapManager::Disconnect(BluetoothProfileController* aController)
 {
   if (mSocket) {
-    mSocket->CloseSocket();
+    mSocket->Close();
   } else {
     BT_WARNING("%s: No ongoing connection to disconnect", __FUNCTION__);
   }

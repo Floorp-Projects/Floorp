@@ -183,7 +183,7 @@ public:
   void Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mSocket->CloseSocket();
+    mSocket->Close();
   }
 
 private:
@@ -282,7 +282,7 @@ BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
 
   // Stop listening because currently we only support one connection at a time.
   if (mServerSocket) {
-    mServerSocket->CloseSocket();
+    mServerSocket->Close();
     mServerSocket = nullptr;
   }
 
@@ -352,7 +352,7 @@ BluetoothOppManager::Listen()
    * BT restarts.
    */
   if (mServerSocket) {
-    mServerSocket->CloseSocket();
+    mServerSocket->Close();
     mServerSocket = nullptr;
   }
 
@@ -1552,7 +1552,7 @@ void
 BluetoothOppManager::Disconnect(BluetoothProfileController* aController)
 {
   if (mSocket) {
-    mSocket->CloseSocket();
+    mSocket->Close();
   } else {
     BT_WARNING("%s: No ongoing file transfer to stop", __FUNCTION__);
   }
