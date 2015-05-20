@@ -307,8 +307,7 @@ SVGMotionSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
 
   // Replace destination's current value -- a point-on-a-path -- with the
   // translation that results from our addition.
-  dstArr.Clear();
-  dstArr.AppendElement(MotionSegment(newX, newY, rotateAngle));
+  dstArr.ReplaceElementAt(0, MotionSegment(newX, newY, rotateAngle));
   return NS_OK;
 }
 
