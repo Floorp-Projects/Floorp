@@ -549,9 +549,10 @@ nsProgressNotificationProxy::GetInterface(const nsIID& iid,
 
 static void
 NewRequestAndEntry(bool aForcePrincipalCheckForCacheEntry, imgLoader* aLoader,
+                   const ImageCacheKey& aKey,
                    imgRequest** aRequest, imgCacheEntry** aEntry)
 {
-  nsRefPtr<imgRequest> request = new imgRequest(aLoader);
+  nsRefPtr<imgRequest> request = new imgRequest(aLoader, aKey);
   nsRefPtr<imgCacheEntry> entry =
     new imgCacheEntry(aLoader, request, aForcePrincipalCheckForCacheEntry);
   aLoader->AddToUncachedImages(request);
@@ -894,18 +895,12 @@ void
 imgCacheEntry::SetHasNoProxies(bool hasNoProxies)
 {
   if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
-    nsRefPtr<ImageURL> uri;
-    mRequest->GetURI(getter_AddRefs(uri));
-    nsAutoCString spec;
-    if (uri) {
-      uri->GetSpec(spec);
-    }
     if (hasNoProxies) {
       LOG_FUNC_WITH_PARAM(GetImgLog(), "imgCacheEntry::SetHasNoProxies true",
-                          "uri", spec.get());
+                          "uri", mRequest->CacheKey().Spec());
     } else {
       LOG_FUNC_WITH_PARAM(GetImgLog(), "imgCacheEntry::SetHasNoProxies false",
-                          "uri", spec.get());
+                          "uri", mRequest->CacheKey().Spec());
     }
   }
 
@@ -1078,15 +1073,11 @@ imgCacheExpirationTracker::NotifyExpired(imgCacheEntry* entry)
   nsRefPtr<imgCacheEntry> kungFuDeathGrip(entry);
 
   if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
-    nsRefPtr<imgRequest> req(entry->GetRequest());
+    nsRefPtr<imgRequest> req = entry->GetRequest();
     if (req) {
-      nsRefPtr<ImageURL> uri;
-      req->GetURI(getter_AddRefs(uri));
-      nsAutoCString spec;
-      uri->GetSpec(spec);
       LOG_FUNC_WITH_PARAM(GetImgLog(),
                          "imgCacheExpirationTracker::NotifyExpired",
-                         "entry", spec.get());
+                         "entry", req->CacheKey().Spec());
     }
   }
 
@@ -1459,15 +1450,9 @@ imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
 bool
 imgLoader::SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry)
 {
-  if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
-    nsRefPtr<ImageURL> uri;
-    aRequest->GetURI(getter_AddRefs(uri));
-    nsAutoCString spec;
-    uri->GetSpec(spec);
-
-    LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
-                               "imgLoader::SetHasNoProxies", "uri", spec.get());
-  }
+  LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
+                             "imgLoader::SetHasNoProxies", "uri",
+                             aRequest->CacheKey().Spec());
 
   aEntry->SetHasNoProxies(true);
 
@@ -1498,10 +1483,7 @@ imgLoader::SetHasProxies(imgRequest* aRequest)
 {
   VerifyCacheSizes();
 
-  nsRefPtr<ImageURL> uri;
-  aRequest->GetURI(getter_AddRefs(uri));
-  ImageCacheKey key(uri);
-
+  const ImageCacheKey& key = aRequest->CacheKey();
   imgCacheTable& cache = GetCache(key);
 
   LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
@@ -1552,15 +1534,11 @@ imgLoader::CheckCacheLimits(imgCacheTable& cache, imgCacheQueue& queue)
     NS_ASSERTION(entry, "imgLoader::CheckCacheLimits -- NULL entry pointer");
 
     if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
-      nsRefPtr<imgRequest> req(entry->GetRequest());
+      nsRefPtr<imgRequest> req = entry->GetRequest();
       if (req) {
-        nsRefPtr<ImageURL> uri;
-        req->GetURI(getter_AddRefs(uri));
-        nsAutoCString spec;
-        uri->GetSpec(spec);
         LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
                                    "imgLoader::CheckCacheLimits",
-                                   "entry", spec.get());
+                                   "entry", req->CacheKey().Spec());
       }
     }
 
@@ -1878,36 +1856,30 @@ imgLoader::RemoveFromCache(imgCacheEntry* entry)
 
   nsRefPtr<imgRequest> request = entry->GetRequest();
   if (request) {
-    nsRefPtr<ImageURL> uri;
-    if (NS_SUCCEEDED(request->GetURI(getter_AddRefs(uri))) && uri) {
-      ImageCacheKey key(uri);
+    const ImageCacheKey& key = request->CacheKey();
+    imgCacheTable& cache = GetCache(key);
+    imgCacheQueue& queue = GetCacheQueue(key);
 
-      imgCacheTable& cache = GetCache(key);
-      imgCacheQueue& queue = GetCacheQueue(key);
+    LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
+                               "imgLoader::RemoveFromCache", "entry's uri",
+                               key.Spec());
 
-#ifdef DEBUG
-      LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
-                                 "imgLoader::RemoveFromCache", "entry's uri",
-                                 key.Spec());
-#endif
+    cache.Remove(key);
 
-      cache.Remove(key);
-
-      if (entry->HasNoProxies()) {
-        LOG_STATIC_FUNC(GetImgLog(),
-                        "imgLoader::RemoveFromCache removing from tracker");
-        if (mCacheTracker) {
-          mCacheTracker->RemoveObject(entry);
-        }
-        queue.Remove(entry);
+    if (entry->HasNoProxies()) {
+      LOG_STATIC_FUNC(GetImgLog(),
+                      "imgLoader::RemoveFromCache removing from tracker");
+      if (mCacheTracker) {
+        mCacheTracker->RemoveObject(entry);
       }
-
-      entry->SetEvicted(true);
-      request->SetIsInCache(false);
-      AddToUncachedImages(request);
-
-      return true;
+      queue.Remove(entry);
     }
+
+    entry->SetEvicted(true);
+    request->SetIsInCache(false);
+    AddToUncachedImages(request);
+
+    return true;
   }
 
   return false;
@@ -2189,7 +2161,8 @@ imgLoader::LoadImage(nsIURI* aURI,
 
     MOZ_ASSERT(NS_UsePrivateBrowsing(newChannel) == mRespectPrivacy);
 
-    NewRequestAndEntry(forcePrincipalCheck, this, getter_AddRefs(request),
+    NewRequestAndEntry(forcePrincipalCheck, this, key,
+                       getter_AddRefs(request),
                        getter_AddRefs(entry));
 
     PR_LOG(GetImgLog(), PR_LOG_DEBUG,
@@ -2440,15 +2413,23 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
                                   requestFlags, _retval);
     static_cast<imgRequestProxy*>(*_retval)->NotifyListener();
   } else {
-    // Default to doing a principal check because we don't know who
-    // started that load and whether their principal ended up being
-    // inherited on the channel.
-    NewRequestAndEntry(true, this, getter_AddRefs(request),
-                       getter_AddRefs(entry));
-
     // We use originalURI here to fulfil the imgIRequest contract on GetURI.
     nsCOMPtr<nsIURI> originalURI;
     channel->GetOriginalURI(getter_AddRefs(originalURI));
+
+    // XXX(seth): We should be able to just use |key| here, except that |key| is
+    // constructed above with the *current URI* and not the *original URI*. I'm
+    // pretty sure this is a bug, and it's preventing us from ever getting a
+    // cache hit in LoadImageWithChannel when redirects are involved.
+    ImageCacheKey originalURIKey(originalURI);
+
+    // Default to doing a principal check because we don't know who
+    // started that load and whether their principal ended up being
+    // inherited on the channel.
+    NewRequestAndEntry(/* aForcePrincipalCheckForCacheEntry = */ true,
+                       this, originalURIKey,
+                       getter_AddRefs(request),
+                       getter_AddRefs(entry));
 
     // No principal specified here, because we're not passed one.
     // In LoadImageWithChannel, the redirects that may have been
@@ -2467,7 +2448,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
     pl.forget(listener);
 
     // Try to add the new request into the cache.
-    PutIntoCache(ImageCacheKey(originalURI), entry);
+    PutIntoCache(originalURIKey, entry);
 
     rv = CreateNewProxyForRequest(request, loadGroup, aObserver,
                                   requestFlags, _retval);
@@ -2719,6 +2700,7 @@ imgCacheValidator::imgCacheValidator(nsProgressNotificationProxy* progress,
    mHadInsecureRedirect(false)
 {
   NewRequestAndEntry(forcePrincipalCheckForCacheEntry, loader,
+                     mRequest->CacheKey(),
                      getter_AddRefs(mNewRequest),
                      getter_AddRefs(mNewEntry));
 }
@@ -2847,7 +2829,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   // Try to add the new request into the cache. Note that the entry must be in
   // the cache before the proxies' ownership changes, because adding a proxy
   // changes the caching behaviour for imgRequests.
-  mImgLoader->PutIntoCache(ImageCacheKey(originalURI), mNewEntry);
+  mImgLoader->PutIntoCache(mNewRequest->CacheKey(), mNewEntry);
 
   uint32_t count = mProxies.Count();
   for (int32_t i = count-1; i>=0; i--) {
