@@ -27,6 +27,6 @@ exports.getTabForWindow = getTabForWindow;
 exports.getTabForRawTab = modelFor;
 
 function getTabForBrowser(browser) {
-  return modelFor(getRawTabForBrowser(browser));
+  return modelFor(getRawTabForBrowser(browser)) || null;
 }
 exports.getTabForBrowser = getTabForBrowser;
