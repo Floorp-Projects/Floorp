@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "loopUtils",
   "resource:///modules/loop/utils.js", "utils");
 XPCOMUtils.defineLazyModuleGetter(this, "loopCrypto",
   "resource:///modules/loop/crypto.js", "LoopCrypto");
+XPCOMUtils.defineLazyModuleGetter(this, "ObjectUtils",
+  "resource://gre/modules/ObjectUtils.jsm");
 
 
 this.EXPORTED_SYMBOLS = ["LoopRooms", "roomsPushNotification"];
@@ -310,24 +312,12 @@ let LoopRoomsInternal = {
    *                                any decrypted data.
    *                   - all: The roomData with both encrypted and decrypted
    *                          information.
+   *                   If rejected, encryption has failed. This could be due to
+   *                   missing keys for FxA, which this process can't manage. It
+   *                   is generally expected the panel will prompt the user for
+   *                   re-auth if the FxA keys are missing.
    */
   promiseEncryptRoomData: Task.async(function* (roomData) {
-    // XXX We should only return unencrypted data whilst we're still working
-    // on context. Once bug 1115340 is fixed, this function should no longer be
-    // here.
-    function getUnencryptedData() {
-      var serverRoomData = extend({}, roomData);
-      delete serverRoomData.decryptedContext;
-
-      // We can only save roomName as non-encypted data for now.
-      serverRoomData.roomName = roomData.decryptedContext.roomName;
-
-      return {
-        all: roomData,
-        encrypted: serverRoomData
-      };
-    }
-
     var newRoomData = extend({}, roomData);
 
     if (!newRoomData.context) {
@@ -337,17 +327,7 @@ let LoopRoomsInternal = {
     // First get the room key.
     let key = yield this.promiseGetOrCreateRoomKey(newRoomData);
 
-    try {
-      newRoomData.context.wrappedKey = yield this.promiseEncryptedRoomKey(key);
-    }
-    catch (ex) {
-      // XXX Bug 1153788 should remove this, then we can remove the whole
-      // try/catch.
-      if (ex.message == "FxA re-register not implemented") {
-        return getUnencryptedData();
-      }
-      return Promise.reject(ex);
-    }
+    newRoomData.context.wrappedKey = yield this.promiseEncryptedRoomKey(key);
 
     // Now encrypt the actual data.
     newRoomData.context.value = yield loopCrypto.encryptBytes(key,
@@ -461,9 +441,7 @@ let LoopRoomsInternal = {
       // We don't do anything with roomUrl here as it doesn't need a key
       // string adding at this stage.
 
-      // No encrypted data, use the old roomName field.
-      // XXX Bug 1152764 will add functions for automatically encrypting the room
-      // name.
+      // No encrypted data yet, use the old roomName field.
       room.decryptedContext = {
         roomName: room.roomName
       };
@@ -475,7 +453,11 @@ let LoopRoomsInternal = {
 
       this.saveAndNotifyUpdate(room, isUpdate);
     } else {
-      // XXX Don't decrypt if same?
+      // We could potentially optimise this later by not decrypting if the
+      // encrypted context hasn't already changed. However perf doesn't seem
+      // to be too bigger an issue at the moment, so we just decrypt for now.
+      // If we do change this, then we need to make sure we get the new room
+      // data setup properly, as happens at the end of promiseDecryptRoomData.
       try {
         let roomData = yield this.promiseDecryptRoomData(room);
 
@@ -851,17 +833,9 @@ let LoopRoomsInternal = {
         context: encrypted.context
       };
 
-      // If we're not encrypting currently, then only send the roomName.
-      // XXX This should go away once bug 1153788 is fixed.
-      if (!sendData.context) {
-        sendData = {
-          roomName: room.decryptedContext.roomName
-        };
-      } else {
-        // This might be an upgrade to encrypted rename, so store the key
-        // just in case.
-        yield this.roomsCache.setKey(this.sessionType, all.roomToken, all.roomKey);
-      }
+      // This might be an upgrade to encrypted rename, so store the key
+      // just in case.
+      yield this.roomsCache.setKey(this.sessionType, all.roomToken, all.roomKey);
 
       let response = yield MozLoopService.hawkRequest(this.sessionType,
           url, "PATCH", sendData);
