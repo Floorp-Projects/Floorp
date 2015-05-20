@@ -11,7 +11,7 @@ dependencies = [
  "regex 0.1.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
- "webdriver 0.1.0 (git+https://github.com/jgraham/webdriver-rust.git)",
+ "webdriver 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -243,8 +243,8 @@ dependencies = [
 
 [[package]]
 name = "webdriver"
-version = "0.1.0"
-source = "git+https://github.com/jgraham/webdriver-rust.git#7623fabea3df5ecde77a053e4bb702c5c6fab13b"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "hyper 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
