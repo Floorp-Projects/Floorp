@@ -65,10 +65,11 @@ impl<T: WebDriverHandler> Dispatcher<T> {
                             self.session = Some(Session::new(new_session.sessionId.clone()));
                         },
                         Ok(WebDriverResponse::DeleteSession) => {
-                            debug!("Deleting session");
-                            self.handler.delete_session(&self.session);
-                            self.session = None;
+                            self.delete_session();
                         },
+                        Err(ref x) if x.delete_session() => {
+                            self.delete_session();
+                        }
                         _ => {}
                     }
 
@@ -82,6 +83,12 @@ impl<T: WebDriverHandler> Dispatcher<T> {
                 Err(_) => panic!("Error receiving message in handler")
             }
         }
+    }
+
+    fn delete_session(&mut self) {
+        debug!("Deleting session");
+        self.handler.delete_session(&self.session);
+        self.session = None;
     }
 
     fn check_session(&self, msg: &WebDriverMessage) -> WebDriverResult<()> {
