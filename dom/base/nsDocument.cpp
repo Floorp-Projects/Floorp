@@ -11351,10 +11351,9 @@ nsDocument::RestorePreviousFullScreenState()
             (!nsContentUtils::IsSitePermAllow(doc->NodePrincipal(), "fullscreen") &&
              !static_cast<nsDocument*>(doc)->mIsApprovedForFullscreen)) {
           nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-            new AsyncEventDispatcher(doc,
-                  NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
-                  true,
-                  true);
+            new AsyncEventDispatcher(
+                doc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
+                /* Bubbles */ true, /* ChromeOnly */ true);
           asyncDispatcher->PostDOMEvent();
         }
       }
@@ -11820,19 +11819,32 @@ nsDocument::RequestFullScreen(Element* aElement,
       nsContentUtils::IsSitePermAllow(NodePrincipal(), "fullscreen");
   }
 
-  // If this document, or a document with the same principal has not
-  // already been approved for fullscreen this fullscreen-session, dispatch
-  // an event so that chrome knows to pop up a warning/approval UI.
-  // Note previousFullscreenDoc=nullptr upon first entry, so we always
-  // take this path on the first time we enter fullscreen in a fullscreen
-  // session.
-  if (!mIsApprovedForFullscreen ||
+  // If it is the first entry of the fullscreen, trigger an event so
+  // that the UI can response to this change, e.g. hide chrome, or
+  // notifying parent process to enter fullscreen. Note that chrome
+  // code may also want to listen to MozDOMFullscreen:NewOrigin event
+  // to pop up warning/approval UI.
+  if (!previousFullscreenDoc) {
+    nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(
+        this, NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
+        /* Bubbles */ true, /* ChromeOnly */ true);
+    asyncDispatcher->PostDOMEvent();
+  }
+
+  // The origin which is fullscreen gets changed. Trigger an event so
+  // that the chrome knows to pop up a warning/approval UI. Note that
+  // previousFullscreenDoc == nullptr upon first entry, so we always
+  // take this path on the first entry. Also note that, in a multi-
+  // process browser, the code in content process is responsible for
+  // sending message with the origin to its parent, and the parent
+  // shouldn't rely on this event itself.
+  if (aNotifyOnOriginChange &&
       !nsContentUtils::HaveEqualPrincipals(previousFullscreenDoc, this)) {
     nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this,
-                               NS_LITERAL_STRING("MozDOMFullscreen:Entered"),
-                               true,
-                               true);
+      new AsyncEventDispatcher(
+        this, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
+        /* Bubbles */ true, /* ChromeOnly */ true);
     asyncDispatcher->PostDOMEvent();
   }
 
