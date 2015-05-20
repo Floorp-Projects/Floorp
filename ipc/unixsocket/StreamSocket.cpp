@@ -543,6 +543,29 @@ StreamSocket::SendSocketData(const nsACString& aStr)
 }
 
 void
+StreamSocket::Close()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mIO) {
+    return;
+  }
+
+  mIO->CancelDelayedConnectTask();
+
+  // From this point on, we consider mIO as being deleted.
+  // We sever the relationship here so any future calls to listen or connect
+  // will create a new implementation.
+  mIO->ShutdownOnMainThread();
+
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
+
+  mIO = nullptr;
+
+  NotifyDisconnect();
+}
+
+void
 StreamSocket::GetSocketAddr(nsAString& aAddrStr)
 {
   aAddrStr.Truncate();
@@ -617,28 +640,10 @@ StreamSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
 // |SocketBase|
 
 void
-StreamSocket::Close()
+StreamSocket::CloseSocket()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mIO) {
-    return;
-  }
-
-  mIO->CancelDelayedConnectTask();
-
-  // From this point on, we consider mIO as being deleted.
-  // We sever the relationship here so any future calls to listen or connect
-  // will create a new implementation.
-  mIO->ShutdownOnMainThread();
-
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
-
-  mIO = nullptr;
-
-  NotifyDisconnect();
+  Close();
 }
-
 
 } // namespace ipc
 } // namespace mozilla
