@@ -737,11 +737,11 @@ WebGLContext::UnbindFakeBlackTextures()
     for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
         if (mBound2DTextures[i] && mBound2DTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBound2DTextures[i]->GLName());
+            gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBound2DTextures[i]->mGLName);
         }
         if (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBoundCubeMapTextures[i]->GLName());
+            gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBoundCubeMapTextures[i]->mGLName);
         }
     }
 
