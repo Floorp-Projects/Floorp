@@ -116,7 +116,7 @@ const DOM = exports.DOM = {
     hbox.setAttribute("align", "center");
 
     let bullet = doc.createElement("hbox");
-    bullet.className = `marker-details-bullet ${blueprint.colorName}`;
+    bullet.className = `marker-details-bullet marker-color-${blueprint.colorName}`;
 
     let title = getMarkerLabel(marker);
     let label = doc.createElement("label");

@@ -493,41 +493,29 @@
   border-radius: 1px;
 }
 
-#performance-filter-menupopup > menuitem.highlight-pink:before,
-.marker-details-bullet.highlight-pink,
-.waterfall-marker-bar.highlight-pink,
-.waterfall-marker-bullet.highlight-pink {
-  background-color: var(--theme-highlight-pink);
+menuitem.marker-color-graphs-purple:before,
+.marker-color-graphs-purple {
+  background-color: var(--theme-graphs-purple);
 }
-#performance-filter-menupopup > menuitem.highlight-bluegrey:before,
-.marker-details-bullet.highlight-bluegrey,
-.waterfall-marker-bar.highlight-bluegrey,
-.waterfall-marker-bullet.highlight-bluegrey {
-  background-color: var(--theme-highlight-bluegrey);
+menuitem.marker-color-graphs-grey:before,
+.marker-color-graphs-grey{
+  background-color: var(--theme-graphs-grey);
 }
-#performance-filter-menupopup > menuitem.highlight-green:before,
-.marker-details-bullet.highlight-green,
-.waterfall-marker-bar.highlight-green,
-.waterfall-marker-bullet.highlight-green {
-  background-color: var(--theme-highlight-green);
+menuitem.marker-color-graphs-green:before,
+.marker-color-graphs-green {
+  background-color: var(--theme-graphs-green);
 }
-#performance-filter-menupopup > menuitem.highlight-lightorange:before,
-.marker-details-bullet.highlight-lightorange,
-.waterfall-marker-bar.highlight-lightorange,
-.waterfall-marker-bullet.highlight-lightorange {
-  background-color: var(--theme-highlight-lightorange);
+menuitem.marker-color-graphs-yellow:before,
+.marker-color-graphs-yellow {
+  background-color: var(--theme-graphs-yellow);
 }
-#performance-filter-menupopup > menuitem.highlight-red:before,
-.marker-details-bullet.highlight-red,
-.waterfall-marker-bar.highlight-red,
-.waterfall-marker-bullet.highlight-red {
-  background-color: var(--theme-highlight-red);
+menuitem.marker-color-graphs-red:before,
+.marker-color-graphs-red {
+  background-color: var(--theme-graphs-red);
 }
-#performance-filter-menupopup > menuitem.highlight-purple:before,
-.marker-details-bullet.highlight-purple,
-.waterfall-marker-bar.highlight-purple,
-.waterfall-marker-bullet.highlight-purple {
-  background-color: var(--theme-highlight-purple);
+menuitem.marker-color-graphs-blue:before,
+.marker-color-graphs-blue {
+  background-color: var(--theme-graphs-blue);
 }
 
 #waterfall-details > * {
