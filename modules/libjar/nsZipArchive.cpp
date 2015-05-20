@@ -20,7 +20,7 @@
 #include "nsISupportsUtils.h"
 #include "prio.h"
 #include "plstr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "stdlib.h"
 #include "nsWildCard.h"
 #include "nsZipArchive.h"

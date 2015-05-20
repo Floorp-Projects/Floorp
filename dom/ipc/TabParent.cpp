@@ -84,6 +84,8 @@
 #include "gfxPrefs.h"
 #include "nsILoginManagerPrompter.h"
 #include "nsPIWindowRoot.h"
+#include "gfxDrawable.h"
+#include "ImageOps.h"
 #include <algorithm>
 
 using namespace mozilla::dom;
@@ -1229,7 +1231,9 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
     if (event.message == NS_MOUSE_ENTER_WIDGET ||
         event.message == NS_MOUSE_OVER) {
       mTabSetsCursor = true;
-      if (mCursor != nsCursor(-1)) {
+      if (mCustomCursor) {
+        widget->SetCursor(mCustomCursor, mCustomCursorHotspotX, mCustomCursorHotspotY);
+      } else if (mCursor != nsCursor(-1)) {
         widget->SetCursor(mCursor);
       }
       // We don't actually want to forward NS_MOUSE_ENTER_WIDGET messages.
@@ -1710,6 +1714,7 @@ bool
 TabParent::RecvSetCursor(const uint32_t& aCursor, const bool& aForce)
 {
   mCursor = static_cast<nsCursor>(aCursor);
+  mCustomCursor = nullptr;
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
@@ -1720,6 +1725,46 @@ TabParent::RecvSetCursor(const uint32_t& aCursor, const bool& aForce)
       widget->SetCursor(mCursor);
     }
   }
+  return true;
+}
+
+bool
+TabParent::RecvSetCustomCursor(const nsCString& aCursorData,
+                               const uint32_t& aWidth,
+                               const uint32_t& aHeight,
+                               const uint32_t& aStride,
+                               const uint8_t& aFormat,
+                               const uint32_t& aHotspotX,
+                               const uint32_t& aHotspotY,
+                               const bool& aForce)
+{
+  mCursor = nsCursor(-1);
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    if (aForce) {
+      widget->ClearCachedCursor();
+    }
+
+    if (mTabSetsCursor) {
+      const gfxIntSize size(aWidth, aHeight);
+
+      mozilla::RefPtr<gfx::DataSourceSurface> customCursor = new mozilla::gfx::SourceSurfaceRawData();
+      mozilla::gfx::SourceSurfaceRawData* raw = static_cast<mozilla::gfx::SourceSurfaceRawData*>(customCursor.get());
+      raw->InitWrappingData(
+        reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aCursorData).BeginWriting()),
+        size, aStride, static_cast<mozilla::gfx::SurfaceFormat>(aFormat), false);
+      raw->GuaranteePersistance();
+
+      nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(customCursor, size);
+      nsCOMPtr<imgIContainer> cursorImage(image::ImageOps::CreateFromDrawable(drawable));
+      widget->SetCursor(cursorImage, aHotspotX, aHotspotY);
+      mCustomCursor = cursorImage;
+      mCustomCursorHotspotX = aHotspotX;
+      mCustomCursorHotspotY = aHotspotY;
+    }
+  }
+
   return true;
 }
 

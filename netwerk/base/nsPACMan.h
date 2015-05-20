@@ -19,7 +19,7 @@
 #include "mozilla/LinkedList.h"
 #include "nsAutoPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 class nsPACMan;
 class nsISystemProxySettings;

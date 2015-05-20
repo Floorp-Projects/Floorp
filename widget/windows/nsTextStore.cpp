@@ -6,7 +6,7 @@
 #include <olectl.h>
 #include <algorithm>
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "nscore.h"
 #include "nsWindow.h"

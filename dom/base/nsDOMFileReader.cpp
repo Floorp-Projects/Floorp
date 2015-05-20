@@ -238,9 +238,7 @@ nsDOMFileReader::DoAbort(nsAString& aEvent)
   SetDOMStringToNull(mResult);
   mResultArrayBuffer = nullptr;
 
-  if (mAsyncStream) {
-    mAsyncStream = nullptr;
-  }
+  mAsyncStream = nullptr;
   mBlob = nullptr;
 
   //Clean up memory buffer
@@ -281,7 +279,8 @@ nsDOMFileReader::DoOnLoadEnd(nsresult aStatus,
   // Make sure we drop all the objects that could hold files open now.
   nsCOMPtr<nsIAsyncInputStream> stream;
   mAsyncStream.swap(stream);
-  nsCOMPtr<nsIDOMBlob> blob;
+
+  nsRefPtr<Blob> blob;
   mBlob.swap(blob);
 
   aSuccessEvent = NS_LITERAL_STRING(LOAD_STR);
@@ -408,9 +407,8 @@ nsDOMFileReader::ReadFileContent(Blob& aBlob,
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  rv = mBlob->GetInternalStream(getter_AddRefs(stream));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
+  mBlob->GetInternalStream(getter_AddRefs(stream), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
@@ -439,8 +437,10 @@ nsDOMFileReader::ReadFileContent(Blob& aBlob,
   mAsyncStream = do_QueryInterface(wrapper);
   MOZ_ASSERT(mAsyncStream);
 
-  mTotal = mozilla::dom::kUnknownSize;
-  mBlob->GetSize(&mTotal);
+  mTotal = mBlob->GetSize(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 
   rv = DoAsyncWait(mAsyncStream);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -462,7 +462,7 @@ nsDOMFileReader::ReadFileContent(Blob& aBlob,
 }
 
 nsresult
-nsDOMFileReader::GetAsText(nsIDOMBlob *aBlob,
+nsDOMFileReader::GetAsText(Blob *aBlob,
                            const nsACString &aCharset,
                            const char *aFileData,
                            uint32_t aDataLen,
@@ -502,17 +502,16 @@ nsDOMFileReader::GetAsText(nsIDOMBlob *aBlob,
 }
 
 nsresult
-nsDOMFileReader::GetAsDataURL(nsIDOMBlob *aBlob,
+nsDOMFileReader::GetAsDataURL(Blob *aBlob,
                               const char *aFileData,
                               uint32_t aDataLen,
                               nsAString& aResult)
 {
   aResult.AssignLiteral("data:");
 
-  nsresult rv;
   nsString contentType;
-  rv = aBlob->GetType(contentType);
-  if (NS_SUCCEEDED(rv) && !contentType.IsEmpty()) {
+  aBlob->GetType(contentType);
+  if (!contentType.IsEmpty()) {
     aResult.Append(contentType);
   } else {
     aResult.AppendLiteral("application/octet-stream");
@@ -520,7 +519,7 @@ nsDOMFileReader::GetAsDataURL(nsIDOMBlob *aBlob,
   aResult.AppendLiteral(";base64,");
 
   nsCString encodedData;
-  rv = Base64Encode(Substring(aFileData, aDataLen), encodedData);
+  nsresult rv = Base64Encode(Substring(aFileData, aDataLen), encodedData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!AppendASCIItoUTF16(encodedData, aResult, fallible)) {

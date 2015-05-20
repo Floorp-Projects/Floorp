@@ -6,7 +6,7 @@
 
 #include "nsDeque.h"
 #include "MediaData.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 extern PRLogModuleInfo* GetSourceBufferResourceLog();
 

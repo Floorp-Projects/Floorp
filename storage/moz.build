@@ -4,7 +4,112 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src', 'build']
+DIRS += ['build']
 
 TEST_DIRS += ['test']
 
+XPIDL_SOURCES += [
+    'mozIStorageAggregateFunction.idl',
+    'mozIStorageAsyncConnection.idl',
+    'mozIStorageAsyncStatement.idl',
+    'mozIStorageBaseStatement.idl',
+    'mozIStorageBindingParams.idl',
+    'mozIStorageBindingParamsArray.idl',
+    'mozIStorageCompletionCallback.idl',
+    'mozIStorageConnection.idl',
+    'mozIStorageError.idl',
+    'mozIStorageFunction.idl',
+    'mozIStoragePendingStatement.idl',
+    'mozIStorageProgressHandler.idl',
+    'mozIStorageResultSet.idl',
+    'mozIStorageRow.idl',
+    'mozIStorageService.idl',
+    'mozIStorageStatement.idl',
+    'mozIStorageStatementCallback.idl',
+    'mozIStorageStatementParams.idl',
+    'mozIStorageStatementRow.idl',
+    'mozIStorageVacuumParticipant.idl',
+    'mozIStorageValueArray.idl',
+]
+
+XPIDL_MODULE = 'storage'
+
+EXPORTS += [
+    'mozStorageHelper.h',
+]
+
+EXPORTS.mozilla += [
+    'storage.h',
+]
+
+# NOTE When adding something to this list, you probably need to add it to the
+#      storage.h file too.
+EXPORTS.mozilla.storage += [
+    'StatementCache.h',
+    'Variant.h',
+    'Variant_inl.h',
+]
+# SEE ABOVE NOTE!
+
+UNIFIED_SOURCES += [
+    'FileSystemModule.cpp',
+    'mozStorageArgValueArray.cpp',
+    'mozStorageAsyncStatement.cpp',
+    'mozStorageAsyncStatementExecution.cpp',
+    'mozStorageAsyncStatementJSHelper.cpp',
+    'mozStorageAsyncStatementParams.cpp',
+    'mozStorageBindingParamsArray.cpp',
+    'mozStorageError.cpp',
+    'mozStoragePrivateHelpers.cpp',
+    'mozStorageResultSet.cpp',
+    'mozStorageRow.cpp',
+    'mozStorageService.cpp',
+    'mozStorageSQLFunctions.cpp',
+    'mozStorageStatement.cpp',
+    'mozStorageStatementJSHelper.cpp',
+    'mozStorageStatementParams.cpp',
+    'mozStorageStatementRow.cpp',
+    'SQLCollations.cpp',
+    'StorageBaseStatementInternal.cpp',
+    'TelemetryVFS.cpp',
+    'VacuumManager.cpp',
+]
+
+# These files need to be built separately because they #include variantToSQLiteT_impl.h.
+SOURCES += [
+    'mozStorageBindingParams.cpp',
+    'mozStorageConnection.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
+
+# Don't use the jemalloc allocator on Android, because we can't guarantee
+# that Gecko will configure sqlite before it is first used (bug 730495).
+#
+# Don't use the jemalloc allocator when using system sqlite. Linked in libraries
+# (such as NSS) might trigger an initialization of sqlite and allocation
+# of memory using the default allocator, prior to the storage service
+# registering its allocator, causing memory management failures (bug 938730).
+# However, this is not an issue if both the jemalloc allocator and the default
+# allocator are the same thing.
+#
+# Note: On Windows our sqlite build assumes we use jemalloc.  If you disable
+# MOZ_STORAGE_MEMORY on Windows, you will also need to change the "ifdef
+# MOZ_MEMORY" options in db/sqlite3/src/Makefile.in.
+if CONFIG['MOZ_MEMORY'] and (not CONFIG['MOZ_NATIVE_SQLITE']
+                             or CONFIG['MOZ_NATIVE_JEMALLOC']):
+    if CONFIG['OS_TARGET'] != 'Android':
+        DEFINES['MOZ_STORAGE_MEMORY'] = True
+
+# This is the default value.  If we ever change it when compiling sqlite, we
+# will need to change it here as well.
+DEFINES['SQLITE_MAX_LIKE_PATTERN_LENGTH'] = 50000
+
+LOCAL_INCLUDES += [
+    '/db/sqlite3/src',
+    '/dom/base',
+]
+
+CXXFLAGS += CONFIG['SQLITE_CFLAGS']

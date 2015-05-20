@@ -8,7 +8,7 @@
 #define WebSocketLog_h
 
 #include "base/basictypes.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "mozilla/net/NeckoChild.h"
 
 extern PRLogModuleInfo* webSocketLog;

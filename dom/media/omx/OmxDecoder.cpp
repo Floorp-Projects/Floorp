@@ -26,7 +26,7 @@
 #include "mozilla/Monitor.h"
 #include "nsMimeTypes.h"
 #include "MPAPI.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"

@@ -3857,11 +3857,6 @@ VPX_X86_ASM=
 VPX_ARM_ASM=
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
-LIBJPEG_TURBO_X86_ASM=
-LIBJPEG_TURBO_X64_ASM=
-LIBJPEG_TURBO_ARM_ASM=
-LIBJPEG_TURBO_ARM64_ASM=
-LIBJPEG_TURBO_MIPS_ASM=
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
 MOZ_SOCIAL=1
@@ -4478,7 +4473,7 @@ then
             if test "$NS_PRINTING"; then
                 PKG_CHECK_MODULES(MOZ_QT_WIDGETS, Qt5PrintSupport, ,
                 [
-                  AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qtbase widgets development package])
+                  AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qt5 printsupport development package])
                 ])
                 MOZ_QT_LIBS="$MOZ_QT_LIBS $MOZ_QT_WIDGETS_LIBS"
                 MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $MOZ_QT_WIDGETS_CFLAGS"
@@ -6101,55 +6096,47 @@ dnl files.
 if test -n "$MOZ_LIBJPEG_TURBO"; then
 
   dnl Do we support libjpeg-turbo on this platform?
-  case "$OS_ARCH:$OS_TEST" in
-  Darwin:i?86)
+  case "$OS_ARCH:$CPU_ARCH" in
+  Darwin:x86)
     LIBJPEG_TURBO_ASFLAGS="-f macho32 -rnasm -pnasm -DPIC -DMACHO"
-    LIBJPEG_TURBO_X86_ASM=1
   ;;
   Darwin:x86_64)
     LIBJPEG_TURBO_ASFLAGS="-f macho64 -rnasm -pnasm -D__x86_64__ -DPIC -DMACHO"
-    LIBJPEG_TURBO_X64_ASM=1
   ;;
-  WINNT:x86|WINNT:i?86)
+  WINNT:x86)
     LIBJPEG_TURBO_ASFLAGS="-f win32 -rnasm -pnasm -DPIC -DWIN32"
-    LIBJPEG_TURBO_X86_ASM=1
   ;;
   WINNT:x86_64)
     LIBJPEG_TURBO_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64 -DMSVC"
-    LIBJPEG_TURBO_X64_ASM=1
   ;;
-  *:arm*)
+  *:arm)
     LIBJPEG_TURBO_ASFLAGS="-march=armv7-a -mfpu=neon"
-    LIBJPEG_TURBO_ARM_ASM=1
   ;;
-  *:aarch64*)
+  *:aarch64)
     LIBJPEG_TURBO_ASFLAGS="-march=armv8-a"
-    LIBJPEG_TURBO_ARM64_ASM=1
   ;;
-  *:mips*)
+  *:mips)
     LIBJPEG_TURBO_ASFLAGS="-mdspr2"
-    LIBJPEG_TURBO_MIPS_ASM=1
   ;;
-  *:x86|*:i?86)
+  *:x86)
     if $CC -E -dM -</dev/null | grep -q __ELF__; then
       LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
-      LIBJPEG_TURBO_X86_ASM=1
     fi
   ;;
   *:x86_64)
     if $CC -E -dM -</dev/null | grep -q __ELF__; then
       LIBJPEG_TURBO_ASFLAGS="-f elf64 -rnasm -pnasm -D__x86_64__ -DPIC -DELF"
-      LIBJPEG_TURBO_X64_ASM=1
     fi
   ;;
   esac
-
 fi
 
+if test -n "$LIBJPEG_TURBO_ASFLAGS"; then
+  case "$CPU_ARCH" in
 dnl If we're on an x86 or x64 system which supports libjpeg-turbo's asm routines
 dnl and --disable-libjpeg-turbo wasn't passed, check for Yasm, and error out if
 dnl it doesn't exist or we have too old of a version.
-if test -n "$LIBJPEG_TURBO_X86_ASM" -o -n "$LIBJPEG_TURBO_X64_ASM" ; then
+  x86_64|x86)
     LIBJPEG_TURBO_AS=$YASM
 
     if test -z "$LIBJPEG_TURBO_AS" ; then
@@ -6167,21 +6154,12 @@ if test -n "$LIBJPEG_TURBO_X86_ASM" -o -n "$LIBJPEG_TURBO_X64_ASM" ; then
             AC_MSG_ERROR([Yasm 1.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
         fi
     fi
-fi
-
-dnl If we're on an ARM system which supports libjpeg-turbo's asm routines and
-dnl --disable-libjpeg-turbo wasn't passed, use the C compiler as the assembler.
-if test -n "$LIBJPEG_TURBO_ARM_ASM" ; then
-    echo "Using $AS as the assembler for ARM code."
+  ;;
+dnl On other platforms, use the C compiler as the assembler.
+  *)
     LIBJPEG_TURBO_AS=$AS
-fi
-
-if test -n "$LIBJPEG_TURBO_X86_ASM"; then
-    AC_DEFINE(LIBJPEG_TURBO_X86_ASM)
-elif test -n "$LIBJPEG_TURBO_X64_ASM"; then
-    AC_DEFINE(LIBJPEG_TURBO_X64_ASM)
-elif test -n "$LIBJPEG_TURBO_ARM_ASM"; then
-    AC_DEFINE(LIBJPEG_TURBO_ARM_ASM)
+  ;;
+  esac
 elif test -n "$MOZ_LIBJPEG_TURBO"; then
     dnl Warn if we're not building the optimized routines, even though the user
     dnl didn't specify --disable-libjpeg-turbo.
@@ -8871,11 +8849,6 @@ AC_SUBST(MOZ_INSTRUMENT_EVENT_LOOP)
 AC_SUBST(MOZ_CODE_COVERAGE)
 AC_SUBST(LIBJPEG_TURBO_AS)
 AC_SUBST_LIST(LIBJPEG_TURBO_ASFLAGS)
-AC_SUBST(LIBJPEG_TURBO_X86_ASM)
-AC_SUBST(LIBJPEG_TURBO_X64_ASM)
-AC_SUBST(LIBJPEG_TURBO_ARM_ASM)
-AC_SUBST(LIBJPEG_TURBO_ARM64_ASM)
-AC_SUBST(LIBJPEG_TURBO_MIPS_ASM)
 
 AC_SUBST(MOZ_PACKAGE_JSSHELL)
 AC_SUBST(MOZ_FOLD_LIBS)

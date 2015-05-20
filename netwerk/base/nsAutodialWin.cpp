@@ -12,7 +12,7 @@
 #include <winsvc.h>
 #include "nsString.h"
 #include "nsAutodialWin.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsWindowsHelpers.h"
 
 #define AUTODIAL_DEFAULT AUTODIAL_NEVER

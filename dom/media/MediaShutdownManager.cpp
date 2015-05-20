@@ -9,7 +9,7 @@
 #include "mozilla/StaticPtr.h"
 #include "MediaDecoder.h"
 #include "SharedThreadPool.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 
