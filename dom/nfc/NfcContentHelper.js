@@ -71,6 +71,7 @@ function NfcContentHelper() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   this._requestMap = [];
+  this.initDOMRequestHelper(/* window */ null, NFC_IPC_MSG_NAMES);
 }
 
 NfcContentHelper.prototype = {
@@ -88,56 +89,13 @@ NfcContentHelper.prototype = {
                        Ci.nsINfcBrowserAPI]
   }),
 
-  _window: null,
   _requestMap: null,
   _rfState: null,
-  _tabId: null,
   eventListener: null,
 
   init: function init(aWindow) {
-    if (aWindow == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-    this._window = aWindow;
-    this.initDOMRequestHelper(this._window, NFC_IPC_MSG_NAMES);
-
-    if (!NFC.DEBUG_CONTENT_HELPER && this._window.navigator.mozSettings) {
-      let lock = this._window.navigator.mozSettings.createLock();
-      var nfcDebug = lock.get(NFC.SETTING_NFC_DEBUG);
-      nfcDebug.onsuccess = function _nfcDebug() {
-        DEBUG = nfcDebug.result[NFC.SETTING_NFC_DEBUG];
-        updateDebug();
-      };
-    }
-
     let info = cpmm.sendSyncMessage("NFC:QueryInfo")[0];
     this._rfState = info.rfState;
-
-    // For now, we assume app will run in oop mode so we can get
-    // tab id for each app. Fix bug 1116449 if we are going to
-    // support in-process mode.
-    let docShell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation)
-                          .QueryInterface(Ci.nsIDocShell);
-    try {
-      this._tabId = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsITabChild)
-                            .tabId;
-    } catch(e) {
-      // Only parent process does not have tab id, so in this case
-      // NfcContentHelper is used by system app. Use -1(tabId) to
-      // indicate its system app.
-      let inParent = Cc["@mozilla.org/xre/app-info;1"]
-                       .getService(Ci.nsIXULRuntime)
-                       .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-      if (inParent) {
-        this._tabId = Ci.nsINfcBrowserAPI.SYSTEM_APP_ID;
-      } else {
-        throw Components.Exception("Can't get tab id in child process",
-                                   Cr.NS_ERROR_UNEXPECTED);
-      }
-    }
   },
 
   queryRFState: function queryRFState() {
@@ -224,9 +182,21 @@ NfcContentHelper.prototype = {
     });
   },
 
-  addEventListener: function addEventListener(listener) {
+  addEventListener: function addEventListener(listener, tabId) {
+    let _window = listener.window;
+
+    // TODO Bug 1166210 - enable NFC debug for child process.
+    if (!NFC.DEBUG_CONTENT_HELPER && _window.navigator.mozSettings) {
+      let lock = _window.navigator.mozSettings.createLock();
+      var nfcDebug = lock.get(NFC.SETTING_NFC_DEBUG);
+      nfcDebug.onsuccess = function _nfcDebug() {
+        DEBUG = nfcDebug.result[NFC.SETTING_NFC_DEBUG];
+        updateDebug();
+      };
+    }
+
     this.eventListener = listener;
-    cpmm.sendAsyncMessage("NFC:AddEventListener", { tabId: this._tabId });
+    cpmm.sendAsyncMessage("NFC:AddEventListener", { tabId: tabId });
   },
 
   registerTargetForPeerReady: function registerTargetForPeerReady(appId) {
@@ -399,16 +369,7 @@ NfcContentHelper.prototype = {
       return;
     }
 
-    let ndefMsg = new this._window.Array();
-    let records = result.records;
-    for (let i = 0; i < records.length; i++) {
-      let record = records[i];
-      ndefMsg.push(new this._window.MozNDEFRecord({tnf: record.tnf,
-                                                   type: record.type,
-                                                   id: record.id,
-                                                   payload: record.payload}));
-    }
-    callback.notifySuccessWithNDEFRecords(ndefMsg);
+    callback.notifySuccessWithNDEFRecords(result.records);
   },
 
   handleCheckP2PRegistrationResponse: function handleCheckP2PRegistrationResponse(result) {
