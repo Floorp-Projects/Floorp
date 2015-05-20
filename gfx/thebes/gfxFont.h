@@ -1844,7 +1844,7 @@ protected:
     // (and with variantCaps set to normal).
     // Default implementation relies on gfxFontEntry::CreateFontInstance;
     // backends that don't implement that will need to override this and use
-    // an alternative technique. (gfxPangoFonts, I'm looking at you...)
+    // an alternative technique. (gfxFontconfigFonts, I'm looking at you...)
     virtual already_AddRefed<gfxFont> GetSmallCapsFont();
 
     // subclasses may provide (possibly hinted) glyph widths (in font units);

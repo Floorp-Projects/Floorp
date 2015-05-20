@@ -489,7 +489,7 @@ PrepareFontOptions(FcPattern* aPattern,
 {
     NS_ASSERTION(aFontOptions, "null font options passed to PrepareFontOptions");
 
-    // xxx - taken from the gfxPangoFonts code, needs to be reviewed
+    // xxx - taken from the gfxFontconfigFonts code, needs to be reviewed
 
     FcBool printing;
     if (FcPatternGetBool(aPattern, PRINTING_FC_PROPERTY, 0, &printing) !=
