@@ -180,6 +180,7 @@ impl WebDriverHandler for MarionetteHandler {
                 if connection.is_none() {
                     match msg.command {
                         NewSession => {
+                            debug!("Got NewSession command");
                             create_connection = true;
                         },
                         _ => {
@@ -215,12 +216,14 @@ impl WebDriverHandler for MarionetteHandler {
     }
 
     fn delete_session(&mut self, _: &Option<Session>) {
+        debug!("delete_session");
         if let Ok(connection) = self.connection.lock() {
             if let Some(ref conn) = *connection {
                 conn.close();
             }
         }
         if let Some(ref mut runner) = self.browser {
+            debug!("Closing browser");
             if runner.stop().is_err() {
                 error!("Failed to kill browser");
             };
@@ -725,6 +728,7 @@ impl ToMarionette for WebDriverMessage {
                 let mut data = BTreeMap::new();
                 data.insert("sessionId".to_string(), Json::Null);
                 data.insert("capabilities".to_string(), Json::Null);
+                debug!("Creating NewSession message");
                 (Some("newSession"), Some(Ok(Json::Object(data))))
             },
             DeleteSession => (Some("deleteSession"), None),
