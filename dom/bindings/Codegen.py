@@ -651,6 +651,7 @@ class CGPrototypeJSClass(CGThing):
 
 
 def NeedsGeneratedHasInstance(descriptor):
+    assert descriptor.interface.hasInterfaceObject()
     return descriptor.hasXPConnectImpls or descriptor.interface.isConsequential()
 
 def InterfaceObjectProtoGetter(descriptor):
@@ -1020,6 +1021,7 @@ class CGHeaders(CGWrapper):
          # Grab the includes for the things that involve XPCOM interfaces
         hasInstanceIncludes = set("nsIDOM" + d.interface.identifier.name + ".h" for d
                                   in descriptors if
+                                  d.interface.hasInterfaceObject() and
                                   NeedsGeneratedHasInstance(d) and
                                   d.interface.hasInterfacePrototypeObject())
 
@@ -1777,6 +1779,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::MutableHandle<JS::Value>', 'vp'),
                 Argument('bool*', 'bp')]
+        assert descriptor.interface.hasInterfaceObject()
         CGAbstractStaticMethod.__init__(self, descriptor, HASINSTANCE_HOOK_NAME,
                                         'bool', args)
 
