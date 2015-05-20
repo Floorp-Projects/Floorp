@@ -2280,8 +2280,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </field>
       <property name="isMixedContentBlocked" readonly="true">
         <getter><![CDATA[
-          return this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+          return
+            ((this.notification.options.state &
+              Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) || 
+             (this.notification.options.state &
+              Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT));
         ]]></getter>
       </property>
       <field name="_trackingContent">
@@ -2311,8 +2314,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         _doorhangerTitle.value =
           gNavigatorBundle.getFormattedString(
             "badContentBlocked.notblocked.message", [this._brandShortName]);
-        if (this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+        if ((this.notification.options.state &
+             Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) ||
+            (this.notification.options.state &
+             Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT)) {
           _doorhangerTitle.value =
             gNavigatorBundle.getFormattedString(
               "badContentBlocked.blocked.message", [this._brandShortName]);
@@ -2322,8 +2327,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             Services.urlFormatter.formatURLPref("app.support.baseURL")
               + "mixed-content";
         }
-        if (this.notification.options.state &
-            Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
+        if ((this.notification.options.state &
+             Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) ||
+            // user has set a pref to block mixed display and has overriden it
+            ((this.notification.options.state &
+             Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT) &&
+             gPrefService.getBoolPref("security.mixed_content.block_display_content"))) {
           this.setAttribute("mixedblockdisabled", true);
           _mixedContent.hidden = false;
           _mixedContentBlock.hidden = false;
