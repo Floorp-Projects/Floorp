@@ -378,7 +378,7 @@ WebGLFramebuffer::AttachPoint::FinalizeAttachment(gl::GLContext* gl,
 
         const GLenum imageTarget = ImageTarget().get();
         const GLint mipLevel = MipLevel();
-        const GLuint glName = Texture()->GLName();
+        const GLuint glName = Texture()->mGLName;
 
         if (attachmentLoc == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
             gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
