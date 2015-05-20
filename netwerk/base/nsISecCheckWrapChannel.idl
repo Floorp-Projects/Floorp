@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+
+/**
+ * nsISecCheckWrapChannel
+ * Describes an XPCOM component used to wrap channels for performing
+ * security checks. Channels wrapped inside this class can use
+ * this interface to query the wrapped inner channel.
+ */
+
+[scriptable, uuid(9446c5d5-c9fb-4a6e-acf9-ca4fc666efe0)]
+interface nsISecCheckWrapChannel : nsISupports
+{
+  /**
+   * Returns the wrapped channel inside this class.
+   */
+  readonly attribute nsIChannel innerChannel;
+
+};
