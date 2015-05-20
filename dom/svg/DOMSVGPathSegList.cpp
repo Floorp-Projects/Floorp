@@ -384,8 +384,12 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
   float segAsRaw[1 + NS_SVG_PATH_SEG_MAX_ARGS];
   domItem->ToSVGPathSegEncodedData(segAsRaw);
 
-  InternalList().mData.InsertElementsAt(internalIndex, segAsRaw, 1 + argCount);
-  mItems.InsertElementAt(aIndex, ItemProxy(domItem.get(), internalIndex));
+  MOZ_ALWAYS_TRUE(InternalList().mData.InsertElementsAt(internalIndex,
+                                                        segAsRaw,
+                                                        1 + argCount));
+  MOZ_ALWAYS_TRUE(mItems.InsertElementAt(aIndex,
+                                         ItemProxy(domItem.get(),
+                                                   internalIndex)));
 
   // This MUST come after the insertion into InternalList(), or else under the
   // insertion into InternalList() the values read from domItem would be bad
