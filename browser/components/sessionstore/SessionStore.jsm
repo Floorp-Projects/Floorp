@@ -691,7 +691,7 @@ let SessionStoreInternal = {
         break;
       case "SessionStore:restoreHistoryComplete":
         // Notify the tabbrowser that the tab chrome has been restored.
-        let tabData = browser.__SS_data;
+        let tabData = TabState.collect(tab);
 
         // wall-paper fix for bug 439675: make sure that the URL to be loaded
         // is always visible in the address bar
@@ -713,6 +713,7 @@ let SessionStoreInternal = {
         // Restore the tab icon.
         if ("image" in tabData) {
           win.gBrowser.setIcon(tab, tabData.image);
+          TabStateCache.update(browser, {image: null});
         }
 
         let event = win.document.createEvent("Events");
@@ -729,11 +730,16 @@ let SessionStoreInternal = {
           // enter yet, then we just need to write that value to the URL bar without
           // loading anything. This must happen after the load, since it will clear
           // userTypedValue.
-          let tabData = browser.__SS_data;
+          let tabData = TabState.collect(tab);
           if (tabData.userTypedValue && !tabData.userTypedClear) {
             browser.userTypedValue = tabData.userTypedValue;
             win.URLBarSetURI();
           }
+
+          // Remove state we don't need any longer.
+          TabStateCache.update(browser, {
+            userTypedValue: null, userTypedClear: null
+          });
         }
         break;
       case "SessionStore:restoreTabContentComplete":
@@ -742,8 +748,6 @@ let SessionStoreInternal = {
         if (gDebuggingEnabled) {
           Services.obs.notifyObservers(browser, NOTIFY_TAB_RESTORED, null);
         }
-
-        delete browser.__SS_data;
 
         SessionStoreInternal._resetLocalTabRestoringState(tab);
         SessionStoreInternal.restoreNextTab();
@@ -1410,7 +1414,6 @@ let SessionStoreInternal = {
    */
   onTabRemove: function ssi_onTabRemove(aWindow, aTab, aNoNotification) {
     let browser = aTab.linkedBrowser;
-    delete browser.__SS_data;
     browser.removeEventListener("SwapDocShells", this);
     browser.removeEventListener("oop-browser-crashed", this);
 
@@ -1948,15 +1951,7 @@ let SessionStoreInternal = {
   },
 
   getTabValue: function ssi_getTabValue(aTab, aKey) {
-    let data = {};
-    if (aTab.__SS_extdata) {
-      data = aTab.__SS_extdata;
-    }
-    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
-      // If the tab hasn't been fully restored, get the data from the to-be-restored data
-      data = aTab.linkedBrowser.__SS_data.extData;
-    }
-    return data[aKey] || "";
+    return (aTab.__SS_extdata || {})[aKey] || "";
   },
 
   setTabValue: function ssi_setTabValue(aTab, aKey, aStringValue) {
@@ -1966,36 +1961,17 @@ let SessionStoreInternal = {
 
     // If the tab hasn't been restored, then set the data there, otherwise we
     // could lose newly added data.
-    let saveTo;
-    if (aTab.__SS_extdata) {
-      saveTo = aTab.__SS_extdata;
-    }
-    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
-      saveTo = aTab.linkedBrowser.__SS_data.extData;
-    }
-    else {
+    if (!aTab.__SS_extdata) {
       aTab.__SS_extdata = {};
-      saveTo = aTab.__SS_extdata;
     }
 
-    saveTo[aKey] = aStringValue;
+    aTab.__SS_extdata[aKey] = aStringValue;
     this.saveStateDelayed(aTab.ownerDocument.defaultView);
   },
 
   deleteTabValue: function ssi_deleteTabValue(aTab, aKey) {
-    // We want to make sure that if data is accessed early, we attempt to delete
-    // that data from __SS_data as well. Otherwise we'll throw in cases where
-    // data can be set or read.
-    let deleteFrom;
-    if (aTab.__SS_extdata) {
-      deleteFrom = aTab.__SS_extdata;
-    }
-    else if (aTab.linkedBrowser.__SS_data && aTab.linkedBrowser.__SS_data.extData) {
-      deleteFrom = aTab.linkedBrowser.__SS_data.extData;
-    }
-
-    if (deleteFrom && aKey in deleteFrom) {
-      delete deleteFrom[aKey];
+    if (aTab.__SS_extdata && aKey in aTab.__SS_extdata) {
+      delete aTab.__SS_extdata[aKey];
       this.saveStateDelayed(aTab.ownerDocument.defaultView);
     }
   },
@@ -2819,7 +2795,6 @@ let SessionStoreInternal = {
 
     // keep the data around to prevent dataloss in case
     // a tab gets closed before it's been properly restored
-    browser.__SS_data = tabData;
     browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
     browser.setAttribute("pending", "true");
     tab.setAttribute("pending", "true");
@@ -2831,7 +2806,14 @@ let SessionStoreInternal = {
       storage: tabData.storage || null,
       formdata: tabData.formdata || null,
       disallow: tabData.disallow || null,
-      pageStyle: tabData.pageStyle || null
+      pageStyle: tabData.pageStyle || null,
+
+      // This information is only needed until the tab has finished restoring.
+      // When that's done it will be removed from the cache and we always
+      // collect it in TabState._collectBaseTabData().
+      image: tabData.image || "",
+      userTypedValue: tabData.userTypedValue || "",
+      userTypedClear: tabData.userTypedClear || 0
     });
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory",
