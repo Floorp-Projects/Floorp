@@ -866,4 +866,75 @@ AccessibleCaretManager::CancelCaretTimeoutTimer()
   }
 }
 
+void
+AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReason) const
+{
+  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+  // Holding PresShell to prevent AccessibleCaretManager to be destroyed.
+  nsCOMPtr<nsIPresShell> presShell = mPresShell;
+  // XXX: Do we need to flush layout?
+  presShell->FlushPendingNotifications(Flush_Layout);
+  if (presShell->IsDestroying()) {
+    return;
+  }
+
+  Selection* sel = GetSelection();
+  if (!sel) {
+    return;
+  }
+
+  nsIDocument* doc = mPresShell->GetDocument();
+  MOZ_ASSERT(doc);
+
+  CaretStateChangedEventInit init;
+  init.mBubbles = true;
+
+  const nsRange* range = sel->GetAnchorFocusRange();
+  nsINode* commonAncestorNode = nullptr;
+  if (range) {
+    commonAncestorNode = range->GetCommonAncestor();
+  }
+
+  if (!commonAncestorNode) {
+    commonAncestorNode = sel->GetFrameSelection()->GetAncestorLimiter();
+  }
+
+  nsRefPtr<DOMRect> domRect = new DOMRect(ToSupports(doc));
+  nsRect rect = nsContentUtils::GetSelectionBoundingRect(sel);
+
+  nsIFrame* commonAncestorFrame = nullptr;
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+
+  if (commonAncestorNode && commonAncestorNode->IsContent()) {
+    commonAncestorFrame = commonAncestorNode->AsContent()->GetPrimaryFrame();
+  }
+
+  if (commonAncestorFrame && rootFrame) {
+    nsLayoutUtils::TransformRect(rootFrame, commonAncestorFrame, rect);
+    nsRect clampedRect = nsLayoutUtils::ClampRectToScrollFrames(commonAncestorFrame,
+                                                                rect);
+    nsLayoutUtils::TransformRect(commonAncestorFrame, rootFrame, clampedRect);
+    domRect->SetLayoutRect(clampedRect);
+    init.mSelectionVisible = !clampedRect.IsEmpty();
+    init.mBoundingClientRect = domRect;
+  } else {
+    domRect->SetLayoutRect(rect);
+    init.mSelectionVisible = true;
+  }
+
+  init.mBoundingClientRect = domRect;
+  init.mReason = aReason;
+  init.mCollapsed = sel->IsCollapsed();
+  init.mCaretVisible = mFirstCaret->IsLogicallyVisible() ||
+                       mSecondCaret->IsLogicallyVisible();
+
+  nsRefPtr<CaretStateChangedEvent> event =
+    CaretStateChangedEvent::Constructor(doc, NS_LITERAL_STRING("mozcaretstatechanged"), init);
+
+  event->SetTrusted(true);
+  event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  bool ret;
+  doc->DispatchEvent(event, &ret);
+}
+
 } // namespace mozilla
