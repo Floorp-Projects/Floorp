@@ -590,6 +590,7 @@ let DOMFullscreenHandler = {
     addMessageListener("DOMFullscreen:Approved", this);
     addMessageListener("DOMFullscreen:CleanUp", this);
     addEventListener("MozDOMFullscreen:Entered", this);
+    addEventListener("MozDOMFullscreen:NewOrigin", this);
     addEventListener("MozDOMFullscreen:Exited", this);
   },
 
@@ -613,8 +614,12 @@ let DOMFullscreenHandler = {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "MozDOMFullscreen:Entered": {
+        sendAsyncMessage("DOMFullscreen:Entered");
+        break;
+      }
+      case "MozDOMFullscreen:NewOrigin": {
         this._fullscreenDoc = aEvent.target;
-        sendAsyncMessage("DOMFullscreen:Entered", {
+        sendAsyncMessage("DOMFullscreen:NewOrigin", {
           origin: this._fullscreenDoc.nodePrincipal.origin,
         });
         break;
