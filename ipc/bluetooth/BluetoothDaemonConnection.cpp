@@ -569,7 +569,7 @@ BluetoothDaemonConnection::SendSocketData(UnixSocketIOBuffer* aBuffer)
 // |SocketBase|
 
 void
-BluetoothDaemonConnection::Close()
+BluetoothDaemonConnection::CloseSocket()
 {
   MOZ_ASSERT(NS_IsMainThread());
 

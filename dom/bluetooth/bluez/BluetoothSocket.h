@@ -38,7 +38,7 @@ public:
               int aChannel);
   inline void Disconnect()
   {
-    Close();
+    CloseSocket();
   }
 
   inline void GetAddress(nsAString& aDeviceAddress)
@@ -102,7 +102,7 @@ public:
   // Methods for |SocketBase|
   //
 
-  void Close() override;
+  void CloseSocket() override;
 
   void OnConnectSuccess() override;
   void OnConnectError() override;

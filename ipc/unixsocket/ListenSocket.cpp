@@ -314,6 +314,27 @@ ListenSocket::~ListenSocket()
   MOZ_ASSERT(!mIO);
 }
 
+void
+ListenSocket::Close()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mIO) {
+    return;
+  }
+
+  // From this point on, we consider mIO as being deleted. We sever
+  // the relationship here so any future calls to listen or connect
+  // will create a new implementation.
+  mIO->ShutdownOnMainThread();
+
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
+
+  mIO = nullptr;
+
+  NotifyDisconnect();
+}
+
 bool
 ListenSocket::Listen(UnixSocketConnector* aConnector,
                      ConnectionOrientedSocket* aCOSocket)
@@ -364,24 +385,9 @@ ListenSocket::GetSocketAddr(nsAString& aAddrStr)
 // |SocketBase|
 
 void
-ListenSocket::Close()
+ListenSocket::CloseSocket()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mIO) {
-    return;
-  }
-
-  // From this point on, we consider mIO as being deleted. We sever
-  // the relationship here so any future calls to listen or connect
-  // will create a new implementation.
-  mIO->ShutdownOnMainThread();
-
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
-
-  mIO = nullptr;
-
-  NotifyDisconnect();
+  Close();
 }
 
 } // namespace ipc
