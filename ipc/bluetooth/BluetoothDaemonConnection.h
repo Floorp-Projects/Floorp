@@ -131,7 +131,7 @@ public:
   // Methods for |SocketBase|
   //
 
-  void CloseSocket() override;
+  void Close() override;
 
 protected:
 
