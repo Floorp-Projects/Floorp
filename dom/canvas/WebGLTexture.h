@@ -12,7 +12,6 @@
 #include "mozilla/LinkedList.h"
 #include "nsAlgorithm.h"
 #include "nsWrapperCache.h"
-#include "WebGLBindableName.h"
 #include "WebGLFramebufferAttachable.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
@@ -31,7 +30,6 @@ IsPOTAssumingNonnegative(GLsizei x)
 // WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
 class WebGLTexture final
     : public nsWrapperCache
-    , public WebGLBindableName<TexTarget>
     , public WebGLRefCountedObject<WebGLTexture>
     , public LinkedListElement<WebGLTexture>
     , public WebGLContextBoundObject
@@ -41,6 +39,9 @@ public:
     explicit WebGLTexture(WebGLContext* webgl, GLuint tex);
 
     void Delete();
+
+    bool HasEverBeenBound() const { return mTarget != LOCAL_GL_NONE; }
+    GLenum Target() const { return mTarget; }
 
     WebGLContext* GetParentObject() const {
         return Context();
@@ -61,6 +62,12 @@ protected:
 
     // We store information about the various images that are part of this
     // texture. (cubemap faces, mipmap levels)
+
+public:
+    const GLuint mGLName;
+
+protected:
+    GLenum mTarget;
 
 public:
     class ImageInfo

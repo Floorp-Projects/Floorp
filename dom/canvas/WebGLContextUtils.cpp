@@ -1119,11 +1119,11 @@ WebGLContext::AssertCachedBindings()
     AssertUintParamCorrect(gl, LOCAL_GL_ACTIVE_TEXTURE, activeTexture);
 
     WebGLTexture* curTex = ActiveBoundTextureForTarget(LOCAL_GL_TEXTURE_2D);
-    bound = curTex ? curTex->GLName() : 0;
+    bound = curTex ? curTex->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_2D, bound);
 
     curTex = ActiveBoundTextureForTarget(LOCAL_GL_TEXTURE_CUBE_MAP);
-    bound = curTex ? curTex->GLName() : 0;
+    bound = curTex ? curTex->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, bound);
 
     // Buffers
