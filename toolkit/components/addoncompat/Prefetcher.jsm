@@ -93,10 +93,12 @@ function isPrimitive(v) {
 
 function objAddr(obj)
 {
+/*
   if (!isPrimitive(obj)) {
     return String(obj) + "[" + Cu.getJSTestingFunctions().objectAddress(obj) + "]";
   }
   return String(obj);
+*/
 }
 
 function log(/*...args*/)
