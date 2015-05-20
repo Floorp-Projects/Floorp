@@ -55,8 +55,8 @@ this.TabState = Object.freeze({
     return TabStateInternal.clone(tab);
   },
 
-  copyFromCache: function (tab, tabData, options) {
-    TabStateInternal.copyFromCache(tab, tabData, options);
+  copyFromCache(browser, tabData, options) {
+    TabStateInternal.copyFromCache(browser, tabData, options);
   }
 });
 
@@ -179,8 +179,9 @@ let TabStateInternal = {
     else if (tabData.extData)
       delete tabData.extData;
 
-    // Copy data from the tab state cache.
-    this.copyFromCache(tab, tabData, options);
+    // Copy data from the tab state cache only if the tab has fully finished
+    // restoring. We don't want to overwrite data contained in __SS_data.
+    this.copyFromCache(browser, tabData, options);
 
     // After copyFromCache() was called we check for properties that are kept
     // in the cache only while the tab is pending or restoring. Once that
@@ -206,23 +207,24 @@ let TabStateInternal = {
   },
 
   /**
-   * Copy tab data for the given |tab| from the cache to |tabData|.
+   * Copy data for the given |browser| from the cache to |tabData|.
    *
-   * @param tab (xul:tab)
-   *        The tab belonging to the given |tabData| object.
+   * @param browser (xul:browser)
+   *        The browser belonging to the given |tabData| object.
    * @param tabData (object)
    *        The tab data belonging to the given |tab|.
    * @param options (object)
    *        {includePrivateData: true} to always include private data
    */
-  copyFromCache: function (tab, tabData, options = {}) {
-    let data = TabStateCache.get(tab.linkedBrowser);
+  copyFromCache(browser, tabData, options = {}) {
+    let data = TabStateCache.get(browser);
     if (!data) {
       return;
     }
 
     // The caller may explicitly request to omit privacy checks.
     let includePrivateData = options && options.includePrivateData;
+    let isPinned = tabData.pinned || false;
 
     for (let key of Object.keys(data)) {
       let value = data[key];
@@ -230,9 +232,9 @@ let TabStateInternal = {
       // Filter sensitive data according to the current privacy level.
       if (!includePrivateData) {
         if (key === "storage") {
-          value = PrivacyFilter.filterSessionStorageData(value, tab.pinned);
+          value = PrivacyFilter.filterSessionStorageData(value, isPinned);
         } else if (key === "formdata") {
-          value = PrivacyFilter.filterFormData(value, tab.pinned);
+          value = PrivacyFilter.filterFormData(value, isPinned);
         }
       }
 

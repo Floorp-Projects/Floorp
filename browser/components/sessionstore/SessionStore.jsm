@@ -661,7 +661,7 @@ let SessionStoreInternal = {
 
           // Update the closed tab's state. This will be reflected in its
           // window's list of closed tabs as that refers to the same object.
-          TabState.copyFromCache({linkedBrowser: browser}, tabData.state);
+          TabState.copyFromCache(browser, tabData.state);
 
           // Is this the tab's final message?
           if (aMessage.data.isFinal) {
