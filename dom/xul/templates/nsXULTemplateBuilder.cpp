@@ -55,7 +55,7 @@
 #include "nsGkAtoms.h"
 #include "nsXULElement.h"
 #include "jsapi.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "rdf.h"
 #include "pldhash.h"
 #include "plhash.h"

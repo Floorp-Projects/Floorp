@@ -7,7 +7,7 @@
 #include <ctype.h>
 
 #include "prprf.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prtime.h"
 
 #include "nsIOService.h"

@@ -11,7 +11,7 @@
 #ifndef _nsCache_h_
 #define _nsCache_h_
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsISupports.h"
 #include "nsIFile.h"
 #include "nsAString.h"

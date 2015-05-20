@@ -165,7 +165,7 @@ class NodeBuilder
           userv(c)
     {}
 
-    bool init(HandleObject userobj = js::NullPtr()) {
+    bool init(HandleObject userobj = nullptr) {
         if (src) {
             if (!atomValue(src, &srcval))
                 return false;
@@ -201,7 +201,7 @@ class NodeBuilder
 
             if (!funv.isObject() || !funv.toObject().is<JSFunction>()) {
                 ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NOT_FUNCTION,
-                                      JSDVG_SEARCH_STACK, funv, js::NullPtr(), nullptr, nullptr);
+                                      JSDVG_SEARCH_STACK, funv, nullptr, nullptr, nullptr);
                 return false;
             }
 
@@ -3625,7 +3625,7 @@ reflect_parse(JSContext* cx, uint32_t argc, jsval* vp)
     if (!arg.isNullOrUndefined()) {
         if (!arg.isObject()) {
             ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                  JSDVG_SEARCH_STACK, arg, js::NullPtr(),
+                                  JSDVG_SEARCH_STACK, arg, nullptr,
                                   "not an object", nullptr);
             return false;
         }
@@ -3677,7 +3677,7 @@ reflect_parse(JSContext* cx, uint32_t argc, jsval* vp)
         if (!prop.isNullOrUndefined()) {
             if (!prop.isObject()) {
                 ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                      JSDVG_SEARCH_STACK, prop, js::NullPtr(),
+                                      JSDVG_SEARCH_STACK, prop, nullptr,
                                       "not an object", nullptr);
                 return false;
             }

@@ -14,7 +14,7 @@
 
 //-----------------------------------------------------
 // PR LOGGING
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #define DUMP_LAYOUT_LEVEL 9 // this turns on the dumping of each doucment's layout info
 static PRLogModuleInfo *

@@ -7,7 +7,7 @@
 #include "nsTemplateRule.h"
 #include "nsXULTemplateQueryProcessorRDF.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 extern PRLogModuleInfo* gXULTemplateLog;
 
 nsInstantiationNode::nsInstantiationNode(nsXULTemplateQueryProcessorRDF* aProcessor,

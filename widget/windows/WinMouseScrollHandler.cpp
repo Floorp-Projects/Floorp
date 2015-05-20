@@ -6,7 +6,7 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "WinMouseScrollHandler.h"
 #include "nsWindow.h"

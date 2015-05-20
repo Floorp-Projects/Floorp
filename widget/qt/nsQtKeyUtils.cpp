@@ -445,7 +445,6 @@ QtKeyCodeToDOMKeyNameIndex(int aKeysym)
         case Qt::Key_TouchpadOff:
         case Qt::Key_unknown:
         case Qt::Key_Call:
-        case Qt::Key_CameraFocus:
         case Qt::Key_Context1:
         case Qt::Key_Context2:
         case Qt::Key_Context3:

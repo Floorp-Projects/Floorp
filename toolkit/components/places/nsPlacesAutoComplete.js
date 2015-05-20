@@ -318,7 +318,7 @@ function nsPlacesAutoComplete()
 
     // Autocomplete often fallbacks to a table scan due to lack of text indices.
     // In such cases a larger cache helps reducing IO.  The default Storage
-    // value is MAX_CACHE_SIZE_BYTES in storage/src/mozStorageConnection.cpp.
+    // value is MAX_CACHE_SIZE_BYTES in storage/mozStorageConnection.cpp.
     let stmt = db.createAsyncStatement("PRAGMA cache_size = -6144"); // 6MiB
     stmt.executeAsync();
     stmt.finalize();

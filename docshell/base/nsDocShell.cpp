@@ -151,7 +151,7 @@
 
 #include "nsIJARChannel.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "nsISelectionDisplay.h"
 

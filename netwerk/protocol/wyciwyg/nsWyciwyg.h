@@ -10,7 +10,7 @@
 // Get rid of chromium's LOG.
 #undef LOG
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 //
 // Log module for HTTP Protocol logging...
