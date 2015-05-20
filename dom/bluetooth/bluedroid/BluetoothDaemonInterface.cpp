@@ -1913,7 +1913,7 @@ BluetoothDaemonInterface::OnConnectSuccess(enum Channel aChannel)
         /* Notification channel should not be open; let's close it. */
         mNtfChannel->Close();
       }
-      if (!mListenSocket->Listen(mNtfChannel)) {
+      if (NS_FAILED(mListenSocket->Listen(mNtfChannel))) {
         OnConnectError(NTF_CHANNEL);
       }
       break;
@@ -2136,9 +2136,9 @@ BluetoothDaemonInterface::Init(
     mListenSocketName.AssignLiteral(BASE_SOCKET_NAME);
   }
 
-  bool success = mListenSocket->Listen(
-    new BluetoothDaemonConnector(mListenSocketName), mCmdChannel);
-  if (!success) {
+  rv = mListenSocket->Listen(new BluetoothDaemonConnector(mListenSocketName),
+                             mCmdChannel);
+  if (NS_FAILED(rv)) {
     OnConnectError(CMD_CHANNEL);
     return;
   }
