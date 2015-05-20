@@ -326,6 +326,8 @@ public:
 
   void EnsureMenuItemIsVisible(nsMenuFrame* aMenuFrame);
 
+  void ChangeByPage(bool aIsUp);
+
   // Move the popup to the screen coordinate (aLeft, aTop) in CSS pixels.
   // If aUpdateAttrs is true, and the popup already has left or top attributes,
   // then those attributes are updated to the new location.
