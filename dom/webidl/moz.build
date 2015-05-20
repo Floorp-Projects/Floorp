@@ -727,6 +727,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'CameraConfigurationEvent.webidl',
     'CameraFacesDetectedEvent.webidl',
     'CameraStateChangeEvent.webidl',
+    'CaretStateChangedEvent.webidl',
     'CFStateChangeEvent.webidl',
     'CloseEvent.webidl',
     'CSSFontFaceLoadEvent.webidl',
