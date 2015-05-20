@@ -2153,6 +2153,12 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
         mQuirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
     }
 #endif
+
+#ifdef OS_WIN
+    if (specialType == nsPluginHost::eSpecialType_Unity) {
+        mQuirks |= QUIRK_UNITY_FIXUP_MOUSE_CAPTURE;
+    }
+#endif
 }
 
 bool
