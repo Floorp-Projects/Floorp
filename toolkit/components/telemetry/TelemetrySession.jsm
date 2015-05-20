@@ -742,6 +742,7 @@ this.TelemetrySession = Object.freeze({
   reset: function() {
     Impl._sessionId = null;
     Impl._subsessionId = null;
+    Impl._previousSessionId = null;
     Impl._previousSubsessionId = null;
     Impl._subsessionCounter = 0;
     Impl._profileSubsessionCounter = 0;
@@ -814,6 +815,8 @@ let Impl = {
   _sessionId: null,
   // Random subsession id.
   _subsessionId: null,
+  // Session id of the previous session, null on first run.
+  _previousSessionId: null,
   // Subsession id of the previous subsession (even if it was in a different session),
   // null on first run.
   _previousSubsessionId: null,
@@ -1120,6 +1123,7 @@ let Impl = {
 
       sessionId: this._sessionId,
       subsessionId: this._subsessionId,
+      previousSessionId: this._previousSessionId,
       previousSubsessionId: this._previousSubsessionId,
 
       subsessionCounter: this._subsessionCounter,
@@ -1914,13 +1918,14 @@ let Impl = {
     let dataFile = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY,
                                 SESSION_STATE_FILE_NAME);
 
-    // Try to load the "profileSubsessionCounter" from the state file.
+    // Try to load info about the previous session from the state file.
     try {
       let data = yield CommonUtils.readJSON(dataFile);
       if (data &&
           "profileSubsessionCounter" in data &&
           typeof(data.profileSubsessionCounter) == "number" &&
-          "subsessionId" in data) {
+          "subsessionId" in data && "sessionId" in data) {
+        this._previousSessionId = data.sessionId;
         this._previousSubsessionId = data.subsessionId;
         // Add |_subsessionCounter| to the |_profileSubsessionCounter| to account for
         // new subsession while loading still takes place. This will always be exactly
@@ -1940,6 +1945,7 @@ let Impl = {
    */
   _getSessionDataObject: function() {
     return {
+      sessionId: this._sessionId,
       subsessionId: this._subsessionId,
       profileSubsessionCounter: this._profileSubsessionCounter,
     };
