@@ -50,6 +50,13 @@ js::CurrentThreadIsGCSweeping()
     return js::TlsPerThreadData.get()->gcSweeping;
 }
 
+bool
+js::CurrentThreadIsHandlingInitFailure()
+{
+    JSRuntime* rt = js::TlsPerThreadData.get()->runtimeIfOnOwnerThread();
+    return rt && rt->handlingInitFailure;
+}
+
 #endif // DEBUG
 
 template <typename S>
