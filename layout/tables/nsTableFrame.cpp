@@ -2249,11 +2249,17 @@ nsTableFrame::AppendFrames(ChildListID     aListID,
     const nsStyleDisplay* display = f->StyleDisplay();
 
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
+      if (MOZ_UNLIKELY(GetPrevInFlow())) {
+        nsFrameList colgroupFrame(f, f);
+        auto firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
+        firstInFlow->AppendFrames(aListID, colgroupFrame);
+        continue;
+      }
       nsTableColGroupFrame* lastColGroup =
         nsTableColGroupFrame::GetLastRealColGroup(this);
       int32_t startColIndex = (lastColGroup)
         ? lastColGroup->GetStartColumnIndex() + lastColGroup->GetColCount() : 0;
-      mColGroups.InsertFrame(nullptr, lastColGroup, f);
+      mColGroups.InsertFrame(this, lastColGroup, f);
       // Insert the colgroup and its cols into the table
       InsertColGroups(startColIndex,
                       nsFrameList::Slice(mColGroups, f, f->GetNextSibling()));
@@ -2347,16 +2353,22 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
 {
   // See what kind of frame we have
   const nsStyleDisplay* display = aFrameList.FirstChild()->StyleDisplay();
+  bool isColGroup = NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay;
 #ifdef DEBUG
   // Verify that either all siblings have display:table-column-group, or they
   // all have display values different from table-column-group.
-  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    const nsStyleDisplay* nextDisplay = e.get()->StyleDisplay();
-    MOZ_ASSERT((display->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP) ==
-               (nextDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP),
+  for (nsIFrame* frame : aFrameList) {
+    auto nextDisplay = frame->StyleDisplay()->mDisplay;
+    MOZ_ASSERT(isColGroup ==
+               (nextDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP),
                "heterogenous childlist");
   }
 #endif
+  if (MOZ_UNLIKELY(isColGroup && GetPrevInFlow())) {
+    auto firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
+    firstInFlow->AppendFrames(aListID, aFrameList);
+    return;
+  }
   if (aPrevFrame) {
     const nsStyleDisplay* prevDisplay = aPrevFrame->StyleDisplay();
     // Make sure they belong on the same frame list
@@ -2377,8 +2389,6 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
       if (MOZ_LIKELY(container)) { // XXX need this null-check, see bug 411823.
         int32_t newIndex = container->IndexOf(content);
         nsIFrame* kidFrame;
-        bool isColGroup = (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ==
-                             display->mDisplay);
         nsTableColGroupFrame* lastColGroup;
         if (isColGroup) {
           kidFrame = mColGroups.FirstChild();
@@ -2415,7 +2425,7 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
     NS_ASSERTION(aListID == kColGroupList, "unexpected child list");
     // Insert the column group frames
     const nsFrameList::Slice& newColgroups =
-      mColGroups.InsertFrames(nullptr, aPrevFrame, aFrameList);
+      mColGroups.InsertFrames(this, aPrevFrame, aFrameList);
     // find the starting col index for the first new col group
     int32_t startColIndex = 0;
     if (aPrevFrame) {
