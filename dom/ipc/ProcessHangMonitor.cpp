@@ -750,7 +750,7 @@ HangMonitoredProcess::GetPluginName(nsACString& aPluginName)
     return NS_ERROR_UNEXPECTED;
   }
 
-  aPluginName = tag->mName;
+  aPluginName = tag->Name();
   return NS_OK;
 }
 
