@@ -36,15 +36,15 @@ public:
   uint32_t Hash() const { return mHash; }
 
   /// A weak pointer to the URI spec for this cache entry. For logging only.
-  const char* Spec() const { return mSpec.get(); }
+  const char* Spec() const;
 
   /// Is this cache entry for a chrome image?
   bool IsChrome() const { return mIsChrome; }
 
 private:
-  static uint32_t ComputeHash(const nsACString& aSpec);
+  static uint32_t ComputeHash(ImageURL* aURI);
 
-  nsCString mSpec;
+  nsRefPtr<ImageURL> mURI;
   uint32_t mHash;
   bool mIsChrome;
 };
