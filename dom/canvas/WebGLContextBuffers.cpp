@@ -20,24 +20,7 @@ WebGLContext::UpdateBoundBuffer(GLenum target, WebGLBuffer* buffer)
     if (!buffer)
         return;
 
-    /* https://www.khronos.org/registry/webgl/specs/latest/2.0/#5.1
-     *
-     * In the WebGL 2 API, buffers have their WebGL buffer type
-     * initially set to undefined. Calling bindBuffer, bindBufferRange
-     * or bindBufferBase with the target argument set to any buffer
-     * binding point except COPY_READ_BUFFER or COPY_WRITE_BUFFER will
-     * then set the WebGL buffer type of the buffer being bound
-     * according to the table above.
-     *
-     * Any call to one of these functions which attempts to bind a
-     * WebGLBuffer that has the element array WebGL buffer type to a
-     * binding point that falls under other data, or bind a
-     * WebGLBuffer which has the other data WebGL buffer type to
-     * ELEMENT_ARRAY_BUFFER will generate an INVALID_OPERATION error,
-     * and the state of the binding point will remain untouched.
-     */
-    if (target != LOCAL_GL_COPY_READ_BUFFER && target != LOCAL_GL_COPY_WRITE_BUFFER)
-        buffer->BindTo(target);
+    buffer->BindTo(target);
 }
 
 void
@@ -435,9 +418,89 @@ WebGLContext::IsBuffer(WebGLBuffer* buffer)
     if (IsContextLost())
         return false;
 
-    return ValidateObjectAllowDeleted("isBuffer", buffer) &&
-           !buffer->IsDeleted() &&
-           buffer->HasEverBeenBound();
+    if (!ValidateObjectAllowDeleted("isBuffer", buffer))
+        return false;
+
+    if (buffer->IsDeleted())
+        return false;
+
+    MakeContextCurrent();
+    return gl->fIsBuffer(buffer->mGLName);
+}
+
+bool
+WebGLContext::ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer,
+                                      const char* info)
+{
+    if (!buffer)
+        return true;
+
+    /* https://www.khronos.org/registry/webgl/specs/latest/2.0/#5.1
+     *
+     * In the WebGL 2 API, buffers have their WebGL buffer type
+     * initially set to undefined. Calling bindBuffer, bindBufferRange
+     * or bindBufferBase with the target argument set to any buffer
+     * binding point except COPY_READ_BUFFER or COPY_WRITE_BUFFER will
+     * then set the WebGL buffer type of the buffer being bound
+     * according to the table above.
+     *
+     * Any call to one of these functions which attempts to bind a
+     * WebGLBuffer that has the element array WebGL buffer type to a
+     * binding point that falls under other data, or bind a
+     * WebGLBuffer which has the other data WebGL buffer type to
+     * ELEMENT_ARRAY_BUFFER will generate an INVALID_OPERATION error,
+     * and the state of the binding point will remain untouched.
+     */
+
+    GLenum boundTo = GetCurrentBinding(buffer);
+    if (boundTo != LOCAL_GL_NONE) {
+        if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER &&
+            boundTo != LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER)
+        {
+            ErrorInvalidOperation("Can't bind buffer to TRANSFORM_FEEDBACK_BUFFER as the "
+                                  "buffer is already bound to another bind point.");
+            return false;
+        }
+        else if (target != LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER &&
+                 boundTo == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER)
+        {
+            ErrorInvalidOperation("Can't bind buffer to bind point as it is currently "
+                                  "bound to TRANSFORM_FEEDBACK_BUFFER.");
+            return false;
+        }
+    }
+
+    WebGLBuffer::Kind content = buffer->Content();
+    if (content == WebGLBuffer::Kind::Undefined)
+        return true;
+
+    switch (target) {
+    case LOCAL_GL_COPY_READ_BUFFER:
+    case LOCAL_GL_COPY_WRITE_BUFFER:
+        return true;
+
+    case LOCAL_GL_ELEMENT_ARRAY_BUFFER:
+        if (content == WebGLBuffer::Kind::ElementArray)
+            return true;
+        break;
+
+    case LOCAL_GL_ARRAY_BUFFER:
+    case LOCAL_GL_PIXEL_PACK_BUFFER:
+    case LOCAL_GL_PIXEL_UNPACK_BUFFER:
+    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
+    case LOCAL_GL_UNIFORM_BUFFER:
+        if (content == WebGLBuffer::Kind::OtherData)
+            return true;
+        break;
+
+    default:
+        MOZ_CRASH();
+    }
+
+    ErrorInvalidOperation("%s: buffer already contains %s data.", info,
+                          content == WebGLBuffer::Kind::OtherData ? "other" : "element");
+
+    return false;
 }
 
 bool
@@ -508,6 +571,37 @@ WebGLContext::GetBufferSlotByTargetIndexed(GLenum target, GLuint index)
     default:
         MOZ_CRASH("Should not get here.");
     }
+}
+
+GLenum
+WebGLContext::GetCurrentBinding(WebGLBuffer* buffer) const
+{
+    if (mBoundArrayBuffer == buffer)
+        return LOCAL_GL_ARRAY_BUFFER;
+
+    if (mBoundCopyReadBuffer == buffer)
+        return LOCAL_GL_COPY_READ_BUFFER;
+
+    if (mBoundCopyWriteBuffer == buffer)
+        return LOCAL_GL_COPY_WRITE_BUFFER;
+
+    if (mBoundPixelPackBuffer == buffer)
+        return LOCAL_GL_PIXEL_PACK_BUFFER;
+
+    if (mBoundPixelUnpackBuffer == buffer)
+        return LOCAL_GL_PIXEL_UNPACK_BUFFER;
+
+    if (mBoundTransformFeedbackBuffer == buffer ||
+        mBoundTransformFeedbackBuffers.Contains(buffer)) {
+        return LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER;
+    }
+
+    if (mBoundUniformBuffer == buffer ||
+        mBoundUniformBuffers.Contains(buffer)) {
+        return LOCAL_GL_UNIFORM_BUFFER;
+    }
+
+    return LOCAL_GL_NONE;
 }
 
 GLenum

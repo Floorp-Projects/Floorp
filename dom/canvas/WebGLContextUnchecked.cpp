@@ -38,6 +38,17 @@ void
 WebGLContextUnchecked::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, WebGLintptr offset, WebGLsizeiptr size)
 {
     gl->MakeCurrent();
+
+#ifdef XP_MACOSX
+    if (buffer && buffer->Content() == WebGLBuffer::Kind::Undefined &&
+        gl->WorkAroundDriverBugs())
+    {
+        // BindBufferRange will fail if the buffer's contents is undefined.
+        // Bind so driver initializes the buffer.
+        gl->fBindBuffer(target, buffer->mGLName);
+    }
+#endif
+
     gl->fBindBufferRange(target, index, buffer ? buffer->mGLName : 0, offset, size);
 }
 
