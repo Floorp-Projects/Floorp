@@ -7,12 +7,12 @@ repository = "https://github.com/jgraham/wires"
 license = "MPL-2.0"
 
 [dependencies]
-env_logger = "0.3.0"
-hyper = "0.3.10"
+env_logger = "0.3.1"
+hyper = "0.4.0"
 log = "0.3.1"
-regex = "0.1.27"
-rustc-serialize = "0.3.12"
-uuid = "0.1.16"
+regex = "0.1.30"
+rustc-serialize = "0.3.14"
+uuid = "0.1.17"
 mozrunner = "0.1.0"
 mozprofile = "0.1.0"
 
