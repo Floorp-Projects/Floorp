@@ -893,10 +893,13 @@ impl ToMarionette for SwitchToFrameParameters {
     fn to_marionette(&self) -> WebDriverResult<Json> {
         let mut data = BTreeMap::new();
         let key = match self.id {
-            FrameId::Short(_) | FrameId::Null => "id",
-            FrameId::Element(_) => "element"
+            FrameId::Null => None,
+            FrameId::Short(_) => Some("id"),
+            FrameId::Element(_) => Some("element")
         };
-        data.insert(key.to_string(), self.id.to_json());
+        if let Some(x) = key {
+            data.insert(x.to_string(), self.id.to_json());
+        }
         Ok(Json::Object(data))
     }
 }
