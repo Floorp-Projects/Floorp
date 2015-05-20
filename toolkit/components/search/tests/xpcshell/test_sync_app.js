@@ -7,17 +7,17 @@ function run_test() {
 
   do_load_manifest("data/chrome.manifest");
 
-  configureToLoadJarEngines();
+  configureToLoadJarEngines(false);
 
   do_check_false(Services.search.isInitialized);
 
-  // test engines from dir are not loaded.
-  let engines = Services.search.getEngines();
-  do_check_eq(engines.length, 1);
+  // test engine from dir is loaded.
+  let engine = Services.search.getEngineByName("TestEngineApp");
+  do_check_neq(engine, null);
 
   do_check_true(Services.search.isInitialized);
 
-  // test jar engine is loaded ok.
-  let engine = Services.search.getEngineByName("bug645970");
-  do_check_neq(engine, null);
+  // test jar engine is not loaded.
+  engine = Services.search.getEngineByName("bug645970");
+  do_check_eq(engine, null);
 }

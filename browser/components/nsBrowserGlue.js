@@ -1364,7 +1364,7 @@ BrowserGlue.prototype = {
                                  stringName: "pu.notifyButton.accesskey"});
 
       let win = this.getMostRecentBrowserWindow();
-      let notifyBox = win.gBrowser.getNotificationBox();
+      let notifyBox = win.document.getElementById("high-priority-global-notificationbox");
 
       let buttons = [
                       {
@@ -1380,7 +1380,6 @@ BrowserGlue.prototype = {
       let notification = notifyBox.appendNotification(text, "post-update-notification",
                                                       null, notifyBox.PRIORITY_INFO_LOW,
                                                       buttons);
-      notification.persistence = -1; // Until user closes it
     }
 
     if (actions.indexOf("showAlert") == -1)
@@ -2396,16 +2395,18 @@ ContentPermissionPrompt.prototype = {
       return;
     }
 
+    if (!aOptions)
+      aOptions = {};
+    aOptions.displayOrigin = (requestPrincipal.URI instanceof Ci.nsIFileURL) ?
+                             requestPrincipal.URI.file.path :
+                             requestPrincipal.URI.host;
+
     return chromeWin.PopupNotifications.show(browser, aNotificationId, aMessage, aAnchorId,
                                              mainAction, secondaryActions, aOptions);
   },
 
   _promptPush : function(aRequest) {
-    var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-    var requestingURI = aRequest.principal.URI;
-
-    var message = browserBundle.formatStringFromName("push.enablePush",
-                                                 [requestingURI.host], 1);
+    var message = gBrowserBundle.GetStringFromName("push.enablePush2");
 
     var actions = [
     {
@@ -2428,8 +2429,8 @@ ContentPermissionPrompt.prototype = {
     }]
 
     var options = {
-                    learnMoreURL: Services.urlFormatter.formatURLPref("browser.push.warning.infoURL"),
-                  };
+      learnMoreURL: Services.urlFormatter.formatURLPref("browser.push.warning.infoURL"),
+    };
 
     this._showPrompt(aRequest, message, "push", actions, "push",
                      "push-notification-icon", options);
@@ -2438,7 +2439,6 @@ ContentPermissionPrompt.prototype = {
 
   _promptGeo : function(aRequest) {
     var secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
-    var requestingURI = aRequest.principal.URI;
 
     var message;
 
@@ -2456,11 +2456,9 @@ ContentPermissionPrompt.prototype = {
       learnMoreURL: Services.urlFormatter.formatURLPref("browser.geolocation.warning.infoURL"),
     };
 
-    if (requestingURI.schemeIs("file")) {
-      options.displayOrigin = requestingURI.path;
+    if (aRequest.principal.URI.schemeIs("file")) {
       message = gBrowserBundle.GetStringFromName("geolocation.shareWithFile2");
     } else {
-      options.displayOrigin = requestingURI.host;
       message = gBrowserBundle.GetStringFromName("geolocation.shareWithSite2");
       // Always share location action.
       actions.push({
@@ -2490,10 +2488,7 @@ ContentPermissionPrompt.prototype = {
   },
 
   _promptWebNotifications : function(aRequest) {
-    var requestingURI = aRequest.principal.URI;
-
-    var message = gBrowserBundle.formatStringFromName("webNotifications.showFromSite",
-                                                      [requestingURI.host], 1);
+    var message = gBrowserBundle.GetStringFromName("webNotifications.showFromSite2");
 
     var actions = [
       {
@@ -2522,13 +2517,9 @@ ContentPermissionPrompt.prototype = {
   },
 
   _promptPointerLock: function CPP_promtPointerLock(aRequest, autoAllow) {
+    let message = gBrowserBundle.GetStringFromName(autoAllow ?
+                                  "pointerLock.autoLock.title3" : "pointerLock.title3");
 
-    let requestingURI = aRequest.principal.URI;
-
-    let originString = requestingURI.schemeIs("file") ? requestingURI.path : requestingURI.host;
-    let message = gBrowserBundle.formatStringFromName(autoAllow ?
-                                  "pointerLock.autoLock.title2" : "pointerLock.title2",
-                                  [originString], 1);
     // If this is an autoAllow info prompt, offer no actions.
     // _showPrompt() will allow the request when it's dismissed.
     let actions = [];
@@ -2598,7 +2589,7 @@ ContentPermissionPrompt.prototype = {
 
     // Make sure that we support the request.
     if (!(perm.type in kFeatureKeys)) {
-        return;
+      return;
     }
 
     var requestingPrincipal = request.principal;
