@@ -37,6 +37,8 @@ public:
                  UnixSocketConnector* aConnector);
   ~StreamSocketIO();
 
+  void GetSocketAddr(nsAString& aAddrStr) const;
+
   StreamSocket* GetStreamSocket();
   DataSocket* GetDataSocket();
 
@@ -165,6 +167,26 @@ StreamSocketIO::~StreamSocketIO()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsShutdownOnMainThread());
+}
+
+void
+StreamSocketIO::GetSocketAddr(nsAString& aAddrStr) const
+{
+  if (!mConnector) {
+    NS_WARNING("No connector to get socket address from!");
+    aAddrStr.Truncate();
+    return;
+  }
+
+  nsCString addressString;
+  nsresult rv = mConnector->ConvertAddressToString(
+    *reinterpret_cast<const struct sockaddr*>(&mAddress), mAddressLength,
+    addressString);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  aAddrStr.Assign(NS_ConvertUTF8toUTF16(addressString));
 }
 
 StreamSocket*
@@ -508,17 +530,47 @@ StreamSocket::~StreamSocket()
   MOZ_ASSERT(!mIO);
 }
 
-nsresult
+bool
+StreamSocket::SendSocketData(const nsACString& aStr)
+{
+  if (aStr.Length() > MAX_READ_SIZE) {
+    return false;
+  }
+
+  SendSocketData(new UnixSocketRawData(aStr.BeginReading(), aStr.Length()));
+
+  return true;
+}
+
+void
+StreamSocket::GetSocketAddr(nsAString& aAddrStr)
+{
+  aAddrStr.Truncate();
+  if (!mIO || GetConnectionStatus() != SOCKET_CONNECTED) {
+    NS_WARNING("No socket currently open!");
+    return;
+  }
+  mIO->GetSocketAddr(aAddrStr);
+}
+
+bool
 StreamSocket::Connect(UnixSocketConnector* aConnector,
+                      const char* aAddress,
                       int aDelayMs)
 {
+  MOZ_ASSERT(aConnector);
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mIO);
+
+  nsAutoPtr<UnixSocketConnector> connector(aConnector);
+
+  if (mIO) {
+    NS_WARNING("Socket already connecting/connected!");
+    return false;
+  }
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  mIO = new StreamSocketIO(ioLoop, this, aConnector);
+  mIO = new StreamSocketIO(ioLoop, this, connector.forget());
   SetConnectionStatus(SOCKET_CONNECTING);
-
   if (aDelayMs > 0) {
     StreamSocketIO::DelayedConnectTask* connectTask =
       new StreamSocketIO::DelayedConnectTask(mIO);
@@ -527,7 +579,8 @@ StreamSocket::Connect(UnixSocketConnector* aConnector,
   } else {
     ioLoop->PostTask(FROM_HERE, new StreamSocketIO::ConnectTask(mIO));
   }
-  return NS_OK;
+
+  return true;
 }
 
 ConnectionOrientedSocketIO*
@@ -567,13 +620,16 @@ void
 StreamSocket::Close()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mIO);
+
+  if (!mIO) {
+    return;
+  }
 
   mIO->CancelDelayedConnectTask();
 
-  // From this point on, we consider |mIO| as being deleted. We sever
-  // the relationship here so any future calls to |Connect| will create
-  // a new I/O object.
+  // From this point on, we consider mIO as being deleted.
+  // We sever the relationship here so any future calls to listen or connect
+  // will create a new implementation.
   mIO->ShutdownOnMainThread();
 
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
