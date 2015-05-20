@@ -330,6 +330,7 @@ function runTestDefaultWaitForWindowClosed() {
 
     setupFiles();
     setupPrefs();
+    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     removeUpdateDirsAndFiles();
     reloadUpdateManagerData();
     setupAddons(runTest);
@@ -358,6 +359,7 @@ function finishTestDefault() {
   verifyTestsRan();
 
   resetPrefs();
+  gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
   resetFiles();
   removeUpdateDirsAndFiles();
   reloadUpdateManagerData();
