@@ -16,7 +16,6 @@ namespace mozilla {
 namespace layers {
 
 class GrallocTextureHostOGL : public TextureHost
-                            , public TextureHostOGL
 {
   friend class GrallocBufferActor;
 public:
@@ -50,13 +49,6 @@ public:
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTextureSource) override;
 
   virtual void UnbindTextureSource() override;
-
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  virtual TextureHostOGL* AsHostOGL() override
-  {
-    return this;
-  }
-#endif
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override;
 
