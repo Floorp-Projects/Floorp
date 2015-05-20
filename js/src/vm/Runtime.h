@@ -1958,7 +1958,7 @@ class MOZ_STACK_CLASS AutoInitGCManagedObject
     UniquePtrT ptr_;
 
   public:
-    AutoInitGCManagedObject(UniquePtrT&& ptr)
+    explicit AutoInitGCManagedObject(UniquePtrT&& ptr)
       : ptr_(mozilla::Move(ptr))
     {}
 
