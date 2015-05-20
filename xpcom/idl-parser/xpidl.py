@@ -159,8 +159,8 @@ class Location(object):
         self._file = getattr(lexer, 'filename', "<unknown>")
 
     def __eq__(self, other):
-        return self._lexpos == other._lexpos and \
-               self._file == other._file
+        return (self._lexpos == other._lexpos and
+                self._file == other._file)
 
     def resolve(self):
         if self._line:
@@ -432,10 +432,10 @@ class Native(object):
                 raise IDLError("Unexpected attribute", aloc)
 
     def __eq__(self, other):
-        return self.name == other.name and \
-               self.nativename == other.nativename and \
-               self.modifier == other.modifier and \
-               self.specialtype == other.specialtype
+        return (self.name == other.name and
+                self.nativename == other.nativename and
+                self.modifier == other.modifier and
+                self.specialtype == other.specialtype)
 
     def resolve(self, parent):
         parent.setName(self)
@@ -542,8 +542,7 @@ class Interface(object):
         # Do not increase this value without increasing the number in that
         # location, or you WILL cause otherwise unknown problems!
         if self.countEntries() > 250 and not self.attributes.builtinclass:
-            raise IDLError("interface '%s' has too many entries" % self.name,
-                self.location)
+            raise IDLError("interface '%s' has too many entries" % self.name, self.location)
 
     def isScriptable(self):
         # NOTE: this is not whether *this* interface is scriptable... it's
@@ -776,11 +775,11 @@ class Attribute(object):
         self.iface = iface
         self.realtype = iface.idl.getName(self.type, self.location)
         if (self.null is not None and
-            getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
+                getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Null' attribute can only be used on DOMString",
                            self.location)
         if (self.undefined is not None and
-            getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
+                getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Undefined' attribute can only be used on DOMString",
                            self.location)
         if self.infallible and not self.realtype.kind == 'builtin':
@@ -981,11 +980,11 @@ class Param(object):
         if self.array:
             self.realtype = Array(self.realtype)
         if (self.null is not None and
-            getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
+                getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Null' attribute can only be used on DOMString",
                            self.location)
         if (self.undefined is not None and
-            getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
+                getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Undefined' attribute can only be used on DOMString",
                            self.location)
 
