@@ -238,7 +238,8 @@ class B2GUpdateTestCase(MarionetteTestCase):
         self.print_status(status, os.path.basename(path))
 
         results = self.marionette.execute_async_script(data,
-                                                       script_args=[self.testvars])
+                                                       script_args=[self.testvars],
+                                                       special_powers=True)
         self.handle_results(path, stage, results)
 
     def handle_results(self, path, stage, results):
