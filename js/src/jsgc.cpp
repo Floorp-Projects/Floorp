@@ -7092,9 +7092,33 @@ JS::AbortIncrementalGC(JSRuntime* rt)
 }
 
 char16_t*
-JS::GCDescription::formatMessage(JSRuntime* rt) const
+JS::GCDescription::formatSliceMessage(JSRuntime* rt) const
 {
-    return rt->gc.stats.formatMessage();
+    UniqueChars cstr = rt->gc.stats.formatCompactSliceMessage();
+
+    size_t nchars = strlen(cstr.get());
+    UniquePtr<char16_t, JS::FreePolicy> out(js_pod_malloc<char16_t>(nchars + 1));
+    if (!out)
+        return nullptr;
+    out.get()[nchars] = 0;
+
+    CopyAndInflateChars(out.get(), cstr.get(), nchars);
+    return out.release();
+}
+
+char16_t*
+JS::GCDescription::formatSummaryMessage(JSRuntime* rt) const
+{
+    UniqueChars cstr = rt->gc.stats.formatCompactSummaryMessage();
+
+    size_t nchars = strlen(cstr.get());
+    UniquePtr<char16_t, JS::FreePolicy> out(js_pod_malloc<char16_t>(nchars + 1));
+    if (!out)
+        return nullptr;
+    out.get()[nchars] = 0;
+
+    CopyAndInflateChars(out.get(), cstr.get(), nchars);
+    return out.release();
 }
 
 JS::dbg::GarbageCollectionEvent::Ptr

@@ -187,6 +187,8 @@ struct Statistics
     void endSCC(unsigned scc, int64_t start);
 
     char16_t* formatMessage();
+    UniqueChars formatCompactSliceMessage() const;
+    UniqueChars formatCompactSummaryMessage() const;
     UniqueChars formatJsonMessage(uint64_t timestamp);
     UniqueChars formatDetailedMessage();
 
@@ -233,7 +235,7 @@ struct Statistics
     size_t slicesLength() const { return slices.length(); }
 
     /* Create a convenient typedef for referring tables of phase times. */
-    typedef int64_t (*PhaseTimeTable)[PHASE_LIMIT];
+    typedef int64_t const (*PhaseTimeTable)[PHASE_LIMIT];
 
   private:
     JSRuntime* runtime;
@@ -277,7 +279,7 @@ struct Statistics
     size_t preBytes;
 
     /* Records the maximum GC pause in an API-controlled interval (in us). */
-    int64_t maxPauseInInterval;
+    mutable int64_t maxPauseInInterval;
 
     /* Phases that are currently on stack. */
     Phase phaseNesting[MAX_NESTING];
@@ -309,10 +311,12 @@ struct Statistics
 
     void recordPhaseEnd(Phase phase);
 
-    void gcDuration(int64_t* total, int64_t* maxPause);
+    void gcDuration(int64_t* total, int64_t* maxPause) const;
     void sccDurations(int64_t* total, int64_t* maxPause);
     void printStats();
     bool formatData(StatisticsSerializer& ss, uint64_t timestamp);
+
+    UniqueChars formatCompactSlicePhaseTimes(PhaseTimeTable phaseTimes) const;
 
     UniqueChars formatDetailedDescription();
     UniqueChars formatDetailedSliceDescription(unsigned i, const SliceData& slice);
@@ -323,7 +327,7 @@ struct Statistics
     UniqueChars formatJsonSliceDescription(unsigned i, const SliceData& slice);
     UniqueChars formatJsonPhaseTimes(PhaseTimeTable phaseTimes);
 
-    double computeMMU(int64_t resolution);
+    double computeMMU(int64_t resolution) const;
 };
 
 struct AutoGCSlice
