@@ -314,10 +314,10 @@ struct Statistics
     void printStats();
     bool formatData(StatisticsSerializer& ss, uint64_t timestamp);
 
-    UniqueChars formatDescription();
-    UniqueChars formatSliceDescription(unsigned i, const SliceData& slice);
-    UniqueChars formatTotals();
-    UniqueChars formatPhaseTimes(PhaseTimeTable phaseTimes);
+    UniqueChars formatDetailedDescription();
+    UniqueChars formatDetailedSliceDescription(unsigned i, const SliceData& slice);
+    UniqueChars formatDetailedPhaseTimes(PhaseTimeTable phaseTimes);
+    UniqueChars formatDetailedTotals();
 
     double computeMMU(int64_t resolution);
 };

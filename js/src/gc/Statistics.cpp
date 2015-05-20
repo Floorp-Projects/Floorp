@@ -585,8 +585,55 @@ Join(const FragmentVector& fragments) {
     return UniqueChars(joined);
 }
 
+static int64_t
+SumChildTimes(size_t phaseSlot, Phase phase, Statistics::PhaseTimeTable phaseTimes)
+{
+    // Sum the contributions from single-parented children.
+    int64_t total = 0;
+    for (unsigned i = 0; i < PHASE_LIMIT; i++) {
+        if (phases[i].parent == phase)
+            total += phaseTimes[phaseSlot][i];
+    }
+
+    // Sum the contributions from multi-parented children.
+    size_t dagSlot = phaseExtra[phase].dagSlot;
+    if (dagSlot != PHASE_DAG_NONE) {
+        for (size_t i = 0; i < mozilla::ArrayLength(dagChildEdges); i++) {
+            if (dagChildEdges[i].parent == phase) {
+                Phase child = dagChildEdges[i].child;
+                total += phaseTimes[dagSlot][child];
+            }
+        }
+    }
+    return total;
+}
+
 UniqueChars
-Statistics::formatDescription()
+Statistics::formatDetailedMessage()
+{
+    FragmentVector fragments;
+
+    if (!fragments.append(formatDetailedDescription()))
+        return UniqueChars(nullptr);
+
+    if (slices.length() > 1) {
+        for (unsigned i = 0; i < slices.length(); i++) {
+            if (!fragments.append(formatDetailedSliceDescription(i, slices[i])))
+                return UniqueChars(nullptr);
+            if (!fragments.append(formatDetailedPhaseTimes(slices[i].phaseTimes)))
+                return UniqueChars(nullptr);
+        }
+    }
+    if (!fragments.append(formatDetailedTotals()))
+        return UniqueChars(nullptr);
+    if (!fragments.append(formatDetailedPhaseTimes(phaseTimes)))
+        return UniqueChars(nullptr);
+
+    return Join(fragments);
+}
+
+UniqueChars
+Statistics::formatDetailedDescription()
 {
     const double bytesPerMiB = 1024 * 1024;
 
@@ -632,7 +679,7 @@ Statistics::formatDescription()
 }
 
 UniqueChars
-Statistics::formatSliceDescription(unsigned i, const SliceData& slice)
+Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice)
 {
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
@@ -656,48 +703,7 @@ Statistics::formatSliceDescription(unsigned i, const SliceData& slice)
 }
 
 UniqueChars
-Statistics::formatTotals()
-{
-    int64_t total, longest;
-    gcDuration(&total, &longest);
-
-    const char* format =
-"\
-  ---- Totals ----\n\
-    Total Time: %.3fms\n\
-    Max Pause: %.3fms\n\
-";
-    char buffer[1024];
-    memset(buffer, 0, sizeof(buffer));
-    JS_snprintf(buffer, sizeof(buffer), format, t(total), t(longest));
-    return make_string_copy(buffer);
-}
-
-static int64_t
-SumChildTimes(size_t phaseSlot, Phase phase, Statistics::PhaseTimeTable phaseTimes)
-{
-    // Sum the contributions from single-parented children.
-    int64_t total = 0;
-    for (unsigned i = 0; i < PHASE_LIMIT; i++) {
-        if (phases[i].parent == phase)
-            total += phaseTimes[phaseSlot][i];
-    }
-
-    // Sum the contributions from multi-parented children.
-    size_t dagSlot = phaseExtra[phase].dagSlot;
-    if (dagSlot != PHASE_DAG_NONE) {
-        for (size_t i = 0; i < mozilla::ArrayLength(dagChildEdges); i++) {
-            if (dagChildEdges[i].parent == phase) {
-                Phase child = dagChildEdges[i].child;
-                total += phaseTimes[dagSlot][child];
-            }
-        }
-    }
-    return total;
-}
-
-UniqueChars
-Statistics::formatPhaseTimes(PhaseTimeTable phaseTimes)
+Statistics::formatDetailedPhaseTimes(PhaseTimeTable phaseTimes)
 {
     static const char* LevelToIndent[] = { "", "  ", "    ", "      " };
     static const int64_t MaxUnaccountedChildTimeUS = 50;
@@ -732,27 +738,21 @@ Statistics::formatPhaseTimes(PhaseTimeTable phaseTimes)
 }
 
 UniqueChars
-Statistics::formatDetailedMessage()
+Statistics::formatDetailedTotals()
 {
-    FragmentVector fragments;
+    int64_t total, longest;
+    gcDuration(&total, &longest);
 
-    if (!fragments.append(formatDescription()))
-        return UniqueChars(nullptr);
-
-    if (slices.length() > 1) {
-        for (unsigned i = 0; i < slices.length(); i++) {
-            if (!fragments.append(formatSliceDescription(i, slices[i])))
-                return UniqueChars(nullptr);
-            if (!fragments.append(formatPhaseTimes(slices[i].phaseTimes)))
-                return UniqueChars(nullptr);
-        }
-    }
-    if (!fragments.append(formatTotals()))
-        return UniqueChars(nullptr);
-    if (!fragments.append(formatPhaseTimes(phaseTimes)))
-        return UniqueChars(nullptr);
-
-    return Join(fragments);
+    const char* format =
+"\
+  ---- Totals ----\n\
+    Total Time: %.3fms\n\
+    Max Pause: %.3fms\n\
+";
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
+    JS_snprintf(buffer, sizeof(buffer), format, t(total), t(longest));
+    return make_string_copy(buffer);
 }
 
 char16_t*
