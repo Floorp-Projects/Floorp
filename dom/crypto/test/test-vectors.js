@@ -659,19 +659,20 @@ tv = {
     }
   },
 
-  // RFC 2409 <http://tools.ietf.org/html/rfc2409#section-6.1>
+  // RFC 2409 <http://tools.ietf.org/html/rfc2409#section-6.2>
   dh: {
     prime: util.hex2abv(
       "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74" +
       "020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f1437" +
-      "4fe1356d6d51c245e485b576625e7ec6f44c42e9a63a3620ffffffffffffffff"
+      "4fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7ed" +
+      "ee386bfb5a899fa5ae9f24117c4b1fe649286651ece65381ffffffffffffffff"
     ),
 
     prime2: util.hex2abv(
-      "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74" +
-      "020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f1437" +
-      "4fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7ed" +
-      "ee386bfb5a899fa5ae9f24117c4b1fe649286651ece65381ffffffffffffffff"
+      "8b79f180cbd3f282de92e8b8f2d092674ffda61f01ed961f8ef04a1b7a3709ff" +
+      "748c2abf6226cf0c4538e48838193da456e92ee530ef7aa703e741585e475b26" +
+      "cd64fa97819181cef27de2449cd385c49c9b030f89873b5b7eaf063a788f00db" +
+      "3cb670c73846bc4f76af062d672bde8f29806b81548411ab48b99aebfd9c2d09"
     ),
   },
 
