@@ -18,36 +18,36 @@ using namespace dom;
 namespace image {
 
 ImageCacheKey::ImageCacheKey(nsIURI* aURI)
+  : mURI(new ImageURL(aURI))
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(mURI);
 
   bool isChrome;
   mIsChrome = NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome;
 
-  aURI->GetSpec(mSpec);
-  mHash = ComputeHash(mSpec);
+  mHash = ComputeHash(mURI);
 }
 
 ImageCacheKey::ImageCacheKey(ImageURL* aURI)
+  : mURI(aURI)
 {
-  MOZ_ASSERT(aURI);
+  MOZ_ASSERT(mURI);
 
   bool isChrome;
   mIsChrome = NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome;
 
-  aURI->GetSpec(mSpec);
-  mHash = ComputeHash(mSpec);
+  mHash = ComputeHash(mURI);
 }
 
 ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
-  : mSpec(aOther.mSpec)
+  : mURI(aOther.mURI)
   , mHash(aOther.mHash)
   , mIsChrome(aOther.mIsChrome)
 { }
 
 ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
-  : mSpec(Move(aOther.mSpec))
+  : mURI(Move(aOther.mURI))
   , mHash(aOther.mHash)
   , mIsChrome(aOther.mIsChrome)
 { }
@@ -55,15 +55,23 @@ ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
 bool
 ImageCacheKey::operator==(const ImageCacheKey& aOther) const
 {
-  return mSpec == aOther.mSpec;
+  return *mURI == *aOther.mURI;
+}
+
+const char*
+ImageCacheKey::Spec() const
+{
+  return mURI->Spec();
 }
 
 /* static */ uint32_t
-ImageCacheKey::ComputeHash(const nsACString& aSpec)
+ImageCacheKey::ComputeHash(ImageURL* aURI)
 {
   // Since we frequently call Hash() several times in a row on the same
   // ImageCacheKey, as an optimization we compute our hash once and store it.
-  return HashString(aSpec);
+  nsAutoCString spec;
+  aURI->GetSpec(spec);
+  return HashString(spec);
 }
 
 } // namespace image
