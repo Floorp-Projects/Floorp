@@ -19,9 +19,57 @@ struct PRLibrary;
 struct nsPluginInfo;
 class nsNPAPIPlugin;
 
+// An interface representing plugin tags internally.
+#define NS_IINTERNALPLUGINTAG_IID \
+{ 0xe8fdd227, 0x27da, 0x46ee,     \
+  { 0xbe, 0xf3, 0x1a, 0xef, 0x5a, 0x8f, 0xc5, 0xb4 } }
+
+class nsIInternalPluginTag : public nsIPluginTag
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IINTERNALPLUGINTAG_IID)
+
+  nsIInternalPluginTag(const char* aName, const char* aDescription,
+                       const char* aFileName, const char* aVersion);
+  nsIInternalPluginTag(const char* aName, const char* aDescription,
+                       const char* aFileName, const char* aVersion,
+                       const nsTArray<nsCString>& aMimeTypes,
+                       const nsTArray<nsCString>& aMimeDescriptions,
+                       const nsTArray<nsCString>& aExtensions);
+
+  virtual bool IsEnabled() = 0;
+
+  const nsCString& Name() const { return mName; }
+  const nsCString& Description() const { return mDescription; }
+
+  const nsTArray<nsCString>& MimeTypes() const { return mMimeTypes; }
+
+  const nsTArray<nsCString>& MimeDescriptions() const {
+    return mMimeDescriptions;
+  }
+
+  const nsTArray<nsCString>& Extensions() const { return mExtensions; }
+
+  const nsCString& FileName() const { return mFileName; }
+
+  const nsCString& Version() const { return mVersion; }
+
+protected:
+  ~nsIInternalPluginTag();
+
+  nsCString     mName; // UTF-8
+  nsCString     mDescription; // UTF-8
+  nsCString     mFileName; // UTF-8
+  nsCString     mVersion;  // UTF-8
+  nsTArray<nsCString> mMimeTypes; // UTF-8
+  nsTArray<nsCString> mMimeDescriptions; // UTF-8
+  nsTArray<nsCString> mExtensions; // UTF-8
+};
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIInternalPluginTag, NS_IINTERNALPLUGINTAG_IID)
+
 // A linked-list of plugin information that is used for instantiating plugins
 // and reflecting plugin information into JavaScript.
-class nsPluginTag final : public nsIPluginTag
+class nsPluginTag final : public nsIInternalPluginTag
 {
 public:
   NS_DECL_ISUPPORTS
@@ -69,7 +117,7 @@ public:
   // plugin is enabled and not blocklisted
   bool IsActive();
 
-  bool IsEnabled();
+  bool IsEnabled() override;
   void SetEnabled(bool enabled);
   bool IsClicktoplay();
   bool IsBlocklisted();
@@ -94,18 +142,11 @@ public:
   // True if we've ever created an instance of this plugin in the current process.
   bool          mHadLocalInstance;
 
-  nsCString     mName; // UTF-8
-  nsCString     mDescription; // UTF-8
-  nsTArray<nsCString> mMimeTypes; // UTF-8
-  nsTArray<nsCString> mMimeDescriptions; // UTF-8
-  nsTArray<nsCString> mExtensions; // UTF-8
   PRLibrary     *mLibrary;
   nsRefPtr<nsNPAPIPlugin> mPlugin;
   bool          mIsJavaPlugin;
   bool          mIsFlashPlugin;
-  nsCString     mFileName; // UTF-8
   nsCString     mFullPath; // UTF-8
-  nsCString     mVersion;  // UTF-8
   int64_t       mLastModifiedTime;
   nsCOMPtr<nsITimer> mUnloadTimer;
 

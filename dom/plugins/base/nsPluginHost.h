@@ -114,7 +114,7 @@ public:
                               /* out */ nsACString & aMimeType,
                               PluginFilter aFilter = eExcludeDisabled);
 
-  void GetPlugins(nsTArray<nsRefPtr<nsPluginTag> >& aPluginArray,
+  void GetPlugins(nsTArray<nsCOMPtr<nsIInternalPluginTag>>& aPluginArray,
                   bool aIncludeDisabled = false);
 
   void FindPluginsForContent(uint32_t aPluginEpoch,
@@ -287,7 +287,8 @@ private:
   // Registers or unregisters the given mime type with the category manager
   // (performs no checks - see UpdateCategoryManager)
   enum nsRegisterType { ePluginRegister, ePluginUnregister };
-  void RegisterWithCategoryManager(nsCString &aMimeType, nsRegisterType aType);
+  void RegisterWithCategoryManager(const nsCString& aMimeType,
+                                   nsRegisterType aType);
 
   void AddPluginTag(nsPluginTag* aPluginTag);
 
