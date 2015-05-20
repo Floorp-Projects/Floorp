@@ -78,6 +78,8 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
   , mDPI(-1)
   , mDefaultScale(-1)
   , mNativeKeyCommandsValid(false)
+  , mCursorHotspotX(0)
+  , mCursorHotspotY(0)
 {
   MOZ_COUNT_CTOR(PuppetWidget);
 
@@ -949,9 +951,11 @@ PuppetWidget::NotifyIMEOfPositionChange()
 NS_IMETHODIMP
 PuppetWidget::SetCursor(nsCursor aCursor)
 {
-  if (mCursor == aCursor && !mUpdateCursor) {
+  if (mCursor == aCursor && !mCustomCursor && !mUpdateCursor) {
     return NS_OK;
   }
+
+  mCustomCursor = nullptr;
 
   if (mTabChild &&
       !mTabChild->SendSetCursor(aCursor, mUpdateCursor)) {
@@ -962,6 +966,59 @@ PuppetWidget::SetCursor(nsCursor aCursor)
   mUpdateCursor = false;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PuppetWidget::SetCursor(imgIContainer* aCursor,
+                        uint32_t aHotspotX, uint32_t aHotspotY)
+{
+  if (!aCursor || !mTabChild) {
+    return NS_OK;
+  }
+
+  if (mCustomCursor == aCursor &&
+      mCursorHotspotX == aHotspotX &&
+      mCursorHotspotY == aHotspotY &&
+      !mUpdateCursor) {
+    return NS_OK;
+  }
+
+  RefPtr<mozilla::gfx::SourceSurface> surface =
+    aCursor->GetFrame(imgIContainer::FRAME_CURRENT,
+                      imgIContainer::FLAG_SYNC_DECODE);
+  if (!surface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mozilla::RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
+    surface->GetDataSurface();
+  size_t length;
+  int32_t stride;
+  mozilla::UniquePtr<char[]> surfaceData =
+    nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
+
+  nsCString cursorData = nsCString(surfaceData.get(), length);
+  mozilla::gfx::IntSize size = dataSurface->GetSize();
+  if (!mTabChild->SendSetCustomCursor(cursorData, size.width, size.height, stride,
+                                      static_cast<uint8_t>(dataSurface->GetFormat()),
+                                      aHotspotX, aHotspotY, mUpdateCursor)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mCursor = nsCursor(-1);
+  mCustomCursor = aCursor;
+  mCursorHotspotX = aHotspotX;
+  mCursorHotspotY = aHotspotY;
+  mUpdateCursor = false;
+
+  return NS_OK;
+}
+
+void
+PuppetWidget::ClearCachedCursor()
+{
+  nsBaseWidget::ClearCachedCursor();
+  mCustomCursor = nullptr;
 }
 
 nsresult

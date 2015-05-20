@@ -208,6 +208,14 @@ public:
                                            nsTArray<nsCString>&& aEnabledCommands,
                                            nsTArray<nsCString>&& aDisabledCommands) override;
     virtual bool RecvSetCursor(const uint32_t& aValue, const bool& aForce) override;
+    virtual bool RecvSetCustomCursor(const nsCString& aUri,
+                                     const uint32_t& aWidth,
+                                     const uint32_t& aHeight,
+                                     const uint32_t& aStride,
+                                     const uint8_t& aFormat,
+                                     const uint32_t& aHotspotX,
+                                     const uint32_t& aHotspotY,
+                                     const bool& aForce) override;
     virtual bool RecvSetBackgroundColor(const nscolor& aValue) override;
     virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus) override;
     virtual bool RecvIsParentWindowMainWidgetVisible(bool* aIsVisible) override;
@@ -600,6 +608,8 @@ private:
     // Cached cursor setting from TabChild.  When the cursor is over the tab,
     // it should take this appearance.
     nsCursor mCursor;
+    nsCOMPtr<imgIContainer> mCustomCursor;
+    uint32_t mCustomCursorHotspotX, mCustomCursorHotspotY;
 
     // True if the cursor changes from the TabChild should change the widget
     // cursor.  This happens whenever the cursor is in the tab's region.
