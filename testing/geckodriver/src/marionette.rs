@@ -203,13 +203,7 @@ impl WebDriverHandler for MarionetteHandler {
         match self.connection.lock() {
             Ok(ref mut connection) => {
                 match connection.as_mut() {
-                    Some(conn) => {
-                        let mut result = conn.send_message(msg);
-                        if let Err(ref mut x) = result {
-                            x.set_delete_session();
-                        };
-                        result
-                    },
+                    Some(conn) => conn.send_message(msg),
                     None => panic!()
                 }
             },
@@ -656,13 +650,17 @@ impl MarionetteConnection {
         match self.stream {
             Some(ref mut stream) => {
                 if stream.write(&data[..].as_bytes()).is_err() {
-                    return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                                   "Failed to write response to stream"))
+                    let mut err = WebDriverError::new(ErrorStatus::UnknownError,
+                                                      "Failed to write response to stream");
+                    err.set_delete_session();
+                    return Err(err);
                 }
             },
             None => {
-                return Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                               "Tried to write before opening stream"))
+                let mut err = WebDriverError::new(ErrorStatus::UnknownError,
+                                                  "Tried to write before opening stream");
+                err.set_delete_session();
+                return Err(err);
             }
         }
         match self.read_resp() {
@@ -670,8 +668,12 @@ impl MarionetteConnection {
                 debug!("Marionette response {}", resp);
                 Ok(resp)
             },
-            Err(_) => Err(WebDriverError::new(ErrorStatus::UnknownError,
-                                              "Failed to decode response from marionette"))
+            Err(_) => {
+                let mut err = WebDriverError::new(ErrorStatus::UnknownError,
+                                                  "Failed to decode response from marionette");
+                err.set_delete_session();
+                Err(err)
+            }
         }
     }
 
