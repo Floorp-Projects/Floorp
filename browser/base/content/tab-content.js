@@ -611,13 +611,18 @@ let DOMFullscreenHandler = {
   },
 
   handleEvent: function(aEvent) {
-    if (aEvent.type == "MozEnteredDomFullscreen") {
-      this._fullscreenDoc = aEvent.target;
-      sendAsyncMessage("MozEnteredDomFullscreen", {
-        origin: this._fullscreenDoc.nodePrincipal.origin,
-      });
-    } else if (aEvent.type == "MozExitedDomFullscreen") {
-      sendAsyncMessage("MozExitedDomFullscreen");
+    switch (aEvent.type) {
+      case "MozEnteredDomFullscreen": {
+        this._fullscreenDoc = aEvent.target;
+        sendAsyncMessage("MozEnteredDomFullscreen", {
+          origin: this._fullscreenDoc.nodePrincipal.origin,
+        });
+        break;
+      }
+      case "MozExitedDomFullscreen": {
+        sendAsyncMessage("MozExitedDomFullscreen");
+        break;
+      }
     }
   }
 };
