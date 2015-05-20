@@ -280,6 +280,11 @@ function checkSettingsSection(data) {
   Assert.ok(checkNullOrString(update.channel));
   Assert.equal(typeof update.enabled, "boolean");
   Assert.equal(typeof update.autoDownload, "boolean");
+
+  // Check "defaultSearchEngine" separately, as it can either be undefined or string.
+  if ("defaultSearchEngine" in data.settings) {
+    checkString(data.settings.defaultSearchEngine);
+  }
 }
 
 function checkProfileSection(data) {
@@ -561,6 +566,8 @@ function checkEnvironmentData(data) {
 }
 
 function run_test() {
+  // Load a custom manifest to provide search engine loading from JAR files.
+  do_load_manifest("chrome.manifest");
   do_test_pending();
   spoofGfxAdapter();
   do_get_profile();
@@ -934,6 +941,64 @@ add_task(function* test_changeThrottling() {
 
   // Unregister the listener.
   TelemetryEnvironment.unregisterChangeListener("testWatchPrefs_throttling");
+});
+
+add_task(function* test_defaultSearchEngine() {
+  // Check that no default engine is in the environment before the search service is
+  // initialized.
+  let data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+  Assert.ok(!("defaultSearchEngine" in data.settings));
+
+  // Load the engines definitions from a custom JAR file: that's needed so that
+  // the search provider reports an engine identifier.
+  let defaultBranch = Services.prefs.getDefaultBranch(null);
+  defaultBranch.setCharPref("browser.search.jarURIs", "chrome://testsearchplugin/locale/searchplugins/");
+  defaultBranch.setBoolPref("browser.search.loadFromJars", true);
+
+  // Initialize the search service and disable geoip lookup, so we don't get unwanted
+  // network connections.
+  Preferences.set("browser.search.geoip.url", "");
+  yield new Promise(resolve => Services.search.init(resolve));
+
+  // Our default engine from the JAR file has an identifier. Check if it is correctly
+  // reported.
+  data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+  Assert.equal(data.settings.defaultSearchEngine, "telemetrySearchIdentifier");
+
+  // Remove all the search engines.
+  for (let engine of Services.search.getEngines()) {
+    Services.search.removeEngine(engine);
+  }
+  // The search service does not notify "engine-default" when removing a default engine.
+  // Manually force the notification.
+  // TODO: remove this when bug 1165341 is resolved.
+  Services.obs.notifyObservers(null, "browser-search-engine-modified", "engine-default");
+
+  // Then check that no default engine is reported if none is available.
+  data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+  Assert.equal(data.settings.defaultSearchEngine, "NONE");
+
+  // Add a new search engine (this will have no engine identifier).
+  const SEARCH_ENGINE_ID = "telemetry_default";
+  const SEARCH_ENGINE_URL = "http://www.example.org/?search={searchTerms}";
+  Services.search.addEngineWithDetails(SEARCH_ENGINE_ID, "", null, "", "get", SEARCH_ENGINE_URL);
+
+  // Set the clock in the future so our changes don't get throttled.
+  gNow = fakeNow(futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE));
+  // Register a new change listener and then wait for the search engine change to be notified.
+  let deferred = PromiseUtils.defer();
+  TelemetryEnvironment.registerChangeListener("testWatch_SearchDefault", deferred.resolve);
+  Services.search.defaultEngine = Services.search.getEngineByName(SEARCH_ENGINE_ID);
+  yield deferred.promise;
+
+  data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+
+  const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
+  Assert.equal(data.settings.defaultSearchEngine, EXPECTED_SEARCH_ENGINE);
 });
 
 add_task(function*() {
