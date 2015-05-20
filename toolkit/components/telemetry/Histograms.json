@@ -331,6 +331,25 @@
     "n_buckets": 50,
     "description": "Time spent sweeping slowest compartment SCC (ms)"
   },
+  "GC_MINOR_REASON": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "JS::gcreason::NUM_TELEMETRY_REASONS",
+    "description": "Reason (enum value) for initiating a minor GC"
+  },
+  "GC_MINOR_REASON_LONG": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "JS::gcreason::NUM_TELEMETRY_REASONS",
+    "description": "Reason (enum value) that caused a long (>1ms) minor GC"
+  },
+  "GC_MINOR_US": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "1000000",
+    "n_buckets": 100,
+    "description": "Time spent running JS minor GC (us)"
+  },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "expires_in_version": "default",
     "kind": "exponential",
