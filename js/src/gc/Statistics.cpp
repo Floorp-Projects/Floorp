@@ -775,7 +775,6 @@ Statistics::Statistics(JSRuntime* rt)
   : runtime(rt),
     startupTime(PRMJ_Now()),
     fp(nullptr),
-    fullFormat(false),
     gcDepth(0),
     nonincrementalReason_(nullptr),
     timedGCStart(0),
@@ -840,36 +839,30 @@ Statistics::Statistics(JSRuntime* rt)
     }
 
     char* env = getenv("MOZ_GCTIMER");
-    if (!env || strcmp(env, "none") == 0) {
-        fp = nullptr;
-        return;
-    }
-
-    if (strcmp(env, "stdout") == 0) {
-        fullFormat = false;
-        fp = stdout;
-    } else if (strcmp(env, "stderr") == 0) {
-        fullFormat = false;
-        fp = stderr;
-    } else {
-        fullFormat = true;
-
-        fp = fopen(env, "a");
-        MOZ_ASSERT(fp);
+    if (env) {
+        if (strcmp(env, "none") == 0) {
+            fp = nullptr;
+        } else if (strcmp(env, "stdout") == 0) {
+            fp = stdout;
+        } else if (strcmp(env, "stderr") == 0) {
+            fp = stderr;
+        } else {
+            fp = fopen(env, "a");
+            if (!fp)
+                MOZ_CRASH("Failed to open MOZ_GCTIMER log file.");
+        }
     }
 }
 
 Statistics::~Statistics()
 {
     if (fp) {
-        if (fullFormat) {
-            StatisticsSerializer ss(StatisticsSerializer::AsText);
-            FormatPhaseTimes(ss, "", phaseTotals);
-            char* msg = ss.finishCString();
-            if (msg) {
-                fprintf(fp, "TOTALS\n%s\n\n-------\n", msg);
-                js_free(msg);
-            }
+        StatisticsSerializer ss(StatisticsSerializer::AsText);
+        FormatPhaseTimes(ss, "", phaseTotals);
+        char* msg = ss.finishCString();
+        if (msg) {
+            fprintf(fp, "TOTALS\n%s\n\n-------\n", msg);
+            js_free(msg);
         }
 
         if (fp != stdout && fp != stderr)
@@ -912,26 +905,11 @@ void
 Statistics::printStats()
 {
     if (aborted) {
-        if (fullFormat)
-            fprintf(fp, "OOM during GC statistics collection. The report is unavailable for this GC.\n");
-        fflush(fp);
-        return;
-    }
-
-    if (fullFormat) {
+        fprintf(fp, "OOM during GC statistics collection. The report is unavailable for this GC.\n");
+    } else {
         UniqueChars msg = formatDetailedMessage();
         if (msg)
             fprintf(fp, "GC(T+%.3fs) %s\n", t(slices[0].start - startupTime) / 1000.0, msg.get());
-    } else {
-        int64_t total, longest;
-        gcDuration(&total, &longest);
-
-        int64_t markTotal = SumPhase(PHASE_MARK, phaseTimes);
-        fprintf(fp, "%f %f %f\n",
-                t(total),
-                t(markTotal),
-                t(phaseTimes[PHASE_DAG_NONE][PHASE_SWEEP]));
-        MOZ_ASSERT(phaseExtra[PHASE_SWEEP].dagSlot == PHASE_DAG_NONE);
     }
     fflush(fp);
 }
