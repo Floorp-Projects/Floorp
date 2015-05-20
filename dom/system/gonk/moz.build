@@ -106,6 +106,8 @@ if CONFIG['MOZ_B2G_RIL']:
     ]
     if not CONFIG['DISABLE_MOZ_RIL_GEOLOC']:
         EXTRA_COMPONENTS += [
+            'DataCallInterfaceService.js',
+            'DataCallInterfaceService.manifest',
             'RadioInterfaceLayer.js',
             'RadioInterfaceLayer.manifest',
         ]
