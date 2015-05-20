@@ -912,14 +912,18 @@ AudioContext::Close(ErrorResult& aRv)
   mCloseCalled = true;
 
   mPromiseGripArray.AppendElement(promise);
-  Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
-                                      AudioContextOperation::Close, promise);
 
+  // This can be called when freeing a document, and the streams are dead at
+  // this point, so we need extra null-checks.
   MediaStream* ds = DestinationStream();
   if (ds) {
-    ds->BlockStreamIfNeeded();
-  }
+    Graph()->ApplyAudioContextOperation(ds->AsAudioNodeStream(),
+                                        AudioContextOperation::Close, promise);
 
+    if (ds) {
+      ds->BlockStreamIfNeeded();
+    }
+  }
   return promise.forget();
 }
 
