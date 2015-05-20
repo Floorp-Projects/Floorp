@@ -115,7 +115,7 @@ impl<T: WebDriverHandler> Dispatcher<T> {
                         match msg.command {
                             WebDriverCommand::NewSession => {
                                 Err(WebDriverError::new(
-                                    ErrorStatus::SessionNotCreated,
+                                    ErrorStatus::UnsupportedOperation,
                                     "Session is already started"))
                             },
                             _ => {
