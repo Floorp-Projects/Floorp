@@ -361,7 +361,6 @@ MozNFCImpl.prototype = {
     this.defineEventHandlerGetterSetter("onpeerlost");
 
     if (this._nfcContentHelper) {
-      this._nfcContentHelper.init(aWindow);
       this._tabId = this.getTabId(aWindow);
       this._nfcContentHelper.addEventListener(this, this._tabId);
       this._rfState = this._nfcContentHelper.queryRFState();

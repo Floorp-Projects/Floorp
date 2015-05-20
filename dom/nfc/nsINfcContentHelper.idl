@@ -124,11 +124,9 @@ interface nsINfcBrowserAPI : nsISupports
                    in boolean isFocus);
 };
 
-[scriptable, uuid(080a84f1-f039-46ed-9dc6-f34ce3aa9638)]
+[scriptable, uuid(f098c114-b21f-43f5-9f53-0c22b4f194eb)]
 interface nsINfcContentHelper : nsISupports
 {
-  void init(in nsIDOMWindow window);
-
   /**
    * Read current NDEF data on the tag.
    *
@@ -206,7 +204,7 @@ interface nsINfcContentHelper : nsISupports
                   in nsINfcRequestCallback callback);
 
   /**
-   * Get current RF state.
+   * Get current RF state. This function will be blocking.
    */
   DOMString queryRFState();
 
