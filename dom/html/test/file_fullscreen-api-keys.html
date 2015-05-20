@@ -92,8 +92,12 @@ function testScriptInitiatedKeyEvents() {
 
 function testNextKey() {
   if (!document.mozFullScreen) {
-    addFullscreenChangeContinuation("enter", reallyTestNextKey);
-    document.body.mozRequestFullScreen();
+    // Async request fullscreen to avoid the request be accidentally
+    // cancelled due to unfinished clean-up of exiting fullscreen.
+    setTimeout(() => {
+      addFullscreenChangeContinuation("enter", reallyTestNextKey);
+      document.body.mozRequestFullScreen();
+    }, 0);
   }
   else {
     reallyTestNextKey();
