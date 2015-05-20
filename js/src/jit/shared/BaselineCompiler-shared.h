@@ -81,8 +81,10 @@ class BaselineCompilerShared
             return nullptr;
 
         // Create the entry and add it to the vector.
-        if (!icEntries_.append(ICEntry(script->pcToOffset(pc), kind)))
+        if (!icEntries_.append(ICEntry(script->pcToOffset(pc), kind))) {
+            ReportOutOfMemory(cx);
             return nullptr;
+        }
         ICEntry& vecEntry = icEntries_.back();
 
         // Set the first stub for the IC entry to the fallback stub
