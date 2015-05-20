@@ -25,7 +25,17 @@ class WebGLBuffer final
     , public WebGLContextBoundObject
 {
 public:
+
+    enum class Kind {
+        Undefined,
+        ElementArray,
+        OtherData
+    };
+
     explicit WebGLBuffer(WebGLContext* webgl, GLuint buf);
+
+    void BindTo(GLenum target);
+    Kind Content() const { return mContent; }
 
     void Delete();
 
@@ -38,10 +48,6 @@ public:
 
     void ElementArrayCacheBufferSubData(size_t pos, const void* ptr,
                                         size_t updateSizeInBytes);
-
-    void BindTo(GLenum target);
-    bool HasEverBeenBound() const { return mTarget != LOCAL_GL_NONE; }
-    GLenum Target() const { return mTarget; }
 
     bool Validate(GLenum type, uint32_t max_allowed, size_t first, size_t count,
                   uint32_t* const out_upperBound);
@@ -62,10 +68,7 @@ public:
 protected:
     ~WebGLBuffer();
 
-    void OnTargetChanged();
-
-    GLenum mTarget;
-
+    Kind mContent;
     WebGLsizeiptr mByteLength;
     nsAutoPtr<WebGLElementArrayCache> mCache;
 };
