@@ -8,13 +8,9 @@ import errno
 import os
 import which
 
-from configobj import ConfigObjError
-
 from mozversioncontrol.repoupdate import update_mercurial_repo
 
 from .config import (
-    HgIncludeException,
-    MercurialConfig,
     HOST_FINGERPRINTS,
 )
 
@@ -44,27 +40,6 @@ class MercurialUpdater(object):
             print('Try running |mach bootstrap| to ensure your environment is '
                 'up to date.')
             return 1
-
-        try:
-            c = MercurialConfig(config_paths)
-        except ConfigObjError as e:
-            print('Error importing existing Mercurial config!\n')
-            for error in e.errors:
-                print(error.message)
-
-            return 1
-        except HgIncludeException as e:
-            print(e.message)
-
-            return 1
-
-        if 'mqext' in c.extensions:
-            self.update_mercurial_repo(
-                hg,
-                'https://bitbucket.org/sfink/mqext',
-                os.path.join(self.ext_dir, 'mqext'),
-                'default',
-                'Ensuring mqext is up to date...')
 
         if os.path.isdir(self.vcs_tools_dir):
             self.update_mercurial_repo(

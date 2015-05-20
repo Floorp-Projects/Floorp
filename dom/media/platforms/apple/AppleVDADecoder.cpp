@@ -18,7 +18,7 @@
 #include "nsAutoPtr.h"
 #include "nsCocoaFeatures.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "VideoUtils.h"
 #include <algorithm>
 #include "gfxPlatform.h"
@@ -457,7 +457,7 @@ CFDictionaryRef
 AppleVDADecoder::CreateOutputConfiguration()
 {
   // Construct IOSurface Properties
-  const void* IOSurfaceKeys[] = { CFSTR("kIOSurfaceIsGlobal") };
+  const void* IOSurfaceKeys[] = { MacIOSurfaceLib::kPropIsGlobal };
   const void* IOSurfaceValues[] = { kCFBooleanTrue };
   static_assert(ArrayLength(IOSurfaceKeys) == ArrayLength(IOSurfaceValues),
                 "Non matching keys/values array size");

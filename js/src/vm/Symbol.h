@@ -62,6 +62,11 @@ class Symbol : public js::gc::TenuredCell
     }
     inline void finalize(js::FreeOp*) {}
 
+    static MOZ_ALWAYS_INLINE void writeBarrierPre(Symbol* thing) {
+        if (thing && !thing->isWellKnownSymbol())
+            thing->asTenured().writeBarrierPre(thing);
+    }
+
 #ifdef DEBUG
     void dump(FILE* fp = stderr);
 #endif

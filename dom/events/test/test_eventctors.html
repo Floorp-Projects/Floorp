@@ -696,11 +696,14 @@ try {
 ok(ex, "MouseEvent: First parameter is required!");
 ex = false;
 
-e = new MouseEvent("hello");
+e = new MouseEvent("hello",  { buttons: 1, movementX: 2, movementY: 3});
 is(e.type, "hello", "MouseEvent: Wrong event type!");
 ok(!e.isTrusted, "MouseEvent: Event shouldn't be trusted!");
 ok(!e.bubbles, "MouseEvent: Event shouldn't bubble!");
 ok(!e.cancelable, "MouseEvent: Event shouldn't be cancelable!");
+is(e.buttons, 1);
+is(e.movementX, 2);
+is(e.movementY, 3);
 document.dispatchEvent(e);
 is(receivedEvent, e, "MouseEvent: Wrong event!");
 
@@ -724,7 +727,7 @@ var mouseEventProps =
   { modifierSymbolLock: false },
   { button: 0 },
   { buttons: 0 },
-  { relatedTarget: null }
+  { relatedTarget: null },
 ];
 
 var testProps =
@@ -811,8 +814,11 @@ try {
 ok(ex, "WheelEvent: First parameter is required!");
 ex = false;
 
-e = new WheelEvent("hello");
+e = new WheelEvent("hello",  { buttons: 1, movementX: 2, movementY: 3});
 is(e.type, "hello", "WheelEvent: Wrong event type!");
+is(e.buttons, 1);
+is(e.movementX, 2);
+is(e.movementY, 3);
 ok(!e.isTrusted, "WheelEvent: Event shouldn't be trusted!");
 ok(!e.bubbles, "WheelEvent: Event shouldn't bubble!");
 ok(!e.cancelable, "WheelEvent: Event shouldn't be cancelable!");
@@ -907,8 +913,11 @@ try {
 ok(ex, "DragEvent: First parameter is required!");
 ex = false;
 
-e = new DragEvent("hello");
+e = new DragEvent("hello", { buttons: 1, movementX: 2, movementY: 3});
 is(e.type, "hello", "DragEvent: Wrong event type!");
+is(e.buttons, 1);
+is(e.movementX, 2);
+is(e.movementY, 3);
 document.dispatchEvent(e);
 is(receivedEvent, e, "DragEvent: Wrong event!");
 

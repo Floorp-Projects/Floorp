@@ -30,7 +30,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIContentViewer.h"
 #include "prtime.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prmem.h"
 #include "nsRect.h"
 #include "nsIWebNavigation.h"

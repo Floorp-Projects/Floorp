@@ -3,6 +3,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: can't convert undefined to object");
+
 /**
  * Tests if cached requests have the correct status code
  */

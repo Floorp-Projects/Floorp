@@ -8,7 +8,7 @@
 #ifndef mozilla_BlockingResourceBase_h
 #define mozilla_BlockingResourceBase_h
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "nscore.h"
 #include "nsDebug.h"

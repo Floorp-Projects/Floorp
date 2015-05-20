@@ -14,7 +14,7 @@
 #include "nsIIOService.h"
 #include "nsIFileURL.h"
 #include "nsNetUtil.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsTArray.h"
 #include "nsPrimitiveHelpers.h"
 #include "prtime.h"

@@ -11,7 +11,7 @@
 #include "nsSiteSecurityService.h"
 #include "nssb64.h"
 #include "pkix/pkixtypes.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "RootCertificateTelemetryUtils.h"
 #include "ScopedNSSTypes.h"
 #include "seccomon.h"

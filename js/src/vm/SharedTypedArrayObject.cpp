@@ -350,7 +350,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
         unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
 
         Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
-        JSObject* getter = NewNativeFunction(cx, native, 0, NullPtr());
+        JSObject* getter = NewNativeFunction(cx, native, 0, nullptr);
         if (!getter)
             return false;
 

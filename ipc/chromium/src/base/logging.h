@@ -9,7 +9,7 @@
 #include <cstring>
 
 #include "base/basictypes.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #ifdef NO_CHROMIUM_LOGGING
 #include <sstream>

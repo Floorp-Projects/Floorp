@@ -21,6 +21,7 @@
 #include "jsscriptinlines.h"
 
 #include "frontend/Parser-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::frontend;
@@ -282,9 +283,8 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
         return nullptr;
 
     bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
-    bool allowSuperProperty = savedCallerFun && (evalCaller->functionOrCallerFunction()->isMethod() ||
-                                                 evalCaller->functionOrCallerFunction()->isGetter() ||
-                                                 evalCaller->functionOrCallerFunction()->isSetter());
+    bool allowSuperProperty = savedCallerFun &&
+                              evalCaller->functionOrCallerFunction()->allowSuperProperty();
 
     Directives directives(options.strictOption);
     GlobalSharedContext globalsc(cx, directives, options.extraWarningsOption, allowSuperProperty);
@@ -300,7 +300,7 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
     BytecodeEmitter::EmitterMode emitterMode =
         options.selfHostingMode ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, &globalsc, script,
-                        /* lazyScript = */ js::NullPtr(), options.forEval,
+                        /* lazyScript = */ nullptr, options.forEval,
                         evalCaller, evalStaticScope, insideNonGlobalEval,
                         options.lineno, emitterMode);
     if (!bce.init())
@@ -523,8 +523,8 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
      */
     MOZ_ASSERT(!options.forEval);
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->pn_funbox, script, lazy,
-                        /* insideEval = */ false, /* evalCaller = */ js::NullPtr(),
-                        /* evalStaticScope = */ js::NullPtr(),
+                        /* insideEval = */ false, /* evalCaller = */ nullptr,
+                        /* evalStaticScope = */ nullptr,
                         /* insideNonGlobalEval = */ false, options.lineno,
                         BytecodeEmitter::LazyFunction);
     if (!bce.init())
@@ -650,9 +650,9 @@ CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyComp
         script->bindings = fn->pn_funbox->bindings;
 
         BytecodeEmitter funbce(/* parent = */ nullptr, &parser, fn->pn_funbox, script,
-                               /* lazyScript = */ js::NullPtr(), /* insideEval = */ false,
-                               /* evalCaller = */ js::NullPtr(),
-                               /* evalStaticScope = */ js::NullPtr(),
+                               /* lazyScript = */ nullptr, /* insideEval = */ false,
+                               /* evalCaller = */ nullptr,
+                               /* evalStaticScope = */ nullptr,
                                /* insideNonGlobalEval = */ false, options.lineno);
         if (!funbce.init())
             return false;
@@ -685,5 +685,5 @@ frontend::CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
                                    const ReadOnlyCompileOptions& options, const AutoNameVector& formals,
                                    JS::SourceBufferHolder& srcBuf)
 {
-    return CompileFunctionBody(cx, fun, options, formals, srcBuf, NullPtr(), StarGenerator);
+    return CompileFunctionBody(cx, fun, options, formals, srcBuf, nullptr, StarGenerator);
 }

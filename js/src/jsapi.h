@@ -2425,8 +2425,8 @@ extern JS_PUBLIC_API(JSRuntime*)
 JS_GetObjectRuntime(JSObject* obj);
 
 /*
- * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default proto.
- * If proto is JS::NullPtr, the JS object will have `null` as [[Prototype]].
+ * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default
+ * proto. If proto is nullptr, the JS object will have `null` as [[Prototype]].
  */
 extern JS_PUBLIC_API(JSObject*)
 JS_NewObjectWithGivenProto(JSContext* cx, const JSClass* clasp, JS::Handle<JSObject*> proto);

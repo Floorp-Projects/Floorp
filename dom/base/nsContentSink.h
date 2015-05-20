@@ -24,7 +24,7 @@
 #include "nsITimer.h"
 #include "nsStubDocumentObserver.h"
 #include "nsIContentSink.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsThreadUtils.h"
 

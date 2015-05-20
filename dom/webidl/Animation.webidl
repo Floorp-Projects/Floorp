@@ -33,9 +33,9 @@ interface Animation {
   void cancel ();
   [Throws]
   void finish ();
-  [BinaryName="playFromJS"]
+  [Throws, BinaryName="playFromJS"]
   void play ();
-  [BinaryName="pauseFromJS"]
+  [Throws, BinaryName="pauseFromJS"]
   void pause ();
   /*
   void reverse ();
