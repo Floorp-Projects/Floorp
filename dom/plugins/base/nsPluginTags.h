@@ -15,6 +15,7 @@
 #include "nsITimer.h"
 #include "nsString.h"
 
+class nsIURI;
 struct PRLibrary;
 struct nsPluginInfo;
 class nsNPAPIPlugin;
@@ -29,6 +30,7 @@ class nsIInternalPluginTag : public nsIPluginTag
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IINTERNALPLUGINTAG_IID)
 
+  nsIInternalPluginTag();
   nsIInternalPluginTag(const char* aName, const char* aDescription,
                        const char* aFileName, const char* aVersion);
   nsIInternalPluginTag(const char* aName, const char* aDescription,
@@ -38,6 +40,7 @@ public:
                        const nsTArray<nsCString>& aExtensions);
 
   virtual bool IsEnabled() = 0;
+  virtual const nsCString& GetNiceFileName() = 0;
 
   const nsCString& Name() const { return mName; }
   const nsCString& Description() const { return mDescription; }
@@ -54,6 +57,16 @@ public:
 
   const nsCString& Version() const { return mVersion; }
 
+  // Returns true if this plugin claims it supports this MIME type.  The
+  // comparison is done ASCII-case-insensitively.
+  bool HasMimeType(const nsACString & aMimeType) const;
+
+  // Returns true if this plugin claims it supports the given extension.  In
+  // that case, aMatchingType is set to the MIME type the plugin claims
+  // corresponds to this extension.  The match on aExtension is done
+  // ASCII-case-insensitively.
+  bool HasExtension(const nsACString & aExtension,
+                    /* out */ nsACString & aMatchingType) const;
 protected:
   ~nsIInternalPluginTag();
 
@@ -129,7 +142,7 @@ public:
   void ImportFlagsToPrefs(uint32_t flag);
 
   bool HasSameNameAndMimes(const nsPluginTag *aPluginTag) const;
-  nsCString GetNiceFileName();
+  const nsCString& GetNiceFileName() override;
 
   bool IsFromExtension() const;
 
@@ -152,15 +165,6 @@ public:
 
   void          InvalidateBlocklistState();
 
-  // Returns true if this plugin claims it supports this MIME type.  The
-  // comparison is done ASCII-case-insensitively.
-  bool          HasMimeType(const nsACString & aMimeType) const;
-  // Returns true if this plugin claims it supports the given extension.  In hat
-  // case, aMatchingType is set to the MIME type the plugin claims corresponds
-  // to this extension.  Again, the extension is done ASCII-case-insensitively.
-  bool          HasExtension(const nsACString & aExtension,
-                             /* out */ nsACString & aMatchingType) const;
-
 private:
   virtual ~nsPluginTag();
 
@@ -177,6 +181,35 @@ private:
   void FixupVersion();
 
   static uint32_t sNextId;
+};
+
+// A class representing "fake" plugin tags; that is plugin tags not
+// corresponding to actual NPAPI plugins.  In practice these are all
+// JS-implemented plugins; maybe we want a better name for this class?
+class nsFakePluginTag : public nsIInternalPluginTag,
+                        public nsIFakePluginTag
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPLUGINTAG
+  NS_DECL_NSIFAKEPLUGINTAG
+
+  nsFakePluginTag();
+
+  bool IsEnabled() override;
+  const nsCString& GetNiceFileName() override;
+
+private:
+  virtual ~nsFakePluginTag();
+
+  // The URI of the handler for our fake plugin.
+  // FIXME-jsplugins do we need to sanity check these?
+  nsCOMPtr<nsIURI>    mHandlerURI;
+
+  nsCString     mFullPath;
+  nsCString     mNiceName;
+
+  nsPluginTag::PluginState mState;
 };
 
 #endif // nsPluginTags_h_
