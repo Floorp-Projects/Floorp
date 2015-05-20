@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test navigator.mozHasPendingMessage</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.8">
+    "use strict";
+
+    const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
+
+    SimpleTest.waitForExplicitFinish();
+
+    function expectAlert(iframe, message, assertion) {
+      return new Promise((resolve, reject) => {
+        iframe.addEventListener("mozbrowsershowmodalprompt", function cb(e) {
+          iframe.removeEventListener("mozbrowsershowmodalprompt", cb);
+          is(e.detail.message, message, assertion);
+          resolve();
+        });
+      });
+    }
+
+    function runTest(isRemote) {
+      return new Promise((finish, reject) => {
+        let testURL = "http://mochi.test:8888/chrome/dom/messages/test/file_hasPendingMessage.html";
+        let manifestURL = "http://example.org/manifest.webapp";
+        let testURI = Services.io.newURI(testURL, null, null);
+        let manifestURI = Services.io.newURI(manifestURL, null, null);
+        let body = document.getElementsByTagName("body")[0];
+        let test_frame = document.createElement("iframe");
+        test_frame.setAttribute("mozbrowser", "true");
+        test_frame.setAttribute("remote", isRemote);
+        test_frame.setAttribute("src", testURL);
+        test_frame.setAttribute("mozapp", manifestURL);
+
+        // Step 0. Register Page or install app
+        let smi = Cc["@mozilla.org/system-message-internal;1"]
+                  .getService(Ci.nsISystemMessagesInternal);
+        smi.registerPage("dummy-system-message", testURI, manifestURI);
+        smi.registerPage("dummy-system-message2", testURI, manifestURI);
+        // XXX lie to SystemMessageInternal to unblock sendMessage
+        Services.obs.notifyObservers(null, "webapps-registry-ready", null);
+        // Step 1. Send system message
+        smi.sendMessage("dummy-system-message", null, testURI, manifestURI);
+        // Step 2. Run app & check hasPendingMessages
+        body.appendChild(test_frame);
+        expectAlert(test_frame, "before load", "hasPendingMessages before load").then(() => {
+          // Step 3. Wait load & check hasPendingMessages
+          return expectAlert(test_frame, "load", "hasPendingMessages after load");
+        }).then(() => {
+          // Step 4. Send second system message
+          smi.sendMessage("dummy-system-message2", null, testURI, manifestURI);
+          // Step 5. Check hasPendingMessages
+          test_frame.src = testURL + "#checkPendingMessages";
+          return expectAlert(test_frame, "after launch", "hasPendingMessages after app launch");
+        }).then(() => {
+          // Step 6. mozSetMessageHandler
+          test_frame.src = testURL + "#setMessageHandler";
+          return expectAlert(test_frame, "handle message", "message handled");
+        }).then(() => {
+          // Setp 7. Check hasPendingMessages
+          return expectAlert(test_frame, "no hasPendingMessages",
+                             "no hasPendingMessages after mozSetMessageHandler");
+        }).then(() => {
+          // Step 6. mozSetMessageHandler2
+          test_frame.src = testURL + "#setMessageHandler2";
+          return expectAlert(test_frame, "handle message", "message handled");
+        }).then(() => {
+          // Setp 7. Check hasPendingMessages2
+          return expectAlert(test_frame, "no hasPendingMessages",
+                             "no hasPendingMessages after mozSetMessageHandler");
+        }).then(() => {
+          test_frame.remove();
+          finish();
+        });
+      });
+    }
+
+    window.addEventListener("load", function onLoad() {
+      window.removeEventListener("load", onLoad);
+      SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
+                                         ["dom.sysmsg.enabled", true]]}, () => {
+        runTest(/* isRemote= */false)
+          .then(() => runTest(/* isRemote= */true))
+          .then(SimpleTest.finish);
+      });
+    });
+  </script>
+</head>
+<body>
+</body>
+</html>

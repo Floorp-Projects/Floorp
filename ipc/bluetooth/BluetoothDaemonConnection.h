@@ -116,8 +116,6 @@ public:
   BluetoothDaemonConnection();
   virtual ~BluetoothDaemonConnection();
 
-  nsresult ConnectSocket(BluetoothDaemonPDUConsumer* aConsumer);
-
   // Methods for |ConnectionOrientedSocket|
   //
 
@@ -131,7 +129,7 @@ public:
   // Methods for |SocketBase|
   //
 
-  void CloseSocket() override;
+  void Close() override;
 
 protected:
 

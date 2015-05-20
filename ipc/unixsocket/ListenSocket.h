@@ -32,11 +32,10 @@ public:
    * @param aConnector Connector object for socket-type-specific functions
    * @param aCOSocket The connection-oriented socket for handling the
    *                  accepted connection.
-   *
-   * @return true on listen started, false otherwise
+   * @return NS_OK on success, or an XPCOM error code otherwise.
    */
-  bool Listen(UnixSocketConnector* aConnector,
-              ConnectionOrientedSocket* aCOSocket);
+  nsresult Listen(UnixSocketConnector* aConnector,
+                  ConnectionOrientedSocket* aCOSocket);
 
   /**
    * Starts a task on the socket that will try to accept a new connection
@@ -45,26 +44,14 @@ public:
    *
    * @param aCOSocket The connection-oriented socket for handling the
    *                  accepted connection.
-   *
-   * @return true on listen started, false otherwise
+   * @return NS_OK on success, or an XPCOM error code otherwise.
    */
-  bool Listen(ConnectionOrientedSocket* aCOSocket);
-
-  /**
-   * Queues the internal representation of socket for deletion. Can be called
-   * from main thread.
-   */
-  void Close();
-
-  /**
-   * Get the current sockaddr for the socket
-   */
-  void GetSocketAddr(nsAString& aAddrStr);
+  nsresult Listen(ConnectionOrientedSocket* aCOSocket);
 
   // Methods for |SocketBase|
   //
 
-  void CloseSocket() override;
+  void Close() override;
 
 private:
   ListenSocketIO* mIO;

@@ -29,7 +29,7 @@ add_task(function *() {
   widget.setCssValue("drop-shadow( 2px  1px 5px black) url( example.svg#filter )");
 
   const computedURI = "chrome://browser/content/devtools/example.svg#filter";
-  const expected = `drop-shadow(rgb(0, 0, 0) 2px 1px 5px) url("${computedURI}")`;
+  const expected = `drop-shadow(rgb(0, 0, 0) 2px 1px 5px) url(${computedURI})`;
   is(widget.getCssValue(), expected,
      "setCssValue should work for string-typed values");
 });

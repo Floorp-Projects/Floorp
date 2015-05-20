@@ -43,12 +43,20 @@ private:
 
   void ReplyToConnect();
   void ReplyToDisconnectOrAbort();
+  void ReplyToSetPath();
   void ReplyError(uint8_t aError);
   void SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
 
+  uint8_t SetPhoneBookPath(uint8_t flags, const ObexHeaderSet& aHeader);
   bool CompareHeaderTarget(const ObexHeaderSet& aHeader);
+  bool IsLegalPath(const nsAString& aPath);
   void AfterPbapConnected();
   void AfterPbapDisconnected();
+
+  /**
+   * Current phonebook path
+   */
+  nsString mCurrentPath;
 
   /**
    * OBEX session status. Set when OBEX session is established.

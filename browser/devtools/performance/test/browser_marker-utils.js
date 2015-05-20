@@ -33,5 +33,30 @@ function spawnTest () {
   is(fields[1].label, "Phase:", "getMarkerFields() returns an array with proper label (ordered)");
   is(fields[1].value, "Target", "getMarkerFields() uses the `formatter` function when available");
 
+  is(Utils.getMarkerClassName("Javascript"), "Function Call",
+    "getMarkerClassName() returns correct string when defined via function");
+  is(Utils.getMarkerClassName("GarbageCollection"), "GC Event",
+    "getMarkerClassName() returns correct string when defined via function");
+  is(Utils.getMarkerClassName("Reflow"), "Layout",
+    "getMarkerClassName() returns correct string when defined via string");
+
+  TIMELINE_BLUEPRINT["fakemarker"] = { group: 0 };
+  try {
+    Utils.getMarkerClassName("fakemarker");
+    ok(false, "getMarkerClassName() should throw when no label on blueprint.");
+  } catch (e) {
+    ok(true, "getMarkerClassName() should throw when no label on blueprint.");
+  }
+
+  TIMELINE_BLUEPRINT["fakemarker"] = { group: 0, label: () => void 0};
+  try {
+    Utils.getMarkerClassName("fakemarker");
+    ok(false, "getMarkerClassName() should throw when label function returnd undefined.");
+  } catch (e) {
+    ok(true, "getMarkerClassName() should throw when label function returnd undefined.");
+  }
+
+  delete TIMELINE_BLUEPRINT["fakemarker"];
+
   finish();
 }

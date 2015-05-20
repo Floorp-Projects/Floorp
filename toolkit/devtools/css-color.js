@@ -9,25 +9,6 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
-const REGEX_JUST_QUOTES  = /^""$/;
-const REGEX_HSL_3_TUPLE  = /^\bhsl\(([\d.]+),\s*([\d.]+%),\s*([\d.]+%)\)$/i;
-
-/**
- * This regex matches:
- *  - #F00
- *  - #FF0000
- *  - hsl()
- *  - hsla()
- *  - rgb()
- *  - rgba()
- *  - red
- *
- *  It also matches css keywords e.g. "background-color" otherwise
- *  "background" would be replaced with #6363CE ("background" is a platform
- *  color).
- */
-const REGEX_ALL_COLORS = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b|hsl\(.*?\)|hsla\(.*?\)|rgba?\(.*?\)|\b[a-zA-Z-]+\b/g;
-
 const SPECIALVALUES = new Set([
   "currentcolor",
   "initial",
@@ -66,9 +47,6 @@ const SPECIALVALUES = new Set([
  *   // Color objects can be reused
  *   color.newColor("green") === "#0F0"; // true
  *
- *   let processed = colorUtils.processCSSString("color:red; background-color:green;");
- *   // Returns "color:#F00; background-color:#0F0;"
- *
  *   Valid values for COLOR_UNIT_PREF are contained in CssColor.COLORUNIT.
  */
 
@@ -78,7 +56,6 @@ function CssColor(colorValue) {
 
 module.exports.colorUtils = {
   CssColor: CssColor,
-  processCSSString: processCSSString,
   rgbToHsl: rgbToHsl,
   setAlpha: setAlpha
 };
@@ -183,9 +160,9 @@ CssColor.prototype = {
     if (this.hasAlpha) {
       return this.rgba;
     }
-    return this.rgb.replace(/\brgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)/gi, function(_, r, g, b) {
-      return "#" + ((1 << 24) + (r << 16) + (g << 8) + (b << 0)).toString(16).substr(-6).toUpperCase();
-    });
+
+    let tuple = this._getRGBATuple();
+    return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) + (tuple.b << 0)).toString(16).substr(-6).toUpperCase();
   },
 
   get rgb() {
@@ -232,7 +209,7 @@ CssColor.prototype = {
     if (this.hasAlpha) {
       return this.hsla;
     }
-    return this._hslNoAlpha();
+    return this._hsl();
   },
 
   get hsla() {
@@ -246,9 +223,9 @@ CssColor.prototype = {
     }
     if (this.hasAlpha) {
       let a = this._getRGBATuple().a;
-      return this._hslNoAlpha().replace("hsl", "hsla").replace(")", ", " + a + ")");
+      return this._hsl(a);
     }
-    return this._hslNoAlpha().replace("hsl", "hsla").replace(")", ", 1)");
+    return this._hsl(1);
   },
 
   /**
@@ -341,19 +318,19 @@ CssColor.prototype = {
     return tuple;
   },
 
-  _hslNoAlpha: function() {
-    let {r, g, b} = this._getRGBATuple();
-
-    if (this.authored.startsWith("hsl(")) {
-      // We perform string manipulations on our output so let's ensure that it
-      // is formatted as we expect.
-      let [, h, s, l] = this.authored.match(REGEX_HSL_3_TUPLE);
-      return "hsl(" + h + ", " + s + ", " + l + ")";
+  _hsl: function(maybeAlpha) {
+    if (this.authored.startsWith("hsl(") && maybeAlpha === undefined) {
+      // We can use it as-is.
+      return this.authored;
     }
 
+    let {r, g, b} = this._getRGBATuple();
     let [h,s,l] = rgbToHsl([r,g,b]);
-
-    return "hsl(" + h + ", " + s + "%, " + l + "%)";
+    if (maybeAlpha !== undefined) {
+      return "hsla(" + h + ", " + s + "%, " + l + "%, " + maybeAlpha + ")";
+    } else {
+      return "hsl(" + h + ", " + s + "%, " + l + "%)";
+    }
   },
 
   /**
@@ -363,31 +340,6 @@ CssColor.prototype = {
     return this.rgba;
   },
 };
-
-/**
- * Process a CSS string
- *
- * @param  {String} value
- *         CSS string e.g. "color:red; background-color:green;"
- * @return {String}
- *         Converted CSS String e.g. "color:#F00; background-color:#0F0;"
- */
-function processCSSString(value) {
-  if (value && REGEX_JUST_QUOTES.test(value)) {
-    return value;
-  }
-
-  let colorPattern = REGEX_ALL_COLORS;
-
-  value = value.replace(colorPattern, function(match) {
-    let color = new CssColor(match);
-    if (color.valid) {
-      return color;
-    }
-    return match;
-  });
-  return value;
-}
 
 /**
  * Convert rgb value to hsl

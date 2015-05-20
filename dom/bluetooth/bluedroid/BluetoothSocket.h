@@ -63,7 +63,7 @@ public:
   // Methods for |SocketBase|
   //
 
-  void CloseSocket() override;
+  void Close() override;
 
   void OnConnectSuccess() override;
   void OnConnectError() override;

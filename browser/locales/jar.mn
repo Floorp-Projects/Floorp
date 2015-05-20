@@ -148,6 +148,8 @@
     locale/browser/syncQuota.dtd                (%chrome/browser/syncQuota.dtd)
     locale/browser/syncQuota.properties         (%chrome/browser/syncQuota.properties)
 #endif
+    locale/browser/searchplugins/list.txt       (.deps/generated_@AB_CD@/list.txt)
+    locale/browser/searchplugins/               (.deps/generated_@AB_CD@/*.xml)
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
 # the following files are browser-specific overrides

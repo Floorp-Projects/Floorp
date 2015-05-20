@@ -86,9 +86,14 @@ EXTRA_JS_MODULES += [
 
 if CONFIG['MOZ_B2G_RIL']:
     XPIDL_SOURCES += [
+        'nsIDataCallInterfaceService.idl',
+        'nsIDataCallManager.idl',
+        'nsIGonkDataCallInterfaceService.idl',
         'nsIRadioInterfaceLayer.idl',
     ]
     EXTRA_COMPONENTS += [
+        'DataCallManager.js',
+        'DataCallManager.manifest',
         'RILContentHelper.js', # TODO: Bug 815526, deprecate RILContentHelper.
         'RILContentHelper.manifest', # TODO: Bug 815526, deprecate RILContentHelper.
         'RILSystemMessengerHelper.js',
@@ -103,6 +108,8 @@ if CONFIG['MOZ_B2G_RIL']:
     ]
     if not CONFIG['DISABLE_MOZ_RIL_GEOLOC']:
         EXTRA_COMPONENTS += [
+            'DataCallInterfaceService.js',
+            'DataCallInterfaceService.manifest',
             'RadioInterfaceLayer.js',
             'RadioInterfaceLayer.manifest',
         ]

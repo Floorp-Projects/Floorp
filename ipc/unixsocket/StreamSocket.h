@@ -29,42 +29,14 @@ public:
   virtual void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) = 0;
 
   /**
-   * Convenience function for sending strings to the socket (common in bluetooth
-   * profile usage). Converts to a UnixSocketRawData struct. Can only be called
-   * on originating thread.
-   *
-   * TODO: Move this method into Bluetooth module.
-   *
-   * @param aMessage String to be sent to socket
-   *
-   * @return true if data is queued, false otherwise (i.e. not connected)
-   */
-  bool SendSocketData(const nsACString& aMessage);
-
-  /**
    * Starts a task on the socket that will try to connect to a socket in a
    * non-blocking manner.
    *
    * @param aConnector Connector object for socket type specific functions
-   * @param aAddress Address to connect to.
-   * @param aDelayMs Time delay in milli-seconds.
-   *
-   * @return true on connect task started, false otherwise.
+   * @param aDelayMs Time delay in milliseconds.
+   * @return NS_OK on success, or an XPCOM error code otherwise.
    */
-  bool Connect(UnixSocketConnector* aConnector,
-               const char* aAddress,
-               int aDelayMs = 0);
-
-  /**
-   * Queues the internal representation of socket for deletion. Can be called
-   * from main thread.
-   */
-  void Close();
-
-  /**
-   * Get the current sockaddr for the socket
-   */
-  void GetSocketAddr(nsAString& aAddrStr);
+  nsresult Connect(UnixSocketConnector* aConnector, int aDelayMs = 0);
 
   // Methods for |DataSocket|
   //
@@ -74,7 +46,7 @@ public:
   // Methods for |SocketBase|
   //
 
-  void CloseSocket() override;
+  void Close() override;
 
 protected:
   virtual ~StreamSocket();
