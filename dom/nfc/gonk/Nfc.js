@@ -219,6 +219,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         return;
       }
 
+      options.tabId = this.focusApp;
       target.sendAsyncMessage("NFC:DOMEvent", options);
     },
 
