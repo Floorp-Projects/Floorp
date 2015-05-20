@@ -277,7 +277,9 @@ public:
     return ((*aData)[4] == 'm' && (*aData)[5] == 'o' && (*aData)[6] == 'o' &&
             (*aData)[7] == 'f') ||
            ((*aData)[4] == 's' && (*aData)[5] == 't' && (*aData)[6] == 'y' &&
-            (*aData)[7] == 'p');
+            (*aData)[7] == 'p') ||
+           ((*aData)[4] == 's' && (*aData)[5] == 'i' && (*aData)[6] == 'd' &&
+            (*aData)[7] == 'x');
   }
 
   bool ParseStartAndEndTimestamps(MediaLargeByteBuffer* aData,
