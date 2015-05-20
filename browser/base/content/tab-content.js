@@ -605,6 +605,9 @@ let DOMFullscreenHandler = {
         break;
       }
       case "DOMFullscreen:CleanUp": {
+        let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+        utils.exitFullscreen();
         this._fullscreenDoc = null;
         break;
       }
