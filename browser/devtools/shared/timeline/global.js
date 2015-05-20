@@ -49,24 +49,24 @@ const TIMELINE_BLUEPRINT = {
   /* Group 0 - Reflow and Rendering pipeline */
   "Styles": {
     group: 0,
-    colorName: "highlight-pink",
+    colorName: "graphs-purple",
     label: L10N.getStr("timeline.label.styles2")
   },
   "Reflow": {
     group: 0,
-    colorName: "highlight-pink",
+    colorName: "graphs-purple",
     label: L10N.getStr("timeline.label.reflow2")
   },
   "Paint": {
     group: 0,
-    colorName: "highlight-green",
+    colorName: "graphs-green",
     label: L10N.getStr("timeline.label.paint")
   },
 
   /* Group 1 - JS */
   "DOMEvent": {
     group: 1,
-    colorName: "highlight-lightorange",
+    colorName: "graphs-yellow",
     label: L10N.getStr("timeline.label.domevent"),
     fields: [{
       property: "type",
@@ -79,22 +79,22 @@ const TIMELINE_BLUEPRINT = {
   },
   "Javascript": {
     group: 1,
-    colorName: "highlight-lightorange",
+    colorName: "graphs-yellow",
     label: getJSLabel,
   },
   "Parse HTML": {
     group: 1,
-    colorName: "highlight-lightorange",
+    colorName: "graphs-yellow",
     label: L10N.getStr("timeline.label.parseHTML")
   },
   "Parse XML": {
     group: 1,
-    colorName: "highlight-lightorange",
+    colorName: "graphs-yellow",
     label: L10N.getStr("timeline.label.parseXML")
   },
   "GarbageCollection": {
     group: 1,
-    colorName: "highlight-red",
+    colorName: "graphs-red",
     label: getGCLabel,
     fields: [
       { property: "causeName", label: "Reason:" },
@@ -105,7 +105,7 @@ const TIMELINE_BLUEPRINT = {
   /* Group 2 - User Controlled */
   "ConsoleTime": {
     group: 2,
-    colorName: "highlight-bluegrey",
+    colorName: "graphs-grey",
     label: L10N.getStr("timeline.label.consoleTime"),
     fields: [{
       property: "causeName",
@@ -114,7 +114,7 @@ const TIMELINE_BLUEPRINT = {
   },
   "TimeStamp": {
     group: 2,
-    colorName: "highlight-purple",
+    colorName: "graphs-blue",
     label: "Timestamp"
   },
 };

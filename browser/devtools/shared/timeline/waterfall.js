@@ -434,7 +434,7 @@ Waterfall.prototype = {
     sidebar.setAttribute("align", "center");
 
     let bullet = this._document.createElement("hbox");
-    bullet.className = `waterfall-marker-bullet ${blueprint.colorName}`;
+    bullet.className = `waterfall-marker-bullet marker-color-${blueprint.colorName}`;
     bullet.setAttribute("type", marker.name);
     sidebar.appendChild(bullet);
 
@@ -476,7 +476,7 @@ Waterfall.prototype = {
     let offset = this._isRTL ? this._waterfallWidth : 0;
 
     let bar = this._document.createElement("hbox");
-    bar.className = `waterfall-marker-bar ${blueprint.colorName}`;
+    bar.className = `waterfall-marker-bar marker-color-${blueprint.colorName}`;
     bar.style.transform = "translateX(" + (start - offset) + "px)";
     bar.setAttribute("type", marker.name);
     bar.setAttribute("width", Math.max(width, WATERFALL_MARKER_BAR_WIDTH_MIN));
