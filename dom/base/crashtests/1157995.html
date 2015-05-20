@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    // This should not leak.
+    var a = navigator;
+    navigator.mediaDevices._ = null;
+  </script>
+</body>
