@@ -335,14 +335,14 @@ RecordingModel.prototype = {
         if (!config.withMarkers) { break; }
         let [markers] = data;
         RecordingUtils.offsetMarkerTimes(markers, this._timelineStartTime);
-        Array.prototype.push.apply(this._markers, markers);
+        pushAll(this._markers, markers);
         break;
       }
       // Accumulate stack frames into an array.
       case "frames": {
         if (!config.withMarkers) { break; }
         let [, frames] = data;
-        Array.prototype.push.apply(this._frames, frames);
+        pushAll(this._frames, frames);
         break;
       }
       // Accumulate memory measurements into an array. Furthermore, the timestamp
@@ -372,10 +372,10 @@ RecordingModel.prototype = {
         let timeOffset = this._memoryStartTime * 1000;
         let timeScale = 1000;
         RecordingUtils.offsetAndScaleTimestamps(timestamps, timeOffset, timeScale);
-        Array.prototype.push.apply(this._allocations.sites, sites);
-        Array.prototype.push.apply(this._allocations.timestamps, timestamps);
-        Array.prototype.push.apply(this._allocations.frames, frames);
-        Array.prototype.push.apply(this._allocations.counts, counts);
+        pushAll(this._allocations.sites, sites);
+        pushAll(this._allocations.timestamps, timestamps);
+        pushAll(this._allocations.frames, frames);
+        pushAll(this._allocations.counts, counts);
         break;
       }
     }
@@ -383,5 +383,24 @@ RecordingModel.prototype = {
 
   toString: () => "[object RecordingModel]"
 };
+
+/**
+ * Push all elements of src array into dest array. Marker data will come in small chunks
+ * and add up over time, whereas allocation arrays can be > 500000 elements (and
+ * Function.prototype.apply throws if applying more than 500000 elements, which
+ * is what spawned this separate function), so iterate one element at a time.
+ * @see bug 1166823
+ * @see http://jsperf.com/concat-large-arrays
+ * @see http://jsperf.com/concat-large-arrays/2
+ *
+ * @param {Array} dest
+ * @param {Array} src
+ */
+function pushAll (dest, src) {
+  let length = src.length;
+  for (let i = 0; i < length; i++) {
+    dest.push(src[i]);
+  }
+}
 
 exports.RecordingModel = RecordingModel;
