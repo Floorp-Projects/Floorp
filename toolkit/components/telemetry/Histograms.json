@@ -4388,6 +4388,14 @@
     "n_values": 30,
     "description": "Number of telemetry pings evicted at startup"
   },
+  "TELEMETRY_COMPRESS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time taken to compress telemetry object (ms)"
+  },
   "TELEMETRY_PING": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4395,6 +4403,22 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Time taken to submit telemetry info (ms)"
+  },
+  "TELEMETRY_SEND" : {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to send the compressed string to the Telemetry servers and get a reply back (ms)"
+  },
+  "TELEMETRY_STRINGIFY" : {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Time to stringify telemetry object (ms)"
   },
   "TELEMETRY_SUCCESS": {
     "expires_in_version": "never",

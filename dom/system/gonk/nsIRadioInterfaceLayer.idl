@@ -3,23 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsINetworkManager.idl"
 
 interface nsIIccInfo;
 interface nsIMobileConnectionInfo;
 interface nsIMobileMessageCallback;
-
-[scriptable, uuid(6e0f45b8-410e-11e3-8c8e-b715b2cd0128)]
-interface nsIRilNetworkInterface : nsINetworkInterface
-{
-  readonly attribute unsigned long serviceId;
-  readonly attribute DOMString iccId;
-
-  /* The following attributes are for MMS proxy settings. */
-  readonly attribute DOMString mmsc;     // Empty string if not set.
-  readonly attribute DOMString mmsProxy; // Empty string if not set.
-  readonly attribute long      mmsPort;  // -1 if not set.
-};
 
 [scriptable, function, uuid(3bc96351-53b0-47a1-a888-c74c64b60f25)]
 interface nsIRilSendWorkerMessageCallback : nsISupports

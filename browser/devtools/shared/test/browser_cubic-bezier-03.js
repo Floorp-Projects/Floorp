@@ -58,12 +58,12 @@ function* coordinatesCanBeChangedByProvidingAValue(widget) {
 
   info("Setting a custom cubic-bezier css value");
   onUpdated = widget.once("updated");
-  widget.cssCubicBezierValue = "cubic-bezier(.25,-0.5, 1, 1.45)";
+  widget.cssCubicBezierValue = "cubic-bezier(.25,-0.5, 1, 1.25)";
   bezier = yield onUpdated;
   ok(true, "The updated event was fired as a result of setting cssValue");
 
   is(bezier.P1[0], .25, "The new P1 time coordinate is correct");
   is(bezier.P1[1], -.5, "The new P1 progress coordinate is correct");
   is(bezier.P2[0], 1, "The new P2 time coordinate is correct");
-  is(bezier.P2[1], 1.45, "The new P2 progress coordinate is correct");
+  is(bezier.P2[1], 1.25, "The new P2 progress coordinate is correct");
 }

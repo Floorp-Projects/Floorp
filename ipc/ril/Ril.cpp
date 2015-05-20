@@ -217,7 +217,7 @@ RilConsumer::RilConsumer(unsigned long aClientId,
     mAddress = addr_un.sun_path;
   }
 
-  Connect(new RilConnector(mAddress, mClientId), mAddress.get());
+  Connect(new RilConnector(mAddress, mClientId));
 }
 
 nsresult
@@ -288,10 +288,10 @@ void
 RilConsumer::OnDisconnect()
 {
   CHROMIUM_LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
-  if (!mShutdown) {
-    Connect(new RilConnector(mAddress, mClientId), mAddress.get(),
-            GetSuggestedConnectDelayMs());
+  if (mShutdown) {
+    return;
   }
+  Connect(new RilConnector(mAddress, mClientId), GetSuggestedConnectDelayMs());
 }
 
 ConnectionOrientedSocketIO*

@@ -1884,8 +1884,10 @@ RilObject.prototype = {
     let Buf = this.context.Buf;
     Buf.newParcel(REQUEST_DEACTIVATE_DATA_CALL, options);
     Buf.writeInt32(2);
-    Buf.writeString(options.cid);
-    Buf.writeString(options.reason || DATACALL_DEACTIVATE_NO_REASON);
+    Buf.writeString(options.cid.toString());
+    Buf.writeString(options.reason !== undefined ?
+                    options.reason.toString() :
+                    DATACALL_DEACTIVATE_NO_REASON.toString());
     Buf.sendParcel();
   },
 
@@ -3432,18 +3434,6 @@ RilObject.prototype = {
       if (!this.overrideICCNetworkName()) {
         this._sendNetworkInfoMessage(NETWORK_INFO_OPERATOR, this.operator);
       }
-    }
-  },
-
-  _setDataCallGeckoState: function(datacall) {
-    switch (datacall.active) {
-      case DATACALL_INACTIVE:
-        datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-        break;
-      case DATACALL_ACTIVE_DOWN:
-      case DATACALL_ACTIVE_UP:
-        datacall.state = GECKO_NETWORK_STATE_CONNECTED;
-        break;
     }
   },
 
@@ -5262,12 +5252,10 @@ RilObject.prototype.readDataCall_v5 = function(options) {
   options.active = Buf.readInt32(); // DATACALL_ACTIVE_*
   options.type = Buf.readString();
   options.apn = Buf.readString();
-  let addresses = Buf.readString();
-  let dnses = Buf.readString();
-  options.addresses = addresses ? addresses.split(" ") : [];
-  options.dnses = dnses ? dnses.split(" ") : [];
+  options.addresses = Buf.readString();
+  options.dnses = Buf.readString();
   options.gateways = [];
-  this._setDataCallGeckoState(options);
+
   return options;
 };
 
@@ -5276,19 +5264,16 @@ RilObject.prototype.readDataCall_v6 = function(options) {
     options = {};
   }
   let Buf = this.context.Buf;
-  options.status = Buf.readInt32();  // DATACALL_FAIL_*
+  options.failCause = Buf.readInt32();  // DATACALL_FAIL_*
   options.suggestedRetryTime = Buf.readInt32();
   options.cid = Buf.readInt32().toString();
   options.active = Buf.readInt32();  // DATACALL_ACTIVE_*
   options.type = Buf.readString();
   options.ifname = Buf.readString();
-  let addresses = Buf.readString();
-  let dnses = Buf.readString();
-  let gateways = Buf.readString();
-  options.addresses = addresses ? addresses.split(" ") : [];
-  options.dnses = dnses ? dnses.split(" ") : [];
-  options.gateways = gateways ? gateways.split(" ") : [];
-  this._setDataCallGeckoState(options);
+  options.addresses = Buf.readString();
+  options.dnses = Buf.readString();
+  options.gateways = Buf.readString();
+
   return options;
 };
 
