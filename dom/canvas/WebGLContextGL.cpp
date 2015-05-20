@@ -198,15 +198,15 @@ WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer* wrb)
     if (wrb && wrb->IsDeleted())
         return;
 
-    if (wrb)
-        wrb->BindTo(target);
-
     MakeContextCurrent();
 
     // Sometimes we emulate renderbuffers (depth-stencil emu), so there's not
     // always a 1-1 mapping from `wrb` to GL name. Just have `wrb` handle it.
     if (wrb) {
         wrb->BindRenderbuffer();
+#ifdef ANDROID
+        wrb->mIsRB = true;
+#endif
     } else {
         gl->fBindRenderbuffer(target, 0);
     }
@@ -1726,9 +1726,22 @@ WebGLContext::IsRenderbuffer(WebGLRenderbuffer* rb)
     if (IsContextLost())
         return false;
 
-    return ValidateObjectAllowDeleted("isRenderBuffer", rb) &&
-        !rb->IsDeleted() &&
-        rb->HasEverBeenBound();
+    if (!ValidateObjectAllowDeleted("isRenderBuffer", rb))
+        return false;
+
+    if (rb->IsDeleted())
+        return false;
+
+#ifdef ANDROID
+    if (gl->WorkAroundDriverBugs() &&
+        gl->Renderer() == GLRenderer::AndroidEmulator)
+    {
+         return rb->mIsRB;
+    }
+#endif
+
+    MakeContextCurrent();
+    return gl->fIsRenderbuffer(rb->PrimaryGLName());
 }
 
 bool
