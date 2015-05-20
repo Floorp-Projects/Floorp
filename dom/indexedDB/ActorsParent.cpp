@@ -3537,6 +3537,7 @@ GetDatabaseFileURL(nsIFile* aDatabaseFile,
                    PersistenceType aPersistenceType,
                    const nsACString& aGroup,
                    const nsACString& aOrigin,
+                   uint32_t aTelemetryId,
                    nsIFileURL** aResult)
 {
   MOZ_ASSERT(aDatabaseFile);
@@ -3554,10 +3555,18 @@ GetDatabaseFileURL(nsIFile* aDatabaseFile,
   nsAutoCString type;
   PersistenceTypeToText(aPersistenceType, type);
 
+  nsAutoCString telemetryFilenameClause;
+  if (aTelemetryId) {
+    telemetryFilenameClause.AssignLiteral("&telemetryFilename=indexedDB-");
+    telemetryFilenameClause.AppendInt(aTelemetryId);
+    telemetryFilenameClause.AppendLiteral(".sqlite");
+  }
+
   rv = fileUrl->SetQuery(NS_LITERAL_CSTRING("persistenceType=") + type +
                          NS_LITERAL_CSTRING("&group=") + aGroup +
                          NS_LITERAL_CSTRING("&origin=") + aOrigin +
-                         NS_LITERAL_CSTRING("&cache=private"));
+                         NS_LITERAL_CSTRING("&cache=private") +
+                         telemetryFilenameClause);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3805,6 +3814,7 @@ CreateStorageConnection(nsIFile* aDBFile,
                         PersistenceType aPersistenceType,
                         const nsACString& aGroup,
                         const nsACString& aOrigin,
+                        uint32_t aTelemetryId,
                         mozIStorageConnection** aConnection)
 {
   AssertIsOnIOThread();
@@ -3832,7 +3842,11 @@ CreateStorageConnection(nsIFile* aDBFile,
   }
 
   nsCOMPtr<nsIFileURL> dbFileUrl;
-  rv = GetDatabaseFileURL(aDBFile, aPersistenceType, aGroup, aOrigin,
+  rv = GetDatabaseFileURL(aDBFile,
+                          aPersistenceType,
+                          aGroup,
+                          aOrigin,
+                          aTelemetryId,
                           getter_AddRefs(dbFileUrl));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4254,6 +4268,7 @@ GetStorageConnection(const nsAString& aDatabaseFilePath,
                      PersistenceType aPersistenceType,
                      const nsACString& aGroup,
                      const nsACString& aOrigin,
+                     uint32_t aTelemetryId,
                      mozIStorageConnection** aConnection)
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -4284,7 +4299,11 @@ GetStorageConnection(const nsAString& aDatabaseFilePath,
   }
 
   nsCOMPtr<nsIFileURL> dbFileUrl;
-  rv = GetDatabaseFileURL(dbFile, aPersistenceType, aGroup, aOrigin,
+  rv = GetDatabaseFileURL(dbFile,
+                          aPersistenceType,
+                          aGroup,
+                          aOrigin,
+                          aTelemetryId,
                           getter_AddRefs(dbFileUrl));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -5537,6 +5556,7 @@ private:
   const nsCString mId;
   const nsString mFilePath;
   uint32_t mFileHandleCount;
+  const uint32_t mTelemetryId;
   const PersistenceType mPersistenceType;
   const bool mChromeWriteAccessAllowed;
   bool mClosed;
@@ -5551,6 +5571,7 @@ public:
            const PrincipalInfo& aPrincipalInfo,
            const nsACString& aGroup,
            const nsACString& aOrigin,
+           uint32_t aTelemetryId,
            FullDatabaseMetadata* aMetadata,
            FileManager* aFileManager,
            already_AddRefed<DatabaseOfflineStorage> aOfflineStorage,
@@ -5598,6 +5619,12 @@ public:
   Id() const
   {
     return mId;
+  }
+
+  uint32_t
+  TelemetryId() const
+  {
+    return mTelemetryId;
   }
 
   PersistenceType
@@ -5842,8 +5869,9 @@ public:
 
     nsCOMPtr<nsIInputStream> inputStream;
     if (mBlobImpl) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        mBlobImpl->GetInternalStream(getter_AddRefs(inputStream))));
+      ErrorResult rv;
+      mBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
+      MOZ_ALWAYS_TRUE(!rv.Failed());
     }
 
     return inputStream.forget();
@@ -6599,6 +6627,8 @@ class OpenDatabaseOp final
   // reference to its OpenDatabaseOp object so this is a weak pointer to avoid
   // cycles.
   VersionChangeOp* mVersionChangeOp;
+
+  uint32_t mTelemetryId;
 
 public:
   OpenDatabaseOp(Factory* aFactory,
@@ -8184,11 +8214,101 @@ typedef nsDataHashtable<nsIDHashKey, DatabaseLoggingInfo*>
 
 StaticAutoPtr<DatabaseLoggingInfoHashtable> gLoggingInfoHashtable;
 
+typedef nsDataHashtable<nsUint32HashKey, uint32_t> TelemetryIdHashtable;
+
+StaticAutoPtr<TelemetryIdHashtable> gTelemetryIdHashtable;
+
+// Protects all reads and writes to gTelemetryIdHashtable.
+StaticAutoPtr<Mutex> gTelemetryIdMutex;
+
 #ifdef DEBUG
 
 StaticRefPtr<DEBUGThreadSlower> gDEBUGThreadSlower;
 
 #endif // DEBUG
+
+
+uint32_t
+TelemetryIdForFile(nsIFile* aFile)
+{
+  // May be called on any thread!
+
+  MOZ_ASSERT(aFile);
+  MOZ_ASSERT(gTelemetryIdMutex);
+
+  // The storage directory is structured like this:
+  //
+  //   <profile>/storage/<persistence>/<origin>/idb/<filename>.sqlite
+  //
+  // For the purposes of this function we're only concerned with the
+  // <persistence>, <origin>, and <filename> pieces.
+
+  nsString filename;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aFile->GetLeafName(filename)));
+
+  // Make sure we were given a database file.
+  NS_NAMED_LITERAL_STRING(sqliteExtension, ".sqlite");
+
+  MOZ_ASSERT(StringEndsWith(filename, sqliteExtension));
+
+  filename.Truncate(filename.Length() - sqliteExtension.Length());
+
+  // Get the "idb" directory.
+  nsCOMPtr<nsIFile> idbDirectory;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aFile->GetParent(getter_AddRefs(idbDirectory))));
+
+  DebugOnly<nsString> idbLeafName;
+  MOZ_ASSERT(NS_SUCCEEDED(idbDirectory->GetLeafName(idbLeafName)));
+  MOZ_ASSERT(static_cast<nsString&>(idbLeafName).EqualsLiteral("idb"));
+
+  // Get the <origin> directory.
+  nsCOMPtr<nsIFile> originDirectory;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    idbDirectory->GetParent(getter_AddRefs(originDirectory))));
+
+  nsString origin;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(originDirectory->GetLeafName(origin)));
+
+  // Any databases in these directories are owned by the application and should
+  // not have their filenames masked. Hopefully they also appear in the
+  // Telemetry.cpp whitelist.
+  if (origin.EqualsLiteral("chrome") ||
+      origin.EqualsLiteral("moz-safe-about+home")) {
+    return 0;
+  }
+
+  // Get the <persistence> directory.
+  nsCOMPtr<nsIFile> persistenceDirectory;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    originDirectory->GetParent(getter_AddRefs(persistenceDirectory))));
+
+  nsString persistence;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(persistenceDirectory->GetLeafName(persistence)));
+
+  NS_NAMED_LITERAL_STRING(separator, "*");
+
+  uint32_t hashValue = HashString(persistence + separator +
+                                  origin + separator +
+                                  filename);
+
+  MutexAutoLock lock(*gTelemetryIdMutex);
+
+  if (!gTelemetryIdHashtable) {
+    gTelemetryIdHashtable = new TelemetryIdHashtable();
+  }
+
+  uint32_t id;
+  if (!gTelemetryIdHashtable->Get(hashValue, &id)) {
+    static uint32_t sNextId = 1;
+
+    // We're locked, no need for atomics.
+    id = sNextId++;
+
+    gTelemetryIdHashtable->Put(hashValue, id);
+  }
+
+  return id;
+}
 
 } // anonymous namespace
 
@@ -9461,6 +9581,7 @@ ConnectionPool::GetOrCreateConnection(const Database* aDatabase,
                            aDatabase->Type(),
                            aDatabase->Group(),
                            aDatabase->Origin(),
+                           aDatabase->TelemetryId(),
                            getter_AddRefs(storageConnection));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -11530,6 +11651,7 @@ Database::Database(Factory* aFactory,
                    const PrincipalInfo& aPrincipalInfo,
                    const nsACString& aGroup,
                    const nsACString& aOrigin,
+                   uint32_t aTelemetryId,
                    FullDatabaseMetadata* aMetadata,
                    FileManager* aFileManager,
                    already_AddRefed<DatabaseOfflineStorage> aOfflineStorage,
@@ -11544,6 +11666,7 @@ Database::Database(Factory* aFactory,
   , mId(aMetadata->mDatabaseId)
   , mFilePath(aMetadata->mFilePath)
   , mFileHandleCount(0)
+  , mTelemetryId(aTelemetryId)
   , mPersistenceType(aMetadata->mCommonMetadata.persistenceType())
   , mChromeWriteAccessAllowed(aChromeWriteAccessAllowed)
   , mClosed(false)
@@ -14466,7 +14589,8 @@ FileManager::InitDirectory(nsIFile* aDirectory,
                            nsIFile* aDatabaseFile,
                            PersistenceType aPersistenceType,
                            const nsACString& aGroup,
-                           const nsACString& aOrigin)
+                           const nsACString& aOrigin,
+                           uint32_t aTelemetryId)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -14538,6 +14662,7 @@ FileManager::InitDirectory(nsIFile* aDirectory,
                                    aPersistenceType,
                                    aGroup,
                                    aOrigin,
+                                   aTelemetryId,
                                    getter_AddRefs(connection));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -14713,6 +14838,11 @@ QuotaClient::QuotaClient()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
+  MOZ_ASSERT(!gTelemetryIdMutex);
+
+  // Always create this so that later access to gTelemetryIdHashtable can be
+  // properly synchronized.
+  gTelemetryIdMutex = new Mutex("IndexedDB gTelemetryIdMutex");
 
   sInstance = this;
 }
@@ -14721,6 +14851,12 @@ QuotaClient::~QuotaClient()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance == this, "We expect this to be a singleton!");
+  MOZ_ASSERT(gTelemetryIdMutex);
+
+  // No one else should be able to touch gTelemetryIdHashtable now that the
+  // QuotaClient has gone away.
+  gTelemetryIdHashtable = nullptr;
+  gTelemetryIdMutex = nullptr;
 
   sInstance = nullptr;
 }
@@ -14970,7 +15106,8 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                     initInfo.mDatabaseFile,
                                     aPersistenceType,
                                     aGroup,
-                                    aOrigin);
+                                    aOrigin,
+                                    TelemetryIdForFile(initInfo.mDatabaseFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -17181,6 +17318,7 @@ OpenDatabaseOp::OpenDatabaseOp(Factory* aFactory,
   , mMetadata(new FullDatabaseMetadata(aParams.metadata()))
   , mRequestedVersion(aParams.metadata().version())
   , mVersionChangeOp(nullptr)
+  , mTelemetryId(0)
 {
   auto& optionalContentParentId =
     const_cast<OptionalContentId&>(mOptionalContentParentId);
@@ -17324,6 +17462,8 @@ OpenDatabaseOp::DoDatabaseWork()
     return rv;
   }
 
+  mTelemetryId = TelemetryIdForFile(dbFile);
+
   rv = dbFile->GetPath(mDatabaseFilePath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -17349,6 +17489,7 @@ OpenDatabaseOp::DoDatabaseWork()
                                persistenceType,
                                mGroup,
                                mOrigin,
+                               mTelemetryId,
                                getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -18051,6 +18192,7 @@ OpenDatabaseOp::EnsureDatabaseActor()
                            mCommonParams.principalInfo(),
                            mGroup,
                            mOrigin,
+                           mTelemetryId,
                            mMetadata,
                            mFileManager,
                            mOfflineStorage.forget(),

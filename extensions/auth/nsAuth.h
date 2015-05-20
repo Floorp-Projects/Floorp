@@ -12,7 +12,7 @@ enum pType {
      PACKAGE_TYPE_NTLM
 };
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 //
 // in order to do logging, the following environment variables need to be set:

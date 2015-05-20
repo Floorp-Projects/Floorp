@@ -82,7 +82,7 @@ initialize(JSContext* cx)
 {
     js::SetRuntimeProfilingStack(cx->runtime(), pstack, &psize, 10);
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    return JS_InitClass(cx, global, js::NullPtr(), &ptestClass, Prof, 0,
+    return JS_InitClass(cx, global, nullptr, &ptestClass, Prof, 0,
                         nullptr, ptestFunctions, nullptr, nullptr);
 }
 

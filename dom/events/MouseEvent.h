@@ -69,6 +69,9 @@ public:
                          aShiftKey, aMetaKey, aButton,
                          aRelatedTarget);
   }
+
+  void InitializeExtraMouseEventDictionaryMembers(const MouseEventInit& aParam);
+
   bool GetModifierState(const nsAString& aKeyArg)
   {
     return GetModifierStateInternal(aKeyArg);
@@ -77,11 +80,11 @@ public:
                                                   const nsAString& aType,
                                                   const MouseEventInit& aParam,
                                                   ErrorResult& aRv);
-  int32_t MozMovementX()
+  int32_t MovementX()
   {
     return GetMovementPoint().x;
   }
-  int32_t MozMovementY()
+  int32_t MovementY()
   {
     return GetMovementPoint().y;
   }

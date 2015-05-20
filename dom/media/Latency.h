@@ -8,7 +8,7 @@
 #define MOZILLA_LATENCY_H
 
 #include "mozilla/TimeStamp.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
 #include "mozilla/Monitor.h"

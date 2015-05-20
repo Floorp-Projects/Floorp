@@ -137,7 +137,7 @@ StackScopedCloneRead(JSContext* cx, JSStructuredCloneReader* reader, uint32_t ta
       {
         nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
         result = ndefRecord->ReadStructuredClone(cx, reader) ?
-                 ndefRecord->WrapObject(cx, JS::NullPtr()) : nullptr;
+                 ndefRecord->WrapObject(cx, nullptr) : nullptr;
       }
       return result;
 #else

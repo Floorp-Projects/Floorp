@@ -89,7 +89,6 @@ BluetoothOppManager::Observe(nsISupports* aSubject,
 {
   MOZ_ASSERT(sBluetoothOppManager);
 
-  // if state of any volume was changed
   if (!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
     HandleVolumeStateChanged(aSubject);
     return NS_OK;
@@ -184,7 +183,7 @@ public:
   void Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mSocket->CloseSocket();
+    mSocket->Close();
   }
 
 private:
@@ -283,7 +282,7 @@ BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
 
   // Stop listening because currently we only support one connection at a time.
   if (mServerSocket) {
-    mServerSocket->CloseSocket();
+    mServerSocket->Close();
     mServerSocket = nullptr;
   }
 
@@ -314,31 +313,25 @@ BluetoothOppManager::HandleVolumeStateChanged(nsISupports* aSubject)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // We will disconnect OPP connection no matter which volume becomes non
-  // STATE_MOUNTED, since user may select files scattered in multiple volumes
-  // in a single transfer, (e.g., user selects 2 files to transfer, one is in
-  // internal volume and the other is in external volume).
-
   if (!mConnected) {
     return;
   }
 
-  // get volume interface and state
+  /**
+   * Disconnect ongoing OPP connection when a volume becomes non-mounted, in
+   * case files of transfer are located on that volume. |OnSocketDisconnect|
+   * will handle incomplete file transfers.
+   */
+
   nsCOMPtr<nsIVolume> vol = do_QueryInterface(aSubject);
   if (!vol) {
     return;
   }
+
   int32_t state;
   vol->GetState(&state);
   if (nsIVolume::STATE_MOUNTED != state) {
-    // Here is for unexpected physical removal of any storage.
-    // By checking the volume state change, we should release the unavailable
-    // storage to prevent being killed by vold.
-    // Disconnect any connected OPP connection since volume state becomes
-    // non STATE_MOUNTED. Then |OnSocketDisconnect| would also be called to
-    // handle remaining files during send(|DiscardBlobsToSend|) or
-    // receive(|DeleteReceivedFile|).
-    BT_LOGR("Volume state is not STATE_MOUNTED. Abort any ongoing OPP connection.");
+    BT_LOGR("Volume becomes non-mounted. Abort ongoing OPP connection");
     Disconnect(nullptr);
   }
 }
@@ -359,7 +352,7 @@ BluetoothOppManager::Listen()
    * BT restarts.
    */
   if (mServerSocket) {
-    mServerSocket->CloseSocket();
+    mServerSocket->Close();
     mServerSocket = nullptr;
   }
 
@@ -751,19 +744,13 @@ bool
 BluetoothOppManager::ExtractBlobHeaders()
 {
   RetrieveSentFileName();
+  mBlob->GetType(mContentType);
 
-  nsresult rv = mBlob->GetType(mContentType);
-  if (NS_FAILED(rv)) {
-    BT_WARNING("Can't get content type");
+  ErrorResult rv;
+  uint64_t fileLength = mBlob->GetSize(rv);
+  if (NS_WARN_IF(rv.Failed())) {
     SendDisconnectRequest();
-    return false;
-  }
-
-  uint64_t fileLength;
-  rv = mBlob->GetSize(&fileLength);
-  if (NS_FAILED(rv)) {
-    BT_WARNING("Can't get file size");
-    SendDisconnectRequest();
+    rv.SuppressException();
     return false;
   }
 
@@ -780,9 +767,9 @@ BluetoothOppManager::ExtractBlobHeaders()
 
   mFileLength = fileLength;
   rv = NS_NewThread(getter_AddRefs(mReadFileThread));
-  if (NS_FAILED(rv)) {
-    BT_WARNING("Can't create thread");
+  if (NS_WARN_IF(rv.Failed())) {
     SendDisconnectRequest();
+    rv.SuppressException();
     return false;
   }
 
@@ -1122,12 +1109,12 @@ BluetoothOppManager::ClientDataHandler(UnixSocketBuffer* aMessage)
       mUpdateProgressCounter = mSentFileLength / kUpdateProgressBase + 1;
     }
 
-    nsresult rv;
+    ErrorResult rv;
     if (!mInputStream) {
-      rv = mBlob->GetInternalStream(getter_AddRefs(mInputStream));
-      if (NS_FAILED(rv)) {
-        BT_WARNING("Can't get internal stream of blob");
+      mBlob->GetInternalStream(getter_AddRefs(mInputStream), rv);
+      if (NS_WARN_IF(rv.Failed())) {
         SendDisconnectRequest();
+        rv.SuppressException();
         return;
       }
     }
@@ -1135,9 +1122,10 @@ BluetoothOppManager::ClientDataHandler(UnixSocketBuffer* aMessage)
     nsRefPtr<ReadFileTask> task = new ReadFileTask(mInputStream,
                                                    mRemoteMaxPacketLength);
     rv = mReadFileThread->Dispatch(task, NS_DISPATCH_NORMAL);
-    if (NS_FAILED(rv)) {
-      BT_WARNING("Cannot dispatch read file task!");
+    if (NS_WARN_IF(rv.Failed())) {
       SendDisconnectRequest();
+      rv.SuppressException();
+      return;
     }
   } else {
     BT_WARNING("Unhandled ObexRequestCode");
@@ -1559,7 +1547,7 @@ void
 BluetoothOppManager::Disconnect(BluetoothProfileController* aController)
 {
   if (mSocket) {
-    mSocket->CloseSocket();
+    mSocket->Close();
   } else {
     BT_WARNING("%s: No ongoing file transfer to stop", __FUNCTION__);
   }
@@ -1573,10 +1561,12 @@ BluetoothOppManager::AcquireSdcardMountLock()
   nsCOMPtr<nsIVolumeService> volumeSrv =
     do_GetService(NS_VOLUMESERVICE_CONTRACTID);
   NS_ENSURE_TRUE(volumeSrv, false);
-  nsresult rv;
-  rv = volumeSrv->CreateMountLock(NS_LITERAL_STRING("sdcard"),
-                                  getter_AddRefs(mMountLock));
-  NS_ENSURE_SUCCESS(rv, false);
+
+  NS_ENSURE_SUCCESS(
+    volumeSrv->CreateMountLock(NS_LITERAL_STRING("sdcard"),
+                               getter_AddRefs(mMountLock)),
+    false);
+
   return true;
 }
 

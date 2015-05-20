@@ -1235,16 +1235,18 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, Hand
         break;
       case Getter:
         flags = JSFunction::INTERPRETED_GETTER;
+        allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case Setter:
         flags = JSFunction::INTERPRETED_SETTER;
+        allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       default:
         flags = JSFunction::INTERPRETED_NORMAL;
         break;
     }
 
-    fun = NewFunctionWithProto(context, nullptr, 0, flags, NullPtr(), atom, proto,
+    fun = NewFunctionWithProto(context, nullptr, 0, flags, nullptr, atom, proto,
                                allocKind, TenuredObject);
     if (!fun)
         return nullptr;
@@ -3942,12 +3944,26 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                 if (!init)
                     return null();
 
+                // Ban the nonsensical |for (var V = E1 in E2);| where V is a
+                // destructuring pattern.  See bug 1164741 for background.
+                if (pc->parsingForInit && kind == PNK_VAR) {
+                    TokenKind afterInit;
+                    if (!tokenStream.peekToken(&afterInit))
+                        return null();
+                    if (afterInit == TOK_IN) {
+                        report(ParseError, false, init, JSMSG_INVALID_FOR_INOF_DECL_WITH_INIT,
+                               "in");
+                        return null();
+                    }
+                }
+
                 if (!bindBeforeInitializer && !checkDestructuring(&data, pn2))
                     return null();
 
                 pn2 = handler.newBinary(PNK_ASSIGN, pn2, init);
                 if (!pn2)
                     return null();
+
                 handler.addList(pn, pn2);
                 break;
             }
@@ -3995,11 +4011,34 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                 if (!init)
                     return null();
 
-                if (!bindBeforeInitializer && !data.binder(&data, name, this))
-                    return null();
+                // Ignore an initializer if we have a for-in loop declaring a
+                // |var| with an initializer: |for (var v = ... in ...);|.
+                // Warn that this syntax is invalid so that developers looking
+                // in the console know to fix this.  ES<6 permitted the
+                // initializer while ES6 doesn't; ignoring it seems the best
+                // way to incrementally move to ES6 semantics.
+                bool performAssignment = true;
+                if (pc->parsingForInit && kind == PNK_VAR) {
+                    TokenKind afterInit;
+                    if (!tokenStream.peekToken(&afterInit))
+                        return null();
+                    if (afterInit == TOK_IN) {
+                        performAssignment = false;
+                        if (!report(ParseWarning, pc->sc->strict(), init,
+                                    JSMSG_INVALID_FOR_INOF_DECL_WITH_INIT, "in"))
+                        {
+                            return null();
+                        }
+                    }
+                }
 
-                if (!handler.finishInitializerAssignment(pn2, init, data.op))
-                    return null();
+                if (performAssignment) {
+                    if (!bindBeforeInitializer && !data.binder(&data, name, this))
+                        return null();
+
+                    if (!handler.finishInitializerAssignment(pn2, init, data.op))
+                        return null();
+                }
             } else {
                 if (data.isConst && !pc->parsingForInit) {
                     report(ParseError, false, null(), JSMSG_BAD_CONST_DECL);
@@ -4883,8 +4922,14 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
         if (isForDecl) {
             pn2 = pn1->pn_head;
             if ((pn2->isKind(PNK_NAME) && pn2->maybeExpr()) || pn2->isKind(PNK_ASSIGN)) {
-                // We have a bizarre |for (var/const/let x = ... in/of ...)|
-                // loop erroneously permitted by ES1-5 but removed in ES6.
+                MOZ_ASSERT(!(headKind == PNK_FORIN && pn1->isKind(PNK_VAR)),
+                           "Parser::variables should have ignored the "
+                           "initializer in the ES5-sanctioned, ES6-prohibited "
+                           "|for (var ... = ... in ...)| syntax");
+
+                // Otherwise, this bizarre |for (const/let x = ... in/of ...)|
+                // loop isn't valid ES6 and has never been permitted in
+                // SpiderMonkey.
                 report(ParseError, false, pn2, JSMSG_INVALID_FOR_INOF_DECL_WITH_INIT,
                        headKind == PNK_FOROF ? "of" : "in");
                 return null();
@@ -6593,7 +6638,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
         if (!tokenStream.peekToken(&ignored))
             return null();
 
-        return functionDef(inHandling, yieldHandling, NullPtr(), Arrow, NotGenerator);
+        return functionDef(inHandling, yieldHandling, nullptr, Arrow, NotGenerator);
       }
 
       default:
@@ -7371,7 +7416,7 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
             return null();
     }
 
-    RootedFunction fun(context, newFunction(/* atom = */ NullPtr(), Expression, proto));
+    RootedFunction fun(context, newFunction(/* atom = */ nullptr, Expression, proto));
     if (!fun)
         return null();
 

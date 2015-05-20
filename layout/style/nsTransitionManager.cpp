@@ -52,8 +52,8 @@ ElementPropertyTransition::Name() const
 double
 ElementPropertyTransition::CurrentValuePortion() const
 {
-  // It would be easy enough to handle finished transitions by using a time
-  // fraction of 1 but currently we should not be called for finished
+  // It would be easy enough to handle finished transitions by using a
+  // progress of 1 but currently we should not be called for finished
   // transitions.
   MOZ_ASSERT(!IsFinishedTransition(),
              "Getting the value portion of a finished transition");
@@ -62,23 +62,23 @@ ElementPropertyTransition::CurrentValuePortion() const
              "sampled");
 
   // Transitions use a fill mode of 'backwards' so GetComputedTiming will
-  // never return a null time fraction due to being *before* the animation
+  // never return a null time progress due to being *before* the animation
   // interval. However, it might be possible that we're behind on flushing
   // causing us to get called *after* the animation interval. So, just in
-  // case, we override the fill mode to 'both' to ensure the time fraction
+  // case, we override the fill mode to 'both' to ensure the progress
   // is never null.
   AnimationTiming timingToUse = mTiming;
   timingToUse.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
   ComputedTiming computedTiming = GetComputedTiming(&timingToUse);
 
-  MOZ_ASSERT(computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction,
-             "Got a null time fraction for a fill mode of 'both'");
+  MOZ_ASSERT(computedTiming.mProgress != ComputedTiming::kNullProgress,
+             "Got a null progress for a fill mode of 'both'");
   MOZ_ASSERT(mProperties.Length() == 1,
              "Should have one animation property for a transition");
   MOZ_ASSERT(mProperties[0].mSegments.Length() == 1,
              "Animation property should have one segment for a transition");
   return mProperties[0].mSegments[0].mTimingFunction
-         .GetValue(computedTiming.mTimeFraction);
+         .GetValue(computedTiming.mProgress);
 }
 
 /*****************************************************************************
@@ -93,10 +93,10 @@ CSSTransition::PlayStateFromJS() const
 }
 
 void
-CSSTransition::PlayFromJS()
+CSSTransition::PlayFromJS(ErrorResult& aRv)
 {
   FlushStyle();
-  Animation::PlayFromJS();
+  Animation::PlayFromJS(aRv);
 }
 
 CommonAnimationManager*

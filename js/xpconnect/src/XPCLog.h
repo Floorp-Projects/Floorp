@@ -9,7 +9,7 @@
 #ifndef xpclog_h___
 #define xpclog_h___
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 /*
  * This uses prlog.h See prlog.h for environment settings for output.

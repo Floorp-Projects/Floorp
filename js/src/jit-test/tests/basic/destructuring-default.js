@@ -157,7 +157,7 @@ assertEq(a.y, 2);
 
 // defaults are evaluated even if there is no binding
 var evaled = false;
-({a: {} = (evaled = true, null)}) = {};
+({a: {} = (evaled = true, {})}) = {};
 assertEq(evaled, true);
 evaled = false;
 assertThrowsInstanceOf(() => { [[] = (evaled = true, 2)] = [] }, TypeError);

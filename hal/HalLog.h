@@ -7,7 +7,7 @@
 #ifndef mozilla_HalLog_h
 #define mozilla_HalLog_h
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 /*
  * HalLog.h contains internal macros and functions used for logging.

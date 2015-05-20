@@ -16,7 +16,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsWidgetsCID.h"
 #include "prerror.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Attributes.h"
 #include "TrackUnionStream.h"
 #include "ImageContainer.h"

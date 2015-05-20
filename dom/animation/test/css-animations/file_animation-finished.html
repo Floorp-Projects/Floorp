@@ -48,7 +48,7 @@ async_test(function(t) {
 
   var previousFinishedPromise = animation.finished;
 
-  animation.currentTime = ANIM_DURATION;
+  animation.finish();
 
   animation.finished.then(t.step_func(function() {
     assert_equals(animation.finished, previousFinishedPromise,
@@ -73,7 +73,7 @@ async_test(function(t) {
 
   var previousFinishedPromise;
 
-  animation.currentTime = ANIM_DURATION;
+  animation.finish();
 
   animation.finished.then(t.step_func(function() {
     previousFinishedPromise = animation.finished;
@@ -100,7 +100,7 @@ async_test(function(t) {
 
   var previousFinishedPromise = animation.finished;
 
-  animation.currentTime = ANIM_DURATION;
+  animation.finish();
 
   animation.finished.then(t.step_func(function() {
     animation.currentTime = ANIM_DURATION + 1000;
@@ -111,6 +111,59 @@ async_test(function(t) {
     t.done();
   }));
 }, 'Test redundant finishing of animation');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  // Setup callback to run if finished promise is resolved
+  var finishPromiseResolved = false;
+  animation.finished.then(function() {
+    finishPromiseResolved = true;
+  });
+
+  animation.ready.then(t.step_func(function() {
+    // Jump to mid-way in interval and pause
+    animation.currentTime = ANIM_DURATION / 2;
+    animation.pause();
+    return animation.ready;
+  })).then(t.step_func(function() {
+    // Jump to the end
+    // (But don't use finish() since that should unpause as well)
+    animation.currentTime = ANIM_DURATION;
+    return waitForAnimationFrames(2);
+  })).then(t.step_func(function() {
+    assert_false(finishPromiseResolved,
+                 'Finished promise should not resolve when paused');
+    t.done();
+  }));
+}, 'Finished promise does not resolve when paused');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  // Setup callback to run if finished promise is resolved
+  var finishPromiseResolved = false;
+  animation.finished.then(function() {
+    finishPromiseResolved = true;
+  });
+
+  animation.ready.then(t.step_func(function() {
+    // Jump to mid-way in interval and pause
+    animation.currentTime = ANIM_DURATION / 2;
+    animation.pause();
+    // Jump to the end
+    animation.currentTime = ANIM_DURATION;
+    return waitForAnimationFrames(2);
+  })).then(t.step_func(function() {
+    assert_false(finishPromiseResolved,
+                 'Finished promise should not resolve when pause-pending');
+    t.done();
+  }));
+}, 'Finished promise does not resolve when pause-pending');
 
 async_test(function(t) {
   var div = addDiv(t);
@@ -223,11 +276,11 @@ async_test(function(t) {
     animation.cancel();
     assert_not_equals(animation.finished, previousFinishedPromise,
                       'A new finished promise should be created when'
-                      + ' cancelling a finished player');
+                      + ' cancelling a finished animation');
   })).then(t.step_func(function() {
     t.done();
   }));
-}, 'cancelling an already-finished player replaces the finished promise');
+}, 'cancelling an already-finished animation replaces the finished promise');
 
 async_test(function(t) {
   var div = addDiv(t);
@@ -250,7 +303,7 @@ async_test(function(t) {
   assert_not_equals(animation.finished, previousFinishedPromise,
                     'A redundant call to cancel() should still generate a new'
                     + ' finished promise');
-}, 'cancelling an idle player still replaces the finished promise');
+}, 'cancelling an idle animation still replaces the finished promise');
 
 async_test(function(t) {
   var div = addDiv(t);
@@ -260,26 +313,32 @@ async_test(function(t) {
   const HALF_DUR = ANIM_DURATION / 2;
   const QUARTER_DUR = ANIM_DURATION / 4;
 
-  animation.currentTime = HALF_DUR;
-  div.style.animationDuration = QUARTER_DUR + 'ms';
-  // Animation should now be finished
-
-  // Below we use gotNextFrame to check that shortening of the animation
-  // duration causes the finished promise to resolve, rather than it just
-  // getting resolved on the next animation frame. This relies on the fact
-  // that the promises are resolved as a micro-task before the next frame
-  // happens.
-
-  window.getComputedStyle(div).animationDuration; // flush style
   var gotNextFrame = false;
-  waitForFrame().then(function() {
-    gotNextFrame = true;
-  });
+  var currentTimeBeforeShortening;
 
-  animation.finished.then(t.step_func(function() {
+  animation.currentTime = HALF_DUR;
+  animation.ready.then(t.step_func(function() {
+    currentTimeBeforeShortening = animation.currentTime;
+
+    div.style.animationDuration = QUARTER_DUR + 'ms';
+    window.getComputedStyle(div).animationDuration; // flush style
+    // Animation should now be finished
+
+    // Below we use gotNextFrame to check that shortening of the animation
+    // duration causes the finished promise to resolve, rather than it just
+    // getting resolved on the next animation frame. This relies on the fact
+    // that the promises are resolved as a micro-task before the next frame
+    // happens.
+
+    waitForFrame().then(function() {
+      gotNextFrame = true;
+    });
+
+    return animation.finished;
+  })).then(t.step_func(function() {
     assert_false(gotNextFrame, 'shortening of the animation duration should ' +
                                'resolve the finished promise');
-    assert_equals(animation.currentTime, HALF_DUR,
+    assert_equals(animation.currentTime, currentTimeBeforeShortening,
                   'currentTime should be unchanged when duration shortened');
     var previousFinishedPromise = animation.finished;
     div.style.animationDuration = ANIM_DURATION + 'ms'; // now active again

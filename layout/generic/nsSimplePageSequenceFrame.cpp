@@ -41,7 +41,7 @@ static const char sPrintOptionsContractID[] = "@mozilla.org/gfx/printsettings-se
 
 //
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 PRLogModuleInfo *
 GetLayoutPrintingLog()
 {

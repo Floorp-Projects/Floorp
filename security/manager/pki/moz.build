@@ -4,5 +4,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'resources', 'src']
+DIRS += ['resources']
 
+XPIDL_SOURCES += [
+    'nsIASN1Tree.idl',
+    'nsIPKIParamBlock.idl',
+]
+
+XPIDL_MODULE = 'pippki'
+
+UNIFIED_SOURCES += [
+    'nsASN1Tree.cpp',
+    'nsNSSDialogHelper.cpp',
+    'nsNSSDialogs.cpp',
+    'nsPKIModule.cpp',
+    'nsPKIParamBlock.cpp',
+]
+
+GENERATED_INCLUDES += [
+    '/dist/public/nss',
+]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'

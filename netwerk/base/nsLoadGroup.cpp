@@ -11,7 +11,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Atomics.h"

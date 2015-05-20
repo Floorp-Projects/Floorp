@@ -29,7 +29,7 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT', 'Darwin'):
     ])
 
 LOCAL_INCLUDES += [
-    '../src',
+    '..',
 ]
 
 FAIL_ON_WARNINGS = True

@@ -186,7 +186,7 @@ ValuePropertyBearer(JSContext* cx, InterpreterFrame* fp, HandleValue v, int spin
         return GlobalObject::getOrCreateBooleanPrototype(cx, global);
 
     MOZ_ASSERT(v.isNull() || v.isUndefined());
-    ReportIsNullOrUndefined(cx, spindex, v, NullPtr());
+    ReportIsNullOrUndefined(cx, spindex, v, nullptr);
     return nullptr;
 }
 

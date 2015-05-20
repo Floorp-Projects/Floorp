@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script type="application/javascript;version=1.8">
+      "use strict";
+      if (navigator.mozHasPendingMessage("dummy-system-message")) {
+        alert("before load");
+      }
+      window.addEventListener("load", e => {
+        if (navigator.mozHasPendingMessage("dummy-system-message")) {
+          alert("load");
+        }
+      });
+      window.addEventListener("hashchange", e => {
+        switch (window.location.hash) {
+          case "#checkPendingMessages":
+            if (navigator.mozHasPendingMessage("dummy-system-message2")) {
+              alert("after launch");
+            }
+            break;
+          case "#setMessageHandler":
+            navigator.mozSetMessageHandler("dummy-system-message", () => {
+              alert("handle message");
+              if (!navigator.mozHasPendingMessage("dummy-system-message")) {
+                alert("no hasPendingMessages");
+              }
+            });
+            break;
+          case "#setMessageHandler2":
+            navigator.mozSetMessageHandler("dummy-system-message2", () => {
+              alert("handle message");
+              if (!navigator.mozHasPendingMessage("dummy-system-message2")) {
+                alert("no hasPendingMessages");
+              }
+            });
+            break;
+        }
+      });
+    </script>
+  </head>
+</html>
