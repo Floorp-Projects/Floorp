@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<style>
+@keyframes abc {
+  to { transform: translate(10px) }
+}
+</style>
+<body>
+<script>
+'use strict';
+
+async_test(function(t) {
+  var div = addDiv(t, { style: 'animation: abc 100s infinite' });
+  var animation = div.getAnimations()[0];
+
+  animation.ready.then(t.step_func(function() {
+    // Seek to a time outside the active range so that play() will have to
+    // snap back to the start
+    animation.currentTime = -5000;
+    animation.playbackRate = -1;
+
+    assert_throws('InvalidStateError',
+                  function () { animation.play(); },
+                  'Expect InvalidStateError exception on calling play() ' +
+                  'with a negative playbackRate and infinite-duration ' +
+                  'animation');
+    t.done();
+  }));
+}, 'play() throws when seeking an infinite-duration animation played in ' +
+   'reverse');
+
+done();
+</script>
+</body>

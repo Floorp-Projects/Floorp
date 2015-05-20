@@ -15,7 +15,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "AudioChannelService.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 #include "nsIFrameLoader.h"

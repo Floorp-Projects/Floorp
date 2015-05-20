@@ -114,7 +114,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   } else if (scopeObject != globalObject) {
 
     // This is just a property holder, so it doesn't need any special JSClass.
-    propertyHolder = JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr());
+    propertyHolder = JS_NewObjectWithGivenProto(cx, nullptr, nullptr);
     NS_ENSURE_TRUE(propertyHolder, NS_ERROR_OUT_OF_MEMORY);
 
     // Define it as a property on the scopeObject, using the same name used on
@@ -248,7 +248,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   jsapi.TakeOwnershipOfErrorReporting();
   JSContext* cx = jsapi.cx();
 
-  mPrecompiledMemberHolder = JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr());
+  mPrecompiledMemberHolder = JS_NewObjectWithGivenProto(cx, nullptr, nullptr);
   if (!mPrecompiledMemberHolder)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -367,7 +367,7 @@ nsXBLProtoImpl::Read(nsIObjectInputStream* aStream,
   AssertInCompilationScope();
   AutoJSContext cx;
   // Set up a class object first so that deserialization is possible
-  mPrecompiledMemberHolder = JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr());
+  mPrecompiledMemberHolder = JS_NewObjectWithGivenProto(cx, nullptr, nullptr);
   if (!mPrecompiledMemberHolder)
     return NS_ERROR_OUT_OF_MEMORY;
 

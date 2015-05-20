@@ -21,7 +21,7 @@
 #include "nsBidiUtils.h"
 #include "nsIPrintSettings.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 extern PRLogModuleInfo *GetLayoutPrintingLog();
 #define PR_PL(_p1)  PR_LOG(GetLayoutPrintingLog(), PR_LOG_DEBUG, _p1)
 

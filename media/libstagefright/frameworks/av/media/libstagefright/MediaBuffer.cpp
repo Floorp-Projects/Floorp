@@ -204,7 +204,7 @@ bool MediaBuffer::ensuresize(size_t length) {
     if (!mOwnsData || refcount()) {
         return false;
     }
-    if (!mBufferBackend.SetLength(length)) {
+    if (!mBufferBackend.SetLength(length, mozilla::fallible)) {
         return false;
     }
     mData = mBufferBackend.Elements();

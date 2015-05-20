@@ -101,10 +101,30 @@
   text-shadow: none;
 }
 
+#performance-view .realtime-message {
+  opacity: 0.5;
+  display: block;
+}
+
 #performance-view toolbarbutton.record-button[checked],
 #performance-view toolbarbutton.record-button[checked] {
   color: var(--theme-selection-color);
   background: var(--theme-selection-background);
+}
+
+#performance-view .realtime-disabled-message,
+#performance-view .realtime-disabled-on-e10s-message {
+  display: none;
+}
+
+#performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message {
+  display: block;
+  opacity: 0.5;
+
+}
+#performance-view[e10s="unsupported"] .realtime-disabled-message {
+  display: block;
+  opacity: 0.5;
 }
 
 #details-pane-container .buffer-status-message,
@@ -671,4 +691,36 @@
   #jit-optimizations-view .opt-icon::before {
     background-image: url(chrome://browser/skin/devtools/webconsole@2x.png);
   }
+}
+
+/**
+ * Configurable Options
+ *
+ * Elements can be tagged with a class and visibility is controlled via a preference being
+ * applied or removed.
+ */
+
+/**
+ * devtools.performance.ui.experimental
+ */
+menuitem.experimental-option::before {
+  content: "";
+  background-image: url(chrome://browser/skin/devtools/webconsole.png);
+  background-repeat: no-repeat;
+  background-size: 48px 40px;
+  margin: 2px 5px 0 0;
+  width: 8px;
+  height: 8px;
+  max-height: 8px;
+  display: inline-block;
+  background-position: -16px -16px;
+}
+@media (min-resolution: 1.25dppx) {
+  menuitem.experimental-option::before {
+    background-image: url(chrome://browser/skin/devtools/webconsole@2x.png);
+  }
+}
+#performance-options-menupopup:not(.experimental-enabled) .experimental-option,
+#performance-options-menupopup:not(.experimental-enabled) .experimental-option::before {
+  display: none;
 }

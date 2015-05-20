@@ -27,7 +27,7 @@
 #include "nsID.h"
 #include "nsIDOMEvent.h"
 #include "nsString.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 // Include this last to avoid path problems on Windows.
 #include "ActorsChild.h"

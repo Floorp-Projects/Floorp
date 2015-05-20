@@ -339,7 +339,7 @@ UDPSocket::Send(const StringOrBlobOrArrayBufferOrArrayBufferView& aData,
   if (aData.IsBlob()) {
     Blob& blob = aData.GetAsBlob();
 
-    aRv = blob.GetInternalStream(getter_AddRefs(stream));
+    blob.GetInternalStream(getter_AddRefs(stream), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return false;
     }

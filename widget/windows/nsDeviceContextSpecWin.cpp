@@ -41,7 +41,7 @@
 #include "nsIStringBundle.h"
 #define NS_ERROR_GFX_PRINTER_BUNDLE_URL "chrome://global/locale/printing.properties"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 PRLogModuleInfo * kWidgetPrintingLogMod = PR_NewLogModule("printing-widget");
 #define PR_PL(_p1)  PR_LOG(kWidgetPrintingLogMod, PR_LOG_DEBUG, _p1)
 

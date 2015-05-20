@@ -302,13 +302,14 @@ StructuredCloneWriteCallback(JSContext* aCx,
   {
     Blob* blob = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
-      uint64_t size;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetSize(&size)));
+      ErrorResult rv;
+      uint64_t size = blob->GetSize(rv);
+      MOZ_ASSERT(!rv.Failed());
 
       size = NativeEndian::swapToLittleEndian(size);
 
       nsString type;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(blob->GetType(type)));
+      blob->GetType(type);
 
       NS_ConvertUTF16toUTF8 convType(type);
       uint32_t convTypeLength =
@@ -587,7 +588,7 @@ public:
                              aFile.mFileInfo.forget());
     MOZ_ASSERT(mutableFile);
 
-    JS::Rooted<JSObject*> result(aCx, mutableFile->WrapObject(aCx, JS::NullPtr()));
+    JS::Rooted<JSObject*> result(aCx, mutableFile->WrapObject(aCx, nullptr));
     if (NS_WARN_IF(!result)) {
       return false;
     }
@@ -1178,7 +1179,8 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
   }
 
   FallibleTArray<uint8_t> cloneData;
-  if (NS_WARN_IF(!cloneData.SetLength(cloneWriteInfo.mCloneBuffer.nbytes()))) {
+  if (NS_WARN_IF(!cloneData.SetLength(cloneWriteInfo.mCloneBuffer.nbytes(),
+                                      fallible))) {
     aRv = NS_ERROR_OUT_OF_MEMORY;
     return nullptr;
   }
@@ -1206,7 +1208,7 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
     const uint32_t count = blobOrFileInfos.Length();
 
     FallibleTArray<DatabaseFileOrMutableFileId> fileActorOrMutableFileIds;
-    if (NS_WARN_IF(!fileActorOrMutableFileIds.SetCapacity(count))) {
+    if (NS_WARN_IF(!fileActorOrMutableFileIds.SetCapacity(count, fallible))) {
       aRv = NS_ERROR_OUT_OF_MEMORY;
       return nullptr;
     }

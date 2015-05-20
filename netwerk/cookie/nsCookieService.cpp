@@ -183,7 +183,7 @@ struct nsListIter
 //    set NSPR_LOG_MODULES=cookie:4 -- shows accepted and rejected cookies
 //    set NSPR_LOG_FILE=cookie.log
 //
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #endif
 
 // define logging macros for convenience

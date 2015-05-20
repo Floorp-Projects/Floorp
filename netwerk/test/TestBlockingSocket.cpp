@@ -12,7 +12,7 @@
 #include "nsStringAPI.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prenv.h"
 #include "prthread.h"
 #include <stdlib.h>

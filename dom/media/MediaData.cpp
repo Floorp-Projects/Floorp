@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "MediaData.h"
 #include "MediaInfo.h"
 #ifdef MOZ_OMX_DECODER
@@ -505,8 +506,10 @@ MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
   if (!EnsureCapacity(aSize)) {
     return;
   }
-  mBuffer->AppendElements(aData, aSize);
-  mBuffer->AppendElements(RAW_DATA_ALIGNMENT);
+
+  // We ensure sufficient capacity above so this shouldn't fail.
+  MOZ_ALWAYS_TRUE(mBuffer->AppendElements(aData, aSize));
+  MOZ_ALWAYS_TRUE(mBuffer->AppendElements(RAW_DATA_ALIGNMENT));
   mSize = aSize;
 }
 
@@ -525,8 +528,10 @@ MediaRawData::Clone() const
     if (!s->EnsureCapacity(mSize)) {
       return nullptr;
     }
-    s->mBuffer->AppendElements(mData, mSize);
-    s->mBuffer->AppendElements(RAW_DATA_ALIGNMENT);
+
+    // We ensure sufficient capacity above so this shouldn't fail.
+    MOZ_ALWAYS_TRUE(s->mBuffer->AppendElements(mData, mSize));
+    MOZ_ALWAYS_TRUE(s->mBuffer->AppendElements(RAW_DATA_ALIGNMENT));
     s->mSize = mSize;
   }
   return s.forget();
@@ -538,7 +543,7 @@ MediaRawData::EnsureCapacity(size_t aSize)
   if (mData && mBuffer->Capacity() >= aSize + RAW_DATA_ALIGNMENT * 2) {
     return true;
   }
-  if (!mBuffer->SetCapacity(aSize + RAW_DATA_ALIGNMENT * 2)) {
+  if (!mBuffer->SetCapacity(aSize + RAW_DATA_ALIGNMENT * 2, fallible)) {
     return false;
   }
   // Find alignment address.
@@ -555,7 +560,8 @@ MediaRawData::EnsureCapacity(size_t aSize)
   if (shift == 0) {
     // Nothing to do.
   } else if (shift > 0) {
-    mBuffer->InsertElementsAt(oldpadding, shift);
+    // We ensure sufficient capacity above so this shouldn't fail.
+    MOZ_ALWAYS_TRUE(mBuffer->InsertElementsAt(oldpadding, shift, fallible));
   } else {
     mBuffer->RemoveElementsAt(mPadding, -shift);
   }
@@ -616,8 +622,11 @@ MediaRawDataWriter::SetSize(size_t aSize)
   if (aSize > mTarget->mSize && !EnsureSize(aSize)) {
     return false;
   }
-  // Pad our buffer.
-  mBuffer->SetLength(aSize + mTarget->mPadding + RAW_DATA_ALIGNMENT);
+
+  // Pad our buffer. We ensure sufficient capacity above so this shouldn't fail.
+  MOZ_ALWAYS_TRUE(
+    mBuffer->SetLength(aSize + mTarget->mPadding + RAW_DATA_ALIGNMENT,
+                       fallible));
   mTarget->mSize = mSize = aSize;
   return true;
 }
@@ -628,7 +637,9 @@ MediaRawDataWriter::Prepend(const uint8_t* aData, size_t aSize)
   if (!EnsureSize(aSize + mTarget->mSize)) {
     return false;
   }
-  mBuffer->InsertElementsAt(mTarget->mPadding, aData, aSize);
+
+  // We ensure sufficient capacity above so this shouldn't fail.
+  MOZ_ALWAYS_TRUE(mBuffer->InsertElementsAt(mTarget->mPadding, aData, aSize));
   mTarget->mSize += aSize;
   mSize = mTarget->mSize;
   return true;
@@ -640,7 +651,10 @@ MediaRawDataWriter::Replace(const uint8_t* aData, size_t aSize)
   if (!EnsureSize(aSize)) {
     return false;
   }
-  mBuffer->ReplaceElementsAt(mTarget->mPadding, mTarget->mSize, aData, aSize);
+
+  // We ensure sufficient capacity above so this shouldn't fail.
+  MOZ_ALWAYS_TRUE(mBuffer->ReplaceElementsAt(mTarget->mPadding, mTarget->mSize,
+                                             aData, aSize, fallible));
   mTarget->mSize = mSize = aSize;
   return true;
 }

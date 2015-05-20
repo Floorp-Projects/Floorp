@@ -1374,7 +1374,7 @@ nsDOMCameraControl::OnFacesDetected(const nsTArray<ICameraControl::Face>& aFaces
   Sequence<OwningNonNull<DOMCameraDetectedFace> > faces;
   uint32_t len = aFaces.Length();
 
-  if (faces.SetCapacity(len)) {
+  if (faces.SetCapacity(len, fallible)) {
     for (uint32_t i = 0; i < len; ++i) {
       *faces.AppendElement() =
         new DOMCameraDetectedFace(static_cast<DOMMediaStream*>(this), aFaces[i]);

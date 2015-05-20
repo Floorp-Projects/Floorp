@@ -12,7 +12,7 @@
 #include <gdk/gdk.h>
 #include "nsAppShell.h"
 #include "nsWindow.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prenv.h"
 #include "mozilla/HangMonitor.h"
 #include "mozilla/unused.h"

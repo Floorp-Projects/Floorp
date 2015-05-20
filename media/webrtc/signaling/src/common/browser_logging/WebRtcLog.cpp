@@ -4,7 +4,7 @@
 
 #include "WebRtcLog.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prenv.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
