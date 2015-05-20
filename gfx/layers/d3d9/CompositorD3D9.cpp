@@ -746,7 +746,11 @@ CompositorD3D9::PaintToTarget()
   device()->GetRenderTargetData(backBuff, destSurf);
 
   D3DLOCKED_RECT rect;
-  destSurf->LockRect(&rect, nullptr, D3DLOCK_READONLY);
+  HRESULT hr = destSurf->LockRect(&rect, nullptr, D3DLOCK_READONLY);
+  if (FAILED(hr) || !rect.pBits) {
+    gfxCriticalError() << "Failed to lock rect in paint to target D3D9 " << hexa(hr);
+    return;
+  }
   RefPtr<DataSourceSurface> sourceSurface =
     Factory::CreateWrappingDataSourceSurface((uint8_t*)rect.pBits,
                                              rect.Pitch,
