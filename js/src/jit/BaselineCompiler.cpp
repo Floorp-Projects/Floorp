@@ -107,8 +107,10 @@ BaselineCompiler::compile()
     if (!emitOutOfLinePostBarrierSlot())
         return Method_Error;
 
-    if (masm.oom())
+    if (masm.oom()) {
+        ReportOutOfMemory(cx);
         return Method_Error;
+    }
 
     Linker linker(masm);
     AutoFlushICache afc("Baseline");
@@ -170,8 +172,10 @@ BaselineCompiler::compile()
         previousOffset = entry.nativeOffset;
     }
 
-    if (pcEntries.oom())
+    if (pcEntries.oom()) {
+        ReportOutOfMemory(cx);
         return Method_Error;
+    }
 
     prologueOffset_.fixup(&masm);
     epilogueOffset_.fixup(&masm);
@@ -282,6 +286,7 @@ BaselineCompiler::compile()
         JitcodeGlobalTable* globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
         if (!globalTable->addEntry(entry, cx->runtime())) {
             entry.destroy();
+            ReportOutOfMemory(cx);
             return Method_Error;
         }
 
@@ -936,8 +941,10 @@ BaselineCompiler::emitBody()
         bool addIndexEntry = (pc == script->code() || lastOpUnreachable || emittedOps > 100);
         if (addIndexEntry)
             emittedOps = 0;
-        if (!addPCMappingEntry(addIndexEntry))
+        if (!addPCMappingEntry(addIndexEntry)) {
+            ReportOutOfMemory(cx);
             return Method_Error;
+        }
 
         // Emit traps for breakpoints and step mode.
         if (compileDebugInstrumentation_ && !emitDebugTrap())
