@@ -498,11 +498,6 @@ public:
    */
   virtual bool HasInternalBuffer() const { return false; }
 
-  /**
-   * Cast to a TextureHost for each backend.
-   */
-  virtual TextureHostOGL* AsHostOGL() { return nullptr; }
-
   void AddCompositableRef() { ++mCompositableCount; }
 
   void ReleaseCompositableRef()
