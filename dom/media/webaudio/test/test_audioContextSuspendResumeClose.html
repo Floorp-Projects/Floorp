@@ -226,26 +226,23 @@ function testScriptProcessNodeSuspended() {
   var sp = ac.createScriptProcessor();
   var remainingIterations = 30;
   var afterResume = false;
-  ac.onstatechange = function() {
-    ac.onstatechange = null;
-    sp.onaudioprocess = function() {
-      ok(ac.state == "running", "If onaudioprocess is called, the context" +
-          " must be running (was " + ac.state + ", remainingIterations:" + remainingIterations +")");
-      remainingIterations--;
-      if (!afterResume) {
-        if (remainingIterations == 0) {
-          ac.suspend().then(function() {
-            ac.resume().then(function() {
-              remainingIterations = 30;
-              afterResume = true;
-            });
+  sp.onaudioprocess = function() {
+    ok(ac.state == "running" || remainingIterations == 3, "If onaudioprocess is called, the context" +
+        " must be running (was " + ac.state + ", remainingIterations:" + remainingIterations +")");
+    remainingIterations--;
+    if (!afterResume) {
+      if (remainingIterations == 0) {
+        ac.suspend().then(function() {
+          ac.resume().then(function() {
+            remainingIterations = 30;
+            afterResume = true;
           });
-        }
-      } else {
-        sp.onaudioprocess = null;
-        todo(false,"3");
-        finish();
+        });
       }
+    } else {
+      sp.onaudioprocess = null;
+      todo(false,"3");
+      finish();
     }
   }
   sp.connect(ac.destination);
