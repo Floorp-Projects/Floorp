@@ -31,6 +31,8 @@ public:
                  UnixSocketConnector* aConnector);
   ~ListenSocketIO();
 
+  void GetSocketAddr(nsAString& aAddrStr) const;
+
   // Task callback methods
   //
 
@@ -110,6 +112,26 @@ ListenSocketIO::~ListenSocketIO()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsShutdownOnMainThread());
+}
+
+void
+ListenSocketIO::GetSocketAddr(nsAString& aAddrStr) const
+{
+  if (!mConnector) {
+    NS_WARNING("No connector to get socket address from!");
+    aAddrStr.Truncate();
+    return;
+  }
+
+  nsCString addressString;
+  nsresult rv = mConnector->ConvertAddressToString(
+    *reinterpret_cast<const struct sockaddr*>(&mAddress), mAddressLength,
+    addressString);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  aAddrStr.Assign(NS_ConvertUTF8toUTF16(addressString));
 }
 
 void
@@ -292,32 +314,51 @@ ListenSocket::~ListenSocket()
   MOZ_ASSERT(!mIO);
 }
 
-nsresult
+bool
 ListenSocket::Listen(UnixSocketConnector* aConnector,
                      ConnectionOrientedSocket* aCOSocket)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mIO);
+  MOZ_ASSERT(aConnector);
+  MOZ_ASSERT(aCOSocket);
 
-  mIO = new ListenSocketIO(XRE_GetIOMessageLoop(), this, aConnector);
+  nsAutoPtr<UnixSocketConnector> connector(aConnector);
+
+  if (mIO) {
+    NS_WARNING("Socket already connecting/connected!");
+    return false;
+  }
+
+  mIO = new ListenSocketIO(XRE_GetIOMessageLoop(), this, connector.forget());
 
   // Prepared I/O object, now start listening.
   return Listen(aCOSocket);
 }
 
-nsresult
+bool
 ListenSocket::Listen(ConnectionOrientedSocket* aCOSocket)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCOSocket);
   MOZ_ASSERT(mIO);
+  MOZ_ASSERT(aCOSocket);
 
   SetConnectionStatus(SOCKET_LISTENING);
 
   XRE_GetIOMessageLoop()->PostTask(
     FROM_HERE, new ListenSocketIO::ListenTask(mIO, aCOSocket->GetIO()));
 
-  return NS_OK;
+  return true;
+}
+
+void
+ListenSocket::GetSocketAddr(nsAString& aAddrStr)
+{
+  aAddrStr.Truncate();
+  if (!mIO || GetConnectionStatus() != SOCKET_CONNECTED) {
+    NS_WARNING("No socket currently open!");
+    return;
+  }
+  mIO->GetSocketAddr(aAddrStr);
 }
 
 // |SocketBase|
