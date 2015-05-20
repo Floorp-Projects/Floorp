@@ -573,7 +573,10 @@ nsObjectLoadingContent::QueueCheckPluginStopEvent()
   nsCOMPtr<nsIRunnable> event = new CheckPluginStopEvent(this);
   mPendingCheckPluginStopEvent = event;
 
-  NS_DispatchToCurrentThread(event);
+  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+  if (appShell) {
+    appShell->RunInStableState(event);
+  }
 }
 
 // Tedious syntax to create a plugin stream listener with checks and put it in
