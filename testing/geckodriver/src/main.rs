@@ -67,8 +67,14 @@ fn parse_args() -> Options {
         parser.refer(&mut opts.connect_existing)
             .add_option(&["--connect-existing"], StoreTrue,
                         "Connect to an existing firefox process");
-        parser.parse_args_or_exit()
+        parser.parse_args_or_exit();
     }
+
+    if opts.binary == "" && !opts.connect_existing {
+        println!("Must supply a binary path or --connect-existing\n");
+        exit(1)
+    }
+
     opts
 }
 
