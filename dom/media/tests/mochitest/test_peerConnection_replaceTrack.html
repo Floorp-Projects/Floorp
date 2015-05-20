@@ -32,6 +32,9 @@
     var audiotrack;
     return navigator.mediaDevices.getUserMedia({video:true, audio:true, fake:true})
       .then(newStream => {
+        // because of bug 934512, we need to addref this on the content side
+        // otherwise gecko might gc it.
+        window.grip = newstream;
         newTrack = newStream.getVideoTracks()[0];
         audiotrack = newStream.getAudioTracks()[0];
         isnot(newTrack, sender.track, "replacing with a different track");
