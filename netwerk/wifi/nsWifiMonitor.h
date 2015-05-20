@@ -15,7 +15,7 @@
 #include "nsIWifiListener.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "nsITimer.h"

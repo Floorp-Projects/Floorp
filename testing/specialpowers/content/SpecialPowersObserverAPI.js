@@ -497,7 +497,7 @@ SpecialPowersObserverAPI.prototype = {
         let msg = aMessage.data;
         let op = msg.op;
 
-        if (op != 'clear' && op != 'getUsage') {
+        if (op != 'clear' && op != 'getUsage' && op != 'reset') {
           throw new SpecialPowersError('Invalid operation for SPQuotaManager');
         }
 
@@ -511,6 +511,8 @@ SpecialPowersObserverAPI.prototype = {
           } else {
             qm.clearStoragesForURI(uri);
           }
+        } else if (op == 'reset') {
+          qm.reset();
         }
 
         // We always use the getUsageForURI callback even if we're clearing

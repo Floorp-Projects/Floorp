@@ -10,7 +10,7 @@
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prprf.h"
 
 #include "gfxPlatform.h"

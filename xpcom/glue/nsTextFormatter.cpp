@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "prdtoa.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prprf.h"
 #include "prmem.h"
 #include "nsCRTGlue.h"

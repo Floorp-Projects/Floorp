@@ -6,7 +6,7 @@
 
 #include "MediaSourceUtils.h"
 #include "SourceBufferDecoder.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "AbstractMediaDecoder.h"
 #include "MediaDecoderReader.h"
 

@@ -40,7 +40,7 @@
 #include "nsThreadUtils.h"
 #include "nsDocShellCID.h"
 #include "nsIContentSecurityPolicy.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsCRT.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsCORSListenerProxy.h"

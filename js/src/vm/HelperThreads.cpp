@@ -1232,7 +1232,7 @@ HelperThread::handleParseWorkload()
         SourceBufferHolder srcBuf(parseTask->chars, parseTask->length,
                                   SourceBufferHolder::NoOwnership);
         parseTask->script = frontend::CompileScript(parseTask->cx, &parseTask->alloc,
-                                                    NullPtr(), NullPtr(), NullPtr(),
+                                                    nullptr, nullptr, nullptr,
                                                     parseTask->options,
                                                     srcBuf);
     }

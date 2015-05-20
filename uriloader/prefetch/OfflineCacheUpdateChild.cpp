@@ -28,7 +28,7 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
 using namespace mozilla::ipc;

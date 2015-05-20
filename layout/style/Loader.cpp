@@ -253,7 +253,7 @@ private:
   void FireLoadEvent(nsIThreadInternal* aThread);
 };
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 static PRLogModuleInfo *
 GetLoaderLog()

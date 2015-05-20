@@ -1,0 +1,4 @@
+# DataCallManager.js
+component {35b9efa2-e42c-45ce-8210-0a13e6f4aadc} DataCallManager.js
+contract @mozilla.org/datacall/manager;1 {35b9efa2-e42c-45ce-8210-0a13e6f4aadc}
+category profile-after-change DataCallManager @mozilla.org/datacall/manager;1

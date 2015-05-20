@@ -34,7 +34,7 @@
 #include "nsPresContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prprf.h"
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"

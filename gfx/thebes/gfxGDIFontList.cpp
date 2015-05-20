@@ -6,7 +6,7 @@
 #include "mozilla/DebugOnly.h"
 #include <algorithm>
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "gfxGDIFontList.h"
 #include "gfxWindowsPlatform.h"

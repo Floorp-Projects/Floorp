@@ -37,17 +37,17 @@ CSSAnimation::GetReady(ErrorResult& aRv)
 }
 
 void
-CSSAnimation::Play(LimitBehavior aLimitBehavior)
+CSSAnimation::Play(ErrorResult &aRv, LimitBehavior aLimitBehavior)
 {
   mPauseShouldStick = false;
-  Animation::Play(aLimitBehavior);
+  Animation::Play(aRv, aLimitBehavior);
 }
 
 void
-CSSAnimation::Pause()
+CSSAnimation::Pause(ErrorResult& aRv)
 {
   mPauseShouldStick = true;
-  Animation::Pause();
+  Animation::Pause(aRv);
 }
 
 AnimationPlayState
@@ -60,12 +60,12 @@ CSSAnimation::PlayStateFromJS() const
 }
 
 void
-CSSAnimation::PlayFromJS()
+CSSAnimation::PlayFromJS(ErrorResult& aRv)
 {
   // Note that flushing style below might trigger calls to
   // PlayFromStyle()/PauseFromStyle() on this object.
   FlushStyle();
-  Animation::PlayFromJS();
+  Animation::PlayFromJS(aRv);
 }
 
 void
@@ -73,7 +73,10 @@ CSSAnimation::PlayFromStyle()
 {
   mIsStylePaused = false;
   if (!mPauseShouldStick) {
-    DoPlay(Animation::LimitBehavior::Continue);
+    ErrorResult rv;
+    DoPlay(rv, Animation::LimitBehavior::Continue);
+    // play() should not throw when LimitBehavior is Continue
+    MOZ_ASSERT(!rv.Failed(), "Unexpected exception playing animation");
   }
 }
 
@@ -86,7 +89,20 @@ CSSAnimation::PauseFromStyle()
   }
 
   mIsStylePaused = true;
-  DoPause();
+  ErrorResult rv;
+  DoPause(rv);
+  // pause() should only throw when *all* of the following conditions are true:
+  // - we are in the idle state, and
+  // - we have a negative playback rate, and
+  // - we have an infinitely repeating animation
+  // The first two conditions will never happen under regular style processing
+  // but could happen if an author made modifications to the Animation object
+  // and then updated animation-play-state. It's an unusual case and there's
+  // no obvious way to pass on the exception information so we just silently
+  // fail for now.
+  if (rv.Failed()) {
+    NS_WARNING("Unexpected exception pausing animation - silently failing");
+  }
 }
 
 void
@@ -532,14 +548,10 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                  src.GetName());
     dest->SetEffect(destEffect);
 
-    // Even in the case where we call PauseFromStyle below, we still need to
-    // call PlayFromStyle first. This is because a newly-created animation is
-    // idle and has no effect until it is played (or otherwise given a start
-    // time).
-    dest->PlayFromStyle();
-
     if (src.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
       dest->PauseFromStyle();
+    } else {
+      dest->PlayFromStyle();
     }
 
     // While current drafts of css3-animations say that later keyframes

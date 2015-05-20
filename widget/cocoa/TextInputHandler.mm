@@ -8,7 +8,7 @@
 
 #include "TextInputHandler.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"

@@ -27,7 +27,7 @@
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/MediaStreamError.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "DOMMediaStream.h"
 
 #ifdef MOZ_WEBRTC

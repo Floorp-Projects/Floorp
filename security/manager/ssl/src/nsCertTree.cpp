@@ -22,7 +22,7 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 using namespace mozilla;
 

@@ -76,6 +76,7 @@ BluetoothPbapManager::HandleShutdown()
 BluetoothPbapManager::BluetoothPbapManager() : mConnected(false)
 {
   mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
+  mCurrentPath.AssignLiteral("");
 }
 
 BluetoothPbapManager::~BluetoothPbapManager()
@@ -156,7 +157,7 @@ BluetoothPbapManager::Listen()
    * BT restarts.
    */
   if (mServerSocket) {
-    mServerSocket->CloseSocket();
+    mServerSocket->Close();
     mServerSocket = nullptr;
   }
 
@@ -220,11 +221,27 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
       ReplyToDisconnectOrAbort();
       AfterPbapDisconnected();
       break;
+    case ObexRequestCode::SetPath: {
+        // Section 3.3.6 "SetPath", IrOBEX 1.2
+        // [opcode:1][length:2][flags:1][contants:1][Headers:var]
+        if (!ParseHeaders(&data[5], receivedLength - 5, &pktHeaders)) {
+          ReplyError(ObexResponseCode::BadRequest);
+          return;
+        }
+
+        uint8_t response = SetPhoneBookPath(data[3], pktHeaders);
+        if (response != ObexResponseCode::Success) {
+          ReplyError(response);
+          return;
+        }
+
+        ReplyToSetPath();
+      }
+      break;
     case ObexRequestCode::Put:
     case ObexRequestCode::PutFinal:
     case ObexRequestCode::Get:
     case ObexRequestCode::GetFinal:
-    case ObexRequestCode::SetPath:
       ReplyError(ObexResponseCode::BadRequest);
       BT_LOGR("Unsupported ObexRequestCode %x", opCode);
       break;
@@ -263,9 +280,93 @@ BluetoothPbapManager::CompareHeaderTarget(const ObexHeaderSet& aHeader)
   return true;
 }
 
+uint8_t
+BluetoothPbapManager::SetPhoneBookPath(uint8_t flags,
+                                       const ObexHeaderSet& aHeader)
+{
+  // Section 5.2 "SetPhoneBook Function", PBAP 1.2
+  // flags bit 1 must be 1 and bit 2~7 be 0
+  if ((flags >> 1) != 1) {
+    BT_LOGR("Illegal flags [0x%x]: bits 1~7 must be 0x01", flags);
+    return ObexResponseCode::BadRequest;
+  }
+
+  nsString newPath = mCurrentPath;
+
+  /**
+   * Three cases:
+   * 1) Go up 1 level   - flags bit 0 is 1
+   * 2) Go back to root - flags bit 0 is 0 AND name header is empty
+   * 3) Go down 1 level - flags bit 0 is 0 AND name header is not empty,
+   *                      where name header is the name of child folder
+   */
+  if (flags & 1) {
+    // Go up 1 level
+    if (!newPath.IsEmpty()) {
+      newPath = StringHead(newPath, newPath.RFindChar('/'));
+    }
+  } else {
+    MOZ_ASSERT(aHeader.Has(ObexHeaderId::Name));
+
+    nsString childFolderName;
+    aHeader.GetName(childFolderName);
+    if (childFolderName.IsEmpty()) {
+      // Go back to root
+      newPath.AssignLiteral("");
+    } else {
+      // Go down 1 level
+      newPath.AppendLiteral("/");
+      newPath.Append(childFolderName);
+    }
+  }
+
+  // Ensure the new path is legal
+  if (!IsLegalPath(newPath)) {
+    BT_LOGR("Illegal phone book path [%s]",
+            NS_ConvertUTF16toUTF8(newPath).get());
+    return ObexResponseCode::NotFound;
+  }
+
+  mCurrentPath = newPath;
+  BT_LOGR("current path [%s]", NS_ConvertUTF16toUTF8(mCurrentPath).get());
+
+  return ObexResponseCode::Success;
+}
+
+bool
+BluetoothPbapManager::IsLegalPath(const nsAString& aPath)
+{
+  static const char* sLegalPaths[] = {
+    "", // root
+    "/telecom",
+    "/telecom/pb",
+    "/telecom/ich",
+    "/telecom/och",
+    "/telecom/mch",
+    "/telecom/cch",
+    "/SIM1",
+    "/SIM1/telecom",
+    "/SIM1/telecom/pb",
+    "/SIM1/telecom/ich",
+    "/SIM1/telecom/och",
+    "/SIM1/telecom/mch",
+    "/SIM1/telecom/cch"
+  };
+
+  NS_ConvertUTF16toUTF8 path(aPath);
+  for (uint8_t i = 0; i < MOZ_ARRAY_LENGTH(sLegalPaths); i++) {
+    if (!strcmp(path.get(), sLegalPaths[i])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 BluetoothPbapManager::AfterPbapConnected()
 {
+  mCurrentPath.AssignLiteral("");
   mConnected = true;
 }
 
@@ -323,6 +424,21 @@ BluetoothPbapManager::ReplyToDisconnectOrAbort()
 
   // Section 3.3.2 "Disconnect" and Section 3.3.5 "Abort", IrOBEX 1.2
   // The format of response packet of "Disconnect" and "Abort" are the same
+  // [opcode:1][length:2][Headers:var]
+  uint8_t req[255];
+  int index = 3;
+
+  SendObexData(req, ObexResponseCode::Success, index);
+}
+
+void
+BluetoothPbapManager::ReplyToSetPath()
+{
+  if (!mConnected) {
+    return;
+  }
+
+  // Section 3.3.6 "SetPath", IrOBEX 1.2
   // [opcode:1][length:2][Headers:var]
   uint8_t req[255];
   int index = 3;
@@ -395,7 +511,7 @@ void
 BluetoothPbapManager::Disconnect(BluetoothProfileController* aController)
 {
   if (mSocket) {
-    mSocket->CloseSocket();
+    mSocket->Close();
   } else {
     BT_WARNING("%s: No ongoing connection to disconnect", __FUNCTION__);
   }

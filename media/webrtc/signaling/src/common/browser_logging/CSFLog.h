@@ -6,7 +6,7 @@
 #define CSFLOG_H
 
 #include <stdarg.h>
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 typedef enum{
     CSF_LOG_CRITICAL =1,

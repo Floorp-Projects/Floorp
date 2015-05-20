@@ -6,7 +6,10 @@
 
 #include "vm/ReceiverGuard.h"
 
+#include "builtin/TypedObject.h"
 #include "vm/UnboxedObject.h"
+
+using namespace js;
 
 ReceiverGuard::ReceiverGuard(JSObject* obj)
   : group(nullptr), shape(nullptr)

@@ -20,7 +20,7 @@
 #include "nsStreamUtils.h"
 #include "nsAutoPtr.h"
 #include "prtime.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "plstr.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"

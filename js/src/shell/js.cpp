@@ -359,7 +359,7 @@ ShellInterruptCallback(JSContext* cx)
         JS::AutoSaveExceptionState savedExc(cx);
         JSAutoCompartment ac(cx, &interruptFunc.toObject());
         RootedValue rval(cx);
-        if (!JS_CallFunctionValue(cx, JS::NullPtr(), interruptFunc,
+        if (!JS_CallFunctionValue(cx, nullptr, interruptFunc,
                                   JS::HandleValueArray::empty(), &rval))
         {
             return false;
@@ -2271,7 +2271,7 @@ DisassFile(JSContext* cx, unsigned argc, jsval* vp)
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return false;
-    bool ok = DisassembleScript(cx, script, JS::NullPtr(), p.lines, p.recursive, &sprinter);
+    bool ok = DisassembleScript(cx, script, nullptr, p.lines, p.recursive, &sprinter);
     if (ok)
         fprintf(stdout, "%s\n", sprinter.string());
     if (!ok)
@@ -5654,7 +5654,7 @@ NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
         };
         SetDOMCallbacks(cx->runtime(), &DOMcallbacks);
 
-        RootedObject domProto(cx, JS_InitClass(cx, glob, js::NullPtr(), &dom_class, dom_constructor,
+        RootedObject domProto(cx, JS_InitClass(cx, glob, nullptr, &dom_class, dom_constructor,
                                                0, dom_props, dom_methods, nullptr, nullptr));
         if (!domProto)
             return nullptr;
