@@ -194,6 +194,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioChannelManager)
 #endif
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCameraManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaDevices)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessagesManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeviceStorageStores)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTimeManager)
@@ -295,6 +296,7 @@ Navigator::Invalidate()
 #endif
 
   mCameraManager = nullptr;
+  mMediaDevices = nullptr;
 
   if (mMessagesManager) {
     mMessagesManager = nullptr;
