@@ -1098,15 +1098,15 @@ WebGLContext::AssertCachedBindings()
 
     // Bound object state
     if (IsWebGL2()) {
-        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->GLName()
+        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->mGLName
                                              : 0;
         AssertUintParamCorrect(gl, LOCAL_GL_DRAW_FRAMEBUFFER_BINDING, bound);
 
-        bound = mBoundReadFramebuffer ? mBoundReadFramebuffer->GLName() : 0;
+        bound = mBoundReadFramebuffer ? mBoundReadFramebuffer->mGLName : 0;
         AssertUintParamCorrect(gl, LOCAL_GL_READ_FRAMEBUFFER_BINDING, bound);
     } else {
         MOZ_ASSERT(mBoundDrawFramebuffer == mBoundReadFramebuffer);
-        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->GLName()
+        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->mGLName
                                              : 0;
         AssertUintParamCorrect(gl, LOCAL_GL_FRAMEBUFFER_BINDING, bound);
     }
