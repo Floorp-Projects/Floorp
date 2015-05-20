@@ -1437,7 +1437,9 @@ pref("devtools.performance.enabled", true);
 
 // The default Performance UI settings
 pref("devtools.performance.memory.sample-probability", "0.05");
-pref("devtools.performance.memory.max-log-length", 2147483647); // Math.pow(2,31) - 1
+// Can't go higher than this without causing internal allocation overflows while
+// serializing the allocations data over the RDP.
+pref("devtools.performance.memory.max-log-length", 125000);
 pref("devtools.performance.timeline.hidden-markers", "[]");
 pref("devtools.performance.profiler.buffer-size", 10000000);
 pref("devtools.performance.profiler.sample-frequency-khz", 1);
