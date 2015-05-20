@@ -101,8 +101,6 @@ enum Stat {
     STAT_LIMIT
 };
 
-class StatisticsSerializer;
-
 struct ZoneGCStats
 {
     /* Number of zones collected in this GC. */
@@ -186,7 +184,6 @@ struct Statistics
     int64_t beginSCC();
     void endSCC(unsigned scc, int64_t start);
 
-    char16_t* formatMessage();
     UniqueChars formatCompactSliceMessage() const;
     UniqueChars formatCompactSummaryMessage() const;
     UniqueChars formatJsonMessage(uint64_t timestamp);
@@ -314,7 +311,6 @@ struct Statistics
     void gcDuration(int64_t* total, int64_t* maxPause) const;
     void sccDurations(int64_t* total, int64_t* maxPause);
     void printStats();
-    bool formatData(StatisticsSerializer& ss, uint64_t timestamp);
 
     UniqueChars formatCompactSlicePhaseTimes(PhaseTimeTable phaseTimes) const;
 
