@@ -104,8 +104,6 @@
         <item name="floatingHintEditTextStyle">@style/FloatingHintEditText</item>
     </style>
 
-    <style name="GeckoStartPane" parent="GeckoBase"/>
-
     <!-- Make an activity appear like an overlay. -->
     <style name="OverlayActivity" parent="Gecko">
         <item name="android:windowBackground">@android:color/transparent</item>
