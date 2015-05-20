@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onpopupshown="popupshown(event.target)" onpopuphidden="nextTest()">
+
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+
+<label value="Popup Test"/>
+
+<menupopup id="popup">
+  <menuitem label="One"/>
+  <menuitem label="Two"/>
+</menupopup>
+
+<panel id="panel" noautohide="true" height="20">
+  <label value="OK"/>
+</panel>
+
+<script>
+<![CDATA[
+
+let menupopup;
+
+let tests = [
+  {
+    test: () => menupopup.openPopupAtScreenRect("after_start", 150, 250, 30, 40),
+    verify: popup => {
+      let rect = popup.getOuterScreenRect();
+      is(rect.left, 150, "popup at screen position x");
+      is(rect.top, 290, "popup at screen position y");
+    }
+  },
+  {
+    test: () => menupopup.openPopupAtScreenRect("after_start", 150, 350, 30, 9000),
+    verify: popup => {
+      let rect = popup.getOuterScreenRect();
+      is(rect.left, 150, "flipped popup at screen position x");
+      is(rect.bottom, 350, "flipped popup at screen position y");
+    }
+  },
+  {
+    test: () => menupopup.openPopupAtScreenRect("end_before", 150, 250, 30, 40),
+    verify: popup => {
+      let rect = popup.getOuterScreenRect();
+      is(rect.left, 180, "popup at end_before screen position x");
+      is(rect.top, 250, "popup at end_before screen position y");
+    }
+  },
+  {
+    test: () => $("panel").openPopupAtScreenRect("after_start", 150, 250, 30, 40),
+    verify: popup => {
+      let rect = popup.getOuterScreenRect();
+      is(rect.left, 150, "panel at screen position x");
+      is(rect.top, 290, "panel at screen position y");
+    }
+  },
+  {
+    test: () => $("panel").openPopupAtScreenRect("before_start", 150, 250, 30, 40),
+    verify: popup => {
+      let rect = popup.getOuterScreenRect();
+      is(rect.left, 150, "panel at before_start screen position x");
+      is(rect.bottom, 250, "panel at before_start screen position y");
+    }
+  },
+];
+
+function runTest(id)
+{
+  menupopup = $("popup");
+  nextTest();
+}
+
+function nextTest()
+{
+  if (!tests.length) {
+    window.close();
+    window.opener.SimpleTest.finish();
+    return;
+  }
+
+  tests[0].test();
+}
+
+function popupshown(popup)
+{
+  tests[0].verify(popup);
+  tests.shift();
+  popup.hidePopup();
+}
+
+function is(left, right, message)
+{
+  window.opener.SimpleTest.is(left, right, message);
+}
+
+function ok(value, message)
+{
+  window.opener.SimpleTest.ok(value, message);
+}
+
+window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>
