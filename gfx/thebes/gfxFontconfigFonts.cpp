@@ -15,7 +15,7 @@
 #ifdef MOZ_WIDGET_QT
 #include "gfxQtPlatform.h"
 #endif
-#include "gfxPangoFonts.h"
+#include "gfxFontconfigFonts.h"
 #include "gfxFT2FontBase.h"
 #include "gfxFT2Utils.h"
 #include "harfbuzz/hb.h"

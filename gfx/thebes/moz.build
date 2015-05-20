@@ -102,9 +102,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 elif CONFIG['MOZ_WIDGET_GTK']:
     EXPORTS += [
+        'gfxFontconfigFonts.h',
         'gfxFT2FontBase.h',
         'gfxGdkNativeRenderer.h',
-        'gfxPangoFonts.h',
         'gfxPDFSurface.h',
         'gfxPlatformGtk.h',
         'gfxPSSurface.h',
@@ -112,11 +112,11 @@ elif CONFIG['MOZ_WIDGET_GTK']:
 
     SOURCES += [
         'gfxFcPlatformFontList.cpp',
+        'gfxFontconfigFonts.cpp',
         'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
         'gfxGdkNativeRenderer.cpp',
-        'gfxPangoFonts.cpp',
         'gfxPDFSurface.cpp',
         'gfxPlatformGtk.cpp',
         'gfxPSSurface.cpp',
@@ -134,18 +134,18 @@ elif CONFIG['MOZ_WIDGET_GTK']:
 
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += [
+        'gfxFontconfigFonts.h',
         'gfxFT2FontBase.h',
-        'gfxPangoFonts.h',
         'gfxPDFSurface.h',
         'gfxQPainterSurface.h',
         'gfxQtNativeRenderer.h',
         'gfxQtPlatform.h',
     ]
     SOURCES += [
+        'gfxFontconfigFonts.cpp',
         'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
-        'gfxPangoFonts.cpp',
         'gfxPDFSurface.cpp',
         'gfxQPainterSurface.cpp',
         'gfxQtPlatform.cpp',
