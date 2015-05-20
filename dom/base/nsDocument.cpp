@@ -11099,35 +11099,6 @@ nsIDocument::ExitFullscreen(nsIDocument* aDoc, bool aRunAsync)
   nsDocument::ExitFullscreen(aDoc);
 }
 
-// Returns true if the document is a direct child of a cross process parent
-// mozbrowser iframe or TabParent. This is the case when the document has
-// a null parent and its DocShell reports that it is a browser frame, or
-// we can get a TabChild from it.
-static bool
-HasCrossProcessParent(nsIDocument* aDocument)
-{
-  if (XRE_GetProcessType() != GeckoProcessType_Content) {
-    return false;
-  }
-  if (aDocument->GetParentDocument() != nullptr) {
-    return false;
-  }
-  nsPIDOMWindow* win = aDocument->GetWindow();
-  if (!win) {
-    return false;
-  }
-  nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
-  if (!docShell) {
-    return false;
-  }
-  TabChild* tabChild(TabChild::GetFrom(docShell));
-  if (!tabChild) {
-    return false;
-  }
-
-  return true;
-}
-
 static bool
 CountFullscreenSubDocuments(nsIDocument* aDoc, void* aData)
 {
@@ -11167,21 +11138,6 @@ ResetFullScreen(nsIDocument* aDocument, void* aData)
     NS_ASSERTION(!aDocument->IsFullScreenDoc(), "Should reset full-screen");
     nsTArray<nsIDocument*>* changed = reinterpret_cast<nsTArray<nsIDocument*>*>(aData);
     changed->AppendElement(aDocument);
-
-    if (HasCrossProcessParent(aDocument)) {
-      // We're at the top of the content-process side doc tree. Ask the parent
-      // process to exit fullscreen.
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      os->NotifyObservers(aDocument, "ask-parent-to-exit-fullscreen", nullptr);
-    }
-
-    // Dispatch a notification so that if this document has any
-    // cross-process subdocuments, they'll be notified to exit fullscreen.
-    // The BrowserElementParent listens for this event and performs the
-    // cross process notification if it has a remote child process.
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    os->NotifyObservers(aDocument, "ask-children-to-exit-fullscreen", nullptr);
-
     aDocument->EnumerateSubDocuments(ResetFullScreen, aData);
   }
   return true;
@@ -11305,12 +11261,6 @@ nsDocument::RestorePreviousFullScreenState()
 
   nsCOMPtr<nsIDocument> fullScreenDoc = GetFullscreenLeaf(this);
 
-  // The fullscreen document may contain a <iframe mozbrowser> element which
-  // has a cross process child. So send a notification so that its browser
-  // parent will send a message to its child process to also exit fullscreen.
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  os->NotifyObservers(fullScreenDoc, "ask-children-to-exit-fullscreen", nullptr);
-
   // Clear full-screen stacks in all descendant in process documents, bottom up.
   nsIDocument* doc = fullScreenDoc;
   while (doc != this) {
@@ -11328,12 +11278,6 @@ nsDocument::RestorePreviousFullScreenState()
     UnlockPointer();
     DispatchFullScreenChange(doc);
     if (static_cast<nsDocument*>(doc)->mFullScreenStack.IsEmpty()) {
-      if (HasCrossProcessParent(doc)) {
-        // Send notification to the parent process to tell it to rollback to
-        // the previous fullscreen elements in its fullscreen element stacks.
-        nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-        os->NotifyObservers(doc, "ask-parent-to-rollback-fullscreen", nullptr);
-      }
       // Full-screen stack in document is empty. Go back up to the parent
       // document. We'll pop the containing element off its stack, and use
       // its next full-screen element as the full-screen element.
