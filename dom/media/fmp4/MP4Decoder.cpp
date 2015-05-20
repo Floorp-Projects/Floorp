@@ -14,7 +14,7 @@
 #ifdef MOZ_EME
 #include "mozilla/CDMProxy.h"
 #endif
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"

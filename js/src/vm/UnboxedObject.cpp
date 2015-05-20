@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/UnboxedObject.h"
+#include "vm/UnboxedObject-inl.h"
 
 #include "jit/JitCommon.h"
 #include "jit/Linker.h"
@@ -274,98 +274,6 @@ UnboxedLayout::detachFromCompartment()
         remove();
 }
 
-static inline bool
-SetUnboxedValue(ExclusiveContext* cx, JSObject* unboxedObject, jsid id,
-                uint8_t* p, JSValueType type, const Value& v)
-{
-    switch (type) {
-      case JSVAL_TYPE_BOOLEAN:
-        if (v.isBoolean()) {
-            *p = v.toBoolean();
-            return true;
-        }
-        return false;
-
-      case JSVAL_TYPE_INT32:
-        if (v.isInt32()) {
-            *reinterpret_cast<int32_t*>(p) = v.toInt32();
-            return true;
-        }
-        return false;
-
-      case JSVAL_TYPE_DOUBLE:
-        if (v.isNumber()) {
-            *reinterpret_cast<double*>(p) = v.toNumber();
-            return true;
-        }
-        return false;
-
-      case JSVAL_TYPE_STRING:
-        if (v.isString()) {
-            MOZ_ASSERT(!IsInsideNursery(v.toString()));
-            *reinterpret_cast<PreBarrieredString*>(p) = v.toString();
-            return true;
-        }
-        return false;
-
-      case JSVAL_TYPE_OBJECT:
-        if (v.isObjectOrNull()) {
-            // Update property types when writing object properties. Types for
-            // other properties were captured when the unboxed layout was
-            // created.
-            AddTypePropertyId(cx, unboxedObject, id, v);
-
-            // Manually trigger post barriers on the whole object. If we treat
-            // the pointer as a HeapPtrObject we will get confused later if the
-            // object is converted to its native representation.
-            JSObject* obj = v.toObjectOrNull();
-            if (IsInsideNursery(v.toObjectOrNull()) && !IsInsideNursery(unboxedObject)) {
-                JSRuntime* rt = cx->asJSContext()->runtime();
-                rt->gc.storeBuffer.putWholeCellFromMainThread(unboxedObject);
-            }
-
-            *reinterpret_cast<PreBarrieredObject*>(p) = obj;
-            return true;
-        }
-        return false;
-
-      default:
-        MOZ_CRASH("Invalid type for unboxed value");
-    }
-}
-
-static inline Value
-GetUnboxedValue(uint8_t* p, JSValueType type, bool maybeUninitialized)
-{
-    switch (type) {
-      case JSVAL_TYPE_BOOLEAN:
-        return BooleanValue(*p != 0);
-
-      case JSVAL_TYPE_INT32:
-        return Int32Value(*reinterpret_cast<int32_t*>(p));
-
-      case JSVAL_TYPE_DOUBLE: {
-        // During unboxed plain object creation, non-GC thing properties are
-        // left uninitialized. This is normally fine, since the properties will
-        // be filled in shortly, but if they are read before that happens we
-        // need to make sure that doubles are canonical.
-        double d = *reinterpret_cast<double*>(p);
-        if (maybeUninitialized)
-            return DoubleValue(JS::CanonicalizeNaN(d));
-        return DoubleValue(d);
-      }
-
-      case JSVAL_TYPE_STRING:
-        return StringValue(*reinterpret_cast<JSString**>(p));
-
-      case JSVAL_TYPE_OBJECT:
-        return ObjectOrNullValue(*reinterpret_cast<JSObject**>(p));
-
-      default:
-        MOZ_CRASH("Invalid type for unboxed value");
-    }
-}
-
 /////////////////////////////////////////////////////////////////////
 // UnboxedPlainObject
 /////////////////////////////////////////////////////////////////////
@@ -375,7 +283,8 @@ UnboxedPlainObject::setValue(ExclusiveContext* cx, const UnboxedLayout::Property
                              const Value& v)
 {
     uint8_t* p = &data_[property.offset];
-    return SetUnboxedValue(cx, this, NameToId(property.name), p, property.type, v);
+    return SetUnboxedValue(cx, this, NameToId(property.name), p, property.type, v,
+                           /* preBarrier = */ true);
 }
 
 Value
@@ -424,7 +333,7 @@ UnboxedPlainObject::ensureExpando(JSContext* cx, Handle<UnboxedPlainObject*> obj
     if (obj->expando_)
         return obj->expando_;
 
-    UnboxedExpandoObject* expando = NewObjectWithGivenProto<UnboxedExpandoObject>(cx, NullPtr());
+    UnboxedExpandoObject* expando = NewObjectWithGivenProto<UnboxedExpandoObject>(cx, nullptr);
     if (!expando)
         return nullptr;
 
@@ -1080,7 +989,7 @@ UnboxedArrayObject::create(ExclusiveContext* cx, HandleObjectGroup group, uint32
         res->setCapacityIndex(CapacityMatchesLengthIndex);
     }
 
-    res->setLength(length);
+    res->setLength(cx, length);
     res->setInitializedLength(0);
     return res;
 }
@@ -1090,7 +999,7 @@ UnboxedArrayObject::setElement(ExclusiveContext* cx, size_t index, const Value& 
 {
     MOZ_ASSERT(index < initializedLength());
     uint8_t* p = elements() + index * elementSize();
-    return SetUnboxedValue(cx, this, JSID_VOID, p, elementType(), v);
+    return SetUnboxedValue(cx, this, JSID_VOID, p, elementType(), v, /* preBarrier = */ true);
 }
 
 bool
@@ -1098,30 +1007,17 @@ UnboxedArrayObject::initElement(ExclusiveContext* cx, size_t index, const Value&
 {
     MOZ_ASSERT(index < initializedLength());
     uint8_t* p = elements() + index * elementSize();
-    if (UnboxedTypeNeedsPreBarrier(elementType()))
-        *reinterpret_cast<void**>(p) = nullptr;
-    return SetUnboxedValue(cx, this, JSID_VOID, p, elementType(), v);
+    return SetUnboxedValue(cx, this, JSID_VOID, p, elementType(), v, /* preBarrier = */ false);
 }
 
-bool
-UnboxedArrayObject::appendElementNoTypeChange(ExclusiveContext* cx, size_t index, const Value& v)
+void
+UnboxedArrayObject::initElementNoTypeChange(size_t index, const Value& v)
 {
-    // The caller should check these preconditions, and ensure that writing v
-    // to this object will not change element type information.
-    MOZ_ASSERT(index == initializedLength());
-    MOZ_ASSERT(index < UnboxedArrayObject::MaximumCapacity);
-
-    if (initializedLength() == capacity()) {
-        if (!growElements(cx, index + 1))
-            return false;
-    }
-
-    setInitializedLength(index + 1);
-    JS_ALWAYS_TRUE(initElement(cx, index, v));
-    if (length() <= index)
-        setLength(index + 1);
-
-    return true;
+    MOZ_ASSERT(index < initializedLength());
+    uint8_t* p = elements() + index * elementSize();
+    if (UnboxedTypeNeedsPreBarrier(elementType()))
+        *reinterpret_cast<void**>(p) = nullptr;
+    SetUnboxedValueNoTypeChange(this, p, elementType(), v, /* preBarrier = */ false);
 }
 
 Value
@@ -1435,7 +1331,7 @@ UnboxedArrayObject::obj_defineProperty(JSContext* cx, HandleObject obj, HandleId
             nobj->setInitializedLength(index + 1);
             if (nobj->initElement(cx, index, desc.value())) {
                 if (nobj->length() <= index)
-                    nobj->setLength(index + 1);
+                    nobj->setLengthInt32(index + 1);
                 return result.succeed();
             }
             nobj->setInitializedLength(index);
@@ -1499,14 +1395,13 @@ UnboxedArrayObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id
                 uint32_t len;
                 if (!CanonicalizeArrayLengthValue(cx, v, &len))
                     return false;
-                if (len <= INT32_MAX) {
-                    UnboxedArrayObject* nobj = &obj->as<UnboxedArrayObject>();
-                    nobj->setLength(len);
-                    if (len < nobj->initializedLength()) {
-                        nobj->setInitializedLength(len);
-                        nobj->shrinkElements(cx, len);
-                    }
+                UnboxedArrayObject* nobj = &obj->as<UnboxedArrayObject>();
+                nobj->setLength(cx, len);
+                if (len < nobj->initializedLength()) {
+                    nobj->setInitializedLength(len);
+                    nobj->shrinkElements(cx, len);
                 }
+                return result.succeed();
             }
 
             if (!convertToNative(cx, obj))
@@ -1849,7 +1744,7 @@ UnboxedArrayObject::fillAfterConvert(ExclusiveContext* cx,
     setInitializedLength(0);
     setInlineElements();
 
-    setLength(NextValue(values, valueCursor).toInt32());
+    setLength(cx, NextValue(values, valueCursor).toInt32());
 
     int32_t initlen = NextValue(values, valueCursor).toInt32();
 
@@ -2039,4 +1934,48 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
     MOZ_ASSERT(valueCursor == values.length());
     layout.release();
     return true;
+}
+
+DefineBoxedOrUnboxedFunctor6(SetOrExtendBoxedOrUnboxedDenseElements,
+                             JSContext*, JSObject*, uint32_t, const Value*, uint32_t, ShouldUpdateTypes);
+
+DenseElementResult
+js::SetOrExtendAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
+                                              uint32_t start, const Value* vp, uint32_t count,
+                                              ShouldUpdateTypes updateTypes)
+{
+    SetOrExtendBoxedOrUnboxedDenseElementsFunctor functor(cx, obj, start, vp, count, updateTypes);
+    return CallBoxedOrUnboxedSpecialization(functor, obj);
+};
+
+DefineBoxedOrUnboxedFunctor5(MoveBoxedOrUnboxedDenseElements,
+                             JSContext*, JSObject*, uint32_t, uint32_t, uint32_t);
+
+DenseElementResult
+js::MoveAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
+                                       uint32_t dstStart, uint32_t srcStart, uint32_t length)
+{
+    MoveBoxedOrUnboxedDenseElementsFunctor functor(cx, obj, dstStart, srcStart, length);
+    return CallBoxedOrUnboxedSpecialization(functor, obj);
+}
+
+DefineBoxedOrUnboxedFunctor5(CopyBoxedOrUnboxedDenseElements,
+                             JSContext*, JSObject*, JSObject*, uint32_t, uint32_t);
+
+DenseElementResult
+js::CopyAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
+                                       uint32_t srcStart, uint32_t length)
+{
+    CopyBoxedOrUnboxedDenseElementsFunctor functor(cx, dst, src, srcStart, length);
+    return CallBoxedOrUnboxedSpecialization(functor, dst);
+}
+
+DefineBoxedOrUnboxedFunctor3(SetBoxedOrUnboxedInitializedLength,
+                             JSContext*, JSObject*, size_t);
+
+void
+js::SetAnyBoxedOrUnboxedInitializedLength(JSContext* cx, JSObject* obj, size_t initlen)
+{
+    SetBoxedOrUnboxedInitializedLengthFunctor functor(cx, obj, initlen);
+    JS_ALWAYS_TRUE(CallBoxedOrUnboxedSpecialization(functor, obj) == DenseElementResult::Success);
 }

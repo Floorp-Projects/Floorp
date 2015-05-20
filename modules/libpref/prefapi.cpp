@@ -25,7 +25,7 @@
 #include "plstr.h"
 #include "pldhash.h"
 #include "plbase64.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prprf.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/PContent.h"

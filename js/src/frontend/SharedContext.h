@@ -339,7 +339,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     }
 
     bool allowSuperProperty() const {
-        return function()->isMethod() || function()->isGetter() || function()->isSetter();
+        return function()->allowSuperProperty();
     }
 };
 

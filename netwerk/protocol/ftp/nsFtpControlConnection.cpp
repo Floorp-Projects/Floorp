@@ -6,7 +6,7 @@
 #include "nsIOService.h"
 #include "nsFtpControlConnection.h"
 #include "nsFtpProtocolHandler.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsIInputStream.h"
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"

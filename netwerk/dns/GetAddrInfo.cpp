@@ -22,7 +22,7 @@
 #include <resolv_netid.h>
 #endif
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 static PRLogModuleInfo *gGetAddrInfoLog = PR_NewLogModule("GetAddrInfo");
 #define LOG(msg, ...) \
   PR_LOG(gGetAddrInfoLog, PR_LOG_DEBUG, ("[DNS]: " msg, ##__VA_ARGS__))

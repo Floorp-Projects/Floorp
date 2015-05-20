@@ -10,7 +10,7 @@
 #define logging_h__
 
 #include <sstream>
-#include <prlog.h>
+#include "mozilla/Logging.h"
 
 #define ML_EMERG            1
 #define ML_ERROR            2

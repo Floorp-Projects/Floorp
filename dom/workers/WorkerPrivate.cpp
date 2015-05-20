@@ -447,7 +447,7 @@ ReadBlobOrFile(JSContext* aCx,
                JS::MutableHandle<JSObject*> aBlobOrFile)
 {
   nsRefPtr<Blob> blob = ReadBlobOrFileNoWrap(aCx, aReader, aIsMainThread);
-  aBlobOrFile.set(blob->WrapObject(aCx, JS::NullPtr()));
+  aBlobOrFile.set(blob->WrapObject(aCx, nullptr));
 }
 
 // See WriteFormData for serialization format.
@@ -505,7 +505,7 @@ ReadFormData(JSContext* aCx,
     }
   }
 
-  aFormData.set(formData->WrapObject(aCx, JS::NullPtr()));
+  aFormData.set(formData->WrapObject(aCx, nullptr));
 }
 
 bool

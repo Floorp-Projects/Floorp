@@ -157,6 +157,9 @@ class JS_FRIEND_API(GCCellPtr)
     // Construction from a void* and trace kind.
     GCCellPtr(void* gcthing, JSGCTraceKind traceKind) : ptr(checkedCast(gcthing, traceKind)) {}
 
+    // Automatically construct a null GCCellPtr from nullptr.
+    MOZ_IMPLICIT GCCellPtr(decltype(nullptr)) : ptr(checkedCast(nullptr, JSTRACE_NULL)) {}
+
     // Construction from an explicit type.
     explicit GCCellPtr(JSObject* obj) : ptr(checkedCast(obj, JSTRACE_OBJECT)) { }
     explicit GCCellPtr(JSFunction* fun) : ptr(checkedCast(fun, JSTRACE_OBJECT)) { }
@@ -164,9 +167,6 @@ class JS_FRIEND_API(GCCellPtr)
     explicit GCCellPtr(JSFlatString* str) : ptr(checkedCast(str, JSTRACE_STRING)) { }
     explicit GCCellPtr(JSScript* script) : ptr(checkedCast(script, JSTRACE_SCRIPT)) { }
     explicit GCCellPtr(const Value& v);
-
-    // Not all compilers have nullptr_t yet, so use this instead of GCCellPtr(nullptr).
-    static GCCellPtr NullPtr() { return GCCellPtr(nullptr, JSTRACE_NULL); }
 
     JSGCTraceKind kind() const {
         JSGCTraceKind traceKind = JSGCTraceKind(ptr & JSTRACE_OUTOFLINE);

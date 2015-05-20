@@ -26,8 +26,7 @@ function setup() {
   return new Promise((resolve, reject) => {
     SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.pushPrefEnv({'set': [
-      ['dom.mozBrowserFramesEnabled', true],
-      ['security.uri.allow_scheme_mismatch', true]
+      ['dom.mozBrowserFramesEnabled', true]
     ]}, () => {
       SpecialPowers.pushPermissions([
         { 'type': 'webapps-manage', 'allow': 1, 'context': document },

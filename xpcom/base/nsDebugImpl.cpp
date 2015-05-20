@@ -17,7 +17,7 @@
 #include "nsString.h"
 #include "nsXULAppAPI.h"
 #include "prprf.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsError.h"
 #include "prerror.h"
 #include "prerr.h"

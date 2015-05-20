@@ -450,9 +450,10 @@ ExtractFromBlob(const Blob& aBlob, nsIInputStream** aStream,
                 nsCString& aContentType)
 {
   nsRefPtr<BlobImpl> impl = aBlob.Impl();
-  nsresult rv = impl->GetInternalStream(aStream);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  ErrorResult rv;
+  impl->GetInternalStream(aStream, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
   nsAutoString type;

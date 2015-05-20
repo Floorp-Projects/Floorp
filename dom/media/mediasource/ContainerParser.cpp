@@ -9,7 +9,7 @@
 #include "WebMBufferedParser.h"
 #include "mozilla/Endian.h"
 #include "mp4_demuxer/MoofParser.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "MediaData.h"
 #ifdef MOZ_FMP4
 #include "MP4Stream.h"

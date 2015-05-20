@@ -11,7 +11,7 @@
 #include "nsRDFConInstanceTestNode.h"
 #include "nsResourceSet.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsXULContentUtils.h"
 extern PRLogModuleInfo* gXULTemplateLog;
 

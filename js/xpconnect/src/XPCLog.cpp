@@ -7,7 +7,7 @@
 /* Debug Logging support. */
 
 #include "XPCLog.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prprf.h"
 #include "mozilla/mozalloc.h"
 #include <string.h>

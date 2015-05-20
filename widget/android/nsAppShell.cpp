@@ -52,7 +52,7 @@
 #endif
 
 #ifdef MOZ_LOGGING
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #endif
 
 #ifdef DEBUG_ANDROID_EVENTS

@@ -7,7 +7,7 @@
 #include "AudioSinkInputPin.h"
 #include "AudioSinkFilter.h"
 #include "SampleSink.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include <wmsdkidl.h>
 

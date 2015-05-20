@@ -92,7 +92,8 @@ public:
     return mLength;
   }
 
-  virtual nsresult GetInternalStream(nsIInputStream** aInputStream) override;
+  virtual void GetInternalStream(nsIInputStream** aInputStream,
+                                 ErrorResult& aRv) override;
 
   virtual const nsTArray<nsRefPtr<BlobImpl>>* GetSubBlobImpls() const override
   {

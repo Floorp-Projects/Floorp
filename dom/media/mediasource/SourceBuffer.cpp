@@ -19,7 +19,7 @@
 #include "nsIEventTarget.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include <time.h>
 #include "TimeUnits.h"
 

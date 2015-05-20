@@ -140,7 +140,7 @@ static bool
 ConvertAndCopyTo(JSContext* cx, HandleTypedObject typedObj, HandleValue val)
 {
     Rooted<TypeDescr*> type(cx, &typedObj->typeDescr());
-    return ConvertAndCopyTo(cx, type, typedObj, 0, NullPtr(), val);
+    return ConvertAndCopyTo(cx, type, typedObj, 0, nullptr, val);
 }
 
 /*
@@ -780,11 +780,11 @@ StructMetaTypeDescr::create(JSContext* cx,
     int32_t alignment = 1;             // Alignment of struct.
     bool opaque = false;               // Opacity of struct.
 
-    userFieldOffsets = NewObjectWithProto<PlainObject>(cx, NullPtr(), TenuredObject);
+    userFieldOffsets = NewObjectWithProto<PlainObject>(cx, nullptr, TenuredObject);
     if (!userFieldOffsets)
         return nullptr;
 
-    userFieldTypes = NewObjectWithProto<PlainObject>(cx, NullPtr(), TenuredObject);
+    userFieldTypes = NewObjectWithProto<PlainObject>(cx, nullptr, TenuredObject);
     if (!userFieldTypes)
         return nullptr;
 
@@ -929,7 +929,7 @@ StructMetaTypeDescr::create(JSContext* cx,
     {
         RootedObject fieldNamesVec(cx);
         fieldNamesVec = NewDenseCopiedArray(cx, fieldNames.length(),
-                                            fieldNames.begin(), NullPtr(),
+                                            fieldNames.begin(), nullptr,
                                             TenuredObject);
         if (!fieldNamesVec)
             return nullptr;
@@ -941,7 +941,7 @@ StructMetaTypeDescr::create(JSContext* cx,
     {
         RootedObject fieldTypeVec(cx);
         fieldTypeVec = NewDenseCopiedArray(cx, fieldTypeObjs.length(),
-                                           fieldTypeObjs.begin(), NullPtr(),
+                                           fieldTypeObjs.begin(), nullptr,
                                            TenuredObject);
         if (!fieldTypeVec)
             return nullptr;
@@ -953,7 +953,7 @@ StructMetaTypeDescr::create(JSContext* cx,
     {
         RootedObject fieldOffsetsVec(cx);
         fieldOffsetsVec = NewDenseCopiedArray(cx, fieldOffsets.length(),
-                                              fieldOffsets.begin(), NullPtr(),
+                                              fieldOffsets.begin(), nullptr,
                                               TenuredObject);
         if (!fieldOffsetsVec)
             return nullptr;
@@ -1930,7 +1930,7 @@ TypedObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id, Handl
             Rooted<TypeDescr*> elementType(cx);
             elementType = &typedObj->typeDescr().as<ArrayTypeDescr>().elementType();
             size_t offset = elementType->size() * index;
-            if (!ConvertAndCopyTo(cx, elementType, typedObj, offset, NullPtr(), v))
+            if (!ConvertAndCopyTo(cx, elementType, typedObj, offset, nullptr, v))
                 return false;
             return result.succeed();
         }

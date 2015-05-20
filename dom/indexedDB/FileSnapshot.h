@@ -76,8 +76,8 @@ private:
   virtual void
   GetMozFullPathInternal(nsAString& aFullPath, ErrorResult& aRv) override;
 
-  virtual nsresult
-  GetInternalStream(nsIInputStream** aStream) override;
+  virtual void
+  GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
   virtual bool MayBeClonedToOtherThreads() const override
   {

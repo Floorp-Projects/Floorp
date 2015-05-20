@@ -632,8 +632,8 @@ FileHandleBase::GetInputStream(const Blob& aValue, uint64_t* aInputLength,
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  aRv = file.GetInternalStream(getter_AddRefs(stream));
-  if (aRv.Failed()) {
+  file.GetInternalStream(getter_AddRefs(stream), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 

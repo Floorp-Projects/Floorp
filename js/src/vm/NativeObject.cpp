@@ -528,7 +528,7 @@ NativeObject::willBeSparseElements(uint32_t requiredCapacity, uint32_t newElemen
     return true;
 }
 
-/* static */ NativeObject::EnsureDenseResult
+/* static */ DenseElementResult
 NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeObject obj)
 {
     /*
@@ -537,7 +537,7 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
      * (see PropertyTree::MAX_HEIGHT).
      */
     if (!obj->inDictionaryMode())
-        return ED_SPARSE;
+        return DenseElementResult::Incomplete;
 
     /*
      * Only measure the number of indexed properties every log(n) times when
@@ -545,11 +545,11 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
      */
     uint32_t slotSpan = obj->slotSpan();
     if (slotSpan != RoundUpPow2(slotSpan))
-        return ED_SPARSE;
+        return DenseElementResult::Incomplete;
 
     /* Watch for conditions under which an object's elements cannot be dense. */
     if (!obj->nonProxyIsExtensible() || obj->watched())
-        return ED_SPARSE;
+        return DenseElementResult::Incomplete;
 
     /*
      * The indexes in the object need to be sufficiently dense before they can
@@ -573,17 +573,17 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
                  * For simplicity, only densify the object if all indexed
                  * properties can be converted to dense elements.
                  */
-                return ED_SPARSE;
+                return DenseElementResult::Incomplete;
             }
         }
         shape = shape->previous();
     }
 
     if (numDenseElements * SPARSE_DENSITY_RATIO < newInitializedLength)
-        return ED_SPARSE;
+        return DenseElementResult::Incomplete;
 
     if (newInitializedLength >= NELEMENTS_LIMIT)
-        return ED_SPARSE;
+        return DenseElementResult::Incomplete;
 
     /*
      * This object meets all necessary restrictions, convert all indexed
@@ -591,11 +591,11 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
      */
 
     if (!obj->maybeCopyElementsForWrite(cx))
-        return ED_FAILED;
+        return DenseElementResult::Failure;
 
     if (newInitializedLength > obj->getDenseCapacity()) {
         if (!obj->growElements(cx, newInitializedLength))
-            return ED_FAILED;
+            return DenseElementResult::Failure;
     }
 
     obj->ensureDenseInitializedLength(cx, newInitializedLength, 0);
@@ -619,10 +619,10 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
             if (shape != obj->lastProperty()) {
                 shape = shape->previous();
                 if (!obj->removeProperty(cx, id))
-                    return ED_FAILED;
+                    return DenseElementResult::Failure;
             } else {
                 if (!obj->removeProperty(cx, id))
-                    return ED_FAILED;
+                    return DenseElementResult::Failure;
                 shape = obj->lastProperty();
             }
 
@@ -638,9 +638,9 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
      * to grow the object.
      */
     if (!obj->clearFlag(cx, BaseShape::INDEXED))
-        return ED_FAILED;
+        return DenseElementResult::Failure;
 
-    return ED_OK;
+    return DenseElementResult::Success;
 }
 
 // Round up |reqAllocated| to a good size. Up to 1 Mebi (i.e. 1,048,576) the
@@ -1128,10 +1128,10 @@ AddOrChangeProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
         !IsAnyTypedArray(obj))
     {
         uint32_t index = JSID_TO_INT(id);
-        NativeObject::EnsureDenseResult edResult = obj->ensureDenseElements(cx, index, 1);
-        if (edResult == NativeObject::ED_FAILED)
+        DenseElementResult edResult = obj->ensureDenseElements(cx, index, 1);
+        if (edResult == DenseElementResult::Failure)
             return false;
-        if (edResult == NativeObject::ED_OK) {
+        if (edResult == DenseElementResult::Success) {
             obj->setDenseElementWithType(cx, index, desc.value());
             if (!CallAddPropertyHookDense(cx, obj, index, desc.value()))
                 return false;
@@ -1155,11 +1155,11 @@ AddOrChangeProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
 
         uint32_t index = JSID_TO_INT(id);
         NativeObject::removeDenseElementForSparseIndex(cx, obj, index);
-        NativeObject::EnsureDenseResult edResult =
+        DenseElementResult edResult =
             NativeObject::maybeDensifySparseElements(cx, obj);
-        if (edResult == NativeObject::ED_FAILED)
+        if (edResult == DenseElementResult::Failure)
             return false;
-        if (edResult == NativeObject::ED_OK) {
+        if (edResult == DenseElementResult::Success) {
             MOZ_ASSERT(!desc.setter());
             return CallAddPropertyHookDense(cx, obj, index, desc.value());
         }
@@ -1440,7 +1440,7 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                          ObjectOpResult& result)
 {
     Rooted<PropertyDescriptor> desc(cx);
-    desc.initFields(NullPtr(), value, attrs, getter, setter);
+    desc.initFields(nullptr, value, attrs, getter, setter);
     return NativeDefineProperty(cx, obj, id, desc, result);
 }
 
@@ -1758,7 +1758,7 @@ GetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     // Ok, bad undefined property reference: whine about it.
     RootedValue val(cx, IdToValue(id));
     return ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP, JSDVG_IGNORE_STACK, val,
-                                    js::NullPtr(), nullptr, nullptr);
+                                    nullptr, nullptr, nullptr);
 }
 
 /* The NoGC version of GetNonexistentProperty, present only to make types line up. */

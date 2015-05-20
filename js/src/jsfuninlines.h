@@ -53,7 +53,7 @@ CanReuseFunctionForClone(JSContext* cx, HandleFunction fun)
 
 inline JSFunction*
 CloneFunctionObjectIfNotSingleton(JSContext* cx, HandleFunction fun, HandleObject parent,
-                                  HandleObject proto = NullPtr(),
+                                  HandleObject proto = nullptr,
                                   NewObjectKind newKind = GenericObject)
 {
     /*
