@@ -488,9 +488,14 @@ let EnvironmentData = {
    * Renders the environment data
    */
   render: function(ping) {
-    setHasData("environment-data-section", true);
     let dataDiv = document.getElementById("environment-data");
     removeAllChildNodes(dataDiv);
+    const hasData = !!ping.environment;
+    setHasData("environment-data-section", hasData);
+    if (!hasData) {
+      return;
+    }
+
     let data = sectionalizeObject(ping.environment);
 
     for (let [section, sectionData] of data) {
@@ -536,11 +541,12 @@ let TelLog = {
    */
   render: function(aPing) {
     let entries = aPing.payload.log;
-
-    if(entries.length == 0) {
-        return;
+    const hasData = entries && entries.length > 0;
+    setHasData("telemetry-log-section", hasData);
+    if (!hasData) {
+      return;
     }
-    setHasData("telemetry-log-section", true);
+
     let table = document.createElement("table");
 
     let caption = document.createElement("caption");
@@ -604,17 +610,23 @@ let SlowSQL = {
     // We want to show the actual ping data for archived pings,
     // so skip this there.
     let debugSlowSql = PingPicker.viewCurrentPingData && Preferences.get(PREF_DEBUG_SLOW_SQL, false);
+    let slowSql = debugSlowSql ? Telemetry.debugSlowSQL : aPing.payload.slowSQL;
+    if (!slowSql) {
+      setHasData("slow-sql-section", false);
+      return;
+    }
+
     let {mainThread, otherThreads} =
       debugSlowSql ? Telemetry.debugSlowSQL : aPing.payload.slowSQL;
 
     let mainThreadCount = Object.keys(mainThread).length;
     let otherThreadCount = Object.keys(otherThreads).length;
     if (mainThreadCount == 0 && otherThreadCount == 0) {
+      setHasData("slow-sql-section", false);
       return;
     }
 
     setHasData("slow-sql-section", true);
-
     if (debugSlowSql) {
       document.getElementById("sql-warning").classList.remove("hidden");
     }
@@ -862,6 +874,11 @@ let ChromeHangs = {
    */
   render: function ChromeHangs_render(aPing) {
     let hangs = aPing.payload.chromeHangs;
+    setHasData("chrome-hangs-section", !!hangs);
+    if (!hangs) {
+      return;
+    }
+
     let stacks = hangs.stacks;
     let memoryMap = hangs.memoryMap;
 
@@ -885,12 +902,14 @@ let ThreadHangStats = {
     removeAllChildNodes(div);
 
     let stats = aPing.payload.threadHangStats;
+    setHasData("thread-hang-stats-section", stats && (stats.length > 0));
+    if (!stats) {
+      return;
+    }
+
     stats.forEach((thread) => {
       div.appendChild(this.renderThread(thread));
     });
-    if (stats.length) {
-      setHasData("thread-hang-stats-section", true);
-    }
   },
 
   /**
@@ -1276,7 +1295,7 @@ let AddonDetails = {
     let addonSection = document.getElementById("addon-details");
     removeAllChildNodes(addonSection);
     let addonDetails = aPing.payload.addonDetails;
-    const hasData = Object.keys(addonDetails).length > 0;
+    const hasData = addonDetails && Object.keys(addonDetails).length > 0;
     setHasData("addon-details-section", hasData);
     if (!hasData) {
       return;
@@ -1438,6 +1457,11 @@ let LateWritesSingleton = {
   },
 
   renderLateWrites: function LateWritesSingleton_renderLateWrites(lateWrites) {
+    setHasData("late-writes-section", !!lateWrites);
+    if (!lateWrites) {
+      return;
+    }
+
     let stacks = lateWrites.stacks;
     let memoryMap = lateWrites.memoryMap;
     StackRenderer.renderStacks('late-writes', stacks, memoryMap,
@@ -1521,7 +1545,7 @@ function displayPingData(ping) {
   let payload = ping.payload;
   let simpleMeasurements = sortStartupMilestones(payload.simpleMeasurements);
   let hasData = Object.keys(simpleMeasurements).length > 0;
-  setHasData("simple-measurements-section", true);
+  setHasData("simple-measurements-section", hasData);
   let simpleSection = document.getElementById("simple-measurements");
   removeAllChildNodes(simpleSection);
 
@@ -1585,16 +1609,16 @@ function displayPingData(ping) {
 
   let addonHistogramsRendered = false;
   let addonData = payload.addonHistograms;
-  for (let [addon, histograms] of Iterator(addonData)) {
-    for (let [name, hgram] of Iterator(histograms)) {
-      addonHistogramsRendered = true;
-      Histogram.render(addonDiv, addon + ": " + name, hgram, {unpacked: true});
+  if (addonData) {
+    for (let [addon, histograms] of Iterator(addonData)) {
+      for (let [name, hgram] of Iterator(histograms)) {
+        addonHistogramsRendered = true;
+        Histogram.render(addonDiv, addon + ": " + name, hgram, {unpacked: true});
+      }
     }
   }
 
-  if (addonHistogramsRendered) {
-   setHasData("addon-histograms-section", true);
-  }
+  setHasData("addon-histograms-section", addonHistogramsRendered);
 }
 
 window.addEventListener("load", onLoad, false);
