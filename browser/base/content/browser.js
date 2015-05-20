@@ -6814,13 +6814,19 @@ var gIdentityHandler = {
     // Show the doorhanger when:
     // - mixed active content is blocked
     // - mixed active content is loaded (detected but not blocked)
+    // - mixed display content is blocked
+    // - mixed display content was blocked but user overrid the block
     // - tracking content is blocked
     // - tracking content is not blocked
     if (state &
         (nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT |
          nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT  |
+         nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT|
          nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT     |
-         nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {
+         nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)     ||
+        // user has set a pref to block mixed display and has overridden it
+        (gPrefService.getBoolPref("security.mixed_content.block_display_content")
+        && (state & nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT))) {
       this.showBadContentDoorhanger(state);
     } else if (gPrefService.getBoolPref("privacy.trackingprotection.enabled")) {
       // We didn't show the shield
@@ -6861,8 +6867,11 @@ var gIdentityHandler = {
       histogram.add(3);
     }
     if (state &
-        (Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT |
-         Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)) {
+        (Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT  |
+         Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT)     ||
+        // user has set a pref to block mixed display and has overridden it
+        (gPrefService.getBoolPref("security.mixed_content.block_display_content")
+        && (state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT))) {
       iconState = "bad-content-unblocked-notification-icon";
     }
 
