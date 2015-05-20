@@ -11,7 +11,7 @@
 #include "xrecore.h"
 #include "nsXPCOM.h"
 #include "nsISupports.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsXREAppData.h"
 #include "js/TypeDecls.h"
 

@@ -186,8 +186,14 @@ async_test(function(t) {
 
     // Set current time
     animation.currentTime = 5000;
-    assert_equals(animation.playState, 'running',
-                  'Animation is running immediately after setting currentTime');
+    assert_equals(animation.playState, 'paused',
+                  'Animation is paused immediately after setting currentTime');
+    assert_equals(animation.startTime, null,
+                  'Animation startTime is unresolved immediately after ' +
+                  'setting currentTime');
+    assert_equals(animation.currentTime, 5000,
+                  'Animation currentTime does not change when forcing a ' +
+                  'pause operation to complete');
 
     // The ready promise should now be resolved. If it's not then test will
     // probably time out before anything else happens that causes it to resolve.
@@ -195,7 +201,61 @@ async_test(function(t) {
   })).then(t.step_func(function() {
     t.done();
   }));
-}, 'Setting the current time cancels a pending pause');
+}, 'Setting the current time completes a pending pause');
+
+async_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 1000s' });
+  var animation = div.getAnimations()[0];
+
+  // Go to idle state then pause
+  animation.cancel();
+  animation.pause();
+
+  assert_equals(animation.currentTime, 0, 'currentTime is set to 0');
+  assert_equals(animation.startTime, null, 'startTime is not set');
+  assert_equals(animation.playState, 'pending', 'initially pause-pending');
+
+  // Check it still resolves as expected
+  animation.ready.then(t.step_func(function() {
+    assert_equals(animation.playState, 'paused',
+                  'resolves to paused state asynchronously');
+    assert_equals(animation.currentTime, 0,
+                  'keeps the initially set currentTime');
+    t.done();
+  }));
+}, 'pause() from idle');
+
+async_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 1000s' });
+  var animation = div.getAnimations()[0];
+
+  animation.cancel();
+  animation.playbackRate = -1;
+  animation.pause();
+
+  assert_equals(animation.currentTime, 1000 * 1000,
+                'currentTime is set to the effect end');
+
+  animation.ready.then(t.step_func(function() {
+    assert_equals(animation.currentTime, 1000 * 1000,
+                  'keeps the initially set currentTime');
+    t.done();
+  }));
+}, 'pause() from idle with a negative playbackRate');
+
+test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 1000s infinite' });
+  var animation = div.getAnimations()[0];
+
+  animation.cancel();
+  animation.playbackRate = -1;
+
+  assert_throws('InvalidStateError',
+                function () { animation.pause(); },
+                'Expect InvalidStateError exception on calling pause() ' +
+                'from idle with a negative playbackRate and ' +
+                'infinite-duration animation');
+}, 'pause() from idle with a negative playbackRate and endless effect');
 
 done();
 </script>

@@ -43,7 +43,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
         return ToOperand(def->output());
     }
 
-    MoveOperand toMoveOperand(const LAllocation* a) const;
+    MoveOperand toMoveOperand(LAllocation a) const;
 
     void bailoutIf(Assembler::Condition condition, LSnapshot* snapshot);
     void bailoutFrom(Label* label, LSnapshot* snapshot);

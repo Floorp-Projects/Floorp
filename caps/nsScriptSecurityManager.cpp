@@ -487,26 +487,6 @@ nsScriptSecurityManager::HashPrincipalByOrigin(nsIPrincipal* aPrincipal)
     return SecurityHashURI(uri);
 }
 
-/* static */ bool
-nsScriptSecurityManager::AppAttributesEqual(nsIPrincipal* aFirst,
-                                            nsIPrincipal* aSecond)
-{
-    MOZ_ASSERT(aFirst && aSecond, "Don't pass null pointers!");
-
-    uint32_t firstAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-    if (!aFirst->GetUnknownAppId()) {
-        firstAppId = aFirst->GetAppId();
-    }
-
-    uint32_t secondAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-    if (!aSecond->GetUnknownAppId()) {
-        secondAppId = aSecond->GetAppId();
-    }
-
-    return ((firstAppId == secondAppId) &&
-            (aFirst->GetIsInBrowserElement() == aSecond->GetIsInBrowserElement()));
-}
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
 {
@@ -1022,9 +1002,9 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, uint32_t aAppId,
         return NS_OK;
     }
 
+    BasePrincipal::OriginAttributes attrs(aAppId, aInMozBrowser);
     nsRefPtr<nsPrincipal> codebase = new nsPrincipal();
-
-    nsresult rv = codebase->Init(aURI, aAppId, aInMozBrowser);
+    nsresult rv = codebase->Init(aURI, attrs);
     if (NS_FAILED(rv))
         return rv;
 

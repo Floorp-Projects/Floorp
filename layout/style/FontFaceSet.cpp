@@ -6,7 +6,7 @@
 
 #include "FontFaceSet.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/CSSFontFaceLoadEvent.h"

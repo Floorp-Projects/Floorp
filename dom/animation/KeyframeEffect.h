@@ -72,24 +72,25 @@ struct AnimationTiming
 struct ComputedTiming
 {
   ComputedTiming()
-    : mTimeFraction(kNullTimeFraction)
+    : mProgress(kNullProgress)
     , mCurrentIteration(0)
     , mPhase(AnimationPhase_Null)
   { }
 
-  static const double kNullTimeFraction;
+  static const double kNullProgress;
 
   // The total duration of the animation including all iterations.
   // Will equal StickyTimeDuration::Forever() if the animation repeats
   // indefinitely.
   StickyTimeDuration mActiveDuration;
 
-  // Will be kNullTimeFraction if the animation is neither animating nor
+  // Progress towards the end of the current iteration. If the effect is
+  // being sampled backwards, this will go from 1.0 to 0.0.
+  // Will be kNullProgress if the animation is neither animating nor
   // filling at the sampled time.
-  double mTimeFraction;
+  double mProgress;
 
-  // Zero-based iteration index (meaningless if mTimeFraction is
-  // kNullTimeFraction).
+  // Zero-based iteration index (meaningless if mProgress is kNullProgress).
   uint64_t mCurrentIteration;
 
   enum {
@@ -275,9 +276,9 @@ public:
   // active duration are calculated. All other members of the returned object
   // are given a null/initial value.
   //
-  // This function returns ComputedTiming::kNullTimeFraction for the
-  // mTimeFraction member of the return value if the animation should not be
-  // run (because it is not currently active and is not filling at this time).
+  // This function returns ComputedTiming::kNullProgress for the mProgress
+  // member of the return value if the animation should not be run
+  // (because it is not currently active and is not filling at this time).
   static ComputedTiming
   GetComputedTimingAt(const Nullable<TimeDuration>& aLocalTime,
                       const AnimationTiming& aTiming);

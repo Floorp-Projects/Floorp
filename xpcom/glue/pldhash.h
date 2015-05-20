@@ -145,12 +145,10 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
   PLDHashEntryHdr* aHdr, mozilla::MallocSizeOf aMallocSizeOf, void* aArg);
 
 /*
- * A PLDHashTable is currently 8 words (without the PL_DHASHMETER overhead)
- * on most architectures, and may be allocated on the stack or within another
- * structure or class (see below for the Init and Finish functions to use).
- *
- * No entry storage is allocated until the first element is added. This means
- * that empty hash tables are cheap, which is good because they are common.
+ * A PLDHashTable may be allocated on the stack or within another structure or
+ * class. No entry storage is allocated until the first element is added. This
+ * means that empty hash tables are cheap, which is good because they are
+ * common.
  *
  * There used to be a long, math-heavy comment here about the merits of
  * double hashing vs. chaining; it was removed in bug 1058335. In short, double
@@ -237,9 +235,8 @@ public:
 
   bool IsInitialized() const { return !!mOps; }
 
-  // These should be used rarely.
+  // This should be used rarely.
   const PLDHashTableOps* const Ops() { return mOps; }
-  void SetOps(const PLDHashTableOps* aOps) { mOps = aOps; }
 
   /*
    * Size in entries (gross, not net of free and removed sentinels) for table.
@@ -335,6 +332,47 @@ private:
 
   PLDHashTable(const PLDHashTable& aOther) = delete;
   PLDHashTable& operator=(const PLDHashTable& aOther) = delete;
+};
+
+// PLDHashTable uses C style, manual initialization and finalization, via the
+// Init() and Finish() methods. PLDHashTable2 is a slight extension of
+// PLDHashTable that provides C++-style, automatic initialization and
+// finalization via an initializing constructor and a destructor. It also
+// overrides the Init() and Finish() methods with versions that will crash
+// immediately if called.
+//
+// XXX: We're using a subclass here so that instances of PLDHashTable can be
+// converted incrementally to PLDHashTable2. Once all instances have been
+// converted, we can merge the two and call the merged class PLDHashTable
+// again.
+class PLDHashTable2 : public PLDHashTable
+{
+public:
+  PLDHashTable2(const PLDHashTableOps* aOps, uint32_t aEntrySize,
+                uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
+
+  PLDHashTable2(PLDHashTable2&& aOther)
+    : PLDHashTable(mozilla::Move(aOther))
+  {}
+
+  PLDHashTable2& operator=(PLDHashTable2&& aOther)
+  {
+    return static_cast<PLDHashTable2&>(
+      PLDHashTable::operator=(mozilla::Move(aOther)));
+  }
+
+  ~PLDHashTable2();
+
+  void Init(const PLDHashTableOps* aOps, uint32_t aEntrySize, uint32_t aLength)
+  {
+    MOZ_CRASH("PLDHashTable2::Init()");
+  }
+
+  void Finish() { MOZ_CRASH("PLDHashTable2::Finish()"); }
+
+private:
+  PLDHashTable2(const PLDHashTable2& aOther) = delete;
+  PLDHashTable2& operator=(const PLDHashTable2& aOther) = delete;
 };
 
 /*
@@ -478,6 +516,9 @@ void PL_DHashTableDestroy(PLDHashTable* aTable);
 void PL_DHashTableInit(
   PLDHashTable* aTable, const PLDHashTableOps* aOps,
   uint32_t aEntrySize, uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
+void PL_DHashTableInit(
+  PLDHashTable2* aTable, const PLDHashTableOps* aOps,
+  uint32_t aEntrySize, uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
  * Free |aTable|'s entry storage (via aTable->mOps->freeTable). Use this
@@ -485,6 +526,7 @@ void PL_DHashTableInit(
  * static memory and was created via PL_DHashTableInit().
  */
 void PL_DHashTableFinish(PLDHashTable* aTable);
+void PL_DHashTableFinish(PLDHashTable2* aTable);
 
 /*
  * To search for a key in |table|, call:

@@ -280,6 +280,16 @@ TryParseLocationURICandidate(const nsACString& uristr,
             StringBeginsWith(uristr, kToolkit) ||
             StringBeginsWith(uristr, kBrowser))
             return false;
+
+        // -- GROSS HACK ALERT --
+        // The Yandex Elements 8.10.2 extension implements its own "xb://" URL
+        // scheme. If we call NS_NewURI() on an "xb://..." URL, we'll end up
+        // calling into the extension's own JS-implemented nsIProtocolHandler
+        // object, which we can't allow while we're iterating over the JS heap.
+        // So just skip any such URL.
+        // -- GROSS HACK ALERT --
+        if (StringBeginsWith(uristr, NS_LITERAL_CSTRING("xb")))
+            return false;
     }
 
     nsCOMPtr<nsIURI> uri;
@@ -3387,9 +3397,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // were not taken at the time of this writing, so we hazard a guess that
     // ASAN builds have roughly thrice the stack overhead as normal builds.
     // On normal builds, the largest stack frame size we might encounter is
-    // 9.0k (see above), so let's use a buffer of 9.0 * 3 * 10 = 270k.
+    // 9.0k (see above), so let's use a buffer of 9.0 * 5 * 10 = 450k.
     const size_t kStackQuota =  2 * kDefaultStackQuota;
-    const size_t kTrustedScriptBuffer = 270 * 1024;
+    const size_t kTrustedScriptBuffer = 450 * 1024;
 #elif defined(XP_WIN)
     // 1MB is the default stack size on Windows, so use 900k.
     // Windows PGO stack frames have unfortunately gotten pretty large lately. :-(

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "gfxFcPlatformFontList.h"
 #include "gfxFont.h"
@@ -722,6 +722,8 @@ static void ApplyGdkScreenFontOptions(FcPattern *aPattern);
 static void
 PreparePattern(FcPattern* aPattern, bool aIsPrinterFont)
 {
+    FcConfigSubstitute(nullptr, aPattern, FcMatchPattern);
+
     // This gets cairo_font_options_t for the Screen.  We should have
     // different font options for printing (no hinting) but we are not told
     // what we are measuring for.

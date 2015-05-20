@@ -75,6 +75,7 @@ EXPORTS.mozilla += [
     'FileUtils.h',
     'GenericFactory.h',
     'IntentionalCrash.h',
+    'Logging.h',
     'Monitor.h',
     'Mutex.h',
     'Observer.h',

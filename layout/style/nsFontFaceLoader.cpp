@@ -6,7 +6,7 @@
 
 /* code for loading in @font-face defined font data */
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include "nsFontFaceLoader.h"
 

@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "prdtoa.h"
 #include "AudioStream.h"
 #include "VideoUtils.h"

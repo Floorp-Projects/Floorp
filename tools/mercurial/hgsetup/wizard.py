@@ -79,9 +79,9 @@ Would you like to activate bzexport
 '''.strip()
 
 MQEXT_INFO = '''
-The mqext extension (https://bitbucket.org/sfink/mqext) provides a number of
-useful abilities to Mercurial, including automatically committing changes to
-your mq patch queue.
+The mqext extension adds a number of features, including automatically committing
+changes to your mq patch queue. More info is available at
+https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/mqext/README.txt
 
 Would you like to activate mqext
 '''.strip()
@@ -158,6 +158,7 @@ b) perform head/bookmark-based development (as opposed to mq)
 
 Would you like to activate firefoxtree
 '''.strip()
+
 
 class MercurialSetupWizard(object):
     """Command-line wizard to help users configure Mercurial."""
@@ -284,16 +285,7 @@ class MercurialSetupWizard(object):
             self.prompt_external_extension(c, 'firefoxtree', FIREFOXTREE_INFO)
 
         if 'mq' in c.extensions:
-            self.prompt_external_extension(c, 'mqext', MQEXT_INFO,
-                                           os.path.join(self.ext_dir, 'mqext'))
-
-            if 'mqext' in c.extensions:
-                self.updater.update_mercurial_repo(
-                    hg,
-                    'https://bitbucket.org/sfink/mqext',
-                    os.path.join(self.ext_dir, 'mqext'),
-                    'default',
-                    'Ensuring mqext extension is up to date...')
+            self.prompt_external_extension(c, 'mqext', MQEXT_INFO)
 
             if 'mqext' in c.extensions and not c.have_mqext_autocommit_mq():
                 if self._prompt_yn('Would you like to configure mqext to '
@@ -337,7 +329,7 @@ class MercurialSetupWizard(object):
                 'Ensuring version-control-tools is up to date...')
 
         # Look for and clean up old extensions.
-        for ext in {'bzexport', 'qimportbz'}:
+        for ext in {'bzexport', 'qimportbz', 'mqext'}:
             path = os.path.join(self.ext_dir, ext)
             if os.path.exists(path):
                 if self._prompt_yn('Would you like to remove the old and no '
@@ -414,11 +406,11 @@ class MercurialSetupWizard(object):
             if not self._prompt_yn(prompt_text):
                 print('')
                 return
-            print('Activated %s extension.\n' % name)
         if not path:
             path = os.path.join(self.vcs_tools_dir, 'hgext', name)
-            self.update_vcs_tools = True
+        self.update_vcs_tools = True
         c.activate_extension(name, path)
+        print('Activated %s extension.\n' % name)
 
     def _prompt(self, msg, allow_empty=False):
         print(msg)

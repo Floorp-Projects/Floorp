@@ -13,7 +13,7 @@
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsUrlClassifierPrefixSet.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 namespace safebrowsing {

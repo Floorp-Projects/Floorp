@@ -790,6 +790,7 @@ let Impl = {
   onPingRequestFinished: function(success, startTime, ping, isPersisted) {
     this._log.trace("onPingRequestFinished - success: " + success + ", persisted: " + isPersisted);
 
+    Telemetry.getHistogramById("TELEMETRY_SEND").add(new Date() - startTime);
     let hping = Telemetry.getHistogramById("TELEMETRY_PING");
     let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
 
@@ -923,11 +924,16 @@ let Impl = {
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
+    startTime = new Date();
     let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(networkPayload));
     utf8Payload += converter.Finish();
+    Telemetry.getHistogramById("TELEMETRY_STRINGIFY").add(new Date() - startTime);
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                         .createInstance(Ci.nsIStringInputStream);
+    startTime = new Date();
     payloadStream.data = this.gzipCompressString(utf8Payload);
+    Telemetry.getHistogramById("TELEMETRY_COMPRESS").add(new Date() - startTime);
+    startTime = new Date();
     request.send(payloadStream);
 
     return deferred.promise;

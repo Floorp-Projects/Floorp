@@ -12,7 +12,7 @@
 #include "nsString.h"
 #include "nsXULContentUtils.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 extern PRLogModuleInfo* gXULTemplateLog;
 
 nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,

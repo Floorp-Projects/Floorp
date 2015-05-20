@@ -13,7 +13,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/unused.h"
 #include "nsNetUtil.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 #include <sys/types.h>
 

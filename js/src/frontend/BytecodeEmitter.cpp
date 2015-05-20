@@ -3726,11 +3726,14 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOpt
     MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
     MOZ_ASSERT(pattern->isArity(PN_LIST));
 
-    MOZ_ASSERT(this->stackDepth != 0);                            // ... OBJ
+    MOZ_ASSERT(this->stackDepth > 0);                             // ... RHS
+
+    if (!emitRequireObjectCoercible())                            // ... RHS
+        return false;
 
     for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
         // Duplicate the value being destructured to use as a reference base.
-        if (!emit1(JSOP_DUP))                                     // ... OBJ OBJ
+        if (!emit1(JSOP_DUP))                                     // ... RHS RHS
             return false;
 
         // Now push the property name currently being matched, which is the
@@ -3740,7 +3743,7 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOpt
 
         ParseNode* subpattern;
         if (member->isKind(PNK_MUTATEPROTO)) {
-            if (!emitAtomOp(cx->names().proto, JSOP_GETPROP))     // ... OBJ PROP
+            if (!emitAtomOp(cx->names().proto, JSOP_GETPROP))     // ... RHS PROP
                 return false;
             needsGetElem = false;
             subpattern = member->pn_kid;
@@ -3749,7 +3752,7 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOpt
 
             ParseNode* key = member->pn_left;
             if (key->isKind(PNK_NUMBER)) {
-                if (!emitNumberOp(key->pn_dval))                  // ... OBJ OBJ KEY
+                if (!emitNumberOp(key->pn_dval))                  // ... RHS RHS KEY
                     return false;
             } else if (key->isKind(PNK_OBJECT_PROPERTY_NAME) || key->isKind(PNK_STRING)) {
                 PropertyName* name = key->pn_atom->asPropertyName();
@@ -3759,16 +3762,16 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOpt
                 // as indexes for simplification of downstream analysis.
                 jsid id = NameToId(name);
                 if (id != IdToTypeId(id)) {
-                    if (!emitTree(key))                           // ... OBJ OBJ KEY
+                    if (!emitTree(key))                           // ... RHS RHS KEY
                         return false;
                 } else {
-                    if (!emitAtomOp(name, JSOP_GETPROP))          // ...OBJ PROP
+                    if (!emitAtomOp(name, JSOP_GETPROP))          // ...RHS PROP
                         return false;
                     needsGetElem = false;
                 }
             } else {
                 MOZ_ASSERT(key->isKind(PNK_COMPUTED_NAME));
-                if (!emitTree(key->pn_kid))                       // ... OBJ OBJ KEY
+                if (!emitTree(key->pn_kid))                       // ... RHS RHS KEY
                     return false;
             }
 
@@ -3776,7 +3779,7 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOpt
         }
 
         // Get the property value if not done already.
-        if (needsGetElem && !emitElemOpBase(JSOP_GETELEM))        // ... OBJ PROP
+        if (needsGetElem && !emitElemOpBase(JSOP_GETELEM))        // ... RHS PROP
             return false;
 
         if (subpattern->isKind(PNK_ASSIGN)) {
@@ -3794,7 +3797,7 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOpt
         // target in the subpattern's LHS as it went, then popped PROP.  We've
         // correctly returned to the loop-entry stack, and we continue to the
         // next member.
-        if (emitOption == InitializeVars)                         // ... OBJ
+        if (emitOption == InitializeVars)                         // ... RHS
             continue;
 
         MOZ_ASSERT(emitOption == PushInitialValues);
@@ -4372,7 +4375,7 @@ ParseNode::getConstantValue(ExclusiveContext* cx, AllowConstantObjects allowObje
             pn = pn_head;
         }
 
-        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, NullPtr(), newKind));
+        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, nullptr, newKind));
         if (!obj)
             return false;
 
@@ -4953,6 +4956,42 @@ BytecodeEmitter::emitWith(ParseNode* pn)
 }
 
 bool
+BytecodeEmitter::emitRequireObjectCoercible()
+{
+    // For simplicity, handle this in self-hosted code, at cost of 13 bytes of
+    // bytecode versus 1 byte for a dedicated opcode.  As more places need this
+    // behavior, we may want to reconsider this tradeoff.
+
+#ifdef DEBUG
+    auto depth = this->stackDepth;
+#endif
+    MOZ_ASSERT(depth > 0);                 // VAL
+    if (!emit1(JSOP_DUP))                  // VAL VAL
+        return false;
+
+    // Note that "intrinsic" is a misnomer: we're calling a *self-hosted*
+    // function that's not an intrinsic!  But it nonetheless works as desired.
+    if (!emitAtomOp(cx->names().RequireObjectCoercible,
+                    JSOP_GETINTRINSIC))    // VAL VAL REQUIREOBJECTCOERCIBLE
+    {
+        return false;
+    }
+    if (!emit1(JSOP_UNDEFINED))            // VAL VAL REQUIREOBJECTCOERCIBLE UNDEFINED
+        return false;
+    if (!emit2(JSOP_PICK, jsbytecode(2)))  // VAL REQUIREOBJECTCOERCIBLE UNDEFINED VAL
+        return false;
+    if (!emitCall(JSOP_CALL, 1))           // VAL IGNORED
+        return false;
+    checkTypeSet(JSOP_CALL);
+
+    if (!emit1(JSOP_POP))                  // VAL
+        return false;
+
+    MOZ_ASSERT(depth == this->stackDepth);
+    return true;
+}
+
+bool
 BytecodeEmitter::emitIterator()
 {
     // Convert iterable to iterator.
@@ -5513,9 +5552,9 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             script->bindings = funbox->bindings;
 
             uint32_t lineNum = parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
-            BytecodeEmitter bce2(this, parser, funbox, script, /* lazyScript = */ js::NullPtr(),
+            BytecodeEmitter bce2(this, parser, funbox, script, /* lazyScript = */ nullptr,
                                  insideEval, evalCaller,
-                                 /* evalStaticScope = */ js::NullPtr(),
+                                 /* evalStaticScope = */ nullptr,
                                  insideNonGlobalEval, lineNum, emitterMode);
             if (!bce2.init())
                 return false;
@@ -6766,7 +6805,7 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
         if (propdef->pn_right->isKind(PNK_FUNCTION) &&
             propdef->pn_right->pn_funbox->needsHomeObject())
         {
-            MOZ_ASSERT(propdef->pn_right->pn_funbox->function()->isMethod());
+            MOZ_ASSERT(propdef->pn_right->pn_funbox->function()->allowSuperProperty());
             if (!emit2(JSOP_INITHOMEOBJECT, isIndex))
                 return false;
         }

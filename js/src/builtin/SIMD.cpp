@@ -17,6 +17,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "jsprf.h"
 
 #include "builtin/TypedObject.h"
 #include "js/Value.h"

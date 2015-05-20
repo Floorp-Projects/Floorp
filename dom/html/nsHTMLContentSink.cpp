@@ -28,7 +28,7 @@
 #include "nsIAppShell.h"
 #include "nsCRT.h"
 #include "prtime.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsNodeUtils.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"

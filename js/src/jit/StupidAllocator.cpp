@@ -186,11 +186,11 @@ StupidAllocator::syncRegister(LInstruction* ins, RegisterIndex index)
 {
     if (registers[index].dirty) {
         LMoveGroup* input = getInputMoveGroup(ins);
-        LAllocation* source = new(alloc()) LAllocation(registers[index].reg);
+        LAllocation source(registers[index].reg);
 
         uint32_t existing = registers[index].vreg;
         LAllocation* dest = stackLocation(existing);
-        input->addAfter(source, dest, registers[index].type);
+        input->addAfter(source, *dest, registers[index].type);
 
         registers[index].dirty = false;
     }
@@ -219,8 +219,8 @@ StupidAllocator::loadRegister(LInstruction* ins, uint32_t vreg, RegisterIndex in
     // Load a vreg from its stack location to a register.
     LMoveGroup* input = getInputMoveGroup(ins);
     LAllocation* source = stackLocation(vreg);
-    LAllocation* dest = new(alloc()) LAllocation(registers[index].reg);
-    input->addAfter(source, dest, type);
+    LAllocation dest(registers[index].reg);
+    input->addAfter(*source, dest, type);
     registers[index].set(vreg, ins);
     registers[index].type = type;
 }
@@ -321,7 +321,7 @@ StupidAllocator::syncForBlockEnd(LBlock* block, LInstruction* ins)
                 }
             }
 
-            group->add(source, dest, phi->getDef(0)->type());
+            group->add(*source, *dest, phi->getDef(0)->type());
         }
     }
 }

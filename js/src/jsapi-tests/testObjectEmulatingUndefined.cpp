@@ -22,7 +22,7 @@ ObjectEmulatingUndefinedConstructor(JSContext* cx, unsigned argc, jsval* vp)
 
 BEGIN_TEST(testObjectEmulatingUndefined_truthy)
 {
-    CHECK(JS_InitClass(cx, global, js::NullPtr(), &ObjectEmulatingUndefinedClass,
+    CHECK(JS_InitClass(cx, global, nullptr, &ObjectEmulatingUndefinedClass,
                        ObjectEmulatingUndefinedConstructor, 0,
                        nullptr, nullptr, nullptr, nullptr));
 
@@ -48,7 +48,7 @@ END_TEST(testObjectEmulatingUndefined_truthy)
 
 BEGIN_TEST(testObjectEmulatingUndefined_equal)
 {
-    CHECK(JS_InitClass(cx, global, js::NullPtr(), &ObjectEmulatingUndefinedClass,
+    CHECK(JS_InitClass(cx, global, nullptr, &ObjectEmulatingUndefinedClass,
                        ObjectEmulatingUndefinedConstructor, 0,
                        nullptr, nullptr, nullptr, nullptr));
 

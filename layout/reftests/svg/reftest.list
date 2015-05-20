@@ -41,6 +41,7 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 == clipPath-basic-04.svg pass.svg
 == clipPath-basic-05.svg pass.svg
 == clipPath-basic-06.svg pass.svg
+== clipPath-basic-07.svg pass.svg
 == clipPath-winding-01.svg pass.svg
 == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == conditions-01.svg pass.svg

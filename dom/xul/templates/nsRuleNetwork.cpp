@@ -20,7 +20,7 @@
 #include "nsCOMPtr.h"
 #include "plhash.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 extern PRLogModuleInfo* gXULTemplateLog;
 
 #include "nsString.h"

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPParent.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "nsComponentManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIInputStream.h"
@@ -365,11 +365,21 @@ void
 GMPParent::ChildTerminated()
 {
   nsRefPtr<GMPParent> self(this);
-  GMPThread()->Dispatch(NS_NewRunnableMethodWithArg<nsRefPtr<GMPParent>>(
-                          mService,
-                          &GeckoMediaPluginServiceParent::PluginTerminated,
-                          self),
-                        NS_DISPATCH_NORMAL);
+  nsIThread* gmpThread = GMPThread();
+
+  if (!gmpThread) {
+    // Bug 1163239 - this can happen on shutdown.
+    // PluginTerminated removes the GMP from the GMPService.
+    // On shutdown we can have this case where it is already been
+    // removed so there is no harm in not trying to remove it again.
+    LOGD("%s::%s: GMPThread() returned nullptr.", __CLASS__, __FUNCTION__);
+  } else {
+    gmpThread->Dispatch(NS_NewRunnableMethodWithArg<nsRefPtr<GMPParent>>(
+                         mService,
+                         &GeckoMediaPluginServiceParent::PluginTerminated,
+                         self),
+                         NS_DISPATCH_NORMAL);
+  }
 }
 
 void

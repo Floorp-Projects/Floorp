@@ -18,7 +18,7 @@
 #include "mozilla/Likely.h"
 #include <algorithm>
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 #include "plstr.h"
 #include "prprf.h"
 

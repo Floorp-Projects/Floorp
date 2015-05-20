@@ -524,6 +524,10 @@ struct BytecodeEmitter
     // the stack.
     bool emitInitializeDestructuringDecls(JSOp prologueOp, ParseNode* pattern);
 
+    // Throw a TypeError if the value atop the stack isn't convertible to an
+    // object, with no overall effect on the stack.
+    bool emitRequireObjectCoercible();
+
     // emitIterator expects the iterable to already be on the stack.
     // It will replace that stack value with the corresponding iterator
     bool emitIterator();

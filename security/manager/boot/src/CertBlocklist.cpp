@@ -19,7 +19,7 @@
 #include "nsTHashtable.h"
 #include "nsThreadUtils.h"
 #include "pkix/Input.h"
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 NS_IMPL_ISUPPORTS(CertBlocklist, nsICertBlocklist)
 
