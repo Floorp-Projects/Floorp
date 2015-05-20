@@ -171,7 +171,7 @@ let PerformanceView = {
       $container.setAttribute("buffer-status", "in-progress");
     }
 
-    $bufferLabel.value = L10N.getFormatStr("profiler.bufferStatus", percent);
+    $bufferLabel.value = `Buffer ${percent}% full`;
     this.emit(EVENTS.UI_BUFFER_UPDATED, percent);
   },
 
