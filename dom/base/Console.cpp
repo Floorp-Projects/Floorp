@@ -1019,7 +1019,8 @@ public:
     return GetCause() == aOther.GetCause();
   }
 
-  virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker) override
+  virtual void AddDetails(JSContext* aCx,
+                          mozilla::dom::ProfileTimelineMarker& aMarker) override
   {
     if (GetMetaData() == TRACING_INTERVAL_START) {
       aMarker.mCauseName.Construct(GetCause());
@@ -1041,7 +1042,8 @@ public:
     MOZ_ASSERT(aMetaData == TRACING_TIMESTAMP);
   }
 
-  virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker) override
+  virtual void AddDetails(JSContext* aCx,
+                          mozilla::dom::ProfileTimelineMarker& aMarker) override
   {
     if (!GetCause().IsEmpty()) {
       aMarker.mCauseName.Construct(GetCause());

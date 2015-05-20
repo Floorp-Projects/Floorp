@@ -26,6 +26,8 @@ let TESTS = [{
     // cause.
     let jsMarkers = markers.filter(m => m.name == "Javascript" && m.causeName);
     ok(jsMarkers.length > 0, "Got some Javascript markers");
+    is(jsMarkers[0].stack.functionDisplayName, "do_xhr",
+       "Javascript marker has entry point name");
   }
 }];
 
