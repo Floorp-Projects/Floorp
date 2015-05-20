@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GFX_PANGOFONTS_H
-#define GFX_PANGOFONTS_H
+#ifndef GFX_FONTCONFIG_FONTS_H
+#define GFX_FONTCONFIG_FONTS_H
 
 #include "cairo.h"
 #include "gfxTypes.h"
@@ -102,4 +102,4 @@ private:
     static FT_Library GetFTLibrary();
 };
 
-#endif /* GFX_PANGOFONTS_H */
+#endif /* GFX_FONTCONFIG_FONTS_H */
