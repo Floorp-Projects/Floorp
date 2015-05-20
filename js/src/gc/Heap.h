@@ -1123,6 +1123,7 @@ inline uintptr_t
 ArenaHeader::address() const
 {
     uintptr_t addr = reinterpret_cast<uintptr_t>(this);
+    MOZ_ASSERT(addr);
     MOZ_ASSERT(!(addr & ArenaMask));
     MOZ_ASSERT(Chunk::withinArenasRange(addr));
     return addr;
@@ -1186,7 +1187,8 @@ ArenaHeader::setNextDelayedMarking(ArenaHeader* aheader)
     MOZ_ASSERT(!(uintptr_t(aheader) & ArenaMask));
     MOZ_ASSERT(!auxNextLink && !hasDelayedMarking);
     hasDelayedMarking = 1;
-    auxNextLink = aheader->arenaAddress() >> ArenaShift;
+    if (aheader)
+        auxNextLink = aheader->arenaAddress() >> ArenaShift;
 }
 
 inline void
@@ -1209,7 +1211,8 @@ ArenaHeader::setNextAllocDuringSweep(ArenaHeader* aheader)
 {
     MOZ_ASSERT(!auxNextLink && !allocatedDuringIncremental);
     allocatedDuringIncremental = 1;
-    auxNextLink = aheader->arenaAddress() >> ArenaShift;
+    if (aheader)
+        auxNextLink = aheader->arenaAddress() >> ArenaShift;
 }
 
 inline void

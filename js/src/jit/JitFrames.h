@@ -373,13 +373,10 @@ class JitFrameLayout : public CommonFrameLayout
         return offsetof(JitFrameLayout, numActualArgs_);
     }
     static size_t offsetOfThis() {
-        JitFrameLayout* base = nullptr;
-        return reinterpret_cast<size_t>(&base->argv()[0]);
+        return sizeof(JitFrameLayout);
     }
     static size_t offsetOfActualArgs() {
-        JitFrameLayout* base = nullptr;
-        // +1 to skip |this|.
-        return reinterpret_cast<size_t>(&base->argv()[1]);
+        return offsetOfThis() + sizeof(Value);
     }
     static size_t offsetOfActualArg(size_t arg) {
         return offsetOfActualArgs() + arg * sizeof(Value);
