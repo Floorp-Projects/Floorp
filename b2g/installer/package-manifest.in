@@ -502,6 +502,8 @@
 @RESPATH@/components/MobileMessageDatabaseService.js
 @RESPATH@/components/MobileMessageDatabaseService.manifest
 #ifndef DISABLE_MOZ_RIL_GEOLOC
+@RESPATH@/components/DataCallInterfaceService.js
+@RESPATH@/components/DataCallInterfaceService.manifest
 @RESPATH@/components/MobileConnectionService.js
 @RESPATH@/components/MobileConnectionService.manifest
 @RESPATH@/components/RadioInterfaceLayer.js
