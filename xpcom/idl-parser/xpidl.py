@@ -677,6 +677,7 @@ class InterfaceAttributes(object):
 
 class ConstMember(object):
     kind = 'const'
+
     def __init__(self, type, name, value, location, doccomments):
         self.type = type
         self.name = name
@@ -790,7 +791,6 @@ class Attribute(object):
             raise IDLError('[infallible] attributes are only allowed on '
                            '[builtinclass] interfaces',
                            self.location)
-
 
     def toIDL(self):
         attribs = attlistToIDL(self.attlist)
