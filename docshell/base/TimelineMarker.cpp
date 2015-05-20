@@ -22,7 +22,8 @@ TimelineMarker::TimelineMarker(nsDocShell* aDocShell, const char* aName,
 
 TimelineMarker::TimelineMarker(nsDocShell* aDocShell, const char* aName,
                                TracingMetadata aMetaData,
-                               const nsAString& aCause)
+                               const nsAString& aCause,
+                               TimelineStackRequest aStackRequest)
   : mName(aName)
   , mMetaData(aMetaData)
   , mCause(aCause)
@@ -30,7 +31,7 @@ TimelineMarker::TimelineMarker(nsDocShell* aDocShell, const char* aName,
   MOZ_COUNT_CTOR(TimelineMarker);
   MOZ_ASSERT(aName);
   aDocShell->Now(&mTime);
-  if (aMetaData == TRACING_INTERVAL_START) {
+  if (aMetaData == TRACING_INTERVAL_START && aStackRequest != NO_STACK) {
     CaptureStack();
   }
 }
