@@ -92,9 +92,14 @@ WebGLContext::IsVertexArray(WebGLVertexArray* array)
     if (!array)
         return false;
 
-    return ValidateObjectAllowDeleted("isVertexArray", array) &&
-           !array->IsDeleted() &&
-           array->HasEverBeenBound();
+    if (!ValidateObjectAllowDeleted("isVertexArray", array))
+        return false;
+
+    if (array->IsDeleted())
+        return false;
+
+    MakeContextCurrent();
+    return array->IsVertexArray();
 }
 
 } // namespace mozilla
