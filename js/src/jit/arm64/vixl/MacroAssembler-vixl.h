@@ -27,7 +27,8 @@
 #ifndef VIXL_A64_MACRO_ASSEMBLER_A64_H_
 #define VIXL_A64_MACRO_ASSEMBLER_A64_H_
 
-#include "jit/arm64/Assembler-arm64.h"
+// TODO: Re-enable once landed.
+// #include "jit/arm64/Assembler-arm64.h"
 
 #include "jit/arm64/vixl/Debugger-vixl.h"
 #include "jit/arm64/vixl/Globals-vixl.h"
