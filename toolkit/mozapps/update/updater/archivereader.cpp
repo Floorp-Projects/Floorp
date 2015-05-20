@@ -18,7 +18,7 @@
 // These are generated at compile time based on the DER file for the channel
 // being used
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
-#ifdef UPDATER_XPCSHELL_CERT
+#ifdef TEST_UPDATER
 #include "../xpcshellCert.h"
 #else
 #include "primaryCert.h"
@@ -85,7 +85,7 @@ ArchiveReader::VerifySignature()
 #ifndef MOZ_VERIFY_MAR_SIGNATURE
   return OK;
 #else
-#ifdef UPDATER_XPCSHELL_CERT
+#ifdef TEST_UPDATER
   int rv = VerifyLoadedCert(mArchive, xpcshellCertData);
 #else
   int rv = VerifyLoadedCert(mArchive, primaryCertData);
