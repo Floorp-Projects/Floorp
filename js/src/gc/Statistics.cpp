@@ -86,7 +86,7 @@ class gcstats::StatisticsSerializer
         if (d < 0)
             d = 0;
         if (asJSON_)
-            appendNumber(name, "%d.%03d", units, (int)d, (int)(d * 1000.) % 1000);
+            appendNumber(name, "%d.%03d", units, int(d), int(d * 1000.) % 1000);
         else
             appendNumber(name, "%.1f", units, d);
     }
@@ -458,10 +458,10 @@ FormatPhaseTimes(StatisticsSerializer& ss, const char* name, Statistics::PhaseTi
 }
 
 void
-Statistics::gcDuration(int64_t* total, int64_t* maxPause)
+Statistics::gcDuration(int64_t* total, int64_t* maxPause) const
 {
     *total = *maxPause = 0;
-    for (SliceData* slice = slices.begin(); slice != slices.end(); slice++) {
+    for (const SliceData* slice = slices.begin(); slice != slices.end(); slice++) {
         *total += slice->duration();
         if (slice->duration() > *maxPause)
             *maxPause = slice->duration();
@@ -615,6 +615,119 @@ SumChildTimes(size_t phaseSlot, Phase phase, Statistics::PhaseTimeTable phaseTim
         }
     }
     return total;
+}
+
+UniqueChars
+Statistics::formatCompactSliceMessage() const
+{
+    // Skip if we OOM'ed.
+    if (slices.length() == 0)
+        return UniqueChars(nullptr);
+
+    const size_t index = slices.length() - 1;
+    const SliceData& slice = slices[index];
+
+    char budgetDescription[200];
+    slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
+
+    const char* format =
+        "GC Slice %u - Pause: %.3fms of %s budget (@ %.3fms); Reason: %s; Reset: %s%s; Times: ";
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
+    JS_snprintf(buffer, sizeof(buffer), format, index,
+                t(slice.duration()), budgetDescription, t(slice.start - slices[0].start),
+                ExplainReason(slice.reason),
+                slice.resetReason ? "yes - " : "no", slice.resetReason ? slice.resetReason : "");
+
+    FragmentVector fragments;
+    if (!fragments.append(make_string_copy(buffer)) ||
+        !fragments.append(formatCompactSlicePhaseTimes(slices[index].phaseTimes)))
+    {
+        return UniqueChars(nullptr);
+    }
+    return Join(fragments);
+}
+
+UniqueChars
+Statistics::formatCompactSummaryMessage() const
+{
+    const double bytesPerMiB = 1024 * 1024;
+
+    FragmentVector fragments;
+    if (!fragments.append(make_string_copy("Summary - ")))
+        return UniqueChars(nullptr);
+
+    int64_t total, longest;
+    gcDuration(&total, &longest);
+
+    const double mmu20 = computeMMU(20 * PRMJ_USEC_PER_MSEC);
+    const double mmu50 = computeMMU(50 * PRMJ_USEC_PER_MSEC);
+
+    char buffer[1024];
+    if (!nonincrementalReason_) {
+        JS_snprintf(buffer, sizeof(buffer),
+                    "Max Pause: %.3fms; MMU 20ms: %.1f%%; MMU 50ms: %.1f%%; Total: %.3fms; ",
+                    t(longest), mmu20 * 100., mmu50 * 100., t(total));
+    } else {
+        JS_snprintf(buffer, sizeof(buffer), "Non-Incremental: %.3fms; ", t(total));
+    }
+    if (!fragments.append(make_string_copy(buffer)))
+        return UniqueChars(nullptr);
+
+    JS_snprintf(buffer, sizeof(buffer),
+                "Zones: %d of %d; Compartments: %d of %d; HeapSize: %.3f MiB; "\
+                "HeapChange (abs): %+d (%d); ",
+                zoneStats.collectedZoneCount, zoneStats.zoneCount,
+                zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
+                double(preBytes) / bytesPerMiB,
+                counts[STAT_NEW_CHUNK] - counts[STAT_DESTROY_CHUNK],
+                counts[STAT_NEW_CHUNK] + counts[STAT_DESTROY_CHUNK]);
+    if (!fragments.append(make_string_copy(buffer)))
+        return UniqueChars(nullptr);
+
+    MOZ_ASSERT_IF(counts[STAT_ARENA_RELOCATED], gckind == GC_SHRINK);
+    if (gckind == GC_SHRINK) {
+        JS_snprintf(buffer, sizeof(buffer),
+                    "Kind: %s; Relocated: %.3f MiB; ",
+                    ExplainInvocationKind(gckind),
+                    double(ArenaSize * counts[STAT_ARENA_RELOCATED]) / bytesPerMiB);
+        if (!fragments.append(make_string_copy(buffer)))
+            return UniqueChars(nullptr);
+    }
+
+    return Join(fragments);
+}
+
+UniqueChars
+Statistics::formatCompactSlicePhaseTimes(PhaseTimeTable phaseTimes) const
+{
+    static const int64_t MaxUnaccountedTimeUS = 100;
+
+    FragmentVector fragments;
+    char buffer[128];
+    for (AllPhaseIterator iter(phaseTimes); !iter.done(); iter.advance()) {
+        Phase phase;
+        size_t dagSlot;
+        size_t level;
+        iter.get(&phase, &dagSlot, &level);
+        MOZ_ASSERT(level < 4);
+
+        int64_t ownTime = phaseTimes[dagSlot][phase];
+        int64_t childTime = SumChildTimes(dagSlot, phase, phaseTimes);
+        if (ownTime > MaxUnaccountedTimeUS) {
+            JS_snprintf(buffer, sizeof(buffer), "%s: %.3fms", phases[phase].name, t(ownTime));
+            if (!fragments.append(make_string_copy(buffer)))
+                return UniqueChars(nullptr);
+
+            if (childTime && (ownTime - childTime) > MaxUnaccountedTimeUS) {
+                MOZ_ASSERT(level < 3);
+                JS_snprintf(buffer, sizeof(buffer), "%s: %.3fms", "Other", t(ownTime - childTime));
+                if (!fragments.append(make_string_copy(buffer)))
+                    return UniqueChars(nullptr);
+            }
+        }
+    }
+    return Join(fragments, ", ");
 }
 
 UniqueChars
@@ -1012,18 +1125,8 @@ Statistics::Statistics(JSRuntime* rt)
 
 Statistics::~Statistics()
 {
-    if (fp) {
-        StatisticsSerializer ss(StatisticsSerializer::AsText);
-        FormatPhaseTimes(ss, "", phaseTotals);
-        char* msg = ss.finishCString();
-        if (msg) {
-            fprintf(fp, "TOTALS\n%s\n\n-------\n", msg);
-            js_free(msg);
-        }
-
-        if (fp != stdout && fp != stderr)
-            fclose(fp);
-    }
+    if (fp && fp != stdout && fp != stderr)
+        fclose(fp);
 }
 
 JS::GCSliceCallback
@@ -1314,7 +1417,7 @@ Statistics::endSCC(unsigned scc, int64_t start)
  * as long as the total time it spends is at most 10ms.
  */
 double
-Statistics::computeMMU(int64_t window)
+Statistics::computeMMU(int64_t window) const
 {
     MOZ_ASSERT(!slices.empty());
 
