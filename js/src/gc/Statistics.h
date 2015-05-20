@@ -232,6 +232,9 @@ struct Statistics
     SliceRange sliceRange() const { return slices.all(); }
     size_t slicesLength() const { return slices.length(); }
 
+    /* Create a convenient typedef for referring tables of phase times. */
+    typedef int64_t (*PhaseTimeTable)[PHASE_LIMIT];
+
   private:
     JSRuntime* runtime;
 
@@ -314,7 +317,7 @@ struct Statistics
     UniqueChars formatDescription();
     UniqueChars formatSliceDescription(unsigned i, const SliceData& slice);
     UniqueChars formatTotals();
-    UniqueChars formatPhaseTimes(int64_t (*phaseTimes)[PHASE_LIMIT]);
+    UniqueChars formatPhaseTimes(PhaseTimeTable phaseTimes);
 
     double computeMMU(int64_t resolution);
 };

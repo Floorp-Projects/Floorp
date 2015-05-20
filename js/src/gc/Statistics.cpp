@@ -397,7 +397,7 @@ struct AllPhaseIterator {
     size_t activeSlot;
     mozilla::Vector<Phase>::Range descendants;
 
-    explicit AllPhaseIterator(int64_t (*table)[PHASE_LIMIT])
+    explicit AllPhaseIterator(Statistics::PhaseTimeTable table)
       : current(0)
       , baseLevel(0)
       , activeSlot(PHASE_DAG_NONE)
@@ -444,7 +444,7 @@ struct AllPhaseIterator {
 };
 
 static void
-FormatPhaseTimes(StatisticsSerializer& ss, const char* name, int64_t (*times)[PHASE_LIMIT])
+FormatPhaseTimes(StatisticsSerializer& ss, const char* name, Statistics::PhaseTimeTable times)
 {
     ss.beginObject(name);
 
@@ -674,7 +674,7 @@ Statistics::formatTotals()
 }
 
 static int64_t
-SumChildTimes(size_t phaseSlot, Phase phase, int64_t (*phaseTimes)[PHASE_LIMIT])
+SumChildTimes(size_t phaseSlot, Phase phase, Statistics::PhaseTimeTable phaseTimes)
 {
     // Sum the contributions from single-parented children.
     int64_t total = 0;
@@ -697,7 +697,7 @@ SumChildTimes(size_t phaseSlot, Phase phase, int64_t (*phaseTimes)[PHASE_LIMIT])
 }
 
 UniqueChars
-Statistics::formatPhaseTimes(int64_t (*phaseTimes)[PHASE_LIMIT])
+Statistics::formatPhaseTimes(PhaseTimeTable phaseTimes)
 {
     static const char* LevelToIndent[] = { "", "  ", "    ", "      " };
     static const int64_t MaxUnaccountedChildTimeUS = 50;
@@ -900,7 +900,7 @@ Statistics::getMaxGCPauseSinceClear()
 }
 
 static int64_t
-SumPhase(Phase phase, int64_t (*times)[PHASE_LIMIT])
+SumPhase(Phase phase, Statistics::PhaseTimeTable times)
 {
     int64_t sum = 0;
     for (size_t i = 0; i < Statistics::MAX_MULTIPARENT_PHASES + 1; i++)
