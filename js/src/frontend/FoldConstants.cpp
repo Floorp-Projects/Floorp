@@ -402,7 +402,6 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_FALSE:
       case PNK_NULL:
       case PNK_THIS:
-      case PNK_LETEXPR:
       case PNK_ELISION:
       case PNK_NUMBER:
       case PNK_NEW:
