@@ -977,7 +977,6 @@ test("let ( x = 1, y = 2 ) { @");
 test("let ( x = 1, y = 2 ) { x @");
 test("let ( x = 1, y = 2 ) { x; @");
 test("let ( x = 1, y = 2 ) { x; } @");
-test_no_strict("let ( x = 1, y = 2 ) x @");
 
 // Expression closures
 
@@ -1013,22 +1012,6 @@ test("for each (let x @");
 test("for each (let x in @");
 test("for each (let x in y @");
 test("for each (let x in y) @");
-
-// let expression
-
-test("(let @");
-test("(let ( @");
-test("(let ( x @");
-test("(let ( x = @");
-test("(let ( x = 1 @");
-test("(let ( x = 1, @");
-test("(let ( x = 1, y @");
-test("(let ( x = 1, y = @");
-test("(let ( x = 1, y = 2 @");
-test("(let ( x = 1, y = 2 ) @");
-test("(let ( x = 1, y = 2 ) x @");
-test("(let ( x = 1, y = 2 ) x) @");
-test("(let ( x = 1, y = 2 ) x); @");
 
 // Legacy array comprehensions
 
