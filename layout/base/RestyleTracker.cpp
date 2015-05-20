@@ -109,7 +109,8 @@ public:
     }
   }
 
-  virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker) override
+  virtual void AddDetails(JSContext* aCx,
+                          mozilla::dom::ProfileTimelineMarker& aMarker) override
   {
     if (GetMetaData() == TRACING_INTERVAL_START) {
       aMarker.mRestyleHint.Construct(mRestyleHint);
