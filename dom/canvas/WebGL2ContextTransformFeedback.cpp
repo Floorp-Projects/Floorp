@@ -60,7 +60,7 @@ WebGL2Context::IsTransformFeedback(WebGLTransformFeedback* tf)
         return false;
 
     MakeContextCurrent();
-    return gl->fIsTransformFeedback(tf->GLName());
+    return gl->fIsTransformFeedback(tf->mGLName);
 }
 
 void
@@ -84,11 +84,8 @@ WebGL2Context::BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf)
     if (tf && tf->IsDeleted())
         return ErrorInvalidOperation("bindTransformFeedback: Attempt to bind deleted id");
 
-    if (tf)
-        tf->BindTo(LOCAL_GL_TRANSFORM_FEEDBACK);
-
     MakeContextCurrent();
-    gl->fBindTransformFeedback(target, tf ? tf->GLName() : 0);
+    gl->fBindTransformFeedback(target, tf ? tf->mGLName : 0);
     if (tf)
         mBoundTransformFeedback = tf;
     else
