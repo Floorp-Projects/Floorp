@@ -31,7 +31,7 @@ interface nsITagNDEFInfo : nsISupports
   readonly attribute boolean isFormatable;
 };
 
-[scriptable, uuid(151b4024-0443-434f-99ca-47ec247508ce)]
+[scriptable, uuid(86e46a0c-016d-4e5d-9fb5-789eb71848a1)]
 interface nsINfcEventListener : nsISupports
 {
   /**
@@ -92,6 +92,11 @@ interface nsINfcEventListener : nsISupports
    *        focus value receveid from parent process.
    */
   void notifyFocusChanged(in boolean focus);
+
+  /**
+   * The window object of this event listener.
+   */
+  readonly attribute nsIDOMWindow window;
 };
 
 [scriptable, uuid(6c913015-9658-46a9-88d9-6ecfda2bd020)]
