@@ -212,9 +212,6 @@ CurrentThreadIsIonCompiling();
 
 bool
 CurrentThreadIsGCSweeping();
-
-bool
-CurrentThreadIsHandlingInitFailure();
 #endif
 
 namespace gc {
@@ -442,9 +439,8 @@ class HeapPtr : public BarrieredBase<T>
     explicit HeapPtr(const HeapPtr<T>& v) : BarrieredBase<T>(v) { post(); }
 #ifdef DEBUG
     ~HeapPtr() {
-        // No prebarrier necessary as this only happens when we are sweeping or
-        // before the containing obect becomes part of the GC graph.
-        MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadIsHandlingInitFailure());
+        // No prebarrier necessary as this only happens when we are sweeping.
+        MOZ_ASSERT(CurrentThreadIsGCSweeping());
     }
 #endif
 

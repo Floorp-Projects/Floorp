@@ -2030,22 +2030,18 @@ BacktrackingAllocator::populateSafepoints()
                     safepoint->addGcPointer(a);
                     break;
                   case LDefinition::SLOTS:
-                    if (!safepoint->addSlotsOrElementsPointer(a))
-                        return false;
+                    safepoint->addSlotsOrElementsPointer(a);
                     break;
 #ifdef JS_NUNBOX32
                   case LDefinition::TYPE:
-                    if (!safepoint->addNunboxType(i, a))
-                        return false;
+                    safepoint->addNunboxType(i, a);
                     break;
                   case LDefinition::PAYLOAD:
-                    if (!safepoint->addNunboxPayload(i, a))
-                        return false;
+                    safepoint->addNunboxPayload(i, a);
                     break;
 #else
                   case LDefinition::BOX:
-                    if (!safepoint->addBoxedValue(a))
-                        return false;
+                    safepoint->addBoxedValue(a);
                     break;
 #endif
                   default:
