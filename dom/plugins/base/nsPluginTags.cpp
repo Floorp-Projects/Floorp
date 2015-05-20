@@ -22,8 +22,10 @@
 #include <cctype>
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/FakePluginTagInitBinding.h"
 
 using mozilla::dom::EncodingUtils;
+using mozilla::dom::FakePluginTagInit;
 using namespace mozilla;
 
 // These legacy flags are used in the plugin registry. The states are now
@@ -785,6 +787,43 @@ NS_INTERFACE_TABLE_HEAD(nsFakePluginTag)
     NS_INTERFACE_TABLE_ENTRY(nsFakePluginTag, nsIFakePluginTag)
   NS_INTERFACE_TABLE_END
 NS_INTERFACE_TABLE_TAIL
+
+/* static */
+nsresult
+nsFakePluginTag::Create(const FakePluginTagInit& aInitDictionary,
+                        nsFakePluginTag** aPluginTag)
+{
+  NS_ENSURE_TRUE(!aInitDictionary.mMimeEntries.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  nsRefPtr<nsFakePluginTag> tag = new nsFakePluginTag();
+  nsresult rv = NS_NewURI(getter_AddRefs(tag->mHandlerURI),
+                          aInitDictionary.mHandlerURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  CopyUTF16toUTF8(aInitDictionary.mNiceName, tag->mNiceName);
+  CopyUTF16toUTF8(aInitDictionary.mFullPath, tag->mFullPath);
+  CopyUTF16toUTF8(aInitDictionary.mName, tag->mName);
+  CopyUTF16toUTF8(aInitDictionary.mDescription, tag->mDescription);
+  CopyUTF16toUTF8(aInitDictionary.mFileName, tag->mFileName);
+  CopyUTF16toUTF8(aInitDictionary.mVersion, tag->mVersion);
+
+  for (const FakePluginMimeEntry& mimeEntry : aInitDictionary.mMimeEntries) {
+    CopyUTF16toUTF8(mimeEntry.mType, *tag->mMimeTypes.AppendElement());
+    CopyUTF16toUTF8(mimeEntry.mDescription,
+                    *tag->mMimeDescriptions.AppendElement());
+    CopyUTF16toUTF8(mimeEntry.mExtension, *tag->mExtensions.AppendElement());
+  }
+
+  tag.forget(aPluginTag);
+  return NS_OK;
+}
+
+bool
+nsFakePluginTag::HandlerURIMatches(nsIURI* aURI)
+{
+  bool equals = false;
+  return NS_SUCCEEDED(mHandlerURI->Equals(aURI, &equals)) && equals;
+}
 
 NS_IMETHODIMP
 nsFakePluginTag::GetHandlerURI(nsIURI **aResult)
