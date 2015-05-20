@@ -1167,6 +1167,7 @@ add_task(function* test_savedSessionData() {
   // Write test data to the session data file.
   const dataFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
   const sessionState = {
+    sessionId: null,
     subsessionId: null,
     profileSubsessionCounter: 3785,
   };
