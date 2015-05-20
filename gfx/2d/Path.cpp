@@ -10,42 +10,30 @@
 namespace mozilla {
 namespace gfx {
 
-static double CubicRoot(double aValue) {
+static float CubicRoot(float aValue) {
   if (aValue < 0.0) {
     return -CubicRoot(-aValue);
   }
   else {
-    return pow(aValue, 1.0 / 3.0);
+    return powf(aValue, 1.0f / 3.0f);
   }
 }
-
-struct PointD : public BasePoint<double, PointD> {
-  typedef BasePoint<double, PointD> Super;
-
-  PointD() : Super() {}
-  PointD(double aX, double aY) : Super(aX, aY) {}
-  MOZ_IMPLICIT PointD(const Point& aPoint) : Super(aPoint.x, aPoint.y) {}
-
-  Point ToPoint() const {
-    return Point(static_cast<Float>(x), static_cast<Float>(y));
-  }
-};
 
 struct BezierControlPoints
 {
   BezierControlPoints() {}
-  BezierControlPoints(const PointD &aCP1, const PointD &aCP2,
-                      const PointD &aCP3, const PointD &aCP4)
+  BezierControlPoints(const Point &aCP1, const Point &aCP2,
+                      const Point &aCP3, const Point &aCP4)
     : mCP1(aCP1), mCP2(aCP2), mCP3(aCP3), mCP4(aCP4)
   {
   }
 
-  PointD mCP1, mCP2, mCP3, mCP4;
+  Point mCP1, mCP2, mCP3, mCP4;
 };
 
 void
 FlattenBezier(const BezierControlPoints &aPoints,
-              PathSink *aSink, double aTolerance);
+              PathSink *aSink, Float aTolerance);
 
 
 Path::Path()
@@ -217,18 +205,18 @@ static void
 SplitBezier(const BezierControlPoints &aControlPoints,
             BezierControlPoints *aFirstSegmentControlPoints,
             BezierControlPoints *aSecondSegmentControlPoints,
-            double t)
+            Float t)
 {
   MOZ_ASSERT(aSecondSegmentControlPoints);
   
   *aSecondSegmentControlPoints = aControlPoints;
 
-  PointD cp1a = aControlPoints.mCP1 + (aControlPoints.mCP2 - aControlPoints.mCP1) * t;
-  PointD cp2a = aControlPoints.mCP2 + (aControlPoints.mCP3 - aControlPoints.mCP2) * t;
-  PointD cp1aa = cp1a + (cp2a - cp1a) * t;
-  PointD cp3a = aControlPoints.mCP3 + (aControlPoints.mCP4 - aControlPoints.mCP3) * t;
-  PointD cp2aa = cp2a + (cp3a - cp2a) * t;
-  PointD cp1aaa = cp1aa + (cp2aa - cp1aa) * t;
+  Point cp1a = aControlPoints.mCP1 + (aControlPoints.mCP2 - aControlPoints.mCP1) * t;
+  Point cp2a = aControlPoints.mCP2 + (aControlPoints.mCP3 - aControlPoints.mCP2) * t;
+  Point cp1aa = cp1a + (cp2a - cp1a) * t;
+  Point cp3a = aControlPoints.mCP3 + (aControlPoints.mCP4 - aControlPoints.mCP3) * t;
+  Point cp2aa = cp2a + (cp3a - cp2a) * t;
+  Point cp1aaa = cp1aa + (cp2aa - cp1aa) * t;
   aSecondSegmentControlPoints->mCP4 = aControlPoints.mCP4;
 
   if(aFirstSegmentControlPoints) {
@@ -245,7 +233,7 @@ SplitBezier(const BezierControlPoints &aControlPoints,
 static void
 FlattenBezierCurveSegment(const BezierControlPoints &aControlPoints,
                           PathSink *aSink,
-                          double aTolerance)
+                          Float aTolerance)
 {
   /* The algorithm implemented here is based on:
    * http://cis.usouthal.edu/~hain/general/Publications/Bezier/Bezier%20Offset%20Curves.pdf
@@ -257,37 +245,38 @@ FlattenBezierCurveSegment(const BezierControlPoints &aControlPoints,
    */
   BezierControlPoints currentCP = aControlPoints;
 
-  double t = 0;
-  while (t < 1.0) {
-    PointD cp21 = currentCP.mCP2 - currentCP.mCP3;
-    PointD cp31 = currentCP.mCP3 - currentCP.mCP1;
+  Float t = 0;
+  while (t < 1.0f) {
+    Point cp21 = currentCP.mCP2 - currentCP.mCP3;
+    Point cp31 = currentCP.mCP3 - currentCP.mCP1;
 
-    double s3 = (cp31.x * cp21.y - cp31.y * cp21.x) / hypot(cp21.x, cp21.y);
+    Float s3 = (cp31.x * cp21.y - cp31.y * cp21.x) / hypotf(cp21.x, cp21.y);
 
-    t = 2 * sqrt(aTolerance / (3. * std::abs(s3)));
+    t = 2 * Float(sqrt(aTolerance / (3. * std::abs(s3))));
 
-    if (t >= 1.0) {
-      aSink->LineTo(aControlPoints.mCP4.ToPoint());
+    if (t >= 1.0f) {
+      aSink->LineTo(aControlPoints.mCP4);
       break;
     }
 
+    Point prevCP2, prevCP3, nextCP1, nextCP2, nextCP3;
     SplitBezier(currentCP, nullptr, &currentCP, t);
 
-    aSink->LineTo(currentCP.mCP1.ToPoint());
+    aSink->LineTo(currentCP.mCP1);
   }
 }
 
 static inline void
 FindInflectionApproximationRange(BezierControlPoints aControlPoints,
-                                 double *aMin, double *aMax, double aT,
-                                 double aTolerance)
+                                 Float *aMin, Float *aMax, Float aT,
+                                 Float aTolerance)
 {
     SplitBezier(aControlPoints, nullptr, &aControlPoints, aT);
 
-    PointD cp21 = aControlPoints.mCP2 - aControlPoints.mCP1;
-    PointD cp41 = aControlPoints.mCP4 - aControlPoints.mCP1;
+    Point cp21 = aControlPoints.mCP2 - aControlPoints.mCP1;
+    Point cp41 = aControlPoints.mCP4 - aControlPoints.mCP1;
 
-    if (cp21.x == 0. && cp21.y == 0.) {
+    if (cp21.x == 0.f && cp21.y == 0.f) {
       // In this case s3 becomes lim[n->0] (cp41.x * n) / n - (cp41.y * n) / n = cp41.x - cp41.y.
 
       // Use the absolute value so that Min and Max will correspond with the
@@ -297,18 +286,18 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
       return;
     }
 
-    double s3 = (cp41.x * cp21.y - cp41.y * cp21.x) / hypot(cp21.x, cp21.y);
+    Float s3 = (cp41.x * cp21.y - cp41.y * cp21.x) / hypotf(cp21.x, cp21.y);
 
     if (s3 == 0) {
       // This means within the precision we have it can be approximated
       // infinitely by a linear segment. Deal with this by specifying the
       // approximation range as extending beyond the entire curve.
-      *aMin = -1.0;
-      *aMax = 2.0;
+      *aMin = -1.0f;
+      *aMax = 2.0f;
       return;
     }
 
-    double tf = CubicRoot(std::abs(aTolerance / s3));
+    Float tf = CubicRoot(std::abs(aTolerance / s3));
 
     *aMin = aT - tf * (1 - aT);
     *aMax = aT + tf * (1 - aT);
@@ -367,18 +356,18 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
  */
 static inline void
 FindInflectionPoints(const BezierControlPoints &aControlPoints,
-                     double *aT1, double *aT2, uint32_t *aCount)
+                     Float *aT1, Float *aT2, uint32_t *aCount)
 {
   // Find inflection points.
   // See www.faculty.idc.ac.il/arik/quality/appendixa.html for an explanation
   // of this approach.
-  PointD A = aControlPoints.mCP2 - aControlPoints.mCP1;
-  PointD B = aControlPoints.mCP3 - (aControlPoints.mCP2 * 2) + aControlPoints.mCP1;
-  PointD C = aControlPoints.mCP4 - (aControlPoints.mCP3 * 3) + (aControlPoints.mCP2 * 3) - aControlPoints.mCP1;
+  Point A = aControlPoints.mCP2 - aControlPoints.mCP1;
+  Point B = aControlPoints.mCP3 - (aControlPoints.mCP2 * 2) + aControlPoints.mCP1;
+  Point C = aControlPoints.mCP4 - (aControlPoints.mCP3 * 3) + (aControlPoints.mCP2 * 3) - aControlPoints.mCP1;
 
-  double a = B.x * C.y - B.y * C.x;
-  double b = A.x * C.y - A.y * C.x;
-  double c = A.x * B.y - A.y * B.x;
+  Float a = Float(B.x) * C.y - Float(B.y) * C.x;
+  Float b = Float(A.x) * C.y - Float(A.y) * C.x;
+  Float c = Float(A.x) * B.y - Float(A.y) * B.x;
 
   if (a == 0) {
     // Not a quadratic equation.
@@ -402,7 +391,7 @@ FindInflectionPoints(const BezierControlPoints &aControlPoints,
     *aCount = 1;
     return;
   } else {
-    double discriminant = b * b - 4 * a * c;
+    Float discriminant = b * b - 4 * a * c;
 
     if (discriminant < 0) {
       // No inflection points.
@@ -417,13 +406,13 @@ FindInflectionPoints(const BezierControlPoints &aControlPoints,
        * t1 = q / a
        * t2 = c / q
        */
-      double q = sqrt(discriminant);
+      Float q = sqrtf(discriminant);
       if (b < 0) {
         q = b - q;
       } else {
         q = b + q;
       }
-      q *= -1./2;
+      q *= Float(-1./2);
 
       *aT1 = q / a;
       *aT2 = c / q;
@@ -439,10 +428,10 @@ FindInflectionPoints(const BezierControlPoints &aControlPoints,
 
 void
 FlattenBezier(const BezierControlPoints &aControlPoints,
-              PathSink *aSink, double aTolerance)
+              PathSink *aSink, Float aTolerance)
 {
-  double t1;
-  double t2;
+  Float t1;
+  Float t2;
   uint32_t count;
 
   FindInflectionPoints(aControlPoints, &t1, &t2, &count);
@@ -453,7 +442,7 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
     return;
   }
 
-  double t1min = t1, t1max = t1, t2min = t2, t2max = t2;
+  Float t1min = t1, t1max = t1, t2min = t2, t2max = t2;
 
   BezierControlPoints remainingCP = aControlPoints;
 
@@ -472,7 +461,7 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
   // segments.
   if (count == 1 && t1min <= 0 && t1max >= 1.0) {
     // The whole range can be approximated by a line segment.
-    aSink->LineTo(aControlPoints.mCP4.ToPoint());
+    aSink->LineTo(aControlPoints.mCP4);
     return;
   }
 
@@ -489,7 +478,7 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
     // subsequently flatten up until the end or the next inflection point.
     SplitBezier(aControlPoints, nullptr, &nextCPs, t1max);
 
-    aSink->LineTo(nextCPs.mCP1.ToPoint());
+    aSink->LineTo(nextCPs.mCP1);
 
     if (count == 1 || (count > 1 && t2min >= 1.0)) {
       // No more inflection points to deal with, flatten the rest of the curve.
@@ -499,7 +488,7 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
     // We've already concluded t2min <= t1max, so if this is true the
     // approximation range for the first inflection point runs past the
     // end of the curve, draw a line to the end and we're done.
-    aSink->LineTo(aControlPoints.mCP4.ToPoint());
+    aSink->LineTo(aControlPoints.mCP4);
     return;
   }
 
@@ -508,12 +497,12 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
       // In this case the t2 approximation range starts inside the t1
       // approximation range.
       SplitBezier(aControlPoints, nullptr, &nextCPs, t1max);
-      aSink->LineTo(nextCPs.mCP1.ToPoint());
+      aSink->LineTo(nextCPs.mCP1);
     } else if (t2min > 0 && t1max > 0) {
       SplitBezier(aControlPoints, nullptr, &nextCPs, t1max);
 
       // Find a control points describing the portion of the curve between t1max and t2min.
-      double t2mina = (t2min - t1max) / (1 - t1max);
+      Float t2mina = (t2min - t1max) / (1 - t1max);
       SplitBezier(nextCPs, &prevCPs, &nextCPs, t2mina);
       FlattenBezierCurveSegment(prevCPs, aSink, aTolerance);
     } else if (t2min > 0) {
@@ -527,11 +516,11 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
 
       // Draw a line to the start, this is the approximation between t2min and
       // t2max.
-      aSink->LineTo(nextCPs.mCP1.ToPoint());
+      aSink->LineTo(nextCPs.mCP1);
       FlattenBezierCurveSegment(nextCPs, aSink, aTolerance);
     } else {
       // Our approximation range extends beyond the end of the curve.
-      aSink->LineTo(aControlPoints.mCP4.ToPoint());
+      aSink->LineTo(aControlPoints.mCP4);
       return;
     }
   }
