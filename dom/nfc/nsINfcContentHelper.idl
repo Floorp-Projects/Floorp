@@ -124,7 +124,7 @@ interface nsINfcBrowserAPI : nsISupports
                    in boolean isFocus);
 };
 
-[scriptable, uuid(9cf841c9-0347-4564-99e5-18c0f74eca4d)]
+[scriptable, uuid(080a84f1-f039-46ed-9dc6-f34ce3aa9638)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
@@ -233,8 +233,10 @@ interface nsINfcContentHelper : nsISupports
    *
    * @param listener
    *        An instance of the nsINfcEventListener.
+   * @param tabId
+   *        The tab ID of the listener.
    */
-  void addEventListener(in nsINfcEventListener listener);
+  void addEventListener(in nsINfcEventListener listener, in uint64_t tabId);
 
   /**
    * Register the given application id with parent process
