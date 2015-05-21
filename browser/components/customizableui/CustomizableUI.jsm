@@ -304,6 +304,13 @@ let CustomizableUIInternal = {
     // We should still enter even if gSavedState.currentVersion >= kVersion
     // because the per-widget pref facility is independent of versioning.
     if (!gSavedState) {
+      // Flip all the prefs so we don't try to re-introduce later:
+      for (let [id, widget] of gPalette) {
+        if (widget.defaultArea && widget._introducedInVersion === "pref") {
+          let prefId = "browser.toolbarbuttons.introduced." + widget.id;
+          Services.prefs.setBoolPref(prefId, true);
+        }
+      }
       return;
     }
 
