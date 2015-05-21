@@ -92,6 +92,8 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
 PuppetWidget::~PuppetWidget()
 {
   MOZ_COUNT_DTOR(PuppetWidget);
+
+  Destroy();
 }
 
 NS_IMETHODIMP
