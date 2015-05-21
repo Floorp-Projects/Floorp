@@ -31,7 +31,7 @@ extern PRLogModuleInfo* gMediaPromiseLog;
 
 #define PROMISE_LOG(x, ...) \
   MOZ_ASSERT(gMediaPromiseLog); \
-  PR_LOG(gMediaPromiseLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
+  MOZ_LOG(gMediaPromiseLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
 
 /*
  * A promise manages an asynchronous request that may or may not be able to be

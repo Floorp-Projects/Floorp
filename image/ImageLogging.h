@@ -24,7 +24,7 @@ public:
     , mFrom(aFrom)
     , mFunc(aFunc)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {ENTER}\n",
+    MOZ_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {ENTER}\n",
                                 GIVE_ME_MS_NOW(), mFrom, mFunc));
   }
 
@@ -35,7 +35,7 @@ public:
     , mFrom(from)
     , mFunc(fn)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\") {ENTER}\n",
+    MOZ_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\") {ENTER}\n",
                                  GIVE_ME_MS_NOW(), mFrom, mFunc,
                                  paramName, paramValue));
   }
@@ -47,7 +47,7 @@ public:
     , mFrom(from)
     , mFunc(fn)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=%p) {ENTER}\n",
+    MOZ_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=%p) {ENTER}\n",
                                 GIVE_ME_MS_NOW(), mFrom, mFunc,
                                 paramName, paramValue));
   }
@@ -59,7 +59,7 @@ public:
     , mFrom(from)
     , mFunc(fn)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
+    MOZ_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
                                 GIVE_ME_MS_NOW(), mFrom, mFunc,
                                 paramName, paramValue));
   }
@@ -71,14 +71,14 @@ public:
     , mFrom(from)
     , mFunc(fn)
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
+    MOZ_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
                                 GIVE_ME_MS_NOW(), mFrom, mFunc,
                                 paramName, paramValue));
   }
 
   ~LogScope()
   {
-    PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {EXIT}\n",
+    MOZ_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {EXIT}\n",
                                 GIVE_ME_MS_NOW(), mFrom, mFunc));
   }
 
@@ -92,14 +92,14 @@ class LogFunc {
 public:
   LogFunc(PRLogModuleInfo* aLog, void* from, const char* fn)
   {
-    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s\n",
+    MOZ_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s\n",
                                 GIVE_ME_MS_NOW(), from, fn));
   }
 
   LogFunc(PRLogModuleInfo* aLog, void* from, const char* fn,
           const char* paramName, const char* paramValue)
   {
-    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\")\n",
+    MOZ_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\")\n",
                                 GIVE_ME_MS_NOW(), from, fn,
                                 paramName, paramValue));
   }
@@ -107,7 +107,7 @@ public:
   LogFunc(PRLogModuleInfo* aLog, void* from, const char* fn,
           const char* paramName, const void* paramValue)
   {
-    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%p\")\n",
+    MOZ_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%p\")\n",
                                 GIVE_ME_MS_NOW(), from, fn,
                                 paramName, paramValue));
   }
@@ -116,7 +116,7 @@ public:
   LogFunc(PRLogModuleInfo* aLog, void* from, const char* fn,
           const char* paramName, uint32_t paramValue)
   {
-    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\")\n",
+    MOZ_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\")\n",
                                 GIVE_ME_MS_NOW(), from, fn,
                                 paramName, paramValue));
   }
@@ -129,7 +129,7 @@ public:
   LogMessage(PRLogModuleInfo* aLog, void* from, const char* fn,
              const char* msg)
   {
-    PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s -- %s\n",
+    MOZ_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s -- %s\n",
                                 GIVE_ME_MS_NOW(), from, fn, msg));
   }
 };

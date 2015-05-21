@@ -853,7 +853,7 @@ RDFServiceImpl::GetResource(const nsACString& aURI, nsIRDFResource** aResource)
         return NS_ERROR_INVALID_ARG;
 
     const nsAFlatCString& flatURI = PromiseFlatCString(aURI);
-    PR_LOG(gLog, PR_LOG_DEBUG, ("rdfserv get-resource %s", flatURI.get()));
+    MOZ_LOG(gLog, PR_LOG_DEBUG, ("rdfserv get-resource %s", flatURI.get()));
 
     // First, check the cache to see if we've already created and
     // registered this thing.
@@ -1152,7 +1152,7 @@ RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, bool aReplace)
         // only ever held a weak reference to it. We simply replace
         // it.
 
-        PR_LOG(gLog, PR_LOG_DEBUG,
+        MOZ_LOG(gLog, PR_LOG_DEBUG,
                ("rdfserv   replace-resource [%p] <-- [%p] %s",
                 static_cast<ResourceHashEntry *>(hdr)->mResource,
                 aResource, (const char*) uri));
@@ -1162,7 +1162,7 @@ RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, bool aReplace)
         if (! hdr)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        PR_LOG(gLog, PR_LOG_DEBUG,
+        MOZ_LOG(gLog, PR_LOG_DEBUG,
                ("rdfserv   register-resource [%p] %s",
                 aResource, (const char*) uri));
     }
@@ -1195,7 +1195,7 @@ RDFServiceImpl::UnregisterResource(nsIRDFResource* aResource)
     if (! uri)
         return NS_ERROR_UNEXPECTED;
 
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv unregister-resource [%p] %s",
             aResource, (const char*) uri));
 
@@ -1231,7 +1231,7 @@ RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, bool aReplace)
         // N.B., we only hold a weak reference to the datasource, so
         // just replace the old with the new and don't touch any
         // refcounts.
-        PR_LOG(gLog, PR_LOG_NOTICE,
+        MOZ_LOG(gLog, PR_LOG_NOTICE,
                ("rdfserv    replace-datasource [%p] <-- [%p] %s",
                 (*hep)->value, aDataSource, (const char*) uri));
 
@@ -1244,7 +1244,7 @@ RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, bool aReplace)
 
         PL_HashTableAdd(mNamedDataSources, key, aDataSource);
 
-        PR_LOG(gLog, PR_LOG_NOTICE,
+        MOZ_LOG(gLog, PR_LOG_NOTICE,
                ("rdfserv   register-datasource [%p] %s",
                 aDataSource, (const char*) uri));
 
@@ -1284,7 +1284,7 @@ RDFServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
     // don't release here.
     PL_HashTableRawRemove(mNamedDataSources, hep, *hep);
 
-    PR_LOG(gLog, PR_LOG_NOTICE,
+    MOZ_LOG(gLog, PR_LOG_NOTICE,
            ("rdfserv unregister-datasource [%p] %s",
             aDataSource, (const char*) uri));
 
@@ -1408,7 +1408,7 @@ RDFServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral)
     entry->mLiteral = aLiteral;
     entry->mKey = value;
 
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv   register-literal [%p] %s",
             aLiteral, (const char16_t*) value));
 
@@ -1429,7 +1429,7 @@ RDFServiceImpl::UnregisterLiteral(nsIRDFLiteral* aLiteral)
 
     // N.B. that we _don't_ release the literal: we only held a weak
     // reference to it in the hashtable.
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv unregister-literal [%p] %s",
             aLiteral, (const char16_t*) value));
 
@@ -1460,7 +1460,7 @@ RDFServiceImpl::RegisterInt(nsIRDFInt* aInt)
     entry->mInt = aInt;
     entry->mKey = value;
 
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv   register-int [%p] %d",
             aInt, value));
 
@@ -1481,7 +1481,7 @@ RDFServiceImpl::UnregisterInt(nsIRDFInt* aInt)
 
     // N.B. that we _don't_ release the literal: we only held a weak
     // reference to it in the hashtable.
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv unregister-int [%p] %d",
             aInt, value));
 
@@ -1512,7 +1512,7 @@ RDFServiceImpl::RegisterDate(nsIRDFDate* aDate)
     entry->mDate = aDate;
     entry->mKey = value;
 
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv   register-date [%p] %ld",
             aDate, value));
 
@@ -1533,7 +1533,7 @@ RDFServiceImpl::UnregisterDate(nsIRDFDate* aDate)
 
     // N.B. that we _don't_ release the literal: we only held a weak
     // reference to it in the hashtable.
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv unregister-date [%p] %ld",
             aDate, value));
 
@@ -1558,7 +1558,7 @@ RDFServiceImpl::RegisterBlob(BlobImpl *aBlob)
     // made will be owned by the callee.
     entry->mBlob = aBlob;
 
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv   register-blob [%p] %s",
             aBlob, aBlob->mData.mBytes));
 
@@ -1575,7 +1575,7 @@ RDFServiceImpl::UnregisterBlob(BlobImpl *aBlob)
 
      // N.B. that we _don't_ release the literal: we only held a weak
      // reference to it in the hashtable.
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("rdfserv unregister-blob [%p] %s",
             aBlob, aBlob->mData.mBytes));
 

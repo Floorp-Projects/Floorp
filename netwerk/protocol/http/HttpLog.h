@@ -37,11 +37,11 @@
 extern PRLogModuleInfo *gHttpLog;
 
 // http logging
-#define LOG1(args) PR_LOG(gHttpLog, 1, args)
-#define LOG2(args) PR_LOG(gHttpLog, 2, args)
-#define LOG3(args) PR_LOG(gHttpLog, 3, args)
-#define LOG4(args) PR_LOG(gHttpLog, 4, args)
-#define LOG5(args) PR_LOG(gHttpLog, 5, args)
+#define LOG1(args) MOZ_LOG(gHttpLog, 1, args)
+#define LOG2(args) MOZ_LOG(gHttpLog, 2, args)
+#define LOG3(args) MOZ_LOG(gHttpLog, 3, args)
+#define LOG4(args) MOZ_LOG(gHttpLog, 4, args)
+#define LOG5(args) MOZ_LOG(gHttpLog, 5, args)
 #define LOG(args) LOG4(args)
 
 #define LOG1_ENABLED() PR_LOG_TEST(gHttpLog, 1)

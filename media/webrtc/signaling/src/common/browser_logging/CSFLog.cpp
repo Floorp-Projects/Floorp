@@ -82,7 +82,7 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   }
 
   vsnprintf(message, MAX_MESSAGE_LENGTH, format, args);
-  PR_LOG(gLogModuleInfo, level, ("[%s|%s] %s:%d: %s",
+  MOZ_LOG(gLogModuleInfo, level, ("[%s|%s] %s:%d: %s",
                                   threadName, tag, sourceFile, sourceLine,
                                   message));
 #endif

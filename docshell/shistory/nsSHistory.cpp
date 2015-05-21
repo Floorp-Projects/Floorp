@@ -68,7 +68,7 @@ GetSHistoryLog()
   }
   return sLog;
 }
-#define LOG(format) PR_LOG(GetSHistoryLog(), PR_LOG_DEBUG, format)
+#define LOG(format) MOZ_LOG(GetSHistoryLog(), PR_LOG_DEBUG, format)
 
 // This macro makes it easier to print a log message which includes a URI's
 // spec.  Example use:

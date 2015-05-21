@@ -1022,7 +1022,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     }
 
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
-      // Can't use PR_LOG(), b/c it truncates the line
+      // Can't use MOZ_LOG(), b/c it truncates the line
       fprintf(gRefcntsLog, "\n<%s> %p %" PRIuPTR " AddRef %" PRIuPTR "\n",
               aClass, aPtr, serialno, aRefcnt);
       nsTraceRefcnt::WalkTheStackCached(gRefcntsLog);
@@ -1069,7 +1069,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
 
     bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
-      // Can't use PR_LOG(), b/c it truncates the line
+      // Can't use MOZ_LOG(), b/c it truncates the line
       fprintf(gRefcntsLog,
               "\n<%s> %p %" PRIuPTR " Release %" PRIuPTR "\n",
               aClass, aPtr, serialno, aRefcnt);

@@ -163,7 +163,7 @@ Module gModules[] = {
 
 void tracefunc (void *aClosure, const char *aStmt)
 {
-  PR_LOG(gStorageLog, PR_LOG_DEBUG, ("sqlite3_trace on %p for '%s'", aClosure,
+  MOZ_LOG(gStorageLog, PR_LOG_DEBUG, ("sqlite3_trace on %p for '%s'", aClosure,
                                      aStmt));
 }
 
@@ -708,7 +708,7 @@ Connection::initializeInternal()
   if (PR_LOG_TEST(gStorageLog, PR_LOG_DEBUG)) {
     ::sqlite3_trace(mDBConn, tracefunc, this);
 
-    PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
+    MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Opening connection to '%s' (%p)",
                                         mTelemetryFilename.get(), this));
   }
 
@@ -938,7 +938,7 @@ Connection::internalClose(sqlite3 *aNativeConnection)
     nsAutoCString leafName(":memory");
     if (mDatabaseFile)
         (void)mDatabaseFile->GetNativeLeafName(leafName);
-    PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Closing connection to '%s'",
+    MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Closing connection to '%s'",
                                         leafName.get()));
   }
 
@@ -964,7 +964,7 @@ Connection::internalClose(sqlite3 *aNativeConnection)
 
     sqlite3_stmt *stmt = nullptr;
     while ((stmt = ::sqlite3_next_stmt(aNativeConnection, stmt))) {
-      PR_LOG(gStorageLog, PR_LOG_NOTICE,
+      MOZ_LOG(gStorageLog, PR_LOG_NOTICE,
              ("Auto-finalizing SQL statement '%s' (%x)",
               ::sqlite3_sql(stmt),
               stmt));
@@ -1114,7 +1114,7 @@ Connection::prepareStatement(sqlite3 *aNativeConnection, const nsCString &aSQL,
 #ifdef DEBUG
     NS_WARNING(warnMsg.get());
 #endif
-    PR_LOG(gStorageLog, PR_LOG_ERROR, ("%s", warnMsg.get()));
+    MOZ_LOG(gStorageLog, PR_LOG_ERROR, ("%s", warnMsg.get()));
   }
 
   (void)::sqlite3_extended_result_codes(aNativeConnection, 0);

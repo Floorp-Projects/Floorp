@@ -191,11 +191,11 @@ void AsyncLatencyLogger::WriteLog(LatencyLogIndex aIndex, uint64_t aID, int64_t 
                                   TimeStamp aTimeStamp)
 {
   if (aTimeStamp.IsNull()) {
-    PR_LOG(GetLatencyLog(), PR_LOG_DEBUG,
+    MOZ_LOG(GetLatencyLog(), PR_LOG_DEBUG,
       ("Latency: %s,%llu,%lld,%lld",
        LatencyLogIndex2Strings[aIndex], aID, GetTimeStamp(), aValue));
   } else {
-    PR_LOG(GetLatencyLog(), PR_LOG_DEBUG,
+    MOZ_LOG(GetLatencyLog(), PR_LOG_DEBUG,
       ("Latency: %s,%llu,%lld,%lld,%lld",
        LatencyLogIndex2Strings[aIndex], aID, GetTimeStamp(), aValue,
        static_cast<int64_t>((aTimeStamp - gAsyncLogger->mStart).ToMilliseconds())));

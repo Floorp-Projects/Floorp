@@ -251,7 +251,7 @@ Vacuumer::HandleError(mozIStorageError *aError)
     nsAutoCString message;
     rv = aError->GetMessage(message);
     NS_ENSURE_SUCCESS(rv, rv);
-    PR_LOG(gStorageLog, PR_LOG_ERROR,
+    MOZ_LOG(gStorageLog, PR_LOG_ERROR,
            ("Vacuum failed with error: %d '%s'. Database was: '%s'",
             result, message.get(), mDBFilename.get()));
   }
