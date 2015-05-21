@@ -1593,7 +1593,7 @@ nsDocument::nsDocument(const char* aContentType)
     gDocumentLeakPRLog = PR_NewLogModule("DocumentLeak");
 
   if (gDocumentLeakPRLog)
-    PR_LOG(gDocumentLeakPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gDocumentLeakPRLog, PR_LOG_DEBUG,
            ("DOCUMENT %p created", this));
 
   if (!gCspPRLog)
@@ -1637,7 +1637,7 @@ nsIDocument::~nsIDocument()
 nsDocument::~nsDocument()
 {
   if (gDocumentLeakPRLog)
-    PR_LOG(gDocumentLeakPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gDocumentLeakPRLog, PR_LOG_DEBUG,
            ("DOCUMENT %p destroyed", this));
 
   NS_ASSERTION(!mIsShowing, "Destroying a currently-showing document");
@@ -2771,7 +2771,7 @@ AppendCSPFromHeader(nsIContentSecurityPolicy* csp,
       rv = csp->AppendPolicy(policy, aReportOnly);
       NS_ENSURE_SUCCESS(rv, rv);
       {
-        PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+        MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
                 ("CSP refined with policy: \"%s\"",
                 NS_ConvertUTF16toUTF8(policy).get()));
       }
@@ -2811,7 +2811,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 {
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   if (!CSPService::sCSPEnabled) {
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSP is disabled, skipping CSP init for document %p", this));
     return NS_OK;
   }
@@ -2869,7 +2869,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
       aChannel->GetURI(getter_AddRefs(chanURI));
       nsAutoCString aspec;
       chanURI->GetAsciiSpec(aspec);
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+      MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
              ("no CSP for document, %s, %s",
               aspec.get(),
               applyAppDefaultCSP ? "is app" : "not an app"));
@@ -2878,7 +2878,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     return NS_OK;
   }
 
-  PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("Document is an app or CSP header specified %p", this));
+  MOZ_LOG(gCspPRLog, PR_LOG_DEBUG, ("Document is an app or CSP header specified %p", this));
 
   nsresult rv;
 
@@ -2897,7 +2897,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (csp) {
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("%s %s %s",
+      MOZ_LOG(gCspPRLog, PR_LOG_DEBUG, ("%s %s %s",
            "This document is sharing principal with another document.",
            "Since the document is an app, CSP was already set.",
            "Skipping attempt to set CSP."));
@@ -2908,7 +2908,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   csp = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
 
   if (NS_FAILED(rv)) {
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("Failed to create CSP object: %x", rv));
+    MOZ_LOG(gCspPRLog, PR_LOG_DEBUG, ("Failed to create CSP object: %x", rv));
     return rv;
   }
 
@@ -2961,7 +2961,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     rv = csp->PermitsAncestry(docShell, &safeAncestry);
 
     if (NS_FAILED(rv) || !safeAncestry) {
-      PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+      MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
               ("CSP doesn't like frame's ancestry, not loading."));
       // stop!  ERROR page!
       aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
@@ -2982,7 +2982,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     } else if (mReferrerPolicy != referrerPolicy) {
       mReferrerPolicy = mozilla::net::RP_No_Referrer;
       {
-        PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("%s %s",
+        MOZ_LOG(gCspPRLog, PR_LOG_DEBUG, ("%s %s",
                 "CSP wants to set referrer, but nsDocument"
                 "already has it set. No referrers will be sent"));
       }
@@ -2995,7 +2995,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 
   rv = principal->SetCsp(csp);
   NS_ENSURE_SUCCESS(rv, rv);
-  PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+  MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
          ("Inserted CSP into principal %p", principal));
 
   return NS_OK;

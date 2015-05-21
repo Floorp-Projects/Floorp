@@ -25,7 +25,7 @@
 namespace mozilla {
 
 PRLogModuleInfo* gMediaCacheLog;
-#define CACHE_LOG(type, msg) PR_LOG(gMediaCacheLog, type, msg)
+#define CACHE_LOG(type, msg) MOZ_LOG(gMediaCacheLog, type, msg)
 
 // Readahead blocks for non-seekable streams will be limited to this
 // fraction of the cache space. We don't normally evict such blocks

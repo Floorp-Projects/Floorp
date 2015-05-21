@@ -307,7 +307,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
     NS_IF_RELEASE(mDocumentURL);
 
     if (mContextStack) {
-        PR_LOG(gLog, PR_LOG_WARNING,
+        MOZ_LOG(gLog, PR_LOG_WARNING,
                ("rdfxml: warning! unclosed tag"));
 
         // XXX we should never need to do this, but, we'll write the
@@ -326,7 +326,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
             if (resource && PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
                 nsXPIDLCString uri;
                 resource->GetValue(getter_Copies(uri));
-                PR_LOG(gLog, PR_LOG_NOTICE,
+                MOZ_LOG(gLog, PR_LOG_NOTICE,
                        ("rdfxml:   uri=%s", (const char*) uri));
             }
 
@@ -421,7 +421,7 @@ RDFContentSinkImpl::HandleStartElement(const char16_t *aName,
       break;
 
   case eRDFContentSinkState_InEpilog:
-      PR_LOG(gLog, PR_LOG_WARNING,
+      MOZ_LOG(gLog, PR_LOG_WARNING,
              ("rdfxml: unexpected content in epilog at line %d",
               aLineNumber));
       break;
@@ -850,7 +850,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const char16_t** aAttributes,
         }
         else if (localName == kAboutEachAtom) {
             // XXX we don't deal with aboutEach...
-            //PR_LOG(gLog, PR_LOG_WARNING,
+            //MOZ_LOG(gLog, PR_LOG_WARNING,
             //       ("rdfxml: ignoring aboutEach at line %d",
             //        aNode.GetSourceLineNumber()));
         }
@@ -1039,7 +1039,7 @@ RDFContentSinkImpl::OpenRDF(const char16_t* aName)
         SplitExpatName(aName, getter_AddRefs(localName));
 
     if (!nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI) || localName != kRDFAtom) {
-       // PR_LOG(gLog, PR_LOG_ALWAYS,
+       // MOZ_LOG(gLog, PR_LOG_ALWAYS,
        //        ("rdfxml: expected RDF:RDF at line %d",
        //         aNode.GetSourceLineNumber()));
 
@@ -1213,7 +1213,7 @@ RDFContentSinkImpl::OpenMember(const char16_t* aName,
 
     if (!nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI) ||
         localName != kLiAtom) {
-        PR_LOG(gLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gLog, PR_LOG_ALWAYS,
                ("rdfxml: expected RDF:li at line %d",
                 -1)); // XXX pass in line number
 

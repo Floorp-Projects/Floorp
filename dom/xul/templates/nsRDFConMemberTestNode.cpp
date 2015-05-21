@@ -50,7 +50,7 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
         if (mMemberVariable)
             mMemberVariable->ToString(mvar);
 
-        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsRDFConMemberTestNode[%p]: parent=%p member-props=(%s) container-var=%s member-var=%s",
                 this,
                 aParent,
@@ -120,7 +120,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
             if (hasMemberBinding)
                 nsXULContentUtils::GetTextForNode(memberValue, member);
 
-            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("nsRDFConMemberTestNode[%p]: FilterInstantiations() container=[%s] member=[%s]",
                     this, container, NS_ConvertUTF16toUTF8(member).get()));
         }
@@ -168,7 +168,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 }
             }
 
-            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("    consistency check => %s", isconsistent ? "passed" : "failed"));
 
             if (isconsistent) {
@@ -219,7 +219,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                     nsAutoString member;
                     nsXULContentUtils::GetTextForNode(node, member);
 
-                    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                    MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                            ("    member => %s", NS_ConvertUTF16toUTF8(member).get()));
                 }
 
@@ -306,7 +306,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                             const char* container;
                             source->GetValueConst(&container);
 
-                            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                                    ("    container => %s", container));
                         }
 
@@ -376,7 +376,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                             nsAutoString s;
                             nsXULContentUtils::GetTextForNode(value, s);
 
-                            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                                    ("    member => %s", NS_ConvertUTF16toUTF8(s).get()));
                         }
                     }
@@ -393,7 +393,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                             const char* s;
                             valueRes->GetValueConst(&s);
 
-                            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                                    ("    container => %s", s));
                         }
                     }
@@ -476,7 +476,7 @@ nsRDFConMemberTestNode::CanPropagate(nsIRDFResource* aSource,
         nsAutoString target;
         nsXULContentUtils::GetTextForNode(aTarget, target);
 
-        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsRDFConMemberTestNode[%p]: CanPropagate([%s]==[%s]=>[%s]) => %s",
                 this, source, property, NS_ConvertUTF16toUTF8(target).get(),
                 canpropagate ? "true" : "false"));

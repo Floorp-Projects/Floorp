@@ -93,7 +93,7 @@
 
 // NSPR_LOG_MODULES=UrlClassifierDbService:5
 extern PRLogModuleInfo *gUrlClassifierDbServiceLog;
-#define LOG(args) PR_LOG(gUrlClassifierDbServiceLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gUrlClassifierDbServiceLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gUrlClassifierDbServiceLog, PR_LOG_DEBUG)
 
 // Either the return was successful or we call the Reset function (unless we
