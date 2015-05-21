@@ -28,9 +28,22 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
   "resource://gre/modules/UpdateChannel.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "eTLD",
+  "@mozilla.org/network/effective-tld-service;1",
+  "nsIEffectiveTLDService");
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
   return new TextDecoder();
 });
+XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function () {
+  return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+});
+XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = 'utf8';
+  return converter;
+});
+
 
 // The filename where directory links are stored locally
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
@@ -105,11 +118,17 @@ const DEFAULT_PRUNE_TIME_DELTA = 10*24*60*60*1000;
 // The min number of visible (not blocked) history tiles to have before showing suggested tiles
 const MIN_VISIBLE_HISTORY_TILES = 8;
 
+// The max number of visible (not blocked) history tiles to test for inadjacency
+const MAX_VISIBLE_HISTORY_TILES = 15;
+
 // Divide frecency by this amount for pings
 const PING_SCORE_DIVISOR = 10000;
 
 // Allowed ping actions remotely stored as columns: case-insensitive [a-z0-9_]
 const PING_ACTIONS = ["block", "click", "pin", "sponsored", "sponsored_link", "unpin", "view"];
+
+// Location of inadjacent sites json
+const INADJACENCY_SOURCE = "chrome://browser/content/newtab/newTab.inadjacent.json";
 
 /**
  * Singleton that serves as the provider of directory links.
@@ -147,6 +166,23 @@ let DirectoryLinksProvider = {
    * A set of top sites that we can provide suggested links for
    */
   _topSitesWithSuggestedLinks: new Set(),
+
+  /**
+   * lookup Set of inadjacent domains
+   */
+  _inadjacentSites: new Set(),
+
+  /**
+   * This flag is set if there is a suggested tile configured to avoid
+   * inadjacent sites in new tab
+   */
+  _avoidInadjacentSites: false,
+
+  /**
+   * This flag is set if _avoidInadjacentSites is true and there is
+   * an inadjacent site in the new tab
+   */
+  _newTabHasInadjacentSite: false,
 
   get _observedPrefs() Object.freeze({
     enhanced: PREF_NEWTAB_ENHANCED,
@@ -270,22 +306,26 @@ let DirectoryLinksProvider = {
     uri = uri.replace("%LOCALE%", this.locale);
     uri = uri.replace("%CHANNEL%", UpdateChannel.get());
 
+    return this._downloadJsonData(uri).then(json => {
+      return OS.File.writeAtomic(this._directoryFilePath, json, {tmpPath: this._directoryFilePath + ".tmp"});
+    });
+  },
+
+  /**
+   * Downloads a links with json content
+   * @param download uri
+   * @return promise resolved to json string, "{}" returned if status != 200
+   */
+  _downloadJsonData: function DirectoryLinksProvider__downloadJsonData(uri) {
     let deferred = Promise.defer();
     let xmlHttp = new XMLHttpRequest();
 
-    let self = this;
     xmlHttp.onload = function(aResponse) {
       let json = this.responseText;
       if (this.status && this.status != 200) {
         json = "{}";
       }
-      OS.File.writeAtomic(self._directoryFilePath, json, {tmpPath: self._directoryFilePath + ".tmp"})
-        .then(() => {
-          deferred.resolve();
-        },
-        () => {
-          deferred.reject("Error writing uri data in profD.");
-        });
+      deferred.resolve(json);
     };
 
     xmlHttp.onerror = function(e) {
@@ -596,6 +636,7 @@ let DirectoryLinksProvider = {
       this._enhancedLinks.clear();
       this._suggestedLinks.clear();
       this._clearCampaignTimeout();
+      this._avoidInadjacentSites = false;
 
       let validityFilter = function(link) {
         // Make sure the link url is allowed and images too if they exist
@@ -618,6 +659,10 @@ let DirectoryLinksProvider = {
         link.explanation = link.explanation ? ParserUtils.convertToPlainText(link.explanation, sanitizeFlags, 0) : "";
         link.targetedName = ParserUtils.convertToPlainText(link.adgroup_name, sanitizeFlags, 0) || name;
         link.lastVisitDate = rawLinks.suggested.length - position;
+        // check if link wants to avoid inadjacent sites
+        if (link.check_inadjacency) {
+          this._avoidInadjacentSites = true;
+        }
 
         // We cache suggested tiles here but do not push any of them in the links list yet.
         // The decision for which suggested tile to include will be made separately.
@@ -667,6 +712,8 @@ let DirectoryLinksProvider = {
 
     // setup frequency cap file path
     this._frequencyCapFilePath = OS.Path.join(OS.Constants.Path.localProfileDir, FREQUENCY_CAP_FILE);
+    // setup inadjacent sites URL
+    this._inadjacentSitesUrl = INADJACENCY_SOURCE;
 
     NewTabUtils.placesProvider.addObserver(this);
     NewTabUtils.links.addObserver(this);
@@ -682,6 +729,8 @@ let DirectoryLinksProvider = {
       yield this._readFrequencyCapFile();
       // fetch directory on startup without force
       yield this._fetchAndCacheLinksIfNecessary();
+      // fecth inadjacent sites on startup
+      yield this._loadInadjacentSites();
     }.bind(this));
   },
 
@@ -714,6 +763,13 @@ let DirectoryLinksProvider = {
       this._topSitesWithSuggestedLinks.add(changedLinkSite);
       return true;
     }
+
+    // always run _updateSuggestedTile if aLink is inadjacent
+    // and there are tiles configured to avoid it
+    if (this._avoidInadjacentSites && this._isInadjacentLink(aLink)) {
+      return true;
+    }
+
     return false;
   },
 
@@ -757,11 +813,17 @@ let DirectoryLinksProvider = {
 
   _getCurrentTopSiteCount: function() {
     let visibleTopSiteCount = 0;
-    for (let link of NewTabUtils.links.getLinks().slice(0, MIN_VISIBLE_HISTORY_TILES)) {
+    let newTabLinks = NewTabUtils.links.getLinks();
+    for (let link of newTabLinks.slice(0, MIN_VISIBLE_HISTORY_TILES)) {
+      // compute visibleTopSiteCount for suggested tiles
       if (link && (link.type == "history" || link.type == "enhanced")) {
         visibleTopSiteCount++;
       }
     }
+    // since newTabLinks are available, set _newTabHasInadjacentSite here
+    // note that _shouldUpdateSuggestedTile is called by _updateSuggestedTile
+    this._newTabHasInadjacentSite = this._avoidInadjacentSites && this._checkForInadjacentSites(newTabLinks);
+
     return visibleTopSiteCount;
   },
 
@@ -850,6 +912,11 @@ let DirectoryLinksProvider = {
           return;
         }
 
+        // Skip link if it avoids inadjacent sites and newtab has one
+        if (suggestedLink.check_inadjacency && this._newTabHasInadjacentSite) {
+          return;
+        }
+
         possibleLinks.set(url, suggestedLink);
 
         // Keep a map of URL to targeted sites. We later use this to show the user
@@ -890,6 +957,66 @@ let DirectoryLinksProvider = {
     }, chosenSuggestedLink));
     return chosenSuggestedLink;
    },
+
+  /**
+   * Loads inadjacent sites
+   * @return a promise resolved when lookup Set for sites is built
+   */
+  _loadInadjacentSites: function DirectoryLinksProvider_loadInadjacentSites() {
+    return this._downloadJsonData(this._inadjacentSitesUrl).then(jsonString => {
+      let jsonObject = {};
+      try {
+        jsonObject = JSON.parse(jsonString);
+      }
+      catch (e) {
+        Cu.reportError(e);
+      }
+
+      this._inadjacentSites = new Set(jsonObject.domains);
+    });
+  },
+
+  /**
+   * Genegrates hash suitable for looking up inadjacent site
+   * @param value to hsh
+   * @return hased value, base64-ed
+   */
+  _generateHash: function DirectoryLinksProvider_generateHash(value) {
+    let byteArr = gUnicodeConverter.convertToByteArray(value);
+    gCryptoHash.init(gCryptoHash.MD5);
+    gCryptoHash.update(byteArr, byteArr.length);
+    return gCryptoHash.finish(true);
+  },
+
+  /**
+   * Checks if link belongs to inadjacent domain
+   * @param link to check
+   * @return true for inadjacent domains, false otherwise
+   */
+  _isInadjacentLink: function DirectoryLinksProvider_isInadjacentLink(link) {
+    let baseDomain = link.baseDomain || NewTabUtils.extractSite(link.url || "");
+    if (!baseDomain) {
+        return false;
+    }
+    // check if hashed domain is inadjacent
+    return this._inadjacentSites.has(this._generateHash(baseDomain));
+  },
+
+  /**
+   * Checks if new tab has inadjacent site
+   * @param new tab links (or nothing, in which case NewTabUtils.links.getLinks() is called
+   * @return true if new tab shows has inadjacent site
+   */
+  _checkForInadjacentSites: function DirectoryLinksProvider_checkForInadjacentSites(newTabLink) {
+    let links = newTabLink || NewTabUtils.links.getLinks();
+    for (let link of links.slice(0, MAX_VISIBLE_HISTORY_TILES)) {
+      // check links against inadjacent list - specifically include ALL link types
+      if (this._isInadjacentLink(link)) {
+        return true;
+      }
+    }
+    return false;
+  },
 
   /**
    * Reads json file, parses its content, and returns resulting object
