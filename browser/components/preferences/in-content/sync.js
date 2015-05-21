@@ -570,7 +570,7 @@ let gSyncPane = {
   },
 
   openChangeProfileImage: function() {
-    fxAccounts.promiseAccountsChangeProfileURI("avatar")
+    fxAccounts.promiseAccountsChangeProfileURI("preferences", "avatar")
       .then(url => {
         this.openContentInBrowser(url, {
           replaceQueryString: true
@@ -579,7 +579,7 @@ let gSyncPane = {
   },
 
   manageFirefoxAccount: function() {
-    fxAccounts.promiseAccountsManageURI()
+    fxAccounts.promiseAccountsManageURI("preferences")
       .then(url => {
         this.openContentInBrowser(url, {
           replaceQueryString: true
