@@ -897,6 +897,12 @@ nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsTextInputListener::EditAction()
 {
+  if (!mFrame) {
+    // We've been disconnected from the nsTextEditorState object, nothing to do
+    // here.
+    return NS_OK;
+  }
+
   nsWeakFrame weakFrame = mFrame;
 
   nsITextControlFrame* frameBase = do_QueryFrame(mFrame);
