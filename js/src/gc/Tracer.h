@@ -109,11 +109,6 @@ TraceGenericPointerRoot(JSTracer* trc, gc::Cell** thingp, const char* name);
 void
 TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, gc::Cell** thingp, const char* name);
 
-// Object slots are not stored as a contiguous vector, so marking them as such
-// will lead to the wrong indicies, if such are requested when tracing.
-void
-TraceObjectSlots(JSTracer* trc, NativeObject* obj, uint32_t start, uint32_t nslots);
-
 // Depricated. Please use one of the strongly typed variants above.
 void
 TraceChildren(JSTracer* trc, void* thing, JSGCTraceKind kind);

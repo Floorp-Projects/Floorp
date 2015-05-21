@@ -528,18 +528,6 @@ js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name)
 template void js::TraceProcessGlobalRoot<JSAtom>(JSTracer*, JSAtom*, const char*);
 template void js::TraceProcessGlobalRoot<JS::Symbol>(JSTracer*, JS::Symbol*, const char*);
 
-void
-js::TraceObjectSlots(JSTracer* trc, NativeObject* obj, uint32_t start, uint32_t nslots)
-{
-    JS::AutoTracingIndex index(trc, start);
-    for (uint32_t i = start; i < (start + nslots); ++i) {
-        HeapSlot& slot = obj->getSlotRef(i);
-        if (InternalGCMethods<Value>::isMarkable(slot))
-            DispatchToTracer(trc, slot.unsafeGet(), "object slot");
-        ++index;
-    }
-}
-
 // A typed functor adaptor for TraceRoot.
 struct TraceRootFunctor {
     template <typename T>
