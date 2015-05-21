@@ -33,9 +33,13 @@ if CONFIG['MOZ_WEBSPEECH']:
         'SpeechSynthesis.cpp',
         'SpeechSynthesisUtterance.cpp',
         'SpeechSynthesisVoice.cpp',
-        'test/FakeSynthModule.cpp',
-        'test/nsFakeSynthServices.cpp'
     ]
+
+    if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
+        UNIFIED_SOURCES += [
+            'test/FakeSynthModule.cpp',
+            'test/nsFakeSynthServices.cpp'
+        ]
 
     if CONFIG['MOZ_SYNTH_PICO']:
         DIRS = ['pico']
