@@ -113,7 +113,7 @@ protected:
 class BluetoothDaemonConnection : public ConnectionOrientedSocket
 {
 public:
-  BluetoothDaemonConnection();
+  BluetoothDaemonConnection(BluetoothDaemonPDUConsumer* aConsumer);
   virtual ~BluetoothDaemonConnection();
 
   // Methods for |ConnectionOrientedSocket|
@@ -136,10 +136,10 @@ protected:
   // Prepares an instance of |BluetoothDaemonConnection| in DISCONNECTED
   // state for accepting a connection. Subclasses implementing |GetIO|
   // need to call this method.
-  ConnectionOrientedSocketIO*
-    PrepareAccept(BluetoothDaemonPDUConsumer* aConsumer);
+  ConnectionOrientedSocketIO* PrepareAccept();
 
 private:
+  BluetoothDaemonPDUConsumer* mConsumer;
   BluetoothDaemonConnectionIO* mIO;
 };
 
