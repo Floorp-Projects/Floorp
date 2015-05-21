@@ -96,9 +96,9 @@ JS_IsDeadWrapper(JSObject* obj);
  * all cycle-participating data it reaches, using bounded stack space.
  */
 extern JS_FRIEND_API(void)
-JS_TraceShapeCycleCollectorChildren(JSTracer* trc, JS::GCCellPtr shape);
+JS_TraceShapeCycleCollectorChildren(JS::CallbackTracer* trc, JS::GCCellPtr shape);
 extern JS_FRIEND_API(void)
-JS_TraceObjectGroupCycleCollectorChildren(JSTracer* trc, JS::GCCellPtr group);
+JS_TraceObjectGroupCycleCollectorChildren(JS::CallbackTracer* trc, JS::GCCellPtr group);
 
 enum {
     JS_TELEMETRY_GC_REASON,
