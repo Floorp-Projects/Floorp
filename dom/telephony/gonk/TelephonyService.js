@@ -1461,7 +1461,7 @@ TelephonyService.prototype = {
     }
 
     // Store unique value in the list.
-    disconnectedCalls = [...Set(disconnectedCalls)];
+    disconnectedCalls = [...new Set(disconnectedCalls)];
 
     let callsForStateChanged = [];
 
