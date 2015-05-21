@@ -534,8 +534,11 @@ var LoginManagerContent = {
     return false;
   },
 
-  /**
-   * Called by our observer when notified of a form submission.
+
+  /*
+   * _onFormSubmit
+   *
+   * Called by the our observer when notified of a form submission.
    * [Note that this happens before any DOM onsubmit handlers are invoked.]
    * Looks for a password change in the submitted form, so we can update
    * our stored password.
@@ -569,17 +572,11 @@ var LoginManagerContent = {
       return;
     }
 
-    let formSubmitURL = LoginUtils._getActionOrigin(form);
-    let messageManager = messageManagerFromWindow(win);
-
-    let recipesArray = messageManager.sendSyncMessage("RemoteLogins:findRecipes", {
-      formOrigin: hostname,
-    })[0];
-    let recipes = new Set(recipesArray);
+    var formSubmitURL = LoginUtils._getActionOrigin(form)
 
     // Get the appropriate fields from the form.
     var [usernameField, newPasswordField, oldPasswordField] =
-          this._getFormFields(form, true, recipes);
+        this._getFormFields(form, true);
 
     // Need at least 1 valid password field to do anything.
     if (newPasswordField == null)
@@ -613,6 +610,7 @@ var LoginManagerContent = {
     // Make sure to pass the opener's top in case it was in a frame.
     let opener = win.opener ? win.opener.top : null;
 
+    let messageManager = messageManagerFromWindow(win);
     messageManager.sendAsyncMessage("RemoteLogins:onFormSubmit",
                                     { hostname: hostname,
                                       formSubmitURL: formSubmitURL,
