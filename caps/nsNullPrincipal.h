@@ -44,19 +44,19 @@ public:
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
-  NS_IMETHOD GetOrigin(nsACString& aOrigin) override;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
+  nsresult GetOriginInternal(nsACString& aOrigin) override;
 
   // Returns null on failure.
   static already_AddRefed<nsNullPrincipal> CreateWithInheritedAttributes(nsIPrincipal *aInheritFrom);
 
   // Returns null on failure.
   static already_AddRefed<nsNullPrincipal>
-    Create(const OriginAttributes& aOriginAttributes = OriginAttributes());
+    Create(const mozilla::OriginAttributes& aOriginAttributes = mozilla::OriginAttributes());
 
-  nsresult Init(const OriginAttributes& aOriginAttributes = OriginAttributes());
+  nsresult Init(const mozilla::OriginAttributes& aOriginAttributes = mozilla::OriginAttributes());
 
   virtual void GetScriptLocation(nsACString &aStr) override;
 

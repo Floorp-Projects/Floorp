@@ -59,9 +59,6 @@ function InLeapYear( t ) {\
 function DayWithinYear( t ) {\
   return( Day(t) - DayFromYear(YearFromTime(t)));\
 ");
-lfcode.push("this.__proto__ = []; \
-let ( _ = this ) Boolean   (\"({ set x([, b, c]) { } })\");\
-");
 while (true) {
 	var file = lfcode.shift(); if (file == undefined) { break; }
 	if (file == "evaluate") {

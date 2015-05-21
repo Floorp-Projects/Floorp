@@ -26,20 +26,6 @@ function test()
 // =====
   ((function x()x in []) for (y in []))
 
-//Assertion failure: lexdep->frameLevel() <= funbox->level, at ../jsparse.cpp:1778
-// Opt crash [@ JSCompiler::setFunctionKinds]
-// =====
-    let(x=[]) function(){try {x} catch(x) {} }
-
-// Assertion failure: cg->upvars.lookup(atom), at ../jsemit.cpp:2034
-// =====
-  try
-  {
-    eval('for(let [y] = (let (x) (y)) in []) function(){}');
-  }
-  catch(ex)
-  {
-  }
 // Assertion failure: !(pnu->pn_dflags & PND_BOUND), at ../jsemit.cpp:1818
 // =====
 

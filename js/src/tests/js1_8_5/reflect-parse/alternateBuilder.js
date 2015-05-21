@@ -138,7 +138,6 @@ return {
     comprehensionExpression: reject,
     generatorExpression: reject,
     yieldExpression: reject,
-    letExpression: reject,
 
     emptyStatement: () => ["EmptyStmt", {}],
     blockStatement: function(stmts) {

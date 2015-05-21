@@ -260,6 +260,7 @@ size. -->
 <!ENTITY pref_private_data_offlineApps "Offline website data">
 <!ENTITY pref_private_data_siteSettings2 "Site settings">
 <!ENTITY pref_private_data_downloadFiles2 "Downloads">
+<!ENTITY pref_private_data_syncedTabs "Synced tabs">
 
 
 <!ENTITY pref_about_firefox "About &brandShortName;">

@@ -10,6 +10,8 @@
 #ifndef mozilla_image_src_ImageCacheKey_h
 #define mozilla_image_src_ImageCacheKey_h
 
+#include "mozilla/Maybe.h"
+
 class nsIURI;
 
 namespace mozilla {
@@ -42,9 +44,11 @@ public:
   bool IsChrome() const { return mIsChrome; }
 
 private:
-  static uint32_t ComputeHash(ImageURL* aURI);
+  static uint32_t ComputeHash(ImageURL* aURI,
+                              const Maybe<uint64_t>& aBlobSerial);
 
   nsRefPtr<ImageURL> mURI;
+  Maybe<uint64_t> mBlobSerial;
   uint32_t mHash;
   bool mIsChrome;
 };

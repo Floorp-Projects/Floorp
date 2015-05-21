@@ -277,14 +277,9 @@ this.DOMIdentity = {
       if (!aMessage.principal) {
         return false;
       }
-      let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                     .getService(Ci.nsIScriptSecurityManager);
-      let uri = Services.io.newURI(aMessage.principal.origin, null, null);
-      let principal = secMan.getAppCodebasePrincipal(uri,
-        aMessage.principal.appId, aMessage.principal.isInBrowserElement);
 
       let permission =
-        permissionManager.testPermissionFromPrincipal(principal,
+        permissionManager.testPermissionFromPrincipal(aMessage.principal,
                                                       FXA_PERMISSION);
       return permission != Ci.nsIPermissionManager.UNKNOWN_ACTION &&
              permission != Ci.nsIPermissionManager.DENY_ACTION;
