@@ -21,6 +21,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/net/ReferrerPolicy.h"
+#include "ImageCacheKey.h"
 
 class imgCacheValidator;
 class imgLoader;
@@ -49,12 +50,13 @@ class imgRequest final : public nsIStreamListener,
                          public nsIAsyncVerifyRedirectCallback
 {
   typedef mozilla::image::Image Image;
+  typedef mozilla::image::ImageCacheKey ImageCacheKey;
   typedef mozilla::image::ImageURL ImageURL;
   typedef mozilla::image::ProgressTracker ProgressTracker;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
 public:
-  explicit imgRequest(imgLoader* aLoader);
+  imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
@@ -142,6 +144,9 @@ public:
 
   // Get the current principal of the image. No AddRefing.
   inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); }
+
+  /// Get the ImageCacheKey associated with this request.
+  const ImageCacheKey& CacheKey() const { return mCacheKey; }
 
   // Resize the cache entry to 0 if it exists
   void ResetCacheEntry();
@@ -245,6 +250,9 @@ private:
 
   /* we hold on to this to this so long as we have observers */
   nsRefPtr<imgCacheEntry> mCacheEntry;
+
+  /// The key under which this imgRequest is stored in the image cache.
+  ImageCacheKey mCacheKey;
 
   void* mLoadId;
 

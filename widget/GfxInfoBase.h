@@ -82,6 +82,9 @@ public:
   virtual nsString Manufacturer() { return EmptyString(); }
   virtual uint32_t OperatingSystemVersion() { return 0; }
 
+  // Convenience to get the application version
+  static const nsCString& GetApplicationVersion();
+
 protected:
 
   virtual ~GfxInfoBase();

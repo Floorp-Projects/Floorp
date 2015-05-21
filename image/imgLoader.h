@@ -17,6 +17,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsExpirationTracker.h"
 #include "nsAutoPtr.h"
+#include "ImageCacheKey.h"
 #include "imgRequest.h"
 #include "nsIProgressEventSink.h"
 #include "nsIChannel.h"
@@ -214,38 +215,6 @@ enum class AcceptedMimeTypes : uint8_t {
   IMAGES_AND_DOCUMENTS,
 };
 
-/**
- * An ImageLib cache entry key.
- *
- * We key the cache on the initial URI (before any redirects), with some
- * canonicalization applied. See ComputeHash() for the details.
- */
-class ImageCacheKey final
-{
-public:
-  explicit ImageCacheKey(nsIURI* aURI);
-  explicit ImageCacheKey(mozilla::image::ImageURL* aURI);
-
-  ImageCacheKey(const ImageCacheKey& aOther);
-  ImageCacheKey(ImageCacheKey&& aOther);
-
-  bool operator==(const ImageCacheKey& aOther) const;
-  uint32_t Hash() const { return mHash; }
-
-  /// A weak pointer to the URI spec for this cache entry. For logging only.
-  const char* Spec() const { return mSpec.get(); }
-
-  /// Is this cache entry for a chrome image?
-  bool IsChrome() const { return mIsChrome; }
-
-private:
-  static uint32_t ComputeHash(const nsACString& aSpec);
-
-  nsCString mSpec;
-  uint32_t mHash;
-  bool mIsChrome;
-};
-
 class imgLoader final : public imgILoader,
                         public nsIContentSniffer,
                         public imgICache,
@@ -255,6 +224,7 @@ class imgLoader final : public imgILoader,
   virtual ~imgLoader();
 
 public:
+  typedef mozilla::image::ImageCacheKey ImageCacheKey;
   typedef mozilla::image::ImageURL ImageURL;
   typedef nsRefPtrHashtable<nsGenericHashKey<ImageCacheKey>,
                             imgCacheEntry> imgCacheTable;

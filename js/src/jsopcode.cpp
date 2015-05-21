@@ -530,9 +530,9 @@ BytecodeParser::addJump(uint32_t offset, uint32_t* currentOffset,
     Bytecode*& code = codeArray_[offset];
     if (!code) {
         code = alloc().new_<Bytecode>();
-        if (!code)
-            return false;
-        if (!code->captureOffsetStack(alloc(), offsetStack, stackDepth)) {
+        if (!code ||
+            !code->captureOffsetStack(alloc(), offsetStack, stackDepth))
+        {
             reportOOM();
             return false;
         }

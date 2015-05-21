@@ -44,6 +44,9 @@ public:
     return NS_OK;
   }
 
+  /// A weak pointer to the URI spec for this ImageURL. For logging only.
+  const char* Spec() const { return mSpec.get(); }
+
   nsresult GetScheme(nsACString& result)
   {
     result = mScheme;
@@ -72,6 +75,13 @@ public:
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI), mSpec);
     return newURI.forget();
+  }
+
+  bool operator==(const ImageURL& aOther) const
+  {
+    // Note that we don't need to consider mScheme and mRef, because they're
+    // already represented in mSpec.
+    return mSpec == aOther.mSpec;
   }
 
 private:

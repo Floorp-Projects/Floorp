@@ -49,8 +49,6 @@ const PING_FORMAT_VERSION = 4;
 const TELEMETRY_DELAY = 60000;
 // Delay before initializing telemetry if we're testing (ms)
 const TELEMETRY_TEST_DELAY = 100;
-// The number of days to keep pings serialised on the disk in case of failures.
-const DEFAULT_RETENTION_DAYS = 14;
 // Timeout after which we consider a ping submission failed.
 const PING_SUBMIT_TIMEOUT_MS = 2 * 60 * 1000;
 
@@ -174,6 +172,7 @@ this.TelemetryController = Object.freeze({
    */
   reset: function() {
     Impl._clientID = null;
+    TelemetryStorage.reset();
     return this.setup();
   },
   /**
@@ -241,8 +240,6 @@ this.TelemetryController = Object.freeze({
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {Object} [aOptions] Options object.
-   * @param {Number} [aOptions.retentionDays=14] The number of days to keep the ping on disk
-   *                 if sending fails.
    * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
    *                  id, false otherwise.
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
@@ -252,7 +249,6 @@ this.TelemetryController = Object.freeze({
    */
   savePendingPings: function(aType, aPayload, aOptions = {}) {
     let options = aOptions;
-    options.retentionDays = aOptions.retentionDays || DEFAULT_RETENTION_DAYS;
     options.addClientId = aOptions.addClientId || false;
     options.addEnvironment = aOptions.addEnvironment || false;
 
@@ -265,8 +261,6 @@ this.TelemetryController = Object.freeze({
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {Object} [aOptions] Options object.
-   * @param {Number} [aOptions.retentionDays=14] The number of days to keep the ping on disk
-   *                 if sending fails.
    * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
    *                  id, false otherwise.
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
@@ -280,7 +274,6 @@ this.TelemetryController = Object.freeze({
    */
   addPendingPing: function(aType, aPayload, aOptions = {}) {
     let options = aOptions;
-    options.retentionDays = aOptions.retentionDays || DEFAULT_RETENTION_DAYS;
     options.addClientId = aOptions.addClientId || false;
     options.addEnvironment = aOptions.addEnvironment || false;
     options.overwrite = aOptions.overwrite || false;
@@ -325,8 +318,6 @@ this.TelemetryController = Object.freeze({
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {String} aFilePath The path to save the ping to.
    * @param {Object} [aOptions] Options object.
-   * @param {Number} [aOptions.retentionDays=14] The number of days to keep the ping on disk
-   *                 if sending fails.
    * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
    *                  id, false otherwise.
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
@@ -340,7 +331,6 @@ this.TelemetryController = Object.freeze({
    */
   savePing: function(aType, aPayload, aFilePath, aOptions = {}) {
     let options = aOptions;
-    options.retentionDays = aOptions.retentionDays || DEFAULT_RETENTION_DAYS;
     options.addClientId = aOptions.addClientId || false;
     options.addEnvironment = aOptions.addEnvironment || false;
     options.overwrite = aOptions.overwrite || false;
@@ -665,8 +655,6 @@ let Impl = {
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {Object} aOptions Options object.
-   * @param {Number} aOptions.retentionDays The number of days to keep the ping on disk
-   *                 if sending fails.
    * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
    *                  false otherwise.
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
@@ -689,8 +677,6 @@ let Impl = {
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {Object} aOptions Options object.
-   * @param {Number} aOptions.retentionDays The number of days to keep the ping on disk
-   *                 if sending fails.
    * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
    *                  false otherwise.
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
@@ -728,8 +714,6 @@ let Impl = {
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {String} aFilePath The path to save the ping to.
    * @param {Object} aOptions Options object.
-   * @param {Number} aOptions.retentionDays The number of days to keep the ping on disk
-   *                 if sending fails.
    * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
    *                  false otherwise.
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
@@ -1066,6 +1050,10 @@ let Impl = {
         // Load the ClientID and update the cache.
         this._clientID = yield ClientID.getClientID();
         Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+
+        // Purge the pings archive by removing outdated pings. We don't wait for this
+        // task to complete, but TelemetryStorage blocks on it during shutdown.
+        TelemetryStorage.runCleanPingArchiveTask();
 
         Telemetry.asyncFetchTelemetryData(function () {});
         this._delayedInitTaskDeferred.resolve();
