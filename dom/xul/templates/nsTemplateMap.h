@@ -25,8 +25,7 @@ public:
 
     void
     Put(nsIContent* aContent, nsIContent* aTemplate) {
-        NS_ASSERTION(!PL_DHashTableSearch(&mTable, aContent),
-                     "aContent already in map");
+        NS_ASSERTION(!mTable.Search(aContent), "aContent already in map");
 
         Entry* entry = static_cast<Entry*>
             (PL_DHashTableAdd(&mTable, aContent, fallible));
@@ -51,9 +50,7 @@ public:
 
     void
     GetTemplateFor(nsIContent* aContent, nsIContent** aResult) {
-        Entry* entry =
-            static_cast<Entry*>(PL_DHashTableSearch(&mTable, aContent));
-
+        auto entry = static_cast<Entry*>(mTable.Search(aContent));
         if (entry)
             NS_IF_ADDREF(*aResult = entry->mTemplate);
         else

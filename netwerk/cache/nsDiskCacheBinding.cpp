@@ -197,10 +197,8 @@ nsDiskCacheBindery::FindActiveBinding(uint32_t  hashNumber)
 {
     NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
     // find hash entry for key
-    HashTableEntry * hashEntry;
-    hashEntry =
-      (HashTableEntry *) PL_DHashTableSearch(&table,
-                                             (void*)(uintptr_t) hashNumber);
+    auto hashEntry = static_cast<HashTableEntry*>
+        (table.Search((void*)(uintptr_t)hashNumber));
     if (!hashEntry) return nullptr;
 
     // walk list looking for active entry
@@ -294,11 +292,9 @@ nsDiskCacheBindery::RemoveBinding(nsDiskCacheBinding * binding)
     NS_ASSERTION(initialized, "nsDiskCacheBindery not initialized");
     if (!initialized)   return;
     
-    HashTableEntry * hashEntry;
-    void           * key = (void *)(uintptr_t)binding->mRecord.HashNumber();
-
-    hashEntry = (HashTableEntry*) PL_DHashTableSearch(&table,
-                                                      (void*)(uintptr_t) key);
+    void* key = (void *)(uintptr_t)binding->mRecord.HashNumber();
+    auto hashEntry =
+        static_cast<HashTableEntry*>(table.Search((void*)(uintptr_t) key));
     if (!hashEntry) {
         NS_WARNING("### disk cache: binding not in hashtable!");
         return;

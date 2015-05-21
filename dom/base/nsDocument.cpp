@@ -3994,9 +3994,8 @@ nsIDocument*
 nsDocument::GetSubDocumentFor(nsIContent *aContent) const
 {
   if (mSubDocuments && aContent->IsElement()) {
-    SubDocMapEntry *entry =
-      static_cast<SubDocMapEntry*>
-                 (PL_DHashTableSearch(mSubDocuments, aContent->AsElement()));
+    auto entry = static_cast<SubDocMapEntry*>
+                            (mSubDocuments->Search(aContent->AsElement()));
 
     if (entry) {
       return entry->mSubDocument;

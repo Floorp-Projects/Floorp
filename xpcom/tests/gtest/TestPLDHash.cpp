@@ -128,7 +128,7 @@ TEST(PLDHashTableTest, LazyStorage)
   ASSERT_EQ(t.EntryCount(), 0u);
   ASSERT_EQ(t.Generation(), 0u);
 
-  ASSERT_TRUE(!PL_DHashTableSearch(&t, (const void*)1));
+  ASSERT_TRUE(!t.Search((const void*)1));
 
   // No result to check here, but call it to make sure it doesn't crash.
   PL_DHashTableRemove(&t, (const void*)2);

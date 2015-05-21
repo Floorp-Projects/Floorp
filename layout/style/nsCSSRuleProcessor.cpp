@@ -672,24 +672,22 @@ void RuleHash::EnumerateAllRules(Element* aElement, ElementDependentRuleProcesso
   }
   // universal rules within the namespace
   if (kNameSpaceID_Unknown != nameSpace && mNameSpaceTable.EntryCount() > 0) {
-    RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-                                           (PL_DHashTableSearch(&mNameSpaceTable, NS_INT32_TO_PTR(nameSpace)));
+    auto entry = static_cast<RuleHashTableEntry*>
+      (mNameSpaceTable.Search(NS_INT32_TO_PTR(nameSpace)));
     if (entry) {
       mEnumList[valueCount++] = ToEnumData(entry->mRules);
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementNameSpaceCalls);
     }
   }
   if (mTagTable.EntryCount() > 0) {
-    RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-                                           (PL_DHashTableSearch(&mTagTable, tag));
+    auto entry = static_cast<RuleHashTableEntry*>(mTagTable.Search(tag));
     if (entry) {
       mEnumList[valueCount++] = ToEnumData(entry->mRules);
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementTagCalls);
     }
   }
   if (id && mIdTable.EntryCount() > 0) {
-    RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-                                           (PL_DHashTableSearch(&mIdTable, id));
+    auto entry = static_cast<RuleHashTableEntry*>(mIdTable.Search(id));
     if (entry) {
       mEnumList[valueCount++] = ToEnumData(entry->mRules);
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementIdCalls);
@@ -697,8 +695,8 @@ void RuleHash::EnumerateAllRules(Element* aElement, ElementDependentRuleProcesso
   }
   if (mClassTable.EntryCount() > 0) {
     for (int32_t index = 0; index < classCount; ++index) {
-      RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-                                             (PL_DHashTableSearch(&mClassTable, classList->AtomAt(index)));
+      auto entry = static_cast<RuleHashTableEntry*>
+        (mClassTable.Search(classList->AtomAt(index)));
       if (entry) {
         mEnumList[valueCount++] = ToEnumData(entry->mRules);
         RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementClassCalls);
@@ -2644,8 +2642,8 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade && cascade->mAnonBoxRules.EntryCount()) {
-    RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>
-      (PL_DHashTableSearch(&cascade->mAnonBoxRules, aData->mPseudoTag));
+    auto entry = static_cast<RuleHashTagTableEntry*>
+                            (cascade->mAnonBoxRules.Search(aData->mPseudoTag));
     if (entry) {
       nsTArray<RuleValue>& rules = entry->mRules;
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
@@ -2664,8 +2662,8 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade && cascade->mXULTreeRules.EntryCount()) {
-    RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>
-      (PL_DHashTableSearch(&cascade->mXULTreeRules, aData->mPseudoTag));
+    auto entry = static_cast<RuleHashTagTableEntry*>
+                            (cascade->mXULTreeRules.Search(aData->mPseudoTag));
     if (entry) {
       NodeMatchContext nodeContext(EventStates(),
                                    nsCSSRuleProcessor::IsLink(aData->mElement));
@@ -2984,9 +2982,8 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(
     if (aData->mAttribute == nsGkAtoms::id) {
       nsIAtom* id = aData->mElement->GetID();
       if (id) {
-        AtomSelectorEntry *entry =
-          static_cast<AtomSelectorEntry*>
-                     (PL_DHashTableSearch(&cascade->mIdSelectors, id));
+        auto entry =
+          static_cast<AtomSelectorEntry*>(cascade->mIdSelectors.Search(id));
         if (entry) {
           EnumerateSelectors(entry->mSelectors, &data);
         }
@@ -3021,10 +3018,9 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(
           for (int32_t i = 0; i < atomCount; ++i) {
             nsIAtom* curClass = elementClasses->AtomAt(i);
             if (!otherClassesTable.Contains(curClass)) {
-              AtomSelectorEntry *entry =
+              auto entry =
                 static_cast<AtomSelectorEntry*>
-                           (PL_DHashTableSearch(&cascade->mClassSelectors,
-                                                curClass));
+                           (cascade->mClassSelectors.Search(curClass));
               if (entry) {
                 EnumerateSelectors(entry->mSelectors, &data);
               }
@@ -3036,10 +3032,9 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(
       EnumerateSelectors(cascade->mPossiblyNegatedClassSelectors, &data);
     }
 
-    AtomSelectorEntry *entry =
+    auto entry =
       static_cast<AtomSelectorEntry*>
-                 (PL_DHashTableSearch(&cascade->mAttributeSelectors,
-                                      aData->mAttribute));
+                 (cascade->mAttributeSelectors.Search(aData->mAttribute));
     if (entry) {
       EnumerateSelectors(entry->mSelectors, &data);
     }

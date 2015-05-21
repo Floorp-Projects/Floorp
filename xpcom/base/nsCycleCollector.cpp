@@ -899,7 +899,7 @@ PtrToNodeEntry*
 CCGraph::FindNodeEntry(void* aPtr)
 {
   return
-    static_cast<PtrToNodeEntry*>(PL_DHashTableSearch(&mPtrToNodeMap, aPtr));
+    static_cast<PtrToNodeEntry*>(mPtrToNodeMap.Search(aPtr));
 }
 
 PtrInfo*

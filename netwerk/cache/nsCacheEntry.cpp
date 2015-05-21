@@ -420,7 +420,7 @@ nsCacheEntryHashTable::GetEntry( const nsCString * key)
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     if (!initialized)  return nullptr;
 
-    PLDHashEntryHdr *hashEntry = PL_DHashTableSearch(&table, key);
+    PLDHashEntryHdr *hashEntry = table.Search(key);
     return hashEntry ? ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry
                      : nullptr;
 }

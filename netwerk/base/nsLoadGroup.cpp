@@ -255,7 +255,7 @@ nsLoadGroup::Cancel(nsresult status)
 
         NS_ASSERTION(request, "NULL request found in list.");
 
-        if (!PL_DHashTableSearch(&mRequests, request)) {
+        if (!mRequests.Search(request)) {
             // |request| was removed already
             NS_RELEASE(request);
             continue;
@@ -463,7 +463,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
              this, request, nameStr.get(), mRequests.EntryCount()));
     }
 
-    NS_ASSERTION(!PL_DHashTableSearch(&mRequests, request),
+    NS_ASSERTION(!mRequests.Search(request),
                  "Entry added to loadgroup twice, don't do that");
 
     //
@@ -571,9 +571,7 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
     // the request was *not* in the group so do not update the foreground
     // count or it will get messed up...
     //
-    RequestMapEntry *entry =
-        static_cast<RequestMapEntry *>
-                   (PL_DHashTableSearch(&mRequests, request));
+    auto entry = static_cast<RequestMapEntry*>(mRequests.Search(request));
 
     if (!entry) {
         LOG(("LOADGROUP [%x]: Unable to remove request %x. Not in group!\n",

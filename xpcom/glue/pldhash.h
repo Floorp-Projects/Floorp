@@ -620,12 +620,6 @@ PL_DHashClearEntryStub(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 const PLDHashTableOps*
 PL_DHashGetStubOps(void);
 
-// The following function are deprecated. Use the equivalent class methods
-// instead: PLDHashTable::Search() instead of PL_DHashTableSearch(), etc.
-
-PLDHashEntryHdr* PL_DHASH_FASTCALL
-PL_DHashTableSearch(PLDHashTable* aTable, const void* aKey);
-
 PLDHashEntryHdr* PL_DHASH_FASTCALL
 PL_DHashTableAdd(PLDHashTable* aTable, const void* aKey,
                  const mozilla::fallible_t&);

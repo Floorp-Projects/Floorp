@@ -1339,8 +1339,7 @@ void nsDocLoader::RemoveRequestInfo(nsIRequest *aRequest)
 
 nsDocLoader::nsRequestInfo* nsDocLoader::GetRequestInfo(nsIRequest* aRequest)
 {
-  return static_cast<nsRequestInfo*>
-                    (PL_DHashTableSearch(&mRequestInfoHash, aRequest));
+  return static_cast<nsRequestInfo*>(mRequestInfoHash.Search(aRequest));
 }
 
 void nsDocLoader::ClearRequestInfoHash(void)
