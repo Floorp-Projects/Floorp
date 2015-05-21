@@ -20,12 +20,9 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
   printStatus('This bug can only be verified with a WAY_TOO_MUCH_GC build');
- 
+
   let (x = [].map(function () {})) { x; }
   reportCompare(expect, actual, summary + ': 1');
-
-  let (x = [].map(function () {})) 3
-    reportCompare(expect, actual, summary + ': 2');
 
   var g = function() {};
   (function() { let x = [].map(function () {}); g(x); })()

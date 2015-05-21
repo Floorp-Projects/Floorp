@@ -61,8 +61,8 @@ function test_registerFailure() {
   });
 }
 
-function genericError() {
-  ok(false, "Some promise failed");
+function genericError(name, val) {
+  ok(false, "Promise from " + name + " rejected with value: " + val);
 }
 
 function test_register() {
@@ -70,7 +70,7 @@ function test_register() {
   function() {
     ok(true, "navigator.sync.register() worked!");
     runTests();
-  }, genericError);
+  }, genericError.bind(null, 'register'));
 }
 
 function test_unregister() {
@@ -78,12 +78,12 @@ function test_unregister() {
   function() {
     ok(true, "navigator.sync.unregister() worked!");
     runTests();
-  }, genericError);
+  }, genericError.bind(null, 'unregister'));
 }
 
 function test_unregisterDuplicate() {
   navigator.sync.unregister('foobar').then(
-  genericError,
+  genericError.bind(null, 'unregisterDuplicate'),
   function(error) {
     ok(true, "navigator.sync.unregister() should throw if the task doesn't exist.");
     ok(error, "UnknownTaskError", "Duplicate unregistration error is correct");
@@ -97,7 +97,7 @@ function test_registrationEmpty() {
     is(results, null, "navigator.sync.registration() should return null.");
     runTests();
   },
-  genericError);
+  genericError.bind(null, 'registrationEmpty'));
 }
 
 function test_registration() {
@@ -113,7 +113,7 @@ function test_registration() {
     ok(!("app" in results), "navigator.sync.registrations().app is correct");
     runTests();
   },
-  genericError);
+  genericError.bind(null, 'registration'));
 }
 
 function test_registrationsEmpty() {
@@ -122,7 +122,7 @@ function test_registrationsEmpty() {
     is(results.length, 0, "navigator.sync.registrations() should return an empty array.");
     runTests();
   },
-  genericError);
+  genericError.bind(null, 'registrationEmpty'));
 }
 
 function test_registrations() {
@@ -139,7 +139,7 @@ function test_registrations() {
     ok(!("app" in results[0]), "navigator.sync.registrations()[0].app is correct");
     runTests();
   },
-  genericError);
+  genericError.bind(null, 'registrations'));
 }
 
 function test_managerRegistrationsEmpty() {
@@ -148,7 +148,7 @@ function test_managerRegistrationsEmpty() {
     is(results.length, 0, "navigator.syncManager.registrations() should return an empty array.");
     runTests();
   },
-  genericError);
+  genericError.bind(null, 'managerRegistrationsEmpty'));
 }
 
 function test_managerRegistrations(state, overwrittenMinInterval) {
@@ -172,7 +172,7 @@ function test_managerRegistrations(state, overwrittenMinInterval) {
     ok("runNow" in results[0], "navigator.sync.registrations()[0].runNow is correct");
     runTests();
   },
-  genericError);
+  genericError.bind(null, 'managerRegistrations'));
 }
 
 function test_managerSetPolicy(state, overwrittenMinInterval) {
@@ -183,6 +183,6 @@ function test_managerSetPolicy(state, overwrittenMinInterval) {
       ok(state, results[0].state, "State matches");
       ok(overwrittenMinInterval, results[0].overwrittenMinInterval, "OverwrittenMinInterval matches");
       runTests();
-    }, genericError);
-  }).catch(genericError);
+    }, genericError.bind(null, 'managerSetPolicy'));
+  }).catch(genericError.bind(null, 'managerSetPolicy_catch'));
 }

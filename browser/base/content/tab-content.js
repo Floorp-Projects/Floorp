@@ -591,8 +591,9 @@ let DOMFullscreenHandler = {
   init: function() {
     addMessageListener("DOMFullscreen:Approved", this);
     addMessageListener("DOMFullscreen:CleanUp", this);
-    addEventListener("MozEnteredDomFullscreen", this);
-    addEventListener("MozExitedDomFullscreen", this);
+    addEventListener("MozDOMFullscreen:Entered", this);
+    addEventListener("MozDOMFullscreen:NewOrigin", this);
+    addEventListener("MozDOMFullscreen:Exited", this);
   },
 
   receiveMessage: function(aMessage) {
@@ -606,6 +607,9 @@ let DOMFullscreenHandler = {
         break;
       }
       case "DOMFullscreen:CleanUp": {
+        let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+        utils.exitFullscreen();
         this._fullscreenDoc = null;
         break;
       }
@@ -613,13 +617,22 @@ let DOMFullscreenHandler = {
   },
 
   handleEvent: function(aEvent) {
-    if (aEvent.type == "MozEnteredDomFullscreen") {
-      this._fullscreenDoc = aEvent.target;
-      sendAsyncMessage("MozEnteredDomFullscreen", {
-        origin: this._fullscreenDoc.nodePrincipal.origin,
-      });
-    } else if (aEvent.type == "MozExitedDomFullscreen") {
-      sendAsyncMessage("MozExitedDomFullscreen");
+    switch (aEvent.type) {
+      case "MozDOMFullscreen:Entered": {
+        sendAsyncMessage("DOMFullscreen:Entered");
+        break;
+      }
+      case "MozDOMFullscreen:NewOrigin": {
+        this._fullscreenDoc = aEvent.target;
+        sendAsyncMessage("DOMFullscreen:NewOrigin", {
+          origin: this._fullscreenDoc.nodePrincipal.origin,
+        });
+        break;
+      }
+      case "MozDOMFullscreen:Exited": {
+        sendAsyncMessage("DOMFullscreen:Exited");
+        break;
+      }
     }
   }
 };

@@ -37,7 +37,6 @@ ASTDEF(AST_THIS_EXPR,             "ThisExpression",                 "thisExpress
 ASTDEF(AST_COMP_EXPR,             "ComprehensionExpression",        "comprehensionExpression")
 ASTDEF(AST_GENERATOR_EXPR,        "GeneratorExpression",            "generatorExpression")
 ASTDEF(AST_YIELD_EXPR,            "YieldExpression",                "yieldExpression")
-ASTDEF(AST_LET_EXPR,              "LetExpression",                  "letExpression")
 ASTDEF(AST_CLASS_EXPR,            "ClassExpression",                "classExpression")
 
 ASTDEF(AST_EMPTY_STMT,            "EmptyStatement",                 "emptyStatement")

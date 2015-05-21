@@ -57,7 +57,7 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   nsCOMPtr<nsIAtom>  mName;           // property name
-  PLDHashTable       mObjectValueMap; // map of object/value pairs
+  PLDHashTable2      mObjectValueMap; // map of object/value pairs
   NSPropertyDtorFunc mDtorFunc;       // property specific value dtor function
   void*              mDtorData;       // pointer to pass to dtor
   bool               mTransfer;       // whether to transfer in
@@ -287,20 +287,17 @@ nsPropertyTable::PropertyList::PropertyList(nsIAtom            *aName,
                                             void               *aDtorData,
                                             bool                aTransfer)
   : mName(aName),
+    mObjectValueMap(PL_DHashGetStubOps(), sizeof(PropertyListMapEntry)),
     mDtorFunc(aDtorFunc),
     mDtorData(aDtorData),
     mTransfer(aTransfer),
     mNext(nullptr)
 {
-  PL_DHashTableInit(&mObjectValueMap, PL_DHashGetStubOps(),
-                    sizeof(PropertyListMapEntry));
 }
 
 nsPropertyTable::PropertyList::~PropertyList()
 {
-  PL_DHashTableFinish(&mObjectValueMap);
 }
-
 
 static PLDHashOperator
 DestroyPropertyEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,

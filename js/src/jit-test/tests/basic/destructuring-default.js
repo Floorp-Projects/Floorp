@@ -92,7 +92,7 @@ function testThrow(pattern, input) {
 }
 testAll(testThrow);
 
-// XXX: Support for let blocks and expressions will be removed in bug 1023609.
+// XXX: Support for let blocks will be removed in bug 1023609.
 // However, they test a special code path in destructuring assignment so having
 // these tests here for now seems like a good idea.
 function testLetBlock(pattern, input) {
@@ -102,13 +102,6 @@ function testLetBlock(pattern, input) {
   )(input);
 }
 testAll(testLetBlock);
-
-function testLetExpression(pattern, input) {
-  return new Function('input',
-    'return (let (' + pattern + ' = input) [a, b, c, d, e, f]);'
-  )(input);
-}
-testAll(testLetExpression);
 
 // test global const
 const [ca = 1, cb = 2] = [];

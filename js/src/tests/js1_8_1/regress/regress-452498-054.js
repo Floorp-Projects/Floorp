@@ -31,11 +31,6 @@ function test()
   function f() { var x; eval("let x, x;"); }
   f();
 
-// Assertion failure: fp2->fun && fp2->script,
-// at ../jsinterp.cpp:5589
-//
-  eval("let(x) function(){ x = this; }()");
-
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

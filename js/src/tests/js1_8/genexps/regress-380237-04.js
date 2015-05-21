@@ -51,8 +51,6 @@ needParens(13, "for (;;xx) { }");
 needParens(14, "for (i in xx) { }");
 needParens(15, "throw xx");
 needParens(16, "try { } catch (e if xx) { }");
-needParens(17, "let (x=3) xx");
-needParens(18, "let (x=xx) 3");
 
 // Function calls
 doesNotNeedParens(19, "f(xx);");
