@@ -37,6 +37,11 @@ extern SECStatus SECKEY_CopySubjectPublicKeyInfo(PLArenaPool *arena,
 extern SECStatus
 SECKEY_UpdateCertPQG(CERTCertificate * subjectCert);
 
+/*
+** Return the number of bits in the provided big integer.  This assumes that the
+** SECItem contains a big-endian number and counts from the first non-zero bit.
+*/
+extern unsigned SECKEY_BigIntegerBitLength(const SECItem *number);
 
 /*
 ** Return the strength of the public key in bytes
