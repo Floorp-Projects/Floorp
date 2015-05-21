@@ -254,6 +254,7 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
         NS_DISPATCH_NORMAL);
     } else {
       MOZ_ASSERT(mPlugins.IsEmpty());
+      mWaitingForPluginsAsyncShutdown = false;
     }
 
     // Wait for plugins to do async shutdown...
