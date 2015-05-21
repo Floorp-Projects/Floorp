@@ -140,6 +140,153 @@ typedef PLDHashOperator (*PLDHashEnumerator)(PLDHashTable* aTable,
 typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
   PLDHashEntryHdr* aHdr, mozilla::MallocSizeOf aMallocSizeOf, void* aArg);
 
+#ifdef DEBUG
+
+// This class does three kinds of checking:
+//
+// - that calls to one of |mOps| or to an enumerator do not cause re-entry into
+//   the table in an unsafe way;
+//
+// - that multiple threads do not access the table in an unsafe way;
+//
+// - that a table marked as immutable is not modified.
+//
+// "Safe" here means that multiple concurrent read operations are ok, but a
+// write operation (i.e. one that can cause the entry storage to be reallocated
+// or destroyed) cannot safely run concurrently with another read or write
+// operation. This meaning of "safe" is only partial; for example, it does not
+// cover whether a single entry in the table is modified by two separate
+// threads. (Doing such checking would be much harder.)
+//
+// It does this with two variables:
+//
+// - mState, which embodies a tri-stage tagged union with the following
+//   variants:
+//   - Idle
+//   - Read(n), where 'n' is the number of concurrent read operations
+//   - Write
+//
+// - mIsWritable, which indicates if the table is mutable.
+//
+class Checker
+{
+public:
+  MOZ_CONSTEXPR Checker() : mState(kIdle), mIsWritable(1) {}
+
+  Checker& operator=(Checker&& aOther) {
+    // Atomic<> doesn't have an |operator=(Atomic<>&&)|.
+    mState = uint32_t(aOther.mState);
+    mIsWritable = uint32_t(aOther.mIsWritable);
+
+    aOther.mState = kIdle;
+
+    return *this;
+  }
+
+  static bool IsIdle(uint32_t aState)  { return aState == kIdle; }
+  static bool IsRead(uint32_t aState)  { return kRead1 <= aState &&
+                                                aState <= kReadMax; }
+  static bool IsRead1(uint32_t aState) { return aState == kRead1; }
+  static bool IsWrite(uint32_t aState) { return aState == kWrite; }
+
+  bool IsIdle() const { return mState == kIdle; }
+
+  bool IsWritable() const { return !!mIsWritable; }
+
+  void SetNonWritable() { mIsWritable = 0; }
+
+  // NOTE: the obvious way to implement these functions is to (a) check
+  // |mState| is reasonable, and then (b) update |mState|. But the lack of
+  // atomicity in such an implementation can cause problems if we get unlucky
+  // thread interleaving between (a) and (b).
+  //
+  // So instead for |mState| we are careful to (a) first get |mState|'s old
+  // value and assign it a new value in single atomic operation, and only then
+  // (b) check the old value was reasonable. This ensures we don't have
+  // interleaving problems.
+  //
+  // For |mIsWritable| we don't need to be as careful because it can only in
+  // transition in one direction (from writable to non-writable).
+
+  void StartReadOp()
+  {
+    uint32_t oldState = mState++;     // this is an atomic increment
+    MOZ_ASSERT(IsIdle(oldState) || IsRead(oldState));
+    MOZ_ASSERT(oldState < kReadMax);  // check for overflow
+  }
+
+  void EndReadOp()
+  {
+    uint32_t oldState = mState--;     // this is an atomic decrement
+    MOZ_ASSERT(IsRead(oldState));
+  }
+
+  void StartWriteOp()
+  {
+    MOZ_ASSERT(IsWritable());
+    uint32_t oldState = mState.exchange(kWrite);
+    MOZ_ASSERT(IsIdle(oldState));
+  }
+
+  void EndWriteOp()
+  {
+    // Check again that the table is writable, in case it was marked as
+    // non-writable just after the IsWritable() assertion in StartWriteOp()
+    // occurred.
+    MOZ_ASSERT(IsWritable());
+    uint32_t oldState = mState.exchange(kIdle);
+    MOZ_ASSERT(IsWrite(oldState));
+  }
+
+  void StartIteratorRemovalOp()
+  {
+    // When doing removals at the end of iteration, we go from Read1 state to
+    // Write and then back.
+    MOZ_ASSERT(IsWritable());
+    uint32_t oldState = mState.exchange(kWrite);
+    MOZ_ASSERT(IsRead1(oldState));
+  }
+
+  void EndIteratorRemovalOp()
+  {
+    // Check again that the table is writable, in case it was marked as
+    // non-writable just after the IsWritable() assertion in
+    // StartIteratorRemovalOp() occurred.
+    MOZ_ASSERT(IsWritable());
+    uint32_t oldState = mState.exchange(kRead1);
+    MOZ_ASSERT(IsWrite(oldState));
+  }
+
+  void StartDestructorOp()
+  {
+    // A destructor op is like a write, but the table doesn't need to be
+    // writable.
+    uint32_t oldState = mState.exchange(kWrite);
+    MOZ_ASSERT(IsIdle(oldState));
+  }
+
+  void EndDestructorOp()
+  {
+    uint32_t oldState = mState.exchange(kIdle);
+    MOZ_ASSERT(IsWrite(oldState));
+  }
+
+private:
+  // Things of note about the representation of |mState|.
+  // - The values between kRead1..kReadMax represent valid Read(n) values.
+  // - kIdle and kRead1 are deliberately chosen so that incrementing the -
+  //   former gives the latter.
+  // - 9999 concurrent readers should be enough for anybody.
+  static const uint32_t kIdle    = 0;
+  static const uint32_t kRead1   = 1;
+  static const uint32_t kReadMax = 9999;
+  static const uint32_t kWrite   = 10000;
+
+  mutable mozilla::Atomic<uint32_t> mState;
+  mutable mozilla::Atomic<uint32_t> mIsWritable;
+};
+#endif
+
 /*
  * A PLDHashTable may be allocated on the stack or within another structure or
  * class. No entry storage is allocated until the first element is added. This
@@ -167,12 +314,7 @@ private:
   char*               mEntryStore;    /* entry storage; allocated lazily */
 
 #ifdef DEBUG
-  // We use an atomic counter here so that the various ++/-- operations can't
-  // get corrupted when a table is shared between threads. The associated
-  // assertions should in no way be taken to mean that thread safety is being
-  // validated! Proper synchronization and thread safety assertions must be
-  // employed by any consumers.
-  mutable mozilla::Atomic<uint32_t> mRecursionLevel;
+  mutable Checker mChecker;
 #endif
 
 public:
@@ -196,7 +338,7 @@ public:
       // to the destructor, which the move assignment operator does.
     , mEntryStore(nullptr)
 #ifdef DEBUG
-    , mRecursionLevel(0)
+    , mChecker()
 #endif
   {
     *this = mozilla::Move(aOther);
