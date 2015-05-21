@@ -15,7 +15,6 @@ include protocol PContentBridge;
 include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
 include protocol PCrashReporter;
-include protocol PDocAccessible;
 include protocol PPSMContentDownloader;
 include protocol PExternalHelperApp;
 include protocol PDeviceStorageRequest;
@@ -422,7 +421,6 @@ prio(normal upto urgent) sync protocol PContent
     manages PContentPermissionRequest;
     manages PCrashReporter;
     manages PCycleCollectWithLogs;
-    manages PDocAccessible;
     manages PDeviceStorageRequest;
     manages PFileSystemRequest;
     manages PPSMContentDownloader;
@@ -654,14 +652,6 @@ child:
      */
     GamepadUpdate(GamepadChangeEvent aGamepadEvent);
 parent:
-    /**
-     * Tell the parent process a new accessible document has been created.
-     * aParentDoc is the accessible document it was created in if any, and
-     * aParentAcc is the id of the accessible in that document the new document
-     * is a child of.
-     */
-    PDocAccessible(nullable PDocAccessible aParentDoc, uint64_t aParentAcc);
-
     /**
      * Tell the content process some attributes of itself.  This is
      * among the first information queried by content processes after

@@ -9,6 +9,7 @@ include protocol PBlob;
 include protocol PColorPicker;
 include protocol PContent;
 include protocol PContentBridge;
+include protocol PDocAccessible;
 include protocol PDocumentRenderer;
 include protocol PFilePicker;
 include protocol PIndexedDBPermissionRequest;
@@ -98,6 +99,7 @@ prio(normal upto urgent) sync protocol PBrowser
     manager PContent or PContentBridge;
 
     manages PColorPicker;
+    manages PDocAccessible;
     manages PDocumentRenderer;
     manages PFilePicker;
     manages PIndexedDBPermissionRequest;
@@ -115,6 +117,14 @@ both:
     PRenderFrame();
 
 parent:
+    /**
+     * Tell the parent process a new accessible document has been created.
+     * aParentDoc is the accessible document it was created in if any, and
+     * aParentAcc is the id of the accessible in that document the new document
+     * is a child of.
+     */
+    PDocAccessible(nullable PDocAccessible aParentDoc, uint64_t aParentAcc);
+
     /*
      * Creates a new remoted nsIWidget connection for windowed plugins
      * in e10s mode. This is always initiated from the child in response

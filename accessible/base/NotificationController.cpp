@@ -10,7 +10,7 @@
 #include "TextLeafAccessible.h"
 #include "TextUpdater.h"
 
-#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Telemetry.h"
 
@@ -292,8 +292,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 
       ipcDoc = new DocAccessibleChild(childDoc);
       childDoc->SetIPCDoc(ipcDoc);
-      auto contentChild = dom::ContentChild::GetSingleton();
-      contentChild->SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id);
+      nsCOMPtr<nsITabChild> tabChild =
+        do_GetInterface(mDocument->DocumentNode()->GetDocShell());
+      static_cast<TabChild*>(tabChild.get())->
+        SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id);
     }
   }
 
