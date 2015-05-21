@@ -346,10 +346,15 @@ protected:
   protected:
     virtual void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
     {
+      // Note: The usage of InvokeCallbackMethod here requires that
+      // ResolveFunction/RejectFunction are capture-lambdas (i.e. anonymous
+      // classes with ::operator()), since it allows us to share code more easily.
+      // We could fix this if need be, though it's quite easy to work around by
+      // just capturing something.
       if (aValue.IsResolve()) {
-        mResolveFunction.ref()(aValue.ResolveValue());
+        InvokeCallbackMethod(mResolveFunction.ptr(), &ResolveFunction::operator(), aValue.ResolveValue());
       } else {
-        mRejectFunction.ref()(aValue.RejectValue());
+        InvokeCallbackMethod(mRejectFunction.ptr(), &RejectFunction::operator(), aValue.RejectValue());
       }
 
       // Destroy callbacks after invocation so that any references in closures are
