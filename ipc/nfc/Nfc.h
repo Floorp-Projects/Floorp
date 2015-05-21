@@ -51,8 +51,6 @@ public:
   void Shutdown();
   bool PostToNfcDaemon(const uint8_t* aData, size_t aSize);
 
-  ConnectionOrientedSocketIO* GetIO() override;
-
 private:
   void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
 

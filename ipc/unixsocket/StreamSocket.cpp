@@ -530,21 +530,24 @@ StreamSocket::Connect(UnixSocketConnector* aConnector,
   return NS_OK;
 }
 
-ConnectionOrientedSocketIO*
-StreamSocket::PrepareAccept(UnixSocketConnector* aConnector)
+// |ConnectionOrientedSocket|
+
+nsresult
+StreamSocket::PrepareAccept(UnixSocketConnector* aConnector,
+                            ConnectionOrientedSocketIO*& aIO)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIO);
   MOZ_ASSERT(aConnector);
 
-  nsAutoPtr<UnixSocketConnector> connector(aConnector);
-
   SetConnectionStatus(SOCKET_CONNECTING);
 
   mIO = new StreamSocketIO(XRE_GetIOMessageLoop(),
                            -1, UnixSocketWatcher::SOCKET_IS_CONNECTING,
-                           this, connector.forget());
-  return mIO;
+                           this, aConnector);
+  aIO = mIO;
+
+  return NS_OK;
 }
 
 // |DataSocket|
@@ -582,7 +585,6 @@ StreamSocket::Close()
 
   NotifyDisconnect();
 }
-
 
 } // namespace ipc
 } // namespace mozilla

@@ -21,8 +21,6 @@ public:
     mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
   static void Shutdown();
 
-  ConnectionOrientedSocketIO* GetIO() override;
-
 private:
   RilConsumer(unsigned long aClientId,
               mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
