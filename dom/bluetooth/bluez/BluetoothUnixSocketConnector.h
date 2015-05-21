@@ -41,6 +41,8 @@ public:
                               socklen_t* aAddressLength,
                               int& aStreamFd) override;
 
+  nsresult Duplicate(UnixSocketConnector*& aConnector) override;
+
 private:
   nsresult CreateSocket(int& aFd) const;
   nsresult SetSocketFlags(int aFd) const;
