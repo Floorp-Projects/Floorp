@@ -87,6 +87,7 @@ WEBIDL_FILES = [
     'ConvolverNode.webidl',
     'Coordinates.webidl',
     'Crypto.webidl',
+    'CSPDictionaries.webidl',
     'CSPReport.webidl',
     'CSS.webidl',
     'CSSLexer.webidl',

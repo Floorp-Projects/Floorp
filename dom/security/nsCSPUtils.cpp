@@ -769,6 +769,93 @@ nsCSPDirective::toString(nsAString& outStr) const
   }
 }
 
+void
+nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
+{
+  mozilla::dom::Sequence<nsString> srcs;
+  nsString src;
+  for (uint32_t i = 0; i < mSrcs.Length(); i++) {
+    src.Truncate();
+    mSrcs[i]->toString(src);
+    srcs.AppendElement(src);
+  }
+
+  switch(mDirective) {
+    case nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE:
+      outCSP.mDefault_src.Construct();
+      outCSP.mDefault_src.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE:
+      outCSP.mScript_src.Construct();
+      outCSP.mScript_src.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::OBJECT_SRC_DIRECTIVE:
+      outCSP.mObject_src.Construct();
+      outCSP.mObject_src.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::STYLE_SRC_DIRECTIVE:
+      outCSP.mStyle_src.Construct();
+      outCSP.mStyle_src.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::IMG_SRC_DIRECTIVE:
+      outCSP.mImg_src.Construct();
+      outCSP.mImg_src.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::MEDIA_SRC_DIRECTIVE:
+      outCSP.mMedia_src.Construct();
+      outCSP.mMedia_src.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE:
+      outCSP.mFrame_src.Construct();
+      outCSP.mFrame_src.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::FONT_SRC_DIRECTIVE:
+      outCSP.mFont_src.Construct();
+      outCSP.mFont_src.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::CONNECT_SRC_DIRECTIVE:
+      outCSP.mConnect_src.Construct();
+      outCSP.mConnect_src.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE:
+      outCSP.mReport_uri.Construct();
+      outCSP.mReport_uri.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::FRAME_ANCESTORS_DIRECTIVE:
+      outCSP.mFrame_ancestors.Construct();
+      outCSP.mFrame_ancestors.Value() = srcs;
+      return;
+
+    // not supporting REFLECTED_XSS_DIRECTIVE
+
+    case nsIContentSecurityPolicy::BASE_URI_DIRECTIVE:
+      outCSP.mBase_uri.Construct();
+      outCSP.mBase_uri.Value() = srcs;
+      return;
+
+    case nsIContentSecurityPolicy::FORM_ACTION_DIRECTIVE:
+      outCSP.mForm_action.Construct();
+      outCSP.mForm_action.Value() = srcs;
+      return;
+
+    // REFERRER_DIRECTIVE is handled in nsCSPPolicy::toDomCSPStruct()
+
+    default:
+      NS_ASSERTION(false, "cannot find directive to convert CSP to JSON");
+  }
+}
+
+
 bool
 nsCSPDirective::restrictsContentType(nsContentPolicyType aContentType) const
 {
@@ -932,6 +1019,23 @@ nsCSPPolicy::toString(nsAString& outStr) const
     }
     if (i != (length - 1)) {
       outStr.AppendASCII("; ");
+    }
+  }
+}
+
+void
+nsCSPPolicy::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
+{
+  outCSP.mReport_only = mReportOnly;
+
+  for (uint32_t i = 0; i < mDirectives.Length(); ++i) {
+    if (mDirectives[i]->equals(nsIContentSecurityPolicy::REFERRER_DIRECTIVE)) {
+      mozilla::dom::Sequence<nsString> srcs;
+      srcs.AppendElement(mReferrerPolicy);
+      outCSP.mReferrer.Construct();
+      outCSP.mReferrer.Value() = srcs;
+    } else {
+      mDirectives[i]->toDomCSPStruct(outCSP);
     }
   }
 }
