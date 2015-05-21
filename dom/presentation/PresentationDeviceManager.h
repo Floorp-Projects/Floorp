@@ -12,6 +12,7 @@
 #include "nsIPresentationDeviceManager.h"
 #include "nsIPresentationDeviceProvider.h"
 #include "nsCOMArray.h"
+#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace dom {
@@ -20,6 +21,7 @@ class PresentationDeviceManager final : public nsIPresentationDeviceManager
                                       , public nsIPresentationDeviceListener
                                       , public nsIPresentationDeviceEventListener
                                       , public nsIObserver
+                                      , public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
