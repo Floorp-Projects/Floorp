@@ -7163,9 +7163,7 @@ JS::IsIncrementalBarrierNeeded(JSContext* cx)
 }
 
 struct IncrementalReferenceBarrierFunctor {
-    template <typename T> void operator()(gc::Cell* cell) {
-        T::writeBarrierPre(static_cast<T*>(cell));
-    }
+    template <typename T> void operator()(T* t) { T::writeBarrierPre(t); }
 };
 
 JS_PUBLIC_API(void)
@@ -7174,7 +7172,7 @@ JS::IncrementalReferenceBarrier(GCCellPtr thing)
     if (!thing)
         return;
 
-    CallTyped(IncrementalReferenceBarrierFunctor(), thing.kind(), thing.asCell());
+    CallTyped(IncrementalReferenceBarrierFunctor(), thing.asCell(), thing.kind());
 }
 
 JS_PUBLIC_API(void)

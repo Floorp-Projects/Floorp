@@ -224,6 +224,34 @@ CallTyped(F f, JSGCTraceKind traceKind, Args&&... args)
 }
 #undef DEPENDENT_TEMPLATE_HINT
 
+template <typename F, typename... Args>
+auto
+CallTyped(F f, void* thing, JSGCTraceKind traceKind, Args&&... args)
+  -> decltype(f(reinterpret_cast<JSObject*>(0), mozilla::Forward<Args>(args)...))
+{
+    switch (traceKind) {
+      case JSTRACE_OBJECT:
+          return f(static_cast<JSObject*>(thing), mozilla::Forward<Args>(args)...);
+      case JSTRACE_SCRIPT:
+          return f(static_cast<JSScript*>(thing), mozilla::Forward<Args>(args)...);
+      case JSTRACE_STRING:
+          return f(static_cast<JSString*>(thing), mozilla::Forward<Args>(args)...);
+      case JSTRACE_SYMBOL:
+          return f(static_cast<JS::Symbol*>(thing), mozilla::Forward<Args>(args)...);
+      case JSTRACE_BASE_SHAPE:
+          return f(static_cast<BaseShape*>(thing), mozilla::Forward<Args>(args)...);
+      case JSTRACE_JITCODE:
+          return f(static_cast<jit::JitCode*>(thing), mozilla::Forward<Args>(args)...);
+      case JSTRACE_LAZY_SCRIPT:
+          return f(static_cast<LazyScript*>(thing), mozilla::Forward<Args>(args)...);
+      case JSTRACE_SHAPE:
+          return f(static_cast<Shape*>(thing), mozilla::Forward<Args>(args)...);
+      case JSTRACE_OBJECT_GROUP:
+          return f(static_cast<ObjectGroup*>(thing), mozilla::Forward<Args>(args)...);
+      default:
+          MOZ_CRASH("Invalid trace kind in CallTyped.");
+    }
+}
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
