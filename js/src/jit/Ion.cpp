@@ -1099,7 +1099,6 @@ IonScript::Destroy(FreeOp* fop, IonScript* script)
     if (script->pendingBuilder())
         jit::FinishOffThreadBuilder(nullptr, script->pendingBuilder());
 
-    script->destroyCaches();
     script->unlinkFromRuntime(fop);
     fop->free_(script);
 }
@@ -1123,13 +1122,6 @@ IonScript::purgeCaches()
 
     for (size_t i = 0; i < numCaches(); i++)
         getCacheFromIndex(i).reset();
-}
-
-void
-IonScript::destroyCaches()
-{
-    for (size_t i = 0; i < numCaches(); i++)
-        getCacheFromIndex(i).destroy();
 }
 
 void
