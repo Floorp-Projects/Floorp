@@ -451,8 +451,7 @@ InspectorPanel.prototype = {
 
     // On any new selection made by the user, store the unique css selector
     // of the selected node so it can be restored after reload of the same page
-    if (reason !== "navigateaway" &&
-        this.canGetUniqueSelector &&
+    if (this.canGetUniqueSelector &&
         this.selection.isElementNode()) {
       selection.getUniqueSelector().then(selector => {
         this.selectionCssSelector = selector;
