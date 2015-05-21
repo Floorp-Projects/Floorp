@@ -85,7 +85,7 @@ public:
    */
   void RemoveChildDoc(DocAccessibleParent* aChildDoc)
   {
-    aChildDoc->mParent->SetChildDoc(nullptr);
+    aChildDoc->Parent()->SetChildDoc(nullptr);
     mChildDocs.RemoveElement(aChildDoc);
     aChildDoc->mParentDoc = nullptr;
     MOZ_ASSERT(aChildDoc->mChildDocs.Length() == 0);
