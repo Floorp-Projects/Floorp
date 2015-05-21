@@ -35,7 +35,6 @@ const IS_CONTENT_PROCESS = (function() {
 const PAYLOAD_VERSION = 4;
 const PING_TYPE_MAIN = "main";
 const PING_TYPE_SAVED_SESSION = "saved-session";
-const RETENTION_DAYS = 14;
 
 const REASON_ABORTED_SESSION = "aborted-session";
 const REASON_DAILY = "daily";
@@ -1392,7 +1391,6 @@ let Impl = {
     const isSubsession = !this._isClassicReason(reason);
     let payload = this.getSessionPayload(reason, isSubsession);
     let options = {
-      retentionDays: RETENTION_DAYS,
       addClientId: true,
       addEnvironment: true,
     };
@@ -1631,7 +1629,6 @@ let Impl = {
     }
 
     let options = {
-      retentionDays: RETENTION_DAYS,
       addClientId: true,
       addEnvironment: true,
       overwrite: true,
@@ -1652,7 +1649,6 @@ let Impl = {
     this._log.trace("savePendingPingsClassic");
     let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
     let options = {
-      retentionDays: RETENTION_DAYS,
       addClientId: true,
       addEnvironment: true,
     };
@@ -1663,7 +1659,6 @@ let Impl = {
     this._log.trace("testSaveHistograms - Path: " + file.path);
     let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
     let options = {
-      retentionDays: RETENTION_DAYS,
       addClientId: true,
       addEnvironment: true,
       overwrite: true,
@@ -1814,7 +1809,6 @@ let Impl = {
       if (Telemetry.isOfficialTelemetry) {
         let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
         let options = {
-          retentionDays: RETENTION_DAYS,
           addClientId: true,
           addEnvironment: true,
           overwrite: true,
@@ -1896,7 +1890,6 @@ let Impl = {
     let payload = this.getSessionPayload(REASON_DAILY, true);
 
     let options = {
-      retentionDays: RETENTION_DAYS,
       addClientId: true,
       addEnvironment: true,
     };
@@ -1972,7 +1965,6 @@ let Impl = {
     TelemetryScheduler.reschedulePings(REASON_ENVIRONMENT_CHANGE, payload);
 
     let options = {
-      retentionDays: RETENTION_DAYS,
       addClientId: true,
       addEnvironment: true,
       overrideEnvironment: oldEnvironment,

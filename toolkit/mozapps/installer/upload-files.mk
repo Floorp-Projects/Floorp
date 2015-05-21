@@ -303,6 +303,7 @@ DIST_FILES += \
   extensions \
   application.ini \
   package-name.txt \
+  ua-update.json \
   platform.ini \
   greprefs.js \
   browserconfig.properties \
