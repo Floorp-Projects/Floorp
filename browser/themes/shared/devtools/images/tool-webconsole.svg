@@ -1,3 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" xmlns:xlink="http://www.w3.org/1999/xlink" enable-background="new 0 0 16 16">
-<path fill="#edf0f1" fill-rule="evenodd" d="M2,2h5.4l6.5,6.5L7.4,15H2l6.5-6.5L2,2z"/>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <path fill="#edf0f1" fill-rule="evenodd" d="M2,2h5.4l6.5,6.5L7.4,15H2l6.5-6.5L2,2z"/>
 </svg>
