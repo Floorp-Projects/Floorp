@@ -230,6 +230,9 @@ struct Cell
     inline JSRuntime* runtimeFromAnyThread() const;
     inline JS::shadow::Runtime* shadowRuntimeFromAnyThread() const;
 
+    // May be overridden by GC thing kinds that have a compartment pointer.
+    inline JSCompartment* maybeCompartment() const { return nullptr; }
+
     inline StoreBuffer* storeBuffer() const;
 
     inline JSGCTraceKind getTraceKind() const;

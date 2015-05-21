@@ -737,21 +737,23 @@ template <typename S, typename T>
 void
 js::GCMarker::traverseEdge(S source, T target)
 {
+    // Atoms and Symbols do not have or mark their internal pointers, respectively.
+    MOZ_ASSERT(!ThingIsPermanentAtomOrWellKnownSymbol(source));
+
+    // The Zones must match, unless the target is an atom.
     MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(target),
                   target->zone()->isAtomsZone() || target->zone() == source->zone());
-    traverse(target);
-}
 
-namespace js {
-// Special-case JSObject->JSObject edges to check the compartment too.
-template <>
-void
-GCMarker::traverseEdge(JSObject* source, JSObject* target)
-{
-    MOZ_ASSERT(target->compartment() == source->compartment());
+    // Atoms and Symbols do not have access to a compartment pointer, or we'd need
+    // to adjust the subsequent check to catch that case.
+    MOZ_ASSERT_IF(ThingIsPermanentAtomOrWellKnownSymbol(target), !target->maybeCompartment());
+    MOZ_ASSERT_IF(target->zoneFromAnyThread()->isAtomsZone(), !target->maybeCompartment());
+    // If we have access to a compartment pointer for both things, they must match.
+    MOZ_ASSERT_IF(source->maybeCompartment() && target->maybeCompartment(),
+                  source->maybeCompartment() == target->maybeCompartment());
+
     traverse(target);
 }
-} // namespace js
 
 template <typename V, typename S> struct TraverseEdgeFunctor : public VoidDefaultAdaptor<V> {
     template <typename T> void operator()(T t, GCMarker* gcmarker, S s) {

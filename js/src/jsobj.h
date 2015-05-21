@@ -155,9 +155,8 @@ class JSObject : public js::gc::Cell
         return group_->lazy();
     }
 
-    JSCompartment* compartment() const {
-        return group_->compartment();
-    }
+    JSCompartment* compartment() const { return group_->compartment(); }
+    JSCompartment* maybeCompartment() const { return compartment(); }
 
     inline js::Shape* maybeShape() const;
     inline js::Shape* ensureShape(js::ExclusiveContext* cx);
