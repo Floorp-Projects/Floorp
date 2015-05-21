@@ -8,6 +8,7 @@
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzImageSurface.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/MacIOSurface.h"
 
 #include "gfxMacPlatformFontList.h"
 #include "gfxMacFont.h"
@@ -93,6 +94,8 @@ gfxPlatformMac::gfxPlatformMac()
             NS_WARNING("Unable to bump RLIMIT_NOFILE to the maximum number on this OS");
         }
     }
+
+    MacIOSurfaceLib::LoadLibrary();
 }
 
 gfxPlatformMac::~gfxPlatformMac()
