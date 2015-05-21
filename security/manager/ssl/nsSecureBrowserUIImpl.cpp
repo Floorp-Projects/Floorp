@@ -872,8 +872,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   {
     { /* scope for the ReentrantMonitorAutoEnter */
       ReentrantMonitorAutoEnter lock(mReentrantMonitor);
-      PLDHashEntryHdr* entry =
-        PL_DHashTableSearch(&mTransferringRequests, aRequest);
+      PLDHashEntryHdr* entry = mTransferringRequests.Search(aRequest);
       if (entry) {
         mTransferringRequests.RemoveEntry(entry);
         requestHasTransferedData = true;

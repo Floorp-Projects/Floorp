@@ -838,8 +838,8 @@ nsHostResolver::ResolveHost(const char            *host,
                     // First, search for an entry with AF_UNSPEC
                     const nsHostKey unspecKey = { host, flags, PR_AF_UNSPEC,
                                                   netInterface };
-                    nsHostDBEnt *unspecHe = static_cast<nsHostDBEnt *>
-                        (PL_DHashTableSearch(&mDB, &unspecKey));
+                    auto unspecHe =
+                        static_cast<nsHostDBEnt*>(mDB.Search(&unspecKey));
                     NS_ASSERTION(!unspecHe ||
                                  (unspecHe && unspecHe->rec),
                                 "Valid host entries should contain a record");
@@ -977,8 +977,7 @@ nsHostResolver::DetachCallback(const char            *host,
         MutexAutoLock lock(mLock);
 
         nsHostKey key = { host, flags, af, netInterface };
-        nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                                     (PL_DHashTableSearch(&mDB, &key));
+        auto he = static_cast<nsHostDBEnt*>(mDB.Search(&key));
         if (he) {
             // walk list looking for |callback|... we cannot assume
             // that it will be there!
@@ -1323,8 +1322,7 @@ nsHostResolver::CancelAsyncRequest(const char            *host,
 
     // Lookup the host record associated with host, flags & address family
     nsHostKey key = { host, flags, af, netInterface };
-    nsHostDBEnt *he = static_cast<nsHostDBEnt *>
-                      (PL_DHashTableSearch(&mDB, &key));
+    auto he = static_cast<nsHostDBEnt*>(mDB.Search(&key));
     if (he) {
         nsHostRecord* recPtr = nullptr;
         PRCList *node = he->rec->callbacks.next;

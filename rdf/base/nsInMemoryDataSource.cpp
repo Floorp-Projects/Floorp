@@ -302,13 +302,13 @@ public:
     // Implementation methods
     Assertion*
     GetForwardArcs(nsIRDFResource* u) {
-        PLDHashEntryHdr* hdr = PL_DHashTableSearch(&mForwardArcs, u);
+        PLDHashEntryHdr* hdr = mForwardArcs.Search(u);
         return hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
     }
 
     Assertion*
     GetReverseArcs(nsIRDFNode* v) {
-        PLDHashEntryHdr* hdr = PL_DHashTableSearch(&mReverseArcs, v);
+        PLDHashEntryHdr* hdr = mReverseArcs.Search(v);
         return hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
     }
 
@@ -421,8 +421,7 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
         if (mNextAssertion && mNextAssertion->mHashEntry) {
             // its our magical HASH_ENTRY forward hash for assertions
             PLDHashEntryHdr* hdr =
-                PL_DHashTableSearch(mNextAssertion->u.hash.mPropertyHash,
-                                    aProperty);
+                mNextAssertion->u.hash.mPropertyHash->Search(aProperty);
             mNextAssertion =
                 hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         }
@@ -917,8 +916,7 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
 
     Assertion *as = GetForwardArcs(source);
     if (as && as->mHashEntry) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(as->u.hash.mPropertyHash, property);
+        PLDHashEntryHdr* hdr = as->u.hash.mPropertyHash->Search(property);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         while (val) {
             if (tv == val->u.as.mTruthValue) {
@@ -962,8 +960,7 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
 
     Assertion *as = GetForwardArcs(source);
     if (as && as->mHashEntry) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(as->u.hash.mPropertyHash, property);
+        PLDHashEntryHdr* hdr = as->u.hash.mPropertyHash->Search(property);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         while (val) {
             if ((val->u.as.mTarget == target) && (tv == (val->u.as.mTruthValue))) {
@@ -1072,8 +1069,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
 
     bool    haveHash = (next) ? next->mHashEntry : false;
     if (haveHash) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(next->u.hash.mPropertyHash, aProperty);
+        PLDHashEntryHdr* hdr = next->u.hash.mPropertyHash->Search(aProperty);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         while (val) {
             if (val->u.as.mTarget == aTarget) {
@@ -1112,8 +1108,7 @@ InMemoryDataSource::LockedAssert(nsIRDFResource* aSource,
 
     if (haveHash)
     {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(next->u.hash.mPropertyHash, aProperty);
+        PLDHashEntryHdr* hdr = next->u.hash.mPropertyHash->Search(aProperty);
         Assertion *asRef =
             hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         if (asRef)
@@ -1211,8 +1206,7 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
 
     bool    haveHash = (next) ? next->mHashEntry : false;
     if (haveHash) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(next->u.hash.mPropertyHash, aProperty);
+        PLDHashEntryHdr* hdr = next->u.hash.mPropertyHash->Search(aProperty);
         prev = next = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         bool first = true;
         while (next) {
@@ -1513,8 +1507,7 @@ InMemoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, boo
 {
     Assertion* ass = GetForwardArcs(aSource);
     if (ass && ass->mHashEntry) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(ass->u.hash.mPropertyHash, aArc);
+        PLDHashEntryHdr* hdr = ass->u.hash.mPropertyHash->Search(aArc);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         if (val) {
             *result = true;
@@ -1664,7 +1657,7 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
         nextRef = first->mNext;
         nsIRDFResource *prop = first->u.as.mProperty;
 
-        PLDHashEntryHdr* hdr = PL_DHashTableSearch(table, prop);
+        PLDHashEntryHdr* hdr = table->Search(prop);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         if (val) {
             first->mNext = val->mNext;
@@ -1727,8 +1720,7 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
 
     Assertion *as = GetForwardArcs(aSource);
     if (as && as->mHashEntry) {
-        PLDHashEntryHdr* hdr =
-            PL_DHashTableSearch(as->u.hash.mPropertyHash, aProperty);
+        PLDHashEntryHdr* hdr = as->u.hash.mPropertyHash->Search(aProperty);
         Assertion* val = hdr ? static_cast<Entry*>(hdr)->mAssertions : nullptr;
         while (val) {
             if ((val->u.as.mTarget == aTarget) &&
@@ -1844,7 +1836,7 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
 
                 // remove from the reverse arcs
                 PLDHashEntryHdr* hdr =
-                    PL_DHashTableSearch(aInfo->mReverseArcs, as->u.as.mTarget);
+                    aInfo->mReverseArcs->Search(as->u.as.mTarget);
                 NS_ASSERTION(hdr, "no assertion in reverse arcs");
 
                 Entry* rentry = static_cast<Entry*>(hdr);

@@ -207,14 +207,13 @@ nsCommandParams::RemoveValue(const char* aName)
 nsCommandParams::HashEntry*
 nsCommandParams::GetNamedEntry(const char* aName)
 {
-  return (HashEntry*)PL_DHashTableSearch(&mValuesHash, (void*)aName);
+  return static_cast<HashEntry*>(mValuesHash.Search((void*)aName));
 }
 
 nsCommandParams::HashEntry*
 nsCommandParams::GetOrMakeEntry(const char* aName, uint8_t aEntryType)
 {
-  HashEntry* foundEntry =
-    (HashEntry*)PL_DHashTableSearch(&mValuesHash, (void*)aName);
+  auto foundEntry = static_cast<HashEntry*>(mValuesHash.Search((void*)aName));
   if (foundEntry) { // reuse existing entry
     foundEntry->Reset(aEntryType);
     return foundEntry;

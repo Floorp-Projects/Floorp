@@ -38,7 +38,7 @@ public:
     }
 
     bool Get(nsIContent* aElement, nsTemplateMatch** aMatch) {
-        PLDHashEntryHdr* hdr = PL_DHashTableSearch(&mMap, aElement);
+        PLDHashEntryHdr* hdr = mMap.Search(aElement);
         if (!hdr)
             return false;
 

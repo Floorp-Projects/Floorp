@@ -164,9 +164,8 @@ nsFrameManager::GetPlaceholderFrameFor(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "null param unexpected");
 
-  PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>
-                                          (PL_DHashTableSearch(const_cast<PLDHashTable*>(&mPlaceholderMap),
-                              aFrame));
+  auto entry = static_cast<PlaceholderMapEntry*>
+    (const_cast<PLDHashTable*>(&mPlaceholderMap)->Search(aFrame));
   if (entry) {
     return entry->placeholderFrame;
   }

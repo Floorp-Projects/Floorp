@@ -552,9 +552,7 @@ nsPersistentProperties::GetStringProperty(const nsACString& aKey,
 {
   const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
 
-  PropertyTableEntry* entry = static_cast<PropertyTableEntry*>(
-    PL_DHashTableSearch(&mTable, flatKey.get()));
-
+  auto entry = static_cast<PropertyTableEntry*>(mTable.Search(flatKey.get()));
   if (!entry) {
     return NS_ERROR_FAILURE;
   }
@@ -612,7 +610,7 @@ nsPersistentProperties::Undefine(const char* aProp)
 NS_IMETHODIMP
 nsPersistentProperties::Has(const char* aProp, bool* aResult)
 {
-  *aResult = !!PL_DHashTableSearch(&mTable, aProp);
+  *aResult = !!mTable.Search(aProp);
   return NS_OK;
 }
 

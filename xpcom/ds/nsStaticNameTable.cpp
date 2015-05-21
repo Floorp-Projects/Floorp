@@ -170,8 +170,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
   const nsAFlatCString& str = PromiseFlatCString(aName);
 
   NameTableKey key(&str);
-  NameTableEntry* entry =
-    static_cast<NameTableEntry*>(PL_DHashTableSearch(&mNameTable, &key));
+  auto entry = static_cast<NameTableEntry*>(mNameTable.Search(&key));
 
   return entry ? entry->mIndex : nsStaticCaseInsensitiveNameTable::NOT_FOUND;
 }
@@ -184,8 +183,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
   const nsAFlatString& str = PromiseFlatString(aName);
 
   NameTableKey key(&str);
-  NameTableEntry* entry =
-    static_cast<NameTableEntry*>(PL_DHashTableSearch(&mNameTable, &key));
+  auto entry = static_cast<NameTableEntry*>(mNameTable.Search(&key));
 
   return entry ? entry->mIndex : nsStaticCaseInsensitiveNameTable::NOT_FOUND;
 }

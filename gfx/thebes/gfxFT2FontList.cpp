@@ -724,9 +724,7 @@ public:
     GetInfoForFile(const nsCString& aFileName, nsCString& aFaceList,
                    uint32_t *aTimestamp, uint32_t *aFilesize)
     {
-        FNCMapEntry *entry =
-            static_cast<FNCMapEntry*>(PL_DHashTableSearch(&mMap,
-                                                          aFileName.get()));
+        auto entry = static_cast<FNCMapEntry*>(mMap.Search(aFileName.get()));
         if (entry) {
             *aTimestamp = entry->mTimestamp;
             *aFilesize = entry->mFilesize;
