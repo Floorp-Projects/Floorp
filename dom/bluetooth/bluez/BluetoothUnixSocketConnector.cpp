@@ -408,4 +408,12 @@ BluetoothUnixSocketConnector::CreateStreamSocket(struct sockaddr* aAddress,
   return NS_OK;
 }
 
+nsresult
+BluetoothUnixSocketConnector::Duplicate(UnixSocketConnector*& aConnector)
+{
+  aConnector = new BluetoothUnixSocketConnector(*this);
+
+  return NS_OK;
+}
+
 END_BLUETOOTH_NAMESPACE

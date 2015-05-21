@@ -190,5 +190,13 @@ NfcConnector::CreateStreamSocket(struct sockaddr* aAddress,
   return NS_OK;
 }
 
+nsresult
+NfcConnector::Duplicate(UnixSocketConnector*& aConnector)
+{
+  aConnector = new NfcConnector(*this);
+
+  return NS_OK;
+}
+
 }
 }
