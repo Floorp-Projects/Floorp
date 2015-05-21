@@ -171,4 +171,12 @@ BluetoothDaemonConnector::CreateStreamSocket(struct sockaddr* aAddress,
   return NS_ERROR_ABORT;
 }
 
+nsresult
+BluetoothDaemonConnector::Duplicate(UnixSocketConnector*& aConnector)
+{
+  aConnector = new BluetoothDaemonConnector(*this);
+
+  return NS_OK;
+}
+
 END_BLUETOOTH_NAMESPACE

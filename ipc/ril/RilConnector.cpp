@@ -204,5 +204,13 @@ RilConnector::CreateStreamSocket(struct sockaddr* aAddress,
   return NS_OK;
 }
 
+nsresult
+RilConnector::Duplicate(UnixSocketConnector*& aConnector)
+{
+  aConnector = new RilConnector(*this);
+
+  return NS_OK;
+}
+
 }
 }

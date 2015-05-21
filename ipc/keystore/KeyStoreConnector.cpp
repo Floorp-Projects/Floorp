@@ -222,5 +222,13 @@ KeyStoreConnector::CreateStreamSocket(struct sockaddr* aAddress,
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+KeyStoreConnector::Duplicate(UnixSocketConnector*& aConnector)
+{
+  aConnector = new KeyStoreConnector(*this);
+
+  return NS_OK;
+}
+
 }
 }
