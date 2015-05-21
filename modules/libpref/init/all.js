@@ -2513,7 +2513,7 @@ pref("font.minimum-size.ko", 0);
 pref("font.size.variable.ko", 16);
 pref("font.size.fixed.ko", 16);
 
-pref("font.default.th", "serif");
+pref("font.default.th", "sans-serif");
 pref("font.minimum-size.th", 0);
 pref("font.size.variable.th", 16);
 pref("font.size.fixed.th", 13);
