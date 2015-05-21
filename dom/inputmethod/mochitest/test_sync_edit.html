@@ -25,10 +25,6 @@ let appFrameScript = function appFrameScript() {
   input.focus();
   input.value = 'First1';
   input.blur();
-
-  content.setTimeout(function() {
-    sendAsyncMessage('test:next', {});
-  });
 };
 
 function runTest() {
@@ -36,7 +32,32 @@ function runTest() {
 
   let i = 0;
   im.oninputcontextchange = function() {
-    ok(false, 'Should not receive any inputcontextchange events.');
+    let inputcontext = im.inputcontext;
+    i++;
+    switch (i) {
+      case 1:
+        ok(!!inputcontext, 'Should receive inputcontext from focus().');
+        is(inputcontext.textAfterCursor, 'First');
+
+        break;
+
+      case 2:
+        ok(!!inputcontext, 'Should receive inputcontext from value change.');
+        is(inputcontext.textBeforeCursor, 'First1');
+
+        break;
+
+      case 3:
+        ok(!inputcontext, 'Should lost inputcontext from blur().');
+
+        inputmethod_cleanup();
+        break;
+
+      default:
+        ok(false, 'Unknown event count.');
+
+        inputmethod_cleanup();
+    }
   };
 
   // Set current page as an input method.
@@ -48,11 +69,6 @@ function runTest() {
   document.body.appendChild(iframe);
 
   let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
-  mm.addMessageListener('test:next', function() {
-    ok(true, '\\o/');
-    inputmethod_cleanup();
-  });
-
   iframe.addEventListener('mozbrowserloadend', function() {
     mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
   });
