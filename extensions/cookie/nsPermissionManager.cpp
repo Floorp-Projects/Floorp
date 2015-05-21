@@ -36,6 +36,8 @@
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsReadLine.h"
+#include "mozilla/Telemetry.h"
+#include "nsIConsoleService.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
@@ -66,6 +68,18 @@ ChildProcess()
   return nullptr;
 }
 
+static void
+LogToConsole(const nsAString& aMsg)
+{
+  nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
+  if (!console) {
+    NS_WARNING("Failed to log message to console.");
+    return;
+  }
+
+  nsAutoString msg(aMsg);
+  console->LogStringMessage(msg.get());
+}
 
 #define ENSURE_NOT_CHILD_PROCESS_(onError) \
   PR_BEGIN_MACRO \
@@ -472,29 +486,52 @@ nsPermissionManager::InitDB(bool aRemoveFile)
 
   // cache a connection to the hosts database
   rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    LogToConsole(NS_LITERAL_STRING("permissions.sqlite is corrupted! Try again!"));
+
+    // Add telemetry probe
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::PERMISSIONS_SQL_CORRUPTED, 1);
+
+    // delete corrupted permissions.sqlite and try again
+    rv = permissionsFile->Remove(false);
+    NS_ENSURE_SUCCESS(rv, rv);
+    LogToConsole(NS_LITERAL_STRING("Corrupted permissions.sqlite has been removed."));
+
+    rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
+    NS_ENSURE_SUCCESS(rv, rv);
+    LogToConsole(NS_LITERAL_STRING("OpenDatabase to permissions.sqlite is successful!"));
+  }
 
   bool ready;
   mDBConn->GetConnectionReady(&ready);
   if (!ready) {
+    LogToConsole(NS_LITERAL_STRING("Fail to get connection to permissions.sqlite! Try again!"));
+
     // delete and try again
     rv = permissionsFile->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
+    LogToConsole(NS_LITERAL_STRING("Defective permissions.sqlite has been removed."));
+
+    // Add telemetry probe
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::DEFECTIVE_PERMISSIONS_SQL_REMOVED, 1);
 
     rv = storage->OpenDatabase(permissionsFile, getter_AddRefs(mDBConn));
     NS_ENSURE_SUCCESS(rv, rv);
+    LogToConsole(NS_LITERAL_STRING("OpenDatabase to permissions.sqlite is successful!"));
 
     mDBConn->GetConnectionReady(&ready);
     if (!ready)
       return NS_ERROR_UNEXPECTED;
   }
 
+  LogToConsole(NS_LITERAL_STRING("Get a connection to permissions.sqlite."));
+
   bool tableExists = false;
   mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts"), &tableExists);
   if (!tableExists) {
     rv = CreateTable();
     NS_ENSURE_SUCCESS(rv, rv);
-
+    LogToConsole(NS_LITERAL_STRING("DB table(moz_hosts) is created!"));
   } else {
     // table already exists; check the schema version before reading
     int32_t dbSchemaVersion;
