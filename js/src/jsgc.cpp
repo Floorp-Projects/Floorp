@@ -3725,20 +3725,9 @@ CheckCompartment(CompartmentCheckTracer* trc, JSCompartment* thingCompartment,
                 InCrossCompartmentMap((JSObject*)trc->src, thing, kind)));
 }
 
-static JSCompartment*
-CompartmentOfCell(Cell* thing, JSGCTraceKind kind)
-{
-    if (kind == JSTRACE_OBJECT)
-        return static_cast<JSObject*>(thing)->compartment();
-    else if (kind == JSTRACE_SHAPE)
-        return static_cast<Shape*>(thing)->compartment();
-    else if (kind == JSTRACE_BASE_SHAPE)
-        return static_cast<BaseShape*>(thing)->compartment();
-    else if (kind == JSTRACE_SCRIPT)
-        return static_cast<JSScript*>(thing)->compartment();
-    else
-        return nullptr;
-}
+struct MaybeCompartmentFunctor {
+    template <typename T> JSCompartment* operator()(T* t) { return t->maybeCompartment(); }
+};
 
 static void
 CheckCompartmentCallback(JS::CallbackTracer* trcArg, void** thingp, JSGCTraceKind kind)
@@ -3746,7 +3735,7 @@ CheckCompartmentCallback(JS::CallbackTracer* trcArg, void** thingp, JSGCTraceKin
     CompartmentCheckTracer* trc = static_cast<CompartmentCheckTracer*>(trcArg);
     TenuredCell* thing = TenuredCell::fromPointer(*thingp);
 
-    JSCompartment* comp = CompartmentOfCell(thing, kind);
+    JSCompartment* comp = CallTyped(MaybeCompartmentFunctor(), thing, kind);
     if (comp && trc->compartment)
         CheckCompartment(trc, comp, thing, kind);
     else
@@ -3766,7 +3755,7 @@ GCRuntime::checkForCompartmentMismatches()
             for (ZoneCellIterUnderGC i(zone, thingKind); !i.done(); i.next()) {
                 trc.src = i.getCell();
                 trc.srcKind = MapAllocToTraceKind(thingKind);
-                trc.compartment = CompartmentOfCell(trc.src, trc.srcKind);
+                trc.compartment = CallTyped(MaybeCompartmentFunctor(), trc.src, trc.srcKind);
                 JS_TraceChildren(&trc, trc.src, trc.srcKind);
             }
         }
