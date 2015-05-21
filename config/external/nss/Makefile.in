@@ -374,7 +374,7 @@ ifdef MOZ_CRT
 # OS_LIBS comes from having mozcrt as a dependency in moz.build.
 DLLFLAGS := $(OS_LIBS)
 else
-DLLFLAGS := -LIBPATH:$(ABS_DIST)/lib -DEFAULTLIB:mozglue
+DLLFLAGS := -LIBPATH:$(ABS_DIST)/../mozglue/build -DEFAULTLIB:mozglue
 endif
 export DLLFLAGS
 endif
