@@ -37,6 +37,7 @@
 #include "nsString.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/CSPReportBinding.h"
+#include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "nsINetworkInterceptController.h"
 
@@ -1183,6 +1184,26 @@ nsCSPContext::Permits(nsIURI* aURI,
                     *outPermits ? "allow" : "deny"));
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSPContext::ToJSON(nsAString& outCSPinJSON)
+{
+  outCSPinJSON.Truncate();
+  dom::CSPPolicies jsonPolicies;
+  jsonPolicies.mCsp_policies.Construct();
+
+  for (uint32_t p = 0; p < mPolicies.Length(); p++) {
+    dom::CSP jsonCSP;
+    mPolicies[p]->toDomCSPStruct(jsonCSP);
+    jsonPolicies.mCsp_policies.Value().AppendElement(jsonCSP);
+  }
+
+  // convert the gathered information to JSON
+  if (!jsonPolicies.ToJSON(outCSPinJSON)) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
