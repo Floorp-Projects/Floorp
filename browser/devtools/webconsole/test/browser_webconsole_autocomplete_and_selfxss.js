@@ -39,7 +39,7 @@ function consoleOpened(HUD) {
     waitForClipboard(
       stringToCopy,
       function() {
-        clipboardHelper.copyString(stringToCopy, document);
+        clipboardHelper.copyString(stringToCopy);
       },
       onClipboardCopy,
       finishTest);
