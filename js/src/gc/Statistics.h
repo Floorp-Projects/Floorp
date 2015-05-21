@@ -232,13 +232,16 @@ struct Statistics
     SliceRange sliceRange() const { return slices.all(); }
     size_t slicesLength() const { return slices.length(); }
 
+    /* Create a convenient typedef for referring tables of phase times. */
+    typedef int64_t (*PhaseTimeTable)[PHASE_LIMIT];
+
   private:
     JSRuntime* runtime;
 
     int64_t startupTime;
 
+    /* File pointer used for MOZ_GCTIMER output. */
     FILE* fp;
-    bool fullFormat;
 
     /*
      * GCs can't really nest, but a second GC can be triggered from within the
@@ -311,10 +314,10 @@ struct Statistics
     void printStats();
     bool formatData(StatisticsSerializer& ss, uint64_t timestamp);
 
-    UniqueChars formatDescription();
-    UniqueChars formatSliceDescription(unsigned i, const SliceData& slice);
-    UniqueChars formatTotals();
-    UniqueChars formatPhaseTimes(int64_t (*phaseTimes)[PHASE_LIMIT]);
+    UniqueChars formatDetailedDescription();
+    UniqueChars formatDetailedSliceDescription(unsigned i, const SliceData& slice);
+    UniqueChars formatDetailedPhaseTimes(PhaseTimeTable phaseTimes);
+    UniqueChars formatDetailedTotals();
 
     double computeMMU(int64_t resolution);
 };

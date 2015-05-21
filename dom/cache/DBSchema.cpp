@@ -181,7 +181,7 @@ static void AppendListParamsToQuery(nsACString& aQuery,
 static nsresult BindListParamsToQuery(mozIStorageStatement* aState,
                                       const nsTArray<EntryId>& aEntryIdList,
                                       uint32_t aPos, int32_t aLen);
-static nsresult BindId(mozIStorageStatement* aState, uint32_t aPos,
+static nsresult BindId(mozIStorageStatement* aState, const nsACString& aName,
                        const nsID* aId);
 static nsresult ExtractId(mozIStorageStatement* aState, uint32_t aPos,
                           nsID* aIdOut);
@@ -412,11 +412,11 @@ DeleteCacheId(mozIStorageConnection* aConn, CacheId aCacheId,
   // Delete the remainder of the cache using cascade semantics.
   nsCOMPtr<mozIStorageStatement> state;
   rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM caches WHERE id=?1;"
+    "DELETE FROM caches WHERE id=:id;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt64Parameter(0, aCacheId);
+  rv = state->BindInt64ByName(NS_LITERAL_CSTRING("id"), aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->Execute();
@@ -438,11 +438,11 @@ IsCacheOrphaned(mozIStorageConnection* aConn, CacheId aCacheId,
 
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT COUNT(*) FROM storage WHERE cache_id=?1;"
+    "SELECT COUNT(*) FROM storage WHERE cache_id=:cache_id;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt64Parameter(0, aCacheId);
+  rv = state->BindInt64ByName(NS_LITERAL_CSTRING("cache_id"), aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -646,11 +646,11 @@ StorageMatch(mozIStorageConnection* aConn,
 
   nsCOMPtr<mozIStorageStatement> state;
   rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT cache_id FROM storage WHERE namespace=?1 ORDER BY rowid;"
+    "SELECT cache_id FROM storage WHERE namespace=:namespace ORDER BY rowid;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aNamespace);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("namespace"), aNamespace);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   nsAutoTArray<CacheId, 32> cacheIdList;
@@ -693,14 +693,15 @@ StorageGetCacheId(mozIStorageConnection* aConn, Namespace aNamespace,
   // Use IS for matching the key since an EmptryString() key maps to NULL.
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT cache_id FROM storage WHERE namespace=?1 AND key IS ?2 ORDER BY rowid;"
+    "SELECT cache_id FROM storage WHERE namespace=:namespace AND key IS :key "
+                                 "ORDER BY rowid;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aNamespace);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("namespace"), aNamespace);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringAsBlobParameter(1, aKey);
+  rv = state->BindStringAsBlobByName(NS_LITERAL_CSTRING("key"), aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -727,17 +728,18 @@ StoragePutCache(mozIStorageConnection* aConn, Namespace aNamespace,
 
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO storage (namespace, key, cache_id) VALUES(?1, ?2, ?3);"
+    "INSERT INTO storage (namespace, key, cache_id) "
+                 "VALUES (:namespace, :key, :cache_id);"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aNamespace);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("namespace"), aNamespace);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringAsBlobParameter(1, aKey);
+  rv = state->BindStringAsBlobByName(NS_LITERAL_CSTRING("key"), aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt64Parameter(2, aCacheId);
+  rv = state->BindInt64ByName(NS_LITERAL_CSTRING("cache_id"), aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->Execute();
@@ -756,14 +758,14 @@ StorageForgetCache(mozIStorageConnection* aConn, Namespace aNamespace,
   // Use IS for matching the key since an EmptryString() key maps to NULL.
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM storage WHERE namespace=?1 AND key IS ?2;"
+    "DELETE FROM storage WHERE namespace=:namespace AND key IS :key;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aNamespace);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("namespace"), aNamespace);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringAsBlobParameter(1, aKey);
+  rv = state->BindStringAsBlobByName(NS_LITERAL_CSTRING("key"), aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->Execute();
@@ -781,11 +783,11 @@ StorageGetKeys(mozIStorageConnection* aConn, Namespace aNamespace,
 
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT key FROM storage WHERE namespace=?1 ORDER BY rowid;"
+    "SELECT key FROM storage WHERE namespace=:namespace ORDER BY rowid;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aNamespace);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("namespace"), aNamespace);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -811,11 +813,11 @@ QueryAll(mozIStorageConnection* aConn, CacheId aCacheId,
 
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id FROM entries WHERE cache_id=?1 ORDER BY id;"
+    "SELECT id FROM entries WHERE cache_id=:cache_id ORDER BY id;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt64Parameter(0, aCacheId);
+  rv = state->BindInt64ByName(NS_LITERAL_CSTRING("cache_id"), aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -851,7 +853,7 @@ QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
     "FROM entries "
     "LEFT OUTER JOIN response_headers ON entries.id=response_headers.entry_id "
                                     "AND response_headers.name='vary' "
-    "WHERE entries.cache_id=?1 "
+    "WHERE entries.cache_id=:cache_id "
       "AND entries."
   );
 
@@ -864,16 +866,16 @@ QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
     query.AppendLiteral("request_url");
   }
 
-  query.AppendLiteral("=?2 GROUP BY entries.id ORDER BY entries.id;");
+  query.AppendLiteral("=:url GROUP BY entries.id ORDER BY entries.id;");
 
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(query, getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt64Parameter(0, aCacheId);
+  rv = state->BindInt64ByName(NS_LITERAL_CSTRING("cache_id"), aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringParameter(1, urlToMatch);
+  rv = state->BindStringByName(NS_LITERAL_CSTRING("url"), urlToMatch);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -919,11 +921,11 @@ MatchByVaryHeader(mozIStorageConnection* aConn,
   nsCOMPtr<mozIStorageStatement> state;
   nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT value FROM response_headers "
-    "WHERE name='vary' AND entry_id=?1;"
+    "WHERE name='vary' AND entry_id=:entry_id;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, entryId);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("entry_id"), entryId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   nsAutoTArray<nsCString, 8> varyValues;
@@ -943,11 +945,11 @@ MatchByVaryHeader(mozIStorageConnection* aConn,
   state->Reset();
   rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT name, value FROM request_headers "
-    "WHERE entry_id=?1;"
+    "WHERE entry_id=:entry_id;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, entryId);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("entry_id"), entryId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   nsRefPtr<InternalHeaders> cachedHeaders =
@@ -1138,71 +1140,101 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "response_body_id, "
       "response_security_info, "
       "cache_id "
-    ") VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)"
+    ") VALUES ("
+      ":request_method, "
+      ":request_url, "
+      ":request_url_no_query, "
+      ":request_referrer, "
+      ":request_headers_guard, "
+      ":request_mode, "
+      ":request_credentials, "
+      ":request_contentpolicytype, "
+      ":request_context, "
+      ":request_cache, "
+      ":request_body_id, "
+      ":response_type, "
+      ":response_url, "
+      ":response_status, "
+      ":response_status_text, "
+      ":response_headers_guard, "
+      ":response_body_id, "
+      ":response_security_info, "
+      ":cache_id "
+    ");"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindUTF8StringParameter(0, aRequest.method());
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("request_method"),
+                                   aRequest.method());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringParameter(1, aRequest.url());
+  rv = state->BindStringByName(NS_LITERAL_CSTRING("request_url"),
+                               aRequest.url());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringParameter(2, aRequest.urlWithoutQuery());
+  rv = state->BindStringByName(NS_LITERAL_CSTRING("request_url_no_query"),
+                               aRequest.urlWithoutQuery());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringParameter(3, aRequest.referrer());
+  rv = state->BindStringByName(NS_LITERAL_CSTRING("request_referrer"),
+                               aRequest.referrer());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(4,
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_headers_guard"),
     static_cast<int32_t>(aRequest.headersGuard()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(5, static_cast<int32_t>(aRequest.mode()));
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_mode"),
+                              static_cast<int32_t>(aRequest.mode()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(6,
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_credentials"),
     static_cast<int32_t>(aRequest.credentials()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(7,
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_contentpolicytype"),
     static_cast<int32_t>(aRequest.contentPolicyType()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(8,
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_context"),
     static_cast<int32_t>(aRequest.context()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(9,
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("request_cache"),
     static_cast<int32_t>(aRequest.requestCache()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = BindId(state, 10, aRequestBodyId);
+  rv = BindId(state, NS_LITERAL_CSTRING("request_body_id"), aRequestBodyId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(11, static_cast<int32_t>(aResponse.type()));
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("response_type"),
+                              static_cast<int32_t>(aResponse.type()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindStringParameter(12, aResponse.url());
+  rv = state->BindStringByName(NS_LITERAL_CSTRING("response_url"),
+                               aResponse.url());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(13, aResponse.status());
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("response_status"),
+                              aResponse.status());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindUTF8StringParameter(14, aResponse.statusText());
+  rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("response_status_text"),
+                                   aResponse.statusText());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(15,
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("response_headers_guard"),
     static_cast<int32_t>(aResponse.headersGuard()));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = BindId(state, 16, aResponseBodyId);
+  rv = BindId(state, NS_LITERAL_CSTRING("response_body_id"), aResponseBodyId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindUTF8StringAsBlobParameter(17, aResponse.securityInfo());
+  rv = state->BindUTF8StringAsBlobByName(NS_LITERAL_CSTRING("response_security_info"),
+                                         aResponse.securityInfo());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt64Parameter(18, aCacheId);
+  rv = state->BindInt64ByName(NS_LITERAL_CSTRING("cache_id"), aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->Execute();
@@ -1226,19 +1258,21 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "name, "
       "value, "
       "entry_id "
-    ") VALUES (?1, ?2, ?3)"
+    ") VALUES (:name, :value, :entry_id)"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   const nsTArray<HeadersEntry>& requestHeaders = aRequest.headers();
   for (uint32_t i = 0; i < requestHeaders.Length(); ++i) {
-    rv = state->BindUTF8StringParameter(0, requestHeaders[i].name());
+    rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("name"),
+                                     requestHeaders[i].name());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = state->BindUTF8StringParameter(1, requestHeaders[i].value());
+    rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("value"),
+                                     requestHeaders[i].value());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = state->BindInt32Parameter(2, entryId);
+    rv = state->BindInt32ByName(NS_LITERAL_CSTRING("entry_id"), entryId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = state->Execute();
@@ -1250,19 +1284,21 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
       "name, "
       "value, "
       "entry_id "
-    ") VALUES (?1, ?2, ?3)"
+    ") VALUES (:name, :value, :entry_id)"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   const nsTArray<HeadersEntry>& responseHeaders = aResponse.headers();
   for (uint32_t i = 0; i < responseHeaders.Length(); ++i) {
-    rv = state->BindUTF8StringParameter(0, responseHeaders[i].name());
+    rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("name"),
+                                     responseHeaders[i].name());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = state->BindUTF8StringParameter(1, responseHeaders[i].value());
+    rv = state->BindUTF8StringByName(NS_LITERAL_CSTRING("value"),
+                                     responseHeaders[i].value());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = state->BindInt32Parameter(2, entryId);
+    rv = state->BindInt32ByName(NS_LITERAL_CSTRING("entry_id"), entryId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = state->Execute();
@@ -1291,11 +1327,11 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
       "response_body_id, "
       "response_security_info "
     "FROM entries "
-    "WHERE id=?1;"
+    "WHERE id=:id;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aEntryId);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("id"), aEntryId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -1342,11 +1378,11 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
       "name, "
       "value "
     "FROM response_headers "
-    "WHERE entry_id=?1;"
+    "WHERE entry_id=:entry_id;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aEntryId);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("entry_id"), aEntryId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
@@ -1387,11 +1423,11 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
       "request_cache, "
       "request_body_id "
     "FROM entries "
-    "WHERE id=?1;"
+    "WHERE id=:id;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aEntryId);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("id"), aEntryId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -1460,11 +1496,11 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
       "name, "
       "value "
     "FROM request_headers "
-    "WHERE entry_id=?1;"
+    "WHERE entry_id=:entry_id;"
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aEntryId);
+  rv = state->BindInt32ByName(NS_LITERAL_CSTRING("entry_id"), aEntryId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
@@ -1506,28 +1542,28 @@ BindListParamsToQuery(mozIStorageStatement* aState,
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT((aPos + aLen) <= aEntryIdList.Length());
   for (int32_t i = aPos; i < aLen; ++i) {
-    nsresult rv = aState->BindInt32Parameter(i, aEntryIdList[i]);
+    nsresult rv = aState->BindInt32ByIndex(i, aEntryIdList[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
 
 nsresult
-BindId(mozIStorageStatement* aState, uint32_t aPos, const nsID* aId)
+BindId(mozIStorageStatement* aState, const nsACString& aName, const nsID* aId)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aState);
   nsresult rv;
 
   if (!aId) {
-    rv = aState->BindNullParameter(aPos);
+    rv = aState->BindNullByName(aName);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     return rv;
   }
 
   char idBuf[NSID_LENGTH];
   aId->ToProvidedString(idBuf);
-  rv = aState->BindUTF8StringParameter(aPos, nsAutoCString(idBuf));
+  rv = aState->BindUTF8StringByName(aName, nsAutoCString(idBuf));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;

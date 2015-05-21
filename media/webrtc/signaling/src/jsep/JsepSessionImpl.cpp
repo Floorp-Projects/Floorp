@@ -1307,6 +1307,8 @@ JsepSessionImpl::SetLocalDescription(JsepSdpType type, const std::string& sdp)
 {
   mLastError.clear();
 
+  MOZ_MTLOG(ML_DEBUG, "SetLocalDescription type=" << type << "\nSDP=\n"
+                                                  << sdp);
   switch (mState) {
     case kJsepStateStable:
       if (type != kJsepSdpOffer) {

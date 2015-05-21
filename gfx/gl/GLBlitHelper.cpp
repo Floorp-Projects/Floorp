@@ -969,7 +969,8 @@ GLBlitHelper::BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
                                        GLenum destTarget,
                                        bool internalFBs)
 {
-    MOZ_ASSERT(!srcFB || mGL->fIsFramebuffer(srcFB));
+    // On the Android 4.3 emulator, IsFramebuffer may return false incorrectly.
+    MOZ_ASSERT_IF(mGL->Renderer() != GLRenderer::AndroidEmulator, !srcFB || mGL->fIsFramebuffer(srcFB));
     MOZ_ASSERT(mGL->fIsTexture(destTex));
 
     if (mGL->IsSupported(GLFeature::framebuffer_blit)) {
