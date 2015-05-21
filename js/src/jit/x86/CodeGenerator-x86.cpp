@@ -865,14 +865,6 @@ CodeGeneratorX86::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
 }
 
-void
-DispatchIonCache::initializeAddCacheState(LInstruction* ins, AddCacheState* addState)
-{
-    // On x86, where there is no general purpose scratch register available,
-    // child cache classes must manually specify a dispatch scratch register.
-    MOZ_CRASH("x86 needs manual assignment of dispatchScratch");
-}
-
 namespace js {
 namespace jit {
 

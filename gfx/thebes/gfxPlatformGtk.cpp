@@ -14,7 +14,7 @@
 #include "gfx2DGlue.h"
 #include "gfxFcPlatformFontList.h"
 #include "gfxFontconfigUtils.h"
-#include "gfxPangoFonts.h"
+#include "gfxFontconfigFonts.h"
 #include "gfxContext.h"
 #include "gfxUserFontSet.h"
 #include "gfxUtils.h"

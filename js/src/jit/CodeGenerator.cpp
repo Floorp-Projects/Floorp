@@ -64,7 +64,7 @@ class OutOfLineUpdateCache :
   private:
     LInstruction* lir_;
     size_t cacheIndex_;
-    AddCacheState state_;
+    RepatchLabel entry_;
 
   public:
     OutOfLineUpdateCache(LInstruction* lir, size_t cacheIndex)
@@ -83,8 +83,8 @@ class OutOfLineUpdateCache :
     LInstruction* lir() const {
         return lir_;
     }
-    AddCacheState& state() {
-        return state_;
+    RepatchLabel& entry() {
+        return entry_;
     }
 
     void accept(CodeGenerator* codegen) {
@@ -125,10 +125,7 @@ CodeGeneratorShared::addCache(LInstruction* lir, size_t cacheIndex)
     OutOfLineUpdateCache* ool = new(alloc()) OutOfLineUpdateCache(lir, cacheIndex);
     addOutOfLineCode(ool, mir);
 
-    // OOL-specific state depends on the type of cache.
-    cache->initializeAddCacheState(lir, &ool->state());
-
-    cache->emitInitialJump(masm, ool->state());
+    cache->emitInitialJump(masm, ool->entry());
     masm.bind(ool->rejoin());
 }
 
@@ -139,7 +136,7 @@ CodeGenerator::visitOutOfLineCache(OutOfLineUpdateCache* ool)
 
     // Register the location of the OOL path in the IC.
     cache->setFallbackLabel(masm.labelForPatch());
-    cache->bindInitialJump(masm, ool->state());
+    masm.bind(&ool->entry());
 
     // Dispatch to ICs' accept functions.
     cache->accept(this, ool);
@@ -6737,7 +6734,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         Address initLength(elements, ObjectElements::offsetOfInitializedLength());
         masm.branchKey(Assembler::NotEqual, initLength, ToInt32Key(index), &callStub);
     } else {
-        Address initLength(obj, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
+        Address initLength(object, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength());
         masm.load32(initLength, ToRegister(temp));
         masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), ToRegister(temp));
         masm.branchKey(Assembler::NotEqual, ToRegister(temp), ToInt32Key(index), &callStub);

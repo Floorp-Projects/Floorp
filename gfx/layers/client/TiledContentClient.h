@@ -404,6 +404,8 @@ public:
     : mPaintedLayer(nullptr)
     , mCompositableClient(nullptr)
     , mManager(nullptr)
+    , mCallback(nullptr)
+    , mCallbackData(nullptr)
     , mLastPaintContentType(gfxContentType::COLOR)
     , mLastPaintSurfaceMode(SurfaceMode::SURFACE_OPAQUE)
     , mSharedFrameMetricsHelper(nullptr)

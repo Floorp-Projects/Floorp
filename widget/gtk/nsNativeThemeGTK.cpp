@@ -848,7 +848,8 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
         if (needClip || aTransparency != nsITheme::eOpaque) {
           // The widget either needs to be masked or has transparency, so use the slower drawing path.
           aDrawTarget->DrawSurface(dataSurface,
-                                   Rect(aDrawOrigin, Size(aDrawSize)),
+                                   Rect(aSnapped ? aDrawOrigin - aDrawTarget->GetTransform().GetTranslation() : aDrawOrigin,
+                                        Size(aDrawSize)),
                                    Rect(0, 0, aDrawSize.width, aDrawSize.height));
         } else {
           // The widget is a simple opaque rectangle, so just copy it out.

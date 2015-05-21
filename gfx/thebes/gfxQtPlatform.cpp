@@ -23,7 +23,7 @@
 #include "gfxQPainterSurface.h"
 #include "nsUnicodeProperties.h"
 
-#include "gfxPangoFonts.h"
+#include "gfxFontconfigFonts.h"
 #include "gfxContext.h"
 #include "gfxUserFontSet.h"
 

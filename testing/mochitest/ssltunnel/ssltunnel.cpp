@@ -1252,6 +1252,7 @@ int processConfigLine(char* configLine)
       else
       {
         LOG_ERROR(("Incorrect client auth option modifier for host '%s'", hostname));
+        delete authoption;
         return 1;
       }
 
@@ -1260,6 +1261,7 @@ int processConfigLine(char* configLine)
       char *hostname_copy = new char[strlen(hostname)+strlen(hostportstring)+2];
       if (!hostname_copy) {
         LOG_ERROR(("Out of memory"));
+        delete authoption;
         return 1;
       }
 
@@ -1270,6 +1272,7 @@ int processConfigLine(char* configLine)
       PLHashEntry* entry = PL_HashTableAdd(existingServer->host_clientauth_table, hostname_copy, authoption);
       if (!entry) {
         LOG_ERROR(("Out of memory"));
+        delete authoption;
         return 1;
       }
     }
@@ -1315,6 +1318,8 @@ int processConfigLine(char* configLine)
       PLHashEntry* entry = PL_HashTableAdd(existingServer->host_redir_table, hostname_copy, redir_copy);
       if (!entry) {
         LOG_ERROR(("Out of memory"));
+        delete hostname_copy;
+        delete redir_copy;
         return 1;
       }
     }
@@ -1366,7 +1371,10 @@ int parseConfigFile(const char* filePath)
     case '\n':
       *b++ = 0;
       if (processConfigLine(buffer))
+      {
+        fclose(f);
         return 1;
+      }
       b = buffer;
     case '\r':
       continue;

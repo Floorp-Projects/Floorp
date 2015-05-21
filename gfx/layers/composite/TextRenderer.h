@@ -23,7 +23,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING(TextRenderer)
 
   explicit TextRenderer(Compositor *aCompositor)
-    : mCompositor(aCompositor)
+    : mCompositor(aCompositor), mMap({nullptr, 0})
   {
   }
 
