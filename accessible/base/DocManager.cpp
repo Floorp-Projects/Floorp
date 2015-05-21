@@ -32,7 +32,7 @@
 #include "nsIWebProgress.h"
 #include "nsCoreUtils.h"
 #include "nsXULAppAPI.h"
-#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/TabChild.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -457,8 +457,10 @@ DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
     if (IPCAccessibilityActive()) {
       DocAccessibleChild* ipcDoc = new DocAccessibleChild(docAcc);
       docAcc->SetIPCDoc(ipcDoc);
-    auto contentChild = dom::ContentChild::GetSingleton();
-    contentChild->SendPDocAccessibleConstructor(ipcDoc, nullptr, 0);
+      nsCOMPtr<nsITabChild> tabChild =
+        do_GetInterface(aDocument->GetDocShell());
+    static_cast<TabChild*>(tabChild.get())->
+      SendPDocAccessibleConstructor(ipcDoc, nullptr, 0);
     }
   } else {
     parentDocAcc->BindChildDocument(docAcc);
