@@ -630,12 +630,10 @@ void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
 
   stream_->AddListener(listener_);
 
- // Is this a gUM mediastream?  If so, also register the Listener directly with
- // the SourceMediaStream that's attached to the TrackUnion so we can get direct
- // unqueued (and not resampled) data
- if (domstream_->AddDirectListener(listener_)) {
-   listener_->direct_connect_ = true;
- }
+  // Is this a gUM mediastream?  If so, also register the Listener directly with
+  // the SourceMediaStream that's attached to the TrackUnion so we can get direct
+  // unqueued (and not resampled) data
+  listener_->direct_connect_ = domstream_->AddDirectListener(listener_);
 
 #ifndef MOZILLA_INTERNAL_API
   // this enables the unit tests that can't fiddle with principals and the like
