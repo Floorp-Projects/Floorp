@@ -116,6 +116,20 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
     var obs = Services.obs;
     obs.addObserver(this, "xpcom-shutdown", false);
     obs.addObserver(this, "chrome-document-global-created", false);
+
+    // Register special testing modules.
+    var testsURI = Cc["@mozilla.org/file/directory_service;1"].
+                     getService(Ci.nsIProperties).
+                     get("ProfD", Ci.nsILocalFile);
+    testsURI.append("tests.manifest");
+    var ioSvc = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService);
+    var manifestFile = ioSvc.newFileURI(testsURI).
+                         QueryInterface(Ci.nsIFileURL).file;
+
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
+                   autoRegister(manifestFile);
+
     obs.addObserver(this, "http-on-modify-request", false);
 
     if (messageManager) {

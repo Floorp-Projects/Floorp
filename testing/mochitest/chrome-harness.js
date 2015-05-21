@@ -293,23 +293,7 @@ function readConfig(filename) {
   return JSON.parse(str);
 }
 
-function registerTests() {
-  var testsURI = Components.classes["@mozilla.org/file/directory_service;1"].
-                 getService(Components.interfaces.nsIProperties).
-                 get("ProfD", Components.interfaces.nsILocalFile);
-  testsURI.append("tests.manifest");
-  var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
-              getService(Components.interfaces.nsIIOService);
-  var manifestFile = ioSvc.newFileURI(testsURI).
-                     QueryInterface(Components.interfaces.nsIFileURL).file;
-
-  Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar).
-                     autoRegister(manifestFile);
-}
-
 function getTestList(params, callback) {
-  registerTests();
-
   var baseurl = 'chrome://mochitests/content';
   if (window.parseQueryString) {
     params = parseQueryString(location.search.substring(1), true);
