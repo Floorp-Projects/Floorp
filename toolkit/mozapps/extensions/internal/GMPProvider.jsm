@@ -480,7 +480,7 @@ GMPWrapper.prototype = {
     } else if (isLinux) {
       libName = id.substring(4) + ".so";
     } else {
-      this._info.error("_arePluginFilesOnDisk - unsupported platform.");
+      this._log.info("_arePluginFilesOnDisk - unsupported platform.");
       return false;
     }
 
