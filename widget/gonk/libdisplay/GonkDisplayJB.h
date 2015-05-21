@@ -56,6 +56,8 @@ public:
 
 private:
     void StopBootAnim();
+    void CreateSurface(android::sp<ANativeWindow>& aNativeWindow,
+                       android::sp<android::DisplaySurface>& aDisplaySurface);
 
     hw_module_t const*        mModule;
     hw_module_t const*        mFBModule;
@@ -64,8 +66,9 @@ private:
     power_module_t*           mPowerModule;
     android::sp<android::DisplaySurface> mDispSurface;
     android::sp<ANativeWindow> mSTClient;
+    android::sp<android::DisplaySurface> mBootAnimDispSurface;
+    android::sp<ANativeWindow> mBootAnimSTClient;
     android::sp<android::IGraphicBufferAlloc> mAlloc;
-    android::sp<android::GraphicBuffer> mBootAnimBuffer;
     hwc_display_contents_1_t* mList;
     uint32_t mWidth;
     uint32_t mHeight;

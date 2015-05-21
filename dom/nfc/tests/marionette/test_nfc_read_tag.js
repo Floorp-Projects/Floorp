@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_TIMEOUT = 30000;
+MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 let url = "http://www.mozilla.org";
@@ -16,16 +16,16 @@ function testUrlTagDiscover(re) {
 
   sysMsgHelper.waitForTechDiscovered(function(msg) {
     log("Received \'nfc-manager-tech-ndiscovered\'");
-    is(msg.type, "techDiscovered", "check for correct message type");
+    ok(msg.peer === undefined, "peer object should be undefined");
 
-    let records = Cu.waiveXrays(msg.records);
+    let records = msg.records;
     ok(records.length > 0);
 
     is(tnf, records[0].tnf, "check for TNF field in NDEF");
-    is(type, NfcUtils.toUTF8(records[0].type), "check for type field in NDEF");
-    is(payload, NfcUtils.toUTF8(records[0].payload), "check for payload field in NDEF");
+    is(type, NfcUtils.toUTF8(Cu.waiveXrays(records[0].type)), "check for type field in NDEF");
+    is(payload, NfcUtils.toUTF8(Cu.waiveXrays(records[0].payload)), "check for payload field in NDEF");
 
-    toggleNFC(false).then(runNextTest);
+    deactivateAndWaitForTechLost().then(() => toggleNFC(false)).then(runNextTest);
   });
 
   toggleNFC(true)
@@ -38,12 +38,12 @@ function testEmptyTagDiscover(re) {
 
   sysMsgHelper.waitForTechDiscovered(function(msg) {
     log("Received \'nfc-manager-tech-ndiscovered\'");
-    is(msg.type, "techDiscovered", "check for correct message type");
+    ok(msg.peer === undefined, "peer object should be undefined");
 
     let records = msg.records;
     ok(records == null);
 
-    toggleNFC(false).then(runNextTest);
+    deactivateAndWaitForTechLost().then(() => toggleNFC(false)).then(runNextTest);
   });
 
   toggleNFC(true)

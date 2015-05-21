@@ -97,9 +97,9 @@
       <row id="fontRow">
         <hbox align="center">
           <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
-          <menulist id="defaultFont" />
+          <menulist id="defaultFont" delayprefsave="true"/>
           <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize.accesskey;">&defaultSize.label;</label>
-          <menulist id="defaultFontSize">
+          <menulist id="defaultFontSize" delayprefsave="true">
             <menupopup>
               <menuitem value="9" label="9"/>
               <menuitem value="10" label="10"/>

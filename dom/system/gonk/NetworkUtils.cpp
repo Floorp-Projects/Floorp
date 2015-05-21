@@ -1615,6 +1615,7 @@ void NetworkUtils::ExecuteCommand(NetworkParams aOptions)
     BUILD_ENTRY(updateUpStream),
     BUILD_ENTRY(configureInterface),
     BUILD_ENTRY(dhcpRequest),
+    BUILD_ENTRY(stopDhcp),
     BUILD_ENTRY(enableInterface),
     BUILD_ENTRY(disableInterface),
     BUILD_ENTRY(resetConnections),
@@ -1831,6 +1832,11 @@ CommandResult NetworkUtils::configureInterface(NetworkParams& aOptions)
     aOptions.mDns1_long,
     aOptions.mDns2_long
   );
+}
+
+CommandResult NetworkUtils::stopDhcp(NetworkParams& aOptions)
+{
+  return mNetUtils->do_dhcp_stop(GET_CHAR(mIfname));
 }
 
 CommandResult NetworkUtils::dhcpRequest(NetworkParams& aOptions) {

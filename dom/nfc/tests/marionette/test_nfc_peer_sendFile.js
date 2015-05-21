@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_TIMEOUT = 30000;
+MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 let MANIFEST_URL = "app://system.gaiamobile.org/manifest.webapp";
@@ -23,16 +23,14 @@ function testSendFile() {
   };
 
   sysMsgHelper.waitForTechDiscovered(function(msg) {
-    let request = nfc.checkP2PRegistration(MANIFEST_URL);
-    request.onsuccess = function(evt) {
-      is(request.result, true, "check for P2P registration result");
-      nfc.notifyUserAcceptedP2P(MANIFEST_URL);
-    }
-
-    request.onerror = function() {
-      ok(false, "checkP2PRegistration failed.");
-      toggleNFC(false).then(runNextTest);
-    }
+    nfc.checkP2PRegistration(MANIFEST_URL).then(result => {
+      if (result) {
+        nfc.notifyUserAcceptedP2P(MANIFEST_URL);
+      } else {
+        ok(false, "checkP2PRegistration failed.");
+        deactivateAndWaitForTechLost().then(() => toggleNFC(false)).then(runNextTest);
+      }
+    });
   });
 
   toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
@@ -43,6 +41,5 @@ let tests = [
 ];
 
 SpecialPowers.pushPermissions(
-  [{"type": "nfc", "allow": true,
-                   "read": true, 'write': true, context: document},
+  [{"type": "nfc-share", "allow": true, context: document},
    {"type": "nfc-manager", 'allow': true, context: document}], runTests);
