@@ -159,7 +159,7 @@ void ProfileBuffer::reset() {
   mReadPos = mWritePos = 0;
 }
 
-#define DYNAMIC_MAX_STRING 512
+#define DYNAMIC_MAX_STRING 8192
 
 char* ProfileBuffer::processDynamicTag(int readPos,
                                        int* tagsConsumed, char* tagBuff)
@@ -681,6 +681,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
   int readPos = mReadPos;
   int currentThreadID = -1;
   Maybe<float> currentTime;
+  UniquePtr<char[]> tagBuff = MakeUnique<char[]>(DYNAMIC_MAX_STRING);
 
   while (readPos != mWritePos) {
     ProfileEntry entry = mEntries[readPos];
@@ -749,13 +750,12 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
             // Read ahead to the next tag, if it's a 'd' tag process it now
             const char* tagStringData = frame.mTagData;
             int readAheadPos = (framePos + 1) % mEntrySize;
-            char tagBuff[DYNAMIC_MAX_STRING];
             // Make sure the string is always null terminated if it fills up
             // DYNAMIC_MAX_STRING-2
             tagBuff[DYNAMIC_MAX_STRING-1] = '\0';
 
             if (readAheadPos != mWritePos && mEntries[readAheadPos].mTagName == 'd') {
-              tagStringData = processDynamicTag(framePos, &incBy, tagBuff);
+              tagStringData = processDynamicTag(framePos, &incBy, tagBuff.get());
             }
 
             // Write one frame. It can have either
@@ -768,8 +768,8 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
               // We need a double cast here to tell GCC that we don't want to sign
               // extend 32-bit addresses starting with 0xFXXXXXX.
               unsigned long long pc = (unsigned long long)(uintptr_t)frame.mTagPtr;
-              snprintf(tagBuff, DYNAMIC_MAX_STRING, "%#llx", pc);
-              stack.AppendFrame(UniqueStacks::OnStackFrameKey(tagBuff));
+              snprintf(tagBuff.get(), DYNAMIC_MAX_STRING, "%#llx", pc);
+              stack.AppendFrame(UniqueStacks::OnStackFrameKey(tagBuff.get()));
             } else if (frame.mTagName == 'c') {
               UniqueStacks::OnStackFrameKey frameKey(tagStringData);
               readAheadPos = (framePos + incBy) % mEntrySize;

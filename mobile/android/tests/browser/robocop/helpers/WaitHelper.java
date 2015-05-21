@@ -128,7 +128,7 @@ public final class WaitHelper {
      * the invocation of storeState to the invocation of hasStateChanged. A boolean will be
      * returned from hasStateChanged, indicating this change of status.
      */
-    private static interface ChangeVerifier {
+    private interface ChangeVerifier {
         public String getLogTag();
 
         /**

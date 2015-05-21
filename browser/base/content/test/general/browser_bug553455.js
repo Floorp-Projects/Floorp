@@ -302,8 +302,7 @@ function test_failed_download() {
     wait_for_notification("addon-install-failed", function(aPanel) {
       let notification = aPanel.childNodes[0];
       is(notification.getAttribute("label"),
-         "The add-on could not be downloaded because of a connection failure " +
-         "on example.com.",
+         "The add-on could not be downloaded because of a connection failure.",
          "Should have seen the right message");
 
       Services.perms.remove("example.com", "install");
@@ -329,7 +328,7 @@ function test_corrupt_file() {
     wait_for_notification("addon-install-failed", function(aPanel) {
       let notification = aPanel.childNodes[0];
       is(notification.getAttribute("label"),
-         "The add-on downloaded from example.com could not be installed " +
+         "The add-on downloaded from this site could not be installed " +
          "because it appears to be corrupt.",
          "Should have seen the right message");
 
@@ -663,7 +662,7 @@ function test_wronghost() {
       wait_for_notification("addon-install-failed", function(aPanel) {
         let notification = aPanel.childNodes[0];
         is(notification.getAttribute("label"),
-           "The add-on downloaded from example.com could not be installed " +
+           "The add-on downloaded from this site could not be installed " +
            "because it appears to be corrupt.",
            "Should have seen the right message");
 
