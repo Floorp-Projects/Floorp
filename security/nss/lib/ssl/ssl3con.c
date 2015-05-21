@@ -5401,9 +5401,7 @@ ssl3_HandleHelloRequest(sslSocket *ss)
 	return SECFailure;
     }
     if (ss->opt.enableRenegotiation == SSL_RENEGOTIATE_NEVER) {
-	ssl_GetXmitBufLock(ss);
-	rv = SSL3_SendAlert(ss, alert_warning, no_renegotiation);
-	ssl_ReleaseXmitBufLock(ss);
+	(void)SSL3_SendAlert(ss, alert_warning, no_renegotiation);
 	PORT_SetError(SSL_ERROR_RENEGOTIATION_NOT_ALLOWED);
 	return SECFailure;
     }
@@ -6601,29 +6599,6 @@ loser:
     return SECFailure;
 }
 
-/* ssl3_BigIntGreaterThanOne returns true iff |mpint|, taken as an unsigned,
- * big-endian integer is > 1 */
-static PRBool
-ssl3_BigIntGreaterThanOne(const SECItem* mpint) {
-    unsigned char firstNonZeroByte = 0;
-    unsigned int i;
-
-    for (i = 0; i < mpint->len; i++) {
-	if (mpint->data[i]) {
-	    firstNonZeroByte = mpint->data[i];
-	    break;
-	}
-    }
-
-    if (firstNonZeroByte == 0)
-	return PR_FALSE;
-    if (firstNonZeroByte > 1)
-	return PR_TRUE;
-
-    /* firstNonZeroByte == 1, therefore mpint > 1 iff the first non-zero byte
-     * is followed by another byte. */
-    return (i < mpint->len - 1);
-}
 
 /* Called from ssl3_HandleHandshakeMessage() when it has deciphered a complete
  * ssl3 ServerKeyExchange message.
@@ -6668,6 +6643,12 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     	if (rv != SECSuccess) {
 	    goto loser;		/* malformed. */
 	}
+        /* This exchange method is only used by export cipher suites.
+         * Those are broken and so this code will eventually be removed. */
+        if (SECKEY_BigIntegerBitLength(&modulus) < 512) {
+            desc = isTLS ? insufficient_security : illegal_parameter;
+            goto alert_loser;
+        }
     	rv = ssl3_ConsumeHandshakeVariable(ss, &exponent, 2, &b, &length);
     	if (rv != SECSuccess) {
 	    goto loser;		/* malformed. */
@@ -6753,12 +6734,16 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	SECItem          dh_p      = {siBuffer, NULL, 0};
 	SECItem          dh_g      = {siBuffer, NULL, 0};
 	SECItem          dh_Ys     = {siBuffer, NULL, 0};
+        unsigned dh_p_bits;
+        unsigned dh_g_bits;
+        unsigned dh_Ys_bits;
 
     	rv = ssl3_ConsumeHandshakeVariable(ss, &dh_p, 2, &b, &length);
     	if (rv != SECSuccess) {
 	    goto loser;		/* malformed. */
 	}
-	if (dh_p.len < 512/8) {
+        dh_p_bits = SECKEY_BigIntegerBitLength(&dh_p);
+        if (dh_p_bits < DH_MIN_P_BITS) {
 	    errCode = SSL_ERROR_WEAK_SERVER_EPHEMERAL_DH_KEY;
 	    goto alert_loser;
 	}
@@ -6766,13 +6751,16 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     	if (rv != SECSuccess) {
 	    goto loser;		/* malformed. */
 	}
-	if (dh_g.len > dh_p.len || !ssl3_BigIntGreaterThanOne(&dh_g))
+        /* Abort if dh_g is 0, 1, or obviously too big. */
+        dh_g_bits = SECKEY_BigIntegerBitLength(&dh_g);
+        if (dh_g_bits > dh_p_bits || dh_g_bits <= 1)
 	    goto alert_loser;
     	rv = ssl3_ConsumeHandshakeVariable(ss, &dh_Ys, 2, &b, &length);
     	if (rv != SECSuccess) {
 	    goto loser;		/* malformed. */
 	}
-	if (dh_Ys.len > dh_p.len || !ssl3_BigIntGreaterThanOne(&dh_Ys))
+        dh_Ys_bits = SECKEY_BigIntegerBitLength(&dh_Ys);
+        if (dh_Ys_bits > dh_p_bits || dh_Ys_bits <= 1)
 	    goto alert_loser;
 	if (isTLS12) {
 	    rv = ssl3_ConsumeSignatureAndHashAlgorithm(ss, &b, &length,
@@ -8881,6 +8869,10 @@ ssl3_SendServerKeyExchange(sslSocket *ss)
 	         2 + sdPub->u.rsa.publicExponent.len +
 	         2 + signed_hash.len;
 
+	if (ss->ssl3.pwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_2) {
+	    length += 2;
+	}
+
 	rv = ssl3_AppendHandshakeHeader(ss, server_key_exchange, length);
 	if (rv != SECSuccess) {
 	    goto loser; 	/* err set by AppendHandshake. */
@@ -10055,33 +10047,25 @@ ssl3_AuthCertificate(sslSocket *ss)
 	if (pubKey) {
 	    ss->sec.keaKeyBits = ss->sec.authKeyBits =
 		SECKEY_PublicKeyStrengthInBits(pubKey);
-#ifndef NSS_DISABLE_ECC
-	    if (ss->sec.keaType == kt_ecdh) {
-		/* Get authKeyBits from signing key.
-		 * XXX The code below uses a quick approximation of
-		 * key size based on cert->signatureWrap.signature.data
-		 * (which contains the DER encoded signature). The field
-		 * cert->signatureWrap.signature.len contains the
-		 * length of the encoded signature in bits.
-		 */
-		if (ss->ssl3.hs.kea_def->kea == kea_ecdh_ecdsa) {
-		    ss->sec.authKeyBits = 
-			cert->signatureWrap.signature.data[3]*8;
-		    if (cert->signatureWrap.signature.data[4] == 0x00)
-			    ss->sec.authKeyBits -= 8;
-		    /* 
-		     * XXX: if cert is not signed by ecdsa we should
-		     * destroy pubKey and goto bad_cert
-		     */
-		} else if (ss->ssl3.hs.kea_def->kea == kea_ecdh_rsa) {
-		    ss->sec.authKeyBits = cert->signatureWrap.signature.len;
-		    /* 
-		     * XXX: if cert is not signed by rsa we should
-		     * destroy pubKey and goto bad_cert
-		     */
-		}
-	    }
-#endif /* NSS_DISABLE_ECC */
+            KeyType pubKeyType = SECKEY_GetPublicKeyType(pubKey);
+            /* Too small: not good enough. Send a fatal alert. */
+            /* TODO: Use 1023 for RSA because a higher RSA_MIN_MODULUS_BITS
+             * breaks export cipher suites, not 1024 to be conservative; when
+             * export removed, increase RSA_MIN_MODULUS_BITS and use that. */
+            /* We aren't checking EC here on the understanding that we only
+             * support curves we like, a decision that might need revisiting. */
+            if (((pubKeyType == rsaKey || pubKeyType == rsaPssKey ||
+                  pubKeyType == rsaOaepKey) && ss->sec.authKeyBits < 1023) ||
+                (pubKeyType == dsaKey && ss->sec.authKeyBits < DSA_MIN_P_BITS) ||
+                (pubKeyType == dhKey && ss->sec.authKeyBits < DH_MIN_P_BITS)) {
+                PORT_SetError(SSL_ERROR_WEAK_SERVER_CERT_KEY);
+                (void)SSL3_SendAlert(ss, alert_fatal,
+                                     ss->version >= SSL_LIBRARY_VERSION_TLS_1_0
+                                     ? insufficient_security
+                                     : illegal_parameter);
+                SECKEY_DestroyPublicKey(pubKey);
+                return SECFailure;
+            }
 	    SECKEY_DestroyPublicKey(pubKey); 
 	    pubKey = NULL;
     	}
