@@ -33,6 +33,23 @@ extern PRLogModuleInfo* gMediaPromiseLog;
   MOZ_ASSERT(gMediaPromiseLog); \
   MOZ_LOG(gMediaPromiseLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
 
+namespace detail {
+template<typename ThisType, typename Ret, typename ArgType>
+static TrueType TakesArgumentHelper(Ret (ThisType::*)(ArgType));
+template<typename ThisType, typename Ret, typename ArgType>
+static TrueType TakesArgumentHelper(Ret (ThisType::*)(ArgType) const);
+template<typename ThisType, typename Ret>
+static FalseType TakesArgumentHelper(Ret (ThisType::*)());
+template<typename ThisType, typename Ret>
+static FalseType TakesArgumentHelper(Ret (ThisType::*)() const);
+} // namespace detail
+
+template<typename MethodType>
+struct TakesArgument {
+  typedef decltype(detail::TakesArgumentHelper(DeclVal<MethodType>())) Type;
+  static const bool value = Type::value;
+};
+
 /*
  * A promise manages an asynchronous request that may or may not be able to be
  * fulfilled immediately. When an API returns a promise, the consumer may attach
@@ -241,23 +258,16 @@ protected:
    * make the resolve/reject value argument "optional".
    */
 
-  // Avoid confusing the compiler when the callback accepts T* but the ValueType
-  // is nsRefPtr<T>. See bug 1109954 comment 6.
-  template <typename T>
-  struct NonDeduced
-  {
-    typedef T type;
-  };
-
-  template<typename ThisType, typename ValueType>
-  static void InvokeCallbackMethod(ThisType* aThisVal, void(ThisType::*aMethod)(ValueType),
-                                   typename NonDeduced<ValueType>::type aValue)
+  template<typename ThisType, typename MethodType, typename ValueType>
+  static typename EnableIf<TakesArgument<MethodType>::value, void>::Type
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
   {
       ((*aThisVal).*aMethod)(aValue);
   }
 
-  template<typename ThisType, typename ValueType>
-  static void InvokeCallbackMethod(ThisType* aThisVal, void(ThisType::*aMethod)(), ValueType aValue)
+  template<typename ThisType, typename MethodType, typename ValueType>
+  static typename EnableIf<!TakesArgument<MethodType>::value, void>::Type
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
   {
       ((*aThisVal).*aMethod)();
   }
