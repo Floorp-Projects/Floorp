@@ -7,6 +7,7 @@
 /*
  * Double hashing implementation.
  */
+#include <new>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +39,7 @@
  * allowed (and therefore the level is 0 or 1, depending on whether they
  * incremented it).
  *
- * Only Finish() needs to allow this special value.
+ * Only the destructor needs to allow this special value.
  */
 #define IMMUTABLE_RECURSION_LEVEL UINT32_MAX
 
@@ -192,15 +193,8 @@ MinLoad(uint32_t aCapacity)
   return aCapacity >> 2;                // == aCapacity * 0.25
 }
 
-static inline uint32_t
-MinCapacity(uint32_t aLength)
-{
-  return (aLength * 4 + (3 - 1)) / 3;   // == ceil(aLength * 4 / 3)
-}
-
-MOZ_ALWAYS_INLINE void
-PLDHashTable::Init(const PLDHashTableOps* aOps,
-                   uint32_t aEntrySize, uint32_t aLength)
+static MOZ_ALWAYS_INLINE uint32_t
+HashShift(uint32_t aEntrySize, uint32_t aLength)
 {
   if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
     MOZ_CRASH("Initial length is too large");
@@ -208,38 +202,39 @@ PLDHashTable::Init(const PLDHashTableOps* aOps,
 
   // Compute the smallest capacity allowing |aLength| elements to be inserted
   // without rehashing.
-  uint32_t capacity = MinCapacity(aLength);
+  uint32_t capacity = (aLength * 4 + (3 - 1)) / 3; // == ceil(aLength * 4 / 3)
   if (capacity < PL_DHASH_MIN_CAPACITY) {
     capacity = PL_DHASH_MIN_CAPACITY;
   }
 
+  // Round up capacity to next power-of-two.
   int log2 = CeilingLog2(capacity);
-
   capacity = 1u << log2;
   MOZ_ASSERT(capacity <= PL_DHASH_MAX_CAPACITY);
-  mOps = aOps;
-  mHashShift = PL_DHASH_BITS - log2;
-  mEntrySize = aEntrySize;
-  mEntryCount = mRemovedCount = 0;
-  mGeneration = 0;
+
   uint32_t nbytes;
   if (!SizeOfEntryStore(capacity, aEntrySize, &nbytes)) {
     MOZ_CRASH("Initial entry store size is too large");
   }
 
-  mEntryStore = nullptr;
-
-  METER(memset(&mStats, 0, sizeof(mStats)));
-
-#ifdef DEBUG
-  mRecursionLevel = 0;
-#endif
+  // Compute the hashShift value.
+  return PL_DHASH_BITS - log2;
 }
 
 PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
                            uint32_t aLength)
+  : mOps(aOps)
+  , mHashShift(HashShift(aEntrySize, aLength))
+  , mEntrySize(aEntrySize)
+  , mEntryCount(0)
+  , mRemovedCount(0)
+  , mGeneration(0)
+  , mEntryStore(nullptr)
+#ifdef DEBUG
+  , mRecursionLevel(0)
+#endif
 {
-  Init(aOps, aEntrySize, aLength);
+  METER(memset(&mStats, 0, sizeof(mStats)));
 }
 
 PLDHashTable&
@@ -250,12 +245,18 @@ PLDHashTable::operator=(PLDHashTable&& aOther)
   }
 
   // Destruct |this|.
-  Finish();
+  this->~PLDHashTable();
 
-  // Move pieces over.
-  mOps = Move(aOther.mOps);
+  // |mOps| and |mEntrySize| are const so we can't assign them. Instead, we
+  // require that they are equal. The justification for this is that they're
+  // conceptually part of the type -- indeed, if PLDHashTable was a templated
+  // type like nsTHashtable, they *would* be part of the type -- so it only
+  // makes sense to assign in cases where they match.
+  MOZ_RELEASE_ASSERT(mOps == aOther.mOps);
+  MOZ_RELEASE_ASSERT(mEntrySize == aOther.mEntrySize);
+
+  // Move non-const pieces over.
   mHashShift = Move(aOther.mHashShift);
-  mEntrySize = Move(aOther.mEntrySize);
   mEntryCount = Move(aOther.mEntryCount);
   mRemovedCount = Move(aOther.mRemovedCount);
   mGeneration = Move(aOther.mGeneration);
@@ -313,8 +314,7 @@ PLDHashTable::EntryIsFree(PLDHashEntryHdr* aEntry)
   return aEntry->mKeyHash == 0;
 }
 
-MOZ_ALWAYS_INLINE void
-PLDHashTable::Finish()
+PLDHashTable::~PLDHashTable()
 {
   if (!mEntryStore) {
     return;
@@ -342,20 +342,15 @@ PLDHashTable::Finish()
   mEntryStore = nullptr;
 }
 
-PLDHashTable::~PLDHashTable()
-{
-  Finish();
-}
-
 void
 PLDHashTable::ClearAndPrepareForLength(uint32_t aLength)
 {
-  // Get these values before the call to Finish() clobbers them.
+  // Get these values before the destructor clobbers them.
   const PLDHashTableOps* ops = mOps;
   uint32_t entrySize = mEntrySize;
 
-  Finish();
-  Init(ops, entrySize, aLength);
+  this->~PLDHashTable();
+  new (this) PLDHashTable(ops, entrySize, aLength);
 }
 
 void
@@ -591,7 +586,7 @@ PLDHashTable::Add(const void* aKey, const mozilla::fallible_t&)
   // Allocate the entry storage if it hasn't already been allocated.
   if (!mEntryStore) {
     uint32_t nbytes;
-    // We already checked this in Init(), so it must still be true.
+    // We already checked this in the constructor, so it must still be true.
     MOZ_RELEASE_ASSERT(SizeOfEntryStore(CapacityFromHashShift(), mEntrySize,
                                         &nbytes));
     mEntryStore = (char*)malloc(nbytes);
