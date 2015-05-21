@@ -11,7 +11,6 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const myScope = this;
 
-Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -23,6 +22,7 @@ Cu.import("resource://gre/modules/ObjectUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
 #ifndef MOZ_WIDGET_GONK
+Cu.import("resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 #endif
@@ -48,7 +48,7 @@ function getGlobal() {
   return gGlobalEnvironment;
 }
 
-const TelemetryEnvironment = {
+this.TelemetryEnvironment = {
   get currentEnvironment() {
     return getGlobal().currentEnvironment;
   },
@@ -659,9 +659,16 @@ function EnvironmentCache() {
   // Build the remaining asynchronous parts of the environment. Don't register change listeners
   // until the initial environment has been built.
 
+#ifdef MOZ_WIDGET_GONK
+  this._addonBuilder = {
+    watchForChanges: function() {}
+  }
+  let p = [];
+#else
   this._addonBuilder = new EnvironmentAddonBuilder(this);
 
   let p = [ this._addonBuilder.init() ];
+#endif
 #ifndef MOZ_WIDGET_ANDROID
   this._currentEnvironment.profile = {};
   p.push(this._updateProfile());
@@ -920,6 +927,9 @@ EnvironmentCache.prototype = {
    * @returns null on error, true if we are the default browser, or false otherwise.
    */
   _isDefaultBrowser: function () {
+#ifdef MOZ_WIDGET_GONK
+    return true;
+#else
     if (!("@mozilla.org/browser/shell-service;1" in Cc)) {
       this._log.error("_isDefaultBrowser - Could not obtain shell service");
       return null;
@@ -945,6 +955,7 @@ EnvironmentCache.prototype = {
     }
 
     return null;
+#endif
   },
 
   /**
