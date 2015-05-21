@@ -386,3 +386,76 @@ class Graph(object):
             graph.pop('metadata', None)
 
         print(json.dumps(graph, indent=4))
+
+@CommandProvider
+class CIBuild(object):
+    @Command('taskcluster-build', category='ci',
+        description="Create taskcluster try server build task")
+    @CommandArgument('--base-repository',
+        help='URL for "base" repository to clone')
+    @CommandArgument('--head-repository',
+        required=True,
+        help='URL for "head" repository to fetch revision from')
+    @CommandArgument('--head-ref',
+        help='Reference (this is same as rev usually for hg)')
+    @CommandArgument('--head-rev',
+        required=True,
+        help='Commit revision to use')
+    @CommandArgument('--mozharness-repository',
+        help='URL for custom mozharness repo')
+    @CommandArgument('--mozharness-rev',
+        help='Commit revision to use from mozharness repository')
+    @CommandArgument('--owner',
+        default='foobar@mozilla.com',
+        help='email address of who owns this graph')
+    @CommandArgument('build_task',
+        help='path to build task definition')
+    def create_ci_build(self, **params):
+        templates = Templates(ROOT)
+        # TODO handle git repos
+        head_repository = params['head_repository']
+        if not head_repository:
+            head_repository = get_hg_url()
+
+        head_rev = params['head_rev']
+        if not head_rev:
+            head_rev = get_latest_hg_revision(head_repository)
+
+        head_ref = params['head_ref'] or head_rev
+
+        mozharness = load_mozharness_info()
+
+        mozharness_repo = params['mozharness_repository']
+        if mozharness_repo is None:
+            mozharness_repo = mozharness['repo']
+
+        mozharness_rev = params['mozharness_rev']
+        if mozharness_rev is None:
+            mozharness_rev = mozharness['revision']
+
+        build_parameters = dict(gaia_info().items() + {
+            'docker_image': docker_image,
+            'owner': params['owner'],
+            'from_now': json_time_from_now,
+            'now': current_json_time(),
+            'base_repository': params['base_repository'] or head_repository,
+            'head_repository': head_repository,
+            'head_rev': head_rev,
+            'head_ref': head_ref,
+            'mozharness_repository': mozharness_repo,
+            'mozharness_ref': mozharness_rev,
+            'mozharness_rev': mozharness_rev
+        }.items())
+
+        try:
+            build_task = templates.load(params['build_task'], build_parameters)
+        except IOError:
+            sys.stderr.write(
+                "Could not load build task file.  Ensure path is a relative " \
+                "path from testing/taskcluster"
+            )
+            sys.exit(1)
+
+        taskcluster_graph.build_task.validate(build_task)
+
+        print(json.dumps(build_task['task'], indent=4))
