@@ -5,18 +5,22 @@
 
 (function (factory) { // Module boilerplate
   if (this.module && module.id.indexOf("worker") >= 0) { // require
-    const { Cc, Ci, ChromeWorker } = require("chrome");
-    factory.call(this, require, exports, module, { Cc, Ci }, ChromeWorker);
+    const { Cc, Ci, Cu, ChromeWorker } = require("chrome");
+    const dumpn = require("devtools/toolkit/DevToolsUtils").dumpn;
+    factory.call(this, require, exports, module, { Cc, Ci, Cu }, ChromeWorker, dumpn);
   } else { // Cu.import
-      const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-      const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-      this.isWorker = false;
-      this.Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-      this.console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
-      factory.call(this, devtools.require, this, { exports: this }, { Cc, Ci }, ChromeWorker);
-      this.EXPORTED_SYMBOLS = ["DevToolsWorker"];
+    const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+    const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+    this.isWorker = false;
+    this.Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+    this.console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
+    factory.call(
+      this, devtools.require, this, { exports: this },
+      { Cc, Ci, Cu }, ChromeWorker, null
+    );
+    this.EXPORTED_SYMBOLS = ["DevToolsWorker"];
   }
-}).call(this, function (require, exports, module, { Ci, Cc }, ChromeWorker ) {
+}).call(this, function (require, exports, module, { Ci, Cc }, ChromeWorker, dumpn) {
 
 let MESSAGE_COUNTER = 0;
 
@@ -29,9 +33,18 @@ let MESSAGE_COUNTER = 0;
  *
  * @param {string} url
  *        The URL of the worker.
+ * @param Object opts
+ *        An option with the following optional fields:
+ *        - name: a name that will be printed with logs
+ *        - verbose: log incoming and outgoing messages
  */
-function DevToolsWorker (url) {
+function DevToolsWorker (url, opts) {
+  opts = opts || {};
   this._worker = new ChromeWorker(url);
+  this._verbose = opts.verbose;
+  this._name = opts.name;
+
+  this._worker.addEventListener("error", this.onError, false);
 }
 exports.DevToolsWorker = DevToolsWorker;
 
@@ -46,16 +59,31 @@ exports.DevToolsWorker = DevToolsWorker;
  *        Data to be passed into the task implemented by the worker.
  * @return {Promise}
  */
-DevToolsWorker.prototype.performTask = function DevToolsWorkerPerformTask (task, data) {
+DevToolsWorker.prototype.performTask = function (task, data) {
   if (this._destroyed) {
     return Promise.reject("Cannot call performTask on a destroyed DevToolsWorker");
   }
   let worker = this._worker;
   let id = ++MESSAGE_COUNTER;
-  worker.postMessage({ task, id, data });
+  let payload = { task, id, data };
 
-  return new Promise(function (resolve, reject) {
-    worker.addEventListener("message", function listener({ data }) {
+  if(this._verbose && dumpn) {
+    dumpn("Sending message to worker" +
+          (this._name ? (" (" + this._name + ")") : "" ) +
+          ": " +
+          JSON.stringify(payload, null, 2));
+  }
+  worker.postMessage(payload);
+
+  return new Promise((resolve, reject) => {
+    let listener = ({ data }) => {
+      if(this._verbose && dumpn) {
+        dumpn("Received message from worker" +
+              (this._name ? (" (" + this._name + ")") : "" ) +
+              ": " +
+              JSON.stringify(data, null, 2));
+      }
+
       if (data.id !== id) {
         return;
       }
@@ -65,18 +93,24 @@ DevToolsWorker.prototype.performTask = function DevToolsWorkerPerformTask (task,
       } else {
         resolve(data.response);
       }
-    });
+    };
+
+    worker.addEventListener("message", listener);
   });
 }
 
 /**
  * Terminates the underlying worker. Use when no longer needing the worker.
  */
-DevToolsWorker.prototype.destroy = function DevToolsWorkerDestroy () {
+DevToolsWorker.prototype.destroy = function () {
   this._worker.terminate();
   this._worker = null;
   this._destroyed = true;
 };
+
+DevToolsWorker.prototype.onError = function({ message, filename, lineno }) {
+  dump(new Error(message + " @ " + filename + ":" + lineno) + "\n");
+}
 
 /**
  * Takes a function and returns a Worker-wrapped version of the same function.
