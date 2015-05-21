@@ -178,8 +178,8 @@ SECKEY_CreateDHPrivateKey(SECKEYDHParams *param, SECKEYPublicKey **pubk, void *c
     PK11SlotInfo *slot;
 
     if (!param || !param->base.data || !param->prime.data ||
-        SECKEY_BigIntegerBitLength(&param->prime) < DH_MIN_P_BITS ||
-        param->base.len == 0 || param->base.len > param->prime.len + 1 ||
+        param->prime.len < 512/8 || param->base.len == 0 || 
+        param->base.len > param->prime.len + 1 || 
 	(param->base.len == 1 && param->base.data[0] == 0)) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
@@ -941,76 +941,61 @@ SECKEY_ECParamsToBasePointOrderLen(const SECItem *encodedParams)
     }
 }
 
-/* The number of bits in the number from the first non-zero bit onward. */
-unsigned
-SECKEY_BigIntegerBitLength(const SECItem *number)
-{
-    const unsigned char *p;
-    unsigned octets;
-    unsigned bits;
-
-    if (!number || !number->data) {
-        PORT_SetError(SEC_ERROR_INVALID_KEY);
-        return 0;
-    }
-
-    p = number->data;
-    octets = number->len;
-    while (octets > 0 && !*p) {
-        ++p;
-        --octets;
-    }
-    if (octets == 0) {
-        return 0;
-    }
-    /* bits = 7..1 because we know at least one bit is set already */
-    /* Note: This could do a binary search, but this is faster for keys if we
-     * assume that good keys will have the MSB set. */
-    for (bits = 7; bits > 0; --bits) {
-        if (*p & (1 << bits)) {
-            break;
-        }
-    }
-    return octets * 8 + bits - 7;
-}
-
 /* returns key strength in bytes (not bits) */
 unsigned
 SECKEY_PublicKeyStrength(const SECKEYPublicKey *pubk)
 {
-    return (SECKEY_PublicKeyStrengthInBits(pubk) + 7) / 8;
+    unsigned char b0;
+    unsigned size;
+
+    /* interpret modulus length as key strength */
+    if (!pubk)
+    	goto loser;
+    switch (pubk->keyType) {
+    case rsaKey:
+	if (!pubk->u.rsa.modulus.data) break;
+    	b0 = pubk->u.rsa.modulus.data[0];
+    	return b0 ? pubk->u.rsa.modulus.len : pubk->u.rsa.modulus.len - 1;
+    case dsaKey:
+	if (!pubk->u.dsa.publicValue.data) break;
+    	b0 = pubk->u.dsa.publicValue.data[0];
+    	return b0 ? pubk->u.dsa.publicValue.len :
+	    pubk->u.dsa.publicValue.len - 1;
+    case dhKey:
+	if (!pubk->u.dh.publicValue.data) break;
+    	b0 = pubk->u.dh.publicValue.data[0];
+    	return b0 ? pubk->u.dh.publicValue.len :
+	    pubk->u.dh.publicValue.len - 1;
+    case ecKey:
+	/* Get the key size in bits and adjust */
+	size =	SECKEY_ECParamsToKeySize(&pubk->u.ec.DEREncodedParams);
+	return (size + 7)/8;
+    default:
+	break;
+    }
+loser:
+    PORT_SetError(SEC_ERROR_INVALID_KEY);
+    return 0;
 }
 
 /* returns key strength in bits */
 unsigned
 SECKEY_PublicKeyStrengthInBits(const SECKEYPublicKey *pubk)
 {
-    unsigned bitSize = 0;
-
-    if (!pubk) {
-        PORT_SetError(SEC_ERROR_INVALID_KEY);
-        return 0;
-    }
-
-    /* interpret modulus length as key strength */
+    unsigned size;
     switch (pubk->keyType) {
     case rsaKey:
-        bitSize = SECKEY_BigIntegerBitLength(&pubk->u.rsa.modulus);
-        break;
     case dsaKey:
-        bitSize = SECKEY_BigIntegerBitLength(&pubk->u.dsa.publicValue);
-        break;
     case dhKey:
-        bitSize = SECKEY_BigIntegerBitLength(&pubk->u.dh.publicValue);
-        break;
+	return SECKEY_PublicKeyStrength(pubk) * 8; /* 1 byte = 8 bits */
     case ecKey:
-        bitSize = SECKEY_ECParamsToKeySize(&pubk->u.ec.DEREncodedParams);
-        break;
+	size = SECKEY_ECParamsToKeySize(&pubk->u.ec.DEREncodedParams);
+	return size;
     default:
-        PORT_SetError(SEC_ERROR_INVALID_KEY);
-        break;
+	break;
     }
-    return bitSize;
+    PORT_SetError(SEC_ERROR_INVALID_KEY);
+    return 0;
 }
 
 /* returns signature length in bytes (not bits) */
