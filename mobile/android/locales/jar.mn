@@ -48,6 +48,7 @@
 relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/about.dtd                       (%chrome/global/about.dtd)
   locale/@AB_CD@/browser/overrides/aboutAbout.dtd                  (%chrome/global/aboutAbout.dtd)
+  locale/@AB_CD@/browser/overrides/aboutReader.properties          (%chrome/global/aboutReader.properties)
   locale/@AB_CD@/browser/overrides/aboutRights.dtd                 (%chrome/global/aboutRights.dtd)
   locale/@AB_CD@/browser/overrides/charsetMenu.properties          (%chrome/global/charsetMenu.properties)
   locale/@AB_CD@/browser/overrides/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
@@ -74,6 +75,7 @@ relativesrcdir toolkit/locales:
 
 % override chrome://global/locale/about.dtd chrome://browser/locale/overrides/about.dtd
 % override chrome://global/locale/aboutAbout.dtd chrome://browser/locale/overrides/aboutAbout.dtd
+% override chrome://global/locale/aboutReader.properties chrome://browser/locale/overrides/aboutReader.properties
 % override chrome://global/locale/aboutRights.dtd chrome://browser/locale/overrides/aboutRights.dtd
 % override chrome://global/locale/charsetMenu.properties chrome://browser/locale/overrides/charsetMenu.properties
 % override chrome://global/locale/commonDialogs.properties chrome://browser/locale/overrides/commonDialogs.properties
