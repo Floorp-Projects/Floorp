@@ -1167,12 +1167,23 @@ let Impl = {
    * Check if pings can be sent to the server. If FHR is not allowed to upload,
    * pings are not sent to the server (Telemetry is a sub-feature of FHR).
    * If unified telemetry is off, don't send pings if Telemetry is disabled.
+   *
    * @return {Boolean} True if pings can be send to the servers, false otherwise.
    */
   _canSend: function() {
-    return (Telemetry.isOfficialTelemetry || this._testMode) &&
-           Preferences.get(PREF_FHR_UPLOAD_ENABLED, false) &&
-           (IS_UNIFIED_TELEMETRY || Preferences.get(PREF_ENABLED));
+    // We only send pings from official builds, but allow overriding this for tests.
+    if (!Telemetry.isOfficialTelemetry && !this._testMode) {
+      return false;
+    }
+
+    // With unified Telemetry, the FHR upload setting controls whether we can send pings.
+    // The Telemetry pref enables sending extended data sets instead.
+    if (IS_UNIFIED_TELEMETRY) {
+      return Preferences.get(PREF_FHR_UPLOAD_ENABLED, false);
+    }
+
+    // Without unified Telemetry, the Telemetry enabled pref controls ping sending.
+    return Preferences.get(PREF_ENABLED, false);
   },
 
   /**
