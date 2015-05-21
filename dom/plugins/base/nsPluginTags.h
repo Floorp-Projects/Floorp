@@ -211,6 +211,14 @@ public:
 
   static nsresult Create(const mozilla::dom::FakePluginTagInit& aInitDictionary,
                          nsFakePluginTag** aPluginTag);
+  nsFakePluginTag(uint32_t aId,
+                  already_AddRefed<nsIURI>&& aHandlerURI,
+                  const char* aName,
+                  const char* aDescription,
+                  const nsTArray<nsCString>& aMimeTypes,
+                  const nsTArray<nsCString>& aMimeDescriptions,
+                  const nsTArray<nsCString>& aExtensions,
+                  const nsCString& aNiceName);
 
   bool IsEnabled() override;
   const nsCString& GetNiceFileName() override;
@@ -219,9 +227,17 @@ public:
 
   nsIURI* HandlerURI() const { return mHandlerURI; }
 
+  uint32_t Id() const { return mId; }
+
 private:
   nsFakePluginTag();
   virtual ~nsFakePluginTag();
+
+  // A unique id for this JS-implemented plugin. Registering a plugin through
+  // nsPluginHost::RegisterFakePlugin assigns a new id. The id is transferred
+  // through IPC when getting the list of JS-implemented plugins from child
+  // processes, so it should be consistent across processes.
+  uint32_t      mId;
 
   // The URI of the handler for our fake plugin.
   // FIXME-jsplugins do we need to sanity check these?
@@ -231,6 +247,10 @@ private:
   nsCString     mNiceName;
 
   nsPluginTag::PluginState mState;
+
+  // Stores the id to use for the JS-implemented plugin that gets registered
+  // next through nsPluginHost::RegisterFakePlugin.
+  static uint32_t sNextId;
 };
 
 #endif // nsPluginTags_h_

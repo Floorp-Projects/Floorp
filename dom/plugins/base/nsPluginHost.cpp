@@ -57,6 +57,7 @@
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginTypes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ipc/URIUtils.h"
 
 #include "nsEnumeratorUtils.h"
 #include "nsXPCOM.h"
@@ -116,6 +117,7 @@
 
 using namespace mozilla;
 using mozilla::TimeStamp;
+using mozilla::plugins::FakePluginTag;
 using mozilla::plugins::PluginTag;
 using mozilla::plugins::PluginAsyncSurrogate;
 using mozilla::dom::FakePluginTagInit;
@@ -2280,8 +2282,9 @@ nsPluginHost::FindPluginsInContent(bool aCreatePluginList, bool* aPluginsChanged
   dom::ContentChild* cp = dom::ContentChild::GetSingleton();
   nsresult rv;
   nsTArray<PluginTag> plugins;
+  nsTArray<FakePluginTag> fakePlugins;
   uint32_t parentEpoch;
-  if (!cp->SendFindPlugins(ChromeEpochForContent(), &rv, &plugins, &parentEpoch) ||
+  if (!cp->SendFindPlugins(ChromeEpochForContent(), &rv, &plugins, &fakePlugins, &parentEpoch) ||
       NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -2322,6 +2325,24 @@ nsPluginHost::FindPluginsInContent(bool aCreatePluginList, bool* aPluginsChanged
                                                tag.isFromExtension(),
                                                tag.sandboxLevel());
       AddPluginTag(pluginTag);
+    }
+
+    for (const auto& tag : fakePlugins) {
+      // Don't add the same plugin again.
+      for (const auto& existingTag : mFakePlugins) {
+        if (existingTag->Id() == tag.id()) {
+          continue;
+        }
+      }
+
+      mFakePlugins.AppendElement(new nsFakePluginTag(tag.id(),
+                                                     mozilla::ipc::DeserializeURI(tag.handlerURI()),
+                                                     tag.name().get(),
+                                                     tag.description().get(),
+                                                     tag.mimeTypes(),
+                                                     tag.mimeDescriptions(),
+                                                     tag.extensions(),
+                                                     tag.niceName()));
     }
   }
 
@@ -2472,17 +2493,19 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
 nsresult
 mozilla::plugins::FindPluginsForContent(uint32_t aPluginEpoch,
                                         nsTArray<PluginTag>* aPlugins,
+                                        nsTArray<FakePluginTag>* aFakePlugins,
                                         uint32_t* aNewPluginEpoch)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
-  return host->FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
+  return host->FindPluginsForContent(aPluginEpoch, aPlugins, aFakePlugins, aNewPluginEpoch);
 }
 
 nsresult
 nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
                                     nsTArray<PluginTag>* aPlugins,
+                                    nsTArray<FakePluginTag>* aFakePlugins,
                                     uint32_t* aNewPluginEpoch)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -2506,9 +2529,19 @@ nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
 
     nsCOMPtr<nsIFakePluginTag> faketag = do_QueryInterface(basetag);
     if (faketag) {
-      /// FIXME-jsplugins - We need to make content processes properly
-      /// aware of jsplugins (and add a nsIInternalPluginTag->AsNative() to
-      /// avoid this hacky static cast)
+      /// FIXME-jsplugins - We need to add a nsIInternalPluginTag->AsNative() to
+      /// avoid this hacky static cast
+      nsFakePluginTag* tag = static_cast<nsFakePluginTag*>(basetag.get());
+      mozilla::ipc::URIParams handlerURI;
+      SerializeURI(tag->HandlerURI(), handlerURI);
+      aFakePlugins->AppendElement(FakePluginTag(tag->Id(),
+                                                handlerURI,
+                                                tag->Name(),
+                                                tag->Description(),
+                                                tag->MimeTypes(),
+                                                tag->MimeDescriptions(),
+                                                tag->Extensions(),
+                                                tag->GetNiceFileName()));
       continue;
     }
 

@@ -1125,9 +1125,10 @@ mozilla::ipc::IPCResult
 ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
                                nsresult* aRv,
                                nsTArray<PluginTag>* aPlugins,
+                               nsTArray<FakePluginTag>* aFakePlugins,
                                uint32_t* aNewPluginEpoch)
 {
-  *aRv = mozilla::plugins::FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
+  *aRv = mozilla::plugins::FindPluginsForContent(aPluginEpoch, aPlugins, aFakePlugins, aNewPluginEpoch);
   return IPC_OK();
 }
 
