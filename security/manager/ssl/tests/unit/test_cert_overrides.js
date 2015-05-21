@@ -42,7 +42,7 @@ function check_telemetry() {
   do_check_eq(histogram.counts[10], 5); // SEC_ERROR_EXPIRED_CERTIFICATE
   do_check_eq(histogram.counts[11], 2); // MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
   do_check_eq(histogram.counts[12], 1); // MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA
-  do_check_eq(histogram.counts[13], 1); // MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE
+  do_check_eq(histogram.counts[13], 0); // MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE
   do_check_eq(histogram.counts[14], 2); // MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE
   do_check_eq(histogram.counts[15], 1); // MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE
   do_check_eq(histogram.counts[16], 2); // SEC_ERROR_INVALID_TIME
@@ -54,7 +54,7 @@ function check_telemetry() {
   do_check_eq(keySizeHistogram.counts[0], 0);
   do_check_eq(keySizeHistogram.counts[1], 0); // 0 successful verifications of 2048-bit keys
   do_check_eq(keySizeHistogram.counts[2], 4); // 4 successful verifications of 1024-bit keys
-  do_check_eq(keySizeHistogram.counts[3], 49); // 49 verification failures
+  do_check_eq(keySizeHistogram.counts[3], 48); // 48 verification failures
 
   run_next_test();
 }
@@ -179,9 +179,10 @@ function add_simple_tests() {
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          SEC_ERROR_CA_CERT_INVALID);
 
-  add_cert_override_test("inadequate-key-size-ee.example.com",
-                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
-                         MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
+  // This host presents a 1008-bit RSA key. NSS determines this key is too
+  // small and terminates the connection. The error is not overridable.
+  add_non_overridable_test("inadequate-key-size-ee.example.com",
+                           SSL_ERROR_WEAK_SERVER_CERT_KEY);
 }
 
 function add_combo_tests() {
