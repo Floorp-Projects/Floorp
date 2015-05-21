@@ -3879,6 +3879,9 @@ MOZ_OMX_PLUGIN=
 MOZ_VPX=
 MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
+MOZ_WEBSPEECH_MODELS=
+MOZ_WEBSPEECH_POCKETSPHINX=
+MOZ_WEBSPEECH_TEST_BACKEND=1
 VPX_AS=
 VPX_ASFLAGS=
 VPX_AS_CONVERSION=
@@ -5165,6 +5168,34 @@ else
 fi
 
 dnl ========================================================
+dnl = Disable Speech API test backend
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(webspeechtestbackend,
+[  --disable-webspeechtestbackend        Disable support for HTML Speech API Test Backend],
+    MOZ_WEBSPEECH_TEST_BACKEND=,
+    MOZ_WEBSPEECH_TEST_BACKEND=1)
+
+if test -n "$MOZ_WEBSPEECH_TEST_BACKEND"; then
+    AC_DEFINE(MOZ_WEBSPEECH_TEST_BACKEND)
+fi
+
+AC_SUBST(MOZ_WEBSPEECH_TEST_BACKEND)
+
+dnl ========================================================
+dnl = Disable Speech API pocketsphinx backend
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(webspeechpocketsphinx,
+[  --disable-webspeechpocketsphinx        Disable support for HTML Speech API Pocketsphinx Backend],
+    MOZ_WEBSPEECH_POCKETSPHINX=,
+    MOZ_WEBSPEECH_POCKETSPHINX=1)
+
+if test -n "$MOZ_WEBSPEECH_POCKETSPHINX"; then
+    AC_DEFINE(MOZ_WEBSPEECH_POCKETSPHINX)
+fi
+
+AC_SUBST(MOZ_WEBSPEECH_POCKETSPHINX)
+
+dnl ========================================================
 dnl = Disable Speech API code
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(webspeech,
@@ -5177,6 +5208,20 @@ if test -n "$MOZ_WEBSPEECH"; then
 fi
 
 AC_SUBST(MOZ_WEBSPEECH)
+
+dnl ========================================================
+dnl = Disable Speech API models
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(webspeechmodels,
+[  --disable-webspeechmodels        Disable support for HTML Speech API Models],
+    MOZ_WEBSPEECH_MODELS=,
+    MOZ_WEBSPEECH_MODELS=1)
+
+if test -n "$MOZ_WEBSPEECH_MODELS"; then
+    AC_DEFINE(MOZ_WEBSPEECH_MODELS)
+fi
+
+AC_SUBST(MOZ_WEBSPEECH_MODELS)
 
 dnl ========================================================
 dnl = Enable Raw Codecs
