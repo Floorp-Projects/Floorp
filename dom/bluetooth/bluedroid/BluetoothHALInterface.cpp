@@ -640,6 +640,8 @@ BluetoothHALInterface::GetRemoteDeviceProperty(
 
   if (NS_SUCCEEDED(Convert(aRemoteAddr, remoteAddr)) &&
       false /* TODO: we don't support any values for aName currently */) {
+    // silence uninitialized variable warning for |name|
+    name = static_cast<bt_property_type_t>(0);
     status = mInterface->get_remote_device_property(&remoteAddr, name);
   } else {
     status = BT_STATUS_PARM_INVALID;
