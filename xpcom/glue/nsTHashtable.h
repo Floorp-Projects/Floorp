@@ -134,7 +134,7 @@ public:
                  "nsTHashtable was not initialized properly.");
 
     return static_cast<EntryType*>(
-      PL_DHashTableSearch(const_cast<PLDHashTable*>(static_cast<const PLDHashTable*>(&mTable)),
+      PL_DHashTableSearch(const_cast<PLDHashTable*>(&mTable),
                           EntryType::KeyToPointer(aKey)));
   }
 
