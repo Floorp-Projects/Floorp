@@ -132,6 +132,7 @@ Below is an example directory source file::
           {
               "adgroup_name": "open-source browser",
               "bgColor": "#cae1f4",
+              "check_inadjacency": true,
               "directoryId": 702,
               "explanation": "Suggested for %1$S enthusiasts who visit sites like %2$S",
               "frecent_sites": [
@@ -184,6 +185,8 @@ A suggested link has additional values:
 
 - ``adgroup_name`` - string to override the hardcoded display name of the
   triggering set of sites in Firefox.
+- ``check_inadjacency`` - boolean if true prevents the suggested link from being
+  shown if the new tab page is showing a site from an inadjacency list.
 - ``explanation`` - string to override the default explanation that appears
   below a Suggested Tile. %1$S is replaced by the triggering adgroup name and
   %2$S is replaced by the triggering site.
@@ -197,6 +200,10 @@ A suggested link has additional values:
 - ``time_limits`` - an object consisting of start and end timestamps specifying
   when a Suggested Tile may start and has to stop showing in the newtab.
   The timestamp is expected in ISO_8601 format: '2014-01-10T20:00:00.000Z'
+
+The inadjacency list is packaged with Firefox as base64-encoded 1-way-hashed
+sites that tend to have adult, gambling, alcohol, drug, and similar content.
+Its location: chrome://browser/content/newtab/newTab.inadjacent.json
 
 The preapproved arrays follow a policy for determining what topic grouping is
 allowed as well as the composition of a grouping. The topics are broad

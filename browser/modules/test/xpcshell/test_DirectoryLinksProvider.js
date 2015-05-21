@@ -209,6 +209,7 @@ function promiseCleanDirectoryLinksProvider() {
     yield promiseDirectoryDownloadOnPrefChange(kLocalePref, "en-US");
     yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, kTestURL);
     yield DirectoryLinksProvider._clearFrequencyCap();
+    yield DirectoryLinksProvider._loadInadjacentSites();
     DirectoryLinksProvider._lastDownloadMS  = 0;
     DirectoryLinksProvider.reset();
   });
@@ -1716,4 +1717,182 @@ add_task(function test_sanitizeExplanation() {
   let suggestedLink = [...DirectoryLinksProvider._suggestedLinks.get(suggestedSites[0]).values()][0];
   do_check_eq(suggestedLink.explanation, "This is an evil tile X muhahaha");
   do_check_eq(suggestedLink.targetedName, "WE ARE EVIL ");
+});
+
+add_task(function test_inadjecentSites() {
+  let suggestedTile = Object.assign({
+    check_inadjacency: true
+  }, suggestedTile1);
+
+  // Initial setup
+  let topSites = ["1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
+  let data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+
+  let testObserver = new TestFirstRun();
+  DirectoryLinksProvider.addObserver(testObserver);
+
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
+
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+  let links = yield fetchData();
+
+  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
+  NewTabUtils.isTopPlacesSite = function(site) {
+    return topSites.indexOf(site) >= 0;
+  }
+
+  let origGetProviderLinks = NewTabUtils.getProviderLinks;
+  NewTabUtils.getProviderLinks = function(provider) {
+    return links;
+  }
+
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => {
+    origCurrentTopSiteCount.apply(DirectoryLinksProvider);
+    return 8;
+  };
+
+  // store oroginal inadjacent sites url
+  let origInadjacentSitesUrl = DirectoryLinksProvider._inadjacentSitesUrl;
+
+  // loading inadjacent sites list function
+  function setInadjacentSites(sites) {
+    let badSiteB64 = [];
+    sites.forEach(site => {
+      badSiteB64.push(DirectoryLinksProvider._generateHash(site));
+    });
+    let theList = {"domains": badSiteB64};
+    let dataURI = 'data:application/json,' + JSON.stringify(theList);
+    DirectoryLinksProvider._inadjacentSitesUrl = dataURI;
+    return DirectoryLinksProvider._loadInadjacentSites();
+  };
+
+  // setup gLinks loader
+  let gLinks = NewTabUtils.links;
+  gLinks.addProvider(DirectoryLinksProvider);
+
+  function updateNewTabCache() {
+    gLinks.populateCache();
+    return new Promise(resolve => {
+      NewTabUtils.allPages.register({
+        observe: _ => _,
+        update() {
+          NewTabUtils.allPages.unregister(this);
+          resolve();
+        }
+      });
+  });
+  }
+
+  // no suggested file
+  do_check_eq(DirectoryLinksProvider._updateSuggestedTile(), undefined);
+  // _avoidInadjacentSites should be set, since link.check_inadjacency is on
+  do_check_true(DirectoryLinksProvider._avoidInadjacentSites);
+  // make sure example.com is included in inadjacent sites list
+  do_check_true(DirectoryLinksProvider._isInadjacentLink({baseDomain: "example.com"}));
+
+  function TestFirstRun() {
+    this.promise = new Promise(resolve => {
+      this.onLinkChanged = (directoryLinksProvider, link) => {
+        do_check_eq(link.url, suggestedTile.url);
+        do_check_eq(link.type, "affiliate");
+        resolve();
+      };
+    });
+  }
+
+  // Test first call to '_updateSuggestedTile()', called when fetching directory links.
+  yield testObserver.promise;
+  DirectoryLinksProvider.removeObserver(testObserver);
+
+  // update newtab cache
+  yield updateNewTabCache();
+  // this should have set
+  do_check_true(DirectoryLinksProvider._avoidInadjacentSites);
+
+  // there should be siggested link
+  let link = DirectoryLinksProvider._updateSuggestedTile();
+  do_check_eq(link.url, "http://turbotax.com");
+  // and it should have avoidInadjacentSites flag
+  do_check_true(link.check_inadjacency);
+
+  // make someothersite.com inadjacent
+  yield setInadjacentSites(["someothersite.com"]);
+
+  // there should be no suggested link
+  link = DirectoryLinksProvider._updateSuggestedTile();
+  do_check_false(link);
+  do_check_true(DirectoryLinksProvider._newTabHasInadjacentSite);
+
+  // _handleLinkChanged must return true on inadjacent site
+  do_check_true(DirectoryLinksProvider._handleLinkChanged({
+    url: "http://someothersite.com",
+    type: "history",
+  }));
+  // _handleLinkChanged must return false on ok site
+  do_check_false(DirectoryLinksProvider._handleLinkChanged({
+    url: "http://foobar.com",
+    type: "history",
+  }));
+
+  // change inadjacent list to sites not on newtab page
+  yield setInadjacentSites(["foo.com", "bar.com"]);
+
+  link = DirectoryLinksProvider._updateSuggestedTile();
+  // we should now have a link
+  do_check_true(link);
+  do_check_eq(link.url, "http://turbotax.com");
+
+  // make newtab offending again
+  yield setInadjacentSites(["someothersite.com", "foo.com"]);
+  // there should be no suggested link
+  link = DirectoryLinksProvider._updateSuggestedTile();
+  do_check_false(link);
+  do_check_true(DirectoryLinksProvider._newTabHasInadjacentSite);
+
+  // remove avoidInadjacentSites flag from suggested tile and reload json
+  delete suggestedTile.check_inadjacency;
+  data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
+  dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, dataURI);
+  yield fetchData();
+
+  // inadjacent checking should be disabled
+  do_check_false(DirectoryLinksProvider._avoidInadjacentSites);
+  link = DirectoryLinksProvider._updateSuggestedTile();
+  do_check_true(link);
+  do_check_eq(link.url, "http://turbotax.com");
+  do_check_false(DirectoryLinksProvider._newTabHasInadjacentSite);
+
+  // _handleLinkChanged should return false now, even if newtab has bad site
+  do_check_false(DirectoryLinksProvider._handleLinkChanged({
+    url: "http://someothersite.com",
+    type: "history",
+  }));
+
+  // test _isInadjacentLink
+  do_check_true(DirectoryLinksProvider._isInadjacentLink({baseDomain: "someothersite.com"}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({baseDomain: "bar.com"}));
+  do_check_true(DirectoryLinksProvider._isInadjacentLink({url: "http://www.someothersite.com"}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({url: "http://www.bar.com"}));
+  // try to crash _isInadjacentLink
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({baseDomain: ""}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({url: ""}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({url: "http://localhost:8081/"}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({url: "abracodabra"}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({}));
+
+  // test _checkForInadjacentSites
+  do_check_true(DirectoryLinksProvider._checkForInadjacentSites());
+
+  // Cleanup
+  gLinks.removeProvider(DirectoryLinksProvider);
+  DirectoryLinksProvider._inadjacentSitesUrl = origInadjacentSitesUrl;
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
+  NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  NewTabUtils.getProviderLinks = origGetProviderLinks;
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
+  yield promiseCleanDirectoryLinksProvider();
 });
