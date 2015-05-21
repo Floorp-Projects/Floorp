@@ -2523,7 +2523,7 @@ SourceMediaStream::ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSe
       SpeexResamplerState* state = speex_resampler_init(channels,
                                                         aTrackData->mInputRate,
                                                         GraphImpl()->GraphRate(),
-                                                        SPEEX_RESAMPLER_QUALITY_DEFAULT,
+                                                        SPEEX_RESAMPLER_QUALITY_MIN,
                                                         nullptr);
       if (!state) {
         return;
