@@ -159,10 +159,8 @@ nsScriptNameSpaceManager::GetConstructorProto(const nsGlobalNameStruct* aStruct)
   NS_ASSERTION(aStruct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias,
                "This function only works on constructor aliases!");
   if (!aStruct->mAlias->mProto) {
-    GlobalNameMapEntry *proto =
-      static_cast<GlobalNameMapEntry *>
-                 (PL_DHashTableSearch(&mGlobalNames,
-                                      &aStruct->mAlias->mProtoName));
+    auto proto = static_cast<GlobalNameMapEntry*>
+                            (mGlobalNames.Search(&aStruct->mAlias->mProtoName));
     if (proto) {
       aStruct->mAlias->mProto = &proto->mGlobalName;
     }
@@ -344,9 +342,7 @@ nsGlobalNameStruct*
 nsScriptNameSpaceManager::LookupNameInternal(const nsAString& aName,
                                              const char16_t **aClassName)
 {
-  GlobalNameMapEntry *entry =
-    static_cast<GlobalNameMapEntry *>
-               (PL_DHashTableSearch(&mGlobalNames, &aName));
+  auto entry = static_cast<GlobalNameMapEntry*>(mGlobalNames.Search(&aName));
 
   if (entry) {
     if (aClassName) {
@@ -364,9 +360,7 @@ nsScriptNameSpaceManager::LookupNameInternal(const nsAString& aName,
 const nsGlobalNameStruct*
 nsScriptNameSpaceManager::LookupNavigatorName(const nsAString& aName)
 {
-  GlobalNameMapEntry *entry =
-    static_cast<GlobalNameMapEntry *>
-               (PL_DHashTableSearch(&mNavigatorNames, &aName));
+  auto entry = static_cast<GlobalNameMapEntry*>(mNavigatorNames.Search(&aName));
 
   return entry ? &entry->mGlobalName : nullptr;
 }

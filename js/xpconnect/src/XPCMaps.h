@@ -114,7 +114,7 @@ public:
     inline XPCWrappedNative* Find(nsISupports* Obj)
     {
         NS_PRECONDITION(Obj,"bad param");
-        Entry* entry = (Entry*) PL_DHashTableSearch(mTable, Obj);
+        auto entry = static_cast<Entry*>(mTable->Search(Obj));
         return entry ? entry->value : nullptr;
     }
 
@@ -178,7 +178,7 @@ public:
 
     inline nsXPCWrappedJSClass* Find(REFNSIID iid)
     {
-        Entry* entry = (Entry*) PL_DHashTableSearch(mTable, &iid);
+        auto entry = static_cast<Entry*>(mTable->Search(&iid));
         return entry ? entry->value : nullptr;
     }
 
@@ -232,7 +232,7 @@ public:
 
     inline XPCNativeInterface* Find(REFNSIID iid)
     {
-        Entry* entry = (Entry*) PL_DHashTableSearch(mTable, &iid);
+        auto entry = static_cast<Entry*>(mTable->Search(&iid));
         return entry ? entry->value : nullptr;
     }
 
@@ -287,7 +287,7 @@ public:
 
     inline XPCNativeSet* Find(nsIClassInfo* info)
     {
-        Entry* entry = (Entry*) PL_DHashTableSearch(mTable, info);
+        auto entry = static_cast<Entry*>(mTable->Search(info));
         return entry ? entry->value : nullptr;
     }
 
@@ -344,7 +344,7 @@ public:
 
     inline XPCWrappedNativeProto* Find(nsIClassInfo* info)
     {
-        Entry* entry = (Entry*) PL_DHashTableSearch(mTable, info);
+        auto entry = static_cast<Entry*>(mTable->Search(info));
         return entry ? entry->value : nullptr;
     }
 
@@ -405,7 +405,7 @@ public:
 
     inline XPCNativeSet* Find(XPCNativeSetKey* key)
     {
-        Entry* entry = (Entry*) PL_DHashTableSearch(mTable, key);
+        auto entry = static_cast<Entry*>(mTable->Search(key));
         return entry ? entry->key_value : nullptr;
     }
 
@@ -478,7 +478,7 @@ public:
 
     inline nsIXPCFunctionThisTranslator* Find(REFNSIID iid)
     {
-        Entry* entry = (Entry*) PL_DHashTableSearch(mTable, &iid);
+        auto entry = static_cast<Entry*>(mTable->Search(&iid));
         return entry ? entry->value : nullptr;
     }
 

@@ -147,9 +147,8 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
       return EntityToUnicode(temp);
     }
 
-  EntityNodeEntry* entry =
-    static_cast<EntityNodeEntry*>
-               (PL_DHashTableSearch(gEntityToUnicode, aEntity.get()));
+  auto entry =
+    static_cast<EntityNodeEntry*>(gEntityToUnicode->Search(aEntity.get()));
 
   return entry ? entry->node->mUnicode : -1;
 }
@@ -170,9 +169,9 @@ const char*
 nsHTMLEntities::UnicodeToEntity(int32_t aUnicode)
 {
   NS_ASSERTION(gUnicodeToEntity, "no lookup table, needs addref");
-  EntityNodeEntry* entry =
+  auto entry =
     static_cast<EntityNodeEntry*>
-               (PL_DHashTableSearch(gUnicodeToEntity, NS_INT32_TO_PTR(aUnicode)));
+               (gUnicodeToEntity->Search(NS_INT32_TO_PTR(aUnicode)));
 
   return entry ? entry->node->mStr : nullptr;
 }
