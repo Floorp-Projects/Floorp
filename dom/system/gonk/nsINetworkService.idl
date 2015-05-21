@@ -159,7 +159,7 @@ interface nsIDhcpRequestCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(8216224c-a4e0-43fa-9662-3f2446b500c6)]
+[scriptable, uuid(214c0810-fd41-11e4-b939-0800200c9a66)]
 interface nsINetworkService : nsISupports
 {
   const long MODIFY_ROUTE_ADD    = 0;
@@ -416,6 +416,18 @@ interface nsINetworkService : nsISupports
    */
   void dhcpRequest(in DOMString interfaceName,
                    in nsIDhcpRequestCallback callback);
+
+  /**
+   * Stop Dhcp daemon.
+   *
+   * @param ifname
+   *        Target interface.
+   *
+   * @param callback
+   *        Callback to notify the result of stopping dhcp request.
+   */
+  void stopDhcp(in DOMString ifname,
+                in nsINativeCommandCallback callback);
 
   /**
    * Enable a network interface.
