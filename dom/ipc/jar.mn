@@ -7,6 +7,7 @@ toolkit.jar:
         content/global/remote-test-ipc.js (remote-test.js)
         content/global/BrowserElementChild.js (../browser-element/BrowserElementChild.js)
         content/global/BrowserElementChildPreload.js (../browser-element/BrowserElementChildPreload.js)
+        content/global/BrowserElementCopyPaste.js (../browser-element/BrowserElementCopyPaste.js)
         content/global/BrowserElementPanning.js (../browser-element/BrowserElementPanning.js)
 *       content/global/BrowserElementPanningAPZDisabled.js (../browser-element/BrowserElementPanningAPZDisabled.js)
         content/global/manifestMessages.js (manifestMessages.js)
