@@ -321,7 +321,7 @@ function copySourceLocation(aDownload)
   if (gPerformAllCallback === null) {
     let uris = [];
     gPerformAllCallback = function(aURI) aURI ? uris.push(aURI) :
-      clipboard.copyString(uris.join("\n"), document);
+      clipboard.copyString(uris.join("\n"));
   }
 
   // We have a callback to use, so use it to add a uri
@@ -329,7 +329,7 @@ function copySourceLocation(aDownload)
     gPerformAllCallback(uri);
   else {
     // It's a plain copy source, so copy it
-    clipboard.copyString(uri, document);
+    clipboard.copyString(uri);
   }
 }
 

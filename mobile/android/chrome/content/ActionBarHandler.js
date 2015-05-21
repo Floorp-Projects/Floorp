@@ -329,7 +329,7 @@ var ActionBarHandler = {
         let selectedText = ActionBarHandler._getSelectedText();
         let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
           getService(Ci.nsIClipboardHelper);
-        clipboard.copyString(selectedText, win.document);
+        clipboard.copyString(selectedText);
 
         let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
         NativeWindow.toast.show(msg, "short");
@@ -364,7 +364,7 @@ var ActionBarHandler = {
         let selectedText = ActionBarHandler._getSelectedText();
         let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
           getService(Ci.nsIClipboardHelper);
-        clipboard.copyString(selectedText, win.document);
+        clipboard.copyString(selectedText);
 
         let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
         NativeWindow.toast.show(msg, "short");
