@@ -7,15 +7,12 @@ package org.mozilla.gecko.widget;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
 
@@ -39,17 +36,13 @@ public abstract class DoorHanger extends LinearLayout {
         public void onButtonClick(JSONObject response, DoorHanger doorhanger);
     }
 
-    protected static final LayoutParams sButtonParams;
-    static {
-        sButtonParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1.0f);
-    }
-
     private static final String LOGTAG = "GeckoDoorHanger";
 
     // Divider between doorhangers.
     private final View mDivider;
 
-    protected final LinearLayout mButtonsContainer;
+    private final Button mNegativeButton;
+    private final Button mPositiveButton;
     protected final OnButtonClickListener mOnButtonClickListener;
 
     // The tab this doorhanger is associated with.
@@ -89,7 +82,8 @@ public abstract class DoorHanger extends LinearLayout {
         mDivider = findViewById(R.id.divider_doorhanger);
         mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
 
-        mButtonsContainer = (LinearLayout) findViewById(R.id.doorhanger_buttons);
+        mNegativeButton = (Button) findViewById(R.id.doorhanger_button_negative);
+        mPositiveButton = (Button) findViewById(R.id.doorhanger_button_positive);
         mOnButtonClickListener = config.getButtonClickListener();
 
         mDividerColor = mResources.getColor(R.color.divider_light);
@@ -113,17 +107,21 @@ public abstract class DoorHanger extends LinearLayout {
         }
     }
 
-    protected void setButtons(DoorhangerConfig config) {
-        final JSONArray buttons = config.getButtons();
-        for (int i = 0; i < buttons.length(); i++) {
-            try {
-                final JSONObject buttonObject = buttons.getJSONObject(i);
-                final String label = buttonObject.getString("label");
-                final int callbackId = buttonObject.getInt("callback");
-                addButtonToLayout(label, callbackId);
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Error creating doorhanger button", e);
-            }
+    protected void addButtonsToLayout(DoorhangerConfig config) {
+        final DoorhangerConfig.ButtonConfig negativeButtonConfig = config.getNegativeButtonConfig();
+        final DoorhangerConfig.ButtonConfig positiveButtonConfig = config.getPositiveButtonConfig();
+
+        if (negativeButtonConfig != null) {
+            mNegativeButton.setText(negativeButtonConfig.label);
+            mNegativeButton.setOnClickListener(makeOnButtonClickListener(negativeButtonConfig.callback));
+            mNegativeButton.setVisibility(VISIBLE);
+        }
+
+        if (positiveButtonConfig != null) {
+            mPositiveButton.setText(positiveButtonConfig.label);
+            mPositiveButton.setOnClickListener(makeOnButtonClickListener(positiveButtonConfig.callback));
+            mPositiveButton.setVisibility(VISIBLE);
+            // TODO: set positive button click listener for LoginDoorhanger callback
         }
    }
 
@@ -146,37 +144,6 @@ public abstract class DoorHanger extends LinearLayout {
     public void setIcon(int resId) {
         mIcon.setImageResource(resId);
         mIcon.setVisibility(View.VISIBLE);
-    }
-
-    /**
-     * Creates and adds a button into the DoorHanger.
-     * @param text Button text
-     * @param id Identifier associated with the button
-     */
-    private void addButtonToLayout(String text, int id) {
-        final Button button = createButtonInstance(text, id);
-        if (mButtonsContainer.getChildCount() == 0) {
-            // If this is the first button we're adding, make the choices layout visible.
-            mButtonsContainer.setVisibility(View.VISIBLE);
-            // Make the divider above the buttons visible.
-            View divider = findViewById(R.id.divider_buttons);
-            divider.setVisibility(View.VISIBLE);
-        } else {
-            // Add a vertical divider between additional buttons.
-            Divider divider = new Divider(getContext(), null);
-            divider.setOrientation(Divider.Orientation.VERTICAL);
-            divider.setBackgroundColor(mDividerColor);
-            mButtonsContainer.addView(divider);
-        }
-
-        mButtonsContainer.addView(button, sButtonParams);
-    }
-
-    protected Button createButtonInstance(String text, int id) {
-        final Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
-        button.setText(text);
-        button.setOnClickListener(makeOnButtonClickListener(id));
-        return button;
     }
 
     protected abstract OnClickListener makeOnButtonClickListener(final int id);

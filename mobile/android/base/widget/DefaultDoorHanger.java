@@ -69,7 +69,7 @@ public class DefaultDoorHanger extends DoorHanger {
             addLink(link.label, link.url, link.delimiter);
         }
 
-        setButtons(config);
+        addButtonsToLayout(config);
     }
 
     @Override

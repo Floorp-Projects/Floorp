@@ -202,8 +202,8 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.LOGIN, buttonClickListener);
 
         // Set buttons.
-        config.appendButton(mContext.getString(R.string.button_cancel), ButtonType.CANCEL.ordinal());
-        config.appendButton(mContext.getString(R.string.button_copy), ButtonType.COPY.ordinal());
+        config.setButton(mContext.getString(R.string.button_cancel), ButtonType.CANCEL.ordinal(), false);
+        config.setButton(mContext.getString(R.string.button_copy), ButtonType.COPY.ordinal(), true);
 
         // Set message.
         String username = ((JSONObject) logins.get(0)).getString("username");
@@ -361,10 +361,10 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
     private void addNotificationButtons(DoorhangerConfig config, boolean blocked) {
         if (blocked) {
-            config.appendButton(mContext.getString(R.string.disable_protection), ButtonType.DISABLE.ordinal());
-            config.appendButton(mContext.getString(R.string.keep_blocking), ButtonType.KEEP_BLOCKING.ordinal());
+            config.setButton(mContext.getString(R.string.disable_protection), ButtonType.DISABLE.ordinal(), false);
+            config.setButton(mContext.getString(R.string.keep_blocking), ButtonType.KEEP_BLOCKING.ordinal(), true);
         } else {
-            config.appendButton(mContext.getString(R.string.enable_protection), ButtonType.ENABLE.ordinal());
+            config.setButton(mContext.getString(R.string.enable_protection), ButtonType.ENABLE.ordinal(), true);
         }
     }
 
