@@ -431,25 +431,28 @@ BluetoothDaemonConnectionIO::ShutdownOnIOThread()
 // BluetoothDaemonConnection
 //
 
-BluetoothDaemonConnection::BluetoothDaemonConnection()
-  : mIO(nullptr)
-{ }
+BluetoothDaemonConnection::BluetoothDaemonConnection(
+  BluetoothDaemonPDUConsumer* aConsumer)
+  : mConsumer(aConsumer)
+  , mIO(nullptr)
+{
+  MOZ_ASSERT(mConsumer);
+}
 
 BluetoothDaemonConnection::~BluetoothDaemonConnection()
 { }
 
 ConnectionOrientedSocketIO*
-BluetoothDaemonConnection::PrepareAccept(BluetoothDaemonPDUConsumer* aConsumer)
+BluetoothDaemonConnection::PrepareAccept()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIO);
-  MOZ_ASSERT(aConsumer);
 
   SetConnectionStatus(SOCKET_CONNECTING);
 
   mIO = new BluetoothDaemonConnectionIO(
     XRE_GetIOMessageLoop(), -1, UnixSocketWatcher::SOCKET_IS_CONNECTING,
-    this, aConsumer);
+    this, mConsumer);
 
   return mIO;
 }

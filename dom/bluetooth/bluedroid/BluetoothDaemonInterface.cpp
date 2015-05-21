@@ -1702,16 +1702,15 @@ public:
 private:
   BluetoothDaemonInterface* mInterface;
   BluetoothDaemonInterface::Channel mChannel;
-  BluetoothDaemonPDUConsumer* mConsumer;
 };
 
 BluetoothDaemonChannel::BluetoothDaemonChannel(
   BluetoothDaemonInterface* aInterface,
   BluetoothDaemonInterface::Channel aChannel,
   BluetoothDaemonPDUConsumer* aConsumer)
-  : mInterface(aInterface)
+  : BluetoothDaemonConnection(aConsumer)
+  , mInterface(aInterface)
   , mChannel(aChannel)
-  , mConsumer(aConsumer)
 { }
 
 void
@@ -1744,7 +1743,7 @@ BluetoothDaemonChannel::OnDisconnect()
 ConnectionOrientedSocketIO*
 BluetoothDaemonChannel::GetIO()
 {
-  return PrepareAccept(mConsumer);
+  return PrepareAccept();
 }
 
 //
