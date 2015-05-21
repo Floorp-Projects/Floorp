@@ -130,6 +130,21 @@ interface PopupBoxObject : BoxObject
                          Event? triggerEvent);
 
   /**
+   * Open the popup anchored at a specific screen rectangle. This function is
+   * similar to openPopup except that that rectangle of the anchor is supplied
+   * rather than an element. The anchor rectangle arguments are screen
+   * coordinates.
+   */
+  void openPopupAtScreenRect(optional DOMString position = "",
+                             long x,
+                             long y,
+                             long width,
+                             long height,
+                             boolean isContextMenu,
+                             boolean attributesOverride,
+                             Event? triggerEvent);
+
+  /**
    * Returns the state of the popup:
    *   closed - the popup is closed
    *   open - the popup is open

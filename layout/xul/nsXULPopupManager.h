@@ -405,6 +405,16 @@ public:
                          bool aIsContextMenu,
                          nsIDOMEvent* aTriggerEvent);
 
+  /* Open a popup anchored at a screen rectangle specified by aRect.
+   * The remaining arguments are similar to ShowPopup.
+   */
+  void ShowPopupAtScreenRect(nsIContent* aPopup,
+                             const nsAString& aPosition,
+                             const nsIntRect& aRect,
+                             bool aIsContextMenu,
+                             bool aAttributesOverride,
+                             nsIDOMEvent* aTriggerEvent);
+
   /**
    * Open a tooltip at a specific screen position specified by aXPos and aYPos,
    * measured in CSS pixels.

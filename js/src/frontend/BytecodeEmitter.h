@@ -490,7 +490,7 @@ struct BytecodeEmitter
     bool emitWith(ParseNode* pn);
 
     MOZ_NEVER_INLINE bool emitLabeledStatement(const LabeledStatement* pn);
-    MOZ_NEVER_INLINE bool emitLet(ParseNode* pnLet);
+    MOZ_NEVER_INLINE bool emitLetBlock(ParseNode* pnLet);
     MOZ_NEVER_INLINE bool emitLexicalScope(ParseNode* pn);
     MOZ_NEVER_INLINE bool emitSwitch(ParseNode* pn);
     MOZ_NEVER_INLINE bool emitTry(ParseNode* pn);

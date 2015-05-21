@@ -232,9 +232,6 @@ function genExpr(body, blocks, filter, style) {
 function graphExpr(idx, body) {
     return Pattern({ type: "GraphExpression", index: idx, expression: body });
 }
-function letExpr(head, body) {
-    return Pattern({ type: "LetExpression", head: head, body: body });
-}
 function idxExpr(idx) {
     return Pattern({ type: "GraphIndexExpression", index: idx });
 }

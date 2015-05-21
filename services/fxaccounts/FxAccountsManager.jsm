@@ -510,14 +510,9 @@ this.FxAccountsManager = {
       return this._error(ERROR_INVALID_AUDIENCE);
     }
 
-    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
-                   .getService(Ci.nsIScriptSecurityManager);
-    let uri = Services.io.newURI(aPrincipal.origin, null, null);
+    let principal = aPrincipal;
     log.debug("FxAccountsManager.getAssertion() aPrincipal: ",
-              aPrincipal.origin, aPrincipal.appId,
-              aPrincipal.isInBrowserElement);
-    let principal = secMan.getAppCodebasePrincipal(uri,
-      aPrincipal.appId, aPrincipal.isInBrowserElement);
+              principal.origin, principal.appId, principal.isInBrowserElement);
 
     return this.getAccount().then(
       user => {

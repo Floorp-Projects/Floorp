@@ -13,7 +13,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
-let specialpowers = {};
 
 //list of OOP frames that has the frame script loaded
 let remoteFrames = [];
@@ -120,11 +119,6 @@ FrameManager.prototype = {
     let oopFrame = this.getOopFrame(winId, frameId);
     let mm = this.getFrameMM(winId, frameId);
 
-    if (!specialpowers.hasOwnProperty("specialPowersObserver")) {
-      loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
-          specialpowers);
-    }
-
     // See if this frame already has our frame script loaded in it;
     // if so, just wake it up.
     for (let i = 0; i < remoteFrames.length; i++) {
@@ -142,11 +136,6 @@ FrameManager.prototype = {
         this.currentRemoteFrame = frame;
         this.addMessageManagerListeners(mm);
 
-        if (!frame.specialPowersObserver) {
-          frame.specialPowersObserver = new specialpowers.SpecialPowersObserver();
-          frame.specialPowersObserver.init(mm);
-        }
-
         mm.sendAsyncMessage("Marionette:restart");
         return oopFrame.id;
       }
@@ -163,9 +152,6 @@ FrameManager.prototype = {
 
     mm.loadFrameScript(FRAME_SCRIPT, true, true);
 
-    aFrame.specialPowersObserver = new specialpowers.SpecialPowersObserver();
-    aFrame.specialPowersObserver.init(mm);
-
     return oopFrame.id;
   },
 
@@ -180,20 +166,6 @@ FrameManager.prototype = {
       this.addMessageManagerListeners(this.currentRemoteFrame.messageManager.get());
     }
     this.handledModal = false;
-  },
-
-  /**
-   * This function removes any SpecialPowersObservers from OOP frames.
-   */
-  removeSpecialPowers: function FM_removeSpecialPowers() {
-    for (let i = 0; i < remoteFrames.length; i++) {
-      let frame = remoteFrames[i];
-
-      if (frame.specialPowersObserver) {
-        frame.specialPowersObserver.uninit();
-        frame.specialPowersObserver = null;
-      }
-    }
   },
 
   /**
@@ -220,6 +192,7 @@ FrameManager.prototype = {
     mm.addWeakMessageListener("Marionette:deleteCookie", this.server);
     mm.addWeakMessageListener("Marionette:register", this.server);
     mm.addWeakMessageListener("Marionette:listenersAttached", this.server);
+    mm.addWeakMessageListener("Marionette:getFiles", this.server);
     mm.addWeakMessageListener("MarionetteFrame:handleModal", this);
     mm.addWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
     mm.addWeakMessageListener("MarionetteFrame:getInterruptedState", this);
@@ -248,6 +221,7 @@ FrameManager.prototype = {
     mm.removeWeakMessageListener("Marionette:deleteCookie", this.server);
     mm.removeWeakMessageListener("Marionette:listenersAttached", this.server);
     mm.removeWeakMessageListener("Marionette:register", this.server);
+    mm.removeWeakMessageListener("Marionette:getFiles", this.server);
     mm.removeWeakMessageListener("MarionetteFrame:handleModal", this);
     mm.removeWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
   }
