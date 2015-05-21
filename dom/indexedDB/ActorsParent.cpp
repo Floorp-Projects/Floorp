@@ -8170,24 +8170,20 @@ struct QuotaClient::MultipleMaintenanceInfo final
    : MaintenanceInfoBase(aGroup, aOrigin, aPersistenceType)
    , mDatabasePaths(Move(aDatabasePaths))
   {
-#ifdef DEBUG
     MOZ_ASSERT(!mDatabasePaths.IsEmpty());
     for (const nsString& databasePath : mDatabasePaths) {
       MOZ_ASSERT(!databasePath.IsEmpty());
     }
-#endif
   }
 
   MultipleMaintenanceInfo(MultipleMaintenanceInfo&& aOther)
     : MaintenanceInfoBase(Move(aOther))
     , mDatabasePaths(Move(aOther.mDatabasePaths))
   {
-#ifdef DEBUG
     MOZ_ASSERT(!mDatabasePaths.IsEmpty());
     for (const nsString& databasePath : mDatabasePaths) {
       MOZ_ASSERT(!databasePath.IsEmpty());
     }
-#endif
   }
 
   MultipleMaintenanceInfo(const MultipleMaintenanceInfo& aOther) = delete;
