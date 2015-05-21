@@ -2126,8 +2126,9 @@ CssRuleView.prototype = {
       // Highlight search matches in the computed list of properties
       for (let computed of textProp.computed) {
         if (computed.element) {
-          let computedName = computed.name;
-          let computedValue = computed.value;
+          // Get the actual property value displayed in the computed list
+          let computedValue = computed.parsedValue.toLowerCase();
+          let computedName = computed.name.toLowerCase();
 
           isComputedHighlighted = this._highlightMatches(computed.element, {
             searchName: name,
@@ -3011,6 +3012,9 @@ TextPropertyEditor.prototype = {
           baseURI: this.sheetURI
         }
       );
+
+      // Store the computed property value that was parsed for output
+      computed.parsedValue = frag.textContent;
 
       createChild(li, "span", {
         class: "ruleview-propertyvalue theme-fg-color1",
