@@ -142,7 +142,7 @@ public class FaviconView extends ImageView {
      * in this view with the coloured background.
      */
     private void formatImage() {
-        // If we're called before bitmap is set, or before size is set, show blank.
+        // We're waiting for both onSizeChanged and updateImage to be called before scaling.
         if (mIconBitmap == null || mActualWidth == 0 || mActualHeight == 0) {
             showNoImage();
             return;
