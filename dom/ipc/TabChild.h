@@ -391,6 +391,10 @@ public:
 
     virtual bool RecvSwappedWithOtherRemoteLoader() override;
 
+    virtual PDocAccessibleChild* AllocPDocAccessibleChild(PDocAccessibleChild*,
+                                                          const uint64_t&)
+      override;
+    virtual bool DeallocPDocAccessibleChild(PDocAccessibleChild*) override;
     virtual PDocumentRendererChild*
     AllocPDocumentRendererChild(const nsRect& documentRect, const gfx::Matrix& transform,
                                 const nsString& bgcolor,
