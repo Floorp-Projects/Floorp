@@ -271,6 +271,7 @@ class Node {
                       "ubi::Base specializations must be the same size as ubi::Base");
         Concrete<T>::construct(base(), ptr);
     }
+    struct ConstructFunctor;
 
   public:
     Node() { construct<void>(nullptr); }
