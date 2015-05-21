@@ -4113,7 +4113,11 @@ JSObject::traceChildren(JSTracer* trc)
         {
             GetObjectSlotNameFunctor func(nobj);
             JS::AutoTracingDetails ctx(trc, func);
-            TraceObjectSlots(trc, nobj, 0, nobj->slotSpan());
+            JS::AutoTracingIndex index(trc);
+            for (uint32_t i = 0; i < nobj->slotSpan(); ++i) {
+                TraceManuallyBarrieredEdge(trc, nobj->getSlotRef(i).unsafeGet(), "object slot");
+                ++index;
+            }
         }
 
         do {
