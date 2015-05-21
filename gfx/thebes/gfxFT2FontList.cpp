@@ -656,7 +656,7 @@ public:
 
     void Init()
     {
-        if (!mMap.IsInitialized() || !mCache) {
+        if (!mCache) {
             return;
         }
         uint32_t size;
@@ -711,9 +711,6 @@ public:
     GetInfoForFile(const nsCString& aFileName, nsCString& aFaceList,
                    uint32_t *aTimestamp, uint32_t *aFilesize)
     {
-        if (!mMap.IsInitialized()) {
-            return;
-        }
         FNCMapEntry *entry =
             static_cast<FNCMapEntry*>(PL_DHashTableSearch(&mMap,
                                                           aFileName.get()));
@@ -732,9 +729,6 @@ public:
     CacheFileInfo(const nsCString& aFileName, const nsCString& aFaceList,
                   uint32_t aTimestamp, uint32_t aFilesize)
     {
-        if (!mMap.IsInitialized()) {
-            return;
-        }
         FNCMapEntry* entry = static_cast<FNCMapEntry*>
             (PL_DHashTableAdd(&mMap, aFileName.get(), fallible));
         if (entry) {

@@ -167,9 +167,6 @@ public:
    */
   uint32_t EnumerateRead(EnumReadFunction aEnumFunc, void* aUserArg) const
   {
-    NS_ASSERTION(this->mTable.IsInitialized(),
-                 "nsBaseHashtable was not initialized properly.");
-
     s_EnumReadArgs enumData = { aEnumFunc, aUserArg };
     return PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&this->mTable),
                                   s_EnumReadStub,
@@ -199,9 +196,6 @@ public:
    */
   uint32_t Enumerate(EnumFunction aEnumFunc, void* aUserArg)
   {
-    NS_ASSERTION(this->mTable.IsInitialized(),
-                 "nsBaseHashtable was not initialized properly.");
-
     s_EnumArgs enumData = { aEnumFunc, aUserArg };
     return PL_DHashTableEnumerate(&this->mTable,
                                   s_EnumStub,

@@ -47,7 +47,7 @@ public:
         return true;
     }
 
-    nsresult Remove(nsIContent* aElement);
+    void Remove(nsIContent* aElement);
 
     void Clear() { mMap.Clear(); }
 

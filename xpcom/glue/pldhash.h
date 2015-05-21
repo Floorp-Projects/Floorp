@@ -227,8 +227,6 @@ public:
 
   ~PLDHashTable();
 
-  bool IsInitialized() const { return !!mOps; }
-
   // This should be used rarely.
   const PLDHashTableOps* const Ops() { return mOps; }
 

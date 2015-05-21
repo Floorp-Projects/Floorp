@@ -350,8 +350,6 @@ PLDHashTable::~PLDHashTable()
 void
 PLDHashTable::ClearAndPrepareForLength(uint32_t aLength)
 {
-  MOZ_ASSERT(IsInitialized());
-
   // Get these values before the call to Finish() clobbers them.
   const PLDHashTableOps* ops = mOps;
   uint32_t entrySize = mEntrySize;
@@ -567,8 +565,6 @@ PLDHashTable::ComputeKeyHash(const void* aKey)
 MOZ_ALWAYS_INLINE PLDHashEntryHdr*
 PLDHashTable::Search(const void* aKey)
 {
-  MOZ_ASSERT(IsInitialized());
-
   INCREMENT_RECURSION_LEVEL(this);
 
   METER(mStats.mSearches++);
@@ -585,8 +581,6 @@ PLDHashTable::Search(const void* aKey)
 MOZ_ALWAYS_INLINE PLDHashEntryHdr*
 PLDHashTable::Add(const void* aKey, const mozilla::fallible_t&)
 {
-  MOZ_ASSERT(IsInitialized());
-
   PLDHashNumber keyHash;
   PLDHashEntryHdr* entry;
   uint32_t capacity;
@@ -692,8 +686,6 @@ PLDHashTable::Add(const void* aKey)
 MOZ_ALWAYS_INLINE void
 PLDHashTable::Remove(const void* aKey)
 {
-  MOZ_ASSERT(IsInitialized());
-
   MOZ_ASSERT(mRecursionLevel == 0);
   INCREMENT_RECURSION_LEVEL(this);
 
@@ -748,7 +740,6 @@ PL_DHashTableRemove(PLDHashTable* aTable, const void* aKey)
 MOZ_ALWAYS_INLINE void
 PLDHashTable::RawRemove(PLDHashEntryHdr* aEntry)
 {
-  MOZ_ASSERT(IsInitialized());
   MOZ_ASSERT(mEntryStore);
 
   MOZ_ASSERT(mRecursionLevel != IMMUTABLE_RECURSION_LEVEL);
@@ -777,8 +768,6 @@ PL_DHashTableRawRemove(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 MOZ_ALWAYS_INLINE uint32_t
 PLDHashTable::Enumerate(PLDHashEnumerator aEtor, void* aArg)
 {
-  MOZ_ASSERT(IsInitialized());
-
   if (!mEntryStore) {
     return 0;
   }
@@ -883,8 +872,6 @@ PLDHashTable::SizeOfExcludingThis(
     PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
     MallocSizeOf aMallocSizeOf, void* aArg /* = nullptr */) const
 {
-  MOZ_ASSERT(IsInitialized());
-
   if (!mEntryStore) {
     return 0;
   }
@@ -907,8 +894,6 @@ PLDHashTable::SizeOfIncludingThis(
     PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
     MallocSizeOf aMallocSizeOf, void* aArg /* = nullptr */) const
 {
-  MOZ_ASSERT(IsInitialized());
-
   return aMallocSizeOf(this) +
          SizeOfExcludingThis(aSizeOfEntryExcludingThis, aMallocSizeOf, aArg);
 }
@@ -938,8 +923,6 @@ PLDHashTable::Iterator::Iterator(const PLDHashTable* aTable)
   mEntryAddr(mTable->mEntryStore),
   mEntryOffset(0)
 {
-  MOZ_ASSERT(mTable->IsInitialized());
-
   // Make sure that modifications can't simultaneously happen while the iterator
   // is active.
   INCREMENT_RECURSION_LEVEL(mTable);
@@ -968,8 +951,6 @@ PLDHashTable::Iterator::Iterator(const Iterator& aIterator)
   mEntryAddr(aIterator.mEntryAddr),
   mEntryOffset(aIterator.mEntryOffset)
 {
-  MOZ_ASSERT(mTable->IsInitialized());
-
   // We need the copy constructor only so that we can keep the recursion level
   // consistent.
   INCREMENT_RECURSION_LEVEL(mTable);
@@ -977,16 +958,12 @@ PLDHashTable::Iterator::Iterator(const Iterator& aIterator)
 
 PLDHashTable::Iterator::~Iterator()
 {
-  MOZ_ASSERT(mTable->IsInitialized());
-
   DECREMENT_RECURSION_LEVEL(mTable);
 }
 
 bool
 PLDHashTable::Iterator::HasMoreEntries() const
 {
-  MOZ_ASSERT(mTable->IsInitialized());
-
   // Check the number of live entries seen, not the total number of entries
   // seen. To see why, consider what happens if the last entry is not live: we
   // would have to iterate after returning an entry to see if more live entries
@@ -1039,8 +1016,6 @@ PLDHashTable::Iterator::NextEntry()
 MOZ_ALWAYS_INLINE void
 PLDHashTable::MarkImmutable()
 {
-  MOZ_ASSERT(IsInitialized());
-
   mRecursionLevel = IMMUTABLE_RECURSION_LEVEL;
 }
 
@@ -1057,8 +1032,6 @@ PL_DHashMarkTableImmutable(PLDHashTable* aTable)
 void
 PLDHashTable::DumpMeter(PLDHashEnumerator aDump, FILE* aFp)
 {
-  MOZ_ASSERT(IsInitialized());
-
   PLDHashNumber hash1, hash2, maxChainHash1, maxChainHash2;
   double sqsum, mean, variance, sigma;
   PLDHashEntryHdr* entry;
