@@ -158,7 +158,7 @@ public:
 
     // Hyperlink color extracted from the system, not affected by the
     // browser.anchor_color user pref.
-    // There is no OS-specified safe background color for this text, 
+    // There is no OS-specified safe background color for this text,
     // but it is used regularly within Windows and the Gnome DE on Dialog and
     // Window colors.
     eColorID__moz_nativehyperlinktext,
@@ -386,13 +386,13 @@ public:
      * is shown.
      */
      eIntID_PhysicalHomeButton,
- 
+
      /*
       * Controls whether overlay scrollbars display when the user moves
       * the mouse in a scrollable frame.
       */
      eIntID_ScrollbarDisplayOnMouseMove,
- 
+
      /*
       * Overlay scrollbar animation constants.
       */
@@ -423,6 +423,7 @@ public:
     eOperatingSystemVersion_WindowsVista,
     eOperatingSystemVersion_Windows7,
     eOperatingSystemVersion_Windows8,
+    eOperatingSystemVersion_Windows10,
     eOperatingSystemVersion_Unknown
   };
 
@@ -437,7 +438,7 @@ public:
   enum {
     // single arrow at each end
     eScrollArrowStyle_Single =
-      eScrollArrow_StartBackward | eScrollArrow_EndForward, 
+      eScrollArrow_StartBackward | eScrollArrow_EndForward,
     // both arrows at bottom/right, none at top/left
     eScrollArrowStyle_BothAtBottom =
       eScrollArrow_EndBackward | eScrollArrow_EndForward,

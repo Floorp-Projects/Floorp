@@ -61,6 +61,7 @@ const OperatingSystemVersionInfo osVersionStrings[] = {
     { LookAndFeel::eOperatingSystemVersion_WindowsVista,  L"windows-vista" },
     { LookAndFeel::eOperatingSystemVersion_Windows7,      L"windows-win7" },
     { LookAndFeel::eOperatingSystemVersion_Windows8,      L"windows-win8" },
+    { LookAndFeel::eOperatingSystemVersion_Windows10,     L"windows-win10" }
 };
 #endif
 
