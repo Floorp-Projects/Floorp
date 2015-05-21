@@ -128,11 +128,6 @@ private:
 
     void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
 
-    // ConnectionOrientedSocket
-    //
-
-    ConnectionOrientedSocketIO* GetIO() override;
-
   private:
     KeyStore* mKeyStore;
   };

@@ -161,11 +161,5 @@ NfcConsumer::OnDisconnect()
   }
 }
 
-ConnectionOrientedSocketIO*
-NfcConsumer::GetIO()
-{
-  return PrepareAccept(new NfcConnector(NS_LITERAL_CSTRING("nfcd")));
-}
-
 } // namespace ipc
 } // namespace mozilla

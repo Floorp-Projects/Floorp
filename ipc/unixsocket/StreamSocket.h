@@ -38,6 +38,12 @@ public:
    */
   nsresult Connect(UnixSocketConnector* aConnector, int aDelayMs = 0);
 
+  // Methods for |ConnectionOrientedSocket|
+  //
+
+  nsresult PrepareAccept(UnixSocketConnector* aConnector,
+                         ConnectionOrientedSocketIO*& aIO) override;
+
   // Methods for |DataSocket|
   //
 
@@ -50,11 +56,6 @@ public:
 
 protected:
   virtual ~StreamSocket();
-
-  // Prepares an instance of |StreamSocket| in DISCONNECTED state
-  // for accepting a connection. Subclasses implementing |GetIO|
-  // need to call this method.
-  ConnectionOrientedSocketIO* PrepareAccept(UnixSocketConnector* aConnector);
 
 private:
   StreamSocketIO* mIO;

@@ -13,6 +13,7 @@
 namespace mozilla {
 namespace ipc {
 
+class UnixSocketConnector;
 union sockaddr_any;
 
 /*
@@ -24,18 +25,27 @@ union sockaddr_any;
 class ConnectionOrientedSocketIO : public DataSocketIO
 {
 public:
+  virtual ~ConnectionOrientedSocketIO();
+
   virtual nsresult Accept(int aFd,
                           const union sockaddr_any* aAddr,
                           socklen_t aAddrLen) = 0;
-
-protected:
-  virtual ~ConnectionOrientedSocketIO();
 };
 
 class ConnectionOrientedSocket : public DataSocket
 {
 public:
-  virtual ConnectionOrientedSocketIO* GetIO() = 0;
+  /**
+   * Prepares an instance of |ConnectionOrientedSocket| in DISCONNECTED
+   * state for accepting a connection. Main-thread only.
+   *
+   * @param aConnector The new connector object, owned by the
+   *                   connection-oriented socket.
+   * @param[out] aIO, Returns an instance of |ConnectionOrientedSocketIO|.
+   * @return NS_OK on success, or an XPCOM error code otherwise.
+   */
+  virtual nsresult PrepareAccept(UnixSocketConnector* aConnector,
+                                 ConnectionOrientedSocketIO*& aIO) = 0;
 
 protected:
   virtual ~ConnectionOrientedSocket();
