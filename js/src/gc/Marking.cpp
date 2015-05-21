@@ -1672,49 +1672,16 @@ PushArenaTyped(GCMarker* gcmarker, ArenaHeader* aheader)
         gcmarker->traverse(i.get<T>());
 }
 
+struct PushArenaFunctor {
+    template <typename T> void operator()(GCMarker* gcmarker, ArenaHeader* aheader) {
+        PushArenaTyped<T>(gcmarker, aheader);
+    }
+};
+
 void
 gc::PushArena(GCMarker* gcmarker, ArenaHeader* aheader)
 {
-    switch (MapAllocToTraceKind(aheader->getAllocKind())) {
-      case JSTRACE_OBJECT:
-        PushArenaTyped<JSObject>(gcmarker, aheader);
-        break;
-
-      case JSTRACE_SCRIPT:
-        PushArenaTyped<JSScript>(gcmarker, aheader);
-        break;
-
-      case JSTRACE_STRING:
-        PushArenaTyped<JSString>(gcmarker, aheader);
-        break;
-
-      case JSTRACE_SYMBOL:
-        PushArenaTyped<JS::Symbol>(gcmarker, aheader);
-        break;
-
-      case JSTRACE_BASE_SHAPE:
-        PushArenaTyped<js::BaseShape>(gcmarker, aheader);
-        break;
-
-      case JSTRACE_JITCODE:
-        PushArenaTyped<js::jit::JitCode>(gcmarker, aheader);
-        break;
-
-      case JSTRACE_LAZY_SCRIPT:
-        PushArenaTyped<LazyScript>(gcmarker, aheader);
-        break;
-
-      case JSTRACE_SHAPE:
-        PushArenaTyped<js::Shape>(gcmarker, aheader);
-        break;
-
-      case JSTRACE_OBJECT_GROUP:
-        PushArenaTyped<js::ObjectGroup>(gcmarker, aheader);
-        break;
-
-      default:
-        MOZ_CRASH("Invalid trace kind in PushArena.");
-    }
+    CallTyped(PushArenaFunctor(), MapAllocToTraceKind(aheader->getAllocKind()), gcmarker, aheader);
 }
 
 #ifdef DEBUG
