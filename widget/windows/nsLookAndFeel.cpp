@@ -28,7 +28,9 @@ nsLookAndFeel::GetOperatingSystemVersion()
     return version;
   }
 
-  if (IsWin8OrLater()) {
+  if (IsWin10OrLater()) {
+    version = eOperatingSystemVersion_Windows10;
+  } else if (IsWin8OrLater()) {
     version = eOperatingSystemVersion_Windows8;
   } else if (IsWin7OrLater()) {
     version = eOperatingSystemVersion_Windows7;
@@ -59,7 +61,7 @@ static nsresult GetColorFromTheme(nsUXThemeClass cls,
 
 static int32_t GetSystemParam(long flag, int32_t def)
 {
-    DWORD value; 
+    DWORD value;
     return ::SystemParametersInfo(flag, 0, &value, 0) ? value : def;
 }
 
@@ -354,7 +356,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         aResult = ::GetSystemMetrics(SM_CYDRAG) - 1;
         break;
     case eIntID_UseAccessibilityTheme:
-        // High contrast is a misnomer under Win32 -- any theme can be used with it, 
+        // High contrast is a misnomer under Win32 -- any theme can be used with it,
         // e.g. normal contrast with large fonts, low contrast, etc.
         // The high contrast flag really means -- use this theme and don't override it.
         aResult = nsUXThemeData::IsHighContrastOn();
