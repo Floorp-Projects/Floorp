@@ -1061,6 +1061,7 @@ class JSScript : public js::gc::TenuredCell
     inline JSPrincipals* principals();
 
     JSCompartment* compartment() const { return compartment_; }
+    JSCompartment* maybeCompartment() const { return compartment(); }
 
     void setVersion(JSVersion v) { version = v; }
 

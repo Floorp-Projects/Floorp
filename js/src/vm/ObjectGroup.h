@@ -216,9 +216,8 @@ class ObjectGroup : public gc::TenuredCell
         return res;
     }
 
-    JSCompartment* compartment() const {
-        return compartment_;
-    }
+    JSCompartment* compartment() const { return compartment_; }
+    JSCompartment* maybeCompartment() const { return compartment(); }
 
   private:
     /* Flags for this group. */
