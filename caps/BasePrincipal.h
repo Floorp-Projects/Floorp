@@ -11,10 +11,41 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSPrincipals.h"
 
+#include "mozilla/dom/SystemDictionariesBinding.h"
+
 class nsIObjectOutputStream;
 class nsIObjectInputStream;
 
 namespace mozilla {
+
+class OriginAttributes : public dom::OriginAttributesDictionary
+{
+public:
+  OriginAttributes() {}
+  OriginAttributes(uint32_t aAppId, bool aInBrowser)
+  {
+    mAppId = aAppId;
+    mInBrowser = aInBrowser;
+  }
+
+  bool operator==(const OriginAttributes& aOther) const
+  {
+    return mAppId == aOther.mAppId &&
+           mInBrowser == aOther.mInBrowser;
+  }
+  bool operator!=(const OriginAttributes& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  // Serializes non-default values into the suffix format, i.e.
+  // |!key1=value1&key2=value2|. If there are no non-default attributes, this
+  // returns an empty string.
+  void CreateSuffix(nsACString& aStr);
+
+  void Serialize(nsIObjectOutputStream* aStream) const;
+  nsresult Deserialize(nsIObjectInputStream* aStream);
+};
 
 /*
  * Base class from which all nsIPrincipal implementations inherit. Use this for
@@ -31,6 +62,8 @@ public:
   enum DocumentDomainConsideration { DontConsiderDocumentDomain, ConsiderDocumentDomain};
   bool Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration);
 
+  NS_IMETHOD GetOrigin(nsACString& aOrigin) final;
+  NS_IMETHOD GetOriginNoSuffix(nsACString& aOrigin) final;
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) final;
@@ -39,6 +72,9 @@ public:
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aIsNullPrincipal) override;
   NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix) final;
+  NS_IMETHOD GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) final;
+  NS_IMETHOD GetOriginSuffix(nsACString& aOriginSuffix) final;
+  NS_IMETHOD GetCookieJar(nsACString& aCookieJar) final;
   NS_IMETHOD GetAppStatus(uint16_t* aAppStatus) final;
   NS_IMETHOD GetAppId(uint32_t* aAppStatus) final;
   NS_IMETHOD GetIsInBrowserElement(bool* aIsInBrowserElement) final;
@@ -47,38 +83,16 @@ public:
   virtual bool IsOnCSSUnprefixingWhitelist() override { return false; }
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
-
-  struct OriginAttributes {
-    // NB: If you add any members here, you need to update Serialize/Deserialize
-    // and bump the CIDs of all the principal implementations that invoke those
-    // methods.
-    uint32_t mAppId;
-    bool mIsInBrowserElement;
-
-    OriginAttributes() : mAppId(nsIScriptSecurityManager::NO_APP_ID), mIsInBrowserElement(false) {}
-    OriginAttributes(uint32_t aAppId, bool aIsInBrowserElement)
-      : mAppId(aAppId), mIsInBrowserElement(aIsInBrowserElement) {}
-    bool operator==(const OriginAttributes& aOther) const
-    {
-      return mAppId == aOther.mAppId &&
-             mIsInBrowserElement == aOther.mIsInBrowserElement;
-    }
-    bool operator!=(const OriginAttributes& aOther) const
-    {
-      return !(*this == aOther);
-    }
-
-    void Serialize(nsIObjectOutputStream* aStream) const;
-    nsresult Deserialize(nsIObjectInputStream* aStream);
-  };
+  static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(nsIURI* aURI, OriginAttributes& aAttrs);
 
   const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
-  bool IsInBrowserElement() const { return mOriginAttributes.mIsInBrowserElement; }
+  bool IsInBrowserElement() const { return mOriginAttributes.mInBrowser; }
 
 protected:
   virtual ~BasePrincipal() {}
 
+  virtual nsresult GetOriginInternal(nsACString& aOrigin) = 0;
   virtual bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsider) = 0;
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;

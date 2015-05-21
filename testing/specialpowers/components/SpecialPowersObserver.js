@@ -12,8 +12,10 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+if (typeof(Cc) == "undefined") {
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+}
 
 const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js"
 const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js"

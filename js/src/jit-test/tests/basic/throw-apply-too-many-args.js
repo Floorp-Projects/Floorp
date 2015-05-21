@@ -4,7 +4,9 @@ function f(a, b, c)
   arguments.length = getMaxArgs() + 1;
   g.apply(this, arr);
 }
-var args = [[5], [5], [5], [5], [5], [5], [5], [5], [5], [5], [5], let (x = []) (x.length = getMaxArgs() + 1, x)]
+let x = [];
+x.length = getMaxArgs() + 1;
+var args = [[5], [5], [5], [5], [5], [5], [5], [5], [5], [5], [5], x]
 try
 {
   for (var i = 0; i < args.length; i++) { arr = args[i]; f(); }

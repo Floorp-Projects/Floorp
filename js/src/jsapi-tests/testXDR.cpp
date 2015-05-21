@@ -12,6 +12,8 @@
 
 #include "jsscriptinlines.h"
 
+using mozilla::UniquePtr;
+
 static JSScript*
 FreezeThaw(JSContext* cx, JS::HandleScript script)
 {
@@ -41,7 +43,8 @@ BEGIN_TEST(testXDR_bug506491)
         "function makeClosure(s, name, value) {\n"
         "    eval(s);\n"
         "    Math.sin(value);\n"
-        "    return let (n = name, v = value) function () { return String(v); };\n"
+        "    let n = name, v = value;\n"
+        "    return function () { return String(v); };\n"
         "}\n"
         "var f = makeClosure('0;', 'status', 'ok');\n";
 
@@ -129,7 +132,8 @@ BEGIN_TEST(testXDR_sourceMap)
         CHECK(script);
 
         size_t len = strlen(*sm);
-        char16_t* expected = js::InflateString(cx, *sm, &len);
+        UniquePtr<char16_t,JS::FreePolicy> expected_wrapper(js::InflateString(cx, *sm, &len));
+        char16_t *expected = expected_wrapper.get();
         CHECK(expected);
 
         // The script source takes responsibility of free'ing |expected|.

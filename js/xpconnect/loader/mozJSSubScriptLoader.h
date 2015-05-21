@@ -39,6 +39,11 @@ private:
                         bool reuseGlobal, JS::MutableHandleScript script,
                         JS::MutableHandleFunction function);
 
+    nsresult ReadScriptAsync(nsIURI* uri, JSObject* target_obj,
+                             const nsAString& charset,
+                             nsIIOService* serv, bool reuseGlobal,
+                             bool cache, JS::MutableHandleValue retval);
+
     nsresult DoLoadSubScriptWithOptions(const nsAString& url,
                                         LoadSubScriptOptions& options,
                                         JSContext* cx,

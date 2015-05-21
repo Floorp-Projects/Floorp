@@ -59,10 +59,6 @@ assertEq((function(a) { let ([x,y] = a) { (function() { x += y })(); return x } 
 assertEq((function(a) { let ([x,y] = a) { x += y; return (function() x)() } })([1,2]), 3);
 assertEq((function(a) { let ([[l, x],[m, y]] = a) { (function() { x += y })(); return x } })([[0,1],[0,2]]), 3);
 assertEq((function(a) { let ([[l, x],[m, y]] = a) { x += y; return (function() x)() } })([[0,1],[0,2]]), 3);
-assertEq((function(a) { return let ([x,y] = a) ((function() { x += y })(), x) })([1,2]), 3);
-assertEq((function(a) { return let ([x,y] = a) (x += y, (function() x)()) })([1,2]), 3);
-assertEq((function(a) { return let ([[l, x],[m, y]] = a) ((function() { x += y })(), x) })([[0,1],[0,2]]), 3);
-assertEq((function(a) { return let ([[l, x],[m, y]] = a) (x += y, (function() x)()) })([[0,1],[0,2]]), 3);
 
 assertEq((function() { let x = 3; return (function() { return x })() })(), 3);
 assertEq((function() { let g = function() { return x }; let x = 3; return g() })(), 3);
