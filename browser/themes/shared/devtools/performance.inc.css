@@ -84,26 +84,13 @@
   margin: 3px 2px;
 }
 
-.theme-dark #performance-view toolbarbutton.record-button {
-  background-color: var(--theme-tab-toolbar-background);
-  border: 1px solid var(--theme-sidebar-background);
-}
-
-.theme-light #performance-view toolbarbutton.record-button {
-  background-color: rgba(221, 221, 221, 1);
-  border: 1px solid rgba(204, 204, 204, 1);
-}
-
-#performance-view toolbarbutton.record-button {
-  margin: 5px;
-  padding: 5px;
-  cursor: pointer;
-  text-shadow: none;
-}
-
 #performance-view .realtime-message {
   opacity: 0.5;
   display: block;
+}
+
+#performance-view toolbarbutton.record-button {
+  padding: 5px;
 }
 
 #performance-view toolbarbutton.record-button[checked],
