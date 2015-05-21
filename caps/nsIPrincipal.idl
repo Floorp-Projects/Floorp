@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(749f21f5-8ade-4d0b-a590-2b1d18e890d5)]
+[scriptable, builtinclass, uuid(49c2faf0-b6de-4640-8d0f-e0217baa8627)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -132,6 +132,13 @@ interface nsIPrincipal : nsISerializable
      * A Content Security Policy associated with this principal.
      */
     [noscript] attribute nsIContentSecurityPolicy csp;
+
+    /**
+     * The CSP of the principal in JSON notation.
+     * Note, that the CSP itself is not exposed to JS, but script
+     * should be able to obtain a JSON representation of the CSP.
+     */
+    readonly attribute AString cspJSON;
 
     /**
      * Returns the jar prefix of the principal.
