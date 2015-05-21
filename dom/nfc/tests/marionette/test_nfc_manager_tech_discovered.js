@@ -1,14 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_TIMEOUT = 30000;
+MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
 function handleTechnologyDiscoveredRE0(msg) {
   log('Received \'nfc-manager-tech-discovered\'');
-  is(msg.type, 'techDiscovered', 'check for correct message type');
-  is(msg.isP2P, 'P2P', 'check for correct tech type');
-  toggleNFC(false).then(runNextTest);
+  ok(msg.peer, 'check for correct tech type');
+  deactivateAndWaitForTechLost().then(() => toggleNFC(false)).then(runNextTest);
 }
 
 function testActivateRE0() {

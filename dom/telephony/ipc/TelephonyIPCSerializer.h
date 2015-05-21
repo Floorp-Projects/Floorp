@@ -37,10 +37,13 @@ struct ParamTraits<nsITelephonyCallInfo*>
     uint32_t clientId;
     uint32_t callIndex;
     uint16_t callState;
+    nsString disconnectedReason;
+
     nsString number;
     uint16_t numberPresentation;
     nsString name;
     uint16_t namePresentation;
+
     bool isOutgoing;
     bool isEmergency;
     bool isConference;
@@ -50,10 +53,13 @@ struct ParamTraits<nsITelephonyCallInfo*>
     aParam->GetClientId(&clientId);
     aParam->GetCallIndex(&callIndex);
     aParam->GetCallState(&callState);
+    aParam->GetDisconnectedReason(disconnectedReason);
+
     aParam->GetNumber(number);
     aParam->GetNumberPresentation(&numberPresentation);
     aParam->GetName(name);
     aParam->GetNamePresentation(&namePresentation);
+
     aParam->GetIsOutgoing(&isOutgoing);
     aParam->GetIsEmergency(&isEmergency);
     aParam->GetIsConference(&isConference);
@@ -63,10 +69,13 @@ struct ParamTraits<nsITelephonyCallInfo*>
     WriteParam(aMsg, clientId);
     WriteParam(aMsg, callIndex);
     WriteParam(aMsg, callState);
+    WriteParam(aMsg, disconnectedReason);
+
     WriteParam(aMsg, number);
     WriteParam(aMsg, numberPresentation);
     WriteParam(aMsg, name);
     WriteParam(aMsg, namePresentation);
+
     WriteParam(aMsg, isOutgoing);
     WriteParam(aMsg, isEmergency);
     WriteParam(aMsg, isConference);
@@ -90,10 +99,13 @@ struct ParamTraits<nsITelephonyCallInfo*>
     uint32_t clientId;
     uint32_t callIndex;
     uint16_t callState;
+    nsString disconnectedReason;
+
     nsString number;
     uint16_t numberPresentation;
     nsString name;
     uint16_t namePresentation;
+
     bool isOutgoing;
     bool isEmergency;
     bool isConference;
@@ -104,10 +116,13 @@ struct ParamTraits<nsITelephonyCallInfo*>
     if (!(ReadParam(aMsg, aIter, &clientId) &&
           ReadParam(aMsg, aIter, &callIndex) &&
           ReadParam(aMsg, aIter, &callState) &&
+          ReadParam(aMsg, aIter, &disconnectedReason) &&
+
           ReadParam(aMsg, aIter, &number) &&
           ReadParam(aMsg, aIter, &numberPresentation) &&
           ReadParam(aMsg, aIter, &name) &&
           ReadParam(aMsg, aIter, &namePresentation) &&
+
           ReadParam(aMsg, aIter, &isOutgoing) &&
           ReadParam(aMsg, aIter, &isEmergency) &&
           ReadParam(aMsg, aIter, &isConference) &&
@@ -117,10 +132,21 @@ struct ParamTraits<nsITelephonyCallInfo*>
     }
 
     nsCOMPtr<nsITelephonyCallInfo> info =
-        new TelephonyCallInfo(clientId, callIndex, callState, number,
-                              numberPresentation, name, namePresentation,
-                              isOutgoing, isEmergency, isConference,
-                              isSwitchable, isMergeable);
+        new TelephonyCallInfo(clientId,
+                              callIndex,
+                              callState,
+                              disconnectedReason,
+
+                              number,
+                              numberPresentation,
+                              name,
+                              namePresentation,
+
+                              isOutgoing,
+                              isEmergency,
+                              isConference,
+                              isSwitchable,
+                              isMergeable);
 
     info.forget(aResult);
 
