@@ -7,6 +7,8 @@
 "use strict";
 
 const { utils: Cu } = Components;
+const DEFAULT_PREVIEW_TEXT = "Abc";
+const PREVIEW_UPDATE_DELAY = 150;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -31,6 +33,9 @@ FontInspector.prototype = {
     this.showAll = this.showAll.bind(this);
     this.showAllButton = this.chromeDoc.getElementById("showall");
     this.showAllButton.addEventListener("click", this.showAll);
+    this.previewTextChanged = this.previewTextChanged.bind(this);
+    this.previewInput = this.chromeDoc.getElementById("preview-text-input");
+    this.previewInput.addEventListener("input", this.previewTextChanged);
     this.update();
   },
 
@@ -50,6 +55,11 @@ FontInspector.prototype = {
     this.inspector.sidebar.off("fontinspector-selected", this.onNewNode);
     this.inspector.selection.off("new-node", this.onNewNode);
     this.showAllButton.removeEventListener("click", this.showAll);
+    this.previewInput.removeEventListener("input", this.previewTextChanged);
+
+    if (this._previewUpdateTimeout) {
+      clearTimeout(this._previewUpdateTimeout);
+    }
   },
 
   /**
@@ -67,11 +77,38 @@ FontInspector.prototype = {
   },
 
   /**
+   * The text to use for previews. Returns either the value user has typed to
+   * the preview input or DEFAULT_PREVIEW_TEXT if the input is empty or contains
+   * only whitespace.
+   */
+  getPreviewText: function() {
+    let inputText = this.previewInput.value.trim();
+    if (inputText === "") {
+      return DEFAULT_PREVIEW_TEXT;
+    }
+
+    return inputText;
+  },
+
+  /**
+   * Preview input 'input' event handler.
+   */
+  previewTextChanged: function() {
+    if (this._previewUpdateTimeout) {
+      clearTimeout(this._previewUpdateTimeout);
+    }
+
+    this._previewUpdateTimeout = setTimeout(() => {
+      this.update(this._lastUpdateShowedAllFonts);
+    }, PREVIEW_UPDATE_DELAY);
+  },
+
+  /**
    * Hide the font list. No node are selected.
    */
   dim: function() {
     this.chromeDoc.body.classList.add("dim");
-    this.chromeDoc.querySelector("#all-fonts").innerHTML = "";
+    this.clear();
   },
 
   /**
@@ -79,6 +116,13 @@ FontInspector.prototype = {
    */
   undim: function() {
     this.chromeDoc.body.classList.remove("dim");
+  },
+
+  /**
+   * Clears the font list.
+   */
+  clear: function() {
+    this.chromeDoc.querySelector("#all-fonts").innerHTML = "";
   },
 
  /**
@@ -95,13 +139,15 @@ FontInspector.prototype = {
       return;
     }
 
-    this.chromeDoc.querySelector("#all-fonts").innerHTML = "";
+    this._lastUpdateShowedAllFonts = showAllFonts;
 
     // Assume light theme colors as the default (see also bug 1118179).
     let fillStyle = (Services.prefs.getCharPref("devtools.theme") == "dark") ?
         "white" : "black";
+
     let options = {
       includePreviews: true,
+      previewText: this.getPreviewText(),
       previewFillStyle: fillStyle
     };
 
@@ -115,6 +161,8 @@ FontInspector.prototype = {
     }
 
     if (!fonts || !fonts.length) {
+      // No fonts to display. Clear the previously shown fonts.
+      this.clear();
       return;
     }
 
@@ -127,8 +175,8 @@ FontInspector.prototype = {
       return;
     }
 
-    // clear again in case an update got in right before us
-    this.chromeDoc.querySelector("#all-fonts").innerHTML = "";
+    // Make room for the new fonts.
+    this.clear();
 
     for (let font of fonts) {
       this.render(font);
