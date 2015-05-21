@@ -115,6 +115,9 @@ let AppConstants = Object.freeze({
   false,
 #endif
 
+  DLL_PREFIX: "@DLL_PREFIX@",
+  DLL_SUFFIX: "@DLL_SUFFIX@",
+
   MOZ_APP_VERSION: "@MOZ_APP_VERSION@",
 
   ANDROID_PACKAGE_NAME: "@ANDROID_PACKAGE_NAME@",
