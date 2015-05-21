@@ -96,5 +96,4 @@ LOCAL_INCLUDES += [
     '/dom/workers',
     '/ipc/glue',
     '/xpcom/build',
-    '/xpcom/threads',
 ]
