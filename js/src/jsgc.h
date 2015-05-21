@@ -176,9 +176,6 @@ CanBeFinalizedInBackground(AllocKind kind, const Class* clasp)
             (!clasp->finalize || (clasp->flags & JSCLASS_BACKGROUND_FINALIZE)));
 }
 
-inline JSGCTraceKind
-GetGCThingTraceKind(const void* thing);
-
 // Fortunately, few places in the system need to deal with fully abstract
 // cells. In those places that do, we generally want to move to a layout
 // templated function as soon as possible. This template wraps the upcast
