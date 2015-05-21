@@ -563,7 +563,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   copyUrl: function() {
     let selected = this.selectedItem.attachment;
-    clipboardHelper.copyString(selected.url, document);
+    clipboardHelper.copyString(selected.url);
   },
 
   /**
@@ -573,7 +573,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let selected = this.selectedItem.attachment;
     let params = nsIURL(selected.url).query.split("&");
     let string = params.join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n");
-    clipboardHelper.copyString(string, document);
+    clipboardHelper.copyString(string);
   },
 
   /**
@@ -650,7 +650,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       }
     }
 
-    clipboardHelper.copyString(string, document);
+    clipboardHelper.copyString(string);
   }),
 
   /**
@@ -681,7 +681,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         data.postDataText = yield gNetwork.getString(postData);
       }
 
-      clipboardHelper.copyString(Curl.generateCommand(data), document);
+      clipboardHelper.copyString(Curl.generateCommand(data));
     });
   },
 
@@ -694,7 +694,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     if (Services.appinfo.OS !== "WINNT") {
       rawHeaders = rawHeaders.replace(/\r/g, "");
     }
-    clipboardHelper.copyString(rawHeaders, document);
+    clipboardHelper.copyString(rawHeaders);
   },
 
   /**
@@ -706,7 +706,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     if (Services.appinfo.OS !== "WINNT") {
       rawHeaders = rawHeaders.replace(/\r/g, "");
     }
-    clipboardHelper.copyString(rawHeaders, document);
+    clipboardHelper.copyString(rawHeaders);
   },
 
   /**
@@ -718,7 +718,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     gNetwork.getString(text).then(aString => {
       let data = "data:" + mimeType + ";" + encoding + "," + aString;
-      clipboardHelper.copyString(data, document);
+      clipboardHelper.copyString(data);
     });
   },
 
@@ -730,7 +730,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let text = selected.responseContent.content.text;
 
     gNetwork.getString(text).then(aString => {
-      clipboardHelper.copyString(aString, document);
+      clipboardHelper.copyString(aString);
     });
   },
 

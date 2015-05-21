@@ -570,7 +570,7 @@ DownloadItem.prototype = {
       case "cmd_copyLocation":
         let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                         getService(Ci.nsIClipboardHelper);
-        clipboard.copyString(this.uri, document);
+        clipboard.copyString(this.uri);
         break;
     }
   },

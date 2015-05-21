@@ -1570,7 +1570,7 @@ SpecialPowersAPI.prototype = {
   copyString: function(str, doc) {
     Components.classes["@mozilla.org/widget/clipboardhelper;1"].
       getService(Components.interfaces.nsIClipboardHelper).
-      copyString(str, doc);
+      copyString(str);
   },
 
   openDialog: function(win, args) {
@@ -1654,7 +1654,7 @@ SpecialPowersAPI.prototype = {
   clipboardCopyString: function(preExpectedVal, doc) {
     var cbHelperSvc = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
                       getService(Components.interfaces.nsIClipboardHelper);
-    cbHelperSvc.copyString(preExpectedVal, doc);
+    cbHelperSvc.copyString(preExpectedVal);
   },
 
   supportsSelectionClipboard: function() {
