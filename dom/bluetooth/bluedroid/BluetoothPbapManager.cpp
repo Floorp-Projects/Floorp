@@ -183,17 +183,27 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  const uint8_t* data = aMessage->GetData();
+  /**
+   * Ensure
+   * - valid access to data[0], i.e., opCode
+   * - received packet length smaller than max packet length
+   */
   int receivedLength = aMessage->GetSize();
-  uint8_t opCode = data[0];
+  if (receivedLength < 1 || receivedLength > MAX_PACKET_LENGTH) {
+    ReplyError(ObexResponseCode::BadRequest);
+    return;
+  }
 
-  ObexHeaderSet pktHeaders(opCode);
+  const uint8_t* data = aMessage->GetData();
+  uint8_t opCode = data[0];
+  ObexHeaderSet pktHeaders;
   switch (opCode) {
     case ObexRequestCode::Connect:
       // Section 3.3.1 "Connect", IrOBEX 1.2
       // [opcode:1][length:2][version:1][flags:1][MaxPktSizeWeCanReceive:2]
       // [Headers:var]
-      if (!ParseHeaders(&data[7], receivedLength - 7, &pktHeaders)) {
+      if (receivedLength < 7 ||
+          !ParseHeaders(&data[7], receivedLength - 7, &pktHeaders)) {
         ReplyError(ObexResponseCode::BadRequest);
         return;
       }
@@ -213,7 +223,8 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
       // Section 3.3.2 "Disconnect" and Section 3.3.5 "Abort", IrOBEX 1.2
       // The format of request packet of "Disconnect" and "Abort" are the same
       // [opcode:1][length:2][Headers:var]
-      if (!ParseHeaders(&data[3], receivedLength - 3, &pktHeaders)) {
+      if (receivedLength < 3 ||
+          !ParseHeaders(&data[3], receivedLength - 3, &pktHeaders)) {
         ReplyError(ObexResponseCode::BadRequest);
         return;
       }
@@ -224,7 +235,8 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
     case ObexRequestCode::SetPath: {
         // Section 3.3.6 "SetPath", IrOBEX 1.2
         // [opcode:1][length:2][flags:1][contants:1][Headers:var]
-        if (!ParseHeaders(&data[5], receivedLength - 5, &pktHeaders)) {
+        if (receivedLength < 5 ||
+            !ParseHeaders(&data[5], receivedLength - 5, &pktHeaders)) {
           ReplyError(ObexResponseCode::BadRequest);
           return;
         }

@@ -549,7 +549,8 @@ WebappsApplication.prototype = {
   },
 
   get enabled() {
-    return this._proxy.enabled;
+    let value = this._proxy.enabled;
+    return (value === undefined ? true : value);
   },
 
   download: function() {
