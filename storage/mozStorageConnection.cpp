@@ -62,10 +62,6 @@ PRLogModuleInfo* gStorageLog = nullptr;
 #define CHECK_MAINTHREAD_ABUSE() do { /* Nothing */ } while(0)
 #endif
 
-extern "C" {
-int sqlite3_dbstat_register(sqlite3 *db);
-}
-
 namespace mozilla {
 namespace storage {
 
@@ -148,14 +144,7 @@ struct Module
 };
 
 Module gModules[] = {
-  { "filesystem", RegisterFileSystemModule },
-  { "dbstat",
-    [](sqlite3* aDatabase, const char* aName) -> int
-    {
-      MOZ_ASSERT(!strcmp(aName, "dbstat"));
-      return sqlite3_dbstat_register(aDatabase);
-    }
-  }
+  { "filesystem", RegisterFileSystemModule }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
