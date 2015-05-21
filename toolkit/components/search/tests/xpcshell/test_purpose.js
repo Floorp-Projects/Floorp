@@ -46,5 +46,13 @@ add_task(function* test_purpose() {
   check_submission("&channel=fflb", "foo", "application/x-moz-default-purpose", "keyword");
   check_submission("",              "foo", "application/x-moz-default-purpose", "invalid");
 
+  // Tests for a purpose on the search form (ie. empty query).
+  [engine] = yield addTestEngines([
+    { name: "engine-rel-searchform-purpose", xmlFileName: "engine-rel-searchform-purpose.xml" }
+  ]);
+  base = "http://www.google.com/search?q=";
+  check_submission("&channel=sb", "", null,        "searchbar");
+  check_submission("&channel=sb", "", "text/html", "searchbar");
+
   do_test_finished();
 });
