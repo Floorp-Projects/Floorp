@@ -27,6 +27,7 @@
 #include "js/Vector.h"
 #include "vm/Debugger.h"
 #include "vm/StringBuffer.h"
+#include "vm/WrapperObject.h"
 
 #include "jscntxtinlines.h"
 
@@ -1223,6 +1224,7 @@ SavedStacksMetadataCallback(JSContext* cx, JSObject* target)
     if (!Debugger::onLogAllocationSite(cx, obj, frame, PRMJ_Now()))
         CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
 
+    MOZ_ASSERT_IF(frame, !frame->is<WrapperObject>());
     return frame;
 }
 

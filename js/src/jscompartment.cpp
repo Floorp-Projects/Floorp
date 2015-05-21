@@ -719,16 +719,17 @@ JSCompartment::clearObjectMetadata()
 void
 JSCompartment::setNewObjectMetadata(JSContext* cx, JSObject* obj)
 {
-    MOZ_ASSERT(this == cx->compartment());
+    assertSameCompartment(cx, this, obj);
 
     if (JSObject* metadata = objectMetadataCallback(cx, obj)) {
+        assertSameCompartment(cx, metadata);
         if (!objectMetadataTable) {
             objectMetadataTable = cx->new_<ObjectWeakMap>(cx);
             if (!objectMetadataTable)
-                CrashAtUnhandlableOOM("setObjectMetadata");
+                CrashAtUnhandlableOOM("setNewObjectMetadata");
         }
         if (!objectMetadataTable->add(cx, obj, metadata))
-            CrashAtUnhandlableOOM("setObjectMetadata");
+            CrashAtUnhandlableOOM("setNewObjectMetadata");
     }
 }
 
