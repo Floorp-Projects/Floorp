@@ -211,17 +211,17 @@ JS_WrapPropertyDescriptor(JSContext* cx, JS::MutableHandle<js::PropertyDescripto
 }
 
 JS_FRIEND_API(void)
-JS_TraceShapeCycleCollectorChildren(JSTracer* trc, JS::GCCellPtr shape)
+JS_TraceShapeCycleCollectorChildren(JS::CallbackTracer* trc, JS::GCCellPtr shape)
 {
     MOZ_ASSERT(shape.isShape());
-    MarkCycleCollectorChildren(trc, static_cast<Shape*>(shape.asCell()));
+    TraceCycleCollectorChildren(trc, static_cast<Shape*>(shape.asCell()));
 }
 
 JS_FRIEND_API(void)
-JS_TraceObjectGroupCycleCollectorChildren(JSTracer* trc, JS::GCCellPtr group)
+JS_TraceObjectGroupCycleCollectorChildren(JS::CallbackTracer* trc, JS::GCCellPtr group)
 {
     MOZ_ASSERT(group.isObjectGroup());
-    MarkCycleCollectorChildren(trc, static_cast<ObjectGroup*>(group.asCell()));
+    TraceCycleCollectorChildren(trc, static_cast<ObjectGroup*>(group.asCell()));
 }
 
 static bool
