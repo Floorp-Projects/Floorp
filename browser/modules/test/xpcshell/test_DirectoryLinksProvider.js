@@ -104,6 +104,16 @@ let suggestedTile4 = {
     "sponsoredtarget.com"
   ]
 }
+let suggestedTile5 = {
+  url: "http://eviltile.com",
+  type: "affiliate",
+  lastVisitDate: 5,
+  explanation: "This is an evil tile <form><button formaction='javascript:alert(1)''>X</button></form> muhahaha",
+  adgroup_name: "WE ARE EVIL <link rel='import' href='test.svg'/>",
+  frecent_sites: [
+    "eviltarget.com"
+  ]
+}
 let someOtherSite = {url: "http://someothersite.com", title: "Not_A_Suggested_Site"};
 
 function getHttpHandler(path) {
@@ -199,6 +209,7 @@ function promiseCleanDirectoryLinksProvider() {
     yield promiseDirectoryDownloadOnPrefChange(kLocalePref, "en-US");
     yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, kTestURL);
     yield DirectoryLinksProvider._clearFrequencyCap();
+    yield DirectoryLinksProvider._loadInadjacentSites();
     DirectoryLinksProvider._lastDownloadMS  = 0;
     DirectoryLinksProvider.reset();
   });
@@ -442,6 +453,7 @@ add_task(function test_suggestedLinksMap() {
     for (let link of expected_data[site]) {
       let linkCopy = JSON.parse(JSON.stringify(link));
       linkCopy.targetedName = "testing map";
+      linkCopy.explanation = "";
       isIdentical(suggestedLinksItr.next().value, linkCopy);
     }
   })
@@ -1107,6 +1119,30 @@ add_task(function test_DirectoryLinksProvider_getAllowedImages() {
   do_check_eq(links[1].imageURI, data["directory"][5].imageURI);
 });
 
+add_task(function test_DirectoryLinksProvider_getAllowedImages_base() {
+  let data = {"directory": [
+    {url: "http://example1.com", imageURI: "https://example.com"},
+    {url: "http://example2.com", imageURI: "https://tiles.cdn.mozilla.net"},
+    {url: "http://example3.com", imageURI: "https://tiles2.cdn.mozilla.net"},
+    {url: "http://example4.com", enhancedImageURI: "https://mozilla.net"},
+    {url: "http://example5.com", imageURI: "data:text/plain,hi"},
+  ]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  // Pretend we're using the default pref to trigger base matching
+  DirectoryLinksProvider.__linksURLModified = false;
+
+  let links = yield fetchData();
+  do_check_eq(links.length, 4);
+
+  // The only remaining images should be https with mozilla.net or data URI
+  do_check_eq(links[0].url, data["directory"][1].url);
+  do_check_eq(links[1].url, data["directory"][2].url);
+  do_check_eq(links[2].url, data["directory"][3].url);
+  do_check_eq(links[3].url, data["directory"][4].url);
+});
+
 add_task(function test_DirectoryLinksProvider_getAllowedEnhancedImages() {
   let data = {"directory": [
     {url: "http://example.com", enhancedImageURI: "ftp://example.com"},
@@ -1687,4 +1723,204 @@ add_task(function test_DirectoryLinksProvider_ClickRemoval() {
 
 add_task(function test_DirectoryLinksProvider_anonymous() {
   do_check_true(DirectoryLinksProvider._newXHR().mozAnon);
+});
+
+add_task(function test_sanitizeExplanation() {
+  // Note: this is a basic test to ensure we applied sanitization to the link explanation.
+  // Full testing for appropriate sanitization is done in parser/xml/test/unit/test_sanitizer.js.
+
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "testing map";
+
+  let data = {"suggested": [suggestedTile5]};
+  let dataURI = 'data:application/json,' + encodeURIComponent(JSON.stringify(data));
+
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+  let links = yield fetchData();
+
+  let suggestedSites = [...DirectoryLinksProvider._suggestedLinks.keys()];
+  do_check_eq(suggestedSites.indexOf("eviltarget.com"), 0);
+  do_check_eq(suggestedSites.length, 1);
+
+  let suggestedLink = [...DirectoryLinksProvider._suggestedLinks.get(suggestedSites[0]).values()][0];
+  do_check_eq(suggestedLink.explanation, "This is an evil tile X muhahaha");
+  do_check_eq(suggestedLink.targetedName, "WE ARE EVIL ");
+});
+
+add_task(function test_inadjecentSites() {
+  let suggestedTile = Object.assign({
+    check_inadjacency: true
+  }, suggestedTile1);
+
+  // Initial setup
+  let topSites = ["1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
+  let data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+
+  let testObserver = new TestFirstRun();
+  DirectoryLinksProvider.addObserver(testObserver);
+
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
+
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+  let links = yield fetchData();
+
+  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
+  NewTabUtils.isTopPlacesSite = function(site) {
+    return topSites.indexOf(site) >= 0;
+  }
+
+  let origGetProviderLinks = NewTabUtils.getProviderLinks;
+  NewTabUtils.getProviderLinks = function(provider) {
+    return links;
+  }
+
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => {
+    origCurrentTopSiteCount.apply(DirectoryLinksProvider);
+    return 8;
+  };
+
+  // store oroginal inadjacent sites url
+  let origInadjacentSitesUrl = DirectoryLinksProvider._inadjacentSitesUrl;
+
+  // loading inadjacent sites list function
+  function setInadjacentSites(sites) {
+    let badSiteB64 = [];
+    sites.forEach(site => {
+      badSiteB64.push(DirectoryLinksProvider._generateHash(site));
+    });
+    let theList = {"domains": badSiteB64};
+    let dataURI = 'data:application/json,' + JSON.stringify(theList);
+    DirectoryLinksProvider._inadjacentSitesUrl = dataURI;
+    return DirectoryLinksProvider._loadInadjacentSites();
+  };
+
+  // setup gLinks loader
+  let gLinks = NewTabUtils.links;
+  gLinks.addProvider(DirectoryLinksProvider);
+
+  function updateNewTabCache() {
+    gLinks.populateCache();
+    return new Promise(resolve => {
+      NewTabUtils.allPages.register({
+        observe: _ => _,
+        update() {
+          NewTabUtils.allPages.unregister(this);
+          resolve();
+        }
+      });
+  });
+  }
+
+  // no suggested file
+  do_check_eq(DirectoryLinksProvider._updateSuggestedTile(), undefined);
+  // _avoidInadjacentSites should be set, since link.check_inadjacency is on
+  do_check_true(DirectoryLinksProvider._avoidInadjacentSites);
+  // make sure example.com is included in inadjacent sites list
+  do_check_true(DirectoryLinksProvider._isInadjacentLink({baseDomain: "example.com"}));
+
+  function TestFirstRun() {
+    this.promise = new Promise(resolve => {
+      this.onLinkChanged = (directoryLinksProvider, link) => {
+        do_check_eq(link.url, suggestedTile.url);
+        do_check_eq(link.type, "affiliate");
+        resolve();
+      };
+    });
+  }
+
+  // Test first call to '_updateSuggestedTile()', called when fetching directory links.
+  yield testObserver.promise;
+  DirectoryLinksProvider.removeObserver(testObserver);
+
+  // update newtab cache
+  yield updateNewTabCache();
+  // this should have set
+  do_check_true(DirectoryLinksProvider._avoidInadjacentSites);
+
+  // there should be siggested link
+  let link = DirectoryLinksProvider._updateSuggestedTile();
+  do_check_eq(link.url, "http://turbotax.com");
+  // and it should have avoidInadjacentSites flag
+  do_check_true(link.check_inadjacency);
+
+  // make someothersite.com inadjacent
+  yield setInadjacentSites(["someothersite.com"]);
+
+  // there should be no suggested link
+  link = DirectoryLinksProvider._updateSuggestedTile();
+  do_check_false(link);
+  do_check_true(DirectoryLinksProvider._newTabHasInadjacentSite);
+
+  // _handleLinkChanged must return true on inadjacent site
+  do_check_true(DirectoryLinksProvider._handleLinkChanged({
+    url: "http://someothersite.com",
+    type: "history",
+  }));
+  // _handleLinkChanged must return false on ok site
+  do_check_false(DirectoryLinksProvider._handleLinkChanged({
+    url: "http://foobar.com",
+    type: "history",
+  }));
+
+  // change inadjacent list to sites not on newtab page
+  yield setInadjacentSites(["foo.com", "bar.com"]);
+
+  link = DirectoryLinksProvider._updateSuggestedTile();
+  // we should now have a link
+  do_check_true(link);
+  do_check_eq(link.url, "http://turbotax.com");
+
+  // make newtab offending again
+  yield setInadjacentSites(["someothersite.com", "foo.com"]);
+  // there should be no suggested link
+  link = DirectoryLinksProvider._updateSuggestedTile();
+  do_check_false(link);
+  do_check_true(DirectoryLinksProvider._newTabHasInadjacentSite);
+
+  // remove avoidInadjacentSites flag from suggested tile and reload json
+  delete suggestedTile.check_inadjacency;
+  data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
+  dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, dataURI);
+  yield fetchData();
+
+  // inadjacent checking should be disabled
+  do_check_false(DirectoryLinksProvider._avoidInadjacentSites);
+  link = DirectoryLinksProvider._updateSuggestedTile();
+  do_check_true(link);
+  do_check_eq(link.url, "http://turbotax.com");
+  do_check_false(DirectoryLinksProvider._newTabHasInadjacentSite);
+
+  // _handleLinkChanged should return false now, even if newtab has bad site
+  do_check_false(DirectoryLinksProvider._handleLinkChanged({
+    url: "http://someothersite.com",
+    type: "history",
+  }));
+
+  // test _isInadjacentLink
+  do_check_true(DirectoryLinksProvider._isInadjacentLink({baseDomain: "someothersite.com"}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({baseDomain: "bar.com"}));
+  do_check_true(DirectoryLinksProvider._isInadjacentLink({url: "http://www.someothersite.com"}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({url: "http://www.bar.com"}));
+  // try to crash _isInadjacentLink
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({baseDomain: ""}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({url: ""}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({url: "http://localhost:8081/"}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({url: "abracodabra"}));
+  do_check_false(DirectoryLinksProvider._isInadjacentLink({}));
+
+  // test _checkForInadjacentSites
+  do_check_true(DirectoryLinksProvider._checkForInadjacentSites());
+
+  // Cleanup
+  gLinks.removeProvider(DirectoryLinksProvider);
+  DirectoryLinksProvider._inadjacentSitesUrl = origInadjacentSitesUrl;
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
+  NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  NewTabUtils.getProviderLinks = origGetProviderLinks;
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
+  yield promiseCleanDirectoryLinksProvider();
 });
