@@ -31,6 +31,8 @@ public:
                  UnixSocketConnector* aConnector);
   ~ListenSocketIO();
 
+  UnixSocketConnector* GetConnector() const;
+
   // Task callback methods
   //
 
@@ -110,6 +112,12 @@ ListenSocketIO::~ListenSocketIO()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsShutdownOnMainThread());
+}
+
+UnixSocketConnector*
+ListenSocketIO::GetConnector() const
+{
+  return mConnector;
 }
 
 void
@@ -302,7 +310,14 @@ ListenSocket::Listen(UnixSocketConnector* aConnector,
   mIO = new ListenSocketIO(XRE_GetIOMessageLoop(), this, aConnector);
 
   // Prepared I/O object, now start listening.
-  return Listen(aCOSocket);
+  nsresult rv = Listen(aCOSocket);
+  if (NS_FAILED(rv)) {
+    delete mIO;
+    mIO = nullptr;
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -312,10 +327,28 @@ ListenSocket::Listen(ConnectionOrientedSocket* aCOSocket)
   MOZ_ASSERT(aCOSocket);
   MOZ_ASSERT(mIO);
 
+  // We first prepare the connection-oriented socket with a
+  // socket connector and a socket I/O class.
+
+  nsAutoPtr<UnixSocketConnector> connector;
+  nsresult rv = mIO->GetConnector()->Duplicate(*connector.StartAssignment());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsAutoPtr<ConnectionOrientedSocketIO> io;
+  rv = aCOSocket->PrepareAccept(connector, *io.StartAssignment());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  connector.forget(); // now owned by |io|
+
+  // Then we start listening for connection requests.
+
   SetConnectionStatus(SOCKET_LISTENING);
 
   XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE, new ListenSocketIO::ListenTask(mIO, aCOSocket->GetIO()));
+    FROM_HERE, new ListenSocketIO::ListenTask(mIO, io.forget()));
 
   return NS_OK;
 }

@@ -745,12 +745,6 @@ KeyStore::StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
   mKeyStore->ReceiveSocketData(aBuffer);
 }
 
-ConnectionOrientedSocketIO*
-KeyStore::StreamSocket::GetIO()
-{
-  return PrepareAccept(new KeyStoreConnector(KEYSTORE_ALLOWED_USERS));
-}
-
 //
 // KeyStore
 //

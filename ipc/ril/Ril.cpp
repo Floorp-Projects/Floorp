@@ -294,11 +294,5 @@ RilConsumer::OnDisconnect()
   Connect(new RilConnector(mAddress, mClientId), GetSuggestedConnectDelayMs());
 }
 
-ConnectionOrientedSocketIO*
-RilConsumer::GetIO()
-{
-  return PrepareAccept(new RilConnector(mAddress, mClientId));
-}
-
 } // namespace ipc
 } // namespace mozilla
