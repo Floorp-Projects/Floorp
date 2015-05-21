@@ -2108,8 +2108,10 @@ CssRuleView.prototype = {
       // Get the actual property value displayed in the rule view
       let propertyValue = textProp.editor.valueSpan.textContent.toLowerCase();
       let propertyName = textProp.name.toLowerCase();
+      let styleSheetSource = textProp.rule.title.toLowerCase();
 
       let editor = textProp.editor;
+      let source = editor.ruleEditor.source;
 
       let isPropertyHighlighted = this._highlightMatches(editor.container, {
         searchName: name,
@@ -2137,7 +2139,14 @@ CssRuleView.prototype = {
         }
       }
 
-      if (isPropertyHighlighted || isComputedHighlighted) {
+      // Highlight search matches in the stylesheet source
+      let isStyleSheetHighlighted = styleSheetSource.includes(aValue);
+      if (isStyleSheetHighlighted) {
+        source.classList.add("ruleview-highlight");
+      }
+
+      if (isPropertyHighlighted || isComputedHighlighted ||
+          isStyleSheetHighlighted) {
         isHighlighted = true;
       }
 
@@ -2262,11 +2271,11 @@ RuleEditor.prototype = {
     this.element.style.position = "relative";
 
     // Add the source link.
-    let source = createChild(this.element, "div", {
+    this.source = createChild(this.element, "div", {
       class: "ruleview-rule-source theme-link"
     });
-    source.addEventListener("click", function() {
-      if (source.hasAttribute("unselectable")) {
+    this.source.addEventListener("click", function() {
+      if (this.source.hasAttribute("unselectable")) {
         return;
       }
       let rule = this.rule.domRule;
@@ -2275,7 +2284,7 @@ RuleEditor.prototype = {
     let sourceLabel = this.doc.createElementNS(XUL_NS, "label");
     sourceLabel.setAttribute("crop", "center");
     sourceLabel.classList.add("source-link-label");
-    source.appendChild(sourceLabel);
+    this.source.appendChild(sourceLabel);
 
     this.updateSourceLink();
 

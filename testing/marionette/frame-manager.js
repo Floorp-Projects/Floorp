@@ -134,7 +134,7 @@ FrameManager.prototype = {
         frameMessageManager.sendAsyncMessage("aliveCheck", {});
       } catch (e) {
         if (e.result ==  Components.results.NS_ERROR_NOT_INITIALIZED) {
-          remoteFrames.splice(i, 1);
+          remoteFrames.splice(i--, 1);
           continue;
         }
       }

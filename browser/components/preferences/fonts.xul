@@ -107,7 +107,7 @@
                      accesskey="&sizeProportional.accesskey;"
                      control="sizeVar"/>
             </hbox>  
-            <menulist id="sizeVar">
+            <menulist id="sizeVar" delayprefsave="true">
               <menupopup>
                 <menuitem value="9" label="9"/>
                 <menuitem value="10" label="10"/>
@@ -141,7 +141,7 @@
             <hbox align="center" pack="end">
               <label accesskey="&serif.accesskey;" control="serif">&serif.label;</label>
             </hbox>
-            <menulist id="serif" flex="1" style="width: 0px;"
+            <menulist id="serif" flex="1" style="width: 0px;" delayprefsave="true"
                       onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('serif'));"/>
             <spacer/>
           </row>
@@ -149,7 +149,7 @@
             <hbox align="center" pack="end">
               <label accesskey="&sans-serif.accesskey;" control="sans-serif">&sans-serif.label;</label>
             </hbox>
-            <menulist id="sans-serif" flex="1" style="width: 0px;"
+            <menulist id="sans-serif" flex="1" style="width: 0px;" delayprefsave="true"
                       onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('sans-serif'));"/>
             <spacer/>
           </row>
@@ -157,14 +157,14 @@
             <hbox align="center" pack="end">
               <label accesskey="&monospace.accesskey;" control="monospace">&monospace.label;</label>
             </hbox>
-            <menulist id="monospace" flex="1" style="width: 0px;" crop="right"
+            <menulist id="monospace" flex="1" style="width: 0px;" crop="right" delayprefsave="true"
                       onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('monospace'));"/>
             <hbox align="center" pack="end">
               <label value="&size.label;"
                      accesskey="&sizeMonospace.accesskey;"
                      control="sizeMono"/>
             </hbox>  
-            <menulist id="sizeMono">
+            <menulist id="sizeMono" delayprefsave="true">
               <menupopup>
                 <menuitem value="9" label="9"/>
                 <menuitem value="10" label="10"/>

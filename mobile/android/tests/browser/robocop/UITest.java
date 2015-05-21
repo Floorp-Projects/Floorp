@@ -124,6 +124,11 @@ abstract class UITest extends BaseRobocopTest
     }
 
     @Override
+    public StringHelper getStringHelper() {
+        return mStringHelper;
+    }
+
+    @Override
     public void dumpLog(final String logtag, final String message) {
         mAsserter.dumpLog(logtag + ": " + message);
     }

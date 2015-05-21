@@ -148,6 +148,7 @@ function fakeNow(...args) {
     Cu.import("resource://gre/modules/TelemetrySession.jsm"),
     Cu.import("resource://gre/modules/TelemetryEnvironment.jsm"),
     Cu.import("resource://gre/modules/TelemetryController.jsm"),
+    Cu.import("resource://gre/modules/TelemetryStorage.jsm"),
   ];
 
   for (let m of modules) {

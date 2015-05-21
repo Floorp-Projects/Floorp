@@ -58,10 +58,7 @@ function* testManualEdit(inspector, view) {
   info("Typing new value");
   let input = editor.input;
   let onBlur = once(input, "blur");
-  for (let ch of newColor + ";"){
-    EventUtils.sendChar(ch, view.doc.defaultView);
-  }
-
+  EventUtils.sendString(newColor + ";", view.doc.defaultView);
   yield onBlur;
   yield wait(1);
 

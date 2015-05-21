@@ -60,9 +60,7 @@ function* testEditProperty(ruleEditor, name, value, isValid) {
   info("Entering a new property name, including : to commit and focus the value");
   let onValueFocus = once(ruleEditor.element, "focus", true);
   let onModifications = ruleEditor.rule._applyingModifications;
-  for (let ch of name + ":") {
-    EventUtils.sendChar(ch, doc.defaultView);
-  }
+  EventUtils.sendString(name + ":", doc.defaultView);
   yield onValueFocus;
   yield onModifications;
 
@@ -74,9 +72,7 @@ function* testEditProperty(ruleEditor, name, value, isValid) {
   info("Entering a new value, including ; to commit and blur the value");
   let onBlur = once(input, "blur");
   onModifications = ruleEditor.rule._applyingModifications;
-  for (let ch of value + ";") {
-    EventUtils.sendChar(ch, doc.defaultView);
-  }
+  EventUtils.sendString(value + ";", doc.defaultView);
   yield onBlur;
   yield onModifications;
 

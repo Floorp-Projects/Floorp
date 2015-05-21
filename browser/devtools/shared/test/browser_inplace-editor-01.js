@@ -82,9 +82,7 @@ function testAdvanceCharCommit(doc) {
     advanceChars: ":",
     start: function(editor) {
       let input = editor.input;
-      for each (let ch in "Test:") {
-        EventUtils.sendChar(ch);
-      }
+      EventUtils.sendString("Test:");
     },
     done: onDone("Test", true, def)
   }, doc);

@@ -1183,6 +1183,10 @@
         <body>
         <![CDATA[
           // Write all values to preferences.
+          if (this._deferredValueUpdateElements.size) {
+            this._finalizeDeferredElements();
+          }
+
           var preferences = this.preferences;
           for (var i = 0; i < preferences.length; ++i) {
             var preference = preferences[i];
@@ -1259,15 +1263,57 @@
         </body>
       </method>
       
+      <field name="DeferredTask" readonly="true">
+        let targetObj = {};
+        Components.utils.import("resource://gre/modules/DeferredTask.jsm", targetObj);
+        targetObj.DeferredTask;
+      </field>
+      <method name="_deferredValueUpdate">
+        <parameter name="aElement"/>
+        <body>
+        <![CDATA[
+          delete aElement._deferredValueUpdateTask;
+          let preference = document.getElementById(aElement.getAttribute("preference"));
+          let prefVal = preference.getElementValue(aElement);
+          preference.value = prefVal;
+          this._deferredValueUpdateElements.delete(aElement);
+        ]]>
+        </body>
+      </method>
+      <field name="_deferredValueUpdateElements">
+        new Set();
+      </field>
+      <method name="_finalizeDeferredElements">
+        <body>
+        <![CDATA[
+          for (let el of this._deferredValueUpdateElements) {
+            if (el._deferredValueUpdateTask) {
+              el._deferredValueUpdateTask.finalize();
+            }
+          }
+        ]]>
+        </body>
+      </method>
       <method name="userChangedValue">
         <parameter name="aElement"/>
         <body>
         <![CDATA[
-          var element = this.getPreferenceElement(aElement);
+          let element = this.getPreferenceElement(aElement);
           if (element.hasAttribute("preference")) {
-            var preference = document.getElementById(element.getAttribute("preference"));
-            var prefVal = preference.getElementValue(element);
-            preference.value = prefVal;
+            if (element.getAttribute("delayprefsave") != "true") {
+              var preference = document.getElementById(element.getAttribute("preference"));
+              var prefVal = preference.getElementValue(element);
+              preference.value = prefVal;
+            } else {
+              if (!element._deferredValueUpdateTask) {
+                element._deferredValueUpdateTask = new this.DeferredTask(this._deferredValueUpdate.bind(this, element), 1000);
+                this._deferredValueUpdateElements.add(element);
+              } else {
+                // Each time the preference is changed, restart the delay.
+                element._deferredValueUpdateTask.disarm();
+                element._deferredValueUpdateTask.arm();
+              }
+            }
           }
         ]]>
         </body>

@@ -44,12 +44,12 @@ Show subsession data
 Choose ping:
 ">
 
-<!ENTITY aboutTelemetry.showPreviousPing "
-&lt;&lt; Previous ping
+<!ENTITY aboutTelemetry.showNewerPing "
+&lt;&lt; Newer ping
 ">
 
-<!ENTITY aboutTelemetry.showNextPing "
-Next ping &gt;&gt;
+<!ENTITY aboutTelemetry.showOlderPing "
+Older ping &gt;&gt;
 ">
 
 <!ENTITY aboutTelemetry.generalDataSection "

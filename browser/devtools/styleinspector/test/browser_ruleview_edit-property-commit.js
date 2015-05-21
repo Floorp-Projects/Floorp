@@ -64,9 +64,7 @@ function* runTestData(view, {value, commitKey, modifiers, expected}) {
   is(inplaceEditor(propEditor.valueSpan), editor, "Focused editor should be the value span.");
 
   info("Entering test data " + value);
-  for (let ch of value) {
-    EventUtils.sendChar(ch, view.doc.defaultView);
-  }
+  EventUtils.sendString(value, view.doc.defaultView);
 
   info("Waiting for focus on the field");
   let onBlur = once(editor.input, "blur");

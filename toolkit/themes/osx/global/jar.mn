@@ -31,7 +31,6 @@ toolkit.jar:
 * skin/classic/global/findBar.css
 * skin/classic/global/global.css
   skin/classic/global/groupbox.css
-* skin/classic/global/inContentUI.css
   skin/classic/global/linkTree.css
   skin/classic/global/listbox.css
   skin/classic/global/menu.css
@@ -145,7 +144,6 @@ toolkit.jar:
   skin/classic/global/icons/webapps-16.png                           (icons/webapps-16.png)
   skin/classic/global/icons/webapps-16@2x.png                        (icons/webapps-16@2x.png)
   skin/classic/global/icons/webapps-64.png                           (icons/webapps-64.png)
-  skin/classic/global/inContentUI/background-texture.png             (inContentUI/background-texture.png)
   skin/classic/global/notification/close.png                         (notification/close.png)
   skin/classic/global/notification/critical-bar-background.png       (notification/critical-bar-background.png)
   skin/classic/global/notification/error-icon.png                    (notification/error-icon.png)

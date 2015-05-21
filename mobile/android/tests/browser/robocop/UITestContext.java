@@ -32,6 +32,7 @@ public interface UITestContext {
     public Driver getDriver();
     public Actions getActions();
     public Instrumentation getInstrumentation();
+    public StringHelper getStringHelper();
 
     public void dumpLog(final String logtag, final String message);
     public void dumpLog(final String logtag, final String message, final Throwable t);

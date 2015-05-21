@@ -31,9 +31,7 @@ function* testCreateNewMultiUnfinished(inspector, ruleEditor, view) {
   is(ruleEditor.rule.textProps.length, 4, "Should have created new text properties.");
   is(ruleEditor.propertyList.children.length, 4, "Should have created property editors.");
 
-  for (let ch of "red") {
-    EventUtils.sendChar(ch, view.doc.defaultView);
-  }
+  EventUtils.sendString("red", view.doc.defaultView);
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
   is(ruleEditor.rule.textProps.length, 4, "Should have the same number of text properties.");

@@ -826,7 +826,9 @@ AbstractCanvasGraph.prototype = {
       stripesColor: this.selectionStripesColor
     });
     ctx.fillStyle = pattern;
-    ctx.fillRect(start, 0, end - start, this._height);
+    let rectStart = Math.min(this._width, Math.max(0, start));
+    let rectEnd = Math.min(this._width, Math.max(0, end));
+    ctx.fillRect(rectStart, 0, rectEnd - rectStart, this._height);
 
     // Draw left boundary.
 
