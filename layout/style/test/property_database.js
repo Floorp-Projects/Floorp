@@ -5888,12 +5888,7 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
       "'' ''",
       "'1a-é_ .' \"b .\"",
       "' Z\t\\aZ' 'Z Z'",
-      " '. . a b'  '. .a b' ",
-      "'a.b' '. . .'",
-      "'.' '..'",
-      "'...' '.'",
-      "'...-blah' '. .'",
-      "'.. ..' '.. ...'",
+      " '. . a b'  '..a b' ",
     ],
     invalid_values: [
       "'a b' 'a/b'",
