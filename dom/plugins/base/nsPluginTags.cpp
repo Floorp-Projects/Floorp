@@ -818,10 +818,29 @@ bool nsPluginTag::IsFromExtension() const
 
 /* nsFakePluginTag */
 
+uint32_t nsFakePluginTag::sNextId;
+
 nsFakePluginTag::nsFakePluginTag()
-  : mState(nsPluginTag::ePluginState_Disabled)
+  : mId(sNextId++),
+    mState(nsPluginTag::ePluginState_Disabled)
 {
 }
+
+nsFakePluginTag::nsFakePluginTag(uint32_t aId,
+                                 already_AddRefed<nsIURI>&& aHandlerURI,
+                                 const char* aName,
+                                 const char* aDescription,
+                                 const nsTArray<nsCString>& aMimeTypes,
+                                 const nsTArray<nsCString>& aMimeDescriptions,
+                                 const nsTArray<nsCString>& aExtensions,
+                                 const nsCString& aNiceName)
+  : nsIInternalPluginTag(aName, aDescription, nullptr, nullptr,
+                         aMimeTypes, aMimeDescriptions, aExtensions),
+    mId(aId),
+    mHandlerURI(aHandlerURI),
+    mNiceName(aNiceName),
+    mState(nsPluginTag::ePluginState_Enabled)
+{}
 
 nsFakePluginTag::~nsFakePluginTag()
 {
