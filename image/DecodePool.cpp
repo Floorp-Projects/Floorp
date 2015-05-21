@@ -337,7 +337,17 @@ DecodePool::DecodePool()
   int32_t prefLimit = gfxPrefs::ImageMTDecodingLimit();
   uint32_t limit;
   if (prefLimit <= 0) {
-    limit = max(PR_GetNumberOfProcessors(), 2) - 1;
+    int32_t numCores = PR_GetNumberOfProcessors();
+    if (numCores <= 1) {
+      limit = 1;
+    } else if (numCores == 2) {
+      // On an otherwise mostly idle system, having two image decoding threads
+      // doubles decoding performance, so it's worth doing on dual-core devices,
+      // even if under load we can't actually get that level of parallelism.
+      limit = 2;
+    } else {
+      limit = numCores - 1;
+    }
   } else {
     limit = static_cast<uint32_t>(prefLimit);
   }

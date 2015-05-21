@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(7e024afa-afd4-48e7-ba11-1c7b9620b1b2)]
+[scriptable, builtinclass, uuid(749f21f5-8ade-4d0b-a590-2b1d18e890d5)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -64,15 +64,6 @@ interface nsIPrincipal : nsISerializable
      * Setting this has no effect on the URI.
      */
     [noscript] attribute nsIURI domain;
-
-    /**
-     * The origin of this principal's codebase URI.
-     * An origin is defined as: scheme + host + port.
-     */
-    // XXXcaa this should probably be turned into an nsIURI.
-    // The system principal's origin should be some caps namespace
-    // with a chrome URI.  All of chrome should probably be the same.
-    readonly attribute ACString origin;
 
     /**
      * Returns whether the other principal is equal to or weaker than this
@@ -156,6 +147,79 @@ interface nsIPrincipal : nsISerializable
      * it might be crypto-hashed at some point.
      */
     readonly attribute AUTF8String jarPrefix;
+
+    /**
+     * A dictionary of the non-default origin attributes associated with this
+     * nsIPrincipal.
+     *
+     * Attributes are tokens that are taken into account when determining whether
+     * two principals are same-origin - if any attributes differ, the principals
+     * are cross-origin, even if the scheme, host, and port are the same.
+     * Attributes should also be considered for all security and bucketing decisions,
+     * even those which make non-standard comparisons (like cookies, which ignore
+     * scheme, or quotas, which ignore subdomains).
+     *
+     * If you're looking for an easy-to-use canonical stringification of the origin
+     * attributes, see |originSuffix| below.
+     */
+    [implicit_jscontext]
+    readonly attribute jsval originAttributes;
+
+    /**
+     * A canonical representation of the origin for this principal. This
+     * consists of a base string (which, for codebase principals, is of the
+     * format scheme://host:port), concatenated with |originAttributes| (see
+     * below).
+     *
+     * We maintain the invariant that principalA.equals(principalB) if and only
+     * if principalA.origin == principalB.origin.
+     */
+    readonly attribute ACString origin;
+
+    /**
+     * The base part of |origin| without the concatenation with |originSuffix|.
+     * This doesn't have the important invariants described above with |origin|,
+     * and as such should only be used for legacy situations.
+     */
+    readonly attribute ACString originNoSuffix;
+
+    /**
+     * A string of the form !key1=value1&key2=value2, where each pair represents
+     * an attribute with a non-default value. If all attributes have default
+     * values, this is the empty string.
+     *
+     * The value of .originSuffix is automatically serialized into .origin, so any
+     * consumers using that are automatically origin-attribute-aware. Consumers with
+     * special requirements must inspect and compare .originSuffix manually.
+     *
+     * originsuffix are intended to be a replacement for jarPrefix, which will
+     * eventually be removed.
+     */
+    readonly attribute AUTF8String originSuffix;
+
+    /**
+     * Opaque string token representing the "cookie jar" associated with this
+     * principal. Cookie jars are intended to be a tag associated with persistent
+     * data (like cookies, localStorage data, etc) such that all data associated
+     * with a given cookie jar can be quickly located and (for example) deleted.
+     * Code from many origins may share a given cookie jar, so callers still need
+     * to consult .origin (or equivalent) to compartmentalize data - the cookie
+     * jar should _only_ be used as a tag in the manner described above.
+     *
+     * If two principals are in different cookie jars, they must be cross-origin.
+     * As such, the information making up the cookie jar token must be contained
+     * in the originAttributes (i.e. cookieJar must be a function of / derivable
+     * from originAttributes). Long term, the intention is for the cookie jar
+     * identifier to simply be an origin attribute. But we don't have that
+     * attribute yet, and we also need to concatenate the appId and inBrowser
+     * attributes until those go away.
+     *
+     * This getter is designed to hide these details from consumers so that they
+     * don't need to be updated when we swap out the implementation. For that
+     * reason, callers should treat the string as opaque and not rely on the
+     * current format.
+     */
+    readonly attribute ACString cookieJar;
 
     /**
      * The base domain of the codebase URI to which this principal pertains

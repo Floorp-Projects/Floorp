@@ -9,7 +9,9 @@ printBugNumber(BUGNUMBER);
 printStatus(summary);
 
 var expected = '1,2,3,4';
-var actual = let (a = 1, [b,c] = [2,3], d = 4) ( String([a,b,c,d]) );
+
+let a = 1, [b,c] = [2,3], d = 4;
+var actual = String([a,b,c,d]);
 
 reportCompare(expected, actual, 'destructuring assignment in let');
 

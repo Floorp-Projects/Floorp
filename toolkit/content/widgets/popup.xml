@@ -69,7 +69,28 @@
         ]]>
         </body>
       </method>
-      
+
+      <method name="openPopupAtScreenRect">
+        <parameter name="aPosition"/>
+        <parameter name="aX"/>
+        <parameter name="aY"/>
+        <parameter name="aWidth"/>
+        <parameter name="aHeight"/>
+        <parameter name="aIsContextMenu"/>
+        <parameter name="aAttributesOverride"/>
+        <parameter name="aTriggerEvent"/>
+        <body>
+        <![CDATA[
+          try {
+            var popupBox = this.popupBoxObject;
+            if (popupBox)
+              popupBox.openPopupAtScreenRect(aPosition, aX, aY, aWidth, aHeight,
+                                             aIsContextMenu, aAttributesOverride, aTriggerEvent);
+          } catch(e) {}
+        ]]>
+        </body>
+      </method>
+
       <method name="showPopup">
         <parameter name="element"/>
         <parameter name="xpos"/>
@@ -94,7 +115,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="hidePopup">
         <parameter name="cancel"/>
         <body>

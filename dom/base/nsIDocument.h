@@ -151,8 +151,8 @@ struct FullScreenOptions {
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x0b78eabe, 0x8b94, 0x4ea1, \
-  { 0x93, 0x31, 0x5d, 0x48, 0xe8, 0x3a, 0xda, 0x95 } }
+{ 0xdcfa30f2, 0x2197, 0x421f, \
+  { 0xa7, 0x5a, 0x3e, 0x70, 0x18, 0x08, 0xde, 0x81 } }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -1094,11 +1094,10 @@ public:
    * Called when a frame in a child process has entered fullscreen or when a
    * fullscreen frame in a child process changes to another origin.
    * aFrameElement is the frame element which contains the child-process
-   * fullscreen document, and aNewOrigin is the origin of the new fullscreen
-   * document.
+   * fullscreen document.
    */
-  virtual nsresult RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
-                                                const nsAString& aNewOrigin) = 0;
+  virtual nsresult
+    RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement) = 0;
 
   /**
    * Called when a frame in a remote child document has rolled back fullscreen
