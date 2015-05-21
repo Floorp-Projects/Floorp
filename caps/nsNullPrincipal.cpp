@@ -102,8 +102,8 @@ nsNullPrincipal::SetDomain(nsIURI* aDomain)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP
-nsNullPrincipal::GetOrigin(nsACString& aOrigin)
+nsresult
+nsNullPrincipal::GetOriginInternal(nsACString& aOrigin)
 {
   return mURI->GetSpec(aOrigin);
 }

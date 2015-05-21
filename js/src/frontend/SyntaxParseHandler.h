@@ -258,10 +258,6 @@ class SyntaxParseHandler
     Node newLexicalScope(ObjectBox* blockbox) { return NodeGeneric; }
     void setLexicalScopeBody(Node block, Node body) {}
 
-    Node newLetExpression(Node vars, Node block, const TokenPos& pos) {
-        return NodeGeneric;
-    }
-
     Node newLetBlock(Node vars, Node block, const TokenPos& pos) {
         return NodeGeneric;
     }

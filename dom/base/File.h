@@ -301,6 +301,14 @@ public:
 
   virtual void GetType(nsAString& aType) = 0;
 
+  /**
+   * An effectively-unique serial number identifying this instance of FileImpl.
+   *
+   * Implementations should obtain a serial number from
+   * FileImplBase::NextSerialNumber().
+   */
+  virtual uint64_t GetSerialNumber() const = 0;
+
   already_AddRefed<BlobImpl>
   Slice(const Optional<int64_t>& aStart, const Optional<int64_t>& aEnd,
         const nsAString& aContentType, ErrorResult& aRv);
@@ -368,6 +376,7 @@ public:
     , mStart(0)
     , mLength(aLength)
     , mLastModificationDate(aLastModifiedDate)
+    , mSerialNumber(NextSerialNumber())
   {
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
@@ -382,6 +391,7 @@ public:
     , mStart(0)
     , mLength(aLength)
     , mLastModificationDate(INT64_MAX)
+    , mSerialNumber(NextSerialNumber())
   {
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
@@ -394,6 +404,7 @@ public:
     , mStart(0)
     , mLength(aLength)
     , mLastModificationDate(INT64_MAX)
+    , mSerialNumber(NextSerialNumber())
   {
     // Ensure non-null mContentType by default
     mContentType.SetIsVoid(false);
@@ -407,6 +418,7 @@ public:
     , mStart(aStart)
     , mLength(aLength)
     , mLastModificationDate(INT64_MAX)
+    , mSerialNumber(NextSerialNumber())
   {
     NS_ASSERTION(aLength != UINT64_MAX,
                  "Must know length when creating slice");
@@ -433,6 +445,8 @@ public:
   }
 
   virtual void GetType(nsAString& aType) override;
+
+  virtual uint64_t GetSerialNumber() const override { return mSerialNumber; }
 
   virtual already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
@@ -521,6 +535,13 @@ public:
 protected:
   virtual ~BlobImplBase() {}
 
+  /**
+   * Returns a new, effectively-unique serial number. This should be used
+   * by implementations to obtain a serial number for GetSerialNumber().
+   * The implementation is thread safe.
+   */
+  static uint64_t NextSerialNumber();
+
   indexedDB::FileInfo* GetFileInfo() const
   {
     NS_ASSERTION(IsStoredFile(), "Should only be called on stored files!");
@@ -540,6 +561,8 @@ protected:
   uint64_t mLength;
 
   int64_t mLastModificationDate;
+
+  const uint64_t mSerialNumber;
 
   // Protected by IndexedDatabaseManager::FileMutex()
   nsTArray<nsRefPtr<indexedDB::FileInfo>> mFileInfos;

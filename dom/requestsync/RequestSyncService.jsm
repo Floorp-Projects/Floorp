@@ -209,7 +209,7 @@ this.RequestSyncService = {
   principalToKey: function(aPrincipal) {
     return aPrincipal.appId + '|' +
            aPrincipal.isInBrowserElement + '|' +
-           aPrincipal.origin;
+           aPrincipal.originNoSuffix;
   },
 
   // Add a task to the _registrations map and create the timer if it's needed.
@@ -287,20 +287,7 @@ this.RequestSyncService = {
     }
 
     // The principal is used to validate the message.
-    if (!aMessage.principal) {
-      return;
-    }
-
-    let uri = Services.io.newURI(aMessage.principal.origin, null, null);
-
-    let principal;
-    try {
-      principal = secMan.getAppCodebasePrincipal(uri,
-        aMessage.principal.appId, aMessage.principal.isInBrowserElement);
-    } catch(e) {
-      return;
-    }
-
+    let principal = aMessage.principal;
     if (!principal) {
       return;
     }
@@ -398,7 +385,7 @@ this.RequestSyncService = {
     let dbKey = aData.task + "|" +
                 aPrincipal.appId + '|' +
                 aPrincipal.isInBrowserElement + '|' +
-                aPrincipal.origin;
+                aPrincipal.originNoSuffix;
 
     let data = { principal: aPrincipal,
                  dbKey: dbKey,
@@ -514,7 +501,7 @@ this.RequestSyncService = {
       }
 
       if (aObj.principal.isInBrowserElement != aData.isInBrowserElement ||
-          aObj.principal.origin != aData.origin) {
+          aObj.principal.originNoSuffix != aData.origin) {
         return;
       }
 
@@ -562,7 +549,7 @@ this.RequestSyncService = {
       }
 
       if (aObj.principal.isInBrowserElement != aData.isInBrowserElement ||
-          aObj.principal.origin != aData.origin) {
+          aObj.principal.originNoSuffix != aData.origin) {
         return;
       }
 
@@ -607,7 +594,7 @@ this.RequestSyncService = {
     let obj = this.createPartialTaskObject(aObj);
 
     obj.app = { manifestURL: '',
-                origin: aObj.principal.origin,
+                origin: aObj.principal.originNoSuffix,
                 isInBrowserElement: aObj.principal.isInBrowserElement };
 
     let app = appsService.getAppByLocalId(aObj.principal.appId);

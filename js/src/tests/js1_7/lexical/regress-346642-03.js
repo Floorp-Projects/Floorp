@@ -107,18 +107,6 @@ function test()
   }
   reportCompare(expect, actual, summary + ': 7');
 
-  expect = 'TypeError: ++x is not a function';
-  actual = 'No Crash';
-  try
-  {
-    let (x=3) ((++x)())
-      }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  reportCompare(expect, actual, summary + ': 8');
-
   expect = 'ReferenceError: x.y is not defined';
   actual = 'No Crash';
   try

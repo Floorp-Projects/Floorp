@@ -6,19 +6,27 @@
 var FullScreen = {
   _XULNS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
 
+  _MESSAGES: [
+    "DOMFullscreen:Entered",
+    "DOMFullscreen:NewOrigin",
+    "DOMFullscreen:Exited"
+  ],
+
   init: function() {
     // called when we go into full screen, even if initiated by a web page script
     window.addEventListener("fullscreen", this, true);
-    window.messageManager.addMessageListener("MozEnteredDomFullscreen", this);
-    window.messageManager.addMessageListener("MozExitedDomFullscreen", this);
+    for (let type of this._MESSAGES) {
+      window.messageManager.addMessageListener(type, this);
+    }
 
     if (window.fullScreen)
       this.toggle();
   },
 
   uninit: function() {
-    window.messageManager.removeMessageListener("MozEnteredDomFullscreen", this);
-    window.messageManager.removeMessageListener("MozExitedDomFullscreen", this);
+    for (let type of this._MESSAGES) {
+      window.messageManager.removeMessageListener(type, this);
+    }
     this.cleanup();
   },
 
@@ -93,34 +101,45 @@ var FullScreen = {
   },
 
   receiveMessage: function(aMessage) {
-    if (aMessage.name == "MozEnteredDomFullscreen") {
-      // If we're a multiprocess browser, then the request to enter fullscreen
-      // did not bubble up to the root browser document - it stopped at the root
-      // of the content document. That means we have to kick off the switch to
-      // fullscreen here at the operating system level in the parent process
-      // ourselves.
-      let data = aMessage.data;
-      let browser = aMessage.target;
-      if (gMultiProcessBrowser && browser.getAttribute("remote") == "true") {
-        let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils);
-        windowUtils.remoteFrameFullscreenChanged(browser, data.origin);
+    let browser = aMessage.target;
+    switch (aMessage.name) {
+      case "DOMFullscreen:Entered": {
+        // If we're a multiprocess browser, then the request to enter
+        // fullscreen did not bubble up to the root browser document -
+        // it stopped at the root of the content document. That means
+        // we have to kick off the switch to fullscreen here at the
+        // operating system level in the parent process ourselves.
+        if (this._isRemoteBrowser(browser)) {
+          this._windowUtils.remoteFrameFullscreenChanged(browser);
+        }
+        this.enterDomFullscreen(browser);
+        break;
       }
-      this.enterDomFullscreen(browser, data.origin);
-    } else if (aMessage.name == "MozExitedDomFullscreen") {
-      document.documentElement.removeAttribute("inDOMFullscreen");
-      this.cleanupDomFullscreen();
-      this.showNavToolbox();
-      // If we are still in fullscreen mode, re-hide
-      // the toolbox with animation.
-      if (window.fullScreen) {
-        this._shouldAnimate = true;
-        this.hideNavToolbox();
+      case "DOMFullscreen:NewOrigin": {
+        this.showWarning(aMessage.data.origin);
+        break;
+      }
+      case "DOMFullscreen:Exited": {
+        // Like entering DOM fullscreen, we also need to exit fullscreen
+        // at the operating system level in the parent process here.
+        if (this._isRemoteBrowser(browser)) {
+          this._windowUtils.remoteFrameFullscreenReverted();
+        }
+        document.documentElement.removeAttribute("inDOMFullscreen");
+        this.cleanupDomFullscreen();
+        this.showNavToolbox();
+        // If we are still in fullscreen mode, re-hide
+        // the toolbox with animation.
+        if (window.fullScreen) {
+          this._shouldAnimate = true;
+          this.hideNavToolbox();
+        }
+        break;
       }
     }
   },
 
-  enterDomFullscreen : function(aBrowser, aOrigin) {
+  enterDomFullscreen : function(aBrowser) {
     if (!document.mozFullScreen)
       return;
 
@@ -145,8 +164,6 @@ var FullScreen = {
 
     if (gFindBarInitialized)
       gFindBar.close();
-
-    this.showWarning(aOrigin);
 
     // Exit DOM full-screen mode upon open, close, or change tab.
     gBrowser.tabContainer.addEventListener("TabOpen", this.exitDomFullScreen);
@@ -186,7 +203,16 @@ var FullScreen = {
       window.removeEventListener("activate", this);
 
     window.messageManager
-          .broadcastAsyncMessage("DOMFullscreen:Cleanup");
+          .broadcastAsyncMessage("DOMFullscreen:CleanUp");
+  },
+
+  _isRemoteBrowser: function (aBrowser) {
+    return gMultiProcessBrowser && aBrowser.getAttribute("remote") == "true";
+  },
+
+  get _windowUtils() {
+    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIDOMWindowUtils);
   },
 
   getMouseTargetRect: function()
