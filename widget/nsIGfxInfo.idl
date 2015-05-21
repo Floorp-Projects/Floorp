@@ -64,7 +64,7 @@ interface nsIGfxInfo : nsISupports
    * A set of constants for features that we can ask this GfxInfo object
    * about via GetFeatureStatus
    */
-  /* Don't assign 0 or -1 */
+  /* Don't assign any value <= 0 */
   /* Whether Direct2D is supported for content rendering. */
   const long FEATURE_DIRECT2D = 1;
   /* Whether Direct3D 9 is supported for layers. */
@@ -81,15 +81,15 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBGL_ANGLE = 7;
   /* Whether WebGL antialiasing is supported. */
   const long FEATURE_WEBGL_MSAA = 8;
-  /* Whether Stagefright is supported */
+  /* Whether Stagefright is supported, starting in 17. */
   const long FEATURE_STAGEFRIGHT = 9;
-  /* Whether Webrtc Hardware acceleration is supported */
+  /* Whether Webrtc Hardware acceleration is supported, starting in 31. */
   const long FEATURE_WEBRTC_HW_ACCELERATION = 10;
-  /* Whether Direct3D 11 is supported for layers. */
+  /* Whether Direct3D 11 is supported for layers, starting in 32. */
   const long FEATURE_DIRECT3D_11_LAYERS = 11;
-  /* Whether hardware accelerated video decoding is supported. */
+  /* Whether hardware accelerated video decoding is supported, starting in 36. */
   const long FEATURE_HARDWARE_VIDEO_DECODING = 12;
-  /* Whether Direct3D 11 is supported for ANGLE. */
+  /* Whether Direct3D 11 is supported for ANGLE, starting in 38. */
   const long FEATURE_DIRECT3D_11_ANGLE = 13;
 
   /*

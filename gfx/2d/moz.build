@@ -24,6 +24,7 @@ EXPORTS.mozilla.gfx += [
     'DrawTargetTiled.h',
     'Filters.h',
     'Helpers.h',
+    'HelpersCairo.h',
     'Logging.h',
     'Matrix.h',
     'NumericTools.h',
@@ -79,7 +80,6 @@ if CONFIG['MOZ_ENABLE_SKIA']:
         'image_operations.cpp', # Uses _USE_MATH_DEFINES
     ]
     EXPORTS.mozilla.gfx += [
-        'HelpersCairo.h',
         'HelpersSkia.h',
     ]
 

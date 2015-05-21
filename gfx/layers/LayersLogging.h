@@ -183,6 +183,10 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::ScaleFactors2D<sr
 }
 
 void
+AppendToString(std::stringstream& aStream, const mozilla::gfx::Matrix& m,
+               const char* pfx="", const char* sfx="");
+
+void
 AppendToString(std::stringstream& aStream, const mozilla::gfx::Matrix4x4& m,
                const char* pfx="", const char* sfx="");
 

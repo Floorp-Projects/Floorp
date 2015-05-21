@@ -503,7 +503,6 @@ struct IonScript
     }
     void toggleBarriers(bool enabled);
     void purgeCaches();
-    void destroyCaches();
     void unlinkFromRuntime(FreeOp* fop);
     void copySnapshots(const SnapshotWriter* writer);
     void copyRecovers(const RecoverWriter* writer);
