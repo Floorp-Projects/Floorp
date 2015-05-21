@@ -21,7 +21,12 @@ ParseContext<ParseHandler>::init(TokenStream& ts)
     if (!frontend::GenerateBlockId(ts, this, this->bodyid))
         return false;
 
-    return decls_.init() && lexdeps.ensureMap(sc->context);
+    if (!decls_.init() || !lexdeps.ensureMap(sc->context)) {
+        ReportOutOfMemory(sc->context);
+        return false;
+    }
+
+    return true;
 }
 
 template <typename ParseHandler>

@@ -1948,8 +1948,10 @@ js::TenuringTracer::traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_
     HeapSlot* dynStart;
     HeapSlot* dynEnd;
     nobj->getSlotRange(start, length, &fixedStart, &fixedEnd, &dynStart, &dynEnd);
-    traceSlots(fixedStart->unsafeGet(), fixedEnd->unsafeGet());
-    traceSlots(dynStart->unsafeGet(), dynEnd->unsafeGet());
+    if (fixedStart)
+        traceSlots(fixedStart->unsafeGet(), fixedEnd->unsafeGet());
+    if (dynStart)
+        traceSlots(dynStart->unsafeGet(), dynEnd->unsafeGet());
 }
 
 void

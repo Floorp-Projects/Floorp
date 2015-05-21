@@ -38,9 +38,9 @@ var grid_template_test_cases = [
         shorthand: "40px / subgrid",
     },
     {
-        gridTemplateColumns: "(foo) 40px (bar)",
-        gridTemplateRows: "(baz) 100px (fizz)",
-        shorthand: "(foo) 40px (bar) / (baz) 100px (fizz)",
+        gridTemplateColumns: "[foo] 40px [bar]",
+        gridTemplateRows: "[baz] 100px [fizz]",
+        shorthand: "[foo] 40px [bar] / [baz] 100px [fizz]",
     },
     {
         gridTemplateAreas: "\"a\"",
@@ -49,8 +49,8 @@ var grid_template_test_cases = [
     },
     {
         gridTemplateAreas: "\"a\"",
-        gridTemplateRows: "(foo) 20px (bar)",
-        shorthand: "(foo) \"a\" 20px (bar)",
+        gridTemplateRows: "[foo] 20px [bar]",
+        shorthand: "[foo] \"a\" 20px [bar]",
     },
     // Combinations of longhands that make the shorthand non-serializable:
     {
@@ -70,7 +70,7 @@ var grid_template_test_cases = [
     },
     {
         gridTemplateAreas: "\"a\"",
-        gridTemplateRows: "subgrid (foo)",
+        gridTemplateRows: "subgrid [foo]",
         shorthand: "",
     },
     {

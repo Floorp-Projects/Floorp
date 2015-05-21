@@ -53,9 +53,6 @@ NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistrationBase, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationBase)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationBase,
-                                   DOMEventTargetHelper, mCCDummy);
-
 ServiceWorkerRegistrationBase::ServiceWorkerRegistrationBase(nsPIDOMWindow* aWindow,
                                                              const nsAString& aScope)
   : DOMEventTargetHelper(aWindow)

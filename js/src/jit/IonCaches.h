@@ -354,26 +354,7 @@ class RepatchIonCache : public IonCache
 
     CodeLocationJump initialJump_;
     CodeLocationJump lastJump_;
-
-    // Offset from the initial jump to the rejoin label.
-#ifdef JS_CODEGEN_ARM
-    static const size_t REJOIN_LABEL_OFFSET = 4;
-#elif defined(JS_CODEGEN_MIPS)
-    // The size of jump created by MacroAssemblerMIPSCompat::jumpWithPatch.
-    static const size_t REJOIN_LABEL_OFFSET = 4 * sizeof(void*);
-#else
-    static const size_t REJOIN_LABEL_OFFSET = 0;
-#endif
-
-    CodeLocationLabel rejoinLabel() const {
-        uint8_t* ptr = initialJump_.raw();
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-        uint32_t i = 0;
-        while (i < REJOIN_LABEL_OFFSET)
-            ptr = Assembler::NextInstruction(ptr, &i);
-#endif
-        return CodeLocationLabel(ptr);
-    }
+    CodeLocationLabel rejoinLabel_;
 
   public:
     RepatchIonCache()
@@ -395,7 +376,7 @@ class RepatchIonCache : public IonCache
     void updateBaseAddress(JitCode* code, MacroAssembler& masm) override;
 
     virtual void* rejoinAddress() override {
-        return rejoinLabel().raw();
+        return rejoinLabel_.raw();
     }
 };
 
