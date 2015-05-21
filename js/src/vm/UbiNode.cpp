@@ -58,33 +58,18 @@ Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const
     MOZ_CRASH("null ubi::Node");
 }
 
+struct Node::ConstructFunctor : public BoolDefaultAdaptor<Value, false> {
+    template <typename T> bool operator()(T* t, Node* node) { node->construct(t); return true; }
+};
+
 Node::Node(JSGCTraceKind kind, void* ptr)
 {
-    switch (kind) {
-      case JSTRACE_OBJECT:       construct(static_cast<JSObject*>(ptr));         break;
-      case JSTRACE_SCRIPT:       construct(static_cast<JSScript*>(ptr));         break;
-      case JSTRACE_STRING:       construct(static_cast<JSString*>(ptr));         break;
-      case JSTRACE_SYMBOL:       construct(static_cast<JS::Symbol*>(ptr));       break;
-      case JSTRACE_BASE_SHAPE:   construct(static_cast<js::BaseShape*>(ptr));    break;
-      case JSTRACE_JITCODE:      construct(static_cast<js::jit::JitCode*>(ptr)); break;
-      case JSTRACE_LAZY_SCRIPT:  construct(static_cast<js::LazyScript*>(ptr));   break;
-      case JSTRACE_SHAPE:        construct(static_cast<js::Shape*>(ptr));        break;
-      case JSTRACE_OBJECT_GROUP: construct(static_cast<js::ObjectGroup*>(ptr));  break;
-
-      default:
-        MOZ_CRASH("bad JSGCTraceKind passed to JS::ubi::Node::Node");
-    }
+    CallTyped(ConstructFunctor(), ptr, kind, this);
 }
 
 Node::Node(HandleValue value)
 {
-    if (value.isObject())
-        construct(&value.toObject());
-    else if (value.isString())
-        construct(value.toString());
-    else if (value.isSymbol())
-        construct(value.toSymbol());
-    else
+    if (!DispatchValueTyped(ConstructFunctor(), value, this))
         construct<void>(nullptr);
 }
 
