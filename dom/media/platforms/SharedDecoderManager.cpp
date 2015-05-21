@@ -74,7 +74,7 @@ SharedDecoderManager::SharedDecoderManager()
   , mActiveProxy(nullptr)
   , mActiveCallback(nullptr)
   , mWaitForInternalDrain(false)
-  , mMonitor("SharedDecoderProxy")
+  , mMonitor("SharedDecoderManager")
   , mDecoderReleasedResources(false)
 {
   MOZ_ASSERT(NS_IsMainThread()); // taskqueue must be created on main thread.
