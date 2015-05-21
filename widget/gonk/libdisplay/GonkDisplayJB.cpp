@@ -106,29 +106,8 @@ GonkDisplayJB::GonkDisplayJB()
 
     mAlloc = new GraphicBufferAlloc();
 
-#if ANDROID_VERSION >= 21
-    sp<IGraphicBufferProducer> producer;
-    sp<IGraphicBufferConsumer> consumer;
-    BufferQueue::createBufferQueue(&producer, &consumer, mAlloc);
-#elif ANDROID_VERSION >= 19
-    sp<BufferQueue> consumer = new BufferQueue(mAlloc);
-    sp<IGraphicBufferProducer> producer = consumer;
-#elif ANDROID_VERSION >= 18
-    sp<BufferQueue> consumer = new BufferQueue(true, mAlloc);
-    sp<IGraphicBufferProducer> producer = consumer;
-#else
-    sp<BufferQueue> consumer = new BufferQueue(true, mAlloc);
-#endif
+    CreateSurface(mSTClient, mDispSurface);
 
-    mDispSurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, consumer);
-
-#if ANDROID_VERSION == 17
-    sp<SurfaceTextureClient> stc = new SurfaceTextureClient(
-        static_cast<sp<ISurfaceTexture> >(mDispSurface->getBufferQueue()));
-#else
-    sp<Surface> stc = new Surface(producer);
-#endif
-    mSTClient = stc;
     mList = (hwc_display_contents_1_t *)malloc(sizeof(*mList) + (sizeof(hwc_layer_1_t)*2));
 
     uint32_t usage = GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER;
@@ -148,7 +127,7 @@ GonkDisplayJB::GonkDisplayJB()
 #endif
         // For devices w/ hwc v1.0 or no hwc, this buffer can not be created,
         // only create this buffer for devices w/ hwc version > 1.0.
-        mBootAnimBuffer = mAlloc->createGraphicBuffer(mWidth, mHeight, surfaceformat, usage, &err);
+        CreateSurface(mBootAnimSTClient, mBootAnimDispSurface);
     }
 
     ALOGI("Starting bootanimation with (%d) format framebuffer", surfaceformat);
@@ -162,6 +141,34 @@ GonkDisplayJB::~GonkDisplayJB()
     if (mFBDevice)
         framebuffer_close(mFBDevice);
     free(mList);
+}
+
+void
+GonkDisplayJB::CreateSurface(android::sp<ANativeWindow>& aNativeWindow,
+                             android::sp<android::DisplaySurface>& aDisplaySurface)
+{
+#if ANDROID_VERSION >= 21
+    sp<IGraphicBufferProducer> producer;
+    sp<IGraphicBufferConsumer> consumer;
+    BufferQueue::createBufferQueue(&producer, &consumer, mAlloc);
+#elif ANDROID_VERSION >= 19
+    sp<BufferQueue> consumer = new BufferQueue(mAlloc);
+    sp<IGraphicBufferProducer> producer = consumer;
+#elif ANDROID_VERSION >= 18
+    sp<BufferQueue> consumer = new BufferQueue(true, mAlloc);
+    sp<IGraphicBufferProducer> producer = consumer;
+#else
+    sp<BufferQueue> consumer = new BufferQueue(true, mAlloc);
+#endif
+
+    aDisplaySurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, consumer);
+
+#if ANDROID_VERSION == 17
+    aNativeWindow = new SurfaceTextureClient(
+        static_cast<sp<ISurfaceTexture>>(aDisplaySurface->getBufferQueue()));
+#else
+    aNativeWindow = new Surface(producer);
+#endif
 }
 
 ANativeWindow*
@@ -311,12 +318,13 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
 ANativeWindowBuffer*
 GonkDisplayJB::DequeueBuffer()
 {
-    if (mBootAnimBuffer.get()) {
-        return static_cast<ANativeWindowBuffer*>(mBootAnimBuffer.get());
-    }
+    // Check for bootAnim or normal display flow.
+    sp<ANativeWindow> nativeWindow =
+        !mBootAnimSTClient.get() ? mSTClient : mBootAnimSTClient;
+
     ANativeWindowBuffer *buf;
     int fenceFd = -1;
-    mSTClient->dequeueBuffer(mSTClient.get(), &buf, &fenceFd);
+    nativeWindow->dequeueBuffer(nativeWindow.get(), &buf, &fenceFd);
     sp<Fence> fence(new Fence(fenceFd));
 #if ANDROID_VERSION == 17
     fence->waitForever(1000, "GonkDisplayJB_DequeueBuffer");
@@ -332,10 +340,16 @@ bool
 GonkDisplayJB::QueueBuffer(ANativeWindowBuffer* buf)
 {
     int error = 0;
-    if (!mBootAnimBuffer.get()) {
+    bool success = false;
+    // Check for bootAnim or normal display flow.
+    if (!mBootAnimSTClient.get()) {
         error = mSTClient->queueBuffer(mSTClient.get(), buf, -1);
+        success = Post(mDispSurface->lastHandle, mDispSurface->GetPrevDispAcquireFd());
+    } else {
+        error = mBootAnimSTClient->queueBuffer(mBootAnimSTClient.get(), buf, -1);
+        success = Post(mBootAnimDispSurface->lastHandle, mBootAnimDispSurface->GetPrevDispAcquireFd());
     }
-    bool success = Post(mDispSurface->lastHandle, mDispSurface->GetPrevDispAcquireFd());
+
     return error == 0 && success;
 }
 
@@ -363,8 +377,9 @@ void
 GonkDisplayJB::StopBootAnim()
 {
     StopBootAnimation();
-    if (mBootAnimBuffer.get()) {
-        mBootAnimBuffer = nullptr;
+    if (mBootAnimSTClient.get()) {
+        mBootAnimSTClient = nullptr;
+        mBootAnimDispSurface = nullptr;
     }
 }
 
