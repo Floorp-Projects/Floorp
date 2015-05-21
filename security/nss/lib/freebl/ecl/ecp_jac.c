@@ -144,6 +144,20 @@ ec_GFp_pt_add_jac_aff(const mp_int *px, const mp_int *py, const mp_int *pz,
 	MP_CHECKOK(group->meth->field_sub(&A, px, &C, group->meth));
 	MP_CHECKOK(group->meth->field_sub(&B, py, &D, group->meth));
 
+	if (mp_cmp_z(&C) == 0) {
+		/* P == Q or P == -Q */
+		if (mp_cmp_z(&D) == 0) {
+			/* P == Q */
+			/* It is cheaper to double (qx, qy, 1) than (px, py, pz). */
+			MP_DIGIT(&D, 0) = 1; /* Set D to 1. */
+			MP_CHECKOK(ec_GFp_pt_dbl_jac(qx, qy, &D, rx, ry, rz, group));
+		} else {
+			/* P == -Q */
+			MP_CHECKOK(ec_GFp_pt_set_inf_jac(rx, ry, rz));
+		}
+		goto CLEANUP;
+	}
+
 	/* C2 = C^2, C3 = C^3 */
 	MP_CHECKOK(group->meth->field_sqr(&C, &C2, group->meth));
 	MP_CHECKOK(group->meth->field_mul(&C, &C2, &C3, group->meth));
@@ -205,7 +219,8 @@ ec_GFp_pt_dbl_jac(const mp_int *px, const mp_int *py, const mp_int *pz,
 	MP_CHECKOK(mp_init(&M));
 	MP_CHECKOK(mp_init(&S));
 
-	if (ec_GFp_pt_is_inf_jac(px, py, pz) == MP_YES) {
+	/* P == inf or P == -P */
+	if (ec_GFp_pt_is_inf_jac(px, py, pz) == MP_YES || mp_cmp_z(py) == 0) {
 		MP_CHECKOK(ec_GFp_pt_set_inf_jac(rx, ry, rz));
 		goto CLEANUP;
 	}
