@@ -238,7 +238,12 @@ this.UserCustomizations = {
       }
 
       try {
-        Services.scriptloader.loadSubScript(aScript, sandbox, "UTF-8");
+        let options = {
+          target: sandbox,
+          charset: "UTF-8",
+          async: true
+        }
+        Services.scriptloader.loadSubScriptWithOptions(aScript, options);
         if (!this._loaded[manifestURL]) {
           this._loaded[manifestURL] = { css: [], scripts: [] };
         }
