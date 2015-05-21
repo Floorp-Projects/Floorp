@@ -34,12 +34,7 @@ let appFrameScript = function appFrameScript() {
     switch (i) {
       case 2:
         input2.focus();
-
-        break;
-
-      case 3:
-        input2.blur();
-        input2.focus();
+        i++; // keep the same count with the parent frame.
 
         break;
 
@@ -50,23 +45,26 @@ let appFrameScript = function appFrameScript() {
 
       case 5:
         input2.focus();
-        input2.blur();
-
-        input1.focus();
 
         break;
 
       case 6:
-        content.document.body.removeChild(input1);
-
-        break;
-
-      case 7:
-        input2.focus();
+        input1.focus();
+        i++; // keep the same count with the parent frame.
 
         break;
 
       case 8:
+        content.document.body.removeChild(input1);
+
+        break;
+
+      case 9:
+        input2.focus();
+
+        break;
+
+      case 10:
         content.document.body.removeChild(input2);
 
         break;
@@ -85,26 +83,21 @@ function runTest() {
     switch (i) {
       // focus on the first input receives the first input context.
       case 1:
-        ok(!!inputcontext, 'Receving the first input context');
+        ok(!!inputcontext, '1) Receving the first input context');
         is(inputcontext.textAfterCursor, 'First');
 
         mm.sendAsyncMessage('test:next');
         break;
 
-      // focus on the second input (implicitly blur the first input)
-      // results the second input context.
+      // focus on the second input should implicitly blur the first input
       case 2:
-        ok(!!inputcontext, 'Receving the second input context');
-        is(inputcontext.textAfterCursor, 'Second');
+        is(inputcontext, null, '2) Receving null inputcontext');
 
-
-        mm.sendAsyncMessage('test:next');
         break;
 
-      // blur and re-focus on the second input results updated
-      // input context for the second input.
+      // ... and results the second input context.
       case 3:
-        ok(!!inputcontext, 'Receving the second input context');
+        ok(!!inputcontext, '3) Receving the second input context');
         is(inputcontext.textAfterCursor, 'Second');
 
         mm.sendAsyncMessage('test:next');
@@ -112,38 +105,51 @@ function runTest() {
 
       // blur on the second input results null input context
       case 4:
-        is(inputcontext, null, 'Receving null inputcontext');
+        is(inputcontext, null, '4) Receving null inputcontext');
 
         mm.sendAsyncMessage('test:next');
         break;
 
-      // focus and blur on the second input sends no message;
-      // focus on the first input receives the first input context.
+      // focus on the second input receives the second input context.
       case 5:
-        ok(!!inputcontext, 'Receving the first input context');
+        ok(!!inputcontext, '5) Receving the second input context');
+        is(inputcontext.textAfterCursor, 'Second');
+
+        mm.sendAsyncMessage('test:next');
+        break;
+
+      // focus on the second input should implicitly blur the first input
+      case 6:
+        is(inputcontext, null, '6) Receving null inputcontext');
+
+        break;
+
+      // ... and results the second input context.
+      case 7:
+        ok(!!inputcontext, '7) Receving the first input context');
         is(inputcontext.textAfterCursor, 'First');
 
         mm.sendAsyncMessage('test:next');
         break;
 
       // remove on the first focused input results null input context
-      case 6:
-        is(inputcontext, null, 'Receving null inputcontext');
+      case 8:
+        is(inputcontext, null, '8) Receving null inputcontext');
 
         mm.sendAsyncMessage('test:next');
         break;
 
       // input context for the second input.
-      case 7:
-        ok(!!inputcontext, 'Receving the second input context');
+      case 9:
+        ok(!!inputcontext, '9) Receving the second input context');
         is(inputcontext.textAfterCursor, 'Second');
 
         mm.sendAsyncMessage('test:next');
         break;
 
       // remove on the second focused input results null input context
-      case 8:
-        is(inputcontext, null, 'Receving null inputcontext');
+      case 10:
+        is(inputcontext, null, '10) Receving null inputcontext');
 
         inputmethod_cleanup();
         break;
