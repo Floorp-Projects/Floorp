@@ -1807,10 +1807,12 @@ private:
 void
 nsEditor::NotifyEditorObservers(NotificationForEditorObservers aNotification)
 {
+  // Copy the observers since EditAction()s can modify mEditorObservers.
+  nsTArray<mozilla::dom::OwningNonNull<nsIEditorObserver>> observers(mEditorObservers);
   switch (aNotification) {
     case eNotifyEditorObserversOfEnd:
       mIsInEditAction = false;
-      for (auto& observer : mEditorObservers) {
+      for (auto& observer : observers) {
         observer->EditAction();
       }
 
@@ -1822,13 +1824,13 @@ nsEditor::NotifyEditorObservers(NotificationForEditorObservers aNotification)
       break;
     case eNotifyEditorObserversOfBefore:
       mIsInEditAction = true;
-      for (auto& observer : mEditorObservers) {
+      for (auto& observer : observers) {
         observer->BeforeEditAction();
       }
       break;
     case eNotifyEditorObserversOfCancel:
       mIsInEditAction = false;
-      for (auto& observer : mEditorObservers) {
+      for (auto& observer : observers) {
         observer->CancelEditAction();
       }
       break;
