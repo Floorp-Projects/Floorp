@@ -60,7 +60,9 @@ public:
 private:
   virtual ~Child();
 
-  CoatCheck<ChildPledge<nsCString>> mRequestPledges;
+  typedef std::pair<uint32_t,nsRefPtr<ChildPledge<nsCString>>> PledgeEntry;
+  static uint32_t sRequestCounter;
+  nsTArray<PledgeEntry> mRequestPledges;
 };
 
 PMediaChild* AllocPMediaChild();
