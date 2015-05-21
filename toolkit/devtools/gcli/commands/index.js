@@ -71,6 +71,7 @@ exports.devtoolsModules = [
   "gcli/commands/restart",
   "gcli/commands/rulers",
   "gcli/commands/screenshot",
+  "gcli/commands/security",
   "gcli/commands/tools",
 ];
 
