@@ -1363,6 +1363,39 @@ add_task(function* test_abortedSession() {
   yield TelemetrySession.shutdown();
 });
 
+add_task(function* test_abortedSession_Shutdown() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session ping here.
+    return;
+  }
+
+  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+
+  let schedulerTickCallback = null;
+  let now = fakeNow(2040, 1, 1, 0, 0, 0);
+  // Fake scheduler functions to control aborted-session flow in tests.
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  yield TelemetrySession.reset();
+
+  Assert.ok((yield OS.File.exists(DATAREPORTING_PATH)),
+            "Telemetry must create the aborted session directory when starting.");
+
+  // Fake now again so that the scheduled aborted-session save takes place.
+  now = fakeNow(futureDate(now, ABORTED_SESSION_UPDATE_INTERVAL_MS));
+  // The first aborted session checkpoint must take place right after the initialisation.
+  Assert.ok(!!schedulerTickCallback);
+  // Execute one scheduler tick.
+  yield schedulerTickCallback();
+  // Check that the aborted session is due at the correct time.
+  Assert.ok((yield OS.File.exists(ABORTED_FILE)), "There must be an aborted session ping.");
+
+  // Remove the aborted session file and then shut down to make sure exceptions (e.g file
+  // not found) do not compromise the shutdown.
+  yield OS.File.remove(ABORTED_FILE);
+
+  yield TelemetrySession.shutdown();
+});
+
 add_task(function* test_abortedDailyCoalescing() {
   if (gIsAndroid || gIsGonk) {
     // We don't have the aborted session or the daily ping here.
