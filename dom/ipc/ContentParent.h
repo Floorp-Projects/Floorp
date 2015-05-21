@@ -299,6 +299,7 @@ public:
   virtual mozilla::ipc::IPCResult RecvFindPlugins(const uint32_t& aPluginEpoch,
                                                   nsresult* aRv,
                                                   nsTArray<PluginTag>* aPlugins,
+                                                  nsTArray<FakePluginTag>* aFakePlugins,
                                                   uint32_t* aNewPluginEpoch) override;
 
   virtual mozilla::ipc::IPCResult RecvUngrabPointer(const uint32_t& aTime) override;
