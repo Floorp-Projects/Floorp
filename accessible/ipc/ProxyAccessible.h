@@ -46,7 +46,7 @@ public:
   ProxyAccessible* ChildAt(uint32_t aIdx) const { return mChildren[aIdx]; }
 
   // XXX evaluate if this is fast enough.
-  size_t IndexInParent() const { return mParent->mChildren.IndexOf(this); }
+  size_t IndexInParent() const { return Parent()->mChildren.IndexOf(this); }
   int32_t IndexOfEmbeddedChild(const ProxyAccessible*);
   bool MustPruneChildren() const;
 
