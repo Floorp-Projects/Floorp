@@ -1761,6 +1761,27 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   background-image: radial-gradient(circle closest-side, hsla(205,100%,70%,.3), transparent);
 }
 
+#urlbar-search-footer {
+  border-top: 1px solid hsla(210,4%,10%,.14);
+  background-color: hsla(210,4%,10%,.07);
+}
+
+#urlbar-search-settings {
+  -moz-appearance: none;
+  -moz-user-focus: ignore;
+  color: GrayText;
+  margin: 0;
+  padding: 8px 20px;
+}
+
+#urlbar-search-settings:hover {
+  background-color: hsla(210,4%,10%,.07);
+}
+
+#urlbar-search-settings:hover:active {
+  background-color: hsla(210,4%,10%,.12);
+}
+
 #urlbar-search-splitter {
   min-width: 8px;
   width: 8px;
