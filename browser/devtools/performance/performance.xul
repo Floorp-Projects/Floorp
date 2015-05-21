@@ -146,7 +146,8 @@
           <hbox class="devtools-toolbarbutton-group"
                 pack="center">
             <toolbarbutton class="devtools-toolbarbutton record-button"
-                           label="&profilerUI.startRecording;" />
+                           label="&profilerUI.startRecording;"
+                           standalone="true"/>
           </hbox>
         </hbox>
         <vbox id="performance-view-content" flex="1">
@@ -172,7 +173,8 @@
                 <hbox class="devtools-toolbarbutton-group"
                       pack="center">
                   <toolbarbutton class="devtools-toolbarbutton record-button"
-                                 label="&profilerUI.stopRecording;" />
+                                 label="&profilerUI.stopRecording;"
+                                 standalone="true"/>
                 </hbox>
                 <label class="realtime-disabled-message">
                   Realtime recording data disabled on non-multiprocess Firefox.
