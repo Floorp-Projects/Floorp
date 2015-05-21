@@ -1798,13 +1798,6 @@ CodeGeneratorMIPS::generateInvalidateEpilogue()
 }
 
 void
-DispatchIonCache::initializeAddCacheState(LInstruction* ins, AddCacheState* addState)
-{
-    // Can always use the scratch register on MIPS.
-    addState->dispatchScratch = ScratchRegister;
-}
-
-void
 CodeGeneratorMIPS::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins)
 {
     MOZ_CRASH("NYI");

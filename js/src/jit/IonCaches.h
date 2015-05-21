@@ -46,15 +46,6 @@ class IonCacheVisitor
 #undef VISIT_INS
 };
 
-// Common shared temporary state needed during codegen between the different
-// kinds of caches. Used by OutOfLineUpdateCache.
-struct AddCacheState
-{
-    RepatchLabel repatchEntry;
-    Register dispatchScratch;
-};
-
-
 // Common structure encoding the state of a polymorphic inline cache contained
 // in the code for an IonScript. IonCaches are used for polymorphic operations
 // where multiple implementations may be required.
@@ -64,13 +55,70 @@ struct AddCacheState
 // may generate a stub to perform the operation in certain cases (e.g. a
 // particular shape for an input object) and attach the stub to existing
 // stubs, forming a daisy chain of tests for how to perform the operation in
-// different circumstances. The details of how stubs are linked up as
-// described in comments below for the classes RepatchIonCache and
-// DispatchIonCache.
+// different circumstances.
 //
 // Eventually, if too many stubs are generated the cache function may disable
 // the cache, by generating a stub to make a call and perform the operation
 // within the VM.
+//
+// The caches initially generate a patchable jump to an out of line call
+// to the cache function. Stubs are attached by appending: when attaching a
+// new stub, we patch the any failure conditions in last generated stub to
+// jump to the new stub. Failure conditions in the new stub jump to the cache
+// function which may generate new stubs.
+//
+//        Control flow               Pointers
+//      =======#                 ----.     .---->
+//             #                     |     |
+//             #======>              \-----/
+//
+// Initial state:
+//
+//  JIT Code
+// +--------+   .---------------.
+// |        |   |               |
+// |========|   v +----------+  |
+// |== IC ==|====>| Cache Fn |  |
+// |========|     +----------+  |
+// |        |<=#       #        |
+// |        |  #=======#        |
+// +--------+  Rejoin path      |
+//     |________                |
+//             |                |
+//     IC      |                |
+//   Entry     |                |
+// +------------+               |
+// | lastJump_  |---------------/
+// +------------+
+// |    ...     |
+// +------------+
+//
+// Attaching stubs:
+//
+//   Patch the jump pointed to by lastJump_ to jump to the new stub. Update
+//   lastJump_ to be the new stub's failure jump. The failure jump of the new
+//   stub goes to the fallback label, which is the cache function. In this
+//   fashion, new stubs are _appended_ to the chain of stubs, as lastJump_
+//   points to the _tail_ of the stub chain.
+//
+//  JIT Code
+// +--------+ #=======================#
+// |        | #                       v
+// |========| #   +----------+     +------+
+// |== IC ==|=#   | Cache Fn |<====| Stub |
+// |========|     +----------+  ^  +------+
+// |        |<=#      #         |     #
+// |        |  #======#=========|=====#
+// +--------+      Rejoin path  |
+//     |________                |
+//             |                |
+//     IC      |                |
+//   Entry     |                |
+// +------------+               |
+// | lastJump_  |---------------/
+// +------------+
+// |    ...     |
+// +------------+
 //
 // While calls may be made to the cache function and other VM functions, the
 // cache may still be treated as pure during optimization passes, such that
@@ -166,6 +214,10 @@ class IonCache
     // IC code to enter a callee.
     jsbytecode* profilerLeavePc_;
 
+    CodeLocationJump initialJump_;
+    CodeLocationJump lastJump_;
+    CodeLocationLabel rejoinLabel_;
+
   private:
     static const size_t MAX_STUBS;
     void incrementStubCount() {
@@ -184,7 +236,10 @@ class IonCache
         fallbackLabel_(),
         script_(nullptr),
         pc_(nullptr),
-        profilerLeavePc_(nullptr)
+        profilerLeavePc_(nullptr),
+        initialJump_(),
+        lastJump_(),
+        rejoinLabel_()
     {
     }
 
@@ -206,21 +261,15 @@ class IonCache
     }
 
     // Get the address at which IC rejoins the mainline jitcode.
-    virtual void* rejoinAddress() = 0;
+    void* rejoinAddress() const {
+        return rejoinLabel_.raw();
+    }
 
-    virtual void emitInitialJump(MacroAssembler& masm, AddCacheState& addState) = 0;
-    virtual void bindInitialJump(MacroAssembler& masm, AddCacheState& addState) = 0;
-    virtual void updateBaseAddress(JitCode* code, MacroAssembler& masm);
-
-    // Initialize the AddCacheState depending on the kind of cache, like
-    // setting a scratch register. Defaults to doing nothing.
-    virtual void initializeAddCacheState(LInstruction* ins, AddCacheState* addState);
+    void emitInitialJump(MacroAssembler& masm, RepatchLabel& entry);
+    void updateBaseAddress(JitCode* code, MacroAssembler& masm);
 
     // Reset the cache around garbage collection.
     virtual void reset();
-
-    // Destroy any extra resources the cache uses upon IonScript finalization.
-    virtual void destroy();
 
     bool canAttachStub() const {
         return stubCount_ < MAX_STUBS;
@@ -285,204 +334,6 @@ class IonCache
     }
 };
 
-//
-// Repatch caches initially generate a patchable jump to an out of line call
-// to the cache function. Stubs are attached by appending: when attaching a
-// new stub, we patch the any failure conditions in last generated stub to
-// jump to the new stub. Failure conditions in the new stub jump to the cache
-// function which may generate new stubs.
-//
-//        Control flow               Pointers
-//      =======#                 ----.     .---->
-//             #                     |     |
-//             #======>              \-----/
-//
-// Initial state:
-//
-//  JIT Code
-// +--------+   .---------------.
-// |        |   |               |
-// |========|   v +----------+  |
-// |== IC ==|====>| Cache Fn |  |
-// |========|     +----------+  |
-// |        |<=#       #        |
-// |        |  #=======#        |
-// +--------+  Rejoin path      |
-//     |________                |
-//             |                |
-//   Repatch   |                |
-//     IC      |                |
-//   Entry     |                |
-// +------------+               |
-// | lastJump_  |---------------/
-// +------------+
-// |    ...     |
-// +------------+
-//
-// Attaching stubs:
-//
-//   Patch the jump pointed to by lastJump_ to jump to the new stub. Update
-//   lastJump_ to be the new stub's failure jump. The failure jump of the new
-//   stub goes to the fallback label, which is the cache function. In this
-//   fashion, new stubs are _appended_ to the chain of stubs, as lastJump_
-//   points to the _tail_ of the stub chain.
-//
-//  JIT Code
-// +--------+ #=======================#
-// |        | #                       v
-// |========| #   +----------+     +------+
-// |== IC ==|=#   | Cache Fn |<====| Stub |
-// |========|     +----------+  ^  +------+
-// |        |<=#      #         |     #
-// |        |  #======#=========|=====#
-// +--------+      Rejoin path  |
-//     |________                |
-//             |                |
-//   Repatch   |                |
-//     IC      |                |
-//   Entry     |                |
-// +------------+               |
-// | lastJump_  |---------------/
-// +------------+
-// |    ...     |
-// +------------+
-//
-class RepatchIonCache : public IonCache
-{
-  protected:
-    class RepatchStubAppender;
-
-    CodeLocationJump initialJump_;
-    CodeLocationJump lastJump_;
-    CodeLocationLabel rejoinLabel_;
-
-  public:
-    RepatchIonCache()
-      : initialJump_(),
-        lastJump_()
-    {
-    }
-
-    virtual void reset() override;
-
-    // Set the initial jump state of the cache. The initialJump is the inline
-    // jump that will point to out-of-line code (such as the slow path, or
-    // stubs), and the rejoinLabel is the position that all out-of-line paths
-    // will rejoin to.
-    void emitInitialJump(MacroAssembler& masm, AddCacheState& addState) override;
-    void bindInitialJump(MacroAssembler& masm, AddCacheState& addState) override;
-
-    // Update the labels once the code is finalized.
-    void updateBaseAddress(JitCode* code, MacroAssembler& masm) override;
-
-    virtual void* rejoinAddress() override {
-        return rejoinLabel_.raw();
-    }
-};
-
-//
-// Dispatch caches avoid patching already-running code. Instead, the jump to
-// the stub chain is indirect by way of the firstStub_ pointer
-// below. Initially the pointer points to the cache function which may attach
-// new stubs. Stubs are attached by prepending: when attaching a new stub, we
-// jump to the previous stub on failure conditions, then overwrite the
-// firstStub_ pointer with the newly generated stub.
-//
-// This style does not patch the already executing instruction stream, does
-// not need to worry about cache coherence of cached jump addresses, and does
-// not have to worry about aligning the exit jumps to ensure atomic patching,
-// at the expense of an extra memory read to load the very first stub.
-//
-// ICs that need to work in parallel execution need to be dispatch
-// style. Since PJS's removal, nothing else yet uses this style of ICs.
-//
-//        Control flow               Pointers             Memory load
-//      =======#                 ----.     .---->         ******
-//             #                     |     |                   *
-//             #======>              \-----/                   *******
-//
-// Initial state:
-//
-//    The first stub points to the cache function.
-//
-//  JIT Code
-// +--------+                                 .-------.
-// |        |                                 v       |
-// |========|     +---------------+     +----------+  |
-// |== IC ==|====>| Load and jump |====>| Cache Fn |  |
-// |========|     +---------------+     +----------+  |
-// |        |<=#           *                #         |
-// |        |  #===========*================#         |
-// +--------+       Rejoin * path                     |
-//     |________           *                          |
-//             |           *                          |
-//   Dispatch  |           *                          |
-//     IC    **|************                          |
-//   Entry   * |                                      |
-// +------------+                                     |
-// | firstStub_ |-------------------------------------/
-// +------------+
-// |    ...     |
-// +------------+
-//
-// Attaching stubs:
-//
-//   Assign the address of the new stub to firstStub_. The new stub jumps to
-//   the old address held in firstStub_ on failure. Note that there is no
-//   concept of a fallback label here, new stubs are _prepended_, as
-//   firstStub_ always points to the _head_ of the stub chain.
-//
-//  JIT Code
-// +--------+                        #=====================#   .-----.
-// |        |                        #                     v   v     |
-// |========|     +---------------+  #  +----------+     +------+    |
-// |== IC ==|====>| Load and jump |==#  | Cache Fn |<====| Stub |    |
-// |========|     +---------------+     +----------+     +------+    |
-// |        |<=#           *                #                #       |
-// |        |  #===========*================#================#       |
-// +--------+       Rejoin * path                                    |
-//     |________           *                                         |
-//             |           *                                         |
-//   Dispatch  |           *                                         |
-//     IC    **|************                                         |
-//   Entry   * |                                                     |
-// +------------+                                                    |
-// | firstStub_ |----------------------------------------------------/
-// +------------+
-// |    ...     |
-// +------------+
-//
-class DispatchIonCache : public IonCache
-{
-  protected:
-    class DispatchStubPrepender;
-
-    uint8_t* firstStub_;
-    CodeLocationLabel rejoinLabel_;
-    CodeOffsetLabel dispatchLabel_;
-
-  public:
-    DispatchIonCache()
-      : firstStub_(nullptr),
-        rejoinLabel_(),
-        dispatchLabel_()
-    {
-    }
-
-    virtual void reset() override;
-    virtual void initializeAddCacheState(LInstruction* ins, AddCacheState* addState) override;
-
-    void emitInitialJump(MacroAssembler& masm, AddCacheState& addState) override;
-    void bindInitialJump(MacroAssembler& masm, AddCacheState& addState) override;
-
-    // Fix up the first stub pointer once the code is finalized.
-    void updateBaseAddress(JitCode* code, MacroAssembler& masm) override;
-
-    virtual void* rejoinAddress() override {
-        return rejoinLabel_.raw();
-    }
-};
-
 // Define the cache kind and pre-declare data structures used for calling inline
 // caches.
 #define CACHE_HEADER(ickind)                                        \
@@ -517,7 +368,7 @@ struct CacheLocation {
     { }
 };
 
-class GetPropertyIC : public RepatchIonCache
+class GetPropertyIC : public IonCache
 {
   protected:
     // Registers live after the cache, excluding output registers. The initial
@@ -662,7 +513,7 @@ class GetPropertyIC : public RepatchIonCache
                        HandleObject obj, MutableHandleValue vp);
 };
 
-class SetPropertyIC : public RepatchIonCache
+class SetPropertyIC : public IonCache
 {
   protected:
     // Registers live after the cache, excluding output registers. The initial
@@ -749,7 +600,7 @@ class SetPropertyIC : public RepatchIonCache
                        HandleObject obj, HandleValue value);
 };
 
-class GetElementIC : public RepatchIonCache
+class GetElementIC : public IonCache
 {
   protected:
     LiveRegisterSet liveRegs_;
@@ -860,7 +711,7 @@ class GetElementIC : public RepatchIonCache
     }
 };
 
-class SetElementIC : public RepatchIonCache
+class SetElementIC : public IonCache
 {
   protected:
     Register object_;
@@ -944,7 +795,7 @@ class SetElementIC : public RepatchIonCache
            HandleValue idval, HandleValue value);
 };
 
-class BindNameIC : public RepatchIonCache
+class BindNameIC : public IonCache
 {
   protected:
     Register scopeChain_;
@@ -981,7 +832,7 @@ class BindNameIC : public RepatchIonCache
     update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject scopeChain);
 };
 
-class NameIC : public RepatchIonCache
+class NameIC : public IonCache
 {
   protected:
     // Registers live after the cache, excluding output registers. The initial
