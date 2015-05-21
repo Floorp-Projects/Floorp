@@ -596,7 +596,7 @@ JS_FRIEND_API(JSGCTraceKind)
 js::GCThingTraceKind(void* thing)
 {
     MOZ_ASSERT(thing);
-    return gc::GetGCThingTraceKind(thing);
+    return static_cast<js::gc::Cell*>(thing)->getTraceKind();
 }
 
 JS_FRIEND_API(void)
