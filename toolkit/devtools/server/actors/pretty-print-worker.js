@@ -27,27 +27,24 @@
  *     { id, error }
  */
 
+importScripts("resource://gre/modules/devtools/shared/worker-helper.js");
 importScripts("resource://gre/modules/devtools/acorn/acorn.js");
 importScripts("resource://gre/modules/devtools/source-map.js");
 importScripts("resource://gre/modules/devtools/pretty-fast.js");
 
-self.onmessage = (event) => {
-  const { data: { id, url, indent, source } } = event;
+workerHelper.createTask(self, "pretty-print", ({ url, indent, source }) => {
   try {
     const prettified = prettyFast(source, {
       url: url,
       indent: " ".repeat(indent)
     });
 
-    self.postMessage({
-      id: id,
+    return {
       code: prettified.code,
       mappings: prettified.map._mappings
-    });
-  } catch (e) {
-    self.postMessage({
-      id: id,
-      error: e.message + "\n" + e.stack
-    });
+    };
   }
-};
+  catch(e) {
+    return new Error(e.message + "\n" + e.stack);
+  }
+});
