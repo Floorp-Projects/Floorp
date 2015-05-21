@@ -276,9 +276,24 @@ class B2GRemoteAutomation(Automation):
         if 'b2g' not in session:
             raise Exception("bad session value %s returned by start_session" % session)
 
-        if self.context_chrome:
-            self.marionette.set_context(self.marionette.CONTEXT_CHROME)
-        else:
+        self.marionette.set_context(self.marionette.CONTEXT_CHROME)
+        self.marionette.execute_script("""
+            let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+            Components.utils.import("resource://gre/modules/Services.jsm");
+            Services.prefs.setBoolPref(SECURITY_PREF, true);
+
+            if (!testUtils.hasOwnProperty("specialPowersObserver")) {
+              let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
+                .getService(Components.interfaces.mozIJSSubScriptLoader);
+              loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
+                testUtils);
+              testUtils.specialPowersObserver = new testUtils.SpecialPowersObserver();
+              testUtils.specialPowersObserver.init();
+              testUtils.specialPowersObserver._loadFrameScript();
+            }
+            """)
+
+        if not self.context_chrome:
             self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
 
         # run the script that starts the tests

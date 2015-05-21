@@ -66,56 +66,56 @@ endif
 # JavaScript Shell packaging
 ifndef LIBXUL_SDK
 JSSHELL_BINS  = \
-  $(DIST)/bin/js$(BIN_SUFFIX) \
-  $(DIST)/bin/$(DLL_PREFIX)mozglue$(DLL_SUFFIX) \
+  js$(BIN_SUFFIX) \
+  $(DLL_PREFIX)mozglue$(DLL_SUFFIX) \
   $(NULL)
 ifndef MOZ_NATIVE_NSPR
 ifdef MSVC_C_RUNTIME_DLL
-JSSHELL_BINS += $(DIST)/bin/$(MSVC_C_RUNTIME_DLL)
+JSSHELL_BINS += $(MSVC_C_RUNTIME_DLL)
 endif
 ifdef MSVC_CXX_RUNTIME_DLL
-JSSHELL_BINS += $(DIST)/bin/$(MSVC_CXX_RUNTIME_DLL)
+JSSHELL_BINS += $(MSVC_CXX_RUNTIME_DLL)
 endif
 ifdef MSVC_APPCRT_DLL
-JSSHELL_BINS += $(DIST)/bin/$(MSVC_APPCRT_DLL)
+JSSHELL_BINS += $(MSVC_APPCRT_DLL)
 endif
 ifdef MSVC_DESKTOPCRT_DLL
-JSSHELL_BINS += $(DIST)/bin/$(MSVC_DESKTOPCRT_DLL)
+JSSHELL_BINS += $(MSVC_DESKTOPCRT_DLL)
 endif
 ifdef MOZ_FOLD_LIBS
-JSSHELL_BINS += $(DIST)/bin/$(DLL_PREFIX)nss3$(DLL_SUFFIX)
+JSSHELL_BINS += $(DLL_PREFIX)nss3$(DLL_SUFFIX)
 else
 JSSHELL_BINS += \
-  $(DIST)/bin/$(DLL_PREFIX)nspr4$(DLL_SUFFIX) \
-  $(DIST)/bin/$(DLL_PREFIX)plds4$(DLL_SUFFIX) \
-  $(DIST)/bin/$(DLL_PREFIX)plc4$(DLL_SUFFIX) \
+  $(DLL_PREFIX)nspr4$(DLL_SUFFIX) \
+  $(DLL_PREFIX)plds4$(DLL_SUFFIX) \
+  $(DLL_PREFIX)plc4$(DLL_SUFFIX) \
   $(NULL)
 endif # MOZ_FOLD_LIBS
 endif # MOZ_NATIVE_NSPR
 ifdef MOZ_SHARED_ICU
 ifeq ($(OS_TARGET), WINNT)
 JSSHELL_BINS += \
-  $(DIST)/bin/icudt$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
-  $(DIST)/bin/icuin$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
-  $(DIST)/bin/icuuc$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
+  icudt$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
+  icuin$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
+  icuuc$(MOZ_ICU_DBG_SUFFIX)$(MOZ_ICU_VERSION).dll \
   $(NULL)
 else
 ifeq ($(OS_TARGET), Darwin)
 JSSHELL_BINS += \
-  $(DIST)/bin/libicudata.$(MOZ_ICU_VERSION).dylib \
-  $(DIST)/bin/libicui18n.$(MOZ_ICU_VERSION).dylib \
-  $(DIST)/bin/libicuuc.$(MOZ_ICU_VERSION).dylib \
+  libicudata.$(MOZ_ICU_VERSION).dylib \
+  libicui18n.$(MOZ_ICU_VERSION).dylib \
+  libicuuc.$(MOZ_ICU_VERSION).dylib \
   $(NULL)
 else
 JSSHELL_BINS += \
-  $(DIST)/bin/libicudata.so.$(MOZ_ICU_VERSION) \
-  $(DIST)/bin/libicui18n.so.$(MOZ_ICU_VERSION) \
-  $(DIST)/bin/libicuuc.so.$(MOZ_ICU_VERSION) \
+  libicudata.so.$(MOZ_ICU_VERSION) \
+  libicui18n.so.$(MOZ_ICU_VERSION) \
+  libicuuc.so.$(MOZ_ICU_VERSION) \
   $(NULL)
 endif # Darwin
 endif # WINNT
 endif # MOZ_STATIC_JS
-MAKE_JSSHELL  = $(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/dozip.py $(PKG_JSSHELL) $(abspath $(JSSHELL_BINS))
+MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
 endif # LIBXUL_SDK
 
 _ABS_DIST = $(abspath $(DIST))
@@ -158,7 +158,7 @@ PKG_SUFFIX	= .zip
 INNER_MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR) \
   -x \*/.mkdir.done
 INNER_UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
-MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
+MAKE_SDK = $(call py_action,zip,$(SDK) $(MOZ_APP_NAME)-sdk)
 endif
 ifeq ($(MOZ_PKG_FORMAT),SFX7Z)
 PKG_SUFFIX	= .exe

@@ -8,8 +8,6 @@
 
 #include <stdint.h>
 
-class nsIAtom;
-
 // The following constants define unicode subranges
 // values below kRangeNum must be continuous so that we can map to 
 // lang group directly.
@@ -89,6 +87,5 @@ const uint8_t   kRangeTertiaryTable  = 145; // leave room for 16 subtable
 
 
 uint32_t FindCharUnicodeRange(uint32_t ch);
-nsIAtom* LangGroupFromUnicodeRange(uint8_t unicodeRange);
 
 #endif

@@ -128,7 +128,7 @@ function testThrow(pattern, input, binding) {
 }
 testDeclaration(testThrow);
 
-// XXX: Support for let blocks and expressions will be removed in bug 1023609.
+// XXX: Support for let blocks will be removed in bug 1023609.
 // However, they test a special code path in destructuring assignment so having
 // these tests here for now seems like a good idea.
 function testLetBlock(pattern, input, binding) {
@@ -139,12 +139,3 @@ function testLetBlock(pattern, input, binding) {
   )(input);
 }
 testDeclaration(testLetBlock);
-
-function testLetExpression(pattern, input, binding) {
-  binding = binding || 'rest';
-  return new Function('input',
-    'return (let (' + pattern + ' = input) ' + binding + ');'
-  )(input);
-}
-testDeclaration(testLetExpression);
-
