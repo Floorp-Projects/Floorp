@@ -1895,6 +1895,17 @@ gfxWindowsPlatform::InitD3D11Devices()
           return;
         }
 
+        if (!IsWin8OrLater()) {
+            /* On Windows 7 WARP runs very badly on the builtin vga driver */
+            nsString driver;
+            gfxInfo->GetAdapterDriver(driver);
+            // driver can start with vga or svga so only look for "framebuf..."
+            if (driver.Find("framebuf vga256 vga64k") != kNotFound) {
+                gfxCriticalError(CriticalLog::DefaultOptions(false)) << "Disabling WARP on builtin vga driver";
+                return;
+            }
+        }
+
         useWARP = true;
       }
     }
