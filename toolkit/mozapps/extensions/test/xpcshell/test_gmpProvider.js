@@ -5,6 +5,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 let GMPScope = Cu.import("resource://gre/modules/addons/GMPProvider.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
   () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
@@ -229,24 +230,11 @@ function createMockPluginFilesIfNeeded(aFile, aPluginId) {
     }
   };
 
-  // Note: we can't use Services.appInfo.OS, as that's "XPCShell" in our tests.
-  let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-  let isOSX = ("nsILocalFileMac" in Components.interfaces);
-  let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Components.classes);
-
-  let libName = "";
-  if (isWindows) {
-    libName = aPluginId.substring(4) + ".dll";
-  } else if (isOSX) {
-    libName = "lib" + aPluginId.substring(4) + ".dylib";
-  } else if (isLinux) {
-    libName = aPluginId.substring(4) + ".so";
-  } else {
-    // FAIL!
-    return;
-  }
+  let id = aPluginId.substring(4);
+  let libName = AppConstants.DLL_PREFIX + id + AppConstants.DLL_SUFFIX;
+  
   createFile(libName);
-  createFile(aPluginId.substring(4) + ".info");
+  createFile(id + ".info");
 }
 
 // Array.includes is only in 41, so polyfill for 40/39 uplift.
