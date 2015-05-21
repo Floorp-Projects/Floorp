@@ -158,7 +158,7 @@ private:
     static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr, mozilla::MallocSizeOf mallocSizeOf, void*);
 
 private:
-    PLDHashTable* mTable;
+    PLDHashTable2* mTable;
 };
 
 /*************************/
@@ -212,7 +212,7 @@ private:
     IID2WrappedJSClassMap();    // no implementation
     explicit IID2WrappedJSClassMap(int size);
 private:
-    PLDHashTable* mTable;
+    PLDHashTable2* mTable;
 };
 
 /*************************/
@@ -271,7 +271,7 @@ private:
     static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr, mozilla::MallocSizeOf mallocSizeOf, void*);
 
 private:
-    PLDHashTable* mTable;
+    PLDHashTable2* mTable;
 };
 
 /*************************/
@@ -328,7 +328,7 @@ private:
     ClassInfo2NativeSetMap();    // no implementation
     explicit ClassInfo2NativeSetMap(int size);
 private:
-    PLDHashTable* mTable;
+    PLDHashTable2* mTable;
 };
 
 /*************************/
@@ -384,7 +384,7 @@ private:
     static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr, mozilla::MallocSizeOf mallocSizeOf, void*);
 
 private:
-    PLDHashTable* mTable;
+    PLDHashTable2* mTable;
 };
 
 /*************************/
@@ -454,7 +454,7 @@ private:
     static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr, mozilla::MallocSizeOf mallocSizeOf, void*);
 
 private:
-    PLDHashTable* mTable;
+    PLDHashTable2* mTable;
 };
 
 /***************************************************************************/
@@ -512,7 +512,7 @@ private:
     IID2ThisTranslatorMap();    // no implementation
     explicit IID2ThisTranslatorMap(int size);
 private:
-    PLDHashTable* mTable;
+    PLDHashTable2* mTable;
 };
 
 /***************************************************************************/
@@ -548,7 +548,7 @@ private:
     XPCNativeScriptableSharedMap();    // no implementation
     explicit XPCNativeScriptableSharedMap(int size);
 private:
-    PLDHashTable* mTable;
+    PLDHashTable2* mTable;
 };
 
 /***************************************************************************/
@@ -586,7 +586,7 @@ private:
     XPCWrappedNativeProtoMap();    // no implementation
     explicit XPCWrappedNativeProtoMap(int size);
 private:
-    PLDHashTable* mTable;
+    PLDHashTable2* mTable;
 };
 
 /***************************************************************************/

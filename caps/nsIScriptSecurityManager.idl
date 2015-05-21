@@ -26,7 +26,7 @@ class DomainPolicyClone;
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
 
-[scriptable, uuid(ba602ca6-dc7a-457e-a57a-ee5b343fd863)]
+[scriptable, uuid(f4c578b8-5bac-4ba1-9582-f1140e09a3b4)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -179,11 +179,27 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal getNoAppCodebasePrincipal(in nsIURI uri);
 
     /**
-     * Legacy name for getNoAppCodebasePrincipal.
+     * Legacy method for getting a principal with no origin attributes.
      *
-     * @deprecated use getNoAppCodebasePrincipal instead.
+     * @deprecated use createCodebasePrincipal instead.
      */
     [deprecated] nsIPrincipal getCodebasePrincipal(in nsIURI uri);
+
+    /**
+     * Returns a principal whose origin is composed of |uri| and |originAttributes|.
+     * See nsIPrincipal.h for a description of origin attributes, and
+     * SystemDictionaries.webidl for a list of origin attributes and their defaults.
+     */
+    [implicit_jscontext]
+    nsIPrincipal createCodebasePrincipal(in nsIURI uri, in jsval originAttributes);
+
+    /**
+     * Returns a unique nonce principal with |originAttributes|.
+     * See nsIPrincipal.h for a description of origin attributes, and
+     * SystemDictionaries.webidl for a list of origin attributes and their defaults.
+     */
+    [implicit_jscontext]
+    nsIPrincipal createNullPrincipal(in jsval originAttributes);
 
     /**
      * Returns OK if aSourceURI and target have the same "origin"

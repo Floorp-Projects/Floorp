@@ -125,7 +125,7 @@ public:
     {
         struct hash
         {
-            PLDHashTable*   mPropertyHash; 
+            PLDHashTable2*  mPropertyHash;
         } hash;
         struct as
         {
@@ -163,7 +163,7 @@ Assertion::Assertion(nsIRDFResource* aSource)
     NS_ADDREF(mSource);
 
     u.hash.mPropertyHash =
-        PL_NewDHashTable(PL_DHashGetStubOps(), sizeof(Entry));
+        new PLDHashTable2(PL_DHashGetStubOps(), sizeof(Entry));
 }
 
 Assertion::Assertion(nsIRDFResource* aSource,
@@ -194,7 +194,7 @@ Assertion::~Assertion()
     if (mHashEntry && u.hash.mPropertyHash) {
         PL_DHashTableEnumerate(u.hash.mPropertyHash, DeletePropertyHashEntry,
                                nullptr);
-        PL_DHashTableDestroy(u.hash.mPropertyHash);
+        delete u.hash.mPropertyHash;
         u.hash.mPropertyHash = nullptr;
     }
 

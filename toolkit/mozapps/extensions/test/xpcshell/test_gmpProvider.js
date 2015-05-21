@@ -249,6 +249,14 @@ function createMockPluginFilesIfNeeded(aFile, aPluginId) {
   createFile(aPluginId.substring(4) + ".info");
 }
 
+// Array.includes() is only in Nightly channel, so polyfill so we don't fail
+// on other branches.
+if (![].includes) {
+  Array.prototype.includes = function(element) {
+    return Object(this).indexOf(element) != -1;
+  }
+}
+
 add_task(function* test_pluginRegistration() {
   const TEST_VERSION = "1.2.3.4";
 

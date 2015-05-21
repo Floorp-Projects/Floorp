@@ -19,6 +19,7 @@
 #include "nsINestedURI.h"
 #include "nspr.h"
 #include "nsJSPrincipals.h"
+#include "mozilla/BasePrincipal.h"
 #include "nsSystemPrincipal.h"
 #include "nsPrincipal.h"
 #include "nsNullPrincipal.h"
@@ -280,29 +281,21 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
     NS_ENSURE_SUCCESS(app->GetAppStatus(&status),
                       nsIPrincipal::APP_STATUS_NOT_INSTALLED);
 
-    nsAutoCString origin;
-    NS_ENSURE_SUCCESS(aPrin->GetOrigin(origin),
-                      nsIPrincipal::APP_STATUS_NOT_INSTALLED);
     nsString appOrigin;
     NS_ENSURE_SUCCESS(app->GetOrigin(appOrigin),
                       nsIPrincipal::APP_STATUS_NOT_INSTALLED);
-
-    // We go from string -> nsIURI -> origin to be sure we
-    // compare two punny-encoded origins.
     nsCOMPtr<nsIURI> appURI;
     NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(appURI), appOrigin),
                       nsIPrincipal::APP_STATUS_NOT_INSTALLED);
 
-    nsAutoCString appOriginPunned;
-    NS_ENSURE_SUCCESS(nsPrincipal::GetOriginForURI(appURI, appOriginPunned),
-                      nsIPrincipal::APP_STATUS_NOT_INSTALLED);
-
-    if (!appOriginPunned.Equals(origin)) {
-        return nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-    }
-
-    return status;
-
+    // The app could contain a cross-origin iframe - make sure that the content
+    // is actually same-origin with the app.
+    MOZ_ASSERT(inMozBrowser == false, "Checked this above");
+    OriginAttributes attrs(appId, false);
+    nsCOMPtr<nsIPrincipal> appPrin = BasePrincipal::CreateCodebasePrincipal(appURI, attrs);
+    NS_ENSURE_TRUE(appPrin, nsIPrincipal::APP_STATUS_NOT_INSTALLED);
+    return aPrin->Equals(appPrin) ? status
+                                  : nsIPrincipal::APP_STATUS_NOT_INSTALLED;
 }
 
 /*
@@ -378,8 +371,10 @@ nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
         return GetLoadContextCodebasePrincipal(uri, loadContext, aPrincipal);
     }
 
-    return GetCodebasePrincipalInternal(uri, UNKNOWN_APP_ID,
-        /* isInBrowserElement */ false, aPrincipal);
+    OriginAttributes attrs(UNKNOWN_APP_ID, false);
+    nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+    prin.forget(aPrincipal);
+    return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -979,55 +974,24 @@ nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
     return NS_OK;
 }
 
-nsresult
-nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, uint32_t aAppId,
-                                                 bool aInMozBrowser,
-                                                 nsIPrincipal **result)
-{
-    // I _think_ it's safe to not create null principals here based on aURI.
-    // At least all the callers would do the right thing in those cases, as far
-    // as I can tell.  --bz
-
-    nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
-    if (uriPrinc) {
-        nsCOMPtr<nsIPrincipal> principal;
-        uriPrinc->GetPrincipal(getter_AddRefs(principal));
-        if (!principal) {
-            principal = nsNullPrincipal::Create();
-            NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
-        }
-
-        principal.forget(result);
-
-        return NS_OK;
-    }
-
-    BasePrincipal::OriginAttributes attrs(aAppId, aInMozBrowser);
-    nsRefPtr<nsPrincipal> codebase = new nsPrincipal();
-    nsresult rv = codebase->Init(aURI, attrs);
-    if (NS_FAILED(rv))
-        return rv;
-
-    NS_ADDREF(*result = codebase);
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsScriptSecurityManager::GetSimpleCodebasePrincipal(nsIURI* aURI,
                                                     nsIPrincipal** aPrincipal)
 {
-  return GetCodebasePrincipalInternal(aURI,
-                                      nsIScriptSecurityManager::UNKNOWN_APP_ID,
-                                      false, aPrincipal);
+  OriginAttributes attrs(UNKNOWN_APP_ID, false);
+  nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+  prin.forget(aPrincipal);
+  return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetNoAppCodebasePrincipal(nsIURI* aURI,
                                                    nsIPrincipal** aPrincipal)
 {
-  return GetCodebasePrincipalInternal(aURI,  nsIScriptSecurityManager::NO_APP_ID,
-                                      false, aPrincipal);
+  OriginAttributes attrs(NO_APP_ID, false);
+  nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+  prin.forget(aPrincipal);
+  return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1035,6 +999,33 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI* aURI,
                                               nsIPrincipal** aPrincipal)
 {
   return GetNoAppCodebasePrincipal(aURI, aPrincipal);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, JS::Handle<JS::Value> aOriginAttributes,
+                                                 JSContext* aCx, nsIPrincipal** aPrincipal)
+{
+  OriginAttributes attrs;
+  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+      return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+  prin.forget(aPrincipal);
+  return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CreateNullPrincipal(JS::Handle<JS::Value> aOriginAttributes,
+                                             JSContext* aCx, nsIPrincipal** aPrincipal)
+{
+  OriginAttributes attrs;
+  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+      return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIPrincipal> prin = nsNullPrincipal::Create(attrs);
+  NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
+  prin.forget(aPrincipal);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1046,7 +1037,10 @@ nsScriptSecurityManager::GetAppCodebasePrincipal(nsIURI* aURI,
   NS_ENSURE_TRUE(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
                  NS_ERROR_INVALID_ARG);
 
-  return GetCodebasePrincipalInternal(aURI, aAppId, aInMozBrowser, aPrincipal);
+  OriginAttributes attrs(aAppId, aInMozBrowser);
+  nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+  prin.forget(aPrincipal);
+  return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1055,14 +1049,13 @@ nsScriptSecurityManager::
                                   nsILoadContext* aLoadContext,
                                   nsIPrincipal** aPrincipal)
 {
-  uint32_t appId;
-  aLoadContext->GetAppId(&appId);
-  bool isInBrowserElement;
-  aLoadContext->GetIsInBrowserElement(&isInBrowserElement);
-  return GetCodebasePrincipalInternal(aURI,
-                                      appId,
-                                      isInBrowserElement,
-                                      aPrincipal);
+  // XXXbholley - Make this more general in bug 1165466.
+  OriginAttributes attrs;
+  aLoadContext->GetAppId(&attrs.mAppId);
+  aLoadContext->GetIsInBrowserElement(&attrs.mInBrowser);
+  nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+  prin.forget(aPrincipal);
+  return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1070,37 +1063,11 @@ nsScriptSecurityManager::GetDocShellCodebasePrincipal(nsIURI* aURI,
                                                       nsIDocShell* aDocShell,
                                                       nsIPrincipal** aPrincipal)
 {
-  return GetCodebasePrincipalInternal(aURI,
-                                      aDocShell->GetAppId(),
-                                      aDocShell->GetIsInBrowserElement(),
-                                      aPrincipal);
-}
-
-nsresult
-nsScriptSecurityManager::GetCodebasePrincipalInternal(nsIURI *aURI,
-                                                      uint32_t aAppId,
-                                                      bool aInMozBrowser,
-                                                      nsIPrincipal **result)
-{
-    NS_ENSURE_ARG(aURI);
-
-    bool inheritsPrincipal;
-    nsresult rv =
-        NS_URIChainHasFlags(aURI,
-                            nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
-                            &inheritsPrincipal);
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(rv) || inheritsPrincipal) {
-        principal = nsNullPrincipal::Create();
-        NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
-    } else {
-        rv = CreateCodebasePrincipal(aURI, aAppId, aInMozBrowser,
-                                     getter_AddRefs(principal));
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-    principal.forget(result);
-
-    return NS_OK;
+  // XXXbholley - Make this more general in bug 1165466.
+  OriginAttributes attrs(aDocShell->GetAppId(), aDocShell->GetIsInBrowserElement());
+  nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
+  prin.forget(aPrincipal);
+  return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // static

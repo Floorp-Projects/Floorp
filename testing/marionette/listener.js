@@ -27,9 +27,6 @@ loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
 loader.loadSubScript("chrome://marionette/content/sendkeys.js", utils);
 
-loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
-loader.loadSubScript("chrome://specialpowers/content/specialpowers.js");
-
 let marionetteLogObj = new MarionetteLogObj();
 
 let isB2G = false;
@@ -45,6 +42,10 @@ let elementManager = new ElementManager([]);
 let accessibility = new Accessibility();
 let actions = new ActionChain(utils, checkForInterrupted);
 let importedScripts = null;
+
+// Contains the last file input element that was the target of
+// sendKeysToElement.
+let fileInputElement;
 
 // A dict of sandboxes used this session
 let sandboxes = {};
@@ -196,6 +197,7 @@ let isElementEnabledFn = dispatch(isElementEnabled);
  * Start all message listeners
  */
 function startListeners() {
+  addMessageListenerId("Marionette:receiveFiles", receiveFiles);
   addMessageListenerId("Marionette:newSession", newSession);
   addMessageListenerId("Marionette:executeScript", executeScript);
   addMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
@@ -300,6 +302,7 @@ function restart(msg) {
  * Removes all listeners
  */
 function deleteSession(msg) {
+  removeMessageListenerId("Marionette:receiveFiles", receiveFiles);
   removeMessageListenerId("Marionette:newSession", newSession);
   removeMessageListenerId("Marionette:executeScript", executeScript);
   removeMessageListenerId("Marionette:executeAsyncScript", executeAsyncScript);
@@ -487,14 +490,6 @@ function createExecuteContentSandbox(win, timeout) {
     }
   });
 
-  let specialPowersFn;
-  if (typeof win.wrappedJSObject.SpecialPowers != "undefined") {
-    specialPowersFn = () => win.wrappedJSObject.SpecialPowers;
-  } else {
-    specialPowersFn = () => new SpecialPowers(win);
-  }
-  XPCOMUtils.defineLazyGetter(sandbox, "SpecialPowers", specialPowersFn);
-
   sandbox.asyncComplete = (obj, id) => {
     if (id == asyncTestCommandId) {
       curFrame.removeEventListener("unload", onunload, false);
@@ -648,6 +643,28 @@ function setTestName(msg) {
  */
 function executeAsyncScript(msg) {
   executeWithCallback(msg);
+}
+
+/**
+ * Receive file objects from chrome in order to complete a
+ * sendKeysToElement action on a file input element.
+ */
+function receiveFiles(msg) {
+  if ('error' in msg.json) {
+    let err = new InvalidArgumentError(msg.json.error);
+    sendError(err, msg.json.command_id);
+    return;
+  }
+  if (!fileInputElement) {
+    let err = new InvalidElementStateError("receiveFiles called with no valid fileInputElement");
+    sendError(err, msg.json.command_id);
+    return;
+  }
+  let fs = Array.prototype.slice.call(fileInputElement.files);
+  fs.push(msg.json.file);
+  fileInputElement.mozSetFileArray(fs);
+  fileInputElement = null;
+  sendOk(msg.json.command_id);
 }
 
 /**
@@ -1537,31 +1554,12 @@ function sendKeysToElement(msg) {
   let el = elementManager.getKnownElement(msg.json.id, curFrame);
   if (el.type == "file") {
     let p = val.join("");
-
-    // for some reason using mozSetFileArray doesn't work with e10s
-    // enabled (probably a bug), but a workaround is to elevate the element's
-    // privileges with SpecialPowers
-    //
-    // this extra branch can be removed when the e10s bug 1149998 is fixed
-    if (isRemoteBrowser()) {
-      let fs = Array.prototype.slice.call(el.files);
-      let file;
-      try {
-        file = new File(p);
-      } catch (e) {
-        let err = new InvalidArgumentError(`File not found: ${val}`);
-        sendError(err, command_id);
-        return;
-      }
-      fs.push(file);
-
-      let wel = new SpecialPowers(utils.window).wrap(el);
-      wel.mozSetFileArray(fs);
-    } else {
-      sendSyncMessage("Marionette:setElementValue", {value: p}, {element: el});
-    }
-
-    sendOk(command_id);
+    fileInputElement = el;
+    // In e10s, we can only construct File objects in the parent process,
+    // so pass the filename to driver.js, which in turn passes them back
+    // to this frame script in receiveFiles.
+    sendSyncMessage("Marionette:getFiles",
+                    {value: p, command_id: command_id});
   } else {
     utils.sendKeysToElement(curFrame, el, val, sendOk, sendError, command_id);
   }

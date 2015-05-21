@@ -42,8 +42,6 @@ test2('             { let @@ = 0; { let y = 0; h(); } }');
 test2('function f() { let @@ = 0; { let y = 0; h(); } }  f();');
 test2('             { for (let @@ = 0; X < 1; X++) h(); }');
 test2('function f() { for (let @@ = 0; X < 1; X++) h(); }  f();');
-test2('             {        (let (@@ = 0) let (y = 2, z = 3) h()); }');
-test2('function f() { return (let (@@ = 0) let (y = 2, z = 3) h()); }  f();');
 
 test1('(function X() { h(); })();');
 test1('(function X(a, b, c) { h(); })(1, 2, 3);');
