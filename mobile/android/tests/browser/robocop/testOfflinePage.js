@@ -18,6 +18,37 @@ function is(lhs, rhs, text) {
   do_report_result(lhs === rhs, text, Components.stack.caller, false);
 }
 
+function promiseBrowserEvent(browser, eventType) {
+  return new Promise((resolve) => {
+    function handle(event) {
+      // Since we'll be redirecting, don't make assumptions about the given URL and the loaded URL
+      if (event.target != browser.contentDocument || event.target.location.href == "about:blank") {
+        do_print("Skipping spurious '" + eventType + "' event" + " for " + event.target.location.href);
+        return;
+      }
+      do_print("Received event " + eventType + " from browser");
+      browser.removeEventListener(eventType, handle, true);
+      resolve(event);
+    }
+
+    browser.addEventListener(eventType, handle, true);
+    do_print("Now waiting for " + eventType + " event from browser");
+  });
+}
+
+// Provide a helper to yield until we are sure the offline state has changed
+function promiseOffline(isOffline) {
+  return new Promise((resolve, reject) => {
+    function observe(subject, topic, data) {
+      do_print("Received topic: " + topic);
+      Services.obs.removeObserver(observe, "network:offline-status-changed");
+      resolve();
+    }
+    Services.obs.addObserver(observe, "network:offline-status-changed", false);
+    Services.io.offline = isOffline;
+  });
+}
+
 // The chrome window
 let chromeWin;
 
@@ -29,7 +60,7 @@ let proxyPrefValue;
 
 const kUniqueURI = Services.io.newURI("http://mochi.test:8888/tests/robocop/video_controls.html", null, null);
 
-add_test(function setup_browser() {
+add_task(function* test_offline() {
   // Tests always connect to localhost, and per bug 87717, localhost is now
   // reachable in offline mode.  To avoid this, disable any proxy.
   proxyPrefValue = Services.prefs.getIntPref("network.proxy.type");
@@ -47,29 +78,15 @@ add_test(function setup_browser() {
     Services.io.offline = false;
   });
 
-  do_test_pending();
-
   // Add a new tab with a blank page so we can better control the real page load and the offline state
   browser = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
 
   // Go offline, expecting the error page.
-  Services.io.offline = true;
+  yield promiseOffline(true);
 
   // Load our test web page
-  browser.addEventListener("DOMContentLoaded", errorListener, true);
   browser.loadURI(kUniqueURI.spec, null, null)
-});
-
-//------------------------------------------------------------------------------
-// listen to loading the neterror page. (offline mode)
-function errorListener() {
-  if (browser.contentWindow.location == "about:blank") {
-    do_print("got about:blank, which is expected once, so return");
-    return;
-  }
-
-  browser.removeEventListener("DOMContentLoaded", errorListener, true);
-  ok(Services.io.offline, "Services.io.offline is true.");
+  yield promiseBrowserEvent(browser, "DOMContentLoaded");
 
   // This is an error page.
   is(browser.contentDocument.documentURI.substring(0, 27), "about:neterror?e=netOffline", "Document URI is the error page.");
@@ -79,29 +96,17 @@ function errorListener() {
 
   Services.prefs.setIntPref("network.proxy.type", proxyPrefValue);
 
-  // Now press the "Try Again" button, with offline mode off.
-  Services.io.offline = false;
-
-  browser.addEventListener("DOMContentLoaded", reloadListener, true);
+  // Go online and try to load the page again
+  yield promiseOffline(false);
 
   ok(browser.contentDocument.getElementById("errorTryAgain"), "The error page has got a #errorTryAgain element");
+
+  // Click "Try Again" button to start the page load
   browser.contentDocument.getElementById("errorTryAgain").click();
-}
-
-
-//------------------------------------------------------------------------------
-// listen to reload of neterror.
-function reloadListener() {
-  browser.removeEventListener("DOMContentLoaded", reloadListener, true);
-
-  ok(!Services.io.offline, "Services.io.offline is false.");
+  yield promiseBrowserEvent(browser, "DOMContentLoaded");
 
   // This is not an error page.
   is(browser.contentDocument.documentURI, kUniqueURI.spec, "Document URI is not the offline-error page, but the original URI.");
-
-  do_test_finished();
-
-  run_next_test();
-}
+});
 
 run_next_test();
