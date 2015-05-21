@@ -307,15 +307,6 @@ namespace gc {
 
 /*** Special Cases ***/
 
-/*
- * Trace through a shape or group iteratively during cycle collection to avoid
- * deep or infinite recursion.
- */
-void
-MarkCycleCollectorChildren(JSTracer* trc, Shape* shape);
-void
-MarkCycleCollectorChildren(JSTracer* trc, ObjectGroup* group);
-
 void
 PushArena(GCMarker* gcmarker, ArenaHeader* aheader);
 
