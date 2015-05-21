@@ -4858,41 +4858,15 @@ BytecodeEmitter::emitIf(ParseNode* pn)
 }
 
 /*
- * pnLet represents one of:
+ * pnLet represents a let-statement: let (x = y) { ... }
  *
- *   let-expression:   (let (x = y) EXPR)
- *   let-statement:    let (x = y) { ... }
- *
- * For a let-expression 'let (x = a, [y,z] = b) e', EmitLet produces:
- *
- *  bytecode          stackDepth  srcnotes
- *  evaluate a        +1
- *  evaluate b        +1
- *  dup               +1
- *  destructure y
- *  pick 1
- *  dup               +1
- *  destructure z
- *  pick 1
- *  pop               -1
- *  setlocal 2        -1
- *  setlocal 1        -1
- *  setlocal 0        -1
- *  pushblockscope (if needed)
- *  evaluate e        +1
- *  debugleaveblock
- *  popblockscope (if needed)
- *
- * Note that, since pushblockscope simply changes fp->scopeChain and does not
- * otherwise touch the stack, evaluation of the let-var initializers must leave
- * the initial value in the let-var's future slot.
  */
 /*
  * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
  * the comment on emitSwitch.
  */
 MOZ_NEVER_INLINE bool
-BytecodeEmitter::emitLet(ParseNode* pnLet)
+BytecodeEmitter::emitLetBlock(ParseNode* pnLet)
 {
     MOZ_ASSERT(pnLet->isArity(PN_BINARY));
     ParseNode* varList = pnLet->pn_left;
@@ -6722,9 +6696,8 @@ BytecodeEmitter::emitConditionalExpression(ConditionalExpression& conditional)
      * ignore the value pushed by the first branch.  Execution will follow
      * only one path, so we must decrement this->stackDepth.
      *
-     * Failing to do this will foil code, such as let expression and block
-     * code generation, which must use the stack depth to compute local
-     * stack indexes correctly.
+     * Failing to do this will foil code, such as let block code generation,
+     * which must use the stack depth to compute local stack indexes correctly.
      */
     MOZ_ASSERT(stackDepth > 0);
     stackDepth--;
@@ -7542,8 +7515,7 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         break;
 
       case PNK_LETBLOCK:
-      case PNK_LETEXPR:
-        ok = emitLet(pn);
+        ok = emitLetBlock(pn);
         break;
 
       case PNK_CONST:

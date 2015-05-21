@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(34a42cdc-7a04-4e71-8a5c-63e092fba58e)]
+[scriptable, uuid(0ce789cc-3fb6-48b8-a58e-32deefc337b4)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1183,11 +1183,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * Called when the remote child frame has changed its fullscreen state,
    * when entering fullscreen, and when the origin which is fullscreen changes.
    * aFrameElement is the iframe element which contains the child-process
-   * fullscreen document, and aNewOrigin is the origin of the new fullscreen
-   * document.
+   * fullscreen document.
    */
-  void remoteFrameFullscreenChanged(in nsIDOMElement aFrameElement,
-                                    in AString aNewOrigin);
+  void remoteFrameFullscreenChanged(in nsIDOMElement aFrameElement);
 
   /**
    * Called when the remote frame has popped all fullscreen elements off its

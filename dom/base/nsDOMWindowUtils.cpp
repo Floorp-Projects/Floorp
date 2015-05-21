@@ -3072,15 +3072,14 @@ nsDOMWindowUtils::SetContentDocumentFixedPositionMargins(float aTop, float aRigh
 }
 
 nsresult
-nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
-                                            const nsAString& aNewOrigin)
+nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
-  doc->RemoteFrameFullscreenChanged(aFrameElement, aNewOrigin);
+  doc->RemoteFrameFullscreenChanged(aFrameElement);
   return NS_OK;
 }
 

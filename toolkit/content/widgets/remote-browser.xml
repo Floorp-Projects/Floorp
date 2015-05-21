@@ -263,8 +263,6 @@
           let RemoteController = Components.utils.import(jsm, {}).RemoteController;
           this._controller = new RemoteController(this);
           this.controllers.appendController(this._controller);
-
-          Services.obs.addObserver(this, "ask-children-to-exit-fullscreen", false);
         ]]>
       </constructor>
 
@@ -283,8 +281,6 @@
           this.mDestroyed = true;
 
           this.controllers.removeController(this._controller);
-
-          Services.obs.removeObserver(this, "ask-children-to-exit-fullscreen");
         ]]></body>
       </method>
 
@@ -366,19 +362,6 @@
               // Delegate to browser.xml.
               return this._receiveMessage(aMessage);
               break;
-          }
-        ]]></body>
-      </method>
-
-      <method name="observe">
-        <parameter name="aSubject"/>
-        <parameter name="aTopic"/>
-        <parameter name="aData"/>
-        <body><![CDATA[
-          if (aTopic == "ask-children-to-exit-fullscreen") {
-            if (aSubject == window.document) {
-              this.messageManager.sendAsyncMessage("DOMFullscreen:ChildrenMustExit");
-            }
           }
         ]]></body>
       </method>

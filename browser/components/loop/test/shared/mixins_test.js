@@ -487,6 +487,15 @@ describe("loop.shared.mixins", function() {
           expect(view._videoDimensionsCache.remote.camera.aspectRatio.height)
             .eql(0.32857142857142857);
         });
+
+        it("should not populate the cache on another component instance", function() {
+            var view2 =
+              TestUtils.renderIntoDocument(React.createElement(TestComp));
+
+            expect(view2._videoDimensionsCache.local).to.be.empty;
+            expect(view2._videoDimensionsCache.remote).to.be.empty;
+        });
+
       });
     });
   });
