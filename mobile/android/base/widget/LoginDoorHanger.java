@@ -7,8 +7,6 @@ package org.mozilla.gecko.widget;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -29,7 +27,6 @@ import ch.boye.httpclientandroidlib.util.TextUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
@@ -42,6 +39,7 @@ public class LoginDoorHanger extends DoorHanger {
     private final TextView mTitle;
     private final TextView mMessage;
     private final TextView mLink;
+    // TODO: Fix callback for pos/neg button.
     private int mCallbackID;
 
     public LoginDoorHanger(Context context, DoorhangerConfig config) {
@@ -65,7 +63,7 @@ public class LoginDoorHanger extends DoorHanger {
     protected void loadConfig(DoorhangerConfig config) {
         setOptions(config.getOptions());
         setMessage(config.getMessage());
-        setButtons(config);
+        addButtonsToLayout(config);
     }
 
     @Override
@@ -103,13 +101,6 @@ public class LoginDoorHanger extends DoorHanger {
 
         final JSONObject actionText = options.optJSONObject("actionText");
         addActionText(actionText);
-    }
-
-    @Override
-    protected Button createButtonInstance(final String text, final int id) {
-        // HACK: Confirm button will the the rightmost/last button added. Bug 1147064 should add differentiation of the two.
-        mCallbackID = id;
-        return super.createButtonInstance(text, id);
     }
 
     @Override
