@@ -294,7 +294,7 @@ nsPKCS11Module::FindSlotByName(const char16_t *aName,
     return NS_ERROR_NOT_AVAILABLE;
 
   char *asciiname = ToNewUTF8String(nsDependentString(aName));
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
+  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
   PK11SlotInfo *slotinfo = nullptr;
   PK11SlotList *slotList = PK11_FindSlotsByNames(mModule->dllName, 
         asciiname /* slotName */, nullptr /* token Name */, false);

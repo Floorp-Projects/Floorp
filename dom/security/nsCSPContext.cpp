@@ -51,7 +51,7 @@ GetCspContextLog()
   return gCspContextPRLog;
 }
 
-#define CSPCONTEXTLOG(args) PR_LOG(GetCspContextLog(), PR_LOG_DEBUG, args)
+#define CSPCONTEXTLOG(args) MOZ_LOG(GetCspContextLog(), PR_LOG_DEBUG, args)
 #define CSPCONTEXTLOGENABLED() PR_LOG_TEST(GetCspContextLog(), PR_LOG_DEBUG)
 
 static const uint32_t CSP_CACHE_URI_CUTOFF_SIZE = 512;

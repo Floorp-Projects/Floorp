@@ -23,7 +23,7 @@ GetCspUtilsLog()
   return gCspUtilsPRLog;
 }
 
-#define CSPUTILSLOG(args) PR_LOG(GetCspUtilsLog(), PR_LOG_DEBUG, args)
+#define CSPUTILSLOG(args) MOZ_LOG(GetCspUtilsLog(), PR_LOG_DEBUG, args)
 #define CSPUTILSLOGENABLED() PR_LOG_TEST(GetCspUtilsLog(), PR_LOG_DEBUG)
 
 void

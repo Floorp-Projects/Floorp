@@ -32,7 +32,7 @@ nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
         if (aRefVariable)
             aRefVariable->ToString(refvar);
 
-        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsContentTestNode[%p]: ref-var=%s tag=%s",
                 this, NS_ConvertUTF16toUTF8(refvar).get(),
                 NS_ConvertUTF16toUTF8(tag).get()));

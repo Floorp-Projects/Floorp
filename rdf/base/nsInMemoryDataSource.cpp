@@ -809,7 +809,7 @@ InMemoryDataSource::~InMemoryDataSource()
     if (mReverseArcs.IsInitialized())
         PL_DHashTableFinish(&mReverseArcs);
 
-    PR_LOG(gLog, PR_LOG_NOTICE,
+    MOZ_LOG(gLog, PR_LOG_NOTICE,
            ("InMemoryDataSource(%p): destroyed.", this));
 
     MOZ_COUNT_DTOR(InMemoryDataSource);
