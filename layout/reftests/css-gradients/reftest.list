@@ -115,7 +115,7 @@ fuzzy-if(d2d,127,2612) == repeating-radial-1e.html repeating-radial-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
 skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1a.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-fails-if(!d2d&&!(OSX==1010&&isDebugBuild)) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694, passing on 10.10 debug is bug 1128517
+fails-if(!d2d) fuzzy-if(azureQuartz&&OSX==1010,1,11134) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
 skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1c.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
 skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1d.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
 skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,1,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1e.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
