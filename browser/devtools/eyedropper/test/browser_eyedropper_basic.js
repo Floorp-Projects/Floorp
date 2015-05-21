@@ -2,7 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const TESTCASE_URI = TEST_BASE + "color-block.html";
+const TESTCASE_URI = CHROME_URL_ROOT + "color-block.html";
 const DIV_COLOR = "#0000FF";
 
 /**
