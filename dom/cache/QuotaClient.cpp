@@ -226,9 +226,6 @@ public:
     }
   }
 
-  virtual void
-  PerformIdleMaintenance() override
-  { }
 
   virtual void
   ShutdownWorkThreads() override
