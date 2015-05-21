@@ -233,8 +233,9 @@ this.MobileIdentityManager = {
     }
 
     return this._iccInfo;
-#endif
+#else
     return null;
+#endif
   },
 
   get iccIds() {
@@ -253,8 +254,9 @@ this.MobileIdentityManager = {
     }
 
     return this._iccIds;
-#endif
+#else
     return null;
+#endif
   },
 
   get credStore() {
