@@ -10,7 +10,6 @@
 #include "nsIBinaryInputStream.h"
 #include "nsIBinaryOutputStream.h"
 #include "nsIFile.h"
-#include "nsIIdleService.h"
 #include "nsIObserverService.h"
 #include "nsIOfflineStorage.h"
 #include "nsIPermissionManager.h"
@@ -1483,8 +1482,10 @@ QuotaManager::Init()
   NS_ASSERTION(mClients.Capacity() == Client::TYPE_MAX,
                "Should be using an auto array with correct capacity!");
 
+  nsRefPtr<Client> idbClient = indexedDB::CreateQuotaClient();
+
   // Register clients.
-  mClients.AppendElement(indexedDB::CreateQuotaClient());
+  mClients.AppendElement(idbClient);
   mClients.AppendElement(asmjscache::CreateClient());
   mClients.AppendElement(cache::CreateQuotaClient());
 
@@ -3057,13 +3058,6 @@ QuotaManager::Observe(nsISupports* aSubject,
     rv = ClearStoragesForApp(appId, browserOnly);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY)) {
-    for (auto& client : mClients) {
-      client->PerformIdleMaintenance();
-    }
     return NS_OK;
   }
 
