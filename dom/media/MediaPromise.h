@@ -389,7 +389,7 @@ public:
     return;
   }
 
-  template<typename ThisType, typename ResolveFunction, typename RejectFunction>
+  template<typename ResolveFunction, typename RejectFunction>
   void Then(AbstractThread* aResponseThread, const char* aCallSite,
             ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
   {
