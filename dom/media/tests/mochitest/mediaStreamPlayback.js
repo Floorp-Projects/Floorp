@@ -47,9 +47,10 @@ MediaStreamPlayback.prototype = {
   startMedia : function(isResume) {
     var canPlayThroughFired = false;
 
-    // If we're initially running this media, check that the time is zero
+    // If we're playing this media element for the first time,
+    // check that the time is zero.
     if (!isResume) {
-      is(this.mediaStream.currentTime, 0,
+      is(this.mediaElement.currentTime, 0,
          "Before starting the media element, currentTime = 0");
     }
 

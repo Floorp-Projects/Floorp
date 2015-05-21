@@ -825,6 +825,10 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)                               \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+// If you are looking for NS_IMPL_CYCLE_COLLECTION_INHERITED_0(_class, _base)
+// you should instead not declare any cycle collected stuff in _class, so it
+// will just inherit the CC declarations from _base.
+
 #define NS_IMPL_CYCLE_COLLECTION_INHERITED(_class, _base, ...)                 \
   NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                       \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(_class, _base)               \

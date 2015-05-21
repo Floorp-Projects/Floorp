@@ -264,7 +264,7 @@ class RepatchIonCache::RepatchStubAppender : public IonCache::StubAttacher
 
   public:
     explicit RepatchStubAppender(RepatchIonCache& cache)
-      : StubAttacher(cache.rejoinLabel()),
+      : StubAttacher(cache.rejoinLabel_),
         cache_(cache)
     {
     }
@@ -302,6 +302,9 @@ RepatchIonCache::emitInitialJump(MacroAssembler& masm, AddCacheState& addState)
 {
     initialJump_ = masm.jumpWithPatch(&addState.repatchEntry);
     lastJump_ = initialJump_;
+    Label label;
+    masm.bind(&label);
+    rejoinLabel_ = CodeOffsetLabel(label.offset());
 }
 
 void
@@ -316,6 +319,7 @@ RepatchIonCache::updateBaseAddress(JitCode* code, MacroAssembler& masm)
     IonCache::updateBaseAddress(code, masm);
     initialJump_.repoint(code, &masm);
     lastJump_.repoint(code, &masm);
+    rejoinLabel_.repoint(code, &masm);
 }
 
 class DispatchIonCache::DispatchStubPrepender : public IonCache::StubAttacher

@@ -1635,6 +1635,87 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem)
   }
 }
 
+void nsMenuPopupFrame::ChangeByPage(bool aIsUp)
+{
+  nsIFrame* parentMenu = GetParent();
+  if (parentMenu) {
+    // Only scroll by page within menulists.
+    nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(parentMenu->GetContent());
+    if (!menulist) {
+      return;
+    }
+  }
+
+  nsMenuFrame* newMenu = nullptr;
+  nsIFrame* currentMenu = mCurrentMenu;
+  if (!currentMenu) {
+    // If there is no current menu item, get the first item. When moving up,
+    // just use this as the newMenu and leave currentMenu null so that no
+    // check for a later element is performed. When moving down, set currentMenu
+    // so that we look for one page down from the first item.
+    newMenu = nsXULPopupManager::GetNextMenuItem(this, nullptr, true);
+    if (!aIsUp) {
+      currentMenu = newMenu;
+    }
+  }
+
+  if (currentMenu) {
+    nscoord scrollHeight = mRect.height;
+    nsIScrollableFrame *scrollframe = GetScrollFrame(this);
+    if (scrollframe) {
+      scrollHeight = scrollframe->GetScrollPortRect().height;
+    }
+
+    // Get the position of the current item and add or subtract one popup's
+    // height to or from it.
+    nscoord targetPosition = aIsUp ? currentMenu->GetRect().YMost() - scrollHeight :
+                                     currentMenu->GetRect().y + scrollHeight;
+
+    // Indicates that the last visible child was a valid menuitem.
+    bool lastWasValid = false;
+
+    // Look for the next child which is just past the target position. This child
+    // will need to be selected.
+    while (currentMenu) {
+      // Only consider menu frames.
+      nsMenuFrame* menuFrame = do_QueryFrame(currentMenu);
+      if (menuFrame &&
+          nsXULPopupManager::IsValidMenuItem(PresContext(), menuFrame->GetContent(), true)) {
+
+        // If the right position was found, break out. Otherwise, look for another item.
+        if ((!aIsUp && currentMenu->GetRect().YMost() > targetPosition) ||
+            (aIsUp && currentMenu->GetRect().y < targetPosition)) {
+
+          // If the last visible child was not a valid menuitem or was disabled,
+          // use this as the menu to select, skipping over any non-valid items at
+          // the edge of the page.
+          if (!lastWasValid) {
+            newMenu = menuFrame;
+          }
+
+          break;
+        }
+
+        // Assign this item to newMenu. This item will be selected in case we
+        // don't find any more. 
+        lastWasValid = true;
+        newMenu = menuFrame;
+      }
+      else {
+        lastWasValid = false;
+      }
+
+      currentMenu = aIsUp ? currentMenu->GetPrevSibling() :
+                            currentMenu->GetNextSibling();
+    }
+  }
+
+  // Select the new menuitem.
+  if (newMenu) {
+    ChangeMenuItem(newMenu, false);
+  }
+}
+
 NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsMenuFrame* aMenuItem)
 {
   if (mCurrentMenu == aMenuItem)

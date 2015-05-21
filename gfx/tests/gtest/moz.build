@@ -13,6 +13,7 @@ UNIFIED_SOURCES += [
     'TestColorNames.cpp',
     'TestCompositor.cpp',
     'TestGfxPrefs.cpp',
+    'TestGfxWidgets.cpp',
     'TestLayers.cpp',
     'TestRegion.cpp',
     'TestSkipChars.cpp',

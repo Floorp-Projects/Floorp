@@ -397,7 +397,7 @@ struct AllPhaseIterator {
     size_t activeSlot;
     mozilla::Vector<Phase>::Range descendants;
 
-    explicit AllPhaseIterator(int64_t (*table)[PHASE_LIMIT])
+    explicit AllPhaseIterator(Statistics::PhaseTimeTable table)
       : current(0)
       , baseLevel(0)
       , activeSlot(PHASE_DAG_NONE)
@@ -444,7 +444,7 @@ struct AllPhaseIterator {
 };
 
 static void
-FormatPhaseTimes(StatisticsSerializer& ss, const char* name, int64_t (*times)[PHASE_LIMIT])
+FormatPhaseTimes(StatisticsSerializer& ss, const char* name, Statistics::PhaseTimeTable times)
 {
     ss.beginObject(name);
 
@@ -585,8 +585,55 @@ Join(const FragmentVector& fragments) {
     return UniqueChars(joined);
 }
 
+static int64_t
+SumChildTimes(size_t phaseSlot, Phase phase, Statistics::PhaseTimeTable phaseTimes)
+{
+    // Sum the contributions from single-parented children.
+    int64_t total = 0;
+    for (unsigned i = 0; i < PHASE_LIMIT; i++) {
+        if (phases[i].parent == phase)
+            total += phaseTimes[phaseSlot][i];
+    }
+
+    // Sum the contributions from multi-parented children.
+    size_t dagSlot = phaseExtra[phase].dagSlot;
+    if (dagSlot != PHASE_DAG_NONE) {
+        for (size_t i = 0; i < mozilla::ArrayLength(dagChildEdges); i++) {
+            if (dagChildEdges[i].parent == phase) {
+                Phase child = dagChildEdges[i].child;
+                total += phaseTimes[dagSlot][child];
+            }
+        }
+    }
+    return total;
+}
+
 UniqueChars
-Statistics::formatDescription()
+Statistics::formatDetailedMessage()
+{
+    FragmentVector fragments;
+
+    if (!fragments.append(formatDetailedDescription()))
+        return UniqueChars(nullptr);
+
+    if (slices.length() > 1) {
+        for (unsigned i = 0; i < slices.length(); i++) {
+            if (!fragments.append(formatDetailedSliceDescription(i, slices[i])))
+                return UniqueChars(nullptr);
+            if (!fragments.append(formatDetailedPhaseTimes(slices[i].phaseTimes)))
+                return UniqueChars(nullptr);
+        }
+    }
+    if (!fragments.append(formatDetailedTotals()))
+        return UniqueChars(nullptr);
+    if (!fragments.append(formatDetailedPhaseTimes(phaseTimes)))
+        return UniqueChars(nullptr);
+
+    return Join(fragments);
+}
+
+UniqueChars
+Statistics::formatDetailedDescription()
 {
     const double bytesPerMiB = 1024 * 1024;
 
@@ -632,7 +679,7 @@ Statistics::formatDescription()
 }
 
 UniqueChars
-Statistics::formatSliceDescription(unsigned i, const SliceData& slice)
+Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice)
 {
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
@@ -656,48 +703,7 @@ Statistics::formatSliceDescription(unsigned i, const SliceData& slice)
 }
 
 UniqueChars
-Statistics::formatTotals()
-{
-    int64_t total, longest;
-    gcDuration(&total, &longest);
-
-    const char* format =
-"\
-  ---- Totals ----\n\
-    Total Time: %.3fms\n\
-    Max Pause: %.3fms\n\
-";
-    char buffer[1024];
-    memset(buffer, 0, sizeof(buffer));
-    JS_snprintf(buffer, sizeof(buffer), format, t(total), t(longest));
-    return make_string_copy(buffer);
-}
-
-static int64_t
-SumChildTimes(size_t phaseSlot, Phase phase, int64_t (*phaseTimes)[PHASE_LIMIT])
-{
-    // Sum the contributions from single-parented children.
-    int64_t total = 0;
-    for (unsigned i = 0; i < PHASE_LIMIT; i++) {
-        if (phases[i].parent == phase)
-            total += phaseTimes[phaseSlot][i];
-    }
-
-    // Sum the contributions from multi-parented children.
-    size_t dagSlot = phaseExtra[phase].dagSlot;
-    if (dagSlot != PHASE_DAG_NONE) {
-        for (size_t i = 0; i < mozilla::ArrayLength(dagChildEdges); i++) {
-            if (dagChildEdges[i].parent == phase) {
-                Phase child = dagChildEdges[i].child;
-                total += phaseTimes[dagSlot][child];
-            }
-        }
-    }
-    return total;
-}
-
-UniqueChars
-Statistics::formatPhaseTimes(int64_t (*phaseTimes)[PHASE_LIMIT])
+Statistics::formatDetailedPhaseTimes(PhaseTimeTable phaseTimes)
 {
     static const char* LevelToIndent[] = { "", "  ", "    ", "      " };
     static const int64_t MaxUnaccountedChildTimeUS = 50;
@@ -732,27 +738,21 @@ Statistics::formatPhaseTimes(int64_t (*phaseTimes)[PHASE_LIMIT])
 }
 
 UniqueChars
-Statistics::formatDetailedMessage()
+Statistics::formatDetailedTotals()
 {
-    FragmentVector fragments;
+    int64_t total, longest;
+    gcDuration(&total, &longest);
 
-    if (!fragments.append(formatDescription()))
-        return UniqueChars(nullptr);
-
-    if (slices.length() > 1) {
-        for (unsigned i = 0; i < slices.length(); i++) {
-            if (!fragments.append(formatSliceDescription(i, slices[i])))
-                return UniqueChars(nullptr);
-            if (!fragments.append(formatPhaseTimes(slices[i].phaseTimes)))
-                return UniqueChars(nullptr);
-        }
-    }
-    if (!fragments.append(formatTotals()))
-        return UniqueChars(nullptr);
-    if (!fragments.append(formatPhaseTimes(phaseTimes)))
-        return UniqueChars(nullptr);
-
-    return Join(fragments);
+    const char* format =
+"\
+  ---- Totals ----\n\
+    Total Time: %.3fms\n\
+    Max Pause: %.3fms\n\
+";
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
+    JS_snprintf(buffer, sizeof(buffer), format, t(total), t(longest));
+    return make_string_copy(buffer);
 }
 
 char16_t*
@@ -775,7 +775,6 @@ Statistics::Statistics(JSRuntime* rt)
   : runtime(rt),
     startupTime(PRMJ_Now()),
     fp(nullptr),
-    fullFormat(false),
     gcDepth(0),
     nonincrementalReason_(nullptr),
     timedGCStart(0),
@@ -840,36 +839,30 @@ Statistics::Statistics(JSRuntime* rt)
     }
 
     char* env = getenv("MOZ_GCTIMER");
-    if (!env || strcmp(env, "none") == 0) {
-        fp = nullptr;
-        return;
-    }
-
-    if (strcmp(env, "stdout") == 0) {
-        fullFormat = false;
-        fp = stdout;
-    } else if (strcmp(env, "stderr") == 0) {
-        fullFormat = false;
-        fp = stderr;
-    } else {
-        fullFormat = true;
-
-        fp = fopen(env, "a");
-        MOZ_ASSERT(fp);
+    if (env) {
+        if (strcmp(env, "none") == 0) {
+            fp = nullptr;
+        } else if (strcmp(env, "stdout") == 0) {
+            fp = stdout;
+        } else if (strcmp(env, "stderr") == 0) {
+            fp = stderr;
+        } else {
+            fp = fopen(env, "a");
+            if (!fp)
+                MOZ_CRASH("Failed to open MOZ_GCTIMER log file.");
+        }
     }
 }
 
 Statistics::~Statistics()
 {
     if (fp) {
-        if (fullFormat) {
-            StatisticsSerializer ss(StatisticsSerializer::AsText);
-            FormatPhaseTimes(ss, "", phaseTotals);
-            char* msg = ss.finishCString();
-            if (msg) {
-                fprintf(fp, "TOTALS\n%s\n\n-------\n", msg);
-                js_free(msg);
-            }
+        StatisticsSerializer ss(StatisticsSerializer::AsText);
+        FormatPhaseTimes(ss, "", phaseTotals);
+        char* msg = ss.finishCString();
+        if (msg) {
+            fprintf(fp, "TOTALS\n%s\n\n-------\n", msg);
+            js_free(msg);
         }
 
         if (fp != stdout && fp != stderr)
@@ -900,7 +893,7 @@ Statistics::getMaxGCPauseSinceClear()
 }
 
 static int64_t
-SumPhase(Phase phase, int64_t (*times)[PHASE_LIMIT])
+SumPhase(Phase phase, Statistics::PhaseTimeTable times)
 {
     int64_t sum = 0;
     for (size_t i = 0; i < Statistics::MAX_MULTIPARENT_PHASES + 1; i++)
@@ -912,26 +905,11 @@ void
 Statistics::printStats()
 {
     if (aborted) {
-        if (fullFormat)
-            fprintf(fp, "OOM during GC statistics collection. The report is unavailable for this GC.\n");
-        fflush(fp);
-        return;
-    }
-
-    if (fullFormat) {
+        fprintf(fp, "OOM during GC statistics collection. The report is unavailable for this GC.\n");
+    } else {
         UniqueChars msg = formatDetailedMessage();
         if (msg)
             fprintf(fp, "GC(T+%.3fs) %s\n", t(slices[0].start - startupTime) / 1000.0, msg.get());
-    } else {
-        int64_t total, longest;
-        gcDuration(&total, &longest);
-
-        int64_t markTotal = SumPhase(PHASE_MARK, phaseTimes);
-        fprintf(fp, "%f %f %f\n",
-                t(total),
-                t(markTotal),
-                t(phaseTimes[PHASE_DAG_NONE][PHASE_SWEEP]));
-        MOZ_ASSERT(phaseExtra[PHASE_SWEEP].dagSlot == PHASE_DAG_NONE);
     }
     fflush(fp);
 }

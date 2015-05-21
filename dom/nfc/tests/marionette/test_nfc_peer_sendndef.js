@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_TIMEOUT = 30000;
+MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
 let url = "https://www.example.com";
@@ -21,18 +21,17 @@ function sendNDEF(peer) {
     emulator.run(cmd, function(result) {
       is(result.pop(), "OK", "check SNEP PUT result");
       NDEF.compare(ndef, NDEF.parseString(result.pop()));
-      toggleNFC(false).then(runNextTest);
+      deactivateAndWaitForTechLost().then(() => toggleNFC(false)).then(runNextTest);
     });
   }).catch(() => {
     ok(false, "Failed to send NDEF message, error \'" + this.error + "\'");
-    toggleNFC(false).then(runNextTest);
+    deactivateAndWaitForTechLost().then(() => toggleNFC(false)).then(runNextTest);
   });
 }
 
 function handleTechnologyDiscoveredRE0(msg) {
   log("Received \'nfc-manager-tech-discovered\' " + JSON.stringify(msg));
-  is(msg.type, "techDiscovered", "check for correct message type");
-  is(msg.isP2P, "check for \'P2P\' in tech list");
+  ok(msg.peer, "techDiscovered", "check for correct message type");
   sendNDEF(msg.peer);
 }
 
