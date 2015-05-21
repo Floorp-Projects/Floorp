@@ -4001,6 +4001,7 @@ pref("webgl.enable-draft-extensions", false);
 pref("webgl.enable-privileged-extensions", false);
 pref("webgl.bypass-shader-validation", false);
 pref("webgl.enable-prototype-webgl2", false);
+pref("webgl.disable-fail-if-major-performance-caveat", false);
 pref("gl.require-hardware", false);
 
 #ifdef XP_WIN
