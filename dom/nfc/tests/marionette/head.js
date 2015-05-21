@@ -194,20 +194,63 @@ let SNEP = (function() {
 function toggleNFC(enabled) {
   let deferred = Promise.defer();
 
-  let promise;
-  if (enabled) {
-    promise = nfc.startPoll();
-  } else {
-    promise = nfc.powerOff();
-  }
+  // In bug 1109592, nfcd will only run when nfc is enabled.
+  // The way we activate/deactivate nfcd is by using set property "ctl.start" & "ctl.stop".
+  // In emulator it seems sometimes enable/disable NFC too quick will cause nfcd won't starat,
+  // So here we use a simple workaround to delay enable or disable for 100ms, bug 1164786 is
+  // created to track this issue.
+  setTimeout(function() {
+    let promise;
+    if (enabled) {
+      promise = nfc.startPoll();
+    } else {
+      promise = nfc.powerOff();
+    }
 
-  promise.then(() => {
+    promise.then(() => {
+      deferred.resolve();
+    }).catch(() => {
+      ok(false, 'operation failed, error ' + req.error.name);
+      deferred.reject();
+      finish();
+    });
+  }, 100);
+
+  return deferred.promise;
+}
+
+function activateAndwaitForTechDiscovered(re) {
+  let deferred = Promise.defer();
+
+  sysMsgHelper.waitForTechDiscovered(function() {
     deferred.resolve();
-  }).catch(() => {
-    ok(false, 'operation failed, error ' + req.error.name);
-    deferred.reject();
-    finish();
   });
+
+  NCI.activateRE(re);
+
+  return deferred.promise;
+}
+
+function deactivateAndWaitForTechLost() {
+  let deferred = Promise.defer();
+
+  sysMsgHelper.waitForTechLost(function() {
+    deferred.resolve();
+  });
+
+  NCI.deactivate();
+
+  return deferred.promise;
+}
+
+function deactivateAndWaitForPeerLost() {
+  let deferred = Promise.defer();
+
+  nfc.onpeerlost = function() {
+    deferred.resolve();
+  };
+
+  NCI.deactivate();
 
   return deferred.promise;
 }

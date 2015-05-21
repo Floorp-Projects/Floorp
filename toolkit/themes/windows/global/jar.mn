@@ -31,7 +31,6 @@ toolkit.jar:
 *       skin/classic/global/global.css
         skin/classic/global/globalBindings.xml
         skin/classic/global/groupbox.css
-*       skin/classic/global/inContentUI.css
         skin/classic/global/linkTree.css
 *       skin/classic/global/listbox.css
 *       skin/classic/global/menu.css
@@ -138,7 +137,6 @@ toolkit.jar:
         skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
         skin/classic/global/icons/webapps-16.png                 (icons/webapps-16.png)
         skin/classic/global/icons/webapps-64.png                 (icons/webapps-64.png)
-        skin/classic/global/inContentUI/background-texture.png   (inContentUI/background-texture.png)
         skin/classic/global/media/TopLevelImageDocument.css      (media/TopLevelImageDocument.css)
         skin/classic/global/media/TopLevelVideoDocument.css      (media/TopLevelVideoDocument.css)
         skin/classic/global/media/imagedoc-lightnoise.png        (media/imagedoc-lightnoise.png)
