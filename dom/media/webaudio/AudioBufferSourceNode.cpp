@@ -175,7 +175,7 @@ public:
     if (!mResampler) {
       mChannels = aChannels;
       mResampler = speex_resampler_init(mChannels, mBufferSampleRate, aOutRate,
-                                        SPEEX_RESAMPLER_QUALITY_DEFAULT,
+                                        SPEEX_RESAMPLER_QUALITY_MIN,
                                         nullptr);
     } else {
       uint32_t currentOutSampleRate, currentInSampleRate;
