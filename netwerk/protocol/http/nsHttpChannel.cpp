@@ -4822,6 +4822,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     return rv;
 }
 
+// On error BeginConnect() should call AsyncAbort() before exiting until
+// ContineBeginConnect after that it should not call it.
 nsresult
 nsHttpChannel::BeginConnect()
 {
@@ -4845,12 +4847,17 @@ nsHttpChannel::BeginConnect()
         mURI->GetUsername(mUsername);
     if (NS_SUCCEEDED(rv))
         rv = mURI->GetAsciiSpec(mSpec);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+        AsyncAbort(rv);
         return rv;
+    }
 
     // Reject the URL if it doesn't specify a host
-    if (host.IsEmpty())
-        return NS_ERROR_MALFORMED_URI;
+    if (host.IsEmpty()) {
+        rv = NS_ERROR_MALFORMED_URI;
+        AsyncAbort(rv);
+        return rv;
+    }
     LOG(("host=%s port=%d\n", host.get(), port));
     LOG(("uri=%s\n", mSpec.get()));
 
@@ -4923,8 +4930,10 @@ nsHttpChannel::BeginConnect()
                           &rv);
     if (NS_SUCCEEDED(rv))
         rv = mAuthProvider->Init(this);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+        AsyncAbort(rv);
         return rv;
+    }
 
     // check to see if authorization headers should be included
     mAuthProvider->AddAuthorizationHeaders();
@@ -4935,7 +4944,11 @@ nsHttpChannel::BeginConnect()
     // Check to see if we should redirect this channel elsewhere by
     // nsIHttpChannel.redirectTo API request
     if (mAPIRedirectToURI) {
-        return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
+        rv = AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
+        if (NS_FAILED(rv)) {
+            AsyncAbort(rv);
+        }
+        return rv;
     }
     // Check to see if this principal exists on local blocklists.
     nsRefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier();
@@ -5028,6 +5041,8 @@ nsHttpChannel::BeginConnect()
         mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
     }
     if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
+        // On error ContinueBeginConnect() will call AsyncAbort so do not do it
+        // here
         return ContinueBeginConnect();
     }
     // mLocalBlocklist is true only if tracking protection is enabled and the
@@ -5038,6 +5053,8 @@ nsHttpChannel::BeginConnect()
     if (mCanceled || !mLocalBlocklist) {
        rv = ContinueBeginConnect();
        if (NS_FAILED(rv)) {
+           // On error ContinueBeginConnect() will call AsyncAbort so do not do
+           // it here
            return rv;
        }
        callContinueBeginConnect = false;
@@ -5161,21 +5178,15 @@ nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIChannel *channel,
         LOG(("nsHttpChannel::OnProxyAvailable [this=%p] "
              "Handler no longer active.\n", this));
         rv = NS_ERROR_NOT_AVAILABLE;
+        AsyncAbort(rv);
     }
     else {
+        // On error BeginConnect() will call AsyncAbort.
         rv = BeginConnect();
     }
 
     if (NS_FAILED(rv)) {
         Cancel(rv);
-        // Calling OnStart/OnStop synchronously here would mean doing it before
-        // returning from AsyncOpen which is a contract violation. Do it async.
-        nsRefPtr<nsRunnableMethod<HttpBaseChannel> > event =
-            NS_NewRunnableMethod(this, &nsHttpChannel::DoNotifyListener);
-        rv = NS_DispatchToCurrentThread(event);
-        if (NS_FAILED(rv)) {
-            NS_WARNING("Failed To Dispatch DoNotifyListener");
-        }
     }
     return rv;
 }

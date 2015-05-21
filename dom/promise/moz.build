@@ -35,4 +35,5 @@ FINAL_LIBRARY = 'xul'
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
-BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

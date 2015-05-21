@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menulist Tests"
+        onload="setTimeout(startTest, 0);"
+        onpopupshown="menulistShown()" onpopuphidden="runTest()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<menulist id="menulist1">
+  <menupopup id="menulist-popup1">
+    <menuitem label="One"/>
+    <menuitem label="Two"/>
+    <menuitem label="Three"/>
+    <menuitem label="Four"/>
+    <menuitem label="Five"/>
+    <menuitem label="Six"/>
+    <menuitem label="Seven"/>
+    <menuitem label="Eight"/>
+    <menuitem label="Nine"/>
+    <menuitem label="Ten"/>
+  </menupopup>
+</menulist>
+
+<menulist id="menulist2">
+  <menupopup id="menulist-popup2">
+    <menuitem label="One" disabled="true"/>
+    <menuitem label="Two" selected="true"/>
+    <menuitem label="Three"/>
+    <menuitem label="Four"/>
+    <menuitem label="Five"/>
+    <menuitem label="Six"/>
+    <menuitem label="Seven"/>
+    <menuitem label="Eight"/>
+    <menuitem label="Nine"/>
+    <menuitem label="Ten" disabled="true"/>
+  </menupopup>
+</menulist>
+
+<menulist id="menulist3">
+  <menupopup id="menulist-popup3">
+    <label value="One"/>
+    <menuitem label="Two" selected="true"/>
+    <menuitem label="Three"/>
+    <menuitem label="Four"/>
+    <menuitem label="Five" disabled="true"/>
+    <menuitem label="Six" disabled="true"/>
+    <menuitem label="Seven"/>
+    <menuitem label="Eight"/>
+    <menuitem label="Nine"/>
+    <label value="Ten"/>
+  </menupopup>
+</menulist>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+let test;
+
+// Windows allows disabled items to be selected.
+let isWindows = navigator.platform.indexOf("Win") >= 0;
+
+let tests = [
+  { list: "menulist1", initial: 0, downs: [3, 6, 9, 9],
+                                   ups: [6, 3, 0, 0] },
+  { list: "menulist2", initial: 1, downs: [4, 7, isWindows ? 9 : 8, isWindows ? 9 : 8],
+                                   ups: [isWindows ? 6 : 5, isWindows ? 3 : 2, isWindows ? 0 : 1] },
+  { list: "menulist3", initial: 1, downs: [isWindows ? 4 : 6, isWindows ? 7 : 8, 8],
+                                   ups: [isWindows ? 5 : 3, isWindows ? 2 : 1, 1] }
+];
+
+function startTest()
+{
+  let popup = document.getElementById("menulist-popup1");
+  let menupopupHeight = popup.getBoundingClientRect().height;
+  let menuitemHeight = popup.firstChild.getBoundingClientRect().height;
+
+  // First, set the height of each popup to the height of four menuitems plus
+  // any padding and border on the menupopup.
+  let height = menuitemHeight * 4 + (menupopupHeight - menuitemHeight * 10);
+  popup.height = height;
+  document.getElementById("menulist-popup2").height = height;
+  document.getElementById("menulist-popup3").height = height;
+
+  runTest();
+}
+
+function runTest()
+{
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  test = tests.shift();
+  document.getElementById(test.list).open = true;
+}
+
+function menulistShown()
+{
+  let menulist = document.getElementById(test.list);
+  is(menulist.menuBoxObject.activeChild.label, menulist.getItemAtIndex(test.initial).label, test.list + " initial selection");
+
+  for (let i = 0; i < test.downs.length; i++) {
+    sendKey("PAGE_DOWN");
+    is(menulist.menuBoxObject.activeChild.label, menulist.getItemAtIndex(test.downs[i]).label, test.list + " page down " + i);
+  }
+
+  for (let i = 0; i < test.ups.length; i++) {
+    sendKey("PAGE_UP");
+    is(menulist.menuBoxObject.activeChild.label, menulist.getItemAtIndex(test.ups[i]).label, test.list + " page up " + i);
+  }
+
+  menulist.open = false;
+}
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

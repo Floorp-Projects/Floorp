@@ -207,13 +207,15 @@ public:
   HasMoreElements(bool* aRetvalue) override
   {
     MOZ_ASSERT(aRetvalue);
-    *aRetvalue = mFiles.Length() >= mIndex;
+    *aRetvalue = mIndex < mFiles.Length();
     return NS_OK;
   }
 
   NS_IMETHOD
   GetNext(nsISupports** aSupports) override
   {
+    NS_ENSURE_TRUE(mIndex < mFiles.Length(), NS_ERROR_FAILURE);
+
     nsCOMPtr<nsIDOMBlob> blob = mFiles[mIndex++].get();
     blob.forget(aSupports);
     return NS_OK;
