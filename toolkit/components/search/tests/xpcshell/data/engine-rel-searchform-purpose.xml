@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>engine-rel-searchform-purpose</ShortName>
+<Url type="text/html" method="GET" template="http://www.google.com/search" resultdomain="google.com" rel="searchform">
+  <Param name="q" value="{searchTerms}"/>
+  <!-- Dynamic parameters -->
+  <MozParam name="channel" condition="purpose" purpose="contextmenu" value="rcs"/>
+  <MozParam name="channel" condition="purpose" purpose="keyword" value="fflb"/>
+  <MozParam name="channel" condition="purpose" purpose="searchbar" value="sb"/>
+</Url>
+</SearchPlugin>
