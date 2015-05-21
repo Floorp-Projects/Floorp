@@ -48,7 +48,7 @@ mkdir -p $HOME/artifacts-public
 
 mv $WORKSPACE/B2G/upload-public/$mar_file $HOME/artifacts-public/
 mv $WORKSPACE/B2G/upload/sources.xml $HOME/artifacts/sources.xml
-#mv $WORKSPACE/B2G/upload/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
+mv $WORKSPACE/B2G/upload/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
 mv $WORKSPACE/B2G/upload/b2g-*.android-arm.tar.gz $HOME/artifacts/b2g-android-arm.tar.gz
 mv $WORKSPACE/B2G/upload/${TARGET}.zip $HOME/artifacts/${TARGET}.zip
 mv $WORKSPACE/B2G/upload/gaia.zip $HOME/artifacts/gaia.zip

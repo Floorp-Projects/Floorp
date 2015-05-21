@@ -46,13 +46,13 @@ span {
 
 .test3 {
   grid-template-areas:'. a .';
-  grid-template-columns: (a-start) 20px 20px (a-start-start) 20px (a-start-end);
+  grid-template-columns: [a-start] 20px 20px [a-start-start] 20px [a-start-end];
 }
 .test3 span { grid-column: a-start / 8; }
 
 .test4, .test5 {
   grid-template-areas:'. . . a';
-  grid-template-columns: 20px (a-start) 20px (a-start) 20px (a-end) 20px ;
+  grid-template-columns: 20px [a-start] 20px [a-start] 20px [a-end] 20px ;
 }
 .test4 span { grid-column: a-start 2 / 8; }
 .test5 span { grid-column: a / 8; }

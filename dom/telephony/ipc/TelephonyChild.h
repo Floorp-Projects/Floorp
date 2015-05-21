@@ -35,10 +35,6 @@ protected:
   DeallocPTelephonyRequestChild(PTelephonyRequestChild* aActor) override;
 
   virtual bool
-  RecvNotifyCallError(const uint32_t& aClientId, const int32_t& aCallIndex,
-                      const nsString& aError) override;
-
-  virtual bool
   RecvNotifyCallStateChanged(nsTArray<nsITelephonyCallInfo*>&& aAllInfo) override;
 
   virtual bool
