@@ -24,6 +24,8 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
+const Utils = TelemetryUtils;
+
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryController::";
 
@@ -52,12 +54,11 @@ const TELEMETRY_TEST_DELAY = 100;
 // Timeout after which we consider a ping submission failed.
 const PING_SUBMIT_TIMEOUT_MS = 2 * 60 * 1000;
 
-// We treat pings before midnight as happening "at midnight" with this tolerance.
-const MIDNIGHT_TOLERANCE_MS = 15 * 60 * 1000;
 // For midnight fuzzing we want to affect pings around midnight with this tolerance.
 const MIDNIGHT_TOLERANCE_FUZZ_MS = 5 * 60 * 1000;
 // We try to spread "midnight" pings out over this interval.
 const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * 60 * 1000;
+// We delay sending "midnight" pings on this client by this interval.
 const MIDNIGHT_FUZZING_DELAY_MS = Math.random() * MIDNIGHT_FUZZING_INTERVAL_MS;
 
 // Ping types.
@@ -532,7 +533,16 @@ let Impl = {
    * @return Number The next time (ms from UNIX epoch) when we can send pings.
    */
   _getNextPingSendTime: function(now) {
-    const midnight = TelemetryUtils.getNearestMidnight(now, MIDNIGHT_FUZZING_INTERVAL_MS);
+    // 1. First we check if the time is between 11pm and 1am. If it's not, we send
+    // immediately.
+    // 2. If we confirmed the time is indeed between 11pm and 1am in step 1, we
+    // then check if the time is also 11:55pm or later. If it's not, we send
+    // immediately.
+    // 3. Finally, if the time is between 11:55pm and 1am, we disallow sending
+    // before (midnight + fuzzing delay), which is a random time between 12am-1am
+    // (decided at startup).
+
+    const midnight = Utils.getNearestMidnight(now, MIDNIGHT_FUZZING_INTERVAL_MS);
 
     // Don't delay ping if we are not close to midnight.
     if (!midnight) {

@@ -175,28 +175,6 @@ const BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS = 1;
 // days we will try to create a new one more aggressively.
 const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 3;
 
-// Record the current default search engine in Telemetry.
-function recordDefaultSearchEngine() {
-  let engine;
-  try {
-    engine = Services.search.defaultEngine;
-  } catch (e) {}
-  let name;
-
-  if (!engine) {
-    name = "NONE";
-  } else if (engine.identifier) {
-    name = engine.identifier;
-  } else if (engine.name) {
-    name = "other-" + engine.name;
-  } else {
-    name = "UNDEFINED";
-  }
-
-  let engines = Services.telemetry.getKeyedHistogramById("SEARCH_DEFAULT_ENGINE");
-  engines.add(name, true)
-}
-
 // Factory object
 const BrowserGlueServiceFactory = {
   _instance: null,
@@ -476,14 +454,12 @@ BrowserGlue.prototype = {
           ss.defaultEngine = ss.currentEngine;
         else
           ss.currentEngine = ss.defaultEngine;
-        recordDefaultSearchEngine();
         break;
       case "browser-search-service":
         if (data != "init-complete")
           return;
         Services.obs.removeObserver(this, "browser-search-service");
         this._syncSearchEngines();
-        recordDefaultSearchEngine();
         break;
 #ifdef NIGHTLY_BUILD
       case "nsPref:changed":

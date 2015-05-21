@@ -34,6 +34,7 @@ Structure::
       settings: {
         blocklistEnabled: <bool>, // true on failure
         isDefaultBrowser: <bool>, // null on failure, not available on Android
+        defaultSearchEngine: <string>, // e.g. "yahoo"
         e10sEnabled: <bool>, // false on failure
         telemetryEnabled: <bool>, // false on failure
         locale: <string>, // e.g. "it", null on failure
@@ -189,3 +190,16 @@ Structure::
         persona: <string>, // id of the current persona, null on GONK
       },
     }
+
+Settings
+--------
+
+defaultSearchEngine
+~~~~~~~~~~~~~~~~~~~
+Contains the string identifier or name of the default search engine provider. This will not be present in environment data collected before the Search Service initialization.
+
+The special value ``NONE`` could occur if there is no default search engine.
+
+The special value ``UNDEFINED`` could occur if a default search engine exists but its identifier could not be determined.
+
+This field's contents are ``Services.search.defaultEngine.identifier`` (if defined) or ``"other-"`` + ``Services.search.defaultEngine.name`` if not. In other words, search engines without an ``.identifier`` are prefixed with ``other-``.
