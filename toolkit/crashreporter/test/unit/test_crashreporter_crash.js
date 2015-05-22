@@ -39,11 +39,13 @@ function run_test()
   // check setting some basic data
   do_crash(function() {
              crashReporter.annotateCrashReport("TestKey", "TestValue");
+             crashReporter.annotateCrashReport("\u2665", "\u{1F4A9}");
              crashReporter.appendAppNotesToCrashReport("Junk");
              crashReporter.appendAppNotesToCrashReport("MoreJunk");
            },
            function(mdump, extra) {
              do_check_eq(extra.TestKey, "TestValue");
+             do_check_eq(extra["\u2665"], "\u{1F4A9}");
              do_check_eq(extra.Notes, "JunkMoreJunk");
            });
 }
