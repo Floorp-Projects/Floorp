@@ -33,3 +33,9 @@ DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 17
 # Additional debugging info is exposed in debug builds
 if CONFIG['MOZ_EM_DEBUG']:
     DEFINES['MOZ_EM_DEBUG'] = 1
+
+if CONFIG['MOZ_ADDON_SIGNING']:
+    DEFINES['MOZ_ADDON_SIGNING'] = 1
+
+if CONFIG['MOZ_REQUIRE_SIGNING']:
+    DEFINES['MOZ_REQUIRE_SIGNING'] = 1
