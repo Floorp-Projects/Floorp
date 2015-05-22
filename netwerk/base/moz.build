@@ -144,7 +144,6 @@ EXPORTS += [
     'nsASocketHandler.h',
     'nsAsyncRedirectVerifyHelper.h',
     'nsFileStreams.h',
-    'nsInputStreamPump.h',
     'nsMIMEInputStream.h',
     'nsNetUtil.h',
     'nsReadLine.h',
