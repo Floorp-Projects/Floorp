@@ -39,7 +39,6 @@ public class LoginDoorHanger extends DoorHanger {
     private final TextView mTitle;
     private final TextView mMessage;
     private final TextView mLink;
-    // TODO: Fix callback for pos/neg button.
     private int mCallbackID;
 
     public LoginDoorHanger(Context context, DoorhangerConfig config) {
@@ -63,6 +62,8 @@ public class LoginDoorHanger extends DoorHanger {
     protected void loadConfig(DoorhangerConfig config) {
         setOptions(config.getOptions());
         setMessage(config.getMessage());
+        // Store the positive callback id for nested dialogs that need the same callback id.
+        mCallbackID = config.getPositiveButtonConfig().callback;
         addButtonsToLayout(config);
     }
 
@@ -214,7 +215,7 @@ public class LoginDoorHanger extends DoorHanger {
                             public void onClick(DialogInterface dialog, int which) {
                                 final JSONObject response = new JSONObject();
                                 try {
-                                    response.put("callback", SiteIdentityPopup.ButtonType.COPY.ordinal());
+                                    response.put("callback", mCallbackID);
                                     response.put("password", passwords[which]);
                                 } catch (JSONException e) {
                                     Log.e(LOGTAG, "Error making login select dialog JSON", e);
