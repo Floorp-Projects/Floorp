@@ -93,8 +93,8 @@ MediaOmxCommonDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                                    MediaDecoderEventVisibility::Observable);
     mSeekRequest.DisconnectIfExists();
     mSeekRequest.Begin(mAudioOffloadPlayer->Seek(target)
-      ->RefableThen(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),
-                    &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
+      ->Then(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),
+             &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
   }
   // Call ChangeState() to run AudioOffloadPlayer since offload state enabled
   ChangeState(mPlayState);
@@ -232,8 +232,8 @@ MediaOmxCommonDecoder::CallSeek(const SeekTarget& aTarget)
 
   mSeekRequest.DisconnectIfExists();
   mSeekRequest.Begin(mAudioOffloadPlayer->Seek(aTarget)
-    ->RefableThen(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),
-                  &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
+    ->Then(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),
+           &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
 }
 
 int64_t
