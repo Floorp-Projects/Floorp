@@ -1410,7 +1410,8 @@ MarkupView.prototype = {
     if (!this._queuedChildUpdates) {
       return promise.resolve(undefined);
     }
-    return promise.all([updatePromise for (updatePromise of this._queuedChildUpdates.values())]);
+
+    return promise.all([...this._queuedChildUpdates.values()]);
   },
 
   /**
@@ -2371,7 +2372,10 @@ function TextEditor(aContainer, aNode, aTemplate) {
 }
 
 TextEditor.prototype = {
-  get selected() this._selected,
+  get selected() {
+    return this._selected;
+  },
+
   set selected(aValue) {
     if (aValue === this._selected) {
       return;
