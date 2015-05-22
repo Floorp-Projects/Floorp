@@ -5616,7 +5616,6 @@ RilObject.prototype[REQUEST_VOICE_RADIO_TECH] = function REQUEST_VOICE_RADIO_TEC
   let radioTech = this.context.Buf.readInt32List();
   this._processRadioTech(radioTech[0]);
 };
-RilObject.prototype[REQUEST_GET_CELL_INFO_LIST] = null;
 RilObject.prototype[REQUEST_SET_UNSOL_CELL_INFO_LIST_RATE] = null;
 RilObject.prototype[REQUEST_SET_INITIAL_ATTACH_APN] = null;
 RilObject.prototype[REQUEST_IMS_REGISTRATION_STATE] = null;
