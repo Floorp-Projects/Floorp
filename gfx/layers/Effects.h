@@ -285,8 +285,14 @@ CreateTexturedEffect(TextureSource* aSource,
 {
   MOZ_ASSERT(aSource);
   if (aSourceOnWhite) {
+    if ((aSource->GetFormat() != gfx::SurfaceFormat::R8G8B8X8 &&
+         aSource->GetFormat() != gfx::SurfaceFormat::B8G8R8X8) ||
+        aSource->GetFormat() != aSourceOnWhite->GetFormat()) {
+      printf_stderr("XXXX - source %i - on white %i\n", (int)aSource->GetFormat(), (int)aSourceOnWhite->GetFormat());
+    }
     MOZ_ASSERT(aSource->GetFormat() == gfx::SurfaceFormat::R8G8B8X8 ||
-               aSourceOnWhite->GetFormat() == gfx::SurfaceFormat::B8G8R8X8);
+               aSource->GetFormat() == gfx::SurfaceFormat::B8G8R8X8);
+    MOZ_ASSERT(aSource->GetFormat() == aSourceOnWhite->GetFormat());
     return MakeAndAddRef<EffectComponentAlpha>(aSource, aSourceOnWhite, aFilter);
   }
 
