@@ -6147,8 +6147,10 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
 
   // If there are continued floats, then we may need to continue BR clearance
   if (0 != aState.ClearFloats(0, NS_STYLE_CLEAR_BOTH)) {
-    aState.mFloatBreakType = static_cast<nsBlockFrame*>(GetPrevInFlow())
-                               ->FindTrailingClear();
+    nsBlockFrame* prevBlock = static_cast<nsBlockFrame*>(GetPrevInFlow());
+    if (prevBlock) {
+      aState.mFloatBreakType = prevBlock->FindTrailingClear();
+    }
   }
 }
 
