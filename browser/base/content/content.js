@@ -367,6 +367,12 @@ let ClickEventHandler = {
                  bookmark: false, referrerPolicy: ownerDoc.referrerPolicy };
 
     if (href) {
+      try {
+        BrowserUtils.urlSecurityCheck(href, node.ownerDocument.nodePrincipal);
+      } catch (e) {
+        return;
+      }
+
       json.href = href;
       if (node) {
         json.title = node.getAttribute("title");
