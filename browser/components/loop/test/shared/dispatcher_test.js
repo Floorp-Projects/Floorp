@@ -1,11 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var expect = chai.expect;
-
 describe("loop.Dispatcher", function () {
   "use strict";
 
+  var expect = chai.expect;
   var sharedActions = loop.shared.actions;
   var dispatcher, sandbox;
 

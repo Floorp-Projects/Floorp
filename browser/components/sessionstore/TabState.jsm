@@ -55,8 +55,8 @@ this.TabState = Object.freeze({
     return TabStateInternal.clone(tab);
   },
 
-  copyFromCache: function (tab, tabData, options) {
-    TabStateInternal.copyFromCache(tab, tabData, options);
+  copyFromCache(browser, tabData, options) {
+    TabStateInternal.copyFromCache(browser, tabData, options);
   }
 });
 
@@ -165,43 +165,6 @@ let TabStateInternal = {
     let tabData = {entries: [], lastAccessed: tab.lastAccessed };
     let browser = tab.linkedBrowser;
 
-    if (!browser || !browser.currentURI) {
-      // can happen when calling this function right after .addTab()
-      return tabData;
-    }
-    if (browser.__SS_data) {
-      // Use the data to be restored when the tab hasn't been
-      // completely loaded. We clone the data, since we're updating it
-      // here and the caller may update it further.
-      tabData = Utils.shallowCopy(browser.__SS_data);
-      if (tab.pinned)
-        tabData.pinned = true;
-      else
-        delete tabData.pinned;
-      tabData.hidden = tab.hidden;
-
-      // If __SS_extdata is set then we'll use that since it might be newer.
-      if (tab.__SS_extdata)
-        tabData.extData = tab.__SS_extdata;
-      // If it exists but is empty then a key was likely deleted. In that case just
-      // delete extData.
-      if (tabData.extData && !Object.keys(tabData.extData).length)
-        delete tabData.extData;
-      return tabData;
-    }
-
-    // If there is a userTypedValue set, then either the user has typed something
-    // in the URL bar, or a new tab was opened with a URI to load. userTypedClear
-    // is used to indicate whether the tab was in some sort of loading state with
-    // userTypedValue.
-    if (browser.userTypedValue) {
-      tabData.userTypedValue = browser.userTypedValue;
-      tabData.userTypedClear = browser.userTypedClear;
-    } else {
-      delete tabData.userTypedValue;
-      delete tabData.userTypedClear;
-    }
-
     if (tab.pinned)
       tabData.pinned = true;
     else
@@ -211,10 +174,6 @@ let TabStateInternal = {
     // Save tab attributes.
     tabData.attributes = TabAttributes.get(tab);
 
-    // Store the tab icon.
-    let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
-    tabData.image = tabbrowser.getIcon(tab);
-
     if (tab.__SS_extdata)
       tabData.extData = tab.__SS_extdata;
     else if (tabData.extData)
@@ -222,29 +181,50 @@ let TabStateInternal = {
 
     // Copy data from the tab state cache only if the tab has fully finished
     // restoring. We don't want to overwrite data contained in __SS_data.
-    this.copyFromCache(tab, tabData, options);
+    this.copyFromCache(browser, tabData, options);
+
+    // After copyFromCache() was called we check for properties that are kept
+    // in the cache only while the tab is pending or restoring. Once that
+    // happened those properties will be removed from the cache and will
+    // be read from the tab/browser every time we collect data.
+
+    // Store the tab icon.
+    if (!("image" in tabData)) {
+      let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
+      tabData.image = tabbrowser.getIcon(tab);
+    }
+
+    // If there is a userTypedValue set, then either the user has typed something
+    // in the URL bar, or a new tab was opened with a URI to load. userTypedClear
+    // is used to indicate whether the tab was in some sort of loading state with
+    // userTypedValue.
+    if (!("userTypedValue" in tabData) && browser.userTypedValue) {
+      tabData.userTypedValue = browser.userTypedValue;
+      tabData.userTypedClear = browser.userTypedClear;
+    }
 
     return tabData;
   },
 
   /**
-   * Copy tab data for the given |tab| from the cache to |tabData|.
+   * Copy data for the given |browser| from the cache to |tabData|.
    *
-   * @param tab (xul:tab)
-   *        The tab belonging to the given |tabData| object.
+   * @param browser (xul:browser)
+   *        The browser belonging to the given |tabData| object.
    * @param tabData (object)
    *        The tab data belonging to the given |tab|.
    * @param options (object)
    *        {includePrivateData: true} to always include private data
    */
-  copyFromCache: function (tab, tabData, options = {}) {
-    let data = TabStateCache.get(tab.linkedBrowser);
+  copyFromCache(browser, tabData, options = {}) {
+    let data = TabStateCache.get(browser);
     if (!data) {
       return;
     }
 
     // The caller may explicitly request to omit privacy checks.
     let includePrivateData = options && options.includePrivateData;
+    let isPinned = tabData.pinned || false;
 
     for (let key of Object.keys(data)) {
       let value = data[key];
@@ -252,9 +232,9 @@ let TabStateInternal = {
       // Filter sensitive data according to the current privacy level.
       if (!includePrivateData) {
         if (key === "storage") {
-          value = PrivacyFilter.filterSessionStorageData(value, tab.pinned);
+          value = PrivacyFilter.filterSessionStorageData(value, isPinned);
         } else if (key === "formdata") {
-          value = PrivacyFilter.filterFormData(value, tab.pinned);
+          value = PrivacyFilter.filterFormData(value, isPinned);
         }
       }
 

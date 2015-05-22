@@ -1,9 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var expect = chai.expect;
-
 describe("loop.store.StandaloneAppStore", function () {
+  var expect = chai.expect;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
   var sandbox, dispatcher;

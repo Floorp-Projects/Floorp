@@ -53,14 +53,6 @@ add_task(function* setup_server() {
     res.finish();
   });
 
-  function returnRoomDetails(res, roomName) {
-    roomDetail.roomName = roomName;
-    res.setStatusLine(null, 200, "OK");
-    res.write(JSON.stringify(roomDetail));
-    res.processAsync();
-    res.finish();
-  }
-
   function getJSONData(body) {
     return JSON.parse(CommonUtils.readBytesFromInputStream(body));
   }

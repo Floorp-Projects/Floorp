@@ -11,6 +11,9 @@ const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
             .getService(Ci.mozIJSSubScriptLoader);
 let EventUtils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
+devtools.lazyGetter(this, "nsIProfilerModule", () => {
+  return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
+});
 
 addMessageListener("devtools:test:history", function ({ data }) {
   content.history[data.direction]();
@@ -102,6 +105,15 @@ addMessageListener("devtools:test:xhr", Task.async(function* ({ data }) {
 
   sendAsyncMessage("devtools:test:xhr", responses);
 }));
+
+addMessageListener("devtools:test:profiler", function ({ data: { method, args, id }}) {
+  let result = nsIProfilerModule[method](...args);
+  sendAsyncMessage("devtools:test:profiler:response", {
+    data: result,
+    id: id
+  });
+});
+
 
 // To eval in content, look at `evalInDebuggee` in the head.js of canvasdebugger
 // for an example.

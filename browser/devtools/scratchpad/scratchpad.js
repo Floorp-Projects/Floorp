@@ -49,6 +49,7 @@ const Telemetry = require("devtools/shared/telemetry");
 const Editor    = require("devtools/sourceeditor/editor");
 const TargetFactory = require("devtools/framework/target").TargetFactory;
 const EventEmitter = require("devtools/toolkit/event-emitter");
+const {DevToolsWorker} = require("devtools/toolkit/shared/worker");
 
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -650,12 +651,11 @@ var Scratchpad = {
    */
   get prettyPrintWorker() {
     if (!this._prettyPrintWorker) {
-      this._prettyPrintWorker = new ChromeWorker(
-        "resource://gre/modules/devtools/server/actors/pretty-print-worker.js");
-
-      this._prettyPrintWorker.addEventListener("error", ({ message, filename, lineno }) => {
-        DevToolsUtils.reportException(message + " @ " + filename + ":" + lineno);
-      }, false);
+      this._prettyPrintWorker = new DevToolsWorker(
+        "resource://gre/modules/devtools/server/actors/pretty-print-worker.js",
+        { name: 'pretty-print',
+          verbose: DevToolsUtils.dumpn.wantLogging }
+      );
     }
     return this._prettyPrintWorker;
   },
@@ -670,34 +670,17 @@ var Scratchpad = {
   prettyPrint: function SP_prettyPrint() {
     const uglyText = this.getText();
     const tabsize = Services.prefs.getIntPref(TAB_SIZE);
-    const id = Math.random();
-    const deferred = promise.defer();
 
-    const onReply = ({ data }) => {
-      if (data.id !== id) {
-        return;
-      }
-      this.prettyPrintWorker.removeEventListener("message", onReply, false);
-
-      if (data.error) {
-        let errorString = DevToolsUtils.safeErrorString(data.error);
-        this.writeAsErrorComment({ exception: errorString });
-        deferred.reject(errorString);
-      } else {
-        this.editor.setText(data.code);
-        deferred.resolve(data.code);
-      }
-    };
-
-    this.prettyPrintWorker.addEventListener("message", onReply, false);
-    this.prettyPrintWorker.postMessage({
-      id: id,
+    return this.prettyPrintWorker.performTask("pretty-print", {
       url: "(scratchpad)",
       indent: tabsize,
       source: uglyText
+    }).then(data => {
+      this.editor.setText(data.code);
+    }).then(null, error => {
+      this.writeAsErrorComment({ exception: error });
+      throw error;
     });
-
-    return deferred.promise;
   },
 
   /**
@@ -1825,7 +1808,7 @@ var Scratchpad = {
     }
 
     if (this._prettyPrintWorker) {
-      this._prettyPrintWorker.terminate();
+      this._prettyPrintWorker.destroy();
       this._prettyPrintWorker = null;
     }
 

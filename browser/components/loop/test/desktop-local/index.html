@@ -82,7 +82,7 @@
 
     describe("Uncaught Error Check", function() {
       it("should load the tests without errors", function() {
-        expect(uncaughtError && uncaughtError.message).to.be.undefined;
+        chai.expect(uncaughtError && uncaughtError.message).to.be.undefined;
       });
     });
 
