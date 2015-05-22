@@ -21,8 +21,14 @@ import android.widget.ImageView;
  * Special version of ImageView for favicons.
  * Displays solid colour background around Favicon to fill space not occupied by the icon. Colour
  * selected is the dominant colour of the provided Favicon.
+ *
+ * The default favicon can be overridden by both passing a drawable to the
+ * gecko:defaultFaviconDrawable and a String to gecko:defaultFaviconKey. The String should be a
+ * unique identifier to each image - it is automatically namespaced by prepending the class name to
+ * the given value.
  */
 public class FaviconView extends ImageView {
+    // These values will be used unless overridden by the gecko:defaultFavicon* attributes (see class comment).
     private static String DEFAULT_FAVICON_KEY = "DefaultFavicon";
     private static int DEFAULT_FAVICON_RES_ID = R.drawable.favicon_globe;
 
