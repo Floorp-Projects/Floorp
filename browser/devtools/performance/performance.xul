@@ -174,10 +174,12 @@
                   <toolbarbutton class="devtools-toolbarbutton record-button"
                                  label="&profilerUI.stopRecording;" />
                 </hbox>
-                <label class="realtime-disabled-message"
-                       value="Realtime recording data disabled on non-multiprocess Firefox."/>
-                <label class="realtime-disabled-on-e10s-message"
-                       value="Enable multiprocess Firefox in preferences for rendering recording data in realtime."/>
+                <label class="realtime-disabled-message">
+                  Realtime recording data disabled on non-multiprocess Firefox.
+                </label>
+                <label class="realtime-disabled-on-e10s-message">
+                  Enable multiprocess Firefox in preferences for rendering recording data in realtime.
+                </label>
                 <label class="buffer-status-message"
                        tooltiptext="&profilerUI.bufferStatusTooltip;"/>
                 <label class="buffer-status-message-full"
@@ -200,10 +202,12 @@
                       <label class="console-profile-command" />
                       <label value="&profilerUI.console.stopCommandEnd;" />
                     </hbox>
-                    <label class="realtime-disabled-message"
-                           value="Realtime recording data disabled on non-multiprocess Firefox."/>
-                    <label class="realtime-disabled-on-e10s-message"
-                           value="Enable multiprocess Firefox in preferences for rendering recording data in realtime."/>
+                    <label class="realtime-disabled-message">
+                      Realtime recording data disabled on non-multiprocess Firefox.
+                    </label>
+                    <label class="realtime-disabled-on-e10s-message">
+                      Enable multiprocess Firefox in preferences for rendering recording data in realtime.
+                    </label>
                     <label class="buffer-status-message"
                            tooltiptext="&profilerUI.bufferStatusTooltip;"/>
                     <label class="buffer-status-message-full"
