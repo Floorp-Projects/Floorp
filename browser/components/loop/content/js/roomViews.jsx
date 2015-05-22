@@ -665,6 +665,7 @@ loop.roomViews = (function(mozL10n) {
         default: {
           return (
             <div className="room-conversation-wrapper">
+              <sharedViews.TextChatView dispatcher={this.props.dispatcher} />
               <DesktopRoomInvitationView
                 dispatcher={this.props.dispatcher}
                 error={this.state.error}

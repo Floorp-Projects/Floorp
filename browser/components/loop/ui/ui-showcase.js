@@ -76,6 +76,8 @@
 
   loop.shared.mixins.setRootObject(rootObject);
 
+  var dispatcher = new loop.Dispatcher();
+
   // Feedback API client configured to send data to the stage input server,
   // which is available at https://input.allizom.org
   var stageFeedbackApiClient = new loop.FeedbackAPIClient(
@@ -84,9 +86,14 @@
     }
   );
 
-  var mockSDK = _.extend({}, Backbone.Events);
+  var mockSDK = _.extend({
+    sendTextChatMessage: function(message) {
+      dispatcher.dispatch(new loop.shared.actions.ReceivedTextChatMessage({
+        message: message
+      }));
+    }
+  }, Backbone.Events);
 
-  var dispatcher = new loop.Dispatcher();
   var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
     mozLoop: navigator.mozLoop,
     sdkDriver: mockSDK
@@ -102,10 +109,19 @@
     mozLoop: navigator.mozLoop,
     sdkDriver: mockSDK
   });
+  var textChatStore = new loop.store.TextChatStore(dispatcher, {
+    sdkDriver: mockSDK
+  });
+
+  textChatStore.setStoreState({
+    // XXX Disabled until we start sorting out some of the layouts.
+    textChatEnabled: false
+  });
 
   loop.store.StoreMixin.register({
     conversationStore: conversationStore,
-    feedbackStore: feedbackStore
+    feedbackStore: feedbackStore,
+    textChatStore: textChatStore
   });
 
   // Local mocks
