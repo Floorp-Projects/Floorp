@@ -20,20 +20,20 @@ describe("loop.shared.utils", function() {
 
   describe("#getUnsupportedPlatform", function() {
     it("should detect iOS", function() {
-      expect(sharedUtils.getUnsupportedPlatform("iPad")).eql('ios');
-      expect(sharedUtils.getUnsupportedPlatform("iPod")).eql('ios');
-      expect(sharedUtils.getUnsupportedPlatform("iPhone")).eql('ios');
-      expect(sharedUtils.getUnsupportedPlatform("iPhone Simulator")).eql('ios');
+      expect(sharedUtils.getUnsupportedPlatform("iPad")).eql("ios");
+      expect(sharedUtils.getUnsupportedPlatform("iPod")).eql("ios");
+      expect(sharedUtils.getUnsupportedPlatform("iPhone")).eql("ios");
+      expect(sharedUtils.getUnsupportedPlatform("iPhone Simulator")).eql("ios");
     });
 
     it("should detect Windows Phone", function() {
       expect(sharedUtils.getUnsupportedPlatform("Windows Phone"))
-        .eql('windows_phone');
+        .eql("windows_phone");
     });
 
     it("should detect BlackBerry", function() {
       expect(sharedUtils.getUnsupportedPlatform("BlackBerry"))
-        .eql('blackberry');
+        .eql("blackberry");
     });
 
     it("shouldn't detect other platforms", function() {

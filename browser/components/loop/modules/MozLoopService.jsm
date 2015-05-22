@@ -752,7 +752,7 @@ let MozLoopServiceInternal = {
   stageForTelemetryUpload: function(window, pc) {
     window.WebrtcGlobalInformation.getAllStats(allStats => {
       let internalFormat = allStats.reports[0]; // filtered on pc.id
-      window.WebrtcGlobalInformation.getLogging('', logs => {
+      window.WebrtcGlobalInformation.getLogging("", logs => {
         let report = convertToRTCStatsReport(internalFormat);
         let logStr = "";
         logs.forEach(s => { logStr += s + "\n"; });
