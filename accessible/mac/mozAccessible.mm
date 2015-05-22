@@ -65,7 +65,7 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ((self = [super init])) {
-    mGeckoAccessible = geckoAccessible;
+    mGeckoAccessible = reinterpret_cast<uintptr_t>(geckoAccessible);
     mRole = geckoAccessible->Role();
   }
    
@@ -86,7 +86,11 @@ GetClosestInterestingAccessible(id anObject)
 
 - (mozilla::a11y::AccessibleWrap*)getGeckoAccessible
 {
-  return mGeckoAccessible;
+  // Check if mGeckoAccessible points at a proxy
+  if (mGeckoAccessible & IS_PROXY)
+    return nil;
+
+  return reinterpret_cast<AccessibleWrap*>(mGeckoAccessible);
 }
  
 #pragma mark -
@@ -236,7 +240,6 @@ GetClosestInterestingAccessible(id anObject)
 - (id)accessibilityHitTest:(NSPoint)point
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-
   if (!accWrap)
     return nil;
 
@@ -282,7 +285,6 @@ GetClosestInterestingAccessible(id anObject)
 - (id)accessibilityFocusedUIElement
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-
   if (!accWrap)
     return nil;
   
@@ -304,7 +306,6 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-
   Accessible* accessibleParent = accWrap->GetUnignoredParent();
   if (accessibleParent) {
     id nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
@@ -348,7 +349,6 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-
   if (mChildren || !accWrap->AreChildrenCached())
     return mChildren;
 
@@ -408,7 +408,6 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-
   if (!accWrap)
     return nil;
 
@@ -669,7 +668,7 @@ struct RoleDescrComparator
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  AccessibleWrap* accWrap = static_cast<AccessibleWrap*>([self getGeckoAccessible]);
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
 
   // Get a pointer to the native window (NSWindow) we reside in.
   NSWindow *nativeWindow = nil;
@@ -711,7 +710,7 @@ struct RoleDescrComparator
 
   [self invalidateChildren];
 
-  mGeckoAccessible = nullptr;
+  mGeckoAccessible = 0;
   
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
