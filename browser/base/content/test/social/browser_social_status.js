@@ -183,7 +183,7 @@ var tests = {
       let panel = document.getElementById("social-notification-panel");
       ensureEventFired(panel, "popupshown").then(() => {
         ensureFrameLoaded(frame).then(() => {
-          is(frame.contentDocument.location.href.indexOf("about:socialerror?"), 0, "social error page is showing "+frame.contentDocument.location.href);
+          is(frame.contentDocument.documentURI.indexOf("about:socialerror?mode=tryAgainOnly"), 0, "social error page is showing "+frame.contentDocument.documentURI);
           panel.hidePopup();
           goOnline().then(next);
         });
