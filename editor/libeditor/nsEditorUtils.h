@@ -173,24 +173,26 @@ class nsBoolDomIterFunctor
 class MOZ_STACK_CLASS nsDOMIterator
 {
   public:
-    explicit nsDOMIterator(nsRange& aRange);
+    nsDOMIterator();
+
     explicit nsDOMIterator(nsINode& aNode);
     virtual ~nsDOMIterator();
+
+    nsresult Init(nsRange& aRange);
 
     void AppendList(const nsBoolDomIterFunctor& functor,
                     nsTArray<mozilla::dom::OwningNonNull<nsINode>>& arrayOfNodes) const;
   protected:
     nsCOMPtr<nsIContentIterator> mIter;
-
-    // For nsDOMSubtreeIterator
-    nsDOMIterator();
 };
 
 class MOZ_STACK_CLASS nsDOMSubtreeIterator : public nsDOMIterator
 {
   public:
-    explicit nsDOMSubtreeIterator(nsRange& aRange);
+    nsDOMSubtreeIterator();
     virtual ~nsDOMSubtreeIterator();
+
+    nsresult Init(nsRange& aRange);
 };
 
 class nsTrivialFunctor : public nsBoolDomIterFunctor
