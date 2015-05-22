@@ -145,6 +145,7 @@ function run() {
   //
   $("ltr").focus();
   sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
   isAt("l1", 0, "l1", 0, "test 6a");
   sel.modify("Move", "Left", "Character");
   isAt("l1", 1, "l1", 1, "test 6b");
@@ -156,6 +157,7 @@ function run() {
   isAt("l1", 1, "l1", 0, "test 6e");
 
   sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
   sel.modify("move", "left", "character");
   sel.modify("extend", "right", "Word");
   isAt("l1", 1, "l1", 3, "test 7a");
@@ -169,6 +171,7 @@ function run() {
   isAt("l1", 3, "l1", 3, "test 7e");
 
   sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
   sel.modify("extend", "left", "lineboundary");
   isAt("l1", 0, "l1", 3, "test 8a");
   sel.modify("move", "forward", "lineboundary");
@@ -183,6 +186,7 @@ function run() {
   // Put the cursor at the left edge of the first line so that when we go up
   // and down, where we end up doesn't depend on how the characters line up.
   sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
   sel.modify("move", "left", "lineboundary");
   isAt("l1", 3, "l1", 3, "test 9a");
   sel.modify("move", "forward", "Line");
@@ -195,6 +199,7 @@ function run() {
 
   // Same test as above, now with absolute directions.
   sel.collapse($("l1"), 0);
+  SpecialPowers.wrap(sel).caretBidiLevel = 1;
   sel.modify("move", "left", "lineboundary");
   isAt("l1", 3, "l1", 3, "test 10a");
   sel.modify("move", "right", "line");
