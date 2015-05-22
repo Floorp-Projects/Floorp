@@ -51,8 +51,8 @@ export TINDERBOX_OUTPUT=1
 export LIBRARY_PATH=$LIBRARY_PATH:$WORKSPACE/src/obj-firefox:$WORKSPACE/src/gcc/lib64
 
 # test required parameters are supplied
-test ${MOZHARNESS_SCRIPT}
-test ${MOZHARNESS_CONFIG}
+if [[ -z ${MOZHARNESS_SCRIPT} ]]; then exit 1; fi
+if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
 
 cleanup() {
     [ -n "$xvfb_pid" ] && kill $xvfb_pid
@@ -125,8 +125,13 @@ set -x
 # entirely effective.
 export TOOLTOOL_CACHE
 
-./${MOZHARNESS_SCRIPT} \
-  --config ${MOZHARNESS_CONFIG} \
+# support multiple, space delimited, config files
+config_cmds=""
+for cfg in $MOZHARNESS_CONFIG; do
+  config_cmds="${config_cmds} --config ${cfg}"
+done
+
+./${MOZHARNESS_SCRIPT} ${config_cmds} \
   $debug_flag \
   $custom_build_variant_cfg_flag \
   --disable-mock \
