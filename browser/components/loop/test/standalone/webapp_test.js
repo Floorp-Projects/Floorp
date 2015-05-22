@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global loop, sinon */
-
-var expect = chai.expect;
-var TestUtils = React.addons.TestUtils;
-
 describe("loop.webapp", function() {
   "use strict";
 
+  var expect = chai.expect;
+  var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
   var sharedModels = loop.shared.models,
       sharedViews = loop.shared.views,

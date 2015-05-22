@@ -351,7 +351,7 @@ const mockDb = {
     callback(null);
   },
   promise: function(method, ...params) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       this[method](...params, (err, res) => err ? reject(err) : resolve(res));
     });
   }

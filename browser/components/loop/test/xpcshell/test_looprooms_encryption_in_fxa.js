@@ -126,7 +126,9 @@ add_task(function* setup_server() {
   });
 
   function returnRoomDetails(res, roomName) {
-    roomDetail.roomName = roomName;
+    var roomDetail = {
+      roomName: roomName
+    };
     res.setStatusLine(null, 200, "OK");
     res.write(JSON.stringify(roomDetail));
     res.processAsync();

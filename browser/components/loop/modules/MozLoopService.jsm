@@ -190,7 +190,6 @@ let MozLoopServiceInternal = {
       // Default to 5 seconds
       return 5000;
     }
-    return initialDelay;
   },
 
   /**
