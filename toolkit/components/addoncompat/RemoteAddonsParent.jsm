@@ -259,14 +259,7 @@ let AboutProtocolParent = {
     let securityFlags = msg.data.securityFlags;
     let contentPolicyType = msg.data.contentPolicyType;
     try {
-      let channel = NetUtil.newChannel2(uri,
-                                        null,
-                                        null,
-                                        null,  // aLoadingNode
-                                        loadingPrincipal,
-                                        null,  // aTriggeringPrincipal
-                                        securityFlags,
-                                        contentPolicyType);
+      let channel = NetUtil.newChannel({uri, loadingPrincipal, securityFlags, contentPolicyType});
 
       // We're not allowed to set channel.notificationCallbacks to a
       // CPOW, since the setter for notificationCallbacks is in C++,
