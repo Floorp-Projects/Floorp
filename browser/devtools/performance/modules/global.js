@@ -3,10 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
-loader.lazyRequireGetter(this, "ViewHelpers",
-  "resource:///modules/devtools/ViewHelpers.jsm", true);
-loader.lazyRequireGetter(this, "Services");
+const { Cc, Ci, Cu, Cr } = require("chrome");
+const { ViewHelpers } = require("resource:///modules/devtools/ViewHelpers.jsm");
 
 // String used to fill in platform data when it should be hidden.
 const GECKO_SYMBOL = "(Gecko)";

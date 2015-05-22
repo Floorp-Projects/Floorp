@@ -36,7 +36,7 @@ const CHROME_LOCATIONS = [
 ].map(argify);
 
 function test() {
-  const { isContent, parseLocation } = devtools.require("devtools/shared/profiler/frame-utils");
+  const { isContent, parseLocation } = devtools.require("devtools/performance/frame-utils");
 
   for (let frame of CONTENT_LOCATIONS) {
     ok(isContent.apply(null, frameify(frame)), `${frame[0]} should be considered a content frame.`);

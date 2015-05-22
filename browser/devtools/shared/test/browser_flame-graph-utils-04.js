@@ -5,7 +5,7 @@
 
 let {FlameGraphUtils} = devtools.require("devtools/shared/widgets/FlameGraph");
 let {PALLETTE_SIZE} = devtools.require("devtools/shared/widgets/FlameGraph");
-let {FrameNode} = devtools.require("devtools/shared/profiler/tree-model");
+let {FrameNode} = devtools.require("devtools/performance/tree-model");
 
 add_task(function*() {
   yield promiseTab("about:blank");

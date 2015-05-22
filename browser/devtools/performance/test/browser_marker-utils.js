@@ -6,8 +6,8 @@
  */
 
 function spawnTest () {
-  let { TIMELINE_BLUEPRINT } = devtools.require("devtools/shared/timeline/global");
-  let Utils = devtools.require("devtools/shared/timeline/marker-utils");
+  let { TIMELINE_BLUEPRINT } = devtools.require("devtools/performance/global");
+  let Utils = devtools.require("devtools/performance/marker-utils");
 
   Services.prefs.setBoolPref(PLATFORM_DATA_PREF, false);
 

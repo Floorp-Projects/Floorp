@@ -9,6 +9,7 @@
 let PerformanceView = {
 
   _state: null,
+
   // Set to true if the front emits a "buffer-status" event, indicating
   // that the server has support for determining buffer status.
   _bufferStatusSupported: false,

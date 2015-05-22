@@ -3,22 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+const { Cc, Ci, Cu, Cr } = require("chrome");
 
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/shared/profiler/global", true);
+  "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
-  "devtools/shared/profiler/global", true);
+  "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "CATEGORIES",
-  "devtools/shared/profiler/global", true);
+  "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "CATEGORY_JIT",
-  "devtools/shared/profiler/global", true);
+  "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "CATEGORY_OTHER",
-  "devtools/shared/profiler/global", true);
+  "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "JITOptimizations",
-  "devtools/shared/profiler/jit", true);
+  "devtools/performance/jit", true);
 loader.lazyRequireGetter(this, "FrameUtils",
-  "devtools/shared/profiler/frame-utils");
+  "devtools/performance/frame-utils");
 
 exports.ThreadNode = ThreadNode;
 exports.FrameNode = FrameNode;

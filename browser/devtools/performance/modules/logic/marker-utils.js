@@ -9,9 +9,9 @@
  */
 
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/shared/timeline/global", true);
+  "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/shared/timeline/global", true);
+  "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "WebConsoleUtils",
   "devtools/toolkit/webconsole/utils");
 
