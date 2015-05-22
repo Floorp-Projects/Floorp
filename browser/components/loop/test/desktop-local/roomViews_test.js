@@ -1,10 +1,13 @@
-var expect = chai.expect;
-
-/* jshint newcap:false */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 describe("loop.roomViews", function () {
   "use strict";
 
+  var expect = chai.expect;
+  var TestUtils = React.addons.TestUtils;
+  var sharedActions = loop.shared.actions;
+  var sharedUtils = loop.shared.utils;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 

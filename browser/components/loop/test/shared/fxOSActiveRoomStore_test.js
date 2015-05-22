@@ -1,13 +1,12 @@
-/* global chai, loop */
-
-var expect = chai.expect;
-var sharedActions = loop.shared.actions;
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 describe("loop.store.FxOSActiveRoomStore", function () {
   "use strict";
 
   var ROOM_STATES = loop.store.ROOM_STATES;
-
+  var expect = chai.expect;
+  var sharedActions = loop.shared.actions;
   var sandbox;
   var dispatcher;
   var fakeMozLoop;

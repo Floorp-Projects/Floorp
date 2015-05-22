@@ -1,11 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var expect = chai.expect;
-
 describe("loop.conversationViews", function () {
   "use strict";
 
+  var expect = chai.expect;
+  var TestUtils = React.addons.TestUtils;
+  var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
   var sharedView = loop.shared.views;
   var sandbox, view, dispatcher, contact, fakeAudioXHR;

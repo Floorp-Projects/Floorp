@@ -1,11 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var expect = chai.expect;
-
 describe("loop.store.ConversationStore", function () {
   "use strict";
 
+  var expect = chai.expect;
   var CALL_STATES = loop.store.CALL_STATES;
   var WS_STATES = loop.store.WS_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
