@@ -615,7 +615,7 @@ function DataChannelWrapper(dataChannel, peerConnectionWrapper) {
       is(this.readyState, "open", "data channel is 'open' after 'onopen'");
       resolve(this);
     };
-  }), 60000, "channel didn't open in time");
+  }), 180000, "channel didn't open in time");
 }
 
 DataChannelWrapper.prototype = {

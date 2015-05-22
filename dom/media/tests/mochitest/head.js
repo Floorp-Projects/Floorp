@@ -135,6 +135,8 @@ function setupEnvironment() {
       ['media.peerconnection.enabled', true],
       ['media.peerconnection.identity.enabled', true],
       ['media.peerconnection.identity.timeout', 12000],
+      ['media.peerconnection.ice.stun_client_maximum_transmits', 14],
+      ['media.peerconnection.ice.trickle_grace_period', 30000],
       ['media.navigator.permission.disabled', true],
       ['media.getusermedia.screensharing.enabled', true],
       ['media.getusermedia.screensharing.allowed_domains', "mochi.test"]
