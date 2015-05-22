@@ -70,6 +70,15 @@ enum State {
     COMPACT
 };
 
+// Map from base trace type to the trace kind.
+template <typename T> struct MapTypeToTraceKind {};
+#define EXPAND_DEF(name, type, _) \
+    template <> struct MapTypeToTraceKind<type> { \
+        static const JS::TraceKind kind = JS::TraceKind::name; \
+    };
+FOR_EACH_GC_LAYOUT(EXPAND_DEF);
+#undef EXPAND_DEF
+
 /* Map from C++ type to alloc kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
 template <typename T> struct MapTypeToFinalizeKind {};
 template <> struct MapTypeToFinalizeKind<JSScript>          { static const AllocKind kind = AllocKind::SCRIPT; };
@@ -192,28 +201,15 @@ CanBeFinalizedInBackground(AllocKind kind, const Class* clasp)
 #endif
 template <typename F, typename... Args>
 auto
-CallTyped(F f, JSGCTraceKind traceKind, Args&&... args)
+CallTyped(F f, JS::TraceKind traceKind, Args&&... args)
   -> decltype(f. DEPENDENT_TEMPLATE_HINT operator()<JSObject>(mozilla::Forward<Args>(args)...))
 {
     switch (traceKind) {
-      case JSTRACE_OBJECT:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<JSObject>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_SCRIPT:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<JSScript>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_STRING:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<JSString>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_SYMBOL:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<JS::Symbol>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_BASE_SHAPE:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<BaseShape>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_JITCODE:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<jit::JitCode>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_LAZY_SCRIPT:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<LazyScript>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_SHAPE:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<Shape>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_OBJECT_GROUP:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<ObjectGroup>(mozilla::Forward<Args>(args)...);
+#define EXPAND_DEF(name, type, _) \
+      case JS::TraceKind::name: \
+        return f. DEPENDENT_TEMPLATE_HINT operator()<type>(mozilla::Forward<Args>(args)...);
+      FOR_EACH_GC_LAYOUT(EXPAND_DEF);
+#undef EXPAND_DEF
       default:
           MOZ_CRASH("Invalid trace kind in CallTyped.");
     }
@@ -222,28 +218,15 @@ CallTyped(F f, JSGCTraceKind traceKind, Args&&... args)
 
 template <typename F, typename... Args>
 auto
-CallTyped(F f, void* thing, JSGCTraceKind traceKind, Args&&... args)
+CallTyped(F f, void* thing, JS::TraceKind traceKind, Args&&... args)
   -> decltype(f(reinterpret_cast<JSObject*>(0), mozilla::Forward<Args>(args)...))
 {
     switch (traceKind) {
-      case JSTRACE_OBJECT:
-          return f(static_cast<JSObject*>(thing), mozilla::Forward<Args>(args)...);
-      case JSTRACE_SCRIPT:
-          return f(static_cast<JSScript*>(thing), mozilla::Forward<Args>(args)...);
-      case JSTRACE_STRING:
-          return f(static_cast<JSString*>(thing), mozilla::Forward<Args>(args)...);
-      case JSTRACE_SYMBOL:
-          return f(static_cast<JS::Symbol*>(thing), mozilla::Forward<Args>(args)...);
-      case JSTRACE_BASE_SHAPE:
-          return f(static_cast<BaseShape*>(thing), mozilla::Forward<Args>(args)...);
-      case JSTRACE_JITCODE:
-          return f(static_cast<jit::JitCode*>(thing), mozilla::Forward<Args>(args)...);
-      case JSTRACE_LAZY_SCRIPT:
-          return f(static_cast<LazyScript*>(thing), mozilla::Forward<Args>(args)...);
-      case JSTRACE_SHAPE:
-          return f(static_cast<Shape*>(thing), mozilla::Forward<Args>(args)...);
-      case JSTRACE_OBJECT_GROUP:
-          return f(static_cast<ObjectGroup*>(thing), mozilla::Forward<Args>(args)...);
+#define EXPAND_DEF(name, type, _) \
+      case JS::TraceKind::name: \
+          return f(static_cast<type*>(thing), mozilla::Forward<Args>(args)...);
+      FOR_EACH_GC_LAYOUT(EXPAND_DEF);
+#undef EXPAND_DEF
       default:
           MOZ_CRASH("Invalid trace kind in CallTyped.");
     }
@@ -1148,9 +1131,9 @@ typedef HashSet<js::gc::Chunk*, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
 typedef void (*IterateChunkCallback)(JSRuntime* rt, void* data, gc::Chunk* chunk);
 typedef void (*IterateZoneCallback)(JSRuntime* rt, void* data, JS::Zone* zone);
 typedef void (*IterateArenaCallback)(JSRuntime* rt, void* data, gc::Arena* arena,
-                                     JSGCTraceKind traceKind, size_t thingSize);
+                                     JS::TraceKind traceKind, size_t thingSize);
 typedef void (*IterateCellCallback)(JSRuntime* rt, void* data, void* thing,
-                                    JSGCTraceKind traceKind, size_t thingSize);
+                                    JS::TraceKind traceKind, size_t thingSize);
 
 /*
  * This function calls |zoneCallback| on every zone, |compartmentCallback| on

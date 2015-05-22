@@ -2007,7 +2007,7 @@ GCThingIsGrayCCThing(JS::GCCellPtr thing)
 static bool
 ValueIsGrayCCThing(const JS::Value& value)
 {
-    return AddToCCKind(value.gcKind()) &&
+    return AddToCCKind(value.traceKind()) &&
            JS::GCThingIsMarkedGray(value.toGCCellPtr());
 }
 
