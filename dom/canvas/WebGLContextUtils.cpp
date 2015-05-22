@@ -1127,12 +1127,12 @@ WebGLContext::AssertCachedBindings()
     AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, bound);
 
     // Buffers
-    bound = mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0;
+    bound = mBoundArrayBuffer ? mBoundArrayBuffer->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_ARRAY_BUFFER_BINDING, bound);
 
     MOZ_ASSERT(mBoundVertexArray);
     WebGLBuffer* curBuff = mBoundVertexArray->mElementArrayBuffer;
-    bound = curBuff ? curBuff->GLName() : 0;
+    bound = curBuff ? curBuff->mGLName : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING, bound);
 
     MOZ_ASSERT(!GetAndFlushUnderlyingGLErrors());
