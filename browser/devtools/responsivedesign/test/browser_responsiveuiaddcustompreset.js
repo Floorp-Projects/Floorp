@@ -40,7 +40,7 @@ function test() {
     key.doCommand();
   }
 
-  Task.spawn(function() {
+  Task.spawn(function*() {
 
     yield addTab("data:text/html;charset=utf8,test custom presets in responsive mode");
 

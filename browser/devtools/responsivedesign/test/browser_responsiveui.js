@@ -6,7 +6,7 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Protocol error (unknownError): 
 function test() {
   waitForExplicitFinish();
   SimpleTest.requestCompleteLog();
-  Task.spawn(function() {
+  Task.spawn(function*() {
 
     function extractSizeFromString(str) {
       let numbers = str.match(/(\d+)[^\d]*(\d+)/);

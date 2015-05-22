@@ -89,7 +89,7 @@ const TEST_URL = "data:text/html," +
   "<!DOCTYPE html>" +
   "<head><meta charset='utf-8' /></head>" +
   "<body>" +
-  [outer.oldHTML for (outer of TEST_DATA)].join("\n") +
+  TEST_DATA.map(outer => outer.oldHTML).join("\n") +
   "</body>" +
   "</html>";
 
