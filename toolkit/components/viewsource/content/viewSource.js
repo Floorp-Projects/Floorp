@@ -52,6 +52,13 @@ ViewSourceChrome.prototype = {
   },
 
   /**
+   * Holds the value of the last line found via the "Go to line"
+   * command, to pre-populate the prompt the next time it is
+   * opened.
+   */
+  lastLineFound: null,
+
+  /**
    * The context menu, when opened from the content process, sends
    * up a chunk of serialized data describing the items that the
    * context menu is being opened on. This allows us to avoid using
@@ -70,6 +77,8 @@ ViewSourceChrome.prototype = {
     "ViewSource:SourceUnloaded",
     "ViewSource:Close",
     "ViewSource:OpenURL",
+    "ViewSource:GoToLine:Success",
+    "ViewSource:GoToLine:Failed",
     "ViewSource:UpdateStatus",
     "ViewSource:ContextMenuOpening",
   ]),
@@ -121,17 +130,6 @@ ViewSourceChrome.prototype = {
     let data = message.data;
 
     switch(message.name) {
-      // Begin messages from super class
-      case "ViewSource:PromptAndGoToLine":
-        this.promptAndGoToLine();
-        break;
-      case "ViewSource:GoToLine:Success":
-        this.onGoToLineSuccess(data.lineNumber);
-        break;
-      case "ViewSource:GoToLine:Failed":
-        this.onGoToLineFailed();
-        break;
-      // End messages from super class
       case "ViewSource:SourceLoaded":
         this.onSourceLoaded();
         break;
@@ -143,6 +141,12 @@ ViewSourceChrome.prototype = {
         break;
       case "ViewSource:OpenURL":
         this.openURL(data.URL);
+        break;
+      case "ViewSource:GoToLine:Failed":
+        this.onGoToLineFailed();
+        break;
+      case "ViewSource:GoToLine:Success":
+        this.onGoToLineSuccess(data.lineNumber);
         break;
       case "ViewSource:UpdateStatus":
         this.updateStatus(data.label);
@@ -601,6 +605,47 @@ ViewSourceChrome.prototype = {
   },
 
   /**
+   * Opens the "Go to line" prompt for a user to hop to a particular line
+   * of the source code they're viewing. This will keep prompting until the
+   * user either cancels out of the prompt, or enters a valid line number.
+   */
+  promptAndGoToLine() {
+    let input = { value: this.lastLineFound };
+
+    let ok = Services.prompt.prompt(
+        window,
+        gViewSourceBundle.getString("goToLineTitle"),
+        gViewSourceBundle.getString("goToLineText"),
+        input,
+        null,
+        {value:0});
+
+    if (!ok)
+      return;
+
+    let line = parseInt(input.value, 10);
+
+    if (!(line > 0)) {
+      Services.prompt.alert(window,
+                            gViewSourceBundle.getString("invalidInputTitle"),
+                            gViewSourceBundle.getString("invalidInputText"));
+      this.promptAndGoToLine();
+    } else {
+      this.goToLine(line);
+    }
+  },
+
+  /**
+   * Go to a particular line of the source code. This act is asynchronous.
+   *
+   * @param lineNumber
+   *        The line number to try to go to to.
+   */
+  goToLine(lineNumber) {
+    this.sendAsyncMessage("ViewSource:GoToLine", { lineNumber });
+  },
+
+  /**
    * Called when the frame script reports that a line was successfully gotten
    * to.
    *
@@ -608,9 +653,23 @@ ViewSourceChrome.prototype = {
    *        The line number that we successfully got to.
    */
   onGoToLineSuccess(lineNumber) {
-    ViewSourceBrowser.prototype.onGoToLineSuccess.call(this, lineNumber);
+    // We'll pre-populate the "Go to line" prompt with this value the next
+    // time it comes up.
+    this.lastLineFound = lineNumber;
     document.getElementById("statusbar-line-col").label =
       gViewSourceBundle.getFormattedString("statusBarLineCol", [lineNumber, 1]);
+  },
+
+  /**
+   * Called when the frame script reports that we failed to go to a particular
+   * line. This informs the user that their selection was likely out of range,
+   * and then reprompts the user to try again.
+   */
+  onGoToLineFailed() {
+    Services.prompt.alert(window,
+                          gViewSourceBundle.getString("outOfRangeTitle"),
+                          gViewSourceBundle.getString("outOfRangeText"));
+    this.promptAndGoToLine();
   },
 
   /**
@@ -648,7 +707,8 @@ ViewSourceChrome.prototype = {
   toggleSyntaxHighlighting() {
     this.shouldHighlight = !this.shouldHighlight;
     // We can't flip this value in the child, since prefs are read-only there.
-    // We flip it here, and then toggle a class in the child.
+    // We flip it here, and then cause a reload in the child to make the change
+    // occur.
     Services.prefs.setBoolPref("view_source.syntax_highlight",
                                this.shouldHighlight);
     this.sendAsyncMessage("ViewSource:ToggleSyntaxHighlighting");
