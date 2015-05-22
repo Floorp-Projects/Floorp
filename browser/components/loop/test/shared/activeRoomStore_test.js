@@ -619,6 +619,10 @@ describe("loop.store.ActiveRoomStore", function () {
   });
 
   describe("#joinRoom", function() {
+    beforeEach(function() {
+      store.setStoreState({roomState: ROOM_STATES.READY});
+    });
+
     it("should reset failureReason", function() {
       store.setStoreState({failureReason: "Test"});
 
@@ -627,12 +631,32 @@ describe("loop.store.ActiveRoomStore", function () {
       expect(store.getStoreState().failureReason).eql(undefined);
     });
 
-    it("should set the state to MEDIA_WAIT", function() {
-      store.setStoreState({roomState: ROOM_STATES.READY});
+    it("should set the state to MEDIA_WAIT if media devices are present", function() {
+      sandbox.stub(loop.shared.utils, "hasAudioDevices").callsArgWith(0, true);
 
       store.joinRoom();
 
       expect(store.getStoreState().roomState).eql(ROOM_STATES.MEDIA_WAIT);
+    });
+
+    it("should not set the state to MEDIA_WAIT if no media devices are present", function() {
+      sandbox.stub(loop.shared.utils, "hasAudioDevices").callsArgWith(0, false);
+
+      store.joinRoom();
+
+      expect(store.getStoreState().roomState).eql(ROOM_STATES.READY);
+    });
+
+    it("should dispatch `ConnectionFailure` if no media devices are present", function() {
+      sandbox.stub(loop.shared.utils, "hasAudioDevices").callsArgWith(0, false);
+
+      store.joinRoom();
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.ConnectionFailure({
+          reason: FAILURE_DETAILS.NO_MEDIA
+        }));
     });
   });
 
