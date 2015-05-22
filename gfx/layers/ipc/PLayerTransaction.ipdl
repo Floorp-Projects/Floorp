@@ -89,9 +89,6 @@ parent:
   // Useful for testing rendering of async scrolling.
   sync SetAsyncScrollOffset(ViewID id, int32_t x, int32_t y);
 
-  // Flush any pending APZ repaints to the main thread.
-  async FlushApzRepaints();
-
   // Drop any front buffers that might be retained on the compositor
   // side.
   async ClearCachedResources();
