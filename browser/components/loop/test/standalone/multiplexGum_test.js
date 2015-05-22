@@ -2,18 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*global loop, sinon, it, beforeEach, afterEach, describe*/
-
-var expect = chai.expect;
-
 describe("loop.standaloneMedia._MultiplexGum", function() {
   "use strict";
 
+  var expect = chai.expect;
   var defaultGum =
     navigator.getUserMedia ||
     navigator.mozGetUserMedia ||
     navigator.webkitGetUserMedia ||
-    (window.TBPlugin && TBPlugin.getUserMedia);
+    (window.TBPlugin && window.TBPlugin.getUserMedia);
 
   var sandbox;
   var multiplexGum;

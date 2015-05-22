@@ -3,10 +3,6 @@
 
 "use strict";
 
-let tmp = {};
-Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", tmp);
-let {SessionSaver} = tmp;
-
 const URL = ROOT + "browser_454908_sample.html";
 const PASS = "pwd-" + Math.random();
 

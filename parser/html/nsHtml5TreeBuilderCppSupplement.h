@@ -176,16 +176,24 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
           nsString* rel = aAttributes->getValue(nsHtml5AttributeName::ATTR_REL);
           // Not splitting on space here is bogus but the old parser didn't even
           // do a case-insensitive check.
-          if (rel && rel->LowerCaseEqualsASCII("stylesheet")) {
-            nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
-            if (url) {
-              nsString* charset = aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
-              nsString* crossOrigin =
-                aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
-              mSpeculativeLoadQueue.AppendElement()->
-                InitStyle(*url,
-                          (charset) ? *charset : EmptyString(),
-                          (crossOrigin) ? *crossOrigin : NullString());
+          if (rel) {
+            if (rel->LowerCaseEqualsASCII("stylesheet")) {
+              nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
+              if (url) {
+                nsString* charset = aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
+                nsString* crossOrigin =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+                mSpeculativeLoadQueue.AppendElement()->
+                  InitStyle(*url,
+                            (charset) ? *charset : EmptyString(),
+                            (crossOrigin) ? *crossOrigin : NullString());
+              }
+            } else if (rel->LowerCaseEqualsASCII("preconnect")) {
+              nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
+              if (url) {
+                mSpeculativeLoadQueue.AppendElement()->
+                  InitPreconnect(*url);
+              }
             }
           }
         } else if (nsHtml5Atoms::video == aName) {

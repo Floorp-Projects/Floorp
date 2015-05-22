@@ -42,7 +42,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 
 PRLogModuleInfo* gMediaStreamGraphLog;
-#define STREAM_LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
+#define STREAM_LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
 // #define ENABLE_LIFECYCLE_LOG
 
@@ -2523,7 +2523,7 @@ SourceMediaStream::ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSe
       SpeexResamplerState* state = speex_resampler_init(channels,
                                                         aTrackData->mInputRate,
                                                         GraphImpl()->GraphRate(),
-                                                        SPEEX_RESAMPLER_QUALITY_DEFAULT,
+                                                        SPEEX_RESAMPLER_QUALITY_MIN,
                                                         nullptr);
       if (!state) {
         return;

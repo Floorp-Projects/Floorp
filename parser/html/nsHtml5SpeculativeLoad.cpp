@@ -67,6 +67,9 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
                                                intSource);
       }
       break;
+    case eSpeculativeLoadPreconnect:
+      aExecutor->Preconnect(mUrl);
+      break;
     default:
       NS_NOTREACHED("Bogus speculative load.");
       break;

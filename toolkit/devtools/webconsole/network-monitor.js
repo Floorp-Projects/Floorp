@@ -735,6 +735,17 @@ NetworkMonitor.prototype = {
       return true;
     }
 
+    // Ignore requests from chrome or add-on code when we are monitoring
+    // content.
+    // TODO: one particular test (browser_styleeditor_fetch-from-cache.js) needs
+    // the gDevTools.testing check. We will move to a better way to serve its
+    // needs in bug 1167188, where this check should be removed.
+    if (!gDevTools.testing && aChannel.loadInfo &&
+        aChannel.loadInfo.loadingDocument === null &&
+        aChannel.loadInfo.loadingPrincipal === Services.scriptSecurityManager.getSystemPrincipal()) {
+      return false;
+    }
+
     if (this.window) {
       // Since frames support, this.window may not be the top level content
       // frame, so that we can't only compare with win.top.

@@ -167,7 +167,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         if (uri) {
           nsAutoCString uriSpec;
           uri->GetSpec(uriSpec);
-          PR_LOG(gWin32SoundLog, PR_LOG_ALWAYS,
+          MOZ_LOG(gWin32SoundLog, PR_LOG_ALWAYS,
                  ("Failed to load %s\n", uriSpec.get()));
         }
       }
@@ -201,7 +201,7 @@ NS_IMETHODIMP nsSound::Play(nsIURL *aURL)
 #ifdef DEBUG_SOUND
   char *url;
   aURL->GetSpec(&url);
-  PR_LOG(gWin32SoundLog, PR_LOG_ALWAYS,
+  MOZ_LOG(gWin32SoundLog, PR_LOG_ALWAYS,
          ("%s\n", url));
 #endif
 

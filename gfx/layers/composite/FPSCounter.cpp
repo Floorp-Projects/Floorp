@@ -29,6 +29,7 @@ using namespace mozilla::gl;
 
 FPSCounter::FPSCounter(const char* aName)
   : mWriteIndex(0)
+  , mIteratorIndex(-1)
   , mFPSName(aName)
 {
   Init();

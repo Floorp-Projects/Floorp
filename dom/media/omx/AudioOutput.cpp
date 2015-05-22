@@ -20,13 +20,13 @@
 #include <stagefright/foundation/ADebug.h>
 #include "AudioOutput.h"
 
-#include "prlog.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 
 extern PRLogModuleInfo* gAudioOffloadPlayerLog;
 #define AUDIO_OFFLOAD_LOG(type, msg) \
-  PR_LOG(gAudioOffloadPlayerLog, type, msg)
+  MOZ_LOG(gAudioOffloadPlayerLog, type, msg)
 
 using namespace android;
 

@@ -16,6 +16,12 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/Logging.h"
 
+namespace mozilla {
+namespace dom {
+  struct CSP;
+}
+}
+
 /* =============== Logging =================== */
 
 void CSP_LogLocalizedStr(const char16_t* aName,
@@ -58,7 +64,8 @@ void CSP_LogMessage(const nsAString& aMessage,
 
 // these strings map to the CSPDirectives in nsIContentSecurityPolicy
 // NOTE: When implementing a new directive, you will need to add it here but also
-// add a corresponding entry to the constants in nsIContentSecurityPolicy.idl
+// add a corresponding entry to the constants in nsIContentSecurityPolicy.idl and
+// also create an entry for the new directive in nsCSPDirective::toDomCSPStruct().
 static const char* CSPStrDirectives[] = {
   "-error-",    // NO_DIRECTIVE
   "default-src",     // DEFAULT_SRC_DIRECTIVE
@@ -284,6 +291,7 @@ class nsCSPDirective {
     bool permits(nsIURI* aUri) const;
     bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const;
     void toString(nsAString& outStr) const;
+    void toDomCSPStruct(mozilla::dom::CSP& outCSP) const;
 
     inline void addSrcs(const nsTArray<nsCSPBaseSrc*>& aSrcs)
       { mSrcs = aSrcs; }
@@ -325,6 +333,7 @@ class nsCSPPolicy {
     bool allows(nsContentPolicyType aContentType,
                 enum CSPKeyword aKeyword) const;
     void toString(nsAString& outStr) const;
+    void toDomCSPStruct(mozilla::dom::CSP& outCSP) const;
 
     inline void addDirective(nsCSPDirective* aDir)
       { mDirectives.AppendElement(aDir); }

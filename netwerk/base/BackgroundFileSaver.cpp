@@ -34,7 +34,7 @@ namespace net {
 
 // NSPR_LOG_MODULES=BackgroundFileSaver:5
 PRLogModuleInfo *BackgroundFileSaver::prlog = nullptr;
-#define LOG(args) PR_LOG(BackgroundFileSaver::prlog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(BackgroundFileSaver::prlog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(BackgroundFileSaver::prlog, 4)
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,16 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 let state1 = {
   windows: [{
     tabs: [{
-      entries: [{ url: "about:blank#1" }],
+      entries: [{ url: "about:robots#1" }],
       hidden: true,
-      extData: {"tabview-tab": '{"url":"about:blank#1","groupID":1,"bounds":{"left":120,"top":20,"width":20,"height":20}}'}
+      extData: {"tabview-tab": '{"url":"about:robots#1","groupID":1,"bounds":{"left":120,"top":20,"width":20,"height":20}}'}
     },{
-      entries: [{ url: "about:blank#2" }],
+      entries: [{ url: "about:robots#2" }],
       hidden: false,
-      extData: {"tabview-tab": '{"url":"about:blank#2","groupID":2,"bounds":{"left":20,"top":20,"width":20,"height":20}}'},
+      extData: {"tabview-tab": '{"url":"about:robots#2","groupID":2,"bounds":{"left":20,"top":20,"width":20,"height":20}}'},
     }],
     selected: 2,
     extData: {
@@ -24,8 +26,8 @@ let state1 = {
 
 let state2 = {
   windows: [{
-    tabs: [{entries: [{ url: "about:blank#1" }], hidden: true},
-           {entries: [{ url: "about:blank#2" }], hidden: false}],
+    tabs: [{entries: [{ url: "about:robots#1" }], hidden: true},
+           {entries: [{ url: "about:robots#2" }], hidden: false}],
     selected: 2
   }]
 };
@@ -44,8 +46,8 @@ function test() {
       let [group1, group2] = cw.GroupItems.groupItems;
       let [tab1, tab2] = win.gBrowser.tabs;
 
-      checkUrl(group1.getChild(0), "about:blank#1", "tab1 is in first group");
-      checkUrl(group2.getChild(0), "about:blank#2", "tab2 is in second group");
+      checkUrl(group1.getChild(0), "about:robots#1", "tab1 is in first group");
+      checkUrl(group2.getChild(0), "about:robots#2", "tab2 is in second group");
 
       whenWindowStateReady(win, function () {
         let groups = cw.GroupItems.groupItems;

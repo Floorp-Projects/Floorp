@@ -73,7 +73,6 @@
       <li><a href="about:license#apache">Apache License 2.0</a></li>
       <li><a href="about:license#apple">Apple License</a></li>
       <li><a href="about:license#apple-mozilla">Apple/Mozilla NPRuntime License</a></li>
-      <li><a href="about:license#apple-torch">Apple/Torch Mobile License</a></li>
       <li><a href="about:license#arm">ARM License</a></li>
       <li><a href="about:license#backbone">Backbone License</a></li>
       <li><a href="about:license#bspatch">bspatch License</a></li>
@@ -85,8 +84,6 @@
       <li><a href="about:license#dagre-d3">Dagre-D3 License</a></li>
       <li><a href="about:license#dtoa">dtoa License</a></li>
       <li><a href="about:license#hunspell-nl">Dutch Spellchecking Dictionary License</a></li>
-      <li><a href="about:license#edl">Eclipse Distribution License</a></li>
-      <li><a href="about:license#escodegen">Escodegen License</a></li>
       <li><a href="about:license#hunspell-ee">Estonian Spellchecking Dictionary License</a></li>
       <li><a href="about:license#expat">Expat License</a></li>
       <li><a href="about:license#firebug">Firebug License</a></li>
@@ -110,11 +107,9 @@
       <li><a href="about:license#libjingle">libjingle License</a></li>
       <li><a href="about:license#libnestegg">libnestegg License</a></li>
       <li><a href="about:license#libsoundtouch">libsoundtouch License</a></li>
-      <li><a href="about:license#libsrtp">libsrtp License</a></li>
       <li><a href="about:license#libyuv">libyuv License</a></li>
       <li><a href="about:license#hunspell-lt">Lithuanian Spellchecking Dictionary License</a></li>
       <li><a href="about:license#lodash">Lodash License</a></li>
-      <li><a href="about:license#maattachedwindow">MAAttachedWindow License</a></li>
       <li><a href="about:license#myspell">MySpell License</a></li>
       <li><a href="about:license#nicer">nICEr License</a></li>
       <li><a href="about:license#nrappkit">nrappkit License</a></li>
@@ -130,16 +125,13 @@
       <li><a href="about:license#sctp">SCTP Licenses</a></li>
       <li><a href="about:license#skia">Skia License</a></li>
       <li><a href="about:license#snappy">Snappy License</a></li>
-      <li><a href="about:license#sparkle">Sparkle License</a></li>
 #ifdef USE_STLPORT
       <li><a href="about:license#stlport">STLport License</a></li>
 #endif
-      <li><a href="about:license#suitable">Suitable Systems License</a></li>
       <li><a href="about:license#sunsoft">SunSoft License</a></li>
       <li><a href="about:license#superfasthash">SuperFastHash License</a></li>
       <li><a href="about:license#unicode">Unicode License</a></li>
       <li><a href="about:license#ucal">University of California License</a></li>
-      <li><a href="about:license#uszeged">University of Szeged License</a></li>
       <li><a href="about:license#hunspell-en-US">US English Spellchecking Dictionary Licenses</a></li>
       <li><a href="about:license#v8">V8 License</a></li>
       <li><a href="about:license#vtune">VTune License</a></li>
@@ -1352,7 +1344,7 @@ Library.</p>
     <h1><a id="ACE"></a>ACE License</h1>
 
     <p>This license applies to the file
-    <span class="path">media/webrtc/trunk/src/system_wrappers/source/condition_variable_win.cc</span>.</p>
+    <span class="path">media/webrtc/trunk/webrtc/system_wrappers/source/condition_variable_event_win.cc</span>.</p>
 
 <pre>
 ACE(TM), TAO(TM), CIAO(TM), DAnCE(TM), and CoSMIC(TM)
@@ -1750,7 +1742,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <h1><a id="apple"></a>Apple License</h1>
 
-    <p>This license applies to certain files in the directories <span class="path">js/src/assembler/assembler/</span>, <span class="path">js/src/assembler/wtf/</span>, <span class="path">js/src/yarr</span>, <span class="path">dom/media/webaudio/blink</span>, and <span class="path">widget/cocoa</span>.</p>
+    <p>This license applies to certain files in the directories <span class="path">dom/media/webaudio/blink</span>, and <span class="path">widget/cocoa</span>.</p>
 
 <pre>
 Copyright (C) 2008, 2009 Apple Inc. All rights reserved.
@@ -1814,44 +1806,6 @@ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-</pre>
-
-
-    <hr>
-
-    <h1><a id="apple-torch"></a>Apple/Torch Mobile License</h1>
-
-    <p>This license applies to the following files:</p>
-
-    <ul>
-      <li class="path">js/src/assembler/wtf/Assertions.cpp</li>
-      <li class="path">js/src/assembler/wtf/Platform.h</li>
-    </ul>
-
-<pre>
-Copyright (C) 2003, 2006, 2007 Apple Inc.  All rights reserved.
-Copyright (C) 2007-2009 Torch Mobile, Inc.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-1. Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY APPLE COMPUTER, INC. ``AS IS'' AND ANY
-EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE COMPUTER, INC. OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </pre>
 
 
@@ -2021,7 +1975,7 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       and also some files in the directories
       <span class="path">ipc/chromium/</span>,
       <span class="path">dom/plugins/</span>,
-      <span class="path">tools/profiler/sps/</span>,
+      <span class="path">tools/profiler/</span>,
       <span class="path">gfx/ots/</span>,
       <span class="path">media/openmax_dl/</span>,
       <span class="path">gfx/ycbcr</span> and
@@ -2228,8 +2182,7 @@ OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
 
     <h1><a id="hunspell-nl"></a>Dutch Spellchecking Dictionary License</h1>
 
-    <p>This license applies to certain files in the directory
-      <span class="path">l10n/nl/extensions/spellcheck/hunspell/</span>. (This
+    <p>This license applies to the Dutch Spellchecking Dictionary. (This
       code only ships in some localized versions of this product.)</p>
 
 <pre>
@@ -2268,82 +2221,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <hr>
 
-    <h1><a id="edl"></a>Eclipse Distribution License</h1>
-
-    <p>This license applies to certain files in the directory
-    <span class="path">browser/devtools/sourceeditor/orion/</span>.</p>
-
-<pre>
-Eclipse Distribution License - v 1.0
-
-Copyright (c) 2007, Eclipse Foundation, Inc. and its licensors.
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright notice, this
-  list of conditions and the following disclaimer in the documentation and/or
-  other materials provided with the distribution.
-* Neither the name of the Eclipse Foundation, Inc. nor the names of its
-  contributors may be used to endorse or promote products derived from this
-  software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-</pre>
-
-
-    <hr>
-
-    <h1><a id="escodegen"></a>Escodegen License</h1>
-
-    <p>This license applies to all files in
-      <span class="path">toolkit/devtools/escodegen</span>.
-    </p>
-<pre>
-Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-  * Redistributions of source code must retain the above copyright notice, this
-    list of conditions and the following disclaimer.
-
-  * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation
-    and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-OF SUCH DAMAGE.
-</pre>
-
-
-    <hr>
-
     <h1><a id="hunspell-ee"></a>Estonian Spellchecking Dictionary License</h1>
 
-    <p>This license applies to precursor works to certain files in the directory
-      <span class="path">l10n/ee/extensions/spellcheck/hunspell/</span>. The
+    <p>This license applies to precursor works to certain files which are
+      part of the Estonian Spellchecking Dictionary. The
       shipped versions are under the GNU Lesser General Public License. (This
       code only ships in some localized versions of this product.)</p>
 
@@ -2511,8 +2392,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="google-bsd"></a>Google BSD License</h1>
 
     <p>This license applies to files in the directories
-    <span class="path">toolkit/crashreporter/google-breakpad/</span>,
-    <span class="path">camino/google-breakpad/</span> and
+    <span class="path">toolkit/crashreporter/google-breakpad/</span> and
     <span class="path">toolkit/components/protobuf/</span>.</p>
 
 <pre>
@@ -2836,7 +2716,7 @@ of their respective owners.
     <h1><a id="jpnic"></a>Japan Network Information Center License</h1>
 
     <p>This license applies to certain files in the
-    directory <span class="path">netwerk/dns/src/</span>.</p>
+    directory <span class="path">netwerk/dns/</span>.</p>
 
 <pre>
 Copyright (c) 2001,2002 Japan Network Information Center.
@@ -2926,9 +2806,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a id="jquery"></a>jQuery License</h1>
 
-    <p>This license applies to files in the directory
-      <span class="path">mail/jquery/</span>.
-      Furthermore, the file <span class="path">browser/base/content/tabview/iq.js</span>
+    <p>This license applies to all copies of jQuery in the code.
+      Furthermore, the file <span class="path">browser/components/tabview/iq.js</span>
       incorporates work from jQuery.</p>
 
 <pre>
@@ -3092,7 +2971,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="libffi"></a>libffi License</h1>
 
     <p>This license applies to files in the directory
-    <span class="path">js/ctypes/libffi/</span>.
+    <span class="path">js/src/ctypes/libffi/</span>.
     </p>
 
 <pre>
@@ -3211,53 +3090,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
     <hr>
 
-    <h1><a id="libsrtp"></a>libsrtp License</h1>
-
-    <p>This license applies to files in the directory
-    <span class="path">media/webrtc/trunk/third_party/libsrtp</span>.
-    </p>
-
-<pre>
-Copyright (c) 2001-2006 Cisco Systems, Inc.
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-  Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-
-  Redistributions in binary form must reproduce the above
-  copyright notice, this list of conditions and the following
-  disclaimer in the documentation and/or other materials provided
-  with the distribution.
-
-  Neither the name of the Cisco Systems, Inc. nor the names of its
-  contributors may be used to endorse or promote products derived
-  from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-OF THE POSSIBILITY OF SUCH DAMAGE.
-</pre>
-
-    <hr>
-
     <h1><a id="libyuv"></a>libyuv License</h1>
 
     <p>This license applies to files in the directory
-    <span class="path">media/webrtc/trunk/third_party/libyuv</span> except
-    for the file <span class="path">media/webrtc/trunk/third_party/libyuv/source/x86inc.asm</span>.
+    <span class="path">media/libyuv</span> except
+    for the file <span class="path">media/libyuv/source/x86inc.asm</span>.
     </p>
 
 <pre>
@@ -3296,8 +3133,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a id="hunspell-lt"></a>Lithuanian Spellchecking Dictionary License</h1>
 
-    <p>This license applies to certain files in the directory
-      <span class="path">l10n/lt/extensions/spellcheck/hunspell/</span>. (This
+    <p>This license applies to the Lithuanian Spellchecking Dictionary. (This
       code only ships in some localized versions of this product.)</p>
 
 <pre>
@@ -3360,55 +3196,6 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-</pre>
-
-
-    <hr>
-
-    <h1><a id="maattachedwindow"></a>MAAttachedWindow License</h1>
-
-    <p>This license applies to the files
-    <span class="path">camino/src/extensions/MAAttachedWindow.h</span> and
-    <span class="path">camino/src/extensions/MAAttachedWindow.mm</span>. (This
-    code only ships in the Camino browser or products based on it.)</p>
-
-<pre>
-        This software is supplied to you by Matt Gemmell in consideration of
-your agreement to the following terms, and your use, installation, modification
-or redistribution of this software constitutes acceptance of these terms. If
-you do not agree with these terms, please do not use, install, modify or
-redistribute this software.
-
-        In consideration of your agreement to abide by the following terms, and
-subject to these terms, Matt Gemmell grants you a personal, non-exclusive
-license, to use, reproduce, modify and redistribute the software, with or
-without modifications, in source and/or binary forms; provided that if you
-redistribute the software in its entirety and without modifications, you must
-retain this notice and the following text and disclaimers in all such
-redistributions of the software, and that in all cases attribution of Matt
-Gemmell as the original author of the source code shall be included in all such
-resulting software products or distributions.
-Neither the name, trademarks, service marks or logos of Matt Gemmell may be
-used to endorse or promote products derived from the software without specific
-prior written permission from Matt Gemmell. Except as expressly stated in this
-notice, no other rights or licenses, express or implied, are granted by Matt
-Gemmell herein, including but not limited to any patent rights that may be
-infringed by your derivative works or by other works in which the software may
-be incorporated.
-
-        The software is provided by Matt Gemmell on an "AS IS" basis. MATT
-GEMMELL MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
-THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE, REGARDING THE SOFTWARE OR ITS USE AND OPERATION ALONE OR IN
-COMBINATION WITH YOUR PRODUCTS.
-
-        IN NO EVENT SHALL MATT GEMMELL BE LIABLE FOR ANY SPECIAL, INDIRECT,
-INCIDENTAL OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION, MODIFICATION
-AND/OR DISTRIBUTION OF THE SOFTWARE, HOWEVER CAUSED AND WHETHER UNDER THEORY OF
-CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF
-MATT GEMMELL HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </pre>
 
 
@@ -3540,9 +3327,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
     <p>This license applies to the file
     <span class="path">browser/components/loop/content/shared/libs/sdk.js</span>
-    and the files in
-    <span class="path">browser/components/loop/content/shared/libs/otcdn</span>
-    and its subdirectories.</p>
+    and a couple of others nearby.</p>
 
 <pre>
 Copyright (c) 2014 TokBox, Inc.
@@ -3681,9 +3466,7 @@ SUCH DAMAGE.
    files included in this distribution. it does not apply to any other
    part of ssldump not included in this distribution.</p>
 
-    <p>This license applies to each copy of the file
-  <span class="path">sys/queue.h</span>
-  in <span class="path">media/mtransport/third_party/nrappkit/</span>.</p>
+    <p>This license applies to the file <span class="path">media/mtransport/third_party/nrappkit/src/port/generic/include/sys/queue.h</span>.</p>
 
 <pre>
 Copyright (c) 1991, 1993
@@ -3950,8 +3733,7 @@ SOFTWARE.
 
     <h1><a id="hunspell-ru"></a>Russian Spellchecking Dictionary License</h1>
 
-    <p>This license applies to certain files in the directory
-      <span class="path">l10n/ru/extensions/spellcheck/hunspell/</span>. (This
+    <p>This license applies to the Russian Spellchecking Dictionary. (This
       code only ships in some localized versions of this product.)</p>
 
 <pre>
@@ -4133,35 +3915,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <hr>
 
-    <h1><a id="sparkle"></a>Sparkle License</h1>
-
-    <p>This license applies to certain files in the directory
-    <span class="path">camino/sparkle/</span>. (This code only ships in the
-    Camino browser or products based on it.)</p>
-
-<pre>
-Copyright (c) 2006 Andy Matuschak
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-</pre>
-
-    <hr>
-
 #ifdef USE_STLPORT
     <h1><a id="stlport"></a>STLport License</h1>
 
@@ -4231,59 +3984,6 @@ implied warranty.
     <hr>
 
 #endif
-    <h1><a id="suitable"></a>Suitable Systems License</h1>
-
-    <p>This license applies to certain files in the directory
-    <span class="path">dom/system/cocoa/</span>.</p>
-
-<pre>
-SMSLib Sudden Motion Sensor Access Library
-Copyright (c) 2010 Suitable Systems
-All rights reserved.
-
-Developed by: Daniel Griscom
-              Suitable Systems
-              http://www.suitable.com
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal with the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-- Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimers.
-
-- Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimers in the
-documentation and/or other materials provided with the distribution.
-
-- Neither the names of Suitable Systems nor the names of its
-contributors may be used to endorse or promote products derived from
-this Software without specific prior written permission.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE SOFTWARE.
-
-For more information about SMSLib, see
-	<http://www.suitable.com/tools/smslib.html>
-or contact
-	Daniel Griscom
-	Suitable Systems
-	1 Centre Street, Suite 204
-	Wakefield, MA 01880
-	(781) 665-0053
-</pre>
-
-
-    <hr>
 
     <h1><a id="sunsoft"></a>SunSoft License</h1>
 
@@ -4452,39 +4152,6 @@ SUCH DAMAGE.
 
     <hr>
 
-    <h1><a id="uszeged"></a>University of Szeged License</h1>
-
-    <p>This license applies to certain files in the directory <span class="path">js/src/assembler/assembler/</span>.</p>
-
-<pre>
-Copyright (C) 2009 University of Szeged
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-1. Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY UNIVERSITY OF SZEGED ``AS IS'' AND ANY
-EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL UNIVERSITY OF SZEGED OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-</pre>
-
-
-    <hr>
-
     <h1><a id="hunspell-en-US"></a>US English Spellchecking Dictionary Licenses</h1>
 
     <p>These licenses apply to certain files in the directory
@@ -4585,7 +4252,6 @@ Additional Contributors:
     <h1><a id="v8"></a>V8 License</h1>
 
     <p>This license applies to certain files in the directories
-      <span class="path">js/src/v8-dtoa</span>,
       <span class="path">js/src/irregexp</span>,
       <span class="path">js/src/builtin</span>,
       <span class="path">js/src/jit/arm</span> and

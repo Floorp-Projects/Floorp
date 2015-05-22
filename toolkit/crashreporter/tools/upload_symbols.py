@@ -15,6 +15,7 @@
 from __future__ import print_function
 
 import os
+import redo
 import requests
 import sys
 
@@ -46,13 +47,15 @@ def main():
     print('Uploading symbol file "{0}" to "{1}"...'.format(sys.argv[1], url))
 
     try:
-        r = requests.post(
-            url,
-            files={'symbols.zip': open(sys.argv[1], 'rb')},
-            headers={'Auth-Token': auth_token},
-            allow_redirects=False,
-            timeout=120,
-        )
+        with redo.retrying(requests.post,
+                           cleanup=lambda: print('Retrying...'),
+                           retry_exceptions=(requests.exceptions.RequestException,)) as post:
+            r = post(
+                url,
+                files={'symbols.zip': open(sys.argv[1], 'rb')},
+                headers={'Auth-Token': auth_token},
+                allow_redirects=False,
+                timeout=120)
     except requests.exceptions.RequestException as e:
         print('Error: {0}'.format(e))
         return 1

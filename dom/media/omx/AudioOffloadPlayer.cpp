@@ -44,7 +44,7 @@ namespace mozilla {
 
 PRLogModuleInfo* gAudioOffloadPlayerLog;
 #define AUDIO_OFFLOAD_LOG(type, msg) \
-  PR_LOG(gAudioOffloadPlayerLog, type, msg)
+  MOZ_LOG(gAudioOffloadPlayerLog, type, msg)
 
 // maximum time in paused state when offloading audio decompression.
 // When elapsed, the GonkAudioSink is destroyed to allow the audio DSP to power down.

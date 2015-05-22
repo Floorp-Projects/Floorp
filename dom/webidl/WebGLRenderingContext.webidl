@@ -41,6 +41,7 @@ dictionary WebGLContextAttributes {
     boolean antialias = true;
     boolean premultipliedAlpha = true;
     boolean preserveDrawingBuffer = false;
+    boolean failIfMajorPerformanceCaveat = false;
 };
 
 interface WebGLBuffer {

@@ -6,6 +6,7 @@
 
 #include "mozilla/BasePrincipal.h"
 
+#include "nsIContentSecurityPolicy.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 
@@ -14,6 +15,7 @@
 #include "nsNullPrincipal.h"
 #include "nsScriptSecurityManager.h"
 
+#include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 
 namespace mozilla {
@@ -126,6 +128,19 @@ BasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
 
   mCSP = aCsp;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetCspJSON(nsAString& outCSPinJSON)
+{
+  outCSPinJSON.Truncate();
+  dom::CSPPolicies jsonPolicies;
+
+  if (!mCSP) {
+    jsonPolicies.ToJSON(outCSPinJSON);
+    return NS_OK;
+  }
+  return mCSP->ToJSON(outCSPinJSON);
 }
 
 NS_IMETHODIMP

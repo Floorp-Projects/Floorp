@@ -332,7 +332,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   }
 
   *aMaskTransform = ToMatrix(maskSurfaceMatrix);
-  return destMaskSurface;
+  return destMaskSurface.forget();
 }
 
 nsresult
