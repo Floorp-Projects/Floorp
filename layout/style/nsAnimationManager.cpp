@@ -230,11 +230,23 @@ nsAnimationManager::MaybeUpdateCascadeResults(AnimationCollection* aCollection)
     if (anim->IsInEffect() != anim->mInEffectForCascadeResults) {
       // Update our own cascade results.
       mozilla::dom::Element* element = aCollection->GetElementToRestyle();
+      bool updatedCascadeResults = false;
       if (element) {
         nsIFrame* frame = element->GetPrimaryFrame();
         if (frame) {
           UpdateCascadeResults(frame->StyleContext(), aCollection);
+          updatedCascadeResults = true;
         }
+      }
+
+      if (!updatedCascadeResults) {
+        // If we don't have a style context we can't do the work of updating
+        // cascading results but we need to make sure to update
+        // mInEffectForCascadeResults or else we'll keep running this
+        // code every time (potentially leading to infinite recursion due
+        // to the fact that this method both calls and is (indirectly) called
+        // by nsTransitionManager).
+        anim->mInEffectForCascadeResults = anim->IsInEffect();
       }
 
       // Notify the transition manager, whose results might depend on ours.
