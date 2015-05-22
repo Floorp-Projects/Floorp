@@ -2411,7 +2411,7 @@ IsInCertifiedApp(JSContext* aCx, JSObject* aObj)
 #ifdef DEBUG
 void
 VerifyTraceProtoAndIfaceCacheCalled(JS::CallbackTracer *trc, void **thingp,
-                                    JSGCTraceKind kind)
+                                    JS::TraceKind kind)
 {
     // We don't do anything here, we only want to verify that
     // TraceProtoAndIfaceCache was called.
