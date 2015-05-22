@@ -17,8 +17,6 @@ GENERATED_SOURCES += [
     "%s.c" % cpu,
 ]
 
-DEFINES['ELFHACK_BUILD'] = True
-
 NO_PGO = True
 
 NO_VISIBILITY_FLAGS = True
