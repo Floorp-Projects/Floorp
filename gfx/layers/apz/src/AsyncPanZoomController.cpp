@@ -2446,13 +2446,6 @@ void AsyncPanZoomController::FlushRepaintForNewInputBlock() {
   UpdateSharedCompositorFrameMetrics();
 }
 
-void AsyncPanZoomController::FlushRepaintIfPending() {
-  // Just tell the paint throttler to send the pending repaint request if
-  // there is one.
-  ReentrantMonitorAutoEnter lock(mMonitor);
-  mPaintThrottler.TaskComplete(GetFrameTime());
-}
-
 bool AsyncPanZoomController::SnapBackIfOverscrolled() {
   ReentrantMonitorAutoEnter lock(mMonitor);
   // It's possible that we're already in the middle of an overscroll

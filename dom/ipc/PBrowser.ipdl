@@ -589,7 +589,6 @@ child:
     HandleSingleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
     HandleLongTap(CSSPoint point, Modifiers aModifiers, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
-    NotifyFlushComplete();
 
 
     /**
