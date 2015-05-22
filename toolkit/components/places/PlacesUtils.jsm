@@ -463,8 +463,9 @@ this.PlacesUtils = {
    *        the URL to generate a rev host for.
    * @return the reversed host string.
    */
-  getReversedHost(url)
-    url.host.split("").reverse().join("") + ".",
+  getReversedHost(url) {
+    return url.host.split("").reverse().join("") + ".";
+  },
 
   /**
    * String-wraps a result node according to the rules of the specified

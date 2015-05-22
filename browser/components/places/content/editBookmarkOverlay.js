@@ -374,7 +374,9 @@ let gEditItemOverlay = {
   XPCOMUtils.generateQI([Components.interfaces.nsIDOMEventListener,
                          Components.interfaces.nsINavBookmarkObserver]),
 
-  _element(aID) document.getElementById("editBMPanel_" + aID),
+  _element(aID) {
+    return document.getElementById("editBMPanel_" + aID);
+  },
 
   uninitPanel(aHideCollapsibleElements) {
     if (aHideCollapsibleElements) {
