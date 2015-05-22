@@ -39,6 +39,7 @@ add_task(function* test_initialize_with_no_guest_rooms_and_no_auth_token() {
 add_task(function* test_initialize_with_created_room_and_no_auth_token() {
   Services.prefs.setBoolPref(LOOP_CREATED_ROOM_PREF, true);
   Services.prefs.clearUserPref(LOOP_FXA_TOKEN_PREF);
+  MozLoopService.resetServiceInitialized();
 
   loopServer.registerPathHandler("/registration", (request, response) => {
     response.setStatusLine(null, 200, "OK");
@@ -55,6 +56,7 @@ add_task(function* test_initialize_with_created_room_and_no_auth_token() {
 add_task(function* test_initialize_with_invalid_fxa_token() {
   Services.prefs.setCharPref(LOOP_FXA_PROFILE_PREF, FAKE_FXA_PROFILE);
   Services.prefs.setCharPref(LOOP_FXA_TOKEN_PREF, FAKE_FXA_TOKEN_DATA);
+  MozLoopService.resetServiceInitialized();
 
   // Only need to implement the FxA registration because the previous
   // test registered as a guest.
@@ -88,6 +90,7 @@ add_task(function* test_initialize_with_invalid_fxa_token() {
 add_task(function* test_initialize_with_fxa_token() {
   Services.prefs.setCharPref(LOOP_FXA_PROFILE_PREF, FAKE_FXA_PROFILE);
   Services.prefs.setCharPref(LOOP_FXA_TOKEN_PREF, FAKE_FXA_TOKEN_DATA);
+  MozLoopService.resetServiceInitialized();
 
   MozLoopService.errors.clear();
 
