@@ -216,6 +216,13 @@ ViewSourceChrome.prototype = {
   },
 
   /**
+   * Getter for the nsIWebNavigation of the view source browser.
+   */
+  get webNav() {
+    return this.browser.webNavigation;
+  },
+
+  /**
    * Send the browser forward in its history.
    */
   goForward() {
