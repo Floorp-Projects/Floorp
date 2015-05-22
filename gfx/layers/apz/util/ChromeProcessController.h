@@ -56,7 +56,6 @@ public:
                                     int aArg) override;
   virtual void NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId,
                                          const nsString& aEvent) override;
-  virtual void NotifyFlushComplete() override;
 private:
   nsCOMPtr<nsIWidget> mWidget;
   nsRefPtr<APZEventState> mAPZEventState;
