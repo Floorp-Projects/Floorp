@@ -24,11 +24,6 @@
 
   <div id="newtab-customize-overlay"></div>
 
-  <xul:panel id="newtab-intro-panel" orient="vertical" type="arrow"
-             noautohide="true" hidden="true">
-    <h1>&newtab.intro.header;</h1>
-  </xul:panel>
-
   <xul:panel id="newtab-search-panel" orient="vertical" type="arrow"
              noautohide="true" hidden="true">
     <xul:hbox id="newtab-search-manage">
@@ -131,8 +126,6 @@
       <div id="newtab-margin-bottom"/>
 
     </div>
-
-    <div id="newtab-intro-what">&newtab.customize.what;</div>
 
     <input id="newtab-customize-button" type="button" title="&newtab.customize.title;"/>
   </div>
