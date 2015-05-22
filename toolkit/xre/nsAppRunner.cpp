@@ -4411,7 +4411,7 @@ mozilla::BrowserTabsRemoteAutostart()
 #else
   // Nightly builds, update gBrowserTabsRemoteAutostart based on all the
   // e10s remote relayed prefs we watch.
-  bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
+  bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.disabled-for-a11y", false);
   // Disable for VR
   bool disabledForVR = Preferences::GetBool("dom.vr.enabled", false);
 
