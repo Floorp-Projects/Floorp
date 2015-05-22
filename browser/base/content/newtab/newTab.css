@@ -50,50 +50,6 @@ input[type=button] {
   right: auto;
 }
 
-#newtab-intro-what {
-  cursor: pointer;
-  position: absolute;
-  right: 70px;
-  top: 20px;
-  display: none;
-}
-
-#newtab-intro-what:-moz-locale-dir(rtl) {
-  left: 70px;
-  right: auto;
-}
-
-#newtab-scrollbox[page-disabled] #newtab-intro-what {
-  display: none;
-}
-
-#newtab-intro-panel {
-  color: #6a7b86;
-  font-size: 15px;
-  line-height: 19px;
-  width: 520px;
-}
-
-#newtab-intro-panel h1 {
-  color: #343f48;
-  font-family: Open Sans, sans-serif;
-  font-size: 30px;
-  margin: 20px;
-}
-
-#newtab-intro-panel p {
-  margin: 10px 20px;
-}
-
-#newtab-intro-panel p:last-child {
-  margin-bottom: 30px;
-}
-
-#newtab-intro-what:hover,
-#newtab-intro-panel a {
-  color: #4a90e2;
-}
-
 /* MARGINS */
 #newtab-vertical-margin {
   display: -moz-box;
@@ -299,7 +255,6 @@ input[type=button] {
   text-align: start;
 }
 
-#newtab-intro-panel input,
 .sponsored-explain input,
 .suggested-explain input {
   background-size: 18px;
