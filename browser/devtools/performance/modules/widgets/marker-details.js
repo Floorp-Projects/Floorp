@@ -3,9 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-let { Ci } = require("chrome");
-let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
-
 /**
  * This file contains the rendering code for the marker sidebar.
  */
