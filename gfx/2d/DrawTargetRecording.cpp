@@ -541,14 +541,14 @@ TemporaryRef<DrawTarget>
 DrawTargetRecording::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
   RefPtr<DrawTarget> dt = mFinalDT->CreateSimilarDrawTarget(aSize, aFormat);
-  return new DrawTargetRecording(mRecorder.get(), dt);
+  return MakeAndAddRef<DrawTargetRecording>(mRecorder.get(), dt);
 }
 
 TemporaryRef<PathBuilder>
 DrawTargetRecording::CreatePathBuilder(FillRule aFillRule) const
 {
   RefPtr<PathBuilder> builder = mFinalDT->CreatePathBuilder(aFillRule);
-  return new PathBuilderRecording(builder, aFillRule);
+  return MakeAndAddRef<PathBuilderRecording>(builder, aFillRule);
 }
 
 TemporaryRef<GradientStops>

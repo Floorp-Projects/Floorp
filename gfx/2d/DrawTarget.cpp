@@ -21,7 +21,7 @@ DrawTarget::CreateCaptureDT(const IntSize& aSize)
     return nullptr;
   }
 
-  return dt;
+  return dt.forget();
 }
 
 void

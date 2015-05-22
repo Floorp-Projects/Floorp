@@ -57,6 +57,7 @@ public:
     , thisUpdate(thisUpdate)
     , validThrough(validThrough)
     , expired(false)
+    , matchFound(false)
   {
     if (thisUpdate) {
       *thisUpdate = TimeFromElapsedSecondsAD(0);
@@ -74,6 +75,12 @@ public:
   Time* thisUpdate;
   Time* validThrough;
   bool expired;
+
+  // Keep track of whether the OCSP response contains the status of the
+  // certificate we're interested in. Responders might reply without
+  // including the status of any of the requested certs, we should
+  // indicate a server failure in those cases.
+  bool matchFound;
 
   Context(const Context&) = delete;
   void operator=(const Context&) = delete;
@@ -312,6 +319,9 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
   if (rv != Success) {
     return MapBadDERToMalformedOCSPResponse(rv);
   }
+  if (!context.matchFound) {
+    return Result::ERROR_OCSP_RESPONSE_FOR_CERT_MISSING;
+  }
 
   expired = context.expired;
 
@@ -527,6 +537,9 @@ SingleResponse(Reader& input, Context& context)
     input.SkipToEnd();
     return Success;
   }
+
+  // We found a response for the cert we're interested in.
+  context.matchFound = true;
 
   // CertStatus ::= CHOICE {
   //     good        [0]     IMPLICIT NULL,

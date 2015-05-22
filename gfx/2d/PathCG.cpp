@@ -130,14 +130,14 @@ PathBuilderCG::EnsureActive(const Point &aPoint)
 TemporaryRef<Path>
 PathBuilderCG::Finish()
 {
-  return new PathCG(mCGPath, mFillRule);
+  return MakeAndAddRef<PathCG>(mCGPath, mFillRule);
 }
 
 TemporaryRef<PathBuilder>
 PathCG::CopyToBuilder(FillRule aFillRule) const
 {
   CGMutablePathRef path = CGPathCreateMutableCopy(mPath);
-  return new PathBuilderCG(path, aFillRule);
+  return MakeAndAddRef<PathBuilderCG>(path, aFillRule);
 }
 
 
@@ -197,7 +197,7 @@ PathCG::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) c
   ta.transform = GfxMatrixToCGAffineTransform(aTransform);
 
   CGPathApply(mPath, &ta, TransformApplier::TranformCGPathApplierFunc);
-  return new PathBuilderCG(ta.path, aFillRule);
+  return MakeAndAddRef<PathBuilderCG>(ta.path, aFillRule);
 }
 
 static void

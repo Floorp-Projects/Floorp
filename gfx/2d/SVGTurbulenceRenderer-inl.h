@@ -353,7 +353,7 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::Render(const IntSize
     }
   }
 
-  return target;
+  return target.forget();
 }
 
 } // namespace gfx

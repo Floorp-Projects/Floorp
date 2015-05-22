@@ -21,7 +21,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsINode.h"
-#include "nsISpeculativeConnect.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIURL.h"
@@ -182,6 +181,8 @@ HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
 
+  // If this is reinserted back into the document it will not be
+  // from the parser.
   nsCOMPtr<nsIDocument> oldDoc = GetUncomposedDoc();
 
   // Check for a ShadowRoot because link elements are inert in a
@@ -311,12 +312,11 @@ HTMLLinkElement::UpdatePreconnect()
     return;
   }
 
-  nsCOMPtr<nsISpeculativeConnect>
-    speculator(do_QueryInterface(nsContentUtils::GetIOService()));
-  if (speculator) {
+  nsIDocument *owner = OwnerDoc();
+  if (owner) {
     nsCOMPtr<nsIURI> uri = GetHrefURI();
     if (uri) {
-      speculator->SpeculativeConnect(uri, nullptr);
+      owner->MaybePreconnect(uri);
     }
   }
 }

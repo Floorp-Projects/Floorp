@@ -66,7 +66,7 @@ CreateLockedSurface(VolatileBuffer* vbuf,
   }
 
   surf->AddUserData(&kVolatileBuffer, vbufptr, VolatileBufferRelease);
-  return surf;
+  return surf.forget();
 }
 
 static TemporaryRef<VolatileBuffer>
@@ -76,7 +76,7 @@ AllocateBufferForImage(const IntSize& size, SurfaceFormat format)
   RefPtr<VolatileBuffer> buf = new VolatileBuffer();
   if (buf->Init(stride * size.height,
                 1 << gfxAlphaRecovery::GoodAlignmentLog2())) {
-    return buf;
+    return buf.forget();
   }
 
   return nullptr;
@@ -1055,14 +1055,16 @@ imgFrame::GetSurfaceInternal()
 
   if (mOptSurface) {
     if (mOptSurface->IsValid()) {
-      return mOptSurface;
+      RefPtr<SourceSurface> surf(mOptSurface);
+      return surf.forget();
     } else {
       mOptSurface = nullptr;
     }
   }
 
   if (mImageSurface) {
-    return mImageSurface;
+    RefPtr<SourceSurface> surf(mImageSurface);
+    return surf.forget();
   }
 
   if (!mVBuf) {

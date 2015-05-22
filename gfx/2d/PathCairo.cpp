@@ -125,7 +125,7 @@ PathBuilderCairo::CurrentPoint() const
 TemporaryRef<Path>
 PathBuilderCairo::Finish()
 {
-  return new PathCairo(mFillRule, mPathData, mCurrentPoint);
+  return MakeAndAddRef<PathCairo>(mFillRule, mPathData, mCurrentPoint);
 }
 
 PathCairo::PathCairo(FillRule aFillRule, std::vector<cairo_path_data_t> &aPathData, const Point &aCurrentPoint)

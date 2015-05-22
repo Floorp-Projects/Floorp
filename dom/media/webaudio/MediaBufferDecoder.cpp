@@ -507,7 +507,12 @@ AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
                            WebAudioDecodeJob::UnknownError);
     NS_DispatchToMainThread(event);
   } else {
-    task->Reader()->GetTaskQueue()->Dispatch(task);
+    // If we did this without a temporary:
+    //   task->Reader()->GetTaskQueue()->Dispatch(task.forget())
+    // we might evaluate the task.forget() before calling Reader(). Enforce
+    // a non-crashy order-of-operations.
+    MediaTaskQueue* taskQueue = task->Reader()->GetTaskQueue();
+    taskQueue->Dispatch(task.forget());
   }
 }
 

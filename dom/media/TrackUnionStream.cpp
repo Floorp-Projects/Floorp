@@ -43,7 +43,7 @@ namespace mozilla {
 #endif
 
 PRLogModuleInfo* gTrackUnionStreamLog;
-#define STREAM_LOG(type, msg) PR_LOG(gTrackUnionStreamLog, type, msg)
+#define STREAM_LOG(type, msg) MOZ_LOG(gTrackUnionStreamLog, type, msg)
 
 TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
   ProcessedMediaStream(aWrapper)

@@ -25,10 +25,10 @@ void   CacheLogPrintPath(PRLogModuleLevel level,
                          const char *     format,
                          nsIFile *        item);
 #define CACHE_LOG_INIT()        CacheLogInit()
-#define CACHE_LOG_ALWAYS(args)  PR_LOG(gCacheLog, PR_LOG_ALWAYS, args)
-#define CACHE_LOG_ERROR(args)   PR_LOG(gCacheLog, PR_LOG_ERROR, args)
-#define CACHE_LOG_WARNING(args) PR_LOG(gCacheLog, PR_LOG_WARNING, args)
-#define CACHE_LOG_DEBUG(args)   PR_LOG(gCacheLog, PR_LOG_DEBUG, args)
+#define CACHE_LOG_ALWAYS(args)  MOZ_LOG(gCacheLog, PR_LOG_ALWAYS, args)
+#define CACHE_LOG_ERROR(args)   MOZ_LOG(gCacheLog, PR_LOG_ERROR, args)
+#define CACHE_LOG_WARNING(args) MOZ_LOG(gCacheLog, PR_LOG_WARNING, args)
+#define CACHE_LOG_DEBUG(args)   MOZ_LOG(gCacheLog, PR_LOG_DEBUG, args)
 #define CACHE_LOG_PATH(level, format, item) \
                                 CacheLogPrintPath(level, format, item)
 

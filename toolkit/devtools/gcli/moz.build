@@ -23,6 +23,7 @@ EXTRA_JS_MODULES.devtools.gcli.commands += [
     'commands/restart.js',
     'commands/rulers.js',
     'commands/screenshot.js',
+    'commands/security.js',
     'commands/tools.js',
 ]
 

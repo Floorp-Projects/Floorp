@@ -49,7 +49,7 @@ struct MediaTrackConstraintSet;
 }
 
 extern PRLogModuleInfo* GetMediaManagerLog();
-#define MM_LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
+#define MM_LOG(msg) MOZ_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
 
 /**
  * This class is an implementation of MediaStreamListener. This is used
