@@ -141,6 +141,120 @@ describe("loop.shared.utils", function() {
     });
   });
 
+  describe("hasAudioDevices", function() {
+    var fakeNavigatorObject, fakeWindowObject;
+
+    beforeEach(function() {
+      fakeNavigatorObject = {
+        mediaDevices: {
+          enumerateDevices: sinon.stub()
+        }
+      };
+
+      fakeWindowObject = {
+        MediaStreamTrack: {
+          getSources: sinon.stub()
+        }
+      };
+
+      sharedUtils.setRootObjects(fakeWindowObject, fakeNavigatorObject);
+    });
+
+    afterEach(function() {
+      sharedUtils.setRootObjects();
+    });
+
+    it("should return true if no APIs to detect devices exist", function(done) {
+      delete fakeNavigatorObject.mediaDevices;
+      delete fakeWindowObject.MediaStreamTrack;
+
+      sharedUtils.hasAudioDevices(function(result) {
+        expect(result).eql(true);
+        done();
+      });
+    });
+
+    it("should return false if no audio devices exist according to navigator.mediaDevices", function(done) {
+      delete fakeWindowObject.MediaStreamTrack;
+
+      fakeNavigatorObject.mediaDevices.enumerateDevices.returns(Promise.resolve([]));
+      sharedUtils.hasAudioDevices(function(result) {
+        try {
+          expect(result).eql(false);
+          done();
+        } catch (ex) {
+          done(ex);
+        }
+      });
+    });
+
+    it("should return true if audio devices exist according to navigator.mediaDevices", function(done) {
+      delete fakeWindowObject.MediaStreamTrack;
+
+      fakeNavigatorObject.mediaDevices.enumerateDevices.returns(
+        Promise.resolve([{
+          deviceId: "15234",
+          groupId: "",
+          kind: "videoinput",
+          label: ""
+        }, {
+          deviceId: "54321",
+          groupId: "",
+          kind: "audioinput",
+          label: ""
+        }])
+      );
+
+      sharedUtils.hasAudioDevices(function(result) {
+        try {
+          expect(result).eql(true);
+          done();
+        } catch (ex) {
+          done(ex);
+        }
+      });
+    });
+
+    it("should return false if no audio devices exist according to window.MediaStreamTrack", function(done) {
+      delete fakeNavigatorObject.mediaDevices;
+
+      fakeWindowObject.MediaStreamTrack.getSources.callsArgWith(0, []);
+      sharedUtils.hasAudioDevices(function(result) {
+        try {
+          expect(result).eql(false);
+          done();
+        } catch (ex) {
+          done(ex);
+        }
+      });
+    });
+
+    it("should return true if audio devices exist according to window.MediaStreamTrack", function(done) {
+      delete fakeNavigatorObject.mediaDevices;
+
+      fakeWindowObject.MediaStreamTrack.getSources.callsArgWith(0, [{
+        facing: "",
+        id: "15234",
+        kind: "video",
+        label: ""
+      }, {
+        facing: "",
+        id: "54321",
+        kind: "audio",
+        label: ""
+      }]);
+
+      sharedUtils.hasAudioDevices(function(result) {
+        try {
+          expect(result).eql(true);
+          done();
+        } catch (ex) {
+          done(ex);
+        }
+      });
+    });
+  });
+
   describe("#formatURL", function() {
     it("should decode encoded URIs", function() {
       expect(sharedUtils.formatURL("http://invalid.com/?a=Foo%20Bar"))
