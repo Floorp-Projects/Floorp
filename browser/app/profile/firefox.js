@@ -1766,19 +1766,11 @@ pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MO
 #endif
 
 #ifdef XP_MACOSX
-#ifdef RELEASE_BUILD
 pref("geo.provider.use_corelocation", false);
-#else
-pref("geo.provider.use_corelocation", true);
-#endif
 #endif
 
 #ifdef XP_WIN
-#ifdef RELEASE_BUILD
 pref("geo.provider.ms-windows-location", false);
-#else
-pref("geo.provider.ms-windows-location", true);
-#endif
 #endif
 
 // Necko IPC security checks only needed for app isolation for cookies/cache/etc:
