@@ -41,20 +41,27 @@ function runTests() {
   yield null;
   yield null;
 
+  whenPagesUpdated();
   // Click the pin button on the link in the 1th tile spot
   let siteNode = getCell(1).node.querySelector(".newtab-site");
   let pinButton = siteNode.querySelector(".newtab-control-pin");
   expected.action = "pin";
+  // tiles become "history" when pinned
+  expected.type = "history";
   expected.pinned = true;
   EventUtils.synthesizeMouseAtCenter(pinButton, {}, getContentWindow());
 
-  // Wait for reportSitesAction
+  // Wait for whenPagesUpdated and reportSitesAction
+  yield null;
   yield null;
 
   // Unpin that link
   expected.action = "unpin";
   expected.pinned = false;
   whenPagesUpdated();
+  // need to reget siteNode for it could have been re-rendered after pin
+  siteNode = getCell(1).node.querySelector(".newtab-site");
+  pinButton = siteNode.querySelector(".newtab-control-pin");
   EventUtils.synthesizeMouseAtCenter(pinButton, {}, getContentWindow());
 
   // Wait for whenPagesUpdated and reportSitesAction
@@ -75,7 +82,7 @@ function runTests() {
   yield null;
 
   // Click the 1th link now in the 0th tile spot
-  expected.type = "sponsored";
+  expected.type = "history";
   expected.action = "click";
   EventUtils.synthesizeMouseAtCenter(siteNode, {}, getContentWindow());
 
