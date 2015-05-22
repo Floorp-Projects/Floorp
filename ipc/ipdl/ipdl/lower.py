@@ -982,7 +982,11 @@ class MessageDecl(ipdl.ast.MessageDecl):
         cxxargs = [ ]
 
         if params:
-            cxxargs.extend([ ExprMove(p.var()) for p in self.params ])
+            for p in self.params:
+                if p.ipdltype.isIPDL() and p.ipdltype.isActor():
+                    cxxargs.append(p.var())
+                else:
+                    cxxargs.append(ExprMove(p.var()))
 
         for ret in self.returns:
             if retsems is 'in':
@@ -5111,7 +5115,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                 idexpr=_actorHId(actorhandle))
             + [ Whitespace.NL ]
             + saveIdStmts
-            + self.invokeRecvHandler(md)
+            + self.invokeRecvHandler(md, actorvar)
             + self.makeReply(md, errfnRecv, idvar)
             + [ Whitespace.NL,
                 StmtReturn(_Result.Processed) ])
@@ -5364,16 +5368,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def callDeallocSubtree(self, md, actorexpr):
         return ExprCall(ExprSelect(actorexpr, '->', 'DeallocSubtree'))
 
-    def invokeRecvHandler(self, md, implicit=1):
+    def invokeRecvHandler(self, md, actorvar=None, implicit=1):
         failif = StmtIf(ExprNot(
             ExprCall(md.recvMethod(),
                      args=md.makeCxxArgs(params=1,
                                          retsems='in', retcallsems='out',
                                          implicit=implicit))))
-        failif.addifstmts([
-            _protocolErrorBreakpoint('Handler for '+ md.name +' returned error code'),
-            StmtReturn(_Result.ProcessingError)
-        ])
+        failif.addifstmt(
+            _protocolErrorBreakpoint('Handler for '+ md.name +' returned error code')
+        )
+        if actorvar is not None:
+            failif.addifstmts(self.destroyActor(md, actorvar,
+                                                why=_DestroyReason.FailedConstructor))
+        failif.addifstmt(StmtReturn(_Result.ProcessingError))
         return [ failif ]
 
     def makeDtorMethodDecl(self, md):
