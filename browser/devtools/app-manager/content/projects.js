@@ -126,7 +126,7 @@ let UI = {
   _getLocalIconURL: function(project, manifest) {
     let icon;
     if (manifest.icons) {
-      let size = Object.keys(manifest.icons).sort(function(a, b) b - a)[0];
+      let size = Object.keys(manifest.icons).sort((a, b) => b - a)[0];
       if (size) {
         icon = manifest.icons[size];
       }
