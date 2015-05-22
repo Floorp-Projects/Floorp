@@ -128,6 +128,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <div className="ended-conversation">
                 <sharedViews.FeedbackView
                   onAfterFeedbackReceived={this.onFeedbackSent}
+                  noCloseText={true}
                 />
               </div>
             );

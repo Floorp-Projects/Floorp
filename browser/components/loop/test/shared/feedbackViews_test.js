@@ -77,6 +77,15 @@ describe("loop.shared.views.FeedbackView", function() {
       expect(comp.getDOMNode().querySelector("button.fx-embedded-btn-back"))
         .eql(null);
     });
+
+    it("should not display the countdown text if noCloseText is true", function() {
+      comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.FeedbackView, {
+          noCloseText: true
+        }));
+
+      expect(comp.getDOMNode().querySelector(".info.thank-you")).eql(null);
+    });
   });
 
   describe("Sad feedback", function() {
