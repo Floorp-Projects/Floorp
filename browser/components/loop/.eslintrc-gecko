@@ -1,0 +1,64 @@
+// This file defines additional items and rules specific for gecko files.
+// This is applied on top of the basic .eslintrc for gecko specific directories
+// e.g. the modules directory.
+{
+  "ecmaFeatures": {
+    "arrowFunctions": true,
+    "blockBindings": true,
+    "destructuring": true,
+    "generators": true,
+    "restParams": true,
+    "spread": true,
+    "objectLiteralShorthandMethods": true,
+  },
+  "globals": {
+    // Gecko + Loop Globals.
+    "CardDavImporter": true,
+    "Chat": false,
+    "ChromeWorker": false,
+    "CommonUtils": false,
+    "Components": false,
+    "convertToRTCStatsReport": false,
+    "CustomizableUI": false,
+    "deriveHawkCredentials": false,
+    "eventEmitter": false,
+    "FxAccountsOAuthClient": false,
+    "FxAccountsProfileClient": false,
+    "gBrowser": false,
+    "gDNSService": false,
+    "gLoopBundle": false,
+    "GoogleImporter": true,
+    "gWM": false,
+    "HawkClient": false,
+    "injectLoopAPI": true,
+    "Iterator": false,
+    "Log": false,
+    "log": true,
+    "LOOP_SESSION_TYPE": true,
+    "LoopCalls": true,
+    "LoopContacts": true,
+    "loopCrypto": false,
+    "LoopRooms": true,
+    "LoopRoomsCache": true,
+    "LoopStorage": true,
+    "MozLoopPushHandler": true,
+    "MozLoopService": true,
+    "OS": false,
+    "roomsPushNotification": true,
+    "Services": false,
+    "Social": false,
+    "SocialShare": false,
+    "Task": false,
+    "UITour": false,
+    "XPCOMUtils": false,
+    "uuidgen": true,
+    // Test Related
+    "Assert": false,
+  },
+  "rules": {
+    "generator-star-spacing": [2, "after"],
+    // We should fix the errors and enable this (set to 2)
+    "no-var": 0,
+    "strict": [2, "global"]
+  }
+}

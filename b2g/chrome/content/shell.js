@@ -641,6 +641,7 @@ var shell = {
   },
 
   handleCmdLine: function shell_handleCmdLine() {
+#ifndef MOZ_WIDGET_GONK
     let b2gcmds = Cc["@mozilla.org/commandlinehandler/general-startup;1?type=b2gcmds"]
                     .getService(Ci.nsISupports);
     let args = b2gcmds.wrappedJSObject.cmdLine;
@@ -654,6 +655,7 @@ var shell = {
     } catch(e) {
       // Throws if -url is present with no params
     }
+#endif
   },
 };
 

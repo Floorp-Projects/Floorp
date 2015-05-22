@@ -307,11 +307,19 @@ function onSearchSubmit(aEvent)
   if (engineName && searchTerms.length > 0) {
     // Send an event that will perform a search and Firefox Health Report will
     // record that a search from about:home has occurred.
-    let useNewTab = aEvent && aEvent.button == 1;
     let eventData = {
       engineName: engineName,
       searchTerms: searchTerms,
-      useNewTab: useNewTab,
+      originalEvent: {
+        target: {
+          ownerDocument: null
+        },
+        shiftKey: aEvent.shiftKey,
+        ctrlKey: aEvent.ctrlKey,
+        metaKey: aEvent.metaKey,
+        altKey: aEvent.altKey,
+        button: aEvent.button,
+      },
     };
 
     if (searchText.hasAttribute("selection-index")) {

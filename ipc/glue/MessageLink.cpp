@@ -14,6 +14,7 @@
 #include "ipc/Nuwa.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/hal_sandbox/PHalParent.h"
 #endif
 
 #include "mozilla/Assertions.h"
@@ -178,6 +179,7 @@ ProcessLink::SendMessage(Message *msg)
         case mozilla::dom::PContent::Msg_NuwaFork__ID:
         case mozilla::dom::PContent::Reply_AddNewProcess__ID:
         case mozilla::dom::PContent::Msg_NotifyPhoneStateChange__ID:
+        case mozilla::hal_sandbox::PHal::Msg_NotifyNetworkChange__ID:
         case GOODBYE_MESSAGE_TYPE:
             break;
         default:
