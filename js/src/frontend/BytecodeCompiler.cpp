@@ -283,12 +283,8 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
         return nullptr;
 
     bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
-    bool allowSuperProperty = savedCallerFun &&
-                              evalCaller->functionOrCallerFunction()->allowSuperProperty();
-
     Directives directives(options.strictOption);
-    GlobalSharedContext globalsc(cx, directives, evalStaticScope, options.extraWarningsOption,
-                                 allowSuperProperty);
+    GlobalSharedContext globalsc(cx, directives, evalStaticScope, options.extraWarningsOption);
 
     Rooted<JSScript*> script(cx, JSScript::Create(cx, evalStaticScope, savedCallerFun,
                                                   options, staticLevel, sourceObject, 0,
