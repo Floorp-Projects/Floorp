@@ -314,6 +314,11 @@ class nsHtml5Highlighter
     nsHtml5UTF16Buffer* mBuffer;
 
     /**
+     * Whether to highlight syntax visibly initially.
+     */
+    bool mSyntaxHighlight;
+
+    /**
      * The outgoing tree op queue.
      */
     nsTArray<nsHtml5TreeOperation> mOpQueue;
