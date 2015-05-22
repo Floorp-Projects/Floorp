@@ -5838,11 +5838,6 @@ MALLOC_OUT:
 #endif
 	}
 
-#if !defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN)
-	/* Prevent potential deadlock on malloc locks after fork. */
-	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
-#endif
-
 #ifndef MALLOC_STATIC_SIZES
 	/* Set variables according to the value of opt_small_max_2pow. */
 	if (opt_small_max_2pow < opt_quantum_2pow)
@@ -6044,6 +6039,11 @@ MALLOC_OUT:
 #endif
 
 	malloc_initialized = true;
+
+#if !defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN)
+	/* Prevent potential deadlock on malloc locks after fork. */
+	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
+#endif
 
 #if defined(NEEDS_PTHREAD_MMAP_UNALIGNED_TSD)
 	if (pthread_key_create(&mmap_unaligned_tsd, NULL) != 0) {
