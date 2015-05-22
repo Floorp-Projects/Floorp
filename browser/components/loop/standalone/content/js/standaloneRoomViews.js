@@ -127,7 +127,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
             return (
               React.createElement("div", {className: "ended-conversation"}, 
                 React.createElement(sharedViews.FeedbackView, {
-                  onAfterFeedbackReceived: this.onFeedbackSent}
+                  onAfterFeedbackReceived: this.onFeedbackSent, 
+                  noCloseText: true}
                 )
               )
             );
