@@ -42,12 +42,31 @@ template<typename ThisType, typename Ret>
 static FalseType TakesArgumentHelper(Ret (ThisType::*)());
 template<typename ThisType, typename Ret>
 static FalseType TakesArgumentHelper(Ret (ThisType::*)() const);
+
+template<typename ThisType, typename Ret, typename ArgType>
+static Ret ReturnTypeHelper(Ret (ThisType::*)(ArgType));
+template<typename ThisType, typename Ret, typename ArgType>
+static Ret ReturnTypeHelper(Ret (ThisType::*)(ArgType) const);
+template<typename ThisType, typename Ret>
+static Ret ReturnTypeHelper(Ret (ThisType::*)());
+template<typename ThisType, typename Ret>
+static Ret ReturnTypeHelper(Ret (ThisType::*)() const);
+
+template<typename MethodType>
+struct ReturnType {
+  typedef decltype(detail::ReturnTypeHelper(DeclVal<MethodType>())) Type;
+};
+
 } // namespace detail
 
 template<typename MethodType>
 struct TakesArgument {
-  typedef decltype(detail::TakesArgumentHelper(DeclVal<MethodType>())) Type;
-  static const bool value = Type::value;
+  static const bool value = decltype(detail::TakesArgumentHelper(DeclVal<MethodType>()))::value;
+};
+
+template<typename MethodType, typename TargetType>
+struct ReturnTypeIs {
+  static const bool value = IsConvertible<typename detail::ReturnType<MethodType>::Type, TargetType>::value;
 };
 
 /*
@@ -259,17 +278,41 @@ protected:
    */
 
   template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<TakesArgument<MethodType>::value, void>::Type
+  static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MediaPromise>>::value &&
+                           TakesArgument<MethodType>::value,
+                           already_AddRefed<MediaPromise>>::Type
   InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
   {
-      ((*aThisVal).*aMethod)(aValue);
+    return ((*aThisVal).*aMethod)(aValue).forget();
   }
 
   template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<!TakesArgument<MethodType>::value, void>::Type
+  static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
+                           TakesArgument<MethodType>::value,
+                           already_AddRefed<MediaPromise>>::Type
   InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
   {
-      ((*aThisVal).*aMethod)();
+    ((*aThisVal).*aMethod)(aValue);
+    return nullptr;
+  }
+
+  template<typename ThisType, typename MethodType, typename ValueType>
+  static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MediaPromise>>::value &&
+                           !TakesArgument<MethodType>::value,
+                           already_AddRefed<MediaPromise>>::Type
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  {
+    return ((*aThisVal).*aMethod)().forget();
+  }
+
+  template<typename ThisType, typename MethodType, typename ValueType>
+  static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
+                           !TakesArgument<MethodType>::value,
+                           already_AddRefed<MediaPromise>>::Type
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  {
+    ((*aThisVal).*aMethod)();
+    return nullptr;
   }
 
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
@@ -297,10 +340,11 @@ protected:
   protected:
     virtual void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
     {
+      nsRefPtr<MediaPromise> completion;
       if (aValue.IsResolve()) {
-        InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aValue.ResolveValue());
+        completion = InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aValue.ResolveValue());
       } else {
-        InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aValue.RejectValue());
+        completion = InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aValue.RejectValue());
       }
 
       // Null out mThisVal after invoking the callback so that any references are
@@ -351,10 +395,11 @@ protected:
       // classes with ::operator()), since it allows us to share code more easily.
       // We could fix this if need be, though it's quite easy to work around by
       // just capturing something.
+      nsRefPtr<MediaPromise> completion;
       if (aValue.IsResolve()) {
-        InvokeCallbackMethod(mResolveFunction.ptr(), &ResolveFunction::operator(), aValue.ResolveValue());
+        completion = InvokeCallbackMethod(mResolveFunction.ptr(), &ResolveFunction::operator(), aValue.ResolveValue());
       } else {
-        InvokeCallbackMethod(mRejectFunction.ptr(), &RejectFunction::operator(), aValue.RejectValue());
+        completion = InvokeCallbackMethod(mRejectFunction.ptr(), &RejectFunction::operator(), aValue.RejectValue());
       }
 
       // Destroy callbacks after invocation so that any references in closures are
