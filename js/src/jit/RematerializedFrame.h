@@ -43,7 +43,6 @@ class RematerializedFrame
 
     JSScript* script_;
     JSObject* scopeChain_;
-    JSFunction* callee_;
     ArgumentsObject* argsObj_;
 
     Value returnValue_;
@@ -152,11 +151,10 @@ class RematerializedFrame
         return isFunctionFrame() ? fun() : nullptr;
     }
     JSFunction* callee() const {
-        MOZ_ASSERT(isFunctionFrame());
-        return callee_;
+        return fun();
     }
     Value calleev() const {
-        return ObjectValue(*callee());
+        return ObjectValue(*fun());
     }
     Value& thisValue() {
         return thisValue_;

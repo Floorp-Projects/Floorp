@@ -67,14 +67,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     MoveResolver moveResolver_;
 
   private:
-    Operand payloadOfAfterStackPush(const Address& address) {
-        // If we are basing off %esp, the address will be invalid after the
-        // first push.
-        if (address.base == StackPointer)
-            return Operand(address.base, address.offset + 4);
-        else 
-            return payloadOf(address);
-    }
     Operand payloadOf(const Address& address) {
         return Operand(address.base, address.offset);
     }
@@ -248,7 +240,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void pushValue(const Address& addr) {
         push(tagOf(addr));
-        push(payloadOfAfterStackPush(addr));
+        push(payloadOf(addr));
     }
     void storePayload(const Value& val, Operand dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
