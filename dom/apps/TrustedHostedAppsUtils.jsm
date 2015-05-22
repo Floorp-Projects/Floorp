@@ -203,15 +203,11 @@ this.TrustedHostedAppsUtils = {
     let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
                       aApp.origin, aApp.localId, false);
 
-    let mRequestChannel = NetUtil.newChannel2(aApp.manifestURL,
-                                              null,
-                                              null,
-                                              null,      // aLoadingNode
-                                              principal,
-                                              null,      // aTriggeringPrincipal
-                                              Ci.nsILoadInfo.SEC_NORMAL,
-                                              Ci.nsIContentPolicy.TYPE_OTHER)
-                                 .QueryInterface(Ci.nsIHttpChannel);
+    let mRequestChannel = NetUtil.newChannel({
+      uri: aApp.manifestURL,
+      loadingPrincipal: principal,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER}
+    ).QueryInterface(Ci.nsIHttpChannel);
     mRequestChannel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     mRequestChannel.notificationCallbacks =
       AppsUtils.createLoadContext(aAppId, false);
@@ -232,15 +228,11 @@ this.TrustedHostedAppsUtils = {
       return;
     }
 
-    let sRequestChannel = NetUtil.newChannel2(signatureURL,
-                                              null,
-                                              null,
-                                              null,      // aLoadingNode
-                                              principal,
-                                              null,      // aTriggeringPrincipal
-                                              Ci.nsILoadInfo.SEC_NORMAL,
-                                              Ci.nsIContentPolicy.TYPE_OTHER)
-      .QueryInterface(Ci.nsIHttpChannel);
+    let sRequestChannel = NetUtil.newChannel({
+      uri: signatureURL,
+      loadingPrincipal: principal,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER}
+    ).QueryInterface(Ci.nsIHttpChannel);
     sRequestChannel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
     sRequestChannel.notificationCallbacks =
       AppsUtils.createLoadContext(aAppId, false);

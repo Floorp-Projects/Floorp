@@ -12,14 +12,8 @@ Cu.import("resource://gre/modules/NetUtil.jsm"); /*global NetUtil */
 function readChannel(url) {
   let deferred = Promise.defer();
 
-  let channel = NetUtil.newChannel2(url,
-                                    null,
-                                    null,
-                                    null,      // aLoadingNode
-                                    Services.scriptSecurityManager.getSystemPrincipal(),
-                                    null,      // aTriggeringPrincipal
-                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                    Ci.nsIContentPolicy.TYPE_OTHER);
+  let channel = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+
   channel.contentType = "text/plain";
 
   NetUtil.asyncFetch(channel, function(inputStream, status) {
