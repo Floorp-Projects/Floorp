@@ -62,7 +62,7 @@ struct Node::ConstructFunctor : public BoolDefaultAdaptor<Value, false> {
     template <typename T> bool operator()(T* t, Node* node) { node->construct(t); return true; }
 };
 
-Node::Node(JSGCTraceKind kind, void* ptr)
+Node::Node(JS::TraceKind kind, void* ptr)
 {
     CallTyped(ConstructFunctor(), ptr, kind, this);
 }
@@ -108,11 +108,11 @@ class SimpleEdgeVectorTracer : public JS::CallbackTracer {
     // True if we should populate the edge's names.
     bool wantNames;
 
-    static void staticCallback(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind) {
+    static void staticCallback(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind) {
         static_cast<SimpleEdgeVectorTracer*>(trc)->callback(thingp, kind);
     }
 
-    void callback(void** thingp, JSGCTraceKind kind) {
+    void callback(void** thingp, JS::TraceKind kind) {
         if (!okay)
             return;
 
@@ -172,7 +172,7 @@ class SimpleEdgeRange : public EdgeRange {
   public:
     explicit SimpleEdgeRange(JSContext* cx) : edges(cx), i(0) { }
 
-    bool init(JSContext* cx, void* thing, JSGCTraceKind kind, bool wantNames = true) {
+    bool init(JSContext* cx, void* thing, JS::TraceKind kind, bool wantNames = true) {
         SimpleEdgeVectorTracer tracer(cx, &edges, wantNames);
         JS_TraceChildren(&tracer, thing, kind);
         settle();
@@ -272,7 +272,6 @@ template class TracerConcreteWithCompartment<js::BaseShape>;
 template class TracerConcrete<js::ObjectGroup>;
 }
 }
-
 
 namespace JS {
 namespace ubi {

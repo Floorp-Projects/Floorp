@@ -141,9 +141,9 @@ JSID_TO_GCTHING(jsid id)
 {
     void* thing = (void*)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
     if (JSID_IS_STRING(id))
-        return JS::GCCellPtr(thing, JSTRACE_STRING);
+        return JS::GCCellPtr(thing, JS::TraceKind::String);
     MOZ_ASSERT(JSID_IS_SYMBOL(id));
-    return JS::GCCellPtr(thing, JSTRACE_SYMBOL);
+    return JS::GCCellPtr(thing, JS::TraceKind::Symbol);
 }
 
 static MOZ_ALWAYS_INLINE bool

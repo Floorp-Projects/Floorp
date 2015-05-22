@@ -592,7 +592,7 @@ js::ZoneGlobalsAreAllGray(JS::Zone* zone)
     return true;
 }
 
-JS_FRIEND_API(JSGCTraceKind)
+JS_FRIEND_API(JS::TraceKind)
 js::GCThingTraceKind(void* thing)
 {
     MOZ_ASSERT(thing);
@@ -945,7 +945,7 @@ DumpHeapVisitCompartment(JSRuntime* rt, void* data, JSCompartment* comp)
 
 static void
 DumpHeapVisitArena(JSRuntime* rt, void* data, gc::Arena* arena,
-                   JSGCTraceKind traceKind, size_t thingSize)
+                   JS::TraceKind traceKind, size_t thingSize)
 {
     DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(data);
     fprintf(dtrc->output, "# arena allockind=%u size=%u\n",
@@ -954,7 +954,7 @@ DumpHeapVisitArena(JSRuntime* rt, void* data, gc::Arena* arena,
 
 static void
 DumpHeapVisitCell(JSRuntime* rt, void* data, void* thing,
-                  JSGCTraceKind traceKind, size_t thingSize)
+                  JS::TraceKind traceKind, size_t thingSize)
 {
     DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(data);
     char cellDesc[1024 * 32];
@@ -964,7 +964,7 @@ DumpHeapVisitCell(JSRuntime* rt, void* data, void* thing,
 }
 
 static void
-DumpHeapVisitChild(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind)
+DumpHeapVisitChild(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
 {
     if (gc::IsInsideNursery((js::gc::Cell*)*thingp))
         return;
@@ -976,7 +976,7 @@ DumpHeapVisitChild(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind)
 }
 
 static void
-DumpHeapVisitRoot(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind)
+DumpHeapVisitRoot(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
 {
     if (gc::IsInsideNursery((js::gc::Cell*)*thingp))
         return;

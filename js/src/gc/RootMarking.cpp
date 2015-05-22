@@ -552,14 +552,14 @@ class BufferGrayRootsTracer : public JS::CallbackTracer
     // Set to false if we OOM while buffering gray roots.
     bool bufferingGrayRootsFailed;
 
-    void appendGrayRoot(gc::TenuredCell* thing, JSGCTraceKind kind);
+    void appendGrayRoot(gc::TenuredCell* thing, JS::TraceKind kind);
 
   public:
     explicit BufferGrayRootsTracer(JSRuntime* rt)
       : JS::CallbackTracer(rt, grayTraceCallback), bufferingGrayRootsFailed(false)
     {}
 
-    static void grayTraceCallback(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind) {
+    static void grayTraceCallback(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind) {
         auto tracer = static_cast<BufferGrayRootsTracer*>(trc);
         tracer->appendGrayRoot(gc::TenuredCell::fromPointer(*thingp), kind);
     }
@@ -595,7 +595,7 @@ struct SetMaybeAliveFunctor {
 };
 
 void
-BufferGrayRootsTracer::appendGrayRoot(TenuredCell* thing, JSGCTraceKind kind)
+BufferGrayRootsTracer::appendGrayRoot(TenuredCell* thing, JS::TraceKind kind)
 {
     MOZ_ASSERT(runtime()->isHeapBusy());
 

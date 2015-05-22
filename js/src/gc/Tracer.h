@@ -111,7 +111,7 @@ TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, gc::Cell** thingp, const
 
 // Depricated. Please use one of the strongly typed variants above.
 void
-TraceChildren(JSTracer* trc, void* thing, JSGCTraceKind kind);
+TraceChildren(JSTracer* trc, void* thing, JS::TraceKind kind);
 
 namespace gc {
 
