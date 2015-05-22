@@ -409,8 +409,13 @@ ViewHelpers.L10N.prototype = {
  *        The root path to the required preferences branch.
  * @param object aPrefsBlueprint
  *        An object containing { accessorName: [prefType, prefName] } keys.
+ * @param object aOptions
+ *        Additional options for this constructor. Currently supported:
+ *          - monitorChanges: true to update the stored values if they changed
+ *                            when somebody edits about:config or the prefs
+ *                            change somewhere else.
  */
-ViewHelpers.Prefs = function(aPrefsRoot = "", aPrefsBlueprint = {}) {
+ViewHelpers.Prefs = function(aPrefsRoot = "", aPrefsBlueprint = {}, aOptions = {}) {
   EventEmitter.decorate(this);
 
   this._cache = new Map();
@@ -442,6 +447,10 @@ ViewHelpers.Prefs = function(aPrefsRoot = "", aPrefsBlueprint = {}) {
 
   this.registerObserver = () => observer.register();
   this.unregisterObserver = () => observer.unregister();
+
+  if (aOptions.monitorChanges) {
+    this.registerObserver();
+  }
 };
 
 ViewHelpers.Prefs.prototype = {
