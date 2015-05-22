@@ -15,10 +15,10 @@ const GECKO_SYMBOL = "(Gecko)";
  * Localization convenience methods.
  + TODO: merge these into a single file: Bug 1082695.
  */
-const TIMELINE_STRINGS_URI = "chrome://browser/locale/devtools/timeline.properties";
-const PROFILER_STRINGS_URI = "chrome://browser/locale/devtools/profiler.properties";
-
-const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const L10N = new ViewHelpers.MultiL10N([
+  "chrome://browser/locale/devtools/timeline.properties",
+  "chrome://browser/locale/devtools/profiler.properties"
+]);
 
 /**
  * A list of preferences for this tool. The values automatically update
