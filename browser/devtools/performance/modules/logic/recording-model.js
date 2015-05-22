@@ -16,7 +16,6 @@ loader.lazyRequireGetter(this, "RecordingUtils",
  * frames data, timeline (marker, tick, memory) data, and methods to mark
  * a recording as 'in progress' or 'finished'.
  */
-
 const RecordingModel = function (options={}) {
   this._label = options.label || "";
   this._console = options.console || false;
