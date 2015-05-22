@@ -668,6 +668,7 @@ xul|tree {
   -moz-appearance: none;
   font-size: 1em;
   border: 1px solid #c1c1c1;
+  margin: 0;
 }
 
 xul|tree:-moz-focusring,
