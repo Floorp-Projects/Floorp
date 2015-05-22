@@ -40,11 +40,6 @@ function onLoadViewPartialSource()
   else
     viewPartialSourceForFragment(window.arguments[2], window.arguments[3]);
 
-  gBrowser.droppedLinkHandler = function (event, url, name) {
-    viewSource(url)
-    event.preventDefault();
-  }
-
   window.content.focus();
 }
 
@@ -174,7 +169,7 @@ function viewPartialSourceForSelection(selection)
   // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
   var referrerPolicy = Components.interfaces.nsIHttpChannel.REFERRER_POLICY_DEFAULT;
-  ViewSourceChrome.webNav.loadURIWithOptions((isHTML ?
+  viewSourceChrome.webNav.loadURIWithOptions((isHTML ?
                                               "view-source:data:text/html;charset=utf-8," :
                                               "view-source:data:application/xml;charset=utf-8,")
                                              + encodeURIComponent(tmpNode.innerHTML),
