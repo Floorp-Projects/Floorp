@@ -237,20 +237,29 @@ class GlobalSharedContext : public SharedContext
 {
   private:
     Handle<StaticEvalObject*> staticEvalScope_;
-    bool allowSuperProperty_;
 
   public:
     GlobalSharedContext(ExclusiveContext* cx,
                         Directives directives, Handle<StaticEvalObject*> staticEvalScope,
-                        bool extraWarnings, bool allowSuperProperty)
+                        bool extraWarnings)
       : SharedContext(cx, directives, extraWarnings),
-        staticEvalScope_(staticEvalScope),
-        allowSuperProperty_(allowSuperProperty)
+        staticEvalScope_(staticEvalScope)
     {}
 
     ObjectBox* toObjectBox() { return nullptr; }
-    bool allowSuperProperty() const { return allowSuperProperty_; }
     HandleObject evalStaticScope() const { return staticEvalScope_; }
+
+    bool allowSuperProperty() const {
+        StaticScopeIter<CanGC> it(context, staticEvalScope_);
+        for (; !it.done(); it++) {
+            if (it.type() == StaticScopeIter<CanGC>::Function &&
+                !it.fun().isArrow())
+            {
+                return it.fun().allowSuperProperty();
+            }
+        }
+        return false;
+    }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
