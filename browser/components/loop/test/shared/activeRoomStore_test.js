@@ -269,7 +269,7 @@ describe("loop.store.ActiveRoomStore", function () {
         }));
 
         expect(store.getStoreState()).
-          to.have.property('roomState', ROOM_STATES.GATHER);
+          to.have.property("roomState", ROOM_STATES.GATHER);
       });
 
     it("should dispatch an SetupRoomInfo action if the get is successful",

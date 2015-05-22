@@ -792,8 +792,8 @@ loop.OTSdkDriver = (function() {
 
       this._connectionLengthNotedCalls++;
       if (this._debugTwoWayMediaTelemetry) {
-        console.log('Loop Telemetry: noted two-way media connection ' +
-          'in bucket: ', bucket);
+        console.log("Loop Telemetry: noted two-way media connection " +
+          "in bucket: ", bucket);
       }
     },
 

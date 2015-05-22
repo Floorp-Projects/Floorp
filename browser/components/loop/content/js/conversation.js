@@ -153,8 +153,7 @@ loop.conversation = (function(mozL10n) {
     React.render(React.createElement(AppControllerView, {
       roomStore: roomStore, 
       dispatcher: dispatcher, 
-      mozLoop: navigator.mozLoop}
-    ), document.querySelector('#main'));
+      mozLoop: navigator.mozLoop}), document.querySelector("#main"));
 
     document.body.setAttribute("dir", mozL10n.getDirection());
     document.body.setAttribute("platform", loop.shared.utils.getPlatform());
@@ -178,4 +177,4 @@ loop.conversation = (function(mozL10n) {
   };
 })(document.mozL10n);
 
-document.addEventListener('DOMContentLoaded', loop.conversation.init);
+document.addEventListener("DOMContentLoaded", loop.conversation.init);

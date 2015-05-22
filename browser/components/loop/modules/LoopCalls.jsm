@@ -146,7 +146,7 @@ CallProgressSocket.prototype = {
       return;
     }
 
-    if (msg.messageType && msg.messageType === 'hello') {
+    if (msg.messageType && msg.messageType === "hello") {
       this._handshakeComplete = true;
       this._onSuccess();
     }

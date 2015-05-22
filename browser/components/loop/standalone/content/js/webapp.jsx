@@ -455,7 +455,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     getInitialState: function() {
       return {
-        urlCreationDateString: '',
+        urlCreationDateString: "",
         disableCallButton: false
       };
     },
