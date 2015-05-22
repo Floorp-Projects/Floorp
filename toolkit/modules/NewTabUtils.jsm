@@ -405,8 +405,14 @@ let PinnedLinks = {
     // Clear the link's old position, if any.
     this.unpin(aLink);
 
+    // change pinned link into a history link
+    // update all pages on link change
+    let updatePages = this._makeHistoryLink(aLink);
     this.links[aIndex] = aLink;
     this.save();
+    if (updatePages) {
+      AllPages.update();
+    }
   },
 
   /**
@@ -464,7 +470,37 @@ let PinnedLinks = {
 
     // The given link is unpinned.
     return -1;
-  }
+  },
+
+  /**
+   * Transforms link into a "history" link
+   * @param aLink The link to change
+   * @return true if link changes, false otherwise
+   */
+  _makeHistoryLink: function PinnedLinks_makeHistoryLink(aLink) {
+    if (!aLink.type || aLink.type == "history") {
+      return false;
+    }
+    aLink.type = "history";
+    // always remove targetedSite
+    delete aLink.targetedSite;
+    return true;
+  },
+
+  /**
+   * Replaces existing link with another link.
+   * @param aUrl The url of existing link
+   * @param aLink The replacement link
+   */
+  replace: function PinnedLinks_replace(aUrl, aLink) {
+    let index = this._indexOfLink({url: aUrl});
+    if (index == -1) {
+      return;
+    }
+    this.links[index] = aLink;
+    this.save();
+  },
+
 };
 
 /**
