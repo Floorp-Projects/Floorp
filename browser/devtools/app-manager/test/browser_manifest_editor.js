@@ -11,7 +11,7 @@ let gManifestWindow, gManifestEditor;
 function test() {
   waitForExplicitFinish();
 
-  Task.spawn(function() {
+  Task.spawn(function*() {
     Services.prefs.setBoolPref(MANIFEST_EDITOR_ENABLED, true);
     let tab = yield openAppManager();
     yield selectProjectsPanel();
