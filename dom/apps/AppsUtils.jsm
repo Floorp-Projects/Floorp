@@ -706,7 +706,7 @@ this.AppsUtils = {
                                         Ci.nsIContentPolicy.TYPE_OTHER);
       channel.contentType = "application/json";
 
-      NetUtil.asyncFetch2(channel, function(aStream, aResult) {
+      NetUtil.asyncFetch(channel, function(aStream, aResult) {
         if (!Components.isSuccessCode(aResult)) {
           deferred.resolve(null);
 

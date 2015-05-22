@@ -47,7 +47,7 @@ function readURI(uri, options) {
   let { promise, resolve, reject } = defer();
 
   try {
-    NetUtil.asyncFetch2(channel, function (stream, result) {
+    NetUtil.asyncFetch(channel, function (stream, result) {
       if (components.isSuccessCode(result)) {
         let count = stream.available();
         let data = NetUtil.readInputStreamToString(stream, count, { charset : charset });

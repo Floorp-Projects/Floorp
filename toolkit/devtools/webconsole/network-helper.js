@@ -289,7 +289,7 @@ let NetworkHelper = {
       Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE |
       Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
-    NetUtil.asyncFetch2(
+    NetUtil.asyncFetch(
       channel,
       (aInputStream, aStatusCode, aRequest) => {
         if (!components.isSuccessCode(aStatusCode)) {

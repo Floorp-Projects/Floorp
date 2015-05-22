@@ -369,7 +369,7 @@ let SnapshotsListView = Heritage.extend(WidgetMethods, {
                                       Ci.nsIContentPolicy.TYPE_OTHER);
     channel.contentType = "text/plain";
 
-    NetUtil.asyncFetch2(channel, (inputStream, status) => {
+    NetUtil.asyncFetch(channel, (inputStream, status) => {
       if (!Components.isSuccessCode(status)) {
         console.error("Could not import recorded animation frame snapshot file.");
         return;
