@@ -9,16 +9,16 @@
  * markers are visible in the "waterfall".
  */
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+const { Cc, Ci, Cu, Cr } = require("chrome");
+const { AbstractCanvasGraph } = require("resource:///modules/devtools/Graphs.jsm");
+const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
 
-Cu.import("resource:///modules/devtools/Graphs.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-
-const { colorUtils: { setAlpha }} = require("devtools/css-color");
-const { getColor } = require("devtools/shared/theme");
-
+loader.lazyRequireGetter(this, "colorUtils",
+  "devtools/css-color", true);
+loader.lazyRequireGetter(this, "getColor",
+  "devtools/shared/theme", true);
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/shared/timeline/global", true);
+  "devtools/performance/global", true);
 
 const OVERVIEW_HEADER_HEIGHT = 14; // px
 const OVERVIEW_ROW_HEIGHT = 11; // px
@@ -224,12 +224,12 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   setTheme: function (theme) {
     this.theme = theme = theme || "light";
     this.backgroundColor = getColor("body-background", theme);
-    this.selectionBackgroundColor = setAlpha(getColor("selection-background", theme), 0.25);
-    this.selectionStripesColor = setAlpha("#fff", 0.1);
+    this.selectionBackgroundColor = colorUtils.setAlpha(getColor("selection-background", theme), 0.25);
+    this.selectionStripesColor = colorUtils.setAlpha("#fff", 0.1);
     this.headerBackgroundColor = getColor("body-background", theme);
     this.headerTextColor = getColor("body-color", theme);
-    this.headerTimelineStrokeColor = setAlpha(getColor("body-color-alt", theme), 0.25);
-    this.alternatingBackgroundColor = setAlpha(getColor("body-color", theme), 0.05);
+    this.headerTimelineStrokeColor = colorUtils.setAlpha(getColor("body-color-alt", theme), 0.25);
+    this.alternatingBackgroundColor = colorUtils.setAlpha(getColor("body-color", theme), 0.05);
   }
 });
 

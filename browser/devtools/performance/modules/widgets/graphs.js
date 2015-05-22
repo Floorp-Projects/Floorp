@@ -7,24 +7,27 @@
  * This file contains the base line graph that all Performance line graphs use.
  */
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+const { Cc, Ci, Cu, Cr } = require("chrome");
+const { Task } = require("resource://gre/modules/Task.jsm");
+const { LineGraphWidget } = require("resource:///modules/devtools/Graphs.jsm");
+const { BarGraphWidget } = require("resource:///modules/devtools/Graphs.jsm");
+const { CanvasGraphUtils } = require("resource:///modules/devtools/Graphs.jsm");
+const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
 
-Cu.import("resource:///modules/devtools/Graphs.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
-
-const { colorUtils: { setAlpha }} = require("devtools/css-color");
-const { getColor } = require("devtools/shared/theme");
-
-loader.lazyRequireGetter(this, "ProfilerGlobal",
-  "devtools/shared/profiler/global");
-loader.lazyRequireGetter(this, "TimelineGlobal",
-  "devtools/shared/timeline/global");
-loader.lazyRequireGetter(this, "MarkersOverview",
-  "devtools/shared/timeline/markers-overview", true);
+loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
+
+loader.lazyRequireGetter(this, "colorUtils",
+  "devtools/css-color", true);
+loader.lazyRequireGetter(this, "getColor",
+  "devtools/shared/theme", true);
+loader.lazyRequireGetter(this, "ProfilerGlobal",
+  "devtools/performance/global");
+loader.lazyRequireGetter(this, "TimelineGlobal",
+  "devtools/performance/global");
+loader.lazyRequireGetter(this, "MarkersOverview",
+  "devtools/performance/markers-overview", true);
 
 /**
  * For line graphs
@@ -86,13 +89,13 @@ PerformanceGraph.prototype = Heritage.extend(LineGraphWidget.prototype, {
     let mainColor = getColor(this.mainColor || "highlight-blue", theme);
     this.backgroundColor = getColor("body-background", theme);
     this.strokeColor = mainColor;
-    this.backgroundGradientStart = setAlpha(mainColor, 0.2);
-    this.backgroundGradientEnd = setAlpha(mainColor, 0.2);
-    this.selectionBackgroundColor = setAlpha(getColor(SELECTION_BACKGROUND_COLOR_NAME, theme), 0.25);
+    this.backgroundGradientStart = colorUtils.setAlpha(mainColor, 0.2);
+    this.backgroundGradientEnd = colorUtils.setAlpha(mainColor, 0.2);
+    this.selectionBackgroundColor = colorUtils.setAlpha(getColor(SELECTION_BACKGROUND_COLOR_NAME, theme), 0.25);
     this.selectionStripesColor = "rgba(255, 255, 255, 0.1)";
-    this.maximumLineColor = setAlpha(mainColor, 0.4);
-    this.averageLineColor = setAlpha(mainColor, 0.7);
-    this.minimumLineColor = setAlpha(mainColor, 0.9);
+    this.maximumLineColor = colorUtils.setAlpha(mainColor, 0.4);
+    this.averageLineColor = colorUtils.setAlpha(mainColor, 0.7);
+    this.minimumLineColor = colorUtils.setAlpha(mainColor, 0.9);
   }
 });
 
@@ -217,7 +220,7 @@ GraphsController.prototype = {
       return;
     }
 
-    this._rendering = Promise.defer();
+    this._rendering = promise.defer();
     for (let graph of (yield this._getEnabled())) {
       yield graph.setPerformanceData(recordingData, resolution);
       this.emit("rendered", graph.graphName);

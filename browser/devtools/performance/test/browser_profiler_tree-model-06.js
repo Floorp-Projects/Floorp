@@ -155,7 +155,7 @@ gThread.frameTable.data.forEach((frame) => {
 });
 
 function test() {
-  let { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
+  let { ThreadNode } = devtools.require("devtools/performance/tree-model");
 
   let root = new ThreadNode(gThread);
 

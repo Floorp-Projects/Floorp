@@ -6,8 +6,8 @@
  */
 
 function test() {
-  let { FrameNode } = devtools.require("devtools/shared/profiler/tree-model");
-  let { CATEGORY_OTHER } = devtools.require("devtools/shared/profiler/global");
+  let { FrameNode } = devtools.require("devtools/performance/tree-model");
+  let { CATEGORY_OTHER } = devtools.require("devtools/performance/global");
 
   let frame1 = new FrameNode("hello/<.world (http://foo/bar.js:123:987)", {
     location: "hello/<.world (http://foo/bar.js:123:987)",

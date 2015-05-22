@@ -10,7 +10,7 @@
 const { RecordingUtils } = devtools.require("devtools/performance/recording-utils");
 
 function test() {
-  let { JITOptimizations } = devtools.require("devtools/shared/profiler/jit");
+  let { JITOptimizations } = devtools.require("devtools/performance/jit");
 
   let rawSites = [];
   rawSites.push(gRawSite2);

@@ -6,7 +6,7 @@
  */
 
 function test() {
-  const { ThreadNode } = devtools.require("devtools/shared/profiler/tree-model");
+  const { ThreadNode } = devtools.require("devtools/performance/tree-model");
 
   // Create a root node from a given samples array.
 

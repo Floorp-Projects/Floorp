@@ -9,10 +9,10 @@ const { Promise } = require("resource://gre/modules/Promise.jsm");
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { getColor } = require("devtools/shared/theme");
 const EventEmitter = require("devtools/toolkit/event-emitter");
-const FrameUtils = require("devtools/shared/profiler/frame-utils");
+const FrameUtils = require("devtools/performance/frame-utils");
 
 loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
-  "devtools/shared/profiler/global", true);
+  "devtools/performance/global", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
