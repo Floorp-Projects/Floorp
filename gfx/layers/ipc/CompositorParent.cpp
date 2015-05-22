@@ -1327,6 +1327,13 @@ CompositorParent::RecvRequestOverfill()
 }
 
 void
+CompositorParent::FlushApzRepaints(const LayerTransactionParent* aLayerTree)
+{
+  MOZ_ASSERT(mApzcTreeManager);
+  mApzcTreeManager->FlushApzRepaints(aLayerTree->GetId());
+}
+
+void
 CompositorParent::GetAPZTestData(const LayerTransactionParent* aLayerTree,
                                  APZTestData* aOutData)
 {
@@ -1734,6 +1741,7 @@ public:
   virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) override;
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
                override;
+  virtual void FlushApzRepaints(const LayerTransactionParent* aLayerTree) override;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                               APZTestData* aOutData) override;
   virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
@@ -2144,6 +2152,21 @@ CrossProcessCompositorParent::ApplyAsyncProperties(
 
   MOZ_ASSERT(state->mParent);
   state->mParent->ApplyAsyncProperties(aLayerTree);
+}
+
+void
+CrossProcessCompositorParent::FlushApzRepaints(const LayerTransactionParent* aLayerTree)
+{
+  uint64_t id = aLayerTree->GetId();
+  MOZ_ASSERT(id != 0);
+  const CompositorParent::LayerTreeState* state =
+    CompositorParent::GetIndirectShadowTree(id);
+  if (!state) {
+    return;
+  }
+
+  MOZ_ASSERT(state->mParent);
+  state->mParent->FlushApzRepaints(aLayerTree);
 }
 
 void
