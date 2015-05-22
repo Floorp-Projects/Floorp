@@ -2785,7 +2785,7 @@ let E10SUINotification = {
       let channelAuthorized = updateChannel == "nightly" || updateChannel == "aurora";
 
       skipE10sChecks = !channelAuthorized ||
-                       UpdateServices.prefs.getBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y");
+                       Services.prefs.getBoolPref("browser.tabs.remote.disabled-for-a11y");
     } catch(e) {}
 
     if (skipE10sChecks) {
@@ -2869,7 +2869,9 @@ let E10SUINotification = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   observe: function(subject, topic, data) {
-    if (topic == "a11y-init-or-shutdown" && data == "1") {
+    if (topic == "a11y-init-or-shutdown"
+        && data == "1" &&
+        Services.appinfo.accessibilityIsBlacklistedForE10S) {
       this._showE10sAccessibilityWarning();
     }
   },
@@ -2959,7 +2961,15 @@ let E10SUINotification = {
   _warnedAboutAccessibility: false,
 
   _showE10sAccessibilityWarning: function() {
-    Services.prefs.setBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y", true);
+    try {
+      if (!Services.prefs.getBoolPref("browser.tabs.remote.disabled-for-a11y")) {
+        // Only return if the pref exists and was set to false, but not
+        // if the pref didn't exist (which will throw).
+        return;
+      }
+    } catch (e) { }
+
+    Services.prefs.setBoolPref("browser.tabs.remote.disabled-for-a11y", true);
 
     if (this._warnedAboutAccessibility) {
       return;
@@ -2996,7 +3006,7 @@ let E10SUINotification = {
         label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.label"),
         accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.dontDisable.accesskey"),
         callback: function () {
-          Services.prefs.setBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
+          Services.prefs.setBoolPref("browser.tabs.remote.disabled-for-a11y", false);
         }
       }
     ];
