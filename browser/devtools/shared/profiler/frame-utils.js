@@ -140,7 +140,7 @@ exports.parseLocation = function parseLocation(location, fallbackLine, fallbackC
   // If the URI digged out from the `location` is valid, this is a JS frame.
   if (uri) {
     functionName = location.substring(0, firstParenIndex - 1);
-    fileName = (uri.fileName + (uri.ref ? "#" + uri.ref : "")) || "/";
+    fileName = uri.fileName || "/";
     hostName = getHost(url, uri.host);
     // nsIURL throws when accessing a piece of a URL that doesn't
     // exist, because we can't have nice things. Only check this if hostName
