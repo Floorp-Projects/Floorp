@@ -218,9 +218,8 @@ public class FaviconView extends ImageView {
 
     public void showDefaultFavicon() {
         // We handle the default favicon as any other favicon to avoid the complications of special
-        // casing it. This means that if we provide assets that require the default favicon to be
-        // scaled up to fit in the container, a box with the dominant color will be used. We can
-        // deal with that later if it becomes relevant.
+        // casing it. This means that the icon can be scaled both up and down, and the dominant
+        // color box can used if it is enabled in XML attrs.
         final Bitmap defaultFaviconBitmap = BitmapFactory.decodeResource(getResources(),
                 R.drawable.favicon_globe);
         updateAndScaleImage(defaultFaviconBitmap, DEFAULT_FAVICON_KEY);
