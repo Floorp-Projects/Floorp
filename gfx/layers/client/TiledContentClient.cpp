@@ -374,7 +374,7 @@ int32_t
 gfxMemorySharedReadLock::ReadUnlock()
 {
   int32_t readCount = PR_ATOMIC_DECREMENT(&mReadCount);
-  NS_ASSERTION(readCount >= 0, "ReadUnlock called without ReadLock.");
+  MOZ_ASSERT(readCount >= 0);
 
   return readCount;
 }
@@ -424,7 +424,7 @@ gfxShmSharedReadLock::ReadUnlock() {
   }
   ShmReadLockInfo* info = GetShmReadLockInfoPtr();
   int32_t readCount = PR_ATOMIC_DECREMENT(&info->readCount);
-  NS_ASSERTION(readCount >= 0, "ReadUnlock called without a ReadLock.");
+  MOZ_ASSERT(readCount >= 0);
   if (readCount <= 0) {
     mAllocator->FreeShmemSection(mShmemSection);
   }
@@ -520,6 +520,7 @@ TileClient::TileClient(const TileClient& o)
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
   mCompositableClient = o.mCompositableClient;
+  mUpdateRect = o.mUpdateRect;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   mLastUpdate = o.mLastUpdate;
 #endif
@@ -539,6 +540,7 @@ TileClient::operator=(const TileClient& o)
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
   mCompositableClient = o.mCompositableClient;
+  mUpdateRect = o.mUpdateRect;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   mLastUpdate = o.mLastUpdate;
 #endif
@@ -609,6 +611,8 @@ CopyFrontToBack(TextureClient* aFront,
 
   gfx::IntPoint rectToCopyTopLeft = aRectToCopy.TopLeft();
   aFront->CopyToTextureClient(aBack, &aRectToCopy, &rectToCopyTopLeft);
+
+  aFront->Unlock();
   return true;
 }
 
@@ -705,9 +709,9 @@ TileClient::DiscardBackBuffer()
        mManager->ReportClientLost(*mBackBufferOnWhite);
      }
     } else {
-      mManager->ReturnTextureClient(*mBackBuffer);
+      mManager->ReturnTextureClientDeferred(*mBackBuffer);
       if (mBackBufferOnWhite) {
-        mManager->ReturnTextureClient(*mBackBufferOnWhite);
+        mManager->ReturnTextureClientDeferred(*mBackBufferOnWhite);
       }
     }
     mBackLock->ReadUnlock();
@@ -816,20 +820,14 @@ TileClient::GetTileDescriptor()
   if (mFrontLock->GetType() == gfxSharedReadLock::TYPE_MEMORY) {
     return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
                                   mFrontBufferOnWhite ? MaybeTexture(mFrontBufferOnWhite->GetIPDLActor()) : MaybeTexture(null_t()),
+                                  mUpdateRect,
                                   TileLock(uintptr_t(mFrontLock.get())));
   } else {
     gfxShmSharedReadLock *lock = static_cast<gfxShmSharedReadLock*>(mFrontLock.get());
     return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
                                   mFrontBufferOnWhite ? MaybeTexture(mFrontBufferOnWhite->GetIPDLActor()) : MaybeTexture(null_t()),
+                                  mUpdateRect,
                                   TileLock(lock->GetShmemSection()));
-  }
-}
-
-void
-ClientTiledLayerBuffer::ReadUnlock() {
-  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-    if (mRetainedTiles[i].IsPlaceholderTile()) continue;
-    mRetainedTiles[i].ReadUnlock();
   }
 }
 
@@ -873,9 +871,12 @@ ClientTiledLayerBuffer::GetSurfaceDescriptorTiles()
       tileDesc = mRetainedTiles[i].GetTileDescriptor();
     }
     tiles.AppendElement(tileDesc);
+    mRetainedTiles[i].mUpdateRect = IntRect();
   }
   return SurfaceDescriptorTiles(mValidRegion, mPaintedRegion,
-                                tiles, mRetainedWidth, mRetainedHeight,
+                                tiles,
+                                mFirstTileX, mFirstTileY,
+                                mRetainedWidth, mRetainedHeight,
                                 mResolution, mFrameResolution.xScale,
                                 mFrameResolution.yScale);
 }
@@ -1135,6 +1136,8 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                         content, mode,
                         &createdTextureClient, extraPainted,
                         &backBufferOnWhite);
+
+  aTile.mUpdateRect = offsetScaledDirtyRegion.GetBounds().Union(extraPainted.GetBounds());
 
   extraPainted.MoveBy(aTileOrigin);
   extraPainted.And(extraPainted, mNewValidRegion);
