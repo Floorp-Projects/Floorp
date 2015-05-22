@@ -177,7 +177,7 @@ GonkDiskSpaceWatcher::DoStart()
   NS_ASSERTION(XRE_GetIOMessageLoop() == MessageLoopForIO::current(),
                "Not on the correct message loop");
 
-  mFd = fanotify_init(FAN_CLASS_NOTIF, FAN_CLOEXEC);
+  mFd = fanotify_init(FAN_CLASS_NOTIF, FAN_CLOEXEC | O_LARGEFILE);
   if (mFd == -1) {
     if (errno == ENOSYS) {
       NS_WARNING("Warning: No fanotify support in this device's kernel.\n");
