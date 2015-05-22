@@ -218,16 +218,6 @@ this.TelemetryStorage = {
   },
 
   /**
-   * Save all pending pings.
-   *
-   * @param {object} sessionPing The additional session ping.
-   * @returns {promise}
-   */
-  savePendingPings: function(sessionPing) {
-    return TelemetryStorageImpl.savePendingPings(sessionPing);
-  },
-
-  /**
    * Add a ping to the saved pings directory so that it gets saved
    * and sent along with other pings.
    *
@@ -460,6 +450,7 @@ let TelemetryStorageImpl = {
   shutdown: Task.async(function*() {
     this._shutdown = true;
     yield this._abortedSessionSerializer.flushTasks();
+    yield this.savePendingPings();
     // If the archive cleaning task is running, block on it. It should bail out as soon
     // as possible.
     yield this._archiveCleanTask;
@@ -758,17 +749,12 @@ let TelemetryStorageImpl = {
   /**
    * Save all pending pings.
    *
-   * @param {object} sessionPing The additional session ping.
    * @returns {promise}
    */
-  savePendingPings: function(sessionPing) {
-    let p = pendingPings.reduce((p, ping) => {
-      // Restore the files with the previous pings if for some reason they have
-      // been deleted, don't overwrite them otherwise.
-      p.push(this.savePing(ping, false));
-      return p;}, [this.savePing(sessionPing, true)]);
-
-    pendingPings = [];
+  savePendingPings: function() {
+    let p = [for (ping of pendingPings) this.savePing(ping, false).catch(ex => {
+      this._log.error("savePendingPings - failed to save pending pings.");
+    })];
     return Promise.all(p);
   },
 
