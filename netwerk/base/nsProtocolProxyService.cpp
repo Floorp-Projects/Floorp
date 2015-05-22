@@ -49,7 +49,7 @@ using namespace mozilla;
 
 #include "mozilla/Logging.h"
 #undef LOG
-#define LOG(args) PR_LOG(net::GetProxyLog(), PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(net::GetProxyLog(), PR_LOG_DEBUG, args)
 
 //----------------------------------------------------------------------------
 

@@ -49,7 +49,7 @@ public:
   void Print(webrtc::TraceLevel level, const char* message, int length)
   {
     PRLogModuleInfo *log = GetWebRtcTraceLog();
-    PR_LOG(log, PR_LOG_DEBUG, ("%s", message));
+    MOZ_LOG(log, PR_LOG_DEBUG, ("%s", message));
   }
 };
 

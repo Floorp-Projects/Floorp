@@ -80,7 +80,7 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    nsGlobalWindow* window = nsGlobalWindow::GetOuterWindowWithId(mWindowId);
+    nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
     UniquePtr<ServiceWorkerClientInfo> clientInfo;
 
     if (window) {

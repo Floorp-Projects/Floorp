@@ -27,7 +27,7 @@ GetProbeLog()
   }
   return sLog;
 }
-#define LOG(x)  PR_LOG(GetProbeLog(), PR_LOG_DEBUG, x)
+#define LOG(x)  MOZ_LOG(GetProbeLog(), PR_LOG_DEBUG, x)
 #else
 #define LOG(x)
 #endif

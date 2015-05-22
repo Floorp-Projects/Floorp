@@ -27,7 +27,7 @@
 #endif
 
 extern PRLogModuleInfo *gWifiMonitorLog;
-#define LOG(args)     PR_LOG(gWifiMonitorLog, PR_LOG_DEBUG, args)
+#define LOG(args)     MOZ_LOG(gWifiMonitorLog, PR_LOG_DEBUG, args)
 
 class nsWifiAccessPoint;
 

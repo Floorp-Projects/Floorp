@@ -47,7 +47,7 @@ nsDirectoryIndexStream::nsDirectoryIndexStream()
     if (! gLog)
         gLog = PR_NewLogModule("nsDirectoryIndexStream");
 
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("nsDirectoryIndexStream[%p]: created", this));
 }
 
@@ -95,7 +95,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
         nsAutoCString path;
         aDir->GetNativePath(path);
-        PR_LOG(gLog, PR_LOG_DEBUG,
+        MOZ_LOG(gLog, PR_LOG_DEBUG,
                ("nsDirectoryIndexStream[%p]: initialized on %s",
                 this, path.get()));
     }
@@ -157,7 +157,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 
 nsDirectoryIndexStream::~nsDirectoryIndexStream()
 {
-    PR_LOG(gLog, PR_LOG_DEBUG,
+    MOZ_LOG(gLog, PR_LOG_DEBUG,
            ("nsDirectoryIndexStream[%p]: destroyed", this));
 }
 
@@ -242,7 +242,7 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
             if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
                 nsAutoCString path;
                 current->GetNativePath(path);
-                PR_LOG(gLog, PR_LOG_DEBUG,
+                MOZ_LOG(gLog, PR_LOG_DEBUG,
                        ("nsDirectoryIndexStream[%p]: iterated %s",
                         this, path.get()));
             }
@@ -254,7 +254,7 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
             bool hidden = false;
             current->IsHidden(&hidden);
             if (hidden) {
-                PR_LOG(gLog, PR_LOG_DEBUG,
+                MOZ_LOG(gLog, PR_LOG_DEBUG,
                        ("nsDirectoryIndexStream[%p]: skipping hidden file/directory",
                         this));
                 continue;

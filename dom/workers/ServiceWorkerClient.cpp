@@ -28,17 +28,21 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerClient)
 NS_INTERFACE_MAP_END
 
 ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
+  : mWindowId(0)
 {
   MOZ_ASSERT(aDoc);
-  MOZ_ASSERT(aDoc->GetWindow());
-
   nsresult rv = aDoc->GetId(mClientId);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to get the UUID of the document.");
   }
 
-  nsRefPtr<nsGlobalWindow> outerWindow = static_cast<nsGlobalWindow*>(aDoc->GetWindow());
-  mWindowId = outerWindow->WindowID();
+  nsRefPtr<nsGlobalWindow> innerWindow = static_cast<nsGlobalWindow*>(aDoc->GetInnerWindow());
+  if (innerWindow) {
+    // XXXcatalinb: The inner window can be null if the document is navigating
+    // and was detached.
+    mWindowId = innerWindow->WindowID();
+  }
+
   aDoc->GetURL(mUrl);
   mVisibilityState = aDoc->VisibilityState();
 
@@ -48,6 +52,8 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
     NS_WARNING("Failed to get focus information.");
   }
 
+  nsRefPtr<nsGlobalWindow> outerWindow = static_cast<nsGlobalWindow*>(aDoc->GetWindow());
+  MOZ_ASSERT(outerWindow);
   if (!outerWindow->IsTopLevelWindow()) {
     mFrameType = FrameType::Nested;
   } else if (outerWindow->HadOriginalOpener()) {
@@ -85,7 +91,7 @@ public:
   Run()
   {
     AssertIsOnMainThread();
-    nsGlobalWindow* window = nsGlobalWindow::GetOuterWindowWithId(mWindowId);
+    nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(mWindowId);
     if (!window) {
       return NS_ERROR_FAILURE;
     }

@@ -28,7 +28,7 @@ GetCspParserLog()
   return gCspParserPRLog;
 }
 
-#define CSPPARSERLOG(args) PR_LOG(GetCspParserLog(), PR_LOG_DEBUG, args)
+#define CSPPARSERLOG(args) MOZ_LOG(GetCspParserLog(), PR_LOG_DEBUG, args)
 #define CSPPARSERLOGENABLED() PR_LOG_TEST(GetCspParserLog(), PR_LOG_DEBUG)
 
 static const char16_t COLON        = ':';

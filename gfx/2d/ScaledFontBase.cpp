@@ -80,7 +80,7 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
 #ifdef USE_SKIA
   if (aTarget->GetBackendType() == BackendType::SKIA) {
     SkPath path = GetSkiaPathForGlyphs(aBuffer);
-    return new PathSkia(path, FillRule::FILL_WINDING);
+    return MakeAndAddRef<PathSkia>(path, FillRule::FILL_WINDING);
   }
 #endif
 #ifdef USE_CAIRO

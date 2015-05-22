@@ -407,8 +407,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     NS_DECL_ISUPPORTS
 
    private:
-      RefPtr<PeerConnectionMedia> pcm_;
-      virtual ~ProtocolProxyQueryHandler() {}
+    void SetProxyOnPcm(nsIProxyInfo& proxyinfo);
+    RefPtr<PeerConnectionMedia> pcm_;
+    virtual ~ProtocolProxyQueryHandler() {}
   };
 #endif // !defined(MOZILLA_XPCOMRT_API)
 

@@ -447,14 +447,14 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
     nsresult rv;
 
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-        PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("nsXULContentBuilder::BuildContentFromTemplate (is unique: %d)",
                aIsUnique));
 
         nsAutoString id;
         aChild->GetId(id);
 
-        PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("Tags: [Template: %s  Resource: %s  Real: %s] for id %s",
                 nsAtomCString(aTemplateNode->NodeInfo()->NameAtom()).get(),
                 nsAtomCString(aResourceNode->NodeInfo()->NameAtom()).get(),
@@ -524,7 +524,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
         nsIAtom *tag = tmplKid->NodeInfo()->NameAtom();
 
         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+            MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("xultemplate[%p]     building %s %s %s",
                     this, nsAtomCString(tag).get(),
                     (isGenerationElement ? "[resource]" : ""),
@@ -939,7 +939,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
     // and 2) recursive subcontent (if the current element refers to a
     // container result).
 
-    PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+    MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
            ("nsXULContentBuilder::CreateTemplateAndContainerContents start - flags: %d",
             mFlags));
 
@@ -975,7 +975,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
                                     false, true);
     }
 
-    PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+    MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
            ("nsXULContentBuilder::CreateTemplateAndContainerContents end"));
 
     return NS_OK;
@@ -1076,7 +1076,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoString id;
         aResult->GetId(id);
-        PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("nsXULContentBuilder::CreateContainerContentsForQuerySet start for ref %s\n",
                NS_ConvertUTF16toUTF8(id).get()));
     }
