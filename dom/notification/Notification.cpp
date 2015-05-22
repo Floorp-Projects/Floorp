@@ -690,7 +690,8 @@ Notification::IsGetEnabled(JSContext* aCx, JSObject* aObj)
   return NS_IsMainThread();
 }
 
-Notification::Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
+Notification::Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
+                           const nsAString& aTitle, const nsAString& aBody,
                            NotificationDirection aDir, const nsAString& aLang,
                            const nsAString& aTag, const nsAString& aIconUrl,
                            const NotificationBehavior& aBehavior)
@@ -700,7 +701,14 @@ Notification::Notification(const nsAString& aID, const nsAString& aTitle, const 
     mTag(aTag), mIconUrl(aIconUrl), mBehavior(aBehavior), mIsClosed(false),
     mIsStored(false), mTaskCount(0)
 {
-  if (!NS_IsMainThread()) {
+  if (NS_IsMainThread()) {
+    // We can only call this on the main thread because
+    // Event::SetEventType() called down the call chain when dispatching events
+    // using DOMEventTargetHelper::DispatchTrustedEvent() will assume the event
+    // is a main thread event if it has a valid owner. It will then attempt to
+    // fetch the atom for the event name which asserts main thread only.
+    BindToOwner(aGlobal);
+  } else {
     mWorkerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(mWorkerPrivate);
   }
@@ -787,14 +795,8 @@ Notification::ConstructFromFields(
   options.mBody = aBody;
   options.mTag = aTag;
   options.mIcon = aIcon;
-  nsRefPtr<Notification> notification;
-  notification = Notification::CreateInternal(aID,
-                                              aTitle,
-                                              options);
-
-  if (NS_IsMainThread()) {
-    notification->BindToOwner(aGlobal);
-  }
+  nsRefPtr<Notification> notification = CreateInternal(aGlobal, aID, aTitle,
+                                                       options);
 
   notification->InitFromBase64(jsapi.cx(), aData, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -879,7 +881,8 @@ Notification::UnpersistNotification()
 }
 
 already_AddRefed<Notification>
-Notification::CreateInternal(const nsAString& aID,
+Notification::CreateInternal(nsIGlobalObject* aGlobal,
+                             const nsAString& aID,
                              const nsAString& aTitle,
                              const NotificationOptions& aOptions)
 {
@@ -900,8 +903,7 @@ Notification::CreateInternal(const nsAString& aID,
     id = convertedID;
   }
 
-  nsRefPtr<Notification> notification = new Notification(id,
-                                                         aTitle,
+  nsRefPtr<Notification> notification = new Notification(aGlobal, id, aTitle,
                                                          aOptions.mBody,
                                                          aOptions.mDir,
                                                          aOptions.mLang,
@@ -2274,11 +2276,8 @@ Notification::CreateAndShow(nsIGlobalObject* aGlobal,
   jsapi.Init(aGlobal);
   JSContext* cx = jsapi.cx();
 
-  nsRefPtr<Notification> notification = CreateInternal(EmptyString(),
-                                                       aTitle,
-                                                       aOptions);
-
-  notification->BindToOwner(aGlobal);
+  nsRefPtr<Notification> notification = CreateInternal(aGlobal, EmptyString(),
+                                                       aTitle, aOptions);
 
   // Make a structured clone of the aOptions.mData object
   JS::Rooted<JS::Value> data(cx, aOptions.mData);

@@ -289,14 +289,14 @@ public:
   bool DispatchClickEvent();
   bool DispatchNotificationClickEvent();
 protected:
-  // Callers MUST bind the Notification to the correct DOMEventTargetHelper parent using
-  // BindToOwner().
-  Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
+  Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
+               const nsAString& aTitle, const nsAString& aBody,
                NotificationDirection aDir, const nsAString& aLang,
                const nsAString& aTag, const nsAString& aIconUrl,
                const NotificationBehavior& aBehavior);
 
-  static already_AddRefed<Notification> CreateInternal(const nsAString& aID,
+  static already_AddRefed<Notification> CreateInternal(nsIGlobalObject* aGlobal,
+                                                       const nsAString& aID,
                                                        const nsAString& aTitle,
                                                        const NotificationOptions& aOptions);
 
