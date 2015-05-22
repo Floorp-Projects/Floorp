@@ -1,0 +1,33 @@
+<!doctype html>
+<html class="reftest-wait">
+<style>
+#parent.hidden {
+  display: none;
+}
+.icon {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.icon.shrink {
+  animation: shrink 1s;
+}
+@keyframes shrink {
+  to { transform: scale(0); }
+}
+</style>
+<div id="parent">
+  <div class="icon">Searching</div>
+</div>
+<script>
+var icon = document.querySelector('.icon');
+getComputedStyle(icon).opacity;
+icon.style.opacity = 1;
+icon.classList.add('shrink');
+setTimeout(function() {
+  document.getElementById('parent').classList.add('hidden');
+  setTimeout(function() {
+    document.documentElement.removeAttribute('class');
+  }, 500);
+}, 500);
+</script>
+</html>

@@ -24,7 +24,8 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadScriptFromHead,
   eSpeculativeLoadStyle,
   eSpeculativeLoadManifest,
-  eSpeculativeLoadSetDocumentCharset
+  eSpeculativeLoadSetDocumentCharset,
+  eSpeculativeLoadPreconnect
 };
 
 class nsHtml5SpeculativeLoad {
@@ -161,6 +162,14 @@ class nsHtml5SpeculativeLoad {
       mOpCode = eSpeculativeLoadSetDocumentCharset;
       CopyUTF8toUTF16(aCharset, mCharset);
       mTypeOrCharsetSource.Assign((char16_t)aCharsetSource);
+    }
+
+    inline void InitPreconnect(const nsAString& aUrl)
+    {
+      NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
+                      "Trying to reinitialize a speculative load!");
+      mOpCode = eSpeculativeLoadPreconnect;
+      mUrl.Assign(aUrl);
     }
 
     void Perform(nsHtml5TreeOpExecutor* aExecutor);

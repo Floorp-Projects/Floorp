@@ -33,7 +33,7 @@ MacIOSurfaceTextureClientOGL::Create(ISurfaceAllocator* aAllocator,
   MOZ_ASSERT(texture->IsValid());
   MOZ_ASSERT(!texture->IsAllocated());
   texture->mSurface = aSurface;
-  return texture;
+  return texture.forget();
 }
 
 bool

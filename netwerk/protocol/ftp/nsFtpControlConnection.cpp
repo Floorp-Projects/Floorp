@@ -16,8 +16,8 @@
 #include <algorithm>
 
 extern PRLogModuleInfo* gFTPLog;
-#define LOG(args)         PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
-#define LOG_ALWAYS(args)  PR_LOG(gFTPLog, PR_LOG_ALWAYS, args)
+#define LOG(args)         MOZ_LOG(gFTPLog, PR_LOG_DEBUG, args)
+#define LOG_ALWAYS(args)  MOZ_LOG(gFTPLog, PR_LOG_ALWAYS, args)
 
 //
 // nsFtpControlConnection implementation ...

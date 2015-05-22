@@ -16,7 +16,7 @@ using namespace mozilla::media;
 namespace mozilla {
 
 PRLogModuleInfo* GetDirectShowLog();
-#define LOG(...) PR_LOG(GetDirectShowLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define LOG(...) MOZ_LOG(GetDirectShowLog(), PR_LOG_DEBUG, (__VA_ARGS__))
 
 AudioSinkInputPin::AudioSinkInputPin(wchar_t* aObjectName,
                                      AudioSinkFilter* aFilter,
@@ -139,7 +139,7 @@ AudioSinkInputPin::GetConnectedPinSeeking()
     return nullptr;
   RefPtr<IMediaSeeking> seeking;
   peer->QueryInterface(static_cast<IMediaSeeking**>(byRef(seeking)));
-  return seeking;
+  return seeking.forget();
 }
 
 HRESULT

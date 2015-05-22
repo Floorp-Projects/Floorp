@@ -19,7 +19,7 @@
 
 PRLogModuleInfo* gRtspLog;
 #undef LOG
-#define LOG(args) PR_LOG(gRtspLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gRtspLog, PR_LOG_DEBUG, args)
 
 #define SEND_DISCONNECT_IF_ERROR(rv)                         \
   if (NS_FAILED(rv) && mIPCOpen && mTotalTracks > 0ul) {     \

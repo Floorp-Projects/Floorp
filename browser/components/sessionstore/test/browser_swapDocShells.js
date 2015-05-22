@@ -1,25 +1,21 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-function test() {
-  waitForExplicitFinish();
+add_task(function* () {
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
+  yield promiseBrowserLoaded(gBrowser.selectedBrowser);
 
-  Task.spawn(function task() {
-    let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
-    yield promiseBrowserLoaded(gBrowser.selectedBrowser);
+  let win = gBrowser.replaceTabWithWindow(tab);
+  yield promiseDelayedStartupFinished(win);
+  yield promiseBrowserHasURL(win.gBrowser.browsers[0], "about:mozilla");
 
-    let win = gBrowser.replaceTabWithWindow(tab);
-    yield promiseDelayedStartupFinished(win);
-    yield promiseBrowserHasURL(win.gBrowser.browsers[0], "about:mozilla");
+  win.duplicateTabIn(win.gBrowser.selectedTab, "tab");
+  yield promiseTabRestored(win.gBrowser.tabs[1]);
 
-    win.duplicateTabIn(win.gBrowser.selectedTab, "tab");
-    let browser = win.gBrowser.browsers[1];
-    yield promiseBrowserLoaded(browser);
-    is(browser.currentURI.spec, "about:mozilla", "tab was duplicated");
+  let browser = win.gBrowser.browsers[1];
+  is(browser.currentURI.spec, "about:mozilla", "tab was duplicated");
 
-    win.close();
-  }).then(finish);
-}
+  yield promiseWindowClosed(win);
+});
 
 function promiseDelayedStartupFinished(win) {
   let deferred = Promise.defer();

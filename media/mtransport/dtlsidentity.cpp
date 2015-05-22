@@ -150,7 +150,9 @@ TemporaryRef<DtlsIdentity> DtlsIdentity::Generate() {
   }
   certificate->derCert = *signedCert;
 
-  return new DtlsIdentity(private_key.forget(), certificate.forget());
+  RefPtr<DtlsIdentity> identity =
+    new DtlsIdentity(private_key.forget(), certificate.forget());
+  return identity.forget();
 }
 
 

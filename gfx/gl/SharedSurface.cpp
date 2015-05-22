@@ -347,7 +347,7 @@ SurfaceFactory::NewShSurfHandle(const gfx::IntSize& size)
     // is no longer being used.
     surf->WaitForBufferOwnership();
 
-    return new ShSurfHandle(this, Move(surf));
+    return MakeAndAddRef<ShSurfHandle>(this, Move(surf));
 }
 
 // Auto-deletes surfs of the wrong type.

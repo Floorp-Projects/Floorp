@@ -128,6 +128,7 @@ struct WebGLContextOptions
     bool premultipliedAlpha;
     bool antialias;
     bool preserveDrawingBuffer;
+    bool failIfMajorPerformanceCaveat;
 };
 
 // From WebGLContextUtils

@@ -8,7 +8,7 @@ EXTRA_JS_MODULES += [
     'ManifestImageObjectProcessor.jsm',
     'ManifestObtainer.jsm',
     'ManifestProcessor.jsm',
-    'manifestValueExtractor.js'
+    'ManifestValueExtractor.jsm'
 ]
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']

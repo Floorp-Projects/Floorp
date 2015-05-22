@@ -22,7 +22,7 @@ namespace mozilla {
 
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(x, ...) \
-  PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, ("Decoder=%p " x, mDecoder, ##__VA_ARGS__))
+  MOZ_LOG(gMediaDecoderLog, PR_LOG_DEBUG, ("Decoder=%p " x, mDecoder, ##__VA_ARGS__))
 
 // Same workaround as MediaDecoderStateMachine.cpp.
 #define DECODER_WARN_HELPER(a, b) NS_WARNING b
@@ -277,7 +277,7 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
       // again. We don't just decode straight in a loop here, as that
       // would hog the decode task queue.
       RefPtr<nsIRunnable> task(new ReRequestVideoWithSkipTask(this, aTimeThreshold));
-      mTaskQueue->Dispatch(task);
+      mTaskQueue->Dispatch(task.forget());
       return p;
     }
   }
@@ -313,7 +313,7 @@ MediaDecoderReader::RequestAudioData()
     // consumed. (|mVideoSinkBufferCount| > 0)
     if (AudioQueue().GetSize() == 0 && mTaskQueue) {
       RefPtr<nsIRunnable> task(new ReRequestAudioTask(this));
-      mTaskQueue->Dispatch(task);
+      mTaskQueue->Dispatch(task.forget());
       return p;
     }
   }

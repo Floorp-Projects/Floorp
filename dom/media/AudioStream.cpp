@@ -30,7 +30,7 @@ namespace mozilla {
 
 PRLogModuleInfo* gAudioStreamLog = nullptr;
 // For simple logs
-#define LOG(x) PR_LOG(gAudioStreamLog, PR_LOG_DEBUG, x)
+#define LOG(x) MOZ_LOG(gAudioStreamLog, PR_LOG_DEBUG, x)
 
 /**
  * When MOZ_DUMP_AUDIO is set in the environment (to anything),
@@ -329,7 +329,7 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
     return NS_ERROR_FAILURE;
   }
 
-  PR_LOG(gAudioStreamLog, PR_LOG_DEBUG,
+  MOZ_LOG(gAudioStreamLog, PR_LOG_DEBUG,
     ("%s  channels: %d, rate: %d for %p", __FUNCTION__, aNumChannels, aRate, this));
   mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
@@ -546,12 +546,12 @@ AudioStream::CheckForStart()
     if (mLatencyRequest == LowLatency || mNeedsStart) {
       StartUnlocked(); // mState = STARTED or ERRORED
       mNeedsStart = false;
-      PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+      MOZ_LOG(gAudioStreamLog, PR_LOG_WARNING,
              ("Started waiting %s-latency stream",
               mLatencyRequest == LowLatency ? "low" : "high"));
     } else {
       // high latency, not full - OR Pause() was called before we got here
-      PR_LOG(gAudioStreamLog, PR_LOG_DEBUG,
+      MOZ_LOG(gAudioStreamLog, PR_LOG_DEBUG,
              ("Not starting waiting %s-latency stream",
               mLatencyRequest == LowLatency ? "low" : "high"));
     }
@@ -644,7 +644,7 @@ AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTim
           remains = mBuffer.Length() - bytesToCopy; // Free up just enough space
         }
         // account for dropping samples
-        PR_LOG(gAudioStreamLog, PR_LOG_WARNING, ("Stream %p dropping %u bytes (%u frames)in Write()",
+        MOZ_LOG(gAudioStreamLog, PR_LOG_WARNING, ("Stream %p dropping %u bytes (%u frames)in Write()",
             this, mBuffer.Length() - remains, BytesToFrames(mBuffer.Length() - remains)));
         mReadPoint += BytesToFrames(mBuffer.Length() - remains);
         mBuffer.ContractTo(remains);
@@ -652,14 +652,14 @@ AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTim
         // If we are not playing, but our buffer is full, start playing to make
         // room for soon-to-be-decoded data.
         if (mState != STARTED && mState != RUNNING) {
-          PR_LOG(gAudioStreamLog, PR_LOG_WARNING, ("Starting stream %p in Write (%u waiting)",
+          MOZ_LOG(gAudioStreamLog, PR_LOG_WARNING, ("Starting stream %p in Write (%u waiting)",
                                                  this, bytesToCopy));
           StartUnlocked();
           if (mState == ERRORED) {
             return NS_ERROR_FAILURE;
           }
         }
-        PR_LOG(gAudioStreamLog, PR_LOG_WARNING, ("Stream %p waiting in Write() (%u waiting)",
+        MOZ_LOG(gAudioStreamLog, PR_LOG_WARNING, ("Stream %p waiting in Write() (%u waiting)",
                                                  this, bytesToCopy));
         mon.Wait();
       }
@@ -1072,16 +1072,16 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
       TimeStamp now = TimeStamp::Now();
       if (!mStartTime.IsNull()) {
         int64_t timeMs = (now - mStartTime).ToMilliseconds();
-        PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+        MOZ_LOG(gAudioStreamLog, PR_LOG_WARNING,
                ("Stream took %lldms to start after first Write() @ %u", timeMs, mOutRate));
       } else {
-        PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+        MOZ_LOG(gAudioStreamLog, PR_LOG_WARNING,
           ("Stream started before Write() @ %u", mOutRate));
       }
 
       if (old_len != available) {
         // Note that we may have dropped samples in Write() as well!
-        PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+        MOZ_LOG(gAudioStreamLog, PR_LOG_WARNING,
                ("AudioStream %p dropped %u + %u initial frames @ %u", this,
                  mReadPoint, BytesToFrames(old_len - available), mOutRate));
         mReadPoint += BytesToFrames(old_len - available);
@@ -1122,7 +1122,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
     uint8_t* rpos = static_cast<uint8_t*>(aBuffer) + FramesToBytes(aFrames - underrunFrames);
     memset(rpos, 0, FramesToBytes(underrunFrames));
     if (underrunFrames) {
-      PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
+      MOZ_LOG(gAudioStreamLog, PR_LOG_WARNING,
              ("AudioStream %p lost %d frames", this, underrunFrames));
     }
     servicedFrames += underrunFrames;

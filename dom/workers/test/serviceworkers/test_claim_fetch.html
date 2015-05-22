@@ -1,0 +1,98 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1130684 - Test fetch events are intercepted after claim </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <a ping="ping" href="fetch.txt">link</a>
+</div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+
+  function register() {
+    return navigator.serviceWorker.register("claim_fetch_worker.js",
+                                            { scope: "./" })
+      .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+  function createClient() {
+    var p = new Promise(function(res, rej){
+      window.onmessage = function(e) {
+        if(e.data === "READY") {
+          res();
+        }
+      }
+    });
+
+    var content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "sw_clients/service_worker_controlled.html");
+    content.appendChild(iframe);
+
+    return p;
+  }
+
+  function testFetch(before) {
+    return fetch("fetch/real-file.txt").then(function(res) {
+      ok(res.ok, "Response should be valid.");
+      return res.text().then(function(body) {
+        if (before) {
+          ok(body !== "Fetch was intercepted", "Fetch events should not be intercepted.");
+        } else {
+          ok(body === "Fetch was intercepted", "Fetch events should be intercepted.");
+        }
+      });
+    });
+  }
+
+  function claimThisPage() {
+    ok(registration.active, "Worker is active.");
+    var p = new Promise(function (res, rej) {
+      navigator.serviceWorker.oncontrollerchange = res;
+    });
+
+    registration.active.postMessage("Claim");
+
+    return p;
+  }
+
+  function runTest() {
+    register()
+      .then(createClient)
+      .then(testFetch.bind(this, true))
+      .then(claimThisPage)
+      .then(testFetch.bind(this, false))
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
