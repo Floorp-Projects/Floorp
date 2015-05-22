@@ -263,7 +263,6 @@ public:
      * on the critical path.
      */
     static void PreloadSlowThings();
-    static void PostForkPreload();
 
     /** Return a TabChild with the given attributes. */
     static already_AddRefed<TabChild>
@@ -476,6 +475,7 @@ public:
     static TabChild* GetFrom(uint64_t aLayersId);
 
     void DidComposite(uint64_t aTransactionId);
+    void ClearCachedResources();
 
     static inline TabChild*
     GetFrom(nsIDOMWindow* aWindow)

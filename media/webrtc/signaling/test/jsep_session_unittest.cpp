@@ -397,6 +397,18 @@ protected:
   }
 
   void
+  SetPayloadTypeNumber(JsepSession& session,
+                       const std::string& codecName,
+                       const std::string& payloadType)
+  {
+    for (auto* codec : session.Codecs()) {
+      if (codec->mName == codecName) {
+        codec->mDefaultPt = payloadType;
+      }
+    }
+  }
+
+  void
   EnsureNegotiationFailure(SdpMediaSection::MediaType type,
                            const std::string& codecName)
   {
@@ -3156,6 +3168,25 @@ TEST_F(JsepSessionTest, StronglyPreferredCodec)
   GetCodec(mSessionAns, 0, false, 0, &codec); // receiving
   ASSERT_TRUE(codec);
   ASSERT_EQ("H264", codec->mName);
+}
+
+TEST_F(JsepSessionTest, LowDynamicPayloadType)
+{
+  SetPayloadTypeNumber(mSessionOff, "opus", "12");
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+
+  OfferAnswer();
+  const JsepCodecDescription* codec;
+  GetCodec(mSessionAns, 0, true, 0, &codec); // sending
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("opus", codec->mName);
+  ASSERT_EQ("12", codec->mDefaultPt);
+  GetCodec(mSessionAns, 0, false, 0, &codec); // receiving
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("opus", codec->mName);
+  ASSERT_EQ("12", codec->mDefaultPt);
 }
 
 } // namespace mozilla

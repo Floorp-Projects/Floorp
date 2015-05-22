@@ -176,7 +176,9 @@ public:
 
   void DispatchShutdown()
   {
-    TaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown));
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown);
+    TaskQueue()->Dispatch(runnable.forget());
   }
 
   void FinishShutdown();
@@ -243,7 +245,9 @@ public:
 
   void DispatchStartBuffering()
   {
-    TaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MediaDecoderStateMachine::StartBuffering));
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::StartBuffering);
+    TaskQueue()->Dispatch(runnable.forget());
   }
 
   // This is called on the state machine thread and audio thread.
@@ -745,7 +749,9 @@ private:
 public:
   void DispatchOnAudioSinkComplete()
   {
-    TaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkComplete));
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkComplete);
+    TaskQueue()->Dispatch(runnable.forget());
   }
 
   // Called by the AudioSink to signal errors.
@@ -753,7 +759,9 @@ public:
 
   void DispatchOnAudioSinkError()
   {
-    TaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkError));
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkError);
+    TaskQueue()->Dispatch(runnable.forget());
   }
 
   // Return true if the video decoder's decode speed can not catch up the

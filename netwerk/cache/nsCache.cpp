@@ -32,9 +32,9 @@ CacheLogPrintPath(PRLogModuleLevel level, const char * format, nsIFile * item)
     nsAutoCString path;
     nsresult rv = item->GetNativePath(path);
     if (NS_SUCCEEDED(rv)) {
-        PR_LOG(gCacheLog, level, (format, path.get()));
+        MOZ_LOG(gCacheLog, level, (format, path.get()));
     } else {
-        PR_LOG(gCacheLog, level, ("GetNativePath failed: %x", rv));
+        MOZ_LOG(gCacheLog, level, ("GetNativePath failed: %x", rv));
     }
 }
 

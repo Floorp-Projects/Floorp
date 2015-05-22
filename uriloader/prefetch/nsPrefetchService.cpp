@@ -44,7 +44,7 @@ using namespace mozilla;
 static PRLogModuleInfo *gPrefetchLog;
 
 #undef LOG
-#define LOG(args) PR_LOG(gPrefetchLog, 4, args)
+#define LOG(args) MOZ_LOG(gPrefetchLog, 4, args)
 
 #undef LOG_ENABLED
 #define LOG_ENABLED() PR_LOG_TEST(gPrefetchLog, 4)

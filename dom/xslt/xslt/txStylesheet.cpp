@@ -168,14 +168,14 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
 #ifdef TX_TO_STRING
           match->toString(matchAttr);
 #endif
-          PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+          MOZ_LOG(txLog::xslt, PR_LOG_DEBUG,
                  ("MatchTemplate, Pattern %s, Mode %s, Node %s\n",
                   NS_LossyConvertUTF16toASCII(matchAttr).get(),
                   NS_LossyConvertUTF16toASCII(mode).get(),
                   NS_LossyConvertUTF16toASCII(nodeName).get()));
       }
       else {
-          PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+          MOZ_LOG(txLog::xslt, PR_LOG_DEBUG,
                  ("No match, Node %s, Mode %s\n", 
                   NS_LossyConvertUTF16toASCII(nodeName).get(),
                   NS_LossyConvertUTF16toASCII(mode).get()));

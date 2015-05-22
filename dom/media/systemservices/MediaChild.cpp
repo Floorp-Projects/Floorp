@@ -15,7 +15,7 @@
 
 #undef LOG
 PRLogModuleInfo *gMediaChildLog;
-#define LOG(args) PR_LOG(gMediaChildLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gMediaChildLog, PR_LOG_DEBUG, args)
 
 namespace mozilla {
 namespace media {
@@ -113,30 +113,16 @@ Child::~Child()
   MOZ_COUNT_DTOR(Child);
 }
 
-uint32_t Child::sRequestCounter = 0;
-
 uint32_t
 Child::AddRequestPledge(ChildPledge<nsCString>& aPledge)
 {
-  uint32_t id = ++sRequestCounter;
-  nsRefPtr<ChildPledge<nsCString>> ptr(&aPledge);
-  mRequestPledges.AppendElement(PledgeEntry(id, ptr));
-  return id;
+  return mRequestPledges.Append(aPledge);
 }
 
 already_AddRefed<ChildPledge<nsCString>>
 Child::RemoveRequestPledge(uint32_t aRequestId)
 {
-  for (PledgeEntry& entry : mRequestPledges) {
-    if (entry.first == aRequestId) {
-      nsRefPtr<ChildPledge<nsCString>> ref;
-      ref.swap(entry.second);
-      mRequestPledges.RemoveElement(entry);
-      return ref.forget();
-    }
-  }
-  MOZ_ASSERT_UNREACHABLE("Received response with no matching media::ChildPledge!");
-  return nullptr;
+  return mRequestPledges.Remove(aRequestId);
 }
 
 bool

@@ -191,7 +191,7 @@ SourceRotatedBuffer::GetSourceSurface(ContextSource aSource) const
   }
 
   MOZ_ASSERT(surf);
-  return surf;
+  return surf.forget();
 }
 
 /* static */ bool

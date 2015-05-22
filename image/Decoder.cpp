@@ -295,12 +295,18 @@ Decoder::Finish()
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
 
     if (consoleService && errorObject && !HasDecoderError()) {
-      nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated: ") +
-                       NS_ConvertUTF8toUTF16(mImage->GetURIString()));
-
+      nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated."));
+      nsAutoString src;
+      if (mImage->GetURI()) {
+        nsCString uri;
+        if (mImage->GetURI()->GetSpecTruncatedTo1k(uri) == ImageURL::TruncatedTo1k) {
+          msg += NS_LITERAL_STRING(" URI in this note truncated due to length.");
+        }
+        src = NS_ConvertUTF8toUTF16(uri);
+      }
       if (NS_SUCCEEDED(errorObject->InitWithWindowID(
                          msg,
-                         NS_ConvertUTF8toUTF16(mImage->GetURIString()),
+                         src,
                          EmptyString(), 0, 0, nsIScriptError::errorFlag,
                          "Image", mImage->InnerWindowID()
                        ))) {

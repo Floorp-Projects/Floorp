@@ -60,7 +60,7 @@ public:
 #ifdef PLUGIN_LOGGING
  #define NPN_PLUGIN_LOG(a, b)                              \
    PR_BEGIN_MACRO                                        \
-   PR_LOG(nsPluginLogging::gNPNLog, a, b); \
+   MOZ_LOG(nsPluginLogging::gNPNLog, a, b); \
    PR_LogFlush();                                                    \
    PR_END_MACRO
 #else
@@ -70,7 +70,7 @@ public:
 #ifdef PLUGIN_LOGGING
  #define NPP_PLUGIN_LOG(a, b)                              \
    PR_BEGIN_MACRO                                         \
-   PR_LOG(nsPluginLogging::gNPPLog, a, b); \
+   MOZ_LOG(nsPluginLogging::gNPPLog, a, b); \
    PR_LogFlush();                                                    \
    PR_END_MACRO
 #else
@@ -80,7 +80,7 @@ public:
 #ifdef PLUGIN_LOGGING
  #define PLUGIN_LOG(a, b)                              \
    PR_BEGIN_MACRO                                         \
-   PR_LOG(nsPluginLogging::gPluginLog, a, b); \
+   MOZ_LOG(nsPluginLogging::gPluginLog, a, b); \
    PR_LogFlush();                                                    \
    PR_END_MACRO
 #else

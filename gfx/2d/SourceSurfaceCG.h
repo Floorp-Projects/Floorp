@@ -127,7 +127,8 @@ public:
     //
     // For more information see bug 925448.
     DrawTargetWillChange();
-    return this;
+    RefPtr<DataSourceSurface> copy(this);
+    return copy.forget();
   }
 
   CGImageRef GetImage() { EnsureImage(); return mImage; }

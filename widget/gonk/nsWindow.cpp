@@ -728,7 +728,8 @@ nsWindow::StartRemoteDrawing()
         mBackBuffer = mFramebufferTarget->CreateSimilarDrawTarget(
             mFramebufferTarget->GetSize(), mFramebufferTarget->GetFormat());
     }
-    return mBackBuffer;
+    RefPtr<DrawTarget> buffer(mBackBuffer);
+    return buffer.forget();
 }
 
 void

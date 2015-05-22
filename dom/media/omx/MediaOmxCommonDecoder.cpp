@@ -21,7 +21,7 @@ using namespace android;
 namespace mozilla {
 
 extern PRLogModuleInfo* gMediaDecoderLog;
-#define DECODER_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
+#define DECODER_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
 MediaOmxCommonDecoder::MediaOmxCommonDecoder()
   : MediaDecoder()
@@ -119,7 +119,7 @@ MediaOmxCommonDecoder::PauseStateMachine()
       GetStateMachine(),
       &MediaDecoderStateMachine::SetDormant,
       true);
-  GetStateMachine()->TaskQueue()->Dispatch(event);
+  GetStateMachine()->TaskQueue()->Dispatch(event.forget());
 }
 
 void
@@ -148,7 +148,7 @@ MediaOmxCommonDecoder::ResumeStateMachine()
       GetStateMachine(),
       &MediaDecoderStateMachine::Seek,
       target);
-  GetStateMachine()->TaskQueue()->Dispatch(event);
+  GetStateMachine()->TaskQueue()->Dispatch(event.forget());
 
   mNextState = mPlayState;
   ChangeState(PLAY_STATE_LOADING);
@@ -158,7 +158,7 @@ MediaOmxCommonDecoder::ResumeStateMachine()
       GetStateMachine(),
       &MediaDecoderStateMachine::SetDormant,
       false);
-  GetStateMachine()->TaskQueue()->Dispatch(event);
+  GetStateMachine()->TaskQueue()->Dispatch(event.forget());
   UpdateLogicalPosition();
 }
 

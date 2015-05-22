@@ -162,44 +162,54 @@ OnProxyAvailable(nsICancelable *request,
                  nsIChannel *aChannel,
                  nsIProxyInfo *proxyinfo,
                  nsresult result) {
+
+  if (result == NS_ERROR_ABORT) {
+    // NS_ERROR_ABORT means that the PeerConnectionMedia is no longer waiting
+    return NS_OK;
+  }
+
   CSFLogInfo(logTag, "%s: Proxy Available: %d", __FUNCTION__, (int)result);
 
   if (NS_SUCCEEDED(result) && proxyinfo) {
-    CSFLogInfo(logTag, "%s: Had proxyinfo", __FUNCTION__);
-    nsresult rv;
-    nsCString httpsProxyHost;
-    int32_t httpsProxyPort;
-
-    rv = proxyinfo->GetHost(httpsProxyHost);
-    if (NS_FAILED(rv)) {
-      CSFLogError(logTag, "%s: Failed to get proxy server host", __FUNCTION__);
-      return rv;
-    }
-
-    rv = proxyinfo->GetPort(&httpsProxyPort);
-    if (NS_FAILED(rv)) {
-      CSFLogError(logTag, "%s: Failed to get proxy server port", __FUNCTION__);
-      return rv;
-    }
-
-    if (pcm_->mIceCtx.get()) {
-      assert(httpsProxyPort >= 0 && httpsProxyPort < (1 << 16));
-      pcm_->mProxyServer.reset(
-        new NrIceProxyServer(httpsProxyHost.get(),
-                             static_cast<uint16_t>(httpsProxyPort)));
-    } else {
-      CSFLogError(logTag, "%s: Failed to set proxy server (ICE ctx unavailable)",
-          __FUNCTION__);
-    }
+    SetProxyOnPcm(*proxyinfo);
   }
 
-  if (result != NS_ERROR_ABORT) {
-    // NS_ERROR_ABORT means that the PeerConnectionMedia is no longer waiting
-    pcm_->mProxyResolveCompleted = true;
-    pcm_->FlushIceCtxOperationQueueIfReady();
-  }
+  pcm_->mProxyResolveCompleted = true;
+  pcm_->FlushIceCtxOperationQueueIfReady();
 
   return NS_OK;
+}
+
+void
+PeerConnectionMedia::ProtocolProxyQueryHandler::SetProxyOnPcm(
+    nsIProxyInfo& proxyinfo)
+{
+  CSFLogInfo(logTag, "%s: Had proxyinfo", __FUNCTION__);
+  nsresult rv;
+  nsCString httpsProxyHost;
+  int32_t httpsProxyPort;
+
+  rv = proxyinfo.GetHost(httpsProxyHost);
+  if (NS_FAILED(rv)) {
+    CSFLogError(logTag, "%s: Failed to get proxy server host", __FUNCTION__);
+    return;
+  }
+
+  rv = proxyinfo.GetPort(&httpsProxyPort);
+  if (NS_FAILED(rv)) {
+    CSFLogError(logTag, "%s: Failed to get proxy server port", __FUNCTION__);
+    return;
+  }
+
+  if (pcm_->mIceCtx.get()) {
+    assert(httpsProxyPort >= 0 && httpsProxyPort < (1 << 16));
+    pcm_->mProxyServer.reset(
+      new NrIceProxyServer(httpsProxyHost.get(),
+                           static_cast<uint16_t>(httpsProxyPort)));
+  } else {
+    CSFLogError(logTag, "%s: Failed to set proxy server (ICE ctx unavailable)",
+        __FUNCTION__);
+  }
 }
 
 NS_IMPL_ISUPPORTS(PeerConnectionMedia::ProtocolProxyQueryHandler, nsIProtocolProxyCallback)

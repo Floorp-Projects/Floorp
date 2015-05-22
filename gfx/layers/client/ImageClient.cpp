@@ -120,8 +120,7 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
 TemporaryRef<AsyncTransactionTracker>
 ImageClientSingle::PrepareFlushAllImages()
 {
-  RefPtr<AsyncTransactionTracker> status = new RemoveTextureFromCompositableTracker();
-  return status;
+  return MakeAndAddRef<RemoveTextureFromCompositableTracker>();
 }
 
 void
