@@ -337,11 +337,26 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
 
   FrameMetrics metrics(mLastRootMetrics);
   metrics.SetViewport(CSSRect(CSSPoint(), viewport));
+
+  // Calculate the composition bounds based on mInnerSize, excluding the sizes
+  // of the scrollbars if they are not overlay scrollbars.
+  ScreenSize compositionSize(mInnerSize);
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  if (shell) {
+    nsMargin scrollbarsAppUnits =
+        nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(shell->GetRootScrollFrame());
+    // Scrollbars are not subject to scaling, so CSS pixels = screen pixels for them.
+    ScreenMargin scrollbars = CSSMargin::FromAppUnits(scrollbarsAppUnits)
+                            * CSSToScreenScale(1.0f);
+    compositionSize.width -= scrollbars.LeftRight();
+    compositionSize.height -= scrollbars.TopBottom();
+  }
+
   metrics.SetCompositionBounds(ParentLayerRect(
       ParentLayerPoint(),
-      ParentLayerSize(ViewAs<ParentLayerPixel>(mInnerSize, PixelCastJustification::ScreenIsParentLayerForRoot))));
+      ParentLayerSize(ViewAs<ParentLayerPixel>(compositionSize, PixelCastJustification::ScreenIsParentLayerForRoot))));
   metrics.SetRootCompositionSize(
-      ScreenSize(mInnerSize) * ScreenToLayoutDeviceScale(1.0f) / metrics.GetDevPixelsPerCSSPixel());
+      ScreenSize(compositionSize) * ScreenToLayoutDeviceScale(1.0f) / metrics.GetDevPixelsPerCSSPixel());
 
   // This change to the zoom accounts for all types of changes I can conceive:
   // 1. screen size changes, CSS viewport does not (pages with no meta viewport
@@ -362,7 +377,6 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
 
   // Changing the zoom when we're not doing a first paint will get ignored
   // by AsyncPanZoomController and causes a blurry flash.
-  nsCOMPtr<nsIPresShell> shell = GetPresShell();
   bool isFirstPaint = true;
   if (shell) {
     isFirstPaint = shell->GetIsFirstPaint();
