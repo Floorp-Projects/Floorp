@@ -274,6 +274,7 @@ public:
                               APZStateChange aChange,
                               int aArg);
     void NotifyMouseScrollTestEvent(const ViewID& aScrollId, const nsString& aEvent);
+    void NotifyFlushComplete();
     void Activate();
     void Deactivate();
 

@@ -784,6 +784,13 @@ LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aSc
 }
 
 bool
+LayerTransactionParent::RecvFlushApzRepaints()
+{
+  mShadowLayersManager->FlushApzRepaints(this);
+  return true;
+}
+
+bool
 LayerTransactionParent::RecvGetAPZTestData(APZTestData* aOutData)
 {
   mShadowLayersManager->GetAPZTestData(this, aOutData);
