@@ -1334,7 +1334,14 @@ PlacesTreeView.prototype = {
     if (PlacesControllerDragHelper.disallowInsertion(container))
       return null;
 
-    let tagName = PlacesUtils.nodeIsTagQuery(container) ? container.title : null;
+    // TODO (Bug 1160193): properly support dropping on a tag root.
+    let tagName = null;
+    if (PlacesUtils.nodeIsTagQuery(container)) {
+      tagName = container.title;
+      if (!tagName)
+        return null;
+    }
+
     return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
                               index, orientation,
                               tagName,
