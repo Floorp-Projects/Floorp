@@ -482,6 +482,7 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
   RefPtr<IMFSample> sample;
   HRESULT hr;
   aOutData = nullptr;
+  int typeChangeCount = 0;
 
   // Loop until we decode a sample, or an unexpected error that we can't
   // handle occurs.
@@ -497,7 +498,12 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
       MOZ_ASSERT(!sample);
       hr = ConfigureVideoFrameGeometry();
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+      // Catch infinite loops, but some decoders perform at least 2 stream
+      // changes on consecutive calls, so be permissive.
+      // 100 is arbitrarily > 2.
+      NS_ENSURE_TRUE(typeChangeCount < 100, MF_E_TRANSFORM_STREAM_CHANGE);
       // Loop back and try decoding again...
+      ++typeChangeCount;
       continue;
     }
     if (SUCCEEDED(hr)) {
