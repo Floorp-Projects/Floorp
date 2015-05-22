@@ -705,7 +705,10 @@ loop.panel = (function(_, mozL10n) {
       userDisplayName: React.PropTypes.string.isRequired
     },
 
-    mixins: [sharedMixins.DocumentVisibilityMixin],
+    mixins: [
+      sharedMixins.DocumentVisibilityMixin,
+      React.addons.PureRenderMixin
+    ],
 
     getInitialState: function() {
       return {
@@ -717,6 +720,11 @@ loop.panel = (function(_, mozL10n) {
     },
 
     onDocumentVisible: function() {
+      // We would use onDocumentHidden to null out the data ready for the next
+      // opening. However, this seems to cause an awkward glitch in the display
+      // when opening the panel, and it seems cleaner just to update the data
+      // even if there's a small delay.
+
       this.props.mozLoop.getSelectedTabMetadata(function callback(metadata) {
         var previewImage = metadata.favicon || "";
         var description = metadata.title || metadata.description;
@@ -727,14 +735,6 @@ loop.panel = (function(_, mozL10n) {
           url: url
         });
       }.bind(this));
-    },
-
-    onDocumentHidden: function() {
-      this.setState({
-        previewImage: "",
-        description: "",
-        url: ""
-      });
     },
 
     onCheckboxChange: function(newState) {
