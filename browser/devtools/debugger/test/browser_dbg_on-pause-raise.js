@@ -62,9 +62,10 @@ function testPause() {
     "Main window is the top level window before pause.");
 
   if (gToolbox.hostType == devtools.Toolbox.HostType.WINDOW) {
-    gToolbox._host._window.onfocus = () => {
+    gToolbox._host._window.addEventListener("focus", function onFocus() {
+      gToolbox._host._window.removeEventListener("focus", onFocus, true);
       gFocusedWindow = gToolbox._host._window;
-    };
+    }, true);
   }
 
   gDebugger.gThreadClient.addOneTimeListener("paused", () => {
