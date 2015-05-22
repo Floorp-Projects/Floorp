@@ -158,6 +158,7 @@ public:
 
   virtual bool IPCOpen() const { return true; }
   virtual bool IsSameProcess() const = 0;
+  virtual base::ProcessId ParentPid() const { return base::ProcessId(); }
 
   virtual bool IsImageBridgeChild() const { return false; }
 
