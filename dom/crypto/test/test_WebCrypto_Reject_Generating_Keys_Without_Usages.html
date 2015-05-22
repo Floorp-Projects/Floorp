@@ -22,6 +22,9 @@
 <script>/*<![CDATA[*/
 "use strict";
 
+// Generating 2048-bit keys takes some time.
+SimpleTest.requestLongerTimeout(2);
+
 TestArray.addTest(
   "Test that we reject generating keys without any usage",
   function() {
