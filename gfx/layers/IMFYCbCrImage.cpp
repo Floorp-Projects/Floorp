@@ -95,7 +95,7 @@ InitTextures(IDirect3DDevice9* aDevice,
     return nullptr;
   }
 
-  return result;
+  return result.forget();
 }
 
 static void

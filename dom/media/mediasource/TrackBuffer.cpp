@@ -24,7 +24,7 @@
 
 extern PRLogModuleInfo* GetMediaSourceLog();
 
-#define MSE_DEBUG(arg, ...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("TrackBuffer(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
+#define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("TrackBuffer(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 
 // Time in seconds to substract from the current time when deciding the
 // time point to evict data before in a decoder. This is used to help
@@ -551,7 +551,7 @@ TrackBuffer::QueueInitializeDecoder(SourceBufferDecoder* aDecoder)
                                                       &TrackBuffer::InitializeDecoder,
                                                       aDecoder);
   // We need to initialize the reader on its own task queue
-  aDecoder->GetReader()->GetTaskQueue()->Dispatch(task);
+  aDecoder->GetReader()->GetTaskQueue()->Dispatch(task.forget());
   return true;
 }
 
@@ -1041,7 +1041,7 @@ TrackBuffer::RemoveDecoder(SourceBufferDecoder* aDecoder)
     mInitializedDecoders.RemoveElement(aDecoder);
     mDecoders.RemoveElement(aDecoder);
   }
-  aDecoder->GetReader()->GetTaskQueue()->Dispatch(task);
+  aDecoder->GetReader()->GetTaskQueue()->Dispatch(task.forget());
 }
 
 bool

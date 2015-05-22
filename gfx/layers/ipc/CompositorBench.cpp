@@ -135,10 +135,10 @@ public:
       red = modf(i * 0.03f, &tmp);
       EffectChain effects;
       gfxRGBA color(red, 0.4f, 0.4f, 1.0f);
-      return new EffectSolidColor(gfx::Color(color.r,
-                                             color.g,
-                                             color.b,
-                                             color.a));
+      return MakeAndAddRef<EffectSolidColor>(gfx::Color(color.r,
+                                                        color.g,
+                                                        color.b,
+                                                        color.a));
   }
 };
 
@@ -161,10 +161,10 @@ public:
       red = modf(i * 0.03f, &tmp);
       EffectChain effects;
       gfxRGBA color(red, 0.4f, 0.4f, 1.0f);
-      return new EffectSolidColor(gfx::Color(color.r,
-                                             color.g,
-                                             color.b,
-                                             color.a));
+      return MakeAndAddRef<EffectSolidColor>(gfx::Color(color.r,
+                                                        color.g,
+                                                        color.b,
+                                                        color.a));
   }
 };
 
@@ -241,8 +241,7 @@ public:
   }
 
   TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
-    return effect;
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
   }
 };
 
@@ -285,8 +284,7 @@ public:
   }
 
   virtual TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
-    return effect;
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
   }
 };
 
@@ -328,8 +326,7 @@ public:
   }
 
   virtual TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
-    return effect;
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
   }
 };
 
@@ -370,8 +367,7 @@ public:
   }
 
   virtual TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
-    return effect;
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
   }
 };
 #endif

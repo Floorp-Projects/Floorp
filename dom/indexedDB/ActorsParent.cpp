@@ -101,7 +101,7 @@
 #endif
 
 #define IDB_DEBUG_LOG(_args)                                                   \
-  PR_LOG(IndexedDatabaseManager::GetLoggingModule(),                           \
+  MOZ_LOG(IndexedDatabaseManager::GetLoggingModule(),                           \
          PR_LOG_DEBUG,                                                         \
          _args )
 

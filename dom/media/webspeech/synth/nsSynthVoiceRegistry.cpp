@@ -24,7 +24,7 @@
 
 #undef LOG
 extern PRLogModuleInfo* GetSpeechSynthLog();
-#define LOG(type, msg) PR_LOG(GetSpeechSynthLog(), type, msg)
+#define LOG(type, msg) MOZ_LOG(GetSpeechSynthLog(), type, msg)
 
 namespace {
 

@@ -32,7 +32,7 @@
 #endif
 
 PRLogModuleInfo* gMediaEncoderLog;
-#define LOG(type, msg) PR_LOG(gMediaEncoderLog, type, msg)
+#define LOG(type, msg) MOZ_LOG(gMediaEncoderLog, type, msg)
 
 namespace mozilla {
 

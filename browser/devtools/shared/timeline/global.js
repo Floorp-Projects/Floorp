@@ -49,24 +49,25 @@ const TIMELINE_BLUEPRINT = {
   /* Group 0 - Reflow and Rendering pipeline */
   "Styles": {
     group: 0,
-    colorName: "highlight-pink",
-    label: L10N.getStr("timeline.label.styles2")
+    colorName: "graphs-purple",
+    label: L10N.getStr("timeline.label.styles2"),
+    fields: getStylesFields,
   },
   "Reflow": {
     group: 0,
-    colorName: "highlight-pink",
+    colorName: "graphs-purple",
     label: L10N.getStr("timeline.label.reflow2")
   },
   "Paint": {
     group: 0,
-    colorName: "highlight-green",
+    colorName: "graphs-green",
     label: L10N.getStr("timeline.label.paint")
   },
 
   /* Group 1 - JS */
   "DOMEvent": {
     group: 1,
-    colorName: "highlight-lightorange",
+    colorName: "graphs-yellow",
     label: L10N.getStr("timeline.label.domevent"),
     fields: [{
       property: "type",
@@ -79,22 +80,22 @@ const TIMELINE_BLUEPRINT = {
   },
   "Javascript": {
     group: 1,
-    colorName: "highlight-lightorange",
+    colorName: "graphs-yellow",
     label: getJSLabel,
   },
   "Parse HTML": {
     group: 1,
-    colorName: "highlight-lightorange",
+    colorName: "graphs-yellow",
     label: L10N.getStr("timeline.label.parseHTML")
   },
   "Parse XML": {
     group: 1,
-    colorName: "highlight-lightorange",
+    colorName: "graphs-yellow",
     label: L10N.getStr("timeline.label.parseXML")
   },
   "GarbageCollection": {
     group: 1,
-    colorName: "highlight-red",
+    colorName: "graphs-red",
     label: getGCLabel,
     fields: [
       { property: "causeName", label: "Reason:" },
@@ -105,8 +106,8 @@ const TIMELINE_BLUEPRINT = {
   /* Group 2 - User Controlled */
   "ConsoleTime": {
     group: 2,
-    colorName: "highlight-bluegrey",
-    label: L10N.getStr("timeline.label.consoleTime"),
+    colorName: "graphs-grey",
+    label: sublabelForProperty(L10N.getStr("timeline.label.consoleTime"), "causeName"),
     fields: [{
       property: "causeName",
       label: L10N.getStr("timeline.markerDetail.consoleTimerName")
@@ -114,8 +115,12 @@ const TIMELINE_BLUEPRINT = {
   },
   "TimeStamp": {
     group: 2,
-    colorName: "highlight-purple",
-    label: L10N.getStr("timeline.label.timestamp")
+    colorName: "graphs-blue",
+    label: sublabelForProperty(L10N.getStr("timeline.label.timestamp"), "causeName"),
+    fields: [{
+      property: "causeName",
+      label: "Label:"
+    }]
   },
 };
 
@@ -148,6 +153,22 @@ function getJSLabel (marker={}) {
     return marker.causeName;
   }
   return L10N.getStr("timeline.label.javascript2");
+}
+
+function getStylesFields (marker) {
+  if ("restyleHint" in marker) {
+    return { "Restyle Hint": marker.restyleHint.replace(/eRestyle_/g, "") };
+  }
+}
+
+/**
+ * Takes a main label (like "Timestamp") and a property,
+ * and returns a marker that will print out the property
+ * value for a marker if it exists ("Timestamp (rendering)"),
+ * or just the main label if it does not.
+ */
+function sublabelForProperty (mainLabel, prop) {
+  return (marker={}) => marker[prop] ? `${mainLabel} (${marker[prop]})` : mainLabel;
 }
 
 // Exported symbols.

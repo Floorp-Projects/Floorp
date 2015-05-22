@@ -210,8 +210,8 @@ GetCookieLog()
 
 #define COOKIE_LOGSTRING(lvl, fmt)   \
   PR_BEGIN_MACRO                     \
-    PR_LOG(GetCookieLog(), lvl, fmt);  \
-    PR_LOG(GetCookieLog(), lvl, ("\n")); \
+    MOZ_LOG(GetCookieLog(), lvl, fmt);  \
+    MOZ_LOG(GetCookieLog(), lvl, ("\n")); \
   PR_END_MACRO
 
 static void
@@ -225,20 +225,20 @@ LogFailure(bool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const c
   if (aHostURI)
     aHostURI->GetAsciiSpec(spec);
 
-  PR_LOG(GetCookieLog(), PR_LOG_WARNING,
+  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,
     ("===== %s =====\n", aSetCookie ? "COOKIE NOT ACCEPTED" : "COOKIE NOT SENT"));
-  PR_LOG(GetCookieLog(), PR_LOG_WARNING,("request URL: %s\n", spec.get()));
+  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("request URL: %s\n", spec.get()));
   if (aSetCookie)
-    PR_LOG(GetCookieLog(), PR_LOG_WARNING,("cookie string: %s\n", aCookieString));
+    MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("cookie string: %s\n", aCookieString));
 
   PRExplodedTime explodedTime;
   PR_ExplodeTime(PR_Now(), PR_GMTParameters, &explodedTime);
   char timeString[40];
   PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
 
-  PR_LOG(GetCookieLog(), PR_LOG_WARNING,("current time: %s", timeString));
-  PR_LOG(GetCookieLog(), PR_LOG_WARNING,("rejected because %s\n", aReason));
-  PR_LOG(GetCookieLog(), PR_LOG_WARNING,("\n"));
+  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("current time: %s", timeString));
+  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("rejected because %s\n", aReason));
+  MOZ_LOG(GetCookieLog(), PR_LOG_WARNING,("\n"));
 }
 
 static void
@@ -249,27 +249,27 @@ LogCookie(nsCookie *aCookie)
   char timeString[40];
   PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
 
-  PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("current time: %s", timeString));
+  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("current time: %s", timeString));
 
   if (aCookie) {
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("----------------\n"));
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("name: %s\n", aCookie->Name().get()));
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("value: %s\n", aCookie->Value().get()));
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("%s: %s\n", aCookie->IsDomain() ? "domain" : "host", aCookie->Host().get()));
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("path: %s\n", aCookie->Path().get()));
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("----------------\n"));
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("name: %s\n", aCookie->Name().get()));
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("value: %s\n", aCookie->Value().get()));
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("%s: %s\n", aCookie->IsDomain() ? "domain" : "host", aCookie->Host().get()));
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("path: %s\n", aCookie->Path().get()));
 
     PR_ExplodeTime(aCookie->Expiry() * int64_t(PR_USEC_PER_SEC),
                    PR_GMTParameters, &explodedTime);
     PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,
       ("expires: %s%s", timeString, aCookie->IsSession() ? " (at end of session)" : ""));
 
     PR_ExplodeTime(aCookie->CreationTime(), PR_GMTParameters, &explodedTime);
     PR_FormatTimeUSEnglish(timeString, 40, "%c GMT", &explodedTime);
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("created: %s", timeString));
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("created: %s", timeString));
 
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("is secure: %s\n", aCookie->IsSecure() ? "true" : "false"));
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("is httpOnly: %s\n", aCookie->IsHttpOnly() ? "true" : "false"));
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("is secure: %s\n", aCookie->IsSecure() ? "true" : "false"));
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("is httpOnly: %s\n", aCookie->IsHttpOnly() ? "true" : "false"));
   }
 }
 
@@ -285,27 +285,27 @@ LogSuccess(bool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCooki
   if (aHostURI)
     aHostURI->GetAsciiSpec(spec);
 
-  PR_LOG(GetCookieLog(), PR_LOG_DEBUG,
+  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,
     ("===== %s =====\n", aSetCookie ? "COOKIE ACCEPTED" : "COOKIE SENT"));
-  PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("request URL: %s\n", spec.get()));
-  PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("cookie string: %s\n", aCookieString));
+  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("request URL: %s\n", spec.get()));
+  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("cookie string: %s\n", aCookieString));
   if (aSetCookie)
-    PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("replaces existing cookie: %s\n", aReplacing ? "true" : "false"));
+    MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("replaces existing cookie: %s\n", aReplacing ? "true" : "false"));
 
   LogCookie(aCookie);
 
-  PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("\n"));
+  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("\n"));
 }
 
 static void
 LogEvicted(nsCookie *aCookie, const char* details)
 {
-  PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("===== COOKIE EVICTED =====\n"));
-  PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("%s\n", details));
+  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("===== COOKIE EVICTED =====\n"));
+  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("%s\n", details));
 
   LogCookie(aCookie);
 
-  PR_LOG(GetCookieLog(), PR_LOG_DEBUG,("\n"));
+  MOZ_LOG(GetCookieLog(), PR_LOG_DEBUG,("\n"));
 }
 
 // inline wrappers to make passing in nsAFlatCStrings easier

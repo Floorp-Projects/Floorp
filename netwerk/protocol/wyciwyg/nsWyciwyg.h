@@ -26,10 +26,10 @@
 extern PRLogModuleInfo *gWyciwygLog;
 
 // http logging
-#define LOG1(args) PR_LOG(gWyciwygLog, 1, args)
-#define LOG2(args) PR_LOG(gWyciwygLog, 2, args)
-#define LOG3(args) PR_LOG(gWyciwygLog, 3, args)
-#define LOG4(args) PR_LOG(gWyciwygLog, 4, args)
+#define LOG1(args) MOZ_LOG(gWyciwygLog, 1, args)
+#define LOG2(args) MOZ_LOG(gWyciwygLog, 2, args)
+#define LOG3(args) MOZ_LOG(gWyciwygLog, 3, args)
+#define LOG4(args) MOZ_LOG(gWyciwygLog, 4, args)
 #define LOG(args) LOG4(args)
 
 #define LOG1_ENABLED() PR_LOG_TEST(gWyciwygLog, 1)

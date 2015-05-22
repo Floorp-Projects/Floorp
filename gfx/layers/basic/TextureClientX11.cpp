@@ -46,7 +46,7 @@ TextureClientX11::CreateSimilar(TextureFlags aFlags,
     return nullptr;
   }
 
-  return tex;
+  return tex.forget();
 }
 
 bool

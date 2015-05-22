@@ -723,6 +723,8 @@ public class ToolbarEditText extends CustomEditText
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             boolean tapped;
+            final int action = event.getActionMasked();
+
             switch (mVoiceSearchIconIndex) {
                 case 0:
                     tapped = event.getX() < (getPaddingLeft() + mVoiceSearchIcon.getIntrinsicWidth());
@@ -733,7 +735,7 @@ public class ToolbarEditText extends CustomEditText
                 default:
                     tapped = false;
             }
-            if (tapped) {
+            if (tapped && (action == MotionEvent.ACTION_DOWN)) {
                 launchVoiceRecognizer();
             }
             return tapped;

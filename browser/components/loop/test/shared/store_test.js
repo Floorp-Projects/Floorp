@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var expect = chai.expect;
-
 describe("loop.store", function () {
   "use strict";
 
+  var expect = chai.expect;
   var dispatcher;
   var sandbox;
   var sharedActions = loop.shared.actions;
+  var TestUtils = React.addons.TestUtils;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();

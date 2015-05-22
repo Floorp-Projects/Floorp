@@ -297,7 +297,7 @@ LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
       va_end(args);
     }
 
-    PR_LOG(logModule, logLevel, ("%s", message.get()));
+    MOZ_LOG(logModule, logLevel, ("%s", message.get()));
 
     if (aUseProfiler) {
       PROFILER_MARKER(message.get());

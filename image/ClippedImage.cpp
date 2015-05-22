@@ -61,7 +61,8 @@ public:
   }
 
   TemporaryRef<SourceSurface> Surface() {
-    return mSurface;
+    RefPtr<SourceSurface> surf(mSurface);
+    return surf.forget();
   }
 
 private:

@@ -22,7 +22,7 @@ GetRedirectLog()
         sLog = PR_NewLogModule("nsRedirect");
     return sLog;
 }
-#define LOG(args) PR_LOG(GetRedirectLog(), PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(GetRedirectLog(), PR_LOG_DEBUG, args)
 
 NS_IMPL_ISUPPORTS(nsAsyncRedirectVerifyHelper,
                   nsIAsyncVerifyRedirectCallback,

@@ -66,6 +66,16 @@ exports.getMarkerClassName = getMarkerClassName;
  */
 function getMarkerFields (marker) {
   let blueprint = TIMELINE_BLUEPRINT[marker.name];
+
+  if (typeof blueprint.fields === "function") {
+    let fields = blueprint.fields(marker);
+    // Add a ":" to the label since the localization files contain the ":"
+    // if not present. This should be changed, ugh.
+    return Object.keys(fields || []).map(label => {
+      let normalizedLabel = label.indexOf(":") !== -1 ? label : (label + ":");
+      return { label: normalizedLabel, value: fields[label] };
+    });
+  }
   return (blueprint.fields || []).reduce((fields, field) => {
     // Ensure this marker has this field present
     if (field.property in marker) {
@@ -116,7 +126,7 @@ const DOM = exports.DOM = {
     hbox.setAttribute("align", "center");
 
     let bullet = doc.createElement("hbox");
-    bullet.className = `marker-details-bullet ${blueprint.colorName}`;
+    bullet.className = `marker-details-bullet marker-color-${blueprint.colorName}`;
 
     let title = getMarkerLabel(marker);
     let label = doc.createElement("label");

@@ -458,7 +458,8 @@ TemporaryRef<gfx::SourceSurface>
 PlanarYCbCrImage::GetAsSourceSurface()
 {
   if (mSourceSurface) {
-    return mSourceSurface.get();
+    RefPtr<gfx::SourceSurface> surface(mSourceSurface);
+    return surface.forget();
   }
 
   gfx::IntSize size(mSize);

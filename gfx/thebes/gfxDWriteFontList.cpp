@@ -27,13 +27,13 @@
 
 using namespace mozilla;
 
-#define LOG_FONTLIST(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
+#define LOG_FONTLIST(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontlist), \
                                PR_LOG_DEBUG, args)
 #define LOG_FONTLIST_ENABLED() PR_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_fontlist), \
                                    PR_LOG_DEBUG)
 
-#define LOG_FONTINIT(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontinit), \
+#define LOG_FONTINIT(args) MOZ_LOG(gfxPlatform::GetLog(eGfxLog_fontinit), \
                                PR_LOG_DEBUG, args)
 #define LOG_FONTINIT_ENABLED() PR_LOG_TEST( \
                                    gfxPlatform::GetLog(eGfxLog_fontinit), \

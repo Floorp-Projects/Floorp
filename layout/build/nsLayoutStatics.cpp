@@ -139,6 +139,7 @@ using namespace mozilla::system;
 #include "CameraPreferences.h"
 #include "TouchManager.h"
 #include "MediaDecoder.h"
+#include "mozilla/layers/CompositorLRU.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -319,6 +320,8 @@ nsLayoutStatics::Initialize()
   MediaDecoder::InitStatics();
 
   PromiseDebugging::Init();
+
+  layers::CompositorLRU::Init();
 
   return NS_OK;
 }
