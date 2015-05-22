@@ -326,14 +326,10 @@ function saveRecordingToFile(recordingItem, file) {
 function loadRecordingFromFile(file) {
   let deferred = promise.defer();
 
-  let channel = NetUtil.newChannel2(file,
-                                    null,
-                                    null,
-                                    window.document,
-                                    null,  // aLoadingPrincipal
-                                    null,  // aTriggeringPrincipal
-                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                    Ci.nsIContentPolicy.TYPE_OTHER);
+  let channel = NetUtil.newChannel({
+    uri: NetUtil.newURI(file),
+    loadingNode: window.document,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER});
   channel.contentType = "text/plain";
 
   NetUtil.asyncFetch(channel, (inputStream, status) => {

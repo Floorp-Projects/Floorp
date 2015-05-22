@@ -25,14 +25,10 @@ const cachedThemes = {};
  * Returns a string of the file found at URI
  */
 function readURI (uri) {
-  let stream = NetUtil.newChannel2(uri,
-                                   "UTF-8",
-                                   null,
-                                   null,      // aLoadingNode
-                                   Services.scriptSecurityManager.getSystemPrincipal(),
-                                   null,      // aTriggeringPrincipal
-                                   Ci.nsILoadInfo.SEC_NORMAL,
-                                   Ci.nsIContentPolicy.TYPE_OTHER).open();
+  let stream = NetUtil.newChannel({
+    uri: NetUtil.newURI(uri, "UTF-8"),
+    loadUsingSystemPrincipal: true}
+  ).open();
 
   let count = stream.available();
   let data = NetUtil.readInputStreamToString(stream, count, { charset: "UTF-8" });

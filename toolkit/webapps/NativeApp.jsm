@@ -456,14 +456,10 @@ function downloadIcon(aIconURI) {
                                   : Services.scriptSecurityManager
                                             .getNoAppCodebasePrincipal(aIconURI);
 
-    let channel = NetUtil.newChannel2(aIconURI,
-                                      null,
-                                      null,
-                                      null,      // aLoadingNode
-                                      principal,
-                                      null,      // aTriggeringPrincipal
-                                      Ci.nsILoadInfo.SEC_NORMAL,
-                                      Ci.nsIContentPolicy.TYPE_IMAGE);
+    let channel = NetUtil.newChannel({
+      uri: aIconURI,
+      loadingPrincipal: principal,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_IMAGE});
     let { BadCertHandler } = Cu.import("resource://gre/modules/CertUtils.jsm", {});
     // Pass true to avoid optional redirect-cert-checking behavior.
     channel.notificationCallbacks = new BadCertHandler(true);

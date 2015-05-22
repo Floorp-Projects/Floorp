@@ -359,14 +359,10 @@ let SnapshotsListView = Heritage.extend(WidgetMethods, {
       return;
     }
 
-    let channel = NetUtil.newChannel2(fp.file,
-                                      null,
-                                      null,
-                                      window.document,
-                                      null, // aLoadingPrincipal
-                                      null, // aTriggeringPrincipal
-                                      Ci.nsILoadInfo.SEC_NORMAL,
-                                      Ci.nsIContentPolicy.TYPE_OTHER);
+    let channel = NetUtil.newChannel({
+      uri: NetUtil.newURI(fp.file),
+      loadingNode: window.document,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER});
     channel.contentType = "text/plain";
 
     NetUtil.asyncFetch(channel, (inputStream, status) => {

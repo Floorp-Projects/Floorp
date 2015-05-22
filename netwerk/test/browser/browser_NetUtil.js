@@ -36,14 +36,9 @@ function test_asyncFetchBadCert() {
     ok(aRequest instanceof Ci.nsIHttpChannel, "request is an nsIHttpChannel");
 
     // Now try again with a channel whose notificationCallbacks doesn't suprress errors
-    let channel = NetUtil.newChannel2("https://untrusted.example.com",
-                                      null,
-                                      null,
-                                      null,      // aLoadingNode
-                                      Services.scriptSecurityManager.getSystemPrincipal(),
-                                      null,      // aTriggeringPrincipal
-                                      Ci.nsILoadInfo.SEC_NORMAL,
-                                      Ci.nsIContentPolicy.TYPE_OTHER);
+    let channel = NetUtil.newChannel({
+      uri: "https://untrusted.example.com",
+      loadUsingSystemPrincipal: true});
     channel.notificationCallbacks = {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIProgressEventSink,
                                              Ci.nsIInterfaceRequestor]),
