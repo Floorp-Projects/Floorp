@@ -256,11 +256,11 @@ this.TrustedHostedAppsUtils = {
 
     Promise.all([
       new Promise((resolve, reject) => {
-        NetUtil.asyncFetch2(mRequestChannel,
+        NetUtil.asyncFetch(mRequestChannel,
                             getAsyncFetchCallback(resolve, reject));
       }),
       new Promise((resolve, reject) => {
-        NetUtil.asyncFetch2(sRequestChannel,
+        NetUtil.asyncFetch(sRequestChannel,
                             getAsyncFetchCallback(resolve, reject));
       })
     ]).then(([aManifestStream, aSignatureStream]) => {

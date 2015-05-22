@@ -168,7 +168,7 @@ function createNewChannel(uri, node, principal) {
 }
 
 function asyncFetchChannel(channel, callback) {
-  return NetUtil.asyncFetch2(channel, callback);
+  return NetUtil.asyncFetch(channel, callback);
 }
 
 // PDF data storage

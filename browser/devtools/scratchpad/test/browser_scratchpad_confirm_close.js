@@ -224,7 +224,7 @@ function readFile(file, callback)
                                     Ci.nsIContentPolicy.TYPE_OTHER);
   channel.contentType = "application/javascript";
 
-  NetUtil.asyncFetch2(channel, function(inputStream, status) {
+  NetUtil.asyncFetch(channel, function(inputStream, status) {
     ok(Components.isSuccessCode(status),
        "file was read successfully");
 

@@ -22,7 +22,7 @@ function readChannel(url) {
                                     Ci.nsIContentPolicy.TYPE_OTHER);
   channel.contentType = "text/plain";
 
-  NetUtil.asyncFetch2(channel, function(inputStream, status) {
+  NetUtil.asyncFetch(channel, function(inputStream, status) {
     if (!Components.isSuccessCode(status)) {
       deferred.reject();
       return;

@@ -667,13 +667,15 @@ function fetch(aURL, aOptions={ loadFromCache: true, window: null,
     case "chrome":
     case "resource":
       try {
-        NetUtil.asyncFetch2(
-          url,
-          function onFetch(aStream, aStatus, aRequest) {
+        NetUtil.asyncFetch({
+          uri: url,
+          loadUsingSystemPrincipal: true,
+          contentPolicyType: Ci.nsIContentPolicy.TYPE_STYLESHEET
+        }, function onFetch(aStream, aStatus, aRequest) {
             if (!components.isSuccessCode(aStatus)) {
               deferred.reject(new Error("Request failed with status code = "
                                         + aStatus
-                                        + " after NetUtil.asyncFetch2 for url = "
+                                        + " after NetUtil.asyncFetch for url = "
                                         + url));
               return;
             }
@@ -682,12 +684,7 @@ function fetch(aURL, aOptions={ loadFromCache: true, window: null,
             contentType = aRequest.contentType;
             deferred.resolve(source);
             aStream.close();
-          },
-          null,      // aLoadingNode
-          Services.scriptSecurityManager.getSystemPrincipal(),
-          null,      // aTriggeringPrincipal
-          Ci.nsILoadInfo.SEC_NORMAL,
-          Ci.nsIContentPolicy.TYPE_STYLESHEET);
+          });
       } catch (ex) {
         deferred.reject(ex);
       }
