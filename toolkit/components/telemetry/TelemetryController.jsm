@@ -235,27 +235,6 @@ this.TelemetryController = Object.freeze({
   },
 
   /**
-   * Add the ping to the pending ping list and save all pending pings.
-   *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} [aOptions] Options object.
-   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
-   *                  id, false otherwise.
-   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
-   *                  environment data.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @returns {Promise} A promise that resolves when the pings are saved.
-   */
-  savePendingPings: function(aType, aPayload, aOptions = {}) {
-    let options = aOptions;
-    options.addClientId = aOptions.addClientId || false;
-    options.addEnvironment = aOptions.addEnvironment || false;
-
-    return Impl.savePendingPings(aType, aPayload, options);
-  },
-
-  /**
    * Save a ping to disk.
    *
    * @param {String} aType The type of the ping.
@@ -647,28 +626,6 @@ let Impl = {
     let promise = Promise.all(p);
     this._trackPendingPingTask(promise);
     return promise;
-  },
-
-  /**
-   * Saves all the pending pings, plus the passed one, to disk.
-   *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} aOptions Options object.
-   * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
-   *                  false otherwise.
-   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
-   *                  environment data.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   *
-   * @returns {Promise} A promise that resolves when all the pings are saved to disk.
-   */
-  savePendingPings: function savePendingPings(aType, aPayload, aOptions) {
-    this._log.trace("savePendingPings - Type " + aType + ", Server " + this._server +
-                    ", aOptions " + JSON.stringify(aOptions));
-
-    let pingData = this.assemblePing(aType, aPayload, aOptions);
-    return TelemetryStorage.savePendingPings(pingData);
   },
 
   /**
