@@ -95,7 +95,7 @@ ConvertToB8G8R8A8_SIMD(SourceSurface* aSurface)
       output = nullptr;
       break;
   }
-  return output;
+  return output.forget();
 }
 
 template<typename u8x16_t>
@@ -334,7 +334,7 @@ ApplyBlending_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInput2)
     }
   }
 
-  return target;
+  return target.forget();
 }
 
 template<typename i32x4_t, typename i16x8_t, typename u8x16_t>
@@ -608,7 +608,7 @@ ApplyColorMatrix_SIMD(DataSourceSurface* aInput, const Matrix5x4 &aMatrix)
     }
   }
 
-  return target;
+  return target.forget();
 }
 
 // source / dest: bgra bgra
@@ -1074,7 +1074,7 @@ ApplyArithmeticCombine_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInpu
     }
   }
 
-  return target;
+  return target.forget();
 }
 
 } // namespace mozilla

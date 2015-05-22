@@ -21,29 +21,17 @@
  */
 /*exported EXPORTED_SYMBOLS */
 /*JSLint options in comment below: */
-/*globals Components, XPCOMUtils, extractValue*/
+/*globals Components, XPCOMUtils*/
 'use strict';
 this.EXPORTED_SYMBOLS = ['ManifestProcessor']; // jshint ignore:line
 const imports = {};
 const {
-  utils: Cu,
-  classes: Cc,
-  interfaces: Ci
+  utils: Cu
 } = Components;
-const scriptLoader = Cc['@mozilla.org/moz/jssubscript-loader;1']
-  .getService(Ci.mozIJSSubScriptLoader);
-//Add extractValue() helper to this context.
-scriptLoader.loadSubScript(
-  'resource://gre/modules/manifestValueExtractor.js',
-  this); // jshint ignore:line
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.importGlobalProperties(['URL']);
 XPCOMUtils.defineLazyModuleGetter(imports, 'Services',
   'resource://gre/modules/Services.jsm');
-XPCOMUtils.defineLazyModuleGetter(imports, 'ManifestImageObjectProcessor',
-  'resource://gre/modules/ManifestImageObjectProcessor.jsm');
-imports.netutil = Cc['@mozilla.org/network/util;1']
-  .getService(Ci.nsINetUtil);
 const displayModes = new Set(['fullscreen', 'standalone', 'minimal-ui',
   'browser'
 ]);
@@ -54,6 +42,13 @@ const orientationTypes = new Set(['any', 'natural', 'landscape', 'portrait',
 const {
   ConsoleAPI
 } = Cu.import('resource://gre/modules/devtools/Console.jsm');
+const {
+  ManifestImageObjectProcessor: ImgObjProcessor
+} = Cu.import('resource://gre/modules/ManifestImageObjectProcessor.jsm');
+
+const {
+  ManifestValueExtractor
+} = Cu.import('resource://gre/modules/ManifestValueExtractor.jsm');
 
 function ManifestProcessor() {}
 
@@ -77,22 +72,22 @@ Object.defineProperties(ManifestProcessor, {
 });
 
 ManifestProcessor.prototype = {
-  // process method: processes JSON text into a clean manifest
+  // process() method processes JSON text into a clean manifest
   // that conforms with the W3C specification. Takes an object
   // expecting the following dictionary items:
   //  * aJsonText: the JSON string to be processed.
   //  * aManifestURL: the URL of the manifest, to resolve URLs.
-  //  * aDocURL: the URL of the owner doc, for security checks.
+  //  * aDocURL: the URL of the owner doc, for security checks
   process({
     jsonText: aJsonText,
     manifestURL: aManifestURL,
     docURL: aDocURL
   }) {
-    const manifestURL = new URL(aManifestURL);
-    const docURL = new URL(aDocURL);
     const console = new ConsoleAPI({
       prefix: 'Web Manifest: '
     });
+    const manifestURL = new URL(aManifestURL);
+    const docURL = new URL(aDocURL);
     let rawManifest = {};
     try {
       rawManifest = JSON.parse(aJsonText);
@@ -102,18 +97,21 @@ ManifestProcessor.prototype = {
       console.warn(msg);
       rawManifest = {};
     }
+    const extractor = new ManifestValueExtractor(console);
+    const imgObjProcessor = new ImgObjProcessor(console, extractor);
     const processedManifest = {
       'start_url': processStartURLMember(rawManifest, manifestURL, docURL),
       'display': processDisplayMember(rawManifest),
       'orientation': processOrientationMember(rawManifest),
       'name': processNameMember(rawManifest),
-      'icons': imports.ManifestImageObjectProcessor.process(
-        rawManifest, manifestURL, 'icons', console
+      'icons': imgObjProcessor.process(
+        rawManifest, manifestURL, 'icons'
       ),
-      'splash_screens': imports.ManifestImageObjectProcessor.process(
-        rawManifest, manifestURL, 'splash_screens', console
+      'splash_screens': imgObjProcessor.process(
+        rawManifest, manifestURL, 'splash_screens'
       ),
       'short_name': processShortNameMember(rawManifest),
+      'theme_color': processThemeColorMember(rawManifest),
     };
     processedManifest.scope = processScopeMember(rawManifest, manifestURL,
       docURL, new URL(processedManifest['start_url'])); // jshint ignore:line
@@ -128,7 +126,7 @@ ManifestProcessor.prototype = {
         expectedType: 'string',
         trim: true
       };
-      return extractValue(spec, console);
+      return extractor.extractValue(spec);
     }
 
     function processShortNameMember(aManifest) {
@@ -139,7 +137,7 @@ ManifestProcessor.prototype = {
         expectedType: 'string',
         trim: true
       };
-      return extractValue(spec, console);
+      return extractor.extractValue(spec);
     }
 
     function processOrientationMember(aManifest) {
@@ -150,7 +148,7 @@ ManifestProcessor.prototype = {
         expectedType: 'string',
         trim: true
       };
-      const value = extractValue(spec, console);
+      const value = extractor.extractValue(spec);
       if (ManifestProcessor.orientationTypes.has(value)) {
         return value;
       }
@@ -166,7 +164,7 @@ ManifestProcessor.prototype = {
         expectedType: 'string',
         trim: true
       };
-      const value = extractValue(spec, console);
+      const value = extractor.extractValue(spec);
       if (ManifestProcessor.displayModes.has(value)) {
         return value;
       }
@@ -182,7 +180,7 @@ ManifestProcessor.prototype = {
         trim: false
       };
       let scopeURL;
-      const value = extractValue(spec, console);
+      const value = extractor.extractValue(spec);
       if (value === undefined || value === '') {
         return undefined;
       }
@@ -218,7 +216,7 @@ ManifestProcessor.prototype = {
         trim: false
       };
       let result = new URL(aDocURL).href;
-      const value = extractValue(spec, console);
+      const value = extractor.extractValue(spec);
       if (value === undefined || value === '') {
         return result;
       }
@@ -237,6 +235,18 @@ ManifestProcessor.prototype = {
       }
       return result;
     }
+
+    function processThemeColorMember(aManifest) {
+      const spec = {
+        objectName: 'manifest',
+        object: aManifest,
+        property: 'theme_color',
+        expectedType: 'string',
+        trim: true
+      };
+      return extractor.extractColorValue(spec);
+    }
   }
 };
+
 this.ManifestProcessor = ManifestProcessor; // jshint ignore:line

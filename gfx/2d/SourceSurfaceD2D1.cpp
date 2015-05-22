@@ -66,7 +66,7 @@ SourceSurfaceD2D1::GetDataSurface()
     return nullptr;
   }
 
-  return new DataSourceSurfaceD2D1(softwareBitmap, mFormat);
+  return MakeAndAddRef<DataSourceSurfaceD2D1>(softwareBitmap, mFormat);
 }
 
 void

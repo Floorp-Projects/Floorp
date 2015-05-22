@@ -112,7 +112,7 @@ CSPService::ShouldLoad(uint32_t aContentType,
   if (PR_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
     nsAutoCString location;
     aContentLocation->GetSpec(location);
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::ShouldLoad called for %s", location.get()));
   }
 
@@ -211,7 +211,7 @@ CSPService::ShouldLoad(uint32_t aContentType,
           for (uint32_t i=0; i<numPolicies; i++) {
             nsAutoString policy;
             csp->GetPolicy(i, policy);
-            PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+            MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
                    ("Document has CSP[%d]: %s", i,
                    NS_ConvertUTF16toUTF8(policy).get()));
           }
@@ -231,7 +231,7 @@ CSPService::ShouldLoad(uint32_t aContentType,
   else if (PR_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
     nsAutoCString uriSpec;
     aContentLocation->GetSpec(uriSpec);
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("COULD NOT get nsINode for location: %s", uriSpec.get()));
   }
 
@@ -319,16 +319,16 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   if (newUri && PR_LOG_TEST(gCspPRLog, PR_LOG_DEBUG)) {
     nsAutoCString newUriSpec("None");
     newUri->GetSpec(newUriSpec);
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::AsyncOnChannelRedirect called for %s",
             newUriSpec.get()));
   }
   if (aDecision == 1) {
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::AsyncOnChannelRedirect ALLOWING request."));
   }
   else {
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("CSPService::AsyncOnChannelRedirect CANCELLING request."));
   }
 

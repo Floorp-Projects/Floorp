@@ -36,13 +36,15 @@ struct Bar : public Foo {};
 TemporaryRef<Foo>
 NewFoo()
 {
-  return RefPtr<Foo>(new Foo());
+  RefPtr<Foo> f(new Foo());
+  return f.forget();
 }
 
 TemporaryRef<Foo>
 NewBar()
 {
-  return new Bar();
+  RefPtr<Bar> bar = new Bar();
+  return bar.forget();
 }
 
 void

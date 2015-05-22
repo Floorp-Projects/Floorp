@@ -73,7 +73,7 @@ TemporaryRef<Path>
 PathBuilderRecording::Finish()
 {
   RefPtr<Path> path = mPathBuilder->Finish();
-  return new PathRecording(path, mPathOps, mFillRule);
+  return MakeAndAddRef<PathRecording>(path, mPathOps, mFillRule);
 }
 
 PathRecording::~PathRecording()

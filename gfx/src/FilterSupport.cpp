@@ -103,7 +103,7 @@ namespace FilterWrappers {
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::UNPREMULTIPLY);
     filter->SetInput(IN_UNPREMULTIPLY_IN, aInput);
-    return filter;
+    return filter.forget();
   }
 
   static TemporaryRef<FilterNode>
@@ -111,7 +111,7 @@ namespace FilterWrappers {
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::PREMULTIPLY);
     filter->SetInput(IN_PREMULTIPLY_IN, aInput);
-    return filter;
+    return filter.forget();
   }
 
   static TemporaryRef<FilterNode>
@@ -126,7 +126,7 @@ namespace FilterWrappers {
     transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_B, glinearRGBTosRGBMap, 256);
     transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_A, true);
     transfer->SetInput(IN_DISCRETE_TRANSFER_IN, aInput);
-    return transfer;
+    return transfer.forget();
   }
 
   static TemporaryRef<FilterNode>
@@ -141,7 +141,7 @@ namespace FilterWrappers {
     transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_B, gsRGBToLinearRGBMap, 256);
     transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_A, true);
     transfer->SetInput(IN_DISCRETE_TRANSFER_IN, aInput);
-    return transfer;
+    return transfer.forget();
   }
 
   static TemporaryRef<FilterNode>
@@ -150,7 +150,7 @@ namespace FilterWrappers {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CROP);
     filter->SetAttribute(ATT_CROP_RECT, Rect(aRect));
     filter->SetInput(IN_CROP_IN, aInputFilter);
-    return filter;
+    return filter.forget();
   }
 
   static TemporaryRef<FilterNode>
@@ -159,7 +159,7 @@ namespace FilterWrappers {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
     filter->SetAttribute(ATT_TRANSFORM_MATRIX, Matrix::Translation(aOffset.x, aOffset.y));
     filter->SetInput(IN_TRANSFORM_IN, aInputFilter);
-    return filter;
+    return filter.forget();
   }
 
   static TemporaryRef<FilterNode>
@@ -171,7 +171,7 @@ namespace FilterWrappers {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::GAUSSIAN_BLUR);
       filter->SetAttribute(ATT_GAUSSIAN_BLUR_STD_DEVIATION, stdX);
       filter->SetInput(IN_GAUSSIAN_BLUR_IN, aInputFilter);
-      return filter;
+      return filter.forget();
     }
     RefPtr<FilterNode> filterH = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
     RefPtr<FilterNode> filterV = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
@@ -181,7 +181,7 @@ namespace FilterWrappers {
     filterV->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, stdY);
     filterH->SetInput(IN_DIRECTIONAL_BLUR_IN, aInputFilter);
     filterV->SetInput(IN_DIRECTIONAL_BLUR_IN, filterH);
-    return filterV;
+    return filterV.forget();
   }
 
   static TemporaryRef<FilterNode>
@@ -189,7 +189,7 @@ namespace FilterWrappers {
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
     filter->SetAttribute(ATT_FLOOD_COLOR, Color(0,0,0,0));
-    return filter;
+    return filter.forget();
   }
 
   static TemporaryRef<FilterNode>
@@ -200,7 +200,7 @@ namespace FilterWrappers {
     filter->SetAttribute(ATT_TRANSFORM_MATRIX,
       Matrix::Translation(aSurfacePosition.x, aSurfacePosition.y));
     filter->SetInput(IN_TRANSFORM_IN, aSurface);
-    return filter;
+    return filter.forget();
   }
 
   static TemporaryRef<FilterNode>
@@ -216,7 +216,7 @@ namespace FilterWrappers {
     transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_B, &zero, 1);
     transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_A, true);
     transfer->SetInput(IN_DISCRETE_TRANSFER_IN, aInput);
-    return transfer;
+    return transfer.forget();
   }
 
 }
@@ -280,7 +280,8 @@ FilterCachedColorModels::ForColorModel(ColorModel aColorModel)
   if (!mFilterForColorModel[aColorModel.ToIndex()]) {
     mFilterForColorModel[aColorModel.ToIndex()] = WrapForColorModel(aColorModel);
   }
-  return mFilterForColorModel[aColorModel.ToIndex()];
+  RefPtr<FilterNode> filter(mFilterForColorModel[aColorModel.ToIndex()]);
+  return filter.forget();
 }
 
 TemporaryRef<FilterNode>
@@ -698,7 +699,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         filter->SetInput(IN_BLEND_IN, aSources[0]);
         filter->SetInput(IN_BLEND_IN2, aSources[1]);
       }
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::ColorMatrix:
@@ -707,7 +708,8 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       uint32_t type = atts.GetUint(eColorMatrixType);
       const nsTArray<float>& values = atts.GetFloats(eColorMatrixValues);
       if (NS_FAILED(ComputeColorMatrix(type, values, colorMatrix))) {
-        return aSources[0];
+        RefPtr<FilterNode> filter(aSources[0]);
+        return filter.forget();
       }
       Matrix5x4 matrix(colorMatrix[0], colorMatrix[5], colorMatrix[10],  colorMatrix[15],
                        colorMatrix[1], colorMatrix[6], colorMatrix[11],  colorMatrix[16],
@@ -718,7 +720,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       filter->SetAttribute(ATT_COLOR_MATRIX_MATRIX, matrix);
       filter->SetAttribute(ATT_COLOR_MATRIX_ALPHA_MODE, (uint32_t)ALPHA_MODE_STRAIGHT);
       filter->SetInput(IN_COLOR_MATRIX_IN, aSources[0]);
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::Morphology:
@@ -745,7 +747,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       filter->SetAttribute(ATT_MORPHOLOGY_RADII, IntSize(rx, ry));
       filter->SetAttribute(ATT_MORPHOLOGY_OPERATOR, (uint32_t)op);
       filter->SetInput(IN_MORPHOLOGY_IN, aSources[0]);
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::Flood:
@@ -753,7 +755,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       Color color = atts.GetColor(eFloodColor);
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
       filter->SetAttribute(ATT_FLOOD_COLOR, color);
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::Tile:
@@ -761,7 +763,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TILE);
       filter->SetAttribute(ATT_TILE_SOURCE_RECT, aSourceRegions[0]);
       filter->SetInput(IN_TILE_IN, aSources[0]);
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::ComponentTransfer:
@@ -789,7 +791,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         }
       }
 
-      return lastFilter;
+      return lastFilter.forget();
     }
 
     case PrimitiveType::ConvolveMatrix:
@@ -820,7 +822,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       filter->SetAttribute(ATT_CONVOLVE_MATRIX_PRESERVE_ALPHA,
                            atts.GetBool(eConvolveMatrixPreserveAlpha));
       filter->SetInput(IN_CONVOLVE_MATRIX_IN, aSources[0]);
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::Offset:
@@ -847,7 +849,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
                            (uint32_t)channel[atts.GetUint(eDisplacementMapYChannel)]);
       filter->SetInput(IN_DISPLACEMENT_MAP_IN, aSources[0]);
       filter->SetInput(IN_DISPLACEMENT_MAP_IN2, aSources[1]);
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::Turbulence:
@@ -898,7 +900,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         filter->SetInput(IN_COMPOSITE_IN_START, aSources[1]);
         filter->SetInput(IN_COMPOSITE_IN_START + 1, aSources[0]);
       }
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::Merge:
@@ -907,14 +909,15 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         return nullptr;
       }
       if (aSources.Length() == 1) {
-        return aSources[0];
+        RefPtr<FilterNode> filter(aSources[0]);
+        return filter.forget();
       }
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COMPOSITE);
       filter->SetAttribute(ATT_COMPOSITE_OPERATOR, (uint32_t)COMPOSITE_OPERATOR_OVER);
       for (size_t i = 0; i < aSources.Length(); i++) {
         filter->SetInput(IN_COMPOSITE_IN_START + i, aSources[i]);
       }
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::GaussianBlur:
@@ -949,7 +952,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       filter->SetAttribute(ATT_COMPOSITE_OPERATOR, (uint32_t)COMPOSITE_OPERATOR_OVER);
       filter->SetInput(IN_COMPOSITE_IN_START, composite);
       filter->SetInput(IN_COMPOSITE_IN_START + 1, aSources[0]);
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::DiffuseLighting:
@@ -1021,7 +1024,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
       filter->SetInput(IN_LIGHTING_IN, aSources[0]);
 
-      return filter;
+      return filter.forget();
     }
 
     case PrimitiveType::Image:
@@ -1040,7 +1043,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       transform->SetInput(IN_TRANSFORM_IN, inputImage);
       transform->SetAttribute(ATT_TRANSFORM_MATRIX, TM);
       transform->SetAttribute(ATT_TRANSFORM_FILTER, atts.GetUint(eImageFilter));
-      return transform;
+      return transform.forget();
     }
 
     case PrimitiveType::ToAlpha:

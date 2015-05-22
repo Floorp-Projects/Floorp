@@ -1362,6 +1362,10 @@ nsCSSGridTemplateAreaScanner::Next(nsCSSGridTemplateAreaToken& aTokenResult)
     aTokenResult.isTrash = false;
   } else if (ch == '.') {
     // Null cell token
+    // Skip any other '.'
+    while (mOffset < mCount && mBuffer[mOffset] == '.') {
+      mOffset++;
+    }
     aTokenResult.mName.Truncate();
     aTokenResult.isTrash = false;
   } else {

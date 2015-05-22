@@ -477,7 +477,7 @@ XULContentSinkImpl::HandleStartElement(const char16_t *aName,
 
   case eInEpilog:
   case eInScript:
-      PR_LOG(gContentSinkLog, PR_LOG_WARNING,
+      MOZ_LOG(gContentSinkLog, PR_LOG_WARNING,
              ("xul: warning: unexpected tags in epilog at line %d",
              aLineNumber));
       rv = NS_ERROR_UNEXPECTED; // XXX
@@ -728,7 +728,7 @@ XULContentSinkImpl::OpenRoot(const char16_t** aAttributes,
 
     if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) ||
         aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XUL)) {
-        PR_LOG(gContentSinkLog, PR_LOG_ERROR,
+        MOZ_LOG(gContentSinkLog, PR_LOG_ERROR,
                ("xul: script tag not allowed as root content element"));
 
         return NS_ERROR_UNEXPECTED;
@@ -742,7 +742,7 @@ XULContentSinkImpl::OpenRoot(const char16_t** aAttributes,
         if (PR_LOG_TEST(gContentSinkLog, PR_LOG_ERROR)) {
             nsAutoString anodeC;
             aNodeInfo->GetName(anodeC);
-            PR_LOG(gContentSinkLog, PR_LOG_ERROR,
+            MOZ_LOG(gContentSinkLog, PR_LOG_ERROR,
                    ("xul: unable to create element '%s' at line %d",
                     NS_ConvertUTF16toUTF8(anodeC).get(),
                     -1)); // XXX pass in line number
@@ -783,7 +783,7 @@ XULContentSinkImpl::OpenTag(const char16_t** aAttributes,
         if (PR_LOG_TEST(gContentSinkLog, PR_LOG_ERROR)) {
             nsAutoString anodeC;
             aNodeInfo->GetName(anodeC);
-            PR_LOG(gContentSinkLog, PR_LOG_ERROR,
+            MOZ_LOG(gContentSinkLog, PR_LOG_ERROR,
                    ("xul: unable to create element '%s' at line %d",
                     NS_ConvertUTF16toUTF8(anodeC).get(),
                     aLineNumber));
@@ -985,7 +985,7 @@ XULContentSinkImpl::AddAttributes(const char16_t** aAttributes,
           nsAutoString qnameC,valueC;
           qnameC.Assign(aAttributes[0]);
           valueC.Assign(aAttributes[1]);
-          PR_LOG(gContentSinkLog, PR_LOG_DEBUG,
+          MOZ_LOG(gContentSinkLog, PR_LOG_DEBUG,
                  ("xul: %.5d. %s    %s=%s",
                   -1, // XXX pass in line number
                   NS_ConvertUTF16toUTF8(extraWhiteSpace).get(),

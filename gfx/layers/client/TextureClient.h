@@ -288,7 +288,7 @@ public:
     RefPtr<gfx::SourceSurface> surf = BorrowDrawTarget()->Snapshot();
     RefPtr<gfx::DataSourceSurface> data = surf->GetDataSurface();
     Unlock();
-    return data;
+    return data.forget();
   }
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);

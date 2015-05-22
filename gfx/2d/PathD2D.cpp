@@ -303,7 +303,7 @@ PathBuilderD2D::Finish()
     return nullptr;
   }
 
-  return new PathD2D(mGeometry, mFigureActive, mCurrentPoint, mFillRule, mBackendType);
+  return MakeAndAddRef<PathD2D>(mGeometry, mFigureActive, mCurrentPoint, mFillRule, mBackendType);
 }
 
 TemporaryRef<PathBuilder>

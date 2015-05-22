@@ -392,7 +392,8 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
                                   aOptions);
     } else {
       RefPtr<gfx::DataSourceSurface> dataSurface;
-      dataSurface = GetBRGADataSourceSurfaceSync(aImage);
+      RefPtr<layers::Image> image(aImage);
+      dataSurface = GetBRGADataSourceSurfaceSync(image.forget());
 
       DataSourceSurface::MappedSurface map;
       if (!dataSurface->Map(gfx::DataSourceSurface::MapType::READ, &map)) {

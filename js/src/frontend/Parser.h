@@ -693,7 +693,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool checkDestructuringObject(BindData<ParseHandler>* data, Node objectPattern);
     bool checkDestructuringArray(BindData<ParseHandler>* data, Node arrayPattern);
     bool bindInitialized(BindData<ParseHandler>* data, Node pn);
-    bool bindDestructuringLHS(Node pn);
     bool makeSetCall(Node pn, unsigned msg);
     Node cloneDestructuringDefault(Node opn);
     Node cloneLeftHandSide(Node opn);

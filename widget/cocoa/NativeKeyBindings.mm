@@ -67,7 +67,7 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
     gNativeKeyBindingsLog = PR_NewLogModule("NativeKeyBindings");
   }
 
-  PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
+  MOZ_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
     ("%p NativeKeyBindings::Init", this));
 
   // Many selectors have a one-to-one mapping to a Gecko command. Those mappings
@@ -203,7 +203,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
                            DoCommandCallback aCallback,
                            void* aCallbackData)
 {
-  PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
+  MOZ_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
     ("%p NativeKeyBindings::KeyPress", this));
 
   // Recover the current event, which should always be the key down we are
@@ -212,19 +212,19 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
   NSEvent* cocoaEvent = reinterpret_cast<NSEvent*>(aEvent.mNativeKeyEvent);
 
   if (!cocoaEvent || [cocoaEvent type] != NSKeyDown) {
-    PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
+    MOZ_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
       ("%p NativeKeyBindings::KeyPress, no Cocoa key down event", this));
 
     return false;
   }
 
-  PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
+  MOZ_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
     ("%p NativeKeyBindings::KeyPress, interpreting", this));
 
   nsAutoTArray<KeyBindingsCommand, 2> bindingCommands;
   nsCocoaUtils::GetCommandsFromKeyEvent(cocoaEvent, bindingCommands);
 
-  PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
+  MOZ_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
     ("%p NativeKeyBindings::KeyPress, bindingCommands=%u",
      this, bindingCommands.Length()));
 
@@ -238,7 +238,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
       nsAutoString nsSelectorString;
       nsCocoaUtils::GetStringForNSString(selectorString, nsSelectorString);
 
-      PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
+      MOZ_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
         ("%p NativeKeyBindings::KeyPress, selector=%s",
          this, NS_LossyConvertUTF16toASCII(nsSelectorString).get()));
     }
@@ -265,7 +265,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
   }
 
   if (geckoCommands.IsEmpty()) {
-    PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
+    MOZ_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
       ("%p NativeKeyBindings::KeyPress, handled=false", this));
 
     return false;
@@ -274,7 +274,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
   for (uint32_t i = 0; i < geckoCommands.Length(); i++) {
     Command geckoCommand = geckoCommands[i];
 
-    PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
+    MOZ_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
       ("%p NativeKeyBindings::KeyPress, command=%s",
        this, WidgetKeyboardEvent::GetCommandStr(geckoCommand)));
 
@@ -282,7 +282,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
     aCallback(geckoCommand, aCallbackData);
   }
 
-  PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
+  MOZ_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
     ("%p NativeKeyBindings::KeyPress, handled=true", this));
 
   return true;

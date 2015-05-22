@@ -35,8 +35,8 @@ PRLogModuleInfo* GetFormatDecoderLog() {
   }
   return log;
 }
-#define LOG(arg, ...) PR_LOG(GetFormatDecoderLog(), PR_LOG_DEBUG, ("MediaFormatReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define LOGV(arg, ...) PR_LOG(GetFormatDecoderLog(), PR_LOG_DEBUG+1, ("MediaFormatReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...) MOZ_LOG(GetFormatDecoderLog(), PR_LOG_DEBUG, ("MediaFormatReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define LOGV(arg, ...) MOZ_LOG(GetFormatDecoderLog(), PR_LOG_DEBUG+1, ("MediaFormatReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 
@@ -1017,7 +1017,7 @@ MediaFormatReader::Output(TrackType aTrack, MediaData* aSample)
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArgs<TrackType, StorensRefPtrPassByPtr<MediaData>>(
       this, &MediaFormatReader::NotifyNewOutput, aTrack, aSample);
-  GetTaskQueue()->Dispatch(task);
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 void
@@ -1026,7 +1026,7 @@ MediaFormatReader::DrainComplete(TrackType aTrack)
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyDrainComplete, aTrack);
-  GetTaskQueue()->Dispatch(task);
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 void
@@ -1035,7 +1035,7 @@ MediaFormatReader::InputExhausted(TrackType aTrack)
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyInputExhausted, aTrack);
-  GetTaskQueue()->Dispatch(task);
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 void
@@ -1044,7 +1044,7 @@ MediaFormatReader::Error(TrackType aTrack)
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyError, aTrack);
-  GetTaskQueue()->Dispatch(task);
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 void
@@ -1362,7 +1362,7 @@ MediaFormatReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int6
     NS_NewRunnableMethodWithArgs<int32_t, uint64_t>(
       this, &MediaFormatReader::NotifyDemuxer,
       aLength, aOffset);
-  GetTaskQueue()->Dispatch(task);
+  GetTaskQueue()->Dispatch(task.forget());
 }
 
 } // namespace mozilla

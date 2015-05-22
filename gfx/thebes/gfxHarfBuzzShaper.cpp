@@ -184,6 +184,61 @@ gfxHarfBuzzShaper::GetGlyph(hb_codepoint_t unicode,
     return gid;
 }
 
+static int
+VertFormsGlyphCompare(const void* aKey, const void* aElem)
+{
+    return int(*((hb_codepoint_t*)(aKey))) - int(*((uint16_t*)(aElem)));
+}
+
+// Return a vertical presentation-form codepoint corresponding to the
+// given Unicode value, or 0 if no such form is available.
+static hb_codepoint_t
+GetVerticalPresentationForm(hb_codepoint_t unicode)
+{
+    static const uint16_t sVerticalForms[][2] = {
+        { 0x2013, 0xfe32 }, // EN DASH
+        { 0x2014, 0xfe31 }, // EM DASH
+        { 0x2025, 0xfe30 }, // TWO DOT LEADER
+        { 0x2026, 0xfe19 }, // HORIZONTAL ELLIPSIS
+        { 0x3001, 0xfe11 }, // IDEOGRAPHIC COMMA
+        { 0x3002, 0xfe12 }, // IDEOGRAPHIC FULL STOP
+        { 0x3008, 0xfe3f }, // LEFT ANGLE BRACKET
+        { 0x3009, 0xfe40 }, // RIGHT ANGLE BRACKET
+        { 0x300a, 0xfe3d }, // LEFT DOUBLE ANGLE BRACKET
+        { 0x300b, 0xfe3e }, // RIGHT DOUBLE ANGLE BRACKET
+        { 0x300c, 0xfe41 }, // LEFT CORNER BRACKET
+        { 0x300d, 0xfe42 }, // RIGHT CORNER BRACKET
+        { 0x300e, 0xfe43 }, // LEFT WHITE CORNER BRACKET
+        { 0x300f, 0xfe44 }, // RIGHT WHITE CORNER BRACKET
+        { 0x3010, 0xfe3b }, // LEFT BLACK LENTICULAR BRACKET
+        { 0x3011, 0xfe3c }, // RIGHT BLACK LENTICULAR BRACKET
+        { 0x3014, 0xfe39 }, // LEFT TORTOISE SHELL BRACKET
+        { 0x3015, 0xfe3a }, // RIGHT TORTOISE SHELL BRACKET
+        { 0x3016, 0xfe17 }, // LEFT WHITE LENTICULAR BRACKET
+        { 0x3017, 0xfe18 }, // RIGHT WHITE LENTICULAR BRACKET
+        { 0xfe4f, 0xfe34 }, // WAVY LOW LINE
+        { 0xff01, 0xfe15 }, // FULLWIDTH EXCLAMATION MARK
+        { 0xff08, 0xfe35 }, // FULLWIDTH LEFT PARENTHESIS
+        { 0xff09, 0xfe36 }, // FULLWIDTH RIGHT PARENTHESIS
+        { 0xff0c, 0xfe10 }, // FULLWIDTH COMMA
+        { 0xff1a, 0xfe13 }, // FULLWIDTH COLON
+        { 0xff1b, 0xfe14 }, // FULLWIDTH SEMICOLON
+        { 0xff1f, 0xfe16 }, // FULLWIDTH QUESTION MARK
+        { 0xff3b, 0xfe47 }, // FULLWIDTH LEFT SQUARE BRACKET
+        { 0xff3d, 0xfe48 }, // FULLWIDTH RIGHT SQUARE BRACKET
+        { 0xff3f, 0xfe33 }, // FULLWIDTH LOW LINE
+        { 0xff5b, 0xfe37 }, // FULLWIDTH LEFT CURLY BRACKET
+        { 0xff5d, 0xfe38 }  // FULLWIDTH RIGHT CURLY BRACKET
+    };
+    const uint16_t* charPair =
+        static_cast<const uint16_t*>(bsearch(&unicode,
+                                             sVerticalForms,
+                                             ArrayLength(sVerticalForms),
+                                             sizeof(sVerticalForms[0]),
+                                             VertFormsGlyphCompare));
+    return charPair ? charPair[1] : 0;
+}
+
 static hb_bool_t
 HBGetGlyph(hb_font_t *font, void *font_data,
            hb_codepoint_t unicode, hb_codepoint_t variation_selector,
@@ -192,6 +247,18 @@ HBGetGlyph(hb_font_t *font, void *font_data,
 {
     const gfxHarfBuzzShaper::FontCallbackData *fcd =
         static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
+
+    if (fcd->mShaper->UseVerticalPresentationForms()) {
+        hb_codepoint_t verticalForm = GetVerticalPresentationForm(unicode);
+        if (verticalForm) {
+            *glyph = fcd->mShaper->GetGlyph(verticalForm, variation_selector);
+            if (*glyph != 0) {
+                return true;
+            }
+        }
+        // fall back to the non-vertical form if we didn't find an alternate
+    }
+
     *glyph = fcd->mShaper->GetGlyph(unicode, variation_selector);
     return *glyph != 0;
 }
@@ -1419,6 +1486,7 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     }
 
     mCallbackData.mContext = aContext;
+    mUseVerticalPresentationForms = false;
 
     if (!Initialize()) {
         return false;
@@ -1427,6 +1495,10 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     if (aVertical) {
         if (!InitializeVertical()) {
             return false;
+        }
+        if (!mFont->GetFontEntry()->
+            SupportsOpenTypeFeature(aScript, HB_TAG('v','e','r','t'))) {
+            mUseVerticalPresentationForms = true;
         }
     }
 

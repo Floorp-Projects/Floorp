@@ -38,7 +38,7 @@ GetNTLMLog()
   return sNTLMLog;
 }
 
-#define LOG(x) PR_LOG(GetNTLMLog(), PR_LOG_DEBUG, x)
+#define LOG(x) MOZ_LOG(GetNTLMLog(), PR_LOG_DEBUG, x)
 #define LOG_ENABLED() PR_LOG_TEST(GetNTLMLog(), PR_LOG_DEBUG)
 
 static void des_makekey(const uint8_t *raw, uint8_t *key);
