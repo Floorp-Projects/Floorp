@@ -198,6 +198,7 @@ class SharedContext
     virtual ObjectBox* toObjectBox() = 0;
     inline bool isFunctionBox() { return toObjectBox() && toObjectBox()->isFunctionBox(); }
     inline FunctionBox* asFunctionBox();
+    inline GlobalSharedContext* asGlobalSharedContext();
 
     bool hasExplicitUseStrict()        const { return anyCxFlags.hasExplicitUseStrict; }
     bool bindingsAccessedDynamically() const { return anyCxFlags.bindingsAccessedDynamically; }
@@ -235,17 +236,21 @@ class SharedContext
 class GlobalSharedContext : public SharedContext
 {
   private:
+    Handle<StaticEvalObject*> staticEvalScope_;
     bool allowSuperProperty_;
 
   public:
     GlobalSharedContext(ExclusiveContext* cx,
-                        Directives directives, bool extraWarnings, bool allowSuperProperty)
+                        Directives directives, Handle<StaticEvalObject*> staticEvalScope,
+                        bool extraWarnings, bool allowSuperProperty)
       : SharedContext(cx, directives, extraWarnings),
+        staticEvalScope_(staticEvalScope),
         allowSuperProperty_(allowSuperProperty)
     {}
 
     ObjectBox* toObjectBox() { return nullptr; }
     bool allowSuperProperty() const { return allowSuperProperty_; }
+    HandleObject evalStaticScope() const { return staticEvalScope_; }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
@@ -348,6 +353,13 @@ SharedContext::asFunctionBox()
 {
     MOZ_ASSERT(isFunctionBox());
     return static_cast<FunctionBox*>(this);
+}
+
+inline GlobalSharedContext*
+SharedContext::asGlobalSharedContext()
+{
+    MOZ_ASSERT(!isFunctionBox());
+    return static_cast<GlobalSharedContext*>(this);
 }
 
 // In generators, we treat all locals as aliased so that they get stored on the
