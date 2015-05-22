@@ -40,45 +40,45 @@ span[id]:before {
   font-weight: normal;
   font-style: normal;
 }
-.highlight .start-tag {
+.start-tag {
  color: purple;
  font-weight: bold;
 }
-.highlight .end-tag {
+.end-tag {
  color: purple;
  font-weight: bold;
 }
-.highlight .comment {
+.comment {
  color: green;
  font-style: italic;
 }
-.highlight .cdata {
+.cdata {
  color: #CC0066;
 }
-.highlight .doctype {
+.doctype {
  color: steelblue;
  font-style: italic;
 }
-.highlight .pi {
+.pi {
  color: orchid;
  font-style: italic;
 }
-.highlight .entity {
- color: #FF4500;
+.entity {
+ color:#FF4500;
  font-weight: normal;
 }
-.highlight .text {
+.text {
   font-weight: normal;
 }
-.highlight .attribute-name {
+.attribute-name {
  color: black;
  font-weight: bold;
 }
-.highlight .attribute-value {
+.attribute-value {
  color: blue;
  font-weight: normal;
 }
-.highlight .markupdeclaration {
+.markupdeclaration {
  color: steelblue;
  font-style: italic;
 }
@@ -88,9 +88,9 @@ span:not(.error), a:not(.error) {
 span[id] {
  unicode-bidi: -moz-isolate;
 }
-.highlight .error,
-.highlight .error > :-moz-any(.start-tag, .end-tag, .comment, .cdata, .doctype,
-                              .pi, .entity, .attribute-name, .attribute-value) {
+.error, 
+.error > :-moz-any(.start-tag, .end-tag, .comment, .cdata, .doctype, .pi,
+                   .entity, .attribute-name, .attribute-value) {
   color: red;
   font-weight: bold;
 }
