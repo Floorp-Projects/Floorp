@@ -7642,25 +7642,31 @@ UpdateCompositionBoundsForRCDRSF(ParentLayerRect& aCompBounds,
   return false;
 }
 
-static bool
-DeflateScrollbarAreaFromCompositionBoundsFor(nsIFrame* aScrollFrame)
+/* static */ nsMargin
+nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(nsIFrame* aScrollFrame)
 {
   if (!aScrollFrame || !aScrollFrame->GetScrollTargetFrame()) {
-    return false;
+    return nsMargin();
   }
   nsPresContext* presContext = aScrollFrame->PresContext();
   nsIPresShell* presShell = presContext->GetPresShell();
   if (!presShell) {
-    return false;
+    return nsMargin();
   }
   bool isRootScrollFrame = aScrollFrame == presShell->GetRootScrollFrame();
   bool isRootContentDocRootScrollFrame = isRootScrollFrame
                                       && presContext->IsRootContentDocument();
-  // Exclude any non-overlay scroll bars from the composition bounds.
-  // This is only done for the RCD-RSF case, because otherwise the scroll
-  // port size is used and that already excludes the scroll bars.
-  return isRootContentDocRootScrollFrame &&
-         !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars);
+  if (!isRootContentDocRootScrollFrame) {
+    return nsMargin();
+  }
+  if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
+    return nsMargin();
+  }
+  nsIScrollableFrame* scrollableFrame = aScrollFrame->GetScrollTargetFrame();
+  if (!scrollableFrame) {
+    return nsMargin();
+  }
+  return scrollableFrame->GetActualScrollbarSizes();
 }
 
 /* static */ nsSize
@@ -7690,9 +7696,8 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame, bool aSubtract
     }
   }
 
-  if (aSubtractScrollbars && DeflateScrollbarAreaFromCompositionBoundsFor(aFrame)) {
-    MOZ_ASSERT(scrollableFrame);
-    nsMargin margins = scrollableFrame->GetActualScrollbarSizes();
+  if (aSubtractScrollbars) {
+    nsMargin margins = ScrollbarAreaToExcludeFromCompositionBoundsFor(aFrame);
     size.width -= margins.LeftRight();
     size.height -= margins.TopBottom();
   }
@@ -7748,14 +7753,11 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
 
   // Adjust composition size for the size of scroll bars.
   nsIFrame* rootRootScrollFrame = rootPresShell ? rootPresShell->GetRootScrollFrame() : nullptr;
-  if (DeflateScrollbarAreaFromCompositionBoundsFor(rootRootScrollFrame)) {
-    nsIScrollableFrame* rootScrollableFrame = rootRootScrollFrame->GetScrollTargetFrame();
-    MOZ_ASSERT(rootScrollableFrame);
-    CSSMargin margins = CSSMargin::FromAppUnits(rootScrollableFrame->GetActualScrollbarSizes());
-    // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
-    rootCompositionSize.width -= margins.LeftRight();
-    rootCompositionSize.height -= margins.TopBottom();
-  }
+  nsMargin scrollbarMargins = ScrollbarAreaToExcludeFromCompositionBoundsFor(rootRootScrollFrame);
+  CSSMargin margins = CSSMargin::FromAppUnits(scrollbarMargins);
+  // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
+  rootCompositionSize.width -= margins.LeftRight();
+  rootCompositionSize.height -= margins.TopBottom();
 
   return rootCompositionSize / aMetrics.DisplayportPixelsPerCSSPixel();
 }
@@ -8275,13 +8277,10 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
       compositionBounds, true, metrics.GetCumulativeResolution());
   }
 
-  if (DeflateScrollbarAreaFromCompositionBoundsFor(aScrollFrame)) {
-    MOZ_ASSERT(scrollableFrame);
-    nsMargin sizes = scrollableFrame->GetActualScrollbarSizes();
-    // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
-    ParentLayerMargin boundMargins = CSSMargin::FromAppUnits(sizes) * CSSToParentLayerScale(1.0f);
-    frameBounds.Deflate(boundMargins);
-  }
+  nsMargin sizes = ScrollbarAreaToExcludeFromCompositionBoundsFor(aScrollFrame);
+  // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
+  ParentLayerMargin boundMargins = CSSMargin::FromAppUnits(sizes) * CSSToParentLayerScale(1.0f);
+  frameBounds.Deflate(boundMargins);
 
   metrics.SetCompositionBounds(frameBounds);
 
