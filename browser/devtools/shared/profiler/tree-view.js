@@ -256,12 +256,16 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     cell.setAttribute("type", "function");
     cell.appendChild(arrowNode);
 
-    let nameNode = this.document.createElement("label");
-    nameNode.className = "plain call-tree-name";
-    nameNode.setAttribute("flex", "1");
-    nameNode.setAttribute("crop", "end");
-    nameNode.setAttribute("value", frameName);
-    cell.appendChild(nameNode);
+    // Don't render a name label node if there's no function name. A different
+    // location label node will be rendered instead.
+    if (frameName) {
+      let nameNode = this.document.createElement("label");
+      nameNode.className = "plain call-tree-name";
+      nameNode.setAttribute("flex", "1");
+      nameNode.setAttribute("crop", "end");
+      nameNode.setAttribute("value", frameName);
+      cell.appendChild(nameNode);
+    }
 
     // Don't render detailed labels for meta category frames
     if (!frameInfo.isMetaCategory) {
