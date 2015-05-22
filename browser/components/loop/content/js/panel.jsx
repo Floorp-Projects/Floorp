@@ -128,11 +128,11 @@ loop.panel = (function(_, mozL10n) {
       return function(event) {
         // Note: side effect!
         switch (newAvailabilty) {
-          case 'available':
+          case "available":
             this.setState({doNotDisturb: false});
             navigator.mozLoop.doNotDisturb = false;
             break;
-          case 'do-not-disturb':
+          case "do-not-disturb":
             this.setState({doNotDisturb: true});
             navigator.mozLoop.doNotDisturb = true;
             break;
@@ -145,13 +145,13 @@ loop.panel = (function(_, mozL10n) {
       // XXX https://github.com/facebook/react/issues/310 for === htmlFor
       var cx = React.addons.classSet;
       var availabilityStatus = cx({
-        'status': true,
-        'status-dnd': this.state.doNotDisturb,
-        'status-available': !this.state.doNotDisturb
+        "status": true,
+        "status-dnd": this.state.doNotDisturb,
+        "status-available": !this.state.doNotDisturb
       });
       var availabilityDropdown = cx({
-        'dropdown-menu': true,
-        'hide': !this.state.showMenu
+        "dropdown-menu": true,
+        "hide": !this.state.showMenu
       });
       var availabilityText = this.state.doNotDisturb ?
                               mozL10n.get("display_name_dnd_status") :
@@ -289,7 +289,7 @@ loop.panel = (function(_, mozL10n) {
       }
 
       var locale = mozL10n.getLanguage();
-      navigator.mozLoop.setLoopPref('showPartnerLogo', false);
+      navigator.mozLoop.setLoopPref("showPartnerLogo", false);
       return (
         <p id="powered-by" className="powered-by">
           {mozL10n.get("powered_by_beforeLogo")}
@@ -301,8 +301,8 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       if (!this.state.gettingStartedSeen || this.state.seenToS == "unseen") {
-        var terms_of_use_url = navigator.mozLoop.getLoopPref('legal.ToS_url');
-        var privacy_notice_url = navigator.mozLoop.getLoopPref('legal.privacy_url');
+        var terms_of_use_url = navigator.mozLoop.getLoopPref("legal.ToS_url");
+        var privacy_notice_url = navigator.mozLoop.getLoopPref("legal.privacy_url");
         var tosHTML = mozL10n.get("legal_text_and_links3", {
           "clientShortname": mozL10n.get("clientShortname2"),
           "terms_of_use": React.renderToStaticMarkup(
@@ -1006,8 +1006,8 @@ loop.panel = (function(_, mozL10n) {
     document.body.setAttribute("platform", loop.shared.utils.getPlatform());
 
     // Notify the window that we've finished initalization and initial layout
-    var evtObject = document.createEvent('Event');
-    evtObject.initEvent('loopPanelInitialized', true, false);
+    var evtObject = document.createEvent("Event");
+    evtObject.initEvent("loopPanelInitialized", true, false);
     window.dispatchEvent(evtObject);
   }
 
@@ -1027,4 +1027,4 @@ loop.panel = (function(_, mozL10n) {
   };
 })(_, document.mozL10n);
 
-document.addEventListener('DOMContentLoaded', loop.panel.init);
+document.addEventListener("DOMContentLoaded", loop.panel.init);

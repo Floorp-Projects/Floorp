@@ -136,8 +136,8 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   }
 
   function isChrome(platform) {
-    return platform.toLowerCase().indexOf('chrome') > -1 ||
-           platform.toLowerCase().indexOf('chromium') > -1;
+    return platform.toLowerCase().indexOf("chrome") > -1 ||
+           platform.toLowerCase().indexOf("chromium") > -1;
   }
 
   function isFirefox(platform) {
@@ -154,8 +154,8 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   }
 
   function isOpera(platform) {
-    return platform.toLowerCase().indexOf('opera') > -1 ||
-           platform.toLowerCase().indexOf('opr') > -1;
+    return platform.toLowerCase().indexOf("opera") > -1 ||
+           platform.toLowerCase().indexOf("opr") > -1;
   }
 
   /**

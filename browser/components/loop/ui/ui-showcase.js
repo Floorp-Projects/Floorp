@@ -8,8 +8,8 @@
   "use strict";
 
   // Stop the default init functions running to avoid conflicts.
-  document.removeEventListener('DOMContentLoaded', loop.panel.init);
-  document.removeEventListener('DOMContentLoaded', loop.conversation.init);
+  document.removeEventListener("DOMContentLoaded", loop.panel.init);
+  document.removeEventListener("DOMContentLoaded", loop.conversation.init);
 
   // 1. Desktop components
   // 1.1 Panel
@@ -743,7 +743,7 @@
    * CSS media rules in their own iframe to mimic the viewport
    * */
   function _renderComponentsInIframes() {
-    var parents = document.querySelectorAll('.breakpoint');
+    var parents = document.querySelectorAll(".breakpoint");
     [].forEach.call(parents, appendChildInIframe);
 
     /**
@@ -752,9 +752,9 @@
      * @type {HTMLElement} parent - Parent DOM node of a component & iframe
      * */
     function appendChildInIframe(parent) {
-      var styles     = document.querySelector('head').children;
+      var styles     = document.querySelector("head").children;
       var component  = parent.children[0];
-      var iframe     = document.createElement('iframe');
+      var iframe     = document.createElement("iframe");
       var width      = parent.dataset.breakpointWidth;
       var height     = parent.dataset.breakpointHeight;
 
@@ -765,8 +765,8 @@
       iframe.src    = "about:blank";
       // Workaround for bug 297685
       iframe.onload = function () {
-        var iframeHead = iframe.contentDocument.querySelector('head');
-        iframe.contentDocument.documentElement.querySelector('body')
+        var iframeHead = iframe.contentDocument.querySelector("head");
+        iframe.contentDocument.documentElement.querySelector("body")
                                               .appendChild(component);
 
         [].forEach.call(styles, function(style) {
