@@ -159,6 +159,7 @@ function runTests() {
   suggestedLink.adgroup_name = "Technology";
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
     "data:application/json," + JSON.stringify({"suggested": [suggestedLink]}));
+  yield watchLinksChangeOnce().then(TestRunner.next);
 
   yield addNewTabPageTab();
   ({type, enhanced, title, suggested} = getData(0));
@@ -170,6 +171,7 @@ function runTests() {
   suggestedLink.explanation = "Suggested for %1$S enthusiasts who visit sites like %2$S";
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
     "data:application/json," + encodeURIComponent(JSON.stringify({"suggested": [suggestedLink]})));
+  yield watchLinksChangeOnce().then(TestRunner.next);
 
   yield addNewTabPageTab();
   ({type, enhanced, title, suggested} = getData(0));
@@ -181,6 +183,7 @@ function runTests() {
   delete suggestedLink.adgroup_name;
   Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE,
     "data:application/json," + encodeURIComponent(JSON.stringify({"suggested": [suggestedLink]})));
+  yield watchLinksChangeOnce().then(TestRunner.next);
 
   yield addNewTabPageTab();
   ({type, enhanced, title, suggested} = getData(0));
