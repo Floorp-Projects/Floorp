@@ -42,7 +42,7 @@ HTMLTitleElement::WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 void
 HTMLTitleElement::GetText(DOMString& aText, ErrorResult& aError)
 {
-  if (!nsContentUtils::GetNodeTextContent(this, false, aText)) {
+  if (!nsContentUtils::GetNodeTextContent(this, false, aText, fallible)) {
     aError = NS_ERROR_OUT_OF_MEMORY;
   }
 }
