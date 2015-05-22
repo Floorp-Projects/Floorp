@@ -298,16 +298,8 @@ this.openChatWindow =
     return;
   }
 
-  let thisCallback = function(chatbox) {
-    // All social chat windows get a special error listener.
-    Social.setErrorListener(chatbox.content, function(aBrowser) {
-      aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo&origin=" +
-                             encodeURIComponent(aBrowser.getAttribute("origin")),
-                             null, null, null, null);
-    });
-  }
   let chatbox = Chat.open(contentWindow, provider.origin, provider.name,
-                          fullURI.spec, mode, undefined, thisCallback);
+                          fullURI.spec, mode);
   if (callback) {
     chatbox.promiseChatLoaded.then(() => {
       callback(chatbox.contentWindow);
