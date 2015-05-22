@@ -33,42 +33,34 @@ const Prefs = new ViewHelpers.Prefs("devtools.performance.ui", {
  * @see CATEGORY_MAPPINGS.
  */
 const CATEGORIES = [{
-  ordinal: 7,
   color: "#5e88b0",
   abbrev: "other",
   label: L10N.getStr("category.other")
 }, {
-  ordinal: 4,
   color: "#46afe3",
   abbrev: "css",
   label: L10N.getStr("category.css")
 }, {
-  ordinal: 1,
   color: "#d96629",
   abbrev: "js",
   label: L10N.getStr("category.js")
 }, {
-  ordinal: 2,
   color: "#eb5368",
   abbrev: "gc",
   label: L10N.getStr("category.gc")
 }, {
-  ordinal: 0,
   color: "#df80ff",
   abbrev: "network",
   label: L10N.getStr("category.network")
 }, {
-  ordinal: 5,
   color: "#70bf53",
   abbrev: "graphics",
   label: L10N.getStr("category.graphics")
 }, {
-  ordinal: 6,
   color: "#8fa1b2",
   abbrev: "storage",
   label: L10N.getStr("category.storage")
 }, {
-  ordinal: 3,
   color: "#d99b28",
   abbrev: "events",
   label: L10N.getStr("category.events")

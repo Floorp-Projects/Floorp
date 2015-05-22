@@ -15,15 +15,6 @@ function test() {
   ok(count,
     "Should have a non-empty list of categories available.");
 
-  ok(categories.find(e => e.ordinal == count - 1),
-    "The maximum category ordinal is the equal to the categories count.");
-
-  is(categories.reduce((a, b) => a + b.ordinal, 0), count * (count - 1) / 2,
-    "There is an ordinal for every category in the list.");
-
-  is(categories.filter((e, i, self) => self.find(e => e.ordinal == i)).length, count,
-    "All categories have unique ordinals.");
-
   ok(!categories.some(e => !e.color),
     "All categories have an associated color.");
 
