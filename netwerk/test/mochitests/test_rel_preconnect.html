@@ -33,6 +33,7 @@ TestServer.prototype = {
         try { socket.close(); } catch(e) {}
         try { trans.close(); } catch(e) {}
         ok(true, "received connect");
+        srv.listener.close();
         setTimeout(srv.nextTest, 0);
     },
     onStopListening: function(socket) {}
@@ -54,7 +55,6 @@ function testElement()
 function testHeader()
 {
   // test the http link response header
-  srv.listener.close();
   srv = new TestServer(testDone);
   var xhr = new XMLHttpRequest();
   xhr.open("GET", 'rel_preconnect.sjs', false);
@@ -67,7 +67,6 @@ function testDone()
 {
   SpecialPowers.setIntPref("network.http.speculative-parallel-limit",
                             originalLimit);
-  srv.listener.close();
   SimpleTest.finish();
 }
 
