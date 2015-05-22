@@ -124,9 +124,7 @@ SVGScriptElement::GetScriptType(nsAString& type)
 void
 SVGScriptElement::GetScriptText(nsAString& text)
 {
-  if (!nsContentUtils::GetNodeTextContent(this, false, text)) {
-    NS_RUNTIMEABORT("OOM");
-  }
+  nsContentUtils::GetNodeTextContent(this, false, text);
 }
 
 void
