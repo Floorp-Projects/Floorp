@@ -115,6 +115,10 @@
 #performance-view .realtime-disabled-message,
 #performance-view .realtime-disabled-on-e10s-message {
   display: none;
+  /* This label does not want to wrap naturally (based on some combination of
+     it's parents and flex).  Quick and dirty way to force it to wrap -> don't
+     let it get bigger than half the screen size */
+  max-width: 60vw;
 }
 
 #performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message {
