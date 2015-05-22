@@ -23,7 +23,11 @@ import android.widget.ImageView;
  * selected is the dominant colour of the provided Favicon.
  */
 public class FaviconView extends ImageView {
-    private static String DEFAULT_FAVICON_KEY = FaviconView.class.getSimpleName() + "DefaultFavicon";
+    private static String DEFAULT_FAVICON_KEY = "DefaultFavicon";
+    private static int DEFAULT_FAVICON_RES_ID = R.drawable.favicon_globe;
+
+    private int defaultFaviconDrawableId;
+    private String defaultFaviconKey;
 
     private Bitmap mIconBitmap;
 
@@ -82,9 +86,14 @@ public class FaviconView extends ImageView {
         try {
             isDominantBorderEnabled = a.getBoolean(R.styleable.FaviconView_dominantBorderEnabled, true);
             isOverrideScaleTypeEnabled = a.getBoolean(R.styleable.FaviconView_overrideScaleType, true);
+
+            defaultFaviconDrawableId = a.getResourceId(R.styleable.FaviconView_defaultFaviconDrawable, -1);
+            defaultFaviconKey = a.getString(R.styleable.FaviconView_defaultFaviconKey);
         } finally {
             a.recycle();
         }
+
+        validateAndAdjustDefaultFavicon();
 
         if (isOverrideScaleTypeEnabled) {
             setScaleType(ImageView.ScaleType.CENTER);
@@ -100,6 +109,26 @@ public class FaviconView extends ImageView {
 
         mStrokeRect.left = mStrokeRect.top = sStrokeWidth;
         mBackgroundRect.left = mBackgroundRect.top = sStrokeWidth * 2.0f;
+    }
+
+    private void validateAndAdjustDefaultFavicon() {
+        if ((defaultFaviconDrawableId < 0 && defaultFaviconKey != null) ||
+                (defaultFaviconDrawableId >= 0 && defaultFaviconKey == null)) {
+            throw new IllegalStateException("defaultFaviconDrawable and defaultFaviconKey both " +
+                    "either need to be specified or omitted");
+        }
+
+        if (DEFAULT_FAVICON_KEY.equals(defaultFaviconKey)) {
+            throw new IllegalStateException("defaultFaviconKey cannot be " + DEFAULT_FAVICON_KEY);
+        }
+
+        if (defaultFaviconDrawableId < 0) { // key == null too
+            defaultFaviconDrawableId = DEFAULT_FAVICON_RES_ID;
+            defaultFaviconKey = DEFAULT_FAVICON_KEY;
+        }
+
+        // Avoid potential collisions in the favicon cache keys.
+        defaultFaviconKey = FaviconView.class.getSimpleName() + defaultFaviconKey;
     }
 
     @Override
@@ -221,8 +250,8 @@ public class FaviconView extends ImageView {
         // casing it. This means that the icon can be scaled both up and down, and the dominant
         // color box can used if it is enabled in XML attrs.
         final Bitmap defaultFaviconBitmap = BitmapFactory.decodeResource(getResources(),
-                R.drawable.favicon_globe);
-        updateAndScaleImage(defaultFaviconBitmap, DEFAULT_FAVICON_KEY);
+                defaultFaviconDrawableId);
+        updateAndScaleImage(defaultFaviconBitmap, defaultFaviconKey);
     }
 
     private void showNoImage() {
