@@ -2,11 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var expect = chai.expect;
-
 describe("loop.StandaloneMozLoop", function() {
   "use strict";
 
+  var expect = chai.expect;
   var sandbox, fakeXHR, requests, callback, mozLoop;
   var fakeToken, fakeBaseServerUrl, fakeServerErrorDescription;
 

@@ -186,3 +186,9 @@ ul.children + .tag-line::before {
 .editor.text {
   display: inline-block;
 }
+
+.editor.text pre,
+.editor.comment pre {
+  font: inherit;
+}
+

@@ -17,6 +17,7 @@ const promise = require("promise");
 const PromiseDebugging = require("PromiseDebugging");
 const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
+const {DevToolsWorker} = require("devtools/toolkit/shared/worker.js");
 
 const { defer, resolve, reject, all } = require("devtools/toolkit/deprecated-sync-thenables");
 
@@ -532,33 +533,13 @@ ThreadActor.prototype = {
   _prettyPrintWorker: null,
   get prettyPrintWorker() {
     if (!this._prettyPrintWorker) {
-      this._prettyPrintWorker = new ChromeWorker(
-        "resource://gre/modules/devtools/server/actors/pretty-print-worker.js");
-
-      this._prettyPrintWorker.addEventListener(
-        "error", this._onPrettyPrintError, false);
-
-      if (dumpn.wantLogging) {
-        this._prettyPrintWorker.addEventListener("message", this._onPrettyPrintMsg, false);
-
-        const postMsg = this._prettyPrintWorker.postMessage;
-        this._prettyPrintWorker.postMessage = data => {
-          dumpn("Sending message to prettyPrintWorker: "
-                + JSON.stringify(data, null, 2) + "\n");
-          return postMsg.call(this._prettyPrintWorker, data);
-        };
-      }
+      this._prettyPrintWorker = new DevToolsWorker(
+        "resource://gre/modules/devtools/server/actors/pretty-print-worker.js",
+        { name: "pretty-print",
+          verbose: dumpn.wantLogging }
+      );
     }
     return this._prettyPrintWorker;
-  },
-
-  _onPrettyPrintError: function ({ message, filename, lineno }) {
-    reportError(new Error(message + " @ " + filename + ":" + lineno));
-  },
-
-  _onPrettyPrintMsg: function ({ data }) {
-    dumpn("Received message from prettyPrintWorker: "
-          + JSON.stringify(data, null, 2) + "\n");
   },
 
   /**
@@ -623,11 +604,7 @@ ThreadActor.prototype = {
     this._threadLifetimePool = null;
 
     if (this._prettyPrintWorker) {
-      this._prettyPrintWorker.removeEventListener(
-        "error", this._onPrettyPrintError, false);
-      this._prettyPrintWorker.removeEventListener(
-        "message", this._onPrettyPrintMsg, false);
-      this._prettyPrintWorker.terminate();
+      this._prettyPrintWorker.destroy();
       this._prettyPrintWorker = null;
     }
 
@@ -2571,31 +2548,11 @@ SourceActor.prototype = {
    */
   _sendToPrettyPrintWorker: function (aIndent) {
     return ({ content }) => {
-      const deferred = promise.defer();
-      const id = Math.random();
-
-      const onReply = ({ data }) => {
-        if (data.id !== id) {
-          return;
-        }
-        this.prettyPrintWorker.removeEventListener("message", onReply, false);
-
-        if (data.error) {
-          deferred.reject(new Error(data.error));
-        } else {
-          deferred.resolve(data);
-        }
-      };
-
-      this.prettyPrintWorker.addEventListener("message", onReply, false);
-      this.prettyPrintWorker.postMessage({
-        id: id,
+      return this.prettyPrintWorker.performTask("pretty-print", {
         url: this.url,
         indent: aIndent,
         source: content
-      });
-
-      return deferred.promise;
+      })
     };
   },
 
