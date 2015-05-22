@@ -7,7 +7,7 @@
 ///////////////////
 //
 // Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed. 
 //
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Unknown sheet source");
 
@@ -70,16 +70,16 @@ add_task(function*() {
 function* testInlineStyle(view, inspector) {
   info("Testing inline style");
 
-  let onTab = waitForTab();
+  let onWindow = waitForWindow();
   info("Clicking on the first link in the rule-view");
   clickLinkByIndex(view, 0);
 
-  let tab = yield onTab;
+  let win = yield onWindow;
 
-  let tabURI = tab.linkedBrowser.documentURI.spec;
-  ok(tabURI.startsWith("view-source:"), "View source tab is open");
-  info("Closing tab");
-  gBrowser.removeTab(tab);
+  let windowType = win.document.documentElement.getAttribute("windowtype");
+  is(windowType, "navigator:view-source", "View source window is open");
+  info("Closing window");
+  win.close();
 }
 
 function* testFirstInlineStyleSheet(view, toolbox) {
