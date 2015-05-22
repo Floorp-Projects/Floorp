@@ -1474,8 +1474,8 @@ Toolbox.prototype = {
   },
 
   /**
-   * Switch to a new host for the toolbox UI. E.g.
-   * bottom, sidebar, separate window.
+   * Switch to a new host for the toolbox UI. E.g. bottom, sidebar, window,
+   * and focus the window when done.
    *
    * @param {string} hostType
    *        The host type of the new host object
@@ -1491,6 +1491,11 @@ Toolbox.prototype = {
       iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
       iframe.swapFrameLoaders(this.frame);
 
+      // See bug 1022726, most probably because of swapFrameLoaders we need to
+      // first focus the window here, and then once again further below to make
+      // sure focus actually happens.
+      this.frame.contentWindow.focus();
+
       this._host.off("window-closed", this.destroy);
       this.destroyHost();
 
@@ -1502,6 +1507,10 @@ Toolbox.prototype = {
 
       this._buildDockButtons();
       this._addKeysToWindow();
+
+      // Focus the contentWindow to make sure keyboard shortcuts work straight
+      // away.
+      this.frame.contentWindow.focus();
 
       this.emit("host-changed");
     });
