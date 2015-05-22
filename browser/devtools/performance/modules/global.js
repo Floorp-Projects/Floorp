@@ -22,8 +22,13 @@ const L10N = new ViewHelpers.MultiL10N([
  * A list of preferences for this tool. The values automatically update
  * if somebody edits edits about:config or the prefs change somewhere else.
  */
-const Prefs = new ViewHelpers.Prefs("devtools.performance.ui", {
-  showPlatformData: ["Bool", "show-platform-data"]
+const PREFS = new ViewHelpers.Prefs("devtools.performance", {
+  "show-platform-data": ["Bool", "ui.show-platform-data"],
+  "hidden-markers": ["Json", "timeline.hidden-markers"],
+  "memory-sample-probability": ["Float", "memory.sample-probability"],
+  "memory-max-log-length": ["Int", "memory.max-log-length"],
+  "profiler-buffer-size": ["Int", "profiler.buffer-size"],
+  "profiler-sample-frequency": ["Int", "profiler.sample-frequency-khz"],
 }, {
   monitorChanges: true
 });
@@ -239,7 +244,7 @@ function getJSLabel (marker={}) {
  */
 function getJSFields (marker) {
   if ("causeName" in marker && !JS_MARKER_MAP[marker.causeName]) {
-    return { Reason: Prefs.showPlatformData ? marker.causeName : GECKO_SYMBOL };
+    return { Reason: PREFS["show-platform-data"] ? marker.causeName : GECKO_SYMBOL };
   }
 }
 
@@ -338,6 +343,7 @@ const CATEGORY_JIT = CATEGORY_MASK('js');
 
 // Exported symbols.
 exports.L10N = L10N;
+exports.PREFS = PREFS;
 exports.TIMELINE_BLUEPRINT = TIMELINE_BLUEPRINT;
 exports.CATEGORIES = CATEGORIES;
 exports.CATEGORY_MAPPINGS = CATEGORY_MAPPINGS;
