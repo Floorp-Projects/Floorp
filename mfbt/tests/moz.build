@@ -28,6 +28,7 @@ CppUnitTests([
     'TestSegmentedVector',
     'TestSHA1',
     'TestSplayTree',
+    'TestTemplateLib',
     'TestTypedEnum',
     'TestTypeTraits',
     'TestUniquePtr',
