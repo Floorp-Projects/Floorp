@@ -581,10 +581,8 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
 
   nsAutoString baseText;
   if (aColumn.mBaseFrame) {
-    if (!nsContentUtils::GetNodeTextContent(aColumn.mBaseFrame->GetContent(),
-                                            true, baseText)) {
-      NS_RUNTIMEABORT("OOM");
-    }
+    nsContentUtils::GetNodeTextContent(aColumn.mBaseFrame->GetContent(),
+                                       true, baseText);
   }
 
   // Reflow text frames
@@ -592,10 +590,9 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
     nsRubyTextFrame* textFrame = aColumn.mTextFrames[i];
     if (textFrame) {
       nsAutoString annotationText;
-      if (!nsContentUtils::GetNodeTextContent(textFrame->GetContent(),
-                                              true, annotationText)) {
-        NS_RUNTIMEABORT("OOM");
-      }
+      nsContentUtils::GetNodeTextContent(textFrame->GetContent(),
+                                         true, annotationText);
+
       // Per CSS Ruby spec, the content comparison for auto-hiding
       // takes place prior to white spaces collapsing (white-space)
       // and text transformation (text-transform), and ignores elements

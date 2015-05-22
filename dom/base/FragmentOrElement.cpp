@@ -1157,7 +1157,7 @@ void
 FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
                                           ErrorResult& aError)
 {
-  if(!nsContentUtils::GetNodeTextContent(this, true, aTextContent)) {
+  if(!nsContentUtils::GetNodeTextContent(this, true, aTextContent, fallible)) {
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);
   }
 }
