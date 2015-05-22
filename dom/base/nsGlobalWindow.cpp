@@ -1211,7 +1211,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
 
   if (gDOMLeakPRLog)
-    PR_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
            ("DOMWINDOW %p created outer=%p", this, aOuterWindow));
 
   NS_ASSERTION(sWindowsById, "Windows hash table must be created!");
@@ -1301,7 +1301,7 @@ nsGlobalWindow::~nsGlobalWindow()
 #endif
 
   if (gDOMLeakPRLog)
-    PR_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
+    MOZ_LOG(gDOMLeakPRLog, PR_LOG_DEBUG,
            ("DOMWINDOW %p destroyed", this));
 
   if (IsOuterWindow()) {

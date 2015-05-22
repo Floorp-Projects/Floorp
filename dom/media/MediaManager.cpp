@@ -111,7 +111,7 @@ GetMediaManagerLog()
     sLog = PR_NewLogModule("MediaManager");
   return sLog;
 }
-#define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
+#define LOG(msg) MOZ_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
 
 using dom::File;
 using dom::MediaStreamConstraints;
@@ -2242,7 +2242,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     // cleared until the lambda function clears it.
 
     MediaManager::GetMessageLoop()->PostTask(FROM_HERE, new ShutdownTask(
-        media::CallbackRunnable::New([this]() mutable {
+        media::NewRunnableFrom([this]() mutable {
       // Close off any remaining active windows.
       MutexAutoLock lock(mMutex);
       GetActiveWindows()->Clear();

@@ -82,7 +82,7 @@ TimerObserverRunnable::Run()
 nsresult
 TimerThread::Init()
 {
-  PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
+  MOZ_LOG(GetTimerLog(), PR_LOG_DEBUG,
          ("TimerThread::Init [%d]\n", mInitialized));
 
   if (mInitialized) {
@@ -129,7 +129,7 @@ TimerThread::Init()
 nsresult
 TimerThread::Shutdown()
 {
-  PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("TimerThread::Shutdown begin\n"));
+  MOZ_LOG(GetTimerLog(), PR_LOG_DEBUG, ("TimerThread::Shutdown begin\n"));
 
   if (!mThread) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -167,7 +167,7 @@ TimerThread::Shutdown()
 
   mThread->Shutdown();    // wait for the thread to die
 
-  PR_LOG(GetTimerLog(), PR_LOG_DEBUG, ("TimerThread::Shutdown end\n"));
+  MOZ_LOG(GetTimerLog(), PR_LOG_DEBUG, ("TimerThread::Shutdown end\n"));
   return NS_OK;
 }
 
@@ -205,7 +205,6 @@ TimerThread::Run()
   }
 #endif
 
-  NS_SetIgnoreStatusOfCurrentThread();
   MonitorAutoLock lock(mMonitor);
 
   // We need to know how many microseconds give a positive PRIntervalTime. This
@@ -260,7 +259,7 @@ TimerThread::Run()
           RemoveTimerInternal(timer);
           timer = nullptr;
 
-          PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
+          MOZ_LOG(GetTimerLog(), PR_LOG_DEBUG,
                  ("Timer thread woke up %fms from when it was supposed to\n",
                   fabs((now - timerRef->mTimeout).ToMilliseconds())));
 
@@ -344,10 +343,10 @@ TimerThread::Run()
 
       if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
         if (waitFor == PR_INTERVAL_NO_TIMEOUT)
-          PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
+          MOZ_LOG(GetTimerLog(), PR_LOG_DEBUG,
                  ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));
         else
-          PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
+          MOZ_LOG(GetTimerLog(), PR_LOG_DEBUG,
                  ("waiting for %u\n", PR_IntervalToMilliseconds(waitFor)));
       }
     }

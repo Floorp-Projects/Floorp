@@ -298,7 +298,7 @@ GetUnconnectedPin(IBaseFilter* aFilter, PIN_DIRECTION aPinDir)
     bool matches = FALSE;
     if (SUCCEEDED(MatchUnconnectedPin(pin, aPinDir, &matches)) &&
         matches) {
-      return pin;
+      return pin.forget();
     }
   }
 

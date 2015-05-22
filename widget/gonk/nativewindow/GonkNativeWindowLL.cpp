@@ -137,7 +137,7 @@ GonkNativeWindow::getCurrentBuffer() {
         return NULL;
     }
     textureClient->SetRecycleCallback(GonkNativeWindow::RecycleCallback, this);
-    return textureClient;
+    return textureClient.forget();
 }
 
 /* static */ void

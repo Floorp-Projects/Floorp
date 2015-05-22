@@ -198,7 +198,8 @@ TextureClientRecycleAllocatorImp::CreateOrRecycleForDrawing(
     mInUseClients[textureHolder->GetTextureClient()] = textureHolder;
   }
   textureHolder->GetTextureClient()->SetRecycleCallback(TextureClientRecycleAllocatorImp::RecycleCallback, this);
-  return textureHolder->GetTextureClient();
+  RefPtr<TextureClient> client(textureHolder->GetTextureClient());
+  return client.forget();
 }
 
 void

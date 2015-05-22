@@ -38,7 +38,7 @@ GetTimeStampLog()
   }
   return sLog;
 }
-#define LOG(x)  PR_LOG(GetTimeStampLog(), PR_LOG_DEBUG, x)
+#define LOG(x)  MOZ_LOG(GetTimeStampLog(), PR_LOG_DEBUG, x)
 
 // Estimate of the smallest duration of time we can measure.
 static volatile ULONGLONG sResolution;

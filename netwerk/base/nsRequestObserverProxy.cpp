@@ -16,7 +16,7 @@ using namespace mozilla;
 static PRLogModuleInfo *gRequestObserverProxyLog;
 
 #undef LOG
-#define LOG(args) PR_LOG(gRequestObserverProxyLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gRequestObserverProxyLog, PR_LOG_DEBUG, args)
 
 //-----------------------------------------------------------------------------
 // nsARequestObserverEvent internal class...

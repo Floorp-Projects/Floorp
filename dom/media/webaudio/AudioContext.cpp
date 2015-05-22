@@ -666,11 +666,9 @@ AudioContext::Shutdown()
 {
   mIsShutDown = true;
 
-  // We mute rather than suspending, because the delay between the ::Shutdown
-  // call and the CC would make us overbuffer in the MediaStreamGraph.
-  // See bug 936784 for details.
   if (!mIsOffline) {
-    Mute();
+    ErrorResult dummy;
+    nsRefPtr<Promise> ignored = Close(dummy);
   }
 
   // Release references to active nodes.
@@ -771,12 +769,18 @@ private:
   nsRefPtr<AudioContext> mAudioContext;
 };
 
-
-
 void
 AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  // This can happen if close() was called right after creating the
+  // AudioContext, before the context has switched to "running".
+  if (mAudioContextState == AudioContextState::Closed &&
+      aNewState == AudioContextState::Running &&
+      !aPromise) {
+    return;
+  }
 
   MOZ_ASSERT((mAudioContextState == AudioContextState::Suspended &&
               aNewState == AudioContextState::Running)   ||
@@ -908,14 +912,18 @@ AudioContext::Close(ErrorResult& aRv)
   mCloseCalled = true;
 
   mPromiseGripArray.AppendElement(promise);
-  Graph()->ApplyAudioContextOperation(DestinationStream()->AsAudioNodeStream(),
-                                      AudioContextOperation::Close, promise);
 
+  // This can be called when freeing a document, and the streams are dead at
+  // this point, so we need extra null-checks.
   MediaStream* ds = DestinationStream();
   if (ds) {
-    ds->BlockStreamIfNeeded();
-  }
+    Graph()->ApplyAudioContextOperation(ds->AsAudioNodeStream(),
+                                        AudioContextOperation::Close, promise);
 
+    if (ds) {
+      ds->BlockStreamIfNeeded();
+    }
+  }
   return promise.forget();
 }
 
