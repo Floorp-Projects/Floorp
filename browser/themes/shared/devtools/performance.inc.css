@@ -298,8 +298,11 @@
   opacity: 0.6;
 }
 
+.call-tree-name {
+  -moz-margin-end: 4px !important;
+}
+
 .call-tree-url {
-  -moz-margin-start: 4px !important;
   cursor: pointer;
 }
 
@@ -324,14 +327,6 @@
   -moz-margin-start: 8px !important;
   font-size: 90%;
   color: var(--theme-content-color2);
-}
-
-.call-tree-name[value=""],
-.call-tree-url[value=""],
-.call-tree-line[value=""],
-.call-tree-column[value=""],
-.call-tree-host[value=""] {
-  display: none;
 }
 
 .call-tree-zoom {
