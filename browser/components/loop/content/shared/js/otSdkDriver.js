@@ -25,6 +25,7 @@ loop.OTSdkDriver = (function() {
     this.dispatcher = options.dispatcher;
     this.sdk = options.sdk;
 
+    this._useDataChannels = !!options.useDataChannels;
     this._isDesktop = !!options.isDesktop;
 
     if (this._isDesktop) {
@@ -77,8 +78,22 @@ loop.OTSdkDriver = (function() {
      * Clones the publisher config into a new object, as the sdk modifies the
      * properties object.
      */
-    _getCopyPublisherConfig: function() {
+    get _getCopyPublisherConfig() {
       return _.extend({}, this.publisherConfig);
+    },
+
+    /**
+     * Returns the required data channel settings.
+     */
+    get _getDataChannelSettings() {
+      return {
+        channels: {
+          // We use a single channel for text. To make things simpler, we
+          // always send on the publisher channel, and receive on the subscriber
+          // channel.
+          text: {}
+        }
+      };
     },
 
     /**
@@ -108,7 +123,7 @@ loop.OTSdkDriver = (function() {
      */
     _publishLocalStreams: function() {
       this.publisher = this.sdk.initPublisher(this.getLocalElement(),
-        this._getCopyPublisherConfig());
+        _.extend(this._getDataChannelSettings, this._getCopyPublisherConfig));
       this.publisher.on("streamCreated", this._onLocalStreamCreated.bind(this));
       this.publisher.on("streamDestroyed", this._onLocalStreamDestroyed.bind(this));
       this.publisher.on("accessAllowed", this._onPublishComplete.bind(this));
@@ -165,7 +180,7 @@ loop.OTSdkDriver = (function() {
         this._windowId = options.constraints.browserWindow;
       }
 
-      var config = _.extend(this._getCopyPublisherConfig(), options);
+      var config = _.extend(this._getCopyPublisherConfig, options);
 
       this.screenshare = this.sdk.initPublisher(this.getScreenShareElementFunc(),
         config);
@@ -241,6 +256,7 @@ loop.OTSdkDriver = (function() {
       this.session.on("streamCreated", this._onRemoteStreamCreated.bind(this));
       this.session.on("streamDestroyed", this._onRemoteStreamDestroyed.bind(this));
       this.session.on("streamPropertyChanged", this._onStreamPropertyChanged.bind(this));
+      this.session.on("signal:readyForDataChannel", this._onReadyForDataChannel.bind(this));
 
       // This starts the actual session connection.
       this.session.connect(sessionData.apiKey, sessionData.sessionToken,
@@ -495,7 +511,7 @@ loop.OTSdkDriver = (function() {
       var remoteElement = this.getScreenShareElementFunc();
 
       this.session.subscribe(stream,
-        remoteElement, this._getCopyPublisherConfig());
+        remoteElement, this._getCopyPublisherConfig);
     },
 
     /**
@@ -522,14 +538,126 @@ loop.OTSdkDriver = (function() {
 
       var remoteElement = this.getRemoteElement();
 
-      this.session.subscribe(event.stream,
-        remoteElement, this._getCopyPublisherConfig());
+      this.subscriber = this.session.subscribe(event.stream,
+        remoteElement, this._getCopyPublisherConfig,
+        this._onRemoteSessionSubscribed.bind(this, event.stream.connection));
 
       this._subscribedRemoteStream = true;
       if (this._checkAllStreamsConnected()) {
         this._setTwoWayMediaStartTime(performance.now());
         this.dispatcher.dispatch(new sharedActions.MediaConnected());
       }
+    },
+
+    /**
+     * Once a remote stream has been subscribed to, this triggers the data
+     * channel set-up routines. A data channel cannot be requested before this
+     * time as the peer connection is not set up.
+     *
+     * @param {OT.Connection} connection The OT connection class object.
+     * @param {OT.Error}      err        Indicates if there's been an error in
+     *                                    completing the subscribe.
+     */
+    _onRemoteSessionSubscribed: function(connection, err) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+
+      if (this._useDataChannels) {
+        this.session.signal({
+          type: "readyForDataChannel",
+          to: connection
+        }, function(signalError) {
+          if (signalError) {
+            console.error(signalError);
+          }
+        });
+      }
+    },
+
+    /**
+     * Handles receiving the signal that the other end of the connection
+     * has subscribed to the stream and we're ready to setup the data channel.
+     *
+     * We get data channels for both the publisher and subscriber on reception
+     * of the signal, as it means that a) the remote client is setup for data
+     * channels, and b) that subscribing of streams has definitely completed
+     * for both clients.
+     *
+     * @param {OT.SignalEvent} event Details of the signal received.
+     */
+    _onReadyForDataChannel: function(event) {
+      // If we don't want data channels, just ignore the message. We haven't
+      // send the other side a message, so it won't display anything.
+      if (!this._useDataChannels) {
+        return;
+      }
+
+      // This won't work until a subscriber exists for this publisher
+      this.publisher._.getDataChannel("text", {}, function(err, channel) {
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        this._publisherChannel = channel;
+
+        channel.on({
+          close: function(event) {
+            // XXX We probably want to dispatch and handle this somehow.
+            console.log("Published data channel closed!");
+          }
+        });
+
+        this._checkDataChannelsAvailable();
+      }.bind(this));
+
+      this.subscriber._.getDataChannel("text", {}, function(err, channel) {
+        // Sends will queue until the channel is fully open.
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        channel.on({
+          message: function(event) {
+            try {
+              this.dispatcher.dispatch(
+                new sharedActions.ReceivedTextChatMessage(JSON.parse(event.data)));
+            } catch (ex) {
+              console.error("Failed to process incoming chat message", ex);
+            }
+          }.bind(this),
+
+          close: function(event) {
+            // XXX We probably want to dispatch and handle this somehow.
+            console.log("Subscribed data channel closed!");
+          }
+        });
+
+        this._subscriberChannel = channel;
+        this._checkDataChannelsAvailable();
+      }.bind(this));
+    },
+
+    /**
+     * Checks to see if all channels have been obtained, and if so it dispatches
+     * a notification to the stores to inform them.
+     */
+    _checkDataChannelsAvailable: function() {
+      if (this._publisherChannel && this._subscriberChannel) {
+        this.dispatcher.dispatch(new sharedActions.DataChannelsAvailable());
+      }
+    },
+
+    /**
+     * Sends a text chat message on the data channel.
+     *
+     * @param {String} message The message to send.
+     */
+    sendTextChatMessage: function(message) {
+      this._publisherChannel.send(JSON.stringify(message));
     },
 
     /**
