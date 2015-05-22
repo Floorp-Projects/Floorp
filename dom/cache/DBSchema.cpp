@@ -201,6 +201,10 @@ static nsresult BindId(mozIStorageStatement* aState, const nsACString& aName,
                        const nsID* aId);
 static nsresult ExtractId(mozIStorageStatement* aState, uint32_t aPos,
                           nsID* aIdOut);
+static nsresult CreateAndBindKeyStatement(mozIStorageConnection* aConn,
+                                          const char* aQueryFormat,
+                                          const nsAString& aKey,
+                                          mozIStorageStatement** aStateOut);
 } // anonymous namespace
 
 nsresult
@@ -741,18 +745,19 @@ StorageGetCacheId(mozIStorageConnection* aConn, Namespace aNamespace,
 
   *aFoundCacheOut = false;
 
-  // Use IS for matching the key since an EmptryString() key maps to NULL.
+  // How we constrain the key column depends on the value of our key.  Use
+  // a format string for the query and let CreateAndBindKeyStatement() fill
+  // it in for us.
+  const char* query = "SELECT cache_id FROM storage "
+                      "WHERE namespace=:namespace AND %s "
+                      "ORDER BY rowid;";
+
   nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT cache_id FROM storage WHERE namespace=:namespace AND key IS :key "
-                                 "ORDER BY rowid;"
-  ), getter_AddRefs(state));
+  nsresult rv = CreateAndBindKeyStatement(aConn, query, aKey,
+                                          getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("namespace"), aNamespace);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  rv = state->BindStringAsBlobByName(NS_LITERAL_CSTRING("key"), aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -806,17 +811,17 @@ StorageForgetCache(mozIStorageConnection* aConn, Namespace aNamespace,
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
 
-  // Use IS for matching the key since an EmptryString() key maps to NULL.
+  // How we constrain the key column depends on the value of our key.  Use
+  // a format string for the query and let CreateAndBindKeyStatement() fill
+  // it in for us.
+  const char *query = "DELETE FROM storage WHERE namespace=:namespace AND %s;";
+
   nsCOMPtr<mozIStorageStatement> state;
-  nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM storage WHERE namespace=:namespace AND key IS :key;"
-  ), getter_AddRefs(state));
+  nsresult rv = CreateAndBindKeyStatement(aConn, query, aKey,
+                                          getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("namespace"), aNamespace);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  rv = state->BindStringAsBlobByName(NS_LITERAL_CSTRING("key"), aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->Execute();
@@ -1864,6 +1869,45 @@ ExtractId(mozIStorageStatement* aState, uint32_t aPos, nsID* aIdOut)
 
   bool success = aIdOut->Parse(idString.get());
   if (NS_WARN_IF(!success)) { return NS_ERROR_UNEXPECTED; }
+
+  return rv;
+}
+
+nsresult
+CreateAndBindKeyStatement(mozIStorageConnection* aConn,
+                          const char* aQueryFormat,
+                          const nsAString& aKey,
+                          mozIStorageStatement** aStateOut)
+{
+  MOZ_ASSERT(aConn);
+  MOZ_ASSERT(aQueryFormat);
+  MOZ_ASSERT(aStateOut);
+
+  // The key is stored as a blob to avoid encoding issues.  An empty string
+  // is mapped to NULL for blobs.  Normally we would just write the query
+  // as "key IS :key" to do the proper NULL checking, but that prevents
+  // sqlite from using the key index.  Therefore use "IS NULL" explicitly
+  // if the key is empty, otherwise use "=:key" so that sqlite uses the
+  // index.
+  const char* constraint = nullptr;
+  if (aKey.IsEmpty()) {
+    constraint = "key IS NULL";
+  } else {
+    constraint = "key=:key";
+  }
+
+  nsPrintfCString query(aQueryFormat, constraint);
+
+  nsCOMPtr<mozIStorageStatement> state;
+  nsresult rv = aConn->CreateStatement(query, getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  if (!aKey.IsEmpty()) {
+    rv = state->BindStringAsBlobByName(NS_LITERAL_CSTRING("key"), aKey);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+  }
+
+  state.forget(aStateOut);
 
   return rv;
 }
