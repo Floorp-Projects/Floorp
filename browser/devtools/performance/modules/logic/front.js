@@ -116,8 +116,6 @@ PerformanceActorsConnection.prototype = {
     yield this._connectActors();
     yield this._registerListeners();
 
-    this._connected = true;
-
     this._connecting.resolve();
     Services.obs.notifyObservers(null, "performance-actors-connection-opened", null);
   }),
@@ -126,18 +124,21 @@ PerformanceActorsConnection.prototype = {
    * Destroys this connection.
    */
   destroy: Task.async(function*() {
-    if (this._connecting && !this._connected) {
+    if (this._connecting) {
       yield this._connecting.promise;
-    } else if (!this._connected) {
+    } else {
       return;
     }
 
     yield this._unregisterListeners();
     yield this._disconnectActors();
 
-    this._memory = this._timeline = this._profiler = this._target = this._client = null;
-    this._connected = false;
     this._connecting = null;
+    this._profiler = null;
+    this._timeline = null;
+    this._memory = null;
+    this._target = null;
+    this._client = null;
   }),
 
   /**
