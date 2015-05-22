@@ -600,12 +600,12 @@ CopyFrontToBack(TextureClient* aFront,
                 const gfx::IntRect& aRectToCopy)
 {
   if (!aFront->Lock(OpenMode::OPEN_READ)) {
-    NS_WARNING("Failed to lock the tile's front buffer");
+    gfxCriticalError() << "[Tiling:Client] Failed to lock the tile's front buffer";
     return false;
   }
 
   if (!aBack->Lock(OpenMode::OPEN_READ_WRITE)) {
-    NS_WARNING("Failed to lock the tile's back buffer");
+    gfxCriticalError() << "[Tiling:Client] Failed to lock the tile's back buffer";
     return false;
   }
 
@@ -1145,7 +1145,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   mPaintedRegion.Or(mPaintedRegion, extraPainted);
 
   if (!backBuffer) {
-    NS_WARNING("Failed to allocate a tile TextureClient");
+    gfxCriticalError() << "[Tiling:Client] Failed to allocate a TextureClient";
     aTile.DiscardBackBuffer();
     aTile.DiscardFrontBuffer();
     return TileClient();
@@ -1154,7 +1154,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   // the back buffer may have been already locked in ValidateBackBufferFromFront
   if (!backBuffer->IsLocked()) {
     if (!backBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
-      NS_WARNING("Failed to lock a tile TextureClient");
+      gfxCriticalError() << "[Tiling:Client] Failed to lock a tile";
       aTile.DiscardBackBuffer();
       aTile.DiscardFrontBuffer();
       return TileClient();
@@ -1163,7 +1163,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 
   if (backBufferOnWhite && !backBufferOnWhite->IsLocked()) {
     if (!backBufferOnWhite->Lock(OpenMode::OPEN_READ_WRITE)) {
-      NS_WARNING("Failed to lock tile TextureClient for updating.");
+      gfxCriticalError() << "[Tiling:Client] Failed to lock a tile";
       aTile.DiscardBackBuffer();
       aTile.DiscardFrontBuffer();
       return TileClient();
@@ -1173,13 +1173,13 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   if (usingTiledDrawTarget) {
     if (createdTextureClient) {
       if (!mCompositableClient->AddTextureClient(backBuffer)) {
-        NS_WARNING("Failed to add tile TextureClient.");
+        gfxCriticalError() << "[Tiling:Client] Failed to connect a TextureClient (a)";
         aTile.DiscardFrontBuffer();
         aTile.DiscardBackBuffer();
         return aTile;
       }
       if (backBufferOnWhite && !mCompositableClient->AddTextureClient(backBufferOnWhite)) {
-        NS_WARNING("Failed to add tile TextureClient.");
+        gfxCriticalError() << "[Tiling:Client] Failed to connect a TextureClient (b)";
         aTile.DiscardFrontBuffer();
         aTile.DiscardBackBuffer();
         return aTile;
@@ -1316,7 +1316,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 
   if (createdTextureClient) {
     if (!mCompositableClient->AddTextureClient(backBuffer)) {
-      NS_WARNING("Failed to add tile TextureClient.");
+      gfxCriticalError() << "[Tiling:Client] Failed to connect a TextureClient (c)";
       aTile.DiscardFrontBuffer();
       aTile.DiscardBackBuffer();
       return aTile;
