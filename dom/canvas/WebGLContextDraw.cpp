@@ -600,7 +600,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
         }
         GLenum error = GetAndFlushUnderlyingGLErrors();
 
-        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
+        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->mGLName : 0);
 
         // note that we do this error checking and early return AFTER having restored the buffer binding above
         if (error) {
@@ -626,7 +626,7 @@ WebGLContext::UndoFakeVertexAttrib0()
 
     if (mBoundVertexArray->HasAttrib(0) && mBoundVertexArray->mAttribs[0].buf) {
         const WebGLVertexAttribData& attrib0 = mBoundVertexArray->mAttribs[0];
-        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.buf->GLName());
+        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.buf->mGLName);
         if (attrib0.integer) {
             gl->fVertexAttribIPointer(0,
                                       attrib0.size,
@@ -645,7 +645,7 @@ WebGLContext::UndoFakeVertexAttrib0()
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     }
 
-    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
+    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->mGLName : 0);
 }
 
 WebGLContextFakeBlackStatus

@@ -24,21 +24,21 @@ void
 WebGLContextUnchecked::BindBuffer(GLenum target, WebGLBuffer* buffer)
 {
     gl->MakeCurrent();
-    gl->fBindBuffer(target, buffer ? buffer->GLName() : 0);
+    gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
 }
 
 void
 WebGLContextUnchecked::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
 {
     gl->MakeCurrent();
-    gl->fBindBufferBase(target, index, buffer ? buffer->GLName() : 0);
+    gl->fBindBufferBase(target, index, buffer ? buffer->mGLName : 0);
 }
 
 void
 WebGLContextUnchecked::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer, WebGLintptr offset, WebGLsizeiptr size)
 {
     gl->MakeCurrent();
-    gl->fBindBufferRange(target, index, buffer ? buffer->GLName() : 0, offset, size);
+    gl->fBindBufferRange(target, index, buffer ? buffer->mGLName : 0, offset, size);
 }
 
 void

@@ -13,8 +13,9 @@
 namespace mozilla {
 
 WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
-    : WebGLBindableName<BufferBinding>(buf)
-    , WebGLContextBoundObject(webgl)
+    : WebGLContextBoundObject(webgl)
+    , mGLName(buf)
+    , mTarget(LOCAL_GL_NONE)
     , mByteLength(0)
 {
     mContext->mBuffers.insertBack(this);
@@ -33,6 +34,18 @@ WebGLBuffer::Delete()
     mByteLength = 0;
     mCache = nullptr;
     LinkedListElement<WebGLBuffer>::remove(); // remove from mContext->mBuffers
+}
+
+void
+WebGLBuffer::BindTo(GLenum target)
+{
+    MOZ_ASSERT(target != LOCAL_GL_NONE, "Can't bind to GL_NONE.");
+    MOZ_ASSERT(!HasEverBeenBound() || mTarget == target, "Rebinding is illegal.");
+
+    bool targetChanged = (target != mTarget);
+    mTarget = target;
+    if (targetChanged)
+        OnTargetChanged();
 }
 
 void
