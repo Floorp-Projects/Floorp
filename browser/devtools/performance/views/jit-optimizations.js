@@ -12,7 +12,7 @@ const PROPNAME_MAX_LENGTH = 4;
 /**
  * View for rendering JIT Optimization data. The terminology and types
  * used here can be referenced:
- * @see browser/devtools/shared/profiler/jit.js
+ * @see browser/devtools/performance/modules/logic/jit.js
  */
 
 let JITOptimizationsView = {
@@ -243,7 +243,7 @@ let JITOptimizationsView = {
   /**
    * Creates an element for insertion in the raw view for an IonType.
    *
-   * @see browser/devtools/shared/profiler/jit.js
+   * @see browser/devtools/performance/modules/logic/jit.js
    * @param {IonType} ionType
    * @return {Element}
    */
@@ -258,7 +258,7 @@ let JITOptimizationsView = {
   /**
    * Creates an element for insertion in the raw view for an ObservedType.
    *
-   * @see browser/devtools/shared/profiler/jit.js
+   * @see browser/devtools/performance/modules/logic/jit.js
    * @param {ObservedType} type
    * @return {Element}
    */
@@ -298,7 +298,7 @@ let JITOptimizationsView = {
   /**
    * Creates an element for insertion in the raw view for an OptimizationAttempt.
    *
-   * @see browser/devtools/shared/profiler/jit.js
+   * @see browser/devtools/performance/modules/logic/jit.js
    * @param {OptimizationAttempt} attempt
    * @return {Element}
    */

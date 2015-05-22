@@ -70,7 +70,7 @@ class ProfileEntry
         CATEGORY_MASK = ~IS_CPP_ENTRY & ~FRAME_LABEL_COPY & ~BEGIN_PSEUDO_JS & ~OSR
     };
 
-    // Keep these in sync with browser/devtools/profiler/utils/global.js
+    // Keep these in sync with browser/devtools/performance/modules/global.js
     enum class Category : uint32_t {
         OTHER    = 0x10,
         CSS      = 0x20,
