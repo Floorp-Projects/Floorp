@@ -192,7 +192,8 @@ let gIntro = {
 
     for (let i = 1; i <= MAX_PARAGRAPH_ID; i++) {
       try {
-        this._paragraphs.push(newTabString("intro.paragraph" + i, substringMappings[i]));
+        let name = "intro.paragraph" + i + (i == 4 ? ".2" : "");
+        this._paragraphs.push(newTabString(name, substringMappings[i]));
       } catch (ex) {
         // Paragraph with this ID doesn't exist so continue
       }

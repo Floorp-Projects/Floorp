@@ -1,17 +1,35 @@
 {
-  "ecmaFeatures": {
-    "arrowFunctions": true,
-    "blockBindings": true,
-    "destructuring": true,
-    "generators": true,
-    "restParams": true,
-    "spread": true,
-    "objectLiteralShorthandMethods": true,
-  },
-  "rules": {
-    "generator-star-spacing": [2, "after"],
-    // We should fix the errors and enable this (set to 2)
-    "no-var": 0,
-    "strict": [2, "global"]
+  "extends": "../../.eslintrc-gecko",
+  "globals": {
+    // General test items.
+    "add_task": false,
+    "Cc": true,
+    "Ci": true,
+    "Cr": true,
+    "Cu": true,
+    "is": false,
+    "info": false,
+    "ok": false,
+    "registerCleanupFunction": false,
+    // head.js items
+    "HAWK_TOKEN_LENGTH": true,
+    "checkLoggedOutState": false,
+    "checkFxAOAuthTokenData": false,
+    "loadLoopPanel": false,
+    "getLoopString": false,
+    "gMozLoopAPI": true,
+    "mockDb": true,
+    "mockPushHandler": true,
+    "promiseDeletedOAuthParams": false,
+    "promiseOAuthGetRegistration": false,
+    "promiseOAuthParamsSetup": false,
+    "promiseObserverNotified": false,
+    "promiseTabLoadEvent": false,
+    "promiseWaitForCondition": false,
+    "resetFxA": true,
+    // Loop specific items
+    "MozLoopServiceInternal": true,
+    "LoopRoomsInternal": true,
+    "LoopUI": false,
   }
 }
