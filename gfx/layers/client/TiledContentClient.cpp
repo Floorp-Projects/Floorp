@@ -1138,7 +1138,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                         &backBufferOnWhite);
 
   aTile.mUpdateRect = offsetScaledDirtyRegion.GetBounds();
-  aTile.mUpdateRect.Union(extraPainted.GetBounds());
+  aTile.mUpdateRect = aTile.mUpdateRect.Union(extraPainted.GetBounds());
 
   extraPainted.MoveBy(aTileOrigin);
   extraPainted.And(extraPainted, mNewValidRegion);
