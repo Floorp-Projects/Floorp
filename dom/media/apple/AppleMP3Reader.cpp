@@ -22,9 +22,9 @@
 namespace mozilla {
 
 extern PRLogModuleInfo* gMediaDecoderLog;
-#define LOGE(...) PR_LOG(gMediaDecoderLog, PR_LOG_ERROR, (__VA_ARGS__))
-#define LOGW(...) PR_LOG(gMediaDecoderLog, PR_LOG_WARNING, (__VA_ARGS__))
-#define LOGD(...) PR_LOG(gMediaDecoderLog, PR_LOG_DEBUG, (__VA_ARGS__))
+#define LOGE(...) MOZ_LOG(gMediaDecoderLog, PR_LOG_ERROR, (__VA_ARGS__))
+#define LOGW(...) MOZ_LOG(gMediaDecoderLog, PR_LOG_WARNING, (__VA_ARGS__))
+#define LOGD(...) MOZ_LOG(gMediaDecoderLog, PR_LOG_DEBUG, (__VA_ARGS__))
 
 #define PROPERTY_ID_FORMAT "%c%c%c%c"
 #define PROPERTY_ID_PRINT(x) ((x) >> 24), \

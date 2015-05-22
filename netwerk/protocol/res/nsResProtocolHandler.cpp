@@ -450,7 +450,7 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
     if (PR_LOG_TEST(gResLog, PR_LOG_DEBUG)) {
         nsAutoCString spec;
         uri->GetAsciiSpec(spec);
-        PR_LOG(gResLog, PR_LOG_DEBUG,
+        MOZ_LOG(gResLog, PR_LOG_DEBUG,
                ("%s\n -> %s\n", spec.get(), PromiseFlatCString(result).get()));
     }
     return rv;

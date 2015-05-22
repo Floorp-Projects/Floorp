@@ -32,7 +32,7 @@
     if (PR_LOG_TEST(getLogModule(), level)) {                           \
       std::stringstream str;                                            \
       str << b;                                                         \
-      PR_LOG(getLogModule(), level, ("%s", str.str().c_str()));         \
+      MOZ_LOG(getLogModule(), level, ("%s", str.str().c_str()));         \
     }                                                                   \
   } while(0)
 

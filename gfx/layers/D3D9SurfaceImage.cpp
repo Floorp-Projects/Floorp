@@ -269,7 +269,7 @@ D3D9SurfaceImage::GetAsSourceSurface()
   systemMemorySurface->UnlockRect();
   surface->Unmap();
 
-  return surface;
+  return surface.forget();
 }
 
 } /* layers */

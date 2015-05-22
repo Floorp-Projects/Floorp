@@ -77,10 +77,10 @@
     return sLog;
   }
 #  define LOG(fmt, ...) \
-     PR_LOG(GetPPMLog(), PR_LOG_DEBUG, \
+     MOZ_LOG(GetPPMLog(), PR_LOG_DEBUG, \
             ("ProcessPriorityManager - " fmt, ##__VA_ARGS__))
 #  define LOGP(fmt, ...) \
-     PR_LOG(GetPPMLog(), PR_LOG_DEBUG, \
+     MOZ_LOG(GetPPMLog(), PR_LOG_DEBUG, \
             ("ProcessPriorityManager[%schild-id=%" PRIu64 ", pid=%d] - " fmt, \
             NameWithComma().get(), \
             static_cast<uint64_t>(ChildID()), Pid(), ##__VA_ARGS__))

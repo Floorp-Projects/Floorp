@@ -13,7 +13,7 @@
 #include "mozilla/Logging.h"
 
 PRLogModuleInfo* GetAppleMediaLog();
-#define LOG(...) PR_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define LOG(...) MOZ_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
 #define FourCC2Str(n) ((char[5]){(char)(n >> 24), (char)(n >> 16), (char)(n >> 8), (char)(n), 0})
 
 namespace mozilla {
@@ -72,11 +72,12 @@ AppleATDecoder::Input(MediaRawData* aSample)
       (unsigned long long)aSample->mSize);
 
   // Queue a task to perform the actual decoding on a separate thread.
-  mTaskQueue->Dispatch(
+  nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
         this,
         &AppleATDecoder::SubmitSample,
-        nsRefPtr<MediaRawData>(aSample)));
+        nsRefPtr<MediaRawData>(aSample));
+  mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;
 }

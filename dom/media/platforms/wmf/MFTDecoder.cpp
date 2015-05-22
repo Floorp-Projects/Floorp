@@ -10,7 +10,7 @@
 #include "mozilla/Logging.h"
 
 PRLogModuleInfo* GetDemuxerLog();
-#define LOG(...) PR_LOG(GetDemuxerLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define LOG(...) MOZ_LOG(GetDemuxerLog(), PR_LOG_DEBUG, (__VA_ARGS__))
 
 namespace mozilla {
 
@@ -74,7 +74,7 @@ MFTDecoder::GetAttributes()
   RefPtr<IMFAttributes> attr;
   HRESULT hr = mDecoder->GetAttributes(byRef(attr));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-  return attr;
+  return attr.forget();
 }
 
 HRESULT

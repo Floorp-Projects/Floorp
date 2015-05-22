@@ -94,7 +94,7 @@ this.BrowserUtils = {
     return Services.io.newURI(aCPOWURI.spec, aCPOWURI.originCharset, null);
   },
 
-  // Creates a codebase principal from a canonical origin string. This is the
+  // Creates a codebase principal from a canonical origin string. This is
   // the inverse operation of .origin on a codebase principal.
   principalFromOrigin: function(aOriginString) {
     if (aOriginString.startsWith('[')) {

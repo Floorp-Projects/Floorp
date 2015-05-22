@@ -69,7 +69,7 @@ public:
     // with it, so the OutputEvent stores it in an nsAutoPtr and deletes
     // it once it's run.
     RefPtr<nsIRunnable> r(new OutputEvent(aSample, mCallback, mCreator));
-    mTaskQueue->Dispatch(r);
+    mTaskQueue->Dispatch(r.forget());
     return NS_OK;
   }
 

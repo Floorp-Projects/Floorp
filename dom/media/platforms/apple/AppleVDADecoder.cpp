@@ -24,7 +24,7 @@
 #include "gfxPlatform.h"
 
 PRLogModuleInfo* GetAppleMediaLog();
-#define LOG(...) PR_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define LOG(...) MOZ_LOG(GetAppleMediaLog(), PR_LOG_DEBUG, (__VA_ARGS__))
 //#define LOG_MEDIA_SHA1
 
 namespace mozilla {
@@ -108,11 +108,12 @@ AppleVDADecoder::Input(MediaRawData* aSample)
       aSample->mKeyframe ? " keyframe" : "",
       aSample->mSize);
 
-  mTaskQueue->Dispatch(
+  nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
           this,
           &AppleVDADecoder::SubmitFrame,
-          nsRefPtr<MediaRawData>(aSample)));
+          nsRefPtr<MediaRawData>(aSample));
+  mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }
 

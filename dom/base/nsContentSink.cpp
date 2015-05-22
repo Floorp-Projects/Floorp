@@ -33,7 +33,6 @@
 #include "nsIApplicationCacheContainer.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsISpeculativeConnect.h"
 #include "nsICookieService.h"
 #include "nsContentUtils.h"
 #include "nsNodeInfoManager.h"
@@ -878,20 +877,15 @@ nsContentSink::PrefetchDNS(const nsAString &aHref)
 void
 nsContentSink::Preconnect(const nsAString &aHref)
 {
-  nsCOMPtr<nsISpeculativeConnect>
-    speculator(do_QueryInterface(nsContentUtils::GetIOService()));
-  if (!speculator) {
-    return;
-  }
-
   // construct URI using document charset
   const nsACString& charset = mDocument->GetDocumentCharacterSet();
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aHref,
             charset.IsEmpty() ? nullptr : PromiseFlatCString(charset).get(),
             mDocument->GetDocBaseURI());
-  if (uri) {
-    speculator->SpeculativeConnect(uri, nullptr);
+
+  if (uri && mDocument) {
+    mDocument->MaybePreconnect(uri);
   }
 }
 

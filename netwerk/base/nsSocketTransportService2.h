@@ -29,7 +29,7 @@ struct PRPollDesc;
 // set NSPR_LOG_MODULES=nsSocketTransport:5
 //
 extern PRLogModuleInfo *gSocketTransportLog;
-#define SOCKET_LOG(args)     PR_LOG(gSocketTransportLog, PR_LOG_DEBUG, args)
+#define SOCKET_LOG(args)     MOZ_LOG(gSocketTransportLog, PR_LOG_DEBUG, args)
 #define SOCKET_LOG_ENABLED() PR_LOG_TEST(gSocketTransportLog, PR_LOG_DEBUG)
 
 //-----------------------------------------------------------------------------

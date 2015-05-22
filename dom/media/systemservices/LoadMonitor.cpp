@@ -56,7 +56,7 @@
 // NSPR_LOG_MODULES=LoadManager:5
 #undef LOG
 #undef LOG_ENABLED
-#define LOG(args) PR_LOG(gLoadManagerLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gLoadManagerLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gLoadManagerLog, 4)
 #define LOG_MANY_ENABLED() PR_LOG_TEST(gLoadManagerLog, 5)
 

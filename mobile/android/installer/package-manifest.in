@@ -575,9 +575,6 @@
 ;
 @BINPATH@/components/pipboot.xpt
 @BINPATH@/components/pipnss.xpt
-@BINPATH@/components/pippki.xpt
-@BINPATH@/chrome/pippki@JAREXT@
-@BINPATH@/chrome/pippki.manifest
 
 ; For process sandboxing
 #if defined(MOZ_SANDBOX)

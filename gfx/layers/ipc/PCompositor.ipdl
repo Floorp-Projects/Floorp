@@ -70,6 +70,12 @@ child:
    */
   async UpdatePluginVisibility(uintptr_t[] aVisibleIdList);
 
+  /**
+   * Drop any buffers that might be retained on the child compositor
+   * side.
+   */
+  async ClearCachedResources(uint64_t id);
+
 parent:
   // Child sends the parent a request for fill ratio numbers.
   async RequestOverfill();
@@ -84,6 +90,14 @@ parent:
   // the compositor needs to pause/resume in lockstep with the application.
   sync Pause();
   sync Resume();
+
+  // The child layer tree is hidden. id is the layers id of the child
+  // layer tree.
+  async NotifyHidden(uint64_t id);
+
+  // The child layer tree is visible. id is the layers id of the child
+  // layer tree.
+  async NotifyVisible(uint64_t id);
 
   async NotifyChildCreated(uint64_t id);
   async AdoptChild(uint64_t id);

@@ -115,7 +115,7 @@ GetObjectLog()
   return sLog;
 }
 
-#define LOG(args) PR_LOG(GetObjectLog(), PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(GetObjectLog(), PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(GetObjectLog(), PR_LOG_DEBUG)
 
 static bool

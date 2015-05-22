@@ -87,12 +87,12 @@ public:
     mUpSampler = speex_resampler_init(aChannels,
                                       aSampleRate,
                                       aSampleRate * ValueOf(aType),
-                                      SPEEX_RESAMPLER_QUALITY_DEFAULT,
+                                      SPEEX_RESAMPLER_QUALITY_MIN,
                                       nullptr);
     mDownSampler = speex_resampler_init(aChannels,
                                         aSampleRate * ValueOf(aType),
                                         aSampleRate,
-                                        SPEEX_RESAMPLER_QUALITY_DEFAULT,
+                                        SPEEX_RESAMPLER_QUALITY_MIN,
                                         nullptr);
     mBuffer.SetLength(WEBAUDIO_BLOCK_SIZE*ValueOf(aType));
   }

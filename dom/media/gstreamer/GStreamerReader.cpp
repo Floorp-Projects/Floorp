@@ -31,7 +31,7 @@ using namespace layers;
 
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define LOG(type, msg, ...) \
-  PR_LOG(gMediaDecoderLog, type, ("GStreamerReader(%p) " msg, this, ##__VA_ARGS__))
+  MOZ_LOG(gMediaDecoderLog, type, ("GStreamerReader(%p) " msg, this, ##__VA_ARGS__))
 
 #if DEBUG
 static const unsigned int MAX_CHANNELS = 4;
