@@ -698,9 +698,8 @@ Parser<ParseHandler>::parse(JSObject* chain)
      *   protected from the GC by a root or a stack frame reference.
      */
     Directives directives(options().strictOption);
-    GlobalSharedContext globalsc(context, directives,
-                                 /* staticEvalScope = */ nullptr,
-                                 options().extraWarningsOption);
+    GlobalSharedContext globalsc(context, directives, options().extraWarningsOption,
+                                 /* allowSuperProperty = */ false);
     ParseContext<ParseHandler> globalpc(this, /* parent = */ nullptr, ParseHandler::null(),
                                         &globalsc, /* newDirectives = */ nullptr,
                                         /* staticLevel = */ 0, /* bodyid = */ 0,
@@ -7924,7 +7923,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
 
                     // If we're in a method, mark the method as requiring
                     // support for 'super', since direct eval code can use it.
-                    // (If we're not in a method, that's fine, so ignore the
+                    // (If we're not in a method, that's fine, so ignore the 
                     // return value.)
                     checkAndMarkSuperScope();
                 }

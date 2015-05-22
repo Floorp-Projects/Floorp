@@ -3562,9 +3562,10 @@ MacroAssemblerARMCompat::pushValue(ValueOperand val) {
 void
 MacroAssemblerARMCompat::pushValue(const Address& addr)
 {
+    MOZ_ASSERT(addr.base != StackPointer);
     Operand srcOp = Operand(addr);
+    Operand payload = ToPayload(srcOp);
     Operand type = ToType(srcOp);
-    Operand payload = ToPayloadAfterStackPush(srcOp);
 
     ma_ldr(type, ScratchRegister);
     ma_push(ScratchRegister);
