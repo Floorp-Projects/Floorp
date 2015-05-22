@@ -375,41 +375,23 @@ public:
 public:
 
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  already_AddRefed<Consumer> RefableThen(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
-                                         ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
+  nsRefPtr<Consumer> Then(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
+                          ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     nsRefPtr<ThenValueBase> thenValue = new MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>(
                                               aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue.forget();
+    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to nsRefPtr<Consumer>.
   }
 
   template<typename ResolveFunction, typename RejectFunction>
-  already_AddRefed<Consumer> RefableThen(AbstractThread* aResponseThread, const char* aCallSite,
-                                         ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
+  nsRefPtr<Consumer> Then(AbstractThread* aResponseThread, const char* aCallSite,
+                          ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
   {
     nsRefPtr<ThenValueBase> thenValue = new FunctionThenValue<ResolveFunction, RejectFunction>(aResponseThread,
                                               Move(aResolveFunction), Move(aRejectFunction), aCallSite);
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue.forget();
-  }
-
-  template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  void Then(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
-            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
-  {
-    nsRefPtr<Consumer> c =
-      RefableThen(aResponseThread, aCallSite, aThisVal, aResolveMethod, aRejectMethod);
-    return;
-  }
-
-  template<typename ResolveFunction, typename RejectFunction>
-  void Then(AbstractThread* aResponseThread, const char* aCallSite,
-            ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
-  {
-    nsRefPtr<Consumer> c =
-      RefableThen(aResponseThread, aCallSite, Move(aResolveFunction), Move(aRejectFunction));
-    return;
+    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to nsRefPtr<Consumer>.
   }
 
   void ChainTo(already_AddRefed<Private> aChainedPromise, const char* aCallSite)
@@ -607,7 +589,7 @@ public:
   MediaPromiseConsumerHolder() {}
   ~MediaPromiseConsumerHolder() { MOZ_ASSERT(!mConsumer); }
 
-  void Begin(already_AddRefed<typename PromiseType::Consumer> aConsumer)
+  void Begin(typename PromiseType::Consumer* aConsumer)
   {
     MOZ_DIAGNOSTIC_ASSERT(!Exists());
     mConsumer = aConsumer;

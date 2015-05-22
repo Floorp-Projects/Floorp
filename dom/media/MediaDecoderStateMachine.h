@@ -825,7 +825,7 @@ public:
       }
       Reset();
       mTarget = aTarget;
-      mRequest.Begin(mMediaTimer->WaitUntil(mTarget, __func__)->RefableThen(
+      mRequest.Begin(mMediaTimer->WaitUntil(mTarget, __func__)->Then(
         mSelf->TaskQueue(), __func__, mSelf,
         &MediaDecoderStateMachine::OnDelayedSchedule,
         &MediaDecoderStateMachine::NotReached));

@@ -452,9 +452,9 @@ SourceBuffer::AppendData(MediaLargeByteBuffer* aData, double aTimestampOffset,
   }
 
   mPendingAppend.Begin(mTrackBuffer->AppendData(aData, aTimestampOffset * USECS_PER_S)
-                       ->RefableThen(AbstractThread::MainThread(), __func__, this,
-                                     &SourceBuffer::AppendDataCompletedWithSuccess,
-                                     &SourceBuffer::AppendDataErrored));
+                       ->Then(AbstractThread::MainThread(), __func__, this,
+                              &SourceBuffer::AppendDataCompletedWithSuccess,
+                              &SourceBuffer::AppendDataErrored));
 }
 
 void
