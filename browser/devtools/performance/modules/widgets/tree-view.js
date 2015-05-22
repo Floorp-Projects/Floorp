@@ -3,15 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+/**
+ * This file contains the tree view, displaying all the samples and frames
+ * received from the proviler in a tree-like structure.
+ */
 
-loader.lazyRequireGetter(this, "L10N",
-  "devtools/shared/profiler/global", true);
-
-loader.lazyImporter(this, "Heritage",
-  "resource:///modules/devtools/ViewHelpers.jsm");
-loader.lazyImporter(this, "AbstractTreeItem",
-  "resource:///modules/devtools/AbstractTreeItem.jsm");
+const { Cc, Ci, Cu, Cr } = require("chrome");
+const { L10N } = require("devtools/performance/global");
+const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
+const { AbstractTreeItem } = require("resource:///modules/devtools/AbstractTreeItem.jsm");
 
 const MILLISECOND_UNITS = L10N.getStr("table.ms");
 const PERCENTAGE_UNITS = L10N.getStr("table.percentage");
@@ -21,7 +21,6 @@ const CALL_TREE_INDENTATION = 16; // px
 const DEFAULT_SORTING_PREDICATE = (frameA, frameB) => {
   let dataA = frameA.getDisplayedData();
   let dataB = frameB.getDisplayedData();
-
   return this.inverted
     ? (dataA.selfPercentage < dataB.selfPercentage ? 1 : -1)
     : (dataA.samples < dataB.samples ? 1 : -1);
