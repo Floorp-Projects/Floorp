@@ -1012,8 +1012,14 @@ nsContextMenu.prototype = {
         inBackground: false
       });
       let viewSourceBrowser = gBrowser.getBrowserForTab(tab);
-      top.gViewSourceUtils.viewSourceFromSelectionInBrowser(reference,
-                                                            viewSourceBrowser);
+      if (aContext == "selection") {
+        top.gViewSourceUtils
+           .viewSourceFromSelectionInBrowser(reference, viewSourceBrowser);
+      } else {
+        top.gViewSourceUtils
+           .viewSourceFromFragmentInBrowser(reference, aContext,
+                                            viewSourceBrowser);
+      }
     } else {
       // unused (and play nice for fragments generated via XSLT too)
       var docUrl = null;
