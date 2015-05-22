@@ -17,7 +17,6 @@
   <script type="application/javascript" src="performance/system.js"/>
   <script type="application/javascript" src="performance/performance-controller.js"/>
   <script type="application/javascript" src="performance/performance-view.js"/>
-  <script type="application/javascript" src="performance/recording-model.js"/>
   <script type="application/javascript" src="performance/views/overview.js"/>
   <script type="application/javascript" src="performance/views/toolbar.js"/>
   <script type="application/javascript" src="performance/views/details-subview.js"/>
