@@ -1772,7 +1772,9 @@ public:
         {
             mFont->AddGlyphChangeObserver(this);
         }
-        gfxFont* mFont;
+        // This pointer is nulled by ForgetFont in the gfxFont's
+        // destructor. Before the gfxFont dies.
+        gfxFont* MOZ_NON_OWNING_REF mFont;
     };
     friend class GlyphChangeObserver;
 
