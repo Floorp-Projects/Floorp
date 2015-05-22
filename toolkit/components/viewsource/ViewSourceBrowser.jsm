@@ -55,22 +55,13 @@ ViewSourceBrowser.prototype = {
   },
 
   /**
-   * Holds the value of the last line found via the "Go to line"
-   * command, to pre-populate the prompt the next time it is
-   * opened.
-   */
-  lastLineFound: null,
-
-  /**
    * These are the messages that ViewSourceBrowser will listen for
    * from the frame script it injects. Any message names added here
    * will automatically have ViewSourceBrowser listen for those messages,
    * and remove the listeners on teardown.
    */
+  // TODO: Some messages will appear here in a later patch
   messages: [
-    "ViewSource:PromptAndGoToLine",
-    "ViewSource:GoToLine:Success",
-    "ViewSource:GoToLine:Failed",
   ],
 
   /**
@@ -100,16 +91,8 @@ ViewSourceBrowser.prototype = {
   receiveMessage(message) {
     let data = message.data;
 
+    // TODO: Some messages will appear here in a later patch
     switch(message.name) {
-      case "ViewSource:PromptAndGoToLine":
-        this.promptAndGoToLine();
-        break;
-      case "ViewSource:GoToLine:Success":
-        this.onGoToLineSuccess(data.lineNumber);
-        break;
-      case "ViewSource:GoToLine:Failed":
-        this.onGoToLineFailed();
-        break;
     }
   },
 
@@ -555,73 +538,5 @@ ViewSourceBrowser.prototype = {
     str = str.replace(/[^\0-\u007f]/g, convertEntity);
 
     return str;
-  },
-
-  /**
-   * Opens the "Go to line" prompt for a user to hop to a particular line
-   * of the source code they're viewing. This will keep prompting until the
-   * user either cancels out of the prompt, or enters a valid line number.
-   */
-  promptAndGoToLine() {
-    let input = { value: this.lastLineFound };
-    let window = Services.wm.getMostRecentWindow(null);
-
-    let ok = Services.prompt.prompt(
-        window,
-        this.bundle.GetStringFromName("goToLineTitle"),
-        this.bundle.GetStringFromName("goToLineText"),
-        input,
-        null,
-        {value:0});
-
-    if (!ok)
-      return;
-
-    let line = parseInt(input.value, 10);
-
-    if (!(line > 0)) {
-      Services.prompt.alert(window,
-                            this.bundle.GetStringFromName("invalidInputTitle"),
-                            this.bundle.GetStringFromName("invalidInputText"));
-      this.promptAndGoToLine();
-    } else {
-      this.goToLine(line);
-    }
-  },
-
-  /**
-   * Go to a particular line of the source code. This act is asynchronous.
-   *
-   * @param lineNumber
-   *        The line number to try to go to to.
-   */
-  goToLine(lineNumber) {
-    this.sendAsyncMessage("ViewSource:GoToLine", { lineNumber });
-  },
-
-  /**
-   * Called when the frame script reports that a line was successfully gotten
-   * to.
-   *
-   * @param lineNumber
-   *        The line number that we successfully got to.
-   */
-  onGoToLineSuccess(lineNumber) {
-    // We'll pre-populate the "Go to line" prompt with this value the next
-    // time it comes up.
-    this.lastLineFound = lineNumber;
-  },
-
-  /**
-   * Called when the frame script reports that we failed to go to a particular
-   * line. This informs the user that their selection was likely out of range,
-   * and then reprompts the user to try again.
-   */
-  onGoToLineFailed() {
-    let window = Services.wm.getMostRecentWindow(null);
-    Services.prompt.alert(window,
-                          this.bundle.GetStringFromName("outOfRangeTitle"),
-                          this.bundle.GetStringFromName("outOfRangeText"));
-    this.promptAndGoToLine();
   },
 };
