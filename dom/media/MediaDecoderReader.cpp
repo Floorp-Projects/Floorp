@@ -164,20 +164,6 @@ MediaDecoderReader::GetBuffered()
   return GetEstimatedBufferedTimeRanges(stream, durationUs);
 }
 
-int64_t
-MediaDecoderReader::ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio)
-{
-  int64_t startTime = std::min<int64_t>(aAudio ? aAudio->mTime : INT64_MAX,
-                                        aVideo ? aVideo->mTime : INT64_MAX);
-  if (startTime == INT64_MAX) {
-    startTime = 0;
-  }
-  DECODER_LOG("ComputeStartTime first video frame start %lld", aVideo ? aVideo->mTime : -1);
-  DECODER_LOG("ComputeStartTime first audio frame start %lld", aAudio ? aAudio->mTime : -1);
-  NS_ASSERTION(startTime >= 0, "Start time is negative");
-  return startTime;
-}
-
 nsRefPtr<MediaDecoderReader::MetadataPromise>
 MediaDecoderReader::AsyncReadMetadata()
 {
