@@ -10,7 +10,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsWrapperCache.h"
-#include "WebGLBindableName.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
 #include "WebGLTypes.h"
@@ -21,7 +20,6 @@ class WebGLElementArrayCache;
 
 class WebGLBuffer final
     : public nsWrapperCache
-    , public WebGLBindableName<BufferBinding>
     , public WebGLRefCountedObject<WebGLBuffer>
     , public LinkedListElement<WebGLBuffer>
     , public WebGLContextBoundObject
@@ -41,6 +39,10 @@ public:
     void ElementArrayCacheBufferSubData(size_t pos, const void* ptr,
                                         size_t updateSizeInBytes);
 
+    void BindTo(GLenum target);
+    bool HasEverBeenBound() const { return mTarget != LOCAL_GL_NONE; }
+    GLenum Target() const { return mTarget; }
+
     bool Validate(GLenum type, uint32_t max_allowed, size_t first, size_t count,
                   uint32_t* const out_upperBound);
 
@@ -52,13 +54,17 @@ public:
 
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
+    const GLenum mGLName;
+
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLBuffer)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLBuffer)
 
 protected:
     ~WebGLBuffer();
 
-    virtual void OnTargetChanged() override;
+    void OnTargetChanged();
+
+    GLenum mTarget;
 
     WebGLsizeiptr mByteLength;
     nsAutoPtr<WebGLElementArrayCache> mCache;
