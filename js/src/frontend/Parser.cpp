@@ -700,8 +700,7 @@ Parser<ParseHandler>::parse(JSObject* chain)
     Directives directives(options().strictOption);
     GlobalSharedContext globalsc(context, directives,
                                  /* staticEvalScope = */ nullptr,
-                                 options().extraWarningsOption,
-                                 /* allowSuperProperty = */ false);
+                                 options().extraWarningsOption);
     ParseContext<ParseHandler> globalpc(this, /* parent = */ nullptr, ParseHandler::null(),
                                         &globalsc, /* newDirectives = */ nullptr,
                                         /* staticLevel = */ 0, /* bodyid = */ 0,
