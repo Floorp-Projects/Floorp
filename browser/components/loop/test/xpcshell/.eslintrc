@@ -1,17 +1,36 @@
 {
-  "ecmaFeatures": {
-    "arrowFunctions": true,
-    "blockBindings": true,
-    "destructuring": true,
-    "generators": true,
-    "restParams": true,
-    "spread": true,
-    "objectLiteralShorthandMethods": true,
-  },
-  "rules": {
-    "generator-star-spacing": [2, "after"],
-    // We should fix the errors and enable this (set to 2)
-    "no-var": 0,
-    "strict": [2, "global"]
+  "extends": "../../.eslintrc-gecko",
+  "globals": {
+    // General xpcshell-test functions
+    "HttpServer": false,
+    "add_task": false,
+    "add_test": false,
+    "Ci": true,
+    "Cu": true,
+    "do_check_true": false,
+    "do_check_false": false,
+    "do_check_eq": false,
+    "do_get_profile": false,
+    "do_print": false,
+    "do_register_cleanup": false,
+    "do_throw": false,
+    "do_timeout": false,
+    "run_next_test": false,
+    // head.js items.
+    "MockWebSocketChannel": false,
+    "extend": true,
+    "getLoopString": false,
+    "kServerPushUrl": true,
+    "kEndPointUrl": true,
+    "loopCrypto": true,
+    "loopServer": true,
+    "mockPushHandler": true,
+    "setupFakeFxAUserProfile": false,
+    "setupFakeLoopServer": false,
+    "timerHandlers",
+    "waitForCondition": true,
+    // Loop specific items
+    "MozLoopServiceInternal": true,
+    "LoopRoomsInternal": true,
   }
 }

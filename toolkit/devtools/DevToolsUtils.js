@@ -434,6 +434,9 @@ exports.defineLazyGetter(this, "NetUtil", () => {
  *        An object with the following optional properties:
  *        - loadFromCache: if false, will bypass the cache and
  *          always load fresh from the network (default: true)
+ *        - policy: the nsIContentPolicy type to apply when fetching the URL
+ *        - window: the window to get the loadGroup from
+ *        - charset: the charset to use if the channel doesn't provide one
  * @returns Promise
  *        A promise of the document at that URL, as a string.
  *
@@ -441,7 +444,10 @@ exports.defineLazyGetter(this, "NetUtil", () => {
  * without relying on caching when we can (not for eval, etc.):
  * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
  */
-exports.fetch = function fetch(aURL, aOptions={ loadFromCache: true }) {
+exports.fetch = function fetch(aURL, aOptions={ loadFromCache: true,
+                                                policy: Ci.nsIContentPolicy.TYPE_OTHER,
+                                                window: null,
+                                                charset: null }) {
   let deferred = promise.defer();
   let scheme;
   let url = aURL.split(" -> ").pop();
@@ -486,7 +492,7 @@ exports.fetch = function fetch(aURL, aOptions={ loadFromCache: true }) {
       break;
 
     default:
-    let channel;
+      let channel;
       try {
         channel = Services.io.newChannel2(url,
                                           null,
@@ -495,7 +501,7 @@ exports.fetch = function fetch(aURL, aOptions={ loadFromCache: true }) {
                                           Services.scriptSecurityManager.getSystemPrincipal(),
                                           null,      // aTriggeringPrincipal
                                           Ci.nsILoadInfo.SEC_NORMAL,
-                                          Ci.nsIContentPolicy.TYPE_OTHER);
+                                          aOptions.policy);
       } catch (e if e.name == "NS_ERROR_UNKNOWN_PROTOCOL") {
         // On Windows xpcshell tests, c:/foo/bar can pass as a valid URL, but
         // newChannel won't be able to handle it.
@@ -507,7 +513,7 @@ exports.fetch = function fetch(aURL, aOptions={ loadFromCache: true }) {
                                           Services.scriptSecurityManager.getSystemPrincipal(),
                                           null,      // aTriggeringPrincipal
                                           Ci.nsILoadInfo.SEC_NORMAL,
-                                          Ci.nsIContentPolicy.TYPE_OTHER);
+                                          aOptions.policy);
       }
       let chunks = [];
       let streamListener = {
@@ -531,12 +537,19 @@ exports.fetch = function fetch(aURL, aOptions={ loadFromCache: true }) {
             return;
           }
 
-          charset = channel.contentCharset;
+          charset = channel.contentCharset || aOptions.charset;
           contentType = channel.contentType;
           deferred.resolve(chunks.join(""));
         }
       };
 
+      if (aOptions.window) {
+        // Respect private browsing.
+        channel.loadGroup = aOptions.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebNavigation)
+                              .QueryInterface(Ci.nsIDocumentLoader)
+                              .loadGroup;
+      }
       channel.loadFlags = aOptions.loadFromCache
         ? channel.LOAD_FROM_CACHE
         : channel.LOAD_BYPASS_CACHE;

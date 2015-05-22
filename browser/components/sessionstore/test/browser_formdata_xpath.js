@@ -62,8 +62,8 @@ add_task(function test_form_data_restoration() {
   }
 
   // Remove all tabs.
-  gBrowser.removeTab(tab2);
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab2);
+  yield promiseRemoveTab(tab);
 
   // Restore one of the tabs again.
   tab = ss.undoCloseTab(window, 0);
@@ -81,7 +81,7 @@ add_task(function test_form_data_restoration() {
   }
 
   // Cleanup.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 });
 
 function createFilePath(leaf) {

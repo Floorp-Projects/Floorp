@@ -92,10 +92,6 @@
 #include "ReportInternalError.h"
 #include "snappy/snappy.h"
 
-#ifdef MOZ_NUWA_PROCESS
-#include "nsThread.h"
-#endif
-
 #define DISABLE_ASSERTS_FOR_FUZZING 0
 
 #if DISABLE_ASSERTS_FOR_FUZZING
@@ -4822,9 +4818,6 @@ struct ConnectionPool::ThreadInfo
 {
   nsCOMPtr<nsIThread> mThread;
   nsRefPtr<ThreadRunnable> mRunnable;
-#ifdef MOZ_NUWA_PROCESS
-  bool mNuwaWorking;
-#endif
 
   ThreadInfo();
 
@@ -4832,17 +4825,6 @@ struct ConnectionPool::ThreadInfo
   ThreadInfo(const ThreadInfo& aOther);
 
   ~ThreadInfo();
-
-  void
-  NuwaSetWorking(bool aWorking)
-#ifdef MOZ_NUWA_PROCESS
-    ;
-#else
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mThread);
-  }
-#endif
 };
 
 struct ConnectionPool::DatabaseInfo final
@@ -9965,8 +9947,6 @@ ConnectionPool::ShutdownThread(ThreadInfo& aThreadInfo)
   MOZ_ASSERT(aThreadInfo.mRunnable);
   MOZ_ASSERT(mTotalThreadCount);
 
-  aThreadInfo.NuwaSetWorking(/* aWorking */ false);
-
   nsRefPtr<ThreadRunnable> runnable;
   aThreadInfo.mRunnable.swap(runnable);
 
@@ -10095,8 +10075,6 @@ ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
 
       AdjustIdleTimer();
     }
-
-    dbInfo->mThreadInfo.NuwaSetWorking(/* aWorking */ true);
   }
 
   MOZ_ASSERT(dbInfo->mThreadInfo.mThread);
@@ -10316,8 +10294,6 @@ ConnectionPool::NoteIdleDatabase(DatabaseInfo* aDatabaseInfo)
     return;
   }
 
-  aDatabaseInfo->mThreadInfo.NuwaSetWorking(/* aWorking */ false);
-
   mIdleDatabases.InsertElementSorted(aDatabaseInfo);
 
   AdjustIdleTimer();
@@ -10360,8 +10336,6 @@ ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo)
         ShutdownThread(aDatabaseInfo->mThreadInfo);
       } else {
         MOZ_ASSERT(!mIdleThreads.Contains(aDatabaseInfo->mThreadInfo));
-
-        aDatabaseInfo->mThreadInfo.NuwaSetWorking(/* aWorking */ false);
 
         mIdleThreads.InsertElementSorted(aDatabaseInfo->mThreadInfo);
 
@@ -10494,8 +10468,6 @@ ConnectionPool::CloseDatabase(DatabaseInfo* aDatabaseInfo)
   aDatabaseInfo->mClosing = true;
 
   nsCOMPtr<nsIRunnable> runnable = new CloseConnectionRunnable(aDatabaseInfo);
-
-  aDatabaseInfo->mThreadInfo.NuwaSetWorking(/* aWorking */ true);
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
     aDatabaseInfo->mThreadInfo.mThread->Dispatch(runnable,
@@ -10845,9 +10817,6 @@ ThreadRunnable::Run()
 
 ConnectionPool::
 ThreadInfo::ThreadInfo()
-#ifdef MOZ_NUWA_PROCESS
-  : mNuwaWorking(false)
-#endif
 {
   AssertIsOnBackgroundThread();
 
@@ -10858,9 +10827,6 @@ ConnectionPool::
 ThreadInfo::ThreadInfo(const ThreadInfo& aOther)
   : mThread(aOther.mThread)
   , mRunnable(aOther.mRunnable)
-#ifdef MOZ_NUWA_PROCESS
-  , mNuwaWorking(false)
-#endif
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aOther.mThread);
@@ -10874,51 +10840,8 @@ ThreadInfo::~ThreadInfo()
 {
   AssertIsOnBackgroundThread();
 
-#ifdef MOZ_NUWA_PROCESS
-  MOZ_ASSERT(!mNuwaWorking);
-#endif
-
   MOZ_COUNT_DTOR(ConnectionPool::ThreadInfo);
 }
-
-#ifdef MOZ_NUWA_PROCESS
-
-void
-ConnectionPool::
-ThreadInfo::NuwaSetWorking(bool aWorking)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mThread);
-
-  if (mNuwaWorking == aWorking) {
-    return;
-  }
-
-  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-    [aWorking]
-    {
-      MOZ_ASSERT(!IsOnBackgroundThread());
-      MOZ_ASSERT(!NS_IsMainThread());
-
-      auto* thread = static_cast<nsThread*>(NS_GetCurrentThread());
-      MOZ_ASSERT(thread);
-
-      if (aWorking) {
-        thread->SetWorking();
-      } else {
-        thread->SetIdle();
-      }
-    }
-  );
-  MOZ_ASSERT(runnable);
-
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    mThread->Dispatch(runnable, NS_DISPATCH_NORMAL)));
-
-  mNuwaWorking = aWorking;
-}
-
-#endif // MOZ_NUWA_PROCESS
 
 ConnectionPool::
 IdleResource::IdleResource(const TimeStamp& aIdleTime)

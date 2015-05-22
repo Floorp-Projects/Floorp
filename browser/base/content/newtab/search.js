@@ -54,7 +54,16 @@ let gSearch = {
         engineName: this.currentEngineName,
         searchString: searchStr,
         whence: "newtab",
-        useNewTab: useNewTab,
+        originalEvent: {
+          target: {
+            ownerDocument: null
+          },
+          shiftKey: event.shiftKey,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          altKey: event.altKey,
+          button: event.button,
+        },
       }
 
       if (searchText.hasAttribute("selection-index")) {

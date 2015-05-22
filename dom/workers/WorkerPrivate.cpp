@@ -5642,15 +5642,6 @@ WorkerPrivate::WaitForWorkerEvents(PRIntervalTime aInterval)
   // The main thread may be waiting so we must notify.
   mMemoryReportCondVar.Notify();
 
-#ifdef MOZ_NUWA_PROCESS
-  {
-    MOZ_ASSERT(mThread);
-
-    ReentrantMonitorAutoEnter mon(mThread->ThreadStatusMonitor());
-    mThread->SetIdle();
-  }
-#endif // MOZ_NUWA_PROCESS
-
   // Now wait for an actual worker event.
   mCondVar.Wait(aInterval);
 

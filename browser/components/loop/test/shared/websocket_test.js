@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*global loop, sinon, it, beforeEach, afterEach, describe */
-
-var expect = chai.expect;
-
-
 describe("loop.CallConnectionWebSocket", function() {
   "use strict";
 
+  var expect = chai.expect;
   var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
 
   var sandbox,

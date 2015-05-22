@@ -60,7 +60,7 @@ let ToolbarView = {
       menuitem.setAttribute("flex", "1");
       menuitem.setAttribute("label", MarkerUtils.getMarkerClassName(markerName));
       menuitem.setAttribute("marker-type", markerName);
-      menuitem.className = markerDetails.colorName;
+      menuitem.className = `marker-color-${markerDetails.colorName}`;
 
       menuitem.addEventListener("command", this._onHiddenMarkersChanged);
 
