@@ -1570,7 +1570,12 @@
             // Attach the nsIFormFillController now that we know the browser
             // will be used. If we do that before and the preloaded browser
             // won't be consumed until shutdown then we leak a docShell.
-            if (browser && this.hasAttribute("autocompletepopup")) {
+            // Also, we do not need to take care of attaching nsIFormFillControllers
+            // in the case that the browser is remote, as remote browsers take
+            // care of that themselves.
+            if (browser &&
+                this.hasAttribute("autocompletepopup") &&
+                !browser.isRemoteBrowser) {
               browser.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
               browser.attachFormFill();
             }
@@ -1601,7 +1606,9 @@
               return;
             }
 
-            let browser = this._createBrowser({isPreloadBrowser: true});
+            let remote = gMultiProcessBrowser &&
+                         E10SUtils.canLoadURIInProcess(BROWSER_NEW_TAB_URL, Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT);
+            let browser = this._createBrowser({isPreloadBrowser: true, remote: remote});
             this._preloadedBrowser = browser;
 
             let notificationbox = this.getNotificationBox(browser);
