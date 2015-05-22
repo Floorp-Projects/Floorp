@@ -218,7 +218,15 @@ let LoopUI;
       // Add observer notifications before the service is initialized
       Services.obs.addObserver(this, "loop-status-changed", false);
 
-      this.MozLoopService.initialize();
+      // This is a promise for test purposes, but we don't want to be logging
+      // expected errors to the console, so we catch them here.
+      this.MozLoopService.initialize().catch(ex => {
+        if (!ex.message ||
+            (!ex.message.contains("not enabled") &&
+             !ex.message.contains("not needed"))) {
+          console.error(ex);
+        }
+      });
       this.updateToolbarState();
     },
 
