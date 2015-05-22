@@ -4,7 +4,8 @@
 "use strict";
 
 const { Task } = require("resource://gre/modules/Task.jsm");
-const { Promise } = require("resource://gre/modules/Promise.jsm");
+
+loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
 
@@ -113,22 +114,22 @@ exports.timelineActorSupported = Task.async(timelineActorSupported);
  * @return {Promise<ProfilerActor>}
  */
 function getProfiler (target) {
-  let { promise, resolve } = Promise.defer();
+  let deferred = promise.defer();
   // Chrome and content process targets already have obtained a reference
   // to the profiler tab actor. Use it immediately.
   if (target.form && target.form.profilerActor) {
-    resolve(target.form.profilerActor);
+    deferred.resolve(target.form.profilerActor);
   }
   // Check if we already have a grip to the `listTabs` response object
   // and, if we do, use it to get to the profiler actor.
   else if (target.root && target.root.profilerActor) {
-    resolve(target.root.profilerActor);
+    deferred.resolve(target.root.profilerActor);
   }
   // Otherwise, call `listTabs`.
   else {
-    target.client.listTabs(({ profilerActor }) => resolve(profilerActor));
+    target.client.listTabs(({ profilerActor }) => deferred.resolve(profilerActor));
   }
-  return promise;
+  return deferred.promise;
 }
 exports.getProfiler = Task.async(getProfiler);
 
@@ -137,12 +138,12 @@ exports.getProfiler = Task.async(getProfiler);
  * interface.
  */
 function legacyRequest (target, actor, method, args) {
-  let { promise, resolve } = Promise.defer();
+  let deferred = promise.defer();
   let data = args[0] || {};
   data.to = actor;
   data.type = method;
-  target.client.request(data, resolve);
-  return promise;
+  target.client.request(data, deferred.resolve);
+  return deferred.promise;
 }
 
 /**

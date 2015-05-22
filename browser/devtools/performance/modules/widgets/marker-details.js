@@ -7,14 +7,17 @@
  * This file contains the rendering code for the marker sidebar.
  */
 
-loader.lazyRequireGetter(this, "L10N",
-  "devtools/shared/timeline/global", true);
-loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/shared/timeline/global", true);
+const { Cc, Ci, Cu, Cr } = require("chrome");
+
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
+
+loader.lazyRequireGetter(this, "L10N",
+  "devtools/performance/global", true);
+loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
+  "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "MarkerUtils",
-  "devtools/shared/timeline/marker-utils");
+  "devtools/performance/marker-utils");
 
 /**
  * A detailed view for one single marker.

@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Ci } = require("chrome");
-const { extend } = require("sdk/util/object");
+const { Cc, Ci, Cu, Cr } = require("chrome");
+
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "CATEGORY_OTHER",
-  "devtools/shared/profiler/global", true);
+  "devtools/performance/global", true);
 
 // Character codes used in various parsing helper functions.
 const CHAR_CODE_A = "a".charCodeAt(0);

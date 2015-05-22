@@ -3,56 +3,61 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+const { Task } = require("resource://gre/modules/Task.jsm");
+const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/devtools/ViewHelpers.jsm");
 
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/devtools/Loader.jsm");
-Cu.import("resource://gre/modules/devtools/Console.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-
-devtools.lazyRequireGetter(this, "Services");
-devtools.lazyRequireGetter(this, "promise");
-devtools.lazyRequireGetter(this, "EventEmitter",
+loader.lazyRequireGetter(this, "Services");
+loader.lazyRequireGetter(this, "promise");
+loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
-devtools.lazyRequireGetter(this, "DevToolsUtils",
+loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
 
-devtools.lazyRequireGetter(this, "TreeWidget",
-  "devtools/shared/widgets/TreeWidget", true);
-devtools.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/shared/timeline/global", true);
-devtools.lazyRequireGetter(this, "L10N",
-  "devtools/shared/profiler/global", true);
-devtools.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/performance/recording-utils", true);
-devtools.lazyRequireGetter(this, "RecordingModel",
-  "devtools/performance/recording-model", true);
-devtools.lazyRequireGetter(this, "GraphsController",
-  "devtools/performance/graphs", true);
-devtools.lazyRequireGetter(this, "Waterfall",
-  "devtools/shared/timeline/waterfall", true);
-devtools.lazyRequireGetter(this, "MarkerDetails",
-  "devtools/shared/timeline/marker-details", true);
-devtools.lazyRequireGetter(this, "MarkerUtils",
-  "devtools/shared/timeline/marker-utils");
-devtools.lazyRequireGetter(this, "CallView",
-  "devtools/shared/profiler/tree-view", true);
-devtools.lazyRequireGetter(this, "ThreadNode",
-  "devtools/shared/profiler/tree-model", true);
-devtools.lazyRequireGetter(this, "FrameNode",
-  "devtools/shared/profiler/tree-model", true);
-devtools.lazyRequireGetter(this, "JITOptimizations",
-  "devtools/shared/profiler/jit", true);
-devtools.lazyRequireGetter(this, "OptionsView",
-  "devtools/shared/options-view", true);
-devtools.lazyRequireGetter(this, "FlameGraphUtils",
-  "devtools/shared/widgets/FlameGraph", true);
-devtools.lazyRequireGetter(this, "FlameGraph",
-  "devtools/shared/widgets/FlameGraph", true);
+// Logic modules
 
-devtools.lazyImporter(this, "SideMenuWidget",
+loader.lazyRequireGetter(this, "L10N",
+  "devtools/performance/global", true);
+loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
+  "devtools/performance/global", true);
+loader.lazyRequireGetter(this, "RecordingUtils",
+  "devtools/performance/recording-utils", true);
+loader.lazyRequireGetter(this, "RecordingModel",
+  "devtools/performance/recording-model", true);
+loader.lazyRequireGetter(this, "GraphsController",
+  "devtools/performance/graphs", true);
+loader.lazyRequireGetter(this, "Waterfall",
+  "devtools/performance/waterfall", true);
+loader.lazyRequireGetter(this, "MarkerDetails",
+  "devtools/performance/marker-details", true);
+loader.lazyRequireGetter(this, "MarkerUtils",
+  "devtools/performance/marker-utils");
+loader.lazyRequireGetter(this, "CallView",
+  "devtools/performance/tree-view", true);
+loader.lazyRequireGetter(this, "ThreadNode",
+  "devtools/performance/tree-model", true);
+loader.lazyRequireGetter(this, "FrameNode",
+  "devtools/performance/tree-model", true);
+loader.lazyRequireGetter(this, "JITOptimizations",
+  "devtools/performance/jit", true);
+
+// Widgets modules
+
+loader.lazyRequireGetter(this, "OptionsView",
+  "devtools/shared/options-view", true);
+loader.lazyRequireGetter(this, "FlameGraphUtils",
+  "devtools/shared/widgets/FlameGraph", true);
+loader.lazyRequireGetter(this, "FlameGraph",
+  "devtools/shared/widgets/FlameGraph", true);
+loader.lazyRequireGetter(this, "TreeWidget",
+  "devtools/shared/widgets/TreeWidget", true);
+
+loader.lazyImporter(this, "SideMenuWidget",
   "resource:///modules/devtools/SideMenuWidget.jsm");
-devtools.lazyImporter(this, "PluralForm",
+loader.lazyImporter(this, "setNamedTimeout",
+  "resource:///modules/devtools/ViewHelpers.jsm");
+loader.lazyImporter(this, "clearNamedTimeout",
+  "resource:///modules/devtools/ViewHelpers.jsm");
+loader.lazyImporter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
 
 const BRANCH_NAME = "devtools.performance.ui.";
@@ -312,7 +317,6 @@ let PerformanceController = {
    */
   stopRecording: Task.async(function *() {
     let recording = this.getLatestManualRecording();
-
     yield gFront.stopRecording(recording);
   }),
 
@@ -336,7 +340,6 @@ let PerformanceController = {
    */
   clearRecordings: Task.async(function* () {
     let latest = this.getLatestManualRecording();
-
     if (latest && latest.isRecording()) {
       yield this.stopRecording();
     }

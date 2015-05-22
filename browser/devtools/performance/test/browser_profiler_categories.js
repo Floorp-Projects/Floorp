@@ -6,7 +6,7 @@
  */
 
 function test() {
-  let global = devtools.require("devtools/shared/profiler/global");
+  let global = devtools.require("devtools/performance/global");
   let l10n = global.L10N;
   let categories = global.CATEGORIES;
   let mappings = global.CATEGORY_MAPPINGS;
