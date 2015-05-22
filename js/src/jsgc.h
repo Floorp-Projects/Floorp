@@ -25,7 +25,6 @@
 
 #define FOR_EACH_GC_LAYOUT(D) \
  /* PrettyName       TypeName           AddToCCKind */ \
-    D(AccessorShape, js::AccessorShape, true) \
     D(BaseShape,     js::BaseShape,     true) \
     D(JitCode,       js::jit::JitCode,  true) \
     D(LazyScript,    js::LazyScript,    true) \
