@@ -67,7 +67,7 @@ ToNSString(id aValue)
 
 - (BOOL)accessibilityIsIgnored
 {
-  return !mGeckoAccessible;
+  return ![self getGeckoAccessible];
 }
 
 - (NSArray*)accessibilityAttributeNames
@@ -126,11 +126,13 @@ ToNSString(id aValue)
     return [self text];
   }
 
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+
   if ([attribute isEqualToString:@"AXRequired"])
-    return [NSNumber numberWithBool:!!(mGeckoAccessible->State() & states::REQUIRED)];
+    return [NSNumber numberWithBool:!!(accWrap->State() & states::REQUIRED)];
 
   if ([attribute isEqualToString:@"AXInvalid"])
-    return [NSNumber numberWithBool:!!(mGeckoAccessible->State() & states::INVALID)];
+    return [NSNumber numberWithBool:!!(accWrap->State() & states::INVALID)];
 
   if ([attribute isEqualToString:NSAccessibilityVisibleCharacterRangeAttribute])
     return [self visibleCharacterRange];
@@ -323,7 +325,7 @@ ToNSString(id aValue)
     return YES;
 
   if (mGeckoTextAccessible)
-    return (mGeckoAccessible->State() & states::READONLY) == 0;
+    return ([self getGeckoAccessible]->State() & states::READONLY) == 0;
 
   return NO;
 
@@ -353,7 +355,7 @@ ToNSString(id aValue)
 
 - (NSString*)text
 {
-  if (!mGeckoAccessible || !mGeckoTextAccessible)
+  if (![self getGeckoAccessible] || !mGeckoTextAccessible)
     return nil;
 
   // A password text field returns an empty value
@@ -371,7 +373,7 @@ ToNSString(id aValue)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  if (!mGeckoAccessible || !mGeckoTextAccessible)
+  if (![self getGeckoAccessible] || !mGeckoTextAccessible)
     return 0;
 
   return mGeckoTextAccessible ? mGeckoTextAccessible->CharacterCount() : 0;
@@ -496,18 +498,22 @@ ToNSString(id aValue)
 
 - (NSString*)text
 {
-  if (!mGeckoAccessible)
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+
+  if (!accWrap)
     return nil;
 
-  return nsCocoaUtils::ToNSString(mGeckoAccessible->AsTextLeaf()->Text());
+  return nsCocoaUtils::ToNSString(accWrap->AsTextLeaf()->Text());
 }
 
 - (long)textLength
 {
-  if (!mGeckoAccessible)
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+
+  if (!accWrap)
     return 0;
 
-  return mGeckoAccessible->AsTextLeaf()->Text().Length();
+  return accWrap->AsTextLeaf()->Text().Length();
 }
 
 @end

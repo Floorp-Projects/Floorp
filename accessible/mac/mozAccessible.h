@@ -54,6 +54,9 @@ GetNativeFromGeckoAccessible(mozilla::a11y::Accessible* aAccessible)
   mozilla::a11y::role        mRole;
 }
 
+// return the Accessible for this mozAccessible.
+- (mozilla::a11y::AccessibleWrap*) getGeckoAccessible;
+
 // inits with the gecko owner.
 - (id)initWithAccessible:(mozilla::a11y::AccessibleWrap*)geckoParent;
 
