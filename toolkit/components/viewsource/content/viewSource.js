@@ -443,7 +443,7 @@ ViewSourceChrome.prototype = {
         doPageLoad: this.historyEnabled,
       });
 
-      if (!this.historyEnabled) {
+      if (this.historyEnabled) {
         this.browser
             .reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
       }
