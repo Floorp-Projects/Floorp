@@ -50,7 +50,8 @@ const TIMELINE_BLUEPRINT = {
   "Styles": {
     group: 0,
     colorName: "graphs-purple",
-    label: L10N.getStr("timeline.label.styles2")
+    label: L10N.getStr("timeline.label.styles2"),
+    fields: getStylesFields,
   },
   "Reflow": {
     group: 0,
@@ -106,7 +107,7 @@ const TIMELINE_BLUEPRINT = {
   "ConsoleTime": {
     group: 2,
     colorName: "graphs-grey",
-    label: L10N.getStr("timeline.label.consoleTime"),
+    label: sublabelForProperty(L10N.getStr("timeline.label.consoleTime"), "causeName"),
     fields: [{
       property: "causeName",
       label: L10N.getStr("timeline.markerDetail.consoleTimerName")
@@ -115,7 +116,11 @@ const TIMELINE_BLUEPRINT = {
   "TimeStamp": {
     group: 2,
     colorName: "graphs-blue",
-    label: "Timestamp"
+    label: sublabelForProperty("Timestamp", "causeName"),
+    fields: [{
+      property: "causeName",
+      label: "Label:"
+    }]
   },
 };
 
