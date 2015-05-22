@@ -38,19 +38,16 @@ add_test(function test_addParam() {
   engine.addParam("param-name", "param-value", null);
 
   function readAsyncFile(aFile, aCallback) {
-    NetUtil.asyncFetch2(
-      aFile,
-      function(inputStream, status) {
+    NetUtil.asyncFetch({
+      uri: NetUtil.newURI(aFile),
+      loadUsingSystemPrincipal: true,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_DATAREQUEST
+    }, function(inputStream, status) {
         do_check_true(Components.isSuccessCode(status));
 
         let data = NetUtil.readInputStreamToString(inputStream, inputStream.available());
         aCallback(data);
-      },
-      null,      // aLoadingNode
-      Services.scriptSecurityManager.getSystemPrincipal(),
-      null,      // aTriggeringPrincipal
-      Ci.nsILoadInfo.SEC_NORMAL,
-      Ci.nsIContentPolicy.TYPE_DATAREQUEST);
+      });
   }
 
   let observer = function(aSubject, aTopic, aData) {

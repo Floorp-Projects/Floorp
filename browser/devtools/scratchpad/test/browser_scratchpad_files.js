@@ -102,7 +102,7 @@ function fileExported(aStatus)
   channel.contentType = "application/javascript";
 
   // Read back the temporary file.
-  NetUtil.asyncFetch2(channel, fileRead);
+  NetUtil.asyncFetch(channel, fileRead);
 }
 
 function fileExported2()

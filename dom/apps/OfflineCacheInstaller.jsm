@@ -100,7 +100,7 @@ function readFile(aFile, aPrincipal, aCallback) {
                                     Ci.nsILoadInfo.SEC_NORMAL,
                                     Ci.nsIContentPolicy.TYPE_OTHER);
   channel.contentType = "plain/text";
-  NetUtil.asyncFetch2(channel, function(aStream, aResult) {
+  NetUtil.asyncFetch(channel, function(aStream, aResult) {
     if (!Components.isSuccessCode(aResult)) {
       Cu.reportError("OfflineCacheInstaller: Could not read file " + aFile.path);
       if (aCallback)

@@ -107,7 +107,10 @@ function toHex(str) {
  */
 function promiseVerifyContents(aFile, aExpectedContents) {
   let deferred = Promise.defer();
-  NetUtil.asyncFetch2(aFile, function(aInputStream, aStatus) {
+  NetUtil.asyncFetch({
+    uri: NetUtil.newURI(aFile),
+    loadUsingSystemPrincipal: true
+  }, function(aInputStream, aStatus) {
     do_check_true(Components.isSuccessCode(aStatus));
     let contents = NetUtil.readInputStreamToString(aInputStream,
                                                    aInputStream.available());
@@ -119,12 +122,7 @@ function promiseVerifyContents(aFile, aExpectedContents) {
       do_check_true(contents == aExpectedContents);
     }
     deferred.resolve();
-  },
-  null,      // aLoadingNode
-  Services.scriptSecurityManager.getSystemPrincipal(),
-  null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_NORMAL,
-  Ci.nsIContentPolicy.TYPE_OTHER);
+  });
 
   return deferred.promise;
 }

@@ -1166,7 +1166,7 @@ var Scratchpad = {
 
     this.notificationBox.removeAllNotifications(false);
 
-    NetUtil.asyncFetch2(channel, (aInputStream, aStatus) => {
+    NetUtil.asyncFetch(channel, (aInputStream, aStatus) => {
       let content = null;
 
       if (Components.isSuccessCode(aStatus)) {
