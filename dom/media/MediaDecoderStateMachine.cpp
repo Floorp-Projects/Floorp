@@ -187,7 +187,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDelayedScheduler(this),
   mState(DECODER_STATE_DECODING_NONE, "MediaDecoderStateMachine::mState"),
   mPlayDuration(0),
-  mStartTime(-1),
   mEndTime(-1),
   mDurationSet(false),
   mEstimatedDuration(mTaskQueue, NullableTimeUnit(),
@@ -206,8 +205,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mFragmentEndTime(-1),
   mReader(aReader),
   mCurrentPosition(mTaskQueue, 0, "MediaDecoderStateMachine::mCurrentPosition (Canonical)"),
-  mStreamStartTime(-1),
-  mAudioStartTime(-1),
+  mStreamStartTime(0),
+  mAudioStartTime(0),
   mAudioEndTime(-1),
   mDecodedAudioEndTime(-1),
   mVideoFrameEndTime(-1),
@@ -1257,7 +1256,7 @@ void MediaDecoderStateMachine::StopPlayback()
   mDecoder->NotifyPlaybackStopped();
 
   if (IsPlaying()) {
-    mPlayDuration = GetClock() - mStartTime;
+    mPlayDuration = GetClock();
     SetPlayStartTime(TimeStamp());
   }
   // Notify the audio sink, so that it notices that we've stopped playing,
@@ -1307,11 +1306,10 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
 void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
 {
   MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("UpdatePlaybackPositionInternal(%lld) (mStartTime=%lld)", aTime, mStartTime);
+  SAMPLE_LOG("UpdatePlaybackPositionInternal(%lld)", aTime);
   AssertCurrentThreadInMonitor();
 
-  NS_ASSERTION(mStartTime >= 0, "Should have positive mStartTime");
-  mCurrentPosition = aTime - mStartTime;
+  mCurrentPosition = aTime;
   NS_ASSERTION(mCurrentPosition >= 0, "CurrentTime should be positive!");
   mObservedDuration = std::max(mObservedDuration.Ref(),
                                TimeUnit::FromMicroseconds(mCurrentPosition.Ref()));
@@ -1387,9 +1385,9 @@ int64_t MediaDecoderStateMachine::GetDuration()
 {
   AssertCurrentThreadInMonitor();
 
-  if (mEndTime == -1 || mStartTime == -1)
+  if (mEndTime == -1)
     return -1;
-  return mEndTime - mStartTime;
+  return mEndTime;
 }
 
 int64_t MediaDecoderStateMachine::GetEndTime()
@@ -1434,9 +1432,11 @@ void MediaDecoderStateMachine::RecomputeDuration()
     duration = mObservedDuration;
     fireDurationChanged = true;
   }
-
   fireDurationChanged = fireDurationChanged && duration.ToMicroseconds() != GetDuration();
-  SetDuration(duration);
+
+  MOZ_ASSERT(duration.ToMicroseconds() >= 0);
+  mEndTime = duration.IsInfinite() ? -1 : duration.ToMicroseconds();
+  mDurationSet = true;
 
   if (fireDurationChanged) {
     nsCOMPtr<nsIRunnable> event =
@@ -1445,29 +1445,11 @@ void MediaDecoderStateMachine::RecomputeDuration()
   }
 }
 
-void MediaDecoderStateMachine::SetDuration(TimeUnit aDuration)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  MOZ_ASSERT(aDuration.ToMicroseconds() >= 0);
-  if (mStartTime == -1) {
-    SetStartTime(0);
-  }
-  mDurationSet = true;
-
-  if (aDuration.IsInfinite()) {
-    mEndTime = -1;
-    return;
-  }
-
-  mEndTime = mStartTime + aDuration.ToMicroseconds();
-}
-
 void MediaDecoderStateMachine::SetFragmentEndTime(int64_t aEndTime)
 {
   AssertCurrentThreadInMonitor();
 
-  mFragmentEndTime = aEndTime < 0 ? aEndTime : aEndTime + mStartTime;
+  mFragmentEndTime = aEndTime < 0 ? aEndTime : aEndTime;
 }
 
 bool MediaDecoderStateMachine::IsDormantNeeded()
@@ -1694,9 +1676,11 @@ void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
   //
   // Make sure to only do this if we have a start time, otherwise the reader
   // doesn't know how to compute GetBuffered.
-  if (!mDecoder->IsInfinite() || mStartTime == -1) {
+  if (!mDecoder->IsInfinite() || !HaveStartTime())
+  {
     return;
   }
+
   media::TimeIntervals buffered{mDecoder->GetBuffered()};
   if (!buffered.IsInvalid()) {
     bool exists;
@@ -1852,12 +1836,11 @@ MediaDecoderStateMachine::InitiateSeek()
 
   // Bound the seek time to be inside the media range.
   int64_t end = GetEndTime();
-  NS_ASSERTION(mStartTime != -1, "Should know start time by now");
   NS_ASSERTION(end != -1, "Should know end time by now");
-  int64_t seekTime = mCurrentSeek.mTarget.mTime + mStartTime;
+  int64_t seekTime = mCurrentSeek.mTarget.mTime;
   seekTime = std::min(seekTime, end);
-  seekTime = std::max(mStartTime, seekTime);
-  NS_ASSERTION(seekTime >= mStartTime && seekTime <= end,
+  seekTime = std::max(int64_t(0), seekTime);
+  NS_ASSERTION(seekTime >= 0 && seekTime <= end,
                "Can only seek in range [0,duration]");
   mCurrentSeek.mTarget.mTime = seekTime;
 
@@ -2300,14 +2283,12 @@ MediaDecoderStateMachine::DecodeFirstFrame()
   DECODER_LOG("DecodeFirstFrame started");
 
   if (IsRealTime()) {
-    SetStartTime(0);
     nsresult res = FinishDecodeFirstFrame();
     NS_ENSURE_SUCCESS(res, res);
   } else if (mSentFirstFrameLoadedEvent) {
     // We're resuming from dormant state, so we don't need to request
     // the first samples in order to determine the media start time,
     // we have the start time from last time we loaded.
-    SetStartTime(mStartTime);
     nsresult res = FinishDecodeFirstFrame();
     NS_ENSURE_SUCCESS(res, res);
   } else {
@@ -2354,22 +2335,18 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   }
 
   if (!IsRealTime() && !mSentFirstFrameLoadedEvent) {
-    const VideoData* v = VideoQueue().PeekFront();
-    const AudioData* a = AudioQueue().PeekFront();
-    SetStartTime(mReader->ComputeStartTime(v, a));
     if (VideoQueue().GetSize()) {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
       RenderVideoFrame(VideoQueue().PeekFront(), TimeStamp::Now());
     }
   }
 
-  NS_ASSERTION(mStartTime != -1, "Must have start time");
   MOZ_ASSERT(!(mDecoder->IsMediaSeekable() && mDecoder->IsTransportSeekable()) ||
                (GetDuration() != -1) || mDurationSet,
              "Seekable media should have duration");
   DECODER_LOG("Media goes from %lld to %lld (duration %lld) "
               "transportSeekable=%d, mediaSeekable=%d",
-              mStartTime, mEndTime, GetDuration(),
+              0, mEndTime, GetDuration(),
               mDecoder->IsTransportSeekable(), mDecoder->IsMediaSeekable());
 
   if (HasAudio() && !HasVideo()) {
@@ -2443,7 +2420,7 @@ MediaDecoderStateMachine::SeekCompleted()
     newCurrentTime = video ? video->mTime : seekTime;
   }
   mStreamStartTime = newCurrentTime;
-  mPlayDuration = newCurrentTime - mStartTime;
+  mPlayDuration = newCurrentTime;
 
   mDecoder->StartProgressUpdates();
 
@@ -2760,8 +2737,8 @@ MediaDecoderStateMachine::Reset()
 
   mVideoFrameEndTime = -1;
   mDecodedVideoEndTime = -1;
-  mStreamStartTime = -1;
-  mAudioStartTime = -1;
+  mStreamStartTime = 0;
+  mAudioStartTime = 0;
   mAudioEndTime = -1;
   mDecodedAudioEndTime = -1;
   mAudioCompleted = false;
@@ -2830,7 +2807,7 @@ void MediaDecoderStateMachine::ResyncAudioClock()
   AssertCurrentThreadInMonitor();
   if (IsPlaying()) {
     SetPlayStartTime(TimeStamp::Now());
-    mPlayDuration = GetAudioClock() - mStartTime;
+    mPlayDuration = GetAudioClock();
   }
 }
 
@@ -2860,14 +2837,14 @@ int64_t MediaDecoderStateMachine::GetVideoStreamPosition() const
   AssertCurrentThreadInMonitor();
 
   if (!IsPlaying()) {
-    return mPlayDuration + mStartTime;
+    return mPlayDuration;
   }
 
   // Time elapsed since we started playing.
   int64_t delta = DurationToUsecs(TimeStamp::Now() - mPlayStartTime);
   // Take playback rate into account.
   delta *= mPlaybackRate;
-  return mStartTime + mPlayDuration + delta;
+  return mPlayDuration + delta;
 }
 
 int64_t MediaDecoderStateMachine::GetClock() const
@@ -2881,7 +2858,7 @@ int64_t MediaDecoderStateMachine::GetClock() const
   // fed to a MediaStream, use that stream as the source of the clock.
   int64_t clock_time = -1;
   if (!IsPlaying()) {
-    clock_time = mPlayDuration + mStartTime;
+    clock_time = mPlayDuration;
   } else {
     if (mAudioCaptured) {
       clock_time = GetStreamClock();
@@ -2924,7 +2901,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
   // Skip frames up to the frame at the playback position, and figure out
   // the time remaining until it's time to display the next frame.
   int64_t remainingTime = AUDIO_DURATION_USECS;
-  NS_ASSERTION(clock_time >= mStartTime, "Should have positive clock time.");
+  NS_ASSERTION(clock_time >= 0, "Should have positive clock time.");
   nsRefPtr<VideoData> currentFrame;
   if (VideoQueue().GetSize() > 0) {
     VideoData* frame = VideoQueue().PeekFront();
@@ -3004,10 +2981,10 @@ void MediaDecoderStateMachine::AdvanceFrame()
     // Decode one frame and display it.
     int64_t delta = currentFrame->mTime - clock_time;
     TimeStamp presTime = nowTime + TimeDuration::FromMicroseconds(delta / mPlaybackRate);
-    NS_ASSERTION(currentFrame->mTime >= mStartTime, "Should have positive frame time");
+    NS_ASSERTION(currentFrame->mTime >= 0, "Should have positive frame time");
     // Filter out invalid frames by checking the frame time. FrameTime could be
     // zero if it's a initial frame.
-    int64_t frameTime = currentFrame->mTime - mStartTime;
+    int64_t frameTime = currentFrame->mTime;
     if (frameTime > 0  || (frameTime == 0 && mPlayDuration == 0) ||
         IsRealTime()) {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
@@ -3167,32 +3144,6 @@ MediaDecoderStateMachine::DropAudioUpToSeekTarget(AudioData* aSample)
   PushFront(data);
 
   return NS_OK;
-}
-
-void MediaDecoderStateMachine::SetStartTime(int64_t aStartTimeUsecs)
-{
-  AssertCurrentThreadInMonitor();
-  DECODER_LOG("SetStartTime(%lld)", aStartTimeUsecs);
-  mStartTime = 0;
-  if (aStartTimeUsecs != 0) {
-    mStartTime = aStartTimeUsecs;
-    // XXXbholley - this whole method goes away in the upcoming patches.
-    if (mDurationSet && GetEndTime() != INT64_MAX) {
-      NS_ASSERTION(mEndTime != -1,
-                   "We should have mEndTime as supplied duration here");
-      // We were specified a duration from a Content-Duration HTTP header.
-      // Adjust mEndTime so that mEndTime-mStartTime matches the specified
-      // duration.
-      mEndTime = mStartTime + mEndTime;
-    }
-  }
-
-  // Set the audio start time to be start of media. If this lies before the
-  // first actual audio frame we have, we'll inject silence during playback
-  // to ensure the audio starts at the correct time.
-  mAudioStartTime = mStartTime;
-  mStreamStartTime = mStartTime;
-  DECODER_LOG("Set media start time to %lld", mStartTime);
 }
 
 void MediaDecoderStateMachine::UpdateNextFrameStatus()
@@ -3362,7 +3313,7 @@ MediaDecoderStateMachine::LogicalPlaybackRateChanged()
   if (!HasAudio() && IsPlaying()) {
     // Remember how much time we've spent in playing the media
     // for playback rate will change from now on.
-    mPlayDuration = GetVideoStreamPosition() - mStartTime;
+    mPlayDuration = GetVideoStreamPosition();
     SetPlayStartTime(TimeStamp::Now());
   }
 

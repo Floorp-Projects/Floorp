@@ -196,14 +196,6 @@ public:
   // Access controlled by decoder monitor.
   int64_t GetEndTime();
 
-  // Called from the main thread to set the duration of the media resource
-  // if it is able to be obtained via HTTP headers. Called from the
-  // state machine thread to set the duration if it is obtained from the
-  // media metadata. The decoder monitor must be obtained before calling this.
-  // aDuration is in microseconds.
-  // A value of INT64_MAX will be treated as infinity.
-  void SetDuration(media::TimeUnit aDuration);
-
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
   bool OnDecodeTaskQueue() const;
@@ -275,7 +267,7 @@ public:
     // time from metadata, in which case the reader isn't ready to be asked this
     // question.
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    if (mStartTime < 0) {
+    if (!HaveStartTime()) {
       return media::TimeIntervals();
     }
 
@@ -613,7 +605,7 @@ protected:
   // which is in the range [0,duration].
   int64_t GetMediaTime() const {
     AssertCurrentThreadInMonitor();
-    return mStartTime + mCurrentPosition;
+    return mCurrentPosition;
   }
 
   // Returns an upper bound on the number of microseconds of audio that is
@@ -956,12 +948,6 @@ public:
   // accessed on the state machine thread. This is null while we're not
   // buffering.
   TimeStamp mBufferingStart;
-
-  // Start time of the media, in microseconds. This is the presentation
-  // time of the first frame decoded from the media, and is used to calculate
-  // duration and as a bounds for seeking. Accessed on state machine, decode,
-  // and main threads. Access controlled by decoder monitor.
-  int64_t mStartTime;
 
   // Time of the last frame in the media, in microseconds. This is the
   // end time of the last frame in the media. Accessed on state
