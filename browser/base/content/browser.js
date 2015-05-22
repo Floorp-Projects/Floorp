@@ -986,7 +986,6 @@ var gBrowserInit = {
     mm.loadFrameScript("chrome://browser/content/content.js", true);
     mm.loadFrameScript("chrome://browser/content/content-UITour.js", true);
     mm.loadFrameScript("chrome://global/content/manifestMessages.js", true);
-    mm.loadFrameScript("chrome://global/content/viewSource-content.js", true);
 
     window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
 
@@ -2323,11 +2322,11 @@ function readFromClipboard()
  *        If aArgsOrDocument is an object, that object can take the
  *        following properties:
  *
- *        URL (required):
- *          A string URL for the page we'd like to view the source of.
- *        browser (optional):
+ *        browser:
  *          The browser containing the document that we would like to view the
- *          source of. This is required if outerWindowID is passed.
+ *          source of.
+ *        URL:
+ *          A string URL for the page we'd like to view the source of.
  *        outerWindowID (optional):
  *          The outerWindowID of the content window containing the document that
  *          we want to view the source of. You only need to provide this if you
@@ -2360,18 +2359,7 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
     args = aArgsOrDocument;
   }
 
-  let inTab = Services.prefs.getBoolPref("view_source.tab");
-  if (inTab) {
-    let viewSourceURL = `view-source:${args.URL}`;
-    let tab = gBrowser.loadOneTab(viewSourceURL, {
-      relatedToCurrent: true,
-      inBackground: false
-    });
-    args.viewSourceBrowser = gBrowser.getBrowserForTab(tab);
-    top.gViewSourceUtils.viewSourceInBrowser(args);
-  } else {
-    top.gViewSourceUtils.viewSource(args);
-  }
+  top.gViewSourceUtils.viewSource(args);
 }
 
 /**
