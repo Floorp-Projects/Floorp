@@ -200,22 +200,10 @@ let PerformanceController = {
 
     // Store data regarding if e10s is enabled.
     this._e10s = Services.appinfo.browserTabsRemoteAutostart;
-
     this._setMultiprocessAttributes();
 
-    // All boolean prefs should be handled via the OptionsView in the
-    // ToolbarView, so that they may be accessible via the "gear" menu.
-    // Every other pref should be registered here.
-    this._nonBooleanPrefs = new ViewHelpers.Prefs("devtools.performance", {
-      "hidden-markers": ["Json", "timeline.hidden-markers"],
-      "memory-sample-probability": ["Float", "memory.sample-probability"],
-      "memory-max-log-length": ["Int", "memory.max-log-length"],
-      "profiler-buffer-size": ["Int", "profiler.buffer-size"],
-      "profiler-sample-frequency": ["Int", "profiler.sample-frequency-khz"],
-    });
-
-    this._nonBooleanPrefs.registerObserver();
-    this._nonBooleanPrefs.on("pref-changed", this._onPrefChanged);
+    this._prefs = require("devtools/performance/global").PREFS;
+    this._prefs.on("pref-changed", this._onPrefChanged);
 
     gFront.on("recording-starting", this._onRecordingStateChange);
     gFront.on("recording-started", this._onRecordingStateChange);
@@ -237,8 +225,7 @@ let PerformanceController = {
    * Remove events handled by the PerformanceController
    */
   destroy: function() {
-    this._nonBooleanPrefs.unregisterObserver();
-    this._nonBooleanPrefs.off("pref-changed", this._onPrefChanged);
+    this._prefs.off("pref-changed", this._onPrefChanged);
 
     gFront.off("recording-starting", this._onRecordingStateChange);
     gFront.off("recording-started", this._onRecordingStateChange);
@@ -265,7 +252,8 @@ let PerformanceController = {
 
   /**
    * Get a boolean preference setting from `prefName` via the underlying
-   * OptionsView in the ToolbarView.
+   * OptionsView in the ToolbarView. This preference is guaranteed to be
+   * displayed in the UI.
    *
    * @param string prefName
    * @return boolean
@@ -275,21 +263,25 @@ let PerformanceController = {
   },
 
   /**
-   * Get a preference setting from `prefName`.
+   * Get a preference setting from `prefName`. This preference can be of
+   * any type and might not be displayed in the UI.
+   *
    * @param string prefName
-   * @return object
+   * @return any
    */
   getPref: function (prefName) {
-    return this._nonBooleanPrefs[prefName];
+    return this._prefs[prefName];
   },
 
   /**
-   * Set a preference setting from `prefName`.
+   * Set a preference setting from `prefName`. This preference can be of
+   * any type and might not be displayed in the UI.
+   *
    * @param string prefName
-   * @param object prefValue
+   * @param any prefValue
    */
   setPref: function (prefName, prefValue) {
-    this._nonBooleanPrefs[prefName] = prefValue;
+    this._prefs[prefName] = prefValue;
   },
 
   /**
