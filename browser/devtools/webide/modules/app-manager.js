@@ -183,7 +183,6 @@ let AppManager = exports.AppManager = {
             // first.
             this._appsFront = front;
             this._listTabsResponse = response;
-            this._recordRuntimeInfo();
             this.update("runtime-global-actors");
           })
           .then(() => {
@@ -193,7 +192,6 @@ let AppManager = exports.AppManager = {
           });
         } else {
           this._listTabsResponse = response;
-          this._recordRuntimeInfo();
           this.update("runtime-global-actors");
         }
       });
@@ -499,31 +497,6 @@ let AppManager = exports.AppManager = {
 
     return deferred.promise;
   },
-
-  _recordRuntimeInfo: Task.async(function*() {
-    if (!this.connected) {
-      return;
-    }
-    let runtime = this.selectedRuntime;
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_TYPE",
-                             runtime.type || "UNKNOWN", true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_ID",
-                             runtime.id || "unknown", true);
-    if (!this.deviceFront) {
-      return;
-    }
-    let d = yield this.deviceFront.getDescription();
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PROCESSOR",
-                             d.processor, true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_OS",
-                             d.os, true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PLATFORM_VERSION",
-                             d.platformversion, true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_APP_TYPE",
-                             d.apptype, true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_VERSION",
-                             d.version, true);
-  }),
 
   isMainProcessDebuggable: function() {
     // Fx <39 exposes chrome tab actors on RootActor
