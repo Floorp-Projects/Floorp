@@ -1342,7 +1342,11 @@ describe("loop.store.ActiveRoomStore", function () {
 
         var fakeRoomData = {
           decryptedContext: {
-            roomName: "fakeName"
+            description: "fakeDescription",
+            roomName: "fakeName",
+            urls: {
+              fake: "url"
+            }
           },
           roomOwner: "you",
           roomUrl: "original"
@@ -1353,9 +1357,13 @@ describe("loop.store.ActiveRoomStore", function () {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.UpdateRoomInfo({
+            description: "fakeDescription",
             roomName: fakeRoomData.decryptedContext.roomName,
             roomOwner: fakeRoomData.roomOwner,
-            roomUrl: fakeRoomData.roomUrl
+            roomUrl: fakeRoomData.roomUrl,
+            urls: {
+              fake: "url"
+            }
           }));
       });
     });
