@@ -48,7 +48,7 @@ function test() {
     "The second frame node has the correct type.");
   is(frame2.getInfo().functionName, "hello/<.world",
     "The second frame node has the correct function name.");
-  is(frame2.getInfo().fileName, "bar.js#baz",
+  is(frame2.getInfo().fileName, "bar.js",
     "The second frame node has the correct file name.");
   is(frame2.getInfo().hostName, "foo",
     "The second frame node has the correct host name.");
@@ -75,7 +75,7 @@ function test() {
     "The third frame node has the correct type.");
   is(frame3.getInfo().functionName, "hello/<.world",
     "The third frame node has the correct function name.");
-  is(frame3.getInfo().fileName, "#bar",
+  is(frame3.getInfo().fileName, "/",
     "The third frame node has the correct file name.");
   is(frame3.getInfo().hostName, "foo",
     "The third frame node has the correct host name.");
