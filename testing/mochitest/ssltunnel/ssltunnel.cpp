@@ -1318,8 +1318,8 @@ int processConfigLine(char* configLine)
       PLHashEntry* entry = PL_HashTableAdd(existingServer->host_redir_table, hostname_copy, redir_copy);
       if (!entry) {
         LOG_ERROR(("Out of memory"));
-        delete hostname_copy;
-        delete redir_copy;
+        delete[] hostname_copy;
+        delete[] redir_copy;
         return 1;
       }
     }
