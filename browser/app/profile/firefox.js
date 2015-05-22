@@ -1198,9 +1198,10 @@ pref("security.sandbox.windows.log", false);
 // On windows these levels are:
 // 0 - no sandbox
 // 1 - sandbox with USER_NON_ADMIN access token level
-// 2 - a more strict sandbox, which might cause functionality issues
+// 2 - a more strict sandbox, which might cause functionality issues. This now
+//     includes running at low integrity.
 // 3 - the strongest settings we seem to be able to use without breaking
-//     everything, but will definitely cause some functionality restrictions
+//     everything, but will probably cause some functionality restrictions
 pref("dom.ipc.plugins.sandbox-level.default", 0);
 
 #if defined(MOZ_CONTENT_SANDBOX)
