@@ -499,7 +499,6 @@ ToNSString(id aValue)
 - (NSString*)text
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-
   if (!accWrap)
     return nil;
 
@@ -509,7 +508,6 @@ ToNSString(id aValue)
 - (long)textLength
 {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
-
   if (!accWrap)
     return 0;
 
