@@ -63,7 +63,7 @@ var tests = {
           Services.obs.removeObserver(observer, 'ipc:content-shutdown');
           // Add another sidebar load listener - it should be the error page.
           onSidebarLoad(function() {
-            ok(sbrowser.contentDocument.location.href.indexOf("about:socialerror?")==0, "is on social error page");
+            ok(sbrowser.contentDocument.location.href.indexOf("about:socialerror?mode=workerFailure")==0, "is on social error page");
             // after reloading, the sidebar should reload
             onSidebarLoad(function() {
               // now ping both workers - they should both be alive.
