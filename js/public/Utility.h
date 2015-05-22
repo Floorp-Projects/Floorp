@@ -63,6 +63,7 @@ JS_Assert(const char* s, const char* file, int ln);
 # include "jscustomallocator.h"
 #else
 # if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+
 /*
  * In order to test OOM conditions, when the testing function
  * oomAfterAllocations COUNT is passed, we fail continuously after the NUM'th
@@ -70,6 +71,7 @@ JS_Assert(const char* s, const char* file, int ln);
  */
 extern JS_PUBLIC_DATA(uint32_t) OOM_maxAllocations; /* set in builtin/TestingFunctions.cpp */
 extern JS_PUBLIC_DATA(uint32_t) OOM_counter; /* data race, who cares. */
+extern JS_PUBLIC_DATA(bool) OOM_failAlways;
 
 #ifdef JS_OOM_BREAKPOINT
 static MOZ_NEVER_INLINE void js_failedAllocBreakpoint() { asm(""); }
@@ -78,39 +80,44 @@ static MOZ_NEVER_INLINE void js_failedAllocBreakpoint() { asm(""); }
 #define JS_OOM_CALL_BP_FUNC() do {} while(0)
 #endif
 
-#  define JS_OOM_POSSIBLY_FAIL() \
-    do \
-    { \
-        if (++OOM_counter > OOM_maxAllocations) { \
-            JS_OOM_CALL_BP_FUNC();\
-            return nullptr; \
-        } \
-    } while (0)
-#  define JS_OOM_POSSIBLY_FAIL_BOOL() \
-    do \
-    { \
-        if (++OOM_counter > OOM_maxAllocations) { \
-            JS_OOM_CALL_BP_FUNC();\
-            return false; \
-        } \
-    } while (0)
-
 namespace js {
 namespace oom {
 static inline bool ShouldFailWithOOM()
 {
-    if (++OOM_counter > OOM_maxAllocations) {
+    OOM_counter++;
+    if (OOM_counter == OOM_maxAllocations ||
+        (OOM_counter > OOM_maxAllocations && OOM_failAlways))
+    {
         JS_OOM_CALL_BP_FUNC();
         return true;
     }
     return false;
 }
-}
-}
+} /* namespace oom */
+} /* namespace js */
+
+#  define JS_OOM_POSSIBLY_FAIL()                                              \
+    do {                                                                      \
+        if (js::oom::ShouldFailWithOOM())                                     \
+            return nullptr;                                                   \
+    } while (0)
+
+#  define JS_OOM_POSSIBLY_FAIL_BOOL()                                         \
+    do {                                                                      \
+        if (js::oom::ShouldFailWithOOM())                                     \
+            return false;                                                     \
+    } while (0)
+
 # else
+
 #  define JS_OOM_POSSIBLY_FAIL() do {} while(0)
 #  define JS_OOM_POSSIBLY_FAIL_BOOL() do {} while(0)
-namespace js { namespace oom { static inline bool ShouldFailWithOOM() { return false; } } }
+namespace js {
+namespace oom {
+static inline bool ShouldFailWithOOM() { return false; }
+} /* namespace oom */
+} /* namespace js */
+
 # endif /* DEBUG || JS_OOM_BREAKPOINT */
 
 static inline void* js_malloc(size_t bytes)
@@ -381,7 +388,7 @@ ScrambleHashCode(HashNumber h)
      *
      * So we use Fibonacci hashing, as described in Knuth, The Art of Computer
      * Programming, 6.4. This mixes all the bits of the input hash code h.
-     * 
+     *
      * The value of goldenRatio is taken from the hex
      * expansion of the golden ratio, which starts 1.9E3779B9....
      * This value is especially good if values with consecutive hash codes
