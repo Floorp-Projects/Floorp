@@ -136,10 +136,10 @@
 
       <property name="isActive">
         <getter>
-          return this.content.docShell.isActive;
+          return this.content.docShellIsActive;
         </getter>
         <setter>
-          this.content.docShell.isActive = !!val;
+          this.content.docShellIsActive = !!val;
 
           // let the chat frame know if it is being shown or hidden
           let evt = this.contentDocument.createEvent("CustomEvent");

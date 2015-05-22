@@ -384,8 +384,7 @@ SocialFlyout = {
     let panel = this.panel;
     let iframe = this.iframe;
     this._dynamicResizer = new DynamicResizeWatcher();
-    iframe.docShell.isActive = true;
-    iframe.docShell.isAppTab = true;
+    iframe.docShellIsActive = true;
     if (iframe.contentDocument.readyState == "complete") {
       this._dynamicResizer.start(panel, iframe);
       this.dispatchPanelEvent("socialFrameShow");
@@ -406,7 +405,7 @@ SocialFlyout = {
   onHidden: function(aEvent) {
     this._dynamicResizer.stop();
     this._dynamicResizer = null;
-    this.iframe.docShell.isActive = false;
+    this.iframe.docShellIsActive = false;
     this.dispatchPanelEvent("socialFrameHide");
   },
 
@@ -679,8 +678,7 @@ SocialShare = {
     let endpointMatch = shareEndpoint == iframe.getAttribute("src");
     if (endpointMatch) {
       this._dynamicResizer.start(iframe.parentNode, iframe, size);
-      iframe.docShell.isActive = true;
-      iframe.docShell.isAppTab = true;
+      iframe.docShellIsActive = true;
       let evt = iframe.contentDocument.createEvent("CustomEvent");
       evt.initCustomEvent("OpenGraphData", true, true, JSON.stringify(pageData));
       iframe.contentDocument.documentElement.dispatchEvent(evt);
@@ -689,8 +687,7 @@ SocialShare = {
       // first time load, wait for load and dispatch after load
       iframe.addEventListener("load", function panelBrowserOnload(e) {
         iframe.removeEventListener("load", panelBrowserOnload, true);
-        iframe.docShell.isActive = true;
-        iframe.docShell.isAppTab = true;
+        iframe.docShellIsActive = true;
         iframe.parentNode.removeAttribute("loading");
         // to support standard share endpoints mimick window.open by setting
         // window.opener, some share endpoints rely on w.opener to know they
@@ -908,8 +905,6 @@ SocialSidebar = {
         // we check readyState right after setting src, we need a new content
         // viewer to ensure we are checking against the correct document.
         sbrowser.docShell.createAboutBlankContentViewer(null);
-        // setting isAppTab causes clicks on untargeted links to open new tabs
-        sbrowser.docShell.isAppTab = true;
         sbrowser.setAttribute("src", this.provider.sidebarURL);
         PopupNotifications.locationChange(sbrowser);
       }
