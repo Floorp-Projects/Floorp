@@ -99,8 +99,6 @@ public:
 
   bool IsWaitingOnCDMResource() override;
 
-  int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio) override;
-
   bool UseBufferingHeuristics() override
   {
     return mTrackDemuxersMayBlock;
