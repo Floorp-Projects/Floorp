@@ -244,7 +244,7 @@ let PerformanceController = {
     gFront.off("recording-started", this._onRecordingStateChange);
     gFront.off("recording-stopping", this._onRecordingStateChange);
     gFront.off("recording-stopped", this._onRecordingStateChange);
-    gFront.on("profiler-status", this._onProfilerStatusUpdated);
+    gFront.off("profiler-status", this._onProfilerStatusUpdated);
     ToolbarView.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     PerformanceView.off(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.off(EVENTS.UI_STOP_RECORDING, this.stopRecording);
