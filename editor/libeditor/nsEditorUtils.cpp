@@ -66,19 +66,18 @@ nsAutoSelectionReset::Abort()
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-nsDOMIterator::nsDOMIterator(nsRange& aRange)
-{
-  MOZ_ASSERT(aRange.GetStartParent(), "Invalid range");
-  mIter = NS_NewContentIterator();
-  DebugOnly<nsresult> res = mIter->Init(&aRange);
-  MOZ_ASSERT(NS_SUCCEEDED(res));
-}
-
 nsDOMIterator::nsDOMIterator(nsINode& aNode)
 {
   mIter = NS_NewContentIterator();
   DebugOnly<nsresult> res = mIter->Init(&aNode);
   MOZ_ASSERT(NS_SUCCEEDED(res));
+}
+
+nsresult
+nsDOMIterator::Init(nsRange& aRange)
+{
+  mIter = NS_NewContentIterator();
+  return mIter->Init(&aRange);
 }
 
 nsDOMIterator::nsDOMIterator()
@@ -103,11 +102,15 @@ nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
   }
 }
 
-nsDOMSubtreeIterator::nsDOMSubtreeIterator(nsRange& aRange)
+nsDOMSubtreeIterator::nsDOMSubtreeIterator()
+{
+}
+
+nsresult
+nsDOMSubtreeIterator::Init(nsRange& aRange)
 {
   mIter = NS_NewContentSubtreeIterator();
-  DebugOnly<nsresult> res = mIter->Init(&aRange);
-  MOZ_ASSERT(NS_SUCCEEDED(res));
+  return mIter->Init(&aRange);
 }
 
 nsDOMSubtreeIterator::~nsDOMSubtreeIterator()
