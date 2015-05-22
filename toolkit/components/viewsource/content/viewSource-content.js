@@ -51,6 +51,11 @@ let ViewSourceContent = {
    */
   selectionListenerAttached: false,
 
+  get isViewSource() {
+    let uri = content.document.documentURI;
+    return uri == "about:blank" || uri.startsWith("view-source:");
+  },
+
   /**
    * This should be called as soon as this frame script has loaded.
    */
@@ -93,6 +98,9 @@ let ViewSourceContent = {
    * get dispatched to a specific function for the message name.
    */
   receiveMessage(msg) {
+    if (!this.isViewSource) {
+      return;
+    }
     let data = msg.data;
     let objects = msg.objects;
     switch(msg.name) {
@@ -124,6 +132,9 @@ let ViewSourceContent = {
    * a specific function for the event type.
    */
   handleEvent(event) {
+    if (!this.isViewSource) {
+      return;
+    }
     switch(event.type) {
       case "pagehide":
         this.onPageHide(event);
@@ -250,8 +261,14 @@ let ViewSourceContent = {
       docShell.charset = forcedCharSet;
     }
 
-    if (lineNumber) {
+    if (lineNumber && lineNumber > 0) {
       let doneLoading = (event) => {
+        let uri = content.document.documentURI;
+        // Ignore possible initial load of about:blank
+        if (uri == "about:blank" ||
+            !content.document.body) {
+          return;
+        }
         this.goToLine(lineNumber);
         removeEventListener("pageshow", doneLoading);
       };
@@ -341,11 +358,12 @@ let ViewSourceContent = {
    *        The pageshow event being handled.
    */
   onPageShow(event) {
-    content.getSelection()
-           .QueryInterface(Ci.nsISelectionPrivate)
-           .addSelectionListener(this);
-    this.selectionListenerAttached = true;
-
+    let selection = content.getSelection();
+    if (selection) {
+      selection.QueryInterface(Ci.nsISelectionPrivate)
+               .addSelectionListener(this);
+      this.selectionListenerAttached = true;
+    }
     content.focus();
     sendAsyncMessage("ViewSource:SourceLoaded");
   },
