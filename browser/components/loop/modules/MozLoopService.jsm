@@ -1072,6 +1072,7 @@ let gInitializeTimerFunc = (deferredInitialization) => {
              MozLoopServiceInternal.initialRegistrationDelayMilliseconds);
 };
 
+let gServiceInitialized = false;
 
 /**
  * Public API
@@ -1089,8 +1090,19 @@ this.MozLoopService = {
     };
   },
 
+  /**
+   * Used to override the initalize timer function for test purposes.
+   */
   set initializeTimerFunc(value) {
     gInitializeTimerFunc = value;
+  },
+
+  /**
+   * Used to reset if the service has been initialized or not - for test
+   * purposes.
+   */
+  resetServiceInitialized: function() {
+    gServiceInitialized = false;
   },
 
   get roomsParticipantsCount() {
@@ -1101,9 +1113,18 @@ this.MozLoopService = {
    * Initialized the loop service, and starts registration with the
    * push and loop servers.
    *
+   * Note: this returns a promise for unit test purposes.
+   *
    * @return {Promise}
    */
   initialize: Task.async(function*() {
+    // Ensure we don't setup things like listeners more than once.
+    if (gServiceInitialized) {
+      return Promise.resolve();
+    }
+
+    gServiceInitialized = true;
+
     // Do this here, rather than immediately after definition, so that we can
     // stub out API functions for unit testing
     Object.freeze(this);
