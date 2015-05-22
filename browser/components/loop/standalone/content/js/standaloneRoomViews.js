@@ -581,6 +581,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return (
         React.createElement("div", {className: "room-conversation-wrapper"}, 
           React.createElement("div", {className: "beta-logo"}), 
+          React.createElement(sharedViews.TextChatView, {dispatcher: this.props.dispatcher}), 
           React.createElement(StandaloneRoomHeader, {dispatcher: this.props.dispatcher}), 
           React.createElement(StandaloneRoomInfoArea, {roomState: this.state.roomState, 
                                   failureReason: this.state.failureReason, 
