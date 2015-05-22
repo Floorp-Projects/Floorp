@@ -330,11 +330,35 @@ function testUnprefixingDisabled()
   is(getComputedStyleWrapper(elem, "display"), initialDisplay,
      "'display:-webkit-box' shouldn't affect computed 'display' " +
      "when CSS Unprefixing Service is inactive");
+
+  elem.style.display = "-webkit-box";
+  is(getComputedStyleWrapper(elem, "display"), initialDisplay,
+     "Setting elem.style.display to '-webkit-box' shouldn't affect computed " +
+     "'display' when CSS Unprefixing Service is inactive");
+}
+
+// Focused test that CSS Unprefixing Service is functioning properly
+// on direct tweaks to elem.style.display:
+function testStyleDisplayDirectly()
+{
+  let elem = document.getElementById("content");
+  elem.style.display = "-webkit-box";
+
+  is(elem.style.display, "flex",
+     "Setting elem.style.display to '-webkit-box' should produce 'flex' " +
+     "in elem.style.display, when CSS Unprefixing Service is active");
+  is(getComputedStyleWrapper(elem, "display"), "flex",
+     "Setting elem.style.display to '-webkit-box' should produce 'flex' " +
+     "in computed style, when CSS Unprefixing Service is active");
+
+  // clean up:
+  elem.style.display = "";
 }
 
 function startTest()
 {
   if (window.location.hash === "#expectEnabled") {
+    testStyleDisplayDirectly();
     gTestcases.forEach(runOneTest);
   } else if (window.location.hash === "#expectDisabled") {
     testUnprefixingDisabled();
