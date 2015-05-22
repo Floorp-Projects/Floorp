@@ -10,6 +10,7 @@
  * for more information.
  */
 
+(function(exports) {
 var _quit = false;
 var _passed = true;
 var _tests_pending = 0;
@@ -195,7 +196,7 @@ _Timer.prototype = {
 };
 
 function _do_main() {
-  if (_quit)
+  if (exports._quit)
     return;
 
   _testLogger.info("running event loop");
@@ -203,7 +204,7 @@ function _do_main() {
   var thr = Components.classes["@mozilla.org/thread-manager;1"]
                       .getService().currentThread;
 
-  while (!_quit)
+  while (!exports._quit)
     thr.processNextEvent(true);
 
   while (thr.hasPendingEvents())
@@ -213,7 +214,7 @@ function _do_main() {
 function _do_quit() {
   _testLogger.info("exiting test");
   _Promise.Debugging.flushUncaughtErrors();
-  _quit = true;
+  exports._quit = true;
 }
 
 /**
@@ -493,12 +494,6 @@ function _execute_test() {
   // _TEST_FILE is dynamically defined by <runxpcshelltests.py>.
   _load_files(_TEST_FILE);
 
-  // Tack Assert.jsm methods to the current scope.
-  this.Assert = Assert;
-  for (let func in Assert) {
-    this[func] = Assert[func].bind(Assert);
-  }
-
   try {
     do_test_pending("MAIN run_test");
     // Check if run_test() is defined. If defined, run it.
@@ -513,12 +508,12 @@ function _execute_test() {
     _do_main();
   } catch (e) {
     _passed = false;
-    // do_check failures are already logged and set _quit to true and throw
+    // do_check failures are already logged and set exports._quit to true and throw
     // NS_ERROR_ABORT. If both of those are true it is likely this exception
     // has already been logged so there is no need to log it again. It's
     // possible that this will mask an NS_ERROR_ABORT that happens after a
     // do_check failure though.
-    if (!_quit || e != Components.results.NS_ERROR_ABORT) {
+    if (!exports._quit || e != Components.results.NS_ERROR_ABORT) {
       let extra = {};
       if (e.fileName) {
         extra.source_file = e.fileName;
@@ -652,12 +647,12 @@ function do_execute_soon(callback, aName) {
       try {
         callback();
       } catch (e) {
-        // do_check failures are already logged and set _quit to true and throw
+        // do_check failures are already logged and set exports._quit to true and throw
         // NS_ERROR_ABORT. If both of those are true it is likely this exception
         // has already been logged so there is no need to log it again. It's
         // possible that this will mask an NS_ERROR_ABORT that happens after a
         // do_check failure though.
-        if (!_quit || e != Components.results.NS_ERROR_ABORT) {
+        if (!exports._quit || e != Components.results.NS_ERROR_ABORT) {
           let stack = e.stack ? _format_stack(e.stack) : null;
           _testLogger.testStatus(_TEST_NAME,
                                  funcName,
@@ -1498,3 +1493,58 @@ try {
     prefs.deleteBranch("browser.devedition.theme.enabled");
   }
 } catch (e) { }
+
+exports._execute_test = _execute_test;
+exports._setupDebuggerServer = _setupDebuggerServer;
+exports._quit = _quit;
+exports._testLogger = _testLogger;
+exports._wrap_with_quotes_if_necessary = _wrap_with_quotes_if_necessary;
+exports.Assert = Assert;
+exports.add_task = add_task;
+exports.add_test = add_test;
+exports.do_await_remote_message = do_await_remote_message;
+exports.do_check_eq = do_check_eq;
+exports.do_check_false = do_check_false;
+exports.do_check_instanceof = do_check_instanceof;
+exports.do_check_matches = do_check_matches;
+exports.do_check_neq = do_check_neq;
+exports.do_check_null = do_check_null;
+exports.do_check_throws_nsIException = do_check_throws_nsIException;
+exports.do_check_true = do_check_true;
+exports.do_execute_soon = do_execute_soon;
+exports.do_get_cwd = do_get_cwd;
+exports.do_get_file = do_get_file;
+exports.do_get_idle = do_get_idle;
+exports.do_get_minidumpdir = do_get_minidumpdir;
+exports.do_get_profile = do_get_profile;
+exports.do_get_tempdir = do_get_tempdir;
+exports.do_load_child_test_harness = do_load_child_test_harness;
+exports.do_load_manifest = do_load_manifest;
+exports.do_note_exception = do_note_exception;
+exports.do_parse_document = do_parse_document;
+exports.do_print = do_print;
+exports.do_register_cleanup = do_register_cleanup;
+exports.do_report_result = do_report_result;
+exports.do_report_unexpected_exception = do_report_unexpected_exception;
+exports.do_send_remote_message = do_send_remote_message;
+exports.do_test_finished = do_test_finished;
+exports.do_test_pending = do_test_pending;
+exports.do_throw = do_throw;
+exports.do_timeout = do_timeout;
+exports.legible_exception = legible_exception;
+exports.run_next_test = run_next_test;
+exports.run_test_in_child = run_test_in_child;
+exports.runningInParent = runningInParent;
+exports.todo_check_eq = todo_check_eq;
+exports.todo_check_false = todo_check_false;
+exports.todo_check_instanceof = todo_check_instanceof;
+exports.todo_check_neq = todo_check_neq;
+exports.todo_check_null = todo_check_null;
+exports.todo_check_true = todo_check_true;
+
+// Tack Assert.jsm methods to the current scope.
+exports.Assert = Assert;
+for (let func in Assert) {
+  exports[func] = Assert[func].bind(Assert);
+}
+}
