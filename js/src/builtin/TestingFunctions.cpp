@@ -1100,6 +1100,34 @@ OOMAfterAllocations(JSContext* cx, unsigned argc, jsval* vp)
         return false;
 
     OOM_maxAllocations = OOM_counter + count;
+    OOM_failAlways = true;
+    return true;
+}
+
+static bool
+OOMAtAllocation(JSContext* cx, unsigned argc, jsval* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportError(cx, "count argument required");
+        return false;
+    }
+
+    uint32_t count;
+    if (!JS::ToUint32(cx, args[0], &count))
+        return false;
+
+    OOM_maxAllocations = OOM_counter + count;
+    OOM_failAlways = false;
+    return true;
+}
+
+static bool
+ResetOOMFailure(JSContext* cx, unsigned argc, jsval* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(OOM_counter >= OOM_maxAllocations);
+    OOM_maxAllocations = UINT32_MAX;
     return true;
 }
 #endif
@@ -2654,6 +2682,16 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "oomAfterAllocations(count)",
 "  After 'count' js_malloc memory allocations, fail every following allocation\n"
 "  (return NULL)."),
+
+    JS_FN_HELP("oomAtAllocation", OOMAtAllocation, 1, 0,
+"oomAtAllocation(count)",
+"  After 'count' js_malloc memory allocations, fail the next allocation\n"
+"  (return NULL)."),
+
+    JS_FN_HELP("resetOOMFailure", ResetOOMFailure, 0, 0,
+"resetOOMFailure()",
+"  Remove the allocation failure scheduled by either oomAfterAllocations() or\n"
+"  oomAtAllocation() and return whether any allocation had been caused to fail."),
 #endif
 
     JS_FN_HELP("makeFakePromise", MakeFakePromise, 0, 0,
