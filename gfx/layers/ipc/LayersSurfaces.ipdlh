@@ -38,6 +38,12 @@ struct SurfaceDescriptorD3D9 {
   uintptr_t texture;
 };
 
+struct SurfaceDescriptorFileMapping {
+  WindowsHandle handle;
+  SurfaceFormat format;
+  IntSize size;
+};
+
 struct SurfaceDescriptorDIB {
   // gfxWindowsSurface*
   uintptr_t surface;
@@ -112,6 +118,7 @@ union SurfaceDescriptor {
   SurfaceDescriptorD3D9;
   SurfaceDescriptorDIB;
   SurfaceDescriptorD3D10;
+  SurfaceDescriptorFileMapping;
   SurfaceDescriptorDXGIYCbCr;
   SurfaceDescriptorX11;
   SurfaceTextureDescriptor;

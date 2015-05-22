@@ -364,9 +364,12 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
   if (!texture && aFormat == SurfaceFormat::B8G8R8X8 &&
       aAllocator->IsSameProcess() &&
       aMoz2DBackend == gfx::BackendType::CAIRO) {
-    texture = new DIBTextureClient(aAllocator, aFormat, aTextureFlags);
+    if (aAllocator->IsSameProcess()) {
+      texture = new TextureClientMemoryDIB(aAllocator, aFormat, aTextureFlags);
+    } else {
+      texture = new TextureClientShmemDIB(aAllocator, aFormat, aTextureFlags);
+    }
   }
-
 #endif
 
 #ifdef MOZ_X11
