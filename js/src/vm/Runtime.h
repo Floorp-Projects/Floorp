@@ -1077,6 +1077,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Had an out-of-memory error which did not populate an exception. */
     bool                hadOutOfMemory;
 
+    /* We are curently deleting an object due to an initialization failure. */
+    mozilla::DebugOnly<bool> handlingInitFailure;
+
     /* A context has been created on this runtime. */
     bool                haveCreatedContext;
 
@@ -1924,6 +1927,71 @@ class AutoEnterIonCompilation
     }
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/*
+ * AutoInitGCManagedObject is a wrapper for use when initializing a object whose
+ * lifetime is managed by the GC.  It ensures that the object is destroyed if
+ * initialization fails but also allows us to assert the invariant that such
+ * objects are only destroyed in this way or by the GC.
+ *
+ * It has a limited interface but is a drop-in replacement for UniquePtr<T> is
+ * this situation.  For example:
+ *
+ *   AutoInitGCManagedObject<MyClass> ptr(cx->make_unique<MyClass>());
+ *   if (!ptr) {
+ *     ReportOutOfMemory(cx);
+ *     return nullptr;
+ *   }
+ *
+ *   if (!ptr->init(cx))
+ *     return nullptr;    // Object destroyed here if init() failed.
+ *
+ *   object->setPrivate(ptr.release());
+ *   // Initialization successful, ptr is now owned through another object.
+ */
+template <typename T>
+class MOZ_STACK_CLASS AutoInitGCManagedObject
+{
+    typedef mozilla::UniquePtr<T, JS::DeletePolicy<T>> UniquePtrT;
+
+    UniquePtrT ptr_;
+
+  public:
+    explicit AutoInitGCManagedObject(UniquePtrT&& ptr)
+      : ptr_(mozilla::Move(ptr))
+    {}
+
+    ~AutoInitGCManagedObject() {
+#ifdef DEBUG
+        if (ptr_) {
+            JSRuntime* rt = TlsPerThreadData.get()->runtimeFromMainThread();
+            MOZ_ASSERT(!rt->handlingInitFailure);
+            rt->handlingInitFailure = true;
+            ptr_.reset(nullptr);
+            rt->handlingInitFailure = false;
+        }
+#endif
+    }
+
+    T& operator*() const {
+        return *ptr_.get();
+    }
+
+    T* operator->() const {
+        return ptr_.get();
+    }
+
+    explicit operator bool() const {
+        return ptr_.get() != nullptr;
+    }
+
+    T* release() {
+        return ptr_.release();
+    }
+
+    AutoInitGCManagedObject(const AutoInitGCManagedObject<T>& other) = delete;
+    AutoInitGCManagedObject& operator=(const AutoInitGCManagedObject<T>& other) = delete;
 };
 
 } /* namespace js */

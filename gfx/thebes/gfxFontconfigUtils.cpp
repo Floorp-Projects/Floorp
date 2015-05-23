@@ -361,7 +361,7 @@ gfxFontconfigUtils::GetFontList(nsIAtom *aLangGroup,
         NS_NOTREACHED("unexpected CSS generic font family");
 
     // The first in the list becomes the default in
-    // gFontsDialog.readFontSelection() if the preference-selected font is not
+    // FontBuilder.readFontSelection() if the preference-selected font is not
     // available, so put system configured defaults first.
     if (monospace)
         aListOfFonts.InsertElementAt(0, NS_LITERAL_STRING("monospace"));

@@ -38,23 +38,23 @@ add_task(function test_nested_about_sessionrestore() {
 
   // test 1
   yield promiseTabState(tab, STATE);
-  checkState("test1", tab);
+  yield checkState("test1", tab);
 
   // test 2
   yield promiseTabState(tab, STATE2);
-  checkState("test2", tab);
+  yield checkState("test2", tab);
 
   // test 3
   yield promiseTabState(tab, STATE3);
-  checkState("test3", tab);
+  yield checkState("test3", tab);
 
   // Cleanup.
   gBrowser.removeTab(tab);
 });
 
-function checkState(prefix, tab) {
+function* checkState(prefix, tab) {
   // Flush and query tab state.
-  TabState.flush(tab.linkedBrowser);
+  yield TabStateFlusher.flush(tab.linkedBrowser);
   let {formdata} = JSON.parse(ss.getTabState(tab));
 
   ok(formdata.id["sessionData"], prefix + ": we have form data for about:sessionrestore");

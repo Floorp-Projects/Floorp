@@ -110,7 +110,7 @@ HTMLScriptElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) c
 NS_IMETHODIMP
 HTMLScriptElement::GetText(nsAString& aValue)
 {
-  if (!nsContentUtils::GetNodeTextContent(this, false, aValue)) {
+  if (!nsContentUtils::GetNodeTextContent(this, false, aValue, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
@@ -222,7 +222,7 @@ HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 NS_IMETHODIMP
 HTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
 {
-  if (!nsContentUtils::GetNodeTextContent(this, false, aInnerHTML)) {
+  if (!nsContentUtils::GetNodeTextContent(this, false, aInnerHTML, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;

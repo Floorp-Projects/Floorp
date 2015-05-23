@@ -43,7 +43,7 @@ add_task(function test_purge() {
   yield promiseBrowserLoaded(browser);
 
   // Check that we now have two shistory entries.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 2, "there are two shistory entries");
 
@@ -51,7 +51,7 @@ add_task(function test_purge() {
   yield sendMessage(browser, "ss-test:purgeSessionHistory");
 
   // Check that we are left with a single shistory entry.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 1, "there is one shistory entry");
 
@@ -71,7 +71,7 @@ add_task(function test_hashchange() {
   yield promiseBrowserLoaded(browser);
 
   // Check that we start with a single shistory entry.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is one shistory entry");
 
@@ -80,7 +80,7 @@ add_task(function test_hashchange() {
   yield promiseContentMessage(browser, "ss-test:hashchange");
 
   // Check that we now have two shistory entries.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there are two shistory entries");
 
@@ -110,7 +110,7 @@ add_task(function test_pageshow() {
   is(browser.currentURI.spec, URL, "correct url after going back");
 
   // Check that loading from bfcache did invalidate shistory.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let {index} = JSON.parse(ss.getTabState(tab));
   is(index, 1, "first history entry is selected");
 
@@ -133,7 +133,7 @@ add_task(function test_subframes() {
   yield promiseBrowserLoaded(browser);
 
   // Check that we have a single shistory entry.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].children.length, 1, "the entry has one child");
@@ -143,7 +143,7 @@ add_task(function test_subframes() {
   yield promiseBrowserLoaded(browser, false /* don't ignore subframes */);
 
   // Check shistory.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there now are two shistory entries");
   is(entries[1].children.length, 1, "the second entry has one child");
@@ -157,7 +157,7 @@ add_task(function test_subframes() {
   yield promiseContentMessage(browser, "ss-test:hashchange");
 
   // Check shistory.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there now are two shistory entries");
   is(entries[1].children.length, 1, "the second entry has one child");
@@ -176,7 +176,7 @@ add_task(function test_about_page_navigate() {
   yield promiseBrowserLoaded(browser);
 
   // Check that we have a single shistory entry.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "about:blank", "url is correct");
@@ -185,7 +185,7 @@ add_task(function test_about_page_navigate() {
   yield promiseBrowserLoaded(browser);
 
   // Check that we have changed the history entry.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "about:robots", "url is correct");
@@ -204,7 +204,7 @@ add_task(function test_pushstate_replacestate() {
   yield promiseBrowserLoaded(browser);
 
   // Check that we have a single shistory entry.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "http://example.com/1", "url is correct");
@@ -214,7 +214,7 @@ add_task(function test_pushstate_replacestate() {
   });
 
   // Check that we have added the history entry.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there is another shistory entry");
   is(entries[1].url, "http://example.com/test-entry/", "url is correct");
@@ -224,7 +224,7 @@ add_task(function test_pushstate_replacestate() {
   });
 
   // Check that we have modified the history entry.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there is still two shistory entries");
   is(entries[1].url, "http://example.com/test-entry/test-entry2/", "url is correct");
@@ -250,7 +250,7 @@ add_task(function test_slow_subframe_load() {
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
 
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let {entries} = JSON.parse(ss.getTabState(tab));
 
   // Check the number of children.

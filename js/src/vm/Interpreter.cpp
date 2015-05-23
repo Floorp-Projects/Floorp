@@ -2776,7 +2776,7 @@ CASE(JSOP_STRICTSETPROP_SUPER)
 
     RootedValue& receiver = rootValue0;
     receiver = REGS.sp[-3];
-    
+
     RootedObject& obj = rootObject0;
     obj = &REGS.sp[-2].toObject();
 
@@ -3981,6 +3981,13 @@ CASE(JSOP_SUPERBASE)
     for (; !si.done(); ++si) {
         if (si.hasScopeObject() && si.type() == ScopeIter::Call) {
             JSFunction& callee = si.scope().as<CallObject>().callee();
+
+            // Arrow functions don't have the information we're looking for,
+            // their enclosing scopes do. Nevertheless, they might have call
+            // objects. Skip them to find what we came for.
+            if (callee.isArrow())
+                continue;
+
             MOZ_ASSERT(callee.allowSuperProperty());
             MOZ_ASSERT(callee.nonLazyScript()->needsHomeObject());
             const Value& homeObjVal = callee.getExtendedSlot(FunctionExtended::METHOD_HOMEOBJECT_SLOT);

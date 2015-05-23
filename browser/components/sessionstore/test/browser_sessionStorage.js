@@ -21,7 +21,7 @@ add_task(function session_storage() {
   yield promiseBrowserLoaded(browser);
 
   // Flush to make sure chrome received all data.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   let {storage} = JSON.parse(ss.getTabState(tab));
   is(storage["http://example.com"].test, INNER_VALUE,
@@ -31,7 +31,7 @@ add_task(function session_storage() {
 
   // Ensure that modifying sessionStore values works for the inner frame only.
   yield modifySessionStorage2(browser, {test: "modified1"});
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   ({storage} = JSON.parse(ss.getTabState(tab)));
   is(storage["http://example.com"].test, "modified1",
@@ -42,7 +42,7 @@ add_task(function session_storage() {
   // Ensure that modifying sessionStore values works for both frames.
   yield modifySessionStorage(browser, {test: "modified"});
   yield modifySessionStorage2(browser, {test: "modified2"});
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   ({storage} = JSON.parse(ss.getTabState(tab)));
   is(storage["http://example.com"].test, "modified2",
@@ -56,7 +56,7 @@ add_task(function session_storage() {
   yield promiseTabRestored(tab2);
 
   // Flush to make sure chrome received all data.
-  TabState.flush(browser2);
+  yield TabStateFlusher.flush(browser2);
 
   ({storage} = JSON.parse(ss.getTabState(tab2)));
   is(storage["http://example.com"].test, "modified2",
@@ -67,7 +67,7 @@ add_task(function session_storage() {
   // Ensure that the content script retains restored data
   // (by e.g. duplicateTab) and sends it along with new data.
   yield modifySessionStorage(browser2, {test: "modified3"});
-  TabState.flush(browser2);
+  yield TabStateFlusher.flush(browser2);
 
   ({storage} = JSON.parse(ss.getTabState(tab2)));
   is(storage["http://example.com"].test, "modified2",
@@ -78,7 +78,7 @@ add_task(function session_storage() {
   // Check that loading a new URL discards data.
   browser2.loadURI("http://mochi.test:8888/");
   yield promiseBrowserLoaded(browser2);
-  TabState.flush(browser2);
+  yield TabStateFlusher.flush(browser2);
 
   ({storage} = JSON.parse(ss.getTabState(tab2)));
   is(storage["http://mochi.test:8888"].test, "modified3",
@@ -88,14 +88,14 @@ add_task(function session_storage() {
   // Check that loading a new URL discards data.
   browser2.loadURI("about:mozilla");
   yield promiseBrowserLoaded(browser2);
-  TabState.flush(browser2);
+  yield TabStateFlusher.flush(browser2);
 
   let state = JSON.parse(ss.getTabState(tab2));
   ok(!state.hasOwnProperty("storage"), "storage data was discarded");
 
   // Clean up.
-  gBrowser.removeTab(tab);
-  gBrowser.removeTab(tab2);
+  yield promiseRemoveTab(tab);
+  yield promiseRemoveTab(tab2);
 });
 
 /**
@@ -111,7 +111,7 @@ add_task(function purge_domain() {
   yield purgeDomainData(browser, "mochi.test");
 
   // Flush to make sure chrome received all data.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   let {storage} = JSON.parse(ss.getTabState(tab));
   ok(!storage["http://mochi.test:8888"],
@@ -119,7 +119,7 @@ add_task(function purge_domain() {
   is(storage["http://example.com"].test, INNER_VALUE,
     "sessionStorage data for example.com has been preserved");
 
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 });
 
 /**

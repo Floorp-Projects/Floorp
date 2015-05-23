@@ -2027,9 +2027,14 @@ AbstractCanvasGraph.createIframe = function(url, parent, callback) {
     callback(iframe);
   });
 
+  // Setting 100% width on the frame and flex on the parent allows the graph
+  // to properly shrink when the window is resized to be smaller.
   iframe.setAttribute("frameborder", "0");
+  iframe.style.width = "100%";
+  iframe.style.minWidth = "50px";
   iframe.src = url;
 
+  parent.style.display = "flex";
   parent.appendChild(iframe);
 };
 

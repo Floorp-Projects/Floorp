@@ -10,12 +10,13 @@
 enum RTCSdpType {
   "offer",
   "pranswer",
-  "answer"
+  "answer",
+  "rollback"
 };
 
 dictionary RTCSessionDescriptionInit {
   RTCSdpType? type = null;
-  DOMString? sdp = null;
+  DOMString? sdp = "";
 };
 
 [Pref="media.peerconnection.enabled",

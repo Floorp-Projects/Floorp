@@ -690,6 +690,27 @@ html, .fx-embedded, #main,
   height: 100%;
 }
 
+/**
+ * The .fx-embbeded .text-chat-* styles are very temporarily whilst we work on
+ * text chat (bug 1108892 and dependencies).
+ */
+.fx-embedded .text-chat-view {
+  height: 60px;
+  color: white;
+  background-color: black;
+}
+
+.fx-embedded .text-chat-entries {
+  /* XXX Should use flex, this is just for the initial implementation. */
+  height: calc(100% - 2em);
+  width: 100%;
+}
+
+.fx-embedded .text-chat-box {
+  width: 100%;
+  margin: auto;
+}
+
 @media screen and (min-width:640px) {
   .standalone .conversation-toolbar {
     position: absolute;
@@ -1268,6 +1289,27 @@ body[dir=rtl] .room-context-btn-edit {
   height: auto;
 }
 
+.text-chat-entries {
+  margin: auto;
+  overflow: scroll;
+  border: 1px solid red;
+}
+
+.text-chat-entry {
+  text-align: left;
+}
+
+.text-chat-entry.received {
+  text-align: right;
+}
+
+.text-chat-box {
+  margin: auto;
+}
+
+.text-chat-box > form > input {
+  width: 100%;
+}
 
 @media screen and (max-width:640px) {
   .standalone-room-info {

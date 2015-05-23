@@ -15,8 +15,7 @@ var gContentPane = {
     this._rebuildFonts();
     var menulist = document.getElementById("defaultFont");
     if (menulist.selectedIndex == -1) {
-      menulist.insertItemAt(0, "", "", "");
-      menulist.selectedIndex = 0;
+      menulist.value = FontBuilder.readFontSelection(menulist);
     }
 
     // Show translation preferences if we may:

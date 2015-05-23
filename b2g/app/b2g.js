@@ -88,7 +88,6 @@ pref("network.http.max-persistent-connections-per-proxy", 20);
 pref("network.cookie.cookieBehavior", 0);
 
 // spdy
-pref("network.http.spdy.enabled.http2draft", true);
 pref("network.http.spdy.push-allowance", 32768);
 
 // See bug 545869 for details on why these are set the way they are

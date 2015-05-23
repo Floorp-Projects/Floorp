@@ -178,14 +178,10 @@ function readURI(uri) {
     uri = proto.resolveURI(nsURI);
   }
 
-  let stream = NetUtil.newChannel2(uri,
-                                   'UTF-8',
-                                   null,
-                                   null,      // aLoadingNode
-                                   systemPrincipal,
-                                   null,      // aTriggeringPrincipal
-                                   Ci.nsILoadInfo.SEC_NORMAL,
-                                   Ci.nsIContentPolicy.TYPE_OTHER).open();
+  let stream = NetUtil.newChannel({
+    uri: NetUtil.newURI(uri, 'UTF-8'),
+    loadUsingSystemPrincipal: true}
+  ).open();
   let count = stream.available();
   let data = NetUtil.readInputStreamToString(stream, count, {
     charset: 'UTF-8'

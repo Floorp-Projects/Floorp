@@ -14,7 +14,7 @@ add_task(function check_history_not_persisted() {
   yield promiseBrowserLoaded(browser);
 
   // Retrieve the tab state.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let state = JSON.parse(ss.getTabState(tab));
   ok(!state.entries[0].persist, "Should have collected the persistence state");
   gBrowser.removeTab(tab);
@@ -51,7 +51,7 @@ add_task(function check_history_default_persisted() {
   yield promiseBrowserLoaded(browser);
 
   // Retrieve the tab state.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let state = JSON.parse(ss.getTabState(tab));
   delete state.entries[0].persist;
   gBrowser.removeTab(tab);

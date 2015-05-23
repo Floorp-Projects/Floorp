@@ -6,8 +6,8 @@
 #ifndef mozilla_net_Http2Compression_Internal_h
 #define mozilla_net_Http2Compression_Internal_h
 
-// HPACK
-// tools.ietf.org/html/draft-ietf-httpbis-header-compression-04
+// HPACK - RFC 7541
+// https://www.rfc-editor.org/rfc/rfc7541.txt
 
 #include "mozilla/Attributes.h"
 #include "nsDeque.h"
@@ -61,7 +61,6 @@ public:
   virtual ~Http2BaseCompressor() { };
 
 protected:
-  // this will become a HTTP/2 SETTINGS value in a future draft
   const static uint32_t kDefaultMaxBuffer = 4096;
 
   virtual void ClearHeaderTable();

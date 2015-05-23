@@ -18,7 +18,7 @@ add_task(function check_http_redirect() {
 
   info("Restored tab");
 
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let data = TabState.collect(tab);
   is(data.entries.length, 1, "Should be one entry in session history");
   is(data.entries[0].url, TARGET, "Should be the right session history entry");
@@ -26,7 +26,7 @@ add_task(function check_http_redirect() {
   ok(!("__SS_data" in browser), "Temporary restore data should have been cleared");
 
   // Cleanup.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 });
 
 /**
@@ -57,7 +57,7 @@ add_task(function check_js_redirect() {
 
   yield loadPromise;
 
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let data = TabState.collect(tab);
   is(data.entries.length, 1, "Should be one entry in session history");
   is(data.entries[0].url, TARGET, "Should be the right session history entry");
@@ -65,5 +65,5 @@ add_task(function check_js_redirect() {
   ok(!("__SS_data" in browser), "Temporary restore data should have been cleared");
 
   // Cleanup.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 });

@@ -549,7 +549,7 @@ class InterpreterFrame
     unsigned numActualArgs() const { MOZ_ASSERT(hasArgs()); return u.nactual; }
 
     /* Watch out, this exposes a pointer to the unaliased formal arg array. */
-    Value* argv() const { return argv_; }
+    Value* argv() const { MOZ_ASSERT(hasArgs()); return argv_; }
 
     /*
      * Arguments object

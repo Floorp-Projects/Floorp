@@ -266,7 +266,7 @@ DOMSVGLengthList::InsertItemBefore(DOMSVGLength& newItem,
   MaybeInsertNullInAnimValListAt(index);
 
   InternalList().InsertItem(index, domItem->ToSVGLength());
-  mItems.InsertElementAt(index, domItem.get());
+  MOZ_ALWAYS_TRUE(mItems.InsertElementAt(index, domItem.get()));
 
   // This MUST come after the insertion into InternalList(), or else under the
   // insertion into InternalList() the values read from domItem would be bad
@@ -380,7 +380,7 @@ DOMSVGLengthList::MaybeInsertNullInAnimValListAt(uint32_t aIndex)
   MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
              "animVal list not in sync!");
 
-  animVal->mItems.InsertElementAt(aIndex, static_cast<DOMSVGLength*>(nullptr));
+  MOZ_ALWAYS_TRUE(animVal->mItems.InsertElementAt(aIndex, nullptr));
 
   UpdateListIndicesFromIndex(animVal->mItems, aIndex + 1);
 }
