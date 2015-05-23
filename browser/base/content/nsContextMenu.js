@@ -1005,11 +1005,22 @@ nsContextMenu.prototype = {
     else
       throw "not reached";
 
-    // unused (and play nice for fragments generated via XSLT too)
-    var docUrl = null;
-    window.openDialog("chrome://global/content/viewPartialSource.xul",
-                      "_blank", "scrollbars,resizable,chrome,dialog=no",
-                      docUrl, docCharset, reference, aContext);
+    let inTab = Services.prefs.getBoolPref("view_source.tab");
+    if (inTab) {
+      let tab = gBrowser.loadOneTab("about:blank", {
+        relatedToCurrent: true,
+        inBackground: false
+      });
+      let viewSourceBrowser = gBrowser.getBrowserForTab(tab);
+      top.gViewSourceUtils.viewSourceFromSelectionInBrowser(reference,
+                                                            viewSourceBrowser);
+    } else {
+      // unused (and play nice for fragments generated via XSLT too)
+      var docUrl = null;
+      window.openDialog("chrome://global/content/viewPartialSource.xul",
+                        "_blank", "scrollbars,resizable,chrome,dialog=no",
+                        docUrl, docCharset, reference, aContext);
+    }
   },
 
   // Open new "view source" window with the frame's URL.
