@@ -606,6 +606,47 @@ condIf(const ParseNode* pn, ParseNodeKind kind)
 static bool
 Fold(ExclusiveContext* cx, ParseNode** pnp,
      FullParseHandler& handler, const ReadOnlyCompileOptions& options,
+     bool inGenexpLambda, SyntacticContext sc);
+
+static bool
+FoldTypeOfExpr(ExclusiveContext* cx, ParseNode* node, FullParseHandler& handler,
+               const ReadOnlyCompileOptions& options, bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_TYPEOFEXPR));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode*& expr = node->pn_kid;
+    if (!Fold(cx, &expr, handler, options, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    // Constant-fold the entire |typeof| if given a constant with known type.
+    RootedPropertyName result(cx);
+    if (expr->isKind(PNK_STRING) || expr->isKind(PNK_TEMPLATE_STRING))
+        result = cx->names().string;
+    else if (expr->isKind(PNK_NUMBER))
+        result = cx->names().number;
+    else if (expr->isKind(PNK_NULL))
+        result = cx->names().object;
+    else if (expr->isKind(PNK_TRUE) || expr->isKind(PNK_FALSE))
+        result = cx->names().boolean;
+    else if (expr->isKind(PNK_FUNCTION))
+        result = cx->names().function;
+
+    if (result) {
+        handler.prepareNodeForMutation(node);
+
+        node->setKind(PNK_STRING);
+        node->setArity(PN_NULLARY);
+        node->setOp(JSOP_NOP);
+        node->pn_atom = result;
+    }
+
+    return true;
+}
+
+bool
+Fold(ExclusiveContext* cx, ParseNode** pnp,
+     FullParseHandler& handler, const ReadOnlyCompileOptions& options,
      bool inGenexpLambda, SyntacticContext sc)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -653,7 +694,14 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
         goto afterFolding;
 
       case PNK_TYPEOFNAME:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->pn_kid->isKind(PNK_NAME));
+        MOZ_ASSERT(!pn->pn_kid->maybeExpr());
+        return true;
+
       case PNK_TYPEOFEXPR:
+        return FoldTypeOfExpr(cx, pn, handler, options, inGenexpLambda);
+
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
@@ -1163,6 +1211,8 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
 
       case PNK_TYPEOFNAME:
       case PNK_TYPEOFEXPR:
+        MOZ_CRASH("should have been fully handled above");
+
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
