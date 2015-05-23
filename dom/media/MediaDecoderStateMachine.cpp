@@ -1713,8 +1713,11 @@ void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
   //
   // Make sure to only do this if we have a start time, otherwise the reader
   // doesn't know how to compute GetBuffered.
+  if (!mDecoder->IsInfinite() || mStartTime == -1) {
+    return;
+  }
   media::TimeIntervals buffered{mDecoder->GetBuffered()};
-  if (mDecoder->IsInfinite() && (mStartTime != -1) && !buffered.IsInvalid()) {
+  if (!buffered.IsInvalid()) {
     bool exists;
     media::TimeUnit end{buffered.GetEnd(&exists)};
     if (exists) {
