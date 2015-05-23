@@ -25,10 +25,8 @@ exports.viewSourceInStyleEditor = Task.async(function *(toolbox, sourceURL, sour
   let panel = yield toolbox.loadTool("styleeditor");
 
   try {
-    let selected = panel.UI.once("editor-selected");
     yield panel.selectStyleSheet(sourceURL, sourceLine);
     yield toolbox.selectTool("styleeditor");
-    yield selected;
     return true;
   } catch (e) {
     exports.viewSource(toolbox, sourceURL, sourceLine);
