@@ -63,7 +63,7 @@ notification[type="critical"] {
 
 /* Popup notification */
 
-.popup-notification-body {
+.popup-notification-description {
   max-width: 24em;
 }
 
