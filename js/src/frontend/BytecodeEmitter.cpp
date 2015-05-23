@@ -2189,6 +2189,37 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      // Classes typically introduce names.  Even if no name is introduced,
+      // the heritage and/or class body (through computed property names)
+      // usually have effects.
+      case PNK_CLASS:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        *answer = true;
+        return true;
+
+      // |with| calls |ToObject| on its expression and so throws if that value
+      // is null/undefined.
+      case PNK_WITH:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      case PNK_RETURN:
+        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        *answer = true;
+        return true;
+
+      case PNK_NAME:
+        MOZ_ASSERT(pn->isArity(PN_NAME));
+        *answer = true;
+        return true;
+
+      // Generator expressions have no side effects on their own.
+      case PNK_GENEXP:
+        MOZ_ASSERT(pn->isArity(PN_LIST));
+        *answer = false;
+        return true;
+
       case PNK_TRY:
         MOZ_ASSERT(pn->isArity(PN_TERNARY));
         if (!checkSideEffects(pn->pn_kid1, answer))
@@ -2228,11 +2259,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_SWITCH:
       case PNK_LETBLOCK:
       case PNK_CLASSMETHOD:
-      case PNK_WITH:
       case PNK_CLASSNAMES:
-      case PNK_RETURN:
-      case PNK_CLASS:
-      case PNK_GENEXP:
       case PNK_ARGSBODY:
       case PNK_ARRAYCOMP:
       case PNK_CLASSMETHODLIST:
@@ -2241,7 +2268,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_IMPORT_SPEC_LIST:
       case PNK_LABEL:
       case PNK_LEXICALSCOPE:
-      case PNK_NAME:
       case PNK_FUNCTION:
       case PNK_EXPORT_SPEC:
       case PNK_IMPORT_SPEC:
