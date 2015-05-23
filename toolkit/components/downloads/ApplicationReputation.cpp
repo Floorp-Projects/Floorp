@@ -379,6 +379,10 @@ PendingLookup::IsBinaryFile()
        NS_ConvertUTF16toUTF8(fileName).get(), this));
   return
     // From https://code.google.com/p/chromium/codesearch#chromium/src/chrome/common/safe_browsing/download_protection_util.cc&l=14
+    // Archives _may_ contain binaries
+#ifdef XP_WIN // disable on Mac/Linux, see 1167493
+    StringEndsWith(fileName, NS_LITERAL_STRING(".zip")) ||
+#endif
     // Android extensions
     StringEndsWith(fileName, NS_LITERAL_STRING(".apk")) ||
     // Windows extensions
@@ -399,9 +403,7 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".app")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".dmg")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".osx")) ||
-    StringEndsWith(fileName, NS_LITERAL_STRING(".pkg")) ||
-    // Archives _may_ contain binaries
-    StringEndsWith(fileName, NS_LITERAL_STRING(".zip"));
+    StringEndsWith(fileName, NS_LITERAL_STRING(".pkg"));
 }
 
 ClientDownloadRequest::DownloadType
