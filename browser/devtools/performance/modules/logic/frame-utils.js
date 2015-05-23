@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Ci } = require("chrome");
-const { extend } = require("sdk/util/object");
+const { Cc, Ci, Cu, Cr } = require("chrome");
+
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "CATEGORY_OTHER",
-  "devtools/shared/profiler/global", true);
+  "devtools/performance/global", true);
 
 // Character codes used in various parsing helper functions.
 const CHAR_CODE_A = "a".charCodeAt(0);
@@ -140,7 +140,7 @@ exports.parseLocation = function parseLocation(location, fallbackLine, fallbackC
   // If the URI digged out from the `location` is valid, this is a JS frame.
   if (uri) {
     functionName = location.substring(0, firstParenIndex - 1);
-    fileName = (uri.fileName + (uri.ref ? "#" + uri.ref : "")) || "/";
+    fileName = uri.fileName || "/";
     hostName = getHost(url, uri.host);
     // nsIURL throws when accessing a piece of a URL that doesn't
     // exist, because we can't have nice things. Only check this if hostName

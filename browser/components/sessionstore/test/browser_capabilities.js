@@ -31,7 +31,7 @@ add_task(function docshell_capabilities() {
   yield promiseBrowserLoaded(browser);
 
   // Flush to make sure chrome received all data.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // Check that we correctly save disallowed features.
   let disallowedState = JSON.parse(ss.getTabState(tab));
@@ -44,7 +44,7 @@ add_task(function docshell_capabilities() {
   yield promiseTabState(tab, {entries: [{url: "about:robots"}]});
 
   // Flush to make sure chrome received all data.
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // After restoring disallowed features must be available again.
   state = JSON.parse(ss.getTabState(tab));
