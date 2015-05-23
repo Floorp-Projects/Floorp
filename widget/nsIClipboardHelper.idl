@@ -17,26 +17,22 @@ interface nsIDOMDocument;
  * helper service for common uses of nsIClipboard.
  */
 
-[scriptable, uuid(c9d5a750-c3a8-11e1-9b21-0800200c9a66)]
+[scriptable, uuid(438307fd-0c68-4d79-922a-f6cc9550cd02)]
 interface nsIClipboardHelper : nsISupports
 {
-
   /**
    * copy string to given clipboard
    *
    * @param aString, the string to copy to the clipboard
-   * @param aDoc, the source document for the string, if available
    * @param aClipboardID, the ID of the clipboard to copy to
    *        (eg. kSelectionClipboard -- see nsIClipboard.idl)
    */
-  void copyStringToClipboard(in AString aString, in long aClipboardID, [optional] in nsIDOMDocument aDoc);
+  void copyStringToClipboard(in AString aString, in long aClipboardID);
 
   /**
    * copy string to (default) clipboard
    *
    * @param aString, the string to copy to the clipboard
-   * @param aDoc, the source document for the string, if available
    */
-  void copyString(in AString aString, [optional] in nsIDOMDocument aDoc);
-
+  void copyString(in AString aString);
 };

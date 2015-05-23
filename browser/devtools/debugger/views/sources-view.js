@@ -910,7 +910,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     if (!selected) {
       return;
     }
-    clipboardHelper.copyString(selected.source.url, document);
+    clipboardHelper.copyString(selected.source.url);
   },
 
   /**

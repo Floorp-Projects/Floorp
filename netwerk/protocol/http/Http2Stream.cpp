@@ -945,10 +945,7 @@ Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
   // The decoding went ok. Now we can customize and clean up.
 
   aHeadersIn.Truncate();
-  nsAutoCString negotiatedToken;
-  mSession->GetNegotiatedToken(negotiatedToken);
-  aHeadersOut.Append("X-Firefox-Spdy: ");
-  aHeadersOut.Append(negotiatedToken);
+  aHeadersOut.Append("X-Firefox-Spdy: h2");
   aHeadersOut.Append("\r\n\r\n");
   LOG (("decoded response headers are:\n%s", aHeadersOut.BeginReading()));
   if (mIsTunnel && !mPlainTextTunnel) {

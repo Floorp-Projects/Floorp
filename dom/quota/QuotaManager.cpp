@@ -10,6 +10,7 @@
 #include "nsIBinaryInputStream.h"
 #include "nsIBinaryOutputStream.h"
 #include "nsIFile.h"
+#include "nsIIdleService.h"
 #include "nsIObserverService.h"
 #include "nsIOfflineStorage.h"
 #include "nsIPermissionManager.h"
@@ -1078,7 +1079,7 @@ nsresult
 GetDirectoryMetadataInputStream(nsIFile* aDirectory,
                                 nsIBinaryInputStream** aStream)
 {
-  AssertIsOnIOThread();
+  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(aStream);
 
@@ -1109,51 +1110,6 @@ GetDirectoryMetadataInputStream(nsIFile* aDirectory,
 }
 
 nsresult
-GetDirectoryMetadata(nsIFile* aDirectory,
-                     int64_t* aTimestamp,
-                     nsACString& aGroup,
-                     nsACString& aOrigin,
-                     bool* aIsApp)
-{
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(aTimestamp);
-
-  nsCOMPtr<nsIBinaryInputStream> binaryStream;
-  nsresult rv =
-    GetDirectoryMetadataInputStream(aDirectory, getter_AddRefs(binaryStream));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint64_t timestamp;
-  rv = binaryStream->Read64(&timestamp);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString group;
-  rv = binaryStream->ReadCString(group);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCString origin;
-  rv = binaryStream->ReadCString(origin);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool isApp;
-  if (aIsApp) {
-    rv = binaryStream->ReadBoolean(&isApp);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  *aTimestamp = timestamp;
-  aGroup = group;
-  aOrigin = origin;
-  if (aIsApp) {
-    *aIsApp = isApp;
-  }
-  return NS_OK;
-}
-
-nsresult
 GetDirectoryMetadataWithRestore(nsIFile* aDirectory,
                                 bool aPersistent,
                                 int64_t* aTimestamp,
@@ -1161,22 +1117,22 @@ GetDirectoryMetadataWithRestore(nsIFile* aDirectory,
                                 nsACString& aOrigin,
                                 bool* aIsApp)
 {
-  nsresult rv = GetDirectoryMetadata(aDirectory,
-                                     aTimestamp,
-                                     aGroup,
-                                     aOrigin,
-                                     aIsApp);
+  nsresult rv = QuotaManager::GetDirectoryMetadata(aDirectory,
+                                                   aTimestamp,
+                                                   aGroup,
+                                                   aOrigin,
+                                                   aIsApp);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     rv = RestoreDirectoryMetadata(aDirectory, aPersistent);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = GetDirectoryMetadata(aDirectory,
-                              aTimestamp,
-                              aGroup,
-                              aOrigin,
-                              aIsApp);
+    rv = QuotaManager::GetDirectoryMetadata(aDirectory,
+                                            aTimestamp,
+                                            aGroup,
+                                            aOrigin,
+                                            aIsApp);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1482,10 +1438,8 @@ QuotaManager::Init()
   NS_ASSERTION(mClients.Capacity() == Client::TYPE_MAX,
                "Should be using an auto array with correct capacity!");
 
-  nsRefPtr<Client> idbClient = indexedDB::CreateQuotaClient();
-
   // Register clients.
-  mClients.AppendElement(idbClient);
+  mClients.AppendElement(indexedDB::CreateQuotaClient());
   mClients.AppendElement(asmjscache::CreateClient());
   mClients.AppendElement(cache::CreateQuotaClient());
 
@@ -2776,6 +2730,52 @@ QuotaManager::ChromeOrigin(nsACString& aOrigin)
   aOrigin.AssignLiteral(kChromeOrigin);
 }
 
+// static
+nsresult
+QuotaManager::GetDirectoryMetadata(nsIFile* aDirectory,
+                                   int64_t* aTimestamp,
+                                   nsACString& aGroup,
+                                   nsACString& aOrigin,
+                                   bool* aIsApp)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(aTimestamp);
+
+  nsCOMPtr<nsIBinaryInputStream> binaryStream;
+  nsresult rv =
+    GetDirectoryMetadataInputStream(aDirectory, getter_AddRefs(binaryStream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint64_t timestamp;
+  rv = binaryStream->Read64(&timestamp);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString group;
+  rv = binaryStream->ReadCString(group);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString origin;
+  rv = binaryStream->ReadCString(origin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isApp;
+  if (aIsApp) {
+    rv = binaryStream->ReadBoolean(&isApp);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  *aTimestamp = timestamp;
+  aGroup = group;
+  aOrigin = origin;
+  if (aIsApp) {
+    *aIsApp = isApp;
+  }
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(QuotaManager, nsIQuotaManager, nsIObserver)
 
 NS_IMETHODIMP
@@ -3058,6 +3058,13 @@ QuotaManager::Observe(nsISupports* aSubject,
     rv = ClearStoragesForApp(appId, browserOnly);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY)) {
+    for (auto& client : mClients) {
+      client->PerformIdleMaintenance();
+    }
     return NS_OK;
   }
 

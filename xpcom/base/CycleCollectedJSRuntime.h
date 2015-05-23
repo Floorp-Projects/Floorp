@@ -334,10 +334,10 @@ private:
 
 void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);
 
-// Returns true if the JSGCTraceKind is one the cycle collector cares about.
-inline bool AddToCCKind(JSGCTraceKind aKind)
+// Returns true if the JS::TraceKind is one the cycle collector cares about.
+inline bool AddToCCKind(JS::TraceKind aKind)
 {
-  return aKind == JSTRACE_OBJECT || aKind == JSTRACE_SCRIPT;
+  return aKind == JS::TraceKind::Object || aKind == JS::TraceKind::Script;
 }
 
 } // namespace mozilla

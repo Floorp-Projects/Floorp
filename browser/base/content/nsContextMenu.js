@@ -1433,13 +1433,13 @@ nsContextMenu.prototype = {
 
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                     getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(addresses, document);
+    clipboard.copyString(addresses);
   },
 
   copyLink: function() {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                     getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(this.linkURL, document);
+    clipboard.copyString(this.linkURL);
   },
 
   ///////////////
@@ -1691,7 +1691,7 @@ nsContextMenu.prototype = {
   copyMediaLocation : function () {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                     getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(this.mediaURL, document);
+    clipboard.copyString(this.mediaURL);
   },
 
   drmLearnMore: function(aEvent) {

@@ -2631,6 +2631,19 @@ public:
                                           bool aIsRoot,
                                           const ContainerLayerParameters& aContainerParameters);
 
+  /**
+   * If the given scroll frame needs an area excluded from its composition
+   * bounds due to scrollbars, return that area, otherwise return an empty
+   * margin.
+   * There is no need to exclude scrollbars in the following cases:
+   *   - If the scroll frame is not the RCD-RSF; in that case, the composition
+   *     bounds is calculated based on the scroll port which already excludes
+   *     the scrollbar area.
+   *   - If the scrollbars are overlay, since then they are drawn on top of the
+   *     scrollable content.
+   */
+  static nsMargin ScrollbarAreaToExcludeFromCompositionBoundsFor(nsIFrame* aScrollFrame);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;

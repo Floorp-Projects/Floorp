@@ -696,17 +696,13 @@ this.AppsUtils = {
       let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(aPath);
 
-      let channel = NetUtil.newChannel2(file,
-                                        null,
-                                        null,
-                                        null,      // aLoadingNode
-                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                        null,      // aTriggeringPrincipal
-                                        Ci.nsILoadInfo.SEC_NORMAL,
-                                        Ci.nsIContentPolicy.TYPE_OTHER);
+      let channel = NetUtil.newChannel({
+        uri: NetUtil.newURI(file),
+        loadUsingSystemPrincipal: true});
+
       channel.contentType = "application/json";
 
-      NetUtil.asyncFetch2(channel, function(aStream, aResult) {
+      NetUtil.asyncFetch(channel, function(aStream, aResult) {
         if (!Components.isSuccessCode(aResult)) {
           deferred.resolve(null);
 

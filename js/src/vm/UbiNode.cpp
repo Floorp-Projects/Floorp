@@ -58,33 +58,18 @@ Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const
     MOZ_CRASH("null ubi::Node");
 }
 
-Node::Node(JSGCTraceKind kind, void* ptr)
-{
-    switch (kind) {
-      case JSTRACE_OBJECT:       construct(static_cast<JSObject*>(ptr));         break;
-      case JSTRACE_SCRIPT:       construct(static_cast<JSScript*>(ptr));         break;
-      case JSTRACE_STRING:       construct(static_cast<JSString*>(ptr));         break;
-      case JSTRACE_SYMBOL:       construct(static_cast<JS::Symbol*>(ptr));       break;
-      case JSTRACE_BASE_SHAPE:   construct(static_cast<js::BaseShape*>(ptr));    break;
-      case JSTRACE_JITCODE:      construct(static_cast<js::jit::JitCode*>(ptr)); break;
-      case JSTRACE_LAZY_SCRIPT:  construct(static_cast<js::LazyScript*>(ptr));   break;
-      case JSTRACE_SHAPE:        construct(static_cast<js::Shape*>(ptr));        break;
-      case JSTRACE_OBJECT_GROUP: construct(static_cast<js::ObjectGroup*>(ptr));  break;
+struct Node::ConstructFunctor : public BoolDefaultAdaptor<Value, false> {
+    template <typename T> bool operator()(T* t, Node* node) { node->construct(t); return true; }
+};
 
-      default:
-        MOZ_CRASH("bad JSGCTraceKind passed to JS::ubi::Node::Node");
-    }
+Node::Node(JS::TraceKind kind, void* ptr)
+{
+    CallTyped(ConstructFunctor(), ptr, kind, this);
 }
 
 Node::Node(HandleValue value)
 {
-    if (value.isObject())
-        construct(&value.toObject());
-    else if (value.isString())
-        construct(value.toString());
-    else if (value.isSymbol())
-        construct(value.toSymbol());
-    else
+    if (!DispatchValueTyped(ConstructFunctor(), value, this))
         construct<void>(nullptr);
 }
 
@@ -123,11 +108,11 @@ class SimpleEdgeVectorTracer : public JS::CallbackTracer {
     // True if we should populate the edge's names.
     bool wantNames;
 
-    static void staticCallback(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind) {
+    static void staticCallback(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind) {
         static_cast<SimpleEdgeVectorTracer*>(trc)->callback(thingp, kind);
     }
 
-    void callback(void** thingp, JSGCTraceKind kind) {
+    void callback(void** thingp, JS::TraceKind kind) {
         if (!okay)
             return;
 
@@ -187,7 +172,7 @@ class SimpleEdgeRange : public EdgeRange {
   public:
     explicit SimpleEdgeRange(JSContext* cx) : edges(cx), i(0) { }
 
-    bool init(JSContext* cx, void* thing, JSGCTraceKind kind, bool wantNames = true) {
+    bool init(JSContext* cx, void* thing, JS::TraceKind kind, bool wantNames = true) {
         SimpleEdgeVectorTracer tracer(cx, &edges, wantNames);
         JS_TraceChildren(&tracer, thing, kind);
         settle();
@@ -287,7 +272,6 @@ template class TracerConcreteWithCompartment<js::BaseShape>;
 template class TracerConcrete<js::ObjectGroup>;
 }
 }
-
 
 namespace JS {
 namespace ubi {

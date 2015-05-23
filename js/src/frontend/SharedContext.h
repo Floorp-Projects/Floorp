@@ -198,6 +198,7 @@ class SharedContext
     virtual ObjectBox* toObjectBox() = 0;
     inline bool isFunctionBox() { return toObjectBox() && toObjectBox()->isFunctionBox(); }
     inline FunctionBox* asFunctionBox();
+    inline GlobalSharedContext* asGlobalSharedContext();
 
     bool hasExplicitUseStrict()        const { return anyCxFlags.hasExplicitUseStrict; }
     bool bindingsAccessedDynamically() const { return anyCxFlags.bindingsAccessedDynamically; }
@@ -235,17 +236,30 @@ class SharedContext
 class GlobalSharedContext : public SharedContext
 {
   private:
-    bool allowSuperProperty_;
+    Handle<StaticEvalObject*> staticEvalScope_;
 
   public:
     GlobalSharedContext(ExclusiveContext* cx,
-                        Directives directives, bool extraWarnings, bool allowSuperProperty)
+                        Directives directives, Handle<StaticEvalObject*> staticEvalScope,
+                        bool extraWarnings)
       : SharedContext(cx, directives, extraWarnings),
-        allowSuperProperty_(allowSuperProperty)
+        staticEvalScope_(staticEvalScope)
     {}
 
     ObjectBox* toObjectBox() { return nullptr; }
-    bool allowSuperProperty() const { return allowSuperProperty_; }
+    HandleObject evalStaticScope() const { return staticEvalScope_; }
+
+    bool allowSuperProperty() const {
+        StaticScopeIter<CanGC> it(context, staticEvalScope_);
+        for (; !it.done(); it++) {
+            if (it.type() == StaticScopeIter<CanGC>::Function &&
+                !it.fun().isArrow())
+            {
+                return it.fun().allowSuperProperty();
+            }
+        }
+        return false;
+    }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
@@ -348,6 +362,13 @@ SharedContext::asFunctionBox()
 {
     MOZ_ASSERT(isFunctionBox());
     return static_cast<FunctionBox*>(this);
+}
+
+inline GlobalSharedContext*
+SharedContext::asGlobalSharedContext()
+{
+    MOZ_ASSERT(!isFunctionBox());
+    return static_cast<GlobalSharedContext*>(this);
 }
 
 // In generators, we treat all locals as aliased so that they get stored on the

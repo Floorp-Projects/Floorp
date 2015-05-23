@@ -35,19 +35,14 @@ function readURI(uri, options) {
   options = options || {};
   let charset = options.charset || 'UTF-8';
 
-  let channel = NetUtil.newChannel2(uri,
-                                    charset,
-                                    null,
-                                    null,      // aLoadingNode
-                                    Services.scriptSecurityManager.getSystemPrincipal(),
-                                    null,      // aTriggeringPrincipal
-                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                    Ci.nsIContentPolicy.TYPE_OTHER);
+  let channel = NetUtil.newChannel({
+    uri: NetUtil.newURI(uri, charset),
+    loadUsingSystemPrincipal: true});
 
   let { promise, resolve, reject } = defer();
 
   try {
-    NetUtil.asyncFetch2(channel, function (stream, result) {
+    NetUtil.asyncFetch(channel, function (stream, result) {
       if (components.isSuccessCode(result)) {
         let count = stream.available();
         let data = NetUtil.readInputStreamToString(stream, count, { charset : charset });
@@ -83,14 +78,9 @@ exports.readURI = readURI;
 function readURISync(uri, charset) {
   charset = typeof charset === "string" ? charset : "UTF-8";
 
-  let channel = NetUtil.newChannel2(uri,
-                                    charset,
-                                    null,
-                                    null,      // aLoadingNode
-                                    Services.scriptSecurityManager.getSystemPrincipal(),
-                                    null,      // aTriggeringPrincipal
-                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                    Ci.nsIContentPolicy.TYPE_OTHER);
+  let channel = NetUtil.newChannel({
+    uri: NetUtil.newURI(uri, charset),
+    loadUsingSystemPrincipal: true});
   let stream = channel.open();
 
   let count = stream.available();

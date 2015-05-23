@@ -1263,7 +1263,7 @@ EncodeSourceSurfaceInternal(SourceSurface* aSurface,
   } else {
     nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     if (clipboard) {
-      clipboard->CopyString(NS_ConvertASCIItoUTF16(string), nullptr);
+      clipboard->CopyString(NS_ConvertASCIItoUTF16(string));
     }
   }
   return NS_OK;

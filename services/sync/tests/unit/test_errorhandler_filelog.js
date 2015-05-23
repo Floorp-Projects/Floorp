@@ -81,16 +81,14 @@ add_test(function test_logOnSuccess_false() {
 });
 
 function readFile(file, callback) {
-  NetUtil.asyncFetch2(file, function (inputStream, statusCode, request) {
+  NetUtil.asyncFetch({
+    uri: NetUtil.newURI(file),
+    loadUsingSystemPrincipal: true
+  }, function (inputStream, statusCode, request) {
     let data = NetUtil.readInputStreamToString(inputStream,
                                                inputStream.available());
     callback(statusCode, data);
-  },
-  null,      // aLoadingNode
-  Services.scriptSecurityManager.getSystemPrincipal(),
-  null,      // aTriggeringPrincipal
-  Ci.nsILoadInfo.SEC_NORMAL,
-  Ci.nsIContentPolicy.TYPE_OTHER);
+  });
 }
 
 add_test(function test_logOnSuccess_true() {

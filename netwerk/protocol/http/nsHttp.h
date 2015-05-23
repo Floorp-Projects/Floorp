@@ -30,7 +30,7 @@ namespace net {
         // SPDY_VERSION_2 = 2, REMOVED
         // SPDY_VERSION_3 = 3, REMOVED
         SPDY_VERSION_31 = 4,
-        HTTP_VERSION_2 = 5,
+        HTTP_VERSION_2 = 5
 
         // leave room for official versions. telem goes to 48
         // 24 was a internal spdy/3.1
@@ -39,16 +39,11 @@ namespace net {
         // 27 was http/2-draft09, h2-10, and h2-11
         // 28 was http/2-draft12
         // 29 was http/2-draft13
-        // 30 was also h2-14. They're effectively the same, -15 added an
-        // error code. So, we advertise all, but our "default position" is -16.
-        HTTP_VERSION_2_DRAFT_15 = 30,
-        HTTP_VERSION_2_DRAFT_16 = 31
+        // 30 was h2-14 and h2-15
+        // 31 was h2-16
     };
 
 typedef uint8_t nsHttpVersion;
-
-#define HTTP_VERSION_2_DRAFT_LATEST HTTP_VERSION_2_DRAFT_16
-#define HTTP2_DRAFT_LATEST_TOKEN "h2-16"
 
 //-----------------------------------------------------------------------------
 // http connection capabilities

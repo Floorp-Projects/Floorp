@@ -781,10 +781,6 @@ HttpConnInfo::SetHTTP2ProtocolVersion(uint8_t pv)
 {
     if (pv == SPDY_VERSION_31) {
         protocolVersion.AssignLiteral(MOZ_UTF16("spdy/3.1"));
-    } else if (pv == HTTP_VERSION_2_DRAFT_15) {
-        protocolVersion.AssignLiteral(MOZ_UTF16("h2-14/15"));
-    } else if (pv == HTTP_VERSION_2_DRAFT_LATEST) {
-        protocolVersion.Assign(NS_LITERAL_STRING(HTTP2_DRAFT_LATEST_TOKEN));
     } else {
         MOZ_ASSERT (pv == HTTP_VERSION_2);
         protocolVersion.Assign(MOZ_UTF16("h2"));
