@@ -2187,6 +2187,39 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      case PNK_TRY:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (!checkSideEffects(pn->pn_kid1, answer))
+            return false;
+        if (*answer)
+            return true;
+        if (ParseNode* catchList = pn->pn_kid2) {
+            MOZ_ASSERT(catchList->isKind(PNK_CATCHLIST));
+            if (!checkSideEffects(catchList, answer))
+                return false;
+            if (*answer)
+                return true;
+        }
+        if (ParseNode* finallyBlock = pn->pn_kid3) {
+            if (!checkSideEffects(finallyBlock, answer))
+                return false;
+        }
+        return true;
+
+      case PNK_CATCH:
+        MOZ_ASSERT(pn->isArity(PN_TERNARY));
+        if (!checkSideEffects(pn->pn_kid1, answer))
+            return false;
+        if (*answer)
+            return true;
+        if (ParseNode* cond = pn->pn_kid2) {
+            if (!checkSideEffects(cond, answer))
+                return false;
+            if (*answer)
+                return true;
+        }
+        return checkSideEffects(pn->pn_kid3, answer);
+
       case PNK_EXPORT_BATCH_SPEC:
       case PNK_FRESHENBLOCK:
       case PNK_SHORTHAND:
@@ -2197,7 +2230,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_CLASSNAMES:
       case PNK_RETURN:
       case PNK_CLASS:
-      case PNK_TRY:
       case PNK_GENEXP:
       case PNK_STATEMENTLIST:
       case PNK_ARGSBODY:
@@ -2211,7 +2243,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_LEXICALSCOPE:
       case PNK_NAME:
       case PNK_FUNCTION:
-      case PNK_CATCH:
       case PNK_EXPORT_SPEC:
       case PNK_IMPORT_SPEC:
       case PNK_CALLSITEOBJ:
