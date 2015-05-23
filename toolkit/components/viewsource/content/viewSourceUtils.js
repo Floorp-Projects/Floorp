@@ -109,6 +109,27 @@ var gViewSourceUtils = {
     viewSourceBrowser.loadViewSourceFromSelection(aSelection);
   },
 
+  /**
+   * Displays view source for a MathML fragment from some document in the
+   * provided <browser>.  This allows for non-window display methods,  such as a
+   * tab from Firefox.  The caller that manages the <browser> is responsible for
+   * ensuring the companion frame script, viewSource-content.js, has been loaded
+   * for the <browser>.
+   *
+   * @param aNode
+   *        Some element within the fragment of interest.
+   * @param aContext
+   *        A string denoting the type of fragment.  Currently, "mathml" is the
+   *        only accepted value.
+   * @param aViewSourceInBrowser
+   *        The browser to display the view source in.
+   */
+  viewSourceFromFragmentInBrowser: function(aNode, aContext,
+                                            aViewSourceInBrowser) {
+    let viewSourceBrowser = new ViewSourceBrowser(aViewSourceInBrowser);
+    viewSourceBrowser.loadViewSourceFromFragment(aNode, aContext);
+  },
+
   // Opens the interval view source viewer
   _openInInternalViewer: function(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber)
   {
