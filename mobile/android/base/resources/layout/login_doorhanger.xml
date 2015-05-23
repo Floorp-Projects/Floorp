@@ -23,7 +23,7 @@
               android:layout_height="wrap_content"
               android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
               android:textColor="@color/link_blue"
-              android:layout_marginBottom="@dimen/doorhanger_section_padding_large"
+              android:layout_marginBottom="@dimen/doorhanger_section_padding_small"
               android:visibility="gone"/>
 
 </merge>
