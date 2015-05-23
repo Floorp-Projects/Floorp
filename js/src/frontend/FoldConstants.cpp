@@ -1141,12 +1141,21 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return FoldIncrementDecrement(cx, pn, parser, inGenexpLambda);
 
       case PNK_THROW:
-      case PNK_COMPUTED_NAME:
       case PNK_ARRAYPUSH:
-      case PNK_SPREAD:
       case PNK_MUTATEPROTO:
-      case PNK_EXPORT:
+      case PNK_COMPUTED_NAME:
+      case PNK_SPREAD:
+      case PNK_SUPERELEM:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        return Fold(cx, &pn->pn_kid, parser, inGenexpLambda, SyntacticContext::Other);
+
       case PNK_SEMI:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        if (ParseNode*& expr = pn->pn_kid)
+            return Fold(cx, &expr, parser, inGenexpLambda, SyntacticContext::Other);
+        return true;
+
+      case PNK_EXPORT:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
       case PNK_SUBASSIGN:
@@ -1161,7 +1170,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
       case PNK_MODASSIGN:
       case PNK_POWASSIGN:
       case PNK_ELEM:
-      case PNK_SUPERELEM:
       case PNK_COLON:
       case PNK_CASE:
       case PNK_SHORTHAND:
