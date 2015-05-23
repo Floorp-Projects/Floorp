@@ -644,6 +644,36 @@ FoldTypeOfExpr(ExclusiveContext* cx, ParseNode* node, FullParseHandler& handler,
     return true;
 }
 
+static bool
+FoldVoid(ExclusiveContext* cx, ParseNode* node, FullParseHandler& handler,
+         const ReadOnlyCompileOptions& options, bool inGenexpLambda, SyntacticContext sc)
+{
+    MOZ_ASSERT(node->isKind(PNK_VOID));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode*& expr = node->pn_kid;
+    if (!Fold(cx, &expr, handler, options, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    if (sc == SyntacticContext::Condition) {
+        if (expr->isKind(PNK_TRUE) ||
+            expr->isKind(PNK_FALSE) ||
+            expr->isKind(PNK_STRING) ||
+            expr->isKind(PNK_TEMPLATE_STRING) ||
+            expr->isKind(PNK_NUMBER) ||
+            expr->isKind(PNK_NULL) ||
+            expr->isKind(PNK_FUNCTION))
+        {
+            handler.prepareNodeForMutation(node);
+            node->setKind(PNK_FALSE);
+            node->setArity(PN_NULLARY);
+            node->setOp(JSOP_FALSE);
+        }
+    }
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp,
      FullParseHandler& handler, const ReadOnlyCompileOptions& options,
@@ -703,6 +733,8 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
         return FoldTypeOfExpr(cx, pn, handler, options, inGenexpLambda);
 
       case PNK_VOID:
+        return FoldVoid(cx, pn, handler, options, inGenexpLambda, sc);
+
       case PNK_NOT:
       case PNK_BITNOT:
       case PNK_THROW:
@@ -1211,9 +1243,9 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
 
       case PNK_TYPEOFNAME:
       case PNK_TYPEOFEXPR:
+      case PNK_VOID:
         MOZ_CRASH("should have been fully handled above");
 
-      case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
       case PNK_POS:
