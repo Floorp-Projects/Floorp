@@ -197,7 +197,7 @@ add_task(function* test_synchronous() {
   info("2");
   // Load another page
   info("Loading about:robots");
-  gBrowser.selectedBrowser.loadURI("about:robots");
+  yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
   is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
 
@@ -208,7 +208,7 @@ add_task(function* test_synchronous() {
   info("3");
   // Load the remote page again
   info("Loading http://example.org/" + DUMMY_PATH);
-  gBrowser.loadURI("http://example.org/" + DUMMY_PATH);
+  yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.org/" + DUMMY_PATH);
   is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
 
