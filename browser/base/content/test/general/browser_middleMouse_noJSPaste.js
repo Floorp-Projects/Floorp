@@ -14,7 +14,7 @@ add_task(function* () {
     SimpleTest.waitForClipboard(url, () => {
       Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                 .getService(Components.interfaces.nsIClipboardHelper)
-                .copyString(url, document);
+                .copyString(url);
     }, resolve, () => {
       ok(false, "Clipboard copy failed");
       reject();

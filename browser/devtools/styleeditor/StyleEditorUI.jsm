@@ -364,7 +364,11 @@ StyleEditorUI.prototype = {
         // nothing selected
         return;
       }
-      NetUtil.asyncFetch2(file, (stream, status) => {
+      NetUtil.asyncFetch({
+        uri: NetUtil.newURI(file),
+        loadingNode: this._window.document,
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+      }, (stream, status) => {
         if (!Components.isSuccessCode(status)) {
           this.emit("error", { key: LOAD_ERROR });
           return;
@@ -375,12 +379,7 @@ StyleEditorUI.prototype = {
         this._debuggee.addStyleSheet(source).then((styleSheet) => {
           this._onStyleSheetCreated(styleSheet, file);
         });
-      },
-      this._window.document,
-      null,  // aLoadingPrincipal
-      null,  // aTriggeringPrincipal
-      Ci.nsILoadInfo.SEC_NORMAL,
-      Ci.nsIContentPolicy.TYPE_OTHER);
+      });
     };
 
     showFilePicker(file, false, parentWindow, onFileSelected);

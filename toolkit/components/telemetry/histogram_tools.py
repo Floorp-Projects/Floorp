@@ -2,9 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import buildconfig
 import json
 import math
+import os
 import re
+import sys
+
+# Need to update sys.path to be able to find usecounters.
+sys.path.append(os.path.join(buildconfig.topsrcdir, 'dom/base/'))
+import usecounters
 
 from collections import OrderedDict
 
@@ -246,11 +253,57 @@ is enabled."""
                 definition['high'],
                 definition['n_buckets'])
 
-def from_file(filename):
-    """Return an iterator that provides a sequence of Histograms for
-the histograms defined in filename.
-    """
+# We support generating histograms from multiple different input files, not
+# just Histograms.json.  For each file's basename, we have a specific
+# routine to parse that file, and return a dictionary mapping histogram
+# names to histogram parameters.
+def from_Histograms_json(filename):
     with open(filename, 'r') as f:
-        histograms = json.load(f, object_pairs_hook=OrderedDict)
+        try:
+            histograms = json.load(f, object_pairs_hook=OrderedDict)
+        except ValueError, e:
+            raise BaseException, "error parsing histograms in %s: %s" % (filename, e.message)
+    return histograms
+
+def from_UseCounters_conf(filename):
+    return usecounters.generate_histograms(filename)
+
+FILENAME_PARSERS = {
+    'Histograms.json': from_Histograms_json,
+    'UseCounters.conf': from_UseCounters_conf,
+}
+
+def from_files(filenames):
+    """Return an iterator that provides a sequence of Histograms for
+the histograms defined in filenames.
+    """
+    all_histograms = OrderedDict()
+    for filename in filenames:
+        parser = FILENAME_PARSERS[os.path.basename(filename)]
+        histograms = parser(filename)
+
+        # OrderedDicts are important, because then the iteration order over
+        # the parsed histograms is stable, which makes the insertion into
+        # all_histograms stable, which makes ordering in generated files
+        # stable, which makes builds more deterministic.
+        if not isinstance(histograms, OrderedDict):
+            raise BaseException, "histogram parser didn't provide an OrderedDict"
+
         for (name, definition) in histograms.iteritems():
-            yield Histogram(name, definition)
+            if all_histograms.has_key(name):
+                raise DefinitionException, "duplicate histogram name %s" % name
+            all_histograms[name] = definition
+
+    # We require that all USE_COUNTER_* histograms be defined in a contiguous
+    # block.
+    use_counter_indices = filter(lambda x: x[1].startswith("USE_COUNTER_"),
+                                 enumerate(all_histograms.iterkeys()));
+    if use_counter_indices:
+        lower_bound = use_counter_indices[0][0]
+        upper_bound = use_counter_indices[-1][0]
+        n_counters = upper_bound - lower_bound + 1
+        if n_counters != len(use_counter_indices):
+            raise DefinitionException, "use counter histograms must be defined in a contiguous block"
+
+    for (name, definition) in all_histograms.iteritems():
+        yield Histogram(name, definition)

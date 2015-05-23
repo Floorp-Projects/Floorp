@@ -455,6 +455,7 @@ UpdateParser.prototype = {
       CertUtils.checkCert(request.channel, !requireBuiltIn);
     }
     catch (e) {
+      logger.warn("Request failed: " + this.url + " - " + e);
       this.notifyError(AddonUpdateChecker.ERROR_DOWNLOAD_ERROR);
       return;
     }

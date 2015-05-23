@@ -570,7 +570,14 @@ static bool RestartApplication()
        i++) {
     NSString* key = NSSTR(i->first);
     NSString* value = NSSTR(i->second);
-    [parameters setObject: value forKey: key];
+    if (key && value) {
+      [parameters setObject: value forKey: key];
+    } else {
+      ostringstream message;
+      message << "Warning: skipping annotation '" << i->first
+              << "' due to malformed UTF-8 encoding";
+      LogMessage(message.str());
+    }
   }
 
   for (StringTable::const_iterator i = gFiles.begin();

@@ -30,9 +30,11 @@ function test() {
   });
 
   function getIconFile(aCallback) {
-    NetUtil.asyncFetch2(
-      favIconLocation,
-      function(inputStream, status) {
+    NetUtil.asyncFetch({
+      uri: favIconLocation,
+      loadUsingSystemPrincipal: true,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_IMAGE
+    }, function(inputStream, status) {
         if (!Components.isSuccessCode(status)) {
           ok(false, "Could not get the icon file");
           // Handle error.
@@ -51,12 +53,7 @@ function test() {
         } else {
           finish();
         }
-      },
-      null,      // aLoadingNode
-      Services.scriptSecurityManager.getSystemPrincipal(),
-      null,      // aTriggeringPrincipal
-      Ci.nsILoadInfo.SEC_NORMAL,
-      Ci.nsIContentPolicy.TYPE_IMAGE);
+      });
   }
 
   function testNormal(aWindow, aCallback) {

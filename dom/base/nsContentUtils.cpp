@@ -7057,10 +7057,19 @@ nsContentUtils::DOMWindowDumpEnabled()
 }
 
 bool
-nsContentUtils::GetNodeTextContent(nsINode* aNode, bool aDeep, nsAString& aResult)
+nsContentUtils::GetNodeTextContent(nsINode* aNode, bool aDeep, nsAString& aResult,
+                                   const fallible_t& aFallible)
 {
   aResult.Truncate();
-  return AppendNodeTextContent(aNode, aDeep, aResult, fallible);
+  return AppendNodeTextContent(aNode, aDeep, aResult, aFallible);
+}
+
+void
+nsContentUtils::GetNodeTextContent(nsINode* aNode, bool aDeep, nsAString& aResult)
+{
+  if (!GetNodeTextContent(aNode, aDeep, aResult, fallible)) {
+    NS_ABORT_OOM(0); // Unfortunately we don't know the allocation size
+  }
 }
 
 void

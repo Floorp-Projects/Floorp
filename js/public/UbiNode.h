@@ -271,6 +271,7 @@ class Node {
                       "ubi::Base specializations must be the same size as ubi::Base");
         Concrete<T>::construct(base(), ptr);
     }
+    struct ConstructFunctor;
 
   public:
     Node() { construct<void>(nullptr); }
@@ -301,7 +302,7 @@ class Node {
     // JS::ubi::Node are both essentially tagged references to other sorts of
     // objects, so letting conversions happen automatically is appropriate.
     MOZ_IMPLICIT Node(JS::HandleValue value);
-    Node(JSGCTraceKind kind, void* ptr);
+    Node(JS::TraceKind kind, void* ptr);
 
     // copy construction and copy assignment just use memcpy, since we know
     // instances contain nothing but a vtable pointer and a data pointer.

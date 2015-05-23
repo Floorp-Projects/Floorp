@@ -6,7 +6,8 @@
 #ifndef mozilla_net_Http2Session_h
 #define mozilla_net_Http2Session_h
 
-// HTTP/2
+// HTTP/2 - RFC 7540
+// https://www.rfc-editor.org/rfc/rfc7540.txt
 
 #include "ASpdySession.h"
 #include "mozilla/Attributes.h"
@@ -221,7 +222,6 @@ public:
   nsISocketTransport *SocketTransport() { return mSocketTransport; }
   int64_t ServerSessionWindow() { return mServerSessionWindow; }
   void DecrementServerSessionWindow (uint32_t bytes) { mServerSessionWindow -= bytes; }
-  void GetNegotiatedToken(nsACString &s) { s.Assign(mNegotiatedToken); }
 
   void SendPing() override;
   bool MaybeReTunnel(nsAHttpTransaction *) override;
@@ -479,11 +479,7 @@ private:
   bool mWaitingForSettingsAck;
   bool mGoAwayOnPush;
 
-  // For caching whether we negotiated "h2" or "h2-<draft>"
-  nsCString mNegotiatedToken;
-
   bool mUseH2Deps;
-  uint32_t mVersion; // HTTP2_VERSION_ from nsHttp.h remove when draft support removed
 
 private:
 /// connect tunnels

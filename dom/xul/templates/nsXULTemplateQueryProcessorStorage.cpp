@@ -290,7 +290,7 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
     nsAutoString sqlQuery;
 
     // Let's get all text nodes (which should be the query) 
-    if (!nsContentUtils::GetNodeTextContent(queryContent, false, sqlQuery)) {
+    if (!nsContentUtils::GetNodeTextContent(queryContent, false, sqlQuery, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -308,7 +308,7 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
 
         if (child->NodeInfo()->Equals(nsGkAtoms::param, kNameSpaceID_XUL)) {
             nsAutoString value;
-            if (!nsContentUtils::GetNodeTextContent(child, false, value)) {
+            if (!nsContentUtils::GetNodeTextContent(child, false, value, fallible)) {
               return NS_ERROR_OUT_OF_MEMORY;
             }
 

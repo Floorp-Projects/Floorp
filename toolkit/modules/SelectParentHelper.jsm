@@ -22,7 +22,7 @@ this.SelectParentHelper = {
     currentBrowser = browser;
     this._registerListeners(menulist.menupopup);
 
-    menulist.menupopup.openPopupAtScreen(rect.left, rect.top + rect.height);
+    menulist.menupopup.openPopupAtScreenRect("after_start", rect.left, rect.top, rect.width, rect.height, false, false);
     menulist.selectedItem.scrollIntoView();
   },
 

@@ -15,22 +15,9 @@
 namespace mozilla {
 namespace layers {
 
-/**
-  * Can only be drawn into through Cairo.
-  * Prefer CairoTextureClient when possible.
-  * The coresponding TextureHost depends on the compositor
-  */
-class DIBTextureClient : public TextureClient
+class TextureClientDIB : public TextureClient
 {
 public:
-  DIBTextureClient(ISurfaceAllocator* aAllocator,
-                   gfx::SurfaceFormat aFormat,
-                   TextureFlags aFlags);
-
-  virtual ~DIBTextureClient();
-
-  // TextureClient
-
   virtual bool IsAllocated() const override { return !!mSurface; }
 
   virtual bool Lock(OpenMode aOpenMode) override;
@@ -38,8 +25,6 @@ public:
   virtual void Unlock() override;
 
   virtual bool IsLocked() const override{ return mIsLocked; }
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
@@ -49,16 +34,15 @@ public:
 
   virtual gfx::DrawTarget* BorrowDrawTarget() override;
 
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-    TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;
-
   virtual bool HasInternalBuffer() const override { return true; }
 
-  virtual TemporaryRef<TextureClient>
-  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
-                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
-
 protected:
+  TextureClientDIB(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat aFormat, TextureFlags aFlags)
+    : TextureClient(aAllocator, aFlags)
+    , mFormat(aFormat)
+    , mIsLocked(false)
+  { }
+
   nsRefPtr<gfxWindowsSurface> mSurface;
   RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
@@ -66,13 +50,82 @@ protected:
   bool mIsLocked;
 };
 
-class DIBTextureHost : public TextureHost
+/**
+  * Can only be drawn into through Cairo.
+  * Prefer CairoTextureClient when possible.
+  * The coresponding TextureHost depends on the compositor
+  */
+class TextureClientMemoryDIB : public TextureClientDIB
 {
 public:
-  DIBTextureHost(TextureFlags aFlags,
-                 const SurfaceDescriptorDIB& aDescriptor);
+  TextureClientMemoryDIB(ISurfaceAllocator* aAllocator,
+                         gfx::SurfaceFormat aFormat,
+                         TextureFlags aFlags);
 
-  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
+  virtual ~TextureClientMemoryDIB();
+
+  // TextureClient
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
+
+  virtual bool AllocateForSurface(gfx::IntSize aSize,
+    TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;
+
+  virtual TemporaryRef<TextureClient>
+  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
+
+
+};
+
+/**
+  * Can only be drawn into through Cairo.
+  * Prefer CairoTextureClient when possible.
+  * The coresponding TextureHost depends on the compositor
+  */
+class TextureClientShmemDIB : public TextureClientDIB
+{
+public:
+  TextureClientShmemDIB(ISurfaceAllocator* aAllocator,
+                        gfx::SurfaceFormat aFormat,
+                        TextureFlags aFlags);
+
+  virtual ~TextureClientShmemDIB();
+
+  // TextureClient
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
+
+  virtual bool AllocateForSurface(gfx::IntSize aSize,
+    TextureAllocationFlags aFlags = ALLOC_DEFAULT) override;
+
+  virtual TemporaryRef<TextureClient>
+  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
+
+protected:
+  HANDLE mFileMapping;
+  HANDLE mHostHandle;
+  HDC mDC;
+  HBITMAP mBitmap;
+};
+
+/**
+  * This is meant for a texture host which does a direct upload from
+  * Updated to a Compositor specific DataTextureSource and therefor doesn't
+  * need any specific Lock/Unlock magic.
+  */
+class TextureHostDirectUpload : public TextureHost
+{
+public:
+  TextureHostDirectUpload(TextureFlags aFlags,
+                          gfx::SurfaceFormat aFormat,
+                          gfx::IntSize aSize)
+    : TextureHost(aFlags)
+    , mFormat(aFormat)
+    , mSize(aSize)
+    , mIsLocked(false)
+  { }
 
   virtual void DeallocateDeviceData() override;
 
@@ -86,6 +139,22 @@ public:
 
   virtual void Unlock() override;
 
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
+
+protected:
+  RefPtr<DataTextureSource> mTextureSource;
+  RefPtr<Compositor> mCompositor;
+  gfx::SurfaceFormat mFormat;
+  gfx::IntSize mSize;
+  bool mIsLocked;
+};
+
+class DIBTextureHost : public TextureHostDirectUpload
+{
+public:
+  DIBTextureHost(TextureFlags aFlags,
+                 const SurfaceDescriptorDIB& aDescriptor);
+
   virtual void Updated(const nsIntRegion* aRegion = nullptr) override;
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override
@@ -95,11 +164,26 @@ public:
 
 protected:
   nsRefPtr<gfxWindowsSurface> mSurface;
-  RefPtr<DataTextureSource> mTextureSource;
-  RefPtr<Compositor> mCompositor;
-  gfx::SurfaceFormat mFormat;
-  gfx::IntSize mSize;
-  bool mIsLocked;
+};
+
+class TextureHostFileMapping : public TextureHostDirectUpload
+{
+public:
+  TextureHostFileMapping(TextureFlags aFlags,
+                         const SurfaceDescriptorFileMapping& aDescriptor);
+  ~TextureHostFileMapping();
+
+  virtual void Updated(const nsIntRegion* aRegion = nullptr) override;
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override
+  {
+    MOZ_CRASH(); // Not implemented! It would be tricky to keep track of the
+                 // scope of the file mapping. We could do this through UserData
+                 // on the DataSourceSurface but we don't need this right now.
+  }
+
+protected:
+  HANDLE mFileMapping;
 };
 
 }

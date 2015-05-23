@@ -103,8 +103,7 @@ Finder.prototype = {
       return;
 
     ClipboardHelper.copyStringToClipboard(aSearchString,
-                                          Ci.nsIClipboard.kFindClipboard,
-                                          this._getWindow().document);
+                                          Ci.nsIClipboard.kFindClipboard);
   },
 
   set caseSensitive(aSensitive) {

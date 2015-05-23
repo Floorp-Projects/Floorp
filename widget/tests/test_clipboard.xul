@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
     const data = "random number: " + Math.random();
     let helper = Cc['@mozilla.org/widget/clipboardhelper;1']
                  .getService(Ci.nsIClipboardHelper);
-    helper.copyString(data, document);
+    helper.copyString(data);
     is(paste(clipboard), data, 'Data was successfully copied.');
 
     // Test emptyClipboard, disabled for OSX because bug 666254

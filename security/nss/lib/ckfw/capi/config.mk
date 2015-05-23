@@ -27,8 +27,5 @@ endif
 # To create a loadable module on Darwin, we must use -bundle.
 #
 ifeq ($(OS_TARGET),Darwin)
-ifndef USE_64
 DSO_LDOPTS = -bundle
 endif
-endif
-

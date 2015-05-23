@@ -41,44 +41,16 @@ function run_test() {
   let spec2 = "http://bar.com/bar.html";
   let uri1 = NetUtil.newURI(spec1);
   let uri2 = NetUtil.newURI(spec2);
-  let channel1 = NetUtil.newChannel2(uri1,
-                                     null,
-                                     null,
-                                     null,      // aLoadingNode
-                                     Services.scriptSecurityManager.getSystemPrincipal(),
-                                     null,      // aTriggeringPrincipal
-                                     Ci.nsILoadInfo.SEC_NORMAL,
-                                     Ci.nsIContentPolicy.TYPE_OTHER);
-  let channel2 = NetUtil.newChannel2(uri2,
-                                     null,
-                                     null,
-                                     null,      // aLoadingNode
-                                     Services.scriptSecurityManager.getSystemPrincipal(),
-                                     null,      // aTriggeringPrincipal
-                                     Ci.nsILoadInfo.SEC_NORMAL,
-                                     Ci.nsIContentPolicy.TYPE_OTHER);
+  let channel1 = NetUtil.newChannel({uri: uri1, loadUsingSystemPrincipal: true});
+  let channel2 = NetUtil.newChannel({uri: uri2, loadUsingSystemPrincipal: true});
 
   // Create some file:// URIs.
   let filespec1 = "file://foo.txt";
   let filespec2 = "file://bar.txt";
   let fileuri1 = NetUtil.newURI(filespec1);
   let fileuri2 = NetUtil.newURI(filespec2);
-  let filechannel1 = NetUtil.newChannel2(fileuri1,
-                                         null,
-                                         null,
-                                         null,      // aLoadingNode
-                                         Services.scriptSecurityManager.getSystemPrincipal(),
-                                         null,      // aTriggeringPrincipal
-                                         Ci.nsILoadInfo.SEC_NORMAL,
-                                         Ci.nsIContentPolicy.TYPE_OTHER);
-  let filechannel2 = NetUtil.newChannel2(fileuri2,
-                                         null,
-                                         null,
-                                         null,      // aLoadingNode
-                                         Services.scriptSecurityManager.getSystemPrincipal(),
-                                         null,      // aTriggeringPrincipal
-                                         Ci.nsILoadInfo.SEC_NORMAL,
-                                         Ci.nsIContentPolicy.TYPE_OTHER);
+  let filechannel1 = NetUtil.newChannel({uri: fileuri1, loadUsingSystemPrincipal: true});
+  let filechannel2 = NetUtil.newChannel({uri: fileuri2, loadUsingSystemPrincipal: true});
 
   // Test isThirdPartyURI.
   do_check_false(util.isThirdPartyURI(uri1, uri1));

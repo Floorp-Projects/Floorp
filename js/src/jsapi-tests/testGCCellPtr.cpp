@@ -35,16 +35,16 @@ BEGIN_TEST(testGCCellPtr)
     CHECK(!JS::GCCellPtr(nullptr));
 
     CHECK(JS::GCCellPtr(obj.get()));
-    CHECK(JS::GCCellPtr(obj.get()).kind() == JSTRACE_OBJECT);
-    CHECK(JS::GCCellPtr(JS::ObjectValue(*obj)).kind() == JSTRACE_OBJECT);
+    CHECK(JS::GCCellPtr(obj.get()).kind() == JS::TraceKind::Object);
+    CHECK(JS::GCCellPtr(JS::ObjectValue(*obj)).kind() == JS::TraceKind::Object);
 
     CHECK(JS::GCCellPtr(str.get()));
-    CHECK(JS::GCCellPtr(str.get()).kind() == JSTRACE_STRING);
-    CHECK(JS::GCCellPtr(JS::StringValue(str)).kind() == JSTRACE_STRING);
+    CHECK(JS::GCCellPtr(str.get()).kind() == JS::TraceKind::String);
+    CHECK(JS::GCCellPtr(JS::StringValue(str)).kind() == JS::TraceKind::String);
 
     CHECK(JS::GCCellPtr(script.get()));
     CHECK(!JS::GCCellPtr(nullptr));
-    CHECK(JS::GCCellPtr(script.get()).kind() == JSTRACE_SCRIPT);
+    CHECK(JS::GCCellPtr(script.get()).kind() == JS::TraceKind::Script);
 
     JS::GCCellPtr objcell(obj.get());
     JS::GCCellPtr scriptcell = JS::GCCellPtr(script.get());

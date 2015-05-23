@@ -307,8 +307,7 @@ SVGMotionSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
 
   // Replace destination's current value -- a point-on-a-path -- with the
   // translation that results from our addition.
-  dstArr.Clear();
-  dstArr.AppendElement(MotionSegment(newX, newY, rotateAngle));
+  dstArr.ReplaceElementAt(0, MotionSegment(newX, newY, rotateAngle));
   return NS_OK;
 }
 
@@ -441,8 +440,9 @@ SVGMotionSMILType::Interpolate(const nsSMILValue& aStartVal,
 
   // Construct the intermediate result segment, and put it in our outparam.
   // AppendElement has guaranteed success here, since Init() allocates 1 slot.
-  resultArr.AppendElement(MotionSegment(path, resultDist,
-                                        rotateType, rotateAngle));
+  MOZ_ALWAYS_TRUE(resultArr.AppendElement(MotionSegment(path, resultDist,
+                                                        rotateType,
+                                                        rotateAngle)));
   return NS_OK;
 }
 
@@ -484,7 +484,8 @@ SVGMotionSMILType::ConstructSMILValue(Path* aPath,
   MotionSegmentArray& arr = ExtractMotionSegmentArray(smilVal);
 
   // AppendElement has guaranteed success here, since Init() allocates 1 slot.
-  arr.AppendElement(MotionSegment(aPath, aDist, aRotateType, aRotateAngle));
+  MOZ_ALWAYS_TRUE(arr.AppendElement(MotionSegment(aPath, aDist,
+                                                  aRotateType, aRotateAngle)));
   return smilVal;
 }
 

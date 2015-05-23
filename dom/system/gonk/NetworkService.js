@@ -240,7 +240,10 @@ NetworkService.prototype = {
       return;
     }
 
-    NetUtil.asyncFetch2(file, function(inputStream, status) {
+    NetUtil.asyncFetch({
+      uri: NetUtil.newURI(file),
+      loadUsingSystemPrincipal: true
+    }, function(inputStream, status) {
       let rxBytes = 0,
           txBytes = 0,
           now = Date.now();
@@ -263,12 +266,7 @@ NetworkService.prototype = {
 
       // netd always return success even interface doesn't exist.
       callback.networkStatsAvailable(true, rxBytes, txBytes, now);
-    },
-    null,      // aLoadingNode
-    Services.scriptSecurityManager.getSystemPrincipal(),
-    null,      // aTriggeringPrincipal
-    Ci.nsILoadInfo.SEC_NORMAL,
-    Ci.nsIContentPolicy.TYPE_OTHER);
+    });
   },
 
   setNetworkInterfaceAlarm: function(networkName, threshold, callback) {

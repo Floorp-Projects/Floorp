@@ -32,6 +32,9 @@ syntaxError("b = {a{}}");
 syntaxError("b = {a({}}");
 syntaxError("b = {a@(){}}");
 syntaxError("b = {a() => 0}");
+syntaxError("b = {a() void 0}");
+syntaxError("b = {a() 1}");
+syntaxError("b = {a() false}");
 
 b = {a(){return 5;}};
 assertEq(b.a(), 5);

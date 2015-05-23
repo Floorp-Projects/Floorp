@@ -10,6 +10,11 @@ assertExpr("b = { *a() { } }", aExpr("=", ident("b"),
               objExpr([{ key: ident("a"), value: genFunExpr(ident("a"), [], blockStmt([])), method:
               true}])));
 
+// Method definitions without braces
+assertError("({ a() void 0 })", SyntaxError);
+assertError("({ a() 1 })", SyntaxError);
+assertError("({ a() false })", SyntaxError);
+
 // getters and setters
 
 assertExpr("({ get x() { return 42 } })",
