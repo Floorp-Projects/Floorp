@@ -674,6 +674,85 @@ FoldVoid(ExclusiveContext* cx, ParseNode* node, FullParseHandler& handler,
     return true;
 }
 
+static bool
+FoldDeleteExpr(ExclusiveContext* cx, ParseNode* node, FullParseHandler& handler,
+               const ReadOnlyCompileOptions& options, bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_DELETEEXPR));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode*& expr = node->pn_kid;
+    if (!Fold(cx, &expr, handler, options, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    // Expression deletion evaluates the expression, then evaluates to
+    // true.  For trivial expressions, eliminate the expression evaluation.
+    if (expr->isKind(PNK_TRUE) ||
+        expr->isKind(PNK_FALSE) ||
+        expr->isKind(PNK_STRING) ||
+        expr->isKind(PNK_TEMPLATE_STRING) ||
+        expr->isKind(PNK_NUMBER) ||
+        expr->isKind(PNK_NULL) ||
+        expr->isKind(PNK_FUNCTION))
+    {
+        handler.prepareNodeForMutation(node);
+        node->setKind(PNK_TRUE);
+        node->setArity(PN_NULLARY);
+        node->setOp(JSOP_TRUE);
+    }
+
+    return true;
+}
+
+static bool
+FoldDeleteElement(ExclusiveContext* cx, ParseNode* node, FullParseHandler& handler,
+                  const ReadOnlyCompileOptions& options, bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_DELETEELEM) || node->isKind(PNK_DELETESUPERELEM));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+    MOZ_ASSERT(node->pn_kid->isKind(PNK_ELEM) || node->pn_kid->isKind(PNK_SUPERELEM));
+
+    ParseNode*& expr = node->pn_kid;
+    if (!Fold(cx, &expr, handler, options, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    // If we're deleting an element, but constant-folding converted our
+    // element reference into a dotted property access, we must *also*
+    // morph the node's kind.
+    //
+    // In principle this also applies to |super["foo"] -> super.foo|,
+    // but we don't constant-fold |super["foo"]| yet.
+    if (node->isKind(PNK_DELETEELEM)) {
+        MOZ_ASSERT(expr->isKind(PNK_ELEM) || expr->isKind(PNK_DOT));
+        if (expr->isKind(PNK_DOT))
+            node->setKind(PNK_DELETEPROP);
+    }
+
+    return true;
+}
+
+static bool
+FoldDeleteProperty(ExclusiveContext* cx, ParseNode* node, FullParseHandler& handler,
+                   const ReadOnlyCompileOptions& options, bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_DELETEPROP) || node->isKind(PNK_DELETESUPERPROP));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+    MOZ_ASSERT(node->pn_kid->isKind(PNK_DOT) || node->pn_kid->isKind(PNK_SUPERPROP));
+
+    ParseNode*& expr = node->pn_kid;
+#ifdef DEBUG
+    ParseNodeKind oldKind = expr->getKind();
+#endif
+
+    if (!Fold(cx, &expr, handler, options, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    MOZ_ASSERT(expr->isKind(oldKind),
+               "kind should have remained invariant under folding");
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp,
      FullParseHandler& handler, const ReadOnlyCompileOptions& options,
@@ -735,15 +814,26 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
       case PNK_VOID:
         return FoldVoid(cx, pn, handler, options, inGenexpLambda, sc);
 
+      case PNK_DELETENAME: {
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->pn_kid->isKind(PNK_NAME));
+        return true;
+      }
+
+      case PNK_DELETEEXPR:
+        return FoldDeleteExpr(cx, pn, handler, options, inGenexpLambda);
+
+      case PNK_DELETEELEM:
+      case PNK_DELETESUPERELEM:
+        return FoldDeleteElement(cx, pn, handler, options, inGenexpLambda);
+
+      case PNK_DELETEPROP:
+      case PNK_DELETESUPERPROP:
+        return FoldDeleteProperty(cx, pn, handler, options, inGenexpLambda);
+
       case PNK_NOT:
       case PNK_BITNOT:
       case PNK_THROW:
-      case PNK_DELETENAME:
-      case PNK_DELETEPROP:
-      case PNK_DELETESUPERPROP:
-      case PNK_DELETEELEM:
-      case PNK_DELETESUPERELEM:
-      case PNK_DELETEEXPR:
       case PNK_POS:
       case PNK_NEG:
       case PNK_PREINCREMENT:
@@ -951,13 +1041,12 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
         break;
 
       case PN_UNARY:
+        MOZ_ASSERT(!IsDeleteKind(pn->getKind()),
+                   "should have been handled above");
         if (pn->pn_kid) {
-            SyntacticContext kidsc =
-                pn->isKind(PNK_NOT)
-                ? SyntacticContext::Condition
-                : IsDeleteKind(pn->getKind())
-                ? SyntacticContext::Delete
-                : SyntacticContext::Other;
+            SyntacticContext kidsc = pn->isKind(PNK_NOT)
+                                     ? SyntacticContext::Condition
+                                     : SyntacticContext::Other;
             if (!Fold(cx, &pn->pn_kid, handler, options, inGenexpLambda, kidsc))
                 return false;
         }
