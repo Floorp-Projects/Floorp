@@ -114,7 +114,7 @@ var gViewSourceUtils = {
                 lineNumber: aLineNumber};
 
     try {
-      var editor = this.getExternalViewSourceEditor();    
+      var editor = this.getExternalViewSourceEditor();
       if (!editor) {
         this.handleCallBack(aCallBack, false, data);
         return;
@@ -129,7 +129,7 @@ var gViewSourceUtils = {
 
       var path;
       var contentType = aDocument ? aDocument.contentType : null;
-      if (uri.scheme == "file") {    
+      if (uri.scheme == "file") {
         // it's a local file; we can open it directly
         path = uri.QueryInterface(Components.interfaces.nsIFileURL).file.path;
 
@@ -140,7 +140,7 @@ var gViewSourceUtils = {
         // set up the progress listener with what we know so far
         this.viewSourceProgressListener.editor = editor;
         this.viewSourceProgressListener.callBack = aCallBack;
-        this.viewSourceProgressListener.data = data;      
+        this.viewSourceProgressListener.data = data;
         if (!aPageDescriptor) {
           // without a page descriptor, loadPage has no chance of working. download the file.
           var file = this.getTemporaryFile(uri, aDocument, contentType);
@@ -189,7 +189,7 @@ var gViewSourceUtils = {
           var progress = webShell.QueryInterface(this.mnsIWebProgress);
           progress.addProgressListener(this.viewSourceProgressListener,
                                        this.mnsIWebProgress.NOTIFY_STATE_DOCUMENT);
-          var pageLoader = webShell.QueryInterface(this.mnsIWebPageDescriptor);    
+          var pageLoader = webShell.QueryInterface(this.mnsIWebPageDescriptor);
           pageLoader.loadPage(aPageDescriptor, this.mnsIWebPageDescriptor.DISPLAY_AS_SOURCE);
         }
       }
@@ -296,7 +296,7 @@ var gViewSourceUtils = {
 
           // get a temporary filename using the attributes from the data object that
           // openInExternalEditor gave us
-          this.file = gViewSourceUtils.getTemporaryFile(this.data.uri, this.data.doc, 
+          this.file = gViewSourceUtils.getTemporaryFile(this.data.uri, this.data.doc,
                                                         this.data.doc.contentType);
 
           // we have to convert from the source charset.
@@ -310,7 +310,7 @@ var gViewSourceUtils = {
 
           // write the source to the file
           coStream.writeString(webNavigation.document.body.textContent);
-          
+
           // clean up
           coStream.close();
           foStream.close();
