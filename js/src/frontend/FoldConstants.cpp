@@ -632,23 +632,26 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
     switch (pn->getKind()) {
       case PNK_NEWTARGET:
       case PNK_NOP:
-      case PNK_STRING:
-      case PNK_TEMPLATE_STRING:
       case PNK_REGEXP:
+      case PNK_STRING:
       case PNK_TRUE:
       case PNK_FALSE:
       case PNK_NULL:
-      case PNK_THIS:
       case PNK_ELISION:
-      case PNK_GENERATOR:
       case PNK_NUMBER:
+      case PNK_DEBUGGER:
       case PNK_BREAK:
       case PNK_CONTINUE:
-      case PNK_DEBUGGER:
+      case PNK_TEMPLATE_STRING:
+      case PNK_THIS:
+      case PNK_GENERATOR:
       case PNK_EXPORT_BATCH_SPEC:
       case PNK_OBJECT_PROPERTY_NAME:
       case PNK_SUPERPROP:
       case PNK_FRESHENBLOCK:
+        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        goto afterFolding;
+
       case PNK_TYPEOFNAME:
       case PNK_TYPEOFEXPR:
       case PNK_VOID:
@@ -1277,6 +1280,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
       default:;
     }
 
+  afterFolding:
     if (sc == SyntacticContext::Condition) {
         Truthiness t = Boolish(pn);
         if (t != Unknown) {
