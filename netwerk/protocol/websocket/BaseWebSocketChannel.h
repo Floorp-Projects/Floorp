@@ -89,11 +89,12 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
 
   nsCString                       mNegotiatedExtensions;
 
-  uint32_t                        mEncrypted                 : 1;
   uint32_t                        mWasOpened                 : 1;
   uint32_t                        mClientSetPingInterval     : 1;
   uint32_t                        mClientSetPingTimeout      : 1;
-  uint32_t                        mPingForced                : 1;
+
+  Atomic<bool>                    mEncrypted;
+  bool                            mPingForced;
 
   uint32_t                        mPingInterval;         /* milliseconds */
   uint32_t                        mPingResponseTimeout;  /* milliseconds */
