@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
+const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 
 add_task(function*() {
   let uri = "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
