@@ -5330,6 +5330,11 @@ if test -n "$MOZ_FMP4"; then
     MOZ_EME=1
 fi;
 
+if test "$MOZ_WIDGET_TOOLKIT" = "gonk" -a -n "$MOZ_FMP4" -a "$ANDROID_VERSION" -ge "18"; then
+    MOZ_GONK_MEDIACODEC=1
+    AC_SUBST(MOZ_GONK_MEDIACODEC)
+fi
+
 dnl ========================================================
 dnl = EME support
 dnl ========================================================
