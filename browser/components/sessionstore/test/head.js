@@ -282,14 +282,7 @@ let promiseForEachSessionRestoreFile = Task.async(function*(cb) {
 });
 
 function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true) {
-  return new Promise(resolve => {
-    aBrowser.messageManager.addMessageListener("ss-test:loadEvent", function onLoad(msg) {
-      if (!ignoreSubFrames || !msg.data.subframe) {
-        aBrowser.messageManager.removeMessageListener("ss-test:loadEvent", onLoad);
-        resolve();
-      }
-    });
-  });
+  return BrowserTestUtils.browserLoaded(aBrowser, !ignoreSubFrames);
 }
 
 function whenWindowLoaded(aWindow, aCallback = next) {
