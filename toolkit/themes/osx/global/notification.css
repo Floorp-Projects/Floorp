@@ -101,7 +101,7 @@ notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
 
 /* Popup notification */
 
-.popup-notification-body {
+.popup-notification-description {
   max-width: 24em;
 }
 
