@@ -753,6 +753,75 @@ FoldDeleteProperty(ExclusiveContext* cx, ParseNode* node, FullParseHandler& hand
     return true;
 }
 
+static bool
+FoldNot(ExclusiveContext* cx, ParseNode* node, FullParseHandler& handler,
+        const ReadOnlyCompileOptions& options, bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_NOT));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode*& expr = node->pn_kid;
+    if (!Fold(cx, &expr, handler, options, inGenexpLambda, SyntacticContext::Condition))
+        return false;
+
+    if (expr->isKind(PNK_NUMBER)) {
+        double d = expr->pn_dval;
+
+        handler.prepareNodeForMutation(node);
+        if (d == 0 || IsNaN(d)) {
+            node->setKind(PNK_TRUE);
+            node->setOp(JSOP_TRUE);
+        } else {
+            node->setKind(PNK_FALSE);
+            node->setOp(JSOP_FALSE);
+        }
+        node->setArity(PN_NULLARY);
+    } else if (expr->isKind(PNK_TRUE) || expr->isKind(PNK_FALSE)) {
+        bool newval = !expr->isKind(PNK_TRUE);
+
+        handler.prepareNodeForMutation(node);
+        node->setKind(newval ? PNK_TRUE : PNK_FALSE);
+        node->setArity(PN_NULLARY);
+        node->setOp(newval ? JSOP_TRUE : JSOP_FALSE);
+    }
+
+    return true;
+}
+
+static bool
+FoldUnaryArithmetic(ExclusiveContext* cx, ParseNode* node, FullParseHandler& handler,
+                    const ReadOnlyCompileOptions& options, bool inGenexpLambda)
+{
+    MOZ_ASSERT(node->isKind(PNK_BITNOT) || node->isKind(PNK_POS) || node->isKind(PNK_NEG),
+               "need a different method for this node kind");
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode*& expr = node->pn_kid;
+    if (!Fold(cx, &expr, handler, options, inGenexpLambda, SyntacticContext::Other))
+        return false;
+
+    if (expr->isKind(PNK_NUMBER) || expr->isKind(PNK_TRUE) || expr->isKind(PNK_FALSE)) {
+        double d = expr->isKind(PNK_NUMBER)
+                   ? expr->pn_dval
+                   : double(expr->isKind(PNK_TRUE));
+
+        if (node->isKind(PNK_BITNOT))
+            d = ~ToInt32(d);
+        else if (node->isKind(PNK_NEG))
+            d = -d;
+        else
+            MOZ_ASSERT(node->isKind(PNK_POS)); // nothing to do
+
+        handler.prepareNodeForMutation(node);
+        node->setKind(PNK_NUMBER);
+        node->setOp(JSOP_DOUBLE);
+        node->setArity(PN_NULLARY);
+        node->pn_dval = d;
+    }
+
+    return true;
+}
+
 bool
 Fold(ExclusiveContext* cx, ParseNode** pnp,
      FullParseHandler& handler, const ReadOnlyCompileOptions& options,
@@ -832,10 +901,14 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
         return FoldDeleteProperty(cx, pn, handler, options, inGenexpLambda);
 
       case PNK_NOT:
+        return FoldNot(cx, pn, handler, options, inGenexpLambda);
+
       case PNK_BITNOT:
-      case PNK_THROW:
       case PNK_POS:
       case PNK_NEG:
+        return FoldUnaryArithmetic(cx, pn, handler, options, inGenexpLambda);
+
+      case PNK_THROW:
       case PNK_PREINCREMENT:
       case PNK_POSTINCREMENT:
       case PNK_PREDECREMENT:
@@ -1044,10 +1117,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
         MOZ_ASSERT(!IsDeleteKind(pn->getKind()),
                    "should have been handled above");
         if (pn->pn_kid) {
-            SyntacticContext kidsc = pn->isKind(PNK_NOT)
-                                     ? SyntacticContext::Condition
-                                     : SyntacticContext::Other;
-            if (!Fold(cx, &pn->pn_kid, handler, options, inGenexpLambda, kidsc))
+            if (!Fold(cx, &pn->pn_kid, handler, options, inGenexpLambda, SyntacticContext::Other))
                 return false;
         }
         pn1 = pn->pn_kid;
@@ -1333,63 +1403,11 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
       case PNK_TYPEOFNAME:
       case PNK_TYPEOFEXPR:
       case PNK_VOID:
-        MOZ_CRASH("should have been fully handled above");
-
       case PNK_NOT:
       case PNK_BITNOT:
       case PNK_POS:
       case PNK_NEG:
-        if (pn1->isKind(PNK_NUMBER)) {
-            double d;
-
-            /* Operate on one numeric constant. */
-            d = pn1->pn_dval;
-            switch (pn->getKind()) {
-              case PNK_BITNOT:
-                d = ~ToInt32(d);
-                break;
-
-              case PNK_NEG:
-                d = -d;
-                break;
-
-              case PNK_POS:
-                break;
-
-              case PNK_NOT:
-                if (d == 0 || IsNaN(d)) {
-                    pn->setKind(PNK_TRUE);
-                    pn->setOp(JSOP_TRUE);
-                } else {
-                    pn->setKind(PNK_FALSE);
-                    pn->setOp(JSOP_FALSE);
-                }
-                pn->setArity(PN_NULLARY);
-                /* FALL THROUGH */
-
-              default:
-                /* Return early to dodge the common PNK_NUMBER code. */
-                goto restart;
-            }
-            pn->setKind(PNK_NUMBER);
-            pn->setOp(JSOP_DOUBLE);
-            pn->setArity(PN_NULLARY);
-            pn->pn_dval = d;
-            handler.freeTree(pn1);
-        } else if (pn1->isKind(PNK_TRUE) || pn1->isKind(PNK_FALSE)) {
-            if (pn->isKind(PNK_NOT)) {
-                ReplaceNode(pnp, pn1);
-                pn = pn1;
-                if (pn->isKind(PNK_TRUE)) {
-                    pn->setKind(PNK_FALSE);
-                    pn->setOp(JSOP_FALSE);
-                } else {
-                    pn->setKind(PNK_TRUE);
-                    pn->setOp(JSOP_TRUE);
-                }
-            }
-        }
-        break;
+        MOZ_CRASH("should have been fully handled above");
 
       case PNK_ELEM: {
         // An indexed expression, pn1[pn2]. A few cases can be improved.
