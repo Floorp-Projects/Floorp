@@ -10,13 +10,9 @@ let getItemForAttachment;
 let Sources;
 let getItemInvoked = false;
 
-function test() {
-  loadTab(TEST_URI).then(() => {
-    openConsole(null).then(testViewSource);
-  });
-}
-
-function testViewSource(hud) {
+add_task(function*() {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole(null);
   info("console opened");
 
   let button = content.document.querySelector("button");
@@ -25,58 +21,42 @@ function testViewSource(hud) {
   expectUncaughtException();
   EventUtils.sendMouseEvent({ type: "click" }, button, content);
 
-  openDebugger().then(({panelWin: { DebuggerView }}) => {
-    info("debugger opened");
-    Sources = DebuggerView.Sources;
-    openConsole().then((hud) => {
-      info("console opened again");
+  let { panelWin: { DebuggerView } } = yield openDebugger();
+  info("debugger opened");
+  Sources = DebuggerView.Sources;
+  hud = yield openConsole();
+  info("console opened again");
 
-      waitForMessages({
-        webconsole: hud,
-        messages: [{
-          text: "fooBazBaz is not defined",
-          category: CATEGORY_JS,
-          severity: SEVERITY_ERROR,
-        }],
-      }).then(onMessage);
-    });
+  let [result] = yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "fooBazBaz is not defined",
+      category: CATEGORY_JS,
+      severity: SEVERITY_ERROR,
+    }],
   });
 
-  function onMessage([result]) {
-    let msg = [...result.matched][0];
-    ok(msg, "error message");
-    let locationNode = msg.querySelector(".message-location");
-    ok(locationNode, "location node");
+  let msg = [...result.matched][0];
+  ok(msg, "error message");
+  let locationNode = msg.querySelector(".message-location");
+  ok(locationNode, "location node");
 
-    Services.ww.registerNotification(observer);
+  let onTabOpen = waitForTab();
 
-    getItemForAttachment = Sources.getItemForAttachment;
-    Sources.getItemForAttachment = () => {
-      getItemInvoked = true;
-      return false;
-    };
+  getItemForAttachment = Sources.getItemForAttachment;
+  Sources.getItemForAttachment = () => {
+    getItemInvoked = true;
+    return false;
+  };
 
-    EventUtils.sendMouseEvent({ type: "click" }, locationNode);
-  }
-}
+  EventUtils.sendMouseEvent({ type: "click" }, locationNode);
 
-let observer = {
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic != "domwindowopened") {
-      return;
-    }
+  let tab = yield onTabOpen;
+  ok(true, "the view source tab was opened in response to clicking " +
+           "the location node");
+  gBrowser.removeTab(tab);
 
-    ok(true, "the view source window was opened in response to clicking " +
-       "the location node");
-
-    aSubject.close();
-    ok(getItemInvoked, "custom getItemForAttachment() was invoked");
-    Sources.getItemForAttachment = getItemForAttachment;
-    Sources = getItemForAttachment = null;
-    finishTest();
-  }
-};
-
-registerCleanupFunction(function() {
-  Services.ww.unregisterNotification(observer);
+  ok(getItemInvoked, "custom getItemForAttachment() was invoked");
+  Sources.getItemForAttachment = getItemForAttachment;
+  Sources = getItemForAttachment = null;
 });
