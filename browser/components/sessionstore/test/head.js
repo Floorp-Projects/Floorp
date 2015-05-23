@@ -637,3 +637,33 @@ function crashBrowser(browser) {
     is(tab.getAttribute("crashed"), "true", "Tab should be marked as crashed");
   });
 }
+
+// Write DOMSessionStorage data to the given browser.
+function modifySessionStorage(browser, data, options = {}) {
+  return ContentTask.spawn(browser, [data, options], function* ([data, options]) {
+    let frame = content;
+    if (options && "frameIndex" in options) {
+      frame = content.frames[options.frameIndex];
+    }
+
+    let keys = new Set(Object.keys(data));
+    let storage = frame.sessionStorage;
+
+    return new Promise(resolve => {
+      addEventListener("MozStorageChanged", function onStorageChanged(event) {
+        if (event.storageArea == storage) {
+          keys.delete(event.key);
+        }
+
+        if (keys.size == 0) {
+          removeEventListener("MozStorageChanged", onStorageChanged, true);
+          resolve();
+        }
+      }, true);
+
+      for (let key of keys) {
+        frame.sessionStorage[key] = data[key];
+      }
+    });
+  });
+}
