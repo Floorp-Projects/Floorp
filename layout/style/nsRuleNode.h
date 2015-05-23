@@ -11,7 +11,6 @@
 #ifndef nsRuleNode_h___
 #define nsRuleNode_h___
 
-#include "mozilla/RangedArray.h"
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
 
@@ -25,11 +24,29 @@ class nsCSSValue;
 class nsStyleCoord;
 struct nsCSSValuePairList;
 
+template <nsStyleStructID MinIndex, nsStyleStructID Count>
+class FixedStyleStructArray
+{
+private:
+  void* mArray[Count];
+public:
+  void*& operator[](nsStyleStructID aIndex) {
+    MOZ_ASSERT(MinIndex <= aIndex && aIndex < (MinIndex + Count),
+               "out of range");
+    return mArray[aIndex - MinIndex];
+  }
+
+  const void* operator[](nsStyleStructID aIndex) const {
+    MOZ_ASSERT(MinIndex <= aIndex && aIndex < (MinIndex + Count),
+               "out of range");
+    return mArray[aIndex - MinIndex];
+  }
+};
+
 struct nsInheritedStyleData
 {
-  mozilla::RangedArray<void*,
-                       nsStyleStructID_Inherited_Start,
-                       nsStyleStructID_Inherited_Count> mStyleStructs;
+  FixedStyleStructArray<nsStyleStructID_Inherited_Start,
+                        nsStyleStructID_Inherited_Count> mStyleStructs;
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->PresShell()->
@@ -66,9 +83,8 @@ struct nsInheritedStyleData
 
 struct nsResetStyleData
 {
-  mozilla::RangedArray<void*,
-                       nsStyleStructID_Reset_Start,
-                       nsStyleStructID_Reset_Count> mStyleStructs;
+  FixedStyleStructArray<nsStyleStructID_Reset_Start,
+                        nsStyleStructID_Reset_Count> mStyleStructs;
 
   nsResetStyleData()
   {
