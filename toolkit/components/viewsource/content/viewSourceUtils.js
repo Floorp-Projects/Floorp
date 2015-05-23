@@ -92,6 +92,23 @@ var gViewSourceUtils = {
     viewSourceBrowser.loadViewSource(aArgs);
   },
 
+  /**
+   * Displays view source for a selection from some document in the provided
+   * <browser>.  This allows for non-window display methods, such as a tab from
+   * Firefox.  The caller that manages the <browser> is responsible for ensuring
+   * the companion frame script, viewSource-content.js, has been loaded for the
+   * <browser>.
+   *
+   * @param aSelection
+   *        A Selection object for the content of interest.
+   * @param aViewSourceInBrowser
+   *        The browser to display the view source in.
+   */
+  viewSourceFromSelectionInBrowser: function(aSelection, aViewSourceInBrowser) {
+    let viewSourceBrowser = new ViewSourceBrowser(aViewSourceInBrowser);
+    viewSourceBrowser.loadViewSourceFromSelection(aSelection);
+  },
+
   // Opens the interval view source viewer
   _openInInternalViewer: function(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber)
   {
