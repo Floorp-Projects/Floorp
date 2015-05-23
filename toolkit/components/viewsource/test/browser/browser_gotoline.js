@@ -24,7 +24,7 @@ let checkViewSource = Task.async(function* (aWindow) {
   is(statusPanel.getAttribute("label"), "", "Correct status bar text");
 
   for (let i = 1; i <= 3; i++) {
-    aWindow.ViewSourceChrome.goToLine(i);
+    aWindow.viewSourceChrome.goToLine(i);
     let result = yield ContentTask.spawn(aWindow.gBrowser, i, function*(i) {
       let selection = content.getSelection();
       return (selection.toString() == "line " + i);
