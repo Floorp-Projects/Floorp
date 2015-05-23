@@ -26,16 +26,6 @@ GetGCObjectKind(const Class* clasp)
     return GetGCObjectKind(nslots);
 }
 
-inline JSGCTraceKind
-GetGCThingTraceKind(const void* thing)
-{
-    MOZ_ASSERT(thing);
-    const Cell* cell = static_cast<const Cell*>(thing);
-    if (IsInsideNursery(cell))
-        return JSTRACE_OBJECT;
-    return MapAllocToTraceKind(cell->asTenured().getAllocKind());
-}
-
 inline void
 GCRuntime::poke()
 {

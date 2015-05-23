@@ -164,7 +164,7 @@ private:
   struct JsepSendingTrack {
     RefPtr<JsepTrack> mTrack;
     Maybe<size_t> mAssignedMLine;
-    bool mSetInLocalDescription;
+    bool mNegotiated;
   };
 
   struct JsepReceivingTrack {
@@ -177,7 +177,8 @@ private:
   void AddCodecs(SdpMediaSection* msection) const;
   void AddExtmap(SdpMediaSection* msection) const;
   void AddMid(const std::string& mid, SdpMediaSection* msection) const;
-  void AddLocalSsrcs(const JsepTrack& track, SdpMediaSection* msection) const;
+  void SetSsrcs(const std::vector<uint32_t>& ssrcs,
+                SdpMediaSection* msection) const;
   void AddLocalIds(const JsepTrack& track, SdpMediaSection* msection) const;
   JsepCodecDescription* FindMatchingCodec(
       const std::string& pt,
@@ -190,6 +191,7 @@ private:
   void AddCommonExtmaps(const SdpMediaSection& remoteMsection,
                         SdpMediaSection* msection);
   nsresult SetupIds();
+  nsresult CreateSsrc(uint32_t* ssrc);
   void SetupDefaultCodecs();
   void SetupDefaultRtpExtensions();
   void SetState(JsepSignalingState state);
@@ -202,7 +204,7 @@ private:
   nsresult ValidateLocalDescription(const Sdp& description);
   nsresult ValidateRemoteDescription(const Sdp& description);
   nsresult ValidateAnswer(const Sdp& offer, const Sdp& answer);
-  nsresult SetRemoteTracksFromDescription(const Sdp& remoteDescription);
+  nsresult SetRemoteTracksFromDescription(const Sdp* remoteDescription);
   // Non-const because we use our Uuid generator
   nsresult CreateReceivingTrack(size_t mline,
                                 const Sdp& sdp,
@@ -238,7 +240,7 @@ private:
                          const Sdp& oldAnswer,
                          Sdp* newSdp);
   void SetupBundle(Sdp* sdp) const;
-  nsresult SetupTransportAttributes(Sdp* sdp);
+  nsresult FinalizeTransportAttributes(Sdp* sdp);
   void SetupMsidSemantic(const std::vector<std::string>& msids, Sdp* sdp) const;
   nsresult GetIdsFromMsid(const Sdp& sdp,
                           const SdpMediaSection& msection,
@@ -262,8 +264,8 @@ private:
   nsresult CreateAnswerMSection(const JsepAnswerOptions& options,
                                 size_t mlineIndex,
                                 const SdpMediaSection& remoteMsection,
-                                SdpMediaSection* msection,
                                 Sdp* sdp);
+  nsresult SetRecvonlySsrc(SdpMediaSection* msection);
   nsresult BindMatchingLocalTrackForAnswer(SdpMediaSection* msection);
   nsresult DetermineAnswererSetupRole(const SdpMediaSection& remoteMsection,
                                       SdpSetupAttribute::Role* rolep);
@@ -278,12 +280,12 @@ private:
                           JsepTrack::Direction,
                           RefPtr<JsepTrack>* track);
 
-  nsresult CreateTransport(const SdpMediaSection& msection,
-                           RefPtr<JsepTransport>* transport);
+  void UpdateTransport(const SdpMediaSection& msection,
+                       JsepTransport* transport);
 
-  nsresult SetupTransport(const SdpAttributeList& remote,
-                          const SdpAttributeList& answer,
-                          const RefPtr<JsepTransport>& transport);
+  nsresult FinalizeTransport(const SdpAttributeList& remote,
+                             const SdpAttributeList& answer,
+                             const RefPtr<JsepTransport>& transport);
 
   nsresult AddCandidateToSdp(Sdp* sdp,
                              const std::string& candidate,
@@ -308,7 +310,7 @@ private:
   bool IsBundleSlave(const Sdp& localSdp, uint16_t level);
 
   void DisableMsection(Sdp* sdp, SdpMediaSection* msection) const;
-  nsresult EnableMsection(SdpMediaSection* msection);
+  nsresult EnableOfferMsection(SdpMediaSection* msection);
 
   nsresult SetUniquePayloadTypes();
   nsresult GetAllPayloadTypes(const JsepTrackNegotiatedDetails& trackDetails,
@@ -323,6 +325,8 @@ private:
   std::vector<JsepReceivingTrack> mRemoteTracksAdded;
   std::vector<JsepReceivingTrack> mRemoteTracksRemoved;
   std::vector<RefPtr<JsepTransport> > mTransports;
+  // So we can rollback
+  std::vector<RefPtr<JsepTransport> > mOldTransports;
   std::vector<JsepTrackPair> mNegotiatedTrackPairs;
 
   bool mIsOfferer;
@@ -343,6 +347,9 @@ private:
   // Used to prevent duplicate local SSRCs. Not used to prevent local/remote or
   // remote-only duplication, which will be important for EKT but not now.
   std::set<uint32_t> mSsrcs;
+  // When an m-section doesn't have a local track, it still needs an ssrc, which
+  // is stored here.
+  std::vector<uint32_t> mRecvonlySsrcs;
   UniquePtr<Sdp> mGeneratedLocalDescription; // Created but not set.
   UniquePtr<Sdp> mCurrentLocalDescription;
   UniquePtr<Sdp> mCurrentRemoteDescription;

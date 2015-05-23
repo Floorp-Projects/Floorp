@@ -363,7 +363,7 @@ function CopyPassword() {
                   getService(Components.interfaces.nsIClipboardHelper);
   var row = document.getElementById("signonsTree").currentIndex;
   var password = signonsTreeView.getCellText(row, {id : "passwordCol" });
-  clipboard.copyString(password, document);
+  clipboard.copyString(password);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_PASSWORD").add(1);
 }
 

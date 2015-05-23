@@ -784,22 +784,23 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
       return NS_ERROR_FAILURE;
     }
 
+    // AppendElement() below must succeed, because SetCapacity() succeeded.
     if (!to.IsNull()) {
       if (!from.IsNull()) {
-        result.AppendElement(from);
-        result.AppendElement(to);
+        MOZ_ALWAYS_TRUE(result.AppendElement(from));
+        MOZ_ALWAYS_TRUE(result.AppendElement(to));
       } else {
-        result.AppendElement(to);
+        MOZ_ALWAYS_TRUE(result.AppendElement(to));
       }
     } else if (!by.IsNull()) {
       nsSMILValue effectiveFrom(by.mType);
       if (!from.IsNull())
         effectiveFrom = from;
       // Set values to 'from; from + by'
-      result.AppendElement(effectiveFrom);
+      MOZ_ALWAYS_TRUE(result.AppendElement(effectiveFrom));
       nsSMILValue effectiveTo(effectiveFrom);
       if (!effectiveTo.IsNull() && NS_SUCCEEDED(effectiveTo.Add(by))) {
-        result.AppendElement(effectiveTo);
+        MOZ_ALWAYS_TRUE(result.AppendElement(effectiveTo));
       } else {
         // Using by-animation with non-additive type or bad base-value
         return NS_ERROR_FAILURE;

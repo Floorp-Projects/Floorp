@@ -39,7 +39,7 @@ IterateCompartmentsArenasCells(JSRuntime* rt, Zone* zone, void* data,
         (*compartmentCallback)(rt, data, comp);
 
     for (auto thingKind : AllAllocKinds()) {
-        JSGCTraceKind traceKind = MapAllocToTraceKind(thingKind);
+        JS::TraceKind traceKind = MapAllocToTraceKind(thingKind);
         size_t thingSize = Arena::thingSize(thingKind);
 
         for (ArenaIter aiter(zone, thingKind); !aiter.done(); aiter.next()) {

@@ -346,7 +346,7 @@ StatsCompartmentCallback(JSRuntime* rt, void* data, JSCompartment* compartment)
 
 static void
 StatsArenaCallback(JSRuntime* rt, void* data, gc::Arena* arena,
-                   JSGCTraceKind traceKind, size_t thingSize)
+                   JS::TraceKind traceKind, size_t thingSize)
 {
     RuntimeStats* rtStats = static_cast<StatsClosure*>(data)->rtStats;
 
@@ -401,14 +401,14 @@ AddClassInfo(Granularity granularity, CompartmentStats* cStats, const char* clas
 // profile speed for complex pages such as gmail.com.
 template <Granularity granularity>
 static void
-StatsCellCallback(JSRuntime* rt, void* data, void* thing, JSGCTraceKind traceKind,
+StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKind,
                   size_t thingSize)
 {
     StatsClosure* closure = static_cast<StatsClosure*>(data);
     RuntimeStats* rtStats = closure->rtStats;
     ZoneStats* zStats = rtStats->currZoneStats;
     switch (traceKind) {
-      case JSTRACE_OBJECT: {
+      case JS::TraceKind::Object: {
         JSObject* obj = static_cast<JSObject*>(thing);
         CompartmentStats* cStats = GetCompartmentStats(obj->compartment());
         JS::ClassInfo info;        // This zeroes all the sizes.
@@ -429,7 +429,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JSGCTraceKind traceKin
         break;
       }
 
-      case JSTRACE_SCRIPT: {
+      case JS::TraceKind::Script: {
         JSScript* script = static_cast<JSScript*>(thing);
         CompartmentStats* cStats = GetCompartmentStats(script->compartment());
         cStats->scriptsGCHeap += thingSize;
@@ -469,7 +469,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JSGCTraceKind traceKin
         break;
       }
 
-      case JSTRACE_STRING: {
+      case JS::TraceKind::String: {
         JSString* str = static_cast<JSString*>(thing);
 
         JS::StringInfo info;
@@ -499,11 +499,11 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JSGCTraceKind traceKin
         break;
       }
 
-      case JSTRACE_SYMBOL:
+      case JS::TraceKind::Symbol:
         zStats->symbolsGCHeap += thingSize;
         break;
 
-      case JSTRACE_BASE_SHAPE: {
+      case JS::TraceKind::BaseShape: {
         BaseShape* base = static_cast<BaseShape*>(thing);
         CompartmentStats* cStats = GetCompartmentStats(base->compartment());
 
@@ -519,20 +519,20 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JSGCTraceKind traceKin
         break;
       }
 
-      case JSTRACE_JITCODE: {
+      case JS::TraceKind::JitCode: {
         zStats->jitCodesGCHeap += thingSize;
         // The code for a script is counted in ExecutableAllocator::sizeOfCode().
         break;
       }
 
-      case JSTRACE_LAZY_SCRIPT: {
+      case JS::TraceKind::LazyScript: {
         LazyScript* lazy = static_cast<LazyScript*>(thing);
         zStats->lazyScriptsGCHeap += thingSize;
         zStats->lazyScriptsMallocHeap += lazy->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         break;
       }
 
-      case JSTRACE_SHAPE: {
+      case JS::TraceKind::Shape: {
         Shape* shape = static_cast<Shape*>(thing);
         CompartmentStats* cStats = GetCompartmentStats(shape->compartment());
         JS::ClassInfo info;        // This zeroes all the sizes.
@@ -550,7 +550,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JSGCTraceKind traceKin
         break;
       }
 
-      case JSTRACE_OBJECT_GROUP: {
+      case JS::TraceKind::ObjectGroup: {
         ObjectGroup* group = static_cast<ObjectGroup*>(thing);
         zStats->objectGroupsGCHeap += thingSize;
         zStats->objectGroupsMallocHeap += group->sizeOfExcludingThis(rtStats->mallocSizeOf_);

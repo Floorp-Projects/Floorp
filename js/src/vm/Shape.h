@@ -426,6 +426,7 @@ class BaseShape : public gc::TenuredCell
     void setSlotSpan(uint32_t slotSpan) { MOZ_ASSERT(isOwned()); slotSpan_ = slotSpan; }
 
     JSCompartment* compartment() const { return compartment_; }
+    JSCompartment* maybeCompartment() const { return compartment(); }
 
     /*
      * Lookup base shapes from the compartment's baseShapes table, adding if
@@ -655,6 +656,7 @@ class Shape : public gc::TenuredCell
 
     const HeapPtrShape& previous() const { return parent; }
     JSCompartment* compartment() const { return base()->compartment(); }
+    JSCompartment* maybeCompartment() const { return compartment(); }
 
     template <AllowGC allowGC>
     class Range {

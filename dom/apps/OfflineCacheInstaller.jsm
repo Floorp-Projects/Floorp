@@ -91,16 +91,12 @@ function storeCache(applicationCache, url, file, itemType, metadata) {
 
 function readFile(aFile, aPrincipal, aCallback) {
 
-  let channel = NetUtil.newChannel2(aFile,
-                                    null,
-                                    null,
-                                    null,      // aLoadingNode
-                                    aPrincipal,
-                                    null,      // aTriggeringPrincipal
-                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                    Ci.nsIContentPolicy.TYPE_OTHER);
+  let channel = NetUtil.newChannel({
+    uri: NetUtil.newURI(aFile),
+    loadingPrincipal: aPrincipal,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER});
   channel.contentType = "plain/text";
-  NetUtil.asyncFetch2(channel, function(aStream, aResult) {
+  NetUtil.asyncFetch(channel, function(aStream, aResult) {
     if (!Components.isSuccessCode(aResult)) {
       Cu.reportError("OfflineCacheInstaller: Could not read file " + aFile.path);
       if (aCallback)

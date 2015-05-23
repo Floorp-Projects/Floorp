@@ -32,7 +32,7 @@ function test() {
   // Put a multi-line string in the clipboard.
   // Setting the clipboard value is an async OS operation, so we need to poll
   // the clipboard for valid data before going on.
-  waitForClipboard(kTestString, function() { cbHelper.copyString(kTestString, document); },
+  waitForClipboard(kTestString, function() { cbHelper.copyString(kTestString); },
                    next_test, finish);
 }
 
