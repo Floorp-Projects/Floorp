@@ -140,11 +140,10 @@ this.BrowserTestUtils = {
    */
   browserLoaded(browser, includeSubFrames=false) {
     return new Promise(resolve => {
-      browser.messageManager.addMessageListener("browser-test-utils:loadEvent",
-                                                 function onLoad(msg) {
-        if (!msg.data.subframe || includeSubFrames) {
-          browser.messageManager.removeMessageListener(
-            "browser-test-utils:loadEvent", onLoad);
+      let mm = browser.ownerDocument.defaultView.messageManager;
+      mm.addMessageListener("browser-test-utils:loadEvent", function onLoad(msg) {
+        if (msg.target == browser && (!msg.data.subframe || includeSubFrames)) {
+          mm.removeMessageListener("browser-test-utils:loadEvent", onLoad);
           resolve();
         }
       });
