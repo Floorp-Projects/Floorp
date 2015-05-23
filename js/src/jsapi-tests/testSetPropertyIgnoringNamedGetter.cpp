@@ -46,7 +46,7 @@ class CustomProxyHandler : public DirectProxyHandler {
                 return false;
             if (match) {
                 desc.object().set(proxy);
-                desc.attributesRef() = JSPROP_READONLY | JSPROP_ENUMERATE;
+                desc.attributesRef() = JSPROP_ENUMERATE;
                 desc.value().setInt32(42);
                 return true;
             }

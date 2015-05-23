@@ -1567,12 +1567,6 @@ SpecialPowersAPI.prototype = {
       deleteCategoryEntry(category, entry, persists);
   },
 
-  copyString: function(str, doc) {
-    Components.classes["@mozilla.org/widget/clipboardhelper;1"].
-      getService(Components.interfaces.nsIClipboardHelper).
-      copyString(str, doc);
-  },
-
   openDialog: function(win, args) {
     return win.openDialog.apply(win, args);
   },
@@ -1651,10 +1645,10 @@ SpecialPowersAPI.prototype = {
     return data.QueryInterface(Components.interfaces.nsISupportsString).data;
   },
 
-  clipboardCopyString: function(preExpectedVal, doc) {
-    var cbHelperSvc = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
-                      getService(Components.interfaces.nsIClipboardHelper);
-    cbHelperSvc.copyString(preExpectedVal, doc);
+  clipboardCopyString: function(str) {
+    Cc["@mozilla.org/widget/clipboardhelper;1"].
+      getService(Ci.nsIClipboardHelper).
+      copyString(str);
   },
 
   supportsSelectionClipboard: function() {

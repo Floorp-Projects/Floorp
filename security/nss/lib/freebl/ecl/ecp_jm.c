@@ -16,7 +16,7 @@
  * output that is still field-encoded.
  *
  */
-mp_err
+static mp_err
 ec_GFp_pt_dbl_jm(const mp_int *px, const mp_int *py, const mp_int *pz,
 				 const mp_int *paz4, mp_int *rx, mp_int *ry, mp_int *rz,
 				 mp_int *raz4, mp_int scratch[], const ECGroup *group)
@@ -86,7 +86,7 @@ ec_GFp_pt_dbl_jm(const mp_int *px, const mp_int *py, const mp_int *pz,
  * Uses mixed Modified_Jacobian-affine coordinates. Assumes input is
  * already field-encoded using field_enc, and returns output that is still
  * field-encoded. */
-mp_err
+static mp_err
 ec_GFp_pt_add_jm_aff(const mp_int *px, const mp_int *py, const mp_int *pz,
 					 const mp_int *paz4, const mp_int *qx,
 					 const mp_int *qy, mp_int *rx, mp_int *ry, mp_int *rz,

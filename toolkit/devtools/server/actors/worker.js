@@ -27,6 +27,7 @@ function matchWorkerDebugger(dbg, options) {
 
 function WorkerActor(dbg) {
   this._dbg = dbg;
+  this._isAttached = false;
 }
 
 WorkerActor.prototype = {
@@ -37,7 +38,59 @@ WorkerActor.prototype = {
       actor: this.actorID,
       url: this._dbg.url
     };
+  },
+
+  onAttach: function () {
+    if (this._dbg.isClosed) {
+      return { error: "closed" };
+    }
+
+    if (!this._isAttached) {
+      this._dbg.addListener(this);
+      this._isAttached = true;
+    }
+
+    return {
+      type: "attached",
+      isFrozen: this._dbg.isFrozen
+    };
+  },
+
+  onDetach: function () {
+    if (!this._isAttached) {
+      return { error: "wrongState" };
+    }
+
+    this._detach();
+
+    return { type: "detached" };
+  },
+
+  onClose: function () {
+    if (this._isAttached) {
+      this._detach();
+    }
+
+    this.conn.sendActorEvent(this.actorID, "close");
+  },
+
+  onFreeze: function () {
+    this.conn.sendActorEvent(this.actorID, "freeze");
+  },
+
+  onThaw: function () {
+    this.conn.sendActorEvent(this.actorID, "thaw");
+  },
+
+  _detach: function () {
+    this._dbg.removeListener(this);
+    this._isAttached = false;
   }
+};
+
+WorkerActor.prototype.requestTypes = {
+  "attach": WorkerActor.prototype.onAttach,
+  "detach": WorkerActor.prototype.onDetach
 };
 
 exports.WorkerActor = WorkerActor;

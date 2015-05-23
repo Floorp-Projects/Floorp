@@ -12,22 +12,8 @@ function run_test() {
   var spec2 = "http://bar.com/bar.html";
   var uri1 = NetUtil.newURI(spec1);
   var uri2 = NetUtil.newURI(spec2);
-  var channel1 = NetUtil.newChannel2(uri1,
-                                     null,
-                                     null,
-                                     null,      // aLoadingNode
-                                     Services.scriptSecurityManager.getSystemPrincipal(),
-                                     null,      // aTriggeringPrincipal
-                                     Ci.nsILoadInfo.SEC_NORMAL,
-                                     Ci.nsIContentPolicy.TYPE_OTHER);
-  var channel2 = NetUtil.newChannel2(uri2,
-                                     null,
-                                     null,
-                                     null,      // aLoadingNode
-                                     Services.scriptSecurityManager.getSystemPrincipal(),
-                                     null,      // aTriggeringPrincipal
-                                     Ci.nsILoadInfo.SEC_NORMAL,
-                                     Ci.nsIContentPolicy.TYPE_OTHER);
+  var channel1 = NetUtil.newChannel({uri: uri1, loadUsingSystemPrincipal: true});
+  var channel2 = NetUtil.newChannel({uri: uri2, loadUsingSystemPrincipal: true});
 
   // test with cookies enabled
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);

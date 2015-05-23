@@ -552,14 +552,14 @@ class BufferGrayRootsTracer : public JS::CallbackTracer
     // Set to false if we OOM while buffering gray roots.
     bool bufferingGrayRootsFailed;
 
-    void appendGrayRoot(gc::TenuredCell* thing, JSGCTraceKind kind);
+    void appendGrayRoot(gc::TenuredCell* thing, JS::TraceKind kind);
 
   public:
     explicit BufferGrayRootsTracer(JSRuntime* rt)
       : JS::CallbackTracer(rt, grayTraceCallback), bufferingGrayRootsFailed(false)
     {}
 
-    static void grayTraceCallback(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind) {
+    static void grayTraceCallback(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind) {
         auto tracer = static_cast<BufferGrayRootsTracer*>(trc);
         tracer->appendGrayRoot(gc::TenuredCell::fromPointer(*thingp), kind);
     }
@@ -591,14 +591,11 @@ js::gc::GCRuntime::bufferGrayRoots()
 }
 
 struct SetMaybeAliveFunctor {
-    template <typename T>
-    void operator()(Cell* cell) {
-        SetMaybeAliveFlag<T>(static_cast<T*>(cell));
-    }
+    template <typename T> void operator()(T* t) { SetMaybeAliveFlag(t); }
 };
 
 void
-BufferGrayRootsTracer::appendGrayRoot(TenuredCell* thing, JSGCTraceKind kind)
+BufferGrayRootsTracer::appendGrayRoot(TenuredCell* thing, JS::TraceKind kind)
 {
     MOZ_ASSERT(runtime()->isHeapBusy());
 
@@ -611,7 +608,7 @@ BufferGrayRootsTracer::appendGrayRoot(TenuredCell* thing, JSGCTraceKind kind)
         // objects and scripts. We rely on gray root buffering for this to work,
         // but we only need to worry about uncollected dead compartments during
         // incremental GCs (when we do gray root buffering).
-        CallTyped(SetMaybeAliveFunctor(), kind, thing);
+        CallTyped(SetMaybeAliveFunctor(), thing, kind);
 
         if (!zone->gcGrayRoots.append(thing))
             bufferingGrayRootsFailed = true;

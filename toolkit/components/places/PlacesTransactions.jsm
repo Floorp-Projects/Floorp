@@ -199,10 +199,12 @@ TransactionsHistory.__proto__ = {
   get undoPosition() this._undoPosition,
 
   // Handy shortcuts
-  get topUndoEntry() this.undoPosition < this.length ?
-                     this[this.undoPosition] : null,
-  get topRedoEntry() this.undoPosition > 0 ?
-                     this[this.undoPosition - 1] : null,
+  get topUndoEntry() {
+    return this.undoPosition < this.length ? this[this.undoPosition] : null;
+  },
+  get topRedoEntry() {
+    return this.undoPosition > 0 ? this[this.undoPosition - 1] : null;
+  },
 
   // Outside of this module, the API of transactions is inaccessible, and so
   // are any internal properties.  To achieve that, transactions are proxified
@@ -219,7 +221,9 @@ TransactionsHistory.__proto__ = {
    */
   proxifyTransaction: function (aRawTransaction) {
     let proxy = Object.freeze({
-      transact() TransactionsManager.transact(this)
+      transact() {
+        return TransactionsManager.transact(this);
+      }
     });
     this.proxifiedToRaw.set(proxy, aRawTransaction);
     return proxy;
@@ -232,8 +236,9 @@ TransactionsHistory.__proto__ = {
    * @return true if aValue is the proxy object for some transaction, false
    * otherwise.
    */
-  isProxifiedTransactionObject:
-  function (aValue) this.proxifiedToRaw.has(aValue),
+  isProxifiedTransactionObject(aValue) {
+    return this.proxifiedToRaw.has(aValue);
+  },
 
   /**
    * Get the raw transaction for the given proxy.
@@ -242,7 +247,9 @@ TransactionsHistory.__proto__ = {
    * @return the transaction proxified by aProxy; |undefined| is returned if
    * aProxy is not a proxified transaction.
    */
-  getRawTransaction(aProxy) this.proxifiedToRaw.get(aProxy),
+  getRawTransaction(aProxy) {
+    return this.proxifiedToRaw.get(aProxy);
+  },
 
   /**
    * Add a transaction either as a new entry, if forced or if there are no undo
@@ -340,7 +347,9 @@ let PlacesTransactions = {
    * @note All undo manager operations are queued. This means that transactions
    * history may change by the time your request is fulfilled.
    */
-  undo() TransactionsManager.undo(),
+  undo() {
+    return TransactionsManager.undo();
+  },
 
   /**
    * Asynchronously redo the transaction immediately before the current undo
@@ -351,7 +360,9 @@ let PlacesTransactions = {
    * @note All undo manager operations are queued. This means that transactions
    * history may change by the time your request is fulfilled.
    */
-  redo() TransactionsManager.redo(),
+  redo() {
+    return TransactionsManager.redo();
+  },
 
   /**
    * Asynchronously clear the undo, redo, or all entries from the transactions
@@ -367,13 +378,16 @@ let PlacesTransactions = {
    * @note All undo manager operations are queued. This means that transactions
    * history may change by the time your request is fulfilled.
    */
-  clearTransactionsHistory(aUndoEntries = true, aRedoEntries = true)
-    TransactionsManager.clearTransactionsHistory(aUndoEntries, aRedoEntries),
+  clearTransactionsHistory(aUndoEntries = true, aRedoEntries = true) {
+    return TransactionsManager.clearTransactionsHistory(aUndoEntries, aRedoEntries);
+  },
 
   /**
    * The numbers of entries in the transactions history.
    */
-  get length() TransactionsHistory.length,
+  get length() {
+    return TransactionsHistory.length;
+  },
 
   /**
    * Get the transaction history entry at a given index.  Each entry consists
@@ -400,17 +414,23 @@ let PlacesTransactions = {
    * Entries past this point
    * Entries at and past this point are redo entries.
    */
-  get undoPosition() TransactionsHistory.undoPosition,
+  get undoPosition() {
+    return TransactionsHistory.undoPosition;
+  },
 
   /**
    * Shortcut for accessing the top undo entry in the transaction history.
    */
-  get topUndoEntry() TransactionsHistory.topUndoEntry,
+  get topUndoEntry() {
+    return TransactionsHistory.topUndoEntry;
+  },
 
   /**
    * Shortcut for accessing the top redo entry in the transaction history.
    */
-  get topRedoEntry() TransactionsHistory.topRedoEntry
+  get topRedoEntry() {
+    return TransactionsHistory.topRedoEntry;
+  }
 };
 
 /**
@@ -461,7 +481,9 @@ Enqueuer.prototype = {
   /**
    * The promise for this queue.
    */
-  get promise() this._promise
+  get promise() {
+    return this._promise;
+  }
 };
 
 let TransactionsManager = {

@@ -276,6 +276,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor)
   if (node->IsElement()) {
     ErrorResult rv;
     mDocChangeRange->SelectNode(*node, rv);
+    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
     AdjustSpecialBreaks();
   }
 
@@ -2403,7 +2404,9 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
           // Build a list of nodes in the range
           nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
           nsTrivialFunctor functor;
-          nsDOMSubtreeIterator iter(*range);
+          nsDOMSubtreeIterator iter;
+          nsresult res = iter.Init(*range);
+          NS_ENSURE_SUCCESS(res, res);
           iter.AppendList(functor, arrayOfNodes);
 
           // Now that we have the list, delete non-table elements
@@ -5783,7 +5786,9 @@ nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRange
   }
   // Gather up a list of all the nodes
   for (auto& range : aArrayOfRanges) {
-    nsDOMSubtreeIterator iter(*range);
+    nsDOMSubtreeIterator iter;
+    nsresult res = iter.Init(*range);
+    NS_ENSURE_SUCCESS(res, res);
     if (aOutArrayOfNodes.Length() == 0) {
       iter.AppendList(nsTrivialFunctor(), aOutArrayOfNodes);
     } else {
@@ -7291,7 +7296,9 @@ nsHTMLEditRules::AdjustSpecialBreaks()
   // Gather list of empty nodes
   nsTArray<OwningNonNull<nsINode>> nodeArray;
   nsEmptyEditableFunctor functor(mHTMLEditor);
-  nsDOMIterator iter(*mDocChangeRange);
+  nsDOMIterator iter;
+  nsresult res = iter.Init(*mDocChangeRange);
+  NS_ENSURE_SUCCESS(res, );
   iter.AppendList(functor, nodeArray);
 
   // Put moz-br's into these empty li's and td's

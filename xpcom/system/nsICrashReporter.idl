@@ -14,7 +14,7 @@ interface nsIURL;
  *                    future releases.
  */
 
-[scriptable, uuid(ee431adc-21dd-42d9-968b-e19b4c62960a)]
+[scriptable, uuid(4b74c39a-cf69-4a8a-8e63-169d81ad1ecf)]
 interface nsICrashReporter : nsISupports
 {
   /**
@@ -61,7 +61,7 @@ interface nsICrashReporter : nsISupports
    *                             Invalid characters for key are '=' and
    *                             '\n'.  Invalid character for data is '\0'.
    */
-  void annotateCrashReport(in ACString key, in ACString data);
+  void annotateCrashReport(in AUTF8String key, in AUTF8String data);
 
   /**
    * Append some data to the "Notes" field, to be submitted with a crash report.

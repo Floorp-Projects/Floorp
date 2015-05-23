@@ -362,7 +362,7 @@ HTMLTextAreaElement::SetValueChanged(bool aValueChanged)
 NS_IMETHODIMP
 HTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue)
 {
-  if (!nsContentUtils::GetNodeTextContent(this, false, aDefaultValue)) {
+  if (!nsContentUtils::GetNodeTextContent(this, false, aDefaultValue, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;

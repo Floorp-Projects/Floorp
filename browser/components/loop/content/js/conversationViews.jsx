@@ -163,7 +163,7 @@ loop.conversationViews = (function(mozL10n) {
 
     clickHandler: function(e) {
       var target = e.target;
-      if (!target.classList.contains('btn-chevron')) {
+      if (!target.classList.contains("btn-chevron")) {
         this._hideDeclineMenu();
       }
     },

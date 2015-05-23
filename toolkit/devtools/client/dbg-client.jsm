@@ -51,6 +51,7 @@ Object.defineProperty(this, "WebConsoleClient", {
 });
 
 Components.utils.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
+this.executeSoon = DevToolsUtils.executeSoon;
 this.makeInfallible = DevToolsUtils.makeInfallible;
 this.values = DevToolsUtils.values;
 
@@ -502,6 +503,29 @@ DebuggerClient.prototype = {
         this.registerClient(tabClient);
       }
       aOnResponse(aResponse, tabClient);
+    });
+  },
+
+  attachWorker: function DC_attachWorker(aWorkerActor, aOnResponse = noop) {
+    let workerClient = this._clients.get(aWorkerActor);
+    if (workerClient !== undefined) {
+      executeSoon(() => aOnResponse({
+        from: workerClient.actor,
+        type: "attached",
+        isFrozen: workerClient.isFrozen
+      }, workerClient));
+      return;
+    }
+
+    this.request({ to: aWorkerActor, type: "attach" }, (aResponse) => {
+      if (aResponse.error) {
+        aOnResponse(aResponse, null);
+        return;
+      }
+
+      let workerClient = new WorkerClient(this, aResponse);
+      this.registerClient(workerClient);
+      aOnResponse(aResponse, workerClient);
     });
   },
 
@@ -1326,10 +1350,81 @@ TabClient.prototype = {
     type: "listWorkers"
   }, {
     telemetry: "LISTWORKERS"
-  })
+  }),
+
+  attachWorker: function (aWorkerActor, aOnResponse) {
+    this.client.attachWorker(aWorkerActor, aOnResponse);
+  }
 };
 
 eventSource(TabClient.prototype);
+
+function WorkerClient(aClient, aForm) {
+  this._client = aClient;
+  this._actor = aForm.from;
+  this._isClosed = false;
+  this._isFrozen = aForm.isFrozen;
+
+  this._onClose = this._onClose.bind(this);
+  this._onFreeze = this._onFreeze.bind(this);
+  this._onThaw = this._onThaw.bind(this);
+
+  this.addListener("close", this._onClose);
+  this.addListener("freeze", this._onFreeze);
+  this.addListener("thaw", this._onThaw);
+}
+
+WorkerClient.prototype = {
+  get _transport() {
+    return this._client._transport;
+  },
+
+  get request() {
+    return this._client.request;
+  },
+
+  get actor() {
+    return this._actor;
+  },
+
+  get isClosed() {
+    return this._isClosed;
+  },
+
+  get isFrozen() {
+    return this._isFrozen;
+  },
+
+  detach: DebuggerClient.requester({ type: "detach" }, {
+    after: function (aResponse) {
+      this._client.unregisterClient(this);
+      return aResponse;
+    },
+
+    telemetry: "WORKERDETACH"
+  }),
+
+  _onClose: function () {
+    this.removeListener("close", this._onClose);
+    this.removeListener("freeze", this._onFreeze);
+    this.removeListener("thaw", this._onThaw);
+
+    this._client.unregisterClient(this);
+    this._closed = true;
+  },
+
+  _onFreeze: function () {
+    this._isFrozen = true;
+  },
+
+  _onThaw: function () {
+    this._isFrozen = false;
+  },
+
+  events: ["close", "freeze", "thaw"]
+};
+
+eventSource(WorkerClient.prototype);
 
 function AddonClient(aClient, aActor) {
   this._client = aClient;

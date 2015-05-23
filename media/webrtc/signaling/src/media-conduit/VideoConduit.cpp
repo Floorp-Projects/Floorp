@@ -163,7 +163,31 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
 
 bool WebrtcVideoConduit::SetLocalSSRC(unsigned int ssrc)
 {
-  return !mPtrRTP->SetLocalSSRC(mChannel, ssrc);
+  unsigned int oldSsrc;
+  if (!GetLocalSSRC(&oldSsrc)) {
+    MOZ_ASSERT(false, "GetLocalSSRC failed");
+    return false;
+  }
+
+  if (oldSsrc == ssrc) {
+    return true;
+  }
+
+  bool wasTransmitting = mEngineTransmitting;
+  if (StopTransmitting() != kMediaConduitNoError) {
+    return false;
+  }
+
+  if (mPtrRTP->SetLocalSSRC(mChannel, ssrc)) {
+    return false;
+  }
+
+  if (wasTransmitting) {
+    if (StartTransmitting() != kMediaConduitNoError) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool WebrtcVideoConduit::GetLocalSSRC(unsigned int* ssrc)
@@ -278,7 +302,7 @@ WebrtcVideoConduit::Init()
 {
   CSFLogDebug(logTag,  "%s this=%p", __FUNCTION__, this);
 
-#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_INTERNAL_API)
+#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
   // already know we must be on MainThread barring unit test weirdness
   MOZ_ASSERT(NS_IsMainThread());
 

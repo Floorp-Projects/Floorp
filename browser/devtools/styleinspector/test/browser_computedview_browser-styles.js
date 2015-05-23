@@ -45,7 +45,7 @@ add_task(function*() {
 function isPropertyVisible(name, view) {
   info("Checking property visibility for " + name);
   let propertyViews = view.propertyViews;
-  for each (let propView in propertyViews) {
+  for (let propView of propertyViews) {
     if (propView.name == name) {
       return propView.visible;
     }

@@ -42,8 +42,6 @@
 // TODO : [nice to have] - Immediately save, buffer the actions in a local queue and send (so it works offline, works like our native extensions)
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
@@ -624,12 +622,7 @@ var pktUI = (function() {
 	function openTabWithUrl(url) {
         let recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (!recentWindow) {
-          if (this.AppConstants.platform == "macosx") {
-            let hiddenWindow = Services.appShell.hiddenDOMWindow;
-            // If there are no open browser windows, open a new one.
-            hiddenWindow.openDialog("chrome://browser/content/", "_blank",
-                                    "chrome,all,dialog=no", url);
-          }
+          Cu.reportError("Pocket: No open browser windows to openTabWithUrl");
           return;
         }
 

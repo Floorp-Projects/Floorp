@@ -1348,7 +1348,7 @@ function getSignedStatus(aRv, aCert, aExpectedID) {
  * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
 function verifyZipSignedState(aFile, aAddon) {
-  if (!SIGNED_TYPES.has(aAddon.type))
+  if (!ADDON_SIGNING || !SIGNED_TYPES.has(aAddon.type))
     return Promise.resolve(undefined);
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
@@ -1378,7 +1378,7 @@ function verifyZipSignedState(aFile, aAddon) {
  * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
 function verifyDirSignedState(aDir, aAddon) {
-  if (!SIGNED_TYPES.has(aAddon.type))
+  if (!ADDON_SIGNING || !SIGNED_TYPES.has(aAddon.type))
     return Promise.resolve(undefined);
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
@@ -3202,7 +3202,8 @@ this.XPIProvider = {
 
         // If updating from a version of the app that didn't support signedState
         // then fetch that property now
-        if (aOldAddon.signedState === undefined && SIGNED_TYPES.has(aOldAddon.type)) {
+        if (aOldAddon.signedState === undefined && ADDON_SIGNING &&
+            SIGNED_TYPES.has(aOldAddon.type)) {
           let file = aInstallLocation.getLocationForID(aOldAddon.id);
           let manifest = syncLoadManifestFromFile(file);
           aOldAddon.signedState = manifest.signedState;
@@ -5571,14 +5572,9 @@ AddonInstall.prototype = {
       let requireBuiltIn = Preferences.get(PREF_INSTALL_REQUIREBUILTINCERTS, true);
       this.badCertHandler = new CertUtils.BadCertHandler(!requireBuiltIn);
 
-      this.channel = NetUtil.newChannel2(this.sourceURI,
-                                         null,
-                                         null,
-                                         null,      // aLoadingNode
-                                         Services.scriptSecurityManager.getSystemPrincipal(),
-                                         null,      // aTriggeringPrincipal
-                                         Ci.nsILoadInfo.SEC_NORMAL,
-                                         Ci.nsIContentPolicy.TYPE_OTHER);
+      this.channel = NetUtil.newChannel({
+        uri: this.sourceURI,
+        loadUsingSystemPrincipal: true});
       this.channel.notificationCallbacks = this;
       if (this.channel instanceof Ci.nsIHttpChannel) {
         this.channel.setRequestHeader("Moz-XPI-Update", "1", true);
@@ -7874,8 +7870,19 @@ WinRegInstallLocation.prototype = {
 };
 #endif
 
-// Make this a non-changable property so it can't be manipulated from other
+// Make these non-changable properties so they can't be manipulated from other
 // code in the app.
+Object.defineProperty(this, "ADDON_SIGNING", {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+#ifdef MOZ_ADDON_SIGNING
+  value: true,
+#else
+  value: false,
+#endif
+});
+
 Object.defineProperty(this, "REQUIRE_SIGNING", {
   configurable: false,
   enumerable: false,

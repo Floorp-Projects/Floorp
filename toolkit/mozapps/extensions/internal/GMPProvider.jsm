@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/GMPUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(
   this, "GMPInstallManager", "resource://gre/modules/GMPInstallManager.jsm");
@@ -480,12 +481,12 @@ GMPWrapper.prototype = {
     } else if (isLinux) {
       libName = id.substring(4) + ".so";
     } else {
-      this._info.error("_arePluginFilesOnDisk - unsupported platform.");
+      this._log.info("_arePluginFilesOnDisk - unsupported platform.");
       return false;
     }
 
     return fileExists(this.gmpPath, libName) &&
-           fileExists(this.gmpPath, id.substring(4) + ".info");
+           fileExists(this.gmpPath, id + ".info");
   },
 
   validate: function() {

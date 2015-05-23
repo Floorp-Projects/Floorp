@@ -731,6 +731,16 @@ ShadowLayerForwarder::IsSameProcess() const
   return mShadowManager->OtherPid() == base::GetCurrentProcId();
 }
 
+base::ProcessId
+ShadowLayerForwarder::ParentPid() const
+{
+  if (!HasShadowManager() || !mShadowManager->IPCOpen()) {
+    return base::ProcessId();
+  }
+
+  return mShadowManager->OtherPid();
+}
+
 /**
   * We bail out when we have no shadow manager. That can happen when the
   * layer manager is created by the preallocated process.

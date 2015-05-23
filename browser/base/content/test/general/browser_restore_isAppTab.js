@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
+
 const DUMMY = "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
 
 function getMinidumpDirectory() {
@@ -86,7 +88,7 @@ let restart = Task.async(function*(browser) {
     return browser;
 
   // Make sure the main process has all of the current tab state before crashing
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   browser.messageManager.sendAsyncMessage("Test:Crash");
   yield promiseWaitForEvent(browser, "AboutTabCrashedLoad", false, true);

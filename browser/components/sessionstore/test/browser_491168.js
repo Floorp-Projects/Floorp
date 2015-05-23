@@ -14,7 +14,7 @@ add_task(function* () {
   browser.loadURI("http://example.org", referrerURI, null);
   yield promiseBrowserLoaded(browser);
 
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
   let tabState = JSON.parse(ss.getTabState(tab));
   is(tabState.entries[0].referrer,  REFERRER1,
      "Referrer retrieved via getTabState matches referrer set via loadURI.");

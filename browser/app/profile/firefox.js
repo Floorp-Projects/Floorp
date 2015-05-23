@@ -1704,6 +1704,7 @@ pref("shumway.swf.whitelist", "http://g-ecx.images-amazon.com/*/AiryBasicRendere
 pref("image.mem.max_decoded_image_kb", 256000);
 
 pref("loop.enabled", true);
+pref("loop.textChat.enabled", false);
 pref("loop.server", "https://loop.services.mozilla.com/v0");
 pref("loop.seenToS", "unseen");
 pref("loop.showPartnerLogo", true);
@@ -1779,19 +1780,11 @@ pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MO
 #endif
 
 #ifdef XP_MACOSX
-#ifdef RELEASE_BUILD
 pref("geo.provider.use_corelocation", false);
-#else
-pref("geo.provider.use_corelocation", true);
-#endif
 #endif
 
 #ifdef XP_WIN
-#ifdef RELEASE_BUILD
 pref("geo.provider.ms-windows-location", false);
-#else
-pref("geo.provider.ms-windows-location", true);
-#endif
 #endif
 
 // Necko IPC security checks only needed for app isolation for cookies/cache/etc:

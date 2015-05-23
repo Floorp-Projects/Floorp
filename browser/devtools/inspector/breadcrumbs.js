@@ -58,7 +58,9 @@ function HTMLBreadcrumbs(inspector) {
 exports.HTMLBreadcrumbs = HTMLBreadcrumbs;
 
 HTMLBreadcrumbs.prototype = {
-  get walker() this.inspector.walker,
+  get walker() {
+    return this.inspector.walker;
+  },
 
   _init: function() {
     this.container = this.chromeDoc.getElementById("inspector-breadcrumbs");

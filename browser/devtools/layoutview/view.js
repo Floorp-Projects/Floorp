@@ -462,7 +462,7 @@ LayoutView.prototype = {
         this.sizeLabel.textContent = newValue;
       }
 
-      this.elementRules = [e.rule for (e of styleEntries)];
+      this.elementRules = styleEntries.map(e => e.rule);
 
       this.inspector.emit("layoutview-updated");
     }).bind(this)).then(null, console.error);

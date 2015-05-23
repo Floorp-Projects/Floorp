@@ -25,7 +25,8 @@ function test() {
       tabState.entries.push({ url: baseURL + i });
 
     promiseTabState(tab, tabState).then(() => {
-      TabState.flush(tab.linkedBrowser);
+      return TabStateFlusher.flush(tab.linkedBrowser);
+    }).then(() => {
       tabState = JSON.parse(ss.getTabState(tab));
       is(tabState.entries.length, max_entries, "session history filled to the limit");
       is(tabState.entries[0].url, baseURL + 0, "... but not more");
@@ -33,15 +34,18 @@ function test() {
       // visit yet another anchor (appending it to session history)
       runInContent(tab.linkedBrowser, function(win) {
         win.document.querySelector("a").click();
-      }, null).then(check);
+      }, null).then(flushAndCheck);
+
+      function flushAndCheck() {
+        TabStateFlusher.flush(tab.linkedBrowser).then(check);
+      }
 
       function check() {
-        TabState.flush(tab.linkedBrowser);
         tabState = JSON.parse(ss.getTabState(tab));
         if (tab.linkedBrowser.currentURI.spec != baseURL + "end") {
           // It may take a few passes through the event loop before we
           // get the right URL.
-          executeSoon(check);
+          executeSoon(flushAndCheck);
           return;
         }
 

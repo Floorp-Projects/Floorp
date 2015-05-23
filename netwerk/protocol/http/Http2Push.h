@@ -6,6 +6,9 @@
 #ifndef mozilla_net_Http2Push_Internal_h
 #define mozilla_net_Http2Push_Internal_h
 
+// HTTP/2 - RFC 7540
+// https://www.rfc-editor.org/rfc/rfc7540.txt
+
 #include "Http2Session.h"
 #include "Http2Stream.h"
 

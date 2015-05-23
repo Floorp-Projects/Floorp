@@ -361,7 +361,7 @@ function testAttachCaretFail() {
 function testPaste() {
   let sh = getSelectionHandler();
   let clipboard = getClipboard();
-  clipboard.copyString(PASTE_TEXT, document);
+  clipboard.copyString(PASTE_TEXT);
 
   // Add a contentEditable element to the document.
   let div = document.createElement("div");

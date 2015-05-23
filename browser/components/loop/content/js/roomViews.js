@@ -665,6 +665,7 @@ loop.roomViews = (function(mozL10n) {
         default: {
           return (
             React.createElement("div", {className: "room-conversation-wrapper"}, 
+              React.createElement(sharedViews.TextChatView, {dispatcher: this.props.dispatcher}), 
               React.createElement(DesktopRoomInvitationView, {
                 dispatcher: this.props.dispatcher, 
                 error: this.state.error, 

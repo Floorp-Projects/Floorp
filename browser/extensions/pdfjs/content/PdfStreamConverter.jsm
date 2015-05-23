@@ -157,18 +157,15 @@ function makeContentReadable(obj, window) {
 }
 
 function createNewChannel(uri, node, principal) {
-  return NetUtil.newChannel2(uri,
-                             null,
-                             null,
-                             node, // aLoadingNode
-                             principal, // aLoadingPrincipal
-                             null, // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({
+    uri: uri,
+    loadingNode: node,
+    loadingPrincipal: principal,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER});
 }
 
 function asyncFetchChannel(channel, callback) {
-  return NetUtil.asyncFetch2(channel, callback);
+  return NetUtil.asyncFetch(channel, callback);
 }
 
 // PDF data storage

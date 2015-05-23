@@ -1976,26 +1976,43 @@ js::SetPropertyByDefining(JSContext* cx, HandleObject obj, HandleId id, HandleVa
         return result.fail(JSMSG_SET_NON_OBJECT_RECEIVER);
     RootedObject receiver(cx, &receiverValue.toObject());
 
-    // Step 5.c-d: Test whether receiver has an existing own property
-    // receiver[id]. The spec calls [[GetOwnProperty]]; js::HasOwnProperty is
-    // the same thing except faster in the non-proxy case. Sometimes we can
-    // even optimize away the HasOwnProperty call.
     bool existing;
     if (receiver == obj) {
+        // Steps 5.c-e.ii.
         // The common case. The caller has necessarily done a property lookup
         // on obj and passed us the answer as objHasOwn.
+        // We also know that the property is a data property and writable
+        // if it exists.
 #ifdef DEBUG
         // Check that objHasOwn is correct. This could fail if receiver or a
         // native object on its prototype chain has a nondeterministic resolve
         // hook. We shouldn't have any that are quite that badly behaved.
-        if (!HasOwnProperty(cx, receiver, id, &existing))
+        Rooted<PropertyDescriptor> desc(cx);
+        if (!GetOwnPropertyDescriptor(cx, receiver, id, &desc))
             return false;
-        MOZ_ASSERT(existing == objHasOwn);
+        MOZ_ASSERT(!!desc.object() == objHasOwn);
+        MOZ_ASSERT_IF(desc.object(), desc.isDataDescriptor());
+        MOZ_ASSERT_IF(desc.object(), desc.writable());
 #endif
         existing = objHasOwn;
     } else {
-        if (!HasOwnProperty(cx, receiver, id, &existing))
+        // Steps 5.c-d.
+        Rooted<PropertyDescriptor> desc(cx);
+        if (!GetOwnPropertyDescriptor(cx, receiver, id, &desc))
             return false;
+
+        existing = !!desc.object();
+
+        // Step 5.e.
+        if (existing) {
+            // Step 5.e.i.
+            if (desc.isAccessorDescriptor())
+                return result.fail(JSMSG_OVERWRITING_ACCESSOR);
+
+            // Step 5.e.ii.
+            if (!desc.writable())
+                return result.fail(JSMSG_READ_ONLY);
+        }
     }
 
     // Invalidate SpiderMonkey-specific caches or bail.
@@ -2005,7 +2022,7 @@ js::SetPropertyByDefining(JSContext* cx, HandleObject obj, HandleId id, HandleVa
     if (!PurgeScopeChain(cx, receiver, id))
         return false;
 
-    // Step 5.e-f. Define the new data property.
+    // Steps 5.e.iii-iv. and 5.f.i. Define the new data property.
     unsigned attrs =
         existing
         ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT

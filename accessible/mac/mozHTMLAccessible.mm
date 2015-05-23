@@ -20,17 +20,19 @@
   mozilla::ErrorResult rv;
   // XXX use the flattening API when there are available
   // see bug 768298
-  mGeckoAccessible->GetContent()->GetTextContent(title, rv);
+  [self getGeckoAccessible]->GetContent()->GetTextContent(title, rv);
 
   return nsCocoaUtils::ToNSString(title);
 }
 
 - (id)value
 {
-  if (!mGeckoAccessible || !mGeckoAccessible->IsHyperText())
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+
+  if (!accWrap || !accWrap->IsHyperText())
     return nil;
 
-  uint32_t level = mGeckoAccessible->AsHyperText()->GetLevelInternal();
+  uint32_t level = accWrap->AsHyperText()->GetLevelInternal();
   return [NSNumber numberWithInt:level];
 }
 
@@ -45,7 +47,7 @@
 - (NSArray*)accessibilityAttributeNames
 {
   // if we're expired, we don't support any attributes.
-  if (!mGeckoAccessible)
+  if (![self getGeckoAccessible])
     return [NSArray array];
   
   static NSMutableArray* attributes = nil;
@@ -69,7 +71,7 @@
 - (NSArray*)accessibilityActionNames 
 {
     // if we're expired, we don't support any attributes.
-  if (!mGeckoAccessible)
+  if (![self getGeckoAccessible])
     return [NSArray array];
 
   static NSArray* actionNames = nil;
@@ -84,11 +86,13 @@
 
 - (void)accessibilityPerformAction:(NSString*)action 
 {
-  if (!mGeckoAccessible)
+  AccessibleWrap* accWrap = [self getGeckoAccessible];
+
+  if (!accWrap)
     return;
 
   if ([action isEqualToString:NSAccessibilityPressAction])
-    mGeckoAccessible->DoAction(0);
+    accWrap->DoAction(0);
   else
     [super accessibilityPerformAction:action];
 }
@@ -105,11 +109,11 @@
 
 - (NSURL*)url
 {
-  if (!mGeckoAccessible || mGeckoAccessible->IsDefunct())
+  if (![self getGeckoAccessible] || [self getGeckoAccessible]->IsDefunct())
     return nil;
 
   nsAutoString value;
-  mGeckoAccessible->Value(value);
+  [self getGeckoAccessible]->Value(value);
 
   NSString* urlString = value.IsEmpty() ? nil : nsCocoaUtils::ToNSString(value);
   if (!urlString)

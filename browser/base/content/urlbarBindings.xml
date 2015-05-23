@@ -596,7 +596,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
             Cc["@mozilla.org/widget/clipboardhelper;1"]
               .getService(Ci.nsIClipboardHelper)
-              .copyString(val, document);
+              .copyString(val);
           },
           supportsCommand: function(aCommand) {
             switch (aCommand) {
@@ -969,7 +969,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
         Cc["@mozilla.org/widget/clipboardhelper;1"]
           .getService(Ci.nsIClipboardHelper)
-          .copyStringToClipboard(val, Ci.nsIClipboard.kSelectionClipboard, document);
+          .copyStringToClipboard(val, Ci.nsIClipboard.kSelectionClipboard);
       ]]></handler>
     </handlers>
 

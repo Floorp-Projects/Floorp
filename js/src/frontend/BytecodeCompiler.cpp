@@ -283,11 +283,8 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
         return nullptr;
 
     bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
-    bool allowSuperProperty = savedCallerFun &&
-                              evalCaller->functionOrCallerFunction()->allowSuperProperty();
-
     Directives directives(options.strictOption);
-    GlobalSharedContext globalsc(cx, directives, options.extraWarningsOption, allowSuperProperty);
+    GlobalSharedContext globalsc(cx, directives, evalStaticScope, options.extraWarningsOption);
 
     Rooted<JSScript*> script(cx, JSScript::Create(cx, evalStaticScope, savedCallerFun,
                                                   options, staticLevel, sourceObject, 0,
@@ -301,7 +298,7 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
         options.selfHostingMode ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, &globalsc, script,
                         /* lazyScript = */ nullptr, options.forEval,
-                        evalCaller, evalStaticScope, insideNonGlobalEval,
+                        evalCaller, insideNonGlobalEval,
                         options.lineno, emitterMode);
     if (!bce.init())
         return nullptr;
@@ -524,7 +521,6 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     MOZ_ASSERT(!options.forEval);
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->pn_funbox, script, lazy,
                         /* insideEval = */ false, /* evalCaller = */ nullptr,
-                        /* evalStaticScope = */ nullptr,
                         /* insideNonGlobalEval = */ false, options.lineno,
                         BytecodeEmitter::LazyFunction);
     if (!bce.init())
@@ -652,7 +648,6 @@ CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyComp
         BytecodeEmitter funbce(/* parent = */ nullptr, &parser, fn->pn_funbox, script,
                                /* lazyScript = */ nullptr, /* insideEval = */ false,
                                /* evalCaller = */ nullptr,
-                               /* evalStaticScope = */ nullptr,
                                /* insideNonGlobalEval = */ false, options.lineno);
         if (!funbce.init())
             return false;
