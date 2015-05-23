@@ -238,7 +238,7 @@ var tests = {
         ensureEventFired(btn.panel, "popupshown").then(() => {
           info("marks panel is open");
           ensureFrameLoaded(btn.content).then(() => {
-            is(btn.contentDocument.location.href.indexOf("about:socialerror?"), 0, "social error page is showing");
+            is(btn.contentDocument.documentURI.indexOf("about:socialerror?mode=tryAgainOnly"), 0, "social error page is showing "+btn.contentDocument.documentURI);
             // cleanup after the page has been unmarked
             ensureBrowserTabClosed(tab).then(() => {
               ok(btn.disabled, "button is disabled");

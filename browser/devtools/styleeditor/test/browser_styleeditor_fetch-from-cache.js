@@ -8,7 +8,7 @@
 
 const TEST_URL = TEST_BASE_HTTP + "doc_uncached.html";
 
-add_task(function() {
+add_task(function*() {
   let isTesting = gDevTools.testing;
   gDevTools.testing = true;
 

@@ -312,7 +312,7 @@ describe("loop.roomViews", function () {
 
         view.setState({audioMuted: true});
 
-        var muteBtn = view.getDOMNode().querySelector('.btn-mute-audio');
+        var muteBtn = view.getDOMNode().querySelector(".btn-mute-audio");
 
         React.addons.TestUtils.Simulate.click(muteBtn);
 
@@ -330,7 +330,7 @@ describe("loop.roomViews", function () {
 
         view.setState({videoMuted: false});
 
-        var muteBtn = view.getDOMNode().querySelector('.btn-mute-video');
+        var muteBtn = view.getDOMNode().querySelector(".btn-mute-video");
 
         React.addons.TestUtils.Simulate.click(muteBtn);
 
@@ -347,7 +347,7 @@ describe("loop.roomViews", function () {
 
       view.setState({videoMuted: false});
 
-      var muteBtn = view.getDOMNode().querySelector('.btn-mute-video');
+      var muteBtn = view.getDOMNode().querySelector(".btn-mute-video");
 
       expect(muteBtn.classList.contains("muted")).eql(false);
     });
@@ -357,7 +357,7 @@ describe("loop.roomViews", function () {
 
       view.setState({audioMuted: true});
 
-      var muteBtn = view.getDOMNode().querySelector('.btn-mute-audio');
+      var muteBtn = view.getDOMNode().querySelector(".btn-mute-audio");
 
       expect(muteBtn.classList.contains("muted")).eql(true);
     });
@@ -368,7 +368,7 @@ describe("loop.roomViews", function () {
 
       view.setState({screenSharingState: SCREEN_SHARE_STATES.INACTIVE});
 
-      var muteBtn = view.getDOMNode().querySelector('.btn-mute-video');
+      var muteBtn = view.getDOMNode().querySelector(".btn-mute-video");
 
       React.addons.TestUtils.Simulate.click(muteBtn);
 

@@ -77,6 +77,10 @@ let PanelFrameInternal = {
         "origin": aOrigin,
         "src": aSrc
       };
+      if (aType == "social") {
+        attrs["message"] = "true";
+        attrs["messagemanagergroup"] = aType;
+      }
       for (let [k, v] of Iterator(attrs)) {
         frame.setAttribute(k, v);
       }

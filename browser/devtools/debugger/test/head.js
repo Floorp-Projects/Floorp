@@ -984,7 +984,7 @@ function callInTab(tab, name) {
     name: name,
     args: Array.prototype.slice.call(arguments, 2)
   });
-  waitForMessageFromTab(tab, "test:call");
+  return waitForMessageFromTab(tab, "test:call");
 }
 
 function evalInTab(tab, string) {
@@ -993,7 +993,7 @@ function evalInTab(tab, string) {
   sendMessageToTab(tab, "test:eval", {
     string: string,
   });
-  waitForMessageFromTab(tab, "test:eval");
+  return waitForMessageFromTab(tab, "test:eval");
 }
 
 function sendMouseClickToTab(tab, target) {
@@ -1024,6 +1024,24 @@ function getSourceActor(aSources, aURL) {
 function getSourceForm(aSources, aURL) {
   let item = aSources.getItemByValue(getSourceActor(gSources, aURL));
   return item.attachment.source;
+}
+
+function createWorkerInTab(tab, url) {
+  info("Creating worker with url '" + url + "' in tab.");
+
+  sendMessageToTab(tab, "test:createWorker", {
+    url: url
+  });
+  return waitForMessageFromTab(tab, "test:createWorker");
+}
+
+function terminateWorkerInTab(tab, url) {
+  info("Terminating worker with url '" + url + "' in tab.");
+
+  sendMessageToTab(tab, "test:terminateWorker", {
+    url: url
+  });
+  return waitForMessageFromTab(tab, "test:terminateWorker");
 }
 
 function connect(client) {
@@ -1081,11 +1099,58 @@ function listWorkers(tabClient) {
   });
 }
 
+function findWorker(workers, url) {
+  info("Finding worker with url '" + url + "'.");
+  for (let worker of workers) {
+    if (worker.url === url) {
+      return worker;
+    }
+  }
+  return null;
+}
+
+function attachWorker(tabClient, worker) {
+  info("Attaching to worker with url '" + worker.url + "'.");
+  return new Promise(function(resolve, reject) {
+    tabClient.attachWorker(worker.actor, function (response, workerClient) {
+      resolve([response, workerClient]);
+    });
+  });
+}
+
 function waitForWorkerListChanged(tabClient) {
   info("Waiting for worker list to change.");
   return new Promise(function (resolve) {
     tabClient.addListener("workerListChanged", function listener() {
       tabClient.removeListener("workerListChanged", listener);
+      resolve();
+    });
+  });
+}
+
+function waitForWorkerClose(workerClient) {
+  info("Waiting for worker to close.");
+  return new Promise(function (resolve) {
+    workerClient.addOneTimeListener("close", function () {
+      info("Worker did close.");
+      resolve();
+    });
+  });
+}
+
+function waitForWorkerFreeze(workerClient) {
+  info("Waiting for worker to freeze.");
+  return new Promise(function (resolve) {
+    workerClient.addOneTimeListener("freeze", function () {
+      resolve();
+    });
+  });
+}
+
+function waitForWorkerThaw(workerClient) {
+  info("Waiting for worker to thaw.");
+  return new Promise(function (resolve) {
+    workerClient.addOneTimeListener("thaw", function () {
       resolve();
     });
   });

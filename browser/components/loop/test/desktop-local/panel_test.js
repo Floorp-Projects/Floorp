@@ -202,7 +202,7 @@ describe("loop.panel", function() {
         .to.have.length.of(0);
     });
 
-    describe('TabView', function() {
+    describe("TabView", function() {
       var view, callTab, roomsTab, contactsTab;
 
       beforeEach(function() {
@@ -906,7 +906,7 @@ describe("loop.panel", function() {
     });
   });
 
-  describe('loop.panel.ToSView', function() {
+  describe("loop.panel.ToSView", function() {
 
     it("should render when the value of loop.seenToS is not set", function() {
       navigator.mozLoop.getLoopPref = function(key) {
