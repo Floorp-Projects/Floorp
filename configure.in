@@ -3934,6 +3934,8 @@ MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
 MOZ_SANDBOX=1
 MOZ_BINARY_EXTENSIONS=
+MOZ_ADDON_SIGNING=
+MOZ_REQUIRE_SIGNING=
 
 case "$target_os" in
     mingw*)
@@ -4096,6 +4098,19 @@ if test -n "$MOZ_ANDROID_RESOURCE_CONSTRAINED"; then
     AC_DEFINE(MOZ_ANDROID_RESOURCE_CONSTRAINED)
 fi
 AC_SUBST(MOZ_ANDROID_RESOURCE_CONSTRAINED)
+
+dnl ========================================================
+dnl = Trademarked Branding
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(official-branding,
+[  --enable-official-branding
+                          Enable Official mozilla.org Branding
+                          Do not distribute builds with
+                          --enable-official-branding unless you have
+                          permission to use trademarks per
+                          http://www.mozilla.org/foundation/trademarks/ .],
+    MOZ_OFFICIAL_BRANDING=1,
+    MOZ_OFFICIAL_BRANDING=)
 
 # Allow the application to influence configure with a confvars.sh script.
 AC_MSG_CHECKING([if app-specific confvars.sh exists])
@@ -4672,28 +4687,14 @@ MOZ_ARG_ENABLE_STRING(ui-locale,
     MOZ_UI_LOCALE=$enableval )
 AC_SUBST(MOZ_UI_LOCALE)
 
-dnl ========================================================
-dnl = Trademarked Branding
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(official-branding,
-[  --enable-official-branding
-                          Enable Official mozilla.org Branding
-                          Do not distribute builds with
-                          --enable-official-branding unless you have
-                          permission to use trademarks per
-                          http://www.mozilla.org/foundation/trademarks/ .],
-[
+AC_SUBST(MOZ_OFFICIAL_BRANDING)
+if test -n "$MOZ_OFFICIAL_BRANDING"; then
   if test -z "$MOZ_OFFICIAL_BRANDING_DIRECTORY"; then
     AC_MSG_ERROR([You must specify MOZ_OFFICIAL_BRANDING_DIRECTORY to use --enable-official-branding.])
   else
     MOZ_BRANDING_DIRECTORY=${MOZ_OFFICIAL_BRANDING_DIRECTORY}
-    MOZ_OFFICIAL_BRANDING=1
+    AC_DEFINE(MOZ_OFFICIAL_BRANDING)
   fi
-], MOZ_OFFICIAL_BRANDING=)
-
-AC_SUBST(MOZ_OFFICIAL_BRANDING)
-if test -n "$MOZ_OFFICIAL_BRANDING"; then
-  AC_DEFINE(MOZ_OFFICIAL_BRANDING)
 fi
 
 MOZ_ARG_WITH_STRING(branding,
@@ -4798,7 +4799,7 @@ then
     MOZ_ARG_DISABLE_BOOL(gconf,
     [  --disable-gconf      Disable Gconf support ],
         MOZ_ENABLE_GCONF=,
-        MOZ_ENABLE_GCONF=force)
+        MOZ_ENABLE_GCONF=1)
 
     if test "$MOZ_ENABLE_GCONF"
     then
@@ -4806,11 +4807,12 @@ then
             MOZ_GCONF_LIBS=`$PKG_CONFIG --libs gobject-2.0`
             MOZ_ENABLE_GCONF=1
         ],[
-            if test "$MOZ_ENABLE_GCONF" = "force"
+            if test -n "$MOZ_ENABLE_GCONF";
             then
                 AC_MSG_ERROR([* * * Could not find gconf-2.0 ])
+            else
+                AC_MSG_WARN([Many automated tests will fail with --disable-gconf. See bug 1167201.])
             fi
-            MOZ_ENABLE_GCONF=
         ])
     fi
 
@@ -5327,6 +5329,11 @@ if test -n "$MOZ_FMP4"; then
     AC_DEFINE(MOZ_FMP4)
     MOZ_EME=1
 fi;
+
+if test "$MOZ_WIDGET_TOOLKIT" = "gonk" -a -n "$MOZ_FMP4" -a "$ANDROID_VERSION" -ge "18"; then
+    MOZ_GONK_MEDIACODEC=1
+    AC_SUBST(MOZ_GONK_MEDIACODEC)
+fi
 
 dnl ========================================================
 dnl = EME support
@@ -8552,6 +8559,9 @@ AC_SUBST(MOZ_BUILD_ROOT)
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_LINKER_EXTRACT)
+
+AC_SUBST(MOZ_ADDON_SIGNING)
+AC_SUBST(MOZ_REQUIRE_SIGNING)
 
 if test -n "$MOZ_BINARY_EXTENSIONS"; then
   AC_DEFINE(MOZ_BINARY_EXTENSIONS)

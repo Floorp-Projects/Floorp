@@ -86,10 +86,14 @@ loop.conversation = (function(mozL10n) {
       }
     });
 
+    // We want data channels only if the text chat preference is enabled.
+    var useDataChannels = loop.shared.utils.getBoolPreference("textChat.enabled");
+
     var dispatcher = new loop.Dispatcher();
     var client = new loop.Client();
     var sdkDriver = new loop.OTSdkDriver({
       isDesktop: true,
+      useDataChannels: useDataChannels,
       dispatcher: dispatcher,
       sdk: OT,
       mozLoop: navigator.mozLoop
@@ -130,11 +134,15 @@ loop.conversation = (function(mozL10n) {
     var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
       feedbackClient: feedbackClient
     });
+    var textChatStore = new loop.store.TextChatStore(dispatcher, {
+      sdkDriver: sdkDriver
+    });
 
     loop.store.StoreMixin.register({
       conversationAppStore: conversationAppStore,
       conversationStore: conversationStore,
-      feedbackStore: feedbackStore
+      feedbackStore: feedbackStore,
+      textChatStore: textChatStore
     });
 
     // Obtain the windowId and pass it through
@@ -153,8 +161,7 @@ loop.conversation = (function(mozL10n) {
     React.render(React.createElement(AppControllerView, {
       roomStore: roomStore, 
       dispatcher: dispatcher, 
-      mozLoop: navigator.mozLoop}
-    ), document.querySelector('#main'));
+      mozLoop: navigator.mozLoop}), document.querySelector("#main"));
 
     document.body.setAttribute("dir", mozL10n.getDirection());
     document.body.setAttribute("platform", loop.shared.utils.getPlatform());
@@ -178,4 +185,4 @@ loop.conversation = (function(mozL10n) {
   };
 })(document.mozL10n);
 
-document.addEventListener('DOMContentLoaded', loop.conversation.init);
+document.addEventListener("DOMContentLoaded", loop.conversation.init);

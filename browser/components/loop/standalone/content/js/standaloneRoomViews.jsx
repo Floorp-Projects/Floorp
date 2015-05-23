@@ -55,6 +55,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
     _getFailureString: function() {
       switch(this.props.failureReason) {
         case FAILURE_DETAILS.MEDIA_DENIED:
+        // XXX Bug 1166824 should provide a better string for this.
+        case FAILURE_DETAILS.NO_MEDIA:
           return mozL10n.get("rooms_media_denied_message");
         case FAILURE_DETAILS.EXPIRED_OR_INVALID:
           return mozL10n.get("rooms_unavailable_notification_message");
@@ -126,6 +128,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <div className="ended-conversation">
                 <sharedViews.FeedbackView
                   onAfterFeedbackReceived={this.onFeedbackSent}
+                  noCloseText={true}
                 />
               </div>
             );
@@ -578,6 +581,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return (
         <div className="room-conversation-wrapper">
           <div className="beta-logo" />
+          <sharedViews.TextChatView dispatcher={this.props.dispatcher} />
           <StandaloneRoomHeader dispatcher={this.props.dispatcher} />
           <StandaloneRoomInfoArea roomState={this.state.roomState}
                                   failureReason={this.state.failureReason}

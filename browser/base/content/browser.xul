@@ -1223,6 +1223,8 @@
         <browser id="social-sidebar-browser"
                  type="content"
                  context="contentAreaContextMenu"
+                 message="true"
+                 messagemanagergroup="social"
                  disableglobalhistory="true"
                  tooltip="aHTMLTooltip"
                  popupnotificationanchor="social-sidebar-favico"

@@ -385,6 +385,29 @@ ViewHelpers.L10N.prototype = {
 };
 
 /**
+ * A helper for having the same interface as ViewHelpers.L10N, but for
+ * more than one file. Useful for abstracting l10n string locations.
+ */
+ViewHelpers.MultiL10N = function(aStringBundleNames) {
+  let l10ns = aStringBundleNames.map(bundle => new ViewHelpers.L10N(bundle));
+  let proto = ViewHelpers.L10N.prototype;
+
+  Object.getOwnPropertyNames(proto)
+    .map(name => ({
+      name: name,
+      desc: Object.getOwnPropertyDescriptor(proto, name)
+    }))
+    .filter(property => property.desc.value instanceof Function)
+    .forEach(method => {
+      this[method.name] = function(...args) {
+        for (let l10n of l10ns) {
+          try { return method.desc.value.apply(l10n, args) } catch (e) {}
+        }
+      };
+    });
+};
+
+/**
  * Shortcuts for lazily accessing and setting various preferences.
  * Usage:
  *   let prefs = new ViewHelpers.Prefs("root.path.to.branch", {
@@ -409,8 +432,13 @@ ViewHelpers.L10N.prototype = {
  *        The root path to the required preferences branch.
  * @param object aPrefsBlueprint
  *        An object containing { accessorName: [prefType, prefName] } keys.
+ * @param object aOptions
+ *        Additional options for this constructor. Currently supported:
+ *          - monitorChanges: true to update the stored values if they changed
+ *                            when somebody edits about:config or the prefs
+ *                            change somewhere else.
  */
-ViewHelpers.Prefs = function(aPrefsRoot = "", aPrefsBlueprint = {}) {
+ViewHelpers.Prefs = function(aPrefsRoot = "", aPrefsBlueprint = {}, aOptions = {}) {
   EventEmitter.decorate(this);
 
   this._cache = new Map();
@@ -442,6 +470,10 @@ ViewHelpers.Prefs = function(aPrefsRoot = "", aPrefsBlueprint = {}) {
 
   this.registerObserver = () => observer.register();
   this.unregisterObserver = () => observer.unregister();
+
+  if (aOptions.monitorChanges) {
+    this.registerObserver();
+  }
 };
 
 ViewHelpers.Prefs.prototype = {

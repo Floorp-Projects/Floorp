@@ -504,7 +504,7 @@ describe("loop.shared.mixins", function() {
       navigator.mozLoop = {
         doNotDisturb: true,
         getAudioBlob: sinon.spy(function(name, callback) {
-          callback(null, new Blob([new ArrayBuffer(10)], {type: 'audio/ogg'}));
+          callback(null, new Blob([new ArrayBuffer(10)], {type: "audio/ogg"}));
         })
       };
 

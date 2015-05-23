@@ -19,7 +19,7 @@ describe("loop.CallConnectionWebSocket", function() {
       close: sinon.spy(),
       send: sinon.spy()
     };
-    sandbox.stub(window, 'WebSocket').returns(dummySocket);
+    sandbox.stub(window, "WebSocket").returns(dummySocket);
   });
 
   afterEach(function() {
