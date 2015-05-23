@@ -1932,10 +1932,8 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesBundleTransport)
   ASSERT_LE(1U, mSessionOff.GetTransports().size());
   ASSERT_LE(1U, mSessionAns.GetTransports().size());
 
-  ASSERT_EQ(JsepTransport::kJsepTransportClosed,
-            mSessionOff.GetTransports()[0]->mState);
-  ASSERT_EQ(JsepTransport::kJsepTransportClosed,
-            mSessionAns.GetTransports()[0]->mState);
+  ASSERT_EQ(0U, mSessionOff.GetTransports()[0]->mComponents);
+  ASSERT_EQ(0U, mSessionAns.GetTransports()[0]->mComponents);
 }
 
 TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport)
@@ -2042,29 +2040,37 @@ TEST_F(JsepSessionTest, OfferAnswerRecvOnlyLines)
   std::string offer = CreateOffer(Some(options));
 
   SipccSdpParser parser;
-  auto outputSdp = parser.Parse(offer);
-  ASSERT_TRUE(!!outputSdp) << "Should have valid SDP" << std::endl
+  UniquePtr<Sdp> parsedOffer = parser.Parse(offer);
+  ASSERT_TRUE(!!parsedOffer) << "Should have valid SDP" << std::endl
                            << "Errors were: " << GetParseErrors(parser);
 
-  ASSERT_EQ(3U, outputSdp->GetMediaSectionCount());
+  ASSERT_EQ(3U, parsedOffer->GetMediaSectionCount());
   ASSERT_EQ(SdpMediaSection::kAudio,
-            outputSdp->GetMediaSection(0).GetMediaType());
+            parsedOffer->GetMediaSection(0).GetMediaType());
   ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
-            outputSdp->GetMediaSection(0).GetAttributeList().GetDirection());
-  ASSERT_EQ(SdpMediaSection::kVideo,
-            outputSdp->GetMediaSection(1).GetMediaType());
-  ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
-            outputSdp->GetMediaSection(1).GetAttributeList().GetDirection());
-  ASSERT_EQ(SdpMediaSection::kVideo,
-            outputSdp->GetMediaSection(2).GetMediaType());
-  ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
-            outputSdp->GetMediaSection(2).GetAttributeList().GetDirection());
+            parsedOffer->GetMediaSection(0).GetAttributeList().GetDirection());
+  ASSERT_TRUE(parsedOffer->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kSsrcAttribute));
 
-  ASSERT_TRUE(outputSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+  ASSERT_EQ(SdpMediaSection::kVideo,
+            parsedOffer->GetMediaSection(1).GetMediaType());
+  ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
+            parsedOffer->GetMediaSection(1).GetAttributeList().GetDirection());
+  ASSERT_TRUE(parsedOffer->GetMediaSection(1).GetAttributeList().HasAttribute(
+        SdpAttribute::kSsrcAttribute));
+
+  ASSERT_EQ(SdpMediaSection::kVideo,
+            parsedOffer->GetMediaSection(2).GetMediaType());
+  ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
+            parsedOffer->GetMediaSection(2).GetAttributeList().GetDirection());
+  ASSERT_TRUE(parsedOffer->GetMediaSection(2).GetAttributeList().HasAttribute(
+        SdpAttribute::kSsrcAttribute));
+
+  ASSERT_TRUE(parsedOffer->GetMediaSection(0).GetAttributeList().HasAttribute(
       SdpAttribute::kRtcpMuxAttribute));
-  ASSERT_TRUE(outputSdp->GetMediaSection(1).GetAttributeList().HasAttribute(
+  ASSERT_TRUE(parsedOffer->GetMediaSection(1).GetAttributeList().HasAttribute(
       SdpAttribute::kRtcpMuxAttribute));
-  ASSERT_TRUE(outputSdp->GetMediaSection(2).GetAttributeList().HasAttribute(
+  ASSERT_TRUE(parsedOffer->GetMediaSection(2).GetAttributeList().HasAttribute(
       SdpAttribute::kRtcpMuxAttribute));
 
   SetLocalOffer(offer, CHECK_SUCCESS);
@@ -2073,21 +2079,33 @@ TEST_F(JsepSessionTest, OfferAnswerRecvOnlyLines)
   SetRemoteOffer(offer, CHECK_SUCCESS);
 
   std::string answer = CreateAnswer();
-  outputSdp = parser.Parse(answer);
+  UniquePtr<Sdp> parsedAnswer = parser.Parse(answer);
 
-  ASSERT_EQ(3U, outputSdp->GetMediaSectionCount());
+  ASSERT_EQ(3U, parsedAnswer->GetMediaSectionCount());
   ASSERT_EQ(SdpMediaSection::kAudio,
-            outputSdp->GetMediaSection(0).GetMediaType());
+            parsedAnswer->GetMediaSection(0).GetMediaType());
   ASSERT_EQ(SdpDirectionAttribute::kSendonly,
-            outputSdp->GetMediaSection(0).GetAttributeList().GetDirection());
+            parsedAnswer->GetMediaSection(0).GetAttributeList().GetDirection());
   ASSERT_EQ(SdpMediaSection::kVideo,
-            outputSdp->GetMediaSection(1).GetMediaType());
+            parsedAnswer->GetMediaSection(1).GetMediaType());
   ASSERT_EQ(SdpDirectionAttribute::kSendonly,
-            outputSdp->GetMediaSection(1).GetAttributeList().GetDirection());
+            parsedAnswer->GetMediaSection(1).GetAttributeList().GetDirection());
   ASSERT_EQ(SdpMediaSection::kVideo,
-            outputSdp->GetMediaSection(2).GetMediaType());
+            parsedAnswer->GetMediaSection(2).GetMediaType());
   ASSERT_EQ(SdpDirectionAttribute::kInactive,
-            outputSdp->GetMediaSection(2).GetAttributeList().GetDirection());
+            parsedAnswer->GetMediaSection(2).GetAttributeList().GetDirection());
+
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+
+  std::vector<JsepTrackPair> trackPairs(mSessionOff.GetNegotiatedTrackPairs());
+  ASSERT_EQ(2U, trackPairs.size());
+  for (auto pair : trackPairs) {
+    auto ssrcs = parsedOffer->GetMediaSection(pair.mLevel).GetAttributeList()
+                 .GetSsrc().mSsrcs;
+    ASSERT_EQ(1U, ssrcs.size());
+    ASSERT_EQ(pair.mRecvonlySsrc, ssrcs.front().ssrc);
+  }
 }
 
 TEST_F(JsepSessionTest, OfferAnswerSendOnlyLines)
@@ -3187,6 +3205,98 @@ TEST_F(JsepSessionTest, LowDynamicPayloadType)
   ASSERT_TRUE(codec);
   ASSERT_EQ("opus", codec->mName);
   ASSERT_EQ("12", codec->mDefaultPt);
+}
+
+TEST_P(JsepSessionTest, TestGlareRollback)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+  JsepOfferOptions options;
+
+  std::string offer;
+  ASSERT_EQ(NS_OK, mSessionAns.CreateOffer(options, &offer));
+  ASSERT_EQ(NS_OK,
+            mSessionAns.SetLocalDescription(kJsepSdpOffer, offer));
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionAns.GetState());
+
+  ASSERT_EQ(NS_OK, mSessionOff.CreateOffer(options, &offer));
+  ASSERT_EQ(NS_OK,
+            mSessionOff.SetLocalDescription(kJsepSdpOffer, offer));
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff.GetState());
+
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetRemoteDescription(kJsepSdpOffer, offer));
+  ASSERT_EQ(NS_OK,
+            mSessionAns.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+
+  SetRemoteOffer(offer);
+
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+}
+
+TEST_P(JsepSessionTest, TestRejectOfferRollback)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+
+  ASSERT_EQ(NS_OK,
+            mSessionAns.SetRemoteDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+  ASSERT_EQ(types.size(), mSessionAns.GetRemoteTracksRemoved().size());
+
+  ASSERT_EQ(NS_OK,
+            mSessionOff.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(kJsepStateStable, mSessionOff.GetState());
+
+  OfferAnswer();
+}
+
+TEST_P(JsepSessionTest, TestInvalidRollback)
+{
+  AddTracks(mSessionOff);
+  AddTracks(mSessionAns);
+
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetRemoteDescription(kJsepSdpRollback, ""));
+
+  std::string offer = CreateOffer();
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetRemoteDescription(kJsepSdpRollback, ""));
+
+  SetLocalOffer(offer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetRemoteDescription(kJsepSdpRollback, ""));
+
+  SetRemoteOffer(offer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetLocalDescription(kJsepSdpRollback, ""));
+
+  std::string answer = CreateAnswer();
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetLocalDescription(kJsepSdpRollback, ""));
+
+  SetLocalAnswer(answer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionAns.SetRemoteDescription(kJsepSdpRollback, ""));
+
+  SetRemoteAnswer(answer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetLocalDescription(kJsepSdpRollback, ""));
+  ASSERT_EQ(NS_ERROR_UNEXPECTED,
+            mSessionOff.SetRemoteDescription(kJsepSdpRollback, ""));
 }
 
 } // namespace mozilla

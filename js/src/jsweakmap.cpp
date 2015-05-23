@@ -39,7 +39,10 @@ WeakMapBase::WeakMapBase(JSObject* memOf, JSCompartment* c)
 
 WeakMapBase::~WeakMapBase()
 {
-    MOZ_ASSERT(!isInList());
+    MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadIsHandlingInitFailure());
+    MOZ_ASSERT_IF(CurrentThreadIsGCSweeping(), !isInList());
+    if (isInList())
+        removeWeakMapFromList(this);
 }
 
 void

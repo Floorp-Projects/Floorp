@@ -1208,7 +1208,7 @@ DownloadsPlacesView.prototype = {
 
     Cc["@mozilla.org/widget/clipboardhelper;1"]
       .getService(Ci.nsIClipboardHelper)
-      .copyString(urls.join("\n"), document);
+      .copyString(urls.join("\n"));
   },
 
   _getURLFromClipboardData() {

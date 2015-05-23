@@ -10,7 +10,7 @@ function test() {
   return Task.spawn(spawnTest).then(finish, helpers.handleError);
 }
 
-function spawnTest() {
+function* spawnTest() {
   let options = yield helpers.openTab(TESTCASE_URI);
   yield helpers.openToolbar(options);
 
@@ -33,7 +33,7 @@ function spawnTest() {
 function inspectAndWaitForCopy() {
   let copied = waitForClipboard(() => {}, DIV_COLOR);
   let ready = inspectPage(); // resolves once eyedropper is destroyed
-  
+
   return Promise.all([copied, ready]);
 }
 

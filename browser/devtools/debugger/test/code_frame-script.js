@@ -13,8 +13,14 @@ addMessageListener("test:call", function (message) {
   dump("Calling function with name " + message.data.name + ".\n");
 
   let data = message.data;
-  XPCNativeWrapper.unwrap(content)[data.name].apply(undefined, data.args);
-  sendAsyncMessage("test:call");
+  let result = XPCNativeWrapper.unwrap(content)[data.name].apply(undefined, data.args);
+  if (result && result.then) {
+    result.then(() => {
+      sendAsyncMessage("test:call");
+    });
+  } else {
+    sendAsyncMessage("test:call");
+  }
 });
 
 addMessageListener("test:click", function (message) {
@@ -28,6 +34,34 @@ addMessageListener("test:click", function (message) {
 addMessageListener("test:eval", function (message) {
   dump("Evalling string " + message.data.string + ".\n");
 
-  content.eval(message.data.string);
-  sendAsyncMessage("test:eval");
+  let result = content.eval(message.data.string);
+  if (result.then) {
+    result.then(() => {
+      sendAsyncMessage("test:eval");
+    });
+  } else {
+    sendAsyncMessage("test:eval");
+  }
+});
+
+let workers = {}
+
+addMessageListener("test:createWorker", function (message) {
+  dump("Creating worker with url '" + message.data.url + "'.\n");
+
+  let url = message.data.url;
+  let worker = new content.Worker(message.data.url);
+  worker.addEventListener("message", function listener() {
+    worker.removeEventListener("message", listener);
+    sendAsyncMessage("test:createWorker");
+  });
+  workers[url] = worker;
+});
+
+addMessageListener("test:terminateWorker", function (message) {
+  dump("Terminating worker with url '" + message.data.url + "'.\n");
+
+  let url = message.data.url;
+  workers[url].terminate();
+  delete workers[url];
 });

@@ -25,7 +25,6 @@
 
 #define FOR_EACH_GC_LAYOUT(D) \
  /* PrettyName       TypeName           AddToCCKind */ \
-    D(AccessorShape, js::AccessorShape, true) \
     D(BaseShape,     js::BaseShape,     true) \
     D(JitCode,       js::jit::JitCode,  true) \
     D(LazyScript,    js::LazyScript,    true) \
@@ -70,6 +69,15 @@ enum State {
     SWEEP,
     COMPACT
 };
+
+// Map from base trace type to the trace kind.
+template <typename T> struct MapTypeToTraceKind {};
+#define EXPAND_DEF(name, type, _) \
+    template <> struct MapTypeToTraceKind<type> { \
+        static const JS::TraceKind kind = JS::TraceKind::name; \
+    };
+FOR_EACH_GC_LAYOUT(EXPAND_DEF);
+#undef EXPAND_DEF
 
 /* Map from C++ type to alloc kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
 template <typename T> struct MapTypeToFinalizeKind {};
@@ -176,9 +184,6 @@ CanBeFinalizedInBackground(AllocKind kind, const Class* clasp)
             (!clasp->finalize || (clasp->flags & JSCLASS_BACKGROUND_FINALIZE)));
 }
 
-inline JSGCTraceKind
-GetGCThingTraceKind(const void* thing);
-
 // Fortunately, few places in the system need to deal with fully abstract
 // cells. In those places that do, we generally want to move to a layout
 // templated function as soon as possible. This template wraps the upcast
@@ -196,34 +201,36 @@ GetGCThingTraceKind(const void* thing);
 #endif
 template <typename F, typename... Args>
 auto
-CallTyped(F f, JSGCTraceKind traceKind, Args&&... args)
+CallTyped(F f, JS::TraceKind traceKind, Args&&... args)
   -> decltype(f. DEPENDENT_TEMPLATE_HINT operator()<JSObject>(mozilla::Forward<Args>(args)...))
 {
     switch (traceKind) {
-      case JSTRACE_OBJECT:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<JSObject>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_SCRIPT:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<JSScript>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_STRING:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<JSString>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_SYMBOL:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<JS::Symbol>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_BASE_SHAPE:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<BaseShape>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_JITCODE:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<jit::JitCode>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_LAZY_SCRIPT:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<LazyScript>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_SHAPE:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<Shape>(mozilla::Forward<Args>(args)...);
-      case JSTRACE_OBJECT_GROUP:
-          return f. DEPENDENT_TEMPLATE_HINT operator()<ObjectGroup>(mozilla::Forward<Args>(args)...);
+#define EXPAND_DEF(name, type, _) \
+      case JS::TraceKind::name: \
+        return f. DEPENDENT_TEMPLATE_HINT operator()<type>(mozilla::Forward<Args>(args)...);
+      FOR_EACH_GC_LAYOUT(EXPAND_DEF);
+#undef EXPAND_DEF
       default:
           MOZ_CRASH("Invalid trace kind in CallTyped.");
     }
 }
 #undef DEPENDENT_TEMPLATE_HINT
 
+template <typename F, typename... Args>
+auto
+CallTyped(F f, void* thing, JS::TraceKind traceKind, Args&&... args)
+  -> decltype(f(reinterpret_cast<JSObject*>(0), mozilla::Forward<Args>(args)...))
+{
+    switch (traceKind) {
+#define EXPAND_DEF(name, type, _) \
+      case JS::TraceKind::name: \
+          return f(static_cast<type*>(thing), mozilla::Forward<Args>(args)...);
+      FOR_EACH_GC_LAYOUT(EXPAND_DEF);
+#undef EXPAND_DEF
+      default:
+          MOZ_CRASH("Invalid trace kind in CallTyped.");
+    }
+}
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
@@ -1124,9 +1131,9 @@ typedef HashSet<js::gc::Chunk*, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
 typedef void (*IterateChunkCallback)(JSRuntime* rt, void* data, gc::Chunk* chunk);
 typedef void (*IterateZoneCallback)(JSRuntime* rt, void* data, JS::Zone* zone);
 typedef void (*IterateArenaCallback)(JSRuntime* rt, void* data, gc::Arena* arena,
-                                     JSGCTraceKind traceKind, size_t thingSize);
+                                     JS::TraceKind traceKind, size_t thingSize);
 typedef void (*IterateCellCallback)(JSRuntime* rt, void* data, void* thing,
-                                    JSGCTraceKind traceKind, size_t thingSize);
+                                    JS::TraceKind traceKind, size_t thingSize);
 
 /*
  * This function calls |zoneCallback| on every zone, |compartmentCallback| on
@@ -1396,14 +1403,23 @@ class AutoSuppressGC
 /* Disable OOM testing in sections which are not OOM safe. */
 class AutoEnterOOMUnsafeRegion
 {
-    uint32_t saved_;
+    bool oomEnabled_;
+    int64_t oomAfter_;
 
   public:
-    AutoEnterOOMUnsafeRegion() : saved_(OOM_maxAllocations) {
-        OOM_maxAllocations = UINT32_MAX;
+    AutoEnterOOMUnsafeRegion()
+      : oomEnabled_(OOM_maxAllocations != UINT32_MAX)
+    {
+        if (oomEnabled_) {
+            oomAfter_ = OOM_maxAllocations - OOM_counter;
+            OOM_maxAllocations = UINT32_MAX;
+        }
     }
+
     ~AutoEnterOOMUnsafeRegion() {
-        OOM_maxAllocations = saved_;
+        MOZ_ASSERT(OOM_maxAllocations == UINT32_MAX);
+        if (oomEnabled_)
+            OOM_maxAllocations = OOM_counter + oomAfter_;
     }
 };
 #else

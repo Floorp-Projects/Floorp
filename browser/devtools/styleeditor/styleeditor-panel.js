@@ -36,9 +36,13 @@ this.StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
 exports.StyleEditorPanel = StyleEditorPanel;
 
 StyleEditorPanel.prototype = {
-  get target() this._toolbox.target,
+  get target() {
+    return this._toolbox.target;
+  },
 
-  get panelWindow() this._panelWin,
+  get panelWindow() {
+    return this._panelWin;
+  },
 
   /**
    * open is effectively an asynchronous constructor

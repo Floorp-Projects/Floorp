@@ -158,6 +158,9 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  DLL_PREFIX: "@DLL_PREFIX@",
+  DLL_SUFFIX: "@DLL_SUFFIX@",
+
   MOZ_APP_NAME: "@MOZ_APP_NAME@",
   MOZ_APP_VERSION: "@MOZ_APP_VERSION@",
   MOZ_BUILD_APP: "@MOZ_BUILD_APP@",

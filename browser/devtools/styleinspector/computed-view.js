@@ -248,12 +248,14 @@ CssHtmlTree.processTemplate = function CssHtmlTree_processTemplate(aTemplate,
   }
 };
 
-XPCOMUtils.defineLazyGetter(CssHtmlTree, "_strings", function() Services.strings
-        .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
+XPCOMUtils.defineLazyGetter(CssHtmlTree, "_strings", function() {
+  return Services.strings.createBundle(
+    "chrome://global/locale/devtools/styleinspector.properties");
+});
 
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
-  return Cc["@mozilla.org/widget/clipboardhelper;1"].
-    getService(Ci.nsIClipboardHelper);
+  return Cc["@mozilla.org/widget/clipboardhelper;1"]
+         .getService(Ci.nsIClipboardHelper);
 });
 
 CssHtmlTree.prototype = {
@@ -816,7 +818,7 @@ CssHtmlTree.prototype = {
   },
 
   _onCopyColor: function() {
-    clipboardHelper.copyString(this._colorToCopy, this.styleDocument);
+    clipboardHelper.copyString(this._colorToCopy);
   },
 
   /**
@@ -854,7 +856,7 @@ CssHtmlTree.prototype = {
         result = textArray[0];
       }
 
-      clipboardHelper.copyString(result, this.styleDocument);
+      clipboardHelper.copyString(result);
 
       if (event) {
         event.preventDefault();

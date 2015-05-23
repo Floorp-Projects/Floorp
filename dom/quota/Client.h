@@ -116,6 +116,9 @@ public:
                             nsIRunnable* aCallback) = 0;
 
   virtual void
+  PerformIdleMaintenance() = 0;
+
+  virtual void
   ShutdownWorkThreads() = 0;
 
 protected:

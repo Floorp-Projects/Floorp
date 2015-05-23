@@ -85,5 +85,37 @@ var FontBuilder = {
       }
     }
     aMenuList.appendChild(popup);    
+  },
+
+  readFontSelection(aElement)
+  {
+    // Determine the appropriate value to select, for the following cases:
+    // - there is no setting
+    // - the font selected by the user is no longer present (e.g. deleted from
+    //   fonts folder)
+    let preference = document.getElementById(aElement.getAttribute("preference"));
+    if (preference.value) {
+      let fontItems = aElement.getElementsByAttribute("value", preference.value);
+
+      // There is a setting that actually is in the list. Respect it.
+      if (fontItems.length)
+        return undefined;
+    }
+
+    let defaultValue = aElement.firstChild.firstChild.getAttribute("value");
+    let fontNameList = preference.name.replace(".name.", ".name-list.");
+    let prefFontNameList = document.getElementById(fontNameList);
+    if (!prefFontNameList || !prefFontNameList.value)
+      return defaultValue;
+
+    let fontNames = prefFontNameList.value.split(",");
+
+    for (let i = 0; i < fontNames.length; ++i) {
+      let fontName = this.enumerator.getStandardFamilyName(fontNames[i].trim());
+      let fontItems = aElement.getElementsByAttribute("value", fontName);
+      if (fontItems.length)
+        return fontItems[0].getAttribute("value");
+    }
+    return defaultValue;
   }
 };

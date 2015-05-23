@@ -79,7 +79,7 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
     yield promiseBrowserLoaded(tab.linkedBrowser);
     yield promiseTabState(tab, tabState);
 
-    TabState.flush(tab.linkedBrowser);
+    yield TabStateFlusher.flush(tab.linkedBrowser);
     let restoredTabState = JSON.parse(ss.getTabState(tab));
     let restoredFormData = restoredTabState.formdata;
 

@@ -18,13 +18,24 @@
   </head>
   <body class="theme-sidebar devtools-monospace" role="application">
     <script type="application/javascript;version=1.8" src="font-inspector.js"></script>
+    <div>
+      <div class="devtools-toolbar preview-input-toolbar">
+        <div class="devtools-searchbox">
+          <input id="preview-text-input"
+                 class="devtools-textinput"
+                 placeholder="&previewHint;"/>
+        </div>
+      </div>
+    </div>
     <div id="root">
       <ul id="all-fonts"></ul>
       <button id="showall">&showAllFonts;</button>
     </div>
     <div id="template">
       <section class="font">
-        <img class="font-preview"></img>
+        <div class="font-preview-container">
+          <img class="font-preview"></img>
+        </div>
         <div class="font-info">
           <h1 class="font-name"></h1>
           <span class="font-is-local">&system;</span>

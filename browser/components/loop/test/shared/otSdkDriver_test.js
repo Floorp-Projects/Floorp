@@ -9,9 +9,10 @@ describe("loop.OTSdkDriver", function () {
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var STREAM_PROPERTIES = loop.shared.utils.STREAM_PROPERTIES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
+  var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
 
   var sandbox;
-  var dispatcher, driver, mozLoop, publisher, sdk, session, sessionData;
+  var dispatcher, driver, mozLoop, publisher, sdk, session, sessionData, subscriber;
   var fakeLocalElement, fakeRemoteElement, fakeScreenElement;
   var publisherConfig, fakeEvent;
 
@@ -42,6 +43,7 @@ describe("loop.OTSdkDriver", function () {
       disconnect: sinon.stub(),
       publish: sinon.stub(),
       unpublish: sinon.stub(),
+      signal: sinon.stub(),
       subscribe: sinon.stub(),
       forceDisconnect: sinon.stub()
     }, Backbone.Events);
@@ -51,9 +53,16 @@ describe("loop.OTSdkDriver", function () {
       publishAudio: sinon.stub(),
       publishVideo: sinon.stub(),
       _: {
+        getDataChannel: sinon.stub(),
         switchAcquiredWindow: sinon.stub()
       }
     }, Backbone.Events);
+
+    subscriber = _.extend({
+      _: {
+        getDataChannel: sinon.stub()
+      }
+    });
 
     sdk = _.extend({
       initPublisher: sinon.stub().returns(publisher),
@@ -116,8 +125,14 @@ describe("loop.OTSdkDriver", function () {
         publisherConfig: publisherConfig
       }));
 
+      var expectedConfig = _.extend({
+        channels: {
+          text: {}
+        }
+      }, publisherConfig);
+
       sinon.assert.calledOnce(sdk.initPublisher);
-      sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, publisherConfig);
+      sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, expectedConfig);
     });
   });
 
@@ -147,8 +162,14 @@ describe("loop.OTSdkDriver", function () {
     it("should call initPublisher", function() {
       driver.retryPublishWithoutVideo();
 
+      var expectedConfig = _.extend({
+        channels: {
+          text: {}
+        }
+      }, publisherConfig);
+
       sinon.assert.calledTwice(sdk.initPublisher);
-      sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, publisherConfig);
+      sinon.assert.calledWith(sdk.initPublisher, fakeLocalElement, expectedConfig);
     });
   });
 
@@ -596,6 +617,25 @@ describe("loop.OTSdkDriver", function () {
       driver.forceDisconnectAll(function() {});
       sinon.assert.calledThrice(session.forceDisconnect);
     });
+
+    describe("#sendTextChatMessage", function() {
+      it("should send a message on the publisher data channel", function() {
+        driver._publisherChannel = {
+          send: sinon.stub()
+        };
+
+        var message = {
+          contentType: CHAT_CONTENT_TYPES.TEXT,
+          message: "Help!"
+        };
+
+        driver.sendTextChatMessage(message);
+
+        sinon.assert.calledOnce(driver._publisherChannel.send);
+        sinon.assert.calledWithExactly(driver._publisherChannel.send,
+          JSON.stringify(message));
+      });
+    });
   });
 
   describe("Events (general media)", function() {
@@ -803,8 +843,32 @@ describe("loop.OTSdkDriver", function () {
         session.trigger("streamCreated", { stream: fakeStream });
 
         sinon.assert.calledOnce(session.subscribe);
-        sinon.assert.calledWithExactly(session.subscribe,
+        sinon.assert.calledWith(session.subscribe,
           fakeStream, fakeRemoteElement, publisherConfig);
+      });
+
+      it("should trigger a readyForDataChannel signal after subscribe is complete", function() {
+        session.subscribe.callsArgWith(3, null);
+        driver._useDataChannels = true;
+        fakeStream.connection = "fakeID";
+
+        session.trigger("streamCreated", { stream: fakeStream });
+
+        sinon.assert.calledOnce(session.signal);
+        sinon.assert.calledWith(session.signal, {
+          type: "readyForDataChannel",
+          to: "fakeID"
+        });
+      });
+
+      it("should not trigger readyForDataChannel signal if data channels are not wanted", function() {
+        session.subscribe.callsArgWith(3, null);
+        driver._useDataChannels = false;
+        fakeStream.connection = "fakeID";
+
+        session.trigger("streamCreated", { stream: fakeStream });
+
+        sinon.assert.notCalled(session.signal);
       });
 
       it("should subscribe to a screen sharing stream", function() {
@@ -1115,6 +1179,67 @@ describe("loop.OTSdkDriver", function () {
         publisher.trigger("accessDialogOpened", fakeEvent);
 
         sinon.assert.calledOnce(fakeEvent.preventDefault);
+      });
+    });
+
+    describe("signal:readyForDataChannel", function() {
+      beforeEach(function() {
+        driver.subscriber = subscriber;
+        driver._useDataChannels = true;
+      });
+
+      it("should not do anything if data channels are not wanted", function() {
+        driver._useDataChannels = false;
+
+        session.trigger("signal:readyForDataChannel");
+
+        sinon.assert.notCalled(publisher._.getDataChannel);
+        sinon.assert.notCalled(subscriber._.getDataChannel);
+      });
+
+      it("should get the data channel for the publisher", function() {
+        session.trigger("signal:readyForDataChannel");
+
+        sinon.assert.calledOnce(publisher._.getDataChannel);
+      });
+
+      it("should get the data channel for the subscriber", function() {
+        session.trigger("signal:readyForDataChannel");
+
+        sinon.assert.calledOnce(subscriber._.getDataChannel);
+      });
+
+      it("should dispatch `DataChannelsAvailable` once both data channels have been obtained", function() {
+        var fakeChannel = _.extend({}, Backbone.Events);
+
+        subscriber._.getDataChannel.callsArgWith(2, null, fakeChannel);
+        publisher._.getDataChannel.callsArgWith(2, null, fakeChannel);
+
+        session.trigger("signal:readyForDataChannel");
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.DataChannelsAvailable());
+      });
+
+      it("should dispatch `ReceivedTextChatMessage` when a text message is received", function() {
+        var fakeChannel = _.extend({}, Backbone.Events);
+
+        subscriber._.getDataChannel.callsArgWith(2, null, fakeChannel);
+
+        session.trigger("signal:readyForDataChannel");
+
+        // Now send the message.
+        fakeChannel.trigger("message", {
+          data: '{"contentType":"' + CHAT_CONTENT_TYPES.TEXT + '","message":"Are you there?"}'
+        });
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ReceivedTextChatMessage({
+            contentType: CHAT_CONTENT_TYPES.TEXT,
+            message: "Are you there?"
+          }));
       });
     });
 

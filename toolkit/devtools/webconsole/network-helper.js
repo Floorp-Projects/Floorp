@@ -275,21 +275,14 @@ let NetworkHelper = {
    */
   loadFromCache: function NH_loadFromCache(aUrl, aCharset, aCallback)
   {
-    let channel = NetUtil.newChannel2(aUrl,
-                                      null,
-                                      null,
-                                      null,      // aLoadingNode
-                                      Services.scriptSecurityManager.getSystemPrincipal(),
-                                      null,      // aTriggeringPrincipal
-                                      Ci.nsILoadInfo.SEC_NORMAL,
-                                      Ci.nsIContentPolicy.TYPE_OTHER);
+    let channel = NetUtil.newChannel({uri: aUrl, loadUsingSystemPrincipal: true});
 
     // Ensure that we only read from the cache and not the server.
     channel.loadFlags = Ci.nsIRequest.LOAD_FROM_CACHE |
       Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE |
       Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
-    NetUtil.asyncFetch2(
+    NetUtil.asyncFetch(
       channel,
       (aInputStream, aStatusCode, aRequest) => {
         if (!components.isSuccessCode(aStatusCode)) {

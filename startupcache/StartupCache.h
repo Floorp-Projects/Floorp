@@ -8,6 +8,7 @@
 
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
+#include "nsTArray.h"
 #include "nsZipArchive.h"
 #include "nsIStartupCache.h"
 #include "nsITimer.h"
@@ -164,6 +165,7 @@ private:
                                          void *);
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
+  nsTArray<nsCString> mPendingWrites;
   nsRefPtr<nsZipArchive> mArchive;
   nsCOMPtr<nsIFile> mFile;
 

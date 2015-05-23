@@ -257,7 +257,7 @@ ElementStyle.prototype = {
     // If we've already included this domRule (for example, when a
     // common selector is inherited), ignore it.
     if (aOptions.rule &&
-        this.rules.some(function(rule) rule.domRule === aOptions.rule)) {
+        this.rules.some(rule => rule.domRule === aOptions.rule)) {
       return false;
     }
 
@@ -396,7 +396,7 @@ ElementStyle.prototype = {
   _updatePropertyOverridden: function(aProp) {
     let overridden = true;
     let dirty = false;
-    for each (let computedProp in aProp.computed) {
+    for (let computedProp of aProp.computed) {
       if (!computedProp.overridden) {
         overridden = false;
       }
@@ -739,7 +739,7 @@ Rule.prototype = {
    *        The property to be removed
    */
   removeProperty: function(aProperty) {
-    this.textProps = this.textProps.filter(function(prop) prop != aProperty);
+    this.textProps = this.textProps.filter(prop => prop != aProperty);
     let modifications = this.style.startModifyingProperties();
     modifications.removeProperty(aProperty.name);
     // Need to re-apply properties in case removing this TextProperty
@@ -782,7 +782,7 @@ Rule.prototype = {
 
     let textProps = [];
 
-    for each (let prop in disabledProps) {
+    for (let prop of disabledProps) {
       let value = store.userProperties.getProperty(this.style, prop.name, prop.value);
       let textProp = new TextProperty(this, prop.name, value, prop.priority);
       textProp.enabled = false;
@@ -861,7 +861,7 @@ Rule.prototype = {
   _updateTextProperty: function(aNewProp) {
     let match = { rank: 0, prop: null };
 
-    for each (let prop in this.textProps) {
+    for (let prop of this.textProps) {
       if (prop.name != aNewProp.name)
         continue;
 
@@ -1511,7 +1511,7 @@ CssRuleView.prototype = {
         text = text.replace(rx, "");
       }
 
-      clipboardHelper.copyString(text, this.doc);
+      clipboardHelper.copyString(text);
       event.preventDefault();
     } catch(e) {
       console.error(e);
@@ -1522,7 +1522,7 @@ CssRuleView.prototype = {
    * Copy the most recently selected color value to clipboard.
    */
   _onCopyColor: function() {
-    clipboardHelper.copyString(this._colorToCopy, this.styleDocument);
+    clipboardHelper.copyString(this._colorToCopy);
   },
 
   /**
@@ -2126,8 +2126,9 @@ CssRuleView.prototype = {
       // Highlight search matches in the computed list of properties
       for (let computed of textProp.computed) {
         if (computed.element) {
-          let computedName = computed.name;
-          let computedValue = computed.value;
+          // Get the actual property value displayed in the computed list
+          let computedValue = computed.parsedValue.toLowerCase();
+          let computedName = computed.name.toLowerCase();
 
           isComputedHighlighted = this._highlightMatches(computed.element, {
             searchName: name,
@@ -2980,7 +2981,7 @@ TextPropertyEditor.prototype = {
     }
 
     let showExpander = false;
-    for each (let computed in this.prop.computed) {
+    for (let computed of this.prop.computed) {
       // Don't bother to duplicate information already
       // shown in the text property.
       if (computed.name === this.prop.name) {
@@ -3011,6 +3012,9 @@ TextPropertyEditor.prototype = {
           baseURI: this.sheetURI
         }
       );
+
+      // Store the computed property value that was parsed for output
+      computed.parsedValue = frag.textContent;
 
       createChild(li, "span", {
         class: "ruleview-propertyvalue theme-fg-color1",
