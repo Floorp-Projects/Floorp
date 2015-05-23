@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
+const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 
 const DUMMY = "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
 
