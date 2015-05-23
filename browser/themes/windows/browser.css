@@ -2153,8 +2153,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 %include ../shared/notification-icons.inc.css
 
-.popup-notification-body[popupid="addon-progress"],
-.popup-notification-body[popupid="addon-install-confirmation"] {
+.popup-notification-description[popupid="addon-progress"],
+.popup-notification-description[popupid="addon-install-confirmation"] {
   width: 27em;
   max-width: 27em;
 }
