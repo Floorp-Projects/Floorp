@@ -12,6 +12,10 @@
  * getDefaultFileName, getNormalizedLeafName and getDefaultExtension
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ViewSourceBrowser",
+  "resource://gre/modules/ViewSourceBrowser.jsm");
+
 var gViewSourceUtils = {
 
   mnsIWebBrowserPersist: Components.interfaces.nsIWebBrowserPersist,
@@ -58,6 +62,34 @@ var gViewSourceUtils = {
     } else {
       this._openInInternalViewer(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber);
     }
+  },
+
+  /**
+   * Displays view source in the provided <browser>.  This allows for non-window
+   * display methods, such as a tab from Firefox.  The caller that manages
+   * the <browser> is responsible for ensuring the companion frame script,
+   * viewSource-content.js, has been loaded for the <browser>.
+   *
+   * @param aArgs
+   *        An object with the following properties:
+   *
+   *        URL (required):
+   *          A string URL for the page we'd like to view the source of.
+   *        viewSourceBrowser (required):
+   *          The browser to display the view source in.
+   *        browser (optional):
+   *          The browser containing the document that we would like to view the
+   *          source of. This is required if outerWindowID is passed.
+   *        outerWindowID (optional):
+   *          The outerWindowID of the content window containing the document that
+   *          we want to view the source of. Pass this if you want to attempt to
+   *          load the document source out of the network cache.
+   *        lineNumber (optional):
+   *          The line number to focus on once the source is loaded.
+   */
+  viewSourceInBrowser: function(aArgs) {
+    let viewSourceBrowser = new ViewSourceBrowser(aArgs.viewSourceBrowser);
+    viewSourceBrowser.loadViewSource(aArgs);
   },
 
   // Opens the interval view source viewer
