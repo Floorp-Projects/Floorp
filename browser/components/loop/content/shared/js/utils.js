@@ -11,6 +11,32 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
 (function() {
   "use strict";
 
+  /**
+   * Root object, by default set to window if we're not in chrome code.
+   * @type {DOMWindow|Object}
+   */
+  var rootObject = inChrome ? {} : window;
+  /**
+   * Root navigator, by default set to navigator if we're not in chrome code.
+   * @type {Navigator|Object}
+   */
+  var rootNavigator = inChrome ? {} : navigator;
+
+  /**
+   * Sets new root objects.  This is useful for testing native DOM events, and also
+   * so we can easily stub items like navigator.mediaDevices.
+   * can fake them. In beforeEach(), loop.shared.utils.setRootObjects is used to
+   * substitute fake objects, and in afterEach(), the real window object is
+   * replaced.
+   *
+   * @param {Object} windowObj The fake window object, undefined to use window.
+   * @param {Object} navigatorObj The fake navigator object, undefined to use navigator.
+   */
+  function setRootObjects(windowObj, navigatorObj) {
+    rootObject = windowObj || window;
+    rootNavigator = navigatorObj || navigator;
+  }
+
   var mozL10n;
   if (inChrome) {
     this.EXPORTED_SYMBOLS = ["utils"];
@@ -48,6 +74,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
 
   var FAILURE_DETAILS = {
     MEDIA_DENIED: "reason-media-denied",
+    NO_MEDIA: "reason-no-media",
     UNABLE_TO_PUBLISH_MEDIA: "unable-to-publish-media",
     COULD_NOT_CONNECT: "reason-could-not-connect",
     NETWORK_DISCONNECTED: "reason-network-disconnected",
@@ -109,8 +136,8 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   }
 
   function isChrome(platform) {
-    return platform.toLowerCase().indexOf('chrome') > -1 ||
-           platform.toLowerCase().indexOf('chromium') > -1;
+    return platform.toLowerCase().indexOf("chrome") > -1 ||
+           platform.toLowerCase().indexOf("chromium") > -1;
   }
 
   function isFirefox(platform) {
@@ -127,8 +154,8 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   }
 
   function isOpera(platform) {
-    return platform.toLowerCase().indexOf('opera') > -1 ||
-           platform.toLowerCase().indexOf('opr') > -1;
+    return platform.toLowerCase().indexOf("opera") > -1 ||
+           platform.toLowerCase().indexOf("opr") > -1;
   }
 
   /**
@@ -278,6 +305,40 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     }
     return platform;
   };
+
+  /**
+   * Determines if the user has any audio devices installed.
+   *
+   * @param  {Function} callback Called with a boolean which is true if there
+   *                             are audio devices present.
+   */
+  function hasAudioDevices(callback) {
+    // mediaDevices is the official API for the spec.
+    if ("mediaDevices" in rootNavigator) {
+      rootNavigator.mediaDevices.enumerateDevices().then(function(result) {
+        function checkForInput(device) {
+          return device.kind === "audioinput";
+        }
+
+        callback(result.some(checkForInput));
+      }).catch(function() {
+        callback(false);
+      });
+    // MediaStreamTrack is the older version of the API, implemented originally
+    // by Google Chrome.
+    } else if ("MediaStreamTrack" in rootObject) {
+      rootObject.MediaStreamTrack.getSources(function(result) {
+        function checkForInput(device) {
+          return device.kind === "audio";
+        }
+
+        callback(result.some(checkForInput));
+      });
+    } else {
+      // We don't know, so assume true.
+      callback(true);
+    }
+  }
 
   /**
    * Helper to allow getting some of the location data in a way that's compatible
@@ -671,6 +732,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     STREAM_PROPERTIES: STREAM_PROPERTIES,
     SCREEN_SHARE_STATES: SCREEN_SHARE_STATES,
     ROOM_INFO_FAILURES: ROOM_INFO_FAILURES,
+    setRootObjects: setRootObjects,
     composeCallUrlEmail: composeCallUrlEmail,
     formatDate: formatDate,
     formatURL: formatURL,
@@ -683,6 +745,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     isFirefoxOS: isFirefoxOS,
     isOpera: isOpera,
     getUnsupportedPlatform: getUnsupportedPlatform,
+    hasAudioDevices: hasAudioDevices,
     locationData: locationData,
     atob: atob,
     btoa: btoa,

@@ -40,11 +40,19 @@ add_task(function test_initialize_no_guest_rooms() {
 add_task(function test_initialize_with_guest_rooms() {
   Services.prefs.setBoolPref("loop.createdRoom", true);
   startTimerCalled = false;
+  MozLoopService.resetServiceInitialized();
 
   MozLoopService.initialize();
 
   Assert.equal(startTimerCalled, true,
     "should start the timer when guest rooms have been created");
+
+  startTimerCalled = false;
+
+  MozLoopService.initialize();
+
+  Assert.equal(startTimerCalled, false,
+    "should not have initialized a second time");
 });
 
 function run_test() {

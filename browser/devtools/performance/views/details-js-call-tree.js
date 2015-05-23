@@ -26,7 +26,6 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
     this._onLink = this._onLink.bind(this);
 
     this.container = $("#js-calltree-view .call-tree-cells-container");
-
     JITOptimizationsView.initialize();
   },
 

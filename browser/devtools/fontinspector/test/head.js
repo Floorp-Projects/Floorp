@@ -128,13 +128,13 @@ let openFontInspectorForURL = Task.async(function* (url) {
    * selectNode calls setNodeFront which always emits 'new-node' which calls
    * FontInspector.update that emits the 'fontinspector-updated' event.
    */
-  let updated = inspector.once("fontinspector-updated");
+  let onUpdated = inspector.once("fontinspector-updated");
 
   yield selectNode("body", inspector);
   inspector.sidebar.select("fontinspector");
 
   info("Waiting for font-inspector to update.");
-  yield updated;
+  yield onUpdated;
 
   info("Font Inspector ready.");
 
@@ -182,4 +182,38 @@ function waitForToolboxFrameFocus(toolbox) {
   let win = toolbox.frame.contentWindow;
   waitForFocus(def.resolve, win);
   return def.promise;
+}
+
+/**
+ * Clears the preview input field, types new text into it and waits for the
+ * preview images to be updated.
+ *
+ * @param {FontInspector} fontInspector - The FontInspector instance.
+ * @param {String} text - The text to preview.
+ */
+function* updatePreviewText(fontInspector, text) {
+  info(`Changing the preview text to '${text}'`);
+
+  let doc = fontInspector.chromeDoc;
+  let input = doc.getElementById("preview-text-input");
+  let update = fontInspector.inspector.once("fontinspector-updated");
+
+  info("Focusing the input field.");
+  input.focus();
+
+  is(doc.activeElement, input, "The input was focused.");
+
+  info("Blanking the input field.");
+  for (let i = input.value.length; i >= 0; i--) {
+    EventUtils.sendKey("BACK_SPACE", doc.defaultView);
+  }
+
+  is(input.value, "", "The input is now blank.");
+
+  info("Typing the specified text to the input field.");
+  EventUtils.sendString(text, doc.defaultView);
+  is(input.value, text, "The input now contains the correct text.");
+
+  info("Waiting for the font-inspector to update.");
+  yield update;
 }

@@ -32,7 +32,6 @@ function test() {
       promiseBrowserLoaded(newWin.gBrowser.selectedBrowser).then(() => {
         let ready = () => {
           // get the sessionstore state for the window
-          TabState.flush(newWin.gBrowser.selectedBrowser);
           let state = ss.getWindowState(newWin);
 
           // verify our cookie got set during pageload
@@ -71,11 +70,15 @@ function test() {
           finish();
         };
 
+        function flushAndReady() {
+          TabStateFlusher.flush(newWin.gBrowser.selectedBrowser).then(ready);
+        }
+
         if (newWin.gMultiProcessBrowser) {
           let tab = newWin.gBrowser.selectedTab;
-          promiseTabRestored(tab).then(ready);
+          promiseTabRestored(tab).then(flushAndReady);
         } else {
-          ready();
+          flushAndReady();
         }
       }, true, testURL);
     });

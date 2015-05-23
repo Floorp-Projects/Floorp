@@ -1,42 +1,45 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px">
-<style>
-  g {
-    fill: #babec3;
-  }
-  g:not(:target) {
-    display: none;
-  }
-</style>
-<g id="overview-markers">
-  <rect x="0px" y="3px" width="5px" height="2.5px" rx="1" ry="1"/>
-  <rect x="7px" y="3px" width="9px" height="2.5px" rx="1" ry="1"/>
-  <rect x="0px" y="7px" width="9px" height="2.5px" rx="1" ry="1"/>
-  <rect x="10px" y="7px" width="6px" height="2.5px" rx="1" ry="1"/>
-  <rect x="4px" y="11px" width="5px" height="2.5px" rx="1" ry="1"/>
-  <rect x="12px" y="11px" width="4px" height="2.5px" rx="1" ry="1"/>
-</g>
-<g id="overview-frames">
-  <rect x="1px" y="4px" width="2px" height="12px" rx="1" ry="1"/>
-  <rect x="5px" y="12px" width="2px" height="4px" rx="1" ry="1"/>
-  <rect x="9px" y="9px" width="2px" height="7px" rx="1" ry="1"/>
-  <rect x="13px" y="7px" width="2px" height="9px" rx="1" ry="1"/>
-</g>
-<g id="details-waterfall">
-  <rect x="0px" y="3px" width="9px" height="2.5px" rx="1" ry="1"/>
-  <rect x="5px" y="7px" width="8px" height="2.5px" rx="1" ry="1"/>
-  <rect x="7px" y="11px" width="9px" height="2.5px" rx="1" ry="1"/>
-</g>
-<g id="details-call-tree">
-  <rect x="0px" y="3px" width="16px" height="2px" rx="1" ry="1"/>
-  <rect x="0px" y="6px" width="8px" height="2px" rx="1" ry="1"/>
-  <rect x="0px" y="9px" width="11px" height="2px" rx="1" ry="1"/>
-  <rect x="0px" y="12px" width="6px" height="2px" rx="1" ry="1"/>
-</g>
-<g id="details-flamegraph">
-  <rect x="0px" y="3px" width="16px" height="2px" rx="1" ry="1"/>
-  <rect x="0px" y="6px" width="8px" height="2px" rx="1" ry="1"/>
-  <rect x="10px" y="6px" width="6px" height="2px" rx="1" ry="1"/>
-  <rect x="2px" y="9px" width="6px" height="2px" rx="1" ry="1"/>
-  <rect x="5px" y="12px" width="3px" height="2px" rx="1" ry="1"/>
-</g>
+  <style>
+    g {
+      fill: #babec3;
+    }
+    g:not(:target) {
+      display: none;
+    }
+  </style>
+  <g id="overview-markers">
+    <rect x="0px" y="3px" width="5px" height="2.5px" rx="1" ry="1"/>
+    <rect x="7px" y="3px" width="9px" height="2.5px" rx="1" ry="1"/>
+    <rect x="0px" y="7px" width="9px" height="2.5px" rx="1" ry="1"/>
+    <rect x="10px" y="7px" width="6px" height="2.5px" rx="1" ry="1"/>
+    <rect x="4px" y="11px" width="5px" height="2.5px" rx="1" ry="1"/>
+    <rect x="12px" y="11px" width="4px" height="2.5px" rx="1" ry="1"/>
+  </g>
+  <g id="overview-frames">
+    <rect x="1px" y="4px" width="2px" height="12px" rx="1" ry="1"/>
+    <rect x="5px" y="12px" width="2px" height="4px" rx="1" ry="1"/>
+    <rect x="9px" y="9px" width="2px" height="7px" rx="1" ry="1"/>
+    <rect x="13px" y="7px" width="2px" height="9px" rx="1" ry="1"/>
+  </g>
+  <g id="details-waterfall">
+    <rect x="0px" y="3px" width="9px" height="2.5px" rx="1" ry="1"/>
+    <rect x="5px" y="7px" width="8px" height="2.5px" rx="1" ry="1"/>
+    <rect x="7px" y="11px" width="9px" height="2.5px" rx="1" ry="1"/>
+  </g>
+  <g id="details-call-tree">
+    <rect x="0px" y="3px" width="16px" height="2px" rx="1" ry="1"/>
+    <rect x="0px" y="6px" width="8px" height="2px" rx="1" ry="1"/>
+    <rect x="0px" y="9px" width="11px" height="2px" rx="1" ry="1"/>
+    <rect x="0px" y="12px" width="6px" height="2px" rx="1" ry="1"/>
+  </g>
+  <g id="details-flamegraph">
+    <rect x="0px" y="3px" width="16px" height="2px" rx="1" ry="1"/>
+    <rect x="0px" y="6px" width="8px" height="2px" rx="1" ry="1"/>
+    <rect x="10px" y="6px" width="6px" height="2px" rx="1" ry="1"/>
+    <rect x="2px" y="9px" width="6px" height="2px" rx="1" ry="1"/>
+    <rect x="5px" y="12px" width="3px" height="2px" rx="1" ry="1"/>
+  </g>
 </svg>

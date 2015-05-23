@@ -127,6 +127,7 @@
 
 #include "nsStyledElement.h"
 #include "nsIContentInlines.h"
+#include "nsChildContentList.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
