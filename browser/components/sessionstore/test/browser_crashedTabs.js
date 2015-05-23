@@ -114,7 +114,7 @@ add_task(function test_crash_page_not_in_history() {
 
   browser.loadURI(PAGE_1);
   yield promiseBrowserLoaded(browser);
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // Crash the tab
   yield crashBrowser(browser);
@@ -143,7 +143,7 @@ add_task(function test_revived_history_from_remote() {
 
   browser.loadURI(PAGE_1);
   yield promiseBrowserLoaded(browser);
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // Crash the tab
   yield crashBrowser(browser);
@@ -154,7 +154,7 @@ add_task(function test_revived_history_from_remote() {
   yield promiseTabRestored(newTab);
   ok(!newTab.hasAttribute("crashed"), "Tab shouldn't be marked as crashed anymore.");
   ok(browser.isRemoteBrowser, "Should be a remote browser");
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // Check the tab state and make sure the tab crashed page isn't
   // mentioned.
@@ -182,7 +182,7 @@ add_task(function test_revived_history_from_non_remote() {
 
   browser.loadURI(PAGE_1);
   yield promiseBrowserLoaded(browser);
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // Crash the tab
   yield crashBrowser(browser);
@@ -193,7 +193,7 @@ add_task(function test_revived_history_from_non_remote() {
   yield promiseBrowserLoaded(browser);
   ok(!newTab.hasAttribute("crashed"), "Tab shouldn't be marked as crashed anymore.");
   ok(!browser.isRemoteBrowser, "Should not be a remote browser");
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // Check the tab state and make sure the tab crashed page isn't
   // mentioned.
@@ -232,7 +232,7 @@ add_task(function test_revive_tab_from_session_store() {
   browser.loadURI(PAGE_2);
   yield promiseBrowserLoaded(browser);
 
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // Crash the tab
   yield crashBrowser(browser);
@@ -282,8 +282,8 @@ add_task(function test_revive_all_tabs_from_session_store() {
   browser.loadURI(PAGE_2);
   yield promiseBrowserLoaded(browser);
 
-  TabState.flush(browser);
-  TabState.flush(browser2);
+  yield TabStateFlusher.flush(browser);
+  yield TabStateFlusher.flush(browser2);
 
   // Crash the tab
   yield crashBrowser(browser);
@@ -328,7 +328,7 @@ add_task(function test_close_tab_after_crash() {
   browser.loadURI(PAGE_1);
   yield promiseBrowserLoaded(browser);
 
-  TabState.flush(browser);
+  yield TabStateFlusher.flush(browser);
 
   // Crash the tab
   yield crashBrowser(browser);

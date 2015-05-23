@@ -448,7 +448,7 @@ describe("loop.shared.models", function() {
     beforeEach(function() {
       collection = new sharedModels.NotificationCollection();
       sandbox.stub(l10n, "get", function(x, y) {
-        return "translated:" + x + (y ? ':' + y : '');
+        return "translated:" + x + (y ? ":" + y : "");
       });
       notifData = {level: "error", message: "plop"};
       testNotif = new sharedModels.NotificationModel(notifData);

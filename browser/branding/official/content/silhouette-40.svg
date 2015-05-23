@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1"
- xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="-45 31 40 40"
- enable-background="new -45 31 40 40">
- <path fill="#CCCCCC" d="M-14.1,54.7c0.7-1.4,1.7-4.4,0.8-6.9c0,0,0,0,0,0.1l0,0c0,0-0.2,0.5-0.4,1.3c0-0.1,0-0.2,0-0.3
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-45 31 40 40">
+  <path fill="#ccc" d="M-14.1,54.7c0.7-1.4,1.7-4.4,0.8-6.9c0,0,0,0,0,0.1l0,0c0,0-0.2,0.5-0.4,1.3c0-0.1,0-0.2,0-0.3
   c0.1-0.9,0-1.9-0.1-2.9c-0.3-1.5-1.4-2.8-2-3.2c0,0,0.1,0,0.1,0.1c-0.1-0.1-0.1-0.1-0.1-0.1s0,0.1,0.1,0.4c-0.7-1.1-1.6-1.5-1.6-1.5
   s0,0.2,0.1,0.5c-2-1.9-4.7-3-7.6-3c-3,0-5.7,1.2-7.8,3.1c0.1,0.1,0.2,0.3,0.4,0.5c0,0,0.8-0.1,1.7-0.1c1.7-1.2,3.6-1.8,5.7-1.8
   c2.6,0,5.1,1.1,7,3c-0.2-0.1-0.1,0,0,0.1c-0.6-0.4-1.2-0.8-1.7-0.8c1,0.8,2.6,2.7,2.4,6.2c-0.3-0.6-0.6-1-0.9-1.3

@@ -73,8 +73,9 @@ function SelectorSearch(aInspector, aInputNode) {
 exports.SelectorSearch = SelectorSearch;
 
 SelectorSearch.prototype = {
-
-  get walker() this.inspector.walker,
+  get walker() {
+    return this.inspector.walker;
+  },
 
   // The possible states of the query.
   States: {
@@ -452,7 +453,7 @@ SelectorSearch.prototype = {
         count: count
       };
 
-      // In case of tagNames, change te case to small
+      // In case of tagNames, change the case to small
       if (value.match(/.*[\.#][^\.#]{0,}$/) == null) {
         item.label = value.toLowerCase();
       }

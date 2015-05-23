@@ -58,7 +58,7 @@ function* testBoxy(inspector, view) {
   });
 }
 
-function testMoxy(inspector, view) {
+function* testMoxy(inspector, view) {
   info("Test content and gutter in the keyframes rule of #moxy");
 
   let {
