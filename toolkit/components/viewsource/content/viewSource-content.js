@@ -19,8 +19,8 @@ const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 // We use noncharacter Unicode codepoints to minimize the risk of clashing
 // with anything that might legitimately be present in the document.
 // U+FDD0..FDEF <noncharacters>
-const MARK_SELECTION_START = '\uFDD0';
-const MARK_SELECTION_END = '\uFDEF';
+const MARK_SELECTION_START = "\uFDD0";
+const MARK_SELECTION_END = "\uFDEF";
 
 let global = this;
 
@@ -69,7 +69,8 @@ let ViewSourceContent = {
 
   get isViewSource() {
     let uri = content.document.documentURI;
-    return uri.startsWith("view-source:");
+    return uri.startsWith("view-source:") ||
+           (uri.startsWith("data:") && uri.includes("MathML"));
   },
 
   get isAboutBlank() {
