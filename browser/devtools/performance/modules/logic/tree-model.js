@@ -175,6 +175,7 @@ ThreadNode.prototype = {
       let prevCalls = this.calls;
       let prevFrameKey;
       let isLeaf = mutableFrameKeyOptions.isLeaf = true;
+      let skipRoot = options.invertTree;
 
       // Inflate the stack and build the FrameNode call tree directly.
       //
@@ -212,6 +213,13 @@ ThreadNode.prototype = {
 
         // Fetch the stack prefix (i.e. older frames) index.
         stackIndex = stackEntry[STACK_PREFIX_SLOT];
+
+        // Do not include the (root) node in this sample, as the costs of each frame
+        // will make it clear to differentiate (root)->B vs (root)->A->B
+        // when a tree is inverted, a revert of bug 1147604
+        if (stackIndex === null && skipRoot) {
+          break;
+        }
 
         // Inflate the frame.
         let inflatedFrame = getOrAddInflatedFrame(inflatedFrameCache, frameIndex, frameTable,
@@ -496,7 +504,7 @@ FrameNode.prototype = {
       return null;
     }
     return new JITOptimizations(this._optimizations, this._stringTable);
-  }
+  },
 };
 
 exports.ThreadNode = ThreadNode;
