@@ -14,6 +14,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
 
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 
+// These are markers used to delimit the selection during processing. They
+// are removed from the final rendering.
+// We use noncharacter Unicode codepoints to minimize the risk of clashing
+// with anything that might legitimately be present in the document.
+// U+FDD0..FDEF <noncharacters>
+const MARK_SELECTION_START = '\uFDD0';
+const MARK_SELECTION_END = '\uFDEF';
+
 let global = this;
 
 /**
@@ -39,7 +47,15 @@ let ViewSourceContent = {
     "ViewSource:ToggleWrapping",
     "ViewSource:ToggleSyntaxHighlighting",
     "ViewSource:SetCharacterSet",
+    "ViewSource:ScheduleDrawSelection",
   ],
+
+  /**
+   * When showing selection source, chrome will construct a page fragment to
+   * show, and then instruct content to draw a selection after load.  This is
+   * set true when there is a pending request to draw selection.
+   */
+  needsDrawSelection: false,
 
   /**
    * ViewSourceContent is attached as an nsISelectionListener on pageshow,
@@ -129,6 +145,9 @@ let ViewSourceContent = {
       case "ViewSource:SetCharacterSet":
         this.setCharacterSet(data.charset, data.doPageLoad);
         break;
+      case "ViewSource:ScheduleDrawSelection":
+        this.scheduleDrawSelection();
+        break;
     }
   },
 
@@ -175,6 +194,14 @@ let ViewSourceContent = {
     return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsISelectionDisplay)
                    .QueryInterface(Ci.nsISelectionController);
+  },
+
+  /**
+   * A shortcut to the nsIWebBrowserFind for the content.
+   */
+  get webBrowserFind() {
+    return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIWebBrowserFind);
   },
 
   /**
@@ -369,6 +396,15 @@ let ViewSourceContent = {
       this.selectionListenerAttached = true;
     }
     content.focus();
+
+    // If we need to draw the selection, wait until an actual view source page
+    // has loaded, instead of about:blank.
+    if (this.needsDrawSelection &&
+        content.document.documentURI.startsWith("view-source:")) {
+      this.needsDrawSelection = false;
+      this.drawSelection();
+    }
+
     sendAsyncMessage("ViewSource:SourceLoaded");
   },
 
@@ -720,6 +756,110 @@ let ViewSourceContent = {
     }
 
     this.updateStatusTask.arm();
+  },
+
+  /**
+   * Chrome has requested that we draw a selection once the content loads.
+   * We set a flag, and wait for the load event, where drawSelection() will be
+   * called to do the real work.
+   */
+  scheduleDrawSelection() {
+    this.needsDrawSelection = true;
+  },
+
+  /**
+   * Using special markers left in the serialized source, this helper makes the
+   * underlying markup of the selected fragment to automatically appear as
+   * selected on the inflated view-source DOM.
+   */
+  drawSelection() {
+    content.document.title =
+      this.bundle.GetStringFromName("viewSelectionSourceTitle");
+
+    // find the special selection markers that we added earlier, and
+    // draw the selection between the two...
+    var findService = null;
+    try {
+      // get the find service which stores the global find state
+      findService = Cc["@mozilla.org/find/find_service;1"]
+                    .getService(Ci.nsIFindService);
+    } catch(e) { }
+    if (!findService)
+      return;
+
+    // cache the current global find state
+    var matchCase     = findService.matchCase;
+    var entireWord    = findService.entireWord;
+    var wrapFind      = findService.wrapFind;
+    var findBackwards = findService.findBackwards;
+    var searchString  = findService.searchString;
+    var replaceString = findService.replaceString;
+
+    // setup our find instance
+    var findInst = this.webBrowserFind;
+    findInst.matchCase = true;
+    findInst.entireWord = false;
+    findInst.wrapFind = true;
+    findInst.findBackwards = false;
+
+    // ...lookup the start mark
+    findInst.searchString = MARK_SELECTION_START;
+    var startLength = MARK_SELECTION_START.length;
+    findInst.findNext();
+
+    var selection = content.getSelection();
+    if (!selection.rangeCount)
+      return;
+
+    var range = selection.getRangeAt(0);
+
+    var startContainer = range.startContainer;
+    var startOffset = range.startOffset;
+
+    // ...lookup the end mark
+    findInst.searchString = MARK_SELECTION_END;
+    var endLength = MARK_SELECTION_END.length;
+    findInst.findNext();
+
+    var endContainer = selection.anchorNode;
+    var endOffset = selection.anchorOffset;
+
+    // reset the selection that find has left
+    selection.removeAllRanges();
+
+    // delete the special markers now...
+    endContainer.deleteData(endOffset, endLength);
+    startContainer.deleteData(startOffset, startLength);
+    if (startContainer == endContainer)
+      endOffset -= startLength; // has shrunk if on same text node...
+    range.setEnd(endContainer, endOffset);
+
+    // show the selection and scroll it into view
+    selection.addRange(range);
+    // the default behavior of the selection is to scroll at the end of
+    // the selection, whereas in this situation, it is more user-friendly
+    // to scroll at the beginning. So we override the default behavior here
+    try {
+      this.selectionController.scrollSelectionIntoView(
+                                 Ci.nsISelectionController.SELECTION_NORMAL,
+                                 Ci.nsISelectionController.SELECTION_ANCHOR_REGION,
+                                 true);
+    }
+    catch(e) { }
+
+    // restore the current find state
+    findService.matchCase     = matchCase;
+    findService.entireWord    = entireWord;
+    findService.wrapFind      = wrapFind;
+    findService.findBackwards = findBackwards;
+    findService.searchString  = searchString;
+    findService.replaceString = replaceString;
+
+    findInst.matchCase     = matchCase;
+    findInst.entireWord    = entireWord;
+    findInst.wrapFind      = wrapFind;
+    findInst.findBackwards = findBackwards;
+    findInst.searchString  = searchString;
   },
 };
 ViewSourceContent.init();
