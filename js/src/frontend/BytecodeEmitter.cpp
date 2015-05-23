@@ -2044,6 +2044,8 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      case PNK_STATEMENTLIST:
+      case PNK_CATCHLIST:
       // Strict equality operations and logical operators are well-behaved and
       // perform no conversions.
       case PNK_OR:
@@ -2231,14 +2233,12 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_RETURN:
       case PNK_CLASS:
       case PNK_GENEXP:
-      case PNK_STATEMENTLIST:
       case PNK_ARGSBODY:
       case PNK_ARRAYCOMP:
       case PNK_CLASSMETHODLIST:
       case PNK_TEMPLATE_STRING_LIST:
       case PNK_EXPORT_SPEC_LIST:
       case PNK_IMPORT_SPEC_LIST:
-      case PNK_CATCHLIST:
       case PNK_LABEL:
       case PNK_LEXICALSCOPE:
       case PNK_NAME:
