@@ -2214,6 +2214,18 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      case PNK_FUNCTION:
+        MOZ_ASSERT(pn->isArity(PN_CODE));
+        /*
+         * A named function, contrary to ES3, is no longer effectful, because
+         * we bind its name lexically (using JSOP_CALLEE) instead of creating
+         * an Object instance and binding a readonly, permanent property in it
+         * (the object and binding can be detected and hijacked or captured).
+         * This is a bug fix to ES3; it is fixed in ES3.1 drafts.
+         */
+        *answer = false;
+        return true;
+
       // Generator expressions have no side effects on their own.
       case PNK_GENEXP:
         MOZ_ASSERT(pn->isArity(PN_LIST));
@@ -2268,7 +2280,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_IMPORT_SPEC_LIST:
       case PNK_LABEL:
       case PNK_LEXICALSCOPE:
-      case PNK_FUNCTION:
       case PNK_EXPORT_SPEC:
       case PNK_IMPORT_SPEC:
       case PNK_CALLSITEOBJ:
