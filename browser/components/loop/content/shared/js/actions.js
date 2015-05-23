@@ -166,6 +166,28 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used to notify that the session has a data channel available.
+     */
+    DataChannelsAvailable: Action.define("dataChannelsAvailable", {
+    }),
+
+    /**
+     * Used to send a message to the other peer.
+     */
+    SendTextChatMessage: Action.define("sendTextChatMessage", {
+      contentType: String,
+      message: String
+    }),
+
+    /**
+     * Notifies that a message has been received from the other peer.
+     */
+    ReceivedTextChatMessage: Action.define("receivedTextChatMessage", {
+      contentType: String,
+      message: String
+    }),
+
+    /**
      * Used by the ongoing views to notify stores about the elements
      * required for the sdk.
      */

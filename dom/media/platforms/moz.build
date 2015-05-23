@@ -59,7 +59,7 @@ if CONFIG['MOZ_APPLEMEDIA']:
       '-framework AudioToolbox',
   ]
 
-if CONFIG['MOZ_FMP4'] and CONFIG['ANDROID_VERSION'] >= '18'and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+if CONFIG['MOZ_GONK_MEDIACODEC']:
     DEFINES['MOZ_GONK_MEDIACODEC'] = True
     DIRS += ['gonk']
 

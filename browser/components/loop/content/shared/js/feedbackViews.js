@@ -169,6 +169,7 @@ loop.shared.views.FeedbackView = (function(l10n) {
    */
   var FeedbackReceived = React.createClass({displayName: "FeedbackReceived",
     propTypes: {
+      noCloseText: React.PropTypes.bool,
       onAfterFeedbackReceived: React.PropTypes.func
     },
 
@@ -195,14 +196,24 @@ loop.shared.views.FeedbackView = (function(l10n) {
       }
     },
 
+    _renderCloseText: function() {
+      if (this.props.noCloseText) {
+        return null;
+      }
+
+      return (
+        React.createElement("p", {className: "info thank-you"}, 
+          l10n.get("feedback_window_will_close_in2", {
+            countdown: this.state.countdown,
+            num: this.state.countdown
+          }))
+      );
+    },
+
     render: function() {
       return (
         React.createElement(FeedbackLayout, {title: l10n.get("feedback_thank_you_heading")}, 
-          React.createElement("p", {className: "info thank-you"}, 
-            l10n.get("feedback_window_will_close_in2", {
-              countdown: this.state.countdown,
-              num: this.state.countdown
-            }))
+          this._renderCloseText()
         )
       );
     }
@@ -220,7 +231,8 @@ loop.shared.views.FeedbackView = (function(l10n) {
     propTypes: {
       onAfterFeedbackReceived: React.PropTypes.func,
       // Used by the UI showcase.
-      feedbackState: React.PropTypes.string
+      feedbackState: React.PropTypes.string,
+      noCloseText: React.PropTypes.bool
     },
 
     getInitialState: function() {
@@ -291,6 +303,7 @@ loop.shared.views.FeedbackView = (function(l10n) {
           }
           return (
             React.createElement(FeedbackReceived, {
+              noCloseText: this.props.noCloseText, 
               onAfterFeedbackReceived: this.props.onAfterFeedbackReceived})
           );
         }

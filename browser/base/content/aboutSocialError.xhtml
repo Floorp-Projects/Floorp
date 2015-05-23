@@ -46,13 +46,14 @@
     }
 
     function parseQueryString() {
-      let searchParams = new URLSearchParams(location.href.split("?")[1]);
+      let searchParams = new URLSearchParams(document.documentURI.split("?")[1]);
       let mode = searchParams.get("mode");
-      config.directory = searchParams.get("directory");
       config.origin = searchParams.get("origin");
       let encodedURL = searchParams.get("url");
       let url = decodeURIComponent(encodedURL);
-      if (config.directory) {
+      // directory does not have origin set, in that case use the url origin for
+      // the error message.
+      if (!config.origin) {
         let URI = Services.io.newURI(url, null, null);
         config.origin = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI).origin;
       }

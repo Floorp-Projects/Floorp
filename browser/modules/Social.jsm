@@ -240,12 +240,6 @@ this.Social = {
         }).then(null, Cu.reportError);
       }
     }).then(null, Cu.reportError);
-  },
-
-  setErrorListener: function(iframe, errorHandler) {
-    if (iframe.socialErrorListener)
-      return iframe.socialErrorListener;
-    return new SocialErrorListener(iframe, errorHandler);
   }
 };
 
@@ -320,84 +314,6 @@ function CreateSocialMarkWidget(aId, aProvider) {
       return node;
     }
   });
-};
-
-// Error handling class used to listen for network errors in the social frames
-// and replace them with a social-specific error page
-function SocialErrorListener(iframe, errorHandler) {
-  this.setErrorMessage = errorHandler;
-  this.iframe = iframe;
-  iframe.socialErrorListener = this;
-  // Force a layout flush by calling .clientTop so that the docShell of this
-  // frame is created for the error listener
-  iframe.clientTop;
-  iframe.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIWebProgress)
-                                   .addProgressListener(this,
-                                                        Ci.nsIWebProgress.NOTIFY_STATE_REQUEST |
-                                                        Ci.nsIWebProgress.NOTIFY_LOCATION);
-}
-
-SocialErrorListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference,
-                                         Ci.nsISupports]),
-
-  remove: function() {
-    this.iframe.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsIWebProgress)
-                                     .removeProgressListener(this);
-    delete this.iframe.socialErrorListener;
-  },
-
-  onStateChange: function SPL_onStateChange(aWebProgress, aRequest, aState, aStatus) {
-    let failure = false;
-    if ((aState & Ci.nsIWebProgressListener.STATE_STOP)) {
-      if (aRequest instanceof Ci.nsIHttpChannel) {
-        try {
-          // Change the frame to an error page on 4xx (client errors)
-          // and 5xx (server errors).  responseStatus throws if it is not set.
-          failure = aRequest.responseStatus >= 400 &&
-                    aRequest.responseStatus < 600;
-        } catch (e) {
-          failure = aStatus == Components.results.NS_ERROR_CONNECTION_REFUSED;
-        }
-      }
-    }
-
-    // Calling cancel() will raise some OnStateChange notifications by itself,
-    // so avoid doing that more than once
-    if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
-      aRequest.cancel(Components.results.NS_BINDING_ABORTED);
-      let origin = this.iframe.getAttribute("origin");
-      if (origin) {
-        let provider = Social._getProviderFromOrigin(origin);
-        provider.errorState = "content-error";
-      }
-      this.setErrorMessage(aWebProgress.QueryInterface(Ci.nsIDocShell)
-                              .chromeEventHandler);
-    }
-  },
-
-  onLocationChange: function SPL_onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
-    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
-      aRequest.cancel(Components.results.NS_BINDING_ABORTED);
-      let origin = this.iframe.getAttribute("origin");
-      if (origin) {
-        let provider = Social._getProviderFromOrigin(origin);
-        if (!provider.errorState)
-          provider.errorState = "content-error";
-      }
-      schedule(function() {
-        this.setErrorMessage(aWebProgress.QueryInterface(Ci.nsIDocShell)
-                              .chromeEventHandler);
-      }.bind(this));
-    }
-  },
-
-  onProgressChange: function SPL_onProgressChange() {},
-  onStatusChange: function SPL_onStatusChange() {},
-  onSecurityChange: function SPL_onSecurityChange() {},
 };
 
 

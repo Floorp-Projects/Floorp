@@ -5,21 +5,23 @@
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = require("resource://gre/modules/Task.jsm");
-const { extend } = require("sdk/util/object");
-const { RecordingModel } = require("devtools/performance/recording-model");
 
 loader.lazyRequireGetter(this, "Services");
+loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
+loader.lazyRequireGetter(this, "extend",
+  "sdk/util/object", true);
+
+loader.lazyRequireGetter(this, "Actors",
+  "devtools/performance/actors");
+loader.lazyRequireGetter(this, "RecordingModel",
+  "devtools/performance/recording-model", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
-loader.lazyRequireGetter(this, "actors",
-  "devtools/performance/actors");
 
 loader.lazyImporter(this, "gDevTools",
   "resource:///modules/devtools/gDevTools.jsm");
-loader.lazyImporter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
 
 // Events to pipe from PerformanceActorsConnection to the PerformanceFront
 const CONNECTION_PIPE_EVENTS = [
@@ -102,7 +104,7 @@ PerformanceActorsConnection.prototype = {
 
     // Create a promise that gets resolved upon connecting, so that
     // other attempts to open the connection use the same resolution promise
-    this._connecting = Promise.defer();
+    this._connecting = promise.defer();
 
     // Local debugging needs to make the target remote.
     yield this._target.makeRemote();
@@ -114,8 +116,6 @@ PerformanceActorsConnection.prototype = {
     yield this._connectActors();
     yield this._registerListeners();
 
-    this._connected = true;
-
     this._connecting.resolve();
     Services.obs.notifyObservers(null, "performance-actors-connection-opened", null);
   }),
@@ -124,18 +124,21 @@ PerformanceActorsConnection.prototype = {
    * Destroys this connection.
    */
   destroy: Task.async(function*() {
-    if (this._connecting && !this._connected) {
+    if (this._connecting) {
       yield this._connecting.promise;
-    } else if (!this._connected) {
+    } else {
       return;
     }
 
     yield this._unregisterListeners();
     yield this._disconnectActors();
 
-    this._memory = this._timeline = this._profiler = this._target = this._client = null;
-    this._connected = false;
     this._connecting = null;
+    this._profiler = null;
+    this._timeline = null;
+    this._memory = null;
+    this._target = null;
+    this._client = null;
   }),
 
   /**
@@ -143,11 +146,11 @@ PerformanceActorsConnection.prototype = {
    * found in ./actors.js.
    */
   _connectActors: Task.async(function*() {
-    this._profiler = new actors.ProfilerFront(this._target);
-    this._memory = new actors.MemoryFront(this._target);
-    this._timeline = new actors.TimelineFront(this._target);
+    this._profiler = new Actors.ProfilerFront(this._target);
+    this._memory = new Actors.MemoryFront(this._target);
+    this._timeline = new Actors.TimelineFront(this._target);
 
-    yield Promise.all([
+    yield promise.all([
       this._profiler.connect(),
       this._memory.connect(),
       this._timeline.connect()
@@ -192,7 +195,7 @@ PerformanceActorsConnection.prototype = {
    * Closes the connections to non-profiler actors.
    */
   _disconnectActors: Task.async(function* () {
-    yield Promise.all([
+    yield promise.all([
       this._profiler.destroy(),
       this._timeline.destroy(),
       this._memory.destroy()

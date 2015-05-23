@@ -8,8 +8,8 @@
 function spawnTest () {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView } = panel.panelWin;
-  let { L10N, TIMELINE_BLUEPRINT } = devtools.require("devtools/shared/timeline/global");
-  let { getMarkerLabel } = devtools.require("devtools/shared/timeline/marker-utils");
+  let { L10N, TIMELINE_BLUEPRINT } = devtools.require("devtools/performance/global");
+  let { getMarkerLabel } = devtools.require("devtools/performance/marker-utils");
 
   yield startRecording(panel);
   ok(true, "Recording has started.");

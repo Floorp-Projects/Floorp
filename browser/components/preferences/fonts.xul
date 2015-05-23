@@ -142,7 +142,7 @@
               <label accesskey="&serif.accesskey;" control="serif">&serif.label;</label>
             </hbox>
             <menulist id="serif" flex="1" style="width: 0px;" delayprefsave="true"
-                      onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('serif'));"/>
+                      onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
             <spacer/>
           </row>
           <row align="center">
@@ -150,7 +150,7 @@
               <label accesskey="&sans-serif.accesskey;" control="sans-serif">&sans-serif.label;</label>
             </hbox>
             <menulist id="sans-serif" flex="1" style="width: 0px;" delayprefsave="true"
-                      onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('sans-serif'));"/>
+                      onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
             <spacer/>
           </row>
           <row align="center">
@@ -158,7 +158,7 @@
               <label accesskey="&monospace.accesskey;" control="monospace">&monospace.label;</label>
             </hbox>
             <menulist id="monospace" flex="1" style="width: 0px;" crop="right" delayprefsave="true"
-                      onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('monospace'));"/>
+                      onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
             <hbox align="center" pack="end">
               <label value="&size.label;"
                      accesskey="&sizeMonospace.accesskey;"

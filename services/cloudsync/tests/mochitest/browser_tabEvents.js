@@ -7,7 +7,7 @@ function test() {
   let local = {};
 
   Components.utils.import("resource://gre/modules/CloudSync.jsm", local);
-  Components.utils.import("resource:///modules/sessionstore/TabState.jsm", local);
+  Components.utils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", local);
 
   let cloudSync = local.CloudSync();
   let opentabs = [];
@@ -58,11 +58,11 @@ function test() {
 
     function flush() {
       tab.linkedBrowser.removeEventListener("load", flush, true);
-      local.TabState.flush(tab.linkedBrowser);
-      ++ nflushed;
-      info("flushed " + nflushed);
-
-      next();
+      local.TabStateFlusher.flush(tab.linkedBrowser).then(() => {
+        ++ nflushed;
+        info("flushed " + nflushed);
+        next();
+      });
     }
 
     tab.linkedBrowser.addEventListener("load", flush, true);

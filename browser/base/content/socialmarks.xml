@@ -54,6 +54,8 @@
           iframe.setAttribute("type", "content");
           iframe.setAttribute("class", "social-panel-frame");
           iframe.setAttribute("flex", "1");
+          iframe.setAttribute("message", "true");
+          iframe.setAttribute("messagemanagergroup", "social");
           iframe.setAttribute("tooltip", "aHTMLTooltip");
           iframe.setAttribute("context", "contentAreaContextMenu");
           iframe.setAttribute("origin", provider.origin);
@@ -134,6 +136,15 @@
         ]]></body>
       </method>
 
+      <method name="receiveMessage">
+        <parameter name="message"/>
+        <body><![CDATA[
+        if (message.name != "Social:ErrorPageNotify" || message.target != this.content)
+          return;
+        this.openPanel();
+        ]]></body>
+      </method>
+
       <method name="loadPanel">
         <parameter name="pageData"/>
         <parameter name="target"/>
@@ -206,34 +217,13 @@
           let unload = () => {
             contentWindow.removeEventListener("unload", unload);
             contentWindow.removeEventListener("socialMarkUpdate", markUpdate);
-            if (this.content.socialErrorListener)
-              this.content.socialErrorListener.remove();
           }
           contentWindow.addEventListener("socialMarkUpdate", markUpdate);
           contentWindow.addEventListener("unload", unload);
         }
         this.content.addEventListener("DOMContentLoaded", DOMContentLoaded, true);
-        Social.setErrorListener(this.content, this.setErrorMessage.bind(this));
         this._loading = true;
         this.content.setAttribute("src", endpoint);
-        ]]></body>
-      </method>
-
-      <method name="setErrorMessage">
-        <parameter name="aNotificationFrame"/>
-        <body><![CDATA[
-        if (!aNotificationFrame)
-          return;
-
-        let src = aNotificationFrame.getAttribute("src");
-        aNotificationFrame.removeAttribute("src");
-        let origin = aNotificationFrame.getAttribute("origin");
-        aNotificationFrame.webNavigation.loadURI("about:socialerror?mode=tryAgainOnly&url=" +
-                                                encodeURIComponent(src) + "&origin=" +
-                                                encodeURIComponent(origin),
-                                                null, null, null, null);
-        // ensure the panel is open if error occurs on first click
-        this.openPanel();
         ]]></body>
       </method>
 

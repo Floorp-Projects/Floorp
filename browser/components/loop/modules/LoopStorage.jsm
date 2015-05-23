@@ -10,7 +10,7 @@ try {
   Cu.importGlobalProperties(["indexedDB"]);
 } catch (ex) {
   // don't write this is out in xpcshell, since it's expected there
-  if (typeof window !== 'undefined' && "console" in window) {
+  if (typeof window !== "undefined" && "console" in window) {
     console.log("Failed to import indexedDB; if this isn't a unit test," +
                 " something is wrong", ex);
   }

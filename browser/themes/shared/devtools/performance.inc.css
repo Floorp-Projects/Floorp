@@ -84,26 +84,13 @@
   margin: 3px 2px;
 }
 
-.theme-dark #performance-view toolbarbutton.record-button {
-  background-color: var(--theme-tab-toolbar-background);
-  border: 1px solid var(--theme-sidebar-background);
-}
-
-.theme-light #performance-view toolbarbutton.record-button {
-  background-color: rgba(221, 221, 221, 1);
-  border: 1px solid rgba(204, 204, 204, 1);
-}
-
-#performance-view toolbarbutton.record-button {
-  margin: 5px;
-  padding: 5px;
-  cursor: pointer;
-  text-shadow: none;
-}
-
 #performance-view .realtime-message {
   opacity: 0.5;
   display: block;
+}
+
+#performance-view toolbarbutton.record-button {
+  padding: 5px;
 }
 
 #performance-view toolbarbutton.record-button[checked],
@@ -120,6 +107,10 @@
 #performance-view .realtime-disabled-message,
 #performance-view .realtime-disabled-on-e10s-message {
   display: none;
+  /* This label does not want to wrap naturally (based on some combination of
+     it's parents and flex).  Quick and dirty way to force it to wrap -> don't
+     let it get bigger than half the screen size */
+  max-width: 60vw;
 }
 
 #performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message {
@@ -295,8 +286,11 @@
   opacity: 0.6;
 }
 
+.call-tree-name {
+  -moz-margin-end: 4px !important;
+}
+
 .call-tree-url {
-  -moz-margin-start: 4px !important;
   cursor: pointer;
 }
 
@@ -321,14 +315,6 @@
   -moz-margin-start: 8px !important;
   font-size: 90%;
   color: var(--theme-content-color2);
-}
-
-.call-tree-name[value=""],
-.call-tree-url[value=""],
-.call-tree-line[value=""],
-.call-tree-column[value=""],
-.call-tree-host[value=""] {
-  display: none;
 }
 
 .call-tree-zoom {

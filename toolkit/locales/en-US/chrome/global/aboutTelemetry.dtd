@@ -52,6 +52,14 @@ Choose ping:
 Older ping &gt;&gt;
 ">
 
+<!ENTITY aboutTelemetry.archiveWeekHeader "
+Week
+">
+
+<!ENTITY aboutTelemetry.archivePingHeader "
+Ping
+">
+
 <!ENTITY aboutTelemetry.generalDataSection "
   General Data
 ">

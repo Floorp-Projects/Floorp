@@ -24,10 +24,16 @@ describe("loop.standaloneRoomViews", function() {
       mozLoop: {},
       sdkDriver: {}
     });
+    var textChatStore = new loop.store.TextChatStore(dispatcher, {
+      sdkDriver: {}
+    });
     feedbackStore = new loop.store.FeedbackStore(dispatcher, {
       feedbackClient: {}
     });
-    loop.store.StoreMixin.register({feedbackStore: feedbackStore});
+    loop.store.StoreMixin.register({
+      feedbackStore: feedbackStore,
+      textChatStore: textChatStore
+    });
 
     sandbox.useFakeTimers();
 
