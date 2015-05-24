@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Task } = require("resource://gre/modules/Task.jsm");
-
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
@@ -86,7 +84,7 @@ function memoryActorSupported (target) {
   // but no memory actor (like addon debugging in Gecko 38+)
   return !!target.getTrait("memoryActorAllocations") && target.hasActor("memory");
 }
-exports.memoryActorSupported = Task.async(memoryActorSupported);
+exports.memoryActorSupported = memoryActorSupported;
 
 /**
  * Takes a TabTarget, and checks existence of a TimelineActor on
@@ -104,7 +102,7 @@ function timelineActorSupported(target) {
 
   return target.hasActor("timeline");
 }
-exports.timelineActorSupported = Task.async(timelineActorSupported);
+exports.timelineActorSupported = timelineActorSupported;
 
 /**
  * Returns a promise resolving to the location of the profiler actor
@@ -131,7 +129,7 @@ function getProfiler (target) {
   }
   return deferred.promise;
 }
-exports.getProfiler = Task.async(getProfiler);
+exports.getProfiler = getProfiler;
 
 /**
  * Makes a request to an actor that does not have the modern `Front`
