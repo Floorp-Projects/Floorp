@@ -9,5 +9,9 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 JAR_MANIFESTS += ['jar.mn']
 
+EXTRA_JS_MODULES += [
+    'ViewSourceBrowser.jsm',
+]
+
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'View Source')

@@ -1508,6 +1508,12 @@ Navigator::GetFeature(const nsAString& aName, ErrorResult& aRv)
   }
 #endif
 
+  // Mirror the dom.apps.developer_mode pref to let apps get it read-only.
+  if (aName.EqualsLiteral("dom.apps.developer_mode")) {
+    p->MaybeResolve(Preferences::GetBool("dom.apps.developer_mode", false));
+    return p.forget();
+  }
+
   p->MaybeResolve(JS::UndefinedHandleValue);
   return p.forget();
 }

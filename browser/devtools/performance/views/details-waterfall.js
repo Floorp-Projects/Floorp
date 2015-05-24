@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const MARKER_DETAILS_WIDTH = 300;
+
 /**
  * Waterfall view containing the timeline markers, controlled by DetailsView.
  */
@@ -23,6 +25,9 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    */
   initialize: function () {
     DetailsSubview.initialize.call(this);
+
+    // TODO bug 1167093 save the previously set width, and ensure minimum width
+    $("#waterfall-details").setAttribute("width", MARKER_DETAILS_WIDTH);
 
     this.waterfall = new Waterfall($("#waterfall-breakdown"), $("#waterfall-view"));
     this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));

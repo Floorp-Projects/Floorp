@@ -27,7 +27,7 @@ function test() {
     visibilityswitch: "devtools.fakeTool4242.enabled",
     url: toolURL,
     label: "FAKE TOOL!!!",
-    isTargetSupported: function() true,
+    isTargetSupported: () => true,
     build: function(iframeWindow, toolbox) {
       let deferred = promise.defer();
       executeSoon(() => {
@@ -35,7 +35,7 @@ function test() {
           target: toolbox.target,
           toolbox: toolbox,
           isReady: true,
-          destroy: function(){},
+          destroy: function() {},
           panelDoc: iframeWindow.document,
         });
       });
