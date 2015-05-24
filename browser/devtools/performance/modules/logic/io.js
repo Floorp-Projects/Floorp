@@ -8,7 +8,7 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/performance/recording-utils", true);
+  "devtools/performance/recording-utils");
 
 loader.lazyImporter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
@@ -116,8 +116,6 @@ let PerformanceIO = {
   }
 };
 
-exports.PerformanceIO = PerformanceIO;
-
 /**
  * Returns a boolean indicating whether or not the passed in `version`
  * is supported by this serializer.
@@ -166,3 +164,5 @@ function convertLegacyData (legacyData) {
 
   return data;
 }
+
+exports.PerformanceIO = PerformanceIO;
