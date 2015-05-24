@@ -19,10 +19,10 @@ namespace mozilla {
 namespace net {
 
 BaseWebSocketChannel::BaseWebSocketChannel()
-  : mEncrypted(0)
-  , mWasOpened(0)
+  : mWasOpened(0)
   , mClientSetPingInterval(0)
   , mClientSetPingTimeout(0)
+  , mEncrypted(0)
   , mPingForced(0)
   , mPingInterval(0)
   , mPingResponseTimeout(10000)
@@ -145,6 +145,8 @@ BaseWebSocketChannel::GetPingInterval(uint32_t *aSeconds)
 NS_IMETHODIMP
 BaseWebSocketChannel::SetPingInterval(uint32_t aSeconds)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mWasOpened) {
     return NS_ERROR_IN_PROGRESS;
   }
@@ -168,6 +170,8 @@ BaseWebSocketChannel::GetPingTimeout(uint32_t *aSeconds)
 NS_IMETHODIMP
 BaseWebSocketChannel::SetPingTimeout(uint32_t aSeconds)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mWasOpened) {
     return NS_ERROR_IN_PROGRESS;
   }
