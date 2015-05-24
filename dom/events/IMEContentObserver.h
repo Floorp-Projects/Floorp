@@ -72,17 +72,6 @@ public:
    * storing the instance.
    */
   void DisconnectFromEventStateManager();
-  /**
-   * MaybeReinitialize() tries to restart to observe the editor's root node.
-   * This is useful when the editor is reframed and all children are replaced
-   * with new node instances.
-   * @return            Returns true if the instance is managing the content.
-   *                    Otherwise, false.
-   */
-  bool MaybeReinitialize(nsIWidget* aWidget,
-                         nsPresContext* aPresContext,
-                         nsIContent* aContent,
-                         nsIEditor* aEditor);
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent);
   bool IsEditorHandlingEventForComposition() const;
   bool KeepAliveDuringDeactive() const
@@ -144,14 +133,6 @@ public:
 private:
   ~IMEContentObserver() {}
 
-  enum State {
-    eState_NotObserving,
-    eState_StoppedObserving,
-    eState_Observing
-  };
-  State GetState() const;
-  bool IsObservingContent(nsPresContext* aPresContext,
-                          nsIContent* aContent) const;
   void MaybeNotifyIMEOfTextChange(const TextChangeData& aTextChangeData);
   void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition);
   void MaybeNotifyIMEOfPositionChange();
@@ -159,13 +140,11 @@ private:
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
   /**
-   *  NotifyIMEOfBlur() notifies IME of blur.
+   *  UnregisterObservers() unresiters all listeners and observers.
+   *  @param aPostEvent     When true, DOM event will be posted to the thread.
+   *                        Otherwise, dispatched when safe.
    */
-  void NotifyIMEOfBlur();
-  /**
-   *  UnregisterObservers() unregisters all listeners and observers.
-   */
-  void UnregisterObservers();
+  void UnregisterObservers(bool aPostEvent);
   void StoreTextChangeData(const TextChangeData& aTextChangeData);
   void FlushMergeableNotifications();
 

@@ -43,8 +43,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IMEContentObserver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
   nsAutoScriptBlocker scriptBlocker;
 
-  tmp->NotifyIMEOfBlur();
-  tmp->UnregisterObservers();
+  tmp->UnregisterObservers(true);
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWidget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection)
@@ -105,25 +104,11 @@ IMEContentObserver::Init(nsIWidget* aWidget,
 {
   MOZ_ASSERT(aEditor, "aEditor must not be null");
 
-  bool firstInitialization = GetState() != eState_StoppedObserving;
-  if (!firstInitialization) {
-    // If this is now trying to initialize with new contents, all observers
-    // should be registered again for simpler implementation.
-    UnregisterObservers();
-    // Clear members which may not be initialized again.
-    mRootContent = nullptr;
-    mEditor = nullptr;
-    mSelection = nullptr;
-    mDocShell = nullptr;
-  }
-
   mESM = aPresContext->EventStateManager();
   mESM->OnStartToObserveContent(this);
 
   mWidget = aWidget;
-
-  mEditableNode =
-    IMEStateManager::GetRootEditableNode(aPresContext, aContent);
+  mEditableNode = IMEStateManager::GetRootEditableNode(aPresContext, aContent);
   if (!mEditableNode) {
     return;
   }
@@ -169,15 +154,19 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   }
   NS_ENSURE_TRUE_VOID(mRootContent);
 
-  if (firstInitialization) {
-    aWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
+  if (IMEStateManager::IsTestingIME()) {
+    nsIDocument* doc = aPresContext->Document();
+    (new AsyncEventDispatcher(doc, NS_LITERAL_STRING("MozIMEFocusIn"),
+                              false, false))->RunDOMEventWhenSafe();
+  }
 
-    // NOTIFY_IME_OF_FOCUS might cause recreating IMEContentObserver
-    // instance via IMEStateManager::UpdateIMEState().  So, this
-    // instance might already have been destroyed, check it.
-    if (!mRootContent) {
-      return;
-    }
+  aWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
+
+  // NOTIFY_IME_OF_FOCUS might cause recreating IMEContentObserver
+  // instance via IMEStateManager::UpdateIMEState().  So, this
+  // instance might already have been destroyed, check it.
+  if (!mRootContent) {
+    return;
   }
 
   mDocShell = aPresContext->GetDocShell();
@@ -214,25 +203,32 @@ IMEContentObserver::ObserveEditableNode()
 }
 
 void
-IMEContentObserver::NotifyIMEOfBlur()
-{
-  // If this failed to initialize, mRootContent may be null, then, we
-  // should not call NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR))
-  if (!mRootContent || !mWidget) {
-    return;
-  }
-
-  // A test event handler might destroy the widget.
-  if (mWidget) {
-    mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
-  }
-}
-
-void
-IMEContentObserver::UnregisterObservers()
+IMEContentObserver::UnregisterObservers(bool aPostEvent)
 {
   if (mEditor) {
     mEditor->RemoveEditorObserver(this);
+  }
+
+  // If CreateTextStateManager failed, mRootContent will be null, then, we
+  // should not call NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR))
+  if (mRootContent && mWidget) {
+    if (IMEStateManager::IsTestingIME() && mEditableNode) {
+      nsIDocument* doc = mEditableNode->OwnerDoc();
+      if (doc) {
+        nsRefPtr<AsyncEventDispatcher> dispatcher =
+          new AsyncEventDispatcher(doc, NS_LITERAL_STRING("MozIMEFocusOut"),
+                                   false, false);
+        if (aPostEvent) {
+          dispatcher->PostDOMEvent();
+        } else {
+          dispatcher->RunDOMEventWhenSafe();
+        }
+      }
+    }
+    // A test event handler might destroy the widget.
+    if (mWidget) {
+      mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
+    }
   }
 
   if (mUpdatePreference.WantSelectionChange() && mSelection) {
@@ -263,8 +259,7 @@ IMEContentObserver::Destroy()
 {
   // WARNING: When you change this method, you have to check Unlink() too.
 
-  NotifyIMEOfBlur();
-  UnregisterObservers();
+  UnregisterObservers(false);
 
   mEditor = nullptr;
   // Even if there are some pending notification, it'll never notify the widget.
@@ -288,46 +283,15 @@ IMEContentObserver::DisconnectFromEventStateManager()
 }
 
 bool
-IMEContentObserver::MaybeReinitialize(nsIWidget* aWidget,
-                                      nsPresContext* aPresContext,
-                                      nsIContent* aContent,
-                                      nsIEditor* aEditor)
-{
-  if (!IsObservingContent(aPresContext, aContent)) {
-    return false;
-  }
-
-  if (GetState() == eState_StoppedObserving) {
-    Init(aWidget, aPresContext, aContent, aEditor);
-  }
-  return IsManaging(aPresContext, aContent);
-}
-
-bool
 IMEContentObserver::IsManaging(nsPresContext* aPresContext,
                                nsIContent* aContent)
 {
-  return GetState() == eState_Observing &&
-         IsObservingContent(aPresContext, aContent);
-}
-
-IMEContentObserver::State
-IMEContentObserver::GetState() const
-{
   if (!mSelection || !mRootContent || !mEditableNode) {
-    return eState_NotObserving; // failed to initialize or finalized.
+    return false; // failed to initialize.
   }
   if (!mRootContent->IsInComposedDoc()) {
-    // the focused editor has already been reframed.
-    return eState_StoppedObserving;
+    return false; // the focused editor has already been reframed.
   }
-  return eState_Observing;
-}
-
-bool
-IMEContentObserver::IsObservingContent(nsPresContext* aPresContext,
-                                       nsIContent* aContent) const
-{
   return mEditableNode == IMEStateManager::GetRootEditableNode(aPresContext,
                                                                aContent);
 }
