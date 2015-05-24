@@ -38,7 +38,7 @@ function checkResult(msg, desc) {
   return def.promise;
 }
 
-function testJSTerm(hud)
+function* testJSTerm(hud)
 {
   const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
