@@ -5,7 +5,7 @@
  * Tests that the frontend UI is properly configured when opening the tool.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { $ } = panel.panelWin;
 
