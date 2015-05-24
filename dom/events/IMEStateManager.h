@@ -138,7 +138,6 @@ public:
 
   static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
                                       nsIContent* aContent);
-  static bool IsTestingIME() { return sIsTestingIME; }
 
 protected:
   static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
@@ -162,7 +161,6 @@ protected:
   static nsIContent*    sContent;
   static nsPresContext* sPresContext;
   static bool           sInstalledMenuKeyboardListener;
-  static bool           sIsTestingIME;
   static bool           sIsGettingNewIMEState;
 
   class MOZ_STACK_CLASS GettingNewIMEStateBlocker final
