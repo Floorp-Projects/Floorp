@@ -2750,9 +2750,11 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
   }
 
   ParentLayerPoint translation = (currentScrollOffset - lastPaintScrollOffset)
-                               * mFrameMetrics.GetZoom();
+                               * mFrameMetrics.GetZoom() * mTestAsyncZoom.scale;
 
-  return ViewTransform(mFrameMetrics.GetAsyncZoom(), -translation);
+  return ViewTransform(
+    LayerToParentLayerScale(mFrameMetrics.GetAsyncZoom().scale * mTestAsyncZoom.scale),
+    -translation);
 }
 
 Matrix4x4 AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll() const {
