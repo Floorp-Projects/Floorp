@@ -140,11 +140,15 @@ private:
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
   /**
-   *  UnregisterObservers() unresiters all listeners and observers.
+   *  NotifyIMEOfBlur() notifies IME of blur.
    *  @param aPostEvent     When true, DOM event will be posted to the thread.
    *                        Otherwise, dispatched when safe.
    */
-  void UnregisterObservers(bool aPostEvent);
+  void NotifyIMEOfBlur(bool aPostEvent);
+  /**
+   *  UnregisterObservers() unregisters all listeners and observers.
+   */
+  void UnregisterObservers();
   void StoreTextChangeData(const TextChangeData& aTextChangeData);
   void FlushMergeableNotifications();
 
