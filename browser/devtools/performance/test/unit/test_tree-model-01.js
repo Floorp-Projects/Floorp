@@ -26,7 +26,7 @@ add_task(function test() {
     "The correct duration was calculated for the root node.");
   equal(root.getInfo().functionName, "(root)",
     "The correct function name was retrieved for the root node.");
-  equal(root.getInfo().categoryData.toSource(), "({})",
+  equal(root.getInfo().categoryData.abbrev, "other",
     "The correct empty category data was retrieved for the root node.");
 
   equal(root.calls.length, 1,
