@@ -2289,7 +2289,8 @@ js::LookupAsmJSModuleInCache(ExclusiveContext* cx,
     if (!atEnd)
         return true;
 
-    parser.tokenStream.advance(module->srcEndBeforeCurly());
+    if (!parser.tokenStream.advance(module->srcEndBeforeCurly()))
+        return false;
 
     {
         // Delay flushing until dynamic linking.

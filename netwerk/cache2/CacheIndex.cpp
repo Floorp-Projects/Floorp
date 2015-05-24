@@ -1077,6 +1077,17 @@ CacheIndex::RemoveAll()
     index->mIndexStats.Clear();
     index->mFrecencyArray.Clear();
     index->mIndex.Clear();
+
+    for (uint32_t i = 0; i < index->mIterators.Length(); ) {
+      nsresult rv = index->mIterators[i]->CloseInternal(NS_ERROR_NOT_AVAILABLE);
+      if (NS_FAILED(rv)) {
+        // CacheIndexIterator::CloseInternal() removes itself from mIterators
+        // iff it returns success.
+        LOG(("CacheIndex::RemoveAll() - Failed to remove iterator %p. "
+             "[rv=0x%08x]", rv));
+        i++;
+      }
+    }
   }
 
   if (file) {
