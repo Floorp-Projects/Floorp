@@ -29,10 +29,12 @@ loader.lazyRequireGetter(this, "MarkerUtils",
  */
 function MarkerDetails(parent, splitter) {
   EventEmitter.decorate(this);
+  this._onClick = this._onClick.bind(this);
   this._document = parent.ownerDocument;
   this._parent = parent;
   this._splitter = splitter;
   this._splitter.addEventListener("mouseup", () => this.emit("resize"));
+  this._parent.addEventListener("click", this._onClick);
 }
 
 MarkerDetails.prototype = {
@@ -41,6 +43,7 @@ MarkerDetails.prototype = {
    */
   destroy: function() {
     this.empty();
+    this._parent.removeEventListener("click", this._onClick);
     this._parent = null;
     this._splitter = null;
   },
@@ -57,121 +60,66 @@ MarkerDetails.prototype = {
    *
    * @param object params
    *        An options object holding:
-   *        toolbox - The toolbox.
    *        marker - The marker to display.
    *        frames - Array of stack frame information; see stack.js.
    */
-  render: function({toolbox: toolbox, marker: marker, frames: frames}) {
+  render: function({ marker, frames }) {
     this.empty();
 
-    // UI for any marker
+    let elements = [];
+    elements.push(MarkerUtils.DOM.buildTitle(this._document, marker));
+    elements.push(MarkerUtils.DOM.buildDuration(this._document, marker));
+    MarkerUtils.DOM.buildFields(this._document, marker).forEach(field => elements.push(field));
 
-    let title = MarkerUtils.DOM.buildTitle(this._document, marker);
-    let duration = MarkerUtils.DOM.buildDuration(this._document, marker);
-    let fields = MarkerUtils.DOM.buildFields(this._document, marker);
-
-    this._parent.appendChild(title);
-    this._parent.appendChild(duration);
-    fields.forEach(field => this._parent.appendChild(field));
-
+    // Build a stack element -- and use the "startStack" label if
+    // we have both a star and endStack.
     if (marker.stack) {
-      let property = "timeline.markerDetail.stack";
-      if (marker.endStack) {
-        property = "timeline.markerDetail.startStack";
-      }
-      this.renderStackTrace({toolbox: toolbox, parent: this._parent, property: property,
-                             frameIndex: marker.stack, frames: frames});
+      let type = marker.endStack ? "startStack" : "stack";
+      elements.push(MarkerUtils.DOM.buildStackTrace(this._document, {
+        frameIndex: marker.stack, frames, type
+      }));
     }
 
-    if (marker.endStack) {
-      this.renderStackTrace({toolbox: toolbox, parent: this._parent, property: "timeline.markerDetail.endStack",
-                             frameIndex: marker.endStack, frames: frames});
-    }
+    elements.forEach(el => this._parent.appendChild(el));
   },
 
   /**
-   * Render a stack trace.
-   *
-   * @param object params
-   *        An options object with the following members:
-   *        object toolbox - The toolbox.
-   *        nsIDOMNode parent - The parent node holding the view.
-   *        string property - String identifier for label's name.
-   *        integer frameIndex - The index of the topmost stack frame.
-   *        array frames - Array of stack frames.
+   * Handles click in the marker details view. Based on the target,
+   * can handle different actions -- only supporting view source links
+   * for the moment.
    */
-  renderStackTrace: function({toolbox: toolbox, parent: parent,
-                              property: property, frameIndex: frameIndex,
-                              frames: frames}) {
-    let labelName = this._document.createElement("label");
-    labelName.className = "plain marker-details-labelname";
-    labelName.setAttribute("value", L10N.getStr(property));
-    parent.appendChild(labelName);
+  _onClick: function (e) {
+    let data = findActionFromEvent(e.target);
+    if (!data) {
+      return;
+    }
 
-    let wasAsyncParent = false;
-    while (frameIndex > 0) {
-      let frame = frames[frameIndex];
-      let url = frame.source;
-      let displayName = frame.functionDisplayName;
-      let line = frame.line;
-
-      // If the previous frame had an async parent, then the async
-      // cause is in this frame and should be displayed.
-      if (wasAsyncParent) {
-        let asyncBox = this._document.createElement("hbox");
-        let asyncLabel = this._document.createElement("label");
-        asyncLabel.className = "devtools-monospace";
-        asyncLabel.setAttribute("value", L10N.getFormatStr("timeline.markerDetail.asyncStack",
-                                                           frame.asyncCause));
-        asyncBox.appendChild(asyncLabel);
-        parent.appendChild(asyncBox);
-        wasAsyncParent = false;
-      }
-
-      let hbox = this._document.createElement("hbox");
-
-      if (displayName) {
-        let functionLabel = this._document.createElement("label");
-        functionLabel.className = "devtools-monospace";
-        functionLabel.setAttribute("value", displayName);
-        hbox.appendChild(functionLabel);
-      }
-
-      if (url) {
-        let aNode = this._document.createElement("a");
-        aNode.className = "waterfall-marker-location theme-link devtools-monospace";
-        aNode.href = url;
-        aNode.draggable = false;
-        aNode.setAttribute("title", url);
-
-        let text = WebConsoleUtils.abbreviateSourceURL(url) + ":" + line;
-        let label = this._document.createElement("label");
-        label.setAttribute("value", text);
-        aNode.appendChild(label);
-        hbox.appendChild(aNode);
-
-        aNode.addEventListener("click", (event) => {
-          event.preventDefault();
-          this.emit("view-source", url, line);
-        });
-      }
-
-      if (!displayName && !url) {
-        let label = this._document.createElement("label");
-        label.setAttribute("value", L10N.getStr("timeline.markerDetail.unknownFrame"));
-        hbox.appendChild(label);
-      }
-
-      parent.appendChild(hbox);
-
-      if (frame.asyncParent) {
-        frameIndex = frame.asyncParent;
-        wasAsyncParent = true;
-      } else {
-        frameIndex = frame.parent;
-      }
+    if (data.action === "view-source") {
+      this.emit("view-source", data.url, data.line);
     }
   },
 };
 
 exports.MarkerDetails = MarkerDetails;
+
+/**
+ * Take an element from an event `target`, and asend through
+ * the DOM, looking for an element with a `data-action` attribute. Return
+ * the parsed `data-action` value found, or null if none found before
+ * reaching the parent `container`.
+ *
+ * @param {Element} target
+ * @param {Element} container
+ * @return {?object}
+ */
+function findActionFromEvent (target, container) {
+  let el = target;
+  let action;
+  while (el !== container) {
+    if (action = el.getAttribute("data-action")) {
+      return JSON.parse(action);
+    }
+    el = el.parentNode;
+  }
+  return null;
+}
