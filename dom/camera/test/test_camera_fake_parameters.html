@@ -527,6 +527,33 @@ suite.test('bug-1052851', function() {
     .then(resolve, suite.rejectGetCamera);
 });
 
+suite.test('bug-1124338', function() {
+  function triggerAutoFocus(p) {
+    var sync = new Promise(function(resolve, reject) {
+      function onEvent(e) {
+        suite.camera.removeEventListener('focus', onEvent);
+        var thumbnailSize = suite.camera.getThumbnailSize();
+        ok(thumbnailSize.width == 640 && thumbnailSize.height == 480, 'thumbnail size reset with auto focus');
+        resolve();
+      }
+      suite.camera.addEventListener('focus', onEvent);
+    });
+
+    var initThumbnailSize = suite.camera.getThumbnailSize();
+    ok(initThumbnailSize.width == 320 && initThumbnailSize.height == 240, 'initial thumbnail size incorrect');
+    suite.hw.params['jpeg-thumbnail-width'] = '640';
+    suite.hw.params['jpeg-thumbnail-height'] = '480';
+    suite.hw.fireAutoFocusComplete(false);
+    return sync;
+  }
+ 
+  suite.hw.params['jpeg-thumbnail-size-values'] = '320x240,640x480';
+  suite.hw.params['jpeg-thumbnail-width'] = '320';
+  suite.hw.params['jpeg-thumbnail-height'] = '240';
+  return suite.getCamera()
+    .then(triggerAutoFocus)
+});
+
 suite.setup()
   .then(suite.run);
 
