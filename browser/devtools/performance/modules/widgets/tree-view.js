@@ -121,34 +121,32 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    * @return nsIDOMNode
    */
   _displaySelf: function(document, arrowNode) {
-    this.document = document;
-
     let displayedData = this.getDisplayedData();
     let frameInfo = this.frame.getInfo();
 
     if (this.visibleCells.duration) {
-      var durationCell = this._createTimeCell(displayedData.totalDuration);
+      var durationCell = this._createTimeCell(document, displayedData.totalDuration);
     }
     if (this.visibleCells.selfDuration) {
-      var selfDurationCell = this._createTimeCell(displayedData.selfDuration, true);
+      var selfDurationCell = this._createTimeCell(document, displayedData.selfDuration, true);
     }
     if (this.visibleCells.percentage) {
-      var percentageCell = this._createExecutionCell(displayedData.totalPercentage);
+      var percentageCell = this._createExecutionCell(document, displayedData.totalPercentage);
     }
     if (this.visibleCells.selfPercentage) {
-      var selfPercentageCell = this._createExecutionCell(displayedData.selfPercentage, true);
+      var selfPercentageCell = this._createExecutionCell(document, displayedData.selfPercentage, true);
     }
     if (this.visibleCells.allocations) {
-      var allocationsCell = this._createAllocationsCell(displayedData.totalAllocations);
+      var allocationsCell = this._createAllocationsCell(document, displayedData.totalAllocations);
     }
     if (this.visibleCells.selfAllocations) {
-      var selfAllocationsCell = this._createAllocationsCell(displayedData.selfAllocations, true);
+      var selfAllocationsCell = this._createAllocationsCell(document, displayedData.selfAllocations, true);
     }
     if (this.visibleCells.samples) {
-      var samplesCell = this._createSamplesCell(displayedData.samples);
+      var samplesCell = this._createSamplesCell(document, displayedData.samples);
     }
     if (this.visibleCells.function) {
-      var functionCell = this._createFunctionCell(arrowNode, displayedData.name, frameInfo, this.level);
+      var functionCell = this._createFunctionCell(document, arrowNode, displayedData.name, frameInfo, this.level);
     }
 
     let targetNode = document.createElement("hbox");
@@ -214,40 +212,40 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    * Functions creating each cell in this call view.
    * Invoked by `_displaySelf`.
    */
-  _createTimeCell: function(duration, isSelf = false) {
-    let cell = this.document.createElement("label");
+  _createTimeCell: function(doc, duration, isSelf = false) {
+    let cell = doc.createElement("label");
     cell.className = "plain call-tree-cell";
     cell.setAttribute("type", isSelf ? "self-duration" : "duration");
     cell.setAttribute("crop", "end");
     cell.setAttribute("value", L10N.numberWithDecimals(duration, 2) + " " + MILLISECOND_UNITS);
     return cell;
   },
-  _createExecutionCell: function(percentage, isSelf = false) {
-    let cell = this.document.createElement("label");
+  _createExecutionCell: function(doc, percentage, isSelf = false) {
+    let cell = doc.createElement("label");
     cell.className = "plain call-tree-cell";
     cell.setAttribute("type", isSelf ? "self-percentage" : "percentage");
     cell.setAttribute("crop", "end");
     cell.setAttribute("value", L10N.numberWithDecimals(percentage, 2) + PERCENTAGE_UNITS);
     return cell;
   },
-  _createAllocationsCell: function(count, isSelf = false) {
-    let cell = this.document.createElement("label");
+  _createAllocationsCell: function(doc, count, isSelf = false) {
+    let cell = doc.createElement("label");
     cell.className = "plain call-tree-cell";
     cell.setAttribute("type", isSelf ? "self-allocations" : "allocations");
     cell.setAttribute("crop", "end");
     cell.setAttribute("value", count || 0);
     return cell;
   },
-  _createSamplesCell: function(count) {
-    let cell = this.document.createElement("label");
+  _createSamplesCell: function(doc, count) {
+    let cell = doc.createElement("label");
     cell.className = "plain call-tree-cell";
     cell.setAttribute("type", "samples");
     cell.setAttribute("crop", "end");
     cell.setAttribute("value", count || "");
     return cell;
   },
-  _createFunctionCell: function(arrowNode, frameName, frameInfo, frameLevel) {
-    let cell = this.document.createElement("hbox");
+  _createFunctionCell: function(doc, arrowNode, frameName, frameInfo, frameLevel) {
+    let cell = doc.createElement("hbox");
     cell.className = "call-tree-cell";
     cell.style.MozMarginStart = (frameLevel * CALL_TREE_INDENTATION) + "px";
     cell.setAttribute("type", "function");
@@ -256,7 +254,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     // Don't render a name label node if there's no function name. A different
     // location label node will be rendered instead.
     if (frameName) {
-      let nameNode = this.document.createElement("label");
+      let nameNode = doc.createElement("label");
       nameNode.className = "plain call-tree-name";
       nameNode.setAttribute("flex", "1");
       nameNode.setAttribute("crop", "end");
@@ -266,7 +264,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
 
     // Don't render detailed labels for meta category frames
     if (!frameInfo.isMetaCategory) {
-      this._appendFunctionDetailsCells(cell, frameInfo);
+      this._appendFunctionDetailsCells(doc, cell, frameInfo);
     }
 
     // Don't render an expando-arrow for leaf nodes.
@@ -277,9 +275,9 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
 
     return cell;
   },
-  _appendFunctionDetailsCells: function(cell, frameInfo) {
+  _appendFunctionDetailsCells: function(doc, cell, frameInfo) {
     if (frameInfo.fileName) {
-      let urlNode = this.document.createElement("label");
+      let urlNode = doc.createElement("label");
       urlNode.className = "plain call-tree-url";
       urlNode.setAttribute("flex", "1");
       urlNode.setAttribute("crop", "end");
@@ -290,32 +288,32 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     }
 
     if (frameInfo.line) {
-      let lineNode = this.document.createElement("label");
+      let lineNode = doc.createElement("label");
       lineNode.className = "plain call-tree-line";
       lineNode.setAttribute("value", ":" + frameInfo.line);
       cell.appendChild(lineNode);
     }
 
     if (frameInfo.column) {
-      let columnNode = this.document.createElement("label");
+      let columnNode = doc.createElement("label");
       columnNode.className = "plain call-tree-column";
       columnNode.setAttribute("value", ":" + frameInfo.column);
       cell.appendChild(columnNode);
     }
 
     if (frameInfo.host) {
-      let hostNode = this.document.createElement("label");
+      let hostNode = doc.createElement("label");
       hostNode.className = "plain call-tree-host";
       hostNode.setAttribute("value", frameInfo.host);
       cell.appendChild(hostNode);
     }
 
-    let spacerNode = this.document.createElement("spacer");
+    let spacerNode = doc.createElement("spacer");
     spacerNode.setAttribute("flex", "10000");
     cell.appendChild(spacerNode);
 
     if (frameInfo.categoryData.label) {
-      let categoryNode = this.document.createElement("label");
+      let categoryNode = doc.createElement("label");
       categoryNode.className = "plain call-tree-category";
       categoryNode.style.color = frameInfo.categoryData.color;
       categoryNode.setAttribute("value", frameInfo.categoryData.label);
