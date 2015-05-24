@@ -6,16 +6,17 @@
 
 :root {
   font: message-box;
+%ifdef XP_MACOSX
+  --monospace-font-family: Menlo, monospace;
+%elifdef XP_WIN
+  --monospace-font-family: Consolas, monospace;
+%else
+  --monospace-font-family: monospace;
+%endif
 }
 
 .devtools-monospace {
-%ifdef XP_MACOSX
-  font-family: Menlo, monospace;
-%elifdef XP_WIN
-  font-family: Consolas, monospace;
-%else
-  font-family: monospace;
-%endif
+  font-family: var(--monospace-font-family);
 %if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
   font-size: 80%;
 %endif
@@ -246,4 +247,35 @@
   height: 120px;
   background-color: transparent;
   border: none;
+}
+
+/* links to source code, like displaying `myfile.js:45` */
+
+.devtools-source-link {
+  font-family: var(--monospace-font-family);
+  color: var(--theme-highlight-blue);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  text-decoration: none;
+  font-size: 11px;
+  width: 12em; /* probably should be changed for each tool */
+}
+
+.devtools-source-link:hover {
+  text-decoration: underline;
+}
+
+.devtools-source-link > .filename {
+  text-overflow: ellipsis;
+  text-align: end;
+  overflow: hidden;
+  margin: 2px 0px;
+  cursor: pointer;
+}
+
+.devtools-source-link > .line-number {
+  flex: none;
+  margin: 2px 0px;
+  cursor: pointer;
 }
