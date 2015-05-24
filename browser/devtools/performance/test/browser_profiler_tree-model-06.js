@@ -6,7 +6,7 @@
  * the FrameNodes have the correct optimization data after iterating over samples.
  */
 
-const { RecordingUtils } = devtools.require("devtools/performance/recording-utils");
+const RecordingUtils = devtools.require("devtools/performance/recording-utils");
 
 let gUniqueStacks = new RecordingUtils.UniqueStacks();
 
