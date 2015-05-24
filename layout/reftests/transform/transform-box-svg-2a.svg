@@ -1,0 +1,10 @@
+<svg xmlns='http://www.w3.org/2000/svg'>
+<g transform="translate(30,30)">
+  <!-- transform-origin specifies a point relative to the top left of the
+       element's paint bbox when transform-box is set to 'fill-box'
+  -->
+  <rect x='10' y='10' width='100' height='100' fill='blue' stroke-width='20' stroke='black'
+        style="transform:rotate(90deg); transform-origin:0px 100px;
+               transform-box:fill-box;"/>
+</g>
+</svg>
