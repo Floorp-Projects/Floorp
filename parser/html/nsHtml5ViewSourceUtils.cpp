@@ -15,8 +15,14 @@ nsHtml5ViewSourceUtils::NewBodyAttributes()
   nsString* id = new nsString(NS_LITERAL_STRING("viewsource"));
   bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, id);
 
+  nsString* klass = new nsString();
   if (mozilla::Preferences::GetBool("view_source.wrap_long_lines", true)) {
-    nsString* klass = new nsString(NS_LITERAL_STRING("wrap"));
+    klass->Append(NS_LITERAL_STRING("wrap "));
+  }
+  if (mozilla::Preferences::GetBool("view_source.syntax_highlight", true)) {
+    klass->Append(NS_LITERAL_STRING("highlight"));
+  }
+  if (!klass->IsEmpty()) {
     bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_CLASS, klass);
   }
 

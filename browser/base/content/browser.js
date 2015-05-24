@@ -986,6 +986,7 @@ var gBrowserInit = {
     mm.loadFrameScript("chrome://browser/content/content.js", true);
     mm.loadFrameScript("chrome://browser/content/content-UITour.js", true);
     mm.loadFrameScript("chrome://global/content/manifestMessages.js", true);
+    mm.loadFrameScript("chrome://global/content/viewSource-content.js", true);
 
     window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
 
@@ -2322,11 +2323,11 @@ function readFromClipboard()
  *        If aArgsOrDocument is an object, that object can take the
  *        following properties:
  *
- *        browser:
- *          The browser containing the document that we would like to view the
- *          source of.
- *        URL:
+ *        URL (required):
  *          A string URL for the page we'd like to view the source of.
+ *        browser (optional):
+ *          The browser containing the document that we would like to view the
+ *          source of. This is required if outerWindowID is passed.
  *        outerWindowID (optional):
  *          The outerWindowID of the content window containing the document that
  *          we want to view the source of. You only need to provide this if you
@@ -2359,7 +2360,18 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
     args = aArgsOrDocument;
   }
 
-  top.gViewSourceUtils.viewSource(args);
+  let inTab = Services.prefs.getBoolPref("view_source.tab");
+  if (inTab) {
+    let viewSourceURL = `view-source:${args.URL}`;
+    let tab = gBrowser.loadOneTab(viewSourceURL, {
+      relatedToCurrent: true,
+      inBackground: false
+    });
+    args.viewSourceBrowser = gBrowser.getBrowserForTab(tab);
+    top.gViewSourceUtils.viewSourceInBrowser(args);
+  } else {
+    top.gViewSourceUtils.viewSource(args);
+  }
 }
 
 /**
@@ -5560,7 +5572,7 @@ function middleMousePaste(event) {
 
   clipboard = stripUnsafeProtocolOnPaste(clipboard);
 
-  // if it's not the current tab, we don't need to do anything because the 
+  // if it's not the current tab, we don't need to do anything because the
   // browser doesn't exist.
   let where = whereToOpenLink(event, true, false);
   let lastLocationChange;
@@ -6278,10 +6290,10 @@ function warnAboutClosingWindow() {
         otherPBWindowExists = true;
       if (win.toolbar.visible)
         nonPopupPresent = true;
-      // If the current window is not in private browsing mode we don't need to 
-      // look for other pb windows, we can leave the loop when finding the 
-      // first non-popup window. If however the current window is in private 
-      // browsing mode then we need at least one other pb and one non-popup 
+      // If the current window is not in private browsing mode we don't need to
+      // look for other pb windows, we can leave the loop when finding the
+      // first non-popup window. If however the current window is in private
+      // browsing mode then we need at least one other pb and one non-popup
       // window to break out early.
       if ((!isPBWindow || otherPBWindowExists) && nonPopupPresent)
         break;
@@ -7099,7 +7111,7 @@ var gIdentityHandler = {
     dt.setData("text/html", htmlString);
     dt.setDragImage(gProxyFavIcon, 16, 16);
   },
- 
+
   handleEvent: function (event) {
     switch (event.type) {
       case "blur":

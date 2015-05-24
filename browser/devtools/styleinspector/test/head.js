@@ -492,6 +492,21 @@ function waitForWindow() {
 }
 
 /**
+ * Listen for a new tab to open and return a promise that resolves when one
+ * does and completes the load event.
+ * @return a promise that resolves to the tab object
+ */
+let waitForTab = Task.async(function*() {
+  info("Waiting for a tab to open");
+  yield once(gBrowser.tabContainer, "TabOpen");
+  let tab = gBrowser.selectedTab;
+  let browser = tab.linkedBrowser;
+  yield once(browser, "load", true);
+  info("The tab load completed");
+  return tab;
+});
+
+/**
  * @see SimpleTest.waitForClipboard
  * @param {Function} setup Function to execute before checking for the
  * clipboard content

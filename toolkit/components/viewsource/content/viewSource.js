@@ -7,6 +7,7 @@
 const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/ViewSourceBrowser.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
@@ -31,15 +32,24 @@ XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
 
 /**
  * ViewSourceChrome is the primary interface for interacting with
- * the view source browser. It initializes itself on script load.
+ * the view source browser from a self-contained window.  It extends
+ * ViewSourceBrowser with additional things needed inside the special window.
+ *
+ * It initializes itself on script load.
  */
-let ViewSourceChrome = {
+function ViewSourceChrome() {
+  ViewSourceBrowser.call(this);
+}
+
+ViewSourceChrome.prototype = {
+  __proto__: ViewSourceBrowser.prototype,
+
   /**
-   * Holds the value of the last line found via the "Go to line"
-   * command, to pre-populate the prompt the next time it is
-   * opened.
+   * The <browser> that will be displaying the view source content.
    */
-  lastLineFound: null,
+  get browser() {
+    return gBrowser;
+  },
 
   /**
    * The context menu, when opened from the content process, sends
@@ -55,31 +65,22 @@ let ViewSourceChrome = {
    * will automatically have ViewSourceChrome listen for those messages,
    * and remove the listeners on teardown.
    */
-  messages: [
+  messages: ViewSourceBrowser.prototype.messages.concat([
     "ViewSource:SourceLoaded",
     "ViewSource:SourceUnloaded",
     "ViewSource:Close",
     "ViewSource:OpenURL",
-    "ViewSource:GoToLine:Success",
-    "ViewSource:GoToLine:Failed",
     "ViewSource:UpdateStatus",
     "ViewSource:ContextMenuOpening",
-  ],
+  ]),
 
   /**
-   * This should be called as soon as the script loads. When this function
-   * executes, we can assume the DOM content has not yet loaded.
+   * This called via ViewSourceBrowser's constructor.  This should be called as
+   * soon as the script loads.  When this function executes, we can assume the
+   * DOM content has not yet loaded.
    */
   init() {
-    // We use the window message manager so that if we switch remoteness of the
-    // browser (which we might do if we're attempting to load the document
-    // source out of the network cache), we automatically re-load the frame
-    // script.
-    let wMM = window.messageManager;
-    wMM.loadFrameScript("chrome://global/content/viewSource-content.js", true);
-    this.messages.forEach((msgName) => {
-      wMM.addMessageListener(msgName, this);
-    });
+    this.mm.loadFrameScript("chrome://global/content/viewSource-content.js", true);
 
     this.shouldWrap = Services.prefs.getBoolPref("view_source.wrap_long_lines");
     this.shouldHighlight =
@@ -89,6 +90,8 @@ let ViewSourceChrome = {
     addEventListener("unload", this);
     addEventListener("AppCommand", this, true);
     addEventListener("MozSwipeGesture", this, true);
+
+    ViewSourceBrowser.prototype.init.call(this);
   },
 
   /**
@@ -96,10 +99,7 @@ let ViewSourceChrome = {
    * clean up event and message listeners.
    */
   uninit() {
-    let wMM = window.messageManager;
-    this.messages.forEach((msgName) => {
-      wMM.removeMessageListener(msgName, this);
-    });
+    ViewSourceBrowser.prototype.uninit.call(this);
 
     // "load" event listener is removed in its handler, to
     // ensure we only fire it once.
@@ -108,8 +108,9 @@ let ViewSourceChrome = {
     removeEventListener("MozSwipeGesture", this, true);
     gContextMenu.removeEventListener("popupshowing", this);
     gContextMenu.removeEventListener("popuphidden", this);
-    Services.els.removeSystemEventListener(gBrowser, "dragover", this, true);
-    Services.els.removeSystemEventListener(gBrowser, "drop", this, true);
+    Services.els.removeSystemEventListener(this.browser, "dragover", this,
+                                           true);
+    Services.els.removeSystemEventListener(this.browser, "drop", this, true);
   },
 
   /**
@@ -120,6 +121,17 @@ let ViewSourceChrome = {
     let data = message.data;
 
     switch(message.name) {
+      // Begin messages from super class
+      case "ViewSource:PromptAndGoToLine":
+        this.promptAndGoToLine();
+        break;
+      case "ViewSource:GoToLine:Success":
+        this.onGoToLineSuccess(data.lineNumber);
+        break;
+      case "ViewSource:GoToLine:Failed":
+        this.onGoToLineFailed();
+        break;
+      // End messages from super class
       case "ViewSource:SourceLoaded":
         this.onSourceLoaded();
         break;
@@ -132,18 +144,12 @@ let ViewSourceChrome = {
       case "ViewSource:OpenURL":
         this.openURL(data.URL);
         break;
-      case "ViewSource:GoToLine:Failed":
-        this.onGoToLineFailed();
-        break;
-      case "ViewSource:GoToLine:Success":
-        this.onGoToLineSuccess(data.lineNumber);
-        break;
       case "ViewSource:UpdateStatus":
         this.updateStatus(data.label);
         break;
       case "ViewSource:ContextMenuOpening":
         this.onContextMenuOpening(data.isLink, data.isEmail, data.href);
-        if (gBrowser.isRemoteBrowser) {
+        if (this.browser.isRemoteBrowser) {
           this.openContextMenu(data.screenX, data.screenY);
         }
         break;
@@ -188,35 +194,35 @@ let ViewSourceChrome = {
    * has history enabled on it.
    */
   get historyEnabled() {
-    return !gBrowser.hasAttribute("disablehistory");
+    return !this.browser.hasAttribute("disablehistory");
   },
 
   /**
-   * Getter for the message manager of the view source browser.
+   * Getter for the message manager used to communicate with the view source
+   * browser.
+   *
+   * In this window version of view source, we use the window message manager
+   * for loading scripts and listening for messages so that if we switch
+   * remoteness of the browser (which we might do if we're attempting to load
+   * the document source out of the network cache), we automatically re-load
+   * the frame script.
    */
   get mm() {
-    return gBrowser.messageManager;
-  },
-
-  /**
-   * Getter for the nsIWebNavigation of the view source browser.
-   */
-  get webNav() {
-    return gBrowser.webNavigation;
+    return window.messageManager;
   },
 
   /**
    * Send the browser forward in its history.
    */
   goForward() {
-    gBrowser.goForward();
+    this.browser.goForward();
   },
 
   /**
    * Send the browser backward in its history.
    */
   goBack() {
-    gBrowser.goBack();
+    this.browser.goBack();
   },
 
   /**
@@ -267,8 +273,8 @@ let ViewSourceChrome = {
     gContextMenu.addEventListener("popupshowing", this);
     gContextMenu.addEventListener("popuphidden", this);
 
-    Services.els.addSystemEventListener(gBrowser, "dragover", this, true);
-    Services.els.addSystemEventListener(gBrowser, "drop", this, true);
+    Services.els.addSystemEventListener(this.browser, "dragover", this, true);
+    Services.els.addSystemEventListener(this.browser, "drop", this, true);
 
     if (!this.historyEnabled) {
       // Disable the BACK and FORWARD commands and hide the related menu items.
@@ -279,12 +285,6 @@ let ViewSourceChrome = {
       }
     }
 
-    // This will only work with non-remote browsers. See bug 1158377.
-    gBrowser.droppedLinkHandler = function (event, url, name) {
-      ViewSourceChrome.loadURL(url);
-      event.preventDefault();
-    };
-
     // We require the first argument to do any loading of source.
     // otherwise, we're done.
     if (!window.arguments[0]) {
@@ -293,39 +293,20 @@ let ViewSourceChrome = {
 
     if (typeof window.arguments[0] == "string") {
       // We're using the deprecated API
-      return ViewSourceChrome._loadViewSourceDeprecated();
+      return this._loadViewSourceDeprecated(window.arguments);
     }
 
     // We're using the modern API, which allows us to view the
     // source of documents from out of process browsers.
     let args = window.arguments[0];
-
-    if (!args.URL) {
-      throw new Error("Must supply a URL when opening view source.");
-    }
-
-    if (args.browser) {
-      // If we're dealing with a remote browser, then the browser
-      // for view source needs to be remote as well.
-      this.updateBrowserRemoteness(args.browser.isRemoteBrowser);
-    } else {
-      if (args.outerWindowID) {
-        throw new Error("Must supply the browser if passing the outerWindowID");
-      }
-    }
-
-    this.mm.sendAsyncMessage("ViewSource:LoadSource", {
-      URL: args.URL,
-      outerWindowID: args.outerWindowID,
-      lineNumber: args.lineNumber,
-    });
+    this.loadViewSource(args);
   },
 
   /**
    * This is the deprecated API for viewSource.xul, for old-timer consumers.
    * This API might eventually go away.
    */
-  _loadViewSourceDeprecated() {
+  _loadViewSourceDeprecated(aArguments) {
     Deprecated.warning("The arguments you're passing to viewSource.xul " +
                        "are using an out-of-date API.",
                        "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
@@ -336,34 +317,34 @@ let ViewSourceChrome = {
     //    arg[3] - Line number to go to.
     //    arg[4] - Whether charset was forced by the user
 
-    if (window.arguments[3] == "selection" ||
-        window.arguments[3] == "mathml") {
+    if (aArguments[3] == "selection" ||
+        aArguments[3] == "mathml") {
       // viewPartialSource.js will take care of loading the content.
       return;
     }
 
-    if (window.arguments[2]) {
-      let pageDescriptor = window.arguments[2];
+    if (aArguments[2]) {
+      let pageDescriptor = aArguments[2];
       if (Cu.isCrossProcessWrapper(pageDescriptor)) {
         throw new Error("Cannot pass a CPOW as the page descriptor to viewSource.xul.");
       }
     }
 
-    if (gBrowser.isRemoteBrowser) {
+    if (this.browser.isRemoteBrowser) {
       throw new Error("Deprecated view source API should not use a remote browser.");
     }
 
     let forcedCharSet;
-    if (window.arguments[4] && window.arguments[1].startsWith("charset=")) {
-      forcedCharSet = window.arguments[1].split("=")[1];
+    if (aArguments[4] && aArguments[1].startsWith("charset=")) {
+      forcedCharSet = aArguments[1].split("=")[1];
     }
 
-    gBrowser.messageManager.sendAsyncMessage("ViewSource:LoadSourceDeprecated", {
-      URL: window.arguments[0],
-      lineNumber: window.arguments[3],
+    this.sendAsyncMessage("ViewSource:LoadSourceDeprecated", {
+      URL: aArguments[0],
+      lineNumber: aArguments[3],
       forcedCharSet,
     }, {
-      pageDescriptor: window.arguments[2],
+      pageDescriptor: aArguments[2],
     });
   },
 
@@ -420,7 +401,7 @@ let ViewSourceChrome = {
       this.updateCommands();
     }
 
-    gBrowser.focus();
+    this.browser.focus();
   },
 
   /**
@@ -446,13 +427,14 @@ let ViewSourceChrome = {
 
       // If we don't have history enabled, we have to do a reload in order to
       // show the character set change. See bug 136322.
-      this.mm.sendAsyncMessage("ViewSource:SetCharacterSet", {
+      this.sendAsyncMessage("ViewSource:SetCharacterSet", {
         charset: charset,
         doPageLoad: this.historyEnabled,
       });
 
-      if (this.historyEnabled) {
-        gBrowser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+      if (!this.historyEnabled) {
+        this.browser
+            .reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
       }
     }
   },
@@ -583,7 +565,7 @@ let ViewSourceChrome = {
    *        A URL string to be opened in the view source browser.
    */
   loadURL(URL) {
-    this.mm.sendAsyncMessage("ViewSource:LoadSource", { URL });
+    this.sendAsyncMessage("ViewSource:LoadSource", { URL });
   },
 
   /**
@@ -619,47 +601,6 @@ let ViewSourceChrome = {
   },
 
   /**
-   * Opens the "Go to line" prompt for a user to hop to a particular line
-   * of the source code they're viewing. This will keep prompting until the
-   * user either cancels out of the prompt, or enters a valid line number.
-   */
-  promptAndGoToLine() {
-    let input = { value: this.lastLineFound };
-
-    let ok = Services.prompt.prompt(
-        window,
-        gViewSourceBundle.getString("goToLineTitle"),
-        gViewSourceBundle.getString("goToLineText"),
-        input,
-        null,
-        {value:0});
-
-    if (!ok)
-      return;
-
-    let line = parseInt(input.value, 10);
-
-    if (!(line > 0)) {
-      Services.prompt.alert(window,
-                            gViewSourceBundle.getString("invalidInputTitle"),
-                            gViewSourceBundle.getString("invalidInputText"));
-      this.promptAndGoToLine();
-    } else {
-      this.goToLine(line);
-    }
-  },
-
-  /**
-   * Go to a particular line of the source code. This act is asynchronous.
-   *
-   * @param lineNumber
-   *        The line number to try to go to to.
-   */
-  goToLine(lineNumber) {
-    this.mm.sendAsyncMessage("ViewSource:GoToLine", { lineNumber });
-  },
-
-  /**
    * Called when the frame script reports that a line was successfully gotten
    * to.
    *
@@ -667,31 +608,17 @@ let ViewSourceChrome = {
    *        The line number that we successfully got to.
    */
   onGoToLineSuccess(lineNumber) {
-    // We'll pre-populate the "Go to line" prompt with this value the next
-    // time it comes up.
-    this.lastLineFound = lineNumber;
+    ViewSourceBrowser.prototype.onGoToLineSuccess.call(this, lineNumber);
     document.getElementById("statusbar-line-col").label =
       gViewSourceBundle.getFormattedString("statusBarLineCol", [lineNumber, 1]);
-  },
-
-  /**
-   * Called when the frame script reports that we failed to go to a particular
-   * line. This informs the user that their selection was likely out of range,
-   * and then reprompts the user to try again.
-   */
-  onGoToLineFailed() {
-    Services.prompt.alert(window,
-                          gViewSourceBundle.getString("outOfRangeTitle"),
-                          gViewSourceBundle.getString("outOfRangeText"));
-    this.promptAndGoToLine();
   },
 
   /**
    * Reloads the browser, bypassing the network cache.
    */
   reload() {
-    gBrowser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY |
-                             Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
+    this.browser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY |
+                                 Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
   },
 
   /**
@@ -710,7 +637,7 @@ let ViewSourceChrome = {
     this.shouldWrap = !this.shouldWrap;
     Services.prefs.setBoolPref("view_source.wrap_long_lines",
                                this.shouldWrap);
-    this.mm.sendAsyncMessage("ViewSource:ToggleWrapping");
+    this.sendAsyncMessage("ViewSource:ToggleWrapping");
   },
 
   /**
@@ -721,11 +648,10 @@ let ViewSourceChrome = {
   toggleSyntaxHighlighting() {
     this.shouldHighlight = !this.shouldHighlight;
     // We can't flip this value in the child, since prefs are read-only there.
-    // We flip it here, and then cause a reload in the child to make the change
-    // occur.
+    // We flip it here, and then toggle a class in the child.
     Services.prefs.setBoolPref("view_source.syntax_highlight",
                                this.shouldHighlight);
-    this.mm.sendAsyncMessage("ViewSource:ToggleSyntaxHighlighting");
+    this.sendAsyncMessage("ViewSource:ToggleSyntaxHighlighting");
   },
 
   /**
@@ -739,22 +665,22 @@ let ViewSourceChrome = {
    *        nothing.
    */
   updateBrowserRemoteness(shouldBeRemote) {
-    if (gBrowser.isRemoteBrowser == shouldBeRemote) {
+    if (this.browser.isRemoteBrowser == shouldBeRemote) {
       return;
     }
 
-    let parentNode = gBrowser.parentNode;
-    let nextSibling = gBrowser.nextSibling;
+    let parentNode = this.browser.parentNode;
+    let nextSibling = this.browser.nextSibling;
 
-    gBrowser.remove();
+    this.browser.remove();
     if (shouldBeRemote) {
-      gBrowser.setAttribute("remote", "true");
+      this.browser.setAttribute("remote", "true");
     } else {
-      gBrowser.removeAttribute("remote");
+      this.browser.removeAttribute("remote");
     }
     // If nextSibling was null, this will put the browser at
     // the end of the list.
-    parentNode.insertBefore(gBrowser, nextSibling);
+    parentNode.insertBefore(this.browser, nextSibling);
 
     if (shouldBeRemote) {
       // We're going to send a message down to the remote browser
@@ -764,14 +690,14 @@ let ViewSourceChrome = {
       // RemoteWebProgress, which is lazily loaded. We only need
       // contentWindowAsCPOW for the printing support, and this
       // should go away once bug 1146454 is fixed, since we can
-      // then just pass the outerWindowID of the gBrowser to
+      // then just pass the outerWindowID of the this.browser to
       // PrintUtils.
-      gBrowser.webProgress;
+      this.browser.webProgress;
     }
   },
 };
 
-ViewSourceChrome.init();
+let viewSourceChrome = new ViewSourceChrome();
 
 /**
  * PrintUtils uses this to make Print Preview work.
@@ -820,7 +746,7 @@ function getBrowser() {
 }
 
 this.__defineGetter__("gPageLoader", function () {
-  var webnav = ViewSourceChrome.webNav;
+  var webnav = viewSourceChrome.webNav;
   if (!webnav)
     return null;
   delete this.gPageLoader;
@@ -843,48 +769,48 @@ function ViewSourceSavePage()
 
 this.__defineGetter__("gLastLineFound", function () {
   Deprecated.warning("gLastLineFound is deprecated - please use " +
-                     "ViewSourceChrome.lastLineFound instead.",
+                     "viewSourceChrome.lastLineFound instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  return ViewSourceChrome.lastLineFound;
+  return viewSourceChrome.lastLineFound;
 });
 
 function onLoadViewSource() {
   Deprecated.warning("onLoadViewSource() is deprecated - please use " +
-                     "ViewSourceChrome.onXULLoaded() instead.",
+                     "viewSourceChrome.onXULLoaded() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  ViewSourceChrome.onXULLoaded();
+  viewSourceChrome.onXULLoaded();
 }
 
 function isHistoryEnabled() {
   Deprecated.warning("isHistoryEnabled() is deprecated - please use " +
-                     "ViewSourceChrome.historyEnabled instead.",
+                     "viewSourceChrome.historyEnabled instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  return ViewSourceChrome.historyEnabled;
+  return viewSourceChrome.historyEnabled;
 }
 
 function ViewSourceClose() {
   Deprecated.warning("ViewSourceClose() is deprecated - please use " +
-                     "ViewSourceChrome.close() instead.",
+                     "viewSourceChrome.close() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  ViewSourceChrome.close();
+  viewSourceChrome.close();
 }
 
 function ViewSourceReload() {
   Deprecated.warning("ViewSourceReload() is deprecated - please use " +
-                     "ViewSourceChrome.reload() instead.",
+                     "viewSourceChrome.reload() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  ViewSourceChrome.reload();
+  viewSourceChrome.reload();
 }
 
 function getWebNavigation()
 {
   Deprecated.warning("getWebNavigation() is deprecated - please use " +
-                     "ViewSourceChrome.webNav instead.",
+                     "viewSourceChrome.webNav instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   // The original implementation returned null if anything threw during
   // the getting of the webNavigation.
   try {
-    return ViewSourceChrome.webNav;
+    return viewSourceChrome.webNav;
   } catch (e) {
     return null;
   }
@@ -892,44 +818,44 @@ function getWebNavigation()
 
 function viewSource(url) {
   Deprecated.warning("viewSource() is deprecated - please use " +
-                     "ViewSourceChrome.loadURL() instead.",
+                     "viewSourceChrome.loadURL() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  ViewSourceChrome.loadURL(url);
+  viewSourceChrome.loadURL(url);
 }
 
 function ViewSourceGoToLine()
 {
   Deprecated.warning("ViewSourceGoToLine() is deprecated - please use " +
-                     "ViewSourceChrome.promptAndGoToLine() instead.",
+                     "viewSourceChrome.promptAndGoToLine() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  ViewSourceChrome.promptAndGoToLine();
+  viewSourceChrome.promptAndGoToLine();
 }
 
 function goToLine(line)
 {
   Deprecated.warning("goToLine() is deprecated - please use " +
-                     "ViewSourceChrome.goToLine() instead.",
+                     "viewSourceChrome.goToLine() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  ViewSourceChrome.goToLine(line);
+  viewSourceChrome.goToLine(line);
 }
 
 function BrowserForward(aEvent) {
   Deprecated.warning("BrowserForward() is deprecated - please use " +
-                     "ViewSourceChrome.goForward() instead.",
+                     "viewSourceChrome.goForward() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  ViewSourceChrome.goForward();
+  viewSourceChrome.goForward();
 }
 
 function BrowserBack(aEvent) {
   Deprecated.warning("BrowserBack() is deprecated - please use " +
-                     "ViewSourceChrome.goBack() instead.",
+                     "viewSourceChrome.goBack() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  ViewSourceChrome.goBack();
+  viewSourceChrome.goBack();
 }
 
 function UpdateBackForwardCommands() {
   Deprecated.warning("UpdateBackForwardCommands() is deprecated - please use " +
-                     "ViewSourceChrome.updateCommands() instead.",
+                     "viewSourceChrome.updateCommands() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
-  ViewSourceChrome.updateCommands();
+  viewSourceChrome.updateCommands();
 }
