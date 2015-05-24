@@ -44,7 +44,7 @@ function promiseTab(aURL) {
     addTab(aURL, resolve));
 }
 
-registerCleanupFunction(function tearDown() {
+registerCleanupFunction(function* tearDown() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield gDevTools.closeToolbox(target);
 
@@ -126,7 +126,9 @@ function waitForValue(aOptions)
       successFn(aOptions, lastValue);
     }
     else {
-      setTimeout(function() wait(validatorFn, successFn, failureFn), 100);
+      setTimeout(() => {
+        wait(validatorFn, successFn, failureFn);
+      }, 100);
     }
   }
 

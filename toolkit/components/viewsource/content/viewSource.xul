@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/viewsource/viewsource.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
@@ -21,10 +21,10 @@
 <window id="viewSource"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         contenttitlesetting="true"
-        title="&mainWindow.title;" 
-        titlemodifier="&mainWindow.titlemodifier;" 
+        title="&mainWindow.title;"
+        titlemodifier="&mainWindow.titlemodifier;"
         titlepreface="&mainWindow.preface;"
-        titlemenuseparator ="&mainWindow.titlemodifierseparator;"  
+        titlemenuseparator ="&mainWindow.titlemodifierseparator;"
         windowtype="navigator:view-source"
         width="640" height="480"
         screenX="10" screenY="10"
@@ -35,7 +35,7 @@
   <script type="application/javascript" src="chrome://global/content/viewSource.js"/>
   <script type="application/javascript" src="chrome://global/content/viewZoomOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  
+
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
   <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
@@ -54,16 +54,16 @@
   <command id="cmd_findSelection"
            oncommand="document.getElementById('FindToolbar').onFindSelectionCommand();"/>
 #endif
-  <command id="cmd_reload" oncommand="ViewSourceChrome.reload();"/>
-  <command id="cmd_goToLine" oncommand="ViewSourceChrome.promptAndGoToLine();" disabled="true"/>
-  <command id="cmd_highlightSyntax" oncommand="ViewSourceChrome.toggleSyntaxHighlighting();"/>
-  <command id="cmd_wrapLongLines" oncommand="ViewSourceChrome.toggleWrapping();"/>
+  <command id="cmd_reload" oncommand="viewSourceChrome.reload();"/>
+  <command id="cmd_goToLine" oncommand="viewSourceChrome.promptAndGoToLine();" disabled="true"/>
+  <command id="cmd_highlightSyntax" oncommand="viewSourceChrome.toggleSyntaxHighlighting();"/>
+  <command id="cmd_wrapLongLines" oncommand="viewSourceChrome.toggleWrapping();"/>
   <command id="cmd_textZoomReduce" oncommand="ZoomManager.reduce();"/>
   <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.enlarge();"/>
   <command id="cmd_textZoomReset" oncommand="ZoomManager.reset();"/>
 
-  <command id="Browser:Back" oncommand="ViewSourceChrome.goBack()" observes="viewSourceNavigation"/>
-  <command id="Browser:Forward" oncommand="ViewSourceChrome.goForward()" observes="viewSourceNavigation"/>
+  <command id="Browser:Back" oncommand="viewSourceChrome.goBack()" observes="viewSourceNavigation"/>
+  <command id="Browser:Forward" oncommand="viewSourceChrome.goForward()" observes="viewSourceNavigation"/>
 
   <broadcaster id="viewSourceNavigation"/>
 
@@ -110,7 +110,7 @@
 #endif
 
   </keyset>
-  
+
   <tooltip id="aHTMLTooltip" page="true"/>
 
   <menupopup id="viewSourceContextMenu">
@@ -131,16 +131,16 @@
     <menuitem id="context-copyLink"
               label="&copyLinkCmd.label;"
               accesskey="&copyLinkCmd.accesskey;"
-              oncommand="ViewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
+              oncommand="viewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
     <menuitem id="context-copyEmail"
               label="&copyEmailCmd.label;"
               accesskey="&copyEmailCmd.accesskey;"
-              oncommand="ViewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
+              oncommand="viewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
     <menuseparator/>
     <menuitem id="cMenu_selectAll"/>
   </menupopup>
 
-  <!-- Menu --> 
+  <!-- Menu -->
   <toolbox id="viewSource-toolbox">
     <menubar id="viewSource-main-menubar">
 
@@ -188,11 +188,11 @@
                     label="&reloadCmd.label;" key="key_reload"/>
           <menuseparator />
           <menu id="viewTextZoomMenu" label="&menu_textSize.label;" accesskey="&menu_textSize.accesskey;">
-            <menupopup>                    
-              <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge" 
+            <menupopup>
+              <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge"
                         label="&menu_textEnlarge.label;" accesskey="&menu_textEnlarge.accesskey;"
                         key="key_textZoomEnlarge"/>
-              <menuitem id="menu_textReduce" command="cmd_textZoomReduce" 
+              <menuitem id="menu_textReduce" command="cmd_textZoomReduce"
                         label="&menu_textReduce.label;" accesskey="&menu_textReduce.accesskey;"
                         key="key_textZoomReduce"/>
               <menuseparator/>
@@ -206,7 +206,7 @@
           <menu id="charsetMenu"
                 label="&charsetMenu2.label;"
                 accesskey="&charsetMenu2.accesskey;"
-                oncommand="ViewSourceChrome.onSetCharacterSet(event);"
+                oncommand="viewSourceChrome.onSetCharacterSet(event);"
                 onpopupshowing="CharsetMenu.build(event.target);"
                 onpopupshown="CharsetMenu.update(event.target, content.document.characterSet);">
             <menupopup/>
@@ -218,7 +218,7 @@
                     label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
         </menupopup>
       </menu>
-    </menubar>  
+    </menubar>
   </toolbox>
 
   <vbox id="appcontent" flex="1">
@@ -226,7 +226,7 @@
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
              context="viewSourceContextMenu" showcaret="true" tooltip="aHTMLTooltip" />
     <findbar id="FindToolbar" browserid="content"/>
-  </vbox> 
+  </vbox>
 
   <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="statusbar-line-col" label="" flex="1"/>

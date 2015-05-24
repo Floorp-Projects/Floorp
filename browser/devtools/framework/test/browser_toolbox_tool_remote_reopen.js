@@ -4,7 +4,7 @@
 ///////////////////
 //
 // Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed. 
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
 //
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Shader Editor is still waiting for a WebGL context to be created.");
 
@@ -40,7 +40,7 @@ const { DebuggerClient } =
  */
 
 function runTools(target) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let toolIds = gDevTools.getToolDefinitionArray()
                            .filter(def => def.isTargetSupported(target))
                            .map(def => def.id);
@@ -96,7 +96,7 @@ function getTarget(client) {
 }
 
 function test() {
-  Task.spawn(function() {
+  Task.spawn(function*() {
     toggleAllTools(true);
     yield addTab("about:blank");
 

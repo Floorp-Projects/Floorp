@@ -22,7 +22,7 @@ function test() {
     visibilityswitch: "devtools.testTool1072208.enabled",
     url: toolURL,
     label: "Test tool",
-    isTargetSupported: function() true,
+    isTargetSupported: () => true,
     build: function(iframeWindow, toolbox) {
       let deferred = promise.defer();
       executeSoon(() => {
@@ -30,7 +30,7 @@ function test() {
           target: toolbox.target,
           toolbox: toolbox,
           isReady: true,
-          destroy: function(){},
+          destroy: function() {},
           panelDoc: iframeWindow.document,
         });
       });

@@ -123,6 +123,15 @@ exports.viewSourceInScratchpad = Task.async(function *(sourceURL, sourceLine) {
  * @return {Promise}
  */
 exports.viewSource = Task.async(function *(toolbox, sourceURL, sourceLine) {
+  // Attempt to access view source via a browser first, which may display it in
+  // a tab, if enabled.
+  let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+  if (browserWin) {
+    return browserWin.BrowserViewSourceOfDocument({
+      URL: sourceURL,
+      lineNumber: sourceLine
+    });
+  }
   let utils = toolbox.gViewSourceUtils;
   utils.viewSource(sourceURL, null, toolbox.doc, sourceLine || 0);
 });

@@ -23,20 +23,20 @@ function test() {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(target, null, Toolbox.HostType.BOTTOM)
       .then(function (aToolbox) { toolbox = aToolbox; })
-      .then(function () toolbox.selectTool(TOOL_ID_1))
+      .then(() => toolbox.selectTool(TOOL_ID_1))
 
     // undock toolbox and check title
-      .then(function () toolbox.switchHost(Toolbox.HostType.WINDOW))
+      .then(() => toolbox.switchHost(Toolbox.HostType.WINDOW))
       .then(checkTitle.bind(null, LABEL_1, URL_1, "toolbox undocked"))
 
     // switch to different tool and check title
-      .then(function () toolbox.selectTool(TOOL_ID_2))
+      .then(() => toolbox.selectTool(TOOL_ID_2))
       .then(checkTitle.bind(null, LABEL_2, URL_1, "tool changed"))
 
     // navigate to different url and check title
       .then(function () {
         let deferred = promise.defer();
-        target.once("navigate", function () deferred.resolve());
+        target.once("navigate", () => deferred.resolve());
         gBrowser.loadURI(URL_2);
         return deferred.promise;
       })
@@ -55,12 +55,12 @@ function test() {
               return gDevTools.showToolbox(target, null, Toolbox.HostType.WINDOW);
             })
             .then(function (aToolbox) { toolbox = aToolbox; })
-            .then(function () toolbox.selectTool(TOOL_ID_1))
+            .then(() => toolbox.selectTool(TOOL_ID_1))
             .then(checkTitle.bind(null, LABEL_1, URL_2,
                                   "toolbox destroyed and recreated"))
 
             // clean up
-            .then(function () toolbox.destroy())
+            .then(() => toolbox.destroy())
             .then(function () {
               toolbox = null;
               gBrowser.removeCurrentTab();

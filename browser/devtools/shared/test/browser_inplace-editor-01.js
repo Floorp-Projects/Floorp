@@ -111,7 +111,7 @@ function testAdvanceCharsFunction(doc) {
       return aText.length > 0;
     },
     start: function(editor) {
-      for each (let ch in ":Test:") {
+      for (let ch of ":Test:") {
         EventUtils.sendChar(ch);
       }
     },
