@@ -23,7 +23,7 @@ add_task(function*() {
 function registerNewTool() {
   let toolDefinition = {
     id: "test-tool",
-    isTargetSupported: function() true,
+    isTargetSupported: () => true,
     visibilityswitch: "devtools.test-tool.enabled",
     url: "about:blank",
     label: "someLabel"

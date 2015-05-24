@@ -12,7 +12,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
 
+const NS_XHTML = "http://www.w3.org/1999/xhtml";
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
+
+// These are markers used to delimit the selection during processing. They
+// are removed from the final rendering.
+// We use noncharacter Unicode codepoints to minimize the risk of clashing
+// with anything that might legitimately be present in the document.
+// U+FDD0..FDEF <noncharacters>
+const MARK_SELECTION_START = "\uFDD0";
+const MARK_SELECTION_END = "\uFDEF";
 
 let global = this;
 
@@ -39,7 +48,15 @@ let ViewSourceContent = {
     "ViewSource:ToggleWrapping",
     "ViewSource:ToggleSyntaxHighlighting",
     "ViewSource:SetCharacterSet",
+    "ViewSource:ScheduleDrawSelection",
   ],
+
+  /**
+   * When showing selection source, chrome will construct a page fragment to
+   * show, and then instruct content to draw a selection after load.  This is
+   * set true when there is a pending request to draw selection.
+   */
+  needsDrawSelection: false,
 
   /**
    * ViewSourceContent is attached as an nsISelectionListener on pageshow,
@@ -50,6 +67,17 @@ let ViewSourceContent = {
    * yet there (which throws).
    */
   selectionListenerAttached: false,
+
+  get isViewSource() {
+    let uri = content.document.documentURI;
+    return uri.startsWith("view-source:") ||
+           (uri.startsWith("data:") && uri.includes("MathML"));
+  },
+
+  get isAboutBlank() {
+    let uri = content.document.documentURI;
+    return uri == "about:blank";
+  },
 
   /**
    * This should be called as soon as this frame script has loaded.
@@ -93,6 +121,9 @@ let ViewSourceContent = {
    * get dispatched to a specific function for the message name.
    */
   receiveMessage(msg) {
+    if (!this.isViewSource && !this.isAboutBlank) {
+      return;
+    }
     let data = msg.data;
     let objects = msg.objects;
     switch(msg.name) {
@@ -116,6 +147,9 @@ let ViewSourceContent = {
       case "ViewSource:SetCharacterSet":
         this.setCharacterSet(data.charset, data.doPageLoad);
         break;
+      case "ViewSource:ScheduleDrawSelection":
+        this.scheduleDrawSelection();
+        break;
     }
   },
 
@@ -124,6 +158,9 @@ let ViewSourceContent = {
    * a specific function for the event type.
    */
   handleEvent(event) {
+    if (!this.isViewSource) {
+      return;
+    }
     switch(event.type) {
       case "pagehide":
         this.onPageHide(event);
@@ -159,6 +196,14 @@ let ViewSourceContent = {
     return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsISelectionDisplay)
                    .QueryInterface(Ci.nsISelectionController);
+  },
+
+  /**
+   * A shortcut to the nsIWebBrowserFind for the content.
+   */
+  get webBrowserFind() {
+    return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIWebBrowserFind);
   },
 
   /**
@@ -250,8 +295,13 @@ let ViewSourceContent = {
       docShell.charset = forcedCharSet;
     }
 
-    if (lineNumber) {
+    if (lineNumber && lineNumber > 0) {
       let doneLoading = (event) => {
+        // Ignore possible initial load of about:blank
+        if (this.isAboutBlank ||
+            !content.document.body) {
+          return;
+        }
         this.goToLine(lineNumber);
         removeEventListener("pageshow", doneLoading);
       };
@@ -300,16 +350,28 @@ let ViewSourceContent = {
   },
 
   /**
-   * This handler is specifically for click events bubbling up from
-   * error page content, which can show up if the user attempts to
-   * view the source of an attack page.
+   * This handler is for click events from:
+   *   * error page content, which can show up if the user attempts to view the
+   *     source of an attack page.
+   *   * in-page context menu actions
    */
   onClick(event) {
+    let target = event.originalTarget;
+    // Check for content menu actions
+    if (target.id) {
+      this.contextMenuItems.forEach(itemSpec => {
+        if (itemSpec.id !== target.id) {
+          return;
+        }
+        itemSpec.handler.call(this, event);
+        event.stopPropagation();
+      });
+    }
+
     // Don't trust synthetic events
     if (!event.isTrusted || event.target.localName != "button")
       return;
 
-    let target = event.originalTarget;
     let errorDoc = target.ownerDocument;
 
     if (/^about:blocked/.test(errorDoc.documentURI)) {
@@ -341,12 +403,26 @@ let ViewSourceContent = {
    *        The pageshow event being handled.
    */
   onPageShow(event) {
-    content.getSelection()
-           .QueryInterface(Ci.nsISelectionPrivate)
-           .addSelectionListener(this);
-    this.selectionListenerAttached = true;
-
+    let selection = content.getSelection();
+    if (selection) {
+      selection.QueryInterface(Ci.nsISelectionPrivate)
+               .addSelectionListener(this);
+      this.selectionListenerAttached = true;
+    }
     content.focus();
+
+    // If we need to draw the selection, wait until an actual view source page
+    // has loaded, instead of about:blank.
+    if (this.needsDrawSelection &&
+        content.document.documentURI.startsWith("view-source:")) {
+      this.needsDrawSelection = false;
+      this.drawSelection();
+    }
+
+    if (content.document.body) {
+      this.injectContextMenu();
+    }
+
     sendAsyncMessage("ViewSource:SourceLoaded");
   },
 
@@ -604,13 +680,12 @@ let ViewSourceContent = {
   },
 
   /**
-   * Called when the parent has changed the syntax highlighting pref.
+   * Toggles the "highlight" class on the document body, which sets whether
+   * or not syntax highlighting is displayed.
    */
   toggleSyntaxHighlighting() {
-    // The parent process should have set the view_source.syntax_highlight
-    // pref to the desired value. The reload brings that setting into
-    // effect.
-    this.reload();
+    let body = content.document.body;
+    body.classList.toggle("highlight");
   },
 
   /**
@@ -698,6 +773,185 @@ let ViewSourceContent = {
     }
 
     this.updateStatusTask.arm();
+  },
+
+  /**
+   * Chrome has requested that we draw a selection once the content loads.
+   * We set a flag, and wait for the load event, where drawSelection() will be
+   * called to do the real work.
+   */
+  scheduleDrawSelection() {
+    this.needsDrawSelection = true;
+  },
+
+  /**
+   * Using special markers left in the serialized source, this helper makes the
+   * underlying markup of the selected fragment to automatically appear as
+   * selected on the inflated view-source DOM.
+   */
+  drawSelection() {
+    content.document.title =
+      this.bundle.GetStringFromName("viewSelectionSourceTitle");
+
+    // find the special selection markers that we added earlier, and
+    // draw the selection between the two...
+    var findService = null;
+    try {
+      // get the find service which stores the global find state
+      findService = Cc["@mozilla.org/find/find_service;1"]
+                    .getService(Ci.nsIFindService);
+    } catch(e) { }
+    if (!findService)
+      return;
+
+    // cache the current global find state
+    var matchCase     = findService.matchCase;
+    var entireWord    = findService.entireWord;
+    var wrapFind      = findService.wrapFind;
+    var findBackwards = findService.findBackwards;
+    var searchString  = findService.searchString;
+    var replaceString = findService.replaceString;
+
+    // setup our find instance
+    var findInst = this.webBrowserFind;
+    findInst.matchCase = true;
+    findInst.entireWord = false;
+    findInst.wrapFind = true;
+    findInst.findBackwards = false;
+
+    // ...lookup the start mark
+    findInst.searchString = MARK_SELECTION_START;
+    var startLength = MARK_SELECTION_START.length;
+    findInst.findNext();
+
+    var selection = content.getSelection();
+    if (!selection.rangeCount)
+      return;
+
+    var range = selection.getRangeAt(0);
+
+    var startContainer = range.startContainer;
+    var startOffset = range.startOffset;
+
+    // ...lookup the end mark
+    findInst.searchString = MARK_SELECTION_END;
+    var endLength = MARK_SELECTION_END.length;
+    findInst.findNext();
+
+    var endContainer = selection.anchorNode;
+    var endOffset = selection.anchorOffset;
+
+    // reset the selection that find has left
+    selection.removeAllRanges();
+
+    // delete the special markers now...
+    endContainer.deleteData(endOffset, endLength);
+    startContainer.deleteData(startOffset, startLength);
+    if (startContainer == endContainer)
+      endOffset -= startLength; // has shrunk if on same text node...
+    range.setEnd(endContainer, endOffset);
+
+    // show the selection and scroll it into view
+    selection.addRange(range);
+    // the default behavior of the selection is to scroll at the end of
+    // the selection, whereas in this situation, it is more user-friendly
+    // to scroll at the beginning. So we override the default behavior here
+    try {
+      this.selectionController.scrollSelectionIntoView(
+                                 Ci.nsISelectionController.SELECTION_NORMAL,
+                                 Ci.nsISelectionController.SELECTION_ANCHOR_REGION,
+                                 true);
+    }
+    catch(e) { }
+
+    // restore the current find state
+    findService.matchCase     = matchCase;
+    findService.entireWord    = entireWord;
+    findService.wrapFind      = wrapFind;
+    findService.findBackwards = findBackwards;
+    findService.searchString  = searchString;
+    findService.replaceString = replaceString;
+
+    findInst.matchCase     = matchCase;
+    findInst.entireWord    = entireWord;
+    findInst.wrapFind      = wrapFind;
+    findInst.findBackwards = findBackwards;
+    findInst.searchString  = searchString;
+  },
+
+  /**
+   * In-page context menu items that are injected after page load.
+   */
+  contextMenuItems: [
+    {
+      id: "goToLine",
+      handler() {
+        sendAsyncMessage("ViewSource:PromptAndGoToLine");
+      }
+    },
+    {
+      id: "wrapLongLines",
+      get checked() {
+        return Services.prefs.getBoolPref("view_source.wrap_long_lines");
+      },
+      handler() {
+        this.toggleWrapping();
+      }
+    },
+    {
+      id: "highlightSyntax",
+      get checked() {
+        return Services.prefs.getBoolPref("view_source.syntax_highlight");
+      },
+      handler() {
+        this.toggleSyntaxHighlighting();
+      }
+    },
+  ],
+
+  /**
+   * Add context menu items for view source specific actions.
+   */
+  injectContextMenu() {
+    let doc = content.document;
+
+    let menu = doc.createElementNS(NS_XHTML, "menu");
+    menu.setAttribute("type", "context");
+    menu.setAttribute("id", "actions");
+    doc.body.appendChild(menu);
+    doc.body.setAttribute("contextmenu", "actions");
+
+    this.contextMenuItems.forEach(itemSpec => {
+      let item = doc.createElementNS(NS_XHTML, "menuitem");
+      item.setAttribute("id", itemSpec.id);
+      let labelName = `context_${itemSpec.id}_label`;
+      let label = this.bundle.GetStringFromName(labelName);
+      item.setAttribute("label", label);
+      if ("checked" in itemSpec) {
+        item.setAttribute("type", "checkbox");
+      }
+      menu.appendChild(item);
+    });
+
+    this.updateContextMenu();
+  },
+
+  /**
+   * Update state of checkbox-style context menu items.
+   */
+  updateContextMenu() {
+    let doc = content.document;
+    this.contextMenuItems.forEach(itemSpec => {
+      if (!("checked" in itemSpec)) {
+        return;
+      }
+      let item = doc.getElementById(itemSpec.id);
+      if (itemSpec.checked) {
+        item.setAttribute("checked", true);
+      } else {
+        item.removeAttribute("checked");
+      }
+    });
   },
 };
 ViewSourceContent.init();

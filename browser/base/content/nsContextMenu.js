@@ -1005,11 +1005,28 @@ nsContextMenu.prototype = {
     else
       throw "not reached";
 
-    // unused (and play nice for fragments generated via XSLT too)
-    var docUrl = null;
-    window.openDialog("chrome://global/content/viewPartialSource.xul",
-                      "_blank", "scrollbars,resizable,chrome,dialog=no",
-                      docUrl, docCharset, reference, aContext);
+    let inTab = Services.prefs.getBoolPref("view_source.tab");
+    if (inTab) {
+      let tab = gBrowser.loadOneTab("about:blank", {
+        relatedToCurrent: true,
+        inBackground: false
+      });
+      let viewSourceBrowser = gBrowser.getBrowserForTab(tab);
+      if (aContext == "selection") {
+        top.gViewSourceUtils
+           .viewSourceFromSelectionInBrowser(reference, viewSourceBrowser);
+      } else {
+        top.gViewSourceUtils
+           .viewSourceFromFragmentInBrowser(reference, aContext,
+                                            viewSourceBrowser);
+      }
+    } else {
+      // unused (and play nice for fragments generated via XSLT too)
+      var docUrl = null;
+      window.openDialog("chrome://global/content/viewPartialSource.xul",
+                        "_blank", "scrollbars,resizable,chrome,dialog=no",
+                        docUrl, docCharset, reference, aContext);
+    }
   },
 
   // Open new "view source" window with the frame's URL.
@@ -1153,7 +1170,7 @@ nsContextMenu.prototype = {
     urlSecurityCheck(this.target.currentURI.spec, this.principal);
 
     // Confirm since it's annoying if you hit this accidentally.
-    const kDesktopBackgroundURL = 
+    const kDesktopBackgroundURL =
                   "chrome://browser/content/setDesktopBackground.xul";
 #ifdef XP_MACOSX
     // On Mac, the Set Desktop Background window is not modal.
@@ -1196,7 +1213,7 @@ nsContextMenu.prototype = {
     // file picker
     function saveAsListener() {}
     saveAsListener.prototype = {
-      extListener: null, 
+      extListener: null,
 
       onStartRequest: function saveLinkAs_onStartRequest(aRequest, aContext) {
 
@@ -1229,17 +1246,17 @@ nsContextMenu.prototype = {
           return;
         }
 
-        let extHelperAppSvc = 
+        let extHelperAppSvc =
           Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
           getService(Ci.nsIExternalHelperAppService);
         let channel = aRequest.QueryInterface(Ci.nsIChannel);
         this.extListener =
-          extHelperAppSvc.doContent(channel.contentType, aRequest, 
+          extHelperAppSvc.doContent(channel.contentType, aRequest,
                                     null, true, window);
         this.extListener.onStartRequest(aRequest, aContext);
-      }, 
+      },
 
-      onStopRequest: function saveLinkAs_onStopRequest(aRequest, aContext, 
+      onStopRequest: function saveLinkAs_onStopRequest(aRequest, aContext,
                                                        aStatusCode) {
         if (aStatusCode == NS_ERROR_SAVE_LINK_AS_TIMEOUT) {
           // do it the old fashioned way, which will pick the best filename
@@ -1272,12 +1289,12 @@ nsContextMenu.prototype = {
           channel.cancel(NS_ERROR_SAVE_LINK_AS_TIMEOUT);
         }
         throw Cr.NS_ERROR_NO_INTERFACE;
-      } 
+      }
     }
 
-    // if it we don't have the headers after a short time, the user 
+    // if it we don't have the headers after a short time, the user
     // won't have received any feedback from their click.  that's bad.  so
-    // we give up waiting for the filename. 
+    // we give up waiting for the filename.
     function timerCallback() {}
     timerCallback.prototype = {
       notify: function sLA_timer_notify(aTimer) {
@@ -1319,8 +1336,8 @@ nsContextMenu.prototype = {
         channel.forceAllowThirdPartyCookie = true;
     }
 
-    // fallback to the old way if we don't see the headers quickly 
-    var timeToWait = 
+    // fallback to the old way if we don't see the headers quickly
+    var timeToWait =
       gPrefService.getIntPref("browser.download.saveLinkAsFilenameTimeout");
     var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback(new timerCallback(), timeToWait,
@@ -1499,7 +1516,7 @@ nsContextMenu.prototype = {
 
   // Generate fully qualified URL for clicked-on link.
   getLinkURL: function() {
-    var href = this.link.href;  
+    var href = this.link.href;
     if (href)
       return href;
 
