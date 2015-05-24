@@ -1114,20 +1114,20 @@ WebSocketChannel::WebSocketChannel() :
   mMaxConcurrentConnections(200),
   mGotUpgradeOK(0),
   mRecvdHttpUpgradeTransport(0),
+  mAutoFollowRedirects(0),
+  mAllowPMCE(1),
+  mPingOutstanding(0),
+  mReleaseOnTransmit(0),
+  mDataStarted(0),
   mRequestedClose(0),
   mClientClosed(0),
   mServerClosed(0),
   mStopped(0),
   mCalledOnStop(0),
-  mPingOutstanding(0),
-  mAutoFollowRedirects(0),
-  mReleaseOnTransmit(0),
   mTCPClosed(0),
   mOpenedHttpChannel(0),
-  mDataStarted(0),
   mIncrementedSessionCount(0),
   mDecrementedSessionCount(0),
-  mAllowPMCE(1),
   mMaxMessageSize(INT32_MAX),
   mStopOnClose(NS_OK),
   mServerCloseCode(CLOSE_ABNORMAL),
@@ -2228,6 +2228,13 @@ WebSocketChannel::StopSession(nsresult reason)
 
   // normally this should be called on socket thread, but it is ok to call it
   // from OnStartRequest before the socket thread machine has gotten underway
+  if (NS_IsMainThread()) {
+    MOZ_DIAGNOSTIC_ASSERT(!mDataStarted);
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(PR_GetCurrentThread() == gSocketThread,
+                          "Called on unexpected thread!");
+    MOZ_DIAGNOSTIC_ASSERT(mDataStarted);
+  }
 
   mStopped = 1;
 
@@ -2330,10 +2337,17 @@ void
 WebSocketChannel::AbortSession(nsresult reason)
 {
   LOG(("WebSocketChannel::AbortSession() %p [reason %x] stopped = %d\n",
-       this, reason, mStopped));
+       this, reason, !!mStopped));
 
   // normally this should be called on socket thread, but it is ok to call it
   // from the main thread before StartWebsocketData() has completed
+  if (NS_IsMainThread()) {
+    MOZ_DIAGNOSTIC_ASSERT(!mDataStarted);
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(PR_GetCurrentThread() == gSocketThread,
+                          "Called on unexpected thread!");
+    MOZ_DIAGNOSTIC_ASSERT(mDataStarted);
+  }
 
   // When we are failing we need to close the TCP connection immediately
   // as per 7.1.1
@@ -2367,7 +2381,7 @@ void
 WebSocketChannel::ReleaseSession()
 {
   LOG(("WebSocketChannel::ReleaseSession() %p stopped = %d\n",
-       this, mStopped));
+       this, !!mStopped));
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "not socket thread");
 
   if (mStopped)
@@ -3693,7 +3707,13 @@ WebSocketChannel::SaveNetworkStats(bool enforce)
     return NS_OK;
   }
 
-  if (mCountRecv <= 0 && mCountSent <= 0) {
+  uint64_t countRecv = 0;
+  uint64_t countSent = 0;
+
+  mCountRecv.exchange(countRecv);
+  mCountSent.exchange(countSent);
+
+  if (countRecv == 0 && countSent == 0) {
     // There is no traffic, no need to save.
     return NS_OK;
   }
@@ -3701,7 +3721,7 @@ WebSocketChannel::SaveNetworkStats(bool enforce)
   // If |enforce| is false, the traffic amount is saved
   // only when the total amount exceeds the predefined
   // threshold.
-  uint64_t totalBytes = mCountRecv + mCountSent;
+  uint64_t totalBytes = countRecv + countSent;
   if (!enforce && totalBytes < NETWORK_STATS_THRESHOLD) {
     return NS_OK;
   }
@@ -3710,12 +3730,8 @@ WebSocketChannel::SaveNetworkStats(bool enforce)
   // the event is then dispathed to the main thread.
   nsRefPtr<nsRunnable> event =
     new SaveNetworkStatsEvent(mAppId, mIsInBrowser, mActiveNetwork,
-                              mCountRecv, mCountSent, false);
+                              countRecv, countSent, false);
   NS_DispatchToMainThread(event);
-
-  // Reset the counters after saving.
-  mCountSent = 0;
-  mCountRecv = 0;
 
   return NS_OK;
 #else

@@ -59,6 +59,7 @@ EXPORTS.mozilla = [
     'PodOperations.h',
     'Poison.h',
     'Range.h',
+    'RangedArray.h',
     'RangedPtr.h',
     'RefCountType.h',
     'ReentrancyGuard.h',

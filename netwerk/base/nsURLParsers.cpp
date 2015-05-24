@@ -119,7 +119,6 @@ nsBaseURLParser::ParseURL(const char *spec, int32_t specLen,
         // spec = <scheme>:<path-no-slashes>
         //
         if (!net_IsValidScheme(spec, colon - spec) || (*(colon+1) == ':')) {
-            NS_WARNING("malformed uri");
             return NS_ERROR_MALFORMED_URI;
         }
         SET_RESULT(scheme, offset, colon - spec);
@@ -577,7 +576,6 @@ nsAuthURLParser::ParseServerInfo(const char *serverinfo, int32_t serverinfoLen,
                 break;
             case ' ':
                 // hostname must not contain a space
-                NS_WARNING("malformed hostname");
                 return NS_ERROR_MALFORMED_URI;
         }
     }
