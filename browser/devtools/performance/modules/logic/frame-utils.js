@@ -42,7 +42,7 @@ const gInflatedFrameStore = new WeakMap();
  * Parses the raw location of this function call to retrieve the actual
  * function name, source url, host name, line and column.
  */
-exports.parseLocation = function parseLocation(location, fallbackLine, fallbackColumn) {
+function parseLocation(location, fallbackLine, fallbackColumn) {
   // Parse the `location` for the function name, source url, line, column etc.
 
   let line, column, url;
@@ -190,7 +190,6 @@ function isContent({ location, category }) {
   // If there was no left parenthesis, try matching from the start.
   return isContentScheme(location, 0);
 }
-exports.isContent = isContent;
 
 /**
  * Get caches to cache inflated frames and computed frame keys of a frame
@@ -199,7 +198,7 @@ exports.isContent = isContent;
  * @param object framesTable
  * @return object
  */
-exports.getInflatedFrameCache = function getInflatedFrameCache(frameTable) {
+function getInflatedFrameCache(frameTable) {
   let inflatedCache = gInflatedFrameStore.get(frameTable);
   if (inflatedCache !== undefined) {
     return inflatedCache;
@@ -220,7 +219,7 @@ exports.getInflatedFrameCache = function getInflatedFrameCache(frameTable) {
  * @param object stringTable
  * @param object allocationsTable
  */
-exports.getOrAddInflatedFrame = function getOrAddInflatedFrame(cache, index, frameTable, stringTable, allocationsTable) {
+function getOrAddInflatedFrame(cache, index, frameTable, stringTable, allocationsTable) {
   let inflatedFrame = cache[index];
   if (inflatedFrame === null) {
     inflatedFrame = cache[index] = new InflatedFrame(index, frameTable, stringTable, allocationsTable);
@@ -291,8 +290,6 @@ InflatedFrame.prototype.getFrameKey = function getFrameKey(options) {
   // Return an empty string denoting that this frame should be skipped.
   return "";
 };
-
-exports.InflatedFrame = InflatedFrame;
 
 /**
  * Helper for getting an nsIURL instance out of a string.
@@ -420,3 +417,9 @@ function isChromeScheme(location, i) {
 function isNumeric(c) {
   return c >= CHAR_CODE_0 && c <= CHAR_CODE_9;
 }
+
+exports.parseLocation = parseLocation;
+exports.isContent = isContent;
+exports.getInflatedFrameCache = getInflatedFrameCache;
+exports.getOrAddInflatedFrame = getOrAddInflatedFrame;
+exports.InflatedFrame = InflatedFrame;

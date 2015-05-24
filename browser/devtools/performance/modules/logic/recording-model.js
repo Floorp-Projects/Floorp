@@ -9,7 +9,7 @@ const { Task } = require("resource://gre/modules/Task.jsm");
 loader.lazyRequireGetter(this, "PerformanceIO",
   "devtools/performance/io", true);
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/performance/recording-utils", true);
+  "devtools/performance/recording-utils");
 
 /**
  * Model for a wholistic profile, containing the duration, profiling data,

@@ -28,7 +28,6 @@ function getMarkerLabel (marker) {
   // as a string.
   return typeof blueprint.label === "function" ? blueprint.label(marker) : blueprint.label;
 }
-exports.getMarkerLabel = getMarkerLabel;
 
 /**
  * Returns the correct generic name for a marker class, like "Function Call"
@@ -57,7 +56,6 @@ function getMarkerClassName (type) {
 
   return className;
 }
-exports.getMarkerClassName = getMarkerClassName;
 
 /**
  * Returns an array of objects with key/value pairs of what should be rendered
@@ -92,12 +90,11 @@ function getMarkerFields (marker) {
     return fields;
   }, []);
 }
-exports.getMarkerFields = getMarkerFields;
 
 /**
  * Utilites for creating elements for markers.
  */
-const DOM = exports.DOM = {
+const DOM = {
   /**
    * Builds all the fields possible for the given marker. Returns an
    * array of elements to be appended to a parent element.
@@ -272,3 +269,8 @@ const DOM = exports.DOM = {
     return container;
   }
 };
+
+exports.getMarkerLabel = getMarkerLabel;
+exports.getMarkerClassName = getMarkerClassName;
+exports.getMarkerFields = getMarkerFields;
+exports.DOM = DOM;

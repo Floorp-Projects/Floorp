@@ -34,7 +34,6 @@ function MockMemoryFront () {
     ["getAllocations", createMockAllocations],
   ]);
 }
-exports.MockMemoryFront = MockMemoryFront;
 
 function MockTimelineFront () {
   MockFront.call(this, [
@@ -43,7 +42,6 @@ function MockTimelineFront () {
     ["stop", 0],
   ]);
 }
-exports.MockTimelineFront = MockTimelineFront;
 
 /**
  * Create a fake allocations object, to be used with the MockMemoryFront
@@ -84,7 +82,6 @@ function memoryActorSupported (target) {
   // but no memory actor (like addon debugging in Gecko 38+)
   return !!target.getTrait("memoryActorAllocations") && target.hasActor("memory");
 }
-exports.memoryActorSupported = memoryActorSupported;
 
 /**
  * Takes a TabTarget, and checks existence of a TimelineActor on
@@ -102,7 +99,6 @@ function timelineActorSupported(target) {
 
   return target.hasActor("timeline");
 }
-exports.timelineActorSupported = timelineActorSupported;
 
 /**
  * Returns a promise resolving to the location of the profiler actor
@@ -129,7 +125,6 @@ function getProfiler (target) {
   }
   return deferred.promise;
 }
-exports.getProfiler = getProfiler;
 
 /**
  * Makes a request to an actor that does not have the modern `Front`
@@ -174,4 +169,10 @@ function actorCompatibilityBridge (method) {
     }
   };
 }
+
+exports.MockMemoryFront = MockMemoryFront;
+exports.MockTimelineFront = MockTimelineFront;
+exports.memoryActorSupported = memoryActorSupported;
+exports.timelineActorSupported = timelineActorSupported;
+exports.getProfiler = getProfiler;
 exports.actorCompatibilityBridge = actorCompatibilityBridge;
