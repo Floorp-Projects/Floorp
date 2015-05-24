@@ -501,4 +501,3 @@ FrameNode.prototype = {
 
 exports.ThreadNode = ThreadNode;
 exports.FrameNode = FrameNode;
-exports.FrameNode.isContent = FrameUtils.isContent;
