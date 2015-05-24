@@ -243,7 +243,9 @@ WebConsoleFrame.prototype = {
    * Getter for the xul:popupset that holds any popups we open.
    * @type nsIDOMElement
    */
-  get popupset() this.owner.mainPopupSet,
+  get popupset() {
+    return this.owner.mainPopupSet;
+  },
 
   /**
    * Holds the initialization promise object.
@@ -356,7 +358,9 @@ WebConsoleFrame.prototype = {
    * Getter for the debugger WebConsoleClient.
    * @type object
    */
-  get webConsoleClient() this.proxy ? this.proxy.webConsoleClient : null,
+  get webConsoleClient() {
+    return this.proxy ? this.proxy.webConsoleClient : null;
+  },
 
   _destroyer: null,
 
@@ -3200,13 +3204,19 @@ JSTerm.prototype = {
    * Getter for the element that holds the messages we display.
    * @type nsIDOMElement
    */
-  get outputNode() this.hud.outputNode,
+  get outputNode()
+  {
+    return this.hud.outputNode;
+  },
 
   /**
    * Getter for the debugger WebConsoleClient.
    * @type object
    */
-  get webConsoleClient() this.hud.webConsoleClient,
+  get webConsoleClient()
+  {
+    return this.hud.webConsoleClient;
+  },
 
   COMPLETE_FORWARD: 0,
   COMPLETE_BACKWARD: 1,

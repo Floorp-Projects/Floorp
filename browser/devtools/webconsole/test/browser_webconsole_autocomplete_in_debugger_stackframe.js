@@ -27,7 +27,7 @@ function testNext() {
   });
 }
 
-function testCompletion(hud) {
+function* testCompletion(hud) {
   let jsterm = hud.jsterm;
   let input = jsterm.inputNode;
   let popup = jsterm.autocompletePopup;

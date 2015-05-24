@@ -110,7 +110,7 @@ function test() {
       "Split console is open after editing.");
   }
 
-  function executeJS() {
+  function* executeJS() {
     jsterm.execute("var foo = { bar: \"baz\" }; foo;");
     hudMessages = yield waitForMessages({
       webconsole: hud,
@@ -133,7 +133,7 @@ function test() {
     return result;
   }
 
-  function startPropertyEditor() {
+  function* startPropertyEditor() {
     let results = yield findVariableViewProperties(variablesView, [
       {name: "bar", value: "baz"}
     ], {webconsole: hud});

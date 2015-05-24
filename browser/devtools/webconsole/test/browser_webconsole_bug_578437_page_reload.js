@@ -9,7 +9,7 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 let browser;
 
 function test() {
-  loadTab(TEST_URI).then({
+  loadTab(TEST_URI).then(() => {
     openConsole().then((tab) => {
       browser = tab.browser;
 
