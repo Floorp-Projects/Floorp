@@ -21,6 +21,8 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
     DetailsSubview.initialize.call(this);
 
     this._onLink = this._onLink.bind(this);
+
+    this.container = $("#memory-calltree-view > .call-tree-cells-container");
   },
 
   /**
@@ -35,10 +37,11 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
    *
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
-   * @param object options [optional]
-   *        Additional options for new the call tree.
    */
-  render: function (interval={}, options={}) {
+  render: function (interval={}) {
+    let options = {
+      invertTree: PerformanceController.getOption("invert-call-tree")
+    };
     let recording = PerformanceController.getCurrentRecording();
     let allocations = recording.getAllocations();
     let threadNode = this._prepareCallTree(allocations, interval, options);
@@ -66,33 +69,30 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
    */
   _prepareCallTree: function (allocations, { startTime, endTime }, options) {
     let thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
-    let invertTree = PerformanceController.getOption("invert-call-tree");
+    let { invertTree } = options;
 
-    let threadNode = new ThreadNode(thread,
-      { startTime, endTime, invertTree });
-
-    // If we have an empty profile (no samples), then don't invert the tree, as
-    // it would hide the root node and a completely blank call tree space can be
-    // mis-interpreted as an error.
-    options.inverted = invertTree && threadNode.samples > 0;
-
-    return threadNode;
+    return new ThreadNode(thread, { startTime, endTime, invertTree });
   },
 
   /**
    * Renders the call tree.
    */
   _populateCallTree: function (frameNode, options={}) {
+    // If we have an empty profile (no samples), then don't invert the tree, as
+    // it would hide the root node and a completely blank call tree space can be
+    // mis-interpreted as an error.
+    let inverted = options.invertTree && frameNode.samples > 0;
+
     let root = new CallView({
       frame: frameNode,
-      inverted: options.inverted,
+      inverted: inverted,
       // Root nodes are hidden in inverted call trees.
-      hidden: options.inverted,
+      hidden: inverted,
       // Memory call trees should be sorted by allocations.
       sortingPredicate: (a, b) => a.frame.allocations < b.frame.allocations ? 1 : -1,
       // Call trees should only auto-expand when not inverted. Passing undefined
       // will default to the CALL_TREE_AUTO_EXPAND depth.
-      autoExpandDepth: options.inverted ? 0 : undefined,
+      autoExpandDepth: inverted ? 0 : undefined,
       // Some cells like the time duration and cost percentage don't make sense
       // for a memory allocations call tree.
       visibleCells: {
@@ -109,9 +109,8 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
     root.on("focus", () => this.emit("focus"));
 
     // Clear out other call trees.
-    let container = $("#memory-calltree-view > .call-tree-cells-container");
-    container.innerHTML = "";
-    root.attachTo(container);
+    this.container.innerHTML = "";
+    root.attachTo(this.container);
 
     // Memory allocation samples don't contain cateogry labels.
     root.toggleCategories(false);
