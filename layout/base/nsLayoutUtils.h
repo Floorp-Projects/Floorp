@@ -2305,6 +2305,10 @@ public:
     return sFontSizeInflationDisabledInMasterProcess;
   }
 
+  static bool SVGTransformOriginEnabled() {
+    return sSVGTransformOriginEnabled;
+  }
+
   /**
    * See comment above "font.size.inflation.mappingIntercept" in
    * modules/libpref/src/init/all.js .
@@ -2657,6 +2661,7 @@ private:
   static bool sInvalidationDebuggingIsEnabled;
   static bool sCSSVariablesEnabled;
   static bool sInterruptibleReflowEnabled;
+  static bool sSVGTransformOriginEnabled;
 
   /**
    * Helper function for LogTestDataForPaint().

@@ -184,6 +184,7 @@ public:
   typedef mozilla::gfx::AntialiasMode AntialiasMode;
   typedef mozilla::gfx::FillRule FillRule;
   typedef mozilla::gfx::GeneralPattern GeneralPattern;
+  typedef mozilla::gfx::Size Size;
 
   static void Init();
 
@@ -249,6 +250,14 @@ public:
    * Update the filter invalidation region for ancestor frames, if relevant.
    */
   static void NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame);
+
+  /**
+   * Percentage lengths in SVG are resolved against the width/height of the
+   * nearest viewport (or its viewBox, if set). This helper returns the size
+   * of this "context" for the given frame so that percentage values can be
+   * resolved.
+   */
+  static Size GetContextSize(const nsIFrame* aFrame);
 
   /* Computes the input length in terms of object space coordinates.
      Input: rect - bounding box

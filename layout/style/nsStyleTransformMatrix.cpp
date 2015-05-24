@@ -9,8 +9,10 @@
 
 #include "nsStyleTransformMatrix.h"
 #include "nsCSSValue.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsRuleNode.h"
+#include "nsSVGUtils.h"
 #include "nsCSSKeywords.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "gfxMatrix.h"
@@ -48,9 +50,44 @@ TransformReferenceBox::EnsureDimensionsAreCached()
   mIsCached = true;
 
   if (mFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    // TODO: SVG needs to define what percentage translations resolve against.
-    mWidth = 0;
-    mHeight = 0;
+    if (!nsLayoutUtils::SVGTransformOriginEnabled()) {
+      mX = -mFrame->GetPosition().x;
+      mY = -mFrame->GetPosition().y;
+      mWidth = 0;
+      mHeight = 0;
+    } else
+    if (mFrame->StyleDisplay()->mTransformBox ==
+          NS_STYLE_TRANSFORM_BOX_FILL_BOX) {
+      // Percentages in transforms resolve against the SVG bbox, and the
+      // transform is relative to the top-left of the SVG bbox.
+      gfxRect bbox = nsSVGUtils::GetBBox(const_cast<nsIFrame*>(mFrame));
+      nsRect bboxInAppUnits =
+        nsLayoutUtils::RoundGfxRectToAppRect(bbox,
+                                             mFrame->PresContext()->AppUnitsPerCSSPixel());
+      // The mRect of an SVG nsIFrame is its user space bounds *including*
+      // stroke and markers, whereas bboxInAppUnits is its user space bounds
+      // including fill only.  We need to note the offset of the reference box
+      // from the frame's mRect in mX/mY.
+      mX = bboxInAppUnits.x - mFrame->GetPosition().x;
+      mY = bboxInAppUnits.y - mFrame->GetPosition().y;
+      mWidth = bboxInAppUnits.width;
+      mHeight = bboxInAppUnits.height;
+    } else {
+      // The value 'border-box' is treated as 'view-box' for SVG content.
+      MOZ_ASSERT(mFrame->StyleDisplay()->mTransformBox ==
+                   NS_STYLE_TRANSFORM_BOX_VIEW_BOX ||
+                 mFrame->StyleDisplay()->mTransformBox ==
+                   NS_STYLE_TRANSFORM_BOX_BORDER_BOX,
+                 "Unexpected value for 'transform-box'");
+      // Percentages in transforms resolve against the width/height of the
+      // nearest viewport (or it's viewBox if one is applied), and the
+      // transform is relative to {0,0} in current user space.
+      mX = -mFrame->GetPosition().x;
+      mY = -mFrame->GetPosition().y;
+      Size contextSize = nsSVGUtils::GetContextSize(mFrame);
+      mWidth = nsPresContext::CSSPixelsToAppUnits(contextSize.width);
+      mHeight = nsPresContext::CSSPixelsToAppUnits(contextSize.height);
+    }
     return;
   }
 
@@ -78,6 +115,8 @@ TransformReferenceBox::EnsureDimensionsAreCached()
   }
 #endif
 
+  mX = 0;
+  mY = 0;
   mWidth = rect.Width();
   mHeight = rect.Height();
 }
@@ -87,6 +126,8 @@ TransformReferenceBox::Init(const nsSize& aDimensions)
 {
   MOZ_ASSERT(!mFrame && !mIsCached);
 
+  mX = 0;
+  mY = 0;
   mWidth = aDimensions.width;
   mHeight = aDimensions.height;
   mIsCached = true;
