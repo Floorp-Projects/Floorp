@@ -465,25 +465,8 @@ GMPWrapper.prototype = {
       return f.exists();
     };
 
-    // Determine the name of the GMP dynamic library; it differs on every
-    // platform. Note: we can't use Services.appInfo.OS here, as that's
-    // "XPCShell" in our tests.
-    let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-    let isOSX = ("nsILocalFileMac" in Ci);
-    let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
-
-    let libName = "";
-    let id = this._plugin.id;
-    if (isWindows) {
-      libName = id.substring(4) + ".dll";
-    } else if (isOSX) {
-      libName = "lib" + id.substring(4) + ".dylib";
-    } else if (isLinux) {
-      libName = id.substring(4) + ".so";
-    } else {
-      this._log.info("_arePluginFilesOnDisk - unsupported platform.");
-      return false;
-    }
+    let id = this._plugin.id.substring(4);
+    let libName = AppConstants.DLL_PREFIX + id + AppConstants.DLL_SUFFIX;
 
     return fileExists(this.gmpPath, libName) &&
            fileExists(this.gmpPath, id + ".info");
