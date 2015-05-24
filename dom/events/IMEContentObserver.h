@@ -72,6 +72,17 @@ public:
    * storing the instance.
    */
   void DisconnectFromEventStateManager();
+  /**
+   * MaybeReinitialize() tries to restart to observe the editor's root node.
+   * This is useful when the editor is reframed and all children are replaced
+   * with new node instances.
+   * @return            Returns true if the instance is managing the content.
+   *                    Otherwise, false.
+   */
+  bool MaybeReinitialize(nsIWidget* aWidget,
+                         nsPresContext* aPresContext,
+                         nsIContent* aContent,
+                         nsIEditor* aEditor);
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent);
   bool IsEditorHandlingEventForComposition() const;
   bool KeepAliveDuringDeactive() const
@@ -133,6 +144,14 @@ public:
 private:
   ~IMEContentObserver() {}
 
+  enum State {
+    eState_NotObserving,
+    eState_StoppedObserving,
+    eState_Observing
+  };
+  State GetState() const;
+  bool IsObservingContent(nsPresContext* aPresContext,
+                          nsIContent* aContent) const;
   void MaybeNotifyIMEOfTextChange(const TextChangeData& aTextChangeData);
   void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition);
   void MaybeNotifyIMEOfPositionChange();

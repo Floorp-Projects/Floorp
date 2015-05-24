@@ -105,8 +105,7 @@ IMEContentObserver::Init(nsIWidget* aWidget,
 {
   MOZ_ASSERT(aEditor, "aEditor must not be null");
 
-  bool firstInitialization =
-    !(mRootContent && !mRootContent->IsInComposedDoc());
+  bool firstInitialization = GetState() != eState_StoppedObserving;
   if (!firstInitialization) {
     // If this is now trying to initialize with new contents, all observers
     // should be registered again for simpler implementation.
@@ -308,15 +307,46 @@ IMEContentObserver::DisconnectFromEventStateManager()
 }
 
 bool
+IMEContentObserver::MaybeReinitialize(nsIWidget* aWidget,
+                                      nsPresContext* aPresContext,
+                                      nsIContent* aContent,
+                                      nsIEditor* aEditor)
+{
+  if (!IsObservingContent(aPresContext, aContent)) {
+    return false;
+  }
+
+  if (GetState() == eState_StoppedObserving) {
+    Init(aWidget, aPresContext, aContent, aEditor);
+  }
+  return IsManaging(aPresContext, aContent);
+}
+
+bool
 IMEContentObserver::IsManaging(nsPresContext* aPresContext,
                                nsIContent* aContent)
 {
+  return GetState() == eState_Observing &&
+         IsObservingContent(aPresContext, aContent);
+}
+
+IMEContentObserver::State
+IMEContentObserver::GetState() const
+{
   if (!mSelection || !mRootContent || !mEditableNode) {
-    return false; // failed to initialize.
+    return eState_NotObserving; // failed to initialize or finalized.
   }
   if (!mRootContent->IsInComposedDoc()) {
-    return false; // the focused editor has already been reframed.
+    // the focused editor has already been reframed.
+    return eState_StoppedObserving;
   }
+  return eState_Observing;
+}
+
+bool
+IMEContentObserver::IsObservingContent(nsPresContext* aPresContext,
+                                       nsIContent* aContent) const
+{
   return mEditableNode == IMEStateManager::GetRootEditableNode(aPresContext,
                                                                aContent);
 }
