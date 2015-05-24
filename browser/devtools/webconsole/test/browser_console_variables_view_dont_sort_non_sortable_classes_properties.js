@@ -80,7 +80,7 @@ function test() {
    *        A string that, once executed, creates and returns the object to
    *        inspect.
    */
-  function testNotSorted(aObject) {
+  function* testNotSorted(aObject) {
     info("Testing " + aObject);
     let deferred = promise.defer();
     jsterm.once("variablesview-fetched", (_, aVar) => deferred.resolve(aVar));
@@ -106,7 +106,7 @@ function test() {
    *        A string that, once executed, creates and returns the object to
    *        inspect.
    */
-  function testSorted(aObject) {
+  function* testSorted(aObject) {
     info("Testing " + aObject);
     let deferred = promise.defer();
     jsterm.once("variablesview-fetched", (_, aVar) => deferred.resolve(aVar));

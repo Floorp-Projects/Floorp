@@ -103,10 +103,16 @@ WebConsolePanel.prototype = {
       });
   },
 
-  get target() this._toolbox.target,
+  get target()
+  {
+    return this._toolbox.target;
+  },
 
   _isReady: false,
-  get isReady() this._isReady,
+  get isReady()
+  {
+    return this._isReady;
+  },
 
   destroy: function WCP_destroy()
   {
