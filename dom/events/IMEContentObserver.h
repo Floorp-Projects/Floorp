@@ -160,10 +160,8 @@ private:
   void ObserveEditableNode();
   /**
    *  NotifyIMEOfBlur() notifies IME of blur.
-   *  @param aPostEvent     When true, DOM event will be posted to the thread.
-   *                        Otherwise, dispatched when safe.
    */
-  void NotifyIMEOfBlur(bool aPostEvent);
+  void NotifyIMEOfBlur();
   /**
    *  UnregisterObservers() unregisters all listeners and observers.
    */
