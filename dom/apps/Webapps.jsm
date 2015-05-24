@@ -860,10 +860,6 @@ this.DOMApplicationRegistry = {
 
     if (!root.messages || !Array.isArray(root.messages) ||
         root.messages.length == 0) {
-      dump("Could not register invalid system message entry\n");
-      try {
-        dump(JSON.stringify(root.messages) + "\n");
-      } catch(e) {}
       return;
     }
 
@@ -873,31 +869,27 @@ this.DOMApplicationRegistry = {
     root.messages.forEach(function registerPages(aMessage) {
       let handlerPageURI = launchPathURI;
       let messageName;
-      if (typeof(aMessage) !== "object" || Object.keys(aMessage).length !== 1) {
-        dump("Could not register invalid system message entry\n");
+      if (typeof(aMessage) === "object" && Object.keys(aMessage).length === 1) {
+        messageName = Object.keys(aMessage)[0];
+        let handlerPath = aMessage[messageName];
+        // Resolve the handler path from origin. If |handler_path| is absent,
+        // simply skip.
+        let fullHandlerPath;
         try {
-          dump(JSON.stringify(aMessage) + "\n");
-        } catch(e) {}
-        return;
-      }
-
-      messageName = Object.keys(aMessage)[0];
-      let handlerPath = aMessage[messageName];
-      // Resolve the handler path from origin. If |handler_path| is absent,
-      // simply skip.
-      let fullHandlerPath;
-      try {
-        if (handlerPath && handlerPath.trim()) {
-          fullHandlerPath = manifest.resolveURL(handlerPath);
-        } else {
-          throw new Error("Empty or blank handler path.");
+          if (handlerPath && handlerPath.trim()) {
+            fullHandlerPath = manifest.resolveURL(handlerPath);
+          } else {
+            throw new Error("Empty or blank handler path.");
+          }
+        } catch(e) {
+          debug("system message handler path (" + handlerPath + ") is " +
+                "invalid, skipping. Error is: " + e);
+          return;
         }
-      } catch(e) {
-        debug("system message handler path (" + handlerPath + ") is " +
-              "invalid, skipping. Error is: " + e);
-        return;
+        handlerPageURI = Services.io.newURI(fullHandlerPath, null, null);
+      } else {
+        messageName = aMessage;
       }
-      handlerPageURI = Services.io.newURI(fullHandlerPath, null, null);
 
       if (SystemMessagePermissionsChecker
             .isSystemMessagePermittedToRegister(messageName,

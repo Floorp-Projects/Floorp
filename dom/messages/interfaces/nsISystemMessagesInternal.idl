@@ -10,7 +10,7 @@ interface nsIMessageSender;
 
 // Implemented by the contract id @mozilla.org/system-message-internal;1
 
-[scriptable, uuid(59b6beda-f911-4d47-a296-8c81e6abcfb9)]
+[scriptable, uuid(54c8e274-decb-4258-9a24-4ebfcbf3d00a)]
 interface nsISystemMessagesInternal : nsISupports
 {
   /*
@@ -36,10 +36,8 @@ interface nsISystemMessagesInternal : nsISupports
    * @param message     The message payload.
    * @param extra       Extra opaque information that will be passed around in the observer
    *                    notification to open the page.
-   * returns a Promise
    */
-  nsISupports broadcastMessage(in DOMString type, in jsval message,
-                               [optional] in jsval extra);
+  void broadcastMessage(in DOMString type, in jsval message, [optional] in jsval extra);
 
   /*
    * Registration of a page that wants to be notified of a message type.
