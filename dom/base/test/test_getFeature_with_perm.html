@@ -76,13 +76,31 @@ function createManifestTest(aFeature) {
   }
 }
 
+function testDevMode(aExpected) {
+  return function() {
+    navigator.getFeature("dom.apps.developer_mode").then(res => {
+      is(res, aExpected, "dom.apps.developer_mode is " + aExpected);
+      runNextTest();
+    }, function() {
+      ok(false, "The Promise should not be rejected");
+    });
+  }
+}
+
+function enableDevMode() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.apps.developer_mode", true]]}, runNextTest);
+}
+
 var currentTest = -1;
 var tests = [
   testNotSupported,
   testNotSupportedManifest,
   testSupported,
   createManifestTest("manifest.origin"),
-  createManifestTest("manifest.redirects")
+  createManifestTest("manifest.redirects"),
+  testDevMode(false),
+  enableDevMode,
+  testDevMode(true)
 ];
 
 function runNextTest() {

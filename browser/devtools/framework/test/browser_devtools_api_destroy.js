@@ -13,7 +13,7 @@ function runTests(aTab) {
   let toolDefinition = {
     id: "testTool",
     visibilityswitch: "devtools.testTool.enabled",
-    isTargetSupported: function() true,
+    isTargetSupported: () => true,
     url: "about:blank",
     label: "someLabel",
     build: function(iframeWindow, toolbox) {

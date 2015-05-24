@@ -4,8 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/viewsource/viewsource.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
@@ -20,10 +20,10 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoadViewPartialSource();"
         contenttitlesetting="true"
-        title="&mainWindow.title;" 
-        titlemodifier="&mainWindow.titlemodifier;" 
+        title="&mainWindow.title;"
+        titlemodifier="&mainWindow.titlemodifier;"
         titlepreface=""
-        titlemenuseparator ="&mainWindow.titlemodifierseparator;"  
+        titlemenuseparator ="&mainWindow.titlemodifierseparator;"
         windowtype="navigator:view-source"
         width="500" height="300"
         screenX="10" screenY="10"
@@ -50,9 +50,9 @@
            oncommand="document.getElementById('FindToolbar').onFindAgainCommand(false);"/>
   <command id="cmd_findPrevious"
            oncommand="document.getElementById('FindToolbar').onFindAgainCommand(true);"/>
-  <command id="cmd_goToLine" oncommand="ViewSourceChrome.promptAndGoToLine();" disabled="true"/>
-  <command id="cmd_highlightSyntax" oncommand="ViewSourceChrome.toggleSyntaxHighlighting();"/>
-  <command id="cmd_wrapLongLines" oncommand="ViewSourceChrome.toggleWrapping();"/>
+  <command id="cmd_goToLine" oncommand="viewSourceChrome.promptAndGoToLine();" disabled="true"/>
+  <command id="cmd_highlightSyntax" oncommand="viewSourceChrome.toggleSyntaxHighlighting();"/>
+  <command id="cmd_wrapLongLines" oncommand="viewSourceChrome.toggleWrapping();"/>
   <command id="cmd_textZoomReduce" oncommand="ZoomManager.reduce();"/>
   <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.enlarge();"/>
   <command id="cmd_textZoomReset" oncommand="ZoomManager.reset();"/>
@@ -80,16 +80,16 @@
     <menuitem id="context-copyLink"
               label="&copyLinkCmd.label;"
               accesskey="&copyLinkCmd.accesskey;"
-              oncommand="ViewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
+              oncommand="viewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
     <menuitem id="context-copyEmail"
               label="&copyEmailCmd.label;"
               accesskey="&copyEmailCmd.accesskey;"
-              oncommand="ViewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
+              oncommand="viewSourceChrome.onContextMenuCopyLinkOrEmail();"/>
     <menuseparator/>
     <menuitem id="cMenu_selectAll"/>
   </menupopup>
 
-  <!-- Menu --> 
+  <!-- Menu -->
   <toolbox id="viewSource-toolbox">
     <menubar id="viewSource-main-menubar">
 
@@ -131,11 +131,11 @@
       <menu id="menu_view" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
         <menupopup id="viewmenu-popup">
           <menu id="viewTextZoomMenu" label="&menu_textSize.label;" accesskey="&menu_textSize.accesskey;">
-            <menupopup>                    
-              <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge" 
+            <menupopup>
+              <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge"
                         label="&menu_textEnlarge.label;" accesskey="&menu_textEnlarge.accesskey;"
                         key="key_textZoomEnlarge"/>
-              <menuitem id="menu_textReduce" command="cmd_textZoomReduce" 
+              <menuitem id="menu_textReduce" command="cmd_textZoomReduce"
                         label="&menu_textReduce.label;" accesskey="&menu_textReduce.accesskey;"
                         key="key_textZoomReduce"/>
               <menuseparator/>
@@ -151,7 +151,7 @@
                     label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
         </menupopup>
       </menu>
-    </menubar>  
+    </menubar>
   </toolbox>
 
   <vbox id="appcontent" flex="1">
