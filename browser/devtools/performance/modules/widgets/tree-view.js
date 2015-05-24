@@ -41,8 +41,6 @@ const DEFAULT_VISIBLE_CELLS = {
 const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
 const sum = vals => vals.reduce((a, b) => a + b, 0);
 
-exports.CallView = CallView;
-
 /**
  * An item in a call tree view, which looks like this:
  *
@@ -402,3 +400,5 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     this.root.emit("link", this);
   }
 });
+
+exports.CallView = CallView;

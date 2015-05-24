@@ -8,7 +8,7 @@
  */
 
 function test() {
-  let { RecordingUtils } = devtools.require("devtools/performance/recording-utils");
+  let RecordingUtils = devtools.require("devtools/performance/recording-utils");
 
   let output = RecordingUtils.getProfileThreadFromAllocations(TEST_DATA);
   is(output.toSource(), EXPECTED_OUTPUT.toSource(), "The output is correct.");
