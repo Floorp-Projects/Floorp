@@ -5,7 +5,7 @@
  * Tests that the frontend UI is properly reconfigured after reloading.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS } = panel.panelWin;
 

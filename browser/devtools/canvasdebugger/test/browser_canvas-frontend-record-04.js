@@ -8,7 +8,7 @@
  * of its loop, when the recording starts before the rAFs start.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(RAF_BEGIN_URL);
   let { window, EVENTS, gFront, SnapshotsListView } = panel.panelWin;
   loadFrameScripts();

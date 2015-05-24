@@ -6,7 +6,7 @@
  * in the event no rAF loop is found.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, front } = yield initCanvasDebuggerBackend(NO_CANVAS_URL);
   loadFrameScripts();
 

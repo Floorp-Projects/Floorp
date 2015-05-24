@@ -190,8 +190,8 @@ EventEmitter.decorate(this);
 /**
  * DOM query helpers.
  */
-function $(selector, target = document) target.querySelector(selector);
-function $all(selector, target = document) target.querySelectorAll(selector);
+let $ = (selector, target = document) => target.querySelector(selector);
+let $all = (selector, target = document) => target.querySelectorAll(selector);
 
 /**
  * Helper for getting an nsIURL instance out of a string.
