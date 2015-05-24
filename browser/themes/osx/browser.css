@@ -3687,10 +3687,10 @@ notification[value="loop-sharing-notification"] .messageImage {
   }
 }
 
-.popup-notification-description[popupid="addon-progress"],
-.popup-notification-description[popupid="addon-install-confirmation"] {
-  width: 27em;
-  max-width: 27em;
+.popup-notification-body[popupid="addon-progress"],
+.popup-notification-body[popupid="addon-install-confirmation"] {
+  width: 28em;
+  max-width: 28em;
 }
 
 #addon-progress-notification-progresstext,

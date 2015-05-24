@@ -12,6 +12,10 @@
  * getDefaultFileName, getNormalizedLeafName and getDefaultExtension
  */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ViewSourceBrowser",
+  "resource://gre/modules/ViewSourceBrowser.jsm");
+
 var gViewSourceUtils = {
 
   mnsIWebBrowserPersist: Components.interfaces.nsIWebBrowserPersist,
@@ -58,6 +62,72 @@ var gViewSourceUtils = {
     } else {
       this._openInInternalViewer(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber);
     }
+  },
+
+  /**
+   * Displays view source in the provided <browser>.  This allows for non-window
+   * display methods, such as a tab from Firefox.  The caller that manages
+   * the <browser> is responsible for ensuring the companion frame script,
+   * viewSource-content.js, has been loaded for the <browser>.
+   *
+   * @param aArgs
+   *        An object with the following properties:
+   *
+   *        URL (required):
+   *          A string URL for the page we'd like to view the source of.
+   *        viewSourceBrowser (required):
+   *          The browser to display the view source in.
+   *        browser (optional):
+   *          The browser containing the document that we would like to view the
+   *          source of. This is required if outerWindowID is passed.
+   *        outerWindowID (optional):
+   *          The outerWindowID of the content window containing the document that
+   *          we want to view the source of. Pass this if you want to attempt to
+   *          load the document source out of the network cache.
+   *        lineNumber (optional):
+   *          The line number to focus on once the source is loaded.
+   */
+  viewSourceInBrowser: function(aArgs) {
+    let viewSourceBrowser = new ViewSourceBrowser(aArgs.viewSourceBrowser);
+    viewSourceBrowser.loadViewSource(aArgs);
+  },
+
+  /**
+   * Displays view source for a selection from some document in the provided
+   * <browser>.  This allows for non-window display methods, such as a tab from
+   * Firefox.  The caller that manages the <browser> is responsible for ensuring
+   * the companion frame script, viewSource-content.js, has been loaded for the
+   * <browser>.
+   *
+   * @param aSelection
+   *        A Selection object for the content of interest.
+   * @param aViewSourceInBrowser
+   *        The browser to display the view source in.
+   */
+  viewSourceFromSelectionInBrowser: function(aSelection, aViewSourceInBrowser) {
+    let viewSourceBrowser = new ViewSourceBrowser(aViewSourceInBrowser);
+    viewSourceBrowser.loadViewSourceFromSelection(aSelection);
+  },
+
+  /**
+   * Displays view source for a MathML fragment from some document in the
+   * provided <browser>.  This allows for non-window display methods,  such as a
+   * tab from Firefox.  The caller that manages the <browser> is responsible for
+   * ensuring the companion frame script, viewSource-content.js, has been loaded
+   * for the <browser>.
+   *
+   * @param aNode
+   *        Some element within the fragment of interest.
+   * @param aContext
+   *        A string denoting the type of fragment.  Currently, "mathml" is the
+   *        only accepted value.
+   * @param aViewSourceInBrowser
+   *        The browser to display the view source in.
+   */
+  viewSourceFromFragmentInBrowser: function(aNode, aContext,
+                                            aViewSourceInBrowser) {
+    let viewSourceBrowser = new ViewSourceBrowser(aViewSourceInBrowser);
+    viewSourceBrowser.loadViewSourceFromFragment(aNode, aContext);
   },
 
   // Opens the interval view source viewer
@@ -114,7 +184,7 @@ var gViewSourceUtils = {
                 lineNumber: aLineNumber};
 
     try {
-      var editor = this.getExternalViewSourceEditor();    
+      var editor = this.getExternalViewSourceEditor();
       if (!editor) {
         this.handleCallBack(aCallBack, false, data);
         return;
@@ -129,7 +199,7 @@ var gViewSourceUtils = {
 
       var path;
       var contentType = aDocument ? aDocument.contentType : null;
-      if (uri.scheme == "file") {    
+      if (uri.scheme == "file") {
         // it's a local file; we can open it directly
         path = uri.QueryInterface(Components.interfaces.nsIFileURL).file.path;
 
@@ -140,7 +210,7 @@ var gViewSourceUtils = {
         // set up the progress listener with what we know so far
         this.viewSourceProgressListener.editor = editor;
         this.viewSourceProgressListener.callBack = aCallBack;
-        this.viewSourceProgressListener.data = data;      
+        this.viewSourceProgressListener.data = data;
         if (!aPageDescriptor) {
           // without a page descriptor, loadPage has no chance of working. download the file.
           var file = this.getTemporaryFile(uri, aDocument, contentType);
@@ -189,7 +259,7 @@ var gViewSourceUtils = {
           var progress = webShell.QueryInterface(this.mnsIWebProgress);
           progress.addProgressListener(this.viewSourceProgressListener,
                                        this.mnsIWebProgress.NOTIFY_STATE_DOCUMENT);
-          var pageLoader = webShell.QueryInterface(this.mnsIWebPageDescriptor);    
+          var pageLoader = webShell.QueryInterface(this.mnsIWebPageDescriptor);
           pageLoader.loadPage(aPageDescriptor, this.mnsIWebPageDescriptor.DISPLAY_AS_SOURCE);
         }
       }
@@ -296,7 +366,7 @@ var gViewSourceUtils = {
 
           // get a temporary filename using the attributes from the data object that
           // openInExternalEditor gave us
-          this.file = gViewSourceUtils.getTemporaryFile(this.data.uri, this.data.doc, 
+          this.file = gViewSourceUtils.getTemporaryFile(this.data.uri, this.data.doc,
                                                         this.data.doc.contentType);
 
           // we have to convert from the source charset.
@@ -310,7 +380,7 @@ var gViewSourceUtils = {
 
           // write the source to the file
           coStream.writeString(webNavigation.document.body.textContent);
-          
+
           // clean up
           coStream.close();
           foStream.close();
