@@ -1358,67 +1358,88 @@ function runEditorReframeTests(aCallback)
     document.activeElement.blur();
   }
 
-  var input = document.getElementById("text");
-  input.focus();
-  input.style.overflow = "visible";
-
-  var mozIMEFocusIn = 0;
-  var mozIMEFocusOut = 0;
+  var IMEFocus = 0;
+  var IMEBlur = 0;
   var IMEHasFocus = false;
-
-  var handler = function (aEvent) {
-    switch (aEvent.type) {
-      case "MozIMEFocusIn":
-        mozIMEFocusIn++;
+  var TIPCallback = function(aTIP, aNotification) {
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+      case "notify-focus":
+        IMEFocus++;
         IMEHasFocus = true;
         break;
-      case "MozIMEFocusOut":
-        mozIMEFocusOut++;
+      case "notify-blur":
+        IMEBlur++;
         IMEHasFocus = false;
         break;
     }
+    return true;
   };
+
+  var TIP = Components.classes["@mozilla.org/text-input-processor;1"]
+              .createInstance(Components.interfaces.nsITextInputProcessor);
+  if (!TIP.beginInputTransactionForTests(window, TIPCallback)) {
+    ok(false, "runEditorReframeTests(): failed to begin input transaction");
+    return;
+  }
+
+  var input = document.getElementById("text");
+  input.focus();
+
+  is(IMEFocus, 1, "runEditorReframeTests(): IME should receive a focus notification by a call of <input>.focus()");
+  is(IMEBlur, 0, "runEditorReframeTests(): IME shouldn't receive a blur notification by a call of <input>.focus()");
+  ok(IMEHasFocus, "runEditorReframeTests(): IME should have focus because <input>.focus() is called");
+
+  IMEFocus = IMEBlur = 0;
+
+  input.style.overflow = "visible";
 
   var onInput = function (aEvent) {
     aEvent.target.style.overflow = "hidden";
   }
-
-  document.addEventListener("MozIMEFocusIn", handler, true);
-  document.addEventListener("MozIMEFocusOut", handler, true);
   input.addEventListener("input", onInput, true);
 
-  sendChar("a");
+  var AKey = new KeyboardEvent("", { key: "a", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A });
+  TIP.keydown(AKey);
+  TIP.keyup(AKey);
 
   hitEventLoop(function () {
-    ok(mozIMEFocusOut > 0, "runEditorReframeTests(): IME focus must be lost at reframing");
-    ok(mozIMEFocusIn > 0, "runEditorReframeTests(): IME focus must be restored after reframing");
-    ok(IMEHasFocus, "runEditorReframeTests(): IME must have focus after reframing");
+    is(IMEFocus, 0, "runEditorReframeTests(): IME shouldn't receive a focus notification during reframing");
+    is(IMEBlur, 0, "runEditorReframeTests(): IME shouldn't receive a blur notification during reframing");
+    ok(IMEHasFocus, "runEditorReframeTests(): IME must have focus even after reframing");
 
-    var focusQueryHandler = function(aEvent) {
-        // Perform a style change and query during focus to trigger reframing
-        input.style.overflow = "visible";
-        synthesizeQuerySelectedText();
-    }
-    document.addEventListener("MozIMEFocusIn", focusQueryHandler, true);
-    mozIMEFocusIn = mozIMEFocusOut = 0;
+    var onFocus = function(aEvent) {
+      // Perform a style change and query during focus to trigger reframing
+      input.style.overflow = "visible";
+      synthesizeQuerySelectedText();
+    };
+    input.addEventListener("focus", onFocus);
+    IMEFocus = IMEBlur = 0;
 
     input.blur();
     input.focus();
-    sendChar("a");
+    TIP.keydown(AKey);
+    TIP.keyup(AKey);
 
     hitEventLoop(function() {
-        ok(IMEHasFocus, "runEditorReframeTests(): IME must have focus after reframing during focus");
-        ok(mozIMEFocusOut == mozIMEFocusIn, "runEditorReframeTests(): IME focus/blur (" + mozIMEFocusIn + "/" + mozIMEFocusOut + ") must match after reframing during focus");
+      is(IMEFocus, 1, "runEditorReframeTests(): IME should receive a focus notification at focus but shouldn't receive it during reframing");
+      is(IMEBlur, 1, "runEditorReframeTests(): IME should receive a blur notification at blur but shouldn't receive it during reframing");
+      ok(IMEHasFocus, "runEditorReframeTests(): IME sould have focus after reframing during focus");
 
-        document.removeEventListener("MozIMEFocusIn", focusQueryHandler, true);
-        document.removeEventListener("MozIMEFocusIn", handler, true);
-        document.removeEventListener("MozIMEFocusOut", handler, true);
-        input.removeEventListener("input", onInput, true);
+      input.removeEventListener("input", onInput, true);
+      input.removeEventListener("focus", onFocus);
 
-        input.style.overflow = "visible";
-        input.value = "";
+      input.style.overflow = "visible";
+      input.value = "";
 
-        hitEventLoop(aCallback, 20);
+      TIP = null;
+
+      hitEventLoop(aCallback, 20);
     }, 20);
   }, 20);
 }
