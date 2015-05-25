@@ -12,6 +12,7 @@
 #include "MediaInfo.h"
 
 #include "FFmpegH264Decoder.h"
+#include "FFmpegLog.h"
 
 #define GECKO_FRAME_TYPE 0x00093CC0
 
@@ -49,6 +50,20 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
   return NS_OK;
 }
 
+int64_t
+FFmpegH264Decoder<LIBAV_VER>::GetPts(const AVPacket& packet)
+{
+#if LIBAVCODEC_VERSION_MAJOR == 53
+  if (mFrame->pkt_pts == 0) {
+    return mFrame->pkt_dts;
+  } else {
+    return mFrame->pkt_pts;
+  }
+#else
+  return mFrame->pkt_pts;
+#endif
+}
+
 FFmpegH264Decoder<LIBAV_VER>::DecodeResult
 FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
 {
@@ -68,9 +83,18 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
     return DecodeResult::DECODE_ERROR;
   }
 
+  // Required with old version of FFmpeg/LibAV
+  mFrame->reordered_opaque = AV_NOPTS_VALUE;
+
   int decoded;
   int bytesConsumed =
     avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet);
+
+  FFMPEG_LOG("DoDecodeFrame:decode_video: rv=%d decoded=%d "
+             "(Input: pts(%lld) dts(%lld) Output: pts(%lld) "
+             "opaque(%lld) pkt_pts(%lld) pkt_dts(%lld))",
+             bytesConsumed, decoded, packet.pts, packet.dts, mFrame->pts,
+             mFrame->reordered_opaque, mFrame->pkt_pts, mFrame->pkt_dts);
 
   if (bytesConsumed < 0) {
     NS_WARNING("FFmpeg video decoder error.");
@@ -80,6 +104,10 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
 
   // If we've decoded a frame then we need to output it
   if (decoded) {
+    int64_t pts = GetPts(packet);
+    FFMPEG_LOG("Got one frame output with pts=%lld opaque=%lld",
+               pts, mCodecContext->reordered_opaque);
+
     VideoInfo info;
     info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
 
@@ -105,7 +133,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
     nsRefPtr<VideoData> v = VideoData::Create(info,
                                               mImageContainer,
                                               aSample->mOffset,
-                                              mFrame->pkt_pts,
+                                              pts,
                                               aSample->mDuration,
                                               b,
                                               aSample->mKeyframe,
