@@ -1358,7 +1358,9 @@ DataStoreService::CreateFirstRevisionId(uint32_t aAppId,
     new FirstRevisionIdCallback(aAppId, aName, aManifestURL);
 
   Sequence<nsString> dbs;
-  dbs.AppendElement(NS_LITERAL_STRING(DATASTOREDB_REVISION));
+  if (!dbs.AppendElement(NS_LITERAL_STRING(DATASTOREDB_REVISION))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return db->Open(IDBTransactionMode::Readwrite, dbs, callback);
 }
