@@ -47,7 +47,7 @@ function test() {
   }
 
   function checkNavigationWhileFocused() {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       yield promise.all([
         waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES),
         waitForSourceAndCaret(gPanel, "-01.js", 5),
