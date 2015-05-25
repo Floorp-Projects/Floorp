@@ -8,7 +8,7 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
-  Task.spawn(function() {
+  Task.spawn(function*() {
     let [tab,, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
     let frames = win.DebuggerController.StackFrames;
