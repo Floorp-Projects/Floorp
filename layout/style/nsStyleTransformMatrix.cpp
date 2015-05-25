@@ -266,8 +266,7 @@ ProcessMatrix3D(gfx3DMatrix& aMatrix,
                                   &aRefBox, &TransformReferenceBox::Height);
   temp._43 = ProcessTranslatePart(aData->Item(15),
                                   aContext, aPresContext, aCanStoreInRuleTree,
-                                  &aRefBox, &TransformReferenceBox::Height);
-  // XXXjwatt why are we using TransformReferenceBox::Height for the z compontent?!
+                                  nullptr);
 
   aMatrix.PreMultiply(temp);
 }
