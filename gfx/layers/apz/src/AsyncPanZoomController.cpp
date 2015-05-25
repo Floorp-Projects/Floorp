@@ -2275,7 +2275,11 @@ void AsyncPanZoomController::CancelAnimation(CancelAnimationFlags aFlags) {
   SetState(NOTHING);
   mAnimation = nullptr;
   // Since there is no animation in progress now the axes should
-  // have no velocity either.
+  // have no velocity either. If we are dropping the velocity from a non-zero
+  // value we should trigger a repaint as the displayport margins are dependent
+  // on the velocity and the last repaint request might not have good margins
+  // any more.
+  bool repaint = !IsZero(GetVelocityVector());
   mX.SetVelocity(0);
   mY.SetVelocity(0);
   // Setting the state to nothing and cancelling the animation can
@@ -2283,6 +2287,9 @@ void AsyncPanZoomController::CancelAnimation(CancelAnimationFlags aFlags) {
   // overscroll here.
   if (!(aFlags & ExcludeOverscroll) && IsOverscrolled()) {
     ClearOverscroll();
+    repaint = true;
+  }
+  if (repaint) {
     RequestContentRepaint();
     ScheduleComposite();
     UpdateSharedCompositorFrameMetrics();
