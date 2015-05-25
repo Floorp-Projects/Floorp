@@ -328,6 +328,31 @@ this.TelemetryStorage = {
   loadPingFile: Task.async(function* (aFilePath) {
     return TelemetryStorageImpl.loadPingFile(aFilePath);
   }),
+
+  /**
+   * Only used in tests, builds an archived ping path from the ping metadata.
+   * @param {String} aPingId The ping id.
+   * @param {Object} aDate The ping creation date.
+   * @param {String} aType The ping type.
+   * @return {String} The full path to the archived ping.
+   */
+  _testGetArchivedPingPath: function(aPingId, aDate, aType) {
+    return getArchivedPingPath(aPingId, aDate, aType);
+  },
+
+  /**
+   * Only used in tests, this helper extracts ping metadata from a given filename.
+   *
+   * @param fileName {String} The filename.
+   * @return {Object} Null if the filename didn't match the expected form.
+   *                  Otherwise an object with the extracted data in the form:
+   *                  { timestamp: <number>,
+   *                    id: <string>,
+   *                    type: <string> }
+   */
+  _testGetArchivedPingDataFromFileName: function(aFileName) {
+    return TelemetryStorageImpl._getArchivedPingDataFromFileName(aFileName);
+  },
 };
 
 /**
