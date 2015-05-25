@@ -76,6 +76,7 @@ public:
   virtual void NotifyDataArrived(const char* aBuffer,
                                  uint32_t aLength,
                                  int64_t aOffset) override;
+  virtual void NotifyDataRemoved() override;
 
   virtual media::TimeIntervals GetBuffered() override;
 

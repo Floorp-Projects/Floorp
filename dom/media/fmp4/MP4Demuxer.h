@@ -45,6 +45,8 @@ public:
 
   virtual void NotifyDataArrived(uint32_t aLength, int64_t aOffset) override;
 
+  virtual void NotifyDataRemoved() override;
+
 private:
   friend class MP4TrackDemuxer;
   nsRefPtr<MediaResource> mResource;

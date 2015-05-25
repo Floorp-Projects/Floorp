@@ -114,6 +114,14 @@ MP4Demuxer::NotifyDataArrived(uint32_t aLength, int64_t aOffset)
   }
 }
 
+void
+MP4Demuxer::NotifyDataRemoved()
+{
+  for (uint32_t i = 0; i < mDemuxers.Length(); i++) {
+    mDemuxers[i]->NotifyDataArrived();
+  }
+}
+
 UniquePtr<EncryptionInfo>
 MP4Demuxer::GetCrypto()
 {
