@@ -32,7 +32,7 @@ add_task(function*() {
   }
 });
 
-function selectFileFirstLoad(projecteditor, resource) {
+function* selectFileFirstLoad(projecteditor, resource) {
   ok (resource && resource.path, "A valid resource has been passed in for selection " + (resource && resource.path));
   projecteditor.projectTree.selectResource(resource);
   let container = projecteditor.projectTree.getViewContainer(resource);
@@ -63,7 +63,7 @@ function selectFileFirstLoad(projecteditor, resource) {
   is (editorLoaded, projecteditor.currentEditor,  "Editor has been loaded for " + resource.path);
 }
 
-function selectFileSubsequentLoad(projecteditor, resource) {
+function* selectFileSubsequentLoad(projecteditor, resource) {
   ok (resource && resource.path, "A valid resource has been passed in for selection " + (resource && resource.path));
   projecteditor.projectTree.selectResource(resource);
 

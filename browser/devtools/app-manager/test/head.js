@@ -127,7 +127,7 @@ function waitForProjectsPanel(deferred = promise.defer()) {
 }
 
 function selectProjectsPanel() {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let projectsButton = content.document.querySelector(".projects-button");
     EventUtils.sendMouseEvent({ type: "click" }, projectsButton, content);
 
@@ -144,7 +144,7 @@ function waitForProjectSelection() {
 }
 
 function selectFirstProject() {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let projectsFrame = content.document.querySelector(".projects-panel");
     let projectsWindow = projectsFrame.contentWindow;
     let projectsDoc = projectsWindow.document;
@@ -156,7 +156,7 @@ function selectFirstProject() {
 }
 
 function showSampleProjectDetails() {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     yield selectProjectsPanel();
     yield selectFirstProject();
   });

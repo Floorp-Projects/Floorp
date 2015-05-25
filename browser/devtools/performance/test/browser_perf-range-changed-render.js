@@ -4,7 +4,7 @@
 /**
  * Tests that the detail views are rerendered after the range changes.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, OverviewView, DetailsView } = panel.panelWin;
   let { WaterfallView, JsCallTreeView, JsFlameGraphView } = panel.panelWin;

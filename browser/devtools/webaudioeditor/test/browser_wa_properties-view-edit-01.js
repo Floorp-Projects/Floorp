@@ -56,7 +56,7 @@ add_task(function*() {
 });
 
 function setAndCheckVariable (panelWin, gVars) {
-  return Task.async(function (varNum, prop, value, expected, desc) {
+  return Task.async(function*(varNum, prop, value, expected, desc) {
     yield modifyVariableView(panelWin, gVars, varNum, prop, value);
     var props = {};
     props[prop] = expected;

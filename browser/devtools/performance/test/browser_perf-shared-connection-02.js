@@ -8,7 +8,7 @@
 let gProfilerConnectionsOpened = 0;
 Services.obs.addObserver(profilerConnectionObserver, "performance-actors-connection-opened", false);
 
-function spawnTest () {
+function* spawnTest() {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
 
   is(gProfilerConnectionsOpened, 1,
