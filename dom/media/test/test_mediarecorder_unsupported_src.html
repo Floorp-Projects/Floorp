@@ -26,6 +26,13 @@ function startTest() {
 
       mediaRecorder.onerror = function (e) {
         callbackStep++;
+        if (callbackStep == 1) {
+          try {
+            mediaRecorder.pause();
+          } catch(e) {
+            ok(false, 'Should not get exception in pause call.');
+          }
+        }
         ok(callbackStep < 3, 'onerror callback fired as expected.');
         is(e.name, 'GenericError', 'Error name should be GenericError.');
         is(mediaRecorder.mimeType, '', 'mimetype should be empty');
@@ -60,12 +67,6 @@ function startTest() {
       } catch(e) {
         ok(false, 'Should not get exception in start call.');
       }
-
-      try {
-        mediaRecorder.pause();
-      } catch(e) {
-        ok(false, 'Should not get exception in pause call.');
-      }
     },
     function(err) {
       ok(false, 'Unexpected error fired with: ' + err);
@@ -81,7 +82,8 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
   {
     "set": [
-      ["media.encoder.webm.enabled", false]
+      ["media.encoder.webm.enabled", false],
+      ["media.encoder.omx.enabled", false]
     ]
   }, startTest);
 
