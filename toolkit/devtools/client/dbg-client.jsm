@@ -2328,6 +2328,39 @@ ObjectClient.prototype = {
   }),
 
   /**
+   * Request a PropertyIteratorClient instance to ease listing
+   * properties for this object.
+   *
+   * @param options Object
+   *        A dictionary object with various boolean attributes:
+   *        - ignoreSafeGetters Boolean
+   *          If true, do not iterate over safe getters.
+   *        - ignoreIndexedProperties Boolean
+   *          If true, filters out Array items.
+   *          e.g. properties names between `0` and `object.length`.
+   *        - ignoreNonIndexedProperties Boolean
+   *          If true, filters out items that aren't array items
+   *          e.g. properties names that are not a number between `0`
+   *          and `object.length`.
+   *        - sort Boolean
+   *          If true, the iterator will sort the properties by name
+   *          before dispatching them.
+   * @param aOnResponse function Called with the client instance.
+   */
+  enumProperties: DebuggerClient.requester({
+    type: "enumProperties",
+    options: args(0)
+  }, {
+    after: function(aResponse) {
+      if (aResponse.iterator) {
+        return { iterator: new PropertyIteratorClient(this._client, aResponse.iterator) };
+      }
+      return aResponse;
+    },
+    telemetry: "ENUMPROPERTIES"
+  }),
+
+  /**
    * Request the property descriptor of the object's specified property.
    *
    * @param aName string The name of the requested property.
@@ -2378,6 +2411,74 @@ ObjectClient.prototype = {
     },
     telemetry: "SCOPE"
   })
+};
+
+/**
+ * A PropertyIteratorClient provides a way to access to property names and
+ * values of an object efficiently, slice by slice.
+ * Note that the properties can be sorted in the backend,
+ * this is controled while creating the PropertyIteratorClient
+ * from ObjectClient.enumProperties.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aGrip Object
+ *        A PropertyIteratorActor grip returned by the protocol via
+ *        TabActor.enumProperties request.
+ */
+function PropertyIteratorClient(aClient, aGrip) {
+  this._grip = aGrip;
+  this._client = aClient;
+  this.request = this._client.request;
+}
+
+PropertyIteratorClient.prototype = {
+  get actor() { return this._grip.actor; },
+
+  /**
+   * Get the total number of properties available in the iterator.
+   */
+  get count() { return this._grip.count; },
+
+  /**
+   * Get one or more property names that correspond to the positions in the
+   * indexes parameter.
+   *
+   * @param indexes Array
+   *        An array of property indexes.
+   * @param aCallback Function
+   *        The function called when we receive the property names.
+   */
+  names: DebuggerClient.requester({
+    type: "names",
+    indexes: args(0)
+  }, {}),
+
+  /**
+   * Get a set of following property value(s).
+   *
+   * @param start Number
+   *        The index of the first property to fetch.
+   * @param count Number
+   *        The number of properties to fetch.
+   * @param aCallback Function
+   *        The function called when we receive the property values.
+   */
+  slice: DebuggerClient.requester({
+    type: "slice",
+    start: args(0),
+    count: args(1)
+  }, {}),
+
+  /**
+   * Get all the property values.
+   *
+   * @param aCallback Function
+   *        The function called when we receive the property values.
+   */
+  all: DebuggerClient.requester({
+    type: "all"
+  }, {}),
 };
 
 /**
