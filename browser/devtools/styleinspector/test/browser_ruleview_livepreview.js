@@ -43,7 +43,7 @@ function* testLivePreviewData(data, ruleView, selector) {
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
   info("Focusing the property value inplace-editor");
-  let editor = yield focusEditableField(propEditor.valueSpan);
+  let editor = yield focusEditableField(ruleView, propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor, "The focused editor is the value");
 
   info("Enter a value in the editor")

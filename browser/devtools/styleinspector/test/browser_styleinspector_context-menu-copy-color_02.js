@@ -53,7 +53,7 @@ function* testManualEdit(inspector, view) {
   let {valueSpan} = getRuleViewProperty(view, "div", "color");
 
   let newColor = "#C9184E"
-  let editor = yield focusEditableField(valueSpan);
+  let editor = yield focusEditableField(view, valueSpan);
 
   info("Typing new value");
   let input = editor.input;
@@ -86,7 +86,7 @@ function* testColorPickerEdit(inspector, view) {
 
   let rgbaColor = [83, 183, 89, 1];
   let rgbaColorText = "rgba(83, 183, 89, 1)";
-  yield simulateColorPickerChange(picker, rgbaColor);
+  yield simulateColorPickerChange(view, picker, rgbaColor);
 
   is(swatch.parentNode.dataset.color, rgbaColorText, "data-color was updated");
   view.doc.popupNode = swatch;
