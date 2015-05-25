@@ -1948,7 +1948,8 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
         // while LazyScript::{begin,end} offsets are relative to the outermost
         // script source.
         uint32_t userbufBase = lazyOuter->begin() - lazyOuter->column();
-        tokenStream.advance(fun->lazyScript()->end() - userbufBase);
+        if (!tokenStream.advance(fun->lazyScript()->end() - userbufBase))
+            return false;
 
         *pbodyProcessed = true;
         return true;

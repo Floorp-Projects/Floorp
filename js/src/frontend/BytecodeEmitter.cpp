@@ -421,7 +421,10 @@ bool
 BytecodeEmitter::updateLineNumberNotes(uint32_t offset)
 {
     TokenStream* ts = &parser->tokenStream;
-    if (!ts->srcCoords.isOnThisLine(offset, currentLine())) {
+    bool onThisLine;
+    if (!ts->srcCoords.isOnThisLine(offset, currentLine(), &onThisLine))
+        return ts->reportError(JSMSG_OUT_OF_MEMORY);
+    if (!onThisLine) {
         unsigned line = ts->srcCoords.lineNum(offset);
         unsigned delta = line - currentLine();
 
