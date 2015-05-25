@@ -14,7 +14,7 @@ function test() {
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
 
-    Task.spawn(function() {
+    Task.spawn(function*() {
       yield waitForSourceShown(aPanel, ".html");
       yield testFetchOnFocus();
       yield testFetchOnReloadWhenFocused();
@@ -23,7 +23,7 @@ function test() {
     });
 
     function testFetchOnFocus() {
-      return Task.spawn(function() {
+      return Task.spawn(function*() {
         let fetched = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
 
         gView.toggleInstrumentsPane({ visible: true, animated: false }, 1);
@@ -42,7 +42,7 @@ function test() {
     }
 
     function testFetchOnReloadWhenFocused() {
-      return Task.spawn(function() {
+      return Task.spawn(function*() {
         let fetched = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
 
         let reloading = once(gDebugger.gTarget, "will-navigate");
@@ -73,7 +73,7 @@ function test() {
     }
 
     function testFetchOnReloadWhenNotFocused() {
-      return Task.spawn(function() {
+      return Task.spawn(function*() {
         gDebugger.on(gDebugger.EVENTS.EVENT_LISTENERS_FETCHED, () => {
           ok(false, "Shouldn't have fetched any event listeners.");
         });

@@ -170,13 +170,17 @@ FilterView.prototype = {
    * Returns the current search operator.
    * @return string
    */
-  get searchOperator() this.searchData[0],
+  get searchOperator() {
+    return this.searchData[0];
+  },
 
   /**
    * Returns the current search arguments.
    * @return array
    */
-  get searchArguments() this.searchData[1],
+  get searchArguments() {
+    return this.searchData[1];
+  },
 
   /**
    * Clears the text from the searchbox and any changed views.
