@@ -108,6 +108,7 @@ MediaFormatReader::Shutdown()
     mAudio.mDecoder = nullptr;
   }
   if (mAudio.mTrackDemuxer) {
+    mAudio.ResetDemuxer();
     mAudio.mTrackDemuxer->BreakCycles();
     mAudio.mTrackDemuxer = nullptr;
   }
@@ -124,6 +125,7 @@ MediaFormatReader::Shutdown()
     mVideo.mDecoder = nullptr;
   }
   if (mVideo.mTrackDemuxer) {
+    mVideo.ResetDemuxer();
     mVideo.mTrackDemuxer->BreakCycles();
     mVideo.mTrackDemuxer = nullptr;
   }
@@ -510,6 +512,7 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.HasPromise(), "No duplicate sample requests");
   MOZ_DIAGNOSTIC_ASSERT(!mVideoSeekRequest.Exists());
   MOZ_DIAGNOSTIC_ASSERT(!mAudioSeekRequest.Exists());
+  MOZ_DIAGNOSTIC_ASSERT(!mSkipRequest.Exists(), "called mid-skipping");
   MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
   LOGV("RequestVideoData(%d, %lld)", aSkipToNextKeyframe, aTimeThreshold);
 
@@ -1014,9 +1017,11 @@ MediaFormatReader::ResetDecode()
   mPendingSeekTime.reset();
 
   if (HasVideo()) {
+    mVideo.ResetDemuxer();
     Flush(TrackInfo::kVideoTrack);
   }
   if (HasAudio()) {
+    mAudio.ResetDemuxer();
     Flush(TrackInfo::kAudioTrack);
   }
   return MediaDecoderReader::ResetDecode();
@@ -1078,9 +1083,6 @@ MediaFormatReader::Flush(TrackType aTrack)
     return;
   }
 
-  // Clear demuxer related data.
-  decoder.mDemuxRequest.DisconnectIfExists();
-  decoder.mTrackDemuxer->Reset();
   decoder.mDecoder->Flush();
   // Purge the current decoder's state.
   // ResetState clears mOutputRequested flag so that we ignore all output until
