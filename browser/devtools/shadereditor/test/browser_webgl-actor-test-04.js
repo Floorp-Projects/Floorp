@@ -6,7 +6,7 @@
  * and that the corresponding vertex and fragment actors can be retrieved.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: true });
 

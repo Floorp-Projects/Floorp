@@ -9,7 +9,7 @@
 let { AbstractTreeItem } = Cu.import("resource:///modules/devtools/AbstractTreeItem.jsm", {});
 let { Heritage } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 
-function spawnTest () {
+function* spawnTest() {
   let container = document.createElement("vbox");
   gBrowser.selectedBrowser.parentNode.appendChild(container);
 

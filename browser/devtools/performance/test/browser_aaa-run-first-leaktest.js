@@ -6,7 +6,7 @@
  * You can also use this initialization format as a template for other tests.
  */
 
-function spawnTest () {
+function* spawnTest() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
 
   ok(target, "Should have a target available.");

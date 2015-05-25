@@ -14,7 +14,7 @@ function test() {
     let TAB_UPDATED = aMonitor.panelWin.EVENTS.TAB_UPDATED;
     RequestsMenu.lazyUpdate = false;
 
-    Task.spawn(function () {
+    Task.spawn(function*() {
       yield waitForNetworkEvents(aMonitor, 1);
       is(RequestsMenu.selectedItem, null,
         "There shouldn't be any selected item in the requests menu.");
@@ -174,7 +174,7 @@ function test() {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll("#details-pane tab")[3]);
 
-      return Task.spawn(function () {
+      return Task.spawn(function*() {
         yield waitFor(aMonitor.panelWin, TAB_UPDATED);
 
         let tab = document.querySelectorAll("#details-pane tab")[3];

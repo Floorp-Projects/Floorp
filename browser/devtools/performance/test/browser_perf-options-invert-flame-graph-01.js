@@ -4,7 +4,7 @@
 /**
  * Tests that the js Flamegraphs gets rerendered when toggling `invert-flame-graph`
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
 

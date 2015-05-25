@@ -5,7 +5,7 @@
  * Tests that the recording notice panes are toggled in correct scenarios
  * for initialization and a single recording.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, $, PerformanceView, RecordingsView } = panel.panelWin;
 

@@ -31,7 +31,7 @@ add_task(function*() {
   }
 });
 
-function testEditFile(projecteditor, filePath, newData) {
+function* testEditFile(projecteditor, filePath, newData) {
   info ("Testing file editing for: " + filePath);
 
   let initialData = yield getFileData(filePath);

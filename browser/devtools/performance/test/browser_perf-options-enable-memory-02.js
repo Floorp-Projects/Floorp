@@ -5,7 +5,7 @@
  * Tests that toggling `enable-memory` during a recording doesn't change that
  * recording's state and does not break.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, $ } = panel.panelWin;
 

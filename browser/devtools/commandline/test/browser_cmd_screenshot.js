@@ -25,7 +25,7 @@ function* spawnTest() {
   pbWin.close();
 }
 
-function addTabWithToolbarRunTests(win) {
+function* addTabWithToolbarRunTests(win) {
   let options = yield helpers.openTab(TEST_URI, { chromeWindow: win });
   yield helpers.openToolbar(options);
 

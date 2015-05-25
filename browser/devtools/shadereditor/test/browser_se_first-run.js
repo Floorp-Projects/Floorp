@@ -5,7 +5,7 @@
  * Tests if the shader editor shows the appropriate UI when opened.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, $ } = panel.panelWin;
 

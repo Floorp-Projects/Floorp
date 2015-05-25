@@ -46,7 +46,7 @@ add_task(function*() {
   }
 });
 
-function testEditor(projecteditor, filePath) {
+function* testEditor(projecteditor, filePath) {
   info ("Testing file editing for: " + filePath);
 
   let editor = projecteditor.currentEditor;

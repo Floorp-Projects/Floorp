@@ -37,7 +37,7 @@ let helperEditData = [
   },
 ];
 
-function selectFile (projecteditor, resource) {
+function* selectFile(projecteditor, resource) {
   ok (resource && resource.path, "A valid resource has been passed in for selection " + (resource && resource.path));
   projecteditor.projectTree.selectResource(resource);
 

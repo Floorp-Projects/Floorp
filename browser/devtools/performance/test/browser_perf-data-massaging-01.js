@@ -8,7 +8,7 @@
 
 const WAIT_TIME = 1000; // ms
 
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let front = panel.panelWin.gFront;
 
