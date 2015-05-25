@@ -10,7 +10,6 @@
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
 #include "nsSVGEffects.h"
-#include "ImageContainer.h"
 
 using namespace mozilla::layers;
 

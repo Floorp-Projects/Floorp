@@ -305,11 +305,14 @@ public:
   struct NonOwningImage {
     explicit NonOwningImage(Image* aImage = nullptr,
                             TimeStamp aTimeStamp = TimeStamp(),
-                            FrameID aFrameID = 0)
-      : mImage(aImage), mTimeStamp(aTimeStamp), mFrameID(aFrameID) {}
+                            FrameID aFrameID = 0,
+                            ProducerID aProducerID = 0)
+      : mImage(aImage), mTimeStamp(aTimeStamp), mFrameID(aFrameID),
+        mProducerID(aProducerID) {}
     Image* mImage;
     TimeStamp mTimeStamp;
     FrameID mFrameID;
+    ProducerID mProducerID;
   };
   /**
    * Set aImages as the list of timestamped to display. The Images must have
@@ -323,6 +326,9 @@ public:
    * painted/dropped frame counts. Otherwise you should use a unique and
    * increasing ID for each decoded and submitted frame (but it's OK to
    * pass the same frame to SetCurrentImages).
+   * mProducerID is a unique ID for the stream of images. A change in the
+   * mProducerID means changing to a new mFrameID namespace. All frames in
+   * aImages must have the same mProducerID.
    * 
    * The Image data must not be modified after this method is called!
    * Note that this must not be called if ENABLE_ASYNC has not been set.
@@ -390,10 +396,12 @@ public:
   bool HasCurrentImage();
 
   struct OwningImage {
+    OwningImage() : mFrameID(0), mProducerID(0), mComposited(false) {}
     nsRefPtr<Image> mImage;
     TimeStamp mTimeStamp;
     FrameID mFrameID;
     ProducerID mProducerID;
+    bool mComposited;
   };
   /**
    * Copy the current Image list to aImages.
@@ -460,11 +468,12 @@ public:
   }
 
   /**
-   * An image in the current image list "expires" when the image has an
-   * associated timestamp, and in a SetCurrentImages call the timestamp of the
-   * first new image is non-null and greater than the timestamp associated
-   * with the image. Every expired image that is never composited is counted
-   * as dropped.
+   * An entry in the current image list "expires" when the entry has an
+   * non-null timestamp, and in a SetCurrentImages call the new image list is
+   * non-empty, the timestamp of the first new image is non-null and greater
+   * than the timestamp associated with the image, and the first new image's
+   * frameID is not the same as the entry's.
+   * Every expired image that is never composited is counted as dropped.
    */
   uint32_t GetDroppedImageCount()
   {
@@ -475,14 +484,18 @@ public:
   PImageContainerChild* GetPImageContainerChild();
   static void NotifyComposite(const ImageCompositeNotification& aNotification);
 
+  /**
+   * Main thread only.
+   */
+  static ProducerID AllocateProducerID();
+
 private:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
   // Private destructor, to discourage deletion outside of Release():
   B2G_ACL_EXPORT ~ImageContainer();
 
-  void SetCurrentImageInternal(Image* aImage, const TimeStamp& aTimeStamp,
-                               FrameID aFrameID);
+  void SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages);
 
   // This is called to ensure we have an active image, this may not be true
   // when we're storing image information in a RemoteImageData structure.
@@ -496,8 +509,7 @@ private:
   // image", and any other state which is shared between threads.
   ReentrantMonitor mReentrantMonitor;
 
-  nsRefPtr<Image> mActiveImage;
-  TimeStamp mCurrentImageTimeStamp;
+  nsTArray<OwningImage> mCurrentImages;
 
   // Updates every time mActiveImage changes
   uint32_t mGenerationCounter;
@@ -512,9 +524,6 @@ private:
 
   // See GetDroppedImageCount. Accessed only with mReentrantMonitor held.
   uint32_t mDroppedImageCount;
-
-  FrameID mCurrentImageFrameID;
-  bool mCurrentImageComposited;
 
   // This is the image factory used by this container, layer managers using
   // this container can set an alternative image factory that will be used to
@@ -535,6 +544,9 @@ private:
   ImageClient* mImageClient;
 
   nsTArray<FrameID> mFrameIDsNotYetComposited;
+  // ProducerID for last current image(s), including the frames in
+  // mFrameIDsNotYetComposited
+  ProducerID mCurrentProducerID;
 
   // Object must be released on the ImageBridge thread. Field is immutable
   // after creation of the ImageContainer.

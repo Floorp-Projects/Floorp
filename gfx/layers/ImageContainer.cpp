@@ -171,11 +171,10 @@ ImageContainer::ImageContainer(Mode flag)
   mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
   mDroppedImageCount(0),
-  mCurrentImageFrameID(0),
-  mCurrentImageComposited(false),
   mImageFactory(new ImageFactory()),
   mRecycleBin(new BufferRecycleBin()),
   mImageClient(nullptr),
+  mCurrentProducerID(-1),
   mIPDLChild(nullptr)
 {
   if (ImageBridgeChild::IsCreated()) {
@@ -236,30 +235,72 @@ ImageContainer::CreateImage(ImageFormat aFormat)
 }
 
 void
-ImageContainer::SetCurrentImageInternal(Image *aImage,
-                                        const TimeStamp& aTimeStamp,
-                                        FrameID aFrameID)
+ImageContainer::SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  if (mActiveImage != aImage || aFrameID != mCurrentImageFrameID) {
-    if (!mCurrentImageComposited && !mCurrentImageTimeStamp.IsNull() &&
-        (aTimeStamp.IsNull() || aTimeStamp > mCurrentImageTimeStamp)) {
-      mFrameIDsNotYetComposited.AppendElement(mCurrentImageFrameID);
+  mGenerationCounter = ++sGenerationCounter;
+
+  if (!aImages.IsEmpty()) {
+    NS_ASSERTION(mCurrentImages.IsEmpty() ||
+                 mCurrentImages[0].mProducerID != aImages[0].mProducerID ||
+                 mCurrentImages[0].mFrameID <= aImages[0].mFrameID,
+                 "frame IDs shouldn't go backwards");
+    if (aImages[0].mProducerID != mCurrentProducerID) {
+      mFrameIDsNotYetComposited.Clear();
+      mCurrentProducerID = aImages[0].mProducerID;
+    } else if (!aImages[0].mTimeStamp.IsNull()) {
+      // Check for expired frames
+      for (auto& img : mCurrentImages) {
+        if (img.mProducerID != aImages[0].mProducerID ||
+            img.mTimeStamp.IsNull() ||
+            img.mTimeStamp >= aImages[0].mTimeStamp) {
+          break;
+        }
+        if (!img.mComposited && !img.mTimeStamp.IsNull() &&
+            img.mFrameID != aImages[0].mFrameID) {
+          mFrameIDsNotYetComposited.AppendElement(img.mFrameID);
+        }
+      }
     }
-    mGenerationCounter = ++sGenerationCounter;
-    mCurrentImageFrameID = aFrameID;
-    mCurrentImageComposited = false;
-    mActiveImage = aImage;
-    mCurrentImageTimeStamp = aTimeStamp;
   }
+
+  nsTArray<OwningImage> newImages;
+
+  for (uint32_t i = 0; i < aImages.Length(); ++i) {
+    NS_ASSERTION(aImages[i].mImage, "image can't be null");
+    NS_ASSERTION(!aImages[i].mTimeStamp.IsNull() || aImages.Length() == 1,
+                 "Multiple images require timestamps");
+    if (i > 0) {
+      NS_ASSERTION(aImages[i].mTimeStamp >= aImages[i - 1].mTimeStamp,
+                   "Timestamps must not decrease");
+      NS_ASSERTION(aImages[i].mFrameID > aImages[i - 1].mFrameID,
+                   "FrameIDs must increase");
+      NS_ASSERTION(aImages[i].mProducerID == aImages[i - 1].mProducerID,
+                   "ProducerIDs must be the same");
+    }
+    OwningImage* img = newImages.AppendElement();
+    img->mImage = aImages[i].mImage;
+    img->mTimeStamp = aImages[i].mTimeStamp;
+    img->mFrameID = aImages[i].mFrameID;
+    img->mProducerID = aImages[i].mProducerID;
+    for (auto& oldImg : mCurrentImages) {
+      if (oldImg.mFrameID == img->mFrameID &&
+          oldImg.mProducerID == img->mProducerID) {
+        img->mComposited = oldImg.mComposited;
+        break;
+      }
+    }
+  }
+
+  mCurrentImages.SwapElements(newImages);
 }
 
 void
 ImageContainer::ClearImagesFromImageBridge()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  SetCurrentImageInternal(nullptr, TimeStamp(), 0);
+  SetCurrentImageInternal(nsTArray<NonOwningImage>());
 }
 
 void
@@ -270,9 +311,7 @@ ImageContainer::SetCurrentImages(const nsTArray<NonOwningImage>& aImages)
   if (IsAsync()) {
     ImageBridgeChild::DispatchImageClientUpdate(mImageClient, this);
   }
-  MOZ_ASSERT(aImages.Length() == 1);
-  SetCurrentImageInternal(aImages[0].mImage, aImages[0].mTimeStamp,
-                          aImages[0].mFrameID);
+  SetCurrentImageInternal(aImages);
 }
 
  void
@@ -286,7 +325,7 @@ ImageContainer::ClearAllImages()
   }
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  SetCurrentImageInternal(nullptr, TimeStamp(), 0);
+  SetCurrentImageInternal(nsTArray<NonOwningImage>());
 }
 
 void
@@ -295,7 +334,9 @@ ImageContainer::SetCurrentImageInTransaction(Image *aImage)
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ASSERTION(!mImageClient, "Should use async image transfer with ImageBridge.");
 
-  SetCurrentImageInternal(aImage, TimeStamp(), 0);
+  nsAutoTArray<NonOwningImage,1> images;
+  images.AppendElement(NonOwningImage(aImage));
+  SetCurrentImageInternal(images);
 }
 
 bool ImageContainer::IsAsync() const
@@ -318,7 +359,7 @@ ImageContainer::HasCurrentImage()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  return !!mActiveImage.get();
+  return !mCurrentImages.IsEmpty();
 }
 
 void
@@ -327,12 +368,7 @@ ImageContainer::GetCurrentImages(nsTArray<OwningImage>* aImages,
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  if (mActiveImage) {
-    OwningImage* img = aImages->AppendElement();
-    img->mImage = mActiveImage;
-    img->mFrameID = mCurrentImageFrameID;
-    img->mProducerID = 0;
-  }
+  *aImages = mCurrentImages;
   if (aGenerationCounter) {
     *aGenerationCounter = mGenerationCounter;
   }
@@ -343,11 +379,11 @@ ImageContainer::GetCurrentSize()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  if (!mActiveImage) {
+  if (mCurrentImages.IsEmpty()) {
     return gfx::IntSize(0, 0);
   }
 
-  return mActiveImage->GetSize();
+  return mCurrentImages[0].mImage->GetSize();
 }
 
 void
@@ -360,18 +396,22 @@ ImageContainer::NotifyCompositeInternal(const ImageCompositeNotification& aNotif
   // a notification, a new image has been painted.
   ++mPaintCount;
 
-  while (!mFrameIDsNotYetComposited.IsEmpty()) {
-    if (mFrameIDsNotYetComposited[0] <= aNotification.frameID()) {
-      if (mFrameIDsNotYetComposited[0] < aNotification.frameID()) {
-        ++mDroppedImageCount;
+  if (aNotification.producerID() == mCurrentProducerID) {
+    while (!mFrameIDsNotYetComposited.IsEmpty()) {
+      if (mFrameIDsNotYetComposited[0] <= aNotification.frameID()) {
+        if (mFrameIDsNotYetComposited[0] < aNotification.frameID()) {
+          ++mDroppedImageCount;
+        }
+        mFrameIDsNotYetComposited.RemoveElementAt(0);
+      } else {
+        break;
       }
-      mFrameIDsNotYetComposited.RemoveElementAt(0);
-    } else {
-      break;
     }
-  }
-  if (aNotification.frameID() == mCurrentImageFrameID) {
-    mCurrentImageComposited = true;
+    for (auto& img : mCurrentImages) {
+      if (img.mFrameID == aNotification.frameID()) {
+        img.mComposited = true;
+      }
+    }
   }
 
   if (!aNotification.imageTimeStamp().IsNull()) {
@@ -635,6 +675,15 @@ ImageContainer::NotifyComposite(const ImageCompositeNotification& aNotification)
       child->mImageContainer->NotifyCompositeInternal(aNotification);
     }
   }
+}
+
+static ImageContainer::ProducerID sProducerID = 0;
+
+ImageContainer::ProducerID
+ImageContainer::AllocateProducerID()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  return ++sProducerID;
 }
 
 } // namespace
