@@ -1277,34 +1277,40 @@ MediaFormatReader::GetBuffered()
 {
   media::TimeIntervals videoti;
   media::TimeIntervals audioti;
+  media::TimeIntervals intervals;
 
   if (!mInitDone) {
-    return media::TimeIntervals();
+    return intervals;
+  }
+  int64_t startTime;
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
+    startTime = mStartTime;
   }
   if (NS_IsMainThread()) {
-    if (!mCachedTimeRangesStale) {
-      return mCachedTimeRanges;
+    if (mCachedTimeRangesStale) {
+      MOZ_ASSERT(mMainThreadDemuxer);
+      if (!mDataRange.IsEmpty()) {
+        mMainThreadDemuxer->NotifyDataArrived(mDataRange.Length(), mDataRange.mStart);
+      }
+      if (mVideoTrackDemuxer) {
+        videoti = mVideoTrackDemuxer->GetBuffered();
+      }
+      if (mAudioTrackDemuxer) {
+        audioti = mAudioTrackDemuxer->GetBuffered();
+      }
+      if (HasAudio() && HasVideo()) {
+        mCachedTimeRanges = media::Intersection(Move(videoti), Move(audioti));
+      } else if (HasAudio()) {
+        mCachedTimeRanges = Move(audioti);
+      } else if (HasVideo()) {
+        mCachedTimeRanges = Move(videoti);
+      }
+      mDataRange = ByteInterval();
+      mCachedTimeRangesStale = false;
     }
-    MOZ_ASSERT(mMainThreadDemuxer);
-    if (!mDataRange.IsEmpty()) {
-      mMainThreadDemuxer->NotifyDataArrived(mDataRange.Length(), mDataRange.mStart);
-    }
-    if (mVideoTrackDemuxer) {
-      videoti = mVideoTrackDemuxer->GetBuffered();
-    }
-    if (mAudioTrackDemuxer) {
-      audioti = mAudioTrackDemuxer->GetBuffered();
-    }
-    if (HasAudio() && HasVideo()) {
-      mCachedTimeRanges = Intersection(Move(videoti), Move(audioti));
-    } else if (HasAudio()) {
-      mCachedTimeRanges = Move(audioti);
-    } else if (HasVideo()) {
-      mCachedTimeRanges = Move(videoti);
-    }
-    mDataRange = ByteInterval();
-    mCachedTimeRangesStale = false;
-    return mCachedTimeRanges;
+    intervals = mCachedTimeRanges;
   } else {
     if (OnTaskQueue()) {
       // Ensure we have up to date buffered time range.
@@ -1323,17 +1329,16 @@ MediaFormatReader::GetBuffered()
       MonitorAutoLock lock(mAudio.mMonitor);
       audioti = mAudio.mTimeRanges;
     }
-  }
-  if (HasAudio() && HasVideo()) {
-    videoti.Intersection(audioti);
-    return videoti;
-  } else if (HasAudio()) {
-    return audioti;
-  } else if (HasVideo()) {
-    return videoti;
+    if (HasAudio() && HasVideo()) {
+      intervals = media::Intersection(Move(videoti), Move(audioti));
+    } else if (HasAudio()) {
+      intervals = Move(audioti);
+    } else if (HasVideo()) {
+      intervals = Move(videoti);
+    }
   }
 
-  return media::TimeIntervals();
+  return intervals.Shift(media::TimeUnit::FromMicroseconds(-startTime));
 }
 
 bool MediaFormatReader::IsDormantNeeded()
