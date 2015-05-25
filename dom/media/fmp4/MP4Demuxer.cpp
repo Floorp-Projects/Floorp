@@ -208,6 +208,7 @@ MP4TrackDemuxer::Seek(media::TimeUnit aTime)
   if (mQueuedSample) {
     seekTime = mQueuedSample->mTime;
   }
+  SetNextKeyFrameTime();
 
   return SeekPromise::CreateAndResolve(media::TimeUnit::FromMicroseconds(seekTime), __func__);
 }
@@ -241,12 +242,24 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
 }
 
 void
+MP4TrackDemuxer::SetNextKeyFrameTime()
+{
+  mNextKeyframeTime.reset();
+  mp4_demuxer::Microseconds frameTime = mIterator->GetNextKeyframeTime();
+  if (frameTime != -1) {
+    mNextKeyframeTime.emplace(
+      media::TimeUnit::FromMicroseconds(frameTime));
+  }
+}
+
+void
 MP4TrackDemuxer::Reset()
 {
   mQueuedSample = nullptr;
   // TODO, Seek to first frame available, which isn't always 0.
   MonitorAutoLock mon(mMonitor);
   mIterator->Seek(0);
+  SetNextKeyFrameTime();
 }
 
 void
@@ -266,12 +279,7 @@ MP4TrackDemuxer::UpdateSamples(nsTArray<nsRefPtr<MediaRawData>>& aSamples)
   }
   if (mNextKeyframeTime.isNothing() ||
       aSamples.LastElement()->mTime >= mNextKeyframeTime.value().ToMicroseconds()) {
-    mNextKeyframeTime.reset();
-    mp4_demuxer::Microseconds frameTime = mIterator->GetNextKeyframeTime();
-    if (frameTime != -1) {
-      mNextKeyframeTime.emplace(
-        media::TimeUnit::FromMicroseconds(frameTime));
-    }
+    SetNextKeyFrameTime();
   }
 }
 
@@ -304,6 +312,7 @@ MP4TrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
       mQueuedSample = sample;
     }
   }
+  SetNextKeyFrameTime();
   if (found) {
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
   } else {
