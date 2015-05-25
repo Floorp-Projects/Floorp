@@ -649,8 +649,10 @@ public:
                       void* aHandleFeatureData);
 
 protected:
-    // the font this shaper is working with
-    gfxFont * mFont;
+    // the font this shaper is working with. The font owns a nsAutoPtr reference
+    // to this object, and will destroy it before it dies. Thus, mFont will always
+    // be valid.
+    gfxFont* MOZ_NON_OWNING_REF mFont;
 };
 
 
