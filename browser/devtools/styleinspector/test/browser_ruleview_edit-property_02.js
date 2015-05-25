@@ -34,7 +34,7 @@ function* testEditProperty(inspector, ruleView) {
   let idRuleEditor = getRuleViewRuleEditor(ruleView, 1);
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
-  let editor = yield focusEditableField(propEditor.nameSpan);
+  let editor = yield focusEditableField(ruleView, propEditor.nameSpan);
   let input = editor.input;
   is(inplaceEditor(propEditor.nameSpan), editor, "Next focused editor should be the name editor.");
 
