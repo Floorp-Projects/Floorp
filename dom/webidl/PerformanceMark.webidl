@@ -7,6 +7,7 @@
  * http://www.w3.org/TR/user-timing/#performancemark
  */
 
+[Exposed=(Window,Worker)]
 interface PerformanceMark : PerformanceEntry
 {
 };
