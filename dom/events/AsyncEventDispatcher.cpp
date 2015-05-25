@@ -23,7 +23,7 @@ using namespace dom;
 AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
                                            WidgetEvent& aEvent)
   : mTarget(aTarget)
-  , mDispatchChromeOnly(false)
+  , mOnlyChromeDispatch(false)
 {
   MOZ_ASSERT(mTarget);
   EventDispatcher::CreateEvent(aTarget, nullptr, &aEvent, EmptyString(),
@@ -36,44 +36,19 @@ AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
 NS_IMETHODIMP
 AsyncEventDispatcher::Run()
 {
-  if (mEvent) {
-    if (mDispatchChromeOnly) {
-      MOZ_ASSERT(mEvent->InternalDOMEvent()->IsTrusted());
-
-      nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
-      MOZ_ASSERT(node, "ChromeOnly dispatch supported with Node targets only!");
-      nsPIDOMWindow* window = node->OwnerDoc()->GetWindow();
-      if (!window) {
-        return NS_ERROR_INVALID_ARG;
-      }
-
-      nsCOMPtr<EventTarget> target = window->GetParentTarget();
-      if (!target) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      EventDispatcher::DispatchDOMEvent(target, nullptr, mEvent,
-                                        nullptr, nullptr);
-    } else {
-      bool defaultActionEnabled; // This is not used because the caller is async
-      mTarget->DispatchEvent(mEvent, &defaultActionEnabled);
-    }
-  } else {
-    if (mDispatchChromeOnly) {
-      nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
-      MOZ_ASSERT(node, "ChromeOnly dispatch supported with Node targets only!");
-      nsContentUtils::DispatchChromeEvent(node->OwnerDoc(), node, mEventType,
-                                          mBubbles, false);
-    } else {
-      nsCOMPtr<nsIDOMEvent> event;
-      NS_NewDOMEvent(getter_AddRefs(event), mTarget, nullptr, nullptr);
-      nsresult rv = event->InitEvent(mEventType, mBubbles, false);
-      NS_ENSURE_SUCCESS(rv, rv);
-      event->SetTrusted(true);
-      bool dummy;
-      mTarget->DispatchEvent(event, &dummy);
-    }
+  nsCOMPtr<nsIDOMEvent> event = mEvent;
+  if (!event) {
+    NS_NewDOMEvent(getter_AddRefs(event), mTarget, nullptr, nullptr);
+    nsresult rv = event->InitEvent(mEventType, mBubbles, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+    event->SetTrusted(true);
   }
-
+  if (mOnlyChromeDispatch) {
+    MOZ_ASSERT(event->InternalDOMEvent()->IsTrusted());
+    event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  }
+  bool dummy;
+  mTarget->DispatchEvent(event, &dummy);
   return NS_OK;
 }
 
