@@ -32,7 +32,7 @@ function* testPressingEnterCommitsChanges(swatch, ruleView) {
   swatch.click();
   yield onShown;
 
-  yield simulateColorPickerChange(cPicker, [0, 255, 0, .5], {
+  yield simulateColorPickerChange(ruleView, cPicker, [0, 255, 0, .5], {
     element: content.document.body,
     name: "borderLeftColor",
     value: "rgba(0, 255, 0, 0.5)"

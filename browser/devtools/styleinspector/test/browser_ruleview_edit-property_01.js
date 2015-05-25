@@ -52,7 +52,7 @@ function* testEditProperty(ruleEditor, name, value, isValid) {
   let propEditor = ruleEditor.rule.textProps[0].editor;
 
   info("Focusing an existing property name in the rule-view");
-  let editor = yield focusEditableField(propEditor.nameSpan, 32, 1);
+  let editor = yield focusEditableField(ruleEditor.ruleView, propEditor.nameSpan, 32, 1);
 
   is(inplaceEditor(propEditor.nameSpan), editor, "The property name editor got focused");
   let input = editor.input;
