@@ -256,6 +256,13 @@ private:
     virtual void RejectPromise(MediaDecoderReader::NotDecodedReason aReason,
                                const char* aMethodName) = 0;
 
+    void ResetDemuxer()
+    {
+      // Clear demuxer related data.
+      mDemuxRequest.DisconnectIfExists();
+      mTrackDemuxer->Reset();
+    }
+
     void ResetState()
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
