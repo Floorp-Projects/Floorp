@@ -651,7 +651,9 @@ protected:
     nsRefPtr<gfxFontEntry>   mPlatformFontEntry;
     nsTArray<gfxFontFaceSrc> mSrcList;
     uint32_t                 mSrcIndex; // index of loading src item
-    nsFontFaceLoader*        mLoader; // current loader for this entry, if any
+    // This field is managed by the nsFontFaceLoader. In the destructor and Cancel()
+    // methods of nsFontFaceLoader this reference is nulled out.
+    nsFontFaceLoader* MOZ_NON_OWNING_REF mLoader; // current loader for this entry, if any
     gfxUserFontSet*          mFontSet; // font-set to which the userfont entry belongs
     nsCOMPtr<nsIPrincipal>   mPrincipal;
 };
