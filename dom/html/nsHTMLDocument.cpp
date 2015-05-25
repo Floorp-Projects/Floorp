@@ -3251,8 +3251,11 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
     return false;
   }
 
+  bool isCutCopy = (commandID.LowerCaseEqualsLiteral("cut") ||
+                    commandID.LowerCaseEqualsLiteral("copy"));
+
   // if editing is not on, bail
-  if (!IsEditingOnAfterFlush()) {
+  if (!isCutCopy && !IsEditingOnAfterFlush()) {
     rv.Throw(NS_ERROR_FAILURE);
     return false;
   }
@@ -3262,14 +3265,33 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
     return false;
   }
 
+  // special case for cut & copy
+  // cut & copy are allowed in non editable documents
+  if (isCutCopy) {
+    if (!nsContentUtils::IsCutCopyAllowed()) {
+      return false;
+    }
+
+    // For cut & copy commands, we need the behaviour from nsWindowRoot::GetControllers
+    // which is to look at the focused element, and defer to a focused textbox's controller
+    // The code past taken by other commands in ExecCommand always uses the window directly,
+    // rather than deferring to the textbox, which is desireable for most editor commands,
+    // but not 'cut' and 'copy' (as those should allow copying out of embedded editors).
+    // This behaviour is invoked if we call DoCommand directly on the docShell.
+    nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
+    if (docShell) {
+      nsresult res = docShell->DoCommand(cmdToDispatch.get());
+      return NS_SUCCEEDED(res);
+    }
+    return false;
+  }
+
   if (commandID.LowerCaseEqualsLiteral("gethtml")) {
     rv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
-  bool restricted = commandID.LowerCaseEqualsLiteral("cut") ||
-                    commandID.LowerCaseEqualsLiteral("copy")||
-                    commandID.LowerCaseEqualsLiteral("paste");
+  bool restricted = commandID.LowerCaseEqualsLiteral("paste");
   if (restricted && !nsContentUtils::IsCallerChrome()) {
     rv = NS_ERROR_DOM_SECURITY_ERR;
     return false;
