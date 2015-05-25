@@ -112,10 +112,11 @@ public:
   }
   // Remove data from resource if it holds more than the threshold
   // number of bytes. Returns amount evicted.
-  uint32_t EvictData(uint64_t aPlaybackOffset, uint32_t aThreshold);
+  uint32_t EvictData(uint64_t aPlaybackOffset, uint32_t aThreshold,
+                     ErrorResult& aRv);
 
   // Remove data from resource before the given offset.
-  void EvictBefore(uint64_t aOffset);
+  void EvictBefore(uint64_t aOffset, ErrorResult& aRv);
 
   // Remove all data from the resource
   uint32_t EvictAll();
