@@ -1348,10 +1348,9 @@ this.MozLoopService = {
           return;
         }
 
-        // This should generally never happen, but its not really possible
-        // for us to force reauth from here in a sensible way for the user.
-        // So we'll just have to flag it the best we can.
-        reject(new Error("No FxA key available"));
+        // XXX If we don't have a key for FxA yet, then simply reject for now.
+        // We'll create some sign-in/sign-out UX in bug 1153788.
+        reject(new Error("FxA re-register not implemented"));
         return;
       }
 
