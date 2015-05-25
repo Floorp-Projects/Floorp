@@ -21,6 +21,53 @@ XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
 const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
 
+/**
+ * Fakes the archive storage quota.
+ * @param {Integer} aArchiveQuota The new quota, in bytes.
+ */
+function fakeStorageQuota(aArchiveQuota) {
+  let storage = Cu.import("resource://gre/modules/TelemetryStorage.jsm");
+  storage.Policy.getArchiveQuota = () => aArchiveQuota;
+}
+
+/**
+ * Lists all the valid archived pings and their metadata, sorted by creation date.
+ *
+ * @param aFileName {String} The filename.
+ * @return {Object[]} A list of objects with the extracted data in the form:
+ *                  { timestamp: <number>,
+ *                    id: <string>,
+ *                    type: <string>,
+ *                    size: <integer> }
+ */
+let getArchivedPingsInfo = Task.async(function*() {
+  let dirIterator = new OS.File.DirectoryIterator(gPingsArchivePath);
+  let subdirs = (yield dirIterator.nextBatch()).filter(e => e.isDir);
+  let archivedPings = [];
+
+  // Iterate through the subdirs of |gPingsArchivePath|.
+  for (let dir of subdirs) {
+    let fileIterator = new OS.File.DirectoryIterator(dir.path);
+    let files = (yield fileIterator.nextBatch()).filter(e => !e.isDir);
+
+    // Then get a list of the files for the current subdir.
+    for (let f of files) {
+      let pingInfo = TelemetryStorage._testGetArchivedPingDataFromFileName(f.name);
+      if (!pingInfo) {
+        // This is not a valid archived ping, skip it.
+        continue;
+      }
+      // Find the size of the ping and then add the info to the array.
+      pingInfo.size = (yield OS.File.stat(f.path)).size;
+      archivedPings.push(pingInfo);
+    }
+  }
+
+  // Sort the list by creation date and then return it.
+  archivedPings.sort((a, b) => b.timestamp - a.timestamp);
+  return archivedPings;
+});
+
 function run_test() {
   do_get_profile(true);
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
@@ -147,48 +194,115 @@ add_task(function* test_archivedPings() {
 add_task(function* test_archiveCleanup() {
   const PING_TYPE = "foo";
 
-  // Create a ping which should be pruned because it is past the retention period.
-  fakeNow(2010, 1, 1, 1, 0, 0);
-  const PING_ID1 = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
-  // Create a ping which should be kept because it is within the retention period.
-  fakeNow(2010, 2, 1, 1, 0, 0);
-  const PING_ID2 = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
-  // Create a ping which should be kept because it is within the retention period.
-  fakeNow(2010, 3, 1, 1, 0, 0);
-  const PING_ID3 = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+  // Empty the archive.
+  yield OS.File.removeDir(gPingsArchivePath);
 
-  // Move the current date 180 days ahead of the PING_ID1 ping.
+  let expectedPrunedInfo = [];
+  let expectedNotPrunedInfo = [];
+
+  let checkArchive = Task.async(function*() {
+    // Check that the pruned pings are not on disk anymore.
+    for (let prunedInfo of expectedPrunedInfo) {
+      yield Assert.rejects(TelemetryArchive.promiseArchivedPingById(prunedInfo.id),
+                           "Ping " + prunedInfo.id + " should have been pruned.");
+      const pingPath =
+        TelemetryStorage._testGetArchivedPingPath(prunedInfo.id, prunedInfo.creationDate, PING_TYPE);
+      Assert.ok(!(yield OS.File.exists(pingPath)), "The ping should not be on the disk anymore.");
+    }
+
+    // Check that the expected pings are there.
+    for (let expectedInfo of expectedNotPrunedInfo) {
+      Assert.ok((yield TelemetryArchive.promiseArchivedPingById(expectedInfo.id)),
+                "Ping" + expectedInfo.id + " should be in the archive.");
+    }
+  });
+
+  // Create a ping which should be pruned because it is past the retention period.
+  let date = fakeNow(2010, 1, 1, 1, 0, 0);
+  let pingId = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+  expectedPrunedInfo.push({ id: pingId, creationDate: date });
+
+  // Create a ping which should be kept because it is within the retention period.
+  date = fakeNow(2010, 2, 1, 1, 0, 0);
+  pingId = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+  expectedNotPrunedInfo.push({ id: pingId, creationDate: date });
+
+  // Create 20 other pings which are within the retention period, but would be affected
+  // by the disk quota.
+  for (let month of [3, 4]) {
+    for (let minute = 0; minute < 10; minute++) {
+      date = fakeNow(2010, month, 1, 1, minute, 0);
+      pingId = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
+      expectedNotPrunedInfo.push({ id: pingId, creationDate: date });
+    }
+  }
+
+  // Move the current date 180 days ahead of the first ping.
   fakeNow(2010, 7, 1, 1, 0, 0);
   // Reset TelemetryArchive and TelemetryController to start the startup cleanup.
   yield TelemetryController.reset();
   // Wait for the cleanup to finish.
   yield TelemetryStorage.testCleanupTaskPromise();
   // Then scan the archived dir.
-  let pingList = yield TelemetryArchive.promiseArchivedPingList();
+  yield TelemetryArchive.promiseArchivedPingList();
 
-  // The PING_ID1 ping should be removed and the other 2 kept.
-  Assert.ok((yield promiseRejects(TelemetryArchive.promiseArchivedPingById(PING_ID1))),
-            "Old pings should be removed from the archive");
-  Assert.ok((yield TelemetryArchive.promiseArchivedPingById(PING_ID2)),
-            "Recent pings should be kept in the archive");
-  Assert.ok((yield TelemetryArchive.promiseArchivedPingById(PING_ID3)),
-            "Recent pings should be kept in the archive");
+  // Check that the archive is in the correct state.
+  yield checkArchive();
 
-  // Move the current date 180 days ahead of the PING_ID2 ping.
+  // Move the current date 180 days ahead of the second ping.
   fakeNow(2010, 8, 1, 1, 0, 0);
-  // Reset TelemetryController but not the TelemetryArchive: the cleanup task will update
-  // the existing archive cache.
+  // Reset TelemetryController and TelemetryArchive.
   yield TelemetryController.reset();
   // Wait for the cleanup to finish.
   yield TelemetryStorage.testCleanupTaskPromise();
   // Then scan the archived dir again.
-  pingList = yield TelemetryArchive.promiseArchivedPingList();
+  yield TelemetryArchive.promiseArchivedPingList();
 
-  // The PING_ID2 ping should be removed and PING_ID3 kept.
-  Assert.ok((yield promiseRejects(TelemetryArchive.promiseArchivedPingById(PING_ID2))),
-            "Old pings should be removed from the archive");
-  Assert.ok((yield TelemetryArchive.promiseArchivedPingById(PING_ID3)),
-            "Recent pings should be kept in the archive");
+  // Move the oldest ping to the unexpected pings list.
+  expectedPrunedInfo.push(expectedNotPrunedInfo.shift());
+  // Check that the archive is in the correct state.
+  yield checkArchive();
+
+  // Find how much disk space the archive takes.
+  const archivedPings = yield getArchivedPingsInfo();
+  let archiveSizeInBytes =
+    archivedPings.reduce((lastResult, element) => lastResult + element.size, 0);
+  // Set the quota to 80% of the space.
+  const testQuotaInBytes = archiveSizeInBytes * 0.8;
+  fakeStorageQuota(testQuotaInBytes);
+
+  // The storage prunes archived pings until we reach 90% of the requested storage quota.
+  // Based on that, find how many pings should be kept.
+  const safeQuotaSize = testQuotaInBytes * 0.9;
+  const archivedPingsInfo = yield getArchivedPingsInfo();
+  let sizeInBytes = 0;
+  let pingsWithinQuota = [];
+  let pingsOutsideQuota = [];
+
+  for (let pingInfo of archivedPingsInfo) {
+    sizeInBytes += pingInfo.size;
+    if (sizeInBytes >= safeQuotaSize) {
+      pingsOutsideQuota.push({ id: pingInfo.id, creationDate: new Date(pingInfo.timestamp) });
+      continue;
+    }
+    pingsWithinQuota.push({ id: pingInfo.id, creationDate: new Date(pingInfo.timestamp) });
+  }
+
+  expectedNotPrunedInfo = pingsWithinQuota;
+  expectedPrunedInfo = expectedPrunedInfo.concat(pingsOutsideQuota);
+
+  // Reset TelemetryArchive and TelemetryController to start the startup cleanup.
+  yield TelemetryController.reset();
+  yield TelemetryStorage.testCleanupTaskPromise();
+  yield TelemetryArchive.promiseArchivedPingList();
+  // Check that the archive is in the correct state.
+  yield checkArchive();
+
+  // Trigger a cleanup again and make sure we're not removing anything.
+  yield TelemetryController.reset();
+  yield TelemetryStorage.testCleanupTaskPromise();
+  yield TelemetryArchive.promiseArchivedPingList();
+  yield checkArchive();
 });
 
 add_task(function* test_clientId() {
