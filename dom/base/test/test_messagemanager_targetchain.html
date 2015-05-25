@@ -102,27 +102,21 @@
 
     addEventListener("load", function() {
       var principal = SpecialPowers.wrap(document).nodePrincipal;
-      SpecialPowers.addPermission("browser", true, { url: SpecialPowers.wrap(principal.URI).spec,
-                                                     appId: principal.appId,
-                                                     isInBrowserElement: false });
-      SpecialPowers.addPermission("browser", true, { url: SpecialPowers.wrap(principal.URI).spec,
-                                                     appId: principal.appId,
-                                                     isInBrowserElement: true });
-      SpecialPowers.pushPrefEnv({
-        "set": [
-          ["dom.mozBrowserFramesEnabled", true],
-          ["dom.ipc.browser_frames.oop_by_default", false],
-        ]
-      }, runTests);
-    });
-    SimpleTest.registerCleanupFunction(function () {
-      var principal = SpecialPowers.wrap(document).nodePrincipal;
-      SpecialPowers.removePermission("browser", { url: SpecialPowers.wrap(principal.URI).spec,
-                                                  appId: principal.appId,
-                                                  isInBrowserElement: false });
-      SpecialPowers.removePermission("browser", { url: SpecialPowers.wrap(principal.URI).spec,
-                                                  appId: principal.appId,
-                                                  isInBrowserElement: true });
+      SpecialPowers.pushPermissions([
+        { "type": "browser", "allow": 1, "context": { "url": principal.URI.spec,
+                                                      "appId": principal.appId,
+                                                      "isInBrowserElement": false }},
+        { "type": "browser", "allow": 1, "context": { "url": principal.URI.spec,
+                                                      "appId": principal.appId,
+                                                      "isInBrowserElement": true }}
+      ], () => {
+        SpecialPowers.pushPrefEnv({
+          "set": [
+            ["dom.mozBrowserFramesEnabled", true],
+            ["dom.ipc.browser_frames.oop_by_default", false],
+          ]
+        }, runTests);
+      });
     });
   </script>
 </body>
