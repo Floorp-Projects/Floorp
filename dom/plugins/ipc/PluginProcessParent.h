@@ -17,6 +17,7 @@
 #include "chrome/common/child_process_host.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/plugins/TaskFactory.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
@@ -80,6 +81,7 @@ private:
     void RunLaunchCompleteTask();
 
     std::string mPluginFilePath;
+    TaskFactory<PluginProcessParent> mTaskFactory;
     UniquePtr<LaunchCompleteTask> mLaunchCompleteTask;
     MessageLoop* mMainMsgLoop;
     bool mRunCompleteTaskImmediately;
