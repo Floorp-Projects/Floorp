@@ -6,6 +6,9 @@
 #ifndef mozilla_dom_CanvasCaptureMediaStream_h_
 #define mozilla_dom_CanvasCaptureMediaStream_h_
 
+#include "DOMMediaStream.h"
+#include "StreamBuffer.h"
+
 namespace mozilla {
 class DOMMediaStream;
 class MediaStreamListener;
