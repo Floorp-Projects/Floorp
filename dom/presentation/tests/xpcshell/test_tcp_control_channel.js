@@ -44,6 +44,9 @@ TestDescription.prototype = {
 const CONTROLLER_CONTROL_CHANNEL_PORT = 36777;
 const PRESENTER_CONTROL_CHANNEL_PORT = 36888;
 
+var CLOSE_CONTROL_CHANNEL_REASON = Cr.NS_OK;
+var candidate;
+
 // presenter's presentation channel description
 const OFFER_ADDRESS = '192.168.123.123';
 const OFFER_PORT = 123;
@@ -98,13 +101,23 @@ function testPresentationServer() {
         onAnswer: function(aAnswer) {
           Assert.ok(false, 'get answer');
         },
+        onIceCandidate: function(aCandidate) {
+          Assert.ok(true, '3. controllerControlChannel: get ice candidate, close channel');
+          let recvCandidate = JSON.parse(aCandidate);
+          for (let key in recvCandidate) {
+            if (typeof(recvCandidate[key]) !== "function") {
+              Assert.equal(recvCandidate[key], candidate[key], "key " + key + " should match.");
+            }
+          }
+          controllerControlChannel.close(CLOSE_CONTROL_CHANNEL_REASON);
+        },
         notifyOpened: function() {
           Assert.equal(this.status, 'created', '0. controllerControlChannel: opened');
           this.status = 'opened';
         },
         notifyClosed: function(aReason) {
-          Assert.equal(this.status, 'onOffer', '3. controllerControlChannel: closed');
-          Assert.equal(aReason, Cr.NS_OK, 'presenterControlChannel notify closed NS_OK');
+          Assert.equal(this.status, 'onOffer', '4. controllerControlChannel: closed');
+          Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, 'presenterControlChannel notify closed');
           this.status = 'closed';
           yayFuncs.controllerControlChannelClose();
         },
@@ -132,15 +145,22 @@ function testPresentationServer() {
       Assert.ok(false, 'get offer');
     },
     onAnswer: function(aAnswer) {
-      Assert.equal(this.status, 'opened', '2. presenterControlChannel: get answer, close channel');
+      Assert.equal(this.status, 'opened', '2. presenterControlChannel: get answer, send ICE candidate');
 
       let answer = aAnswer.QueryInterface(Ci.nsIPresentationChannelDescription);
       Assert.strictEqual(answer.tcpAddress.queryElementAt(0,Ci.nsISupportsCString).data,
                          ANSWER_ADDRESS,
                          'expected answer address array');
       Assert.equal(answer.tcpPort, ANSWER_PORT, 'expected answer port');
-
-      presenterControlChannel.close(Cr.NS_OK);
+      candidate = {
+        candidate: "1 1 UDP 1 127.0.0.1 34567 type host",
+        sdpMid: "helloworld",
+        sdpMLineIndex: 1
+      };
+      presenterControlChannel.sendIceCandidate(JSON.stringify(candidate));
+    },
+    onIceCandidate: function(aCandidate) {
+      Assert.ok(false, 'get ICE candidate');
     },
     notifyOpened: function() {
       Assert.equal(this.status, 'created', '0. presenterControlChannel: opened, send offer');
@@ -155,7 +175,7 @@ function testPresentationServer() {
     },
     notifyClosed: function(aReason) {
       this.status = 'closed';
-      Assert.equal(aReason, Cr.NS_OK, '3. presenterControlChannel notify closed NS_OK');
+      Assert.equal(aReason, CLOSE_CONTROL_CHANNEL_REASON, '4. presenterControlChannel notify closed');
       yayFuncs.presenterControlChannelClose();
     },
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
@@ -198,8 +218,15 @@ function shutdown()
   tps.close();
 }
 
+// Test manually close control channel with NS_ERROR_FAILURE
+function changeCloseReason() {
+  CLOSE_CONTROL_CHANNEL_REASON = Cr.NS_ERROR_FAILURE;
+  run_next_test();
+}
+
 add_test(loopOfferAnser);
 add_test(setOffline);
+add_test(changeCloseReason);
 add_test(oneMoreLoop);
 add_test(shutdown);
 

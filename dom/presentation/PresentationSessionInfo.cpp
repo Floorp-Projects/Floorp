@@ -546,6 +546,13 @@ PresentationControllingInfo::GetAddress()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresentationControllingInfo::OnIceCandidate(const nsAString& aCandidate)
+{
+  MOZ_ASSERT(false, "Should not receive ICE candidates.");
+  return NS_ERROR_FAILURE;
+}
+
 nsresult
 PresentationControllingInfo::OnGetAddress(const nsACString& aAddress)
 {
@@ -848,6 +855,13 @@ NS_IMETHODIMP
 PresentationPresentingInfo::OnAnswer(nsIPresentationChannelDescription* aDescription)
 {
   MOZ_ASSERT(false, "Receiver side should not receive answer.");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+PresentationPresentingInfo::OnIceCandidate(const nsAString& aCandidate)
+{
+  MOZ_ASSERT(false, "Should not receive ICE candidates.");
   return NS_ERROR_FAILURE;
 }
 
