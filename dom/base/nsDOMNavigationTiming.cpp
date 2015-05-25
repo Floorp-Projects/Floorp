@@ -57,7 +57,8 @@ nsDOMNavigationTiming::TimeStampToDOM(mozilla::TimeStamp aStamp) const
   return GetNavigationStart() + static_cast<int64_t>(duration.ToMilliseconds());
 }
 
-DOMTimeMilliSec nsDOMNavigationTiming::DurationFromStart(){
+DOMTimeMilliSec nsDOMNavigationTiming::DurationFromStart()
+{
   return TimeStampToDOM(mozilla::TimeStamp::Now());
 }
 

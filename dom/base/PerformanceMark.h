@@ -16,8 +16,9 @@ namespace dom {
 class PerformanceMark final : public PerformanceEntry
 {
 public:
-  PerformanceMark(nsPerformance* aPerformance,
-                  const nsAString& aName);
+  PerformanceMark(nsISupports* aParent,
+                  const nsAString& aName,
+                  DOMHighResTimeStamp aStartTime);
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
