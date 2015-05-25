@@ -26,6 +26,7 @@ namespace mozilla {
 class MediaFormatReader final : public MediaDecoderReader
 {
   typedef TrackInfo::TrackType TrackType;
+  typedef media::Interval<int64_t> ByteInterval;
 
 public:
   explicit MediaFormatReader(AbstractMediaDecoder* aDecoder,
@@ -104,6 +105,9 @@ public:
 
 private:
   bool InitDemuxer();
+  // Notify the demuxer that new data has been received.
+  // The next queued task calling GetBuffered() is guaranteed to have up to date
+  // buffered ranges.
   void NotifyDemuxer(uint32_t aLength, int64_t aOffset);
   void ReturnOutput(MediaData* aData, TrackType aTrack);
 
@@ -305,7 +309,6 @@ private:
   DecoderDataWithPromise<VideoDataPromise> mVideo;
 
   // Returns true when the decoder for this track needs input.
-  // aDecoder.mMonitor must be locked.
   bool NeedInput(DecoderData& aDecoder);
 
   DecoderData& GetDecoderData(TrackType aTrack);
@@ -390,9 +393,14 @@ private:
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 
   // Main thread objects
+  // Those are only used to calculate our buffered range on the main thread.
+  // The cached buffered range is calculated one when required.
   nsRefPtr<MediaDataDemuxer> mMainThreadDemuxer;
   nsRefPtr<MediaTrackDemuxer> mAudioTrackDemuxer;
   nsRefPtr<MediaTrackDemuxer> mVideoTrackDemuxer;
+  ByteInterval mDataRange;
+  media::TimeIntervals mCachedTimeRanges;
+  bool mCachedTimeRangesStale;
 
 #if defined(READER_DORMANT_HEURISTIC)
   const bool mDormantEnabled;
