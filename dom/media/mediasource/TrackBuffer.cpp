@@ -346,7 +346,7 @@ TrackBuffer::EvictData(double aPlaybackTime,
         toEvict -= decoders[i]->GetResource()->EvictAll();
       } else {
         int64_t playbackOffset =
-          decoders[i]->ConvertToByteOffset(time.ToMicroseconds());
+          decoders[i]->ConvertToByteOffset(time.ToSeconds());
         MSE_DEBUG("evicting some bufferedEnd=%f "
                   "aPlaybackTime=%f time=%f, playbackOffset=%lld size=%lld",
                   buffered.GetEnd().ToSeconds(), aPlaybackTime, time,
