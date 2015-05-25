@@ -347,6 +347,7 @@ TrackBuffer::EvictData(double aPlaybackTime,
                                                            playbackOffset);
         }
       }
+      decoders[i]->GetReader()->NotifyDataRemoved();
     }
   }
 
@@ -368,6 +369,7 @@ TrackBuffer::EvictData(double aPlaybackTime,
               buffered.GetStart().ToSeconds(), buffered.GetEnd().ToSeconds(),
               aPlaybackTime, decoders[i]->GetResource()->GetSize());
     toEvict -= decoders[i]->GetResource()->EvictAll();
+    decoders[i]->GetReader()->NotifyDataRemoved();
   }
 
   // Evict all data from future decoders, starting furthest away from
@@ -413,6 +415,7 @@ TrackBuffer::EvictData(double aPlaybackTime,
               buffered.GetStart().ToSeconds(), buffered.GetEnd().ToSeconds(),
               aPlaybackTime, decoders[i]->GetResource()->GetSize());
     toEvict -= decoders[i]->GetResource()->EvictAll();
+    decoders[i]->GetReader()->NotifyDataRemoved();
   }
 
   RemoveEmptyDecoders(decoders);
@@ -495,6 +498,7 @@ TrackBuffer::EvictBefore(double aTime)
       MSE_DEBUG("decoder=%u offset=%lld",
                 i, endOffset);
       mInitializedDecoders[i]->GetResource()->EvictBefore(endOffset);
+      mInitializedDecoders[i]->GetReader()->NotifyDataRemoved();
     }
   }
   mParentDecoder->NotifyTimeRangesChanged();
@@ -1094,6 +1098,7 @@ TrackBuffer::RangeRemoval(media::TimeUnit aStart,
           decoders[i]->GetResource()->EvictData(offset, offset);
         }
       }
+      decoders[i]->GetReader()->NotifyDataRemoved();
     }
   } else {
     // Only trimming existing buffers.
@@ -1104,6 +1109,7 @@ TrackBuffer::RangeRemoval(media::TimeUnit aStart,
       } else {
         decoders[i]->Trim(aStart.ToMicroseconds());
       }
+      decoders[i]->GetReader()->NotifyDataRemoved();
     }
   }
 
