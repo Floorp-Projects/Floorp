@@ -229,7 +229,7 @@ PuppetWidget::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 {
   for (uint32_t i = 0; i < aConfigurations.Length(); ++i) {
     const Configuration& configuration = aConfigurations[i];
-    PuppetWidget* w = static_cast<PuppetWidget*>(configuration.mChild);
+    PuppetWidget* w = static_cast<PuppetWidget*>(configuration.mChild.get());
     NS_ASSERTION(w->GetParent() == this,
                  "Configured widget is not a child");
     w->SetWindowClipRegion(configuration.mClipRegion, true);
