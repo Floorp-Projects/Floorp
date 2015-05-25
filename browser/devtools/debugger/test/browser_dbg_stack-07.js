@@ -29,7 +29,7 @@ function test() {
 }
 
 function performTest() {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     yield selectBottomFrame();
     testBottomFrame(4);
 
