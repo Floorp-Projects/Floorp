@@ -3847,6 +3847,7 @@
                                           contentDisposition: aMessage.data.contentDisposition,
                                           frameOuterWindowID: aMessage.data.frameOuterWindowID,
                                           selectionInfo: aMessage.data.selectionInfo,
+                                          disableSetDesktopBackground: aMessage.data.disableSetDesktopBg,
                                         };
               let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
               let event = gContextMenuContentData.event;
