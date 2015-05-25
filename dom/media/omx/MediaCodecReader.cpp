@@ -651,7 +651,7 @@ MediaCodecReader::AsyncReadMetadata()
 
   nsRefPtr<MediaCodecReader> self = this;
   mMediaResourceRequest.Begin(CreateMediaCodecs()
-    ->RefableThen(GetTaskQueue(), __func__,
+    ->Then(GetTaskQueue(), __func__,
       [self] (bool) -> void {
         self->mMediaResourceRequest.Complete();
         self->HandleResourceAllocated();
