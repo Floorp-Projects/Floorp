@@ -46,7 +46,7 @@ SiteSpecificUserAgent.prototype = {
       return cachedResult;
     }
 
-    let data = { uri: aURI };
+    let data = { host: aURI.asciiHost };
     let result = cpmm.sendRpcMessage("Useragent:GetOverride", data)[0] || HTTP_PROTO_HANDLER.userAgent;
 
     if (this.userAgentCache.size >= MAX_CACHE_SIZE) {
