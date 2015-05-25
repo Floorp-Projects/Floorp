@@ -158,7 +158,7 @@ private:
   // finds based the format string. The index of the styles matches the indexes
   // of elements that need the custom styling from aSequence. For elements with
   // no custom styling the array is padded with null elements.
-  void
+  bool
   ProcessArguments(JSContext* aCx, const nsTArray<JS::Heap<JS::Value>>& aData,
                    Sequence<JS::Value>& aSequence,
                    Sequence<JS::Value>& aStyles);
@@ -182,7 +182,7 @@ private:
             DOMHighResTimeStamp aTimestamp);
 
   // The method populates a Sequence from an array of JS::Value.
-  void
+  bool
   ArgumentsToValueList(const nsTArray<JS::Heap<JS::Value>>& aData,
                        Sequence<JS::Value>& aSequence);
 
