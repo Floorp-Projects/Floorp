@@ -182,7 +182,7 @@ protected:
 
   MediaPromiseHolder<MediaDecoderReader::MetadataPromise> mMetadataPromise;
   // XXX Remove after bug 1168008 land.
-  MediaPromiseConsumerHolder<MediaResourcePromise> mMediaResourceRequest;
+  MediaPromiseRequestHolder<MediaResourcePromise> mMediaResourceRequest;
   MediaPromiseHolder<MediaResourcePromise> mMediaResourcePromise;
 
 private:
