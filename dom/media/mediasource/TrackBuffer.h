@@ -129,6 +129,8 @@ private:
   // data is appended to the current decoder's SourceBufferResource.
   bool AppendDataToCurrentResource(MediaLargeByteBuffer* aData,
                                    uint32_t aDuration /* microseconds */);
+  // Queue on the parent's decoder task queue a call to NotifyTimeRangesChanged.
+  void NotifyTimeRangesChanged();
 
   // Queue execution of InitializeDecoder on mTaskQueue.
   bool QueueInitializeDecoder(SourceBufferDecoder* aDecoder);
