@@ -205,7 +205,6 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
   aOutData = nullptr;
   RefPtr<IMFSample> sample;
   HRESULT hr;
-  int typeChangeCount = 0;
   while (true) {
     hr = mDecoder->Output(&sample);
     if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
@@ -214,11 +213,6 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
     if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
       hr = UpdateOutputType();
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-      // Catch infinite loops, but some decoders perform at least 2 stream
-      // changes on consecutive calls, so be permissive.
-      // 100 is arbitrarily > 2.
-      NS_ENSURE_TRUE(typeChangeCount < 100, MF_E_TRANSFORM_STREAM_CHANGE);
-      ++typeChangeCount;
       continue;
     }
     break;
