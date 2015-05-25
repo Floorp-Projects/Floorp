@@ -11,6 +11,20 @@
 #include "mozilla/TypeTraits.h"
 #include "nsTArray.h"
 
+// Specialization for nsTArray CopyChooser.
+namespace mozilla {
+namespace media {
+template<class T>
+class IntervalSet;
+}
+}
+
+template<class E>
+struct nsTArray_CopyChooser<mozilla::media::IntervalSet<E>>
+{
+  typedef nsTArray_CopyWithConstructors<mozilla::media::IntervalSet<E>> Type;
+};
+
 namespace mozilla {
 namespace media {
 
