@@ -709,3 +709,12 @@ TEST(IntervalSet, FooIntervalSet)
   EXPECT_EQ(Foo<int>(), is[0].mStart);
   EXPECT_EQ(Foo<int>(4,5,6), is[0].mEnd);
 }
+
+TEST(IntervalSet, StaticAssert)
+{
+  typedef media::IntervalSet<int> IntIntervals;
+  media::Interval<int> i;
+
+  static_assert(mozilla::IsSame<nsTArray_CopyChooser<IntIntervals>::Type, nsTArray_CopyWithConstructors<IntIntervals>>::value, "Must use copy constructor");
+  static_assert(mozilla::IsSame<nsTArray_CopyChooser<media::TimeIntervals>::Type, nsTArray_CopyWithConstructors<media::TimeIntervals>>::value, "Must use copy constructor");
+}
