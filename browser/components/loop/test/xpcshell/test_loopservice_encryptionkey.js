@@ -57,7 +57,7 @@ add_task(function* test_fxaGetKey() {
 
   // Currently unimplemented, add a test when we implement the code.
   yield Assert.rejects(MozLoopService.promiseProfileEncryptionKey(),
-    /No FxA key available/, "should reject as not available");
+    /not implemented/, "should reject as unimplemented");
 });
 
 add_task(function test_hasEncryptionKey() {

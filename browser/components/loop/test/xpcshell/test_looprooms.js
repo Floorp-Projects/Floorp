@@ -9,18 +9,16 @@ Cu.import("resource:///modules/loop/LoopRooms.jsm");
 Cu.import("resource:///modules/Chat.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
-timerHandlers.startTimer = callback => callback();
-
 let openChatOrig = Chat.open;
 
-const kKey = "uGIs-kGbYt1hBBwjyW7MLQ";
+const kGuestKey = "uGIs-kGbYt1hBBwjyW7MLQ";
 
 // Rooms details as responded by the server.
 const kRoomsResponses = new Map([
   ["_nxD4V4FflQ", {
     roomToken: "_nxD4V4FflQ",
     // Encrypted with roomKey "FliIGLUolW-xkKZVWstqKw".
-    // roomKey is wrapped with kKey.
+    // roomKey is wrapped with kGuestKey.
     context: {
       wrappedKey: "F3V27oPB+FgjFbVPML2PupONYqoIZ53XRU4BqG46Lr3eyIGumgCEqgjSe/MXAXiQ//8=",
       value: "df7B4SNxhOI44eJjQavCevADyCCxz6/DEZbkOkRUMVUxzS42FbzN6C2PqmCKDYUGyCJTwJ0jln8TLw==",
@@ -306,7 +304,12 @@ add_task(function* setup_server() {
         room.deleted = kRoomUpdates[qs.version].deleted;
         res.write(JSON.stringify([room]));
       } else {
-        res.write(JSON.stringify([...kRoomsResponses.values()]));
+        // XXX Only return last 2 elements until FxA keys are implemented.
+        if (MozLoopServiceInternal.fxAOAuthTokenData) {
+          res.write(JSON.stringify([...kRoomsResponses.values()].slice(1, 3)));
+        } else {
+          res.write(JSON.stringify([...kRoomsResponses.values()]));
+        }
       }
     }
 
@@ -428,7 +431,8 @@ add_task(function* test_openRoom() {
 
 // Test if the rooms cache is refreshed after FxA signin or signout.
 add_task(function* test_refresh() {
-  gExpectedAdds.push(...kExpectedRooms.values());
+  // XXX Temporarily whilst FxA encryption isn't handled (bug 1153788).
+  Array.prototype.push.apply(gExpectedAdds, [...kExpectedRooms.values()].slice(1, 3));
   gExpectedRefresh = true;
 
   // Make the switch.
@@ -437,7 +441,6 @@ add_task(function* test_refresh() {
     email: "fake@invalid.com",
     uid: "fake"
   };
-  Services.prefs.setCharPref("loop.key.fxa", kKey);
 
   yield waitForCondition(() => !gExpectedRefresh);
   yield waitForCondition(() => gExpectedAdds.length === 0);
@@ -636,7 +639,7 @@ add_task(function* () {
 function run_test() {
   setupFakeLoopServer();
 
-  Services.prefs.setCharPref("loop.key", kKey);
+  Services.prefs.setCharPref("loop.key", kGuestKey);
 
   LoopRooms.on("add", onRoomAdded);
   LoopRooms.on("update", onRoomUpdated);
@@ -649,7 +652,6 @@ function run_test() {
     // Revert original Chat.open implementation
     Chat.open = openChatOrig;
     Services.prefs.clearUserPref("loop.key");
-    Services.prefs.clearUserPref("loop.key.fxa");
 
     MozLoopServiceInternal.fxAOAuthTokenData = null;
     MozLoopServiceInternal.fxAOAuthProfile = null;
