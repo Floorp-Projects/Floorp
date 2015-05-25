@@ -21,8 +21,6 @@
  * exported ManifestObtainer
  */
 'use strict';
-this.EXPORTED_SYMBOLS = ['ManifestObtainer'];
-
 const MSG_KEY = 'DOM:ManifestObtainer:Obtain';
 let messageCounter = 0;
 // FIXME: Ideally, we would store a reference to the
@@ -83,3 +81,5 @@ ManifestObtainer.prototype = {
     }
   }
 };
+this.ManifestObtainer = ManifestObtainer; // jshint ignore:line
+this.EXPORTED_SYMBOLS = ['ManifestObtainer']; // jshint ignore:line
