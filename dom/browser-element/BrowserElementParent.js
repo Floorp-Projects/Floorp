@@ -87,7 +87,6 @@ function BrowserElementParent() {
 
   Services.obs.addObserver(this, 'oop-frameloader-crashed', /* ownsWeak = */ true);
   Services.obs.addObserver(this, 'copypaste-docommand', /* ownsWeak = */ true);
-  Services.obs.addObserver(this, 'ask-children-to-execute-copypaste-command', /* ownsWeak = */ true);
 }
 
 BrowserElementParent.prototype = {
@@ -204,7 +203,6 @@ BrowserElementParent.prototype = {
       "got-set-input-method-active": this._gotDOMRequestResult,
       "selectionstatechanged": this._handleSelectionStateChanged,
       "scrollviewchange": this._handleScrollViewChange,
-      "caretstatechanged": this._handleCaretStateChanged,
     };
 
     let mmSecuritySensitiveCalls = {
@@ -437,34 +435,6 @@ BrowserElementParent.prototype = {
   _handleSelectionStateChanged: function(data) {
     let evt = this._createEvent('selectionstatechanged', data.json,
                                 /* cancelable = */ false);
-    this._frameElement.dispatchEvent(evt);
-  },
-
-  // Called when state of accessible caret in child has changed.
-  // The fields of data is as following:
-  //  - rect: Contains bounding rectangle of selection, Include width, height,
-  //          top, bottom, left and right.
-  //  - commands: Describe what commands can be executed in child. Include canSelectAll,
-  //              canCut, canCopy and canPaste. For example: if we want to check if cut
-  //              command is available, using following code, if (data.commands.canCut) {}.
-  //  - zoomFactor: Current zoom factor in child frame.
-  //  - reason: The reason causes the state changed. Include "visibilitychange",
-  //            "updateposition", "longpressonemptycontent", "taponcaret", "presscaret",
-  //            "releasecaret".
-  //  - collapsed: Indicate current selection is collapsed or not.
-  //  - caretVisible: Indicate the caret visiibility.
-  //  - selectionVisible: Indicate current selection is visible or not.
-  _handleCaretStateChanged: function(data) {
-    let evt = this._createEvent('caretstatechanged', data.json,
-                                /* cancelable = */ false);
-
-    let self = this;
-    function sendDoCommandMsg(cmd) {
-      let data = { command: cmd };
-      self._sendAsyncMsg('copypaste-do-command', data);
-    }
-    Cu.exportFunction(sendDoCommandMsg, evt.detail, { defineAs: 'sendDoCommandMsg' });
-
     this._frameElement.dispatchEvent(evt);
   },
 
@@ -1007,11 +977,6 @@ BrowserElementParent.prototype = {
     case 'copypaste-docommand':
       if (this._isAlive() && this._frameElement.isEqualNode(subject.wrappedJSObject)) {
         this._sendAsyncMsg('do-command', { command: data });
-      }
-      break;
-    case 'ask-children-to-execute-copypaste-command':
-      if (this._isAlive() && this._frameElement == subject.wrappedJSObject) {
-        this._sendAsyncMsg('copypaste-do-command', { command: data });
       }
       break;
     default:

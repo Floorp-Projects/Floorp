@@ -350,7 +350,6 @@ var shell = {
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
     this.contentBrowser.addEventListener('mozbrowserselectionstatechanged', this, true);
     this.contentBrowser.addEventListener('mozbrowserscrollviewchange', this, true);
-    this.contentBrowser.addEventListener('mozbrowsercaretstatechanged', this);
 
     CustomEventManager.init();
     WebappsHelper.init();
@@ -381,7 +380,6 @@ var shell = {
     this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
     this.contentBrowser.removeEventListener('mozbrowserselectionstatechanged', this, true);
     this.contentBrowser.removeEventListener('mozbrowserscrollviewchange', this, true);
-    this.contentBrowser.removeEventListener('mozbrowsercaretstatechanged', this);
     ppmm.removeMessageListener("content-handler", this);
 
     UserAgentOverrides.uninit();
@@ -491,28 +489,6 @@ var shell = {
           type: 'selectionstatechanged',
           detail: data,
         });
-        break;
-      case 'mozbrowsercaretstatechanged':
-        {
-          let elt = evt.target;
-          let win = elt.ownerDocument.defaultView;
-          let offsetX = win.mozInnerScreenX - window.mozInnerScreenX;
-          let offsetY = win.mozInnerScreenY - window.mozInnerScreenY;
-
-          let rect = elt.getBoundingClientRect();
-          offsetX += rect.left;
-          offsetY += rect.top;
-
-          let data = evt.detail;
-          data.offsetX = offsetX;
-          data.offsetY = offsetY;
-          data.sendDoCommandMsg = null;
-
-          shell.sendChromeEvent({
-            type: 'caretstatechanged',
-            detail: data,
-          });
-        }
         break;
 
       case 'MozApplicationManifest':
@@ -741,10 +717,6 @@ var CustomEventManager = {
         break;
       case 'do-command':
         DoCommandHelper.handleEvent(detail.cmd);
-        break;
-      case 'copypaste-do-command':
-        Services.obs.notifyObservers({ wrappedJSObject: shell.contentBrowser },
-                                     'ask-children-to-execute-copypaste-command', detail.cmd);
         break;
     }
   }
