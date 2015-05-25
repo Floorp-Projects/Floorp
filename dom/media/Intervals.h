@@ -212,6 +212,15 @@ public:
     mFuzz = aFuzz;
   }
 
+  // Returns true if the two intervals intersect with this being on the right
+  // of aOther
+  bool TouchesOnRight(const SelfType& aOther) const
+  {
+    return aOther.mStart <= mStart  &&
+      (mStart - mFuzz <= aOther.mEnd + aOther.mFuzz) &&
+      (aOther.mStart - aOther.mFuzz <= mEnd + mFuzz);
+  }
+
   T mStart;
   T mEnd;
   T mFuzz;
@@ -305,10 +314,14 @@ public:
       mIntervals.AppendElement(aInterval);
       return *this;
     }
+    ElemType& last = mIntervals.LastElement();
+    if (aInterval.TouchesOnRight(last)) {
+      last = last.Span(aInterval);
+      return *this;
+    }
     // Most of our actual usage is adding an interval that will be outside the
     // range. We can speed up normalization here.
-    if (aInterval.RightOf(mIntervals.LastElement()) &&
-        !aInterval.Touches(mIntervals.LastElement())) {
+    if (aInterval.RightOf(last)) {
       mIntervals.AppendElement(aInterval);
       return *this;
     }
