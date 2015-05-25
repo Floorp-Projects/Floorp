@@ -2238,7 +2238,8 @@ js::LookupAsmJSModuleInCache(ExclusiveContext* cx,
     if (!atEnd)
         return true;
 
-    parser.tokenStream.advance(module->srcEndBeforeCurly());
+    if (!parser.tokenStream.advance(module->srcEndBeforeCurly()))
+        return false;
 
     {
         // No need to flush the instruction cache now, it will be flushed when
