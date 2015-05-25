@@ -1334,7 +1334,11 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
     return;
   }
 
-  mDemuxer->NotifyDataArrived(aLength, aOffset);
+  if (aLength || aOffset) {
+    mDemuxer->NotifyDataArrived(aLength, aOffset);
+  } else {
+    mDemuxer->NotifyDataRemoved();
+  }
   if (HasVideo()) {
     mVideo.mReceivedNewData = true;
     ScheduleUpdate(TrackType::kVideoTrack);
@@ -1355,6 +1359,7 @@ MediaFormatReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int6
   }
 
   MOZ_ASSERT(mMainThreadDemuxer);
+  MOZ_ASSERT(aBuffer || aLength);
   mMainThreadDemuxer->NotifyDataArrived(aLength, aOffset);
 
   // Queue a task to notify our main demuxer.
@@ -1362,6 +1367,26 @@ MediaFormatReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int6
     NS_NewRunnableMethodWithArgs<int32_t, uint64_t>(
       this, &MediaFormatReader::NotifyDemuxer,
       aLength, aOffset);
+  GetTaskQueue()->Dispatch(task.forget());
+}
+
+void
+MediaFormatReader::NotifyDataRemoved()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mInitDone) {
+    return;
+  }
+
+  MOZ_ASSERT(mMainThreadDemuxer);
+  mMainThreadDemuxer->NotifyDataRemoved();
+
+  // Queue a task to notify our main demuxer.
+  RefPtr<nsIRunnable> task =
+    NS_NewRunnableMethodWithArgs<int32_t, uint64_t>(
+      this, &MediaFormatReader::NotifyDemuxer,
+      0, 0);
   GetTaskQueue()->Dispatch(task.forget());
 }
 
