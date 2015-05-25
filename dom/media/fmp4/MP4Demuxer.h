@@ -86,6 +86,7 @@ private:
   void NotifyDataArrived();
   void UpdateSamples(nsTArray<nsRefPtr<MediaRawData>>& aSamples);
   void EnsureUpToDateIndex();
+  void SetNextKeyFrameTime();
   nsRefPtr<MP4Demuxer> mParent;
   nsRefPtr<mp4_demuxer::Index> mIndex;
   UniquePtr<mp4_demuxer::SampleIterator> mIterator;
