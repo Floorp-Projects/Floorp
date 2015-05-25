@@ -1,7 +1,10 @@
 //Used by JSHint:
-/*global Cu, ManifestObtainer, BrowserTestUtils, add_task, SpecialPowers, todo_is, gBrowser, Assert*/
+/*global Cu, BrowserTestUtils, add_task, SpecialPowers, gBrowser, Assert*/
 'use strict';
-Cu.import('resource://gre/modules/ManifestObtainer.jsm', this);
+const {
+  ManifestObtainer
+} = Cu.import('resource://gre/modules/WebManifest.jsm', {});
+
 requestLongerTimeout(4); // e10s tests take time.
 const defaultURL =
   'http://example.org/tests/dom/manifest/test/resource.sjs';
