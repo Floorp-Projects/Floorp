@@ -5,7 +5,7 @@
 /**
  * Tests that setting the `devtools.performance.profiler.` prefs propagate to the profiler actor.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { gFront } = panel.panelWin;
 

@@ -149,7 +149,7 @@ var Project = Class({
    *          A list of all file paths
    */
   allPaths: function() {
-    return [path for (path of this.localStores.keys())];
+    return [...this.localStores.keys()];
   },
 
   /**

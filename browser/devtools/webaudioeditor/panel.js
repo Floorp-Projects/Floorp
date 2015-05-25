@@ -52,7 +52,9 @@ WebAudioEditorPanel.prototype = {
 
   // DevToolPanel API
 
-  get target() this._toolbox.target,
+  get target() {
+    return this._toolbox.target;
+  },
 
   destroy: function() {
     // Make sure this panel is not already destroyed.

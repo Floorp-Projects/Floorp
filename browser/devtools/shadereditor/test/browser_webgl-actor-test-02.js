@@ -6,7 +6,7 @@
  * if the front wasn't set up first.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
 
   once(front, "program-linked").then(() => {

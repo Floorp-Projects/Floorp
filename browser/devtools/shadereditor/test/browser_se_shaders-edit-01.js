@@ -5,7 +5,7 @@
  * Tests if editing a vertex and a fragment shader works properly.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, $, EVENTS, ShadersEditorsView } = panel.panelWin;
 

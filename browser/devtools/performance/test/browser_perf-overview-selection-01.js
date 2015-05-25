@@ -4,7 +4,7 @@
 /**
  * Tests that events are fired from OverviewView from selection manipulation.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
   let startTime, endTime, params, _;
