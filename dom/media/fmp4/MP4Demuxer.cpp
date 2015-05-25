@@ -298,7 +298,8 @@ int64_t
 MP4TrackDemuxer::GetEvictionOffset(media::TimeUnit aTime)
 {
   MonitorAutoLock mon(mMonitor);
-  return int64_t(mIndex->GetEvictionOffset(aTime.ToMicroseconds()));
+  uint64_t offset = mIndex->GetEvictionOffset(aTime.ToMicroseconds());
+  return int64_t(offset == std::numeric_limits<uint64_t>::max() ? 0 : offset);
 }
 
 media::TimeIntervals
