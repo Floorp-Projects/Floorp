@@ -12,17 +12,15 @@
 #include "Workers.h"
 #include "nsISupportsImpl.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsPerformance.h"
 
 BEGIN_WORKERS_NAMESPACE
 
 class WorkerPrivate;
 
-class Performance final : public nsWrapperCache
+class Performance final : public PerformanceBase
 {
 public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Performance)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(Performance)
-
   explicit Performance(WorkerPrivate* aWorkerPrivate);
 
 private:
@@ -31,18 +29,32 @@ private:
   WorkerPrivate* mWorkerPrivate;
 
 public:
-  virtual JSObject*
+  JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  nsISupports*
-  GetParentObject() const
+  // WebIDL (public APIs)
+  DOMHighResTimeStamp Now() const override;
+
+  using PerformanceBase::Mark;
+  using PerformanceBase::ClearMarks;
+  using PerformanceBase::Measure;
+  using PerformanceBase::ClearMeasures;
+
+private:
+  nsISupports* GetAsISupports() override
   {
-    // There's only one global on a worker, so we don't need to specify.
     return nullptr;
   }
 
-  // WebIDL (public APIs)
-  double Now() const;
+  void DispatchBufferFullEvent() override;
+
+  bool IsPerformanceTimingAttribute(const nsAString& aName) override;
+
+  DOMHighResTimeStamp
+  GetPerformanceTimingFromString(const nsAString& aTimingName) override;
+
+  DOMHighResTimeStamp
+  DeltaFromNavigationStart(DOMHighResTimeStamp aTime) override;
 };
 
 END_WORKERS_NAMESPACE
