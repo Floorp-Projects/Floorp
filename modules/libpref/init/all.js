@@ -1843,7 +1843,10 @@ pref("intl.hyphenation-alias.no-*", "nb");
 pref("intl.hyphenation-alias.nb-*", "nb");
 pref("intl.hyphenation-alias.nn-*", "nn");
 
-pref("font.mathfont-family", "Latin Modern Math, XITS Math, STIX Math, Cambria Math, Asana Math, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Termes Math, Neo Euler, Lucida Bright Math, MathJax_Main, STIXNonUnicode, STIXSizeOneSym, STIXGeneral, Standard Symbols L, DejaVu Sans");
+pref("font.name.serif.x-math", "Latin Modern Math");
+pref("font.name-list.serif.x-math", "Latin Modern Math, XITS Math, Cambria Math, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, MathJax_Main, STIXGeneral, DejaVu Serif, DejaVu Sans, Standard Symbols L, serif");
+pref("font.name.sans-serif.x-math", "sans-serif");
+pref("font.name.monospace.x-math", "monospace");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
 // These fonts are ignored the underline offset, instead of it, the underline is lowered to bottom of its em descent.
@@ -2628,6 +2631,10 @@ pref("font.minimum-size.zh-TW", 0);
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
+// mathml.css sets font-size to "inherit" and font-family to "serif" so only
+// font.name.*.x-math and font.minimum-size.x-math are really relevant.
+pref("font.minimum-size.x-math", 0);
+
 /*
  * A value greater than zero enables font size inflation for
  * pan-and-zoom UIs, so that the fonts in a block are at least the size
@@ -2950,8 +2957,12 @@ pref("font.name-list.monospace.x-tibt", "Tibetan Machine Uni, Jomolhari, Microso
 pref("font.minimum-size.th", 10);
 
 pref("font.default.x-devanagari", "sans-serif");
+pref("font.name.serif.x-math", "Latin Modern Math");
 // We have special support for Monotype Symbol on Windows.
-pref("font.mathfont-family", "MathJax_Main, STIXNonUnicode, STIXSizeOneSym, STIXGeneral, Asana Math, Symbol, DejaVu Sans, Cambria Math");
+pref("font.name-list.serif.x-math", "Latin Modern Math, XITS Math, Cambria Math, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, MathJax_Main, STIXGeneral, DejaVu Serif, DejaVu Sans, Symbol, Times New Roman");
+pref("font.name.sans-serif.x-math", "Arial");
+pref("font.name.monospace.x-math", "Courier New");
+pref("font.name.cursive.x-math", "Comic Sans MS");
 
 // cleartype settings - false implies default system settings
 
@@ -3377,8 +3388,13 @@ pref("font.size.variable.zh-CN", 15);
 pref("font.size.variable.zh-HK", 15);
 pref("font.size.variable.zh-TW", 15);
 
+pref("font.name.serif.x-math", "Latin Modern Math");
 // Apple's Symbol is Unicode so use it
-pref("font.mathfont-family", "Latin Modern Math, XITS Math, STIX Math, Cambria Math, Asana Math, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Termes Math, Neo Euler, Lucida Bright Math, MathJax_Main, STIXNonUnicode, STIXSizeOneSym, STIXGeneral, Symbol, DejaVu Sans");
+pref("font.name-list.serif.x-math", "Latin Modern Math, XITS Math, Cambria Math, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, MathJax_Main, STIXGeneral, DejaVu Serif, DejaVu Sans, Symbol, Times");
+pref("font.name.sans-serif.x-math", "Helvetica");
+pref("font.name.monospace.x-math", "Courier");
+pref("font.name.cursive.x-math", "Apple Chancery");
+pref("font.name.fantasy.x-math", "Papyrus");
 
 // individual font faces to be treated as independent families
 // names are Postscript names of each face
@@ -3732,6 +3748,11 @@ pref("font.name.sans-serif.zh-TW", "Fira Sans");
 pref("font.name.monospace.zh-TW", "Fira Mono");
 pref("font.name-list.sans-serif.zh-TW", "Fira Sans,Droid Sans Fallback");
 
+pref("font.name.serif.x-math", "Latin Modern Math");
+pref("font.name-list.serif.x-math", "Latin Modern Math, XITS Math, Cambria Math, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, MathJax_Main, STIXGeneral, DejaVu Serif, DejaVu Sans, Charis SIL Compact");
+pref("font.name.sans-serif.x-math", "Fira Sans");
+pref("font.name.monospace.x-math", "Fira Mono");
+
 #elif defined(ANDROID)
 // We use the bundled fonts for Firefox for Android
 
@@ -3804,6 +3825,11 @@ pref("font.name.monospace.zh-TW", "Droid Sans Mono");
 pref("font.name-list.serif.zh-TW", "Droid Serif, Droid Sans Fallback");
 pref("font.name-list.sans-serif.zh-TW", "Roboto, Droid Sans, Noto Sans TC, Noto Sans SC, Droid Sans Fallback");
 pref("font.name-list.monospace.zh-TW", "Droid Sans Fallback");
+
+pref("font.name.serif.x-math", "Latin Modern Math");
+pref("font.name-list.serif.x-math", "Latin Modern Math, XITS Math, Cambria Math, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, MathJax_Main, STIXGeneral, DejaVu Serif, DejaVu Sans, Charis SIL Compact");
+pref("font.name.sans-serif.x-math", "Clear Sans");
+pref("font.name.monospace.x-math", "Droid Sans Mono");
 
 #endif
 
