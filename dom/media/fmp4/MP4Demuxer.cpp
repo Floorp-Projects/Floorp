@@ -151,6 +151,7 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
                                  uint32_t aTrackNumber)
   : mParent(aParent)
   , mStream(new mp4_demuxer::ResourceStream(mParent->mResource))
+  , mNeedReIndex(true)
   , mMonitor("MP4TrackDemuxer")
 {
   mInfo = mParent->mMetadata->GetTrackInfo(aType, aTrackNumber);
@@ -174,6 +175,23 @@ UniquePtr<TrackInfo>
 MP4TrackDemuxer::GetInfo() const
 {
   return mInfo->Clone();
+}
+
+void
+MP4TrackDemuxer::EnsureUpToDateIndex()
+{
+  if (!mNeedReIndex) {
+    return;
+  }
+  AutoPinned<MediaResource> resource(mParent->mResource);
+  nsTArray<MediaByteRange> byteRanges;
+  nsresult rv = resource->GetCachedRanges(byteRanges);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  MonitorAutoLock mon(mMonitor);
+  mIndex->UpdateMoofIndex(byteRanges);
+  mNeedReIndex = false;
 }
 
 nsRefPtr<MP4TrackDemuxer::SeekPromise>
@@ -305,6 +323,7 @@ MP4TrackDemuxer::GetEvictionOffset(media::TimeUnit aTime)
 media::TimeIntervals
 MP4TrackDemuxer::GetBuffered()
 {
+  EnsureUpToDateIndex();
   AutoPinned<MediaResource> resource(mParent->mResource);
   nsTArray<MediaByteRange> byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
@@ -315,16 +334,9 @@ MP4TrackDemuxer::GetBuffered()
   nsTArray<mp4_demuxer::Interval<int64_t>> timeRanges;
 
   MonitorAutoLock mon(mMonitor);
-  int64_t endComposition =
-    mIndex->GetEndCompositionIfBuffered(byteRanges);
-
   mIndex->ConvertByteRangesToTimeRanges(byteRanges, &timeRanges);
-  if (endComposition) {
-    mp4_demuxer::Interval<int64_t>::SemiNormalAppend(
-      timeRanges, mp4_demuxer::Interval<int64_t>(endComposition, endComposition));
-  }
   // convert timeRanges.
-  media::TimeIntervals ranges;
+  media::TimeIntervals ranges = media::TimeIntervals();
   for (size_t i = 0; i < timeRanges.Length(); i++) {
     ranges +=
       media::TimeInterval(media::TimeUnit::FromMicroseconds(timeRanges[i].start),
@@ -336,14 +348,7 @@ MP4TrackDemuxer::GetBuffered()
 void
 MP4TrackDemuxer::NotifyDataArrived()
 {
-  AutoPinned<MediaResource> resource(mParent->mResource);
-  nsTArray<MediaByteRange> byteRanges;
-  nsresult rv = resource->GetCachedRanges(byteRanges);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  MonitorAutoLock mon(mMonitor);
-  mIndex->UpdateMoofIndex(byteRanges);
+  mNeedReIndex = true;
 }
 
 void
