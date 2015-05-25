@@ -326,7 +326,6 @@ protected:
   virtual ~TextureHost();
 
 public:
-
   /**
    * Factory method.
    */
