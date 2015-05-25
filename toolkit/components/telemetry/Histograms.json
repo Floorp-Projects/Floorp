@@ -5345,6 +5345,20 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'prototypeAndProperties' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_ENUMPROPERTIES_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'enumProperties' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_ENUMPROPERTIES_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'enumProperties' request to go round trip."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_PROTOTYPESANDPROPERTIES_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
