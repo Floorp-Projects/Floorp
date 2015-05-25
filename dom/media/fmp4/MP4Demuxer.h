@@ -85,6 +85,7 @@ private:
   friend class MP4Demuxer;
   void NotifyDataArrived();
   void UpdateSamples(nsTArray<nsRefPtr<MediaRawData>>& aSamples);
+  void EnsureUpToDateIndex();
   nsRefPtr<MP4Demuxer> mParent;
   nsRefPtr<mp4_demuxer::Index> mIndex;
   UniquePtr<mp4_demuxer::SampleIterator> mIterator;
@@ -93,6 +94,7 @@ private:
   Maybe<media::TimeUnit> mNextKeyframeTime;
   // Queued samples extracted by the demuxer, but not yet returned.
   nsRefPtr<MediaRawData> mQueuedSample;
+  bool mNeedReIndex;
 
   // We do not actually need a monitor, however MoofParser will assert
   // if a monitor isn't held.
