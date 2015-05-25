@@ -137,8 +137,19 @@ function getTempFile(aLeafName)
   do_check_false(file.exists());
 
   do_register_cleanup(function () {
-    if (file.exists()) {
-      file.remove(false);
+    try {
+      file.remove(false)
+    } catch (e) {
+      if (!(e instanceof Components.Exception &&
+            (e.result == Cr.NS_ERROR_FILE_ACCESS_DENIED ||
+             e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
+             e.result == Cr.NS_ERROR_FILE_NOT_FOUND))) {
+        throw e;
+      }
+      // On Windows, we may get an access denied error if the file existed before,
+      // and was recently deleted.
+      // Don't bother checking file.exists() as that may also cause an access
+      // denied error.
     }
   });
 
