@@ -482,6 +482,13 @@ Event::StopImmediatePropagation()
 }
 
 NS_IMETHODIMP
+Event::StopCrossProcessForwarding()
+{
+  mEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Event::GetIsTrusted(bool* aIsTrusted)
 {
   *aIsTrusted = IsTrusted();
