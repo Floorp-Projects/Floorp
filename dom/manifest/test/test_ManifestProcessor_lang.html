@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<!--
+Bug 1143879 - Implement lang member of Web manifest
+https://bugzilla.mozilla.org/show_bug.cgi?id=1143879
+-->
+<meta charset="utf-8">
+<title>Test for Bug 1143879 - Implement lang member of Web manifest</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script src="common.js"></script>
+<script>
+/**
+ * lang member
+ * https://w3c.github.io/manifest/#lang-member
+ **/
+/*globals is, typeTests, data, processor, seperators, lineTerminators, todo_is*/
+'use strict';
+// Type checks: checks that only strings are accepted.
+for (var type of typeTests) {
+  var expected = `Expect non-string to be undefined.`;
+  data.jsonText = JSON.stringify({
+    lang: type
+  });
+  var result = processor.process(data);
+  is(result.lang, undefined, expected);
+}
+
+// Test valid language tags - derived from IANA and BCP-47 spec
+// and our Intl.js implementation.
+var validTags = [
+  'aa', 'ab', 'ae', 'af', 'ak', 'am', 'an', 'ar', 'as', 'av', 'ay', 'az',
+  'ba', 'be', 'bg', 'bh', 'bi', 'bm', 'bn', 'bo', 'br', 'bs', 'ca', 'ce',
+  'ch', 'co', 'cr', 'cs', 'cu', 'cv', 'cy', 'da', 'de', 'dv', 'dz', 'ee',
+  'el', 'en', 'eo', 'es', 'et', 'eu', 'fa', 'ff', 'fi', 'fj', 'fo', 'fr',
+  'fy', 'ga', 'gd', 'gl', 'gn', 'gu', 'gv', 'ha', 'he', 'hi', 'ho', 'hr',
+  'ht', 'hu', 'hy', 'hz', 'ia', 'id', 'ie', 'ig', 'ik', 'in', 'io',
+  'is', 'it', 'iu', 'iw', 'ja', 'ji', 'jv', 'jw', 'ka', 'kg', 'ki', 'kj',
+  'kk', 'kl', 'km', 'kn', 'ko', 'kr', 'ks', 'ku', 'kv', 'kw', 'ky', 'la',
+  'lb', 'lg', 'li', 'ln', 'lo', 'lt', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk',
+  'ml', 'mn', 'mo', 'mr', 'ms', 'mt', 'my', 'na', 'nb', 'nd', 'ne', 'ng',
+  'nl', 'nn', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa',
+  'pi', 'pl', 'ps', 'pt', 'qu', 'rm', 'rn', 'ro', 'ru', 'rw', 'sa', 'sc',
+  'sd', 'se', 'sg', 'sh', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq', 'sr',
+  'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk', 'tl',
+  'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've',
+  'vi', 'vo', 'wa', 'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu', 'en-US',
+  'jp-JS', 'pt-PT', 'pt-BR', 'de-CH', 'de-DE-1901', 'es-419', 'sl-IT-nedis',
+  'en-US-boont', 'mn-Cyrl-MN', 'x-fr-CH', 'sr-Cyrl', 'sr-Latn',
+  'hy-Latn-IT-arevela', 'zh-TW', 'en-GB-boont-r-extended-sequence-x-private',
+  'zh-nan-hans-bu-variant2-variant1-u-ca-chinese-t-zh-latn-x-private',
+  'zh-cmn-Hans-CN', 'cmn-Hans-CN', 'zh-yue-HK', 'yue-HK',
+  'de-CH-x-phonebk', 'az-Arab-x-AZE-derbend', 'x-whatever',
+  'qaa-Qaaa-QM-x-southern'
+];
+for (var tag of validTags) {
+  var expected = `Expect lang to be ${tag}.`;
+  data.jsonText = JSON.stringify({
+    lang: tag
+  });
+  var result = processor.process(data);
+  is(result.lang, tag, expected);
+}
+
+// trim tests - check that language tags get trimmed properly.
+for (var tag of validTags) {
+  var expected = `Expect trimmed tag to be returned.`;
+  var expandedtag = seperators + lineTerminators + tag;
+  expandedtag += lineTerminators + seperators;
+  data.jsonText = JSON.stringify({
+    lang: expandedtag
+  });
+  var result = processor.process(data);
+  is(result.lang, tag, expected);
+}
+
+//Invalid language tags, derived from BCP-47 and made up.
+var invalidTags = [
+  'de-419-DE', ' a-DE ', 'ar-a-aaa-b-bbb-a-ccc', 'sdafsdfaadsfdsf', 'i',
+  'i-phone', 'en US', 'EN-*-US-JP', 'JA-INVALID-TAG', '123123123'
+];
+for (var item of invalidTags) {
+  var expected = `Expect invalid tag (${item}) to be treated as undefined.`;
+  data.jsonText = JSON.stringify({
+    lang: item
+  });
+  var result = processor.process(data);
+  todo_is(result.lang, undefined, expected);
+}
+
+// Canonical form conversion tests. We convert the following tags, which are in
+// canonical form, to upper case and expect the processor to return them
+// in canonical form.
+var canonicalTags = [
+  'jp-JS', 'pt-PT', 'pt-BR', 'de-CH', 'de-DE-1901', 'es-419', 'sl-IT-nedis',
+  'en-US-boont', 'mn-Cyrl-MN', 'x-fr-CH', 'sr-Cyrl', 'sr-Latn',
+  'hy-Latn-IT-arevela', 'zh-TW', 'en-GB-boont-r-extended-sequence-x-private',
+  'zh-cmn-Hans-CN', 'cmn-Hans-CN', 'zh-yue-HK', 'yue-HK',
+  'de-CH-x-phonebk', 'az-Arab-x-AZE-derbend', 'x-whatever',
+  'qaa-Qaaa-QM-x-southern'
+];
+
+for (var tag of canonicalTags) {
+  var uppedTag = tag.toUpperCase();
+  var expected = `Expect tag (${uppedTag}) to be in canonical form (${tag}).`;
+  data.jsonText = JSON.stringify({
+    lang: uppedTag
+  });
+  var result = processor.process(data);
+  todo_is(result.lang, tag, expected);
+}
+
+</script>
