@@ -187,7 +187,7 @@ public:
   void Fill(const CanvasPath& path, const CanvasWindingRule& winding);
   void Stroke();
   void Stroke(const CanvasPath& path);
-  void DrawFocusIfNeeded(mozilla::dom::Element& element);
+  void DrawFocusIfNeeded(mozilla::dom::Element& element, ErrorResult& aRv);
   bool DrawCustomFocusRing(mozilla::dom::Element& element);
   void Clip(const CanvasWindingRule& winding);
   void Clip(const CanvasPath& path, const CanvasWindingRule& winding);
@@ -363,7 +363,8 @@ public:
   void SetMozDash(JSContext* cx, const JS::Value& mozDash,
                   mozilla::ErrorResult& error);
 
-  void SetLineDash(const Sequence<double>& mSegments);
+  void SetLineDash(const Sequence<double>& mSegments,
+                   mozilla::ErrorResult& aRv);
   void GetLineDash(nsTArray<double>& mSegments) const;
 
   void SetLineDashOffset(double mOffset);
