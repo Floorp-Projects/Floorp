@@ -52,6 +52,7 @@
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/Snprintf.h"
 #include "nsRefPtrHashtable.h"
 #include "TouchEvents.h"
 #include "WritingModes.h"
@@ -77,6 +78,7 @@ static int32_t gNumWidgets;
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 static nsRefPtrHashtable<nsVoidPtrHashKey, nsIWidget>* sPluginWidgetList;
 #endif
+
 nsIRollupListener* nsBaseWidget::gRollupListener = nullptr;
 
 using namespace mozilla::layers;
@@ -1970,7 +1972,7 @@ case _value: eventName.AssignLiteral(_name) ; break
     {
       char buf[32];
 
-      sprintf(buf,"UNKNOWN: %d",aGuiEvent->message);
+      snprintf_literal(buf,"UNKNOWN: %d",aGuiEvent->message);
 
       CopyASCIItoUTF16(buf, eventName);
     }

@@ -95,6 +95,7 @@
 #include "mozilla/double-conversion.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Snprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
@@ -388,7 +389,7 @@ public:
   void IntProperty(const char* aName, int64_t aInt)
   {
     char buf[64];
-    sprintf(buf, "%" PRId64, aInt);
+    snprintf_literal(buf, "%" PRId64, aInt);
     Scalar(aName, buf);
   }
 
