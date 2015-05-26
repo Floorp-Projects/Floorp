@@ -48,7 +48,7 @@ void qcms_transform_data_rgb_out_lut_sse1(qcms_transform *transform,
     const __m128 scale = _mm_load_ps(floatScaleX4);
 
     /* working variables */
-    __m128 vec_r, vec_g, vec_b, result, result_hi;
+    __m128 vec_r, vec_g, vec_b, result;
 
     /* CYA */
     if (!length)
@@ -84,11 +84,9 @@ void qcms_transform_data_rgb_out_lut_sse1(qcms_transform *transform,
         result = _mm_mul_ps(vec_r, scale);
 
         /* store calc'd output tables indices */
-        /* Bug 1163740 temporary investigation:
-         * Write output[0] last, to keep |result| in a register in minidumps */
-        result_hi = _mm_movehl_ps(result, result);
-        *((__m64 *)&output[2]) = _mm_cvtps_pi32(result_hi);
         *((__m64 *)&output[0]) = _mm_cvtps_pi32(result);
+        result = _mm_movehl_ps(result, result);
+        *((__m64 *)&output[2]) = _mm_cvtps_pi32(result) ;
 
         /* load for next loop while store completes */
         vec_r = _mm_load_ss(&igtbl_r[src[0]]);
@@ -167,7 +165,7 @@ void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
     const __m128 scale = _mm_load_ps(floatScaleX4);
 
     /* working variables */
-    __m128 vec_r, vec_g, vec_b, result, result_hi;
+    __m128 vec_r, vec_g, vec_b, result;
     unsigned char alpha;
 
     /* CYA */
@@ -208,11 +206,10 @@ void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
         vec_r  = _mm_min_ps(max, vec_r);
         result = _mm_mul_ps(vec_r, scale);
 
-        /* Bug 1163740 temporary investigation:
-         * Write output[0] last, to keep |result| in a register in minidumps */
-        result_hi = _mm_movehl_ps(result, result);
-        *((__m64 *)&output[2]) = _mm_cvtps_pi32(result_hi);
+        /* store calc'd output tables indices */
         *((__m64 *)&output[0]) = _mm_cvtps_pi32(result);
+        result = _mm_movehl_ps(result, result);
+        *((__m64 *)&output[2]) = _mm_cvtps_pi32(result);
 
         /* load gamma values for next loop while store completes */
         vec_r = _mm_load_ss(&igtbl_r[src[0]]);
