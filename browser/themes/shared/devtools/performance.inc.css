@@ -154,12 +154,12 @@
 }
 
 #performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message {
-  display: auto;
+  display: initial;
   opacity: 0.5;
 
 }
 #performance-view[e10s="unsupported"] .realtime-disabled-message {
-  display: auto;
+  display: initial;
   opacity: 0.5;
 }
 
@@ -169,19 +169,19 @@
 }
 
 #details-pane-container[buffer-status="in-progress"] .buffer-status-message {
-  display: auto;
+  display: initial;
   opacity: 0.5;
 }
 
 #details-pane-container[buffer-status="full"] .buffer-status-message {
-  display: auto;
+  display: initial;
   color: var(--theme-highlight-red);
   font-weight: bold;
   opacity: 1;
 }
 
 #details-pane-container[buffer-status="full"] .buffer-status-message-full {
-  display: auto;
+  display: initial;
 }
 
 /* Profile call tree */
