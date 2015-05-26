@@ -5,7 +5,7 @@
  * Tests that a recording that does not have a rAF cycle fails after timeout.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(NO_CANVAS_URL);
   let { window, EVENTS, $, SnapshotsListView } = panel.panelWin;
 

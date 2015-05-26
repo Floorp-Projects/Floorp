@@ -95,6 +95,10 @@ MobileMessageCallback::~MobileMessageCallback()
 nsresult
 MobileMessageCallback::NotifySuccess(JS::Handle<JS::Value> aResult, bool aAsync)
 {
+  if (NS_WARN_IF(!mDOMRequest->GetOwner())) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (aAsync) {
     nsCOMPtr<nsIDOMRequestService> rs =
       do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
@@ -126,6 +130,10 @@ MobileMessageCallback::NotifySuccess(nsISupports *aMessage, bool aAsync)
 nsresult
 MobileMessageCallback::NotifyError(int32_t aError, DOMError *aDetailedError, bool aAsync)
 {
+  if (NS_WARN_IF(!mDOMRequest->GetOwner())) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (aAsync) {
     NS_ASSERTION(!aDetailedError,
       "No Support to FireDetailedErrorAsync() in nsIDOMRequestService!");
@@ -156,18 +164,23 @@ MobileMessageCallback::NotifyMessageSent(nsISupports *aMessage)
 NS_IMETHODIMP
 MobileMessageCallback::NotifySendMessageFailed(int32_t aError, nsISupports *aMessage)
 {
+  nsCOMPtr<nsPIDOMWindow> window = mDOMRequest->GetOwner();
+  if (NS_WARN_IF(!window)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsRefPtr<DOMMobileMessageError> domMobileMessageError;
   if (aMessage) {
     nsAutoString errorStr = ConvertErrorCodeToErrorString(aError);
     nsCOMPtr<nsIDOMMozSmsMessage> smsMsg = do_QueryInterface(aMessage);
     if (smsMsg) {
       domMobileMessageError =
-        new DOMMobileMessageError(mDOMRequest->GetOwner(), errorStr, smsMsg);
+        new DOMMobileMessageError(window, errorStr, smsMsg);
     }
     else {
       nsCOMPtr<nsIDOMMozMmsMessage> mmsMsg = do_QueryInterface(aMessage);
       domMobileMessageError =
-        new DOMMobileMessageError(mDOMRequest->GetOwner(), errorStr, mmsMsg);
+        new DOMMobileMessageError(window, errorStr, mmsMsg);
     }
     NS_ASSERTION(domMobileMessageError, "Invalid DOMMobileMessageError!");
   }

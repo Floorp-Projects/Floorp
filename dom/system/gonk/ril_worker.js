@@ -1457,10 +1457,6 @@ RilObject.prototype = {
     options.langIndex = options.langIndex || PDU_NL_IDENTIFIER_DEFAULT;
     options.langShiftIndex = options.langShiftIndex || PDU_NL_IDENTIFIER_DEFAULT;
 
-    if (!options.retryCount) {
-      options.retryCount = 0;
-    }
-
     if (!options.segmentSeq) {
       // Fist segment to send
       options.segmentSeq = 1;
@@ -4024,15 +4020,6 @@ RilObject.prototype = {
                            options.errorMsg);
       }
 
-      if (options.errorMsg === GECKO_ERROR_SMS_SEND_FAIL_RETRY &&
-          options.retryCount < SMS_RETRY_MAX) {
-        options.retryCount++;
-        // TODO: bug 736702 TP-MR, retry interval, retry timeout
-        this.sendSMS(options);
-        return;
-      }
-
-      // Fallback to default error handling if it meets max retry count.
       this.sendChromeMessage({
         rilMessageType: options.rilMessageType,
         rilMessageToken: options.rilMessageToken,

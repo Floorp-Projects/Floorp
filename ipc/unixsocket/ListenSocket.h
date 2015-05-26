@@ -14,16 +14,17 @@ namespace mozilla {
 namespace ipc {
 
 class ConnectionOrientedSocket;
+class ListenSocketConsumer;
 class ListenSocketIO;
 class UnixSocketConnector;
 
-class ListenSocket : public SocketBase
+class ListenSocket final : public SocketBase
 {
 protected:
   virtual ~ListenSocket();
 
 public:
-  ListenSocket();
+  ListenSocket(ListenSocketConsumer* aConsumer, int aIndex);
 
   /**
    * Starts a task on the socket that will try to accept a new connection
@@ -52,8 +53,13 @@ public:
   //
 
   void Close() override;
+  void OnConnectSuccess() override;
+  void OnConnectError() override;
+  void OnDisconnect() override;
 
 private:
+  ListenSocketConsumer* mConsumer;
+  int mIndex;
   ListenSocketIO* mIO;
 };
 
