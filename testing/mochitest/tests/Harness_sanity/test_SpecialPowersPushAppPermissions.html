@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers extension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="pushPermissionsToSelf();">
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Used to access App's information like appId
+const gAppsService = SpecialPowers.Cc["@mozilla.org/AppsService;1"]
+                     .getService(SpecialPowers.Ci.nsIAppsService);
+var gApp;
+const gAppSource = 'app.html';
+const FILE_APP = 'file_app.sjs';
+const WEBAPP_TEMPLATE = 'file_app.template.webapp';
+const DIR_PATH = 'testing/mochitest/tests/Harness_sanity/';
+// The base path must be same as the gBasePath in file_app.sjs and the
+// launch_path before TESTTOKEN in file_app.template.webapp
+const BASE_PATH = '/tests/' + DIR_PATH;
+const FILE_APP_PATH = BASE_PATH + FILE_APP;
+
+SimpleTest.waitForExplicitFinish();
+
+function cbError(e) {
+  ok(false, "Error callback invoked: " + this.error.name);
+  SimpleTest.finish();
+}
+
+function pushPermissionsToSelf() {
+  SpecialPowers.pushPermissions([
+      { "type": "pAppPermission", "allow": true, "context": document }
+    ], allowManagingApps);
+}
+
+// Setup the prefrences and permissions
+function allowManagingApps() {
+  SpecialPowers.pushPermissions([
+      { "type": "webapps-manage", "allow": true, "context": document }
+    ], function() {
+      SpecialPowers.setAllAppsLaunchable(true);
+      // No confirmation needed when an app is installed and uninstalled.
+      SpecialPowers.autoConfirmAppInstall(() => {
+        SpecialPowers.autoConfirmAppUninstall(
+          function() {
+            installApp(gAppSource, WEBAPP_TEMPLATE);
+          }
+        );
+      });
+    }
+  );
+}
+
+function installApp(aTestToken, aTemplate) {
+  // Install App from manifest
+  var hostedManifestURL = window.location.origin + '/' + FILE_APP_PATH +
+                          '?testToken=' + aTestToken + '&template=' + aTemplate;
+  var request = navigator.mozApps.install(hostedManifestURL);
+  request.onerror = cbError;
+  request.onsuccess = function() {
+    // Get installed app
+    gApp = request.result; // Assign to global variable
+    pushPermissionsToApp();
+  }
+}
+
+function pushPermissionsToApp() {
+  var appId = gAppsService.getAppLocalIdByManifestURL(gApp.manifestURL);
+  var context = { url: gApp.origin,
+                  appId: appId,
+                  isInBrowserElement: false };
+  SpecialPowers.pushPermissions([
+      { "type": "pAppPermission", "allow": true, "context": context }
+    ], testPermissionsForApp);
+}
+
+function testPermissionsForApp() {
+  var appId = gAppsService.getAppLocalIdByManifestURL(gApp.manifestURL);
+  var context = { url: gApp.origin,
+                  appId: appId,
+                  isInBrowserElement: false };
+  ok(SpecialPowers.hasPermission('pAppPermission', context), 'pAppPermission should have permission');
+  uninstallApp();
+}
+
+function uninstallApp() {
+  var request = navigator.mozApps.mgmt.uninstall(gApp);
+  request.onerror = cbError;
+  request.onsuccess = function() {
+    testPermissionsForSelfAndApp();
+  }
+}
+
+function testPermissionsForSelfAndApp() {
+  var appId = gAppsService.getAppLocalIdByManifestURL(gApp.manifestURL);
+  var context = { url: gApp.origin,
+                  appId: appId,
+                  isInBrowserElement: false };
+  ok(!SpecialPowers.hasPermission('pAppPermission', context), 'pAppPermission should not have permission');
+
+  ok(SpecialPowers.hasPermission('pAppPermission', document), 'pAppPermission should have permission');
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
+

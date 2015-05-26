@@ -30,13 +30,13 @@ partial interface Performance {
 };
 
 // http://www.w3.org/TR/performance-timeline/#sec-window.performance-attribute
-[Exposed=Window]
+[Exposed=(Window,Worker)]
 partial interface Performance {
-  [Pref="dom.enable_resource_timing"]
+  [Func="nsPerformance::IsEnabled"]
   PerformanceEntryList getEntries();
-  [Pref="dom.enable_resource_timing"]
+  [Func="nsPerformance::IsEnabled"]
   PerformanceEntryList getEntriesByType(DOMString entryType);
-  [Pref="dom.enable_resource_timing"]
+  [Func="nsPerformance::IsEnabled"]
   PerformanceEntryList getEntriesByName(DOMString name, optional DOMString
     entryType);
 };
@@ -44,11 +44,11 @@ partial interface Performance {
 // http://www.w3.org/TR/resource-timing/#extensions-performance-interface
 [Exposed=Window]
 partial interface Performance {
-  [Pref="dom.enable_resource_timing"]
+  [Func="nsPerformance::IsEnabled"]
   void clearResourceTimings();
-  [Pref="dom.enable_resource_timing"]
+  [Func="nsPerformance::IsEnabled"]
   void setResourceTimingBufferSize(unsigned long maxSize);
-  [Pref="dom.enable_resource_timing"]
+  [Func="nsPerformance::IsEnabled"]
   attribute EventHandler onresourcetimingbufferfull;
 };
 
@@ -60,14 +60,14 @@ partial interface Performance {
 };
 
 // http://www.w3.org/TR/user-timing/
-[Exposed=Window]
+[Exposed=(Window,Worker)]
 partial interface Performance {
-  [Pref="dom.enable_user_timing", Throws]
+  [Func="nsPerformance::IsEnabled", Throws]
   void mark(DOMString markName);
-  [Pref="dom.enable_user_timing"]
+  [Func="nsPerformance::IsEnabled"]
   void clearMarks(optional DOMString markName);
-  [Pref="dom.enable_user_timing", Throws]
+  [Func="nsPerformance::IsEnabled", Throws]
   void measure(DOMString measureName, optional DOMString startMark, optional DOMString endMark);
-  [Pref="dom.enable_user_timing"]
+  [Func="nsPerformance::IsEnabled"]
   void clearMeasures(optional DOMString measureName);
 };

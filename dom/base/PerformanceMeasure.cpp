@@ -9,15 +9,16 @@
 
 using namespace mozilla::dom;
 
-PerformanceMeasure::PerformanceMeasure(nsPerformance* aPerformance,
+PerformanceMeasure::PerformanceMeasure(nsISupports* aParent,
                                        const nsAString& aName,
                                        DOMHighResTimeStamp aStartTime,
                                        DOMHighResTimeStamp aEndTime)
-: PerformanceEntry(aPerformance, aName, NS_LITERAL_STRING("measure")),
+: PerformanceEntry(aParent, aName, NS_LITERAL_STRING("measure")),
   mStartTime(aStartTime),
   mDuration(aEndTime - aStartTime)
 {
-  MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
+  // mParent is null in workers.
+  MOZ_ASSERT(mParent || !NS_IsMainThread());
 }
 
 PerformanceMeasure::~PerformanceMeasure()

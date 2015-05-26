@@ -26,6 +26,18 @@ using base::ProcessId;
 namespace mozilla {
 namespace ipc {
 
+ProtocolCloneContext::ProtocolCloneContext()
+  : mNeckoParent(nullptr)
+{}
+
+ProtocolCloneContext::~ProtocolCloneContext()
+{}
+
+void ProtocolCloneContext::SetContentParent(ContentParent* aContentParent)
+{
+  mContentParent = aContentParent;
+}
+
 static StaticMutex gProtocolMutex;
 
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId)

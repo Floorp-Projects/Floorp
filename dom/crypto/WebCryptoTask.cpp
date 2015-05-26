@@ -1962,7 +1962,9 @@ private:
 
       if (!mKeyUsages.IsEmpty()) {
         mJwk.mKey_ops.Construct();
-        mJwk.mKey_ops.Value().AppendElements(mKeyUsages);
+        if (!mJwk.mKey_ops.Value().AppendElements(mKeyUsages)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
       }
 
       return NS_OK;

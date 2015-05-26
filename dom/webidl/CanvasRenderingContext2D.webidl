@@ -92,7 +92,7 @@ interface CanvasRenderingContext2D {
   void fill(Path2D path, optional CanvasWindingRule winding = "nonzero");
   void stroke();
   void stroke(Path2D path);
-  [Pref="canvas.focusring.enabled"] void drawFocusIfNeeded(Element element);
+  [Pref="canvas.focusring.enabled", Throws] void drawFocusIfNeeded(Element element);
 // NOT IMPLEMENTED  void drawSystemFocusRing(Path path, HTMLElement element);
   [Pref="canvas.customfocusring.enabled"] boolean drawCustomFocusRing(Element element);
 // NOT IMPLEMENTED  boolean drawCustomFocusRing(Path path, HTMLElement element);
@@ -246,7 +246,7 @@ interface CanvasDrawingStyles {
            attribute double miterLimit; // (default 10)
 
   // dashed lines
-    [LenientFloat] void setLineDash(sequence<double> segments); // default empty
+    [LenientFloat, Throws] void setLineDash(sequence<double> segments); // default empty
     sequence<double> getLineDash();
     [LenientFloat] attribute double lineDashOffset;
 

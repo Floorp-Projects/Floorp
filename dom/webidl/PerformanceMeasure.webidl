@@ -7,6 +7,7 @@
  * http://www.w3.org/TR/user-timing/#performancemeasure
  */
 
+[Exposed=(Window,Worker)]
 interface PerformanceMeasure : PerformanceEntry
 {
 };

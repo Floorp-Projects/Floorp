@@ -343,26 +343,38 @@ WebGL2Context::GetInternalformatParameter(JSContext*, GLenum target, GLenum inte
 
 // Map attachments intended for the default buffer, to attachments for a non-
 // default buffer.
-static void
+static bool
 TranslateDefaultAttachments(const dom::Sequence<GLenum>& in, dom::Sequence<GLenum>* out)
 {
     for (size_t i = 0; i < in.Length(); i++) {
         switch (in[i]) {
             case LOCAL_GL_COLOR:
-                out->AppendElement(LOCAL_GL_COLOR_ATTACHMENT0);
+                if (!out->AppendElement(LOCAL_GL_COLOR_ATTACHMENT0)) {
+                    return false;
+                }
                 break;
+
             case LOCAL_GL_DEPTH:
-                out->AppendElement(LOCAL_GL_DEPTH_ATTACHMENT);
+                if (!out->AppendElement(LOCAL_GL_DEPTH_ATTACHMENT)) {
+                    return false;
+                }
                 break;
+
             case LOCAL_GL_STENCIL:
-                out->AppendElement(LOCAL_GL_STENCIL_ATTACHMENT);
+                if (!out->AppendElement(LOCAL_GL_STENCIL_ATTACHMENT)) {
+                    return false;
+                }
                 break;
         }
     }
+
+    return true;
 }
 
 void
-WebGL2Context::InvalidateFramebuffer(GLenum target, const dom::Sequence<GLenum>& attachments)
+WebGL2Context::InvalidateFramebuffer(GLenum target,
+                                     const dom::Sequence<GLenum>& attachments,
+                                     ErrorResult& aRv)
 {
     if (IsContextLost())
         return;
@@ -407,7 +419,11 @@ WebGL2Context::InvalidateFramebuffer(GLenum target, const dom::Sequence<GLenum>&
 
     if (!fb && !isDefaultFB) {
         dom::Sequence<GLenum> tmpAttachments;
-        TranslateDefaultAttachments(attachments, &tmpAttachments);
+        if (!TranslateDefaultAttachments(attachments, &tmpAttachments)) {
+            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            return;
+        }
+
         gl->fInvalidateFramebuffer(target, tmpAttachments.Length(), tmpAttachments.Elements());
     } else {
         gl->fInvalidateFramebuffer(target, attachments.Length(), attachments.Elements());
@@ -416,7 +432,8 @@ WebGL2Context::InvalidateFramebuffer(GLenum target, const dom::Sequence<GLenum>&
 
 void
 WebGL2Context::InvalidateSubFramebuffer(GLenum target, const dom::Sequence<GLenum>& attachments,
-                                        GLint x, GLint y, GLsizei width, GLsizei height)
+                                        GLint x, GLint y, GLsizei width, GLsizei height,
+                                        ErrorResult& aRv)
 {
     if (IsContextLost())
         return;
@@ -461,7 +478,11 @@ WebGL2Context::InvalidateSubFramebuffer(GLenum target, const dom::Sequence<GLenu
 
     if (!fb && !isDefaultFB) {
         dom::Sequence<GLenum> tmpAttachments;
-        TranslateDefaultAttachments(attachments, &tmpAttachments);
+        if (!TranslateDefaultAttachments(attachments, &tmpAttachments)) {
+            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+            return;
+        }
+
         gl->fInvalidateSubFramebuffer(target, tmpAttachments.Length(), tmpAttachments.Elements(),
                                       x, y, width, height);
     } else {

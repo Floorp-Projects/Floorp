@@ -14,6 +14,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsIJARChannel.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIMutableArray.h"
 #include "nsIUploadChannel2.h"
@@ -2594,47 +2595,8 @@ public:
     rv = uri->GetSpec(mSpec);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
-    NS_ENSURE_TRUE(httpChannel, NS_ERROR_NOT_AVAILABLE);
-
-    rv = httpChannel->GetRequestMethod(mMethod);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     uint32_t loadFlags;
     rv = channel->GetLoadFlags(&loadFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);
-    NS_ENSURE_TRUE(internalChannel, NS_ERROR_NOT_AVAILABLE);
-
-    uint32_t mode;
-    internalChannel->GetCorsMode(&mode);
-    switch (mode) {
-      case nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN:
-        mRequestMode = RequestMode::Same_origin;
-        break;
-      case nsIHttpChannelInternal::CORS_MODE_NO_CORS:
-        mRequestMode = RequestMode::No_cors;
-        break;
-      case nsIHttpChannelInternal::CORS_MODE_CORS:
-      case nsIHttpChannelInternal::CORS_MODE_CORS_WITH_FORCED_PREFLIGHT:
-        mRequestMode = RequestMode::Cors;
-        break;
-      default:
-        MOZ_CRASH("Unexpected CORS mode");
-    }
-
-    if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
-      mRequestCredentials = RequestCredentials::Omit;
-    } else {
-      bool includeCrossOrigin;
-      internalChannel->GetCorsIncludeCredentials(&includeCrossOrigin);
-      if (includeCrossOrigin) {
-        mRequestCredentials = RequestCredentials::Include;
-      }
-    }
-
-    rv = httpChannel->VisitRequestHeaders(this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILoadInfo> loadInfo;
@@ -2643,11 +2605,60 @@ public:
 
     mContentPolicyType = loadInfo->GetContentPolicyType();
 
-    nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);
-    if (uploadChannel) {
-      MOZ_ASSERT(!mUploadStream);
-      rv = uploadChannel->CloneUploadStream(getter_AddRefs(mUploadStream));
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+    if (httpChannel) {
+      rv = httpChannel->GetRequestMethod(mMethod);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);
+      NS_ENSURE_TRUE(internalChannel, NS_ERROR_NOT_AVAILABLE);
+
+      uint32_t mode;
+      internalChannel->GetCorsMode(&mode);
+      switch (mode) {
+        case nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN:
+          mRequestMode = RequestMode::Same_origin;
+          break;
+        case nsIHttpChannelInternal::CORS_MODE_NO_CORS:
+          mRequestMode = RequestMode::No_cors;
+          break;
+        case nsIHttpChannelInternal::CORS_MODE_CORS:
+        case nsIHttpChannelInternal::CORS_MODE_CORS_WITH_FORCED_PREFLIGHT:
+          mRequestMode = RequestMode::Cors;
+          break;
+        default:
+          MOZ_CRASH("Unexpected CORS mode");
+      }
+
+      if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
+        mRequestCredentials = RequestCredentials::Omit;
+      } else {
+        bool includeCrossOrigin;
+        internalChannel->GetCorsIncludeCredentials(&includeCrossOrigin);
+        if (includeCrossOrigin) {
+          mRequestCredentials = RequestCredentials::Include;
+        }
+      }
+
+      rv = httpChannel->VisitRequestHeaders(this);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);
+      if (uploadChannel) {
+        MOZ_ASSERT(!mUploadStream);
+        rv = uploadChannel->CloneUploadStream(getter_AddRefs(mUploadStream));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    } else {
+      nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(channel);
+      // If it is not an HTTP channel it must be a JAR one.
+      NS_ENSURE_TRUE(jarChannel, NS_ERROR_NOT_AVAILABLE);
+
+      mMethod = "GET";
+
+      if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
+        mRequestCredentials = RequestCredentials::Omit;
+      }
     }
 
     return NS_OK;

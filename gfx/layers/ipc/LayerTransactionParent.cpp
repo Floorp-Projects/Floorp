@@ -784,6 +784,22 @@ LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aSc
 }
 
 bool
+LayerTransactionParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollID,
+                                         const float& aValue)
+{
+  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+    return false;
+  }
+
+  AsyncPanZoomController* controller = GetAPZCForViewID(mRoot, aScrollID);
+  if (!controller) {
+    return false;
+  }
+  controller->SetTestAsyncZoom(LayerToParentLayerScale(aValue));
+  return true;
+}
+
+bool
 LayerTransactionParent::RecvGetAPZTestData(APZTestData* aOutData)
 {
   mShadowLayersManager->GetAPZTestData(this, aOutData);

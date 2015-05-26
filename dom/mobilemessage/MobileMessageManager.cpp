@@ -599,13 +599,17 @@ MobileMessageManager::DispatchTrustedDeletedEventToSelf(nsISupports* aDeletedInf
     uint32_t msgIdLength = info->GetData().deletedMessageIds().Length();
     if (msgIdLength) {
       Sequence<int32_t>& deletedMsgIds = init.mDeletedMessageIds.SetValue();
-      deletedMsgIds.AppendElements(info->GetData().deletedMessageIds());
+      if (!deletedMsgIds.AppendElements(info->GetData().deletedMessageIds())) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
 
     uint32_t threadIdLength = info->GetData().deletedThreadIds().Length();
     if (threadIdLength) {
       Sequence<uint64_t>& deletedThreadIds = init.mDeletedThreadIds.SetValue();
-      deletedThreadIds.AppendElements(info->GetData().deletedThreadIds());
+      if (!deletedThreadIds.AppendElements(info->GetData().deletedThreadIds())) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
 
     nsRefPtr<MozMessageDeletedEvent> event =

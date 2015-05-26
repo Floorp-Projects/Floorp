@@ -25,20 +25,12 @@ const PLDHashTableOps nsCommandParams::sHashOps =
 NS_IMPL_ISUPPORTS(nsCommandParams, nsICommandParams)
 
 nsCommandParams::nsCommandParams()
+  : mValuesHash(&sHashOps, sizeof(HashEntry), 2)
 {
-  // init the hash table later
 }
 
 nsCommandParams::~nsCommandParams()
 {
-  PL_DHashTableFinish(&mValuesHash);
-}
-
-nsresult
-nsCommandParams::Init()
-{
-  PL_DHashTableInit(&mValuesHash, &sHashOps, sizeof(HashEntry), 2);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

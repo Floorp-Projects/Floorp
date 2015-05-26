@@ -1226,25 +1226,21 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
-    // When we mouseenter the tab, the tab's cursor should become the current
-    // cursor.  When we mouseexit, we stop.
-    if (event.message == NS_MOUSE_ENTER_WIDGET ||
-        event.message == NS_MOUSE_OVER) {
+    // When we mouseenter the tab, the tab's cursor should
+    // become the current cursor.  When we mouseexit, we stop.
+    if (NS_MOUSE_ENTER_WIDGET == event.message) {
       mTabSetsCursor = true;
       if (mCustomCursor) {
         widget->SetCursor(mCustomCursor, mCustomCursorHotspotX, mCustomCursorHotspotY);
       } else if (mCursor != nsCursor(-1)) {
         widget->SetCursor(mCursor);
       }
-      // We don't actually want to forward NS_MOUSE_ENTER_WIDGET messages.
-      return true;
-    } else if (event.message == NS_MOUSE_EXIT_WIDGET ||
-               event.message == NS_MOUSE_OUT) {
+    } else if (NS_MOUSE_EXIT_WIDGET == event.message) {
       mTabSetsCursor = false;
     }
   }
 
-  if (event.message == NS_MOUSE_MOVE) {
+  if (NS_MOUSE_MOVE == event.message) {
     return SendRealMouseMoveEvent(event);
   }
   return SendRealMouseButtonEvent(event);

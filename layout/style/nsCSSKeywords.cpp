@@ -27,24 +27,17 @@ nsCSSKeywords::AddRefTable(void)
 {
   if (0 == gKeywordTableRefCount++) {
     NS_ASSERTION(!gKeywordTable, "pre existing array!");
-    gKeywordTable = new nsStaticCaseInsensitiveNameTable();
-    if (gKeywordTable) {
+    gKeywordTable =
+      new nsStaticCaseInsensitiveNameTable(kCSSRawKeywords, eCSSKeyword_COUNT);
 #ifdef DEBUG
-    {
-      // let's verify the table...
-      int32_t index = 0;
-      for (; index < eCSSKeyword_COUNT && kCSSRawKeywords[index]; ++index) {
-        nsAutoCString temp1(kCSSRawKeywords[index]);
-        nsAutoCString temp2(kCSSRawKeywords[index]);
-        ToLowerCase(temp1);
-        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
-        NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in table");
-      }
-      NS_ASSERTION(index == eCSSKeyword_COUNT, "kCSSRawKeywords and eCSSKeyword_COUNT are out of sync");
+    // Partially verify the entries.
+    int32_t index = 0;
+    for (; index < eCSSKeyword_COUNT && kCSSRawKeywords[index]; ++index) {
+      nsAutoCString temp(kCSSRawKeywords[index]);
+      NS_ASSERTION(-1 == temp.FindChar('_'), "underscore char in table");
     }
-#endif      
-      gKeywordTable->Init(kCSSRawKeywords, eCSSKeyword_COUNT); 
-    }
+    NS_ASSERTION(index == eCSSKeyword_COUNT, "kCSSRawKeywords and eCSSKeyword_COUNT are out of sync");
+#endif
   }
 }
 
