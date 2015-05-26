@@ -132,6 +132,9 @@ public:
                            bool aNotify) override;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
                              bool aNotify) override;
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue,
+                                bool aNotify) override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -1064,7 +1067,12 @@ protected:
   // mSrcStream.
   nsRefPtr<StreamSizeListener> mMediaStreamSizeListener;
 
-  // Holds a reference to the MediaSource supplying data for playback.
+  // Holds a reference to the MediaSource, if any, referenced by the src
+  // attribute on the media element.
+  nsRefPtr<MediaSource> mSrcMediaSource;
+
+  // Holds a reference to the MediaSource supplying data for playback.  This
+  // may either match mSrcMediaSource or come from Source element children.
   nsRefPtr<MediaSource> mMediaSource;
 
   // Holds a reference to the first channel we open to the media resource.

@@ -430,6 +430,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLMediaElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaSource)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrcMediaSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrcStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlaybackStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrcAttrStream)
@@ -458,6 +459,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSrcAttrStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaSource)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSrcMediaSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourcePointer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceLoadCandidate)
@@ -2522,6 +2524,33 @@ nsresult HTMLMediaElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
   }
 
   return rv;
+}
+
+nsresult
+HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue, bool aNotify)
+{
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
+    mSrcMediaSource = nullptr;
+    if (aValue) {
+      nsString srcStr = aValue->GetStringValue();
+      nsCOMPtr<nsIURI> uri;
+      NewURIFromString(srcStr, getter_AddRefs(uri));
+      if (uri && IsMediaSourceURI(uri)) {
+        nsresult rv =
+          NS_GetSourceForMediaSourceURI(uri, getter_AddRefs(mSrcMediaSource));
+        if (NS_FAILED(rv)) {
+          nsAutoString spec;
+          GetCurrentSrc(spec);
+          const char16_t* params[] = { spec.get() };
+          ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
+        }
+      }
+    }
+  }
+
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName,
+                                            aValue, aNotify);
 }
 
 nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
