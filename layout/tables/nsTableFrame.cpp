@@ -71,12 +71,14 @@ struct nsTableReflowState {
   nscoord y;
 
   nsTableReflowState(const nsHTMLReflowState& aReflowState,
-                     nsTableFrame&            aTableFrame,
                      nscoord                  aAvailWidth,
                      nscoord                  aAvailHeight)
     : reflowState(aReflowState)
   {
-    nsTableFrame* table = static_cast<nsTableFrame*>(aTableFrame.FirstInFlow());
+    MOZ_ASSERT(reflowState.frame->GetType() == nsGkAtoms::tableFrame,
+               "nsTableReflowState should only be created for nsTableFrame");
+    nsTableFrame* table =
+      static_cast<nsTableFrame*>(reflowState.frame->FirstInFlow());
     nsMargin borderPadding = table->GetChildAreaOffset(&reflowState);
 
     x = borderPadding.left + table->GetColSpacing(-1);
@@ -2035,7 +2037,7 @@ nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
   // and our reflow height to our avail height minus border, padding, cellspacing
   aDesiredSize.Width() = aReflowState.ComputedWidth() +
                        aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  nsTableReflowState reflowState(aReflowState, *this,
+  nsTableReflowState reflowState(aReflowState,
                                  aDesiredSize.Width(), aAvailHeight);
   ReflowChildren(reflowState, aStatus, aLastChildReflowed,
                  aDesiredSize.mOverflowAreas);
