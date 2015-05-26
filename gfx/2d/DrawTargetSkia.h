@@ -125,7 +125,6 @@ public:
 
 private:
   friend class SourceSurfaceSkia;
-  void SnapshotDestroyed();
 
   void MarkChanged();
 
@@ -142,7 +141,7 @@ private:
 
   IntSize mSize;
   RefPtrSkia<SkCanvas> mCanvas;
-  SourceSurfaceSkia* mSnapshot;
+  RefPtr<SourceSurfaceSkia> mSnapshot;
 };
 
 }
