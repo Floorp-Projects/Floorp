@@ -43,25 +43,6 @@ private:
   NfcSocketListener* mListener;
 };
 
-class NfcConsumer final : public mozilla::ipc::StreamSocket
-{
-public:
-  NfcConsumer(NfcSocketListener* aListener);
-
-  void Shutdown();
-  bool PostToNfcDaemon(const uint8_t* aData, size_t aSize);
-
-private:
-  void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
-
-  void OnConnectSuccess() override;
-  void OnConnectError() override;
-  void OnDisconnect() override;
-
-private:
-  NfcSocketListener* mListener;
-};
-
 } // namespace ipc
 } // namepsace mozilla
 

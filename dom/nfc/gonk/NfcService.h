@@ -9,6 +9,7 @@
 
 #include "mozilla/ipc/Nfc.h"
 #include "mozilla/ipc/SocketBase.h"
+#include "mozilla/ipc/StreamSocketConsumer.h"
 #include "nsCOMPtr.h"
 #include "nsINfcService.h"
 #include "NfcMessageHandler.h"
@@ -20,8 +21,10 @@ namespace dom {
 class NfcEventOptions;
 } // namespace dom
 
-class NfcService final : public nsINfcService,
-                         public mozilla::ipc::NfcSocketListener
+class NfcService final
+  : public nsINfcService
+  , public mozilla::ipc::StreamSocketConsumer
+  , public mozilla::ipc::NfcSocketListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -30,6 +33,8 @@ public:
   static already_AddRefed<NfcService> FactoryCreate();
 
   void DispatchNfcEvent(const mozilla::dom::NfcEventOptions& aOptions);
+
+  bool PostToNfcDaemon(const uint8_t* aData, size_t aSize);
 
   virtual void ReceiveSocketData(
     nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
@@ -42,6 +47,15 @@ public:
     return mThread;
   }
 
+  // Methods for |StreamSocketConsumer|
+  //
+
+  void ReceiveSocketData(
+    int aIndex, nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
+  void OnConnectSuccess(int aIndex) override;
+  void OnConnectError(int aIndex) override;
+  void OnDisconnect(int aIndex) override;
+
 private:
   NfcService();
   ~NfcService();
@@ -49,7 +63,7 @@ private:
   nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<nsINfcGonkEventListener> mListener;
   nsRefPtr<mozilla::ipc::NfcListenSocket> mListenSocket;
-  nsRefPtr<mozilla::ipc::NfcConsumer> mConsumer;
+  nsRefPtr<mozilla::ipc::StreamSocket> mStreamSocket;
   nsAutoPtr<NfcMessageHandler> mHandler;
   nsCString mListenSocketName;
 };
