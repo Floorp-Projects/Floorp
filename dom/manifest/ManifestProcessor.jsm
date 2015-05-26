@@ -21,7 +21,7 @@
  */
 /*exported EXPORTED_SYMBOLS */
 /*JSLint options in comment below: */
-/*globals Components, XPCOMUtils*/
+/*globals Components, XPCOMUtils, Intl*/
 'use strict';
 this.EXPORTED_SYMBOLS = ['ManifestProcessor']; // jshint ignore:line
 const imports = {};
@@ -100,6 +100,7 @@ ManifestProcessor.prototype = {
     const extractor = new ManifestValueExtractor(console);
     const imgObjProcessor = new ImgObjProcessor(console, extractor);
     const processedManifest = {
+      'lang': processLangMember(rawManifest),
       'start_url': processStartURLMember(rawManifest, manifestURL, docURL),
       'display': processDisplayMember(rawManifest),
       'orientation': processOrientationMember(rawManifest),
@@ -246,7 +247,26 @@ ManifestProcessor.prototype = {
       };
       return extractor.extractColorValue(spec);
     }
+
+    function processLangMember(aManifest) {
+      const spec = {
+        objectName: 'manifest',
+        object: aManifest,
+        property: 'lang',
+        expectedType: 'string',
+        trim: true
+      };
+      let tag = extractor.extractValue(spec);
+      // TODO: Check if tag is structurally valid.
+      //       Cannot do this because we don't support Intl API on Android.
+      //       https://bugzilla.mozilla.org/show_bug.cgi?id=864843
+      //       https://github.com/tc39/ecma402/issues/5
+      // TODO: perform canonicalization on the tag.
+      //       Can't do this today because there is no direct means to
+      //       access canonicalization algorithms through Intl API.
+      //       https://github.com/tc39/ecma402/issues/5
+      return tag;
+    }
   }
 };
-
 this.ManifestProcessor = ManifestProcessor; // jshint ignore:line

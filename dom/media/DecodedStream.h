@@ -19,7 +19,6 @@ class SourceMediaStream;
 class ProcessedMediaStream;
 class DecodedStream;
 class DecodedStreamGraphListener;
-class OutputStreamData;
 class OutputStreamListener;
 class ReentrantMonitor;
 
@@ -82,11 +81,6 @@ public:
 
 class OutputStreamData {
 public:
-  // Compiler-generated default constructor needs the complete definition
-  // of OutputStreamListener when constructing OutputStreamData. Provide our
-  // own default constructor for forward declaration of OutputStreamListener
-  // to work.
-  OutputStreamData();
   ~OutputStreamData();
   void Init(DecodedStream* aDecodedStream, ProcessedMediaStream* aStream);
   nsRefPtr<ProcessedMediaStream> mStream;
@@ -103,8 +97,11 @@ public:
   void RecreateData(int64_t aInitialTime, SourceMediaStream* aStream);
   nsTArray<OutputStreamData>& OutputStreams();
   ReentrantMonitor& GetReentrantMonitor();
+  void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
 
 private:
+  void Connect(OutputStreamData* aStream);
+
   UniquePtr<DecodedStreamData> mData;
   // Data about MediaStreams that are being fed by the decoder.
   nsTArray<OutputStreamData> mOutputStreams;
