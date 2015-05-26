@@ -180,12 +180,14 @@ GonkDiskSpaceWatcher::DoStart()
   mFd = fanotify_init(FAN_CLASS_NOTIF, FAN_CLOEXEC | O_LARGEFILE);
   if (mFd == -1) {
     if (errno == ENOSYS) {
-      NS_WARNING("Warning: No fanotify support in this device's kernel.\n");
+      // Don't change these printf_stderr since we need these logs even
+      // in opt builds.
+      printf_stderr("Warning: No fanotify support in this device's kernel.\n");
 #if ANDROID_VERSION >= 19
       MOZ_CRASH("Fanotify support must be enabled in the kernel.");
 #endif
     } else {
-      NS_WARNING("Error calling fanotify_init()");
+      printf_stderr("Error calling fanotify_init()");
     }
     return;
   }
