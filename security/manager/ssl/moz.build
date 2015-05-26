@@ -12,6 +12,8 @@ XPIDL_SOURCES += [
     'nsIASN1Sequence.idl',
     'nsIAssociatedContentSecurity.idl',
     'nsIBadCertListener2.idl',
+    'nsIBufEntropyCollector.idl',
+    'nsICertBlocklist.idl',
     'nsICertificateDialogs.idl',
     'nsICertOverrideService.idl',
     'nsICertPickDialogs.idl',
@@ -28,7 +30,9 @@ XPIDL_SOURCES += [
     'nsIPKCS11ModuleDB.idl',
     'nsIPKCS11Slot.idl',
     'nsIProtectedAuthThread.idl',
+    'nsISecurityUITelemetry.idl',
     'nsISSLStatus.idl',
+    'nsISSLStatusProvider.idl',
     'nsITokenDialogs.idl',
     'nsITokenPasswordDialogs.idl',
     'nsIUserCertPicker.idl',
@@ -61,6 +65,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'DataStorage.h',
     'PublicSSL.h',
 ]
 
@@ -69,7 +74,9 @@ EXPORTS.mozilla.psm += [
 ]
 
 UNIFIED_SOURCES += [
+    'CertBlocklist.cpp',
     'CryptoTask.cpp',
+    'DataStorage.cpp',
     'nsCertOverrideService.cpp',
     'nsCertPicker.cpp',
     'nsCertVerificationThread.cpp',
@@ -77,6 +84,7 @@ UNIFIED_SOURCES += [
     'nsCrypto.cpp',
     'nsCryptoHash.cpp',
     'nsDataSignatureVerifier.cpp',
+    'nsEntropyCollector.cpp',
     'nsKeygenHandler.cpp',
     'nsKeygenHandlerContent.cpp',
     'nsKeygenThread.cpp',
@@ -102,13 +110,18 @@ UNIFIED_SOURCES += [
     'nsPSMBackgroundThread.cpp',
     'nsRandomGenerator.cpp',
     'nsSDR.cpp',
+    'nsSecureBrowserUIImpl.cpp',
+    'nsSecurityHeaderParser.cpp',
     'NSSErrorsService.cpp',
+    'nsSiteSecurityService.cpp',
     'nsSSLSocketProvider.cpp',
     'nsSSLStatus.cpp',
     'nsTLSSocketProvider.cpp',
     'nsUsageArrayHelper.cpp',
     'PSMContentListener.cpp',
     'PSMRunnable.cpp',
+    'PublicKeyPinningService.cpp',
+    'RootCertificateTelemetryUtils.cpp',
     'SharedSSLState.cpp',
     'SSLServerCertVerification.cpp',
     'TransportSecurityInfo.cpp',
@@ -121,10 +134,6 @@ SOURCES += [
 
 IPDL_SOURCES += [
     'PPSMContentDownloader.ipdl',
-]
-
-LOCAL_INCLUDES += [
-    '/security/manager/boot/src',
 ]
 
 if not CONFIG['MOZ_NO_SMART_CARDS']:
@@ -149,6 +158,10 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/security/certverifier',
     '/security/pkix/include',
+]
+
+GENERATED_INCLUDES += [
+    '/dist/public/nss',
 ]
 
 if CONFIG['NSS_DISABLE_DBM']:

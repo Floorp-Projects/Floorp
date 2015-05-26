@@ -38,6 +38,10 @@
 #include "TransportSecurityInfo.h"
 #include "NSSErrorsService.h"
 #include "nsNSSVersion.h"
+#include "CertBlocklist.h"
+#include "nsEntropyCollector.h"
+#include "nsSecureBrowserUIImpl.h"
+#include "nsSiteSecurityService.h"
 
 #include "nsXULAppAPI.h"
 
@@ -215,6 +219,10 @@ typedef mozilla::psm::NSSErrorsService NSSErrorsService;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NSSErrorsService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSVersion)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCertOverrideService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntropyCollector)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(CertBlocklist, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSiteSecurityService, Init)
 
 NS_DEFINE_NAMED_CID(NS_NSSCOMPONENT_CID);
 NS_DEFINE_NAMED_CID(NS_SSLSOCKETPROVIDER_CID);
@@ -244,6 +252,10 @@ NS_DEFINE_NAMED_CID(NS_SSLSTATUS_CID);
 NS_DEFINE_NAMED_CID(TRANSPORTSECURITYINFO_CID);
 NS_DEFINE_NAMED_CID(NS_NSSERRORSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NSSVERSION_CID);
+NS_DEFINE_NAMED_CID(NS_ENTROPYCOLLECTOR_CID);
+NS_DEFINE_NAMED_CID(NS_SECURE_BROWSER_UI_CID);
+NS_DEFINE_NAMED_CID(NS_SITE_SECURITY_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_CERT_BLOCKLIST_CID);
 
 static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_NSSCOMPONENT_CID, false, nullptr, nsNSSComponentConstructor },
@@ -274,6 +286,10 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kTRANSPORTSECURITYINFO_CID, false, nullptr, TransportSecurityInfoConstructor },
   { &kNS_NSSERRORSSERVICE_CID, false, nullptr, NSSErrorsServiceConstructor },
   { &kNS_NSSVERSION_CID, false, nullptr, nsNSSVersionConstructor },
+  { &kNS_ENTROPYCOLLECTOR_CID, false, nullptr, nsEntropyCollectorConstructor },
+  { &kNS_SECURE_BROWSER_UI_CID, false, nullptr, nsSecureBrowserUIImplConstructor },
+  { &kNS_SITE_SECURITY_SERVICE_CID, false, nullptr, nsSiteSecurityServiceConstructor },
+  { &kNS_CERT_BLOCKLIST_CID, false, nullptr, CertBlocklistConstructor},
   { nullptr }
 };
 
@@ -305,6 +321,10 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_DATASIGNATUREVERIFIER_CONTRACTID, &kNS_DATASIGNATUREVERIFIER_CID },
   { NS_CERTOVERRIDE_CONTRACTID, &kNS_CERTOVERRIDE_CID },
   { NS_RANDOMGENERATOR_CONTRACTID, &kNS_RANDOMGENERATOR_CID },
+  { NS_ENTROPYCOLLECTOR_CONTRACTID, &kNS_ENTROPYCOLLECTOR_CID },
+  { NS_SECURE_BROWSER_UI_CONTRACTID, &kNS_SECURE_BROWSER_UI_CID },
+  { NS_SSSERVICE_CONTRACTID, &kNS_SITE_SECURITY_SERVICE_CID },
+  { NS_CERTBLOCKLIST_CONTRACTID, &kNS_CERT_BLOCKLIST_CID },
   { nullptr }
 };
 
