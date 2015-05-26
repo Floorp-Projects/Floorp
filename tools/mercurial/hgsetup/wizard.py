@@ -159,6 +159,16 @@ b) perform head/bookmark-based development (as opposed to mq)
 Would you like to activate firefoxtree
 '''.strip()
 
+BUNDLECLONE_MINIMUM_VERSION = LooseVersion('3.1')
+
+BUNDLECLONE_INFO = '''
+The bundleclone extension makes cloning faster and saves server resources.
+
+We highly recommend you activate this extension.
+
+Would you like to activate bundleclone
+'''.strip()
+
 
 class MercurialSetupWizard(object):
     """Command-line wizard to help users configure Mercurial."""
@@ -283,6 +293,9 @@ class MercurialSetupWizard(object):
 
         if hg_version >= FIREFOXTREE_MINIMUM_VERSION:
             self.prompt_external_extension(c, 'firefoxtree', FIREFOXTREE_INFO)
+
+        if hg_version >= BUNDLECLONE_MINIMUM_VERSION:
+            self.prompt_external_extension(c, 'bundleclone', BUNDLECLONE_INFO)
 
         if 'mq' in c.extensions:
             self.prompt_external_extension(c, 'mqext', MQEXT_INFO)
