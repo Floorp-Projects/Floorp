@@ -495,12 +495,12 @@ Zoom Tests: reftest-zoom="<float>"
 ==================================
 
 When the root element of a test has a "reftest-zoom" attribute, that zoom
-factor is applied when rendering the test. The reftest document will be
-800 device pixels wide by 1000 device pixels high. The reftest harness assumes
-that the CSS pixel dimensions are 800/zoom and 1000/zoom. For best results
-therefore, choose zoom factors that do not require rounding when we calculate
-the number of appunits per device pixel; i.e. the zoom factor should divide 60,
-so 60/zoom is an integer.
+factor is applied when rendering the test. The corresponds to the desktop "full
+zoom" style zoom. The reftest document will be 800 device pixels wide by 1000
+device pixels high. The reftest harness assumes that the CSS pixel dimensions
+are 800/zoom and 1000/zoom. For best results therefore, choose zoom factors
+that do not require rounding when we calculate the number of appunits per
+device pixel; i.e. the zoom factor should divide 60, so 60/zoom is an integer.
 
 Setting Viewport Size: reftest-viewport-w/h="<int>"
 ===================================================
@@ -521,7 +521,7 @@ Setting Async Scroll Mode: reftest-async-scroll attribute
 =========================================================
 
 If the "reftest-async-scroll" attribute is set on the root element, we try to
-enable async scrolling for the document. This is unsupported in many
+enable async scrolling and zooming for the document. This is unsupported in many
 configurations.
 
 Setting Displayport Dimensions: reftest-displayport-x/y/w/h="<int>"
@@ -543,6 +543,16 @@ When the "reftest-async-scroll" attribute is set on the root element, for any
 element where either the "reftest-async-scroll-x" or "reftest-async-scroll-y
 attributes are nonzero, at the end of the test take the snapshot with the given
 offset (in CSS pixels) added to the async scroll offset.
+
+Testing Async Zooming: reftest-async-zoom="<float>"
+=========================================================
+
+When the "reftest-async-zoom" attribute is present on the root element then at
+the end of the test take the snapshot with the given async zoom on top of any
+existing zoom. Content is not re-rendered at the new zoom level. This
+corresponds to the mobile style "pinch zoom" style of zoom. This is unsupported
+in many configurations, and any tests using this will probably want to have
+skip-if(!asyncPanZoom) on them.
 
 Printing Tests: class="reftest-print"
 =====================================

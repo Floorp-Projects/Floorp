@@ -118,6 +118,10 @@ assertEq(b.enumerable, true);
 assertEq(b.writable, true);
 assertEq(b.value(), 4);
 
+// prototype property
+assertEq(a.b.prototype, undefined);
+assertEq(a.b.hasOwnProperty("prototype"), false);
+
 // Defining several methods using eval.
 var code = "({";
 for (i = 0; i < 1000; i++)

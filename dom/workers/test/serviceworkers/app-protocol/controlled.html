@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test app for bug 1161684</title>
+    <script src='test.js'></script>
+    <script type='application/javascript;version=1.7'>
+
+function runTests() {
+  return Promise.resolve()
+    .then(navigator.serviceWorker.ready)
+    .then(() => { return testFetchAppResource('swresponse'); })
+    .then(done);
+}
+  </script>
+  </head>
+  <body onload='runTests()'>
+  </body>
+</html>

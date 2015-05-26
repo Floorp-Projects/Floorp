@@ -102,6 +102,14 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     if CONFIG['MOZ_ENABLE_SKIA']:
         SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+elif CONFIG['CPU_ARCH'].startswith('mips'):
+    SOURCES += [
+        'BlurLS3.cpp',
+    ]
+    if CONFIG['MOZ_ENABLE_SKIA']:
+        SOURCES += [
+            'convolverLS3.cpp',
+        ]
 
 UNIFIED_SOURCES += [
     'Blur.cpp',

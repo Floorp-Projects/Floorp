@@ -43,7 +43,7 @@ interface MutationObserver {
   void disconnect();
   sequence<MutationRecord> takeRecords();
 
-  [ChromeOnly]
+  [ChromeOnly, Throws]
   sequence<MutationObservingInfo?> getObservingInfo();
   [ChromeOnly]
   readonly attribute MutationCallback mutationCallback;

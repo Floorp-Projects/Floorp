@@ -41,4 +41,9 @@
 /* SDP AVRCP 1.5 feature */
 #define SDP_AVRCP_1_5 FALSE
 
+/* BLE Feature */
+#define BTA_GATT_INCLUDED  TRUE
+#define BLE_INCLUDED       TRUE
+#define SMP_INCLUDED       TRUE
+
 #endif /* B2G_BDROID_BUILDCFG_H */

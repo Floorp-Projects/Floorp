@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test app for bug 1161684</title>
+    <script src='test.js'></script>
+    <script type='application/javascript;version=1.7'>
+function registerServiceWorker() {
+  return new Promise((resolve, reject) => {
+    navigator.serviceWorker.ready.then(() => {
+      ready();
+      resolve();
+    });
+    navigator.serviceWorker.register('sw.js', {scope: '.'})
+    .then(registration => {
+      ok(true, 'service worker registered');
+    })
+    .catch(reject);
+  });
+}
+
+function runTests() {
+  return Promise.resolve()
+    .then(() => { return testFetchAppResource('networkresponse'); })
+    .then(registerServiceWorker)
+    .then(done);
+}
+  </script>
+  </head>
+  <body onload='runTests()'>
+  </body>
+</html>

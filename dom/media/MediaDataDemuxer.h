@@ -85,6 +85,12 @@ public:
   // data is available.
   virtual void NotifyDataArrived(uint32_t aLength, int64_t aOffset) { }
 
+  // Notifies the demuxer that the underlying resource has had data removed.
+  // The demuxer can use this mechanism to inform all track demuxers to update
+  // its TimeIntervals.
+  // This will be called should the demuxer be used with MediaSource.
+  virtual void NotifyDataRemoved() { }
+
 protected:
   virtual ~MediaDataDemuxer()
   {

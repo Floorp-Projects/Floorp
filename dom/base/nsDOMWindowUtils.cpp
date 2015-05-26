@@ -2456,6 +2456,33 @@ nsDOMWindowUtils::SetAsyncScrollOffset(nsIDOMNode* aNode,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetAsyncZoom(nsIDOMNode* aRootElement, float aValue)
+{
+  nsCOMPtr<Element> element = do_QueryInterface(aRootElement);
+  if (!element) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  FrameMetrics::ViewID viewId;
+  if (!nsLayoutUtils::FindIDFor(element, &viewId)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+  LayerManager* manager = widget->GetLayerManager();
+  if (!manager) {
+    return NS_ERROR_FAILURE;
+  }
+  ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+  if (!forwarder || !forwarder->HasShadowManager()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  forwarder->GetShadowManager()->SendSetAsyncZoom(viewId, aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
                                            const nsAString& aProperty,
                                            const nsAString& aValue1,

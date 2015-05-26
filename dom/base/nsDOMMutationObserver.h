@@ -493,7 +493,8 @@ public:
 
   void HandleMutation();
 
-  void GetObservingInfo(nsTArray<Nullable<MutationObservingInfo> >& aResult);
+  void GetObservingInfo(nsTArray<Nullable<MutationObservingInfo>>& aResult,
+                        mozilla::ErrorResult& aRv);
 
   mozilla::dom::MutationCallback* MutationCallback() { return mCallback; }
 

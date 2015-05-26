@@ -89,14 +89,15 @@ ResourceQueue::AppendItem(MediaLargeByteBuffer* aData)
 }
 
 uint32_t
-ResourceQueue::Evict(uint64_t aOffset, uint32_t aSizeToEvict)
+ResourceQueue::Evict(uint64_t aOffset, uint32_t aSizeToEvict,
+                     ErrorResult& aRv)
 {
   SBR_DEBUG("Evict(aOffset=%llu, aSizeToEvict=%u)",
             aOffset, aSizeToEvict);
-  return EvictBefore(std::min(aOffset, mOffset + (uint64_t)aSizeToEvict));
+  return EvictBefore(std::min(aOffset, mOffset + (uint64_t)aSizeToEvict), aRv);
 }
 
-uint32_t ResourceQueue::EvictBefore(uint64_t aOffset)
+uint32_t ResourceQueue::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
 {
   SBR_DEBUG("EvictBefore(%llu)", aOffset);
   uint32_t evicted = 0;
@@ -111,8 +112,12 @@ uint32_t ResourceQueue::EvictBefore(uint64_t aOffset)
       mOffset += offset;
       evicted += offset;
       nsRefPtr<MediaLargeByteBuffer> data = new MediaLargeByteBuffer;
-      data->AppendElements(item->mData->Elements() + offset,
-                           item->mData->Length() - offset);
+      if (!data->AppendElements(item->mData->Elements() + offset,
+                                item->mData->Length() - offset)) {
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return 0;
+      }
+
       item->mData = data;
       break;
     }

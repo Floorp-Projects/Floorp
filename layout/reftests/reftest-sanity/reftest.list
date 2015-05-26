@@ -166,6 +166,9 @@ default-preferences pref(layers.low-precision-buffer,false)
 skip-if(!asyncPanZoom||!browserIsRemote) != async-scroll-1b.html async-scroll-1-ref.html
 default-preferences
 
+skip-if(!asyncPanZoom) != async-zoom-1.html async-zoom-1-ref.html
+fuzzy(112,1197) skip-if(!asyncPanZoom) == async-zoom-2.html async-zoom-2-ref.html
+
 # reftest-opaque-layer
 == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
 != reftest-opaque-layer-pass.html about:blank
