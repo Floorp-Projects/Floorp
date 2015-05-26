@@ -179,7 +179,7 @@ nsGonkCameraControl::Initialize()
   mCurrentConfiguration.mRecorderProfile.Truncate();
 
   // Initialize our camera configuration database.
-  PullParametersImpl();
+  mCameraHw->PullParameters(mParams);
 
   // Set preferred preview frame format.
   mParams.Set(CAMERA_PARAM_PREVIEWFORMAT, NS_LITERAL_STRING("yuv420sp"));
@@ -1127,7 +1127,13 @@ nsGonkCameraControl::PullParametersImpl()
   DOM_CAMERA_LOGI("Pulling camera parameters\n");
   RETURN_IF_NO_CAMERA_HW();
 
-  return mCameraHw->PullParameters(mParams);
+  nsresult rv = mCameraHw->PullParameters(mParams);
+  mParams.Get(CAMERA_PARAM_THUMBNAILSIZE, mLastThumbnailSize);
+  mParams.Get(CAMERA_PARAM_PICTURE_SIZE, mCurrentConfiguration.mPictureSize);
+  mParams.Get(CAMERA_PARAM_PREVIEWSIZE, mCurrentConfiguration.mPreviewSize);
+  mParams.Get(CAMERA_PARAM_VIDEOSIZE, mLastRecorderSize);
+
+  return rv;
 }
 
 nsresult
