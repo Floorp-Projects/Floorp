@@ -411,12 +411,6 @@ public:
    */
   void UpdateStreamBlockingForStateMachinePlaying();
 
-  nsTArray<OutputStreamData>& OutputStreams()
-  {
-    GetReentrantMonitor().AssertCurrentThreadIn();
-    return mDecodedStream.OutputStreams();
-  }
-
   DecodedStreamData* GetDecodedStream()
   {
     GetReentrantMonitor().AssertCurrentThreadIn();
