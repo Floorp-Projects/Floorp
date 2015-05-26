@@ -144,8 +144,7 @@ public:
      */
     nsRefPtr<BluetoothDiscoveryHandle> discoveryHandle =
       BluetoothDiscoveryHandle::Create(mAdapter->GetParentObject(),
-                                       mServiceUuids, v.get_nsString(),
-                                       mAdapter);
+                                       mServiceUuids, v.get_nsString());
 
     if (!ToJSValue(cx, discoveryHandle, aValue)) {
       JS_ClearPendingException(cx);
@@ -334,15 +333,35 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
 
 BluetoothAdapter::~BluetoothAdapter()
 {
-  UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), this);
+  Cleanup();
 }
 
 void
 BluetoothAdapter::DisconnectFromOwner()
 {
   DOMEventTargetHelper::DisconnectFromOwner();
+  Cleanup();
+}
 
+void
+BluetoothAdapter::Cleanup()
+{
   UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), this);
+
+  // Stop ongoing LE scans and clear the LeScan handle array
+  if (!mLeScanHandleArray.IsEmpty()) {
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE_VOID(bs);
+
+    nsString uuid;
+    for (uint32_t i = 0; i < mLeScanHandleArray.Length(); ++i) {
+      mLeScanHandleArray[i]->GetLeScanUuid(uuid);
+      nsRefPtr<BluetoothVoidReplyRunnable> results =
+        new BluetoothVoidReplyRunnable(nullptr);
+      bs->StopLeScanInternal(uuid, results);
+    }
+    mLeScanHandleArray.Clear();
+  }
 }
 
 void
