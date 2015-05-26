@@ -11,6 +11,7 @@
 #include <sys/un.h>
 #include "cert.h"
 #include "mozilla/ipc/ListenSocket.h"
+#include "mozilla/ipc/ListenSocketConsumer.h"
 #include "mozilla/ipc/StreamSocket.h"
 #include "mozilla/ipc/StreamSocketConsumer.h"
 #include "nsNSSShutDown.h"
@@ -81,6 +82,7 @@ typedef enum {
 
 class KeyStore final
   : public StreamSocketConsumer
+  , public ListenSocketConsumer
   , public nsNSSShutDownObject
 {
 public:
@@ -99,30 +101,7 @@ private:
     STREAM_SOCKET
   };
 
-  class ListenSocket final : public mozilla::ipc::ListenSocket
-  {
-  public:
-    ListenSocket(KeyStore* aKeyStore);
-    ListenSocket();
-
-    // SocketBase
-    //
-
-    void OnConnectSuccess() override;
-    void OnConnectError() override;
-    void OnDisconnect() override;
-
-  private:
-    KeyStore* mKeyStore;
-  };
-
   ~KeyStore();
-
-  void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aMessage);
-
-  void OnConnectSuccess(enum SocketType aSocketType);
-  void OnConnectError(enum SocketType aSocketType);
-  void OnDisconnect(enum SocketType aSocketType);
 
   struct {
     ProtocolHandlerState          state;

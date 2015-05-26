@@ -341,11 +341,11 @@ NfcService::Start(nsINfcGonkEventListener* aListener)
 
   mListener = aListener;
   mHandler = new NfcMessageHandler();
-  mStreamSocket = new StreamSocket(this, NfcSocketListener::STREAM_SOCKET);
+  mStreamSocket = new StreamSocket(this, STREAM_SOCKET);
 
   mListenSocketName = BASE_SOCKET_NAME;
 
-  mListenSocket = new NfcListenSocket(this);
+  mListenSocket = new ListenSocket(this, LISTEN_SOCKET);
   nsresult rv = mListenSocket->Listen(new NfcConnector(mListenSocketName),
                                       mStreamSocket);
   if (NS_FAILED(rv)) {
@@ -431,8 +431,11 @@ NfcService::DispatchNfcEvent(const mozilla::dom::NfcEventOptions& aOptions)
   mListener->OnEvent(val);
 }
 
+// |StreamSocketConsumer|, |ListenSocketConsumer|
+
 void
-NfcService::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
+NfcService::ReceiveSocketData(
+  int aIndex, nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer)
 {
   MOZ_ASSERT(mHandler);
   nsCOMPtr<nsIRunnable> runnable =
@@ -441,11 +444,11 @@ NfcService::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 }
 
 void
-NfcService::OnConnectSuccess(enum SocketType aSocketType)
+NfcService::OnConnectSuccess(int aIndex)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  switch (aSocketType) {
+  switch (aIndex) {
     case LISTEN_SOCKET: {
         nsCString value("nfcd:-a ");
         value.Append(mListenSocketName);
@@ -461,7 +464,7 @@ NfcService::OnConnectSuccess(enum SocketType aSocketType)
 }
 
 void
-NfcService::OnConnectError(enum SocketType aSocketType)
+NfcService::OnConnectError(int aIndex)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -469,36 +472,9 @@ NfcService::OnConnectError(enum SocketType aSocketType)
 }
 
 void
-NfcService::OnDisconnect(enum SocketType aSocketType)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-}
-
-// |StreamSocketConsumer|
-
-void
-NfcService::ReceiveSocketData(
-  int aIndex, nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer)
-{
-  ReceiveSocketData(aBuffer);
-}
-
-void
-NfcService::OnConnectSuccess(int aIndex)
-{
-  OnConnectSuccess(static_cast<enum SocketType>(aIndex));
-}
-
-void
-NfcService::OnConnectError(int aIndex)
-{
-  OnConnectSuccess(static_cast<enum SocketType>(aIndex));
-}
-
-void
 NfcService::OnDisconnect(int aIndex)
 {
-  OnConnectSuccess(static_cast<enum SocketType>(aIndex));
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(NfcService,

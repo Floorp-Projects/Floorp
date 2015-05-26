@@ -5,11 +5,9 @@
 
 if CONFIG['MOZ_NFC']:
     EXPORTS.mozilla.ipc += [
-        'Nfc.h',
         'NfcConnector.h',
     ]
     SOURCES += [
-        'Nfc.cpp',
         'NfcConnector.cpp',
     ]
 
