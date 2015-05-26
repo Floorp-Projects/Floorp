@@ -289,19 +289,6 @@ void MediaDecoder::SetVolume(double aVolume)
   mVolume = aVolume;
 }
 
-void MediaDecoder::ConnectDecodedStreamToOutputStream(OutputStreamData* aStream)
-{
-  NS_ASSERTION(!aStream->mPort, "Already connected?");
-
-  // The output stream must stay in sync with the decoded stream, so if
-  // either stream is blocked, we block the other.
-  aStream->mPort = aStream->mStream->AllocateInputPort(GetDecodedStream()->mStream,
-      MediaInputPort::FLAG_BLOCK_INPUT | MediaInputPort::FLAG_BLOCK_OUTPUT);
-  // Unblock the output stream now. While it's connected to mDecodedStream,
-  // mDecodedStream is responsible for controlling blocking.
-  aStream->mStream->ChangeExplicitBlockerCount(-1);
-}
-
 void MediaDecoder::UpdateDecodedStream()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -314,40 +301,6 @@ void MediaDecoder::UpdateDecodedStream()
       GetDecodedStream()->mHaveBlockedForPlayState = blockForPlayState;
     }
   }
-}
-
-void MediaDecoder::DestroyDecodedStream()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  GetReentrantMonitor().AssertCurrentThreadIn();
-
-  // Avoid the redundant blocking to output stream.
-  if (!GetDecodedStream()) {
-    return;
-  }
-
-  // All streams are having their SourceMediaStream disconnected, so they
-  // need to be explicitly blocked again.
-  auto& outputStreams = OutputStreams();
-  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
-    OutputStreamData& os = outputStreams[i];
-    // Explicitly remove all existing ports.
-    // This is not strictly necessary but it's good form.
-    MOZ_ASSERT(os.mPort, "Double-delete of the ports!");
-    os.mPort->Destroy();
-    os.mPort = nullptr;
-    // During cycle collection, nsDOMMediaStream can be destroyed and send
-    // its Destroy message before this decoder is destroyed. So we have to
-    // be careful not to send any messages after the Destroy().
-    if (os.mStream->IsDestroyed()) {
-      // Probably the DOM MediaStream was GCed. Clean up.
-      outputStreams.RemoveElementAt(i);
-    } else {
-      os.mStream->ChangeExplicitBlockerCount(1);
-    }
-  }
-
-  mDecodedStream.DestroyData();
 }
 
 void MediaDecoder::UpdateStreamBlockingForStateMachinePlaying()
@@ -382,20 +335,10 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
   if (!aGraph) {
     aGraph = GetDecodedStream()->mStream->Graph();
   }
-  DestroyDecodedStream();
 
+  mDecodedStream.DestroyData();
   mDecodedStream.RecreateData(aStartTimeUSecs, aGraph->CreateSourceStream(nullptr));
 
-  // Note that the delay between removing ports in DestroyDecodedStream
-  // and adding new ones won't cause a glitch since all graph operations
-  // between main-thread stable states take effect atomically.
-  auto& outputStreams = OutputStreams();
-  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
-    OutputStreamData& os = outputStreams[i];
-    MOZ_ASSERT(!os.mStream->IsDestroyed(),
-        "Should've been removed in DestroyDecodedStream()");
-    ConnectDecodedStreamToOutputStream(&os);
-  }
   UpdateStreamBlockingForStateMachinePlaying();
 
   GetDecodedStream()->mHaveBlockedForPlayState = mPlayState != PLAY_STATE_PLAYING;
@@ -418,13 +361,7 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
     if (!GetDecodedStream()) {
       RecreateDecodedStream(mLogicalPosition, aStream->Graph());
     }
-    OutputStreamData* os = OutputStreams().AppendElement();
-    os->Init(&mDecodedStream, aStream);
-    ConnectDecodedStreamToOutputStream(os);
-    if (aFinishWhenEnded) {
-      // Ensure that aStream finishes the moment mDecodedStream does.
-      aStream->SetAutofinish(true);
-    }
+    mDecodedStream.Connect(aStream, aFinishWhenEnded);
   }
 
   // This can be called before Load(), in which case our mDecoderStateMachine
@@ -575,7 +512,7 @@ MediaDecoder::~MediaDecoder()
     // Don't destroy the decoded stream until destructor in order to keep the
     // invariant that the decoded stream is always available in capture mode.
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    DestroyDecodedStream();
+    mDecodedStream.DestroyData();
   }
   MediaMemoryTracker::RemoveMediaDecoder(this);
   UnpinForSeek();

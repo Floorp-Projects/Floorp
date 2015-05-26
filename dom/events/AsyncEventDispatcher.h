@@ -28,12 +28,18 @@ namespace mozilla {
 class AsyncEventDispatcher : public nsRunnable
 {
 public:
+  /**
+   * If aOnlyChromeDispatch is true, the event is dispatched to only
+   * chrome node. In that case, if aTarget is already a chrome node,
+   * the event is dispatched to it, otherwise the dispatch path starts
+   * at the first chrome ancestor of that target.
+   */
   AsyncEventDispatcher(nsINode* aTarget, const nsAString& aEventType,
-                       bool aBubbles, bool aDispatchChromeOnly)
+                       bool aBubbles, bool aOnlyChromeDispatch)
     : mTarget(aTarget)
     , mEventType(aEventType)
     , mBubbles(aBubbles)
-    , mDispatchChromeOnly(aDispatchChromeOnly)
+    , mOnlyChromeDispatch(aOnlyChromeDispatch)
   {
   }
 
@@ -42,14 +48,14 @@ public:
     : mTarget(aTarget)
     , mEventType(aEventType)
     , mBubbles(aBubbles)
-    , mDispatchChromeOnly(false)
+    , mOnlyChromeDispatch(false)
   {
   }
 
   AsyncEventDispatcher(dom::EventTarget* aTarget, nsIDOMEvent* aEvent)
     : mTarget(aTarget)
     , mEvent(aEvent)
-    , mDispatchChromeOnly(false)
+    , mOnlyChromeDispatch(false)
   {
   }
 
@@ -63,7 +69,7 @@ public:
   nsCOMPtr<nsIDOMEvent> mEvent;
   nsString              mEventType;
   bool                  mBubbles;
-  bool                  mDispatchChromeOnly;
+  bool                  mOnlyChromeDispatch;
 };
 
 class LoadBlockingAsyncEventDispatcher final : public AsyncEventDispatcher
