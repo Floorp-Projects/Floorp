@@ -677,7 +677,7 @@ let AppManager = exports.AppManager = {
         let manifest = validation.manifest;
         let iconPath;
         if (manifest.icons) {
-          let size = Object.keys(manifest.icons).sort(function(a, b) b - a)[0];
+          let size = Object.keys(manifest.icons).sort((a, b) => b - a)[0];
           if (size) {
             iconPath = manifest.icons[size];
           }

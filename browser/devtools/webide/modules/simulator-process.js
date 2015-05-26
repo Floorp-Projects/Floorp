@@ -35,7 +35,9 @@ function SimulatorProcess() {}
 SimulatorProcess.prototype = {
 
   // Check if B2G is running.
-  get isRunning() !!this.process,
+  get isRunning() {
+    return !!this.process;
+  },
 
   // Start the process and connect the debugger client.
   run() {

@@ -456,7 +456,9 @@ function ThreadState() {
 }
 
 ThreadState.prototype = {
-  get activeThread() DebuggerController.activeThread,
+  get activeThread() {
+    return DebuggerController.activeThread;
+  },
 
   /**
    * Connect to the current thread client.
@@ -542,7 +544,10 @@ function StackFrames() {
 }
 
 StackFrames.prototype = {
-  get activeThread() DebuggerController.activeThread,
+  get activeThread() {
+    return DebuggerController.activeThread;
+  },
+
   currentFrameDepth: -1,
   _currentFrameDescription: FRAME_TYPE.NORMAL,
   _syncedWatchExpressions: null,
@@ -1114,8 +1119,14 @@ function SourceScripts() {
 }
 
 SourceScripts.prototype = {
-  get activeThread() DebuggerController.activeThread,
-  get debuggerClient() DebuggerController.client,
+  get activeThread() {
+    return DebuggerController.activeThread;
+  },
+
+  get debuggerClient() {
+    return DebuggerController.client;
+  },
+
   _cache: new Map(),
 
   /**
@@ -2443,23 +2454,33 @@ DebuggerController.HitCounts = new HitCounts();
  */
 Object.defineProperties(window, {
   "gTarget": {
-    get: function() DebuggerController._target,
+    get: function() {
+      return DebuggerController._target;
+    },
     configurable: true
   },
   "gHostType": {
-    get: function() DebuggerView._hostType,
+    get: function() {
+      return DebuggerView._hostType;
+    },
     configurable: true
   },
   "gClient": {
-    get: function() DebuggerController.client,
+    get: function() {
+      return DebuggerController.client;
+    },
     configurable: true
   },
   "gThreadClient": {
-    get: function() DebuggerController.activeThread,
+    get: function() {
+      return DebuggerController.activeThread;
+    },
     configurable: true
   },
   "gCallStackPageSize": {
-    get: function() CALL_STACK_PAGE_SIZE,
+    get: function() {
+      return CALL_STACK_PAGE_SIZE;
+    },
     configurable: true
   }
 });

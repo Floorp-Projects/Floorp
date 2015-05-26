@@ -205,6 +205,11 @@ private:
   ~BluetoothAdapter();
 
   /**
+   * Unregister signal handler and clean up LE scan handles.
+   */
+  void Cleanup();
+
+  /**
    * Set adapter properties according to properties array.
    *
    * @param aValue [in] Properties array to set with
