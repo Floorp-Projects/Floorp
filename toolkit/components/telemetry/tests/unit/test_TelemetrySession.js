@@ -1209,6 +1209,9 @@ add_task(function* test_savedSessionData() {
   Assert.equal(payload.info.profileSubsessionCounter, expectedSubsessions);
   yield TelemetrySession.shutdown();
 
+  // Restore the UUID generator so we don't mess with other tests.
+  fakeGenerateUUID(generateUUID, generateUUID);
+
   // Load back the serialised session data.
   let data = yield CommonUtils.readJSON(dataFilePath);
   Assert.equal(data.profileSubsessionCounter, expectedSubsessions);
@@ -1274,6 +1277,9 @@ add_task(function* test_invalidSessionData() {
   let payload = TelemetrySession.getPayload();
   Assert.equal(payload.info.profileSubsessionCounter, expectedSubsessions);
   yield TelemetrySession.shutdown();
+
+  // Restore the UUID generator so we don't mess with other tests.
+  fakeGenerateUUID(generateUUID, generateUUID);
 
   // Load back the serialised session data.
   let data = yield CommonUtils.readJSON(dataFilePath);
