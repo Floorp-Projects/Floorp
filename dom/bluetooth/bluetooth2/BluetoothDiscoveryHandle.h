@@ -22,8 +22,6 @@ class BluetoothDiscoveryHandle final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BluetoothDiscoveryHandle,
-                                           DOMEventTargetHelper)
 
   static already_AddRefed<BluetoothDiscoveryHandle>
     Create(nsPIDOMWindow* aWindow);
@@ -31,8 +29,7 @@ public:
   static already_AddRefed<BluetoothDiscoveryHandle>
     Create(nsPIDOMWindow* aWindow,
            const nsTArray<nsString>& aServiceUuids,
-           const nsAString& aLeScanUuid,
-           BluetoothAdapter* aAdapter);
+           const nsAString& aLeScanUuid);
 
   void DispatchDeviceEvent(BluetoothDevice* aDevice);
 
@@ -57,8 +54,7 @@ private:
 
   BluetoothDiscoveryHandle(nsPIDOMWindow* aWindow,
                            const nsTArray<nsString>& aServiceUuids,
-                           const nsAString& aLeScanUuid,
-                           BluetoothAdapter* aAdapter);
+                           const nsAString& aLeScanUuid);
 
   ~BluetoothDiscoveryHandle();
 
@@ -78,14 +74,6 @@ private:
    * for classic discovery, the array should be empty.
    */
   nsTArray<nsString> mServiceUuids;
-
-  /**
-   * The adapter which called startLeScan and created this discovery handle
-   *
-   * If BluetoothDiscoveryHandle is built for classic discovery, this value
-   * should be nullptr.
-   */
-  nsRefPtr<BluetoothAdapter> mAdapter;
 };
 
 END_BLUETOOTH_NAMESPACE
