@@ -157,7 +157,7 @@ protected:
 
   static bool IsEditable(nsINode* node);
 
-  static bool IsEditableIMEState(nsIWidget* aWidget);
+  static bool IsIMEObserverNeeded(const IMEState& aState);
 
   static nsIContent*    sContent;
   static nsPresContext* sPresContext;
