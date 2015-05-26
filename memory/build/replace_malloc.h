@@ -74,19 +74,6 @@
 
 MOZ_BEGIN_EXTERN_C
 
-#define MALLOC_DECL(name, return_type, ...) \
-  typedef return_type(name ## _impl_t)(__VA_ARGS__);
-
-#include "malloc_decls.h"
-
-#define MALLOC_DECL(name, return_type, ...) \
-  name ## _impl_t * name;
-
-typedef struct {
-#include "malloc_decls.h"
-} malloc_table_t;
-
-
 /* MOZ_NO_REPLACE_FUNC_DECL and MOZ_REPLACE_WEAK are only defined in
  * replace_malloc.c. Normally including this header will add function
  * definitions. */
