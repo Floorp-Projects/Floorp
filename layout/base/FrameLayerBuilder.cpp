@@ -4267,11 +4267,11 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
       continue;
     }
 
-    nsRect clipRect(0, 0, -1, -1);
+    Maybe<nsRect> clipRect;
     scrollFrame->ComputeFrameMetrics(aEntry->mLayer, mContainerReferenceFrame,
                                      mParameters, &clipRect, &metricsArray);
-    if (clipRect.width >= 0) {
-      ParentLayerIntRect pixClip = ViewAs<ParentLayerPixel>(ScaleToNearestPixels(clipRect));
+    if (clipRect) {
+      ParentLayerIntRect pixClip = ViewAs<ParentLayerPixel>(ScaleToNearestPixels(*clipRect));
       if (layerClip) {
         tmpClipRect.IntersectRect(pixClip, *layerClip);
       } else {
