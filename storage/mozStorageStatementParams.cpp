@@ -149,7 +149,8 @@ StatementParams::Resolve(nsIXPConnectWrappedNative *aWrapper,
     if (idx >= mParamCount)
       return NS_ERROR_INVALID_ARG;
 
-    ok = ::JS_DefineElement(aCtx, scope, idx, JS::UndefinedHandleValue, JSPROP_ENUMERATE);
+    ok = ::JS_DefineElement(aCtx, scope, idx, JS::UndefinedHandleValue,
+                            JSPROP_ENUMERATE | JSPROP_RESOLVING);
     resolved = true;
   }
   else if (JSID_IS_STRING(id)) {
@@ -165,7 +166,8 @@ StatementParams::Resolve(nsIXPConnectWrappedNative *aWrapper,
     uint32_t idx;
     nsresult rv = mStatement->GetParameterIndex(name, &idx);
     if (NS_SUCCEEDED(rv)) {
-      ok = ::JS_DefinePropertyById(aCtx, scope, id, JS::UndefinedHandleValue, JSPROP_ENUMERATE);
+      ok = ::JS_DefinePropertyById(aCtx, scope, id, JS::UndefinedHandleValue,
+                                   JSPROP_ENUMERATE | JSPROP_RESOLVING);
       resolved = true;
     }
   }

@@ -5,7 +5,7 @@
  * Tests whether the frontend displays a placeholder snapshot while recording.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, EVENTS, L10N, $, SnapshotsListView } = panel.panelWin;
 

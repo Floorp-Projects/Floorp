@@ -475,8 +475,11 @@ SIMDObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
 
     // Everything is set up, install SIMD on the global object.
     RootedValue SIMDValue(cx, ObjectValue(*SIMD));
-    if (!DefineProperty(cx, global, cx->names().SIMD, SIMDValue, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, global, cx->names().SIMD, SIMDValue, nullptr, nullptr,
+                        JSPROP_RESOLVING))
+    {
         return nullptr;
+    }
 
     global->setConstructor(JSProto_SIMD, SIMDValue);
     return SIMD;

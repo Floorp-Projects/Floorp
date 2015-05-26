@@ -16,6 +16,7 @@ Implement HTML5 sandbox attribute for IFRAMEs
 /** Navigation tests Part 2**/
 
 SimpleTest.expectAssertions(0);
+SimpleTest.requestLongerTimeout(2); // slow on Android
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 // a postMessage handler that is used by sandboxed iframes without

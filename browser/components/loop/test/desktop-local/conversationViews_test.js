@@ -939,6 +939,15 @@ describe("loop.conversationViews", function () {
       expect(view.getDOMNode().querySelector("h2").textContent).eql("no_media_failure_message");
     });
 
+    it("should show 'no media' for FAILURE_DETAILS.NO_MEDIA reason", function() {
+      view = mountTestComponent({
+        cancelCall: function() {},
+        failureReason: FAILURE_DETAILS.NO_MEDIA
+      });
+
+      expect(view.getDOMNode().querySelector("h2").textContent).eql("no_media_failure_message");
+    });
+
     it("should show 'generic_failure_title' when no reason is specified", function() {
       view = mountTestComponent({cancelCall: function() {}});
 

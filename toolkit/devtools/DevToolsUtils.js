@@ -120,7 +120,7 @@ exports.zip = function zip(a, b) {
  */
 exports.executeSoon = function executeSoon(aFn) {
   if (isWorker) {
-    require("Timer").setTimeout(aFn, 0);
+    setImmediate(aFn);
   } else {
     Services.tm.mainThread.dispatch({
       run: exports.makeInfallible(aFn)

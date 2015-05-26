@@ -40,7 +40,7 @@ public class testBookmarklets extends AboutHomeTest {
 
         // add the bookmarklet to the database. there's currently no way to
         // add this using the UI, so we go through the content provider.
-        mDatabaseHelper.addOrUpdateMobileBookmark(title, js);
+        mDatabaseHelper.addMobileBookmark(title, js);
 
         // Open about:home in the Bookmarks page
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);

@@ -32,12 +32,16 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
+#include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/RTCIdentityProviderRegistrar.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
+#include "mozilla/dom/UnionConversions.h"
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/URLSearchParamsBinding.h"
 
@@ -234,6 +238,84 @@ SandboxCreateRTCIdentityProvider(JSContext* cx, JS::HandleObject obj)
             new dom::RTCIdentityProviderRegistrar(nativeGlobal);
     JS::RootedObject wrapped(cx, registrar->WrapObject(cx, nullptr));
     return JS_DefineProperty(cx, obj, "rtcIdentityProvider", wrapped, JSPROP_ENUMERATE);
+}
+
+static bool
+SetFetchRequestFromValue(JSContext *cx, RequestOrUSVString& request,
+                         const MutableHandleValue& requestOrUrl)
+{
+    RequestOrUSVStringArgument requestHolder(request);
+    bool noMatch = true;
+    if (requestOrUrl.isObject() &&
+        !requestHolder.TrySetToRequest(cx, requestOrUrl, noMatch, false)) {
+        return false;
+    }
+    if (noMatch &&
+        !requestHolder.TrySetToUSVString(cx, requestOrUrl, noMatch)) {
+        return false;
+    }
+    if (noMatch) {
+        return false;
+    }
+    return true;
+}
+
+static bool
+SandboxFetch(JSContext* cx, JS::HandleObject scope, const CallArgs& args)
+{
+    if (args.length() < 1) {
+        JS_ReportError(cx, "fetch requires at least 1 argument");
+        return false;
+    }
+
+    RequestOrUSVString request;
+    if (!SetFetchRequestFromValue(cx, request, args[0])) {
+        JS_ReportError(cx, "fetch requires a string or Request in argument 1");
+        return false;
+    }
+    RootedDictionary<dom::RequestInit> options(cx);
+    if (!options.Init(cx, args.hasDefined(1) ? args[1] : JS::NullHandleValue,
+                      "Argument 2 of fetch", false)) {
+        return false;
+    }
+    nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(scope);
+    if (!global) {
+        return false;
+    }
+    ErrorResult rv;
+    nsRefPtr<dom::Promise> response =
+        FetchRequest(global, Constify(request), Constify(options), rv);
+    rv.WouldReportJSException();
+    if (rv.Failed()) {
+        return ThrowMethodFailedWithDetails(cx, rv, "Sandbox", "fetch");
+    }
+    if (!GetOrCreateDOMReflector(cx, scope, response, args.rval())) {
+        return false;
+    }
+    return true;
+}
+
+static bool SandboxFetchPromise(JSContext* cx, unsigned argc, jsval* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+    RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
+    if (SandboxFetch(cx, scope, args)) {
+        return true;
+    }
+    return ConvertExceptionToPromise(cx, scope, args.rval());
+}
+
+
+static bool
+SandboxCreateFetch(JSContext* cx, HandleObject obj)
+{
+    MOZ_ASSERT(JS_IsGlobalObject(obj));
+
+    return JS_DefineFunction(cx, obj, "fetch", SandboxFetchPromise, 2, 0) &&
+        dom::RequestBinding::GetConstructorObject(cx, obj) &&
+        dom::ResponseBinding::GetConstructorObject(cx, obj) &&
+        dom::HeadersBinding::GetConstructorObject(cx, obj);
 }
 
 static bool
@@ -818,6 +900,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             crypto = true;
         } else if (!strcmp(name.ptr(), "rtcIdentityProvider")) {
             rtcIdentityProvider = true;
+        } else if (!strcmp(name.ptr(), "fetch")) {
+            fetch = true;
         } else {
             JS_ReportError(cx, "Unknown property name: %s", name.ptr());
             return false;
@@ -876,6 +960,9 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
         return false;
 
     if (rtcIdentityProvider && !SandboxCreateRTCIdentityProvider(cx, obj))
+        return false;
+
+    if (fetch && !SandboxCreateFetch(cx, obj))
         return false;
 
     return true;

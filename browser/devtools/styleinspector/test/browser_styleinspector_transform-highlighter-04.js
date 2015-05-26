@@ -55,7 +55,9 @@ add_task(function*() {
 
   info("Faking a mousemove on the now unoverriden property");
   ({valueSpan} = getRuleViewProperty(rView, "div", "transform"));
+  let onHighlighterShown = hs.once("highlighter-shown");
   hs._onMouseMove({target: valueSpan});
+  yield onHighlighterShown;
   ok(hs.promises[TYPE], "The highlighter is being initialized now");
   let h = yield hs.promises[TYPE];
   is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");

@@ -116,6 +116,7 @@ public:
   nsresult SetType(const nsString& aType);
   void SetType(KeyType aType);
   void SetExtractable(bool aExtractable);
+  nsresult AddPublicKeyData(SECKEYPublicKey* point);
   void ClearUsages();
   nsresult AddUsage(const nsString& aUsage);
   nsresult AddUsageIntersecting(const nsString& aUsage, uint32_t aUsageMask);
@@ -155,7 +156,7 @@ public:
 
   static SECKEYPublicKey* PublicKeyFromSpki(CryptoBuffer& aKeyData,
                                             const nsNSSShutDownPreventionLock& /*proofOfLock*/);
-  static nsresult PublicKeyToSpki(SECKEYPublicKey* aPrivKey,
+  static nsresult PublicKeyToSpki(SECKEYPublicKey* aPubKey,
                                   CryptoBuffer& aRetVal,
                                   const nsNSSShutDownPreventionLock& /*proofOfLock*/);
 
@@ -167,7 +168,7 @@ public:
 
   static SECKEYPublicKey* PublicKeyFromJwk(const JsonWebKey& aKeyData,
                                            const nsNSSShutDownPreventionLock& /*proofOfLock*/);
-  static nsresult PublicKeyToJwk(SECKEYPublicKey* aPrivKey,
+  static nsresult PublicKeyToJwk(SECKEYPublicKey* aPubKey,
                                  JsonWebKey& aRetVal,
                                  const nsNSSShutDownPreventionLock& /*proofOfLock*/);
 

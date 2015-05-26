@@ -1913,9 +1913,13 @@ private:
       }
 
       switch (mPrivateKey->keyType) {
-        case rsaKey:
-          CryptoKey::PrivateKeyToPkcs8(mPrivateKey.get(), mResult, locker);
+        case rsaKey: {
+          nsresult rv = CryptoKey::PrivateKeyToPkcs8(mPrivateKey.get(), mResult, locker);
+          if (NS_FAILED(rv)) {
+            return NS_ERROR_DOM_OPERATION_ERR;
+          }
           return NS_OK;
+        }
         default:
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
@@ -2327,6 +2331,14 @@ private:
 
     mKeyPair.mPrivateKey.get()->SetPrivateKey(mPrivateKey);
     mKeyPair.mPublicKey.get()->SetPublicKey(mPublicKey);
+
+    // PK11_GenerateKeyPair() does not set a CKA_EC_POINT attribute on the
+    // private key, we need this later when exporting to PKCS8 and JWK though.
+    if (mMechanism == CKM_EC_KEY_PAIR_GEN) {
+      nsresult rv = mKeyPair.mPrivateKey->AddPublicKeyData(mPublicKey);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+    }
+
     return NS_OK;
   }
 

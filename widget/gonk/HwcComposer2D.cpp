@@ -858,11 +858,7 @@ HwcComposer2D::Commit()
         if (!state.mTexture) {
             continue;
         }
-        TextureHostOGL* texture = state.mTexture->AsHostOGL();
-        if (!texture) {
-            continue;
-        }
-        FenceHandle fence = texture->GetAndResetAcquireFence();
+        FenceHandle fence = state.mTexture->GetAndResetAcquireFenceHandle();
         if (fence.IsValid()) {
             nsRefPtr<FenceHandle::FdObj> fdObj = fence.GetAndResetFdObj();
             mList->hwLayers[j].acquireFenceFd = fdObj->GetAndResetFd();
@@ -884,11 +880,7 @@ HwcComposer2D::Commit()
             if (!state.mTexture) {
                 continue;
             }
-            TextureHostOGL* texture = state.mTexture->AsHostOGL();
-            if (!texture) {
-                continue;
-            }
-            texture->SetReleaseFence(fence);
+            state.mTexture->SetReleaseFenceHandle(fence);
         }
     }
 

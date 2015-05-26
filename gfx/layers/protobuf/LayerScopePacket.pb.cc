@@ -26,6 +26,8 @@ void protobuf_ShutdownFile_LayerScopePacket_2eproto() {
   delete LayersPacket_Layer_Matrix::default_instance_;
   delete LayersPacket_Layer_Shadow::default_instance_;
   delete MetaPacket::default_instance_;
+  delete DrawPacket::default_instance_;
+  delete DrawPacket_Rect::default_instance_;
   delete Packet::default_instance_;
   delete CommandPacket::default_instance_;
 }
@@ -47,6 +49,8 @@ void protobuf_AddDesc_LayerScopePacket_2eproto() {
   LayersPacket_Layer_Matrix::default_instance_ = new LayersPacket_Layer_Matrix();
   LayersPacket_Layer_Shadow::default_instance_ = new LayersPacket_Layer_Shadow();
   MetaPacket::default_instance_ = new MetaPacket();
+  DrawPacket::default_instance_ = new DrawPacket();
+  DrawPacket_Rect::default_instance_ = new DrawPacket_Rect();
   Packet::default_instance_ = new Packet();
   CommandPacket::default_instance_ = new CommandPacket();
   FramePacket::default_instance_->InitAsDefaultInstance();
@@ -60,6 +64,8 @@ void protobuf_AddDesc_LayerScopePacket_2eproto() {
   LayersPacket_Layer_Matrix::default_instance_->InitAsDefaultInstance();
   LayersPacket_Layer_Shadow::default_instance_->InitAsDefaultInstance();
   MetaPacket::default_instance_->InitAsDefaultInstance();
+  DrawPacket::default_instance_->InitAsDefaultInstance();
+  DrawPacket_Rect::default_instance_->InitAsDefaultInstance();
   Packet::default_instance_->InitAsDefaultInstance();
   CommandPacket::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_LayerScopePacket_2eproto);
@@ -3192,6 +3198,597 @@ void MetaPacket::Swap(MetaPacket* other) {
 
 // ===================================================================
 
+#ifndef _MSC_VER
+const int DrawPacket_Rect::kXFieldNumber;
+const int DrawPacket_Rect::kYFieldNumber;
+const int DrawPacket_Rect::kWFieldNumber;
+const int DrawPacket_Rect::kHFieldNumber;
+#endif  // !_MSC_VER
+
+DrawPacket_Rect::DrawPacket_Rect()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+}
+
+void DrawPacket_Rect::InitAsDefaultInstance() {
+}
+
+DrawPacket_Rect::DrawPacket_Rect(const DrawPacket_Rect& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void DrawPacket_Rect::SharedCtor() {
+  _cached_size_ = 0;
+  x_ = 0;
+  y_ = 0;
+  w_ = 0;
+  h_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+DrawPacket_Rect::~DrawPacket_Rect() {
+  SharedDtor();
+}
+
+void DrawPacket_Rect::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void DrawPacket_Rect::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const DrawPacket_Rect& DrawPacket_Rect::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_LayerScopePacket_2eproto();  return *default_instance_;
+}
+
+DrawPacket_Rect* DrawPacket_Rect::default_instance_ = NULL;
+
+DrawPacket_Rect* DrawPacket_Rect::New() const {
+  return new DrawPacket_Rect;
+}
+
+void DrawPacket_Rect::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    x_ = 0;
+    y_ = 0;
+    w_ = 0;
+    h_ = 0;
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+bool DrawPacket_Rect::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // required float x = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &x_)));
+          set_has_x();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(21)) goto parse_y;
+        break;
+      }
+      
+      // required float y = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_y:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &y_)));
+          set_has_y();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(29)) goto parse_w;
+        break;
+      }
+      
+      // required float w = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_w:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &w_)));
+          set_has_w();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(37)) goto parse_h;
+        break;
+      }
+      
+      // required float h = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_h:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &h_)));
+          set_has_h();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+      
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void DrawPacket_Rect::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // required float x = 1;
+  if (has_x()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(1, this->x(), output);
+  }
+  
+  // required float y = 2;
+  if (has_y()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->y(), output);
+  }
+  
+  // required float w = 3;
+  if (has_w()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(3, this->w(), output);
+  }
+  
+  // required float h = 4;
+  if (has_h()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(4, this->h(), output);
+  }
+  
+}
+
+int DrawPacket_Rect::ByteSize() const {
+  int total_size = 0;
+  
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // required float x = 1;
+    if (has_x()) {
+      total_size += 1 + 4;
+    }
+    
+    // required float y = 2;
+    if (has_y()) {
+      total_size += 1 + 4;
+    }
+    
+    // required float w = 3;
+    if (has_w()) {
+      total_size += 1 + 4;
+    }
+    
+    // required float h = 4;
+    if (has_h()) {
+      total_size += 1 + 4;
+    }
+    
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void DrawPacket_Rect::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const DrawPacket_Rect*>(&from));
+}
+
+void DrawPacket_Rect::MergeFrom(const DrawPacket_Rect& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_x()) {
+      set_x(from.x());
+    }
+    if (from.has_y()) {
+      set_y(from.y());
+    }
+    if (from.has_w()) {
+      set_w(from.w());
+    }
+    if (from.has_h()) {
+      set_h(from.h());
+    }
+  }
+}
+
+void DrawPacket_Rect::CopyFrom(const DrawPacket_Rect& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool DrawPacket_Rect::IsInitialized() const {
+  if ((_has_bits_[0] & 0x0000000f) != 0x0000000f) return false;
+  
+  return true;
+}
+
+void DrawPacket_Rect::Swap(DrawPacket_Rect* other) {
+  if (other != this) {
+    std::swap(x_, other->x_);
+    std::swap(y_, other->y_);
+    std::swap(w_, other->w_);
+    std::swap(h_, other->h_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string DrawPacket_Rect::GetTypeName() const {
+  return "mozilla.layers.layerscope.DrawPacket.Rect";
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
+const int DrawPacket::kOffsetXFieldNumber;
+const int DrawPacket::kOffsetYFieldNumber;
+const int DrawPacket::kMvMatrixFieldNumber;
+const int DrawPacket::kTotalRectsFieldNumber;
+const int DrawPacket::kLayerRectFieldNumber;
+const int DrawPacket::kLayerrefFieldNumber;
+#endif  // !_MSC_VER
+
+DrawPacket::DrawPacket()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+}
+
+void DrawPacket::InitAsDefaultInstance() {
+}
+
+DrawPacket::DrawPacket(const DrawPacket& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void DrawPacket::SharedCtor() {
+  _cached_size_ = 0;
+  offsetx_ = 0;
+  offsety_ = 0;
+  totalrects_ = 0u;
+  layerref_ = GOOGLE_ULONGLONG(0);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+DrawPacket::~DrawPacket() {
+  SharedDtor();
+}
+
+void DrawPacket::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void DrawPacket::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const DrawPacket& DrawPacket::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_LayerScopePacket_2eproto();  return *default_instance_;
+}
+
+DrawPacket* DrawPacket::default_instance_ = NULL;
+
+DrawPacket* DrawPacket::New() const {
+  return new DrawPacket;
+}
+
+void DrawPacket::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    offsetx_ = 0;
+    offsety_ = 0;
+    totalrects_ = 0u;
+    layerref_ = GOOGLE_ULONGLONG(0);
+  }
+  mvmatrix_.Clear();
+  layerrect_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+bool DrawPacket::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // required float offsetX = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &offsetx_)));
+          set_has_offsetx();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(21)) goto parse_offsetY;
+        break;
+      }
+      
+      // required float offsetY = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_offsetY:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &offsety_)));
+          set_has_offsety();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(29)) goto parse_mvMatrix;
+        break;
+      }
+      
+      // repeated float mvMatrix = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED32) {
+         parse_mvMatrix:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 1, 29, input, this->mutable_mvmatrix())));
+        } else if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag)
+                   == ::google::protobuf::internal::WireFormatLite::
+                      WIRETYPE_LENGTH_DELIMITED) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, this->mutable_mvmatrix())));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(29)) goto parse_mvMatrix;
+        if (input->ExpectTag(32)) goto parse_totalRects;
+        break;
+      }
+      
+      // required uint32 totalRects = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_totalRects:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &totalrects_)));
+          set_has_totalrects();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(42)) goto parse_layerRect;
+        break;
+      }
+      
+      // repeated .mozilla.layers.layerscope.DrawPacket.Rect layerRect = 5;
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_layerRect:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_layerrect()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(42)) goto parse_layerRect;
+        if (input->ExpectTag(48)) goto parse_layerref;
+        break;
+      }
+      
+      // required uint64 layerref = 6;
+      case 6: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_layerref:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &layerref_)));
+          set_has_layerref();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+      
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void DrawPacket::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // required float offsetX = 1;
+  if (has_offsetx()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(1, this->offsetx(), output);
+  }
+  
+  // required float offsetY = 2;
+  if (has_offsety()) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->offsety(), output);
+  }
+  
+  // repeated float mvMatrix = 3;
+  for (int i = 0; i < this->mvmatrix_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(
+      3, this->mvmatrix(i), output);
+  }
+  
+  // required uint32 totalRects = 4;
+  if (has_totalrects()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(4, this->totalrects(), output);
+  }
+  
+  // repeated .mozilla.layers.layerscope.DrawPacket.Rect layerRect = 5;
+  for (int i = 0; i < this->layerrect_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      5, this->layerrect(i), output);
+  }
+  
+  // required uint64 layerref = 6;
+  if (has_layerref()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(6, this->layerref(), output);
+  }
+  
+}
+
+int DrawPacket::ByteSize() const {
+  int total_size = 0;
+  
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // required float offsetX = 1;
+    if (has_offsetx()) {
+      total_size += 1 + 4;
+    }
+    
+    // required float offsetY = 2;
+    if (has_offsety()) {
+      total_size += 1 + 4;
+    }
+    
+    // required uint32 totalRects = 4;
+    if (has_totalrects()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt32Size(
+          this->totalrects());
+    }
+    
+    // required uint64 layerref = 6;
+    if (has_layerref()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->layerref());
+    }
+    
+  }
+  // repeated float mvMatrix = 3;
+  {
+    int data_size = 0;
+    data_size = 4 * this->mvmatrix_size();
+    total_size += 1 * this->mvmatrix_size() + data_size;
+  }
+  
+  // repeated .mozilla.layers.layerscope.DrawPacket.Rect layerRect = 5;
+  total_size += 1 * this->layerrect_size();
+  for (int i = 0; i < this->layerrect_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->layerrect(i));
+  }
+  
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void DrawPacket::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const DrawPacket*>(&from));
+}
+
+void DrawPacket::MergeFrom(const DrawPacket& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  mvmatrix_.MergeFrom(from.mvmatrix_);
+  layerrect_.MergeFrom(from.layerrect_);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_offsetx()) {
+      set_offsetx(from.offsetx());
+    }
+    if (from.has_offsety()) {
+      set_offsety(from.offsety());
+    }
+    if (from.has_totalrects()) {
+      set_totalrects(from.totalrects());
+    }
+    if (from.has_layerref()) {
+      set_layerref(from.layerref());
+    }
+  }
+}
+
+void DrawPacket::CopyFrom(const DrawPacket& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool DrawPacket::IsInitialized() const {
+  if ((_has_bits_[0] & 0x0000002b) != 0x0000002b) return false;
+  
+  for (int i = 0; i < layerrect_size(); i++) {
+    if (!this->layerrect(i).IsInitialized()) return false;
+  }
+  return true;
+}
+
+void DrawPacket::Swap(DrawPacket* other) {
+  if (other != this) {
+    std::swap(offsetx_, other->offsetx_);
+    std::swap(offsety_, other->offsety_);
+    mvmatrix_.Swap(&other->mvmatrix_);
+    std::swap(totalrects_, other->totalrects_);
+    layerrect_.Swap(&other->layerrect_);
+    std::swap(layerref_, other->layerref_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string DrawPacket::GetTypeName() const {
+  return "mozilla.layers.layerscope.DrawPacket";
+}
+
+
+// ===================================================================
+
 bool Packet_DataType_IsValid(int value) {
   switch(value) {
     case 1:
@@ -3200,6 +3797,7 @@ bool Packet_DataType_IsValid(int value) {
     case 4:
     case 5:
     case 6:
+    case 7:
       return true;
     default:
       return false;
@@ -3213,6 +3811,7 @@ const Packet_DataType Packet::COLOR;
 const Packet_DataType Packet::TEXTURE;
 const Packet_DataType Packet::LAYERS;
 const Packet_DataType Packet::META;
+const Packet_DataType Packet::DRAW;
 const Packet_DataType Packet::DataType_MIN;
 const Packet_DataType Packet::DataType_MAX;
 const int Packet::DataType_ARRAYSIZE;
@@ -3224,6 +3823,7 @@ const int Packet::kColorFieldNumber;
 const int Packet::kTextureFieldNumber;
 const int Packet::kLayersFieldNumber;
 const int Packet::kMetaFieldNumber;
+const int Packet::kDrawFieldNumber;
 #endif  // !_MSC_VER
 
 Packet::Packet()
@@ -3237,6 +3837,7 @@ void Packet::InitAsDefaultInstance() {
   texture_ = const_cast< ::mozilla::layers::layerscope::TexturePacket*>(&::mozilla::layers::layerscope::TexturePacket::default_instance());
   layers_ = const_cast< ::mozilla::layers::layerscope::LayersPacket*>(&::mozilla::layers::layerscope::LayersPacket::default_instance());
   meta_ = const_cast< ::mozilla::layers::layerscope::MetaPacket*>(&::mozilla::layers::layerscope::MetaPacket::default_instance());
+  draw_ = const_cast< ::mozilla::layers::layerscope::DrawPacket*>(&::mozilla::layers::layerscope::DrawPacket::default_instance());
 }
 
 Packet::Packet(const Packet& from)
@@ -3253,6 +3854,7 @@ void Packet::SharedCtor() {
   texture_ = NULL;
   layers_ = NULL;
   meta_ = NULL;
+  draw_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -3267,6 +3869,7 @@ void Packet::SharedDtor() {
     delete texture_;
     delete layers_;
     delete meta_;
+    delete draw_;
   }
 }
 
@@ -3302,6 +3905,9 @@ void Packet::Clear() {
     }
     if (has_meta()) {
       if (meta_ != NULL) meta_->::mozilla::layers::layerscope::MetaPacket::Clear();
+    }
+    if (has_draw()) {
+      if (draw_ != NULL) draw_->::mozilla::layers::layerscope::DrawPacket::Clear();
     }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -3397,6 +4003,20 @@ bool Packet::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(58)) goto parse_draw;
+        break;
+      }
+      
+      // optional .mozilla.layers.layerscope.DrawPacket draw = 7;
+      case 7: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_draw:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_draw()));
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -3454,6 +4074,12 @@ void Packet::SerializeWithCachedSizes(
       6, this->meta(), output);
   }
   
+  // optional .mozilla.layers.layerscope.DrawPacket draw = 7;
+  if (has_draw()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      7, this->draw(), output);
+  }
+  
 }
 
 int Packet::ByteSize() const {
@@ -3501,6 +4127,13 @@ int Packet::ByteSize() const {
           this->meta());
     }
     
+    // optional .mozilla.layers.layerscope.DrawPacket draw = 7;
+    if (has_draw()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->draw());
+    }
+    
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -3534,6 +4167,9 @@ void Packet::MergeFrom(const Packet& from) {
     if (from.has_meta()) {
       mutable_meta()->::mozilla::layers::layerscope::MetaPacket::MergeFrom(from.meta());
     }
+    if (from.has_draw()) {
+      mutable_draw()->::mozilla::layers::layerscope::DrawPacket::MergeFrom(from.draw());
+    }
   }
 }
 
@@ -3555,6 +4191,9 @@ bool Packet::IsInitialized() const {
   if (has_layers()) {
     if (!this->layers().IsInitialized()) return false;
   }
+  if (has_draw()) {
+    if (!this->draw().IsInitialized()) return false;
+  }
   return true;
 }
 
@@ -3566,6 +4205,7 @@ void Packet::Swap(Packet* other) {
     std::swap(texture_, other->texture_);
     std::swap(layers_, other->layers_);
     std::swap(meta_, other->meta_);
+    std::swap(draw_, other->draw_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     std::swap(_cached_size_, other->_cached_size_);
   }

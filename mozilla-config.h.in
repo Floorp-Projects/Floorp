@@ -41,11 +41,8 @@
  * Note that this should be the first #include to make sure that prtypes.h does
  * not attempt to define PRUnichar.  This includes the following hunspell-specific
  * includes.
- *
- * We don't use this to build elfhack and elf-dynstr-gc since those builds happen
- * during the export tier.  Also, disable this when building assembly files too.
  */
-#if !defined(ELFHACK_BUILD) && !defined(__ASSEMBLER__)
+#if !defined(__ASSEMBLER__)
 #include "mozilla/Char16.h"
 #endif
 
