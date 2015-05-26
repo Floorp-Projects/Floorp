@@ -17,14 +17,17 @@ namespace mozilla {
 namespace gfx {
 
 SourceSurfaceSkia::SourceSurfaceSkia()
-  : mLocked(false)
-  , mBitmapDataOwned(false)
+  : mDrawTarget(nullptr), mLocked(false)
 {
 }
 
 SourceSurfaceSkia::~SourceSurfaceSkia()
 {
   MaybeUnlock();
+  if (mDrawTarget) {
+    mDrawTarget->SnapshotDestroyed();
+    mDrawTarget = nullptr;
+  }
 }
 
 IntSize
@@ -41,7 +44,8 @@ SourceSurfaceSkia::GetFormat() const
 
 bool
 SourceSurfaceSkia::InitFromCanvas(SkCanvas* aCanvas,
-                                  SurfaceFormat aFormat)
+                                  SurfaceFormat aFormat,
+                                  DrawTargetSkia* aOwner)
 {
   SkISize size = aCanvas->getDeviceSize();
 
@@ -51,7 +55,7 @@ SourceSurfaceSkia::InitFromCanvas(SkCanvas* aCanvas,
 
   mSize = IntSize(size.fWidth, size.fHeight);
   mStride = mBitmap.rowBytes();
-  mBitmapDataOwned = true;
+  mDrawTarget = aOwner;
 
   return true;
 }
@@ -111,6 +115,7 @@ SourceSurfaceSkia::InitFromTexture(DrawTargetSkia* aOwner,
   mBitmap.setPixelRef(texRef);
 #endif
 
+  mDrawTarget = aOwner;
   return true;
 }
 
@@ -129,9 +134,10 @@ SourceSurfaceSkia::GetData()
 void
 SourceSurfaceSkia::DrawTargetWillChange()
 {
-  if (mBitmapDataOwned) {
+  if (mDrawTarget) {
     MaybeUnlock();
 
+    mDrawTarget = nullptr;
     SkBitmap temp = mBitmap;
     mBitmap.reset();
     temp.copyTo(&mBitmap, temp.colorType());

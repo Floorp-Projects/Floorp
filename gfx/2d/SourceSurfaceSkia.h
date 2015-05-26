@@ -36,7 +36,8 @@ public:
                     SurfaceFormat aFormat);
 
   bool InitFromCanvas(SkCanvas* aCanvas,
-                      SurfaceFormat aFormat);
+                      SurfaceFormat aFormat,
+                      DrawTargetSkia* aOwner);
 
   /**
    * NOTE: While wrapping a Texture for SkiaGL, the texture *must* be created
@@ -53,6 +54,7 @@ public:
 
 private:
   friend class DrawTargetSkia;
+
   void DrawTargetWillChange();
   void MaybeUnlock();
 
@@ -60,8 +62,8 @@ private:
   SurfaceFormat mFormat;
   IntSize mSize;
   int32_t mStride;
+  RefPtr<DrawTargetSkia> mDrawTarget;
   bool mLocked;
-  bool mBitmapDataOwned;
 };
 
 }
