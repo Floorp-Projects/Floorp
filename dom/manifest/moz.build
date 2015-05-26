@@ -5,11 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
-    'ImageObjectProcessor.js',
-    'ManifestObtainer.js',
-    'ManifestProcessor.js',
-    'ValueExtractor.js',
-    'WebManifest.jsm'
+    'ManifestImageObjectProcessor.jsm',
+    'ManifestObtainer.jsm',
+    'ManifestProcessor.jsm',
+    'ManifestValueExtractor.jsm'
 ]
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']

@@ -3,22 +3,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.*/
 /*
  * Manifest obtainer frame script implementation of:
- * http://www.w3.org/TR/appmanifest/#obtaining
+ * http://w3c.github.io/manifest/#obtaining
  *
  * It searches a top-level browsing context for
  * a <link rel=manifest> element. Then fetches
  * and processes the linked manifest.
  *
  * BUG: https://bugzilla.mozilla.org/show_bug.cgi?id=1083410
+ * exported ManifestObtainer
  */
-/*globals content, sendAsyncMessage, addMessageListener, Components*/
+/*globals content, ManifestProcessor, XPCOMUtils, sendAsyncMessage, addMessageListener, Components*/
 'use strict';
 const {
   utils: Cu
 } = Components;
-const {
-  ManifestProcessor
-} = Cu.import('resource://gre/modules/WebManifest.jsm', {});
+
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+
+XPCOMUtils.defineLazyModuleGetter(this, 'ManifestProcessor',
+  'resource://gre/modules/ManifestProcessor.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'ManifestObtainer',
+  'resource://gre/modules/ManifestObtainer.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'BrowserUtils',
+  'resource://gre/modules/BrowserUtils.jsm');
 
 addMessageListener('DOM:ManifestObtainer:Obtain', (aMsg) => {
   fetchManifest()
