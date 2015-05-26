@@ -70,20 +70,11 @@ struct nsTableReflowState {
   // Running y-offset
   nscoord y;
 
-  nsTableReflowState(nsPresContext&           aPresContext,
-                     const nsHTMLReflowState& aReflowState,
+  nsTableReflowState(const nsHTMLReflowState& aReflowState,
                      nsTableFrame&            aTableFrame,
                      nscoord                  aAvailWidth,
                      nscoord                  aAvailHeight)
     : reflowState(aReflowState)
-  {
-    Init(aPresContext, aTableFrame, aAvailWidth, aAvailHeight);
-  }
-
-  void Init(nsPresContext&  aPresContext,
-            nsTableFrame&   aTableFrame,
-            nscoord         aAvailWidth,
-            nscoord         aAvailHeight)
   {
     nsTableFrame* table = static_cast<nsTableFrame*>(aTableFrame.FirstInFlow());
     nsMargin borderPadding = table->GetChildAreaOffset(&reflowState);
@@ -108,15 +99,6 @@ struct nsTableReflowState {
       availSize.height = std::max(0, availSize.height);
     }
   }
-
-  nsTableReflowState(nsPresContext&           aPresContext,
-                     const nsHTMLReflowState& aReflowState,
-                     nsTableFrame&            aTableFrame)
-    : reflowState(aReflowState)
-  {
-    Init(aPresContext, aTableFrame, aReflowState.AvailableWidth(), aReflowState.AvailableHeight());
-  }
-
 };
 
 /********************************************************************************
@@ -2053,7 +2035,7 @@ nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
   // and our reflow height to our avail height minus border, padding, cellspacing
   aDesiredSize.Width() = aReflowState.ComputedWidth() +
                        aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  nsTableReflowState reflowState(*PresContext(), aReflowState, *this,
+  nsTableReflowState reflowState(aReflowState, *this,
                                  aDesiredSize.Width(), aAvailHeight);
   ReflowChildren(reflowState, aStatus, aLastChildReflowed,
                  aDesiredSize.mOverflowAreas);
