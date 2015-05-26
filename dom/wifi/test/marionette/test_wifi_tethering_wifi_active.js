@@ -4,6 +4,8 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
+const TESTING_HOSTAPD = [{ ssid: 'ap0' }];
+
 function connectToFirstNetwork() {
   let firstNetwork;
   return gTestSuite.requestWifiScan()
@@ -18,6 +20,11 @@ gTestSuite.doTestTethering(function() {
   let firstNetwork;
 
   return gTestSuite.ensureWifiEnabled(true)
+    // Start custom hostapd for testing.
+    .then(() => gTestSuite.startHostapds(TESTING_HOSTAPD))
+    .then(() => gTestSuite.verifyNumOfProcesses('hostapd', TESTING_HOSTAPD.length))
+
+    // Connect to the testing AP and wait for data becoming disconnected.
     .then(function () {
       return Promise.all([
         // 1) Set up the event listener first:
@@ -46,8 +53,12 @@ gTestSuite.doTestTethering(function() {
         //    Wifi should be enabled, RIL data should become disconnected and
         //    we should connect to an wifi AP.
         gTestSuite.waitForWifiManagerEventOnce('enabled'),
-        gTestSuite.waitForRilDataConnected(false),
-        gTestSuite.waitForConnected(firstNetwork),
+
+        // Due to Bug 1168285, after re-enablin wifi, the remembered network
+        // will not be connected automatically. Leave "auto connect test"
+        // covered by test_wifi_auto_connect.js.
+        //gTestSuite.waitForRilDataConnected(false),
+        //gTestSuite.waitForConnected(firstNetwork),
 
         // 2) Stop wifi tethering.
         gTestSuite.requestTetheringEnabled(false)
@@ -55,5 +66,9 @@ gTestSuite.doTestTethering(function() {
     })
     // Remove wlan0 from default route by disabling wifi. Otherwise,
     // it will cause the subsequent test cases loading page error.
-    .then(() => gTestSuite.requestWifiEnabled(false));
+    .then(() => gTestSuite.requestWifiEnabled(false))
+
+    // Kill running hostapd.
+    .then(gTestSuite.killAllHostapd)
+    .then(() => gTestSuite.verifyNumOfProcesses('hostapd', 0));
 });
