@@ -894,14 +894,15 @@ JS::FormatStackDump(JSContext* cx, char* buf, bool showArgs, bool showLocals, bo
 
 struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
 {
-    FILE*  output;
+    const char* prefix;
+    FILE* output;
 
     DumpHeapTracer(FILE* fp, JSRuntime* rt, JSTraceCallback callback)
       : JS::CallbackTracer(rt, callback, DoNotTraceWeakMaps),
-        js::WeakMapTracer(rt, DumpWeakMap), output(fp)
+        js::WeakMapTracer(rt, DumpWeakMap), prefix(""), output(fp)
     {}
 
-private:
+  private:
     static void
     DumpWeakMap(js::WeakMapTracer* trc, JSObject* map,
                 JS::GCCellPtr key, JS::GCCellPtr value)
@@ -970,7 +971,7 @@ DumpHeapVisitCell(JSRuntime* rt, void* data, void* thing,
 }
 
 static void
-DumpHeapVisitChild(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
+DumpHeapVisitGCThing(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
 {
     if (gc::IsInsideNursery((js::gc::Cell*)*thingp))
         return;
@@ -978,19 +979,7 @@ DumpHeapVisitChild(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
     DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(trc);
     char buffer[1024];
     dtrc->getTracingEdgeName(buffer, sizeof(buffer));
-    fprintf(dtrc->output, "> %p %c %s\n", *thingp, MarkDescriptor(*thingp), buffer);
-}
-
-static void
-DumpHeapVisitRoot(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind)
-{
-    if (gc::IsInsideNursery((js::gc::Cell*)*thingp))
-        return;
-
-    DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(trc);
-    char buffer[1024];
-    dtrc->getTracingEdgeName(buffer, sizeof(buffer));
-    fprintf(dtrc->output, "%p %c %s\n", *thingp, MarkDescriptor(*thingp), buffer);
+    fprintf(dtrc->output, "%s%p %c %s\n", dtrc->prefix, *thingp, MarkDescriptor(*thingp), buffer);
 }
 
 void
@@ -999,7 +988,7 @@ js::DumpHeap(JSRuntime* rt, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
     if (nurseryBehaviour == js::CollectNurseryBeforeDump)
         rt->gc.evictNursery(JS::gcreason::API);
 
-    DumpHeapTracer dtrc(fp, rt, DumpHeapVisitRoot);
+    DumpHeapTracer dtrc(fp, rt, DumpHeapVisitGCThing);
     fprintf(dtrc.output, "# Roots.\n");
     TraceRuntime(&dtrc);
 
@@ -1008,7 +997,7 @@ js::DumpHeap(JSRuntime* rt, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
 
     fprintf(dtrc.output, "==========\n");
 
-    dtrc.setTraceCallback(DumpHeapVisitChild);
+    dtrc.prefix = "> ";
     IterateZonesCompartmentsArenasCells(rt, &dtrc,
                                         DumpHeapVisitZone,
                                         DumpHeapVisitCompartment,
