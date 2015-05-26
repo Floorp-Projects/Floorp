@@ -20,17 +20,8 @@
 
 /* Toolbar */
 
-#performance-toolbar > tabs,
-#performance-toolbar {
-  -moz-border-end-color: var(--theme-splitter-color);
-}
-
 #performance-toolbar-control-other {
   -moz-padding-end: 5px;
-}
-
-#performance-toolbar-controls-detail-views > toolbarbutton {
-  min-width: 0;
 }
 
 #performance-toolbar-controls-detail-views .toolbarbutton-text {
@@ -60,91 +51,23 @@
   border-radius: 1px;
 }
 
-/* Recording Notice */
+/* Details panel buttons */
 
-#performance-view .notice-container {
-  font-size: 120%;
-  background-color: var(--theme-toolbar-background);
-  color: var(--theme-body-color);
-  padding-bottom: 20vh;
+#select-waterfall-view {
+  list-style-image: url(performance-icons.svg#details-waterfall);
 }
 
-#performance-view .notice-container button {
-  min-width: 30px;
-  min-height: 28px;
-  margin: 0;
+#select-js-calltree-view,
+#select-memory-calltree-view {
+  list-style-image: url(performance-icons.svg#details-call-tree);
 }
 
-#performance-view .notice-container vbox {
-  text-align: center;
+#select-js-flamegraph-view,
+#select-memory-flamegraph-view {
+  list-style-image: url(performance-icons.svg#details-flamegraph);
 }
 
-.console-profile-command {
-  font-family: monospace;
-  margin: 3px 2px;
-}
-
-#performance-view .realtime-message {
-  opacity: 0.5;
-  display: block;
-}
-
-#performance-view toolbarbutton.record-button {
-  padding: 5px;
-}
-
-#performance-view toolbarbutton.record-button[checked],
-#performance-view toolbarbutton.record-button[checked] {
-  color: var(--theme-selection-color);
-  background: var(--theme-selection-background);
-}
-
-.record-button[locked] {
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-#performance-view .realtime-disabled-message,
-#performance-view .realtime-disabled-on-e10s-message {
-  display: none;
-  /* This label does not want to wrap naturally (based on some combination of
-     it's parents and flex).  Quick and dirty way to force it to wrap -> don't
-     let it get bigger than half the screen size */
-  max-width: 60vw;
-}
-
-#performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message {
-  display: block;
-  opacity: 0.5;
-
-}
-#performance-view[e10s="unsupported"] .realtime-disabled-message {
-  display: block;
-  opacity: 0.5;
-}
-
-#details-pane-container .buffer-status-message,
-#details-pane-container .buffer-status-message-full {
-  display: none;
-}
-
-#details-pane-container[buffer-status="in-progress"] .buffer-status-message {
-  display: block;
-  opacity: 0.5;
-}
-
-#details-pane-container[buffer-status="full"] .buffer-status-message {
-  display: block;
-  color: var(--theme-highlight-red);
-  font-weight: bold;
-  opacity: 1;
-}
-
-#details-pane-container[buffer-status="full"] .buffer-status-message-full {
-  display: block;
-}
-
-/* Overview Panel */
+/* Recording buttons */
 
 #main-record-button {
   list-style-image: url(profiler-stopwatch.svg);
@@ -162,20 +85,103 @@
   display: none;
 }
 
-/* Details Panel */
-
-#select-waterfall-view {
-  list-style-image: url(performance-icons.svg#details-waterfall);
+.notice-container .record-button {
+  padding: 5px !important;
 }
 
-#select-js-calltree-view,
-#select-memory-calltree-view {
-  list-style-image: url(performance-icons.svg#details-call-tree);
+.notice-container .record-button[checked],
+.notice-container .record-button[checked] {
+  color: var(--theme-selection-color) !important;
+  background: var(--theme-selection-background) !important;
 }
 
-#select-js-flamegraph-view,
-#select-memory-flamegraph-view {
-  list-style-image: url(performance-icons.svg#details-flamegraph);
+.record-button[locked] {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Sidebar & recording items */
+
+.recording-item {
+  padding: 4px;
+}
+
+.recording-item-title {
+  font-size: 110%;
+}
+
+.recording-item-footer {
+  padding-top: 4px;
+  font-size: 90%;
+}
+
+.recording-item-save {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.recording-item-duration,
+.recording-item-save {
+  color: var(--theme-body-color-alt);
+}
+
+#recordings-list .selected label {
+  /* Text inside a selected item should not be custom colored. */
+  color: inherit !important;
+}
+
+/* Recording notices */
+
+.notice-container {
+  font-size: 120%;
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color);
+  padding-bottom: 20vh;
+}
+
+.console-profile-command {
+  font-family: monospace;
+  margin: 3px 2px;
+}
+
+.realtime-disabled-message,
+.realtime-disabled-on-e10s-message {
+  display: none;
+  /* This label does not want to wrap naturally (based on some combination of
+     it's parents and flex).  Quick and dirty way to force it to wrap -> don't
+     let it get bigger than half the screen size */
+  max-width: 60vw;
+}
+
+#performance-view[e10s="disabled"] .realtime-disabled-on-e10s-message {
+  display: auto;
+  opacity: 0.5;
+
+}
+#performance-view[e10s="unsupported"] .realtime-disabled-message {
+  display: auto;
+  opacity: 0.5;
+}
+
+.buffer-status-message,
+.buffer-status-message-full {
+  display: none;
+}
+
+#details-pane-container[buffer-status="in-progress"] .buffer-status-message {
+  display: auto;
+  opacity: 0.5;
+}
+
+#details-pane-container[buffer-status="full"] .buffer-status-message {
+  display: auto;
+  color: var(--theme-highlight-red);
+  font-weight: bold;
+  opacity: 1;
+}
+
+#details-pane-container[buffer-status="full"] .buffer-status-message-full {
+  display: auto;
 }
 
 /* Profile call tree */
@@ -317,45 +323,6 @@
   color: var(--theme-content-color2);
 }
 
-.call-tree-zoom {
-  -moz-appearance: none;
-  background-color: transparent;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 11px;
-  min-width: 11px;
-  -moz-margin-start: 8px !important;
-  cursor: zoom-in;
-  opacity: 0;
-}
-
-.theme-dark .call-tree-zoom {
-  background-image: url(magnifying-glass.png);
-}
-
-.theme-light .call-tree-zoom {
-  background-image: url(magnifying-glass-light.png);
-}
-
-@media (min-resolution: 1.25dppx) {
-  .theme-dark .call-tree-zoom {
-    background-image: url(magnifying-glass@2x.png);
-  }
-
-  .theme-light .call-tree-zoom {
-    background-image: url(magnifying-glass-light@2x.png);
-  }
-}
-
-.call-tree-item:hover .call-tree-zoom {
-  transition: opacity 0.3s ease-in;
-  opacity: 1;
-}
-
-.call-tree-item:hover .call-tree-zoom:hover {
-  opacity: 0;
-}
-
 .call-tree-category {
   transform: scale(0.75);
   transform-origin: center right;
@@ -364,6 +331,10 @@
 /**
  * Details Waterfall Styles
  */
+
+#waterfall-breakdown {
+  overflow: auto;
+}
 
 .waterfall-list-contents {
   /* Hack: force hardware acceleration */
@@ -513,36 +484,6 @@ menuitem.marker-color-graphs-blue:before,
   font-weight: bold;
 }
 
-/* Recording items */
-
-.recording-item {
-  padding: 4px;
-}
-
-.recording-item-title {
-  font-size: 110%;
-}
-
-.recording-item-footer {
-  padding-top: 4px;
-  font-size: 90%;
-}
-
-.recording-item-save {
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.recording-item-duration,
-.recording-item-save {
-  color: var(--theme-body-color-alt);
-}
-
-#recordings-list .selected label {
-  /* Text inside a selected item should not be custom colored. */
-  color: inherit !important;
-}
-
 /**
  * JIT View
  */
@@ -662,8 +603,8 @@ menuitem.marker-color-graphs-blue:before,
 /**
  * Configurable Options
  *
- * Elements can be tagged with a class and visibility is controlled via a preference being
- * applied or removed.
+ * Elements can be tagged with a class and visibility is controlled via a
+ * preference being applied or removed.
  */
 
 /**
