@@ -30,6 +30,7 @@
 #include "ssl.h"
 #include "sslproto.h"
 #include "plhash.h"
+#include "mozilla/Snprintf.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -514,7 +515,7 @@ bool AdjustWebSocketHost(relayBuffer& buffer, connection_info_t *ci)
   char newhost[40];
   PR_NetAddrToString(&inet_addr, newhost, sizeof(newhost));
   assert(strlen(newhost) < sizeof(newhost) - 7);
-  sprintf(newhost, "%s:%d", newhost, PR_ntohs(inet_addr.inet.port));
+  snprintf_literal(newhost, "%s:%d", newhost, PR_ntohs(inet_addr.inet.port));
 
   int diff = strlen(newhost) - (endhost-host);
   if (diff > 0)
@@ -784,17 +785,20 @@ void HandleConnection(void* data)
                   LOG_DEBUG((" accepted CONNECT request with redirection, "
                              "sending location and 302 to the client\n"));
                   client_done = true;
-                  sprintf(buffers[s2].buffer, 
-                          "HTTP/1.1 302 Moved\r\n"
-                          "Location: https://%s/\r\n"
-                          "Connection: close\r\n\r\n",
-                          locationHeader.c_str());
+                  snprintf(buffers[s2].buffer,
+                           buffers[s2].bufferend - buffers[s2].buffer,
+                           "HTTP/1.1 302 Moved\r\n"
+                           "Location: https://%s/\r\n"
+                           "Connection: close\r\n\r\n",
+                           locationHeader.c_str());
               }
               else
               {
                 LOG_ERRORD((" could not read the connect request, closing connection with %d", response));
                 client_done = true;
-                sprintf(buffers[s2].buffer, "HTTP/1.1 %d ERROR\r\nConnection: close\r\n\r\n", response);
+                snprintf(buffers[s2].buffer,
+                         buffers[s2].bufferend - buffers[s2].buffer,
+                         "HTTP/1.1 %d ERROR\r\nConnection: close\r\n\r\n", response);
 
                 break;
               }
