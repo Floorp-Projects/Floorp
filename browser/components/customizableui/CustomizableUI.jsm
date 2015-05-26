@@ -1507,6 +1507,21 @@ let CustomizableUIInternal = {
     // to the panel if we have to. We bail as soon as we find an input,
     // a toolbarbutton/item, or the panel:
     while (true && target) {
+      // Skip out of iframes etc:
+      if (target.nodeType == target.DOCUMENT_NODE) {
+        if (!target.defaultView) {
+          // Err, we're done.
+          break;
+        }
+        // Cue some voodoo
+        target = target.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIWebNavigation)
+                                   .QueryInterface(Ci.nsIDocShell)
+                                   .chromeEventHandler;
+        if (!target) {
+          break;
+        }
+      }
       let tagName = target.localName;
       inInput = tagName == "input" || tagName == "textbox";
       inItem = tagName == "toolbaritem" || tagName == "toolbarbutton";
