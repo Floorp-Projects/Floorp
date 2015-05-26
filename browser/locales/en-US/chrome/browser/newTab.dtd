@@ -12,8 +12,6 @@
 <!ENTITY newtab.customize.suggested "Show suggested and your top sites">
 <!ENTITY newtab.customize.topsites "Show your top sites">
 <!ENTITY newtab.customize.blank2 "Show blank page">
-<!ENTITY newtab.customize.what "What is this page?">
-<!ENTITY newtab.intro.header "What is this page?">
 <!ENTITY newtab.undo.removedLabel "Thumbnail removed.">
 <!ENTITY newtab.undo.undoButton "Undo.">
 <!ENTITY newtab.undo.restoreButton "Restore All.">

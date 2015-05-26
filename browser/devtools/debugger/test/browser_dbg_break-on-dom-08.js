@@ -14,7 +14,7 @@ function test() {
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
 
-    Task.spawn(function() {
+    Task.spawn(function*() {
       yield waitForSourceShown(aPanel, ".html");
       yield callInTab(gTab, "addBodyClickEventListener");
 

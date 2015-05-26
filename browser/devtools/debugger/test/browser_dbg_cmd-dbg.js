@@ -8,7 +8,7 @@
 const TEST_URI = EXAMPLE_URL + "doc_cmd-dbg.html";
 
 function test() {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let options = yield helpers.openTab(TEST_URI);
     yield helpers.openToolbar(options);
 

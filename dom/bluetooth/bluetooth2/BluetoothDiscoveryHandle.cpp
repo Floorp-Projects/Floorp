@@ -15,10 +15,6 @@
 
 USING_BLUETOOTH_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(BluetoothDiscoveryHandle,
-                                   DOMEventTargetHelper,
-                                   mAdapter)
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothDiscoveryHandle)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
@@ -35,33 +31,22 @@ BluetoothDiscoveryHandle::BluetoothDiscoveryHandle(nsPIDOMWindow* aWindow)
 BluetoothDiscoveryHandle::BluetoothDiscoveryHandle(
   nsPIDOMWindow* aWindow,
   const nsTArray<nsString>& aServiceUuids,
-  const nsAString& aLeScanUuid,
-  BluetoothAdapter* aAdapter)
+  const nsAString& aLeScanUuid)
   : DOMEventTargetHelper(aWindow)
   , mLeScanUuid(aLeScanUuid)
   , mServiceUuids(aServiceUuids)
-  , mAdapter(aAdapter)
 {
   MOZ_ASSERT(aWindow);
 }
 
 BluetoothDiscoveryHandle::~BluetoothDiscoveryHandle()
 {
-  // Remove itself from the adapter's mLeScanHandleArray
-  if (!mLeScanUuid.IsEmpty() && mAdapter != nullptr) {
-    mAdapter->RemoveLeScanHandle(mLeScanUuid);
-  }
 }
 
 void
 BluetoothDiscoveryHandle::DisconnectFromOwner()
 {
   DOMEventTargetHelper::DisconnectFromOwner();
-
-  // Remove itself from the adapter's mLeScanHandleArray
-  if (!mLeScanUuid.IsEmpty() && mAdapter != nullptr) {
-    mAdapter->RemoveLeScanHandle(mLeScanUuid);
-  }
 }
 
 // static
@@ -80,15 +65,13 @@ already_AddRefed<BluetoothDiscoveryHandle>
 BluetoothDiscoveryHandle::Create(
   nsPIDOMWindow* aWindow,
   const nsTArray<nsString>& aServiceUuids,
-  const nsAString& aLeScanUuid,
-  BluetoothAdapter* aAdapter)
+  const nsAString& aLeScanUuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aAdapter);
 
   nsRefPtr<BluetoothDiscoveryHandle> handle =
-    new BluetoothDiscoveryHandle(aWindow, aServiceUuids, aLeScanUuid, aAdapter);
+    new BluetoothDiscoveryHandle(aWindow, aServiceUuids, aLeScanUuid);
   return handle.forget();
 }
 

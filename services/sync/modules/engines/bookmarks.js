@@ -1154,6 +1154,7 @@ BookmarksStore.prototype = {
     stmt.params.guid = guid;
     stmt.params.item_id = id;
     Async.querySpinningly(stmt);
+    PlacesUtils.invalidateCachedGuidFor(id);
     return guid;
   },
 
