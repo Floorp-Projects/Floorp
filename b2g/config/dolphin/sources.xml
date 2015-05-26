@@ -121,7 +121,7 @@
   <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="3c5405863d2002f665ef2b901abb3853c420129b"/>
   <project name="platform/system/netd" path="system/netd" revision="3ae56364946d4a5bf5a5f83f12f9a45a30398e33"/>
   <project name="platform/system/security" path="system/security" revision="ee8068b9e7bfb2770635062fc9c2035be2142bd8"/>
-  <project name="platform/system/vold" path="system/vold" revision="bb33b1ce8ad9cd3fc4311801b4d56db1d5c8175b"/>
+  <project name="platform/system/vold" path="system/vold" revision="fe12a9e2268da653d1cd4c39ec89a42211d22f25"/>
   <!--original fetch url was http://sprdsource.spreadtrum.com:8085/b2g/android-->
   <remote fetch="https://git.mozilla.org/external/sprd-aosp" name="sprd-aosp"/>
   <default remote="sprd-aosp" revision="sprdb2g_gonk4.4" sync-j="4"/>
@@ -135,7 +135,7 @@
   <project groups="invensense" name="platform/hardware/invensense" path="hardware/invensense" revision="e6d9ab28b4f4e7684f6c07874ee819c9ea0002a2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="865ce3b4a2ba0b3a31421ca671f4d6c5595f8690"/>
   <project name="kernel/common" path="kernel" revision="0f36762ab0c1d8ce10c6a5eda948b05d5d6cc379"/>
-  <project name="platform/system/core" path="system/core" revision="7992618bd4ee33ce96897675a5c0a9b619122f13"/>
+  <project name="platform/system/core" path="system/core" revision="21aded5b180f7bcc9e2cefbe6e570b1d51b6065b"/>
   <project name="u-boot" path="u-boot" revision="f1502910977ac88f43da7bf9277c3523ad4b0b2f"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="7d6e1269be7186b2073fa568958b357826692c4b"/>
   <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="e503b1d14d7fdee532b8f391407299da193c1b2d"/>
