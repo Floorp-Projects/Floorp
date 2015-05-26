@@ -67,16 +67,16 @@ describe("loop.OTSdkDriver", function () {
     mozLoop = {
       telemetryAddValue: sinon.stub(),
       TWO_WAY_MEDIA_CONN_LENGTH: {
-        SHORTER_THAN_10S: "SHORTER_THAN_10S",
-        BETWEEN_10S_AND_30S: "BETWEEN_10S_AND_30S",
-        BETWEEN_30S_AND_5M: "BETWEEN_30S_AND_5M",
-        MORE_THAN_5M: "MORE_THAN_5M"
+        SHORTER_THAN_10S: 0,
+        BETWEEN_10S_AND_30S: 1,
+        BETWEEN_30S_AND_5M: 2,
+        MORE_THAN_5M: 3
       },
       SHARING_STATE_CHANGE: {
-        WINDOW_ENABLED: "WINDOW_ENABLED",
-        WINDOW_DISABLED: "WINDOW_DISABLED",
-        BROWSER_ENABLED: "BROWSER_ENABLED",
-        BROWSER_DISABLED: "BROWSER_DISABLED"
+        WINDOW_ENABLED: 0,
+        WINDOW_DISABLED: 1,
+        BROWSER_ENABLED: 2,
+        BROWSER_DISABLED: 3
       }
     };
 
