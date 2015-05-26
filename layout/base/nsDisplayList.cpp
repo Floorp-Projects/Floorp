@@ -2164,7 +2164,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
 
   if (isThemed) {
     nsITheme* theme = presContext->GetTheme();
-    if (theme->NeedToClearBackgroundBehindWidget(aFrame->StyleDisplay()->mAppearance) &&
+    if (theme->NeedToClearBackgroundBehindWidget(aFrame, aFrame->StyleDisplay()->mAppearance) &&
         aBuilder->IsInRootChromeDocumentOrPopup() && !aBuilder->IsInTransform()) {
       bgItemList.AppendNewToTop(
         new (aBuilder) nsDisplayClearBackground(aBuilder, aFrame));
@@ -4696,11 +4696,6 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
 
   coords[2] = NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
                                       aAppUnitsPerPixel);
-  if (aBoundsOverride) {
-    // Adjust based on the origin of the override:
-    coords[0] += NSAppUnitsToFloatPixels(aBoundsOverride->x, aAppUnitsPerPixel);
-    coords[1] += NSAppUnitsToFloatPixels(aBoundsOverride->y, aAppUnitsPerPixel);
-  }
 
   return Point3D(coords[0], coords[1], coords[2]);
 }
@@ -4914,6 +4909,17 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
                         0);
   Point3D offsetBetweenOrigins = roundedOrigin + aProperties.mToTransformOrigin;
 
+  if (aOffsetByOrigin) {
+    // We can fold the final translation by roundedOrigin into the first matrix
+    // basis change translation. This is more stable against variation due to
+    // insufficient floating point precision than reversing the translation
+    // afterwards.
+    result.Translate(-aProperties.mToTransformOrigin);
+    result.TranslatePost(offsetBetweenOrigins);
+  } else {
+    result.ChangeBasis(offsetBetweenOrigins);
+  }
+
   if (frame && frame->Preserves3D()) {
     // Include the transform set on our parent
     NS_ASSERTION(frame->GetParent() &&
@@ -4933,27 +4939,9 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
                                           aOrigin - frame->GetPosition(),
                                           aAppUnitsPerPixel, nullptr,
                                           aOutAncestor, !frame->IsTransformed());
-
-    if (aOffsetByOrigin) {
-      result.Translate(-aProperties.mToTransformOrigin);
-      result.TranslatePost(offsetBetweenOrigins);
-    } else {
-      result.ChangeBasis(offsetBetweenOrigins);
-    }
     result = result * parent;
-    return result;
   }
 
-  if (aOffsetByOrigin) {
-    // We can fold the final translation by roundedOrigin into the first matrix
-    // basis change translation. This is more stable against variation due to
-    // insufficient floating point precision than reversing the translation
-    // afterwards.
-    result.Translate(-aProperties.mToTransformOrigin);
-    result.TranslatePost(offsetBetweenOrigins);
-  } else {
-    result.ChangeBasis(offsetBetweenOrigins);
-  }
   return result;
 }
 

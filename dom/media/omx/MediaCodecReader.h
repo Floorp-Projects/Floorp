@@ -177,11 +177,6 @@ protected:
   // Called on MediaCodecReader::mLooper thread.
   void onMessageReceived(const android::sp<android::AMessage>& aMessage);
 
-  // Receive a notify from ResourceListener.
-  // Called on Binder thread.
-  virtual void VideoCodecReserved();
-  virtual void VideoCodecCanceled();
-
   virtual bool CreateExtractor();
 
   // Check the underlying HW resource is available and store the result in
@@ -194,28 +189,6 @@ protected:
   bool mIsWaitingResources;
 
 private:
-
-  // An intermediary class that can be managed by android::sp<T>.
-  // Redirect codecReserved() and codecCanceled() to MediaCodecReader.
-  class VideoResourceListener : public android::MediaCodecProxy::CodecResourceListener
-  {
-  public:
-    VideoResourceListener(MediaCodecReader* aReader);
-    ~VideoResourceListener();
-
-    virtual void codecReserved();
-    virtual void codecCanceled();
-
-  private:
-    // Forbidden
-    VideoResourceListener() = delete;
-    VideoResourceListener(const VideoResourceListener& rhs) = delete;
-    const VideoResourceListener& operator=(const VideoResourceListener& rhs) = delete;
-
-    MediaCodecReader* mReader;
-  };
-  friend class VideoResourceListener;
-
   class VorbisInputCopier : public TrackInputCopier
   {
     virtual bool Copy(android::MediaBuffer* aSourceBuffer,
@@ -354,7 +327,6 @@ private:
   bool CreateMediaCodecs();
   static bool CreateMediaCodec(android::sp<android::ALooper>& aLooper,
                                Track& aTrack,
-                               bool aAsync,
                                android::wp<android::MediaCodecProxy::CodecResourceListener> aListener);
   static bool ConfigureMediaCodec(Track& aTrack);
   void DestroyMediaCodecs();
@@ -414,8 +386,6 @@ private:
                                        size_t& aIndex);
 
   void ReleaseAllTextureClients();
-
-  android::sp<VideoResourceListener> mVideoListener;
 
   android::sp<android::ALooper> mLooper;
   android::sp<android::MetaData> mMetaData;

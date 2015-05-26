@@ -39,7 +39,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) random-if(smallScreen&&Android) fuzzy(255
 != mfenced-8.html mfenced-8-ref.html
 == mfenced-9.html mfenced-9-ref.html
 fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfenced-10.html mfenced-10-ref.html # Windows versions without Cambria Math, see bug 670592
-fails-if(winWidget&&d2d) == mfenced-11.html mfenced-11-ref.html
+== mfenced-11.html mfenced-11-ref.html
 skip-if(Mulet) == mfenced-12.html mfenced-12-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
@@ -139,9 +139,9 @@ random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.
 == mpadded-5.html mpadded-5-ref.html
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
-fails-if(B2G||Mulet) == mpadded-7.html mpadded-7-ref.html # B2G: slight character width variation # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-fails-if(B2G) == mpadded-8.html mpadded-8-ref.html # B2G: slight character width variation
-fails-if(B2G) == mpadded-9.html mpadded-9-ref.html # B2G: slight character width variation
+fails-if(Mulet) == mpadded-7.html mpadded-7-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+== mpadded-8.html mpadded-8-ref.html
+== mpadded-9.html mpadded-9-ref.html
 == math-display.html math-display-ref.html
 == scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
@@ -198,7 +198,7 @@ random-if(winWidget&&!d2d) == opentype-stretchy.html opentype-stretchy-ref.html
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
-random-if((B2G&&browserIsRemote)||Mulet) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics # Initial mulet triage: parity with B2G/B2G Desktop
+random-if((B2G&&browserIsRemote)||Mulet) fails-if(winWidget&&/^Windows\x20NT\x205\.1/.test(http.oscpu)) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics # Initial mulet triage: parity with B2G/B2G Desktop
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1a.html menclose-1-ref.html
@@ -345,20 +345,21 @@ fails-if(B2G||Mulet||Android||/^Windows\x20NT\x205\.1/.test(http.oscpu)||OSX) ==
 == mfrac-A-7.html mfrac-A-7-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html
 == mfrac-B-1.html mfrac-B-1-ref.html
-random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfrac-B-2.html mfrac-B-2-3-ref.html
-random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfrac-B-3.html mfrac-B-2-3-ref.html
+fails-if(winWidget) == mfrac-B-2.html mfrac-B-2-3-ref.html
+fails-if(winWidget) == mfrac-B-3.html mfrac-B-2-3-ref.html
 == mfrac-B-4.html mfrac-B-4-5-ref.html
 == mfrac-B-5.html mfrac-B-4-5-ref.html
 == mfrac-B-6.html mfrac-B-6-7-ref.html
 == mfrac-B-7.html mfrac-B-6-7-ref.html
 fuzzy-if(OSX,1,100) == mfrac-C-1.html mfrac-C-1-ref.html
-random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfrac-C-2.html mfrac-C-2-ref.html
+fails-if(winWidget) == mfrac-C-2.html mfrac-C-2-ref.html
 == mfrac-C-3.html mfrac-C-3-ref.html
 == mfrac-C-4.html mfrac-C-4-ref.html
 fuzzy-if(OSX,1,100) == mfrac-D-1.html mfrac-D-1-ref.html
-random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfrac-D-2.html mfrac-D-2-ref.html
+fails-if(winWidget) == mfrac-D-2.html mfrac-D-2-ref.html
 == mfrac-D-3.html mfrac-D-3-ref.html
 == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
 test-pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1-ref.html
 pref(font.size.inflation.emPerLine,25) == font-inflation-1.html font-inflation-1-ref.html
+test-pref(font.minimum-size.x-math,40) == default-font.html default-font-ref.html

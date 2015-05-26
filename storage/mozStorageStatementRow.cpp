@@ -142,7 +142,8 @@ StatementRow::Resolve(nsIXPConnectWrappedNative *aWrapper,
     }
 
     JS::Rooted<jsid> id(aCtx, aId);
-    *_retval = ::JS_DefinePropertyById(aCtx, scopeObj, id, JS::UndefinedHandleValue, 0);
+    *_retval = ::JS_DefinePropertyById(aCtx, scopeObj, id, JS::UndefinedHandleValue,
+                                       JSPROP_RESOLVING);
     *aResolvedp = true;
     return NS_OK;
   }

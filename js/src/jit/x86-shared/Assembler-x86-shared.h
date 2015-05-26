@@ -2766,7 +2766,7 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
     unsigned blendpsMask(bool x, bool y, bool z, bool w) {
-        return x | (y << 1) | (z << 2) | (w << 3);
+        return (x << 0) | (y << 1) | (z << 2) | (w << 3);
     }
     void vblendps(unsigned mask, FloatRegister src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE41());

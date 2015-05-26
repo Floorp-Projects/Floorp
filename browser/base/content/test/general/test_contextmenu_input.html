@@ -40,8 +40,8 @@ function runTest(testNum) {
         // Context menu for text input field.
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,
@@ -61,8 +61,8 @@ function runTest(testNum) {
         // Context menu for spell-check input.
         checkContextMenu(["context-undo",        value,
                           "---",                 null,
-                          "context-cut",         value,
-                          "context-copy",        value,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      value,
                           "---",                 null,
@@ -90,8 +90,8 @@ function runTest(testNum) {
                           "---",                 null,
                           "context-undo",        value,
                           "---",                 null,
-                          "context-cut",         value,
-                          "context-copy",        value,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      value,
                           "---",                 null,
@@ -115,8 +115,8 @@ function runTest(testNum) {
         // Context menu for spell-check input with a known word.
         checkContextMenu(["context-undo",        value,
                           "---",                 null,
-                          "context-cut",         value,
-                          "context-copy",        value,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      value,
                           "---",                 null,
@@ -139,8 +139,8 @@ function runTest(testNum) {
         // Context menu for disabled input.
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,
@@ -157,15 +157,11 @@ function runTest(testNum) {
         break;
 
     case 7: // password
-    case 8: // email
-    case 9: // url
-    case 10: // tel
-    case 11: // type='number'
-        // Context menu for tel, password, email, url and number input fields.
+        // Context menu for password input fields.
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,
@@ -175,9 +171,30 @@ function runTest(testNum) {
 
         closeContextMenu();
 
-        if (testNum == 7) {
-          input.type = 'email';
-        } else if (testNum == 8) {
+        input.type = 'email';
+
+        openContextMenuFor(input); // Invoke context menu for next test.
+        break;
+
+    case 8: // email
+    case 9: // url
+    case 10: // tel
+    case 11: // type='number'
+        // Context menu for tel, email, url and number input fields.
+        checkContextMenu(["context-undo",        false,
+                          "---",                 null,
+                          "context-cut",         true,
+                          "context-copy",        true,
+                          "context-paste",       null, // ignore clipboard state
+                          "context-delete",      false,
+                          "---",                 null,
+                          "context-selectall",   false,
+                          "---",                 null,
+                          "context-inspect",     true]);
+
+        closeContextMenu();
+
+        if (testNum == 8) {
           input.type = 'url';
         } else if (testNum == 9) {
           input.type = 'tel';
@@ -228,8 +245,8 @@ function runTest(testNum) {
         // Context menu for search input fields.
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,
@@ -257,8 +274,8 @@ function runTest(testNum) {
         // Context menu for a read-only input.
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
+                          "context-cut",         true,
+                          "context-copy",        true,
                           "context-paste",       null, // ignore clipboard state
                           "context-delete",      false,
                           "---",                 null,

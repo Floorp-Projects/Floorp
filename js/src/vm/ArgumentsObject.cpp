@@ -355,7 +355,7 @@ args_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 {
     Rooted<NormalArgumentsObject*> argsobj(cx, &obj->as<NormalArgumentsObject>());
 
-    unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
+    unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE | JSPROP_RESOLVING;
     if (JSID_IS_INT(id)) {
         uint32_t arg = uint32_t(JSID_TO_INT(id));
         if (arg >= argsobj->initialLength() || argsobj->isElementDeleted(arg))
@@ -490,6 +490,7 @@ strictargs_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp
         setter = CastAsSetterOp(argsobj->global().getThrowTypeError());
     }
 
+    attrs |= JSPROP_RESOLVING;
     if (!NativeDefineProperty(cx, argsobj, id, UndefinedHandleValue, getter, setter, attrs))
         return false;
 

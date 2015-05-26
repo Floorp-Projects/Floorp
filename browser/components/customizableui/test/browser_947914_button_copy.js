@@ -19,7 +19,7 @@ add_task(function() {
 
   let copyButton = document.getElementById("copy-button");
   ok(copyButton, "Copy button exists in Panel Menu");
-  is(copyButton.getAttribute("disabled"), "true", "Copy button is initially disabled");
+  ok(!copyButton.getAttribute("disabled"), "Copy button is initially enabled");
 
   // copy text from URL bar
   gURLBar.value = testText;
@@ -28,7 +28,7 @@ add_task(function() {
   yield PanelUI.show();
   info("Menu panel was opened");
 
-  ok(!copyButton.hasAttribute("disabled"), "Copy button gets enabled");
+  ok(!copyButton.hasAttribute("disabled"), "Copy button is enabled when selecting");
 
   copyButton.click();
   is(gURLBar.value, testText, "Selected text is unaltered when clicking copy");
