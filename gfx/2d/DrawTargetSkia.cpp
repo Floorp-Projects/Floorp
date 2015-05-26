@@ -132,6 +132,7 @@ DrawTargetSkia::DrawTargetSkia()
 
 DrawTargetSkia::~DrawTargetSkia()
 {
+  MarkChanged();
 }
 
 TemporaryRef<SourceSurface>
@@ -140,9 +141,9 @@ DrawTargetSkia::Snapshot()
   RefPtr<SourceSurfaceSkia> snapshot = mSnapshot;
   if (!snapshot) {
     snapshot = new SourceSurfaceSkia();
-    mSnapshot = snapshot;
-    if (!snapshot->InitFromCanvas(mCanvas.get(), mFormat, this))
+    if (!snapshot->InitFromCanvas(mCanvas.get(), mFormat))
       return nullptr;
+    mSnapshot = snapshot;
   }
 
   return snapshot.forget();
@@ -1006,12 +1007,6 @@ SkRect
 DrawTargetSkia::SkRectCoveringWholeSurface() const
 {
   return RectToSkRect(mTransform.TransformBounds(Rect(0, 0, mSize.width, mSize.height)));
-}
-
-void
-DrawTargetSkia::SnapshotDestroyed()
-{
-  mSnapshot = nullptr;
 }
 
 }
