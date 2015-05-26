@@ -500,8 +500,7 @@ nsClipboardCommand::IsCommandEnabled(const char* aCommandName, nsISupports *aCon
 nsresult
 nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
 {
-  if (strcmp(aCommandName, "cmd_cut") &&
-      strcmp(aCommandName, "cmd_copy") &&
+  if (strcmp(aCommandName, "cmd_copy") &&
       strcmp(aCommandName, "cmd_copyAndCollapseToEnd"))
     return NS_OK;
 
@@ -514,13 +513,7 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
   nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  int32_t eventType = NS_COPY;
-  if (strcmp(aCommandName, "cmd_cut") == 0) {
-    eventType = NS_CUT;
-  }
-
-  bool actionTaken = false;
-  nsCopySupport::FireClipboardEvent(eventType, nsIClipboard::kGlobalClipboard, presShell, nullptr, &actionTaken);
+  nsCopySupport::FireClipboardEvent(NS_COPY, nsIClipboard::kGlobalClipboard, presShell, nullptr);
 
   if (!strcmp(aCommandName, "cmd_copyAndCollapseToEnd")) {
     dom::Selection *sel =
@@ -529,10 +522,7 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
     sel->CollapseToEnd();
   }
 
-  if (actionTaken) {
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
