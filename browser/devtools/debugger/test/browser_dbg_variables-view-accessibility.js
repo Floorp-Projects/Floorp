@@ -62,7 +62,7 @@ function performTest() {
   gVariablesView.rawObject = test;
   gVariablesView.scrollPageSize = 5;
 
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     yield waitForTick();
 
     // Part 0: Test generic focus methods on the variables view.
