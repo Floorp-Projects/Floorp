@@ -455,7 +455,6 @@ this.worker = new WorkerDebuggerLoader({
     "PromiseDebugging": PromiseDebugging,
     "Services": Object.create(null),
     "chrome": chrome,
-    "promise": Promise,
     "xpcInspector": xpcInspector
   },
   paths: {
@@ -463,6 +462,7 @@ this.worker = new WorkerDebuggerLoader({
     "devtools": "resource:///modules/devtools",
     "devtools/server": "resource://gre/modules/devtools/server",
     "devtools/toolkit": "resource://gre/modules/devtools",
+    "promise": "resource://gre/modules/Promise-backend.js",
     "source-map": "resource://gre/modules/devtools/source-map",
     "xpcshell-test": "resource://test"
   }
