@@ -7,8 +7,9 @@
 #ifndef mozilla_dom_PerformanceEntry_h___
 #define mozilla_dom_PerformanceEntry_h___
 
-#include "nsPerformance.h"
 #include "nsDOMNavigationTiming.h"
+
+class nsISupports;
 
 namespace mozilla {
 namespace dom {
@@ -21,7 +22,7 @@ protected:
   virtual ~PerformanceEntry();
 
 public:
-  PerformanceEntry(nsPerformance* aPerformance,
+  PerformanceEntry(nsISupports* aParent,
                    const nsAString& aName,
                    const nsAString& aEntryType);
 
@@ -30,9 +31,9 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPerformance* GetParentObject() const
+  nsISupports* GetParentObject() const
   {
-    return mPerformance;
+    return mParent;
   }
 
   void GetName(nsAString& aName) const
@@ -76,7 +77,7 @@ public:
   }
 
 protected:
-  nsRefPtr<nsPerformance> mPerformance;
+  nsCOMPtr<nsISupports> mParent;
   nsString mName;
   nsString mEntryType;
 };

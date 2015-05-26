@@ -9,12 +9,14 @@
 
 using namespace mozilla::dom;
 
-PerformanceMark::PerformanceMark(nsPerformance* aPerformance,
-                                 const nsAString& aName)
-: PerformanceEntry(aPerformance, aName, NS_LITERAL_STRING("mark"))
+PerformanceMark::PerformanceMark(nsISupports* aParent,
+                                 const nsAString& aName,
+                                 DOMHighResTimeStamp aStartTime)
+  : PerformanceEntry(aParent, aName, NS_LITERAL_STRING("mark"))
+  , mStartTime(aStartTime)
 {
-  MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
-  mStartTime = aPerformance->GetDOMTiming()->TimeStampToDOMHighRes(mozilla::TimeStamp::Now());
+  // mParent is null in workers.
+  MOZ_ASSERT(mParent || !NS_IsMainThread());
 }
 
 PerformanceMark::~PerformanceMark()

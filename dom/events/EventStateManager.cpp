@@ -580,6 +580,15 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   }
+  case NS_MOUSE_ENTER_WIDGET:
+    // In some cases on e10s NS_MOUSE_ENTER_WIDGET
+    // event was sent twice into child process of content.
+    // (From specific widget code (sending is not permanent) and
+    // from ESM::DispatchMouseOrPointerEvent (sending is permanent)).
+    // Flag mNoCrossProcessBoundaryForwarding helps to
+    // suppress sending accidental event from widget code.
+    aEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
+    break;
   case NS_MOUSE_EXIT_WIDGET:
     // If this is a remote frame, we receive NS_MOUSE_EXIT_WIDGET from the parent
     // the mouse exits our content. Since the parent may update the cursor
@@ -591,6 +600,10 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     if (XRE_GetProcessType() == GeckoProcessType_Content) {
       ClearCachedWidgetCursor(mCurrentTarget);
     }
+
+    // Flag helps to suppress double event sending into process of content.
+    // For more information see comment above, at NS_MOUSE_ENTER_WIDGET case.
+    aEvent->mFlags.mNoCrossProcessBoundaryForwarding = true;
 
     // If the event is not a top-level window exit, then it's not
     // really an exit --- we may have traversed widget boundaries but
@@ -1183,7 +1196,6 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
     case NS_CONTEXTMENU:
     case NS_MOUSE_ENTER_WIDGET:
     case NS_MOUSE_EXIT_WIDGET:
-    case NS_MOUSE_OVER:
       return true;
     default:
       return false;

@@ -44,6 +44,7 @@ function SpecialPowersAPI() {
   this._permissionsUndoStack = [];
   this._pendingPermissions = [];
   this._applyingPermissions = false;
+  this._observingPermissions = false;
   this._fm = null;
   this._cb = null;
   this._quotaManagerCallbackInfos = null;
@@ -830,12 +831,72 @@ SpecialPowersAPI.prototype = {
       // that the callback checks for. The second delay is because pref
       // observers often defer making their changes by posting an event to the
       // event loop.
+      if (!this._observingPermissions) {
+        this._observingPermissions = true;
+        // If specialpowers is in main-process, then we can add a observer
+        // to get all 'perm-changed' signals. Otherwise, it can't receive
+        // all signals, so we register a observer in specialpowersobserver(in
+        // main-process) and get signals from it.
+        if (this.isMainProcess()) {
+          this.permissionObserverProxy._specialPowersAPI = this;
+          Services.obs.addObserver(this.permissionObserverProxy, "perm-changed", false);
+        } else {
+          this.registerObservers("perm-changed");
+          // bind() is used to set 'this' to SpecialPowersAPI itself.
+          this._addMessageListener("specialpowers-perm-changed", this.permChangedProxy.bind(this));
+        }
+      }
       this._permissionsUndoStack.push(cleanupPermissions);
       this._pendingPermissions.push([pendingPermissions,
 				     this._delayCallbackTwice(callback)]);
       this._applyPermissions();
     } else {
       this._setTimeout(callback);
+    }
+  },
+
+  /*
+   * This function should be used when specialpowers is in content process but
+   * it want to get the notification from chrome space.
+   *
+   * This function will call Services.obs.addObserver in SpecialPowersObserver
+   * (that is in chrome process) and forward the data received to SpecialPowers
+   * via messageManager.
+   * You can use this._addMessageListener("specialpowers-YOUR_TOPIC") to fire
+   * the callback.
+   *
+   * To get the expected data, you should modify
+   * SpecialPowersObserver.prototype._registerObservers.observe. Or the message
+   * you received from messageManager will only contain 'aData' from Service.obs.
+   *
+   * NOTICE: there is no implementation of _addMessageListener in
+   * ChromePowers.js
+   */
+  registerObservers: function(topic) {
+    var msg = {
+      'op': 'add',
+      'observerTopic': topic,
+    };
+    this._sendSyncMessage("SPObserverService", msg);
+  },
+
+  permChangedProxy: function(aMessage) {
+    let permission = aMessage.json.permission;
+    let aData = aMessage.json.aData;
+    this._permissionObserver.observe(permission, aData);
+  },
+
+  permissionObserverProxy: {
+    // 'this' in permChangedObserverProxy is the permChangedObserverProxy
+    // object itself. The '_specialPowersAPI' will be set to the 'SpecialPowersAPI'
+    // object to call the member function in SpecialPowersAPI.
+    _specialPowersAPI: null,
+    observe: function (aSubject, aTopic, aData)
+    {
+      if (aTopic == "perm-changed") {
+        var permission = aSubject.QueryInterface(Ci.nsIPermission);
+        this._specialPowersAPI._permissionObserver.observe(permission, aData);
+      }
     }
   },
 
@@ -847,7 +908,11 @@ SpecialPowersAPI.prototype = {
       this._pendingPermissions.push([this._permissionsUndoStack.pop(), cb]);
       this._applyPermissions();
     } else {
-       this._setTimeout(callback);
+      if (this._observingPermissions) {
+        this._observingPermissions = false;
+        this._removeMessageListener("specialpowers-perm-changed", this.permChangedProxy.bind(this));
+      }
+      this._setTimeout(callback);
     }
   },
 
@@ -870,15 +935,39 @@ SpecialPowersAPI.prototype = {
     _lastPermission: {},
     _callBack: null,
     _nextCallback: null,
-
-    observe: function (aSubject, aTopic, aData)
+    _obsDataMap: {
+      'deleted':'remove',
+      'added':'add'
+    },
+    observe: function (permission, aData)
     {
-      if (aTopic == "perm-changed") {
-        var permission = aSubject.QueryInterface(Ci.nsIPermission);
+      if (this._self._applyingPermissions) {
         if (permission.type == this._lastPermission.type) {
-          Services.obs.removeObserver(this, "perm-changed");
           this._self._setTimeout(this._callback);
           this._self._setTimeout(this._nextCallback);
+          this._callback = null;
+          this._nextCallback = null;
+        }
+      } else {
+        var found = false;
+        for (var i = 0; !found && i < this._self._permissionsUndoStack.length; i++) {
+          var undos = this._self._permissionsUndoStack[i];
+          for (var j = 0; j < undos.length; j++) {
+            var undo = undos[j];
+            if (undo.op == this._obsDataMap[aData] &&
+                undo.appId == permission.appId &&
+                undo.type == permission.type) {
+              // Remove this undo item if it has been done by others(not
+              // specialpowers itself.)
+              undos.splice(j,1);
+              found = true;
+              break;
+            }
+          }
+          if (!undos.length) {
+            // Remove the empty row in permissionsUndoStack
+            this._self._permissionsUndoStack.splice(i, 1);
+          }
         }
       }
     }
@@ -909,8 +998,6 @@ SpecialPowersAPI.prototype = {
         // Now apply any permissions that may have been queued while we were applying
         self._applyPermissions();
     }
-
-    Services.obs.addObserver(this._permissionObserver, "perm-changed", false);
 
     for (var idx in pendingActions) {
       var perm = pendingActions[idx];

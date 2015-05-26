@@ -1210,7 +1210,8 @@ struct BindData
 
 template <typename ParseHandler>
 JSFunction*
-Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, HandleObject proto)
+Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
+                                  GeneratorKind generatorKind, HandleObject proto)
 {
     MOZ_ASSERT_IF(kind == Statement, atom != nullptr);
 
@@ -1227,7 +1228,11 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, Hand
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case Method:
-        flags = JSFunction::INTERPRETED_METHOD;
+        MOZ_ASSERT(generatorKind == NotGenerator || generatorKind == StarGenerator);
+        if (generatorKind == NotGenerator)
+            flags = JSFunction::INTERPRETED_METHOD;
+        else
+            flags = JSFunction::INTERPRETED_METHOD_GENERATOR;
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case ClassConstructor:
@@ -2193,7 +2198,7 @@ Parser<ParseHandler>::functionDef(InHandling inHandling, YieldHandling yieldHand
         if (!proto)
             return null();
     }
-    RootedFunction fun(context, newFunction(funName, kind, proto));
+    RootedFunction fun(context, newFunction(funName, kind, generatorKind, proto));
     if (!fun)
         return null();
 
@@ -7340,7 +7345,7 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
             return null();
     }
 
-    RootedFunction fun(context, newFunction(/* atom = */ nullptr, Expression, proto));
+    RootedFunction fun(context, newFunction(/* atom = */ nullptr, Expression, comprehensionKind, proto));
     if (!fun)
         return null();
 

@@ -27,7 +27,7 @@ var tests = (function() {
   // origin when crossorigin (trimming whitespace)
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape(' origin-when-crossorigin');
-  yield checkResults("origin-when-cross-origin", ["origin", "full"]);
+  yield checkIndividualResults("origin-when-cross-origin", ["origin", "full"]);
 
   // complete.  Be sure to yield so we don't call this twice.
   yield SimpleTest.finish();

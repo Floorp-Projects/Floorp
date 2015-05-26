@@ -316,7 +316,9 @@ DataStoreDB::DatabaseOpened()
   }
 
   StringOrStringSequence objectStores;
-  objectStores.RawSetAsStringSequence().AppendElements(mObjectStores);
+  if (!objectStores.RawSetAsStringSequence().AppendElements(mObjectStores)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsRefPtr<IDBTransaction> txn;
   error = mDatabase->Transaction(objectStores,
