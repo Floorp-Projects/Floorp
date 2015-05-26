@@ -104,11 +104,8 @@ nsHTMLCSSStyleSheet::PseudoElementRulesMatching(Element* aPseudoElement,
 /* virtual */ void
 nsHTMLCSSStyleSheet::RulesMatching(PseudoElementRuleProcessorData* aData)
 {
-  if (nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(aData->mPseudoType)) {
-    MOZ_ASSERT(aData->mPseudoElement,
-        "If pseudo element is supposed to support style attribute, it must "
-        "have a pseudo element set");
-
+  if (nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(aData->mPseudoType) &&
+      aData->mPseudoElement) {
     PseudoElementRulesMatching(aData->mPseudoElement, aData->mPseudoType,
                                aData->mRuleWalker);
   }
