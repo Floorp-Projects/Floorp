@@ -15,7 +15,7 @@ function test() {
     let gSources = gDebugger.DebuggerView.Sources;
     let gControllerSources = gDebugger.DebuggerController.SourceScripts;
 
-    Task.spawn(function*() {
+    Task.spawn(function() {
       yield waitForSourceShown(aPanel, JS_URL);
 
       is(gSources.itemCount, 1,

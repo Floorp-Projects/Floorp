@@ -16,7 +16,7 @@ function test() {
     let gEvents = gView.EventListeners;
     let gBreakpoints = gController.Breakpoints;
 
-    Task.spawn(function*() {
+    Task.spawn(function() {
       yield waitForSourceShown(aPanel, ".html");
 
       let fetched = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);

@@ -27,7 +27,7 @@ function test() {
     is(gView.instrumentsPaneTab, "variables-tab",
       "The variables tab should be selected by default.");
 
-    Task.spawn(function*() {
+    Task.spawn(function() {
       yield waitForSourceShown(aPanel, ".html");
       is(gEvents.itemCount, 0, "There should be no events before reloading.");
 

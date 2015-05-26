@@ -515,17 +515,15 @@ let DebuggerView = {
    * Gets the visibility state of the instruments pane.
    * @return boolean
    */
-  get instrumentsPaneHidden() {
-    return this._instrumentsPane.hasAttribute("pane-collapsed");
-  },
+  get instrumentsPaneHidden()
+    this._instrumentsPane.hasAttribute("pane-collapsed"),
 
   /**
    * Gets the currently selected tab in the instruments pane.
    * @return string
    */
-  get instrumentsPaneTab() {
-    return this._instrumentsPane.selectedTab.id;
-  },
+  get instrumentsPaneTab()
+    this._instrumentsPane.selectedTab.id,
 
   /**
    * Sets the instruments pane hidden or visible.
@@ -756,10 +754,9 @@ ResultsPanelContainer.prototype = Heritage.extend(WidgetMethods, {
    * Gets this container's visibility state.
    * @return boolean
    */
-  get hidden() {
-    return this._panel.state == "closed" ||
-           this._panel.state == "hiding";
-  },
+  get hidden()
+    this._panel.state == "closed" ||
+    this._panel.state == "hiding",
 
   /**
    * Removes all items from this container and hides it.

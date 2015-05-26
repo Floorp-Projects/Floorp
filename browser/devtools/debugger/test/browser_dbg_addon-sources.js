@@ -1,14 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Ensure that the sources listed when debugging an addon are either from the
+// Ensure that the sources listed when debugging an addon are either from the 
 // addon itself, or the SDK, with proper groups and labels.
 
 const ADDON_URL = EXAMPLE_URL + "addon3.xpi";
 let gClient;
 
 function test() {
-  Task.spawn(function*() {
+  Task.spawn(function () {
     let addon = yield addAddon(ADDON_URL);
     let addonDebugger = yield initAddonDebugger(ADDON_URL);
 
