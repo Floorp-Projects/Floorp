@@ -2121,6 +2121,9 @@ GK_ATOM(el, "el")
 GK_ATOM(ga, "ga")
 GK_ATOM(nl, "nl")
 
+// mathematical language, used for MathML
+GK_ATOM(x_math, "x-math")
+
 // Names for editor transactions
 GK_ATOM(TypingTxnName, "Typing")
 GK_ATOM(IMETxnName, "IME")

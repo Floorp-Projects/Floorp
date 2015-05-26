@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346659
 
 /** Test for Bug 346659 **/
 var numTests = 10;
+SimpleTest.requestLongerTimeout(2); // test takes a long time on android and b2g emulators
 SimpleTest.waitForExplicitFinish();
 
 var wins = [];

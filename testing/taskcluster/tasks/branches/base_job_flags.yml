@@ -25,6 +25,7 @@ flags:
     - dolphin-512-eng
     - aries-nightly
     - aries-eng
+    - android-api-11
 
   tests:
     - cppunit

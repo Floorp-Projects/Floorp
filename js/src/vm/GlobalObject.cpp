@@ -329,7 +329,7 @@ GlobalObject::initStandardClasses(JSContext* cx, Handle<GlobalObject*> global)
 {
     /* Define a top-level property 'undefined' with the undefined value. */
     if (!DefineProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
-                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
+                        nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING))
     {
         return false;
     }

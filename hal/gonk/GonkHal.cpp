@@ -1647,8 +1647,12 @@ PriorityClass::PriorityClass(ProcessPriority aPriority)
 
 PriorityClass::~PriorityClass()
 {
-  close(mCpuCGroupProcsFd);
-  close(mMemCGroupProcsFd);
+  if (mCpuCGroupProcsFd != -1) {
+    close(mCpuCGroupProcsFd);
+  }
+  if (mMemCGroupProcsFd != -1) {
+    close(mMemCGroupProcsFd);
+  }
 }
 
 PriorityClass::PriorityClass(const PriorityClass& aOther)

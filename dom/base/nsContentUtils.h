@@ -1863,6 +1863,13 @@ public:
    */
   static bool IsRequestFullScreenAllowed();
 
+  /**
+   * Returns true if calling execCommand with 'cut' or 'copy' arguments is
+   * allowed in the current context. These are only allowed if the user initiated
+   * them (like with a mouse-click or key press).
+   */
+  static bool IsCutCopyAllowed();
+
   /*
    * Returns true if the performance timing APIs are enabled.
    */

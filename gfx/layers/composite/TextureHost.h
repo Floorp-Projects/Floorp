@@ -470,8 +470,6 @@ public:
    */
   PTextureParent* GetIPDLActor();
 
-  virtual FenceHandle GetAndResetReleaseFenceHandle();
-
   /**
    * Specific to B2G's Composer2D
    * XXX - more doc here
@@ -500,11 +498,6 @@ public:
    */
   virtual bool HasInternalBuffer() const { return false; }
 
-  /**
-   * Cast to a TextureHost for each backend.
-   */
-  virtual TextureHostOGL* AsHostOGL() { return nullptr; }
-
   void AddCompositableRef() { ++mCompositableCount; }
 
   void ReleaseCompositableRef()
@@ -518,7 +511,31 @@ public:
 
   int NumCompositableRefs() const { return mCompositableCount; }
 
+  /**
+   * Store a fence that will signal when the current buffer is no longer being read.
+   * Similar to android's GLConsumer::setReleaseFence()
+   */
+  bool SetReleaseFenceHandle(const FenceHandle& aReleaseFenceHandle);
+
+  /**
+   * Return a releaseFence's Fence and clear a reference to the Fence.
+   */
+  FenceHandle GetAndResetReleaseFenceHandle();
+
+  void SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle);
+
+  /**
+   * Return a acquireFence's Fence and clear a reference to the Fence.
+   */
+  FenceHandle GetAndResetAcquireFenceHandle();
+
+  virtual void WaitAcquireFenceHandleSyncComplete() {};
+
 protected:
+  FenceHandle mReleaseFenceHandle;
+
+  FenceHandle mAcquireFenceHandle;
+
   void RecycleTexture(TextureFlags aFlags);
 
   PTextureParent* mActor;

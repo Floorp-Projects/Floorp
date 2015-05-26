@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include "mozilla/ipc/BluetoothDaemonConnectionConsumer.h"
 #include "mozilla/ipc/DataSocket.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
 #include "mozilla/ipc/UnixSocketWatcher.h"
@@ -433,8 +434,12 @@ BluetoothDaemonConnectionIO::ShutdownOnIOThread()
 //
 
 BluetoothDaemonConnection::BluetoothDaemonConnection(
-  BluetoothDaemonPDUConsumer* aConsumer)
-  : mConsumer(aConsumer)
+  BluetoothDaemonPDUConsumer* aPDUConsumer,
+  BluetoothDaemonConnectionConsumer* aConsumer,
+  int aIndex)
+  : mPDUConsumer(aPDUConsumer)
+  , mConsumer(aConsumer)
+  , mIndex(aIndex)
   , mIO(nullptr)
 {
   MOZ_ASSERT(mConsumer);
@@ -461,7 +466,7 @@ BluetoothDaemonConnection::PrepareAccept(UnixSocketConnector* aConnector,
 
   mIO = new BluetoothDaemonConnectionIO(
     XRE_GetIOMessageLoop(), -1, UnixSocketWatcher::SOCKET_IS_CONNECTING,
-    this, mConsumer);
+    this, mPDUConsumer);
   aIO = mIO;
 
   return NS_OK;
@@ -498,6 +503,30 @@ BluetoothDaemonConnection::Close()
   mIO = nullptr;
 
   NotifyDisconnect();
+}
+
+void
+BluetoothDaemonConnection::OnConnectSuccess()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->OnConnectSuccess(mIndex);
+}
+
+void
+BluetoothDaemonConnection::OnConnectError()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->OnConnectError(mIndex);
+}
+
+void
+BluetoothDaemonConnection::OnDisconnect()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->OnDisconnect(mIndex);
 }
 
 }
