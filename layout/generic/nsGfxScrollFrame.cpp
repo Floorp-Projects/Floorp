@@ -3091,7 +3091,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
     parentLayerClip = Some(clip);
   }
 
-  if (!nsLayoutUtils::UsesAsyncScrolling()) {
+  if (!gfxPrefs::AsyncPanZoomEnabled()) {
     if (parentLayerClip) {
       // If APZ is not enabled, we still need the displayport to be clipped
       // in the compositor.
