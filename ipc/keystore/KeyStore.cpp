@@ -705,47 +705,6 @@ KeyStore::ListenSocket::OnDisconnect()
 }
 
 //
-// KeyStore::StreamSocket
-//
-
-KeyStore::StreamSocket::StreamSocket(KeyStore* aKeyStore)
-: mKeyStore(aKeyStore)
-{
-  MOZ_ASSERT(mKeyStore);
-
-  MOZ_COUNT_CTOR(KeyStore::StreamSocket);
-}
-
-KeyStore::StreamSocket::~StreamSocket()
-{
-  MOZ_COUNT_DTOR(KeyStore::StreamSocket);
-}
-
-void
-KeyStore::StreamSocket::OnConnectSuccess()
-{
-  mKeyStore->OnConnectSuccess(STREAM_SOCKET);
-}
-
-void
-KeyStore::StreamSocket::OnConnectError()
-{
-  mKeyStore->OnConnectError(STREAM_SOCKET);
-}
-
-void
-KeyStore::StreamSocket::OnDisconnect()
-{
-  mKeyStore->OnDisconnect(STREAM_SOCKET);
-}
-
-void
-KeyStore::StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
-{
-  mKeyStore->ReceiveSocketData(aBuffer);
-}
-
-//
 // KeyStore
 //
 
@@ -795,7 +754,7 @@ KeyStore::Listen()
   if (mStreamSocket) {
     mStreamSocket->Close();
   } else {
-    mStreamSocket = new StreamSocket(this);
+    mStreamSocket = new StreamSocket(this, STREAM_SOCKET);
   }
 
   if (!mListenSocket) {
@@ -1051,6 +1010,32 @@ KeyStore::OnDisconnect(SocketType aSocketType)
       Listen();
       break;
   }
+}
+
+// |StreamSocketConsumer|
+
+void
+KeyStore::ReceiveSocketData(int aIndex, nsAutoPtr<UnixSocketBuffer>& aMessage)
+{
+  ReceiveSocketData(aMessage);
+}
+
+void
+KeyStore::OnConnectSuccess(int aIndex)
+{
+  OnConnectSuccess(static_cast<SocketType>(aIndex));
+}
+
+void
+KeyStore::OnConnectError(int aIndex)
+{
+  OnConnectError(static_cast<SocketType>(aIndex));
+}
+
+void
+KeyStore::OnDisconnect(int aIndex)
+{
+  OnDisconnect(static_cast<SocketType>(aIndex));
 }
 
 } // namespace ipc
