@@ -623,6 +623,17 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     // Apply the render offset
     mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
+    // See the comment below - the first FrameMetrics has the clip computed
+    // by layout (currently, effectively the composition bounds), which we
+    // intersect here to include the layer clip.
+    if (i == 0 && metrics.HasClipRect()) {
+      if (clipRect) {
+        clipRect = Some(clipRect.value().Intersect(metrics.ClipRect()));
+      } else {
+        clipRect = Some(metrics.ClipRect());
+      }
+    }
+
     combinedAsyncTransformWithoutOverscroll *= asyncTransformWithoutOverscroll;
     combinedAsyncTransform *= (Matrix4x4(asyncTransformWithoutOverscroll) * overscrollTransform);
     if (i > 0 && clipRect) {

@@ -4241,8 +4241,6 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   }
   uint32_t baseLength = metricsArray.Length();
 
-  ParentLayerIntRect tmpClipRect;
-  const ParentLayerIntRect* layerClip = aEntry->mLayer->GetClipRect().ptrOr(nullptr);
   nsIFrame* fParent;
   for (const nsIFrame* f = aEntry->mAnimatedGeometryRoot;
        f != mContainerAnimatedGeometryRoot;
@@ -4267,23 +4265,9 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
       continue;
     }
 
-    Maybe<nsRect> clipRect;
     scrollFrame->ComputeFrameMetrics(aEntry->mLayer, mContainerReferenceFrame,
-                                     mParameters, &clipRect, &metricsArray);
-    if (clipRect) {
-      ParentLayerIntRect pixClip = ViewAs<ParentLayerPixel>(ScaleToNearestPixels(*clipRect));
-      if (layerClip) {
-        tmpClipRect.IntersectRect(pixClip, *layerClip);
-      } else {
-        tmpClipRect = pixClip;
-      }
-      layerClip = &tmpClipRect;
-      // XXX this could cause IPC churn due to cliprects being updated
-      // twice during layer building --- for non-PaintedLayers that have
-      // both CSS and scroll clipping.
-    }
+                                     mParameters, &metricsArray);
   }
-  aEntry->mLayer->SetClipRect(ToMaybe(layerClip));
   // Watch out for FrameMetrics copies in profiles
   aEntry->mLayer->SetFrameMetrics(metricsArray);
 }
