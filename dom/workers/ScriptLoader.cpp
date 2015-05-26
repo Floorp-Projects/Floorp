@@ -539,22 +539,6 @@ private:
       NS_ENSURE_SUCCESS(rv, rv);
       MOZ_ASSERT(channelLoadGroup);
 
-      // See if this is a resource URI. Since JSMs usually come from resource://
-      // URIs we're currently considering all URIs with the URI_IS_UI_RESOURCE
-      // flag as valid for creating privileged workers.
-      if (!nsContentUtils::IsSystemPrincipal(channelPrincipal)) {
-        bool isResource;
-        rv = NS_URIChainHasFlags(finalURI,
-                                 nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                                 &isResource);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (isResource) {
-          rv = ssm->GetSystemPrincipal(getter_AddRefs(channelPrincipal));
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      }
-
       // If the load principal is the system principal then the channel
       // principal must also be the system principal (we do not allow chrome
       // code to create workers with non-chrome scripts). Otherwise this channel
@@ -562,14 +546,25 @@ private:
       // here in case redirects changed the location of the script).
       if (nsContentUtils::IsSystemPrincipal(loadPrincipal)) {
         if (!nsContentUtils::IsSystemPrincipal(channelPrincipal)) {
-          return NS_ERROR_DOM_BAD_URI;
+          // See if this is a resource URI. Since JSMs usually come from
+          // resource:// URIs we're currently considering all URIs with the
+          // URI_IS_UI_RESOURCE flag as valid for creating privileged workers.
+          bool isResource;
+          rv = NS_URIChainHasFlags(finalURI,
+                                   nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                                   &isResource);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          if (isResource) {
+            // Assign the system principal to the resource:// worker only if it
+            // was loaded from code using the system principal.
+            channelPrincipal = loadPrincipal;
+          } else {
+            return NS_ERROR_DOM_BAD_URI;
+          }
         }
       }
       else  {
-        nsCString scheme;
-        rv = finalURI->GetScheme(scheme);
-        NS_ENSURE_SUCCESS(rv, rv);
-
         // We exempt data urls and other URI's that inherit their
         // principal again.
         if (NS_FAILED(loadPrincipal->CheckMayLoad(finalURI, false, true))) {
