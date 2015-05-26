@@ -4242,7 +4242,7 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
     event->SetTarget(this);                                                   \
     nsRefPtr<AsyncEventDispatcher> asyncDispatcher =                          \
       new AsyncEventDispatcher(this, event);                                  \
-    asyncDispatcher->mDispatchChromeOnly = true;                              \
+    asyncDispatcher->mOnlyChromeDispatch = true;                              \
     asyncDispatcher->PostDOMEvent();                                          \
   } while (0);
 
