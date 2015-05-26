@@ -27,37 +27,6 @@
 
 using namespace mozilla::ipc;
 
-namespace {
-
-class SendNfcSocketDataTask final : public nsRunnable
-{
-public:
-  SendNfcSocketDataTask(NfcConsumer* aConsumer, UnixSocketRawData* aRawData)
-    : mConsumer(aConsumer)
-    , mRawData(aRawData)
-  { }
-
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mConsumer ||
-      mConsumer->GetConnectionStatus() != SOCKET_CONNECTED) {
-      // Probably shuting down.
-      return NS_OK;
-    }
-
-    mConsumer->SendSocketData(mRawData.forget());
-    return NS_OK;
-  }
-
-private:
-  NfcConsumer* mConsumer;
-  nsAutoPtr<UnixSocketRawData> mRawData;
-};
-
-} // anonymous namespace
-
 namespace mozilla {
 namespace ipc {
 
@@ -90,74 +59,6 @@ NfcListenSocket::OnDisconnect()
 {
   if (mListener) {
     mListener->OnDisconnect(NfcSocketListener::LISTEN_SOCKET);
-  }
-}
-
-//
-// NfcConsumer
-//
-
-NfcConsumer::NfcConsumer(NfcSocketListener* aListener)
-  : mListener(aListener)
-{ }
-
-void
-NfcConsumer::Shutdown()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  Close();
-}
-
-bool
-NfcConsumer::PostToNfcDaemon(const uint8_t* aData, size_t aSize)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  UnixSocketRawData* raw = new UnixSocketRawData(aData, aSize);
-  nsRefPtr<SendNfcSocketDataTask> task = new SendNfcSocketDataTask(this, raw);
-  NS_DispatchToMainThread(task);
-  return true;
-}
-
-void
-NfcConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mListener) {
-    mListener->ReceiveSocketData(aBuffer);
-  }
-}
-
-void
-NfcConsumer::OnConnectSuccess()
-{
-  CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
-
-  if (mListener) {
-    mListener->OnConnectSuccess(NfcSocketListener::STREAM_SOCKET);
-  }
-  // Nothing to do here.
-}
-
-void
-NfcConsumer::OnConnectError()
-{
-  CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
-
-  if (mListener) {
-    mListener->OnConnectError(NfcSocketListener::STREAM_SOCKET);
-  }
-}
-
-void
-NfcConsumer::OnDisconnect()
-{
-  CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
-
-  if (mListener) {
-    mListener->OnDisconnect(NfcSocketListener::STREAM_SOCKET);
   }
 }
 

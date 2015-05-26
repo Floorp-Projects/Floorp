@@ -12,6 +12,7 @@
 #include "cert.h"
 #include "mozilla/ipc/ListenSocket.h"
 #include "mozilla/ipc/StreamSocket.h"
+#include "mozilla/ipc/StreamSocketConsumer.h"
 #include "nsNSSShutDown.h"
 
 namespace mozilla {
@@ -78,7 +79,9 @@ typedef enum {
   STATE_PROCESSING
 } ProtocolHandlerState;
 
-class KeyStore final : public nsNSSShutDownObject
+class KeyStore final
+  : public StreamSocketConsumer
+  , public nsNSSShutDownObject
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KeyStore)
@@ -113,25 +116,6 @@ private:
     KeyStore* mKeyStore;
   };
 
-  class StreamSocket final : public mozilla::ipc::StreamSocket
-  {
-  public:
-    StreamSocket(KeyStore* aKeyStore);
-    ~StreamSocket();
-
-    // SocketConsumerBase
-    //
-
-    void OnConnectSuccess() override;
-    void OnConnectError() override;
-    void OnDisconnect() override;
-
-    void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
-
-  private:
-    KeyStore* mKeyStore;
-  };
-
   ~KeyStore();
 
   void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aMessage);
@@ -156,6 +140,15 @@ private:
   ResponseCode ReadData(UnixSocketBuffer *aMessage);
   void SendResponse(ResponseCode response);
   void SendData(const uint8_t *data, int length);
+
+  // Methods for |StreamSocketConsumer|
+  //
+
+  void ReceiveSocketData(int aIndex,
+                         nsAutoPtr<UnixSocketBuffer>& aMessage) override;
+  void OnConnectSuccess(int aIndex) override;
+  void OnConnectError(int aIndex) override;
+  void OnDisconnect(int aIndex) override;
 
   bool mShutdown;
 
