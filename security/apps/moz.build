@@ -14,9 +14,9 @@ FAIL_ON_WARNINGS = True
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '../certverifier',
-    '../manager/ssl/src',
-    '../pkix/include',
+    '/security/certverifier',
+    '/security/manager/ssl',
+    '/security/pkix/include',
 ]
 
 DEFINES['NSS_ENABLE_ECC'] = 'True'
