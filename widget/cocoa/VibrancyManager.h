@@ -27,7 +27,7 @@ enum class VibrancyType {
   TOOLTIP,
   MENU,
   HIGHLIGHTED_MENUITEM,
-  SHEET,
+  SHEET
 };
 
 /**
