@@ -87,6 +87,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 IMEContentObserver::IMEContentObserver()
   : mESM(nullptr)
   , mPreCharacterDataChangeLength(-1)
+  , mIsObserving(false)
   , mIsSelectionChangeEventPending(false)
   , mSelectionChangeCausedOnlyByComposition(false)
   , mIsPositionChangeEventPending(false)
@@ -105,7 +106,12 @@ IMEContentObserver::Init(nsIWidget* aWidget,
 {
   MOZ_ASSERT(aEditor, "aEditor must not be null");
 
-  bool firstInitialization = GetState() != eState_StoppedObserving;
+  State state = GetState();
+  if (NS_WARN_IF(state == eState_Observing)) {
+    return; // Nothing to do.
+  }
+
+  bool firstInitialization = state != eState_StoppedObserving;
   if (!firstInitialization) {
     // If this is now trying to initialize with new contents, all observers
     // should be registered again for simpler implementation.
@@ -129,7 +135,6 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   }
 
   mEditor = aEditor;
-  mEditor->AddEditorObserver(this);
 
   nsIPresShell* presShell = aPresContext->PresShell();
 
@@ -172,6 +177,14 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   if (firstInitialization) {
     aWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
 
+    // While Init() notifies IME of focus, pending layout may be flushed
+    // because the notification may cause querying content.  Then, recursive
+    // call of Init() with the latest content may be occur.  In such case, we
+    // shouldn't keep first initialization.
+    if (GetState() != eState_Initializing) {
+      return;
+    }
+
     // NOTIFY_IME_OF_FOCUS might cause recreating IMEContentObserver
     // instance via IMEStateManager::UpdateIMEState().  So, this
     // instance might already have been destroyed, check it.
@@ -188,8 +201,13 @@ IMEContentObserver::Init(nsIWidget* aWidget,
 void
 IMEContentObserver::ObserveEditableNode()
 {
-  MOZ_ASSERT(mSelection);
-  MOZ_ASSERT(mRootContent);
+  MOZ_RELEASE_ASSERT(mEditor);
+  MOZ_RELEASE_ASSERT(mSelection);
+  MOZ_RELEASE_ASSERT(mRootContent);
+  MOZ_RELEASE_ASSERT(GetState() != eState_Observing);
+
+  mIsObserving = true;
+  mEditor->AddEditorObserver(this);
 
   mUpdatePreference = mWidget->GetIMEUpdatePreference();
   if (mUpdatePreference.WantSelectionChange()) {
@@ -231,6 +249,11 @@ IMEContentObserver::NotifyIMEOfBlur()
 void
 IMEContentObserver::UnregisterObservers()
 {
+  if (!mIsObserving) {
+    return;
+  }
+  mIsObserving = false;
+
   if (mEditor) {
     mEditor->RemoveEditorObserver(this);
   }
@@ -321,7 +344,7 @@ IMEContentObserver::GetState() const
     // the focused editor has already been reframed.
     return eState_StoppedObserving;
   }
-  return eState_Observing;
+  return mIsObserving ? eState_Observing : eState_Initializing;
 }
 
 bool
