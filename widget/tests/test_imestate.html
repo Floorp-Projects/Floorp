@@ -145,6 +145,32 @@ const kIMEOpenSupported = false;
 
 function runBasicTest(aIsEditable, aInDesignMode, aDescription)
 {
+  var onIMEFocusBlurHandler = null;
+  var TIPCallback = function(aTIP, aNotification) {
+    switch (aNotification.type) {
+      case "request-to-commit":
+        aTIP.commitComposition();
+        break;
+      case "request-to-cancel":
+        aTIP.cancelComposition();
+        break;
+      case "notify-focus":
+      case "notify-blur":
+        if (onIMEFocusBlurHandler) {
+          onIMEFocusBlurHandler(aNotification);
+        }
+        break;
+    }
+    return true;
+  };
+
+  var TIP = Components.classes["@mozilla.org/text-input-processor;1"]
+              .createInstance(Components.interfaces.nsITextInputProcessor);
+  if (!TIP.beginInputTransactionForTests(window, TIPCallback)) {
+    ok(false, "runBasicTest(): failed to begin input transaction");
+    return;
+  }
+
   function test(aTest)
   {
     function moveFocus(aTest, aFocusEventHandler)
@@ -171,22 +197,12 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
       }
 
       focusEventTarget.addEventListener("focus", aFocusEventHandler, true);
-      document.addEventListener("MozIMEFocusIn", aFocusEventHandler, true);
-      document.addEventListener("MozIMEFocusOut", aFocusEventHandler, true);
-      if (subDocument) {
-        subDocument.addEventListener("MozIMEFocusIn", aFocusEventHandler, true);
-        subDocument.addEventListener("MozIMEFocusOut", aFocusEventHandler, true);
-      }
+      onIMEFocusBlurHandler = aFocusEventHandler;
 
       element.focus();
 
       focusEventTarget.removeEventListener("focus", aFocusEventHandler, true);
-      document.removeEventListener("MozIMEFocusIn", aFocusEventHandler, true);
-      document.removeEventListener("MozIMEFocusOut", aFocusEventHandler, true);
-      if (element.contentDocument) {
-        subDocument.removeEventListener("MozIMEFocusIn", aFocusEventHandler, true);
-        subDocument.removeEventListener("MozIMEFocusOut", aFocusEventHandler, true);
-      }
+      onIMEFocusBlurHandler = null;
 
       var focusedElement = gFM.focusedElement;
       if (focusedElement) {
@@ -222,8 +238,8 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
     var enabled = gUtils.IME_STATUS_ENABLED;
     if (kIMEEnabledSupported) {
       var focusEventCount = 0;
-      var mozIMEFocusInCount = 0;
-      var mozIMEFocusOutCount = 0;
+      var IMEReceivesFocus = 0;
+      var IMEReceivesBlur = 0;
       var IMEHasFocus = false;
 
       function onFocus(aEvent)
@@ -234,29 +250,29 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
             is(gUtils.IMEStatus, aTest.expectedEnabled,
                aDescription + ": " + aTest.description + ", wrong enabled state at focus event");
             break;
-          case "MozIMEFocusIn":
-            mozIMEFocusInCount++;
+          case "notify-focus":
+            IMEReceivesFocus++;
             IMEHasFocus = true;
             is(gUtils.IMEStatus, aTest.expectedEnabled,
                aDescription + ": " + aTest.description +
-                 ", MozIMEFocusIn event must be fired after IME state is updated");
+                 ", IME should receive a focus notification after IME state is updated");
             break;
-          case "MozIMEFocusOut":
-            mozIMEFocusOutCount++;
+          case "notify-blur":
+            IMEReceivesBlur++;
             IMEHasFocus = false;
             var changingStatus = !(aIsEditable && aTest.expectedEnabled == gUtils.IME_STATUS_ENABLED);
             if (aTest.toDesignModeEditor) {
               is(gUtils.IME_STATUS_ENABLED, aTest.expectedEnabled,
                  aDescription + ": " + aTest.description +
-                   ", MozIMEFocusOut event must be fired after IME state is updated");
+                   ", IME should receive a blur notification after IME state is updated");
             } else if (changingStatus) {
               isnot(gUtils.IMEStatus, aTest.expectedEnabled,
                     aDescription + ": " + aTest.description +
-                      ", MozIMEFocusOut event must be fired before IME state is updated");
+                      ", IME should receive a blur notification before IME state is updated");
             } else {
               is(gUtils.IMEStatus, aTest.expectedEnabled,
                  aDescription + ": " + aTest.description +
-                   ", MozIMEFocusOut event must be fired with expected IME state if the state isn't being changed");
+                   ", IME should receive a blur notification and its context has expected IME state if the state isn't being changed");
             }
             break;
         }
@@ -271,42 +287,42 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
           ok(focusEventCount > 0,
              aDescription + ": " + aTest.description + ", focus event is never fired");
           if (aTest.expectedEnabled == gUtils.IME_STATUS_ENABLED || aTest.expectedEnabled == gUtils.IME_STATUS_PASSWORD) {
-            ok(mozIMEFocusInCount > 0,
-               aDescription + ": " + aTest.description + ", MozIMEFocusIn event should be fired");
+            ok(IMEReceivesFocus > 0,
+               aDescription + ": " + aTest.description + ", IME should receive a focus notification");
             if (aInDesignMode && !aTest.toDesignModeEditor) {
-              is(mozIMEFocusOutCount, 0,
+              is(IMEReceivesBlur, 0,
                  aDescription + ": " + aTest.description +
-                   ", MozIMEFocusOut event shouldn't be fired in designMode since focus isn't moved from another editor");
+                   ", IME shouldn't receive a blur notification in designMode since focus isn't moved from another editor");
             } else {
-              ok(mozIMEFocusOutCount > 0,
+              ok(IMEReceivesBlur > 0,
                  aDescription + ": " + aTest.description +
-                   ", MozIMEFocusOut event should be fired for the previous focused editor");
+                   ", IME should receive a blur notification for the previous focused editor");
             }
             ok(IMEHasFocus,
                aDescription + ": " + aTest.description +
-                 ", The latest MozIMEFocus* event must be MozIMEFocusIn");
+                 ", IME should have focus right now");
           } else {
-            is(mozIMEFocusInCount, 0,
+            is(IMEReceivesFocus, 0,
                aDescription + ": " + aTest.description +
-                 ", MozIMEFocusIn event shouldn't be fired");
-            ok(mozIMEFocusOutCount > 0,
+                 ", IME shouldn't receive a focus notification");
+            ok(IMEReceivesBlur > 0,
                aDescription + ": " + aTest.description +
-                 ", MozIMEFocusOut event should be fired");
+                 ", IME should receive a blur notification");
             ok(!IMEHasFocus,
                aDescription + ": " + aTest.description +
-                 ", The latest MozIMEFocus* event must be MozIMEFocusOut");
+                 ", IME shouldn't have focus right now");
           }
         } else {
           todo(focusEventCount > 0,
                aDescription + ": " + aTest.description + ", focus event should be fired");
         }
       } else {
-        is(mozIMEFocusInCount, 0,
+        is(IMEReceivesFocus, 0,
            aDescription + ": " + aTest.description +
-             ", MozIMEFocusIn event shouldn't be fired at testing non-focusable element");
-        is(mozIMEFocusOutCount, 0,
+             ", IME shouldn't receive a focus notification at testing non-focusable element");
+        is(IMEReceivesBlur, 0,
            aDescription + ": " + aTest.description +
-             ", MozIMEFocusOut event shouldn't be fired at testing non-focusable element");
+             ", IME shouldn't receive a blur notification at testing non-focusable element");
       }
 
       enabled = gUtils.IMEStatus;
@@ -1449,7 +1465,6 @@ function runTests()
   if (!kIMEEnabledSupported && !kIMEOpenSupported)
     return;
 
-  SpecialPowers.pushPrefEnv({"set":[["test.IME", true]]}, function() {
   // test for normal contents.
   runBasicTest(false, false, "Testing of normal contents");
 
@@ -1499,7 +1514,6 @@ function runTests()
     // This will call onFinish(), so, this test must be the last.
     runEditableSubframeTests();
   });
- });
 }
 
 function onFinish()
