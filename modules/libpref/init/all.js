@@ -3575,6 +3575,9 @@ pref("print.print_extra_margin", 0); // twips
 
 // font names
 
+pref("font.name.serif.ar", "serif");
+pref("font.name.sans-serif.ar", "sans-serif");
+pref("font.name.monospace.ar", "monospace");
 pref("font.size.fixed.ar", 12);
 
 pref("font.name.serif.el", "serif");
@@ -3597,13 +3600,77 @@ pref("font.name.monospace.ko", "monospace");
 
 pref("font.name.serif.th", "serif");
 pref("font.name.sans-serif.th", "sans-serif");
-pref("font.minimum-size.th", 13);
 pref("font.name.monospace.th", "monospace");
+pref("font.minimum-size.th", 13);
+
+pref("font.name.serif.x-armn", "serif");
+pref("font.name.sans-serif.x-armn", "sans-serif");
+pref("font.name.monospace.x-armn", "monospace");
+
+pref("font.name.serif.x-beng", "serif");
+pref("font.name.sans-serif.x-beng", "sans-serif");
+pref("font.name.monospace.x-beng", "monospace");
+
+pref("font.name.serif.x-cans", "serif");
+pref("font.name.sans-serif.x-cans", "sans-serif");
+pref("font.name.monospace.x-cans", "monospace");
 
 pref("font.name.serif.x-cyrillic", "serif");
 pref("font.name.sans-serif.x-cyrillic", "sans-serif");
 pref("font.name.monospace.x-cyrillic", "monospace");
 pref("font.size.fixed.x-cyrillic", 12);
+
+pref("font.name.serif.x-devanagari", "serif");
+pref("font.name.sans-serif.x-devanagari", "sans-serif");
+pref("font.name.monospace.x-devanagari", "monospace");
+
+pref("font.name.serif.x-ethi", "serif");
+pref("font.name.sans-serif.x-ethi", "sans-serif");
+pref("font.name.monospace.x-ethi", "monospace");
+
+pref("font.name.serif.x-geor", "serif");
+pref("font.name.sans-serif.x-geor", "sans-serif");
+pref("font.name.monospace.x-geor", "monospace");
+
+pref("font.name.serif.x-gujr", "serif");
+pref("font.name.sans-serif.x-gujr", "sans-serif");
+pref("font.name.monospace.x-gujr", "monospace");
+
+pref("font.name.serif.x-guru", "serif");
+pref("font.name.sans-serif.x-guru", "sans-serif");
+pref("font.name.monospace.x-guru", "monospace");
+
+pref("font.name.serif.x-khmr", "serif");
+pref("font.name.sans-serif.x-khmr", "sans-serif");
+pref("font.name.monospace.x-khmr", "monospace");
+
+pref("font.name.serif.x-knda", "serif");
+pref("font.name.sans-serif.x-knda", "sans-serif");
+pref("font.name.monospace.x-knda", "monospace");
+
+pref("font.name.serif.x-mlym", "serif");
+pref("font.name.sans-serif.x-mlym", "sans-serif");
+pref("font.name.monospace.x-mlym", "monospace");
+
+pref("font.name.serif.x-orya", "serif");
+pref("font.name.sans-serif.x-orya", "sans-serif");
+pref("font.name.monospace.x-orya", "monospace");
+
+pref("font.name.serif.x-sinh", "serif");
+pref("font.name.sans-serif.x-sinh", "sans-serif");
+pref("font.name.monospace.x-sinh", "monospace");
+
+pref("font.name.serif.x-tamil", "serif");
+pref("font.name.sans-serif.x-tamil", "sans-serif");
+pref("font.name.monospace.x-tamil", "monospace");
+
+pref("font.name.serif.x-telu", "serif");
+pref("font.name.sans-serif.x-telu", "sans-serif");
+pref("font.name.monospace.x-telu", "monospace");
+
+pref("font.name.serif.x-tibt", "serif");
+pref("font.name.sans-serif.x-tibt", "sans-serif");
+pref("font.name.monospace.x-tibt", "monospace");
 
 pref("font.name.serif.x-unicode", "serif");
 pref("font.name.sans-serif.x-unicode", "sans-serif");
@@ -3619,13 +3686,13 @@ pref("font.name.serif.zh-CN", "serif");
 pref("font.name.sans-serif.zh-CN", "sans-serif");
 pref("font.name.monospace.zh-CN", "monospace");
 
-// ming_uni.ttf (HKSCS-2001)
-// http://www.info.gov.hk/digital21/eng/hkscs/download/uime.exe
 pref("font.name.serif.zh-HK", "serif");
 pref("font.name.sans-serif.zh-HK", "sans-serif");
 pref("font.name.monospace.zh-HK", "monospace");
 
-// zh-TW
+pref("font.name.serif.zh-TW", "serif");
+pref("font.name.sans-serif.zh-TW", "sans-serif");
+pref("font.name.monospace.zh-TW", "monospace");
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
