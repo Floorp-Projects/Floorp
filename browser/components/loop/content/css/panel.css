@@ -752,11 +752,19 @@ body[dir=rtl] .generate-url-spinner {
   right: 14px;
 }
 
+body[dir="rtl"] .settings-menu .dropdown-menu {
+  /* This is specified separately rather than using -moz-margin-start etc, as
+     we need to override .dropdown-menu's values which can't use the gecko
+     specific extensions. */
+  left: 14px;
+  right: auto;
+}
+
 .settings-menu .icon {
   background-size: contain;
   width: 12px;
   height: 12px;
-  margin-right: 1em;
+  -moz-margin-end: 1em;
   margin-top: 2px;
 }
 
