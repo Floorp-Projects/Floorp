@@ -9,7 +9,7 @@
 let gDefaultHostType = Services.prefs.getCharPref("devtools.toolbox.host");
 
 function test() {
-  Task.spawn(function() {
+  Task.spawn(function*() {
     yield testHosts(["bottom", "side", "window"], ["horizontal", "vertical", "horizontal"]);
     yield testHosts(["side", "bottom", "side"], ["vertical", "horizontal", "vertical"]);
     yield testHosts(["bottom", "side", "bottom"], ["horizontal", "vertical", "horizontal"]);
@@ -25,7 +25,7 @@ function testHosts(aHostTypes, aLayoutTypes) {
 
   Services.prefs.setCharPref("devtools.toolbox.host", firstHost);
 
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let [tab, debuggee, panel] = yield initDebugger("about:blank");
     yield testHost(tab, panel, firstHost, firstLayout);
     yield switchAndTestHost(tab, panel, secondHost, secondLayout);
@@ -38,7 +38,7 @@ function switchAndTestHost(aTab, aPanel, aHostType, aLayoutType) {
   let gToolbox = aPanel._toolbox;
   let gDebugger = aPanel.panelWin;
 
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let layoutChanged = once(gDebugger, gDebugger.EVENTS.LAYOUT_CHANGED);
     let hostChanged = gToolbox.switchHost(aHostType);
 

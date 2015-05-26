@@ -1464,7 +1464,9 @@ this.PlacesUtils = {
    * @resolves to the GUID.
    * @rejects if aItemId is invalid.
    */
-  promiseItemGuid: function (aItemId) GuidHelper.getItemGuid(aItemId),
+  promiseItemGuid(aItemId) {
+    return GuidHelper.getItemGuid(aItemId)
+  },
 
   /**
    * Get the item id for an item (a bookmark, a folder or a separator) given
@@ -1472,11 +1474,23 @@ this.PlacesUtils = {
    *
    * @param aGuid
    *        an item GUID
-   * @retrun {Promise}
+   * @return {Promise}
    * @resolves to the GUID.
    * @rejects if there's no item for the given GUID.
    */
-  promiseItemId: function (aGuid) GuidHelper.getItemId(aGuid),
+  promiseItemId(aGuid) {
+    return GuidHelper.getItemId(aGuid)
+  },
+
+  /**
+   * Invalidate the GUID cache for the given itemId.
+   *
+   * @param aItemId
+   *        an item id
+   */
+  invalidateCachedGuidFor(aItemId) {
+    GuidHelper.invalidateCacheForItemId(aItemId)
+  },
 
   /**
    * Asynchronously retrieve a JS-object representation of a places bookmarks
@@ -1565,7 +1579,7 @@ this.PlacesUtils = {
         item.id = itemId;
 
       // Cache it for promiseItemId consumers regardless.
-      GuidHelper.idsForGuids.set(item.guid, itemId);
+      GuidHelper.updateCache(itemId, item.guid);
 
       let type = aRow.getResultByName("type");
       if (type == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
@@ -2166,7 +2180,7 @@ let GuidHelper = {
 
     this.ensureObservingRemovedItems();
     let itemId = rows[0].getResultByName("id");
-    this.idsForGuids.set(aGuid, itemId);
+    this.updateCache(itemId, aGuid);
     return itemId;
   }),
 
@@ -2185,9 +2199,30 @@ let GuidHelper = {
 
     this.ensureObservingRemovedItems();
     let guid = rows[0].getResultByName("guid");
-    this.guidsForIds.set(aItemId, guid);
+    this.updateCache(aItemId, guid);
     return guid;
   }),
+
+  /**
+   * Updates the cache.
+   *
+   * @note This is the only place where the cache should be populated,
+   *       invalidation relies on both Maps being populated at the same time.
+   */
+  updateCache(aItemId, aGuid) {
+    if (typeof(aItemId) != "number" || aItemId <= 0)
+      throw new Error("Trying to update the GUIDs cache with an invalid itemId");
+    if (typeof(aGuid) != "string" || !/^[a-zA-Z0-9\-_]{12}$/.test(aGuid))
+      throw new Error("Trying to update the GUIDs cache with an invalid GUID");
+    this.guidsForIds.set(aItemId, aGuid);
+    this.idsForGuids.set(aGuid, aItemId);
+  },
+
+  invalidateCacheForItemId(aItemId) {
+    let guid = this.guidsForIds.get(aItemId);
+    this.guidsForIds.delete(aItemId);
+    this.idsForGuids.delete(guid);
+  },
 
   ensureObservingRemovedItems: function () {
     if (!("observer" in this)) {
@@ -2201,14 +2236,14 @@ let GuidHelper = {
       this.observer = {
         onItemAdded: (aItemId, aParentId, aIndex, aItemType, aURI, aTitle,
                       aDateAdded, aGuid, aParentGuid) => {
-          this.guidsForIds.set(aItemId, aGuid);
-          this.guidsForIds.set(aParentId, aParentGuid);
+          this.updateCache(aItemId, aGuid);
+          this.updateCache(aParentId, aParentGuid);
         },
         onItemRemoved:
         (aItemId, aParentId, aIndex, aItemTyep, aURI, aGuid, aParentGuid) => {
           this.guidsForIds.delete(aItemId);
           this.idsForGuids.delete(aGuid);
-          this.guidsForIds.set(aParentId, aParentGuid);
+          this.updateCache(aParentId, aParentGuid);
         },
 
         QueryInterface: XPCOMUtils.generateQI(Ci.nsINavBookmarkObserver),
