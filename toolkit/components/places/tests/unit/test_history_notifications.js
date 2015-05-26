@@ -51,9 +51,11 @@ function run_test() {
   dbConn.executeSimpleSQL("PRAGMA USER_VERSION = 1");
 
   // Try to create history service while the db is locked
-  Assert.throws(() => Cc["@mozilla.org/browser/nav-history-service;1"].
-    getService(Ci.nsINavHistoryService),
-    /NS_ERROR_XPC_GS_RETURNED_FAILURE/);
+  try {
+    var hs1 = Cc["@mozilla.org/browser/nav-history-service;1"].
+              getService(Ci.nsINavHistoryService);
+    do_throw("Creating an instance of history service on a locked db should throw");
+  } catch (ex) {}
 
   // Close our connection and try to cleanup the file (could fail on Windows)
   dbConn.close();
@@ -62,11 +64,6 @@ function run_test() {
       db.remove(false);
     } catch(e) { dump("Unable to remove dummy places.sqlite"); }
   }
-
-  // Make sure that the incorrectly opened service is closed before
-  // we make another attempt. Otherwise, there will be a conflict between
-  // the two services (and an assertion failure).
-  yield shutdownPlaces();
 
   // Create history service correctly
   try {
