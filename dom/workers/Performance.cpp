@@ -11,11 +11,6 @@
 
 BEGIN_WORKERS_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Performance, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Performance, Release)
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(Performance)
-
 Performance::Performance(WorkerPrivate* aWorkerPrivate)
   : mWorkerPrivate(aWorkerPrivate)
 {
@@ -33,12 +28,53 @@ Performance::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return PerformanceBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
-double
+DOMHighResTimeStamp
 Performance::Now() const
 {
   TimeDuration duration =
     TimeStamp::Now() - mWorkerPrivate->NowBaseTimeStamp();
   return duration.ToMilliseconds();
+}
+
+// To be removed once bug 1124165 lands
+bool
+Performance::IsPerformanceTimingAttribute(const nsAString& aName)
+{
+  // In workers we just support navigationStart.
+  return aName.EqualsASCII("navigationStart");
+}
+
+DOMHighResTimeStamp
+Performance::GetPerformanceTimingFromString(const nsAString& aProperty)
+{
+  if (!IsPerformanceTimingAttribute(aProperty)) {
+    return 0;
+  }
+
+  if (aProperty.EqualsLiteral("navigationStart")) {
+    return mWorkerPrivate->NowBaseTimeHighRes();
+  }
+
+  MOZ_CRASH("IsPerformanceTimingAttribute and GetPerformanceTimingFromString are out of sync");
+  return 0;
+}
+
+DOMHighResTimeStamp
+Performance::DeltaFromNavigationStart(DOMHighResTimeStamp aTime)
+{
+  if (aTime == 0) {
+    return 0;
+  }
+
+  return aTime - mWorkerPrivate->NowBaseTimeHighRes();
+}
+
+void
+Performance::DispatchBufferFullEvent()
+{
+  // This method is needed just for InsertResourceEntry, but this method is not
+  // exposed to workers.
+  MOZ_CRASH("This should not be called.");
 }
 
 END_WORKERS_NAMESPACE

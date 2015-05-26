@@ -1,0 +1,6 @@
+{
+  "name": "EMPTY-APP",
+  "description": "Empty app for Harness_sanity.",
+  "launch_path": "/tests/testing/mochitest/tests/Harness_sanity/TESTTOKEN",
+  "icons": { "128": "default_icon" }
+}

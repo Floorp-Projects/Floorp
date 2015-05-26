@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait"
+      reftest-async-scroll
+      reftest-async-scroll-x="224" reftest-async-scroll-y="4999"
+      reftest-async-zoom="2.0"><head>
+<meta name="viewport" content="width=device-width">
+</head>
+<!-- Doing scrollTo(1,1) is to activate the left/up arrows in the scrollbars
+     for non-overlay scrollbar environments -->
+<body onload="scrollTo(1,1); document.documentElement.classList.remove('reftest-wait')">
+<div style="width: 4500px; height: 10000px; background: white;"></div>
+</body>
+</html>
+

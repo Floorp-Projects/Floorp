@@ -443,16 +443,19 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
          * or (Object.prototype, Function.prototype, etc.) have that property
          * created eagerly.
          *
-         * ES5 15.3.4: the non-native function object named Function.prototype
-         * does not have a .prototype property.
-         *
          * ES5 15.3.4.5: bound functions don't have a prototype property. The
          * isBuiltin() test covers this case because bound functions are native
          * (and thus built-in) functions by definition/construction.
          *
-         * ES6 19.2.4.3: arrow functions also don't have a prototype property.
+         * In ES6 9.2.8 MakeConstructor the .prototype property is only assigned
+         * to constructors.
+         *
+         * Thus all of the following don't get a .prototype property:
+         * - Methods (that are not class-constructors or generators)
+         * - Arrow functions
+         * - Function.prototype
          */
-        if (fun->isBuiltin() || fun->isArrow() || fun->isFunctionPrototype())
+        if (fun->isBuiltin() || !fun->isConstructor())
             return true;
 
         if (!ResolveInterpretedFunctionPrototype(cx, fun))

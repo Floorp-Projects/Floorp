@@ -693,7 +693,9 @@ nsDOMMutationObserver::TakeRecords(
 }
 
 void
-nsDOMMutationObserver::GetObservingInfo(nsTArray<Nullable<MutationObservingInfo> >& aResult)
+nsDOMMutationObserver::GetObservingInfo(
+                         nsTArray<Nullable<MutationObservingInfo>>& aResult,
+                         mozilla::ErrorResult& aRv)
 {
   aResult.SetCapacity(mReceivers.Count());
   for (int32_t i = 0; i < mReceivers.Count(); ++i) {
@@ -712,7 +714,10 @@ nsDOMMutationObserver::GetObservingInfo(nsTArray<Nullable<MutationObservingInfo>
       mozilla::dom::Sequence<nsString>& filtersAsStrings =
         info.mAttributeFilter.Value();
       for (int32_t j = 0; j < filters.Count(); ++j) {
-        filtersAsStrings.AppendElement(nsDependentAtomString(filters[j]));
+        if (!filtersAsStrings.AppendElement(nsDependentAtomString(filters[j]))) {
+          aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+          return;
+        }
       }
     }
     info.mObservedNode = mr->Target();

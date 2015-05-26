@@ -20,8 +20,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOMMANDPARAMS
 
-  nsresult Init();
-
 protected:
   virtual ~nsCommandParams();
 
@@ -126,7 +124,7 @@ protected:
 
   static void HashClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 
-  PLDHashTable mValuesHash;
+  PLDHashTable2 mValuesHash;
 
   static const PLDHashTableOps sHashOps;
 };

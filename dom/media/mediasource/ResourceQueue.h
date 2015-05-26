@@ -12,6 +12,8 @@
 
 namespace mozilla {
 
+class ErrorResult;
+
 // A SourceBufferResource has a queue containing the data that is appended
 // to it. The queue holds instances of ResourceItem which is an array of the
 // bytes. Appending data to the SourceBufferResource pushes this onto the
@@ -47,9 +49,10 @@ public:
 
   // Tries to evict at least aSizeToEvict from the queue up until
   // aOffset. Returns amount evicted.
-  uint32_t Evict(uint64_t aOffset, uint32_t aSizeToEvict);
+  uint32_t Evict(uint64_t aOffset, uint32_t aSizeToEvict,
+                 ErrorResult& aRv);
 
-  uint32_t EvictBefore(uint64_t aOffset);
+  uint32_t EvictBefore(uint64_t aOffset, ErrorResult& aRv);
 
   uint32_t EvictAll();
 

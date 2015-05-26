@@ -2700,7 +2700,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mParentStatus(Pending), mParentFrozen(false),
   mIsChromeWorker(aIsChromeWorker), mMainThreadObjectsForgotten(false),
   mWorkerType(aWorkerType),
-  mCreationTimeStamp(TimeStamp::Now())
+  mCreationTimeStamp(TimeStamp::Now()),
+  mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(),
                 !aSharedWorkerName.IsVoid() && NS_IsMainThread());
@@ -2722,6 +2723,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
 
     MOZ_ASSERT(IsDedicatedWorker());
     mNowBaseTimeStamp = aParent->NowBaseTimeStamp();
+    mNowBaseTimeHighRes = aParent->NowBaseTimeHighRes();
   }
   else {
     AssertIsOnMainThread();
@@ -2732,8 +2734,11 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
         mLoadInfo.mWindow->GetPerformance()) {
       mNowBaseTimeStamp = mLoadInfo.mWindow->GetPerformance()->GetDOMTiming()->
         GetNavigationStartTimeStamp();
+      mNowBaseTimeHighRes = mLoadInfo.mWindow->GetPerformance()->GetDOMTiming()->
+        GetNavigationStartHighRes();
     } else {
       mNowBaseTimeStamp = CreationTimeStamp();
+      mNowBaseTimeHighRes = CreationTimeHighRes();
     }
   }
 }

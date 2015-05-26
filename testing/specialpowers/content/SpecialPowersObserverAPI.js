@@ -409,11 +409,15 @@ SpecialPowersObserverAPI.prototype = {
       }
 
       case "SPObserverService": {
+        let topic = aMessage.json.observerTopic;
         switch (aMessage.json.op) {
           case "notify":
-            let topic = aMessage.json.observerTopic;
             let data = aMessage.json.observerData
             Services.obs.notifyObservers(null, topic, data);
+            break;
+          case "add":
+            this._registerObservers._self = this;
+            this._registerObservers._add(topic);
             break;
           default:
             throw new SpecialPowersError("Invalid operation for SPObserverervice");

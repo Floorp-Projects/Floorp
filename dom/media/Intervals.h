@@ -11,6 +11,20 @@
 #include "mozilla/TypeTraits.h"
 #include "nsTArray.h"
 
+// Specialization for nsTArray CopyChooser.
+namespace mozilla {
+namespace media {
+template<class T>
+class IntervalSet;
+}
+}
+
+template<class E>
+struct nsTArray_CopyChooser<mozilla::media::IntervalSet<E>>
+{
+  typedef nsTArray_CopyWithConstructors<mozilla::media::IntervalSet<E>> Type;
+};
+
 namespace mozilla {
 namespace media {
 
@@ -198,6 +212,15 @@ public:
     mFuzz = aFuzz;
   }
 
+  // Returns true if the two intervals intersect with this being on the right
+  // of aOther
+  bool TouchesOnRight(const SelfType& aOther) const
+  {
+    return aOther.mStart <= mStart  &&
+      (mStart - mFuzz <= aOther.mEnd + aOther.mFuzz) &&
+      (aOther.mStart - aOther.mFuzz <= mEnd + mFuzz);
+  }
+
   T mStart;
   T mEnd;
   T mFuzz;
@@ -291,10 +314,14 @@ public:
       mIntervals.AppendElement(aInterval);
       return *this;
     }
+    ElemType& last = mIntervals.LastElement();
+    if (aInterval.TouchesOnRight(last)) {
+      last = last.Span(aInterval);
+      return *this;
+    }
     // Most of our actual usage is adding an interval that will be outside the
     // range. We can speed up normalization here.
-    if (aInterval.RightOf(mIntervals.LastElement()) &&
-        !aInterval.Touches(mIntervals.LastElement())) {
+    if (aInterval.RightOf(last)) {
       mIntervals.AppendElement(aInterval);
       return *this;
     }
@@ -510,12 +537,13 @@ public:
   }
 
   // Shift all values by aOffset.
-  void Shift(const T& aOffset)
+  SelfType& Shift(const T& aOffset)
   {
     for (auto& interval : mIntervals) {
       interval.mStart = interval.mStart + aOffset;
       interval.mEnd = interval.mEnd + aOffset;
     }
+    return *this;
   }
 
   void SetFuzz(const T& aFuzz) {

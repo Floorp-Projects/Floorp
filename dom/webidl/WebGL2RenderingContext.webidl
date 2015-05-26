@@ -329,9 +329,14 @@ interface WebGL2RenderingContext : WebGLRenderingContext
                          GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
     void framebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer);
     any getInternalformatParameter(GLenum target, GLenum internalformat, GLenum pname);
+
+    [Throws]
     void invalidateFramebuffer(GLenum target, sequence<GLenum> attachments);
+
+    [Throws]
     void invalidateSubFramebuffer (GLenum target, sequence<GLenum> attachments,
                                    GLint x, GLint y, GLsizei width, GLsizei height);
+
     void readBuffer(GLenum src);
 
     /* Renderbuffer objects */

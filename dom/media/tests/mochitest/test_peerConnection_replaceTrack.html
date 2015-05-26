@@ -32,6 +32,7 @@
     var audiotrack;
     return navigator.mediaDevices.getUserMedia({video:true, audio:true, fake:true})
       .then(newStream => {
+        window.grip = newStream;
         newTrack = newStream.getVideoTracks()[0];
         audiotrack = newStream.getAudioTracks()[0];
         isnot(newTrack, sender.track, "replacing with a different track");

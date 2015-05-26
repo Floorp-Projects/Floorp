@@ -2442,7 +2442,7 @@ FunctionObjectToShadowFunction(JSObject* fun)
 }
 
 /* Statically asserted in jsfun.h. */
-static const unsigned JS_FUNCTION_INTERPRETED_BITS = 0x401;
+static const unsigned JS_FUNCTION_INTERPRETED_BITS = 0x0201;
 
 // Return whether the given function object is native.
 static MOZ_ALWAYS_INLINE bool

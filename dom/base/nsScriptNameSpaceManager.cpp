@@ -119,20 +119,29 @@ NS_IMPL_ISUPPORTS(
   nsISupportsWeakReference,
   nsIMemoryReporter)
 
+static const PLDHashTableOps hash_table_ops =
+{
+  GlobalNameHashHashKey,
+  GlobalNameHashMatchEntry,
+  PL_DHashMoveEntryStub,
+  GlobalNameHashClearEntry,
+  GlobalNameHashInitEntry
+};
+
+#define GLOBALNAME_HASHTABLE_INITIAL_LENGTH   512
+
 nsScriptNameSpaceManager::nsScriptNameSpaceManager()
-  : mIsInitialized(false)
+  : mGlobalNames(&hash_table_ops, sizeof(GlobalNameMapEntry),
+                 GLOBALNAME_HASHTABLE_INITIAL_LENGTH)
+  , mNavigatorNames(&hash_table_ops, sizeof(GlobalNameMapEntry),
+                    GLOBALNAME_HASHTABLE_INITIAL_LENGTH)
 {
   MOZ_COUNT_CTOR(nsScriptNameSpaceManager);
 }
 
 nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
 {
-  if (mIsInitialized) {
-    UnregisterWeakMemoryReporter(this);
-    // Destroy the hash
-    PL_DHashTableFinish(&mGlobalNames);
-    PL_DHashTableFinish(&mNavigatorNames);
-  }
+  UnregisterWeakMemoryReporter(this);
   MOZ_COUNT_DTOR(nsScriptNameSpaceManager);
 }
 
@@ -309,30 +318,9 @@ nsScriptNameSpaceManager::RegisterInterface(const char* aIfName,
   return NS_OK;
 }
 
-#define GLOBALNAME_HASHTABLE_INITIAL_LENGTH   512
-
 nsresult
 nsScriptNameSpaceManager::Init()
 {
-  static const PLDHashTableOps hash_table_ops =
-  {
-    GlobalNameHashHashKey,
-    GlobalNameHashMatchEntry,
-    PL_DHashMoveEntryStub,
-    GlobalNameHashClearEntry,
-    GlobalNameHashInitEntry
-  };
-
-  PL_DHashTableInit(&mGlobalNames, &hash_table_ops,
-                    sizeof(GlobalNameMapEntry),
-                    GLOBALNAME_HASHTABLE_INITIAL_LENGTH);
-
-  PL_DHashTableInit(&mNavigatorNames, &hash_table_ops,
-                    sizeof(GlobalNameMapEntry),
-                    GLOBALNAME_HASHTABLE_INITIAL_LENGTH);
-
-  mIsInitialized = true;
-
   RegisterWeakMemoryReporter(this);
 
   nsresult rv = NS_OK;

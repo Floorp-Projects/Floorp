@@ -50,12 +50,9 @@ public:
     // nsLoadGroup methods:
 
     explicit nsLoadGroup(nsISupports* outer);
-
-    nsresult Init();
-
-protected:
     virtual ~nsLoadGroup();
 
+protected:
     nsresult MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& flags);
 
 private:
@@ -73,7 +70,7 @@ protected:
     nsCOMPtr<nsILoadGroupConnectionInfo> mConnectionInfo;
 
     nsCOMPtr<nsIRequest>            mDefaultLoadRequest;
-    PLDHashTable                    mRequests;
+    PLDHashTable2                   mRequests;
 
     nsWeakPtr                       mObserver;
     nsWeakPtr                       mParentLoadGroup;
