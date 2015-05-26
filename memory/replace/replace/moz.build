@@ -4,17 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'logalloc',
-    'replace',
+SharedLibrary('replace_malloc')
+
+SOURCES += [
+    'ReplaceMalloc.cpp',
 ]
 
-# Build jemalloc3 as a replace-malloc lib when building with mozjemalloc
-if not CONFIG['MOZ_JEMALLOC3']:
-    DIRS += ['jemalloc']
-
-if CONFIG['MOZ_REPLACE_MALLOC_LINKAGE'] == 'dummy library':
-    DIRS += ['dummy']
-
-if CONFIG['MOZ_DMD']:
-    DIRS += ['dmd']
+DISABLE_STL_WRAPPING = True

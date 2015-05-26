@@ -48,14 +48,58 @@
 
 struct ReplaceMallocBridge;
 
-#ifdef __cplusplus
-
 #include "mozilla/Types.h"
+
+MOZ_BEGIN_EXTERN_C
 
 #ifndef REPLACE_MALLOC_IMPL
 /* Returns the replace-malloc bridge if there is one to be returned. */
-extern "C" MFBT_API ReplaceMallocBridge* get_bridge();
+MFBT_API ReplaceMallocBridge* get_bridge();
 #endif
+
+/* Table of malloc functions.
+ *   e.g. void* (*malloc)(size_t), etc.
+ */
+#define MALLOC_DECL(name, return_type, ...) \
+  typedef return_type(name ## _impl_t)(__VA_ARGS__);
+
+#include "malloc_decls.h"
+
+#define MALLOC_DECL(name, return_type, ...) \
+  name ## _impl_t * name;
+
+typedef struct {
+#include "malloc_decls.h"
+} malloc_table_t;
+
+
+/* Table of malloc hook functions.
+ * Those functions are called with the arguments and results of malloc
+ * functions after they are called.
+ *   e.g. void* (*malloc_hook)(void*, size_t), etc.
+ * They can either return the result they're given, or alter it before
+ * returning it.
+ * The hooks corresponding to functions, like free(void*), that return no
+ * value, don't take an extra argument.
+ * The table must at least contain a pointer for malloc_hook and free_hook
+ * functions. They will be used as fallback if no pointer is given for
+ * other allocation functions, like calloc_hook.
+ */
+#define MALLOC_DECL(name, return_type, ...) \
+  return_type (*name ## _hook)(return_type, __VA_ARGS__);
+#define MALLOC_DECL_VOID(name, ...) \
+  void (*name ## _hook)(__VA_ARGS__);
+
+typedef struct {
+#include "malloc_decls.h"
+  /* Like free_hook, but called before realloc_hook. free_hook is called
+   * instead of not given. */
+  void (*realloc_hook_before)(void* aPtr);
+} malloc_hook_table_t;
+
+MOZ_END_EXTERN_C
+
+#ifdef __cplusplus
 
 namespace mozilla {
 namespace dmd {
@@ -75,7 +119,7 @@ struct DebugFdRegistry
 
 struct ReplaceMallocBridge
 {
-  ReplaceMallocBridge() : mVersion(2) {}
+  ReplaceMallocBridge() : mVersion(3) {}
 
   /* This method was added in version 1 of the bridge. */
   virtual mozilla::dmd::DMDFuncs* GetDMDFuncs() { return nullptr; }
@@ -85,6 +129,23 @@ struct ReplaceMallocBridge
    * instance is valid until the process dies.
    * This method was added in version 2 of the bridge. */
   virtual void InitDebugFd(mozilla::DebugFdRegistry&) {}
+
+  /* Register a list of malloc functions and hook functions to the
+   * replace-malloc library so that it can choose to dispatch to them
+   * when needed. The details of what is dispatched when is left to the
+   * replace-malloc library.
+   * Passing a nullptr for either table will unregister a previously
+   * registered table under the same name.
+   * Returns nullptr if registration failed.
+   * If registration succeeded, a table of "pure" malloc functions is
+   * returned. Those "pure" malloc functions won't call hooks.
+   * /!\ Do not rely on registration/unregistration to be instantaneous.
+   * Functions from a previously registered table may still be called for
+   * a brief time after RegisterHook returns.
+   * This method was added in version 3 of the bridge. */
+  virtual const malloc_table_t*
+  RegisterHook(const char* aName, const malloc_table_t* aTable,
+               const malloc_hook_table_t* aHookTable) { return nullptr; }
 
 #ifndef REPLACE_MALLOC_IMPL
   /* Returns the replace-malloc bridge if its version is at least the
@@ -123,6 +184,15 @@ struct ReplaceMalloc
     if (singleton) {
       singleton->InitDebugFd(aRegistry);
     }
+  }
+
+  static const malloc_table_t*
+  RegisterHook(const char* aName, const malloc_table_t* aTable,
+               const malloc_hook_table_t* aHookTable)
+  {
+    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 3);
+    return singleton ? singleton->RegisterHook(aName, aTable, aHookTable)
+                     : nullptr;
   }
 };
 #endif
