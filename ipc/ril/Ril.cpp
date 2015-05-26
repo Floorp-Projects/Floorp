@@ -32,7 +32,7 @@ namespace {
 
 static const char RIL_SOCKET_NAME[] = "/dev/socket/rilproxy";
 
-static nsTArray<nsRefPtr<mozilla::ipc::RilConsumer> > sRilConsumers;
+static nsTArray<nsAutoPtr<mozilla::ipc::RilConsumer>> sRilConsumers;
 
 class ConnectWorkerToRIL final : public WorkerTask
 {
@@ -53,15 +53,13 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (sRilConsumers.Length() <= mClientId ||
-        !sRilConsumers[mClientId] ||
-        sRilConsumers[mClientId]->GetConnectionStatus() != SOCKET_CONNECTED) {
-      // Probably shuting down.
+    if (sRilConsumers.Length() <= mClientId || !sRilConsumers[mClientId]) {
+      // Probably shutting down.
       delete mRawData;
       return NS_OK;
     }
 
-    sRilConsumers[mClientId]->SendSocketData(mRawData);
+    sRilConsumers[mClientId]->Send(mRawData);
     return NS_OK;
   }
 
@@ -203,7 +201,6 @@ namespace ipc {
 RilConsumer::RilConsumer(unsigned long aClientId,
                          WorkerCrossThreadDispatcher* aDispatcher)
   : mDispatcher(aDispatcher)
-  , mClientId(aClientId)
   , mShutdown(false)
 {
   // Only append client id after RIL_SOCKET_NAME when it's not connected to
@@ -217,7 +214,8 @@ RilConsumer::RilConsumer(unsigned long aClientId,
     mAddress = addr_un.sun_path;
   }
 
-  Connect(new RilConnector(mAddress, mClientId));
+  mSocket = new StreamSocket(this, aClientId);
+  mSocket->Connect(new RilConnector(mAddress, aClientId));
 }
 
 nsresult
@@ -250,7 +248,7 @@ RilConsumer::Shutdown()
   MOZ_ASSERT(NS_IsMainThread());
 
   for (unsigned long i = 0; i < sRilConsumers.Length(); i++) {
-    nsRefPtr<RilConsumer>& instance = sRilConsumers[i];
+    nsAutoPtr<RilConsumer> instance(sRilConsumers[i]);
     if (!instance) {
       continue;
     }
@@ -262,36 +260,58 @@ RilConsumer::Shutdown()
 }
 
 void
-RilConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
+RilConsumer::Send(UnixSocketRawData* aRawData)
+{
+  if (!mSocket || mSocket->GetConnectionStatus() != SOCKET_CONNECTED) {
+    // Probably shutting down.
+    delete aRawData;
+    return;
+  }
+  mSocket->SendSocketData(aRawData);
+}
+
+void
+RilConsumer::Close()
+{
+  mSocket->Close();
+  mSocket = nullptr;
+}
+
+// |StreamSocketConnector|
+
+void
+RilConsumer::ReceiveSocketData(int aIndex,
+                               nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<DispatchRILEvent> dre(new DispatchRILEvent(mClientId, aBuffer.forget()));
+  nsRefPtr<DispatchRILEvent> dre(new DispatchRILEvent(aIndex, aBuffer.forget()));
   mDispatcher->PostTask(dre);
 }
 
 void
-RilConsumer::OnConnectSuccess()
+RilConsumer::OnConnectSuccess(int aIndex)
 {
   // Nothing to do here.
-  CHROMIUM_LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
+  CHROMIUM_LOG("RIL[%d]: %s\n", aIndex, __FUNCTION__);
 }
 
 void
-RilConsumer::OnConnectError()
+RilConsumer::OnConnectError(int aIndex)
 {
-  CHROMIUM_LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
+  CHROMIUM_LOG("RIL[%d]: %s\n", aIndex, __FUNCTION__);
   Close();
 }
 
 void
-RilConsumer::OnDisconnect()
+RilConsumer::OnDisconnect(int aIndex)
 {
-  CHROMIUM_LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
+  CHROMIUM_LOG("RIL[%d]: %s\n", aIndex, __FUNCTION__);
   if (mShutdown) {
     return;
   }
-  Connect(new RilConnector(mAddress, mClientId), GetSuggestedConnectDelayMs());
+  mSocket->Connect(new RilConnector(mAddress, aIndex),
+                   mSocket->GetSuggestedConnectDelayMs());
 }
 
 } // namespace ipc

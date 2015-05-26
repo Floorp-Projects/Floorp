@@ -234,7 +234,7 @@ StatementJSHelper::Resolve(nsIXPConnectWrappedNative *aWrapper,
   JS::RootedObject scope(aCtx, aScopeObj);
   if (::JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(aId), "step")) {
     *_retval = ::JS_DefineFunction(aCtx, scope, "step", stepFunc,
-                                   0, 0) != nullptr;
+                                   0, JSPROP_RESOLVING) != nullptr;
     *aResolvedp = true;
     return NS_OK;
   }

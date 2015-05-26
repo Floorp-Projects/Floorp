@@ -210,7 +210,7 @@ XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
     // The global Components property is non-configurable if it's a full
     // nsXPCComponents object. That way, if it's an nsXPCComponentsBase,
     // enableUniversalXPConnect can upgrade it later.
-    unsigned attrs = JSPROP_READONLY;
+    unsigned attrs = JSPROP_READONLY | JSPROP_RESOLVING;
     nsCOMPtr<nsIXPCComponents> c = do_QueryInterface(mComponents);
     if (c)
         attrs |= JSPROP_PERMANENT;

@@ -861,26 +861,6 @@ class MOZ_STACK_CLASS SourceBufferHolder final
 
 #define JSFUN_CONSTRUCTOR      0x400    /* native that can be called as a ctor */
 
-#define JSPROP_REDEFINE_NONCONFIGURABLE 0x800 /* If set, will allow redefining a
-                                                 non-configurable property, but
-                                                 only on a non-DOM global.  This
-                                                 is a temporary hack that will
-                                                 need to go away in bug
-                                                 1105518 */
-
-#define JSPROP_IGNORE_ENUMERATE 0x1000  /* ignore the value in JSPROP_ENUMERATE.
-                                           This flag only valid when defining over
-                                           an existing property. */
-#define JSPROP_IGNORE_READONLY  0x2000  /* ignore the value in JSPROP_READONLY.
-                                           This flag only valid when defining over
-                                           an existing property. */
-#define JSPROP_IGNORE_PERMANENT 0x4000  /* ignore the value in JSPROP_PERMANENT.
-                                           This flag only valid when defining over
-                                           an existing property. */
-#define JSPROP_IGNORE_VALUE     0x8000  /* ignore the Value in the descriptor. Nothing was
-                                           specified when passed to Object.defineProperty
-                                           from script. */
-
 /*
  * Specify a generic native prototype methods, i.e., methods of a class
  * prototype that are exposed as static methods taking an extra leading
@@ -894,6 +874,40 @@ class MOZ_STACK_CLASS SourceBufferHolder final
 #define JSFUN_GENERIC_NATIVE   0x800
 
 #define JSFUN_FLAGS_MASK       0xe00    /* | of all the JSFUN_* flags */
+
+/*
+ * If set, will allow redefining a non-configurable property, but only on a
+ * non-DOM global.  This is a temporary hack that will need to go away in bug
+ * 1105518.
+ */
+#define JSPROP_REDEFINE_NONCONFIGURABLE 0x1000
+
+/*
+ * Resolve hooks and enumerate hooks must pass this flag when calling
+ * JS_Define* APIs to reify lazily-defined properties.
+ *
+ * JSPROP_RESOLVING is used only with property-defining APIs. It tells the
+ * engine to skip the resolve hook when performing the lookup at the beginning
+ * of property definition. This keeps the resolve hook from accidentally
+ * triggering itself: unchecked recursion.
+ *
+ * For enumerate hooks, triggering the resolve hook would be merely silly, not
+ * fatal, except in some cases involving non-configurable properties.
+ */
+#define JSPROP_RESOLVING         0x2000
+
+#define JSPROP_IGNORE_ENUMERATE  0x4000  /* ignore the value in JSPROP_ENUMERATE.
+                                            This flag only valid when defining over
+                                            an existing property. */
+#define JSPROP_IGNORE_READONLY   0x8000  /* ignore the value in JSPROP_READONLY.
+                                            This flag only valid when defining over
+                                            an existing property. */
+#define JSPROP_IGNORE_PERMANENT 0x10000  /* ignore the value in JSPROP_PERMANENT.
+                                            This flag only valid when defining over
+                                            an existing property. */
+#define JSPROP_IGNORE_VALUE     0x20000  /* ignore the Value in the descriptor. Nothing was
+                                            specified when passed to Object.defineProperty
+                                            from script. */
 
 /*
  * The first call to JS_CallOnce by any thread in a process will call 'func'.
@@ -2563,6 +2577,7 @@ class PropertyDescriptorOperations
                                      JSPROP_SETTER |
                                      JSPROP_SHARED |
                                      JSPROP_REDEFINE_NONCONFIGURABLE |
+                                     JSPROP_RESOLVING |
                                      SHADOWABLE)) == 0);
         MOZ_ASSERT(!hasAll(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE));
         MOZ_ASSERT(!hasAll(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT));
@@ -2581,6 +2596,12 @@ class PropertyDescriptorOperations
         }
         MOZ_ASSERT(getter() != JS_PropertyStub);
         MOZ_ASSERT(setter() != JS_StrictPropertyStub);
+
+        MOZ_ASSERT_IF(has(JSPROP_RESOLVING), !has(JSPROP_IGNORE_ENUMERATE));
+        MOZ_ASSERT_IF(has(JSPROP_RESOLVING), !has(JSPROP_IGNORE_PERMANENT));
+        MOZ_ASSERT_IF(has(JSPROP_RESOLVING), !has(JSPROP_IGNORE_READONLY));
+        MOZ_ASSERT_IF(has(JSPROP_RESOLVING), !has(JSPROP_IGNORE_VALUE));
+        MOZ_ASSERT_IF(has(JSPROP_RESOLVING), !has(JSPROP_REDEFINE_NONCONFIGURABLE));
 #endif
     }
 
@@ -2594,6 +2615,7 @@ class PropertyDescriptorOperations
                                      JSPROP_SETTER |
                                      JSPROP_SHARED |
                                      JSPROP_REDEFINE_NONCONFIGURABLE |
+                                     JSPROP_RESOLVING |
                                      SHADOWABLE)) == 0);
         MOZ_ASSERT_IF(isAccessorDescriptor(), has(JSPROP_GETTER) && has(JSPROP_SETTER));
 #endif

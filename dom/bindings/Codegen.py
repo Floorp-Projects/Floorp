@@ -7803,9 +7803,11 @@ class CGResolveHook(CGAbstractClassHook):
             // If desc.value() is undefined, then the DoResolve call
             // has already defined it on the object.  Don't try to also
             // define it.
-            if (!desc.value().isUndefined() &&
-                !JS_DefinePropertyById(cx, obj, id, desc)) {
-              return false;
+            if (!desc.value().isUndefined()) {
+              desc.attributesRef() |= JSPROP_RESOLVING;
+              if (!JS_DefinePropertyById(cx, obj, id, desc)) {
+                return false;
+              }
             }
             *resolvedp = true;
             return true;

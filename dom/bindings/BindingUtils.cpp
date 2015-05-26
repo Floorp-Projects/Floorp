@@ -550,7 +550,7 @@ DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global, const char* name,
 
   // This is Enumerable: False per spec.
   return alreadyDefined ||
-         JS_DefineProperty(cx, global, name, constructor, 0);
+         JS_DefineProperty(cx, global, name, constructor, JSPROP_RESOLVING);
 }
 
 static JSObject*

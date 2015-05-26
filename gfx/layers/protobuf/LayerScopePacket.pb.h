@@ -44,6 +44,8 @@ class LayersPacket_Layer_Region;
 class LayersPacket_Layer_Matrix;
 class LayersPacket_Layer_Shadow;
 class MetaPacket;
+class DrawPacket;
+class DrawPacket_Rect;
 class Packet;
 class CommandPacket;
 
@@ -92,11 +94,12 @@ enum Packet_DataType {
   Packet_DataType_COLOR = 3,
   Packet_DataType_TEXTURE = 4,
   Packet_DataType_LAYERS = 5,
-  Packet_DataType_META = 6
+  Packet_DataType_META = 6,
+  Packet_DataType_DRAW = 7
 };
 bool Packet_DataType_IsValid(int value);
 const Packet_DataType Packet_DataType_DataType_MIN = Packet_DataType_FRAMESTART;
-const Packet_DataType Packet_DataType_DataType_MAX = Packet_DataType_META;
+const Packet_DataType Packet_DataType_DataType_MAX = Packet_DataType_DRAW;
 const int Packet_DataType_DataType_ARRAYSIZE = Packet_DataType_DataType_MAX + 1;
 
 enum CommandPacket_CmdType {
@@ -1311,6 +1314,232 @@ class MetaPacket : public ::google::protobuf::MessageLite {
 };
 // -------------------------------------------------------------------
 
+class DrawPacket_Rect : public ::google::protobuf::MessageLite {
+ public:
+  DrawPacket_Rect();
+  virtual ~DrawPacket_Rect();
+  
+  DrawPacket_Rect(const DrawPacket_Rect& from);
+  
+  inline DrawPacket_Rect& operator=(const DrawPacket_Rect& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const DrawPacket_Rect& default_instance();
+  
+  void Swap(DrawPacket_Rect* other);
+  
+  // implements Message ----------------------------------------------
+  
+  DrawPacket_Rect* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const DrawPacket_Rect& from);
+  void MergeFrom(const DrawPacket_Rect& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  // accessors -------------------------------------------------------
+  
+  // required float x = 1;
+  inline bool has_x() const;
+  inline void clear_x();
+  static const int kXFieldNumber = 1;
+  inline float x() const;
+  inline void set_x(float value);
+  
+  // required float y = 2;
+  inline bool has_y() const;
+  inline void clear_y();
+  static const int kYFieldNumber = 2;
+  inline float y() const;
+  inline void set_y(float value);
+  
+  // required float w = 3;
+  inline bool has_w() const;
+  inline void clear_w();
+  static const int kWFieldNumber = 3;
+  inline float w() const;
+  inline void set_w(float value);
+  
+  // required float h = 4;
+  inline bool has_h() const;
+  inline void clear_h();
+  static const int kHFieldNumber = 4;
+  inline float h() const;
+  inline void set_h(float value);
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.DrawPacket.Rect)
+ private:
+  inline void set_has_x();
+  inline void clear_has_x();
+  inline void set_has_y();
+  inline void clear_has_y();
+  inline void set_has_w();
+  inline void clear_has_w();
+  inline void set_has_h();
+  inline void clear_has_h();
+  
+  float x_;
+  float y_;
+  float w_;
+  float h_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static DrawPacket_Rect* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class DrawPacket : public ::google::protobuf::MessageLite {
+ public:
+  DrawPacket();
+  virtual ~DrawPacket();
+  
+  DrawPacket(const DrawPacket& from);
+  
+  inline DrawPacket& operator=(const DrawPacket& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const DrawPacket& default_instance();
+  
+  void Swap(DrawPacket* other);
+  
+  // implements Message ----------------------------------------------
+  
+  DrawPacket* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const DrawPacket& from);
+  void MergeFrom(const DrawPacket& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  typedef DrawPacket_Rect Rect;
+  
+  // accessors -------------------------------------------------------
+  
+  // required float offsetX = 1;
+  inline bool has_offsetx() const;
+  inline void clear_offsetx();
+  static const int kOffsetXFieldNumber = 1;
+  inline float offsetx() const;
+  inline void set_offsetx(float value);
+  
+  // required float offsetY = 2;
+  inline bool has_offsety() const;
+  inline void clear_offsety();
+  static const int kOffsetYFieldNumber = 2;
+  inline float offsety() const;
+  inline void set_offsety(float value);
+  
+  // repeated float mvMatrix = 3;
+  inline int mvmatrix_size() const;
+  inline void clear_mvmatrix();
+  static const int kMvMatrixFieldNumber = 3;
+  inline float mvmatrix(int index) const;
+  inline void set_mvmatrix(int index, float value);
+  inline void add_mvmatrix(float value);
+  inline const ::google::protobuf::RepeatedField< float >&
+      mvmatrix() const;
+  inline ::google::protobuf::RepeatedField< float >*
+      mutable_mvmatrix();
+  
+  // required uint32 totalRects = 4;
+  inline bool has_totalrects() const;
+  inline void clear_totalrects();
+  static const int kTotalRectsFieldNumber = 4;
+  inline ::google::protobuf::uint32 totalrects() const;
+  inline void set_totalrects(::google::protobuf::uint32 value);
+  
+  // repeated .mozilla.layers.layerscope.DrawPacket.Rect layerRect = 5;
+  inline int layerrect_size() const;
+  inline void clear_layerrect();
+  static const int kLayerRectFieldNumber = 5;
+  inline const ::mozilla::layers::layerscope::DrawPacket_Rect& layerrect(int index) const;
+  inline ::mozilla::layers::layerscope::DrawPacket_Rect* mutable_layerrect(int index);
+  inline ::mozilla::layers::layerscope::DrawPacket_Rect* add_layerrect();
+  inline const ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect >&
+      layerrect() const;
+  inline ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect >*
+      mutable_layerrect();
+  
+  // required uint64 layerref = 6;
+  inline bool has_layerref() const;
+  inline void clear_layerref();
+  static const int kLayerrefFieldNumber = 6;
+  inline ::google::protobuf::uint64 layerref() const;
+  inline void set_layerref(::google::protobuf::uint64 value);
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.DrawPacket)
+ private:
+  inline void set_has_offsetx();
+  inline void clear_has_offsetx();
+  inline void set_has_offsety();
+  inline void clear_has_offsety();
+  inline void set_has_totalrects();
+  inline void clear_has_totalrects();
+  inline void set_has_layerref();
+  inline void clear_has_layerref();
+  
+  float offsetx_;
+  float offsety_;
+  ::google::protobuf::RepeatedField< float > mvmatrix_;
+  ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect > layerrect_;
+  ::google::protobuf::uint64 layerref_;
+  ::google::protobuf::uint32 totalrects_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static DrawPacket* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class Packet : public ::google::protobuf::MessageLite {
  public:
   Packet();
@@ -1359,6 +1588,7 @@ class Packet : public ::google::protobuf::MessageLite {
   static const DataType TEXTURE = Packet_DataType_TEXTURE;
   static const DataType LAYERS = Packet_DataType_LAYERS;
   static const DataType META = Packet_DataType_META;
+  static const DataType DRAW = Packet_DataType_DRAW;
   static inline bool DataType_IsValid(int value) {
     return Packet_DataType_IsValid(value);
   }
@@ -1418,6 +1648,14 @@ class Packet : public ::google::protobuf::MessageLite {
   inline ::mozilla::layers::layerscope::MetaPacket* mutable_meta();
   inline ::mozilla::layers::layerscope::MetaPacket* release_meta();
   
+  // optional .mozilla.layers.layerscope.DrawPacket draw = 7;
+  inline bool has_draw() const;
+  inline void clear_draw();
+  static const int kDrawFieldNumber = 7;
+  inline const ::mozilla::layers::layerscope::DrawPacket& draw() const;
+  inline ::mozilla::layers::layerscope::DrawPacket* mutable_draw();
+  inline ::mozilla::layers::layerscope::DrawPacket* release_draw();
+  
   // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.Packet)
  private:
   inline void set_has_type();
@@ -1432,16 +1670,19 @@ class Packet : public ::google::protobuf::MessageLite {
   inline void clear_has_layers();
   inline void set_has_meta();
   inline void clear_has_meta();
+  inline void set_has_draw();
+  inline void clear_has_draw();
   
   ::mozilla::layers::layerscope::FramePacket* frame_;
   ::mozilla::layers::layerscope::ColorPacket* color_;
   ::mozilla::layers::layerscope::TexturePacket* texture_;
   ::mozilla::layers::layerscope::LayersPacket* layers_;
   ::mozilla::layers::layerscope::MetaPacket* meta_;
+  ::mozilla::layers::layerscope::DrawPacket* draw_;
   int type_;
   
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
   
   friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
   friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
@@ -2737,6 +2978,240 @@ inline void MetaPacket::set_composedbyhwc(bool value) {
 
 // -------------------------------------------------------------------
 
+// DrawPacket_Rect
+
+// required float x = 1;
+inline bool DrawPacket_Rect::has_x() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void DrawPacket_Rect::set_has_x() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void DrawPacket_Rect::clear_has_x() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void DrawPacket_Rect::clear_x() {
+  x_ = 0;
+  clear_has_x();
+}
+inline float DrawPacket_Rect::x() const {
+  return x_;
+}
+inline void DrawPacket_Rect::set_x(float value) {
+  set_has_x();
+  x_ = value;
+}
+
+// required float y = 2;
+inline bool DrawPacket_Rect::has_y() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void DrawPacket_Rect::set_has_y() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void DrawPacket_Rect::clear_has_y() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void DrawPacket_Rect::clear_y() {
+  y_ = 0;
+  clear_has_y();
+}
+inline float DrawPacket_Rect::y() const {
+  return y_;
+}
+inline void DrawPacket_Rect::set_y(float value) {
+  set_has_y();
+  y_ = value;
+}
+
+// required float w = 3;
+inline bool DrawPacket_Rect::has_w() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void DrawPacket_Rect::set_has_w() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void DrawPacket_Rect::clear_has_w() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void DrawPacket_Rect::clear_w() {
+  w_ = 0;
+  clear_has_w();
+}
+inline float DrawPacket_Rect::w() const {
+  return w_;
+}
+inline void DrawPacket_Rect::set_w(float value) {
+  set_has_w();
+  w_ = value;
+}
+
+// required float h = 4;
+inline bool DrawPacket_Rect::has_h() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void DrawPacket_Rect::set_has_h() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void DrawPacket_Rect::clear_has_h() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void DrawPacket_Rect::clear_h() {
+  h_ = 0;
+  clear_has_h();
+}
+inline float DrawPacket_Rect::h() const {
+  return h_;
+}
+inline void DrawPacket_Rect::set_h(float value) {
+  set_has_h();
+  h_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// DrawPacket
+
+// required float offsetX = 1;
+inline bool DrawPacket::has_offsetx() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void DrawPacket::set_has_offsetx() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void DrawPacket::clear_has_offsetx() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void DrawPacket::clear_offsetx() {
+  offsetx_ = 0;
+  clear_has_offsetx();
+}
+inline float DrawPacket::offsetx() const {
+  return offsetx_;
+}
+inline void DrawPacket::set_offsetx(float value) {
+  set_has_offsetx();
+  offsetx_ = value;
+}
+
+// required float offsetY = 2;
+inline bool DrawPacket::has_offsety() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void DrawPacket::set_has_offsety() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void DrawPacket::clear_has_offsety() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void DrawPacket::clear_offsety() {
+  offsety_ = 0;
+  clear_has_offsety();
+}
+inline float DrawPacket::offsety() const {
+  return offsety_;
+}
+inline void DrawPacket::set_offsety(float value) {
+  set_has_offsety();
+  offsety_ = value;
+}
+
+// repeated float mvMatrix = 3;
+inline int DrawPacket::mvmatrix_size() const {
+  return mvmatrix_.size();
+}
+inline void DrawPacket::clear_mvmatrix() {
+  mvmatrix_.Clear();
+}
+inline float DrawPacket::mvmatrix(int index) const {
+  return mvmatrix_.Get(index);
+}
+inline void DrawPacket::set_mvmatrix(int index, float value) {
+  mvmatrix_.Set(index, value);
+}
+inline void DrawPacket::add_mvmatrix(float value) {
+  mvmatrix_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< float >&
+DrawPacket::mvmatrix() const {
+  return mvmatrix_;
+}
+inline ::google::protobuf::RepeatedField< float >*
+DrawPacket::mutable_mvmatrix() {
+  return &mvmatrix_;
+}
+
+// required uint32 totalRects = 4;
+inline bool DrawPacket::has_totalrects() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void DrawPacket::set_has_totalrects() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void DrawPacket::clear_has_totalrects() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void DrawPacket::clear_totalrects() {
+  totalrects_ = 0u;
+  clear_has_totalrects();
+}
+inline ::google::protobuf::uint32 DrawPacket::totalrects() const {
+  return totalrects_;
+}
+inline void DrawPacket::set_totalrects(::google::protobuf::uint32 value) {
+  set_has_totalrects();
+  totalrects_ = value;
+}
+
+// repeated .mozilla.layers.layerscope.DrawPacket.Rect layerRect = 5;
+inline int DrawPacket::layerrect_size() const {
+  return layerrect_.size();
+}
+inline void DrawPacket::clear_layerrect() {
+  layerrect_.Clear();
+}
+inline const ::mozilla::layers::layerscope::DrawPacket_Rect& DrawPacket::layerrect(int index) const {
+  return layerrect_.Get(index);
+}
+inline ::mozilla::layers::layerscope::DrawPacket_Rect* DrawPacket::mutable_layerrect(int index) {
+  return layerrect_.Mutable(index);
+}
+inline ::mozilla::layers::layerscope::DrawPacket_Rect* DrawPacket::add_layerrect() {
+  return layerrect_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect >&
+DrawPacket::layerrect() const {
+  return layerrect_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::DrawPacket_Rect >*
+DrawPacket::mutable_layerrect() {
+  return &layerrect_;
+}
+
+// required uint64 layerref = 6;
+inline bool DrawPacket::has_layerref() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void DrawPacket::set_has_layerref() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void DrawPacket::clear_has_layerref() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void DrawPacket::clear_layerref() {
+  layerref_ = GOOGLE_ULONGLONG(0);
+  clear_has_layerref();
+}
+inline ::google::protobuf::uint64 DrawPacket::layerref() const {
+  return layerref_;
+}
+inline void DrawPacket::set_layerref(::google::protobuf::uint64 value) {
+  set_has_layerref();
+  layerref_ = value;
+}
+
+// -------------------------------------------------------------------
+
 // Packet
 
 // required .mozilla.layers.layerscope.Packet.DataType type = 1;
@@ -2904,6 +3379,35 @@ inline ::mozilla::layers::layerscope::MetaPacket* Packet::release_meta() {
   clear_has_meta();
   ::mozilla::layers::layerscope::MetaPacket* temp = meta_;
   meta_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.DrawPacket draw = 7;
+inline bool Packet::has_draw() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void Packet::set_has_draw() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void Packet::clear_has_draw() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void Packet::clear_draw() {
+  if (draw_ != NULL) draw_->::mozilla::layers::layerscope::DrawPacket::Clear();
+  clear_has_draw();
+}
+inline const ::mozilla::layers::layerscope::DrawPacket& Packet::draw() const {
+  return draw_ != NULL ? *draw_ : *default_instance_->draw_;
+}
+inline ::mozilla::layers::layerscope::DrawPacket* Packet::mutable_draw() {
+  set_has_draw();
+  if (draw_ == NULL) draw_ = new ::mozilla::layers::layerscope::DrawPacket;
+  return draw_;
+}
+inline ::mozilla::layers::layerscope::DrawPacket* Packet::release_draw() {
+  clear_has_draw();
+  ::mozilla::layers::layerscope::DrawPacket* temp = draw_;
+  draw_ = NULL;
   return temp;
 }
 

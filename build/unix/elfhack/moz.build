@@ -25,6 +25,4 @@ HOST_SOURCES += [
 
 HostProgram('elfhack')
 
-DEFINES['ELFHACK_BUILD'] = True
-
 NO_PGO = True

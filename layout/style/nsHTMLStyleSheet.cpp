@@ -306,6 +306,13 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
   if (aData->mElement->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang, lang)) {
     ruleWalker->Forward(LangRuleFor(lang));
   }
+
+  // Set the language to "x-math" on the <math> element, so that appropriate
+  // font settings are used for MathML.
+  if (aData->mElement->IsMathMLElement(nsGkAtoms::math)) {
+    nsGkAtoms::x_math->ToString(lang);
+    ruleWalker->Forward(LangRuleFor(lang));
+  }
 }
 
 // Test if style is dependent on content state

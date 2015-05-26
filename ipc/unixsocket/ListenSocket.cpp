@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include "ConnectionOrientedSocket.h"
 #include "DataSocket.h"
+#include "ListenSocketConsumer.h"
 #include "mozilla/RefPtr.h"
 #include "nsXULAppAPI.h"
 #include "UnixSocketConnector.h"
@@ -291,9 +292,13 @@ private:
 // UnixSocketConsumer
 //
 
-ListenSocket::ListenSocket()
-: mIO(nullptr)
-{ }
+ListenSocket::ListenSocket(ListenSocketConsumer* aConsumer, int aIndex)
+  : mConsumer(aConsumer)
+  , mIndex(aIndex)
+  , mIO(nullptr)
+{
+  MOZ_ASSERT(mConsumer);
+}
 
 ListenSocket::~ListenSocket()
 {
@@ -374,6 +379,30 @@ ListenSocket::Close()
   mIO = nullptr;
 
   NotifyDisconnect();
+}
+
+void
+ListenSocket::OnConnectSuccess()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->OnConnectSuccess(mIndex);
+}
+
+void
+ListenSocket::OnConnectError()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->OnConnectError(mIndex);
+}
+
+void
+ListenSocket::OnDisconnect()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->OnDisconnect(mIndex);
 }
 
 } // namespace ipc
