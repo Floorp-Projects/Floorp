@@ -516,9 +516,12 @@ exports.items.push({
         return args.invert ? !value : value;
       }
 
-      const toBlackBox = [s.attachment.source
-                          for (s of dbg._view.Sources.items)
-                          if (shouldBlackBox(s.attachment.source))];
+      const toBlackBox = [];
+      for (let {attachment: {source}} of dbg._view.Sources.items) {
+        if (shouldBlackBox(source)) {
+          toBlackBox.push(source);
+        }
+      }
 
       // If we aren't black boxing any sources, bail out now.
 

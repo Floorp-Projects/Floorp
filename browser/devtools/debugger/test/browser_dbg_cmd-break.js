@@ -18,7 +18,7 @@ function test() {
   };
 
   helpers.addTabWithToolbar(TAB_URL, aOptions => {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       yield helpers.audit(aOptions, [{
         setup: 'break',
         check: {

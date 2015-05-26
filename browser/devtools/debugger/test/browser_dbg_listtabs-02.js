@@ -74,8 +74,8 @@ function testTabA() {
     is(tabActors.size, 2, "gTabA opened: two tabs in list");
     ok(tabActors.has(gFirstActor), "gTabA opened: initial tab present");
 
-    info("actors: " + [a.url for (a of tabActors)]);
-    gActorA = [a for (a of tabActors) if (a !== gFirstActor)][0];
+    info("actors: " + [...tabActors].map(a => a.url));
+    gActorA = [...tabActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabA opened: new tab URL");
     is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabA opened: new tab title");
   });
@@ -118,8 +118,8 @@ function testTabClosed() {
     is(tabActors.size, 2, "gTabA closed: two tabs in list");
     ok(tabActors.has(gFirstActor), "gTabA closed: initial tab present");
 
-    info("actors: " + [a.url for (a of tabActors)]);
-    gActorA = [a for (a of tabActors) if (a !== gFirstActor)][0];
+    info("actors: " + [...tabActors].map(a => a.url));
+    gActorA = [...tabActors].filter(a => a!== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabA closed: new tab URL");
     is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabA closed: new tab title");
   });
@@ -162,8 +162,8 @@ function testNewWindow() {
     is(tabActors.size, 3, "gTabC closed: three tabs in list");
     ok(tabActors.has(gFirstActor), "gTabC closed: initial tab present");
 
-    info("actors: " + [a.url for (a of tabActors)]);
-    gActorA = [a for (a of tabActors) if (a !== gFirstActor)][0];
+    info("actors: " + [...tabActors].map(a => a.url));
+    gActorA = [...tabActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gTabC closed: new tab URL");
     is(gActorA.title, "JS Debugger BrowserTabList test page", "gTabC closed: new tab title");
   });
@@ -191,8 +191,8 @@ function testWindowClosed() {
     is(tabActors.size, 2, "gNewWindow closed: two tabs in list");
     ok(tabActors.has(gFirstActor), "gNewWindow closed: initial tab present");
 
-    info("actors: " + [a.url for (a of tabActors)]);
-    gActorA = [a for (a of tabActors) if (a !== gFirstActor)][0];
+    info("actors: " + [...tabActors].map(a => a.url));
+    gActorA = [...tabActors].filter(a => a !== gFirstActor)[0];
     ok(gActorA.url.match(/^data:text\/html;/), "gNewWindow closed: new tab URL");
     is(gActorA.title, "JS Debugger BrowserTabList test page", "gNewWindow closed: new tab title");
   });

@@ -6,7 +6,7 @@
 const ADDON_URL = EXAMPLE_URL + "addon4.xpi";
 
 function test() {
-  Task.spawn(function () {
+  Task.spawn(function*() {
     let addon = yield addAddon(ADDON_URL);
     let tab1 = yield addTab("chrome://browser_dbg_addon4/content/test.xul");
 

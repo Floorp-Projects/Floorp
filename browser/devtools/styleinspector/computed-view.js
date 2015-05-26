@@ -1245,10 +1245,11 @@ PropertyView.prototype = {
 
         this._matchedSelectorResponse = matched;
 
-        this._buildMatchedSelectors();
+        this._buildMatchedSelectors()
+            .then(() => {
+              this.tree.inspector.emit("computed-view-property-expanded");
+            });
         this.matchedExpander.setAttribute("open", "");
-
-        this.tree.inspector.emit("computed-view-property-expanded");
       }).then(null, console.error);
     } else {
       this.matchedSelectorsContainer.innerHTML = "";
@@ -1264,6 +1265,7 @@ PropertyView.prototype = {
   },
 
   _buildMatchedSelectors: function() {
+    let promises = [];
     let frag = this.element.ownerDocument.createDocumentFragment();
 
     for (let selector of this.matchedSelectorViews) {
@@ -1292,9 +1294,11 @@ PropertyView.prototype = {
         class: "other-property-value theme-fg-color1"
       });
       valueSpan.appendChild(selector.outputFragment);
+      promises.push(selector.ready);
     }
 
     this.matchedSelectorsContainer.appendChild(frag);
+    return promise.all(promises);
   },
 
   /**
@@ -1391,7 +1395,7 @@ function SelectorView(aTree, aSelectorInfo)
   this.openStyleEditor = this.openStyleEditor.bind(this);
   this.maybeOpenStyleEditor = this.maybeOpenStyleEditor.bind(this);
 
-  this.updateSourceLink();
+  this.ready = this.updateSourceLink();
 }
 
 /**
