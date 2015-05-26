@@ -166,7 +166,7 @@ void GonkConsumerBase::dumpLocked(String8& result, const char* prefix) const {
     result.appendFormat("%smAbandoned=%d\n", prefix, int(mAbandoned));
 
     if (!mAbandoned) {
-        mConsumer->dumpToString(result, prefix);
+        mConsumer->dump(result, prefix);
     }
 }
 

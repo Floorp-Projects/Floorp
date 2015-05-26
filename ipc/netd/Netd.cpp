@@ -17,7 +17,6 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Snprintf.h"
 
 #define NETD_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
 #define ICS_SYS_USB_RNDIS_MAC "/sys/class/android_usb/android0/f_rndis/ethaddr"
@@ -68,9 +67,9 @@ InitRndisAddress()
     address[i % (kEthernetAddressLength - 1) + 1] ^= serialno[i];
   }
 
-  snprintf_literal(mac, "%02x:%02x:%02x:%02x:%02x:%02x",
-                   address[0], address[1], address[2],
-                   address[3], address[4], address[5]);
+  sprintf(mac, "%02x:%02x:%02x:%02x:%02x:%02x",
+          address[0], address[1], address[2],
+          address[3], address[4], address[5]);
   length = strlen(mac);
   ret = write(fd.get(), mac, length);
   if (ret != length) {

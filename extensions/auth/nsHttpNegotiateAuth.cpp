@@ -37,7 +37,6 @@
 #include "prmem.h"
 #include "prnetdb.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Snprintf.h"
 
 //-----------------------------------------------------------------------------
 
@@ -277,12 +276,11 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
     LOG(("  Sending a token of length %d\n", outTokenLen));
 
     // allocate a buffer sizeof("Negotiate" + " " + b64output_token + "\0")
-    const int bufsize = kNegotiateLen + 1 + strlen(encoded_token) + 1;
-    *creds = (char *) moz_xmalloc(bufsize);
+    *creds = (char *) moz_xmalloc(kNegotiateLen + 1 + strlen(encoded_token) + 1);
     if (MOZ_UNLIKELY(!*creds))
         rv = NS_ERROR_OUT_OF_MEMORY;
     else
-        snprintf(*creds, bufsize, "%s %s", kNegotiate, encoded_token);
+        sprintf(*creds, "%s %s", kNegotiate, encoded_token);
 
     PR_Free(encoded_token);
     return rv;

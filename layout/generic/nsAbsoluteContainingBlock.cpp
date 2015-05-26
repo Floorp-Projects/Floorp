@@ -18,12 +18,10 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsGridContainerFrame.h"
 
-#include "mozilla/Snprintf.h"
-
 #ifdef DEBUG
 #include "nsBlockFrame.h"
 
-static void PrettyUC(nscoord aSize, char* aBuf, int aBufSize)
+static void PrettyUC(nscoord aSize, char* aBuf)
 {
   if (NS_UNCONSTRAINEDSIZE == aSize) {
     strcpy(aBuf, "UC");
@@ -31,7 +29,7 @@ static void PrettyUC(nscoord aSize, char* aBuf, int aBufSize)
     if((int32_t)0xdeadbeef == aSize) {
       strcpy(aBuf, "deadbeef");
     } else {
-      snprintf(aBuf, aBufSize, "%d", aSize);
+      sprintf(aBuf, "%d", aSize);
     }
   }
 }
@@ -372,11 +370,11 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
     char width[16];
     char height[16];
-    PrettyUC(aReflowState.AvailableWidth(), width, 16);
-    PrettyUC(aReflowState.AvailableHeight(), height, 16);
+    PrettyUC(aReflowState.AvailableWidth(), width);
+    PrettyUC(aReflowState.AvailableHeight(), height);
     printf(" a=%s,%s ", width, height);
-    PrettyUC(aReflowState.ComputedWidth(), width, 16);
-    PrettyUC(aReflowState.ComputedHeight(), height, 16);
+    PrettyUC(aReflowState.ComputedWidth(), width);
+    PrettyUC(aReflowState.ComputedHeight(), height);
     printf("c=%s,%s \n", width, height);
   }
   AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
