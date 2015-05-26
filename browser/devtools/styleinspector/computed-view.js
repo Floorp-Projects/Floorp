@@ -151,6 +151,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this._onClick = this._onClick.bind(this);
   this._onCopy = this._onCopy.bind(this);
   this._onCopyColor = this._onCopyColor.bind(this);
+  this._onCopyImageDataUrl = this._onCopyImageDataUrl.bind(this);
   this._onFilterStyles = this._onFilterStyles.bind(this);
   this._onFilterKeyPress = this._onFilterKeyPress.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
@@ -328,7 +329,7 @@ CssHtmlTree.prototype = {
    * - type {String} One of the VIEW_NODE_XXX_TYPE const in
    *   style-inspector-overlays
    * - value {Object} Depends on the type of the node
-   * returns null of the node isn't anything we care about
+   * returns null if the node isn't anything we care about
    */
   getNodeInfo: function(node) {
     if (!node) {
@@ -351,7 +352,7 @@ CssHtmlTree.prototype = {
       return {
         type: overlays.VIEW_NODE_SELECTOR_TYPE,
         value: selectorText.trim()
-      }
+      };
     }
 
     // Walk up the nodes to find out where node is
@@ -715,6 +716,13 @@ CssHtmlTree.prototype = {
       command: this._onCopyColor
     });
 
+    // Copy data URI
+    this.menuitemCopyImageDataUrl = createMenuItem(this._contextmenu, {
+      label: "styleinspector.contextmenu.copyImageDataUrl",
+      accesskey: "styleinspector.contextmenu.copyImageDataUrl.accessKey",
+      command: this._onCopyImageDataUrl
+    });
+
     // Show Original Sources
     this.menuitemSources= createMenuItem(this._contextmenu, {
       label: "ruleView.contextmenu.showOrigSources",
@@ -745,6 +753,7 @@ CssHtmlTree.prototype = {
     this.menuitemSources.setAttribute("checked", showOrig);
 
     this.menuitemCopyColor.hidden = !this._isColorPopup();
+    this.menuitemCopyImageDataUrl.hidden = !this._isImageUrlPopup();
   },
 
   /**
@@ -757,13 +766,11 @@ CssHtmlTree.prototype = {
   _isColorPopup: function () {
     this._colorToCopy = "";
 
-    let trigger = this.popupNode;
-    if (!trigger) {
+
+    let container = this._getPopupNodeContainer();
+    if (!container) {
       return false;
     }
-
-    let container = (trigger.nodeType == trigger.TEXT_NODE) ?
-                     trigger.parentElement : trigger;
 
     let isColorNode = el => el.dataset && "color" in el.dataset;
 
@@ -776,6 +783,52 @@ CssHtmlTree.prototype = {
 
     this._colorToCopy = container.dataset["color"];
     return true;
+  },
+
+  /**
+   * Check if the context menu popup was opened with a click on an image link
+   * If true, save the image url to this._imageUrlToCopy
+   */
+  _isImageUrlPopup: function () {
+    this._imageUrlToCopy = "";
+
+    let container = this._getPopupNodeContainer();
+    let isImageUrlNode = this._isImageUrlNode(container);
+    if (isImageUrlNode) {
+      this._imageUrlToCopy = container.href;
+    }
+
+    return isImageUrlNode;
+  },
+
+  /**
+   * Check if a node is an image url
+   * @param {DOMNode} node The node which we want information about
+   * @return {Boolean} true if the node is an image url
+   */
+  _isImageUrlNode: function (node) {
+    let nodeInfo = this.getNodeInfo(node);
+    if (!nodeInfo) {
+      return false
+    }
+    return nodeInfo.type == overlays.VIEW_NODE_IMAGE_URL_TYPE;
+  },
+
+  /**
+   * Get the DOM Node container for the current popupNode.
+   * If popupNode is a textNode, return the parent node, otherwise return popupNode itself.
+   * @return {DOMNode}
+   */
+  _getPopupNodeContainer: function () {
+    let container = null;
+    let node = this.popupNode;
+
+    if (node) {
+      let isTextNode = node.nodeType == node.TEXT_NODE;
+      container = isTextNode ? node.parentElement : node;
+    }
+
+    return container;
   },
 
   /**
@@ -820,6 +873,22 @@ CssHtmlTree.prototype = {
   _onCopyColor: function() {
     clipboardHelper.copyString(this._colorToCopy);
   },
+
+  /**
+   * Retrieve the image data for the selected image url and copy it to the clipboard
+   */
+  _onCopyImageDataUrl: Task.async(function*() {
+    let message;
+    try {
+      let inspectorFront = this.inspector.inspector;
+      let data = yield inspectorFront.getImageDataFromURL(this._imageUrlToCopy);
+      message = yield data.data.string();
+    } catch (e) {
+      message = CssHtmlTree.l10n("styleinspector.copyImageDataUrlError");
+    }
+
+    clipboardHelper.copyString(message);
+  }),
 
   /**
    * Copy selected text.
@@ -909,6 +978,10 @@ CssHtmlTree.prototype = {
       // Destroy Copy Color menuitem.
       this.menuitemCopyColor.removeEventListener("command", this._onCopyColor);
       this.menuitemCopyColor = null;
+
+      // Destroy Copy Data URI menuitem.
+      this.menuitemCopyImageDataUrl.removeEventListener("command", this._onCopyImageDataUrl);
+      this.menuitemCopyImageDataUrl = null;
 
       // Destroy the context menu.
       this._contextmenu.removeEventListener("popupshowing", this._contextMenuUpdate);

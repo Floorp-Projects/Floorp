@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include "mozilla/RefPtr.h"
 #include "nsXULAppAPI.h"
+#include "StreamSocketConsumer.h"
 #include "UnixSocketConnector.h"
 
 static const size_t MAX_READ_SIZE = 1 << 16;
@@ -499,13 +500,25 @@ public:
 // StreamSocket
 //
 
-StreamSocket::StreamSocket()
-: mIO(nullptr)
-{ }
+StreamSocket::StreamSocket(StreamSocketConsumer* aConsumer, int aIndex)
+  : mConsumer(aConsumer)
+  , mIndex(aIndex)
+  , mIO(nullptr)
+{
+  MOZ_ASSERT(mConsumer);
+}
 
 StreamSocket::~StreamSocket()
 {
   MOZ_ASSERT(!mIO);
+}
+
+void
+StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->ReceiveSocketData(mIndex, aBuffer);
 }
 
 nsresult
@@ -584,6 +597,30 @@ StreamSocket::Close()
   mIO = nullptr;
 
   NotifyDisconnect();
+}
+
+void
+StreamSocket::OnConnectSuccess()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->OnConnectSuccess(mIndex);
+}
+
+void
+StreamSocket::OnConnectError()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->OnConnectError(mIndex);
+}
+
+void
+StreamSocket::OnDisconnect()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mConsumer->OnDisconnect(mIndex);
 }
 
 } // namespace ipc

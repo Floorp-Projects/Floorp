@@ -6,7 +6,7 @@
  * forms if the method's signature does not expect an enum. Bug 999687.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, front } = yield initCanvasDebuggerBackend(WEBGL_ENUM_URL);
 
   let navigated = once(target, "navigate");

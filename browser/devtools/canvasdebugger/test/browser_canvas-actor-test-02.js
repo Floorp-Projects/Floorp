@@ -6,7 +6,7 @@
  * and that their stack is successfully retrieved.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, front } = yield initCallWatcherBackend(SIMPLE_CANVAS_URL);
 
   let navigated = once(target, "navigate");

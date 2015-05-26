@@ -6,7 +6,7 @@
  * You can also use this initialization format as a template for other tests.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, front } = yield initCallWatcherBackend(SIMPLE_CANVAS_URL);
 
   ok(target, "Should have a target available.");

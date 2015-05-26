@@ -9,11 +9,12 @@
 
 #include <mozilla/dom/workers/Workers.h>
 #include <mozilla/ipc/StreamSocket.h>
+#include <mozilla/ipc/StreamSocketConsumer.h>
 
 namespace mozilla {
 namespace ipc {
 
-class RilConsumer final : public mozilla::ipc::StreamSocket
+class RilConsumer final : public StreamSocketConsumer
 {
 public:
   static nsresult Register(
@@ -21,18 +22,25 @@ public:
     mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
   static void Shutdown();
 
+  void Send(UnixSocketRawData* aRawData);
+
 private:
   RilConsumer(unsigned long aClientId,
               mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
 
-  void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
+  void Close();
 
-  void OnConnectSuccess() override;
-  void OnConnectError() override;
-  void OnDisconnect() override;
+  // Methods for |StreamSocketConsumer|
+  //
 
+  void ReceiveSocketData(int aIndex,
+                         nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
+  void OnConnectSuccess(int aIndex) override;
+  void OnConnectError(int aIndex) override;
+  void OnDisconnect(int aIndex) override;
+
+  nsRefPtr<StreamSocket> mSocket;
   nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
-  unsigned long mClientId;
   nsCString mAddress;
   bool mShutdown;
 };
