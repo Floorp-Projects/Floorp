@@ -1232,6 +1232,11 @@ HttpChannelChild::Redirect3Complete()
 
   // Release ref to new channel.
   mRedirectChannelChild = nullptr;
+
+  if (mInterceptListener) {
+    mInterceptListener->Cleanup();
+    mInterceptListener = nullptr;
+  }
 }
 
 //-----------------------------------------------------------------------------
