@@ -9,7 +9,6 @@
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObserver.h"
-#include "nsIAsyncShutdown.h"
 #include "mozilla/storage.h"
 #include "mozilla/storage/StatementCache.h"
 #include "mozilla/Attributes.h"
@@ -27,6 +26,11 @@
 // initial shutdown work and notifies TOPIC_PLACES_SHUTDOWN to all listeners.
 // Any shutdown work that requires the Places APIs should happen here.
 #define TOPIC_PROFILE_CHANGE_TEARDOWN "profile-change-teardown"
+// This topic is received just before the profile is lost.  Places begins
+// shutting down the connection and notifies TOPIC_PLACES_WILL_CLOSE_CONNECTION
+// to all listeners.  Only critical database cleanups should happen here,
+// some APIs may bail out already.
+#define TOPIC_PROFILE_BEFORE_CHANGE "profile-before-change"
 // Fired when Places is shutting down.  Any code should stop accessing Places
 // APIs after this notification.  If you need to listen for Places shutdown
 // you should only use this notification, next ones are intended only for
@@ -38,14 +42,6 @@
 #define TOPIC_PLACES_WILL_CLOSE_CONNECTION "places-will-close-connection"
 // Fired when the connection has gone, nothing will work from now on.
 #define TOPIC_PLACES_CONNECTION_CLOSED "places-connection-closed"
-
-// Simulate profile-before-change. This topic may only be used by
-// calling `observe` directly on the database. Used for testing only.
-#define TOPIC_SIMULATE_PLACES_MUST_CLOSE_1 "test-simulate-places-shutdown-phase-1"
-
-// Simulate profile-before-change. This topic may only be used by
-// calling `observe` directly on the database. Used for testing only.
-#define TOPIC_SIMULATE_PLACES_MUST_CLOSE_2 "test-simulate-places-shutdown-phase-2"
 
 class nsIRunnable;
 
@@ -63,8 +59,6 @@ enum JournalMode {
   // Can reduce number of fsyncs.  We try to use this mode by default.
 , JOURNAL_WAL
 };
-
-class DatabaseShutdown;
 
 class Database final : public nsIObserver
                      , public nsSupportsWeakReference
@@ -85,9 +79,10 @@ public:
   nsresult Init();
 
   /**
-   * The AsyncShutdown client used by clients of this API to be informed of shutdown.
+   * Finalizes the cached statements and closes the database connection.
+   * A TOPIC_PLACES_CONNECTION_CLOSED notification is fired when done.
    */
-  already_AddRefed<nsIAsyncShutdownClient> GetConnectionShutdown();
+  void Shutdown();
 
   /**
    * Getter to use when instantiating the class.
@@ -166,7 +161,17 @@ public:
    * @note Always null check the result.
    * @note Always use a scoper to reset the statement.
    */
-  already_AddRefed<mozIStorageStatement>  GetStatement(const nsACString& aQuery) const;
+  already_AddRefed<mozIStorageStatement>
+  GetStatement(const nsACString& aQuery) const
+  {
+    if (mShuttingDown) {
+      return nullptr;
+    }
+    if (NS_IsMainThread()) {
+      return mMainThreadStatements.GetCachedStatement(aQuery);
+    }
+    return mAsyncThreadStatements.GetCachedStatement(aQuery);
+  }
 
   /**
    * Gets a cached asynchronous statement.
@@ -194,17 +199,17 @@ public:
    * @note Always null check the result.
    * @note AsyncStatements are automatically reset on execution.
    */
-  already_AddRefed<mozIStorageAsyncStatement> GetAsyncStatement(const nsACString& aQuery) const;
+  already_AddRefed<mozIStorageAsyncStatement>
+  GetAsyncStatement(const nsACString& aQuery) const
+  {
+    if (mShuttingDown) {
+      return nullptr;
+    }
+    MOZ_ASSERT(NS_IsMainThread());
+    return mMainThreadAsyncStatements.GetCachedStatement(aQuery);
+  }
 
 protected:
-  /**
-   * Finalizes the cached statements and closes the database connection.
-   * A TOPIC_PLACES_CONNECTION_CLOSED notification is fired when done.
-   */
-  void Shutdown();
-
-  bool IsShutdownStarted() const;
-
   /**
    * Initializes the database file.  If the database does not exist or is
    * corrupt, a new one is created.  In case of corruption it also creates a
@@ -248,7 +253,7 @@ protected:
 
   /**
    * Initializes triggers defined in nsPlacesTriggers.h
-   */
+   */  
   nsresult InitTempTriggers();
 
   /**
@@ -273,8 +278,6 @@ protected:
 
   nsresult UpdateBookmarkRootTitles();
 
-  friend class DatabaseShutdown;
-
 private:
   ~Database();
 
@@ -293,22 +296,8 @@ private:
 
   int32_t mDBPageSize;
   uint16_t mDatabaseStatus;
+  bool mShuttingDown;
   bool mClosed;
-
-  /**
-   * Determine at which shutdown phase we need to start shutting down
-   * the Database.
-   */
-  already_AddRefed<nsIAsyncShutdownClient> GetShutdownPhase();
-
-  /**
-   * A companion object in charge of shutting down the mozStorage
-   * connection once all clients have disconnected.
-   *
-   * Cycles between `this` and `mConnectionShutdown` are broken
-   * in `Shutdown()`.
-   */
-  nsRefPtr<DatabaseShutdown> mConnectionShutdown;
 };
 
 } // namespace places
