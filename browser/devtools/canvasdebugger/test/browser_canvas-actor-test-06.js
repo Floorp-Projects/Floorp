@@ -5,7 +5,7 @@
  * Tests if screenshots for arbitrary draw calls are generated properly.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, front } = yield initCanvasDebuggerBackend(SIMPLE_CANVAS_TRANSPARENT_URL);
 
   let navigated = once(target, "navigate");

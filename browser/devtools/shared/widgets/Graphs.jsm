@@ -684,6 +684,13 @@ AbstractCanvasGraph.prototype = {
       return;
     }
 
+    // Handle a changed size by mapping the old selection to the new width
+    if (this._width && newWidth && this.hasSelection()) {
+      let ratio = this._width / (newWidth * this._pixelRatio);
+      this._selection.start = Math.round(this._selection.start / ratio);
+      this._selection.end = Math.round(this._selection.end / ratio);
+    }
+
     bounds.width = newWidth;
     bounds.height = newHeight;
     this._iframe.setAttribute("width", bounds.width);

@@ -5,7 +5,7 @@
  * Tests if the slider in the calls list view works as advertised.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, gFront, SnapshotsListView, CallsListView } = panel.panelWin;
 

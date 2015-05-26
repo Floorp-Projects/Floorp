@@ -5,7 +5,7 @@
  * Tests if filtering the items in the call list works properly.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, $, EVENTS, SnapshotsListView, CallsListView } = panel.panelWin;
   let searchbox = $("#calls-searchbox");

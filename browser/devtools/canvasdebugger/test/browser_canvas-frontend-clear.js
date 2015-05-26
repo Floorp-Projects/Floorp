@@ -5,7 +5,7 @@
  * Tests if clearing the snapshots list works as expected.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, panel } = yield initCanvasDebuggerFrontend(SIMPLE_CANVAS_URL);
   let { window, EVENTS, SnapshotsListView } = panel.panelWin;
 

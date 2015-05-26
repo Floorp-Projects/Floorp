@@ -21,7 +21,7 @@ public class testBookmarksPanel extends AboutHomeTest {
         initializeProfile();
 
         // Add a mobile bookmark.
-        mDatabaseHelper.addOrUpdateMobileBookmark(mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, BOOKMARK_URL);
+        mDatabaseHelper.addMobileBookmark(mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, BOOKMARK_URL);
 
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
 

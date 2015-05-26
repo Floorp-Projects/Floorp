@@ -80,6 +80,7 @@
   <string name="bookmark">&bookmark;</string>
   <string name="bookmark_remove">&bookmark_remove;</string>
   <string name="bookmark_added">&bookmark_added;</string>
+  <string name="bookmark_already_added">&bookmark_already_added;</string>
   <string name="bookmark_removed">&bookmark_removed;</string>
   <string name="bookmark_updated">&bookmark_updated;</string>
   <string name="bookmark_options">&bookmark_options;</string>
