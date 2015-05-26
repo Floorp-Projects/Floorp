@@ -1168,7 +1168,7 @@ nsPlaintextEditor::CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed)
 }
 
 bool
-nsPlaintextEditor::FireClipboardEvent(int32_t aType, int32_t aSelectionType, bool* aActionTaken)
+nsPlaintextEditor::FireClipboardEvent(int32_t aType, int32_t aSelectionType)
 {
   if (aType == NS_PASTE)
     ForceCompositionEnd();
@@ -1181,7 +1181,7 @@ nsPlaintextEditor::FireClipboardEvent(int32_t aType, int32_t aSelectionType, boo
     return false;
   }
 
-  if (!nsCopySupport::FireClipboardEvent(aType, aSelectionType, presShell, selection, aActionTaken))
+  if (!nsCopySupport::FireClipboardEvent(aType, aSelectionType, presShell, selection))
     return false;
 
   // If the event handler caused the editor to be destroyed, return false.
@@ -1191,11 +1191,9 @@ nsPlaintextEditor::FireClipboardEvent(int32_t aType, int32_t aSelectionType, boo
 
 NS_IMETHODIMP nsPlaintextEditor::Cut()
 {
-  bool actionTaken = false;
-  if (FireClipboardEvent(NS_CUT, nsIClipboard::kGlobalClipboard, &actionTaken)) {
-    DeleteSelection(eNone, eStrip);
-  }
-  return actionTaken ? NS_OK : NS_ERROR_FAILURE;
+  if (FireClipboardEvent(NS_CUT, nsIClipboard::kGlobalClipboard))
+    return DeleteSelection(eNone, eStrip);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::CanCut(bool *aCanCut)
@@ -1207,10 +1205,8 @@ NS_IMETHODIMP nsPlaintextEditor::CanCut(bool *aCanCut)
 
 NS_IMETHODIMP nsPlaintextEditor::Copy()
 {
-  bool actionTaken = false;
-  FireClipboardEvent(NS_COPY, nsIClipboard::kGlobalClipboard, &actionTaken);
-
-  return actionTaken ? NS_OK : NS_ERROR_FAILURE;
+  FireClipboardEvent(NS_COPY, nsIClipboard::kGlobalClipboard);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::CanCopy(bool *aCanCopy)
