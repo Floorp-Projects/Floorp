@@ -33,8 +33,6 @@
 #include <time.h> 
 #include <string.h>
 
-#include "mozilla/Snprintf.h"
-
 #ifdef WIN32
 #include <process.h>
 #endif
@@ -455,7 +453,7 @@ OAES_RET oaes_sprintf(
 	
 	for( _i = 0; _i < data_len; _i++ )
 	{
-		snprintf( _temp, sizeof(_temp), "%02x ", data[_i] );
+		sprintf( _temp, "%02x ", data[_i] );
 		strcat( buf, _temp );
 		if( _i && 0 == ( _i + 1 ) % OAES_BLOCK_SIZE )
 			strcat( buf, "\n" );

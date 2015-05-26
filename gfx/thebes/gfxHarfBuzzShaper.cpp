@@ -9,7 +9,6 @@
 #include "gfxHarfBuzzShaper.h"
 #include "gfxFontUtils.h"
 #include "gfxTextRun.h"
-#include "mozilla/Snprintf.h"
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeScriptCodes.h"
 #include "nsUnicodeNormalizer.h"
@@ -902,10 +901,10 @@ gfxHarfBuzzShaper::GetHKerning(uint16_t aFirstGlyph,
 #if DEBUG
                 {
                     char buf[1024];
-                    snprintf_literal(buf, "unknown kern subtable in %s: "
-                                          "ver 0 format %d\n",
-                                     NS_ConvertUTF16toUTF8(mFont->GetName()).get(),
-                                     format);
+                    sprintf(buf, "unknown kern subtable in %s: "
+                                 "ver 0 format %d\n",
+                            NS_ConvertUTF16toUTF8(mFont->GetName()).get(),
+                            format);
                     NS_WARNING(buf);
                 }
 #endif
@@ -964,10 +963,10 @@ gfxHarfBuzzShaper::GetHKerning(uint16_t aFirstGlyph,
 #if DEBUG
                     {
                         char buf[1024];
-                        snprintf_literal(buf, "unknown kern subtable in %s: "
-                                              "ver 0 format %d\n",
-                                         NS_ConvertUTF16toUTF8(mFont->GetName()).get(),
-                                         format);
+                        sprintf(buf, "unknown kern subtable in %s: "
+                                     "ver 0 format %d\n",
+                                NS_ConvertUTF16toUTF8(mFont->GetName()).get(),
+                                format);
                         NS_WARNING(buf);
                     }
 #endif

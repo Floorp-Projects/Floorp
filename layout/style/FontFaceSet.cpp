@@ -16,7 +16,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Snprintf.h"
 #include "nsCORSListenerProxy.h"
 #include "nsFontFaceLoader.h"
 #include "nsIConsoleService.h"
@@ -1082,7 +1081,7 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   if (weightKeywordString.Length() > 0) {
     weightKeyword = weightKeywordString.get();
   } else {
-    snprintf_literal(weightKeywordBuf, "%u", aUserFontEntry->Weight());
+    sprintf(weightKeywordBuf, "%u", aUserFontEntry->Weight());
     weightKeyword = weightKeywordBuf;
   }
 
