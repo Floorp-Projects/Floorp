@@ -435,7 +435,7 @@ class UnboxedArrayObject : public JSObject
         return computeCapacity(capacityIndex(), length());
     }
 
-    bool containsProperty(JSContext* cx, jsid id);
+    bool containsProperty(ExclusiveContext* cx, jsid id);
 
     bool setElement(ExclusiveContext* cx, size_t index, const Value& v);
     bool initElement(ExclusiveContext* cx, size_t index, const Value& v);
