@@ -19,6 +19,7 @@
 #include "prnetdb.h"
 #include "nsIPrefService.h"
 #include "nsIClientAuthDialogs.h"
+#include "nsIWebProgressListener.h"
 #include "nsClientAuthRemember.h"
 
 #include "nsNetUtil.h"
