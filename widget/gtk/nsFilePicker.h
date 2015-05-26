@@ -73,6 +73,8 @@ protected:
 
 private:
   static nsIFile *mPrevDisplayDirectory;
+
+  GtkFileChooserWidget *mFileChooserDelegate;
 };
 
 #endif

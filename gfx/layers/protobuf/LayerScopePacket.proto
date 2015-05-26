@@ -117,6 +117,22 @@ message MetaPacket {
   optional bool composedByHwc = 1;
 }
 
+message DrawPacket {
+  message Rect {
+    required float x = 1;
+    required float y = 2;
+    required float w = 3;
+    required float h = 4;
+  }
+
+  required float  offsetX = 1;
+  required float  offsetY = 2;
+  repeated float  mvMatrix = 3;
+  required uint32 totalRects = 4;
+  repeated Rect   layerRect = 5;
+  required uint64 layerref = 6;
+}
+
 // We only need to use this Packet.
 // Other packet definitions are just type defines
 message Packet {
@@ -127,6 +143,7 @@ message Packet {
     TEXTURE = 4;
     LAYERS = 5;
     META = 6;
+    DRAW = 7;
   }
   required DataType type = 1;
 
@@ -135,6 +152,7 @@ message Packet {
   optional TexturePacket texture = 4;
   optional LayersPacket layers = 5;
   optional MetaPacket meta = 6;
+  optional DrawPacket draw = 7;
 }
 
 

@@ -1,0 +1,62 @@
+$inherits:
+  from: 'tasks/build.yml'
+  variables:
+    build_name: 'android'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] Android armv7 API 11+'
+      description: 'Android armv7 API 11+'
+
+  workerType: b2g-desktop-opt
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.android-api-11'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-11'
+
+  scopes:
+    - 'docker-worker:cache:build-android-api-11-workspace'
+    - 'docker-worker:cache:tooltool-cache'
+
+  payload:
+    image: '{{#docker_image}}desktop-build{{/docker_image}}'
+    cache:
+      build-android-api-11-workspace: '/home/worker/workspace'
+      tooltool-cache: '/home/worker/tools/tooltool-cache'
+
+    env:
+      # 1164623: rename this var
+      GECKO_REV: '{{head_rev}}'
+      # 1164623: rename these three vars
+      MOZHARNESS_BASE_REPOSITORY: '{{mozharness_repository}}'
+      MOZHARNESS_HEAD_REPOSITORY: '{{mozharness_repository}}'
+      MOZHARNESS_REV: '{{mozharness_rev}}'
+
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
+      MOZHARNESS_CONFIG: 'builds/releng_base_android_64_builds.py'
+      MH_CUSTOM_BUILD_VARIANT_CFG: api-11
+      MH_BRANCH: {{project}}
+      MH_BUILD_POOL: taskcluster
+
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
+      RELENGAPI_TOKEN: 'TODO' # 1164612: encrypt this secret
+
+    maxRunTime: 36000
+
+    command: ["/bin/bash", "bin/build.sh"]
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: android-4-0-armv7-api11
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/target.linux-x86_64.tar.bz2'
+      tests: 'public/build/target.tests.zip'
+

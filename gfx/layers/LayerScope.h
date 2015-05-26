@@ -23,10 +23,15 @@ class LayerComposite;
 
 class LayerScope {
 public:
-    static void SendEffectChain(gl::GLContext* aGLContext,
-                                const EffectChain& aEffectChain,
-                                int aWidth,
-                                int aHeight);
+    static void DrawBegin();
+    static void SetRenderOffset(float aX, float aY);
+    static void SetLayerTransform(const gfx::Matrix4x4& aMatrix);
+    static void SetLayerRects(size_t aRects, const gfx::Rect* aLayerRects);
+    static void DrawEnd(gl::GLContext* aGLContext,
+                        const EffectChain& aEffectChain,
+                        int aWidth,
+                        int aHeight);
+
     static void SendLayer(LayerComposite* aLayer,
                           int aWidth,
                           int aHeight);

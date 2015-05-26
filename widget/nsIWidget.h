@@ -1459,7 +1459,7 @@ class nsIWidget : public nsISupports {
      * a child widget.
      */
     struct Configuration {
-        nsIWidget* mChild;
+        nsCOMPtr<nsIWidget> mChild;
         uintptr_t mWindowID; // e10s specific, the unique plugin port id
         bool mVisible; // e10s specific, widget visibility
         nsIntRect mBounds;

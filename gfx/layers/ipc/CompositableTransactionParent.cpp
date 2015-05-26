@@ -179,10 +179,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       if (maybeFence.type() == MaybeFence::TFenceHandle) {
         FenceHandle fence = maybeFence.get_FenceHandle();
         if (fence.IsValid() && tex) {
-          TextureHostOGL* hostOGL = tex->AsHostOGL();
-          if (hostOGL) {
-            hostOGL->SetAcquireFence(fence);
-          }
+          tex->SetAcquireFenceHandle(fence);
         }
       }
 
