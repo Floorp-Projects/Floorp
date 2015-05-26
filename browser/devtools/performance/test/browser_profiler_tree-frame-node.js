@@ -6,13 +6,14 @@
  */
 
 function test() {
+  let FrameUtils = devtools.require("devtools/performance/frame-utils");
   let { FrameNode } = devtools.require("devtools/performance/tree-model");
   let { CATEGORY_OTHER } = devtools.require("devtools/performance/global");
 
   let frame1 = new FrameNode("hello/<.world (http://foo/bar.js:123:987)", {
     location: "hello/<.world (http://foo/bar.js:123:987)",
     line: 456,
-    isContent: FrameNode.isContent({
+    isContent: FrameUtils.isContent({
       location: "hello/<.world (http://foo/bar.js:123:987)"
     })
   }, false);
@@ -39,7 +40,7 @@ function test() {
   let frame2 = new FrameNode("hello/<.world (http://foo/bar.js#baz:123:987)", {
     location: "hello/<.world (http://foo/bar.js#baz:123:987)",
     line: 456,
-    isContent: FrameNode.isContent({
+    isContent: FrameUtils.isContent({
       location: "hello/<.world (http://foo/bar.js#baz:123:987)"
     })
   }, false);
@@ -66,7 +67,7 @@ function test() {
   let frame3 = new FrameNode("hello/<.world (http://foo/#bar:123:987)", {
     location: "hello/<.world (http://foo/#bar:123:987)",
     line: 456,
-    isContent: FrameNode.isContent({
+    isContent: FrameUtils.isContent({
       location: "hello/<.world (http://foo/#bar:123:987)"
     })
   }, false);
@@ -93,7 +94,7 @@ function test() {
   let frame4 = new FrameNode("hello/<.world (http://foo/:123:987)", {
     location: "hello/<.world (http://foo/:123:987)",
     line: 456,
-    isContent: FrameNode.isContent({
+    isContent: FrameUtils.isContent({
       location: "hello/<.world (http://foo/:123:987)"
     })
   }, false);
@@ -120,7 +121,7 @@ function test() {
   let frame5 = new FrameNode("hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)", {
     location: "hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)",
     line: 456,
-    isContent: FrameNode.isContent({
+    isContent: FrameUtils.isContent({
       location: "hello/<.world (resource://foo.js -> http://bar/baz.js:123:987)"
     })
   }, false);
@@ -148,7 +149,7 @@ function test() {
     location: "Foo::Bar::Baz",
     line: 456,
     category: CATEGORY_OTHER,
-    isContent: FrameNode.isContent({
+    isContent: FrameUtils.isContent({
       location: "Foo::Bar::Baz",
       category: CATEGORY_OTHER
     })
@@ -173,7 +174,7 @@ function test() {
 
   let frame7 = new FrameNode("EnterJIT", {
     location: "EnterJIT",
-    isContent: FrameNode.isContent({
+    isContent: FrameUtils.isContent({
       location: "EnterJIT"
     })
   }, false);
@@ -217,7 +218,7 @@ function test() {
   let frame10 = new FrameNode("main (http://localhost:8888/file.js:123:987)", {
     location: "main (http://localhost:8888/file.js:123:987)",
     line: 123,
-    isContent: FrameNode.isContent({
+    isContent: FrameUtils.isContent({
       location: "main (http://localhost:8888/file.js:123:987)"
     })
   }, false);

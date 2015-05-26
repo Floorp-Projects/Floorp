@@ -10,8 +10,6 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
  * such as filtering profile samples or offsetting timestamps.
  */
 
-exports.RecordingUtils = {};
-
 /**
  * Filters all the samples in the provided profiler data to be more recent
  * than the specified start time.
@@ -21,7 +19,7 @@ exports.RecordingUtils = {};
  * @param number profilerStartTime
  *        The earliest acceptable sample time (in milliseconds).
  */
-exports.RecordingUtils.filterSamples = function(profile, profilerStartTime) {
+function filterSamples(profile, profilerStartTime) {
   let firstThread = profile.threads[0];
   const TIME_SLOT = firstThread.samples.schema.time;
   firstThread.samples.data = firstThread.samples.data.filter(e => {
@@ -37,7 +35,7 @@ exports.RecordingUtils.filterSamples = function(profile, profilerStartTime) {
  * @param number timeOffset
  *        The amount of time to offset by (in milliseconds).
  */
-exports.RecordingUtils.offsetSampleTimes = function(profile, timeOffset) {
+function offsetSampleTimes(profile, timeOffset) {
   let firstThread = profile.threads[0];
   const TIME_SLOT = firstThread.samples.schema.time;
   let samplesData = firstThread.samples.data;
@@ -54,7 +52,7 @@ exports.RecordingUtils.offsetSampleTimes = function(profile, timeOffset) {
  * @param number timeOffset
  *        The amount of time to offset by (in milliseconds).
  */
-exports.RecordingUtils.offsetMarkerTimes = function(markers, timeOffset) {
+function offsetMarkerTimes(markers, timeOffset) {
   for (let marker of markers) {
     marker.start -= timeOffset;
     marker.end -= timeOffset;
@@ -72,7 +70,7 @@ exports.RecordingUtils.offsetMarkerTimes = function(markers, timeOffset) {
  * @param number timeScale
  *        The factor to scale by, after offsetting.
  */
-exports.RecordingUtils.offsetAndScaleTimestamps = function(timestamps, timeOffset, timeScale) {
+function offsetAndScaleTimestamps(timestamps, timeOffset, timeScale) {
   for (let i = 0, len = timestamps.length; i < len; i++) {
     timestamps[i] -= timeOffset;
     timestamps[i] /= timeScale;
@@ -95,7 +93,7 @@ let gProfileThreadFromAllocationCache = new WeakMap();
  * @return object
  *         The "profile" describing the allocations log.
  */
-exports.RecordingUtils.getProfileThreadFromAllocations = function(allocations) {
+function getProfileThreadFromAllocations(allocations) {
   let cached = gProfileThreadFromAllocationCache.get(allocations);
   if (cached) {
     return cached;
@@ -208,7 +206,7 @@ exports.RecordingUtils.getProfileThreadFromAllocations = function(allocations) {
  * @return object
  *         The filtered timeline blueprint.
  */
-exports.RecordingUtils.getFilteredBlueprint = function({ blueprint, hiddenMarkers }) {
+function getFilteredBlueprint({ blueprint, hiddenMarkers }) {
   // Clone functions here just to prevent an error, as the blueprint
   // contains functions (even though we do not use them).
   let filteredBlueprint = Cu.cloneInto(blueprint, {}, { cloneFunctions: true });
@@ -259,7 +257,7 @@ exports.RecordingUtils.getFilteredBlueprint = function({ blueprint, hiddenMarker
  * @param object profile
  *               A profile with version 2.
  */
-exports.RecordingUtils.deflateProfile = function deflateProfile(profile) {
+function deflateProfile(profile) {
   profile.threads = profile.threads.map((thread) => {
     let uniqueStacks = new UniqueStacks();
     return deflateThread(thread, uniqueStacks);
@@ -379,7 +377,6 @@ function deflateThread(thread, uniqueStacks) {
     stringTable: uniqueStacks.getStringTable()
   };
 }
-exports.RecordingUtils.deflateThread = deflateThread;
 
 function stackTableWithSchema(data) {
   let slot = 0;
@@ -447,8 +444,6 @@ UniqueStrings.prototype.getOrAddStringIndex = function(s) {
   stringTable.push(s);
   return index;
 };
-
-exports.RecordingUtils.UniqueStrings = UniqueStrings;
 
 /**
  * A helper class to deduplicate old-version profiles.
@@ -571,4 +566,13 @@ UniqueStacks.prototype.getOrAddStringIndex = function(s) {
   return this._uniqueStrings.getOrAddStringIndex(s);
 };
 
-exports.RecordingUtils.UniqueStacks = UniqueStacks;
+exports.filterSamples = filterSamples;
+exports.offsetSampleTimes = offsetSampleTimes;
+exports.offsetMarkerTimes = offsetMarkerTimes;
+exports.offsetAndScaleTimestamps = offsetAndScaleTimestamps;
+exports.getProfileThreadFromAllocations = getProfileThreadFromAllocations;
+exports.getFilteredBlueprint = getFilteredBlueprint;
+exports.deflateProfile = deflateProfile;
+exports.deflateThread = deflateThread;
+exports.UniqueStrings = UniqueStrings;
+exports.UniqueStacks = UniqueStacks;
