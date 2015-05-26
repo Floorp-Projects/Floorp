@@ -15,6 +15,7 @@
 namespace mozilla {
 namespace ipc {
 
+class BluetoothDaemonConnectionConsumer;
 class BluetoothDaemonConnectionIO;
 class BluetoothDaemonPDUConsumer;
 
@@ -113,7 +114,9 @@ protected:
 class BluetoothDaemonConnection : public ConnectionOrientedSocket
 {
 public:
-  BluetoothDaemonConnection(BluetoothDaemonPDUConsumer* aConsumer);
+  BluetoothDaemonConnection(BluetoothDaemonPDUConsumer* aPDUConsumer,
+                            BluetoothDaemonConnectionConsumer* aConsumer,
+                            int aIndex);
   virtual ~BluetoothDaemonConnection();
 
   // Methods for |ConnectionOrientedSocket|
@@ -131,9 +134,14 @@ public:
   //
 
   void Close() override;
+  void OnConnectSuccess() override;
+  void OnConnectError() override;
+  void OnDisconnect() override;
 
 private:
-  BluetoothDaemonPDUConsumer* mConsumer;
+  BluetoothDaemonPDUConsumer* mPDUConsumer;
+  BluetoothDaemonConnectionConsumer* mConsumer;
+  int mIndex;
   BluetoothDaemonConnectionIO* mIO;
 };
 

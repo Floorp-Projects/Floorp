@@ -1369,8 +1369,9 @@ private:
 
     (this->*(HandleNtf[index]))(aHeader, aPDU);
   }
-
 };
+
+const int BluetoothDaemonCoreModule::MAX_NUM_CLIENTS = 1;
 
 //
 // Protocol handling
@@ -1421,8 +1422,6 @@ private:
 //
 //  - |HandleSvc|,
 //
-const int BluetoothDaemonCoreModule::MAX_NUM_CLIENTS = 1;
-
 // which is called by |BluetoothDaemonProtcol| to hand over received
 // PDUs into a module.
 //
@@ -1625,65 +1624,6 @@ BluetoothDaemonProtocol::FetchUserData(const BluetoothDaemonPDUHeader& aHeader)
 }
 
 //
-// Channels
-//
-
-class BluetoothDaemonChannel final : public BluetoothDaemonConnection
-{
-public:
-  BluetoothDaemonChannel(BluetoothDaemonInterface* aInterface,
-                         BluetoothDaemonInterface::Channel aChannel,
-                         BluetoothDaemonPDUConsumer* aConsumer);
-
-  // SocketBase
-  //
-
-  void OnConnectSuccess() override;
-  void OnConnectError() override;
-  void OnDisconnect() override;
-
-private:
-  BluetoothDaemonInterface* mInterface;
-  BluetoothDaemonInterface::Channel mChannel;
-};
-
-BluetoothDaemonChannel::BluetoothDaemonChannel(
-  BluetoothDaemonInterface* aInterface,
-  BluetoothDaemonInterface::Channel aChannel,
-  BluetoothDaemonPDUConsumer* aConsumer)
-  : BluetoothDaemonConnection(aConsumer)
-  , mInterface(aInterface)
-  , mChannel(aChannel)
-{ }
-
-void
-BluetoothDaemonChannel::OnConnectSuccess()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mInterface);
-
-  mInterface->OnConnectSuccess(mChannel);
-}
-
-void
-BluetoothDaemonChannel::OnConnectError()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mInterface);
-
-  mInterface->OnConnectError(mChannel);
-}
-
-void
-BluetoothDaemonChannel::OnDisconnect()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mInterface);
-
-  mInterface->OnDisconnect(mChannel);
-}
-
-//
 // Interface
 //
 
@@ -1811,149 +1751,6 @@ private:
   bool mRegisteredSocketModule;
 };
 
-void
-BluetoothDaemonInterface::OnConnectSuccess(enum Channel aChannel)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mResultHandlerQ.IsEmpty());
-
-  switch (aChannel) {
-    case LISTEN_SOCKET: {
-        // Init, step 2: Start Bluetooth daemon */
-        nsCString value("bluetoothd:-a ");
-        value.Append(mListenSocketName);
-        if (NS_WARN_IF(property_set("ctl.start", value.get()) < 0)) {
-          OnConnectError(CMD_CHANNEL);
-        }
-
-        /*
-         * If Bluetooth daemon is not running, retry to start it later.
-         *
-         * This condition happens when when we restart Bluetooth daemon
-         * immediately after it crashed, as the daemon state remains 'stopping'
-         * instead of 'stopped'. Due to the limitation of property service,
-         * hereby add delay. See Bug 1143925 Comment 41.
-         */
-        if (!IsDaemonRunning()) {
-          MessageLoop::current()->PostDelayedTask(FROM_HERE,
-              new StartDaemonTask(this, value), sRetryInterval);
-        }
-      }
-      break;
-    case CMD_CHANNEL:
-      // Init, step 3: Listen for notification channel...
-      if (!mNtfChannel) {
-        mNtfChannel = new BluetoothDaemonChannel(this, NTF_CHANNEL, mProtocol);
-      } else if (
-        NS_WARN_IF(mNtfChannel->GetConnectionStatus() == SOCKET_CONNECTED)) {
-        /* Notification channel should not be open; let's close it. */
-        mNtfChannel->Close();
-      }
-      if (NS_FAILED(mListenSocket->Listen(mNtfChannel))) {
-        OnConnectError(NTF_CHANNEL);
-      }
-      break;
-    case NTF_CHANNEL: {
-        nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
-        mResultHandlerQ.RemoveElementAt(0);
-
-        // Init, step 4: Register Core module
-        nsresult rv = mProtocol->RegisterModuleCmd(
-          0x01, 0x00, BluetoothDaemonCoreModule::MAX_NUM_CLIENTS,
-          new InitResultHandler(this, res));
-        if (NS_FAILED(rv) && res) {
-          DispatchError(res, STATUS_FAIL);
-        }
-      }
-      break;
-  }
-}
-
-void
-BluetoothDaemonInterface::OnConnectError(enum Channel aChannel)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mResultHandlerQ.IsEmpty());
-
-  switch (aChannel) {
-    case NTF_CHANNEL:
-      // Close command channel
-      mCmdChannel->Close();
-    case CMD_CHANNEL:
-      // Stop daemon and close listen socket
-      unused << NS_WARN_IF(property_set("ctl.stop", "bluetoothd"));
-      mListenSocket->Close();
-    case LISTEN_SOCKET:
-      if (!mResultHandlerQ.IsEmpty()) {
-        // Signal error to caller
-        nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
-        mResultHandlerQ.RemoveElementAt(0);
-
-        if (res) {
-          DispatchError(res, STATUS_FAIL);
-        }
-      }
-      break;
-  }
-}
-
-/*
- * Three cases for restarting:
- * a) during startup
- * b) during regular service
- * c) during shutdown
- * For (a)/(c) cases, mResultHandlerQ contains an element, but case (b)
- * mResultHandlerQ shall be empty. The following procedure to recover from crashed
- * consists of several steps for case (b).
- * 1) Close listen socket.
- * 2) Wait for all sockets disconnected and inform BluetoothServiceBluedroid to
- * perform the regular stop bluetooth procedure.
- * 3) When stop bluetooth procedures complete, fire
- * AdapterStateChangedNotification to cleanup all necessary data members and
- * deinit ProfileManagers.
- * 4) After all resources cleanup, call |StartBluetooth|
- */
-void
-BluetoothDaemonInterface::OnDisconnect(enum Channel aChannel)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  switch (aChannel) {
-    case CMD_CHANNEL:
-      // We don't have to do anything here. Step 4 is triggered
-      // by the daemon.
-      break;
-    case NTF_CHANNEL:
-      // Cleanup, step 4 (Recovery, step 1): Close listen socket
-      mListenSocket->Close();
-      break;
-    case LISTEN_SOCKET:
-      if (!mResultHandlerQ.IsEmpty()) {
-        nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
-        mResultHandlerQ.RemoveElementAt(0);
-        // Cleanup, step 5: Signal success to caller
-        if (res) {
-          res->Cleanup();
-        }
-      }
-      break;
-  }
-
-  /* For recovery make sure all sockets disconnected, in order to avoid
-   * the remaining disconnects interfere with the restart procedure.
-   */
-  if (sNotificationHandler && mResultHandlerQ.IsEmpty()) {
-    if (mListenSocket->GetConnectionStatus() == SOCKET_DISCONNECTED &&
-        mCmdChannel->GetConnectionStatus() == SOCKET_DISCONNECTED &&
-        mNtfChannel->GetConnectionStatus() == SOCKET_DISCONNECTED) {
-      // Assume daemon crashed during regular service; notify
-      // BluetoothServiceBluedroid to prepare restart-daemon procedure
-      sNotificationHandler->BackendErrorNotification(true);
-      sNotificationHandler = nullptr;
-    }
-  }
-}
-
 nsresult
 BluetoothDaemonInterface::CreateRandomAddressString(
   const nsACString& aPrefix, unsigned long aPostfixLength,
@@ -2052,7 +1849,7 @@ BluetoothDaemonInterface::Init(
   // Init, step 1: Listen for command channel... */
 
   if (!mCmdChannel) {
-    mCmdChannel = new BluetoothDaemonChannel(this, CMD_CHANNEL, mProtocol);
+    mCmdChannel = new BluetoothDaemonConnection(mProtocol, this, CMD_CHANNEL);
   } else if (
     NS_WARN_IF(mCmdChannel->GetConnectionStatus() == SOCKET_CONNECTED)) {
     // Command channel should not be open; let's close it.
@@ -2504,25 +2301,149 @@ BluetoothDaemonInterface::GetBluetoothGattInterface()
   return nullptr;
 }
 
-// Methods for |ListenSocketConsumer|
-//
+// |BluetoothDaemonConnectionConsumer|, |ListenSocketConsumer|
 
 void
 BluetoothDaemonInterface::OnConnectSuccess(int aIndex)
 {
-  OnConnectSuccess(static_cast<enum Channel>(aIndex));
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mResultHandlerQ.IsEmpty());
+
+  switch (aIndex) {
+    case LISTEN_SOCKET: {
+        // Init, step 2: Start Bluetooth daemon */
+        nsCString value("bluetoothd:-a ");
+        value.Append(mListenSocketName);
+        if (NS_WARN_IF(property_set("ctl.start", value.get()) < 0)) {
+          OnConnectError(CMD_CHANNEL);
+        }
+
+        /*
+         * If Bluetooth daemon is not running, retry to start it later.
+         *
+         * This condition happens when when we restart Bluetooth daemon
+         * immediately after it crashed, as the daemon state remains 'stopping'
+         * instead of 'stopped'. Due to the limitation of property service,
+         * hereby add delay. See Bug 1143925 Comment 41.
+         */
+        if (!IsDaemonRunning()) {
+          MessageLoop::current()->PostDelayedTask(FROM_HERE,
+              new StartDaemonTask(this, value), sRetryInterval);
+        }
+      }
+      break;
+    case CMD_CHANNEL:
+      // Init, step 3: Listen for notification channel...
+      if (!mNtfChannel) {
+        mNtfChannel = new BluetoothDaemonConnection(mProtocol, this, NTF_CHANNEL);
+      } else if (
+        NS_WARN_IF(mNtfChannel->GetConnectionStatus() == SOCKET_CONNECTED)) {
+        /* Notification channel should not be open; let's close it. */
+        mNtfChannel->Close();
+      }
+      if (NS_FAILED(mListenSocket->Listen(mNtfChannel))) {
+        OnConnectError(NTF_CHANNEL);
+      }
+      break;
+    case NTF_CHANNEL: {
+        nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
+        mResultHandlerQ.RemoveElementAt(0);
+
+        // Init, step 4: Register Core module
+        nsresult rv = mProtocol->RegisterModuleCmd(
+          0x01, 0x00, BluetoothDaemonCoreModule::MAX_NUM_CLIENTS,
+          new InitResultHandler(this, res));
+        if (NS_FAILED(rv) && res) {
+          DispatchError(res, STATUS_FAIL);
+        }
+      }
+      break;
+  }
 }
 
 void
 BluetoothDaemonInterface::OnConnectError(int aIndex)
 {
-  OnConnectError(static_cast<enum Channel>(aIndex));
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mResultHandlerQ.IsEmpty());
+
+  switch (aIndex) {
+    case NTF_CHANNEL:
+      // Close command channel
+      mCmdChannel->Close();
+    case CMD_CHANNEL:
+      // Stop daemon and close listen socket
+      unused << NS_WARN_IF(property_set("ctl.stop", "bluetoothd"));
+      mListenSocket->Close();
+    case LISTEN_SOCKET:
+      if (!mResultHandlerQ.IsEmpty()) {
+        // Signal error to caller
+        nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
+        mResultHandlerQ.RemoveElementAt(0);
+
+        if (res) {
+          DispatchError(res, STATUS_FAIL);
+        }
+      }
+      break;
+  }
 }
 
+/*
+ * Three cases for restarting:
+ * a) during startup
+ * b) during regular service
+ * c) during shutdown
+ * For (a)/(c) cases, mResultHandlerQ contains an element, but case (b)
+ * mResultHandlerQ shall be empty. The following procedure to recover from crashed
+ * consists of several steps for case (b).
+ * 1) Close listen socket.
+ * 2) Wait for all sockets disconnected and inform BluetoothServiceBluedroid to
+ * perform the regular stop bluetooth procedure.
+ * 3) When stop bluetooth procedures complete, fire
+ * AdapterStateChangedNotification to cleanup all necessary data members and
+ * deinit ProfileManagers.
+ * 4) After all resources cleanup, call |StartBluetooth|
+ */
 void
 BluetoothDaemonInterface::OnDisconnect(int aIndex)
 {
-  OnDisconnect(static_cast<enum Channel>(aIndex));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  switch (aIndex) {
+    case CMD_CHANNEL:
+      // We don't have to do anything here. Step 4 is triggered
+      // by the daemon.
+      break;
+    case NTF_CHANNEL:
+      // Cleanup, step 4 (Recovery, step 1): Close listen socket
+      mListenSocket->Close();
+      break;
+    case LISTEN_SOCKET:
+      if (!mResultHandlerQ.IsEmpty()) {
+        nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
+        mResultHandlerQ.RemoveElementAt(0);
+        // Cleanup, step 5: Signal success to caller
+        if (res) {
+          res->Cleanup();
+        }
+      }
+      break;
+  }
+
+  /* For recovery make sure all sockets disconnected, in order to avoid
+   * the remaining disconnects interfere with the restart procedure.
+   */
+  if (sNotificationHandler && mResultHandlerQ.IsEmpty()) {
+    if (mListenSocket->GetConnectionStatus() == SOCKET_DISCONNECTED &&
+        mCmdChannel->GetConnectionStatus() == SOCKET_DISCONNECTED &&
+        mNtfChannel->GetConnectionStatus() == SOCKET_DISCONNECTED) {
+      // Assume daemon crashed during regular service; notify
+      // BluetoothServiceBluedroid to prepare restart-daemon procedure
+      sNotificationHandler->BackendErrorNotification(true);
+      sNotificationHandler = nullptr;
+    }
+  }
 }
 
 END_BLUETOOTH_NAMESPACE
