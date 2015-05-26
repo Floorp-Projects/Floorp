@@ -8,6 +8,7 @@
 
 #include "WebMBufferedParser.h"
 #include "mozilla/Endian.h"
+#include "mozilla/ErrorResult.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mozilla/Logging.h"
 #include "MediaData.h"
@@ -324,7 +325,13 @@ public:
 
     mp4_demuxer::Interval<mp4_demuxer::Microseconds> compositionRange =
       mParser->GetCompositionRange(byteRanges);
-    mResource->EvictData(mParser->mOffset, mParser->mOffset);
+
+    ErrorResult rv;
+    mResource->EvictData(mParser->mOffset, mParser->mOffset, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+      return false;
+    }
 
     if (compositionRange.IsNull()) {
       return false;

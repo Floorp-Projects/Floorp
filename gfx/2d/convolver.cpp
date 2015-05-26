@@ -38,6 +38,10 @@
 #include "convolverSSE2.h"
 #endif
 
+#if defined(_MIPS_ARCH_LOONGSON3A)
+#include "convolverLS3.h"
+#endif
+
 using mozilla::gfx::Factory;
 
 #if defined(SK_CPU_LENDIAN)
@@ -50,6 +54,18 @@ using mozilla::gfx::Factory;
 #define G_OFFSET_IDX 2
 #define B_OFFSET_IDX 1
 #define A_OFFSET_IDX 0
+#endif
+
+#if defined(USE_SSE2)
+#define ConvolveHorizontally4_SIMD ConvolveHorizontally4_SSE2
+#define ConvolveHorizontally_SIMD ConvolveHorizontally_SSE2
+#define ConvolveVertically_SIMD ConvolveVertically_SSE2
+#endif
+
+#if defined(_MIPS_ARCH_LOONGSON3A)
+#define ConvolveHorizontally4_SIMD ConvolveHorizontally4_LS3
+#define ConvolveHorizontally_SIMD ConvolveHorizontally_LS3
+#define ConvolveVertically_SIMD ConvolveVertically_LS3
 #endif
 
 namespace skia {
@@ -273,14 +289,14 @@ void ConvolveVertically(const ConvolutionFilter1D::Fixed* filter_values,
                         int filter_length,
                         unsigned char* const* source_data_rows,
                         int width, unsigned char* out_row,
-                        bool has_alpha, bool use_sse2) {
+                        bool has_alpha, bool use_simd) {
   int processed = 0;
 
-#if defined(USE_SSE2)
+#if defined(USE_SSE2) || defined(_MIPS_ARCH_LOONGSON3A)
   // If the binary was not built with SSE2 support, we had to fallback to C version.
   int simd_width = width & ~3;
-  if (use_sse2 && simd_width) {
-    ConvolveVertically_SSE2(filter_values, filter_length,
+  if (use_simd && simd_width) {
+    ConvolveVertically_SIMD(filter_values, filter_length,
                             source_data_rows, 0, simd_width,
                             out_row, has_alpha);
     processed = simd_width;
@@ -301,12 +317,12 @@ void ConvolveVertically(const ConvolutionFilter1D::Fixed* filter_values,
 void ConvolveHorizontally(const unsigned char* src_data,
                           const ConvolutionFilter1D& filter,
                           unsigned char* out_row,
-                          bool has_alpha, bool use_sse2) {
+                          bool has_alpha, bool use_simd) {
   int width = filter.num_values();
   int processed = 0;
 #if defined(USE_SSE2)
   int simd_width = width & ~3;
-  if (use_sse2 && simd_width) {
+  if (use_simd && simd_width) {
     // SIMD implementation works with 4 pixels at a time.
     // Therefore we process as much as we can using SSE and then use
     // C implementation for leftovers
@@ -394,12 +410,16 @@ void BGRAConvolve2D(const unsigned char* source_data,
                     const ConvolutionFilter1D& filter_y,
                     int output_byte_row_stride,
                     unsigned char* output) {
-  bool use_sse2 = Factory::HasSSE2();
+  bool use_simd = Factory::HasSSE2();
 
 #if !defined(USE_SSE2)
   // Even we have runtime support for SSE2 instructions, since the binary
   // was not built with SSE2 support, we had to fallback to C version.
-  use_sse2 = false;
+  use_simd = false;
+#endif
+
+#if defined(_MIPS_ARCH_LOONGSON3A)
+  use_simd = true;
 #endif
 
 
@@ -426,7 +446,7 @@ void BGRAConvolve2D(const unsigned char* source_data,
   // TODO(jiesun): We do not use aligned load from row buffer in vertical
   // convolution pass yet. Somehow Windows does not like it.
   int row_buffer_width = (filter_x.num_values() + 15) & ~0xF;
-  int row_buffer_height = max_y_filter_size + (use_sse2 ? 4 : 0);
+  int row_buffer_height = max_y_filter_size + (use_simd ? 4 : 0);
   CircularRowBuffer row_buffer(row_buffer_width,
                                row_buffer_height,
                                filter_offset);
@@ -448,8 +468,8 @@ void BGRAConvolve2D(const unsigned char* source_data,
                                             &filter_offset, &filter_length);
 
     // Generate output rows until we have enough to run the current filter.
-    if (use_sse2) {
-#if defined(USE_SSE2)
+    if (use_simd) {
+#if defined(USE_SSE2) || defined(_MIPS_ARCH_LOONGSON3A)
       // We don't want to process too much rows in batches of 4 because
       // we can go out-of-bounds at the end
       while (next_x_row < filter_offset + filter_length) {
@@ -460,7 +480,7 @@ void BGRAConvolve2D(const unsigned char* source_data,
             src[i] = &source_data[(next_x_row + i) * source_byte_row_stride];
             out_row[i] = row_buffer.AdvanceRow();
           }
-          ConvolveHorizontally4_SSE2(src, 0, pixel_width, filter_x, out_row);
+          ConvolveHorizontally4_SIMD(src, 0, pixel_width, filter_x, out_row);
           next_x_row += 4;
         } else {
           unsigned char* buffer = row_buffer.AdvanceRow();
@@ -469,7 +489,7 @@ void BGRAConvolve2D(const unsigned char* source_data,
           // image area. therefore we use cobined C+SSE version here
           int simd_width = pixel_width & ~3;
           if (simd_width) {
-            ConvolveHorizontally_SSE2(
+            ConvolveHorizontally_SIMD(
                 &source_data[next_x_row * source_byte_row_stride],
                 0, simd_width, filter_x, buffer);
           }
@@ -519,7 +539,7 @@ void BGRAConvolve2D(const unsigned char* source_data,
 
     ConvolveVertically(filter_values, filter_length,
                        first_row_for_filter, pixel_width,
-                       cur_output_row, source_has_alpha, use_sse2);
+                       cur_output_row, source_has_alpha, use_simd);
   }
 }
 

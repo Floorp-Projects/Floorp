@@ -89,6 +89,11 @@ parent:
   // Useful for testing rendering of async scrolling.
   sync SetAsyncScrollOffset(ViewID id, int32_t x, int32_t y);
 
+  // The next time the layer tree is composited, include this async zoom in
+  // for the given ViewID.
+  // Useful for testing rendering of async zooming.
+  sync SetAsyncZoom(ViewID id, float zoom);
+
   // Drop any front buffers that might be retained on the compositor
   // side.
   async ClearCachedResources();
