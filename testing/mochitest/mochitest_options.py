@@ -77,7 +77,7 @@ class MochitestArguments(ArgumentContainer):
           "help": "Override the default binary used to run tests with the path provided, e.g "
                   "/usr/bin/firefox. If you have run ./mach package beforehand, you can "
                   "specify 'dist' to run tests against the distribution bundle's binary.",
-          "suppress": True,
+          "suppress": build_obj is not None,
           }],
         [["--utility-path"],
          {"dest": "utilityPath",
@@ -585,7 +585,9 @@ class MochitestArguments(ArgumentContainer):
                     "could not find xre directory, --xre-path must be specified")
 
         # allow relative paths
-        options.xrePath = self.get_full_path(options.xrePath, parser.oldcwd)
+        if options.xrePath:
+            options.xrePath = self.get_full_path(options.xrePath, parser.oldcwd)
+
         if options.profilePath:
             options.profilePath = self.get_full_path(options.profilePath, parser.oldcwd)
 
@@ -1150,7 +1152,7 @@ container_map = {
 
 class MochitestArgumentParser(ArgumentParser):
     """
-    Usage instructions for runtests.py.
+    Usage instructions for Mochitest.
 
     All arguments are optional.
     If --chrome is specified, chrome tests will be run instead of web content tests.
