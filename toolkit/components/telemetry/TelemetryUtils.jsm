@@ -10,7 +10,19 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
 this.TelemetryUtils = {
+  /**
+   * Turn a millisecond timestamp into a day timestamp.
+   *
+   * @param aMsec A number of milliseconds since Unix epoch.
+   * @return The number of whole days since Unix epoch.
+   */
+  millisecondsToDays: function(aMsec) {
+    return Math.floor(aMsec / MILLISECONDS_PER_DAY);
+  },
+
   /**
    * Takes a date and returns it trunctated to a date with daily precision.
    */
