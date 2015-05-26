@@ -56,6 +56,7 @@ private:
   SharedDecoderProxy* mActiveProxy;
   MediaDataDecoderCallback* mActiveCallback;
   nsAutoPtr<MediaDataDecoderCallback> mCallback;
+  // access protected by mMonitor
   bool mWaitForInternalDrain;
   Monitor mMonitor;
   bool mDecoderReleasedResources;

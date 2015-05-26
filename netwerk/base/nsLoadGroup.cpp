@@ -44,6 +44,69 @@ static PRLogModuleInfo* gLoadGroupLog = nullptr;
 #define LOG(args) MOZ_LOG(gLoadGroupLog, PR_LOG_DEBUG, args)
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsLoadGroupConnectionInfo
+
+class nsLoadGroupConnectionInfo final : public nsILoadGroupConnectionInfo
+{
+    ~nsLoadGroupConnectionInfo() {}
+
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSILOADGROUPCONNECTIONINFO
+
+    nsLoadGroupConnectionInfo();
+private:
+    Atomic<uint32_t>       mBlockingTransactionCount;
+    nsAutoPtr<mozilla::net::SpdyPushCache> mSpdyCache;
+};
+
+NS_IMPL_ISUPPORTS(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
+
+nsLoadGroupConnectionInfo::nsLoadGroupConnectionInfo()
+    : mBlockingTransactionCount(0)
+{
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::GetBlockingTransactionCount(uint32_t *aBlockingTransactionCount)
+{
+    NS_ENSURE_ARG_POINTER(aBlockingTransactionCount);
+    *aBlockingTransactionCount = mBlockingTransactionCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::AddBlockingTransaction()
+{
+    mBlockingTransactionCount++;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::RemoveBlockingTransaction(uint32_t *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+        mBlockingTransactionCount--;
+        *_retval = mBlockingTransactionCount;
+    return NS_OK;
+}
+
+/* [noscript] attribute SpdyPushCachePtr spdyPushCache; */
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::GetSpdyPushCache(mozilla::net::SpdyPushCache **aSpdyPushCache)
+{
+    *aSpdyPushCache = mSpdyCache.get();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::SetSpdyPushCache(mozilla::net::SpdyPushCache *aSpdyPushCache)
+{
+    mSpdyCache = aSpdyPushCache;
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 class RequestMapEntry : public PLDHashEntryHdr
 {
@@ -86,6 +149,14 @@ RequestHashInitEntry(PLDHashEntryHdr *entry, const void *key)
     new (entry) RequestMapEntry(request);
 }
 
+static const PLDHashTableOps sRequestHashOps =
+{
+    PL_DHashVoidPtrKeyStub,
+    RequestHashMatchEntry,
+    PL_DHashMoveEntryStub,
+    RequestHashClearEntry,
+    RequestHashInitEntry
+};
 
 static void
 RescheduleRequest(nsIRequest *aRequest, int32_t delta)
@@ -106,11 +177,12 @@ RescheduleRequests(PLDHashTable *table, PLDHashEntryHdr *hdr,
     return PL_DHASH_NEXT;
 }
 
-
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mForegroundCount(0)
     , mLoadFlags(LOAD_NORMAL)
     , mDefaultLoadFlags(0)
+    , mConnectionInfo(new nsLoadGroupConnectionInfo())
+    , mRequests(&sRequestHashOps, sizeof(RequestMapEntry))
     , mStatus(NS_OK)
     , mPriority(PRIORITY_NORMAL)
     , mIsCanceling(false)
@@ -132,10 +204,6 @@ nsLoadGroup::~nsLoadGroup()
 {
     DebugOnly<nsresult> rv = Cancel(NS_BINDING_ABORTED);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
-
-    if (mRequests.IsInitialized()) {
-        PL_DHashTableFinish(&mRequests);
-    }
 
     mDefaultLoadRequest = 0;
 
@@ -1053,87 +1121,6 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags
 
     outFlags = flags;
     return rv;
-}
-
-// nsLoadGroupConnectionInfo
-
-class nsLoadGroupConnectionInfo final : public nsILoadGroupConnectionInfo
-{
-    ~nsLoadGroupConnectionInfo() {}
-
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSILOADGROUPCONNECTIONINFO
-
-    nsLoadGroupConnectionInfo();
-private:
-    Atomic<uint32_t>       mBlockingTransactionCount;
-    nsAutoPtr<mozilla::net::SpdyPushCache> mSpdyCache;
-};
-
-NS_IMPL_ISUPPORTS(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
-
-nsLoadGroupConnectionInfo::nsLoadGroupConnectionInfo()
-    : mBlockingTransactionCount(0)
-{
-}
-
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::GetBlockingTransactionCount(uint32_t *aBlockingTransactionCount)
-{
-    NS_ENSURE_ARG_POINTER(aBlockingTransactionCount);
-    *aBlockingTransactionCount = mBlockingTransactionCount;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::AddBlockingTransaction()
-{
-    mBlockingTransactionCount++;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::RemoveBlockingTransaction(uint32_t *_retval)
-{
-    NS_ENSURE_ARG_POINTER(_retval);
-        mBlockingTransactionCount--;
-        *_retval = mBlockingTransactionCount;
-    return NS_OK;
-}
-
-/* [noscript] attribute SpdyPushCachePtr spdyPushCache; */
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::GetSpdyPushCache(mozilla::net::SpdyPushCache **aSpdyPushCache)
-{
-    *aSpdyPushCache = mSpdyCache.get();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadGroupConnectionInfo::SetSpdyPushCache(mozilla::net::SpdyPushCache *aSpdyPushCache)
-{
-    mSpdyCache = aSpdyPushCache;
-    return NS_OK;
-}
-
-nsresult nsLoadGroup::Init()
-{
-    static const PLDHashTableOps hash_table_ops =
-    {
-        PL_DHashVoidPtrKeyStub,
-        RequestHashMatchEntry,
-        PL_DHashMoveEntryStub,
-        RequestHashClearEntry,
-        RequestHashInitEntry
-    };
-
-    PL_DHashTableInit(&mRequests, &hash_table_ops,
-                      sizeof(RequestMapEntry));
-
-    mConnectionInfo = new nsLoadGroupConnectionInfo();
-
-    return NS_OK;
 }
 
 #undef LOG

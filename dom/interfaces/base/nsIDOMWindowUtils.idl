@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(0ce789cc-3fb6-48b8-a58e-32deefc337b4)]
+[scriptable, uuid(7719798a-62fa-4dff-a6ed-782256649232)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1427,6 +1427,14 @@ interface nsIDOMWindowUtils : nsISupports {
    * will be removed. Only call this while test-controlled refreshes is enabled.
    */
   void setAsyncScrollOffset(in nsIDOMNode aNode, in int32_t aX, in int32_t aY);
+
+  /**
+   * Set async zoom value. aRootElement should be the document element of our
+   * document. The next composite will render with that zoom added to any
+   * existing zoom if async scrolling is enabled, and then the zoom will be
+   * removed. Only call this while test-controlled refreshes is enabled.
+   */
+  void setAsyncZoom(in nsIDOMNode aRootElement, in float aValue);
 
   /**
    * Method for testing StyleAnimationValue::ComputeDistance.

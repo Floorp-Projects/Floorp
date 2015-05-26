@@ -645,7 +645,7 @@ class GTestCommands(MachCommandBase):
 
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
-        help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used. The following arguments have no effect without this.')
+        help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
     @CommandArgument('--debugger', default=None, type=str, group='debugging',
         help='Name of debugger to use.')
     @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
@@ -661,7 +661,7 @@ class GTestCommands(MachCommandBase):
         app_path = self.get_binary_path('app')
         args = [app_path, '-unittest'];
 
-        if debug:
+        if debug or debugger or debugger_args:
             args = self.prepend_debugger_args(args, debugger, debugger_args)
 
         cwd = os.path.join(self.topobjdir, '_tests', 'gtest')
@@ -862,7 +862,7 @@ class RunProgram(MachCommandBase):
 
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
-        help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used. The following arguments have no effect without this.')
+        help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
     @CommandArgument('--debugger', default=None, type=str, group='debugging',
         help='Name of debugger to use.')
     @CommandArgument('--debugparams', default=None, metavar='params', type=str,
@@ -921,7 +921,7 @@ class RunProgram(MachCommandBase):
 
         extra_env = {}
 
-        if debug:
+        if debug or debugger or debugparams:
             import mozdebug
             if not debugger:
                 # No debugger name was provided. Look for the default ones on

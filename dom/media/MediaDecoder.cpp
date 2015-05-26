@@ -384,7 +384,7 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
   }
   DestroyDecodedStream();
 
-  mDecodedStream.RecreateData(this, aStartTimeUSecs, aGraph->CreateSourceStream(nullptr));
+  mDecodedStream.RecreateData(aStartTimeUSecs, aGraph->CreateSourceStream(nullptr));
 
   // Note that the delay between removing ports in DestroyDecodedStream
   // and adding new ones won't cause a glitch since all graph operations
@@ -419,7 +419,7 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
       RecreateDecodedStream(mLogicalPosition, aStream->Graph());
     }
     OutputStreamData* os = OutputStreams().AppendElement();
-    os->Init(this, aStream);
+    os->Init(&mDecodedStream, aStream);
     ConnectDecodedStreamToOutputStream(os);
     if (aFinishWhenEnded) {
       // Ensure that aStream finishes the moment mDecodedStream does.
@@ -483,6 +483,7 @@ MediaDecoder::MediaDecoder() :
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
+  mDecodedStream(mReentrantMonitor),
   mPlayState(AbstractThread::MainThread(), PLAY_STATE_LOADING,
              "MediaDecoder::mPlayState (Canonical)"),
   mNextState(AbstractThread::MainThread(), PLAY_STATE_PAUSED,

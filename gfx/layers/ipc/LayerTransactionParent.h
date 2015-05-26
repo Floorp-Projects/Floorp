@@ -133,6 +133,8 @@ protected:
                                          override;
   virtual bool RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,
                                         const int32_t& aX, const int32_t& aY) override;
+  virtual bool RecvSetAsyncZoom(const FrameMetrics::ViewID& aId,
+                                const float& aValue) override;
   virtual bool RecvGetAPZTestData(APZTestData* aOutData) override;
   virtual bool RecvRequestProperty(const nsString& aProperty, float* aValue) override;
   virtual bool RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,

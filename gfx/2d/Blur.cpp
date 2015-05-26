@@ -570,12 +570,21 @@ AlphaBoxBlur::Blur(uint8_t* aData)
       } else
 #endif
       {
+#ifdef _MIPS_ARCH_LOONGSON3A
+        BoxBlur_LS3(aData, horizontalLobes[0][0], horizontalLobes[0][1], verticalLobes[0][0],
+                     verticalLobes[0][1], integralImage, integralImageStride);
+        BoxBlur_LS3(aData, horizontalLobes[1][0], horizontalLobes[1][1], verticalLobes[1][0],
+                     verticalLobes[1][1], integralImage, integralImageStride);
+        BoxBlur_LS3(aData, horizontalLobes[2][0], horizontalLobes[2][1], verticalLobes[2][0],
+                     verticalLobes[2][1], integralImage, integralImageStride);
+#else
         BoxBlur_C(aData, horizontalLobes[0][0], horizontalLobes[0][1], verticalLobes[0][0],
                   verticalLobes[0][1], integralImage, integralImageStride);
         BoxBlur_C(aData, horizontalLobes[1][0], horizontalLobes[1][1], verticalLobes[1][0],
                   verticalLobes[1][1], integralImage, integralImageStride);
         BoxBlur_C(aData, horizontalLobes[2][0], horizontalLobes[2][1], verticalLobes[2][0],
                   verticalLobes[2][1], integralImage, integralImageStride);
+#endif
       }
     }
   }
