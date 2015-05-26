@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+  <title>Fetch in JS Sandbox</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"></link>
+  <script src="test_fetch_basic.js"></script>
+</head>
+<body>
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function testHttpFetch(url) {
+  info('fetch: ' + url);
+  return fetch(new Request(url, { method: 'GET' }))
+    .then(response => {
+      is(response.status, 200, 'Response is 200');
+      is(response.url, url, 'Response URL matches');
+    });
+}
+
+function runSandboxTest(testFunc, argString) {
+  is(typeof testFunc, 'function');
+  var resolvePromise;
+  var testPromise = new Promise(r => resolvePromise = r);
+  var finishFuncName = 'finish_' + testFunc.name;
+  SpecialPowers.Cu.exportFunction(_ => resolvePromise(), sb,
+                                  { defineAs: finishFuncName });
+  SpecialPowers.Cu.evalInSandbox('(' + testFunc.toSource() + ')' +
+                                 '(' + argString + ')' +
+                                 '.then(' + finishFuncName + ');', sb);
+  return testPromise;
+}
+
+var origin = 'https://example.com';
+var properties = ['fetch', 'Blob', 'URL'];
+var sb = new SpecialPowers.Cu.Sandbox(origin,
+                                      { wantGlobalProperties: properties });
+
+sb.ok = SpecialPowers.Cu.exportFunction(ok, sb);
+sb.is = SpecialPowers.Cu.exportFunction(is, sb);
+sb.info = SpecialPowers.Cu.exportFunction(info, sb);
+
+Promise.resolve()
+  .then(_ => runSandboxTest(testHttpFetch, '"' + origin + window.location.pathname + '"'))
+  .then(_ => runSandboxTest(testAboutURL))
+  .then(_ => runSandboxTest(testDataURL))
+  .then(_ => runSandboxTest(testSameOriginBlobURL))
+  .then(_ => SimpleTest.finish());
+
+</script>
+</body>
+</html>

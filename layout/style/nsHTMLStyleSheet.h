@@ -132,6 +132,8 @@ public: // for mLangRuleTable structures only
 
   // Rule to handle xml:lang attributes, of which we have exactly one
   // per language string, maintained in mLangRuleTable.
+  // We also create one extra rule for the "x-math" language string, used on
+  // <math> elements.
   class LangRule final : public nsIStyleRule {
   private:
     ~LangRule() {}

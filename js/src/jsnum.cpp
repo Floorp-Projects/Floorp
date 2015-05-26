@@ -457,8 +457,8 @@ js::num_parseInt(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec number_functions[] = {
-    JS_SELF_HOSTED_FN(js_isNaN_str, "Global_isNaN", 1,0),
-    JS_SELF_HOSTED_FN(js_isFinite_str, "Global_isFinite", 1,0),
+    JS_SELF_HOSTED_FN(js_isNaN_str, "Global_isNaN", 1, JSPROP_RESOLVING),
+    JS_SELF_HOSTED_FN(js_isFinite_str, "Global_isFinite", 1, JSPROP_RESOLVING),
     JS_FS_END
 };
 
@@ -1176,20 +1176,22 @@ js::InitNumberClass(JSContext* cx, HandleObject obj)
 
     /* Number.parseInt should be the same function object as global parseInt. */
     RootedId parseIntId(cx, NameToId(cx->names().parseInt));
-    JSFunction* parseInt = DefineFunction(cx, global, parseIntId, num_parseInt, 2, 0);
-    if(!parseInt)
+    JSFunction* parseInt = DefineFunction(cx, global, parseIntId, num_parseInt, 2,
+                                          JSPROP_RESOLVING);
+    if (!parseInt)
         return nullptr;
     RootedValue parseIntValue(cx, ObjectValue(*parseInt));
-    if(!DefineProperty(cx, ctor, parseIntId, parseIntValue, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, ctor, parseIntId, parseIntValue, nullptr, nullptr, 0))
         return nullptr;
 
     /* Number.parseFloat should be the same function object as global parseFloat. */
     RootedId parseFloatId(cx, NameToId(cx->names().parseFloat));
-    JSFunction* parseFloat = DefineFunction(cx, global, parseFloatId, num_parseFloat, 1, 0);
-    if(!parseFloat)
+    JSFunction* parseFloat = DefineFunction(cx, global, parseFloatId, num_parseFloat, 1,
+                                            JSPROP_RESOLVING);
+    if (!parseFloat)
         return nullptr;
     RootedValue parseFloatValue(cx, ObjectValue(*parseFloat));
-    if(!DefineProperty(cx, ctor, parseFloatId, parseFloatValue, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, ctor, parseFloatId, parseFloatValue, nullptr, nullptr, 0))
         return nullptr;
 
     RootedValue valueNaN(cx, cx->runtime()->NaNValue);
@@ -1197,9 +1199,9 @@ js::InitNumberClass(JSContext* cx, HandleObject obj)
 
     /* ES5 15.1.1.1, 15.1.1.2 */
     if (!NativeDefineProperty(cx, global, cx->names().NaN, valueNaN, nullptr, nullptr,
-                              JSPROP_PERMANENT | JSPROP_READONLY) ||
+                              JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING) ||
         !NativeDefineProperty(cx, global, cx->names().Infinity, valueInfinity, nullptr, nullptr,
-                              JSPROP_PERMANENT | JSPROP_READONLY))
+                              JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING))
     {
         return nullptr;
     }

@@ -35,6 +35,7 @@ var gBlock1, gBlock2;
 var alwaysEnabledCommands = [
   "contentReadOnly",
   "copy",
+  "cut",
   "enableInlineTableEditing",
   "enableObjectResizing",
   "insertBrOnReturn",
@@ -89,9 +90,12 @@ function runTests() {
     IsCommandEnabled(commands[i]);
 
   // These are privileged, and available only to chrome.
-  commands = ["cut", "paste", "copy"];
+  commands = ["paste"];
   for (i = 0; i < commands.length; i++) {
-    IsCommandEnabled(commands[i]);
+    is(document.queryCommandEnabled(commands[i]), false,
+       "Command should not be enabled for non-privileged code");
+    is(SpecialPowers.wrap(document).queryCommandEnabled(commands[i]), true,
+       "Command should be enabled for privileged code");
     try {
       document.execCommand(commands[i], false, false);
       ok(false, "Thould have thrown: " + commands[i]);
