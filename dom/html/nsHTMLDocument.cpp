@@ -3256,6 +3256,7 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
 
   // if editing is not on, bail
   if (!isCutCopy && !IsEditingOnAfterFlush()) {
+    rv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
@@ -3292,6 +3293,7 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
 
   bool restricted = commandID.LowerCaseEqualsLiteral("paste");
   if (restricted && !nsContentUtils::IsCallerChrome()) {
+    rv = NS_ERROR_DOM_SECURITY_ERR;
     return false;
   }
 
@@ -3388,6 +3390,7 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString& commandID, ErrorResult& rv)
 
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush()) {
+    rv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
@@ -3430,6 +3433,7 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString& commandID, ErrorResult& rv
 
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush()) {
+    rv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
@@ -3490,6 +3494,7 @@ nsHTMLDocument::QueryCommandState(const nsAString& commandID, ErrorResult& rv)
 
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush()) {
+    rv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
@@ -3602,6 +3607,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString& commandID,
 
   // if editing is not on, bail
   if (!IsEditingOnAfterFlush()) {
+    rv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
