@@ -11,10 +11,10 @@ SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../../../../certverifier',
-    '../../../../pkix/include',
-    '../../../../pkix/test/lib',
-    '/security/manager/ssl/src',
+    '/security/certverifier',
+    '/security/manager/ssl',
+    '/security/pkix/include',
+    '/security/pkix/test/lib',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
