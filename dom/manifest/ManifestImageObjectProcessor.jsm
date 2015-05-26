@@ -1,12 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
- * ImageObjectProcessor
+ * ManifestImageObjectProcessor
  * Implementation of Image Object processing algorithms from:
- * http://www.w3.org/TR/appmanifest/#image-object-and-its-members
+ * http://www.w3.org/2008/webapps/manifest/#image-object-and-its-members
  *
- * This is intended to be used in conjunction with ManifestProcessor.js
+ * This is intended to be used in conjunction with ManifestProcessor.jsm
  *
  * Creates an object to process Image Objects as defined by the
  * W3C specification. This is used to process things like the
@@ -18,25 +18,27 @@
  *
  */
 /*exported EXPORTED_SYMBOLS*/
-/*globals Components */
+/*globals Components*/
 'use strict';
+this.EXPORTED_SYMBOLS = ['ManifestImageObjectProcessor']; // jshint ignore:line
+const imports = {};
 const {
   utils: Cu,
-  interfaces: Ci,
-  classes: Cc
+  classes: Cc,
+  interfaces: Ci
 } = Components;
-
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.importGlobalProperties(['URL']);
-const netutil = Cc['@mozilla.org/network/util;1']
+imports.netutil = Cc['@mozilla.org/network/util;1']
   .getService(Ci.nsINetUtil);
 
-function ImageObjectProcessor(aConsole, aExtractor) {
+function ManifestImageObjectProcessor(aConsole, aExtractor) {
   this.console = aConsole;
   this.extractor = aExtractor;
 }
 
 // Static getters
-Object.defineProperties(ImageObjectProcessor, {
+Object.defineProperties(ManifestImageObjectProcessor, {
   'decimals': {
     get: function() {
       return /^\d+$/;
@@ -49,7 +51,7 @@ Object.defineProperties(ImageObjectProcessor, {
   }
 });
 
-ImageObjectProcessor.prototype.process = function(
+ManifestImageObjectProcessor.prototype.process = function(
   aManifest, aBaseURL, aMemberName
 ) {
   const spec = {
@@ -92,7 +94,7 @@ ImageObjectProcessor.prototype.process = function(
     };
     let value = extractor.extractValue(spec);
     if (value) {
-      value = netutil.parseContentType(value, charset, hadCharset);
+      value = imports.netutil.parseContentType(value, charset, hadCharset);
     }
     return value || undefined;
   }
@@ -142,7 +144,7 @@ ImageObjectProcessor.prototype.process = function(
     // Implementation of HTML's link@size attribute checker.
     function isValidSizeValue(aSize) {
       const size = aSize.toLowerCase();
-      if (ImageObjectProcessor.anyRegEx.test(aSize)) {
+      if (ManifestImageObjectProcessor.anyRegEx.test(aSize)) {
         return true;
       }
       if (!size.includes('x') || size.indexOf('x') !== size.lastIndexOf('x')) {
@@ -153,7 +155,7 @@ ImageObjectProcessor.prototype.process = function(
       const w = widthAndHeight.shift();
       const h = widthAndHeight.join('x');
       const validStarts = !w.startsWith('0') && !h.startsWith('0');
-      const validDecimals = ImageObjectProcessor.decimals.test(w + h);
+      const validDecimals = ManifestImageObjectProcessor.decimals.test(w + h);
       return (validStarts && validDecimals);
     }
   }
@@ -169,5 +171,4 @@ ImageObjectProcessor.prototype.process = function(
     return extractor.extractColorValue(spec);
   }
 };
-this.ImageObjectProcessor = ImageObjectProcessor; // jshint ignore:line
-this.EXPORTED_SYMBOLS = ['ImageObjectProcessor']; // jshint ignore:line
+this.ManifestImageObjectProcessor = ManifestImageObjectProcessor; // jshint ignore:line
