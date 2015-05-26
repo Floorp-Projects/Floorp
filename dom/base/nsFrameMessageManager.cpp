@@ -2084,7 +2084,7 @@ nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase(JSContext* aCx,
     mPrincipal(aPrincipal)
 {
   if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
-    NS_RUNTIMEABORT("OOM");
+    NS_ABORT_OOM(aData.mDataLength);
   }
   mClosure = aData.mClosure;
 }
