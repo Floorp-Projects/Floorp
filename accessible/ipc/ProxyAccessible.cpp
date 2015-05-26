@@ -6,6 +6,10 @@
 
 #include "ProxyAccessible.h"
 #include "DocAccessibleParent.h"
+#include "DocAccessible.h"
+#include "mozilla/a11y/DocManager.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/TabParent.h"
 #include "mozilla/unused.h"
 #include "mozilla/a11y/Platform.h"
 #include "RelationType.h"
@@ -963,5 +967,19 @@ ProxyAccessible::URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
   unused << mDoc->SendURLDocTypeMimeType(mID, &aURL, &aDocType, &aMimeType);
 }
 
+Accessible*
+ProxyAccessible::OuterDocOfRemoteBrowser() const
+{
+  auto tab = static_cast<dom::TabParent*>(mDoc->Manager());
+  dom::Element* frame = tab->GetOwnerElement();
+  NS_ASSERTION(frame, "why isn't the tab in a frame!");
+  if (!frame)
+    return nullptr;
+
+  DocAccessible* chromeDoc = GetExistingDocAccessible(frame->OwnerDoc());
+  NS_ASSERTION(chromeDoc, "accessible tab in not accessible chromeDocument");
+
+  return chromeDoc ? chromeDoc->GetAccessible(frame) : nullptr;
+}
 }
 }
