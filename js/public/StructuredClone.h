@@ -162,17 +162,25 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     uint64_t* data_;
     size_t nbytes_;
     uint32_t version_;
+    enum {
+        OwnsTransferablesIfAny,
+        IgnoreTransferablesIfAny,
+        NoTransferables
+    } ownTransferables_;
+
     const JSStructuredCloneCallbacks* callbacks_;
     void* closure_;
 
   public:
     JSAutoStructuredCloneBuffer()
         : data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION),
+          ownTransferables_(NoTransferables),
           callbacks_(nullptr), closure_(nullptr)
     {}
 
     JSAutoStructuredCloneBuffer(const JSStructuredCloneCallbacks* callbacks, void* closure)
         : data_(nullptr), nbytes_(0), version_(JS_STRUCTURED_CLONE_VERSION),
+          ownTransferables_(NoTransferables),
           callbacks_(callbacks), closure_(closure)
     {}
 
@@ -194,10 +202,16 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     // JSAutoStructuredCloneBuffer::steal).
     void adopt(uint64_t* data, size_t nbytes, uint32_t version=JS_STRUCTURED_CLONE_VERSION);
 
-    // Remove the buffer so that it will not be automatically freed.
-    // After this, the caller is responsible for feeding the memory back to
-    // JSAutoStructuredCloneBuffer::adopt.
+    // Release the buffer and transfer ownership to the caller. The caller is
+    // responsible for calling JS_ClearStructuredClone or feeding the memory
+    // back to JSAutoStructuredCloneBuffer::adopt.
     void steal(uint64_t** datap, size_t* nbytesp, uint32_t* versionp=nullptr);
+
+    // Abandon ownership of any transferable objects stored in the buffer,
+    // without freeing the buffer itself. Useful when copying the data out into
+    // an external container, though note that you will need to use adopt() or
+    // JS_ClearStructuredClone to properly release that data eventually.
+    void abandon() { ownTransferables_ = IgnoreTransferablesIfAny; }
 
     bool read(JSContext* cx, JS::MutableHandleValue vp,
               const JSStructuredCloneCallbacks* optionalCallbacks=nullptr, void* closure=nullptr);
