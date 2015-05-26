@@ -625,7 +625,7 @@ let DOMFullscreenHandler = {
       case "MozDOMFullscreen:NewOrigin": {
         this._fullscreenDoc = aEvent.target;
         sendAsyncMessage("DOMFullscreen:NewOrigin", {
-          origin: this._fullscreenDoc.nodePrincipal.origin,
+          originNoSuffix: this._fullscreenDoc.nodePrincipal.originNoSuffix,
         });
         break;
       }
