@@ -274,4 +274,19 @@ DecodedStream::Connect(OutputStreamData* aStream)
   aStream->mStream->ChangeExplicitBlockerCount(-1);
 }
 
+void
+DecodedStream::Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  GetReentrantMonitor().AssertCurrentThreadIn();
+
+  OutputStreamData* os = OutputStreams().AppendElement();
+  os->Init(this, aStream);
+  Connect(os);
+  if (aFinishWhenEnded) {
+    // Ensure that aStream finishes the moment mDecodedStream does.
+    aStream->SetAutofinish(true);
+  }
+}
+
 } // namespace mozilla
