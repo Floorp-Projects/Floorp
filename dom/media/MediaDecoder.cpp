@@ -361,13 +361,7 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
     if (!GetDecodedStream()) {
       RecreateDecodedStream(mLogicalPosition, aStream->Graph());
     }
-    OutputStreamData* os = OutputStreams().AppendElement();
-    os->Init(&mDecodedStream, aStream);
-    mDecodedStream.Connect(os);
-    if (aFinishWhenEnded) {
-      // Ensure that aStream finishes the moment mDecodedStream does.
-      aStream->SetAutofinish(true);
-    }
+    mDecodedStream.Connect(aStream, aFinishWhenEnded);
   }
 
   // This can be called before Load(), in which case our mDecoderStateMachine

@@ -103,9 +103,11 @@ public:
   void RecreateData(int64_t aInitialTime, SourceMediaStream* aStream);
   nsTArray<OutputStreamData>& OutputStreams();
   ReentrantMonitor& GetReentrantMonitor();
-  void Connect(OutputStreamData* aStream);
+  void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
 
 private:
+  void Connect(OutputStreamData* aStream);
+
   UniquePtr<DecodedStreamData> mData;
   // Data about MediaStreams that are being fed by the decoder.
   nsTArray<OutputStreamData> mOutputStreams;
