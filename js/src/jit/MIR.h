@@ -10475,7 +10475,8 @@ class MGuardObjectGroup
 
         // Unboxed groups which might be converted to natives can't be guarded
         // on, due to MConvertUnboxedObjectToNative.
-        MOZ_ASSERT_IF(group->maybeUnboxedLayout(), !group->unboxedLayout().nativeGroup());
+        MOZ_ASSERT_IF(group->maybeUnboxedLayoutDontCheckGeneration(),
+                      !group->unboxedLayoutDontCheckGeneration().nativeGroup());
     }
 
   public:

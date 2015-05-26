@@ -26,6 +26,8 @@
 
 #include "jsgcinlines.h"
 
+#include "vm/ObjectGroup-inl.h"
+
 using namespace js;
 using namespace js::gc;
 using mozilla::DebugOnly;
