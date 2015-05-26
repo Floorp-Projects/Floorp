@@ -231,7 +231,18 @@ DecodedStream::RecreateData(int64_t aInitialTime, SourceMediaStream* aStream)
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
   MOZ_ASSERT(!mData);
+
   mData.reset(new DecodedStreamData(aInitialTime, aStream));
+
+  // Note that the delay between removing ports in DestroyDecodedStream
+  // and adding new ones won't cause a glitch since all graph operations
+  // between main-thread stable states take effect atomically.
+  auto& outputStreams = OutputStreams();
+  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
+    OutputStreamData& os = outputStreams[i];
+    MOZ_ASSERT(!os.mStream->IsDestroyed(), "Should've been removed in DestroyData()");
+    Connect(&os);
+  }
 }
 
 nsTArray<OutputStreamData>&
