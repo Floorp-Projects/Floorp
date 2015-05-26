@@ -22,8 +22,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+// Do not load the FinalizationWitnessService is we are being required as a
+// CommonJS module, because the Components object is not available in workers.
+if (!isWorker) {
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+  XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
+                                     "@mozilla.org/toolkit/finalizationwitness;1",
+                                     "nsIFinalizationWitnessService");
+}
 
 const STATUS_PENDING = 0;
 const STATUS_RESOLVED = 1;
@@ -38,7 +46,7 @@ const salt = Math.floor(Math.random() * 100);
 const N_INTERNALS = "{private:internals:" + salt + "}";
 
 // We use DOM Promise for scheduling the walker loop.
-const DOMPromise = Promise;
+const DOMPromise = isWorker ? null : Promise;
 
 /////// Warn-upon-finalization mechanism
 //
@@ -70,10 +78,6 @@ const DOMPromise = Promise;
 //
 // In this snippet, the error is reported both by p1 and by p2.
 //
-
-XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
-                                   "@mozilla.org/toolkit/finalizationwitness;1",
-                                   "nsIFinalizationWitnessService");
 
 let PendingErrors = {
   // An internal counter, used to generate unique id.
@@ -247,7 +251,13 @@ let PendingErrors = {
     this._observers.clear();
   }
 };
-PendingErrors.init();
+
+// Do not initialize the warn-on-finalization mechanism if we are being required
+// as a CommonJS module by the worker loader, because the Components object (and
+// therefore the FinalizationWitnessService) is not available.
+if (!isWorker) {
+  PendingErrors.init();
+}
 
 // Default mechanism for displaying errors
 PendingErrors.addObserver(function(details) {
@@ -618,6 +628,12 @@ Object.freeze(Promise.Debugging);
 
 Object.freeze(Promise);
 
+// Make sure to export the Promise object if we are being required as a CommonJS
+// module by the worker loader.
+if (isWorker) {
+  module.exports = Promise;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// PromiseWalker
 
@@ -669,7 +685,7 @@ this.PromiseWalker = {
     aPromise[N_INTERNALS].value = aValue;
     if (aPromise[N_INTERNALS].handlers.length > 0) {
       this.schedulePromise(aPromise);
-    } else if (aStatus == STATUS_REJECTED) {
+    } else if (!isWorker && aStatus == STATUS_REJECTED) {
       // This is a rejection and the promise is the last in the chain.
       // For the time being we therefore have an uncaught error.
       let id = PendingErrors.register(aValue);
@@ -685,7 +701,11 @@ this.PromiseWalker = {
   scheduleWalkerLoop: function()
   {
     this.walkerLoopScheduled = true;
-    DOMPromise.resolve().then(() => this.walkerLoop());
+    if (isWorker) {
+      setImmediate(this.walkerLoop);
+    } else {
+      DOMPromise.resolve().then(() => this.walkerLoop());
+    }
   },
 
   /**
