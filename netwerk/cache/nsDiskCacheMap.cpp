@@ -18,6 +18,7 @@
 #include "nsSerializationHelper.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Snprintf.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/VisualEventTracer.h"
 #include <algorithm>
@@ -1140,8 +1141,8 @@ nsDiskCacheMap::GetFileForDiskCacheRecord(nsDiskCacheRecord * record,
     int16_t generation = record->Generation();
     char name[32];
     // Cut the beginning of the hash that was used in the path
-    ::sprintf(name, "%05X%c%02X", hash & 0xFFFFF, (meta ? 'm' : 'd'),
-              generation);
+    ::snprintf_literal(name, "%05X%c%02X", hash & 0xFFFFF, (meta ? 'm' : 'd'),
+               generation);
     rv = file->AppendNative(nsDependentCString(name));
     if (NS_FAILED(rv))  return rv;
     
@@ -1178,7 +1179,7 @@ nsDiskCacheMap::GetBlockFileForIndex(uint32_t index, nsIFile ** result)
     if (NS_FAILED(rv))  return rv;
     
     char name[32];
-    ::sprintf(name, "_CACHE_%03d_", index + 1);
+    ::snprintf_literal(name, "_CACHE_%03d_", index + 1);
     rv = file->AppendNative(nsDependentCString(name));
     if (NS_FAILED(rv))  return rv;
     

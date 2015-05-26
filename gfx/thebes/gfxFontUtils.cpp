@@ -15,6 +15,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/Snprintf.h"
 
 #include "nsCOMPtr.h"
 #include "nsIUUIDGenerator.h"
@@ -68,9 +69,10 @@ gfxSparseBitSet::Dump(const char* aPrefix, eGfxLog aWhichLog) const
     for (b = 0; b < numBlocks; b++) {
         Block *block = mBlocks[b];
         if (!block) continue;
-        char outStr[256];
+        const int BUFSIZE = 256;
+        char outStr[BUFSIZE];
         int index = 0;
-        index += sprintf(&outStr[index], "%s u+%6.6x [", aPrefix, (b << BLOCK_INDEX_SHIFT));
+        index += snprintf(&outStr[index], BUFSIZE - index, "%s u+%6.6x [", aPrefix, (b << BLOCK_INDEX_SHIFT));
         for (int i = 0; i < 32; i += 4) {
             for (int j = i; j < i + 4; j++) {
                 uint8_t bits = block->mBits[j];
@@ -78,11 +80,11 @@ gfxSparseBitSet::Dump(const char* aPrefix, eGfxLog aWhichLog) const
                 uint8_t flip2 = ((flip1 & 0xcc) >> 2) | ((flip1 & 0x33) << 2);
                 uint8_t flipped = ((flip2 & 0xf0) >> 4) | ((flip2 & 0x0f) << 4);
 
-                index += sprintf(&outStr[index], "%2.2x", flipped);
+                index += snprintf(&outStr[index], BUFSIZE - index, "%2.2x", flipped);
             }
-            if (i + 4 != 32) index += sprintf(&outStr[index], " ");
+            if (i + 4 != 32) index += snprintf(&outStr[index], BUFSIZE - index, " ");
         }
-        index += sprintf(&outStr[index], "]");
+        index += snprintf(&outStr[index], BUFSIZE - index, "]");
         LOG(aWhichLog, ("%s", outStr));
     }
 }
@@ -1410,8 +1412,8 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
         char warnBuf[128];
         if (aByteLen > 64)
             aByteLen = 64;
-        sprintf(warnBuf, "skipping font name, unknown charset %d:%d:%d for <%.*s>",
-                aPlatformCode, aScriptCode, aLangCode, aByteLen, aNameData);
+        snprintf_literal(warnBuf, "skipping font name, unknown charset %d:%d:%d for <%.*s>",
+                         aPlatformCode, aScriptCode, aLangCode, aByteLen, aNameData);
         NS_WARNING(warnBuf);
 #endif
         return false;
