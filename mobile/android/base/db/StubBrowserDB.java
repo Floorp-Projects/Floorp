@@ -250,7 +250,8 @@ public class StubBrowserDB implements BrowserDB {
     }
 
     @RobocopTarget
-    public void addBookmark(ContentResolver cr, String title, String uri) {
+    public boolean addBookmark(ContentResolver cr, String title, String uri) {
+        return false;
     }
 
     @RobocopTarget
