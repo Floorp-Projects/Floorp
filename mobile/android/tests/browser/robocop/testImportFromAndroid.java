@@ -113,7 +113,7 @@ public class testImportFromAndroid extends AboutHomeTest {
         for (String url:androidBookmarks) {
             // Add every 3rd bookmark to Firefox Mobile
             if ((androidBookmarks.indexOf(url) % 3) == 0) {
-                mDatabaseHelper.addOrUpdateMobileBookmark("Bookmark Number" + String.valueOf(androidBookmarks.indexOf(url)), url);
+                mDatabaseHelper.addMobileBookmark("Bookmark Number" + String.valueOf(androidBookmarks.indexOf(url)), url);
             }
         }
 

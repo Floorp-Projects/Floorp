@@ -673,79 +673,6 @@ checkPermission(uid_t uid)
 }
 
 //
-// KeyStore::ListenSocket
-//
-
-KeyStore::ListenSocket::ListenSocket(KeyStore* aKeyStore)
-: mKeyStore(aKeyStore)
-{
-  MOZ_ASSERT(mKeyStore);
-
-  MOZ_COUNT_CTOR(KeyStore::ListenSocket);
-}
-
-void
-KeyStore::ListenSocket::OnConnectSuccess()
-{
-  mKeyStore->OnConnectSuccess(LISTEN_SOCKET);
-
-  MOZ_COUNT_DTOR(KeyStore::ListenSocket);
-}
-
-void
-KeyStore::ListenSocket::OnConnectError()
-{
-  mKeyStore->OnConnectError(LISTEN_SOCKET);
-}
-
-void
-KeyStore::ListenSocket::OnDisconnect()
-{
-  mKeyStore->OnDisconnect(LISTEN_SOCKET);
-}
-
-//
-// KeyStore::StreamSocket
-//
-
-KeyStore::StreamSocket::StreamSocket(KeyStore* aKeyStore)
-: mKeyStore(aKeyStore)
-{
-  MOZ_ASSERT(mKeyStore);
-
-  MOZ_COUNT_CTOR(KeyStore::StreamSocket);
-}
-
-KeyStore::StreamSocket::~StreamSocket()
-{
-  MOZ_COUNT_DTOR(KeyStore::StreamSocket);
-}
-
-void
-KeyStore::StreamSocket::OnConnectSuccess()
-{
-  mKeyStore->OnConnectSuccess(STREAM_SOCKET);
-}
-
-void
-KeyStore::StreamSocket::OnConnectError()
-{
-  mKeyStore->OnConnectError(STREAM_SOCKET);
-}
-
-void
-KeyStore::StreamSocket::OnDisconnect()
-{
-  mKeyStore->OnDisconnect(STREAM_SOCKET);
-}
-
-void
-KeyStore::StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
-{
-  mKeyStore->ReceiveSocketData(aBuffer);
-}
-
-//
 // KeyStore
 //
 
@@ -795,12 +722,12 @@ KeyStore::Listen()
   if (mStreamSocket) {
     mStreamSocket->Close();
   } else {
-    mStreamSocket = new StreamSocket(this);
+    mStreamSocket = new StreamSocket(this, STREAM_SOCKET);
   }
 
   if (!mListenSocket) {
     // We only ever allocate one |ListenSocket|...
-    mListenSocket = new ListenSocket(this);
+    mListenSocket = new ListenSocket(this, LISTEN_SOCKET);
     mListenSocket->Listen(new KeyStoreConnector(KEYSTORE_ALLOWED_USERS),
                           mStreamSocket);
   } else {
@@ -952,8 +879,10 @@ KeyStore::SendData(const uint8_t *aData, int aLength)
   mStreamSocket->SendSocketData(data);
 }
 
+// |StreamSocketConsumer|, |ListenSocketConsumer|
+
 void
-KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aMessage)
+KeyStore::ReceiveSocketData(int aIndex, nsAutoPtr<UnixSocketBuffer>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1013,34 +942,34 @@ KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aMessage)
 }
 
 void
-KeyStore::OnConnectSuccess(SocketType aSocketType)
+KeyStore::OnConnectSuccess(int aIndex)
 {
-  if (aSocketType == STREAM_SOCKET) {
+  if (aIndex == STREAM_SOCKET) {
     mShutdown = false;
   }
 }
 
 void
-KeyStore::OnConnectError(SocketType aSocketType)
+KeyStore::OnConnectError(int aIndex)
 {
   if (mShutdown) {
     return;
   }
 
-  if (aSocketType == STREAM_SOCKET) {
+  if (aIndex == STREAM_SOCKET) {
     // Stream socket error; start listening again
     Listen();
   }
 }
 
 void
-KeyStore::OnDisconnect(SocketType aSocketType)
+KeyStore::OnDisconnect(int aIndex)
 {
   if (mShutdown) {
     return;
   }
 
-  switch (aSocketType) {
+  switch (aIndex) {
     case LISTEN_SOCKET:
       // Listen socket disconnected; start anew.
       mListenSocket = nullptr;

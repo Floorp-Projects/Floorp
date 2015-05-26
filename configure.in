@@ -431,7 +431,7 @@ if test -z "$RUSTC" -a -n "$MOZ_RUST"; then
     To compile rust language sources, you must have 'rustc' in your path.
     See http://www.rust-lang.org/ for more information.])
 fi
-if test -n "$MOZ_RUST" -a -z "$_RUSTC_MAJOR_VERSION" -o \
+if test -n "$MOZ_RUST" && test -z "$_RUSTC_MAJOR_VERSION" -o \
   "$_RUSTC_MAJOR_VERSION" -lt 1; then
   AC_MSG_ERROR([Rust compiler ${RUSTC_VERSION} is too old.
     To compile rust language sources please install at least
