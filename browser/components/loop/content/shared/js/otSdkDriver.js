@@ -852,7 +852,7 @@ loop.OTSdkDriver = (function() {
 
       var bucket = this.mozLoop.SHARING_STATE_CHANGE[type.toUpperCase() + "_" +
         (enabled ? "ENABLED" : "DISABLED")];
-      if (!bucket) {
+      if (typeof bucket === "undefined") {
         console.error("No sharing state bucket found for '" + type + "'");
         return;
       }
