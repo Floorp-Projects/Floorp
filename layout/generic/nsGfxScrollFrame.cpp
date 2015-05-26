@@ -3045,14 +3045,27 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        Maybe<nsRect>* aClipRect,
                                        nsTArray<FrameMetrics>* aOutput) const
 {
+  if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
+    return;
+  }
+
+  bool needsParentLayerClip = true;
+  if (gfxPrefs::LayoutUseContainersForRootFrames() && !mAddClipRectToLayer) {
+    // For containerful frames, the clip is on the container frame.
+    needsParentLayerClip = false;
+  }
+
+  // Note: Do not apply clips to the scroll ports of metrics above the first
+  // one on a given layer. They will be applied by the compositor instead,
+  // with async transforms for the scrollframes interspersed between them.
+  if (aOutput->Length() > 0) {
+    needsParentLayerClip = false;
+  }
+
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
   bool isRoot = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
-  // If APZ is enabled, do not apply clips to the scroll ports of metrics
-  // above the first one on a given layer. They will be applied by the
-  // compositor instead, with async transforms for the scrollframes interspersed
-  // between them.
-  bool omitClip = gfxPrefs::AsyncPanZoomEnabled() && aOutput->Length() > 0;
-  if (!omitClip && (!gfxPrefs::LayoutUseContainersForRootFrames() || mAddClipRectToLayer)) {
+
+  if (needsParentLayerClip) {
     nsRect clip = nsRect(mScrollPort.TopLeft() + toReferenceFrame,
                          nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
     if (isRoot) {
@@ -3060,13 +3073,10 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
       clip.width = NSToCoordRound(clip.width / res);
       clip.height = NSToCoordRound(clip.height / res);
     }
+
     // When using containers, the container layer contains the clip. Otherwise
     // we always include the clip.
     *aClipRect = Some(clip);
-  }
-
-  if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
-    return;
   }
 
   MOZ_ASSERT(mScrolledFrame->GetContent());
