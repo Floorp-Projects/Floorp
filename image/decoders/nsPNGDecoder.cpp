@@ -111,6 +111,7 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
    mPNG(nullptr), mInfo(nullptr),
    mCMSLine(nullptr), interlacebuf(nullptr),
    mInProfile(nullptr), mTransform(nullptr),
+   format(gfx::SurfaceFormat::UNKNOWN),
    mHeaderBytesRead(0), mCMSMode(0),
    mChannels(0), mFrameIsHidden(false),
    mDisablePremultipliedAlpha(false),
@@ -636,6 +637,8 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->format = gfx::SurfaceFormat::B8G8R8X8;
   } else if (channels == 2 || channels == 4) {
     decoder->format = gfx::SurfaceFormat::B8G8R8A8;
+  } else {
+    png_longjmp(decoder->mPNG, 1); // invalid number of channels
   }
 
 #ifdef PNG_APNG_SUPPORTED

@@ -61,7 +61,7 @@ document_resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* res
                 return false;
 
             JS::Rooted<JS::Value> allValue(cx, JS::ObjectValue(*docAll));
-            if (!JS_DefinePropertyById(cx, obj, id, allValue, 0))
+            if (!JS_DefinePropertyById(cx, obj, id, allValue, JSPROP_RESOLVING))
                 return false;
 
             *resolvedp = true;

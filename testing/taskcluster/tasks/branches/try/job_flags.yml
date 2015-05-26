@@ -100,6 +100,12 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_dolphin_512_eng.yml
+  android-api-11:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_api_11.yml
 
 tests:
   cppunit:

@@ -8,6 +8,7 @@
 #include "gfx2DGlue.h"
 #include <ui/GraphicBuffer.h>
 #include "GrallocImages.h"  // for GrallocImage
+#include "GLLibraryEGL.h"   // for GLLibraryEGL
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/layers/GrallocTextureHost.h"
@@ -19,6 +20,7 @@ namespace mozilla {
 namespace layers {
 
 using namespace android;
+using namespace mozilla::gl;
 
 static gfx::SurfaceFormat
 SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
@@ -263,12 +265,6 @@ GrallocTextureHostOGL::UnbindTextureSource()
   mGLTextureSource = nullptr;
 }
 
-FenceHandle
-GrallocTextureHostOGL::GetAndResetReleaseFenceHandle()
-{
-  return GetAndResetReleaseFence();
-}
-
 GLenum GetTextureTarget(gl::GLContext* aGL, android::PixelFormat aFormat) {
   MOZ_ASSERT(aGL);
   if (aGL->Renderer() == gl::GLRenderer::SGX530 ||
@@ -382,6 +378,42 @@ GrallocTextureHostOGL::PrepareTextureSource(CompositableTextureSourceRef& aTextu
   }
 }
 
+void
+GrallocTextureHostOGL::WaitAcquireFenceHandleSyncComplete()
+{
+  if (!mAcquireFenceHandle.IsValid()) {
+    return;
+  }
+
+  nsRefPtr<FenceHandle::FdObj> fence = mAcquireFenceHandle.GetAndResetFdObj();
+  int fenceFd = fence->GetAndResetFd();
+
+  EGLint attribs[] = {
+              LOCAL_EGL_SYNC_NATIVE_FENCE_FD_ANDROID, fenceFd,
+              LOCAL_EGL_NONE
+          };
+
+  EGLSync sync = sEGLLibrary.fCreateSync(EGL_DISPLAY(),
+                                         LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID,
+                                         attribs);
+  if (!sync) {
+    NS_WARNING("failed to create native fence sync");
+    return;
+  }
+
+  // Wait sync complete with timeout.
+  // If a source of the fence becomes invalid because of error,
+  // fene complete is not signaled. See Bug 1061435.
+  EGLint status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(),
+                                              sync,
+                                              0,
+                                              400000000 /*400 usec*/);
+  if (status != LOCAL_EGL_CONDITION_SATISFIED) {
+    NS_ERROR("failed to wait native fence sync");
+  }
+  MOZ_ALWAYS_TRUE( sEGLLibrary.fDestroySync(EGL_DISPLAY(), sync) );
+}
+
 bool
 GrallocTextureHostOGL::BindTextureSource(CompositableTextureSourceRef& aTextureSource)
 {
@@ -400,7 +432,7 @@ GrallocTextureHostOGL::BindTextureSource(CompositableTextureSourceRef& aTextureS
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   // Wait until it's ready.
-  WaitAcquireFenceSyncComplete();
+  WaitAcquireFenceHandleSyncComplete();
 #endif
   return true;
 }

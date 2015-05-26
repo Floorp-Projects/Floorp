@@ -171,7 +171,7 @@ public:
                  "nsBaseHashtable was not initialized properly.");
 
     s_EnumReadArgs enumData = { aEnumFunc, aUserArg };
-    return PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&this->mTable),
+    return PL_DHashTableEnumerate(const_cast<PLDHashTable*>(static_cast<const PLDHashTable*>(&this->mTable)),
                                   s_EnumReadStub,
                                   &enumData);
   }

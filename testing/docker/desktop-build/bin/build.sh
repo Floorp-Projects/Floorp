@@ -70,7 +70,7 @@ if [ ! -d build ]; then
 fi
 
 # and check out mozilla-central where mozharness will use it as a cache (/builds/hg-shared)
-tc-vcs checkout /builds/hg-shared/mozilla-central $GECKO_BASE_REPOSITORY $GECKO_HEAD_REPOSITORY $GECKO_REV
+tc-vcs checkout $WORKSPACE/build/src $GECKO_BASE_REPOSITORY $GECKO_HEAD_REPOSITORY $GECKO_REV
 
 # run mozharness in XVfb, if necessary; this is an array to maintain the quoting in the -s argument
 if $NEED_XVFB; then
@@ -131,11 +131,15 @@ for cfg in $MOZHARNESS_CONFIG; do
   config_cmds="${config_cmds} --config ${cfg}"
 done
 
+# Mozharness would ordinarily do the checkouts itself, but they are disabled
+# here (--no-checkout-sources, --no-clone-tools) as the checkout is performed above.
+
 ./${MOZHARNESS_SCRIPT} ${config_cmds} \
   $debug_flag \
   $custom_build_variant_cfg_flag \
   --disable-mock \
   --no-setup-mock \
+  --no-checkout-sources \
   --no-clone-tools \
   --no-clobber \
   --no-update \

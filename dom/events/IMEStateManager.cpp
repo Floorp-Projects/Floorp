@@ -180,7 +180,6 @@ GetNotifyIMEMessageName(IMEMessage aMessage)
 nsIContent* IMEStateManager::sContent = nullptr;
 nsPresContext* IMEStateManager::sPresContext = nullptr;
 bool IMEStateManager::sInstalledMenuKeyboardListener = false;
-bool IMEStateManager::sIsTestingIME = false;
 bool IMEStateManager::sIsGettingNewIMEState = false;
 
 // sActiveIMEContentObserver points to the currently active IMEContentObserver.
@@ -649,9 +648,23 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
     return;
   }
 
-  // If the IMEContentObserver instance isn't managing the editor's current
-  // editable root content, the editor frame might be reframed.  We should
-  // recreate the instance at that time.
+  // Even if there is active IMEContentObserver, it may not be observing the
+  // editor with current editable root content due to reframed.  In such case,
+  // We should try to reinitialize the IMEContentObserver.
+  if (sActiveIMEContentObserver && IsIMEObserverNeeded(aNewIMEState)) {
+    PR_LOG(sISMLog, PR_LOG_DEBUG,
+      ("ISM:   IMEStateManager::UpdateIMEState(), try to reinitialize the "
+       "active IMEContentObserver"));
+    if (!sActiveIMEContentObserver->MaybeReinitialize(widget, sPresContext,
+                                                      aContent, aEditor)) {
+      PR_LOG(sISMLog, PR_LOG_ERROR,
+        ("ISM:   IMEStateManager::UpdateIMEState(), failed to reinitialize the "
+         "active IMEContentObserver"));
+    }
+  }
+
+  // If there is no active IMEContentObserver or it isn't observing the
+  // editor correctly, we should recreate it.
   bool createTextStateManager =
     (!sActiveIMEContentObserver ||
      !sActiveIMEContentObserver->IsManaging(sPresContext, aContent));
@@ -1128,18 +1141,9 @@ IMEStateManager::GetRootEditableNode(nsPresContext* aPresContext,
 
 // static
 bool
-IMEStateManager::IsEditableIMEState(nsIWidget* aWidget)
+IMEStateManager::IsIMEObserverNeeded(const IMEState& aState)
 {
-  switch (aWidget->GetInputContext().mIMEState.mEnabled) {
-    case IMEState::ENABLED:
-    case IMEState::PASSWORD:
-      return true;
-    case IMEState::PLUGIN:
-    case IMEState::DISABLED:
-      return false;
-    default:
-      MOZ_CRASH("Unknown IME enable state");
-  }
+  return aState.IsEditable();
 }
 
 // static
@@ -1193,18 +1197,12 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
     return; // Sometimes, there are no widgets.
   }
 
-  // If it's not text ediable, we don't need to create IMEContentObserver.
-  if (!IsEditableIMEState(widget)) {
+  // If it's not text editable, we don't need to create IMEContentObserver.
+  if (!IsIMEObserverNeeded(widget->GetInputContext().mIMEState)) {
     MOZ_LOG(sISMLog, PR_LOG_DEBUG,
       ("ISM:   IMEStateManager::CreateIMEContentObserver() doesn't create "
        "IMEContentObserver because of non-editable IME state"));
     return;
-  }
-
-  static bool sInitializeIsTestingIME = true;
-  if (sInitializeIsTestingIME) {
-    Preferences::AddBoolVarCache(&sIsTestingIME, "test.IME", false);
-    sInitializeIsTestingIME = false;
   }
 
   MOZ_LOG(sISMLog, PR_LOG_DEBUG,

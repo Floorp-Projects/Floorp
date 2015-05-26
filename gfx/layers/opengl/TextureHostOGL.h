@@ -123,38 +123,6 @@ private:
 };
 
 /**
- * TextureHostOGL provides the necessary API for platform specific composition.
- */
-class TextureHostOGL
-{
-public:
-  /**
-   * Store a fence that will signal when the current buffer is no longer being read.
-   * Similar to android's GLConsumer::setReleaseFence()
-   */
-  virtual bool SetReleaseFence(const FenceHandle& aReleaseFence);
-
-  /**
-   * Return a releaseFence's Fence and clear a reference to the Fence.
-   */
-  virtual FenceHandle GetAndResetReleaseFence();
-
-  virtual void SetAcquireFence(const FenceHandle& aAcquireFence);
-
-  /**
-   * Return a acquireFence's Fence and clear a reference to the Fence.
-   */
-  virtual FenceHandle GetAndResetAcquireFence();
-
-  virtual void WaitAcquireFenceSyncComplete();
-
-protected:
-  FenceHandle mReleaseFence;
-
-  FenceHandle mAcquireFence;
-};
-
-/**
  * A TextureSource backed by a TextureImage.
  *
  * Depending on the underlying TextureImage, may support texture tiling, so

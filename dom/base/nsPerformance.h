@@ -423,7 +423,7 @@ private:
     return this;
   }
 
-  void InsertUserEntry(PerformanceEntry* aEntry);
+  void InsertUserEntry(PerformanceEntry* aEntry) override;
 
   bool IsPerformanceTimingAttribute(const nsAString& aName) override;
 

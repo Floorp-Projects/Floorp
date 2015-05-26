@@ -106,7 +106,8 @@ AsyncStatementParams::Resolve(nsIXPConnectWrappedNative *aWrapper,
     uint32_t idx = JSID_TO_INT(aId);
     // All indexes are good because we don't know how many parameters there
     // really are.
-    ok = ::JS_DefineElement(aCtx, scopeObj, idx, JS::UndefinedHandleValue, 0);
+    ok = ::JS_DefineElement(aCtx, scopeObj, idx, JS::UndefinedHandleValue,
+                            JSPROP_RESOLVING);
     resolved = true;
   }
   else if (JSID_IS_STRING(aId)) {
@@ -114,7 +115,8 @@ AsyncStatementParams::Resolve(nsIXPConnectWrappedNative *aWrapper,
     // we must assume that there is.  This screws the rest of the prototype
     // chain, but people really shouldn't be depending on this anyways.
     JS::Rooted<jsid> id(aCtx, aId);
-    ok = ::JS_DefinePropertyById(aCtx, scopeObj, id, JS::UndefinedHandleValue, 0);
+    ok = ::JS_DefinePropertyById(aCtx, scopeObj, id, JS::UndefinedHandleValue,
+                                 JSPROP_RESOLVING);
     resolved = true;
   }
 
