@@ -79,3 +79,11 @@ crtdll.obj: msvc_combined.lib
 # Grab both CRT libraries and combine them into one library to simplify things
 msvc_combined.lib:
 	lib -OUT:$@ $(WIN32_CRT_LIBS)
+
+# Normally, we'd use SDK_LIBRARY, but we can't because all the tricks above
+# involve *not* defining the library in moz.build, so SDK_LIBRARY = True would
+# not have the expected outcome.
+SDK_FILES = mozcrt.lib
+SDK_DEST = $(SDK_LIB_DIR)
+SDK_TARGET = target
+INSTALL_TARGETS += SDK
