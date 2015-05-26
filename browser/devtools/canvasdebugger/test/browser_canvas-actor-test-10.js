@@ -6,7 +6,7 @@
  * after generating screenshots using the actor.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, front } = yield initCanvasDebuggerBackend(WEBGL_BINDINGS_URL);
   loadFrameScripts();
 

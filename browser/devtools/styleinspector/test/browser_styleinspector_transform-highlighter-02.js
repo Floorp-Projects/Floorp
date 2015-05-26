@@ -36,7 +36,9 @@ add_task(function*() {
 
   info("Faking a mousemove on a transform property");
   ({valueSpan} = getRuleViewProperty(rView, "body", "transform"));
+  let onHighlighterShown = hs.once("highlighter-shown");
   hs._onMouseMove({target: valueSpan});
+  yield onHighlighterShown;
   ok(hs.promises[TYPE], "The highlighter is being initialized");
   let h = yield hs.promises[TYPE];
   is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");
@@ -57,7 +59,9 @@ add_task(function*() {
 
   info("Faking a mousemove on a transform property");
   ({valueSpan} = getComputedViewProperty(cView, "transform"));
+  onHighlighterShown = hs.once("highlighter-shown");
   hs._onMouseMove({target: valueSpan});
+  yield onHighlighterShown;
   ok(hs.promises[TYPE], "The highlighter is being initialized");
   h = yield hs.promises[TYPE];
   is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");

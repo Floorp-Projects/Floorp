@@ -19,15 +19,15 @@
   <script type="application/javascript"
           src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript"><![CDATA[
-    // Without the fix for bug 366992, the copy command would be enabled
+    // Without the fix for bug 366992, the delete command would be enabled
     // for the textbox even though the textbox's controller for this command
     // disables it.
     var gShouldNotBeReachedController = {
       supportsCommand: function(aCommand) {
-        return aCommand == "cmd_copy";
+        return aCommand == "cmd_delete";
       },
       isCommandEnabled: function(aCommand) {
-        return aCommand == "cmd_copy";
+        return aCommand == "cmd_delete";
       },
       doCommand: function(aCommand) { }
     }
@@ -43,10 +43,10 @@
 
     function onLoad() {
       document.getElementById("textbox").focus();
-      var copyDisabled = document.getElementById("cmd_copy")
-                                 .getAttribute("disabled") == "true";
-      ok(copyDisabled,
-         "cmd_copy should be disabled when the empty textbox is focused");
+      var deleteDisabled = document.getElementById("cmd_delete")
+                                   .getAttribute("disabled") == "true";
+      ok(deleteDisabled,
+         "cmd_delete should be disabled when the empty textbox is focused");
       finish();
     }
     

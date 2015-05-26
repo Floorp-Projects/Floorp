@@ -330,6 +330,7 @@ loop.conversationViews = (function(mozL10n) {
 
       var errorString;
       switch (this.props.failureReason) {
+        case FAILURE_DETAILS.NO_MEDIA:
         case FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA:
           errorString = mozL10n.get("no_media_failure_message");
           break;

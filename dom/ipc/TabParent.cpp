@@ -2246,6 +2246,14 @@ TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
         aEvent.mReply.mRect =
           aEvent.mReply.mRect.Union(mIMECompositionRects[i]);
       }
+      if (aEvent.mInput.mOffset < mIMECacheText.Length()) {
+        aEvent.mReply.mString =
+          Substring(mIMECacheText, aEvent.mInput.mOffset,
+                    mIMECacheText.Length() >= aEvent.mInput.EndOffset() ?
+                      aEvent.mInput.mLength : UINT32_MAX);
+      } else {
+        aEvent.mReply.mString.Truncate();
+      }
       aEvent.mReply.mOffset = aEvent.mInput.mOffset;
       aEvent.mReply.mRect = aEvent.mReply.mRect - GetChildProcessOffset();
       aEvent.mReply.mWritingMode = mWritingMode;

@@ -6,7 +6,7 @@
  * the correct thumbnails.
  */
 
-function ifTestingSupported() {
+function* ifTestingSupported() {
   let { target, front } = yield initCanvasDebuggerBackend(SIMPLE_CANVAS_URL);
 
   let navigated = once(target, "navigate");

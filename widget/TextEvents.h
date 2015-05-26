@@ -548,6 +548,11 @@ public:
   bool mWithFontRanges;
   struct
   {
+    uint32_t EndOffset() const
+    {
+      return mOffset + mLength;
+    }
+
     uint32_t mOffset;
     uint32_t mLength;
   } mInput;

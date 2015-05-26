@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1162952
+-->
+<head>
+  <title>Test for Bug 1162952</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1162952">Mozilla Bug 1162952</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1162952 **/
+var userCallbackRun = false;
+
+document.addEventListener('keydown', function() {
+    // During a user callback, the commands should be enabled
+    userCallbackRun = true;
+    is(true, document.queryCommandEnabled('cut'));
+    is(true, document.queryCommandEnabled('copy'));
+});
+
+// Otherwise, they should be disabled
+is(false, document.queryCommandEnabled('cut'));
+is(false, document.queryCommandEnabled('copy'));
+
+// Fire a user callback
+synthesizeKey('A', {});
+
+ok(userCallbackRun, "User callback should've been run");
+
+</script>
+</pre>
+</body>
+</html>
