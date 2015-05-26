@@ -2398,8 +2398,19 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
   switch (aWidgetType) {
     case NS_THEME_DIALOG: {
-      HIThemeSetFill(kThemeBrushDialogBackgroundActive, NULL, cgContext, HITHEME_ORIENTATION);
-      CGContextFillRect(cgContext, macRect);
+      if (IsWindowSheet(aFrame)) {
+        if (VibrancyManager::SystemSupportsVibrancy()) {
+          ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
+          DrawVibrancyBackground(cgContext, macRect, aFrame, type);
+        } else {
+          HIThemeSetFill(kThemeBrushSheetBackgroundTransparent, NULL, cgContext, HITHEME_ORIENTATION);
+          CGContextFillRect(cgContext, macRect);
+        }
+      } else {
+        HIThemeSetFill(kThemeBrushDialogBackgroundActive, NULL, cgContext, HITHEME_ORIENTATION);
+        CGContextFillRect(cgContext, macRect);
+      }
+
     }
       break;
 
@@ -3767,7 +3778,20 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
 }
 
 bool
-nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(uint8_t aWidgetType)
+nsNativeThemeCocoa::IsWindowSheet(nsIFrame* aFrame)
+{
+  NSWindow* win = NativeWindowForFrame(aFrame);
+  id winDelegate = [win delegate];
+  nsIWidget* widget = [(WindowDelegate *)winDelegate geckoWidget];
+  if (!widget) {
+    return false;
+  }
+  return (widget->WindowType() == eWindowType_sheet);
+}
+
+bool
+nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
+                                                      uint8_t aWidgetType)
 {
   switch (aWidgetType) {
     case NS_THEME_MAC_VIBRANCY_LIGHT:
@@ -3777,6 +3801,8 @@ nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(uint8_t aWidgetType)
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
       return true;
+    case NS_THEME_DIALOG:
+      return IsWindowSheet(aFrame);
     default:
       return false;
   }
@@ -3803,7 +3829,11 @@ nsNativeThemeCocoa::WidgetProvidesFontSmoothingBackgroundColor(nsIFrame* aFrame,
     case NS_THEME_MENUPOPUP:
     case NS_THEME_MENUITEM:
     case NS_THEME_CHECKMENUITEM:
+    case NS_THEME_DIALOG:
     {
+      if (aWidgetType == NS_THEME_DIALOG && !IsWindowSheet(aFrame)) {
+        return false;
+      }
       ChildView* childView = ChildViewForFrame(aFrame);
       if (childView) {
         ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aWidgetType);
@@ -3848,6 +3878,8 @@ nsNativeThemeCocoa::ThemeGeometryTypeForWidget(nsIFrame* aFrame, uint8_t aWidget
       bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
       return isSelected ? eThemeGeometryTypeHighlightedMenuItem : eThemeGeometryTypeMenu;
     }
+    case NS_THEME_DIALOG:
+      return IsWindowSheet(aFrame) ? eThemeGeometryTypeSheet : eThemeGeometryTypeUnknown;
     default:
       return eThemeGeometryTypeUnknown;
   }
@@ -3860,6 +3892,9 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
   case NS_THEME_MENUPOPUP:
   case NS_THEME_TOOLTIP:
     return eTransparent;
+
+  case NS_THEME_DIALOG:
+    return IsWindowSheet(aFrame) ? eTransparent : eOpaque;
 
   case NS_THEME_SCROLLBAR_SMALL:
   case NS_THEME_SCROLLBAR:
