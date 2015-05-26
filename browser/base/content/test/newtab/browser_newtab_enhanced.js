@@ -109,9 +109,6 @@ function runTests() {
 
   is(getData(1), null, "directory link still pushed out by pinned history link");
 
-  ok(getContentDocument().getElementById("newtab-intro-what"),
-     "'What is this page?' link exists");
-
   yield unpinCell(0);
 
 

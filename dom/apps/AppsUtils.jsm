@@ -891,18 +891,17 @@ ManifestHelper.prototype = {
     return {};
   },
 
-  get biggestIconURL() {
+  biggestIconURL: function(predicate) {
     let icons = this._localeProp("icons");
     if (!icons) {
       return null;
     }
 
-    let iconSizes = Object.keys(icons);
+    let iconSizes = Object.keys(icons).sort((a, b) => a - b)
+                          .filter(predicate || (() => true));
     if (iconSizes.length == 0) {
       return null;
     }
-
-    iconSizes.sort((a, b) => a - b);
     let biggestIconSize = iconSizes.pop();
     let biggestIcon = icons[biggestIconSize];
     let biggestIconURL = this._baseURI.resolve(biggestIcon);

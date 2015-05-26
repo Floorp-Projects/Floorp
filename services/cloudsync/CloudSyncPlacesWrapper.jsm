@@ -80,23 +80,6 @@ PlacesWrapper.prototype = {
     return deferred.promise;
   },
 
-  setGuidForLocalId: function (localId, guid) {
-    let deferred = Promise.defer();
-
-    let stmt = "UPDATE moz_bookmarks " +
-               "SET guid = :guid " +
-               "WHERE id = :item_id";
-    let query = this.placesQueries.getQuery(stmt);
-
-    query.params.guid = guid;
-    query.params.item_id = localId;
-
-    this.asyncQuery(query)
-        .then(deferred.resolve, deferred.reject);
-
-    return deferred.promise;
-  },
-
   getItemsById: function (ids, types) {
     let deferred = Promise.defer();
     let stmt = "SELECT b.id, b.type, b.parent, b.position, b.title, b.guid, b.dateAdded, b.lastModified, p.url " +

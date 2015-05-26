@@ -159,11 +159,6 @@ private:
   nsRefPtr<MediaStream> mStream;
 };
 
-OutputStreamData::OutputStreamData()
-{
-  //
-}
-
 OutputStreamData::~OutputStreamData()
 {
   mListener->Forget();
@@ -195,6 +190,33 @@ DecodedStream::DestroyData()
 {
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
+
+  // Avoid the redundant blocking to output stream.
+  if (!mData) {
+    return;
+  }
+
+  // All streams are having their SourceMediaStream disconnected, so they
+  // need to be explicitly blocked again.
+  auto& outputStreams = OutputStreams();
+  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
+    OutputStreamData& os = outputStreams[i];
+    // Explicitly remove all existing ports.
+    // This is not strictly necessary but it's good form.
+    MOZ_ASSERT(os.mPort, "Double-delete of the ports!");
+    os.mPort->Destroy();
+    os.mPort = nullptr;
+    // During cycle collection, nsDOMMediaStream can be destroyed and send
+    // its Destroy message before this decoder is destroyed. So we have to
+    // be careful not to send any messages after the Destroy().
+    if (os.mStream->IsDestroyed()) {
+      // Probably the DOM MediaStream was GCed. Clean up.
+      outputStreams.RemoveElementAt(i);
+    } else {
+      os.mStream->ChangeExplicitBlockerCount(1);
+    }
+  }
+
   mData = nullptr;
 }
 
@@ -204,7 +226,18 @@ DecodedStream::RecreateData(int64_t aInitialTime, SourceMediaStream* aStream)
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
   MOZ_ASSERT(!mData);
+
   mData.reset(new DecodedStreamData(aInitialTime, aStream));
+
+  // Note that the delay between removing ports in DestroyDecodedStream
+  // and adding new ones won't cause a glitch since all graph operations
+  // between main-thread stable states take effect atomically.
+  auto& outputStreams = OutputStreams();
+  for (int32_t i = outputStreams.Length() - 1; i >= 0; --i) {
+    OutputStreamData& os = outputStreams[i];
+    MOZ_ASSERT(!os.mStream->IsDestroyed(), "Should've been removed in DestroyData()");
+    Connect(&os);
+  }
 }
 
 nsTArray<OutputStreamData>&
@@ -218,6 +251,37 @@ ReentrantMonitor&
 DecodedStream::GetReentrantMonitor()
 {
   return mMonitor;
+}
+
+void
+DecodedStream::Connect(OutputStreamData* aStream)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  NS_ASSERTION(!aStream->mPort, "Already connected?");
+
+  // The output stream must stay in sync with the decoded stream, so if
+  // either stream is blocked, we block the other.
+  aStream->mPort = aStream->mStream->AllocateInputPort(mData->mStream,
+      MediaInputPort::FLAG_BLOCK_INPUT | MediaInputPort::FLAG_BLOCK_OUTPUT);
+  // Unblock the output stream now. While it's connected to DecodedStream,
+  // DecodedStream is responsible for controlling blocking.
+  aStream->mStream->ChangeExplicitBlockerCount(-1);
+}
+
+void
+DecodedStream::Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  GetReentrantMonitor().AssertCurrentThreadIn();
+
+  OutputStreamData* os = OutputStreams().AppendElement();
+  os->Init(this, aStream);
+  Connect(os);
+  if (aFinishWhenEnded) {
+    // Ensure that aStream finishes the moment mDecodedStream does.
+    aStream->SetAutofinish(true);
+  }
 }
 
 } // namespace mozilla
