@@ -395,18 +395,8 @@ public:
   // replaying after the input as ended. In the latter case, the new source is
   // not connected to streams created by captureStreamUntilEnded.
 
-  /**
-   * Connects mDecodedStream->mStream to aStream->mStream.
-   */
-  void ConnectDecodedStreamToOutputStream(OutputStreamData* aStream);
-
   void UpdateDecodedStream();
 
-  /**
-   * Disconnects mDecodedStream->mStream from all outputs and clears
-   * mDecodedStream.
-   */
-  void DestroyDecodedStream();
   /**
    * Recreates mDecodedStream. Call this to create mDecodedStream at first,
    * and when seeking, to ensure a new stream is set up with fresh buffers.
@@ -420,12 +410,6 @@ public:
    * Decoder monitor must be held.
    */
   void UpdateStreamBlockingForStateMachinePlaying();
-
-  nsTArray<OutputStreamData>& OutputStreams()
-  {
-    GetReentrantMonitor().AssertCurrentThreadIn();
-    return mDecodedStream.OutputStreams();
-  }
 
   DecodedStreamData* GetDecodedStream()
   {
