@@ -269,12 +269,6 @@ class ObjectGroup : public gc::TenuredCell
         return nullptr;
     }
 
-    UnboxedLayout* maybeUnboxedLayoutDontCheckGeneration() const {
-        if (addendumKind() == Addendum_UnboxedLayout)
-            return reinterpret_cast<UnboxedLayout*>(addendum_);
-        return nullptr;
-    }
-
     TypeNewScript* anyNewScript();
     void detachNewScript(bool writeBarrier, ObjectGroup* replacement);
 
@@ -284,34 +278,16 @@ class ObjectGroup : public gc::TenuredCell
 
   public:
 
-    ObjectGroupFlags flags() {
-        maybeSweep(nullptr);
-        return flagsDontCheckGeneration();
-    }
-
-    void addFlags(ObjectGroupFlags flags) {
-        maybeSweep(nullptr);
-        flags_ |= flags;
-    }
-
-    void clearFlags(ObjectGroupFlags flags) {
-        maybeSweep(nullptr);
-        flags_ &= ~flags;
-    }
-
-    TypeNewScript* newScript() {
-        maybeSweep(nullptr);
-        return newScriptDontCheckGeneration();
-    }
+    inline ObjectGroupFlags flags();
+    inline void addFlags(ObjectGroupFlags flags);
+    inline void clearFlags(ObjectGroupFlags flags);
+    inline TypeNewScript* newScript();
 
     void setNewScript(TypeNewScript* newScript) {
         setAddendum(Addendum_NewScript, newScript);
     }
 
-    PreliminaryObjectArrayWithTemplate* maybePreliminaryObjects() {
-        maybeSweep(nullptr);
-        return maybePreliminaryObjectsDontCheckGeneration();
-    }
+    inline PreliminaryObjectArrayWithTemplate* maybePreliminaryObjects();
 
     PreliminaryObjectArrayWithTemplate* maybePreliminaryObjectsDontCheckGeneration() {
         if (addendumKind() == Addendum_PreliminaryObjects)
@@ -324,7 +300,7 @@ class ObjectGroup : public gc::TenuredCell
     }
 
     void detachPreliminaryObjects() {
-        MOZ_ASSERT(maybePreliminaryObjects());
+        MOZ_ASSERT(maybePreliminaryObjectsDontCheckGeneration());
         setAddendum(Addendum_None, nullptr);
     }
 
@@ -333,19 +309,18 @@ class ObjectGroup : public gc::TenuredCell
                maybePreliminaryObjectsDontCheckGeneration();
     }
 
-    UnboxedLayout* maybeUnboxedLayout() {
-        maybeSweep(nullptr);
-        return maybeUnboxedLayoutDontCheckGeneration();
+    inline UnboxedLayout* maybeUnboxedLayout();
+    inline UnboxedLayout& unboxedLayout();
+
+    UnboxedLayout* maybeUnboxedLayoutDontCheckGeneration() const {
+        if (addendumKind() == Addendum_UnboxedLayout)
+            return reinterpret_cast<UnboxedLayout*>(addendum_);
+        return nullptr;
     }
 
     UnboxedLayout& unboxedLayoutDontCheckGeneration() const {
         MOZ_ASSERT(addendumKind() == Addendum_UnboxedLayout);
         return *maybeUnboxedLayoutDontCheckGeneration();
-    }
-
-    UnboxedLayout& unboxedLayout() {
-        maybeSweep(nullptr);
-        return unboxedLayoutDontCheckGeneration();
     }
 
     void setUnboxedLayout(UnboxedLayout* layout) {
@@ -462,26 +437,15 @@ class ObjectGroup : public gc::TenuredCell
     inline ObjectGroup(const Class* clasp, TaggedProto proto, JSCompartment* comp,
                        ObjectGroupFlags initialFlags);
 
-    inline bool hasAnyFlags(ObjectGroupFlags flags) {
-        MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
-        return !!(this->flags() & flags);
-    }
-
-    bool hasAllFlags(ObjectGroupFlags flags) {
-        MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
-        return (this->flags() & flags) == flags;
-    }
+    inline bool hasAnyFlags(ObjectGroupFlags flags);
+    inline bool hasAllFlags(ObjectGroupFlags flags);
 
     bool hasAllFlagsDontCheckGeneration(ObjectGroupFlags flags) {
         MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
         return (this->flagsDontCheckGeneration() & flags) == flags;
     }
 
-    bool unknownProperties() {
-        MOZ_ASSERT_IF(flags() & OBJECT_FLAG_UNKNOWN_PROPERTIES,
-                      hasAllFlags(OBJECT_FLAG_DYNAMIC_MASK));
-        return !!(flags() & OBJECT_FLAG_UNKNOWN_PROPERTIES);
-    }
+    inline bool unknownProperties();
 
     bool unknownPropertiesDontCheckGeneration() {
         MOZ_ASSERT_IF(flagsDontCheckGeneration() & OBJECT_FLAG_UNKNOWN_PROPERTIES,
@@ -489,24 +453,13 @@ class ObjectGroup : public gc::TenuredCell
         return !!(flagsDontCheckGeneration() & OBJECT_FLAG_UNKNOWN_PROPERTIES);
     }
 
-    bool shouldPreTenure() {
-        return hasAnyFlags(OBJECT_FLAG_PRE_TENURE) && !unknownProperties();
-    }
+    inline bool shouldPreTenure();
 
     gc::InitialHeap initialHeap(CompilerConstraintList* constraints);
 
-    bool canPreTenure() {
-        return !unknownProperties();
-    }
-
-    bool fromAllocationSite() {
-        return flags() & OBJECT_FLAG_FROM_ALLOCATION_SITE;
-    }
-
-    void setShouldPreTenure(ExclusiveContext* cx) {
-        MOZ_ASSERT(canPreTenure());
-        setFlags(cx, OBJECT_FLAG_PRE_TENURE);
-    }
+    inline bool canPreTenure();
+    inline bool fromAllocationSite();
+    inline void setShouldPreTenure(ExclusiveContext* cx);
 
     /*
      * Get or create a property of this object. Only call this for properties which
@@ -543,13 +496,13 @@ class ObjectGroup : public gc::TenuredCell
     void print();
 
     inline void clearProperties();
-    void maybeSweep(AutoClearTypeInferenceStateOnOOM* oom);
     void traceChildren(JSTracer* trc);
 
+    inline bool needsSweep();
+    inline void maybeSweep(AutoClearTypeInferenceStateOnOOM* oom);
+
   private:
-#ifdef DEBUG
-    bool needsSweep();
-#endif
+    void sweep(AutoClearTypeInferenceStateOnOOM* oom);
 
     uint32_t generation() {
         return (flags_ & OBJECT_FLAG_GENERATION_MASK) >> OBJECT_FLAG_GENERATION_SHIFT;

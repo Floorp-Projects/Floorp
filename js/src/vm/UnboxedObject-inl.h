@@ -162,8 +162,24 @@ SetUnboxedValue(ExclusiveContext* cx, JSObject* unboxedObject, jsid id,
 }
 
 /////////////////////////////////////////////////////////////////////
+// UnboxedPlainObject
+/////////////////////////////////////////////////////////////////////
+
+inline const UnboxedLayout&
+UnboxedPlainObject::layout() const
+{
+    return group()->unboxedLayout();
+}
+
+/////////////////////////////////////////////////////////////////////
 // UnboxedArrayObject
 /////////////////////////////////////////////////////////////////////
+
+inline const UnboxedLayout&
+UnboxedArrayObject::layout() const
+{
+    return group()->unboxedLayout();
+}
 
 inline void
 UnboxedArrayObject::setLength(ExclusiveContext* cx, uint32_t length)
