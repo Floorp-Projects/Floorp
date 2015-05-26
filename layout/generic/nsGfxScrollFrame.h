@@ -378,7 +378,6 @@ public:
   bool WantAsyncScroll() const;
   void ComputeFrameMetrics(Layer* aLayer, nsIFrame* aContainerReferenceFrame,
                            const ContainerLayerParameters& aParameters,
-                           mozilla::Maybe<nsRect>* aClipRect,
                            nsTArray<FrameMetrics>* aOutput) const;
 
   // nsIScrollbarMediator
@@ -833,10 +832,9 @@ public:
   }
   virtual void ComputeFrameMetrics(Layer* aLayer, nsIFrame* aContainerReferenceFrame,
                                    const ContainerLayerParameters& aParameters,
-                                   mozilla::Maybe<nsRect>* aClipRect,
                                    nsTArray<FrameMetrics>* aOutput) const override {
     mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame,
-                                aParameters, aClipRect, aOutput);
+                                aParameters, aOutput);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();
@@ -1226,10 +1224,9 @@ public:
   }
   virtual void ComputeFrameMetrics(Layer* aLayer, nsIFrame* aContainerReferenceFrame,
                                    const ContainerLayerParameters& aParameters,
-                                   mozilla::Maybe<nsRect>* aClipRect,
                                    nsTArray<FrameMetrics>* aOutput) const override {
     mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame,
-                                aParameters, aClipRect, aOutput);
+                                aParameters, aOutput);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();

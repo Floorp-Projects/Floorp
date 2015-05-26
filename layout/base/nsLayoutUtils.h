@@ -8,6 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Maybe.h"
 #include "nsBoundingMetrics.h"
 #include "nsChangeHint.h"
 #include "nsAutoPtr.h"
@@ -2628,6 +2629,7 @@ public:
                                           Layer* aLayer,
                                           ViewID aScrollParentId,
                                           const nsRect& aViewport,
+                                          const mozilla::Maybe<nsRect>& aClipRect,
                                           bool aIsRoot,
                                           const ContainerLayerParameters& aContainerParameters);
 

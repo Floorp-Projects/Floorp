@@ -732,6 +732,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.GetLineScrollAmount());
     WriteParam(aMsg, aParam.GetPageScrollAmount());
     WriteParam(aMsg, aParam.AllowVerticalScrollWithWheel());
+    WriteParam(aMsg, aParam.mClipRect);
     WriteParam(aMsg, aParam.GetContentDescription());
   }
 
@@ -774,6 +775,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mLineScrollAmount) &&
             ReadParam(aMsg, aIter, &aResult->mPageScrollAmount) &&
             ReadParam(aMsg, aIter, &aResult->mAllowVerticalScrollWithWheel) &&
+            ReadParam(aMsg, aIter, &aResult->mClipRect) &&
             ReadContentDescription(aMsg, aIter, aResult));
   }
 };
