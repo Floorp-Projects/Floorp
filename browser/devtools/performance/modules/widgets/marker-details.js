@@ -100,8 +100,6 @@ MarkerDetails.prototype = {
   },
 };
 
-exports.MarkerDetails = MarkerDetails;
-
 /**
  * Take an element from an event `target`, and asend through
  * the DOM, looking for an element with a `data-action` attribute. Return
@@ -123,3 +121,5 @@ function findActionFromEvent (target, container) {
   }
   return null;
 }
+
+exports.MarkerDetails = MarkerDetails;
