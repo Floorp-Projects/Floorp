@@ -50,9 +50,10 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    * Gets the visibility state of the global search container.
    * @return boolean
    */
-  get hidden()
-    this.widget.getAttribute("hidden") == "true" ||
-    this._splitter.getAttribute("hidden") == "true",
+  get hidden() {
+    return this.widget.getAttribute("hidden") == "true" ||
+           this._splitter.getAttribute("hidden") == "true";
+  },
 
   /**
    * Hides and removes all items from this search container.
@@ -366,7 +367,9 @@ GlobalResults.prototype = {
   /**
    * Gets the number of source results in this store.
    */
-  get matchCount() this._store.length
+  get matchCount() {
+    return this._store.length;
+  }
 };
 
 /**
@@ -400,7 +403,9 @@ SourceResults.prototype = {
   /**
    * Gets the number of line results in this store.
    */
-  get matchCount() this._store.length,
+  get matchCount() {
+    return this._store.length;
+  },
 
   /**
    * Expands the element, showing all the added details.
@@ -429,21 +434,26 @@ SourceResults.prototype = {
    * Gets this element's expanded state.
    * @return boolean
    */
-  get expanded()
-    this._resultsContainer.getAttribute("hidden") != "true" &&
-    this._arrow.hasAttribute("open"),
+  get expanded() {
+    return this._resultsContainer.getAttribute("hidden") != "true" &&
+           this._arrow.hasAttribute("open");
+  },
 
   /**
    * Sets this element's expanded state.
    * @param boolean aFlag
    */
-  set expanded(aFlag) this[aFlag ? "expand" : "collapse"](),
+  set expanded(aFlag) {
+    this[aFlag ? "expand" : "collapse"]();
+  },
 
   /**
    * Gets the element associated with this item.
    * @return nsIDOMNode
    */
-  get target() this._target,
+  get target() {
+    return this._target;
+  },
 
   /**
    * Customization function for creating this item's UI.
@@ -547,13 +557,17 @@ LineResults.prototype = {
   /**
    * Gets the number of word results in this store.
    */
-  get matchCount() this._matchCount,
+  get matchCount() {
+    return this._matchCount;
+  },
 
   /**
    * Gets the element associated with this item.
    * @return nsIDOMNode
    */
-  get target() this._target,
+  get target() {
+    return this._target;
+  },
 
   /**
    * Customization function for creating this item's UI.

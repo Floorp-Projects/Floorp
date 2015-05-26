@@ -8,7 +8,7 @@ function test() {
   waitForExplicitFinish();
   requestCompleteLog();
 
-  Task.spawn(function() {
+  Task.spawn(function*() {
     const { DebuggerServer } =
       Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 
