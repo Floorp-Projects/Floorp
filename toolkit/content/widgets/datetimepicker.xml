@@ -27,7 +27,7 @@
 
     <content align="center">
       <xul:hbox class="datetimepicker-input-box" align="center"
-                xbl:inherits="context,disabled,readonly">
+                xbl:inherits="context">
         <xul:hbox class="textbox-input-box datetimepicker-input-subbox" align="center">
           <html:input class="datetimepicker-input textbox-input" anonid="input-one"
                       size="2" maxlength="2"
@@ -1147,7 +1147,7 @@
         <parameter name="aDir"/>
         <body>
           <![CDATA[
-            if (!this.disabled && !this.readOnly) {
+            if (!this.disabled) {
               var month = this._displayedDate ? this._displayedDate.getMonth() :
                                                 this.month;
               this._updateUI(this.monthField, month + aDir, true);
@@ -1215,7 +1215,7 @@
            extends="chrome://global/content/bindings/datetimepicker.xml#datepicker">
     <content align="center">
       <xul:hbox class="textbox-input-box datetimepicker-input-box" align="center"
-                allowevents="true" xbl:inherits="context,disabled,readonly">
+                allowevents="true" xbl:inherits="context">
         <xul:hbox class="datetimepicker-input-subbox" align="baseline">
           <html:input class="datetimepicker-input textbox-input" anonid="input-one"
                       size="2" maxlength="2"
