@@ -40,7 +40,7 @@ class EventTarget;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[builtinclass, uuid(02d54f52-a1f5-4ad2-b560-36f14012935e)]
+[builtinclass, uuid(63857daf-c084-4ea6-a8b9-6812e3176991)]
 interface nsIDOMEvent : nsISupports
 {
   // PhaseType
@@ -213,6 +213,7 @@ interface nsIDOMEvent : nsISupports
   [notxpcom] boolean Deserialize(in ConstIPCMessagePtr aMsg, out voidPtr aIter);
   [noscript,notxpcom] void SetOwner(in EventTargetPtr aOwner);
   [notxpcom] DOMEventPtr InternalDOMEvent();
+  [noscript] void stopCrossProcessForwarding();
 };
 
 %{C++
