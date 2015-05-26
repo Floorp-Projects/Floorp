@@ -18,7 +18,7 @@ add_task(function() {
 
   let cutButton = document.getElementById("cut-button");
   ok(cutButton, "Cut button exists in Panel Menu");
-  ok(cutButton.getAttribute("disabled"), "Cut button is disabled");
+  ok(!cutButton.hasAttribute("disabled"), "Cut button is enabled");
 
   // cut text from URL bar
   gURLBar.value = testText;
@@ -27,7 +27,7 @@ add_task(function() {
   yield PanelUI.show();
   info("Menu panel was opened");
 
-  ok(!cutButton.hasAttribute("disabled"), "Cut button gets enabled");
+  ok(!cutButton.hasAttribute("disabled"), "Cut button is enabled when selecting");
   cutButton.click();
   is(gURLBar.value, "", "Selected text is removed from source when clicking on cut");
 

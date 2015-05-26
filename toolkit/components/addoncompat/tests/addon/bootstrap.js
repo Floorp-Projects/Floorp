@@ -538,6 +538,57 @@ function testProgressListener()
   });
 }
 
+function testRootTreeItem()
+{
+  return new Promise(function(resolve, reject) {
+    const url = baseURL + "browser_addonShims_testpage.html";
+    let tab = gBrowser.addTab(url);
+    gBrowser.selectedTab = tab;
+    let browser = tab.linkedBrowser;
+    addLoadListener(browser, function handler() {
+      let win = browser.contentWindow;
+
+      // Add-ons love this crap.
+      let root = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIWebNavigation)
+                    .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindow);
+      is(root, gWin, "got correct chrome window");
+
+      gBrowser.removeTab(tab);
+      resolve();
+    });
+  });
+}
+
+function testImportNode()
+{
+  return new Promise(function(resolve, reject) {
+    const url = baseURL + "browser_addonShims_testpage.html";
+    let tab = gBrowser.addTab(url);
+    gBrowser.selectedTab = tab;
+    let browser = tab.linkedBrowser;
+    addLoadListener(browser, function handler() {
+      let node = gWin.document.createElement("div");
+      let doc = browser.contentDocument;
+      let result;
+      try {
+        result = doc.importNode(node, false);
+      } catch (e) {
+        ok(false, "importing threw an exception");
+      }
+      if (browser.isRemoteBrowser) {
+        is(result, node, "got expected import result");
+      }
+
+      gBrowser.removeTab(tab);
+      resolve();
+    });
+  });
+}
+
 function runTests(win, funcs)
 {
   ok = funcs.ok;
@@ -555,6 +606,8 @@ function runTests(win, funcs)
     then(testAddonContent).
     then(testAboutModuleRegistration).
     then(testProgressListener).
+    then(testRootTreeItem).
+    then(testImportNode).
     then(Promise.resolve());
 }
 

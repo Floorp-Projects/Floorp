@@ -300,6 +300,37 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "JWK export of a newly generated ECDH private key",
+  function () {
+    var that = this;
+    var alg = { name: "ECDH", namedCurve: "P-256" };
+    var reBase64URL = /^[a-zA-Z0-9_-]+$/;
+
+    function doExportToJWK(x) {
+      return crypto.subtle.exportKey("jwk", x.privateKey)
+    }
+
+    crypto.subtle.generateKey(alg, true, ["deriveKey", "deriveBits"])
+      .then(doExportToJWK)
+      .then(
+        complete(that, function(x) {
+          return x.ext &&
+                 x.kty == 'EC' &&
+                 x.crv == 'P-256' &&
+                 reBase64URL.test(x.x) &&
+                 reBase64URL.test(x.y) &&
+                 reBase64URL.test(x.d) &&
+                 x.x.length == 43 && // 32 octets, base64-encoded
+                 x.y.length == 43 && // 32 octets, base64-encoded
+                 shallowArrayEquals(x.key_ops, ['deriveKey', 'deriveBits']);
+          }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "Derive an HMAC key from two ECDH keys and test sign/verify",
   function() {
     var that = this;
