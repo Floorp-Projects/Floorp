@@ -15,10 +15,6 @@
 
 #include "nsStackWalk.h"
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#endif
-
 namespace mozilla {
 
 // This class is used to print details about code locations.

@@ -12,6 +12,7 @@
 #include "VideoUtils.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Snprintf.h"
 #include <algorithm>
 #include "mozilla/Telemetry.h"
 #include "soundtouch/SoundTouch.h"
@@ -264,7 +265,7 @@ OpenDumpFile(AudioStream* aStream)
   if (!getenv("MOZ_DUMP_AUDIO"))
     return nullptr;
   char buf[100];
-  sprintf(buf, "dumped-audio-%d.wav", gDumpedAudioCount);
+  snprintf_literal(buf, "dumped-audio-%d.wav", gDumpedAudioCount);
   FILE* f = fopen(buf, "wb");
   if (!f)
     return nullptr;
