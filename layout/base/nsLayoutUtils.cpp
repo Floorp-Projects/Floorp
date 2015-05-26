@@ -8134,6 +8134,7 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
                                    Layer* aLayer,
                                    ViewID aScrollParentId,
                                    const nsRect& aViewport,
+                                   const Maybe<nsRect>& aClipRect,
                                    bool aIsRoot,
                                    const ContainerLayerParameters& aContainerParameters)
 {
@@ -8260,6 +8261,13 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
   ParentLayerRect frameBounds = LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
                               * metrics.GetCumulativeResolution()
                               * layerToParentLayerScale;
+
+  if (aClipRect) {
+    ParentLayerRect rect = LayoutDeviceRect::FromAppUnits(*aClipRect, auPerDevPixel)
+                         * metrics.GetCumulativeResolution()
+                         * layerToParentLayerScale;
+    metrics.SetClipRect(Some(RoundedToInt(rect)));
+  }
 
   // For the root scroll frame of the root content document (RCD-RSF), the above calculation
   // will yield the size of the viewport frame as the composition bounds, which

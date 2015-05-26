@@ -56,6 +56,7 @@
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "AsyncScrollBase.h"
+#include "UnitTransforms.h"
 #include <mozilla/layers/AxisPhysicsModel.h>
 #include <mozilla/layers/AxisPhysicsMSDModel.h>
 #include <algorithm>
@@ -3042,7 +3043,6 @@ void
 ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsIFrame* aContainerReferenceFrame,
                                        const ContainerLayerParameters& aParameters,
-                                       Maybe<nsRect>* aClipRect,
                                        nsTArray<FrameMetrics>* aOutput) const
 {
   if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
@@ -3065,6 +3065,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
   bool isRoot = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
 
+  Maybe<nsRect> parentLayerClip;
   if (needsParentLayerClip) {
     nsRect clip = nsRect(mScrollPort.TopLeft() + toReferenceFrame,
                          nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
@@ -3074,9 +3075,31 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
       clip.height = NSToCoordRound(clip.height / res);
     }
 
-    // When using containers, the container layer contains the clip. Otherwise
-    // we always include the clip.
-    *aClipRect = Some(clip);
+    parentLayerClip = Some(clip);
+  }
+
+  if (!gfxPrefs::AsyncPanZoomEnabled()) {
+    if (parentLayerClip) {
+      // If APZ is not enabled, we still need the displayport to be clipped
+      // in the compositor.
+      ParentLayerIntRect displayportClip =
+        ViewAs<ParentLayerPixel>(
+          parentLayerClip->ScaleToNearestPixels(
+            aParameters.mXScale,
+            aParameters.mYScale,
+            mScrolledFrame->PresContext()->AppUnitsPerDevPixel()));
+
+      ParentLayerIntRect layerClip;
+      if (const ParentLayerIntRect* origClip = aLayer->GetClipRect().ptrOr(nullptr)) {
+        layerClip = displayportClip.Intersect(*origClip);
+      } else {
+        layerClip = displayportClip;
+      }
+      aLayer->SetClipRect(Some(layerClip));
+    }
+
+    // Return early, since if we don't use APZ we don't need FrameMetrics.
+    return;
   }
 
   MOZ_ASSERT(mScrolledFrame->GetContent());
@@ -3086,7 +3109,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
       nsLayoutUtils::ComputeFrameMetrics(
         mScrolledFrame, mOuter, mOuter->GetContent(),
         aContainerReferenceFrame, aLayer, mScrollParentID,
-        scrollport, isRoot, aParameters);
+        scrollport, parentLayerClip, isRoot, aParameters);
 }
 
 bool

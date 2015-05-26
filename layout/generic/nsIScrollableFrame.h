@@ -418,7 +418,6 @@ public:
   virtual void ComputeFrameMetrics(mozilla::layers::Layer* aLayer,
                                    nsIFrame* aContainerReferenceFrame,
                                    const ContainerLayerParameters& aParameters,
-                                   mozilla::Maybe<nsRect>* aOutClipRect,
                                    nsTArray<FrameMetrics>* aOutput) const = 0;
 
   /**
