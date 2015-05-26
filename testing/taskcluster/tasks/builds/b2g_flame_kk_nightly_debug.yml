@@ -15,4 +15,4 @@ task:
         build-flame-kk-nightly-debug: /home/worker/workspace
     env:
       VARIANT: userdebug
-      B2G_DEBUG: 1
+      B2G_DEBUG: 0
