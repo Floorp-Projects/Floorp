@@ -103,8 +103,14 @@ CommonNativeApp.prototype = {
     let manifest = new ManifestHelper(aManifest, aApp.origin, aApp.manifestURL);
     let origin = Services.io.newURI(aApp.origin, null, null);
 
-    this.iconURI = Services.io.newURI(manifest.biggestIconURL || DEFAULT_ICON_URL,
-                                      null, null);
+#ifdef XP_WIN
+    let biggestIconURL = manifest.biggestIconURL(v => v <= 256);
+#else
+    let biggestIconURL = manifest.biggestIconURL();
+#endif
+
+    this.iconURI = Services.io.newURI(biggestIconURL || DEFAULT_ICON_URL, null,
+                                      null);
 
     if (manifest.developer) {
       if (manifest.developer.name) {

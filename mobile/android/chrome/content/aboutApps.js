@@ -114,7 +114,7 @@ function addApplication(aApp) {
   container.setAttribute("title", manifest.name);
 
   let img = document.createElement("img");
-  img.src = manifest.biggestIconURL || DEFAULT_ICON;
+  img.src = manifest.biggestIconURL() || DEFAULT_ICON;
   img.onerror = function() {
     // If the image failed to load, and it was not our default icon, attempt to
     // use our default as a fallback.

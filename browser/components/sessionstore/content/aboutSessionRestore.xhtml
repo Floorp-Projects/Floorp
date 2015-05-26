@@ -15,7 +15,7 @@
   %restorepageDTD;
 ]>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
     <title>&restorepage.tabtitle;</title>
     <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" media="all"/>
@@ -27,7 +27,7 @@
 
   <body dir="&locale.dir;">
 
-    <div class="container">
+    <div class="container flex">
 
       <div class="title">
         <h1 class="title-text">&restorepage.errorTitle;</h1>
@@ -42,43 +42,42 @@
             <li>&restorepage.startNew;</li>
           </ul>
         </div>
-
-        <tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-              id="tabList" flex="1" seltype="single" hidecolumnpicker="true"
+      </div>
+      <div class="tree-container">
+        <xul:tree id="tabList" seltype="single" hidecolumnpicker="true"
               onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
               available="true" _window_label="&restorepage.windowLabel;">
-          <treecols>
-            <treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
-            <splitter class="tree-splitter"/>
-            <treecol primary="true" id="title" label="&restorepage.listHeader;" flex="1"/>
-          </treecols>
-          <treechildren flex="1"/>
-        </tree>
+          <xul:treecols>
+            <xul:treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
+            <xul:splitter class="tree-splitter"/>
+            <xul:treecol primary="true" id="title" label="&restorepage.listHeader;" flex="1"/>
+          </xul:treecols>
+          <xul:treechildren flex="1"/>
+        </xul:tree>
       </div>
-
-      <hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="button-container">
+      <div class="button-container">
 #ifdef XP_UNIX
-        <button id="errorCancel"
+        <xul:button id="errorCancel"
                 label="&restorepage.closeButton;"
                 accesskey="&restorepage.close.access;"
                 oncommand="startNewSession();"/>
-        <button class="primary"
+        <xul:button class="primary"
                 id="errorTryAgain"
                 label="&restorepage.tryagainButton;"
                 accesskey="&restorepage.restore.access;"
                 oncommand="restoreSession();"/>
 #else
-        <button class="primary"
+        <xul:button class="primary"
                 id="errorTryAgain"
                 label="&restorepage.tryagainButton;"
                 accesskey="&restorepage.restore.access;"
                 oncommand="restoreSession();"/>
-        <button id="errorCancel"
+        <xul:button id="errorCancel"
                 label="&restorepage.closeButton;"
                 accesskey="&restorepage.close.access;"
                 oncommand="startNewSession();"/>
 #endif
-      </hbox>
+      </div>
       <!-- holds the session data for when the tab is closed -->
       <input type="text" id="sessionData" style="display: none;"/>
     </div>

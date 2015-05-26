@@ -190,7 +190,7 @@ let UI = {
         }
         break;
       case "project":
-        this._updatePromise = Task.spawn(function() {
+        this._updatePromise = Task.spawn(function*() {
           UI.updateTitle();
           yield UI.destroyToolbox();
           UI.updateCommands();
