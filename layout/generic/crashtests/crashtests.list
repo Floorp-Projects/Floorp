@@ -559,6 +559,7 @@ load 973701-2.xhtml
 load 986899.html
 load 1001233.html
 load 1001258-1.html
+load 1003441.xul
 pref(layout.css.grid.enabled,true) load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
