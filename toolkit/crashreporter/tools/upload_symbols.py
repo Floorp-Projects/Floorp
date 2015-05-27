@@ -46,18 +46,19 @@ def main():
 
     print('Uploading symbol file "{0}" to "{1}"...'.format(sys.argv[1], url))
 
-    try:
-        with redo.retrying(requests.post,
-                           cleanup=lambda: print('Retrying...'),
-                           retry_exceptions=(requests.exceptions.RequestException,)) as post:
-            r = post(
+    for _ in redo.retrier():
+        try:
+            r = requests.post(
                 url,
                 files={'symbols.zip': open(sys.argv[1], 'rb')},
                 headers={'Auth-Token': auth_token},
                 allow_redirects=False,
                 timeout=120)
-    except requests.exceptions.RequestException as e:
-        print('Error: {0}'.format(e))
+            break
+        except requests.exceptions.RequestException as e:
+            print('Error: {0}'.format(e))
+    else:
+        print('Maximum retries hit, giving up!')
         return 1
 
     if r.status_code >= 200 and r.status_code < 300:
