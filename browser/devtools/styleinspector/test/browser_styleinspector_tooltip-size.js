@@ -81,8 +81,6 @@ function* testPickerDimension(ruleView) {
   ok(panelRect.height >= h, "The panel is high enough to show the picker");
 
   let onHidden = cPicker.tooltip.once("hidden");
-  let onRuleViewChanged = ruleView.once("ruleview-changed");
   cPicker.hide();
   yield onHidden;
-  yield onRuleViewChanged;
 }
