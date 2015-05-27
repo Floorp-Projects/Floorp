@@ -148,8 +148,12 @@ const gXPInstallObserver = {
       cancelButton.accessKey = gNavigatorBundle.getString("addonInstall.cancelButton.accesskey");
 
       let acceptButton = document.getElementById("addon-progress-accept");
-      acceptButton.label = gNavigatorBundle.getString("addonInstall.acceptButton.label");
-      acceptButton.accessKey = gNavigatorBundle.getString("addonInstall.acceptButton.accesskey");
+      if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+        acceptButton.label = gNavigatorBundle.getString("addonInstall.acceptButton.label");
+        acceptButton.accessKey = gNavigatorBundle.getString("addonInstall.acceptButton.accesskey");
+      } else {
+        acceptButton.hidden = true;
+      }
       break; }
     case "addon-install-failed": {
       // TODO This isn't terribly ideal for the multiple failure case
