@@ -98,14 +98,14 @@ class FinishResponse final : public nsRunnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
   nsRefPtr<InternalResponse> mInternalResponse;
-  ChannelInfo mWorkerChannelInfo;
+  nsCString mWorkerSecurityInfo;
 public:
   FinishResponse(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
                  InternalResponse* aInternalResponse,
-                 const ChannelInfo& aWorkerChannelInfo)
+                 const nsCString& aWorkerSecurityInfo)
     : mChannel(aChannel)
     , mInternalResponse(aInternalResponse)
-    , mWorkerChannelInfo(aWorkerChannelInfo)
+    , mWorkerSecurityInfo(aWorkerSecurityInfo)
   {
   }
 
@@ -114,17 +114,19 @@ public:
   {
     AssertIsOnMainThread();
 
-    ChannelInfo channelInfo;
-    if (mInternalResponse->GetChannelInfo().IsInitialized()) {
-      channelInfo = mInternalResponse->GetChannelInfo();
-    } else {
+    nsCOMPtr<nsISupports> infoObj;
+    nsAutoCString securityInfo(mInternalResponse->GetSecurityInfo());
+    if (securityInfo.IsEmpty()) {
       // We are dealing with a synthesized response here, so fall back to the
-      // channel info for the worker script.
-      channelInfo = mWorkerChannelInfo;
+      // security info for the worker script.
+      securityInfo = mWorkerSecurityInfo;
     }
-    nsresult rv = mChannel->SetChannelInfo(&channelInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    nsresult rv = NS_DeserializeObject(securityInfo, getter_AddRefs(infoObj));
+    if (NS_SUCCEEDED(rv)) {
+      rv = mChannel->SetSecurityInfo(infoObj);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     mChannel->SynthesizeStatus(mInternalResponse->GetStatus(), mInternalResponse->GetStatusText());
@@ -167,14 +169,14 @@ struct RespondWithClosure
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
   nsRefPtr<InternalResponse> mInternalResponse;
-  ChannelInfo mWorkerChannelInfo;
+  nsCString mWorkerSecurityInfo;
 
   RespondWithClosure(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
                      InternalResponse* aInternalResponse,
-                     const ChannelInfo& aWorkerChannelInfo)
+                     const nsCString& aWorkerSecurityInfo)
     : mInterceptedChannel(aChannel)
     , mInternalResponse(aInternalResponse)
-    , mWorkerChannelInfo(aWorkerChannelInfo)
+    , mWorkerSecurityInfo(aWorkerSecurityInfo)
   {
   }
 };
@@ -186,7 +188,7 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
   if (NS_SUCCEEDED(aStatus)) {
     event = new FinishResponse(data->mInterceptedChannel,
                                data->mInternalResponse,
-                               data->mWorkerChannelInfo);
+                               data->mWorkerSecurityInfo);
   } else {
     event = new CancelChannelRunnable(data->mInterceptedChannel);
   }
@@ -253,7 +255,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   worker->AssertIsOnWorkerThread();
 
   nsAutoPtr<RespondWithClosure> closure(
-      new RespondWithClosure(mInterceptedChannel, ir, worker->GetChannelInfo()));
+      new RespondWithClosure(mInterceptedChannel, ir, worker->GetSecurityInfo()));
   nsCOMPtr<nsIInputStream> body;
   response->GetBody(getter_AddRefs(body));
   // Errors and redirects may not have a body.

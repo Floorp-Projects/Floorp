@@ -13,7 +13,6 @@
 #include "nsHttpChannel.h"
 #include "HttpChannelChild.h"
 #include "nsHttpResponseHead.h"
-#include "mozilla/dom/ChannelInfo.h"
 
 namespace mozilla {
 namespace net {
@@ -234,13 +233,13 @@ InterceptedChannelChrome::Cancel()
 }
 
 NS_IMETHODIMP
-InterceptedChannelChrome::SetChannelInfo(dom::ChannelInfo* aChannelInfo)
+InterceptedChannelChrome::SetSecurityInfo(nsISupports* aSecurityInfo)
 {
   if (!mChannel) {
     return NS_ERROR_FAILURE;
   }
 
-  return aChannelInfo->ResurrectInfoOnChannel(mChannel);
+  return mChannel->OverrideSecurityInfo(aSecurityInfo);
 }
 
 InterceptedChannelContent::InterceptedChannelContent(HttpChannelChild* aChannel,
@@ -341,13 +340,13 @@ InterceptedChannelContent::Cancel()
 }
 
 NS_IMETHODIMP
-InterceptedChannelContent::SetChannelInfo(dom::ChannelInfo* aChannelInfo)
+InterceptedChannelContent::SetSecurityInfo(nsISupports* aSecurityInfo)
 {
   if (!mChannel) {
     return NS_ERROR_FAILURE;
   }
 
-  return aChannelInfo->ResurrectInfoOnChannel(mChannel);
+  return mChannel->OverrideSecurityInfo(aSecurityInfo);
 }
 
 } // namespace net

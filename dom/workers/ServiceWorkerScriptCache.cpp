@@ -10,6 +10,7 @@
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "nsIThreadRetargetableRequest.h"
+#include "nsSerializationHelper.h"
 
 #include "nsIPrincipal.h"
 #include "Workers.h"
@@ -445,9 +446,9 @@ public:
   }
 
   void
-  InitChannelInfo(nsIChannel* aChannel)
+  SetSecurityInfo(nsISerializable* aSecurityInfo)
   {
-    mChannelInfo.InitFromChannel(aChannel);
+    NS_SerializeToString(aSecurityInfo, mSecurityInfo);
   }
 
 private:
@@ -544,7 +545,7 @@ private:
       new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ir->SetBody(body);
 
-    ir->InitChannelInfo(mChannelInfo);
+    ir->SetSecurityInfo(mSecurityInfo);
 
     nsRefPtr<Response> response = new Response(aCache->GetGlobalObject(), ir);
 
@@ -576,7 +577,7 @@ private:
   // Only used if the network script has changed and needs to be cached.
   nsString mNewCacheName;
 
-  ChannelInfo mChannelInfo;
+  nsCString mSecurityInfo;
 
   nsCString mMaxScope;
 
@@ -605,7 +606,16 @@ CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   MOZ_ASSERT(channel == mChannel);
 #endif
 
-  mManager->InitChannelInfo(mChannel);
+  nsCOMPtr<nsISupports> infoObj;
+  mChannel->GetSecurityInfo(getter_AddRefs(infoObj));
+  if (infoObj) {
+    nsCOMPtr<nsISerializable> serializable = do_QueryInterface(infoObj);
+    if (serializable) {
+      mManager->SetSecurityInfo(serializable);
+    } else {
+      NS_WARNING("A non-serializable object was obtained from nsIChannel::GetSecurityInfo()!");
+    }
+  }
 
   return NS_OK;
 }

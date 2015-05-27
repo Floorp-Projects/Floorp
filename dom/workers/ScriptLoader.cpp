@@ -14,6 +14,7 @@
 #include "nsIIOService.h"
 #include "nsIProtocolHandler.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsISerializable.h"
 #include "nsIStreamLoader.h"
 #include "nsIStreamListenerTee.h"
 #include "nsIThreadRetargetableRequest.h"
@@ -421,7 +422,7 @@ private:
   bool mFailed;
   nsCOMPtr<nsIInputStreamPump> mPump;
   nsCOMPtr<nsIURI> mBaseURI;
-  ChannelInfo mChannelInfo;
+  nsCString mSecurityInfo;
 };
 
 NS_IMPL_ISUPPORTS(CacheScriptLoader, nsIStreamLoaderObserver)
@@ -588,9 +589,19 @@ private:
       new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ir->SetBody(mReader);
 
-    // Set the channel info of the channel on the response so that it's
+    // Set the security info of the channel on the response so that it's
     // saved in the cache.
-    ir->InitChannelInfo(channel);
+    nsCOMPtr<nsISupports> infoObj;
+    channel->GetSecurityInfo(getter_AddRefs(infoObj));
+    if (infoObj) {
+      nsCOMPtr<nsISerializable> serializable = do_QueryInterface(infoObj);
+      if (serializable) {
+        ir->SetSecurityInfo(serializable);
+        MOZ_ASSERT(!ir->GetSecurityInfo().IsEmpty());
+      } else {
+        NS_WARNING("A non-serializable object was obtained from nsIChannel::GetSecurityInfo()!");
+      }
+    }
 
     nsRefPtr<Response> response = new Response(mCacheCreator->Global(), ir);
 
@@ -954,9 +965,18 @@ private:
       // Take care of the base URI first.
       mWorkerPrivate->SetBaseURI(finalURI);
 
-      // Store the channel info if needed.
+      // Store the security info if needed.
       if (mWorkerPrivate->IsServiceWorker()) {
-        mWorkerPrivate->InitChannelInfo(channel);
+        nsCOMPtr<nsISupports> infoObj;
+        channel->GetSecurityInfo(getter_AddRefs(infoObj));
+        if (infoObj) {
+          nsCOMPtr<nsISerializable> serializable = do_QueryInterface(infoObj);
+          if (serializable) {
+            mWorkerPrivate->SetSecurityInfo(serializable);
+          } else {
+            NS_WARNING("A non-serializable object was obtained from nsIChannel::GetSecurityInfo()!");
+          }
+        }
       }
 
       // Now to figure out which principal to give this worker.
@@ -1027,8 +1047,7 @@ private:
 
   void
   DataReceivedFromCache(uint32_t aIndex, const uint8_t* aString,
-                        uint32_t aStringLen,
-                        const ChannelInfo& aChannelInfo)
+                        uint32_t aStringLen, const nsCString& aSecurityInfo)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aIndex < mLoadInfos.Length());
@@ -1056,7 +1075,7 @@ private:
       MOZ_ASSERT(principal);
       nsILoadGroup* loadGroup = mWorkerPrivate->GetLoadGroup();
       MOZ_ASSERT(loadGroup);
-      mWorkerPrivate->InitChannelInfo(aChannelInfo);
+      mWorkerPrivate->SetSecurityInfo(aSecurityInfo);
       // Needed to initialize the principal info. This is fine because
       // the cache principal cannot change, unlike the channel principal.
       mWorkerPrivate->SetPrincipal(principal, loadGroup);
@@ -1410,11 +1429,11 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
 
   nsCOMPtr<nsIInputStream> inputStream;
   response->GetBody(getter_AddRefs(inputStream));
-  mChannelInfo = response->GetChannelInfo();
+  mSecurityInfo = response->GetSecurityInfo();
 
   if (!inputStream) {
     mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
-    mRunnable->DataReceivedFromCache(mIndex, (uint8_t*)"", 0, mChannelInfo);
+    mRunnable->DataReceivedFromCache(mIndex, (uint8_t*)"", 0, mSecurityInfo);
     return;
   }
 
@@ -1470,7 +1489,7 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aCont
 
   mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
 
-  mRunnable->DataReceivedFromCache(mIndex, aString, aStringLen, mChannelInfo);
+  mRunnable->DataReceivedFromCache(mIndex, aString, aStringLen, mSecurityInfo);
   return NS_OK;
 }
 

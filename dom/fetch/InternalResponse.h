@@ -11,7 +11,6 @@
 #include "nsISupportsImpl.h"
 
 #include "mozilla/dom/ResponseBinding.h"
-#include "mozilla/dom/ChannelInfo.h"
 
 namespace mozilla {
 namespace dom {
@@ -49,7 +48,7 @@ public:
     response->mTerminationReason = mTerminationReason;
     response->mURL = mURL;
     response->mFinalURL = mFinalURL;
-    response->mChannelInfo = mChannelInfo;
+    response->mSecurityInfo = mSecurityInfo;
     response->mWrappedResponse = this;
     return response.forget();
   }
@@ -157,29 +156,17 @@ public:
     mBody = aBody;
   }
 
-  void
-  InitChannelInfo(nsIChannel* aChannel)
+  const nsCString&
+  GetSecurityInfo() const
   {
-    mChannelInfo.InitFromChannel(aChannel);
+    return mSecurityInfo;
   }
 
   void
-  InitChannelInfo(const mozilla::ipc::IPCChannelInfo& aChannelInfo)
-  {
-    mChannelInfo.InitFromIPCChannelInfo(aChannelInfo);
-  }
+  SetSecurityInfo(nsISupports* aSecurityInfo);
 
   void
-  InitChannelInfo(const ChannelInfo& aChannelInfo)
-  {
-    mChannelInfo = aChannelInfo;
-  }
-
-  const ChannelInfo&
-  GetChannelInfo() const
-  {
-    return mChannelInfo;
-  }
+  SetSecurityInfo(const nsCString& aSecurityInfo);
 
 private:
   ~InternalResponse()
@@ -198,7 +185,7 @@ private:
     copy->mTerminationReason = mTerminationReason;
     copy->mURL = mURL;
     copy->mFinalURL = mFinalURL;
-    copy->mChannelInfo = mChannelInfo;
+    copy->mSecurityInfo = mSecurityInfo;
     return copy.forget();
   }
 
@@ -210,7 +197,7 @@ private:
   const nsCString mStatusText;
   nsRefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBody;
-  ChannelInfo mChannelInfo;
+  nsCString mSecurityInfo;
 
   // For filtered responses.
   // Cache, and SW interception should always serialize/access the underlying
