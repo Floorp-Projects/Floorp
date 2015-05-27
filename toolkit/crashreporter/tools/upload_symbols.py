@@ -62,15 +62,22 @@ def main():
 
     if r.status_code >= 200 and r.status_code < 300:
         print('Uploaded successfully!')
-    elif r.status_code < 400:
-        print('Error: bad auth token? ({0})'.format(r.status_code),
+        return 0
+
+    if r.status_code < 400:
+        print('Error: bad auth token? ({0}: {1})'.format(r.status_code,
+                                                         r.reason),
               file=sys.stderr)
-        return 1
     else:
-        print('Error: got HTTP response {0}'.format(r.status_code),
+        print('Error: got HTTP response {0}: {1}'.format(r.status_code,
+                                                         r.reason),
               file=sys.stderr)
-        return 1
-    return 0
+
+    print('Response body:\n{sep}\n{body}\n{sep}\n'.format(
+        sep='=' * 20,
+        body=r.text
+        ))
+    return 1
 
 if __name__ == '__main__':
     sys.exit(main())
