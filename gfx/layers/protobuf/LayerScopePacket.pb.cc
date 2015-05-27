@@ -2115,6 +2115,11 @@ const int LayersPacket_Layer::kCAlphaFieldNumber;
 const int LayersPacket_Layer::kDirectFieldNumber;
 const int LayersPacket_Layer::kBarIDFieldNumber;
 const int LayersPacket_Layer::kMaskFieldNumber;
+const int LayersPacket_Layer::kHitRegionFieldNumber;
+const int LayersPacket_Layer::kDispatchRegionFieldNumber;
+const int LayersPacket_Layer::kNoActionRegionFieldNumber;
+const int LayersPacket_Layer::kHPanRegionFieldNumber;
+const int LayersPacket_Layer::kVPanRegionFieldNumber;
 const int LayersPacket_Layer::kValidFieldNumber;
 const int LayersPacket_Layer::kColorFieldNumber;
 const int LayersPacket_Layer::kFilterFieldNumber;
@@ -2132,6 +2137,11 @@ void LayersPacket_Layer::InitAsDefaultInstance() {
   transform_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Matrix::default_instance());
   vregion_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Region*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Region::default_instance());
   shadow_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Shadow::default_instance());
+  hitregion_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Region*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Region::default_instance());
+  dispatchregion_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Region*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Region::default_instance());
+  noactionregion_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Region*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Region::default_instance());
+  hpanregion_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Region*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Region::default_instance());
+  vpanregion_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Region*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Region::default_instance());
   valid_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Region*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Region::default_instance());
   size_ = const_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Size*>(&::mozilla::layers::layerscope::LayersPacket_Layer_Size::default_instance());
 }
@@ -2157,6 +2167,11 @@ void LayersPacket_Layer::SharedCtor() {
   direct_ = 1;
   barid_ = GOOGLE_ULONGLONG(0);
   mask_ = GOOGLE_ULONGLONG(0);
+  hitregion_ = NULL;
+  dispatchregion_ = NULL;
+  noactionregion_ = NULL;
+  hpanregion_ = NULL;
+  vpanregion_ = NULL;
   valid_ = NULL;
   color_ = 0u;
   filter_ = 0;
@@ -2175,6 +2190,11 @@ void LayersPacket_Layer::SharedDtor() {
     delete transform_;
     delete vregion_;
     delete shadow_;
+    delete hitregion_;
+    delete dispatchregion_;
+    delete noactionregion_;
+    delete hpanregion_;
+    delete vpanregion_;
     delete valid_;
     delete size_;
   }
@@ -2220,13 +2240,28 @@ void LayersPacket_Layer::Clear() {
     direct_ = 1;
     barid_ = GOOGLE_ULONGLONG(0);
     mask_ = GOOGLE_ULONGLONG(0);
+    if (has_hitregion()) {
+      if (hitregion_ != NULL) hitregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+    }
+    if (has_dispatchregion()) {
+      if (dispatchregion_ != NULL) dispatchregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+    }
+    if (has_noactionregion()) {
+      if (noactionregion_ != NULL) noactionregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+    }
+  }
+  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
+    if (has_hpanregion()) {
+      if (hpanregion_ != NULL) hpanregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+    }
+    if (has_vpanregion()) {
+      if (vpanregion_ != NULL) vpanregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+    }
     if (has_valid()) {
       if (valid_ != NULL) valid_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
     }
     color_ = 0u;
     filter_ = 0;
-  }
-  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
     refid_ = GOOGLE_ULONGLONG(0);
     if (has_size()) {
       if (size_ != NULL) size_->::mozilla::layers::layerscope::LayersPacket_Layer_Size::Clear();
@@ -2442,6 +2477,76 @@ bool LayersPacket_Layer::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(162)) goto parse_hitRegion;
+        break;
+      }
+      
+      // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hitRegion = 20;
+      case 20: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_hitRegion:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_hitregion()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(170)) goto parse_dispatchRegion;
+        break;
+      }
+      
+      // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region dispatchRegion = 21;
+      case 21: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_dispatchRegion:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_dispatchregion()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(178)) goto parse_noActionRegion;
+        break;
+      }
+      
+      // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region noActionRegion = 22;
+      case 22: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_noActionRegion:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_noactionregion()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(186)) goto parse_hPanRegion;
+        break;
+      }
+      
+      // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hPanRegion = 23;
+      case 23: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_hPanRegion:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_hpanregion()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(194)) goto parse_vPanRegion;
+        break;
+      }
+      
+      // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region vPanRegion = 24;
+      case 24: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_vPanRegion:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_vpanregion()));
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectTag(802)) goto parse_valid;
         break;
       }
@@ -2613,6 +2718,36 @@ void LayersPacket_Layer::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(19, this->mask(), output);
   }
   
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hitRegion = 20;
+  if (has_hitregion()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      20, this->hitregion(), output);
+  }
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region dispatchRegion = 21;
+  if (has_dispatchregion()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      21, this->dispatchregion(), output);
+  }
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region noActionRegion = 22;
+  if (has_noactionregion()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      22, this->noactionregion(), output);
+  }
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hPanRegion = 23;
+  if (has_hpanregion()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      23, this->hpanregion(), output);
+  }
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region vPanRegion = 24;
+  if (has_vpanregion()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      24, this->vpanregion(), output);
+  }
+  
   // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region valid = 100;
   if (has_valid()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
@@ -2732,6 +2867,43 @@ int LayersPacket_Layer::ByteSize() const {
           this->mask());
     }
     
+    // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hitRegion = 20;
+    if (has_hitregion()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->hitregion());
+    }
+    
+    // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region dispatchRegion = 21;
+    if (has_dispatchregion()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->dispatchregion());
+    }
+    
+    // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region noActionRegion = 22;
+    if (has_noactionregion()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->noactionregion());
+    }
+    
+  }
+  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
+    // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hPanRegion = 23;
+    if (has_hpanregion()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->hpanregion());
+    }
+    
+    // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region vPanRegion = 24;
+    if (has_vpanregion()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->vpanregion());
+    }
+    
     // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region valid = 100;
     if (has_valid()) {
       total_size += 2 +
@@ -2752,8 +2924,6 @@ int LayersPacket_Layer::ByteSize() const {
         ::google::protobuf::internal::WireFormatLite::EnumSize(this->filter());
     }
     
-  }
-  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
     // optional uint64 refID = 103;
     if (has_refid()) {
       total_size += 2 +
@@ -2824,6 +2994,23 @@ void LayersPacket_Layer::MergeFrom(const LayersPacket_Layer& from) {
     if (from.has_mask()) {
       set_mask(from.mask());
     }
+    if (from.has_hitregion()) {
+      mutable_hitregion()->::mozilla::layers::layerscope::LayersPacket_Layer_Region::MergeFrom(from.hitregion());
+    }
+    if (from.has_dispatchregion()) {
+      mutable_dispatchregion()->::mozilla::layers::layerscope::LayersPacket_Layer_Region::MergeFrom(from.dispatchregion());
+    }
+    if (from.has_noactionregion()) {
+      mutable_noactionregion()->::mozilla::layers::layerscope::LayersPacket_Layer_Region::MergeFrom(from.noactionregion());
+    }
+  }
+  if (from._has_bits_[16 / 32] & (0xffu << (16 % 32))) {
+    if (from.has_hpanregion()) {
+      mutable_hpanregion()->::mozilla::layers::layerscope::LayersPacket_Layer_Region::MergeFrom(from.hpanregion());
+    }
+    if (from.has_vpanregion()) {
+      mutable_vpanregion()->::mozilla::layers::layerscope::LayersPacket_Layer_Region::MergeFrom(from.vpanregion());
+    }
     if (from.has_valid()) {
       mutable_valid()->::mozilla::layers::layerscope::LayersPacket_Layer_Region::MergeFrom(from.valid());
     }
@@ -2833,8 +3020,6 @@ void LayersPacket_Layer::MergeFrom(const LayersPacket_Layer& from) {
     if (from.has_filter()) {
       set_filter(from.filter());
     }
-  }
-  if (from._has_bits_[16 / 32] & (0xffu << (16 % 32))) {
     if (from.has_refid()) {
       set_refid(from.refid());
     }
@@ -2871,6 +3056,11 @@ void LayersPacket_Layer::Swap(LayersPacket_Layer* other) {
     std::swap(direct_, other->direct_);
     std::swap(barid_, other->barid_);
     std::swap(mask_, other->mask_);
+    std::swap(hitregion_, other->hitregion_);
+    std::swap(dispatchregion_, other->dispatchregion_);
+    std::swap(noactionregion_, other->noactionregion_);
+    std::swap(hpanregion_, other->hpanregion_);
+    std::swap(vpanregion_, other->vpanregion_);
     std::swap(valid_, other->valid_);
     std::swap(color_, other->color_);
     std::swap(filter_, other->filter_);
