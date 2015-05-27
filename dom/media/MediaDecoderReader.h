@@ -177,7 +177,7 @@ public:
   // with tag metadata from the file.
   // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) = 0;
+                                MetadataTags** aTags) { MOZ_CRASH(); }
 
   // Fills aInfo with the latest cached data required to present the media,
   // ReadUpdatedMetadata will always be called once ReadMetadata has succeeded.
