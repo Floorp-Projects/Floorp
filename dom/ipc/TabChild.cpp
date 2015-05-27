@@ -221,6 +221,12 @@ CSSToParentLayerScale ConvertScaleForRoot(CSSToScreenScale aScale)
   return ViewTargetAs<ParentLayerPixel>(aScale, PixelCastJustification::ScreenIsParentLayerForRoot);
 }
 
+// Calculate the scale needed to fit the given viewport into the given display.
+CSSToScreenScale CalculateIntrinsicScale(const ScreenIntSize& aDisplaySize, const CSSSize& aViewportSize)
+{
+  return MaxScaleRatio(ScreenSize(aDisplaySize), aViewportSize);
+}
+
 void
 TabChildBase::InitializeRootMetrics()
 {
@@ -231,7 +237,8 @@ TabChildBase::InitializeRootMetrics()
   mLastRootMetrics.SetCompositionBounds(ParentLayerRect(
       ParentLayerPoint(),
       ParentLayerSize(ViewAs<ParentLayerPixel>(mInnerSize, PixelCastJustification::ScreenIsParentLayerForRoot))));
-  mLastRootMetrics.SetZoom(CSSToParentLayerScale2D(mLastRootMetrics.CalculateIntrinsicScale()));
+  mLastRootMetrics.SetZoom(CSSToParentLayerScale2D(
+      ConvertScaleForRoot(CalculateIntrinsicScale(mInnerSize, kDefaultViewportSize))));
   mLastRootMetrics.SetDevPixelsPerCSSPixel(WebWidget()->GetDefaultScale());
   // We use ParentLayerToLayerScale(1) below in order to turn the
   // async zoom amount into the gecko zoom amount.
@@ -388,10 +395,9 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
   // In all of these cases, we maintain how much actual content is visible
   // within the screen width. Note that "actual content" may be different with
   // respect to CSS pixels because of the CSS viewport size changing.
-  float oldIntrinsicScale =
-      std::max(oldScreenSize.width / oldBrowserSize.width,
-               oldScreenSize.height / oldBrowserSize.height);
-  metrics.ZoomBy(metrics.CalculateIntrinsicScale().scale / oldIntrinsicScale);
+  CSSToScreenScale oldIntrinsicScale = CalculateIntrinsicScale(oldScreenSize, oldBrowserSize);
+  CSSToScreenScale newIntrinsicScale = CalculateIntrinsicScale(mInnerSize, viewport);
+  metrics.ZoomBy(newIntrinsicScale.scale / oldIntrinsicScale.scale);
 
   // Changing the zoom when we're not doing a first paint will get ignored
   // by AsyncPanZoomController and causes a blurry flash.
@@ -404,7 +410,7 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
     // 0.0 to mean "did not calculate a zoom".  In that case, we default
     // it to the intrinsic scale.
     if (viewportInfo.GetDefaultZoom().scale < 0.01f) {
-      viewportInfo.SetDefaultZoom(ConvertScaleForRoot(metrics.CalculateIntrinsicScale()));
+      viewportInfo.SetDefaultZoom(newIntrinsicScale);
     }
 
     CSSToScreenScale defaultZoom = viewportInfo.GetDefaultZoom();
