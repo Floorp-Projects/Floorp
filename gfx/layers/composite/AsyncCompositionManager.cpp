@@ -813,11 +813,11 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * effectiveZoom;
     yTranslation -= thumbOriginDeltaPL;
 
-    if (metrics.IsRootScrollable()) {
+    if (metrics.IsRootContent()) {
       // Scrollbar for the root are painted at the same resolution as the
       // content. Since the coordinate space we apply this transform in includes
       // the resolution, we need to adjust for it as well here. Note that in
-      // another metrics.IsRootScrollable() hunk below we apply a
+      // another metrics.IsRootContent() hunk below we apply a
       // resolution-cancelling transform which ensures the scroll thumb isn't
       // actually rendered at a larger scale.
       yTranslation *= metrics.GetPresShellResolution();
@@ -846,7 +846,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * effectiveZoom;
     xTranslation -= thumbOriginDeltaPL;
 
-    if (metrics.IsRootScrollable()) {
+    if (metrics.IsRootContent()) {
       xTranslation *= metrics.GetPresShellResolution();
     }
 
@@ -862,7 +862,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
   // thumb's size to vary with the zoom (other than its length reflecting the
   // fraction of the scrollable length that's in view, which is taken care of
   // above), we apply a transform to cancel out this resolution.
-  if (metrics.IsRootScrollable()) {
+  if (metrics.IsRootContent()) {
     compensation =
         Matrix4x4::Scaling(metrics.GetPresShellResolution(),
                            metrics.GetPresShellResolution(),

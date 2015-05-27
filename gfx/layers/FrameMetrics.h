@@ -120,11 +120,6 @@ public:
     return (def == *this);
   }
 
-  bool IsRootScrollable() const
-  {
-    return mIsRootContent;
-  }
-
   bool IsScrollable() const
   {
     return mScrollId != NULL_SCROLL_ID;
