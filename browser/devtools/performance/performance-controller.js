@@ -33,6 +33,8 @@ loader.lazyRequireGetter(this, "MarkerDetails",
   "devtools/performance/marker-details", true);
 loader.lazyRequireGetter(this, "MarkerUtils",
   "devtools/performance/marker-utils");
+loader.lazyRequireGetter(this, "WaterfallUtils",
+  "devtools/performance/waterfall-utils");
 loader.lazyRequireGetter(this, "CallView",
   "devtools/performance/tree-view", true);
 loader.lazyRequireGetter(this, "ThreadNode",
