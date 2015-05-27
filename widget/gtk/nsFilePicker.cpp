@@ -163,10 +163,12 @@ MakeCaseInsensitiveShellGlob(const char* aPattern) {
 NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 
 nsFilePicker::nsFilePicker()
-  : mSelectedType(0),
-    mRunning(false),
-    mAllowURLs(false),
-    mFileChooserDelegate(nullptr)
+  : mSelectedType(0)
+  , mRunning(false)
+  , mAllowURLs(false)
+#if (MOZ_WIDGET_GTK == 3)
+  , mFileChooserDelegate(nullptr)
+#endif
 {
 }
 
