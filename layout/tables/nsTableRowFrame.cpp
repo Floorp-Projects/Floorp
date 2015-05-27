@@ -629,16 +629,8 @@ nsTableRowFrame::CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
       // (since we can't specify one value of box-sizing for width and another
       // for height)
       if (PresContext()->CompatibilityMode() != eCompatibility_NavQuirks) {
-        switch (position->mBoxSizing) {
-          case NS_STYLE_BOX_SIZING_CONTENT:
-            outsideBoxSizing = aCellFrame->GetUsedBorderAndPadding().TopBottom();
-            break;
-          case NS_STYLE_BOX_SIZING_PADDING:
-            outsideBoxSizing = aCellFrame->GetUsedBorder().TopBottom();
-            break;
-          default:
-            // NS_STYLE_BOX_SIZING_BORDER
-            break;
+        if (position->mBoxSizing == NS_STYLE_BOX_SIZING_CONTENT) {
+          outsideBoxSizing = aCellFrame->GetUsedBorderAndPadding().TopBottom();
         }
       }
 
