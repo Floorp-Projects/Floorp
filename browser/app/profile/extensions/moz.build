@@ -5,5 +5,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['{972ce4c6-7e08-4474-a285-3208198ce6fd}']
-
-DIST_SUBDIR = ''
