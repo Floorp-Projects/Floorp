@@ -11,6 +11,7 @@
 #include "BluetoothDaemonA2dpInterface.h"
 #include "BluetoothDaemonAvrcpInterface.h"
 #include "BluetoothDaemonConnector.h"
+#include "BluetoothDaemonGattInterface.h"
 #include "BluetoothDaemonHandsfreeInterface.h"
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothDaemonSetupInterface.h"
@@ -1433,6 +1434,7 @@ class BluetoothDaemonProtocol final
   , public BluetoothDaemonHandsfreeModule
   , public BluetoothDaemonA2dpModule
   , public BluetoothDaemonAvrcpModule
+  , public BluetoothDaemonGattModule
 {
 public:
   BluetoothDaemonProtocol();
@@ -1472,6 +1474,8 @@ private:
                      BluetoothDaemonPDU& aPDU, void* aUserData);
   void HandleAvrcpSvc(const BluetoothDaemonPDUHeader& aHeader,
                       BluetoothDaemonPDU& aPDU, void* aUserData);
+  void HandleGattSvc(const BluetoothDaemonPDUHeader& aHeader,
+                     BluetoothDaemonPDU& aPDU, void* aUserData);
 
   BluetoothDaemonConnection* mConnection;
   nsTArray<void*> mUserDataQ;
@@ -1571,6 +1575,14 @@ BluetoothDaemonProtocol::HandleAvrcpSvc(
 }
 
 void
+BluetoothDaemonProtocol::HandleGattSvc(
+  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  void* aUserData)
+{
+  BluetoothDaemonGattModule::HandleSvc(aHeader, aPDU, aUserData);
+}
+
+void
 BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
 {
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
@@ -1586,7 +1598,9 @@ BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
       &BluetoothDaemonProtocol::HandleA2dpSvc),
     INIT_ARRAY_AT(0x07, nullptr), // Health
     INIT_ARRAY_AT(BluetoothDaemonAvrcpModule::SERVICE_ID,
-      &BluetoothDaemonProtocol::HandleAvrcpSvc)
+      &BluetoothDaemonProtocol::HandleAvrcpSvc),
+    INIT_ARRAY_AT(BluetoothDaemonGattModule::SERVICE_ID,
+      &BluetoothDaemonProtocol::HandleGattSvc)
   };
 
   BluetoothDaemonPDUHeader header;
@@ -2298,7 +2312,13 @@ BluetoothDaemonInterface::GetBluetoothAvrcpInterface()
 BluetoothGattInterface*
 BluetoothDaemonInterface::GetBluetoothGattInterface()
 {
-  return nullptr;
+  if (mGattInterface) {
+    return mGattInterface;
+  }
+
+  mGattInterface = new BluetoothDaemonGattInterface(mProtocol);
+
+  return mGattInterface;
 }
 
 // |BluetoothDaemonConnectionConsumer|, |ListenSocketConsumer|
