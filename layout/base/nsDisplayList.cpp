@@ -69,6 +69,7 @@
 #include "RestyleManager.h"
 #include "nsCaret.h"
 #include "nsISelection.h"
+#include "nsDOMTokenList.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount().
@@ -897,9 +898,20 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
                                                const nsFrameList& aFrames,
                                                const nsRect& aDirtyRect) {
   mFramesMarkedForDisplay.SetCapacity(mFramesMarkedForDisplay.Length() + aFrames.GetLength());
-  for (nsFrameList::Enumerator e(aFrames); !e.AtEnd(); e.Next()) {
-    mFramesMarkedForDisplay.AppendElement(e.get());
-    MarkOutOfFlowFrameForDisplay(aDirtyFrame, e.get(), aDirtyRect);
+  for (nsIFrame* e : aFrames) {
+    // Skip the AccessibleCaret frame when building no caret.
+    if (!IsBuildingCaret()) {
+      nsIContent* content = e->GetContent();
+      if (content && content->IsInNativeAnonymousSubtree() && content->IsElement()) {
+        ErrorResult rv;
+        auto classList = content->AsElement()->ClassList();
+        if (classList->Contains(NS_LITERAL_STRING("moz-accessiblecaret"), rv)) {
+          continue;
+        }
+      }
+    }
+    mFramesMarkedForDisplay.AppendElement(e);
+    MarkOutOfFlowFrameForDisplay(aDirtyFrame, e, aDirtyRect);
   }
 }
 
