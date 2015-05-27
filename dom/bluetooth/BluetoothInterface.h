@@ -9,7 +9,6 @@
 
 #include "BluetoothCommon.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#include "mozilla/dom/TypedArray.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -632,15 +631,27 @@ protected:
   { }
 };
 
-class BluetoothGattClientResultHandler
+class BluetoothGattResultHandler
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothGattClientResultHandler)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothGattResultHandler)
 
   virtual void OnError(BluetoothStatus aStatus)
   {
     BT_WARNING("Received error code %d", (int)aStatus);
   }
+
+  virtual void Init() { }
+  virtual void Cleanup() { }
+
+protected:
+  virtual ~BluetoothGattResultHandler() { }
+};
+
+class BluetoothGattClientResultHandler : public BluetoothGattResultHandler
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothGattClientResultHandler)
 
   virtual void RegisterClient() { }
   virtual void UnregisterClient() { }
@@ -671,29 +682,13 @@ public:
   virtual void ReadRemoteRssi() { }
   virtual void GetDeviceType() { }
   virtual void SetAdvData() { }
+  virtual void TestCommand() { }
 
 protected:
   virtual ~BluetoothGattClientResultHandler() { }
 };
 
 // TODO: Add GattServerResultHandler
-
-class BluetoothGattResultHandler
-{
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothGattResultHandler)
-
-  virtual void OnError(BluetoothStatus aStatus)
-  {
-    BT_WARNING("Received error code %d", (int)aStatus);
-  }
-
-  virtual void Init() { }
-  virtual void Cleanup() { }
-
-protected:
-  virtual ~BluetoothGattResultHandler() { }
-};
 
 class BluetoothGattClientInterface
 {
@@ -815,13 +810,17 @@ public:
                           int aMinInterval,
                           int aMaxInterval,
                           int aApperance,
-                          uint8_t aManufacturerLen,
-                          const ArrayBuffer& aManufacturerData,
-                          uint8_t aServiceDataLen,
-                          const ArrayBuffer& aServiceData,
-                          uint8_t aServiceUUIDLen,
-                          const ArrayBuffer& aServiceUUID,
+                          uint16_t aManufacturerLen,
+                          char* aManufacturerData,
+                          uint16_t aServiceDataLen,
+                          char* aServiceData,
+                          uint16_t aServiceUUIDLen,
+                          char* aServiceUUID,
                           BluetoothGattClientResultHandler* aRes) = 0;
+
+  virtual void TestCommand(int aCommand,
+                           const BluetoothGattTestParam& aTestParam,
+                           BluetoothGattClientResultHandler* aRes) = 0;
 
 protected:
   BluetoothGattClientInterface();
