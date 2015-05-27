@@ -78,16 +78,10 @@ public:
     return mInternalResponse->Headers();
   }
 
-  void
-  InitChannelInfo(nsIChannel* aChannel)
+  const nsCString&
+  GetSecurityInfo() const
   {
-    mInternalResponse->InitChannelInfo(aChannel);
-  }
-
-  const ChannelInfo&
-  GetChannelInfo() const
-  {
-    return mInternalResponse->GetChannelInfo();
+    return mInternalResponse->GetSecurityInfo();
   }
 
   Headers* Headers_();

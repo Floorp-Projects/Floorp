@@ -20,7 +20,6 @@
 #include "nsILoadContext.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIInterfaceRequestor.h"
-#include "mozilla/dom/ChannelInfo.h"
 
 #define BEGIN_WORKERS_NAMESPACE \
   namespace mozilla { namespace dom { namespace workers {
@@ -245,7 +244,7 @@ struct WorkerLoadInfo
 
   nsString mServiceWorkerCacheName;
 
-  ChannelInfo mChannelInfo;
+  nsCString mSecurityInfo;
 
   uint64_t mWindowID;
   uint64_t mServiceWorkerID;
