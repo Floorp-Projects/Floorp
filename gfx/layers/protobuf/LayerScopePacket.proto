@@ -97,6 +97,11 @@ message LayersPacket {
     optional ScrollingDirect direct = 17;
     optional uint64 barID = 18;
     optional uint64 mask = 19;    // mask layer
+    optional Region hitRegion = 20;
+    optional Region dispatchRegion = 21;
+    optional Region noActionRegion = 22;
+    optional Region hPanRegion = 23;
+    optional Region vPanRegion = 24;
 
     // Specific info (100 to max)
     // Painted Layer

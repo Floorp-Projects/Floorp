@@ -1064,6 +1064,46 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
   inline ::google::protobuf::uint64 mask() const;
   inline void set_mask(::google::protobuf::uint64 value);
   
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hitRegion = 20;
+  inline bool has_hitregion() const;
+  inline void clear_hitregion();
+  static const int kHitRegionFieldNumber = 20;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& hitregion() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* mutable_hitregion();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* release_hitregion();
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region dispatchRegion = 21;
+  inline bool has_dispatchregion() const;
+  inline void clear_dispatchregion();
+  static const int kDispatchRegionFieldNumber = 21;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& dispatchregion() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* mutable_dispatchregion();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* release_dispatchregion();
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region noActionRegion = 22;
+  inline bool has_noactionregion() const;
+  inline void clear_noactionregion();
+  static const int kNoActionRegionFieldNumber = 22;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& noactionregion() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* mutable_noactionregion();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* release_noactionregion();
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hPanRegion = 23;
+  inline bool has_hpanregion() const;
+  inline void clear_hpanregion();
+  static const int kHPanRegionFieldNumber = 23;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& hpanregion() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* mutable_hpanregion();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* release_hpanregion();
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region vPanRegion = 24;
+  inline bool has_vpanregion() const;
+  inline void clear_vpanregion();
+  static const int kVPanRegionFieldNumber = 24;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& vpanregion() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* mutable_vpanregion();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* release_vpanregion();
+  
   // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region valid = 100;
   inline bool has_valid() const;
   inline void clear_valid();
@@ -1129,6 +1169,16 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
   inline void clear_has_barid();
   inline void set_has_mask();
   inline void clear_has_mask();
+  inline void set_has_hitregion();
+  inline void clear_has_hitregion();
+  inline void set_has_dispatchregion();
+  inline void clear_has_dispatchregion();
+  inline void set_has_noactionregion();
+  inline void clear_has_noactionregion();
+  inline void set_has_hpanregion();
+  inline void clear_has_hpanregion();
+  inline void set_has_vpanregion();
+  inline void clear_has_vpanregion();
   inline void set_has_valid();
   inline void clear_has_valid();
   inline void set_has_color();
@@ -1153,6 +1203,11 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
   int direct_;
   ::google::protobuf::uint64 barid_;
   ::google::protobuf::uint64 mask_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* hitregion_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* dispatchregion_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* noactionregion_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* hpanregion_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* vpanregion_;
   ::mozilla::layers::layerscope::LayersPacket_Layer_Region* valid_;
   ::google::protobuf::uint32 color_;
   int filter_;
@@ -1160,7 +1215,7 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
   ::mozilla::layers::layerscope::LayersPacket_Layer_Size* size_;
   
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(18 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(23 + 31) / 32];
   
   friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
   friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
@@ -2796,15 +2851,160 @@ inline void LayersPacket_Layer::set_mask(::google::protobuf::uint64 value) {
   mask_ = value;
 }
 
-// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region valid = 100;
-inline bool LayersPacket_Layer::has_valid() const {
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hitRegion = 20;
+inline bool LayersPacket_Layer::has_hitregion() const {
   return (_has_bits_[0] & 0x00002000u) != 0;
 }
-inline void LayersPacket_Layer::set_has_valid() {
+inline void LayersPacket_Layer::set_has_hitregion() {
   _has_bits_[0] |= 0x00002000u;
 }
-inline void LayersPacket_Layer::clear_has_valid() {
+inline void LayersPacket_Layer::clear_has_hitregion() {
   _has_bits_[0] &= ~0x00002000u;
+}
+inline void LayersPacket_Layer::clear_hitregion() {
+  if (hitregion_ != NULL) hitregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+  clear_has_hitregion();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& LayersPacket_Layer::hitregion() const {
+  return hitregion_ != NULL ? *hitregion_ : *default_instance_->hitregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::mutable_hitregion() {
+  set_has_hitregion();
+  if (hitregion_ == NULL) hitregion_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Region;
+  return hitregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::release_hitregion() {
+  clear_has_hitregion();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* temp = hitregion_;
+  hitregion_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region dispatchRegion = 21;
+inline bool LayersPacket_Layer::has_dispatchregion() const {
+  return (_has_bits_[0] & 0x00004000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_dispatchregion() {
+  _has_bits_[0] |= 0x00004000u;
+}
+inline void LayersPacket_Layer::clear_has_dispatchregion() {
+  _has_bits_[0] &= ~0x00004000u;
+}
+inline void LayersPacket_Layer::clear_dispatchregion() {
+  if (dispatchregion_ != NULL) dispatchregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+  clear_has_dispatchregion();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& LayersPacket_Layer::dispatchregion() const {
+  return dispatchregion_ != NULL ? *dispatchregion_ : *default_instance_->dispatchregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::mutable_dispatchregion() {
+  set_has_dispatchregion();
+  if (dispatchregion_ == NULL) dispatchregion_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Region;
+  return dispatchregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::release_dispatchregion() {
+  clear_has_dispatchregion();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* temp = dispatchregion_;
+  dispatchregion_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region noActionRegion = 22;
+inline bool LayersPacket_Layer::has_noactionregion() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_noactionregion() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void LayersPacket_Layer::clear_has_noactionregion() {
+  _has_bits_[0] &= ~0x00008000u;
+}
+inline void LayersPacket_Layer::clear_noactionregion() {
+  if (noactionregion_ != NULL) noactionregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+  clear_has_noactionregion();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& LayersPacket_Layer::noactionregion() const {
+  return noactionregion_ != NULL ? *noactionregion_ : *default_instance_->noactionregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::mutable_noactionregion() {
+  set_has_noactionregion();
+  if (noactionregion_ == NULL) noactionregion_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Region;
+  return noactionregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::release_noactionregion() {
+  clear_has_noactionregion();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* temp = noactionregion_;
+  noactionregion_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region hPanRegion = 23;
+inline bool LayersPacket_Layer::has_hpanregion() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_hpanregion() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void LayersPacket_Layer::clear_has_hpanregion() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void LayersPacket_Layer::clear_hpanregion() {
+  if (hpanregion_ != NULL) hpanregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+  clear_has_hpanregion();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& LayersPacket_Layer::hpanregion() const {
+  return hpanregion_ != NULL ? *hpanregion_ : *default_instance_->hpanregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::mutable_hpanregion() {
+  set_has_hpanregion();
+  if (hpanregion_ == NULL) hpanregion_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Region;
+  return hpanregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::release_hpanregion() {
+  clear_has_hpanregion();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* temp = hpanregion_;
+  hpanregion_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region vPanRegion = 24;
+inline bool LayersPacket_Layer::has_vpanregion() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_vpanregion() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void LayersPacket_Layer::clear_has_vpanregion() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void LayersPacket_Layer::clear_vpanregion() {
+  if (vpanregion_ != NULL) vpanregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+  clear_has_vpanregion();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& LayersPacket_Layer::vpanregion() const {
+  return vpanregion_ != NULL ? *vpanregion_ : *default_instance_->vpanregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::mutable_vpanregion() {
+  set_has_vpanregion();
+  if (vpanregion_ == NULL) vpanregion_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Region;
+  return vpanregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::release_vpanregion() {
+  clear_has_vpanregion();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* temp = vpanregion_;
+  vpanregion_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region valid = 100;
+inline bool LayersPacket_Layer::has_valid() const {
+  return (_has_bits_[0] & 0x00040000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_valid() {
+  _has_bits_[0] |= 0x00040000u;
+}
+inline void LayersPacket_Layer::clear_has_valid() {
+  _has_bits_[0] &= ~0x00040000u;
 }
 inline void LayersPacket_Layer::clear_valid() {
   if (valid_ != NULL) valid_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
@@ -2827,13 +3027,13 @@ inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_La
 
 // optional uint32 color = 101;
 inline bool LayersPacket_Layer::has_color() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
+  return (_has_bits_[0] & 0x00080000u) != 0;
 }
 inline void LayersPacket_Layer::set_has_color() {
-  _has_bits_[0] |= 0x00004000u;
+  _has_bits_[0] |= 0x00080000u;
 }
 inline void LayersPacket_Layer::clear_has_color() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00080000u;
 }
 inline void LayersPacket_Layer::clear_color() {
   color_ = 0u;
@@ -2849,13 +3049,13 @@ inline void LayersPacket_Layer::set_color(::google::protobuf::uint32 value) {
 
 // optional .mozilla.layers.layerscope.LayersPacket.Layer.Filter filter = 102;
 inline bool LayersPacket_Layer::has_filter() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
+  return (_has_bits_[0] & 0x00100000u) != 0;
 }
 inline void LayersPacket_Layer::set_has_filter() {
-  _has_bits_[0] |= 0x00008000u;
+  _has_bits_[0] |= 0x00100000u;
 }
 inline void LayersPacket_Layer::clear_has_filter() {
-  _has_bits_[0] &= ~0x00008000u;
+  _has_bits_[0] &= ~0x00100000u;
 }
 inline void LayersPacket_Layer::clear_filter() {
   filter_ = 0;
@@ -2872,13 +3072,13 @@ inline void LayersPacket_Layer::set_filter(::mozilla::layers::layerscope::Layers
 
 // optional uint64 refID = 103;
 inline bool LayersPacket_Layer::has_refid() const {
-  return (_has_bits_[0] & 0x00010000u) != 0;
+  return (_has_bits_[0] & 0x00200000u) != 0;
 }
 inline void LayersPacket_Layer::set_has_refid() {
-  _has_bits_[0] |= 0x00010000u;
+  _has_bits_[0] |= 0x00200000u;
 }
 inline void LayersPacket_Layer::clear_has_refid() {
-  _has_bits_[0] &= ~0x00010000u;
+  _has_bits_[0] &= ~0x00200000u;
 }
 inline void LayersPacket_Layer::clear_refid() {
   refid_ = GOOGLE_ULONGLONG(0);
@@ -2894,13 +3094,13 @@ inline void LayersPacket_Layer::set_refid(::google::protobuf::uint64 value) {
 
 // optional .mozilla.layers.layerscope.LayersPacket.Layer.Size size = 104;
 inline bool LayersPacket_Layer::has_size() const {
-  return (_has_bits_[0] & 0x00020000u) != 0;
+  return (_has_bits_[0] & 0x00400000u) != 0;
 }
 inline void LayersPacket_Layer::set_has_size() {
-  _has_bits_[0] |= 0x00020000u;
+  _has_bits_[0] |= 0x00400000u;
 }
 inline void LayersPacket_Layer::clear_has_size() {
-  _has_bits_[0] &= ~0x00020000u;
+  _has_bits_[0] &= ~0x00400000u;
 }
 inline void LayersPacket_Layer::clear_size() {
   if (size_ != NULL) size_->::mozilla::layers::layerscope::LayersPacket_Layer_Size::Clear();
