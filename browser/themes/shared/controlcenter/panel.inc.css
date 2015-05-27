@@ -1,0 +1,36 @@
+#identity-popup-content-box:not(.chromeUI) > #identity-popup-brandName,
+#identity-popup-content-box:not(.chromeUI) > #identity-popup-chromeLabel,
+#identity-popup-content-box.chromeUI > .identity-popup-label:not(#identity-popup-brandName):not(#identity-popup-chromeLabel),
+#identity-popup-content-box.chromeUI > .identity-popup-description,
+#identity-popup.chromeUI > #identity-popup-button-container,
+#identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
+#identity-popup-content-box.unknownIdentity > #identity-popup-runByLabel ,
+#identity-popup-content-box.unknownIdentity > #identity-popup-content-host ,
+#identity-popup-content-box.unknownIdentity > #identity-popup-content-owner ,
+#identity-popup-content-box.verifiedIdentity > #identity-popup-connectedToLabel2 ,
+#identity-popup-content-box.verifiedDomain > #identity-popup-connectedToLabel2 ,
+#identity-popup-content-box.verifiedDomain > #identity-popup-runByLabel {
+  display: none;
+}
+
+#identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
+  list-style-image: url("chrome://branding/content/icon64.png");
+}
+
+#identity-popup-brandName {
+  font-weight: bold;
+  font-size: 1.25em;
+  margin-top: .5em;
+  margin-bottom: .5em;
+}
+
+#identity-popup-content-box {
+  max-width: 50ch;
+}
+
+@media (min-resolution: 1.1dppx) {
+  #identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
+    list-style-image: url("chrome://branding/content/icon128.png");
+    -moz-image-region: rect(0, 128px, 128px, 0);
+  }
+}
