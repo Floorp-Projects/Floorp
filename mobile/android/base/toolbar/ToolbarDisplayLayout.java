@@ -173,6 +173,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
 
         mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
         mSiteIdentityPopup.setAnchor(this);
+        mSiteIdentityPopup.setOnVisibilityChangeListener(mActivity);
 
         mStop = (ImageButton) findViewById(R.id.stop);
         mPageActionLayout = (PageActionLayout) findViewById(R.id.page_action_layout);
