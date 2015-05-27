@@ -806,26 +806,14 @@ SpecialPowersAPI.prototype = {
           continue;
         }
 
-        var todo = {'op': 'add',
-                    'type': permission.type,
-                    'permission': perm,
-                    'value': perm,
-                    'url': url,
-                    'appId': appId,
-                    'isInBrowserElement': isInBrowserElement,
-                    'expireType': (typeof permission.expireType === "number") ?
-                      permission.expireType : 0, // default: EXPIRE_NEVER
-                    'expireTime': (typeof permission.expireTime === "number") ?
-                      permission.expireTime : 0};
-
-        var cleanupTodo = Object.assign({}, todo);
-
+        var todo = {'op': 'add', 'type': permission.type, 'permission': perm, 'value': perm, 'url': url, 'appId': appId, 'isInBrowserElement': isInBrowserElement};
         if (permission.remove == true)
           todo.op = 'remove';
 
         pendingPermissions.push(todo);
 
         /* Push original permissions value or clear into cleanup array */
+        var cleanupTodo = {'op': 'add', 'type': permission.type, 'permission': perm, 'value': perm, 'url': url, 'appId': appId, 'isInBrowserElement': isInBrowserElement};
         if (originalValue == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
           cleanupTodo.op = 'remove';
         } else {
@@ -1878,7 +1866,7 @@ SpecialPowersAPI.prototype = {
     return [ url, appId, isInBrowserElement, isSystem ];
   },
 
-  addPermission: function(type, allow, arg, expireType, expireTime) {
+  addPermission: function(type, allow, arg) {
     let [url, appId, isInBrowserElement, isSystem] = this._getInfoFromPermissionArg(arg);
     if (isSystem) {
       return; // nothing to do
@@ -1898,9 +1886,7 @@ SpecialPowersAPI.prototype = {
       'permission': permission,
       'url': url,
       'appId': appId,
-      'isInBrowserElement': isInBrowserElement,
-      'expireType': (typeof expireType === "number") ? expireType : 0,
-      'expireTime': (typeof expireTime === "number") ? expireTime : 0
+      'isInBrowserElement': isInBrowserElement
     };
 
     this._sendSyncMessage('SPPermissionManager', msg);
