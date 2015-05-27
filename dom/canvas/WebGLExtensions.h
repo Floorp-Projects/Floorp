@@ -16,6 +16,8 @@ namespace mozilla {
 
 class WebGLContext;
 class WebGLShader;
+class WebGLQuery;
+class WebGLTimerQuery;
 class WebGLVertexArray;
 
 class WebGLExtensionBase
@@ -327,6 +329,36 @@ public:
     static bool IsSupported(const WebGLContext*);
 
     DECL_WEBGL_EXTENSION_GOOP
+};
+
+class WebGLExtensionDisjointTimerQuery
+    : public WebGLExtensionBase
+{
+public:
+    explicit WebGLExtensionDisjointTimerQuery(WebGLContext* webgl);
+    virtual ~WebGLExtensionDisjointTimerQuery();
+
+    already_AddRefed<WebGLTimerQuery> CreateQueryEXT();
+    void DeleteQueryEXT(WebGLTimerQuery* query);
+    bool IsQueryEXT(WebGLTimerQuery* query);
+    void BeginQueryEXT(GLenum target, WebGLTimerQuery* query);
+    void EndQueryEXT(GLenum target);
+    void QueryCounterEXT(WebGLTimerQuery* query, GLenum target);
+    void GetQueryEXT(JSContext *cx, GLenum target, GLenum pname,
+                     JS::MutableHandle<JS::Value> retval);
+    void GetQueryObjectEXT(JSContext *cx, WebGLTimerQuery* query,
+                           GLenum pname,
+                           JS::MutableHandle<JS::Value> retval);
+
+    static bool IsSupported(const WebGLContext*);
+
+    DECL_WEBGL_EXTENSION_GOOP
+
+private:
+    /**
+     * An active TIME_ELAPSED query participating in a begin/end block.
+     */
+    WebGLRefPtr<WebGLTimerQuery> mActiveQuery;
 };
 
 } // namespace mozilla
