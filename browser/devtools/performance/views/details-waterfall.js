@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const WATERFALL_RESIZE_EVENTS_DRAIN = 100; // ms
 const MARKER_DETAILS_WIDTH = 200;
 
 /**
@@ -38,6 +39,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
     this.details.on("resize", this._onResize);
     this.details.on("view-source", this._onViewSource);
+    window.addEventListener("resize", this._onResize);
 
     // TODO bug 1167093 save the previously set width, and ensure minimum width
     this.details.width = MARKER_DETAILS_WIDTH;
@@ -51,6 +53,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
 
     this.details.off("resize", this._onResize);
     this.details.off("view-source", this._onViewSource);
+    window.removeEventListener("resize", this._onResize);
   },
 
   /**
@@ -90,8 +93,10 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    * Called when the marker details view is resized.
    */
   _onResize: function () {
-    this._markersRoot.recalculateBounds();
-    this.render();
+    setNamedTimeout("waterfall-resize", WATERFALL_RESIZE_EVENTS_DRAIN, () => {
+      this._markersRoot.recalculateBounds();
+      this.render(OverviewView.getTimeInterval());
+    });
   },
 
   /**

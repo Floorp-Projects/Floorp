@@ -34,7 +34,10 @@ function* spawnTest() {
   ok(true, "Recording has ended.");
 
   // Select everything
-  OverviewView.graphs.get("timeline").setSelection({ start: 0, end: OverviewView.graphs.get("timeline").width })
+  let timeline = OverviewView.graphs.get("timeline");
+  let rerendered = WaterfallView.once(EVENTS.WATERFALL_RENDERED);
+  timeline.setSelection({ start: 0, end: timeline.width })
+  yield rerendered;
 
   let bars = $$(".waterfall-marker-bar");
   let markers = PerformanceController.getCurrentRecording().getMarkers();
