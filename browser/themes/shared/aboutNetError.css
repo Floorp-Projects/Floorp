@@ -6,7 +6,7 @@
 
 body {
   display: flex;
-  box-sizing: padding-box;
+  box-sizing: border-box;
   min-height: 100vh;
   padding: 0 48px;
   align-items: center;
