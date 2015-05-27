@@ -22,7 +22,6 @@
  */
 
 #include "BluetoothUnixSocketConnector.h"
-#include <bluetooth/bluetooth.h>
 #include <bluetooth/l2cap.h>
 #include <bluetooth/rfcomm.h>
 #include <bluetooth/sco.h>
