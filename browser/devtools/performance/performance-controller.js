@@ -25,8 +25,10 @@ loader.lazyRequireGetter(this, "RecordingModel",
   "devtools/performance/recording-model", true);
 loader.lazyRequireGetter(this, "GraphsController",
   "devtools/performance/graphs", true);
-loader.lazyRequireGetter(this, "Waterfall",
-  "devtools/performance/waterfall", true);
+loader.lazyRequireGetter(this, "WaterfallHeader",
+  "devtools/performance/waterfall-ticks", true);
+loader.lazyRequireGetter(this, "MarkerView",
+  "devtools/performance/marker-view", true);
 loader.lazyRequireGetter(this, "MarkerDetails",
   "devtools/performance/marker-details", true);
 loader.lazyRequireGetter(this, "MarkerUtils",

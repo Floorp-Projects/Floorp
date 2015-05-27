@@ -17,9 +17,10 @@ EXTRA_JS_MODULES.devtools.performance += [
     'modules/logic/tree-model.js',
     'modules/widgets/graphs.js',
     'modules/widgets/marker-details.js',
+    'modules/widgets/marker-view.js',
     'modules/widgets/markers-overview.js',
     'modules/widgets/tree-view.js',
-    'modules/widgets/waterfall.js',
+    'modules/widgets/waterfall-ticks.js',
     'panel.js'
 ]
 
