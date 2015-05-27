@@ -7,7 +7,7 @@
 
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
-  let { $, $$, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
+  let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
   let { TimelineGraph } = devtools.require("devtools/performance/graphs");
   let { rowHeight: MARKERS_GRAPH_ROW_HEIGHT } = TimelineGraph.prototype;
 
@@ -24,20 +24,15 @@ function* spawnTest() {
 
   yield stopRecording(panel);
 
-  let overview = OverviewView.graphs.get("timeline");
-  let waterfall = WaterfallView.waterfall;
-
   // Select everything
   OverviewView.setTimeInterval({ startTime: 0, endTime: Number.MAX_VALUE })
 
   $("#filter-button").click();
-
-  yield waitUntil(() => !waterfall._outstandingMarkers.length);
-
   let menuItem1 = $("menuitem[marker-type=Styles]");
   let menuItem2 = $("menuitem[marker-type=Reflow]");
   let menuItem3 = $("menuitem[marker-type=Paint]");
 
+  let overview = OverviewView.graphs.get("timeline");
   let originalHeight = overview.fixedHeight;
 
   ok($(".waterfall-marker-bar[type=Styles]"), "Found at least one 'Styles' marker (1)");
@@ -46,9 +41,7 @@ function* spawnTest() {
 
   let heightBefore = overview.fixedHeight;
   EventUtils.synthesizeMouseAtCenter(menuItem1, {type: "mouseup"}, panel.panelWin);
-  yield once(menuItem1, "command");
-
-  yield waitUntil(() => !waterfall._outstandingMarkers.length);
+  yield waitForOverviewAndCommand(overview, menuItem1);
 
   is(overview.fixedHeight, heightBefore, "Overview height hasn't changed");
   ok(!$(".waterfall-marker-bar[type=Styles]"), "No 'Styles' marker (2)");
@@ -57,9 +50,7 @@ function* spawnTest() {
 
   heightBefore = overview.fixedHeight;
   EventUtils.synthesizeMouseAtCenter(menuItem2, {type: "mouseup"}, panel.panelWin);
-  yield once(menuItem2, "command");
-
-  yield waitUntil(() => !waterfall._outstandingMarkers.length);
+  yield waitForOverviewAndCommand(overview, menuItem2);
 
   is(overview.fixedHeight, heightBefore, "Overview height hasn't changed");
   ok(!$(".waterfall-marker-bar[type=Styles]"), "No 'Styles' marker (3)");
@@ -68,9 +59,7 @@ function* spawnTest() {
 
   heightBefore = overview.fixedHeight;
   EventUtils.synthesizeMouseAtCenter(menuItem3, {type: "mouseup"}, panel.panelWin);
-  yield once(menuItem3, "command");
-
-  yield waitUntil(() => !waterfall._outstandingMarkers.length);
+  yield waitForOverviewAndCommand(overview, menuItem3);
 
   is(overview.fixedHeight, heightBefore - MARKERS_GRAPH_ROW_HEIGHT, "Overview is smaller");
   ok(!$(".waterfall-marker-bar[type=Styles]"), "No 'Styles' marker (4)");
@@ -79,10 +68,8 @@ function* spawnTest() {
 
   for (let item of [menuItem1, menuItem2, menuItem3]) {
     EventUtils.synthesizeMouseAtCenter(item, {type: "mouseup"}, panel.panelWin);
-    yield once(item, "command");
+    yield waitForOverviewAndCommand(overview, item);
   }
-
-  yield waitUntil(() => !waterfall._outstandingMarkers.length);
 
   ok($(".waterfall-marker-bar[type=Styles]"), "Found at least one 'Styles' marker (5)");
   ok($(".waterfall-marker-bar[type=Reflow]"), "Found at least one 'Reflow' marker (5)");
@@ -92,4 +79,10 @@ function* spawnTest() {
 
   yield teardown(panel);
   finish();
+}
+
+function waitForOverviewAndCommand(overview, item) {
+  let overviewRendered = overview.once("refresh");
+  let menuitemCommandDispatched = once(item, "command");
+  return Promise.all([overviewRendered, menuitemCommandDispatched]);
 }
