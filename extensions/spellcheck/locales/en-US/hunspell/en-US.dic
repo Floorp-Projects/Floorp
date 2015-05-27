@@ -1,4 +1,4 @@
-54818
+54837
 0/nm
 0th/pt
 1/n1
@@ -16883,7 +16883,6 @@ active/KIMYS
 activeness/M
 activism/M
 activist/MS
-activity's/A
 activity/ISM
 actor/AMS
 actress/MS
@@ -17602,6 +17601,7 @@ amity/M
 ammeter/SM
 ammo/M
 ammonia/M
+ammonium
 ammunition/M
 amnesia/M
 amnesiac/MS
@@ -19853,6 +19853,7 @@ biological/Y
 biologist/MS
 biology/M
 biomass/M
+biomedical
 bionic/S
 bionically
 bionics/M
@@ -23334,7 +23335,7 @@ comportment/M
 compose/AECGSD
 composedly
 composer/MS
-composite/MYNXSDGP
+composite/MYGNXPDS
 composition/CM
 compositor/SM
 compost/SGMD
@@ -26466,6 +26467,7 @@ doorstop/MS
 doorway/SM
 dooryard/MS
 dopa/M
+dopamine
 dope/MZGDRS
 doper/M
 dopey
@@ -27566,6 +27568,7 @@ endorser/M
 endoscope/MS
 endoscopic
 endoscopy/M
+endothelial
 endothermic
 endow/SDLG
 endowment/MS
@@ -27798,6 +27801,8 @@ episcopate/M
 episode/SM
 episodic
 episodically
+epistemic
+epistemological
 epistemology
 epistle/SM
 epistolary
@@ -32015,6 +32020,7 @@ heal/DRHZGS
 healed/U
 healer/M
 health/M
+healthcare
 healthful/PY
 healthfulness/M
 healthily/U
@@ -36451,6 +36457,7 @@ macroeconomic/S
 macroeconomics/M
 macrology/S
 macron/MS
+macrophages
 macroscopic
 mad/SMYP
 madam/SM
@@ -37831,6 +37838,9 @@ miter/MDG
 mitigate/XDSGN
 mitigated/U
 mitigation/M
+mitochondria
+mitochondrial
+mitochondrion
 mitoses
 mitosis/M
 mitotic
@@ -37870,6 +37880,7 @@ mocking/Y
 mockingbird/SM
 mod/STM
 modal/SM
+modality/S
 modded
 modding
 mode/MS
@@ -38517,6 +38528,7 @@ mycologist/SM
 mycology/M
 myelitis/M
 myna/MS
+myocardial
 myocardium
 myopia/M
 myopic
@@ -41389,6 +41401,7 @@ pepping
 peppy/TPR
 pepsin/M
 peptic/MS
+peptide/S
 peradventure/M
 perambulate/XGNDS
 perambulation/M
@@ -41447,6 +41460,7 @@ perfumer/M
 perfumery/SM
 perfunctorily
 perfunctory
+perfusion
 pergola/SM
 perhaps
 pericardia
@@ -42332,7 +42346,7 @@ poesy/M
 poet/MS
 poetaster/MS
 poetess/MS
-poetic
+poetic/S
 poetical/Y
 poetry/M
 pogrom/SM
@@ -44277,6 +44291,7 @@ reacquire/DSG
 react/V
 reactant/SM
 reactionary/SM
+reactivity/M
 read/ZGMRBJS
 readability/SM
 reader/M
@@ -47406,6 +47421,7 @@ sitter/SM
 sitting/SM
 situate/DSXGN
 situation/M
+situational
 six/MSH
 sixfold
 sixpence/MS
@@ -48941,6 +48957,7 @@ steno/SM
 stenographer/SM
 stenographic
 stenography/M
+stenosis
 stent/SM
 stentorian
 step/IMS
@@ -53112,6 +53129,7 @@ vernier/SM
 veronica/M
 verruca/SM
 verrucae
+versa
 versatile
 versatility/M
 verse/AFNGMSDX
@@ -53670,6 +53688,7 @@ wastefulness/M
 wasteland/SM
 wastepaper/M
 waster/M
+wastewater
 wastrel/SM
 watch/BZGMDRS
 watchband/MS
