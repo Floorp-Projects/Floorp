@@ -25,29 +25,37 @@ class ChunkedJSONWriteFunc : public mozilla::JSONWriteFunc
   mozilla::Vector<mozilla::UniquePtr<char[]>> mChunkList;
   mozilla::Vector<size_t> mChunkLengths;
 
-  void AllocChunk() {
+  void AllocChunk(size_t aChunkSize) {
     MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
-    mozilla::UniquePtr<char[]> newChunk = mozilla::MakeUnique<char[]>(kChunkSize);
+    mozilla::UniquePtr<char[]> newChunk = mozilla::MakeUnique<char[]>(aChunkSize);
     mChunkPtr = newChunk.get();
-    mChunkEnd = mChunkPtr + kChunkSize;
+    mChunkEnd = mChunkPtr + aChunkSize;
     MOZ_ALWAYS_TRUE(mChunkLengths.append(0));
     MOZ_ALWAYS_TRUE(mChunkList.append(mozilla::Move(newChunk)));
   }
 
 public:
   ChunkedJSONWriteFunc() {
-    AllocChunk();
+    AllocChunk(kChunkSize);
   }
 
   void Write(const char* aStr) override {
-    MOZ_ASSERT(strlen(aStr) < kChunkSize);
-
     size_t len = strlen(aStr);
-    char* newPtr = mChunkPtr + len;
-    if (newPtr >= mChunkEnd) {
-      MOZ_ASSERT(*mChunkPtr == '\0');
-      AllocChunk();
+
+    // Most strings to be written are small, but subprocess profiles (e.g.,
+    // from the content process in e10s) may be huge. If the string is larger
+    // than a chunk, allocate its own chunk.
+    char* newPtr;
+    if (len >= kChunkSize) {
+      AllocChunk(len + 1);
       newPtr = mChunkPtr + len;
+    } else {
+      newPtr = mChunkPtr + len;
+      if (newPtr >= mChunkEnd) {
+        MOZ_ASSERT(*mChunkPtr == '\0');
+        AllocChunk(kChunkSize);
+        newPtr = mChunkPtr + len;
+      }
     }
 
     memcpy(mChunkPtr, aStr, len);
