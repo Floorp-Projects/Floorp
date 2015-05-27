@@ -249,7 +249,9 @@ protected:
 
     // to avoid enumerating all fonts, maintain a mapping of local font
     // names to family
-    nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> mLocalNames;
+    nsBaseHashtable<nsStringHashKey,
+                    nsCountedRef<FcPattern>,
+                    FcPattern*> mLocalNames;
 
     // caching generic/lang ==> font family
     nsRefPtrHashtable<nsCStringHashKey, gfxFontFamily> mGenericMappings;
