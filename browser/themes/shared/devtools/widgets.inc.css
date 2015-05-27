@@ -923,7 +923,7 @@
   -moz-padding-start: 6px;
   -moz-padding-end: 6px;
   transform: translateY(-50%);
-  font-size: 80%;
+  font-size: 0.8rem !important;
   z-index: 1;
   pointer-events: none;
 }
