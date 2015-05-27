@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset='UTF-8'>
+<title>WebGL test: Test EXT_disjoint_timer_query.</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="webgl-util.js"></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<script>
+
+function doTest() {
+  var gl = WebGLUtil.getWebGL('c', true);
+  var ext = gl.getExtension('EXT_disjoint_timer_query');
+  if (!ext) {
+    ok(true, "EXT_disjoint_timer_query may be unsupported.");
+    SimpleTest.finish();
+    return;
+  }
+
+  ok(!ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT),
+     "No query is active initially.");
+
+  var elapsedQuery = ext.createQueryEXT();
+  ok(elapsedQuery, "Query creation works.");
+  ok(ext.isQueryEXT(elapsedQuery), "New query is valid after creation.");
+
+  ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, elapsedQuery);
+  is(ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT), elapsedQuery,
+     "Query is active after beginQueryEXT.");
+  ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
+  gl.flush();
+
+  ok(!ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT),
+     "Query is inactive after endQueryEXT.");
+  ok(ext.getQueryObjectEXT(elapsedQuery, ext.QUERY_RESULT_AVAILABLE_EXT),
+     "Time elapsed query is available immediately after flush.");
+
+  ext.deleteQueryEXT(elapsedQuery);
+  ok(!ext.isQueryEXT(elapsedQuery), "Query is no longer valid after deletion.");
+
+  var timestampQuery = ext.createQueryEXT();
+  ext.queryCounterEXT(timestampQuery, ext.TIMESTAMP_EXT);
+  gl.flush();
+  ok(ext.getQueryObjectEXT(timestampQuery, ext.QUERY_RESULT_AVAILABLE_EXT),
+     "Timestamp query should be available immediately after flush.");
+
+  ok(ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30,
+     "Timestamp must be at least 30 bits to hold at least 1 second of timing.");
+  ok(ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30,
+     "Time elapsed must be at least 30 bits to hold at least 1 second of timing.");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [['webgl.enable-draft-extensions', true]]}, doTest);
+
+</script>
+</body>
+</html>
