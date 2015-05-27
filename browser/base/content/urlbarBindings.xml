@@ -2180,7 +2180,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   &mixedContentBlocked2.moreinfo;
                 </xul:description>
                 <xul:label anonid="mixedContent.helplink"
-                  class="text-link plain" href=""
+                  class="text-link" href=""
                   value="&mixedContentBlocked2.learnMore;"/>
               </xul:vbox>
               <xul:button
@@ -2218,7 +2218,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   &trackingContentBlocked.moreinfo;
                 </xul:description>
                 <xul:label anonid="trackingContent.helplink"
-                  class="text-link plain" href=""
+                  class="text-link" href=""
                   value="&trackingContentBlocked.learnMore;"/>
               </xul:vbox>
               <xul:button

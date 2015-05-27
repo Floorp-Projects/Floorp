@@ -2566,10 +2566,6 @@ notification[value="loop-sharing-notification"] .messageImage {
 
 /* Social toolbar item */
 
-#social-undoactivation-button {
-  -moz-margin-start: 0; /* override default label margin to match description margin */
-}
-
 #socialActivatedNotification .popup-notification-button-container {
   margin-left: 6px;
 }
