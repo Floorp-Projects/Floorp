@@ -110,6 +110,7 @@ public:
   bool mLastUploadLengthComputable;
   bool mSeenLoadStart;
   bool mSeenUploadLoadStart;
+  bool mOpening;
 
   // Only touched on the main thread.
   bool mUploadEventListenersAttached;
@@ -125,7 +126,7 @@ public:
     mOuterEventStreamId(0), mOuterChannelId(0), mLastLoaded(0), mLastTotal(0),
     mLastUploadLoaded(0), mLastUploadTotal(0), mIsSyncXHR(false),
     mLastLengthComputable(false), mLastUploadLengthComputable(false),
-    mSeenLoadStart(false), mSeenUploadLoadStart(false),
+    mSeenLoadStart(false), mSeenUploadLoadStart(false), mOpening(false),
     mUploadEventListenersAttached(false), mMainThreadSeenLoadStart(false),
     mInOpen(false), mArrayBufferResponseWasTransferred(false)
   { }
@@ -1546,7 +1547,11 @@ SendRunnable::MainThreadRun()
     variant = wvariant;
   }
 
-  MOZ_ASSERT(!mProxy->mWorkerPrivate);
+  // Send() has been already called.
+  if (mProxy->mWorkerPrivate) {
+    return NS_ERROR_FAILURE;
+  }
+
   mProxy->mWorkerPrivate = mWorkerPrivate;
 
   MOZ_ASSERT(!mProxy->mSyncLoopTarget);
@@ -1841,6 +1846,12 @@ XMLHttpRequest::SendInternal(const nsAString& aStringBody,
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
+  // No send() calls when open is running.
+  if (mProxy->mOpening) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   bool hasUploadListeners = mUpload ? mUpload->HasListeners() : false;
 
   MaybePin(aRv);
@@ -1926,12 +1937,15 @@ XMLHttpRequest::Open(const nsACString& aMethod, const nsAString& aUrl,
                      mBackgroundRequest, mWithCredentials,
                      mTimeout);
 
+  mProxy->mOpening = true;
   if (!runnable->Dispatch(mWorkerPrivate->GetJSContext())) {
     ReleaseProxy();
+    mProxy->mOpening = false;
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
+  mProxy->mOpening = false;
   mProxy->mIsSyncXHR = !aAsync;
 }
 
