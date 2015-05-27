@@ -561,17 +561,14 @@ void mozilla_sampler_save()
   t->HandleSaveRequest();
 }
 
-char* mozilla_sampler_get_profile(float aSinceTime)
+mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(float aSinceTime)
 {
   TableTicker *t = tlsTicker.get();
   if (!t) {
     return nullptr;
   }
 
-  std::stringstream stream;
-  t->ToStreamAsJSON(stream, aSinceTime);
-  char* profile = strdup(stream.str().c_str());
-  return profile;
+  return t->ToJSON(aSinceTime);
 }
 
 JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, float aSinceTime)
