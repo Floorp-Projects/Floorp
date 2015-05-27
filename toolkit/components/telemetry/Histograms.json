@@ -7928,6 +7928,14 @@
     "kind": "count",
     "description": "Tracking whether a ServiceWorker spawn gets queued due to hitting max workers per domain limit"
   },
+  "GRAPHICS_SANITY_TEST": {
+    "expires_in_version": "never",
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
+    "kind": "enumerated",
+    "n_values": 20,
+    "releaseChannelCollection": "opt-out",
+    "description": "Reports results from the graphics sanity test to track which drivers are having problems (0=TEST_PASSED, 1=TEST_FAILED_RENDER, 2=TEST_FAILED_VIDEO, 3=TEST_CRASHED)"
+  },
   "READER_MODE_SERIALIZE_DOM_MS": {
     "expires_in_version": "42",
     "kind": "exponential",
