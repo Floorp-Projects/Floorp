@@ -318,7 +318,7 @@ SpecialPowersObserverAPI.prototype = {
 
         switch (msg.op) {
           case "add":
-            Services.perms.addFromPrincipal(principal, msg.type, msg.permission, msg.expireType, msg.expireTime);
+            Services.perms.addFromPrincipal(principal, msg.type, msg.permission);
             break;
           case "remove":
             Services.perms.removeFromPrincipal(principal, msg.type);
