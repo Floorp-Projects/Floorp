@@ -75,6 +75,34 @@ struct ReturnTypeIs {
  * callbacks to be invoked (asynchronously, on a specified thread) when the
  * request is either completed (resolved) or cannot be completed (rejected).
  *
+ * MediaPromises attempt to mirror the spirit of JS Promises to the extent that
+ * is possible (and desirable) in C++. While the intent is that MediaPromises
+ * feel familiar to programmers who are accustomed to their JS-implemented cousin,
+ * we don't shy away from imposing restrictions and adding features that make
+ * sense for the use cases we encounter.
+ *
+ * A MediaPromise is ThreadSafe, and may be ->Then()ed on any thread. The Then()
+ * call accepts resolve and reject callbacks, and returns a MediaPromise::Request.
+ * The Request object serves several purposes for the consumer.
+ *
+ *   (1) It allows the caller to cancel the delivery of the resolve/reject value
+ *       if it has not already occurred, via Disconnect() (this must be done on
+ *       the target thread to avoid racing).
+ *
+ *   (2) It provides access to a "Completion Promise", which is roughly analagous
+ *       to the Promise returned directly by ->then() calls on JS promises. If
+ *       the resolve/reject callback returns a new MediaPromise, that promise is
+ *       chained to the completion promise, such that its resolve/reject value
+ *       will be forwarded along when it arrives. If the resolve/reject callback
+ *       returns void, the completion promise is resolved/rejected with the same
+ *       value that was passed to the callback.
+ *
+ * The MediaPromise APIs skirt traditional XPCOM convention by returning nsRefPtrs
+ * (rather than already_AddRefed) from various methods. This is done to allow elegant
+ * chaining of calls without cluttering up the code with intermediate variables, and
+ * without introducing separate API variants for callers that want a return value
+ * (from, say, ->Then()) from those that don't.
+ *
  * When IsExclusive is true, the MediaPromise does a release-mode assertion that
  * there is at most one call to either Then(...) or ChainTo(...).
  */
@@ -180,7 +208,6 @@ public:
     // tries to access an inherited protected member.
     bool IsDisconnected() const { return mDisconnected; }
 
-    // XXXbholley - Comments for this come in a subsequent patch.
     virtual MediaPromise* CompletionPromise() = 0;
 
   protected:
