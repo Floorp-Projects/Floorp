@@ -34,6 +34,7 @@ class CentOSBootstrapper(BaseBootstrapper):
         self.browser_packages = [
             'alsa-lib-devel',
             'dbus-glib-devel',
+            'GConf2-devel',
             'glibc-static',
             'gstreamer-devel',
             'gstreamer-plugins-base-devel',
