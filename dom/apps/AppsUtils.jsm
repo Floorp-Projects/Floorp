@@ -66,7 +66,8 @@ mozIApplication.prototype = {
     let uri = Services.io.newURI(aPageURL, null, null);
     let filepath = AppsUtils.getFilePath(uri.path);
     let eliminatedUri = Services.io.newURI(uri.prePath + filepath, null, null);
-    let equalCriterion = aUri => aUri.equals(eliminatedUri);
+    let equalCriterion = aUrl => Services.io.newURI(aUrl, null, null)
+                                            .equals(eliminatedUri);
     return this.widgetPages.find(equalCriterion) !== undefined;
   },
 
