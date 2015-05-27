@@ -1864,6 +1864,16 @@ DEPRECATION_HINTS = {
 
             NO_DIST_INSTALL = True
     ''',
+
+    'GENERATED_SOURCES': '''
+        Please use
+
+            SOURCES += [ '!foo.cpp' ]
+
+        instead of
+
+            GENERATED_SOURCES += [ 'foo.cpp']
+    ''',
 }
 
 # Make sure that all template variables have a deprecation hint.
