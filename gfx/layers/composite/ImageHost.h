@@ -112,7 +112,8 @@ public:
                          const nsIntRegion* aVisibleRegion = nullptr) override;
   virtual LayerRenderState GetRenderState() override;
   virtual void UseOverlaySource(OverlaySource aOverlay) override;
-  virtual void SetPictureRect(const gfx::IntRect& aPictureRect) override
+  virtual gfx::IntSize GetImageSize() const override;
+  virtual void SetPictureRect(const nsIntRect& aPictureRect) override
   {
     mPictureRect = aPictureRect;
     mHasPictureRect = true;

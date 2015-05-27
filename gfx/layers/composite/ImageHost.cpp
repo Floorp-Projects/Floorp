@@ -363,6 +363,16 @@ ImageHostOverlay::UseOverlaySource(OverlaySource aOverlay)
   mOverlay = aOverlay;
 }
 
+IntSize
+ImageHostOverlay::GetImageSize() const
+{
+  if (mHasPictureRect) {
+    return IntSize(mPictureRect.width, mPictureRect.height);
+  }
+
+  return IntSize();
+}
+
 void
 ImageHostOverlay::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
