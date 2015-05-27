@@ -2,15 +2,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import buildconfig
 import json
 import math
 import os
 import re
 import sys
 
-# Need to update sys.path to be able to find usecounters.
-sys.path.append(os.path.join(buildconfig.topsrcdir, 'dom/base/'))
+# histogram_tools.py is used by scripts from a mozilla-central build tree
+# and also by outside consumers, such as the telemetry server.  We need
+# to ensure that importing things works in both contexts.  Therefore,
+# unconditionally importing things that are local to the build tree, such
+# as buildconfig, is a no-no.
+try:
+    import buildconfig
+
+    # Need to update sys.path to be able to find usecounters.
+    sys.path.append(os.path.join(buildconfig.topsrcdir, 'dom/base/'))
+except ImportError:
+    # Must be in an out-of-tree usage scenario.  Trust that whoever is
+    # running this script knows we need the usecounters module and has
+    # ensured it's in our sys.path.
+    pass
+
 import usecounters
 
 from collections import OrderedDict
