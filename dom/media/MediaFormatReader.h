@@ -55,13 +55,6 @@ public:
   }
 
   virtual nsRefPtr<MetadataPromise> AsyncReadMetadata() override;
-  virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) override
-  {
-    // Unused as we provide AsyncReadMetadataAPI.
-    // However we must implement it as it's pure virtual.
-    return NS_OK;
-  }
 
   virtual void ReadUpdatedMetadata(MediaInfo* aInfo) override;
 

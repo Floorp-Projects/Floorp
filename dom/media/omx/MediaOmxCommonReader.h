@@ -24,6 +24,8 @@ class AbstractMediaDecoder;
 class MediaOmxCommonReader : public MediaDecoderReader
 {
 public:
+  typedef MediaPromise<bool /* aIgnored */, bool /* aIgnored */, /* IsExclusive = */ true> MediaResourcePromise;
+
   MediaOmxCommonReader(AbstractMediaDecoder* aDecoder);
 
   void SetAudioChannel(dom::AudioChannel aAudioChannel) {
