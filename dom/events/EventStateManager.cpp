@@ -4785,8 +4785,10 @@ EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
 
     if (aState == NS_EVENT_STATE_ACTIVE) {
       // Editable content can never become active since their default actions
-      // are disabled.
-      if (aContent && aContent->IsEditable()) {
+      // are disabled.  Watch out for editable content in native anonymous
+      // subtrees though, as they belong to text controls.
+      if (aContent && aContent->IsEditable() &&
+          !aContent->IsInNativeAnonymousSubtree()) {
         aContent = nullptr;
       }
       if (aContent != mActiveContent) {
