@@ -225,6 +225,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init)
 #ifdef NECKO_PROTOCOL_http
 // http/https
 #include "nsHttpHandler.h"
+#include "Http2Compression.h"
 #undef LOG
 #undef LOG_ENABLED
 #include "nsHttpAuthManager.h"
@@ -654,6 +655,10 @@ static void nsNetShutdown()
     // Release the Websocket Admission Manager
     mozilla::net::WebSocketChannel::Shutdown();
 #endif // NECKO_PROTOCOL_websocket
+
+#ifdef NECKO_PROTOCOL_http
+    mozilla::net::Http2CompressionCleanup();
+#endif // NECKO_PROTOCOL_http
 
     delete gNetSniffers;
     gNetSniffers = nullptr;
