@@ -350,6 +350,7 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
     // Content is empty. No need to select word.
     AC_LOG("%s, Cannot select word bacause content is empty", __FUNCTION__);
     DispatchCaretStateChangedEvent(CaretChangedReason::Longpressonemptycontent);
+    UpdateCarets();
     return NS_OK;
   }
 
