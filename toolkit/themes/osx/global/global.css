@@ -176,10 +176,14 @@ separator.groove[orient="vertical"] {
 description,
 label {
   cursor: default;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
 }
 
-label {
-  margin: 2px 6px;
+description {
+  margin-bottom: 4px;
 }
 
 label[disabled="true"] {
@@ -190,12 +194,7 @@ label[disabled="true"] {
   margin: 0;
 }
 
-description {
-  margin-bottom: 4px;
-}
-
 .header {
-  margin-bottom: 6px;
   font-weight: bold;
 }
 
