@@ -17,11 +17,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
     // designMode document is in a frame inside the window, as this means
     // the editable region is not in the root docshell (a less complicated case).  
 
+    var pageShowChecker = '<scr' + 'ipt>' +
+      'window.addEventListener("pageshow", function(event) {' +
+        'window.opener.postMessage({persisted:event.persisted}, "*");' +
+      '});</scr' + 'ipt>';
   
     var gTests = [
       {
         // <html><body><p>designModeDocument</p></body></html>
-        url: "data:text/html;charset=utf-8,<html><body><p>designModeDocument</p></body></html>",
+        url: "data:text/html;charset=utf-8,<html><head>" + pageShowChecker + "</head><body><p>designModeDocument</p></body></html>",
         name: 'designModeNavigate',
         onload(doc) { doc.designMode = "on"; },
         expectedBodyBeforeEdit: '<p>designModeDocument</p>',
@@ -30,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       },
       {
         // <html><body contentEditable="true"><p>contentEditable</p></body></html>
-        url: 'data:text/html;charset=utf-8,<html><body contentEditable="true"><p>contentEditable</p></body></html>',
+        url: "data:text/html;charset=utf-8,<html><head>" + pageShowChecker + "</head><body contentEditable=\"true\"><p>contentEditable</p></body></html>",
         name: 'contentEditableNavigate',
         expectedBodyBeforeEdit: '<p>contentEditable</p>',
         expectedBodyAfterEdit:  'EDITED <br><p>contentEditable</p>',
@@ -51,12 +55,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       }
       gTest = gTests[gTestNum];
       gTest.window = window.open(gTest.url, gTest.name, "width=500,height=500");
-      gTest.window.addEventListener("load", function() {
+      window.onmessage = function(e) {
+        is(e.data.persisted, false, "Initial load cannot be persisted");
+        window.onmessage = null;
         if ("onload" in gTest) {
           gTest.onload(gTest.window.document);
         }
         SimpleTest.waitForFocus(beginTest, gTest.window);
-      }, false);
+      };
     }
 
     function beginTest() {
@@ -73,10 +79,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
     }
     
     function goBack() {
+      window.onmessage = function(e) {
+        window.onmessage = null;
+        // Skip the test if the page is not loaded from the bf-cache when going back.
+        if (e.data.persisted) {
+          checkStillEditable();
+        } else {
+          gTest.window.close();
+          goNext();
+        }
+      };
       gTest.window.history.back();
-      setTimeout(function() {
-        SimpleTest.waitForFocus(checkStillEditable, gTest.window);
-      }, 0);
     }
 
     function checkStillEditable() {
