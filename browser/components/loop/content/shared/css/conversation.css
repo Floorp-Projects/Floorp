@@ -1006,10 +1006,6 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   flex: 0 1 auto;
 }
 
-body[dir=rtl] .room-context-thumbnail {
-  order: 2;
-}
-
 .room-context-thumbnail[src=""] {
   display: none;
 }
@@ -1018,10 +1014,6 @@ body[dir=rtl] .room-context-thumbnail {
   order: 2;
   flex: 1 1 auto;
   text-align: start;
-}
-
-body[dir=rtl] .room-context-content {
-  order: 1;
 }
 
 .room-context-content > .error-display-area.error {

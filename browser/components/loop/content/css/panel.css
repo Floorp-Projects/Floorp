@@ -339,7 +339,7 @@ body[dir=rtl] .new-room-view > .context > .context-content > .context-preview {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-right: .3rem;
+  -moz-margin-end: .3rem;
 }
 
 .room-list > .room-entry.room-active > h2 > .room-notification {
@@ -383,7 +383,8 @@ body[dir=rtl] .new-room-view > .context > .context-content > .context-preview {
   width: 24px;
   height: 24px;
   border: none;
-  margin: .1em .1em .1em .5em; /* relative to _this_ line's font, not the document's */
+  margin: .1em; /* relative to _this_ line's font, not the document's */
+  -moz-margin-start: .5em;
   background-color: transparent;  /* override browser default for button tags */
   top: -15px;
 }
@@ -424,7 +425,7 @@ body[dir=rtl] .new-room-view > .context > .context-content > .context-preview {
 .room-entry-context-item {
   display: inline-block;
   vertical-align: middle;
-  margin-left: 1rem;
+  -moz-margin-start: 1rem;
   height: 16px;
 }
 
