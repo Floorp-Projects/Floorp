@@ -119,14 +119,13 @@ nsProfiler::AddMarker(const char *aMarker)
 NS_IMETHODIMP
 nsProfiler::GetProfile(float aSinceTime, char **aProfile)
 {
-  char *profile = profiler_get_profile(aSinceTime);
+  mozilla::UniquePtr<char[]> profile = profiler_get_profile(aSinceTime);
   if (profile) {
-    size_t len = strlen(profile);
+    size_t len = strlen(profile.get());
     char *profileStr = static_cast<char *>
-                         (nsMemory::Clone(profile, (len + 1) * sizeof(char)));
+                         (nsMemory::Clone(profile.get(), (len + 1) * sizeof(char)));
     profileStr[len] = '\0';
     *aProfile = profileStr;
-    free(profile);
   }
   return NS_OK;
 }
