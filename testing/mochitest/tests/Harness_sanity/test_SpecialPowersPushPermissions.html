@@ -17,6 +17,11 @@ const ACCESS_SESSION = SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION;
 const ACCESS_ALLOW_FIRST_PARTY_ONLY = SpecialPowers.Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY;
 const ACCESS_LIMIT_THIRD_PARTY = SpecialPowers.Ci.nsICookiePermission.ACCESS_LIMIT_THIRD_PARTY;
 
+const EXPIRE_TIME = SpecialPowers.Ci.nsIPermissionManager.EXPIRE_TIME;
+var start;
+const DELAY = 1000;
+SimpleTest.requestFlakyTimeout("untriaged");
+
 function starttest(){
   SpecialPowers.addPermission("pPROMPT", PROMPT_ACTION, document);
   SpecialPowers.addPermission("pALLOW", ALLOW_ACTION, document);
@@ -136,8 +141,41 @@ function test6() {
     dump('/**** pTHIRDPARTY still set ****/\n');
     setTimeout(test6, 0);
   } else {
-    SimpleTest.finish();
+    test7();
   }
+}
+
+function test7() {
+  start = Number(Date.now());
+  SpecialPowers.addPermission('pEXPIRE', true, document, EXPIRE_TIME, start + DELAY);
+  testExpiredPermission(test8);
+}
+
+function test8() {
+  start = Number(Date.now());
+  SpecialPowers.pushPermissions([
+    { 'type': 'pEXPIRE',
+      'allow': true,
+      'expireType': EXPIRE_TIME,
+      'expireTime': start + DELAY,
+      'context': document
+    }], function() {
+      testExpiredPermission(SimpleTest.finish);
+    }
+  );
+}
+
+function testExpiredPermission(callback) {
+  var now = Number(Date.now());
+  if (now < start + DELAY) {
+    ok(SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document), 'unexpired permission is still there');
+    setTimeout(function() {testExpiredPermission(callback)}, DELAY);
+    return;
+  }
+
+  ok(!SpecialPowers.testPermission('pEXPIRE', ALLOW_ACTION, document), 'expired permission is cleared');
+
+  callback();
 }
 </script>
 </pre>
