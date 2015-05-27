@@ -51,6 +51,7 @@ toolkit.jar:
         skin/classic/mozapps/passwordmgr/key-64.png                (passwordmgr/key-64.png)
 #ifdef MOZ_PLACES
         skin/classic/mozapps/places/defaultFavicon.png             (places/defaultFavicon.png)
+        skin/classic/mozapps/places/defaultFavicon@2x.png          (places/defaultFavicon@2x.png)
 #endif
         skin/classic/mozapps/formautofill/requestAutocomplete.css  (../../shared/formautofill/requestAutocomplete.css)
         skin/classic/mozapps/plugins/pluginProblem.css             (../../shared/plugins/pluginProblem.css)
