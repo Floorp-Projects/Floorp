@@ -80,13 +80,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           // GetScreenRectInAppUnits returns the border box rectangle, so
           // adjust to get the desired content rectangle.
           nsRect rect = frameToResize->GetScreenRectInAppUnits();
-          switch (frameToResize->StylePosition()->mBoxSizing) {
-            case NS_STYLE_BOX_SIZING_CONTENT:
-              rect.Deflate(frameToResize->GetUsedPadding());
-            case NS_STYLE_BOX_SIZING_PADDING:
-              rect.Deflate(frameToResize->GetUsedBorder());
-            default:
-              break;
+          if (frameToResize->StylePosition()->mBoxSizing == NS_STYLE_BOX_SIZING_CONTENT) {
+            rect.Deflate(frameToResize->GetUsedBorderAndPadding());
           }
 
           mMouseDownRect =
