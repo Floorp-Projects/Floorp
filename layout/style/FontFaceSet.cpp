@@ -1545,6 +1545,7 @@ FontFaceSet::DispatchLoadingFinishedEvent(
   init.mCancelable = false;
   OwningNonNull<FontFace>* elements =
     init.mFontfaces.AppendElements(aFontFaces.Length());
+  MOZ_ASSERT(elements);
   for (size_t i = 0; i < aFontFaces.Length(); i++) {
     elements[i] = aFontFaces[i];
   }
