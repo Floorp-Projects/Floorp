@@ -712,11 +712,7 @@ Rule.prototype = {
 
     let modifications = this.style.startModifyingProperties();
     modifications.setProperty(aProperty.name, aValue, aPriority);
-    modifications.apply().then(() => {
-      // Ensure dispatching a ruleview-changed event
-      // also for previews
-      this.elementStyle._changed();
-    });
+    modifications.apply();
   },
 
   /**
