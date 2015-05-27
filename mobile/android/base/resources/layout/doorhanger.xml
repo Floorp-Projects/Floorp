@@ -5,39 +5,23 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <LinearLayout android:layout_width="wrap_content"
+    <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
                   android:padding="@dimen/doorhanger_padding">
 
         <ImageView android:id="@+id/doorhanger_icon"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:paddingRight="@dimen/doorhanger_padding"
+                   android:layout_width="@dimen/doorhanger_icon_size"
+                   android:layout_height="@dimen/doorhanger_icon_size"
+                   android:layout_gravity="center_horizontal"
+                   android:paddingRight="@dimen/doorhanger_section_padding_small"
                    android:visibility="gone"/>
 
-        <TextView android:id="@+id/doorhanger_message"
-                  android:focusable="true"
+        <ViewStub android:id="@+id/content"
                   android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:textAppearance="@style/TextAppearance.DoorHanger.Medium"/>
+                  android:layout_height="wrap_content"/>
 
     </LinearLayout>
-
-    <LinearLayout android:id="@+id/doorhanger_inputs"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:orientation="vertical"
-              android:gravity="right"
-              android:paddingLeft="@dimen/doorhanger_padding"
-              android:visibility="gone"/>
-
-    <CheckBox android:id="@+id/doorhanger_checkbox"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:checked="true"
-              android:textColor="@color/placeholder_active_grey"
-              android:visibility="gone"/>
 
     <View android:id="@+id/divider_buttons"
           android:layout_width="match_parent"

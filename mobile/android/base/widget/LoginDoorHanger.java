@@ -13,6 +13,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.text.Html;
+import android.text.Spanned;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -38,6 +40,7 @@ public class LoginDoorHanger extends DoorHanger {
     private enum ActionType { EDIT, SELECT }
 
     private final TextView mTitle;
+    private final TextView mMessage;
     private final TextView mLink;
     private int mCallbackID;
 
@@ -45,9 +48,17 @@ public class LoginDoorHanger extends DoorHanger {
         super(context, config, Type.LOGIN);
 
         mTitle = (TextView) findViewById(R.id.doorhanger_title);
+        mMessage = (TextView) findViewById(R.id.doorhanger_message);
         mLink = (TextView) findViewById(R.id.doorhanger_link);
+        mIcon.setImageResource(R.drawable.icon_key);
+        mIcon.setVisibility(View.VISIBLE);
 
         loadConfig(config);
+    }
+
+    private void setMessage(String message) {
+        Spanned markupMessage = Html.fromHtml(message);
+        mMessage.setText(markupMessage);
     }
 
     @Override
@@ -55,6 +66,11 @@ public class LoginDoorHanger extends DoorHanger {
         setOptions(config.getOptions());
         setMessage(config.getMessage());
         setButtons(config);
+    }
+
+    @Override
+    protected int getContentResource() {
+        return R.layout.login_doorhanger;
     }
 
     @Override
