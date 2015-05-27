@@ -14,6 +14,28 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+/*
+ * Defined in section 6.2.1 "Application Parameters Header", PBAP ver 1.2
+ */
+enum AppParameterTag {
+  Order                   = 0x01,
+  SearchValue             = 0x02,
+  SearchProperty          = 0x03,
+  MaxListCount            = 0x04,
+  ListStartOffset         = 0x05,
+  PropertySelector        = 0x06,
+  Format                  = 0x07,
+  PhonebookSize           = 0x08,
+  NewMissedCalls          = 0x09,
+  PrimaryVersionCounter   = 0x0A,
+  SecondaryVersionCounter = 0x0B,
+  vCardSelector           = 0x0C,
+  DatabaseIdentifier      = 0x0D,
+  vCardSelectorOperator   = 0x0E,
+  ResetNewMissedCalls     = 0x0F,
+  PbapSupportedFeatures   = 0x10
+};
+
 class BluetoothSocket;
 class ObexHeaderSet;
 
