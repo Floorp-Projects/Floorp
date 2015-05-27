@@ -406,67 +406,6 @@
 
     <menupopup id="placesContext"/>
 
-    <!-- Popup for site identity information -->
-    <panel id="identity-popup"
-           type="arrow"
-           hidden="true"
-           noautofocus="true"
-           onpopupshown="if (event.target == this)
-                           gIdentityHandler.onPopupShown(event);"
-           orient="vertical"
-           level="top">
-      <hbox id="identity-popup-container" align="top">
-        <image id="identity-popup-icon"/>
-        <vbox id="identity-popup-content-box">
-          <label id="identity-popup-brandName"
-                 class="identity-popup-label"
-                 value="&brandFullName;"/>
-          <label id="identity-popup-chromeLabel"
-                 class="identity-popup-label"/>
-          <label id="identity-popup-connectedToLabel"
-                 class="identity-popup-label"
-                 value="&identity.connectedTo;"/>
-          <label id="identity-popup-connectedToLabel2"
-                 class="identity-popup-label"
-                 value="&identity.unverifiedsite2;"/>
-          <description id="identity-popup-content-host"
-                       class="identity-popup-description"/>
-          <label id="identity-popup-runByLabel"
-                 class="identity-popup-label"
-                 value="&identity.runBy;"/>
-          <description id="identity-popup-content-owner"
-                       class="identity-popup-description"/>
-          <description id="identity-popup-content-supplemental"
-                       class="identity-popup-description"/>
-          <description id="identity-popup-content-verifier"
-                       class="identity-popup-description"/>
-          <hbox id="identity-popup-encryption" flex="1">
-            <vbox>
-              <image id="identity-popup-encryption-icon"/>
-            </vbox>
-            <description id="identity-popup-encryption-label" flex="1"
-                         class="identity-popup-description"/>
-          </hbox>
-          <vbox id="identity-popup-permissions">
-            <separator class="thin"/>
-            <label class="identity-popup-label header"
-                   value="&identity.permissions;"/>
-            <vbox id="identity-popup-permission-list" class="indent"/>
-          </vbox>
-        </vbox>
-      </hbox>
-      <!-- Footer button to open security page info -->
-      <hbox id="identity-popup-button-container" align="center">
-        <button id="identity-popup-help-icon"
-               oncommand="gIdentityHandler.handleHelpCommand(event);"
-               tooltiptext="&identity.help.tooltip;"/>
-        <spacer flex="1"/>
-        <button id="identity-popup-more-info-button"
-                label="&identity.moreInfoLinkText;"
-                oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
-      </hbox>
-    </panel>
-
     <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" norestorefocus="true" level="top">
       <hbox>
         <button class="ctrlTab-preview" flex="1"/>
@@ -549,6 +488,7 @@
 #include popup-notifications.inc
 
 #include ../../components/customizableui/content/panelUI.inc.xul
+#include ../../components/controlcenter/content/panel.inc.xul
 
     <hbox id="downloads-animation-container" mousethrough="always">
       <vbox id="downloads-notification-anchor">
