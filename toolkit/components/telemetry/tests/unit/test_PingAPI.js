@@ -197,6 +197,20 @@ add_task(function* test_archiveCleanup() {
   // Empty the archive.
   yield OS.File.removeDir(gPingsArchivePath);
 
+  Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SCAN_PING_COUNT").clear();
+  Telemetry.getHistogramById("TELEMETRY_ARCHIVE_DIRECTORIES_COUNT").clear();
+
+  // Build the cache. Nothing should be evicted as there's no ping directory.
+  yield TelemetryController.reset();
+  yield TelemetryStorage.testCleanupTaskPromise();
+  yield TelemetryArchive.promiseArchivedPingList();
+
+  let h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SCAN_PING_COUNT").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report 0 pings scanned if no archive dir exists.");
+  // One directory out of four was removed as well.
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OLD_DIRS").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report 0 evicted dirs if no archive dir exists.");
+
   let expectedPrunedInfo = [];
   let expectedNotPrunedInfo = [];
 
@@ -217,15 +231,17 @@ add_task(function* test_archiveCleanup() {
     }
   });
 
+  Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SESSION_PING_COUNT").clear();
+
   // Create a ping which should be pruned because it is past the retention period.
   let date = fakeNow(2010, 1, 1, 1, 0, 0);
   let pingId = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
   expectedPrunedInfo.push({ id: pingId, creationDate: date });
 
   // Create a ping which should be kept because it is within the retention period.
-  date = fakeNow(2010, 2, 1, 1, 0, 0);
+  const oldestDirectoryDate = fakeNow(2010, 2, 1, 1, 0, 0);
   pingId = yield TelemetryController.submitExternalPing(PING_TYPE, {}, {});
-  expectedNotPrunedInfo.push({ id: pingId, creationDate: date });
+  expectedNotPrunedInfo.push({ id: pingId, creationDate: oldestDirectoryDate });
 
   // Create 20 other pings which are within the retention period, but would be affected
   // by the disk quota.
@@ -237,8 +253,15 @@ add_task(function* test_archiveCleanup() {
     }
   }
 
+  // We expect all the pings we archived to be in this histogram.
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SESSION_PING_COUNT");
+  Assert.equal(h.snapshot().sum, 22, "All the pings must be live-accumulated in the histogram.");
+  // Reset the histogram that will be populated by the archive scan.
+  Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OLD_DIRS").clear();
+  Telemetry.getHistogramById("TELEMETRY_ARCHIVE_OLDEST_DIRECTORY_AGE").clear();
+
   // Move the current date 180 days ahead of the first ping.
-  fakeNow(2010, 7, 1, 1, 0, 0);
+  let now = fakeNow(2010, 7, 1, 1, 0, 0);
   // Reset TelemetryArchive and TelemetryController to start the startup cleanup.
   yield TelemetryController.reset();
   // Wait for the cleanup to finish.
@@ -248,6 +271,27 @@ add_task(function* test_archiveCleanup() {
 
   // Check that the archive is in the correct state.
   yield checkArchive();
+
+  // Make sure the ping count is correct after the scan (one ping was removed).
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SCAN_PING_COUNT").snapshot();
+  Assert.equal(h.sum, 21, "The histogram must count all the pings in the archive.");
+  // One directory out of four was removed as well.
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OLD_DIRS").snapshot();
+  Assert.equal(h.sum, 1, "Telemetry must correctly report removed archive directories.");
+  // Check that the remaining directories are correctly counted.
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_DIRECTORIES_COUNT").snapshot();
+  Assert.equal(h.sum, 3, "Telemetry must correctly report the remaining archive directories.");
+  // Check that the remaining directories are correctly counted.
+  const oldestAgeInMonths = 5;
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_OLDEST_DIRECTORY_AGE").snapshot();
+  Assert.equal(h.sum, oldestAgeInMonths,
+               "Telemetry must correctly report age of the oldest directory in the archive.");
+
+  // We need to test the archive size before we hit the quota, otherwise a special
+  // value is recorded.
+  Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SIZE_MB").clear();
+  Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OVER_QUOTA").clear();
+  Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTING_OVER_QUOTA_MS").clear();
 
   // Move the current date 180 days ahead of the second ping.
   fakeNow(2010, 8, 1, 1, 0, 0);
@@ -264,9 +308,19 @@ add_task(function* test_archiveCleanup() {
   yield checkArchive();
 
   // Find how much disk space the archive takes.
-  const archivedPings = yield getArchivedPingsInfo();
+  const archivedPingsInfo = yield getArchivedPingsInfo();
   let archiveSizeInBytes =
-    archivedPings.reduce((lastResult, element) => lastResult + element.size, 0);
+    archivedPingsInfo.reduce((lastResult, element) => lastResult + element.size, 0);
+
+  // Check that the correct values for quota probes are reported when no quota is hit.
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SIZE_MB").snapshot();
+  Assert.equal(h.sum, Math.round(archiveSizeInBytes / 1024 / 1024),
+               "Telemetry must report the correct archive size.");
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OVER_QUOTA").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report 0 evictions if quota is not hit.");
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTING_OVER_QUOTA_MS").snapshot();
+  Assert.equal(h.sum, 0, "Telemetry must report a null elapsed time if quota is not hit.");
+
   // Set the quota to 80% of the space.
   const testQuotaInBytes = archiveSizeInBytes * 0.8;
   fakeStorageQuota(testQuotaInBytes);
@@ -274,7 +328,6 @@ add_task(function* test_archiveCleanup() {
   // The storage prunes archived pings until we reach 90% of the requested storage quota.
   // Based on that, find how many pings should be kept.
   const safeQuotaSize = testQuotaInBytes * 0.9;
-  const archivedPingsInfo = yield getArchivedPingsInfo();
   let sizeInBytes = 0;
   let pingsWithinQuota = [];
   let pingsOutsideQuota = [];
@@ -297,6 +350,12 @@ add_task(function* test_archiveCleanup() {
   yield TelemetryArchive.promiseArchivedPingList();
   // Check that the archive is in the correct state.
   yield checkArchive();
+
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_EVICTED_OVER_QUOTA").snapshot();
+  Assert.equal(h.sum, pingsOutsideQuota.length,
+               "Telemetry must correctly report the over quota pings evicted from the archive.");
+  h = Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SIZE_MB").snapshot();
+  Assert.equal(h.sum, 300, "Archive quota was hit, a special size must be reported.");
 
   // Trigger a cleanup again and make sure we're not removing anything.
   yield TelemetryController.reset();
