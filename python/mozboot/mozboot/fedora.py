@@ -29,6 +29,7 @@ class FedoraBootstrapper(BaseBootstrapper):
         self.browser_packages = [
             'alsa-lib-devel',
             'gcc-c++',
+            'GConf2-devel',
             'glibc-static',
             'gstreamer-devel',
             'gstreamer-plugins-base-devel',
