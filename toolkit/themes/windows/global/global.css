@@ -324,7 +324,6 @@ popupnotificationcontent {
 
 /* :::::: Close button icons ::::: */
 
-%ifdef XP_WIN
 .close-icon {
   list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-image-region: rect(0, 16px, 16px, 0);
@@ -358,4 +357,3 @@ popupnotificationcontent {
     -moz-image-region: rect(0, 96px, 32px, 64px);
   }
 }
-%endif
