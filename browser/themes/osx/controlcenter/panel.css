@@ -1,0 +1,155 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../shared.inc
+%include ../../shared/controlcenter/panel.inc.css
+
+/* Popup Icons */
+#identity-popup-icon {
+  height: 64px;
+  width: 64px;
+  padding: 0;
+  list-style-image: url("chrome://browser/skin/identity.png");
+  -moz-image-region: rect(0px, 64px, 64px, 0px);
+}
+
+#identity-popup.verifiedDomain > #identity-popup-container > #identity-popup-icon {
+  -moz-image-region: rect(64px, 64px, 128px, 0px);
+}
+
+#identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
+  -moz-image-region: rect(128px, 64px, 192px, 0px);
+}
+
+@media (min-resolution: 2dppx) {
+  #identity-popup-icon {
+    list-style-image: url("chrome://browser/skin/identity@2x.png");
+    -moz-image-region: rect(0px, 128px, 128px, 0px);
+  }
+
+  #identity-popup.verifiedDomain > #identity-popup-container > #identity-popup-icon {
+    -moz-image-region: rect(128px, 128px, 256px, 0px);
+  }
+
+  #identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
+    -moz-image-region: rect(256px, 128px, 384px, 0px);
+  }
+}
+
+/* Popup Body Text */
+.identity-popup-description {
+  white-space: pre-wrap;
+  -moz-padding-start: 15px;
+  margin: 2px 0 4px;
+}
+
+.identity-popup-label {
+  white-space: pre-wrap;
+  -moz-padding-start: 15px;
+  margin: 0;
+}
+
+#identity-popup-content-host ,
+#identity-popup-content-owner {
+  font-weight: bold;
+  max-width: 300px;
+}
+
+#identity-popup-content-host ,
+#identity-popup-content-box.verifiedIdentity > #identity-popup-content-owner {
+  font-size: 140%;
+}
+
+#identity-popup-content-owner {
+  margin-bottom: 0 !important;
+}
+
+#identity-popup-content-verifier {
+  margin: 4px 0 2px;
+}
+
+#identity-popup-content-box.verifiedIdentity > #identity-popup-encryption ,
+#identity-popup-content-box.verifiedDomain > #identity-popup-encryption {
+  margin-top: 10px;
+  -moz-margin-start: -24px;
+}
+
+#identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
+#identity-popup-content-box.verifiedDomain > #identity-popup-encryption > vbox > #identity-popup-encryption-icon {
+  margin-top: 5px;
+  list-style-image: url("chrome://browser/skin/Secure-Glyph.png");
+}
+
+#identity-popup-help-icon {
+  -moz-appearance: none;
+  border: none;
+  margin: 10px 0 0 2px;
+  background: none;
+  min-width: 0;
+  list-style-image: url("chrome://global/skin/icons/question-16.png");
+  cursor: pointer;
+}
+
+#identity-popup-help-icon > .button-box > .button-text {
+  display: none;
+}
+
+#identity-popup-help-icon > .button-box > .button-icon {
+  height: 16px;
+  width: 16px;
+}
+
+#identity-popup-help-icon:focus {
+  @hudButtonFocused@
+}
+
+#identity-popup-help-icon:hover:active {
+  @hudButtonPressed@
+}
+
+@media (min-resolution: 2dppx) {
+  #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
+  #identity-popup-content-box.verifiedDomain > #identity-popup-encryption > vbox > #identity-popup-encryption-icon {
+    list-style-image: url("chrome://browser/skin/Secure-Glyph@2x.png");
+    width: 24px;
+  }
+
+  #identity-popup-help-icon {
+    list-style-image: url("chrome://global/skin/icons/question-32.png");
+  }
+}
+
+#identity-popup {
+  margin-top: 1px;
+}
+
+#identity-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#identity-popup-container {
+  padding: 16px;
+}
+
+#identity-popup-button-container {
+  background-color: hsla(210,4%,10%,.07);
+  border-top: 1px solid hsla(210,4%,10%,.12);
+  padding: 16px;
+  margin-top: 5px;
+}
+
+/* Popup Buttons */
+#identity-popup-more-info-button {
+  @hudButton@
+  margin: 10px 0 0;
+  min-height: 0px;
+}
+
+#identity-popup-more-info-button:focus {
+  @hudButtonFocused@
+}
+
+#identity-popup-more-info-button:hover:active {
+  @hudButtonPressed@
+}
