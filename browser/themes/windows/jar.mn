@@ -42,10 +42,15 @@ browser.jar:
         skin/classic/browser/identity.png
         skin/classic/browser/identity-XP.png
         skin/classic/browser/identity-icons-generic.png
+        skin/classic/browser/identity-icons-generic@2x.png
         skin/classic/browser/identity-icons-https.png
+        skin/classic/browser/identity-icons-https@2x.png
         skin/classic/browser/identity-icons-https-ev.png
+        skin/classic/browser/identity-icons-https-ev@2x.png
         skin/classic/browser/identity-icons-https-mixed-active.png
+        skin/classic/browser/identity-icons-https-mixed-active@2x.png
         skin/classic/browser/identity-icons-https-mixed-display.png
+        skin/classic/browser/identity-icons-https-mixed-display@2x.png
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/livemark-folder.png
@@ -94,6 +99,7 @@ browser.jar:
         skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7.png
         skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7-tall.png
         skin/classic/browser/reload-stop-go.png
+        skin/classic/browser/reload-stop-go@2x.png
         skin/classic/browser/searchbar.css
         skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/searchbar-dropdown-arrow-XP.png
@@ -127,8 +133,10 @@ browser.jar:
         skin/classic/browser/undoCloseTab@2x.png                     (../shared/undoCloseTab@2x.png)
         skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
         skin/classic/browser/urlbar-arrow.png
+        skin/classic/browser/urlbar-arrow@2x.png
         skin/classic/browser/urlbar-popup-blocked.png
         skin/classic/browser/urlbar-history-dropmarker.png
+        skin/classic/browser/urlbar-history-dropmarker@2x.png
         skin/classic/browser/session-restore.svg                     (../shared/incontent-icons/session-restore.svg)
         skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
         skin/classic/browser/welcome-back.svg                        (../shared/incontent-icons/welcome-back.svg)
@@ -166,6 +174,7 @@ browser.jar:
         skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
         skin/classic/browser/customizableui/customize-illustration-rtl.png  (../shared/customizableui/customize-illustration-rtl.png)
         skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
+        skin/classic/browser/customizableui/customize-titleBar-toggle@2x.png  (customizableui/customize-titleBar-toggle@2x.png)
         skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
         skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
         skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
