@@ -177,6 +177,21 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
     }
 
+    if (IsExtensionEnabled(WebGLExtensionID::EXT_disjoint_timer_query)) {
+        if (pname == LOCAL_GL_TIMESTAMP_EXT) {
+            GLuint64 iv = 0;
+            gl->fGetInteger64v(pname, (GLint64*) &iv);
+            return JS::NumberValue(uint64_t(iv));
+        } else if (pname == LOCAL_GL_GPU_DISJOINT_EXT) {
+            // When disjoint isn't supported, leave as false.
+            realGLboolean disjoint = 0;
+            if (gl->IsExtensionSupported(gl::GLContext::EXT_disjoint_timer_query)) {
+                gl->fGetBooleanv(pname, &disjoint);
+            }
+            return JS::BooleanValue(bool(disjoint));
+        }
+    }
+
     if (IsWebGL2()) {
         switch (pname) {
             case LOCAL_GL_MAX_SAMPLES:
