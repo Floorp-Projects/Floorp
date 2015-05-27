@@ -640,7 +640,7 @@ describe("loop.store.ActiveRoomStore", function () {
     });
 
     it("should set the state to MEDIA_WAIT if media devices are present", function() {
-      sandbox.stub(loop.shared.utils, "hasAudioDevices").callsArgWith(0, true);
+      sandbox.stub(loop.shared.utils, "hasAudioOrVideoDevices").callsArgWith(0, true);
 
       store.joinRoom();
 
@@ -648,7 +648,7 @@ describe("loop.store.ActiveRoomStore", function () {
     });
 
     it("should not set the state to MEDIA_WAIT if no media devices are present", function() {
-      sandbox.stub(loop.shared.utils, "hasAudioDevices").callsArgWith(0, false);
+      sandbox.stub(loop.shared.utils, "hasAudioOrVideoDevices").callsArgWith(0, false);
 
       store.joinRoom();
 
@@ -656,7 +656,7 @@ describe("loop.store.ActiveRoomStore", function () {
     });
 
     it("should dispatch `ConnectionFailure` if no media devices are present", function() {
-      sandbox.stub(loop.shared.utils, "hasAudioDevices").callsArgWith(0, false);
+      sandbox.stub(loop.shared.utils, "hasAudioOrVideoDevices").callsArgWith(0, false);
 
       store.joinRoom();
 
