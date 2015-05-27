@@ -77,19 +77,19 @@ window.onload = function() {
   }
 
   // Here, we should have 5 entries (1 css, 3 png, 1 html) since the image was loaded.
-  is(window.performance.getEntries().length, 5, "Performance.getEntries() returned wrong number of entries.");
+  is(window.performance.getEntriesByType("resource").length, 5, "Performance.getEntriesByType() returned wrong number of entries.");
 
-  checkStringify(window.performance.getEntries()[0]);
+  checkStringify(window.performance.getEntriesByType("resource")[0]);
 
   ok(!!window.performance.getEntriesByType("resource").length,
     "Performance.getEntriesByType() should return some results");
   ok(!!window.performance.getEntriesByName("http://mochi.test:8888/tests/image/test/mochitest/blue.png").length,
     "Performance.getEntriesByName() should return some results");
 
-  // Checks that two calls for "getEntries()" return a different array with the same
+  // Checks that two calls for "getEntriesByType()" return a different array with the same
   // entries.
-  ok(window.performance.getEntries() !== window.performance.getEntries(),
-    "getEntries() should return a different array object every time.");
+  isnot(window.performance.getEntriesByType("resource"), window.performance.getEntriesByType("resource"),
+        "getEntriesByType() should return a different array object every time.");
   ok(function (array1, array2) {
        if (array1.length != array2.length) {
          return false;
@@ -100,22 +100,22 @@ window.onload = function() {
          }
        }
        return true;
-     }(window.performance.getEntries(), window.performance.getEntries()),
+     }(window.performance.getEntriesByType("resource"), window.performance.getEntriesByType("resource")),
      "The arrays should have the same entries.");
 
-  checkEntries(window.performance.getEntries());
+  checkEntries(window.performance.getEntriesByType("resource"));
 
   window.performance.setResourceTimingBufferSize(1);
-  is(window.performance.getEntries().length, 5, "No entries should be " +
+  is(window.performance.getEntriesByType("resource").length, 5, "No entries should be " +
     "removed when setResourceTimingBufferSize is called.");
 
   window.performance.setResourceTimingBufferSize(4);
-  is(window.performance.getEntries().length, 5, "No entries should be " +
+  is(window.performance.getEntriesByType("resource").length, 5, "No entries should be " +
     "removed when setResourceTimingBufferSize is called.");
 
   window.performance.setResourceTimingBufferSize(1);
   window.performance.clearResourceTimings();
-  is(window.performance.getEntries().length, 0, "All the entries should " +
+  is(window.performance.getEntriesByType("resource").length, 0, "All the entries should " +
     "be removed when when clearResourceTimings is being called.");
 
   makeXhr("test-data.json", firstCheck);
@@ -210,18 +210,18 @@ function checkEntries(anEntryList) {
 }
 
 function firstCheck() {
-  is(window.performance.getEntries().length, 1, "The first xhr entry was not added.");
-  is(window.performance.getEntries()[0].initiatorType, "xmlhttprequest",
+  is(window.performance.getEntriesByType("resource").length, 1, "The first xhr entry was not added.");
+  is(window.performance.getEntriesByType("resource")[0].initiatorType, "xmlhttprequest",
     "The initiatorType is incorect for this entry");
   makeXhr("test-data2.json", secondCheck);
 }
 
 function secondCheck() {
-  // Since the buffer max size was set to '1', 'peformance.getEntries()' should
+  // Since the buffer max size was set to '1', 'peformance.getEntriesByType()' should
   // return only  '1' entry (first xhr results).
-  is(window.performance.getEntries().length, 1, "The second xhr entry should not be " +
+  is(window.performance.getEntriesByType("resource").length, 1, "The second xhr entry should not be " +
     "returned since the buffer size was set to 1.");
-  isnot(window.performance.getEntries()[0].name, "http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json", 
+  isnot(window.performance.getEntriesByType("resource")[0].name, "http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json",
     "We returned the second xhr instead of the first one");
   finishTest();
 }
