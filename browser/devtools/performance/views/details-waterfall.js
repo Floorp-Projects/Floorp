@@ -114,6 +114,14 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    * populate the waterfall tree.
    */
   _prepareWaterfallTree: function(markers) {
+    let rootMarkerNode = WaterfallUtils.makeEmptyMarkerNode("(root)");
+
+    WaterfallUtils.collapseMarkersIntoNode({
+      markerNode: rootMarkerNode,
+      markersList: markers
+    });
+
+    return rootMarkerNode;
   },
 
   /**
