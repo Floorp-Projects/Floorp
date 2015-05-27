@@ -498,34 +498,24 @@ public:
     return mLoadInfo.mServiceWorkerCacheName;
   }
 
-  const ChannelInfo&
-  GetChannelInfo() const
+  const nsCString&
+  GetSecurityInfo() const
   {
     MOZ_ASSERT(IsServiceWorker());
-    return mLoadInfo.mChannelInfo;
+    return mLoadInfo.mSecurityInfo;
   }
 
   void
-  SetChannelInfo(const ChannelInfo& aChannelInfo)
+  SetSecurityInfo(const nsCString& aSecurityInfo)
   {
     MOZ_ASSERT(IsServiceWorker());
     AssertIsOnMainThread();
-    MOZ_ASSERT(!mLoadInfo.mChannelInfo.IsInitialized());
-    MOZ_ASSERT(aChannelInfo.IsInitialized());
-    mLoadInfo.mChannelInfo = aChannelInfo;
+    MOZ_ASSERT(mLoadInfo.mSecurityInfo.IsEmpty());
+    mLoadInfo.mSecurityInfo = aSecurityInfo;
   }
 
   void
-  InitChannelInfo(nsIChannel* aChannel)
-  {
-    mLoadInfo.mChannelInfo.InitFromChannel(aChannel);
-  }
-
-  void
-  InitChannelInfo(const ChannelInfo& aChannelInfo)
-  {
-    mLoadInfo.mChannelInfo = aChannelInfo;
-  }
+  SetSecurityInfo(nsISerializable* aSerializable);
 
   // This is used to handle importScripts(). When the worker is first loaded
   // and executed, it happens in a sync loop. At this point it sets

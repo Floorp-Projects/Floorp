@@ -11,7 +11,6 @@
 #include "nsProxyInfo.h"
 #include "nsCOMPtr.h"
 #include "nsStringFwd.h"
-#include "mozilla/Logging.h"
 
 extern PRLogModuleInfo *gHttpLog;
 
