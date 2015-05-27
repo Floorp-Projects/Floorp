@@ -4431,6 +4431,84 @@
     "extended_statistics_ok": true,
     "description": "Number of histograms with total count low errors"
   },
+  "TELEMETRY_ARCHIVE_DIRECTORIES_COUNT": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "13",
+    "n_buckets": 12,
+    "description": "Number of directories in the archive at scan"
+  },
+  "TELEMETRY_ARCHIVE_OLDEST_DIRECTORY_AGE": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "13",
+    "n_buckets": 12,
+    "description": "The age of the oldest Telemetry archive directory in months"
+  },
+  "TELEMETRY_ARCHIVE_SCAN_PING_COUNT": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "100000",
+    "n_buckets": 100,
+    "description": "Number of Telemetry pings in the archive at scan"
+  },
+  "TELEMETRY_ARCHIVE_SESSION_PING_COUNT": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Number of Telemetry pings added to the archive during the session"
+  },
+  "TELEMETRY_ARCHIVE_SIZE_MB": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "300",
+    "n_buckets": 60,
+    "description": "The size of the Telemetry archive (MB)"
+  },
+  "TELEMETRY_ARCHIVE_EVICTED_OVER_QUOTA": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "100000",
+    "n_buckets": 100,
+    "description": "Number of Telemetry pings evicted from the archive during cleanup, because they were over the quota"
+  },
+  "TELEMETRY_ARCHIVE_EVICTED_OLD_DIRS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "13",
+    "n_buckets": 12,
+    "description": "Number of Telemetry directories evicted from the archive during cleanup, because they were too old"
+  },
+  "TELEMETRY_ARCHIVE_EVICTING_DIRS_MS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "300000",
+    "n_buckets": 20,
+    "description": "Time (ms) it takes for evicting old directories"
+  },
+  "TELEMETRY_ARCHIVE_CHECKING_OVER_QUOTA_MS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "300000",
+    "n_buckets": 20,
+    "description": "Time (ms) it takes for checking if the archive is over-quota"
+  },
+  "TELEMETRY_ARCHIVE_EVICTING_OVER_QUOTA_MS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "300000",
+    "n_buckets": 20,
+    "description": "Time (ms) it takes for evicting over-quota pings"
+  },
   "TELEMETRY_DISCARDED_CONTENT_PINGS_COUNT": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
