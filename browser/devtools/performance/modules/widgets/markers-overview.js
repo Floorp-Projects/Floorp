@@ -77,7 +77,7 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 
     for (let type in blueprint) {
       this._paintBatches.set(type, { style: blueprint[type], batch: [] });
-      this._lastGroup = Math.max(this._lastGroup, blueprint[type].group);
+      this._lastGroup = Math.max(this._lastGroup, blueprint[type].group || 0);
     }
   },
 
