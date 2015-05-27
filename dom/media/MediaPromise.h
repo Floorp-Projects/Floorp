@@ -61,16 +61,30 @@ public:
   class ResolveOrRejectValue
   {
   public:
-    void SetResolve(ResolveValueType& aResolveValue)
+    void SetResolve(const ResolveValueType& aResolveValue)
     {
       MOZ_ASSERT(IsNothing());
       mResolveValue.emplace(aResolveValue);
     }
 
-    void SetReject(RejectValueType& aRejectValue)
+    void SetReject(const RejectValueType& aRejectValue)
     {
       MOZ_ASSERT(IsNothing());
       mRejectValue.emplace(aRejectValue);
+    }
+
+    static ResolveOrRejectValue MakeResolve(const ResolveValueType aResolveValue)
+    {
+      ResolveOrRejectValue val;
+      val.SetResolve(aResolveValue);
+      return val;
+    }
+
+    static ResolveOrRejectValue MakeReject(const RejectValueType aRejectValue)
+    {
+      ResolveOrRejectValue val;
+      val.SetReject(aRejectValue);
+      return val;
     }
 
     bool IsResolve() const { return mResolveValue.isSome(); }
