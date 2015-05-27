@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Testcase for bug 1161752</title>
+<style>
+  object.overlapping-green
+    {
+      height: 56px;
+      width: 500px;
+      vertical-align: top;
+    }
+
+  div.red-overlapped-reference
+    {
+      background-color: red;
+      bottom: 56px;
+      height: 50px;
+      left: 300px;
+      position: relative;
+      width: 100px;
+      z-index: -1;
+    }
+</style>
+<script>
+function runTest1() {
+  var root = document.querySelector('#test1').contentDocument.documentElement;
+  root.style.direction='rtl';
+  root.offsetHeight;
+}
+function runTest2() {
+  var root = document.querySelector('#test2').contentDocument.documentElement;
+  root.style.display='none';
+  root.offsetHeight;
+  root.style.display='block';
+  root.offsetHeight;
+}
+function runTest3() {
+  var doc = document.querySelector('#test3').contentDocument;
+  var root = doc.documentElement;
+  doc.removeChild(root);
+  var newRoot = root.cloneNode(true);
+  newRoot.setAttribute('dir','rtl');
+  doc.appendChild(newRoot);
+}
+function runTest4() {
+  var root = document.querySelector('#test4').contentDocument.documentElement;
+  root.style.direction='rtl';
+  root.offsetHeight;
+}
+</script>
+ </head>
+ <body>
+
+  <p>Test passes if there are three filled green rectangles and <strong>no red</strong>.</p>
+
+
+  <div><object id="test1" data="1161752-1-embed.html" type="text/html" class="overlapping-green" onload="runTest1()">This test requires a browser with capability to embed an HTML document thanks to the HTML &lt;object&gt; element.</object></div>
+  <div class="red-overlapped-reference"></div>
+
+  <div><object id="test2" data="1161752-2-embed.html" type="text/html" class="overlapping-green" onload="runTest2()">This test requires a browser with capability to embed an HTML document thanks to the HTML &lt;object&gt; element.</object></div>
+  <div class="red-overlapped-reference"></div>
+
+  <div><object id="test3" data="1161752-3-embed.html" type="text/html" class="overlapping-green" onload="runTest3()">This test requires a browser with capability to embed an HTML document thanks to the HTML &lt;object&gt; element.</object></div>
+  <div class="red-overlapped-reference"></div>
+
+  <div><object id="test4" data="1161752-4-embed.html" type="text/html" class="overlapping-green" onload="runTest4()">This test requires a browser with capability to embed an HTML document thanks to the HTML &lt;object&gt; element.</object></div>
+  <div class="red-overlapped-reference"></div>
+
+  <div><object id="test5" data="1161752-5-embed.html" type="text/html" class="overlapping-green">This test requires a browser with capability to embed an HTML document thanks to the HTML &lt;object&gt; element.</object></div>
+  <div class="red-overlapped-reference"></div>
+
+ </body>
+</html>
