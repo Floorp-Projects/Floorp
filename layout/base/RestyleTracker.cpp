@@ -224,8 +224,17 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
 void
 RestyleTracker::DoProcessRestyles()
 {
-  PROFILER_LABEL("RestyleTracker", "ProcessRestyles",
-    js::ProfileEntry::Category::CSS);
+  nsAutoCString docURL;
+  if (profiler_is_active()) {
+    nsIURI *uri = Document()->GetDocumentURI();
+    if (uri) {
+      uri->GetSpec(docURL);
+    } else {
+      docURL = "N/A";
+    }
+  }
+  PROFILER_LABEL_PRINTF("RestyleTracker", "ProcessRestyles",
+                        js::ProfileEntry::Category::CSS, "(%s)", docURL.get());
 
   bool isTimelineRecording = false;
   nsDocShell* docShell =
