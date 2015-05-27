@@ -23,6 +23,7 @@ LOCAL_INCLUDES += [
 ]
 
 USE_LIBS += [
+    'mfbt',
     'xpcomglue',
 ]
 
