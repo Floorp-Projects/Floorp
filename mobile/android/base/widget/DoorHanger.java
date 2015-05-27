@@ -7,24 +7,17 @@ package org.mozilla.gecko.widget;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.text.Html;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tabs;
 
 public abstract class DoorHanger extends LinearLayout {
 
@@ -67,8 +60,7 @@ public abstract class DoorHanger extends LinearLayout {
 
     protected final Type mType;
 
-    private final ImageView mIcon;
-    private final TextView mMessage;
+    protected final ImageView mIcon;
 
     protected final Context mContext;
     protected final Resources mResources;
@@ -81,33 +73,29 @@ public abstract class DoorHanger extends LinearLayout {
 
     protected DoorHanger(Context context, DoorhangerConfig config, Type type) {
         super(context);
+
         mContext = context;
         mResources = context.getResources();
         mTabId = config.getTabId();
         mIdentifier = config.getId();
+        mType = type;
 
-        int resource;
-        switch (type) {
-            case LOGIN:
-                resource = R.layout.login_doorhanger;
-                break;
-            default:
-                resource = R.layout.doorhanger;
-        }
+        setOrientation(VERTICAL);
 
-        LayoutInflater.from(context).inflate(resource, this);
+        final ViewStub contentStub = (ViewStub) findViewById(R.id.content);
+        contentStub.setLayoutResource(getContentResource());
+        contentStub.inflate();
+
         mDivider = findViewById(R.id.divider_doorhanger);
         mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
-        mMessage = (TextView) findViewById(R.id.doorhanger_message);
-
-        mType = type;
 
         mButtonsContainer = (LinearLayout) findViewById(R.id.doorhanger_buttons);
         mOnButtonClickListener = config.getButtonClickListener();
 
         mDividerColor = mResources.getColor(R.color.divider_light);
-        setOrientation(VERTICAL);
     }
+
+    protected abstract int getContentResource();
 
     protected abstract void loadConfig(DoorhangerConfig config);
 
@@ -158,30 +146,6 @@ public abstract class DoorHanger extends LinearLayout {
     public void setIcon(int resId) {
         mIcon.setImageResource(resId);
         mIcon.setVisibility(View.VISIBLE);
-    }
-
-    protected void setMessage(String message) {
-        Spanned markupMessage = Html.fromHtml(message);
-        mMessage.setText(markupMessage);
-    }
-
-    protected void addLink(String label, String url, String delimiter) {
-        String title = mMessage.getText().toString();
-        SpannableString titleWithLink = new SpannableString(title + delimiter + label);
-        URLSpan linkSpan = new URLSpan(url) {
-            @Override
-            public void onClick(View view) {
-                Tabs.getInstance().loadUrlInTab(getURL());
-            }
-        };
-
-        // Prevent text outside the link from flashing when clicked.
-        ForegroundColorSpan colorSpan = new ForegroundColorSpan(mMessage.getCurrentTextColor());
-        titleWithLink.setSpan(colorSpan, 0, title.length(), 0);
-
-        titleWithLink.setSpan(linkSpan, title.length() + 1, titleWithLink.length(), 0);
-        mMessage.setText(titleWithLink);
-        mMessage.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     /**
