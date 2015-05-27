@@ -12,6 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=924087
 <body>
 <div contenteditable><a id="editable" href="#">editable link</a></div>
 <a id="noneditable" href="#">non-editable link</a>
+<input>
+<textarea></textarea>
 <pre id="test">
 <script type="application/javascript;version=1.8">
 
@@ -20,12 +22,19 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   var editable = document.querySelector("#editable");
   var noneditable = document.querySelector("#noneditable");
+  var input = document.querySelector("input");
+  var textarea = document.querySelector("textarea");
   synthesizeMouseAtCenter(noneditable, {type:"mousedown"});
   is(document.querySelector(":active:link"), noneditable, "Normal links should become :active");
   synthesizeMouseAtCenter(noneditable, {type:"mouseup"});
   synthesizeMouseAtCenter(editable, {type:"mousedown"});
   is(document.querySelector(":active:link"), null, "Editable links should not become :active");
   synthesizeMouseAtCenter(editable, {type:"mouseup"});
+  [input, textarea].forEach(textbox => {
+    synthesizeMouseAtCenter(textbox, {type:"mousedown"});
+    is(document.querySelector(textbox.localName + ":active"), textbox, "The textbox should become :active");
+    synthesizeMouseAtCenter(textbox, {type:"mouseup"});
+  });
   SimpleTest.finish();
 });
 
