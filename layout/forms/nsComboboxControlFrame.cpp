@@ -1285,8 +1285,8 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
     computedWidth = 0;
   }
   state.SetComputedWidth(computedWidth);
-
-  return nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
+  nsBlockFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
+  aStatus = NS_FRAME_COMPLETE; // this type of frame can't be split
 }
 
 void
