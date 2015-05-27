@@ -40,10 +40,15 @@ browser.jar:
   skin/classic/browser/heartbeat-star-off.svg               (../shared/heartbeat-star-off.svg)
   skin/classic/browser/identity.png
   skin/classic/browser/identity-icons-generic.png
+  skin/classic/browser/identity-icons-generic@2x.png
   skin/classic/browser/identity-icons-https.png
+  skin/classic/browser/identity-icons-https@2x.png
   skin/classic/browser/identity-icons-https-ev.png
+  skin/classic/browser/identity-icons-https-ev@2x.png
   skin/classic/browser/identity-icons-https-mixed-active.png
+  skin/classic/browser/identity-icons-https-mixed-active@2x.png
   skin/classic/browser/identity-icons-https-mixed-display.png
+  skin/classic/browser/identity-icons-https-mixed-display@2x.png
   skin/classic/browser/Info.png
   skin/classic/browser/magnifier.png                        (../shared/magnifier.png)
   skin/classic/browser/magnifier@2x.png                     (../shared/magnifier@2x.png)
@@ -76,6 +81,7 @@ browser.jar:
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/privatebrowsing-mask.png
   skin/classic/browser/reload-stop-go.png
+  skin/classic/browser/reload-stop-go@2x.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/search-pref.png                      (../shared/search/search-pref.png)
   skin/classic/browser/search-indicator.png                 (../shared/search/search-indicator.png)
@@ -94,6 +100,7 @@ browser.jar:
   skin/classic/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
   skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
   skin/classic/browser/urlbar-arrow.png
+  skin/classic/browser/urlbar-arrow@2x.png
   skin/classic/browser/session-restore.svg                  (../shared/incontent-icons/session-restore.svg)
   skin/classic/browser/tab-crashed.svg                      (../shared/incontent-icons/tab-crashed.svg)
   skin/classic/browser/welcome-back.svg                     (../shared/incontent-icons/welcome-back.svg)
