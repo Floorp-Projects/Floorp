@@ -1,5 +1,6 @@
 marionette_transport.pth:testing/marionette/transport
 marionette_driver.pth:testing/marionette/driver
+browsermobproxy.pth:testing/marionette/client/marionette/runner/mixins/browsermob-proxy-py
 marionette.pth:testing/marionette/client
 blessings.pth:python/blessings
 configobj.pth:python/configobj
