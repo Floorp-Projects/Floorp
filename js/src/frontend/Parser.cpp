@@ -1574,7 +1574,7 @@ Parser<ParseHandler>::bindDestructuringArg(BindData<ParseHandler>* data,
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyntaxKind kind,
-                                        Node* listp, Node funcpn, bool* hasRest)
+                                        Node funcpn, bool* hasRest)
 {
     FunctionBox* funbox = pc->sc->asFunctionBox();
 
@@ -1621,7 +1621,6 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
     if (hasArguments) {
         bool hasDefaults = false;
         Node duplicatedArg = null();
-        Node list = null();
         bool disallowDuplicateArgs = kind == Arrow || kind == Method || kind == ClassConstructor;
 
         if (kind == Getter) {
@@ -1650,11 +1649,6 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                     return false;
                 }
 
-                if (hasDefaults) {
-                    report(ParseError, false, null(), JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT);
-                    return false;
-                }
-
                 funbox->hasDestructuringArgs = true;
 
                 /*
@@ -1667,35 +1661,25 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 data.pn = ParseHandler::null();
                 data.op = JSOP_DEFVAR;
                 data.binder = bindDestructuringArg;
-                Node lhs = destructuringExprWithoutYield(yieldHandling, &data, tt,
-                                                         JSMSG_YIELD_IN_DEFAULT);
-                if (!lhs)
+                Node destruct = destructuringExprWithoutYield(yieldHandling, &data, tt,
+                                                              JSMSG_YIELD_IN_DEFAULT);
+                if (!destruct)
                     return false;
 
                 /*
-                 * Synthesize a destructuring assignment from the single
-                 * anonymous positional parameter into the destructuring
-                 * left-hand-side expression and accumulate it in list.
+                 * Make a single anonymous positional parameter, and store
+                 * destructuring expression into the node.
                  */
                 HandlePropertyName name = context->names().empty;
-                Node rhs = newName(name);
-                if (!rhs)
+                Node arg = newName(name);
+                if (!arg)
                     return false;
 
-                if (!pc->define(tokenStream, name, rhs, Definition::ARG))
+                handler.addFunctionArgument(funcpn, arg);
+                if (!pc->define(tokenStream, name, arg, Definition::ARG))
                     return false;
 
-                Node item = handler.newBinary(PNK_ASSIGN, lhs, rhs);
-                if (!item)
-                    return false;
-                if (list) {
-                    handler.addList(list, item);
-                } else {
-                    list = handler.newDeclarationList(PNK_VAR, item);
-                    if (!list)
-                        return false;
-                    *listp = list;
-                }
+                handler.setLastFunctionArgumentDestructuring(funcpn, destruct);
                 break;
               }
 
@@ -1743,39 +1727,6 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 RootedPropertyName name(context, tokenStream.currentName());
                 if (!defineArg(funcpn, name, disallowDuplicateArgs, &duplicatedArg))
                     return false;
-
-                bool matched;
-                if (!tokenStream.matchToken(&matched, TOK_ASSIGN))
-                    return false;
-                if (matched) {
-                    // A default argument without parentheses would look like:
-                    // a = expr => body, but both operators are right-associative, so
-                    // that would have been parsed as a = (expr => body) instead.
-                    // Therefore it's impossible to get here with parenFreeArrow.
-                    MOZ_ASSERT(!parenFreeArrow);
-
-                    if (*hasRest) {
-                        report(ParseError, false, null(), JSMSG_REST_WITH_DEFAULT);
-                        return false;
-                    }
-                    disallowDuplicateArgs = true;
-                    if (duplicatedArg) {
-                        report(ParseError, false, duplicatedArg, JSMSG_BAD_DUP_ARGS);
-                        return false;
-                    }
-                    if (!hasDefaults) {
-                        hasDefaults = true;
-
-                        // The Function.length property is the number of formals
-                        // before the first default argument.
-                        funbox->length = pc->numArgs() - 1;
-                    }
-                    Node def_expr = assignExprWithoutYield(yieldHandling, JSMSG_YIELD_IN_DEFAULT);
-                    if (!def_expr)
-                        return false;
-                    handler.setLastFunctionArgumentDefault(funcpn, def_expr);
-                }
-
                 break;
               }
 
@@ -1784,10 +1735,42 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 return false;
             }
 
+            bool matched;
+            if (!tokenStream.matchToken(&matched, TOK_ASSIGN))
+                return false;
+            if (matched) {
+                // A default argument without parentheses would look like:
+                // a = expr => body, but both operators are right-associative, so
+                // that would have been parsed as a = (expr => body) instead.
+                // Therefore it's impossible to get here with parenFreeArrow.
+                MOZ_ASSERT(!parenFreeArrow);
+
+                if (*hasRest) {
+                    report(ParseError, false, null(), JSMSG_REST_WITH_DEFAULT);
+                    return false;
+                }
+                disallowDuplicateArgs = true;
+                if (duplicatedArg) {
+                    report(ParseError, false, duplicatedArg, JSMSG_BAD_DUP_ARGS);
+                    return false;
+                }
+                if (!hasDefaults) {
+                    hasDefaults = true;
+
+                    // The Function.length property is the number of formals
+                    // before the first default argument.
+                    funbox->length = pc->numArgs() - 1;
+                }
+                Node def_expr = assignExprWithoutYield(yieldHandling, JSMSG_YIELD_IN_DEFAULT);
+                if (!def_expr)
+                    return false;
+                if (!handler.setLastFunctionArgumentDefault(funcpn, def_expr))
+                    return false;
+            }
+
             if (parenFreeArrow || kind == Setter)
                 break;
 
-            bool matched;
             if (!tokenStream.matchToken(&matched, TOK_COMMA))
                 return false;
             if (!matched)
@@ -2238,35 +2221,9 @@ Parser<ParseHandler>::functionDef(InHandling inHandling, YieldHandling yieldHand
 template <>
 bool
 Parser<FullParseHandler>::finishFunctionDefinition(ParseNode* pn, FunctionBox* funbox,
-                                                   ParseNode* prelude, ParseNode* body)
+                                                   ParseNode* body)
 {
     pn->pn_pos.end = pos().end;
-
-    /*
-     * If there were destructuring formal parameters, prepend the initializing
-     * comma expression that we synthesized to body. If the body is a return
-     * node, we must make a special PNK_SEQ node, to prepend the destructuring
-     * code without bracing the decompilation of the function body.
-     */
-    if (prelude) {
-        if (!body->isArity(PN_LIST)) {
-            ParseNode* block;
-
-            block = handler.newList(PNK_SEQ, body);
-            if (!block)
-                return false;
-            body = block;
-        }
-
-        ParseNode* item = handler.new_<UnaryNode>(PNK_SEMI, JSOP_NOP,
-                                                  TokenPos(body->pn_pos.begin, body->pn_pos.begin),
-                                                  prelude);
-        if (!item)
-            return false;
-
-        body->prepend(item);
-        body->pn_xflags |= PNX_DESTRUCT;
-    }
 
     MOZ_ASSERT(pn->pn_funbox == funbox);
     MOZ_ASSERT(pn->pn_body->isKind(PNK_ARGSBODY));
@@ -2278,7 +2235,7 @@ Parser<FullParseHandler>::finishFunctionDefinition(ParseNode* pn, FunctionBox* f
 template <>
 bool
 Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox* funbox,
-                                                     Node prelude, Node body)
+                                                     Node body)
 {
     // The LazyScript for a lazily parsed function needs to be constructed
     // while its ParseContext and associated lexdeps and inner functions are
@@ -2546,9 +2503,8 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(InHandling inHandling,
     // function without concern for conversion to strict mode, use of lazy
     // parsing and such.
 
-    Node prelude = null();
     bool hasRest;
-    if (!functionArguments(yieldHandling, kind, &prelude, pn, &hasRest))
+    if (!functionArguments(yieldHandling, kind, pn, &hasRest))
         return false;
 
     FunctionBox* funbox = pc->sc->asFunctionBox();
@@ -2624,7 +2580,7 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(InHandling inHandling,
             return false;
     }
 
-    return finishFunctionDefinition(pn, funbox, prelude, body);
+    return finishFunctionDefinition(pn, funbox, body);
 }
 
 template <typename ParseHandler>
@@ -4795,10 +4751,6 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
     ParseNode* forLetImpliedBlock = nullptr;
     ParseNode* forLetDecl = nullptr;
 
-    // If non-null, the node for the decl 'var v = expr1' in the weirdo form
-    // 'for (var v = expr1 in expr2) stmt'.
-    ParseNode* hoistedVar = nullptr;
-
     /*
      * We can be sure that it's a for/in loop if there's still an 'in'
      * keyword here, even if JavaScript recognizes 'in' as an operator,
@@ -5011,14 +4963,6 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
     if (!forLoop)
         return null();
 
-    if (hoistedVar) {
-        ParseNode* pnseq = handler.newList(PNK_SEQ, hoistedVar);
-        if (!pnseq)
-            return null();
-        pnseq->pn_pos = forLoop->pn_pos;
-        pnseq->append(forLoop);
-        return pnseq;
-    }
     if (forLetImpliedBlock) {
         forLetImpliedBlock->pn_expr = forLoop;
         forLetImpliedBlock->pn_pos = forLoop->pn_pos;

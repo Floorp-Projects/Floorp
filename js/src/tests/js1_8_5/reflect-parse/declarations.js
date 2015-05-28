@@ -32,6 +32,12 @@ assertDecl("function foo(a=(function () {})) { function a() {} }",
            funDecl(ident("foo"), [ident("a")], blockStmt([funDecl(ident("a"), [], blockStmt([]))]),
                    [funExpr(null, [], blockStmt([]))]));
 
+// Bug 1018628: default paremeter for destructuring
+assertDecl("function f(a=1, [x,y]=[2,3]) { }",
+           funDecl(ident("f"),
+                   [ident("a"), arrPatt([ident("x"), ident("y")])],
+                   blockStmt([]),
+                   [lit(1), arrExpr([lit(2), lit(3)])]));
 
 // Bug 591437: rebound args have their defs turned into uses
 assertDecl("function f(a) { function a() { } }",

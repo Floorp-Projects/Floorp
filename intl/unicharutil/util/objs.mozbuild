@@ -22,6 +22,6 @@ intl_unicharutil_util_lcppsrcs += [
 ]
 
 intl_unicharutil_util_cppsrcs = [
-    '%s/intl/unicharutil/util/%s' % (TOPSRCDIR, s) \
+    '/intl/unicharutil/util/%s' % s
         for s in intl_unicharutil_util_lcppsrcs
 ]

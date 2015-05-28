@@ -249,7 +249,7 @@ DriverFormatsFromEffectiveInternalFormat(gl::GLContext* gl,
     // in some cases we must pass a different value. On ES, they are equal by definition
     // as it is an error to pass internalformat!=format.
     GLenum driverInternalFormat = driverFormat;
-    if (!gl->IsGLES()) {
+    if (gl->IsCompatibilityProfile()) {
         // Cases where desktop OpenGL requires a tweak to 'format'
         if (driverFormat == LOCAL_GL_SRGB)
             driverFormat = LOCAL_GL_RGB;
@@ -284,9 +284,64 @@ DriverFormatsFromEffectiveInternalFormat(gl::GLContext* gl,
         }
     }
 
+    // OpenGL core profile removed texture formats ALPHA, LUMINANCE and LUMINANCE_ALPHA
+    if (gl->IsCoreProfile()) {
+        switch (driverFormat) {
+        case LOCAL_GL_ALPHA:
+        case LOCAL_GL_LUMINANCE:
+            driverInternalFormat = driverFormat = LOCAL_GL_RED;
+            break;
+
+        case LOCAL_GL_LUMINANCE_ALPHA:
+            driverInternalFormat = driverFormat = LOCAL_GL_RG;
+            break;
+        }
+    }
+
     *out_driverInternalFormat = driverInternalFormat;
     *out_driverFormat = driverFormat;
     *out_driverType = driverType;
+}
+
+// Map R to A
+static const GLenum kLegacyAlphaSwizzle[4] = {
+    LOCAL_GL_ZERO, LOCAL_GL_ZERO, LOCAL_GL_ZERO, LOCAL_GL_RED
+};
+// Map R to RGB
+static const GLenum kLegacyLuminanceSwizzle[4] = {
+    LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_ONE
+};
+// Map R to RGB, G to A
+static const GLenum kLegacyLuminanceAlphaSwizzle[4] = {
+    LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_RED, LOCAL_GL_GREEN
+};
+
+void
+SetLegacyTextureSwizzle(gl::GLContext* gl, GLenum target, GLenum internalformat)
+{
+    if (!gl->IsCoreProfile())
+        return;
+
+    /* Only support swizzling on core profiles. */
+    // Bug 1159117: Fix this.
+    // MOZ_RELEASE_ASSERT(gl->IsSupported(gl::GLFeature::texture_swizzle));
+
+    switch (internalformat) {
+    case LOCAL_GL_ALPHA:
+        gl->fTexParameteriv(target, LOCAL_GL_TEXTURE_SWIZZLE_RGBA,
+                            (GLint*) kLegacyAlphaSwizzle);
+        break;
+
+    case LOCAL_GL_LUMINANCE:
+        gl->fTexParameteriv(target, LOCAL_GL_TEXTURE_SWIZZLE_RGBA,
+                            (GLint*) kLegacyLuminanceSwizzle);
+        break;
+
+    case LOCAL_GL_LUMINANCE_ALPHA:
+        gl->fTexParameteriv(target, LOCAL_GL_TEXTURE_SWIZZLE_RGBA,
+                            (GLint*) kLegacyLuminanceAlphaSwizzle);
+        break;
+    }
 }
 
 /**

@@ -11,21 +11,21 @@ generated = [
     'SurfaceTexture',
 ]
 
-GENERATED_SOURCES += [stem + '.cpp' for stem in generated]
+SOURCES += ['!%s.cpp' % stem for stem in generated]
 
 # We'd like to add these to a future GENERATED_EXPORTS list, but for now we mark
 # them as generated here and manually install them in Makefile.in.
 GENERATED_FILES += [stem + '.h' for stem in generated]
 
-# There is an unfortunate race condition when using GENERATED_SOURCES and
+# There is an unfortunate race condition when using generated SOURCES and
 # pattern rules (see Makefile.in) that manifests itself as a VPATH resolution
 # conflict: MediaCodec.o looks for MediaCodec.cpp and $(CURDIR)/MediaCodec.cpp,
 # and the pattern rule is matched but doesn't resolve both sources, causing a
-# failure.  Adding the GENERATED_SOURCES to GENERATED_FILES causes the sources
+# failure.  Adding the SOURCES to GENERATED_FILES causes the sources
 # to be built at export time, which is before MediaCodec.o needs them; and by
 # the time MediaCodec.o is built, the source is in place and the VPATH
 # resolution works as expected.
-GENERATED_FILES += GENERATED_SOURCES
+GENERATED_FILES += [f[1:] for f in SOURCES]
 
 FAIL_ON_WARNINGS = True
 FINAL_LIBRARY = 'xul'

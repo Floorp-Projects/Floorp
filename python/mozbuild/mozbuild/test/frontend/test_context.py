@@ -9,12 +9,18 @@ from mozunit import main
 
 from mozbuild.frontend.context import (
     Context,
+    ContextDerivedTypedList,
+    ContextDerivedTypedListWithItems,
     FUNCTIONS,
+    ObjDirPath,
+    Path,
+    SourcePath,
     SPECIAL_VARIABLES,
     SUBCONTEXTS,
     VARIABLES,
 )
 
+from mozbuild.util import StrictOrderingOnAppendListWithFlagsFactory
 from mozpack import path as mozpath
 
 
@@ -99,7 +105,7 @@ class TestContext(unittest.TestCase):
         self.assertEqual(test['foo'], 42)
         self.assertEqual(test['baz'], { 'c': 3, 'd': 4 })
 
-    def test_paths(self):
+    def test_context_paths(self):
         test = Context()
 
         # Newly created context has no paths.
@@ -203,7 +209,7 @@ class TestContext(unittest.TestCase):
         self.assertEqual(test.all_paths, set([bar, foo]))
         self.assertEqual(test.source_stack, [foo, bar, bar, foo])
 
-    def test_dirs(self):
+    def test_context_dirs(self):
         class Config(object): pass
         config = Config()
         config.topsrcdir = mozpath.abspath(os.curdir)
@@ -263,6 +269,301 @@ class TestSymbols(unittest.TestCase):
             for name, v in cls.VARIABLES.items():
                 self._verify_doc(v[2])
 
+
+class TestPaths(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        class Config(object): pass
+        cls.config = config = Config()
+        config.topsrcdir = mozpath.abspath(os.curdir)
+        config.topobjdir = mozpath.abspath('obj')
+        config.external_source_dir = None
+
+    def test_path(self):
+        config = self.config
+        ctxt1 = Context(config=config)
+        ctxt1.push_source(mozpath.join(config.topsrcdir, 'foo', 'moz.build'))
+        ctxt2 = Context(config=config)
+        ctxt2.push_source(mozpath.join(config.topsrcdir, 'bar', 'moz.build'))
+
+        path1 = Path(ctxt1, 'qux')
+        self.assertIsInstance(path1, SourcePath)
+        self.assertEqual(path1, 'qux')
+        self.assertEqual(path1.full_path,
+                         mozpath.join(config.topsrcdir, 'foo', 'qux'))
+
+        path2 = Path(ctxt2, '../foo/qux')
+        self.assertIsInstance(path2, SourcePath)
+        self.assertEqual(path2, '../foo/qux')
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topsrcdir, 'foo', 'qux'))
+
+        self.assertEqual(path1, path2)
+
+        self.assertEqual(path1.join('../../bar/qux').full_path,
+                         mozpath.join(config.topsrcdir, 'bar', 'qux'))
+
+        path1 = Path(ctxt1, '/qux/qux')
+        self.assertIsInstance(path1, SourcePath)
+        self.assertEqual(path1, '/qux/qux')
+        self.assertEqual(path1.full_path,
+                         mozpath.join(config.topsrcdir, 'qux', 'qux'))
+
+        path2 = Path(ctxt2, '/qux/qux')
+        self.assertIsInstance(path2, SourcePath)
+        self.assertEqual(path2, '/qux/qux')
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topsrcdir, 'qux', 'qux'))
+
+        self.assertEqual(path1, path2)
+
+        path1 = Path(ctxt1, '!qux')
+        self.assertIsInstance(path1, ObjDirPath)
+        self.assertEqual(path1, '!qux')
+        self.assertEqual(path1.full_path,
+                         mozpath.join(config.topobjdir, 'foo', 'qux'))
+
+        path2 = Path(ctxt2, '!../foo/qux')
+        self.assertIsInstance(path2, ObjDirPath)
+        self.assertEqual(path2, '!../foo/qux')
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topobjdir, 'foo', 'qux'))
+
+        self.assertEqual(path1, path2)
+
+        path1 = Path(ctxt1, '!/qux/qux')
+        self.assertIsInstance(path1, ObjDirPath)
+        self.assertEqual(path1, '!/qux/qux')
+        self.assertEqual(path1.full_path,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        path2 = Path(ctxt2, '!/qux/qux')
+        self.assertIsInstance(path2, ObjDirPath)
+        self.assertEqual(path2, '!/qux/qux')
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        self.assertEqual(path1, path2)
+
+        path1 = Path(ctxt1, path1)
+        self.assertIsInstance(path1, ObjDirPath)
+        self.assertEqual(path1, '!/qux/qux')
+        self.assertEqual(path1.full_path,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        path2 = Path(ctxt2, path2)
+        self.assertIsInstance(path2, ObjDirPath)
+        self.assertEqual(path2, '!/qux/qux')
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        self.assertEqual(path1, path2)
+
+        path1 = Path(path1)
+        self.assertIsInstance(path1, ObjDirPath)
+        self.assertEqual(path1, '!/qux/qux')
+        self.assertEqual(path1.full_path,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        self.assertEqual(path1, path2)
+
+        path2 = Path(path2)
+        self.assertIsInstance(path2, ObjDirPath)
+        self.assertEqual(path2, '!/qux/qux')
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        self.assertEqual(path1, path2)
+
+    def test_source_path(self):
+        config = self.config
+        ctxt = Context(config=config)
+        ctxt.push_source(mozpath.join(config.topsrcdir, 'foo', 'moz.build'))
+
+        path = SourcePath(ctxt, 'qux')
+        self.assertEqual(path, 'qux')
+        self.assertEqual(path.full_path,
+                         mozpath.join(config.topsrcdir, 'foo', 'qux'))
+        self.assertEqual(path.translated,
+                         mozpath.join(config.topobjdir, 'foo', 'qux'))
+
+        path = SourcePath(ctxt, '../bar/qux')
+        self.assertEqual(path, '../bar/qux')
+        self.assertEqual(path.full_path,
+                         mozpath.join(config.topsrcdir, 'bar', 'qux'))
+        self.assertEqual(path.translated,
+                         mozpath.join(config.topobjdir, 'bar', 'qux'))
+
+        path = SourcePath(ctxt, '/qux/qux')
+        self.assertEqual(path, '/qux/qux')
+        self.assertEqual(path.full_path,
+                         mozpath.join(config.topsrcdir, 'qux', 'qux'))
+        self.assertEqual(path.translated,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        with self.assertRaises(ValueError):
+            SourcePath(ctxt, '!../bar/qux')
+
+        with self.assertRaises(ValueError):
+            SourcePath(ctxt, '!/qux/qux')
+
+        path = SourcePath(path)
+        self.assertIsInstance(path, SourcePath)
+        self.assertEqual(path, '/qux/qux')
+        self.assertEqual(path.full_path,
+                         mozpath.join(config.topsrcdir, 'qux', 'qux'))
+        self.assertEqual(path.translated,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        path = Path(path)
+        self.assertIsInstance(path, SourcePath)
+
+    def test_objdir_path(self):
+        config = self.config
+        ctxt = Context(config=config)
+        ctxt.push_source(mozpath.join(config.topsrcdir, 'foo', 'moz.build'))
+
+        path = ObjDirPath(ctxt, '!qux')
+        self.assertEqual(path, '!qux')
+        self.assertEqual(path.full_path,
+                         mozpath.join(config.topobjdir, 'foo', 'qux'))
+
+        path = ObjDirPath(ctxt, '!../bar/qux')
+        self.assertEqual(path, '!../bar/qux')
+        self.assertEqual(path.full_path,
+                         mozpath.join(config.topobjdir, 'bar', 'qux'))
+
+        path = ObjDirPath(ctxt, '!/qux/qux')
+        self.assertEqual(path, '!/qux/qux')
+        self.assertEqual(path.full_path,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        with self.assertRaises(ValueError):
+            path = ObjDirPath(ctxt, '../bar/qux')
+
+        with self.assertRaises(ValueError):
+            path = ObjDirPath(ctxt, '/qux/qux')
+
+        path = ObjDirPath(path)
+        self.assertIsInstance(path, ObjDirPath)
+        self.assertEqual(path, '!/qux/qux')
+        self.assertEqual(path.full_path,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+        path = Path(path)
+        self.assertIsInstance(path, ObjDirPath)
+
+    def test_path_with_mixed_contexts(self):
+        config = self.config
+        ctxt1 = Context(config=config)
+        ctxt1.push_source(mozpath.join(config.topsrcdir, 'foo', 'moz.build'))
+        ctxt2 = Context(config=config)
+        ctxt2.push_source(mozpath.join(config.topsrcdir, 'bar', 'moz.build'))
+
+        path1 = Path(ctxt1, 'qux')
+        path2 = Path(ctxt2, path1)
+        self.assertEqual(path2, path1)
+        self.assertEqual(path2, 'qux')
+        self.assertEqual(path2.context, ctxt1)
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topsrcdir, 'foo', 'qux'))
+
+        path1 = Path(ctxt1, '../bar/qux')
+        path2 = Path(ctxt2, path1)
+        self.assertEqual(path2, path1)
+        self.assertEqual(path2, '../bar/qux')
+        self.assertEqual(path2.context, ctxt1)
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topsrcdir, 'bar', 'qux'))
+
+        path1 = Path(ctxt1, '/qux/qux')
+        path2 = Path(ctxt2, path1)
+        self.assertEqual(path2, path1)
+        self.assertEqual(path2, '/qux/qux')
+        self.assertEqual(path2.context, ctxt1)
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topsrcdir, 'qux', 'qux'))
+
+        path1 = Path(ctxt1, '!qux')
+        path2 = Path(ctxt2, path1)
+        self.assertEqual(path2, path1)
+        self.assertEqual(path2, '!qux')
+        self.assertEqual(path2.context, ctxt1)
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topobjdir, 'foo', 'qux'))
+
+        path1 = Path(ctxt1, '!../bar/qux')
+        path2 = Path(ctxt2, path1)
+        self.assertEqual(path2, path1)
+        self.assertEqual(path2, '!../bar/qux')
+        self.assertEqual(path2.context, ctxt1)
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topobjdir, 'bar', 'qux'))
+
+        path1 = Path(ctxt1, '!/qux/qux')
+        path2 = Path(ctxt2, path1)
+        self.assertEqual(path2, path1)
+        self.assertEqual(path2, '!/qux/qux')
+        self.assertEqual(path2.context, ctxt1)
+        self.assertEqual(path2.full_path,
+                         mozpath.join(config.topobjdir, 'qux', 'qux'))
+
+    def test_path_typed_list(self):
+        config = self.config
+        ctxt1 = Context(config=config)
+        ctxt1.push_source(mozpath.join(config.topsrcdir, 'foo', 'moz.build'))
+        ctxt2 = Context(config=config)
+        ctxt2.push_source(mozpath.join(config.topsrcdir, 'bar', 'moz.build'))
+
+        paths = [
+            '!../bar/qux',
+            '!/qux/qux',
+            '!qux',
+            '../bar/qux',
+            '/qux/qux',
+            'qux',
+        ]
+
+        MyList = ContextDerivedTypedList(Path)
+        l = MyList(ctxt1)
+        l += paths
+
+        for p_str, p_path in zip(paths, l):
+            self.assertEqual(p_str, p_path)
+            self.assertEqual(p_path, Path(ctxt1, p_str))
+            self.assertEqual(p_path.join('foo'),
+                             Path(ctxt1, mozpath.join(p_str, 'foo')))
+
+        l2 = MyList(ctxt2)
+        l2 += paths
+
+        for p_str, p_path in zip(paths, l2):
+            self.assertEqual(p_str, p_path)
+            self.assertEqual(p_path, Path(ctxt2, p_str))
+
+        # Assigning with Paths from another context doesn't rebase them
+        l2 = MyList(ctxt2)
+        l2 += l
+
+        for p_str, p_path in zip(paths, l2):
+            self.assertEqual(p_str, p_path)
+            self.assertEqual(p_path, Path(ctxt1, p_str))
+
+        MyListWithFlags = ContextDerivedTypedListWithItems(
+            Path, StrictOrderingOnAppendListWithFlagsFactory({
+                'foo': bool,
+            }))
+        l = MyListWithFlags(ctxt1)
+        l += paths
+
+        for p in paths:
+            l[p].foo = True
+
+        for p_str, p_path in zip(paths, l):
+            self.assertEqual(p_str, p_path)
+            self.assertEqual(p_path, Path(ctxt1, p_str))
+            self.assertEqual(l[p_str].foo, True)
+            self.assertEqual(l[p_path].foo, True)
 
 if __name__ == '__main__':
     main()
