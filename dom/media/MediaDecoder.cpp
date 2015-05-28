@@ -289,29 +289,12 @@ void MediaDecoder::SetVolume(double aVolume)
   mVolume = aVolume;
 }
 
-
-void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
-                                         MediaStreamGraph* aGraph)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  DECODER_LOG("RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
-  mDecodedStream.RecreateData(aStartTimeUSecs, aGraph);
-}
-
 void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
                                    bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  DECODER_LOG("AddOutputStream aStream=%p!", aStream);
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  if (!GetDecodedStream()) {
-    RecreateDecodedStream(mLogicalPosition, aStream->Graph());
-  }
-  mDecodedStream.Connect(aStream, aFinishWhenEnded);
-  mDecoderStateMachine->DispatchAudioCaptured();
+  mDecoderStateMachine->AddOutputStream(aStream, aFinishWhenEnded);
 }
 
 double MediaDecoder::GetDuration()
@@ -360,7 +343,6 @@ MediaDecoder::MediaDecoder() :
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
-  mDecodedStream(mReentrantMonitor),
   mPlayState(AbstractThread::MainThread(), PLAY_STATE_LOADING,
              "MediaDecoder::mPlayState (Canonical)"),
   mNextState(AbstractThread::MainThread(), PLAY_STATE_PAUSED,
@@ -448,12 +430,6 @@ void MediaDecoder::Shutdown()
 MediaDecoder::~MediaDecoder()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  {
-    // Don't destroy the decoded stream until destructor in order to keep the
-    // invariant that the decoded stream is always available in capture mode.
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    mDecodedStream.DestroyData();
-  }
   MediaMemoryTracker::RemoveMediaDecoder(this);
   UnpinForSeek();
   MOZ_COUNT_DTOR(MediaDecoder);
