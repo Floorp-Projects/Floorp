@@ -118,7 +118,7 @@ private:
     if (aIndex >= mItems.Length()) {
       aIndex = mItems.Length();
     }
-    return !!mItems.InsertElementAt(aIndex, aPoint);
+    return !!mItems.InsertElementAt(aIndex, aPoint, fallible);
   }
 
   void ReplaceItem(uint32_t aIndex, const SVGPoint &aPoint) {

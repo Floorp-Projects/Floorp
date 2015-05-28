@@ -107,7 +107,7 @@ private:
 
   bool InsertItem(uint32_t aIndex, const SVGLength &aLength) {
     if (aIndex >= mLengths.Length()) aIndex = mLengths.Length();
-    return !!mLengths.InsertElementAt(aIndex, aLength);
+    return !!mLengths.InsertElementAt(aIndex, aLength, fallible);
   }
 
   void ReplaceItem(uint32_t aIndex, const SVGLength &aLength) {
