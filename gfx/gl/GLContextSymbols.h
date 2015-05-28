@@ -145,6 +145,12 @@ struct GLContextSymbols
     PFNGLGETQUERYOBJECTIVPROC fGetQueryObjectiv;
     typedef void (GLAPIENTRY * PFNGLGETQUERYOBJECTUIVPROC) (GLuint id, GLenum pname, GLuint* params);
     PFNGLGETQUERYOBJECTUIVPROC fGetQueryObjectuiv;
+    typedef void (GLAPIENTRY * PFNGLGETQUERYOBJECTI64VPROC) (GLuint id, GLenum pname, GLint64* params);
+    PFNGLGETQUERYOBJECTI64VPROC fGetQueryObjecti64v;
+    typedef void (GLAPIENTRY * PFNGLGETQUERYOBJECTUI64VPROC) (GLuint id, GLenum pname, GLuint64* params);
+    PFNGLGETQUERYOBJECTUI64VPROC fGetQueryObjectui64v;
+    typedef void (GLAPIENTRY * PFNGLQUERYCOUNTERPROC) (GLuint id, GLenum target);
+    PFNGLQUERYCOUNTERPROC fQueryCounter;
     typedef void (GLAPIENTRY * PFNGLTEXPARAMETERIPROC) (GLenum target, GLenum pname, GLint param);
     PFNGLTEXPARAMETERIPROC fTexParameteri;
     typedef void (GLAPIENTRY * PFNGLTEXPARAMETERIVPROC) (GLenum target, GLenum pname, const GLint* param);
