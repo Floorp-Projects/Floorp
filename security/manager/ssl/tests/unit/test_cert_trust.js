@@ -194,11 +194,11 @@ function run_test() {
   }
 
   let ca_cert = certdb.findCertByNickname(null, 'ca');
-  do_check_false(!ca_cert)
+  notEqual(ca_cert, null, "CA cert should be in the cert DB");
   let int_cert = certdb.findCertByNickname(null, 'int');
-  do_check_false(!int_cert)
+  notEqual(int_cert, null, "Intermediate cert should be in the cert DB");
   let ee_cert = certdb.findCertByNickname(null, 'ee');
-  do_check_false(!ee_cert);
+  notEqual(ee_cert, null, "EE cert should be in the cert DB");
 
   setup_basic_trusts(ca_cert, int_cert);
   test_ca_distrust(ee_cert, ca_cert, true);

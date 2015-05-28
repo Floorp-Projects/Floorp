@@ -1227,6 +1227,26 @@ TypeSet::ObjectKey::ensureTrackedProperty(JSContext* cx, jsid id)
     }
 }
 
+void
+js::EnsureTrackPropertyTypes(JSContext* cx, JSObject* obj, jsid id)
+{
+    id = IdToTypeId(id);
+
+    if (obj->isSingleton()) {
+        AutoEnterAnalysis enter(cx);
+        if (obj->hasLazyGroup() && !obj->getGroup(cx)) {
+            CrashAtUnhandlableOOM("Could not allocate ObjectGroup in EnsureTrackPropertyTypes");
+            return;
+        }
+        if (!obj->group()->unknownProperties() && !obj->group()->getProperty(cx, obj, id)) {
+            MOZ_ASSERT(obj->group()->unknownProperties());
+            return;
+        }
+    }
+
+    MOZ_ASSERT(obj->group()->unknownProperties() || TrackPropertyTypes(cx, obj, id));
+}
+
 bool
 HeapTypeSetKey::instantiate(JSContext* cx)
 {
@@ -4021,16 +4041,6 @@ ObjectGroup::clearProperties()
     propertySet = nullptr;
 }
 
-#ifdef DEBUG
-bool
-ObjectGroup::needsSweep()
-{
-    // Note: this can be called off thread during compacting GCs, in which case
-    // nothing will be running on the main thread.
-    return generation() != zoneFromAnyThread()->types.generation;
-}
-#endif
-
 static void
 EnsureHasAutoClearTypeInferenceStateOnOOM(AutoClearTypeInferenceStateOnOOM*& oom, Zone* zone,
                                           Maybe<AutoClearTypeInferenceStateOnOOM>& fallback)
@@ -4053,12 +4063,9 @@ EnsureHasAutoClearTypeInferenceStateOnOOM(AutoClearTypeInferenceStateOnOOM*& oom
  * objects are accessed before their contents have been swept.
  */
 void
-ObjectGroup::maybeSweep(AutoClearTypeInferenceStateOnOOM* oom)
+ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
 {
-    if (generation() == zoneFromAnyThread()->types.generation) {
-        // No sweeping required.
-        return;
-    }
+    MOZ_ASSERT(generation() != zoneFromAnyThread()->types.generation);
 
     setGeneration(zone()->types.generation);
 

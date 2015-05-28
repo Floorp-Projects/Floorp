@@ -162,8 +162,24 @@ SetUnboxedValue(ExclusiveContext* cx, JSObject* unboxedObject, jsid id,
 }
 
 /////////////////////////////////////////////////////////////////////
+// UnboxedPlainObject
+/////////////////////////////////////////////////////////////////////
+
+inline const UnboxedLayout&
+UnboxedPlainObject::layout() const
+{
+    return group()->unboxedLayout();
+}
+
+/////////////////////////////////////////////////////////////////////
 // UnboxedArrayObject
 /////////////////////////////////////////////////////////////////////
+
+inline const UnboxedLayout&
+UnboxedArrayObject::layout() const
+{
+    return group()->unboxedLayout();
+}
 
 inline void
 UnboxedArrayObject::setLength(ExclusiveContext* cx, uint32_t length)
@@ -266,12 +282,30 @@ GetAnyBoxedOrUnboxedInitializedLength(JSObject* obj)
     return 0;
 }
 
+static inline size_t
+GetAnyBoxedOrUnboxedCapacity(JSObject* obj)
+{
+    if (obj->isNative())
+        return obj->as<NativeObject>().getDenseCapacity();
+    if (obj->is<UnboxedArrayObject>())
+        return obj->as<UnboxedArrayObject>().capacity();
+    return 0;
+}
+
 static inline Value
 GetAnyBoxedOrUnboxedDenseElement(JSObject* obj, size_t index)
 {
     if (obj->isNative())
         return obj->as<NativeObject>().getDenseElement(index);
     return obj->as<UnboxedArrayObject>().getElement(index);
+}
+
+static inline size_t
+GetAnyBoxedOrUnboxedArrayLength(JSObject* obj)
+{
+    if (obj->is<ArrayObject>())
+        return obj->as<ArrayObject>().length();
+    return obj->as<UnboxedArrayObject>().length();
 }
 
 static inline void
@@ -477,24 +511,26 @@ MoveBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, uint32_t dstStart,
 template <JSValueType Type>
 static inline DenseElementResult
 CopyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
-                                uint32_t srcStart, uint32_t length)
+                                uint32_t dstStart, uint32_t srcStart, uint32_t length)
 {
     MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<Type>(src));
     MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<Type>(dst));
-    MOZ_ASSERT(GetBoxedOrUnboxedInitializedLength<Type>(dst) == 0);
+    MOZ_ASSERT(GetBoxedOrUnboxedInitializedLength<Type>(dst) == dstStart);
     MOZ_ASSERT(GetBoxedOrUnboxedCapacity<Type>(dst) >= length);
 
-    SetBoxedOrUnboxedInitializedLength<Type>(cx, dst, length);
+    SetBoxedOrUnboxedInitializedLength<Type>(cx, dst, dstStart + length);
 
     if (Type == JSVAL_TYPE_MAGIC) {
         const Value* vp = src->as<NativeObject>().getDenseElements() + srcStart;
-        dst->as<NativeObject>().initDenseElements(0, vp, length);
+        dst->as<NativeObject>().initDenseElements(dstStart, vp, length);
     } else {
         uint8_t* dstData = dst->as<UnboxedArrayObject>().elements();
         uint8_t* srcData = src->as<UnboxedArrayObject>().elements();
         size_t elementSize = UnboxedTypeSize(Type);
 
-        memcpy(dstData, srcData + srcStart * elementSize, length * elementSize);
+        memcpy(dstData + dstStart * elementSize,
+               srcData + srcStart * elementSize,
+               length * elementSize);
 
         // Add a post barrier if we might have copied a nursery pointer to dst.
         if (UnboxedTypeNeedsPostBarrier(Type) && !IsInsideNursery(dst))
@@ -537,6 +573,18 @@ CallBoxedOrUnboxedSpecialization(F f, JSObject* obj)
 }
 
 #undef DEPENDENT_TEMPLATE_HINT
+
+#define DefineBoxedOrUnboxedFunctor1(Signature, A)                      \
+struct Signature ## Functor {                                           \
+    A a;                                                                \
+    explicit Signature ## Functor(A a)                                  \
+      : a(a)                                                            \
+    {}                                                                  \
+    template <JSValueType Type>                                         \
+    DenseElementResult operator()() {                                   \
+        return Signature<Type>(a);                                      \
+    }                                                                   \
+}
 
 #define DefineBoxedOrUnboxedFunctor3(Signature, A, B, C)                \
 struct Signature ## Functor {                                           \
@@ -597,7 +645,7 @@ MoveAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
 
 DenseElementResult
 CopyAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
-                                   uint32_t srcStart, uint32_t length);
+                                   uint32_t dstStart, uint32_t srcStart, uint32_t length);
 
 void
 SetAnyBoxedOrUnboxedInitializedLength(JSContext* cx, JSObject* obj, size_t initlen);

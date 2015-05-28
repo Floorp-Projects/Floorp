@@ -317,9 +317,7 @@ struct FunctionInfo
 // Parameters necessary for invoking a JS function from a C closure.
 struct ClosureInfo
 {
-  JSContext* cx;                   // JSContext to use
-  JSRuntime* rt;                   // Used in the destructor, where cx might have already
-                                   // been GCed.
+  JSRuntime* rt;
   JS::Heap<JSObject*> closureObj;  // CClosure object
   JS::Heap<JSObject*> typeObj;     // FunctionType describing the C function
   JS::Heap<JSObject*> thisObj;     // 'this' object to use for the JS function call

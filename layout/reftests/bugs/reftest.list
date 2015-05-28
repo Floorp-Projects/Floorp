@@ -1847,7 +1847,7 @@ test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-ref.htm
 == 1059498-2.html 1059498-1-ref.html
 == 1059498-3.html 1059498-1-ref.html
 skip-if(Mulet) == 1062108-1.html 1062108-1-ref.html # Bug 1139893: font rounding failure, tracked in bug 1141535
-fails-if(Android) fuzzy-if(Mulet,1,5) == 1062792-1.html 1062792-1-ref.html
+fuzzy-if(Mulet,1,5) == 1062792-1.html 1062792-1-ref.html
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow-ref.html
 test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html

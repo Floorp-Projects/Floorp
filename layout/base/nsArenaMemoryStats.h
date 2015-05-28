@@ -42,6 +42,7 @@ struct nsArenaMemoryStats {
   macro(Other, mLineBoxes) \
   macro(Style, mRuleNodes) \
   macro(Style, mStyleContexts) \
+  macro(Style, mStyleStructs) \
   macro(Other, mOther)
 
   nsArenaMemoryStats()

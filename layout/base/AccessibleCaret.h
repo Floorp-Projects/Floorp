@@ -165,11 +165,11 @@ private:
   // Remove caret element from custom content container.
   void RemoveCaretElement(nsIDocument* aDocument);
 
-  // The bottom-center of the imaginary caret to which this AccessibleCaret is
+  // The top-center of the imaginary caret to which this AccessibleCaret is
   // attached.
   static nsPoint CaretElementPosition(const nsRect& aRect)
   {
-    return aRect.TopLeft() + nsPoint(aRect.width / 2, aRect.height);
+    return aRect.TopLeft() + nsPoint(aRect.width / 2, 0);
   }
 
   class DummyTouchListener final : public nsIDOMEventListener

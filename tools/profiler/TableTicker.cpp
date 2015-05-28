@@ -218,14 +218,19 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx, float aSinceTime)
 {
   JS::RootedValue val(aCx);
   {
-    SpliceableChunkedJSONWriter b;
-    StreamJSON(b, aSinceTime);
-    UniquePtr<char[]> buf = b.WriteFunc()->CopyData();
+    UniquePtr<char[]> buf = ToJSON(aSinceTime);
     NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
     MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, static_cast<const char16_t*>(js_string.get()),
                                  js_string.Length(), &val));
   }
   return &val.toObject();
+}
+
+UniquePtr<char[]> TableTicker::ToJSON(float aSinceTime)
+{
+  SpliceableChunkedJSONWriter b;
+  StreamJSON(b, aSinceTime);
+  return b.WriteFunc()->CopyData();
 }
 
 struct SubprocessClosure {
