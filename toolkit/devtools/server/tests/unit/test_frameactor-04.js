@@ -62,7 +62,7 @@ function test_frame_slice() {
         expected.actor = actual.actor;
       }
 
-      for each (let key in ["type", "callee-name"]) {
+      for (let key of ["type", "callee-name"]) {
         do_check_eq(expected[key] || undefined, actual[key]);
       }
     }

@@ -213,7 +213,9 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    * Instead of storing a connection object, the NodeActor gets its connection
    * from its associated walker.
    */
-  get conn() this.walker.conn,
+  get conn() {
+    return this.walker.conn;
+  },
 
   isDocumentElement: function() {
     return this.rawNode.ownerDocument &&
@@ -365,8 +367,9 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     if (!this.rawNode.attributes) {
       return undefined;
     }
-    return [{namespace: attr.namespace, name: attr.name, value: attr.value }
-            for (attr of this.rawNode.attributes)];
+    return [...this.rawNode.attributes].map(attr => {
+      return {namespace: attr.namespace, name: attr.name, value: attr.value };
+    });
   },
 
   writePseudoClassLocks: function() {
@@ -815,37 +818,75 @@ let NodeFront = protocol.FrontClass(NodeActor, {
 
   // Some accessors to make NodeFront feel more like an nsIDOMNode
 
-  get id() this.getAttribute("id"),
+  get id() {
+    return this.getAttribute("id");
+  },
 
-  get nodeType() this._form.nodeType,
-  get namespaceURI() this._form.namespaceURI,
-  get nodeName() this._form.nodeName,
+  get nodeType() {
+    return this._form.nodeType;
+  },
+  get namespaceURI() {
+    return this._form.namespaceURI;
+  },
+  get nodeName() {
+    return this._form.nodeName;
+  },
 
-  get baseURI() this._form.baseURI,
+  get baseURI() {
+    return this._form.baseURI;
+  },
 
   get className() {
     return this.getAttribute("class") || '';
   },
 
-  get hasChildren() this._form.numChildren > 0,
-  get numChildren() this._form.numChildren,
-  get hasEventListeners() this._form.hasEventListeners,
+  get hasChildren() {
+    return this._form.numChildren > 0;
+  },
+  get numChildren() {
+    return this._form.numChildren;
+  },
+  get hasEventListeners() {
+    return this._form.hasEventListeners;
+  },
 
-  get isBeforePseudoElement() this._form.isBeforePseudoElement,
-  get isAfterPseudoElement() this._form.isAfterPseudoElement,
-  get isPseudoElement() this.isBeforePseudoElement || this.isAfterPseudoElement,
-  get isAnonymous() this._form.isAnonymous,
+  get isBeforePseudoElement() {
+    return this._form.isBeforePseudoElement;
+  },
+  get isAfterPseudoElement() {
+    return this._form.isAfterPseudoElement;
+  },
+  get isPseudoElement() {
+    return this.isBeforePseudoElement || this.isAfterPseudoElement;
+  },
+  get isAnonymous() {
+    return this._form.isAnonymous;
+  },
 
-  get tagName() this.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ? this.nodeName : null,
-  get shortValue() this._form.shortValue,
-  get incompleteValue() !!this._form.incompleteValue,
+  get tagName() {
+    return this.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ? this.nodeName : null;
+  },
+  get shortValue() {
+    return this._form.shortValue;
+  },
+  get incompleteValue() {
+    return !!this._form.incompleteValue;
+  },
 
-  get isDocumentElement() !!this._form.isDocumentElement,
+  get isDocumentElement() {
+    return !!this._form.isDocumentElement;
+  },
 
   // doctype properties
-  get name() this._form.name,
-  get publicId() this._form.publicId,
-  get systemId() this._form.systemId,
+  get name() {
+    return this._form.name;
+  },
+  get publicId() {
+    return this._form.publicId;
+  },
+  get systemId() {
+    return this._form.systemId;
+  },
 
   getAttribute: function(name) {
     let attr = this._getAttribute(name);
@@ -861,9 +902,13 @@ let NodeFront = protocol.FrontClass(NodeActor, {
     return cls && cls.indexOf(HIDDEN_CLASS) > -1;
   },
 
-  get attributes() this._form.attrs,
+  get attributes() {
+    return this._form.attrs;
+  },
 
-  get pseudoClassLocks() this._form.pseudoClassLocks || [],
+  get pseudoClassLocks() {
+    return this._form.pseudoClassLocks || [];
+  },
   hasPseudoClassLock: function(pseudo) {
     return this.pseudoClassLocks.some(locked => locked === pseudo);
   },
@@ -1056,7 +1101,7 @@ var NodeListActor = exports.NodeListActor = protocol.ActorClass({
    * Get a range of the items from the node list.
    */
   items: method(function(start=0, end=this.nodeList.length) {
-    let items = [this.walker._ref(item) for (item of Array.prototype.slice.call(this.nodeList, start, end))];
+    let items = Array.prototype.slice.call(this.nodeList, start, end).map(item => this.walker._ref(item));
     return this.walker.attachElements(items);
   }, {
     request: {
@@ -3431,7 +3476,9 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     this.destroy();
   },
 
-  get window() this.tabActor.window,
+  get window() {
+    return this.tabActor.window;
+  },
 
   getWalker: method(function(options={}) {
     if (this._walkerPromise) {
@@ -3712,10 +3759,18 @@ function DocumentWalker(node, rootWin, whatToShow=Ci.nsIDOMNodeFilter.SHOW_ALL, 
 }
 
 DocumentWalker.prototype = {
-  get node() this.walker.node,
-  get whatToShow() this.walker.whatToShow,
-  get currentNode() this.walker.currentNode,
-  set currentNode(aVal) this.walker.currentNode = aVal,
+  get node() {
+    return this.walker.node;
+  },
+  get whatToShow() {
+    return this.walker.whatToShow;
+  },
+  get currentNode() {
+    return this.walker.currentNode;
+  },
+  set currentNode(aVal) {
+    this.walker.currentNode = aVal;
+  },
 
   parentNode: function() {
     return this.walker.parentNode();

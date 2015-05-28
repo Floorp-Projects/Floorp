@@ -274,9 +274,13 @@ DebuggerTransport.prototype = {
 
     try {
       this._currentOutgoing.write(stream);
-    } catch(e if e.result != Cr.NS_BASE_STREAM_WOULD_BLOCK) {
-      this.close(e.result);
-      return;
+    } catch(e) {
+      if (e.result != Cr.NS_BASE_STREAM_WOULD_BLOCK) {
+        this.close(e.result);
+        return;
+      } else {
+        throw e;
+      }
     }
 
     this._flushOutgoing();
@@ -351,8 +355,12 @@ DebuggerTransport.prototype = {
       while(stream.available() && this._incomingEnabled &&
             this._processIncoming(stream, stream.available())) {}
       this._waitForIncoming();
-    } catch(e if e.result != Cr.NS_BASE_STREAM_WOULD_BLOCK) {
-      this.close(e.result);
+    } catch(e) {
+      if (e.result != Cr.NS_BASE_STREAM_WOULD_BLOCK) {
+        this.close(e.result);
+      } else {
+        throw e;
+      }
     }
   }, "DebuggerTransport.prototype.onInputStreamReady"),
 
