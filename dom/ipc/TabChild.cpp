@@ -575,8 +575,9 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     }
 
     FrameMetrics newMetrics = aFrameMetrics;
-    if (nsCOMPtr<nsIPresShell> presShell = GetPresShell()) {
-      APZCCallbackHelper::UpdateRootFrame(presShell, newMetrics);
+    nsCOMPtr<nsIContent> target = nsLayoutUtils::FindContentFor(aFrameMetrics.GetScrollId());
+    if (target) {
+      APZCCallbackHelper::UpdateRootFrame(target, newMetrics);
     }
 
     CSSSize cssCompositedSize = newMetrics.CalculateCompositedSizeInCssPixels();
