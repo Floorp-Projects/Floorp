@@ -22,6 +22,7 @@ private:
   ~Connection();
 
   nsCOMPtr<mozIStorageConnection> mBase;
+  bool mClosed;
 
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEASYNCCONNECTION
