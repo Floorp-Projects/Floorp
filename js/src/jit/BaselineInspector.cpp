@@ -10,6 +10,8 @@
 
 #include "jit/BaselineIC.h"
 
+#include "vm/ObjectGroup-inl.h"
+
 using namespace js;
 using namespace js::jit;
 

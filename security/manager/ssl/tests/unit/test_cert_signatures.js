@@ -36,7 +36,7 @@ function check_ca(ca_name) {
   let verified = {};
   let usages = {};
   cert.getUsagesString(true, verified, usages);
-  do_check_eq('SSL CA', usages.value);
+  equal("SSL CA", usages.value, "Usages string for a CA cert should be 'SSL CA'");
 }
 
 function run_test() {
@@ -88,6 +88,7 @@ function run_test() {
     let verified = {};
     let usages = {};
     cert.getUsagesString(true, verified, usages);
-    do_check_eq(cert2usage[cert_name], usages.value);
+    equal(cert2usage[cert_name], usages.value,
+          "Expected and actual usages string should match");
   }
 }

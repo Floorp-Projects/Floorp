@@ -144,7 +144,7 @@ void profiler_set_frame_number(int frameNumber)
 }
 
 static inline
-char* profiler_get_profile(float aSinceTime = 0)
+mozilla::UniquePtr<char[]> profiler_get_profile(float aSinceTime = 0)
 {
   return mozilla_sampler_get_profile(aSinceTime);
 }

@@ -2008,6 +2008,8 @@ public:
 
     a1_->SetExpectedFrameRequestType(frameRequestType);
     a1_->mExpectNack = expectNack;
+    // Since we don't support rewriting rtcp-fb in answers, a2 still thinks it
+    // will be doing all of the normal rtcp-fb
 
     WaitForCompleted();
     CheckPipelines();
@@ -2028,6 +2030,8 @@ public:
     std::string modifiedOffer = HardcodeRtcpFb(a1_->offer(), feedback);
 
     a2_->SetRemote(TestObserver::OFFER, modifiedOffer);
+    a1_->SetExpectedFrameRequestType(frameRequestType);
+    a1_->mExpectNack = expectNack;
     a2_->SetExpectedFrameRequestType(frameRequestType);
     a2_->mExpectNack = expectNack;
 

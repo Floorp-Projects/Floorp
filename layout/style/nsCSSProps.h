@@ -692,6 +692,7 @@ public:
   static const KTableValue kTextOverflowKTable[];
   static const KTableValue kTextTransformKTable[];
   static const KTableValue kTouchActionKTable[];
+  static const KTableValue kTransformBoxKTable[];
   static const KTableValue kTransitionTimingFunctionKTable[];
   static const KTableValue kUnicodeBidiKTable[];
   static const KTableValue kUserFocusKTable[];

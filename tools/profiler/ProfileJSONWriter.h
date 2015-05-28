@@ -15,70 +15,50 @@
 
 class SpliceableChunkedJSONWriter;
 
+// On average, profile JSONs are large enough such that we want to avoid
+// reallocating its buffer when expanding. Additionally, the contents of the
+// profile are not accessed until the profile is entirely written. For these
+// reasons we use a chunked writer that keeps an array of chunks, which is
+// concatenated together after writing is finished.
 class ChunkedJSONWriteFunc : public mozilla::JSONWriteFunc
 {
+public:
   friend class SpliceableJSONWriter;
 
-  const static size_t kChunkSize = 4096 * 512;
+  ChunkedJSONWriteFunc() {
+    AllocChunk(kChunkSize);
+  }
+
+  void Write(const char* aStr) override;
+  mozilla::UniquePtr<char[]> CopyData() const;
+
+private:
+  void AllocChunk(size_t aChunkSize);
+
+  static const size_t kChunkSize = 4096 * 512;
+
+  // Pointer for writing inside the current chunk.
+  //
+  // The current chunk is always at the back of mChunkList, i.e.,
+  // mChunkList.back() <= mChunkPtr <= mChunkEnd.
   char* mChunkPtr;
+
+  // Pointer to the end of the current chunk.
+  //
+  // The current chunk is always at the back of mChunkList, i.e.,
+  // mChunkEnd >= mChunkList.back() + mChunkLengths.back().
   char* mChunkEnd;
+
+  // List of chunks and their lengths.
+  //
+  // For all i, the length of the string in mChunkList[i] is
+  // mChunkLengths[i].
   mozilla::Vector<mozilla::UniquePtr<char[]>> mChunkList;
   mozilla::Vector<size_t> mChunkLengths;
-
-  void AllocChunk() {
-    MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
-    mozilla::UniquePtr<char[]> newChunk = mozilla::MakeUnique<char[]>(kChunkSize);
-    mChunkPtr = newChunk.get();
-    mChunkEnd = mChunkPtr + kChunkSize;
-    MOZ_ALWAYS_TRUE(mChunkLengths.append(0));
-    MOZ_ALWAYS_TRUE(mChunkList.append(mozilla::Move(newChunk)));
-  }
-
-public:
-  ChunkedJSONWriteFunc() {
-    AllocChunk();
-  }
-
-  void Write(const char* aStr) override {
-    MOZ_ASSERT(strlen(aStr) < kChunkSize);
-
-    size_t len = strlen(aStr);
-    char* newPtr = mChunkPtr + len;
-    if (newPtr >= mChunkEnd) {
-      MOZ_ASSERT(*mChunkPtr == '\0');
-      AllocChunk();
-      newPtr = mChunkPtr + len;
-    }
-
-    memcpy(mChunkPtr, aStr, len);
-    mChunkPtr = newPtr;
-    mChunkLengths.back() += len;
-    *mChunkPtr = '\0';
-  }
-
-  mozilla::UniquePtr<char[]> CopyData() {
-    MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
-    size_t totalLen = 1;
-    for (size_t i = 0; i < mChunkLengths.length(); i++) {
-      MOZ_ASSERT(strlen(mChunkList[i].get()) == mChunkLengths[i]);
-      totalLen += mChunkLengths[i];
-    }
-    mozilla::UniquePtr<char[]> c = mozilla::MakeUnique<char[]>(totalLen);
-    char* ptr = c.get();
-    for (size_t i = 0; i < mChunkList.length(); i++) {
-      size_t len = mChunkLengths[i];
-      memcpy(ptr, mChunkList[i].get(), len);
-      ptr += len;
-    }
-    *ptr = '\0';
-    return c;
-  }
 };
 
 struct OStreamJSONWriteFunc : public mozilla::JSONWriteFunc
 {
-  std::ostream& mStream;
-
   explicit OStreamJSONWriteFunc(std::ostream& aStream)
     : mStream(aStream)
   { }
@@ -86,6 +66,8 @@ struct OStreamJSONWriteFunc : public mozilla::JSONWriteFunc
   void Write(const char* aStr) override {
     mStream << aStr;
   }
+
+  std::ostream& mStream;
 };
 
 class SpliceableJSONWriter : public mozilla::JSONWriter
