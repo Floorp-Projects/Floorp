@@ -33,7 +33,7 @@ add_task(function*() {
   yield check_autocomplete({
     search: "mozilla.org/rum",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "http://mozilla.org/rum", input: "mozilla.org/rum"}), title: "http://mozilla.org/rum", style: [ "action", "visiturl" ] } ]
+    matches: [ makeVisitMatch("mozilla.org/rum", "http://mozilla.org/rum") ]
   });
 
   // And hosts with no dot in them are special, due to requiring whitelisting.
@@ -44,7 +44,7 @@ add_task(function*() {
   yield check_autocomplete({
     search: "mozilla/rum",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "mozilla/rum", searchQuery: "mozilla/rum"}), title: "MozSearch", style: [ "action", "searchengine" ] } ]
+    matches: [ makeSearchMatch("mozilla/rum") ]
   });
 
   // ipv4 and ipv6 literal addresses should offer to visit.
@@ -52,13 +52,13 @@ add_task(function*() {
   yield check_autocomplete({
     search: "127.0.0.1",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "http://127.0.0.1/", input: "127.0.0.1"}), title: "http://127.0.0.1/", style: ["action", "visiturl"] } ]
+    matches: [ makeVisitMatch("127.0.0.1", "http://127.0.0.1/") ]
   });
 
   do_print("visit url, ipv6 literal");
   yield check_autocomplete({
     search: "[2001:db8::1]",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "http://[2001:db8::1]/", input: "[2001:db8::1]"}), title: "http://[2001:db8::1]/", style: ["action", "visiturl"] } ]
+    matches: [ makeVisitMatch("[2001:db8::1]", "http://[2001:db8::1]/") ]
   });
 });

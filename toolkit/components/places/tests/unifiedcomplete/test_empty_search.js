@@ -43,14 +43,14 @@ add_task(function* test_javascript_match() {
   yield check_autocomplete({
     search: "foo",
     searchParam: "enable-actions",
-    matches: [ { uri: uri1, title: "title" },
+    matches: [ makeSearchMatch("foo"),
+               { uri: uri1, title: "title" },
                { uri: uri2, title: "title", style: ["bookmark"] },
                { uri: uri3, title: "title" },
                { uri: uri4, title: "title", style: ["bookmark"] },
                { uri: uri5, title: "title", style: ["bookmark"] },
                { uri: uri6, title: "title", style: ["bookmark"] },
-               { uri: makeActionURI("switchtab", {url: "http://t.foo/6"}), title: "title", style: [ "action,switchtab" ] },
-               { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "foo", searchQuery: "foo"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
              ]
   });
 
@@ -87,8 +87,8 @@ add_task(function* test_javascript_match() {
     search: "",
     searchParam: "enable-actions",
     matches: [
-               { uri: makeActionURI("switchtab", {url: "http://t.foo/6"}), title: "title", style: [ "action,switchtab" ] },
-               { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "", searchQuery: ""}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               makeSearchMatch(""),
+               makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
              ]
   });
 
