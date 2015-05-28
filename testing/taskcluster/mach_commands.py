@@ -45,7 +45,7 @@ TREEHERDER_ROUTES = {
 
 DEFAULT_TRY = 'try: -b do -p all -u all'
 DEFAULT_JOB_PATH = os.path.join(
-    ROOT, 'tasks', 'branches', 'mozilla-central', 'job_flags.yml'
+    ROOT, 'tasks', 'branches', 'base_jobs.yml'
 )
 
 def load_mozharness_info():
