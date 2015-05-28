@@ -10045,9 +10045,10 @@ ssl3_AuthCertificate(sslSocket *ss)
 	ss->sec.authAlgorithm = ss->ssl3.hs.kea_def->signKeyType;
 	ss->sec.keaType       = ss->ssl3.hs.kea_def->exchKeyType;
 	if (pubKey) {
+	    KeyType pubKeyType;
 	    ss->sec.keaKeyBits = ss->sec.authKeyBits =
 		SECKEY_PublicKeyStrengthInBits(pubKey);
-            KeyType pubKeyType = SECKEY_GetPublicKeyType(pubKey);
+            pubKeyType = SECKEY_GetPublicKeyType(pubKey);
             /* Too small: not good enough. Send a fatal alert. */
             /* TODO: Use 1023 for RSA because a higher RSA_MIN_MODULUS_BITS
              * breaks export cipher suites, not 1024 to be conservative; when
