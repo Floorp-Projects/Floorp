@@ -14,5 +14,5 @@
 interface SpeechRecognitionResult {
     readonly attribute unsigned long length;
     getter SpeechRecognitionAlternative item(unsigned long index);
-    readonly attribute boolean final;
+    readonly attribute boolean isFinal;
 };
