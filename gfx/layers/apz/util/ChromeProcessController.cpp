@@ -76,9 +76,17 @@ ChromeProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics
   }
 
   nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(aFrameMetrics.GetScrollId());
-  if (targetContent) {
-    FrameMetrics metrics = aFrameMetrics;
-    APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
+  FrameMetrics metrics = aFrameMetrics;
+  if (aFrameMetrics.GetIsRoot()) {
+    nsCOMPtr<nsIDocument> doc = targetContent->GetComposedDoc();
+    nsCOMPtr<nsIPresShell> shell = doc ? doc->GetShell() : nullptr;
+    if (shell && aFrameMetrics.GetPresShellId() == shell->GetPresShellId()) {
+      APZCCallbackHelper::UpdateRootFrame(targetContent, metrics);
+    }
+  } else {
+    if (targetContent) {
+      APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
+    }
   }
 }
 
