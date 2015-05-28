@@ -8,11 +8,7 @@
 #include "jsapi-tests/tests.h"
 
 class CCWTestTracer : public JS::CallbackTracer {
-    static void staticCallback(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind) {
-        static_cast<CCWTestTracer*>(trc)->callback(thingp, kind);
-    }
-
-    void callback(void** thingp, JS::TraceKind kind) {
+    void trace(void** thingp, JS::TraceKind kind) {
         numberOfThingsTraced++;
 
         printf("*thingp         = %p\n", *thingp);
@@ -32,7 +28,7 @@ class CCWTestTracer : public JS::CallbackTracer {
     JS::TraceKind expectedKind;
 
     CCWTestTracer(JSContext* cx, void** expectedThingp, JS::TraceKind expectedKind)
-      : JS::CallbackTracer(JS_GetRuntime(cx), staticCallback),
+      : JS::CallbackTracer(JS_GetRuntime(cx)),
         okay(true),
         numberOfThingsTraced(0),
         expectedThingp(expectedThingp),
