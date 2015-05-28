@@ -1445,7 +1445,11 @@ this.PlacesUtils = {
    */
   getImageURLForResolution:
   function PU_getImageURLForResolution(aWindow, aURL, aWidth = 16, aHeight = 16) {
-    if (!aURL.endsWith('.ico') && !aURL.endsWith('.ICO')) {
+    // We only want to modify the URL when the file extension is ".ico" or
+    // it's a data URI with an icon media-type.
+    let uri = Services.io.newURI(aURL, null, null);
+    if ((!(uri instanceof Ci.nsIURL) || uri.fileExtension.toLowerCase() != "ico") &&
+        !/^data:image\/(?:x-icon|icon|ico)/.test(aURL)) {
       return aURL;
     }
     let width  = Math.round(aWidth * aWindow.devicePixelRatio);
