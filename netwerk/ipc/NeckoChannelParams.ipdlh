@@ -73,6 +73,7 @@ struct HttpChannelOpenArgs
 struct HttpChannelConnectArgs
 {
   uint32_t channelId;
+  bool shouldIntercept;
 };
 
 union HttpChannelCreationArgs
