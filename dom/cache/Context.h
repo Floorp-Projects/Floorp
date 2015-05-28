@@ -112,7 +112,7 @@ public:
   // be execute synchronously.
   static already_AddRefed<Context>
   Create(Manager* aManager, nsIThread* aTarget,
-         Action* aQuotaIOThreadAction, Context* aOldContext);
+         Action* aInitAction, Context* aOldContext);
 
   // Execute given action on the target once the quota manager has been
   // initialized.
