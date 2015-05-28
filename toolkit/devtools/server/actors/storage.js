@@ -885,7 +885,7 @@ ObjectStoreMetadata.prototype = {
       keyPath: this._keyPath,
       autoIncrement: this._autoIncrement,
       indexes: JSON.stringify(
-        [index.toObject() for (index of this._indexes.values())]
+        [...this._indexes.values()].map(index => index.toObject())
       )
     };
   }

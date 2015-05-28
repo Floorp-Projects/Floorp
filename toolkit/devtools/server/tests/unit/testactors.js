@@ -47,7 +47,7 @@ function TestTabList(aConnection) {
 TestTabList.prototype = {
   constructor: TestTabList,
   getList: function () {
-    return Promise.resolve([tabActor for (tabActor of this._tabActors)]);
+    return Promise.resolve([...this._tabActors]);
   }
 };
 

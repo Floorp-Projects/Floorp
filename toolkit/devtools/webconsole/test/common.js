@@ -194,7 +194,7 @@ var gTestState = {};
 
 function runTests(aTests, aEndCallback)
 {
-  function driver()
+  function* driver()
   {
     let lastResult, sendToNext;
     for (let i = 0; i < aTests.length; i++) {
@@ -212,5 +212,5 @@ function runTests(aTests, aEndCallback)
 
 function nextTest(aMessage)
 {
-  return gTestState.driver.send(aMessage);
+  return gTestState.driver.next(aMessage);
 }
