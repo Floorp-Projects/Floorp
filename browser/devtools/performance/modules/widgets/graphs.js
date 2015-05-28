@@ -9,10 +9,10 @@
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = require("resource://gre/modules/Task.jsm");
+const { LineGraphWidget } = require("resource:///modules/devtools/Graphs.jsm");
+const { BarGraphWidget } = require("resource:///modules/devtools/Graphs.jsm");
+const { CanvasGraphUtils } = require("resource:///modules/devtools/Graphs.jsm");
 const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
-const { LineGraphWidget } = require("devtools/shared/widgets/Graphs");
-const { BarGraphWidget } = require("devtools/shared/widgets/Graphs");
-const { CanvasGraphUtils } = require("devtools/shared/widgets/Graphs");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
@@ -326,7 +326,7 @@ GraphsController.prototype = {
 
   /**
    * Fetches the currently mapped selection. If graphs are not yet rendered,
-   * (which throws in Graphs.js), return null.
+   * (which throws in Graphs.jsm), return null.
    */
   getMappedSelection: function ({ mapStart, mapEnd }) {
     let primary = this._getPrimaryLink();
