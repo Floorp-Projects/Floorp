@@ -30,11 +30,11 @@ static float ClampFactor(float aFactor)
 
 nsCSSFilterInstance::nsCSSFilterInstance(const nsStyleFilter& aFilter,
                                          nscolor aShadowFallbackColor,
-                                         const nsIntRect& aTargetBBoxInFilterSpace,
+                                         const nsIntRect& aTargetBoundsInFilterSpace,
                                          const gfxMatrix& aFrameSpaceInCSSPxToFilterSpaceTransform)
   : mFilter(aFilter)
   , mShadowFallbackColor(aShadowFallbackColor)
-  , mTargetBBoxInFilterSpace(aTargetBBoxInFilterSpace)
+  , mTargetBoundsInFilterSpace(aTargetBoundsInFilterSpace)
   , mFrameSpaceInCSSPxToFilterSpaceTransform(aFrameSpaceInCSSPxToFilterSpaceTransform)
 {
 }
@@ -385,7 +385,7 @@ nsCSSFilterInstance::SetBounds(FilterPrimitiveDescription& aDescr,
 {
   int32_t inputIndex = GetLastResultIndex(aPrimitiveDescrs);
   nsIntRect inputBounds = (inputIndex < 0) ?
-    mTargetBBoxInFilterSpace : aPrimitiveDescrs[inputIndex].PrimitiveSubregion();
+    mTargetBoundsInFilterSpace : aPrimitiveDescrs[inputIndex].PrimitiveSubregion();
 
   nsTArray<nsIntRegion> inputExtents;
   inputExtents.AppendElement(inputBounds);
