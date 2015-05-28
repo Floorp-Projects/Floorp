@@ -129,7 +129,7 @@ JSValToDashArray(JSContext* cx, const JS::Value& patternArray,
             } else if (d > 0.0) {
                 haveNonzeroElement = true;
             }
-            if (!dashes.AppendElement(d)) {
+            if (!dashes.AppendElement(d, mozilla::fallible)) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
         }

@@ -1149,7 +1149,7 @@ TouchCaret::DispatchTapEvent()
   sel->Stringify(init.mSelectedText);
 
   dom::Sequence<dom::SelectionState> state;
-  state.AppendElement(dom::SelectionState::Taponcaret);
+  state.AppendElement(dom::SelectionState::Taponcaret, fallible);
   init.mStates = state;
 
   nsRefPtr<dom::SelectionStateChangedEvent> event =
