@@ -3198,6 +3198,9 @@ GLenum WebGLContext::CheckedTexImage2D(TexImageTarget texImageTarget,
 
     gl->fTexImage2D(texImageTarget.get(), level, driverInternalFormat, width, height, border, driverFormat, driverType, data);
 
+    if (effectiveInternalFormat != driverInternalFormat)
+        SetLegacyTextureSwizzle(gl, texImageTarget.get(), internalformat.get());
+
     GLenum error = LOCAL_GL_NO_ERROR;
     if (sizeMayChange) {
         error = GetAndFlushUnderlyingGLErrors();

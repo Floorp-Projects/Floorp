@@ -94,19 +94,25 @@ MediaResourceManagerClient::State OMXCodecProxy::getState()
   return mState;
 }
 
-void OMXCodecProxy::setEventListener(const wp<OMXCodecProxy::EventListener>& listener)
+void OMXCodecProxy::setListener(const wp<CodecResourceListener>& listener)
 {
   Mutex::Autolock autoLock(mLock);
-  mEventListener = listener;
+  mListener = listener;
 }
 
-void OMXCodecProxy::notifyStatusChangedLocked()
+void OMXCodecProxy::notifyResourceReserved()
 {
-  if (mEventListener != nullptr) {
-    sp<EventListener> listener = mEventListener.promote();
-    if (listener != nullptr) {
-      listener->statusChanged();
-    }
+  sp<CodecResourceListener> listener = mListener.promote();
+  if (listener != nullptr) {
+    listener->codecReserved();
+  }
+}
+
+void OMXCodecProxy::notifyResourceCanceled()
+{
+  sp<CodecResourceListener> listener = mListener.promote();
+  if (listener != nullptr) {
+    listener->codecCanceled();
   }
 }
 
@@ -129,12 +135,6 @@ void OMXCodecProxy::requestResource()
   mManagerService->requestMediaResource(mClient, IMediaResourceManagerService::HW_VIDEO_DECODER, true /* will wait */);
 }
 
-bool OMXCodecProxy::IsWaitingResources()
-{
-  Mutex::Autolock autoLock(mLock);
-  return mState == MediaResourceManagerClient::CLIENT_STATE_WAIT_FOR_RESOURCE;
-}
-
 // called on Binder ipc thread
 void OMXCodecProxy::statusChanged(int event)
 {
@@ -146,13 +146,14 @@ void OMXCodecProxy::statusChanged(int event)
 
   mState = (MediaResourceManagerClient::State) event;
   if (mState != MediaResourceManagerClient::CLIENT_STATE_RESOURCE_ASSIGNED) {
+    notifyResourceCanceled();
     return;
   }
 
   const char *mime;
   if (!mSrcMeta->findCString(kKeyMIMEType, &mime)) {
     mState = MediaResourceManagerClient::CLIENT_STATE_SHUTDOWN;
-    notifyStatusChangedLocked();
+    notifyResourceCanceled();
     return;
   }
 
@@ -161,7 +162,7 @@ void OMXCodecProxy::statusChanged(int event)
     mOMXCodec = OMXCodec::Create(mOMX, mSrcMeta, mIsEncoder, mSource, mComponentName, mFlags, mNativeWindow);
     if (mOMXCodec == nullptr) {
       mState = MediaResourceManagerClient::CLIENT_STATE_SHUTDOWN;
-      notifyStatusChangedLocked();
+      notifyResourceCanceled();
       return;
     }
     // Check if this video is sized such that we're comfortable
@@ -182,7 +183,7 @@ void OMXCodecProxy::statusChanged(int event)
                     width, height, maxWidth, maxHeight);
       mOMXCodec.clear();
       mState = MediaResourceManagerClient::CLIENT_STATE_SHUTDOWN;
-      notifyStatusChangedLocked();
+      notifyResourceCanceled();
       return;
     }
 
@@ -190,11 +191,11 @@ void OMXCodecProxy::statusChanged(int event)
       NS_WARNING("Couldn't start OMX video source");
       mOMXCodec.clear();
       mState = MediaResourceManagerClient::CLIENT_STATE_SHUTDOWN;
-      notifyStatusChangedLocked();
+      notifyResourceCanceled();
       return;
     }
   }
-  notifyStatusChangedLocked();
+  notifyResourceReserved();
 }
 
 status_t OMXCodecProxy::start(MetaData *params)

@@ -32,3 +32,11 @@ function l(a=8, b=a) {
     function a() { return 42; }
 }
 assertEq(l(), 8);
+function m([a, b]=[1, 2], c=a) {
+  function a() { return 42; }
+  assertEq(typeof a, "function");
+  assertEq(a(), 42);
+  assertEq(b, 2);
+  assertEq(c, 1);
+}
+m();

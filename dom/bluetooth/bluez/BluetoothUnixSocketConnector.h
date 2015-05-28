@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_bluetooth_BluetoothUnixSocketConnector_h
 #define mozilla_dom_bluetooth_BluetoothUnixSocketConnector_h
 
+#include <bluetooth/bluetooth.h>
 #include "BluetoothCommon.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
 

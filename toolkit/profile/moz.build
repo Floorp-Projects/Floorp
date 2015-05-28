@@ -14,10 +14,14 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'toolkitprofile'
 
-UNIFIED_SOURCES += [ TOPSRCDIR + '/profile/dirserviceprovider/nsProfileLock.cpp' ]
+UNIFIED_SOURCES += [
+    '/profile/dirserviceprovider/nsProfileLock.cpp'
+]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    UNIFIED_SOURCES += [ TOPSRCDIR + '/profile/dirserviceprovider/ProfileUnlockerWin.cpp' ]
+    UNIFIED_SOURCES += [
+        '/profile/dirserviceprovider/ProfileUnlockerWin.cpp'
+    ]
 
 UNIFIED_SOURCES += [
     'nsToolkitProfileService.cpp'

@@ -5,10 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_ENABLE_QT5GEOPOSITION']:
-    GENERATED_SOURCES += [
-        'moc_QTMLocationProvider.cpp',
-    ]
     SOURCES += [
+        '!moc_QTMLocationProvider.cpp',
         'QTMLocationProvider.cpp',
     ]
 

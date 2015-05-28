@@ -246,7 +246,7 @@ function process_log(contents) {
         });
       continue;
     }
-    match = line.match(/^(?:  |)IMAGE([^:]*): (data:.*)$/);
+    match = line.match(/IMAGE([^:]*): (data:.*)$/);
     if (match) {
       var item = gTestItems[gTestItems.length - 1];
       item.images.push(match[2]);

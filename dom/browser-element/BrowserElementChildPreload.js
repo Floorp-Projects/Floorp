@@ -965,7 +965,7 @@ BrowserElementChild.prototype = {
 
   _mozFullscreenOriginChange: function(e) {
     sendAsyncMsg("fullscreen-origin-change", {
-      origin: e.target.nodePrincipal.origin
+      originNoSuffix: e.target.nodePrincipal.originNoSuffix
     });
   },
 
