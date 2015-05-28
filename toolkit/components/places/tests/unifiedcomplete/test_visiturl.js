@@ -38,10 +38,6 @@ add_task(function*() {
 
   // And hosts with no dot in them are special, due to requiring whitelisting.
   do_print("visit url, host matching visited host but not visited url, non-whitelisted host");
-  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-                                       "http://s.example.com/search");
-  let engine = Services.search.getEngineByName("MozSearch");
-  Services.search.currentEngine = engine;
   yield PlacesTestUtils.addVisits([
     { uri: NetUtil.newURI("http://mozilla/bourbon/"), title: "Mozilla Bourbon", transition: TRANSITION_TYPED },
   ]);
@@ -49,5 +45,20 @@ add_task(function*() {
     search: "mozilla/rum",
     searchParam: "enable-actions",
     matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "mozilla/rum", searchQuery: "mozilla/rum"}), title: "MozSearch", style: [ "action", "searchengine" ] } ]
+  });
+
+  // ipv4 and ipv6 literal addresses should offer to visit.
+  do_print("visit url, ipv4 literal");
+  yield check_autocomplete({
+    search: "127.0.0.1",
+    searchParam: "enable-actions",
+    matches: [ { uri: makeActionURI("visiturl", {url: "http://127.0.0.1/", input: "127.0.0.1"}), title: "http://127.0.0.1/", style: ["action", "visiturl"] } ]
+  });
+
+  do_print("visit url, ipv6 literal");
+  yield check_autocomplete({
+    search: "[2001:db8::1]",
+    searchParam: "enable-actions",
+    matches: [ { uri: makeActionURI("visiturl", {url: "http://[2001:db8::1]/", input: "[2001:db8::1]"}), title: "http://[2001:db8::1]/", style: ["action", "visiturl"] } ]
   });
 });

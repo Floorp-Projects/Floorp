@@ -3,10 +3,8 @@
 
 
 add_task(function*() {
-  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-                                       "http://s.example.com/search");
-  let engine = Services.search.getEngineByName("MozSearch");
-  Services.search.currentEngine = engine;
+  // Note that head_autocomplete.js has already added a MozSearch engine.
+  // Here we add another engine with a search alias.
   Services.search.addEngineWithDetails("AliasedMozSearch", "", "doit", "",
                                        "GET", "http://s.example.com/search");
 
