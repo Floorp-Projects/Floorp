@@ -131,11 +131,13 @@ class Context::QuotaInitRunnable final : public nsIRunnable
 public:
   QuotaInitRunnable(Context* aContext,
                     Manager* aManager,
+                    Data* aData,
                     nsIThread* aTarget,
                     Action* aInitAction)
     : mContext(aContext)
     , mThreadsafeHandle(aContext->CreateThreadsafeHandle())
     , mManager(aManager)
+    , mData(aData)
     , mTarget(aTarget)
     , mInitAction(aInitAction)
     , mInitiatingThread(NS_GetCurrentThread())
@@ -146,6 +148,7 @@ public:
   {
     MOZ_ASSERT(mContext);
     MOZ_ASSERT(mManager);
+    MOZ_ASSERT(mData);
     MOZ_ASSERT(mTarget);
     MOZ_ASSERT(mInitiatingThread);
   }
@@ -232,6 +235,7 @@ private:
   nsRefPtr<Context> mContext;
   nsRefPtr<ThreadsafeHandle> mThreadsafeHandle;
   nsRefPtr<Manager> mManager;
+  nsRefPtr<Data> mData;
   nsCOMPtr<nsIThread> mTarget;
   nsRefPtr<Action> mInitAction;
   nsCOMPtr<nsIThread> mInitiatingThread;
@@ -414,7 +418,7 @@ Context::QuotaInitRunnable::Run()
 
       // Execute the provided initialization Action.  The Action must Resolve()
       // before returning.
-      mInitAction->RunOnTarget(resolver, mQuotaInfo, nullptr);
+      mInitAction->RunOnTarget(resolver, mQuotaInfo, mData);
       MOZ_ASSERT(resolver->Resolved());
 
       break;
@@ -930,8 +934,8 @@ Context::Init(Action* aInitAction, Context* aOldContext)
   MOZ_ASSERT(!mInitRunnable);
 
   // Do this here to avoid doing an AddRef() in the constructor
-  // TODO: pass context->mData to allow connetion sharing with init
-  mInitRunnable = new QuotaInitRunnable(this, mManager, mTarget, aInitAction);
+  mInitRunnable = new QuotaInitRunnable(this, mManager, mData, mTarget,
+                                        aInitAction);
 
   if (aOldContext) {
     aOldContext->SetNextContext(this);
