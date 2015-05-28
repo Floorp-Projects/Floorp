@@ -135,6 +135,9 @@
 @RESPATH@/run-mozilla.sh
 #endif
 #endif
+#ifdef MOZ_WEBSPEECH_MODELS
+@BINPATH@/models/
+#endif
 
 ; [Components]
 @RESPATH@/components/components.manifest
