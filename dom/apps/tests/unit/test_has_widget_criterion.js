@@ -13,7 +13,7 @@ add_test(function test_has_widget_criterion() {
   let resolve = (aPage)=>{
     let filepath = AppsUtils.getFilePath(aPage);
 
-    return baseUri.resolve(filepath);
+    return Services.io.newURI(baseUri.resolve(filepath), null, null);
   };
 
   let widgetPages = ['/widget.html',
