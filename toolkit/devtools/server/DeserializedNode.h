@@ -81,6 +81,10 @@ struct DeserializedNode {
   // virtual to provide a hook for gmock and gtest.
   virtual DeserializedNode &getEdgeReferent(const DeserializedEdge &edge);
 
+protected:
+  // This is only for use with `MockDeserializedNode` in testing.
+  DeserializedNode(NodeId id, const char16_t *typeName, uint64_t size);
+
 private:
   DeserializedNode(const DeserializedNode &) = delete;
   DeserializedNode &operator=(const DeserializedNode &) = delete;
