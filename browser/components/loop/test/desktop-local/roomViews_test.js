@@ -96,7 +96,7 @@ describe("loop.roomViews", function () {
           roomStore: roomStore
         }));
 
-      var expectedState = _.extend({foo: "bar"},
+      var expectedState = _.extend({foo: "bar", savingContext: false},
         activeRoomStore.getInitialStoreState());
 
       expect(testView.state).eql(expectedState);
@@ -676,10 +676,8 @@ describe("loop.roomViews", function () {
         expect(node).to.not.eql(null);
         expect(node.querySelector(".room-context-thumbnail").src).to.
           eql(fakeContextURL.thumbnail);
-        expect(node.querySelector(".room-context-description").textContent).to.
-          eql(fakeContextURL.description);
-        expect(node.querySelector(".room-context-comment").textContent).to.
-          eql(view.props.roomData.roomDescription);
+        expect(node.querySelector(".room-context-description").firstChild.textContent).
+          to.eql(fakeContextURL.description);
       });
 
       it("should not render optional data", function() {
@@ -727,12 +725,13 @@ describe("loop.roomViews", function () {
         expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
       });
 
-      it("should show the checkbox as disabled when no context is available", function() {
+      it("should show the checkbox as disabled when context is already set", function() {
         view = mountTestComponent({
           editMode: true,
           roomData: {
             roomToken: "fakeToken",
-            roomName: "fakeName"
+            roomName: "fakeName",
+            roomContextUrls: [fakeContextURL]
           }
         });
 
@@ -758,9 +757,32 @@ describe("loop.roomViews", function () {
           expect(view.state.availableContext.previewImage).to.eql(favicon);
 
           var node = view.getDOMNode();
+          expect(node.querySelector(".checkbox-wrapper").classList.contains("disabled")).to.eql(true);
           expect(node.querySelector(".room-context-name").value).to.eql(roomName);
           expect(node.querySelector(".room-context-url").value).to.eql(fakeContextURL.location);
           expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
+
+          next();
+        });
+      });
+
+      it("should hide the checkbox when no context data is stored or available", function(next) {
+        view = mountTestComponent({
+          roomData: {
+            roomToken: "fakeToken",
+            roomName: "Hello, is it me you're looking for?"
+          }
+        });
+
+        // Switch to editMode via setting the prop, since we can control that
+        // better.
+        view.setProps({ editMode: true }, function() {
+          // First check if availableContext is set correctly.
+          expect(view.state.availableContext).to.not.eql(null);
+          expect(view.state.availableContext.previewImage).to.eql(favicon);
+
+          var node = view.getDOMNode();
+          expect(node.querySelector(".checkbox-wrapper").classList.contains("hide")).to.eql(true);
 
           next();
         });
@@ -785,13 +807,13 @@ describe("loop.roomViews", function () {
         roomNameBox = view.getDOMNode().querySelector(".room-context-name");
       });
 
-      it("should dispatch a UpdateRoomContext action when the focus is lost",
+      it("should dispatch a UpdateRoomContext action when the save button is clicked",
         function() {
           React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
             value: "reallyFake"
           }});
 
-          React.addons.TestUtils.Simulate.blur(roomNameBox);
+          React.addons.TestUtils.Simulate.click(view.getDOMNode().querySelector(".btn-info"));
 
           sinon.assert.calledOnce(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch,
