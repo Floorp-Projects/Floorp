@@ -509,6 +509,33 @@ GonkGPSGeolocationProvider::RequestSetID(uint32_t flags)
   mAGpsRilInterface->set_set_id(type, idBytes.get());
 }
 
+namespace {
+int
+ConvertToGpsRefLocationType(const nsAString& aConnectionType)
+{
+  const char* GSM_TYPES[] = { "gsm", "gprs", "edge" };
+  const char* UMTS_TYPES[] = { "umts", "hspda", "hsupa", "hspa", "hspa+" };
+
+  for (auto type: GSM_TYPES) {
+    if (aConnectionType.EqualsASCII(type)) {
+        return AGPS_REF_LOCATION_TYPE_GSM_CELLID;
+    }
+  }
+
+  for (auto type: UMTS_TYPES) {
+    if (aConnectionType.EqualsASCII(type)) {
+      return AGPS_REF_LOCATION_TYPE_UMTS_CELLID;
+    }
+  }
+
+  if (gDebug_isLoggingEnabled) {
+    nsContentUtils::LogMessageToConsole("geo: Unsupported connection type %s\n",
+                                        NS_ConvertUTF16toUTF8(aConnectionType).get());
+  }
+  return AGPS_REF_LOCATION_TYPE_GSM_CELLID;
+}
+} // anonymous namespace
+
 void
 GonkGPSGeolocationProvider::SetReferenceLocation()
 {
@@ -521,9 +548,6 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
 
   AGpsRefLocation location;
 
-  // TODO: Bug 772750 - get mobile connection technology from rilcontext
-  location.type = AGPS_REF_LOCATION_TYPE_UMTS_CELLID;
-
   nsCOMPtr<nsIMobileConnectionService> service =
     do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
   if (!service) {
@@ -532,14 +556,19 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
   }
 
   nsCOMPtr<nsIMobileConnection> connection;
-  // TODO: Bug 878748 - B2G GPS: acquire correct RadioInterface instance in
-  // MultiSIM configuration
-  service->GetItemByServiceId(0 /* Client Id */, getter_AddRefs(connection));
+  service->GetItemByServiceId(mRilDataServiceId, getter_AddRefs(connection));
   NS_ENSURE_TRUE_VOID(connection);
 
   nsCOMPtr<nsIMobileConnectionInfo> voice;
   connection->GetVoice(getter_AddRefs(voice));
   if (voice) {
+    nsAutoString connectionType;
+    nsresult rv = voice->GetType(connectionType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+    location.type = ConvertToGpsRefLocationType(connectionType);
+
     nsCOMPtr<nsIMobileNetworkInfo> networkInfo;
     voice->GetNetwork(getter_AddRefs(networkInfo));
     if (networkInfo) {
@@ -1026,9 +1055,7 @@ GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
             }
 
             nsCOMPtr<nsIMobileConnection> connection;
-            // TODO: Bug 878748 - B2G GPS: acquire correct RadioInterface instance in
-            // MultiSIM configuration
-            service->GetItemByServiceId(0 /* Client Id */, getter_AddRefs(connection));
+            service->GetItemByServiceId(mRilDataServiceId, getter_AddRefs(connection));
             if (!connection) {
               break;
             }

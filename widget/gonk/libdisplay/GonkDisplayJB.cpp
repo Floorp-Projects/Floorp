@@ -45,6 +45,8 @@ GonkDisplayJB::GonkDisplayJB()
     , mFBDevice(nullptr)
     , mPowerModule(nullptr)
     , mList(nullptr)
+    , mWidth(0)
+    , mHeight(0)
     , mEnabledCallback(nullptr)
 {
     int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &mFBModule);
@@ -108,7 +110,7 @@ GonkDisplayJB::GonkDisplayJB()
 
     CreateSurface(mSTClient, mDispSurface);
 
-    mList = (hwc_display_contents_1_t *)malloc(sizeof(*mList) + (sizeof(hwc_layer_1_t)*2));
+    mList = (hwc_display_contents_1_t *)calloc(1, sizeof(*mList) + (sizeof(hwc_layer_1_t)*2));
 
     uint32_t usage = GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER;
     if (mFBDevice) {

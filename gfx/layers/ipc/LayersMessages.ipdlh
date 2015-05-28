@@ -315,6 +315,7 @@ union MaybeTexture {
 struct TexturedTileDescriptor {
   PTexture texture;
   MaybeTexture textureOnWhite;
+  IntRect updateRect;
   TileLock sharedLock;
 };
 
@@ -330,6 +331,8 @@ struct SurfaceDescriptorTiles {
   nsIntRegion validRegion;
   nsIntRegion paintedRegion;
   TileDescriptor[] tiles;
+  int         firstTileX;
+  int         firstTileY;
   int         retainedWidth;
   int         retainedHeight;
   float       resolution;

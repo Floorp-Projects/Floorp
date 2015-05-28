@@ -194,6 +194,7 @@ class TableTicker: public Sampler {
 
   void ToStreamAsJSON(std::ostream& stream, float aSinceTime = 0);
   virtual JSObject *ToJSObject(JSContext *aCx, float aSinceTime = 0);
+  mozilla::UniquePtr<char[]> ToJSON(float aSinceTime = 0);
   void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
   void StreamTaskTracer(SpliceableJSONWriter& aWriter);
   void FlushOnJSShutdown(JSRuntime* aRuntime);

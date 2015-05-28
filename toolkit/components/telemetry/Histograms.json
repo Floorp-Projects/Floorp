@@ -97,6 +97,7 @@
     "n_buckets": 50
   },
   "CYCLE_COLLECTOR": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -104,6 +105,7 @@
     "description": "Time spent on one cycle collection (ms)"
   },
   "CYCLE_COLLECTOR_WORKER": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -111,6 +113,7 @@
     "description": "Time spent on one cycle collection in a worker (ms)"
   },
   "CYCLE_COLLECTOR_FULL": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -118,6 +121,7 @@
     "description": "Full pause time for one cycle collection, including preparation (ms)"
   },
   "CYCLE_COLLECTOR_MAX_PAUSE": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -125,16 +129,19 @@
     "description": "Longest pause for an individual slice of one cycle collection, including preparation (ms)"
   },
   "CYCLE_COLLECTOR_FINISH_IGC": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Cycle collection finished an incremental GC"
   },
   "CYCLE_COLLECTOR_SYNC_SKIPPABLE": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Cycle collection synchronously ran forget skippable"
   },
   "CYCLE_COLLECTOR_VISITED_REF_COUNTED": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "300000",
@@ -142,6 +149,7 @@
     "description": "Number of ref counted objects visited by the cycle collector"
   },
   "CYCLE_COLLECTOR_WORKER_VISITED_REF_COUNTED": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "300000",
@@ -149,6 +157,7 @@
     "description": "Number of ref counted objects visited by the cycle collector in a worker"
   },
   "CYCLE_COLLECTOR_VISITED_GCED": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "300000",
@@ -156,6 +165,7 @@
     "description": "Number of JS objects visited by the cycle collector"
   },
   "CYCLE_COLLECTOR_WORKER_VISITED_GCED": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "300000",
@@ -163,6 +173,7 @@
     "description": "Number of JS objects visited by the cycle collector in a worker"
   },
   "CYCLE_COLLECTOR_COLLECTED": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "100000",
@@ -170,6 +181,7 @@
     "description": "Number of objects collected by the cycle collector"
   },
   "CYCLE_COLLECTOR_WORKER_COLLECTED": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "100000",
@@ -177,16 +189,19 @@
     "description": "Number of objects collected by the cycle collector in a worker"
   },
   "CYCLE_COLLECTOR_NEED_GC": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Needed garbage collection before cycle collection."
   },
   "CYCLE_COLLECTOR_WORKER_NEED_GC": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Needed garbage collection before cycle collection in a worker."
   },
   "CYCLE_COLLECTOR_TIME_BETWEEN": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "120",
@@ -194,6 +209,7 @@
     "description": "Time spent in between cycle collections (seconds)"
   },
   "CYCLE_COLLECTOR_CONTENT_UNBIND": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -201,16 +217,19 @@
     "description": "Time spent on one ContentUnbinder (ms)"
   },
   "CYCLE_COLLECTOR_OOM": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Set if the cycle collector ran out of memory at some point"
   },
   "CYCLE_COLLECTOR_WORKER_OOM": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Set if the cycle collector in a worker ran out of memory at some point"
   },
   "CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -229,6 +248,7 @@
     "description": "Was Fetch request initiated from the main thread?"
   },
   "FORGET_SKIPPABLE_MAX": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -236,17 +256,20 @@
     "description": "Max time spent on one forget skippable (ms)"
   },
   "GC_REASON_2": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": "JS::gcreason::NUM_TELEMETRY_REASONS",
     "description": "Reason (enum value) for initiating a GC"
   },
   "GC_IS_COMPARTMENTAL": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Is it a compartmental GC?"
   },
   "GC_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -254,6 +277,7 @@
     "description": "Time spent running JS GC (ms)"
   },
   "GC_MAX_PAUSE_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": "1000",
@@ -261,6 +285,7 @@
     "description": "Longest GC slice in a GC (ms)"
   },
   "GC_MARK_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -268,6 +293,7 @@
     "description": "Time spent running JS GC mark phase (ms)"
   },
   "GC_SWEEP_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -275,6 +301,7 @@
     "description": "Time spent running JS GC sweep phase (ms)"
   },
   "GC_MARK_ROOTS_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": "200",
@@ -282,6 +309,7 @@
     "description": "Time spent marking GC roots (ms)"
   },
   "GC_MARK_GRAY_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": "200",
@@ -289,6 +317,7 @@
     "description": "Time spent marking gray GC objects (ms)"
   },
   "GC_SLICE_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000",
@@ -296,6 +325,7 @@
     "description": "Time spent running a JS GC slice (ms)"
   },
   "GC_MMU_50": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
@@ -303,21 +333,25 @@
     "description": "Minimum percentage of time spent outside GC over any 50ms window"
   },
   "GC_RESET": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Was an incremental GC canceled?"
   },
   "GC_INCREMENTAL_DISABLED": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Is incremental GC permanently disabled?"
   },
   "GC_NON_INCREMENTAL": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Was the GC non-incremental?"
   },
   "GC_SCC_SWEEP_TOTAL_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": "500",
@@ -325,6 +359,7 @@
     "description": "Time spent sweeping compartment SCCs (ms)"
   },
   "GC_SCC_SWEEP_MAX_PAUSE_MS": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": "500",
@@ -332,18 +367,21 @@
     "description": "Time spent sweeping slowest compartment SCC (ms)"
   },
   "GC_MINOR_REASON": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": "JS::gcreason::NUM_TELEMETRY_REASONS",
     "description": "Reason (enum value) for initiating a minor GC"
   },
   "GC_MINOR_REASON_LONG": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": "JS::gcreason::NUM_TELEMETRY_REASONS",
     "description": "Reason (enum value) that caused a long (>1ms) minor GC"
   },
   "GC_MINOR_US": {
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000000",
@@ -7889,6 +7927,14 @@
     "expires_in_version": "50",
     "kind": "count",
     "description": "Tracking whether a ServiceWorker spawn gets queued due to hitting max workers per domain limit"
+  },
+  "GRAPHICS_SANITY_TEST": {
+    "expires_in_version": "never",
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
+    "kind": "enumerated",
+    "n_values": 20,
+    "releaseChannelCollection": "opt-out",
+    "description": "Reports results from the graphics sanity test to track which drivers are having problems (0=TEST_PASSED, 1=TEST_FAILED_RENDER, 2=TEST_FAILED_VIDEO, 3=TEST_CRASHED)"
   },
   "READER_MODE_SERIALIZE_DOM_MS": {
     "expires_in_version": "42",

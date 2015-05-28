@@ -69,6 +69,7 @@
 #include "RestyleManager.h"
 #include "nsCaret.h"
 #include "nsISelection.h"
+#include "nsDOMTokenList.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount().
@@ -897,9 +898,20 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
                                                const nsFrameList& aFrames,
                                                const nsRect& aDirtyRect) {
   mFramesMarkedForDisplay.SetCapacity(mFramesMarkedForDisplay.Length() + aFrames.GetLength());
-  for (nsFrameList::Enumerator e(aFrames); !e.AtEnd(); e.Next()) {
-    mFramesMarkedForDisplay.AppendElement(e.get());
-    MarkOutOfFlowFrameForDisplay(aDirtyFrame, e.get(), aDirtyRect);
+  for (nsIFrame* e : aFrames) {
+    // Skip the AccessibleCaret frame when building no caret.
+    if (!IsBuildingCaret()) {
+      nsIContent* content = e->GetContent();
+      if (content && content->IsInNativeAnonymousSubtree() && content->IsElement()) {
+        ErrorResult rv;
+        auto classList = content->AsElement()->ClassList();
+        if (classList->Contains(NS_LITERAL_STRING("moz-accessiblecaret"), rv)) {
+          continue;
+        }
+      }
+    }
+    mFramesMarkedForDisplay.AppendElement(e);
+    MarkOutOfFlowFrameForDisplay(aDirtyFrame, e, aDirtyRect);
   }
 }
 
@@ -1543,7 +1555,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
                          presShell->GetRootScrollFrame(),
                          content,
                          aBuilder->FindReferenceFrameFor(frame),
-                         root, FrameMetrics::NULL_SCROLL_ID, viewport,
+                         root, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
                          isRoot, containerParameters));
   }
 
@@ -4175,7 +4187,7 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
   return MakeUnique<FrameMetrics>(
     nsLayoutUtils::ComputeFrameMetrics(
       mFrame, rootScrollFrame, rootScrollFrame->GetContent(), ReferenceFrame(),
-      aLayer, mScrollParentId, viewport,
+      aLayer, mScrollParentId, viewport, Nothing(),
       isRootContentDocument, params));
 }
 
@@ -4447,7 +4459,7 @@ nsDisplayScrollInfoLayer::ComputeFrameMetrics(Layer* aLayer,
     nsLayoutUtils::ComputeFrameMetrics(
       mScrolledFrame, mScrollFrame, mScrollFrame->GetContent(),
       ReferenceFrame(), aLayer,
-      mScrollParentId, viewport, false, params)));
+      mScrollParentId, viewport, Nothing(), false, params)));
 }
 
 
@@ -4652,17 +4664,23 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
    * a distance, it's already computed for us!
    */
   const nsStyleDisplay* display = aFrame->StyleDisplay();
+  // We don't use aBoundsOverride for SVG since we need to account for
+  // refBox.X/Y(). This happens to work because ReflowSVG sets the frame's
+  // mRect before calling FinishAndStoreOverflow so we don't need the override.
   TransformReferenceBox refBox;
-  if (aBoundsOverride) {
+  if (aBoundsOverride &&
+      !(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
     refBox.Init(aBoundsOverride->Size());
   } else {
     refBox.Init(aFrame);
   }
 
   /* Allows us to access dimension getters by index. */
-  float coords[3];
+  float coords[2];
   TransformReferenceBox::DimensionGetter dimensionGetter[] =
     { &TransformReferenceBox::Width, &TransformReferenceBox::Height };
+  TransformReferenceBox::DimensionGetter offsetGetter[] =
+    { &TransformReferenceBox::X, &TransformReferenceBox::Y };
 
   for (uint8_t index = 0; index < 2; ++index) {
     /* If the -moz-transform-origin specifies a percentage, take the percentage
@@ -4684,20 +4702,19 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
       coords[index] =
         NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
     }
-    if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
-        coord.GetUnit() != eStyleUnit_Percent) {
-      // <length> values represent offsets from the origin of the SVG element's
-      // user space, not the top left of its bounds, so we must adjust for that:
-      nscoord offset =
-        (index == 0) ? aFrame->GetPosition().x : aFrame->GetPosition().y;
-      coords[index] -= NSAppUnitsToFloatPixels(offset, aAppUnitsPerPixel);
+
+    if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+      // SVG frames (unlike other frames) have a reference box that can be (and
+      // typically is) offset from the TopLeft() of the frame. We need to
+      // account for that here.
+      coords[index] +=
+        NSAppUnitsToFloatPixels((refBox.*offsetGetter[index])(), aAppUnitsPerPixel);
     }
   }
 
-  coords[2] = NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
-                                      aAppUnitsPerPixel);
-
-  return Point3D(coords[0], coords[1], coords[2]);
+  return Point3D(coords[0], coords[1],
+                 NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
+                                         aAppUnitsPerPixel));
 }
 
 /* Returns the delta specified by the -moz-perspective-origin property.
@@ -4847,8 +4864,12 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
 
   // Get the underlying transform matrix:
 
+  // We don't use aBoundsOverride for SVG since we need to account for
+  // refBox.X/Y(). This happens to work because ReflowSVG sets the frame's
+  // mRect before calling FinishAndStoreOverflow so we don't need the override.
   TransformReferenceBox refBox;
-  if (aBoundsOverride) {
+  if (aBoundsOverride &&
+      (!frame || !(frame->GetStateBits() & NS_FRAME_SVG_LAYOUT))) {
     refBox.Init(aBoundsOverride->Size());
   } else {
     refBox.Init(frame);
@@ -4862,6 +4883,8 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
   Matrix svgTransform, transformFromSVGParent;
   bool hasSVGTransforms =
     frame && frame->IsSVGTransformed(&svgTransform, &transformFromSVGParent);
+  bool hasTransformFromSVGParent =
+    hasSVGTransforms && !transformFromSVGParent.IsIdentity();
   /* Transformed frames always have a transform, or are preserving 3d (and might still have perspective!) */
   if (aProperties.mTransformList) {
     result = nsStyleTransformMatrix::ReadTransforms(aProperties.mTransformList->mHead,
@@ -4875,15 +4898,6 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     svgTransform._31 *= pixelsPerCSSPx;
     svgTransform._32 *= pixelsPerCSSPx;
     result = gfx3DMatrix::From2D(ThebesMatrix(svgTransform));
-  }
-
-  if (hasSVGTransforms && !transformFromSVGParent.IsIdentity()) {
-    // Correct the translation components for zoom:
-    float pixelsPerCSSPx = frame->PresContext()->AppUnitsPerCSSPixel() /
-                             aAppUnitsPerPixel;
-    transformFromSVGParent._31 *= pixelsPerCSSPx;
-    transformFromSVGParent._32 *= pixelsPerCSSPx;
-    result = result * gfx3DMatrix::From2D(ThebesMatrix(transformFromSVGParent));
   }
 
   if (aProperties.mChildPerspective > 0.0) {
@@ -4907,17 +4921,52 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
   Point3D roundedOrigin(hasSVGTransforms ? newOrigin.x : NS_round(newOrigin.x),
                         hasSVGTransforms ? newOrigin.y : NS_round(newOrigin.y),
                         0);
-  Point3D offsetBetweenOrigins = roundedOrigin + aProperties.mToTransformOrigin;
 
-  if (aOffsetByOrigin) {
-    // We can fold the final translation by roundedOrigin into the first matrix
-    // basis change translation. This is more stable against variation due to
-    // insufficient floating point precision than reversing the translation
-    // afterwards.
-    result.Translate(-aProperties.mToTransformOrigin);
-    result.TranslatePost(offsetBetweenOrigins);
+  if (!hasSVGTransforms || !hasTransformFromSVGParent) {
+    // This is a simplification of the following |else| block, the
+    // simplification being possible because we don't need to apply
+    // mToTransformOrigin between two transforms.
+    Point3D offsets = roundedOrigin + aProperties.mToTransformOrigin;
+    if (aOffsetByOrigin) {
+      // We can fold the final translation by roundedOrigin into the first matrix
+      // basis change translation. This is more stable against variation due to
+      // insufficient floating point precision than reversing the translation
+      // afterwards.
+      result.Translate(-aProperties.mToTransformOrigin);
+      result.TranslatePost(offsets);
+    } else {
+      result.ChangeBasis(offsets);
+    }
   } else {
-    result.ChangeBasis(offsetBetweenOrigins);
+    Point3D refBoxOffset(NSAppUnitsToFloatPixels(refBox.X(), aAppUnitsPerPixel),
+                         NSAppUnitsToFloatPixels(refBox.Y(), aAppUnitsPerPixel),
+                         0);
+    // We have both a transform and children-only transform. The
+    // 'transform-origin' must apply between the two, so we need to apply it
+    // now before we apply transformFromSVGParent. Since mToTransformOrigin is
+    // relative to the frame's TopLeft(), we need to convert it to SVG user
+    // space by subtracting refBoxOffset. (Then after applying
+    // transformFromSVGParent we have to reapply refBoxOffset below.)
+    result.ChangeBasis(aProperties.mToTransformOrigin - refBoxOffset);
+
+    // Now apply the children-only transforms, converting the translation
+    // components to device pixels:
+    float pixelsPerCSSPx =
+      frame->PresContext()->AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
+    transformFromSVGParent._31 *= pixelsPerCSSPx;
+    transformFromSVGParent._32 *= pixelsPerCSSPx;
+    result = result * gfx3DMatrix::From2D(ThebesMatrix(transformFromSVGParent));
+
+    // Similar to the code in the |if| block above, but since we've accounted
+    // for mToTransformOrigin so we don't include that. We also need to reapply
+    // refBoxOffset.
+    Point3D offsets = roundedOrigin + refBoxOffset;
+    if (aOffsetByOrigin) {
+      result.Translate(-refBoxOffset);
+      result.TranslatePost(offsets);
+    } else {
+      result.ChangeBasis(offsets);
+    }
   }
 
   if (frame && frame->Preserves3D()) {

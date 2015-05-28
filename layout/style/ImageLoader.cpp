@@ -313,9 +313,7 @@ void
 ImageLoader::AddImage(ImageLoader::Image* aImage)
 {
   NS_ASSERTION(!mImages.Contains(aImage), "Huh?");
-  if (!mImages.PutEntry(aImage)) {
-    NS_RUNTIMEABORT("OOM");
-  }
+  mImages.PutEntry(aImage);
 }
 
 void

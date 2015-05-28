@@ -6168,6 +6168,10 @@ nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget, nsIntRegion& aInvali
       !mShmImage)
     return;
 
+  if (mThebesSurface) {
+    aInvalidRegion.AndWith(nsIntRect(nsIntPoint(0, 0), mThebesSurface->GetSize()));
+  }
+
   gint scale = GdkScaleFactor();
   if (scale != 1) {
     aInvalidRegion.ScaleInverseRoundOut(scale, scale);

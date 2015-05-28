@@ -134,7 +134,9 @@ protected:
   // This is either a CSSStyleSheet* or an nsHTMLStyleSheet*.  The former
   // if the low bit is 0, the latter if the low bit is 1.
   uintptr_t         mSheet;
-  GroupRule*        mParentRule;
+  // When the parent GroupRule is destroyed, it will call SetParentRule(nullptr)
+  // on this object. (Through SetParentRuleReference);
+  GroupRule* MOZ_NON_OWNING_REF mParentRule;
 
   // Keep the same type so that MSVC packs them.
   uint32_t          mLineNumber;

@@ -116,7 +116,9 @@ pref("mozilla.widget.force-24bpp", true);
 pref("mozilla.widget.use-buffer-pixmap", true);
 pref("mozilla.widget.disable-native-theme", true);
 pref("layout.reflow.synthMouseMove", false);
+#ifndef MOZ_X11
 pref("layers.enable-tiles", true);
+#endif
 pref("layers.low-precision-buffer", true);
 pref("layers.low-precision-opacity", "0.5");
 pref("layers.progressive-paint", true);

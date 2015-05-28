@@ -4142,6 +4142,10 @@ class LMaybeCopyElementsForWrite : public LInstructionHelper<0, 1, 1>
     const LDefinition* temp() {
         return getTemp(0);
     }
+
+    const MMaybeCopyElementsForWrite* mir() const {
+        return mir_->toMaybeCopyElementsForWrite();
+    }
 };
 
 // Load the initialized length from an elements header.

@@ -737,7 +737,7 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheet* aPrimarySheet,
 
   mPrincipal = nsNullPrincipal::Create();
   if (!mPrincipal) {
-    NS_RUNTIMEABORT("OOM");
+    NS_RUNTIMEABORT("nsNullPrincipal::Init failed");
   }
 }
 

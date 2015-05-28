@@ -2655,10 +2655,9 @@ ContentChild::RecvStopProfiler()
 bool
 ContentChild::RecvGetProfile(nsCString* aProfile)
 {
-    char* profile = profiler_get_profile();
+    UniquePtr<char[]> profile = profiler_get_profile();
     if (profile) {
-        *aProfile = nsCString(profile, strlen(profile));
-        free(profile);
+        *aProfile = nsCString(profile.get(), strlen(profile.get()));
     } else {
         *aProfile = EmptyCString();
     }

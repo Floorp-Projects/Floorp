@@ -270,6 +270,7 @@ struct TileClient
   RefPtr<gfxSharedReadLock> mBackLock;
   RefPtr<gfxSharedReadLock> mFrontLock;
   RefPtr<ClientLayerManager> mManager;
+  gfx::IntRect mUpdateRect;
   CompositableClient* mCompositableClient;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   TimeStamp        mLastUpdate;
@@ -418,8 +419,6 @@ public:
                    LayerManager::DrawPaintedLayerCallback aCallback,
                    void* aCallbackData);
 
-  void ReadUnlock();
-
   void ReadLock();
 
   void Release();
@@ -444,6 +443,15 @@ public:
                          void* aCallbackData);
 
   SurfaceDescriptorTiles GetSurfaceDescriptorTiles();
+
+  void SetResolution(float aResolution) {
+    if (mResolution == aResolution) {
+      return;
+    }
+
+    Update(nsIntRegion(), nsIntRegion());
+    mResolution = aResolution;
+  }
 
 protected:
   TileClient ValidateTile(TileClient aTile,
