@@ -1076,6 +1076,8 @@ protected:
 
   // Holds a reference to the MediaSource supplying data for playback.  This
   // may either match mSrcMediaSource or come from Source element children.
+  // This is set when and only when mLoadingSrc corresponds to an object url
+  // that resolved to a MediaSource.
   nsRefPtr<MediaSource> mMediaSource;
 
   // Holds a reference to the first channel we open to the media resource.
