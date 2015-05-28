@@ -206,6 +206,67 @@ public:
     return Move(p);
   }
 
+  typedef MediaPromise<nsTArray<ResolveValueType>, RejectValueType, IsExclusive> AllPromiseType;
+private:
+  class AllPromiseHolder : public MediaPromiseRefcountable
+  {
+  public:
+    explicit AllPromiseHolder(size_t aDependentPromises)
+      : mPromise(new typename AllPromiseType::Private(__func__))
+      , mOutstandingPromises(aDependentPromises)
+    {
+      mResolveValues.SetLength(aDependentPromises);
+    }
+
+    void Resolve(size_t aIndex, const ResolveValueType& aResolveValue)
+    {
+      if (!mPromise) {
+        // Already rejected.
+        return;
+      }
+
+      mResolveValues[aIndex].emplace(aResolveValue);
+      if (--mOutstandingPromises == 0) {
+        nsTArray<ResolveValueType> resolveValues;
+        resolveValues.SetCapacity(mResolveValues.Length());
+        for (size_t i = 0; i < mResolveValues.Length(); ++i) {
+          resolveValues.AppendElement(mResolveValues[i].ref());
+        }
+
+        mPromise->Resolve(resolveValues, __func__);
+        mPromise = nullptr;
+        mResolveValues.Clear();
+      }
+    }
+
+    void Reject(const RejectValueType& aRejectValue)
+    {
+      mPromise->Reject(aRejectValue, __func__);
+      mPromise = nullptr;
+      mResolveValues.Clear();
+    }
+
+    AllPromiseType* Promise() { return mPromise; }
+
+  private:
+    nsTArray<Maybe<ResolveValueType>> mResolveValues;
+    nsRefPtr<typename AllPromiseType::Private> mPromise;
+    size_t mOutstandingPromises;
+  };
+public:
+
+  static nsRefPtr<AllPromiseType> All(AbstractThread* aProcessingThread, nsTArray<nsRefPtr<MediaPromise>>& aPromises)
+  {
+    nsRefPtr<AllPromiseHolder> holder = new AllPromiseHolder(aPromises.Length());
+    for (size_t i = 0; i < aPromises.Length(); ++i) {
+      aPromises[i]->Then(aProcessingThread, __func__,
+        [holder, i] (ResolveValueType aResolveValue) -> void { holder->Resolve(i, aResolveValue); },
+        [holder] (RejectValueType aRejectValue) -> void { holder->Reject(aRejectValue); }
+      );
+    }
+    return holder->Promise();
+  }
+
   class Request : public MediaPromiseRefcountable
   {
   public:
