@@ -18,6 +18,7 @@ jar.sources += [
     'src/org/mozilla/tests/browser/junit3/TestImageDownloader.java',
     'src/org/mozilla/tests/browser/junit3/TestJarReader.java',
     'src/org/mozilla/tests/browser/junit3/TestRawResource.java',
+    'src/org/mozilla/tests/browser/junit3/TestRemoteTabs.java',
     'src/org/mozilla/tests/browser/junit3/TestSuggestedSites.java',
     'src/org/mozilla/tests/browser/junit3/TestTopSitesCursorWrapper.java',
 ]
