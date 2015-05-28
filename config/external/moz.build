@@ -40,6 +40,12 @@ if not CONFIG['MOZ_NATIVE_PNG']:
 if CONFIG['CPU_ARCH'] == 'arm':
     external_dirs += ['media/openmax_dl']
 
+if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
+    external_dirs += [
+        'media/sphinxbase',
+        'media/pocketsphinx',
+    ]
+
 external_dirs += [
     'media/kiss_fft',
     'media/libcubeb',

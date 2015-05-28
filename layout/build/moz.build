@@ -122,6 +122,13 @@ if CONFIG['MOZ_WEBSPEECH']:
         '/dom/media/webspeech/synth',
     ]
 
+if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
+    LOCAL_INCLUDES += [
+        '/media/pocketsphinx',
+        '/media/sphinxbase',
+    ]
+
+
 if CONFIG['MOZ_GSTREAMER']:
     CXXFLAGS += CONFIG['GSTREAMER_CFLAGS']
 

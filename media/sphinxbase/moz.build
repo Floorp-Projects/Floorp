@@ -1,0 +1,79 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.sphinxbase += [
+    'sphinxbase/cmd_ln.h',
+    'sphinxbase/fe.h',
+    'sphinxbase/feat.h',
+    'sphinxbase/logmath.h',
+]
+
+SOURCES += [
+    'src/libsphinxbase/fe/fe_interface.c',
+    'src/libsphinxbase/fe/fe_noise.c',
+    'src/libsphinxbase/fe/fe_prespch_buf.c',
+    'src/libsphinxbase/fe/fe_sigproc.c',
+    'src/libsphinxbase/fe/fe_warp.c',
+    'src/libsphinxbase/fe/fe_warp_affine.c',
+    'src/libsphinxbase/fe/fe_warp_inverse_linear.c',
+    'src/libsphinxbase/fe/fe_warp_piecewise_linear.c',
+    'src/libsphinxbase/fe/fixlog.c',
+    'src/libsphinxbase/fe/yin.c',
+    'src/libsphinxbase/feat/agc.c',
+    'src/libsphinxbase/feat/cmn.c',
+    'src/libsphinxbase/feat/cmn_prior.c',
+    'src/libsphinxbase/feat/feat.c',
+    'src/libsphinxbase/feat/lda.c',
+    'src/libsphinxbase/lm/fsg_model.c',
+    'src/libsphinxbase/lm/jsgf.c',
+    'src/libsphinxbase/lm/jsgf_parser.c',
+    'src/libsphinxbase/lm/jsgf_scanner.c',
+    'src/libsphinxbase/lm/lm3g_model.c',
+    'src/libsphinxbase/lm/ngram_model.c',
+    'src/libsphinxbase/lm/ngram_model_arpa.c',
+    'src/libsphinxbase/lm/ngram_model_dmp.c',
+    'src/libsphinxbase/lm/ngram_model_set.c',
+    'src/libsphinxbase/util/bio.c',
+    'src/libsphinxbase/util/bitvec.c',
+    'src/libsphinxbase/util/blas_lite.c',
+    'src/libsphinxbase/util/case.c',
+    'src/libsphinxbase/util/ckd_alloc.c',
+    'src/libsphinxbase/util/cmd_ln.c',
+    'src/libsphinxbase/util/dtoa.c',
+    'src/libsphinxbase/util/err.c',
+    'src/libsphinxbase/util/errno.c',
+    'src/libsphinxbase/util/f2c_lite.c',
+    'src/libsphinxbase/util/filename.c',
+    'src/libsphinxbase/util/genrand.c',
+    'src/libsphinxbase/util/glist.c',
+    'src/libsphinxbase/util/hash_table.c',
+    'src/libsphinxbase/util/heap.c',
+    'src/libsphinxbase/util/huff_code.c',
+    'src/libsphinxbase/util/listelem_alloc.c',
+    'src/libsphinxbase/util/logmath.c',
+    'src/libsphinxbase/util/matrix.c',
+    'src/libsphinxbase/util/mmio.c',
+    'src/libsphinxbase/util/pio.c',
+    'src/libsphinxbase/util/profile.c',
+    'src/libsphinxbase/util/sbthread.c',
+    'src/libsphinxbase/util/slamch.c',
+    'src/libsphinxbase/util/slapack_lite.c',
+    'src/libsphinxbase/util/strfuncs.c',
+    'src/libsphinxbase/util/utf8.c',
+]
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wno-sign-compare']
+
+# Add define required of third party code.
+if CONFIG['GNU_CC']:
+    DEFINES['HAVE_CONFIG_H'] = True
+
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+    NO_VISIBILITY_FLAGS = True,
+
+FINAL_LIBRARY = 'gkmedias'
