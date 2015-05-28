@@ -486,6 +486,11 @@ MediaCodecProxy::resourceReserved()
   releaseCodec();
   if (!allocateCodec()) {
     SetMediaCodecFree();
+    // Notification
+    sp<CodecResourceListener> listener = mListener.promote();
+    if (listener != nullptr) {
+      listener->codecCanceled();
+    }
     return;
   }
 
@@ -498,6 +503,17 @@ MediaCodecProxy::resourceReserved()
   sp<CodecResourceListener> listener = mListener.promote();
   if (listener != nullptr) {
     listener->codecReserved();
+  }
+}
+
+void
+MediaCodecProxy::resourceCanceled()
+{
+  SetMediaCodecFree();
+  // Notification
+  sp<CodecResourceListener> listener = mListener.promote();
+  if (listener != nullptr) {
+    listener->codecCanceled();
   }
 }
 
