@@ -13,24 +13,19 @@ let PAGE_CONTENT = [
   '  }',
   '</style>',
   '<div id="testid" class="testclass">Styled Node</div>',
-  '<span id="testid2">This is a span</span>'
+  '<span>This is a span</span>',
 ].join("\n");
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,test rule view selector changes");
-
-  info("Creating the test document");
-  content.document.body.innerHTML = PAGE_CONTENT;
-
-  info("Opening the rule-view");
-  let {toolbox, inspector, view} = yield openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
+  let {inspector, view} = yield openRuleView();
 
   info("Selecting the test element");
   yield selectNode("#testid", inspector);
   yield testEditSelector(view, "span");
 
-  info("Selecting the modified element");
-  yield selectNode("#testid2", inspector);
+  info("Selecting the modified element with the new rule");
+  yield selectNode("span", inspector);
   yield checkModifiedElement(view, "span");
 });
 
@@ -48,16 +43,17 @@ function* testEditSelector(view, name) {
   info("Entering a new selector name and committing");
   editor.input.value = name;
 
-  info("Waiting for rule view to refresh");
-  let onRuleViewRefresh = once(view, "ruleview-refreshed");
+  info("Waiting for rule view to update");
+  let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield onRuleViewRefresh;
+  yield onRuleViewChanged;
 
-  is(view._elementStyle.rules.length, 1, "Should have 1 rule.");
-  is(getRuleViewRule(view, name), undefined,
-      name + " selector has been removed.");
+  is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
+  ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
+  ok(getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"),
+    "Rule with " + name + " does not match the current element.");
 }
 
 function* checkModifiedElement(view, name) {
