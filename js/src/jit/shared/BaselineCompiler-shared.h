@@ -98,7 +98,11 @@ class BaselineCompilerShared
     bool appendICEntry(ICEntry::Kind kind, uint32_t returnOffset) {
         ICEntry entry(script->pcToOffset(pc), kind);
         entry.setReturnOffset(CodeOffsetLabel(returnOffset));
-        return icEntries_.append(entry);
+        if (!icEntries_.append(entry)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
     }
 
     bool addICLoadLabel(CodeOffsetLabel label) {
@@ -106,7 +110,11 @@ class BaselineCompilerShared
         ICLoadLabel loadLabel;
         loadLabel.label = label;
         loadLabel.icEntry = icEntries_.length() - 1;
-        return icLoadLabels_.append(loadLabel);
+        if (!icLoadLabels_.append(loadLabel)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
     }
 
     JSFunction* function() const {
