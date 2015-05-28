@@ -286,9 +286,10 @@ XPTInterfaceInfoManager::GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& a
     mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayAppender, &aInterfaces);
 }
 
-struct ArrayAndPrefix
+struct MOZ_STACK_CLASS ArrayAndPrefix
 {
-    nsISupportsArray* array;
+    // Outlives the ArrayAndPrefix on the stack
+    nsISupportsArray* MOZ_NON_OWNING_REF array;
     const char*       prefix;
     uint32_t          length;
 };
