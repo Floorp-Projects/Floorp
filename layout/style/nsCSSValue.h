@@ -1537,7 +1537,8 @@ public:
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIURI> mSheetURI;
   nsCOMPtr<nsIPrincipal> mSheetPrincipal;
-  mozilla::CSSStyleSheet* mSheet;
+  // XXX Should store sheet here (see Bug 952338)
+  // mozilla::CSSStyleSheet* mSheet;
   uint32_t mLineNumber;
   uint32_t mLineOffset;
 
