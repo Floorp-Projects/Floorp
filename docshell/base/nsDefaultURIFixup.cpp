@@ -382,28 +382,8 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
     info->mFixupCreatedAlternateURI = MakeAlternateURI(info->mFixedURI);
   }
 
-  // If there is no relevent dot in the host, do we require the domain to
-  // be whitelisted?
   if (info->mFixedURI) {
-    if (aFixupFlags & FIXUP_FLAG_REQUIRE_WHITELISTED_HOST) {
-      nsAutoCString asciiHost;
-      if (NS_SUCCEEDED(info->mFixedURI->GetAsciiHost(asciiHost)) &&
-          !asciiHost.IsEmpty()) {
-        uint32_t dotLoc = uint32_t(asciiHost.FindChar('.'));
-
-        if ((dotLoc == uint32_t(kNotFound) ||
-             dotLoc == asciiHost.Length() - 1)) {
-          if (IsDomainWhitelisted(asciiHost, dotLoc)) {
-            info->mPreferredURI = info->mFixedURI;
-          }
-        } else {
-          info->mPreferredURI = info->mFixedURI;
-        }
-      }
-    } else {
-      info->mPreferredURI = info->mFixedURI;
-    }
-
+    info->mPreferredURI = info->mFixedURI;
     return NS_OK;
   }
 
@@ -1109,6 +1089,15 @@ nsDefaultURIFixup::IsDomainWhitelisted(const nsAutoCString aAsciiHost,
   }
 
   return Preferences::GetBool(pref.get(), false);
+}
+
+NS_IMETHODIMP
+nsDefaultURIFixup::IsDomainWhitelisted(const nsACString& aDomain,
+                                       const uint32_t aDotLoc,
+                                       bool* aResult)
+{
+  *aResult = IsDomainWhitelisted(nsAutoCString(aDomain), aDotLoc);
+  return NS_OK;
 }
 
 /* Implementation of nsIURIFixupInfo */
