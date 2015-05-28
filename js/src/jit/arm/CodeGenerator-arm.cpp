@@ -1793,9 +1793,9 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->output()));
             if (size == 32)
-                masm.ma_vldr(Operand(HeapReg, ptrImm), vd.singleOverlay(), Assembler::Always);
+                masm.ma_vldr(Address(HeapReg, ptrImm), vd.singleOverlay(), Assembler::Always);
             else
-                masm.ma_vldr(Operand(HeapReg, ptrImm), vd, Assembler::Always);
+                masm.ma_vldr(Address(HeapReg, ptrImm), vd, Assembler::Always);
         }  else {
             masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->output()), Offset, Assembler::Always);
@@ -1826,11 +1826,11 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
         FloatRegister dst = ToFloatRegister(ins->output());
         VFPRegister vd(dst);
         if (size == 32) {
-            masm.ma_vldr(Operand(GlobalReg, AsmJSNaN32GlobalDataOffset - AsmJSGlobalRegBias),
+            masm.ma_vldr(Address(GlobalReg, AsmJSNaN32GlobalDataOffset - AsmJSGlobalRegBias),
                          vd.singleOverlay(), Assembler::AboveOrEqual);
             masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Below);
         } else {
-            masm.ma_vldr(Operand(GlobalReg, AsmJSNaN64GlobalDataOffset - AsmJSGlobalRegBias),
+            masm.ma_vldr(Address(GlobalReg, AsmJSNaN64GlobalDataOffset - AsmJSGlobalRegBias),
                          vd, Assembler::AboveOrEqual);
             masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Below);
         }
@@ -1870,9 +1870,9 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->value()));
             if (size == 32)
-                masm.ma_vstr(vd.singleOverlay(), Operand(HeapReg, ptrImm), Assembler::Always);
+                masm.ma_vstr(vd.singleOverlay(), Address(HeapReg, ptrImm), Assembler::Always);
             else
-                masm.ma_vstr(vd, Operand(HeapReg, ptrImm), Assembler::Always);
+                masm.ma_vstr(vd, Address(HeapReg, ptrImm), Assembler::Always);
         } else {
             masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->value()), Offset, Assembler::Always);
@@ -2089,7 +2089,7 @@ void
 CodeGeneratorARM::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
 {
     const MAsmJSPassStackArg* mir = ins->mir();
-    Operand dst(StackPointer, mir->spOffset());
+    Address dst(StackPointer, mir->spOffset());
     if (ins->arg()->isConstant()) {
         //masm.as_bkpt();
         masm.ma_storeImm(Imm32(ToInt32(ins->arg())), dst);
@@ -2231,9 +2231,9 @@ CodeGeneratorARM::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins)
         masm.ma_dtr(IsLoad, GlobalReg, Imm32(addr), ToRegister(ins->output()));
     } else if (mir->type() == MIRType_Float32) {
         VFPRegister vd(ToFloatRegister(ins->output()));
-        masm.ma_vldr(Operand(GlobalReg, addr), vd.singleOverlay());
+        masm.ma_vldr(Address(GlobalReg, addr), vd.singleOverlay());
     } else {
-        masm.ma_vldr(Operand(GlobalReg, addr), ToFloatRegister(ins->output()));
+        masm.ma_vldr(Address(GlobalReg, addr), ToFloatRegister(ins->output()));
     }
 }
 
@@ -2250,9 +2250,9 @@ CodeGeneratorARM::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins)
         masm.ma_dtr(IsStore, GlobalReg, Imm32(addr), ToRegister(ins->value()));
     } else if (type == MIRType_Float32) {
         VFPRegister vd(ToFloatRegister(ins->value()));
-        masm.ma_vstr(vd.singleOverlay(), Operand(GlobalReg, addr));
+        masm.ma_vstr(vd.singleOverlay(), Address(GlobalReg, addr));
     } else {
-        masm.ma_vstr(ToFloatRegister(ins->value()), Operand(GlobalReg, addr));
+        masm.ma_vstr(ToFloatRegister(ins->value()), Address(GlobalReg, addr));
     }
 }
 
@@ -2275,7 +2275,7 @@ CodeGeneratorARM::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
 {
     const MAsmJSLoadFFIFunc* mir = ins->mir();
 
-    masm.ma_ldr(Operand(GlobalReg, mir->globalDataOffset() - AsmJSGlobalRegBias),
+    masm.ma_ldr(Address(GlobalReg, mir->globalDataOffset() - AsmJSGlobalRegBias),
                 ToRegister(ins->output()));
 }
 
