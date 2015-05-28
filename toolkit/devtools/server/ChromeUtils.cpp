@@ -35,7 +35,7 @@ using namespace dom;
 // globals, find the set of zones the globals are allocated within. Returns
 // false on OOM failure.
 static bool
-PopulateZonesWithGlobals(ZoneSet &zones, AutoObjectVector &globals)
+PopulateZonesWithGlobals(ZoneSet& zones, AutoObjectVector& globals)
 {
   if (!zones.init())
     return false;
@@ -52,7 +52,7 @@ PopulateZonesWithGlobals(ZoneSet &zones, AutoObjectVector &globals)
 // Add the given set of globals as explicit roots in the given roots
 // list. Returns false on OOM failure.
 static bool
-AddGlobalsAsRoots(AutoObjectVector &globals, ubi::RootList &roots)
+AddGlobalsAsRoots(AutoObjectVector& globals, ubi::RootList& roots)
 {
   unsigned length = globals.length();
   for (unsigned i = 0; i < length; i++) {
@@ -75,11 +75,11 @@ AddGlobalsAsRoots(AutoObjectVector &globals, ubi::RootList &roots)
 // handle it, or we run out of memory, set `rv` appropriately and return
 // `false`.
 static bool
-EstablishBoundaries(JSContext *cx,
-                    ErrorResult &rv,
-                    const HeapSnapshotBoundaries &boundaries,
-                    ubi::RootList &roots,
-                    ZoneSet &zones)
+EstablishBoundaries(JSContext* cx,
+                    ErrorResult& rv,
+                    const HeapSnapshotBoundaries& boundaries,
+                    ubi::RootList& roots,
+                    ZoneSet& zones)
 {
   MOZ_ASSERT(!roots.initialized());
   MOZ_ASSERT(!zones.initialized());
@@ -107,7 +107,7 @@ EstablishBoundaries(JSContext *cx,
     }
     foundBoundaryProperty = true;
 
-    JSObject *dbgObj = boundaries.mDebugger.Value();
+    JSObject* dbgObj = boundaries.mDebugger.Value();
     if (!dbgObj || !dbg::IsDebugger(*dbgObj)) {
       rv.Throw(NS_ERROR_INVALID_ARG);
       return false;
@@ -139,7 +139,7 @@ EstablishBoundaries(JSContext *cx,
 
     AutoObjectVector globals(cx);
     for (uint32_t i = 0; i < length; i++) {
-      JSObject *global = boundaries.mGlobals.Value().ElementAt(i);
+      JSObject* global = boundaries.mGlobals.Value().ElementAt(i);
       if (!JS_IsGlobalObject(global)) {
         rv.Throw(NS_ERROR_INVALID_ARG);
         return false;
@@ -175,12 +175,12 @@ EstablishBoundaries(JSContext *cx,
 // given `ZeroCopyOutputStream`.
 class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
 {
-  JSContext *cx;
+  JSContext* cx;
   bool      wantNames;
 
-  ::google::protobuf::io::ZeroCopyOutputStream &stream;
+  ::google::protobuf::io::ZeroCopyOutputStream& stream;
 
-  bool writeMessage(const ::google::protobuf::MessageLite &message) {
+  bool writeMessage(const ::google::protobuf::MessageLite& message) {
     // We have to create a new CodedOutputStream when writing each message so
     // that the 64MB size limit used by Coded{Output,Input}Stream to prevent
     // integer overflow is enforced per message rather than on the whole stream.
@@ -191,8 +191,8 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
   }
 
 public:
-  StreamWriter(JSContext *cx,
-               ::google::protobuf::io::ZeroCopyOutputStream &stream,
+  StreamWriter(JSContext* cx,
+               ::google::protobuf::io::ZeroCopyOutputStream& stream,
                bool wantNames)
     : cx(cx)
     , wantNames(wantNames)
@@ -207,16 +207,16 @@ public:
     return writeMessage(metadata);
   }
 
-  virtual bool writeNode(const JS::ubi::Node &ubiNode,
+  virtual bool writeNode(const JS::ubi::Node& ubiNode,
                          EdgePolicy includeEdges) override {
     protobuf::Node protobufNode;
     protobufNode.set_id(ubiNode.identifier());
 
-    const char16_t *typeName = ubiNode.typeName();
+    const char16_t* typeName = ubiNode.typeName();
     size_t length = NS_strlen(typeName) * sizeof(char16_t);
     protobufNode.set_typename_(typeName, length);
 
-    JSRuntime *rt = JS_GetRuntime(cx);
+    JSRuntime* rt = JS_GetRuntime(cx);
     mozilla::MallocSizeOf mallocSizeOf = dbg::GetDebuggerMallocSizeOf(rt);
     MOZ_ASSERT(mallocSizeOf);
     protobufNode.set_size(ubiNode.size(mallocSizeOf));
@@ -227,9 +227,9 @@ public:
         return false;
 
       for ( ; !edges->empty(); edges->popFront()) {
-        const ubi::Edge &ubiEdge = edges->front();
+        const ubi::Edge& ubiEdge = edges->front();
 
-        protobuf::Edge *protobufEdge = protobufNode.add_edges();
+        protobuf::Edge* protobufEdge = protobufNode.add_edges();
         if (NS_WARN_IF(!protobufEdge)) {
           return false;
         }
@@ -251,7 +251,7 @@ public:
 // core dump.
 class MOZ_STACK_CLASS HeapSnapshotHandler {
   CoreDumpWriter& writer;
-  JS::ZoneSet*   zones;
+  JS::ZoneSet*    zones;
 
 public:
   HeapSnapshotHandler(CoreDumpWriter& writer,
@@ -264,10 +264,10 @@ public:
 
   class NodeData { };
   typedef JS::ubi::BreadthFirst<HeapSnapshotHandler> Traversal;
-  bool operator() (Traversal &traversal,
+  bool operator() (Traversal& traversal,
                    JS::ubi::Node origin,
-                   const JS::ubi::Edge &edge,
-                   NodeData *,
+                   const JS::ubi::Edge& edge,
+                   NodeData*,
                    bool first)
   {
     // We're only interested in the first time we reach edge.referent, not in
@@ -279,7 +279,7 @@ public:
     if (!first)
       return true;
 
-    const JS::ubi::Node &referent = edge.referent;
+    const JS::ubi::Node& referent = edge.referent;
 
     if (!zones)
       // We aren't targeting a particular set of zones, so serialize all the
@@ -293,7 +293,7 @@ public:
     // by traversing the heap graph. However, we do not serialize its outgoing
     // edges and we abandon further traversal from this node.
 
-    JS::Zone *zone = referent.zone();
+    JS::Zone* zone = referent.zone();
 
     if (zones->has(zone))
       return writer.writeNode(referent, CoreDumpWriter::INCLUDE_EDGES);
@@ -305,12 +305,12 @@ public:
 
 
 bool
-WriteHeapGraph(JSContext *cx,
-               const JS::ubi::Node &node,
-               CoreDumpWriter &writer,
+WriteHeapGraph(JSContext* cx,
+               const JS::ubi::Node& node,
+               CoreDumpWriter& writer,
                bool wantNames,
-               JS::ZoneSet *zones,
-               JS::AutoCheckCannotGC &noGC)
+               JS::ZoneSet* zones,
+               JS::AutoCheckCannotGC& noGC)
 {
   // Serialize the starting node to the core dump.
 
@@ -332,10 +332,10 @@ WriteHeapGraph(JSContext *cx,
 }
 
 /* static */ void
-ChromeUtils::SaveHeapSnapshot(GlobalObject &global,
-                              JSContext *cx,
-                              const nsAString &filePath,
-                              const HeapSnapshotBoundaries &boundaries,
+ChromeUtils::SaveHeapSnapshot(GlobalObject& global,
+                              JSContext* cx,
+                              const nsAString& filePath,
+                              const HeapSnapshotBoundaries& boundaries,
                               ErrorResult& rv)
 {
   bool wantNames = true;
@@ -384,10 +384,10 @@ ChromeUtils::SaveHeapSnapshot(GlobalObject &global,
 }
 
 /* static */ already_AddRefed<HeapSnapshot>
-ChromeUtils::ReadHeapSnapshot(GlobalObject &global,
-                              JSContext *cx,
-                              const nsAString &filePath,
-                              ErrorResult &rv)
+ChromeUtils::ReadHeapSnapshot(GlobalObject& global,
+                              JSContext* cx,
+                              const nsAString& filePath,
+                              ErrorResult& rv)
 {
   UniquePtr<char[]> path(ToNewCString(filePath));
   if (!path) {
@@ -402,13 +402,13 @@ ChromeUtils::ReadHeapSnapshot(GlobalObject &global,
   }
 
   uint32_t size = fileInfo.size;
-  ScopedFreePtr<uint8_t> buffer(static_cast<uint8_t *>(malloc(size)));
+  ScopedFreePtr<uint8_t> buffer(static_cast<uint8_t*>(malloc(size)));
   if (!buffer) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
 
-  PRFileDesc *fd = PR_Open(path.get(), PR_RDONLY, 0);
+  PRFileDesc* fd = PR_Open(path.get(), PR_RDONLY, 0);
   if (!fd) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
