@@ -25,20 +25,17 @@ task:
       tooltool-cache: '/home/worker/tools/tooltool-cache'
 
     env:
-      # 1164623: rename this var
-      GECKO_REV: '{{head_rev}}'
-      # 1164623: rename these three vars
-      MOZHARNESS_BASE_REPOSITORY: '{{mozharness_repository}}'
-      MOZHARNESS_HEAD_REPOSITORY: '{{mozharness_repository}}'
-      MOZHARNESS_REV: '{{mozharness_rev}}'
-
+      # inputs to mozharness
       MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
       MOZHARNESS_CONFIG: 'builds/releng_base_android_64_builds.py'
       MH_CUSTOM_BUILD_VARIANT_CFG: api-11
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
 
+      # image paths
       TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
+
+      # authentication
       RELENGAPI_TOKEN: 'TODO' # 1164612: encrypt this secret
 
     maxRunTime: 36000

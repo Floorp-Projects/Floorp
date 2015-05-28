@@ -24,6 +24,7 @@ from mozbuild.frontend.sandbox import (
 from mozbuild.frontend.context import (
     Context,
     FUNCTIONS,
+    SourcePath,
     SPECIAL_VARIABLES,
     VARIABLES,
 )
@@ -131,6 +132,9 @@ class TestedSandbox(MozbuildSandbox):
     def normalize_path(self, path):
         return mozpath.normpath(
             mozpath.join(self._context.config.topsrcdir, path))
+
+    def source_path(self, path):
+        return SourcePath(self._context, path)
 
     def exec_file(self, path):
         super(TestedSandbox, self).exec_file(self.normalize_path(path))
@@ -250,8 +254,8 @@ class TestMozbuildSandbox(unittest.TestCase):
         sandbox.exec_file('moz.build')
 
         self.assertEqual(sandbox['DIRS'], [
-            sandbox.normalize_path('foo'),
-            sandbox.normalize_path('bar'),
+            sandbox.source_path('foo'),
+            sandbox.source_path('bar'),
         ])
         self.assertEqual(sandbox._context.main_path,
             sandbox.normalize_path('moz.build'))
@@ -299,11 +303,11 @@ class TestMozbuildSandbox(unittest.TestCase):
         # child directory.
         sandbox = self.sandbox(data_path='include-relative-from-child')
         sandbox.exec_file('child/child.build')
-        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('foo')])
+        self.assertEqual(sandbox['DIRS'], [sandbox.source_path('../foo')])
 
         sandbox = self.sandbox(data_path='include-relative-from-child')
         sandbox.exec_file('child/child2.build')
-        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('foo')])
+        self.assertEqual(sandbox['DIRS'], [sandbox.source_path('../foo')])
 
     def test_include_topsrcdir_relative(self):
         # An absolute path for include() is relative to topsrcdir.
@@ -311,7 +315,7 @@ class TestMozbuildSandbox(unittest.TestCase):
         sandbox = self.sandbox(data_path='include-topsrcdir-relative')
         sandbox.exec_file('moz.build')
 
-        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('foo')])
+        self.assertEqual(sandbox['DIRS'], [sandbox.source_path('foo')])
 
     def test_error(self):
         sandbox = self.sandbox()
@@ -382,7 +386,7 @@ SOURCES += ['hoge.cpp']
 
         self.assertEqual(sandbox2._context, {
             'SOURCES': ['qux.cpp', 'bar.cpp', 'foo.cpp', 'hoge.cpp'],
-            'DIRS': [sandbox.normalize_path('foo')],
+            'DIRS': [sandbox2.source_path('foo')],
         })
 
         sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
@@ -425,7 +429,7 @@ TemplateGlobalUPPERVariable()
         sandbox2.exec_source(source, 'foo.mozbuild')
         self.assertEqual(sandbox2._context, {
             'SOURCES': [],
-            'DIRS': [sandbox2.normalize_path('foo')],
+            'DIRS': [sandbox2.source_path('foo')],
         })
 
         # However, the result of the template is mixed with the global

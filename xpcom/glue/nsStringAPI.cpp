@@ -1308,3 +1308,5 @@ ParseString(const nsACString& aSource, char aDelimiter,
 
   return true;
 }
+
+#undef snprintf

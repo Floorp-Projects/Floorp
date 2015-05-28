@@ -1,23 +1,39 @@
 #! /bin/bash -vex
 
-set -v -x -e
+set -x -e
 
 # Inputs, with defaults
 
 : MOZHARNESS_SCRIPT             ${MOZHARNESS_SCRIPT}
 : MOZHARNESS_CONFIG             ${MOZHARNESS_CONFIG}
 
-: GECKO_BASE_REPOSITORY         ${GECKO_BASE_REPOSITORY:=https://hg.mozilla.org/mozilla-central}
-: GECKO_HEAD_REPOSITORY         ${GECKO_HEAD_REPOSITORY:=https://hg.mozilla.org/mozilla-central}
-: GECKO_REV                     ${GECKO_REV:=default}
+# mozharness builds use three repositories: gecko (source), mozharness (build
+# scripts) and tools (miscellaneous) for each, specify *_REPOSITORY.  If the
+# revision is not in the standard repo for the codebase, specify *_BASE_REPO as
+# the canonical repo to clone and *_HEAD_REPO as the repo containing the
+# desired revision.  For Mercurial clones, only *_HEAD_REV is required; for Git
+# clones, specify the branch name to fetch as *_HEAD_REF and the desired sha1
+# as *_HEAD_REV.  For compatibility, we also accept MOZHARNESS_{REV,REF}
 
-: MOZHARNESS_BASE_REPOSITORY    ${MOZHARNESS_BASE_REPOSITORY:=https://hg.mozilla.org/build/mozharness}
-: MOZHARNESS_HEAD_REPOSITORY    ${MOZHARNESS_HEAD_REPOSITORY:=https://hg.mozilla.org/build/mozharness}
+: GECKO_REPOSITORY              ${GECKO_REPOSITORY:=https://hg.mozilla.org/mozilla-central}
+: GECKO_BASE_REPOSITORY         ${GECKO_BASE_REPOSITORY:=${GECKO_REPOSITORY}}
+: GECKO_HEAD_REPOSITORY         ${GECKO_HEAD_REPOSITORY:=${GECKO_REPOSITORY}}
+: GECKO_HEAD_REV                ${GECKO_HEAD_REV:=default}
+: GECKO_HEAD_REF                ${GECKO_HEAD_REF:=${GECKO_HEAD_REV}}
+
+: MOZHARNESS_REPOSITORY         ${MOZHARNESS_REPOSITORY:=https://hg.mozilla.org/build/mozharness}
+: MOZHARNESS_BASE_REPOSITORY    ${MOZHARNESS_BASE_REPOSITORY:=${MOZHARNESS_REPOSITORY}}
+: MOZHARNESS_HEAD_REPOSITORY    ${MOZHARNESS_HEAD_REPOSITORY:=${MOZHARNESS_REPOSITORY}}
 : MOZHARNESS_REV                ${MOZHARNESS_REV:=production}
+: MOZHARNESS_REF                ${MOZHARNESS_REF:=${MOZHARNESS_REV}}
+: MOZHARNESS_HEAD_REV           ${MOZHARNESS_HEAD_REV:=${MOZHARNESS_REV}}
+: MOZHARNESS_HEAD_REF           ${MOZHARNESS_HEAD_REF:=${MOZHARNESS_REF}}
 
-: TOOLS_BASE_REPOSITORY         ${TOOLS_BASE_REPOSITORY:=https://hg.mozilla.org/build/tools}
-: TOOLS_HEAD_REPOSITORY         ${TOOLS_HEAD_REPOSITORY:=https://hg.mozilla.org/build/tools}
-: TOOLS_REV                     ${TOOLS_REV:=default}
+: TOOLS_REPOSITORY              ${TOOLS_REPOSITORY:=https://hg.mozilla.org/build/tools}
+: TOOLS_BASE_REPOSITORY         ${TOOLS_BASE_REPOSITORY:=${TOOLS_REPOSITORY}}
+: TOOLS_HEAD_REPOSITORY         ${TOOLS_HEAD_REPOSITORY:=${TOOLS_REPOSITORY}}
+: TOOLS_HEAD_REV                ${TOOLS_HEAD_REV:=default}
+: TOOLS_HEAD_REF                ${TOOLS_HEAD_REF:=${TOOLS_HEAD_REV}}
 
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
 
@@ -33,6 +49,8 @@ set -v -x -e
 : MOZ_SIGN_CMD                  ${MOZ_SIGN_CMD}
 
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
+
+set -v
 
 # buildbot
 export CCACHE_COMPRESS=1
@@ -60,17 +78,17 @@ cleanup() {
 trap cleanup EXIT INT
 
 # check out mozharness
-tc-vcs checkout mozharness $MOZHARNESS_BASE_REPOSITORY $MOZHARNESS_HEAD_REPOSITORY $MOZHARNESS_REV
+tc-vcs checkout mozharness $MOZHARNESS_BASE_REPOSITORY $MOZHARNESS_HEAD_REPOSITORY $MOZHARNESS_HEAD_REV $MOZHARNESS_HEAD_REF
 
 # check out tools where mozharness expects it to be ($PWD/build/tools and $WORKSPACE/build/tools)
-tc-vcs checkout $WORKSPACE/build/tools $TOOLS_BASE_REPOSITORY $TOOLS_HEAD_REPOSITORY $TOOLS_REV
+tc-vcs checkout $WORKSPACE/build/tools $TOOLS_BASE_REPOSITORY $TOOLS_HEAD_REPOSITORY $TOOLS_HEAD_REV $TOOLS_HEAD_REF
 if [ ! -d build ]; then
     mkdir -p build
     ln -s $WORKSPACE/build/tools build/tools
 fi
 
 # and check out mozilla-central where mozharness will use it as a cache (/builds/hg-shared)
-tc-vcs checkout $WORKSPACE/build/src $GECKO_BASE_REPOSITORY $GECKO_HEAD_REPOSITORY $GECKO_REV
+tc-vcs checkout $WORKSPACE/build/src $GECKO_BASE_REPOSITORY $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV $GECKO_HEAD_REF
 
 # run mozharness in XVfb, if necessary; this is an array to maintain the quoting in the -s argument
 if $NEED_XVFB; then

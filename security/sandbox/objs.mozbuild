@@ -125,6 +125,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         ]
 
     security_sandbox_cppsrcs = [
-        '%s/security/sandbox/%s' % (TOPSRCDIR, s)
+        '/security/sandbox/%s' % s
             for s in sorted(security_sandbox_lcppsrcs)
     ]

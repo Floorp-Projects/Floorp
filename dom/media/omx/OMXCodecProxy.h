@@ -23,8 +23,19 @@ class OMXCodecProxy : public MediaSource,
                       public MediaResourceManagerClient::EventListener
 {
 public:
-  struct EventListener : public virtual RefBase {
-    virtual void statusChanged() = 0;
+  /* Codec resource notification listener.
+   * All functions are called on the Binder thread.
+   */
+  struct CodecResourceListener : public virtual RefBase {
+    /* The codec resource is reserved and can be granted.
+     * The client can allocate the requested resource.
+     */
+    virtual void codecReserved() = 0;
+    /* The codec resource is not reserved any more.
+     * The client should release the resource as soon as possible if the
+     * resource is still being held.
+     */
+    virtual void codecCanceled() = 0;
   };
 
   static sp<OMXCodecProxy> Create(
@@ -37,10 +48,9 @@ public:
 
     MediaResourceManagerClient::State getState();
 
-    void setEventListener(const wp<EventListener>& listener);
+    void setListener(const wp<CodecResourceListener>& listener);
 
     void requestResource();
-    bool IsWaitingResources();
 
     // MediaResourceManagerClient::EventListener
     virtual void statusChanged(int event);
@@ -68,6 +78,9 @@ protected:
 
     virtual ~OMXCodecProxy();
 
+    void notifyResourceReserved();
+    void notifyResourceCanceled();
+
     void notifyStatusChangedLocked();
 
 private:
@@ -91,7 +104,8 @@ private:
     MediaResourceManagerClient::State mState;
 
     sp<IMediaResourceManagerService> mManagerService;
-    wp<OMXCodecProxy::EventListener> mEventListener;
+    // Codec Resource Notification Listener
+    wp<CodecResourceListener> mListener;
 };
 
 }  // namespace android

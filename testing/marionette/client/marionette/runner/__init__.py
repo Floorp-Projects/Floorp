@@ -10,5 +10,7 @@ from base import (
 from mixins import (
         B2GTestCaseMixin, B2GTestResultMixin, EnduranceOptionsMixin,
         EnduranceTestCaseMixin, HTMLReportingOptionsMixin, HTMLReportingTestResultMixin,
-        HTMLReportingTestRunnerMixin, MemoryEnduranceTestCaseMixin
+        HTMLReportingTestRunnerMixin, MemoryEnduranceTestCaseMixin,
+        BrowserMobProxyTestCaseMixin, BrowserMobProxyOptionsMixin,
+        BrowserMobTestCase,
         )

@@ -6,14 +6,14 @@
 
 GeckoSharedLibrary('AccessibleMarshal', linkage=None)
 
-GENERATED_SOURCES += [
-    'dlldata.c',
-    'ISimpleDOMDocument_i.c',
-    'ISimpleDOMDocument_p.c',
-    'ISimpleDOMNode_i.c',
-    'ISimpleDOMNode_p.c',
-    'ISimpleDOMText_i.c',
-    'ISimpleDOMText_p.c',
+SOURCES += [
+    '!dlldata.c',
+    '!ISimpleDOMDocument_i.c',
+    '!ISimpleDOMDocument_p.c',
+    '!ISimpleDOMNode_i.c',
+    '!ISimpleDOMNode_p.c',
+    '!ISimpleDOMText_i.c',
+    '!ISimpleDOMText_p.c',
 ]
 
 DEFINES['REGISTER_PROXY_DLL'] = True

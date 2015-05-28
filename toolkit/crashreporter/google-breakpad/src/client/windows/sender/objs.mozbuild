@@ -10,5 +10,5 @@ lobjs_sender = [
 
 subdir = 'toolkit/crashreporter/google-breakpad/src/client/windows/sender'
 objs_sender = [
-    '%s/%s/%s' % (TOPSRCDIR, subdir, s) for s in lobjs_sender
+    '/%s/%s' % (subdir, s) for s in lobjs_sender
 ]

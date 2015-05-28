@@ -3,19 +3,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { ViewHelpers } = require("resource:///modules/devtools/ViewHelpers.jsm");
-const { AbstractCanvasGraph, GraphArea, GraphAreaDragger } = require("resource:///modules/devtools/Graphs.jsm");
-const { Promise } = require("resource://gre/modules/Promise.jsm");
 const { Task } = require("resource://gre/modules/Task.jsm");
-const { getColor } = require("devtools/shared/theme");
-const EventEmitter = require("devtools/toolkit/event-emitter");
-const FrameUtils = require("devtools/performance/frame-utils");
+const { ViewHelpers } = require("resource:///modules/devtools/ViewHelpers.jsm");
+const { setNamedTimeout, clearNamedTimeout } = require("resource:///modules/devtools/ViewHelpers.jsm");
+
+loader.lazyRequireGetter(this, "promise");
+loader.lazyRequireGetter(this, "EventEmitter",
+  "devtools/toolkit/event-emitter");
+
+loader.lazyRequireGetter(this, "getColor",
+  "devtools/shared/theme", true);
 
 loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
   "devtools/performance/global", true);
+loader.lazyRequireGetter(this, "FrameUtils",
+  "devtools/performance/frame-utils");
+
+loader.lazyImporter(this, "AbstractCanvasGraph",
+  "resource:///modules/devtools/Graphs.jsm");
+loader.lazyImporter(this, "GraphArea",
+  "resource:///modules/devtools/Graphs.jsm");
+loader.lazyImporter(this, "GraphAreaDragger",
+  "resource:///modules/devtools/Graphs.jsm");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
+
 const L10N = new ViewHelpers.L10N();
 
 const GRAPH_RESIZE_EVENTS_DRAIN = 100; // ms
@@ -112,7 +125,7 @@ function FlameGraph(parent, sharpness) {
   EventEmitter.decorate(this);
 
   this._parent = parent;
-  this._ready = Promise.defer();
+  this._ready = promise.defer();
 
   this.setTheme();
 

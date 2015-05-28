@@ -161,8 +161,8 @@ public:
                                   InfallibleTArray<CpowEntry>&& aCpows,
                                   const IPC::Principal& aPrincipal) override;
     virtual bool RecvNotifyIMEFocus(const bool& aFocus,
-                                    nsIMEUpdatePreference* aPreference,
-                                    uint32_t* aSeqno) override;
+                                    nsIMEUpdatePreference* aPreference)
+                                      override;
     virtual bool RecvNotifyIMETextChange(const uint32_t& aStart,
                                          const uint32_t& aEnd,
                                          const uint32_t& aNewEnd,
@@ -172,8 +172,7 @@ public:
                    InfallibleTArray<LayoutDeviceIntRect>&& aRects,
                    const uint32_t& aCaretOffset,
                    const LayoutDeviceIntRect& aCaretRect) override;
-    virtual bool RecvNotifyIMESelection(const uint32_t& aSeqno,
-                                        const uint32_t& aAnchor,
+    virtual bool RecvNotifyIMESelection(const uint32_t& aAnchor,
                                         const uint32_t& aFocus,
                                         const mozilla::WritingMode& aWritingMode,
                                         const bool& aCausedByComposition) override;
@@ -482,7 +481,6 @@ protected:
     // Compositions in almost all cases are small enough for nsAutoString
     nsAutoString mIMECompositionText;
     uint32_t mIMECompositionStart;
-    uint32_t mIMESeqno;
 
     uint32_t mIMECompositionRectOffset;
     InfallibleTArray<LayoutDeviceIntRect> mIMECompositionRects;

@@ -29,7 +29,7 @@ UNIFIED_SOURCES += [
 # Because of gkmedia on windows we won't find these
 # symbols in xul.dll.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
-    UNIFIED_SOURCES += [ '%s/gfx/2d/unittest/%s' % (TOPSRCDIR, p) for p in [
+    UNIFIED_SOURCES += [ '/gfx/2d/unittest/%s' % p for p in [
         'TestBase.cpp',
         'TestBugs.cpp',
         'TestPoint.cpp',
