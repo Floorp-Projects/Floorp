@@ -57,7 +57,7 @@ MacroAssemblerARM::convertInt32ToDouble(Register src, FloatRegister dest_)
 void
 MacroAssemblerARM::convertInt32ToDouble(const Address& src, FloatRegister dest)
 {
-    ma_vldr(Operand(src), ScratchDoubleReg);
+    ma_vldr(src, ScratchDoubleReg);
     as_vcvt(dest, VFPRegister(ScratchDoubleReg).sintOverlay());
 }
 
@@ -214,7 +214,7 @@ MacroAssemblerARM::convertInt32ToFloat32(Register src, FloatRegister dest) {
 
 void
 MacroAssemblerARM::convertInt32ToFloat32(const Address& src, FloatRegister dest) {
-    ma_vldr(Operand(src), ScratchFloat32Reg);
+    ma_vldr(src, ScratchFloat32Reg);
     as_vcvt(dest, VFPRegister(ScratchFloat32Reg).sintOverlay());
 }
 
@@ -282,8 +282,8 @@ MacroAssemblerARM::alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
     // doesn't have a dest, such as check for overflow by doing first operation
     // don't do second operation if first operation overflowed. This preserves
     // the overflow condition code. Unfortunately, it is horribly brittle.
-    as_alu(ScratchRegister, src1, both.fst, interop, NoSetCond, c);
-    as_alu(dest, ScratchRegister, both.snd, op, sc, c);
+    as_alu(ScratchRegister, src1, Operand2(both.fst), interop, NoSetCond, c);
+    as_alu(dest, ScratchRegister, Operand2(both.snd), op, sc, c);
     return true;
 }
 
@@ -332,7 +332,7 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
             // bits in tact, so it is unsuitable to move a constant that
             if (op == OpMov && ((imm.value & ~ 0xffff) == 0)) {
                 MOZ_ASSERT(src1 == InvalidReg);
-                as_movw(dest, (uint16_t)imm.value, c);
+                as_movw(dest, Imm16((uint16_t)imm.value), c);
                 return;
             }
 
@@ -340,7 +340,7 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
             // then do it.
             if (op == OpMvn && (((~imm.value) & ~ 0xffff) == 0)) {
                 MOZ_ASSERT(src1 == InvalidReg);
-                as_movw(dest, (uint16_t)~imm.value, c);
+                as_movw(dest, Imm16((uint16_t)~imm.value), c);
                 return;
             }
 
@@ -354,8 +354,8 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
             // src1.
             if (op == OpMvn)
                 imm.value = ~imm.value;
-            as_movw(dest, imm.value & 0xffff, c);
-            as_movt(dest, (imm.value >> 16) & 0xffff, c);
+            as_movw(dest, Imm16(imm.value & 0xffff), c);
+            as_movt(dest, Imm16((imm.value >> 16) & 0xffff), c);
             return;
         }
         // If we weren't doing a movalike, a 16 bit immediate will require 2
@@ -392,9 +392,9 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
     // single load from a pool then op.
     if (HasMOVWT()) {
         // Try to load the immediate into a scratch register then use that
-        as_movw(ScratchRegister, imm.value & 0xffff, c);
+        as_movw(ScratchRegister, Imm16(imm.value & 0xffff), c);
         if ((imm.value >> 16) != 0)
-            as_movt(ScratchRegister, (imm.value >> 16) & 0xffff, c);
+            as_movt(ScratchRegister, Imm16((imm.value >> 16) & 0xffff), c);
     } else {
         // Going to have to use a load. If the operation is a move, then just
         // move it into the destination register
@@ -847,7 +847,7 @@ MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
         as_cmp(src1, op.toOp2(), c);
         break;
       case Operand::MEM:
-        ma_ldr(op, ScratchRegister);
+        ma_ldr(op.toAddress(), ScratchRegister);
         as_cmp(src1, O2Reg(ScratchRegister), c);
         break;
       default:
@@ -1068,15 +1068,13 @@ MacroAssemblerARM::ma_str(Register rt, DTRAddr addr, Index mode, Condition cc)
 }
 
 void
-MacroAssemblerARM::ma_dtr(LoadStore ls, Register rt, const Operand& addr, Index mode, Condition cc)
+MacroAssemblerARM::ma_dtr(LoadStore ls, Register rt, const Address& addr, Index mode, Condition cc)
 {
-    ma_dataTransferN(ls, 32, true,
-                     Register::FromCode(addr.base()), Imm32(addr.disp()),
-                     rt, mode, cc);
+    ma_dataTransferN(ls, 32, true, addr.base, Imm32(addr.offset), rt, mode, cc);
 }
 
 void
-MacroAssemblerARM::ma_str(Register rt, const Operand& addr, Index mode, Condition cc)
+MacroAssemblerARM::ma_str(Register rt, const Address& addr, Index mode, Condition cc)
 {
     ma_dtr(IsStore, rt, addr, mode, cc);
 }
@@ -1094,7 +1092,7 @@ MacroAssemblerARM::ma_ldr(DTRAddr addr, Register rt, Index mode, Condition cc)
     as_dtr(IsLoad, 32, mode, rt, addr, cc);
 }
 void
-MacroAssemblerARM::ma_ldr(const Operand& addr, Register rt, Index mode, Condition cc)
+MacroAssemblerARM::ma_ldr(const Address& addr, Register rt, Index mode, Condition cc)
 {
     ma_dtr(IsLoad, rt, addr, mode, cc);
 }
@@ -1709,13 +1707,13 @@ MacroAssemblerARM::ma_vxfer(Register src1, Register src2, FloatRegister dest, Co
 }
 
 BufferOffset
-MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand& addr, VFPRegister rt, Condition cc)
+MacroAssemblerARM::ma_vdtr(LoadStore ls, const Address& addr, VFPRegister rt, Condition cc)
 {
-    int off = addr.disp();
+    int off = addr.offset;
     MOZ_ASSERT((off & 3) == 0);
-    Register base = Register::FromCode(addr.base());
+    Register base = addr.base;
     if (off > -1024 && off < 1024)
-        return as_vdtr(ls, rt, addr.toVFPAddr(), cc);
+        return as_vdtr(ls, rt, Operand(addr).toVFPAddr(), cc);
 
     // We cannot encode this offset in a a single ldr. Try to encode it as an
     // add scratch, base, imm; ldr dest, [scratch, +offset].
@@ -1772,7 +1770,7 @@ MacroAssemblerARM::ma_vldr(VFPAddr addr, VFPRegister dest, Condition cc)
     return as_vdtr(IsLoad, dest, addr, cc);
 }
 BufferOffset
-MacroAssemblerARM::ma_vldr(const Operand& addr, VFPRegister dest, Condition cc)
+MacroAssemblerARM::ma_vldr(const Address& addr, VFPRegister dest, Condition cc)
 {
     return ma_vdtr(IsLoad, addr, dest, cc);
 }
@@ -1780,7 +1778,7 @@ BufferOffset
 MacroAssemblerARM::ma_vldr(VFPRegister src, Register base, Register index, int32_t shift, Condition cc)
 {
     as_add(ScratchRegister, base, lsl(index, shift), NoSetCond, cc);
-    return ma_vldr(Operand(ScratchRegister, 0), src, cc);
+    return ma_vldr(Address(ScratchRegister, 0), src, cc);
 }
 
 BufferOffset
@@ -1790,7 +1788,7 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, VFPAddr addr, Condition cc)
 }
 
 BufferOffset
-MacroAssemblerARM::ma_vstr(VFPRegister src, const Operand& addr, Condition cc)
+MacroAssemblerARM::ma_vstr(VFPRegister src, const Address& addr, Condition cc)
 {
     return ma_vdtr(IsStore, addr, src, cc);
 }
@@ -1799,7 +1797,7 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32
                            int32_t offset, Condition cc)
 {
     as_add(ScratchRegister, base, lsl(index, shift), NoSetCond, cc);
-    return ma_vstr(src, Operand(ScratchRegister, offset), cc);
+    return ma_vstr(src, Address(ScratchRegister, offset), cc);
 }
 
 void
@@ -2232,7 +2230,7 @@ MacroAssemblerARMCompat::load32(AbsoluteAddress address, Register dest)
 void
 MacroAssemblerARMCompat::loadPtr(const Address& address, Register dest)
 {
-    ma_ldr(Operand(address), dest);
+    ma_ldr(address, dest);
 }
 
 void
@@ -2261,23 +2259,16 @@ MacroAssemblerARMCompat::loadPtr(AsmJSAbsoluteAddress address, Register dest)
     loadPtr(Address(ScratchRegister, 0x0), dest);
 }
 
-Operand payloadOf(const Address& address) {
-    return Operand(address.base, address.offset);
-}
-Operand tagOf(const Address& address) {
-    return Operand(address.base, address.offset + 4);
-}
-
 void
 MacroAssemblerARMCompat::loadPrivate(const Address& address, Register dest)
 {
-    ma_ldr(payloadOf(address), dest);
+    ma_ldr(ToPayload(address), dest);
 }
 
 void
 MacroAssemblerARMCompat::loadDouble(const Address& address, FloatRegister dest)
 {
-    ma_vldr(Operand(address), dest);
+    ma_vldr(address, dest);
 }
 
 void
@@ -2291,14 +2282,14 @@ MacroAssemblerARMCompat::loadDouble(const BaseIndex& src, FloatRegister dest)
     int32_t offset = src.offset;
     as_add(ScratchRegister, base, lsl(index, scale));
 
-    ma_vldr(Operand(ScratchRegister, offset), dest);
+    ma_vldr(Address(ScratchRegister, offset), dest);
 }
 
 void
 MacroAssemblerARMCompat::loadFloatAsDouble(const Address& address, FloatRegister dest)
 {
     VFPRegister rt = dest;
-    ma_vldr(Operand(address), rt.singleOverlay());
+    ma_vldr(address, rt.singleOverlay());
     as_vcvt(rt, rt.singleOverlay());
 }
 
@@ -2314,14 +2305,14 @@ MacroAssemblerARMCompat::loadFloatAsDouble(const BaseIndex& src, FloatRegister d
     VFPRegister rt = dest;
     as_add(ScratchRegister, base, lsl(index, scale));
 
-    ma_vldr(Operand(ScratchRegister, offset), rt.singleOverlay());
+    ma_vldr(Address(ScratchRegister, offset), rt.singleOverlay());
     as_vcvt(rt, rt.singleOverlay());
 }
 
 void
 MacroAssemblerARMCompat::loadFloat32(const Address& address, FloatRegister dest)
 {
-    ma_vldr(Operand(address), VFPRegister(dest).singleOverlay());
+    ma_vldr(address, VFPRegister(dest).singleOverlay());
 }
 
 void
@@ -2335,7 +2326,7 @@ MacroAssemblerARMCompat::loadFloat32(const BaseIndex& src, FloatRegister dest)
     int32_t offset = src.offset;
     as_add(ScratchRegister, base, lsl(index, scale));
 
-    ma_vldr(Operand(ScratchRegister, offset), VFPRegister(dest).singleOverlay());
+    ma_vldr(Address(ScratchRegister, offset), VFPRegister(dest).singleOverlay());
 }
 
 void
@@ -2488,7 +2479,7 @@ template void MacroAssemblerARMCompat::storePtr<BaseIndex>(ImmGCPtr imm, BaseInd
 void
 MacroAssemblerARMCompat::storePtr(Register src, const Address& address)
 {
-    ma_str(src, Operand(address));
+    ma_str(src, address);
 }
 
 void
@@ -3147,19 +3138,19 @@ MacroAssemblerARMCompat::branchTestValue(Condition cond, const Address& valaddr,
 
     // Check payload before tag, since payload is more likely to differ.
     if (cond == NotEqual) {
-        ma_ldr(payloadOf(valaddr), ScratchRegister);
+        ma_ldr(ToPayload(valaddr), ScratchRegister);
         branchPtr(NotEqual, ScratchRegister, value.payloadReg(), label);
 
-        ma_ldr(tagOf(valaddr), ScratchRegister);
+        ma_ldr(ToType(valaddr), ScratchRegister);
         branchPtr(NotEqual, ScratchRegister, value.typeReg(), label);
 
     } else {
         Label fallthrough;
 
-        ma_ldr(payloadOf(valaddr), ScratchRegister);
+        ma_ldr(ToPayload(valaddr), ScratchRegister);
         branchPtr(NotEqual, ScratchRegister, value.payloadReg(), &fallthrough);
 
-        ma_ldr(tagOf(valaddr), ScratchRegister);
+        ma_ldr(ToType(valaddr), ScratchRegister);
         branchPtr(Equal, ScratchRegister, value.typeReg(), label);
 
         bind(&fallthrough);
@@ -3177,7 +3168,7 @@ MacroAssemblerARMCompat::unboxNonDouble(const ValueOperand& operand, Register de
 void
 MacroAssemblerARMCompat::unboxNonDouble(const Address& src, Register dest)
 {
-    ma_ldr(payloadOf(src), dest);
+    ma_ldr(ToPayload(src), dest);
 }
 
 void
@@ -3199,7 +3190,7 @@ void
 MacroAssemblerARMCompat::unboxDouble(const Address& src, FloatRegister dest)
 {
     MOZ_ASSERT(dest.isDouble());
-    ma_vldr(Operand(src), dest);
+    ma_vldr(src, dest);
 }
 
 void
@@ -3286,7 +3277,7 @@ MacroAssemblerARMCompat::loadConstantFloat32(float f, FloatRegister dest)
 }
 
 void
-MacroAssemblerARMCompat::loadInt32OrDouble(const Operand& src, FloatRegister dest)
+MacroAssemblerARMCompat::loadInt32OrDouble(const Address& src, FloatRegister dest)
 {
     Label notInt32, end;
     // If it's an int, convert it to double.
@@ -3365,14 +3356,14 @@ MacroAssemblerARMCompat::testDoubleTruthy(bool truthy, FloatRegister reg)
 Register
 MacroAssemblerARMCompat::extractObject(const Address& address, Register scratch)
 {
-    ma_ldr(payloadOf(address), scratch);
+    ma_ldr(ToPayload(address), scratch);
     return scratch;
 }
 
 Register
 MacroAssemblerARMCompat::extractTag(const Address& address, Register scratch)
 {
-    ma_ldr(tagOf(address), scratch);
+    ma_ldr(ToType(address), scratch);
     return scratch;
 }
 
@@ -3432,7 +3423,7 @@ MacroAssemblerARMCompat::moveValue(const Value& val, const ValueOperand& dest)
 // X86/X64-common (ARM too now) interface.
 /////////////////////////////////////////////////////////////////
 void
-MacroAssemblerARMCompat::storeValue(ValueOperand val, Operand dst)
+MacroAssemblerARMCompat::storeValue(ValueOperand val, const Address& dst)
 {
     ma_str(val.payloadReg(), ToPayload(dst));
     ma_str(val.typeReg(), ToType(dst));
@@ -3489,17 +3480,17 @@ MacroAssemblerARMCompat::loadValue(const BaseIndex& addr, ValueOperand val)
 void
 MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
 {
-    Operand srcOp = Operand(src);
-    Operand payload = ToPayload(srcOp);
-    Operand type = ToType(srcOp);
+    Address payload = ToPayload(src);
+    Address type = ToType(src);
+
     // TODO: copy this code into a generic function that acts on all sequences
     // of memory accesses
     if (isValueDTRDCandidate(val)) {
         // If the value we want is in two consecutive registers starting with an
         // even register, they can be combined as a single ldrd.
-        int offset = srcOp.disp();
+        int offset = src.offset;
         if (offset < 256 && offset > -256) {
-            ma_ldrd(EDtrAddr(Register::FromCode(srcOp.base()), EDtrOffImm(srcOp.disp())), val.payloadReg(), val.typeReg());
+            ma_ldrd(EDtrAddr(src.base, EDtrOffImm(src.offset)), val.payloadReg(), val.typeReg());
             return;
         }
     }
@@ -3507,11 +3498,11 @@ MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
     // instruction.
 
     if (val.payloadReg().code() < val.typeReg().code()) {
-        if (srcOp.disp() <= 4 && srcOp.disp() >= -8 && (srcOp.disp() & 3) == 0) {
+        if (src.offset <= 4 && src.offset >= -8 && (src.offset & 3) == 0) {
             // Turns out each of the 4 value -8, -4, 0, 4 corresponds exactly
             // with one of LDM{DB, DA, IA, IB}
             DTMMode mode;
-            switch(srcOp.disp()) {
+            switch (src.offset) {
               case -8:
                 mode = DB;
                 break;
@@ -3527,7 +3518,7 @@ MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
               default:
                 MOZ_CRASH("Bogus Offset for LoadValue as DTM");
             }
-            startDataTransferM(IsLoad, Register::FromCode(srcOp.base()), mode);
+            startDataTransferM(IsLoad, src.base, mode);
             transferReg(val.payloadReg());
             transferReg(val.typeReg());
             finishDataTransfer();
@@ -3536,7 +3527,7 @@ MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
     }
     // Ensure that loading the payload does not erase the pointer to the Value
     // in memory.
-    if (Register::FromCode(type.base()) != val.payloadReg()) {
+    if (type.base != val.payloadReg()) {
         ma_ldr(payload, val.payloadReg());
         ma_ldr(type, val.typeReg());
     } else {
@@ -3562,13 +3553,9 @@ MacroAssemblerARMCompat::pushValue(ValueOperand val) {
 void
 MacroAssemblerARMCompat::pushValue(const Address& addr)
 {
-    Operand srcOp = Operand(addr);
-    Operand type = ToType(srcOp);
-    Operand payload = ToPayloadAfterStackPush(srcOp);
-
-    ma_ldr(type, ScratchRegister);
+    ma_ldr(ToType(addr), ScratchRegister);
     ma_push(ScratchRegister);
-    ma_ldr(payload, ScratchRegister);
+    ma_ldr(ToPayloadAfterStackPush(addr), ScratchRegister);
     ma_push(ScratchRegister);
 }
 
@@ -3578,7 +3565,7 @@ MacroAssemblerARMCompat::popValue(ValueOperand val) {
     ma_pop(val.typeReg());
 }
 void
-MacroAssemblerARMCompat::storePayload(const Value& val, Operand dest)
+MacroAssemblerARMCompat::storePayload(const Value& val, const Address& dest)
 {
     jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable())
@@ -3587,15 +3574,11 @@ MacroAssemblerARMCompat::storePayload(const Value& val, Operand dest)
         ma_mov(Imm32(jv.s.payload.i32), secondScratchReg_);
     ma_str(secondScratchReg_, ToPayload(dest));
 }
-void
-MacroAssemblerARMCompat::storePayload(Register src, Operand dest)
-{
-    if (dest.getTag() == Operand::MEM) {
-        ma_str(src, ToPayload(dest));
-        return;
-    }
-    MOZ_CRASH("why do we do all of these things?");
 
+void
+MacroAssemblerARMCompat::storePayload(Register src, const Address& dest)
+{
+    ma_str(src, ToPayload(dest));
 }
 
 void
@@ -3651,15 +3634,10 @@ MacroAssemblerARMCompat::storePayload(Register src, const BaseIndex& dest)
 }
 
 void
-MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Operand dest) {
-    if (dest.getTag() == Operand::MEM) {
-        ma_mov(tag, secondScratchReg_);
-        ma_str(secondScratchReg_, ToType(dest));
-        return;
-    }
-
-    MOZ_CRASH("why do we do all of these things?");
-
+MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, const Address& dest)
+{
+    ma_mov(tag, secondScratchReg_);
+    ma_str(secondScratchReg_, ToType(dest));
 }
 
 void
@@ -4210,7 +4188,7 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     Label return_;
     Label bailout;
 
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, kind)), r0);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, kind)), r0);
     branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
     branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
     branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
@@ -4223,7 +4201,7 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     // and return from the entry frame.
     bind(&entryFrame);
     moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp);
 
     // We're going to be returning by the ion calling convention, which returns
     // by ??? (for now, I think ldr pc, [sp]!)
@@ -4232,9 +4210,9 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     // If we found a catch handler, this must be a baseline frame. Restore state
     // and jump to the catch block.
     bind(&catch_);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, target)), r0);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, framePointer)), r11);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, target)), r0);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, framePointer)), r11);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp);
     jump(r0);
 
     // If we found a finally block, this must be a baseline frame. Push two
@@ -4243,9 +4221,9 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     ValueOperand exception = ValueOperand(r1, r2);
     loadValue(Operand(sp, offsetof(ResumeFromException, exception)), exception);
 
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, target)), r0);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, framePointer)), r11);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, target)), r0);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, framePointer)), r11);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp);
 
     pushValue(BooleanValue(true));
     pushValue(exception);
@@ -4254,8 +4232,8 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     // Only used in debug mode. Return BaselineFrame->returnValue() to the
     // caller.
     bind(&return_);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, framePointer)), r11);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, framePointer)), r11);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp);
     loadValue(Address(r11, BaselineFrame::reverseOffsetOfReturnValue()), JSReturnOperand);
     ma_mov(r11, sp);
     pop(r11);
@@ -4276,9 +4254,9 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler)
     // If we are bailing out to baseline to handle an exception, jump to the
     // bailout tail stub.
     bind(&bailout);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, bailoutInfo)), r2);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, bailoutInfo)), r2);
     ma_mov(Imm32(BAILOUT_RETURN_OK), r0);
-    ma_ldr(Operand(sp, offsetof(ResumeFromException, target)), r1);
+    ma_ldr(Address(sp, offsetof(ResumeFromException, target)), r1);
     jump(r1);
 }
 
