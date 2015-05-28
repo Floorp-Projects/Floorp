@@ -50,10 +50,15 @@ browser.jar:
         skin/classic/browser/identity.png
         skin/classic/browser/identity-XP.png
         skin/classic/browser/identity-icons-generic.png
+        skin/classic/browser/identity-icons-generic@2x.png
         skin/classic/browser/identity-icons-https.png
+        skin/classic/browser/identity-icons-https@2x.png
         skin/classic/browser/identity-icons-https-ev.png
+        skin/classic/browser/identity-icons-https-ev@2x.png
         skin/classic/browser/identity-icons-https-mixed-active.png
+        skin/classic/browser/identity-icons-https-mixed-active@2x.png
         skin/classic/browser/identity-icons-https-mixed-display.png
+        skin/classic/browser/identity-icons-https-mixed-display@2x.png
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/livemark-folder.png
@@ -67,12 +72,19 @@ browser.jar:
         skin/classic/browser/menu-forward.png
         skin/classic/browser/menu-forward-XP.png
         skin/classic/browser/menuPanel.png
+        skin/classic/browser/menuPanel@2x.png
         skin/classic/browser/menuPanel-aero.png
+        skin/classic/browser/menuPanel-aero@2x.png
         skin/classic/browser/menuPanel-customize.png
+        skin/classic/browser/menuPanel-customize@2x.png
         skin/classic/browser/menuPanel-exit.png
+        skin/classic/browser/menuPanel-exit@2x.png
         skin/classic/browser/menuPanel-help.png
+        skin/classic/browser/menuPanel-help@2x.png
         skin/classic/browser/menuPanel-small.png
+        skin/classic/browser/menuPanel-small@2x.png
         skin/classic/browser/menuPanel-small-aero.png
+        skin/classic/browser/menuPanel-small-aero@2x.png
         skin/classic/browser/bad-content-blocked-16.png             (../shared/bad-content-blocked-16.png)
         skin/classic/browser/bad-content-blocked-16@2x.png          (../shared/bad-content-blocked-16@2x.png)
         skin/classic/browser/bad-content-blocked-64.png             (../shared/bad-content-blocked-64.png)
@@ -95,15 +107,19 @@ browser.jar:
         skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7.png
         skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7-tall.png
         skin/classic/browser/reload-stop-go.png
+        skin/classic/browser/reload-stop-go@2x.png
         skin/classic/browser/searchbar.css
         skin/classic/browser/searchbar-dropdown-arrow.png
         skin/classic/browser/searchbar-dropdown-arrow-XP.png
         skin/classic/browser/search-pref.png                         (../shared/search/search-pref.png)
         skin/classic/browser/search-indicator.png                    (../shared/search/search-indicator.png)
-        skin/classic/browser/search-indicator-add-engine.png         (../shared/search/search-indicator-add-engine.png)
+        skin/classic/browser/search-indicator@2x.png                 (../shared/search/search-indicator@2x.png)
         skin/classic/browser/search-engine-placeholder.png           (../shared/search/search-engine-placeholder.png)
+        skin/classic/browser/search-engine-placeholder@2x.png        (../shared/search/search-engine-placeholder@2x.png)
         skin/classic/browser/badge-add-engine.png                    (../shared/search/badge-add-engine.png)
+        skin/classic/browser/badge-add-engine@2x.png                 (../shared/search/badge-add-engine@2x.png)
         skin/classic/browser/search-indicator-badge-add.png          (../shared/search/search-indicator-badge-add.png)
+        skin/classic/browser/search-indicator-badge-add@2x.png       (../shared/search/search-indicator-badge-add@2x.png)
         skin/classic/browser/search-history-icon.svg                 (../shared/search/history-icon.svg)
         skin/classic/browser/Secure24.png
         skin/classic/browser/Secure24-XP.png
@@ -125,8 +141,10 @@ browser.jar:
         skin/classic/browser/undoCloseTab@2x.png                     (../shared/undoCloseTab@2x.png)
         skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
         skin/classic/browser/urlbar-arrow.png
+        skin/classic/browser/urlbar-arrow@2x.png
         skin/classic/browser/urlbar-popup-blocked.png
         skin/classic/browser/urlbar-history-dropmarker.png
+        skin/classic/browser/urlbar-history-dropmarker@2x.png
         skin/classic/browser/session-restore.svg                     (../shared/incontent-icons/session-restore.svg)
         skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
         skin/classic/browser/welcome-back.svg                        (../shared/incontent-icons/welcome-back.svg)
@@ -164,12 +182,14 @@ browser.jar:
         skin/classic/browser/customizableui/customize-illustration.png  (../shared/customizableui/customize-illustration.png)
         skin/classic/browser/customizableui/customize-illustration-rtl.png  (../shared/customizableui/customize-illustration-rtl.png)
         skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
+        skin/classic/browser/customizableui/customize-titleBar-toggle@2x.png  (customizableui/customize-titleBar-toggle@2x.png)
         skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
         skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
         skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
         skin/classic/browser/customizableui/info-icon-customizeTip.png  (../shared/customizableui/info-icon-customizeTip.png)
         skin/classic/browser/customizableui/menu-arrow.svg           (customizableui/menu-arrow.svg)
         skin/classic/browser/customizableui/menuPanel-customizeFinish.png  (../shared/customizableui/menuPanel-customizeFinish.png)
+        skin/classic/browser/customizableui/menuPanel-customizeFinish@2x.png  (../shared/customizableui/menuPanel-customizeFinish@2x.png)
         skin/classic/browser/customizableui/panelarrow-customizeTip.png  (../shared/customizableui/panelarrow-customizeTip.png)
 *       skin/classic/browser/customizableui/panelUIOverlay.css       (customizableui/panelUIOverlay.css)
         skin/classic/browser/customizableui/subView-arrow-back-inverted.png  (../shared/customizableui/subView-arrow-back-inverted.png)
@@ -197,8 +217,11 @@ browser.jar:
         skin/classic/browser/newtab/controls.svg                     (../shared/newtab/controls.svg)
         skin/classic/browser/newtab/whimsycorn.png                   (../shared/newtab/whimsycorn.png)
         skin/classic/browser/panic-panel/header.png                  (../shared/panic-panel/header.png)
+        skin/classic/browser/panic-panel/header@2x.png               (../shared/panic-panel/header@2x.png)
         skin/classic/browser/panic-panel/header-small.png            (../shared/panic-panel/header-small.png)
+        skin/classic/browser/panic-panel/header-small@2x.png         (../shared/panic-panel/header-small@2x.png)
         skin/classic/browser/panic-panel/icons.png                   (../shared/panic-panel/icons.png)
+        skin/classic/browser/panic-panel/icons@2x.png                (../shared/panic-panel/icons@2x.png)
         skin/classic/browser/places/places.css                       (places/places.css)
 *       skin/classic/browser/places/organizer.css                    (places/organizer.css)
         skin/classic/browser/places/bookmark.png                     (places/bookmark.png)
@@ -265,16 +288,22 @@ browser.jar:
         skin/classic/browser/social/gear_default.png                 (../shared/social/gear_default.png)
         skin/classic/browser/social/gear_clicked.png                 (../shared/social/gear_clicked.png)
         skin/classic/browser/tabbrowser/newtab.png                   (tabbrowser/newtab.png)
+        skin/classic/browser/tabbrowser/newtab@2x.png                (tabbrowser/newtab@2x.png)
         skin/classic/browser/tabbrowser/newtab-XPVista7.png          (tabbrowser/newtab-XPVista7.png)
+        skin/classic/browser/tabbrowser/newtab-XPVista7@2x.png       (tabbrowser/newtab-XPVista7@2x.png)
         skin/classic/browser/tabbrowser/newtab-inverted.png          (tabbrowser/newtab-inverted.png)
+        skin/classic/browser/tabbrowser/newtab-inverted@2x.png       (tabbrowser/newtab-inverted@2x.png)
         skin/classic/browser/tabbrowser/connecting.png               (tabbrowser/connecting.png)
         skin/classic/browser/tabbrowser/crashed.svg                  (../shared/tabbrowser/crashed.svg)
         skin/classic/browser/tabbrowser/loading.png                  (tabbrowser/loading.png)
         skin/classic/browser/tabbrowser/tab-active-middle.png        (tabbrowser/tab-active-middle.png)
         skin/classic/browser/tabbrowser/tab-active-middle@2x.png     (tabbrowser/tab-active-middle@2x.png)
         skin/classic/browser/tabbrowser/tab-arrow-left.png           (tabbrowser/tab-arrow-left.png)
+        skin/classic/browser/tabbrowser/tab-arrow-left@2x.png        (tabbrowser/tab-arrow-left@2x.png)
         skin/classic/browser/tabbrowser/tab-arrow-left-XPVista7.png  (tabbrowser/tab-arrow-left-XPVista7.png)
+        skin/classic/browser/tabbrowser/tab-arrow-left-XPVista7@2x.png  (tabbrowser/tab-arrow-left-XPVista7@2x.png)
         skin/classic/browser/tabbrowser/tab-arrow-left-inverted.png  (tabbrowser/tab-arrow-left-inverted.png)
+        skin/classic/browser/tabbrowser/tab-arrow-left-inverted@2x.png  (tabbrowser/tab-arrow-left-inverted@2x.png)
         skin/classic/browser/tabbrowser/tab-background-start.png     (tabbrowser/tab-background-start.png)
         skin/classic/browser/tabbrowser/tab-background-start@2x.png  (tabbrowser/tab-background-start@2x.png)
         skin/classic/browser/tabbrowser/tab-background-middle.png    (tabbrowser/tab-background-middle.png)
@@ -497,15 +526,20 @@ browser.jar:
         skin/classic/browser/sync-bg.png
         skin/classic/browser/sync-desktopIcon.png
         skin/classic/browser/sync-horizontalbar.png
+        skin/classic/browser/sync-horizontalbar@2x.png
         skin/classic/browser/sync-horizontalbar-XPVista7.png
+        skin/classic/browser/sync-horizontalbar-XPVista7@2x.png
         skin/classic/browser/sync-mobileIcon.png
         skin/classic/browser/sync-notification-24.png
         skin/classic/browser/syncSetup.css
         skin/classic/browser/syncCommon.css
         skin/classic/browser/syncQuota.css
         skin/classic/browser/syncProgress-horizontalbar.png
+        skin/classic/browser/syncProgress-horizontalbar@2x.png
         skin/classic/browser/syncProgress-horizontalbar-XPVista7.png
+        skin/classic/browser/syncProgress-horizontalbar-XPVista7@2x.png
         skin/classic/browser/syncProgress-menuPanel.png
+        skin/classic/browser/syncProgress-menuPanel@2x.png
         skin/classic/browser/syncProgress-toolbar.png
         skin/classic/browser/syncProgress-toolbar@2x.png
         skin/classic/browser/syncProgress-toolbar-inverted.png
@@ -569,17 +603,25 @@ browser.jar:
 % override chrome://browser/skin/tabbrowser/tab-separator.png         chrome://browser/skin/tabbrowser/tab-separator-XP.png             os=WINNT osversion<6
 
 % override chrome://browser/skin/sync-horizontalbar.png               chrome://browser/skin/sync-horizontalbar-XPVista7.png             os=WINNT osversion<=6.1
+% override chrome://browser/skin/sync-horizontalbar@2x.png            chrome://browser/skin/sync-horizontalbar-XPVista7@2x.png          os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-horizontalbar.png       chrome://browser/skin/syncProgress-horizontalbar-XPVista7.png     os=WINNT osversion<=6.1
+% override chrome://browser/skin/syncProgress-horizontalbar@2x.png    chrome://browser/skin/syncProgress-horizontalbar-XPVista7@2x.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-toolbar.png             chrome://browser/skin/syncProgress-toolbar-XPVista7.png           os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-toolbar@2x.png          chrome://browser/skin/syncProgress-toolbar-XPVista7@2x.png        os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-XPVista7.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab.png                chrome://browser/skin/tabbrowser/newtab-XPVista7.png              os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/newtab@2x.png             chrome://browser/skin/tabbrowser/newtab-XPVista7@2x.png           os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.png        chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png      os=WINNT osversion<=6.1
+% override chrome://browser/skin/tabbrowser/tab-arrow-left@2x.png     chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7@2x.png      os=WINNT osversion<=6.1
 
 % override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6
 % override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6.1
+% override chrome://browser/skin/menuPanel@2x.png                     chrome://browser/skin/menuPanel-aero@2x.png                       os=WINNT osversion=6
+% override chrome://browser/skin/menuPanel@2x.png                     chrome://browser/skin/menuPanel-aero@2x.png                       os=WINNT osversion=6.1
 % override chrome://browser/skin/menuPanel-small.png                  chrome://browser/skin/menuPanel-small-aero.png                    os=WINNT osversion=6
 % override chrome://browser/skin/menuPanel-small.png                  chrome://browser/skin/menuPanel-small-aero.png                    os=WINNT osversion=6.1
+% override chrome://browser/skin/menuPanel-small@2x.png               chrome://browser/skin/menuPanel-small-aero@2x.png                 os=WINNT osversion=6
+% override chrome://browser/skin/menuPanel-small@2x.png               chrome://browser/skin/menuPanel-small-aero@2x.png                 os=WINNT osversion=6.1
 % override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-aero@2x.png                         os=WINNT osversion=6
 % override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-aero@2x.png                         os=WINNT osversion=6.1
 % override chrome://browser/skin/loop/menuPanel.png                   chrome://browser/skin/loop/menuPanel-aero.png                     os=WINNT osversion=6

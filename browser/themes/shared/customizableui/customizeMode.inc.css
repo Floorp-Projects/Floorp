@@ -179,6 +179,17 @@
   -moz-image-region: rect(0, 48px, 24px, 24px);
 }
 
+@media (min-resolution: 1.1dppx) {
+  #customization-titlebar-visibility-button {
+    list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle@2x.png");
+    -moz-image-region: rect(0, 48px, 48px, 0);
+  }
+
+  #customization-titlebar-visibility-button[checked] {
+    -moz-image-region: rect(0, 96px, 48px, 48px);
+  }
+}
+
 #main-window[customize-entered] #customization-panel-container {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-separatorHorizontal.png"),
                     url("chrome://browser/skin/customizableui/customizeMode-separatorVertical.png"),

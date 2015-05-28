@@ -3,7 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const MARKER_DETAILS_WIDTH = 300;
+const WATERFALL_RESIZE_EVENTS_DRAIN = 100; // ms
+const MARKER_DETAILS_WIDTH = 200;
 
 /**
  * Waterfall view containing the timeline markers, controlled by DetailsView.
@@ -26,24 +27,22 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   initialize: function () {
     DetailsSubview.initialize.call(this);
 
-    // TODO bug 1167093 save the previously set width, and ensure minimum width
-    $("#waterfall-details").setAttribute("width", MARKER_DETAILS_WIDTH);
-
-    this.waterfall = new Waterfall($("#waterfall-breakdown"), $("#waterfall-view"));
-    this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
-
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
     this._onViewSource = this._onViewSource.bind(this);
 
-    this.waterfall.on("selected", this._onMarkerSelected);
-    this.waterfall.on("unselected", this._onMarkerSelected);
+    this.headerContainer = $("#waterfall-header");
+    this.breakdownContainer = $("#waterfall-breakdown");
+    this.detailsContainer = $("#waterfall-details");
+    this.detailsSplitter = $("#waterfall-view > splitter");
+
+    this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
     this.details.on("resize", this._onResize);
     this.details.on("view-source", this._onViewSource);
+    window.addEventListener("resize", this._onResize);
 
-    let blueprint = PerformanceController.getTimelineBlueprint();
-    this.waterfall.setBlueprint(blueprint);
-    this.waterfall.recalculateBounds();
+    // TODO bug 1167093 save the previously set width, and ensure minimum width
+    this.details.width = MARKER_DETAILS_WIDTH;
   },
 
   /**
@@ -52,10 +51,9 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   destroy: function () {
     DetailsSubview.destroy.call(this);
 
-    this.waterfall.off("selected", this._onMarkerSelected);
-    this.waterfall.off("unselected", this._onMarkerSelected);
     this.details.off("resize", this._onResize);
     this.details.off("view-source", this._onViewSource);
+    window.removeEventListener("resize", this._onResize);
   },
 
   /**
@@ -69,7 +67,9 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     let startTime = interval.startTime || 0;
     let endTime = interval.endTime || recording.getDuration();
     let markers = recording.getMarkers();
-    this.waterfall.setData({ markers, interval: { startTime, endTime } });
+    let rootMarkerNode = this._prepareWaterfallTree(markers);
+
+    this._populateWaterfallTree(rootMarkerNode, { startTime, endTime });
     this.emit(EVENTS.WATERFALL_RENDERED);
   },
 
@@ -79,18 +79,15 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    */
   _onMarkerSelected: function (event, marker) {
     let recording = PerformanceController.getCurrentRecording();
-    // Race condition in tests due to lazy rendering of markers in the
-    // waterfall? intermittent bug 1157523
-    if (!recording) {
-      return;
-    }
     let frames = recording.getFrames();
 
     if (event === "selected") {
       this.details.render({ toolbox: gToolbox, marker, frames });
+      this._selected = marker;
     }
     if (event === "unselected") {
       this.details.empty();
+      this._selected = null;
     }
   },
 
@@ -98,8 +95,10 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    * Called when the marker details view is resized.
    */
   _onResize: function () {
-    this.waterfall.recalculateBounds();
-    this.render();
+    setNamedTimeout("waterfall-resize", WATERFALL_RESIZE_EVENTS_DRAIN, () => {
+      this._markersRoot.recalculateBounds();
+      this.render(OverviewView.getTimeInterval());
+    });
   },
 
   /**
@@ -107,7 +106,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    */
   _onObservedPrefChange: function(_, prefName) {
     let blueprint = PerformanceController.getTimelineBlueprint();
-    this.waterfall.setBlueprint(blueprint);
+    this._markersRoot.blueprint = blueprint;
   },
 
   /**
@@ -115,6 +114,60 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    */
   _onViewSource: function (_, file, line) {
     gToolbox.viewSourceInDebugger(file, line);
+  },
+
+  /**
+   * Called when the recording is stopped and prepares data to
+   * populate the waterfall tree.
+   */
+  _prepareWaterfallTree: function(markers) {
+    let rootMarkerNode = WaterfallUtils.makeEmptyMarkerNode("(root)");
+
+    WaterfallUtils.collapseMarkersIntoNode({
+      markerNode: rootMarkerNode,
+      markersList: markers
+    });
+
+    return rootMarkerNode;
+  },
+
+  /**
+   * Renders the waterfall tree.
+   */
+  _populateWaterfallTree: function(rootMarkerNode, interval) {
+    let root = new MarkerView({
+      marker: rootMarkerNode,
+      // The root node is irrelevant in a waterfall tree.
+      hidden: true,
+      // The waterfall tree should not expand by default.
+      autoExpandDepth: 0
+    });
+
+    let header = new WaterfallHeader(root);
+
+    this._markersRoot = root;
+    this._waterfallHeader = header;
+
+    let blueprint = PerformanceController.getTimelineBlueprint();
+    root.blueprint = blueprint;
+    root.interval = interval;
+    root.on("selected", this._onMarkerSelected);
+    root.on("unselected", this._onMarkerSelected);
+
+    this.breakdownContainer.innerHTML = "";
+    root.attachTo(this.breakdownContainer);
+
+    this.headerContainer.innerHTML = "";
+    header.attachTo(this.headerContainer);
+
+    // If an item was previously selected in this view, attempt to
+    // re-select it by traversing the newly created tree.
+    if (this._selected) {
+      let item = root.find(i => i.marker == this._selected);
+      if (item) {
+        item.focus();
+      }
+    }
   },
 
   toString: () => "[object WaterfallView]"

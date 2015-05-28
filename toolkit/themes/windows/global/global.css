@@ -337,22 +337,23 @@ popupnotificationcontent {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
-%ifdef XP_WIN
-@media (-moz-windows-theme: luna-blue) {
-  .close-icon {
-    list-style-image: url("chrome://global/skin/icons/close-lunaBlue.png");
-  }
+.close-icon > .button-icon,
+.close-icon > .button-box > .button-icon,
+.close-icon > .toolbarbutton-icon {
+  width: 16px;
 }
 
-@media (-moz-windows-theme: luna-olive) {
+@media (min-resolution: 1.1dppx) {
   .close-icon {
-    list-style-image: url("chrome://global/skin/icons/close-lunaOlive.png");
+    list-style-image: url("chrome://global/skin/icons/close@2x.png");
+    -moz-image-region: rect(0, 32px, 32px, 0);
   }
-}
 
-@media (-moz-windows-theme: luna-silver) {
-  .close-icon {
-    list-style-image: url("chrome://global/skin/icons/close-lunaSilver.png");
+  .close-icon:hover {
+    -moz-image-region: rect(0, 64px, 32px, 32px);
+  }
+
+  .close-icon:hover:active {
+    -moz-image-region: rect(0, 96px, 32px, 64px);
   }
 }
-%endif

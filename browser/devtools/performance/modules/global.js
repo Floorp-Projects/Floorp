@@ -104,6 +104,21 @@ const CATEGORY_MAPPINGS = {
  *              for `.marker-details-bullet.{COLORNAME}` for the equivilent
  *              entry in ./browser/themes/shared/devtools/performance.inc.css
  *              https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors
+ * - collapseFunc: A function determining how markers are collapsed together.
+ *                 Invoked with 3 arguments: the current parent marker, the
+ *                 current marker and a method for peeking i markers ahead. If
+ *                 nothing is returned, the marker is added as a standalone entry
+ *                 in the waterfall. Otherwise, an object needs to be returned
+ *                 with the following properties:
+ *                 - toParent: The parent marker name (needs to be an entry in
+ *                             the `TIMELINE_BLUEPRINT` itself).
+ *                 - withData: An object containing some properties to staple
+ *                             on the parent marker.
+ *                 - forceNew: True if a new parent marker needs to be created
+ *                             even though there is one currently available
+ *                             with the same name.
+ *                 - forceEnd: True if the current parent marker is full after
+ *                             this collapse operation and should be finalized.
  * - fields: An optional array of marker properties you wish to display in the
  *           marker details view. For example, a field in the array such as
  *           { property: "aCauseName", label: "Cause" } would render a string
@@ -127,51 +142,64 @@ const TIMELINE_BLUEPRINT = {
   "Styles": {
     group: 0,
     colorName: "graphs-purple",
+    collapseFunc: collapseConsecutiveIdentical,
     label: L10N.getStr("timeline.label.styles2"),
     fields: getStylesFields,
   },
   "Reflow": {
     group: 0,
     colorName: "graphs-purple",
-    label: L10N.getStr("timeline.label.reflow2")
+    collapseFunc: collapseConsecutiveIdentical,
+    label: L10N.getStr("timeline.label.reflow2"),
   },
   "Paint": {
     group: 0,
     colorName: "graphs-green",
-    label: L10N.getStr("timeline.label.paint")
+    collapseFunc: collapseConsecutiveIdentical,
+    label: L10N.getStr("timeline.label.paint"),
   },
 
   /* Group 1 - JS */
   "DOMEvent": {
     group: 1,
     colorName: "graphs-yellow",
+    collapseFunc: collapseDOMIntoDOMJS,
     label: L10N.getStr("timeline.label.domevent"),
     fields: getDOMEventFields,
   },
   "Javascript": {
     group: 1,
     colorName: "graphs-yellow",
+    collapseFunc: either(collapseJSIntoDOMJS, collapseConsecutiveIdentical),
     label: getJSLabel,
     fields: getJSFields,
+  },
+  "meta::DOMEvent+JS": {
+    colorName: "graphs-yellow",
+    label: getDOMJSLabel,
+    fields: getDOMEventFields,
   },
   "Parse HTML": {
     group: 1,
     colorName: "graphs-yellow",
-    label: L10N.getStr("timeline.label.parseHTML")
+    collapseFunc: collapseConsecutiveIdentical,
+    label: L10N.getStr("timeline.label.parseHTML"),
   },
   "Parse XML": {
     group: 1,
     colorName: "graphs-yellow",
-    label: L10N.getStr("timeline.label.parseXML")
+    collapseFunc: collapseConsecutiveIdentical,
+    label: L10N.getStr("timeline.label.parseXML"),
   },
   "GarbageCollection": {
     group: 1,
     colorName: "graphs-red",
+    collapseFunc: collapseAdjacentGC,
     label: getGCLabel,
     fields: [
       { property: "causeName", label: "Reason:" },
       { property: "nonincrementalReason", label: "Non-incremental Reason:" }
-    ]
+    ],
   },
 
   /* Group 2 - User Controlled */
@@ -182,7 +210,7 @@ const TIMELINE_BLUEPRINT = {
     fields: [{
       property: "causeName",
       label: L10N.getStr("timeline.markerDetail.consoleTimerName")
-    }]
+    }],
   },
   "TimeStamp": {
     group: 2,
@@ -191,9 +219,82 @@ const TIMELINE_BLUEPRINT = {
     fields: [{
       property: "causeName",
       label: "Label:"
-    }]
+    }],
   },
 };
+
+/**
+ * Helper for creating a function that returns the first defined result from
+ * a list of functions passed in as params, in order.
+ * @param ...function fun
+ * @return any
+ */
+function either(...fun) {
+  return function() {
+    for (let f of fun) {
+      let result = f.apply(null, arguments);
+      if (result !== undefined) return result;
+    }
+  }
+}
+
+/**
+ * A series of collapsers used by the blueprint. These functions are
+ * consecutively invoked on a moving window of two markers.
+ */
+
+function collapseConsecutiveIdentical(parent, curr, peek) {
+  // If there is a parent marker currently being filled and the current marker
+  // should go into the parent marker, make it so.
+  if (parent && parent.name == curr.name) {
+    return { toParent: parent.name };
+  }
+  // Otherwise if the current marker is the same type as the next marker type,
+  // create a new parent marker containing the current marker.
+  let next = peek(1);
+  if (next && curr.name == next.name) {
+    return { toParent: curr.name };
+  }
+}
+
+function collapseAdjacentGC(parent, curr, peek) {
+  let next = peek(1);
+  if (next && (next.start < curr.end || next.start - curr.end <= 10 /* ms */)) {
+    return collapseConsecutiveIdentical(parent, curr, peek);
+  }
+}
+
+function collapseDOMIntoDOMJS(parent, curr, peek) {
+  // If the next marker is a JavaScript marker, create a new meta parent marker
+  // containing the current marker.
+  let next = peek(1);
+  if (next && next.name == "Javascript") {
+    return {
+      forceNew: true,
+      toParent: "meta::DOMEvent+JS",
+      withData: {
+        type: curr.type,
+        eventPhase: curr.eventPhase
+      },
+    };
+  }
+}
+
+function collapseJSIntoDOMJS(parent, curr, peek) {
+  // If there is a parent marker currently being filled, and it's the one
+  // created from a `DOMEvent` via `collapseDOMIntoDOMJS`, then the current
+  // marker has to go into that one.
+  if (parent && parent.name == "meta::DOMEvent+JS") {
+    return {
+      forceEnd: true,
+      toParent: "meta::DOMEvent+JS",
+      withData: {
+        stack: curr.stack,
+        endStack: curr.endStack
+      },
+    };
+  }
+}
 
 /**
  * A series of formatters used by the blueprint.
@@ -234,6 +335,10 @@ function getJSLabel (marker={}) {
     return JS_MARKER_MAP[marker.causeName] || generic;
   }
   return generic;
+}
+
+function getDOMJSLabel (marker={}) {
+  return `Event (${marker.type})`;
 }
 
 /**

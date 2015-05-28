@@ -97,6 +97,34 @@ AutoCompleteInput.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
 }
 
+// A helper for check_autocomplete to check a specific match against data from
+// the controller.
+function _check_autocomplete_matches(match, controllerInfo) {
+  let { uri, title, tags, searchEngine, style } = match;
+  let { controllerValue, controllerComment, controllerStyle } = controllerInfo;
+  if (tags)
+    title += " \u2013 " + tags.sort().join(", ");
+  if (searchEngine)
+    title += TITLE_SEARCH_ENGINE_SEPARATOR + searchEngine;
+  if (style)
+    style = style.sort();
+  else
+    style = ["favicon"];
+
+  do_print("Checking against expected '" + uri.spec + "', '" + title + "'...");
+  // Got a match on both uri and title?
+  if (stripPrefix(uri.spec) != stripPrefix(controllerValue) || title != controllerComment) {
+    return false;
+  }
+  let actualStyle = controllerStyle.split(/\s+/).sort();
+  if (style)
+    Assert.equal(actualStyle.toString(), style.toString(), "Match should have expected style");
+  if (uri.spec.startsWith("moz-action:")) {
+    Assert.ok(actualStyle.indexOf("action") != -1, "moz-action results should always have 'action' in their style");
+  }
+  return true;
+}
+
 function* check_autocomplete(test) {
   // At this point frecency could still be updating due to latest pages
   // updates.
@@ -143,51 +171,50 @@ function* check_autocomplete(test) {
 
   Assert.equal(numSearchesStarted, expectedSearches, "All searches started");
 
-  // Check to see the expected uris and titles match up (in any order)
+  // Check to see the expected uris and titles match up. If 'enable-actions'
+  // is specified, we check that the first specified match is the first
+  // controller value (as this is the "special" always selected item), but the
+  // rest can match in any order.
+  // If 'enable-actions' is not specified, they can match in any order.
   if (test.matches) {
     // Do not modify the test original matches.
     let matches = test.matches.slice();
 
-    for (let i = 0; i < controller.matchCount; i++) {
-      let value = controller.getValueAt(i);
-      let comment = controller.getCommentAt(i);
-      do_print("Looking for '" + value + "', '" + comment + "' in expected results...");
+    let firstIndexToCheck = 0;
+    if (test.searchParam && test.searchParam == "enable-actions") {
+      firstIndexToCheck = 1;
+      do_print("Checking first match is first autocomplete entry")
+      let controllerValue = controller.getValueAt(0);
+      let controllerComment = controller.getCommentAt(0);
+      let controllerStyle = controller.getStyleAt(0);
+      do_print("First match is '" + controllerValue + "', '" + controllerComment + "");
+      let controllerInfo = { controllerValue, controllerComment, controllerStyle };
+      Assert.ok(_check_autocomplete_matches(matches[0], controllerInfo), "first item is correct");
+      do_print("Checking rest of the matches");
+    }
+
+    for (let i = firstIndexToCheck; i < controller.matchCount; i++) {
+      let controllerValue = controller.getValueAt(i);
+      let controllerComment = controller.getCommentAt(i);
+      let controllerStyle = controller.getStyleAt(i);
+      let controllerInfo = { controllerValue, controllerComment, controllerStyle };
+      do_print("Looking for '" + controllerValue + "', '" + controllerComment + "' in expected results...");
       let j;
-      for (j = 0; j < matches.length; j++) {
+      for (j = firstIndexToCheck; j < matches.length; j++) {
         // Skip processed expected results
         if (matches[j] == undefined)
           continue;
-
-        let { uri, title, tags, searchEngine, style } = matches[j];
-        if (tags)
-          title += " \u2013 " + tags.sort().join(", ");
-        if (searchEngine)
-          title += TITLE_SEARCH_ENGINE_SEPARATOR + searchEngine;
-        if (style)
-          style = style.sort();
-        else
-          style = ["favicon"];
-
-        do_print("Checking against expected '" + uri.spec + "', '" + title + "'...");
-        // Got a match on both uri and title?
-        if (stripPrefix(uri.spec) == stripPrefix(value) && title == comment) {
+        if (_check_autocomplete_matches(matches[j], controllerInfo)) {
           do_print("Got a match at index " + j + "!");
-          let actualStyle = controller.getStyleAt(i).split(/\s+/).sort();
-          if (style)
-            Assert.equal(actualStyle.toString(), style.toString(), "Match should have expected style");
-
           // Make it undefined so we don't process it again
           matches[j] = undefined;
-          if (uri.spec.startsWith("moz-action:")) {
-            Assert.ok(actualStyle.indexOf("action") != -1, "moz-action results should always have 'action' in their style");
-          }
           break;
         }
       }
 
       // We didn't hit the break, so we must have not found it
       if (j == matches.length)
-        do_throw("Didn't find the current result ('" + value + "', '" + comment + "') in matches");
+        do_throw("Didn't find the current result ('" + controllerValue + "', '" + controllerComment + "') in matches");
     }
 
     Assert.equal(controller.matchCount, matches.length,
@@ -302,11 +329,62 @@ function makeActionURI(action, params) {
   return NetUtil.newURI(url);
 }
 
-// Hide all the search engines so they don't influence tests results.
-add_task(function ensure_no_search_engines() {
-  let count = {};
-  let engines = Services.search.getEngines(count);
-  for (let i = 0; i < count.value; i++) {
-    engines[i].hidden = true;
+// Creates a full "match" entry for a search result, suitable for passing as
+// an entry to check_autocomplete.
+function makeSearchMatch(input, extra = {}) {
+  // Note that counter-intuitively, the order the object properties are defined
+  // in the object passed to makeActionURI is important for check_autocomplete
+  // to match them :(
+  let params = {
+    engineName: extra.engineName || "MozSearch",
+    input,
+    searchQuery: extra.searchQuery || input,
+    alias: extra.alias, // may be undefined which is expected.
   }
+  return {
+    uri: makeActionURI("searchengine", params),
+    title: params.engineName,
+    style: [ "action", "searchengine" ],
+  }
+}
+
+// Creates a full "match" entry for a search result, suitable for passing as
+// an entry to check_autocomplete.
+function makeVisitMatch(input, url, extra = {}) {
+  // Note that counter-intuitively, the order the object properties are defined
+  // in the object passed to makeActionURI is important for check_autocomplete
+  // to match them :(
+  let params = {
+    url,
+    input,
+  }
+  return {
+    uri: makeActionURI("visiturl", params),
+    title: extra.title || url,
+    style: [ "action", "visiturl" ],
+  }
+}
+
+function makeSwitchToTabMatch(url, extra = {}) {
+  return {
+    uri: makeActionURI("switchtab", {url}),
+    title: extra.title || url,
+    style: [ "action", "switchtab" ],
+  }
+}
+
+// Ensure we have a default search engine and the keyword.enabled preference
+// set.
+add_task(function ensure_search_engine() {
+  // keyword.enabled is necessary for the tests to see keyword searches.
+  Services.prefs.setBoolPref("keyword.enabled", true);
+
+  // Remove any existing engines before adding ours.
+  for (let engine of Services.search.getEngines()) {
+    Services.search.removeEngine(engine);
+  }
+  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
+                                       "http://s.example.com/search");
+  let engine = Services.search.getEngineByName("MozSearch");
+  Services.search.currentEngine = engine;
 });
