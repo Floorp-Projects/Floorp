@@ -563,16 +563,18 @@ private:
     // Perform the encryption/decryption
     if (mEncrypt) {
       rv = MapSECStatus(PK11_Encrypt(symKey.get(), mMechanism, &param,
-                                     mResult.Elements(), &outLen, maxLen,
-                                     mData.Elements(), mData.Length()));
+                                     mResult.Elements(), &outLen,
+                                     mResult.Length(), mData.Elements(),
+                                     mData.Length()));
     } else {
       rv = MapSECStatus(PK11_Decrypt(symKey.get(), mMechanism, &param,
-                                     mResult.Elements(), &outLen, maxLen,
-                                     mData.Elements(), mData.Length()));
+                                     mResult.Elements(), &outLen,
+                                     mResult.Length(), mData.Elements(),
+                                     mData.Length()));
     }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
-    mResult.SetLength(outLen);
+    mResult.TruncateLength(outLen);
     return rv;
   }
 };
@@ -848,7 +850,7 @@ private:
     }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
-    mResult.SetLength(outLen);
+    mResult.TruncateLength(outLen);
     return NS_OK;
   }
 };
@@ -934,10 +936,10 @@ private:
     rv = MapSECStatus(PK11_DigestOp(ctx.get(), mData.Elements(), mData.Length()));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
     rv = MapSECStatus(PK11_DigestFinal(ctx.get(), mResult.Elements(),
-                                       &outLen, HASH_LENGTH_MAX));
+                                       &outLen, mResult.Length()));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
-    mResult.SetLength(outLen);
+    mResult.TruncateLength(outLen);
     return rv;
   }
 
