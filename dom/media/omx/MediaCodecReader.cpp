@@ -67,6 +67,33 @@ IsValidTimestampUs(int64_t aTimestamp)
   return aTimestamp >= INT64_C(0);
 }
 
+MediaCodecReader::VideoResourceListener::VideoResourceListener(
+  MediaCodecReader* aReader)
+  : mReader(aReader)
+{
+}
+
+MediaCodecReader::VideoResourceListener::~VideoResourceListener()
+{
+  mReader = nullptr;
+}
+
+void
+MediaCodecReader::VideoResourceListener::codecReserved()
+{
+  if (mReader) {
+    mReader->VideoCodecReserved();
+  }
+}
+
+void
+MediaCodecReader::VideoResourceListener::codecCanceled()
+{
+  if (mReader) {
+    mReader->VideoCodecCanceled();
+  }
+}
+
 MediaCodecReader::TrackInputCopier::~TrackInputCopier()
 {
 }
@@ -249,6 +276,7 @@ MediaCodecReader::MediaCodecReader(AbstractMediaDecoder* aDecoder)
   , mNextParserPosition(INT64_C(0))
   , mParsedDataLength(INT64_C(0))
 {
+  mVideoListener = new VideoResourceListener(this);
 }
 
 MediaCodecReader::~MediaCodecReader()
@@ -646,6 +674,14 @@ MediaCodecReader::ReadMetadata(MediaInfo* aInfo,
   UpdateIsWaitingMediaResources();
   if (IsWaitingMediaResources()) {
     return NS_OK;
+  }
+
+  // Configure video codec after the codecReserved.
+  if (mVideoTrack.mSource != nullptr) {
+    if (!ConfigureMediaCodec(mVideoTrack)) {
+      DestroyMediaCodec(mVideoTrack);
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // TODO: start streaming
@@ -1259,8 +1295,8 @@ MediaCodecReader::CreateTaskQueues()
 bool
 MediaCodecReader::CreateMediaCodecs()
 {
-  if (CreateMediaCodec(mLooper, mAudioTrack, nullptr) &&
-      CreateMediaCodec(mLooper, mVideoTrack, nullptr)) {
+  if (CreateMediaCodec(mLooper, mAudioTrack, false, nullptr) &&
+      CreateMediaCodec(mLooper, mVideoTrack, true, mVideoListener)) {
     return true;
   }
 
@@ -1270,6 +1306,7 @@ MediaCodecReader::CreateMediaCodecs()
 bool
 MediaCodecReader::CreateMediaCodec(sp<ALooper>& aLooper,
                                    Track& aTrack,
+                                   bool aAsync,
                                    wp<MediaCodecProxy::CodecResourceListener> aListener)
 {
   if (aTrack.mSource != nullptr && aTrack.mCodec == nullptr) {
@@ -1282,10 +1319,6 @@ MediaCodecReader::CreateMediaCodec(sp<ALooper>& aLooper,
 
     if (aTrack.mCodec == nullptr) {
       NS_WARNING("Couldn't create MediaCodecProxy");
-      return false;
-    }
-    if (!aTrack.mCodec->AskMediaCodecAndWait()) {
-      NS_WARNING("AskMediaCodecAndWait fail");
       return false;
     }
 
@@ -1310,8 +1343,16 @@ MediaCodecReader::CreateMediaCodec(sp<ALooper>& aLooper,
 #endif
     }
 
-    if (!aTrack.mCodec->allocated() || !ConfigureMediaCodec(aTrack)) {
-      NS_WARNING("Couldn't create and configure MediaCodec synchronously");
+    if (!aAsync && aTrack.mCodec->AskMediaCodecAndWait()) {
+      // Pending configure() and start() to codecReserved() if the creation
+      // should be asynchronous.
+      if (!aTrack.mCodec->allocated() || !ConfigureMediaCodec(aTrack)){
+        NS_WARNING("Couldn't create and configure MediaCodec synchronously");
+        DestroyMediaCodec(aTrack);
+        return false;
+      }
+    } else if (aAsync && !aTrack.mCodec->AsyncAskMediaCodec()) {
+      NS_WARNING("Couldn't request MediaCodec asynchronously");
       DestroyMediaCodec(aTrack);
       return false;
     }
@@ -1843,8 +1884,7 @@ MediaCodecReader::EnsureCodecFormatParsed(Track& aTrack)
         NS_WARNING("Couldn't get output buffers from MediaCodec");
         return false;
       }
-    } else if (status != -EAGAIN && status != INVALID_OPERATION) {
-      // FIXME: let INVALID_OPERATION pass?
+    } else if (status != -EAGAIN) {
       return false; // something wrong!!!
     }
     FillCodecInputData(aTrack);
@@ -1873,6 +1913,24 @@ MediaCodecReader::ClearColorConverterBuffer()
 {
   mColorConverterBuffer = nullptr;
   mColorConverterBufferSize = 0;
+}
+
+// Called on Binder thread.
+void
+MediaCodecReader::VideoCodecReserved()
+{
+  mDecoder->NotifyWaitingForResourcesStatusChanged();
+}
+
+// Called on Binder thread.
+void
+MediaCodecReader::VideoCodecCanceled()
+{
+  if (mVideoTrack.mTaskQueue) {
+    RefPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this, &MediaCodecReader::ReleaseCriticalResources);
+    mVideoTrack.mTaskQueue->Dispatch(task.forget());
+  }
 }
 
 } // namespace mozilla
