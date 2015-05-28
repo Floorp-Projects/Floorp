@@ -293,7 +293,7 @@ ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
   DestroyBuffers();
 
   mSurfaceFormat = aFormat;
-  mSize = gfx::IntSize(aRect.width, aRect.height);
+  mSize = IntSize(aRect.width, aRect.height);
   mTextureFlags = TextureFlagsForRotatedContentBufferFlags(aFlags);
 
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
