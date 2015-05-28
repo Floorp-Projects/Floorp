@@ -2005,7 +2005,7 @@ private:
 
       if (!mKeyUsages.IsEmpty()) {
         mJwk.mKey_ops.Construct();
-        if (!mJwk.mKey_ops.Value().AppendElements(mKeyUsages)) {
+        if (!mJwk.mKey_ops.Value().AppendElements(mKeyUsages, fallible)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
       }

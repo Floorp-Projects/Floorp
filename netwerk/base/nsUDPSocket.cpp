@@ -674,7 +674,7 @@ nsUDPSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
   SaveNetworkStats(false);
 
   FallibleTArray<uint8_t> data;
-  if(!data.AppendElements(buff, count)){
+  if (!data.AppendElements(buff, count, fallible)) {
     mCondition = NS_ERROR_UNEXPECTED;
     return;
   }

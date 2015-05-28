@@ -662,7 +662,7 @@ WebrtcGlobalParent::RecvGetLogResult(const int& aRequestId,
     CSFLogError(logTag, "Bad RequestId");
     return false;
   }
-  request->mResult.AppendElements(aLog);
+  request->mResult.AppendElements(aLog, fallible);
 
   auto next = request->GetNextParent();
   if (next) {
