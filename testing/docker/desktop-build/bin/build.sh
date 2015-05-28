@@ -52,12 +52,6 @@ set -x -e
 
 set -v
 
-# buildbot
-export CCACHE_COMPRESS=1
-export CCACHE_DIR=/builds/ccache
-export CCACHE_HASHDIR=
-export CCACHE_UMASK=002
-
 # Don't run the upload step; this is passed through mozharness to mach.  Once
 # the mozharness scripts are not run in Buildbot anymore, this can be moved to
 # Mozharness (or the upload step removed from mach entirely)
