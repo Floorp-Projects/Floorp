@@ -44,9 +44,10 @@
 
 namespace mozilla {
 
-using namespace mozilla::layers;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
+using namespace mozilla::layers;
+using namespace mozilla::media;
 
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractThreadDispatchInstead
 
@@ -197,6 +198,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mStartTime(-1),
   mEndTime(-1),
   mDurationSet(false),
+  mNetworkDuration(mTaskQueue, NullableTimeUnit(),
+                   "MediaDecoderStateMachine::mNetworkDuration (Mirror)"),
   mPlayState(mTaskQueue, MediaDecoder::PLAY_STATE_LOADING,
              "MediaDecoderStateMachine::mPlayState (Mirror)"),
   mNextPlayState(mTaskQueue, MediaDecoder::PLAY_STATE_PAUSED,
@@ -294,6 +297,7 @@ MediaDecoderStateMachine::InitializationTask()
   MOZ_ASSERT(OnTaskQueue());
 
   // Connect mirrors.
+  mNetworkDuration.Connect(mDecoder->CanonicalNetworkDuration());
   mPlayState.Connect(mDecoder->CanonicalPlayState());
   mNextPlayState.Connect(mDecoder->CanonicalNextPlayState());
   mLogicallySeeking.Connect(mDecoder->CanonicalLogicallySeeking());
@@ -307,6 +311,7 @@ MediaDecoderStateMachine::InitializationTask()
   mWatchManager.Watch(mVolume, &MediaDecoderStateMachine::VolumeChanged);
   mWatchManager.Watch(mLogicalPlaybackRate, &MediaDecoderStateMachine::LogicalPlaybackRateChanged);
   mWatchManager.Watch(mPreservesPitch, &MediaDecoderStateMachine::PreservesPitchChanged);
+  mWatchManager.Watch(mNetworkDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::LogicallySeekingChanged);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::UpdateStreamBlockingForPlayState);
@@ -1450,10 +1455,21 @@ private:
   double mSeekTarget;
 };
 
+void MediaDecoderStateMachine::RecomputeDuration()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+  // XXXbholley - This will do something more sensible in upcoming patches. This
+  // would be incorrect if we ever sent spurious state mirroring updates.
+  if (mNetworkDuration.Ref().isSome()) {
+    SetDuration(mNetworkDuration.Ref().ref().ToMicroseconds());
+  }
+}
+
 void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
 {
-  MOZ_ASSERT(NS_IsMainThread() || OnDecodeTaskQueue());
-  AssertCurrentThreadInMonitor();
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   if (aDuration < 0) {
     mDurationSet = false;
@@ -2555,6 +2571,7 @@ MediaDecoderStateMachine::FinishShutdown()
   mPendingWakeDecoder = nullptr;
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
+  mNetworkDuration.DisconnectIfConnected();
   mPlayState.DisconnectIfConnected();
   mNextPlayState.DisconnectIfConnected();
   mLogicallySeeking.DisconnectIfConnected();

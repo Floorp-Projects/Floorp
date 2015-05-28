@@ -33,6 +33,8 @@
 #include "nsProxyRelease.h"
 #include "nsIContentPolicy.h"
 
+using mozilla::media::TimeUnit;
+
 PRLogModuleInfo* gMediaResourceLog;
 #define RESOURCE_LOG(msg, ...) MOZ_LOG(gMediaResourceLog, mozilla::LogLevel::Debug, \
                                       (msg, ##__VA_ARGS__))
@@ -260,7 +262,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       if (NS_SUCCEEDED(rv)) {
         double duration = durationText.ToDouble(&ec);
         if (ec == NS_OK && duration >= 0) {
-          mDecoder->SetDuration(duration);
+          mDecoder->SetNetworkDuration(TimeUnit::FromSeconds(duration));
           // We know the resource must be bounded.
           dataIsBounded = true;
         }
