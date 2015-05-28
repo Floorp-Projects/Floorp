@@ -395,7 +395,7 @@ public:
   // replaying after the input as ended. In the latter case, the new source is
   // not connected to streams created by captureStreamUntilEnded.
 
-  void UpdateDecodedStream();
+  void UpdateStreamBlockingForPlayState();
 
   /**
    * Recreates mDecodedStream. Call this to create mDecodedStream at first,
