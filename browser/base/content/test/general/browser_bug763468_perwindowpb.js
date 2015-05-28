@@ -8,7 +8,6 @@ function test() {
   waitForExplicitFinish();
   let windowsToClose = [];
   let newTab;
-  let newTabPrefName = "browser.newtab.url";
   let newTabURL;
   let mode;
 
@@ -19,7 +18,7 @@ function test() {
         newTabURL = "about:privatebrowsing";
       } else {
         mode = "normal";
-        newTabURL = Services.prefs.getCharPref(newTabPrefName) || "about:blank";
+        newTabURL = NewTabURL.get();
       }
 
       is(aWindow.gBrowser.currentURI.spec, newTabURL,
