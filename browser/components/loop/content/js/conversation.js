@@ -163,7 +163,7 @@ loop.conversation = (function(mozL10n) {
       dispatcher: dispatcher, 
       mozLoop: navigator.mozLoop}), document.querySelector("#main"));
 
-    document.body.setAttribute("dir", mozL10n.getDirection());
+    document.body.setAttribute("dir", "rtl");//mozL10n.getDirection());
     document.body.setAttribute("platform", loop.shared.utils.getPlatform());
 
     dispatcher.dispatch(new sharedActions.GetWindowData({

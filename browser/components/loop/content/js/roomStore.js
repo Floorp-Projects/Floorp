@@ -91,6 +91,7 @@ loop.store = loop.store || {};
       "openRoom",
       "shareRoomUrl",
       "updateRoomContext",
+      "updateRoomContextDone",
       "updateRoomContextError",
       "updateRoomList"
     ],
@@ -115,7 +116,8 @@ loop.store = loop.store || {};
         error: null,
         pendingCreation: false,
         pendingInitialRetrieval: false,
-        rooms: []
+        rooms: [],
+        savingContext: false
       };
     },
 
@@ -473,6 +475,7 @@ loop.store = loop.store || {};
      * @param {sharedActions.UpdateRoomContext} actionData
      */
     updateRoomContext: function(actionData) {
+      this.setStoreState({ savingContext: true });
       this._mozLoop.rooms.get(actionData.roomToken, function(err, room) {
         if (err) {
           this.dispatchAction(new sharedActions.UpdateRoomContextError({
@@ -520,19 +523,26 @@ loop.store = loop.store || {};
         // When no properties have been set on the roomData object, there's nothing
         // to save.
         if (!Object.getOwnPropertyNames(roomData).length) {
+          this.dispatchAction(new sharedActions.UpdateRoomContextDone());
           return;
         }
 
         this.setStoreState({error: null});
         this._mozLoop.rooms.update(actionData.roomToken, roomData,
           function(err, data) {
-            if (err) {
-              this.dispatchAction(new sharedActions.UpdateRoomContextError({
-                error: err
-              }));
-            }
+            var action = err ?
+              new sharedActions.UpdateRoomContextError({ error: err }) :
+              new sharedActions.UpdateRoomContextDone();
+            this.dispatchAction(action);
           }.bind(this));
       }.bind(this));
+    },
+
+    /**
+     * Handles the updateRoomContextDone action.
+     */
+    updateRoomContextDone: function() {
+      this.setStoreState({ savingContext: false });
     },
 
     /**
@@ -541,7 +551,10 @@ loop.store = loop.store || {};
      * @param {sharedActions.UpdateRoomContextError} actionData
      */
     updateRoomContextError: function(actionData) {
-      this.setStoreState({error: actionData.error});
+      this.setStoreState({
+        error: actionData.error,
+        savingContext: false
+      });
     }
   });
 })(document.mozL10n || navigator.mozL10n);

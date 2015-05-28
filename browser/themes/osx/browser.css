@@ -42,9 +42,6 @@
   --urlbar-dropmarker-2x-url: url("chrome://browser/skin/urlbar-history-dropmarker@2x.png");
   --urlbar-dropmarker-2x-region: rect(0, 22px, 28px, 0);
   --urlbar-dropmarker-active-2x-region: rect(0, 44px, 28px, 22px);
-
-  --menupanel-list-style-image-2x: url(chrome://browser/skin/menuPanel@2x.png);
-  --menupanel-small-list-style-image-2x: url(chrome://browser/skin/menuPanel-small@2x.png);
 }
 
 #urlbar:-moz-lwtheme:not([focused="true"]),
@@ -725,10 +722,9 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 }
 
 %include ../shared/toolbarbuttons.inc.css
-
-@media not all and (min-resolution: 1.1dppx) {
 %include ../shared/menupanel.inc.css
 
+@media not all and (min-resolution: 1.1dppx) {
   #back-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(18px, 36px, 36px, 18px);
   }
@@ -1069,236 +1065,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-badge-container > .toolbarbutton-icon,
   :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
     width: 18px;
-  }
-
-  /* Menu panel and palette styles */
-
-  toolbaritem[sdkstylewidget="true"] > toolbarbutton,
-  :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > :-moz-any(@primaryToolbarButtons@) {
-    list-style-image: var(--menupanel-list-style-image-2x);
-  }
-
-  #home-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #home-button {
-    -moz-image-region: rect(0px, 256px, 64px, 192px);
-  }
-
-  #bookmarks-menu-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
-    -moz-image-region: rect(0px, 384px, 64px, 320px);
-  }
-
-  #bookmarks-menu-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 384px, 128px, 320px);
-  }
-
-  #history-panelmenu[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #history-panelmenu {
-    -moz-image-region: rect(0px, 448px, 64px, 384px);
-  }
-
-  #history-panelmenu[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 448px, 128px, 384px);
-  }
-
-  #downloads-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #downloads-button {
-    -moz-image-region: rect(0px, 512px, 64px, 448px);
-  }
-
-  #add-ons-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #add-ons-button {
-    -moz-image-region: rect(0px, 576px, 64px, 512px);
-  }
-
-  #open-file-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #open-file-button {
-    -moz-image-region: rect(0px, 640px, 64px, 576px);
-  }
-
-  #save-page-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #save-page-button {
-    -moz-image-region: rect(0px, 704px, 64px, 640px);
-  }
-
-  #sync-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #sync-button {
-    -moz-image-region: rect(0px, 768px, 64px, 704px);
-  }
-
-  #sync-button[cui-areatype="menu-panel"][status="active"] {
-    list-style-image: url(chrome://browser/skin/syncProgress-menuPanel@2x.png);
-    -moz-image-region: rect(0px, 64px, 64px, 0px);
-  }
-
-  #feed-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #feed-button {
-    -moz-image-region: rect(0px, 832px, 64px, 768px);
-  }
-
-  #feed-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 832px, 128px, 768px);
-  }
-
-  #social-share-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #social-share-button {
-    -moz-image-region: rect(0px, 896px, 64px, 832px);
-  }
-
-  #characterencoding-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #characterencoding-button {
-    -moz-image-region: rect(0, 960px, 64px, 896px);
-  }
-
-  #characterencoding-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 960px, 128px, 896px);
-  }
-
-  #new-window-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #new-window-button {
-    -moz-image-region: rect(0px, 1024px, 64px, 960px);
-  }
-
-  #e10s-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #e10s-button {
-    -moz-image-region: rect(0px, 1024px, 64px, 960px);
-  }
-
-  #webide-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #webide-button {
-    -moz-image-region: rect(0px, 1920px, 64px, 1856px);
-  }
-
-  #pocket-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #pocket-button {
-    -moz-image-region: rect(0px, 1984px, 64px, 1920px);
-  }
-
-  #pocket-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 1984px, 128px, 1920px);
-  }
-
-  #new-tab-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #new-tab-button {
-    -moz-image-region: rect(0px, 1088px, 64px, 1024px);
-  }
-
-  #privatebrowsing-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #privatebrowsing-button {
-    -moz-image-region: rect(0px, 1152px, 64px, 1088px);
-  }
-
-  #tabview-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #tabview-button {
-    -moz-image-region: rect(0px, 1216px, 64px, 1152px);
-  }
-
-  #find-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #find-button {
-    -moz-image-region: rect(0px, 1280px, 64px, 1216px);
-  }
-
-  #print-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #print-button {
-    -moz-image-region: rect(0px, 1344px, 64px, 1280px);
-  }
-
-  #fullscreen-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #fullscreen-button {
-    -moz-image-region: rect(0px, 1408px, 64px, 1344px);
-  }
-
-  #developer-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #developer-button {
-    -moz-image-region: rect(0px, 1472px, 64px, 1408px);
-  }
-
-  #developer-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 1472px, 128px, 1408px);
-  }
-
-  #preferences-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #preferences-button {
-    -moz-image-region: rect(0px, 1536px, 64px, 1472px);
-  }
-
-  #email-link-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #email-link-button {
-    -moz-image-region: rect(0px, 1600px, 64px, 1536px);
-  }
-
-  #sidebar-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #sidebar-button {
-    -moz-image-region: rect(0px, 1728px, 64px, 1664px);
-  }
-
-  #panic-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #panic-button {
-    -moz-image-region: rect(0, 1792px, 64px, 1728px);
-  }
-
-  #panic-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 1792px, 128px, 1728px);
-  }
-
-  #web-apps-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #web-apps-button {
-    -moz-image-region: rect(0, 1856px, 64px, 1792px);
-  }
-
-  toolbaritem[sdkstylewidget="true"] > toolbarbutton {
-    -moz-image-region: rect(0, 1664px, 64px, 1600px);
-  }
-
-  /* Footer and wide panel control icons */
-  #edit-controls@inAnyPanel@ > toolbarbutton,
-  #zoom-controls@inAnyPanel@ > toolbarbutton,
-  toolbarpaletteitem[place="palette"] > #edit-controls > toolbarbutton,
-  toolbarpaletteitem[place="palette"] > #zoom-controls > toolbarbutton {
-    list-style-image: var(--menupanel-small-list-style-image-2x);
-  }
-
-  /* Wide items like the Cut/Copy/Paste and Zoom controls are special in that their icons
-     are 16x16 when in the panel, but 18x18 when in a toolbar. */
-  #edit-controls@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon,
-  #zoom-controls@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon,
-  toolbarpaletteitem[place="palette"] > #edit-controls > toolbarbutton > .toolbarbutton-icon,
-  toolbarpaletteitem[place="palette"] > #zoom-controls > toolbarbutton > .toolbarbutton-icon {
-    width: 16px;
-  }
-
-  #edit-controls@inAnyPanel@ > #cut-button,
-  toolbarpaletteitem[place="palette"] > #edit-controls > #cut-button {
-    -moz-image-region: rect(0px, 64px, 32px, 32px);
-  }
-
-  #edit-controls@inAnyPanel@ > #copy-button,
-  toolbarpaletteitem[place="palette"] > #edit-controls > #copy-button {
-    -moz-image-region: rect(0px, 96px, 32px, 64px);
-  }
-
-  #edit-controls@inAnyPanel@ > #paste-button,
-  toolbarpaletteitem[place="palette"] > #edit-controls > #paste-button {
-    -moz-image-region: rect(0px, 128px, 32px, 96px);
-  }
-
-  #zoom-controls@inAnyPanel@ > #zoom-out-button,
-  toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
-    -moz-image-region: rect(0px, 160px, 32px, 128px);
-  }
-
-  #zoom-controls@inAnyPanel@ > #zoom-in-button,
-  toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
-    -moz-image-region: rect(0px, 192px, 32px, 160px);
-  }
-
-  #PanelUI-update-status > .toolbarbutton-icon,
-  #PanelUI-fxa-status > .toolbarbutton-icon,
-  #PanelUI-quit > .toolbarbutton-icon,
-  #PanelUI-customize > .toolbarbutton-icon,
-  #PanelUI-help > .toolbarbutton-icon {
-    width: 16px;
   }
 
   #add-share-provider {
@@ -2078,51 +1844,23 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 #page-proxy-favicon {
   margin: 0px;
   padding: 0px;
-  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#identity-box:hover:active > #page-proxy-favicon,
-#identity-box[open=true] > #page-proxy-favicon {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+@media not all and (min-resolution: 1.1dppx) {
+  #identity-box:hover:active > #page-proxy-favicon,
+  #identity-box[open=true] > #page-proxy-favicon {
+    -moz-image-region: rect(0, 32px, 16px, 16px);
+  }
+
+  /* The chromeUI identity-icon set includes three states,
+     but OS X only uses two of them. */
+  #identity-box.chromeUI:hover:active > #page-proxy-favicon,
+  #identity-box.chromeUI[open=true] > #page-proxy-favicon {
+    -moz-image-region: rect(0, 48px, 16px, 32px);
+  }
 }
 
-/* The chromeUI identity-icon set includes three states,
-   but OS X only uses two of them. */
-#identity-box.chromeUI:hover:active > #page-proxy-favicon,
-#identity-box.chromeUI[open=true] > #page-proxy-favicon {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
-@media (min-resolution: 2dppx) {
-  #page-proxy-favicon {
-    list-style-image: url(chrome://browser/skin/identity-icons-generic@2x.png);
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  .chromeUI > #page-proxy-favicon[pageproxystate="valid"] {
-    list-style-image: url(chrome://branding/content/identity-icons-brand@2x.png);
-  }
-
-  .verifiedDomain > #page-proxy-favicon[pageproxystate="valid"] {
-    list-style-image: url(chrome://browser/skin/identity-icons-https@2x.png);
-  }
-
-  .verifiedIdentity > #page-proxy-favicon[pageproxystate="valid"] {
-    list-style-image: url(chrome://browser/skin/identity-icons-https-ev@2x.png);
-  }
-
-  .mixedActiveContent > #page-proxy-favicon[pageproxystate="valid"] {
-    list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-active@2x.png);
-  }
-
-  .mixedDisplayContent > #page-proxy-favicon[pageproxystate="valid"] {
-    list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display@2x.png);
-  }
-
-  .mixedDisplayContentLoadedActiveBlocked > #page-proxy-favicon[pageproxystate="valid"] {
-    list-style-image: url(chrome://browser/skin/identity-icons-https-mixed-display@2x.png);
-  }
-
+@media (min-resolution: 1.1dppx) {
   #identity-box:hover:active > #page-proxy-favicon,
   #identity-box[open=true] > #page-proxy-favicon {
     -moz-image-region: rect(0, 64px, 32px, 32px);
@@ -4122,15 +3860,6 @@ window > chatbox {
 }
 
 @media (min-resolution: 2dppx) {
-  #customization-titlebar-visibility-button {
-    list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle@2x.png");
-    -moz-image-region: rect(0, 48px, 48px, 0);
-  }
-
-  #customization-titlebar-visibility-button[checked] {
-    -moz-image-region: rect(0, 96px, 48px, 48px);
-  }
-
   .customization-tipPanel-infoBox {
     background-image: url(chrome://browser/skin/customizableui/info-icon-customizeTip@2x.png);
     background-size: 25px 25px;

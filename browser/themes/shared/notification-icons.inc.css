@@ -312,14 +312,14 @@
   100% { transform: translateX(0); }
 }
 
-%ifdef XP_MACOSX
 /* HiDPI notification icons */
-
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.1dppx) {
   #notification-popup-box {
     border-image: url("chrome://browser/skin/urlbar-arrow@2x.png") 0 16 0 0 fill;
   }
 
+%ifdef XP_MACOSX
+/* OSX only until we have icons for Windows and Linux */
   .default-notification-icon,
   #default-notification-icon {
     list-style-image: url(chrome://global/skin/icons/information-32.png);
@@ -480,5 +480,5 @@
   #servicesInstall-notification-icon {
     list-style-image: url(chrome://browser/skin/social/services-16@2x.png);
   }
-}
 %endif
+}
