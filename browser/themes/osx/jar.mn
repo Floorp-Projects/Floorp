@@ -611,6 +611,7 @@ browser.jar:
   skin/classic/browser/warning16.png                        (../shared/warning16.png)
   skin/classic/browser/warning16@2x.png                     (../shared/warning16@2x.png)
 
+../extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/chrome.jar:
 % override chrome://browser/skin/feeds/audioFeedIcon.png                   chrome://browser/skin/feeds/feedIcon.png
 % override chrome://browser/skin/feeds/audioFeedIcon16.png                 chrome://browser/skin/feeds/feedIcon16.png
 % override chrome://browser/skin/feeds/videoFeedIcon.png                   chrome://browser/skin/feeds/feedIcon.png
