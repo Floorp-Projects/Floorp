@@ -15,6 +15,9 @@ var FullScreen = {
   init: function() {
     // called when we go into full screen, even if initiated by a web page script
     window.addEventListener("fullscreen", this, true);
+    window.addEventListener("MozDOMFullscreen:Exited", this,
+                            /* useCapture */ true,
+                            /* wantsUntrusted */ false);
     for (let type of this._MESSAGES) {
       window.messageManager.addMessageListener(type, this);
     }
@@ -97,6 +100,9 @@ var FullScreen = {
         if (event.propertyName == "opacity")
           this.cancelWarning();
         break;
+      case "MozDOMFullscreen:Exited":
+        this.cleanupDomFullscreen();
+        break;
     }
   },
 
@@ -125,15 +131,7 @@ var FullScreen = {
         if (this._isRemoteBrowser(browser)) {
           this._windowUtils.remoteFrameFullscreenReverted();
         }
-        document.documentElement.removeAttribute("inDOMFullscreen");
         this.cleanupDomFullscreen();
-        this.showNavToolbox();
-        // If we are still in fullscreen mode, re-hide
-        // the toolbox with animation.
-        if (window.fullScreen) {
-          this._shouldAnimate = true;
-          this.hideNavToolbox();
-        }
         break;
       }
     }
@@ -189,8 +187,6 @@ var FullScreen = {
       document.removeEventListener("keypress", this._keyToggleCallback, false);
       document.removeEventListener("popupshown", this._setPopupOpen, false);
       document.removeEventListener("popuphidden", this._setPopupOpen, false);
-
-      this.cleanupDomFullscreen();
     }
   },
 
@@ -201,6 +197,15 @@ var FullScreen = {
     gBrowser.tabContainer.removeEventListener("TabSelect", this.exitDomFullScreen);
     if (!this.useLionFullScreen)
       window.removeEventListener("activate", this);
+
+    document.documentElement.removeAttribute("inDOMFullscreen");
+    this.showNavToolbox();
+    // If we are still in fullscreen mode, re-hide
+    // the toolbox with animation.
+    if (window.fullScreen) {
+      this._shouldAnimate = true;
+      this.hideNavToolbox();
+    }
 
     window.messageManager
           .broadcastAsyncMessage("DOMFullscreen:CleanUp");
