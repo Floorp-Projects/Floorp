@@ -6,6 +6,9 @@
 
 #include "mozilla/dom/cache/Connection.h"
 
+#include "mozilla/dom/cache/DBSchema.h"
+#include "mozStorageHelper.h"
+
 namespace mozilla {
 namespace dom {
 namespace cache {
@@ -15,12 +18,32 @@ NS_IMPL_ISUPPORTS(cache::Connection, mozIStorageAsyncConnection,
 
 Connection::Connection(mozIStorageConnection* aBase)
   : mBase(aBase)
+  , mClosed(false)
 {
   MOZ_ASSERT(mBase);
 }
 
 Connection::~Connection()
 {
+  NS_ASSERT_OWNINGTHREAD(Connection);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(Close()));
+}
+
+NS_IMETHODIMP
+Connection::Close()
+{
+  NS_ASSERT_OWNINGTHREAD(Connection);
+
+  if (mClosed) {
+    return NS_OK;
+  }
+  mClosed = true;
+
+  // If we are closing here, then Cache must not have a transaction
+  // open anywhere else.  This should be guaranteed to succeed.
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(db::IncrementalVacuum(this)));
+
+  return mBase->Close();
 }
 
 // The following methods are all boilerplate that either forward to the
@@ -114,12 +137,6 @@ Connection::RemoveProgressHandler(mozIStorageProgressHandler** aHandlerOut)
 }
 
 // mozIStorageConnection methods
-
-NS_IMETHODIMP
-Connection::Close()
-{
-  return mBase->Close();
-}
 
 NS_IMETHODIMP
 Connection::Clone(bool aReadOnly, mozIStorageConnection** aConnectionOut)
