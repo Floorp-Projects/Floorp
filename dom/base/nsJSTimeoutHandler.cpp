@@ -409,7 +409,7 @@ NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow, Function& aFunction,
                           ErrorResult& aError)
 {
   FallibleTArray<JS::Heap<JS::Value> > args;
-  if (!args.AppendElements(aArguments)) {
+  if (!args.AppendElements(aArguments, fallible)) {
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }

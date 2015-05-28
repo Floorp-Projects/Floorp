@@ -20904,7 +20904,8 @@ VersionChangeOp::RunOnOwningThread()
         MOZ_ASSERT(!info->mLiveDatabases.IsEmpty());
 
         FallibleTArray<Database*> liveDatabases;
-        if (NS_WARN_IF(!liveDatabases.AppendElements(info->mLiveDatabases))) {
+        if (NS_WARN_IF(!liveDatabases.AppendElements(info->mLiveDatabases,
+                                                     fallible))) {
           deleteOp->SetFailureCode(NS_ERROR_OUT_OF_MEMORY);
         } else {
 #ifdef DEBUG
