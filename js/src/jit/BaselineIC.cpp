@@ -3367,9 +3367,11 @@ CheckHasNoSuchProperty(JSContext* cx, HandleObject obj, HandlePropertyName name,
     while (curObj) {
         if (curObj->isNative()) {
             // Don't handle proto chains with resolve hooks.
-            if (curObj->getClass()->resolve)
+            if (ClassMayResolveId(cx->names(), curObj->getClass(), NameToId(name), curObj) ||
+                curObj->getClass()->addProperty)
+            {
                 return false;
-
+            }
             if (curObj->as<NativeObject>().contains(cx, NameToId(name)))
                 return false;
         } else if (curObj != obj) {
@@ -3541,9 +3543,12 @@ IsCacheableSetPropAddSlot(JSContext* cx, JSObject* obj, Shape* oldShape,
         return false;
     }
 
-    // If object has a resolve hook, don't inline
-    if (obj->getClass()->resolve)
+    // Watch out for resolve or addProperty hooks.
+    if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj) ||
+        obj->getClass()->addProperty)
+    {
         return false;
+    }
 
     size_t chainDepth = 0;
     // Walk up the object prototype chain and ensure that all prototypes are
@@ -3559,10 +3564,11 @@ IsCacheableSetPropAddSlot(JSContext* cx, JSObject* obj, Shape* oldShape,
         if (protoShape && !protoShape->hasDefaultSetter())
             return false;
 
-        // Otherise, if there's no such property, watch out for a resolve hook that would need
-        // to be invoked and thus prevent inlining of property addition.
-        if (proto->getClass()->resolve)
-             return false;
+        // Otherwise, if there's no such property, watch out for a resolve hook
+        // that would need to be invoked and thus prevent inlining of property
+        // addition.
+        if (ClassMayResolveId(cx->names(), proto->getClass(), id, proto))
+            return false;
     }
 
     // Only add a IC entry if the dynamic slots didn't change when the shapes

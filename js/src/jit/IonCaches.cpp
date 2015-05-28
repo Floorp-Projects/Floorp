@@ -2948,7 +2948,7 @@ IsPropertySetInlineable(NativeObject* obj, HandleId id, MutableHandleShape pshap
 }
 
 static bool
-PrototypeChainShadowsPropertyAdd(JSObject* obj, jsid id)
+PrototypeChainShadowsPropertyAdd(JSContext* cx, JSObject* obj, jsid id)
 {
     // Walk up the object prototype chain and ensure that all prototypes
     // are native, and that all prototypes have no getter or setter
@@ -2966,7 +2966,7 @@ PrototypeChainShadowsPropertyAdd(JSObject* obj, jsid id)
         // Otherwise, if there's no such property, watch out for a resolve
         // hook that would need to be invoked and thus prevent inlining of
         // property addition.
-        if (proto->getClass()->resolve)
+        if (ClassMayResolveId(cx->names(), proto->getClass(), id, proto))
              return true;
     }
 
@@ -2974,7 +2974,7 @@ PrototypeChainShadowsPropertyAdd(JSObject* obj, jsid id)
 }
 
 static bool
-IsPropertyAddInlineable(NativeObject* obj, HandleId id, ConstantOrRegister val,
+IsPropertyAddInlineable(JSContext* cx, NativeObject* obj, HandleId id, ConstantOrRegister val,
                         HandleShape oldShape, bool needsTypeBarrier, bool* checkTypeset)
 {
     // If the shape of the object did not change, then this was not an add.
@@ -2989,8 +2989,8 @@ IsPropertyAddInlineable(NativeObject* obj, HandleId id, ConstantOrRegister val,
     // the shape must be the one we just added.
     MOZ_ASSERT(shape == obj->lastProperty());
 
-    // If object has a resolve hook, don't inline
-    if (obj->getClass()->resolve)
+    // Watch out for resolve hooks.
+    if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj))
         return false;
 
     // Likewise for an addProperty hook, since we'll need to invoke it.
@@ -3000,7 +3000,7 @@ IsPropertyAddInlineable(NativeObject* obj, HandleId id, ConstantOrRegister val,
     if (!obj->nonProxyIsExtensible() || !shape->writable())
         return false;
 
-    if (PrototypeChainShadowsPropertyAdd(obj, id))
+    if (PrototypeChainShadowsPropertyAdd(cx, obj, id))
         return false;
 
     // Don't attach if we are adding a property to an object which the new
@@ -3174,7 +3174,7 @@ CanAttachAddUnboxedExpando(JSContext* cx, HandleObject obj, HandleShape oldShape
 
     MOZ_ASSERT(newShape->hasDefaultSetter() && newShape->hasSlot() && newShape->writable());
 
-    if (PrototypeChainShadowsPropertyAdd(obj, id))
+    if (PrototypeChainShadowsPropertyAdd(cx, obj, id))
         return false;
 
     if (needsTypeBarrier && !CanInlineSetPropTypeCheck(obj, id, val, checkTypeset))
@@ -3292,7 +3292,7 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
         // The property did not exist before, now we can try to inline the property add.
         bool checkTypeset;
         if (!addedSetterStub && canCache == MaybeCanAttachAddSlot &&
-            IsPropertyAddInlineable(&obj->as<NativeObject>(), id, cache.value(), oldShape,
+            IsPropertyAddInlineable(cx, &obj->as<NativeObject>(), id, cache.value(), oldShape,
                                     cache.needsTypeBarrier(), &checkTypeset))
         {
             if (!cache.attachAddSlot(cx, outerScript, ion, obj, oldShape, oldGroup, checkTypeset))
