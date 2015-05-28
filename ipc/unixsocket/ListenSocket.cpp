@@ -215,7 +215,7 @@ ListenSocketIO::OnSocketCanAcceptWithoutBlocking()
   }
 
   mCOSocketIO->Accept(fd,
-                      reinterpret_cast<union sockaddr_any*>(&storage),
+                      reinterpret_cast<struct sockaddr*>(&storage),
                       addressLength);
 }
 

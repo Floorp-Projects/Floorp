@@ -8,6 +8,7 @@ from runner import (
         B2GTestResultMixin,
         BaseMarionetteOptions,
         BaseMarionetteTestRunner,
+        BrowserMobProxyTestCaseMixin,
         EnduranceOptionsMixin,
         EnduranceTestCaseMixin,
         HTMLReportingOptionsMixin,

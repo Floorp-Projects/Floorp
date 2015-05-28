@@ -3740,7 +3740,7 @@ CheckArgument(ModuleCompiler& m, ParseNode* arg, PropertyName** name)
     if (!IsDefinition(arg))
         return m.fail(arg, "duplicate argument name not allowed");
 
-    if (arg->pn_dflags & PND_DEFAULT)
+    if (arg->isKind(PNK_ASSIGN))
         return m.fail(arg, "default arguments not allowed");
 
     if (!CheckIdentifier(m, arg, arg->name()))

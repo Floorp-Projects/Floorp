@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="setTimeout(boom,0,1)">
+
+<splitter style="all: inherit;">
+    <box/>
+    <box/>
+    <box/>
+    <box/>
+    <iframe id="a" src="aaa"/>
+</splitter>
+
+<script id="script" xmlns="http://www.w3.org/1999/xhtml">
+
+    <![CDATA[//<![CDATA[
+
+var doc = document;
+function boom(i) {
+  if (i>6)
+    return;
+  var x=doc.getElementsByTagName('*');
+  if (x[i] && x[i+1]) {
+    var temp = x[i+1].getAttribute('style');
+    x[i+1].setAttribute('style', x[i].getAttribute('style'));
+    x[i].setAttribute('style', temp);
+  } else { 
+    return;
+  }
+  i++;
+  setTimeout(boom,50,i);
+}
+
+//]]>
+
+    </script>
+
+    </window>

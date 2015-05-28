@@ -1772,7 +1772,7 @@ class ASTSerializer
     bool statements(ParseNode* pn, NodeVector& elts);
     bool expressions(ParseNode* pn, NodeVector& elts);
     bool leftAssociate(ParseNode* pn, MutableHandleValue dst);
-    bool functionArgs(ParseNode* pn, ParseNode* pnargs, ParseNode* pndestruct, ParseNode* pnbody,
+    bool functionArgs(ParseNode* pn, ParseNode* pnargs, ParseNode* pnbody,
                       NodeVector& args, NodeVector& defaults, MutableHandleValue rest);
 
     bool sourceElement(ParseNode* pn, MutableHandleValue dst);
@@ -2544,28 +2544,6 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
                optExpression(head->pn_kid2, &test) &&
                optExpression(head->pn_kid3, &update) &&
                builder.forStatement(init, test, update, stmt, &pn->pn_pos, dst);
-      }
-
-      /* Synthesized by the parser when a for-in loop contains a variable initializer. */
-      case PNK_SEQ:
-      {
-        LOCAL_ASSERT(pn->pn_count == 2);
-
-        ParseNode* prelude = pn->pn_head;
-        ParseNode* loop = prelude->pn_next;
-
-        LOCAL_ASSERT(prelude->isKind(PNK_VAR) && loop->isKind(PNK_FOR));
-
-        RootedValue var(cx);
-        if (!variableDeclaration(prelude, false, &var))
-            return false;
-
-        ParseNode* head = loop->pn_left;
-        MOZ_ASSERT(head->isKind(PNK_FORIN));
-
-        RootedValue stmt(cx);
-
-        return statement(loop->pn_right, &stmt) && forIn(loop, head, var, stmt, dst);
       }
 
       case PNK_BREAK:
@@ -3434,40 +3412,15 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
         pnbody = pn;
     }
 
-    ParseNode* pndestruct;
-
-    /* Extract the destructuring assignments. */
-    if (pnbody->isArity(PN_LIST) && (pnbody->pn_xflags & PNX_DESTRUCT)) {
-        ParseNode* head = pnbody->pn_head;
-        LOCAL_ASSERT(head && head->isKind(PNK_SEMI));
-
-        pndestruct = head->pn_kid;
-        LOCAL_ASSERT(pndestruct);
-        LOCAL_ASSERT(pndestruct->isKind(PNK_VAR));
-    } else {
-        pndestruct = nullptr;
-    }
-
     /* Serialize the arguments and body. */
     switch (pnbody->getKind()) {
       case PNK_RETURN: /* expression closure, no destructured args */
-        return functionArgs(pn, pnargs, nullptr, pnbody, args, defaults, rest) &&
+        return functionArgs(pn, pnargs, pnbody, args, defaults, rest) &&
                expression(pnbody->pn_left, body);
-
-      case PNK_SEQ:    /* expression closure with destructured args */
-      {
-        ParseNode* pnstart = pnbody->pn_head->pn_next;
-        LOCAL_ASSERT(pnstart && pnstart->isKind(PNK_RETURN));
-
-        return functionArgs(pn, pnargs, pndestruct, pnbody, args, defaults, rest) &&
-               expression(pnstart->pn_left, body);
-      }
 
       case PNK_STATEMENTLIST:     /* statement closure */
       {
-        ParseNode* pnstart = (pnbody->pn_xflags & PNX_DESTRUCT)
-                               ? pnbody->pn_head->pn_next
-                               : pnbody->pn_head;
+        ParseNode* pnstart = pnbody->pn_head;
 
         // Skip over initial yield in generator.
         if (pnstart && pnstart->isKind(PNK_YIELD)) {
@@ -3475,7 +3428,7 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
             pnstart = pnstart->pn_next;
         }
 
-        return functionArgs(pn, pnargs, pndestruct, pnbody, args, defaults, rest) &&
+        return functionArgs(pn, pnargs, pnbody, args, defaults, rest) &&
                functionBody(pnstart, &pnbody->pn_pos, body);
       }
 
@@ -3485,70 +3438,54 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
 }
 
 bool
-ASTSerializer::functionArgs(ParseNode* pn, ParseNode* pnargs, ParseNode* pndestruct,
+ASTSerializer::functionArgs(ParseNode* pn, ParseNode* pnargs,
                             ParseNode* pnbody, NodeVector& args, NodeVector& defaults,
                             MutableHandleValue rest)
 {
-    uint32_t i = 0;
-    ParseNode* arg = pnargs ? pnargs->pn_head : nullptr;
-    ParseNode* destruct = pndestruct ? pndestruct->pn_head : nullptr;
+    if (!pnargs)
+        return true;
+
     RootedValue node(cx);
     bool defaultsNull = true;
     MOZ_ASSERT(defaults.empty(),
                "must be initially empty for it to be proper to clear this "
                "when there are no defaults");
 
-    /*
-     * Arguments are found in potentially two different places: 1) the
-     * argsbody sequence (which ends with the body node), or 2) a
-     * destructuring initialization at the beginning of the body. Loop
-     * |arg| through the argsbody and |destruct| through the initial
-     * destructuring assignments, stopping only when we've exhausted
-     * both.
-     */
-    while ((arg && arg != pnbody) || destruct) {
-        if (destruct && destruct->pn_right->frameSlot() == i) {
-            if (!pattern(destruct->pn_left, &node) ||
-                !args.append(node) || !defaults.append(NullValue()))
-            {
-                return false;
+    for (ParseNode* arg = pnargs->pn_head; arg && arg != pnbody; arg = arg->pn_next) {
+        MOZ_ASSERT(arg->isKind(PNK_NAME) || arg->isKind(PNK_ASSIGN));
+        ParseNode* argName = nullptr;
+        ParseNode* defNode = nullptr;
+        if (arg->isKind(PNK_ASSIGN)) {
+            argName = arg->pn_left;
+            defNode = arg->pn_right;
+        } else if (arg->pn_atom == cx->names().empty) {
+            ParseNode* destruct = arg->expr();
+            if (destruct->isKind(PNK_ASSIGN)) {
+                defNode = destruct->pn_right;
+                destruct = destruct->pn_left;
             }
-            destruct = destruct->pn_next;
-        } else if (arg && arg != pnbody) {
-            /*
-             * We don't check that arg->frameSlot() == i since we
-             * can't call that method if the arg def has been turned
-             * into a use, e.g.:
-             *
-             *     function(a) { function a() { } }
-             *
-             * There's no other way to ask a non-destructuring arg its
-             * index in the formals list, so we rely on the ability to
-             * ask destructuring args their index above.
-             */
-            MOZ_ASSERT(arg->isKind(PNK_NAME) || arg->isKind(PNK_ASSIGN));
-            ParseNode* argName = arg->isKind(PNK_NAME) ? arg : arg->pn_left;
+            if (!pattern(destruct, &node) || !args.append(node))
+                return false;
+        } else {
+            argName = arg;
+        }
+        if (argName) {
             if (!identifier(argName, &node))
                 return false;
             if (rest.isUndefined() && arg->pn_next == pnbody)
                 rest.setObject(node.toObject());
             else if (!args.append(node))
                 return false;
-            if (arg->pn_dflags & PND_DEFAULT) {
-                defaultsNull = false;
-                ParseNode* expr = arg->expr();
-                RootedValue def(cx);
-                if (!expression(expr, &def) || !defaults.append(def))
-                    return false;
-            } else {
-                if (!defaults.append(NullValue()))
-                    return false;
-            }
-            arg = arg->pn_next;
-        } else {
-            LOCAL_NOT_REACHED("missing function argument");
         }
-        ++i;
+        if (defNode) {
+            defaultsNull = false;
+            RootedValue def(cx);
+            if (!expression(defNode, &def) || !defaults.append(def))
+                return false;
+        } else {
+            if (!defaults.append(NullValue()))
+                return false;
+        }
     }
     MOZ_ASSERT(!rest.isUndefined());
 

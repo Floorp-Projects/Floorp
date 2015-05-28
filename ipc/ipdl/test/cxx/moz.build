@@ -55,12 +55,9 @@ if CONFIG['OS_ARCH'] == 'Linux':
     ]
 
 SOURCES += [
+    '!IPDLUnitTests.cpp',
     'IPDLUnitTestProcessChild.cpp',
     'IPDLUnitTestSubprocess.cpp',
-]
-
-GENERATED_SOURCES += [
-    'IPDLUnitTests.cpp',
 ]
 
 IPDL_SOURCES += [

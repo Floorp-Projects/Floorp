@@ -6,35 +6,35 @@
 
 DIST_INSTALL = False
 
-UNIFIED_SOURCES += [ '%s/%s' % (relative_path, p) for p in [
+UNIFIED_SOURCES += [
     'nptest.cpp',
     'nptest_utils.cpp',
-]]
+]
 
 UNIFIED_SOURCES += [
-    'nptest_name.cpp',
+    '%s/nptest_name.cpp' % relative_path,
 ]
 
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 if toolkit == 'cocoa':
     UNIFIED_SOURCES += [
-        relative_path + '/nptest_macosx.mm'
+        'nptest_macosx.mm'
     ]
 elif toolkit in ('gtk2', 'gtk3'):
     UNIFIED_SOURCES += [
-        relative_path + '/nptest_gtk2.cpp',
+        'nptest_gtk2.cpp',
     ]
 elif toolkit == 'android':
     UNIFIED_SOURCES += [
-        relative_path + '/nptest_droid.cpp',
+        'nptest_droid.cpp',
     ]
 elif toolkit == 'qt':
     UNIFIED_SOURCES += [
-        relative_path + '/nptest_qt.cpp',
+        'nptest_qt.cpp',
     ]
 elif toolkit == 'windows':
     UNIFIED_SOURCES += [
-        relative_path + '/nptest_windows.cpp',
+        'nptest_windows.cpp',
     ]
     OS_LIBS += [
         'msimg32',
