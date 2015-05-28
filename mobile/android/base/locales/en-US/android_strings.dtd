@@ -156,6 +156,8 @@
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
 <!ENTITY pref_category_logins "Logins">
 <!ENTITY pref_remember_signons "Remember passwords">
+<!ENTITY pref_open_external_urls_privately_title "Open links in Private browsing">
+<!ENTITY pref_open_external_urls_privately_summary "For all external links opened in &brandShortName;">
 <!ENTITY pref_manage_logins "Manage logins">
 
 <!ENTITY pref_category_home "Home">

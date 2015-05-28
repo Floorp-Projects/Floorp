@@ -26,7 +26,7 @@ add_task(function*() {
   }
 });
 
-function testChangeUnsavedFileExternally(projecteditor, filePath, newData) {
+function* testChangeUnsavedFileExternally(projecteditor, filePath, newData) {
   info ("Testing file external changes for: " + filePath);
 
   let editor = projecteditor.currentEditor;
@@ -57,7 +57,7 @@ function testChangeUnsavedFileExternally(projecteditor, filePath, newData) {
   info ("Finished checking saving for " + filePath);
 }
 
-function testChangeFileExternally(projecteditor, filePath, newData) {
+function* testChangeFileExternally(projecteditor, filePath, newData) {
   info ("Testing file external changes for: " + filePath);
 
   let editor = projecteditor.currentEditor;

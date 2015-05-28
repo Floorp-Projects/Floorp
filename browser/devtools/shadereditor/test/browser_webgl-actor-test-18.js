@@ -5,7 +5,7 @@
  * Tests the `getPixel` actor method works across threads.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(MULTIPLE_CONTEXTS_URL);
   front.setup({ reload: true });
 

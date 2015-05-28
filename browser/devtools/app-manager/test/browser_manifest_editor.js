@@ -48,7 +48,7 @@ function waitForUpdate() {
 }
 
 function changeManifestValue(key, value) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let propElem = gManifestWindow.document
                    .querySelector("[id ^= '" + key + "']");
     is(propElem.querySelector(".name").value, key,
@@ -74,7 +74,7 @@ function changeManifestValue(key, value) {
 }
 
 function changeManifestValueBad(key, value) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let propElem = gManifestWindow.document
                    .querySelector("[id ^= '" + key + "']");
     is(propElem.querySelector(".name").value, key,
@@ -102,7 +102,7 @@ function changeManifestValueBad(key, value) {
 
 function addNewManifestProperty(parent, key, value) {
   info("Adding new property - parent: " + parent + "; key: " + key + "; value: " + value + "\n\n");
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let parentElem = gManifestWindow.document
                      .querySelector("[id ^= '" + parent + "']");
     ok(parentElem, "Found parent element: " + parentElem.id);
@@ -143,7 +143,7 @@ function addNewManifestProperty(parent, key, value) {
 }
 
 function addNewManifestPropertyBad(parent, key, value) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let parentElem = gManifestWindow.document
                      .querySelector("[id ^= '" + parent + "']");
     ok(parentElem,
@@ -176,7 +176,7 @@ function addNewManifestPropertyBad(parent, key, value) {
 function removeManifestProperty(parent, key) {
   info("*** Remove property test ***");
 
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     let parentElem = gManifestWindow.document
                      .querySelector("[id ^= '" + parent + "']");
     ok(parentElem, "Found parent element");

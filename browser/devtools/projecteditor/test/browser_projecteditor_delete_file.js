@@ -28,7 +28,7 @@ function openContextMenuOn(node) {
   );
 }
 
-function testDeleteOnRoot(projecteditor, container) {
+function* testDeleteOnRoot(projecteditor, container) {
   let popup = projecteditor.contextMenuPopup;
   let oncePopupShown = onPopupShow(popup);
   openContextMenuOn(container.label);

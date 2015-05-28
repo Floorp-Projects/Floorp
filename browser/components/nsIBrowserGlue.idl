@@ -23,7 +23,7 @@ interface nsIDOMWindow;
  *
  */ 
 
-[scriptable, uuid(ea083cb7-6b9d-4695-8b34-2e8f6ce2a860)]
+[scriptable, uuid(b0e7c156-d00c-4605-a77d-27c7418f23ae)]
 interface nsIBrowserGlue : nsISupports
 {
   /** 
@@ -34,9 +34,4 @@ interface nsIBrowserGlue : nsISupports
    *
    */
   void sanitize(in nsIDOMWindow aParentWindow);
-
-  /**
-   * Gets the most recent window that's a browser (but not a popup)
-   */
-  nsIDOMWindow getMostRecentBrowserWindow();
 };

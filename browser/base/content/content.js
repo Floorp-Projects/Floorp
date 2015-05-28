@@ -664,3 +664,73 @@ addMessageListener("ContextMenu:BookmarkFrame", (message) => {
                    { title: frame.title,
                      description: PlacesUIUtils.getDescriptionFromDocument(frame) });
 });
+
+addMessageListener("ContextMenu:SearchFieldBookmarkData", (message) => {
+  let node = message.objects.target;
+
+  let charset = node.ownerDocument.characterSet;
+
+  let formBaseURI = BrowserUtils.makeURI(node.form.baseURI,
+                                         charset);
+
+  let formURI = BrowserUtils.makeURI(node.form.getAttribute("action"),
+                                     charset,
+                                     formBaseURI);
+
+  let spec = formURI.spec;
+
+  let isURLEncoded =
+               (node.form.method.toUpperCase() == "POST"
+                && (node.form.enctype == "application/x-www-form-urlencoded" ||
+                    node.form.enctype == ""));
+
+  let title = node.ownerDocument.title;
+  let description = PlacesUIUtils.getDescriptionFromDocument(node.ownerDocument);
+
+  let formData = [];
+
+  function escapeNameValuePair(aName, aValue, aIsFormUrlEncoded) {
+    if (aIsFormUrlEncoded)
+      return escape(aName + "=" + aValue);
+    else
+      return escape(aName) + "=" + escape(aValue);
+  }
+
+  for (let el of node.form.elements) {
+    if (!el.type) // happens with fieldsets
+      continue;
+
+    if (el == node) {
+      formData.push((isURLEncoded) ? escapeNameValuePair(el.name, "%s", true) :
+                                     // Don't escape "%s", just append
+                                     escapeNameValuePair(el.name, "", false) + "%s");
+      continue;
+    }
+
+    let type = el.type.toLowerCase();
+
+    if (((el instanceof content.HTMLInputElement && el.mozIsTextField(true)) ||
+        type == "hidden" || type == "textarea") ||
+        ((type == "checkbox" || type == "radio") && el.checked)) {
+      formData.push(escapeNameValuePair(el.name, el.value, isURLEncoded));
+    } else if (el instanceof content.HTMLSelectElement && el.selectedIndex >= 0) {
+      for (let j=0; j < el.options.length; j++) {
+        if (el.options[j].selected)
+          formData.push(escapeNameValuePair(el.name, el.options[j].value,
+                                            isURLEncoded));
+      }
+    }
+  }
+
+  let postData;
+
+  if (isURLEncoded)
+    postData = formData.join("&");
+  else {
+    let separator = spec.includes("?") ? "&" : "?";
+    spec += separator + formData.join("&");
+  }
+
+  sendAsyncMessage("ContextMenu:SearchFieldBookmarkData:Result",
+                   { spec, title, description, postData, charset });
+});

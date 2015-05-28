@@ -31,9 +31,13 @@ this.StoragePanel = function StoragePanel(panelWin, toolbox) {
 exports.StoragePanel = StoragePanel;
 
 StoragePanel.prototype = {
-  get target() this._toolbox.target,
+  get target() {
+    return this._toolbox.target;
+  },
 
-  get panelWindow() this._panelWin,
+  get panelWindow() {
+    return this._panelWin;
+  },
 
   /**
    * open is effectively an asynchronous constructor

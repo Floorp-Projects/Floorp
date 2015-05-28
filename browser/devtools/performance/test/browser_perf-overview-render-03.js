@@ -4,7 +4,7 @@
 /**
  * Tests that the overview graphs share the exact same width and scaling.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
