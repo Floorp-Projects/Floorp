@@ -10,6 +10,8 @@ let promise = devtools.require("resource://gre/modules/Promise.jsm").Promise;
 let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
 let clipboard = devtools.require("sdk/clipboard");
 let {setTimeout, clearTimeout} = devtools.require("sdk/timers");
+let {promiseInvoke} = devtools.require("devtools/async-utils");
+
 
 // All test are asynchronous
 waitForExplicitFinish();
@@ -108,24 +110,36 @@ function reloadPage(inspector) {
 }
 
 /**
+ * Open the toolbox, with given tool visible.
+ * @param {string} toolId ID of the tool that should be visible by default.
+ * @return a promise that resolves when the tool is ready.
+ */
+function openToolbox(toolId) {
+  info("Opening the inspector panel");
+  let deferred = promise.defer();
+
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  gDevTools.showToolbox(target, toolId).then(function(toolbox) {
+    info("The toolbox is open");
+    deferred.resolve({toolbox: toolbox});
+  }).then(null, console.error);
+
+  return deferred.promise;
+}
+
+/**
  * Open the toolbox, with the inspector tool visible.
  * @return a promise that resolves when the inspector is ready
  */
 function openInspector() {
-  info("Opening the inspector panel");
-  let def = promise.defer();
-
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-    info("The toolbox is open");
+  return openToolbox("inspector").then(({toolbox}) => {
     let inspector = toolbox.getCurrentPanel();
-    inspector.once("inspector-updated", () => {
+    let eventId = "inspector-updated";
+    return inspector.once("inspector-updated").then(() => {
       info("The inspector panel is active and ready");
-      def.resolve({toolbox: toolbox, inspector: inspector});
+      return {toolbox: toolbox, inspector: inspector};
     });
-  }).then(null, console.error);
-
-  return def.promise;
+  });
 }
 
 /**
@@ -698,4 +712,65 @@ function contextMenuClick(element) {
        false, false, false, button, null);
 
   element.dispatchEvent(evt);
+}
+
+/**
+ * Registers new backend tab actor.
+ *
+ * @param {DebuggerClient} client RDP client object (toolbox.target.client)
+ * @param {Object} options Configuration object with the following options:
+ *
+ * - moduleUrl {String}: URL of the module that contains actor implementation.
+ * - prefix {String}: prefix of the actor.
+ * - actorClass {ActorClass}: Constructor object for the actor.
+ * - frontClass {FrontClass}: Constructor object for the front part
+ * of the registered actor.
+ *
+ * @returns {Promise} A promise that is resolved when the actor is registered.
+ * The resolved value has two properties:
+ *
+ * - registrar {ActorActor}: A handle to the registered actor that allows
+ * unregistration.
+ * - form {Object}: The JSON actor form provided by the server.
+ */
+function registerTabActor(client, options) {
+  let moduleUrl = options.moduleUrl;
+
+  // Since client.listTabs doesn't use promises we need to
+  // 'promisify' it using 'promiseInvoke' helper method.
+  // This helps us to chain all promises and catch errors.
+  return promiseInvoke(client, client.listTabs).then(response => {
+    let config = {
+      prefix: options.prefix,
+      constructor: options.actorClass,
+      type: { tab: true },
+    };
+
+    // Register the custom actor on the backend.
+    let registry = ActorRegistryFront(client, response);
+    return registry.registerActor(moduleUrl, config).then(registrar => {
+      return client.getTab().then(response => {
+        return {
+          registrar: registrar,
+          form: response.tab
+        };
+      });
+    });
+  });
+}
+
+/**
+ * A helper for unregistering an existing backend actor.
+ *
+ * @param {ActorActor} registrar A handle to the registered actor
+ * that has been received after registration.
+ * @param {Front} Corresponding front object.
+ *
+ * @returns A promise that is resolved when the unregistration
+ * has finished.
+ */
+function unregisterActor(registrar, front) {
+  return front.detach().then(() => {
+    return registrar.unregister();
+  });
 }
