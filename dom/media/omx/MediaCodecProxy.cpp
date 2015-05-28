@@ -138,6 +138,20 @@ MediaCodecProxy::AskMediaCodecAndWait()
   return true;
 }
 
+bool
+MediaCodecProxy::AsyncAskMediaCodec()
+{
+  if ((strncasecmp(mCodecMime.get(), "video/", 6) != 0) ||
+      (mResourceHandler == nullptr)) {
+    return false;
+  }
+  // request video codec
+  mResourceHandler->requestResource(mCodecEncoder
+    ? IMediaResourceManagerService::HW_VIDEO_ENCODER
+    : IMediaResourceManagerService::HW_VIDEO_DECODER);
+  return true;
+}
+
 void
 MediaCodecProxy::SetMediaCodecFree()
 {
