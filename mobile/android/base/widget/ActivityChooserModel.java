@@ -23,11 +23,13 @@ package org.mozilla.gecko.widget;
 // Mozilla: New import
 import android.accounts.Account;
 import android.content.pm.PackageManager;
+
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.TabsAccessor;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
-import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.R;
 import java.io.File;
@@ -38,6 +40,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.database.DataSetObservable;
 import android.os.AsyncTask;
 import android.text.TextUtils;
@@ -1311,8 +1314,19 @@ public class ActivityChooserModel extends DataSetObservable {
             return false;
         }
 
-        final ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(mContext);
-        return db.clientsCount() > 0;
+        final BrowserDB browserDB = GeckoProfile.get(mContext).getDB();
+        final TabsAccessor tabsAccessor = browserDB.getTabsAccessor();
+        final Cursor remoteClientsCursor = tabsAccessor
+                .getRemoteClientsByRecencyCursor(mContext);
+        if (remoteClientsCursor == null) {
+            return false;
+        }
+
+        try {
+            return remoteClientsCursor.getCount() > 0;
+        } finally {
+            remoteClientsCursor.close();
+        }
     }
 
     /**
