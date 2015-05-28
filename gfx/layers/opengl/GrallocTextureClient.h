@@ -19,6 +19,10 @@ class MediaBuffer;
 };
 
 namespace mozilla {
+namespace gl {
+class SharedSurface;
+}
+
 namespace layers {
 
 /**
