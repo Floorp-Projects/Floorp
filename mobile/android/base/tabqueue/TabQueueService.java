@@ -31,7 +31,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
