@@ -70,7 +70,7 @@ interface nsIURIFixupInfo : nsISupports
 /**
  * Interface implemented by objects capable of fixing up strings into URIs
  */
-[scriptable, uuid(d2a78abe-e678-4103-9bcc-dd1377460c44)]
+[scriptable, uuid(1da7e9d4-620b-4949-849a-1cd6077b1b2d)]
 interface nsIURIFixup : nsISupports
 {
     /** No fixup flags. */
@@ -89,18 +89,12 @@ interface nsIURIFixup : nsISupports
      */
     const unsigned long FIXUP_FLAGS_MAKE_ALTERNATE_URI = 2;
 
-    /**
-     * For an input that may be just a domain with only 1 level (eg, "mozilla"),
-     * require that the host be whitelisted.
-     *
-     * Overridden by FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP.
-     */
-    const unsigned long FIXUP_FLAG_REQUIRE_WHITELISTED_HOST = 4;
-
     /*
      * Fix common scheme typos.
      */
     const unsigned long FIXUP_FLAG_FIX_SCHEME_TYPOS = 8;
+
+    /* NB: If adding an extra flag, 4 is free (again) */
 
     /**
      * Converts an internal URI (e.g. a wyciwyg URI) into one which we can
@@ -155,5 +149,18 @@ interface nsIURIFixup : nsISupports
      */
     nsIURIFixupInfo keywordToURI(in AUTF8String aKeyword,
                                  [optional] out nsIInputStream aPostData);
+
+    /**
+     * Returns true if the specified domain is whitelisted and false otherwise.
+     * A whitelisted domain is relevant when we have a single word and can't be
+     * sure whether to treat the word as a host name or should instead be
+     * treated as a search term.
+     *
+     * @param aDomain A domain name to query.
+     * @param aDotPos The position of the first '.' character in aDomain, or
+     *                -1 if no '.' character exists.
+     */
+    bool isDomainWhitelisted(in AUTF8String aDomain,
+                             in uint32_t aDotPos);
 };
 

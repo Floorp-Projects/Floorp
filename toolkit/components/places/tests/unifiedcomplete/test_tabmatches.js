@@ -7,11 +7,6 @@
 let gTabRestrictChar = "%";
 
 add_task(function* test_tab_matches() {
-  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-                                       "http://s.example.com/search");
-  let engine = Services.search.getEngineByName("MozSearch");
-  Services.search.currentEngine = engine;
-
   let uri1 = NetUtil.newURI("http://abc.com/");
   let uri2 = NetUtil.newURI("http://xyz.net/");
   let uri3 = NetUtil.newURI("about:mozilla");

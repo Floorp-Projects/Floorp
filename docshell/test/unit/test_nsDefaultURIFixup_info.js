@@ -38,7 +38,6 @@ let flagInputs = [
   urifixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
   urifixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI,
   urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
-  urifixup.FIXUP_FLAG_REQUIRE_WHITELISTED_HOST,
 ];
 
 flagInputs.concat([
@@ -56,7 +55,6 @@ flagInputs.concat([
     alternateURI: "", // Expected alternateURI
     keywordLookup: false, // Whether a keyword lookup is expected
     protocolChange: false, // Whether a protocol change is expected
-    affectedByWhitelist: false, // Whether the input host is affected by the whitelist
     inWhitelist: false, // Whether the input host is in the whitelist
     affectedByDNSForSingleHosts: false, // Whether the input host could be a host, but is normally assumed to be a keyword query
   }
@@ -176,25 +174,21 @@ let testcases = [ {
     fixedURI: "http://[::1]/",
     alternateURI: "http://[::1]/",
     protocolChange: true,
-    affectedByWhitelist: true
   }, {
     input: "[::1]/",
     fixedURI: "http://[::1]/",
     alternateURI: "http://[::1]/",
     protocolChange: true,
-    affectedByWhitelist: true,
   }, {
     input: "[::1]:8000",
     fixedURI: "http://[::1]:8000/",
     alternateURI: "http://[::1]:8000/",
     protocolChange: true,
-    affectedByWhitelist: true,
   }, {
     input: "[::1]:8000/",
     fixedURI: "http://[::1]:8000/",
     alternateURI: "http://[::1]:8000/",
     protocolChange: true,
-    affectedByWhitelist: true,
   }, {
     input: "[[::1]]/",
     keywordLookup: true,
@@ -204,7 +198,6 @@ let testcases = [ {
     fixedURI: "http://[fe80:cd00:0:cde:1257:0:211e:729c]/",
     alternateURI: "http://[fe80:cd00:0:cde:1257:0:211e:729c]/",
     protocolChange: true,
-    affectedByWhitelist: true
   }, {
     input: "[64:ff9b::8.8.8.8]",
     fixedURI: "http://[64:ff9b::8.8.8.8]/",
@@ -223,7 +216,6 @@ let testcases = [ {
     alternateURI: "http://[::1][100/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "[::1]]",
@@ -235,21 +227,18 @@ let testcases = [ {
     alternateURI: "http://www.1234.com/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "host/foo.txt",
     fixedURI: "http://host/foo.txt",
     alternateURI: "http://www.host.com/foo.txt",
     protocolChange: true,
-    affectedByWhitelist: true,
   }, {
     input: "mozilla",
     fixedURI: "http://mozilla/",
     alternateURI: "http://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "test.",
@@ -257,7 +246,6 @@ let testcases = [ {
     alternateURI: "http://www.test./",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: ".test",
@@ -292,7 +280,6 @@ let testcases = [ {
     alternateURI: "http://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "   mozilla  ",
@@ -300,13 +287,11 @@ let testcases = [ {
     alternateURI: "http://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "mozilla \\",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
   }, {
     input: "mozilla \\ foo.txt",
     keywordLookup: true,
@@ -321,7 +306,6 @@ let testcases = [ {
     alternateURI: "http://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "mozilla \r\n",
@@ -329,7 +313,6 @@ let testcases = [ {
     alternateURI: "http://www.mozilla.com/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "moz\r\nfirefox\nos\r",
@@ -337,7 +320,6 @@ let testcases = [ {
     alternateURI: "http://www.mozfirefoxos.com/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "moz\r\n firefox\n",
@@ -355,7 +337,6 @@ let testcases = [ {
     input: "http://whitelisted/",
     fixedURI: "http://whitelisted/",
     alternateURI: "http://www.whitelisted.com/",
-    affectedByWhitelist: true,
     inWhitelist: true,
   }, {
     input: "café.local",
@@ -393,7 +374,6 @@ let testcases = [ {
     alternateURI: "http://www.5+2.com/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "5/2",
@@ -401,7 +381,6 @@ let testcases = [ {
     alternateURI: "http://www.5.com/2",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "moz ?.::%27",
@@ -444,20 +423,17 @@ let testcases = [ {
     alternateURI: "http://www.'.com/?",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true
   }, {
     input: "a?.com",
     fixedURI: "http://a/?.com",
     alternateURI: "http://www.a.com/?.com",
     protocolChange: true,
-    affectedByWhitelist: true
   }, {
     input: "?'.com",
     fixedURI: "http:///?%27.com",
     alternateURI: "http://www..com/?%27.com",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true
   }, {
     input: "' ?.com",
     keywordLookup: true,
@@ -468,40 +444,34 @@ let testcases = [ {
     alternateURI: "http://www..com/?mozilla",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true
   }, {
     input: "??mozilla",
     fixedURI: "http:///??mozilla",
     alternateURI: "http://www..com/??mozilla",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true
   }, {
     input: "mozilla/",
     fixedURI: "http://mozilla/",
     alternateURI: "http://www.mozilla.com/",
     protocolChange: true,
-    affectedByWhitelist: true,
   }, {
     input: "mozilla",
     fixedURI: "http://mozilla/",
     alternateURI: "http://www.mozilla.com/",
     protocolChange: true,
     keywordLookup: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   }, {
     input: "mozilla5/2",
     fixedURI: "http://mozilla5/2",
     alternateURI: "http://www.mozilla5.com/2",
     protocolChange: true,
-    affectedByWhitelist: true,
   }, {
     input: "mozilla/foo",
     fixedURI: "http://mozilla/foo",
     alternateURI: "http://www.mozilla.com/foo",
     protocolChange: true,
-    affectedByWhitelist: true,
   }];
 
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
@@ -515,14 +485,12 @@ if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
     fixedURI: "http://mozilla/",
     alternateURI: "http://www.mozilla.com/",
     protocolChange: true,
-    affectedByWhitelist: true,
   });
   testcases.push({
     input: "mozilla\\",
     fixedURI: "http://mozilla/",
     alternateURI: "http://www.mozilla.com/",
     protocolChange: true,
-    affectedByWhitelist: true,
   });
 } else {
   testcases.push({
@@ -541,7 +509,6 @@ if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
     alternateURI: "http://www.mozilla/",
     keywordLookup: true,
     protocolChange: true,
-    affectedByWhitelist: true,
     affectedByDNSForSingleHosts: true,
   });
 }
@@ -578,7 +545,6 @@ function do_single_test_run() {
              alternateURI: alternativeURI,
              keywordLookup: expectKeywordLookup,
              protocolChange: expectProtocolChange,
-             affectedByWhitelist: affectedByWhitelist,
              inWhitelist: inWhitelist,
              affectedByDNSForSingleHosts: affectedByDNSForSingleHosts,
            } of relevantTests) {
@@ -586,7 +552,6 @@ function do_single_test_run() {
     // Explicitly force these into a boolean
     expectKeywordLookup = !!expectKeywordLookup;
     expectProtocolChange = !!expectProtocolChange;
-    affectedByWhitelist = !!affectedByWhitelist;
     inWhitelist = !!inWhitelist;
     affectedByDNSForSingleHosts = !!affectedByDNSForSingleHosts;
 
@@ -637,10 +602,9 @@ function do_single_test_run() {
       do_check_eq(info.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null);
 
       // Check the preferred URI
-      let requiresWhitelistedDomain = flags & urifixup.FIXUP_FLAG_REQUIRE_WHITELISTED_HOST;
       if (couldDoKeywordLookup) {
         if (expectKeywordLookup) {
-          if (!affectedByWhitelist || (affectedByWhitelist && !inWhitelist)) {
+          if (!inWhitelist) {
             let urlparamInput = encodeURIComponent(sanitize(testInput)).replace(/%20/g, "+");
             // If the input starts with `?`, then info.preferredURI.spec will omit it
             // In order to test this behaviour, remove `?` only if it is the first character
@@ -656,14 +620,6 @@ function do_single_test_run() {
         } else {
           do_check_eq(info.preferredURI.spec, info.fixedURI.spec);
         }
-      } else if (requiresWhitelistedDomain) {
-        // Not a keyword search, but we want to enforce the host whitelist.
-        // If we always do DNS lookups, we should always havea  preferred URI here - unless the
-        // input starts with '?' in which case preferredURI will just be null...
-        if (!affectedByWhitelist || (affectedByWhitelist && inWhitelist) || (gSingleWordHostLookup && !testInput.startsWith("?")))
-          do_check_eq(info.preferredURI.spec, info.fixedURI.spec);
-        else
-          do_check_eq(info.preferredURI, null);
       } else {
         // In these cases, we should never be doing a keyword lookup and
         // the fixed URI should be preferred:

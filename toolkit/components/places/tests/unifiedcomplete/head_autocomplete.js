@@ -302,11 +302,18 @@ function makeActionURI(action, params) {
   return NetUtil.newURI(url);
 }
 
-// Hide all the search engines so they don't influence tests results.
-add_task(function ensure_no_search_engines() {
-  let count = {};
-  let engines = Services.search.getEngines(count);
-  for (let i = 0; i < count.value; i++) {
-    engines[i].hidden = true;
+// Ensure we have a default search engine and the keyword.enabled preference
+// set.
+add_task(function ensure_search_engine() {
+  // keyword.enabled is necessary for the tests to see keyword searches.
+  Services.prefs.setBoolPref("keyword.enabled", true);
+
+  // Remove any existing engines before adding ours.
+  for (let engine of Services.search.getEngines()) {
+    Services.search.removeEngine(engine);
   }
+  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
+                                       "http://s.example.com/search");
+  let engine = Services.search.getEngineByName("MozSearch");
+  Services.search.currentEngine = engine;
 });

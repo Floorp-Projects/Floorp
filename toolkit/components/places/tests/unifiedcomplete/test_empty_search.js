@@ -49,9 +49,13 @@ add_task(function* test_javascript_match() {
                { uri: uri4, title: "title", style: ["bookmark"] },
                { uri: uri5, title: "title", style: ["bookmark"] },
                { uri: uri6, title: "title", style: ["bookmark"] },
-               { uri: makeActionURI("switchtab", {url: "http://t.foo/6"}), title: "title", style: [ "action,switchtab" ] }, ]
+               { uri: makeActionURI("switchtab", {url: "http://t.foo/6"}), title: "title", style: [ "action,switchtab" ] },
+               { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "foo", searchQuery: "foo"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+             ]
   });
 
+  // Note the next few tests do *not* get a search result as enable-actions
+  // isn't specified.
   do_print("Match only typed history");
   yield check_autocomplete({
     search: "foo ^ ~",
@@ -82,7 +86,10 @@ add_task(function* test_javascript_match() {
   yield check_autocomplete({
     search: "",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "http://t.foo/6"}), title: "title", style: [ "action,switchtab" ] }, ]
+    matches: [
+               { uri: makeActionURI("switchtab", {url: "http://t.foo/6"}), title: "title", style: [ "action,switchtab" ] },
+               { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "", searchQuery: ""}), title: "MozSearch", style: [ "action", "searchengine" ] },
+             ]
   });
 
   Services.prefs.clearUserPref("browser.urlbar.suggest.history");
