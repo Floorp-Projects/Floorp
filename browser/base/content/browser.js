@@ -2363,11 +2363,19 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
   let inTab = Services.prefs.getBoolPref("view_source.tab");
   if (inTab) {
     let viewSourceURL = `view-source:${args.URL}`;
-    let tab = gBrowser.loadOneTab(viewSourceURL, {
+    let tabBrowser = gBrowser;
+    // In the case of sidebars and chat windows, gBrowser is defined but null,
+    // because no #content element exists.  For these cases, we need to find
+    // the most recent browser window.
+    if (!tabBrowser) {
+      let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+      tabBrowser = browserWindow.gBrowser;
+    }
+    let tab = tabBrowser.loadOneTab(viewSourceURL, {
       relatedToCurrent: true,
       inBackground: false
     });
-    args.viewSourceBrowser = gBrowser.getBrowserForTab(tab);
+    args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
     top.gViewSourceUtils.viewSourceInBrowser(args);
   } else {
     top.gViewSourceUtils.viewSource(args);
