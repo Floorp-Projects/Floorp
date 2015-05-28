@@ -134,7 +134,6 @@ MediaOmxReader::MediaOmxReader(AbstractMediaDecoder *aDecoder)
   , mSkipCount(0)
   , mIsShutdown(false)
   , mMP3FrameParser(-1)
-  , mIsWaitingResources(false)
 {
   if (!gMediaDecoderLog) {
     gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
@@ -187,22 +186,11 @@ MediaOmxReader::Shutdown()
   return p;
 }
 
-bool MediaOmxReader::IsWaitingMediaResources()
-{
-  return mIsWaitingResources;
-}
-
-void MediaOmxReader::UpdateIsWaitingMediaResources()
-{
-  if (mOmxDecoder.get()) {
-    mIsWaitingResources = mOmxDecoder->IsWaitingMediaResources();
-  } else {
-    mIsWaitingResources = false;
-  }
-}
-
 void MediaOmxReader::ReleaseMediaResources()
 {
+  mMediaResourceRequest.DisconnectIfExists();
+  mMetadataPromise.RejectIfExists(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+
   ResetDecode();
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.
@@ -237,23 +225,17 @@ nsresult MediaOmxReader::InitOmxDecoder()
   return NS_OK;
 }
 
-void MediaOmxReader::PreReadMetadata()
-{
-  UpdateIsWaitingMediaResources();
-}
-
-nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
-                                      MetadataTags** aTags)
+nsRefPtr<MediaDecoderReader::MetadataPromise>
+MediaOmxReader::AsyncReadMetadata()
 {
   MOZ_ASSERT(OnTaskQueue());
   EnsureActive();
 
-  *aTags = nullptr;
-
   // Initialize the internal OMX Decoder.
   nsresult rv = InitOmxDecoder();
   if (NS_FAILED(rv)) {
-    return rv;
+    return MediaDecoderReader::MetadataPromise::CreateAndReject(
+             ReadMetadataFailureReason::METADATA_ERROR, __func__);
   }
 
   bool isMP3 = mDecoder->GetResource()->GetContentType().EqualsASCII(AUDIO_MP3);
@@ -265,22 +247,33 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
     ProcessCachedData(0, true);
   }
 
-  if (!mOmxDecoder->AllocateMediaResources()) {
-    return NS_ERROR_FAILURE;
-  }
-  // Bug 1050667, both MediaDecoderStateMachine and MediaOmxReader
-  // relies on IsWaitingMediaResources() function. And the waiting state will be
-  // changed by binder thread, so we store the waiting state in a cache value to
-  // make them in consistent state.
-  UpdateIsWaitingMediaResources();
-  if (IsWaitingMediaResources()) {
-    return NS_OK;
-  }
+  nsRefPtr<MediaDecoderReader::MetadataPromise> p = mMetadataPromise.Ensure(__func__);
+
+  nsRefPtr<MediaOmxReader> self = this;
+  mMediaResourceRequest.Begin(mOmxDecoder->AllocateMediaResources()
+    ->RefableThen(GetTaskQueue(), __func__,
+      [self] (bool) -> void {
+        self->mMediaResourceRequest.Complete();
+        self->HandleResourceAllocated();
+      }, [self] (bool) -> void {
+        self->mMediaResourceRequest.Complete();
+        self->mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+      }));
+
+  return p;
+}
+
+void MediaOmxReader::HandleResourceAllocated()
+{
+  EnsureActive();
+
   // After resources are available, set the metadata.
   if (!mOmxDecoder->EnsureMetadata()) {
-    return NS_ERROR_FAILURE;
+    mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+    return;
   }
 
+  bool isMP3 = mDecoder->GetResource()->GetContentType().EqualsASCII(AUDIO_MP3);
   if (isMP3 && mMP3FrameParser.IsMP3()) {
     // Check if the MP3 frame parser found a duration.
     mLastParserDuration = mMP3FrameParser.GetDuration();
@@ -312,7 +305,8 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
     nsIntSize displaySize(displayWidth, displayHeight);
     nsIntSize frameSize(width, height);
     if (!IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
-      return NS_ERROR_FAILURE;
+      mMetadataPromise.Reject(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+      return;
     }
 
     // Video track's frame sizes will not overflow. Activate the video track.
@@ -336,13 +330,15 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
     mInfo.mAudio.mRate = sampleRate;
   }
 
- *aInfo = mInfo;
+  nsRefPtr<MetadataHolder> metadata = new MetadataHolder();
+  metadata->mInfo = mInfo;
+  metadata->mTags = nullptr;
 
 #ifdef MOZ_AUDIO_OFFLOAD
   CheckAudioOffload();
 #endif
 
-  return NS_OK;
+  mMetadataPromise.Resolve(metadata, __func__);
 }
 
 bool

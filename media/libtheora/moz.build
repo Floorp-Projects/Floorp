@@ -86,7 +86,7 @@ if CONFIG['GNU_AS']:
         if CONFIG['OS_TARGET'] == 'Android':
             DEFINES['__linux__'] = True
 
-        GENERATED_SOURCES += [ '%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
+        SOURCES += [ '!%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
             'armbits-gnu',
             'armfrag-gnu',
             'armidct-gnu',

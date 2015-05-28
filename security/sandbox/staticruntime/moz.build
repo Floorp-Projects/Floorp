@@ -14,7 +14,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
     # Bug 1102853 tracks looking at removing this.
     if CONFIG['CPU_ARCH'] == 'x86_64':
-        SOURCES['%s/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_client.cc' % TOPSRCDIR].no_pgo = True
+        SOURCES['/security/sandbox/chromium/sandbox/win/src/sharedmem_ipc_client.cc'].no_pgo = True
 
     for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'SANDBOX_EXPORTS',
                 'NOMINMAX', '_CRT_RAND_S', 'CHROMIUM_SANDBOX_BUILD'):

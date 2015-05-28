@@ -175,8 +175,8 @@ static nsresult DeleteEntries(mozIStorageConnection* aConn,
                               nsTArray<nsID>& aDeletedBodyIdListOut,
                               nsTArray<IdCount>& aDeletedSecurityIdListOut,
                               uint32_t aPos=0, int32_t aLen=-1);
-static nsresult InsertSecurity(mozIStorageConnection* aConn,
-                               const nsACString& aData, int32_t *aIdOut);
+static nsresult InsertSecurityInfo(mozIStorageConnection* aConn,
+                                   const nsACString& aData, int32_t *aIdOut);
 static nsresult DeleteSecurityInfo(mozIStorageConnection* aConn, int32_t aId,
                                    int32_t aCount);
 static nsresult DeleteSecurityInfoList(mozIStorageConnection* aConn,
@@ -1194,8 +1194,8 @@ DeleteEntries(mozIStorageConnection* aConn,
 }
 
 nsresult
-InsertSecurity(mozIStorageConnection* aConn, const nsACString& aData,
-               int32_t *aIdOut)
+InsertSecurityInfo(mozIStorageConnection* aConn, const nsACString& aData,
+                   int32_t *aIdOut)
 {
   MOZ_ASSERT(aConn);
   MOZ_ASSERT(aIdOut);
@@ -1394,8 +1394,10 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
   nsresult rv = NS_OK;
   int32_t securityId = -1;
 
-  if (!aResponse.securityInfo().IsEmpty()) {
-    rv = InsertSecurity(aConn, aResponse.securityInfo(), &securityId);
+  if (!aResponse.channelInfo().securityInfo().IsEmpty()) {
+    rv = InsertSecurityInfo(aConn,
+                            aResponse.channelInfo().securityInfo(),
+                            &securityId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
@@ -1511,7 +1513,7 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
   rv = BindId(state, NS_LITERAL_CSTRING("response_body_id"), aResponseBodyId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  if (aResponse.securityInfo().IsEmpty()) {
+  if (aResponse.channelInfo().securityInfo().IsEmpty()) {
     rv = state->BindNullByName(NS_LITERAL_CSTRING("response_security_info_id"));
   } else {
     rv = state->BindInt32ByName(NS_LITERAL_CSTRING("response_security_info_id"),
@@ -1657,7 +1659,7 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
-  rv = state->GetBlobAsUTF8String(6, aSavedResponseOut->mValue.securityInfo());
+  rv = state->GetBlobAsUTF8String(6, aSavedResponseOut->mValue.channelInfo().securityInfo());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = aConn->CreateStatement(NS_LITERAL_CSTRING(

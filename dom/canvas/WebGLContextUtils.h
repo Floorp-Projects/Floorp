@@ -38,6 +38,8 @@ TexType TypeFromInternalFormat(TexInternalFormat internalformat);
 TexInternalFormat
 UnsizedInternalFormatFromInternalFormat(TexInternalFormat internalformat);
 
+void SetLegacyTextureSwizzle(gl::GLContext* gl, GLenum target, GLenum internalformat);
+
 size_t GetBitsPerTexel(TexInternalFormat effectiveinternalformat);
 
 // For use with the different texture calls, i.e.

@@ -598,7 +598,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     /*
      * Additional JS parsers.
      */
-    bool functionArguments(YieldHandling yieldHandling, FunctionSyntaxKind kind, Node* list,
+    bool functionArguments(YieldHandling yieldHandling, FunctionSyntaxKind kind,
                            Node funcpn, bool* hasRest);
 
     Node functionDef(InHandling inHandling, YieldHandling uieldHandling, HandlePropertyName name,
@@ -664,7 +664,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool makeDefIntoUse(Definition* dn, Node pn, JSAtom* atom);
     bool checkFunctionDefinition(HandlePropertyName funName, Node* pn, FunctionSyntaxKind kind,
                                  bool* pbodyProcessed);
-    bool finishFunctionDefinition(Node pn, FunctionBox* funbox, Node prelude, Node body);
+    bool finishFunctionDefinition(Node pn, FunctionBox* funbox, Node body);
     bool addFreeVariablesFromLazyFunction(JSFunction* fun, ParseContext<ParseHandler>* pc);
 
     bool isValidForStatementLHS(Node pn1, JSVersion version, bool forDecl, bool forEach,
