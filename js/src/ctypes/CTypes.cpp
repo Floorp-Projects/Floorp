@@ -335,6 +335,18 @@ namespace CClosure {
   // libffi callback
   static void ClosureStub(ffi_cif* cif, void* result, void** args,
     void* userData);
+
+  struct ArgClosure : public ScriptEnvironmentPreparer::Closure {
+      ArgClosure(ffi_cif* cifArg, void* resultArg, void** argsArg, ClosureInfo* cinfoArg)
+        : cif(cifArg), result(resultArg), args(argsArg), cinfo(cinfoArg) {}
+
+      bool operator()(JSContext *cx) override;
+
+      ffi_cif* cif;
+      void* result;
+      void** args;
+      ClosureInfo* cinfo;
+  };
 }
 
 namespace CData {
@@ -6780,9 +6792,6 @@ CClosure::Create(JSContext* cx,
   MOZ_ASSERT(proto);
   MOZ_ASSERT(CType::IsCTypeProto(proto));
 
-  // Get a JSContext for use with the closure.
-  JSContext* closeureCx = js::DefaultJSContext(JS_GetRuntime(cx));
-
   // Prepare the error sentinel value. It's important to do this now, because
   // we might be unable to convert the value to the proper type. If so, we want
   // the caller to know about it _now_, rather than some uncertain time in the
@@ -6819,7 +6828,6 @@ CClosure::Create(JSContext* cx,
   }
 
   // Copy the important bits of context into cinfo.
-  cinfo->cx = closeureCx;
   cinfo->errResult = errResult.release();
   cinfo->closureObj = result;
   cinfo->typeObj = typeObj;
@@ -6890,9 +6898,14 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   MOZ_ASSERT(userData);
 
   // Retrieve the essentials from our closure object.
-  ClosureInfo* cinfo = static_cast<ClosureInfo*>(userData);
-  JSContext* cx = cinfo->cx;
+  ArgClosure argClosure(cif, result, args, static_cast<ClosureInfo*>(userData));
+  JSRuntime* rt = argClosure.cinfo->rt;
+  RootedObject fun(rt, argClosure.cinfo->jsfnObj);
+  (void) js::PrepareScriptEnvironmentAndInvoke(rt, fun, argClosure);
+}
 
+bool CClosure::ArgClosure::operator()(JSContext* cx)
+{
   // Let the runtime callback know that we are about to call into JS again. The end callback will
   // fire automatically when we exit this function.
   js::AutoCTypesActivityCallback autoCallback(cx, js::CTYPES_CALLBACK_BEGIN,
@@ -6901,11 +6914,10 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   RootedObject typeObj(cx, cinfo->typeObj);
   RootedObject thisObj(cx, cinfo->thisObj);
   RootedValue jsfnVal(cx, ObjectValue(*cinfo->jsfnObj));
+  AssertSameCompartment(cx, cinfo->jsfnObj);
+
 
   JS_AbortIfWrongThread(JS_GetRuntime(cx));
-
-  JSAutoRequest ar(cx);
-  JSAutoCompartment ac(cx, cinfo->jsfnObj);
 
   // Assert that our CIFs agree.
   FunctionInfo* fninfo = FunctionType::GetFunctionInfo(typeObj);
@@ -6939,7 +6951,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   JS::AutoValueVector argv(cx);
   if (!argv.resize(cif->nargs)) {
     JS_ReportOutOfMemory(cx);
-    return;
+    return false;
   }
 
   for (uint32_t i = 0; i < cif->nargs; ++i) {
@@ -6947,7 +6959,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
     // the existing buffers.
     RootedObject argType(cx, fninfo->mArgTypes[i]);
     if (!ConvertToJS(cx, argType, nullptr, args[i], false, false, argv[i]))
-      return;
+      return false;
   }
 
   // Call the JS function. 'thisObj' may be nullptr, in which case the JS
@@ -6968,11 +6980,9 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
     // Something failed. The callee may have thrown, or it may not have
     // returned a value that ImplicitConvert() was happy with. Depending on how
     // prudent the consumer has been, we may or may not have a recovery plan.
-
-    // In any case, a JS exception cannot be passed to C code, so report the
-    // exception if any and clear it from the cx.
-    if (JS_IsExceptionPending(cx))
-      JS_ReportPendingException(cx);
+    //
+    // Note that PrepareScriptEnvironmentAndInvoke should take care of reporting
+    // the exception.
 
     if (cinfo->errResult) {
       // Good case: we have a sentinel that we can return. Copy it in place of
@@ -6986,15 +6996,8 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
       memcpy(result, cinfo->errResult, copySize);
     } else {
       // Bad case: not much we can do here. The rv is already zeroed out, so we
-      // just report (another) error and hope for the best. JS_ReportError will
-      // actually throw an exception here, so then we have to report it. Again.
-      // Ugh.
-      JS_ReportError(cx, "JavaScript callback failed, and an error sentinel "
-                         "was not specified.");
-      if (JS_IsExceptionPending(cx))
-        JS_ReportPendingException(cx);
-
-      return;
+      // just return and hope for the best.
+      return false;
     }
   }
 
@@ -7017,6 +7020,8 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
   default:
     break;
   }
+
+  return true;
 }
 
 /*******************************************************************************

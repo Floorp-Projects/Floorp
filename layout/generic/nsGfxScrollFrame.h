@@ -378,7 +378,6 @@ public:
   bool WantAsyncScroll() const;
   void ComputeFrameMetrics(Layer* aLayer, nsIFrame* aContainerReferenceFrame,
                            const ContainerLayerParameters& aParameters,
-                           nsRect* aClipRect,
                            nsTArray<FrameMetrics>* aOutput) const;
 
   // nsIScrollbarMediator
@@ -457,6 +456,9 @@ public:
   nsRect mPrevScrolledRect;
 
   FrameMetrics::ViewID mScrollParentID;
+
+  // The scroll port clip. Only valid during painting.
+  const DisplayItemClip* mAncestorClip;
 
   bool mNeverHasVerticalScrollbar:1;
   bool mNeverHasHorizontalScrollbar:1;
@@ -833,10 +835,9 @@ public:
   }
   virtual void ComputeFrameMetrics(Layer* aLayer, nsIFrame* aContainerReferenceFrame,
                                    const ContainerLayerParameters& aParameters,
-                                   nsRect* aClipRect,
                                    nsTArray<FrameMetrics>* aOutput) const override {
     mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame,
-                                aParameters, aClipRect, aOutput);
+                                aParameters, aOutput);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();
@@ -1226,10 +1227,9 @@ public:
   }
   virtual void ComputeFrameMetrics(Layer* aLayer, nsIFrame* aContainerReferenceFrame,
                                    const ContainerLayerParameters& aParameters,
-                                   nsRect* aClipRect,
                                    nsTArray<FrameMetrics>* aOutput) const override {
     mHelper.ComputeFrameMetrics(aLayer, aContainerReferenceFrame,
-                                aParameters, aClipRect, aOutput);
+                                aParameters, aOutput);
   }
   virtual bool IsIgnoringViewportClipping() const override {
     return mHelper.IsIgnoringViewportClipping();

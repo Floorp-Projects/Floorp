@@ -3320,6 +3320,16 @@ CSS_PROP_DISPLAY(
     offsetof(nsStyleDisplay, mSpecifiedTransform),
     eStyleAnimType_Custom)
 CSS_PROP_DISPLAY(
+    transform-box,
+    transform_box,
+    TransformBox,
+    CSS_PROPERTY_PARSE_VALUE,
+    "svg.transform-origin.enabled",
+    VARIANT_HK,
+    kTransformBoxKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_DISPLAY(
     transform-origin,
     transform_origin,
     TransformOrigin,

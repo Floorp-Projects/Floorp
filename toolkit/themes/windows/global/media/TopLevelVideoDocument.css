@@ -4,6 +4,7 @@
 
 body {
   background-image: url("chrome://global/skin/media/imagedoc-darknoise.png");
+  background-color: rgb(33,33,33); /* Average color of that ^ image. */
 }
 
 video {

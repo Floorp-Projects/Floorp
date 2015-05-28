@@ -58,13 +58,13 @@ Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const
     MOZ_CRASH("null ubi::Node");
 }
 
-struct Node::ConstructFunctor : public BoolDefaultAdaptor<Value, false> {
+struct Node::ConstructFunctor : public js::BoolDefaultAdaptor<Value, false> {
     template <typename T> bool operator()(T* t, Node* node) { node->construct(t); return true; }
 };
 
 Node::Node(JS::TraceKind kind, void* ptr)
 {
-    CallTyped(ConstructFunctor(), ptr, kind, this);
+    js::gc::CallTyped(ConstructFunctor(), ptr, kind, this);
 }
 
 Node::Node(HandleValue value)

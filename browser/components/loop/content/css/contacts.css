@@ -81,7 +81,7 @@
   height: 40px;
   background-color: #ccc;
   border-radius: 50%;
-  margin-right: 10px;
+  -moz-margin-end: 10px;
   overflow: hidden;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
   background-image: url("../shared/img/audio-call-avatar.svg");
@@ -134,6 +134,11 @@
   background-color: #fff;
 }
 
+body[dir="rtl"] .contact > .details > .username > i.icon-google {
+  left: 1rem;
+  right: auto;
+}
+
 .contact > .details > .email {
   color: #999;
   font-size: 11px;
@@ -143,7 +148,7 @@
 .icons {
   cursor: pointer;
   display: none;
-  margin-left: auto;
+  -moz-margin-start: auto;
   padding: 10px;
   border-radius: 2px;
   background-color: #5bc0a4;
@@ -188,6 +193,11 @@
   left: auto;
 }
 
+body[dir="rtl"] .contact > .dropdown-menu {
+  right: auto;
+  left: 3em;
+}
+
 .contact > .dropdown-menu-up {
   bottom: 10px;
   top: auto;
@@ -199,6 +209,10 @@
   background-position: center left;
   background-size: 10px 10px;
   margin-top: 3px;
+}
+
+body[dir="rtl"] .contact > .dropdown-menu > .dropdown-menu-item > .icon {
+  background-position: center right;
 }
 
 .contact > .dropdown-menu > .dropdown-menu-item > .icon-audio-call {

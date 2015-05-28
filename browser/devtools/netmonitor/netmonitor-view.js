@@ -948,19 +948,21 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Returns an object with all the filter predicates as [key: function] pairs.
    */
-  get _allFilterPredicates() ({
-    all: () => true,
-    html: this.isHtml,
-    css: this.isCss,
-    js: this.isJs,
-    xhr: this.isXHR,
-    fonts: this.isFont,
-    images: this.isImage,
-    media: this.isMedia,
-    flash: this.isFlash,
-    other: this.isOther,
-    freetext: this.isFreetextMatch
-  }),
+  get _allFilterPredicates() {
+    return {
+      all: () => true,
+      html: this.isHtml,
+      css: this.isCss,
+      js: this.isJs,
+      xhr: this.isXHR,
+      fonts: this.isFont,
+      images: this.isImage,
+      media: this.isMedia,
+      flash: this.isFlash,
+      other: this.isOther,
+      freetext: this.isFreetextMatch
+    };
+  },
 
   /**
    * Sorts all network requests in this container by a specified detail.
@@ -1074,52 +1076,72 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * @return boolean
    *         True if the item should be visible, false otherwise.
    */
-  isHtml: function({ attachment: { mimeType } })
-    mimeType && mimeType.includes("/html"),
+  isHtml: function({ attachment: { mimeType } }) {
+    return mimeType && mimeType.includes("/html");
+  },
 
-  isCss: function({ attachment: { mimeType } })
-    mimeType && mimeType.includes("/css"),
+  isCss: function({ attachment: { mimeType } }) {
+    return mimeType && mimeType.includes("/css");
+  },
 
-  isJs: function({ attachment: { mimeType } })
-    mimeType && (
+  isJs: function({ attachment: { mimeType } }) {
+    return mimeType && (
       mimeType.includes("/ecmascript") ||
       mimeType.includes("/javascript") ||
-      mimeType.includes("/x-javascript")),
+      mimeType.includes("/x-javascript"));
+  },
 
-  isXHR: function({ attachment: { isXHR } })
-    isXHR,
+  isXHR: function({ attachment: { isXHR } }) {
+    return isXHR;
+  },
 
-  isFont: function({ attachment: { url, mimeType } }) // Fonts are a mess.
-    (mimeType && (
-      mimeType.includes("font/") ||
-      mimeType.includes("/font"))) ||
-    url.includes(".eot") ||
-    url.includes(".ttf") ||
-    url.includes(".otf") ||
-    url.includes(".woff"),
+  isFont: function({ attachment: { url, mimeType } }) {
+    // Fonts are a mess.
+    return (mimeType && (
+        mimeType.includes("font/") ||
+        mimeType.includes("/font"))) ||
+      url.includes(".eot") ||
+      url.includes(".ttf") ||
+      url.includes(".otf") ||
+      url.includes(".woff");
+  },
 
-  isImage: function({ attachment: { mimeType } })
-    mimeType && mimeType.includes("image/"),
+  isImage: function({ attachment: { mimeType } }) {
+    return mimeType && mimeType.includes("image/");
+  },
 
-  isMedia: function({ attachment: { mimeType } }) // Not including images.
-    mimeType && (
+  isMedia: function({ attachment: { mimeType } }) {
+    // Not including images.
+    return mimeType && (
       mimeType.includes("audio/") ||
       mimeType.includes("video/") ||
-      mimeType.includes("model/")),
+      mimeType.includes("model/"));
+  },
 
-  isFlash: function({ attachment: { url, mimeType } }) // Flash is a mess.
-    (mimeType && (
-      mimeType.includes("/x-flv") ||
-      mimeType.includes("/x-shockwave-flash"))) ||
-    url.includes(".swf") ||
-    url.includes(".flv"),
+  isFlash: function({ attachment: { url, mimeType } }) {
+    // Flash is a mess.
+    return (mimeType && (
+        mimeType.includes("/x-flv") ||
+        mimeType.includes("/x-shockwave-flash"))) ||
+      url.includes(".swf") ||
+      url.includes(".flv");
+  },
 
-  isOther: function(e)
-    !this.isHtml(e) && !this.isCss(e) && !this.isJs(e) && !this.isXHR(e) &&
-    !this.isFont(e) && !this.isImage(e) && !this.isMedia(e) && !this.isFlash(e),
+  isOther: function(e) {
+    return !this.isHtml(e) &&
+           !this.isCss(e) &&
+           !this.isJs(e) &&
+           !this.isXHR(e) &&
+           !this.isFont(e) &&
+           !this.isImage(e) &&
+           !this.isMedia(e) &&
+           !this.isFlash(e);
+  },
 
-  isFreetextMatch: function({ attachment: { url } }, text) //no text is a positive match
-    !text || url.includes(text),
+  isFreetextMatch: function({ attachment: { url } }, text) {
+    //no text is a positive match
+    return !text || url.includes(text);
+  },
 
   /**
    * Predicates used when sorting items.
@@ -1133,18 +1155,21 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *          0 to leave aFirst and aSecond unchanged with respect to each other
    *          1 to sort aSecond to a lower index than aFirst
    */
-  _byTiming: function({ attachment: first }, { attachment: second })
-    first.startedMillis > second.startedMillis,
+  _byTiming: function({ attachment: first }, { attachment: second }) {
+    return first.startedMillis > second.startedMillis;
+  },
 
-  _byStatus: function({ attachment: first }, { attachment: second })
-    first.status == second.status
-      ? first.startedMillis > second.startedMillis
-      : first.status > second.status,
+  _byStatus: function({ attachment: first }, { attachment: second }) {
+    return first.status == second.status
+           ? first.startedMillis > second.startedMillis
+           : first.status > second.status;
+  },
 
-  _byMethod: function({ attachment: first }, { attachment: second })
-    first.method == second.method
-      ? first.startedMillis > second.startedMillis
-      : first.method > second.method,
+  _byMethod: function({ attachment: first }, { attachment: second }) {
+    return first.method == second.method
+           ? first.startedMillis > second.startedMillis
+           : first.method > second.method;
+  },
 
   _byFile: function({ attachment: first }, { attachment: second }) {
     let firstUrl = this._getUriNameWithQuery(first.url).toLowerCase();
@@ -3256,8 +3281,8 @@ PerformanceStatisticsView.prototype = {
 /**
  * DOM query helper.
  */
-function $(aSelector, aTarget = document) aTarget.querySelector(aSelector);
-function $all(aSelector, aTarget = document) aTarget.querySelectorAll(aSelector);
+let $ = (aSelector, aTarget = document) => aTarget.querySelector(aSelector);
+let $all = (aSelector, aTarget = document) => aTarget.querySelectorAll(aSelector);
 
 /**
  * Helper for getting an nsIURL instance out of a string.
@@ -3352,7 +3377,7 @@ function parseRequestText(aText, aName, aDivider) {
  *         List of headers in text format
  */
 function writeHeaderText(aHeaders) {
-  return [(name + ": " + value) for ({name, value} of aHeaders)].join("\n");
+  return aHeaders.map(({name, value}) => name + ": " + value).join("\n");
 }
 
 /**
@@ -3364,7 +3389,7 @@ function writeHeaderText(aHeaders) {
  *         List of query params in text format
  */
 function writeQueryText(aParams) {
-  return [(name + "=" + value) for ({name, value} of aParams)].join("\n");
+  return aParams.map(({name, value}) => name + "=" + value).join("\n");
 }
 
 /**
@@ -3376,7 +3401,7 @@ function writeQueryText(aParams) {
  *         Query string that can be appended to a url.
  */
 function writeQueryString(aParams) {
-  return [(name + "=" + value) for ({name, value} of aParams)].join("&");
+  return aParams.map(({name, value}) => name + "=" + value).join("&");
 }
 
 /**

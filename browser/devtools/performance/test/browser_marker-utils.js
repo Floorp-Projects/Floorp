@@ -5,7 +5,7 @@
  * Tests the marker utils methods.
  */
 
-function spawnTest () {
+function* spawnTest() {
   let { TIMELINE_BLUEPRINT } = devtools.require("devtools/performance/global");
   let Utils = devtools.require("devtools/performance/marker-utils");
 

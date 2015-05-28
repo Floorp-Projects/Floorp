@@ -6,7 +6,7 @@
  * have memory data (withMemory: false), and that when a memory panel is selected,
  * switching to a panel that does not have memory goes to a default panel instead.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, OverviewView, DetailsView } = panel.panelWin;
   let { $, RecordingsView, WaterfallView, MemoryCallTreeView, MemoryFlameGraphView } = panel.panelWin;

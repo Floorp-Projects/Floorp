@@ -169,15 +169,7 @@ JSObject2WrappedJSMap::SizeOfWrappedJS(mozilla::MallocSizeOf mallocSizeOf) const
 Native2WrappedNativeMap*
 Native2WrappedNativeMap::newMap(int length)
 {
-    Native2WrappedNativeMap* map = new Native2WrappedNativeMap(length);
-    if (map && map->mTable)
-        return map;
-    // Allocation of the map or the creation of its hash table has
-    // failed. This will cause a nullptr deref later when we attempt
-    // to use the map, so we abort immediately to provide a more
-    // useful crash stack.
-    NS_RUNTIMEABORT("Ran out of memory.");
-    return nullptr;
+    return new Native2WrappedNativeMap(length);
 }
 
 Native2WrappedNativeMap::Native2WrappedNativeMap(int length)
@@ -329,15 +321,7 @@ ClassInfo2NativeSetMap::ShallowSizeOfIncludingThis(mozilla::MallocSizeOf mallocS
 ClassInfo2WrappedNativeProtoMap*
 ClassInfo2WrappedNativeProtoMap::newMap(int length)
 {
-    ClassInfo2WrappedNativeProtoMap* map = new ClassInfo2WrappedNativeProtoMap(length);
-    if (map && map->mTable)
-        return map;
-    // Allocation of the map or the creation of its hash table has
-    // failed. This will cause a nullptr deref later when we attempt
-    // to use the map, so we abort immediately to provide a more
-    // useful crash stack.
-    NS_RUNTIMEABORT("Ran out of memory.");
-    return nullptr;
+    return new ClassInfo2WrappedNativeProtoMap(length);
 }
 
 ClassInfo2WrappedNativeProtoMap::ClassInfo2WrappedNativeProtoMap(int length)

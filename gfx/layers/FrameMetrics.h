@@ -8,6 +8,7 @@
 
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include "Units.h"                      // for CSSRect, CSSPixel, etc
+#include "mozilla/Maybe.h"
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
@@ -98,7 +99,8 @@ public:
            mDoSmoothScroll == aOther.mDoSmoothScroll &&
            mLineScrollAmount == aOther.mLineScrollAmount &&
            mPageScrollAmount == aOther.mPageScrollAmount &&
-           mAllowVerticalScrollWithWheel == aOther.mAllowVerticalScrollWithWheel;
+           mAllowVerticalScrollWithWheel == aOther.mAllowVerticalScrollWithWheel &&
+           mClipRect == aOther.mClipRect;
   }
   bool operator!=(const FrameMetrics& aOther) const
   {
@@ -517,6 +519,21 @@ public:
     mAllowVerticalScrollWithWheel = true;
   }
 
+  void SetClipRect(const Maybe<ParentLayerIntRect>& aClipRect)
+  {
+    mClipRect = aClipRect;
+  }
+  const Maybe<ParentLayerIntRect>& GetClipRect() const
+  {
+    return mClipRect;
+  }
+  bool HasClipRect() const {
+    return mClipRect.isSome();
+  }
+  const ParentLayerIntRect& ClipRect() const {
+    return mClipRect.ref();
+  }
+
 private:
 
   // The pres-shell resolution that has been induced on the document containing
@@ -687,6 +704,9 @@ private:
 
   // Whether or not the frame can be vertically scrolled with a mouse wheel.
   bool mAllowVerticalScrollWithWheel;
+
+  // The clip rect to use when compositing a layer with this FrameMetrics.
+  Maybe<ParentLayerIntRect> mClipRect;
 
   // WARNING!!!!
   //

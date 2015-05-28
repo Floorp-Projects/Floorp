@@ -183,6 +183,9 @@ AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     if (m.GetScrollParentId() != FrameMetrics::NULL_SCROLL_ID) {
       AppendToString(aStream, m.GetScrollParentId(), "] [scrollParent=");
     }
+    if (m.HasClipRect()) {
+      AppendToString(aStream, m.ClipRect(), "] [clip=");
+    }
     AppendToString(aStream, m.GetZoom(), "] [z=", "] }");
   } else {
     AppendToString(aStream, m.GetDisplayPortMargins(), " [dpm=");

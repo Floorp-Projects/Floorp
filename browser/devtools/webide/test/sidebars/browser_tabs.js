@@ -64,7 +64,7 @@ function connectToLocal(win, docRuntime) {
 }
 
 function selectTabProject(win, docProject) {
-  return Task.spawn(function() {
+  return Task.spawn(function*() {
     yield waitForUpdate(win, "runtime-targets");
     let tabsNode = docProject.querySelector("#project-panel-tabs");
     let tabNode = tabsNode.querySelectorAll(".panel-item")[1];

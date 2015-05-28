@@ -2248,6 +2248,7 @@ static bool sLayersSupportsD3D9 = false;
 static bool sLayersSupportsD3D11 = false;
 static bool sANGLESupportsD3D11 = false;
 static bool sLayersSupportsHardwareVideoDecoding = false;
+static bool sLayersHardwareVideoDecodingFailed = false;
 static bool sBufferRotationCheckPref = true;
 static bool sPrefBrowserTabsRemoteAutostart = false;
 
@@ -2307,6 +2308,10 @@ InitLayersAccelerationPrefs()
       }
     }
 
+    Preferences::AddBoolVarCache(&sLayersHardwareVideoDecodingFailed,
+                                 "media.hardware-video-decoding.failed",
+                                 false);
+
     sLayersAccelerationPrefsInitialized = true;
   }
 }
@@ -2335,7 +2340,7 @@ gfxPlatform::CanUseHardwareVideoDecoding()
   // this function is called from the compositor thread, so it is not
   // safe to init the prefs etc. from here.
   MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
-  return sLayersSupportsHardwareVideoDecoding;
+  return sLayersSupportsHardwareVideoDecoding && !sLayersHardwareVideoDecodingFailed;
 }
 
 bool

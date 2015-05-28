@@ -248,9 +248,7 @@ class UnboxedPlainObject : public JSObject
     static bool obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties);
     static bool obj_watch(JSContext* cx, HandleObject obj, HandleId id, HandleObject callable);
 
-    const UnboxedLayout& layout() const {
-        return group()->unboxedLayout();
-    }
+    inline const UnboxedLayout& layout() const;
 
     const UnboxedLayout& layoutDontCheckGeneration() const {
         return group()->unboxedLayoutDontCheckGeneration();
@@ -385,9 +383,7 @@ class UnboxedArrayObject : public JSObject
     static bool obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties);
     static bool obj_watch(JSContext* cx, HandleObject obj, HandleId id, HandleObject callable);
 
-    const UnboxedLayout& layout() const {
-        return group()->unboxedLayout();
-    }
+    inline const UnboxedLayout& layout() const;
 
     const UnboxedLayout& layoutDontCheckGeneration() const {
         return group()->unboxedLayoutDontCheckGeneration();
@@ -439,7 +435,7 @@ class UnboxedArrayObject : public JSObject
         return computeCapacity(capacityIndex(), length());
     }
 
-    bool containsProperty(JSContext* cx, jsid id);
+    bool containsProperty(ExclusiveContext* cx, jsid id);
 
     bool setElement(ExclusiveContext* cx, size_t index, const Value& v);
     bool initElement(ExclusiveContext* cx, size_t index, const Value& v);

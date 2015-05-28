@@ -5,7 +5,7 @@
  * Tests that the `setTimeInterval` and `getTimeInterval` functions
  * work properly.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 

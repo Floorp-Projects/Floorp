@@ -7,7 +7,7 @@
  * `getBufferUsage()` values.
  */
 
-function spawnTest () {
+function* spawnTest() {
   let { target, front } = yield initBackend(SIMPLE_URL, {
     TEST_MOCK_PROFILER_CHECK_TIMER: 10,
     TEST_PROFILER_FILTER_STATUS: ["position", "totalSize", "generation"]
