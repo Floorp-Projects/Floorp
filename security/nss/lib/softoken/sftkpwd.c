@@ -1247,7 +1247,7 @@ loser:
 	PORT_ZFree(newKey.data,newKey.len);
     }
     if (result) {
-	SECITEM_FreeItem(result, PR_FALSE);
+	SECITEM_FreeItem(result, PR_TRUE);
     }
     if (rv != SECSuccess) {
         (*keydb->db->sdb_Abort)(keydb->db);
