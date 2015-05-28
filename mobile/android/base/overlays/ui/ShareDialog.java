@@ -15,6 +15,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.LocalBrowserDB;
+import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.overlays.OverlayConstants;
 import org.mozilla.gecko.overlays.service.OverlayActionService;
 import org.mozilla.gecko.overlays.service.sharemethods.ParcelableClientRecord;
@@ -101,13 +102,13 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
     protected void handleSendTabUIEvent(Intent intent) {
         sendTabOverrideIntent = intent.getParcelableExtra(SendTab.OVERRIDE_INTENT);
 
-        ParcelableClientRecord[] clientrecords = (ParcelableClientRecord[]) intent.getParcelableArrayExtra(SendTab.EXTRA_CLIENT_RECORDS);
+        RemoteClient[] remoteClientRecords = (RemoteClient[]) intent.getParcelableArrayExtra(SendTab.EXTRA_REMOTE_CLIENT_RECORDS);
 
         // Escape hatch: we don't show the option to open this dialog in this state so this should
         // never be run. However, due to potential inconsistencies in synced client state
         // (e.g. bug 1122302 comment 47), we might fail.
         if (state == State.DEVICES_ONLY &&
-                (clientrecords == null || clientrecords.length == 0)) {
+                (remoteClientRecords == null || remoteClientRecords.length == 0)) {
             Log.e(LOGTAG, "In state: " + State.DEVICES_ONLY + " and received 0 synced clients. Finishing...");
             Toast.makeText(this, getResources().getText(R.string.overlay_no_synced_devices), Toast.LENGTH_SHORT)
                  .show();
@@ -115,11 +116,11 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
             return;
         }
 
-        sendTabList.setSyncClients(clientrecords);
+        sendTabList.setSyncClients(remoteClientRecords);
 
         if (state == State.DEVICES_ONLY ||
-                clientrecords == null ||
-                clientrecords.length <= MAXIMUM_INLINE_DEVICES) {
+                remoteClientRecords == null ||
+                remoteClientRecords.length <= MAXIMUM_INLINE_DEVICES) {
             // Show the list of devices in-line.
             sendTabList.switchState(SendTabList.State.LIST);
 
@@ -128,7 +129,7 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
             //
             // Note: a more thorough implementation would add this
             // (and other non-ListView buttons) into a custom ListView.
-            if (clientrecords == null || clientrecords.length == 0) {
+            if (remoteClientRecords == null || remoteClientRecords.length == 0) {
                 readingListButton.setBackgroundResource(
                         R.drawable.overlay_share_button_background_first);
             }

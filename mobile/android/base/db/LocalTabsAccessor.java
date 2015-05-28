@@ -33,10 +33,19 @@ public class LocalTabsAccessor implements TabsAccessor {
                                                                 BrowserContract.Tabs.URL,
                                                                 BrowserContract.Clients.GUID,
                                                                 BrowserContract.Clients.NAME,
+                                                                BrowserContract.Tabs.LAST_USED,
                                                                 BrowserContract.Clients.LAST_MODIFIED,
                                                                 BrowserContract.Clients.DEVICE_TYPE,
                                                             };
 
+    public static final String[] CLIENTS_PROJECTION_COLUMNS = new String[] {
+                                                                    BrowserContract.Clients.GUID,
+                                                                    BrowserContract.Clients.NAME,
+                                                                    BrowserContract.Clients.LAST_MODIFIED,
+                                                                    BrowserContract.Clients.DEVICE_TYPE
+                                                            };
+
+    private static final String REMOTE_CLIENTS_SELECTION = BrowserContract.Clients.GUID + " IS NOT NULL";
     private static final String LOCAL_TABS_SELECTION = BrowserContract.Tabs.CLIENT_GUID + " IS NULL";
     private static final String REMOTE_TABS_SELECTION = BrowserContract.Tabs.CLIENT_GUID + " IS NOT NULL";
 
@@ -53,12 +62,49 @@ public class LocalTabsAccessor implements TabsAccessor {
 
     private static final Pattern FILTERED_URL_PATTERN = Pattern.compile("^(about|chrome|wyciwyg|file):");
 
+    private final Uri clientsRecencyUriWithProfile;
     private final Uri tabsUriWithProfile;
     private final Uri clientsUriWithProfile;
 
-    public LocalTabsAccessor(String mProfile) {
-        tabsUriWithProfile = DBUtils.appendProfileWithDefault(mProfile, BrowserContract.Tabs.CONTENT_URI);
-        clientsUriWithProfile = DBUtils.appendProfileWithDefault(mProfile, BrowserContract.Clients.CONTENT_URI);
+    public LocalTabsAccessor(String profileName) {
+        tabsUriWithProfile = DBUtils.appendProfileWithDefault(profileName, BrowserContract.Tabs.CONTENT_URI);
+        clientsUriWithProfile = DBUtils.appendProfileWithDefault(profileName, BrowserContract.Clients.CONTENT_URI);
+        clientsRecencyUriWithProfile = DBUtils.appendProfileWithDefault(profileName, BrowserContract.Clients.CONTENT_RECENCY_URI);
+    }
+
+    /**
+     * Extracts a List of just RemoteClients from a cursor.
+     * The supplied cursor should be grouped by guid and sorted by most recently used.
+     */
+    @Override
+    public List<RemoteClient> getClientsWithoutTabsByRecencyFromCursor(Cursor cursor) {
+        final ArrayList<RemoteClient> clients = new ArrayList<>(cursor.getCount());
+
+        final int originalPosition = cursor.getPosition();
+        try {
+            if (!cursor.moveToFirst()) {
+                return clients;
+            }
+
+            final int clientGuidIndex = cursor.getColumnIndex(BrowserContract.Clients.GUID);
+            final int clientNameIndex = cursor.getColumnIndex(BrowserContract.Clients.NAME);
+            final int clientLastModifiedIndex = cursor.getColumnIndex(BrowserContract.Clients.LAST_MODIFIED);
+            final int clientDeviceTypeIndex = cursor.getColumnIndex(BrowserContract.Clients.DEVICE_TYPE);
+
+            while (!cursor.isAfterLast()) {
+                final String clientGuid = cursor.getString(clientGuidIndex);
+                final String clientName = cursor.getString(clientNameIndex);
+                final String deviceType = cursor.getString(clientDeviceTypeIndex);
+                final long lastModified = cursor.getLong(clientLastModifiedIndex);
+
+                clients.add(new RemoteClient(clientGuid, clientName, lastModified, deviceType));
+
+                cursor.moveToNext();
+            }
+        } finally {
+            cursor.moveToPosition(originalPosition);
+        }
+        return clients;
     }
 
     /**
@@ -85,6 +131,7 @@ public class LocalTabsAccessor implements TabsAccessor {
 
             final int tabTitleIndex = cursor.getColumnIndex(BrowserContract.Tabs.TITLE);
             final int tabUrlIndex = cursor.getColumnIndex(BrowserContract.Tabs.URL);
+            final int tabLastUsedIndex = cursor.getColumnIndex(BrowserContract.Tabs.LAST_USED);
             final int clientGuidIndex = cursor.getColumnIndex(BrowserContract.Clients.GUID);
             final int clientNameIndex = cursor.getColumnIndex(BrowserContract.Clients.NAME);
             final int clientLastModifiedIndex = cursor.getColumnIndex(BrowserContract.Clients.LAST_MODIFIED);
@@ -106,7 +153,8 @@ public class LocalTabsAccessor implements TabsAccessor {
 
                 final String tabTitle = cursor.getString(tabTitleIndex);
                 final String tabUrl = cursor.getString(tabUrlIndex);
-                lastClient.tabs.add(new RemoteTab(tabTitle, tabUrl));
+                final long tabLastUsed = cursor.getLong(tabLastUsedIndex);
+                lastClient.tabs.add(new RemoteTab(tabTitle, tabUrl, tabLastUsed));
 
                 cursor.moveToNext();
             }
@@ -115,6 +163,13 @@ public class LocalTabsAccessor implements TabsAccessor {
         }
 
         return clients;
+    }
+
+    @Override
+    public Cursor getRemoteClientsByRecencyCursor(Context context) {
+        final Uri uri = clientsRecencyUriWithProfile;
+        return context.getContentResolver().query(uri, CLIENTS_PROJECTION_COLUMNS,
+                REMOTE_CLIENTS_SELECTION, null, null);
     }
 
     @Override

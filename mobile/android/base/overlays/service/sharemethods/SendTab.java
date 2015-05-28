@@ -10,11 +10,17 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.RemoteClient;
+import org.mozilla.gecko.db.TabsAccessor;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
@@ -28,19 +34,14 @@ import org.mozilla.gecko.sync.CommandRunner;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.SyncConstants;
-import org.mozilla.gecko.sync.repositories.NullCursorException;
-import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
-import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.syncadapter.SyncAdapter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -54,8 +55,8 @@ public class SendTab extends ShareMethod {
     // Key used in the extras Bundle in the share intent used for a send tab ShareMethod.
     public static final String SEND_TAB_TARGET_DEVICES = "SEND_TAB_TARGET_DEVICES";
 
-    // Key used in broadcast intent from SendTab ShareMethod specifying available ClientRecords.
-    public static final String EXTRA_CLIENT_RECORDS = "RECORDS";
+    // Key used in broadcast intent from SendTab ShareMethod specifying available RemoteClients.
+    public static final String EXTRA_REMOTE_CLIENT_RECORDS = "RECORDS";
 
     // The intent we should dispatch when the button for this ShareMethod is tapped, instead of
     // taking the normal action (e.g., "Set up Sync!")
@@ -190,20 +191,16 @@ public class SendTab extends ShareMethod {
      * Load the list of Sync clients that are not this device using the given TabSender.
      */
     private void updateClientList(TabSender tabSender) {
-        Collection<ClientRecord> otherClients = getOtherClients(tabSender);
+        Collection<RemoteClient> otherClients = getOtherClients(tabSender);
 
-        ParcelableClientRecord[] records = new ParcelableClientRecord[otherClients.size()];
+        // Put the list of RemoteClients into the uiStateIntent and broadcast it.
+        RemoteClient[] records = new RemoteClient[otherClients.size()];
+        records = otherClients.toArray(records);
+
         validGUIDs = new HashSet<>();
-        int i = 0;
 
-        // Put the list of ClientRecords into the uiStateIntent and broadcast it.
-        for (ClientRecord client : otherClients) {
-            ParcelableClientRecord record = ParcelableClientRecord.fromClientRecord(client);
-
-            records[i] = record;
-
-            validGUIDs.add(record.guid);
-            i++;
+        for (RemoteClient client : otherClients) {
+            validGUIDs.add(client.guid);
         }
 
         if (validGUIDs.isEmpty()) {
@@ -214,7 +211,7 @@ public class SendTab extends ShareMethod {
         }
 
         Intent uiStateIntent = getUIStateIntent();
-        uiStateIntent.putExtra(EXTRA_CLIENT_RECORDS, records);
+        uiStateIntent.putExtra(EXTRA_REMOTE_CLIENT_RECORDS, records);
         broadcastUIState(uiStateIntent);
     }
 
@@ -252,48 +249,25 @@ public class SendTab extends ShareMethod {
     }
 
     /**
-     * @return A map from GUID to client record for all sync clients, including our own; or null iff
-     * ClientsDatabaseAccessor.fetchAllClients throws NullCursorException.
+     * @return A collection of unique remote clients sorted by most recently used.
      */
-    protected Map<String, ClientRecord> getAllClients() {
-        ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(context);
-        try {
-            return db.fetchAllClients();
-        } catch (NullCursorException e) {
-            Log.w(LOGTAG, "NullCursorException while populating device list.", e);
-            return null;
-        } finally {
-            db.close();
-        }
-    }
-
-    /**
-     * @return a collection of client records, excluding our own.
-     */
-    protected Collection<ClientRecord> getOtherClients(final TabSender sender) {
+    protected Collection<RemoteClient> getOtherClients(final TabSender sender) {
         if (sender == null) {
             Log.w(LOGTAG, "No tab sender when fetching other client IDs.");
             return Collections.emptyList();
         }
 
-        final Map<String, ClientRecord> all = getAllClients();
-        if (all == null) {
-            return Collections.emptyList();
-        }
-
-        final String ourGUID = sender.getAccountGUID();
-        if (ourGUID == null) {
-            return all.values();
-        }
-
-        final ArrayList<ClientRecord> out = new ArrayList<>(all.size());
-        for (Map.Entry<String, ClientRecord> entry : all.entrySet()) {
-            if (!ourGUID.equals(entry.getKey())) {
-                out.add(entry.getValue());
+        final BrowserDB browserDB = GeckoProfile.get(context).getDB();
+        final TabsAccessor tabsAccessor = browserDB.getTabsAccessor();
+        final Cursor remoteTabsCursor = tabsAccessor.getRemoteClientsByRecencyCursor(context);
+        try {
+            if (remoteTabsCursor.getCount() == 0) {
+                return Collections.emptyList();
             }
+            return tabsAccessor.getClientsWithoutTabsByRecencyFromCursor(remoteTabsCursor);
+        } finally {
+            remoteTabsCursor.close();
         }
-
-        return out;
     }
 
     @Override
