@@ -1486,6 +1486,13 @@ OptimizeMIR(MIRGenerator* mir)
         AssertGraphCoherency(graph);
     }
 
+    if (!mir->compilingAsmJS()) {
+        AutoTraceLog log(logger, TraceLogger_AddKeepAliveInstructions);
+        AddKeepAliveInstructions(graph);
+        IonSpewPass("Add KeepAlive Instructions");
+        AssertGraphCoherency(graph);
+    }
+
     return true;
 }
 
