@@ -641,6 +641,37 @@ function selectNetworkAutomaticallyAndWait() {
 }
 
 /**
+ * Configures call waiting options.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter' or
+ *   'GenericFailure'.
+ *
+ * @return A deferred promise.
+ */
+ function setCallWaitingOption(aEnabled) {
+  let request = mobileConnection.setCallWaitingOption(aEnabled);
+  return request.then(null, () => { throw request.error });
+}
+
+/**
+ * Queries current call waiting status.
+ *
+ * Fulfill params:
+ *   A boolean indicating the call waiting status.
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter' or
+ *   'GenericFailure'.
+ *
+ * @return A deferred promise.
+ */
+ function getCallWaitingOption() {
+  let request = mobileConnection.getCallWaitingOption();
+  return request.then(() => request.result, () => { throw request.error });
+}
+
+/**
  * Set data connection enabling state and wait for "datachange" event.
  *
  * Resolve if data connection state changed to the expected one.  Never reject.

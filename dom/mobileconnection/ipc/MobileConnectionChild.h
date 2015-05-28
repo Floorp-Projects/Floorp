@@ -149,6 +149,9 @@ public:
   DoReply(const MobileConnectionReplySuccessCallBarring& aReply);
 
   bool
+  DoReply(const MobileConnectionReplySuccessCallWaiting& aReply);
+
+  bool
   DoReply(const MobileConnectionReplySuccessClirStatus& aReply);
 
   bool

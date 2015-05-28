@@ -933,7 +933,7 @@ RilObject.prototype = {
     Buf.newParcel(REQUEST_QUERY_CALL_WAITING, options);
     Buf.writeInt32(1);
     // As per 3GPP TS 24.083, section 1.6 UE doesn't need to send service
-    // class parameter in call waiting interrogation  to network
+    // class parameter in call waiting interrogation to network.
     Buf.writeInt32(ICC_SERVICE_CLASS_NONE);
     Buf.sendParcel();
   },
@@ -941,16 +941,17 @@ RilObject.prototype = {
   /**
    * Set call waiting status.
    *
-   * @param on
+   * @param enabled
    *        Boolean indicating the desired waiting status.
+   * @param serviceClass
+   *        One of ICC_SERVICE_CLASS_* constants.
    */
   setCallWaiting: function(options) {
     let Buf = this.context.Buf;
     Buf.newParcel(REQUEST_SET_CALL_WAITING, options);
     Buf.writeInt32(2);
     Buf.writeInt32(options.enabled ? 1 : 0);
-    Buf.writeInt32(options.serviceClass !== undefined ?
-                    options.serviceClass : ICC_SERVICE_CLASS_VOICE);
+    Buf.writeInt32(options.serviceClass);
     Buf.sendParcel();
   },
 
@@ -4937,9 +4938,9 @@ RilObject.prototype[REQUEST_QUERY_CALL_WAITING] =
   }
 
   let Buf = this.context.Buf;
-  options.length = Buf.readInt32();
-  options.enabled = ((Buf.readInt32() == 1) &&
-                     ((Buf.readInt32() & ICC_SERVICE_CLASS_VOICE) == 0x01));
+  let results = Buf.readInt32List();
+  let enabled = (results[0] === 1);
+  options.serviceClass = enabled ? results[1] : ICC_SERVICE_CLASS_NONE;
   this.sendChromeMessage(options);
 };
 
