@@ -6,6 +6,7 @@
 #ifndef mozilla_devtools_DeserializedNode__
 #define mozilla_devtools_DeserializedNode__
 
+#include "js/UbiNode.h"
 #include "mozilla/devtools/CoreDump.pb.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/Move.h"
@@ -87,5 +88,40 @@ private:
 
 } // namespace devtools
 } // namespace mozilla
+
+namespace JS {
+namespace ubi {
+
+using mozilla::devtools::DeserializedNode;
+using mozilla::UniquePtr;
+
+template<>
+struct Concrete<DeserializedNode> : public Base
+{
+protected:
+  explicit Concrete(DeserializedNode *ptr) : Base(ptr) { }
+  DeserializedNode &get() const {
+    return *static_cast<DeserializedNode *>(ptr);
+  }
+
+public:
+  static const char16_t concreteTypeName[];
+
+  static void construct(void *storage, DeserializedNode *ptr) {
+    new (storage) Concrete(ptr);
+  }
+
+  Id identifier() const override { return get().id; }
+  bool isLive() const override { return false; }
+  const char16_t *typeName() const override;
+  size_t size(mozilla::MallocSizeOf mallocSizeof) const override;
+
+  // We ignore the `bool wantNames` parameter because we can't control whether
+  // the core dump was serialized with edge names or not.
+  UniquePtr<EdgeRange> edges(JSContext* cx, bool) const override;
+};
+
+} // namespace JS
+} // namespace ubi
 
 #endif // mozilla_devtools_DeserializedNode__
