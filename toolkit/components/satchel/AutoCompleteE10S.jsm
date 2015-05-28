@@ -82,10 +82,13 @@ this.AutoCompleteE10S = {
                          getService(Ci.nsIMessageListenerManager);
     messageManager.addMessageListener("FormAutoComplete:SelectBy", this);
     messageManager.addMessageListener("FormAutoComplete:GetSelectedIndex", this);
+    messageManager.addMessageListener("FormAutoComplete:MaybeOpenPopup", this);
     messageManager.addMessageListener("FormAutoComplete:ClosePopup", this);
   },
 
   _initPopup: function(browserWindow, rect, direction) {
+    this._popupCache = { browserWindow, rect, direction };
+
     this.browser = browserWindow.gBrowser.selectedBrowser;
     this.popup = this.browser.autoCompletePopup;
     this.popup.hidden = false;
@@ -122,6 +125,7 @@ this.AutoCompleteE10S = {
       this.popup.closePopup();
     }
 
+    this._resultCache = results;
     return resultsArray;
   },
 
@@ -192,6 +196,19 @@ this.AutoCompleteE10S = {
       case "FormAutoComplete:GetSelectedIndex":
         return this.popup.selectedIndex;
 
+      case "FormAutoComplete:MaybeOpenPopup":
+        if (AutoCompleteE10SView.treeData.length > 0 &&
+            !this.popup.popupOpen) {
+          // This happens when one of the arrow keys is pressed after a search
+          // has already been completed. nsAutoCompleteController tries to
+          // re-use its own cache of the results without re-doing the search.
+          // Detect that and show the popup here.
+          this.showPopupWithResults(this._popupCache.browserWindow,
+                                    this._popupCache.rect,
+                                    this._resultCache);
+        }
+        break;
+
       case "FormAutoComplete:ClosePopup":
         this.popup.closePopup();
         break;
@@ -202,7 +219,7 @@ this.AutoCompleteE10S = {
     this.browser.messageManager.sendAsyncMessage(
       "FormAutoComplete:HandleEnter",
       { selectedIndex: this.popup.selectedIndex,
-        IsPopupSelection: aIsPopupSelection }
+        isPopupSelection: aIsPopupSelection }
     );
   },
 
