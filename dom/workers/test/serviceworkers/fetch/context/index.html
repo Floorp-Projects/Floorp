@@ -11,6 +11,10 @@
     ok(a === b, msg + ", expected '" + b + "', got '" + a + "'");
   }
 
+  function todo(v, msg) {
+    window.parent.postMessage({status: "todo", result: !!v, message: msg}, "*");
+  }
+
   function finish() {
     window.parent.postMessage({status: "done"}, "*");
   }
@@ -114,6 +118,10 @@
   }
 
   function testEmbed() {
+    return Promise.resolve().then(function() {
+      todo(false, "<embed> tag is not currently intercepted. See Bug 1168676.");
+    });
+
     return new Promise(function(resolve, reject) {
       var embed = document.createElement("embed");
       embed.src = "embed";
@@ -130,6 +138,10 @@
   }
 
   function testObject() {
+    return Promise.resolve().then(function() {
+      todo(false, "<object> tag is not currently intercepted. See Bug 1168676");
+    });
+
     return new Promise(function(resolve, reject) {
       var object = document.createElement("object");
       object.data = "object";
@@ -223,11 +235,16 @@
   }
 
   function testPlugin() {
+    return Promise.resolve().then(function() {
+      todo(false, "plugins are not currently intercepted. See Bug 1168676.");
+    });
+
     var isMobile = /Mobile|Tablet/.test(navigator.userAgent);
     if (isMobile || parent.isMulet()) {
       // We can't use plugins on mobile, so skip this part of the test there.
       return Promise.resolve();
     }
+
     return new Promise(function(resolve, reject) {
       var embed = document.createElement("embed");
       embed.type = "application/x-test";
