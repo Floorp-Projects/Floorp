@@ -5,7 +5,7 @@
  * Tests if the timeline blueprint has a correct structure.
  */
 
-function spawnTest () {
+function* spawnTest() {
   let { TIMELINE_BLUEPRINT } = devtools.require("devtools/performance/global");
 
   ok(TIMELINE_BLUEPRINT,

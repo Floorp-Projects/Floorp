@@ -6,7 +6,7 @@
  * has the correct 'root', 'parent', 'level' etc. accessors on child nodes.
  */
 
-function spawnTest () {
+function* spawnTest() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
   let { CallView } = devtools.require("devtools/performance/tree-view");
 

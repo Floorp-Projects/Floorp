@@ -13931,7 +13931,7 @@ public:
     aMarker.mCauseName.Construct(GetCause());
 
     if (!mFunctionName.IsEmpty() || !mFileName.IsEmpty()) {
-      ProfileTimelineStackFrame stackFrame;
+      RootedDictionary<ProfileTimelineStackFrame> stackFrame(aCx);
       stackFrame.mLine.Construct(mLineNumber);
       stackFrame.mSource.Construct(mFileName);
       stackFrame.mFunctionDisplayName.Construct(mFunctionName);

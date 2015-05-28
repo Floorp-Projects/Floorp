@@ -5,7 +5,7 @@
  * Tests if the sidebar is properly updated when a marker is selected.
  */
 
-function spawnTest () {
+function* spawnTest() {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView } = panel.panelWin;
   let { L10N, TIMELINE_BLUEPRINT } = devtools.require("devtools/performance/global");

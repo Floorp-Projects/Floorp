@@ -9,7 +9,7 @@
 let { getPerformanceActorsConnection } = devtools.require("devtools/performance/front");
 let WAIT_TIME = 10;
 
-function spawnTest () {
+function* spawnTest() {
   let profilerConnected = waitForProfilerConnection();
   let { target, toolbox, console } = yield initConsole(SIMPLE_URL);
   yield profilerConnected;

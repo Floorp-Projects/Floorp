@@ -82,7 +82,7 @@ const CM_IFRAME   =
   "      body { margin: 0; overflow: hidden; }" +
   "      .CodeMirror { width: 100%; height: 100% !important; line-height: 1.25 !important;}" +
   "    </style>" +
-[ "    <link rel='stylesheet' href='" + style + "'>" for (style of CM_STYLES) ].join("\n") +
+  CM_STYLES.map(style => "<link rel='stylesheet' href='" + style + "'>").join("\n") +
   "  </head>" +
   "  <body class='theme-body devtools-monospace'></body>" +
   "</html>";

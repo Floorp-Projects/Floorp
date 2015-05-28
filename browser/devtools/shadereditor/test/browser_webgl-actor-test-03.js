@@ -6,7 +6,7 @@
  * after a target navigation.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
 
   let navigated = once(target, "navigate");

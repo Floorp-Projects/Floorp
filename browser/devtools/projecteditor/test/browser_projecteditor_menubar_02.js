@@ -109,7 +109,7 @@ add_task(function*() {
   is (cmdPaste.getAttribute("disabled"), "", "Edit menu item is enabled");
 });
 
-function openAndCloseMenu(menu) {
+function* openAndCloseMenu(menu) {
   let shown = onPopupShow(menu);
   EventUtils.synthesizeMouseAtCenter(menu, {}, menu.ownerDocument.defaultView);
   yield shown;

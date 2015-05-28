@@ -4,7 +4,7 @@
 /**
  * Tests that the js flamegraphs get rerendered when toggling `show-platform-data`
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
 
