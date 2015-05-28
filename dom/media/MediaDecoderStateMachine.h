@@ -158,6 +158,10 @@ private:
   // constructor immediately after the task queue is created.
   void InitializationTask();
 
+  // Update blocking state of mDecodedStream when mPlayState or
+  // mLogicallySeeking change. Decoder monitor must be held.
+  void UpdateStreamBlockingForPlayState();
+
   // Call this IsPlaying() changes. Decoder monitor must be held.
   void UpdateStreamBlockingForStateMachinePlaying();
 

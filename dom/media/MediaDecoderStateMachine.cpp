@@ -308,6 +308,8 @@ MediaDecoderStateMachine::InitializationTask()
   mWatchManager.Watch(mPreservesPitch, &MediaDecoderStateMachine::PreservesPitchChanged);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::LogicallySeekingChanged);
+  mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::UpdateStreamBlockingForPlayState);
+  mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::UpdateStreamBlockingForPlayState);
 }
 
 bool MediaDecoderStateMachine::HasFutureAudio()
@@ -479,6 +481,7 @@ void MediaDecoderStateMachine::SendStreamData()
 
       // Make sure stream blocking is updated before sending stream data so we
       // don't 'leak' data when the stream is supposed to be blocked.
+      UpdateStreamBlockingForPlayState();
       UpdateStreamBlockingForStateMachinePlaying();
       UpdateStreamBlocking(mediaStream, false);
     }
@@ -3518,6 +3521,23 @@ void MediaDecoderStateMachine::DispatchAudioCaptured()
     }
   });
   TaskQueue()->Dispatch(r.forget());
+}
+
+void MediaDecoderStateMachine::UpdateStreamBlockingForPlayState()
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+   auto stream = mDecoder->GetDecodedStream();
+   if (!stream) {
+     return;
+   }
+
+  bool blocking = mPlayState != MediaDecoder::PLAY_STATE_PLAYING ||
+                  mLogicallySeeking;
+  if (blocking != stream->mHaveBlockedForPlayState) {
+    stream->mHaveBlockedForPlayState = blocking;
+    UpdateStreamBlocking(stream->mStream, blocking);
+  }
 }
 
 void MediaDecoderStateMachine::UpdateStreamBlockingForStateMachinePlaying()
