@@ -289,20 +289,6 @@ void MediaDecoder::SetVolume(double aVolume)
   mVolume = aVolume;
 }
 
-void MediaDecoder::UpdateStreamBlockingForPlayState()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  GetReentrantMonitor().AssertCurrentThreadIn();
-
-  auto s = GetDecodedStream();
-  if (s) {
-    bool blockForPlayState = mPlayState != PLAY_STATE_PLAYING || mLogicallySeeking;
-    if (s->mHaveBlockedForPlayState != blockForPlayState) {
-      s->mStream->ChangeExplicitBlockerCount(blockForPlayState ? 1 : -1);
-      s->mHaveBlockedForPlayState = blockForPlayState;
-    }
-  }
-}
 
 void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
                                          MediaStreamGraph* aGraph)
@@ -310,9 +296,7 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   DECODER_LOG("RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
-
   mDecodedStream.RecreateData(aStartTimeUSecs, aGraph);
-  UpdateStreamBlockingForPlayState();
 }
 
 void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
@@ -599,7 +583,6 @@ nsresult MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
   mWasEndedWhenEnteredDormant = false;
 
   mLogicallySeeking = true;
-  UpdateStreamBlockingForPlayState();
   SeekTarget target = SeekTarget(timeUsecs, aSeekType);
   CallSeek(target);
 
@@ -1019,7 +1002,6 @@ void MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
       ChangeState(PLAY_STATE_ENDED);
     }
     mLogicallySeeking = false;
-    UpdateStreamBlockingForPlayState();
   }
 
   UpdateLogicalPosition(aVal.mEventVisibility);
@@ -1064,8 +1046,6 @@ void MediaDecoder::ChangeState(PlayState aState)
   DECODER_LOG("ChangeState %s => %s",
               gPlayStateStr[mPlayState], gPlayStateStr[aState]);
   mPlayState = aState;
-
-  UpdateStreamBlockingForPlayState();
 
   if (mPlayState == PLAY_STATE_PLAYING) {
     ConstructMediaTracks();
