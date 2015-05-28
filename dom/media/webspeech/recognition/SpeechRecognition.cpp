@@ -34,7 +34,7 @@ namespace mozilla {
 namespace dom {
 
 #define PREFERENCE_DEFAULT_RECOGNITION_SERVICE "media.webspeech.service.default"
-#define DEFAULT_RECOGNITION_SERVICE "google"
+#define DEFAULT_RECOGNITION_SERVICE "pocketsphinx"
 
 #define PREFERENCE_ENDPOINTER_SILENCE_LENGTH "media.webspeech.silence_length"
 #define PREFERENCE_ENDPOINTER_LONG_SILENCE_LENGTH "media.webspeech.long_silence_length"
@@ -84,9 +84,9 @@ GetSpeechRecognitionService()
       NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "fake";
   }
 
-  nsresult aRv;
+  nsresult rv;
   nsCOMPtr<nsISpeechRecognitionService> recognitionService;
-  recognitionService = do_GetService(speechRecognitionServiceCID.get(), &aRv);
+  recognitionService = do_GetService(speechRecognitionServiceCID.get(), &rv);
   return recognitionService.forget();
 }
 
@@ -477,7 +477,7 @@ SpeechRecognition::NotifyFinalResult(SpeechEvent* aEvent)
   init.mCancelable = false;
   // init.mResultIndex = 0;
   init.mResults = aEvent->mRecognitionResultList;
-  init.mInterpretation = NS_LITERAL_STRING("NOT_IMPLEMENTED");
+  init.mInterpretation = JS::NullValue();
   // init.mEmma = nullptr;
 
   nsRefPtr<SpeechRecognitionEvent> event =
@@ -535,7 +535,9 @@ SpeechRecognition::StartRecording(DOMMediaStream* aDOMStream)
   // doesn't get Destroy()'ed
   mDOMStream = aDOMStream;
 
-  NS_ENSURE_STATE(mDOMStream->GetStream());
+  if (NS_WARN_IF(!mDOMStream->GetStream())) {
+    return NS_ERROR_UNEXPECTED;
+  }
   mSpeechListener = new SpeechStreamListener(this);
   mDOMStream->GetStream()->AddListener(mSpeechListener);
 
@@ -698,11 +700,15 @@ SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream, Error
   }
 
   mRecognitionService = GetSpeechRecognitionService();
-  NS_ENSURE_TRUE_VOID(mRecognitionService);
+  if (NS_WARN_IF(!mRecognitionService)) {
+    return;
+  }
 
   nsresult rv;
   rv = mRecognitionService->Initialize(this);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   MediaStreamConstraints constraints;
   constraints.mAudio.SetAsBoolean() = true;
@@ -957,7 +963,7 @@ SpeechRecognition::GetUserMediaErrorCallback::OnError(nsISupports* aError)
   }
   SpeechRecognitionErrorCode errorCode;
 
-  nsString name;
+  nsAutoString name;
   error->GetName(name);
   if (name.EqualsLiteral("PERMISSION_DENIED")) {
     errorCode = SpeechRecognitionErrorCode::Not_allowed;
@@ -965,7 +971,7 @@ SpeechRecognition::GetUserMediaErrorCallback::OnError(nsISupports* aError)
     errorCode = SpeechRecognitionErrorCode::Audio_capture;
   }
 
-  nsString message;
+  nsAutoString message;
   error->GetMessage(message);
   mRecognition->DispatchError(SpeechRecognition::EVENT_AUDIO_ERROR, errorCode,
                               message);
