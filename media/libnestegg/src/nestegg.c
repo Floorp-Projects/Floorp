@@ -2224,6 +2224,7 @@ nestegg_track_codec_data_count(nestegg * ctx, unsigned int track,
 {
   struct track_entry * entry;
   struct ebml_binary codec_private;
+  int codec_id;
   unsigned char * p;
 
   *count = 0;
@@ -2232,7 +2233,14 @@ nestegg_track_codec_data_count(nestegg * ctx, unsigned int track,
   if (!entry)
     return -1;
 
-  if (nestegg_track_codec_id(ctx, track) != NESTEGG_CODEC_VORBIS)
+  codec_id = nestegg_track_codec_id(ctx, track);
+
+  if (codec_id == NESTEGG_CODEC_OPUS) {
+    *count = 1;
+    return 0;
+  }
+
+  if (codec_id != NESTEGG_CODEC_VORBIS)
     return -1;
 
   if (ne_get_binary(entry->codec_private, &codec_private) != 0)
