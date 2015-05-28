@@ -108,14 +108,18 @@ class GraphSpewer
 {
   private:
     MIRGraph* graph_;
+    LSprinter c1Printer_;
+    LSprinter jsonPrinter_;
     C1Spewer c1Spewer_;
     JSONSpewer jsonSpewer_;
 
   public:
     explicit GraphSpewer(TempAllocator *alloc)
       : graph_(nullptr),
-        c1Spewer_(alloc),
-        jsonSpewer_(alloc)
+        c1Printer_(alloc->lifoAlloc()),
+        jsonPrinter_(alloc->lifoAlloc()),
+        c1Spewer_(c1Printer_),
+        jsonSpewer_(jsonPrinter_)
     { }
 
     bool isSpewing() const {
