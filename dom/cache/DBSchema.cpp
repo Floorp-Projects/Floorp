@@ -39,7 +39,7 @@ const int32_t kMaxEntriesPerStatement = 255;
 const uint32_t kPageSize = 4 * 1024;
 
 // Grow the database in chunks to reduce fragmentation
-const uint32_t kGrowthSize = 64 * 1024;
+const uint32_t kGrowthSize = 32 * 1024;
 const uint32_t kGrowthPages = kGrowthSize / kPageSize;
 static_assert(kGrowthSize % kPageSize == 0,
               "Growth size must be multiple of page size");
