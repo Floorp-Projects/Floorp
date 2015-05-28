@@ -1169,6 +1169,7 @@ bool
 OptimizeMIR(MIRGenerator* mir)
 {
     MIRGraph& graph = mir->graph();
+    GraphSpewer& gs = mir->graphSpewer();
     TraceLoggerThread* logger;
     if (GetJitContext()->runtime->onMainThread())
         logger = TraceLoggerForMainThread(GetJitContext()->runtime);
@@ -1180,7 +1181,7 @@ OptimizeMIR(MIRGenerator* mir)
             return false;
     }
 
-    IonSpewPass("BuildSSA");
+    gs.spewPass("BuildSSA");
     AssertBasicGraphCoherency(graph);
 
     if (mir->shouldCancel("Start"))
@@ -1189,7 +1190,7 @@ OptimizeMIR(MIRGenerator* mir)
     if (!mir->compilingAsmJS()) {
         AutoTraceLog log(logger, TraceLogger_FoldTests);
         FoldTests(graph);
-        IonSpewPass("Fold Tests");
+        gs.spewPass("Fold Tests");
         AssertBasicGraphCoherency(graph);
 
         if (mir->shouldCancel("Fold Tests"))
@@ -1200,7 +1201,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_SplitCriticalEdges);
         if (!SplitCriticalEdges(graph))
             return false;
-        IonSpewPass("Split Critical Edges");
+        gs.spewPass("Split Critical Edges");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Split Critical Edges"))
@@ -1211,7 +1212,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_RenumberBlocks);
         if (!RenumberBlocks(graph))
             return false;
-        IonSpewPass("Renumber Blocks");
+        gs.spewPass("Renumber Blocks");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Renumber Blocks"))
@@ -1239,7 +1240,7 @@ OptimizeMIR(MIRGenerator* mir)
                                       : AggressiveObservability;
         if (!EliminatePhis(mir, graph, observability))
             return false;
-        IonSpewPass("Eliminate phis");
+        gs.spewPass("Eliminate phis");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Eliminate phis"))
@@ -1258,7 +1259,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_ScalarReplacement);
         if (!ScalarReplacement(mir, graph))
             return false;
-        IonSpewPass("Scalar Replacement");
+        gs.spewPass("Scalar Replacement");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Scalar Replacement"))
@@ -1269,7 +1270,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_ApplyTypes);
         if (!ApplyTypeInformation(mir, graph))
             return false;
-        IonSpewPass("Apply types");
+        gs.spewPass("Apply types");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Apply types"))
@@ -1280,7 +1281,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_EagerSimdUnbox);
         if (!EagerSimdUnbox(mir, graph))
             return false;
-        IonSpewPass("Eager Simd Unbox");
+        gs.spewPass("Eager Simd Unbox");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Eager Simd Unbox"))
@@ -1292,7 +1293,7 @@ OptimizeMIR(MIRGenerator* mir)
         AlignmentMaskAnalysis ama(graph);
         if (!ama.analyze())
             return false;
-        IonSpewPass("Alignment Mask Analysis");
+        gs.spewPass("Alignment Mask Analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Alignment Mask Analysis"))
@@ -1312,7 +1313,7 @@ OptimizeMIR(MIRGenerator* mir)
         AliasAnalysis analysis(mir, graph);
         if (!analysis.analyze())
             return false;
-        IonSpewPass("Alias analysis");
+        gs.spewPass("Alias analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Alias analysis"))
@@ -1334,7 +1335,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_GVN);
         if (!gvn.run(ValueNumberer::UpdateAliasAnalysis))
             return false;
-        IonSpewPass("GVN");
+        gs.spewPass("GVN");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("GVN"))
@@ -1350,7 +1351,7 @@ OptimizeMIR(MIRGenerator* mir)
         if (!script || !script->hadFrequentBailouts()) {
             if (!LICM(mir, graph))
                 return false;
-            IonSpewPass("LICM");
+            gs.spewPass("LICM");
             AssertExtendedGraphCoherency(graph);
 
             if (mir->shouldCancel("LICM"))
@@ -1363,7 +1364,7 @@ OptimizeMIR(MIRGenerator* mir)
         RangeAnalysis r(mir, graph);
         if (!r.addBetaNodes())
             return false;
-        IonSpewPass("Beta");
+        gs.spewPass("Beta");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("RA Beta"))
@@ -1371,7 +1372,7 @@ OptimizeMIR(MIRGenerator* mir)
 
         if (!r.analyze() || !r.addRangeAssertions())
             return false;
-        IonSpewPass("Range Analysis");
+        gs.spewPass("Range Analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Range Analysis"))
@@ -1379,7 +1380,7 @@ OptimizeMIR(MIRGenerator* mir)
 
         if (!r.removeBetaNodes())
             return false;
-        IonSpewPass("De-Beta");
+        gs.spewPass("De-Beta");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("RA De-Beta"))
@@ -1389,7 +1390,7 @@ OptimizeMIR(MIRGenerator* mir)
             bool shouldRunUCE = false;
             if (!r.prepareForUCE(&shouldRunUCE))
                 return false;
-            IonSpewPass("RA check UCE");
+            gs.spewPass("RA check UCE");
             AssertExtendedGraphCoherency(graph);
 
             if (mir->shouldCancel("RA check UCE"))
@@ -1398,7 +1399,7 @@ OptimizeMIR(MIRGenerator* mir)
             if (shouldRunUCE) {
                 if (!gvn.run(ValueNumberer::DontUpdateAliasAnalysis))
                     return false;
-                IonSpewPass("UCE After RA");
+                gs.spewPass("UCE After RA");
                 AssertExtendedGraphCoherency(graph);
 
                 if (mir->shouldCancel("UCE After RA"))
@@ -1409,7 +1410,7 @@ OptimizeMIR(MIRGenerator* mir)
         if (mir->optimizationInfo().autoTruncateEnabled()) {
             if (!r.truncate())
                 return false;
-            IonSpewPass("Truncate Doubles");
+            gs.spewPass("Truncate Doubles");
             AssertExtendedGraphCoherency(graph);
 
             if (mir->shouldCancel("Truncate Doubles"))
@@ -1422,7 +1423,7 @@ OptimizeMIR(MIRGenerator* mir)
             if (!UnrollLoops(graph, r.loopIterationBounds))
                 return false;
 
-            IonSpewPass("Unroll Loops");
+            gs.spewPass("Unroll Loops");
             AssertExtendedGraphCoherency(graph);
         }
     }
@@ -1432,7 +1433,7 @@ OptimizeMIR(MIRGenerator* mir)
         EffectiveAddressAnalysis eaa(mir, graph);
         if (!eaa.analyze())
             return false;
-        IonSpewPass("Effective Address Analysis");
+        gs.spewPass("Effective Address Analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Effective Address Analysis"))
@@ -1443,7 +1444,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_EliminateDeadCode);
         if (!EliminateDeadCode(mir, graph))
             return false;
-        IonSpewPass("DCE");
+        gs.spewPass("DCE");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("DCE"))
@@ -1454,7 +1455,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_EliminateDeadCode);
         if (!Sink(mir, graph))
             return false;
-        IonSpewPass("Sink");
+        gs.spewPass("Sink");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Sink"))
@@ -1467,7 +1468,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_MakeLoopsContiguous);
         if (!MakeLoopsContiguous(graph))
             return false;
-        IonSpewPass("Make loops contiguous");
+        gs.spewPass("Make loops contiguous");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Make loops contiguous"))
@@ -1482,7 +1483,7 @@ OptimizeMIR(MIRGenerator* mir)
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
         if (!edgeCaseAnalysis.analyzeLate())
             return false;
-        IonSpewPass("Edge Case Analysis (Late)");
+        gs.spewPass("Edge Case Analysis (Late)");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Edge Case Analysis (Late)"))
@@ -1497,7 +1498,7 @@ OptimizeMIR(MIRGenerator* mir)
         // before its bounds check.
         if (!EliminateRedundantChecks(graph))
             return false;
-        IonSpewPass("Bounds Check Elimination");
+        gs.spewPass("Bounds Check Elimination");
         AssertGraphCoherency(graph);
     }
 
@@ -1515,6 +1516,7 @@ LIRGraph*
 GenerateLIR(MIRGenerator* mir)
 {
     MIRGraph& graph = mir->graph();
+    GraphSpewer& gs = mir->graphSpewer();
 
     TraceLoggerThread* logger;
     if (GetJitContext()->runtime->onMainThread())
@@ -1531,7 +1533,7 @@ GenerateLIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_GenerateLIR);
         if (!lirgen.generate())
             return nullptr;
-        IonSpewPass("Generate LIR");
+        gs.spewPass("Generate LIR");
 
         if (mir->shouldCancel("Generate LIR"))
             return nullptr;
@@ -1558,7 +1560,7 @@ GenerateLIR(MIRGenerator* mir)
                 return nullptr;
 #endif
 
-            IonSpewPass("Allocate Registers [Backtracking]");
+            gs.spewPass("Allocate Registers [Backtracking]");
             break;
           }
 
@@ -1573,7 +1575,7 @@ GenerateLIR(MIRGenerator* mir)
                 return nullptr;
             if (!integrity.check(true))
                 return nullptr;
-            IonSpewPass("Allocate Registers [Stupid]");
+            gs.spewPass("Allocate Registers [Stupid]");
             break;
           }
 
@@ -1615,6 +1617,7 @@ CompileBackEnd(MIRGenerator* mir)
 {
     // Everything in CompileBackEnd can potentially run on a helper thread.
     AutoEnterIonCompilation enter;
+    AutoSpewEndFunction spewEndFunction(mir);
 
     if (!OptimizeMIR(mir))
         return nullptr;
@@ -1918,15 +1921,14 @@ IonCompile(JSContext* cx, JSScript* script,
     if (recompile)
         builderScript->ionScript()->setRecompiling();
 
-#ifdef DEBUG
-    IonSpewFunction ionSpewFunction(graph, builderScript);
-#endif
+    SpewBeginFunction(builder, builderScript);
 
     bool succeeded = builder->build();
     builder->clearForBackEnd();
 
     if (!succeeded) {
         AbortReason reason = builder->abortReason();
+        builder->graphSpewer().endFunction();
         if (reason == AbortReason_PreliminaryObjects) {
             // Some group was accessed which has associated preliminary objects
             // to analyze. Do this now and we will try to build again shortly.
@@ -1960,7 +1962,8 @@ IonCompile(JSContext* cx, JSScript* script,
         if (!recompile)
             builderScript->setIonScript(cx, ION_COMPILING_SCRIPT);
 
-        JitSpew(JitSpew_IonLogs, "Can't log script %s:%" PRIuSIZE ". (Compiled on background thread.)",
+        JitSpew(JitSpew_IonSyncLogs, "Can't log script %s:%" PRIuSIZE
+                ". (Compiled on background thread.)",
                 builderScript->filename(), builderScript->lineno());
 
         JSRuntime* rt = cx->runtime();
@@ -1974,6 +1977,7 @@ IonCompile(JSContext* cx, JSScript* script,
 
         if (!StartOffThreadIonCompile(cx, builder)) {
             JitSpew(JitSpew_IonAbort, "Unable to start off-thread ion compilation.");
+            builder->graphSpewer().endFunction();
             return AbortReason_Alloc;
         }
 
