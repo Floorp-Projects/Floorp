@@ -29,12 +29,26 @@ namespace dom {
 namespace cache {
 namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 9;
+const int32_t kMaxWipeSchemaVersion = 10;
 
 namespace {
 
-const int32_t kLatestSchemaVersion = 9;
+const int32_t kLatestSchemaVersion = 10;
 const int32_t kMaxEntriesPerStatement = 255;
+
+const uint32_t kPageSize = 4 * 1024;
+
+// Grow the database in chunks to reduce fragmentation
+const uint32_t kGrowthSize = 64 * 1024;
+const uint32_t kGrowthPages = kGrowthSize / kPageSize;
+static_assert(kGrowthSize % kPageSize == 0,
+              "Growth size must be multiple of page size");
+
+// Limit WAL journal to a reasonable size
+const uint32_t kWalAutoCheckpointSize = 512 * 1024;
+const uint32_t kWalAutoCheckpointPages = kWalAutoCheckpointSize / kPageSize;
+static_assert(kWalAutoCheckpointSize % kPageSize == 0,
+              "WAL checkpoint size must be multiple of page size");
 
 } // anonymous namespace
 
@@ -380,22 +394,35 @@ InitializeConnection(mozIStorageConnection* aConn)
   // This function needs to perform per-connection initialization tasks that
   // need to happen regardless of the schema.
 
-  nsAutoCString pragmas(
+  nsPrintfCString pragmas(
+    // Use a smaller page size to improve perf/footprint; default is too large
+    "PRAGMA page_size = %u; "
+    // WAL journal can grow to given number of *pages*
+    "PRAGMA wal_autocheckpoint = %u; "
+    // Always truncate the journal back to given number of *bytes*
+    "PRAGMA journal_size_limit = %u; "
+    // WAL must be enabled at the end to allow page size to be changed, etc.
     "PRAGMA journal_mode = WAL; "
-    // Use default mozStorage 32kb page size for now
-    // WAL journal can grow to 512kb before being flushed to disk
-    "PRAGMA wal_autocheckpoint = 16; "
-    // Always truncate the journal back to 512kb after large transactions
-    "PRAGMA journal_size_limit = 524288; "
-    "PRAGMA foreign_keys = ON; "
-
-    // Note, the default encoding of UTF-8 is preferred.  mozStorage does all
-    // the work necessary to convert UTF-16 nsString values for us.  We don't
-    // need ordering and the binary equality operations are correct.  So, do
-    // NOT set PRAGMA encoding to UTF-16.
+    "PRAGMA foreign_keys = ON; ",
+    kPageSize,
+    kWalAutoCheckpointPages,
+    kWalAutoCheckpointSize
   );
 
+  // Note, the default encoding of UTF-8 is preferred.  mozStorage does all
+  // the work necessary to convert UTF-16 nsString values for us.  We don't
+  // need ordering and the binary equality operations are correct.  So, do
+  // NOT set PRAGMA encoding to UTF-16.
+
   nsresult rv = aConn->ExecuteSimpleSQL(pragmas);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // Limit fragmentation by growing the database by many pages at once.
+  rv = aConn->SetGrowthIncrement(kGrowthSize, EmptyCString());
+  if (rv == NS_ERROR_FILE_TOO_BIG) {
+    NS_WARNING("Not enough disk space to set sqlite growth increment.");
+    rv = NS_OK;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return NS_OK;
