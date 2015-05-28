@@ -173,6 +173,7 @@ private:
 
   Context(Manager* aManager, nsIThread* aTarget);
   ~Context();
+  void Init(Action* aInitAction, Context* aOldContext);
   void Start();
   void DispatchAction(Action* aAction, bool aDoomData = false);
   void OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,

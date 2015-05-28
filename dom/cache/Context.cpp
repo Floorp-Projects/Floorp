@@ -800,18 +800,7 @@ Context::Create(Manager* aManager, nsIThread* aTarget,
                 Action* aInitAction, Context* aOldContext)
 {
   nsRefPtr<Context> context = new Context(aManager, aTarget);
-
-  // Do this here to avoid doing an AddRef() in the constructor
-  // TODO: pass context->mData to allow connetion sharing with init
-  context->mInitRunnable = new QuotaInitRunnable(context, aManager,
-                                                 aTarget, aInitAction);
-
-  if (aOldContext) {
-    aOldContext->SetNextContext(context);
-  } else {
-    context->Start();
-  }
-
+  context->Init(aInitAction, aOldContext);
   return context.forget();
 }
 
@@ -932,6 +921,24 @@ Context::~Context()
   if (mNextContext) {
     mNextContext->Start();
   }
+}
+
+void
+Context::Init(Action* aInitAction, Context* aOldContext)
+{
+  NS_ASSERT_OWNINGTHREAD(Context);
+  MOZ_ASSERT(!mInitRunnable);
+
+  // Do this here to avoid doing an AddRef() in the constructor
+  // TODO: pass context->mData to allow connetion sharing with init
+  mInitRunnable = new QuotaInitRunnable(this, mManager, mTarget, aInitAction);
+
+  if (aOldContext) {
+    aOldContext->SetNextContext(this);
+    return;
+  }
+
+  Start();
 }
 
 void
