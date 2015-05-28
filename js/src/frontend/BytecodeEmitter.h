@@ -546,7 +546,13 @@ struct BytecodeEmitter
     bool emitStatement(ParseNode* pn);
     bool emitStatementList(ParseNode* pn, ptrdiff_t top);
 
-    bool emitDelete(ParseNode* pn);
+    bool emitDeleteName(ParseNode* pn);
+    bool emitDeleteProperty(ParseNode* pn);
+    bool emitDeleteSuperProperty(ParseNode* pn);
+    bool emitDeleteElement(ParseNode* pn);
+    bool emitDeleteSuperElement(ParseNode* pn);
+    bool emitDeleteExpression(ParseNode* pn);
+
     bool emitLogical(ParseNode* pn);
     bool emitUnary(ParseNode* pn);
 
