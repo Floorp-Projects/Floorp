@@ -176,8 +176,6 @@ function setForm(value) {
   input.focus();
 }
 
-var autocompleteMenu = getAutocompletePopup();
-
 // Restore the form to the default state.
 function restoreForm() {
   setForm("");
@@ -210,7 +208,7 @@ function popupShownListener()
   }
 }
 
-SpecialPowers.addAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
+registerPopupShownListener(popupShownListener);
 
 /*
  * Main section of test...
@@ -980,7 +978,6 @@ function runTest() {
 
     default:
         ok(false, "Unexpected invocation of test #" + testNum);
-        SpecialPowers.removeAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
         SimpleTest.finish();
         return;
   }
@@ -1005,16 +1002,7 @@ function waitForScroll()
 
 function waitForMenuChange(expectedCount, expectedFirstValue)
 {
-  if (autocompleteMenu.tree.view.rowCount != expectedCount) {
-    SimpleTest.executeSoon(function () waitForMenuChange(expectedCount, expectedFirstValue));
-  }
-  else if (expectedFirstValue && autocompleteMenu.tree.view.rowCount > 1 &&
-           autocompleteMenu.tree.view.getValueAt(0, autocompleteMenu.tree.columns[0]) != expectedFirstValue) {
-    SimpleTest.executeSoon(function () waitForMenuChange(expectedCount, expectedFirstValue));
-  }
-  else {
-    runTest();
-  }
+    notifyMenuChanged(expectedCount, expectedFirstValue, runTest);
 }
 
 function checkMenuEntries(expectedValues, testNum) {
@@ -1022,19 +1010,6 @@ function checkMenuEntries(expectedValues, testNum) {
     is(actualValues.length, expectedValues.length, testNum + " Checking length of expected menu");
     for (var i = 0; i < expectedValues.length; i++)
         is(actualValues[i], expectedValues[i], testNum + " Checking menu entry #"+i);
-}
-
-function getMenuEntries() {
-    var entries = [];
-
-    // Could perhaps pull values directly from the controller, but it seems
-    // more reliable to test the values that are actually in the tree?
-    var column = autocompleteMenu.tree.columns[0];
-    var numRows = autocompleteMenu.tree.view.rowCount;
-    for (var i = 0; i < numRows; i++) {
-        entries.push(autocompleteMenu.tree.view.getValueAt(i, column));
-    }
-    return entries;
 }
 
 function startTest() {
