@@ -5,7 +5,7 @@
  * Tests that the overview graphs do not render when realtime rendering is off
  * due to lack of e10s.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, PerformanceController, OverviewView, RecordingsView } = panel.panelWin;
 

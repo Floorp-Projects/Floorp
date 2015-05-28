@@ -32,7 +32,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
 
 const MAX_LONG_STRING_LENGTH = 200000;
+const MAX_PROPERTY_ITEMS = 2000;
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
+
+const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data
 
 this.EXPORTED_SYMBOLS = ["VariablesViewController", "StackFrameUtils"];
 
@@ -159,6 +162,166 @@ VariablesViewController.prototype = {
   },
 
   /**
+   * Adds pseudo items in case there is too many properties to display.
+   * Each item can expand into property slices.
+   *
+   * @param Scope aTarget
+   *        The Scope where the properties will be placed into.
+   * @param object aGrip
+   *        The property iterator grip.
+   * @param object aIterator
+   *        The property iterator client.
+   */
+  _populatePropertySlices: function(aTarget, aGrip, aIterator) {
+    if (aGrip.count < MAX_PROPERTY_ITEMS) {
+      return this._populateFromPropertyIterator(aTarget, aGrip);
+    }
+
+    // Divide the keys into quarters.
+    let items = Math.ceil(aGrip.count / 4);
+
+    let promises = [];
+    for(let i = 0; i < 4; i++) {
+      let start = aGrip.start + i * items;
+      let count = i != 3 ? items : aGrip.count - i * items;
+
+      // Create a new kind of grip, with additional fields to define the slice
+      let sliceGrip = {
+        type: "property-iterator",
+        propertyIterator: aIterator,
+        start: start,
+        count: count
+      };
+
+      // Query the name of the first and last items for this slice
+      let deferred = promise.defer();
+      aIterator.names([start, start + count - 1], ({ names }) => {
+        let label = "[" + names[0] + ELLIPSIS + names[1] + "]";
+        let item = aTarget.addItem(label);
+        item.showArrow();
+        this.addExpander(item, sliceGrip);
+        deferred.resolve();
+      });
+      promises.push(deferred.promise);
+    }
+
+    return promise.all(promises);
+  },
+
+  /**
+   * Adds a property slice for a Variable in the view using the already
+   * property iterator
+   *
+   * @param Scope aTarget
+   *        The Scope where the properties will be placed into.
+   * @param object aGrip
+   *        The property iterator grip.
+   */
+  _populateFromPropertyIterator: function(aTarget, aGrip) {
+    if (aGrip.count >= MAX_PROPERTY_ITEMS) {
+      // We already started to split, but there is still too many properties, split again.
+      return this._populatePropertySlices(aTarget, aGrip, aGrip.propertyIterator);
+    }
+    // We started slicing properties, and the slice is now small enough to be displayed
+    let deferred = promise.defer();
+    aGrip.propertyIterator.slice(aGrip.start, aGrip.count,
+      ({ ownProperties }) => {
+        // Add all the variable properties.
+        if (Object.keys(ownProperties).length > 0) {
+          aTarget.addItems(ownProperties, {
+            sorted: true,
+            // Expansion handlers must be set after the properties are added.
+            callback: this.addExpander
+          });
+        }
+        deferred.resolve();
+      });
+    return deferred.promise;
+  },
+
+  /**
+   * Adds the properties for a Variable in the view using a new feature in FF40+
+   * that allows iteration over properties in slices.
+   *
+   * @param Scope aTarget
+   *        The Scope where the properties will be placed into.
+   * @param object aGrip
+   *        The grip to use to populate the target.
+   * @param string aQuery [optional]
+   *        The query string used to fetch only a subset of properties
+   */
+  _populateFromObjectWithIterator: function(aTarget, aGrip, aQuery) {
+    // FF40+ starts exposing `ownPropertyLength` on ObjectActor's grip,
+    // as well as `enumProperties` request.
+    let deferred = promise.defer();
+    let objectClient = this._getObjectClient(aGrip);
+    let isArray = aGrip.preview && aGrip.preview.kind === "ArrayLike";
+    if (isArray) {
+      // First enumerate array items, e.g. properties from `0` to `array.length`.
+      let options = {
+        ignoreNonIndexedProperties: true,
+        ignoreSafeGetters: true,
+        query: aQuery
+      };
+      objectClient.enumProperties(options, ({ iterator }) => {
+        let sliceGrip = {
+          type: "property-iterator",
+          propertyIterator: iterator,
+          start: 0,
+          count: iterator.count
+        };
+        this._populatePropertySlices(aTarget, sliceGrip, iterator)
+            .then(() => {
+          // Then enumerate the rest of the properties, like length, buffer, etc.
+          let options = {
+            ignoreIndexedProperties: true,
+            sort: true,
+            query: aQuery
+          };
+          objectClient.enumProperties(options, ({ iterator }) => {
+            let sliceGrip = {
+              type: "property-iterator",
+              propertyIterator: iterator,
+              start: 0,
+              count: iterator.count
+            };
+            deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip, iterator));
+          });
+        });
+      });
+    } else {
+      // For objects, we just enumerate all the properties sorted by name.
+      objectClient.enumProperties({ sort: true, query: aQuery }, ({ iterator }) => {
+        let sliceGrip = {
+          type: "property-iterator",
+          propertyIterator: iterator,
+          start: 0,
+          count: iterator.count
+        };
+        deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip, iterator));
+      });
+
+    }
+    return deferred.promise;
+  },
+
+  /**
+   * Adds the given prototype in the view.
+   *
+   * @param Scope aTarget
+   *        The Scope where the properties will be placed into.
+   * @param object aProtype
+   *        The prototype grip.
+   */
+  _populateObjectPrototype: function(aTarget, aPrototype) {
+    // Add the variable's __proto__.
+    if (aPrototype && aPrototype.type != "null") {
+      let proto = aTarget.addItem("__proto__", { value: aPrototype });
+      this.addExpander(proto, aPrototype);
+    }
+  },
+
+  /**
    * Adds properties to a Scope, Variable, or Property in the view. Triggered
    * when a scope is expanded or certain variables are hovered.
    *
@@ -168,7 +331,19 @@ VariablesViewController.prototype = {
    *        The grip to use to populate the target.
    */
   _populateFromObject: function(aTarget, aGrip) {
-    let deferred = promise.defer();
+    // Fetch properties by slices if there is too many in order to prevent UI freeze.
+    if ("ownPropertyLength" in aGrip && aGrip.ownPropertyLength >= MAX_PROPERTY_ITEMS) {
+      return this._populateFromObjectWithIterator(aTarget, aGrip)
+                 .then(() => {
+                   let deferred = promise.defer();
+                   let objectClient = this._getObjectClient(aGrip);
+                   objectClient.getPrototype(({ prototype }) => {
+                     this._populateObjectPrototype(aTarget, prototype);
+                     deferred.resolve();
+                   });
+                   return deferred.promise;
+                 });
+    }
 
     if (aGrip.class === "Promise" && aGrip.promiseState) {
       const { state, value, reason } = aGrip.promiseState;
@@ -179,10 +354,16 @@ VariablesViewController.prototype = {
         this.addExpander(aTarget.addItem("<reason>", { value: reason }), reason);
       }
     }
+    return this._populateProperties(aTarget, aGrip);
+  },
+
+  _populateProperties: function(aTarget, aGrip, aOptions) {
+    let deferred = promise.defer();
 
     let objectClient = this._getObjectClient(aGrip);
     objectClient.getPrototypeAndProperties(aResponse => {
-      let { ownProperties, prototype } = aResponse;
+      let ownProperties = aResponse.ownProperties || {};
+      let prototype = aResponse.prototype || null;
       // 'safeGetterValues' is new and isn't necessary defined on old actors.
       let safeGetterValues = aResponse.safeGetterValues || {};
       let sortable = VariablesView.isSortable(aGrip.class);
@@ -200,21 +381,15 @@ VariablesViewController.prototype = {
       }
 
       // Add all the variable properties.
-      if (ownProperties) {
-        aTarget.addItems(ownProperties, {
-          // Not all variables need to force sorted properties.
-          sorted: sortable,
-          // Expansion handlers must be set after the properties are added.
-          callback: this.addExpander
-        });
-      }
+      aTarget.addItems(ownProperties, {
+        // Not all variables need to force sorted properties.
+        sorted: sortable,
+        // Expansion handlers must be set after the properties are added.
+        callback: this.addExpander
+      });
 
       // Add the variable's __proto__.
-      if (prototype && prototype.type != "null") {
-        let proto = aTarget.addItem("__proto__", { value: prototype });
-        // Expansion handlers must be set after the properties are added.
-        this.addExpander(proto, prototype);
-      }
+      this._populateObjectPrototype(aTarget, prototype);
 
       // If the object is a function we need to fetch its scope chain
       // to show them as closures for the respective function.
@@ -389,6 +564,10 @@ VariablesViewController.prototype = {
     let deferred = promise.defer();
     aTarget._fetched = deferred.promise;
 
+    if (aSource.type === "property-iterator") {
+      return this._populateFromPropertyIterator(aTarget, aSource);
+    }
+
     // If the target is a Variable or Property then we're fetching properties.
     if (VariablesView.isVariable(aTarget)) {
       this._populateFromObject(aTarget, aSource).then(() => {
@@ -436,6 +615,29 @@ VariablesViewController.prototype = {
     }
 
     return deferred.promise;
+  },
+
+  /**
+   * Indicates to the view if the targeted actor supports properties search
+   *
+   * @return boolean True, if the actor supports enumProperty request
+   */
+  supportsSearch: function () {
+    // FF40+ starts exposing ownPropertyLength on object actor's grip
+    // as well as enumProperty which allows to query a subset of properties.
+    return this.objectActor && ("ownPropertyLength" in this.objectActor);
+  },
+
+  /**
+   * Try to use the actor to perform an attribute search.
+   *
+   * @param Scope aScope
+   *        The Scope instance to populate with properties
+   * @param string aToken
+   *        The query string
+   */
+  performSearch: function(aScope, aToken) {
+    this._populateFromObjectWithIterator(aScope, this.objectActor, aToken);
   },
 
   /**
@@ -497,6 +699,8 @@ VariablesViewController.prototype = {
     let populated;
 
     if (aOptions.objectActor) {
+      // Save objectActor for properties filtering
+      this.objectActor = aOptions.objectActor;
       populated = this.populate(variable, aOptions.objectActor);
       variable.expand();
     } else if (aOptions.rawObject) {

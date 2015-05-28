@@ -69,7 +69,7 @@ function checkNodeKeyValue(aPanel, aId, aKey, aValue) {
   ok(false, "content check failed for " + aId + ", key " + aKey);
 }
 
-function testGen() {
+function* testGen() {
   let filterBox = hud.ui.filterBox;
 
   let httpActivity = {

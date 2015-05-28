@@ -5,7 +5,7 @@
  * Tests that vertex and fragment shader sources can be changed.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: true });
 

@@ -42,6 +42,8 @@ let promiseValidateArchivedPings = Task.async(function*(aExpectedReasons) {
   let previousPing = yield TelemetryArchive.promiseArchivedPingById(list[0].id);
   Assert.equal(aExpectedReasons.shift(), previousPing.payload.info.reason,
                "Telemetry should only get pings with expected reasons.");
+  Assert.equal(previousPing.payload.info.previousSessionId, null,
+               "The first session must report a null previous session id.");
   Assert.equal(previousPing.payload.info.previousSubsessionId, null,
                "The first subsession must report a null previous subsession id.");
   Assert.equal(previousPing.payload.info.profileSubsessionCounter, 1,
@@ -50,6 +52,7 @@ let promiseValidateArchivedPings = Task.async(function*(aExpectedReasons) {
                "subsessionCounter must be 1 the first time.");
 
   let expectedSubsessionCounter = 1;
+  let expectedPreviousSessionId = previousPing.payload.info.sessionId;
 
   for (let i = 1; i < list.length; i++) {
     let currentPing = yield TelemetryArchive.promiseArchivedPingById(list[i].id);
@@ -59,6 +62,8 @@ let promiseValidateArchivedPings = Task.async(function*(aExpectedReasons) {
 
     Assert.equal(aExpectedReasons.shift(), currentInfo.reason,
                  "Telemetry should only get pings with expected reasons.");
+    Assert.equal(currentInfo.previousSessionId, expectedPreviousSessionId,
+                 "Telemetry must correctly chain session identifiers.");
     Assert.equal(currentInfo.previousSubsessionId, previousInfo.subsessionId,
                  "Telemetry must correctly chain subsession identifiers.");
     Assert.equal(currentInfo.profileSubsessionCounter, previousInfo.profileSubsessionCounter + 1,
@@ -70,8 +75,13 @@ let promiseValidateArchivedPings = Task.async(function*(aExpectedReasons) {
     previousPing = currentPing;
     // Reset the expected subsession counter, if required. Otherwise increment the expected
     // subsession counter.
-    expectedSubsessionCounter =
-      SESSION_END_PING_REASONS.has(currentInfo.reason) ? 1 : (expectedSubsessionCounter + 1);
+    // If this is the final subsession of a session we need to update expected values accordingly.
+    if (SESSION_END_PING_REASONS.has(currentInfo.reason)) {
+      expectedSubsessionCounter = 1;
+      expectedPreviousSessionId = currentInfo.sessionId;
+    } else {
+      expectedSubsessionCounter++;
+    }
   }
 });
 

@@ -23,7 +23,7 @@ let test = asyncTest(function*() {
 
   let executeList = ["document", "window", "window.location"];
 
-  for each (var item in executeList) {
+  for (var item of executeList) {
     input.value = item;
     yield jsterm.execute();
   }

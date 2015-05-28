@@ -433,7 +433,35 @@ let {
       xpcInspector
     };
   } else { // Worker thread
-    throw new Error("Not yet implemented!");
+    let requestors = [];
+
+    let xpcInspector = {
+      get lastNestRequestor() {
+        return requestors.length === 0 ? null : requestors[0];
+      },
+
+      enterNestedEventLoop: function (requestor) {
+        requestors.push(requestor);
+        this.enterEventLoop();
+        return requestors.length;
+      },
+
+      exitNestedEventLoop: function () {
+        requestors.pop();
+        this.leaveEventLoop();
+        return requestors.length;
+      }
+    };
+
+    return {
+      Debugger: this.Debugger,
+      createSandbox: this.createSandbox,
+      dump: this.dump,
+      loadSubScript: this.loadSubScript,
+      reportError: this.reportError,
+      setImmediate: this.setImmediate,
+      xpcInspector: xpcInspector
+    };
   }
 }).call(this);
 

@@ -5,7 +5,7 @@
  * Test basic functionality of PerformanceFront, retrieving timeline data.
  */
 
-function spawnTest () {
+function* spawnTest() {
   let { target, front } = yield initBackend(SIMPLE_URL);
 
   let lastMemoryDelta = 0;

@@ -5,7 +5,7 @@
  * Tests that `enable-memory` toggles the visibility of the memory graph,
  * as well as enabling memory data on the PerformanceFront.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, $ } = panel.panelWin;
 

@@ -6,7 +6,7 @@
  * in the recording list.
  */
 
-function spawnTest () {
+function* spawnTest() {
   loadFrameScripts();
   let { target, toolbox, panel } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, gFront, PerformanceController, OverviewView, RecordingsView } = panel.panelWin;

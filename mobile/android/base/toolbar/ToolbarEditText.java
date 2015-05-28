@@ -531,6 +531,10 @@ public class ToolbarEditText extends CustomEditText
                 String text = voiceStrings.get(0);
                 setText(text);
                 setSelection(0, text.length());
+
+                final InputMethodManager imm =
+                        (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(ToolbarEditText.this, InputMethodManager.SHOW_IMPLICIT);
             }
         });
     }
