@@ -30,9 +30,7 @@ var gUpdatedOverrides;
 var gOverrideForHostCache = new Map;
 var gInitialized = false;
 var gOverrideFunctions = [
-  function (aHttpChannel) {
-    return UserAgentOverrides.getOverrideForURI(aHttpChannel.URI.asciiHost);
-  }
+  function (aHttpChannel) { return UserAgentOverrides.getOverrideForURI(aHttpChannel.URI); }
 ];
 var gBuiltUAs = new Map;
 
@@ -73,19 +71,20 @@ this.UserAgentOverrides = {
     gOverrideFunctions.unshift(callback);
   },
 
-  getOverrideForURI: function uao_getOverrideForURI(aHost) {
+  getOverrideForURI: function uao_getOverrideForURI(aURI) {
+    let host = aURI.asciiHost;
     if (!gInitialized ||
         (!gOverrides.size && !gUpdatedOverrides) ||
-        !(aHost)) {
+        !(host)) {
       return null;
     }
 
-    let override = gOverrideForHostCache.get(aHost);
+    let override = gOverrideForHostCache.get(host);
     if (override !== undefined)
       return override;
 
     function findOverride(overrides) {
-      let searchHost = aHost;
+      let searchHost = host;
       let userAgent = overrides.get(searchHost);
 
       while (!userAgent) {
@@ -105,7 +104,7 @@ this.UserAgentOverrides = {
     if (gOverrideForHostCache.size >= MAX_OVERRIDE_FOR_HOST_CACHE_SIZE) {
       gOverrideForHostCache.clear();
     }
-    gOverrideForHostCache.set(aHost, override);
+    gOverrideForHostCache.set(host, override);
 
     return override;
   },
@@ -126,8 +125,8 @@ this.UserAgentOverrides = {
     let name = aMessage.name;
     switch (name) {
       case OVERRIDE_MESSAGE:
-        let host = aMessage.data.host;
-        return this.getOverrideForURI(host);
+        let uri = aMessage.data.uri;
+        return this.getOverrideForURI(uri);
       default:
         throw("Wrong Message in UserAgentOverride: " + name);
     }
