@@ -6,7 +6,7 @@
  * overlapping geometry.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, debuggee, panel } = yield initShaderEditor(BLENDED_GEOMETRY_CANVAS_URL);
   let { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 

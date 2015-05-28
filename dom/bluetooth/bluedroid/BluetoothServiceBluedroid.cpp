@@ -2880,7 +2880,10 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
     // also a valid name. According to Bluetooth Core Spec. v3.0 - Sec. 6.22,
     // "a valid Bluetooth name is a UTF-8 encoding string which is up to 248
     // bytes in length."
-    MOZ_ASSERT(nameExists);
+    // Furthermore, we don't assert |nameExists| here since it's expected to be
+    // 'false' if remote device is using "SSP just works without user
+    // interaction" or "legacy pairing with auto-pairing".
+
     BT_APPEND_NAMED_VALUE(propertiesArray, "Name", deviceName);
   }
 

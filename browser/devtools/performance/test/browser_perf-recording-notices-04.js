@@ -5,7 +5,7 @@
  * Tests that when a recording overlaps the circular buffer, that
  * a class is assigned to the recording notices.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL, void 0, { TEST_MOCK_PROFILER_CHECK_TIMER: 10 });
   let { EVENTS, $, PerformanceController, PerformanceView } = panel.panelWin;
 

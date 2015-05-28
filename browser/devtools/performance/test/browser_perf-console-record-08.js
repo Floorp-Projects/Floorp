@@ -21,7 +21,7 @@ function testRecordings (win, expected) {
   });
 }
 
-function spawnTest () {
+function* spawnTest() {
   loadFrameScripts();
   let { target, toolbox, panel } = yield initPerformance(SIMPLE_URL);
   let win = panel.panelWin;

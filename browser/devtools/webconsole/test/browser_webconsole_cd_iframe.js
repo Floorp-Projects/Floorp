@@ -102,7 +102,7 @@ function test() {
     yield closeConsole(tab);
   }
 
-  function executeWindowTest() {
+  function* executeWindowTest() {
     yield hud.jsterm.execute("document.title");
     yield hud.jsterm.execute("'p: ' + document.querySelector('p').textContent");
     yield hud.jsterm.execute("'obj: ' + window.foobarBug609872");

@@ -5,7 +5,7 @@
  * Tests markers filtering mechanism.
  */
 
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
   let { TimelineGraph } = devtools.require("devtools/performance/graphs");

@@ -7,7 +7,7 @@
 const { ThreadNode } = devtools.require("devtools/performance/tree-model");
 const RecordingUtils = devtools.require("devtools/performance/recording-utils")
 
-function spawnTest () {
+function* spawnTest() {
   let focus = 0;
   let focusEvent = () => focus++;
 

@@ -5,7 +5,7 @@
  * Tests if multiple WebGL contexts are correctly handled.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(MULTIPLE_CONTEXTS_URL);
   front.setup({ reload: true });
 

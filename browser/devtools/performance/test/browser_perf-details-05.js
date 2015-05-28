@@ -4,7 +4,7 @@
 /**
  * Tests that the details view utility functions work as advertised.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView } = panel.panelWin;
   let { PerformanceController, WaterfallView, JsCallTreeView } = panel.panelWin;

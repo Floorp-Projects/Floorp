@@ -493,18 +493,26 @@ describe("loop.store.ActiveRoomStore", function () {
   });
 
   describe("#feedbackComplete", function() {
-    it("should reset the room store state", function() {
-      var initialState = store.getInitialStoreState();
+    it("should set the room state to READY", function() {
       store.setStoreState({
         roomState: ROOM_STATES.ENDED,
-        audioMuted: true,
-        videoMuted: true,
-        failureReason: "foo"
+        used: true
       });
 
       store.feedbackComplete(new sharedActions.FeedbackComplete());
 
-      expect(store.getStoreState()).eql(initialState);
+      expect(store.getStoreState().roomState).eql(ROOM_STATES.READY);
+    });
+
+    it("should reset the 'used' state", function() {
+      store.setStoreState({
+        roomState: ROOM_STATES.ENDED,
+        used: true
+      });
+
+      store.feedbackComplete(new sharedActions.FeedbackComplete());
+
+      expect(store.getStoreState().used).eql(false);
     });
   });
 
@@ -1301,6 +1309,38 @@ describe("loop.store.ActiveRoomStore", function () {
       store.leaveRoom();
 
       expect(store._storeState.roomState).eql(ROOM_STATES.ENDED);
+    });
+
+    it("should reset various store states", function() {
+      store.setStoreState({
+        audioMuted: true,
+        localVideoDimensions: { x: 10 },
+        receivingScreenShare: true,
+        remoteVideoDimensions: { y: 10 },
+        screenSharingState: true,
+        videoMuted: true
+      });
+
+      store.leaveRoom();
+
+      expect(store._storeState.audioMuted).eql(false);
+      expect(store._storeState.localVideoDimensions).eql({});
+      expect(store._storeState.receivingScreenShare).eql(false);
+      expect(store._storeState.remoteVideoDimensions).eql({});
+      expect(store._storeState.screenSharingState).eql(SCREEN_SHARE_STATES.INACTIVE);
+      expect(store._storeState.videoMuted).eql(false);
+    });
+
+    it("should not reset the room context", function() {
+      store.setStoreState({
+        roomContextUrls: [{ fake: 1 }],
+        roomName: "fred"
+      });
+
+      store.leaveRoom();
+
+      expect(store._storeState.roomName).eql("fred");
+      expect(store._storeState.roomContextUrls).eql([{ fake: 1 }]);
     });
   });
 

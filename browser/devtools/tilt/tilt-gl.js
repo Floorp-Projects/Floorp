@@ -835,9 +835,9 @@ TiltGL.Program.prototype = {
       this.cleanupVertexAttrib();
 
       // enable any necessary vertex attributes using the cache
-      for each (let attribute in this._attributes) {
-        this._context.enableVertexAttribArray(attribute);
-        utils._enabledAttributes.push(attribute);
+      for (let key in this._attributes) {
+        this._context.enableVertexAttribArray(this._attributes[key]);
+        utils._enabledAttributes.push(this._attributes[key]);
       }
     }
   },
@@ -849,7 +849,7 @@ TiltGL.Program.prototype = {
   {
     let utils = TiltGL.ProgramUtils;
 
-    for each (let attribute in utils._enabledAttributes) {
+    for (let attribute of utils._enabledAttributes) {
       this._context.disableVertexAttribArray(attribute);
     }
     utils._enabledAttributes = [];

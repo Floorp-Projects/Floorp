@@ -4219,11 +4219,6 @@ Tab.prototype = {
 
           this.browser.addEventListener("pagehide", listener, true);
         }
-
-        if (docURI.startsWith("about:reader")) {
-          // Update the page action to show the "reader active" icon.
-          Reader.updatePageAction(this);
-        }
         break;
       }
 
@@ -4544,6 +4539,13 @@ Tab.prototype = {
     let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0 ||
                        ((this.browser.lastURI != null) && fixedURI.equals(this.browser.lastURI) && !fixedURI.equals(aLocationURI));
     this.browser.lastURI = fixedURI;
+
+    // Let the reader logic know about same document changes because we won't get a DOMContentLoaded
+    // or pageshow event, but we'll still want to update the reader view button to account for this change.
+    // This mirrors the desktop logic in TabsProgressListener.
+    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
+      this.browser.messageManager.sendAsyncMessage("Reader:PushState", {isArticle: gBrowser.selectedBrowser.isArticle});
+    }
 
     // Reset state of click-to-play plugin notifications.
     clearTimeout(this.pluginDoorhangerTimeout);
