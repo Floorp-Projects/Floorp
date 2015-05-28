@@ -492,8 +492,8 @@ LoginManagerStorage_mozStorage.prototype = {
         // Historical compatibility requires this special case
         case "formSubmitURL":
           if (value != null) {
-              conditions.push("formSubmitURL = :formSubmitURL OR formSubmitURL = ''");
-              params["formSubmitURL"] = value;
+              // As we also need to check for different schemes at the URI
+              // this case gets handled by filtering the result of the query.
               break;
           }
         // Normal cases.
@@ -531,7 +531,7 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     let stmt;
-    let logins = [], ids = [];
+    let logins = [], ids = [], fallbackLogins = [], fallbackIds = [];;
     try {
       stmt = this._dbCreateStatement(query, params);
       // We can't execute as usual here, since we're iterating over rows
@@ -550,8 +550,18 @@ LoginManagerStorage_mozStorage.prototype = {
         login.timeLastUsed = stmt.row.timeLastUsed;
         login.timePasswordChanged = stmt.row.timePasswordChanged;
         login.timesUsed = stmt.row.timesUsed;
-        logins.push(login);
-        ids.push(stmt.row.id);
+        if (login.formSubmitURL == "" ||
+            login.formSubmitURL == matchData["formSubmitURL"]) {
+            logins.push(login);
+            ids.push(stmt.row.id);
+        } else {
+          let loginURI = Services.io.newURI(login.formSubmitURL, null, null);
+          let matchURI = Services.io.newURI(matchData.formSubmitURL, null, null);
+          if (loginURI.hostPort == matchURI.hostPort) {
+            fallbackLogins.push(login);
+            fallbackIds.push(stmt.row.id);
+          }
+        }
       }
     } catch (e) {
       this.log("_searchLogins failed: " + e.name + " : " + e.message);
@@ -561,6 +571,10 @@ LoginManagerStorage_mozStorage.prototype = {
       }
     }
 
+    if (!logins.length && fallbackLogins.length) {
+      this.log("_searchLogins: returning " + fallbackLogins.length + " fallback logins");
+      return [fallbackLogins, fallbackIds];
+    }
     this.log("_searchLogins: returning " + logins.length + " logins");
     return [logins, ids];
   },

@@ -75,6 +75,11 @@ var login8B = new nsLoginInfo(
 var login8C = new nsLoginInfo(
     "http://mochi.test:8888", "http://autocomplete5", null,
     "form9userAABz", "form9pass", "uname", "pword");
+
+var login9 = new nsLoginInfo(
+    "http://mochi.test:8888", "http://autocomplete6", null,
+    "testuser9", "testpass9", "uname", "pword");
+
 // try/catch in case someone runs the tests manually, twice.
 try {
     pwmgr.addLogin(login0);
@@ -88,6 +93,7 @@ try {
     pwmgr.addLogin(login7);
     pwmgr.addLogin(login8A);
     pwmgr.addLogin(login8B);
+    pwmgr.addLogin(login9);
 } catch (e) {
     ok(false, "addLogin threw: " + e);
 }
@@ -153,6 +159,13 @@ try {
 
   <!-- test autocomplete dropdown -->
   <form id="form9" action="http://autocomplete5" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- test for different scheme -->
+  <form id="form10" action="https://autocomplete6" onsubmit="return false;">
     <input  type="text"       name="uname">
     <input  type="password"   name="pword">
     <button type="submit">Submit</button>
@@ -769,6 +782,25 @@ function* runTest() {
   /* test 704 */
   // check that empty results are cached - bug 496466
   checkMenuEntries([]);
+
+  /* test 705 */
+  // Check that formSubmitURL with different schemes matches
+  // Turn our attention to form10
+  uname = $_(10, "uname");
+  pword = $_(10, "pword");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield waitForCompletion();
+  checkACForm("testuser9", "testpass9");
+  yield runNextTest();
 
   SimpleTest.finish();
   return;

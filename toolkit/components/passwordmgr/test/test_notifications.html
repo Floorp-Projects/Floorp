@@ -56,7 +56,8 @@ var subtests = [
                    "subtst_notifications_2pw_0un.html",  // 28
                    "http://example.org" + testpath + "subtst_notifications_2pw_1un_1text.html", // 29
                    "http://example.org" + testpath + "subtst_notifications_2pw_1un_1text.html", // 30
-               ];
+                   "subtst_notifications_1.html", // 31
+           ];
 
 
 var ignoreLoad = false;
@@ -510,9 +511,34 @@ function checkTest() {
 
         // remove the added login
         pwmgr.removeAllLogins();
+
+        // Add login for the next test
+        pwmgr.addLogin(login3);
+
         break;
       }
 
+      case 31: {
+        // make sure we didn't prompt for an existing login with different
+        // scheme for formSubmitURL.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(!popup, "checking for no notification popup");
+
+        // Check to make sure we updated the timestamps and use count on the
+        // existing login that was submitted for this form.
+        var logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should only have 1 login");
+        ok(SpecialPowers.call_Instanceof(logins[0], Ci.nsILoginMetaInfo), "metainfo QI");
+        is(logins[0].timesUsed, 2, "check .timesUsed for existing login submission");
+        ok(logins[0].timeLastUsed > logins[0].timeCreated, "timeLastUsed bumped");
+        ok(logins[0].timeCreated == logins[0].timePasswordChanged, "timeChanged not updated");
+
+        // remove that login
+        pwmgr.removeAllLogins();
+        break;
+      }
       default:
         ok(false, "Unexpected call to checkTest for test #" + testNum);
 
@@ -549,6 +575,8 @@ var login1B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888"
                               "notifyu1B", "notifyp1B", "user", "pass");
 var login2B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
                               "", "notifyp1B", "", "pass");
+var login3 = new nsLoginInfo("http://mochi.test:8888", "https://mochi.test:8888", null,
+                             "notifyu1", "notifyp1", "user", "pass");
 
 var parentScriptURL = SimpleTest.getTestFileURL("pwmgr_common.js");
 var mm = SpecialPowers.loadChromeScript(parentScriptURL);
