@@ -23,9 +23,8 @@ const STRINGS_URI = "chrome://browser/locale/devtools/webaudioeditor.properties"
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const Telemetry = require("devtools/shared/telemetry");
 const telemetry = new Telemetry();
-
-devtools.lazyRequireGetter("LineGraphWidget",
-  "devtools/shared/widgets/Graphs", true);
+devtools.lazyImporter(this, "LineGraphWidget",
+  "resource:///modules/devtools/Graphs.jsm");
 
 // `AUDIO_NODE_DEFINITION` defined in the controller's initialization,
 // which describes all the properties of an AudioNode
