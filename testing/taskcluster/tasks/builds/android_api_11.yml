@@ -27,7 +27,11 @@ task:
     env:
       # inputs to mozharness
       MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
-      MOZHARNESS_CONFIG: builds/releng_base_android_64_builds.py
+      # TODO: make these additional configuration files go away
+      MOZHARNESS_CONFIG: >
+          builds/releng_base_android_64_builds.py
+          disable_signing.py
+          platform_supports_post_upload_to_latest.py
       MH_CUSTOM_BUILD_VARIANT_CFG: api-11
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster

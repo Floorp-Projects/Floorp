@@ -45,9 +45,6 @@ set -x -e
 : MH_BRANCH                     ${MH_BRANCH:=mozilla-central}
 : MH_BUILD_POOL                 ${MH_BUILD_POOL:=staging}
 
-: MOZ_SIGNING_SERVERS           ${MOZ_SIGNING_SERVERS}
-: MOZ_SIGN_CMD                  ${MOZ_SIGN_CMD}
-
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 
 set -v
