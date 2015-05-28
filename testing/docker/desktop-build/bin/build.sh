@@ -166,6 +166,8 @@ done
   --no-clone-tools \
   --no-clobber \
   --no-update \
+  --no-upload-files \
+  --no-sendchange \
   --log-level=debug \
   --work-dir=$WORKSPACE/build \
   --no-action=generate-build-stats \
