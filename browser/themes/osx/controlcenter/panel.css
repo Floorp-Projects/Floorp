@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../shared.inc
 %include ../../shared/controlcenter/panel.inc.css
 
 /* Popup Icons */
@@ -99,26 +98,4 @@
 
 #identity-popup-container {
   padding: 16px;
-}
-
-#identity-popup-button-container {
-  background-color: hsla(210,4%,10%,.07);
-  border-top: 1px solid hsla(210,4%,10%,.12);
-  padding: 16px;
-  margin-top: 5px;
-}
-
-/* Popup Buttons */
-#identity-popup-more-info-button {
-  @hudButton@
-  margin: 10px 0 0;
-  min-height: 0px;
-}
-
-#identity-popup-more-info-button:focus {
-  @hudButtonFocused@
-}
-
-#identity-popup-more-info-button:hover:active {
-  @hudButtonPressed@
 }
