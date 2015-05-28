@@ -4,7 +4,7 @@
 /**
  * Tests that the memory call tree views get rerendered when toggling `invert-call-tree`
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, MemoryCallTreeView } = panel.panelWin;
 

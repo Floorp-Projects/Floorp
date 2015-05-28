@@ -6,7 +6,7 @@
  * an in-progress console profile.
  */
 
-function spawnTest () {
+function* spawnTest() {
   loadFrameScripts();
   let { target, toolbox, panel } = yield initPerformance(SIMPLE_URL);
   let win = panel.panelWin;

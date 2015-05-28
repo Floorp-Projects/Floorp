@@ -5,7 +5,7 @@
  * Tests if program actors are cached when navigating in the bfcache.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: false });
 
@@ -53,7 +53,7 @@ function ifWebGLSupported() {
   finish();
 
   function checkFirstCachedPrograms(programActor) {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       let programs = yield front.getPrograms();
 
       is(programs.length, 1,
@@ -64,7 +64,7 @@ function ifWebGLSupported() {
   }
 
   function checkSecondCachedPrograms(oldProgramActor, newProgramActors) {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       let programs = yield front.getPrograms();
 
       is(programs.length, 2,
@@ -82,7 +82,7 @@ function ifWebGLSupported() {
   }
 
   function checkHighlightingInTheFirstPage(programActor) {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
       yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
       ok(true, "The corner pixel colors are correct before highlighting.");
@@ -100,7 +100,7 @@ function ifWebGLSupported() {
   }
 
   function checkHighlightingInTheSecondPage(firstProgramActor, secondProgramActor) {
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
       yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
       yield ensurePixelIs(front, { x: 127, y: 127 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");

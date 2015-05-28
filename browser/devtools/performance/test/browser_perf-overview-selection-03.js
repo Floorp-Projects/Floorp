@@ -4,7 +4,7 @@
 /**
  * Tests that the graphs' selections are linked.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, OverviewView } = panel.panelWin;
 

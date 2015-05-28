@@ -4,7 +4,7 @@
 /**
  * Tests that the overview continuously renders content when recording.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, OverviewView } = panel.panelWin;
 

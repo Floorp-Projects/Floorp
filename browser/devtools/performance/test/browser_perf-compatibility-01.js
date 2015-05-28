@@ -7,7 +7,7 @@
 
 let WAIT_TIME = 100;
 
-function spawnTest () {
+function* spawnTest() {
   let { target, front } = yield initBackend(SIMPLE_URL, {
     TEST_MOCK_MEMORY_ACTOR: true,
     TEST_MOCK_TIMELINE_ACTOR: true
