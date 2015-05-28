@@ -21,7 +21,9 @@ function add_non_overridable_test(aHost, aExpectedError) {
       // error, which is what we're testing (although it would be best to test
       // this directly).
       securityInfo.QueryInterface(Ci.nsISSLStatusProvider);
-      do_check_eq(securityInfo.SSLStatus, null);
+      equal(securityInfo.SSLStatus, null,
+            "As a proxy to checking that the connection error is" +
+            " non-overridable, SSLStatus should be null");
     });
 }
 
@@ -30,31 +32,50 @@ function check_telemetry() {
                     .getService(Ci.nsITelemetry)
                     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
                     .snapshot();
-  do_check_eq(histogram.counts[ 0], 0);
-  do_check_eq(histogram.counts[ 2], 7); // SEC_ERROR_UNKNOWN_ISSUER
-  do_check_eq(histogram.counts[ 3], 1); // SEC_ERROR_CA_CERT_INVALID
-  do_check_eq(histogram.counts[ 4], 0); // SEC_ERROR_UNTRUSTED_ISSUER
-  do_check_eq(histogram.counts[ 5], 1); // SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE
-  do_check_eq(histogram.counts[ 6], 0); // SEC_ERROR_UNTRUSTED_CERT
-  do_check_eq(histogram.counts[ 7], 0); // SEC_ERROR_INADEQUATE_KEY_USAGE
-  do_check_eq(histogram.counts[ 8], 2); // SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
-  do_check_eq(histogram.counts[ 9], 6); // SSL_ERROR_BAD_CERT_DOMAIN
-  do_check_eq(histogram.counts[10], 5); // SEC_ERROR_EXPIRED_CERTIFICATE
-  do_check_eq(histogram.counts[11], 2); // MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
-  do_check_eq(histogram.counts[12], 1); // MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA
-  do_check_eq(histogram.counts[13], 0); // MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE
-  do_check_eq(histogram.counts[14], 2); // MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE
-  do_check_eq(histogram.counts[15], 1); // MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE
-  do_check_eq(histogram.counts[16], 2); // SEC_ERROR_INVALID_TIME
+  equal(histogram.counts[ 0], 0, "Should have 0 unclassified counts");
+  equal(histogram.counts[ 2], 7,
+        "Actual and expected SEC_ERROR_UNKNOWN_ISSUER counts should match");
+  equal(histogram.counts[ 3], 1,
+        "Actual and expected SEC_ERROR_CA_CERT_INVALID counts should match");
+  equal(histogram.counts[ 4], 0,
+        "Actual and expected SEC_ERROR_UNTRUSTED_ISSUER counts should match");
+  equal(histogram.counts[ 5], 1,
+        "Actual and expected SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE counts should match");
+  equal(histogram.counts[ 6], 0,
+        "Actual and expected SEC_ERROR_UNTRUSTED_CERT counts should match");
+  equal(histogram.counts[ 7], 0,
+        "Actual and expected SEC_ERROR_INADEQUATE_KEY_USAGE counts should match");
+  equal(histogram.counts[ 8], 2,
+        "Actual and expected SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED counts should match");
+  equal(histogram.counts[ 9], 6,
+        "Actual and expected SSL_ERROR_BAD_CERT_DOMAIN counts should match");
+  equal(histogram.counts[10], 5,
+        "Actual and expected SEC_ERROR_EXPIRED_CERTIFICATE counts should match");
+  equal(histogram.counts[11], 2,
+        "Actual and expected MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY counts should match");
+  equal(histogram.counts[12], 1,
+        "Actual and expected MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA counts should match");
+  equal(histogram.counts[13], 0,
+        "Actual and expected MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE counts should match");
+  equal(histogram.counts[14], 2,
+        "Actual and expected MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE counts should match");
+  equal(histogram.counts[15], 1,
+        "Actual and expected MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE counts should match");
+  equal(histogram.counts[16], 2,
+        "Actual and expected SEC_ERROR_INVALID_TIME counts should match");
 
   let keySizeHistogram = Cc["@mozilla.org/base/telemetry;1"]
                            .getService(Ci.nsITelemetry)
                            .getHistogramById("CERT_CHAIN_KEY_SIZE_STATUS")
                            .snapshot();
-  do_check_eq(keySizeHistogram.counts[0], 0);
-  do_check_eq(keySizeHistogram.counts[1], 0); // 0 successful verifications of 2048-bit keys
-  do_check_eq(keySizeHistogram.counts[2], 4); // 4 successful verifications of 1024-bit keys
-  do_check_eq(keySizeHistogram.counts[3], 48); // 48 verification failures
+  equal(keySizeHistogram.counts[0], 0,
+        "Actual and expected unchecked key size counts should match");
+  equal(keySizeHistogram.counts[1], 0,
+        "Actual and expected successful verifications of 2048-bit keys should match");
+  equal(keySizeHistogram.counts[2], 4,
+        "Actual and expected successful verifications of 1024-bit keys should match");
+  equal(keySizeHistogram.counts[3], 48,
+        "Actual and expected key size verification failures should match");
 
   run_next_test();
 }

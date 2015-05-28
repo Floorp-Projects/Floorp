@@ -1760,6 +1760,13 @@ const KTableValue nsCSSProps::kTouchActionKTable[] = {
   eCSSKeyword_UNKNOWN,      -1
 };
 
+const KTableValue nsCSSProps::kTransformBoxKTable[] = {
+  eCSSKeyword_border_box, NS_STYLE_TRANSFORM_BOX_BORDER_BOX,
+  eCSSKeyword_fill_box, NS_STYLE_TRANSFORM_BOX_FILL_BOX,
+  eCSSKeyword_view_box, NS_STYLE_TRANSFORM_BOX_VIEW_BOX,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const KTableValue nsCSSProps::kTransitionTimingFunctionKTable[] = {
   eCSSKeyword_ease, NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE,
   eCSSKeyword_linear, NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR,

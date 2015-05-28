@@ -388,12 +388,12 @@ ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId 
     else
         objProto = fun->global().getOrCreateObjectPrototype(cx);
     if (!objProto)
-        return nullptr;
+        return false;
 
     RootedPlainObject proto(cx, NewObjectWithGivenProto<PlainObject>(cx, objProto,
                                                                      SingletonObject));
     if (!proto)
-        return nullptr;
+        return false;
 
     // Per ES5 13.2 the prototype's .constructor property is configurable,
     // non-enumerable, and writable.  However, per the 15 July 2013 ES6 draft,
@@ -402,7 +402,7 @@ ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId 
     if (!isStarGenerator) {
         RootedValue objVal(cx, ObjectValue(*fun));
         if (!DefineProperty(cx, proto, cx->names().constructor, objVal, nullptr, nullptr, 0))
-            return nullptr;
+            return false;
     }
 
     // Per ES5 15.3.5.2 a user-defined function's .prototype property is

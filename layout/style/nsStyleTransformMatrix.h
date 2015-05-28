@@ -79,11 +79,28 @@ namespace nsStyleTransformMatrix {
 
     void Init(const nsSize& aDimensions);
 
+    /**
+     * The offset of the reference box from the nsIFrame's TopLeft(). This
+     * is non-zero only in the case of SVG content. If we can successfully
+     * implement UNIFIED_CONTINUATIONS at some point in the future then it
+     * may also be non-zero for non-SVG content.
+     */
+    nscoord X() {
+      EnsureDimensionsAreCached();
+      return mX;
+    }
+    nscoord Y() {
+      EnsureDimensionsAreCached();
+      return mY;
+    }
+
+    /**
+     * The size of the reference box.
+     */
     nscoord Width() {
       EnsureDimensionsAreCached();
       return mWidth;
     }
-
     nscoord Height() {
       EnsureDimensionsAreCached();
       return mHeight;
@@ -98,7 +115,7 @@ namespace nsStyleTransformMatrix {
     void EnsureDimensionsAreCached();
 
     const nsIFrame* mFrame;
-    nscoord mWidth, mHeight;
+    nscoord mX, mY, mWidth, mHeight;
     bool mIsCached;
   };
 

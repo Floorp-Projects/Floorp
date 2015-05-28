@@ -1281,7 +1281,7 @@ UnboxedArrayObject::shrinkElements(ExclusiveContext* cx, size_t cap)
 }
 
 bool
-UnboxedArrayObject::containsProperty(JSContext* cx, jsid id)
+UnboxedArrayObject::containsProperty(ExclusiveContext* cx, jsid id)
 {
     if (JSID_IS_INT(id) && uint32_t(JSID_TO_INT(id)) < initializedLength())
         return true;
@@ -1396,11 +1396,11 @@ UnboxedArrayObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id
                 if (!CanonicalizeArrayLengthValue(cx, v, &len))
                     return false;
                 UnboxedArrayObject* nobj = &obj->as<UnboxedArrayObject>();
-                nobj->setLength(cx, len);
                 if (len < nobj->initializedLength()) {
                     nobj->setInitializedLength(len);
                     nobj->shrinkElements(cx, len);
                 }
+                nobj->setLength(cx, len);
                 return result.succeed();
             }
 
@@ -1439,6 +1439,15 @@ UnboxedArrayObject::obj_getOwnPropertyDescriptor(JSContext* cx, HandleObject obj
 UnboxedArrayObject::obj_deleteProperty(JSContext* cx, HandleObject obj, HandleId id,
                                        ObjectOpResult& result)
 {
+    if (obj->as<UnboxedArrayObject>().containsProperty(cx, id)) {
+        size_t initlen = obj->as<UnboxedArrayObject>().initializedLength();
+        if (JSID_IS_INT(id) && JSID_TO_INT(id) == int32_t(initlen - 1)) {
+            obj->as<UnboxedArrayObject>().setInitializedLength(initlen - 1);
+            obj->as<UnboxedArrayObject>().shrinkElements(cx, initlen - 1);
+            return result.succeed();
+        }
+    }
+
     if (!convertToNative(cx, obj))
         return false;
     return DeleteProperty(cx, obj, id, result);
@@ -1959,14 +1968,14 @@ js::MoveAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj,
     return CallBoxedOrUnboxedSpecialization(functor, obj);
 }
 
-DefineBoxedOrUnboxedFunctor5(CopyBoxedOrUnboxedDenseElements,
-                             JSContext*, JSObject*, JSObject*, uint32_t, uint32_t);
+DefineBoxedOrUnboxedFunctor6(CopyBoxedOrUnboxedDenseElements,
+                             JSContext*, JSObject*, JSObject*, uint32_t, uint32_t, uint32_t);
 
 DenseElementResult
 js::CopyAnyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
-                                       uint32_t srcStart, uint32_t length)
+                                       uint32_t dstStart, uint32_t srcStart, uint32_t length)
 {
-    CopyBoxedOrUnboxedDenseElementsFunctor functor(cx, dst, src, srcStart, length);
+    CopyBoxedOrUnboxedDenseElementsFunctor functor(cx, dst, src, dstStart, srcStart, length);
     return CallBoxedOrUnboxedSpecialization(functor, dst);
 }
 

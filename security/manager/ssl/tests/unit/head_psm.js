@@ -605,7 +605,8 @@ function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
     (sslstatus.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
     (sslstatus.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
     (sslstatus.isNotValidAtThisTime ? Ci.nsICertOverrideService.ERROR_TIME : 0);
-  do_check_eq(bits, aExpectedBits);
+  Assert.equal(bits, aExpectedBits,
+               "Actual and expected override bits should match");
   let cert = sslstatus.serverCert;
   let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
                               .getService(Ci.nsICertOverrideService);
