@@ -15,13 +15,20 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'jsinspector'
 
 EXPORTS.mozilla.devtools += [
+    'ChromeUtils.h',
+    'CoreDump.pb.h',
     'ZeroCopyNSIOutputStream.h',
 ]
 
 SOURCES += [
+    'ChromeUtils.cpp',
+    'CoreDump.pb.cc',
     'nsJSInspector.cpp',
     'ZeroCopyNSIOutputStream.cpp',
 ]
+
+# Disable RTTI in google protocol buffer
+DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 
 FINAL_LIBRARY = 'xul'
 
