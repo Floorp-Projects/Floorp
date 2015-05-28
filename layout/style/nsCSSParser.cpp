@@ -10001,7 +10001,8 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
             tokenStream->mBaseURI = mBaseURI;
             tokenStream->mSheetURI = mSheetURI;
             tokenStream->mSheetPrincipal = mSheetPrincipal;
-            tokenStream->mSheet = mSheet;
+            // XXX Should store sheet here (see bug 952338).
+            // tokenStream->mSheet = mSheet;
             tokenStream->mLineNumber = stateBeforeProperty.mPosition.LineNumber();
             tokenStream->mLineOffset = stateBeforeProperty.mPosition.LineOffset();
             value.SetTokenStreamValue(tokenStream);
@@ -10014,7 +10015,8 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
           tokenStream->mBaseURI = mBaseURI;
           tokenStream->mSheetURI = mSheetURI;
           tokenStream->mSheetPrincipal = mSheetPrincipal;
-          tokenStream->mSheet = mSheet;
+          // XXX Should store sheet here (see bug 952338).
+          // tokenStream->mSheet = mSheet;
           tokenStream->mLineNumber = stateBeforeProperty.mPosition.LineNumber();
           tokenStream->mLineOffset = stateBeforeProperty.mPosition.LineOffset();
           value.SetTokenStreamValue(tokenStream);
