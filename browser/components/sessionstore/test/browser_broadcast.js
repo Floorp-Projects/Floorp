@@ -56,12 +56,8 @@ add_task(function flush_on_duplicate() {
   let tab2 = ss.duplicateTab(window, tab);
   yield promiseTabRestored(tab2);
 
-  let {storage} = JSON.parse(ss.getTabState(tab2));
-  is(storage["http://example.com"].test, "on-duplicate",
-    "sessionStorage data has been flushed when duplicating tabs");
-
   yield promiseRemoveTab(tab2);
-  [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
+  let [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
   is(storage["http://example.com"].test, "on-duplicate",
     "sessionStorage data has been flushed when duplicating tabs");
 
