@@ -238,6 +238,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_SPREAD:
       case PNK_MUTATEPROTO:
       case PNK_EXPORT:
+      case PNK_EXPORT_DEFAULT:
       case PNK_SUPERELEM:
         return PushUnaryNodeChild(pn, stack);
 
