@@ -468,7 +468,12 @@ TiledContentHost::RenderTile(TileHost& aTile,
     return;
   }
 
-  RefPtr<TexturedEffect> effect = CreateTexturedEffect(aTile.mTextureSource, aTile.mTextureSourceOnWhite, aFilter, true);
+  RefPtr<TexturedEffect> effect =
+    CreateTexturedEffect(aTile.mTextureSource,
+                         aTile.mTextureSourceOnWhite,
+                         aFilter,
+                         true,
+                         aTile.mTextureHost->GetRenderState());
   if (!effect) {
     return;
   }
