@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/b2g_flame_kk_ota_base.yml'
   variables:
-    build_name: 'flame-kk'
+    build_name: 'flame-kk-ota'
     build_type: 'opt'
 task:
   metadata:

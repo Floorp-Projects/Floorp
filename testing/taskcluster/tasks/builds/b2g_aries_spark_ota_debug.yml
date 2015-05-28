@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/b2g_aries_spark_ota_base.yml'
   variables:
-    build_name: 'aries'
+    build_name: 'aries-ota'
     build_type: 'debug'
 task:
   metadata:
