@@ -1076,3 +1076,9 @@ CERT_GetImposedNameConstraints;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.19.1 { 	# NSS 3.19.1 release
+;+    global:
+SECKEY_BigIntegerBitLength;
+;+    local:
+;+       *;
+;+};

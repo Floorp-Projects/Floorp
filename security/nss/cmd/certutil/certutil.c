@@ -180,7 +180,7 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
 
 static SECStatus
 CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
-        SECOidTag hashAlgTag, CERTName *subject, char *phone, int ascii, 
+        SECOidTag hashAlgTag, CERTName *subject, const char *phone, int ascii,
 	const char *emailAddrs, const char *dnsNames,
         certutilExtnList extnList, const char *extGeneric,
         /*out*/ SECItem *result)
@@ -270,7 +270,7 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
 	}
 
 	if (!phone)
-	    phone = strdup("(not specified)");
+	    phone = "(not specified)";
 
 	email = CERT_GetCertEmailAddress(subject);
 	if (!email)
@@ -323,6 +323,7 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
 	    }
 	    PR_smprintf_free(header);
 	}
+	PORT_Free(obuf);
     } else {
 	(void) SECITEM_CopyItem(NULL, result, &signedReq);
     }
