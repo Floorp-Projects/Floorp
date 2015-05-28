@@ -78,6 +78,7 @@ NS_strtok(const char* aDelims, char** aStr)
 uint32_t
 NS_strlen(const char16_t* aString)
 {
+  MOZ_ASSERT(aString);
   const char16_t* end;
 
   for (end = aString; *end; ++end) {
@@ -101,6 +102,23 @@ NS_strcmp(const char16_t* aStrA, const char16_t* aStrB)
   }
 
   return *aStrA != '\0';
+}
+
+int
+NS_strncmp(const char16_t* aStrA, const char16_t* aStrB, size_t aLen)
+{
+  while (aLen && *aStrB) {
+    int r = *aStrA - *aStrB;
+    if (r) {
+      return r;
+    }
+
+    ++aStrA;
+    ++aStrB;
+    --aLen;
+  }
+
+  return aLen ? *aStrA != '\0' : *aStrA - *aStrB;
 }
 
 char16_t*

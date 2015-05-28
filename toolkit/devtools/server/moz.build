@@ -20,12 +20,16 @@ XPIDL_MODULE = 'jsinspector'
 EXPORTS.mozilla.devtools += [
     'ChromeUtils.h',
     'CoreDump.pb.h',
+    'DeserializedNode.h',
+    'HeapSnapshot.h',
     'ZeroCopyNSIOutputStream.h',
 ]
 
 SOURCES += [
     'ChromeUtils.cpp',
     'CoreDump.pb.cc',
+    'DeserializedNode.cpp',
+    'HeapSnapshot.cpp',
     'nsJSInspector.cpp',
     'ZeroCopyNSIOutputStream.cpp',
 ]
