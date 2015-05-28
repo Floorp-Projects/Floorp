@@ -64,6 +64,7 @@ public final class GeckoProfile {
     // Caches the guest profile dir.
     private static File sGuestDir;
     private static GeckoProfile sGuestProfile;
+    private static boolean sShouldCheckForGuestProfile = true;
 
     public static boolean sIsUsingCustomProfile;
 
@@ -319,6 +320,7 @@ public final class GeckoProfile {
             // We need to force the creation of a new guest profile if we want it outside of the normal profile path,
             // otherwise GeckoProfile.getDir will try to be smart and build it for us in the normal profiles dir.
             getGuestDir(context).mkdir();
+            sShouldCheckForGuestProfile = true;
             GeckoProfile profile = getGuestProfile(context);
 
             // If we're creating this guest session over the keyguard, don't lock it.
@@ -367,10 +369,14 @@ public final class GeckoProfile {
 
     public static GeckoProfile getGuestProfile(Context context) {
         if (sGuestProfile == null) {
-            File guestDir = getGuestDir(context);
-            if (guestDir.exists()) {
-                sGuestProfile = get(context, GUEST_PROFILE, guestDir);
-                sGuestProfile.mInGuestMode = true;
+            if (sShouldCheckForGuestProfile) {
+                File guestDir = getGuestDir(context);
+                if (guestDir.exists()) {
+                    sGuestProfile = get(context, GUEST_PROFILE, guestDir);
+                    sGuestProfile.mInGuestMode = true;
+                } else {
+                    sShouldCheckForGuestProfile = false;
+                }
             }
         }
 
