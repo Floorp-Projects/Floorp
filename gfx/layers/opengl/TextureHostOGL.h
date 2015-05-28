@@ -425,7 +425,8 @@ public:
   EGLImageTextureHost(TextureFlags aFlags,
                      EGLImage aImage,
                      EGLSync aSync,
-                     gfx::IntSize aSize);
+                     gfx::IntSize aSize,
+                     bool hasAlpha);
 
   virtual ~EGLImageTextureHost();
 
@@ -461,6 +462,7 @@ protected:
   const EGLImage mImage;
   const EGLSync mSync;
   const gfx::IntSize mSize;
+  const bool mHasAlpha;
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<EGLImageTextureSource> mTextureSource;
 };
