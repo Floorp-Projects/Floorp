@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -42,8 +41,7 @@ using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController,
                          mController, mLoginManager, mFocusedPopup, mDocShells,
-                         mPopups, mLastSearchResult, mLastListener,
-                         mLastFormAutoComplete)
+                         mPopups, mLastListener, mLastFormAutoComplete)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
@@ -217,8 +215,7 @@ nsFormFillController::MaybeRemoveMutationObserver(nsINode* aNode)
 {
   // Nodes being tracked in mPwmgrInputs will have their observers removed when
   // they stop being tracked. 
-  bool dummy;
-  if (!mPwmgrInputs.Get(aNode, &dummy)) {
+  if (!mPwmgrInputs.Get(aNode)) {
     aNode->RemoveMutationObserver(this);
   }
 }
@@ -637,8 +634,7 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
 
   // If the login manager has indicated it's responsible for this field, let it
   // handle the autocomplete. Otherwise, handle with form history.
-  bool dummy;
-  if (mPwmgrInputs.Get(mFocusedInputNode, &dummy)) {
+  if (mPwmgrInputs.Get(mFocusedInputNode)) {
     // XXX aPreviousResult shouldn't ever be a historyResult type, since we're not letting
     // satchel manage the field?
     mLastListener = aListener;
@@ -650,81 +646,64 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
   } else {
     mLastListener = aListener;
 
-    // It appears that mFocusedInput is always null when we are focusing a XUL
-    // element. Scary :)
-    if (!mFocusedInput || nsContentUtils::IsAutocompleteEnabled(mFocusedInput)) {
-      nsCOMPtr <nsIFormAutoComplete> formAutoComplete =
-        do_GetService("@mozilla.org/satchel/form-autocomplete;1", &rv);
+    nsCOMPtr<nsIAutoCompleteResult> datalistResult;
+    if (mFocusedInput) {
+      rv = PerformInputListAutoComplete(aSearchString,
+                                        getter_AddRefs(datalistResult));
       NS_ENSURE_SUCCESS(rv, rv);
-
-      formAutoComplete->AutoCompleteSearchAsync(aSearchParam,
-                                                aSearchString,
-                                                mFocusedInput,
-                                                aPreviousResult,
-                                                this);
-      mLastFormAutoComplete = formAutoComplete;
-    } else {
-      mLastSearchString = aSearchString;
-
-      // Even if autocomplete is disabled, handle the inputlist anyway as that was
-      // specifically requested by the page. This is so a field can have the default
-      // autocomplete disabled and replaced with a custom inputlist autocomplete.
-      return PerformInputListAutoComplete(aPreviousResult);
     }
+
+    nsCOMPtr <nsIFormAutoComplete> formAutoComplete =
+      do_GetService("@mozilla.org/satchel/form-autocomplete;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    formAutoComplete->AutoCompleteSearchAsync(aSearchParam,
+                                              aSearchString,
+                                              mFocusedInput,
+                                              aPreviousResult,
+                                              datalistResult,
+                                              this);
+    mLastFormAutoComplete = formAutoComplete;
   }
 
   return NS_OK;
 }
 
 nsresult
-nsFormFillController::PerformInputListAutoComplete(nsIAutoCompleteResult* aPreviousResult)
+nsFormFillController::PerformInputListAutoComplete(const nsAString& aSearch,
+                                                   nsIAutoCompleteResult** aResult)
 {
   // If an <input> is focused, check if it has a list="<datalist>" which can
   // provide the list of suggestions.
 
+  MOZ_ASSERT(!mPwmgrInputs.Get(mFocusedInputNode));
   nsresult rv;
-  nsCOMPtr<nsIAutoCompleteResult> result;
 
-  bool dummy;
-  if (!mPwmgrInputs.Get(mFocusedInputNode, &dummy)) {
-    nsCOMPtr <nsIInputListAutoComplete> inputListAutoComplete =
-      do_GetService("@mozilla.org/satchel/inputlist-autocomplete;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = inputListAutoComplete->AutoCompleteSearch(aPreviousResult,
-                                                   mLastSearchString,
-                                                   mFocusedInput,
-                                                   getter_AddRefs(result));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIInputListAutoComplete> inputListAutoComplete =
+    do_GetService("@mozilla.org/satchel/inputlist-autocomplete;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = inputListAutoComplete->AutoCompleteSearch(aSearch,
+                                                 mFocusedInput,
+                                                 aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mFocusedInput) {
-      nsCOMPtr<nsIDOMHTMLElement> list;
-      mFocusedInput->GetList(getter_AddRefs(list));
+  if (mFocusedInput) {
+    nsCOMPtr<nsIDOMHTMLElement> list;
+    mFocusedInput->GetList(getter_AddRefs(list));
 
-      // Add a mutation observer to check for changes to the items in the <datalist>
-      // and update the suggestions accordingly.
-      nsCOMPtr<nsINode> node = do_QueryInterface(list);
-      if (mListNode != node) {
-        if (mListNode) {
-          mListNode->RemoveMutationObserver(this);
-          mListNode = nullptr;
-        }
-        if (node) {
-          node->AddMutationObserverUnlessExists(this);
-          mListNode = node;
-        }
+    // Add a mutation observer to check for changes to the items in the <datalist>
+    // and update the suggestions accordingly.
+    nsCOMPtr<nsINode> node = do_QueryInterface(list);
+    if (mListNode != node) {
+      if (mListNode) {
+        mListNode->RemoveMutationObserver(this);
+        mListNode = nullptr;
+      }
+      if (node) {
+        node->AddMutationObserverUnlessExists(this);
+        mListNode = node;
       }
     }
-  } else {
-    result = aPreviousResult;
-
-    // If this is a password manager input mLastSearchResult will be a JS
-    // object (wrapped in an XPConnect reflector), so we need to take care not
-    // to hold onto it for too long.
-    mLastSearchResult = nullptr;
-  }
-
-  if (mLastListener) {
-    mLastListener->OnSearchResult(this, result);
   }
 
   return NS_OK;
@@ -759,14 +738,24 @@ void nsFormFillController::RevalidateDataList()
   if (!mLastListener) {
     return;
   }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    nsCOMPtr<nsIAutoCompleteController> controller(do_QueryInterface(mLastListener));
+    if (!controller) {
+      return;
+    }
+
+    controller->StartSearch(mLastSearchString);
+    return;
+  }
+
   nsresult rv;
   nsCOMPtr <nsIInputListAutoComplete> inputListAutoComplete =
     do_GetService("@mozilla.org/satchel/inputlist-autocomplete;1", &rv);
 
   nsCOMPtr<nsIAutoCompleteResult> result;
 
-  rv = inputListAutoComplete->AutoCompleteSearch(mLastSearchResult,
-                                                 mLastSearchString,
+  rv = inputListAutoComplete->AutoCompleteSearch(mLastSearchString,
                                                  mFocusedInput,
                                                  getter_AddRefs(result));
 
@@ -793,14 +782,16 @@ nsFormFillController::StopSearch()
 NS_IMETHODIMP
 nsFormFillController::OnSearchCompletion(nsIAutoCompleteResult *aResult)
 {
-  nsCOMPtr<nsIAutoCompleteResult> resultParam = do_QueryInterface(aResult);
-
   nsAutoString searchString;
-  resultParam->GetSearchString(searchString);
-  mLastSearchResult = aResult;
+  aResult->GetSearchString(searchString);
+
   mLastSearchString = searchString;
 
-  return PerformInputListAutoComplete(resultParam);
+  if (mLastListener) {
+    mLastListener->OnSearchResult(this, aResult);
+  }
+
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -905,9 +896,8 @@ nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
   aInput->GetList(getter_AddRefs(datalist));
   bool hasList = datalist != nullptr;
 
-  bool dummy;
   bool isPwmgrInput = false;
-  if (mPwmgrInputs.Get(inputNode, &dummy))
+  if (mPwmgrInputs.Get(inputNode))
       isPwmgrInput = true;
 
   if (isPwmgrInput || hasList || autocomplete) {
