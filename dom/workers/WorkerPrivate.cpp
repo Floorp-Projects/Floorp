@@ -32,7 +32,6 @@
 #include "nsIXPConnect.h"
 #include "nsPerformance.h"
 #include "nsPIDOMWindow.h"
-#include "nsSerializationHelper.h"
 
 #include <algorithm>
 #include "jsfriendapi.h"
@@ -4073,17 +4072,6 @@ WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal,
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
     PrincipalToPrincipalInfo(aPrincipal, mLoadInfo.mPrincipalInfo)));
-}
-
-template <class Derived>
-void
-WorkerPrivateParent<Derived>::SetSecurityInfo(nsISerializable* aSerializable)
-{
-  MOZ_ASSERT(IsServiceWorker());
-  AssertIsOnMainThread();
-  nsAutoCString securityInfo;
-  NS_SerializeToString(aSerializable, securityInfo);
-  SetSecurityInfo(securityInfo);
 }
 
 template <class Derived>

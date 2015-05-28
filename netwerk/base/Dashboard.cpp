@@ -298,7 +298,6 @@ LookupHelper::OnLookupComplete(nsICancelable *aRequest,
 nsresult
 LookupHelper::ConstructAnswer(LookupArgument *aArgument)
 {
-
     nsIDNSRecord *aRecord = aArgument->mRecord;
     AutoSafeJSContext cx;
 
@@ -312,10 +311,15 @@ LookupHelper::ConstructAnswer(LookupArgument *aArgument)
         bool hasMore;
         aRecord->HasMore(&hasMore);
         while (hasMore) {
-           nsCString nextAddress;
-           aRecord->GetNextAddrAsString(nextAddress);
-           CopyASCIItoUTF16(nextAddress, *addresses.AppendElement());
-           aRecord->HasMore(&hasMore);
+            nsString* nextAddress = addresses.AppendElement();
+            if (!nextAddress) {
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+
+            nsCString nextAddressASCII;
+            aRecord->GetNextAddrAsString(nextAddressASCII);
+            CopyASCIItoUTF16(nextAddressASCII, *nextAddress);
+            aRecord->HasMore(&hasMore);
         }
     } else {
         dict.mAnswer = false;

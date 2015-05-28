@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to BrowserMob Proxy’s documentation! &mdash; BrowserMob Proxy 0.6.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="BrowserMob Proxy 0.6.0 documentation" href="#" />
+    <link rel="next" title="client Package" href="client.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="client.html" title="client Package"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">BrowserMob Proxy 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-browsermob-proxy-s-documentation">
+<h1>Welcome to BrowserMob Proxy&#8217;s documentation!<a class="headerlink" href="#welcome-to-browsermob-proxy-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Python client for the BrowserMob Proxy 2.0 REST API.</p>
+<div class="section" id="how-to-install">
+<h2>How to install<a class="headerlink" href="#how-to-install" title="Permalink to this headline">¶</a></h2>
+<p>BrowserMob Proxy is available on <a class="reference external" href="http://pypi.python.org/pypi/browsermob-proxy">PyPI</a>, so you can install it with <tt class="docutils literal"><span class="pre">pip</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install browsermob-proxy
+</pre></div>
+</div>
+<p>Or with <cite>easy_install</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ easy_install browsermob-proxy
+</pre></div>
+</div>
+<p>Or by cloning the repo from <a class="reference external" href="https://github.com/AutomatedTester/browsermob-proxy-py">GitHub</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone git://github.com/AutomatedTester/browsermob-proxy-py.git
+</pre></div>
+</div>
+<p>Then install it by running:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python setup.py install
+</pre></div>
+</div>
+</div>
+<div class="section" id="how-to-use-with-selenium-webdriver">
+<h2>How to use with selenium-webdriver<a class="headerlink" href="#how-to-use-with-selenium-webdriver" title="Permalink to this headline">¶</a></h2>
+<p>Manually:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">browsermobproxy</span> <span class="kn">import</span> <span class="n">Server</span>
+<span class="n">server</span> <span class="o">=</span> <span class="n">Server</span><span class="p">(</span><span class="s">&quot;path/to/browsermob-proxy&quot;</span><span class="p">)</span>
+<span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="n">proxy</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">create_proxy</span><span class="p">()</span>
+
+<span class="kn">from</span> <span class="nn">selenium</span> <span class="kn">import</span> <span class="n">webdriver</span>
+<span class="n">profile</span>  <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">FirefoxProfile</span><span class="p">()</span>
+<span class="n">profile</span><span class="o">.</span><span class="n">set_proxy</span><span class="p">(</span><span class="n">proxy</span><span class="o">.</span><span class="n">selenium_proxy</span><span class="p">())</span>
+<span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Firefox</span><span class="p">(</span><span class="n">firefox_profile</span><span class="o">=</span><span class="n">profile</span><span class="p">)</span>
+
+
+<span class="n">proxy</span><span class="o">.</span><span class="n">new_har</span><span class="p">(</span><span class="s">&quot;google&quot;</span><span class="p">)</span>
+<span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;http://www.google.co.uk&quot;</span><span class="p">)</span>
+<span class="n">proxy</span><span class="o">.</span><span class="n">har</span> <span class="c"># returns a HAR JSON blob</span>
+
+<span class="n">server</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+<span class="n">driver</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="client.html"><tt class="docutils literal"><span class="pre">client</span></tt> Package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="server.html"><tt class="docutils literal"><span class="pre">server</span></tt> Package</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to BrowserMob Proxy&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#how-to-install">How to install</a></li>
+<li><a class="reference internal" href="#how-to-use-with-selenium-webdriver">How to use with selenium-webdriver</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="client.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">client</span></tt> Package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="client.html" title="client Package"
+             >next</a> |</li>
+        <li><a href="#">BrowserMob Proxy 0.6.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, David Burns.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

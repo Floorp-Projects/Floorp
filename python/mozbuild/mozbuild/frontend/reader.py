@@ -66,6 +66,7 @@ from .context import (
     FUNCTIONS,
     VARIABLES,
     DEPRECATION_HINTS,
+    SourcePath,
     SPECIAL_VARIABLES,
     SUBCONTEXTS,
     SubContext,
@@ -296,8 +297,8 @@ class MozbuildSandbox(Sandbox):
     def _include(self, path):
         """Include and exec another file within the context of this one."""
 
-        # path is a SourcePath, and needs to be coerced to unicode.
-        self.exec_file(unicode(path))
+        # path is a SourcePath
+        self.exec_file(path.full_path)
 
     def _warning(self, message):
         # FUTURE consider capturing warnings in a variable instead of printing.
@@ -431,7 +432,7 @@ class MozbuildSandbox(Sandbox):
             for k, v in inspect.getcallargs(func, *args, **kwargs).items():
                 sandbox[k] = v
 
-            sandbox.exec_source(code, path)
+            sandbox.exec_source(code, path, becomes_current_path=False)
 
             # This is gross, but allows the merge to happen. Eventually, the
             # merging will go away and template contexts emitted independently.
@@ -1067,8 +1068,8 @@ class BuildReader(object):
             from .gyp_reader import read_from_gyp
             non_unified_sources = set()
             for s in gyp_dir.non_unified_sources:
-                source = mozpath.normpath(mozpath.join(curdir, s))
-                if not os.path.exists(source):
+                source = SourcePath(context, s)
+                if not os.path.exists(source.full_path):
                     raise SandboxValidationError('Cannot find %s.' % source,
                         context)
                 non_unified_sources.add(source)
@@ -1099,7 +1100,8 @@ class BuildReader(object):
                 if d in recurse_info:
                     raise SandboxValidationError(
                         'Directory (%s) registered multiple times in %s' % (
-                            mozpath.relpath(d, context.srcdir), var), context)
+                            mozpath.relpath(d.full_path, context.srcdir), var),
+                        context)
 
                 recurse_info[d] = {}
                 for key in sandbox.metadata:
@@ -1109,7 +1111,7 @@ class BuildReader(object):
                     recurse_info[d][key] = dict(sandbox.metadata[key])
 
         for path, child_metadata in recurse_info.items():
-            child_path = path.join('moz.build')
+            child_path = path.join('moz.build').full_path
 
             # Ensure we don't break out of the topsrcdir. We don't do realpath
             # because it isn't necessary. If there are symlinks in the srcdir,

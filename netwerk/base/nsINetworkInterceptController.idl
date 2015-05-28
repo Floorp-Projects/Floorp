@@ -9,6 +9,16 @@ interface nsIChannel;
 interface nsIOutputStream;
 interface nsIURI;
 
+%{C++
+namespace mozilla {
+namespace dom {
+class ChannelInfo;
+}
+}
+%}
+
+[ptr] native ChannelInfo(mozilla::dom::ChannelInfo);
+
 /**
  * Interface to allow implementors of nsINetworkInterceptController to control the behaviour
  * of intercepted channels without tying implementation details of the interception to
@@ -16,7 +26,7 @@ interface nsIURI;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(2fc1170c-4f9d-4c9e-8e5d-2d351dbe03f2)]
+[scriptable, uuid(f2c07a6b-366d-4ef4-85ab-a77f4bcb1646)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -67,9 +77,10 @@ interface nsIInterceptedChannel : nsISupports
     readonly attribute bool isNavigation;
 
     /**
-     * This method allows to override the security info for the channel.
+     * This method allows to override the channel info for the channel.
      */
-    void setSecurityInfo(in nsISupports securityInfo);
+    [noscript]
+    void setChannelInfo(in ChannelInfo channelInfo);
 };
 
 /**

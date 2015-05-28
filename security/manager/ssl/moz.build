@@ -4,6 +4,177 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['src', 'public']
-
 TEST_DIRS += [ 'tests' ]
+
+XPIDL_SOURCES += [
+    'nsIASN1Object.idl',
+    'nsIASN1PrintableItem.idl',
+    'nsIASN1Sequence.idl',
+    'nsIAssociatedContentSecurity.idl',
+    'nsIBadCertListener2.idl',
+    'nsIBufEntropyCollector.idl',
+    'nsICertBlocklist.idl',
+    'nsICertificateDialogs.idl',
+    'nsICertOverrideService.idl',
+    'nsICertPickDialogs.idl',
+    'nsIClientAuthDialogs.idl',
+    'nsIDataSignatureVerifier.idl',
+    'nsIGenKeypairInfoDlg.idl',
+    'nsIKeygenThread.idl',
+    'nsIKeyModule.idl',
+    'nsINSSVersion.idl',
+    'nsIPK11Token.idl',
+    'nsIPK11TokenDB.idl',
+    'nsIPKCS11.idl',
+    'nsIPKCS11Module.idl',
+    'nsIPKCS11ModuleDB.idl',
+    'nsIPKCS11Slot.idl',
+    'nsIProtectedAuthThread.idl',
+    'nsISecurityUITelemetry.idl',
+    'nsISiteSecurityService.idl',
+    'nsISSLStatus.idl',
+    'nsISSLStatusProvider.idl',
+    'nsITokenDialogs.idl',
+    'nsITokenPasswordDialogs.idl',
+    'nsIUserCertPicker.idl',
+    'nsIX509Cert.idl',
+    'nsIX509CertDB.idl',
+    'nsIX509CertList.idl',
+    'nsIX509CertValidity.idl',
+]
+
+if CONFIG['MOZ_XUL']:
+    XPIDL_SOURCES += [
+        'nsICertTree.idl',
+    ]
+
+XPIDL_MODULE = 'pipnss'
+
+EXPORTS += [
+    'CryptoTask.h',
+    'nsClientAuthRemember.h',
+    'nsCrypto.h',
+    'nsNSSCallbacks.h',
+    'nsNSSCertificate.h',
+    'nsNSSComponent.h',
+    'nsNSSHelper.h',
+    'nsNSSShutDown.h',
+    'nsRandomGenerator.h',
+    'NSSErrorsService.h',
+    'ScopedNSSTypes.h',
+    'SharedCertVerifier.h',
+]
+
+EXPORTS.mozilla += [
+    'DataStorage.h',
+    'PublicSSL.h',
+]
+
+EXPORTS.mozilla.psm += [
+    'PSMContentListener.h',
+]
+
+UNIFIED_SOURCES += [
+    'CertBlocklist.cpp',
+    'CryptoTask.cpp',
+    'DataStorage.cpp',
+    'nsCertOverrideService.cpp',
+    'nsCertPicker.cpp',
+    'nsCertVerificationThread.cpp',
+    'nsClientAuthRemember.cpp',
+    'nsCrypto.cpp',
+    'nsCryptoHash.cpp',
+    'nsDataSignatureVerifier.cpp',
+    'nsEntropyCollector.cpp',
+    'nsKeygenHandler.cpp',
+    'nsKeygenHandlerContent.cpp',
+    'nsKeygenThread.cpp',
+    'nsKeyModule.cpp',
+    'nsNSSASN1Object.cpp',
+    'nsNSSCallbacks.cpp',
+    'nsNSSCertHelper.cpp',
+    'nsNSSCertificate.cpp',
+    'nsNSSCertificateFakeTransport.cpp',
+    'nsNSSCertTrust.cpp',
+    'nsNSSCertValidity.cpp',
+    'nsNSSComponent.cpp',
+    'nsNSSErrors.cpp',
+    'nsNSSIOLayer.cpp',
+    'nsNSSModule.cpp',
+    'nsNSSShutDown.cpp',
+    'nsNSSVersion.cpp',
+    'nsNTLMAuthModule.cpp',
+    'nsPK11TokenDB.cpp',
+    'nsPKCS11Slot.cpp',
+    'nsPKCS12Blob.cpp',
+    'nsProtectedAuthThread.cpp',
+    'nsPSMBackgroundThread.cpp',
+    'nsRandomGenerator.cpp',
+    'nsSDR.cpp',
+    'nsSecureBrowserUIImpl.cpp',
+    'nsSecurityHeaderParser.cpp',
+    'NSSErrorsService.cpp',
+    'nsSiteSecurityService.cpp',
+    'nsSSLSocketProvider.cpp',
+    'nsSSLStatus.cpp',
+    'nsTLSSocketProvider.cpp',
+    'nsUsageArrayHelper.cpp',
+    'PSMContentListener.cpp',
+    'PSMRunnable.cpp',
+    'PublicKeyPinningService.cpp',
+    'RootCertificateTelemetryUtils.cpp',
+    'SharedSSLState.cpp',
+    'SSLServerCertVerification.cpp',
+    'TransportSecurityInfo.cpp',
+]
+
+# nsNSSCertificateDB.cpp needs to include nscert.h before everything else.
+SOURCES += [
+    'nsNSSCertificateDB.cpp',
+]
+
+IPDL_SOURCES += [
+    'PPSMContentDownloader.ipdl',
+]
+
+if not CONFIG['MOZ_NO_SMART_CARDS']:
+    UNIFIED_SOURCES += [
+        'nsSmartCardMonitor.cpp',
+    ]
+
+if CONFIG['MOZ_XUL']:
+    UNIFIED_SOURCES += [
+        'nsCertTree.cpp',
+    ]
+
+UNIFIED_SOURCES += [
+    'md4.c',
+]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+    '/security/certverifier',
+    '/security/pkix/include',
+]
+
+GENERATED_INCLUDES += [
+    '/dist/public/nss',
+]
+
+if CONFIG['NSS_DISABLE_DBM']:
+    DEFINES['NSS_DISABLE_DBM'] = '1'
+
+DEFINES['SSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES'] = 'True'
+DEFINES['NSS_ENABLE_ECC'] = 'True'
+for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
+    DEFINES[var] = '"%s"' % CONFIG[var]
+
+USE_LIBS += [
+    'crmf',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
