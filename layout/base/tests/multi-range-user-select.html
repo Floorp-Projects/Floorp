@@ -110,13 +110,11 @@ function runTest() {
       enableSelection('span3');
       action(e, 440, 65);
       checkRangeCount(1, e);
-      var r = sel.getRangeAt(0);
-      checkRangePoints(r, [e.childNodes[4].firstChild,10,e.childNodes[6],0], e);
+      checkRangePoints(0, [e.childNodes[4].firstChild,10,e.childNodes[6],0], e);
     } else if (test == "#prev6") {
       action(e, 140, 125);
       checkRangeCount(1, e);
-      var r = sel.getRangeAt(0);
-      checkRangePoints(r, [e.childNodes[5].firstChild,2,e.childNodes[6],0], e);
+      checkRangePoints(0, [e.childNodes[5].firstChild,2,e.childNodes[6],0], e);
     } else if (test == "#prev7") {
       if (action == accelDragSelect) {
         accelDragSelect(e, 460, 500, 125);
@@ -159,14 +157,12 @@ function runTest() {
     } else if (test == "#next2") {
       action(e, 260);
       checkRangeCount(1, e);
-      var r = sel.getRangeAt(0);
-      checkRangePoints(r, [e.childNodes[0],10,e.childNodes[1].firstChild,3], e);
+      checkRangePoints(0, [e.childNodes[0],10,e.childNodes[1].firstChild,3], e);
     } else if (test == "#next3") {
       enableSelection('span2');
       action(e, 400);
       checkRangeCount(1, e);
-      var r = sel.getRangeAt(0);
-      checkRangePoints(r, [e.childNodes[0],10,e.childNodes[2].firstChild,5], e);
+      checkRangePoints(0, [e.childNodes[0],10,e.childNodes[2].firstChild,5], e);
     } else if (test == "#next4") {
       action(e, 180, 65);
       checkRangeCount(2, e);
@@ -177,8 +173,7 @@ function runTest() {
       action(e, 440, 65);
       checkRangeCount(2, e);
       checkRange(0, [0,10,-1,2], e);
-      var r = sel.getRangeAt(1);
-      checkRangePoints(r, [e.childNodes[3],0,e.childNodes[4].firstChild,10], e);
+      checkRangePoints(1, [e.childNodes[3],0,e.childNodes[4].firstChild,10], e);
     } else if (test == "#next6") {
       action(e, 140, 125);
       checkRangeCount(3, e);
@@ -197,8 +192,7 @@ function runTest() {
         checkRangeCount(3, e);
         checkRange(0, [0,10,-1,2], e);
         checkRange(1, [3,0,-1,4], e);
-        var r = sel.getRangeAt(2);
-        checkRangePoints(r, [e.childNodes[5],0,e.childNodes[6],10], e);
+        checkRangePoints(2, [e.childNodes[5],0,e.childNodes[6],10], e);
       }
     } else if (test == "#next8") {
       if (action == accelDragSelect) {
