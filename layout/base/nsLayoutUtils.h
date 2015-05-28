@@ -8,6 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Maybe.h"
 #include "nsBoundingMetrics.h"
 #include "nsChangeHint.h"
 #include "nsAutoPtr.h"
@@ -2304,6 +2305,10 @@ public:
     return sFontSizeInflationDisabledInMasterProcess;
   }
 
+  static bool SVGTransformOriginEnabled() {
+    return sSVGTransformOriginEnabled;
+  }
+
   /**
    * See comment above "font.size.inflation.mappingIntercept" in
    * modules/libpref/src/init/all.js .
@@ -2628,6 +2633,7 @@ public:
                                           Layer* aLayer,
                                           ViewID aScrollParentId,
                                           const nsRect& aViewport,
+                                          const mozilla::Maybe<nsRect>& aClipRect,
                                           bool aIsRoot,
                                           const ContainerLayerParameters& aContainerParameters);
 
@@ -2655,6 +2661,7 @@ private:
   static bool sInvalidationDebuggingIsEnabled;
   static bool sCSSVariablesEnabled;
   static bool sInterruptibleReflowEnabled;
+  static bool sSVGTransformOriginEnabled;
 
   /**
    * Helper function for LogTestDataForPaint().

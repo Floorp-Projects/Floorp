@@ -7,7 +7,7 @@
 
 Services.prefs.setBoolPref(EXPERIMENTAL_PREF, false);
 
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, PerformanceController } = panel.panelWin;
 

@@ -8,7 +8,7 @@
 
 let WAIT_TIME = 1000;
 
-function spawnTest () {
+function* spawnTest() {
   let { target, front } = yield initBackend(SIMPLE_URL);
   let config = { withMarkers: true, withMemory: true, withTicks: true };
 

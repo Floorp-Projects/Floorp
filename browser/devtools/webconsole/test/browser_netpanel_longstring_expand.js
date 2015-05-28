@@ -67,7 +67,7 @@ function checkNodeKeyValue(aPanel, aId, aKey, aValue) {
   ok(false, "content check failed for " + aId + ", key " + aKey);
 }
 
-function testGen() {
+function* testGen() {
   let hud = HUDService.getHudByWindow(content);
   let filterBox = hud.ui.filterBox;
 

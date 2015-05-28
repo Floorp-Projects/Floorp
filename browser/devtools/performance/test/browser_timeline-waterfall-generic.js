@@ -5,7 +5,7 @@
  * Tests if the waterfall is properly built after finishing a recording.
  */
 
-function spawnTest () {
+function* spawnTest() {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
 

@@ -298,6 +298,22 @@ nsSVGUtils::NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame)
   }
 }
 
+Size
+nsSVGUtils::GetContextSize(const nsIFrame* aFrame)
+{
+  Size size;
+
+  MOZ_ASSERT(aFrame->GetContent()->IsSVGElement(), "bad cast");
+  const nsSVGElement* element = static_cast<nsSVGElement*>(aFrame->GetContent());
+
+  SVGSVGElement* ctx = element->GetCtx();
+  if (ctx) {
+    size.width = ctx->GetLength(SVGContentUtils::X);
+    size.height = ctx->GetLength(SVGContentUtils::Y);
+  }
+  return size;
+}
+
 float
 nsSVGUtils::ObjectSpace(const gfxRect &aRect, const nsSVGLength2 *aLength)
 {

@@ -7106,7 +7106,16 @@ JS::GCDescription::toGCEvent(JSRuntime* rt) const
 char16_t*
 JS::GCDescription::formatJSON(JSRuntime* rt, uint64_t timestamp) const
 {
-    return rt->gc.stats.formatJSON(timestamp);
+    UniqueChars cstr = rt->gc.stats.formatJsonMessage(timestamp);
+
+    size_t nchars = strlen(cstr.get());
+    UniquePtr<char16_t, JS::FreePolicy> out(js_pod_malloc<char16_t>(nchars + 1));
+    if (!out)
+        return nullptr;
+    out.get()[nchars] = 0;
+
+    CopyAndInflateChars(out.get(), cstr.get(), nchars);
+    return out.release();
 }
 
 JS_PUBLIC_API(JS::GCSliceCallback)

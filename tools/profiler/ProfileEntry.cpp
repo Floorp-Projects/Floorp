@@ -186,44 +186,6 @@ char* ProfileBuffer::processDynamicTag(int readPos,
   return tagBuff;
 }
 
-void ProfileBuffer::IterateTagsForThread(IterateTagsCallback aCallback, int aThreadId)
-{
-  MOZ_ASSERT(aCallback);
-
-  int readPos = mReadPos;
-  int currentThreadID = -1;
-
-  while (readPos != mWritePos) {
-    const ProfileEntry& entry = mEntries[readPos];
-
-    if (entry.mTagName == 'T') {
-      currentThreadID = entry.mTagInt;
-      readPos = (readPos + 1) % mEntrySize;
-      continue;
-    }
-
-    // Number of tags consumed
-    int incBy = 1;
-
-    // Read ahead to the next tag, if it's a 'd' tag process it now
-    const char* tagStringData = entry.mTagData;
-    int readAheadPos = (readPos + 1) % mEntrySize;
-    char tagBuff[DYNAMIC_MAX_STRING];
-    // Make sure the string is always null terminated if it fills up DYNAMIC_MAX_STRING-2
-    tagBuff[DYNAMIC_MAX_STRING-1] = '\0';
-
-    if (readAheadPos != mWritePos && mEntries[readAheadPos].mTagName == 'd') {
-      tagStringData = processDynamicTag(readPos, &incBy, tagBuff);
-    }
-
-    if (currentThreadID == aThreadId) {
-      aCallback(entry, tagStringData);
-    }
-
-    readPos = (readPos + incBy) % mEntrySize;
-  }
-}
-
 class JSONSchemaWriter
 {
   JSONWriter& mWriter;
@@ -398,7 +360,10 @@ uint32_t UniqueStacks::Stack::GetOrAddIndex() const
 
 uint32_t UniqueStacks::FrameKey::Hash() const
 {
-  uint32_t hash = mozilla::HashString(mLocation.c_str(), mLocation.length());
+  uint32_t hash = 0;
+  if (!mLocation.IsEmpty()) {
+    hash = mozilla::HashString(mLocation.get());
+  }
   if (mLine.isSome()) {
     hash = mozilla::AddToHash(hash, *mLine);
   }
@@ -531,7 +496,7 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
 
   mFrameTableWriter.StartArrayElement();
   if (!aFrame.mJITFrameHandle) {
-    mUniqueStrings.WriteElement(mFrameTableWriter, aFrame.mLocation.c_str());
+    mUniqueStrings.WriteElement(mFrameTableWriter, aFrame.mLocation.get());
     if (aFrame.mLine.isSome()) {
       mFrameTableWriter.NullElement(); // implementation
       mFrameTableWriter.NullElement(); // optimizations
@@ -929,17 +894,6 @@ void ThreadProfile::addStoredMarker(ProfilerMarker *aStoredMarker) {
   mBuffer->addStoredMarker(aStoredMarker);
 }
 
-void ThreadProfile::IterateTags(IterateTagsCallback aCallback)
-{
-  mBuffer->IterateTagsForThread(aCallback, mThreadId);
-}
-
-void ThreadProfile::ToStreamAsJSON(std::ostream& stream, float aSinceTime)
-{
-  SpliceableJSONWriter b(MakeUnique<OStreamJSONWriteFunc>(stream));
-  StreamJSON(b, aSinceTime);
-}
-
 void ThreadProfile::StreamJSON(SpliceableJSONWriter& aWriter, float aSinceTime)
 {
   // mUniqueStacks may already be emplaced from FlushSamplesAndMarkers.
@@ -1105,20 +1059,6 @@ void ThreadProfile::FlushSamplesAndMarkers()
   // Reset the buffer. Attempting to symbolicate JS samples after mRuntime has
   // gone away will crash.
   mBuffer->reset();
-}
-
-JSObject* ThreadProfile::ToJSObject(JSContext* aCx, float aSinceTime)
-{
-  JS::RootedValue val(aCx);
-  {
-    SpliceableChunkedJSONWriter b;
-    StreamJSON(b, aSinceTime);
-    UniquePtr<char[]> buf = b.WriteFunc()->CopyData();
-    NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
-    MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, static_cast<const char16_t*>(js_string.get()),
-                                 js_string.Length(), &val));
-  }
-  return &val.toObject();
 }
 
 PseudoStack* ThreadProfile::GetPseudoStack()

@@ -6414,97 +6414,32 @@ function BrowserOpenApps() {
   switchToTabHavingURI(appsURL, true)
 }
 
-function GetSearchFieldBookmarkData(node) {
-  var charset = node.ownerDocument.characterSet;
-
-  var formBaseURI = makeURI(node.form.baseURI,
-                            charset);
-
-  var formURI = makeURI(node.form.getAttribute("action"),
-                        charset,
-                        formBaseURI);
-
-  var spec = formURI.spec;
-
-  var isURLEncoded =
-               (node.form.method.toUpperCase() == "POST"
-                && (node.form.enctype == "application/x-www-form-urlencoded" ||
-                    node.form.enctype == ""));
-
-  var title = gNavigatorBundle.getFormattedString("addKeywordTitleAutoFill",
-                                                  [node.ownerDocument.title]);
-  var description = PlacesUIUtils.getDescriptionFromDocument(node.ownerDocument);
-
-  var formData = [];
-
-  function escapeNameValuePair(aName, aValue, aIsFormUrlEncoded) {
-    if (aIsFormUrlEncoded)
-      return escape(aName + "=" + aValue);
-    else
-      return escape(aName) + "=" + escape(aValue);
-  }
-
-  for (let el of node.form.elements) {
-    if (!el.type) // happens with fieldsets
-      continue;
-
-    if (el == node) {
-      formData.push((isURLEncoded) ? escapeNameValuePair(el.name, "%s", true) :
-                                     // Don't escape "%s", just append
-                                     escapeNameValuePair(el.name, "", false) + "%s");
-      continue;
-    }
-
-    let type = el.type.toLowerCase();
-
-    if (((el instanceof HTMLInputElement && el.mozIsTextField(true)) ||
-        type == "hidden" || type == "textarea") ||
-        ((type == "checkbox" || type == "radio") && el.checked)) {
-      formData.push(escapeNameValuePair(el.name, el.value, isURLEncoded));
-    } else if (el instanceof HTMLSelectElement && el.selectedIndex >= 0) {
-      for (var j=0; j < el.options.length; j++) {
-        if (el.options[j].selected)
-          formData.push(escapeNameValuePair(el.name, el.options[j].value,
-                                            isURLEncoded));
-      }
-    }
-  }
-
-  var postData;
-
-  if (isURLEncoded)
-    postData = formData.join("&");
-  else {
-    let separator = spec.includes("?") ? "&" : "?";
-    spec += separator + formData.join("&");
-  }
-
-  return {
-    spec: spec,
-    title: title,
-    description: description,
-    postData: postData,
-    charSet: charset
-  };
-}
-
-
 function AddKeywordForSearchField() {
-  let bookmarkData = GetSearchFieldBookmarkData(gContextMenu.target);
+  let mm = gBrowser.selectedBrowser.messageManager;
 
-  PlacesUIUtils.showBookmarkDialog({ action: "add"
-                                   , type: "bookmark"
-                                   , uri: makeURI(bookmarkData.spec)
-                                   , title: bookmarkData.title
-                                   , description: bookmarkData.description
-                                   , keyword: ""
-                                   , postData: bookmarkData.postData
-                                   , charSet: bookmarkData.charset
-                                   , hiddenRows: [ "location"
-                                                 , "description"
-                                                 , "tags"
-                                                 , "loadInSidebar" ]
-                                   }, window);
+  let onMessage = (message) => {
+    mm.removeMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
+
+    let bookmarkData = message.data;
+    let title = gNavigatorBundle.getFormattedString("addKeywordTitleAutoFill",
+                                                    [bookmarkData.title]);
+    PlacesUIUtils.showBookmarkDialog({ action: "add"
+                                     , type: "bookmark"
+                                     , uri: makeURI(bookmarkData.spec)
+                                     , title: title
+                                     , description: bookmarkData.description
+                                     , keyword: ""
+                                     , postData: bookmarkData.postData
+                                     , charSet: bookmarkData.charset
+                                     , hiddenRows: [ "location"
+                                                   , "description"
+                                                   , "tags"
+                                                   , "loadInSidebar" ]
+                                     }, window);
+  }
+  mm.addMessageListener("ContextMenu:SearchFieldBookmarkData:Result", onMessage);
+
+  mm.sendAsyncMessage("ContextMenu:SearchFieldBookmarkData", {}, { target: gContextMenu.target });
 }
 
 function convertFromUnicode(charset, str)

@@ -6,7 +6,7 @@
  * changed in one shader of a page with multiple WebGL contexts.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(MULTIPLE_CONTEXTS_URL);
   front.setup({ reload: true });
 

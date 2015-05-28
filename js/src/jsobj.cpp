@@ -2810,6 +2810,12 @@ js::LookupPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSObject** 
                 MarkNonNativePropertyFound<NoGC>(propp);
                 return true;
             }
+        } else if (obj->is<UnboxedArrayObject>()) {
+            if (obj->as<UnboxedArrayObject>().containsProperty(cx, id)) {
+                *objp = obj;
+                MarkNonNativePropertyFound<NoGC>(propp);
+                return true;
+            }
         } else if (obj->is<TypedObject>()) {
             if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
                 *objp = obj;

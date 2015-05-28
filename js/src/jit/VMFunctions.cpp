@@ -269,7 +269,7 @@ ArraySpliceDense(JSContext* cx, HandleObject obj, uint32_t start, uint32_t delet
 bool
 ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval)
 {
-    MOZ_ASSERT(obj->is<ArrayObject>());
+    MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>());
 
     AutoDetectInvalidation adi(cx, rval);
 
@@ -288,21 +288,14 @@ ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval)
 }
 
 bool
-ArrayPushDense(JSContext* cx, HandleArrayObject obj, HandleValue v, uint32_t* length)
+ArrayPushDense(JSContext* cx, HandleObject obj, HandleValue v, uint32_t* length)
 {
-    if (MOZ_LIKELY(obj->lengthIsWritable())) {
-        uint32_t idx = obj->length();
-        DenseElementResult result = obj->ensureDenseElements(cx, idx, 1);
-        if (result == DenseElementResult::Failure)
-            return false;
-
-        if (result == DenseElementResult::Success) {
-            obj->setDenseElement(idx, v);
-            MOZ_ASSERT(idx < INT32_MAX);
-            *length = idx + 1;
-            obj->setLengthInt32(*length);
-            return true;
-        }
+    *length = GetAnyBoxedOrUnboxedArrayLength(obj);
+    DenseElementResult result =
+        SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, *length, v.address(), 1, DontUpdateTypes);
+    if (result != DenseElementResult::Incomplete) {
+        (*length)++;
+        return result == DenseElementResult::Success;
     }
 
     JS::AutoValueArray<3> argv(cx);
@@ -319,7 +312,7 @@ ArrayPushDense(JSContext* cx, HandleArrayObject obj, HandleValue v, uint32_t* le
 bool
 ArrayShiftDense(JSContext* cx, HandleObject obj, MutableHandleValue rval)
 {
-    MOZ_ASSERT(obj->is<ArrayObject>());
+    MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>());
 
     AutoDetectInvalidation adi(cx, rval);
 
@@ -340,21 +333,17 @@ ArrayShiftDense(JSContext* cx, HandleObject obj, MutableHandleValue rval)
 JSObject*
 ArrayConcatDense(JSContext* cx, HandleObject obj1, HandleObject obj2, HandleObject objRes)
 {
-    Rooted<ArrayObject*> arr1(cx, &obj1->as<ArrayObject>());
-    Rooted<ArrayObject*> arr2(cx, &obj2->as<ArrayObject>());
-    Rooted<ArrayObject*> arrRes(cx, objRes ? &objRes->as<ArrayObject>() : nullptr);
-
-    if (arrRes) {
+    if (objRes) {
         // Fast path if we managed to allocate an object inline.
-        if (!js::array_concat_dense(cx, arr1, arr2, arrRes))
+        if (!js::array_concat_dense(cx, obj1, obj2, objRes))
             return nullptr;
-        return arrRes;
+        return objRes;
     }
 
     JS::AutoValueArray<3> argv(cx);
     argv[0].setUndefined();
-    argv[1].setObject(*arr1);
-    argv[2].setObject(*arr2);
+    argv[1].setObject(*obj1);
+    argv[2].setObject(*obj2);
     if (!js::array_concat(cx, 1, argv.begin()))
         return nullptr;
     return &argv[0].toObject();

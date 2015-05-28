@@ -30,6 +30,7 @@
 
 #include "gc/Nursery-inl.h"
 #include "vm/String-inl.h"
+#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 using namespace js::gc;

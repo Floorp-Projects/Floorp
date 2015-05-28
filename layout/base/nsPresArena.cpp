@@ -164,6 +164,12 @@ nsPresArena::FreeListEnumerator(FreeList* aEntry, void* aData)
   case nsStyleContext_id:
     p = &data->stats->mStyleContexts;
     break;
+#define STYLE_STRUCT(name_, checkdata_cb_) \
+  case nsStyle##name_##_id:
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+    p = &data->stats->mStyleStructs;
+    break;
   default:
     return PL_DHASH_NEXT;
   }

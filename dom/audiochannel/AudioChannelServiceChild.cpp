@@ -94,6 +94,22 @@ AudioChannelServiceChild::GetState(AudioChannelAgent* aAgent, bool aElementHidde
   data->mState = state;
   cc->SendAudioChannelChangedNotification();
 
+  #ifdef MOZ_WIDGET_GONK
+  /** Only modify the speaker status when
+   *  (1) apps in the foreground.
+   *  (2) apps in the backgrund and inactive.
+   *  Notice : modify only when the visible status is stable, because there
+   *  has lantency in passing the visibility events.
+   **/
+  bool active = AnyAudioChannelIsActive();
+  if (aElementHidden == oldElementHidden &&
+      (!aElementHidden || (aElementHidden && !active))) {
+    for (uint32_t i = 0; i < mSpeakerManager.Length(); i++) {
+      mSpeakerManager[i]->SetAudioChannelActive(active);
+    }
+  }
+  #endif
+
   return state;
 }
 

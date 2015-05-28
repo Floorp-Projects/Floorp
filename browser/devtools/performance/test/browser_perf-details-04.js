@@ -5,7 +5,7 @@
  * Tests that the details view hides the toolbar buttons when a recording
  * doesn't exist or is in progress.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, $, $$, PerformanceController, RecordingsView, WaterfallView } = panel.panelWin;
 

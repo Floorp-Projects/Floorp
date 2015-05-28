@@ -1220,7 +1220,7 @@ qcms_transform* qcms_transform_create(
 	if (out_type != QCMS_DATA_RGB_8 &&
                 out_type != QCMS_DATA_RGBA_8) {
             assert(0 && "output type");
-	    transform_free(transform);
+	    qcms_transform_release(transform);
             return NULL;
         }
 
@@ -1243,7 +1243,7 @@ qcms_transform* qcms_transform_create(
 		qcms_transform *result = qcms_transform_precacheLUT_float(transform, in, out, 33, in_type);
 		if (!result) {
             		assert(0 && "precacheLUT failed");
-			transform_free(transform);
+			qcms_transform_release(transform);
 			return NULL;
 		}
 		return result;
@@ -1273,7 +1273,7 @@ qcms_transform* qcms_transform_create(
 		if (in_type != QCMS_DATA_RGB_8 &&
                     in_type != QCMS_DATA_RGBA_8){
                 	assert(0 && "input type");
-			transform_free(transform);
+			qcms_transform_release(transform);
                 	return NULL;
             	}
 		if (precache) {
@@ -1337,6 +1337,16 @@ qcms_transform* qcms_transform_create(
 		}
 		result = matrix_multiply(out_matrix, in_matrix);
 
+		/* check for NaN values in the matrix and bail if we find any */
+		for (unsigned i = 0 ; i < 3 ; ++i) {
+			for (unsigned j = 0 ; j < 3 ; ++j) {
+				if (result.m[i][j] != result.m[i][j]) {
+					qcms_transform_release(transform);
+					return NULL;
+				}
+			}
+		}
+
 		/* store the results in column major mode
 		 * this makes doing the multiplication with sse easier */
 		transform->matrix[0][0] = result.m[0][0];
@@ -1353,7 +1363,7 @@ qcms_transform* qcms_transform_create(
 		if (in_type != QCMS_DATA_GRAY_8 &&
 				in_type != QCMS_DATA_GRAYA_8){
 			assert(0 && "input type");
-			transform_free(transform);
+			qcms_transform_release(transform);
 			return NULL;
 		}
 
@@ -1378,7 +1388,7 @@ qcms_transform* qcms_transform_create(
 		}
 	} else {
 		assert(0 && "unexpected colorspace");
-		transform_free(transform);
+		qcms_transform_release(transform);
 		return NULL;
 	}
 	return transform;

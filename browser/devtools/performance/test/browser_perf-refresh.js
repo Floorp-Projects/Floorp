@@ -4,7 +4,7 @@
 /**
  * Rough test that the recording still continues after a refresh.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel, target } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController } = panel.panelWin;
 

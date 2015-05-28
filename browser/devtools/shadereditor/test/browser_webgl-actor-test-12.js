@@ -6,7 +6,7 @@
  * regardless of the order in which they were compiled and attached.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(SHADER_ORDER_URL);
   front.setup({ reload: true });
 

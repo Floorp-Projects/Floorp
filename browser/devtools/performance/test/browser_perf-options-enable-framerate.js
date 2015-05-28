@@ -5,7 +5,7 @@
  * Tests that `enable-framerate` toggles the visibility of the fps graph,
  * as well as enabling ticks data on the PerformanceFront.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, $ } = panel.panelWin;
   Services.prefs.setBoolPref(FRAMERATE_PREF, false);

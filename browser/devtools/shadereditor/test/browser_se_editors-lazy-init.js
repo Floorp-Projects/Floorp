@@ -5,7 +5,7 @@
  * Tests if source editors are lazily initialized.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, ShadersEditorsView } = panel.panelWin;
 

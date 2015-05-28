@@ -56,6 +56,7 @@
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "AsyncScrollBase.h"
+#include "UnitTransforms.h"
 #include <mozilla/layers/AxisPhysicsModel.h>
 #include <mozilla/layers/AxisPhysicsMSDModel.h>
 #include <algorithm>
@@ -1789,6 +1790,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mResolution(1.0)
   , mScrollPosForLayerPixelAlignment(-1, -1)
   , mLastUpdateImagesPos(-1, -1)
+  , mAncestorClip(nullptr)
   , mNeverHasVerticalScrollbar(false)
   , mNeverHasHorizontalScrollbar(false)
   , mHasVerticalScrollbar(false)
@@ -2754,6 +2756,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
+  // Clear the scroll port clip that was set during the last paint.
+  mAncestorClip = nullptr;
+
   // We put non-overlay scrollbars in their own layers when this is the root
   // scroll frame and we are a toplevel content document. In this situation,
   // the scrollbar(s) would normally be assigned their own layer anyway, since
@@ -2936,6 +2941,11 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
     if (usingDisplayport) {
+      // Capture the clip state of the parent scroll frame. This will be saved
+      // on FrameMetrics for layers with this frame as their animated geoemetry
+      // root.
+      mAncestorClip = aBuilder->ClipState().GetCurrentCombinedClip(aBuilder);
+
       // If we are using a display port, then ignore any pre-existing clip
       // passed down from our parents. The pre-existing clip would just defeat
       // the purpose of a display port which is to paint regions that are not
@@ -3042,17 +3052,30 @@ void
 ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsIFrame* aContainerReferenceFrame,
                                        const ContainerLayerParameters& aParameters,
-                                       nsRect* aClipRect,
                                        nsTArray<FrameMetrics>* aOutput) const
 {
+  if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
+    return;
+  }
+
+  bool needsParentLayerClip = true;
+  if (gfxPrefs::LayoutUseContainersForRootFrames() && !mAddClipRectToLayer) {
+    // For containerful frames, the clip is on the container frame.
+    needsParentLayerClip = false;
+  }
+
+  // Note: Do not apply clips to the scroll ports of metrics above the first
+  // one on a given layer. They will be applied by the compositor instead,
+  // with async transforms for the scrollframes interspersed between them.
+  if (aOutput->Length() > 0) {
+    needsParentLayerClip = false;
+  }
+
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
   bool isRoot = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
-  // If APZ is enabled, do not apply clips to the scroll ports of metrics
-  // above the first one on a given layer. They will be applied by the
-  // compositor instead, with async transforms for the scrollframes interspersed
-  // between them.
-  bool omitClip = gfxPrefs::AsyncPanZoomEnabled() && aOutput->Length() > 0;
-  if (!omitClip && (!gfxPrefs::LayoutUseContainersForRootFrames() || mAddClipRectToLayer)) {
+
+  Maybe<nsRect> parentLayerClip;
+  if (needsParentLayerClip) {
     nsRect clip = nsRect(mScrollPort.TopLeft() + toReferenceFrame,
                          nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
     if (isRoot) {
@@ -3060,12 +3083,35 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
       clip.width = NSToCoordRound(clip.width / res);
       clip.height = NSToCoordRound(clip.height / res);
     }
-    // When using containers, the container layer contains the clip. Otherwise
-    // we always include the clip.
-    *aClipRect = clip;
+
+    if (mAncestorClip && mAncestorClip->HasClip()) {
+      clip = mAncestorClip->GetClipRect().Intersect(clip);
+    }
+
+    parentLayerClip = Some(clip);
   }
 
-  if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
+  if (!gfxPrefs::AsyncPanZoomEnabled()) {
+    if (parentLayerClip) {
+      // If APZ is not enabled, we still need the displayport to be clipped
+      // in the compositor.
+      ParentLayerIntRect displayportClip =
+        ViewAs<ParentLayerPixel>(
+          parentLayerClip->ScaleToNearestPixels(
+            aParameters.mXScale,
+            aParameters.mYScale,
+            mScrolledFrame->PresContext()->AppUnitsPerDevPixel()));
+
+      ParentLayerIntRect layerClip;
+      if (const ParentLayerIntRect* origClip = aLayer->GetClipRect().ptrOr(nullptr)) {
+        layerClip = displayportClip.Intersect(*origClip);
+      } else {
+        layerClip = displayportClip;
+      }
+      aLayer->SetClipRect(Some(layerClip));
+    }
+
+    // Return early, since if we don't use APZ we don't need FrameMetrics.
     return;
   }
 
@@ -3076,7 +3122,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
       nsLayoutUtils::ComputeFrameMetrics(
         mScrolledFrame, mOuter, mOuter->GetContent(),
         aContainerReferenceFrame, aLayer, mScrollParentID,
-        scrollport, isRoot, aParameters);
+        scrollport, parentLayerClip, isRoot, aParameters);
 }
 
 bool

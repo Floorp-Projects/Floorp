@@ -39,7 +39,6 @@ function run_test() {
 
   // mozilla::pkix doesn't implement the Netscape Object Signer restriction.
   var basicEndEntityUsages = 'Client,Server,Sign,Encrypt,Object Signer';
-  var basicEndEntityUsagesWithObjectSigner = basicEndEntityUsages + ",Object Signer"
 
   // mozilla::pkix won't let a certificate with the 'Status Responder' EKU get
   // validated for any other usage.
@@ -95,7 +94,8 @@ function run_test() {
      ]
   ];
 
-  do_check_eq(gNumCAs, ca_usages.length);
+  equal(gNumCAs, ca_usages.length,
+        "Number of CAs and length of ca_usages array should match");
 
   for (var i = 0; i < gNumCAs; i++) {
     var ca_name = "ca-" + (i + 1);
@@ -103,7 +103,8 @@ function run_test() {
     var usages = {};
     var cert = certdb.findCertByNickname(null, ca_name);
     cert.getUsagesString(true, verified, usages);
-    do_check_eq(ca_usages[i], usages.value);
+    equal(ca_usages[i], usages.value,
+          "Expected and actual CA usages string should match");
     if (ca_usages[i].indexOf('SSL CA') != -1) {
       checkCertErrorGeneric(certdb, cert, PRErrorCodeSuccess,
                             certificateUsageVerifyCA);
@@ -118,7 +119,8 @@ function run_test() {
       var verified = {};
       var usages = {};
       ee_cert.getUsagesString(true, verified, usages);
-      do_check_eq(ee_usages[i][j], usages.value);
+      equal(ee_usages[i][j], usages.value,
+            "Expected and actual EE usages string should match");
     }
   }
 }

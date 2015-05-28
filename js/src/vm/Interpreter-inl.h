@@ -22,6 +22,7 @@
 #include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
+#include "vm/UnboxedObject-inl.h"
 
 namespace js {
 

@@ -50,6 +50,7 @@
 #define SAMPLER_H
 
 #include "js/TypeDecls.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 class TimeStamp;
@@ -159,7 +160,9 @@ static inline void profiler_responsiveness(const mozilla::TimeStamp& aTime) {}
 static inline void profiler_set_frame_number(int frameNumber) {}
 
 // Get the profile encoded as a JSON string.
-static inline char* profiler_get_profile(float aSinceTime = 0) { return nullptr; }
+static inline mozilla::UniquePtr<char[]> profiler_get_profile(float aSinceTime = 0) {
+  return nullptr;
+}
 
 // Get the profile encoded as a JSON object.
 static inline JSObject* profiler_get_profile_jsobject(JSContext* aCx,

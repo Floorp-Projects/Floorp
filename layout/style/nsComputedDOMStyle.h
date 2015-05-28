@@ -406,6 +406,7 @@ private:
   mozilla::dom::CSSValue* DoGetPageBreakInside();
   mozilla::dom::CSSValue* DoGetTouchAction();
   mozilla::dom::CSSValue* DoGetTransform();
+  mozilla::dom::CSSValue* DoGetTransformBox();
   mozilla::dom::CSSValue* DoGetTransformOrigin();
   mozilla::dom::CSSValue* DoGetPerspective();
   mozilla::dom::CSSValue* DoGetBackfaceVisibility();

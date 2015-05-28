@@ -187,7 +187,7 @@ struct Statistics
     void endSCC(unsigned scc, int64_t start);
 
     char16_t* formatMessage();
-    char16_t* formatJSON(uint64_t timestamp);
+    UniqueChars formatJsonMessage(uint64_t timestamp);
     UniqueChars formatDetailedMessage();
 
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
@@ -318,6 +318,10 @@ struct Statistics
     UniqueChars formatDetailedSliceDescription(unsigned i, const SliceData& slice);
     UniqueChars formatDetailedPhaseTimes(PhaseTimeTable phaseTimes);
     UniqueChars formatDetailedTotals();
+
+    UniqueChars formatJsonDescription(uint64_t timestamp);
+    UniqueChars formatJsonSliceDescription(unsigned i, const SliceData& slice);
+    UniqueChars formatJsonPhaseTimes(PhaseTimeTable phaseTimes);
 
     double computeMMU(int64_t resolution);
 };
