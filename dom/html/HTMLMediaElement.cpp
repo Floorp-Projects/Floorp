@@ -2720,9 +2720,9 @@ nsresult HTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
     return NS_ERROR_FAILURE;
   }
 
-  double duration = aOriginal->GetDuration();
-  if (duration >= 0) {
-    decoder->SetDuration(duration);
+  media::NullableTimeUnit duration = aOriginal->NetworkDuration();
+  if (duration.isSome()) {
+    decoder->SetNetworkDuration(duration.ref());
     decoder->SetMediaSeekable(aOriginal->IsMediaSeekable());
   }
 

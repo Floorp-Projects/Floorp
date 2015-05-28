@@ -900,10 +900,16 @@ public:
   // It will be set to -1 if the duration is infinite
   int64_t mEndTime;
 
+  // Recomputes the canonical duration from various sources.
+  void RecomputeDuration();
+
   // Will be set when SetDuration has been called with a value != -1
   // mDurationSet false doesn't indicate that we do not have a valid duration
   // as mStartTime and mEndTime could have been set separately.
   bool mDurationSet;
+
+  // The duration according to HTTP headers etc, mirrored from the main thread.
+  Mirror<media::NullableTimeUnit> mNetworkDuration;
 
   // The current play state and next play state, mirrored from the main thread.
   Mirror<MediaDecoder::PlayState> mPlayState;
