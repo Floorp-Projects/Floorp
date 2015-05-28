@@ -471,7 +471,7 @@ function submitForm(formNum)
 
   // End the test now on SeaMonkey.
   if (formNum == 21 && navigator.userAgent.match(/ SeaMonkey\//)) {
-    Services.obs.removeObserver(checkObserver, "satchel-storage-changed");
+    checkObserver.uninit();
     is(numSubmittedForms, 21, "Ensuring all forms were submitted.");
 
     todo(false, "Skipping remaining checks on SeaMonkey ftb. (Bug 589471)");
@@ -493,7 +493,7 @@ function submitForm(formNum)
   // End the test at the last form.
   if (formNum == 110) {
     is(numSubmittedForms, 35, "Ensuring all forms were submitted.");
-    Services.obs.removeObserver(checkObserver, "satchel-storage-changed");
+    checkObserver.uninit();
     SimpleTest.finish();
     return false; // return false to cancel current form submission
   }
@@ -526,7 +526,7 @@ function submitForm(formNum)
   return false; // cancel current form submission
 }
 
-Services.obs.addObserver(checkObserver, "satchel-storage-changed", false);
+checkObserver.init();
 
 window.onload = checkInitialState;
 
