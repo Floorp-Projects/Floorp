@@ -20,7 +20,7 @@ interface nsIEditorStyleSheets : nsISupports
   /** Load and apply the style sheet, specified by aURL, to the
     * editor's document, replacing the last style sheet added (if any).
     * This is always asynchronous, and may cause network I/O.
-    * 
+    *
     * @param aURL The style sheet to be loaded and applied.
     */
   void replaceStyleSheet(in AString aURL);
@@ -41,7 +41,7 @@ interface nsIEditorStyleSheets : nsISupports
     * display behavior for editing (like showing special cursors) that will
     * not be affected by loading "document" style sheets with addStyleSheet or
     * especially replaceStyleSheet.
-    * 
+    *
     * @param aURL The style sheet to be loaded and applied.
     */
   void replaceOverrideStyleSheet(in AString aURL);

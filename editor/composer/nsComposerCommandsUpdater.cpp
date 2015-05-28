@@ -64,7 +64,7 @@ nsComposerCommandsUpdater::NotifyDocumentWillBeDestroyed()
     mUpdateTimer->Cancel();
     mUpdateTimer = nullptr;
   }
-  
+
   // We can't call this right now; it is too late in some cases and the window
   // is already partially destructed (e.g. JS objects may be gone).
 #if 0
@@ -114,11 +114,11 @@ nsComposerCommandsUpdater::DidDo(nsITransactionManager *aManager,
       UpdateCommandGroup(NS_LITERAL_STRING("undo"));
     mFirstDoOfFirstUndo = false;
   }
-	
+
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsComposerCommandsUpdater::WillUndo(nsITransactionManager *aManager,
                                     nsITransaction *aTransaction,
                                     bool *aInterrupt)
@@ -151,7 +151,7 @@ nsComposerCommandsUpdater::WillRedo(nsITransactionManager *aManager,
 }
 
 NS_IMETHODIMP
-nsComposerCommandsUpdater::DidRedo(nsITransactionManager *aManager,  
+nsComposerCommandsUpdater::DidRedo(nsITransactionManager *aManager,
                                    nsITransaction *aTransaction,
                                    nsresult aRedoResult)
 {
@@ -183,7 +183,7 @@ nsComposerCommandsUpdater::WillEndBatch(nsITransactionManager *aManager,
 }
 
 NS_IMETHODIMP
-nsComposerCommandsUpdater::DidEndBatch(nsITransactionManager *aManager, 
+nsComposerCommandsUpdater::DidEndBatch(nsITransactionManager *aManager,
                                        nsresult aResult)
 {
   return NS_OK;
@@ -277,7 +277,7 @@ nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
   nsCOMPtr<nsPICommandUpdater> commandUpdater = GetCommandUpdater();
   NS_ENSURE_TRUE(commandUpdater, NS_ERROR_FAILURE);
 
-  
+
   // This hardcoded list of commands is temporary.
   // This code should use nsIControllerCommandGroup.
   if (aCommandGroup.EqualsLiteral("undo"))
@@ -306,7 +306,7 @@ nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
     commandUpdater->CommandStatusChanged("cmd_code");
     commandUpdater->CommandStatusChanged("cmd_samp");
     commandUpdater->CommandStatusChanged("cmd_var");
-   
+
     commandUpdater->CommandStatusChanged("cmd_increaseFont");
     commandUpdater->CommandStatusChanged("cmd_decreaseFont");
 
@@ -315,14 +315,14 @@ nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
     commandUpdater->CommandStatusChanged("cmd_fontColor");
     commandUpdater->CommandStatusChanged("cmd_backgroundColor");
     commandUpdater->CommandStatusChanged("cmd_highlight");
-  }  
+  }
   else if (aCommandGroup.EqualsLiteral("save"))
   {
     // save commands (most are not in C++)
     commandUpdater->CommandStatusChanged("cmd_setDocumentModified");
     commandUpdater->CommandStatusChanged("cmd_save");
   }
-  return NS_OK;  
+  return NS_OK;
 }
 
 nsresult
@@ -333,7 +333,7 @@ nsComposerCommandsUpdater::UpdateOneCommand(const char *aCommand)
 
   commandUpdater->CommandStatusChanged(aCommand);
 
-  return NS_OK;  
+  return NS_OK;
 }
 
 bool

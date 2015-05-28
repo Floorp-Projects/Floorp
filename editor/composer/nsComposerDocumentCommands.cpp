@@ -92,7 +92,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-  int32_t animationMode; 
+  int32_t animationMode;
   rv = aParams->GetLongValue("imageAnimation", &animationMode);
   if (NS_SUCCEEDED(rv))
   {
@@ -101,7 +101,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
     presContext->SetImageAnimationMode(animationMode);
   }
 
-  bool allowPlugins; 
+  bool allowPlugins;
   rv = aParams->GetBooleanValue("plugins", &allowPlugins);
   if (NS_SUCCEEDED(rv))
   {
@@ -150,7 +150,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  bool allowPlugins = false; 
+  bool allowPlugins = false;
   rv = aParams->GetBooleanValue("plugins", &allowPlugins);
   if (NS_SUCCEEDED(rv))
   {
@@ -205,7 +205,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   {
     NS_ENSURE_ARG_POINTER(aParams);
 
-    bool modified; 
+    bool modified;
     nsresult rv = aParams->GetBooleanValue(STATE_ATTRIBUTE, &modified);
 
     // Should we fail if this param wasn't set?
@@ -221,7 +221,7 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
   if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly"))
   {
     NS_ENSURE_ARG_POINTER(aParams);
-    bool isReadOnly; 
+    bool isReadOnly;
     nsresult rvRO = aParams->GetBooleanValue(STATE_ATTRIBUTE, &isReadOnly);
     NS_ENSURE_SUCCESS(rvRO, rvRO);
 
@@ -376,7 +376,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
 }
 
 /**
- * Commands just for state notification 
+ * Commands just for state notification
  *  As of 11/21/02, possible commands are:
  *    "obs_documentCreated"
  *    "obs_documentWillBeDestroyed"
@@ -389,7 +389,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
  *  1. Get the nsICommandManager for the current editor
  *  2. Implement an nsIObserve object, e.g:
  *
- *    void Observe( 
+ *    void Observe(
  *        in nsISupports aSubject, // The nsICommandManager calling this Observer
  *        in string      aTopic,   // command name, e.g.:"obs_documentCreated"
  *                                 //    or "obs_documentWillBeDestroyed"
@@ -397,7 +397,7 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
  *
  *  3. Add the observer by:
  *       commandManager.addObserver(observeobject, obs_documentCreated);
- *  4. In the appropriate location in editorSession, editor, or commands code, 
+ *  4. In the appropriate location in editorSession, editor, or commands code,
  *     trigger the notification of this observer by something like:
  *
  *  nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(mDocShell);
@@ -406,8 +406,8 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
  *    commandUpdater->CommandStatusChanged(obs_documentCreated);
  *
  *  5. Use GetCommandStateParams() to obtain state information
- *     e.g., any creation state codes when creating an editor are 
- *     supplied for "obs_documentCreated" command in the 
+ *     e.g., any creation state codes when creating an editor are
+ *     supplied for "obs_documentCreated" command in the
  *     "state_data" param's value
  *
  */
@@ -457,7 +457,7 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
       // refCon is initially set to nsIEditingSession until editor
       //  is successfully created and source doc is loaded
       // Embedder gets error status if this fails
-      // If called before startup is finished, 
+      // If called before startup is finished,
       //    status = eEditorCreationInProgress
       rv = editingSession->GetEditorStatus(&editorStatus);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -474,7 +474,7 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     // an nsIEditingSession or nsIEditor, we return "eEditorErrorUnknown"
     aParams->SetLongValue(STATE_DATA, editorStatus);
     return NS_OK;
-  }  
+  }
   else if (!nsCRT::strcmp(aCommandName, "obs_documentLocationChanged"))
   {
     nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
@@ -491,7 +491,7 @@ nsDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
       return aParams->SetISupportsValue(STATE_DATA, (nsISupports*)uri);
     }
     return NS_OK;
-  }  
+  }
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
