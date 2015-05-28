@@ -61,7 +61,7 @@ class HeapSnapshot final : public nsISupports
 {
   friend struct DeserializedNode;
 
-  explicit HeapSnapshot(JSContext *cx, nsISupports *aParent)
+  explicit HeapSnapshot(JSContext* cx, nsISupports* aParent)
     : timestamp(Nothing())
     , rootId(0)
     , nodes(cx)
@@ -74,11 +74,11 @@ class HeapSnapshot final : public nsISupports
   // Initialize this HeapSnapshot from the given buffer that contains a
   // serialized core dump. Do NOT take ownership of the buffer, only borrow it
   // for the duration of the call. Return false on failure.
-  bool init(const uint8_t *buffer, uint32_t size);
+  bool init(const uint8_t* buffer, uint32_t size);
 
   // Save the given `protobuf::Node` message in this `HeapSnapshot` as a
   // `DeserializedNode`.
-  bool saveNode(const protobuf::Node &node);
+  bool saveNode(const protobuf::Node& node);
 
   // If present, a timestamp in the same units that `PR_Now` gives.
   Maybe<uint64_t> timestamp;
@@ -108,19 +108,19 @@ public:
   // Create a `HeapSnapshot` from the given buffer that contains a serialized
   // core dump. Do NOT take ownership of the buffer, only borrow it for the
   // duration of the call.
-  static already_AddRefed<HeapSnapshot> Create(JSContext *cx,
-                                               dom::GlobalObject &global,
-                                               const uint8_t *buffer,
+  static already_AddRefed<HeapSnapshot> Create(JSContext* cx,
+                                               dom::GlobalObject& global,
+                                               const uint8_t* buffer,
                                                uint32_t size,
-                                               ErrorResult &rv);
+                                               ErrorResult& rv);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HeapSnapshot)
   MOZ_DECLARE_REFCOUNTED_TYPENAME(HeapSnapshot)
 
-  nsISupports *GetParentObject() const { return mParent; }
+  nsISupports* GetParentObject() const { return mParent; }
 
-  virtual JSObject *WrapObject(JSContext* aCx,
+  virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   const char16_t* borrowUniqueString(const char16_t* duplicateString,
