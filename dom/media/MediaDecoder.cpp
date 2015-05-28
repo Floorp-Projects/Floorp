@@ -32,8 +32,9 @@
 #include "WMFDecoder.h"
 #endif
 
-using namespace mozilla::layers;
 using namespace mozilla::dom;
+using namespace mozilla::layers;
+using namespace mozilla::media;
 
 // Default timeout msecs until try to enter dormant state by heuristic.
 static const int DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS = 60000;
@@ -343,6 +344,8 @@ MediaDecoder::MediaDecoder() :
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
+  mNetworkDuration(AbstractThread::MainThread(), NullableTimeUnit(),
+                   "MediaDecoder::mNetworkDuration (Canonical)"),
   mPlayState(AbstractThread::MainThread(), PLAY_STATE_LOADING,
              "MediaDecoder::mPlayState (Canonical)"),
   mNextState(AbstractThread::MainThread(), PLAY_STATE_PAUSED,
@@ -488,7 +491,6 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
 void MediaDecoder::SetStateMachineParameters()
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mDecoderStateMachine->SetDuration(mDuration);
   if (mMinimizePreroll) {
     mDecoderStateMachine->DispatchMinimizePrerollUntilPlaybackStarts();
   }
@@ -1082,9 +1084,14 @@ void MediaDecoder::DurationChanged()
   }
 }
 
-void MediaDecoder::SetDuration(double aDuration)
+void MediaDecoder::SetNetworkDuration(TimeUnit aNetworkDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  mNetworkDuration = Some(aNetworkDuration);
+
+  // XXXbholley - it doesn't really make sense to change mDuration here, but
+  // we leave it for this patch. This will change in subsequent patches.
+  double aDuration = aNetworkDuration.ToSeconds();
   if (mozilla::IsInfinite(aDuration)) {
     SetInfinite(true);
   } else if (IsNaN(aDuration)) {
@@ -1094,12 +1101,8 @@ void MediaDecoder::SetDuration(double aDuration)
     mDuration = static_cast<int64_t>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
   }
 
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetDuration(mDuration);
-  }
-
   // Duration has changed so we should recompute playback rate
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   UpdatePlaybackRate();
 }
 
