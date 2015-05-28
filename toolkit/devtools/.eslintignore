@@ -1,0 +1,6 @@
+# Ignore various libs
+toolkit/devtools/jsbeautify/*
+toolkit/devtools/acorn/*
+toolkit/devtools/tern/*
+toolkit/devtools/pretty-fast/*
+toolkit/devtools/sourcemap/*
