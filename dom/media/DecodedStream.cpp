@@ -181,7 +181,7 @@ DecodedStream::DecodedStream(ReentrantMonitor& aMonitor)
 }
 
 DecodedStreamData*
-DecodedStream::GetData()
+DecodedStream::GetData() const
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
   return mData.get();
@@ -256,7 +256,7 @@ DecodedStream::OutputStreams()
 }
 
 ReentrantMonitor&
-DecodedStream::GetReentrantMonitor()
+DecodedStream::GetReentrantMonitor() const
 {
   return mMonitor;
 }
