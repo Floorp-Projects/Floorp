@@ -173,4 +173,49 @@ TEST(MediaPromise, CompletionPromises)
   });
 }
 
+TEST(MediaPromise, PromiseAllResolve)
+{
+  AutoTaskQueue atq;
+  nsRefPtr<MediaTaskQueue> queue = atq.TaskQueue();
+  RunOnTaskQueue(queue, [queue] () -> void {
+
+    nsTArray<nsRefPtr<TestPromise>> promises;
+    promises.AppendElement(TestPromise::CreateAndResolve(22, __func__));
+    promises.AppendElement(TestPromise::CreateAndResolve(32, __func__));
+    promises.AppendElement(TestPromise::CreateAndResolve(42, __func__));
+
+    TestPromise::All(queue, promises)->Then(queue, __func__,
+      [queue] (const nsTArray<int>& aResolveValues) -> void {
+        EXPECT_EQ(aResolveValues.Length(), 3UL);
+        EXPECT_EQ(aResolveValues[0], 22);
+        EXPECT_EQ(aResolveValues[1], 32);
+        EXPECT_EQ(aResolveValues[2], 42);
+        queue->BeginShutdown();
+      },
+      DO_FAIL
+    );
+  });
+}
+
+TEST(MediaPromise, PromiseAllReject)
+{
+  AutoTaskQueue atq;
+  nsRefPtr<MediaTaskQueue> queue = atq.TaskQueue();
+  RunOnTaskQueue(queue, [queue] () -> void {
+
+    nsTArray<nsRefPtr<TestPromise>> promises;
+    promises.AppendElement(TestPromise::CreateAndResolve(22, __func__));
+    promises.AppendElement(TestPromise::CreateAndReject(32.0, __func__));
+    promises.AppendElement(TestPromise::CreateAndResolve(42, __func__));
+
+    TestPromise::All(queue, promises)->Then(queue, __func__,
+      DO_FAIL,
+      [queue] (float aRejectValue) -> void {
+        EXPECT_EQ(aRejectValue, 32.0);
+        queue->BeginShutdown();
+      }
+    );
+  });
+}
+
 #undef DO_FAIL
