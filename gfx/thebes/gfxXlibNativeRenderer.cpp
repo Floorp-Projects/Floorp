@@ -136,7 +136,7 @@ FINISH:
  * @return True if we took the direct path
  */
 bool
-gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
+gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, IntSize size,
                                   uint32_t flags,
                                   Screen *screen, Visual *visual)
 {
@@ -154,7 +154,7 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
 }
 
 bool
-gfxXlibNativeRenderer::DrawCairo(cairo_t* cr, nsIntSize size,
+gfxXlibNativeRenderer::DrawCairo(cairo_t* cr, IntSize size,
                                  uint32_t flags,
                                  Screen *screen, Visual *visual)
 {
@@ -308,7 +308,7 @@ enum DrawingMethod {
 static cairo_surface_t*
 CreateTempXlibSurface (cairo_surface_t* cairoTarget,
                        DrawTarget* drawTarget,
-                       nsIntSize size,
+                       IntSize size,
                        bool canDrawOverBackground,
                        uint32_t flags, Screen *screen, Visual *visual,
                        DrawingMethod *method)
@@ -463,7 +463,7 @@ CopyXlibSurfaceToImage(cairo_surface_t *tempXlibSurface,
 }
 
 void
-gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
+gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
                             uint32_t flags, Screen *screen, Visual *visual)
 {
     gfxMatrix matrix = ctx->CurrentMatrix();

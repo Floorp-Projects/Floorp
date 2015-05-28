@@ -90,7 +90,7 @@ public:
      * Returns null on error.
      */
     virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
-                                                               const nsIntSize& aSize);
+                                                               const mozilla::gfx::IntSize& aSize);
 
     /**
      * Returns an image surface for this surface, or nullptr if not supported.
@@ -118,7 +118,7 @@ public:
      * using 4 bytes per pixel; optionally, make sure that either dimension
      * doesn't exceed the given limit.
      */
-    static bool CheckSurfaceSize(const nsIntSize& sz, int32_t limit = 0);
+    static bool CheckSurfaceSize(const mozilla::gfx::IntSize& sz, int32_t limit = 0);
 
     /* Provide a stride value that will respect all alignment requirements of
      * the accelerated image-rendering code.
@@ -167,7 +167,7 @@ public:
 
     static int32_t BytePerPixelFromFormat(gfxImageFormat format);
 
-    virtual const nsIntSize GetSize() const;
+    virtual const mozilla::gfx::IntSize GetSize() const;
 
     void SetOpaqueRect(const gfxRect& aRect);
 
@@ -228,10 +228,10 @@ public:
     }
 
     virtual ~gfxUnknownSurface() { }
-    virtual const nsIntSize GetSize() const override { return mSize; }
+    virtual const mozilla::gfx::IntSize GetSize() const override { return mSize; }
 
 private:
-    nsIntSize mSize;
+    mozilla::gfx::IntSize mSize;
 };
 
 #endif /* GFX_ASURFACE_H */
