@@ -176,7 +176,7 @@ let OverviewView = {
    * Method for handling all the set up for rendering the overview graphs.
    *
    * @param number resolution
-   *        The fps graph resolution. @see Graphs.js
+   *        The fps graph resolution. @see Graphs.jsm
    */
   render: Task.async(function *(resolution) {
     if (this.isDisabled()) {
