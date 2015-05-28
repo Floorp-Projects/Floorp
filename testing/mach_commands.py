@@ -101,6 +101,11 @@ TEST_SUITES = {
         'mach_command': 'reftest-ipc',
         'kwargs': {'test_file': None},
     },
+    'web-platform-tests': {
+        'aliases': ('wpt',),
+        'mach_command': 'web-platform-tests',
+        'kwargs': {}
+    },
     'valgrind': {
         'aliases': ('V', 'v'),
         'mach_command': 'valgrind-test',
@@ -134,6 +139,10 @@ TEST_FLAVORS = {
     },
     'reftest': { },
     'steeplechase': { },
+    'web-platform-tests': {
+        'mach_command': 'web-platform-tests',
+        'kwargs': {'include': []}
+    },
     'webapprt-chrome': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'webapprt-chrome', 'test_paths': []},
