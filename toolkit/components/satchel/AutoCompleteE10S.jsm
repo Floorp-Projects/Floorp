@@ -105,9 +105,12 @@ this.AutoCompleteE10S = {
     let resultsArray = [];
     let count = results.matchCount;
     for (let i = 0; i < count; i++) {
-      let result = results.getValueAt(i);
-      resultsArray.push(result);
-      AutoCompleteE10SView.addResult(result, results.getStyleAt(i));
+      // The actual result for each match in the results object is the value.
+      // We return that in order to submit the correct value. However, we have
+      // to make sure we display the label corresponding to it in the popup.
+      resultsArray.push(results.getValueAt(i));
+      AutoCompleteE10SView.addResult(results.getLabelAt(i),
+                                     results.getStyleAt(i));
     }
 
     this.popup.view = AutoCompleteE10SView;
