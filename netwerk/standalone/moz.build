@@ -18,7 +18,7 @@ netwerk_base_src = [
     'nsURLHelper.cpp',
 ]
 src_list += [
-    '%s/netwerk/base/%s' % (TOPSRCDIR, s) for s in netwerk_base_src
+    '/netwerk/base/%s' % s for s in netwerk_base_src
 ]
 
 netwerk_dns_src = [
@@ -33,7 +33,7 @@ netwerk_dns_src = [
     'race.c',
 ]
 src_list += [
-    '%s/netwerk/dns/%s' % (TOPSRCDIR, s) for s in netwerk_dns_src
+    '/netwerk/dns/%s' % s for s in netwerk_dns_src
 ]
 
 SOURCES += sorted(src_list)

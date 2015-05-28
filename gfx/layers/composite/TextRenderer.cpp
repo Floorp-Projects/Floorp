@@ -90,7 +90,9 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
   }
 
   DataSourceSurface::MappedSurface map;
-  textSurf->Map(DataSourceSurface::MapType::READ_WRITE, &map);
+  if (NS_WARN_IF(!textSurf->Map(DataSourceSurface::MapType::READ_WRITE, &map))) {
+    return;
+  }
 
   // Initialize the surface to transparent white.
   memset(map.mData, uint8_t(sBackgroundOpacity * 255.0f),
@@ -151,7 +153,9 @@ TextRenderer::EnsureInitialized()
     return;
   }
 
-  mGlyphBitmaps->Map(DataSourceSurface::MapType::READ_WRITE, &mMap);
+  if (NS_WARN_IF(!mGlyphBitmaps->Map(DataSourceSurface::MapType::READ_WRITE, &mMap))) {
+    return;
+  }
 
   png_structp png_ptr = NULL;
   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);

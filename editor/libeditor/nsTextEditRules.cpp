@@ -427,12 +427,20 @@ nsTextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
     return NS_OK;
   }
 
+  NS_ENSURE_STATE(mEditor);
+
+  // If there is no selection ranges, we should set to the end of the editor.
+  // This is usually performed in nsTextEditRules::Init(), however, if the
+  // editor is reframed, this may be called by AfterEdit().
+  if (!aSelection->RangeCount()) {
+    mEditor->EndOfDocument();
+  }
+
   // if we are at the end of the textarea, we need to set the
   // selection to stick to the mozBR at the end of the textarea.
   int32_t selOffset;
   nsCOMPtr<nsIDOMNode> selNode;
   nsresult res;
-  NS_ENSURE_STATE(mEditor);
   res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
 

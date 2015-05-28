@@ -1,4 +1,5 @@
 -r mozbase_requirements.txt
 ../marionette/transport
 ../marionette/driver
+../marionette/marionette/runner/mixins/browsermob-proxy-py
 ../marionette

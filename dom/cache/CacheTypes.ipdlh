@@ -6,6 +6,7 @@ include protocol PCache;
 include protocol PCachePushStream;
 include protocol PCacheStreamControl;
 include InputStreamParams;
+include ChannelInfo;
 
 using HeadersGuardEnum from "mozilla/dom/cache/IPCUtils.h";
 using RequestCredentials from "mozilla/dom/cache/IPCUtils.h";
@@ -81,7 +82,7 @@ struct CacheResponse
   HeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
   CacheReadStreamOrVoid body;
-  nsCString securityInfo;
+  IPCChannelInfo channelInfo;
 };
 
 union CacheResponseOrVoid

@@ -116,7 +116,7 @@ var FullScreen = {
         break;
       }
       case "DOMFullscreen:NewOrigin": {
-        this.showWarning(aMessage.data.origin);
+        this.showWarning(aMessage.data.originNoSuffix);
         break;
       }
       case "DOMFullscreen:Exited": {

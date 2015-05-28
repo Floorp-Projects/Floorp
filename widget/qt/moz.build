@@ -4,12 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GENERATED_SOURCES += [
-    'moc_mozqwidget.cpp',
-    'moc_nsAppShell.cpp',
-]
-
 SOURCES += [
+    '!moc_mozqwidget.cpp',
+    '!moc_nsAppShell.cpp',
     'mozqwidget.cpp',
     'nsAppShell.cpp',
     'nsBidiKeyboard.cpp',
