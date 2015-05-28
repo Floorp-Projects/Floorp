@@ -326,6 +326,33 @@ AbstractTreeItem.prototype = {
   },
 
   /**
+   * Calls the provided function on all the descendants of this item.
+   * If this item was never expanded, then no descendents exist yet.
+   * @param function cb
+   */
+  traverse: function(cb) {
+    for (let child of this._childTreeItems) {
+      cb(child);
+      child.bfs();
+    }
+  },
+
+  /**
+   * Calls the provided function on all descendants of this item until
+   * a truthy value is returned by the predicate.
+   * @param function predicate
+   * @return AbstractTreeItem
+   */
+  find: function(predicate) {
+    for (let child of this._childTreeItems) {
+      if (predicate(child) || child.find(predicate)) {
+        return child;
+      }
+    }
+    return null;
+  },
+
+  /**
    * Shows or hides all the children of this item in the tree. If neessary,
    * populates this item with children.
    *
