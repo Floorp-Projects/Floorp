@@ -999,6 +999,30 @@ add_task(function* test_defaultSearchEngine() {
 
   const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
   Assert.equal(data.settings.defaultSearchEngine, EXPECTED_SEARCH_ENGINE);
+  TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
+
+  // Define and reset the test preference.
+  const PREF_TEST = "toolkit.telemetry.test.pref1";
+  const PREFS_TO_WATCH = new Map([
+    [PREF_TEST, TelemetryEnvironment.RECORD_PREF_STATE],
+  ]);
+  Preferences.reset(PREF_TEST);
+
+  // Set the clock in the future so our changes don't get throttled.
+  gNow = fakeNow(futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE));
+  // Watch the test preference.
+  TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
+  deferred = PromiseUtils.defer();
+  TelemetryEnvironment.registerChangeListener("testSearchEngine_pref", deferred.resolve);
+  // Trigger an environment change.
+  Preferences.set(PREF_TEST, 1);
+  yield deferred.promise;
+  TelemetryEnvironment.unregisterChangeListener("testSearchEngine_pref");
+
+  // Check that the search engine information is correctly retained when prefs change.
+  data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+  Assert.equal(data.settings.defaultSearchEngine, EXPECTED_SEARCH_ENGINE);
 });
 
 add_task(function*() {
