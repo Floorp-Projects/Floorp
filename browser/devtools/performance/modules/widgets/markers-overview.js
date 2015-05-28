@@ -19,6 +19,8 @@ loader.lazyRequireGetter(this, "getColor",
   "devtools/shared/theme", true);
 loader.lazyRequireGetter(this, "L10N",
   "devtools/performance/global", true);
+loader.lazyRequireGetter(this, "TickUtils",
+  "devtools/performance/waterfall-ticks", true);
 
 const OVERVIEW_HEADER_HEIGHT = 14; // px
 const OVERVIEW_ROW_HEIGHT = 11; // px
@@ -75,7 +77,7 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 
     for (let type in blueprint) {
       this._paintBatches.set(type, { style: blueprint[type], batch: [] });
-      this._lastGroup = Math.max(this._lastGroup, blueprint[type].group);
+      this._lastGroup = Math.max(this._lastGroup, blueprint[type].group || 0);
     }
   },
 
@@ -143,7 +145,12 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let fontFamily = OVERVIEW_HEADER_TEXT_FONT_FAMILY;
     let textPaddingLeft = OVERVIEW_HEADER_TEXT_PADDING_LEFT * this._pixelRatio;
     let textPaddingTop = OVERVIEW_HEADER_TEXT_PADDING_TOP * this._pixelRatio;
-    let tickInterval = this._findOptimalTickInterval(dataScale);
+
+    let tickInterval = TickUtils.findOptimalTickInterval({
+      ticksMultiple: OVERVIEW_HEADER_TICKS_MULTIPLE,
+      ticksSpacingMin: OVERVIEW_HEADER_TICKS_SPACING_MIN,
+      dataScale: dataScale
+    });
 
     ctx.textBaseline = "middle";
     ctx.font = fontSize + "px " + fontFamily;
@@ -188,32 +195,6 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     }
 
     return canvas;
-  },
-
-  /**
-   * Finds the optimal tick interval between time markers in this overview.
-   */
-  _findOptimalTickInterval: function(dataScale) {
-    let timingStep = OVERVIEW_HEADER_TICKS_MULTIPLE;
-    let spacingMin = OVERVIEW_HEADER_TICKS_SPACING_MIN * this._pixelRatio;
-    let maxIters = FIND_OPTIMAL_TICK_INTERVAL_MAX_ITERS;
-    let numIters = 0;
-
-    if (dataScale > spacingMin) {
-      return dataScale;
-    }
-
-    while (true) {
-      let scaledStep = dataScale * timingStep;
-      if (++numIters > maxIters) {
-        return scaledStep;
-      }
-      if (scaledStep < spacingMin) {
-        timingStep <<= 1;
-        continue;
-      }
-      return scaledStep;
-    }
   },
 
   /**

@@ -871,6 +871,11 @@ EnvironmentCache.prototype = {
    * Update the default search engine value.
    */
   _updateSearchEngine: function () {
+    if (!Services.search) {
+      // Just ignore cases where the search service is not implemented.
+      return;
+    }
+
     this._log.trace("_updateSearchEngine - isInitialized: " + Services.search.isInitialized);
     if (!Services.search.isInitialized) {
       return;

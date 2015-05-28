@@ -8,7 +8,6 @@
  */
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
@@ -29,27 +28,29 @@ loader.lazyRequireGetter(this, "MarkerUtils",
  */
 function MarkerDetails(parent, splitter) {
   EventEmitter.decorate(this);
-  this._onClick = this._onClick.bind(this);
+
   this._document = parent.ownerDocument;
   this._parent = parent;
   this._splitter = splitter;
-  this._splitter.addEventListener("mouseup", () => this.emit("resize"));
+
+  this._onClick = this._onClick.bind(this);
+  this._onSplitterMouseUp = this._onSplitterMouseUp.bind(this);
+
   this._parent.addEventListener("click", this._onClick);
+  this._splitter.addEventListener("mouseup", this._onSplitterMouseUp);
 }
 
 MarkerDetails.prototype = {
   /**
-   * Removes any node references from this view.
+   * Sets this view's width.
+   * @param boolean
    */
-  destroy: function() {
-    this.empty();
-    this._parent.removeEventListener("click", this._onClick);
-    this._parent = null;
-    this._splitter = null;
+  set width(value) {
+    this._parent.setAttribute("width", value);
   },
 
   /**
-   * Clears the view.
+   * Clears the marker details from this view.
    */
   empty: function() {
     this._parent.innerHTML = "";
@@ -60,8 +61,8 @@ MarkerDetails.prototype = {
    *
    * @param object params
    *        An options object holding:
-   *        marker - The marker to display.
-   *        frames - Array of stack frame information; see stack.js.
+   *          - marker: The marker to display.
+   *          - frames: Array of stack frame information; see stack.js.
    */
   render: function({ marker, frames }) {
     this.empty();
@@ -69,10 +70,10 @@ MarkerDetails.prototype = {
     let elements = [];
     elements.push(MarkerUtils.DOM.buildTitle(this._document, marker));
     elements.push(MarkerUtils.DOM.buildDuration(this._document, marker));
-    MarkerUtils.DOM.buildFields(this._document, marker).forEach(field => elements.push(field));
+    MarkerUtils.DOM.buildFields(this._document, marker).forEach(f => elements.push(f));
 
     // Build a stack element -- and use the "startStack" label if
-    // we have both a star and endStack.
+    // we have both a startStack and endStack.
     if (marker.stack) {
       let type = marker.endStack ? "startStack" : "stack";
       elements.push(MarkerUtils.DOM.buildStackTrace(this._document, {
@@ -98,6 +99,13 @@ MarkerDetails.prototype = {
       this.emit("view-source", data.url, data.line);
     }
   },
+
+  /**
+   * Handles the "mouseup" event on the marker details view splitter.
+   */
+  _onSplitterMouseUp: function() {
+    this.emit("resize");
+  }
 };
 
 /**

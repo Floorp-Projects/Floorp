@@ -7,6 +7,7 @@
 
 #include "BluetoothDaemonConnector.h"
 #include <fcntl.h>
+#include <sys/un.h>
 #include "nsThreadUtils.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
