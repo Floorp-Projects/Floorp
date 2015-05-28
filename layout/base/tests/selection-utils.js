@@ -124,7 +124,10 @@ function checkRangeCount(n, e)
   is(sel.rangeCount, n, e.id + ": Selection range count");
 }
 
-function checkRangePoints(r, expected, e) {
+function checkRangePoints(i, expected, e) {
+  var sel = window.getSelection();
+  if (i >= sel.rangeCount) return;
+  var r = sel.getRangeAt(i);
   is(r.startContainer, expected[0], e.id + ": range.startContainer");
   is(r.startOffset, expected[1], e.id + ": range.startOffset");
   is(r.endContainer, expected[2], e.id + ": range.endContainer");
