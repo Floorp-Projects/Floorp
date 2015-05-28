@@ -413,7 +413,7 @@ let Impl = {
 
     let updateChannel = null;
     try {
-      updateChannel = UpdateChannel.get();
+      updateChannel = UpdateChannel.get(false);
     } catch (e) {
       this._log.trace("assemblePing - Unable to get update channel.", e);
     }
