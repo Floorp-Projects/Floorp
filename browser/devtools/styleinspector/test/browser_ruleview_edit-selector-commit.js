@@ -48,12 +48,7 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,test escaping selector change reverts back to original value");
-
-  info("Creating the test document");
-  content.document.body.innerHTML = PAGE_CONTENT;
-
-  info("Opening the rule-view");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(PAGE_CONTENT));
   let {toolbox, inspector, view} = yield openRuleView();
 
   info("Iterating over the test data");
@@ -88,7 +83,7 @@ function* runTestData(inspector, view, data) {
         "Value is as expected: " + expected);
     is(idRuleEditor.isEditing, false, "Selector is not being edited.")
   } else {
-    yield once(view, "ruleview-refreshed");
+    yield once(view, "ruleview-changed");
     ok(getRuleViewRule(view, expected),
         "Rule with " + name + " selector exists.");
   }

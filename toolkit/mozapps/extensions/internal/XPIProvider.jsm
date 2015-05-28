@@ -1003,20 +1003,35 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.targetPlatforms = [];
   }
 
-  // Load the storage service before NSS (nsIRandomGenerator),
-  // to avoid a SQLite initialization error (bug 717904).
-  let storage = Services.storage;
+  // Define .syncGUID as a lazy property which is also settable
+  Object.defineProperty(addon, "syncGUID", {
+    get: () => {
+      // Load the storage service before NSS (nsIRandomGenerator),
+      // to avoid a SQLite initialization error (bug 717904).
+      let storage = Services.storage;
 
-  // Generate random GUID used for Sync.
-  // This was lifted from util.js:makeGUID() from services-sync.
-  let rng = Cc["@mozilla.org/security/random-generator;1"].
-            createInstance(Ci.nsIRandomGenerator);
-  let bytes = rng.generateRandomBytes(9);
-  let byte_string = [String.fromCharCode(byte) for each (byte in bytes)]
-                    .join("");
-  // Base64 encode
-  addon.syncGUID = btoa(byte_string).replace(/\+/g, '-')
-                                    .replace(/\//g, '_');
+      // Generate random GUID used for Sync.
+      // This was lifted from util.js:makeGUID() from services-sync.
+      let rng = Cc["@mozilla.org/security/random-generator;1"].
+        createInstance(Ci.nsIRandomGenerator);
+      let bytes = rng.generateRandomBytes(9);
+      let byte_string = [String.fromCharCode(byte) for each (byte in bytes)]
+                        .join("");
+      // Base64 encode
+      let guid = btoa(byte_string).replace(/\+/g, '-')
+        .replace(/\//g, '_');
+
+      delete addon.syncGUID;
+      addon.syncGUID = guid;
+      return guid;
+    },
+    set: (val) => {
+      delete addon.syncGUID;
+      addon.syncGUID = val;
+    },
+    configurable: true,
+    enumerable: true,
+  });
 
   return addon;
 }

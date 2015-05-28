@@ -65,6 +65,11 @@ const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
 // The default frecency value used when inserting matches with unknown frecency.
 const FRECENCY_DEFAULT = 1000;
 
+// A regex that matches "single word" hostnames for whitelisting purposes.
+// The hostname will already have been checked for general validity, so we
+// don't need to be exhaustive here, so allow dashes anywhere.
+const REGEXP_SINGLEWORD_HOST = new RegExp("^[a-z0-9-]+$", "i");
+
 // Sqlite result row index constants.
 const QUERYINDEX_QUERYTYPE     = 0;
 const QUERYINDEX_URL           = 1;
@@ -1005,7 +1010,7 @@ Search.prototype = {
   // scheme isn't specificed.
   _matchUnknownUrl: function* () {
     let flags = Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
-                Ci.nsIURIFixup.FIXUP_FLAG_REQUIRE_WHITELISTED_HOST;
+                Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
     let fixupInfo = null;
     try {
       fixupInfo = Services.uriFixup.getFixupURIInfo(this._originalSearchString,
@@ -1014,14 +1019,30 @@ Search.prototype = {
       return false;
     }
 
-    let uri = fixupInfo.preferredURI;
+    // If the URI cannot be fixed or the preferred URI would do a keyword search,
+    // that basically means this isn't useful to us. Note that
+    // fixupInfo.keywordAsSent will never be true if the keyword.enabled pref
+    // is false or there are no engines, so in that case we will always return
+    // a "visit".
+    if (!fixupInfo.fixedURI || fixupInfo.keywordAsSent)
+      return false;
+
+    let uri = fixupInfo.fixedURI;
     // Check the host, as "http:///" is a valid nsIURI, but not useful to us.
     // But, some schemes are expected to have no host. So we check just against
     // schemes we know should have a host. This allows new schemes to be
     // implemented without us accidentally blocking access to them.
     let hostExpected = new Set(["http", "https", "ftp", "chrome", "resource"]);
-    if (!uri || (hostExpected.has(uri.scheme) && !uri.host))
+    if (hostExpected.has(uri.scheme) && !uri.host)
       return false;
+
+    // If the result is something that looks like a single-worded hostname
+    // we need to check the domain whitelist to treat it as such.
+    if (uri.asciiHost &&
+        REGEXP_SINGLEWORD_HOST.test(uri.asciiHost) &&
+        !Services.uriFixup.isDomainWhitelisted(uri.asciiHost, -1)) {
+      return false;
+    }
 
     let value = makeActionURL("visiturl", {
       url: uri.spec,

@@ -48,20 +48,30 @@ browser.jar:
   skin/classic/browser/heartbeat-star-off.svg               (../shared/heartbeat-star-off.svg)
   skin/classic/browser/identity.png
   skin/classic/browser/identity-icons-generic.png
+  skin/classic/browser/identity-icons-generic@2x.png
   skin/classic/browser/identity-icons-https.png
+  skin/classic/browser/identity-icons-https@2x.png
   skin/classic/browser/identity-icons-https-ev.png
+  skin/classic/browser/identity-icons-https-ev@2x.png
   skin/classic/browser/identity-icons-https-mixed-active.png
+  skin/classic/browser/identity-icons-https-mixed-active@2x.png
   skin/classic/browser/identity-icons-https-mixed-display.png
+  skin/classic/browser/identity-icons-https-mixed-display@2x.png
   skin/classic/browser/Info.png
   skin/classic/browser/magnifier.png                        (../shared/magnifier.png)
   skin/classic/browser/magnifier@2x.png                     (../shared/magnifier@2x.png)
   skin/classic/browser/mask.png                             (../shared/mask.png)
   skin/classic/browser/mask@2x.png                          (../shared/mask@2x.png)
   skin/classic/browser/menuPanel.png
+  skin/classic/browser/menuPanel@2x.png
   skin/classic/browser/menuPanel-customize.png
+  skin/classic/browser/menuPanel-customize@2x.png
   skin/classic/browser/menuPanel-exit.png
+  skin/classic/browser/menuPanel-exit@2x.png
   skin/classic/browser/menuPanel-help.png
+  skin/classic/browser/menuPanel-help@2x.png
   skin/classic/browser/menuPanel-small.png
+  skin/classic/browser/menuPanel-small@2x.png
   skin/classic/browser/bad-content-blocked-16.png           (../shared/bad-content-blocked-16.png)
   skin/classic/browser/bad-content-blocked-16@2x.png        (../shared/bad-content-blocked-16@2x.png)
   skin/classic/browser/bad-content-blocked-64.png           (../shared/bad-content-blocked-64.png)
@@ -79,10 +89,10 @@ browser.jar:
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/privatebrowsing-mask.png
   skin/classic/browser/reload-stop-go.png
+  skin/classic/browser/reload-stop-go@2x.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/search-pref.png                      (../shared/search/search-pref.png)
   skin/classic/browser/search-indicator.png                 (../shared/search/search-indicator.png)
-  skin/classic/browser/search-indicator-add-engine.png      (../shared/search/search-indicator-add-engine.png)
   skin/classic/browser/search-engine-placeholder.png        (../shared/search/search-engine-placeholder.png)
   skin/classic/browser/badge-add-engine.png                 (../shared/search/badge-add-engine.png)
   skin/classic/browser/search-indicator-badge-add.png       (../shared/search/search-indicator-badge-add.png)
@@ -98,6 +108,7 @@ browser.jar:
   skin/classic/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
   skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
   skin/classic/browser/urlbar-arrow.png
+  skin/classic/browser/urlbar-arrow@2x.png
   skin/classic/browser/session-restore.svg                  (../shared/incontent-icons/session-restore.svg)
   skin/classic/browser/tab-crashed.svg                      (../shared/incontent-icons/tab-crashed.svg)
   skin/classic/browser/welcome-back.svg                     (../shared/incontent-icons/welcome-back.svg)
@@ -132,6 +143,7 @@ browser.jar:
   skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
   skin/classic/browser/customizableui/info-icon-customizeTip.png  (../shared/customizableui/info-icon-customizeTip.png)
   skin/classic/browser/customizableui/menuPanel-customizeFinish.png  (../shared/customizableui/menuPanel-customizeFinish.png)
+  skin/classic/browser/customizableui/menuPanel-customizeFinish@2x.png  (../shared/customizableui/menuPanel-customizeFinish@2x.png)
   skin/classic/browser/customizableui/panelarrow-customizeTip.png  (../shared/customizableui/panelarrow-customizeTip.png)
 * skin/classic/browser/customizableui/panelUIOverlay.css (customizableui/panelUIOverlay.css)
   skin/classic/browser/customizableui/subView-arrow-back-inverted.png  (../shared/customizableui/subView-arrow-back-inverted.png)
@@ -156,8 +168,11 @@ browser.jar:
   skin/classic/browser/newtab/controls.svg            (../shared/newtab/controls.svg)
   skin/classic/browser/newtab/whimsycorn.png          (../shared/newtab/whimsycorn.png)
   skin/classic/browser/panic-panel/header.png         (../shared/panic-panel/header.png)
+  skin/classic/browser/panic-panel/header@2x.png      (../shared/panic-panel/header@2x.png)
   skin/classic/browser/panic-panel/header-small.png   (../shared/panic-panel/header-small.png)
+  skin/classic/browser/panic-panel/header-small@2x.png (../shared/panic-panel/header-small@2x.png)
   skin/classic/browser/panic-panel/icons.png          (../shared/panic-panel/icons.png)
+  skin/classic/browser/panic-panel/icons@2x.png       (../shared/panic-panel/icons@2x.png)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
   skin/classic/browser/places/bookmarksToolbar-menuPanel.png (places/bookmarksToolbar-menuPanel.png)
@@ -422,15 +437,18 @@ browser.jar:
   skin/classic/browser/sync-128.png
   skin/classic/browser/sync-desktopIcon.png
   skin/classic/browser/sync-horizontalbar.png
+  skin/classic/browser/sync-horizontalbar@2x.png
   skin/classic/browser/sync-mobileIcon.png
   skin/classic/browser/sync-notification-24.png
   skin/classic/browser/syncProgress-menuPanel.png
+  skin/classic/browser/syncProgress-menuPanel@2x.png
   skin/classic/browser/syncProgress-toolbar.png
   skin/classic/browser/syncProgress-toolbar-inverted.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
   skin/classic/browser/syncQuota.css
   skin/classic/browser/syncProgress-horizontalbar.png
+  skin/classic/browser/syncProgress-horizontalbar@2x.png
 #endif
   skin/classic/browser/notification-pluginNormal.png  (../shared/plugins/notification-pluginNormal.png)
   skin/classic/browser/notification-pluginAlert.png   (../shared/plugins/notification-pluginAlert.png)

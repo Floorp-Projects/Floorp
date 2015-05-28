@@ -226,8 +226,8 @@ public:
   //
 
   nsresult Accept(int aFd,
-                  const union sockaddr_any* aAddr,
-                  socklen_t aAddrLen) override;
+                  const struct sockaddr* aAddress,
+                  socklen_t aAddressLength) override;
 
   // Methods for |DataSocketIO|
   //
@@ -336,8 +336,8 @@ BluetoothDaemonConnectionIO::OnError(const char* aFunction, int aErrno)
 
 nsresult
 BluetoothDaemonConnectionIO::Accept(int aFd,
-                                    const union sockaddr_any* aAddr,
-                                    socklen_t aAddrLen)
+                                    const struct sockaddr* aAddress,
+                                    socklen_t aAddressLength)
 {
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTING);

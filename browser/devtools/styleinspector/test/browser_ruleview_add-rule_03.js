@@ -79,14 +79,14 @@ function* testEditSelector(view, name) {
   info("Entering a new selector name: " + name);
   editor.input.value = name;
 
-  info("Waiting for rule view to refresh");
-  let onRuleViewRefresh = once(view, "ruleview-refreshed");
+  info("Waiting for rule view to update");
+  let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield onRuleViewRefresh;
+  yield onRuleViewChanged;
 
-  is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
+  is(view._elementStyle.rules.length, 3, "Should have 3 rules.");
 }
 
 function* checkModifiedElement(view, name, index) {
