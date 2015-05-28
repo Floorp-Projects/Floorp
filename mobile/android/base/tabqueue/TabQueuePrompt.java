@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.tabqueue;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.animation.TransitionsTracker;
 
 import android.os.Bundle;
@@ -39,15 +41,19 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
     private void showTabQueueEnablePrompt() {
         setContentView(R.layout.tab_queue_prompt);
 
+        final int numberOfTimesTabQueuePromptSeen = GeckoSharedPrefs.forApp(this).getInt(TabQueueHelper.PREF_TAB_QUEUE_TIMES_PROMPT_SHOWN, 0);
+
         findViewById(R.id.ok_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onConfirmButtonPressed();
+                Telemetry.addToHistogram("FENNEC_TABQUEUE_PROMPT_ENABLE_YES", numberOfTimesTabQueuePromptSeen);
             }
         });
         findViewById(R.id.cancel_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Telemetry.addToHistogram("FENNEC_TABQUEUE_PROMPT_ENABLE_NO", numberOfTimesTabQueuePromptSeen);
                 setResult(TabQueueHelper.TAB_QUEUE_NO);
                 finish();
             }
