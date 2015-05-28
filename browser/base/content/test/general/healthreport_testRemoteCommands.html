@@ -72,6 +72,11 @@ function validateTelemetryPingList(list) {
     return false;
   }
 
+  // Telemetry may generate other pings (e.g. "deletion" pings), so filter those
+  // out.
+  const TEST_TYPES_REGEX = /^test-telemetryArchive/;
+  list = list.filter(p => TEST_TYPES_REGEX.test(p.type));
+
   if (list.length != TEST_PINGS.length) {
     console.log("Telemetry ping length is not correct.");
     return false;
