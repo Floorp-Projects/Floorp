@@ -63,7 +63,8 @@ ContentHostTexture::Composite(EffectChain& aEffectChain,
 
   RefPtr<TexturedEffect> effect = CreateTexturedEffect(mTextureSource.get(),
                                                        mTextureSourceOnWhite.get(),
-                                                       aFilter, true);
+                                                       aFilter, true,
+                                                       GetRenderState());
   if (!effect) {
     return;
   }
@@ -460,7 +461,8 @@ ContentHostTexture::GenEffect(const gfx::Filter& aFilter)
   }
   return CreateTexturedEffect(mTextureSource.get(),
                               mTextureSourceOnWhite.get(),
-                              aFilter, true);
+                              aFilter, true,
+                              GetRenderState());
 }
 
 TemporaryRef<gfx::DataSourceSurface>
