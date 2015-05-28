@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/devtools/DeserializedNode.h"
+#include "mozilla/devtools/HeapSnapshot.h"
+#include "nsCRTGlue.h"
 
 namespace mozilla {
 namespace devtools {
@@ -107,3 +109,86 @@ DeserializedNode::getEdgeReferent(const DeserializedEdge &edge)
 
 } // namespace devtools
 } // namespace mozilla
+
+namespace JS {
+namespace ubi {
+
+using mozilla::devtools::DeserializedEdge;
+
+const char16_t Concrete<DeserializedNode>::concreteTypeName[] =
+  MOZ_UTF16("mozilla::devtools::DeserializedNode");
+
+const char16_t *
+Concrete<DeserializedNode>::typeName() const
+{
+  return get().typeName;
+}
+
+size_t
+Concrete<DeserializedNode>::size(mozilla::MallocSizeOf mallocSizeof) const
+{
+  return get().size;
+}
+
+class DeserializedEdgeRange : public EdgeRange
+{
+  SimpleEdgeVector edges;
+  size_t           i;
+
+  void settle() {
+    front_ = i < edges.length() ? &edges[i] : nullptr;
+  }
+
+public:
+  explicit DeserializedEdgeRange(JSContext* cx)
+    : edges(cx)
+    , i(0)
+  {
+    settle();
+  }
+
+  bool init(DeserializedNode &node)
+  {
+    if (!edges.reserve(node.edges.length()))
+      return false;
+
+    for (DeserializedEdge *edgep = node.edges.begin();
+         edgep != node.edges.end();
+         edgep++)
+    {
+      char16_t *name = nullptr;
+      if (edgep->name) {
+        name = NS_strdup(edgep->name);
+        if (!name)
+          return false;
+      }
+
+      DeserializedNode &referent = node.getEdgeReferent(*edgep);
+      edges.infallibleAppend(mozilla::Move(SimpleEdge(name, Node(&referent))));
+    }
+
+    settle();
+    return true;
+  }
+
+  void popFront() override
+  {
+    i++;
+    settle();
+  }
+};
+
+UniquePtr<EdgeRange>
+Concrete<DeserializedNode>::edges(JSContext* cx, bool) const
+{
+  UniquePtr<DeserializedEdgeRange, JS::DeletePolicy<DeserializedEdgeRange>> range(
+    js_new<DeserializedEdgeRange>(cx));
+
+  if (!range || !range->init(get()))
+    return nullptr;
+
+  return UniquePtr<EdgeRange>(range.release());
+}
+
+} // namespace JS
+} // namespace ubi
