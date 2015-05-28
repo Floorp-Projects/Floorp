@@ -26,12 +26,12 @@ void dbg_break() {}
 
 // Note this is used for inter-AsmJS calls and may pass arguments and results in
 // floating point registers even if the system ABI does not.
-ABIArgGenerator::ABIArgGenerator() :
-    intRegIndex_(0),
+ABIArgGenerator::ABIArgGenerator()
+  : intRegIndex_(0),
     floatRegIndex_(0),
     stackOffset_(0),
     current_()
-{}
+{ }
 
 ABIArg
 ABIArgGenerator::next(MIRType type)
@@ -498,15 +498,17 @@ InstMOV::IsTHIS(const Instruction& i)
 }
 
 Op2Reg
-Operand2::toOp2Reg() {
+Operand2::toOp2Reg() const {
     return *(Op2Reg*)this;
 }
+
 O2RegImmShift
-Op2Reg::toO2RegImmShift() {
+Op2Reg::toO2RegImmShift() const {
     return *(O2RegImmShift*)this;
 }
+
 O2RegRegShift
-Op2Reg::toO2RegRegShift() {
+Op2Reg::toO2RegRegShift() const {
     return *(O2RegRegShift*)this;
 }
 
@@ -1257,7 +1259,7 @@ BOffImm::BOffImm(Instruction& inst)
 }
 
 Instruction*
-BOffImm::getDest(Instruction* src)
+BOffImm::getDest(Instruction* src) const
 {
     // TODO: It is probably worthwhile to verify that src is actually a branch.
     // NOTE: This does not explicitly shift the offset of the destination left by 2,
@@ -1716,7 +1718,8 @@ Assembler::as_dtr_patch(LoadStore ls, int size, Index mode, Register rt, DTRAddr
     WriteInstStatic(EncodeDtr(ls, size, mode, rt, addr, c), dest);
 }
 
-class PoolHintData {
+class PoolHintData
+{
   public:
     enum LoadType {
         // Set 0 to bogus, since that is the value most likely to be
@@ -1759,19 +1762,19 @@ class PoolHintData {
         destReg_ = destReg.id();
         destType_ = destReg.isDouble();
     }
-    Assembler::Condition getCond() {
+    Assembler::Condition getCond() const {
         return Assembler::Condition(cond_ << 28);
     }
 
-    Register getReg() {
+    Register getReg() const {
         return Register::FromCode(destReg_);
     }
-    VFPRegister getVFPReg() {
+    VFPRegister getVFPReg() const {
         VFPRegister r = VFPRegister(destReg_, destType_ ? VFPRegister::Double : VFPRegister::Single);
         return r;
     }
 
-    int32_t getIndex() {
+    int32_t getIndex() const {
         return index_;
     }
     void setIndex(uint32_t index) {
@@ -1780,7 +1783,7 @@ class PoolHintData {
         MOZ_ASSERT(index_ == index);
     }
 
-    LoadType getLoadType() {
+    LoadType getLoadType() const {
         // If this *was* a PoolBranch, but the branch has already been bound
         // then this isn't going to look like a real poolhintdata, but we still
         // want to lie about it so everyone knows it *used* to be a branch.
@@ -1789,7 +1792,7 @@ class PoolHintData {
         return loadType_;
     }
 
-    bool isValidPoolHint() {
+    bool isValidPoolHint() const {
         // Most instructions cannot have a condition that is 0xf. Notable
         // exceptions are blx and the entire NEON instruction set. For the
         // purposes of pool loads, and possibly patched branches, the possible
@@ -1799,7 +1802,8 @@ class PoolHintData {
     }
 };
 
-union PoolHintPun {
+union PoolHintPun
+{
     PoolHintData phd;
     uint32_t raw;
 };
@@ -1844,8 +1848,7 @@ BufferOffset
 Assembler::as_dtm(LoadStore ls, Register rn, uint32_t mask,
                 DTMMode mode, DTMWriteBack wb, Condition c)
 {
-    return writeInst(0x08000000 | RN(rn) | ls |
-                     mode | mask | c | wb);
+    return writeInst(0x08000000 | RN(rn) | ls | mode | mask | c | wb);
 }
 
 BufferOffset
@@ -2056,12 +2059,14 @@ Assembler::as_bx(Register r, Condition c)
     BufferOffset ret = writeInst(((int) c) | OpBx | r.code());
     return ret;
 }
+
 void
 Assembler::WritePoolGuard(BufferOffset branch, Instruction* dest, BufferOffset afterPool)
 {
     BOffImm off = afterPool.diffB<BOffImm>(branch);
     *dest = InstBImm(off, Always);
 }
+
 // Branch can branch to an immediate *or* to a register.
 // Branches to immediates are pc relative, branches to registers are absolute.
 BufferOffset
@@ -2106,6 +2111,7 @@ Assembler::as_b(Label* l, Condition c)
     MOZ_ASSERT(check == old);
     return ret;
 }
+
 BufferOffset
 Assembler::as_b(BOffImm off, Condition c, BufferOffset inst)
 {
@@ -2168,6 +2174,7 @@ Assembler::as_bl(Label* l, Condition c)
     MOZ_ASSERT(check == old);
     return ret;
 }
+
 BufferOffset
 Assembler::as_bl(BOffImm off, Condition c, BufferOffset inst)
 {
@@ -2195,6 +2202,7 @@ enum vfp_tags {
     VfpTag   = 0x0C000A00,
     VfpArith = 0x02000000
 };
+
 BufferOffset
 Assembler::writeVFPInst(vfp_size sz, uint32_t blob)
 {
@@ -2225,43 +2233,37 @@ Assembler::as_vfp_float(VFPRegister vd, VFPRegister vn, VFPRegister vm,
 }
 
 BufferOffset
-Assembler::as_vadd(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c)
+Assembler::as_vadd(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c)
 {
     return as_vfp_float(vd, vn, vm, OpvAdd, c);
 }
 
 BufferOffset
-Assembler::as_vdiv(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c)
+Assembler::as_vdiv(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c)
 {
     return as_vfp_float(vd, vn, vm, OpvDiv, c);
 }
 
 BufferOffset
-Assembler::as_vmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c)
+Assembler::as_vmul(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c)
 {
     return as_vfp_float(vd, vn, vm, OpvMul, c);
 }
 
 BufferOffset
-Assembler::as_vnmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                  Condition c)
+Assembler::as_vnmul(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c)
 {
     return as_vfp_float(vd, vn, vm, OpvMul, c);
 }
 
 BufferOffset
-Assembler::as_vnmla(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                  Condition c)
+Assembler::as_vnmla(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c)
 {
     MOZ_CRASH("Feature NYI");
 }
 
 BufferOffset
-Assembler::as_vnmls(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                  Condition c)
+Assembler::as_vnmls(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c)
 {
     MOZ_CRASH("Feature NYI");
 }
@@ -2285,18 +2287,17 @@ Assembler::as_vabs(VFPRegister vd, VFPRegister vm, Condition c)
 }
 
 BufferOffset
-Assembler::as_vsub(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c)
+Assembler::as_vsub(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c)
 {
     return as_vfp_float(vd, vn, vm, OpvSub, c);
 }
 
 BufferOffset
-Assembler::as_vcmp(VFPRegister vd, VFPRegister vm,
-                 Condition c)
+Assembler::as_vcmp(VFPRegister vd, VFPRegister vm, Condition c)
 {
     return as_vfp_float(vd, NoVFPRegister, vm, OpvCmp, c);
 }
+
 BufferOffset
 Assembler::as_vcmpz(VFPRegister vd, Condition c)
 {
@@ -2309,6 +2310,7 @@ Assembler::as_vmov(VFPRegister vd, VFPRegister vsrc, Condition c)
 {
     return as_vfp_float(vd, NoVFPRegister, vsrc, OpvMov, c);
 }
+
 // Transfer between Core and VFP.
 
 // Unlike the next function, moving between the core registers and vfp registers
@@ -2339,15 +2341,13 @@ Assembler::as_vxfer(Register vt1, Register vt2, VFPRegister vm, FloatToCore_ f2c
         MOZ_ASSERT(idx == 0);
     }
 
-    if (vt2 == InvalidReg) {
-        return writeVFPInst(sz, WordTransfer | f2c | c |
-                            RT(vt1) | maybeRN(vt2) | VN(vm) | idx);
-    } else {
-        // We are doing a 64 bit transfer.
-        return writeVFPInst(sz, DoubleTransfer | f2c | c |
-                            RT(vt1) | maybeRN(vt2) | VM(vm) | idx);
-    }
+    if (vt2 == InvalidReg)
+        return writeVFPInst(sz, WordTransfer | f2c | c | RT(vt1) | maybeRN(vt2) | VN(vm) | idx);
+
+    // We are doing a 64 bit transfer.
+    return writeVFPInst(sz, DoubleTransfer | f2c | c | RT(vt1) | maybeRN(vt2) | VM(vm) | idx);
 }
+
 enum vcvt_destFloatness {
     VcvtToInteger = 1 << 18,
     VcvtToFloat  = 0 << 18
@@ -2384,9 +2384,9 @@ Assembler::as_vcvt(VFPRegister vd, VFPRegister vm, bool useFPSCR,
     vcvt_Signedness opSign;
     vcvt_toZero doToZero = VcvtToFPSCR;
     MOZ_ASSERT(vd.isFloat() || vm.isFloat());
-    if (vd.isSingle() || vm.isSingle()) {
+    if (vd.isSingle() || vm.isSingle())
         sz = IsSingle;
-    }
+
     if (vd.isFloat()) {
         destFloat = VcvtToFloat;
         opSign = (vm.isSInt()) ? VcvtFromSigned : VcvtFromUnsigned;
@@ -2459,6 +2459,7 @@ Assembler::as_vimm(VFPRegister vd, VFPImm imm, Condition c)
     return writeVFPInst(sz,  c | imm.encode() | VD(vd) | 0x02B00000);
 
 }
+
 BufferOffset
 Assembler::as_vmrs(Register r, Condition c)
 {
@@ -2577,7 +2578,6 @@ Assembler::retarget(Label* label, Label* target)
 
 }
 
-
 static int stopBKPT = -1;
 void
 Assembler::as_bkpt()
@@ -2632,6 +2632,7 @@ Assembler::GetBranchOffset(const Instruction* i_)
     i->extractImm(&dest);
     return dest.decode();
 }
+
 void
 Assembler::RetargetNearBranch(Instruction* i, int offset, bool final)
 {
@@ -2667,7 +2668,8 @@ Assembler::RetargetFarBranch(Instruction* i, uint8_t** slot, uint8_t* dest, Cond
 
 }
 
-struct PoolHeader : Instruction {
+struct PoolHeader : Instruction
+{
     struct Header
     {
         // The size should take into account the pool header.
@@ -2708,6 +2710,7 @@ struct PoolHeader : Instruction {
         Header tmp(this);
         return tmp.isNatural;
     }
+
     static bool IsTHIS(const Instruction& i) {
         return (*i.raw() & 0xffff0000) == 0xffff0000;
     }
@@ -2718,12 +2721,10 @@ struct PoolHeader : Instruction {
     }
 };
 
-
 void
 Assembler::WritePoolHeader(uint8_t* start, Pool* p, bool isNatural)
 {
-    static_assert(sizeof(PoolHeader) == 4,
-                  "PoolHandler must have the correct size.");
+    static_assert(sizeof(PoolHeader) == 4, "PoolHandler must have the correct size.");
     uint8_t* pool = start + 4;
     // Go through the usual rigmarole to get the size of the pool.
     pool += p->getPoolSize();
@@ -2735,7 +2736,6 @@ Assembler::WritePoolHeader(uint8_t* start, Pool* p, bool isNatural)
     *(PoolHeader*)start = header;
 }
 
-
 // The size of an arbitrary 32-bit call in the instruction stream. On ARM this
 // sequence is |pc = ldr pc - 4; imm32| given that we never reach the imm32.
 uint32_t
@@ -2743,6 +2743,7 @@ Assembler::PatchWrite_NearCallSize()
 {
     return sizeof(uint32_t);
 }
+
 void
 Assembler::PatchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall)
 {
@@ -2754,8 +2755,8 @@ Assembler::PatchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall
     new (inst) InstBLImm(BOffImm(dest - (uint8_t*)inst) , Always);
     // Ensure everyone sees the code that was just written into memory.
     AutoFlushICache::flush(uintptr_t(inst), 4);
-
 }
+
 void
 Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newValue,
                                    PatchedImmPtr expectedValue)
@@ -2796,7 +2797,6 @@ Assembler::PatchWrite_Imm32(CodeLocationLabel label, Imm32 imm) {
     *(raw - 1) = imm.value;
 }
 
-
 uint8_t*
 Assembler::NextInstruction(uint8_t* inst_, uint32_t* count)
 {
@@ -2821,7 +2821,8 @@ InstIsGuard(Instruction* inst, const PoolHeader** ph)
 }
 
 static bool
-InstIsBNop(Instruction* inst) {
+InstIsBNop(Instruction* inst)
+{
     // In some special situations, it is necessary to insert a NOP into the
     // instruction stream that nobody knows about, since nobody should know
     // about it, make sure it gets skipped when Instruction::next() is called.
@@ -3030,7 +3031,8 @@ void Assembler::UpdateBoundsCheck(uint32_t heapSize, Instruction* inst)
     // for us. Don't call this!
 }
 
-InstructionIterator::InstructionIterator(Instruction* i_) : i(i_)
+InstructionIterator::InstructionIterator(Instruction* i_)
+  : i(i_)
 {
     // Work around pools with an artificial pool guard and around nop-fill.
     i = i->skipPool();
