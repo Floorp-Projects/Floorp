@@ -234,6 +234,68 @@ public:
     }
   }
 
+  uint32_t GetConnectionId() const
+  {
+    int length = mHeaders.Length();
+
+    for (int i = 0; i < length; ++i) {
+      if (mHeaders[i]->mId == ObexHeaderId::ConnectionId) {
+        uint32_t* id = (uint32_t *) mHeaders[i]->mData.get();
+        return *id;
+      }
+    }
+
+    // According to OBEX spec., the value 0xFFFFFFFF is reserved and it's
+    // considered invalid for Connection ID.
+    return 0xFFFFFFFF;
+  }
+
+  /**
+   * Get a specified parameter from the 'Application Parameters' header.
+   *
+   * @param aTagId      [in]  The tag ID of parameter which is defined by
+   *                          applications or upper protocol layer.
+   * @param aRetBuf     [out] The buffer which is used to return the parameter.
+   * @param aBufferSize [in]  The size of the given buffer.
+   *
+   * @return a boolean value to indicate whether the given paramter exists.
+   */
+  bool GetAppParameter(uint8_t aTagId, uint8_t* aRetBuf, int aBufferSize) const
+  {
+    int length = mHeaders.Length();
+
+    for (int i = 0; i < length; ++i) {
+      // Parse the 'Application Parameters' header.
+      if (mHeaders[i]->mId == ObexHeaderId::AppParameters) {
+        uint8_t* ptr = mHeaders[i]->mData.get();
+        int dataLen = mHeaders[i]->mDataLength;
+
+        // An application parameters header may contain more than one
+        // [tag]-[length]-[value] triplet. The [tag] and [length] fields are
+        // each one byte in length.
+        uint8_t tagId;
+        uint8_t offset = 0;
+        do {
+          tagId = *(ptr + offset++);
+
+          // The length of value field, it should not exceed 255.
+          uint8_t paramLen = *(ptr + offset++);
+
+          if (tagId == aTagId) {
+            memcpy(aRetBuf, ptr + offset, paramLen < aBufferSize ? paramLen
+                                                                 : aBufferSize);
+            return true;
+          }
+
+          offset += paramLen;
+        } while (offset < dataLen);
+      }
+    }
+
+    // The specified parameter don't exist in 'Application Parameters' header.
+    return false;
+  }
+
   bool Has(ObexHeaderId aId) const
   {
     int length = mHeaders.Length();

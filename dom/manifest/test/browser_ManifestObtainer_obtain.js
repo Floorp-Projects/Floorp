@@ -1,7 +1,10 @@
 //Used by JSHint:
-/*global Cu, ManifestObtainer, BrowserTestUtils, add_task, SpecialPowers, todo_is, gBrowser, Assert*/
+/*global Cu, BrowserTestUtils, add_task, SpecialPowers, gBrowser, Assert*/
 'use strict';
-Cu.import('resource://gre/modules/ManifestObtainer.jsm', this);
+const {
+  ManifestObtainer
+} = Cu.import('resource://gre/modules/WebManifest.jsm', {});
+
 requestLongerTimeout(4); // e10s tests take time.
 const defaultURL =
   'http://example.org/tests/dom/manifest/test/resource.sjs';
@@ -189,7 +192,7 @@ add_task(function*() {
   // Flood random browsers with requests. Once promises settle, check that
   // responses all pass.
   const results = yield Promise.all((
-    for (browser of randBrowsers(browsers, 1000)) obtainer.obtainManifest(browser)
+    for (browser of randBrowsers(browsers, 100)) obtainer.obtainManifest(browser)
   ));
   const expected = 'Expect every manifest to have name equal to `pass`.';
   const pass = results.every(manifest => manifest.name === 'pass');

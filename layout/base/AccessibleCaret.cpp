@@ -254,9 +254,10 @@ AccessibleCaret::SetCaretElementStyle(const nsRect& aRect)
 {
   nsPoint position = CaretElementPosition(aRect);
   nsAutoString styleStr;
-  styleStr.AppendPrintf("left: %dpx; top: %dpx;",
+  styleStr.AppendPrintf("left: %dpx; top: %dpx; padding-top: %dpx;",
                         nsPresContext::AppUnitsToIntCSSPixels(position.x),
-                        nsPresContext::AppUnitsToIntCSSPixels(position.y));
+                        nsPresContext::AppUnitsToIntCSSPixels(position.y),
+                        nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
 
   float zoomLevel = GetZoomLevel();
   styleStr.AppendPrintf(" width: %.2fpx; height: %.2fpx; margin-left: %.2fpx",
