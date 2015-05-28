@@ -133,8 +133,11 @@ RecordingModel.prototype = {
    * Sets results available from stopping a recording from SharedPerformanceConnection.
    * Should only be called by SharedPerformanceConnection.
    */
-  _onStopRecording: Task.async(function *(info) {
-    this._profile = info.profile;
+  _onStopRecording: Task.async(function *({ profilerEndTime, profile }) {
+    // Update the duration with the accurate profilerEndTime, so we don't have
+    // samples outside of the approximate duration set in `_onStoppingRecording`.
+    this._duration = profilerEndTime - this._profilerStartTime;
+    this._profile = profile;
     this._completed = true;
 
     // We filter out all samples that fall out of current profile's range
