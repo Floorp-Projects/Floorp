@@ -40,14 +40,14 @@ class nsIControllerCommand;
     inCommandTable->RegisterCommand(_cmdName,                           \
                        static_cast<nsIControllerCommand *>(theCmd));    \
   }
-  
+
 #define NS_REGISTER_TAG_COMMAND(_cmdClass, _cmdName, _tagName)          \
   {                                                                     \
     _cmdClass* theCmd = new _cmdClass(_tagName);                        \
     inCommandTable->RegisterCommand(_cmdName,                           \
                        static_cast<nsIControllerCommand *>(theCmd));    \
   }
-  
+
 
 // static
 nsresult

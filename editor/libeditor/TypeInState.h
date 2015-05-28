@@ -27,7 +27,7 @@ struct PropItem
   nsIAtom *tag;
   nsString attr;
   nsString value;
-  
+
   PropItem();
   PropItem(nsIAtom *aTag, const nsAString &aAttr, const nsAString &aValue);
   ~PropItem();
@@ -52,7 +52,7 @@ public:
 
   void ClearAllProps();
   void ClearProp(nsIAtom* aProp, const nsAString& aAttr);
-  
+
   //**************************************************************************
   //    TakeClearProperty: hands back next property item on the clear list.
   //                       caller assumes ownership of PropItem and must delete it.
@@ -89,7 +89,7 @@ protected:
   int32_t mRelativeFontSize;
   nsCOMPtr<nsIDOMNode> mLastSelectionContainer;
   int32_t mLastSelectionOffset;
-  
+
   friend class nsHTMLEditRules;
 };
 
