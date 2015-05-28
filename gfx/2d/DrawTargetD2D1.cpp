@@ -205,7 +205,11 @@ DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface *aSurface,
 
   // Step 1, create the shadow effect.
   RefPtr<ID2D1Effect> shadowEffect;
-  mDC->CreateEffect(CLSID_D2D1Shadow, byRef(shadowEffect));
+  HRESULT hr = mDC->CreateEffect(CLSID_D2D1Shadow, byRef(shadowEffect));
+  if (FAILED(hr) || !shadowEffect) {
+    gfxWarning() << "Failed to create shadow effect. Code: " << hexa(hr);
+    return;
+  }
   shadowEffect->SetInput(0, image);
   shadowEffect->SetValue(D2D1_SHADOW_PROP_BLUR_STANDARD_DEVIATION, aSigma);
   D2D1_VECTOR_4F color = { aColor.r, aColor.g, aColor.b, aColor.a };
@@ -1086,9 +1090,9 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
     }
 
     if (!mBlendEffect) {
-      mDC->CreateEffect(CLSID_D2D1Blend, byRef(mBlendEffect));
+      HRESULT hr = mDC->CreateEffect(CLSID_D2D1Blend, byRef(mBlendEffect));
 
-      if (!mBlendEffect) {
+      if (FAILED(hr) || !mBlendEffect) {
         gfxWarning() << "Failed to create blend effect!";
         return;
       }
@@ -1131,7 +1135,11 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 
   RefPtr<ID2D1Effect> radialGradientEffect;
 
-  mDC->CreateEffect(CLSID_RadialGradientEffect, byRef(radialGradientEffect));
+  HRESULT hr = mDC->CreateEffect(CLSID_RadialGradientEffect, byRef(radialGradientEffect));
+  if (FAILED(hr) || !radialGradientEffect) {
+    gfxWarning() << "Failed to create radial gradient effect. Code: " << hexa(hr);
+    return;
+  }
 
   radialGradientEffect->SetValue(RADIAL_PROP_STOP_COLLECTION,
                                  static_cast<const GradientStopsD2D*>(pat->mStops.get())->mStopCollection);
