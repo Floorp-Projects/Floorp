@@ -43,15 +43,19 @@ add_task(function* test_javascript_match() {
   yield check_autocomplete({
     search: "foo",
     searchParam: "enable-actions",
-    matches: [ { uri: uri1, title: "title" },
+    matches: [ makeSearchMatch("foo"),
+               { uri: uri1, title: "title" },
                { uri: uri2, title: "title", style: ["bookmark"] },
                { uri: uri3, title: "title" },
                { uri: uri4, title: "title", style: ["bookmark"] },
                { uri: uri5, title: "title", style: ["bookmark"] },
                { uri: uri6, title: "title", style: ["bookmark"] },
-               { uri: makeActionURI("switchtab", {url: "http://t.foo/6"}), title: "title", style: [ "action,switchtab" ] }, ]
+               makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
+             ]
   });
 
+  // Note the next few tests do *not* get a search result as enable-actions
+  // isn't specified.
   do_print("Match only typed history");
   yield check_autocomplete({
     search: "foo ^ ~",
@@ -82,7 +86,10 @@ add_task(function* test_javascript_match() {
   yield check_autocomplete({
     search: "",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("switchtab", {url: "http://t.foo/6"}), title: "title", style: [ "action,switchtab" ] }, ]
+    matches: [
+               makeSearchMatch(""),
+               makeSwitchToTabMatch("http://t.foo/6", { title: "title" }),
+             ]
   });
 
   Services.prefs.clearUserPref("browser.urlbar.suggest.history");

@@ -6,6 +6,7 @@
 
 #include "InterceptedJARChannel.h"
 #include "nsIPipe.h"
+#include "mozilla/dom/ChannelInfo.h"
 
 using namespace mozilla::net;
 
@@ -99,13 +100,13 @@ InterceptedJARChannel::Cancel()
 }
 
 NS_IMETHODIMP
-InterceptedJARChannel::SetSecurityInfo(nsISupports* aSecurityInfo)
+InterceptedJARChannel::SetChannelInfo(mozilla::dom::ChannelInfo* aChannelInfo)
 {
   if (!mChannel) {
     return NS_ERROR_FAILURE;
   }
 
-  return mChannel->OverrideSecurityInfo(aSecurityInfo);
+  return aChannelInfo->ResurrectInfoOnChannel(mChannel);
 }
 
 void

@@ -40,8 +40,7 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
     }
     this._recording = true;
     this._ticks = [];
-
-    this._startTime = this._contentWin.performance.now();
+    this._startTime = this.tabActor.docShell.now();
     this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
   }, {
   }),
@@ -108,14 +107,7 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
       return;
     }
     this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
-
-    // Store the amount of time passed since the recording started.
-    let currentTime = this._contentWin.performance.now();
-
-    // Store _elapsedTime so we can use this as a new starting time on a page refresh
-    // to normalize times.
-    this._elapsedTime = currentTime - this._startTime;
-    this._ticks.push(this._elapsedTime);
+    this._ticks.push(this.tabActor.docShell.now() - this._startTime);
   },
 
   /**
@@ -123,9 +115,6 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
    */
   _onGlobalCreated: function (win) {
     if (this._recording) {
-      // Set _startTime to the currently elapsed time so we can get a wholistic
-      // elapsed time in _onRefreshDriverTick.
-      this._startTime = -this._elapsedTime;
       this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
     }
   }

@@ -264,7 +264,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mIMECompositionEnding(false)
   , mIMEEventCountAfterEnding(0)
   , mIMECompositionStart(0)
-  , mIMESeqno(0)
   , mIMECompositionRectOffset(0)
   , mRect(0, 0, 0, 0)
   , mDimensions(0, 0)
@@ -1847,11 +1846,8 @@ TabParent::RecvHideTooltip()
 
 bool
 TabParent::RecvNotifyIMEFocus(const bool& aFocus,
-                              nsIMEUpdatePreference* aPreference,
-                              uint32_t* aSeqno)
+                              nsIMEUpdatePreference* aPreference)
 {
-  *aSeqno = mIMESeqno;
-
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     *aPreference = nsIMEUpdatePreference();
@@ -1922,8 +1918,7 @@ TabParent::RecvNotifyIMESelectedCompositionRect(
 }
 
 bool
-TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
-                                  const uint32_t& aAnchor,
+TabParent::RecvNotifyIMESelection(const uint32_t& aAnchor,
                                   const uint32_t& aFocus,
                                   const mozilla::WritingMode& aWritingMode,
                                   const bool& aCausedByComposition)
@@ -1932,29 +1927,27 @@ TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
   if (!widget)
     return true;
 
-  if (aSeqno == mIMESeqno) {
-    mIMESelectionAnchor = aAnchor;
-    mIMESelectionFocus = aFocus;
-    mWritingMode = aWritingMode;
-    const nsIMEUpdatePreference updatePreference =
-      widget->GetIMEUpdatePreference();
-    if (updatePreference.WantSelectionChange() &&
-        (updatePreference.WantChangesCausedByComposition() ||
-         !aCausedByComposition)) {
-      IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-      notification.mSelectionChangeData.mOffset =
-        std::min(mIMESelectionAnchor, mIMESelectionFocus);
-      notification.mSelectionChangeData.mLength =
-        mIMESelectionAnchor > mIMESelectionFocus ?
-          mIMESelectionAnchor - mIMESelectionFocus :
-          mIMESelectionFocus - mIMESelectionAnchor;
-      notification.mSelectionChangeData.mReversed =
-        mIMESelectionFocus < mIMESelectionAnchor;
-      notification.mSelectionChangeData.SetWritingMode(mWritingMode);
-      notification.mSelectionChangeData.mCausedByComposition =
-        aCausedByComposition;
-      widget->NotifyIME(notification);
-    }
+  mIMESelectionAnchor = aAnchor;
+  mIMESelectionFocus = aFocus;
+  mWritingMode = aWritingMode;
+  const nsIMEUpdatePreference updatePreference =
+    widget->GetIMEUpdatePreference();
+  if (updatePreference.WantSelectionChange() &&
+      (updatePreference.WantChangesCausedByComposition() ||
+       !aCausedByComposition)) {
+    IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
+    notification.mSelectionChangeData.mOffset =
+      std::min(mIMESelectionAnchor, mIMESelectionFocus);
+    notification.mSelectionChangeData.mLength =
+      mIMESelectionAnchor > mIMESelectionFocus ?
+        mIMESelectionAnchor - mIMESelectionFocus :
+        mIMESelectionFocus - mIMESelectionAnchor;
+    notification.mSelectionChangeData.mReversed =
+      mIMESelectionFocus < mIMESelectionAnchor;
+    notification.mSelectionChangeData.SetWritingMode(mWritingMode);
+    notification.mSelectionChangeData.mCausedByComposition =
+      aCausedByComposition;
+    widget->NotifyIME(notification);
   }
   return true;
 }
@@ -2298,7 +2291,6 @@ TabParent::SendCompositionEvent(WidgetCompositionEvent& event)
     mIMEEventCountAfterEnding++;
     return true;
   }
-  event.mSeqno = ++mIMESeqno;
   return PBrowserParent::SendCompositionEvent(event);
 }
 
@@ -2328,7 +2320,6 @@ TabParent::SendCompositionChangeEvent(WidgetCompositionEvent& event)
       mIMECompositionStart + event.mData.Length();
   mIMEComposing = !event.CausesDOMCompositionEndEvent();
 
-  event.mSeqno = ++mIMESeqno;
   return PBrowserParent::SendCompositionEvent(event);
 }
 
@@ -2340,7 +2331,6 @@ TabParent::SendSelectionEvent(WidgetSelectionEvent& event)
   }
   mIMESelectionAnchor = event.mOffset + (event.mReversed ? event.mLength : 0);
   mIMESelectionFocus = event.mOffset + (!event.mReversed ? event.mLength : 0);
-  event.mSeqno = ++mIMESeqno;
   return PBrowserParent::SendSelectionEvent(event);
 }
 

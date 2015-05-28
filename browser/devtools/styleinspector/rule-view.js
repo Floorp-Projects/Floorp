@@ -2685,13 +2685,45 @@ RuleEditor.prototype = {
       return;
     }
 
+    let ruleView = this.ruleView;
+    let elementStyle = ruleView._elementStyle;
+    let element = elementStyle.element;
+    let supportsUnmatchedRules =
+      this.rule.domRule.supportsModifySelectorUnmatched;
+
     this.isEditing = true;
 
-    this.rule.domRule.modifySelector(aValue).then(isModified => {
+    this.rule.domRule.modifySelector(element, aValue).then(response => {
       this.isEditing = false;
 
-      if (isModified) {
-        this.ruleView.refreshPanel();
+      if (!supportsUnmatchedRules) {
+        if (response) {
+          this.ruleView.refreshPanel();
+        }
+        return;
+      }
+
+      let {ruleProps, isMatching} = response;
+      if (!ruleProps) {
+        return;
+      }
+
+      let newRule = new Rule(elementStyle, ruleProps);
+      let editor = new RuleEditor(ruleView, newRule);
+      let rules = elementStyle.rules;
+
+      rules.splice(rules.indexOf(this.rule), 1);
+      rules.push(newRule);
+      elementStyle._changed();
+
+      editor.element.setAttribute("unmatched", !isMatching);
+      this.element.parentNode.replaceChild(editor.element, this.element);
+
+      // Remove highlight for modified selector
+      if (ruleView.highlightedSelector &&
+          ruleView.highlightedSelector == this.rule.selectorText) {
+        ruleView.toggleSelectorHighlighter(ruleView.lastSelectorIcon,
+          ruleView.highlightedSelector);
       }
     }).then(null, err => {
       this.isEditing = false;

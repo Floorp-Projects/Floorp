@@ -6,5 +6,5 @@
 
 SharedLibrary('npsecondtest')
 
-relative_path = '..'
+relative_path = 'secondplugin'
 include('../testplugin.mozbuild')

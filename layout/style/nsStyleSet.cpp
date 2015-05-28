@@ -1834,7 +1834,8 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
 
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                     nsStyleContext* aParentContext)
+                                     nsStyleContext* aParentContext,
+                                     uint32_t aFlags)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
@@ -1871,7 +1872,7 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nullptr,
                     aPseudoTag, nsCSSPseudoElements::ePseudo_AnonBox,
-                    nullptr, eNoFlags);
+                    nullptr, aFlags);
 }
 
 #ifdef MOZ_XUL

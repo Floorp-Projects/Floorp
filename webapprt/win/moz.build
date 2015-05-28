@@ -46,6 +46,7 @@ if not CONFIG['GNU_CC']:
 RCINCLUDE = 'webapprt.rc'
 
 USE_LIBS += [
+    'mfbt_staticruntime',
     'xpcomglue_staticruntime',
 ]
 

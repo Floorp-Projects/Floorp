@@ -47,7 +47,8 @@ bool
 MediaOmxCommonDecoder::CheckDecoderCanOffloadAudio()
 {
   return (mCanOffloadAudio && !mFallbackToStateMachine &&
-          !GetDecodedStream() && mPlaybackRate == 1.0);
+          !(GetStateMachine() && GetStateMachine()->GetDecodedStream()) &&
+          mPlaybackRate == 1.0);
 }
 
 void

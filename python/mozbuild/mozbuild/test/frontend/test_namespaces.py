@@ -12,10 +12,12 @@ from mozbuild.frontend.context import (
     Context,
     ContextDerivedValue,
     ContextDerivedTypedList,
+    ContextDerivedTypedListWithItems,
 )
 
 from mozbuild.util import (
     StrictOrderingOnAppendList,
+    StrictOrderingOnAppendListWithFlagsFactory,
     UnsortedError,
 )
 
@@ -38,6 +40,12 @@ class Piyo(ContextDerivedValue):
     def __str__(self):
         return self.value
 
+    def __cmp__(self, other):
+        return cmp(self.value, str(other))
+
+    def __hash__(self):
+        return hash(self.value)
+
 
 VARIABLES = {
     'HOGE': (unicode, unicode, None, None),
@@ -45,6 +53,11 @@ VARIABLES = {
     'PIYO': (Piyo, unicode, None, None),
     'HOGERA': (ContextDerivedTypedList(Piyo, StrictOrderingOnAppendList),
         list, None, None),
+    'HOGEHOGE': (ContextDerivedTypedListWithItems(
+        Piyo,
+        StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': bool,
+        })), list, None, None),
 }
 
 class TestContext(unittest.TestCase):
@@ -158,8 +171,7 @@ class TestContext(unittest.TestCase):
 
         ns['HOGERA'] += ['a', 'b', 'c']
 
-        self.assertIsInstance(ns['HOGERA'],
-            ContextDerivedTypedList(Piyo, StrictOrderingOnAppendList))
+        self.assertIsInstance(ns['HOGERA'], VARIABLES['HOGERA'][0])
         for n in range(0, 3):
             self.assertIsInstance(ns['HOGERA'][n], Piyo)
             self.assertEqual(ns['HOGERA'][n].value, ['a', 'b', 'c'][n])
@@ -167,6 +179,29 @@ class TestContext(unittest.TestCase):
 
         with self.assertRaises(UnsortedError):
             ns['HOGERA'] += ['f', 'e', 'd']
+
+    def test_context_derived_typed_list_with_items(self):
+        ns = Context(allowed_variables=VARIABLES)
+
+        # Setting to a type that's rejected by coercion should not work.
+        with self.assertRaises(ValueError):
+            ns['HOGEHOGE'] = [False]
+
+        values = ['a', 'b', 'c']
+        ns['HOGEHOGE'] += values
+
+        self.assertIsInstance(ns['HOGEHOGE'], VARIABLES['HOGEHOGE'][0])
+        for v in values:
+            ns['HOGEHOGE'][v].foo = True
+
+        for v, item in zip(values, ns['HOGEHOGE']):
+            self.assertIsInstance(item, Piyo)
+            self.assertEqual(v, item)
+            self.assertEqual(ns['HOGEHOGE'][v].foo, True)
+            self.assertEqual(ns['HOGEHOGE'][item].foo, True)
+
+        with self.assertRaises(UnsortedError):
+            ns['HOGEHOGE'] += ['f', 'e', 'd']
 
 if __name__ == '__main__':
     main()

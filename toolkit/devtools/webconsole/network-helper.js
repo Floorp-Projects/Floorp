@@ -552,7 +552,7 @@ let NetworkHelper = {
      *
      * - request is HTTPS but it uses a weak cipher or old protocol, see
      *   http://hg.mozilla.org/mozilla-central/annotate/def6ed9d1c1a/
-     *   security/manager/ssl/src/nsNSSCallbacks.cpp#l1233
+     *   security/manager/ssl/nsNSSCallbacks.cpp#l1233
      * - request is mixed content (which makes no sense whatsoever)
      *   => .securityState has STATE_IS_BROKEN flag
      *   => .errorCode is NOT an NSS error code
@@ -725,7 +725,7 @@ let NetworkHelper = {
 
     // If there's non-fatal security issues the request has STATE_IS_BROKEN
     // flag set. See http://hg.mozilla.org/mozilla-central/file/44344099d119
-    // /security/manager/ssl/src/nsNSSCallbacks.cpp#l1233
+    // /security/manager/ssl/nsNSSCallbacks.cpp#l1233
     let reasons = [];
 
     if (state & wpl.STATE_IS_BROKEN) {

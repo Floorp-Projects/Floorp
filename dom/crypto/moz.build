@@ -26,7 +26,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/security/manager/ssl/src',
+    '/security/manager/ssl',
 ]
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']

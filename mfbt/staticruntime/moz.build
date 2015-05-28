@@ -1,0 +1,24 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Library('mfbt_staticruntime')
+
+include('../objs.mozbuild')
+
+UNIFIED_SOURCES += mfbt_src_cppsrcs
+
+DEFINES['IMPL_MFBT'] = True
+
+SOURCES += mfbt_nonunified_src_cppsrcs
+
+USE_STATIC_LIBS = True
+
+DISABLE_STL_WRAPPING = True
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CXX']:
+    # TODO: Remove this LZ4 warning suppression after bug 993267 is fixed.
+    SOURCES['/mfbt/Compression.cpp'].flags += ['-Wno-unused-function']

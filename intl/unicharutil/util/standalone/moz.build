@@ -7,16 +7,9 @@
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     Library('unicharutil_standalone')
 
-intl_unicharutil_util_lcppsrcs = [
-    'nsUnicodeProperties.cpp',
+UNIFIED_SOURCES += [
+    '../nsUnicodeProperties.cpp',
 ]
-
-intl_unicharutil_util_cppsrcs = [
-    '%s/intl/unicharutil/util/%s' % (TOPSRCDIR, s) \
-        for s in intl_unicharutil_util_lcppsrcs
-]
-
-UNIFIED_SOURCES += intl_unicharutil_util_cppsrcs
 
 for var in ('MOZILLA_INTERNAL_API', 'MOZILLA_XPCOMRT_API', 'MOZILLA_EXTERNAL_LINKAGE',
             'NR_SOCKET_IS_VOID_PTR', 'HAVE_STRDUP'):

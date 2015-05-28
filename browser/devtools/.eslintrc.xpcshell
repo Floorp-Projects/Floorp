@@ -1,0 +1,51 @@
+// Parent config file for all devtools browser mochitest files.
+{
+  "rules": {
+    // Allow non-camelcase so that run_test doesn't produce a warning.
+    "camelcase": 0,
+    // Only disallow non-global unused vars, so that things like the test
+    // function do not produce errors.
+    "no-unused-vars": [2, {"vars": "local"}],
+    // Allow using undefined variables so that tests can refer to functions
+    // and variables defined in head.js files, without having to maintain a
+    // list of globals in each .eslintrc file.
+    // Note that bug 1168340 will eventually help auto-registering globals
+    // from head.js files.
+    "no-undef": 0,
+    "block-scoped-var": 0
+  },
+  // All globals made available in the test environment.
+  "globals": {
+    "add_task": true,
+    "add_test": true,
+    "Assert": true,
+    "deepEqual": true,
+    "do_check_eq": true,
+    "do_check_false": true,
+    "do_check_neq": true,
+    "do_check_null": true,
+    "do_check_true": true,
+    "do_execute_soon": true,
+    "do_get_cwd": true,
+    "do_get_file": true,
+    "do_get_idle": true,
+    "do_get_profile": true,
+    "do_load_module": true,
+    "do_parse_document": true,
+    "do_print": true,
+    "do_register_cleanup": true,
+    "do_test_finished": true,
+    "do_test_pending": true,
+    "do_throw": true,
+    "do_timeout": true,
+    "equal": true,
+    "load": true,
+    "notDeepEqual": true,
+    "notEqual": true,
+    "notStrictEqual": true,
+    "ok": true,
+    "run_next_test": true,
+    "run_test": true,
+    "strictEqual": true,
+  }
+}

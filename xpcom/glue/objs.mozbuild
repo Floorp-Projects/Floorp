@@ -34,7 +34,7 @@ xpcom_glue_src_lcppsrcs = [
 ]
 
 xpcom_glue_src_cppsrcs = [
-    '%s/xpcom/glue/%s' % (TOPSRCDIR, s) for s in xpcom_glue_src_lcppsrcs
+    '/xpcom/glue/%s' % s for s in xpcom_glue_src_lcppsrcs
 ]
 
 xpcom_gluens_src_lcppsrcs = [
@@ -45,5 +45,5 @@ xpcom_gluens_src_lcppsrcs = [
 ]
 
 xpcom_gluens_src_cppsrcs = [
-    '%s/xpcom/glue/%s' % (TOPSRCDIR, s) for s in xpcom_gluens_src_lcppsrcs
+    '/xpcom/glue/%s' % s for s in xpcom_gluens_src_lcppsrcs
 ]

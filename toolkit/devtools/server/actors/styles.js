@@ -59,6 +59,10 @@ types.addLifetime("walker", "walker");
  * When asking for the styles applied to a node, we return a list of
  * appliedstyle json objects that lists the rules that apply to the node
  * and which element they were inherited from (if any).
+ *
+ * Note appliedstyle only sends the list of actorIDs and is not a valid return
+ * value on its own. appliedstyle should be returned with the actual list of
+ * StyleRuleActor and StyleSheetActor. See appliedStylesReturn.
  */
 types.addDictType("appliedstyle", {
   rule: "domstylerule#actorid",
@@ -77,6 +81,11 @@ types.addDictType("appliedStylesReturn", {
   entries: "array:appliedstyle",
   rules: "array:domstylerule",
   sheets: "array:stylesheet"
+});
+
+types.addDictType("modifiedStylesReturn", {
+  isMatching: RetVal("boolean"),
+  ruleProps: RetVal("nullable:appliedStylesReturn")
 });
 
 types.addDictType("fontpreview", {
@@ -627,10 +636,9 @@ var PageStyleActor = protocol.ActorClass({
     return rules;
   },
 
-
   /**
-   * Helper function for getApplied and addNewRule that fetches a set of
-   * style properties that apply to the given node and associated rules
+   * Helper function for getApplied that fetches a set of style properties that
+   * apply to the given node and associated rules
    * @param NodeActor node
    * @param object options
    *   `filter`: A string filter that affects the "matched" handling.
@@ -838,6 +846,19 @@ var PageStyleActor = protocol.ActorClass({
   },
 
   /**
+   * Helper function for adding a new rule and getting its applied style
+   * properties
+   * @param NodeActor node
+   * @param CSSStyleRUle rule
+   * @returns Object containing its applied style properties
+   */
+  getNewAppliedProps: function(node, rule) {
+    let ruleActor = this._styleRef(rule);
+    return this.getAppliedProps(node, [{ rule: ruleActor }],
+      { matchedSelectors: true });
+  },
+
+  /**
    * Adds a new rule, and returns the new StyleRuleActor.
    * @param   NodeActor node
    * @returns StyleRuleActor of the new rule
@@ -857,16 +878,13 @@ var PageStyleActor = protocol.ActorClass({
     }
 
     let index = sheet.insertRule(selector + " {}", sheet.cssRules.length);
-    let ruleActor = this._styleRef(sheet.cssRules[index]);
-    return this.getAppliedProps(node, [{ rule: ruleActor }],
-      { matchedSelectors: true });
+    return this.getNewAppliedProps(node, sheet.cssRules[index]);
   }, {
     request: {
       node: Arg(0, "domnode")
     },
     response: RetVal("appliedStylesReturn")
   }),
-
 });
 exports.PageStyleActor = PageStyleActor;
 
@@ -990,7 +1008,12 @@ var StyleRuleActor = protocol.ActorClass({
       actor: this.actorID,
       type: this.type,
       line: this.line || undefined,
-      column: this.column
+      column: this.column,
+      traits: {
+        // Whether the style rule actor implements the modifySelector2 method
+        // that allows for unmatched rule to be added
+        modifySelectorUnmatched: true,
+      }
     };
 
     if (this.rawRule.parentRule) {
@@ -1097,8 +1120,49 @@ var StyleRuleActor = protocol.ActorClass({
   }),
 
   /**
-   * Removes the current rule and inserts a new rule with the new selector
-   * into the parent style sheet.
+   * Helper function for modifySelector and modifySelector2, inserts the new
+   * rule with the new selector into the parent style sheet and removes the
+   * current rule. Returns the newly inserted css rule or null if the rule is
+   * unsuccessfully inserted to the parent style sheet.
+   *
+   * @param string value
+   *        The new selector value
+   *
+   * @returns CSSRule
+   *        The new CSS rule added
+   */
+  _addNewSelector: function(value) {
+    let rule = this.rawRule;
+    let parentStyleSheet = rule.parentStyleSheet;
+    let cssRules = parentStyleSheet.cssRules;
+    let cssText = rule.cssText;
+    let selectorText = rule.selectorText;
+
+    for (let i = 0; i < cssRules.length; i++) {
+      if (rule === cssRules.item(i)) {
+        try {
+          // Inserts the new style rule into the current style sheet and
+          // delete the current rule
+          let ruleText = cssText.slice(selectorText.length).trim();
+          parentStyleSheet.insertRule(value + " " + ruleText, i);
+          parentStyleSheet.deleteRule(i + 1);
+          return cssRules.item(i);
+        } catch(e) {}
+
+        break;
+      }
+    }
+
+    return null;
+  },
+
+  /**
+   * Modify the current rule's selector by inserting a new rule with the new
+   * selector value and removing the current rule.
+   *
+   * Note this method was kept for backward compatibility, but unmatched rules
+   * support was added in FF41.
+   *
    * @param string value
    *        The new selector value
    * @returns boolean
@@ -1110,9 +1174,7 @@ var StyleRuleActor = protocol.ActorClass({
       return false;
     }
 
-    let rule = this.rawRule;
-    let parentStyleSheet = rule.parentStyleSheet;
-    let document = this.getDocument(parentStyleSheet);
+    let document = this.getDocument(this.rawRule.parentStyleSheet);
     // Extract the selector, and pseudo elements and classes
     let [selector, pseudoProp] = value.split(/(:{1,2}.+$)/);
     let selectorElement;
@@ -1125,26 +1187,8 @@ var StyleRuleActor = protocol.ActorClass({
 
     // Check if the selector is valid and not the same as the original
     // selector
-    if (selectorElement && rule.selectorText !== value) {
-      let cssRules = parentStyleSheet.cssRules;
-      let cssText = rule.cssText;
-      let selectorText = rule.selectorText;
-
-      // Delete the currently selected rule
-      let i = 0;
-      for (let cssRule of cssRules) {
-        if (rule === cssRule) {
-          parentStyleSheet.deleteRule(i);
-          break;
-        }
-
-        i++;
-      }
-
-      // Inserts the new style rule into the current style sheet
-      let ruleText = cssText.slice(selectorText.length).trim();
-      parentStyleSheet.insertRule(value + " " + ruleText, i);
-
+    if (selectorElement && this.rawRule.selectorText !== value) {
+      this._addNewSelector(value);
       return true;
     } else {
       return false;
@@ -1153,6 +1197,53 @@ var StyleRuleActor = protocol.ActorClass({
     request: { selector: Arg(0, "string") },
     response: { isModified: RetVal("boolean") },
   }),
+
+  /**
+   * Modify the current rule's selector by inserting a new rule with the new
+   * selector value and removing the current rule.
+   *
+   * In contrast with the modifySelector method which was used before FF41,
+   * this method also returns information about the new rule and applied style
+   * so that consumers can immediately display the new rule, whether or not the
+   * selector matches the current element without having to refresh the whole
+   * list.
+   *
+   * @param DOMNode node
+   *        The current selected element
+   * @param string value
+   *        The new selector value
+   * @returns Object
+   *        Returns an object that contains the applied style properties of the
+   *        new rule and a boolean indicating whether or not the new selector
+   *        matches the current selected element
+   */
+  modifySelector2: method(function(node, value) {
+    let isMatching = false;
+    let ruleProps = null;
+
+    if (this.type === ELEMENT_STYLE ||
+        this.rawRule.selectorText === value) {
+      return { ruleProps, isMatching: true };
+    }
+
+    let newCssRule = this._addNewSelector(value);
+    if (newCssRule) {
+      ruleProps = this.pageStyle.getNewAppliedProps(node, newCssRule);
+    }
+
+    // Determine if the new selector value matches the current selected element
+    try {
+      isMatching = node.rawNode.matches(value);
+    } catch(e) {}
+
+    return { ruleProps, isMatching };
+  }, {
+    request: {
+      node: Arg(0, "domnode"),
+      value: Arg(1, "string")
+    },
+    response: RetVal("modifiedStylesReturn")
+  })
 });
 
 /**
@@ -1240,6 +1331,10 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
     return sheet ? sheet.nodeHref : "";
   },
 
+  get supportsModifySelectorUnmatched() {
+    return this._form.traits && this._form.traits.modifySelectorUnmatched;
+  },
+
   get location()
   {
     return {
@@ -1278,7 +1373,24 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
         this._originalLocation = location;
         return location;
       });
-  }
+  },
+
+  modifySelector: protocol.custom(Task.async(function*(node, value) {
+    let response;
+    if (this.supportsModifySelectorUnmatched) {
+      // If the debugee supports adding unmatched rules (post FF41)
+      response = yield this.modifySelector2(node, value);
+    } else {
+      response = yield this._modifySelector(value);
+    }
+
+    if (response.ruleProps) {
+      response.ruleProps = response.ruleProps.entries[0];
+    }
+    return response;
+  }), {
+    impl: "_modifySelector"
+  })
 });
 
 /**

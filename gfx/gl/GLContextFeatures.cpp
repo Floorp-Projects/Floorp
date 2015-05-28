@@ -604,6 +604,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "texture_swizzle",
+        GLVersion::GL3_3,
+        GLESVersion::ES3,
+        GLContext::ARB_texture_swizzle,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
         "transform_feedback2",
         GLVersion::GL4,
         GLESVersion::ES3,

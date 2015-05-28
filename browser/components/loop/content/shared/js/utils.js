@@ -312,12 +312,12 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    * @param  {Function} callback Called with a boolean which is true if there
    *                             are audio devices present.
    */
-  function hasAudioDevices(callback) {
+  function hasAudioOrVideoDevices(callback) {
     // mediaDevices is the official API for the spec.
     if ("mediaDevices" in rootNavigator) {
       rootNavigator.mediaDevices.enumerateDevices().then(function(result) {
         function checkForInput(device) {
-          return device.kind === "audioinput";
+          return device.kind === "audioinput" || device.kind === "videoinput";
         }
 
         callback(result.some(checkForInput));
@@ -329,7 +329,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     } else if ("MediaStreamTrack" in rootObject) {
       rootObject.MediaStreamTrack.getSources(function(result) {
         function checkForInput(device) {
-          return device.kind === "audio";
+          return device.kind === "audio" || device.kind === "video";
         }
 
         callback(result.some(checkForInput));
@@ -745,7 +745,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     isFirefoxOS: isFirefoxOS,
     isOpera: isOpera,
     getUnsupportedPlatform: getUnsupportedPlatform,
-    hasAudioDevices: hasAudioDevices,
+    hasAudioOrVideoDevices: hasAudioOrVideoDevices,
     locationData: locationData,
     atob: atob,
     btoa: btoa,
