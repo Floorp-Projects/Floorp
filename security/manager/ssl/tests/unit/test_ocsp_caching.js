@@ -16,6 +16,7 @@ function generateGoodOCSPResponse() {
 function run_test() {
   do_get_profile();
   Services.prefs.setBoolPref("security.ssl.enable_ocsp_stapling", true);
+  Services.prefs.setIntPref("security.OCSP.enabled", 1);
   add_tls_server_setup("OCSPStaplingServer");
 
   let ocspResponder = new HttpServer();
