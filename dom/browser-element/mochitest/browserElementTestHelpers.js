@@ -65,6 +65,10 @@ const browserElementTestHelpers = {
     this._setPref('selectioncaret.enabled', value);
   },
 
+  setAccessibleCaretEnabledPref: function(value) {
+    this._setPref('layout.accessiblecaret.enabled', value);
+  },
+
   getOOPByDefaultPref: function() {
     return this._getBoolPref("dom.ipc.browser_frames.oop_by_default");
   },
