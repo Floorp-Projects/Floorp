@@ -124,6 +124,12 @@ Login Manager test: forms with 1 password field
     <button type='submit'>Submit</button>
 </form>
 
+<form id='form15' action='https://mochi.test:8888/tests/formtest.js'> 15
+    <!-- Different scheme for same url, should be filled -->
+    <input type='text'     name='uname' value=''>
+    <input type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
 
 </div>
 
@@ -156,6 +162,9 @@ function startTest() {
     checkForm(f++, "testpass", "xxxxxxxx");
     checkForm(f++, "xxxxxxxx", "testuser", "testpass");
     checkForm(f++, "testuser", "testpass", "xxxxxxxx");
+
+    //15
+    checkForm(f++, "testuser", "testpass");
 
     SimpleTest.finish();
 }
