@@ -526,7 +526,7 @@ struct ParamTraits<FallibleTArray<E> >
       }
 
       for (uint32_t index = 0; index < length; index++) {
-        E* element = aResult->AppendElement();
+        E* element = aResult->AppendElement(mozilla::fallible);
         MOZ_ASSERT(element);
         if (!ReadParam(aMsg, aIter, element)) {
           return false;

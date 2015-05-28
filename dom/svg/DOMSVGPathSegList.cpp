@@ -221,7 +221,7 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
         // have FEWER items than it does.
         return;
       }
-      if (!mItems.AppendElement(ItemProxy(nullptr, dataIndex))) {
+      if (!mItems.AppendElement(ItemProxy(nullptr, dataIndex), fallible)) {
         // OOM
         ErrorResult rv;
         Clear(rv);

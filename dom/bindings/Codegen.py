@@ -4315,7 +4315,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
               if (done${nestingLevel}) {
                 break;
               }
-              ${elementType}* slotPtr${nestingLevel} = arr${nestingLevel}.AppendElement();
+              ${elementType}* slotPtr${nestingLevel} = arr${nestingLevel}.AppendElement(mozilla::fallible);
               if (!slotPtr${nestingLevel}) {
                 JS_ReportOutOfMemory(cx);
                 $*{exceptionCode}
@@ -5610,7 +5610,7 @@ class CGArgumentConverter(CGThing):
                     return false;
                   }
                   for (uint32_t variadicArg = ${index}; variadicArg < ${argc}; ++variadicArg) {
-                    ${elemType}& slot = *${declName}.AppendElement();
+                    ${elemType}& slot = *${declName}.AppendElement(mozilla::fallible);
                 """)
         ).substitute(replacer)
 

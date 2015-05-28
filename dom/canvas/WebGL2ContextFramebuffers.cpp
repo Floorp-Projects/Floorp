@@ -349,19 +349,19 @@ TranslateDefaultAttachments(const dom::Sequence<GLenum>& in, dom::Sequence<GLenu
     for (size_t i = 0; i < in.Length(); i++) {
         switch (in[i]) {
             case LOCAL_GL_COLOR:
-                if (!out->AppendElement(LOCAL_GL_COLOR_ATTACHMENT0)) {
+                if (!out->AppendElement(LOCAL_GL_COLOR_ATTACHMENT0, fallible)) {
                     return false;
                 }
                 break;
 
             case LOCAL_GL_DEPTH:
-                if (!out->AppendElement(LOCAL_GL_DEPTH_ATTACHMENT)) {
+                if (!out->AppendElement(LOCAL_GL_DEPTH_ATTACHMENT, fallible)) {
                     return false;
                 }
                 break;
 
             case LOCAL_GL_STENCIL:
-                if (!out->AppendElement(LOCAL_GL_STENCIL_ATTACHMENT)) {
+                if (!out->AppendElement(LOCAL_GL_STENCIL_ATTACHMENT, fallible)) {
                     return false;
                 }
                 break;

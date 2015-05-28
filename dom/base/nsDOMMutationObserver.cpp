@@ -714,7 +714,8 @@ nsDOMMutationObserver::GetObservingInfo(
       mozilla::dom::Sequence<nsString>& filtersAsStrings =
         info.mAttributeFilter.Value();
       for (int32_t j = 0; j < filters.Count(); ++j) {
-        if (!filtersAsStrings.AppendElement(nsDependentAtomString(filters[j]))) {
+        if (!filtersAsStrings.AppendElement(nsDependentAtomString(filters[j]),
+                                            mozilla::fallible)) {
           aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
           return;
         }
@@ -773,7 +774,7 @@ nsDOMMutationObserver::HandleMutation()
     for (uint32_t i = 0; i < mPendingMutationCount; ++i) {
       nsRefPtr<nsDOMMutationRecord> next;
       current->mNext.swap(next);
-      *mutations.AppendElement() = current;
+      *mutations.AppendElement(mozilla::fallible) = current;
       current.swap(next);
     }
   }

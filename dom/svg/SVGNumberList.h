@@ -126,7 +126,7 @@ private:
   }
 
   bool AppendItem(float aNumber) {
-    return !!mNumbers.AppendElement(aNumber);
+    return !!mNumbers.AppendElement(aNumber, fallible);
   }
 
 protected:

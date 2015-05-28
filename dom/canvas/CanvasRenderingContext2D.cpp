@@ -2676,7 +2676,7 @@ void CanvasRenderingContext2D::DrawFocusIfNeeded(mozilla::dom::Element& aElement
     // set dashing for foreground
     FallibleTArray<mozilla::gfx::Float>& dash = CurrentState().dash;
     for (uint32_t i = 0; i < 2; ++i) {
-      if (!dash.AppendElement(1)) {
+      if (!dash.AppendElement(1, fallible)) {
         aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return;
       }
@@ -3964,14 +3964,14 @@ CanvasRenderingContext2D::SetLineDash(const Sequence<double>& aSegments,
       return;
     }
 
-    if (!dash.AppendElement(aSegments[x])) {
+    if (!dash.AppendElement(aSegments[x], fallible)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
   }
   if (aSegments.Length() % 2) { // If the number of elements is odd, concatenate again
     for (uint32_t x = 0; x < aSegments.Length(); x++) {
-      if (!dash.AppendElement(aSegments[x])) {
+      if (!dash.AppendElement(aSegments[x], fallible)) {
         aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return;
       }

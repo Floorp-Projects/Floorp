@@ -134,7 +134,7 @@ private:
   }
 
   bool AppendItem(SVGPoint aPoint) {
-    return !!mItems.AppendElement(aPoint);
+    return !!mItems.AppendElement(aPoint, fallible);
   }
 
 protected:
