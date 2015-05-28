@@ -9,7 +9,7 @@
 #include "gfxXlibSurface.h"
 
 nsresult
-gfxQtNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
+gfxQtNativeRenderer::Draw(gfxContext* ctx, mozilla::gfx::IntSize size,
                           uint32_t flags, Screen* screen, Visual* visual)
 {
     Display *dpy = DisplayOfScreen(screen);
