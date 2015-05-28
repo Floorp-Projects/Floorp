@@ -88,20 +88,28 @@ RtspMediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
   return MediaCodecReader::RequestVideoData(aSkipToNextKeyframe, aTimeThreshold);
 }
 
-nsresult
-RtspMediaCodecReader::ReadMetadata(MediaInfo* aInfo,
-                                   MetadataTags** aTags)
+nsRefPtr<MediaDecoderReader::MetadataPromise>
+RtspMediaCodecReader::AsyncReadMetadata()
 {
   mRtspResource->DisablePlayoutDelay();
   EnsureActive();
-  nsresult rv = MediaCodecReader::ReadMetadata(aInfo, aTags);
+
+  nsRefPtr<MediaDecoderReader::MetadataPromise> p =
+    MediaCodecReader::AsyncReadMetadata();
+
+  // Send a PAUSE to the RTSP server because the underlying media resource is
+  // not ready.
   SetIdle();
 
-  if (rv == NS_OK && !IsWaitingMediaResources()) {
-    mRtspResource->EnablePlayoutDelay();
-  }
+  return p;
+}
 
-  return rv;
+void
+RtspMediaCodecReader::HandleResourceAllocated()
+{
+  EnsureActive();
+  MediaCodecReader::HandleResourceAllocated();
+  mRtspResource->EnablePlayoutDelay();;
 }
 
 } // namespace mozilla

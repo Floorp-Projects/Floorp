@@ -182,9 +182,6 @@ MediaDecoderReader::AsyncReadMetadata()
   mDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
   DECODER_LOG("MediaDecoderReader::AsyncReadMetadata");
 
-  // PreReadMetadata causes us to try to allocate various hardware and OS
-  // resources, which may not be available at the moment.
-  PreReadMetadata();
   if (IsWaitingMediaResources()) {
     return MetadataPromise::CreateAndReject(Reason::WAITING_FOR_RESOURCES, __func__);
   }

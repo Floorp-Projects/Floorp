@@ -152,7 +152,7 @@ protected:
   // MediaResourceHandler::EventListener::resourceReserved()
   virtual void resourceReserved();
   // MediaResourceHandler::EventListener::resourceCanceled()
-  virtual void resourceCanceled() {}
+  virtual void resourceCanceled();
 
 private:
   // Forbidden
