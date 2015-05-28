@@ -303,7 +303,7 @@ GLContextProviderCGL::CreateHeadless(bool requireCompatProfile)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderCGL::CreateOffscreen(const gfxIntSize& size,
+GLContextProviderCGL::CreateOffscreen(const IntSize& size,
                                       const SurfaceCaps& caps,
                                       bool requireCompatProfile)
 {
