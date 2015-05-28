@@ -187,11 +187,23 @@ class FullParseHandler
     }
 
     ParseNode* newDelete(uint32_t begin, ParseNode* expr) {
-        if (expr->getKind() == PNK_NAME) {
+        if (expr->isKind(PNK_NAME)) {
             expr->pn_dflags |= PND_DEOPTIMIZED;
             expr->setOp(JSOP_DELNAME);
+            return newUnary(PNK_DELETENAME, JSOP_NOP, begin, expr);
         }
-        return newUnary(PNK_DELETE, JSOP_NOP, begin, expr);
+
+        if (expr->isKind(PNK_DOT))
+            return newUnary(PNK_DELETEPROP, JSOP_NOP, begin, expr);
+        if (expr->isKind(PNK_SUPERPROP))
+            return newUnary(PNK_DELETESUPERPROP, JSOP_NOP, begin, expr);
+
+        if (expr->isKind(PNK_ELEM))
+            return newUnary(PNK_DELETEELEM, JSOP_NOP, begin, expr);
+        if (expr->isKind(PNK_SUPERELEM))
+            return newUnary(PNK_DELETESUPERELEM, JSOP_NOP, begin, expr);
+
+        return newUnary(PNK_DELETEEXPR, JSOP_NOP, begin, expr);
     }
 
     ParseNode* newNullary(ParseNodeKind kind, JSOp op, const TokenPos& pos) {
