@@ -4528,13 +4528,6 @@ Parser<FullParseHandler>::exportDeclaration()
         return handler.newExportDefaultDeclaration(kid, TokenPos(begin, pos().end));
       }
 
-      case TOK_NAME:
-        // Handle the form |export a| in the same way as |export let a|, by
-        // acting as if we've just seen the let keyword. Simply unget the token
-        // and fall through.
-        //
-        // XXX This |export foo = 5| syntax is *not* in ES6!  Remove it!
-        tokenStream.ungetToken();
       case TOK_LET:
       case TOK_CONST:
         kid = lexicalDeclaration(YieldIsName, tt == TOK_CONST);

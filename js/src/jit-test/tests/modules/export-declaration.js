@@ -266,25 +266,6 @@ program([
     )
 ]).assert(Reflect.parse("export let a = 1, b = 2;"));
 
-// NOTE: binding lists are treated as if they were let declarations by esprima,
-// so we follow that convention.
-program([
-    exportDeclaration(
-        variableDeclaration([
-            {
-                id: ident("a"),
-                init: lit(1)
-            }, {
-                id: ident("b"),
-                init: lit(2)
-            }
-        ]),
-        null,
-        null,
-        false
-    )
-]).assert(Reflect.parse("export a = 1, b = 2;"));
-
 program([
     exportDeclaration(
         functionDeclaration(
@@ -397,4 +378,12 @@ assertThrowsInstanceOf(function() {
 
 assertThrowsInstanceOf(function() {
     Reflect.parse("class() { constructor() {} }");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("export x");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("export foo = 5");
 }, SyntaxError);
