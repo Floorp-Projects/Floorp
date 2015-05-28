@@ -57,7 +57,6 @@ function indirectCallCannotGC(fullCaller, fullVariable)
 
 // Ignore calls through functions pointers with these types
 var ignoreClasses = {
-    "JS::CallbackTracer" : true,
     "JSStringFinalizer" : true,
     "SprintfState" : true,
     "SprintfStateStr" : true,
@@ -330,7 +329,10 @@ function isOverridableField(initialCSU, csu, field)
         if (field == 'GetWindowProxy' || field == 'GetWindowProxyPreserveColor')
             return false;
     }
-
+    if (initialCSU == 'nsICycleCollectorListener' && field == 'NoteWeakMapEntry')
+        return false;
+    if (initialCSU == 'nsICycleCollectorListener' && field == 'NoteEdge')
+        return false;
     return true;
 }
 
