@@ -84,6 +84,7 @@ this.AutoCompleteE10S = {
     messageManager.addMessageListener("FormAutoComplete:GetSelectedIndex", this);
     messageManager.addMessageListener("FormAutoComplete:MaybeOpenPopup", this);
     messageManager.addMessageListener("FormAutoComplete:ClosePopup", this);
+    messageManager.addMessageListener("FormAutoComplete:RemoveEntry", this);
   },
 
   _initPopup: function(browserWindow, rect, direction) {
@@ -138,6 +139,20 @@ this.AutoCompleteE10S = {
   showPopupWithResults: function(browserWindow, rect, results) {
     this._initPopup(browserWindow, rect);
     this._showPopup(results);
+  },
+
+  removeEntry(index) {
+    this._resultCache.removeValueAt(index, true);
+
+    let selectedIndex = this.popup.selectedIndex;
+    this.showPopupWithResults(this._popupCache.browserWindow,
+                              this._popupCache.rect,
+                              this._resultCache);
+
+    // If we removed the last result, bump the selected index back once.
+    if (selectedIndex >= this._resultCache.matchCount)
+      selectedIndex--;
+    this.popup.selectedIndex = selectedIndex;
   },
 
   // This function is called in response to AutoComplete requests from the
@@ -198,6 +213,10 @@ this.AutoCompleteE10S = {
 
       case "FormAutoComplete:GetSelectedIndex":
         return this.popup.selectedIndex;
+
+      case "FormAutoComplete:RemoveEntry":
+        this.removeEntry(message.data.index);
+        break;
 
       case "FormAutoComplete:MaybeOpenPopup":
         if (AutoCompleteE10SView.treeData.length > 0 &&
