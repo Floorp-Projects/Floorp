@@ -116,8 +116,9 @@ private:
   union CallbackUnion
   {
     nsTimerCallbackFunc c;
-    nsITimerCallback*   i;
-    nsIObserver*        o;
+    // These refcounted references are managed manually, as they are in a union
+    nsITimerCallback* MOZ_OWNING_REF i;
+    nsIObserver* MOZ_OWNING_REF o;
   } mCallback;
 
   // Some callers expect to be able to access the callback while the
