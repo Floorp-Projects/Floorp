@@ -343,26 +343,14 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
 {
   MOZ_ASSERT(NS_IsMainThread());
   DECODER_LOG("AddOutputStream aStream=%p!", aStream);
+  MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
 
-  {
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    if (mDecoderStateMachine) {
-      mDecoderStateMachine->DispatchAudioCaptured();
-    }
-    if (!GetDecodedStream()) {
-      RecreateDecodedStream(mLogicalPosition, aStream->Graph());
-    }
-    mDecodedStream.Connect(aStream, aFinishWhenEnded);
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  if (!GetDecodedStream()) {
+    RecreateDecodedStream(mLogicalPosition, aStream->Graph());
   }
-
-  // This can be called before Load(), in which case our mDecoderStateMachine
-  // won't have been created yet and we can rely on Load() to schedule it
-  // once it is created.
-  if (mDecoderStateMachine) {
-    // Make sure the state machine thread runs so that any buffered data
-    // is fed into our stream.
-    ScheduleStateMachine();
-  }
+  mDecodedStream.Connect(aStream, aFinishWhenEnded);
+  mDecoderStateMachine->DispatchAudioCaptured();
 }
 
 double MediaDecoder::GetDuration()
@@ -564,9 +552,6 @@ void MediaDecoder::SetStateMachineParameters()
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mDecoderStateMachine->SetDuration(mDuration);
-  if (GetDecodedStream()) {
-    mDecoderStateMachine->DispatchAudioCaptured();
-  }
   if (mMinimizePreroll) {
     mDecoderStateMachine->DispatchMinimizePrerollUntilPlaybackStarts();
   }
