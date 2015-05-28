@@ -264,16 +264,15 @@ label[disabled="true"] {
 
 .text-link {
   color: -moz-nativehyperlinktext;
-  border: 1px solid transparent;
   cursor: pointer;
 }
 
 .text-link:hover {
   text-decoration: underline;
 }
-  
-.text-link:focus {
-  border: 1px dotted -moz-DialogText;
+
+.text-link:-moz-focusring {
+  outline: 1px dotted;
 }
 
 notification > button {
