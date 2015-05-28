@@ -2363,11 +2363,19 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
   let inTab = Services.prefs.getBoolPref("view_source.tab");
   if (inTab) {
     let viewSourceURL = `view-source:${args.URL}`;
-    let tab = gBrowser.loadOneTab(viewSourceURL, {
+    let tabBrowser = gBrowser;
+    // In the case of sidebars and chat windows, gBrowser is defined but null,
+    // because no #content element exists.  For these cases, we need to find
+    // the most recent browser window.
+    if (!tabBrowser) {
+      let browserWindow = RecentWindow.getMostRecentBrowserWindow();
+      tabBrowser = browserWindow.gBrowser;
+    }
+    let tab = tabBrowser.loadOneTab(viewSourceURL, {
       relatedToCurrent: true,
       inBackground: false
     });
-    args.viewSourceBrowser = gBrowser.getBrowserForTab(tab);
+    args.viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
     top.gViewSourceUtils.viewSourceInBrowser(args);
   } else {
     top.gViewSourceUtils.viewSource(args);
@@ -2561,18 +2569,27 @@ function PageProxyClickHandler(aEvent)
 // Setup the hamburger button badges for updates, if enabled.
 let gMenuButtonUpdateBadge = {
   enabled: false,
+  badgeWaitTime: 0,
+  timer: null,
 
   init: function () {
     try {
       this.enabled = Services.prefs.getBoolPref("app.update.badge");
     } catch (e) {}
     if (this.enabled) {
+      try {
+        this.badgeWaitTime = Services.prefs.getIntPref("app.update.badgeWaitTime");
+      } catch (e) {
+        this.badgeWaitTime = 345600; // 4 days
+      }
       PanelUI.menuButton.classList.add("badged-button");
       Services.obs.addObserver(this, "update-staged", false);
     }
   },
 
   uninit: function () {
+    if (this.timer)
+      this.timer.cancel();
     if (this.enabled) {
       Services.obs.removeObserver(this, "update-staged");
       PanelUI.panel.removeEventListener("popupshowing", this, true);
@@ -2616,23 +2633,14 @@ let gMenuButtonUpdateBadge = {
       case STATE_APPLIED_SVC:
       case STATE_PENDING:
       case STATE_PENDING_SVC:
-        // If the update is successfully applied, or if the updater has fallen back
-        // to non-staged updates, add a badge to the hamburger menu to indicate an
-        // update will be applied once the browser restarts.
-        PanelUI.menuButton.setAttribute("update-status", "succeeded");
-
-        let brandBundle = document.getElementById("bundle_brand");
-        let brandShortName = brandBundle.getString("brandShortName");
-        stringId = "appmenu.restartNeeded.description";
-        updateButtonText = gNavigatorBundle.getFormattedString(stringId,
-                                                               [brandShortName]);
-
-        updateButton.setAttribute("label", updateButtonText);
-        updateButton.setAttribute("update-status", "succeeded");
-        updateButton.hidden = false;
-
-        PanelUI.panel.addEventListener("popupshowing", this, true);
-
+        if (this.timer) {
+          return;
+        }
+        // Give the user badgeWaitTime seconds to react before prompting.
+        this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+        this.timer.initWithCallback(this, this.badgeWaitTime * 1000,
+                                    this.timer.TYPE_ONE_SHOT);
+        // The timer callback will call uninit() when it completes.
         break;
       case STATE_FAILED:
         // Background update has failed, let's show the UI responsible for
@@ -2649,13 +2657,29 @@ let gMenuButtonUpdateBadge = {
 
         PanelUI.panel.addEventListener("popupshowing", this, true);
 
+        this.uninit();
         break;
-      case STATE_DOWNLOADING:
-        // We've fallen back to downloading the full update because the partial
-        // update failed to get staged in the background. Therefore we need to keep
-        // our observer.
-        return;
     }
+  },
+
+  notify: function () {
+    // If the update is successfully applied, or if the updater has fallen back
+    // to non-staged updates, add a badge to the hamburger menu to indicate an
+    // update will be applied once the browser restarts.
+    PanelUI.menuButton.setAttribute("update-status", "succeeded");
+
+    let brandBundle = document.getElementById("bundle_brand");
+    let brandShortName = brandBundle.getString("brandShortName");
+    stringId = "appmenu.restartNeeded.description";
+    updateButtonText = gNavigatorBundle.getFormattedString(stringId,
+                                                           [brandShortName]);
+
+    let updateButton = document.getElementById("PanelUI-update-status");
+    updateButton.setAttribute("label", updateButtonText);
+    updateButton.setAttribute("update-status", "succeeded");
+    updateButton.hidden = false;
+
+    PanelUI.panel.addEventListener("popupshowing", this, true);
     this.uninit();
   },
 

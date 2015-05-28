@@ -59,7 +59,11 @@
   padding: 2px 4px;
 }
 
-/* User agent styles are not editable, display them differently */
+/**
+ * Display rules that don't match the current selected element and uneditable
+ * user agent styles differently
+ */
+.ruleview-rule[unmatched=true],
 .ruleview-rule[uneditable=true] {
   background: var(--theme-tab-toolbar-background);
 }

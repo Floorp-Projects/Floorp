@@ -33,21 +33,32 @@ add_task(function*() {
   yield check_autocomplete({
     search: "mozilla.org/rum",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "http://mozilla.org/rum", input: "mozilla.org/rum"}), title: "http://mozilla.org/rum", style: [ "action", "visiturl" ] } ]
+    matches: [ makeVisitMatch("mozilla.org/rum", "http://mozilla.org/rum") ]
   });
 
   // And hosts with no dot in them are special, due to requiring whitelisting.
   do_print("visit url, host matching visited host but not visited url, non-whitelisted host");
-  Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-                                       "http://s.example.com/search");
-  let engine = Services.search.getEngineByName("MozSearch");
-  Services.search.currentEngine = engine;
   yield PlacesTestUtils.addVisits([
     { uri: NetUtil.newURI("http://mozilla/bourbon/"), title: "Mozilla Bourbon", transition: TRANSITION_TYPED },
   ]);
   yield check_autocomplete({
     search: "mozilla/rum",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "mozilla/rum", searchQuery: "mozilla/rum"}), title: "MozSearch", style: [ "action", "searchengine" ] } ]
+    matches: [ makeSearchMatch("mozilla/rum") ]
+  });
+
+  // ipv4 and ipv6 literal addresses should offer to visit.
+  do_print("visit url, ipv4 literal");
+  yield check_autocomplete({
+    search: "127.0.0.1",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("127.0.0.1", "http://127.0.0.1/") ]
+  });
+
+  do_print("visit url, ipv6 literal");
+  yield check_autocomplete({
+    search: "[2001:db8::1]",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("[2001:db8::1]", "http://[2001:db8::1]/") ]
   });
 });

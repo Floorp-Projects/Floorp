@@ -369,6 +369,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Updating the context data attached to a room finished successfully.
+     */
+    UpdateRoomContextDone: Action.define("updateRoomContextDone", {
+    }),
+
+    /**
      * Copy a room url into the user's clipboard.
      * XXX: should move to some roomActions module - refs bug 1079284
      */

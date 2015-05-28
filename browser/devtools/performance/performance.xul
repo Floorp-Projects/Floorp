@@ -241,12 +241,13 @@
 
               <!-- Waterfall -->
               <hbox id="waterfall-view" flex="1">
-                <vbox id="waterfall-breakdown" flex="1" />
+                <vbox flex="1">
+                  <hbox id="waterfall-header" />
+                  <vbox id="waterfall-breakdown" flex="1" />
+                </vbox>
                 <splitter class="devtools-side-splitter"/>
                 <vbox id="waterfall-details"
-                      class="theme-sidebar"
-                      width="150"
-                      height="150"/>
+                      class="theme-sidebar"/>
               </hbox>
 
               <!-- JS Tree and JIT view -->

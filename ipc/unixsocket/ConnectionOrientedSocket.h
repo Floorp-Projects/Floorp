@@ -14,7 +14,6 @@ namespace mozilla {
 namespace ipc {
 
 class UnixSocketConnector;
-union sockaddr_any;
 
 /*
  * |ConnectionOrientedSocketIO| and |ConnectionOrientedSocket| define
@@ -28,8 +27,8 @@ public:
   virtual ~ConnectionOrientedSocketIO();
 
   virtual nsresult Accept(int aFd,
-                          const union sockaddr_any* aAddr,
-                          socklen_t aAddrLen) = 0;
+                          const struct sockaddr* aAddress,
+                          socklen_t aAddressLength) = 0;
 };
 
 class ConnectionOrientedSocket : public DataSocket
