@@ -126,8 +126,7 @@ CompositorOGL::CreateContext()
     caps.bpp16 = gfxPlatform::GetPlatform()->GetOffscreenFormat() == gfxImageFormat::RGB16_565;
 
     bool requireCompatProfile = true;
-    context = GLContextProvider::CreateOffscreen(gfxIntSize(mSurfaceSize.width,
-                                                            mSurfaceSize.height),
+    context = GLContextProvider::CreateOffscreen(mSurfaceSize,
                                                  caps, requireCompatProfile);
   }
 
@@ -1342,7 +1341,7 @@ CompositorOGL::EndFrameForExternalComposition(const gfx::Matrix& aTransform)
 }
 
 void
-CompositorOGL::SetDestinationSurfaceSize(const gfx::IntSize& aSize)
+CompositorOGL::SetDestinationSurfaceSize(const IntSize& aSize)
 {
   mSurfaceSize.width = aSize.width;
   mSurfaceSize.height = aSize.height;
