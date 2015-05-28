@@ -549,8 +549,8 @@ FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
 
   hr = aDC->CreateEffect(GetCLDIDForFilterType(aType), byRef(effect));
 
-  if (FAILED(hr)) {
-    gfxWarning() << "Failed to create effect for FilterType: " << hexa(hr);
+  if (FAILED(hr) || !effect) {
+    gfxCriticalErrorOnce() << "Failed to create effect for FilterType: " << hexa(hr);
     return nullptr;
   }
 
