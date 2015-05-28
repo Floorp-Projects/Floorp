@@ -140,7 +140,7 @@ void IonSpewPass(const char* pass, BacktrackingAllocator* ra);
 void IonSpewEndFunction();
 
 void CheckLogging();
-extern FILE* JitSpewFile;
+Fprinter& JitSpewPrinter();
 void JitSpew(JitSpewChannel channel, const char* fmt, ...);
 void JitSpewStart(JitSpewChannel channel, const char* fmt, ...);
 void JitSpewCont(JitSpewChannel channel, const char* fmt, ...);
@@ -169,7 +169,10 @@ static inline void IonSpewEndFunction()
 
 static inline void CheckLogging()
 { }
-static FILE* const JitSpewFile = nullptr;
+static inline Fprinter& JitSpewPrinter()
+{
+    MOZ_CRASH("No empty backend for JitSpewPrinter");
+}
 static inline void JitSpew(JitSpewChannel, const char* fmt, ...)
 { }
 static inline void JitSpewStart(JitSpewChannel channel, const char* fmt, ...)

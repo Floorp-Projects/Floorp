@@ -203,7 +203,13 @@ IonSpewer::endFunction()
 }
 
 
-FILE* jit::JitSpewFile = nullptr;
+Fprinter&
+jit::JitSpewPrinter()
+{
+    static Fprinter out;
+    return out;
+}
+
 
 static bool
 ContainsFlag(const char* str, const char* flag)
@@ -348,7 +354,7 @@ jit::CheckLogging()
         EnableChannel(JitSpew_BaselineDebugModeOSR);
     }
 
-    JitSpewFile = stderr;
+    JitSpewPrinter().init(stderr);
 }
 
 void
@@ -402,9 +408,10 @@ jit::JitSpewDef(JitSpewChannel channel, const char* str, MDefinition* def)
         return;
 
     JitSpewHeader(channel);
-    fprintf(JitSpewFile, "%s", str);
-    def->dump(JitSpewFile);
-    def->dumpLocation(JitSpewFile);
+    Fprinter& out = JitSpewPrinter();
+    out.put(str);
+    def->dump(out);
+    def->dumpLocation(out);
 }
 
 void
