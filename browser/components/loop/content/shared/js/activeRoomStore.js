@@ -435,7 +435,7 @@ loop.store.ActiveRoomStore = (function() {
       // XXX Ideally we'd do this check before joining a room, but we're waiting
       // for the UX for that. See bug 1166824. In the meantime this gives us
       // additional information for analysis.
-      loop.shared.utils.hasAudioDevices(function(hasAudio) {
+      loop.shared.utils.hasAudioOrVideoDevices(function(hasAudio) {
         if (hasAudio) {
           // MEDIA_WAIT causes the views to dispatch sharedActions.SetupStreamElements,
           // which in turn starts the sdk obtaining the device permission.

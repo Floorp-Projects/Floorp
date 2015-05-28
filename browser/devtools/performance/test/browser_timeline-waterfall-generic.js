@@ -42,26 +42,22 @@ function* spawnTest() {
   ok($$(".waterfall-header-ticks > .waterfall-header-tick").length > 0,
     "Some header tick labels should have been created inside the tick node.");
 
-  // Test the markers container.
-
-  ok($(".waterfall-marker-container"),
-    "A marker container should have been created.");
-
   // Test the markers sidebar (left).
 
-  ok($$(".waterfall-marker-container > .waterfall-sidebar").length,
+  ok($$(".waterfall-tree-item > .waterfall-sidebar").length,
     "Some marker sidebar nodes should have been created.");
-  ok($$(".waterfall-marker-container > .waterfall-sidebar:not(spacer) > .waterfall-marker-bullet").length,
+  ok($$(".waterfall-tree-item > .waterfall-sidebar > .waterfall-marker-bullet").length,
     "Some marker color bullets should have been created inside the sidebar.");
-  ok($$(".waterfall-marker-container > .waterfall-sidebar:not(spacer) > .waterfall-marker-name").length,
+  ok($$(".waterfall-tree-item > .waterfall-sidebar > .waterfall-marker-name").length,
     "Some marker name labels should have been created inside the sidebar.");
 
   // Test the markers waterfall (right).
 
-  ok($$(".waterfall-marker-item").length,
+  ok($$(".waterfall-tree-item > .waterfall-marker").length,
     "Some marker waterfall nodes should have been created.");
-  ok($$(".waterfall-marker-item:not(spacer) > .waterfall-marker-bar").length,
+  ok($$(".waterfall-tree-item > .waterfall-marker > .waterfall-marker-bar").length,
     "Some marker color bars should have been created inside the waterfall.");
+
   yield teardown(panel);
   finish();
 }
