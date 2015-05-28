@@ -332,6 +332,8 @@ enum ParseNodeKind
  *                              in original source, not introduced via
  *                              constant folding or other tree rewriting
  * PNK_LABEL    name        pn_atom: label, pn_expr: labeled statement
+ * PNK_IMPORT   binary      pn_left: PNK_IMPORT_SPEC_LIST import specifiers
+ *                          pn_right: PNK_STRING module specifier
  *
  * <Expressions>
  * All left-associated binary trees of the same type are optimized into lists
