@@ -81,7 +81,7 @@ function getInnerId(window) {
  * youngest, using nsIWindowMediator::getEnumerator. We're usually
  * interested in "navigator:browser" windows.
  */
-function allAppShellDOMWindows(aWindowType)
+function* allAppShellDOMWindows(aWindowType)
 {
   let e = Services.wm.getEnumerator(aWindowType);
   while (e.hasMoreElements()) {
@@ -2007,7 +2007,7 @@ BrowserAddonList.prototype.getList = function() {
         this._actorByAddonId.set(addon.id, actor);
       }
     }
-    deferred.resolve([actor for ([_, actor] of this._actorByAddonId)]);
+    deferred.resolve([...this._actorByAddonId].map(([_, actor]) => actor));
   });
   return deferred.promise;
 }

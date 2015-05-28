@@ -14,7 +14,7 @@ let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 function run_test() {
   initTestDebuggerServer();
 
-  add_task(function() {
+  add_task(function*() {
     yield test_transport(socket_transport);
     yield test_transport(local_transport);
     DebuggerServer.destroy();

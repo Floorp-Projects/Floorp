@@ -15,7 +15,7 @@ function run_test() {
   initTestDebuggerServer();
   add_test_bulk_actor();
 
-  add_task(function() {
+  add_task(function*() {
     yield test_bulk_request_cs(socket_transport, "jsonReply", "json");
     yield test_bulk_request_cs(local_transport, "jsonReply", "json");
     yield test_bulk_request_cs(socket_transport, "bulkEcho", "bulk");
