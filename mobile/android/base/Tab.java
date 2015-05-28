@@ -614,15 +614,6 @@ public class Tab {
         });
     }
 
-    public void toggleReaderMode() {
-        if (AboutPages.isAboutReader(mUrl)) {
-            Tabs.getInstance().loadUrl(ReaderModeUtils.getUrlFromAboutReader(mUrl));
-        } else {
-            mEnteringReaderMode = true;
-            Tabs.getInstance().loadUrl(ReaderModeUtils.getAboutReaderForUrl(mUrl, mId));
-        }
-    }
-
     public boolean isEnteringReaderMode() {
         return mEnteringReaderMode;
     }

@@ -790,6 +790,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TOUCH_ACTION_MANIPULATION    (1 << 4)
 
 // See nsStyleDisplay
+#define NS_STYLE_TRANSFORM_BOX_BORDER_BOX                0
+#define NS_STYLE_TRANSFORM_BOX_FILL_BOX                  1
+#define NS_STYLE_TRANSFORM_BOX_VIEW_BOX                  2
+
+// See nsStyleDisplay
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE         0
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR       1
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN      2

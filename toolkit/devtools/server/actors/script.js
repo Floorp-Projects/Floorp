@@ -3247,6 +3247,163 @@ let stringifiers = {
   },
 };
 
+
+/**
+ * Creates an actor to iterate over an object's property names and values.
+ *
+ * @param aObjectActor ObjectActor
+ *        The object actor.
+ * @param aOptions Object
+ *        A dictionary object with various boolean attributes:
+ *        - ignoreSafeGetters Boolean
+ *          If true, do not iterate over safe getters.
+ *        - ignoreIndexedProperties Boolean
+ *          If true, filters out Array items.
+ *          e.g. properties names between `0` and `object.length`.
+ *        - ignoreNonIndexedProperties Boolean
+ *          If true, filters out items that aren't array items
+ *          e.g. properties names that are not a number between `0`
+ *          and `object.length`.
+ *        - sort Boolean
+ *          If true, the iterator will sort the properties by name
+ *          before dispatching them.
+ *        - query String
+ *          If non-empty, will filter the properties by names containing
+ *          this query string. The match is not case-sensitive.
+ */
+function PropertyIteratorActor(aObjectActor, aOptions)
+{
+  this.objectActor = aObjectActor;
+
+  let ownProperties = Object.create(null);
+  let names = [];
+  try {
+    names = this.objectActor.obj.getOwnPropertyNames();
+  } catch (ex) {}
+
+
+  let safeGetterValues = {};
+  let safeGetterNames = [];
+  if (!aOptions.ignoreSafeGetters) {
+    // Merge the safe getter values into the existing properties list.
+    safeGetterValues = this.objectActor._findSafeGetterValues(names);
+    safeGetterNames = Object.keys(safeGetterValues);
+    for (let name of safeGetterNames) {
+      if (names.indexOf(name) === -1) {
+        names.push(name);
+      }
+    }
+  }
+
+  if (aOptions.ignoreIndexedProperties || aOptions.ignoreNonIndexedProperties) {
+    let length = DevToolsUtils.getProperty(this.objectActor.obj, "length");
+    if (typeof(length) !== "number") {
+      // Pseudo arrays are flagged as ArrayLike if they have
+      // subsequent indexed properties without having any length attribute.
+      length = 0;
+      for (let key of names) {
+        if (isNaN(key) || key != length++) {
+          break;
+        }
+      }
+    }
+
+    if (aOptions.ignoreIndexedProperties) {
+      names = names.filter(i => {
+        // Use parseFloat in order to reject floats...
+        // (parseInt converts floats to integer)
+        // (Number(str) converts spaces to 0)
+        i = parseFloat(i);
+        return !Number.isInteger(i) || i < 0 || i >= length;
+      });
+    }
+
+    if (aOptions.ignoreNonIndexedProperties) {
+      names = names.filter(i => {
+        i = parseFloat(i);
+        return Number.isInteger(i) && i >= 0 && i < length;
+      });
+    }
+  }
+
+  if (aOptions.query) {
+    let { query } = aOptions;
+    query = query.toLowerCase();
+    names = names.filter(name => {
+      return name.toLowerCase().includes(query);
+    });
+  }
+
+  if (aOptions.sort) {
+    names.sort();
+  }
+
+  // Now build the descriptor list
+  for (let name of names) {
+    let desc = this.objectActor._propertyDescriptor(name);
+    if (!desc) {
+      desc = safeGetterValues[name];
+    }
+    else if (name in safeGetterValues) {
+      // Merge the safe getter values into the existing properties list.
+      let { getterValue, getterPrototypeLevel } = safeGetterValues[name];
+      desc.getterValue = getterValue;
+      desc.getterPrototypeLevel = getterPrototypeLevel;
+    }
+    ownProperties[name] = desc;
+  }
+
+  this.names = names;
+  this.ownProperties = ownProperties;
+}
+
+PropertyIteratorActor.prototype = {
+  actorPrefix: "propertyIterator",
+
+  grip: function () {
+    return {
+      type: "propertyIterator",
+      actor: this.actorID,
+      count: this.names.length
+    };
+  },
+
+  names: function ({ indexes }) {
+    let list = [];
+    for (let idx of indexes) {
+      list.push(this.names[idx]);
+    }
+    return {
+      names: list
+    };
+  },
+
+  slice: function ({ start, count }) {
+    let names = this.names.slice(start, start + count);
+    let props = Object.create(null);
+    for (let name of names) {
+      props[name] = this.ownProperties[name];
+    }
+    return {
+      ownProperties: props
+    };
+  },
+
+  all: function () {
+    return {
+      ownProperties: this.ownProperties
+    };
+  }
+};
+
+PropertyIteratorActor.prototype.requestTypes = {
+  "names": PropertyIteratorActor.prototype.names,
+  "slice": PropertyIteratorActor.prototype.slice,
+  "all": PropertyIteratorActor.prototype.all,
+};
+
+exports.PropertyIteratorActor = PropertyIteratorActor;
+
 /**
  * Creates an actor for the specified object.
  *
@@ -3260,6 +3417,7 @@ function ObjectActor(aObj, aThreadActor)
   dbg_assert(!aObj.optimizedOut, "Should not create object actors for optimized out values!");
   this.obj = aObj;
   this.threadActor = aThreadActor;
+  this.iterators = new Set();
 }
 
 ObjectActor.prototype = {
@@ -3291,6 +3449,16 @@ ObjectActor.prototype = {
           g.promiseState.reason = this.threadActor.createValueGrip(reason);
         }
       }
+
+      // FF40+: Allow to know how many properties an object has
+      // to lazily display them when there is a bunch.
+      // Throws on some MouseEvent object in tests.
+      try {
+        // Bug 1163520: Assert on internal functions
+        if (this.obj.class != "Function") {
+          g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
+        }
+      } catch(e) {}
 
       let raw = this.obj.unsafeDereference();
 
@@ -3328,6 +3496,8 @@ ObjectActor.prototype = {
     if (this.registeredPool.objectActors) {
       this.registeredPool.objectActors.delete(this.obj);
     }
+    this.iterators.forEach(actor => this.registeredPool.removeActor(actor));
+    this.iterators.clear();
     this.registeredPool.removeActor(this);
   },
 
@@ -3381,6 +3551,20 @@ ObjectActor.prototype = {
   },
 
   /**
+   * Creates an actor to iterate over an object property names and values.
+   * See PropertyIteratorActor constructor for more info about options param.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
+  onEnumProperties: function (aRequest) {
+    let actor = new PropertyIteratorActor(this, aRequest.options);
+    this.registeredPool.addActor(actor);
+    this.iterators.add(actor);
+    return { iterator: actor.grip() };
+  },
+
+  /**
    * Handle a protocol request to provide the prototype and own properties of
    * the object.
    *
@@ -3406,15 +3590,15 @@ ObjectActor.prototype = {
     return { from: this.actorID,
              prototype: this.threadActor.createValueGrip(this.obj.proto),
              ownProperties: ownProperties,
-             safeGetterValues: this._findSafeGetterValues(ownProperties) };
+             safeGetterValues: this._findSafeGetterValues(names) };
   },
 
   /**
    * Find the safe getter values for the current Debugger.Object, |this.obj|.
    *
    * @private
-   * @param object aOwnProperties
-   *        The object that holds the list of known ownProperties for
+   * @param array aOwnProperties
+   *        The array that holds the list of known ownProperties names for
    *        |this.obj|.
    * @param number [aLimit=0]
    *        Optional limit of getter values to find.
@@ -3435,7 +3619,7 @@ ObjectActor.prototype = {
         // avoid providing safeGetterValues from prototypes if property |name|
         // is already defined as an own property.
         if (name in safeGetterValues ||
-            (obj != this.obj && name in aOwnProperties)) {
+            (obj != this.obj && aOwnProperties.indexOf(name) !== -1)) {
           continue;
         }
 
@@ -3702,6 +3886,7 @@ ObjectActor.prototype.requestTypes = {
   "definitionSite": ObjectActor.prototype.onDefinitionSite,
   "parameterNames": ObjectActor.prototype.onParameterNames,
   "prototypeAndProperties": ObjectActor.prototype.onPrototypeAndProperties,
+  "enumProperties": ObjectActor.prototype.onEnumProperties,
   "prototype": ObjectActor.prototype.onPrototype,
   "property": ObjectActor.prototype.onProperty,
   "displayString": ObjectActor.prototype.onDisplayString,
@@ -4423,7 +4608,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
 
     if (i < OBJECT_PREVIEW_MAX_ITEMS) {
       preview.safeGetterValues = aObjectActor.
-                                 _findSafeGetterValues(preview.ownProperties,
+                                 _findSafeGetterValues(Object.keys(preview.ownProperties),
                                                        OBJECT_PREVIEW_MAX_ITEMS - i);
     }
 

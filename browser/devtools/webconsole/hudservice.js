@@ -320,7 +320,10 @@ WebConsole.prototype = {
    *
    * @type function
    */
-  get lastFinishedRequestCallback() HUDService.lastFinishedRequest.callback,
+  get lastFinishedRequestCallback()
+  {
+    return HUDService.lastFinishedRequest.callback;
+  },
 
   /**
    * Getter for the window that can provide various utilities that the web

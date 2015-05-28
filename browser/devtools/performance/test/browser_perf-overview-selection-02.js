@@ -4,7 +4,7 @@
 /**
  * Tests that the graphs' selection is correctly disabled or enabled.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, OverviewView } = panel.panelWin;
 

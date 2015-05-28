@@ -1318,11 +1318,10 @@ PropertyView.prototype = {
 
         this._matchedSelectorResponse = matched;
 
-        this._buildMatchedSelectors()
-            .then(() => {
-              this.tree.inspector.emit("computed-view-property-expanded");
-            });
-        this.matchedExpander.setAttribute("open", "");
+        return this._buildMatchedSelectors().then(() => {
+          this.matchedExpander.setAttribute("open", "");
+          this.tree.inspector.emit("computed-view-property-expanded");
+        });
       }).then(null, console.error);
     } else {
       this.matchedSelectorsContainer.innerHTML = "";

@@ -9,7 +9,7 @@
 
 const WAIT_TIME = 1000; // ms
 
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { gFront: front, gTarget: target } = panel.panelWin;
   let connection = getPerformanceActorsConnection(target);

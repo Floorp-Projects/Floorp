@@ -36,6 +36,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.provider.Browser;
 import android.util.Log;
+import android.content.SharedPreferences;
 
 public class Tabs implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -116,8 +117,7 @@ public class Tabs implements GeckoEventListener {
             "DesktopMode:Changed",
             "Tab:ViewportMetadata",
             "Tab:StreamStart",
-            "Tab:StreamStop",
-            "Reader:Toggle");
+            "Tab:StreamStop");
 
     }
 
@@ -580,8 +580,6 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("Tab:StreamStop")) {
                 tab.setRecording(false);
                 notifyListeners(tab, TabEvents.RECORDING_CHANGE);
-            } else if (event.equals("Reader:Toggle")) {
-                tab.toggleReaderMode();
             }
 
         } catch (Exception e) {
@@ -853,6 +851,12 @@ public class Tabs implements GeckoEventListener {
             boolean userEntered = (flags & LOADURL_USER_ENTERED) != 0;
             boolean desktopMode = (flags & LOADURL_DESKTOP) != 0;
             boolean external = (flags & LOADURL_EXTERNAL) != 0;
+
+            final SharedPreferences sharedPrefs =  GeckoSharedPrefs.forApp(mAppContext);
+            final boolean isPrivatePref = sharedPrefs.getBoolean("android.not_a_preference.openExternalURLsPrivately", false);
+            if (isPrivatePref && external) {
+                isPrivate = true;
+            }
 
             args.put("url", url);
             args.put("engine", searchEngine);

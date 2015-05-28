@@ -175,17 +175,8 @@ function createTabWithStorageData(urls, win = window) {
   });
 }
 
-function waitForStorageEvent(browser) {
-  return promiseContentMessage(browser, "ss-test:MozStorageChanged");
-}
-
 function sendQuitApplicationRequested() {
   let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
                      .createInstance(Ci.nsISupportsPRBool);
   Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
-}
-
-function modifySessionStorage(browser, data) {
-  browser.messageManager.sendAsyncMessage("ss-test:modifySessionStorage", data);
-  return waitForStorageEvent(browser);
 }

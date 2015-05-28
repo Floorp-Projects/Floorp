@@ -4,7 +4,7 @@
 /**
  * Tests that view states and lazy component intialization works.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceView, OverviewView, DetailsView } = panel.panelWin;
 

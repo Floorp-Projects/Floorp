@@ -11,12 +11,13 @@
 #include <stdarg.h>
 #include <algorithm>
 
+#include "gfx2DGlue.h"
 #include "gfxUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "gfx2DGlue.h"
+#include "mozilla/Snprintf.h"
 
 #include "nsCOMPtr.h"
 #include "nsFrameList.h"
@@ -9153,7 +9154,8 @@ struct DR_State
   bool GetNumber(char*    aBuf, 
                  int32_t&  aNumber);
   void PrettyUC(nscoord aSize,
-                char*   aBuf);
+                char*   aBuf,
+                int     aBufSize);
   void PrintMargin(const char* tag, const nsMargin* aMargin);
   void DisplayFrameTypeInfo(nsIFrame* aFrame,
                             int32_t   aIndent);
@@ -9646,7 +9648,8 @@ DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
 }
 
 void DR_State::PrettyUC(nscoord aSize,
-                        char*   aBuf)
+                        char*   aBuf,
+                        int     aBufSize)
 {
   if (NS_UNCONSTRAINEDSIZE == aSize) {
     strcpy(aBuf, "UC");
@@ -9657,7 +9660,7 @@ void DR_State::PrettyUC(nscoord aSize,
       strcpy(aBuf, "deadbeef");
     }
     else {
-      sprintf(aBuf, "%d", aSize);
+      snprintf(aBuf, aBufSize, "%d", aSize);
     }
   }
 }
@@ -9666,10 +9669,10 @@ void DR_State::PrintMargin(const char *tag, const nsMargin* aMargin)
 {
   if (aMargin) {
     char t[16], r[16], b[16], l[16];
-    PrettyUC(aMargin->top, t);
-    PrettyUC(aMargin->right, r);
-    PrettyUC(aMargin->bottom, b);
-    PrettyUC(aMargin->left, l);
+    PrettyUC(aMargin->top, t, 16);
+    PrettyUC(aMargin->right, r, 16);
+    PrettyUC(aMargin->bottom, b, 16);
+    PrettyUC(aMargin->left, l, 16);
     printf(" %s=%s,%s,%s,%s", tag, t, r, b, l);
   } else {
     // use %p here for consistency with other null-pointer printouts
@@ -9715,12 +9718,12 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
     char width[16];
     char height[16];
 
-    DR_state->PrettyUC(aReflowState.AvailableWidth(), width);
-    DR_state->PrettyUC(aReflowState.AvailableHeight(), height);
+    DR_state->PrettyUC(aReflowState.AvailableWidth(), width, 16);
+    DR_state->PrettyUC(aReflowState.AvailableHeight(), height, 16);
     printf("Reflow a=%s,%s ", width, height);
 
-    DR_state->PrettyUC(aReflowState.ComputedWidth(), width);
-    DR_state->PrettyUC(aReflowState.ComputedHeight(), height);
+    DR_state->PrettyUC(aReflowState.ComputedWidth(), width, 16);
+    DR_state->PrettyUC(aReflowState.ComputedHeight(), height, 16);
     printf("c=%s,%s ", width, height);
 
     if (aFrame->GetStateBits() & NS_FRAME_IS_DIRTY)
@@ -9842,38 +9845,38 @@ void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
     char height[16];
     char x[16];
     char y[16];
-    DR_state->PrettyUC(aMetrics.Width(), width);
-    DR_state->PrettyUC(aMetrics.Height(), height);
+    DR_state->PrettyUC(aMetrics.Width(), width, 16);
+    DR_state->PrettyUC(aMetrics.Height(), height, 16);
     printf("Reflow d=%s,%s", width, height);
 
     if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
       printf(" status=0x%x", aStatus);
     }
     if (aFrame->HasOverflowAreas()) {
-      DR_state->PrettyUC(aMetrics.VisualOverflow().x, x);
-      DR_state->PrettyUC(aMetrics.VisualOverflow().y, y);
-      DR_state->PrettyUC(aMetrics.VisualOverflow().width, width);
-      DR_state->PrettyUC(aMetrics.VisualOverflow().height, height);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().x, x, 16);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().y, y, 16);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().width, width, 16);
+      DR_state->PrettyUC(aMetrics.VisualOverflow().height, height, 16);
       printf(" vis-o=(%s,%s) %s x %s", x, y, width, height);
 
       nsRect storedOverflow = aFrame->GetVisualOverflowRect();
-      DR_state->PrettyUC(storedOverflow.x, x);
-      DR_state->PrettyUC(storedOverflow.y, y);
-      DR_state->PrettyUC(storedOverflow.width, width);
-      DR_state->PrettyUC(storedOverflow.height, height);
+      DR_state->PrettyUC(storedOverflow.x, x, 16);
+      DR_state->PrettyUC(storedOverflow.y, y, 16);
+      DR_state->PrettyUC(storedOverflow.width, width, 16);
+      DR_state->PrettyUC(storedOverflow.height, height, 16);
       printf(" vis-sto=(%s,%s) %s x %s", x, y, width, height);
 
-      DR_state->PrettyUC(aMetrics.ScrollableOverflow().x, x);
-      DR_state->PrettyUC(aMetrics.ScrollableOverflow().y, y);
-      DR_state->PrettyUC(aMetrics.ScrollableOverflow().width, width);
-      DR_state->PrettyUC(aMetrics.ScrollableOverflow().height, height);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().x, x, 16);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().y, y, 16);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().width, width, 16);
+      DR_state->PrettyUC(aMetrics.ScrollableOverflow().height, height, 16);
       printf(" scr-o=(%s,%s) %s x %s", x, y, width, height);
 
       storedOverflow = aFrame->GetScrollableOverflowRect();
-      DR_state->PrettyUC(storedOverflow.x, x);
-      DR_state->PrettyUC(storedOverflow.y, y);
-      DR_state->PrettyUC(storedOverflow.width, width);
-      DR_state->PrettyUC(storedOverflow.height, height);
+      DR_state->PrettyUC(storedOverflow.x, x, 16);
+      DR_state->PrettyUC(storedOverflow.y, y, 16);
+      DR_state->PrettyUC(storedOverflow.width, width, 16);
+      DR_state->PrettyUC(storedOverflow.height, height, 16);
       printf(" scr-sto=(%s,%s) %s x %s", x, y, width, height);
     }
     printf("\n");
@@ -9917,7 +9920,7 @@ void nsFrame::DisplayIntrinsicISizeExit(nsIFrame*            aFrame,
   if (treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
     char width[16];
-    DR_state->PrettyUC(aResult, width);
+    DR_state->PrettyUC(aResult, width, 16);
     printf("Get%sWidth=%s\n", aType, width);
   }
   DR_state->DeleteTreeNode(*treeNode);
@@ -9939,8 +9942,8 @@ void nsFrame::DisplayIntrinsicSizeExit(nsIFrame*            aFrame,
 
     char width[16];
     char height[16];
-    DR_state->PrettyUC(aResult.width, width);
-    DR_state->PrettyUC(aResult.height, height);
+    DR_state->PrettyUC(aResult.width, width, 16);
+    DR_state->PrettyUC(aResult.height, height, 16);
     printf("Get%sSize=%s,%s\n", aType, width, height);
   }
   DR_state->DeleteTreeNode(*treeNode);
@@ -9991,12 +9994,12 @@ nsHTMLReflowState::DisplayInitConstraintsEnter(nsIFrame* aFrame,
     char width[16];
     char height[16];
 
-    DR_state->PrettyUC(aContainingBlockWidth, width);
-    DR_state->PrettyUC(aContainingBlockHeight, height);
+    DR_state->PrettyUC(aContainingBlockWidth, width, 16);
+    DR_state->PrettyUC(aContainingBlockHeight, height, 16);
     printf(" cb=%s,%s", width, height);
 
-    DR_state->PrettyUC(aState->AvailableWidth(), width);
-    DR_state->PrettyUC(aState->AvailableHeight(), height);
+    DR_state->PrettyUC(aState->AvailableWidth(), width, 16);
+    DR_state->PrettyUC(aState->AvailableHeight(), height, 16);
     printf(" as=%s,%s", width, height);
 
     DR_state->PrintMargin("b", aBorder);
@@ -10021,12 +10024,12 @@ nsHTMLReflowState::DisplayInitConstraintsExit(nsIFrame* aFrame,
   if (treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
     char cmiw[16], cw[16], cmxw[16], cmih[16], ch[16], cmxh[16];
-    DR_state->PrettyUC(aState->ComputedMinWidth(), cmiw);
-    DR_state->PrettyUC(aState->ComputedWidth(), cw);
-    DR_state->PrettyUC(aState->ComputedMaxWidth(), cmxw);
-    DR_state->PrettyUC(aState->ComputedMinHeight(), cmih);
-    DR_state->PrettyUC(aState->ComputedHeight(), ch);
-    DR_state->PrettyUC(aState->ComputedMaxHeight(), cmxh);
+    DR_state->PrettyUC(aState->ComputedMinWidth(), cmiw, 16);
+    DR_state->PrettyUC(aState->ComputedWidth(), cw, 16);
+    DR_state->PrettyUC(aState->ComputedMaxWidth(), cmxw, 16);
+    DR_state->PrettyUC(aState->ComputedMinHeight(), cmih, 16);
+    DR_state->PrettyUC(aState->ComputedHeight(), ch, 16);
+    DR_state->PrettyUC(aState->ComputedMaxHeight(), cmxh, 16);
     printf("InitConstraints= cw=(%s <= %s <= %s) ch=(%s <= %s <= %s)",
            cmiw, cw, cmxw, cmih, ch, cmxh);
     DR_state->PrintMargin("co", &aState->ComputedPhysicalOffsets());
@@ -10057,8 +10060,8 @@ nsCSSOffsetState::DisplayInitOffsetsEnter(nsIFrame* aFrame,
 
     char horizPctBasisStr[16];
     char vertPctBasisStr[16];
-    DR_state->PrettyUC(aHorizontalPercentBasis, horizPctBasisStr);
-    DR_state->PrettyUC(aVerticalPercentBasis,   vertPctBasisStr);
+    DR_state->PrettyUC(aHorizontalPercentBasis, horizPctBasisStr, 16);
+    DR_state->PrettyUC(aVerticalPercentBasis,   vertPctBasisStr, 16);
     printf("InitOffsets pct_basis=%s,%s", horizPctBasisStr, vertPctBasisStr);
 
     DR_state->PrintMargin("b", aBorder);

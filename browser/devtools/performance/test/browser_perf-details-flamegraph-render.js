@@ -4,7 +4,7 @@
 /**
  * Tests that the flamegraph view renders content after recording.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView, JsFlameGraphView } = panel.panelWin;
 

@@ -5,7 +5,7 @@
  * Tests target navigations are handled correctly in the UI.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, panel } = yield initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 

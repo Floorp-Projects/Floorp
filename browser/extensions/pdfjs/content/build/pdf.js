@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.1.114';
-PDFJS.build = '3fd44fd';
+PDFJS.version = '1.1.165';
+PDFJS.build = '39d2103';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -917,6 +917,10 @@ function stringToPDFString(str) {
 
 function stringToUTF8String(str) {
   return decodeURIComponent(escape(str));
+}
+
+function utf8StringToString(str) {
+  return unescape(encodeURIComponent(str));
 }
 
 function isEmptyObj(obj) {
@@ -2009,6 +2013,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
                                                       this.commonObjs,
                                                       intentState.operatorList,
                                                       this.pageNumber);
+      internalRenderTask.useRequestAnimationFrame = renderingIntent !== 'print';
       if (!intentState.renderTasks) {
         intentState.renderTasks = [];
       }
@@ -2814,6 +2819,7 @@ var InternalRenderTask = (function InternalRenderTaskClosure() {
     this.running = false;
     this.graphicsReadyCallback = null;
     this.graphicsReady = false;
+    this.useRequestAnimationFrame = false;
     this.cancelled = false;
     this.capability = createPromiseCapability();
     this.task = new RenderTask(this);
@@ -2887,7 +2893,11 @@ var InternalRenderTask = (function InternalRenderTaskClosure() {
     },
 
     _scheduleNext: function InternalRenderTask__scheduleNext() {
-      window.requestAnimationFrame(this._nextBound);
+      if (this.useRequestAnimationFrame) {
+        window.requestAnimationFrame(this._nextBound);
+      } else {
+        Promise.resolve(undefined).then(this._nextBound);
+      }
     },
 
     _next: function InternalRenderTask__next() {

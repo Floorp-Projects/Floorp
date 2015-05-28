@@ -622,4 +622,4 @@ EventEmitter.decorate(this);
 /**
  * DOM query helper.
  */
-function $(selector, target = document) target.querySelector(selector);
+let $ = (selector, target = document) => target.querySelector(selector);
