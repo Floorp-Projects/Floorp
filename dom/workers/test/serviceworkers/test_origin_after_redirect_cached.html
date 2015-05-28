@@ -26,7 +26,7 @@
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "registrationdone") {
-        win = window.open("/tests/dom/workers/test/serviceworkers/fetch/origin/index.sjs", "mywindow", "width=100,height=100");
+        win = window.open("/tests/dom/workers/test/serviceworkers/fetch/origin/index-cached.sjs", "mywindow", "width=100,height=100");
       } else if (e.data.status == "domain") {
         is(e.data.data, "example.org", "Correct domain expected");
       } else if (e.data.status == "origin") {
