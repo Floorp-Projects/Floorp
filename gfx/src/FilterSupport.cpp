@@ -102,64 +102,82 @@ namespace FilterWrappers {
   Unpremultiply(DrawTarget* aDT, FilterNode* aInput)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::UNPREMULTIPLY);
-    filter->SetInput(IN_UNPREMULTIPLY_IN, aInput);
-    return filter;
+    if (filter) {
+      filter->SetInput(IN_UNPREMULTIPLY_IN, aInput);
+      return filter.forget();
+    }
+    return nullptr;
   }
 
   static TemporaryRef<FilterNode>
   Premultiply(DrawTarget* aDT, FilterNode* aInput)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::PREMULTIPLY);
-    filter->SetInput(IN_PREMULTIPLY_IN, aInput);
-    return filter;
+    if (filter) {
+      filter->SetInput(IN_PREMULTIPLY_IN, aInput);
+      return filter.forget();
+    }
+    return nullptr;
   }
 
   static TemporaryRef<FilterNode>
   LinearRGBToSRGB(DrawTarget* aDT, FilterNode* aInput)
   {
     RefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_R, false);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_R, glinearRGBTosRGBMap, 256);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_G, false);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_G, glinearRGBTosRGBMap, 256);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_B, false);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_B, glinearRGBTosRGBMap, 256);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_A, true);
-    transfer->SetInput(IN_DISCRETE_TRANSFER_IN, aInput);
-    return transfer;
+    if (transfer) {
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_R, false);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_R, glinearRGBTosRGBMap, 256);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_G, false);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_G, glinearRGBTosRGBMap, 256);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_B, false);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_B, glinearRGBTosRGBMap, 256);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_A, true);
+      transfer->SetInput(IN_DISCRETE_TRANSFER_IN, aInput);
+      return transfer.forget();
+    }
+    return nullptr;
   }
 
   static TemporaryRef<FilterNode>
   SRGBToLinearRGB(DrawTarget* aDT, FilterNode* aInput)
   {
     RefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_R, false);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_R, gsRGBToLinearRGBMap, 256);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_G, false);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_G, gsRGBToLinearRGBMap, 256);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_B, false);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_B, gsRGBToLinearRGBMap, 256);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_A, true);
-    transfer->SetInput(IN_DISCRETE_TRANSFER_IN, aInput);
-    return transfer;
+    if (transfer) {
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_R, false);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_R, gsRGBToLinearRGBMap, 256);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_G, false);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_G, gsRGBToLinearRGBMap, 256);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_B, false);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_B, gsRGBToLinearRGBMap, 256);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_A, true);
+      transfer->SetInput(IN_DISCRETE_TRANSFER_IN, aInput);
+      return transfer.forget();
+    }
+    return nullptr;
   }
 
   static TemporaryRef<FilterNode>
   Crop(DrawTarget* aDT, FilterNode* aInputFilter, const IntRect& aRect)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CROP);
-    filter->SetAttribute(ATT_CROP_RECT, Rect(aRect));
-    filter->SetInput(IN_CROP_IN, aInputFilter);
-    return filter;
+    if (filter) {
+      filter->SetAttribute(ATT_CROP_RECT, Rect(aRect));
+      filter->SetInput(IN_CROP_IN, aInputFilter);
+      return filter.forget();
+    }
+    return nullptr;
   }
 
   static TemporaryRef<FilterNode>
   Offset(DrawTarget* aDT, FilterNode* aInputFilter, const IntPoint& aOffset)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
-    filter->SetAttribute(ATT_TRANSFORM_MATRIX, Matrix::Translation(aOffset.x, aOffset.y));
-    filter->SetInput(IN_TRANSFORM_IN, aInputFilter);
-    return filter;
+    if (filter) {
+      filter->SetAttribute(ATT_TRANSFORM_MATRIX, Matrix::Translation(aOffset.x, aOffset.y));
+      filter->SetInput(IN_TRANSFORM_IN, aInputFilter);
+      return filter.forget();
+    }
+    return nullptr;
   }
 
   static TemporaryRef<FilterNode>
@@ -169,27 +187,36 @@ namespace FilterWrappers {
     float stdY = float(std::min(aStdDeviation.height, kMaxStdDeviation));
     if (stdX == stdY) {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::GAUSSIAN_BLUR);
-      filter->SetAttribute(ATT_GAUSSIAN_BLUR_STD_DEVIATION, stdX);
-      filter->SetInput(IN_GAUSSIAN_BLUR_IN, aInputFilter);
-      return filter;
+      if (filter) {
+        filter->SetAttribute(ATT_GAUSSIAN_BLUR_STD_DEVIATION, stdX);
+        filter->SetInput(IN_GAUSSIAN_BLUR_IN, aInputFilter);
+        return filter.forget();
+      }
+      return nullptr;
     }
     RefPtr<FilterNode> filterH = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
     RefPtr<FilterNode> filterV = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
-    filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_DIRECTION, (uint32_t)BLUR_DIRECTION_X);
-    filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, stdX);
-    filterV->SetAttribute(ATT_DIRECTIONAL_BLUR_DIRECTION, (uint32_t)BLUR_DIRECTION_Y);
-    filterV->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, stdY);
-    filterH->SetInput(IN_DIRECTIONAL_BLUR_IN, aInputFilter);
-    filterV->SetInput(IN_DIRECTIONAL_BLUR_IN, filterH);
-    return filterV;
+    if (filterH && filterV) {
+      filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_DIRECTION, (uint32_t)BLUR_DIRECTION_X);
+      filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, stdX);
+      filterV->SetAttribute(ATT_DIRECTIONAL_BLUR_DIRECTION, (uint32_t)BLUR_DIRECTION_Y);
+      filterV->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, stdY);
+      filterH->SetInput(IN_DIRECTIONAL_BLUR_IN, aInputFilter);
+      filterV->SetInput(IN_DIRECTIONAL_BLUR_IN, filterH);
+      return filterV.forget();
+    }
+    return nullptr;
   }
 
   static TemporaryRef<FilterNode>
   Clear(DrawTarget* aDT)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
-    filter->SetAttribute(ATT_FLOOD_COLOR, Color(0,0,0,0));
-    return filter;
+    if (filter) {
+      filter->SetAttribute(ATT_FLOOD_COLOR, Color(0, 0, 0, 0));
+      return filter.forget();
+    }
+    return nullptr;
   }
 
   static TemporaryRef<FilterNode>
@@ -197,10 +224,13 @@ namespace FilterWrappers {
              const IntPoint& aSurfacePosition)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
-    filter->SetAttribute(ATT_TRANSFORM_MATRIX,
-      Matrix::Translation(aSurfacePosition.x, aSurfacePosition.y));
-    filter->SetInput(IN_TRANSFORM_IN, aSurface);
-    return filter;
+    if (filter) {
+      filter->SetAttribute(ATT_TRANSFORM_MATRIX,
+        Matrix::Translation(aSurfacePosition.x, aSurfacePosition.y));
+      filter->SetInput(IN_TRANSFORM_IN, aSurface);
+      return filter.forget();
+    }
+    return nullptr;
   }
 
   static TemporaryRef<FilterNode>
@@ -208,17 +238,19 @@ namespace FilterWrappers {
   {
     float zero = 0.0f;
     RefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_R, false);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_R, &zero, 1);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_G, false);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_G, &zero, 1);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_B, false);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_B, &zero, 1);
-    transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_A, true);
-    transfer->SetInput(IN_DISCRETE_TRANSFER_IN, aInput);
-    return transfer;
+    if (transfer) {
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_R, false);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_R, &zero, 1);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_G, false);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_G, &zero, 1);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_B, false);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_B, &zero, 1);
+      transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_A, true);
+      transfer->SetInput(IN_DISCRETE_TRANSFER_IN, aInput);
+      return transfer.forget();
+    }
+    return nullptr;
   }
-
 }
 
 // A class that wraps a FilterNode and handles conversion between different
@@ -534,6 +566,9 @@ ConvertComponentTransferFunctionToFilter(const AttributeMap& aFunctionAttributes
 
     if (!aTableTransfer) {
       aTableTransfer = aDT->CreateFilter(FilterType::TABLE_TRANSFER);
+      if (!aTableTransfer) {
+        return;
+      }
       DisableAllTransfers(aTableTransfer);
     }
     filter = aTableTransfer;
@@ -557,6 +592,9 @@ ConvertComponentTransferFunctionToFilter(const AttributeMap& aFunctionAttributes
 
     if (!aDiscreteTransfer) {
       aDiscreteTransfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
+      if (!aDiscreteTransfer) {
+        return;
+      }
       DisableAllTransfers(aDiscreteTransfer);
     }
     filter = aDiscreteTransfer;
@@ -588,6 +626,9 @@ ConvertComponentTransferFunctionToFilter(const AttributeMap& aFunctionAttributes
     };
     if (!aLinearTransfer) {
       aLinearTransfer = aDT->CreateFilter(FilterType::LINEAR_TRANSFER);
+      if (!aLinearTransfer) {
+        return;
+      }
       DisableAllTransfers(aLinearTransfer);
     }
     filter = aLinearTransfer;
@@ -621,6 +662,9 @@ ConvertComponentTransferFunctionToFilter(const AttributeMap& aFunctionAttributes
     };
     if (!aGammaTransfer) {
       aGammaTransfer = aDT->CreateFilter(FilterType::GAMMA_TRANSFER);
+      if (!aGammaTransfer) {
+        return;
+      }
       DisableAllTransfers(aGammaTransfer);
     }
     filter = aGammaTransfer;
@@ -671,10 +715,16 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       }
       if (mode == SVG_FEBLEND_MODE_NORMAL) {
         filter = aDT->CreateFilter(FilterType::COMPOSITE);
+        if (!filter) {
+          return nullptr;
+        }
         filter->SetInput(IN_COMPOSITE_IN_START, aSources[1]);
         filter->SetInput(IN_COMPOSITE_IN_START + 1, aSources[0]);
       } else {
         filter = aDT->CreateFilter(FilterType::BLEND);
+        if (!filter) {
+          return nullptr;
+        }
         static const uint8_t blendModes[SVG_FEBLEND_MODE_LUMINOSITY + 1] = {
           0,
           0,
@@ -715,6 +765,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
                        colorMatrix[3], colorMatrix[8], colorMatrix[13],  colorMatrix[18],
                        colorMatrix[4], colorMatrix[9], colorMatrix[14],  colorMatrix[19]);
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COLOR_MATRIX);
+      if (!filter) {
+        return nullptr;
+      }
       filter->SetAttribute(ATT_COLOR_MATRIX_MATRIX, matrix);
       filter->SetAttribute(ATT_COLOR_MATRIX_ALPHA_MODE, (uint32_t)ALPHA_MODE_STRAIGHT);
       filter->SetInput(IN_COLOR_MATRIX_IN, aSources[0]);
@@ -742,6 +795,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         MORPHOLOGY_OPERATOR_ERODE : MORPHOLOGY_OPERATOR_DILATE;
 
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::MORPHOLOGY);
+      if (!filter) {
+        return nullptr;
+      }
       filter->SetAttribute(ATT_MORPHOLOGY_RADII, IntSize(rx, ry));
       filter->SetAttribute(ATT_MORPHOLOGY_OPERATOR, (uint32_t)op);
       filter->SetInput(IN_MORPHOLOGY_IN, aSources[0]);
@@ -752,6 +808,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
     {
       Color color = atts.GetColor(eFloodColor);
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
+      if (!filter) {
+        return nullptr;
+      }
       filter->SetAttribute(ATT_FLOOD_COLOR, color);
       return filter;
     }
@@ -759,6 +818,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
     case PrimitiveType::Tile:
     {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TILE);
+      if (!filter) {
+        return nullptr;
+      }
       filter->SetAttribute(ATT_TILE_SOURCE_RECT, aSourceRegions[0]);
       filter->SetInput(IN_TILE_IN, aSources[0]);
       return filter;
@@ -795,6 +857,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
     case PrimitiveType::ConvolveMatrix:
     {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CONVOLVE_MATRIX);
+      if (!filter) {
+        return nullptr;
+      }
       filter->SetAttribute(ATT_CONVOLVE_MATRIX_KERNEL_SIZE, atts.GetIntSize(eConvolveMatrixKernelSize));
       const nsTArray<float>& matrix = atts.GetFloats(eConvolveMatrixKernelMatrix);
       filter->SetAttribute(ATT_CONVOLVE_MATRIX_KERNEL_MATRIX,
@@ -832,6 +897,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
     case PrimitiveType::DisplacementMap:
     {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::DISPLACEMENT_MAP);
+      if (!filter) {
+        return nullptr;
+      }
       filter->SetAttribute(ATT_DISPLACEMENT_MAP_SCALE,
                            atts.GetFloat(eDisplacementMapScale));
       static const uint8_t channel[SVG_CHANNEL_A+1] = {
@@ -853,6 +921,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
     case PrimitiveType::Turbulence:
     {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TURBULENCE);
+      if (!filter) {
+        return nullptr;
+      }
       filter->SetAttribute(ATT_TURBULENCE_BASE_FREQUENCY,
                            atts.GetSize(eTurbulenceBaseFrequency));
       filter->SetAttribute(ATT_TURBULENCE_NUM_OCTAVES,
@@ -879,6 +950,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       uint32_t op = atts.GetUint(eCompositeOperator);
       if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
         filter = aDT->CreateFilter(FilterType::ARITHMETIC_COMBINE);
+        if (!filter) {
+          return nullptr;
+        }
         const nsTArray<float>& coefficients = atts.GetFloats(eCompositeCoefficients);
         filter->SetAttribute(ATT_ARITHMETIC_COMBINE_COEFFICIENTS,
                              coefficients.Elements(), coefficients.Length());
@@ -886,6 +960,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         filter->SetInput(IN_ARITHMETIC_COMBINE_IN2, aSources[1]);
       } else {
         filter = aDT->CreateFilter(FilterType::COMPOSITE);
+        if (!filter) {
+          return nullptr;
+        }
         static const uint8_t operators[SVG_FECOMPOSITE_OPERATOR_ARITHMETIC] = {
           COMPOSITE_OPERATOR_OVER, // SVG_FECOMPOSITE_OPERATOR_UNKNOWN
           COMPOSITE_OPERATOR_OVER, // SVG_FECOMPOSITE_OPERATOR_OVER
@@ -910,6 +987,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         return aSources[0];
       }
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COMPOSITE);
+      if (!filter) {
+        return nullptr;
+      }
       filter->SetAttribute(ATT_COMPOSITE_OPERATOR, (uint32_t)COMPOSITE_OPERATOR_OVER);
       for (size_t i = 0; i < aSources.Length(); i++) {
         filter->SetInput(IN_COMPOSITE_IN_START + i, aSources[i]);
@@ -931,6 +1011,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       RefPtr<FilterNode> offsetBlur = FilterWrappers::Offset(aDT, blur,
                                         atts.GetIntPoint(eDropShadowOffset));
       RefPtr<FilterNode> flood = aDT->CreateFilter(FilterType::FLOOD);
+      if (!flood) {
+        return nullptr;
+      }
       Color color = atts.GetColor(eDropShadowColor);
       if (aDescription.InputColorSpace(0) == ColorSpace::LinearRGB) {
         color = Color(gsRGBToLinearRGBMap[uint8_t(color.r * 255)],
@@ -941,11 +1024,17 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       flood->SetAttribute(ATT_FLOOD_COLOR, color);
 
       RefPtr<FilterNode> composite = aDT->CreateFilter(FilterType::COMPOSITE);
+      if (!composite) {
+        return nullptr;
+      }
       composite->SetAttribute(ATT_COMPOSITE_OPERATOR, (uint32_t)COMPOSITE_OPERATOR_IN);
       composite->SetInput(IN_COMPOSITE_IN_START, offsetBlur);
       composite->SetInput(IN_COMPOSITE_IN_START + 1, flood);
 
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COMPOSITE);
+      if (!filter) {
+        return nullptr;
+      }
       filter->SetAttribute(ATT_COMPOSITE_OPERATOR, (uint32_t)COMPOSITE_OPERATOR_OVER);
       filter->SetInput(IN_COMPOSITE_IN_START, composite);
       filter->SetInput(IN_COMPOSITE_IN_START + 1, aSources[0]);
@@ -978,6 +1067,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       };
       RefPtr<FilterNode> filter =
         aDT->CreateFilter(filterType[isSpecular][lightType]);
+      if (!filter) {
+        return nullptr;
+      }
 
       filter->SetAttribute(ATT_LIGHTING_COLOR,
                            atts.GetColor(eLightingColor));
@@ -1037,6 +1129,9 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         aInputImages[atts.GetUint(eImageInputIndex)];
 
       RefPtr<FilterNode> transform = aDT->CreateFilter(FilterType::TRANSFORM);
+      if (!transform) {
+        return nullptr;
+      }
       transform->SetInput(IN_TRANSFORM_IN, inputImage);
       transform->SetAttribute(ATT_TRANSFORM_MATRIX, TM);
       transform->SetAttribute(ATT_TRANSFORM_FILTER, atts.GetUint(eImageFilter));
@@ -1247,7 +1342,10 @@ FilterSupport::RenderFilterDescription(DrawTarget* aDT,
     FilterNodeGraphFromDescription(aDT, aFilter, aRenderRect,
                                    aSourceGraphic, aSourceGraphicRect, aFillPaint, aFillPaintRect,
                                    aStrokePaint, aStrokePaintRect, aAdditionalImages);
-
+  if (!resultFilter) {
+    gfxWarning() << "Filter is NULL.";
+    return;
+  }
   aDT->DrawFilter(resultFilter, aRenderRect, aDestPoint, aOptions);
 }
 
