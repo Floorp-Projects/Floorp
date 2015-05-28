@@ -6,6 +6,9 @@
 
 #include "mozilla/dom/cache/DBAction.h"
 
+#include "mozilla/dom/cache/Connection.h"
+#include "mozilla/dom/cache/DBSchema.h"
+#include "mozilla/dom/cache/FileUtils.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/net/nsFileProtocolHandler.h"
 #include "mozIStorageConnection.h"
@@ -15,8 +18,6 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "DBSchema.h"
-#include "FileUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -79,7 +80,12 @@ DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
     // Save this connection in the shared Data object so later Actions can
     // use it.  This avoids opening a new connection for every Action.
     if (aOptionalData) {
-      aOptionalData->SetConnection(conn);
+      // Since we know this connection will be around for as long as the
+      // Cache is open, use our special wrapped connection class.  This
+      // will let us perform certain operations once the Cache origin
+      // is closed.
+      nsCOMPtr<mozIStorageConnection> wrapped = new Connection(conn);
+      aOptionalData->SetConnection(wrapped);
     }
   }
 
