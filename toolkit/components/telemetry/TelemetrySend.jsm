@@ -54,6 +54,8 @@ const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
 
 const PING_FORMAT_VERSION = 4;
 
+const PING_TYPE_DELETION = "deletion";
+
 // We try to spread "midnight" pings out over this interval.
 const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * 60 * 1000;
 // We delay sending "midnight" pings on this client by this interval.
@@ -91,6 +93,15 @@ let Policy = {
 function isV4PingFormat(aPing) {
   return ("id" in aPing) && ("application" in aPing) &&
          ("version" in aPing) && (aPing.version >= 2);
+}
+
+/**
+ * Check if the provided ping is a deletion ping.
+ * @param {Object} aPing The ping to check.
+ * @return {Boolean} True if the ping is a deletion ping, false otherwise.
+ */
+function isDeletionPing(aPing) {
+  return isV4PingFormat(aPing) && (aPing.type == PING_TYPE_DELETION);
 }
 
 function tomorrow(date) {
@@ -386,7 +397,7 @@ let TelemetrySendImpl = {
   },
 
   submitPing: function(ping) {
-    if (!this._canSend()) {
+    if (!this._canSend(ping)) {
       this._log.trace("submitPing - Telemetry is not allowed to send pings.");
       return Promise.resolve();
     }
@@ -566,7 +577,7 @@ let TelemetrySendImpl = {
   },
 
   _doPing: function(ping, id, isPersisted) {
-    if (!this._canSend()) {
+    if (!this._canSend(ping)) {
       // We can't send the pings to the server, so don't try to.
       this._log.trace("_doPing - Sending is disabled.");
       return Promise.resolve();
@@ -670,12 +681,14 @@ let TelemetrySendImpl = {
 
   /**
    * Check if pings can be sent to the server. If FHR is not allowed to upload,
-   * pings are not sent to the server (Telemetry is a sub-feature of FHR).
+   * pings are not sent to the server (Telemetry is a sub-feature of FHR). If trying
+   * to send a deletion ping, don't block it.
    * If unified telemetry is off, don't send pings if Telemetry is disabled.
    *
+   * @param {Object} [ping=null] A ping to be checked.
    * @return {Boolean} True if pings can be send to the servers, false otherwise.
    */
-  _canSend: function() {
+  _canSend: function(ping = null) {
     // We only send pings from official builds, but allow overriding this for tests.
     if (!Telemetry.isOfficialTelemetry && !this._testMode) {
       return false;
@@ -684,6 +697,10 @@ let TelemetrySendImpl = {
     // With unified Telemetry, the FHR upload setting controls whether we can send pings.
     // The Telemetry pref enables sending extended data sets instead.
     if (IS_UNIFIED_TELEMETRY) {
+      // Deletion pings are sent even if the upload is disabled.
+      if (ping && isDeletionPing(ping)) {
+        return true;
+      }
       return Preferences.get(PREF_FHR_UPLOAD_ENABLED, false);
     }
 
