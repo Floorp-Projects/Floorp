@@ -60,8 +60,6 @@ function setForm(value) {
     input.focus();
 }
 
-var autocompleteMenu = getAutocompletePopup();
-
 // Restore the form to the default state.
 function restoreForm() {
     setForm("");
@@ -77,14 +75,12 @@ var testNum = 0;
 var prevValue;
 var expectingPopup = false;
 
-function expectPopup()
-{
+function expectPopup() {
   info("expecting popup for test " + testNum);
   expectingPopup = true;
 }
 
-function popupShownListener()
-{
+function popupShownListener() {
   info("popup shown for test " + testNum);
   if (expectingPopup) {
     expectingPopup = false;
@@ -95,7 +91,7 @@ function popupShownListener()
   }
 }
 
-SpecialPowers.addAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
+registerPopupShownListener(popupShownListener);
 
 /*
 * Main section of test...
@@ -445,7 +441,6 @@ function runTest() {
         ok(event.bubbles, "input event should bubble");
         ok(event.cancelable, "input event should be cancelable");
         checkForm("Google");
-        SpecialPowers.removeAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
         SimpleTest.finish();
       }, false);
 
@@ -456,20 +451,13 @@ function runTest() {
 
     default:
       ok(false, "Unexpected invocation of test #" + testNum);
-      SpecialPowers.removeAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
       SimpleTest.finish();
       return;
     }
 }
 
-function waitForMenuChange(expectedCount)
-{
-  if (autocompleteMenu.tree.view.rowCount != expectedCount) {
-    SimpleTest.executeSoon(function () waitForMenuChange(expectedCount));
-  }
-  else {
-    runTest();
-  }
+function waitForMenuChange(expectedCount) {
+    notifyMenuChanged(expectedCount, null, runTest);
 }
 
 function checkMenuEntries(expectedValues, testNum) {
@@ -477,19 +465,6 @@ function checkMenuEntries(expectedValues, testNum) {
     is(actualValues.length, expectedValues.length, testNum + " Checking length of expected menu");
     for (var i = 0; i < expectedValues.length; i++)
         is(actualValues[i], expectedValues[i], testNum + " Checking menu entry #"+i);
-}
-
-function getMenuEntries() {
-    var entries = [];
-
-    // Could perhaps pull values directly from the controller, but it seems
-    // more reliable to test the values that are actually in the tree?
-    var column = autocompleteMenu.tree.columns[0];
-    var numRows = autocompleteMenu.tree.view.rowCount;
-    for (var i = 0; i < numRows; i++) {
-        entries.push(autocompleteMenu.tree.view.getValueAt(i, column));
-    }
-    return entries;
 }
 
 function startTest() {
