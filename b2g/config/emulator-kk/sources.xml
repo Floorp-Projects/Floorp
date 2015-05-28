@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="e862ab9177af664f00b4522e2350f4cb13866d73">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="8c9b6f0c3c281ba6e5fad7ecf5515006b0f2005f"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="6b567638ce9a2ad716908a1e3a4eaad86b34bef9"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="fffc68521ebb1501d6b015c6d1c4a17a04fdb2e2"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -115,7 +115,7 @@
   <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="6a1bb59af65b6485b1090522f66fac95c3f9e22c"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="b562b01c93de9578d5db537b6a602a38e1aaa0ce"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="387f03e815f57d536dd922706db1622bddba8d81"/>
-  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="48d2332e6d8400cdc0de273ceff2abe8aaababf8"/>
+  <project name="platform_system_bluetoothd" path="system/bluetoothd" remote="b2g" revision="4132c66e4bc78e119eb1cf34b6cf77db8e714e9a"/>
   <project name="platform/system/extras" path="system/extras" revision="5356165f67f4a81c2ef28671c13697f1657590df"/>
   <project name="platform/system/media" path="system/media" revision="be0e2fe59a8043fa5200f75697df9220a99abe9d"/>
   <project name="platform_system_libfdio" path="system/libfdio" remote="b2g" revision="3c5405863d2002f665ef2b901abb3853c420129b"/>
