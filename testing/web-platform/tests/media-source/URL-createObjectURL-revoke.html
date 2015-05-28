@@ -24,6 +24,20 @@ async_test(function(t) {
         assert_equals(mediaSource.readyState, 'closed');
     }));
 }, "Check revoking behavior of URL.revokeObjectURL(url).");
+async_test(function(t) {
+    var mediaSource = new MediaSource();
+    var url = window.URL.createObjectURL(mediaSource);
+    var video = document.createElement('video');
+    var unexpectedErrorHandler = t.unreached_func("Unexpected error.")
+    video.addEventListener('error', unexpectedErrorHandler);
+    video.src = url;
+    window.URL.revokeObjectURL(url);
+    mediaSource.addEventListener('sourceopen', t.step_func_done(function(e) {
+        assert_equals(mediaSource.readyState, 'open');
+        mediaSource.endOfStream();
+        video.removeEventListener('error', unexpectedErrorHandler);
+    }));
+}, "Check referenced MediaSource can open after URL.revokeObjectURL(url).");
 </script>
 </body>
 </html>
