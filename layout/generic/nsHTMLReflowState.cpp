@@ -255,8 +255,13 @@ nsCSSOffsetState::ComputeWidthValue(nscoord aContainingBlockWidth,
 {
   nscoord inside = 0, outside = ComputedPhysicalBorderPadding().LeftRight() +
                                 ComputedPhysicalMargin().LeftRight();
-  if (aBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
-    inside = ComputedPhysicalBorderPadding().LeftRight();
+  switch (aBoxSizing) {
+    case NS_STYLE_BOX_SIZING_BORDER:
+      inside = ComputedPhysicalBorderPadding().LeftRight();
+      break;
+    case NS_STYLE_BOX_SIZING_PADDING:
+      inside = ComputedPhysicalPadding().LeftRight();
+      break;
   }
   outside -= inside;
 
@@ -270,8 +275,13 @@ nsCSSOffsetState::ComputeHeightValue(nscoord aContainingBlockHeight,
                                      const nsStyleCoord& aCoord)
 {
   nscoord inside = 0;
-  if (aBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
-    inside = ComputedPhysicalBorderPadding().TopBottom();
+  switch (aBoxSizing) {
+    case NS_STYLE_BOX_SIZING_BORDER:
+      inside = ComputedPhysicalBorderPadding().TopBottom();
+      break;
+    case NS_STYLE_BOX_SIZING_PADDING:
+      inside = ComputedPhysicalPadding().TopBottom();
+      break;
   }
   return nsLayoutUtils::ComputeHeightValue(aContainingBlockHeight, 
                                            inside, aCoord);
@@ -1086,8 +1096,12 @@ nsHTMLReflowState::CalculateHorizBorderPaddingMargin(
   nscoord outside =
     padding.LeftRight() + border.LeftRight() + margin.LeftRight();
   nscoord inside = 0;
-  if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
-    inside += border.LeftRight() + padding.LeftRight();
+  switch (mStylePosition->mBoxSizing) {
+    case NS_STYLE_BOX_SIZING_BORDER:
+      inside += border.LeftRight();
+      // fall through
+    case NS_STYLE_BOX_SIZING_PADDING:
+      inside += padding.LeftRight();
   }
   outside -= inside;
   *aInsideBoxSizing = inside;
