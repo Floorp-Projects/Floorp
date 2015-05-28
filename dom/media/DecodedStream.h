@@ -21,6 +21,7 @@ class DecodedStream;
 class DecodedStreamGraphListener;
 class OutputStreamListener;
 class ReentrantMonitor;
+class MediaStreamGraph;
 
 namespace layers {
 class Image;
@@ -94,7 +95,7 @@ public:
   explicit DecodedStream(ReentrantMonitor& aMonitor);
   DecodedStreamData* GetData();
   void DestroyData();
-  void RecreateData(int64_t aInitialTime, SourceMediaStream* aStream);
+  void RecreateData(int64_t aInitialTime, MediaStreamGraph* aGraph);
   nsTArray<OutputStreamData>& OutputStreams();
   ReentrantMonitor& GetReentrantMonitor();
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
