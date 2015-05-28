@@ -1083,10 +1083,8 @@ void
 MAssertRange::printOpcode(GenericPrinter& out) const
 {
     MDefinition::printOpcode(out);
-    Sprinter sp(GetJitContext()->cx);
-    sp.init();
-    assertedRange()->dump(sp);
-    out.printf(" %s", sp.string());
+    out.put(" ");
+    assertedRange()->dump(out);
 }
 
 const char*
