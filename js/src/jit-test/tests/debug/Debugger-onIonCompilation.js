@@ -6,13 +6,6 @@ function test() {
         throw "Skipping test: Ion compilation is disabled/prevented.";
 };
 
-// Skip this test if we cannot reliably compile with Ion.
-try {
-    test();
-} catch (x) {
-    if (typeof x == "string")
-        quit();
-}
 
 // Functions used to assert the representation of the graph which is exported in
 // the JSON string argument.
@@ -65,12 +58,22 @@ g.eval(`
 `);
 
 // Wrap the testing function.
-function check() {
+function check(assert) {
   // print('reset compilation counter.');
   with ({}) {       // Prevent Ion compilation.
     gc();           // Flush previous compilation.
     hits = 0;       // Synchronized hit counts.
-    test();         // Wait until the next Ion compilation.
+
+    try {           // Skip this test if we cannot reliably compile with Ion.
+        test();         // Wait until the next Ion compilation.
+    } catch (msg) {
+        if (typeof msg == "string") {
+            // print(msg);
+            return;
+        }
+    }
+
+    assert();       // Run the assertions given as arguments.
   }
 }
 
@@ -84,9 +87,11 @@ g.eval(`
     parent.hits++;
   };
 `);
-check();
-// '>= 1' is needed because --ion-eager is too eager.
-assertEq(hits >= 1, true);
+
+check(function () {
+    // '>= 1' is needed because --ion-eager is too eager.
+    assertEq(hits >= 1, true);
+});
 
 
 // Try re-entering the same compartment as the compiled script.
@@ -97,8 +102,7 @@ g.dbg.onIonCompilation = function (graph) {
   assertOnIonCompilationArgument(graph);
   hits++;
 };
-check();
-assertEq(hits >= 1, true);
+check(function () { assertEq(hits >= 1, true); });
 
 // Disable the debugger, and redo the last 2 tests.
 g.eval(`
@@ -107,12 +111,11 @@ g.eval(`
     parent.hits++;
   };
 `);
-check();
-assertEq(hits, 0);
+check(function () { assertEq(hits, 0); });
+
 
 g.dbg.enabled = false;
 g.dbg.onIonCompilation = function (graph) {
   hits++;
 };
-check();
-assertEq(hits, 0);
+check(function () { assertEq(hits, 0); });
