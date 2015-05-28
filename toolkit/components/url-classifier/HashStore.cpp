@@ -553,7 +553,7 @@ ExpireEntries(FallibleTArray<T>* aEntries, ChunkSet& aExpirations)
     }
   }
 
-  aEntries->SetLength(addIter - aEntries->Elements());
+  aEntries->TruncateLength(addIter - aEntries->Elements());
 }
 
 nsresult
@@ -977,7 +977,7 @@ RemoveDeadSubPrefixes(SubPrefixArray& aSubs, ChunkSet& aAddChunks)
   }
 
   LOG(("Removed %u dead SubPrefix entries.", subEnd - subIter));
-  aSubs.SetLength(subIter - aSubs.Elements());
+  aSubs.TruncateLength(subIter - aSubs.Elements());
 }
 
 #ifdef DEBUG

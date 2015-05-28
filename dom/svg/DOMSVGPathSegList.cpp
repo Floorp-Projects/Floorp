@@ -209,8 +209,7 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
     }
 
     // Only now may we truncate mItems
-    mItems.SetLength(newLength);
-
+    mItems.TruncateLength(newLength);
   } else if (dataIndex < dataLength) {
     // aNewValue has more items than our previous internal counterpart
 
