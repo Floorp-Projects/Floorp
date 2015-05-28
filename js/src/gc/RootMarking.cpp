@@ -552,20 +552,30 @@ class BufferGrayRootsTracer : public JS::CallbackTracer
     // Set to false if we OOM while buffering gray roots.
     bool bufferingGrayRootsFailed;
 
-    void appendGrayRoot(gc::TenuredCell* thing, JS::TraceKind kind);
+    void trace(void** thingp, JS::TraceKind kind) override;
 
   public:
     explicit BufferGrayRootsTracer(JSRuntime* rt)
-      : JS::CallbackTracer(rt, grayTraceCallback), bufferingGrayRootsFailed(false)
+      : JS::CallbackTracer(rt), bufferingGrayRootsFailed(false)
     {}
 
-    static void grayTraceCallback(JS::CallbackTracer* trc, void** thingp, JS::TraceKind kind) {
-        auto tracer = static_cast<BufferGrayRootsTracer*>(trc);
-        tracer->appendGrayRoot(gc::TenuredCell::fromPointer(*thingp), kind);
-    }
-
     bool failed() const { return bufferingGrayRootsFailed; }
+
+#ifdef DEBUG
+    TracerKind getTracerKind() const override { return TracerKind::GrayBuffering; }
+#endif
 };
+
+#ifdef DEBUG
+// Return true if this trace is happening on behalf of gray buffering during
+// the marking phase of incremental GC.
+bool
+js::IsBufferGrayRootsTracer(JSTracer* trc)
+{
+    return trc->isCallbackTracer() &&
+           trc->asCallbackTracer()->getTracerKind() == JS::CallbackTracer::TracerKind::GrayBuffering;
+}
+#endif
 
 void
 js::gc::GCRuntime::bufferGrayRoots()
@@ -595,12 +605,14 @@ struct SetMaybeAliveFunctor {
 };
 
 void
-BufferGrayRootsTracer::appendGrayRoot(TenuredCell* thing, JS::TraceKind kind)
+BufferGrayRootsTracer::trace(void** thingp, JS::TraceKind kind)
 {
     MOZ_ASSERT(runtime()->isHeapBusy());
 
     if (bufferingGrayRootsFailed)
         return;
+
+    gc::TenuredCell* thing = gc::TenuredCell::fromPointer(*thingp);
 
     Zone* zone = thing->zone();
     if (zone->isCollecting()) {
@@ -632,14 +644,5 @@ GCRuntime::resetBufferedGrayRoots() const
                "Do not clear the gray buffers unless we are Failed or becoming Unused");
     for (GCZonesIter zone(rt); !zone.done(); zone.next())
         zone->gcGrayRoots.clearAndFree();
-}
-
-// Return true if this trace is happening on behalf of gray buffering during
-// the marking phase of incremental GC.
-bool
-js::IsBufferingGrayRoots(JSTracer* trc)
-{
-    return trc->isCallbackTracer() &&
-           trc->asCallbackTracer()->hasCallback(BufferGrayRootsTracer::grayTraceCallback);
 }
 
