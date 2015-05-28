@@ -2156,6 +2156,7 @@ bool
 ASTSerializer::importDeclaration(ParseNode* pn, MutableHandleValue dst)
 {
     MOZ_ASSERT(pn->isKind(PNK_IMPORT));
+    MOZ_ASSERT(pn->isArity(PN_BINARY));
     MOZ_ASSERT(pn->pn_left->isKind(PNK_IMPORT_SPEC_LIST));
     MOZ_ASSERT(pn->pn_right->isKind(PNK_STRING));
 
