@@ -175,7 +175,7 @@ SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(FallibleTArray<double
 
     if (i == 0 || (segType != PATHSEG_MOVETO_ABS &&
                    segType != PATHSEG_MOVETO_REL)) {
-      if (!aOutput->AppendElement(state.length)) {
+      if (!aOutput->AppendElement(state.length, fallible)) {
         return false;
       }
     }

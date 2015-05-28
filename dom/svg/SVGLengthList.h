@@ -123,7 +123,7 @@ private:
   }
 
   bool AppendItem(SVGLength aLength) {
-    return !!mLengths.AppendElement(aLength);
+    return !!mLengths.AppendElement(aLength, fallible);
   }
 
 protected:

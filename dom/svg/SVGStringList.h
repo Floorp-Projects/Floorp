@@ -125,7 +125,7 @@ private:
   }
 
   bool AppendItem(const nsAString &aString) {
-    if (mStrings.AppendElement(aString)) {
+    if (mStrings.AppendElement(aString, fallible)) {
       mIsSet = true;
       return true;
     }

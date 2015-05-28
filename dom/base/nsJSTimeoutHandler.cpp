@@ -368,7 +368,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
       return NS_ERROR_OUT_OF_MEMORY;
     }
     for (uint32_t idx = 0; idx < argCount; ++idx) {
-      *args.AppendElement() = argv[idx + 2];
+      *args.AppendElement(fallible) = argv[idx + 2];
     }
     args.SwapElements(mArgs);
   } else {

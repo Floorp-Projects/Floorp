@@ -129,7 +129,7 @@ private:
   }
 
   bool AppendItem(const nsSVGTransform& aTransform) {
-    return !!mItems.AppendElement(aTransform);
+    return !!mItems.AppendElement(aTransform, fallible);
   }
 
 protected:
