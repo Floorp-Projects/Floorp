@@ -21,8 +21,8 @@ class SpeechGrammar;
 
 native SpeechRecognitionWeakPtr(mozilla::WeakPtr<mozilla::dom::SpeechRecognition>);
 [ptr] native AudioSegmentPtr(mozilla::AudioSegment);
-[ptr] native SpeechGrammarListPtr(mozilla::dom::SpeechGrammarList);
 [ptr] native SpeechGrammarPtr(mozilla::dom::SpeechGrammar);
+[ptr] native SpeechGrammarListPtr(mozilla::dom::SpeechGrammarList);
 
 [uuid(374583f0-4507-11e4-a183-164230d1df67)]
 interface nsISpeechGrammarCompilationCallback : nsISupports {
@@ -33,7 +33,7 @@ interface nsISpeechGrammarCompilationCallback : nsISupports {
 interface nsISpeechRecognitionService : nsISupports {
     void initialize(in SpeechRecognitionWeakPtr aSpeechRecognition);
     void processAudioSegment(in AudioSegmentPtr aAudioSegment, in long aSampleRate);
-    void validateAndSetGrammarList(in SpeechGrammarListPtr aSpeechGramarList, in nsISpeechGrammarCompilationCallback aCallback);
+    void validateAndSetGrammarList(in SpeechGrammarPtr aSpeechGrammar, in nsISpeechGrammarCompilationCallback aCallback);
     void soundEnd();
     void abort();
 };
