@@ -94,6 +94,9 @@ toolkit.jar:
         skin/classic/mozapps/profile/profileicon-XP.png            (profile/profileicon-XP.png)
         skin/classic/mozapps/update/downloadButtons-XP.png         (update/downloadButtons-XP.png)
 
+#if MOZ_BUILD_APP == browser
+../browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/chrome.jar:
+#endif
 % override chrome://mozapps/skin/downloads/downloadButtons.png            chrome://mozapps/skin/downloads/downloadButtons-XP.png        osversion<6
 % override chrome://mozapps/skin/downloads/downloadIcon.png               chrome://mozapps/skin/downloads/downloadIcon-XP.png           osversion<6
 % override chrome://mozapps/skin/extensions/category-discover.png         chrome://mozapps/skin/extensions/category-discover-XP.png     osversion<6
@@ -112,6 +115,9 @@ toolkit.jar:
 % override chrome://mozapps/skin/update/downloadButtons.png               chrome://mozapps/skin/update/downloadButtons-XP.png           osversion<6
 #endif
 
+#if MOZ_BUILD_APP == browser
+../browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/chrome.jar:
+#endif
 % override chrome://mozapps/skin/extensions/category-dictionaries.png     chrome://mozapps/skin/extensions/dictionaryGeneric.png
 % override chrome://mozapps/skin/extensions/category-experiments.png      chrome://mozapps/skin/extensions/experimentGeneric.png
 % override chrome://mozapps/skin/extensions/category-extensions.png       chrome://mozapps/skin/extensions/extensionGeneric.png
