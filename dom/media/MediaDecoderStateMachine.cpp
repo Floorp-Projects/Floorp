@@ -422,6 +422,19 @@ static bool ZeroDurationAtLastChunk(VideoSegment& aInput)
   return lastVideoStratTime == aInput.GetDuration();
 }
 
+static void
+UpdateStreamBlocking(MediaStream* aStream, bool aBlocking)
+{
+  int32_t delta = aBlocking ? 1 : -1;
+  if (NS_IsMainThread()) {
+    aStream->ChangeExplicitBlockerCount(delta);
+  } else {
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<int32_t>(
+      aStream, &MediaStream::ChangeExplicitBlockerCount, delta);
+    AbstractThread::MainThread()->Dispatch(r.forget());
+  }
+}
+
 void MediaDecoderStateMachine::SendStreamData()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -463,6 +476,11 @@ void MediaDecoderStateMachine::SendStreamData()
       }
       mediaStream->FinishAddTracks();
       stream->mStreamInitialized = true;
+
+      // Make sure stream blocking is updated before sending stream data so we
+      // don't 'leak' data when the stream is supposed to be blocked.
+      UpdateStreamBlockingForStateMachinePlaying();
+      UpdateStreamBlocking(mediaStream, false);
     }
 
     if (mInfo.HasAudio()) {
@@ -1271,7 +1289,7 @@ void MediaDecoderStateMachine::StopPlayback()
   // so it can pause audio playback.
   mDecoder->GetReentrantMonitor().NotifyAll();
   NS_ASSERTION(!IsPlaying(), "Should report not playing at end of StopPlayback()");
-  mDecoder->UpdateStreamBlockingForStateMachinePlaying();
+  UpdateStreamBlockingForStateMachinePlaying();
 
   DispatchDecodeTasksIfNeeded();
 }
@@ -1309,7 +1327,7 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   NS_ENSURE_SUCCESS_VOID(rv);
 
   mDecoder->GetReentrantMonitor().NotifyAll();
-  mDecoder->UpdateStreamBlockingForStateMachinePlaying();
+  UpdateStreamBlockingForStateMachinePlaying();
   DispatchDecodeTasksIfNeeded();
 }
 
@@ -3485,6 +3503,37 @@ uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
   return (mReader->IsAsync() && mReader->VideoIsHardwareAccelerated())
     ? std::max<uint32_t>(sVideoQueueHWAccelSize, MIN_VIDEO_QUEUE_SIZE)
     : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
+}
+
+void MediaDecoderStateMachine::DispatchAudioCaptured()
+{
+  nsRefPtr<MediaDecoderStateMachine> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void
+  {
+    MOZ_ASSERT(self->OnTaskQueue());
+    ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+    if (!self->mAudioCaptured) {
+      self->mAudioCaptured = true;
+      self->ScheduleStateMachine();
+    }
+  });
+  TaskQueue()->Dispatch(r.forget());
+}
+
+void MediaDecoderStateMachine::UpdateStreamBlockingForStateMachinePlaying()
+{
+  AssertCurrentThreadInMonitor();
+
+  auto stream = mDecoder->GetDecodedStream();
+  if (!stream) {
+    return;
+  }
+
+  bool blocking = !IsPlaying();
+  if (blocking != stream->mHaveBlockedForStateMachineNotPlaying) {
+    stream->mHaveBlockedForStateMachineNotPlaying = blocking;
+    UpdateStreamBlocking(stream->mStream, blocking);
+  }
 }
 
 } // namespace mozilla

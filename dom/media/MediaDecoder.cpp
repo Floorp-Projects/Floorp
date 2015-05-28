@@ -304,28 +304,6 @@ void MediaDecoder::UpdateStreamBlockingForPlayState()
   }
 }
 
-void MediaDecoder::UpdateStreamBlockingForStateMachinePlaying()
-{
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  if (!GetDecodedStream()) {
-    return;
-  }
-  bool blockForStateMachineNotPlaying =
-    mDecoderStateMachine && !mDecoderStateMachine->IsPlaying();
-  if (blockForStateMachineNotPlaying != GetDecodedStream()->mHaveBlockedForStateMachineNotPlaying) {
-    GetDecodedStream()->mHaveBlockedForStateMachineNotPlaying = blockForStateMachineNotPlaying;
-    int32_t delta = blockForStateMachineNotPlaying ? 1 : -1;
-    if (NS_IsMainThread()) {
-      GetDecodedStream()->mStream->ChangeExplicitBlockerCount(delta);
-    } else {
-      nsCOMPtr<nsIRunnable> runnable =
-          NS_NewRunnableMethodWithArg<int32_t>(GetDecodedStream()->mStream.get(),
-              &MediaStream::ChangeExplicitBlockerCount, delta);
-      NS_DispatchToMainThread(runnable);
-    }
-  }
-}
-
 void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
                                          MediaStreamGraph* aGraph)
 {
@@ -334,7 +312,6 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs,
   DECODER_LOG("RecreateDecodedStream aStartTimeUSecs=%lld!", aStartTimeUSecs);
 
   mDecodedStream.RecreateData(aStartTimeUSecs, aGraph);
-  UpdateStreamBlockingForStateMachinePlaying();
   UpdateStreamBlockingForPlayState();
 }
 
