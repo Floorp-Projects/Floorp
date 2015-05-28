@@ -93,11 +93,11 @@ public:
 class DecodedStream {
 public:
   explicit DecodedStream(ReentrantMonitor& aMonitor);
-  DecodedStreamData* GetData();
+  DecodedStreamData* GetData() const;
   void DestroyData();
   void RecreateData(int64_t aInitialTime, MediaStreamGraph* aGraph);
   nsTArray<OutputStreamData>& OutputStreams();
-  ReentrantMonitor& GetReentrantMonitor();
+  ReentrantMonitor& GetReentrantMonitor() const;
   void Connect(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
 
 private:

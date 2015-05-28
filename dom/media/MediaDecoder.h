@@ -395,21 +395,6 @@ public:
   // replaying after the input as ended. In the latter case, the new source is
   // not connected to streams created by captureStreamUntilEnded.
 
-  /**
-   * Recreates mDecodedStream. Call this to create mDecodedStream at first,
-   * and when seeking, to ensure a new stream is set up with fresh buffers.
-   * aStartTimeUSecs is relative to the state machine's mStartTime.
-   * Decoder monitor must be held.
-   */
-  void RecreateDecodedStream(int64_t aStartTimeUSecs,
-                             MediaStreamGraph* aGraph = nullptr);
-
-  DecodedStreamData* GetDecodedStream()
-  {
-    GetReentrantMonitor().AssertCurrentThreadIn();
-    return mDecodedStream.GetData();
-  }
-
   // Add an output stream. All decoder output will be sent to the stream.
   // The stream is initially blocked. The decoder is responsible for unblocking
   // it while it is playing back.
@@ -1009,13 +994,6 @@ private:
 #endif
 
 protected:
-  // The SourceMediaStream we are using to feed the mOutputStreams. This stream
-  // is never exposed outside the decoder.
-  // Only written on the main thread while holding the monitor. Therefore it
-  // can be read on any thread while holding the monitor, or on the main thread
-  // without holding the monitor.
-  DecodedStream mDecodedStream;
-
   // Set to one of the valid play states.
   // This can only be changed on the main thread while holding the decoder
   // monitor. Thus, it can be safely read while holding the decoder monitor
