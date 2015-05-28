@@ -27,7 +27,7 @@ task:
     env:
       # inputs to mozharness
       MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
-      MOZHARNESS_CONFIG: 'builds/releng_base_android_64_builds.py'
+      MOZHARNESS_CONFIG: builds/releng_base_android_64_builds.py
       MH_CUSTOM_BUILD_VARIANT_CFG: api-11
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
