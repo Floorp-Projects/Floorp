@@ -27,7 +27,7 @@ class Selection;
 }
 
 /***************************************************************************
- * stack based helper class for batching a collection of txns inside a 
+ * stack based helper class for batching a collection of txns inside a
  * placeholder txn.
  */
 class MOZ_STACK_CLASS nsAutoPlaceHolderBatch
@@ -35,13 +35,13 @@ class MOZ_STACK_CLASS nsAutoPlaceHolderBatch
   private:
     nsCOMPtr<nsIEditor> mEd;
   public:
-    nsAutoPlaceHolderBatch( nsIEditor *aEd, nsIAtom *atom) : mEd(do_QueryInterface(aEd)) 
+    nsAutoPlaceHolderBatch( nsIEditor *aEd, nsIAtom *atom) : mEd(do_QueryInterface(aEd))
                    { if (mEd) mEd->BeginPlaceHolderTransaction(atom); }
     ~nsAutoPlaceHolderBatch() { if (mEd) mEd->EndPlaceHolderTransaction(); }
 };
 
 /***************************************************************************
- * stack based helper class for batching a collection of txns.  
+ * stack based helper class for batching a collection of txns.
  * Note: I changed this to use placeholder batching so that we get
  * proper selection save/restore across undo/redo.
  */
@@ -66,7 +66,7 @@ class MOZ_STACK_CLASS nsAutoSelectionReset
   public:
     /** constructor responsible for remembering all state needed to restore aSel */
     nsAutoSelectionReset(mozilla::dom::Selection* aSel, nsEditor* aEd);
-    
+
     /** destructor restores mSel to its former state */
     ~nsAutoSelectionReset();
 
@@ -80,25 +80,25 @@ class MOZ_STACK_CLASS nsAutoSelectionReset
 class MOZ_STACK_CLASS nsAutoRules
 {
   public:
-  
+
   nsAutoRules(nsEditor *ed, EditAction action,
               nsIEditor::EDirection aDirection) :
          mEd(ed), mDoNothing(false)
-  { 
+  {
     if (mEd && !mEd->mAction) // mAction will already be set if this is nested call
     {
       mEd->StartOperation(action, aDirection);
     }
     else mDoNothing = true; // nested calls will end up here
   }
-  ~nsAutoRules() 
+  ~nsAutoRules()
   {
-    if (mEd && !mDoNothing) 
+    if (mEd && !mDoNothing)
     {
       mEd->EndOperation();
     }
   }
-  
+
   protected:
   nsEditor *mEd;
   bool mDoNothing;
@@ -112,24 +112,24 @@ class MOZ_STACK_CLASS nsAutoRules
 class MOZ_STACK_CLASS nsAutoTxnsConserveSelection
 {
   public:
-  
+
   explicit nsAutoTxnsConserveSelection(nsEditor *ed) : mEd(ed), mOldState(true)
   {
-    if (mEd) 
+    if (mEd)
     {
       mOldState = mEd->GetShouldTxnSetSelection();
       mEd->SetShouldTxnSetSelection(false);
     }
   }
-  
-  ~nsAutoTxnsConserveSelection() 
+
+  ~nsAutoTxnsConserveSelection()
   {
-    if (mEd) 
+    if (mEd)
     {
       mEd->SetShouldTxnSetSelection(mOldState);
     }
   }
-  
+
   protected:
   nsEditor *mEd;
   bool mOldState;
@@ -141,21 +141,21 @@ class MOZ_STACK_CLASS nsAutoTxnsConserveSelection
 class MOZ_STACK_CLASS nsAutoUpdateViewBatch
 {
   public:
-  
+
   explicit nsAutoUpdateViewBatch(nsEditor *ed) : mEd(ed)
   {
     NS_ASSERTION(mEd, "null mEd pointer!");
 
-    if (mEd) 
+    if (mEd)
       mEd->BeginUpdateViewBatch();
   }
-  
-  ~nsAutoUpdateViewBatch() 
+
+  ~nsAutoUpdateViewBatch()
   {
-    if (mEd) 
+    if (mEd)
       mEd->EndUpdateViewBatch();
   }
-  
+
   protected:
   nsEditor *mEd;
 };
@@ -164,7 +164,7 @@ class MOZ_STACK_CLASS nsAutoUpdateViewBatch
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-class nsBoolDomIterFunctor 
+class nsBoolDomIterFunctor
 {
   public:
     virtual bool operator()(nsINode* aNode) const = 0;

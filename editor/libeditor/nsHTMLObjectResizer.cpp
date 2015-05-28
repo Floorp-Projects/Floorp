@@ -58,7 +58,7 @@ class nsHTMLEditUtils;
 // ==================================================================
 NS_IMPL_ISUPPORTS(DocumentResizeEventListener, nsIDOMEventListener)
 
-DocumentResizeEventListener::DocumentResizeEventListener(nsIHTMLEditor * aEditor) 
+DocumentResizeEventListener::DocumentResizeEventListener(nsIHTMLEditor * aEditor)
 {
   mEditor = do_GetWeakReference(aEditor);
 }
@@ -96,7 +96,7 @@ ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument *, nsISelection 
 {
   if ((aReason & (nsISelectionListener::MOUSEDOWN_REASON |
                   nsISelectionListener::KEYPRESS_REASON |
-                  nsISelectionListener::SELECTALL_REASON)) && aSelection) 
+                  nsISelectionListener::SELECTALL_REASON)) && aSelection)
   {
     // the selection changed and we need to check if we have to
     // hide and/or redisplay resizing handles
@@ -119,7 +119,7 @@ ResizerMouseMotionListener::ResizerMouseMotionListener(nsIHTMLEditor * aEditor)
   mEditor = do_GetWeakReference(aEditor);
 }
 
-ResizerMouseMotionListener::~ResizerMouseMotionListener() 
+ResizerMouseMotionListener::~ResizerMouseMotionListener()
 {
 }
 
@@ -299,7 +299,7 @@ nsHTMLEditor::RefreshResizers()
                            mResizedObjectX, mResizedObjectY);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLEditor::ShowResizers(nsIDOMElement *aResizedElement)
 {
   nsresult res = ShowResizersInner(aResizedElement);
@@ -308,7 +308,7 @@ nsHTMLEditor::ShowResizers(nsIDOMElement *aResizedElement)
   return res;
 }
 
-nsresult 
+nsresult
 nsHTMLEditor::ShowResizersInner(nsIDOMElement *aResizedElement)
 {
   NS_ENSURE_ARG_POINTER(aResizedElement);
@@ -388,7 +388,7 @@ nsHTMLEditor::ShowResizersInner(nsIDOMElement *aResizedElement)
   return res;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLEditor::HideResizers(void)
 {
   NS_ENSURE_TRUE(mResizedObject, NS_OK);
@@ -570,7 +570,7 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLEditor::MouseDown(int32_t aClientX, int32_t aClientY,
                         nsIDOMElement *aTarget, nsIDOMEvent* aEvent)
 {
@@ -599,7 +599,7 @@ nsHTMLEditor::MouseDown(int32_t aClientX, int32_t aClientY,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLEditor::MouseUp(int32_t aClientX, int32_t aClientY,
                       nsIDOMElement *aTarget)
 {
@@ -755,7 +755,7 @@ nsHTMLEditor::GetNewResizingIncrement(int32_t aX, int32_t aY, int32_t aID)
 
   int32_t xi = (aX - mOriginalX) * mWidthIncrementFactor;
   int32_t yi = (aY - mOriginalY) * mHeightIncrementFactor;
-  float objectSizeRatio = 
+  float objectSizeRatio =
               ((float)mResizedObjectWidth) / ((float)mResizedObjectHeight);
   result = (xi > yi) ? xi : yi;
   switch (aID) {
@@ -901,7 +901,7 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
   int32_t height = GetNewResizingHeight(aX, aY);
   bool setWidth  = !mResizedObjectIsAbsolutelyPositioned || (width != mResizedObjectWidth);
   bool setHeight = !mResizedObjectIsAbsolutelyPositioned || (height != mResizedObjectHeight);
-  
+
   int32_t x, y;
   x = left - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderLeft+mResizedObjectMarginLeft : 0);
   y = top - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderTop+mResizedObjectMarginTop : 0);
@@ -911,7 +911,7 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
 
   NS_NAMED_LITERAL_STRING(widthStr,  "width");
   NS_NAMED_LITERAL_STRING(heightStr, "height");
-  
+
   nsCOMPtr<Element> resizedObject = do_QueryInterface(mResizedObject);
   NS_ENSURE_TRUE(resizedObject, );
   if (mResizedObjectIsAbsolutelyPositioned) {

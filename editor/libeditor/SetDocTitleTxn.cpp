@@ -149,8 +149,8 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
       // Not undoable: We will insert newTitleNode below
       nsCOMPtr<nsIDOMNode> resultNode;
       res = titleNode->AppendChild(newNode, getter_AddRefs(resultNode));
-    } 
-    else 
+    }
+    else
     {
       // This is an undoable transaction
       res = editor->InsertNode(newNode, titleNode, 0);
@@ -175,7 +175,7 @@ NS_IMETHODIMP SetDocTitleTxn::GetTxnDescription(nsAString& aString)
 
 NS_IMETHODIMP SetDocTitleTxn::GetIsTransient(bool *aIsTransient)
 {
-  NS_ENSURE_TRUE(aIsTransient, NS_ERROR_NULL_POINTER);  
+  NS_ENSURE_TRUE(aIsTransient, NS_ERROR_NULL_POINTER);
   *aIsTransient = mIsTransient;
   return NS_OK;
 }

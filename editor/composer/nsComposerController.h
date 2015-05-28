@@ -14,7 +14,7 @@ class nsIControllerCommandTable;
 
 // The plaintext editor controller is used for basic text editing and html editing
 // commands in composer
-// The refCon that gets passed to its commands is initially nsIEditingSession, 
+// The refCon that gets passed to its commands is initially nsIEditingSession,
 //   and after successfule editor creation it is changed to nsIEditor.
 #define NS_EDITORDOCSTATECONTROLLER_CID \
  { 0x50e95301, 0x17a8, 0x11d4, { 0x9f, 0x7e, 0xdd, 0x53, 0x0d, 0x5f, 0x05, 0x7c } }

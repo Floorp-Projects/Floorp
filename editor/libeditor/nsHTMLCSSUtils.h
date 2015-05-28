@@ -285,7 +285,7 @@ public:
   bool        IsCSSPrefChecked();
 
   /** ElementsSameStyle compares two elements and checks if they have the same
-    * specified CSS declarations in the STYLE attribute 
+    * specified CSS declarations in the STYLE attribute
     * The answer is always false if at least one of them carries an ID or a class
     *
     * @return                     true if the two elements are considered to have same styles
@@ -404,7 +404,7 @@ private:
 
 private:
   nsHTMLEditor            *mHTMLEditor;
-  bool                    mIsCSSPrefChecked; 
+  bool                    mIsCSSPrefChecked;
 };
 
 #define NS_EDITOR_INDENT_INCREMENT_IN        0.4134f
@@ -415,6 +415,6 @@ private:
 #define NS_EDITOR_INDENT_INCREMENT_EM        3
 #define NS_EDITOR_INDENT_INCREMENT_EX        6
 #define NS_EDITOR_INDENT_INCREMENT_PX        40
-#define NS_EDITOR_INDENT_INCREMENT_PERCENT   4 
+#define NS_EDITOR_INDENT_INCREMENT_PERCENT   4
 
 #endif /* nsHTMLCSSUtils_h__ */

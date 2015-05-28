@@ -117,7 +117,7 @@ interface nsIEditor  : nsISupports
 
   /* ------------ Selected content removal -------------- */
 
-  /** 
+  /**
    * DeleteSelection removes all nodes in the current selection.
    * @param aDir  if eNext, delete to the right (for example, the DEL key)
    *              if ePrevious, delete to the left (for example, the BACKSPACE key)
@@ -130,10 +130,10 @@ interface nsIEditor  : nsISupports
 
 
   /* ------------ Document info and file methods -------------- */
-  
+
   /** Returns true if the document has no *meaningful* content */
   readonly attribute boolean documentIsEmpty;
-  
+
   /** Returns true if the document is modifed and needs saving */
   readonly attribute boolean documentModified;
 
@@ -157,7 +157,7 @@ interface nsIEditor  : nsISupports
     *                    to increase or decrease the count
     */
   void incrementModificationCount(in long aModCount);
-  
+
   /* ------------ Transaction methods -------------- */
 
   /** transactionManager Get the transaction manager the editor is using.
@@ -166,7 +166,7 @@ interface nsIEditor  : nsISupports
 
   /** doTransaction() fires a transaction.
     * It is provided here so clients can create their own transactions.
-    * If a transaction manager is present, it is used.  
+    * If a transaction manager is present, it is used.
     * Otherwise, the transaction is just executed directly.
     *
     * @param aTxn the transaction to execute
@@ -199,7 +199,7 @@ interface nsIEditor  : nsISupports
     * It is provided here so clients need no knowledge of whether
     * the editor has a transaction manager or not.
     * If a transaction manager is present, it is told to undo,
-    * and the result of that undo is returned.  
+    * and the result of that undo is returned.
     * Otherwise, the Undo request is ignored and an
     * error NS_ERROR_NOT_AVAILABLE is returned.
     *
@@ -377,8 +377,8 @@ interface nsIEditor  : nsISupports
    * @return              PR_TRUE if aAttribute is set on the current node,
    *                      PR_FALSE if it is not.
    */
-  boolean getAttributeValue(in nsIDOMElement aElement, 
-                            in AString attributestr, 
+  boolean getAttributeValue(in nsIDOMElement aElement,
+                            in AString attributestr,
                             out AString resultValue);
 
   /**
@@ -388,7 +388,7 @@ interface nsIEditor  : nsISupports
    * @param aElement      the content element to operate on
    * @param aAttribute    the string representation of the attribute to get
    */
-  void removeAttribute(in nsIDOMElement aElement, 
+  void removeAttribute(in nsIDOMElement aElement,
                        in AString aAttribute);
 
   /**
@@ -419,7 +419,7 @@ interface nsIEditor  : nsISupports
    */
   void cloneAttributes(in nsIDOMNode destNode, in nsIDOMNode sourceNode);
 
-  /** 
+  /**
    * createNode instantiates a new element of type aTag and inserts it
    * into aParent at aPosition.
    * @param aTag      The type of object to create
@@ -431,7 +431,7 @@ interface nsIEditor  : nsISupports
                         in nsIDOMNode parent,
                         in long position);
 
-  /** 
+  /**
    * insertNode inserts aNode into aParent at aPosition.
    * No checking is done to verify the legality of the insertion.
    * That is the responsibility of the caller.
@@ -446,7 +446,7 @@ interface nsIEditor  : nsISupports
                   in long       aPosition);
 
 
-  /** 
+  /**
    * splitNode() creates a new node identical to an existing node,
    * and split the contents between the two nodes
    * @param aExistingRightNode   the node to split.
@@ -460,7 +460,7 @@ interface nsIEditor  : nsISupports
                  in long      offset,
                  out nsIDOMNode newLeftNode);
 
-  /** 
+  /**
    * joinNodes() takes 2 nodes and merge their content|children.
    * @param aLeftNode     The left node.  It will be deleted.
    * @param aRightNode    The right node. It will remain after the join.
@@ -474,7 +474,7 @@ interface nsIEditor  : nsISupports
                  in nsIDOMNode rightNode,
                  in nsIDOMNode parent);
 
-  /** 
+  /**
    * deleteNode removes aChild from aParent.
    * @param aChild    The node to delete
    */
@@ -486,7 +486,7 @@ interface nsIEditor  : nsISupports
    */
   [notxpcom] boolean outputsMozDirty();
 
-  /** 
+  /**
    * markNodeDirty() sets a special dirty attribute on the node.
    * Usually this will be called immediately after creating a new node.
    * @param aNode      The node for which to insert formatting.
@@ -495,7 +495,7 @@ interface nsIEditor  : nsISupports
 
 /* ---------- direction controller ---------- */
 
-  /** 
+  /**
    * Switches the editor element direction; from "Left-to-Right" to
    * "Right-to-Left", and vice versa.
    */
