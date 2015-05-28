@@ -155,8 +155,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
       nsHostObjectProtocolHandler::RemoveDataEntry(url);
     });
 
-  rv = nsContentUtils::RunInStableState(revocation);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "RunInStableState() failure");
+  nsContentUtils::RunInStableState(revocation.forget());
 
   CopyASCIItoUTF16(url, aResult);
 }
