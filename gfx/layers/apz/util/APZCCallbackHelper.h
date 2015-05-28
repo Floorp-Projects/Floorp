@@ -47,7 +47,7 @@ public:
        Setting the scroll position can cause some small adjustments to be made
        to the actual scroll position. aMetrics' display port and scroll position
        will be updated with any modifications made. */
-    static void UpdateRootFrame(nsIPresShell* aPresShell,
+    static void UpdateRootFrame(nsIContent* aPresShell,
                                 FrameMetrics& aMetrics);
 
     /* Applies the scroll parameters from the given FrameMetrics object to the subframe
