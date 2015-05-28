@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "mozilla/Snprintf.h"
+
 #ifdef XP_WIN
 #include <io.h>
 #include <windows.h>
@@ -312,8 +314,9 @@ copy_stderr_to_file(const char* aFile)
   if (sStderrCopy) {
     return;
   }
-  char* buf = (char*)malloc(strlen(aFile) + 16);
-  sprintf(buf, "%s.%u", aFile, (uint32_t)getpid());
+  size_t buflen = strlen(aFile) + 16;
+  char* buf = (char*)malloc(buflen);
+  snprintf(buf, buflen, "%s.%u", aFile, (uint32_t)getpid());
   sStderrCopy = fopen(buf, "w");
   free(buf);
   set_stderr_callback(stderr_to_file);

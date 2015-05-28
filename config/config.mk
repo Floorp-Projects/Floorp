@@ -237,10 +237,6 @@ endif # MOZ_DEBUG
 
 endif # WINNT && !GNU_CC
 
-ifdef MOZ_GLUE_IN_PROGRAM
-DEFINES += -DMOZ_GLUE_IN_PROGRAM
-endif
-
 #
 # Build using PIC by default
 #
