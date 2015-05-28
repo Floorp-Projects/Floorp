@@ -47,7 +47,7 @@ SharedDIBSurface::InitSurface(uint32_t aWidth, uint32_t aHeight,
 
   gfxImageFormat format = aTransparent ? gfxImageFormat::ARGB32 : gfxImageFormat::RGB24;
 
-  gfxImageSurface::InitWithData(data, gfxIntSize(aWidth, aHeight),
+  gfxImageSurface::InitWithData(data, IntSize(aWidth, aHeight),
                                 stride, format);
 
   cairo_surface_set_user_data(mSurface, &SHAREDDIB_KEY, this, nullptr);
