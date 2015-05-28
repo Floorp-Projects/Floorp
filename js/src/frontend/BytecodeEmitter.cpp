@@ -1998,30 +1998,25 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 
       case PN_UNARY:
         switch (pn->getKind()) {
-          case PNK_DELETE:
-          {
-            ParseNode* pn2 = pn->pn_kid;
-            switch (pn2->getKind()) {
-              case PNK_NAME:
-                if (!bindNameToSlot(pn2))
-                    return false;
-                if (pn2->isConst()) {
-                    MOZ_ASSERT(*answer == false);
-                    return true;
-                }
-                /* FALL THROUGH */
-              case PNK_DOT:
-              case PNK_CALL:
-              case PNK_ELEM:
-              case PNK_SUPERELEM:
-                /* All these delete addressing modes have effects too. */
-                *answer = true;
-                return true;
-              default:
-                return checkSideEffects(pn2, answer);
-            }
-            MOZ_CRASH("We have a returning default case");
+          case PNK_DELETENAME: {
+            ParseNode* nameExpr = pn->pn_kid;
+            MOZ_ASSERT(nameExpr->isKind(PNK_NAME));
+            if (!bindNameToSlot(nameExpr))
+                return false;
+            *answer = !nameExpr->isConst();
+            return true;
           }
+
+          case PNK_DELETEPROP:
+          case PNK_DELETESUPERPROP:
+          case PNK_DELETEELEM:
+          case PNK_DELETESUPERELEM:
+            // All these delete addressing modes have effects, too.
+            *answer = true;
+            return true;
+
+          case PNK_DELETEEXPR:
+            return checkSideEffects(pn->pn_kid, answer);
 
           case PNK_TYPEOF:
           case PNK_VOID:
@@ -6181,82 +6176,110 @@ BytecodeEmitter::emitStatement(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitDelete(ParseNode* pn)
+BytecodeEmitter::emitDeleteName(ParseNode* node)
 {
-    /*
-     * Under ECMA 3, deleting a non-reference returns true -- but alas we
-     * must evaluate the operand if it appears it might have side effects.
-     */
-    ParseNode* pn2 = pn->pn_kid;
-    switch (pn2->getKind()) {
-      case PNK_NAME:
-        if (!bindNameToSlot(pn2))
-            return false;
-        if (!emitAtomOp(pn2, pn2->getOp()))
-            return false;
-        break;
-      case PNK_DOT:
-      {
-        JSOp delOp = sc->strict() ? JSOP_STRICTDELPROP : JSOP_DELPROP;
-        if (!emitPropOp(pn2, delOp))
-            return false;
-        break;
-      }
-      case PNK_SUPERPROP:
-        // Still have to calculate the base, even though we are are going
-        // to throw unconditionally, as calculating the base could also
-        // throw.
-        if (!emit1(JSOP_SUPERBASE))
-            return false;
-        if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER))
-            return false;
-        break;
-      case PNK_ELEM:
-      {
-        JSOp delOp = sc->strict() ? JSOP_STRICTDELELEM : JSOP_DELELEM;
-        if (!emitElemOp(pn2, delOp))
-            return false;
-        break;
-      }
-      case PNK_SUPERELEM:
-        // Still have to calculate everything, even though we're gonna throw
-        // since it may have side effects
-        if (!emitTree(pn2->pn_kid))
-            return false;
-        if (!emit1(JSOP_SUPERBASE))
-            return false;
-        if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER))
-            return false;
+    MOZ_ASSERT(node->isKind(PNK_DELETENAME));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
 
-        // Another wrinkle: Balance the stack from the emitter's point of view.
-        // Execution will not reach here, as the last bytecode threw.
+    ParseNode* nameExpr = node->pn_kid;
+    MOZ_ASSERT(nameExpr->isKind(PNK_NAME));
+
+    if (!bindNameToSlot(nameExpr))
+        return false;
+
+    MOZ_ASSERT(nameExpr->isOp(JSOP_DELNAME));
+    return emitAtomOp(nameExpr, JSOP_DELNAME);
+}
+
+bool
+BytecodeEmitter::emitDeleteProperty(ParseNode* node)
+{
+    MOZ_ASSERT(node->isKind(PNK_DELETEPROP));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode* propExpr = node->pn_kid;
+    MOZ_ASSERT(propExpr->isKind(PNK_DOT));
+
+    JSOp delOp = sc->strict() ? JSOP_STRICTDELPROP : JSOP_DELPROP;
+    return emitPropOp(propExpr, delOp);
+}
+
+bool
+BytecodeEmitter::emitDeleteSuperProperty(ParseNode* node)
+{
+    MOZ_ASSERT(node->isKind(PNK_DELETESUPERPROP));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+    MOZ_ASSERT(node->pn_kid->isKind(PNK_SUPERPROP));
+
+    // Still have to calculate the base, even though we are are going
+    // to throw unconditionally, as calculating the base could also
+    // throw.
+    if (!emit1(JSOP_SUPERBASE))
+        return false;
+
+    return emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER);
+}
+
+bool
+BytecodeEmitter::emitDeleteElement(ParseNode* node)
+{
+    MOZ_ASSERT(node->isKind(PNK_DELETEELEM));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode* elemExpr = node->pn_kid;
+    MOZ_ASSERT(elemExpr->isKind(PNK_ELEM));
+
+    JSOp delOp = sc->strict() ? JSOP_STRICTDELELEM : JSOP_DELELEM;
+    return emitElemOp(elemExpr, delOp);
+}
+
+bool
+BytecodeEmitter::emitDeleteSuperElement(ParseNode* node)
+{
+    MOZ_ASSERT(node->isKind(PNK_DELETESUPERELEM));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode* superElemExpr = node->pn_kid;
+    MOZ_ASSERT(superElemExpr->isKind(PNK_SUPERELEM));
+
+    // Still have to calculate everything, even though we're gonna throw
+    // since it may have side effects
+    MOZ_ASSERT(superElemExpr->isArity(PN_UNARY));
+    if (!emitTree(superElemExpr->pn_kid))
+        return false;
+    if (!emit1(JSOP_SUPERBASE))
+        return false;
+    if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER))
+        return false;
+
+    // Another wrinkle: Balance the stack from the emitter's point of view.
+    // Execution will not reach here, as the last bytecode threw.
+    return emit1(JSOP_POP);
+}
+
+bool
+BytecodeEmitter::emitDeleteExpression(ParseNode* node)
+{
+    MOZ_ASSERT(node->isKind(PNK_DELETEEXPR));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
+
+    ParseNode* expression = node->pn_kid;
+
+    // If useless, just emit JSOP_TRUE; otherwise convert |delete <expr>| to
+    // effectively |<expr>, true|.
+    bool useful = false;
+    if (!checkSideEffects(expression, &useful))
+        return false;
+
+    if (useful) {
+        MOZ_ASSERT_IF(expression->isKind(PNK_CALL), !(expression->pn_xflags & PNX_SETCALL));
+        if (!emitTree(expression))
+            return false;
         if (!emit1(JSOP_POP))
             return false;
-        break;
-      default:
-      {
-        /*
-         * If useless, just emit JSOP_TRUE; otherwise convert delete foo()
-         * to foo(), true (a comma expression).
-         */
-        bool useful = false;
-        if (!checkSideEffects(pn2, &useful))
-            return false;
-
-        if (useful) {
-            MOZ_ASSERT_IF(pn2->isKind(PNK_CALL), !(pn2->pn_xflags & PNX_SETCALL));
-            if (!emitTree(pn2))
-                return false;
-            if (!emit1(JSOP_POP))
-                return false;
-        }
-
-        if (!emit1(JSOP_TRUE))
-            return false;
-      }
     }
 
-    return true;
+    return emit1(JSOP_TRUE);
 }
 
 bool
@@ -7498,8 +7521,28 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         ok = emitIncOrDec(pn);
         break;
 
-      case PNK_DELETE:
-        ok = emitDelete(pn);
+      case PNK_DELETENAME:
+        ok = emitDeleteName(pn);
+        break;
+
+      case PNK_DELETEPROP:
+        ok = emitDeleteProperty(pn);
+        break;
+
+      case PNK_DELETESUPERPROP:
+        ok = emitDeleteSuperProperty(pn);
+        break;
+
+      case PNK_DELETEELEM:
+        ok = emitDeleteElement(pn);
+        break;
+
+      case PNK_DELETESUPERELEM:
+        ok = emitDeleteSuperElement(pn);
+        break;
+
+      case PNK_DELETEEXPR:
+        ok = emitDeleteExpression(pn);
         break;
 
       case PNK_DOT:
