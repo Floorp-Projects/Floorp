@@ -31,9 +31,15 @@ function* spawnTest() {
   timeline.setSelection({ start: 0, end: timeline.width / 2 })
   yield rerendered;
 
+  // Focus the second item in the tree.
+  WaterfallView._markersRoot.getChild(1).focus();
+
   let beforeResizeBarsCount = $$(".waterfall-marker-bar").length;
   ok(beforeResizeBarsCount < initialBarsCount,
     "A subset of the total markers was selected.");
+
+  is(Array.indexOf($$(".waterfall-tree-item"), $(".waterfall-tree-item:focus")), 2,
+    "The correct item was focused in the tree.");
 
   rerendered = WaterfallView.once(EVENTS.WATERFALL_RENDERED);
   EventUtils.sendMouseEvent({ type: "mouseup" }, WaterfallView.detailsSplitter);
@@ -42,6 +48,9 @@ function* spawnTest() {
   let afterResizeBarsCount = $$(".waterfall-marker-bar").length;
   is(afterResizeBarsCount, beforeResizeBarsCount,
     "The same subset of the total markers remained visible.");
+
+  is(Array.indexOf($$(".waterfall-tree-item"), $(".waterfall-tree-item:focus")), 2,
+    "The correct item is still focused in the tree.");
 
   yield teardown(panel);
   finish();
