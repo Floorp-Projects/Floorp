@@ -56,36 +56,20 @@ xul|*.checkbox-icon {
   -moz-margin-end: 0;
 }
 
-xul|*.text-link:-moz-focusring,
-xul|*.inline-link:-moz-focusring {
-  border: 1px dotted -moz-DialogText;
+/* Never draw a border for the focusring, use outline instead */
+xul|*.button-box,
+xul|*.menulist-label-box,
+xul|*.radio-label-box,
+xul|*.checkbox-label-box {
+  border-style: none;
 }
 
-/* Don't draw a transparent border for the focusring because when page
-   colors are disabled, the border is drawn in -moz-DialogText */
-xul|*.text-link:not(:-moz-focusring),
-xul|button:not(:-moz-focusring) > xul|*.button-box,
-xul|menulist:not(:-moz-focusring) > xul|*.menulist-label-box,
-xul|radio:not([focused="true"]) > xul|*.radio-label-box,
-xul|checkbox:not(:-moz-focusring) > xul|*.checkbox-label-box {
-  border-width: 0;
-  margin: 1px;
-}
-
-xul|*.text-link:not(:-moz-focusring) {
-  margin-top: 2px;
-  margin-right: 1px !important;
-  margin-left: 1px !important;
-  margin-bottom: 3px;
-}
-
-xul|menulist:not(:-moz-focusring) > xul|*.menulist-label-box {
-  margin: 2px;
-}
-
-xul|radio:not([focused="true"]) > xul|*.radio-label-box,
-xul|checkbox:not(:-moz-focusring) > xul|*.checkbox-label-box {
-  -moz-margin-start: 0;
+xul|*.inline-link:-moz-focusring,
+xul|button:-moz-focusring > xul|*.button-box,
+xul|menulist:-moz-focusring > xul|*.menulist-label-box,
+xul|radio[focused="true"] > xul|*.radio-label-box,
+xul|checkbox:-moz-focusring > xul|*.checkbox-label-box {
+  outline: 1px dotted;
 }
 
 /* Use a 2px border so that selected row highlight is still visible behind
