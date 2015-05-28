@@ -26,7 +26,7 @@ add_task(function*() {
   info("Selecting the test element");
   yield selectNode("#testid", inspector);
 
-  info("Waiting for rule view to change");
+  info("Waiting for rule view to update");
   let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Adding the new rule");
@@ -36,7 +36,7 @@ add_task(function*() {
 
   yield testEditSelector(view, "span");
 
-  info("Selecting the modified element");
+  info("Selecting the modified element with the new rule");
   yield selectNode("span", inspector);
   yield checkModifiedElement(view, "span");
 });
@@ -49,14 +49,15 @@ function* testEditSelector(view, name) {
   info("Entering a new selector name and committing");
   editor.value = name;
 
-  info("Waiting for rule view to refresh");
-  let onRuleViewRefresh = once(view, "ruleview-refreshed");
+  info("Waiting for rule view to update");
+  let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("VK_RETURN", {});
-  yield onRuleViewRefresh;
+  yield onRuleViewChanged;
 
-  is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
+  is(view._elementStyle.rules.length, 3, "Should have 3 rules.");
+  ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
 }
 
 function* checkModifiedElement(view, name) {

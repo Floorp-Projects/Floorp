@@ -18,7 +18,7 @@ xpcom_base_src = [
     'nsUUIDGenerator.cpp',
 ]
 src_list += [
-    '%s/xpcom/base/%s' % (TOPSRCDIR, s) for s in xpcom_base_src
+    '/xpcom/base/%s' % s for s in xpcom_base_src
 ]
 
 xpcom_build_src = [
@@ -26,7 +26,7 @@ xpcom_build_src = [
     'Services.cpp',
 ]
 src_list += [
-    '%s/xpcom/build/%s' % (TOPSRCDIR, s) for s in xpcom_build_src
+    '/xpcom/build/%s' % s for s in xpcom_build_src
 ]
 
 xpcom_components_src = [
@@ -34,7 +34,7 @@ xpcom_components_src = [
     'nsComponentManager.cpp',
 ]
 src_list += [
-    '%s/xpcom/components/%s' % (TOPSRCDIR, s) for s in xpcom_components_src
+    '/xpcom/components/%s' % s for s in xpcom_components_src
 ]
 
 xpcom_ds_src = [
@@ -58,7 +58,7 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
 elif CONFIG['COMPILE_ENVIRONMENT']:
     error('No TimeStamp implementation on this platform.  Build will not succeed')
 src_list += [
-    '%s/xpcom/ds/%s' % (TOPSRCDIR, s) for s in xpcom_ds_src
+    '/xpcom/ds/%s' % s for s in xpcom_ds_src
 ]
 
 xpcom_glue_src = [
@@ -84,14 +84,14 @@ xpcom_glue_src = [
     'pldhash.cpp',
 ]
 src_list += [
-    '%s/xpcom/glue/%s' % (TOPSRCDIR, s) for s in xpcom_glue_src
+    '/xpcom/glue/%s' % s for s in xpcom_glue_src
 ]
 
 xpcom_io_src = [
     'nsNativeCharsetUtils.cpp',
 ]
 src_list += [
-    '%s/xpcom/io/%s' % (TOPSRCDIR, s) for s in xpcom_io_src
+    '/xpcom/io/%s' % s for s in xpcom_io_src
 ]
 
 xpcom_string_src = [
@@ -107,7 +107,7 @@ xpcom_string_src = [
 if CONFIG['INTEL_ARCHITECTURE']:
     xpcom_string_src += ['nsUTF8UtilsSSE2.cpp']
 src_list += [
-    '%s/xpcom/string/%s' % (TOPSRCDIR, s) for s in xpcom_string_src
+    '/xpcom/string/%s' % s for s in xpcom_string_src
 ]
 
 xpcom_threads_src = [
@@ -123,14 +123,14 @@ xpcom_threads_src = [
     'TimerThread.cpp',
 ]
 src_list += [
-    '%s/xpcom/threads/%s' % (TOPSRCDIR, s) for s in xpcom_threads_src
+    '/xpcom/threads/%s' % s for s in xpcom_threads_src
 ]
 
 
 SOURCES += sorted(src_list)
 
 if CONFIG['INTEL_ARCHITECTURE']:
-    sse_string_path = '%s/xpcom/string/nsUTF8UtilsSSE2.cpp' % TOPSRCDIR
+    sse_string_path = '/xpcom/string/nsUTF8UtilsSSE2.cpp'
     SOURCES[sse_string_path].flags += CONFIG['SSE2_FLAGS']
 
 GENERATED_INCLUDES += ['..']

@@ -64,5 +64,16 @@ exports.items = [
 
       return l10n.lookup("listenNoInitOutput");
     },
+  },
+  {
+    item: "command",
+    runAt: "client",
+    name: "unlisten",
+    description: l10n.lookup("unlistenDesc"),
+    manual: l10n.lookup("unlistenManual"),
+    exec: function(args, context) {
+      debuggerServer.closeAllListeners();
+      return l10n.lookup("unlistenOutput");
+    }
   }
 ];

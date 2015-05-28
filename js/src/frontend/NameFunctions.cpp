@@ -649,7 +649,6 @@ class NameResolver
           case PNK_GENEXP:
           case PNK_ARRAY:
           case PNK_STATEMENTLIST:
-          case PNK_SEQ:
           case PNK_ARGSBODY:
           // Initializers for individual variables, and computed property names
           // within destructuring patterns, may contain unnamed functions.

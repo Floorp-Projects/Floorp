@@ -6,6 +6,11 @@
 
 TEST_DIRS += ['tests']
 
+# On win we build two mfbt libs - mfbt linked to crt dlls here and in
+# staticruntime we build a statically linked mfbt lib.
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DIRS += ['staticruntime']
+
 Library('mfbt')
 
 EXPORTS.mozilla = [
@@ -95,36 +100,17 @@ elif CONFIG['OS_ARCH'] == 'Linux':
         'LinuxSignal.h',
     ]
 
-UNIFIED_SOURCES = [
-    'double-conversion/bignum-dtoa.cc',
-    'double-conversion/bignum.cc',
-    'double-conversion/cached-powers.cc',
-    'double-conversion/diy-fp.cc',
-    'double-conversion/double-conversion.cc',
-    'double-conversion/fast-dtoa.cc',
-    'double-conversion/fixed-dtoa.cc',
-    'double-conversion/strtod.cc',
-    'FloatingPoint.cpp',
-    'HashFunctions.cpp',
-    'JSONWriter.cpp',
-    'Poison.cpp',
-    'SHA1.cpp',
-    'TaggedAnonymousMemory.cpp',
-    'unused.cpp',
-]
+include('objs.mozbuild')
+
+UNIFIED_SOURCES += mfbt_src_cppsrcs
 
 DEFINES['IMPL_MFBT'] = True
 
-# Compression.cpp cannot be built in unified mode because it pulls in Windows system headers.
-# Decimal.cpp doesn't build in unified mode with gcc.
-SOURCES += [
-    'Compression.cpp',
-    'decimal/Decimal.cpp',
-]
+SOURCES += mfbt_nonunified_src_cppsrcs
 
 DISABLE_STL_WRAPPING = True
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CXX']:
     # TODO: Remove this LZ4 warning suppression after bug 993267 is fixed.
-    SOURCES['Compression.cpp'].flags += ['-Wno-unused-function']
+    SOURCES['/mfbt/Compression.cpp'].flags += ['-Wno-unused-function']

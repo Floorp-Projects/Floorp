@@ -1,5 +1,6 @@
 marionette-transport >= 0.4
 marionette-driver >= 0.7
+browsermob-proxy >= 0.6.0
 manifestparser >= 1.1
 mozhttpd >= 0.7
 mozinfo >= 0.7

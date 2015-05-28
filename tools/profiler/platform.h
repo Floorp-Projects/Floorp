@@ -387,10 +387,6 @@ class Sampler {
   bool signal_sender_launched_;
   pthread_t signal_sender_thread_;
 #endif
-#if defined(SPS_OS_darwin)
-  bool signal_handler_installed_;
-  struct sigaction old_sigprof_signal_handler_;
-#endif
 };
 
 class ThreadInfo {

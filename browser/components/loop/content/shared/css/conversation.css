@@ -313,7 +313,8 @@
   width: 100%;
 }
 
-.call-action-group > .btn {
+.call-action-group > .btn,
+.room-context > .btn {
   min-height: 26px;
   border-radius: 2px;
   margin: 0 4px;
@@ -1005,11 +1006,19 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   width: 100%;
   font-size: .9em;
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: column nowrap;
   align-content: flex-start;
   align-items: flex-start;
   overflow-x: hidden;
   overflow-y: auto;
+  /* Make the context view float atop the video elements. */
+  z-index: 2;
+}
+
+.room-context.editMode {
+  /* Stretch to the maximum available space whilst not covering the conversation
+     toolbar (26px). */
+  height: calc(100% - 26px);
 }
 
 .room-invitation-overlay .room-context {
@@ -1019,11 +1028,26 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   flex: 0 1 auto;
 }
 
+.room-invitation-overlay .room-context.editMode {
+  height: 100%;
+}
+
+.room-context-content {
+  flex: 1 1 auto;
+  text-align: start;
+  display: flex;
+  flex-flow: row nowrap;
+  font-size: .9em;
+}
+
 .room-context-thumbnail {
-  width: 16px;
+  /* 16px icon size + 3px border width. */
+  width: 19px;
+  max-height: 19px;
+  border: 3px solid #fff;
+  border-radius: 3px;
+  background-color: #fff;
   -moz-margin-end: 1ch;
-  margin-bottom: 1em;
-  order: 1;
   flex: 0 1 auto;
 }
 
@@ -1031,30 +1055,24 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   display: none;
 }
 
-.room-context-content {
-  order: 2;
-  flex: 1 1 auto;
-  text-align: start;
-}
-
-.room-context-content > .error-display-area.error {
+.room-context > .error-display-area.error {
   display: block;
   background-color: rgba(215,67,69,.8);
   border-radius: 3px;
   padding: .5em;
 }
 
-.room-context-content > .error-display-area {
+.room-context > .error-display-area {
   display: none;
 }
 
-.room-context-content > .error-display-area.error {
+.room-context > .error-display-area.error {
   margin: 1em 0 .5em 0;
   text-align: center;
   text-shadow: 1px 1px 0 rgba(0,0,0,.3);
 }
 
-.room-context-content > .checkbox-wrapper {
+.room-context > .checkbox-wrapper {
   margin-bottom: .5em;
 }
 
@@ -1062,9 +1080,8 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   margin-bottom: 1em;
 }
 
-.room-context-label,
 .room-context-description,
-.room-context-content > .checkbox-wrapper > label {
+.room-context > .checkbox-wrapper > label {
   color: #fff;
 }
 
@@ -1077,45 +1094,70 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   word-wrap: break-word;
 }
 
-.room-context-url {
-  color: #59A1D7;
+:not(input).room-context-url {
+  color: #0095dd;
   font-style: italic;
   text-decoration: none;
-  margin-bottom: 1em;
+  display: block;
+  cursor: pointer;
 }
 
 .room-context-url:hover {
   text-decoration: underline;
 }
 
-.room-context-content > form > textarea,
-.room-context-content > form > input[type="text"] {
-  display: block;
-  background: rgba(0,0,0,.5);
-  color: #fff;
-  font-family: "Helvetica Neue", Arial, sans;
-  font-size: 1em;
-  border: 1px solid #999;
+.room-context > form {
   width: 100%;
-  padding: .2em .4em;
-  border-radius: 3px;
-  resize: none;
 }
 
-.room-context-content > form > textarea:not(:last-of-type),
-.room-context-content > form > input[type="text"] {
+.room-context > form > textarea,
+.room-context > form > input[type="text"] {
+  display: block;
+  background: rgba(0,0,0,.5);
+  font-family: "Helvetica Neue", Arial, sans;
+  border: 1px solid rgba(255,255,255,.2);
+  width: 100%;
+  padding: .5em;
+  border-radius: 3px;
+  resize: none;
+  color: #fff;
+}
+
+.room-context > form > textarea {
+  font-size: 1em;
+}
+
+.room-context > form > input:not([disabled]).room-context-url {
+  color: #0095dd;
+}
+
+.room-context > form > input[disabled] {
+  background-color: rgba(255,255,255,.2);
+  color: rgba(255,255,255,.4);
+}
+
+.room-context > form > textarea:not(:last-of-type),
+.room-context > form > input[type="text"] {
   margin: 0 0 .5em 0;
+}
+
+.room-context > .btn {
+  margin: .5em 0 0;
+  font-size: 1.1em;
+  padding: 0 .5em;
+  align-self: flex-end;
 }
 
 .room-context-btn-close,
 .room-context-btn-edit {
   position: absolute;
-  right: 5px;
-  top: 5px;
+  right: 8px;
+  /* 8px offset + 2px border-top */
+  top: 10px;
   width: 8px;
   height: 8px;
   background-color: transparent;
-  background-image: url("../img/icons-10x10.svg#close");
+  background-image: url("../img/icons-10x10.svg#close-darkergrey");
   background-size: 8px 8px;
   background-repeat: no-repeat;
   border: 0;
@@ -1124,8 +1166,8 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
 }
 
 .room-context-btn-edit {
-  right: 18px;
-  background-image: url("../img/icons-10x10.svg#edit");
+  right: 20px;
+  background-image: url("../img/icons-10x10.svg#edit-darkergrey");
 }
 
 .room-context-btn-edit:hover,
@@ -1141,11 +1183,11 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
 body[dir=rtl] .room-context-btn-close,
 body[dir=rtl] .room-context-btn-edit {
   right: auto;
-  left: 5px;
+  left: 8px;
 }
 
 body[dir=rtl] .room-context-btn-edit {
-  left: 18px;
+  left: 20px;
 }
 
 /* Standalone rooms */

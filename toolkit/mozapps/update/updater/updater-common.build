@@ -101,7 +101,7 @@ if have_progressui == 0:
         'progressui_null.cpp',
     ]
 
-SOURCES += ['%s%s' % (updater_rel_path, f) for f in sorted(srcs)]
+SOURCES += sorted(srcs)
 
 DEFINES['NS_NO_XPCOM'] = True
 DISABLE_STL_WRAPPING = True

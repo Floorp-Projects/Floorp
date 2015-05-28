@@ -6,6 +6,7 @@
 /* CSS Variables specific to this panel that aren't defined by the themes */
 .theme-dark {
   --cell-border-color: rgba(255,255,255,0.15);
+  --cell-border-color-light: rgba(255,255,255,0.1);
   --focus-cell-border-color: rgba(255,255,255,0.5);
   --row-alt-background-color: rgba(29,79,115,0.15);
   --row-hover-background-color: rgba(29,79,115,0.25);
@@ -13,6 +14,7 @@
 
 .theme-light {
   --cell-border-color: rgba(0,0,0,0.15);
+  --cell-border-color-light: rgba(0,0,0,0.1);
   --focus-cell-border-color: rgba(0,0,0,0.3);
   --row-alt-background-color: rgba(76,158,217,0.1);
   --row-hover-background-color: rgba(76,158,217,0.2);
@@ -183,8 +185,6 @@
 /* Profile call tree */
 
 .call-tree-cells-container {
-  /* Hack: force hardware acceleration */
-  transform: translateZ(1px);
   overflow: auto;
 }
 
@@ -256,7 +256,7 @@
   background-color: var(--theme-tab-toolbar-background);
 }
 
-.call-tree-item:last-child:not(:focus) {
+.call-tree-item:last-child {
   border-bottom: 1px solid var(--cell-border-color);
 }
 
@@ -272,7 +272,7 @@
   background-color: var(--theme-selection-background);
 }
 
-.call-tree-item:focus label {
+.call-tree-item:focus description {
   color: var(--theme-selection-color) !important;
 }
 
@@ -325,62 +325,11 @@
 }
 
 /**
- * Details Waterfall Styles
+ * Waterfall ticks header
  */
 
-#waterfall-breakdown {
-  overflow: auto;
-}
-
-.waterfall-list-contents {
-  /* Hack: force hardware acceleration */
-  transform: translateZ(1px);
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.waterfall-header-contents {
-  overflow-x: hidden;
-}
-
-.waterfall-background-ticks {
-  /* Background created on a <canvas> in js. */
-  /* @see browser/devtools/timeline/widgets/waterfall.js */
-  background-image: -moz-element(#waterfall-background);
-  background-repeat: repeat-y;
-  background-position: -1px center;
-}
-
-.waterfall-marker-container[is-spacer] {
-  pointer-events: none;
-}
-
-.theme-dark .waterfall-marker-container:not([is-spacer]):nth-child(2n) {
-  background-color: rgba(255,255,255,0.03);
-}
-
-.theme-light .waterfall-marker-container:not([is-spacer]):nth-child(2n) {
-  background-color: rgba(128,128,128,0.03);
-}
-
-.theme-dark .waterfall-marker-container:hover {
-  background-color: rgba(255,255,255,0.1) !important;
-}
-
-.theme-light .waterfall-marker-container:hover {
-  background-color: rgba(128,128,128,0.1) !important;
-}
-
-.waterfall-marker-item {
+.waterfall-header-ticks {
   overflow: hidden;
-}
-
-.waterfall-sidebar {
-  -moz-border-end: 1px solid var(--theme-splitter-color);
-}
-
-.waterfall-marker-container:hover > .waterfall-sidebar {
-  background-color: transparent;
 }
 
 .waterfall-header-name {
@@ -399,6 +348,104 @@
   -moz-margin-start: -100px !important; /* Don't affect layout. */
 }
 
+.waterfall-background-ticks {
+  /* Background created on a <canvas> in js. */
+  /* @see browser/devtools/timeline/widgets/waterfall.js */
+  background-image: -moz-element(#waterfall-background);
+  background-repeat: repeat-y;
+  background-position: -1px center;
+}
+
+/**
+ * Markers waterfall breakdown
+ */
+
+#waterfall-breakdown {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.theme-light .waterfall-tree-item:not([level="0"]) {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.025) 2px,
+    rgba(0,0,0,0.025) 4px
+  );
+}
+
+.theme-dark .waterfall-tree-item:not([level="0"]) {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(255,255,255,0.05) 2px,
+    rgba(255,255,255,0.05) 4px
+  );
+}
+
+.theme-light .waterfall-tree-item[expandable] .waterfall-marker-bullet,
+.theme-light .waterfall-tree-item[expandable] .waterfall-marker-bar {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0px,
+    transparent 5px,
+    rgba(255,255,255,0.35) 5px,
+    rgba(255,255,255,0.35) 10px
+  );
+}
+
+.theme-dark .waterfall-tree-item[expandable] .waterfall-marker-bullet,
+.theme-dark .waterfall-tree-item[expandable] .waterfall-marker-bar {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0px,
+    transparent 5px,
+    rgba(0,0,0,0.35) 5px,
+    rgba(0,0,0,0.35) 10px
+  );
+}
+
+.waterfall-tree-item[expanded],
+.waterfall-tree-item:not([level="0"]) + .waterfall-tree-item[level="0"] {
+  box-shadow: 0 -1px var(--cell-border-color-light);
+}
+
+.waterfall-tree-item:nth-child(2n) > .waterfall-marker {
+  background-color: var(--row-alt-background-color);
+}
+
+.waterfall-tree-item:hover {
+  background-color: var(--row-hover-background-color);
+}
+
+.waterfall-tree-item:last-child {
+  border-bottom: 1px solid var(--cell-border-color);
+}
+
+.waterfall-tree-item:focus {
+  background-color: var(--theme-selection-background);
+}
+
+.waterfall-tree-item:focus description {
+  color: var(--theme-selection-color) !important;
+}
+
+/**
+ * Marker left sidebar
+ */
+
+.waterfall-sidebar {
+  -moz-border-end: 1px solid var(--cell-border-color);
+}
+
+.waterfall-tree-item > .waterfall-sidebar:hover,
+.waterfall-tree-item:hover > .waterfall-sidebar,
+.waterfall-tree-item:focus > .waterfall-sidebar {
+  background: transparent;
+}
+
 .waterfall-marker-bullet {
   width: 8px;
   height: 8px;
@@ -412,17 +459,29 @@
   padding-bottom: 1px !important;
 }
 
+/**
+ * Marker timebar
+ */
+
+.waterfall-marker {
+  overflow: hidden;
+}
+
 .waterfall-marker-bar {
   height: 9px;
   transform-origin: left center;
   border-radius: 1px;
 }
 
-.waterfall-marker-container.selected > .waterfall-sidebar,
-.waterfall-marker-container.selected > .waterfall-marker-item {
-  background-color: var(--theme-selection-background);
-  color: var(--theme-selection-color);
+.waterfall-marker > .theme-twisty {
+  /* Don't affect layout. */
+  width: 14px;
+  -moz-margin-end: -14px;
 }
+
+/**
+ * Marker details view
+ */
 
 #waterfall-details {
   -moz-padding-start: 8px;
@@ -432,11 +491,32 @@
   min-width: 50px;
 }
 
+#waterfall-details > * {
+  padding-top: 3px;
+}
+
 .marker-details-bullet {
   width: 8px;
   height: 8px;
   border-radius: 1px;
 }
+
+.marker-details-labelname {
+  -moz-padding-end: 4px;
+}
+
+.marker-details-type {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.marker-details-duration {
+  font-weight: bold;
+}
+
+/**
+ * Marker colors
+ */
 
 menuitem.marker-color-graphs-purple:before,
 .marker-color-graphs-purple {
@@ -461,23 +541,6 @@ menuitem.marker-color-graphs-red:before,
 menuitem.marker-color-graphs-blue:before,
 .marker-color-graphs-blue {
   background-color: var(--theme-graphs-blue);
-}
-
-#waterfall-details > * {
-  padding-top: 3px;
-}
-
-.marker-details-labelname {
-  -moz-padding-end: 4px;
-}
-
-.marker-details-type {
-  font-size: 1.2em;
-  font-weight: bold;
-}
-
-.marker-details-duration {
-  font-weight: bold;
 }
 
 /**

@@ -1369,7 +1369,11 @@ int parseConfigFile(const char* filePath)
   while (!feof(f))
   {
     char c;
-    fscanf(f, "%c", &c);
+
+    if (fscanf(f, "%c", &c) != 1) {
+      break;
+    }
+
     switch (c)
     {
     case '\n':

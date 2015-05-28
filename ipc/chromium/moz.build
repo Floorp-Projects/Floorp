@@ -202,10 +202,8 @@ if os_linux:
         ]
     if CONFIG['MOZ_ENABLE_QT']:
         SOURCES += [
+            '!moc_message_pump_qt.cc',
             'src/base/message_pump_qt.cc',
-        ]
-        GENERATED_SOURCES += [
-            'moc_message_pump_qt.cc',
         ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
         if CONFIG['OS_TARGET'] != 'Android':
@@ -239,10 +237,8 @@ if os_bsd:
         ]
     if CONFIG['MOZ_ENABLE_QT']:
         SOURCES += [
+            '!moc_message_pump_qt.cc',
             'src/base/message_pump_qt.cc',
-        ]
-        GENERATED_SOURCES += [
-            'moc_message_pump_qt.cc',
         ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
         SOURCES += [
