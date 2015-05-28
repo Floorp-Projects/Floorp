@@ -121,31 +121,8 @@ FormAutoComplete.prototype = {
         Services.console.logStringMessage("FormAutoComplete: " + message);
     },
 
-
-    autoCompleteSearch : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult) {
-      Deprecated.warning("nsIFormAutoComplete::autoCompleteSearch is deprecated", "https://bugzilla.mozilla.org/show_bug.cgi?id=697377");
-
-      let result = null;
-      let listener = {
-        onSearchCompletion: function (r) result = r
-      };
-      this._autoCompleteSearchShared(aInputName, aUntrimmedSearchString, aField, aPreviousResult, listener);
-
-      // Just wait for the result to to be available.
-      let thread = Components.classes["@mozilla.org/thread-manager;1"].getService().currentThread;
-      while (!result && this._pendingQuery) {
-        thread.processNextEvent(true);
-      }
-
-      return result;
-    },
-
-    autoCompleteSearchAsync : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult, aListener) {
-      this._autoCompleteSearchShared(aInputName, aUntrimmedSearchString, aField, aPreviousResult, aListener);
-    },
-
     /*
-     * autoCompleteSearchShared
+     * autoCompleteSearchAsync
      *
      * aInputName    -- |name| attribute from the form input being autocompleted.
      * aUntrimmedSearchString -- current value of the input
@@ -154,7 +131,7 @@ FormAutoComplete.prototype = {
      * aListener -- nsIFormAutoCompleteObserver that listens for the nsIAutoCompleteResult
      *              that may be returned asynchronously.
      */
-    _autoCompleteSearchShared : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult, aListener) {
+    autoCompleteSearchAsync : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult, aListener) {
         function sortBytotalScore (a, b) {
             return b.totalScore - a.totalScore;
         }
@@ -359,10 +336,6 @@ FormAutoCompleteChild.prototype = {
       if (!this._debug)
         return;
       dump("FormAutoCompleteChild: " + message + "\n");
-    },
-
-    autoCompleteSearch : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult) {
-      // This function is deprecated
     },
 
     autoCompleteSearchAsync : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult, aListener) {
