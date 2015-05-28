@@ -514,7 +514,7 @@ struct ParamTraits<FallibleTArray<E> >
         return false;
       }
 
-      E* elements = aResult->AppendElements(length);
+      E* elements = aResult->AppendElements(length, mozilla::fallible);
       if (!elements) {
         return false;
       }
