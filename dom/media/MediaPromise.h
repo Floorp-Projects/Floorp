@@ -79,17 +79,17 @@ struct ReturnTypeIs {
  * there is at most one call to either Then(...) or ChainTo(...).
  */
 
-class MediaPromiseBase
+class MediaPromiseRefcountable
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPromiseBase)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPromiseRefcountable)
 protected:
-  virtual ~MediaPromiseBase() {}
+  virtual ~MediaPromiseRefcountable() {}
 };
 
 template<typename T> class MediaPromiseHolder;
 template<typename ResolveValueT, typename RejectValueT, bool IsExclusive>
-class MediaPromise : public MediaPromiseBase
+class MediaPromise : public MediaPromiseRefcountable
 {
 public:
   typedef ResolveValueT ResolveValueType;
@@ -171,11 +171,9 @@ public:
     return Move(p);
   }
 
-  class Consumer
+  class Consumer : public MediaPromiseRefcountable
   {
   public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Consumer)
-
     virtual void Disconnect() = 0;
 
     // MSVC complains when an inner class (ThenValueBase::{Resolve,Reject}Runnable)
