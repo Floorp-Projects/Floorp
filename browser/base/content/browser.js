@@ -7043,8 +7043,6 @@ var gIdentityHandler = {
   },
 
   onPopupShown : function(event) {
-    document.getElementById('identity-popup-more-info-button').focus();
-
     this._identityPopup.addEventListener("blur", this, true);
     this._identityPopup.addEventListener("popuphidden", this);
   },
