@@ -110,7 +110,7 @@ private:
     if (aIndex >= mNumbers.Length()) {
       aIndex = mNumbers.Length();
     }
-    return !!mNumbers.InsertElementAt(aIndex, aNumber);
+    return !!mNumbers.InsertElementAt(aIndex, aNumber, fallible);
   }
 
   void ReplaceItem(uint32_t aIndex, const float &aNumber) {
