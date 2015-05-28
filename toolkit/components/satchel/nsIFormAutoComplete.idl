@@ -9,7 +9,7 @@ interface nsIAutoCompleteResult;
 interface nsIFormAutoCompleteObserver;
 interface nsIDOMHTMLInputElement;
 
-[scriptable, uuid(1d5b18b1-25f9-4407-9a0f-076dba1e41a0)]
+[scriptable, uuid(bfd9b82b-0ab3-4b6b-9e54-aa961ff4b732)]
 interface nsIFormAutoComplete: nsISupports {
     /**
      * Generate results for a form input autocomplete menu asynchronously.
@@ -18,6 +18,7 @@ interface nsIFormAutoComplete: nsISupports {
                                  in AString aSearchString,
                                  in nsIDOMHTMLInputElement aField,
                                  in nsIAutoCompleteResult aPreviousResult,
+                                 in nsIAutoCompleteResult aDatalistResult,
                                  in nsIFormAutoCompleteObserver aListener);
 
     /**

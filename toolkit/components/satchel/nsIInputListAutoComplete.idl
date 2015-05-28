@@ -7,13 +7,11 @@
 interface nsIAutoCompleteResult;
 interface nsIDOMHTMLInputElement;
 
-[scriptable, uuid(9e7ba3eb-a9cf-4861-93e0-82e93d836f7a)]
-
+[scriptable, uuid(0e33de3e-4faf-4a1a-b96e-24115b8bfd45)]
 interface nsIInputListAutoComplete: nsISupports {
   /**
    * Generate results for a form input autocomplete menu.
    */
-  nsIAutoCompleteResult autoCompleteSearch(in nsIAutoCompleteResult aResult,
-                                           in AString aSearchString,
+  nsIAutoCompleteResult autoCompleteSearch(in AString aSearchString,
                                            in nsIDOMHTMLInputElement aField);
 };
