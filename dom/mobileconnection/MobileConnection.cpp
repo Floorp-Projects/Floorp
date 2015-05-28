@@ -300,7 +300,7 @@ bool
 MobileConnection::IsValidCallBarringProgram(int32_t aProgram)
 {
   return aProgram >= nsIMobileConnection::CALL_BARRING_PROGRAM_ALL_OUTGOING &&
-         aProgram <= nsIMobileConnection::CALL_BARRING_PROGRAM_INCOMING_ROAMING;
+         aProgram <= nsIMobileConnection::CALL_BARRING_PROGRAM_INCOMING_SERVICE;
 }
 
 bool

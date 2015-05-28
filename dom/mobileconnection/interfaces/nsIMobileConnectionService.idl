@@ -163,7 +163,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(b9845f09-7cbb-46d0-b713-773d80844e0d)]
+[scriptable, uuid(59a6d450-144b-47f9-8f4a-2132331e9e05)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -214,6 +214,9 @@ interface nsIMobileConnection : nsISupports
   const long CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME = 2;
   const long CALL_BARRING_PROGRAM_ALL_INCOMING                       = 3;
   const long CALL_BARRING_PROGRAM_INCOMING_ROAMING                   = 4;
+  const long CALL_BARRING_PROGRAM_ALL_SERVICE                        = 5;
+  const long CALL_BARRING_PROGRAM_OUTGOING_SERVICE                   = 6;
+  const long CALL_BARRING_PROGRAM_INCOMING_SERVICE                   = 7;
 
   /**
    * Calling line identification restriction constants.
