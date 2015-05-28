@@ -12,7 +12,6 @@
 #include "nsIFile.h"
 #include "nsProxyRelease.h"
 #include "AutoRwLock.h"
-#include "nsIDOMDeviceStorage.h"
 #include "ICameraControl.h"
 #include "CameraCommon.h"
 #include "DeviceStorage.h"
