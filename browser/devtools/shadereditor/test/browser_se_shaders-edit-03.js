@@ -6,7 +6,7 @@
  * their new source on the backend and reshow it in the frontend when required.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, panel } = yield initShaderEditor(MULTIPLE_CONTEXTS_URL);
   let { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 

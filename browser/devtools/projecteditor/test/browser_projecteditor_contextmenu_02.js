@@ -47,14 +47,14 @@ add_task(function*() {
   is (cmdPaste.getAttribute("disabled"), "", "cmdPaste is enabled");
 });
 
-function openContextMenuForEditor(editor, contextMenu) {
+function* openContextMenuForEditor(editor, contextMenu) {
   let editorDoc = editor.editor.container.contentDocument;
   let shown = onPopupShow(contextMenu);
   EventUtils.synthesizeMouse(editorDoc.body, 2, 2,
     {type: "contextmenu", button: 2}, editorDoc.defaultView);
   yield shown;
 }
-function closeContextMenuForEditor(editor, contextMenu) {
+function* closeContextMenuForEditor(editor, contextMenu) {
   let editorDoc = editor.editor.container.contentDocument;
   let hidden = onPopupHidden(contextMenu);
   contextMenu.hidePopup();

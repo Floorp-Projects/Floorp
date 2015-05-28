@@ -13,6 +13,9 @@ dictionary ProfileTimelineStackFrame {
   long column = 0;
   DOMString source;
   DOMString functionDisplayName;
+  object? parent = null;
+  object? asyncParent = null;
+  object? asyncCause = null;
 };
 
 dictionary ProfileTimelineLayerRect {

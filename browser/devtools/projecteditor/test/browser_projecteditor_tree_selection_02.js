@@ -34,7 +34,7 @@ add_task(function*() {
   }
 });
 
-function selectAndRefocusFile(projecteditor, resource) {
+function* selectAndRefocusFile(projecteditor, resource) {
   ok (resource && resource.path, "A valid resource has been passed in for selection " + (resource && resource.path));
   projecteditor.projectTree.selectResource(resource);
 

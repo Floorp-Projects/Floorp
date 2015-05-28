@@ -6,7 +6,7 @@
  * overlapping geometry.
  */
 
-function ifWebGLSupported() {
+function* ifWebGLSupported() {
   let { target, front } = yield initBackend(OVERLAPPING_GEOMETRY_CANVAS_URL);
   front.setup({ reload: true });
 

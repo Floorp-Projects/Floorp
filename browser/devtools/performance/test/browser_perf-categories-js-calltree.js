@@ -5,7 +5,7 @@
  * Tests that the categories are shown in the js call tree when platform data
  * is enabled.
  */
-function spawnTest () {
+function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, $, DetailsView, JsCallTreeView } = panel.panelWin;
 

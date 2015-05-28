@@ -6,7 +6,7 @@
  * and can switch between different recordings with the correct buffer information
  * displayed.
  */
-function spawnTest () {
+function* spawnTest() {
   loadFrameScripts();
   // Keep it large, but still get to 1% relatively quick
   Services.prefs.setIntPref(PROFILER_BUFFER_SIZE_PREF, 1000000);

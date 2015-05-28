@@ -7,7 +7,7 @@
 
 let BUFFER_SIZE = 20000;
 
-function spawnTest () {
+function* spawnTest() {
   let { target, front } = yield initBackend(SIMPLE_URL, { TEST_MOCK_PROFILER_CHECK_TIMER: 10 });
   let config = { bufferSize: BUFFER_SIZE };
 

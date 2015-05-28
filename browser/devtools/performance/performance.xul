@@ -73,6 +73,8 @@
   </popupset>
 
   <hbox class="theme-body" flex="1">
+
+    <!-- Sidebar: controls and recording list -->
     <vbox id="recordings-pane">
       <toolbar id="recordings-toolbar"
                class="devtools-toolbar">
@@ -92,15 +94,21 @@
       <vbox id="recordings-list" flex="1"/>
     </vbox>
 
+    <!-- Main panel content -->
     <vbox id="performance-pane" flex="1">
-      <toolbar id="performance-toolbar" class="devtools-toolbar">
-        <hbox id="performance-toolbar-control-other" class="devtools-toolbarbutton-group">
+
+      <!-- Top toolbar controls -->
+      <toolbar id="performance-toolbar"
+               class="devtools-toolbar">
+        <hbox id="performance-toolbar-controls-other"
+              class="devtools-toolbarbutton-group">
           <toolbarbutton id="filter-button"
                          class="devtools-toolbarbutton"
                          popup="performance-filter-menupopup"
                          tooltiptext="&profilerUI.options.filter.tooltiptext;"/>
         </hbox>
-        <hbox id="performance-toolbar-controls-detail-views" class="devtools-toolbarbutton-group">
+        <hbox id="performance-toolbar-controls-detail-views"
+              class="devtools-toolbarbutton-group">
           <toolbarbutton id="select-waterfall-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="Waterfall"
@@ -128,7 +136,8 @@
                          data-view="memory-flamegraph" />
         </hbox>
         <spacer flex="1"></spacer>
-        <hbox id="performance-toolbar-control-options" class="devtools-toolbarbutton-group">
+        <hbox id="performance-toolbar-controls-options"
+              class="devtools-toolbarbutton-group">
           <toolbarbutton id="performance-options-button"
                          class="devtools-toolbarbutton devtools-option-toolbarbutton"
                          popup="performance-options-menupopup"
@@ -136,7 +145,10 @@
         </hbox>
       </toolbar>
 
+      <!-- Recording contents and general notice messages -->
       <deck id="performance-view" flex="1">
+
+        <!-- "Empty" notice, shown when there's no recordings available -->
         <hbox id="empty-notice"
               class="notice-container"
               align="center"
@@ -149,13 +161,21 @@
                            standalone="true"/>
           </hbox>
         </hbox>
+
+        <!-- Recording contents -->
         <vbox id="performance-view-content" flex="1">
+
+          <!-- Overview graphs -->
           <vbox id="overview-pane">
             <hbox id="markers-overview"/>
             <hbox id="memory-overview"/>
             <hbox id="time-framerate"/>
           </vbox>
+
+          <!-- Detail views and specific notice messages -->
           <deck id="details-pane-container" flex="1">
+
+            <!-- "Loading" notice, shown when a recording is being loaded -->
             <hbox id="loading-notice"
                   class="notice-container devtools-throbber"
                   align="center"
@@ -163,61 +183,65 @@
                   flex="1">
               <label value="&profilerUI.loadingNotice;"/>
             </hbox>
-            <hbox id="recording-notice"
+
+            <!-- "Recording" notice, shown when a recording is in progress -->
+            <vbox id="recording-notice"
                   class="notice-container"
                   align="center"
                   pack="center"
                   flex="1">
-              <vbox>
-                <hbox class="devtools-toolbarbutton-group"
-                      pack="center">
-                  <toolbarbutton class="devtools-toolbarbutton record-button"
-                                 label="&profilerUI.stopRecording;"
-                                 standalone="true"/>
-                </hbox>
-                <label class="realtime-disabled-message">
-                  Realtime recording data disabled on non-multiprocess Firefox.
-                </label>
-                <label class="realtime-disabled-on-e10s-message">
-                  Enable multiprocess Firefox in preferences for rendering recording data in realtime.
-                </label>
-                <label class="buffer-status-message"
-                       tooltiptext="&profilerUI.bufferStatusTooltip;"/>
-                <label class="buffer-status-message-full"
-                       value="&profilerUI.bufferStatusFull;"/>
-              </vbox>
-            </hbox>
-            <hbox id="console-recording-notice"
+              <hbox class="devtools-toolbarbutton-group"
+                    pack="center">
+                <toolbarbutton class="devtools-toolbarbutton record-button"
+                               label="&profilerUI.stopRecording;"
+                               standalone="true"/>
+              </hbox>
+              <label class="realtime-disabled-message">
+                Realtime recording data disabled on non-multiprocess Firefox.
+              </label>
+              <label class="realtime-disabled-on-e10s-message">
+                Enable multiprocess Firefox in preferences for rendering recording data in realtime.
+              </label>
+              <label class="buffer-status-message"
+                     tooltiptext="&profilerUI.bufferStatusTooltip;"/>
+              <label class="buffer-status-message-full"
+                     value="&profilerUI.bufferStatusFull;"/>
+            </vbox>
+
+            <!-- "Console" notice, shown when a console recording is in progress -->
+            <vbox id="console-recording-notice"
                   class="notice-container"
                   align="center"
                   pack="center"
                   flex="1">
-                  <vbox flex="1" align="center">
-                    <hbox class="console-profile-recording-notice">
-                      <label value="&profilerUI.console.recordingNoticeStart;" />
-                      <label class="console-profile-command" />
-                      <label value="&profilerUI.console.recordingNoticeEnd;" />
-                    </hbox>
-                    <hbox class="console-profile-stop-notice">
-                      <label value="&profilerUI.console.stopCommandStart;" />
-                      <label class="console-profile-command" />
-                      <label value="&profilerUI.console.stopCommandEnd;" />
-                    </hbox>
-                    <label class="realtime-disabled-message">
-                      Realtime recording data disabled on non-multiprocess Firefox.
-                    </label>
-                    <label class="realtime-disabled-on-e10s-message">
-                      Enable multiprocess Firefox in preferences for rendering recording data in realtime.
-                    </label>
-                    <label class="buffer-status-message"
-                           tooltiptext="&profilerUI.bufferStatusTooltip;"/>
-                    <label class="buffer-status-message-full"
-                           value="&profilerUI.bufferStatusFull;"/>
-                  </vbox>
-            </hbox>
+              <hbox class="console-profile-recording-notice">
+                <label value="&profilerUI.console.recordingNoticeStart;" />
+                <label class="console-profile-command" />
+                <label value="&profilerUI.console.recordingNoticeEnd;" />
+              </hbox>
+              <hbox class="console-profile-stop-notice">
+                <label value="&profilerUI.console.stopCommandStart;" />
+                <label class="console-profile-command" />
+                <label value="&profilerUI.console.stopCommandEnd;" />
+              </hbox>
+              <label class="realtime-disabled-message">
+                Realtime recording data disabled on non-multiprocess Firefox.
+              </label>
+              <label class="realtime-disabled-on-e10s-message">
+                Enable multiprocess Firefox in preferences for rendering recording data in realtime.
+              </label>
+              <label class="buffer-status-message"
+                     tooltiptext="&profilerUI.bufferStatusTooltip;"/>
+              <label class="buffer-status-message-full"
+                     value="&profilerUI.bufferStatusFull;"/>
+            </vbox>
+
+            <!-- Detail views -->
             <deck id="details-pane" flex="1">
+
+              <!-- Waterfall -->
               <hbox id="waterfall-view" flex="1">
-                <vbox id="waterfall-breakdown" flex="1" class="devtools-main-content" />
+                <vbox id="waterfall-breakdown" flex="1" />
                 <splitter class="devtools-side-splitter"/>
                 <vbox id="waterfall-details"
                       class="theme-sidebar"
@@ -225,6 +249,7 @@
                       height="150"/>
               </hbox>
 
+              <!-- JS Tree and JIT view -->
               <hbox id="js-profile-view" flex="1">
                 <vbox id="js-calltree-view" flex="1">
                   <hbox class="call-tree-headers-container">
@@ -261,7 +286,9 @@
                   </hbox>
                   <vbox class="call-tree-cells-container" flex="1"/>
                 </vbox>
+
                 <splitter id="js-call-tree-splitter" class="devtools-side-splitter"/>
+
                 <vbox id="jit-optimizations-view" hidden="true">
                   <toolbar id="jit-optimizations-toolbar" class="devtools-toolbar">
                     <hbox id="jit-optimizations-header">
@@ -275,9 +302,11 @@
                 </vbox>
               </hbox>
 
+              <!-- JS FlameChart -->
               <hbox id="js-flamegraph-view" flex="1">
               </hbox>
 
+              <!-- Memory Tree -->
               <vbox id="memory-calltree-view" flex="1">
                 <hbox class="call-tree-headers-container">
                   <label class="plain call-tree-header"
@@ -298,8 +327,10 @@
                 <vbox class="call-tree-cells-container" flex="1"/>
               </vbox>
 
+              <!-- Memory FlameChart -->
               <hbox id="memory-flamegraph-view" flex="1">
               </hbox>
+
             </deck>
           </deck>
         </vbox>
