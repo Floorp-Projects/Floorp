@@ -40,6 +40,18 @@ program([
 
 program([
     importDeclaration(
+        [
+            importSpecifier(
+                ident("*"),
+                ident("a")
+            )
+        ],
+        lit("b")
+    )
+]).assert(Reflect.parse("import * as a from 'b'"));
+
+program([
+    importDeclaration(
         [],
         lit("a")
     )
@@ -92,6 +104,106 @@ program([
         lit("a")
     )
 ]).assert(Reflect.parse("import { as as as } from 'a'"));
+
+program([
+    importDeclaration(
+        [
+            importSpecifier(
+                ident("default"),
+                ident("a")
+            ),
+            importSpecifier(
+                ident("*"),
+                ident("b")
+            )
+        ],
+        lit("c")
+    )
+]).assert(Reflect.parse("import a, * as b from 'c'"));
+
+program([
+    importDeclaration(
+        [
+            importSpecifier(
+                ident("default"),
+                ident("d")
+            )
+        ],
+        lit("a")
+    )
+]).assert(Reflect.parse("import d, {} from 'a'"));
+
+program([
+    importDeclaration(
+        [
+            importSpecifier(
+                ident("default"),
+                ident("d")
+            ),
+            importSpecifier(
+                ident("a"),
+                ident("a")
+            )
+        ],
+        lit("b")
+    )
+]).assert(Reflect.parse("import d, { a } from 'b'"));
+
+program([
+    importDeclaration(
+        [
+            importSpecifier(
+                ident("default"),
+                ident("d")
+            ),
+            importSpecifier(
+                ident("a"),
+                ident("b")
+            )
+        ],
+        lit("c")
+    )
+]).assert(Reflect.parse("import d, { a as b } from 'c'"));
+
+program([
+    importDeclaration(
+        [
+            importSpecifier(
+                ident("default"),
+                ident("d")
+            ),
+            importSpecifier(
+                ident("a"),
+                ident("a")
+            ),
+            importSpecifier(
+                ident("b"),
+                ident("b")
+            ),
+        ],
+        lit("c")
+    )
+]).assert(Reflect.parse("import d, { a, b } from 'c'"));
+
+program([
+    importDeclaration(
+        [
+            importSpecifier(
+                ident("default"),
+                ident("d")
+            ),
+            importSpecifier(
+                ident("a"),
+                ident("b")
+            ),
+            importSpecifier(
+                ident("c"),
+                ident("d")
+            ),
+        ],
+        lit("e")
+    )
+]).assert(Reflect.parse("import d, { a as b, c as d } from 'e'"));
 
 program([
     importDeclaration(
@@ -183,4 +295,44 @@ assertThrowsInstanceOf(function() {
 
 assertThrowsInstanceOf(function() {
     Reflect.parse("import { true } from 'a'");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import a,");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import a, b from 'a'");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import * as a,");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import * as a, {} from 'a'");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import as a from 'a'");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import * a from 'a'");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import * as from 'a'");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import , {} from 'a'");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import d, from 'a'");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    Reflect.parse("import * as true from 'b'");
 }, SyntaxError);
