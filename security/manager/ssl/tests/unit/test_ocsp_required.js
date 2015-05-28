@@ -14,6 +14,7 @@ let gOCSPRequestCount = 0;
 function run_test() {
   do_get_profile();
   Services.prefs.setBoolPref("security.OCSP.require", true);
+  Services.prefs.setIntPref("security.OCSP.enabled", 1);
 
   // We don't actually make use of stapling in this test. This is just how we
   // get a TLS connection.
