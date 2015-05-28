@@ -86,6 +86,8 @@ DecodedStreamData::DecodedStreamData(int64_t aInitialTime,
 {
   mListener = new DecodedStreamGraphListener(mStream);
   mStream->AddListener(mListener);
+  // Block the stream until the initialization is done.
+  mStream->ChangeExplicitBlockerCount(1);
 }
 
 DecodedStreamData::~DecodedStreamData()

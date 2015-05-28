@@ -145,20 +145,7 @@ public:
     return mState;
   }
 
-  void DispatchAudioCaptured()
-  {
-    nsRefPtr<MediaDecoderStateMachine> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void
-    {
-      MOZ_ASSERT(self->OnTaskQueue());
-      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
-      if (!self->mAudioCaptured) {
-        self->mAudioCaptured = true;
-        self->ScheduleStateMachine();
-      }
-    });
-    TaskQueue()->Dispatch(r.forget());
-  }
+  void DispatchAudioCaptured();
 
   // Check if the decoder needs to become dormant state.
   bool IsDormantNeeded();
@@ -170,6 +157,9 @@ private:
   // task that gets run on the task queue, and is dispatched from the MDSM
   // constructor immediately after the task queue is created.
   void InitializationTask();
+
+  // Call this IsPlaying() changes. Decoder monitor must be held.
+  void UpdateStreamBlockingForStateMachinePlaying();
 
   void Shutdown();
 public:

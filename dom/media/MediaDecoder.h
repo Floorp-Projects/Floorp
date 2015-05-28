@@ -405,11 +405,6 @@ public:
    */
   void RecreateDecodedStream(int64_t aStartTimeUSecs,
                              MediaStreamGraph* aGraph = nullptr);
-  /**
-   * Call this when mDecoderStateMachine or mDecoderStateMachine->IsPlaying() changes.
-   * Decoder monitor must be held.
-   */
-  void UpdateStreamBlockingForStateMachinePlaying();
 
   DecodedStreamData* GetDecodedStream()
   {
