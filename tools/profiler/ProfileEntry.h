@@ -111,7 +111,7 @@ class UniqueStacks
 {
 public:
   struct FrameKey {
-    std::string mLocation;
+    nsCString mLocation;
     mozilla::Maybe<unsigned> mLine;
     mozilla::Maybe<unsigned> mCategory;
     mozilla::Maybe<void*> mJITAddress;
@@ -119,6 +119,14 @@ public:
 
     explicit FrameKey(const char* aLocation)
      : mLocation(aLocation)
+    { }
+
+    FrameKey(const FrameKey& aToCopy)
+     : mLocation(aToCopy.mLocation)
+     , mLine(aToCopy.mLine)
+     , mCategory(aToCopy.mCategory)
+     , mJITAddress(aToCopy.mJITAddress)
+     , mJITDepth(aToCopy.mJITDepth)
     { }
 
     FrameKey(void* aJITAddress, uint32_t aJITDepth)
@@ -137,6 +145,11 @@ public:
     explicit OnStackFrameKey(const char* aLocation)
       : FrameKey(aLocation)
       , mJITFrameHandle(nullptr)
+    { }
+
+    OnStackFrameKey(const OnStackFrameKey& aToCopy)
+      : FrameKey(aToCopy)
+      , mJITFrameHandle(aToCopy.mJITFrameHandle)
     { }
 
     OnStackFrameKey(void* aJITAddress, unsigned aJITDepth)
