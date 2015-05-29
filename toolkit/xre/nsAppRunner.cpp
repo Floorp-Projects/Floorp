@@ -676,26 +676,10 @@ SetUpSandboxEnvironment()
   }
 }
 
-static void
-CleanUpSandboxEnvironment()
-{
-  // We can't have created a low integrity temp before Vista.
-  if (!IsVistaOrLater()) {
-    return;
-  }
-
-  // Get temp directory suffix pref.
-  nsAdoptingString tempDirSuffix =
-    Preferences::GetString("security.sandbox.content.tempDirSuffix");
-  if (tempDirSuffix.IsEmpty()) {
-    return;
-  }
-
-  // Get and remove the low integrity Mozilla temp directory.
-  // This function already warns if the deletion fails.
-  unused << GetAndCleanLowIntegrityTemp(tempDirSuffix);
-
 #if defined(NIGHTLY_BUILD)
+static void
+CleanUpOldSandboxEnvironment()
+{
   // Temporary code to clean up the old low integrity temp directories.
   // The removal of this is tracked by bug 1165818.
   nsCOMPtr<nsIFile> lowIntegrityMozilla;
@@ -734,7 +718,31 @@ CleanUpSandboxEnvironment()
       file->Remove(/* aRecursive */ true);
     }
   }
+}
 #endif
+
+static void
+CleanUpSandboxEnvironment()
+{
+  // We can't have created a low integrity temp before Vista.
+  if (!IsVistaOrLater()) {
+    return;
+  }
+
+#if defined(NIGHTLY_BUILD)
+  CleanUpOldSandboxEnvironment();
+#endif
+
+  // Get temp directory suffix pref.
+  nsAdoptingString tempDirSuffix =
+    Preferences::GetString("security.sandbox.content.tempDirSuffix");
+  if (tempDirSuffix.IsEmpty()) {
+    return;
+  }
+
+  // Get and remove the low integrity Mozilla temp directory.
+  // This function already warns if the deletion fails.
+  nsCOMPtr<nsIFile> lowIntegrityTemp = GetAndCleanLowIntegrityTemp(tempDirSuffix);
 }
 #endif
 

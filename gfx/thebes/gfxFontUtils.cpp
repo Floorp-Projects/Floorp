@@ -992,7 +992,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const uint8_t *aFontData,
     uint32_t adjFontDataSize = paddedFontDataSize + nameTableSize;
 
     // create new buffer: old font data plus new name table
-    if (!aNewFont->AppendElements(adjFontDataSize))
+    if (!aNewFont->AppendElements(adjFontDataSize, fallible))
         return NS_ERROR_OUT_OF_MEMORY;
 
     // copy the old font data

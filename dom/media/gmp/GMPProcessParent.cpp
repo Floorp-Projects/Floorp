@@ -6,6 +6,8 @@
 
 #include "GMPProcessParent.h"
 #include "GMPUtils.h"
+#include "nsIFile.h"
+#include "nsIRunnable.h"
 
 #include "base/string_util.h"
 #include "base/process_util.h"

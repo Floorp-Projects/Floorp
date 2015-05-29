@@ -78,7 +78,8 @@ public:
     SystemProtect(aAddr, aSize, aRights);
   }
 
-  NS_INLINE_DECL_REFCOUNTING(SharedMemory)
+  // bug 1168843, compositor thread may create shared memory instances that are destroyed by main thread on shutdown, so this must use thread-safe RC to avoid hitting assertion
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedMemory)
 
   static void SystemProtect(char* aAddr, size_t aSize, int aRights);
   static size_t SystemPageSize();

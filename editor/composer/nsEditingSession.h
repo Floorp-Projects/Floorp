@@ -56,7 +56,7 @@ public:
 
   // nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER
-  
+
   // nsIEditingSession
   NS_DECL_NSIEDITINGSESSION
 
@@ -64,13 +64,13 @@ protected:
   virtual         ~nsEditingSession();
 
   nsIDocShell *   GetDocShellFromWindow(nsIDOMWindow *aWindow);
-  
+
   nsresult        SetupEditorCommandController(const char *aControllerClassName,
                                                nsIDOMWindow *aWindow,
                                                nsISupports *aContext,
                                                uint32_t *aControllerId);
 
-  nsresult        SetContextOnControllerById(nsIControllers* aControllers, 
+  nsresult        SetContextOnControllerById(nsIControllers* aControllers,
                                             nsISupports* aContext,
                                             uint32_t aID);
 
@@ -78,17 +78,17 @@ protected:
 
   static void     TimerCallback(nsITimer *aTimer, void *aClosure);
   nsCOMPtr<nsITimer>  mLoadBlankDocTimer;
-  
+
   // progress load stuff
   nsresult        StartDocumentLoad(nsIWebProgress *aWebProgress,
                                     bool isToBeMadeEditable);
-  nsresult        EndDocumentLoad(nsIWebProgress *aWebProgress, 
+  nsresult        EndDocumentLoad(nsIWebProgress *aWebProgress,
                                   nsIChannel* aChannel, nsresult aStatus,
                                   bool isToBeMadeEditable);
   nsresult        StartPageLoad(nsIChannel *aChannel);
-  nsresult        EndPageLoad(nsIWebProgress *aWebProgress, 
+  nsresult        EndPageLoad(nsIWebProgress *aWebProgress,
                               nsIChannel* aChannel, nsresult aStatus);
-  
+
   bool            IsProgressForTargetDocument(nsIWebProgress *aWebProgress);
 
   void            RemoveEditorControllers(nsIDOMWindow *aWindow);
@@ -102,10 +102,10 @@ protected:
   bool            mDoneSetup;    // have we prepared for editing yet?
 
   // Used to prevent double creation of editor because nsIWebProgressListener
-  //  receives a STATE_STOP notification before the STATE_START 
-  //  for our document, so we wait for the STATE_START, then STATE_STOP 
+  //  receives a STATE_STOP notification before the STATE_START
+  //  for our document, so we wait for the STATE_START, then STATE_STOP
   //  before creating an editor
-  bool            mCanCreateEditor; 
+  bool            mCanCreateEditor;
 
   bool            mInteractive;
   bool            mMakeWholeDocumentEditable;
@@ -128,9 +128,9 @@ protected:
   // THE REMAINING MEMBER VARIABLES WILL BECOME A SET WHEN WE EDIT
   // MORE THAN ONE EDITOR PER EDITING SESSION
   nsRefPtr<nsComposerCommandsUpdater> mStateMaintainer;
-  
+
   // Save the editor type so we can create the editor after loading uri
-  nsCString       mEditorType; 
+  nsCString       mEditorType;
   uint32_t        mEditorFlags;
   uint32_t        mEditorStatus;
   uint32_t        mBaseCommandControllerId;

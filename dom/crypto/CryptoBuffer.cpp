@@ -59,7 +59,7 @@ CryptoBuffer::Assign(const ArrayBufferViewOrArrayBuffer& aData)
 
   // If your union is uninitialized, something's wrong
   MOZ_ASSERT(false);
-  SetLength(0);
+  Clear();
   return nullptr;
 }
 
@@ -74,7 +74,7 @@ CryptoBuffer::Assign(const OwningArrayBufferViewOrArrayBuffer& aData)
 
   // If your union is uninitialized, something's wrong
   MOZ_ASSERT(false);
-  SetLength(0);
+  Clear();
   return nullptr;
 }
 

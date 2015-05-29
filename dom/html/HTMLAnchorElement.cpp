@@ -43,6 +43,13 @@ HTMLAnchorElement::~HTMLAnchorElement()
 {
 }
 
+bool
+HTMLAnchorElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
+{
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::href) ||
+         nsGenericHTMLElement::IsInteractiveHTMLContent(aIgnoreTabindex);
+}
+
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLAnchorElement)
   NS_INTERFACE_TABLE_INHERITED(HTMLAnchorElement,
                                nsIDOMHTMLAnchorElement,

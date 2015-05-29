@@ -118,7 +118,7 @@ SVGTransformListSMILType::Add(nsSMILValue& aDest,
   const SVGTransformSMILData& srcTransform = srcTransforms[0];
   if (dstTransforms.IsEmpty()) {
     SVGTransformSMILData* result = dstTransforms.AppendElement(
-      SVGTransformSMILData(srcTransform.mTransformType));
+      SVGTransformSMILData(srcTransform.mTransformType), fallible);
     NS_ENSURE_TRUE(result,NS_ERROR_OUT_OF_MEMORY);
   }
   SVGTransformSMILData& dstTransform = dstTransforms[0];
@@ -170,7 +170,8 @@ SVGTransformListSMILType::SandwichAdd(nsSMILValue& aDest,
 
   // Stick the src on the end of the array
   const SVGTransformSMILData& srcTransform = srcTransforms[0];
-  SVGTransformSMILData* result = dstTransforms.AppendElement(srcTransform);
+  SVGTransformSMILData* result =
+    dstTransforms.AppendElement(srcTransform, fallible);
   NS_ENSURE_TRUE(result,NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
@@ -305,7 +306,7 @@ SVGTransformListSMILType::Interpolate(const nsSMILValue& aStartVal,
 
   // Assign the result
   SVGTransformSMILData* transform =
-    dstTransforms.AppendElement(resultTransform);
+    dstTransforms.AppendElement(resultTransform, fallible);
   NS_ENSURE_TRUE(transform,NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
@@ -323,7 +324,7 @@ SVGTransformListSMILType::AppendTransform(
   NS_PRECONDITION(aValue.mType == Singleton(), "Unexpected SMIL value type");
 
   TransformArray& transforms = *static_cast<TransformArray*>(aValue.mU.mPtr);
-  return transforms.AppendElement(aTransform) ?
+  return transforms.AppendElement(aTransform, fallible) ?
     NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -342,7 +343,8 @@ SVGTransformListSMILType::AppendTransforms(const SVGTransformList& aList,
   for (uint32_t i = 0; i < aList.Length(); ++i) {
     // No need to check the return value below since we have already allocated
     // the necessary space
-    MOZ_ALWAYS_TRUE(transforms.AppendElement(SVGTransformSMILData(aList[i])));
+    MOZ_ALWAYS_TRUE(transforms.AppendElement(SVGTransformSMILData(aList[i]),
+                                             fallible));
   }
   return true;
 }
@@ -364,7 +366,7 @@ SVGTransformListSMILType::GetTransforms(const nsSMILValue& aValue,
   for (uint32_t i = 0; i < smilTransforms.Length(); ++i) {
     // No need to check the return value below since we have already allocated
     // the necessary space
-    aTransforms.AppendElement(smilTransforms[i].ToSVGTransform());
+    aTransforms.AppendElement(smilTransforms[i].ToSVGTransform(), fallible);
   }
   return true;
 }

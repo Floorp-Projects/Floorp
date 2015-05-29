@@ -11,6 +11,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/DebugOnly.h"
 
 class nsIRunnable;
 
@@ -94,6 +95,7 @@ private:
   bool mHasXPCOMEvents;
   bool mRerunCurrentEvent;
   bool mShutdown;
+  DebugOnly<bool> mInsideLoop;
 };
 
 } // net

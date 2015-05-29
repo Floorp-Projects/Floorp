@@ -151,8 +151,10 @@ BaselineCompiler::compile()
             indexEntry.pcOffset = entry.pcOffset;
             indexEntry.nativeOffset = entry.nativeOffset;
             indexEntry.bufferOffset = pcEntries.length();
-            if (!pcMappingIndexEntries.append(indexEntry))
+            if (!pcMappingIndexEntries.append(indexEntry)) {
+                ReportOutOfMemory(cx);
                 return Method_Error;
+            }
             previousOffset = entry.nativeOffset;
         }
 

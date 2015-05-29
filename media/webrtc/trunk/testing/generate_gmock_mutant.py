@@ -276,7 +276,7 @@ CreateFunctor(T* obj, R (U::*method)(%(params)s), %(args)s) {
   MutantRunner<R, %(calltime)s>* t =
       new Mutant<R, T, R (U::*)(%(params)s),
                  %(prebound)s, %(calltime)s>
-          (obj, method, MakeTuple(%(call_args)s));
+          (obj, method, base::MakeTuple(%(call_args)s));
   return MutantFunctor<R, %(calltime)s>(t);
 }
 """
@@ -288,7 +288,7 @@ CreateFunctor(R (*function)(%(params)s), %(args)s) {
   MutantRunner<R, %(calltime)s>* t =
       new MutantFunction<R, R (*)(%(params)s),
                          %(prebound)s, %(calltime)s>
-          (function, MakeTuple(%(call_args)s));
+          (function, base::MakeTuple(%(call_args)s));
   return MutantFunctor<R, %(calltime)s>(t);
 }
 """

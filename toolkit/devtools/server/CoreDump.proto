@@ -1,0 +1,69 @@
+/* -*- Mode: protobuf; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// # Core Dumps
+//
+// A core dump is a serialized snapshot of the heap graph. We serialize the heap
+// as a series of protobuf messages with each message prefixed by its Varint32
+// byte size so we can delimit individual protobuf messages (protobuf parsers
+// cannot determine where a message ends on their own).
+//
+// The first protobuf message is an instance of the `Metadata` message. All
+// subsequent messages will be instances of the `Node` message. The first of
+// these `Node` messages is the root node of the serialized heap graph. Here is
+// a diagram of our core dump format:
+//
+//     +-----------------------------------------------------------------------+
+//     | Varint32: The size of following `Metadata` message.                   |
+//     +-----------------------------------------------------------------------+
+//     | message: The core dump `Metadata` message.                            |
+//     +-----------------------------------------------------------------------+
+//     | Varint32: The size of the following `Node` message.                   |
+//     +-----------------------------------------------------------------------+
+//     | message: The first `Node` message. This is the root node.             |
+//     +-----------------------------------------------------------------------+
+//     | Varint32: The size of the following `Node` message.                   |
+//     +-----------------------------------------------------------------------+
+//     | message: A `Node` message.                                            |
+//     +-----------------------------------------------------------------------+
+//     | Varint32: The size of the following `Node` message.                   |
+//     +-----------------------------------------------------------------------+
+//     | message: A `Node` message.                                            |
+//     +-----------------------------------------------------------------------+
+//     | .                                                                     |
+//     | .                                                                     |
+//     | .                                                                     |
+//     +-----------------------------------------------------------------------+
+//
+// In practice, certain message fields have a lot of duplication (such as type
+// or edge name strings). Rather than try and de-duplicate this information at
+// the protobuf message and field level, core dumps should be written with
+// `google::protobuf::io::GzipOutputStream` and read from
+// `google::protobuf::io::GzipInputStream`.
+
+package mozilla.devtools.protobuf;
+
+// A collection of metadata about this core dump.
+message Metadata {
+    // Number of microseconds since midnight (00:00:00) 1 January 1970 UTC.
+    optional uint64 timeStamp = 1;
+}
+
+// A serialized version of `JS::ubi::Node` and its outgoing edges.
+message Node {
+    optional uint64 id       = 1;
+    // char16_t[]
+    optional bytes  typeName = 2;
+    optional uint64 size     = 3;
+    repeated Edge   edges    = 4;
+}
+
+// A serialized edge from the heap graph.
+message Edge {
+    optional uint64 referent = 1;
+    // char16_t[]
+    optional bytes  name     = 2;
+}

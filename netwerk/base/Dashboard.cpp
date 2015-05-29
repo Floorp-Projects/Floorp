@@ -311,7 +311,7 @@ LookupHelper::ConstructAnswer(LookupArgument *aArgument)
         bool hasMore;
         aRecord->HasMore(&hasMore);
         while (hasMore) {
-            nsString* nextAddress = addresses.AppendElement();
+            nsString* nextAddress = addresses.AppendElement(fallible);
             if (!nextAddress) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
@@ -397,7 +397,7 @@ Dashboard::GetSockets(SocketData *aSocketData)
     }
 
     for (uint32_t i = 0; i < socketData->mData.Length(); i++) {
-        mozilla::dom::SocketElement &mSocket = *sockets.AppendElement();
+        dom::SocketElement &mSocket = *sockets.AppendElement(fallible);
         CopyASCIItoUTF16(socketData->mData[i].host, mSocket.mHost);
         mSocket.mPort = socketData->mData[i].port;
         mSocket.mActive = socketData->mData[i].active;
@@ -467,7 +467,7 @@ Dashboard::GetHttpConnections(HttpData *aHttpData)
     }
 
     for (uint32_t i = 0; i < httpData->mData.Length(); i++) {
-        HttpConnectionElement &connection = *connections.AppendElement();
+        HttpConnectionElement &connection = *connections.AppendElement(fallible);
 
         CopyASCIItoUTF16(httpData->mData[i].host, connection.mHost);
         connection.mPort = httpData->mData[i].port;
@@ -491,7 +491,7 @@ Dashboard::GetHttpConnections(HttpData *aHttpData)
         }
 
         for (uint32_t j = 0; j < httpData->mData[i].active.Length(); j++) {
-            HttpConnInfo &info = *active.AppendElement();
+            HttpConnInfo &info = *active.AppendElement(fallible);
             info.mRtt = httpData->mData[i].active[j].rtt;
             info.mTtl = httpData->mData[i].active[j].ttl;
             info.mProtocolVersion =
@@ -499,14 +499,14 @@ Dashboard::GetHttpConnections(HttpData *aHttpData)
         }
 
         for (uint32_t j = 0; j < httpData->mData[i].idle.Length(); j++) {
-            HttpConnInfo &info = *idle.AppendElement();
+            HttpConnInfo &info = *idle.AppendElement(fallible);
             info.mRtt = httpData->mData[i].idle[j].rtt;
             info.mTtl = httpData->mData[i].idle[j].ttl;
             info.mProtocolVersion = httpData->mData[i].idle[j].protocolVersion;
         }
 
         for (uint32_t j = 0; j < httpData->mData[i].halfOpens.Length(); j++) {
-            HalfOpenInfoDict &info = *halfOpens.AppendElement();
+            HalfOpenInfoDict &info = *halfOpens.AppendElement(fallible);
             info.mSpeculative = httpData->mData[i].halfOpens[j].speculative;
         }
     }
@@ -630,7 +630,7 @@ Dashboard::GetWebSocketConnections(WebSocketRequest *aWsRequest)
     }
 
     for (uint32_t i = 0; i < mWs.data.Length(); i++) {
-        mozilla::dom::WebSocketElement &websocket = *websockets.AppendElement();
+        dom::WebSocketElement &websocket = *websockets.AppendElement(fallible);
         CopyASCIItoUTF16(mWs.data[i].mHost, websocket.mHostport);
         websocket.mMsgsent = mWs.data[i].mMsgSent;
         websocket.mMsgreceived = mWs.data[i].mMsgReceived;
@@ -703,7 +703,7 @@ Dashboard::GetDNSCacheEntries(DnsData *dnsData)
     }
 
     for (uint32_t i = 0; i < dnsData->mData.Length(); i++) {
-        mozilla::dom::DnsCacheEntry &entry = *entries.AppendElement();
+        dom::DnsCacheEntry &entry = *entries.AppendElement(fallible);
         entry.mHostaddr.Construct();
 
         Sequence<nsString> &addrs = entry.mHostaddr.Value();
@@ -717,7 +717,7 @@ Dashboard::GetDNSCacheEntries(DnsData *dnsData)
 
         for (uint32_t j = 0; j < dnsData->mData[i].hostaddr.Length(); j++) {
             CopyASCIItoUTF16(dnsData->mData[i].hostaddr[j],
-                *addrs.AppendElement());
+                             *addrs.AppendElement(fallible));
         }
 
         if (dnsData->mData[i].family == PR_AF_INET6) {

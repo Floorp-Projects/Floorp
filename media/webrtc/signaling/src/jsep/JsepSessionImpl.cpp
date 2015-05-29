@@ -903,11 +903,12 @@ CompareCodec(const JsepCodecDescription* lhs, const JsepCodecDescription* rhs)
 }
 
 PtrVector<JsepCodecDescription>
-JsepSessionImpl::GetCommonCodecs(const SdpMediaSection& remoteMsection)
+JsepSessionImpl::GetCommonCodecs(const SdpMediaSection& offerMsection)
 {
+  MOZ_ASSERT(!mIsOfferer);
   PtrVector<JsepCodecDescription> matchingCodecs;
-  for (const std::string& fmt : remoteMsection.GetFormats()) {
-    JsepCodecDescription* codec = FindMatchingCodec(fmt, remoteMsection);
+  for (const std::string& fmt : offerMsection.GetFormats()) {
+    JsepCodecDescription* codec = FindMatchingCodec(fmt, offerMsection);
     if (codec) {
       codec->mDefaultPt = fmt; // Remember the other side's PT
       matchingCodecs.values.push_back(codec->Clone());
@@ -1715,11 +1716,25 @@ JsepSessionImpl::NegotiateTrack(const SdpMediaSection& remoteMsection,
       MakeUnique<JsepTrackNegotiatedDetailsImpl>();
   negotiatedDetails->mProtocol = remoteMsection.GetProtocol();
 
-  // Insert all the codecs we jointly support.
-  PtrVector<JsepCodecDescription> commonCodecs(
-      GetCommonCodecs(remoteMsection));
+  auto& answerMsection = mIsOfferer ? remoteMsection : localMsection;
 
-  for (JsepCodecDescription* codec : commonCodecs.values) {
+  for (auto& format : answerMsection.GetFormats()) {
+    JsepCodecDescription* origCodec = FindMatchingCodec(format, answerMsection);
+    if (!origCodec) {
+      continue;
+    }
+
+    // Make sure codec->mDefaultPt is consistent with what is in the remote
+    // msection, since the following logic needs to look stuff up there.
+    for (auto& remoteFormat : remoteMsection.GetFormats()) {
+      if (origCodec->Matches(remoteFormat, remoteMsection)) {
+        origCodec->mDefaultPt = remoteFormat;
+        break;
+      }
+    }
+
+    UniquePtr<JsepCodecDescription> codec(origCodec->Clone());
+
     bool sending = (direction == JsepTrack::kJsepTrackSending);
 
     // Everywhere else in JsepSessionImpl, a JsepCodecDescription describes
@@ -1751,7 +1766,7 @@ JsepSessionImpl::NegotiateTrack(const SdpMediaSection& remoteMsection,
       }
     }
 
-    negotiatedDetails->mCodecs.values.push_back(codec->Clone());
+    negotiatedDetails->mCodecs.values.push_back(codec.release());
     break;
   }
 
@@ -1759,8 +1774,6 @@ JsepSessionImpl::NegotiateTrack(const SdpMediaSection& remoteMsection,
     JSEP_SET_ERROR("Failed to negotiate codec details for all codecs");
     return NS_ERROR_INVALID_ARG;
   }
-
-  auto& answerMsection = mIsOfferer ? remoteMsection : localMsection;
 
   if (answerMsection.GetAttributeList().HasAttribute(
         SdpAttribute::kExtmapAttribute)) {

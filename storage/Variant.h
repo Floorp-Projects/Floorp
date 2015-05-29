@@ -263,7 +263,7 @@ struct variant_storage_traits<uint8_t[], false>
   {
     _outData->Clear();
     (void)_outData->AppendElements(static_cast<const uint8_t *>(aBlob.first),
-                                   aBlob.second);
+                                   aBlob.second, fallible);
   }
   static inline void destroy(const StorageType& _outData)
   { }

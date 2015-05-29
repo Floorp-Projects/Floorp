@@ -228,7 +228,7 @@ nsScreen::MozLockOrientation(const nsAString& aOrientation, ErrorResult& aRv)
 {
   nsString orientation(aOrientation);
   Sequence<nsString> orientations;
-  if (!orientations.AppendElement(orientation)) {
+  if (!orientations.AppendElement(orientation, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return false;
   }

@@ -44,17 +44,23 @@ function create2ndLevelIframeUrl(schemeFrom, schemeTo, policy, type) {
 // loaded. The click triggers a redirection to file_bug704320_redirect.html,
 // which in turn notifies the main window that it's time to check the test
 // results.
-function createTest(schemeFrom, schemeTo, policy) {
+function createTest(schemeFrom, schemeTo, policy, optionalEarlierPolicy) {
   var _createTestUrl = createTestUrl.bind(
       null, schemeFrom, schemeTo, policy, 'test');
 
   var _create2ndLevelIframeUrl = create2ndLevelIframeUrl.bind(
       null, schemeFrom, schemeTo, policy);
 
+  var metaReferrerPolicyString = '';
+  if (optionalEarlierPolicy && optionalEarlierPolicy != '') {
+    metaReferrerPolicyString += '<meta name="referrer" content="' + optionalEarlierPolicy + '">\n';
+  }
+  metaReferrerPolicyString += '<meta name="referrer" content="' + policy + '">';
+
   return '<!DOCTYPE HTML>\n\
          <html>\n\
          <head>\n\
-           <meta name="referrer" content="' + policy + '">\n\
+	    '+metaReferrerPolicyString+'\n\
            <link rel="stylesheet" type="text/css" href="' + _createTestUrl('stylesheet') + '">\n\
            <style type="text/css">\n\
              @import "' + _createTestUrl('import-css') + '";\n\
@@ -165,11 +171,17 @@ function createIframedWindowLocationTest(schemeFrom, schemeTo, policy) {
          </html>';
 }
 
-function createPolicyTest(refpol) {
+function createPolicyTest(policy, optionalEarlierPolicy) {
+  var metaReferrerPolicyString = '';
+  if (optionalEarlierPolicy && optionalEarlierPolicy != '') {
+    metaReferrerPolicyString += '<meta name="referrer" content="' + optionalEarlierPolicy + '">\n';
+  }
+  metaReferrerPolicyString += '<meta name="referrer" content="' + policy + '">';
+
   return '<!DOCTYPE HTML>\n\
           <html>\n\
           <head>\n\
-            <meta name="referrer" content="' + refpol + '">\n\
+	    '+metaReferrerPolicyString+'\n\
             <script type="text/javascript" src="/tests/dom/base/test/file_bug704320_preload_common.js"></script>\n\
           </head>\n\
           <body>\n\
@@ -191,10 +203,14 @@ function handleRequest(request, response) {
     var schemeFrom = params[1].split('=')[1];
     var schemeTo = params[2].split('=')[1];
     var policy = params[3].split('=')[1];
+    var optionalEarlierPolicy = '';
+    if (params[4]) {
+      optionalEarlierPolicy = params[4].split('=')[1];
+    }
 
     response.setHeader('Content-Type', 'text/html; charset=utf-8', false);
     response.setHeader('Cache-Control', 'no-cache', false);
-    response.write(createTest(schemeFrom, schemeTo, policy));
+    response.write(createTest(schemeFrom, schemeTo, policy, optionalEarlierPolicy));
   }
   else if (action === 'create-2nd-level-iframe') {
     // ?action=create-2nd-level-iframe&scheme-from=http&scheme-to=https&policy=origin&type=form"
@@ -266,7 +282,12 @@ function handleRequest(request, response) {
     // ?action=generate-policy-test&policy=b64-encoded-string
     response.setHeader('Cache-Control', 'no-cache', false);
     response.setHeader('Content-Type', 'text/html', false);
-    var refpol = unescape(params[1].split('=')[1]);
-    response.write(createPolicyTest(refpol));
+    var policy = unescape(params[1].split('=')[1]);
+    var optionalEarlierPolicy = '';
+    if (params[2]) {
+      optionalEarlierPolicy = params[2].split('=')[1];
+    }
+
+    response.write(createPolicyTest(policy, optionalEarlierPolicy));
   }
 }

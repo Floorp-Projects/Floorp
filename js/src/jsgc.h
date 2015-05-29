@@ -1408,7 +1408,7 @@ class AutoEnterOOMUnsafeRegion
 
   public:
     AutoEnterOOMUnsafeRegion()
-      : oomEnabled_(OOM_maxAllocations != UINT32_MAX)
+      : oomEnabled_(OOM_maxAllocations != UINT32_MAX), oomAfter_(0)
     {
         if (oomEnabled_) {
             oomAfter_ = OOM_maxAllocations - OOM_counter;

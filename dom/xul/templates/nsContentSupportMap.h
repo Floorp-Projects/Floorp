@@ -21,13 +21,10 @@
  */
 class nsContentSupportMap {
 public:
-    nsContentSupportMap() { Init(); }
-    ~nsContentSupportMap() { Finish(); }
+    nsContentSupportMap() : mMap(PL_DHashGetStubOps(), sizeof(Entry)) { }
+    ~nsContentSupportMap() { }
 
     nsresult Put(nsIContent* aElement, nsTemplateMatch* aMatch) {
-        if (!mMap.IsInitialized())
-            return NS_ERROR_NOT_INITIALIZED;
-
         PLDHashEntryHdr* hdr =
             PL_DHashTableAdd(&mMap, aElement, mozilla::fallible);
         if (!hdr)
@@ -41,9 +38,6 @@ public:
     }
 
     bool Get(nsIContent* aElement, nsTemplateMatch** aMatch) {
-        if (!mMap.IsInitialized())
-            return false;
-
         PLDHashEntryHdr* hdr = PL_DHashTableSearch(&mMap, aElement);
         if (!hdr)
             return false;
@@ -55,13 +49,10 @@ public:
 
     nsresult Remove(nsIContent* aElement);
 
-    void Clear() { Finish(); Init(); }
+    void Clear() { mMap.Clear(); }
 
 protected:
-    PLDHashTable mMap;
-
-    void Init();
-    void Finish();
+    PLDHashTable2 mMap;
 
     struct Entry : public PLDHashEntryHdr {
         nsIContent*      mContent;

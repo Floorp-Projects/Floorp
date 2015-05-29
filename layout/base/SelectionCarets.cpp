@@ -1031,25 +1031,25 @@ GetSelectionStates(int16_t aReason)
 {
   dom::Sequence<SelectionState> states;
   if (aReason & nsISelectionListener::DRAG_REASON) {
-    states.AppendElement(SelectionState::Drag);
+    states.AppendElement(SelectionState::Drag, fallible);
   }
   if (aReason & nsISelectionListener::MOUSEDOWN_REASON) {
-    states.AppendElement(SelectionState::Mousedown);
+    states.AppendElement(SelectionState::Mousedown, fallible);
   }
   if (aReason & nsISelectionListener::MOUSEUP_REASON) {
-    states.AppendElement(SelectionState::Mouseup);
+    states.AppendElement(SelectionState::Mouseup, fallible);
   }
   if (aReason & nsISelectionListener::KEYPRESS_REASON) {
-    states.AppendElement(SelectionState::Keypress);
+    states.AppendElement(SelectionState::Keypress, fallible);
   }
   if (aReason & nsISelectionListener::SELECTALL_REASON) {
-    states.AppendElement(SelectionState::Selectall);
+    states.AppendElement(SelectionState::Selectall, fallible);
   }
   if (aReason & nsISelectionListener::COLLAPSETOSTART_REASON) {
-    states.AppendElement(SelectionState::Collapsetostart);
+    states.AppendElement(SelectionState::Collapsetostart, fallible);
   }
   if (aReason & nsISelectionListener::COLLAPSETOEND_REASON) {
-    states.AppendElement(SelectionState::Collapsetoend);
+    states.AppendElement(SelectionState::Collapsetoend, fallible);
   }
   return states;
 }
@@ -1074,7 +1074,7 @@ SelectionCarets::DispatchSelectionStateChangedEvent(Selection* aSelection,
                                                     SelectionState aState)
 {
   dom::Sequence<SelectionState> state;
-  state.AppendElement(aState);
+  state.AppendElement(aState, fallible);
   DispatchSelectionStateChangedEvent(aSelection, state);
 }
 
