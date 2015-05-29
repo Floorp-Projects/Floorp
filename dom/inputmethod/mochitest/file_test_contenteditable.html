@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<div id="text" contenteditable>Jan Jongboom</div>
+<script type="application/javascript;version=1.7">
+  var t = document.querySelector('#text');
+
+  t.focus();
+  var range = document.createRange();
+  range.selectNodeContents(t);
+  range.collapse(false);
+  var selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+</script>
+</body>
+</html>
