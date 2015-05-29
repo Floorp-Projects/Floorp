@@ -2214,6 +2214,26 @@ js::InitSelfHostingCollectionIteratorFunctions(JSContext* cx, HandleObject obj)
     return JS_DefineFunctions(cx, obj, selfhosting_collection_iterator_methods);
 }
 
+/*** JS static utility functions *********************************************/
+
+static
+bool
+forEach(const char* funcName, JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue thisArg)
+{
+    RootedId forEachId(cx, NameToId(cx->names().forEach));
+    RootedFunction forEachFunc(cx, JS::GetSelfHostedFunction(cx, funcName, forEachId, 2));
+    if (!forEachFunc)
+        return false;
+    InvokeArgs args(cx);
+    if (!args.init(2))
+        return false;
+    args.setCallee(JS::ObjectValue(*forEachFunc));
+    args.setThis(JS::ObjectValue(*obj));
+    args[0].set(callbackFn);
+    args[1].set(thisArg);
+    return Invoke(cx, args);
+}
+
 /*** JS public APIs **********************************************************/
 
 JS_PUBLIC_API(JSObject*)
@@ -2292,6 +2312,12 @@ JS::MapEntries(JSContext* cx, HandleObject obj, MutableHandleValue rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, rval);
     return MapObject::iterator(cx, MapObject::Entries, obj, rval);
+
+JS_PUBLIC_API(bool)
+JS::MapForEach(JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue thisVal)
+{
+    CHECK_REQUEST(cx);
+    return forEach("MapForEach", cx, obj, callbackFn, thisVal);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2359,4 +2385,10 @@ JS::SetEntries(JSContext *cx, HandleObject obj, MutableHandleValue rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, rval);
     return SetObject::iterator(cx, SetObject::Entries, obj, rval);
+
+JS_PUBLIC_API(bool)
+JS::SetForEach(JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue thisVal)
+{
+    CHECK_REQUEST(cx);
+    return forEach("SetForEach", cx, obj, callbackFn, thisVal);
 }
