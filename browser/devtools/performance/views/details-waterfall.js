@@ -27,6 +27,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   initialize: function () {
     DetailsSubview.initialize.call(this);
 
+    this._cache = new WeakMap();
+
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
     this._onViewSource = this._onViewSource.bind(this);
@@ -52,6 +54,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    */
   destroy: function () {
     DetailsSubview.destroy.call(this);
+
+    this._cache = null;
 
     this.details.off("resize", this._onResize);
     this.details.off("view-source", this._onViewSource);
@@ -123,6 +127,11 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    * populate the waterfall tree.
    */
   _prepareWaterfallTree: function(markers) {
+    let cached = this._cache.get(markers);
+    if (cached) {
+      return cached;
+    }
+
     let rootMarkerNode = WaterfallUtils.makeEmptyMarkerNode("(root)");
 
     WaterfallUtils.collapseMarkersIntoNode({
@@ -130,6 +139,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
       markersList: markers
     });
 
+    this._cache.set(markers, rootMarkerNode);
     return rootMarkerNode;
   },
 
