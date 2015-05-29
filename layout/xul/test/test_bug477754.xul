@@ -38,8 +38,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=477754
     }, false);
 
     function doTest() {
-      is(Math.round(testAnchor.getBoundingClientRect().right) -
-         Math.round(testPopup.getBoundingClientRect().right), 10,
+      is(Math.round(testAnchor.getBoundingClientRect().right -
+                    testPopup.getBoundingClientRect().right), 10,
          "RTL popup's right offset should be equal to the x offset passed to openPopup");
       testPopup.hidePopup();
       SimpleTest.finish();
