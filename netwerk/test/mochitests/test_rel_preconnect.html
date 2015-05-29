@@ -11,9 +11,9 @@
 SimpleTest.waitForExplicitFinish();
 
 const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci, Cr = SpecialPowers.Cr;
-var srv;
+var srv1, srv2;
 
-function TestServer(nextTest) {
+function TestServer1(nextTest) {
     this.listener= Cc["@mozilla.org/network/server-socket;1"]
                    .createInstance(Ci.nsIServerSocket);
     this.listener.init(-1, true, -1);
@@ -21,7 +21,7 @@ function TestServer(nextTest) {
     this.nextTest = nextTest;
 }
 
-TestServer.prototype = {
+TestServer1.prototype = {
     QueryInterface: function(iid) {
       iid = SpecialPowers.wrap(iid);
         if (iid.equals(Ci.nsIServerSocketListener) ||
@@ -33,8 +33,40 @@ TestServer.prototype = {
         try { socket.close(); } catch(e) {}
         try { trans.close(); } catch(e) {}
         ok(true, "received connect");
-        srv.listener.close();
-        setTimeout(srv.nextTest, 0);
+        srv1.listener.close();
+        if(srv1.nextTest != null) {
+         setTimeout(srv1.nextTest, 0);
+        }
+        srv1.nextTest = null;
+    },
+    onStopListening: function(socket) {}
+};
+
+function TestServer2(nextTest) {
+    this.listener= Cc["@mozilla.org/network/server-socket;1"]
+                   .createInstance(Ci.nsIServerSocket);
+    this.listener.init(-1, true, -1);
+    this.listener.asyncListen(SpecialPowers.wrapCallbackObject(this));
+    this.nextTest = nextTest;
+}
+
+TestServer2.prototype = {
+    QueryInterface: function(iid) {
+      iid = SpecialPowers.wrap(iid);
+        if (iid.equals(Ci.nsIServerSocketListener) ||
+            iid.equals(Ci.nsISupports))
+            return this;
+        throw Cr.NS_ERROR_NO_INTERFACE;
+    },
+    onSocketAccepted: function(socket, trans) {
+        try { socket.close(); } catch(e) {}
+        try { trans.close(); } catch(e) {}
+        ok(true, "received connect");
+        srv2.listener.close();
+        if(srv2.nextTest != null) {
+         setTimeout(srv2.nextTest, 0);
+        }
+        srv2.nextTest = null;
     },
     onStopListening: function(socket) {}
 };
@@ -44,21 +76,21 @@ var originalLimit = SpecialPowers.getIntPref("network.http.speculative-parallel-
 function testElement()
 {
   // test the link rel=preconnect element in the head
-  srv = new TestServer(testHeader);
+  srv1 = new TestServer1(testHeader);
   SpecialPowers.setIntPref("network.http.speculative-parallel-limit", 1);
   var link = document.createElement("link");
   link.rel = "preconnect";
-  link.href = "//localhost:" +  srv.listener.port;
+  link.href = "//localhost:" +  srv1.listener.port;
   document.head.appendChild(link);
 }
 
 function testHeader()
 {
   // test the http link response header
-  srv = new TestServer(testDone);
+  srv2 = new TestServer2(testDone);
   var xhr = new XMLHttpRequest();
   xhr.open("GET", 'rel_preconnect.sjs', false);
-  xhr.setRequestHeader("X-Link", "//localhost:" + srv.listener.port);
+  xhr.setRequestHeader("X-Link", "//localhost:" + srv2.listener.port);
   xhr.send();
   is(xhr.status, 200, 'xhr cool');
 }
