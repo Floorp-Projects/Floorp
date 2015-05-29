@@ -49,9 +49,6 @@ public:
     return (mType == nsSMILNullType::Singleton());
   }
 
-  // Swaps the member data (mU & mPtr) of |this| with |aOther|
-  void     Swap(nsSMILValue& aOther);
-
   nsresult Add(const nsSMILValue& aValueToAdd, uint32_t aCount = 1);
   nsresult SandwichAdd(const nsSMILValue& aValueToAdd);
   nsresult ComputeDistance(const nsSMILValue& aTo, double& aDistance) const;
