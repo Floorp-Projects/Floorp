@@ -574,11 +574,25 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       result = ProcessTouchInput(touchInput, aOutTargetGuid, aOutInputBlockId);
       break;
     } case SCROLLWHEEL_INPUT: {
+      FlushRepaintsToClearScreenToGeckoTransform();
+
       ScrollWheelInput& wheelInput = aEvent.AsScrollWheelInput();
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(wheelInput.mOrigin,
                                                             &hitResult);
       if (apzc) {
         MOZ_ASSERT(hitResult == HitLayer || hitResult == HitDispatchToContentRegion);
+
+        // For wheel events, the call to ReceiveInputEvent below may result in
+        // scrolling, which changes the async transform. However, the event we
+        // want to pass to gecko should be the pre-scroll event coordinates,
+        // transformed into the gecko space. (pre-scroll because the mouse
+        // cursor is stationary during wheel scrolling, unlike touchmove
+        // events). Also, since we just flushed the pending repaints the
+        // transform to gecko space is a no-op so we can just skip it.
+        MOZ_ASSERT(
+          (GetScreenToApzcTransform(apzc) * GetApzcToGeckoTransform(apzc))
+          .NudgeToIntegersFixedEpsilon()
+          .IsIdentity());
 
         result = mInputQueue->ReceiveInputEvent(
           apzc,
@@ -587,10 +601,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
-        Matrix4x4 transformToGecko = GetScreenToApzcTransform(apzc)
-                                   * GetApzcToGeckoTransform(apzc);
-        wheelInput.mOrigin =
-          TransformTo<ScreenPixel>(transformToGecko, wheelInput.mOrigin);
       }
       break;
     } case PANGESTURE_INPUT: {
@@ -668,17 +678,7 @@ APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
     return apzc.forget();
   }
 
-  { // In this block we flush repaint requests for the entire APZ tree. We need to do this
-    // at the start of an input block for a number of reasons. One of the reasons is so that
-    // after we untransform the event into gecko space, it doesn't end up under something
-    // else. Another reason is that if we hit-test this event and end up on a layer's
-    // dispatch-to-content region we cannot be sure we actually got the correct layer. We
-    // have to fall back to the gecko hit-test to handle this case, but we can't untransform
-    // the event we send to gecko because we don't know the layer to untransform with
-    // respect to.
-    MonitorAutoLock lock(mTreeLock);
-    FlushRepaintsRecursively(mRootNode);
-  }
+  FlushRepaintsToClearScreenToGeckoTransform();
 
   apzc = GetTargetAPZC(aEvent.mTouches[0].mScreenPoint, aOutHitResult);
   for (size_t i = 1; i < aEvent.mTouches.Length(); i++) {
@@ -770,6 +770,12 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     Matrix4x4 transformToApzc = GetScreenToApzcTransform(mApzcForInputBlock);
     Matrix4x4 transformToGecko = GetApzcToGeckoTransform(mApzcForInputBlock);
     Matrix4x4 outTransform = transformToApzc * transformToGecko;
+    if (aInput.mType == MultiTouchInput::MULTITOUCH_START) {
+      // For touch-start events we should have flushed all pending repaints
+      // above as part of the GetTouchInputBlockAPZC call, and so we expect
+      // the apzc-to-gecko transform to be empty.
+      MOZ_ASSERT(outTransform.NudgeToIntegersFixedEpsilon().IsIdentity());
+    }
     for (size_t i = 0; i < aInput.mTouches.Length(); i++) {
       SingleTouchData& touchData = aInput.mTouches[i];
       touchData.mScreenPoint = TransformTo<ScreenPixel>(
@@ -1055,6 +1061,32 @@ APZCTreeManager::UpdateZoomConstraintsRecursively(HitTestingTreeNode* aNode,
     }
     UpdateZoomConstraintsRecursively(child, aConstraints);
   }
+}
+
+void
+APZCTreeManager::FlushRepaintsToClearScreenToGeckoTransform()
+{
+  // As the name implies, we flush repaint requests for the entire APZ tree in
+  // order to clear the screen-to-gecko transform (aka the "untransform" applied
+  // to incoming input events before they can be passed on to Gecko).
+  //
+  // The primary reason we do this is to avoid the problem where input events,
+  // after being untransformed, end up hit-testing differently in Gecko. This
+  // might happen in cases where the input event lands on content that is async-
+  // scrolled into view, but Gecko still thinks it is out of view given the
+  // visible area of a scrollframe.
+  //
+  // Another reason we want to clear the untransform is that if our APZ hit-test
+  // hits a dispatch-to-content region then that's an ambiguous result and we
+  // need to ask Gecko what actually got hit. In order to do this we need to
+  // untransform the input event into Gecko space - but to do that we need to
+  // know which APZC got hit! This leads to a circular dependency; the only way
+  // to get out of it is to make sure that the untransform for all the possible
+  // matched APZCs is the same. It is simplest to ensure that by flushing the
+  // pending repaint requests, which makes all of the untransforms empty (and
+  // therefore equal).
+  MonitorAutoLock lock(mTreeLock);
+  FlushRepaintsRecursively(mRootNode);
 }
 
 void
