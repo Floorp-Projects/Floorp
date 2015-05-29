@@ -7,6 +7,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "Platform.h"
+#include "ProxyAccessible.h"
 
 #include "nsAppShell.h"
 
@@ -34,13 +35,23 @@ PlatformShutdown()
 }
 
 void
-ProxyCreated(ProxyAccessible*, uint32_t)
+ProxyCreated(ProxyAccessible* aProxy, uint32_t)
 {
+  // Pass in dummy state for now as retrieving proxy state requires IPC.
+  Class type = GetTypeFromRole(aProxy->Role());
+  uintptr_t accWrap = reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY;
+  mozAccessible* mozWrapper = [[type alloc] initWithAccessible:accWrap];
+  aProxy->SetWrapper(reinterpret_cast<uintptr_t>(mozWrapper));
 }
 
 void
-ProxyDestroyed(ProxyAccessible*)
+ProxyDestroyed(ProxyAccessible* aProxy)
 {
+  mozAccessible* wrapper =
+    reinterpret_cast<mozAccessible*>(aProxy->GetWrapper());
+  [wrapper expire];
+  [wrapper release];
+  aProxy->SetWrapper(0);
 }
 
 void

@@ -105,6 +105,8 @@ private:
   bool mNativeInited;  
 };
 
+Class GetTypeFromRole(roles::Role aRole);
+
 } // namespace a11y
 } // namespace mozilla
 
