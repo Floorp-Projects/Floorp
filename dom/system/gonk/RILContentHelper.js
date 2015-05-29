@@ -44,8 +44,6 @@ const RILCONTENTHELPER_CID =
   Components.ID("{472816e1-1fd6-4405-996c-806f9ea68174}");
 
 const RIL_IPC_MSG_NAMES = [
-  "RIL:StkCommand",
-  "RIL:StkSessionEnd",
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
 ];
@@ -85,7 +83,6 @@ function RILContentHelper() {
 
   this.initDOMRequestHelper(/* aWindow */ null, RIL_IPC_MSG_NAMES);
   this._windowsMap = [];
-  this._iccListeners = [];
 
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
@@ -115,59 +112,6 @@ RILContentHelper.prototype = {
   /**
    * nsIIccProvider
    */
-
-  sendStkResponse: function(clientId, window, command, response) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-    response.command = command;
-    cpmm.sendAsyncMessage("RIL:SendStkResponse", {
-      clientId: clientId,
-      data: response
-    });
-  },
-
-  sendStkMenuSelection: function(clientId, window, itemIdentifier,
-                                 helpRequested) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-    cpmm.sendAsyncMessage("RIL:SendStkMenuSelection", {
-      clientId: clientId,
-      data: {
-        itemIdentifier: itemIdentifier,
-        helpRequested: helpRequested
-      }
-    });
-  },
-
-  sendStkTimerExpiration: function(clientId, window, timer) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-    cpmm.sendAsyncMessage("RIL:SendStkTimerExpiration", {
-      clientId: clientId,
-      data: {
-        timer: timer
-      }
-    });
-  },
-
-  sendStkEventDownload: function(clientId, window, event) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-    cpmm.sendAsyncMessage("RIL:SendStkEventDownload", {
-      clientId: clientId,
-      data: {
-        event: event
-      }
-    });
-  },
 
   readContacts: function(clientId, window, contactType) {
     if (window == null) {
@@ -235,51 +179,6 @@ RILContentHelper.prototype = {
     });
 
     return request;
-  },
-
-  _iccListeners: null,
-
-  registerListener: function(listenerType, clientId, listener) {
-    if (!this[listenerType]) {
-      return;
-    }
-    let listeners = this[listenerType][clientId];
-    if (!listeners) {
-      listeners = this[listenerType][clientId] = [];
-    }
-
-    if (listeners.indexOf(listener) != -1) {
-      throw new Error("Already registered this listener!");
-    }
-
-    listeners.push(listener);
-    if (DEBUG) debug("Registered " + listenerType + " listener: " + listener);
-  },
-
-  unregisterListener: function(listenerType, clientId, listener) {
-    if (!this[listenerType]) {
-      return;
-    }
-    let listeners = this[listenerType][clientId];
-    if (!listeners) {
-      return;
-    }
-
-    let index = listeners.indexOf(listener);
-    if (index != -1) {
-      listeners.splice(index, 1);
-      if (DEBUG) debug("Unregistered listener: " + listener);
-    }
-  },
-
-  registerIccMsg: function(clientId, listener) {
-    if (DEBUG) debug("Registering for ICC related messages");
-    this.registerListener("_iccListeners", clientId, listener);
-    cpmm.sendAsyncMessage("RIL:RegisterIccMsg");
-  },
-
-  unregisterIccMsg: function(clientId, listener) {
-    this.unregisterListener("_iccListeners", clientId, listener);
   },
 
   // nsIObserver
@@ -371,13 +270,6 @@ RILContentHelper.prototype = {
     let data = msg.json.data;
     let clientId = msg.json.clientId;
     switch (msg.name) {
-      case "RIL:StkCommand":
-        this._deliverEvent(clientId, "_iccListeners", "notifyStkCommand",
-                           [JSON.stringify(data)]);
-        break;
-      case "RIL:StkSessionEnd":
-        this._deliverEvent(clientId, "_iccListeners", "notifyStkSessionEnd", null);
-        break;
       case "RIL:ReadIccContacts":
         this.handleReadIccContacts(data);
         break;
@@ -442,32 +334,6 @@ RILContentHelper.prototype = {
     contact.id = iccContact.contactId;
 
     this.fireRequestSuccess(message.requestId, contact);
-  },
-
-  _deliverEvent: function(clientId, listenerType, name, args) {
-    if (!this[listenerType]) {
-      return;
-    }
-    let thisListeners = this[listenerType][clientId];
-    if (!thisListeners) {
-      return;
-    }
-
-    let listeners = thisListeners.slice();
-    for (let listener of listeners) {
-      if (thisListeners.indexOf(listener) == -1) {
-        continue;
-      }
-      let handler = listener[name];
-      if (typeof handler != "function") {
-        throw new Error("No handler for " + name);
-      }
-      try {
-        handler.apply(listener, args);
-      } catch (e) {
-        if (DEBUG) debug("listener for " + name + " threw an exception: " + e);
-      }
-    }
   }
 };
 

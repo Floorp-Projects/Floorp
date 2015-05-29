@@ -85,13 +85,8 @@ const NETWORK_TYPE_MOBILE_DUN  = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN;
 
 // TODO: Bug 815526, deprecate RILContentHelper.
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
-  "RIL:SendStkResponse",
-  "RIL:SendStkMenuSelection",
-  "RIL:SendStkTimerExpiration",
-  "RIL:SendStkEventDownload",
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
-  "RIL:RegisterIccMsg",
 ];
 
 // set to true in ril_consts.js to see debug messages
@@ -157,10 +152,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gCellBroadcastService",
                                    "@mozilla.org/cellbroadcast/cellbroadcastservice;1",
                                    "nsIGonkCellBroadcastService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gIccMessenger",
-                                   "@mozilla.org/ril/system-messenger-helper;1",
-                                   "nsIIccMessenger");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gDataCallManager",
                                    "@mozilla.org/datacall/manager;1",
                                    "nsIDataCallManager");
@@ -169,11 +160,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDataCallInterfaceService",
                                    "@mozilla.org/datacall/interfaceservice;1",
                                    "nsIGonkDataCallInterfaceService");
 
-XPCOMUtils.defineLazyGetter(this, "gStkCmdFactory", function() {
-  let stk = {};
-  Cu.import("resource://gre/modules/StkProactiveCmdFactory.jsm", stk);
-  return stk.StkProactiveCmdFactory;
-});
+XPCOMUtils.defineLazyServiceGetter(this, "gStkCmdFactory",
+                                   "@mozilla.org/icc/stkcmdfactory;1",
+                                   "nsIStkCmdFactory");
 
 // TODO: Bug 815526, deprecate RILContentHelper.
 XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
@@ -336,12 +325,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
       } else {
         if (DEBUG) debug("Ignoring unknown message type: " + msg.name);
         return null;
-      }
-
-      switch (msg.name) {
-        case "RIL:RegisterIccMsg":
-          this._registerMessageTarget("icc", msg.target);
-          return null;
       }
 
       let clientId = msg.json.clientId || 0;
@@ -968,11 +951,6 @@ RadioInterface.prototype = {
     Services.obs.removeObserver(this, kNetworkConnStateChangedTopic);
   },
 
-  getIccInfo: function() {
-    let icc = gIccService.getIccByServiceId(this.clientId);
-    return icc ? icc.iccInfo : null;
-  },
-
   isCardPresent: function() {
     let icc = gIccService.getIccByServiceId(this.clientId);
     let cardState = icc ? icc.cardState : Ci.nsIIcc.CARD_STATE_UNKNOWN;
@@ -987,18 +965,6 @@ RadioInterface.prototype = {
    */
   receiveMessage: function(msg) {
     switch (msg.name) {
-      case "RIL:SendStkResponse":
-        this.workerMessenger.send("sendStkTerminalResponse", msg.json.data);
-        break;
-      case "RIL:SendStkMenuSelection":
-        this.workerMessenger.send("sendStkMenuSelection", msg.json.data);
-        break;
-      case "RIL:SendStkTimerExpiration":
-        this.workerMessenger.send("sendStkTimerExpiration", msg.json.data);
-        break;
-      case "RIL:SendStkEventDownload":
-        this.workerMessenger.send("sendStkEventDownload", msg.json.data);
-        break;
       case "RIL:ReadIccContacts":
         this.workerMessenger.sendWithIPCMessage(msg, "readICCContacts");
         break;
@@ -1099,11 +1065,11 @@ RadioInterface.prototype = {
         this.handleIccMwis(message.mwi);
         break;
       case "stkcommand":
-        this.handleStkProactiveCommand(message);
+        gIccService.notifyStkCommand(this.clientId,
+                                     gStkCmdFactory.createCommand(message));
         break;
       case "stksessionend":
-        // TODO: Bug 815526, deprecate RILContentHelper.
-        gMessageManager.sendIccMessage("RIL:StkSessionEnd", this.clientId, null);
+        gIccService.notifyStkSessionEnd(this.clientId);
         break;
       case "cdma-info-rec-received":
         this.handleCdmaInformationRecords(message.records);
@@ -1290,18 +1256,6 @@ RadioInterface.prototype = {
     // Note: returnNumber and returnMessage is not available from UICC.
     service.notifyStatusChanged(this.clientId, mwi.active, mwi.msgCount,
                                 null, null);
-  },
-
-  handleStkProactiveCommand: function(message) {
-    if (DEBUG) this.debug("handleStkProactiveCommand " + JSON.stringify(message));
-    let iccInfo = this.getIccInfo();
-    if (iccInfo && iccInfo.iccid) {
-      gIccMessenger
-        .notifyStkProactiveCommand(iccInfo.iccid,
-                                   gStkCmdFactory.createCommand(message));
-    }
-    // TODO: Bug 815526, deprecate RILContentHelper.
-    gMessageManager.sendIccMessage("RIL:StkCommand", this.clientId, message);
   },
 
   _convertCbGsmGeographicalScope: function(aGeographicalScope) {

@@ -1,4 +1,4 @@
-#! /bin/bash -vex
+#!/bin/bash -vex
 
 . pre-build.sh
 

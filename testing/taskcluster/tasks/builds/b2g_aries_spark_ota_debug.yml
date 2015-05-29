@@ -1,0 +1,17 @@
+$inherits:
+  from: 'tasks/builds/b2g_aries_spark_ota_base.yml'
+  variables:
+    build_name: 'aries'
+    build_type: 'debug'
+task:
+  metadata:
+    name: '[TC] B2G Aries OTA (userdebug)'
+  scopes:
+    - 'docker-worker:cache:build-aries-spark-ota-debug'
+  payload:
+    cache:
+      build-aries-spark-ota-debug: /home/worker/workspace
+    env:
+      VARIANT: userdebug
+      B2G_DEBUG: 0
+

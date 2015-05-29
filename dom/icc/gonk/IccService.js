@@ -29,6 +29,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
                                    "@mozilla.org/mobileconnection/mobileconnectionservice;1",
                                    "nsIGonkMobileConnectionService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gIccMessenger",
+                                   "@mozilla.org/ril/system-messenger-helper;1",
+                                   "nsIIccMessenger");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gStkCmdFactory",
+                                   "@mozilla.org/icc/stkcmdfactory;1",
+                                   "nsIStkCmdFactory");
+
 let DEBUG = RIL.DEBUG_RIL;
 function debug(s) {
   dump("IccService: " + s);
@@ -124,6 +132,27 @@ IccService.prototype = {
   /**
    * nsIGonkIccService interface.
    */
+  notifyStkCommand: function(aServiceId, aStkcommand) {
+    if (DEBUG) {
+      debug("notifyStkCommand for service Id: " + aServiceId);
+    }
+
+    let icc = this.getIccByServiceId(aServiceId);
+
+    gIccMessenger.notifyStkProactiveCommand(icc.iccInfo.iccid, aStkcommand);
+
+    icc._deliverListenerEvent("notifyStkCommand", [aStkcommand]);
+  },
+
+  notifyStkSessionEnd: function(aServiceId) {
+    if (DEBUG) {
+      debug("notifyStkSessionEnd for service Id: " + aServiceId);
+    }
+
+    this.getIccByServiceId(aServiceId)
+      ._deliverListenerEvent("notifyStkSessionEnd");
+  },
+
   notifyCardStateChanged: function(aServiceId, aCardState) {
     if (DEBUG) {
       debug("notifyCardStateChanged for service Id: " + aServiceId +
@@ -536,6 +565,36 @@ Icc.prototype = {
 
       aCallback.notifyCloseChannelSuccess();
     });
+  },
+
+  sendStkResponse: function(aCommand, aResponse) {
+    let response = gStkCmdFactory.createResponseMessage(aResponse);
+    response.command = gStkCmdFactory.createCommandMessage(aCommand);
+    this._radioInterface.sendWorkerMessage("sendStkTerminalResponse", response);
+  },
+
+  sendStkMenuSelection: function(aItemIdentifier, aHelpRequested) {
+    this._radioInterface
+      .sendWorkerMessage("sendStkMenuSelection", {
+        itemIdentifier: aItemIdentifier,
+        helpRequested: aHelpRequested
+      });
+  },
+
+  sendStkTimerExpiration: function(aTimerId, aTimerValue) {
+    this._radioInterface
+      .sendWorkerMessage("sendStkTimerExpiration",{
+        timer: {
+          timerId: aTimerId,
+          timerValue: aTimerValue
+        }
+      });
+  },
+
+  sendStkEventDownload: function(aEvent) {
+    this._radioInterface
+      .sendWorkerMessage("sendStkEventDownload",
+                         { event: gStkCmdFactory.createEventMessage(aEvent) });
   }
 };
 

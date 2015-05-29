@@ -16,14 +16,15 @@ flags:
     - linux64-mulet  # Firefox desktop - b2g gecko linux 64 bit
     - macosx64_gecko # b2g desktop osx 64 bit
     - win32_gecko    # b2g desktop win 32 bit
-    - flame-kk-nightly
+    - flame-kk-ota
     - flame-kk       # b2g flame kitkat
     - flame-kk-eng   # b2g flame eng build
     - dolphin
     - dolphin-eng
     - dolphin-512
     - dolphin-512-eng
-    - aries-nightly
+    - aries
+    - aries-ota
     - aries-eng
     - android-api-11
 

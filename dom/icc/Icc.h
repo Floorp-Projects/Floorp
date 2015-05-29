@@ -13,6 +13,7 @@
 class nsIIcc;
 class nsIIccInfo;
 class nsIIccProvider;
+class nsIStkProactiveCmd;
 
 namespace mozilla {
 namespace dom {
@@ -38,7 +39,7 @@ public:
   NotifyEvent(const nsAString& aName);
 
   nsresult
-  NotifyStkEvent(const nsAString& aName, const nsAString& aMessage);
+  NotifyStkEvent(const nsAString& aName, nsIStkProactiveCmd* aStkProactiveCmd);
 
   nsString
   GetIccId()
