@@ -4180,12 +4180,8 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   LogicalSize boxSizingAdjust(aWM);
   const nsStylePosition *stylePos = StylePosition();
 
-  switch (stylePos->mBoxSizing) {
-    case NS_STYLE_BOX_SIZING_BORDER:
-      boxSizingAdjust += aBorder;
-      // fall through
-    case NS_STYLE_BOX_SIZING_PADDING:
-      boxSizingAdjust += aPadding;
+  if (stylePos->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+    boxSizingAdjust += aBorder + aPadding;
   }
   nscoord boxSizingToMarginEdgeISize =
     aMargin.ISize(aWM) + aBorder.ISize(aWM) + aPadding.ISize(aWM) -
