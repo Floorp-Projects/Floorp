@@ -61,6 +61,8 @@ public:
   uint32_t GetBestFitnessDistance(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets) override;
 
+  virtual void Shutdown() override {};
+
 protected:
   struct CapabilityCandidate {
     explicit CapabilityCandidate(uint8_t index, uint32_t distance = 0)
