@@ -17,6 +17,7 @@ constants_jar.sources = [
     'SysInfo.java',
 ]
 constants_jar.generated_sources = [
+    'preprocessed/org/mozilla/gecko/AdjustConstants.java',
     'preprocessed/org/mozilla/gecko/AppConstants.java',
 ]
 
