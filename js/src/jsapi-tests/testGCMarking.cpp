@@ -18,8 +18,8 @@ class CCWTestTracer : public JS::CallbackTracer {
         printf("*thingp         = %p\n", *thingp);
         printf("*expectedThingp = %p\n", *expectedThingp);
 
-        printf("kind         = %d\n", kind);
-        printf("expectedKind = %d\n", expectedKind);
+        printf("kind         = %d\n", static_cast<int>(kind));
+        printf("expectedKind = %d\n", static_cast<int>(expectedKind));
 
         if (*thingp != *expectedThingp || kind != expectedKind)
             okay = false;
