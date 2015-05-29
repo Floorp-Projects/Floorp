@@ -33,7 +33,7 @@ function finish_test(count) {
                      .getService(Components.interfaces.nsICookieManager2);
   cm.remove("example.com", "xpinstall", "/browser/" + RELATIVE_DIR, false);
 
-  Services.perms.remove("example.com", "install");
+  Services.perms.remove(makeURI("http://example.com"), "install");
 
   gBrowser.removeCurrentTab();
   Harness.finish();

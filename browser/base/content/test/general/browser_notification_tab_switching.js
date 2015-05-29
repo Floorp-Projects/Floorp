@@ -14,7 +14,7 @@ function test () {
 
   let pm = Services.perms;
   registerCleanupFunction(function() {
-    pm.remove(notificationURL, "desktop-notification");
+    pm.remove(makeURI(notificationURL), "desktop-notification");
     gBrowser.removeTab(tab);
     window.restore();
   });
