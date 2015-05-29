@@ -98,10 +98,16 @@ class MapObject : public NativeObject {
     static bool has(JSContext* cx, unsigned argc, Value* vp);
     static MapObject* create(JSContext* cx);
 
+    // Publicly exposed Map calls for JSAPI access (webidl maplike/setlike
+    // interfaces, etc.)
     static uint32_t size(JSContext *cx, HandleObject obj);
     static bool get(JSContext *cx, HandleObject obj, HandleValue key, MutableHandleValue rval);
     static bool has(JSContext *cx, HandleObject obj, HandleValue key, bool* rval);
     static bool delete_(JSContext *cx, HandleObject obj, HandleValue key, bool* rval);
+
+    // Set call for public JSAPI exposure. Does not actually return map object
+    // as stated in spec, expects caller to return a value. for instance, with
+    // webidl maplike/setlike, should return interface object.
     static bool set(JSContext *cx, HandleObject obj, HandleValue key, HandleValue val);
     static bool clear(JSContext *cx, HandleObject obj);
     static bool iterator(JSContext *cx, IteratorKind kind, HandleObject obj, MutableHandleValue iter);
@@ -151,6 +157,8 @@ class SetObject : public NativeObject {
     static bool add(JSContext *cx, HandleObject obj, HandleValue key);
     static bool has(JSContext *cx, unsigned argc, Value *vp);
 
+    // Publicly exposed Set calls for JSAPI access (webidl maplike/setlike
+    // interfaces, etc.)
     static SetObject* create(JSContext *cx);
     static uint32_t size(JSContext *cx, HandleObject obj);
     static bool has(JSContext *cx, HandleObject obj, HandleValue key, bool* rval);
