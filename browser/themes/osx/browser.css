@@ -3431,20 +3431,8 @@ notification[value="loop-sharing-notification"] .messageImage {
   max-width: 28em;
 }
 
-#addon-progress-notification-progresstext,
-#addon-progress-notification-progressmeter {
-  /* override default label margin to match description margin */
-  -moz-margin-start: 0;
-  -moz-margin-end: 0;
-}
-
 .addon-install-confirmation-name {
   font-weight: bold;
-  -moz-margin-start: 0 !important; /* override default label margin to match description margin */
-}
-
-#pointerLock-cancel {
-  margin: 0px;
 }
 
 /* Popup Buttons */
@@ -3666,10 +3654,6 @@ notification[value="loop-sharing-notification"] .messageImage {
   text-shadow: none;
   background-image: linear-gradient(#B4211B, #8A1915);
   border-radius: 1px;
-}
-
-#social-undoactivation-button {
-  -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
 .social-activation-icon {
