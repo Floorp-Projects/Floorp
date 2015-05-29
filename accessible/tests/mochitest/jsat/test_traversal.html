@@ -56,7 +56,7 @@
                               'select-1-1', 'select-1-2', 'checkbox-1-2',
                               'select-1-3', 'input-1-5', 'button-1-3',
                               'button-2-1', 'button-2-2', 'button-2-3',
-                              'button-2-4', 'checkbox-1-5']);
+                              'button-2-4', 'checkbox-1-5', 'switch-1']);
 
       queueTraversalSequence(gQueue, docAcc, TraversalRules.Button, null,
                              ['button-1-1', 'button-1-2', 'button-1-3',
@@ -67,7 +67,8 @@
                              ['radio-1-1', 'radio-1-2']);
 
       queueTraversalSequence(gQueue, docAcc, TraversalRules.Checkbox, null,
-                             ['checkbox-1-1', 'checkbox-1-2', 'checkbox-1-5']);
+                             ['checkbox-1-1', 'checkbox-1-2', 'checkbox-1-5',
+                              'switch-1']);
 
       queueTraversalSequence(gQueue, docAcc, TraversalRules.Combobox, null,
                              ['select-1-1', 'select-1-2', 'select-1-3']);
@@ -122,7 +123,8 @@
                               '1', 'Sunday', 'M', 'Week 1', '3', '4', '7', '2',
                               '5 8', 'gridcell4', 'Just an innocuous separator',
                               'Dirty Words', 'Meaning', 'Mud', 'Wet Dirt',
-                              'Dirt', 'Messy Stuff', 'statusbar-1', 'statusbar-2']);
+                              'Dirt', 'Messy Stuff', 'statusbar-1', 'statusbar-2',
+                              'switch-1']);
 
       gQueue.invoke();
     }
