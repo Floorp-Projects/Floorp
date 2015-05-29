@@ -9153,6 +9153,70 @@ class MArrayConcat
     }
 };
 
+// Array.prototype.slice on a dense array.
+class MArraySlice
+  : public MTernaryInstruction,
+    public Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>>::Data
+{
+    AlwaysTenuredObject templateObj_;
+    gc::InitialHeap initialHeap_;
+    JSValueType unboxedType_;
+
+    MArraySlice(CompilerConstraintList* constraints, MDefinition* obj,
+                MDefinition* begin, MDefinition* end,
+                JSObject* templateObj, gc::InitialHeap initialHeap, JSValueType unboxedType)
+      : MTernaryInstruction(obj, begin, end),
+        templateObj_(templateObj),
+        initialHeap_(initialHeap),
+        unboxedType_(unboxedType)
+    {
+        setResultType(MIRType_Object);
+        setResultTypeSet(obj->resultTypeSet());
+    }
+
+  public:
+    INSTRUCTION_HEADER(ArraySlice)
+
+    static MArraySlice* New(TempAllocator& alloc, CompilerConstraintList* constraints,
+                            MDefinition* obj, MDefinition* begin, MDefinition* end,
+                            JSObject* templateObj, gc::InitialHeap initialHeap,
+                            JSValueType unboxedType)
+    {
+        return new(alloc) MArraySlice(constraints, obj, begin, end, templateObj,
+                                      initialHeap, unboxedType);
+    }
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* begin() const {
+        return getOperand(1);
+    }
+    MDefinition* end() const {
+        return getOperand(2);
+    }
+
+    JSObject* templateObj() const {
+        return templateObj_;
+    }
+
+    gc::InitialHeap initialHeap() const {
+        return initialHeap_;
+    }
+
+    JSValueType unboxedType() const {
+        return unboxedType_;
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::Store(AliasSet::BoxedOrUnboxedElements(unboxedType()) |
+                               AliasSet::ObjectFields);
+    }
+    bool possiblyCalls() const override {
+        return true;
+    }
+};
+
 class MArrayJoin
     : public MBinaryInstruction,
       public MixPolicy<ObjectPolicy<0>, StringPolicy<1> >::Data

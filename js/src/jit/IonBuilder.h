@@ -745,6 +745,7 @@ class IonBuilder
     InliningStatus inlineArrayPopShift(CallInfo& callInfo, MArrayPopShift::Mode mode);
     InliningStatus inlineArrayPush(CallInfo& callInfo);
     InliningStatus inlineArrayConcat(CallInfo& callInfo);
+    InliningStatus inlineArraySlice(CallInfo& callInfo);
     InliningStatus inlineArrayJoin(CallInfo& callInfo);
     InliningStatus inlineArraySplice(CallInfo& callInfo);
 
