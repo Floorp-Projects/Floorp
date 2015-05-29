@@ -163,6 +163,12 @@ var Scratchpad = {
    */
   _setupCommandListeners: function SP_setupCommands() {
     let commands = {
+      "cmd_find": () => {
+        goDoCommand('cmd_find');
+      },
+      "cmd_findAgain": () => {
+        goDoCommand('cmd_findAgain');
+      },
       "cmd_gotoLine": () => {
         goDoCommand('cmd_gotoLine');
       },

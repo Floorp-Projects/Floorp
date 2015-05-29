@@ -146,6 +146,18 @@ void InkCollector::SetTarget(HWND aTargetWindow)
   }
 }
 
+void InkCollector::ClearTarget()
+{
+  if (mTargetWindow && mInkCollector) {
+    Enable(false);
+    if (S_OK == mInkCollector->put_hWnd(0)) {
+      mTargetWindow = 0;
+    } else {
+      NS_WARNING("InkCollector did not clear window property successfully");
+    }
+  }
+}
+
 // The display and the digitizer have quite different properties.
 // The display has CursorMustTouch, the mouse pointer alway touches the display surface.
 // The digitizer lists Integrated and HardProximity.
@@ -187,6 +199,10 @@ HRESULT __stdcall InkCollector::QueryInterface(REFIID aRiid, void **aObject)
   return result;
 }
 
+// To avoid a memory leak you must explicitly call the Dispose
+// method on any InkCollector object to which an event handler
+// has been attached, before the object goes out of scope.
+// https://msdn.microsoft.com/en-us/library/dd187726.aspx
 HRESULT InkCollector::Invoke(DISPID aDispIdMember, REFIID /*aRiid*/,
                              LCID /*aId*/, WORD /*wFlags*/,
                              DISPPARAMS* aDispParams, VARIANT* /*aVarResult*/,
@@ -196,6 +212,7 @@ HRESULT InkCollector::Invoke(DISPID aDispIdMember, REFIID /*aRiid*/,
     case DISPID_ICECursorOutOfRange: {
       if (aDispParams && aDispParams->cArgs) {
         CursorOutOfRange(static_cast<IInkCursor*>(aDispParams->rgvarg[0].pdispVal));
+        ClearTarget();
       }
       break;
     }
@@ -218,6 +235,6 @@ void InkCollector::CursorOutOfRange(IInkCursor* aCursor) const
   }
   // Notify current target window.
   if (mTargetWindow) {
-    ::PostMessage(mTargetWindow, MOZ_WM_PEN_LEAVES_HOVER_OF_DIGITIZER, 0, 0);
+    ::SendMessage(mTargetWindow, MOZ_WM_PEN_LEAVES_HOVER_OF_DIGITIZER, 0, 0);
   }
 }

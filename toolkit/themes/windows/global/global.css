@@ -274,7 +274,6 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
 
 .text-link {
   color: -moz-nativehyperlinktext;
-  border: 1px solid transparent;
   cursor: pointer;
 }
 
@@ -283,7 +282,7 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
 }
 
 .text-link:-moz-focusring {
-  border: 1px dotted -moz-DialogText;
+  outline: 1px dotted;
 }
 
 popupnotificationcontent {

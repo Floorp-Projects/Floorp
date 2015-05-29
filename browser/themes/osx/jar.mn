@@ -503,6 +503,7 @@ browser.jar:
   skin/classic/browser/devtools/tool-debugger-paused.svg    (../shared/devtools/images/tool-debugger-paused.svg)
   skin/classic/browser/devtools/tool-inspector.svg          (../shared/devtools/images/tool-inspector.svg)
   skin/classic/browser/devtools/tool-inspector.svg          (../shared/devtools/images/tool-inspector.svg)
+  skin/classic/browser/devtools/tool-shadereditor.svg       (../shared/devtools/images/tool-shadereditor.svg)
   skin/classic/browser/devtools/tool-styleeditor.svg        (../shared/devtools/images/tool-styleeditor.svg)
   skin/classic/browser/devtools/tool-storage.svg            (../shared/devtools/images/tool-storage.svg)
   skin/classic/browser/devtools/tool-profiler.svg           (../shared/devtools/images/tool-profiler.svg)

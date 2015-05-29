@@ -31,6 +31,11 @@ function* spawnTest() {
   timeline.setSelection({ start: 0, end: timeline.width / 2 })
   yield rerendered;
 
+  ok(!$(".waterfall-tree-item:focus"),
+    "There is no item focused in the waterfall yet.");
+  ok($("#waterfall-details").hidden,
+    "The waterfall sidebar is initially hidden.");
+
   // Focus the second item in the tree.
   WaterfallView._markersRoot.getChild(1).focus();
 
@@ -40,6 +45,8 @@ function* spawnTest() {
 
   is(Array.indexOf($$(".waterfall-tree-item"), $(".waterfall-tree-item:focus")), 2,
     "The correct item was focused in the tree.");
+  ok(!$("#waterfall-details").hidden,
+    "The waterfall sidebar is now visible.");
 
   rerendered = WaterfallView.once(EVENTS.WATERFALL_RENDERED);
   EventUtils.sendMouseEvent({ type: "mouseup" }, WaterfallView.detailsSplitter);
@@ -51,9 +58,10 @@ function* spawnTest() {
 
   // Temporarily disable the following assertion; intermittent failures.
   // Bug 1169352.
-
   // is(Array.indexOf($$(".waterfall-tree-item"), $(".waterfall-tree-item:focus")), 2,
   //   "The correct item is still focused in the tree.");
+  ok(!$("#waterfall-details").hidden,
+    "The waterfall sidebar is still visible.");
 
   yield teardown(panel);
   finish();

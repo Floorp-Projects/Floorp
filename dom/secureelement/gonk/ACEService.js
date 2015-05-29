@@ -9,6 +9,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DOMApplicationRegistry",
                                   "resource://gre/modules/Webapps.jsm");
@@ -120,6 +121,11 @@ ACEService.prototype = {
   _rulesManagers: null,
 
   isAccessAllowed: function isAccessAllowed(localId, seType, aid) {
+    if(!Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps")) {
+      debug("Certified apps debug enabled, allowing access");
+      return Promise.resolve(true);
+    }
+
     let manifestURL = DOMApplicationRegistry.getManifestURLByLocalId(localId);
     if (!manifestURL) {
       return Promise.reject(Error("Missing manifest for app: " + localId));
