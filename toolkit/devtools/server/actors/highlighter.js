@@ -143,7 +143,9 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     events.on(this._tabActor, "navigate", this._onNavigate);
   },
 
-  get conn() this._inspector && this._inspector.conn,
+  get conn() {
+    return this._inspector && this._inspector.conn;
+  },
 
   _createHighlighter: function() {
     this._isPreviousWindowXUL = isXUL(this._tabActor);
@@ -434,7 +436,9 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
     }
   },
 
-  get conn() this._inspector && this._inspector.conn,
+  get conn() {
+    return this._inspector && this._inspector.conn;
+  },
 
   destroy: function() {
     protocol.Actor.prototype.destroy.call(this);

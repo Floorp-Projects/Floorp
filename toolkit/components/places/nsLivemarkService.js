@@ -208,8 +208,7 @@ LivemarkService.prototype = {
         title: aLivemarkInfo.title,
         index: aLivemarkInfo.index,
         guid: aLivemarkInfo.guid,
-        dateAdded: toDate(aLivemarkInfo.dateAdded) || toDate(aLivemarkInfo.lastModified),
-        lastModified: toDate(aLivemarkInfo.lastModified),
+        dateAdded: toDate(aLivemarkInfo.dateAdded) || toDate(aLivemarkInfo.lastModified)
       });
 
       // Set feed and site URI annotations.
@@ -231,6 +230,12 @@ LivemarkService.prototype = {
       livemark.writeFeedURI(aLivemarkInfo.feedURI);
       if (aLivemarkInfo.siteURI) {
         livemark.writeSiteURI(aLivemarkInfo.siteURI);
+      }
+
+      if (aLivemarkInfo.lastModified) {
+        yield PlacesUtils.bookmarks.update({ guid: folder.guid,
+                                             lastModified: toDate(aLivemarkInfo.lastModified) });
+        livemark.lastModified = aLivemarkInfo.lastModified;
       }
 
       livemarksMap.set(folder.guid, livemark);

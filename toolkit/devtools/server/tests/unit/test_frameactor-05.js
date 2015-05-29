@@ -57,7 +57,7 @@ function test_pause_frame()
       do_check_eq(aFrameResponse.frames.length, 5);
       // Now wait for the next pause, after which the three
       // youngest actors should be popped..
-      let expectPopped = [frame.actor for each (frame in aFrameResponse.frames.slice(0, 3))];
+      let expectPopped = aFrameResponse.frames.slice(0, 3).map(frame => frame.actor);
       expectPopped.sort()
 
       gThreadClient.addOneTimeListener("paused", function(aEvent, aPausePacket) {

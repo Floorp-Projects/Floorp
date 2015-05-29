@@ -80,7 +80,7 @@ public:
 
   virtual void Shutdown() override;
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   virtual void SetSandboxInfo(MacSandboxInfo* aSandboxInfo) override;
 #endif
 
@@ -275,7 +275,7 @@ GMPLoaderImpl::Shutdown()
   }
 }
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
 void
 GMPLoaderImpl::SetSandboxInfo(MacSandboxInfo* aSandboxInfo)
 {

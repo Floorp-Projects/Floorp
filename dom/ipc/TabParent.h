@@ -247,6 +247,14 @@ public:
     AllocPColorPickerParent(const nsString& aTitle, const nsString& aInitialColor) override;
     virtual bool DeallocPColorPickerParent(PColorPickerParent* aColorPicker) override;
 
+    virtual PDocAccessibleParent*
+    AllocPDocAccessibleParent(PDocAccessibleParent*, const uint64_t&) override;
+    virtual bool DeallocPDocAccessibleParent(PDocAccessibleParent*) override;
+    virtual bool
+    RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
+                                  PDocAccessibleParent* aParentDoc,
+                                  const uint64_t& aParentID) override;
+
     void LoadURL(nsIURI* aURI);
     // XXX/cjones: it's not clear what we gain by hiding these
     // message-sending functions under a layer of indirection and

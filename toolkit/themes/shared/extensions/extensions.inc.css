@@ -1029,6 +1029,7 @@ button.button-link:not([disabled="true"]):active:hover {
 
 #disabled-unsigned-addons-info {
   margin-bottom: 2em;
+  -moz-margin-end: 48px;
 }
 
 #disabled-unsigned-addons-heading {

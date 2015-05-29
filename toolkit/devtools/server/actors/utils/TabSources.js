@@ -331,10 +331,9 @@ TabSources.prototype = {
     return this.fetchSourceMap(aSource)
       .then(map => {
         if (map) {
-          return [
-            this.source({ originalUrl: s, generatedSource: aSource })
-            for (s of map.sources)
-          ].filter(isNotNull);
+          return map.sources.map(s => {
+            return this.source({ originalUrl: s, generatedSource: aSource });
+          }).filter(isNotNull);
         }
         return null;
       });

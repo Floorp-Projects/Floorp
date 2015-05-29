@@ -19,24 +19,41 @@
 
 /*** Main indicator icon ***/
 
+@media not all and (min-resolution: 1.1dppx) {
+  #downloads-indicator-icon {
+    --downloads-indicator-icon: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 0, 198, 18, 180);
+    --downloads-indicator-icon-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 18, 198, 36, 180);
+    --downloads-indicator-icon-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
+    --downloads-indicator-icon-attention-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 18, 198, 36, 180);
+  }
+}
+
+@media (min-resolution: 1.1dppx) {
+  #downloads-indicator-icon {
+    --downloads-indicator-icon: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 0, 396, 36, 360);
+    --downloads-indicator-icon-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 36, 396, 72, 360);
+    --downloads-indicator-icon-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 0, 396, 36, 360);
+    --downloads-indicator-icon-attention-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 36, 396, 72, 360);
+  }
+}
+
 #downloads-indicator-icon {
-  background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
-                              0, 198, 18, 180) center no-repeat;
-  min-width: 18px;
-  min-height: 18px;
+  background: var(--downloads-indicator-icon) center no-repeat;
+  width: 18px;
+  height: 18px;
+  background-size: 18px;
 }
 
 toolbar[brighttext] #downloads-button:not([attention]) > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"),
-                              0, 198, 18, 180) center no-repeat;
+  background-image: var(--downloads-indicator-icon-inverted);
 }
 
 #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 18, 198, 36, 180);
+  background-image: var(--downloads-indicator-icon-attention);
 }
 
 toolbar[brighttext] #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 18, 198, 36, 180);
+  background-image: var(--downloads-indicator-icon-attention-inverted);
 }
 
 #downloads-button[cui-areatype="menu-panel"][attention] {
@@ -59,21 +76,20 @@ toolbar[brighttext] #downloads-button[attention] > #downloads-indicator-anchor >
    equivalent to -moz-any([progress], [paused]). */
 
 #downloads-button:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
-                              0, 198, 18, 180) center no-repeat;
+  background: var(--downloads-indicator-icon) center no-repeat;
   background-size: 12px;
 }
 
 toolbar[brighttext] #downloads-button:not([counter]):not([attention]) > #downloads-indicator-anchor > #downloads-button-progress-area > #downloads-indicator-counter {
-  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
+  background-image: var(--downloads-indicator-icon-inverted);
 }
 
 #downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 18, 198, 36, 180);
+  background-image: var(--downloads-indicator-icon-attention);
 }
 
 toolbar[brighttext] #downloads-button:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 18, 198, 36, 180);
+  background-image: var(--downloads-indicator-icon-attention-inverted);
 }
 
 /*** Download notifications ***/

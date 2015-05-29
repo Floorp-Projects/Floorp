@@ -931,6 +931,7 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
                      gboolean selected, gboolean inconsistent,
                      gboolean isradio, GtkTextDirection direction)
 {
+    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     gint indicator_size, indicator_spacing;
     gint x, y, width, height;
     gint focus_x, focus_y, focus_width, focus_height;
@@ -967,10 +968,16 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
     gtk_widget_set_direction(w, direction);
     gtk_style_context_save(style);
 
+    if (selected)
+        state_flags |= checkbox_check_state;
+
+    if (inconsistent)
+        state_flags |= GTK_STATE_FLAG_INCONSISTENT;
+
+    gtk_style_context_set_state(style, state_flags);
+
     if (isradio) {
         gtk_style_context_add_class(style, GTK_STYLE_CLASS_RADIO);
-        gtk_style_context_set_state(style, selected ? checkbox_check_state :
-                                                      GTK_STATE_FLAG_NORMAL);
         gtk_render_option(style, cr, x, y, width, height);
         if (state->focused) {
             gtk_render_focus(style, cr, focus_x, focus_y,
@@ -983,14 +990,7 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
         * must also be changed for the state to be drawn.
         */        
         gtk_style_context_add_class(style, GTK_STYLE_CLASS_CHECK);
-        if (inconsistent) {
-            gtk_style_context_set_state(style, GTK_STATE_FLAG_INCONSISTENT);
-            gtk_toggle_button_set_inconsistent(GTK_TOGGLE_BUTTON(gCheckboxWidget), TRUE);
-        } else if (selected) {
-            gtk_style_context_set_state(style, checkbox_check_state);
-        } else {
-            gtk_toggle_button_set_inconsistent(GTK_TOGGLE_BUTTON(gCheckboxWidget), FALSE);
-        }
+        gtk_toggle_button_set_inconsistent(GTK_TOGGLE_BUTTON(gCheckboxWidget), inconsistent);
         gtk_render_check(style, cr, x, y, width, height);        
         if (state->focused) {
             gtk_render_focus(style, cr, 
