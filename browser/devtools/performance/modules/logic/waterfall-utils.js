@@ -18,12 +18,17 @@ loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
  */
 function collapseMarkersIntoNode({ markerNode, markersList }) {
   let [getOrCreateParentNode, getCurrentParentNode, clearParentNode] = makeParentNodeFactory();
+  let uid = 0;
 
   for (let i = 0, len = markersList.length; i < len; i++) {
     let curr = markersList[i];
-    let blueprint = TIMELINE_BLUEPRINT[curr.name];
+
+    // Make sure all the markers have an assigned number id. This makes it
+    // easier to find them in a waterfall, for example.
+    curr.uid = ++uid;
 
     let parentNode = getCurrentParentNode();
+    let blueprint = TIMELINE_BLUEPRINT[curr.name];
     let collapse = blueprint.collapseFunc || (() => null);
     let peek = distance => markersList[i + distance];
     let collapseInfo = collapse(parentNode, curr, peek);
@@ -39,9 +44,19 @@ function collapseMarkersIntoNode({ markerNode, markersList }) {
       // If the `toParent` prop is set on the collapse info, then this marker
       // can be collapsed into a higher-level parent marker.
       if (toParent) {
-        let parentNode = getOrCreateParentNode(markerNode, toParent, curr.start);
-        parentNode.end = curr.end;
+        let parentNode = getOrCreateParentNode({
+          uid: ++uid,
+          owner: markerNode,
+          name: toParent,
+          start: curr.start,
+          end: curr.end
+        });
+
+        // A parent marker, even when created, will always have at least one
+        // child submarker (the one which caused it to be created).
         parentNode.submarkers.push(curr);
+
+        // Optionally, additional data may be stapled on this parent marker.
         for (let key in withData) {
           parentNode[key] = withData[key];
         }
@@ -62,13 +77,15 @@ function collapseMarkersIntoNode({ markerNode, markersList }) {
  * Creates an empty parent marker, which functions like a regular marker,
  * but is able to hold additional child markers.
  * @param string name
+ * @param number uid
  * @param number start [optional]
  * @param number end [optional]
  * @return object
  */
-function makeEmptyMarkerNode(name, start, end) {
+function makeEmptyMarkerNode(name, uid, start, end) {
   return {
     name: name,
+    uid: uid,
     start: start,
     end: end,
     submarkers: []
@@ -89,13 +106,15 @@ function makeParentNodeFactory() {
      * @param object owner
      * @param string name
      * @param number start
+     * @param number end
      * @return object
      */
-    function getOrCreateParentNode(owner, name, start) {
+    function getOrCreateParentNode({ owner, name, uid, start, end }) {
       if (marker && marker.name == name) {
+        marker.end = end;
         return marker;
       } else {
-        marker = makeEmptyMarkerNode(name, start);
+        marker = makeEmptyMarkerNode(name, uid, start, end);
         owner.submarkers.push(marker);
         return marker;
       }

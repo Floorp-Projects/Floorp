@@ -176,10 +176,14 @@ separator.groove[orient="vertical"] {
 description,
 label {
   cursor: default;
+  /* FIXME: On Windows and Linux, we're using -moz-margin-end: 5px, but for
+            unknown reasons this breaks test_bug477754.xul on OS X.
+            See bug 1169606. */
+  margin: 1px 6px 2px;
 }
 
-label {
-  margin: 2px 6px;
+description {
+  margin-bottom: 4px;
 }
 
 label[disabled="true"] {
@@ -190,12 +194,7 @@ label[disabled="true"] {
   margin: 0;
 }
 
-description {
-  margin-bottom: 4px;
-}
-
 .header {
-  margin-bottom: 6px;
   font-weight: bold;
 }
 
