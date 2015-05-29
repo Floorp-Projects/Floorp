@@ -56,9 +56,6 @@ const MAX_LRU_PINGS = 50;
 // Maxmimum time, in milliseconds, archive pings should be retained.
 const MAX_ARCHIVED_PINGS_RETENTION_MS = 180 * 24 * 60 * 60 * 1000;  // 180 days
 
-// Maximum space the archive can take on disk (in Bytes).
-const ARCHIVE_QUOTA_BYTES = 120 * 1024 * 1024; // 120 MB
-
 // The number of outstanding saved pings that we have issued loading
 // requests for.
 let pingsLoaded = 0;
@@ -81,7 +78,6 @@ let isPingDirectoryCreated = false;
  */
 let Policy = {
   now: () => new Date(),
-  getArchiveQuota: () => ARCHIVE_QUOTA_BYTES,
 };
 
 this.TelemetryStorage = {
@@ -151,7 +147,7 @@ this.TelemetryStorage = {
    * Test method that allows waiting on the archive clean task to finish.
    */
   testCleanupTaskPromise: function() {
-    return (TelemetryStorageImpl._cleanArchiveTask || Promise.resolve());
+    return (TelemetryStorageImpl._archiveCleanTask || Promise.resolve());
   },
 
   /**
@@ -429,9 +425,9 @@ let TelemetryStorageImpl = {
   // We use this to cache info on archived pings to avoid scanning the disk more than once.
   _archivedPings: new Map(),
   // Track the archive loading task to prevent multiple tasks from being executed.
-  _scanArchiveTask: null,
+  _archiveCleanTaskArchiveLoadingTask: null,
   // Track the archive cleanup task.
-  _cleanArchiveTask: null,
+  _archiveCleanTask: null,
   // Whether we already scanned the archived pings on disk.
   _scannedArchiveDirectory: false,
 
@@ -457,7 +453,7 @@ let TelemetryStorageImpl = {
     yield this.savePendingPings();
     // If the archive cleaning task is running, block on it. It should bail out as soon
     // as possible.
-    yield this._cleanArchiveTask;
+    yield this._archiveCleanTask;
   }),
 
   /**
@@ -544,23 +540,23 @@ let TelemetryStorageImpl = {
    */
   runCleanPingArchiveTask: function() {
     // If there's an archive cleaning task already running, return it.
-    if (this._cleanArchiveTask) {
-      return this._cleanArchiveTask;
+    if (this._archiveCleanTask) {
+      return this._archiveCleanTask;
     }
 
-    // Make sure to clear |_cleanArchiveTask| once done.
-    let clear = () => this._cleanArchiveTask = null;
+    // Make sure to clear |_archiveCleanTask| once done.
+    let clear = () => this._archiveCleanTask = null;
     // Since there's no archive cleaning task running, start it.
-    this._cleanArchiveTask = this._cleanArchive().then(clear, clear);
-    return this._cleanArchiveTask;
+    this._archiveCleanTask = this.cleanArchiveTask().then(clear, clear);
+    return this._archiveCleanTask;
   },
 
-  /**
-   * Removes pings which are too old from the pings archive.
-   * @return {Promise} Resolved when the ping age check is complete.
-   */
-  _purgeOldPings: Task.async(function*() {
-    this._log.trace("_purgeOldPings");
+  cleanArchiveTask: Task.async(function*() {
+    this._log.trace("cleanArchiveTask");
+
+    if (!(yield OS.File.exists(gPingsArchivePath))) {
+      return;
+    }
 
     const now = Policy.now().getTime();
     let dirIterator = new OS.File.DirectoryIterator(gPingsArchivePath);
@@ -572,18 +568,18 @@ let TelemetryStorageImpl = {
     // Walk through the monthly subdirs of the form <YYYY-MM>/
     for (let dir of subdirs) {
       if (this._shutdown) {
-        this._log.trace("_purgeOldPings - Terminating the clean up task due to shutdown");
+        this._log.trace("cleanArchiveTask - Terminating the clean up task due to shutdown");
         return;
       }
 
       if (!isValidArchiveDir(dir.name)) {
-        this._log.warn("_purgeOldPings - skipping invalidly named subdirectory " + dir.path);
+        this._log.warn("cleanArchiveTask - skipping invalidly named subdirectory " + dir.path);
         continue;
       }
 
       const archiveDate = getDateFromArchiveDir(dir.name);
       if (!archiveDate) {
-        this._log.warn("_purgeOldPings - skipping invalid subdirectory date " + dir.path);
+        this._log.warn("cleanArchiveTask - skipping invalid subdirectory date " + dir.path);
         continue;
       }
 
@@ -598,17 +594,13 @@ let TelemetryStorageImpl = {
             newestRemovedMonth = archiveDate;
           }
         } catch (ex) {
-          this._log.error("_purgeOldPings - Unable to remove " + dir.path, ex);
+          this._log.error("cleanArchiveTask - Unable to remove " + dir.path, ex);
         }
       }
     }
 
-    // Trigger scanning of the archived pings.
-    yield this.loadArchivedPingList();
-
-    // Refresh the cache: we could still skip this, but it's cheap enough to keep it
-    // to avoid introducing task dependencies.
-    if (newestRemovedMonth) {
+    // If the archive directory was already scanned, filter the ping archive cache.
+    if (this._scannedArchiveDirectory && newestRemovedMonth) {
       // Scan the archive cache for pings older than the newest directory pruned above.
       for (let [id, info] of this._archivedPings) {
         const timestampCreated = new Date(info.timestampCreated);
@@ -619,102 +611,6 @@ let TelemetryStorageImpl = {
         this._archivedPings.delete(id);
       }
     }
-  }),
-
-  /**
-   * Enforce a disk quota for the pings archive.
-   * @return {Promise} Resolved when the quota check is complete.
-   */
-  _enforceArchiveQuota: Task.async(function*() {
-    this._log.trace("_enforceArchiveQuota");
-
-    // Build an ordered list, from newer to older, of archived pings.
-    let pingList = [for (p of this._archivedPings) {
-      id: p[0],
-      timestampCreated: p[1].timestampCreated,
-      type: p[1].type,
-    }];
-
-    pingList.sort((a, b) => b.timestampCreated - a.timestampCreated);
-
-    // If our archive is too big, we should reduce it to reach 90% of the quota.
-    const SAFE_QUOTA = Policy.getArchiveQuota() * 0.9;
-    // The index of the last ping to keep. Pings older than this one will be deleted if
-    // the archive exceeds the quota.
-    let lastPingIndexToKeep = null;
-    let archiveSizeInBytes = 0;
-
-    // Find the disk size of the archive.
-    for (let i = 0; i < pingList.length; i++) {
-      if (this._shutdown) {
-        this._log.trace("_enforceArchiveQuota - Terminating the clean up task due to shutdown");
-        return;
-      }
-
-      let ping = pingList[i];
-
-      // Get the size for this ping.
-      const fileSize =
-        yield getArchivedPingSize(ping.id, new Date(ping.timestampCreated), ping.type);
-      if (!fileSize) {
-        this._log.warn("_enforceArchiveQuota - Unable to find the size of ping " + ping.id);
-        continue;
-      }
-
-      archiveSizeInBytes += fileSize;
-
-      if (archiveSizeInBytes < SAFE_QUOTA) {
-        // We save the index of the last ping which is ok to keep in order to speed up ping
-        // pruning.
-        lastPingIndexToKeep = i;
-      } else if (archiveSizeInBytes > Policy.getArchiveQuota()) {
-        // Ouch, our ping archive is too big. Bail out and start pruning!
-        break;
-      }
-    }
-
-    // Check if we're using too much space. If not, bail out.
-    if (archiveSizeInBytes < Policy.getArchiveQuota()) {
-      return;
-    }
-
-    this._log.info("_enforceArchiveQuota - archive size: " + archiveSizeInBytes + "bytes"
-                   + ", safety quota: " + SAFE_QUOTA + "bytes");
-
-    let pingsToPurge = pingList.slice(lastPingIndexToKeep + 1);
-
-    // Remove all the pings older than the last one which we are safe to keep.
-    for (let ping of pingsToPurge) {
-      if (this._shutdown) {
-        this._log.trace("_enforceArchiveQuota - Terminating the clean up task due to shutdown");
-        return;
-      }
-
-      // This list is guaranteed to be in order, so remove the pings at its
-      // beginning (oldest).
-      yield this._removeArchivedPing(ping.id, ping.timestampCreated, ping.type);
-
-      // Remove outdated pings from the cache.
-      this._archivedPings.delete(ping.id);
-    }
-  }),
-
-  _cleanArchive: Task.async(function*() {
-    this._log.trace("cleanArchiveTask");
-
-    if (!(yield OS.File.exists(gPingsArchivePath))) {
-      return;
-    }
-
-    // Remove pings older than 180 days.
-    try {
-      yield this._purgeOldPings();
-    } catch (ex) {
-      this._log.error("_cleanArchive - There was an error removing old directories", ex);
-    }
-
-    // Make sure we respect the archive disk quota.
-    yield this._enforceArchiveQuota();
   }),
 
   /**
@@ -735,8 +631,8 @@ let TelemetryStorageImpl = {
    */
   loadArchivedPingList: function() {
     // If there's an archive loading task already running, return it.
-    if (this._scanArchiveTask) {
-      return this._scanArchiveTask;
+    if (this._archiveScanningTask) {
+      return this._archiveScanningTask;
     }
 
     if (this._scannedArchiveDirectory) {
@@ -744,14 +640,14 @@ let TelemetryStorageImpl = {
       return Promise.resolve(this._archivedPings);
     }
 
-    // Make sure to clear |_scanArchiveTask| once done.
+    // Make sure to clear |_archiveScanningTask| once done.
     let clear = pingList => {
-      this._scanArchiveTask = null;
+      this._archiveScanningTask = null;
       return pingList;
     };
     // Since there's no archive loading task running, start it.
-    this._scanArchiveTask = this._scanArchive().then(clear, clear);
-    return this._scanArchiveTask;
+    this._archiveScanningTask = this._scanArchive().then(clear, clear);
+    return this._archiveScanningTask;
   },
 
   _scanArchive: Task.async(function*() {
@@ -1185,24 +1081,6 @@ function getArchivedPingPath(aPingId, aDate, aType) {
   let fileName = [aDate.getTime(), aPingId, aType, "json"].join(".");
   return OS.Path.join(archivedPingDir, fileName);
 }
-
-/**
- * Get the size of the ping file on the disk.
- * @return {Integer} The file size, in bytes, of the ping file or 0 on errors.
- */
-let getArchivedPingSize = Task.async(function*(aPingId, aDate, aType) {
-  const path = getArchivedPingPath(aPingId, aDate, aType);
-  let filePaths = [ path + "lz4", path ];
-
-  for (let path of filePaths) {
-    try {
-      return (yield OS.File.stat(path)).size;;
-    } catch (e) {}
-  }
-
-  // That's odd, this ping doesn't seem to exist.
-  return 0;
-});
 
 /**
  * Check if a directory name is in the "YYYY-MM" format.
