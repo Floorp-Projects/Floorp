@@ -2298,7 +2298,7 @@ SourceActor.prototype = {
   get breakpointActorMap() { return this.threadActor.breakpointActorMap; },
   get url() {
     if (this.source) {
-      return getSourceURL(this.source);
+      return getSourceURL(this.source, this.threadActor._parent.window);
     }
     return this._originalUrl;
   },
@@ -5403,22 +5403,32 @@ function isEvalSource(source) {
 }
 exports.isEvalSource = isEvalSource;
 
-function getSourceURL(source) {
-  if(isEvalSource(source)) {
+function getSourceURL(source, window) {
+  if (isEvalSource(source)) {
     // Eval sources have no urls, but they might have a `displayURL`
     // created with the sourceURL pragma. If the introduction script
     // is a non-eval script, generate an full absolute URL relative to it.
 
-    if(source.displayURL &&
-       source.introductionScript &&
+    if (source.displayURL && source.introductionScript &&
        !isEvalSource(source.introductionScript.source)) {
-      return joinURI(dirname(source.introductionScript.source.url),
-                     source.displayURL);
+
+      if (source.introductionScript.source.url === 'debugger eval code') {
+        if (window) {
+          // If this is a named eval script created from the console, make it
+          // relative to the current page. window is only available
+          // when we care about this.
+          return joinURI(window.location.href, source.displayURL);
+        }
+      }
+      else {
+        return joinURI(dirname(source.introductionScript.source.url),
+                       source.displayURL);
+      }
     }
 
     return source.displayURL;
   }
-  else if(source.url === 'debugger eval code') {
+  else if (source.url === 'debugger eval code') {
     // Treat code evaluated by the console as unnamed eval scripts
     return null;
   }
