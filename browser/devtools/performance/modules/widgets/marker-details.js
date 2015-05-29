@@ -50,6 +50,14 @@ MarkerDetails.prototype = {
   },
 
   /**
+   * Sets this view's visibility.
+   * @param boolean
+   */
+  set hidden(value) {
+    this._parent.hidden = value;
+  },
+
+  /**
    * Clears the marker details from this view.
    */
   empty: function() {
