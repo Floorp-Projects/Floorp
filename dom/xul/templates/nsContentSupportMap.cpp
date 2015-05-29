@@ -6,19 +6,6 @@
 #include "nsContentSupportMap.h"
 #include "nsXULElement.h"
 
-void
-nsContentSupportMap::Init()
-{
-    PL_DHashTableInit(&mMap, PL_DHashGetStubOps(), sizeof(Entry));
-}
-
-void
-nsContentSupportMap::Finish()
-{
-    if (mMap.IsInitialized())
-        PL_DHashTableFinish(&mMap);
-}
-
 nsresult
 nsContentSupportMap::Remove(nsIContent* aElement)
 {

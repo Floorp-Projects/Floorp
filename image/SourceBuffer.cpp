@@ -78,7 +78,7 @@ SourceBuffer::AppendChunk(Maybe<Chunk>&& aChunk)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (MOZ_UNLIKELY(!mChunks.AppendElement(Move(*aChunk)))) {
+  if (MOZ_UNLIKELY(!mChunks.AppendElement(Move(*aChunk), fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

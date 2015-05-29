@@ -221,7 +221,7 @@ private:
 
   MediaPromiseHolder<TrackBufferAppendPromise> mInitializationPromise;
   // Track our request for metadata from the reader.
-  MediaPromiseConsumerHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
+  MediaPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
 };
 
 } // namespace mozilla

@@ -283,6 +283,8 @@ public:
 // Helper functions for constructing tuples while inferring the template
 // argument types.
 
+namespace base {
+
 inline Tuple0 MakeTuple() {
   return Tuple0();
 }
@@ -326,6 +328,8 @@ inline Tuple7<A, B, C, D, E, F, G> MakeTuple(const A& a, const B& b, const C& c,
                                              const G& g) {
   return Tuple7<A, B, C, D, E, F, G>(a, b, c, d, e, f, g);
 }
+
+}  // end namespace base
 
 // The following set of helpers make what Boost refers to as "Tiers" - a tuple
 // of references.

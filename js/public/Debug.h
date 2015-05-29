@@ -262,7 +262,13 @@ class BuilderOrigin : public Builder {
 
 // Tell Debuggers in |runtime| to use |mallocSizeOf| to find the size of
 // malloc'd blocks.
-void SetDebuggerMallocSizeOf(JSRuntime* runtime, mozilla::MallocSizeOf mallocSizeOf);
+JS_PUBLIC_API(void)
+SetDebuggerMallocSizeOf(JSRuntime* runtime, mozilla::MallocSizeOf mallocSizeOf);
+
+// Get the MallocSizeOf function that the given runtime is using to find the
+// size of malloc'd blocks.
+JS_PUBLIC_API(mozilla::MallocSizeOf)
+GetDebuggerMallocSizeOf(JSRuntime* runtime);
 
 
 
@@ -316,7 +322,12 @@ onPromiseSettled(JSContext* cx, HandleObject promise);
 
 // Return true if the given value is a Debugger object, false otherwise.
 JS_PUBLIC_API(bool)
-IsDebugger(JS::Value val);
+IsDebugger(const JSObject& obj);
+
+// Append each of the debuggee global objects observed by the Debugger object
+// |dbgObj| to |vector|. Returns true on success, false on failure.
+JS_PUBLIC_API(bool)
+GetDebuggeeGlobals(JSContext* cx, const JSObject& dbgObj, AutoObjectVector& vector);
 
 
 // Hooks for reporting where JavaScript execution began.

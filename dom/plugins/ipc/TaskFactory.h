@@ -61,7 +61,7 @@ public:
     typedef TaskWrapper<RunnableMethod<Method, Tuple0> > TaskWrapper;
 
     TaskWrapper* task = new TaskWrapper(this);
-    task->Init(object_, method, MakeTuple());
+    task->Init(object_, method, base::MakeTuple());
     return task;
   }
 
@@ -70,7 +70,7 @@ public:
     typedef TaskWrapper<RunnableMethod<Method, Tuple1<A> > > TaskWrapper;
 
     TaskWrapper* task = new TaskWrapper(this);
-    task->Init(object_, method, MakeTuple(a));
+    task->Init(object_, method, base::MakeTuple(a));
     return task;
   }
 

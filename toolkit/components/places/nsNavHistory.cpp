@@ -297,7 +297,7 @@ nsNavHistory::Init()
    ***
    *** Nothing after these add observer calls should return anything but NS_OK.
    *** If a failure code is returned, this nsNavHistory object will be held onto
-   *** by the observer service and the preference service. 
+   *** by the observer service and the preference service.
    ****************************************************************************/
 
   // Observe preferences changes.
@@ -774,7 +774,7 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
       nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
     return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
 
-  // Whenever there is a maximum number of results, 
+  // Whenever there is a maximum number of results,
   // and we are not a bookmark query we must requery. This
   // is because we can't generally know if any given addition/change causes
   // the item to be in the top N items in the database.
@@ -1276,7 +1276,7 @@ bool IsOptimizableHistoryQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     return false;
 
   nsNavHistoryQuery *aQuery = aQueries[0];
- 
+
   if (aOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
     return false;
 
@@ -1298,25 +1298,25 @@ bool IsOptimizableHistoryQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries,
   if (aQuery->MinVisits() != -1 || aQuery->MaxVisits() != -1)
     return false;
 
-  if (aQuery->BeginTime() || aQuery->BeginTimeReference()) 
+  if (aQuery->BeginTime() || aQuery->BeginTimeReference())
     return false;
 
-  if (aQuery->EndTime() || aQuery->EndTimeReference()) 
+  if (aQuery->EndTime() || aQuery->EndTimeReference())
     return false;
 
-  if (!aQuery->SearchTerms().IsEmpty()) 
+  if (!aQuery->SearchTerms().IsEmpty())
     return false;
 
-  if (aQuery->OnlyBookmarked()) 
+  if (aQuery->OnlyBookmarked())
     return false;
 
   if (aQuery->DomainIsHost() || !aQuery->Domain().IsEmpty())
     return false;
 
-  if (aQuery->AnnotationIsNot() || !aQuery->Annotation().IsEmpty()) 
+  if (aQuery->AnnotationIsNot() || !aQuery->Annotation().IsEmpty())
     return false;
 
-  if (aQuery->UriIsPrefix() || aQuery->Uri()) 
+  if (aQuery->UriIsPrefix() || aQuery->Uri())
     return false;
 
   if (aQuery->Folders().Length() > 0)
@@ -1332,7 +1332,7 @@ bool IsOptimizableHistoryQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 }
 
 static
-bool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
+bool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                              nsNavHistoryQueryOptions *aOptions)
 {
   uint16_t resultType = aOptions->ResultType();
@@ -1390,8 +1390,8 @@ private:
 };
 
 PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
-    const nsCString& aConditions, 
-    nsNavHistoryQueryOptions* aOptions, 
+    const nsCString& aConditions,
+    nsNavHistoryQueryOptions* aOptions,
     bool aUseLimit,
     nsNavHistory::StringHash& aAddParams,
     bool aHasSearchTerms)
@@ -1855,7 +1855,7 @@ PlacesSQLQueryBuilder::SelectAsTag()
 
   // This allows sorting by date fields what is not possible with
   // other history queries.
-  mHasDateColumns = true; 
+  mHasDateColumns = true;
 
   mQueryString = nsPrintfCString(
     "SELECT null, 'place:folder=' || id || '&queryType=%d&type=%ld', "
@@ -1905,7 +1905,7 @@ PlacesSQLQueryBuilder::Where()
   mQueryString.ReplaceSubstring("{QUERY_OPTIONS_PLACES}",
                                 additionalPlacesConditions.get());
 
-  // If we used WHERE already, we inject the conditions 
+  // If we used WHERE already, we inject the conditions
   // in place of {ADDITIONAL_CONDITIONS}
   if (mQueryString.Find("{ADDITIONAL_CONDITIONS}", 0) != kNotFound) {
     nsAutoCString innerCondition;
@@ -2056,15 +2056,15 @@ PlacesSQLQueryBuilder::Limit()
 nsresult
 nsNavHistory::ConstructQueryString(
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
-    nsNavHistoryQueryOptions* aOptions, 
-    nsCString& queryString, 
+    nsNavHistoryQueryOptions* aOptions,
+    nsCString& queryString,
     bool& aParamsPresent,
     nsNavHistory::StringHash& aAddParams)
 {
   // For information about visit_type see nsINavHistoryService.idl.
   // visitType == 0 is undefined (see bug #375777 for details).
-  // Some sites, especially Javascript-heavy ones, load things in frames to 
-  // display them, resulting in a lot of these entries. This is the reason 
+  // Some sites, especially Javascript-heavy ones, load things in frames to
+  // display them, resulting in a lot of these entries. This is the reason
   // why such visits are filtered out.
   nsresult rv;
   aParamsPresent = false;
@@ -2151,7 +2151,7 @@ nsNavHistory::ConstructQueryString(
   return NS_OK;
 }
 
-PLDHashOperator BindAdditionalParameter(nsNavHistory::StringHash::KeyType aParamName, 
+PLDHashOperator BindAdditionalParameter(nsNavHistory::StringHash::KeyType aParamName,
                                         nsCString aParamValue,
                                         void* aStatement)
 {
@@ -2233,7 +2233,7 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
   } else {
     rv = ResultsAsList(statement, aOptions, aResults);
     NS_ENSURE_SUCCESS(rv, rv);
-  } 
+  }
 
   return NS_OK;
 }
@@ -2981,6 +2981,17 @@ nsNavHistory::GetDBConnection(mozIStorageConnection **_DBConnection)
 }
 
 NS_IMETHODIMP
+nsNavHistory::GetShutdownClient(nsIAsyncShutdownClient **_shutdownClient)
+{
+  NS_ENSURE_ARG_POINTER(_shutdownClient);
+  nsRefPtr<nsIAsyncShutdownClient> client = mDB->GetConnectionShutdown();
+  MOZ_ASSERT(client);
+  client.forget(_shutdownClient);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNavHistory::AsyncExecuteLegacyQueries(nsINavHistoryQuery** aQueries,
                                         uint32_t aQueryCount,
                                         nsINavHistoryQueryOptions* aOptions,
@@ -3077,9 +3088,10 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
                     const char16_t *aData)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
-
   if (strcmp(aTopic, TOPIC_PROFILE_TEARDOWN) == 0 ||
-      strcmp(aTopic, TOPIC_PROFILE_CHANGE) == 0) {
+      strcmp(aTopic, TOPIC_PROFILE_CHANGE) == 0 ||
+      strcmp(aTopic, TOPIC_SIMULATE_PLACES_MUST_CLOSE_1) == 0 ||
+      strcmp(aTopic, TOPIC_SIMULATE_PLACES_MUST_CLOSE_2) == 0) {
     // These notifications are used by tests to simulate a Places shutdown.
     // They should just be forwarded to the Database handle.
     mDB->Observe(aSubject, aTopic, aData);
@@ -3219,10 +3231,10 @@ nsNavHistory::DecayFrecency()
 
 // Helper class for QueryToSelectClause
 //
-// This class helps to build part of the WHERE clause. It supports 
-// multiple queries by appending the query index to the parameter name. 
+// This class helps to build part of the WHERE clause. It supports
+// multiple queries by appending the query index to the parameter name.
 // For the query with index 0 the parameter name is not altered what
-// allows using this parameter in other situations (see SelectAsSite). 
+// allows using this parameter in other situations (see SelectAsSite).
 
 class ConditionBuilder
 {
@@ -3259,7 +3271,7 @@ public:
     return *this;
   }
 
-  void GetClauseString(nsCString& aResult) 
+  void GetClauseString(nsCString& aResult)
   {
     aResult = mClause;
   }
@@ -3294,7 +3306,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     clause.Condition("EXISTS (SELECT 1 FROM moz_historyvisits "
                               "WHERE place_id = h.id");
     // begin time
-    if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt) 
+    if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt)
       clause.Condition("visit_date >=").Param(":begin_time");
     // end time
     if (NS_SUCCEEDED(aQuery->GetHasEndTime(&hasIt)) && hasIt)
@@ -3325,7 +3337,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
 
   if (aQuery->MaxVisits() >= 0)
     clause.Condition("h.visit_count <=").Param(":max_visits");
-  
+
   // only bookmarked, has no affect on bookmarks-only queries
   if (aOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
       aQuery->OnlyBookmarked())
@@ -3629,7 +3641,7 @@ const int64_t UNDEFINED_URN_VALUE = -1;
 // urn:places-persist:place:group=0&group=1&sort=1&type=1,,%28local%20files%29)
 // to be used to persist the open state of this container
 nsresult
-CreatePlacesPersistURN(nsNavHistoryQueryResultNode *aResultNode, 
+CreatePlacesPersistURN(nsNavHistoryQueryResultNode *aResultNode,
                        int64_t aValue, const nsCString& aTitle, nsCString& aURN)
 {
   nsAutoCString uri;
@@ -3658,12 +3670,12 @@ int64_t
 nsNavHistory::GetTagsFolder()
 {
   // cache our tags folder
-  // note, we can't do this in nsNavHistory::Init(), 
+  // note, we can't do this in nsNavHistory::Init(),
   // as getting the bookmarks service would initialize it.
   if (mTagsFolder == -1) {
     nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, -1);
-    
+
     nsresult rv = bookmarks->GetTagsFolder(&mTagsFolder);
     NS_ENSURE_SUCCESS(rv, -1);
   }
@@ -3676,7 +3688,7 @@ nsNavHistory::GetTagsFolder()
 //   - searching on title, url and tags
 //   - limit count
 //
-// Note:  changes to filtering in FilterResultSet() 
+// Note:  changes to filtering in FilterResultSet()
 // may require changes to NeedToFilterResultSet()
 
 nsresult
@@ -4033,7 +4045,7 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
         resultNode->mBookmarkGuid = aBookmarkGuid;
         resultNode->GetAsFolder()->mTargetFolderGuid = targetFolderGuid;
 
-        // Use the query item title, unless it's void (in that case use the 
+        // Use the query item title, unless it's void (in that case use the
         // concrete folder title).
         if (!aTitle.IsVoid()) {
           resultNode->mTitle = aTitle;

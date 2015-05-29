@@ -1,0 +1,27 @@
+$inherits:
+  from: 'tasks/builds/b2g_phone_base.yml'
+task:
+  workerType: balrog
+  scopes:
+    - 'docker-worker:feature:balrogVPNProxy'
+
+  payload:
+    features:
+      balrogVPNProxy: true
+    env:
+      TARGET: 'aries'
+      DEBUG: 0
+    command:
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
+        buildbot_step 'Build' ./build-spark-ota.sh $HOME/workspace
+
+  extra:
+    treeherder:
+      machine:
+        platform: b2g-device-image
+    locations:
+      img: 'private/build/aries.zip'
+      mar: 'public/build/b2g-aries-gecko-update.mar'
+

@@ -28,7 +28,8 @@ window.performance.onresourcetimingbufferfull = () => {
 
 window.onload = () => {
   // Here, we should have 4 entries (1 css, 3 png) since the image was loaded.
-  is(window.performance.getEntries().length, 4, "Performance.getEntries() returned wrong number of entries.");
+  var nEntries = window.performance.getEntries().length;
+  ok(nEntries >= 4, "Performance.getEntries() returned wrong number of entries.");
 
   window.performance.setResourceTimingBufferSize(5);
   window.performance.mark("test-start");
@@ -38,7 +39,7 @@ window.onload = () => {
   window.performance.measure("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json",
                              "test-start", "test-end");
 
-  is(window.performance.getEntries().length, 7, "User Timing APIs should never be affected by setResourceTimingBufferSize.");
+  is(window.performance.getEntries().length, nEntries + 3, "User Timing APIs should never be affected by setResourceTimingBufferSize.");
   is(window.performance.getEntriesByType("resource").length, 4, "The number of PerformanceResourceTiming should be 4.");
   is(window.performance.getEntriesByType("mark").length, 2, "The number of PerformanceMark entries should be 2.");
   is(window.performance.getEntriesByType("measure").length, 1, "The number of PerformanceMeasure entries should be 1.");

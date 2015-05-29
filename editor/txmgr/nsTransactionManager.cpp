@@ -238,7 +238,7 @@ nsTransactionManager::BeginBatch(nsISupports* aData)
   }
 
   result = BeginTransaction(0, aData);
-  
+
   nsresult result2 = DidBeginBatchNotify(result);
 
   if (NS_SUCCEEDED(result))
@@ -540,7 +540,7 @@ nsTransactionManager::WillDoNotify(nsITransaction *aTransaction, bool *aInterrup
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillDo(this, aTransaction, aInterrupt);
-    
+
     if (NS_FAILED(result) || *aInterrupt)
       break;
   }
@@ -559,7 +559,7 @@ nsTransactionManager::DidDoNotify(nsITransaction *aTransaction, nsresult aDoResu
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidDo(this, aTransaction, aDoResult);
-    
+
     if (NS_FAILED(result))
       break;
   }
@@ -578,7 +578,7 @@ nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction, bool *aInterr
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillUndo(this, aTransaction, aInterrupt);
-    
+
     if (NS_FAILED(result) || *aInterrupt)
       break;
   }
@@ -597,7 +597,7 @@ nsTransactionManager::DidUndoNotify(nsITransaction *aTransaction, nsresult aUndo
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidUndo(this, aTransaction, aUndoResult);
-    
+
     if (NS_FAILED(result))
       break;
   }
@@ -616,7 +616,7 @@ nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction, bool *aInterr
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillRedo(this, aTransaction, aInterrupt);
-    
+
     if (NS_FAILED(result) || *aInterrupt)
       break;
   }
@@ -635,7 +635,7 @@ nsTransactionManager::DidRedoNotify(nsITransaction *aTransaction, nsresult aRedo
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidRedo(this, aTransaction, aRedoResult);
-    
+
     if (NS_FAILED(result))
       break;
   }
@@ -654,7 +654,7 @@ nsTransactionManager::WillBeginBatchNotify(bool *aInterrupt)
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillBeginBatch(this, aInterrupt);
-    
+
     if (NS_FAILED(result) || *aInterrupt)
       break;
   }
@@ -673,7 +673,7 @@ nsTransactionManager::DidBeginBatchNotify(nsresult aResult)
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidBeginBatch(this, aResult);
-    
+
     if (NS_FAILED(result))
       break;
   }
@@ -692,7 +692,7 @@ nsTransactionManager::WillEndBatchNotify(bool *aInterrupt)
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillEndBatch(this, aInterrupt);
-    
+
     if (NS_FAILED(result) || *aInterrupt)
       break;
   }
@@ -711,7 +711,7 @@ nsTransactionManager::DidEndBatchNotify(nsresult aResult)
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidEndBatch(this, aResult);
-    
+
     if (NS_FAILED(result))
       break;
   }
@@ -730,7 +730,7 @@ nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTra
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->WillMerge(this, aTop, aTransaction, aInterrupt);
-    
+
     if (NS_FAILED(result) || *aInterrupt)
       break;
   }
@@ -752,7 +752,7 @@ nsTransactionManager::DidMergeNotify(nsITransaction *aTop,
     NS_ENSURE_TRUE(listener, NS_ERROR_FAILURE);
 
     result = listener->DidMerge(this, aTop, aTransaction, aDidMerge, aMergeResult);
-    
+
     if (NS_FAILED(result))
       break;
   }

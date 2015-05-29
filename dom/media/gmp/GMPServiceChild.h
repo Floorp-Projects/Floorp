@@ -10,6 +10,7 @@
 #include "base/process.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/gmp/PGMPServiceChild.h"
+#include "nsRefPtrHashtable.h"
 
 namespace mozilla {
 namespace gmp {
@@ -18,7 +19,20 @@ namespace gmp {
 
 class GMPContentParent;
 class GMPServiceChild;
-class GetServiceChildCallback;
+
+class GetServiceChildCallback
+{
+public:
+  GetServiceChildCallback()
+  {
+    MOZ_COUNT_CTOR(GetServiceChildCallback);
+  }
+  virtual ~GetServiceChildCallback()
+  {
+    MOZ_COUNT_DTOR(GetServiceChildCallback);
+  }
+  virtual void Done(GMPServiceChild* aGMPServiceChild) = 0;
+};
 
 class GeckoMediaPluginServiceChild : public GeckoMediaPluginService
 {

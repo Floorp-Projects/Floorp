@@ -1,0 +1,180 @@
+---
+# For complete sample of all build and test jobs,
+# see <gecko>/testing/taskcluster/tasks/job_flags.yml
+
+$inherits:
+  from: tasks/branches/base_job_flags.yml
+
+builds:
+  linux64_gecko:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_desktop_opt.yml
+      debug:
+        task: tasks/builds/b2g_desktop_debug.yml
+  linux64-mulet:
+    platforms:
+      - Mulet Linux
+    types:
+      opt:
+        task: tasks/builds/mulet_linux.yml
+  emulator-kk:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_kk_opt.yml
+      debug:
+        task: tasks/builds/b2g_emulator_kk_debug.yml
+  emulator-l:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_l_opt.yml
+      debug:
+        task: tasks/builds/b2g_emulator_l_debug.yml
+  emulator-jb:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_jb_opt.yml
+      debug:
+        task: tasks/builds/b2g_emulator_jb_debug.yml
+  emulator:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_ics_opt.yml
+      debug:
+        task: tasks/builds/b2g_emulator_ics_debug.yml
+  aries:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_spark_opt.yml
+      debug:
+        task: tasks/builds/b2g_aries_spark_debug.yml
+  aries-eng:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_spark_eng.yml
+  flame-kk:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_flame_kk_opt.yml
+      debug:
+        task: tasks/builds/b2g_flame_kk_debug.yml
+  flame-kk-eng:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_flame_kk_eng.yml
+
+tests:
+  cppunit:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_cpp_unit.yml
+      tasks/builds/b2g_emulator_ics_debug.yml:
+        task: tasks/tests/b2g_emulator_cpp_unit.yml
+  crashtest:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_crashtest.yml
+  gaia-build:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_build_test.yml
+  gaia-build-unit:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_build_unit.yml
+  gaia-js-integration:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_js_integration_tests.yml
+  gaia-linter:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_linter.yml
+  gaia-ui-test-accessibility:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_ui_test_accessibility.yml
+      tasks/builds/b2g_desktop_debug.yml:
+        task: tasks/tests/b2g_gaia_ui_test_accessibility.yml
+  gaia-ui-test-functional:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_ui_test_functional.yml
+      tasks/builds/b2g_desktop_debug.yml:
+        task: tasks/tests/b2g_gaia_ui_test_functional.yml
+      tasks/builds/b2g_flame_kk_eng.yml:
+        task: tasks/tests/flame_kk_gaia_ui_test_functional.yml
+  gaia-ui-test-functional-dsds:
+    allowed_build_tasks:
+      tasks/builds/b2g_flame_kk_eng.yml:
+        task: tasks/tests/flame_kk_gaia_ui_test_functional_dsds.yml
+  gaia-ui-test-sanity:
+    allowed_build_tasks:
+      tasks/builds/b2g_flame_kk_eng.yml:
+        task: tasks/tests/flame_kk_gaia_ui_test_sanity.yml
+  gaia-ui-test-unit:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_ui_test_unit.yml
+      tasks/builds/b2g_desktop_debug.yml:
+        task: tasks/tests/b2g_gaia_ui_test_unit.yml
+      tasks/builds/b2g_flame_kk_eng.yml:
+        task: tasks/tests/flame_kk_gaia_ui_test_unit.yml
+  gaia-unit:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_gaia_unit.yml
+  marionette:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_marionette.yml
+  marionette-webapi:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_marionette_webapi.yml
+  mochitest:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_mochitest.yml
+      tasks/builds/b2g_emulator_ics_debug.yml:
+        task: tasks/tests/b2g_emulator_mochitest.yml
+      tasks/builds/mulet_linux.yml:
+        task: tasks/tests/mulet_mochitests.yml
+  mochitest-oop:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_mochitest_oop.yml
+  reftest:
+    allowed_build_tasks:
+      tasks/builds/mulet_linux.yml:
+        task: tasks/tests/mulet_reftests.yml
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_reftest.yml
+  reftest-sanity-oop:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop_opt.yml:
+        task: tasks/tests/b2g_reftests_sanity_oop.yml
+  xpcshell:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator_ics_opt.yml:
+        task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
+      tasks/builds/b2g_emulator_ics_debug.yml:
+        task: tasks/tests/b2g_emulator_xpcshell_chunked.yml

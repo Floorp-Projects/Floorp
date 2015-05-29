@@ -29,12 +29,29 @@ namespace dom {
 namespace cache {
 namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 9;
+const int32_t kMaxWipeSchemaVersion = 10;
 
 namespace {
 
-const int32_t kLatestSchemaVersion = 9;
+const int32_t kLatestSchemaVersion = 10;
 const int32_t kMaxEntriesPerStatement = 255;
+
+const uint32_t kPageSize = 4 * 1024;
+
+// Grow the database in chunks to reduce fragmentation
+const uint32_t kGrowthSize = 32 * 1024;
+const uint32_t kGrowthPages = kGrowthSize / kPageSize;
+static_assert(kGrowthSize % kPageSize == 0,
+              "Growth size must be multiple of page size");
+
+// Only release free pages when we have more than this limit
+const int32_t kMaxFreePages = kGrowthPages;
+
+// Limit WAL journal to a reasonable size
+const uint32_t kWalAutoCheckpointSize = 512 * 1024;
+const uint32_t kWalAutoCheckpointPages = kWalAutoCheckpointSize / kPageSize;
+static_assert(kWalAutoCheckpointSize % kPageSize == 0,
+              "WAL checkpoint size must be multiple of page size");
 
 } // anonymous namespace
 
@@ -213,28 +230,12 @@ CreateSchema(mozIStorageConnection* aConn)
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
 
-  nsAutoCString pragmas(
-    // Enable auto-vaccum but in incremental mode in order to avoid doing a lot
-    // of work at the end of each transaction.
-    // NOTE: This must be done here instead of InitializeConnection() because it
-    //       only works when the database is empty.
-    "PRAGMA auto_vacuum = INCREMENTAL; "
-  );
-
-  nsresult rv = aConn->ExecuteSimpleSQL(pragmas);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
   int32_t schemaVersion;
-  rv = aConn->GetSchemaVersion(&schemaVersion);
+  nsresult rv = aConn->GetSchemaVersion(&schemaVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   if (schemaVersion == kLatestSchemaVersion) {
-    // We already have the correct schema, so just do an incremental vaccum and
-    // get started.
-    rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "PRAGMA incremental_vacuum;"));
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
+    // We already have the correct schema, so just get started.
     return rv;
   }
 
@@ -380,23 +381,68 @@ InitializeConnection(mozIStorageConnection* aConn)
   // This function needs to perform per-connection initialization tasks that
   // need to happen regardless of the schema.
 
-  nsAutoCString pragmas(
-    "PRAGMA journal_mode = WAL; "
-    // Use default mozStorage 32kb page size for now
-    // WAL journal can grow to 512kb before being flushed to disk
-    "PRAGMA wal_autocheckpoint = 16; "
-    // Always truncate the journal back to 512kb after large transactions
-    "PRAGMA journal_size_limit = 524288; "
-    "PRAGMA foreign_keys = ON; "
-
-    // Note, the default encoding of UTF-8 is preferred.  mozStorage does all
-    // the work necessary to convert UTF-16 nsString values for us.  We don't
-    // need ordering and the binary equality operations are correct.  So, do
-    // NOT set PRAGMA encoding to UTF-16.
+  nsPrintfCString pragmas(
+    // Use a smaller page size to improve perf/footprint; default is too large
+    "PRAGMA page_size = %u; "
+    // Enable auto_vacuum; this must happen after page_size and before WAL
+    "PRAGMA auto_vacuum = INCREMENTAL; "
+    "PRAGMA foreign_keys = ON; ",
+    kPageSize
   );
+
+  // Note, the default encoding of UTF-8 is preferred.  mozStorage does all
+  // the work necessary to convert UTF-16 nsString values for us.  We don't
+  // need ordering and the binary equality operations are correct.  So, do
+  // NOT set PRAGMA encoding to UTF-16.
 
   nsresult rv = aConn->ExecuteSimpleSQL(pragmas);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // Limit fragmentation by growing the database by many pages at once.
+  rv = aConn->SetGrowthIncrement(kGrowthSize, EmptyCString());
+  if (rv == NS_ERROR_FILE_TOO_BIG) {
+    NS_WARNING("Not enough disk space to set sqlite growth increment.");
+    rv = NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // Enable WAL journaling.  This must be performed in a separate transaction
+  // after changing the page_size and enabling auto_vacuum.
+  nsPrintfCString wal(
+    // WAL journal can grow to given number of *pages*
+    "PRAGMA wal_autocheckpoint = %u; "
+    // Always truncate the journal back to given number of *bytes*
+    "PRAGMA journal_size_limit = %u; "
+    // WAL must be enabled at the end to allow page size to be changed, etc.
+    "PRAGMA journal_mode = WAL; ",
+    kWalAutoCheckpointPages,
+    kWalAutoCheckpointSize
+  );
+
+  rv = aConn->ExecuteSimpleSQL(wal);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // Verify that we successfully set the vacuum mode to incremental.  It
+  // is very easy to put the database in a state where the auto_vacuum
+  // pragma above fails silently.
+#ifdef DEBUG
+  nsCOMPtr<mozIStorageStatement> state;
+  rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "PRAGMA auto_vacuum;"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  bool hasMoreData = false;
+  rv = state->ExecuteStep(&hasMoreData);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  int32_t mode;
+  rv = state->GetInt32(0, &mode);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // integer value 2 is incremental mode
+  if (NS_WARN_IF(mode != 2)) { return NS_ERROR_UNEXPECTED; }
+#endif
 
   return NS_OK;
 }
@@ -1915,6 +1961,70 @@ CreateAndBindKeyStatement(mozIStorageConnection* aConn,
 }
 
 } // anonymouns namespace
+
+nsresult
+IncrementalVacuum(mozIStorageConnection* aConn)
+{
+  // Determine how much free space is in the database.
+  nsCOMPtr<mozIStorageStatement> state;
+  nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "PRAGMA freelist_count;"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  bool hasMoreData = false;
+  rv = state->ExecuteStep(&hasMoreData);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  int32_t freePages = 0;
+  rv = state->GetInt32(0, &freePages);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // We have a relatively small page size, so we want to be careful to avoid
+  // fragmentation.  We already use a growth incremental which will cause
+  // sqlite to allocate and release multiple pages at the same time.  We can
+  // further reduce fragmentation by making our allocated chunks a bit
+  // "sticky".  This is done by creating some hysteresis where we allocate
+  // pages/chunks as soon as we need them, but we only release pages/chunks
+  // when we have a large amount of free space.  This helps with the case
+  // where a page is adding and remove resources causing it to dip back and
+  // forth across a chunk boundary.
+  //
+  // So only proceed with releasing pages if we have more than our constant
+  // threshold.
+  if (freePages <= kMaxFreePages) {
+    return NS_OK;
+  }
+
+  // Release the excess pages back to the sqlite VFS.  This may also release
+  // chunks of multiple pages back to the OS.
+  int32_t pagesToRelease = freePages - kMaxFreePages;
+
+  rv = aConn->ExecuteSimpleSQL(nsPrintfCString(
+    "PRAGMA incremental_vacuum(%d);", pagesToRelease
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // Verify that our incremental vacuum actually did something
+#ifdef DEBUG
+  rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "PRAGMA freelist_count;"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  hasMoreData = false;
+  rv = state->ExecuteStep(&hasMoreData);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  freePages = 0;
+  rv = state->GetInt32(0, &freePages);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  MOZ_ASSERT(freePages <= kMaxFreePages);
+#endif
+
+  return NS_OK;
+}
 
 } // namespace db
 } // namespace cache

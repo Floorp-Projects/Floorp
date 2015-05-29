@@ -10,6 +10,7 @@ UNIFIED_SOURCES += [
     'TestGMPCrossOrigin.cpp',
     'TestGMPRemoveAndDelete.cpp',
     'TestIntervalSet.cpp',
+    'TestMediaPromise.cpp',
     'TestMP3Demuxer.cpp',
     'TestMP4Demuxer.cpp',
     'TestMP4Reader.cpp',

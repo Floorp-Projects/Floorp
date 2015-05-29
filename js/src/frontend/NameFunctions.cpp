@@ -396,6 +396,7 @@ class NameResolver
           case PNK_MUTATEPROTO:
           case PNK_SUPERELEM:
           case PNK_EXPORT:
+          case PNK_EXPORT_DEFAULT:
             MOZ_ASSERT(cur->isArity(PN_UNARY));
             if (!resolve(cur->pn_kid, prefix))
                 return false;

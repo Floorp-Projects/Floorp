@@ -33,7 +33,7 @@ using namespace mozilla::dom;
 
 nsAutoSelectionReset::nsAutoSelectionReset(Selection* aSel, nsEditor* aEd)
   : mSel(nullptr), mEd(nullptr)
-{ 
+{
   if (!aSel || !aEd) return;    // not much we can do, bail.
   if (aEd->ArePreservingSelection()) return;   // we already have initted mSavedSel, so this must be nested call.
   mSel = aSel;
@@ -178,7 +178,7 @@ nsEditorHookUtils::GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
 }
 
 bool
-nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent,  
+nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent,
                                    nsITransferable *aTrans)
 {
   nsCOMPtr<nsISimpleEnumerator> enumerator;

@@ -1,0 +1,16 @@
+$inherits:
+  from: 'tasks/builds/b2g_flame_kk_ota_base.yml'
+  variables:
+    build_name: 'flame-kk'
+    build_type: 'opt'
+task:
+  metadata:
+    name: '[TC] B2G Flame KK OTA (user)'
+  scopes:
+    - 'docker-worker:cache:build-flame-kk-ota-user'
+
+  payload:
+    cache:
+      build-flame-kk-ota-user: /home/worker/workspace
+    env:
+      VARIANT: user

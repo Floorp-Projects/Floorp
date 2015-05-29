@@ -368,7 +368,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
       return NS_ERROR_OUT_OF_MEMORY;
     }
     for (uint32_t idx = 0; idx < argCount; ++idx) {
-      *args.AppendElement() = argv[idx + 2];
+      *args.AppendElement(fallible) = argv[idx + 2];
     }
     args.SwapElements(mArgs);
   } else {
@@ -409,7 +409,7 @@ NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow, Function& aFunction,
                           ErrorResult& aError)
 {
   FallibleTArray<JS::Heap<JS::Value> > args;
-  if (!args.AppendElements(aArguments)) {
+  if (!args.AppendElements(aArguments, fallible)) {
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }

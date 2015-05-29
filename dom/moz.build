@@ -12,7 +12,6 @@ interfaces = [
     'core',
     'html',
     'events',
-    'devicestorage',
     'settings',
     'stylesheets',
     'sidebar',

@@ -6,11 +6,14 @@
 
 interface nsIIcc;
 interface nsIIccInfo;
+interface nsIStkDownloadEvent;
+interface nsIStkProactiveCmd;
+interface nsIStkTerminalResponse;
 
-[scriptable, uuid(7c0ada3d-d8d4-493e-9243-fa3df39855e4)]
+[scriptable, uuid(71b33012-eca2-11e4-a40d-9ff040a6fe2a)]
 interface nsIIccListener : nsISupports
 {
-  void notifyStkCommand(in DOMString aMessage);
+  void notifyStkCommand(in nsIStkProactiveCmd aStkProactiveCmd);
   void notifyStkSessionEnd();
   void notifyCardStateChanged();
   void notifyIccInfoChanged();
@@ -135,7 +138,7 @@ NS_CreateIccService();
 /**
  * XPCOM component that provides the access to the selected ICC.
  */
-[scriptable, uuid(6ad6b686-f52d-11e4-942d-db2884bd9242)]
+[scriptable, uuid(6ded322c-fadd-11e4-9cb6-3f4fc3f241d3)]
 interface nsIIcc : nsISupports
 {
   /**
@@ -426,4 +429,47 @@ interface nsIIcc : nsISupports
    */
   void iccCloseChannel(in long aChannel,
                        in nsIIccChannelCallback aCallback);
+
+  /**
+   * Send STK terminal response to the received proactive command.
+   *
+   * @param aCommand
+   *        The received proactive command.
+   * @param aResponse
+   *        The response to be reply to the card application that issues
+   *        this proactive command.
+   */
+   void sendStkResponse(in nsIStkProactiveCmd aCommand,
+                        in nsIStkTerminalResponse aResponse);
+
+  /**
+   * Send envelope to notify the selected item of the main STK menu.
+   *
+   * @param aItemIdentifier
+   *        The identifier of the menu item.
+   * @param aHelpRequested
+   *        True if help information of the selected item is requested by
+   *        the user.
+   */
+   void sendStkMenuSelection(in unsigned short aItemIdentifier,
+                             in boolean aHelpRequested);
+
+  /**
+   * Send envelope to notify the expiration of a requested timer.
+   *
+   * @param aTimerId
+   *        The TimerId provided from previous proactive command.
+   * @param aTimerValue
+   *        The real used seconds when expired.
+   */
+   void sendStkTimerExpiration(in unsigned short aTimerId,
+                               in unsigned long aTimerValue);
+
+  /**
+   * Send "Event Download" envelope to the ICC.
+   *
+   * @param aEvent
+   *        The event that ICC listening to in STK_CMD_SET_UP_EVENT_LIST.
+   */
+   void sendStkEventDownload(in nsIStkDownloadEvent aEvent);
 };

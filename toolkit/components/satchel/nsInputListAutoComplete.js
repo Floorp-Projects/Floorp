@@ -14,40 +14,14 @@ InputListAutoComplete.prototype = {
   classID       : Components.ID("{bf1e01d0-953e-11df-981c-0800200c9a66}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIInputListAutoComplete]),
 
-  autoCompleteSearch : function (formHistoryResult, aUntrimmedSearchString, aField) {
-    let comments = []; // "comments" column values for suggestions
+  autoCompleteSearch : function (aUntrimmedSearchString, aField) {
     let [values, labels] = this.getListSuggestions(aField);
-    let historyResults = [];
-    let historyComments = [];
-
-    // formHistoryResult will be null if form autocomplete is disabled.
-    // We still want the list values to display.
-    if (formHistoryResult) {
-      let entries = formHistoryResult.wrappedJSObject.entries;
-      for (let i = 0; i < entries.length; ++i) {
-        historyResults.push(entries[i].text);
-        historyComments.push("");
-      }
-    }
-
-    // fill out the comment column for the suggestions
-    // if we have any suggestions, put a label at the top
-    if (values.length) {
-      comments[0] = "separator";
-    }
-    for (let i = 1; i < values.length; ++i) {
-      comments.push("");
-    }
-
-    // now put the history results above the suggestions
-    let finalValues = historyResults.concat(values);
-    let finalLabels = historyResults.concat(labels);
-    let finalComments = historyComments.concat(comments);
-
+    if (values.length === 0)
+      return null;
     return new FormAutoCompleteResult(aUntrimmedSearchString,
                                       Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
-                                      0, "", finalValues, finalLabels,
-                                      finalComments, formHistoryResult);
+                                      0, "", values, labels,
+                                      [], null);
   },
 
   getListSuggestions : function (aField) {

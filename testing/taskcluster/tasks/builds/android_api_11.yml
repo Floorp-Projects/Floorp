@@ -22,7 +22,7 @@ task:
     image: '{{#docker_image}}desktop-build{{/docker_image}}'
     cache:
       build-android-api-11-workspace: '/home/worker/workspace'
-      tooltool-cache: '/home/worker/tools/tooltool-cache'
+      tooltool-cache: '/home/worker/tooltool-cache'
 
     env:
       # inputs to mozharness

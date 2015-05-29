@@ -35,10 +35,10 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  
+
   // nsISelectionListener
   NS_DECL_NSISELECTIONLISTENER
-  
+
   // nsIDocumentStateListener
   NS_DECL_NSIDOCUMENTSTATELISTENER
 
@@ -46,7 +46,7 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   /** nsITransactionListener interfaces
-    */  
+    */
   NS_IMETHOD WillDo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt) override;
   NS_IMETHOD DidDo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aDoResult) override;
   NS_IMETHOD WillUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, bool *aInterrupt) override;
@@ -75,24 +75,24 @@ protected:
     eStateOff             = false,
     eStateOn              = true
   };
-  
+
   bool          SelectionIsCollapsed();
-  nsresult      UpdateDirtyState(bool aNowDirty);  
+  nsresult      UpdateDirtyState(bool aNowDirty);
   nsresult      UpdateOneCommand(const char* aCommand);
   nsresult      UpdateCommandGroup(const nsAString& aCommandGroup);
 
   already_AddRefed<nsPICommandUpdater> GetCommandUpdater();
-  
+
   nsresult      PrimeUpdateTimer();
   void          TimerCallback();
   nsCOMPtr<nsITimer>  mUpdateTimer;
 
   nsWeakPtr     mDOMWindow;
   nsWeakPtr     mDocShell;
-  int8_t        mDirtyState;  
-  int8_t        mSelectionCollapsed;  
+  int8_t        mDirtyState;
+  int8_t        mSelectionCollapsed;
   bool          mFirstDoOfFirstUndo;
-    
+
 
 };
 

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPDecryptorChild.h"
+#include "GMPContentChild.h"
 #include "GMPChild.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/unused.h"

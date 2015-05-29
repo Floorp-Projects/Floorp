@@ -195,6 +195,14 @@ private:
   // diverting callbacks to parent.
   bool mSuspendSent;
 
+  // Set if a response was synthesized, indicating that any forthcoming redirects
+  // should be intercepted.
+  bool mSynthesizedResponse;
+
+  // Set if the corresponding parent channel should force an interception to occur
+  // before the network transaction is initiated.
+  bool mShouldParentIntercept;
+
   // true after successful AsyncOpen until OnStopRequest completes.
   bool RemoteChannelExists() { return mIPCOpen && !mKeptAlive; }
 

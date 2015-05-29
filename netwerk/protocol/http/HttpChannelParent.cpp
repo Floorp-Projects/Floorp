@@ -57,6 +57,8 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   , mDivertingFromChild(false)
   , mDivertedOnStartRequest(false)
   , mSuspendedForDiversion(false)
+  , mShouldIntercept(false)
+  , mShouldSuspendIntercept(false)
   , mNestedFrameId(0)
 {
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
@@ -92,6 +94,13 @@ HttpChannelParent::ActorDestroy(ActorDestroyReason why)
   // yet, but child process has crashed.  We must not try to send any more msgs
   // to child, or IPDL will kill chrome process, too.
   mIPCClosed = true;
+
+  // If this is an intercepted channel, we need to make sure that any resources are
+  // cleaned up to avoid leaks.
+  if (mInterceptedChannel) {
+    mInterceptedChannel->Cancel();
+    mInterceptedChannel = nullptr;
+  }
 }
 
 bool
@@ -118,7 +127,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
     const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
-    return ConnectChannel(cArgs.channelId());
+    return ConnectChannel(cArgs.channelId(), cArgs.shouldIntercept());
   }
   default:
     NS_NOTREACHED("unknown open type");
@@ -143,7 +152,7 @@ NS_IMPL_ISUPPORTS(HttpChannelParent,
 NS_IMETHODIMP
 HttpChannelParent::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate, bool* aShouldIntercept)
 {
-  *aShouldIntercept = !!mSynthesizedResponseHead;
+  *aShouldIntercept = mShouldIntercept;
   return NS_OK;
 }
 
@@ -188,6 +197,11 @@ public:
 NS_IMETHODIMP
 HttpChannelParent::ChannelIntercepted(nsIInterceptedChannel* aChannel)
 {
+  if (mShouldSuspendIntercept) {
+    mInterceptedChannel = aChannel;
+    return NS_OK;
+  }
+
   aChannel->SynthesizeStatus(mSynthesizedResponseHead->Status(),
                              mSynthesizedResponseHead->StatusText());
   nsCOMPtr<nsIHttpHeaderVisitor> visitor = new HeaderVisitor(aChannel);
@@ -388,6 +402,9 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 
   if (aSynthesizedResponseHead.type() == OptionalHttpResponseHead::TnsHttpResponseHead) {
     mSynthesizedResponseHead = new nsHttpResponseHead(aSynthesizedResponseHead.get_nsHttpResponseHead());
+    mShouldIntercept = true;
+  } else {
+    mChannel->ForceNoIntercept();
   }
 
   nsCOMPtr<nsISupportsPRUint32> cacheKey =
@@ -467,7 +484,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 }
 
 bool
-HttpChannelParent::ConnectChannel(const uint32_t& channelId)
+HttpChannelParent::ConnectChannel(const uint32_t& channelId, const bool& shouldIntercept)
 {
   nsresult rv;
 
@@ -477,6 +494,13 @@ HttpChannelParent::ConnectChannel(const uint32_t& channelId)
   rv = NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel));
   mChannel = static_cast<nsHttpChannel*>(channel.get());
   LOG(("  found channel %p, rv=%08x", mChannel.get(), rv));
+
+  mShouldIntercept = shouldIntercept;
+  if (mShouldIntercept) {
+    // When an interception occurs, this channel should suspend all further activity.
+    // It will be torn down and recreated if necessary.
+    mShouldSuspendIntercept = true;
+  }
 
   if (mPBOverride != kPBOverride_Unset) {
     // redirected-to channel may not support PB

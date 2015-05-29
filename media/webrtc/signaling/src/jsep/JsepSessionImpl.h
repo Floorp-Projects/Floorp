@@ -187,7 +187,7 @@ private:
       SdpMediaSection::MediaType type) const;
 
   PtrVector<JsepCodecDescription> GetCommonCodecs(
-      const SdpMediaSection& remoteMsection);
+      const SdpMediaSection& offerMsection);
   void AddCommonExtmaps(const SdpMediaSection& remoteMsection,
                         SdpMediaSection* msection);
   nsresult SetupIds();

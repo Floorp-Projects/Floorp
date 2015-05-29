@@ -133,7 +133,6 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet *types,
 {
     MOZ_ASSERT(!types->unknown());
     MOZ_ASSERT(!types->hasType(TypeSet::AnyObjectType()));
-    MOZ_ASSERT(types->getObjectCount());
     MOZ_ASSERT(scratch != InvalidReg);
 
     // Note: this method elides read barriers on values read from type sets, as

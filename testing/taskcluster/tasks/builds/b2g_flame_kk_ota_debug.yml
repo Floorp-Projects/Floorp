@@ -1,0 +1,17 @@
+$inherits:
+  from: 'tasks/builds/b2g_flame_kk_ota_base.yml'
+  variables:
+    build_name: 'flame-kk'
+    build_type: 'debug'
+task:
+  metadata:
+    name: '[TC] B2G Flame KK OTA (userdebug)'
+  scopes:
+    - 'docker-worker:cache:build-flame-kk-ota-debug'
+
+  payload:
+    cache:
+        build-flame-kk-ota-debug: /home/worker/workspace
+    env:
+      VARIANT: userdebug
+      B2G_DEBUG: 0

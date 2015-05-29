@@ -2035,6 +2035,15 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nullptr);
     }
 
+    // Remove any and all idle listeners.
+    nsCOMPtr<nsIIdleService> idleService =
+        do_GetService("@mozilla.org/widget/idleservice;1");
+    MOZ_ASSERT(idleService);
+    nsRefPtr<ParentIdleListener> listener;
+    for (int32_t i = mIdleListeners.Length() - 1; i >= 0; --i) {
+        listener = static_cast<ParentIdleListener*>(mIdleListeners[i].get());
+        idleService->RemoveIdleObserver(listener, listener->mTime);
+    }
     mIdleListeners.Clear();
 
     MessageLoop::current()->
@@ -4660,30 +4669,34 @@ ContentParent::RecvAddIdleObserver(const uint64_t& aObserver, const uint32_t& aI
 {
     nsresult rv;
     nsCOMPtr<nsIIdleService> idleService =
-      do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+        do_GetService("@mozilla.org/widget/idleservice;1", &rv);
     NS_ENSURE_SUCCESS(rv, false);
 
-    nsRefPtr<ParentIdleListener> listener = new ParentIdleListener(this, aObserver);
-    mIdleListeners.Put(aObserver, listener);
-    idleService->AddIdleObserver(listener, aIdleTimeInS);
+    nsRefPtr<ParentIdleListener> listener =
+        new ParentIdleListener(this, aObserver, aIdleTimeInS);
+    rv = idleService->AddIdleObserver(listener, aIdleTimeInS);
+    NS_ENSURE_SUCCESS(rv, false);
+    mIdleListeners.AppendElement(listener);
     return true;
 }
 
 bool
 ContentParent::RecvRemoveIdleObserver(const uint64_t& aObserver, const uint32_t& aIdleTimeInS)
 {
-    nsresult rv;
-    nsCOMPtr<nsIIdleService> idleService =
-      do_GetService("@mozilla.org/widget/idleservice;1", &rv);
-    NS_ENSURE_SUCCESS(rv, false);
-
     nsRefPtr<ParentIdleListener> listener;
-    bool found = mIdleListeners.Get(aObserver, &listener);
-    if (found) {
-        mIdleListeners.Remove(aObserver);
-        idleService->RemoveIdleObserver(listener, aIdleTimeInS);
+    for (int32_t i = mIdleListeners.Length() - 1; i >= 0; --i) {
+        listener = static_cast<ParentIdleListener*>(mIdleListeners[i].get());
+        if (listener->mObserver == aObserver &&
+            listener->mTime == aIdleTimeInS) {
+            nsresult rv;
+            nsCOMPtr<nsIIdleService> idleService =
+                do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+            NS_ENSURE_SUCCESS(rv, false);
+            idleService->RemoveIdleObserver(listener, aIdleTimeInS);
+            mIdleListeners.RemoveElementAt(i);
+            break;
+        }
     }
-
     return true;
 }
 

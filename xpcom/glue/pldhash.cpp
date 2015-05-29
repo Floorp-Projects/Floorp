@@ -400,6 +400,25 @@ PLDHashTable2::~PLDHashTable2()
   PLDHashTable::Finish();
 }
 
+void
+PLDHashTable2::ClearAndPrepareForLength(uint32_t aLength)
+{
+  MOZ_ASSERT(IsInitialized());
+
+  // Get these values before the call to Finish() clobbers them.
+  const PLDHashTableOps* ops = mOps;
+  uint32_t entrySize = mEntrySize;
+
+  PLDHashTable::Finish();
+  PLDHashTable::Init(ops, entrySize, aLength);
+}
+
+void
+PLDHashTable2::Clear()
+{
+  ClearAndPrepareForLength(PL_DHASH_DEFAULT_INITIAL_LENGTH);
+}
+
 // If |IsAdd| is true, the return value is always non-null and it may be a
 // previously-removed entry. If |IsAdd| is false, the return value is null on a
 // miss, and will never be a previously-removed entry on a hit. This
