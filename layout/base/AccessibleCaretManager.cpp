@@ -90,6 +90,7 @@ AccessibleCaretManager::HideCarets()
     AC_LOG("%s", __FUNCTION__);
     mFirstCaret->SetAppearance(Appearance::None);
     mSecondCaret->SetAppearance(Appearance::None);
+    DispatchCaretStateChangedEvent(CaretChangedReason::Visibilitychange);
     CancelCaretTimeoutTimer();
   }
 }
@@ -154,7 +155,8 @@ AccessibleCaretManager::UpdateCaretsForCursorMode()
   // No need to consider whether the caret's position is out of scrollport.
   // According to the spec, we need to explicitly hide it after the scrolling is
   // ended.
-  mFirstCaret->SetPosition(frame, offset);
+  bool oldSecondCaretVisible = mSecondCaret->IsLogicallyVisible();
+  PositionChangedResult caretResult = mFirstCaret->SetPosition(frame, offset);
   mFirstCaret->SetSelectionBarEnabled(false);
   if (nsContentUtils::HasNonEmptyTextContent(
         editingHost, nsContentUtils::eRecurseIntoChildren)) {
@@ -164,6 +166,11 @@ AccessibleCaretManager::UpdateCaretsForCursorMode()
     mFirstCaret->SetAppearance(Appearance::NormalNotShown);
   }
   mSecondCaret->SetAppearance(Appearance::None);
+
+  if ((caretResult == PositionChangedResult::Changed ||
+      oldSecondCaretVisible) && !mActiveCaret) {
+    DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
+  }
 }
 
 void
@@ -214,6 +221,14 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode()
   }
 
   UpdateCaretsForTilt();
+
+  if ((firstCaretResult == PositionChangedResult::Changed ||
+       secondCaretResult == PositionChangedResult::Changed ||
+       firstCaretResult == PositionChangedResult::Invisible ||
+       secondCaretResult == PositionChangedResult::Invisible) &&
+      !mActiveCaret) {
+    DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
+  }
 }
 
 void
@@ -253,6 +268,7 @@ AccessibleCaretManager::PressCaret(const nsPoint& aPoint)
     mOffsetYToCaretLogicalPosition =
       mActiveCaret->LogicalPosition().y - aPoint.y;
     SetSelectionDragState(true);
+    DispatchCaretStateChangedEvent(CaretChangedReason::Presscaret);
     CancelCaretTimeoutTimer();
     rv = NS_OK;
   }
@@ -279,6 +295,7 @@ AccessibleCaretManager::ReleaseCaret()
 
   mActiveCaret = nullptr;
   SetSelectionDragState(false);
+  DispatchCaretStateChangedEvent(CaretChangedReason::Releasecaret);
   LaunchCaretTimeoutTimer();
   return NS_OK;
 }
@@ -291,6 +308,7 @@ AccessibleCaretManager::TapCaret(const nsPoint& aPoint)
   nsresult rv = NS_ERROR_FAILURE;
 
   if (GetCaretMode() == CaretMode::Cursor) {
+    DispatchCaretStateChangedEvent(CaretChangedReason::Taponcaret);
     rv = NS_OK;
   }
 
@@ -331,6 +349,7 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
                          editingHost, nsContentUtils::eRecurseIntoChildren))) {
     // Content is empty. No need to select word.
     AC_LOG("%s, Cannot select word bacause content is empty", __FUNCTION__);
+    DispatchCaretStateChangedEvent(CaretChangedReason::Longpressonemptycontent);
     return NS_OK;
   }
 
@@ -864,6 +883,77 @@ AccessibleCaretManager::CancelCaretTimeoutTimer()
   if (mCaretTimeoutTimer) {
     mCaretTimeoutTimer->Cancel();
   }
+}
+
+void
+AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReason) const
+{
+  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+  // Holding PresShell to prevent AccessibleCaretManager to be destroyed.
+  nsCOMPtr<nsIPresShell> presShell = mPresShell;
+  // XXX: Do we need to flush layout?
+  presShell->FlushPendingNotifications(Flush_Layout);
+  if (presShell->IsDestroying()) {
+    return;
+  }
+
+  Selection* sel = GetSelection();
+  if (!sel) {
+    return;
+  }
+
+  nsIDocument* doc = mPresShell->GetDocument();
+  MOZ_ASSERT(doc);
+
+  CaretStateChangedEventInit init;
+  init.mBubbles = true;
+
+  const nsRange* range = sel->GetAnchorFocusRange();
+  nsINode* commonAncestorNode = nullptr;
+  if (range) {
+    commonAncestorNode = range->GetCommonAncestor();
+  }
+
+  if (!commonAncestorNode) {
+    commonAncestorNode = sel->GetFrameSelection()->GetAncestorLimiter();
+  }
+
+  nsRefPtr<DOMRect> domRect = new DOMRect(ToSupports(doc));
+  nsRect rect = nsContentUtils::GetSelectionBoundingRect(sel);
+
+  nsIFrame* commonAncestorFrame = nullptr;
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+
+  if (commonAncestorNode && commonAncestorNode->IsContent()) {
+    commonAncestorFrame = commonAncestorNode->AsContent()->GetPrimaryFrame();
+  }
+
+  if (commonAncestorFrame && rootFrame) {
+    nsLayoutUtils::TransformRect(rootFrame, commonAncestorFrame, rect);
+    nsRect clampedRect = nsLayoutUtils::ClampRectToScrollFrames(commonAncestorFrame,
+                                                                rect);
+    nsLayoutUtils::TransformRect(commonAncestorFrame, rootFrame, clampedRect);
+    domRect->SetLayoutRect(clampedRect);
+    init.mSelectionVisible = !clampedRect.IsEmpty();
+    init.mBoundingClientRect = domRect;
+  } else {
+    domRect->SetLayoutRect(rect);
+    init.mSelectionVisible = true;
+  }
+
+  init.mBoundingClientRect = domRect;
+  init.mReason = aReason;
+  init.mCollapsed = sel->IsCollapsed();
+  init.mCaretVisible = mFirstCaret->IsLogicallyVisible() ||
+                       mSecondCaret->IsLogicallyVisible();
+
+  nsRefPtr<CaretStateChangedEvent> event =
+    CaretStateChangedEvent::Constructor(doc, NS_LITERAL_STRING("mozcaretstatechanged"), init);
+
+  event->SetTrusted(true);
+  event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+  bool ret;
+  doc->DispatchEvent(event, &ret);
 }
 
 } // namespace mozilla

@@ -483,11 +483,11 @@ const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClass(
    * Retrieves the list of installed director-scripts.
    */
   list: method(function () {
-    var enabled_script_ids = [for (id of this._directorScriptActorsMap.keys()) id];
+    let enabledScriptIds = [...this._directorScriptActorsMap.keys()];
 
     return {
       installed: DirectorRegistry.list(),
-      enabled: enabled_script_ids
+      enabled: enabledScriptIds
     };
   }, {
     response: {

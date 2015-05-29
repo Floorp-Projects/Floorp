@@ -21,7 +21,9 @@ exports.items = [
     name: "tools",
     description: l10n.lookupFormat("toolsDesc2", [ BRAND_SHORT_NAME ]),
     manual: l10n.lookupFormat("toolsManual2", [ BRAND_SHORT_NAME ]),
-    get hidden() gcli.hiddenByChromePref(),
+    get hidden() {
+      return gcli.hiddenByChromePref();
+    }
   },
   {
     item: "command",
@@ -29,7 +31,9 @@ exports.items = [
     name: "tools srcdir",
     description: l10n.lookup("toolsSrcdirDesc"),
     manual: l10n.lookupFormat("toolsSrcdirManual2", [ BRAND_SHORT_NAME ]),
-    get hidden() gcli.hiddenByChromePref(),
+    get hidden() {
+      return gcli.hiddenByChromePref();
+    },
     params: [
       {
         name: "srcdir",
@@ -67,7 +71,9 @@ exports.items = [
     name: "tools builtin",
     description: l10n.lookup("toolsBuiltinDesc"),
     manual: l10n.lookup("toolsBuiltinManual"),
-    get hidden() gcli.hiddenByChromePref(),
+    get hidden() {
+      return gcli.hiddenByChromePref();
+    },
     returnType: "string",
     exec: function(args, context) {
       Services.prefs.clearUserPref("devtools.loader.srcdir");

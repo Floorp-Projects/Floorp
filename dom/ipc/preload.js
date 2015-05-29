@@ -103,6 +103,7 @@ const BrowserElementIsPreloaded = true;
     Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js", global);
   }
 
+  Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementCopyPaste.js", global);
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementChildPreload.js", global);
 
   Services.io.getProtocolHandler("app");
