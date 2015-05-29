@@ -190,6 +190,7 @@ add_task(function* test_addLivemark_noSiteURI_succeeds() {
   do_check_true(livemark.feedURI.equals(FEED_URI));
   do_check_eq(livemark.siteURI, null);
   do_check_true(livemark.lastModified > 0);
+  do_check_true(is_time_ordered(livemark.dateAdded, livemark.lastModified));
 
   let bookmark = yield PlacesUtils.bookmarks.fetch(livemark.guid);
   do_check_eq(livemark.index, bookmark.index);
@@ -303,8 +304,7 @@ add_task(function* test_addLivemark_lastModified_succeeds() {
     , lastModified: now
     });
   do_check_eq(livemark.dateAdded, now);
-  // lastModified is updated when annotations are added to the livemark.
-  do_check_true(is_time_ordered(now, livemark.lastModified));
+  do_check_eq(livemark.lastModified, now);
 });
 
 add_task(function* test_removeLivemark_emptyObject_throws() {
