@@ -318,8 +318,10 @@ UDPSocket::Send(const StringOrBlobOrArrayBufferOrArrayBufferView& aData,
   nsCString remoteAddress;
   if (aRemoteAddress.WasPassed()) {
     remoteAddress = NS_ConvertUTF16toUTF8(aRemoteAddress.Value());
+    UDPSOCKET_LOG(("%s: Send to %s", __FUNCTION__, remoteAddress.get()));
   } else if (!mRemoteAddress.IsVoid()) {
     remoteAddress = mRemoteAddress;
+    UDPSOCKET_LOG(("%s: Send to %s", __FUNCTION__, remoteAddress.get()));
   } else {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return false;
@@ -413,6 +415,7 @@ UDPSocket::InitLocal(const nsAString& aLocalAddress,
     PRNetAddr prAddr;
     PR_InitializeNetAddr(PR_IpAddrAny, aLocalPort, &prAddr);
     PR_StringToNetAddr(NS_ConvertUTF16toUTF8(aLocalAddress).BeginReading(), &prAddr);
+    UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, NS_ConvertUTF16toUTF8(aLocalAddress).get(), aLocalPort));
 
     mozilla::net::NetAddr addr;
     PRNetAddrToNetAddr(&prAddr, &addr);

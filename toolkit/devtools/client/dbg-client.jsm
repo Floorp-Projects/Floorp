@@ -189,7 +189,7 @@ function eventSource(aProto) {
     let name = arguments[0];
     let listeners = this._getListeners(name).slice(0);
 
-    for each (let listener in listeners) {
+    for (let listener of listeners) {
       try {
         listener.apply(null, arguments);
       } catch (e) {
@@ -2078,8 +2078,8 @@ ThreadClient.prototype = {
    *        The property name of the grip cache we want to clear.
    */
   _clearObjectClients: function (aGripCacheName) {
-    for each (let grip in this[aGripCacheName]) {
-      grip.valid = false;
+    for (let id in this[aGripCacheName]) {
+      this[aGripCacheName][id].valid = false;
     }
     this[aGripCacheName] = {};
   },
@@ -2269,9 +2269,15 @@ ObjectClient.prototype = {
 
   valid: true,
 
-  get isFrozen() this._grip.frozen,
-  get isSealed() this._grip.sealed,
-  get isExtensible() this._grip.extensible,
+  get isFrozen() {
+    return this._grip.frozen;
+  },
+  get isSealed() {
+    return this._grip.sealed;
+  },
+  get isExtensible() {
+    return this._grip.extensible;
+  },
 
   getDefinitionSite: DebuggerClient.requester({
     type: "definitionSite"
@@ -2540,12 +2546,24 @@ function SourceClient(aClient, aForm) {
 }
 
 SourceClient.prototype = {
-  get _transport() this._client._transport,
-  get isBlackBoxed() this._isBlackBoxed,
-  get isPrettyPrinted() this._isPrettyPrinted,
-  get actor() this._form.actor,
-  get request() this._client.request,
-  get url() this._form.url,
+  get _transport() {
+    return this._client._transport;
+  },
+  get isBlackBoxed() {
+    return this._isBlackBoxed;
+  },
+  get isPrettyPrinted() {
+    return this._isPrettyPrinted;
+  },
+  get actor() {
+    return this._form.actor;
+  },
+  get request() {
+    return this._client.request;
+  },
+  get url() {
+    return this._form.url;
+  },
 
   /**
    * Black box this SourceClient's source.
@@ -2895,7 +2913,9 @@ function EnvironmentClient(aClient, aForm) {
 
 EnvironmentClient.prototype = {
 
-  get actor() this._form.actor,
+  get actor() {
+    return this._form.actor;
+  },
   get _transport() { return this._client._transport; },
 
   /**

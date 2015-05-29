@@ -119,7 +119,18 @@ protected:
   AllocPCacheStreamControlParent() override;
 
   virtual bool
-  DeallocPCacheStreamControlParent(dom::cache::PCacheStreamControlParent* aActor) override;
+  DeallocPCacheStreamControlParent(dom::cache::PCacheStreamControlParent* aActor)
+                                   override;
+
+  virtual PUDPSocketParent*
+  AllocPUDPSocketParent(const OptionalPrincipalInfo& pInfo,
+                        const nsCString& aFilter) override;
+  virtual bool
+  RecvPUDPSocketConstructor(PUDPSocketParent*,
+                            const OptionalPrincipalInfo& aPrincipalInfo,
+                            const nsCString& aFilter) override;
+  virtual bool
+  DeallocPUDPSocketParent(PUDPSocketParent*) override;
 };
 
 } // namespace ipc

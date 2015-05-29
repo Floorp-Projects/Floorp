@@ -909,3 +909,10 @@ pref("touchcaret.extendedvisibility", true);
 // The TouchCaret and the SelectionCarets will indicate when the
 // TextSelection actionbar is to be openned or closed.
 pref("caret.manages-android-actionbar", true);
+
+// Disable sending console to logcat on release builds.
+#ifdef RELEASE_BUILD
+pref("consoleservice.logcat", false);
+#else
+pref("consoleservice.logcat", true);
+#endif

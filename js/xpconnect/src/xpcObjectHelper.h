@@ -120,12 +120,16 @@ protected:
     }
 
     nsCOMPtr<nsISupports>    mCanonicalStrong;
-    nsISupports*             mCanonical;
+    nsISupports* MOZ_UNSAFE_REF("xpcObjectHelper has been specifically optimized "
+                                "to avoid unnecessary AddRefs and Releases. "
+                                "(see bug 565742)") mCanonical;
 
 private:
     xpcObjectHelper(xpcObjectHelper& aOther) = delete;
 
-    nsISupports*             mObject;
+    nsISupports* MOZ_UNSAFE_REF("xpcObjectHelper has been specifically optimized "
+                                "to avoid unnecessary AddRefs and Releases. "
+                                "(see bug 565742)") mObject;
     nsWrapperCache*          mCache;
     nsCOMPtr<nsIClassInfo>   mClassInfo;
     nsRefPtr<nsXPCClassInfo> mXPCClassInfo;

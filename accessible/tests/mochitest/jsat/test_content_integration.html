@@ -58,10 +58,22 @@
            new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
+          [ContentMessages.simpleMoveNext,
+           new ExpectedCursorChange(['Light', {"string": "stateOff"}, {'string': 'switch'}])],
+          // switch on
+          [ContentMessages.activateCurrent(),
+           new ExpectedClickAction({ no_android: true }),
+           new ExpectedSwitchAction(true)],
            [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(['slider', '0', {'string': 'slider'}])],
 
           // Simple traversal backward
+          [ContentMessages.simpleMovePrevious,
+           new ExpectedCursorChange(['Light', {"string": "stateOn"}, {'string': 'switch'}])],
+          // switch off
+          [ContentMessages.activateCurrent(),
+           new ExpectedClickAction({ no_android: true }),
+           new ExpectedSwitchAction(false)],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
           [ContentMessages.simpleMovePrevious,

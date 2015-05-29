@@ -55,6 +55,12 @@
         'aria-valuetext', 'medium');
     }
 
+    function toggleLight() {
+      var lightSwitch = document.getElementById('light');
+      lightSwitch.setAttribute('aria-checked',
+        lightSwitch.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
+    }
+
   </script>
   <style>
     #windows {
@@ -100,6 +106,7 @@
   </div>
   <button id="home">Home</button>
   <button id="fruit" aria-label="apple"></button>
+  <span id="light" role="switch" aria-label="Light" aria-checked="false" onclick="toggleLight()"></span>
   <div id="live" aria-live="polite" aria-label="live">
     <div id="slider" role="slider" aria-label="slider" aria-valuemin="0"
       aria-valuemax="10"  aria-valuenow="0"></div>
