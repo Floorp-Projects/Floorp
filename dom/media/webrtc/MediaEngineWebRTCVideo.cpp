@@ -266,7 +266,7 @@ MediaEngineWebRTCVideoSource::Deallocate()
     // another thread anywhere else, b) ViEInputManager::DestroyCaptureDevice() grabs
     // an exclusive object lock and deletes it in a critical section, so all in all
     // this should be safe threadwise.
-    NS_DispatchToMainThread(WrapRunnable(mViECapture,
+    NS_DispatchToMainThread(WrapRunnable(mViECapture.get(),
                                          &webrtc::ViECapture::ReleaseCaptureDevice,
                                          mCaptureIndex),
                             NS_DISPATCH_SYNC);
@@ -422,9 +422,10 @@ MediaEngineWebRTCVideoSource::Shutdown()
   if (mState == kAllocated || mState == kStopped) {
     Deallocate();
   }
-  mViECapture->Release();
-  mViERender->Release();
-  mViEBase->Release();
+  mViECapture = nullptr;
+  mViERender = nullptr;
+  mViEBase = nullptr;
+
   mState = kReleased;
   mInitDone = false;
 }

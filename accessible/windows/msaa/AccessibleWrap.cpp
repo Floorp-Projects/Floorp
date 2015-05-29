@@ -115,21 +115,17 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 
   if (IID_IUnknown == iid)
     *ppv = static_cast<IAccessible*>(this);
-
-  if (!*ppv && IsProxy())
-    return E_NOINTERFACE;
-
-  if (IID_IDispatch == iid || IID_IAccessible == iid)
+  else if (IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = static_cast<IAccessible*>(this);
-  else if (IID_IEnumVARIANT == iid) {
+  else if (IID_IEnumVARIANT == iid && !IsProxy()) {
     // Don't support this interface for leaf elements.
     if (!HasChildren() || nsAccUtils::MustPrune(this))
       return E_NOINTERFACE;
 
     *ppv = static_cast<IEnumVARIANT*>(new ChildrenEnumVariant(this));
-  } else if (IID_IServiceProvider == iid)
+  } else if (IID_IServiceProvider == iid && !IsProxy())
     *ppv = new ServiceProvider(this);
-  else if (IID_ISimpleDOMNode == iid) {
+  else if (IID_ISimpleDOMNode == iid && !IsProxy()) {
     if (IsDefunct() || (!HasOwnContent() && !IsDoc()))
       return E_NOINTERFACE;
 
@@ -142,7 +138,7 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
       return hr;
   }
 
-  if (nullptr == *ppv) {
+  if (nullptr == *ppv && !IsProxy()) {
     HRESULT hr = ia2AccessibleComponent::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr))
       return hr;
@@ -154,7 +150,7 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
       return hr;
   }
 
-  if (nullptr == *ppv) {
+  if (nullptr == *ppv && !IsProxy()) {
     HRESULT hr = ia2AccessibleValue::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr))
       return hr;

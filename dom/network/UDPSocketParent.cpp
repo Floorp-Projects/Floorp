@@ -20,14 +20,34 @@
 #include "mozilla/dom/TabParent.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptSecurityManager.h"
+#include "mozilla/ipc/PBackgroundParent.h"
+
+#if defined(PR_LOGGING)
+//
+// set NSPR_LOG_MODULES=UDPSocket:5
+//
+extern PRLogModuleInfo *gUDPSocketLog;
+#endif
+#define UDPSOCKET_LOG(args)     PR_LOG(gUDPSocketLog, PR_LOG_DEBUG, args)
+#define UDPSOCKET_LOG_ENABLED() PR_LOG_TEST(gUDPSocketLog, PR_LOG_DEBUG)
 
 namespace mozilla {
 namespace dom {
 
 NS_IMPL_ISUPPORTS(UDPSocketParent, nsIUDPSocketListener)
 
-UDPSocketParent::UDPSocketParent()
-  : mIPCOpen(true)
+UDPSocketParent::UDPSocketParent(PBackgroundParent* aManager)
+  : mBackgroundManager(aManager)
+  , mNeckoManager(nullptr)
+  , mIPCOpen(true)
+{
+  mObserver = new mozilla::net::OfflineObserver(this);
+}
+
+UDPSocketParent::UDPSocketParent(PNeckoParent* aManager)
+  : mBackgroundManager(nullptr)
+  , mNeckoManager(aManager)
+  , mIPCOpen(true)
 {
   mObserver = new mozilla::net::OfflineObserver(this);
 }
@@ -78,12 +98,22 @@ bool
 UDPSocketParent::Init(const IPC::Principal& aPrincipal,
                       const nsACString& aFilter)
 {
+  MOZ_ASSERT_IF(mBackgroundManager, !aPrincipal);
+  // will be used once we move all UDPSocket to PBackground, or
+  // if we add in Principal checking for mtransport
+  unused << mBackgroundManager;
+  
   mPrincipal = aPrincipal;
   if (net::UsingNeckoIPCSecurity() &&
       mPrincipal &&
       !ContentParent::IgnoreIPCPrincipal()) {
-    if (!AssertAppPrincipal(Manager()->Manager(), mPrincipal)) {
-      return false;
+    if (mNeckoManager) {
+      if (!AssertAppPrincipal(mNeckoManager->Manager(), mPrincipal)) {
+        return false;
+      }
+    } else {
+      // PBackground is (for now) using a STUN filter for verification
+      // it's not being used for DoS
     }
 
     nsCOMPtr<nsIPermissionManager> permMgr =
@@ -121,7 +151,7 @@ UDPSocketParent::Init(const IPC::Principal& aPrincipal,
   }
   // We don't have browser actors in xpcshell, and hence can't run automated
   // tests without this loophole.
-  if (net::UsingNeckoIPCSecurity() && !mFilter && 
+  if (net::UsingNeckoIPCSecurity() && !mFilter &&
       (!mPrincipal || ContentParent::IgnoreIPCPrincipal())) {
     return false;
   }
@@ -134,6 +164,8 @@ bool
 UDPSocketParent::RecvBind(const UDPAddressInfo& aAddressInfo,
                           const bool& aAddressReuse, const bool& aLoopback)
 {
+  UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, aAddressInfo.addr().get(), aAddressInfo.port()));
+
   if (NS_FAILED(BindInternal(aAddressInfo.addr(), aAddressInfo.port(), aAddressReuse, aLoopback))) {
     FireInternalError(__LINE__);
     return true;
@@ -154,6 +186,7 @@ UDPSocketParent::RecvBind(const UDPAddressInfo& aAddressInfo,
     return true;
   }
 
+  UDPSOCKET_LOG(("%s: SendCallbackOpened: %s:%u", __FUNCTION__, addr.get(), port));
   mozilla::unused << SendCallbackOpened(UDPAddressInfo(addr, port));
 
   return true;
@@ -164,6 +197,8 @@ UDPSocketParent::BindInternal(const nsCString& aHost, const uint16_t& aPort,
                               const bool& aAddressReuse, const bool& aLoopback)
 {
   nsresult rv;
+
+  UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, nsCString(aHost).get(), aPort));
 
   nsCOMPtr<nsIUDPSocket> sock =
       do_CreateInstance("@mozilla.org/network/udp-socket;1", &rv);
@@ -398,6 +433,7 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket, nsIUDPMessage* aMessage
 
   const char* buffer = data.get();
   uint32_t len = data.Length();
+  UDPSOCKET_LOG(("%s: %s:%u, length %u", __FUNCTION__, ip.get(), port, len));
 
   if (mFilter) {
     bool allowed;
@@ -409,6 +445,9 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket, nsIUDPMessage* aMessage
                                         &allowed);
     // Receiving unallowed data, drop.
     if (NS_WARN_IF(NS_FAILED(rv)) || !allowed) {
+      if (!allowed) {
+        UDPSOCKET_LOG(("%s: not allowed", __FUNCTION__));
+      }
       return NS_OK;
     }
   }

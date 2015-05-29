@@ -86,6 +86,7 @@ class STUNUDPSocketFilter : public nsIUDPSocketFilter {
     : white_list_(),
       pending_requests_() {}
 
+  // Allocated/freed and used on the PBackground IPC thread
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUDPSOCKETFILTER
 

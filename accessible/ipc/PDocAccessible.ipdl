@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PContent;
+include protocol PFileDescriptorSet;
+include protocol PBrowser;
 
 include "mozilla/GfxMessageUtils.h";
 
@@ -44,7 +45,7 @@ struct RelationTargets
 
 prio(normal upto high) sync protocol PDocAccessible
 {
-  manager PContent;
+  manager PBrowser;
 
 parent:
   __delete__();
