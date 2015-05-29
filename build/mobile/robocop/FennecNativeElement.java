@@ -68,7 +68,6 @@ public class FennecNativeElement implements Element {
                         mText = et.getEditableText();
                     } else if (v instanceof TextSwitcher) {
                         TextSwitcher ts = (TextSwitcher)v;
-                        ts.getNextView();
                         mText = ((TextView)ts.getCurrentView()).getText();
                     } else if (v instanceof ViewGroup) {
                         ViewGroup vg = (ViewGroup)v;
