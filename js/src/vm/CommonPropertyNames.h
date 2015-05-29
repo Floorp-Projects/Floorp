@@ -85,6 +85,7 @@
     macro(float64, float64, "float64") \
     macro(float64x2, float64x2, "float64x2") \
     macro(forceInterpreter, forceInterpreter, "forceInterpreter") \
+    macro(forEach, forEach, "forEach") \
     macro(format, format, "format") \
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
