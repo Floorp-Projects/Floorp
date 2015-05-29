@@ -18,6 +18,10 @@ XPCOMUtils.defineLazyServiceGetter(Services, "fm",
                                    "@mozilla.org/focus-manager;1",
                                    "nsIFocusManager");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "threadManager",
+                                   "@mozilla.org/thread-manager;1",
+                                   "nsIThreadManager");
+
 XPCOMUtils.defineLazyGetter(this, "domWindowUtils", function () {
   return content.QueryInterface(Ci.nsIInterfaceRequestor)
                 .getInterface(Ci.nsIDOMWindowUtils);
@@ -457,6 +461,13 @@ let FormAssistant = {
     }
   },
 
+  waitForNextTick: function(callback) {
+    var tm = Services.threadManager;
+    tm.mainThread.dispatch({
+      run: callback,
+    }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+  },
+
   receiveMessage: function fa_receiveMessage(msg) {
     let target = this.focusedElement;
     let json = msg.json;
@@ -671,13 +682,35 @@ let FormAssistant = {
       target = target.parentNode;
 
     this.setFocusedElement(target);
-    this.isHandlingFocus = this.sendInputState(target);
+
+    let count = this._focusCounter;
+    this.waitForNextTick(function fa_handleFocusSync() {
+      if (count !== this._focusCounter) {
+        return;
+      }
+
+      let isHandlingFocus = this.sendInputState(target);
+      this.isHandlingFocus = isHandlingFocus;
+    }.bind(this));
   },
 
   unhandleFocus: function fa_unhandleFocus() {
     this.setFocusedElement(null);
-    this.isHandlingFocus = false;
-    sendAsyncMessage("Forms:Input", { "type": "blur" });
+
+    let count = this._focusCounter;
+
+    // Wait for the next tick before unset the focused element and etc.
+    // If the user move from one input from another,
+    // the remote process should get one Forms:Input message instead of two.
+    this.waitForNextTick(function fa_unhandleFocusSync() {
+      if (count !== this._focusCounter ||
+          !this.isHandlingFocus) {
+        return;
+      }
+
+      this.isHandlingFocus = false;
+      sendAsyncMessage("Forms:Input", { "type": "blur" });
+    }.bind(this));
   },
 
   isFocusableElement: function fa_isFocusableElement(element) {
