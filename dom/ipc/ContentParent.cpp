@@ -32,10 +32,6 @@
 #include "IHistory.h"
 #include "imgIContainer.h"
 #include "mozIApplication.h"
-#ifdef ACCESSIBILITY
-#include "mozilla/a11y/DocAccessibleParent.h"
-#include "nsAccessibilityService.h"
-#endif
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/DataStoreService.h"
@@ -3153,42 +3149,6 @@ ContentParent::Observe(nsISupports* aSubject,
     }
 #endif
     return NS_OK;
-}
-
-  a11y::PDocAccessibleParent*
-ContentParent::AllocPDocAccessibleParent(PDocAccessibleParent* aParent, const uint64_t&)
-{
-#ifdef ACCESSIBILITY
-  return new a11y::DocAccessibleParent();
-#else
-  return nullptr;
-#endif
-}
-
-bool
-ContentParent::DeallocPDocAccessibleParent(PDocAccessibleParent* aParent)
-{
-#ifdef ACCESSIBILITY
-  delete static_cast<a11y::DocAccessibleParent*>(aParent);
-#endif
-  return true;
-}
-
-bool
-ContentParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc, PDocAccessibleParent* aParentDoc, const uint64_t& aParentID)
-{
-#ifdef ACCESSIBILITY
-  auto doc = static_cast<a11y::DocAccessibleParent*>(aDoc);
-  if (aParentDoc) {
-    MOZ_ASSERT(aParentID);
-    auto parentDoc = static_cast<a11y::DocAccessibleParent*>(aParentDoc);
-    return parentDoc->AddChildDoc(doc, aParentID);
-  } else {
-    MOZ_ASSERT(!aParentID);
-    a11y::DocManager::RemoteDocAdded(doc);
-  }
-#endif
-  return true;
 }
 
 PGMPServiceParent*

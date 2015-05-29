@@ -170,6 +170,7 @@ class WebGLContext
     friend class WebGLExtensionCompressedTexturePVRTC;
     friend class WebGLExtensionCompressedTextureS3TC;
     friend class WebGLExtensionDepthTexture;
+    friend class WebGLExtensionDisjointTimerQuery;
     friend class WebGLExtensionDrawBuffers;
     friend class WebGLExtensionLoseContext;
     friend class WebGLExtensionVertexArray;
@@ -1601,6 +1602,7 @@ public:
     friend class WebGLSampler;
     friend class WebGLShader;
     friend class WebGLSync;
+    friend class WebGLTimerQuery;
     friend class WebGLTransformFeedback;
     friend class WebGLUniformLocation;
     friend class WebGLVertexArray;

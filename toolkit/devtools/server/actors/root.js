@@ -260,7 +260,7 @@ RootActor.prototype = {
       let reply = {
         "from": this.actorID,
         "selected": selected || 0,
-        "tabs": [actor.form() for (actor of tabActorList)],
+        "tabs": tabActorList.map(actor => actor.form())
       };
 
       /* If a root window is accessible, include its URL. */
@@ -338,7 +338,7 @@ RootActor.prototype = {
 
       return {
         "from": this.actorID,
-        "addons": [addonActor.form() for (addonActor of addonActors)]
+        "addons": addonActors.map(addonActor => addonActor.form())
       };
     });
   },

@@ -55,7 +55,9 @@ ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor)
     if (!anchor)
       return S_FALSE;
 
-    aAnchor->punkVal = static_cast<IAccessibleHyperlink*>(WrapperFor(anchor));
+    IUnknown* tmp = static_cast<IAccessibleHyperlink*>(WrapperFor(anchor));
+    tmp->AddRef();
+    aAnchor->punkVal = tmp;
     aAnchor->vt = VT_UNKNOWN;
     return S_OK;
   }

@@ -481,7 +481,8 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
     }
 #endif
 
-    nsAutoPtr<PluginModuleChromeParent> parent(new PluginModuleChromeParent(aFilePath, aPluginId));
+    nsAutoPtr<PluginModuleChromeParent> parent(new PluginModuleChromeParent(aFilePath, aPluginId,
+                                                                            sandboxLevel));
     UniquePtr<LaunchCompleteTask> onLaunchedRunnable(new LaunchedTask(parent));
     parent->mSubprocess->SetCallRunnableImmediately(!parent->mIsStartingAsync);
     TimeStamp launchStart = TimeStamp::Now();
@@ -564,9 +565,11 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
 #endif
 #endif
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && defined(_X86_)
+    // Protected mode only applies to Windows and only to x86.
     if (!mIsBlocklisted && mIsFlashPlugin &&
-        Preferences::GetBool("dom.ipc.plugins.flash.disable-protected-mode", false)) {
+        (Preferences::GetBool("dom.ipc.plugins.flash.disable-protected-mode", false) ||
+         mSandboxLevel >= 2)) {
         SendDisableFlashProtectedMode();
     }
 #endif
@@ -662,7 +665,9 @@ PluginModuleContentParent::~PluginModuleContentParent()
 
 bool PluginModuleChromeParent::sInstantiated = false;
 
-PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath, uint32_t aPluginId)
+PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
+                                                   uint32_t aPluginId,
+                                                   int32_t aSandboxLevel)
     : PluginModuleParent(true)
     , mSubprocess(new PluginProcessParent(aFilePath))
     , mPluginId(aPluginId)
@@ -674,6 +679,7 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath, uint32
     , mHangUIParent(nullptr)
     , mHangUIEnabled(true)
     , mIsTimerReset(true)
+    , mSandboxLevel(aSandboxLevel)
 #ifdef MOZ_CRASHREPORTER
     , mCrashReporterMutex("PluginModuleChromeParent::mCrashReporterMutex")
     , mCrashReporter(nullptr)

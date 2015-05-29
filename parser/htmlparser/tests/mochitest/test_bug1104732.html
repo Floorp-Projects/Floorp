@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1104732
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1104732</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1104732 **/
+
+  // Expected order of the values of the "state" variable:
+  // Test starting
+  // defer
+  // DOMContentLoaded
+  // load
+
+  // In the meantime, the async script load should happen before load.
+  // Ideally, we would want to assert that it happens after DOMContentLoaded,
+  // because it shouldn't be holding up DOMContentLoaded, but there is
+  // no *guarantee* that this is the case, so we cannot assert it.
+
+  var state = "Test starting";
+  var asyncState = "not loaded";
+  SimpleTest.waitForExplicitFinish();
+  is(document.readyState, "loading", "Document should have been loading.");
+  document.addEventListener("DOMContentLoaded", function () {
+    is(document.readyState, "interactive", "readyState should be interactive during DOMContentLoaded.");
+    is(state, "defer", "Bad state upon DOMContentLoaded");
+    state = "DOMContentLoaded";
+    // This doesn't work (see above), but we can't "todo" this assertion either, because
+    // it will sometimes be the case...
+    // isnot(asyncState, "loaded", "Async script should not have delayed domcontentloaded");
+  });
+  window.addEventListener("load", function () {
+    is(document.readyState, "complete", "readyState should be complete during load.");
+    is(state, "DOMContentLoaded", "Bad state upon load")
+    state = "load";
+    is(asyncState, "loaded", "Async script should be loaded upon document load event");
+    SimpleTest.finish();
+  });
+  </script>
+  <script defer src="file_defer_bug1104732.js"></script>
+  <script async src="file_async_bug1104732.sjs"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1104732">Mozilla Bug 1104732</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
+

@@ -99,6 +99,7 @@ enum class GLFeature {
     framebuffer_object,
     get_integer_indexed,
     get_integer64_indexed,
+    get_query_object_i64v,
     get_query_object_iv,
     get_string_indexed,
     gpu_shader4,
@@ -110,7 +111,9 @@ enum class GLFeature {
     occlusion_query_boolean,
     occlusion_query2,
     packed_depth_stencil,
+    query_counter,
     query_objects,
+    query_time_elapsed,
     read_buffer,
     renderbuffer_color_float,
     renderbuffer_color_half_float,
@@ -364,6 +367,7 @@ public:
         ANGLE_instanced_arrays,
         ANGLE_texture_compression_dxt3,
         ANGLE_texture_compression_dxt5,
+        ANGLE_timer_query,
         APPLE_client_storage,
         APPLE_texture_range,
         APPLE_vertex_array_object,
@@ -391,6 +395,7 @@ public:
         ARB_texture_rectangle,
         ARB_texture_storage,
         ARB_texture_swizzle,
+        ARB_timer_query,
         ARB_transform_feedback2,
         ARB_uniform_buffer_object,
         ARB_vertex_array_object,
@@ -399,6 +404,7 @@ public:
         EXT_color_buffer_float,
         EXT_color_buffer_half_float,
         EXT_copy_texture,
+        EXT_disjoint_timer_query,
         EXT_draw_buffers,
         EXT_draw_buffers2,
         EXT_draw_instanced,
@@ -423,6 +429,7 @@ public:
         EXT_texture_format_BGRA8888,
         EXT_texture_sRGB,
         EXT_texture_storage,
+        EXT_timer_query,
         EXT_transform_feedback,
         EXT_unpack_subimage,
         IMG_read_format,
@@ -2617,6 +2624,22 @@ public:
         AFTER_GL_CALL;
     }
 
+// -----------------------------------------------------------------------------
+// Package XXX_query_counter
+/**
+ * XXX_query_counter:
+ *  - depends on XXX_query_objects
+ *  - provide all followed entry points
+ *  - provide GL_TIMESTAMP
+ */
+public:
+    void fQueryCounter(GLuint id, GLenum target) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fQueryCounter);
+        mSymbols.fQueryCounter(id, target);
+        AFTER_GL_CALL;
+    }
+
 
 // -----------------------------------------------------------------------------
 // Package XXX_query_objects
@@ -2669,6 +2692,28 @@ public:
         realGLboolean retval = mSymbols.fIsQuery(query);
         AFTER_GL_CALL;
         return retval;
+    }
+
+// -----------------------------------------------------------------------------
+// Package XXX_get_query_object_i64v
+/**
+ * XXX_get_query_object_i64v:
+ *  - depends on XXX_query_objects
+ *  - provide the followed entry point
+ */
+public:
+    void fGetQueryObjecti64v(GLuint id, GLenum pname, GLint64* params) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetQueryObjecti64v);
+        mSymbols.fGetQueryObjecti64v(id, pname, params);
+        AFTER_GL_CALL;
+    }
+
+    void fGetQueryObjectui64v(GLuint id, GLenum pname, GLuint64* params) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetQueryObjectui64v);
+        mSymbols.fGetQueryObjectui64v(id, pname, params);
+        AFTER_GL_CALL;
     }
 
 

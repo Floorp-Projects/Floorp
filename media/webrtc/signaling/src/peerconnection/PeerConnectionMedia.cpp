@@ -304,7 +304,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   // Looks like a bug in the NrIceCtx API.
   mIceCtx = NrIceCtx::Create("PC:" + mParentName,
                              true, // Offerer
-                             true, // Trickle
+                             true, // Explicitly set priorities
                              mAllowIceLoopback);
   if(!mIceCtx) {
     CSFLogError(logTag, "%s: Failed to create Ice Context", __FUNCTION__);

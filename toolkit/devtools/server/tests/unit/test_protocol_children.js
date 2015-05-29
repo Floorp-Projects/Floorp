@@ -29,7 +29,7 @@ let ChildActor = protocol.ActorClass({
   // Actors returned by this actor should be owned by the root actor.
   marshallPool: function() { return this.parent() },
 
-  toString: function() "[ChildActor " + this.childID + "]",
+  toString: function() { return "[ChildActor " + this.childID + "]"; },
 
   initialize: function(conn, id) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -135,7 +135,7 @@ let ChildFront = protocol.FrontClass(ChildActor, {
 
   marshallPool: function() { return this.parent() },
 
-  toString: function() "[child front " + this.childID + "]",
+  toString: function() { return "[child front " + this.childID + "]"; },
 
   form: function(form, detail) {
     if (detail === "actorid") {
@@ -161,7 +161,7 @@ let rootActor = null;
 let RootActor = protocol.ActorClass({
   typeName: "root",
 
-  toString: function() "[root actor]",
+  toString: function() { return "[root actor]"; },
 
   initialize: function(conn) {
     rootActor = this;
@@ -187,7 +187,7 @@ let RootActor = protocol.ActorClass({
   }),
 
   getChildren: method(function(ids) {
-    return [this.getChild(id) for (id of ids)];
+    return ids.map(id => this.getChild(id));
   }, {
     request: { ids: Arg(0, "array:string") },
     response: { children: RetVal("array:childActor") },
@@ -224,7 +224,7 @@ let RootActor = protocol.ActorClass({
 });
 
 let RootFront = protocol.FrontClass(RootActor, {
-  toString: function() "[root front]",
+  toString: function() { return "[root front]"; },
   initialize: function(client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
@@ -351,8 +351,8 @@ function run_test()
           do_check_eq(rootFront._temporaryHolder.__poolMap.size, 2);
 
           // Get the children of the temporary holder...
-          let checkActors = [entry[1] for (entry of rootActor._temporaryHolder.__poolMap)];
-          let checkFronts = [entry[1] for (entry of rootFront._temporaryHolder.__poolMap)];
+          let checkActors = rootActor._temporaryHolder.__poolMap.values();
+          let checkFronts = rootFront._temporaryHolder.__poolMap.values();
 
           // Now release the temporary holders and expect them to drop again.
           return rootFront.clearTemporaryChildren().then(() => {

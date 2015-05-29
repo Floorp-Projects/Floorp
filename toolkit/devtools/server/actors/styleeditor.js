@@ -45,12 +45,16 @@ let StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
   /**
    * The window we work with, taken from the parent actor.
    */
-  get window() this.parentActor.window,
+  get window() {
+    return this.parentActor.window;
+  },
 
   /**
    * The current content document of the window we work with.
    */
-  get document() this.window.document,
+  get document() {
+    return this.window.document;
+  },
 
   events: {
     "document-load" : {
@@ -292,17 +296,23 @@ let OldStyleSheetActor = protocol.ActorClass({
   /**
    * Window of target
    */
-  get window() this._window || this.parentActor.window,
+  get window() {
+    return this._window || this.parentActor.window;
+  },
 
   /**
    * Document of target.
    */
-  get document() this.window.document,
+  get document() {
+    return this.window.document;
+  },
 
   /**
    * URL of underlying stylesheet.
    */
-  get href() this.rawSheet.href,
+  get href() {
+    return this.rawSheet.href;
+  },
 
   /**
    * Retrieve the index (order) of stylesheet in the document.
@@ -618,13 +628,27 @@ var OldStyleSheetFront = protocol.FrontClass(OldStyleSheetActor, {
     return promise.resolve([]);
   },
 
-  get href() this._form.href,
-  get nodeHref() this._form.nodeHref,
-  get disabled() !!this._form.disabled,
-  get title() this._form.title,
-  get isSystem() this._form.system,
-  get styleSheetIndex() this._form.styleSheetIndex,
-  get ruleCount() this._form.ruleCount
+  get href() {
+    return this._form.href;
+  },
+  get nodeHref() {
+    return this._form.nodeHref;
+  },
+  get disabled() {
+    return !!this._form.disabled;
+  },
+  get title() {
+    return this._form.title;
+  },
+  get isSystem() {
+    return this._form.system;
+  },
+  get styleSheetIndex() {
+    return this._form.styleSheetIndex;
+  },
+  get ruleCount() {
+    return this._form.ruleCount;
+  }
 });
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {

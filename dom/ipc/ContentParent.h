@@ -845,11 +845,6 @@ private:
                           int32_t* aSliceRefCnt,
                           bool* aResult) override;
 
-    virtual PDocAccessibleParent* AllocPDocAccessibleParent(PDocAccessibleParent*, const uint64_t&) override;
-    virtual bool DeallocPDocAccessibleParent(PDocAccessibleParent*) override;
-    virtual bool RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
-                                               PDocAccessibleParent* aParentDoc, const uint64_t& aParentID) override;
-
     virtual PWebrtcGlobalParent* AllocPWebrtcGlobalParent() override;
     virtual bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent *aActor) override;
 
