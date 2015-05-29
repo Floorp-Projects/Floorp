@@ -205,9 +205,9 @@ TypeSet::TypeString(TypeSet::Type type)
     which = (which + 1) & 3;
 
     if (type.isSingleton())
-        JS_snprintf(bufs[which], 40, "<0x%p>", (void*) type.singleton());
+        JS_snprintf(bufs[which], 40, "<0x%p>", (void*) type.singletonNoBarrier());
     else
-        JS_snprintf(bufs[which], 40, "[0x%p]", (void*) type.group());
+        JS_snprintf(bufs[which], 40, "[0x%p]", (void*) type.groupNoBarrier());
 
     return bufs[which];
 }

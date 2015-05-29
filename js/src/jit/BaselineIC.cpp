@@ -9948,7 +9948,7 @@ GetTemplateObjectForNative(JSContext* cx, HandleScript script, jsbytecode* pc,
         return true;
     }
 
-    if (native == js::array_concat) {
+    if (native == js::array_concat || native == js::array_slice) {
         if (args.thisv().isObject() && !args.thisv().toObject().isSingleton()) {
             res.set(NewFullyAllocatedArrayTryReuseGroup(cx, &args.thisv().toObject(), 0,
                                                         TenuredObject, /* forceAnalyze = */ true));

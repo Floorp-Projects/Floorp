@@ -7148,6 +7148,41 @@ CodeGenerator::visitArrayConcat(LArrayConcat* lir)
     callVM(ArrayConcatDenseInfo, lir);
 }
 
+typedef JSObject* (*ArraySliceDenseFn)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
+static const VMFunction ArraySliceDenseInfo = FunctionInfo<ArraySliceDenseFn>(array_slice_dense);
+
+void
+CodeGenerator::visitArraySlice(LArraySlice* lir)
+{
+    Register object = ToRegister(lir->object());
+    Register begin = ToRegister(lir->begin());
+    Register end = ToRegister(lir->end());
+    Register temp1 = ToRegister(lir->temp1());
+    Register temp2 = ToRegister(lir->temp2());
+
+    Label call, fail;
+
+    // Try to allocate an object.
+    masm.createGCObject(temp1, temp2, lir->mir()->templateObj(), lir->mir()->initialHeap(), &fail);
+
+    // Fixup the group of the result in case it doesn't match the template object.
+    masm.loadPtr(Address(object, JSObject::offsetOfGroup()), temp2);
+    masm.storePtr(temp2, Address(temp1, JSObject::offsetOfGroup()));
+
+    masm.jump(&call);
+    {
+        masm.bind(&fail);
+        masm.movePtr(ImmPtr(nullptr), temp1);
+    }
+    masm.bind(&call);
+
+    pushArg(temp1);
+    pushArg(end);
+    pushArg(begin);
+    pushArg(object);
+    callVM(ArraySliceDenseInfo, lir);
+}
+
 typedef JSString* (*ArrayJoinFn)(JSContext*, HandleObject, HandleString);
 static const VMFunction ArrayJoinInfo = FunctionInfo<ArrayJoinFn>(jit::ArrayJoin);
 

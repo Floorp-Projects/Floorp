@@ -387,6 +387,22 @@ SetBoxedOrUnboxedDenseElementNoTypeChange(JSObject* obj, size_t index, const Val
         obj->as<UnboxedArrayObject>().setElementNoTypeChangeSpecific<Type>(index, value);
 }
 
+template <JSValueType Type>
+static inline bool
+EnsureBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* obj, size_t count)
+{
+    if (Type == JSVAL_TYPE_MAGIC) {
+        if (!obj->as<ArrayObject>().ensureElements(cx, count))
+            return false;
+    } else {
+        if (obj->as<UnboxedArrayObject>().capacity() < count) {
+            if (!obj->as<UnboxedArrayObject>().growElements(cx, count))
+                return false;
+        }
+    }
+    return true;
+}
+
 enum ShouldUpdateTypes
 {
     UpdateTypes = true,
@@ -532,7 +548,7 @@ CopyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
                srcData + srcStart * elementSize,
                length * elementSize);
 
-        // Add a post barrier if we might have copied a nursery pointer to dst.
+        // Add a store buffer entry if we might have copied a nursery pointer to dst.
         if (UnboxedTypeNeedsPostBarrier(Type) && !IsInsideNursery(dst))
             dst->runtimeFromMainThread()->gc.storeBuffer.putWholeCellFromMainThread(dst);
     }
