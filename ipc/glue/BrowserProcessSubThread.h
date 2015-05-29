@@ -9,7 +9,7 @@
 #define mozilla_ipc_BrowserProcessSubThread_h
 
 #include "base/thread.h"
-#include "base/lock.h"
+#include "mozilla/StaticMutex.h"
 
 #include "nsDebug.h"
 
@@ -60,9 +60,7 @@ private:
   // This lock protects |browser_threads_|.  Do not read or modify that array
   // without holding this lock.  Do not block while holding this lock.
 
-  // FIXME/cjones: XPCOM doesn't like static vars, so can't use 
-  // mozilla::Mutex
-  static Lock sLock;
+  static StaticMutex sLock;
 
   // An array of the ChromeThread objects.  This array is protected by |lock_|.
   // The threads are not owned by this array.  Typically, the threads are owned

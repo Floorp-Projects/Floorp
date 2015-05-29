@@ -464,6 +464,10 @@ class FullParseHandler
         return pn;
     }
 
+    ParseNode* newExportDefaultDeclaration(ParseNode* kid, const TokenPos& pos) {
+        return new_<UnaryNode>(PNK_EXPORT_DEFAULT, JSOP_NOP, pos, kid);
+    }
+
     ParseNode* newExprStatement(ParseNode* expr, uint32_t end) {
         MOZ_ASSERT(expr->pn_pos.end <= end);
         return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, TokenPos(expr->pn_pos.begin, end), expr);

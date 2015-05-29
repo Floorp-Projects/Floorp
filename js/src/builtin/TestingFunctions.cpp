@@ -30,6 +30,7 @@
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
 #include "vm/SavedStacks.h"
+#include "vm/Stack.h"
 #include "vm/TraceLogging.h"
 
 #include "jscntxtinlines.h"
@@ -1209,7 +1210,7 @@ FinalizeCount(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static bool
-DumpHeapComplete(JSContext* cx, unsigned argc, jsval* vp)
+DumpHeap(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1251,11 +1252,11 @@ DumpHeapComplete(JSContext* cx, unsigned argc, jsval* vp)
     }
 
     if (i != args.length()) {
-        JS_ReportError(cx, "bad arguments passed to dumpHeapComplete");
+        JS_ReportError(cx, "bad arguments passed to dumpHeap");
         return false;
     }
 
-    js::DumpHeapComplete(JS_GetRuntime(cx), dumpFile ? dumpFile : stdout, nurseryBehaviour);
+    js::DumpHeap(JS_GetRuntime(cx), dumpFile ? dumpFile : stdout, nurseryBehaviour);
 
     if (dumpFile)
         fclose(dumpFile);
@@ -1573,18 +1574,26 @@ js::testingFunc_inIon(JSContext* cx, unsigned argc, jsval* vp)
         return true;
     }
 
-    JSScript* script = cx->currentScript();
-    if (script && script->getWarmUpResetCount() >= 20) {
-        JSString* error = JS_NewStringCopyZ(cx, "Compilation is being repeatedly prevented. Giving up.");
-        if (!error)
-            return false;
+    ScriptFrameIter iter(cx);
+    if (iter.isIon()) {
+        // Reset the counter of the IonScript's script.
+        JitFrameIterator jitIter(cx);
+        ++jitIter;
+        jitIter.script()->resetWarmUpResetCounter();
+    } else {
+        // Check if we missed multiple attempts at compiling the innermost script.
+        JSScript* script = cx->currentScript();
+        if (script && script->getWarmUpResetCount() >= 20) {
+            JSString* error = JS_NewStringCopyZ(cx, "Compilation is being repeatedly prevented. Giving up.");
+            if (!error)
+                return false;
 
-        args.rval().setString(error);
-        return true;
+            args.rval().setString(error);
+            return true;
+        }
     }
 
-    // false when not in ionMonkey
-    args.rval().setBoolean(false);
+    args.rval().setBoolean(iter.isIon());
     return true;
 }
 
@@ -2788,8 +2797,8 @@ gc::ZealModeHelpText),
 "isProxy(obj)",
 "  If true, obj is a proxy of some sort"),
 
-    JS_FN_HELP("dumpHeapComplete", DumpHeapComplete, 1, 0,
-"dumpHeapComplete(['collectNurseryBeforeDump'], [filename])",
+    JS_FN_HELP("dumpHeap", DumpHeap, 1, 0,
+"dumpHeap(['collectNurseryBeforeDump'], [filename])",
 "  Dump reachable and unreachable objects to the named file, or to stdout.  If\n"
 "  'collectNurseryBeforeDump' is specified, a minor GC is performed first,\n"
 "  otherwise objects in the nursery are ignored."),

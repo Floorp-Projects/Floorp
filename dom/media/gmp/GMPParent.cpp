@@ -24,6 +24,7 @@
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
 #include "mozilla/SandboxInfo.h"
 #endif
+#include "GMPContentParent.h"
 
 #include "mozilla/dom/CrashReporterParent.h"
 using mozilla::dom::CrashReporterParent;
@@ -44,6 +45,11 @@ namespace mozilla {
 extern PRLogModuleInfo* GetGMPLog();
 #define LOG(level, x, ...) MOZ_LOG(GetGMPLog(), (level), (x, ##__VA_ARGS__))
 #define LOGD(x, ...) LOG(PR_LOG_DEBUG, "GMPParent[%p|childPid=%d] " x, this, mChildPid, ##__VA_ARGS__)
+
+#ifdef __CLASS__
+#undef __CLASS__
+#endif
+#define __CLASS__ "GMPParent"
 
 namespace gmp {
 

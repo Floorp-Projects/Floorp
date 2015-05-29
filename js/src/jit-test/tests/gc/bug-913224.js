@@ -1,1 +1,1 @@
-dumpHeapComplete();
+dumpHeap();

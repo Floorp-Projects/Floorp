@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 
 [scriptable, uuid(b74fb158-1265-4102-91eb-edd0136b49f8)]
@@ -71,7 +71,7 @@ interface nsIPlaintextEditor : nsISupports
   attribute long maxTextLength;
 
   /** Get and set the body wrap width.
-    * 
+    *
     * Special values:
     *    0 = wrap to window width
     *   -1 = no wrap at all
@@ -101,7 +101,7 @@ interface nsIPlaintextEditor : nsISupports
    * @param aString   the string to be inserted
    */
    void insertText(in DOMString aStringToInsert);
-  
+
   /**
    * Insert a line break into the content model.
    * The interpretation of a break is up to the implementation:

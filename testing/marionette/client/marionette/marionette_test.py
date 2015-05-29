@@ -474,13 +474,11 @@ setReq.onsuccess = function() {
         for (let i = 0; i < apps.length; i++) {
             let app = apps[i];
             if (app.manifest.name === 'Test Container') {
-                let manager = window.wrappedJSObject.appWindowManager || window.wrappedJSObject.AppWindowManager;
-                if (!manager) {
+                window.wrappedJSObject.Service.request('AppWindowManager:kill', app.origin).then(function() {
+                    marionetteScriptFinished(true);
+                }).catch(function() {
                     marionetteScriptFinished(false);
-                    return;
-                }
-                manager.kill(app.origin);
-                marionetteScriptFinished(true);
+                });
                 return;
             }
         }

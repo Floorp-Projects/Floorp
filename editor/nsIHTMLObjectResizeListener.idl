@@ -29,5 +29,5 @@ interface nsIHTMLObjectResizeListener : nsISupports
   void onEndResizing(in nsIDOMElement aElement,
                      in long aOldWidth, in long aOldHeight,
                      in long aNewWidth, in long aNewHeight);
-                   
+
 };

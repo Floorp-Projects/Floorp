@@ -48,6 +48,11 @@ uint32_t NS_strlen(const char16_t* aString);
 int NS_strcmp(const char16_t* aStrA, const char16_t* aStrB);
 
 /**
+ * "strncmp" for char16_t strings
+ */
+int NS_strncmp(const char16_t* aStrA, const char16_t* aStrB, size_t aLen);
+
+/**
  * "strdup" for char16_t strings, uses the NS_Alloc allocator.
  */
 char16_t* NS_strdup(const char16_t* aString);

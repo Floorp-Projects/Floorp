@@ -225,6 +225,45 @@ compartment.
     thereby escaping the capability-based limits. For this reason,
     `onNewGlobalObject` is only available to privileged code.
 
+<code>onIonCompilation(<i>graph</i>)</code>
+:   A new IonMonkey compilation result is attached to a script instance of
+    the Debuggee, the <i>graph</i> contains the internal intermediate
+    representations of the compiler.
+
+    The value <i>graph</i> is an object composed of the following properties:
+
+    `json`
+    :   String containing a JSON of the intermediate representation used by
+        the compiler. This JSON string content is composed of 2 intermediate
+        representation of the graph, a `mir` (Middle-level IR), and a
+        `lir` (Low-level IR).
+
+        Both have a property `blocks`, which is an array of basic
+        blocks in [SSA form][ssa-form] which are used to construct the
+        control flow graph. All elements of these arrays are objects which
+        have a `number`, and an `instructions` properties.
+
+        The MIR blocks have additional properties such as the
+        `predecessors` and `successors` of each block, which can
+        be used to reconstruct the control flow graph, with the
+        `number` properties of the blocks.
+
+        The `instructions` properties are array of objects which have
+        an `id` and an `opcode`. The `id` corresponds to the
+        [SSA form][ssa-form] identifier (number) of each instruction, and the
+        `opcode` is a string which represents the instruction.
+
+        This JSON string contains even more detailed internal information
+        which remains undocummented, as it is potentially subject to
+        frequent modifications.
+
+    `scripts`
+    :   Array of [`Debugger.Script`][script] instances. For a block at
+        `mir.blocks[i]` or `lir.blocks[i]` in the JSON, `scripts[i]` is the
+        [`Debugger.Script`][script] containing that block's code.
+
+    This method's return value is ignored.
+
 
 
 ## Function Properties of the Debugger Prototype Object

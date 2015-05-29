@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include "js/TypeDecls.h"
+#include "vm/Printer.h"
 
 namespace js {
 namespace jit {
@@ -23,13 +24,9 @@ class LNode;
 class JSONSpewer
 {
   private:
-    // Set by beginFunction(); unset by endFunction().
-    // Used to correctly format output in case of abort during compilation.
-    bool inFunction_;
-
     int indentLevel_;
     bool first_;
-    FILE* fp_;
+    GenericPrinter& out_;
 
     void indent();
 
@@ -39,21 +36,20 @@ class JSONSpewer
     void beginListProperty(const char* name);
     void stringValue(const char* format, ...);
     void stringProperty(const char* name, const char* format, ...);
+    void beginStringProperty(const char* name);
+    void endStringProperty();
     void integerValue(int value);
     void integerProperty(const char* name, int value);
     void endObject();
     void endList();
 
   public:
-    JSONSpewer()
-      : inFunction_(false),
-        indentLevel_(0),
+    explicit JSONSpewer(GenericPrinter& out)
+      : indentLevel_(0),
         first_(true),
-        fp_(nullptr)
+        out_(out)
     { }
-    ~JSONSpewer();
 
-    bool init(const char* path);
     void beginFunction(JSScript* script);
     void beginPass(const char * pass);
     void spewMDef(MDefinition* def);
@@ -64,7 +60,8 @@ class JSONSpewer
     void spewRanges(BacktrackingAllocator* regalloc);
     void endPass();
     void endFunction();
-    void finish();
+
+    void spewDebuggerGraph(MIRGraph* mir);
 };
 
 } // namespace jit

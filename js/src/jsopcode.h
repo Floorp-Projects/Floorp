@@ -19,6 +19,7 @@
 
 #include "frontend/SourceNotes.h"
 #include "vm/Opcodes.h"
+#include "vm/Printer.h"
 
 /*
  * JS operation bytecodes.
@@ -382,7 +383,6 @@ struct JSCodeSpec {
 extern const JSCodeSpec js_CodeSpec[];
 extern const unsigned   js_NumCodeSpecs;
 extern const char       * const js_CodeName[];
-extern const char       js_EscapeMap[];
 
 /* Shorthand for type from opcode. */
 
@@ -399,14 +399,6 @@ JOF_OPTYPE(JSOp op)
 #endif
 
 namespace js {
-
-/*
- * Return a GC'ed string containing the chars in str, with any non-printing
- * chars or quotes (' or " as specified by the quote argument) escaped, and
- * with the quote character at the beginning and end of the result string.
- */
-extern JSString*
-QuoteString(ExclusiveContext* cx, JSString* str, char16_t quote);
 
 static inline bool
 IsJumpOpcode(JSOp op)
@@ -576,89 +568,6 @@ DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
  */
 char*
 DecompileArgument(JSContext* cx, int formalIndex, HandleValue v);
-
-/*
- * Sprintf, but with unlimited and automatically allocated buffering.
- */
-class Sprinter
-{
-  public:
-    struct InvariantChecker
-    {
-        const Sprinter* parent;
-
-        explicit InvariantChecker(const Sprinter* p) : parent(p) {
-            parent->checkInvariants();
-        }
-
-        ~InvariantChecker() {
-            parent->checkInvariants();
-        }
-    };
-
-    ExclusiveContext*       context;       /* context executing the decompiler */
-
-  private:
-    static const size_t     DefaultSize;
-#ifdef DEBUG
-    bool                    initialized;    /* true if this is initialized, use for debug builds */
-#endif
-    char*                   base;          /* malloc'd buffer address */
-    size_t                  size;           /* size of buffer allocated at base */
-    ptrdiff_t               offset;         /* offset of next free char in buffer */
-    bool                    reportedOOM;    /* this sprinter has reported OOM in string ops */
-
-    bool realloc_(size_t newSize);
-
-  public:
-    explicit Sprinter(ExclusiveContext* cx);
-    ~Sprinter();
-
-    /* Initialize this sprinter, returns false on error */
-    bool init();
-
-    void checkInvariants() const;
-
-    const char* string() const;
-    const char* stringEnd() const;
-    /* Returns the string at offset |off| */
-    char* stringAt(ptrdiff_t off) const;
-    /* Returns the char at offset |off| */
-    char& operator[](size_t off);
-
-    /*
-     * Attempt to reserve len + 1 space (for a trailing nullptr byte). If the
-     * attempt succeeds, return a pointer to the start of that space and adjust the
-     * internal content. The caller *must* completely fill this space on success.
-     */
-    char* reserve(size_t len);
-
-    /*
-     * Puts |len| characters from |s| at the current position and return an offset to
-     * the beginning of this new data
-     */
-    ptrdiff_t put(const char* s, size_t len);
-    ptrdiff_t put(const char* s);
-    ptrdiff_t putString(JSString* str);
-
-    /* Prints a formatted string into the buffer */
-    int printf(const char* fmt, ...);
-
-    ptrdiff_t getOffset() const;
-
-    /*
-     * Report that a string operation failed to get the memory it requested. The
-     * first call to this function calls JS_ReportOutOfMemory, and sets this
-     * Sprinter's outOfMemory flag; subsequent calls do nothing.
-     */
-    void reportOutOfMemory();
-
-    /* Return true if this Sprinter ran out of memory. */
-    bool hadOutOfMemory() const;
-};
-
-extern ptrdiff_t
-Sprint(Sprinter* sp, const char* format, ...);
 
 extern bool
 CallResultEscapes(jsbytecode* pc);

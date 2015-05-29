@@ -1019,7 +1019,7 @@ protected:
 
   virtual void CallSeek(const SeekTarget& aTarget);
 
-  MediaPromiseConsumerHolder<SeekPromise> mSeekRequest;
+  MediaPromiseRequestHolder<SeekPromise> mSeekRequest;
 
   // True when seeking or otherwise moving the play position around in
   // such a manner that progress event data is inaccurate. This is set

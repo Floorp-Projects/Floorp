@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
@@ -32,8 +33,8 @@ this.PlacesTestUtils = Object.freeze({
    * @resolves When all visits have been added successfully.
    * @rejects JavaScript exception.
    */
-  addVisits(placeInfo) {
-    return new Promise((resolve, reject) => {
+  addVisits: Task.async(function*(placeInfo) {
+    let promise = new Promise((resolve, reject) => {
       let places = [];
       if (placeInfo instanceof Ci.nsIURI) {
         places.push({ uri: placeInfo });
@@ -73,7 +74,8 @@ this.PlacesTestUtils = Object.freeze({
         }
       );
     });
-  },
+    return (yield promise);
+  }),
 
   /**
    * Clear all history.

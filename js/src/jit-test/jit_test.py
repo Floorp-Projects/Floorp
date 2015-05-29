@@ -88,8 +88,10 @@ def main(argv):
                   help='Run test files listed in [FILE]')
     op.add_option('-R', '--retest', dest='retest', metavar='FILE',
                   help='Retest using test list file [FILE]')
-    op.add_option('-g', '--debug', dest='debug', action='store_true',
-                  help='Run test in gdb')
+    op.add_option('-g', '--debug', action='store_const', const='gdb', dest='debugger',
+                  help='Run a single test under the gdb debugger')
+    op.add_option('--debugger', type='string',
+                  help='Run a single test under the specified debugger')
     op.add_option('--valgrind', dest='valgrind', action='store_true',
                   help='Enable the |valgrind| flag, if valgrind is in $PATH.')
     op.add_option('--valgrind-all', dest='valgrind_all', action='store_true',
@@ -168,7 +170,7 @@ def main(argv):
     read_all = True
 
     # Forbid running several variants of the same asmjs test, when debugging.
-    options.can_test_also_noasmjs = not options.debug
+    options.can_test_also_noasmjs = not options.debugger
 
     if test_args:
         read_all = False
@@ -259,7 +261,7 @@ def main(argv):
     shutil.rmtree(jittests.JS_CACHE_DIR, ignore_errors=True)
     os.mkdir(jittests.JS_CACHE_DIR)
 
-    if options.debug:
+    if options.debugger:
         if len(job_list) > 1:
             print('Multiple tests match command line'
                   ' arguments, debugger can only run one')
@@ -268,8 +270,14 @@ def main(argv):
             sys.exit(1)
 
         tc = job_list[0]
-        cmd = ['gdb', '--args'] + tc.command(prefix, jittests.LIB_DIR)
-        subprocess.call(cmd)
+        if options.debugger == 'gdb':
+            debug_cmd = ['gdb', '--args']
+        elif options.debugger == 'lldb':
+            debug_cmd = ['lldb', '--']
+        else:
+            debug_cmd = options.debugger.split()
+
+        subprocess.call(debug_cmd + tc.command(prefix, jittests.LIB_DIR))
         sys.exit()
 
     try:

@@ -64,7 +64,7 @@ struct IMEState;
 
 /**
  * The HTML editor implementation.<br>
- * Use to edit HTML document represented as a DOM tree. 
+ * Use to edit HTML document represented as a DOM tree.
  */
 class nsHTMLEditor final : public nsPlaintextEditor,
                            public nsIHTMLEditor,
@@ -91,7 +91,7 @@ public:
   // see nsIHTMLEditor for documentation
 
 //Interfaces for addref and release and queryinterface
-//NOTE macro used is for classes that inherit from 
+//NOTE macro used is for classes that inherit from
 // another class. Only the base class should use NS_DECL_ISUPPORTS
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLEditor, nsPlaintextEditor)
@@ -195,14 +195,14 @@ public:
                            int32_t aRowIndex, int32_t aColIndex,
                            nsIDOMElement **aCell,
                            int32_t* aStartRowIndex, int32_t* aStartColIndex,
-                           int32_t* aRowSpan, int32_t* aColSpan, 
-                           int32_t* aActualRowSpan, int32_t* aActualColSpan, 
+                           int32_t* aRowSpan, int32_t* aColSpan,
+                           int32_t* aActualRowSpan, int32_t* aActualColSpan,
                            bool* aIsSelected) override;
   NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement, nsIDOMNode** aRowNode) override;
   NS_IMETHOD GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode** aRowNode) override;
   nsresult GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode);
 
-  NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, int32_t aRow, int32_t aCol, 
+  NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, int32_t aRow, int32_t aCol,
                                         int32_t aDirection, bool aSelected) override;
   NS_IMETHOD GetSelectedOrParentTableElement(nsAString& aTagName,
                                              int32_t *aSelectedCount,
@@ -213,7 +213,7 @@ public:
 
   // Finds the first selected cell in first range of selection
   // This is in the *order of selection*, not order in the table
-  // (i.e., each cell added to selection is added in another range 
+  // (i.e., each cell added to selection is added in another range
   //  in the selection's rangelist, independent of location in table)
   // aRange is optional: returns the range around the cell
   NS_IMETHOD GetFirstSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell) override;
@@ -223,7 +223,7 @@ public:
 
   // Upper-left-most selected cell in table
   NS_IMETHOD GetFirstSelectedCellInTable(int32_t *aRowIndex, int32_t *aColIndex, nsIDOMElement **aCell) override;
-    
+
   /* miscellaneous */
   // This sets background on the appropriate container element (table, cell,)
   //   or calls into nsTextEditor to set the page background
@@ -290,7 +290,7 @@ public:
   /** returns true if aParentTag can contain a child of type aChildTag */
   virtual bool TagCanContainTag(nsIAtom& aParentTag, nsIAtom& aChildTag)
     override;
-  
+
   /** returns true if aNode is a container */
   virtual bool IsContainer(nsINode* aNode) override;
   virtual bool IsContainer(nsIDOMNode* aNode) override;
@@ -337,12 +337,12 @@ public:
 
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction) override;
-  nsresult InsertNodeAtPoint( nsIDOMNode *aNode, 
-                              nsCOMPtr<nsIDOMNode> *ioParent, 
-                              int32_t *ioOffset, 
+  nsresult InsertNodeAtPoint( nsIDOMNode *aNode,
+                              nsCOMPtr<nsIDOMNode> *ioParent,
+                              int32_t *ioOffset,
                               bool aNoEmptyNodes);
 
-  // Use this to assure that selection is set after attribute nodes when 
+  // Use this to assure that selection is set after attribute nodes when
   //  trying to collapse selection at begining of a block node
   //  e.g., when setting at beginning of a table cell
   // This will stop at a table, however, since we don't want to
@@ -358,7 +358,7 @@ public:
   nsresult IsVisTextNode(nsIContent* aNode,
                          bool* outIsEmptyNode,
                          bool aSafeToAskFrames);
-  nsresult IsEmptyNode(nsIDOMNode *aNode, bool *outIsEmptyBlock, 
+  nsresult IsEmptyNode(nsIDOMNode *aNode, bool *outIsEmptyBlock,
                        bool aMozBRDoesntCount = false,
                        bool aListOrCellNotEmpty = false,
                        bool aSafeToAskFrames = false);
@@ -367,7 +367,7 @@ public:
                        bool aListOrCellNotEmpty = false,
                        bool aSafeToAskFrames = false);
   nsresult IsEmptyNodeImpl(nsINode* aNode,
-                           bool *outIsEmptyBlock, 
+                           bool *outIsEmptyBlock,
                            bool aMozBRDoesntCount,
                            bool aListOrCellNotEmpty,
                            bool aSafeToAskFrames,
@@ -427,14 +427,14 @@ protected:
   NS_IMETHOD TabInTable(bool inIsShift, bool *outHandled);
   already_AddRefed<mozilla::dom::Element> CreateBR(nsINode* aNode,
       int32_t aOffset, EDirection aSelect = eNone);
-  NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset, 
+  NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset,
                       nsCOMPtr<nsIDOMNode> *outBRNode, nsIEditor::EDirection aSelect = nsIEditor::eNone) override;
 
 // Table Editing (implemented in nsTableEditor.cpp)
 
   // Table utilities
 
-  // Insert a new cell after or before supplied aCell. 
+  // Insert a new cell after or before supplied aCell.
   //  Optional: If aNewCell supplied, returns the newly-created cell (addref'd, of course)
   // This doesn't change or use the current selection
   NS_IMETHOD InsertCell(nsIDOMElement *aCell, int32_t aRowSpan, int32_t aColSpan,
@@ -474,7 +474,7 @@ protected:
                           nsIDOMNode** aCellParent, int32_t* aCellOffset,
                           int32_t* aRowIndex, int32_t* aColIndex);
 
-  NS_IMETHOD GetCellSpansAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIndex, 
+  NS_IMETHOD GetCellSpansAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIndex,
                             int32_t& aActualRowSpan, int32_t& aActualColSpan);
 
   NS_IMETHOD SplitCellIntoColumns(nsIDOMElement *aTable, int32_t aRowIndex, int32_t aColIndex,
@@ -494,13 +494,13 @@ protected:
   nsresult SetSelectionAtDocumentStart(mozilla::dom::Selection* aSelection);
 
 // End of Table Editing utilities
-  
+
   static already_AddRefed<mozilla::dom::Element>
     GetEnclosingTable(nsINode* aNode);
   static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
 
   /** content-based query returns true if <aProperty aAttribute=aValue> effects aNode
-    * If <aProperty aAttribute=aValue> contains aNode, 
+    * If <aProperty aAttribute=aValue> contains aNode,
     * but <aProperty aAttribute=SomeOtherValue> also contains aNode and the second is
     * more deeply nested than the first, then the first does not effect aNode.
     *
@@ -553,7 +553,7 @@ protected:
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable) override;
   nsresult PrepareHTMLTransferable(nsITransferable **transferable, bool havePrivFlavor);
-  nsresult InsertFromTransferable(nsITransferable *transferable, 
+  nsresult InsertFromTransferable(nsITransferable *transferable,
                                     nsIDOMDocument *aSourceDoc,
                                     const nsAString & aContextStr,
                                     const nsAString & aInfoStr,
@@ -571,13 +571,13 @@ protected:
   nsresult   DoContentFilterCallback(const nsAString &aFlavor,
                                      nsIDOMDocument *aSourceDoc,
                                      bool aWillDeleteSelection,
-                                     nsIDOMNode **aFragmentAsNode,      
+                                     nsIDOMNode **aFragmentAsNode,
                                      nsIDOMNode **aFragStartNode,
                                      int32_t *aFragStartOffset,
                                      nsIDOMNode **aFragEndNode,
                                      int32_t *aFragEndOffset,
-                                     nsIDOMNode **aTargetNode,       
-                                     int32_t *aTargetOffset,   
+                                     nsIDOMNode **aTargetNode,
+                                     int32_t *aTargetOffset,
                                      bool *aDoContinue);
 
   bool       IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nullptr);
@@ -621,7 +621,7 @@ protected:
   bool     IsVisBreak(nsINode* aNode);
   bool     IsVisBreak(nsIDOMNode *aNode);
 
-  /* utility routine to possibly adjust the insertion position when 
+  /* utility routine to possibly adjust the insertion position when
      inserting a block level element */
   void NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
                                   nsCOMPtr<nsIDOMNode> *insertParentNode,
@@ -633,14 +633,14 @@ protected:
   /* helpers for block transformations */
   nsresult MakeDefinitionItem(const nsAString & aItemType);
   nsresult InsertBasicBlock(const nsAString & aBlockType);
-  
+
   /* increase/decrease the font size of selection */
   enum class FontSize { incr, decr };
   nsresult RelativeFontChange(FontSize aDir);
-  
+
   /* helper routines for font size changing */
-  nsresult RelativeFontChangeOnTextNode( int32_t aSizeChange, 
-                                         nsIDOMCharacterData *aTextNode, 
+  nsresult RelativeFontChangeOnTextNode( int32_t aSizeChange,
+                                         nsIDOMCharacterData *aTextNode,
                                          int32_t aStartOffset,
                                          int32_t aEndOffset);
   nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode);
@@ -661,18 +661,18 @@ protected:
   nsresult PromoteInlineRange(nsRange* aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange* aRange);
   nsresult SplitStyleAboveRange(nsRange* aRange,
-                                nsIAtom *aProperty, 
+                                nsIAtom *aProperty,
                                 const nsAString *aAttribute);
   nsresult SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
                                 int32_t *aOffset,
-                                nsIAtom *aProperty, 
+                                nsIAtom *aProperty,
                                 const nsAString *aAttribute,
                                 nsCOMPtr<nsIDOMNode> *outLeftNode = nullptr,
                                 nsCOMPtr<nsIDOMNode> *outRightNode = nullptr);
   nsresult ApplyDefaultProperties();
-  nsresult RemoveStyleInside(nsIDOMNode *aNode, 
-                             nsIAtom *aProperty, 
-                             const nsAString *aAttribute, 
+  nsresult RemoveStyleInside(nsIDOMNode *aNode,
+                             nsIAtom *aProperty,
+                             const nsAString *aAttribute,
                              const bool aChildrenOnly = false);
   nsresult RemoveStyleInside(nsIContent& aNode,
                              nsIAtom* aProperty,
@@ -782,7 +782,7 @@ protected:
   // Maintain a list of associated style sheets and their urls.
   nsTArray<nsString> mStyleSheetURLs;
   nsTArray<nsRefPtr<mozilla::CSSStyleSheet>> mStyleSheets;
-  
+
   // an array for holding default style settings
   nsTArray<PropItem*> mDefaultStyles;
 

@@ -718,7 +718,7 @@ class MochitestArguments(ArgumentContainer):
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
-            "tab": 25000,  # See dependencies of bug 1051230.
+            "tab": 10000,  # See dependencies of bug 1051230.
             # GMP rarely gets a log, but when it does, it leaks a little.
             "geckomediaplugin": 20000,
         }
@@ -727,10 +727,6 @@ class MochitestArguments(ArgumentContainer):
         # get leak logs yet.
         if mozinfo.isWin:
             options.ignoreMissingLeaks.append("tab")
-
-        # Bug 1121539 - OSX-only intermittent tab process leak in test_ipc.html
-        if mozinfo.isMac:
-            options.leakThresholds["tab"] = 100000
 
         return options
 

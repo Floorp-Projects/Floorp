@@ -325,9 +325,16 @@ DebuggerMemory::setOnGarbageCollection(JSContext* cx, unsigned argc, Value* vp)
 
 /* Debugger.Memory.prototype.takeCensus */
 
-void
-JS::dbg::SetDebuggerMallocSizeOf(JSRuntime* rt, mozilla::MallocSizeOf mallocSizeOf) {
+JS_PUBLIC_API(void)
+JS::dbg::SetDebuggerMallocSizeOf(JSRuntime* rt, mozilla::MallocSizeOf mallocSizeOf)
+{
     rt->debuggerMallocSizeOf = mallocSizeOf;
+}
+
+JS_PUBLIC_API(mozilla::MallocSizeOf)
+JS::dbg::GetDebuggerMallocSizeOf(JSRuntime* rt)
+{
+    return rt->debuggerMallocSizeOf;
 }
 
 namespace js {
