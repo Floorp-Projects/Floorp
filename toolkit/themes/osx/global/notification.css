@@ -112,12 +112,10 @@ notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
 
 .popup-notification-origin {
   margin-bottom: .3em !important;
-  -moz-margin-start: 0 !important; /* override default label margin to match description margin */
 }
 
 .popup-notification-learnmore-link {
   margin-top: .5em !important;
-  -moz-margin-start: 0 !important; /* override default label margin to match description margin */
 }
 
 .popup-notification-button-container {

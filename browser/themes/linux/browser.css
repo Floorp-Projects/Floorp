@@ -1919,10 +1919,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 /* Social toolbar item */
 
-#social-undoactivation-button {
-  -moz-margin-start: 0; /* override default label margin to match description margin */
-}
-
 .social-activation-icon {
   width: auto;
   height: auto;
