@@ -188,8 +188,10 @@ let gTranslationExceptions = {
 
   onSiteDeleted: function() {
     let removedSites = this._siteTree.getSelectedItems();
-    for (let host of removedSites)
-      Services.perms.remove(host, kPermissionType);
+    for (let host of removedSites) {
+      let uri = Services.io.newURI("http://" + host, null, null);
+      Services.perms.remove(uri, kPermissionType);
+    }
   },
 
   onAllSitesDeleted: function() {
@@ -199,8 +201,10 @@ let gTranslationExceptions = {
     let removedSites = this._sites.splice(0, this._sites.length);
     this._siteTree.boxObject.rowCountChanged(0, -removedSites.length);
 
-    for (let host of removedSites)
-      Services.perms.remove(host, kPermissionType);
+    for (let host of removedSites) {
+      let uri = Services.io.newURI("http://" + host, null, null);
+      Services.perms.remove(uri, kPermissionType);
+    }
 
     this.onSiteSelected();
   },
