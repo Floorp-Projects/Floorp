@@ -1,0 +1,53 @@
+$inherits:
+  from: 'tasks/build.yml'
+  variables:
+    build_name: 'linux64'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] Linux64 Opt'
+      description: 'Linux64 Opt'
+
+  workerType: b2g-desktop-opt
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64'
+
+  scopes:
+    - 'docker-worker:cache:build-linux64-workspace'
+    - 'docker-worker:cache:tooltool-cache'
+
+  payload:
+    image: '{{#docker_image}}desktop-build{{/docker_image}}'
+    cache:
+      build-linux64-workspace: '/home/worker/workspace'
+      tooltool-cache: '/home/worker/tooltool-cache'
+
+    env:
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
+      MOZHARNESS_CONFIG: 'builds/releng_base_linux_64_builds.py balrog/production.py disable_sendchange.py'
+      MH_BRANCH: {{project}}
+      MH_BUILD_POOL: taskcluster
+      # image paths
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
+      RELENGAPI_TOKEN: 'TODO' # 1164612: encrypt this secret
+
+    maxRunTime: 36000
+
+    command: ["/bin/bash", "bin/build.sh"]
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: linux64
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/target.linux-x86_64.tar.bz2'
+      tests: 'public/build/target.tests.zip'
