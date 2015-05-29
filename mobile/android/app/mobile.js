@@ -859,3 +859,10 @@ pref("reader.toolbar.vertical", false);
 
 // Whether or not to display buttons related to reading list in reader view.
 pref("browser.readinglist.enabled", true);
+
+// Disable sending console to logcat on release builds.
+#ifdef RELEASE_BUILD
+pref("consoleservice.logcat", false);
+#else
+pref("consoleservice.logcat", true);
+#endif

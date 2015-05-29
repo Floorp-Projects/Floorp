@@ -48,6 +48,10 @@ NS_IMPL_CI_INTERFACE_GETTER(nsConsoleService, nsIConsoleService)
 
 static bool sLoggingEnabled = true;
 static bool sLoggingBuffered = true;
+#if defined(ANDROID)
+static bool sLoggingLogcat = true;
+#endif // defined(ANDROID)
+
 
 nsConsoleService::nsConsoleService()
   : mMessages(nullptr)
@@ -86,6 +90,9 @@ public:
   {
     Preferences::AddBoolVarCache(&sLoggingEnabled, "consoleservice.enabled", true);
     Preferences::AddBoolVarCache(&sLoggingBuffered, "consoleservice.buffered", true);
+#if defined(ANDROID)
+    Preferences::AddBoolVarCache(&sLoggingLogcat, "consoleservice.logcat", true);
+#endif // defined(ANDROID)
     if (!sLoggingBuffered) {
       mConsole->Reset();
     }
@@ -206,8 +213,8 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
   {
     MutexAutoLock lock(mLock);
 
-#if defined(ANDROID) && !defined(RELEASE_BUILD)
-    if (aOutputMode == OutputToLog) {
+#if defined(ANDROID)
+    if (sLoggingLogcat && aOutputMode == OutputToLog) {
       nsCString msg;
       aMessage->ToString(msg);
 
