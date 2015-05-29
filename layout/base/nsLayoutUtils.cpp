@@ -4408,11 +4408,15 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
 
       if (ratio.BSize(wm) != 0) {
         nscoord bSizeTakenByBoxSizing = 0;
-        if (boxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+        switch (boxSizing) {
+        case NS_STYLE_BOX_SIZING_BORDER: {
           const nsStyleBorder* styleBorder = aFrame->StyleBorder();
           bSizeTakenByBoxSizing +=
             wm.IsVertical() ? styleBorder->GetComputedBorder().LeftRight()
                             : styleBorder->GetComputedBorder().TopBottom();
+          // fall through
+        }
+        case NS_STYLE_BOX_SIZING_PADDING: {
           if (!(aFlags & IGNORE_PADDING)) {
             const nsStyleSides& stylePadding =
               aFrame->StylePadding()->mPadding;
@@ -4428,6 +4432,11 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
               bSizeTakenByBoxSizing += pad;
             }
           }
+          // fall through
+        }
+        case NS_STYLE_BOX_SIZING_CONTENT:
+        default:
+          break;
         }
 
         nscoord h;
@@ -4476,6 +4485,15 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   if (!(aFlags & IGNORE_PADDING)) {
     coordOutsideISize += offsets.hPadding;
     pctOutsideISize += offsets.hPctPadding;
+
+    if (boxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+      min += coordOutsideISize;
+      result = NSCoordSaturatingAdd(result, coordOutsideISize);
+      pctTotal += pctOutsideISize;
+
+      coordOutsideISize = 0;
+      pctOutsideISize = 0.0f;
+    }
   }
 
   coordOutsideISize += offsets.hBorder;
@@ -4786,8 +4804,12 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   const bool isAutoBSize = IsAutoBSize(*blockStyleCoord, aCBSize.BSize(aWM));
 
   LogicalSize boxSizingAdjust(aWM);
-  if (stylePos->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
-    boxSizingAdjust += aBorder + aPadding;
+  switch (stylePos->mBoxSizing) {
+    case NS_STYLE_BOX_SIZING_BORDER:
+      boxSizingAdjust += aBorder;
+      // fall through
+    case NS_STYLE_BOX_SIZING_PADDING:
+      boxSizingAdjust += aPadding;
   }
   nscoord boxSizingToMarginEdgeISize =
     aMargin.ISize(aWM) + aBorder.ISize(aWM) + aPadding.ISize(aWM) -

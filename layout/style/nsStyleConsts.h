@@ -58,7 +58,8 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 
 // box-sizing
 #define NS_STYLE_BOX_SIZING_CONTENT       0
-#define NS_STYLE_BOX_SIZING_BORDER        1
+#define NS_STYLE_BOX_SIZING_PADDING       1
+#define NS_STYLE_BOX_SIZING_BORDER        2
 
 // clip-path sizing
 #define NS_STYLE_CLIP_SHAPE_SIZING_NOBOX   0
