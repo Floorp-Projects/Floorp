@@ -33,6 +33,10 @@ public:
 
   const nsSMILValue& operator=(const nsSMILValue& aVal);
 
+  // Move constructor / reassignment operator:
+  nsSMILValue(nsSMILValue&& aVal);
+  nsSMILValue& operator=(nsSMILValue&& aVal);
+
   // Equality operators. These are allowed to be conservative (return false
   // more than you'd expect) - see comment above nsISMILType::IsEqual.
   bool operator==(const nsSMILValue& aVal) const;
