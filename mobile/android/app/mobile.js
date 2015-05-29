@@ -876,3 +876,10 @@ pref("selectioncaret.detects.longtap", false);
 #ifdef NIGHTLY_BUILD
 pref("dom.serviceWorkers.enabled", true);
 #endif
+
+// Disable sending console to logcat on release builds.
+#ifdef RELEASE_BUILD
+pref("consoleservice.logcat", false);
+#else
+pref("consoleservice.logcat", true);
+#endif
