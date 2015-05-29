@@ -69,7 +69,7 @@ private:
   nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy) = delete;
   nsHTMLStyleSheet& operator=(const nsHTMLStyleSheet& aCopy) = delete;
 
-  ~nsHTMLStyleSheet();
+  ~nsHTMLStyleSheet() {}
 
   class HTMLColorRule;
   friend class HTMLColorRule;
@@ -159,8 +159,8 @@ private:
   nsRefPtr<TableQuirkColorRule> mTableQuirkColorRule;
   nsRefPtr<TableTHRule>   mTableTHRule;
 
-  PLDHashTable            mMappedAttrTable;
-  PLDHashTable            mLangRuleTable;
+  PLDHashTable2           mMappedAttrTable;
+  PLDHashTable2           mLangRuleTable;
 };
 
 #endif /* !defined(nsHTMLStyleSheet_h_) */

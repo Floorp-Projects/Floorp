@@ -33,27 +33,91 @@ extern PRLogModuleInfo* gMediaPromiseLog;
   MOZ_ASSERT(gMediaPromiseLog); \
   MOZ_LOG(gMediaPromiseLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
 
+namespace detail {
+template<typename ThisType, typename Ret, typename ArgType>
+static TrueType TakesArgumentHelper(Ret (ThisType::*)(ArgType));
+template<typename ThisType, typename Ret, typename ArgType>
+static TrueType TakesArgumentHelper(Ret (ThisType::*)(ArgType) const);
+template<typename ThisType, typename Ret>
+static FalseType TakesArgumentHelper(Ret (ThisType::*)());
+template<typename ThisType, typename Ret>
+static FalseType TakesArgumentHelper(Ret (ThisType::*)() const);
+
+template<typename ThisType, typename Ret, typename ArgType>
+static Ret ReturnTypeHelper(Ret (ThisType::*)(ArgType));
+template<typename ThisType, typename Ret, typename ArgType>
+static Ret ReturnTypeHelper(Ret (ThisType::*)(ArgType) const);
+template<typename ThisType, typename Ret>
+static Ret ReturnTypeHelper(Ret (ThisType::*)());
+template<typename ThisType, typename Ret>
+static Ret ReturnTypeHelper(Ret (ThisType::*)() const);
+
+template<typename MethodType>
+struct ReturnType {
+  typedef decltype(detail::ReturnTypeHelper(DeclVal<MethodType>())) Type;
+};
+
+} // namespace detail
+
+template<typename MethodType>
+struct TakesArgument {
+  static const bool value = decltype(detail::TakesArgumentHelper(DeclVal<MethodType>()))::value;
+};
+
+template<typename MethodType, typename TargetType>
+struct ReturnTypeIs {
+  static const bool value = IsConvertible<typename detail::ReturnType<MethodType>::Type, TargetType>::value;
+};
+
 /*
  * A promise manages an asynchronous request that may or may not be able to be
  * fulfilled immediately. When an API returns a promise, the consumer may attach
  * callbacks to be invoked (asynchronously, on a specified thread) when the
  * request is either completed (resolved) or cannot be completed (rejected).
  *
+ * MediaPromises attempt to mirror the spirit of JS Promises to the extent that
+ * is possible (and desirable) in C++. While the intent is that MediaPromises
+ * feel familiar to programmers who are accustomed to their JS-implemented cousin,
+ * we don't shy away from imposing restrictions and adding features that make
+ * sense for the use cases we encounter.
+ *
+ * A MediaPromise is ThreadSafe, and may be ->Then()ed on any thread. The Then()
+ * call accepts resolve and reject callbacks, and returns a MediaPromise::Request.
+ * The Request object serves several purposes for the consumer.
+ *
+ *   (1) It allows the caller to cancel the delivery of the resolve/reject value
+ *       if it has not already occurred, via Disconnect() (this must be done on
+ *       the target thread to avoid racing).
+ *
+ *   (2) It provides access to a "Completion Promise", which is roughly analagous
+ *       to the Promise returned directly by ->then() calls on JS promises. If
+ *       the resolve/reject callback returns a new MediaPromise, that promise is
+ *       chained to the completion promise, such that its resolve/reject value
+ *       will be forwarded along when it arrives. If the resolve/reject callback
+ *       returns void, the completion promise is resolved/rejected with the same
+ *       value that was passed to the callback.
+ *
+ * The MediaPromise APIs skirt traditional XPCOM convention by returning nsRefPtrs
+ * (rather than already_AddRefed) from various methods. This is done to allow elegant
+ * chaining of calls without cluttering up the code with intermediate variables, and
+ * without introducing separate API variants for callers that want a return value
+ * (from, say, ->Then()) from those that don't.
+ *
  * When IsExclusive is true, the MediaPromise does a release-mode assertion that
  * there is at most one call to either Then(...) or ChainTo(...).
  */
 
-class MediaPromiseBase
+class MediaPromiseRefcountable
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPromiseBase)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPromiseRefcountable)
 protected:
-  virtual ~MediaPromiseBase() {}
+  virtual ~MediaPromiseRefcountable() {}
 };
 
 template<typename T> class MediaPromiseHolder;
 template<typename ResolveValueT, typename RejectValueT, bool IsExclusive>
-class MediaPromise : public MediaPromiseBase
+class MediaPromise : public MediaPromiseRefcountable
 {
 public:
   typedef ResolveValueT ResolveValueType;
@@ -61,16 +125,30 @@ public:
   class ResolveOrRejectValue
   {
   public:
-    void SetResolve(ResolveValueType& aResolveValue)
+    void SetResolve(const ResolveValueType& aResolveValue)
     {
       MOZ_ASSERT(IsNothing());
       mResolveValue.emplace(aResolveValue);
     }
 
-    void SetReject(RejectValueType& aRejectValue)
+    void SetReject(const RejectValueType& aRejectValue)
     {
       MOZ_ASSERT(IsNothing());
       mRejectValue.emplace(aRejectValue);
+    }
+
+    static ResolveOrRejectValue MakeResolve(const ResolveValueType aResolveValue)
+    {
+      ResolveOrRejectValue val;
+      val.SetResolve(aResolveValue);
+      return val;
+    }
+
+    static ResolveOrRejectValue MakeReject(const RejectValueType aRejectValue)
+    {
+      ResolveOrRejectValue val;
+      val.SetReject(aRejectValue);
+      return val;
     }
 
     bool IsResolve() const { return mResolveValue.isSome(); }
@@ -90,7 +168,7 @@ protected:
   explicit MediaPromise(const char* aCreationSite)
     : mCreationSite(aCreationSite)
     , mMutex("MediaPromise Mutex")
-    , mHaveConsumer(false)
+    , mHaveRequest(false)
   {
     PROMISE_LOG("%s creating MediaPromise (%p)", mCreationSite, this);
   }
@@ -121,20 +199,20 @@ public:
     return Move(p);
   }
 
-  class Consumer
+  class Request : public MediaPromiseRefcountable
   {
   public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Consumer)
-
     virtual void Disconnect() = 0;
 
     // MSVC complains when an inner class (ThenValueBase::{Resolve,Reject}Runnable)
     // tries to access an inherited protected member.
     bool IsDisconnected() const { return mDisconnected; }
 
+    virtual MediaPromise* CompletionPromise() = 0;
+
   protected:
-    Consumer() : mComplete(false), mDisconnected(false) {}
-    virtual ~Consumer() {}
+    Request() : mComplete(false), mDisconnected(false) {}
+    virtual ~Request() {}
 
     bool mComplete;
     bool mDisconnected;
@@ -148,7 +226,7 @@ protected:
    * resolved or rejected, a {Resolve,Reject}Runnable is dispatched, which
    * invokes the resolve/reject method and then deletes the ThenValue.
    */
-  class ThenValueBase : public Consumer
+  class ThenValueBase : public Request
   {
   public:
     class ResolveOrRejectRunnable : public nsRunnable
@@ -179,6 +257,16 @@ protected:
     explicit ThenValueBase(AbstractThread* aResponseTarget, const char* aCallSite)
       : mResponseTarget(aResponseTarget), mCallSite(aCallSite) {}
 
+    MediaPromise* CompletionPromise() override
+    {
+      MOZ_DIAGNOSTIC_ASSERT(mResponseTarget->IsCurrentThreadIn());
+      MOZ_DIAGNOSTIC_ASSERT(!Request::mComplete);
+      if (!mCompletionPromise) {
+        mCompletionPromise = new MediaPromise::Private("<completion promise>");
+      }
+      return mCompletionPromise;
+    }
+
     void Dispatch(MediaPromise *aPromise)
     {
       aPromise->mMutex.AssertCurrentThreadOwns();
@@ -190,7 +278,7 @@ protected:
                   aPromise->mValue.IsResolve() ? "Resolving" : "Rejecting", ThenValueBase::mCallSite,
                   runnable.get(), aPromise, this);
 
-      // Promise consumers are allowed to disconnect the Consumer object and
+      // Promise consumers are allowed to disconnect the Request object and
       // then shut down the thread or task queue that the promise result would
       // be dispatched on. So we unfortunately can't assert that promise
       // dispatch succeeds. :-(
@@ -200,25 +288,55 @@ protected:
     virtual void Disconnect() override
     {
       MOZ_ASSERT(ThenValueBase::mResponseTarget->IsCurrentThreadIn());
-      MOZ_DIAGNOSTIC_ASSERT(!Consumer::mComplete);
-      Consumer::mDisconnected = true;
+      MOZ_DIAGNOSTIC_ASSERT(!Request::mComplete);
+      Request::mDisconnected = true;
+
+      // We could support rejecting the completion promise on disconnection, but
+      // then we'd need to have some sort of default reject value. The use cases
+      // of disconnection and completion promise chaining seem pretty orthogonal,
+      // so let's use assert against it.
+      MOZ_DIAGNOSTIC_ASSERT(!mCompletionPromise);
     }
 
   protected:
-    virtual void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) = 0;
+    virtual already_AddRefed<MediaPromise> DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) = 0;
 
     void DoResolveOrReject(ResolveOrRejectValue& aValue)
     {
-      Consumer::mComplete = true;
-      if (Consumer::mDisconnected) {
+      Request::mComplete = true;
+      if (Request::mDisconnected) {
         PROMISE_LOG("ThenValue::DoResolveOrReject disconnected - bailing out [this=%p]", this);
         return;
       }
 
-      DoResolveOrRejectInternal(aValue);
+      // Invoke the resolve or reject method.
+      nsRefPtr<MediaPromise> p = DoResolveOrRejectInternal(aValue);
+
+      // If there's a completion promise, resolve it appropriately with the
+      // result of the method.
+      //
+      // We jump through some hoops to cast to MediaPromise::Private here. This
+      // can go away when we can just declare mCompletionPromise as
+      // MediaPromise::Private. See the declaration below.
+      nsRefPtr<MediaPromise::Private> completionPromise =
+        dont_AddRef(static_cast<MediaPromise::Private*>(mCompletionPromise.forget().take()));
+      if (completionPromise) {
+        if (p) {
+          p->ChainTo(completionPromise.forget(), "<chained completion promise>");
+        } else {
+          completionPromise->ResolveOrReject(aValue, "<completion of non-promise-returning method>");
+        }
+      }
     }
 
     nsRefPtr<AbstractThread> mResponseTarget; // May be released on any thread.
+
+    // Declaring nsRefPtr<MediaPromise::Private> here causes build failures
+    // on MSVC because MediaPromise::Private is only forward-declared at this
+    // point. This hack can go away when we inline-declare MediaPromise::Private,
+    // which is blocked on the B2G ICS compiler being too old.
+    nsRefPtr<MediaPromise> mCompletionPromise;
+
     const char* mCallSite;
   };
 
@@ -227,25 +345,42 @@ protected:
    * make the resolve/reject value argument "optional".
    */
 
-  // Avoid confusing the compiler when the callback accepts T* but the ValueType
-  // is nsRefPtr<T>. See bug 1109954 comment 6.
-  template <typename T>
-  struct NonDeduced
+  template<typename ThisType, typename MethodType, typename ValueType>
+  static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MediaPromise>>::value &&
+                           TakesArgument<MethodType>::value,
+                           already_AddRefed<MediaPromise>>::Type
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
   {
-    typedef T type;
-  };
-
-  template<typename ThisType, typename ValueType>
-  static void InvokeCallbackMethod(ThisType* aThisVal, void(ThisType::*aMethod)(ValueType),
-                                   typename NonDeduced<ValueType>::type aValue)
-  {
-      ((*aThisVal).*aMethod)(aValue);
+    return ((*aThisVal).*aMethod)(aValue).forget();
   }
 
-  template<typename ThisType, typename ValueType>
-  static void InvokeCallbackMethod(ThisType* aThisVal, void(ThisType::*aMethod)(), ValueType aValue)
+  template<typename ThisType, typename MethodType, typename ValueType>
+  static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
+                           TakesArgument<MethodType>::value,
+                           already_AddRefed<MediaPromise>>::Type
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
   {
-      ((*aThisVal).*aMethod)();
+    ((*aThisVal).*aMethod)(aValue);
+    return nullptr;
+  }
+
+  template<typename ThisType, typename MethodType, typename ValueType>
+  static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MediaPromise>>::value &&
+                           !TakesArgument<MethodType>::value,
+                           already_AddRefed<MediaPromise>>::Type
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  {
+    return ((*aThisVal).*aMethod)().forget();
+  }
+
+  template<typename ThisType, typename MethodType, typename ValueType>
+  static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
+                           !TakesArgument<MethodType>::value,
+                           already_AddRefed<MediaPromise>>::Type
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  {
+    ((*aThisVal).*aMethod)();
+    return nullptr;
   }
 
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
@@ -264,19 +399,20 @@ protected:
   {
     ThenValueBase::Disconnect();
 
-    // If a Consumer has been disconnected, we don't guarantee that the
+    // If a Request has been disconnected, we don't guarantee that the
     // resolve/reject runnable will be dispatched. Null out our refcounted
     // this-value now so that it's released predictably on the dispatch thread.
     mThisVal = nullptr;
   }
 
   protected:
-    virtual void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
+    virtual already_AddRefed<MediaPromise> DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
     {
+      nsRefPtr<MediaPromise> completion;
       if (aValue.IsResolve()) {
-        InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aValue.ResolveValue());
+        completion = InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aValue.ResolveValue());
       } else {
-        InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aValue.RejectValue());
+        completion = InvokeCallbackMethod(mThisVal.get(), mRejectMethod, aValue.RejectValue());
       }
 
       // Null out mThisVal after invoking the callback so that any references are
@@ -284,6 +420,8 @@ protected:
       // released on whatever thread last drops its reference to the ThenValue,
       // which may or may not be ok.
       mThisVal = nullptr;
+
+      return completion.forget();
     }
 
   private:
@@ -311,7 +449,7 @@ protected:
   {
     ThenValueBase::Disconnect();
 
-    // If a Consumer has been disconnected, we don't guarantee that the
+    // If a Request has been disconnected, we don't guarantee that the
     // resolve/reject runnable will be dispatched. Destroy our callbacks
     // now so that any references in closures are released predictable on
     // the dispatch thread.
@@ -320,12 +458,18 @@ protected:
   }
 
   protected:
-    virtual void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
+    virtual already_AddRefed<MediaPromise> DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
     {
+      // Note: The usage of InvokeCallbackMethod here requires that
+      // ResolveFunction/RejectFunction are capture-lambdas (i.e. anonymous
+      // classes with ::operator()), since it allows us to share code more easily.
+      // We could fix this if need be, though it's quite easy to work around by
+      // just capturing something.
+      nsRefPtr<MediaPromise> completion;
       if (aValue.IsResolve()) {
-        mResolveFunction.ref()(aValue.ResolveValue());
+        completion = InvokeCallbackMethod(mResolveFunction.ptr(), &ResolveFunction::operator(), aValue.ResolveValue());
       } else {
-        mRejectFunction.ref()(aValue.RejectValue());
+        completion = InvokeCallbackMethod(mRejectFunction.ptr(), &RejectFunction::operator(), aValue.RejectValue());
       }
 
       // Destroy callbacks after invocation so that any references in closures are
@@ -334,6 +478,8 @@ protected:
       // which may or may not be ok.
       mResolveFunction.reset();
       mRejectFunction.reset();
+
+      return completion.forget();
     }
 
   private:
@@ -347,8 +493,8 @@ public:
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(aResponseThread->IsDispatchReliable());
-    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
-    mHaveConsumer = true;
+    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
+    mHaveRequest = true;
     PROMISE_LOG("%s invoking Then() [this=%p, aThenValue=%p, isPending=%d]",
                 aCallSite, this, aThenValue, (int) IsPending());
     if (!IsPending()) {
@@ -361,48 +507,30 @@ public:
 public:
 
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  already_AddRefed<Consumer> RefableThen(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
-                                         ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
+  nsRefPtr<Request> Then(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
+                         ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     nsRefPtr<ThenValueBase> thenValue = new MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>(
                                               aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue.forget();
+    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to nsRefPtr<Request>.
   }
 
   template<typename ResolveFunction, typename RejectFunction>
-  already_AddRefed<Consumer> RefableThen(AbstractThread* aResponseThread, const char* aCallSite,
-                                         ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
+  nsRefPtr<Request> Then(AbstractThread* aResponseThread, const char* aCallSite,
+                         ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
   {
     nsRefPtr<ThenValueBase> thenValue = new FunctionThenValue<ResolveFunction, RejectFunction>(aResponseThread,
                                               Move(aResolveFunction), Move(aRejectFunction), aCallSite);
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue.forget();
-  }
-
-  template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  void Then(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
-            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
-  {
-    nsRefPtr<Consumer> c =
-      RefableThen(aResponseThread, aCallSite, aThisVal, aResolveMethod, aRejectMethod);
-    return;
-  }
-
-  template<typename ThisType, typename ResolveFunction, typename RejectFunction>
-  void Then(AbstractThread* aResponseThread, const char* aCallSite,
-            ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
-  {
-    nsRefPtr<Consumer> c =
-      RefableThen(aResponseThread, aCallSite, Move(aResolveFunction), Move(aRejectFunction));
-    return;
+    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to nsRefPtr<Request>.
   }
 
   void ChainTo(already_AddRefed<Private> aChainedPromise, const char* aCallSite)
   {
     MutexAutoLock lock(mMutex);
-    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
-    mHaveConsumer = true;
+    MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
+    mHaveRequest = true;
     nsRefPtr<Private> chainedPromise = aChainedPromise;
     PROMISE_LOG("%s invoking Chain() [this=%p, chainedPromise=%p, isPending=%d]",
                 aCallSite, this, chainedPromise.get(), (int) IsPending());
@@ -452,7 +580,7 @@ protected:
   ResolveOrRejectValue mValue;
   nsTArray<nsRefPtr<ThenValueBase>> mThenValues;
   nsTArray<nsRefPtr<Private>> mChainedPromises;
-  bool mHaveConsumer;
+  bool mHaveRequest;
 };
 
 template<typename ResolveValueT, typename RejectValueT, bool IsExclusive>
@@ -477,6 +605,15 @@ public:
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s rejecting MediaPromise (%p created at %s)", aRejectSite, this, mCreationSite);
     mValue.SetReject(aRejectValue);
+    DispatchAll();
+  }
+
+  void ResolveOrReject(ResolveOrRejectValue aValue, const char* aSite)
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(IsPending());
+    PROMISE_LOG("%s resolveOrRejecting MediaPromise (%p created at %s)", aSite, this, mCreationSite);
+    mValue = aValue;
     DispatchAll();
   }
 };
@@ -583,34 +720,34 @@ private:
 };
 
 /*
- * Class to encapsulate a MediaPromise::Consumer reference. Use this as the member
+ * Class to encapsulate a MediaPromise::Request reference. Use this as the member
  * variable for a class waiting on a media promise.
  */
 template<typename PromiseType>
-class MediaPromiseConsumerHolder
+class MediaPromiseRequestHolder
 {
 public:
-  MediaPromiseConsumerHolder() {}
-  ~MediaPromiseConsumerHolder() { MOZ_ASSERT(!mConsumer); }
+  MediaPromiseRequestHolder() {}
+  ~MediaPromiseRequestHolder() { MOZ_ASSERT(!mRequest); }
 
-  void Begin(already_AddRefed<typename PromiseType::Consumer> aConsumer)
+  void Begin(typename PromiseType::Request* aRequest)
   {
     MOZ_DIAGNOSTIC_ASSERT(!Exists());
-    mConsumer = aConsumer;
+    mRequest = aRequest;
   }
 
   void Complete()
   {
     MOZ_DIAGNOSTIC_ASSERT(Exists());
-    mConsumer = nullptr;
+    mRequest = nullptr;
   }
 
   // Disconnects and forgets an outstanding promise. The resolve/reject methods
   // will never be called.
   void Disconnect() {
     MOZ_ASSERT(Exists());
-    mConsumer->Disconnect();
-    mConsumer = nullptr;
+    mRequest->Disconnect();
+    mRequest = nullptr;
   }
 
   void DisconnectIfExists() {
@@ -619,10 +756,10 @@ public:
     }
   }
 
-  bool Exists() { return !!mConsumer; }
+  bool Exists() { return !!mRequest; }
 
 private:
-  nsRefPtr<typename PromiseType::Consumer> mConsumer;
+  nsRefPtr<typename PromiseType::Request> mRequest;
 };
 
 // Proxy Media Calls.

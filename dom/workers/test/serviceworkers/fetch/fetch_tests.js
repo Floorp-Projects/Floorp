@@ -21,7 +21,7 @@ function fetchXHR(name, onload, onerror, headers) {
   x.send();
 }
 
-fetchXHR('synthesized.txt', function(xhr) {
+fetchXHR('bare-synthesized.txt', function(xhr) {
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(xhr.responseText == "synthesized response body", "load should have synthesized response");
   finish();
@@ -46,16 +46,33 @@ fetchXHR('synthesized-headers.txt', function(xhr) {
   finish();
 });
 
-fetch('synthesized-redirect-real-file.txt', function(xhr) {
+fetchXHR('synthesized-redirect-real-file.txt', function(xhr) {
 dump("Got status AARRGH " + xhr.status + " " + xhr.responseText + "\n");
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(xhr.responseText == "This is a real file.\n", "Redirect to real file should complete.");
   finish();
 });
 
-fetch('synthesized-redirect-synthesized.txt', function(xhr) {
+fetchXHR('synthesized-redirect-twice-real-file.txt', function(xhr) {
   my_ok(xhr.status == 200, "load should be successful");
-  my_ok(xhr.responseText == "synthesized response body", "load should have synthesized response");
+  my_ok(xhr.responseText == "This is a real file.\n", "Redirect to real file (twice) should complete.");
+  finish();
+});
+
+fetchXHR('synthesized-redirect-synthesized.txt', function(xhr) {
+  my_ok(xhr.status == 200, "synth+redirect+synth load should be successful");
+  my_ok(xhr.responseText == "synthesized response body", "load should have redirected+synthesized response");
+  finish();
+});
+
+fetchXHR('synthesized-redirect-twice-synthesized.txt', function(xhr) {
+  my_ok(xhr.status == 200, "synth+redirect+synth (twice) load should be successful");
+  my_ok(xhr.responseText == "synthesized response body", "load should have redirected+synthesized (twice) response");
+  finish();
+});
+
+fetchXHR('fetch/redirect.sjs', function(xhr) {
+  my_ok(xhr.status == 404, "redirected load should be uninterrupted");
   finish();
 });
 

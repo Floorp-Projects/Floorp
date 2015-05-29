@@ -47,7 +47,7 @@ static NS_DEFINE_CID(kHTMLEditorDocStateCommandTableCID, NS_HTMLEDITOR_DOCSTATE_
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditingSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorSpellCheck)
 
-// There are no macros that enable us to have 2 constructors 
+// There are no macros that enable us to have 2 constructors
 // for the same object
 //
 // Here we are creating the same object with two different contract IDs
@@ -58,12 +58,12 @@ nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
                                  void **aResult, bool aIsForMail)
 {
     *aResult = nullptr;
-    if (nullptr != aOuter) 
+    if (nullptr != aOuter)
     {
         return NS_ERROR_NO_AGGREGATION;
     }
     nsComposeTxtSrvFilter * inst = new nsComposeTxtSrvFilter();
-    if (nullptr == inst) 
+    if (nullptr == inst)
     {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -75,7 +75,7 @@ nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 
 static nsresult
-nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter, 
+nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter,
                                             REFNSIID aIID,
                                             void **aResult)
 {
@@ -83,7 +83,7 @@ nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter,
 }
 
 static nsresult
-nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter, 
+nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter,
                                         REFNSIID aIID,
                                         void **aResult)
 {
@@ -95,7 +95,7 @@ nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter,
 // by the CID passed in. This function uses do_GetService to get the
 // command table, so that every controller shares a single command
 // table, for space-efficiency.
-// 
+//
 // The only reason to go via the service manager for the command table
 // is that it holds onto the singleton for us, avoiding static variables here.
 static nsresult
@@ -107,16 +107,16 @@ CreateControllerWithSingletonCommandTable(const nsCID& inCommandTableCID, nsICon
 
   nsCOMPtr<nsIControllerCommandTable> composerCommandTable = do_GetService(inCommandTableCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   // this guy is a singleton, so make it immutable
   composerCommandTable->MakeImmutable();
-  
+
   nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   rv = controllerContext->Init(composerCommandTable);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   *aResult = controller;
   NS_ADDREF(*aResult);
   return NS_OK;
@@ -126,7 +126,7 @@ CreateControllerWithSingletonCommandTable(const nsCID& inCommandTableCID, nsICon
 // Here we make an instance of the controller that holds doc state commands.
 // We set it up with a singleton command table.
 static nsresult
-nsHTMLEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
+nsHTMLEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
                                               void **aResult)
 {
   nsCOMPtr<nsIController> controller;
@@ -150,40 +150,40 @@ nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aRe
 
 // Constructor for a command table that is pref-filled with HTML editor commands
 static nsresult
-nsHTMLEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID, 
+nsHTMLEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
                                               void **aResult)
 {
   nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> commandTable =
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   rv = nsComposerController::RegisterHTMLEditorCommands(commandTable);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   // we don't know here whether we're being created as an instance,
   // or a service, so we can't become immutable
-  
+
   return commandTable->QueryInterface(aIID, aResult);
 }
 
 
 // Constructor for a command table that is pref-filled with HTML editor doc state commands
 static nsresult
-nsHTMLEditorDocStateCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID, 
+nsHTMLEditorDocStateCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
                                               void **aResult)
 {
   nsresult rv;
   nsCOMPtr<nsIControllerCommandTable> commandTable =
       do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   rv = nsComposerController::RegisterEditorDocStateCommands(commandTable);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   // we don't know here whether we're being created as an instance,
   // or a service, so we can't become immutable
-  
+
   return commandTable->QueryInterface(aIID, aResult);
 }
 

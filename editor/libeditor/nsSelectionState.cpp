@@ -30,7 +30,7 @@ using namespace mozilla::dom;
  */
 nsSelectionState::nsSelectionState() : mArray(){}
 
-nsSelectionState::~nsSelectionState() 
+nsSelectionState::~nsSelectionState()
 {
   MakeEmpty();
 }
@@ -76,7 +76,7 @@ nsSelectionState::SaveSelection(Selection* aSel)
   }
 }
 
-nsresult  
+nsresult
 nsSelectionState::RestoreSelection(Selection* aSel)
 {
   NS_ENSURE_TRUE(aSel, NS_ERROR_NULL_POINTER);
@@ -85,13 +85,13 @@ nsSelectionState::RestoreSelection(Selection* aSel)
 
   // clear out selection
   aSel->RemoveAllRanges();
-  
+
   // set the selection ranges anew
   for (i=0; i<arrayCount; i++)
   {
     nsRefPtr<nsRange> range = mArray[i]->GetRange();
     NS_ENSURE_TRUE(range, NS_ERROR_UNEXPECTED);
-   
+
     res = aSel->AddRange(range);
     if(NS_FAILED(res)) return res;
 
@@ -123,7 +123,7 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
     nsRefPtr<nsRange> myRange = mArray[i]->GetRange();
     nsRefPtr<nsRange> itsRange = aSelState->mArray[i]->GetRange();
     NS_ENSURE_TRUE(myRange && itsRange, false);
-  
+
     int16_t compResult;
     nsresult rv;
     rv = myRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, itsRange, &compResult);
@@ -135,14 +135,14 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
   return true;
 }
 
-void     
+void
 nsSelectionState::MakeEmpty()
 {
   // free any items in the array
   mArray.Clear();
 }
 
-bool     
+bool
 nsSelectionState::IsEmpty()
 {
   return mArray.IsEmpty();
@@ -158,8 +158,8 @@ nsRangeUpdater::~nsRangeUpdater()
 {
   // nothing to do, we don't own the items in our array.
 }
-  
-void 
+
+void
 nsRangeUpdater::RegisterRangeItem(nsRangeStore *aRangeItem)
 {
   if (!aRangeItem) return;
@@ -171,14 +171,14 @@ nsRangeUpdater::RegisterRangeItem(nsRangeStore *aRangeItem)
   mArray.AppendElement(aRangeItem);
 }
 
-void 
+void
 nsRangeUpdater::DropRangeItem(nsRangeStore *aRangeItem)
 {
   if (!aRangeItem) return;
   mArray.RemoveElement(aRangeItem);
 }
 
-nsresult 
+nsresult
 nsRangeUpdater::RegisterSelectionState(nsSelectionState &aSelState)
 {
   uint32_t i, theCount = aSelState.mArray.Length();
@@ -192,7 +192,7 @@ nsRangeUpdater::RegisterSelectionState(nsSelectionState &aSelState)
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsRangeUpdater::DropSelectionState(nsSelectionState &aSelState)
 {
   uint32_t i, theCount = aSelState.mArray.Length();
@@ -497,7 +497,7 @@ nsRangeUpdater::SelAdjDeleteText(nsIDOMCharacterData* aTextNode,
 nsresult
 nsRangeUpdater::WillReplaceContainer()
 {
-  if (mLock) return NS_ERROR_UNEXPECTED;  
+  if (mLock) return NS_ERROR_UNEXPECTED;
   mLock = true;
   return NS_OK;
 }
@@ -518,7 +518,7 @@ nsRangeUpdater::DidReplaceContainer(Element* aOriginalNode, Element* aNewNode)
   for (uint32_t i = 0; i < count; i++) {
     nsRangeStore* item = mArray[i];
     NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
-    
+
     if (item->startNode == aOriginalNode) {
       item->startNode = aNewNode;
     }
@@ -533,7 +533,7 @@ nsRangeUpdater::DidReplaceContainer(Element* aOriginalNode, Element* aNewNode)
 nsresult
 nsRangeUpdater::WillRemoveContainer()
 {
-  if (mLock) return NS_ERROR_UNEXPECTED;  
+  if (mLock) return NS_ERROR_UNEXPECTED;
   mLock = true;
   return NS_OK;
 }
@@ -555,14 +555,14 @@ nsRangeUpdater::DidRemoveContainer(nsINode* aNode, nsINode* aParent,
   for (uint32_t i = 0; i < count; i++) {
     nsRangeStore* item = mArray[i];
     NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
-    
+
     if (item->startNode == aNode) {
       item->startNode = aParent;
       item->startOffset += aOffset;
     } else if (item->startNode == aParent && item->startOffset > aOffset) {
       item->startOffset += (int32_t)aNodeOrigLen - 1;
     }
-      
+
     if (item->endNode == aNode) {
       item->endNode = aParent;
       item->endOffset += aOffset;
@@ -586,7 +586,7 @@ nsRangeUpdater::DidRemoveContainer(nsIDOMNode* aNode, nsIDOMNode* aParent,
 nsresult
 nsRangeUpdater::WillInsertContainer()
 {
-  if (mLock) return NS_ERROR_UNEXPECTED;  
+  if (mLock) return NS_ERROR_UNEXPECTED;
   mLock = true;
   return NS_OK;
 }
@@ -595,7 +595,7 @@ nsRangeUpdater::WillInsertContainer()
 nsresult
 nsRangeUpdater::DidInsertContainer()
 {
-  NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);  
+  NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);
   mLock = false;
   return NS_OK;
 }
@@ -620,7 +620,7 @@ nsRangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
   for (uint32_t i = 0, count = mArray.Length(); i < count; ++i) {
     nsRangeStore* item = mArray[i];
     NS_ENSURE_TRUE_VOID(item);
-    
+
     // like a delete in aOldParent
     if (item->startNode == aOldParent && item->startOffset > aOldOffset) {
       item->startOffset--;
@@ -628,7 +628,7 @@ nsRangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
     if (item->endNode == aOldParent && item->endOffset > aOldOffset) {
       item->endOffset--;
     }
-      
+
     // and like an insert in aNewParent
     if (item->startNode == aNewParent && item->startOffset > aNewOffset) {
       item->startOffset++;
@@ -645,8 +645,8 @@ nsRangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
  * helper class for nsSelectionState.  nsRangeStore stores range endpoints.
  */
 
-nsRangeStore::nsRangeStore() 
-{ 
+nsRangeStore::nsRangeStore()
+{
 }
 nsRangeStore::~nsRangeStore()
 {

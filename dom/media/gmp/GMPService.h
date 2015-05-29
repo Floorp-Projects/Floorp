@@ -15,6 +15,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
+#include "nsThreadUtils.h"
 
 template <class> struct already_AddRefed;
 

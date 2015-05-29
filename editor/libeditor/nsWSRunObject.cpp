@@ -120,7 +120,7 @@ nsWSRunObject::ScrubBlockBoundary(nsHTMLEditor* aHTMLEd,
     NS_ENSURE_STATE(aOffset >= 0);
     offset = aOffset;
   }
-  
+
   nsWSRunObject theWSObj(aHTMLEd, aBlock, offset);
   return theWSObj.Scrub();
 }
@@ -573,7 +573,7 @@ nsWSRunObject::NextVisibleNode(nsINode* aNode,
   *outType = mEndReason;
 }
 
-nsresult 
+nsresult
 nsWSRunObject::AdjustWhitespace()
 {
   // this routine examines a run of ws and tries to get rid of some unneeded nbsp's,
@@ -621,7 +621,7 @@ nsresult
 nsWSRunObject::GetWSNodes()
 {
   // collect up an array of nodes that are contiguous with the insertion point
-  // and which contain only whitespace.  Stop if you reach non-ws text or a new 
+  // and which contain only whitespace.  Stop if you reach non-ws text or a new
   // block boundary.
   ::DOMPoint start(mNode, mOffset), end(mNode, mOffset);
   nsCOMPtr<nsINode> wsBoundingParent = GetWSBoundingParent();
@@ -629,7 +629,7 @@ nsWSRunObject::GetWSNodes()
   // first look backwards to find preceding ws nodes
   if (nsRefPtr<Text> textNode = mNode->GetAsText()) {
     const nsTextFragment* textFrag = textNode->GetText();
-    
+
     mNodeArray.InsertElementAt(0, textNode);
     if (mOffset) {
       for (int32_t pos = mOffset - 1; pos >= 0; pos--) {
@@ -729,9 +729,9 @@ nsWSRunObject::GetWSNodes()
       mStartOffset = start.offset;
       mStartReason = WSType::thisBlock;
       mStartReasonNode = wsBoundingParent;
-    } 
+    }
   }
-  
+
   // then look ahead to find following ws nodes
   if (nsRefPtr<Text> textNode = mNode->GetAsText()) {
     // don't need to put it on list. it already is from code above
@@ -819,8 +819,8 @@ nsWSRunObject::GetWSNodes()
           }
         }
       } else {
-        // we encountered a break or a special node, like <img>, 
-        // that is not a block and not a break but still 
+        // we encountered a break or a special node, like <img>,
+        // that is not a block and not a break but still
         // serves as a terminator to ws runs.
         mEndNode = end.node;
         mEndOffset = end.offset;
@@ -837,7 +837,7 @@ nsWSRunObject::GetWSNodes()
       mEndOffset = end.offset;
       mEndReason = WSType::thisBlock;
       mEndReasonNode = wsBoundingParent;
-    } 
+    }
   }
 
   return NS_OK;
@@ -847,7 +847,7 @@ void
 nsWSRunObject::GetRuns()
 {
   ClearRuns();
-  
+
   // handle some easy cases first
   mHTMLEditor->IsPreformatted(GetAsDOMNode(mNode), &mPRE);
   // if it's preformatedd, or if we are surrounded by text or special, it's all one
@@ -875,12 +875,12 @@ nsWSRunObject::GetRuns()
     MakeSingleWSRun(wstype);
     return;
   }
-  
+
   // otherwise a little trickier.  shucks.
   mStartRun = new WSFragment();
   mStartRun->mStartNode = mStartNode;
   mStartRun->mStartOffset = mStartOffset;
-  
+
   if (mStartReason & WSType::block || mStartReason == WSType::br) {
     // set up mStartRun
     mStartRun->mType = WSType::leadingWS;
@@ -888,7 +888,7 @@ nsWSRunObject::GetRuns()
     mStartRun->mEndOffset = mFirstNBSPOffset;
     mStartRun->mLeftType = mStartReason;
     mStartRun->mRightType = WSType::normalWS;
-    
+
     // set up next run
     WSFragment *normalRun = new WSFragment();
     mStartRun->mRight = normalRun;
@@ -923,7 +923,7 @@ nsWSRunObject::GetRuns()
         normalRun->mEndNode = mLastNBSPNode;
         normalRun->mEndOffset = mLastNBSPOffset+1;
         normalRun->mRightType = WSType::trailingWS;
-        
+
         // set up next run
         WSFragment *lastRun = new WSFragment();
         lastRun->mType = WSType::trailingWS;
@@ -1000,7 +1000,7 @@ nsWSRunObject::MakeSingleWSRun(WSType aType)
   mStartRun->mEndOffset   = mEndOffset;
   mStartRun->mLeftType    = mStartReason;
   mStartRun->mRightType   = mEndReason;
-  
+
   mEndRun  = mStartRun;
 }
 
@@ -1171,24 +1171,24 @@ nsWSRunObject::GetNextWSNode(::DOMPoint aPoint, nsINode* aBlockParent)
   return nextNode;
 }
 
-nsresult 
+nsresult
 nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
 {
   // this routine adjust whitespace before *this* and after aEndObject
-  // in preperation for the two areas to become adjacent after the 
+  // in preperation for the two areas to become adjacent after the
   // intervening content is deleted.  It's overly agressive right
   // now.  There might be a block boundary remaining between them after
   // the deletion, in which case these adjstments are unneeded (though
   // I don't think they can ever be harmful?)
-  
+
   NS_ENSURE_TRUE(aEndObject, NS_ERROR_NULL_POINTER);
   nsresult res = NS_OK;
-  
+
   // get the runs before and after selection
   WSFragment *beforeRun, *afterRun;
   FindRun(mNode, mOffset, &beforeRun, false);
   aEndObject->FindRun(aEndObject->mNode, aEndObject->mOffset, &afterRun, true);
-  
+
   // trim after run of any leading ws
   if (afterRun && (afterRun->mType & WSType::leadingWS)) {
     res = aEndObject->DeleteChars(aEndObject->mNode, aEndObject->mOffset,
@@ -1239,19 +1239,19 @@ nsWSRunObject::PrepareToDeleteRangePriv(nsWSRunObject* aEndObject)
   return res;
 }
 
-nsresult 
+nsresult
 nsWSRunObject::PrepareToSplitAcrossBlocksPriv()
 {
-  // used to prepare ws to be split across two blocks.  The main issue 
+  // used to prepare ws to be split across two blocks.  The main issue
   // here is make sure normalWS doesn't end up becoming non-significant
   // leading or trailing ws after the split.
   nsresult res = NS_OK;
-  
+
   // get the runs before and after selection
   WSFragment *beforeRun, *afterRun;
   FindRun(mNode, mOffset, &beforeRun, false);
   FindRun(mNode, mOffset, &afterRun, true);
-  
+
   // adjust normal ws in afterRun if needed
   if (afterRun && afterRun->mType == WSType::normalWS) {
     // make sure leading char of following ws is an nbsp, so that it will show up
@@ -1609,7 +1609,7 @@ nsWSRunObject::FindRun(nsINode* aNode, int32_t aOffset, WSFragment** outRun,
   }
 }
 
-char16_t 
+char16_t
 nsWSRunObject::GetCharAt(Text* aTextNode, int32_t aOffset)
 {
   // return 0 if we can't get a char, for whatever reason
@@ -1618,7 +1618,7 @@ nsWSRunObject::GetCharAt(Text* aTextNode, int32_t aOffset)
   int32_t len = int32_t(aTextNode->TextLength());
   if (aOffset < 0 || aOffset >= len)
     return 0;
-    
+
   return aTextNode->GetText()->CharAt(aOffset);
 }
 

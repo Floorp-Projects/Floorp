@@ -34,8 +34,8 @@ interface nsIHTMLEditor : nsISupports
   const short eCenter = 1;
   const short eRight = 2;
   const short eJustify = 3;
-  
-  
+
+
   /* ------------ Inline property methods -------------- */
 
 
@@ -50,8 +50,8 @@ interface nsIHTMLEditor : nsISupports
    *                    Example: aProperty="font", aAttribute="color",
    *                             aValue="0x00FFFF"
    */
-  void addDefaultProperty(in nsIAtom aProperty, 
-                          in AString aAttribute, 
+  void addDefaultProperty(in nsIAtom aProperty,
+                          in AString aAttribute,
                           in AString aValue);
 
   /**
@@ -65,8 +65,8 @@ interface nsIHTMLEditor : nsISupports
    *                    Example: aProperty="font", aAttribute="color",
    *                             aValue="0x00FFFF"
    */
-  void removeDefaultProperty(in nsIAtom aProperty, 
-                             in AString aAttribute, 
+  void removeDefaultProperty(in nsIAtom aProperty,
+                             in AString aAttribute,
                              in AString aValue);
 
   /**
@@ -78,7 +78,7 @@ interface nsIHTMLEditor : nsISupports
   /**
    * SetInlineProperty() sets the aggregate properties on the current selection
    *
-   * @param aProperty   the property to set on the selection 
+   * @param aProperty   the property to set on the selection
    * @param aAttribute  the attribute of the property, if applicable.
    *                    May be null.
    *                    Example: aProperty="font", aAttribute="color"
@@ -87,7 +87,7 @@ interface nsIHTMLEditor : nsISupports
    *                    Example: aProperty="font", aAttribute="color",
    *                             aValue="0x00FFFF"
    */
-  void setInlineProperty(in nsIAtom aProperty, 
+  void setInlineProperty(in nsIAtom aProperty,
                          in AString aAttribute,
                          in AString aValue);
 
@@ -96,7 +96,7 @@ interface nsIHTMLEditor : nsISupports
    * All object in the current selection are scanned and their attributes are
    * represented in a list of Property object.
    *
-   * @param aProperty   the property to get on the selection 
+   * @param aProperty   the property to get on the selection
    * @param aAttribute  the attribute of the property, if applicable.
    *                    May be null.
    *                    Example: aProperty="font", aAttribute="color"
@@ -111,22 +111,22 @@ interface nsIHTMLEditor : nsISupports
    * @param aAll        [OUT] PR_TRUE if all of the text nodes in the
    *                          selection have the property
    */
-  void getInlineProperty(in nsIAtom aProperty, 
+  void getInlineProperty(in nsIAtom aProperty,
                          in AString  aAttribute,
                          in AString  aValue,
                          out boolean aFirst,
                          out boolean aAny,
                          out boolean aAll);
 
-  AString getInlinePropertyWithAttrValue(in nsIAtom aProperty, 
+  AString getInlinePropertyWithAttrValue(in nsIAtom aProperty,
                                            in AString  aAttribute,
                                            in AString  aValue,
                                            out boolean aFirst,
                                            out boolean aAny,
                                            out boolean aAll);
-                             
+
   /**
-   * removeAllInlineProperties() deletes all the inline properties from all 
+   * removeAllInlineProperties() deletes all the inline properties from all
    * text in the current selection.
    */
   void removeAllInlineProperties();
@@ -136,7 +136,7 @@ interface nsIHTMLEditor : nsISupports
    * removeInlineProperty() deletes the properties from all text in the current
    * selection.  If aProperty is not set on the selection, nothing is done.
    *
-   * @param aProperty   the property to remove from the selection 
+   * @param aProperty   the property to remove from the selection
    *                    All atoms are for normal HTML tags (e.g.:
    *                    nsIEditorProperty::font) except when you want to
    *                    remove just links and not named anchors.
@@ -183,13 +183,13 @@ interface nsIHTMLEditor : nsISupports
   void insertHTML(in AString aInputString);
 
 
-  /** 
+  /**
     * Paste the text in the OS clipboard at the cursor position, replacing
     * the selected text (if any), but strip out any HTML styles and formatting
     */
   void pasteNoFormatting(in long aSelectionType);
 
-  /** 
+  /**
    *  Rebuild the entire document from source HTML
    *  Needed to be able to edit HEAD and other outside-of-BODY content
    *
@@ -203,12 +203,12 @@ interface nsIHTMLEditor : nsISupports
    *
    * @param aInputString   the string to be inserted
    * @param aContextStr    Context of insertion
-   * @param aInfoStr       Related info to aInputString 
+   * @param aInfoStr       Related info to aInputString
    * @param aFlavor        Transferable flavor, can be ""
    * @param aSourceDoc          document where input was dragged from (may be null)
    * @param aDestinationNode    location for insertion (such as when dropped)
    * @param aDestinationOffset  used with aDestNode to determine insert location
-   * @param aDeleteSelection    used with aDestNode during drag&drop 
+   * @param aDeleteSelection    used with aDestNode during drag&drop
    * @param aCollapseSelection  used with aDestNode during drag&drop
    */
   void insertHTMLWithContext(in AString aInputString,
@@ -221,7 +221,7 @@ interface nsIHTMLEditor : nsISupports
                              in boolean aDeleteSelection);
 
 
-  /** 
+  /**
     * Insert an element, which may have child nodes, at the selection
     * Used primarily to insert a new element for various insert element dialogs,
     *   but it enforces the HTML 4.0 DTD "CanContain" rules, so it should
@@ -229,19 +229,19 @@ interface nsIHTMLEditor : nsISupports
     *
     * @param aElement           The element to insert
     * @param aDeleteSelection   Delete the selection before inserting
-    *     If aDeleteSelection is PR_FALSE, then the element is inserted 
+    *     If aDeleteSelection is PR_FALSE, then the element is inserted
     *     after the end of the selection for all element except
     *     Named Anchors, which insert before the selection
-    */  
+    */
   void insertElementAtSelection(in nsIDOMElement aElement,
                                 in boolean aDeleteSelection);
 
-  /** 
+  /**
    *   Set the documents title.
    */
   void setDocumentTitle(in AString aTitle);
 
-  /** 
+  /**
    *   Set the BaseURL for the document to the current URL
    *     but only if the page doesn't have a <base> tag
    *   This should be done after the document URL has changed,
@@ -253,17 +253,17 @@ interface nsIHTMLEditor : nsISupports
 
   /* ------------ Selection manipulation -------------- */
   /* Should these be moved to nsISelection? */
-  
-  /** 
+
+  /**
     * Set the selection at the suppled element
     *
     * @param aElement   An element in the document
     */
   void selectElement(in nsIDOMElement aElement);
 
-  /** 
+  /**
     * Create a collapsed selection just after aElement
-    * 
+    *
     * XXX could we parameterize SelectElement(before/select/after>?
     *
     * The selection is set to parent-of-aElement with an
@@ -289,48 +289,48 @@ interface nsIHTMLEditor : nsISupports
    */
   AString getParagraphState(out boolean aMixed);
 
-  /** 
+  /**
    * getFontFaceState returns what font face is in the selection.
    * @param aMixed    True if there is more than one font face
    * @return          Name of face.  Note: "tt" is returned for
    *                  tt tag.  "" is returned for none.
    */
   AString getFontFaceState(out boolean aMixed);
-  
-  /** 
+
+  /**
    * getFontColorState returns what font face is in the selection.
    * @param aMixed     True if there is more than one font color
    * @return           Color string. "" is returned for none.
    */
   AString getFontColorState(out boolean aMixed);
 
-  /** 
+  /**
    * getFontColorState returns what font face is in the selection.
    * @param aMixed     True if there is more than one font color
    * @return           Color string. "" is returned for none.
    */
   AString getBackgroundColorState(out boolean aMixed);
 
-  /** 
+  /**
    * getHighlightColorState returns what the highlight color of the selection.
    * @param aMixed     True if there is more than one font color
    * @return           Color string. "" is returned for none.
    */
   AString getHighlightColorState(out boolean aMixed);
 
-  /** 
+  /**
    * getListState returns what list type is in the selection.
    * @param aMixed    True if there is more than one type of list, or
    *                  if there is some list and non-list
-   * @param aOL       The company that employs me.  No, really, it's 
+   * @param aOL       The company that employs me.  No, really, it's
    *                  true if an "ol" list is selected.
    * @param aUL       true if an "ul" list is selected.
    * @param aDL       true if a "dl" list is selected.
    */
   void getListState(out boolean aMixed, out boolean aOL, out boolean aUL,
                     out boolean aDL);
-  
-  /** 
+
+  /**
    * getListItemState returns what list item type is in the selection.
    * @param aMixed    True if there is more than one type of list item, or
    *                  if there is some list and non-list
@@ -340,8 +340,8 @@ interface nsIHTMLEditor : nsISupports
    */
   void getListItemState(out boolean aMixed, out boolean aLI,
                         out boolean aDT, out boolean aDD);
-  
-  /** 
+
+  /**
    * getAlignment     returns what alignment is in the selection.
    * @param aMixed    True if there is more than one type of list item, or
    *                  if there is some list and non-list
@@ -349,39 +349,39 @@ interface nsIHTMLEditor : nsISupports
    *                  (left/center/right)
    */
   void getAlignment(out boolean aMixed, out short aAlign);
-  
+
   /**
    * Document me!
-   * 
+   *
    */
   void getIndentState(out boolean aCanIndent, out boolean aCanOutdent);
 
   /**
    * Document me!
-   * 
+   *
    */
   void makeOrChangeList(in AString aListType, in boolean entireList,
                         in AString aBulletType);
 
   /**
    * Document me!
-   * 
+   *
    */
   void removeList(in AString aListType);
 
   /**
    * Document me!
-   * 
+   *
    */
   void indent(in AString aIndent);
 
   /**
    * Document me!
-   * 
+   *
    */
   void  align(in AString aAlign);
 
-  /** 
+  /**
    * Return the input node or a parent matching the given aTagName,
    *   starting the search at the supplied node.
    * An example of use is for testing if a node is in a table cell
@@ -389,7 +389,7 @@ interface nsIHTMLEditor : nsISupports
    *
    * @param aTagName  The HTML tagname
    *  Special input values:
-   *    Use "href" to get a link node 
+   *    Use "href" to get a link node
    *      (an "A" tag with the "href" attribute set)
    *    Use "anchor" or "namedanchor" to get a named anchor node
    *      (an "A" tag with the "name" attribute set)
@@ -404,7 +404,7 @@ interface nsIHTMLEditor : nsISupports
   nsIDOMElement getElementOrParentByTagName(in AString aTagName,
                                             in nsIDOMNode aNode);
 
-  /** 
+  /**
    * Return an element only if it is the only node selected,
    *    such as an image, horizontal rule, etc.
    * The exception is a link, which is more like a text attribute:
@@ -413,7 +413,7 @@ interface nsIHTMLEditor : nsISupports
    *    This could be a collapsed selection, i.e., a caret
    *    within the link text.
    *
-   * @param aTagName  The HTML tagname or and empty string 
+   * @param aTagName  The HTML tagname or and empty string
    *       to get any element (but only if it is the only element selected)
    *    Special input values for Links and Named anchors:
    *    Use "href" to get a link node
@@ -425,23 +425,23 @@ interface nsIHTMLEditor : nsISupports
    */
   nsIDOMElement getSelectedElement(in AString aTagName);
 
-  /** 
+  /**
    * Output the contents of the <HEAD> section as text/HTML format
    */
   AString getHeadContentsAsHTML();
 
-  /** 
+  /**
    * Replace all children of <HEAD> with string of HTML source
    */
   void replaceHeadContentsWithHTML(in AString aSourceToInsert);
 
-  /** 
+  /**
    * Return a new element with default attribute values
-   * 
+   *
    * This does not rely on the selection, and is not sensitive to context.
-   * 
+   *
    * Used primarily to supply new element for various insert element dialogs
-   *  (Image, Link, NamedAnchor, Table, and HorizontalRule 
+   *  (Image, Link, NamedAnchor, Table, and HorizontalRule
    *   are the only returned elements as of 7/25/99)
    *
    * @param aTagName  The HTML tagname
@@ -454,14 +454,14 @@ interface nsIHTMLEditor : nsISupports
    */
   nsIDOMElement createElementWithDefaults(in AString aTagName);
 
-  /** 
+  /**
    * Insert an link element as the parent of the current selection
    *
    * @param aElement   An "A" element with a non-empty "href" attribute
    */
   void insertLinkAroundSelection(in nsIDOMElement aAnchorElement);
 
-  /** 
+  /**
    * Set the value of the "bgcolor" attribute on the document's <body> element
    *
    * @param aColor  The HTML color string, such as "#ffccff" or "yellow"
@@ -469,7 +469,7 @@ interface nsIHTMLEditor : nsISupports
   void setBackgroundColor(in AString aColor);
 
 
-  /** 
+  /**
    * Set an attribute on the document's <body> element
    *    such as text, link, background colors
    *
@@ -479,7 +479,7 @@ interface nsIHTMLEditor : nsISupports
    * @param aValue  The value of the attribute
    */
   void setBodyAttribute(in AString aAttr, in AString aValue);
-  
+
   /**
    * Find all the nodes in the document which contain references
    * to outside URIs (e.g. a href, img src, script src, etc.)
@@ -489,7 +489,7 @@ interface nsIHTMLEditor : nsISupports
    */
   nsISupportsArray getLinkedObjects();
 
-  /** 
+  /**
    * A boolean which is true is the HTMLEditor has been instantiated
    * with CSS knowledge and if the CSS pref is currently checked
    *

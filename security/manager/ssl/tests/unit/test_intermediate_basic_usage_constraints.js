@@ -1,22 +1,11 @@
 "use strict";
-/* To regenerate the certificates for this test:
- *
- *      cd security/manager/ssl/tests/unit/test_intermediate_basic_usage_constraints
- *      ./generate.py
- *      cd ../../../../../..
- *      make -C $OBJDIR/security/manager/ssl/tests
- *
- * Check in the generated files. These steps are not done as part of the build
- * because we do not want to add a build-time dependency on the OpenSSL or NSS
- * tools or libraries built for the host platform.
- */
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
 
 function load_cert(name, trust) {
-  let filename = "test_intermediate_basic_usage_constraints/" + name + ".der";
+  let filename = "test_intermediate_basic_usage_constraints/" + name + ".pem";
   addCertFromFile(certdb, filename, trust);
 }
 
@@ -24,10 +13,10 @@ function test_cert_for_usages(certChainNicks, expected_usages_string) {
   let certs = [];
   for (let i in certChainNicks) {
     let certNick = certChainNicks[i];
-    let certDER = readFile(do_get_file(
-                             "test_intermediate_basic_usage_constraints/"
-                                + certNick + ".der"), false);
-    certs.push(certdb.constructX509(certDER, certDER.length));
+    let certPEM = readFile(
+                    do_get_file("test_intermediate_basic_usage_constraints/"
+                                + certNick + ".pem"), false);
+    certs.push(certdb.constructX509FromBase64(pemToBase64(certPEM)));
   }
 
   let cert = certs[0];
@@ -39,12 +28,7 @@ function test_cert_for_usages(certChainNicks, expected_usages_string) {
 }
 
 function run_test() {
-  // mozilla::pkix doesn't support the obsolete Netscape object signing
-  // extension, but NSS does.
   let ee_usage1 = 'Client,Server,Sign,Encrypt,Object Signer';
-
-  // mozilla::pkix doesn't validate CA certificates for non-CA uses, but
-  // NSS does.
   let ca_usage1 = "SSL CA";
 
   // Load the ca into mem
@@ -85,9 +69,6 @@ function run_test() {
   //   int-limited-depth (cA==true, pathLenConstraint==0)
   //      int-limited-depth-invalid (cA==true)
   //
-  // XXX: It seems the NSS code does not consider the path length of the
-  // certificate we're validating, but mozilla::pkix does. mozilla::pkix's
-  // behavior is correct.
   test_cert_for_usages(["int-limited-depth-invalid", "int-limited-depth"], "");
   test_cert_for_usages(["ee-int-limited-depth-invalid",
                         "int-limited-depth-invalid",
@@ -102,7 +83,7 @@ function run_test() {
   // int-bad-ku-no-eku has basicConstraints.cA==true and has a KU extension
   // but the KU extension is missing keyCertSign. Note that mozilla::pkix
   // doesn't validate certificates with basicConstraints.Ca==true for non-CA
-  // uses, but NSS does.
+  // uses.
   test_cert_for_usages(["int-bad-ku-no-eku"], "");
   test_cert_for_usages(["ee-int-bad-ku-no-eku", "int-bad-ku-no-eku"], "");
 

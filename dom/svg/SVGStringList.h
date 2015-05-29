@@ -105,7 +105,7 @@ private:
     if (aIndex >= mStrings.Length()) {
       aIndex = mStrings.Length();
     }
-    if (mStrings.InsertElementAt(aIndex, aString)) {
+    if (mStrings.InsertElementAt(aIndex, aString, fallible)) {
       mIsSet = true;
       return true;
     }
@@ -125,7 +125,7 @@ private:
   }
 
   bool AppendItem(const nsAString &aString) {
-    if (mStrings.AppendElement(aString)) {
+    if (mStrings.AppendElement(aString, fallible)) {
       mIsSet = true;
       return true;
     }

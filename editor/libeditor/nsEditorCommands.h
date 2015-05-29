@@ -20,9 +20,9 @@ class nsBaseEditorCommand : public nsIControllerCommand
 {
 public:
   nsBaseEditorCommand();
-    
+
   NS_DECL_ISUPPORTS
-    
+
   NS_IMETHOD  IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) override = 0;
   NS_IMETHOD  DoCommand(const char *aCommandName, nsISupports *aCommandRefCon) override = 0;
 

@@ -414,6 +414,12 @@ NativeObject::growSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newCou
     return true;
 }
 
+/* static */ bool
+NativeObject::growSlotsStatic(ExclusiveContext* cx, NativeObject* obj, uint32_t newCount)
+{
+    return obj->growSlots(cx, obj->numDynamicSlots(), newCount);
+}
+
 static void
 FreeSlots(ExclusiveContext* cx, HeapSlot* slots)
 {
