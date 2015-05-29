@@ -70,40 +70,48 @@ ClientCanvasLayer::Initialize(const Data& aData)
   }
   MOZ_ASSERT(caps.alpha == aData.mHasAlpha);
 
-  auto forwarder = ClientManager()->AsShadowForwarder();
-
-  mFlags = TextureFlags::ORIGIN_BOTTOM_LEFT;
-  if (!aData.mIsGLAlphaPremult) {
-    mFlags |= TextureFlags::NON_PREMULTIPLIED;
-  }
-
   UniquePtr<SurfaceFactory> factory;
 
   if (!gfxPrefs::WebGLForceLayersReadback()) {
-    switch (forwarder->GetCompositorBackendType()) {
+    switch (ClientManager()->AsShadowForwarder()->GetCompositorBackendType()) {
       case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
-#if defined(XP_MACOSX)
-        factory = SurfaceFactory_IOSurface::Create(mGLContext, caps, forwarder, mFlags);
-#elif defined(MOZ_WIDGET_GONK)
-        factory = MakeUnique<SurfaceFactory_Gralloc>(mGLContext, caps, forwarder, mFlags);
-#else
         if (mGLContext->GetContextType() == GLContextType::EGL) {
-          bool isCrossProcess = (XRE_GetProcessType() != GeckoProcessType_Default);
-          if (!isCrossProcess) {
-            factory = SurfaceFactory_EGLImage::Create(mGLContext, caps, forwarder,
-                                                      mFlags);
+#ifdef MOZ_WIDGET_GONK
+          TextureFlags flags = TextureFlags::DEALLOCATE_CLIENT |
+                               TextureFlags::ORIGIN_BOTTOM_LEFT;
+          if (!aData.mIsGLAlphaPremult) {
+            flags |= TextureFlags::NON_PREMULTIPLIED;
           }
-        }
+          factory = MakeUnique<SurfaceFactory_Gralloc>(mGLContext,
+                                                       caps,
+                                                       flags,
+                                                       ClientManager()->AsShadowForwarder());
+#else
+          bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
+          if (!isCrossProcess) {
+            // [Basic/OGL Layers, OMTC] WebGL layer init.
+            factory = SurfaceFactory_EGLImage::Create(mGLContext, caps);
+          } else {
+            // we could do readback here maybe
+            NS_NOTREACHED("isCrossProcess but not on native B2G!");
+          }
 #endif
+        } else {
+          // [Basic Layers, OMTC] WebGL layer init.
+          // Well, this *should* work...
+#ifdef XP_MACOSX
+          factory = SurfaceFactory_IOSurface::Create(mGLContext, caps);
+#else
+          GLContext* nullConsGL = nullptr; // Bug 1050044.
+          factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, nullConsGL, caps);
+#endif
+        }
         break;
       }
       case mozilla::layers::LayersBackend::LAYERS_D3D11: {
 #ifdef XP_WIN
-        if (mGLContext->IsANGLE() &&
-            DoesD3D11TextureSharingWork(gfxWindowsPlatform::GetPlatform()->GetD3D11Device()))
-        {
-          factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext, caps, forwarder,
-                                                            mFlags);
+        if (mGLContext->IsANGLE() && DoesD3D11TextureSharingWork(gfxWindowsPlatform::GetPlatform()->GetD3D11Device())) {
+          factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext, caps);
         }
 #endif
         break;
@@ -119,7 +127,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
     mFactory = Move(factory);
     if (!mFactory) {
       // Absolutely must have a factory here, so create a basic one
-      mFactory = MakeUnique<SurfaceFactory_Basic>(mGLContext, caps, mFlags);
+      mFactory = MakeUnique<SurfaceFactory_Basic>(mGLContext, caps);
     }
   } else {
     if (factory)
