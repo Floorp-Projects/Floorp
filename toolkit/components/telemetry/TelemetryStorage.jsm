@@ -88,6 +88,29 @@ let Policy = {
   getArchiveQuota: () => ARCHIVE_QUOTA_BYTES,
 };
 
+/**
+ * Wait for all promises in iterable to resolve or reject. This function
+ * always resolves its promise with undefined, and never rejects.
+ */
+function waitForAll(it) {
+  let list = Array.from(it);
+  let pending = list.length;
+  if (pending == 0) {
+    return Promise.resolve();
+  }
+  return new Promise(function(resolve, reject) {
+    let rfunc = () => {
+      --pending;
+      if (pending == 0) {
+        resolve();
+      }
+    };
+    for (let p of list) {
+      p.then(rfunc, rfunc);
+    }
+  });
+}
+
 this.TelemetryStorage = {
   get MAX_PING_FILE_AGE() {
     return MAX_PING_FILE_AGE;
@@ -457,6 +480,8 @@ let TelemetryStorageImpl = {
   // Tracks the archived pings in a Map of (id -> {timestampCreated, type}).
   // We use this to cache info on archived pings to avoid scanning the disk more than once.
   _archivedPings: new Map(),
+  // A set of promises for pings currently being archived
+  _activelyArchiving: new Set(),
   // Track the archive loading task to prevent multiple tasks from being executed.
   _scanArchiveTask: null,
   // Track the archive cleanup task.
@@ -495,7 +520,15 @@ let TelemetryStorageImpl = {
    * @param {object} ping The ping data to archive.
    * @return {promise} Promise that is resolved when the ping is successfully archived.
    */
-  saveArchivedPing: Task.async(function*(ping) {
+  saveArchivedPing: function(ping) {
+    let promise = this._saveArchivedPingTask(ping);
+    this._activelyArchiving.add(promise);
+    promise.then((r) => { this._activelyArchiving.delete(promise); },
+                 (e) => { this._activelyArchiving.delete(promise); });
+    return promise;
+  },
+
+  _saveArchivedPingTask: Task.async(function*(ping) {
     const creationDate = new Date(ping.creationDate);
     if (this._archivedPings.has(ping.id)) {
       const data = this._archivedPings.get(ping.id);
@@ -795,26 +828,29 @@ let TelemetryStorageImpl = {
    *
    * @return {promise<sequence<object>>}
    */
-  loadArchivedPingList: function() {
+  loadArchivedPingList: Task.async(function*() {
     // If there's an archive loading task already running, return it.
     if (this._scanArchiveTask) {
       return this._scanArchiveTask;
     }
 
+    yield waitForAll(this._activelyArchiving);
+
     if (this._scannedArchiveDirectory) {
       this._log.trace("loadArchivedPingList - Archive already scanned, hitting cache.");
-      return Promise.resolve(this._archivedPings);
+      return this._archivedPings;
     }
 
-    // Make sure to clear |_scanArchiveTask| once done.
-    let clear = pingList => {
-      this._scanArchiveTask = null;
-      return pingList;
-    };
     // Since there's no archive loading task running, start it.
-    this._scanArchiveTask = this._scanArchive().then(clear, clear);
-    return this._scanArchiveTask;
-  },
+    let result;
+    try {
+      this._scanArchiveTask = this._scanArchive();
+      result = yield this._scanArchiveTask;
+    } finally {
+      this._scanArchiveTask = null;
+    }
+    return result;
+  }),
 
   _scanArchive: Task.async(function*() {
     this._log.trace("_scanArchive");
