@@ -16,7 +16,7 @@ class TextureImageEGL final
 {
 public:
     TextureImageEGL(GLuint aTexture,
-                    const nsIntSize& aSize,
+                    const gfx::IntSize& aSize,
                     GLenum aWrapMode,
                     ContentType aContentType,
                     GLContext* aContext,
@@ -87,7 +87,7 @@ CreateTextureImageEGL(GLContext *gl,
 
 already_AddRefed<TextureImage>
 TileGenFuncEGL(GLContext *gl,
-               const nsIntSize& aSize,
+               const gfx::IntSize& aSize,
                TextureImage::ContentType aContentType,
                TextureImage::Flags aFlags,
                TextureImage::ImageFormat aImageFormat);
