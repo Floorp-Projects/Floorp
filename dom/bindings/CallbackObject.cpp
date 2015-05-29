@@ -62,6 +62,10 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   , mExceptionHandling(aExceptionHandling)
   , mIsMainThread(NS_IsMainThread())
 {
+  if (mIsMainThread) {
+    nsContentUtils::EnterMicroTask();
+  }
+
   // Compute the caller's subject principal (if necessary) early, before we
   // do anything that might perturb the relevant state.
   nsIPrincipal* webIDLCallerPrincipal = nullptr;
@@ -302,6 +306,12 @@ CallbackObject::CallSetup::~CallSetup()
 
   mAutoIncumbentScript.reset();
   mAutoEntryScript.reset();
+
+  // It is important that this is the last thing we do, after leaving the
+  // compartment and undoing all our entry/incumbent script changes
+  if (mIsMainThread) {
+    nsContentUtils::LeaveMicroTask();
+  }
 }
 
 already_AddRefed<nsISupports>
