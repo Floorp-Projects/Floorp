@@ -663,7 +663,7 @@ js::StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
     if (IsAnyTypedArray(obj))
         return DefinePropertyOnTypedArray(cx, obj, id, desc, result);
 
-    if (obj->is<UnboxedPlainObject>() && !UnboxedPlainObject::convertToNative(cx, obj))
+    if (!MaybeConvertUnboxedObjectToNative(cx, obj))
         return false;
 
     if (obj->getOps()->lookupProperty) {
@@ -2956,7 +2956,7 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
 
     // Convert unboxed objects to their native representations before changing
     // their prototype/group, as they depend on the group for their layout.
-    if (obj->is<UnboxedPlainObject>() && !UnboxedPlainObject::convertToNative(cx, obj))
+    if (!MaybeConvertUnboxedObjectToNative(cx, obj))
         return false;
 
     Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
@@ -2981,6 +2981,9 @@ js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result)
 
     if (!obj->nonProxyIsExtensible())
         return result.succeed();
+
+    if (!MaybeConvertUnboxedObjectToNative(cx, obj))
+        return false;
 
     // Force lazy properties to be resolved.
     AutoIdVector props(cx);

@@ -26,6 +26,21 @@
 
 #include "vm/TypeInference-inl.h"
 
+namespace js {
+
+// This is needed here for ensureShape() below.
+inline bool
+MaybeConvertUnboxedObjectToNative(ExclusiveContext* cx, JSObject* obj)
+{
+    if (obj->is<UnboxedPlainObject>())
+        return UnboxedPlainObject::convertToNative(cx->asJSContext(), obj);
+    if (obj->is<UnboxedArrayObject>())
+        return UnboxedArrayObject::convertToNative(cx->asJSContext(), obj);
+    return true;
+}
+
+} // namespace js
+
 inline js::Shape*
 JSObject::maybeShape() const
 {
@@ -37,7 +52,7 @@ JSObject::maybeShape() const
 inline js::Shape*
 JSObject::ensureShape(js::ExclusiveContext* cx)
 {
-    if (is<js::UnboxedPlainObject>() && !js::UnboxedPlainObject::convertToNative(cx->asJSContext(), this))
+    if (!js::MaybeConvertUnboxedObjectToNative(cx, this))
         return nullptr;
     js::Shape* shape = maybeShape();
     MOZ_ASSERT(shape);
