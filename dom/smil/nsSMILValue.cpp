@@ -82,19 +82,6 @@ nsSMILValue::operator==(const nsSMILValue& aVal) const
   return mType == aVal.mType && mType->IsEqual(*this, aVal);
 }
 
-void
-nsSMILValue::Swap(nsSMILValue& aOther)
-{
-  nsSMILValue tmp;
-  memcpy(&tmp,    &aOther, sizeof(nsSMILValue));  // tmp    = aOther
-  memcpy(&aOther, this,    sizeof(nsSMILValue));  // aOther = this
-  memcpy(this,    &tmp,    sizeof(nsSMILValue));  // this   = tmp
-
-  // |tmp| is about to die -- we need to clear its mType, so that its
-  // destructor doesn't muck with the data we just transferred out of it.
-  tmp.mType = nsSMILNullType::Singleton();
-}
-
 nsresult
 nsSMILValue::Add(const nsSMILValue& aValueToAdd, uint32_t aCount)
 {

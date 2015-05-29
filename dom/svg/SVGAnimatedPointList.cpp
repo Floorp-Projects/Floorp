@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGAnimatedPointList.h"
+
 #include "DOMSVGPointList.h"
+#include "mozilla/Move.h"
 #include "nsSVGElement.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
@@ -163,7 +165,7 @@ SVGAnimatedPointList::
   nsresult rv = list->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
     list->SetInfo(mElement);
-    aValue.Swap(val);
+    aValue = Move(val);
   }
   aPreventCachingOfSandwich = false;
   return rv;
@@ -182,7 +184,7 @@ SVGAnimatedPointList::SMILAnimatedPointList::GetBaseValue() const
   nsresult rv = list->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     list->SetInfo(mElement);
-    val.Swap(tmp);
+    Swap(val, tmp);
   }
   return val;
 }
