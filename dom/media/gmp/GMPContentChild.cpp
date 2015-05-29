@@ -4,6 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPContentChild.h"
+#include "GMPChild.h"
+#include "GMPAudioDecoderChild.h"
+#include "GMPDecryptorChild.h"
+#include "GMPVideoDecoderChild.h"
+#include "GMPVideoEncoderChild.h"
 
 namespace mozilla {
 namespace gmp {

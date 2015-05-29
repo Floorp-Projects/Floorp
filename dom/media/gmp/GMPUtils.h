@@ -8,6 +8,8 @@
 
 #include "mozilla/UniquePtr.h"
 
+class nsIFile;
+
 namespace mozilla {
 
 template<typename T>
