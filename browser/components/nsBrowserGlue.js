@@ -1059,6 +1059,11 @@ BrowserGlue.prototype = {
       }
       catch (ex) { /* Don't break the default prompt if telemetry is broken. */ }
 
+      if (isDefault) {
+        let now = Date.now().toString().slice(0, -3);
+        Services.prefs.setCharPref("browser.shell.mostRecentDateSetAsDefault", now);
+      }
+
       if (shouldCheck && !isDefault && !willRecoverSession) {
         Services.tm.mainThread.dispatch(function() {
           DefaultBrowserCheck.prompt(this.getMostRecentBrowserWindow());
