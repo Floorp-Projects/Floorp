@@ -1,7 +1,6 @@
-// Comments must be on their own lines and must start with "//"
-
-// Send these sites a custom user-agent. Bugs to remove each override after
-// evangelism are included.
+#filter slashslash
+// Everything after the first // on a line will be removed by the preproccesor.
+// Send these sites a custom user-agent. Bugs should be included with an entry.
 {
   // bug 826347, msn.com
   "msn.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",

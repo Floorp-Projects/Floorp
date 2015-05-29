@@ -196,7 +196,7 @@ Tools.shaderEditor = {
   id: "shadereditor",
   ordinal: 5,
   visibilityswitch: "devtools.shadereditor.enabled",
-  icon: "chrome://browser/skin/devtools/tool-styleeditor.svg",
+  icon: "chrome://browser/skin/devtools/tool-shadereditor.svg",
   invertIconForLightTheme: true,
   url: "chrome://browser/content/devtools/shadereditor.xul",
   label: l10n("ToolboxShaderEditor.label", shaderEditorStrings),

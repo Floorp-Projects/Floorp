@@ -36,6 +36,8 @@
 <commandset id="editMenuCommands"/>
 
 <commandset id="sourceEditorCommands">
+  <command id="cmd_find" oncommand=";"/>
+  <command id="cmd_findAgain" oncommand=";"/>
   <command id="cmd_gotoLine" oncommand=";"/>
 </commandset>
 
