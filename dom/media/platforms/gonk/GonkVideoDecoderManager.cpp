@@ -569,6 +569,7 @@ GonkVideoDecoderManager::GetColorConverterBuffer(int32_t aWidth, int32_t aHeight
 void
 GonkVideoDecoderManager::RecycleCallback(TextureClient* aClient, void* aClosure)
 {
+  MOZ_ASSERT(aClient && !aClient->IsDead());
   GonkVideoDecoderManager* videoManager = static_cast<GonkVideoDecoderManager*>(aClosure);
   GrallocTextureClientOGL* client = static_cast<GrallocTextureClientOGL*>(aClient);
   aClient->ClearRecycleCallback();
