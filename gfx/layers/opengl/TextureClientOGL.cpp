@@ -46,9 +46,7 @@ EGLImageTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   MOZ_ASSERT(IsAllocated());
 
   const EGLImageImage::Data* data = mImage->GetData();
-  const bool hasAlpha = true;
-  aOutDescriptor = EGLImageDescriptor((uintptr_t)data->mImage, (uintptr_t)data->mSync,
-                                      mSize, hasAlpha);
+  aOutDescriptor = EGLImageDescriptor((uintptr_t)data->mImage, (uintptr_t)data->mSync, mSize);
   return true;
 }
 

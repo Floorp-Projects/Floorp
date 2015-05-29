@@ -38,11 +38,6 @@ public:
                                                  const gfx::IntSize& size,
                                                  bool hasAlpha);
 
-    static UniquePtr<SharedSurface_Basic> Wrap(GLContext* gl,
-                                               const gfx::IntSize& size,
-                                               bool hasAlpha,
-                                               GLuint tex);
-
     static SharedSurface_Basic* Cast(SharedSurface* surf) {
         MOZ_ASSERT(surf->mType == SharedSurfaceType::Basic);
 
@@ -51,14 +46,13 @@ public:
 
 protected:
     const GLuint mTex;
-    const bool mOwnsTex;
     GLuint mFB;
 
     SharedSurface_Basic(GLContext* gl,
                         const gfx::IntSize& size,
                         bool hasAlpha,
-                        GLuint tex,
-                        bool ownsTex);
+                        gfx::SurfaceFormat format,
+                        GLuint tex);
 
 public:
     virtual ~SharedSurface_Basic();
@@ -73,23 +67,112 @@ public:
     virtual GLuint ProdTexture() override {
         return mTex;
     }
-
-    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override {
-        MOZ_CRASH("don't do this");
-        return false;
-    }
 };
 
 class SurfaceFactory_Basic
     : public SurfaceFactory
 {
 public:
-    SurfaceFactory_Basic(GLContext* gl, const SurfaceCaps& caps,
-                         const layers::TextureFlags& flags);
+    SurfaceFactory_Basic(GLContext* gl, const SurfaceCaps& caps)
+        : SurfaceFactory(gl, SharedSurfaceType::Basic, caps)
+    {}
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
         bool hasAlpha = mReadCaps.alpha;
         return SharedSurface_Basic::Create(mGL, mFormats, size, hasAlpha);
+    }
+};
+
+
+// Using shared GL textures:
+class SharedSurface_GLTexture
+    : public SharedSurface
+{
+public:
+    static UniquePtr<SharedSurface_GLTexture> Create(GLContext* prodGL,
+                                                     GLContext* consGL,
+                                                     const GLFormats& formats,
+                                                     const gfx::IntSize& size,
+                                                     bool hasAlpha,
+                                                     GLuint texture = 0);
+
+    static SharedSurface_GLTexture* Cast(SharedSurface* surf) {
+        MOZ_ASSERT(surf->mType == SharedSurfaceType::GLTextureShare);
+
+        return (SharedSurface_GLTexture*)surf;
+    }
+
+protected:
+    GLContext* mConsGL;
+    const GLuint mTex;
+    const bool mOwnsTex;
+    GLsync mSync;
+    mutable Mutex mMutex;
+
+    SharedSurface_GLTexture(GLContext* prodGL,
+                            GLContext* consGL,
+                            const gfx::IntSize& size,
+                            bool hasAlpha,
+                            GLuint tex,
+                            bool ownsTex)
+        : SharedSurface(SharedSurfaceType::GLTextureShare,
+                        AttachmentType::GLTexture,
+                        prodGL,
+                        size,
+                        hasAlpha)
+        , mConsGL(consGL)
+        , mTex(tex)
+        , mOwnsTex(ownsTex)
+        , mSync(0)
+        , mMutex("SharedSurface_GLTexture mutex")
+    {
+    }
+
+public:
+    virtual ~SharedSurface_GLTexture();
+
+    virtual void LockProdImpl() override {}
+    virtual void UnlockProdImpl() override {}
+
+    virtual void Fence() override;
+    virtual bool WaitSync() override;
+    virtual bool PollSync() override;
+
+    virtual GLuint ProdTexture() override {
+        return mTex;
+    }
+
+    // Custom:
+
+    GLuint ConsTexture(GLContext* consGL);
+
+    GLenum ConsTextureTarget() const {
+        return ProdTextureTarget();
+    }
+};
+
+class SurfaceFactory_GLTexture
+    : public SurfaceFactory
+{
+protected:
+    GLContext* const mConsGL;
+
+public:
+    // If we don't know `consGL` at construction time, use `nullptr`, and call
+    // `SetConsumerGL()` on each `SharedSurface_GLTexture` before calling its
+    // `WaitSync()`.
+    SurfaceFactory_GLTexture(GLContext* prodGL,
+                             GLContext* consGL,
+                             const SurfaceCaps& caps)
+        : SurfaceFactory(prodGL, SharedSurfaceType::GLTextureShare, caps)
+        , mConsGL(consGL)
+    {
+        MOZ_ASSERT(consGL != prodGL);
+    }
+
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
+        bool hasAlpha = mReadCaps.alpha;
+        return SharedSurface_GLTexture::Create(mGL, mConsGL, mFormats, size, hasAlpha);
     }
 };
 

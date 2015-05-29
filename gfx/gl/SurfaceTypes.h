@@ -70,6 +70,7 @@ enum class SharedSurfaceType : uint8_t {
     Unknown = 0,
 
     Basic,
+    GLTextureShare,
     EGLImageShare,
     EGLSurfaceANGLE,
     DXGLInterop,
