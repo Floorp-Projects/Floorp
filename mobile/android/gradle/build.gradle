@@ -5,6 +5,10 @@ allprojects {
         topsrcdir = gradle.mozconfig.topsrcdir
         topobjdir = gradle.mozconfig.topobjdir
     }
+
+    repositories {
+        jcenter()
+    }
 }
 
 buildDir "${topobjdir}/mobile/android/gradle/build"
@@ -20,10 +24,6 @@ buildscript {
         // 2.2.1, and IntelliJ 14.0.2: see Bug 1120032.
         classpath 'com.android.tools.build:gradle:1.0.0'
     }
-}
-
-repositories {
-    jcenter()
 }
 
 task generateCodeAndResources(type:Exec) {

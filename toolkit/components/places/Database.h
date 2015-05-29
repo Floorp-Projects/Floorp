@@ -16,7 +16,7 @@
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 28
+#define DATABASE_SCHEMA_VERSION 29
 
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
@@ -253,7 +253,7 @@ protected:
 
   /**
    * Initializes triggers defined in nsPlacesTriggers.h
-   */  
+   */
   nsresult InitTempTriggers();
 
   /**
@@ -275,6 +275,7 @@ protected:
   nsresult MigrateV26Up();
   nsresult MigrateV27Up();
   nsresult MigrateV28Up();
+  nsresult MigrateV29Up();
 
   nsresult UpdateBookmarkRootTitles();
 
