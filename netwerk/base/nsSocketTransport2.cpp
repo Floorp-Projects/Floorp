@@ -1217,6 +1217,9 @@ nsSocketTransport::InitiateSocket()
     bool isLocal;
     IsLocal(&isLocal);
 
+    if (gIOService->IsShutdown()) {
+        return NS_ERROR_ABORT;
+    }
     if (gIOService->IsOffline()) {
         if (!isLocal)
             return NS_ERROR_OFFLINE;
