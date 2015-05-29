@@ -70,41 +70,11 @@ function AddonInterpositionService()
   // kinds of objects.
   this._interfaceInterpositions = RemoteAddonsParent.getInterfaceInterpositions();
   this._taggedInterpositions = RemoteAddonsParent.getTaggedInterpositions();
-
-  let wl = [];
-  for (let v in this._interfaceInterpositions) {
-    let interp = this._interfaceInterpositions[v];
-    wl.push(...Object.getOwnPropertyNames(interp.methods));
-    wl.push(...Object.getOwnPropertyNames(interp.getters));
-    wl.push(...Object.getOwnPropertyNames(interp.setters));
-  }
-
-  for (let v in this._taggedInterpositions) {
-    let interp = this._taggedInterpositions[v];
-    wl.push(...Object.getOwnPropertyNames(interp.methods));
-    wl.push(...Object.getOwnPropertyNames(interp.getters));
-    wl.push(...Object.getOwnPropertyNames(interp.setters));
-  }
-
-  let nameSet = new Set();
-  wl = wl.filter(function(item) {
-    if (nameSet.has(item))
-      return true;
-
-    nameSet.add(item);
-    return true;
-  });
-
-  this._whitelist = wl;
 }
 
 AddonInterpositionService.prototype = {
   classID: Components.ID("{1363d5f0-d95e-11e3-9c1a-0800200c9a66}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAddonInterposition, Ci.nsISupportsWeakReference]),
-
-  getWhitelist: function() {
-    return this._whitelist;
-  },
 
   // When the interface is not known for a method call, this code
   // determines the type of the target object.
