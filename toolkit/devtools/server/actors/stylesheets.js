@@ -49,12 +49,16 @@ let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
   /**
    * The window we work with, taken from the parent actor.
    */
-  get window() this.parentActor.window,
+  get window() {
+    return this.parentActor.window;
+  },
 
   /**
    * The current content document of the window we work with.
    */
-  get document() this.window.document,
+  get document() {
+    return this.window.document;
+  },
 
   form: function()
   {
@@ -269,9 +273,13 @@ let MediaRuleActor = protocol.ActorClass({
     }
   },
 
-  get window() this.parentActor.window,
+  get window() {
+    return this.parentActor.window;
+  },
 
-  get document() this.window.document,
+  get document() {
+    return this.window.document;
+  },
 
   get matches() {
     return this.mql ? this.mql.matches : null;
@@ -355,11 +363,21 @@ let MediaRuleFront = protocol.FrontClass(MediaRuleActor, {
     this._form = form;
   },
 
-  get mediaText() this._form.mediaText,
-  get conditionText() this._form.conditionText,
-  get matches() this._form.matches,
-  get line() this._form.line || -1,
-  get column() this._form.column || -1,
+  get mediaText() {
+    return this._form.mediaText;
+  },
+  get conditionText() {
+    return this._form.conditionText;
+  },
+  get matches() {
+    return this._form.matches;
+  },
+  get line() {
+    return this._form.line || -1;
+  },
+  get column() {
+    return this._form.column || -1;
+  },
   get parentStyleSheet() {
     return this.conn.getActor(this._form.parentStyleSheet);
   }
@@ -396,19 +414,27 @@ let StyleSheetActor = protocol.ActorClass({
   /**
    * Window of target
    */
-  get window() this._window || this.parentActor.window,
+  get window() {
+    return this._window || this.parentActor.window;
+  },
 
   /**
    * Document of target.
    */
-  get document() this.window.document,
+  get document() {
+    return this.window.document;
+  },
 
-  get ownerNode() this.rawSheet.ownerNode,
+  get ownerNode() {
+    return this.rawSheet.ownerNode;
+  },
 
   /**
    * URL of underlying stylesheet.
    */
-  get href() this.rawSheet.href,
+  get href() {
+    return this.rawSheet.href;
+  },
 
   /**
    * Retrieve the index (order) of stylesheet in the document.
@@ -993,13 +1019,27 @@ var StyleSheetFront = protocol.FrontClass(StyleSheetActor, {
     this._form = form;
   },
 
-  get href() this._form.href,
-  get nodeHref() this._form.nodeHref,
-  get disabled() !!this._form.disabled,
-  get title() this._form.title,
-  get isSystem() this._form.system,
-  get styleSheetIndex() this._form.styleSheetIndex,
-  get ruleCount() this._form.ruleCount
+  get href() {
+    return this._form.href;
+  },
+  get nodeHref() {
+    return this._form.nodeHref;
+  },
+  get disabled() {
+    return !!this._form.disabled;
+  },
+  get title() {
+    return this._form.title;
+  },
+  get isSystem() {
+    return this._form.system;
+  },
+  get styleSheetIndex() {
+    return this._form.styleSheetIndex;
+  },
+  get ruleCount() {
+    return this._form.ruleCount;
+  }
 });
 
 /**
@@ -1080,8 +1120,12 @@ let OriginalSourceFront = protocol.FrontClass(OriginalSourceActor, {
     this._form = form;
   },
 
-  get href() this._form.url,
-  get url() this._form.url
+  get href() {
+    return this._form.url;
+  },
+  get url() {
+    return this._form.url;
+  }
 });
 
 

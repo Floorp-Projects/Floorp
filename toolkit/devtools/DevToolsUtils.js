@@ -502,18 +502,22 @@ exports.fetch = function fetch(aURL, aOptions={ loadFromCache: true,
                                           null,      // aTriggeringPrincipal
                                           Ci.nsILoadInfo.SEC_NORMAL,
                                           aOptions.policy);
-      } catch (e if e.name == "NS_ERROR_UNKNOWN_PROTOCOL") {
-        // On Windows xpcshell tests, c:/foo/bar can pass as a valid URL, but
-        // newChannel won't be able to handle it.
-        url = "file:///" + url;
-        channel = Services.io.newChannel2(url,
-                                          null,
-                                          null,
-                                          null,      // aLoadingNode
-                                          Services.scriptSecurityManager.getSystemPrincipal(),
-                                          null,      // aTriggeringPrincipal
-                                          Ci.nsILoadInfo.SEC_NORMAL,
-                                          aOptions.policy);
+      } catch (e) {
+        if (e.name == "NS_ERROR_UNKNOWN_PROTOCOL") {
+          // On Windows xpcshell tests, c:/foo/bar can pass as a valid URL, but
+          // newChannel won't be able to handle it.
+          url = "file:///" + url;
+          channel = Services.io.newChannel2(url,
+                                            null,
+                                            null,
+                                            null,      // aLoadingNode
+                                            Services.scriptSecurityManager.getSystemPrincipal(),
+                                            null,      // aTriggeringPrincipal
+                                            Ci.nsILoadInfo.SEC_NORMAL,
+                                            aOptions.policy);
+        } else {
+          throw e;
+        }
       }
       let chunks = [];
       let streamListener = {

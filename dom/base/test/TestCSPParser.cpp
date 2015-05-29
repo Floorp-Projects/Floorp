@@ -211,7 +211,9 @@ nsresult TestDirectives() {
     { "script-src 'nonce-correctscriptnonce'",
       "script-src 'nonce-correctscriptnonce'" },
     { "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='",
-      "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='" }
+      "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='" },
+    { "referrer no-referrer",
+      "referrer no-referrer" }
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -273,7 +275,9 @@ nsresult TestIgnoreUpperLowerCasePolicies() {
     { "script-src 'NoncE-NONCENEEDSTOBEUPPERCASE'",
       "script-src 'nonce-NONCENEEDSTOBEUPPERCASE'" },
     { "script-src 'SHA256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='",
-      "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='" }
+      "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='" },
+    { "refERRer No-refeRRer",
+      "referrer No-refeRRer" }
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);

@@ -565,7 +565,7 @@ WebappsActor.prototype = {
                         .getService(Ci.nsIObserverService);
             obs.notifyObservers(jar, "flush-cache-entry", null);
           };
-          for each (let frame in self._appFrames()) {
+          for (let frame of self._appFrames()) {
             if (frame.getAttribute("mozapp") == manifestURL) {
               let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
               mm.loadFrameScript("data:," +

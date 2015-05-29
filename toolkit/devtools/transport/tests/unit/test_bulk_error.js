@@ -14,7 +14,7 @@ function run_test() {
   initTestDebuggerServer();
   add_test_bulk_actor();
 
-  add_task(function() {
+  add_task(function*() {
     yield test_string_error(socket_transport, json_reply);
     yield test_string_error(local_transport, json_reply);
     DebuggerServer.destroy();
