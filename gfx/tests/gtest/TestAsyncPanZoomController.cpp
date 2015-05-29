@@ -1899,6 +1899,8 @@ protected:
                                                  layerBound.width, layerBound.height));
     metrics.SetScrollableRect(aScrollableRect);
     metrics.SetScrollOffset(CSSPoint(0, 0));
+    metrics.SetPageScrollAmount(LayoutDeviceIntSize(50, 100));
+    metrics.SetAllowVerticalScrollWithWheel();
     aLayer->SetFrameMetrics(metrics);
     aLayer->SetClipRect(Some(ViewAs<ParentLayerPixel>(layerBound)));
     if (!aScrollableRect.IsEqualEdges(CSSRect(-1, -1, -1, -1))) {
@@ -2421,6 +2423,37 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(mti, nullptr, nullptr));
   EXPECT_EQ(touchPoint, mti.mTouches[0].mScreenPoint);
 
+  mcc->RunThroughDelayedTasks();
+}
+
+TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
+  // The purpose of this test is to ensure that wheel events trigger a repaint
+  // flush as per bug 1166871, and that the wheel event untransform is a no-op.
+
+  CreateSimpleScrollingLayer();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+  TestAsyncPanZoomController* apzcroot = ApzcOf(root);
+
+  EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(AtLeast(3));
+  ScreenPoint origin(100, 50);
+  for (int i = 0; i < 3; i++) {
+    ScrollWheelInput swi(MillisecondsSinceStartup(mTime), mTime, 0,
+      ScrollWheelInput::SCROLLMODE_INSTANT, ScrollWheelInput::SCROLLDELTA_PIXEL,
+      origin, 0, 10);
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(swi, nullptr, nullptr));
+    EXPECT_EQ(origin, swi.mOrigin);
+
+    ViewTransform viewTransform;
+    ParentLayerPoint point;
+    apzcroot->SampleContentTransformForFrame(mTime, &viewTransform, point);
+    EXPECT_EQ(0, point.x);
+    EXPECT_EQ((i + 1) * 10, point.y);
+    EXPECT_EQ(0, viewTransform.mTranslation.x);
+    EXPECT_EQ((i + 1) * -10, viewTransform.mTranslation.y);
+
+    mTime += TimeDuration::FromMilliseconds(5);
+  }
   mcc->RunThroughDelayedTasks();
 }
 
