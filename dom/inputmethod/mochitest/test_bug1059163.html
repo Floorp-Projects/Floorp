@@ -20,20 +20,8 @@ inputmethod_setup(function() {
 
 // The frame script running in the file
 function appFrameScript() {
-  let document = content.document;
-  let window = content.document.defaultView;
-
-  let t = document.getElementById('text');
-  t.focus();
-
-  let range = document.createRange();
-  range.selectNodeContents(t);
-  range.collapse(false);
-  let selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(range);
-
   addMessageListener('test:InputMethod:clear', function() {
+    var t = content.document.getElementById('text');
     t.innerHTML = '';
   });
 }
@@ -46,26 +34,18 @@ function runTest() {
 
   // Create an app frame to recieve keyboard inputs.
   let app = document.createElement('iframe');
-  app.src = 'data:text/html,<html><body><div id="text" contenteditable>Jan Jongboom</div></html>';
+  app.src = 'file_test_contenteditable.html';
   app.setAttribute('mozbrowser', true);
   document.body.appendChild(app);
   app.addEventListener('mozbrowserloadend', function() {
     let mm = SpecialPowers.getBrowserFrameMessageManager(app);
-    mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
-
-    im.oninputcontextchange = function() {
-      if (im.inputcontext) {
-        im.oninputcontextchange = null;
-        register();
-      }
-    };
 
     function register() {
       im.inputcontext.onselectionchange = function() {
         im.inputcontext.onselectionchange = null;
 
         is(im.inputcontext.textBeforeCursor, '', 'textBeforeCursor');
-        is(im.inputcontext.textAfterCursor, '', 'textAfterCursor');
+        is(im.inputcontext.textBeforeCursor, '', 'textAfterCursor');
         is(im.inputcontext.selectionStart, 0, 'selectionStart');
         is(im.inputcontext.selectionEnd, 0, 'selectionEnd');
 
@@ -74,6 +54,20 @@ function runTest() {
 
       mm.sendAsyncMessage('test:InputMethod:clear');
     }
+
+    if (im.inputcontext) {
+       register();
+    }
+    else {
+      im.oninputcontextchange = function() {
+        if (im.inputcontext) {
+          im.oninputcontextchange = null;
+          register();
+        }
+      };
+    }
+
+    mm.loadFrameScript('data:,(' + appFrameScript.toString() + ')();', false);
   });
 }
 </script>
