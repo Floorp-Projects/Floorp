@@ -33,11 +33,16 @@ ul {
   max-width: 512px;
 }
 
-#errorTitleText {
+#errorTitle {
   background: url("aboutNetError_info.svg") left 0 no-repeat;
-  background-size: 1.2em;
-  -moz-margin-start: -2em;
-  -moz-padding-start: 2em;
+  background-size: 3em;
+  -moz-margin-start: -5em;
+  -moz-padding-start: 5em;
+}
+
+#errorTitleText {
+  border-bottom: 1px solid #C1C1C1;
+  padding-bottom: 0.4em;
 }
 
 #errorTitleText:-moz-dir(rtl) {
@@ -58,7 +63,7 @@ ul {
 }
 
 @media (max-width: 675px) {
-  #errorTitleText {
+  #errorTitle {
     padding-top: 0;
     background-image: none;
     -moz-padding-start: 0;
