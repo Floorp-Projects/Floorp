@@ -1052,11 +1052,13 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-nsPermissionManager::Remove(const nsACString &aHost,
-                            const char       *aType)
+nsPermissionManager::Remove(nsIURI*     aURI,
+                            const char* aType)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
+
   nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = GetPrincipal(aHost, getter_AddRefs(principal));
+  nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return RemoveFromPrincipal(principal, aType);
@@ -1090,6 +1092,26 @@ nsPermissionManager::RemoveFromPrincipal(nsIPrincipal* aPrincipal,
                      0,
                      eNotify,
                      eWriteToDB);
+}
+
+NS_IMETHODIMP
+nsPermissionManager::RemovePermission(nsIPermission* aPerm)
+{
+  nsAutoCString host;
+  nsresult rv = aPerm->GetHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = GetPrincipal(host, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString type;
+  rv = aPerm->GetType(type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Permissions are uniquely identified by their principal and type.
+  // We remove the permission using these two pieces of data.
+  return RemoveFromPrincipal(principal, type.get());
 }
 
 NS_IMETHODIMP
