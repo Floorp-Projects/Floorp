@@ -4724,6 +4724,9 @@ MapValues(JSContext* cx, HandleObject obj, MutableHandleValue rval);
 extern JS_PUBLIC_API(bool)
 MapEntries(JSContext* cx, HandleObject obj, MutableHandleValue rval);
 
+extern JS_PUBLIC_API(bool)
+MapForEach(JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue thisVal);
+
 /*
  * Set
  */
@@ -4753,6 +4756,9 @@ SetValues(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 
 extern JS_PUBLIC_API(bool)
 SetEntries(JSContext *cx, HandleObject obj, MutableHandleValue rval);
+
+extern JS_PUBLIC_API(bool)
+SetForEach(JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue thisVal);
 
 } /* namespace JS */
 
