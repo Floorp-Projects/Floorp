@@ -81,3 +81,6 @@ JS_PREFERENCE_FILES += [
     'b2g.js',
 ]
 
+DIST_FILES += [
+  'ua-update.json.in',
+]

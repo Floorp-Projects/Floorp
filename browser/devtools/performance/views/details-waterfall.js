@@ -27,6 +27,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   initialize: function () {
     DetailsSubview.initialize.call(this);
 
+    this._cache = new WeakMap();
+
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
     this._onViewSource = this._onViewSource.bind(this);
@@ -37,6 +39,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     this.detailsSplitter = $("#waterfall-view > splitter");
 
     this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
+    this.details.hidden = true;
+
     this.details.on("resize", this._onResize);
     this.details.on("view-source", this._onViewSource);
     window.addEventListener("resize", this._onResize);
@@ -50,6 +54,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    */
   destroy: function () {
     DetailsSubview.destroy.call(this);
+
+    this._cache = null;
 
     this.details.off("resize", this._onResize);
     this.details.off("view-source", this._onViewSource);
@@ -83,11 +89,11 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
 
     if (event === "selected") {
       this.details.render({ toolbox: gToolbox, marker, frames });
-      this._selected = marker;
+      this.details.hidden = false;
+      this._lastSelected = marker.uid;
     }
     if (event === "unselected") {
       this.details.empty();
-      this._selected = null;
     }
   },
 
@@ -121,6 +127,11 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    * populate the waterfall tree.
    */
   _prepareWaterfallTree: function(markers) {
+    let cached = this._cache.get(markers);
+    if (cached) {
+      return cached;
+    }
+
     let rootMarkerNode = WaterfallUtils.makeEmptyMarkerNode("(root)");
 
     WaterfallUtils.collapseMarkersIntoNode({
@@ -128,6 +139,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
       markersList: markers
     });
 
+    this._cache.set(markers, rootMarkerNode);
     return rootMarkerNode;
   },
 
@@ -162,8 +174,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
 
     // If an item was previously selected in this view, attempt to
     // re-select it by traversing the newly created tree.
-    if (this._selected) {
-      let item = root.find(i => i.marker == this._selected);
+    if (this._lastSelected) {
+      let item = root.find(i => i.marker.uid == this._lastSelected);
       if (item) {
         item.focus();
       }

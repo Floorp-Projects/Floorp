@@ -106,11 +106,11 @@ public class DynamicToolbar {
             return;
         }
 
-        final boolean immediate = transition == VisibilityTransition.IMMEDIATE;
+        final boolean isImmediate = transition == VisibilityTransition.IMMEDIATE;
         if (visible) {
-            layerView.getLayerMarginsAnimator().showMargins(immediate);
+            layerView.getLayerMarginsAnimator().showMargins(isImmediate);
         } else {
-            layerView.getLayerMarginsAnimator().hideMargins(immediate);
+            layerView.getLayerMarginsAnimator().hideMargins(isImmediate);
         }
     }
 

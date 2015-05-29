@@ -53,6 +53,7 @@ protected:
   void Initialize();
   void OnInitialize();
   void Enable(bool aNewState);
+  void ClearTarget();
   void CursorOutOfRange(IInkCursor* aCursor) const;
   bool IsHardProximityTablet(IInkTablet* aTablet) const;
 
@@ -61,11 +62,11 @@ private:
   nsRefPtr<IInkCollector>     mInkCollector;
   nsRefPtr<IConnectionPoint>  mConnectionPoint;
 
-  uint32_t            mRefCount         = 0;
-  DWORD               mCookie           = 0;
-  HWND                mTargetWindow     = 0;
-  bool                mComInitialized   = false;
-  bool                mEnabled          = false;
+  HWND                        mTargetWindow     = 0;
+  DWORD                       mCookie           = 0;
+  uint32_t                    mRefCount         = 0;
+  bool                        mComInitialized   = false;
+  bool                        mEnabled          = false;
 };
 
 #endif // nsInkCollector_h_
