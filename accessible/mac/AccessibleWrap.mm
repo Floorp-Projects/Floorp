@@ -112,18 +112,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   if (!nativeAcc)
     return NS_ERROR_FAILURE;
 
-  switch (eventType) {
-    case nsIAccessibleEvent::EVENT_FOCUS:
-      [nativeAcc didReceiveFocus];
-      break;
-    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
-      [nativeAcc valueDidChange];
-      break;
-    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
-    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
-      [nativeAcc selectedTextDidChange];
-      break;
-  }
+  FireNativeEvent(nativeAcc, eventType);
 
   return NS_OK;
 
@@ -232,6 +221,27 @@ AccessibleWrap::AncestorIsFlat()
   }
   // no parent was flat
   return false;
+}
+
+void
+a11y::FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  switch (aEventType) {
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      [aNativeAcc didReceiveFocus];
+      break;
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+      [aNativeAcc valueDidChange];
+      break;
+    case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
+    case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
+      [aNativeAcc selectedTextDidChange];
+      break;
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 Class

@@ -55,21 +55,39 @@ ProxyDestroyed(ProxyAccessible* aProxy)
 }
 
 void
-ProxyEvent(ProxyAccessible*, uint32_t)
+ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType)
 {
+  // ignore everything but focus-changed, value-changed, caret and selection
+  // events for now.
+  if (aEventType != nsIAccessibleEvent::EVENT_FOCUS &&
+      aEventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
+      aEventType != nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED &&
+      aEventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED)
+    return;
+
+  mozAccessible* wrapper =
+    reinterpret_cast<mozAccessible*>(aProxy->GetWrapper());
+  if (wrapper)
+    FireNativeEvent(wrapper, aEventType);
 }
 
 void
-ProxyStateChangeEvent(ProxyAccessible*, uint64_t, bool)
+ProxyStateChangeEvent(ProxyAccessible* aProxy, uint64_t, bool)
 {
+  // mac doesn't care about state change events
 }
 
 void
 ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
 {
+  mozAccessible* wrapper =
+    reinterpret_cast<mozAccessible*>(aTarget->GetWrapper());
+  if (wrapper)
+    [wrapper selectedTextDidChange];
 }
-}
-}
+
+} // namespace a11y
+} // namespace mozilla
 
 @interface GeckoNSApplication(a11y)
 -(void)accessibilitySetValue:(id)value forAttribute:(NSString*)attribute;
