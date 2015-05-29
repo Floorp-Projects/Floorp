@@ -517,8 +517,13 @@ nsComputedDOMStyle::GetAdjustedValuesForBoxSizing()
   const nsStylePosition* stylePos = StylePosition();
 
   nsMargin adjustment;
-  if (stylePos->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
-    adjustment += mInnerFrame->GetUsedBorderAndPadding();
+  switch(stylePos->mBoxSizing) {
+    case NS_STYLE_BOX_SIZING_BORDER:
+      adjustment += mInnerFrame->GetUsedBorder();
+      // fall through
+
+    case NS_STYLE_BOX_SIZING_PADDING:
+      adjustment += mInnerFrame->GetUsedPadding();
   }
 
   return adjustment;
