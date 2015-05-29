@@ -553,6 +553,9 @@ struct BytecodeEmitter
     bool emitDeleteSuperElement(ParseNode* pn);
     bool emitDeleteExpression(ParseNode* pn);
 
+    // |op| must be JSOP_TYPEOF or JSOP_TYPEOFEXPR.
+    bool emitTypeof(ParseNode* node, JSOp op);
+
     bool emitLogical(ParseNode* pn);
     bool emitUnary(ParseNode* pn);
 

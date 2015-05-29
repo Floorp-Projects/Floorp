@@ -222,7 +222,8 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
         return PushResult::Recyclable;
 
       // Nodes with a single non-null child.
-      case PNK_TYPEOF:
+      case PNK_TYPEOFNAME:
+      case PNK_TYPEOFEXPR:
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
