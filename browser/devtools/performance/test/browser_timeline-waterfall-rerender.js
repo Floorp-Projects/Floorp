@@ -49,8 +49,11 @@ function* spawnTest() {
   is(afterResizeBarsCount, beforeResizeBarsCount,
     "The same subset of the total markers remained visible.");
 
-  is(Array.indexOf($$(".waterfall-tree-item"), $(".waterfall-tree-item:focus")), 2,
-    "The correct item is still focused in the tree.");
+  // Temporarily disable the following assertion; intermittent failures.
+  // Bug 1169352.
+
+  // is(Array.indexOf($$(".waterfall-tree-item"), $(".waterfall-tree-item:focus")), 2,
+  //   "The correct item is still focused in the tree.");
 
   yield teardown(panel);
   finish();

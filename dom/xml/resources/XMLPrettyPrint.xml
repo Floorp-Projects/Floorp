@@ -8,7 +8,7 @@
 
   <binding id="prettyprint" bindToUntrustedContent="true">
 
-    <content><html:div id='top'/>
+    <content><html:div id='top' class="highlight"/>
       <html:span style="display: none;"><children/></html:span>
     </content>
 

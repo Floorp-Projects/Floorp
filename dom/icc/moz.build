@@ -38,12 +38,11 @@ IPDL_SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
-    EXTRA_JS_MODULES += [
-        'gonk/StkProactiveCmdFactory.jsm',
-    ]
     EXTRA_COMPONENTS += [
         'gonk/IccService.js',
         'gonk/IccService.manifest',
+        'gonk/StkCmdFactory.js',
+        'gonk/StkCmdFactory.manifest'
     ]
 
 FAIL_ON_WARNINGS = True

@@ -891,6 +891,9 @@ Convert(const btgatt_write_params_t& aIn, BluetoothGattWriteParam& aOut);
 
 nsresult
 Convert(const btgatt_notify_params_t& aIn, BluetoothGattNotifyParam& aOut);
+
+nsresult
+Convert(const BluetoothGattTestParam& aIn, btgatt_test_params_t& aOut);
 #endif // ANDROID_VERSION >= 19
 
 #if ANDROID_VERSION >= 21

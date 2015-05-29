@@ -64,12 +64,28 @@ builds:
         task: tasks/builds/b2g_emulator_ics_opt.yml
       debug:
         task: tasks/builds/b2g_emulator_ics_debug.yml
+  aries:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_spark_opt.yml
+      debug:
+        task: tasks/builds/b2g_aries_spark_debug.yml
+  aries-eng:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_spark_eng.yml
   flame-kk:
     platforms:
       - b2g
     types:
       opt:
         task: tasks/builds/b2g_flame_kk_opt.yml
+      debug:
+        task: tasks/builds/b2g_flame_kk_debug.yml
   flame-kk-eng:
     platforms:
       - b2g

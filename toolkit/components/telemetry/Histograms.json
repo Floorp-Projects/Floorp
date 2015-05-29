@@ -208,14 +208,6 @@
     "n_buckets": 50,
     "description": "Time spent in between cycle collections (seconds)"
   },
-  "CYCLE_COLLECTOR_CONTENT_UNBIND": {
-    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 50,
-    "description": "Time spent on one ContentUnbinder (ms)"
-  },
   "CYCLE_COLLECTOR_OOM": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
@@ -235,6 +227,13 @@
     "high": "10000",
     "n_buckets": 50,
     "description": "Time spent on one asynchronous SnowWhite freeing (ms)"
+  },
+  "DEFERRED_FINALIZE_ASYNC": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Pause time for asynchronous deferred finalization (ms)"
   },
   "DEVICE_RESET_REASON": {
     "expires_in_version": "never",

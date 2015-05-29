@@ -241,6 +241,9 @@ nsresult
 Convert(uint8_t aIn, BluetoothStatus& aOut);
 
 nsresult
+Convert(int32_t aIn, BluetoothGattStatus& aOut);
+
+nsresult
 Convert(uint32_t aIn, int& aOut);
 
 nsresult
@@ -329,6 +332,12 @@ Convert(BluetoothSspVariant aIn, uint8_t& aOut);
 
 nsresult
 Convert(ControlPlayStatus aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothGattAuthReq aIn, int32_t& aOut);
+
+nsresult
+Convert(BluetoothGattWriteType aIn, int32_t& aOut);
 
 //
 // Packing
@@ -456,6 +465,21 @@ nsresult
 PackPDU(ControlPlayStatus aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
+PackPDU(const BluetoothUuid& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothGattId& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothGattServiceId& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothGattAuthReq aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothGattWriteType aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
 PackPDU(BluetoothTransport aIn, BluetoothDaemonPDU& aPDU);
 
 /* |PackConversion| is a helper for packing converted values. Pass
@@ -519,6 +543,14 @@ PackPDU(const PackArray<T>& aIn, BluetoothDaemonPDU& aPDU)
 template<>
 inline nsresult
 PackPDU<uint8_t>(const PackArray<uint8_t>& aIn, BluetoothDaemonPDU& aPDU)
+{
+  /* Write raw bytes in one pass */
+  return aPDU.Write(aIn.mData, aIn.mLength);
+}
+
+template<>
+inline nsresult
+PackPDU<char>(const PackArray<char>& aIn, BluetoothDaemonPDU& aPDU)
 {
   /* Write raw bytes in one pass */
   return aPDU.Write(aIn.mData, aIn.mLength);
@@ -694,6 +726,69 @@ PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3,
   return PackPDU(aIn8, aPDU);
 }
 
+template <typename T1, typename T2, typename T3,
+          typename T4, typename T5, typename T6,
+          typename T7, typename T8, typename T9,
+          typename T10, typename T11, typename T12,
+          typename T13>
+inline nsresult
+PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3,
+        const T4& aIn4, const T5& aIn5, const T6& aIn6,
+        const T7& aIn7, const T8& aIn8, const T9& aIn9,
+        const T10& aIn10, const T11& aIn11, const T12& aIn12,
+        const T13& aIn13, BluetoothDaemonPDU& aPDU)
+{
+  nsresult rv = PackPDU(aIn1, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn2, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn3, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn4, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn5, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn6, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn7, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn8, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn9, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn10, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn11, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn12, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return PackPDU(aIn13, aPDU);
+}
+
 //
 // Unpacking
 //
@@ -835,11 +930,35 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothSspVariant& aOut);
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothStatus& aOut);
 
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattStatus& aOut);
+
 inline nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothUuid& aOut)
 {
   return aPDU.Read(aOut.mUuid, sizeof(aOut.mUuid));
 }
+
+inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattAdvData& aOut)
+{
+  return aPDU.Read(aOut.mAdvData, sizeof(aOut.mAdvData));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattId& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattServiceId& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattReadParam& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattWriteParam& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattNotifyParam& aOut);
 
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, nsDependentCString& aOut);

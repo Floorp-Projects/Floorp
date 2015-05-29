@@ -21,9 +21,14 @@ const CALL_TREE_INDENTATION = 16; // px
 const DEFAULT_SORTING_PREDICATE = (frameA, frameB) => {
   let dataA = frameA.getDisplayedData();
   let dataB = frameB.getDisplayedData();
-  return this.inverted
-    ? (dataA.selfPercentage < dataB.selfPercentage ? 1 : -1)
-    : (dataA.samples < dataB.samples ? 1 : -1);
+  if (this.inverted) {
+    // Invert trees, sort by selfPercentage, and then totalPercentage
+    if (dataA.selfPercentage === dataB.selfPercentage) {
+      return dataA.totalPercentage < dataB.totalPercentage ? 1 : -1;
+    }
+    return dataA.selfPercentage < dataB.selfPercentage ? 1 : - 1;
+  }
+  return dataA.samples < dataB.samples ? 1 : -1;
 };
 
 const DEFAULT_AUTO_EXPAND_DEPTH = 3; // depth
@@ -241,7 +246,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     cell.className = "plain call-tree-cell";
     cell.setAttribute("type", "samples");
     cell.setAttribute("crop", "end");
-    cell.setAttribute("value", count || "");
+    cell.setAttribute("value", count || 0);
     return cell;
   },
   _createFunctionCell: function(doc, arrowNode, frameName, frameInfo, frameLevel) {
@@ -335,20 +340,72 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     let data = this._cachedDisplayedData = Object.create(null);
     let frameInfo = this.frame.getInfo();
 
-    // Self/total duration.
-    if (this.visibleCells.duration) {
-      data.totalDuration = this.frame.duration;
-    }
-    if (this.visibleCells.selfDuration) {
-      data.selfDuration = this.root.frame.selfDuration[this.frame.key];
-    }
+    /**
+     * When inverting call tree, the costs and times are dependent on position
+     * in the tree. We must only count leaf nodes with self cost, and total costs
+     * dependent on how many times the leaf node was found with a full stack path.
+     *
+     *   Total |  Self | Calls | Function
+     * ============================================================================
+     *  100%   |  100% |   100 | ▼ C
+     *   50%   |   0%  |    50 |   ▼ B
+     *   50%   |   0%  |    50 |     ▼ A
+     *   50%   |   0%  |    50 |   ▼ B
+     *
+     * Every instance of a `CallView` represents a row in the call tree. The same
+     * container node is used for all rows.
+     */
 
-    // Self/total samples percentage.
-    if (this.visibleCells.percentage) {
-      data.totalPercentage = this.frame.samples / this.root.frame.samples * 100;
-    }
-    if (this.visibleCells.selfPercentage) {
-      data.selfPercentage = this.root.frame.selfCount[this.frame.key] / this.root.frame.samples * 100;
+    // Leaf nodes in an inverted tree don't have to do anything special.
+    let isLeaf = this._level === 0;
+
+    if (this.inverted && !isLeaf && this.parent != null) {
+      let calleeData = this.parent.getDisplayedData();
+      // Percentage of time that this frame called the callee
+      // in this branch
+      let callerPercentage = this.frame.samples / calleeData.samples;
+
+      // Self/total duration.
+      if (this.visibleCells.duration) {
+        data.totalDuration = calleeData.totalDuration * callerPercentage;
+      }
+      if (this.visibleCells.selfDuration) {
+        data.selfDuration = 0;
+      }
+
+      // Self/total samples percentage.
+      if (this.visibleCells.percentage) {
+        data.totalPercentage = calleeData.totalPercentage * callerPercentage;
+      }
+      if (this.visibleCells.selfPercentage) {
+        data.selfPercentage = 0;
+      }
+
+      // Raw samples.
+      if (this.visibleCells.samples) {
+        data.samples = this.frame.samples;
+      }
+    } else {
+      // Self/total duration.
+      if (this.visibleCells.duration) {
+        data.totalDuration = this.frame.duration;
+      }
+      if (this.visibleCells.selfDuration) {
+        data.selfDuration = this.root.frame.selfDuration[this.frame.key];
+      }
+
+      // Self/total samples percentage.
+      if (this.visibleCells.percentage) {
+        data.totalPercentage = this.frame.samples / this.root.frame.samples * 100;
+      }
+      if (this.visibleCells.selfPercentage) {
+        data.selfPercentage = this.root.frame.selfCount[this.frame.key] / this.root.frame.samples * 100;
+      }
+
+      // Raw samples.
+      if (this.visibleCells.samples) {
+        data.samples = this.frame.samples;
+      }
     }
 
     // Self/total allocations count.
@@ -358,11 +415,6 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     }
     if (this.visibleCells.selfAllocations) {
       data.selfAllocations = this.frame.allocations;
-    }
-
-    // Raw samples.
-    if (this.visibleCells.samples) {
-      data.samples = this.frame.samples;
     }
 
     // Frame name (function location or some meta information).
@@ -396,7 +448,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     e.preventDefault();
     e.stopPropagation();
     this.root.emit("link", this);
-  }
+  },
 });
 
 exports.CallView = CallView;
