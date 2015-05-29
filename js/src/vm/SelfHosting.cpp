@@ -349,7 +349,7 @@ js::intrinsic_DefineDataProperty(JSContext* cx, unsigned argc, Value* vp)
 
     Rooted<PropertyDescriptor> desc(cx);
     desc.setDataDescriptor(value, attrs);
-    if (!StandardDefineProperty(cx, obj, id, desc))
+    if (!DefineProperty(cx, obj, id, desc))
         return false;
 
     args.rval().setUndefined();

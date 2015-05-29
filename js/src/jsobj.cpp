@@ -274,23 +274,7 @@ js::Throw(JSContext* cx, JSObject* obj, unsigned errorNumber)
 }
 
 
-/*** Standard-compliant property definition (used by Object.defineProperty) **********************/
-
-bool
-js::StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                           Handle<PropertyDescriptor> desc, ObjectOpResult& result)
-{
-    return DefineProperty(cx, obj, id, desc, result);
-}
-
-bool
-js::StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                           Handle<PropertyDescriptor> desc)
-{
-    ObjectOpResult success;
-    return DefineProperty(cx, obj, id, desc, success) &&
-           success.checkStrict(cx, obj, id);
-}
+/*** PropertyDescriptor operations and DefineProperties ******************************************/
 
 bool
 CheckCallable(JSContext* cx, JSObject* obj, const char* fieldName)
@@ -487,12 +471,13 @@ js::DefineProperties(JSContext* cx, HandleObject obj, HandleObject props)
         return false;
 
     for (size_t i = 0, len = ids.length(); i < len; i++) {
-        if (!StandardDefineProperty(cx, obj, ids[i], descs[i]))
+        if (!DefineProperty(cx, obj, ids[i], descs[i]))
             return false;
     }
 
     return true;
 }
+
 
 /*** Seal and freeze *****************************************************************************/
 
@@ -596,15 +581,15 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
             }
 
             // 8.a.i-ii. / 9.a.iii.3-4
-            if (!StandardDefineProperty(cx, obj, id, desc))
+            if (!DefineProperty(cx, obj, id, desc))
                 return false;
         }
     }
 
     // Ordinarily ArraySetLength handles this, but we're going behind its back
     // right now, so we must do this manually.  Neither the custom property
-    // tree mutations nor the StandardDefineProperty call in the above code will
-    // do this for us.
+    // tree mutations nor the DefineProperty call in the above code will do
+    // this for us.
     //
     // ArraySetLength also implements the capacity <= length invariant for
     // arrays with non-writable length.  We don't need to do anything special
@@ -1112,7 +1097,7 @@ JS_CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
     if (!cx->compartment()->wrap(cx, &desc))
         return false;
 
-    return StandardDefineProperty(cx, target, wrappedId, desc);
+    return DefineProperty(cx, target, wrappedId, desc);
 }
 
 JS_FRIEND_API(bool)
@@ -2613,6 +2598,14 @@ js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
     desc.object().set(nobj);
     desc.assertComplete();
     return true;
+}
+
+bool
+js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id, Handle<PropertyDescriptor> desc)
+{
+    ObjectOpResult result;
+    return DefineProperty(cx, obj, id, desc, result) &&
+           result.checkStrict(cx, obj, id);
 }
 
 bool

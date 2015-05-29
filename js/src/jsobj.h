@@ -756,29 +756,7 @@ extern bool
 GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                          MutableHandle<PropertyDescriptor> desc);
 
-/*
- * ES6 [[DefineOwnProperty]]. Define a property on obj.
- *
- * If obj is an array, this follows ES5 15.4.5.1.
- * If obj is any other native object, this follows ES5 8.12.9.
- * If obj is a proxy, this calls the proxy handler's defineProperty method.
- * Otherwise, this reports an error and returns false.
- *
- * Both StandardDefineProperty functions hew close to the ES5 spec. Note that
- * the DefineProperty functions do not enforce some invariants mandated by ES6.
- */
-extern bool
-StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                       Handle<PropertyDescriptor> descriptor, ObjectOpResult& result);
-
-/*
- * Same as above except without the ObjectOpResult out-parameter. Throws a
- * TypeError on failure.
- */
-extern bool
-StandardDefineProperty(JSContext* cx, HandleObject obj, HandleId id,
-                       Handle<PropertyDescriptor> desc);
-
+/* ES6 [[DefineOwnProperty]]. Define a property on obj. */
 extern bool
 DefineProperty(JSContext* cx, HandleObject obj, HandleId id,
                Handle<PropertyDescriptor> desc, ObjectOpResult& result);
@@ -799,6 +777,9 @@ DefineElement(ExclusiveContext* cx, HandleObject obj, uint32_t index, HandleValu
  * When the 'result' out-param is omitted, the behavior is the same as above, except
  * that any failure results in a TypeError.
  */
+extern bool
+DefineProperty(JSContext* cx, HandleObject obj, HandleId id, Handle<PropertyDescriptor> desc);
+
 extern bool
 DefineProperty(ExclusiveContext* cx, HandleObject obj, HandleId id, HandleValue value,
                JSGetterOp getter = nullptr,
