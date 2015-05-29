@@ -5,6 +5,9 @@
  * Tests that the overview graphs share the exact same width and scaling.
  */
 function* spawnTest() {
+  // This test seems to take a long time to cleanup on Ubuntu VMs.
+  requestLongerTimeout(2);
+
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, OverviewView } = panel.panelWin;
 
