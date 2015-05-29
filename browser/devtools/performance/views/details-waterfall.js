@@ -37,6 +37,8 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     this.detailsSplitter = $("#waterfall-view > splitter");
 
     this.details = new MarkerDetails($("#waterfall-details"), $("#waterfall-view > splitter"));
+    this.details.hidden = true;
+
     this.details.on("resize", this._onResize);
     this.details.on("view-source", this._onViewSource);
     window.addEventListener("resize", this._onResize);
@@ -83,6 +85,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
 
     if (event === "selected") {
       this.details.render({ toolbox: gToolbox, marker, frames });
+      this.details.hidden = false;
       this._lastSelected = marker.uid;
     }
     if (event === "unselected") {
