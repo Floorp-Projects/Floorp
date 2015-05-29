@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['tlsserver']
+TEST_DIRS += ['test_intermediate_basic_usage_constraints']
 
 if not CONFIG['MOZ_NO_SMART_CARDS']:
     DIRS += ['pkcs11testmodule']

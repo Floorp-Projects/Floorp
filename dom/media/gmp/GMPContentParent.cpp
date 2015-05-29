@@ -12,6 +12,7 @@
 #include "GMPVideoEncoderParent.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Logging.h"
+#include "mozilla/unused.h"
 
 namespace mozilla {
 

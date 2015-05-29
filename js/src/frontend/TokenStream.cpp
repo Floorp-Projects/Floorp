@@ -1835,8 +1835,10 @@ TokenStream::getStringOrTemplateToken(int untilChar, Token** tp)
             ungetCharIgnoreEOL(nc);
         }
 
-        if (!tokenbuf.append(c))
+        if (!tokenbuf.append(c)) {
+            ReportOutOfMemory(cx);
             return false;
+        }
     }
 
     JSAtom* atom = atomize(cx, tokenbuf);

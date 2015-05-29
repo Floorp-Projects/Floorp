@@ -93,7 +93,7 @@ nsFilteredContentIterator::Init(nsIDOMRange* aRange)
 }
 
 //------------------------------------------------------------
-nsresult 
+nsresult
 nsFilteredContentIterator::SwitchDirections(bool aChangeToForward)
 {
   nsINode *node = mCurrentIterator->GetCurrentNode();
@@ -251,7 +251,7 @@ ContentIsInTraversalRange(nsRange* aRange, nsIDOMNode* aNextNode, bool aIsPreMod
 
 //------------------------------------------------------------
 // Helper function to advance to the next or previous node
-nsresult 
+nsresult
 nsFilteredContentIterator::AdvanceNode(nsIDOMNode* aNode, nsIDOMNode*& aNewNode, eDirectionType aDir)
 {
   nsCOMPtr<nsIDOMNode> nextNode;
@@ -287,7 +287,7 @@ nsFilteredContentIterator::AdvanceNode(nsIDOMNode* aNode, nsIDOMNode*& aNewNode,
     }
   }
 
-  // if we get here it pretty much means 
+  // if we get here it pretty much means
   // we went out of the DOM Range
   mIsOutOfRange = true;
 
@@ -309,7 +309,7 @@ nsFilteredContentIterator::CheckAdvNode(nsIDOMNode* aNode, bool& aDidSkip, eDire
       nsresult rv = mFilter->Skip(aNode, &skipIt);
       if (NS_SUCCEEDED(rv) && skipIt) {
         aDidSkip = true;
-        // Get the next/prev node and then 
+        // Get the next/prev node and then
         // see if we should skip that
         nsCOMPtr<nsIDOMNode> advNode;
         rv = AdvanceNode(aNode, *getter_AddRefs(advNode), aDir);
@@ -353,7 +353,7 @@ nsFilteredContentIterator::Next()
     return;
   }
 
-  // If we can't get the current node then 
+  // If we can't get the current node then
   // don't check to see if we can skip it
   nsINode *currentNode = mCurrentIterator->GetCurrentNode();
 
@@ -385,7 +385,7 @@ nsFilteredContentIterator::Prev()
     return;
   }
 
-  // If we can't get the current node then 
+  // If we can't get the current node then
   // don't check to see if we can skip it
   nsINode *currentNode = mCurrentIterator->GetCurrentNode();
 

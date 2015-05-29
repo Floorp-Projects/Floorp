@@ -316,7 +316,8 @@ DataStoreDB::DatabaseOpened()
   }
 
   StringOrStringSequence objectStores;
-  if (!objectStores.RawSetAsStringSequence().AppendElements(mObjectStores)) {
+  if (!objectStores.RawSetAsStringSequence().AppendElements(mObjectStores,
+                                                            fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

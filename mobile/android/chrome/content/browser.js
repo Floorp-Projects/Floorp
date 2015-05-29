@@ -5885,7 +5885,7 @@ var FormAssistant = {
 
     this._formAutoCompleteService.autoCompleteSearchAsync(aElement.name || aElement.id,
                                                           aSearchString, aElement, null,
-                                                          resultsAvailable);
+                                                          null, resultsAvailable);
   },
 
   /**

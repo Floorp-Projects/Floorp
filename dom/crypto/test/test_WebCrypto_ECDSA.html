@@ -144,6 +144,40 @@ TestArray.addTest(
   }
 );
 
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Raw import/export of a public ECDSA key (P-521)",
+  function () {
+    var that = this;
+    var alg = { name: "ECDSA", namedCurve: "P-521", hash: "SHA-512" };
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("raw", x);
+    }
+
+    crypto.subtle.importKey("raw", tv.ecdsa_verify.raw, alg, true, ["verify"])
+      .then(doExport)
+      .then(memcmp_complete(that, tv.ecdsa_verify.raw), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "ECDSA raw import and verify a known-good signature",
+  function() {
+    var that = this;
+    var alg = { name: "ECDSA", namedCurve: "P-521", hash: "SHA-512" };
+
+    function doVerify(x) {
+      return crypto.subtle.verify(alg, x, tv.ecdsa_verify.sig, tv.ecdsa_verify.data);
+    }
+
+    crypto.subtle.importKey("raw", tv.ecdsa_verify.raw, alg, true, ["verify"])
+      .then(doVerify)
+      .then(complete(that), error(that))
+  }
+);
+
 /*]]>*/</script>
 </head>
 

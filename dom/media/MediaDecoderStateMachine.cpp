@@ -976,16 +976,16 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     nsRefPtr<MediaDecoderStateMachine> self = this;
     WaitRequestRef(aType).Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                                &MediaDecoderReader::WaitForData, aType)
-      ->RefableThen(TaskQueue(), __func__,
-                    [self] (MediaData::Type aType) -> void {
-                      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
-                      self->WaitRequestRef(aType).Complete();
-                      self->DispatchDecodeTasksIfNeeded();
-                    },
-                    [self] (WaitForDataRejectValue aRejection) -> void {
-                      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
-                      self->WaitRequestRef(aRejection.mType).Complete();
-                    }));
+      ->Then(TaskQueue(), __func__,
+             [self] (MediaData::Type aType) -> void {
+               ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+               self->WaitRequestRef(aType).Complete();
+               self->DispatchDecodeTasksIfNeeded();
+             },
+             [self] (WaitForDataRejectValue aRejection) -> void {
+               ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+               self->WaitRequestRef(aRejection.mType).Complete();
+             }));
 
     return;
   }
@@ -1961,20 +1961,20 @@ MediaDecoderStateMachine::InitiateSeek()
   mSeekRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                     &MediaDecoderReader::Seek, mCurrentSeek.mTarget.mTime,
                                     GetEndTime())
-    ->RefableThen(TaskQueue(), __func__,
-                  [self] (int64_t) -> void {
-                    ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
-                    self->mSeekRequest.Complete();
-                    // We must decode the first samples of active streams, so we can determine
-                    // the new stream time. So dispatch tasks to do that.
-                    self->mDecodeToSeekTarget = true;
-                    self->DispatchDecodeTasksIfNeeded();
-                  }, [self] (nsresult aResult) -> void {
-                    ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
-                    self->mSeekRequest.Complete();
-                    MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
-                    self->DecodeError();
-                  }));
+    ->Then(TaskQueue(), __func__,
+           [self] (int64_t) -> void {
+             ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+             self->mSeekRequest.Complete();
+             // We must decode the first samples of active streams, so we can determine
+             // the new stream time. So dispatch tasks to do that.
+             self->mDecodeToSeekTarget = true;
+             self->DispatchDecodeTasksIfNeeded();
+           }, [self] (nsresult aResult) -> void {
+             ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+             self->mSeekRequest.Complete();
+             MOZ_ASSERT(NS_FAILED(aResult), "Cancels should also disconnect mSeekRequest");
+             self->DecodeError();
+           }));
 }
 
 nsresult
@@ -2020,9 +2020,9 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
 
   mAudioDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
                                          __func__, &MediaDecoderReader::RequestAudioData)
-    ->RefableThen(TaskQueue(), __func__, this,
-                  &MediaDecoderStateMachine::OnAudioDecoded,
-                  &MediaDecoderStateMachine::OnAudioNotDecoded));
+    ->Then(TaskQueue(), __func__, this,
+           &MediaDecoderStateMachine::OnAudioDecoded,
+           &MediaDecoderStateMachine::OnAudioNotDecoded));
 
   return NS_OK;
 }
@@ -2080,9 +2080,9 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
   mVideoDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                          &MediaDecoderReader::RequestVideoData,
                                          skipToNextKeyFrame, currentTime)
-    ->RefableThen(TaskQueue(), __func__, this,
-                  &MediaDecoderStateMachine::OnVideoDecoded,
-                  &MediaDecoderStateMachine::OnVideoNotDecoded));
+    ->Then(TaskQueue(), __func__, this,
+           &MediaDecoderStateMachine::OnVideoDecoded,
+           &MediaDecoderStateMachine::OnVideoNotDecoded));
   return NS_OK;
 }
 
@@ -2364,18 +2364,18 @@ MediaDecoderStateMachine::DecodeFirstFrame()
     if (HasAudio()) {
       mAudioDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
                                              __func__, &MediaDecoderReader::RequestAudioData)
-        ->RefableThen(TaskQueue(), __func__, this,
-                      &MediaDecoderStateMachine::OnAudioDecoded,
-                      &MediaDecoderStateMachine::OnAudioNotDecoded));
+        ->Then(TaskQueue(), __func__, this,
+               &MediaDecoderStateMachine::OnAudioDecoded,
+               &MediaDecoderStateMachine::OnAudioNotDecoded));
     }
     if (HasVideo()) {
       mVideoDecodeStartTime = TimeStamp::Now();
       mVideoDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
                                              __func__, &MediaDecoderReader::RequestVideoData, false,
                                              int64_t(0))
-        ->RefableThen(TaskQueue(), __func__, this,
-                      &MediaDecoderStateMachine::OnVideoDecoded,
-                      &MediaDecoderStateMachine::OnVideoNotDecoded));
+        ->Then(TaskQueue(), __func__, this,
+               &MediaDecoderStateMachine::OnVideoDecoded,
+               &MediaDecoderStateMachine::OnVideoNotDecoded));
     }
   }
 
@@ -2648,9 +2648,9 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         DECODER_LOG("Dispatching AsyncReadMetadata");
         mMetadataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                               &MediaDecoderReader::AsyncReadMetadata)
-          ->RefableThen(TaskQueue(), __func__, this,
-                        &MediaDecoderStateMachine::OnMetadataRead,
-                        &MediaDecoderStateMachine::OnMetadataNotRead));
+          ->Then(TaskQueue(), __func__, this,
+                 &MediaDecoderStateMachine::OnMetadataRead,
+                 &MediaDecoderStateMachine::OnMetadataNotRead));
 
       }
       return NS_OK;

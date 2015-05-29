@@ -72,7 +72,8 @@ protected:
    */
   void MaybeStartControllingInput(nsIDOMHTMLInputElement* aElement);
 
-  nsresult PerformInputListAutoComplete(nsIAutoCompleteResult* aPreviousResult);
+  nsresult PerformInputListAutoComplete(const nsAString& aSearch,
+                                        nsIAutoCompleteResult** aResult);
 
   void RevalidateDataList();
   bool RowMatch(nsFormHistory *aHistory, uint32_t aIndex, const nsAString &aInputName, const nsAString &aInputValue);
@@ -101,9 +102,6 @@ protected:
 
   nsTArray<nsCOMPtr<nsIDocShell> > mDocShells;
   nsTArray<nsCOMPtr<nsIAutoCompletePopup> > mPopups;
-
-  //these are used to dynamically update the autocomplete
-  nsCOMPtr<nsIAutoCompleteResult> mLastSearchResult;
 
   // The observer passed to StartSearch. It will be notified when the search is
   // complete or the data from a datalist changes.

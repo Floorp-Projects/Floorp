@@ -116,7 +116,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
         Method, Tuple0> >::TaskWrapper TaskWrapper;
 
     TaskWrapper* task = new TaskWrapper(this);
-    task->Init(object_, method, MakeTuple());
+    task->Init(object_, method, base::MakeTuple());
     return task;
   }
 
@@ -126,7 +126,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
         Method, Tuple1<A> > >::TaskWrapper TaskWrapper;
 
     TaskWrapper* task = new TaskWrapper(this);
-    task->Init(object_, method, MakeTuple(a));
+    task->Init(object_, method, base::MakeTuple(a));
     return task;
   }
 
@@ -136,7 +136,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
         Method, Tuple2<A, B> > >::TaskWrapper TaskWrapper;
 
     TaskWrapper* task = new TaskWrapper(this);
-    task->Init(object_, method, MakeTuple(a, b));
+    task->Init(object_, method, base::MakeTuple(a, b));
     return task;
   }
 
@@ -149,7 +149,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
         Method, Tuple3<A, B, C> > >::TaskWrapper TaskWrapper;
 
     TaskWrapper* task = new TaskWrapper(this);
-    task->Init(object_, method, MakeTuple(a, b, c));
+    task->Init(object_, method, base::MakeTuple(a, b, c));
     return task;
   }
 
@@ -163,7 +163,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
         Method, Tuple4<A, B, C, D> > >::TaskWrapper TaskWrapper;
 
     TaskWrapper* task = new TaskWrapper(this);
-    task->Init(object_, method, MakeTuple(a, b, c, d));
+    task->Init(object_, method, base::MakeTuple(a, b, c, d));
     return task;
   }
 
@@ -178,7 +178,7 @@ class ScopedRunnableMethodFactory : public RevocableStore {
         Method, Tuple5<A, B, C, D, E> > >::TaskWrapper TaskWrapper;
 
     TaskWrapper* task = new TaskWrapper(this);
-    task->Init(object_, method, MakeTuple(a, b, c, d, e));
+    task->Init(object_, method, base::MakeTuple(a, b, c, d, e));
     return task;
   }
 
@@ -331,28 +331,28 @@ class RunnableMethod : public CancelableTask,
 
 template <class T, class Method>
 inline CancelableTask* NewRunnableMethod(T* object, Method method) {
-  return new RunnableMethod<T, Method, Tuple0>(object, method, MakeTuple());
+  return new RunnableMethod<T, Method, Tuple0>(object, method, base::MakeTuple());
 }
 
 template <class T, class Method, class A>
 inline CancelableTask* NewRunnableMethod(T* object, Method method, const A& a) {
   return new RunnableMethod<T, Method, Tuple1<A> >(object,
                                                    method,
-                                                   MakeTuple(a));
+                                                   base::MakeTuple(a));
 }
 
 template <class T, class Method, class A, class B>
 inline CancelableTask* NewRunnableMethod(T* object, Method method,
 const A& a, const B& b) {
   return new RunnableMethod<T, Method, Tuple2<A, B> >(object, method,
-                                                      MakeTuple(a, b));
+                                                      base::MakeTuple(a, b));
 }
 
 template <class T, class Method, class A, class B, class C>
 inline CancelableTask* NewRunnableMethod(T* object, Method method,
                                           const A& a, const B& b, const C& c) {
   return new RunnableMethod<T, Method, Tuple3<A, B, C> >(object, method,
-                                                         MakeTuple(a, b, c));
+                                                         base::MakeTuple(a, b, c));
 }
 
 template <class T, class Method, class A, class B, class C, class D>
@@ -360,7 +360,7 @@ inline CancelableTask* NewRunnableMethod(T* object, Method method,
                                           const A& a, const B& b,
                                           const C& c, const D& d) {
   return new RunnableMethod<T, Method, Tuple4<A, B, C, D> >(object, method,
-                                                            MakeTuple(a, b,
+                                                            base::MakeTuple(a, b,
                                                                       c, d));
 }
 
@@ -372,7 +372,7 @@ inline CancelableTask* NewRunnableMethod(T* object, Method method,
                             Method,
                             Tuple5<A, B, C, D, E> >(object,
                                                     method,
-                                                    MakeTuple(a, b, c, d, e));
+                                                    base::MakeTuple(a, b, c, d, e));
 }
 
 template <class T, class Method, class A, class B, class C, class D, class E,
@@ -385,7 +385,7 @@ inline CancelableTask* NewRunnableMethod(T* object, Method method,
                             Method,
                             Tuple6<A, B, C, D, E, F> >(object,
                                                        method,
-                                                       MakeTuple(a, b, c, d, e,
+                                                       base::MakeTuple(a, b, c, d, e,
                                                                  f));
 }
 
@@ -399,7 +399,7 @@ inline CancelableTask* NewRunnableMethod(T* object, Method method,
                             Method,
                             Tuple7<A, B, C, D, E, F, G> >(object,
                                                           method,
-                                                          MakeTuple(a, b, c, d,
+                                                          base::MakeTuple(a, b, c, d,
                                                                     e, f, g));
 }
 
@@ -431,19 +431,19 @@ class RunnableFunction : public CancelableTask {
 
 template <class Function>
 inline CancelableTask* NewRunnableFunction(Function function) {
-  return new RunnableFunction<Function, Tuple0>(function, MakeTuple());
+  return new RunnableFunction<Function, Tuple0>(function, base::MakeTuple());
 }
 
 template <class Function, class A>
 inline CancelableTask* NewRunnableFunction(Function function, const A& a) {
-  return new RunnableFunction<Function, Tuple1<A> >(function, MakeTuple(a));
+  return new RunnableFunction<Function, Tuple1<A> >(function, base::MakeTuple(a));
 }
 
 template <class Function, class A, class B>
 inline CancelableTask* NewRunnableFunction(Function function,
                                            const A& a, const B& b) {
   return new RunnableFunction<Function, Tuple2<A, B> >(function,
-                                                       MakeTuple(a, b));
+                                                       base::MakeTuple(a, b));
 }
 
 template <class Function, class A, class B, class C>
@@ -451,7 +451,7 @@ inline CancelableTask* NewRunnableFunction(Function function,
                                            const A& a, const B& b,
                                            const C& c) {
   return new RunnableFunction<Function, Tuple3<A, B, C> >(function,
-                                                          MakeTuple(a, b, c));
+                                                          base::MakeTuple(a, b, c));
 }
 
 template <class Function, class A, class B, class C, class D>
@@ -459,7 +459,7 @@ inline CancelableTask* NewRunnableFunction(Function function,
                                            const A& a, const B& b,
                                            const C& c, const D& d) {
   return new RunnableFunction<Function, Tuple4<A, B, C, D> >(function,
-                                                             MakeTuple(a, b,
+                                                             base::MakeTuple(a, b,
                                                                        c, d));
 }
 
@@ -469,7 +469,7 @@ inline CancelableTask* NewRunnableFunction(Function function,
                                            const C& c, const D& d,
                                            const E& e) {
   return new RunnableFunction<Function, Tuple5<A, B, C, D, E> >(function,
-                                                                MakeTuple(a, b,
+                                                                base::MakeTuple(a, b,
                                                                           c, d,
                                                                           e));
 }
@@ -508,7 +508,7 @@ inline CancelableTask* NewRunnableFunction(Function function,
 // or, equivalently, using tuples directly:
 //   CallbackRunner<Tuple2<int, string> >* callback =
 //       NewCallback(obj, &Object::DoStuff);
-//   callback->RunWithParams(MakeTuple(5, string("hello")));
+//   callback->RunWithParams(base::MakeTuple(5, string("hello")));
 
 // Base for all Callbacks that handles storage of the pointers.
 template <class T, typename Method>

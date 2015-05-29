@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const CURRENT_SCHEMA_VERSION = 28;
+const CURRENT_SCHEMA_VERSION = 29;
 const FIRST_UPGRADABLE_SCHEMA_VERSION = 11;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
@@ -367,12 +367,20 @@ function promiseTopicObserved(aTopic)
 /**
  * Simulates a Places shutdown.
  */
-function shutdownPlaces(aKeepAliveConnection)
-{
+let shutdownPlaces = function() {
+  do_print("shutdownPlaces: starting");
+  let promise = new Promise(resolve => {
+    Services.obs.addObserver(resolve, "places-connection-closed", false);
+  });
   let hs = PlacesUtils.history.QueryInterface(Ci.nsIObserver);
-  hs.observe(null, "profile-change-teardown", null);
-  hs.observe(null, "profile-before-change", null);
-}
+  hs.observe(null, "test-simulate-places-shutdown-phase-1", null);
+  do_print("shutdownPlaces: sent test-simulate-places-shutdown-phase-1");
+  hs.observe(null, "test-simulate-places-shutdown-phase-2", null);
+  do_print("shutdownPlaces: sent test-simulate-places-shutdown-phase-2");
+  return promise.then(() => {
+    do_print("shutdownPlaces: complete");
+  });
+};
 
 const FILENAME_BOOKMARKS_HTML = "bookmarks.html";
 const FILENAME_BOOKMARKS_JSON = "bookmarks-" +
