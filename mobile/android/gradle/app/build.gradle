@@ -14,11 +14,6 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
-    dexOptions {
-        incremental true
-        preDexLibraries true
-    }
-
     lintOptions {
         abortOnError false
     }
@@ -50,7 +45,8 @@ android {
 dependencies {
     compile project(':base')
     compile project(':omnijar')
-    androidTestCompile fileTree(dir: 'libs', include: ['*.jar'])
+    // Including the Robotium JAR directly can cause issues with dexing.
+    androidTestCompile 'com.jayway.android.robotium:robotium-solo:4.3.1'
 }
 
 /**
