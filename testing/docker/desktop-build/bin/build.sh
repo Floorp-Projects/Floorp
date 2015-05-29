@@ -58,7 +58,11 @@ export CCACHE_DIR=/builds/ccache
 export CCACHE_HASHDIR=
 export CCACHE_UMASK=002
 
-export MOZ_AUTOMATION=1
+# Don't run the upload step; this is passed through mozharness to mach.  Once
+# the mozharness scripts are not run in Buildbot anymore, this can be moved to
+# Mozharness (or the upload step removed from mach entirely)
+export MOZ_AUTOMATION_UPLOAD=0
+
 export MOZ_CRASHREPORTER_NO_REPORT=1
 export MOZ_OBJDIR=obj-firefox
 export MOZ_SYMBOLS_EXTRA_BUILDID=linux64
@@ -90,6 +94,12 @@ fi
 # and check out mozilla-central where mozharness will use it as a cache (/builds/hg-shared)
 tc-vcs checkout $WORKSPACE/build/src $GECKO_BASE_REPOSITORY $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV $GECKO_HEAD_REF
 
+# the TC docker worker looks for artifacts to upload in $HOME/artifacts, but
+# mach wants to put them in $WORKSPACE/build/upload; symlinking lets everyone
+# win!
+rm -rf $HOME/build/upload
+mkdir -p $HOME/artifacts
+ln -s $HOME/artifacts $HOME/build/upload
 # run mozharness in XVfb, if necessary; this is an array to maintain the quoting in the -s argument
 if $NEED_XVFB; then
     # Some mozharness scripts set DISPLAY=:2
