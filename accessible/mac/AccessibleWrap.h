@@ -59,10 +59,7 @@ public: // construction, destruction
    * for it.
    */
   bool IsIgnored();
-  
-  inline bool HasPopup () 
-    { return (NativeState() & mozilla::a11y::states::HASPOPUP); }
-  
+
   /**
    * Returns this accessible's all children, adhering to "flat" accessibles by 
    * not returning their children.
