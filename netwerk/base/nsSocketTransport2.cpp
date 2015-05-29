@@ -1922,8 +1922,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         }
     }
 
-    // If we are not offline try again.
-    if (!gIOService->IsOffline() && RecoverFromError())
+    // If we are not shutting down try again.
+    if (!gIOService->IsShutdown() && RecoverFromError())
         mCondition = NS_OK;
     else {
         mState = STATE_CLOSED;
