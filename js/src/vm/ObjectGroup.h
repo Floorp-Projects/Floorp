@@ -244,8 +244,8 @@ class ObjectGroup : public gc::TenuredCell
         Addendum_UnboxedLayout,
 
         // If this group is used by objects that have been converted from an
-        // unboxed representation, the addendum points to the original unboxed
-        // group.
+        // unboxed representation and/or have the same allocation kind as such
+        // objects, the addendum points to that unboxed group.
         Addendum_OriginalUnboxedGroup,
 
         // When used by typed objects, the addendum stores a TypeDescr.
@@ -677,6 +677,9 @@ class ObjectGroupCompartment
   public:
     ObjectGroupCompartment();
     ~ObjectGroupCompartment();
+
+    void replaceAllocationSiteGroup(JSScript* script, jsbytecode* pc,
+                                    JSProtoKey kind, ObjectGroup* group);
 
     void removeDefaultNewGroup(const Class* clasp, TaggedProto proto, JSObject* associated);
     void replaceDefaultNewGroup(const Class* clasp, TaggedProto proto, JSObject* associated,
