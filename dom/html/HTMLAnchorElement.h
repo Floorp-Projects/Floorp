@@ -43,10 +43,7 @@ public:
   virtual bool Draggable() const override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override
-  {
-    return true;
-  }
+  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
 
   // nsIDOMHTMLAnchorElement
   NS_DECL_NSIDOMHTMLANCHORELEMENT
