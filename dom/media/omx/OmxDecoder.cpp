@@ -915,6 +915,7 @@ void OmxDecoder::RecycleCallbackImp(TextureClient* aClient)
 /* static */ void
 OmxDecoder::RecycleCallback(TextureClient* aClient, void* aClosure)
 {
+  MOZ_ASSERT(aClient && !aClient->IsDead());
   OmxDecoder* decoder = static_cast<OmxDecoder*>(aClosure);
   decoder->RecycleCallbackImp(aClient);
 }

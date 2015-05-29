@@ -768,7 +768,7 @@ void
 MediaCodecReader::TextureClientRecycleCallback(TextureClient* aClient)
 {
   MOZ_ASSERT(aClient, "aClient should not be nullptr in RecycleCallback()");
-
+  MOZ_ASSERT(!aClient->IsDead());
   size_t index = 0;
 
   {
