@@ -37,6 +37,7 @@ SEARCH_PATHS = [
     'python/which',
     'python/pystache',
     'python/pyyaml/lib',
+    'python/requests',
     'build',
     'build/pymake',
     'config',
