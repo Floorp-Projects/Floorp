@@ -165,7 +165,7 @@ public:
                                      nsTArray<nsRefPtr<MediaEngineVideoSource> >*) override;
   virtual void EnumerateAudioDevices(dom::MediaSourceEnum,
                                      nsTArray<nsRefPtr<MediaEngineAudioSource> >*) override;
-  virtual void Shutdown() {
+  virtual void Shutdown() override {
     MutexAutoLock lock(mMutex);
 
     mVSources.Clear();
