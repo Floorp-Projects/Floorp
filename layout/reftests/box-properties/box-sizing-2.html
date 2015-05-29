@@ -11,7 +11,6 @@
     td { border: 1px solid; padding: 1px solid; }
 
     td#bscontent td > div { box-sizing: content-box; }
-    td#bspadding td > div { box-sizing: padding-box; }
     td#bsborder td > div { box-sizing: border-box; }
 
     td td > div {
@@ -34,17 +33,6 @@
 <td id="bscontent">
 
 <!-- box-sizing: content-box -->
-<table><tr><td><div style="width: auto">A B</div></td></tr></table>
-<table><tr><td><div style="width: -moz-max-content">A B</div></td></tr></table>
-<table><tr><td><div style="width: -moz-min-content">A B</div></td></tr></table>
-<table><tr><td><div style="width: -moz-fit-content">A B</div></td></tr></table>
-<table><tr><td><div style="width: -moz-available">A B</div></td></tr></table>
-<table><tr><td><div style="width: 150px">A B</div></td></tr></table>
-
-</td>
-
-<td id="bspadding">
-<!-- box-sizing: padding-box -->
 <table><tr><td><div style="width: auto">A B</div></td></tr></table>
 <table><tr><td><div style="width: -moz-max-content">A B</div></td></tr></table>
 <table><tr><td><div style="width: -moz-min-content">A B</div></td></tr></table>
