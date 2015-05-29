@@ -11,19 +11,9 @@ const URL = "http://example.com/browser/toolkit/components/aboutperformance/test
 function frameScript() {
   "use strict";
 
-  addMessageListener("aboutperformance-test:done", () => {
-    content.postMessage("stop", "*");
-    sendAsyncMessage("aboutperformance-test:done", null);
-  });
-  addMessageListener("aboutperformance-test:setTitle", ({data: title}) => {
-    content.document.title = title;
-    sendAsyncMessage("aboutperformance-test:setTitle", null);
-  });
-  
-  addMessageListener("aboutperformance-test:hasItems", ({data: title}) => {
-    Services.obs.notifyObservers(null, "about:performance-update-immediately", "");
+  addMessageListener("aboutperformance-test:hasItems", ({data: url}) => {
     let hasPlatform = false;
-    let hasTitle = false;
+    let hasURL = false;
 
     try {
       let eltData = content.document.getElementById("liveData");
@@ -34,51 +24,42 @@ function frameScript() {
       // Find if we have a row for "platform"
       hasPlatform = eltData.querySelector("tr.platform") != null;
 
-      // Find if we have a row for our content page
-      let titles = [for (eltContent of eltData.querySelectorAll("td.contents.name")) eltContent.textContent];
+      // Find if we have a row for our URL
+      hasURL = false;
+      for (let eltContent of eltData.querySelectorAll("tr.content td.name")) {
+        if (eltContent.textContent == url) {
+          hasURL = true;
+          break;
+        }
+      }
 
-      hasTitle = titles.includes(title);
     } catch (ex) {
       Cu.reportError("Error in content: " + ex);
       Cu.reportError(ex.stack);
     } finally {
-      sendAsyncMessage("aboutperformance-test:hasItems", {hasPlatform, hasTitle});
+      sendAsyncMessage("aboutperformance-test:hasItems", {hasPlatform, hasURL});
     }
   });
 }
 
 
-add_task(function* go() {
-  info("Setting up about:performance");
-  let tabAboutPerformance = gBrowser.selectedTab = gBrowser.addTab("about:performance");
+add_task(function* test() {
+  let tabAboutPerformance = gBrowser.addTab("about:performance");
+  let tabContent = gBrowser.addTab(URL);
+
   yield ContentTask.spawn(tabAboutPerformance.linkedBrowser, null, frameScript);
 
-  info(`Setting up ${URL}`);
-  let tabContent = gBrowser.addTab(URL);
-  yield ContentTask.spawn(tabContent.linkedBrowser, null, frameScript);
-
-  let title = "Testing about:performance " + Math.random();
-  info(`Setting up title ${title}`);
   while (true) {
-    yield promiseContentResponse(tabContent.linkedBrowser, "aboutperformance-test:setTitle", title);
     yield new Promise(resolve => setTimeout(resolve, 100));
-    let {hasPlatform, hasTitle} = (yield promiseContentResponse(tabAboutPerformance.linkedBrowser, "aboutperformance-test:hasItems", title));
-    info(`Platform: ${hasPlatform}, title: ${hasTitle}`);
-    if (hasPlatform && hasTitle) {
-      Assert.ok(true, "Found a row for <platform> and a row for our page");
+    let {hasPlatform, hasURL} = (yield promiseContentResponse(tabAboutPerformance.linkedBrowser, "aboutperformance-test:hasItems", URL));
+    info(`Platform: ${hasPlatform}, url: ${hasURL}`);
+    if (hasPlatform && hasURL) {
+      Assert.ok(true, "Found a row for <platform> and a row for our URL");
       break;
     }
   }
 
   // Cleanup
-  info("Cleaning up");
-  yield promiseContentResponse(tabAboutPerformance.linkedBrowser, "aboutperformance-test:done", null);
-
-  info("Closing tabs");
-  for (let tab of gBrowser.tabs) {
-    yield BrowserTestUtils.removeTab(tab);
-  }
-
-  info("Done");
-  gBrowser.selectedTab = null;
+  gBrowser.removeTab(tabContent);
+  gBrowser.removeTab(tabAboutPerformance);
 });

@@ -1779,20 +1779,6 @@ GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
     }
 }
 
-extern void
-xpc::GetCurrentCompartmentName(JSContext* cx, nsCString& name)
-{
-    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    if (!global) {
-        name.AssignLiteral("no global");
-        return;
-    }
-
-    JSCompartment* compartment = GetObjectCompartment(global);
-    int anonymizeID = 0;
-    GetCompartmentName(compartment, name, &anonymizeID, false);
-}
-
 static int64_t
 JSMainRuntimeGCHeapDistinguishedAmount()
 {
@@ -3316,47 +3302,6 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
     xpc::WrapperFactory::PrepareForWrapping
 };
 
-/**
- * Group JSCompartments into PerformanceGroups.
- *
- * - All JSCompartments from the same add-on belong to the same
- *   PerformanceGroup.
- * - All JSCompartments from the same same webpage (including
- *   frames) belong to the same PerformanceGroup.
- * - All other JSCompartments (normally, system add-ons)
- *   belong to to a big uncategorized PerformanceGroup.
- */
-static void*
-GetCurrentPerfGroupCallback(JSContext* cx) {
-    RootedObject global(cx, CurrentGlobalOrNull(cx));
-    if (!global) {
-        // This can happen for the atom compartments, which is system
-        // code.
-        return nullptr;
-    }
-
-    JSAddonId* addonId = AddonIdOfObject(global);
-    if (addonId) {
-        // If this is an add-on, use the id as key.
-        return addonId;
-    }
-
-    // If the compartment belongs to a webpage, use the address of the
-    // topmost scriptable window, hence regrouping all frames of a
-    // window.
-    nsRefPtr<nsGlobalWindow> win = WindowOrNull(global);
-    if (win) {
-        nsCOMPtr<nsIDOMWindow> top;
-        nsresult rv = win->GetScriptableTop(getter_AddRefs(top));
-        NS_ENSURE_SUCCESS(rv, nullptr);
-
-        return top.get();
-    }
-
-    // Otherwise, this is platform code, use `nullptr` as key.
-    return nullptr;
-}
-
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    : CycleCollectedJSRuntime(nullptr, JS::DefaultHeapMaxBytes, JS::DefaultNurseryBytes),
    mJSContextStack(new XPCJSContextStack(this)),
@@ -3536,8 +3481,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // Watch for the JS boolean options.
     ReloadPrefsCallback(nullptr, this);
     Preferences::RegisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
-
-    JS_SetCurrentPerfGroupCallback(runtime, ::GetCurrentPerfGroupCallback);
 }
 
 // static
