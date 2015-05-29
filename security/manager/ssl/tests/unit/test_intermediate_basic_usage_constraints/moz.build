@@ -1,0 +1,39 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+test_certificates = (
+    'ca.pem',
+    'ee-int-bad-ku-no-eku.pem',
+    'ee-int-bad-ku-server-eku.pem',
+    'ee-int-cA-FALSE-asserts-keyCertSign.pem',
+    'ee-int-limited-depth.pem',
+    'ee-int-limited-depth-invalid.pem',
+    'ee-int-no-extensions.pem',
+    'ee-int-no-ku-no-eku.pem',
+    'ee-int-no-ku-server-eku.pem',
+    'ee-int-not-a-ca.pem',
+    'ee-int-valid-ku-no-eku.pem',
+    'ee-int-valid-ku-server-eku.pem',
+    'int-bad-ku-no-eku.pem',
+    'int-bad-ku-server-eku.pem',
+    'int-cA-FALSE-asserts-keyCertSign.pem',
+    'int-limited-depth.pem',
+    'int-limited-depth-invalid.pem',
+    'int-no-extensions.pem',
+    'int-no-ku-no-eku.pem',
+    'int-no-ku-server-eku.pem',
+    'int-not-a-ca.pem',
+    'int-valid-ku-no-eku.pem',
+    'int-valid-ku-server-eku.pem',
+)
+
+for test_certificate in test_certificates:
+    input_file = test_certificate + '.certspec'
+    GENERATED_FILES += [test_certificate]
+    props = GENERATED_FILES[test_certificate]
+    props.script = '../pycert.py'
+    props.inputs = [input_file, TOPOBJDIR + '/config']
+    TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_intermediate_basic_usage_constraints += ['!%s' % test_certificate]

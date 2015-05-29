@@ -294,6 +294,7 @@ UNIFIED_SOURCES += [
     'vm/NativeObject.cpp',
     'vm/ObjectGroup.cpp',
     'vm/PIC.cpp',
+    'vm/Printer.cpp',
     'vm/Probes.cpp',
     'vm/ProxyObject.cpp',
     'vm/ReceiverGuard.cpp',

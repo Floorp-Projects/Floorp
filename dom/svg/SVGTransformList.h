@@ -113,7 +113,7 @@ private:
     if (aIndex >= mItems.Length()) {
       aIndex = mItems.Length();
     }
-    return !!mItems.InsertElementAt(aIndex, aTransform);
+    return !!mItems.InsertElementAt(aIndex, aTransform, fallible);
   }
 
   void ReplaceItem(uint32_t aIndex, const nsSVGTransform& aTransform) {
@@ -129,7 +129,7 @@ private:
   }
 
   bool AppendItem(const nsSVGTransform& aTransform) {
-    return !!mItems.AppendElement(aTransform);
+    return !!mItems.AppendElement(aTransform, fallible);
   }
 
 protected:

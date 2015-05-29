@@ -138,6 +138,20 @@ MediaCodecProxy::AskMediaCodecAndWait()
   return true;
 }
 
+bool
+MediaCodecProxy::AsyncAskMediaCodec()
+{
+  if ((strncasecmp(mCodecMime.get(), "video/", 6) != 0) ||
+      (mResourceHandler == nullptr)) {
+    return false;
+  }
+  // request video codec
+  mResourceHandler->requestResource(mCodecEncoder
+    ? IMediaResourceManagerService::HW_VIDEO_ENCODER
+    : IMediaResourceManagerService::HW_VIDEO_DECODER);
+  return true;
+}
+
 void
 MediaCodecProxy::SetMediaCodecFree()
 {
@@ -472,6 +486,11 @@ MediaCodecProxy::resourceReserved()
   releaseCodec();
   if (!allocateCodec()) {
     SetMediaCodecFree();
+    // Notification
+    sp<CodecResourceListener> listener = mListener.promote();
+    if (listener != nullptr) {
+      listener->codecCanceled();
+    }
     return;
   }
 
@@ -484,6 +503,17 @@ MediaCodecProxy::resourceReserved()
   sp<CodecResourceListener> listener = mListener.promote();
   if (listener != nullptr) {
     listener->codecReserved();
+  }
+}
+
+void
+MediaCodecProxy::resourceCanceled()
+{
+  SetMediaCodecFree();
+  // Notification
+  sp<CodecResourceListener> listener = mListener.promote();
+  if (listener != nullptr) {
+    listener->codecCanceled();
   }
 }
 

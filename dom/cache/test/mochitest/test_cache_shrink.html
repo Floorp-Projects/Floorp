@@ -1,0 +1,131 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Cache with QuotaManager Restart</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="large_url_list.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+function clearStorage() {
+  return new Promise(function(resolve, reject) {
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var appId, inBrowser;
+    var nsIPrincipal = SpecialPowers.Components.interfaces.nsIPrincipal;
+    if (principal.appId != nsIPrincipal.UNKNOWN_APP_ID &&
+        principal.appId != nsIPrincipal.NO_APP_ID) {
+      appId = principal.appId;
+      inBrowser = principal.isInBrowserElement;
+    }
+    SpecialPowers.clearStorageForURI(document.documentURI, resolve, appId,
+                                     inBrowser);
+  });
+}
+
+function storageUsage() {
+  return new Promise(function(resolve, reject) {
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var appId, inBrowser;
+    var nsIPrincipal = SpecialPowers.Components.interfaces.nsIPrincipal;
+    if (principal.appId != nsIPrincipal.UNKNOWN_APP_ID &&
+        principal.appId != nsIPrincipal.NO_APP_ID) {
+      appId = principal.appId;
+      inBrowser = principal.isInBrowserElement;
+    }
+    SpecialPowers.getStorageUsageForURI(document.documentURI, resolve, appId,
+                                        inBrowser);
+  });
+}
+
+function resetStorage() {
+  return new Promise(function(resolve, reject) {
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var appId, inBrowser;
+    var nsIPrincipal = SpecialPowers.Components.interfaces.nsIPrincipal;
+    if (principal.appId != nsIPrincipal.UNKNOWN_APP_ID &&
+        principal.appId != nsIPrincipal.NO_APP_ID) {
+      appId = principal.appId;
+      inBrowser = principal.isInBrowserElement;
+    }
+    SpecialPowers.resetStorageForURI(document.documentURI, resolve, appId,
+                                     inBrowser);
+  });
+}
+
+function gc() {
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.exactGC(window, resolve);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set": [["dom.caches.enabled", true],
+          ["dom.quotaManager.testing", true]],
+}, function() {
+  var name = 'foo';
+  var cache = null;
+  var initialUsage = 0;
+  var fullUsage = 0;
+  var endUsage = 0;
+  // start from a fresh origin directory so other tests do not influence our
+  // results
+  clearStorage().then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    is(0, usage, 'disk usage should be zero to start');
+    return caches.open(name);
+  }).then(function(c) {
+    cache = c;
+    return storageUsage();
+  }).then(function(usage) {
+    initialUsage = usage;
+    return Promise.all(largeUrlList.map(function(url) {
+      return cache.put(new Request(url), new Response());
+    }));
+  }).then(function() {
+    return cache.keys();
+  }).then(function(keyList) {
+    is(keyList.length, largeUrlList.length, 'Large URL list is stored in cache');
+    cache = null;
+    // Ensure the Cache DOM object is gone before proceeding.  If its alive
+    // it will keep the related entries on-disk as well.
+    return gc();
+  }).then(function() {
+    // reset the quota manager storage to ensure the DB connection is flushed
+    return resetStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    fullUsage = usage;
+    ok(fullUsage > initialUsage, 'disk usage should have grown');
+    return caches.delete(name);
+  }).then(function(result) {
+    ok(result, 'cache should be deleted');
+    // This is a bit superfluous, but its necessary to make sure the Cache is
+    // fully deleted before we proceed.  The deletion actually takes place in
+    // two async steps.  We don't want to resetStorage() until the second step
+    // has taken place.  This extra Cache operation ensure that all the
+    // runnables have been flushed through the threads, etc.
+    return caches.has(name);
+  }).then(function(result) {
+    ok(!result, 'cache should not exist in storage');
+    // reset the quota manager storage to ensure the DB connection is flushed
+    return resetStorage();
+  }).then(function() {
+    return storageUsage();
+  }).then(function(usage) {
+    endUsage = usage;
+    dump("### ### initial:" + initialUsage + ", full:" + fullUsage +
+         ", end:" + endUsage + "\n");
+    ok(endUsage < (fullUsage / 2), 'disk usage should have shrank significantly');
+    ok(endUsage > initialUsage, 'disk usage should not shrink back to orig size');
+    SimpleTest.finish();
+  });
+});
+</script>
+</body>
+</html>

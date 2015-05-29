@@ -354,6 +354,10 @@ TestIsConvertible()
   static_assert((!IsConvertible<A, D>::value),
                 "A and D are unrelated");
 
+  static_assert(IsConvertible<void, void>::value, "void is void");
+  static_assert(!IsConvertible<A, void>::value, "A shouldn't convert to void");
+  static_assert(!IsConvertible<void, B>::value, "void shouldn't convert to B");
+
   // These cases seem to require C++11 support to properly implement them, so
   // for now just disable them.
   //static_assert((!IsConvertible<C*, A*>::value),

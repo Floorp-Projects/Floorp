@@ -113,7 +113,8 @@ uint32_t ResourceQueue::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
       evicted += offset;
       nsRefPtr<MediaLargeByteBuffer> data = new MediaLargeByteBuffer;
       if (!data->AppendElements(item->mData->Elements() + offset,
-                                item->mData->Length() - offset)) {
+                                item->mData->Length() - offset,
+                                fallible)) {
         aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return 0;
       }

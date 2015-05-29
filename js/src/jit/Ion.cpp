@@ -41,6 +41,7 @@
 #include "jit/Sink.h"
 #include "jit/StupidAllocator.h"
 #include "jit/ValueNumbering.h"
+#include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/TraceLogging.h"
 
@@ -49,6 +50,7 @@
 #include "jsscriptinlines.h"
 
 #include "jit/JitFrames-inl.h"
+#include "vm/Debugger-inl.h"
 #include "vm/ScopeObject-inl.h"
 
 using namespace js;
@@ -396,6 +398,67 @@ JitCompartment::ensureIonStubsExist(JSContext* cx)
     return true;
 }
 
+struct OnIonCompilationInfo {
+    size_t numBlocks;
+    size_t scriptIndex;
+    LSprinter graph;
+
+    explicit OnIonCompilationInfo(LifoAlloc* alloc)
+      : numBlocks(0),
+        scriptIndex(0),
+        graph(alloc)
+    { }
+
+    bool filled() const {
+        return numBlocks != 0;
+    }
+};
+
+typedef Vector<OnIonCompilationInfo> OnIonCompilationVector;
+
+// This function initializes the values which are given to the Debugger
+// onIonCompilation hook, if the compilation was successful, and if Ion
+// compilations of this compartment are watched by any debugger.
+//
+// This function must be called in the same AutoEnterAnalysis section as the
+// CodeGenerator::link. Failing to do so might leave room to interleave other
+// allocations which can invalidate any JSObject / JSFunction referenced by the
+// MIRGraph.
+//
+// This function ignores any allocation failure and returns whether the
+// Debugger::onIonCompilation should be called.
+static inline void
+PrepareForDebuggerOnIonCompilationHook(JSContext* cx, jit::MIRGraph& graph,
+                                       AutoScriptVector* scripts, OnIonCompilationInfo* info)
+{
+    info->numBlocks = 0;
+    if (!Debugger::observesIonCompilation(cx))
+        return;
+
+    // fireOnIonCompilation failures are ignored, do the same here.
+    info->scriptIndex = scripts->length();
+    if (!scripts->reserve(graph.numBlocks() + scripts->length())) {
+        cx->clearPendingException();
+        return;
+    }
+
+    // Collect the list of scripts which are inlined in the MIRGraph.
+    info->numBlocks = graph.numBlocks();
+    for (jit::MBasicBlockIterator block(graph.begin()); block != graph.end(); block++)
+        scripts->infallibleAppend(block->info().script());
+
+    // Spew the JSON graph made for the Debugger at the end of the LifoAlloc
+    // used by the compiler. This would not prevent unexpected GC from the
+    // compartment of the Debuggee, but do them as part of the compartment of
+    // the Debugger when the content is copied over to a JSString.
+    jit::JSONSpewer spewer(info->graph);
+    spewer.spewDebuggerGraph(&graph);
+    if (info->graph.hadOutOfMemory()) {
+        scripts->resize(info->scriptIndex);
+        info->numBlocks = 0;
+    }
+}
+
 void
 jit::FinishOffThreadBuilder(JSContext* cx, IonBuilder* builder)
 {
@@ -461,6 +524,41 @@ class AutoLazyLinkExitFrame
     }
 };
 
+static bool
+LinkCodeGen(JSContext* cx, IonBuilder* builder, CodeGenerator *codegen,
+            AutoScriptVector* scripts, OnIonCompilationInfo* info)
+{
+    RootedScript script(cx, builder->script());
+    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
+    AutoTraceLog logScript(logger, event);
+    AutoTraceLog logLink(logger, TraceLogger_IonLinking);
+
+    if (!codegen->link(cx, builder->constraints()))
+        return false;
+
+    PrepareForDebuggerOnIonCompilationHook(cx, builder->graph(), scripts, info);
+    return true;
+}
+
+static bool
+LinkBackgroundCodeGen(JSContext* cx, IonBuilder* builder,
+                      AutoScriptVector* scripts, OnIonCompilationInfo* info)
+{
+    CodeGenerator* codegen = builder->backgroundCodegen();
+    if (!codegen)
+        return false;
+
+    JitContext jctx(cx, &builder->alloc());
+
+    // Root the assembler until the builder is finished below. As it was
+    // constructed off thread, the assembler has not been rooted previously,
+    // though any GC activity would discard the builder.
+    codegen->masm.constructRoot(cx);
+
+    return LinkCodeGen(cx, builder, codegen, scripts, info);
+}
+
 uint8_t*
 jit::LazyLinkTopActivation(JSContext* cx)
 {
@@ -470,32 +568,23 @@ jit::LazyLinkTopActivation(JSContext* cx)
     // First frame should be an exit frame.
     JitFrameIterator it(iter);
     LazyLinkExitFrameLayout* ll = it.exitFrame()->as<LazyLinkExitFrameLayout>();
-    JSScript* calleeScript = ScriptFromCalleeToken(ll->jsFrame()->calleeToken());
+    RootedScript calleeScript(cx, ScriptFromCalleeToken(ll->jsFrame()->calleeToken()));
+
 
     // Get the pending builder from the Ion frame.
     IonBuilder* builder = calleeScript->ionScript()->pendingBuilder();
     calleeScript->setPendingIonBuilder(cx, nullptr);
 
-    AutoEnterAnalysis enterTypes(cx);
-    RootedScript script(cx, builder->script());
+    // See PrepareForDebuggerOnIonCompilationHook
+    AutoScriptVector debugScripts(cx);
+    OnIonCompilationInfo info(builder->alloc().lifoAlloc());
 
     // Remove from pending.
     builder->remove();
 
-    if (CodeGenerator* codegen = builder->backgroundCodegen()) {
-        js::TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
-        TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
-        AutoTraceLog logScript(logger, event);
-        AutoTraceLog logLink(logger, TraceLogger_IonLinking);
-
-        JitContext jctx(cx, &builder->alloc());
-
-        // Root the assembler until the builder is finished below. As it
-        // was constructed off thread, the assembler has not been rooted
-        // previously, though any GC activity would discard the builder.
-        codegen->masm.constructRoot(cx);
-
-        if (!codegen->link(cx, builder->constraints())) {
+    {
+        AutoEnterAnalysis enterTypes(cx);
+        if (!LinkBackgroundCodeGen(cx, builder, &debugScripts, &info)) {
             // Silently ignore OOM during code generation. The assembly code
             // doesn't has code to handle it after linking happened. So it's
             // not OK to throw a catchable exception from there.
@@ -503,12 +592,15 @@ jit::LazyLinkTopActivation(JSContext* cx)
         }
     }
 
+    if (info.filled())
+        Debugger::onIonCompilation(cx, debugScripts, info.graph);
+
     FinishOffThreadBuilder(cx, builder);
 
-    MOZ_ASSERT(script->hasBaselineScript());
-    MOZ_ASSERT(script->baselineOrIonRawPointer());
+    MOZ_ASSERT(calleeScript->hasBaselineScript());
+    MOZ_ASSERT(calleeScript->baselineOrIonRawPointer());
 
-    return script->baselineOrIonRawPointer();
+    return calleeScript->baselineOrIonRawPointer();
 }
 
 /* static */ void
@@ -1169,6 +1261,7 @@ bool
 OptimizeMIR(MIRGenerator* mir)
 {
     MIRGraph& graph = mir->graph();
+    GraphSpewer& gs = mir->graphSpewer();
     TraceLoggerThread* logger;
     if (GetJitContext()->runtime->onMainThread())
         logger = TraceLoggerForMainThread(GetJitContext()->runtime);
@@ -1180,7 +1273,7 @@ OptimizeMIR(MIRGenerator* mir)
             return false;
     }
 
-    IonSpewPass("BuildSSA");
+    gs.spewPass("BuildSSA");
     AssertBasicGraphCoherency(graph);
 
     if (mir->shouldCancel("Start"))
@@ -1189,7 +1282,7 @@ OptimizeMIR(MIRGenerator* mir)
     if (!mir->compilingAsmJS()) {
         AutoTraceLog log(logger, TraceLogger_FoldTests);
         FoldTests(graph);
-        IonSpewPass("Fold Tests");
+        gs.spewPass("Fold Tests");
         AssertBasicGraphCoherency(graph);
 
         if (mir->shouldCancel("Fold Tests"))
@@ -1200,7 +1293,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_SplitCriticalEdges);
         if (!SplitCriticalEdges(graph))
             return false;
-        IonSpewPass("Split Critical Edges");
+        gs.spewPass("Split Critical Edges");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Split Critical Edges"))
@@ -1211,7 +1304,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_RenumberBlocks);
         if (!RenumberBlocks(graph))
             return false;
-        IonSpewPass("Renumber Blocks");
+        gs.spewPass("Renumber Blocks");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Renumber Blocks"))
@@ -1239,7 +1332,7 @@ OptimizeMIR(MIRGenerator* mir)
                                       : AggressiveObservability;
         if (!EliminatePhis(mir, graph, observability))
             return false;
-        IonSpewPass("Eliminate phis");
+        gs.spewPass("Eliminate phis");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Eliminate phis"))
@@ -1258,7 +1351,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_ScalarReplacement);
         if (!ScalarReplacement(mir, graph))
             return false;
-        IonSpewPass("Scalar Replacement");
+        gs.spewPass("Scalar Replacement");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Scalar Replacement"))
@@ -1269,7 +1362,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_ApplyTypes);
         if (!ApplyTypeInformation(mir, graph))
             return false;
-        IonSpewPass("Apply types");
+        gs.spewPass("Apply types");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Apply types"))
@@ -1280,7 +1373,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_EagerSimdUnbox);
         if (!EagerSimdUnbox(mir, graph))
             return false;
-        IonSpewPass("Eager Simd Unbox");
+        gs.spewPass("Eager Simd Unbox");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Eager Simd Unbox"))
@@ -1292,7 +1385,7 @@ OptimizeMIR(MIRGenerator* mir)
         AlignmentMaskAnalysis ama(graph);
         if (!ama.analyze())
             return false;
-        IonSpewPass("Alignment Mask Analysis");
+        gs.spewPass("Alignment Mask Analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Alignment Mask Analysis"))
@@ -1312,7 +1405,7 @@ OptimizeMIR(MIRGenerator* mir)
         AliasAnalysis analysis(mir, graph);
         if (!analysis.analyze())
             return false;
-        IonSpewPass("Alias analysis");
+        gs.spewPass("Alias analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Alias analysis"))
@@ -1334,7 +1427,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_GVN);
         if (!gvn.run(ValueNumberer::UpdateAliasAnalysis))
             return false;
-        IonSpewPass("GVN");
+        gs.spewPass("GVN");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("GVN"))
@@ -1350,7 +1443,7 @@ OptimizeMIR(MIRGenerator* mir)
         if (!script || !script->hadFrequentBailouts()) {
             if (!LICM(mir, graph))
                 return false;
-            IonSpewPass("LICM");
+            gs.spewPass("LICM");
             AssertExtendedGraphCoherency(graph);
 
             if (mir->shouldCancel("LICM"))
@@ -1363,7 +1456,7 @@ OptimizeMIR(MIRGenerator* mir)
         RangeAnalysis r(mir, graph);
         if (!r.addBetaNodes())
             return false;
-        IonSpewPass("Beta");
+        gs.spewPass("Beta");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("RA Beta"))
@@ -1371,7 +1464,7 @@ OptimizeMIR(MIRGenerator* mir)
 
         if (!r.analyze() || !r.addRangeAssertions())
             return false;
-        IonSpewPass("Range Analysis");
+        gs.spewPass("Range Analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Range Analysis"))
@@ -1379,7 +1472,7 @@ OptimizeMIR(MIRGenerator* mir)
 
         if (!r.removeBetaNodes())
             return false;
-        IonSpewPass("De-Beta");
+        gs.spewPass("De-Beta");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("RA De-Beta"))
@@ -1389,7 +1482,7 @@ OptimizeMIR(MIRGenerator* mir)
             bool shouldRunUCE = false;
             if (!r.prepareForUCE(&shouldRunUCE))
                 return false;
-            IonSpewPass("RA check UCE");
+            gs.spewPass("RA check UCE");
             AssertExtendedGraphCoherency(graph);
 
             if (mir->shouldCancel("RA check UCE"))
@@ -1398,7 +1491,7 @@ OptimizeMIR(MIRGenerator* mir)
             if (shouldRunUCE) {
                 if (!gvn.run(ValueNumberer::DontUpdateAliasAnalysis))
                     return false;
-                IonSpewPass("UCE After RA");
+                gs.spewPass("UCE After RA");
                 AssertExtendedGraphCoherency(graph);
 
                 if (mir->shouldCancel("UCE After RA"))
@@ -1409,7 +1502,7 @@ OptimizeMIR(MIRGenerator* mir)
         if (mir->optimizationInfo().autoTruncateEnabled()) {
             if (!r.truncate())
                 return false;
-            IonSpewPass("Truncate Doubles");
+            gs.spewPass("Truncate Doubles");
             AssertExtendedGraphCoherency(graph);
 
             if (mir->shouldCancel("Truncate Doubles"))
@@ -1422,7 +1515,7 @@ OptimizeMIR(MIRGenerator* mir)
             if (!UnrollLoops(graph, r.loopIterationBounds))
                 return false;
 
-            IonSpewPass("Unroll Loops");
+            gs.spewPass("Unroll Loops");
             AssertExtendedGraphCoherency(graph);
         }
     }
@@ -1432,7 +1525,7 @@ OptimizeMIR(MIRGenerator* mir)
         EffectiveAddressAnalysis eaa(mir, graph);
         if (!eaa.analyze())
             return false;
-        IonSpewPass("Effective Address Analysis");
+        gs.spewPass("Effective Address Analysis");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Effective Address Analysis"))
@@ -1443,7 +1536,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_EliminateDeadCode);
         if (!EliminateDeadCode(mir, graph))
             return false;
-        IonSpewPass("DCE");
+        gs.spewPass("DCE");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("DCE"))
@@ -1454,7 +1547,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_EliminateDeadCode);
         if (!Sink(mir, graph))
             return false;
-        IonSpewPass("Sink");
+        gs.spewPass("Sink");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Sink"))
@@ -1467,7 +1560,7 @@ OptimizeMIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_MakeLoopsContiguous);
         if (!MakeLoopsContiguous(graph))
             return false;
-        IonSpewPass("Make loops contiguous");
+        gs.spewPass("Make loops contiguous");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("Make loops contiguous"))
@@ -1482,7 +1575,7 @@ OptimizeMIR(MIRGenerator* mir)
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
         if (!edgeCaseAnalysis.analyzeLate())
             return false;
-        IonSpewPass("Edge Case Analysis (Late)");
+        gs.spewPass("Edge Case Analysis (Late)");
         AssertGraphCoherency(graph);
 
         if (mir->shouldCancel("Edge Case Analysis (Late)"))
@@ -1497,14 +1590,14 @@ OptimizeMIR(MIRGenerator* mir)
         // before its bounds check.
         if (!EliminateRedundantChecks(graph))
             return false;
-        IonSpewPass("Bounds Check Elimination");
+        gs.spewPass("Bounds Check Elimination");
         AssertGraphCoherency(graph);
     }
 
     if (!mir->compilingAsmJS()) {
         AutoTraceLog log(logger, TraceLogger_AddKeepAliveInstructions);
         AddKeepAliveInstructions(graph);
-        IonSpewPass("Add KeepAlive Instructions");
+        gs.spewPass("Add KeepAlive Instructions");
         AssertGraphCoherency(graph);
     }
 
@@ -1515,6 +1608,7 @@ LIRGraph*
 GenerateLIR(MIRGenerator* mir)
 {
     MIRGraph& graph = mir->graph();
+    GraphSpewer& gs = mir->graphSpewer();
 
     TraceLoggerThread* logger;
     if (GetJitContext()->runtime->onMainThread())
@@ -1531,7 +1625,7 @@ GenerateLIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_GenerateLIR);
         if (!lirgen.generate())
             return nullptr;
-        IonSpewPass("Generate LIR");
+        gs.spewPass("Generate LIR");
 
         if (mir->shouldCancel("Generate LIR"))
             return nullptr;
@@ -1558,7 +1652,7 @@ GenerateLIR(MIRGenerator* mir)
                 return nullptr;
 #endif
 
-            IonSpewPass("Allocate Registers [Backtracking]");
+            gs.spewPass("Allocate Registers [Backtracking]");
             break;
           }
 
@@ -1573,7 +1667,7 @@ GenerateLIR(MIRGenerator* mir)
                 return nullptr;
             if (!integrity.check(true))
                 return nullptr;
-            IonSpewPass("Allocate Registers [Stupid]");
+            gs.spewPass("Allocate Registers [Stupid]");
             break;
           }
 
@@ -1615,6 +1709,7 @@ CompileBackEnd(MIRGenerator* mir)
 {
     // Everything in CompileBackEnd can potentially run on a helper thread.
     AutoEnterIonCompilation enter;
+    AutoSpewEndFunction spewEndFunction(mir);
 
     if (!OptimizeMIR(mir))
         return nullptr;
@@ -1626,6 +1721,40 @@ CompileBackEnd(MIRGenerator* mir)
     return GenerateCode(mir, lir);
 }
 
+// Find a finished builder for the compartment.
+static IonBuilder*
+GetFinishedBuilder(JSContext* cx, GlobalHelperThreadState::IonBuilderVector& finished)
+{
+    for (size_t i = 0; i < finished.length(); i++) {
+        IonBuilder* testBuilder = finished[i];
+        if (testBuilder->compartment == CompileCompartment::get(cx->compartment())) {
+            HelperThreadState().remove(finished, &i);
+            return testBuilder;
+        }
+    }
+
+    return nullptr;
+}
+
+static bool
+IsBuilderScriptOnStack(JSContext* cx, IonBuilder* builder)
+{
+    for (JitActivationIterator iter(cx->runtime()); !iter.done(); ++iter) {
+        for (JitFrameIterator it(iter); !it.done(); ++it) {
+            if (!it.isIonJS())
+                continue;
+            if (it.checkInvalidation())
+                continue;
+
+            JSScript* script = it.script();
+            if (builder->script() == script)
+                return true;
+        }
+    }
+
+    return false;
+}
+
 void
 AttachFinishedCompilations(JSContext* cx)
 {
@@ -1633,87 +1762,79 @@ AttachFinishedCompilations(JSContext* cx)
     if (!ion)
         return;
 
-    AutoEnterAnalysis enterTypes(cx);
-    AutoLockHelperThreadState lock;
+    LifoAlloc* debuggerAlloc = cx->new_<LifoAlloc>(TempAllocator::PreferredLifoChunkSize);
+    if (!debuggerAlloc) {
+        // Silently ignore OOM during code generation. The caller is
+        // InvokeInterruptCallback, which always runs at a nondeterministic
+        // time. It's not OK to throw a catchable exception from there.
+        cx->clearPendingException();
+        return;
+    }
 
-    GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList();
+    // See PrepareForDebuggerOnIonCompilationHook
+    AutoScriptVector debugScripts(cx);
+    OnIonCompilationVector onIonCompilationVector(cx);
 
-    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
+    {
+        AutoEnterAnalysis enterTypes(cx);
+        AutoLockHelperThreadState lock;
 
-    // Incorporate any off thread compilations for the compartment which have
-    // finished, failed or have been cancelled.
-    while (true) {
-        IonBuilder* builder = nullptr;
+        GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList();
 
-        // Find a finished builder for the compartment.
-        for (size_t i = 0; i < finished.length(); i++) {
-            IonBuilder* testBuilder = finished[i];
-            if (testBuilder->compartment == CompileCompartment::get(cx->compartment())) {
-                builder = testBuilder;
-                HelperThreadState().remove(finished, &i);
+        // Incorporate any off thread compilations for the compartment which have
+        // finished, failed or have been cancelled.
+        while (true) {
+            // Find a finished builder for the compartment.
+            IonBuilder* builder = GetFinishedBuilder(cx, finished);
+            if (!builder)
                 break;
-            }
-        }
-        if (!builder)
-            break;
 
-        // Try to defer linking if the script is on the stack, to postpone
-        // invalidating them.
-        if (builder->script()->hasIonScript()) {
-            bool onStack = false;
-            for (JitActivationIterator iter(cx->runtime()); !iter.done(); ++iter) {
-                for (JitFrameIterator it(iter); !it.done(); ++it) {
-                    if (!it.isIonJS())
-                        continue;
-                    if (it.checkInvalidation())
-                        continue;
-
-                    JSScript* script = it.script();
-                    if (builder->script() == script) {
-                        onStack = true;
-                        break;
-                    }
-                }
-                if (onStack)
-                    break;
-            }
-
-            if (onStack) {
+            // Try to defer linking if the script is on the stack, to postpone
+            // invalidating them.
+            if (builder->script()->hasIonScript() && IsBuilderScriptOnStack(cx, builder)) {
                 builder->script()->setPendingIonBuilder(cx, builder);
                 HelperThreadState().ionLazyLinkList().insertFront(builder);
                 continue;
             }
-        }
 
-        if (CodeGenerator* codegen = builder->backgroundCodegen()) {
-            RootedScript script(cx, builder->script());
-            JitContext jctx(cx, &builder->alloc());
-            TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, script);
-            AutoTraceLog logScript(logger, event);
-            AutoTraceLog logLink(logger, TraceLogger_IonLinking);
+            AutoUnlockHelperThreadState unlock;
 
-            // Root the assembler until the builder is finished below. As it
-            // was constructed off thread, the assembler has not been rooted
-            // previously, though any GC activity would discard the builder.
-            codegen->masm.constructRoot(cx);
-
-            bool success;
-            {
-                AutoUnlockHelperThreadState unlock;
-                success = codegen->link(cx, builder->constraints());
-            }
-
-            if (!success) {
+            OnIonCompilationInfo info(debuggerAlloc);
+            if (!LinkBackgroundCodeGen(cx, builder, &debugScripts, &info)) {
                 // Silently ignore OOM during code generation. The caller is
                 // InvokeInterruptCallback, which always runs at a
                 // nondeterministic time. It's not OK to throw a catchable
                 // exception from there.
                 cx->clearPendingException();
             }
+
+            if (info.filled()) {
+                if (!onIonCompilationVector.append(info))
+                    cx->clearPendingException();
+            }
+
+            FinishOffThreadBuilder(cx, builder);
+        }
+    }
+
+    for (size_t i = 0; i < onIonCompilationVector.length(); i++) {
+        OnIonCompilationInfo& info = onIonCompilationVector[i];
+
+        // As it is easier to root a vector, instead of a vector of vector, we
+        // slice for each compilation.
+        AutoScriptVector sliceScripts(cx);
+        if (!sliceScripts.reserve(info.numBlocks)) {
+            cx->clearPendingException();
+            continue;
         }
 
-        FinishOffThreadBuilder(cx, builder);
+        for (size_t b = 0; b < info.numBlocks; b++)
+            sliceScripts.infallibleAppend(debugScripts[info.scriptIndex + b]);
+
+        Debugger::onIonCompilation(cx, sliceScripts, info.graph);
     }
+
+    js_delete(debuggerAlloc);
 }
 
 void
@@ -1862,8 +1983,6 @@ IonCompile(JSContext* cx, JSScript* script,
 
     JitContext jctx(cx, temp);
 
-    AutoEnterAnalysis enter(cx);
-
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
         return AbortReason_Alloc;
 
@@ -1918,15 +2037,18 @@ IonCompile(JSContext* cx, JSScript* script,
     if (recompile)
         builderScript->ionScript()->setRecompiling();
 
-#ifdef DEBUG
-    IonSpewFunction ionSpewFunction(graph, builderScript);
-#endif
+    SpewBeginFunction(builder, builderScript);
 
-    bool succeeded = builder->build();
-    builder->clearForBackEnd();
+    bool succeeded;
+    {
+        AutoEnterAnalysis enter(cx);
+        succeeded = builder->build();
+        builder->clearForBackEnd();
+    }
 
     if (!succeeded) {
         AbortReason reason = builder->abortReason();
+        builder->graphSpewer().endFunction();
         if (reason == AbortReason_PreliminaryObjects) {
             // Some group was accessed which has associated preliminary objects
             // to analyze. Do this now and we will try to build again shortly.
@@ -1960,7 +2082,8 @@ IonCompile(JSContext* cx, JSScript* script,
         if (!recompile)
             builderScript->setIonScript(cx, ION_COMPILING_SCRIPT);
 
-        JitSpew(JitSpew_IonLogs, "Can't log script %s:%" PRIuSIZE ". (Compiled on background thread.)",
+        JitSpew(JitSpew_IonSyncLogs, "Can't log script %s:%" PRIuSIZE
+                ". (Compiled on background thread.)",
                 builderScript->filename(), builderScript->lineno());
 
         JSRuntime* rt = cx->runtime();
@@ -1974,6 +2097,7 @@ IonCompile(JSContext* cx, JSScript* script,
 
         if (!StartOffThreadIonCompile(cx, builder)) {
             JitSpew(JitSpew_IonAbort, "Unable to start off-thread ion compilation.");
+            builder->graphSpewer().endFunction();
             return AbortReason_Alloc;
         }
 
@@ -1984,15 +2108,26 @@ IonCompile(JSContext* cx, JSScript* script,
         return AbortReason_NoAbort;
     }
 
-    ScopedJSDeletePtr<CodeGenerator> codegen(CompileBackEnd(builder));
-    if (!codegen) {
-        JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");
-        return AbortReason_Disable;
+    // See PrepareForDebuggerOnIonCompilationHook
+    AutoScriptVector debugScripts(cx);
+    OnIonCompilationInfo debugInfo(alloc);
+
+    ScopedJSDeletePtr<CodeGenerator> codegen;
+    {
+        AutoEnterAnalysis enter(cx);
+        codegen = CompileBackEnd(builder);
+        if (!codegen) {
+            JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");
+            return AbortReason_Disable;
+        }
+
+        succeeded = LinkCodeGen(cx, builder, codegen, &debugScripts, &debugInfo);
     }
 
-    bool success = codegen->link(cx, builder->constraints());
+    if (debugInfo.filled())
+        Debugger::onIonCompilation(cx, debugScripts, debugInfo.graph);
 
-    if (success)
+    if (succeeded)
         return AbortReason_NoAbort;
     if (cx->isExceptionPending())
         return AbortReason_Error;

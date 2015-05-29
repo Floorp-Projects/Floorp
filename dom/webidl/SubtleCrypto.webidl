@@ -100,6 +100,10 @@ dictionary EcdsaParams : Algorithm {
   required AlgorithmIdentifier hash;
 };
 
+dictionary EcKeyImportParams : Algorithm {
+  NamedCurve namedCurve;
+};
+
 /***** JWK *****/
 
 dictionary RsaOtherPrimesInfo {

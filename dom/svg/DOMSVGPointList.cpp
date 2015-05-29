@@ -317,7 +317,7 @@ DOMSVGPointList::InsertItemBefore(nsISVGPoint& aNewItem, uint32_t aIndex,
   MaybeInsertNullInAnimValListAt(aIndex);
 
   InternalList().InsertItem(aIndex, domItem->ToSVGPoint());
-  MOZ_ALWAYS_TRUE(mItems.InsertElementAt(aIndex, domItem));
+  MOZ_ALWAYS_TRUE(mItems.InsertElementAt(aIndex, domItem, fallible));
 
   // This MUST come after the insertion into InternalList(), or else under the
   // insertion into InternalList() the values read from domItem would be bad
@@ -433,7 +433,7 @@ DOMSVGPointList::MaybeInsertNullInAnimValListAt(uint32_t aIndex)
   MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
              "animVal list not in sync!");
 
-  MOZ_ALWAYS_TRUE(animVal->mItems.InsertElementAt(aIndex, nullptr));
+  MOZ_ALWAYS_TRUE(animVal->mItems.InsertElementAt(aIndex, nullptr, fallible));
 
   UpdateListIndicesFromIndex(animVal->mItems, aIndex + 1);
 }

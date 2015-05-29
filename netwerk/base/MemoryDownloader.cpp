@@ -57,7 +57,7 @@ MemoryDownloader::ConsumeData(nsIInputStream* aIn,
                               uint32_t* aWriteCount)
 {
   MemoryDownloader* self = static_cast<MemoryDownloader*>(aClosure);
-  if (!self->mData->AppendElements(aFromRawSegment, aCount)) {
+  if (!self->mData->AppendElements(aFromRawSegment, aCount, fallible)) {
     // The error returned by ConsumeData isn't propagated to the
     // return of ReadSegments, so it has to be passed as state.
     self->mStatus = NS_ERROR_OUT_OF_MEMORY;

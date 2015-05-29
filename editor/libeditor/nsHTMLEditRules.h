@@ -41,12 +41,12 @@ struct DOMPoint;
 struct StyleCache : public PropItem
 {
   bool mPresent;
-  
+
   StyleCache() : PropItem(), mPresent(false) {
     MOZ_COUNT_CTOR(StyleCache);
   }
 
-  StyleCache(nsIAtom *aTag, const nsAString &aAttr, const nsAString &aValue) : 
+  StyleCache(nsIAtom *aTag, const nsAString &aAttr, const nsAString &aValue) :
              PropItem(aTag, aAttr, aValue), mPresent(false) {
     MOZ_COUNT_CTOR(StyleCache);
   }
@@ -88,7 +88,7 @@ public:
   nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode);
 
   // nsIEditActionListener methods
-  
+
   NS_IMETHOD WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, int32_t aPosition) override;
   NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult) override;
   NS_IMETHOD WillInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition) override;
@@ -144,8 +144,8 @@ protected:
                                nsIEditor::EDirection aAction,
                                nsIEditor::EStripWrappers aStripWrappers,
                                bool* aCancel, bool* aHandled);
-  nsresult DidDeleteSelection(mozilla::dom::Selection* aSelection, 
-                              nsIEditor::EDirection aDir, 
+  nsresult DidDeleteSelection(mozilla::dom::Selection* aSelection,
+                              nsIEditor::EDirection aDir,
                               nsresult aResult);
   nsresult InsertBRIfNeeded(mozilla::dom::Selection* aSelection);
   ::DOMPoint GetGoodSelPointForNode(nsINode& aNode,
@@ -210,9 +210,9 @@ protected:
                              nsIDOMNode* aHeader, nsIDOMNode* aTextNode,
                              int32_t aOffset, bool* aCancel, bool* aHandled);
   nsresult SplitParagraph(nsIDOMNode *aPara,
-                          nsIDOMNode *aBRNode, 
+                          nsIDOMNode *aBRNode,
                           mozilla::dom::Selection* aSelection,
-                          nsCOMPtr<nsIDOMNode> *aSelNode, 
+                          nsCOMPtr<nsIDOMNode> *aSelNode,
                           int32_t *aOffset);
   nsresult ReturnInListItem(mozilla::dom::Selection* aSelection,
                             nsIDOMNode* aHeader, nsIDOMNode* aTextNode,
@@ -222,14 +222,14 @@ protected:
   nsresult RemovePartOfBlock(mozilla::dom::Element& aBlock,
                              nsIContent& aStartChild,
                              nsIContent& aEndChild);
-  nsresult SplitBlock(nsIDOMNode *aBlock, 
-                      nsIDOMNode *aStartChild, 
+  nsresult SplitBlock(nsIDOMNode *aBlock,
+                      nsIDOMNode *aStartChild,
                       nsIDOMNode *aEndChild,
                       nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
                       nsCOMPtr<nsIDOMNode> *aRightNode = 0,
                       nsCOMPtr<nsIDOMNode> *aMiddleNode = 0);
-  nsresult OutdentPartOfBlock(nsIDOMNode *aBlock, 
-                              nsIDOMNode *aStartChild, 
+  nsresult OutdentPartOfBlock(nsIDOMNode *aBlock,
+                              nsIDOMNode *aStartChild,
                               nsIDOMNode *aEndChild,
                               bool aIsBlockIndentedWithCSS,
                               nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
@@ -246,15 +246,15 @@ protected:
 
   nsresult CreateStyleForInsertText(mozilla::dom::Selection* aSelection,
                                     nsIDOMDocument* aDoc);
-  nsresult IsEmptyBlock(nsIDOMNode *aNode, 
-                        bool *outIsEmptyBlock, 
+  nsresult IsEmptyBlock(nsIDOMNode *aNode,
+                        bool *outIsEmptyBlock,
                         bool aMozBRDoesntCount = false,
                         bool aListItemsNotEmpty = false);
   nsresult CheckForEmptyBlock(nsINode* aStartNode,
                               mozilla::dom::Element* aBodyNode,
                               mozilla::dom::Selection* aSelection,
                               bool* aHandled);
-  nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, nsHTMLEditRules::BRLocation aWhere, 
+  nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, nsHTMLEditRules::BRLocation aWhere,
                                nsCOMPtr<nsIDOMNode> *outBRNode, int32_t aOffset=0);
   nsresult ExpandSelectionForDeletion(mozilla::dom::Selection* aSelection);
   bool IsFirstNode(nsIDOMNode *aNode);
@@ -263,7 +263,7 @@ protected:
   void GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
                         int32_t aOffset, EditAction actionID,
                         nsCOMPtr<nsIDOMNode>* outNode, int32_t* outOffset);
-  void GetPromotedRanges(mozilla::dom::Selection& aSelection, 
+  void GetPromotedRanges(mozilla::dom::Selection& aSelection,
                          nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
                          EditAction inOperationType);
   void PromoteRange(nsRange& aRange, EditAction inOperationType);
@@ -317,8 +317,8 @@ protected:
   nsresult CheckInterlinePosition(mozilla::dom::Selection* aSelection);
   nsresult AdjustSelection(mozilla::dom::Selection* aSelection,
                            nsIEditor::EDirection aAction);
-  nsresult FindNearSelectableNode(nsIDOMNode *aSelNode, 
-                                  int32_t aSelOffset, 
+  nsresult FindNearSelectableNode(nsIDOMNode *aSelNode,
+                                  int32_t aSelOffset,
                                   nsIEditor::EDirection &aDirection,
                                   nsCOMPtr<nsIDOMNode> *outSelectableNode);
   /**

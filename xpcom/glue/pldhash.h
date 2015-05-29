@@ -161,6 +161,8 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
  */
 class PLDHashTable
 {
+  friend class PLDHashTable2;
+
 private:
   const PLDHashTableOps* mOps;        /* Virtual operations; see below. */
   int16_t             mHashShift;     /* multiplicative hash shift */
@@ -369,6 +371,20 @@ public:
   }
 
   void Finish() { MOZ_CRASH("PLDHashTable2::Finish()"); }
+
+  // This function is equivalent to
+  // ClearAndPrepareForLength(PL_DHASH_DEFAULT_INITIAL_LENGTH).
+  void Clear();
+
+  // This function clears the table's contents and frees its entry storage,
+  // leaving it in a empty state ready to be used again. Afterwards, when the
+  // first element is added the entry storage that gets allocated will have a
+  // capacity large enough to fit |aLength| elements without rehashing.
+  //
+  // It's conceptually the same as calling the destructor and then re-calling
+  // the constructor with the original |aOps| and |aEntrySize| arguments, and
+  // a new |aLength| argument.
+  void ClearAndPrepareForLength(uint32_t aLength);
 
 private:
   PLDHashTable2(const PLDHashTable2& aOther) = delete;
