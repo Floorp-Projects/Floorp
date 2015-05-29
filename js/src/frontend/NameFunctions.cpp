@@ -378,8 +378,14 @@ class NameResolver
             MOZ_ASSERT(cur->isArity(PN_NULLARY));
             break;
 
+          case PNK_TYPEOFNAME:
+            MOZ_ASSERT(cur->isArity(PN_UNARY));
+            MOZ_ASSERT(cur->pn_kid->isKind(PNK_NAME));
+            MOZ_ASSERT(!cur->pn_kid->maybeExpr());
+            break;
+
           // Nodes with a single non-null child requiring name resolution.
-          case PNK_TYPEOF:
+          case PNK_TYPEOFEXPR:
           case PNK_VOID:
           case PNK_NOT:
           case PNK_BITNOT:

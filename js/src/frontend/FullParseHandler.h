@@ -206,6 +206,12 @@ class FullParseHandler
         return newUnary(PNK_DELETEEXPR, JSOP_NOP, begin, expr);
     }
 
+    ParseNode* newTypeof(uint32_t begin, ParseNode* kid) {
+        TokenPos pos(begin, kid->pn_pos.end);
+        ParseNodeKind kind = kid->isKind(PNK_NAME) ? PNK_TYPEOFNAME : PNK_TYPEOFEXPR;
+        return new_<UnaryNode>(kind, JSOP_NOP, pos, kid);
+    }
+
     ParseNode* newNullary(ParseNodeKind kind, JSOp op, const TokenPos& pos) {
         return new_<NullaryNode>(kind, op, pos);
     }
