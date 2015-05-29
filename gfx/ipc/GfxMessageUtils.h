@@ -426,9 +426,9 @@ struct ParamTraits<nsIntRegion>
 {};
 
 template<>
-struct ParamTraits<nsIntSize>
+struct ParamTraits<mozilla::gfx::IntSize>
 {
-  typedef nsIntSize paramType;
+  typedef mozilla::gfx::IntSize paramType;
 
   static void Write(Message* msg, const paramType& param)
   {
