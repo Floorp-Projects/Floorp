@@ -112,7 +112,7 @@ add_task(function* setupEnvironment() {
   Services.perms.add(pageURI, "uitour", Services.perms.ALLOW_ACTION);
 
   registerCleanupFunction(() => {
-    Services.perms.remove("example.com", "uitour");
+    Services.perms.remove(pageURI, "uitour");
     Preferences.set(PREF_SELFSUPPORT_ENABLED, selfSupportEnabled);
     Preferences.set(PREF_UITOUR_ENABLED, uitourEnabled);
     Preferences.set(PREF_SELFSUPPORT_URL, selfSupportURL);
