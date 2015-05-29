@@ -1,19 +1,25 @@
-This library has been updated to protobuf-2.4.1 as of 11/30/12.
-
 Protocol Buffers (protobuf) source is available (via svn) at:
-svn checkout http://protobuf.googlecode.com/svn/trunk/ protobuf-read-only
+
+    svn checkout http://protobuf.googlecode.com/svn/trunk/ protobuf-read-only
+
+Or via git at:
+
+    https://github.com/google/protobuf
 
 This code is covered under the BSD license (see COPYING.txt). Documentation is
 available at http://code.google.com/p/protobuf.
 
-This import includes only files in protobuf-lite, a lighter-weight library that
-does not support reflection or descriptors. Manual changes include removing all
-tests, testdata, config.h, and all files not used in protobuf-lite.
+The tree's current version of the protobuf library is 2.6.1.
 
-Applied Patches
-===============
-r512.patch:
-  Support VS2013 (from revision r512)
+We do not include the protobuf tests or the protoc compiler.
 
-vs2013.patch
-  Additional changes to support VS2013 missed from revision r512.
+--------------------------------------------------------------------------------
+
+# Upgrading the Protobuf Library
+
+1. Get a new protobuf release from https://github.com/google/protobuf/releases
+
+2. Run `$ ./toolkit/components/protobuf/upgrade_protobuf.sh ~/path/to/release/checkout/of/protobuf`.
+
+3. Update the moz.build to export the new set of headers and add any new .cc
+   files to the unified sources and remove old ones.

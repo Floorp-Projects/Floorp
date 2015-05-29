@@ -612,6 +612,9 @@ class NativeObject : public JSObject
     bool growSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newCount);
     void shrinkSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newCount);
 
+    /* This method is static because it's called from JIT code. */
+    static bool growSlotsStatic(ExclusiveContext* cx, NativeObject* obj, uint32_t newCount);
+
     bool hasDynamicSlots() const { return !!slots_; }
 
     /* Compute dynamicSlotsCount() for this object. */

@@ -131,11 +131,15 @@ class Context::QuotaInitRunnable final : public nsIRunnable
 public:
   QuotaInitRunnable(Context* aContext,
                     Manager* aManager,
-                    Action* aQuotaIOThreadAction)
+                    Data* aData,
+                    nsIThread* aTarget,
+                    Action* aInitAction)
     : mContext(aContext)
     , mThreadsafeHandle(aContext->CreateThreadsafeHandle())
     , mManager(aManager)
-    , mQuotaIOThreadAction(aQuotaIOThreadAction)
+    , mData(aData)
+    , mTarget(aTarget)
+    , mInitAction(aInitAction)
     , mInitiatingThread(NS_GetCurrentThread())
     , mResult(NS_OK)
     , mState(STATE_INIT)
@@ -144,6 +148,8 @@ public:
   {
     MOZ_ASSERT(mContext);
     MOZ_ASSERT(mManager);
+    MOZ_ASSERT(mData);
+    MOZ_ASSERT(mTarget);
     MOZ_ASSERT(mInitiatingThread);
   }
 
@@ -166,7 +172,7 @@ public:
     NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
     MOZ_ASSERT(!mCanceled);
     mCanceled = true;
-    mQuotaIOThreadAction->CancelOnInitiatingThread();
+    mInitAction->CancelOnInitiatingThread();
   }
 
 private:
@@ -202,7 +208,7 @@ private:
   {
     MOZ_ASSERT(mState == STATE_COMPLETE);
     MOZ_ASSERT(!mContext);
-    MOZ_ASSERT(!mQuotaIOThreadAction);
+    MOZ_ASSERT(!mInitAction);
   }
 
   enum State
@@ -211,6 +217,7 @@ private:
     STATE_CALL_WAIT_FOR_OPEN_ALLOWED,
     STATE_WAIT_FOR_OPEN_ALLOWED,
     STATE_ENSURE_ORIGIN_INITIALIZED,
+    STATE_RUN_ON_TARGET,
     STATE_RUNNING,
     STATE_COMPLETING,
     STATE_COMPLETE
@@ -222,13 +229,15 @@ private:
     MOZ_ASSERT(mContext);
     mContext = nullptr;
     mManager = nullptr;
-    mQuotaIOThreadAction = nullptr;
+    mInitAction = nullptr;
   }
 
   nsRefPtr<Context> mContext;
   nsRefPtr<ThreadsafeHandle> mThreadsafeHandle;
   nsRefPtr<Manager> mManager;
-  nsRefPtr<Action> mQuotaIOThreadAction;
+  nsRefPtr<Data> mData;
+  nsCOMPtr<nsIThread> mTarget;
+  nsRefPtr<Action> mInitAction;
   nsCOMPtr<nsIThread> mInitiatingThread;
   nsresult mResult;
   QuotaInfo mQuotaInfo;
@@ -266,9 +275,14 @@ NS_IMPL_ISUPPORTS(mozilla::dom::cache::Context::QuotaInitRunnable, nsIRunnable);
 // |   (Quota IO Thread)   +----------------+
 // +----------+------------+                |
 //            |                             |
+// +----------v------------+                |
+// |     RunOnTarget       | Resolve(error) |
+// |   (Target Thread)     +----------------+
+// +----------+------------+                |
+//            |                             |
 //  +---------v---------+            +------v------+
 //  |      Running      |            |  Completing |
-//  | (Quota IO Thread) +------------>(Orig Thread)|
+//  | (Target Thread)   +------------>(Orig Thread)|
 //  +-------------------+            +------+------+
 //                                          |
 //                                    +-----v----+
@@ -384,16 +398,27 @@ Context::QuotaInitRunnable::Run()
         break;
       }
 
-      mState = STATE_RUNNING;
-
-      if (!mQuotaIOThreadAction) {
+      if (!mInitAction) {
         resolver->Resolve(NS_OK);
         break;
       }
 
+      mState = STATE_RUN_ON_TARGET;
+
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        mTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL)));
+      break;
+    }
+    // -------------------
+    case STATE_RUN_ON_TARGET:
+    {
+      MOZ_ASSERT(NS_GetCurrentThread() == mTarget);
+
+      mState = STATE_RUNNING;
+
       // Execute the provided initialization Action.  The Action must Resolve()
       // before returning.
-      mQuotaIOThreadAction->RunOnTarget(resolver, mQuotaInfo, nullptr);
+      mInitAction->RunOnTarget(resolver, mQuotaInfo, mData);
       MOZ_ASSERT(resolver->Resolved());
 
       break;
@@ -402,8 +427,8 @@ Context::QuotaInitRunnable::Run()
     case STATE_COMPLETING:
     {
       NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
-      if (mQuotaIOThreadAction) {
-        mQuotaIOThreadAction->CompleteOnInitiatingThread(mResult);
+      if (mInitAction) {
+        mInitAction->CompleteOnInitiatingThread(mResult);
       }
       mContext->OnQuotaInit(mResult, mQuotaInfo, mOfflineStorage);
       mState = STATE_COMPLETE;
@@ -776,21 +801,10 @@ Context::ThreadsafeHandle::ContextDestroyed(Context* aContext)
 // static
 already_AddRefed<Context>
 Context::Create(Manager* aManager, nsIThread* aTarget,
-                Action* aQuotaIOThreadAction, Context* aOldContext)
+                Action* aInitAction, Context* aOldContext)
 {
   nsRefPtr<Context> context = new Context(aManager, aTarget);
-
-  // Do this here to avoid doing an AddRef() in the constructor
-  // TODO: pass context->mData to allow connetion sharing with init
-  context->mInitRunnable = new QuotaInitRunnable(context, aManager,
-                                                 aQuotaIOThreadAction);
-
-  if (aOldContext) {
-    aOldContext->SetNextContext(context);
-  } else {
-    context->Start();
-  }
-
+  context->Init(aInitAction, aOldContext);
   return context.forget();
 }
 
@@ -911,6 +925,24 @@ Context::~Context()
   if (mNextContext) {
     mNextContext->Start();
   }
+}
+
+void
+Context::Init(Action* aInitAction, Context* aOldContext)
+{
+  NS_ASSERT_OWNINGTHREAD(Context);
+  MOZ_ASSERT(!mInitRunnable);
+
+  // Do this here to avoid doing an AddRef() in the constructor
+  mInitRunnable = new QuotaInitRunnable(this, mManager, mData, mTarget,
+                                        aInitAction);
+
+  if (aOldContext) {
+    aOldContext->SetNextContext(this);
+    return;
+  }
+
+  Start();
 }
 
 void

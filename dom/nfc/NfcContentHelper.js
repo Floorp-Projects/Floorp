@@ -218,9 +218,10 @@ NfcContentHelper.prototype = {
     });
   },
 
-  notifyUserAcceptedP2P: function notifyUserAcceptedP2P(appId) {
+  notifyUserAcceptedP2P: function notifyUserAcceptedP2P(appId, tabId) {
     cpmm.sendAsyncMessage("NFC:NotifyUserAcceptedP2P", {
-      appId: appId
+      appId: appId,
+      tabId: tabId
     });
   },
 

@@ -6,40 +6,13 @@
 
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
-interface nsIIccListener;
 
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(2fbacfc4-f52d-11e4-9667-33b72f279d14)]
+[scriptable, uuid(09f29ef0-006f-11e5-a0e1-fbef06958398)]
 interface nsIIccProvider : nsISupports
 {
-  /**
-   * Called when a content process registers receiving unsolicited messages from
-   * RadioInterfaceLayer in the chrome process. Only a content process that has
-   * the 'mobileconnection' permission is allowed to register.
-   */
-  void registerIccMsg(in unsigned long clientId, in nsIIccListener listener);
-  void unregisterIccMsg(in unsigned long clientId, in nsIIccListener listener);
-
-  /**
-   * STK interfaces.
-   */
-  void sendStkResponse(in unsigned long clientId,
-                       in nsIDOMWindow window,
-                       in jsval command,
-                       in jsval response);
-  void sendStkMenuSelection(in unsigned long clientId,
-                            in nsIDOMWindow window,
-                            in unsigned short itemIdentifier,
-                            in boolean helpRequested);
-  void sendStkTimerExpiration(in unsigned long clientId,
-                              in nsIDOMWindow window,
-                              in jsval timer);
-  void sendStkEventDownload(in unsigned long clientId,
-                            in nsIDOMWindow window,
-                            in jsval event);
-
   /**
    * Phonebook interfaces.
    */

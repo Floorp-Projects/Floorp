@@ -29,9 +29,9 @@ function checkFailParseInvalidPin(pinValue) {
   try {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
                              pinValue, sslStatus, 0);
-    do_check_true(false); // this should not run
+    ok(false, "Invalid pin should have been rejected");
   } catch (e) {
-    do_check_true(true);
+    ok(true, "Invalid pin should be rejected");
   }
 }
 
@@ -40,7 +40,7 @@ function checkPassValidPin(pinValue, settingPin) {
                         certFromFile('cn-a.pinning2.example.com-pinningroot.der'));
   let uri = Services.io.newURI("https://a.pinning2.example.com", null, null);
 
-  // setup preconditions for the test, if setting ensure there is no previors
+  // setup preconditions for the test, if setting ensure there is no previous
   // state, if removing ensure there is a valid pin in place.
   if (settingPin) {
     gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
@@ -53,18 +53,18 @@ function checkPassValidPin(pinValue, settingPin) {
   try {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
                              pinValue, sslStatus, 0);
-    do_check_true(true);
+    ok(true, "Valid pin should be accepted");
   } catch (e) {
-    do_check_true(false);
+    ok(false, "Valid pin should have been accepted");
   }
   // after processing ensure that the postconditions are true, if setting
   // the host must be pinned, if removing the host must not be pinned
   let hostIsPinned = gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HPKP,
                                              "a.pinning2.example.com", 0);
   if (settingPin) {
-    do_check_true(hostIsPinned);
+    ok(hostIsPinned, "Host should be considered pinned");
   } else {
-    do_check_true(!hostIsPinned);
+    ok(!hostIsPinned, "Host should not be considered pinned");
   }
 }
 

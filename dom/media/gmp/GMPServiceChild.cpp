@@ -3,8 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "GMPService.h"
+#include "GMPServiceChild.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozIGeckoMediaPluginService.h"
+#include "mozIGeckoMediaPluginChromeService.h"
+#include "nsCOMPtr.h"
+#include "GMPParent.h"
+#include "GMPContentParent.h"
+#include "nsXPCOMPrivate.h"
+#include "mozilla/SyncRunnable.h"
+#include "runnable_utils.h"
 
 namespace mozilla {
 
@@ -37,20 +45,6 @@ GeckoMediaPluginServiceChild::GetSingleton()
 #endif
   return service.forget().downcast<GeckoMediaPluginServiceChild>();
 }
-
-class GetServiceChildCallback
-{
-public:
-  GetServiceChildCallback()
-  {
-    MOZ_COUNT_CTOR(GetServiceChildCallback);
-  }
-  virtual ~GetServiceChildCallback()
-  {
-    MOZ_COUNT_DTOR(GetServiceChildCallback);
-  }
-  virtual void Done(GMPServiceChild* aGMPServiceChild) = 0;
-};
 
 class GetContentParentFromDone : public GetServiceChildCallback
 {

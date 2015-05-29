@@ -1,0 +1,45 @@
+Revision 0.0.5
+--------------
+
+- License updated to vanilla BSD 2-Clause to ease package use
+  (http://opensource.org/licenses/BSD-2-Clause).
+
+Revision 0.0.4
+--------------
+
+- CMP structures (RFC4210), cmpdump.py tool and test case added.
+- SNMPv2c Message syntax (RFC1901) properly defined.
+- Package version established in form of __init__.__version__
+  which is in-sync with distutils.
+- Package meta information and classifiers updated.
+
+Revision 0.0.3
+--------------
+
+- Text cases implemented
+- X.509 CRMF structures (RFC2511) and crmfdump.py tool added
+- X.509 CRL structures and crldump.py tool added
+- PKCS#10 structures and pkcs10dump.py tool added
+- PKCS#8 structures and pkcs8dump.py tool added
+- PKCS#1 (rfc3447) structures added
+- OCSP request & response dumping tool added
+- SNMPv2c & SNMPv3/USM structures added
+- keydump.py moved into pkcs1dump.py
+- PEM files read function generalized to be used more universally.
+- complete PKIX1 '88 code implemented at rfc2459.py
+
+
+Revision 0.0.2
+--------------
+
+- Require pyasn1 >= 0.1.1
+- Fixes towards Py3K compatibility
+  + use either of existing urllib module
+  + adopt to the new bytes type
+  + print operator is now a function
+  + new exception syntax
+
+Revision 0.0.1a
+---------------
+
+- Initial revision, most code carried from pyasn1 examples.

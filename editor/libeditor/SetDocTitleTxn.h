@@ -40,7 +40,7 @@ protected:
 
   /** the editor that created this transaction */
   nsIHTMLEditor*  mEditor;
-  
+
   /** The new title string */
   nsString    mValue;
 

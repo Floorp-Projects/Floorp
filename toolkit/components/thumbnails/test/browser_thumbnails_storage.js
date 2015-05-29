@@ -18,52 +18,62 @@ XPCOMUtils.defineLazyGetter(this, "Sanitizer", function () {
  * be removed when the user sanitizes their history.
  */
 function runTests() {
-  dontExpireThumbnailURLs([URL, URL_COPY]);
+  yield Task.spawn(function*() {
+    dontExpireThumbnailURLs([URL, URL_COPY]);
 
-  yield clearHistory();
-  yield addVisitsAndRepopulateNewTabLinks(URL, next);
-  yield createThumbnail();
+    yield promiseClearHistory();
+    yield promiseAddVisitsAndRepopulateNewTabLinks(URL);
+    yield promiseCreateThumbnail();
 
-  // Make sure Storage.copy() updates an existing file.
-  yield PageThumbsStorage.copy(URL, URL_COPY);
-  let copy = new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL_COPY));
-  let mtime = copy.lastModifiedTime -= 60;
+    // Make sure Storage.copy() updates an existing file.
+    yield PageThumbsStorage.copy(URL, URL_COPY);
+    let copy = new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL_COPY));
+    let mtime = copy.lastModifiedTime -= 60;
 
-  yield PageThumbsStorage.copy(URL, URL_COPY);
-  isnot(new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL_COPY)).lastModifiedTime, mtime,
-        "thumbnail file was updated");
+    yield PageThumbsStorage.copy(URL, URL_COPY);
+    isnot(new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL_COPY)).lastModifiedTime, mtime,
+          "thumbnail file was updated");
 
-  let file = new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL));
-  let fileCopy = new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL_COPY));
+    let file = new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL));
+    let fileCopy = new FileUtils.File(PageThumbsStorage.getFilePathForURL(URL_COPY));
 
-  // Clear the browser history. Retry until the files are gone because Windows
-  // locks them sometimes.
-  while (file.exists() || fileCopy.exists()) {
-    yield clearHistory();
-  }
+    // Clear the browser history. Retry until the files are gone because Windows
+    // locks them sometimes.
+    info("Clearing history");
+    while (file.exists() || fileCopy.exists()) {
+      yield promiseClearHistory();
+    }
+    info("History is clear");
 
-  yield addVisitsAndRepopulateNewTabLinks(URL, next);
-  yield createThumbnail();
+    info("Repopulating");
+    yield promiseAddVisitsAndRepopulateNewTabLinks(URL);
+    yield promiseCreateThumbnail();
 
-  // Clear the last 10 minutes of browsing history.
-  yield clearHistory(true);
+    info("Clearing the last 10 minutes of browsing history");
+    // Clear the last 10 minutes of browsing history.
+    yield promiseClearHistory(true);
 
-  // Retry until the file is gone because Windows locks it sometimes.
-  clearFile(file, URL);
+    info("Attempt to clear file");
+    // Retry until the file is gone because Windows locks it sometimes.
+    yield promiseClearFile(file, URL);    
+
+    info("Done");
+  });
 }
 
-function clearFile(aFile, aURL) {
-  if (aFile.exists()) {
-    // Re-add our URL to the history so that history observer's onDeleteURI()
-    // is called again.
-    PlacesTestUtils.addVisits(makeURI(aURL)).then(() => {
-      // Try again...
-      clearHistory(true, () => clearFile(aFile, aURL));
-    });
+let promiseClearFile = Task.async(function*(aFile, aURL) {
+  if (!aFile.exists()) {
+    return;
   }
-}
+  // Re-add our URL to the history so that history observer's onDeleteURI()
+  // is called again.
+  yield PlacesTestUtils.addVisits(makeURI(aURL));
+  yield promiseClearHistory(true);
+  // Then retry.
+  return promiseClearFile(aFile, aURL);
+});
 
-function clearHistory(aUseRange, aCallback = next) {
+function promiseClearHistory(aUseRange) {
   let s = new Sanitizer();
   s.prefDomain = "privacy.cpd.";
 
@@ -84,18 +94,19 @@ function clearHistory(aUseRange, aCallback = next) {
     s.ignoreTimespan = false;
   }
 
-  s.sanitize();
-  s.range = null;
-  s.ignoreTimespan = true;
-
-  executeSoon(aCallback);
+  return s.sanitize().then(() => {
+    s.range = null;
+    s.ignoreTimespan = true;
+  });
 }
 
-function createThumbnail() {
-  addTab(URL, function () {
-    whenFileExists(URL, function () {
-      gBrowser.removeTab(gBrowser.selectedTab);
-      next();
+function promiseCreateThumbnail() {
+  return new Promise(resolve => {
+    addTab(URL, function () {
+      whenFileExists(URL, function () {
+        gBrowser.removeTab(gBrowser.selectedTab);
+        resolve();
+      });
     });
   });
 }

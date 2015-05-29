@@ -1502,7 +1502,7 @@ void BuildTextRunsScanner::FlushFrames(bool aFlushLineBreaks, bool aSuppressTrai
       AutoFallibleTArray<uint8_t,BIG_TEXT_NODE_SIZE> buffer;
       uint32_t bufferSize = mMaxTextLength*(mDoubleByteText ? 2 : 1);
       if (bufferSize < mMaxTextLength || bufferSize == UINT32_MAX ||
-          !buffer.AppendElements(bufferSize)) {
+          !buffer.AppendElements(bufferSize, fallible)) {
         return;
       }
       textRun = BuildTextRunForFrames(buffer.Elements());
@@ -2050,7 +2050,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         // Need to expand the text. First transform it into a temporary buffer,
         // then expand.
         AutoFallibleTArray<uint8_t,BIG_TEXT_NODE_SIZE> tempBuf;
-        uint8_t* bufStart = tempBuf.AppendElements(contentLength);
+        uint8_t* bufStart = tempBuf.AppendElements(contentLength, fallible);
         if (!bufStart) {
           DestroyUserData(userDataToDestroy);
           return nullptr;
@@ -2268,7 +2268,7 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
   if (bufferSize < mMaxTextLength || bufferSize == UINT32_MAX) {
     return false;
   }
-  void *textPtr = buffer.AppendElements(bufferSize);
+  void *textPtr = buffer.AppendElements(bufferSize, fallible);
   if (!textPtr) {
     return false;
   }
@@ -2341,7 +2341,7 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
         // Need to expand the text. First transform it into a temporary buffer,
         // then expand.
         AutoFallibleTArray<uint8_t,BIG_TEXT_NODE_SIZE> tempBuf;
-        uint8_t* bufStart = tempBuf.AppendElements(contentLength);
+        uint8_t* bufStart = tempBuf.AppendElements(contentLength, fallible);
         if (!bufStart) {
           DestroyUserData(userDataToDestroy);
           return false;
@@ -5641,7 +5641,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
   // Figure out which selections control the colors to use for each character.
   AutoFallibleTArray<SelectionDetails*,BIG_TEXT_NODE_SIZE> prevailingSelectionsBuffer;
   SelectionDetails** prevailingSelections =
-    prevailingSelectionsBuffer.AppendElements(aContentLength);
+    prevailingSelectionsBuffer.AppendElements(aContentLength, fallible);
   if (!prevailingSelections) {
     return false;
   }
@@ -5781,7 +5781,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   // Figure out which characters will be decorated for this selection.
   AutoFallibleTArray<SelectionDetails*, BIG_TEXT_NODE_SIZE> selectedCharsBuffer;
   SelectionDetails** selectedChars =
-    selectedCharsBuffer.AppendElements(aContentLength);
+    selectedCharsBuffer.AppendElements(aContentLength, fallible);
   if (!selectedChars) {
     return;
   }
@@ -7456,7 +7456,8 @@ nsTextFrame::AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
   AutoFallibleTArray<bool,BIG_TEXT_NODE_SIZE> hyphBuffer;
   bool *hyphBreakBefore = nullptr;
   if (hyphenating) {
-    hyphBreakBefore = hyphBuffer.AppendElements(flowEndInTextRun - start);
+    hyphBreakBefore = hyphBuffer.AppendElements(flowEndInTextRun - start,
+                                                fallible);
     if (hyphBreakBefore) {
       provider.GetHyphenationBreaks(start, flowEndInTextRun - start,
                                     hyphBreakBefore);

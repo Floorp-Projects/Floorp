@@ -14,6 +14,8 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 
+#include "vm/Printer.h"
+
 using namespace js;
 using namespace js::jit;
 
@@ -128,11 +130,12 @@ IonSpewDependency(MInstruction* load, MInstruction* store, const char* verb, con
     if (!JitSpewEnabled(JitSpew_Alias))
         return;
 
-    fprintf(JitSpewFile, "Load ");
-    load->printName(JitSpewFile);
-    fprintf(JitSpewFile, " %s on store ", verb);
-    store->printName(JitSpewFile);
-    fprintf(JitSpewFile, " (%s)\n", reason);
+    Fprinter& out = JitSpewPrinter();
+    out.printf("Load ");
+    load->printName(out);
+    out.printf(" %s on store ", verb);
+    store->printName(out);
+    out.printf(" (%s)\n", reason);
 }
 
 static void
@@ -141,9 +144,10 @@ IonSpewAliasInfo(const char* pre, MInstruction* ins, const char* post)
     if (!JitSpewEnabled(JitSpew_Alias))
         return;
 
-    fprintf(JitSpewFile, "%s ", pre);
-    ins->printName(JitSpewFile);
-    fprintf(JitSpewFile, " %s\n", post);
+    Fprinter& out = JitSpewPrinter();
+    out.printf("%s ", pre);
+    ins->printName(out);
+    out.printf(" %s\n", post);
 }
 
 // This pass annotates every load instruction with the last store instruction
@@ -208,9 +212,10 @@ AliasAnalysis::analyze()
                 }
 
                 if (JitSpewEnabled(JitSpew_Alias)) {
-                    fprintf(JitSpewFile, "Processing store ");
-                    def->printName(JitSpewFile);
-                    fprintf(JitSpewFile, " (flags %x)\n", set.flags());
+                    Fprinter& out = JitSpewPrinter();
+                    out.printf("Processing store ");
+                    def->printName(out);
+                    out.printf(" (flags %x)\n", set.flags());
                 }
             } else {
                 // Find the most recent store on which this instruction depends.

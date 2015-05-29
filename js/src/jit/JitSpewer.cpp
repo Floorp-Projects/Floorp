@@ -8,6 +8,8 @@
 
 #include "jit/JitSpewer.h"
 
+#include "mozilla/Atomics.h"
+
 #include "jit/Ion.h"
 #include "jit/MIR.h"
 
@@ -26,12 +28,67 @@
 using namespace js;
 using namespace js::jit;
 
+class IonSpewer
+{
+  private:
+    PRLock* outputLock_;
+    Fprinter c1Output_;
+    Fprinter jsonOutput_;
+    bool firstFunction_;
+    bool asyncLogging_;
+    bool inited_;
+
+    void release();
+
+  public:
+    IonSpewer()
+      : firstFunction_(false),
+        asyncLogging_(false),
+        inited_(false)
+    { }
+
+    // File output is terminated safely upon destruction.
+    ~IonSpewer();
+
+    bool init();
+    bool isEnabled() {
+        return inited_;
+    }
+    void setAsyncLogging(bool incremental) {
+        asyncLogging_ = incremental;
+    }
+    bool getAsyncLogging() {
+        return asyncLogging_;
+    }
+
+    void beginFunction();
+    void spewPass(GraphSpewer* gs);
+    void endFunction(GraphSpewer* gs);
+
+    // Lock used to sequentialized asynchronous compilation output.
+    void lockOutput() {
+        PR_Lock(outputLock_);
+    }
+    void unlockOutput() {
+        PR_Unlock(outputLock_);
+    }
+};
+
+class AutoLockIonSpewerOutput
+{
+  private:
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  public:
+    explicit AutoLockIonSpewerOutput(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+    ~AutoLockIonSpewerOutput();
+};
+
 // IonSpewer singleton.
 static IonSpewer ionspewer;
 
 static bool LoggingChecked = false;
 static uint32_t LoggingBits = 0;
-static uint32_t filteredOutCompilations = 0;
+static mozilla::Atomic<uint32_t, mozilla::Relaxed> filteredOutCompilations(0);
 
 static const char * const ChannelNames[] =
 {
@@ -41,7 +98,7 @@ static const char * const ChannelNames[] =
 };
 
 static bool
-FilterContainsLocation(HandleScript function)
+FilterContainsLocation(JSScript* function)
 {
     static const char* filter = getenv("IONFILTER");
 
@@ -73,48 +130,31 @@ FilterContainsLocation(HandleScript function)
 }
 
 void
-jit::EnableIonDebugLogging()
+jit::EnableIonDebugSyncLogging()
 {
-    EnableChannel(JitSpew_IonLogs);
     ionspewer.init();
+    ionspewer.setAsyncLogging(false);
+    EnableChannel(JitSpew_IonSyncLogs);
 }
 
 void
-jit::IonSpewNewFunction(MIRGraph* graph, HandleScript func)
+jit::EnableIonDebugAsyncLogging()
 {
-    if (GetJitContext()->runtime->onMainThread())
-        ionspewer.beginFunction(graph, func);
+    ionspewer.init();
+    ionspewer.setAsyncLogging(true);
 }
 
 void
-jit::IonSpewPass(const char* pass)
+IonSpewer::release()
 {
-    if (GetJitContext()->runtime->onMainThread())
-        ionspewer.spewPass(pass);
-}
-
-void
-jit::IonSpewPass(const char* pass, BacktrackingAllocator* ra)
-{
-    if (GetJitContext()->runtime->onMainThread())
-        ionspewer.spewPass(pass, ra);
-}
-
-void
-jit::IonSpewEndFunction()
-{
-    if (GetJitContext()->runtime->onMainThread())
-        ionspewer.endFunction();
-}
-
-
-IonSpewer::~IonSpewer()
-{
-    if (!inited_)
-        return;
-
-    c1Spewer.finish();
-    jsonSpewer.finish();
+    if (c1Output_.isInitialized())
+        c1Output_.finish();
+    if (jsonOutput_.isInitialized())
+        jsonOutput_.finish();
+    if (outputLock_)
+        PR_DestroyLock(outputLock_);
+    outputLock_ = nullptr;
+    inited_ = false;
 }
 
 bool
@@ -123,87 +163,191 @@ IonSpewer::init()
     if (inited_)
         return true;
 
-    if (!c1Spewer.init(JIT_SPEW_DIR "ion.cfg"))
+    outputLock_ = PR_NewLock();
+    if (!outputLock_ ||
+        !c1Output_.init(JIT_SPEW_DIR "ion.cfg") ||
+        !jsonOutput_.init(JIT_SPEW_DIR "ion.json"))
+    {
+        release();
         return false;
-    if (!jsonSpewer.init(JIT_SPEW_DIR "ion.json"))
-        return false;
+    }
+
+    jsonOutput_.printf("{\n  \"functions\": [\n");
+    firstFunction_ = true;
 
     inited_ = true;
     return true;
 }
 
-bool
-IonSpewer::isSpewingFunction() const
+AutoLockIonSpewerOutput::AutoLockIonSpewerOutput(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
 {
-    return inited_ && graph;
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    ionspewer.lockOutput();
+}
+
+AutoLockIonSpewerOutput::~AutoLockIonSpewerOutput()
+{
+    ionspewer.unlockOutput();
 }
 
 void
-IonSpewer::beginFunction(MIRGraph* graph, HandleScript function)
+IonSpewer::beginFunction()
+{
+    // If we are doing a synchronous logging then we spew everything as we go,
+    // as this is useful in case of failure during the compilation. On the other
+    // hand, it is recommended to disabled off main thread compilation.
+    if (!getAsyncLogging() && !firstFunction_) {
+        AutoLockIonSpewerOutput outputLock;
+        jsonOutput_.put(","); // separate functions
+    }
+}
+
+void
+IonSpewer::spewPass(GraphSpewer* gs)
+{
+    if (!getAsyncLogging()) {
+        AutoLockIonSpewerOutput outputLock;
+        gs->dump(c1Output_, jsonOutput_);
+    }
+}
+
+void
+IonSpewer::endFunction(GraphSpewer* gs)
+{
+    AutoLockIonSpewerOutput outputLock;
+    if (getAsyncLogging() && !firstFunction_)
+        jsonOutput_.put(","); // separate functions
+
+    gs->dump(c1Output_, jsonOutput_);
+    firstFunction_ = false;
+}
+
+IonSpewer::~IonSpewer()
 {
     if (!inited_)
         return;
 
+    jsonOutput_.printf("\n]}\n");
+    release();
+}
+
+void
+GraphSpewer::init(MIRGraph* graph, JSScript* function)
+{
+    MOZ_ASSERT(!isSpewing());
+    if (!ionspewer.isEnabled())
+        return;
+
     if (!FilterContainsLocation(function)) {
-        MOZ_ASSERT(!this->graph);
         // filter out logs during the compilation.
         filteredOutCompilations++;
+        MOZ_ASSERT(!isSpewing());
         return;
     }
 
-    this->graph = graph;
-
-    c1Spewer.beginFunction(graph, function);
-    jsonSpewer.beginFunction(function);
+    graph_ = graph;
+    MOZ_ASSERT(isSpewing());
 }
 
 void
-IonSpewer::spewPass(const char* pass)
+GraphSpewer::beginFunction(JSScript* function)
 {
-    if (!isSpewingFunction())
+    if (!isSpewing())
         return;
 
-    c1Spewer.spewPass(pass);
-    jsonSpewer.beginPass(pass);
-    jsonSpewer.spewMIR(graph);
-    jsonSpewer.spewLIR(graph);
-    jsonSpewer.endPass();
+    c1Spewer_.beginFunction(graph_, function);
+    jsonSpewer_.beginFunction(function);
+
+    ionspewer.beginFunction();
 }
 
 void
-IonSpewer::spewPass(const char* pass, BacktrackingAllocator* ra)
+GraphSpewer::spewPass(const char* pass)
 {
-    if (!isSpewingFunction())
+    if (!isSpewing())
         return;
 
-    c1Spewer.spewPass(pass);
-    c1Spewer.spewRanges(pass, ra);
-    jsonSpewer.beginPass(pass);
-    jsonSpewer.spewMIR(graph);
-    jsonSpewer.spewLIR(graph);
-    jsonSpewer.spewRanges(ra);
-    jsonSpewer.endPass();
+    c1Spewer_.spewPass(pass);
+
+    jsonSpewer_.beginPass(pass);
+    jsonSpewer_.spewMIR(graph_);
+    jsonSpewer_.spewLIR(graph_);
+    jsonSpewer_.endPass();
+
+    ionspewer.spewPass(this);
 }
 
 void
-IonSpewer::endFunction()
+GraphSpewer::spewPass(const char* pass, BacktrackingAllocator* ra)
 {
-    if (!isSpewingFunction()) {
-        if (inited_) {
-            MOZ_ASSERT(filteredOutCompilations != 0);
-            filteredOutCompilations--;
-        }
+    if (!isSpewing())
+        return;
+
+    c1Spewer_.spewPass(pass);
+    c1Spewer_.spewRanges(pass, ra);
+
+    jsonSpewer_.beginPass(pass);
+    jsonSpewer_.spewMIR(graph_);
+    jsonSpewer_.spewLIR(graph_);
+    jsonSpewer_.spewRanges(ra);
+    jsonSpewer_.endPass();
+
+    ionspewer.spewPass(this);
+}
+
+void
+GraphSpewer::endFunction()
+{
+    if (!ionspewer.isEnabled())
+        return;
+
+    if (!isSpewing()) {
+        MOZ_ASSERT(filteredOutCompilations != 0);
+        filteredOutCompilations--;
         return;
     }
 
-    c1Spewer.endFunction();
-    jsonSpewer.endFunction();
+    c1Spewer_.endFunction();
+    jsonSpewer_.endFunction();
 
-    this->graph = nullptr;
+    ionspewer.endFunction(this);
+    graph_ = nullptr;
 }
 
+void
+GraphSpewer::dump(Fprinter& c1Out, Fprinter& jsonOut)
+{
+    if (!c1Printer_.hadOutOfMemory())
+        c1Printer_.exportInto(c1Out);
+    c1Printer_.clear();
 
-FILE* jit::JitSpewFile = nullptr;
+    if (!jsonPrinter_.hadOutOfMemory())
+        jsonPrinter_.exportInto(jsonOut);
+    else
+        jsonOut.put("{}");
+    jsonPrinter_.clear();
+}
+
+void
+jit::SpewBeginFunction(MIRGenerator* mir, JSScript* function)
+{
+    MIRGraph* graph = &mir->graph();
+    mir->graphSpewer().init(graph, function);
+    mir->graphSpewer().beginFunction(function);
+}
+
+AutoSpewEndFunction::~AutoSpewEndFunction()
+{
+    mir_->graphSpewer().endFunction();
+}
+
+Fprinter&
+jit::JitSpewPrinter()
+{
+    static Fprinter out;
+    return out;
+}
+
 
 static bool
 ContainsFlag(const char* str, const char* flag)
@@ -254,6 +398,7 @@ jit::CheckLogging()
             "  range      Range Analysis\n"
             "  unroll     Loop unrolling\n"
             "  logs       C1 and JSON visualization logging\n"
+            "  logs-sync  Same as logs, but flushes between each pass (sync. compiled functions only).\n"
             "  profiling  Profiling-related information\n"
             "  trackopts  Optimization tracking information\n"
             "  all        Everything\n"
@@ -313,7 +458,9 @@ jit::CheckLogging()
     if (ContainsFlag(env, "cacheflush"))
         EnableChannel(JitSpew_CacheFlush);
     if (ContainsFlag(env, "logs"))
-        EnableIonDebugLogging();
+        EnableIonDebugAsyncLogging();
+    if (ContainsFlag(env, "logs-sync"))
+        EnableIonDebugSyncLogging();
     if (ContainsFlag(env, "profiling"))
         EnableChannel(JitSpew_Profiling);
     if (ContainsFlag(env, "trackopts"))
@@ -348,7 +495,7 @@ jit::CheckLogging()
         EnableChannel(JitSpew_BaselineDebugModeOSR);
     }
 
-    JitSpewFile = stderr;
+    JitSpewPrinter().init(stderr);
 }
 
 void
@@ -402,9 +549,10 @@ jit::JitSpewDef(JitSpewChannel channel, const char* str, MDefinition* def)
         return;
 
     JitSpewHeader(channel);
-    fprintf(JitSpewFile, "%s", str);
-    def->dump(JitSpewFile);
-    def->dumpLocation(JitSpewFile);
+    Fprinter& out = JitSpewPrinter();
+    out.put(str);
+    def->dump(out);
+    def->dumpLocation(out);
 }
 
 void
@@ -452,16 +600,6 @@ jit::DisableChannel(JitSpewChannel channel)
 {
     MOZ_ASSERT(LoggingChecked);
     LoggingBits &= ~(1 << uint32_t(channel));
-}
-
-IonSpewFunction::IonSpewFunction(MIRGraph* graph, JS::HandleScript function)
-{
-    IonSpewNewFunction(graph, function);
-}
-
-IonSpewFunction::~IonSpewFunction()
-{
-    IonSpewEndFunction();
 }
 
 #endif /* DEBUG */

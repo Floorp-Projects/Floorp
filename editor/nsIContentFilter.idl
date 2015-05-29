@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
@@ -34,10 +34,10 @@ interface nsIContentFilter : nsISupports
    * Callers who want to allow insertion of the data with no changes
    * can simply set continueWithInsertion to PR_TRUE and return.
    *
-   * Callers who want to modify the content (docFragment) being inserted are 
-   * responsible for updating contentStartNode, contentStartOffset, 
-   * contentEndNode, and contentEndOffset (if necessary).  
-   * Callers are responsible for freeing and addref'ing if they want to 
+   * Callers who want to modify the content (docFragment) being inserted are
+   * responsible for updating contentStartNode, contentStartOffset,
+   * contentEndNode, and contentEndOffset (if necessary).
+   * Callers are responsible for freeing and addref'ing if they want to
    * completely replace any of the DOM nodes passed in.
    *
    * The location where insertion will occur should be considered an

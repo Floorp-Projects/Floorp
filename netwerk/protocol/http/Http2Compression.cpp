@@ -228,6 +228,10 @@ Http2BaseCompressor::MakeRoom(uint32_t amount, const char *direction)
 void
 Http2BaseCompressor::DumpState()
 {
+  if (!LOG_ENABLED()) {
+    return;
+  }
+
   LOG(("Header Table"));
   uint32_t i;
   uint32_t length = mHeaderTable.Length();

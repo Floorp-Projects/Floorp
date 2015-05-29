@@ -1219,13 +1219,17 @@ public:
   nsMargin GetPhysicalMargin(WritingMode aWritingMode) const
   {
     CHECK_WRITING_MODE(aWritingMode);
-    return aWritingMode.IsVertical() ?
-      (aWritingMode.IsVerticalLR() ?
-        nsMargin(IStart(), BEnd(), IEnd(), BStart()) :
-        nsMargin(IStart(), BStart(), IEnd(), BEnd())) :
-      (aWritingMode.IsBidiLTR() ?
-        nsMargin(BStart(), IEnd(), BEnd(), IStart()) :
-        nsMargin(BStart(), IStart(), BEnd(), IEnd()));
+    return aWritingMode.IsVertical()
+      ? (aWritingMode.IsVerticalLR()
+        ? (aWritingMode.IsBidiLTR()
+          ? nsMargin(IStart(), BEnd(), IEnd(), BStart())
+          : nsMargin(IEnd(), BEnd(), IStart(), BStart()))
+        : (aWritingMode.IsBidiLTR()
+          ? nsMargin(IStart(), BStart(), IEnd(), BEnd())
+          : nsMargin(IEnd(), BStart(), IStart(), BEnd())))
+      : (aWritingMode.IsBidiLTR()
+        ? nsMargin(BStart(), IEnd(), BEnd(), IStart())
+        : nsMargin(BStart(), IStart(), BEnd(), IEnd()));
   }
 
   /**

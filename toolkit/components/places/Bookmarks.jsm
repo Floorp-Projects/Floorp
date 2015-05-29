@@ -258,104 +258,106 @@ let Bookmarks = Object.freeze({
                         , validIf: b => b.lastModified >= item.dateAdded }
         });
 
-      let db = yield PlacesUtils.promiseWrappedConnection();
-      let parent;
-      if (updateInfo.hasOwnProperty("parentGuid")) {
-        if (item.type == this.TYPE_FOLDER) {
-          // Make sure we are not moving a folder into itself or one of its
-          // descendants.
-          let rows = yield db.executeCached(
-            `WITH RECURSIVE
-             descendants(did) AS (
-               VALUES(:id)
-               UNION ALL
-               SELECT id FROM moz_bookmarks
-               JOIN descendants ON parent = did
-               WHERE type = :type
-             )
-             SELECT guid FROM moz_bookmarks
-             WHERE id IN descendants
-            `, { id: item._id, type: this.TYPE_FOLDER });
-          if ([r.getResultByName("guid") for (r of rows)].indexOf(updateInfo.parentGuid) != -1)
-            throw new Error("Cannot insert a folder into itself or one of its descendants");
+      return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: update",
+        Task.async(function*(db) {
+        let parent;
+        if (updateInfo.hasOwnProperty("parentGuid")) {
+          if (item.type == this.TYPE_FOLDER) {
+            // Make sure we are not moving a folder into itself or one of its
+            // descendants.
+            let rows = yield db.executeCached(
+              `WITH RECURSIVE
+               descendants(did) AS (
+                 VALUES(:id)
+                 UNION ALL
+                 SELECT id FROM moz_bookmarks
+                 JOIN descendants ON parent = did
+                 WHERE type = :type
+               )
+               SELECT guid FROM moz_bookmarks
+               WHERE id IN descendants
+              `, { id: item._id, type: this.TYPE_FOLDER });
+            if ([r.getResultByName("guid") for (r of rows)].indexOf(updateInfo.parentGuid) != -1)
+              throw new Error("Cannot insert a folder into itself or one of its descendants");
+          }
+
+          parent = yield fetchBookmark({ guid: updateInfo.parentGuid });
+          if (!parent)
+            throw new Error("No bookmarks found for the provided parentGuid");
         }
 
-        parent = yield fetchBookmark({ guid: updateInfo.parentGuid });
-        if (!parent)
-          throw new Error("No bookmarks found for the provided parentGuid");
-      }
+        if (updateInfo.hasOwnProperty("index")) {
+          // If at this point we don't have a parent yet, we are moving into
+          // the same container.  Thus we know it exists.
+          if (!parent)
+            parent = yield fetchBookmark({ guid: item.parentGuid });
 
-      if (updateInfo.hasOwnProperty("index")) {
-        // If at this point we don't have a parent yet, we are moving into
-        // the same container.  Thus we know it exists.
-        if (!parent)
-          parent = yield fetchBookmark({ guid: item.parentGuid });
+          if (updateInfo.index >= parent._childCount ||
+              updateInfo.index == this.DEFAULT_INDEX) {
+             updateInfo.index = parent._childCount;
 
-        if (updateInfo.index >= parent._childCount ||
-            updateInfo.index == this.DEFAULT_INDEX) {
-           updateInfo.index = parent._childCount;
-
-          // Fix the index when moving within the same container.
-          if (parent.guid == item.parentGuid)
-             updateInfo.index--;
+            // Fix the index when moving within the same container.
+            if (parent.guid == item.parentGuid)
+               updateInfo.index--;
+          }
         }
-      }
 
-      let updatedItem = yield updateBookmark(updateInfo, item, parent);
+        let updatedItem = yield updateBookmark(updateInfo, item, parent);
 
-      if (item.type == this.TYPE_BOOKMARK &&
-          item.url.href != updatedItem.url.href) {
-        // ...though we don't wait for the calculation.
-        updateFrecency(db, [item.url]).then(null, Cu.reportError);
-        updateFrecency(db, [updatedItem.url]).then(null, Cu.reportError);
-      }
+        if (item.type == this.TYPE_BOOKMARK &&
+            item.url.href != updatedItem.url.href) {
+          // ...though we don't wait for the calculation.
+          updateFrecency(db, [item.url]).then(null, Cu.reportError);
+          updateFrecency(db, [updatedItem.url]).then(null, Cu.reportError);
+        }
 
-      // Notify onItemChanged to listeners.
-      let observers = PlacesUtils.bookmarks.getObservers();
-      // For lastModified, we only care about the original input, since we
-      // should not notify implciit lastModified changes.
-      if (info.hasOwnProperty("lastModified") &&
-          updateInfo.hasOwnProperty("lastModified") &&
-          item.lastModified != updatedItem.lastModified) {
-        notify(observers, "onItemChanged", [ updatedItem._id, "lastModified",
-                                             false,
-                                             `${toPRTime(updatedItem.lastModified)}`,
-                                             toPRTime(updatedItem.lastModified),
-                                             updatedItem.type,
-                                             updatedItem._parentId,
-                                             updatedItem.guid,
+        // Notify onItemChanged to listeners.
+        let observers = PlacesUtils.bookmarks.getObservers();
+        // For lastModified, we only care about the original input, since we
+        // should not notify implciit lastModified changes.
+        if (info.hasOwnProperty("lastModified") &&
+            updateInfo.hasOwnProperty("lastModified") &&
+            item.lastModified != updatedItem.lastModified) {
+          notify(observers, "onItemChanged", [ updatedItem._id, "lastModified",
+                                               false,
+                                               `${toPRTime(updatedItem.lastModified)}`,
+                                               toPRTime(updatedItem.lastModified),
+                                               updatedItem.type,
+                                               updatedItem._parentId,
+                                               updatedItem.guid,
+                                               updatedItem.parentGuid ]);
+        }
+        if (updateInfo.hasOwnProperty("title")) {
+          notify(observers, "onItemChanged", [ updatedItem._id, "title",
+                                               false, updatedItem.title,
+                                               toPRTime(updatedItem.lastModified),
+                                               updatedItem.type,
+                                               updatedItem._parentId,
+                                               updatedItem.guid,
+                                               updatedItem.parentGuid ]);
+        }
+        if (updateInfo.hasOwnProperty("url")) {
+          notify(observers, "onItemChanged", [ updatedItem._id, "uri",
+                                               false, updatedItem.url.href,
+                                               toPRTime(updatedItem.lastModified),
+                                               updatedItem.type,
+                                               updatedItem._parentId,
+                                               updatedItem.guid,
+                                               updatedItem.parentGuid ]);
+        }
+        // If the item was moved, notify onItemMoved.
+        if (item.parentGuid != updatedItem.parentGuid ||
+            item.index != updatedItem.index) {
+          notify(observers, "onItemMoved", [ updatedItem._id, item._parentId,
+                                             item.index, updatedItem._parentId,
+                                             updatedItem.index, updatedItem.type,
+                                             updatedItem.guid, item.parentGuid,
                                              updatedItem.parentGuid ]);
-      }
-      if (updateInfo.hasOwnProperty("title")) {
-        notify(observers, "onItemChanged", [ updatedItem._id, "title",
-                                             false, updatedItem.title,
-                                             toPRTime(updatedItem.lastModified),
-                                             updatedItem.type,
-                                             updatedItem._parentId,
-                                             updatedItem.guid,
-                                             updatedItem.parentGuid ]);
-      }
-      if (updateInfo.hasOwnProperty("url")) {
-        notify(observers, "onItemChanged", [ updatedItem._id, "uri",
-                                             false, updatedItem.url.href,
-                                             toPRTime(updatedItem.lastModified),
-                                             updatedItem.type,
-                                             updatedItem._parentId,
-                                             updatedItem.guid,
-                                             updatedItem.parentGuid ]);
-      }
-      // If the item was moved, notify onItemMoved.
-      if (item.parentGuid != updatedItem.parentGuid ||
-          item.index != updatedItem.index) {
-        notify(observers, "onItemMoved", [ updatedItem._id, item._parentId,
-                                           item.index, updatedItem._parentId,
-                                           updatedItem.index, updatedItem.type,
-                                           updatedItem.guid, item.parentGuid,
-                                           updatedItem.parentGuid ]);
-      }
+        }
 
-      // Remove non-enumerable properties.
-      return Object.assign({}, updatedItem);
+        // Remove non-enumerable properties.
+        return Object.assign({}, updatedItem);
+      }.bind(this)));
     }.bind(this));
   },
 
@@ -425,20 +427,21 @@ let Bookmarks = Object.freeze({
    * @return {Promise} resolved when the removal is complete.
    * @resolves once the removal is complete.
    */
-  eraseEverything: Task.async(function* () {
-    let db = yield PlacesUtils.promiseWrappedConnection();
-    yield db.executeTransaction(function* () {
-      const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid];
-      yield removeFoldersContents(db, folderGuids);
-      const time = toPRTime(new Date());
-      for (let folderGuid of folderGuids) {
-        yield db.executeCached(
-          `UPDATE moz_bookmarks SET lastModified = :time
-           WHERE id IN (SELECT id FROM moz_bookmarks WHERE guid = :folderGuid )
-          `, { folderGuid, time });
-      }
-    }.bind(this));
-  }),
+  eraseEverything: function() {
+    return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: eraseEverything",
+      db => db.executeTransaction(function* () {
+        const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid];
+        yield removeFoldersContents(db, folderGuids);
+        const time = toPRTime(new Date());
+        for (let folderGuid of folderGuids) {
+          yield db.executeCached(
+            `UPDATE moz_bookmarks SET lastModified = :time
+             WHERE id IN (SELECT id FROM moz_bookmarks WHERE guid = :folderGuid )
+            `, { folderGuid, time });
+        }
+      }.bind(this))
+    );
+  },
 
   /**
    * Fetches information about a bookmark-item.
@@ -673,340 +676,355 @@ function notify(observers, notification, args) {
 ////////////////////////////////////////////////////////////////////////////////
 // Update implementation.
 
-function* updateBookmark(info, item, newParent) {
-  let db = yield PlacesUtils.promiseWrappedConnection();
+function updateBookmark(info, item, newParent) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: updateBookmark",
+    Task.async(function*(db) {
 
-  let tuples = new Map();
-  if (info.hasOwnProperty("lastModified"))
-    tuples.set("lastModified", { value: toPRTime(info.lastModified) });
-  if (info.hasOwnProperty("title"))
-    tuples.set("title", { value: info.title });
+    let tuples = new Map();
+    if (info.hasOwnProperty("lastModified"))
+      tuples.set("lastModified", { value: toPRTime(info.lastModified) });
+    if (info.hasOwnProperty("title"))
+      tuples.set("title", { value: info.title });
 
-  yield db.executeTransaction(function* () {
-    if (info.hasOwnProperty("url")) {
-      // Ensure a page exists in moz_places for this URL.
-      yield db.executeCached(
-        `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) 
-         VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
-        `, { url: info.url ? info.url.href : null,
-             rev_host: PlacesUtils.getReversedHost(info.url),
-             frecency: info.url.protocol == "place:" ? 0 : -1 });
-      tuples.set("url", { value: info.url.href
-                        , fragment: "fk = (SELECT id FROM moz_places WHERE url = :url)" });
-    }
-
-    if (newParent) {
-      // For simplicity, update the index regardless.
-      let newIndex = info.hasOwnProperty("index") ? info.index : item.index;
-      tuples.set("position", { value: newIndex });
-
-      if (newParent.guid == item.parentGuid) {
-        // Moving inside the original container.
-        // When moving "up", add 1 to each index in the interval.
-        // Otherwise when moving down, we subtract 1.
-        let sign = newIndex < item.index ? +1 : -1;
+    yield db.executeTransaction(function* () {
+      if (info.hasOwnProperty("url")) {
+        // Ensure a page exists in moz_places for this URL.
         yield db.executeCached(
-          `UPDATE moz_bookmarks SET position = position + :sign
-           WHERE parent = :newParentId
-             AND position BETWEEN :lowIndex AND :highIndex
-          `, { sign: sign, newParentId: newParent._id,
-               lowIndex: Math.min(item.index, newIndex),
-               highIndex: Math.max(item.index, newIndex) });
-      } else {
-        // Moving across different containers.
-        tuples.set("parent", { value: newParent._id} );
-        yield db.executeCached(
-          `UPDATE moz_bookmarks SET position = position + :sign
-           WHERE parent = :oldParentId
-             AND position >= :oldIndex
-          `, { sign: -1, oldParentId: item._parentId, oldIndex: item.index });
-        yield db.executeCached(
-          `UPDATE moz_bookmarks SET position = position + :sign
-           WHERE parent = :newParentId
-             AND position >= :newIndex
-          `, { sign: +1, newParentId: newParent._id, newIndex: newIndex });
-
-        yield setAncestorsLastModified(db, item.parentGuid, info.lastModified);
+          `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) 
+           VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
+          `, { url: info.url ? info.url.href : null,
+               rev_host: PlacesUtils.getReversedHost(info.url),
+               frecency: info.url.protocol == "place:" ? 0 : -1 });
+        tuples.set("url", { value: info.url.href
+                          , fragment: "fk = (SELECT id FROM moz_places WHERE url = :url)" });
       }
-      yield setAncestorsLastModified(db, newParent.guid, info.lastModified);
+
+      if (newParent) {
+        // For simplicity, update the index regardless.
+        let newIndex = info.hasOwnProperty("index") ? info.index : item.index;
+        tuples.set("position", { value: newIndex });
+
+        if (newParent.guid == item.parentGuid) {
+          // Moving inside the original container.
+          // When moving "up", add 1 to each index in the interval.
+          // Otherwise when moving down, we subtract 1.
+          let sign = newIndex < item.index ? +1 : -1;
+          yield db.executeCached(
+            `UPDATE moz_bookmarks SET position = position + :sign
+             WHERE parent = :newParentId
+               AND position BETWEEN :lowIndex AND :highIndex
+            `, { sign: sign, newParentId: newParent._id,
+                 lowIndex: Math.min(item.index, newIndex),
+                 highIndex: Math.max(item.index, newIndex) });
+        } else {
+          // Moving across different containers.
+          tuples.set("parent", { value: newParent._id} );
+          yield db.executeCached(
+            `UPDATE moz_bookmarks SET position = position + :sign
+             WHERE parent = :oldParentId
+               AND position >= :oldIndex
+            `, { sign: -1, oldParentId: item._parentId, oldIndex: item.index });
+          yield db.executeCached(
+            `UPDATE moz_bookmarks SET position = position + :sign
+             WHERE parent = :newParentId
+               AND position >= :newIndex
+            `, { sign: +1, newParentId: newParent._id, newIndex: newIndex });
+
+          yield setAncestorsLastModified(db, item.parentGuid, info.lastModified);
+        }
+        yield setAncestorsLastModified(db, newParent.guid, info.lastModified);
+      }
+
+      yield db.executeCached(
+        `UPDATE moz_bookmarks
+         SET ${[tuples.get(v).fragment || `${v} = :${v}` for (v of tuples.keys())].join(", ")}
+         WHERE guid = :guid
+        `, Object.assign({ guid: info.guid },
+                         [...tuples.entries()].reduce((p, c) => { p[c[0]] = c[1].value; return p; }, {})));
+    });
+
+    // If the parent changed, update related non-enumerable properties.
+    let additionalParentInfo = {};
+    if (newParent) {
+      Object.defineProperty(additionalParentInfo, "_parentId",
+                            { value: newParent._id, enumerable: false });
+      Object.defineProperty(additionalParentInfo, "_grandParentId",
+                            { value: newParent._parentId, enumerable: false });
     }
 
-    yield db.executeCached(
-      `UPDATE moz_bookmarks
-       SET ${[tuples.get(v).fragment || `${v} = :${v}` for (v of tuples.keys())].join(", ")}
-       WHERE guid = :guid
-      `, Object.assign({ guid: info.guid },
-                       [...tuples.entries()].reduce((p, c) => { p[c[0]] = c[1].value; return p; }, {})));
-  });
+    let updatedItem = mergeIntoNewObject(item, info, additionalParentInfo);
 
-  // If the parent changed, update related non-enumerable properties.
-  let additionalParentInfo = {};
-  if (newParent) {
-    Object.defineProperty(additionalParentInfo, "_parentId",
-                          { value: newParent._id, enumerable: false });
-    Object.defineProperty(additionalParentInfo, "_grandParentId",
-                          { value: newParent._parentId, enumerable: false });
-  }
+    // Don't return an empty title to the caller.
+    if (updatedItem.hasOwnProperty("title") && updatedItem.title === null)
+      delete updatedItem.title;
 
-  let updatedItem = mergeIntoNewObject(item, info, additionalParentInfo);
-
-  // Don't return an empty title to the caller.
-  if (updatedItem.hasOwnProperty("title") && updatedItem.title === null)
-    delete updatedItem.title;
-
-  return updatedItem;
+    return updatedItem;
+  }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Insert implementation.
 
-function* insertBookmark(item, parent) {
-  let db = yield PlacesUtils.promiseWrappedConnection();
+function insertBookmark(item, parent) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: insertBookmark",
+    Task.async(function*(db) {
 
-  // If a guid was not provided, generate one, so we won't need to fetch the
-  // bookmark just after having created it.
-  if (!item.hasOwnProperty("guid"))
-    item.guid = (yield db.executeCached("SELECT GENERATE_GUID() AS guid"))[0].getResultByName("guid");
+    // If a guid was not provided, generate one, so we won't need to fetch the
+    // bookmark just after having created it.
+    if (!item.hasOwnProperty("guid"))
+      item.guid = (yield db.executeCached("SELECT GENERATE_GUID() AS guid"))[0].getResultByName("guid");
 
-  yield db.executeTransaction(function* transaction() {
-    if (item.type == Bookmarks.TYPE_BOOKMARK) {
-      // Ensure a page exists in moz_places for this URL.
+    yield db.executeTransaction(function* transaction() {
+      if (item.type == Bookmarks.TYPE_BOOKMARK) {
+        // Ensure a page exists in moz_places for this URL.
+        yield db.executeCached(
+          `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) 
+           VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
+          `, { url: item.url.href, rev_host: PlacesUtils.getReversedHost(item.url),
+               frecency: item.url.protocol == "place:" ? 0 : -1 });
+      }
+
+      // Adjust indices.
       yield db.executeCached(
-        `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) 
-         VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
-        `, { url: item.url.href, rev_host: PlacesUtils.getReversedHost(item.url),
-             frecency: item.url.protocol == "place:" ? 0 : -1 });
+        `UPDATE moz_bookmarks SET position = position + 1
+         WHERE parent = :parent
+         AND position >= :index
+        `, { parent: parent._id, index: item.index });
+
+      // Insert the bookmark into the database.
+      yield db.executeCached(
+        `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
+                                    dateAdded, lastModified, guid)
+         VALUES ((SELECT id FROM moz_places WHERE url = :url), :type, :parent,
+                 :index, :title, :date_added, :last_modified, :guid)
+        `, { url: item.hasOwnProperty("url") ? item.url.href : "nonexistent",
+             type: item.type, parent: parent._id, index: item.index,
+             title: item.title, date_added: toPRTime(item.dateAdded),
+             last_modified: toPRTime(item.lastModified), guid: item.guid });
+
+      yield setAncestorsLastModified(db, item.parentGuid, item.dateAdded);
+    });
+
+    // If not a tag recalculate frecency...
+    let isTagging = parent._parentId == PlacesUtils.tagsFolderId;
+    if (item.type == Bookmarks.TYPE_BOOKMARK && !isTagging) {
+      // ...though we don't wait for the calculation.
+      updateFrecency(db, [item.url]).then(null, Cu.reportError);
     }
 
-    // Adjust indices.
-    yield db.executeCached(
-      `UPDATE moz_bookmarks SET position = position + 1
-       WHERE parent = :parent
-       AND position >= :index
-      `, { parent: parent._id, index: item.index });
+    // Don't return an empty title to the caller.
+    if (item.hasOwnProperty("title") && item.title === null)
+      delete item.title;
 
-    // Insert the bookmark into the database.
-    yield db.executeCached(
-      `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
-                                  dateAdded, lastModified, guid)
-       VALUES ((SELECT id FROM moz_places WHERE url = :url), :type, :parent,
-               :index, :title, :date_added, :last_modified, :guid)
-      `, { url: item.hasOwnProperty("url") ? item.url.href : "nonexistent",
-           type: item.type, parent: parent._id, index: item.index,
-           title: item.title, date_added: toPRTime(item.dateAdded),
-           last_modified: toPRTime(item.lastModified), guid: item.guid });
-
-    yield setAncestorsLastModified(db, item.parentGuid, item.dateAdded);
-  });
-
-  // If not a tag recalculate frecency...
-  let isTagging = parent._parentId == PlacesUtils.tagsFolderId;
-  if (item.type == Bookmarks.TYPE_BOOKMARK && !isTagging) {
-    // ...though we don't wait for the calculation.
-    updateFrecency(db, [item.url]).then(null, Cu.reportError);
-  }
-
-  // Don't return an empty title to the caller.
-  if (item.hasOwnProperty("title") && item.title === null)
-    delete item.title;
-  return item;
+    return item;
+  }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fetch implementation.
 
-function* fetchBookmark(info) {
-  let db = yield PlacesUtils.promiseWrappedConnection();
+function fetchBookmark(info) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmark",
+    Task.async(function*(db) {
 
-  let rows = yield db.executeCached(
-    `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-            b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
-            b.id AS _id, b.parent AS _parentId,
-            (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
-            p.parent AS _grandParentId
-     FROM moz_bookmarks b
-     LEFT JOIN moz_bookmarks p ON p.id = b.parent
-     LEFT JOIN moz_places h ON h.id = b.fk
-     WHERE b.guid = :guid
-    `, { guid: info.guid });
+    let rows = yield db.executeCached(
+      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              b.id AS _id, b.parent AS _parentId,
+              (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
+              p.parent AS _grandParentId
+       FROM moz_bookmarks b
+       LEFT JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       WHERE b.guid = :guid
+      `, { guid: info.guid });
 
-  return rows.length ? rowsToItemsArray(rows)[0] : null;
+    return rows.length ? rowsToItemsArray(rows)[0] : null;
+  }));
 }
 
-function* fetchBookmarkByPosition(info) {
-  let db = yield PlacesUtils.promiseWrappedConnection();
-  let index = info.index == Bookmarks.DEFAULT_INDEX ? null : info.index;
+function fetchBookmarkByPosition(info) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarkByPosition",
+    Task.async(function*(db) {
+    let index = info.index == Bookmarks.DEFAULT_INDEX ? null : info.index;
 
-  let rows = yield db.executeCached(
-    `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-            b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
-            b.id AS _id, b.parent AS _parentId,
-            (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
-            p.parent AS _grandParentId
-     FROM moz_bookmarks b
-     LEFT JOIN moz_bookmarks p ON p.id = b.parent
-     LEFT JOIN moz_places h ON h.id = b.fk
-     WHERE p.guid = :parentGuid
-     AND b.position = IFNULL(:index, (SELECT count(*) - 1
-                                      FROM moz_bookmarks
-                                      WHERE parent = p.id))
-    `, { parentGuid: info.parentGuid, index });
+    let rows = yield db.executeCached(
+      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              b.id AS _id, b.parent AS _parentId,
+              (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
+              p.parent AS _grandParentId
+       FROM moz_bookmarks b
+       LEFT JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       WHERE p.guid = :parentGuid
+       AND b.position = IFNULL(:index, (SELECT count(*) - 1
+                                        FROM moz_bookmarks
+                                        WHERE parent = p.id))
+      `, { parentGuid: info.parentGuid, index });
 
-  return rows.length ? rowsToItemsArray(rows)[0] : null;
+    return rows.length ? rowsToItemsArray(rows)[0] : null;
+  }));
 }
 
-function* fetchBookmarksByURL(info) {
-  let db = yield PlacesUtils.promiseWrappedConnection();
+function fetchBookmarksByURL(info) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByURL",
+    Task.async(function*(db) {
 
-  let rows = yield db.executeCached(
-    `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-            b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
-            b.id AS _id, b.parent AS _parentId,
-            (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
-            p.parent AS _grandParentId
-     FROM moz_bookmarks b
-     LEFT JOIN moz_bookmarks p ON p.id = b.parent
-     LEFT JOIN moz_places h ON h.id = b.fk
-     WHERE h.url = :url
-     AND _grandParentId <> :tags_folder
-     ORDER BY b.lastModified DESC
-    `, { url: info.url.href,
-         tags_folder: PlacesUtils.tagsFolderId });
+    let rows = yield db.executeCached(
+      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              b.id AS _id, b.parent AS _parentId,
+              (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
+              p.parent AS _grandParentId
+       FROM moz_bookmarks b
+       LEFT JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       WHERE h.url = :url
+       AND _grandParentId <> :tags_folder
+       ORDER BY b.lastModified DESC
+      `, { url: info.url.href,
+           tags_folder: PlacesUtils.tagsFolderId });
 
-  return rows.length ? rowsToItemsArray(rows) : null;
+    return rows.length ? rowsToItemsArray(rows) : null;
+  }));
 }
 
-function* fetchBookmarksByParent(info) {
-  let db = yield PlacesUtils.promiseWrappedConnection();
+function fetchBookmarksByParent(info) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: fetchBookmarksByParent",
+    Task.async(function*(db) {
 
-  let rows = yield db.executeCached(
-    `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-            b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
-            b.id AS _id, b.parent AS _parentId,
-            (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
-            p.parent AS _grandParentId
-     FROM moz_bookmarks b
-     LEFT JOIN moz_bookmarks p ON p.id = b.parent
-     LEFT JOIN moz_places h ON h.id = b.fk
-     WHERE p.guid = :parentGuid
-     ORDER BY b.position ASC
-    `, { parentGuid: info.parentGuid });
+    let rows = yield db.executeCached(
+      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, b.title, h.url AS url,
+              b.id AS _id, b.parent AS _parentId,
+              (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
+              p.parent AS _grandParentId
+       FROM moz_bookmarks b
+       LEFT JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
+       WHERE p.guid = :parentGuid
+       ORDER BY b.position ASC
+      `, { parentGuid: info.parentGuid });
 
-  return rowsToItemsArray(rows);
+    return rowsToItemsArray(rows);
+  }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Remove implementation.
 
-function* removeBookmark(item) {
-  let db = yield PlacesUtils.promiseWrappedConnection();
+function removeBookmark(item) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: updateBookmark",
+    Task.async(function*(db) {
 
-  let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
+    let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
 
-  yield db.executeTransaction(function* transaction() {
-    // If it's a folder, remove its contents first.
-    if (item.type == Bookmarks.TYPE_FOLDER)
-      yield removeFoldersContents(db, [item.guid]);
+    yield db.executeTransaction(function* transaction() {
+      // If it's a folder, remove its contents first.
+      if (item.type == Bookmarks.TYPE_FOLDER)
+        yield removeFoldersContents(db, [item.guid]);
 
-    // Remove annotations first.  If it's a tag, we can avoid paying that cost.
-    if (!isUntagging) {
-      // We don't go through the annotations service for this cause otherwise
-      // we'd get a pointless onItemChanged notification and it would also
-      // set lastModified to an unexpected value.
-      yield removeAnnotationsForItem(db, item._id);
+      // Remove annotations first.  If it's a tag, we can avoid paying that cost.
+      if (!isUntagging) {
+        // We don't go through the annotations service for this cause otherwise
+        // we'd get a pointless onItemChanged notification and it would also
+        // set lastModified to an unexpected value.
+        yield removeAnnotationsForItem(db, item._id);
+      }
+
+      // Remove the bookmark from the database.
+      yield db.executeCached(
+        `DELETE FROM moz_bookmarks WHERE guid = :guid`, { guid: item.guid });
+
+      // Fix indices in the parent.
+      yield db.executeCached(
+        `UPDATE moz_bookmarks SET position = position - 1 WHERE
+         parent = :parentId AND position > :index
+        `, { parentId: item._parentId, index: item.index });
+
+      yield setAncestorsLastModified(db, item.parentGuid, new Date());
+    });
+
+    // If not a tag recalculate frecency...
+    if (item.type == Bookmarks.TYPE_BOOKMARK && !isUntagging) {
+      // ...though we don't wait for the calculation.
+      updateFrecency(db, [item.url]).then(null, Cu.reportError);
     }
 
-    // Remove the bookmark from the database.
-    yield db.executeCached(
-      `DELETE FROM moz_bookmarks WHERE guid = :guid`, { guid: item.guid });
-
-    // Fix indices in the parent.
-    yield db.executeCached(
-      `UPDATE moz_bookmarks SET position = position - 1 WHERE
-       parent = :parentId AND position > :index
-      `, { parentId: item._parentId, index: item.index });
-
-    yield setAncestorsLastModified(db, item.parentGuid, new Date());
-  });
-
-  // If not a tag recalculate frecency...
-  if (item.type == Bookmarks.TYPE_BOOKMARK && !isUntagging) {
-    // ...though we don't wait for the calculation.
-    updateFrecency(db, [item.url]).then(null, Cu.reportError);
-  }
-
-  return item;
+    return item;
+  }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Reorder implementation.
 
-function* reorderChildren(parent, orderedChildrenGuids) {
-  let db = yield PlacesUtils.promiseWrappedConnection();
+function reorderChildren(parent, orderedChildrenGuids) {
+  return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: updateBookmark",
+    db => db.executeTransaction(function* () {
+      // Select all of the direct children for the given parent.
+      let children = yield fetchBookmarksByParent({ parentGuid: parent.guid });
+      if (!children.length)
+        return;
 
-  return db.executeTransaction(function* () {
-    // Select all of the direct children for the given parent.
-    let children = yield fetchBookmarksByParent({ parentGuid: parent.guid });
-    if (!children.length)
-      return;
+      // Reorder the children array according to the specified order, provided
+      // GUIDs come first, others are appended in somehow random order.
+      children.sort((a, b) => {
+        let i = orderedChildrenGuids.indexOf(a.guid);
+        let j = orderedChildrenGuids.indexOf(b.guid);
+        // This works provided fetchBookmarksByParent returns sorted children.
+        return (i == -1 && j == -1) ? 0 :
+                 (i != -1 && j != -1 && i < j) || (i != -1 && j == -1) ? -1 : 1;
+       });
 
-    // Reorder the children array according to the specified order, provided
-    // GUIDs come first, others are appended in somehow random order.
-    children.sort((a, b) => {
-      let i = orderedChildrenGuids.indexOf(a.guid);
-      let j = orderedChildrenGuids.indexOf(b.guid);
-      // This works provided fetchBookmarksByParent returns sorted children.
-      return (i == -1 && j == -1) ? 0 :
-               (i != -1 && j != -1 && i < j) || (i != -1 && j == -1) ? -1 : 1;
-     });
+      // Update the bookmarks position now.  If any unknown guid have been
+      // inserted meanwhile, its position will be set to -position, and we'll
+      // handle it later.
+      // To do the update in a single step, we build a VALUES (guid, position)
+      // table.  We then use count() in the sorting table to avoid skipping values
+      // when no more existing GUIDs have been provided.
+      let valuesTable = children.map((child, i) => `("${child.guid}", ${i})`)
+                                .join();
+      yield db.execute(
+        `WITH sorting(g, p) AS (
+           VALUES ${valuesTable}
+         )
+         UPDATE moz_bookmarks SET position = (
+           SELECT CASE count(a.g) WHEN 0 THEN -position
+                                  ELSE count(a.g) - 1
+                  END
+           FROM sorting a
+           JOIN sorting b ON b.p <= a.p
+           WHERE a.g = guid
+             AND parent = :parentId
+        )`, { parentId: parent._id});
 
-    // Update the bookmarks position now.  If any unknown guid have been
-    // inserted meanwhile, its position will be set to -position, and we'll
-    // handle it later.
-    // To do the update in a single step, we build a VALUES (guid, position)
-    // table.  We then use count() in the sorting table to avoid skipping values
-    // when no more existing GUIDs have been provided.
-    let valuesTable = children.map((child, i) => `("${child.guid}", ${i})`)
-                              .join();
-    yield db.execute(
-      `WITH sorting(g, p) AS (
-         VALUES ${valuesTable}
-       )
-       UPDATE moz_bookmarks SET position = (
-         SELECT CASE count(a.g) WHEN 0 THEN -position
-                                ELSE count(a.g) - 1
-                END
-         FROM sorting a
-         JOIN sorting b ON b.p <= a.p
-         WHERE a.g = guid
-           AND parent = :parentId
-      )`, { parentId: parent._id});
+      // Update position of items that could have been inserted in the meanwhile.
+      // Since this can happen rarely and it's only done for schema coherence
+      // resonds, we won't notify about these changes.
+      yield db.executeCached(
+        `CREATE TEMP TRIGGER moz_bookmarks_reorder_trigger
+           AFTER UPDATE OF position ON moz_bookmarks
+           WHEN NEW.position = -1
+         BEGIN
+           UPDATE moz_bookmarks
+           SET position = (SELECT MAX(position) FROM moz_bookmarks
+                           WHERE parent = NEW.parent) +
+                          (SELECT count(*) FROM moz_bookmarks
+                           WHERE parent = NEW.parent
+                             AND position BETWEEN OLD.position AND -1)
+           WHERE guid = NEW.guid;
+         END
+        `);
 
-    // Update position of items that could have been inserted in the meanwhile.
-    // Since this can happen rarely and it's only done for schema coherence
-    // resonds, we won't notify about these changes.
-    yield db.executeCached(
-      `CREATE TEMP TRIGGER moz_bookmarks_reorder_trigger
-         AFTER UPDATE OF position ON moz_bookmarks
-         WHEN NEW.position = -1
-       BEGIN
-         UPDATE moz_bookmarks
-         SET position = (SELECT MAX(position) FROM moz_bookmarks
-                         WHERE parent = NEW.parent) +
-                        (SELECT count(*) FROM moz_bookmarks
-                         WHERE parent = NEW.parent
-                           AND position BETWEEN OLD.position AND -1)
-         WHERE guid = NEW.guid;
-       END
-      `);
+      yield db.executeCached(
+        `UPDATE moz_bookmarks SET position = -1 WHERE position < 0`);
 
-    yield db.executeCached(
-      `UPDATE moz_bookmarks SET position = -1 WHERE position < 0`);
+      yield db.executeCached(`DROP TRIGGER moz_bookmarks_reorder_trigger`);
 
-    yield db.executeCached(`DROP TRIGGER moz_bookmarks_reorder_trigger`);
-
-    return children;
-  }.bind(this));
+      return children;
+    }.bind(this))
+  );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

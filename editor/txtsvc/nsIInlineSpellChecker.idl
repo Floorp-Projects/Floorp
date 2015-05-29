@@ -35,7 +35,7 @@ interface nsIInlineSpellChecker : nsISupports
   void replaceWord(in nsIDOMNode aNode, in long aOffset, in AString aNewword);
   void addWordToDictionary(in AString aWord);
   void removeWordFromDictionary(in AString aWord);
-  
+
   void ignoreWord(in AString aWord);
   void ignoreWords([array, size_is(aCount)] in wstring aWordsToIgnore, in unsigned long aCount);
   void updateCurrentDictionary();

@@ -188,7 +188,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    if (!mId.AppendElements(aId)) {
+    if (!mId.AppendElements(aId, fallible)) {
       mRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     }
   }

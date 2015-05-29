@@ -1,4 +1,4 @@
-#! /bin/bash -vex
+#!/bin/bash -vex
 
 # Ensure all the scripts in this dir are on the path....
 DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )

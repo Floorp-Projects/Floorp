@@ -25,8 +25,8 @@ using namespace mozilla::dom;
 // Test for distance between caret and text that will be deleted
 nsresult
 nsTextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
-                                           nsIDOMNode           *aSelNode, 
-                                           int32_t               aSelOffset, 
+                                           nsIDOMNode           *aSelNode,
+                                           int32_t               aSelOffset,
                                            nsIEditor::EDirection aAction,
                                            bool                 *aCancel)
 {
@@ -35,13 +35,13 @@ nsTextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
 
   nsCOMPtr<nsIPresShell> shell = mEditor->GetPresShell();
   NS_ENSURE_TRUE(shell, NS_ERROR_NOT_INITIALIZED);
-  
+
   nsPresContext *context = shell->GetPresContext();
   NS_ENSURE_TRUE(context, NS_ERROR_NULL_POINTER);
-  
+
   if (!context->BidiEnabled())
     return NS_OK;
-  
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(aSelNode);
   NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
 
@@ -50,10 +50,10 @@ nsTextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
   nsRefPtr<nsFrameSelection> frameSelection =
     static_cast<Selection*>(aSelection)->GetFrameSelection();
   NS_ENSURE_TRUE(frameSelection, NS_ERROR_NULL_POINTER);
-  
+
   nsPrevNextBidiLevels levels = frameSelection->
     GetPrevNextBidiLevels(content, aSelOffset, true);
-    
+
   levelBefore = levels.mLevelBefore;
   levelAfter = levels.mLevelAfter;
 

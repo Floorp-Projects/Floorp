@@ -43,27 +43,27 @@ interface nsIEditingSession : nsISupports
                           in boolean doAfterUriLoad,
                           in boolean aMakeWholeDocumentEditable,
                           in boolean aInteractive);
-  
+
   /**
    *  Test whether a specific window has had its editable flag set; it may have an editor
    *  now, or will get one after the uri load.
-   *  
+   *
    *  Use this, passing the content root window, to test if we've set up editing
    *  for this content.
    */
   boolean windowIsEditable(in nsIDOMWindow window);
-  
+
   /**
    *  Get the editor for this window. May return null
    */
-	nsIEditor getEditorForWindow(in nsIDOMWindow window);	
+	nsIEditor getEditorForWindow(in nsIDOMWindow window);
 
-  /** 
+  /**
    *  Setup editor and related support objects
    */
   void setupEditorOnWindow(in nsIDOMWindow window);
 
-  /** 
+  /**
    *   Destroy editor and related support objects
    */
   void tearDownEditorOnWindow(in nsIDOMWindow window);

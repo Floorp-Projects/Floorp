@@ -579,8 +579,8 @@ void MediaDecoder::CallSeek(const SeekTarget& aTarget)
   mSeekRequest.Begin(ProxyMediaCall(mDecoderStateMachine->TaskQueue(),
                                     mDecoderStateMachine.get(), __func__,
                                     &MediaDecoderStateMachine::Seek, aTarget)
-    ->RefableThen(AbstractThread::MainThread(), __func__, this,
-                  &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
+    ->Then(AbstractThread::MainThread(), __func__, this,
+           &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
 }
 
 double MediaDecoder::GetCurrentTime()

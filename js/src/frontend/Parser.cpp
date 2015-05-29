@@ -2598,7 +2598,7 @@ Parser<ParseHandler>::checkYieldNameValidity()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling)
+Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
 
@@ -2620,6 +2620,9 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling)
         if (!checkYieldNameValidity())
             return null();
         name = tokenStream.currentName();
+    } else if (defaultHandling == AllowDefaultName) {
+        name = context->names().starDefaultStar;
+        tokenStream.ungetToken();
     } else {
         /* Unnamed function expressions are forbidden in statement context. */
         report(ParseError, false, null(), JSMSG_UNNAMED_FUNCTION_STMT);
@@ -4177,6 +4180,105 @@ Parser<SyntaxParseHandler>::letDeclarationOrBlock(YieldHandling yieldHandling)
     return SyntaxParseHandler::NodeFailure;
 }
 
+template<>
+bool
+Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet)
+{
+    if (tt == TOK_LC) {
+        while (true) {
+            // Handle the forms |import {} from 'a'| and
+            // |import { ..., } from 'a'| (where ... is non empty), by
+            // escaping the loop early if the next token is }.
+            if (!tokenStream.peekToken(&tt, TokenStream::KeywordIsName))
+                return false;
+
+            if (tt == TOK_RC)
+                break;
+
+            // If the next token is a keyword, the previous call to
+            // peekToken matched it as a TOK_NAME, and put it in the
+            // lookahead buffer, so this call will match keywords as well.
+            MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_IMPORT_NAME);
+            Node importName = newName(tokenStream.currentName());
+            if (!importName)
+                return false;
+
+            if (!tokenStream.getToken(&tt))
+                return false;
+
+            if (tt == TOK_NAME && tokenStream.currentName() == context->names().as) {
+                MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_BINDING_NAME);
+            } else {
+                // Keywords cannot be bound to themselves, so an import name
+                // that is a keyword is a syntax error if it is not followed
+                // by the keyword 'as'.
+                // See the ImportSpecifier production in ES6 section 15.2.2.
+                if (IsKeyword(importName->name())) {
+                    JSAutoByteString bytes;
+                    if (!AtomToPrintableString(context, importName->name(), &bytes))
+                        return false;
+                    report(ParseError, false, null(), JSMSG_AS_AFTER_RESERVED_WORD, bytes.ptr());
+                    return false;
+                }
+                tokenStream.ungetToken();
+            }
+            Node bindingName = newName(tokenStream.currentName());
+            if (!bindingName)
+                return false;
+
+            Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importName, bindingName);
+            if (!importSpec)
+                return false;
+
+            handler.addList(importSpecSet, importSpec);
+
+            bool matched;
+            if (!tokenStream.matchToken(&matched, TOK_COMMA))
+                return false;
+
+            if (!matched)
+                break;
+        }
+
+        MUST_MATCH_TOKEN(TOK_RC, JSMSG_RC_AFTER_IMPORT_SPEC_LIST);
+    } else {
+        MOZ_ASSERT(tt == TOK_MUL);
+        if (!tokenStream.getToken(&tt))
+            return false;
+
+        if (tt != TOK_NAME || tokenStream.currentName() != context->names().as) {
+            report(ParseError, false, null(), JSMSG_AS_AFTER_IMPORT_STAR);
+            return false;
+        }
+
+        MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_BINDING_NAME);
+
+        Node importName = newName(context->names().star);
+        if (!importName)
+            return null();
+
+        Node bindingName = newName(tokenStream.currentName());
+        if (!bindingName)
+            return false;
+
+        Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importName, bindingName);
+        if (!importSpec)
+            return false;
+
+        handler.addList(importSpecSet, importSpec);
+    }
+
+    return true;
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
 template<typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::importDeclaration()
@@ -4197,7 +4299,7 @@ Parser<ParseHandler>::importDeclaration()
     if (!importSpecSet)
         return null();
 
-    if (tt == TOK_NAME || tt == TOK_LC) {
+    if (tt == TOK_NAME || tt == TOK_LC || tt == TOK_MUL) {
         if (tt == TOK_NAME) {
             // Handle the form |import a from 'b'|, by adding a single import
             // specifier to the list, with 'default' as the import name and
@@ -4216,83 +4318,43 @@ Parser<ParseHandler>::importDeclaration()
                 return null();
 
             handler.addList(importSpecSet, importSpec);
-        } else {
-            while (true) {
-                // Handle the forms |import {} from 'a'| and
-                // |import { ..., } from 'a'| (where ... is non empty), by
-                // escaping the loop early if the next token is }.
-                if (!tokenStream.peekToken(&tt, TokenStream::KeywordIsName))
-                    return null();
-                if (tt == TOK_RC)
-                    break;
 
-                // If the next token is a keyword, the previous call to
-                // peekToken matched it as a TOK_NAME, and put it in the
-                // lookahead buffer, so this call will match keywords as well.
-                MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_IMPORT_NAME);
-                Node importName = newName(tokenStream.currentName());
-                if (!importName)
+            if (!tokenStream.peekToken(&tt))
+                return null();
+
+            if (tt == TOK_COMMA) {
+                if (!tokenStream.getToken(&tt) || !tokenStream.getToken(&tt))
                     return null();
 
-                if (!tokenStream.getToken(&tt))
+                if (tt != TOK_LC && tt != TOK_MUL) {
+                    report(ParseError, false, null(), JSMSG_NAMED_IMPORTS_OR_NAMESPACE_IMPORT);
                     return null();
-                if (tt == TOK_NAME && tokenStream.currentName() == context->names().as) {
-                    if (!tokenStream.getToken(&tt))
-                        return null();
-                    if (tt != TOK_NAME) {
-                        report(ParseError, false, null(), JSMSG_NO_BINDING_NAME);
-                        return null();
-                    }
-                } else {
-                    // Keywords cannot be bound to themselves, so an import name
-                    // that is a keyword is a syntax error if it is not followed
-                    // by the keyword 'as'.
-                    if (IsKeyword(importName->name())) {
-                        JSAutoByteString bytes;
-                        if (!AtomToPrintableString(context, importName->name(), &bytes))
-                            return null();
-                        report(ParseError, false, null(), JSMSG_AS_AFTER_RESERVED_WORD, bytes.ptr());
-                        return null();
-                    }
-                    tokenStream.ungetToken();
                 }
-                Node bindingName = newName(tokenStream.currentName());
-                if (!bindingName)
-                    return null();
 
-                Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importName, bindingName);
-                if (!importSpec)
+                if (!namedImportsOrNamespaceImport(tt, importSpecSet))
                     return null();
-
-                handler.addList(importSpecSet, importSpec);
-
-                bool matched;
-                if (!tokenStream.matchToken(&matched, TOK_COMMA))
-                    return null();
-                if (!matched)
-                    break;
             }
-
-            MUST_MATCH_TOKEN(TOK_RC, JSMSG_RC_AFTER_IMPORT_SPEC_LIST);
+        } else {
+            if (!namedImportsOrNamespaceImport(tt, importSpecSet))
+                return null();
         }
 
         if (!tokenStream.getToken(&tt))
             return null();
+
         if (tt != TOK_NAME || tokenStream.currentName() != context->names().from) {
-            report(ParseError, false, null(), JSMSG_FROM_AFTER_IMPORT_SPEC_SET);
+            report(ParseError, false, null(), JSMSG_FROM_AFTER_IMPORT_CLAUSE);
             return null();
         }
 
         MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
-    } else {
-        if (tt != TOK_STRING) {
-            report(ParseError, false, null(), JSMSG_DECLARATION_AFTER_IMPORT);
-            return null();
-        }
-
+    } else if (tt == TOK_STRING) {
         // Handle the form |import 'a'| by leaving the list empty. This is
         // equivalent to |import {} from 'a'|.
         importSpecSet->pn_pos.end = importSpecSet->pn_pos.begin;
+    } else {
+        report(ParseError, false, null(), JSMSG_DECLARATION_AFTER_IMPORT);
+        return null();
     }
 
     Node moduleSpec = stringLiteral();
@@ -4302,8 +4364,7 @@ Parser<ParseHandler>::importDeclaration()
     if (!MatchOrInsertSemicolon(tokenStream))
         return null();
 
-    return handler.newImportDeclaration(importSpecSet, moduleSpec,
-                                        TokenPos(begin, pos().end));
+    return handler.newImportDeclaration(importSpecSet, moduleSpec, TokenPos(begin, pos().end));
 }
 
 template<>
@@ -4314,9 +4375,15 @@ Parser<SyntaxParseHandler>::importDeclaration()
     return SyntaxParseHandler::NodeFailure;
 }
 
-template<typename ParseHandler>
-typename ParseHandler::Node
-Parser<ParseHandler>::exportDeclaration()
+template <>
+ParseNode*
+Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
+                                          ClassContext classContext,
+                                          DefaultHandling defaultHandling);
+
+template<>
+ParseNode*
+Parser<FullParseHandler>::exportDeclaration()
 {
     MOZ_ASSERT(tokenStream.currentToken().type == TOK_EXPORT);
 
@@ -4331,6 +4398,7 @@ Parser<ParseHandler>::exportDeclaration()
     TokenKind tt;
     if (!tokenStream.getToken(&tt))
         return null();
+    bool isExportStar = tt == TOK_MUL;
     switch (tt) {
       case TOK_LC:
       case TOK_MUL:
@@ -4387,7 +4455,7 @@ Parser<ParseHandler>::exportDeclaration()
             // Handle the form |export *| by adding a special export batch
             // specifier to the list.
             Node exportSpec = handler.newNullary(PNK_EXPORT_BATCH_SPEC, JSOP_NOP, pos());
-            if (!kid)
+            if (!exportSpec)
                 return null();
 
             handler.addList(kid, exportSpec);
@@ -4405,17 +4473,25 @@ Parser<ParseHandler>::exportDeclaration()
                 return null();
 
             return handler.newExportFromDeclaration(begin, kid, moduleSpec);
+        } else if (isExportStar) {
+            report(ParseError, false, null(), JSMSG_FROM_AFTER_EXPORT_STAR);
+            return null();
         } else {
             tokenStream.ungetToken();
         }
 
-        kid = MatchOrInsertSemicolon(tokenStream) ? kid : nullptr;
-        if (!kid)
+        if (!MatchOrInsertSemicolon(tokenStream))
             return null();
         break;
 
       case TOK_FUNCTION:
-        kid = functionStmt(YieldIsKeyword);
+        kid = functionStmt(YieldIsKeyword, NameRequired);
+        if (!kid)
+            return null();
+        break;
+
+      case TOK_CLASS:
+        kid = classDefinition(YieldIsKeyword, ClassStatement, NameRequired);
         if (!kid)
             return null();
         break;
@@ -4430,13 +4506,28 @@ Parser<ParseHandler>::exportDeclaration()
             return null();
         break;
 
-      case TOK_NAME:
-        // Handle the form |export a| in the same way as |export let a|, by
-        // acting as if we've just seen the let keyword. Simply unget the token
-        // and fall through.
-        //
-        // XXX This |export foo = 5| syntax is *not* in ES6!  Remove it!
-        tokenStream.ungetToken();
+      case TOK_DEFAULT: {
+        if (!tokenStream.getToken(&tt))
+            return null();
+
+        switch (tt) {
+          case TOK_FUNCTION:
+            kid = functionStmt(YieldIsKeyword, AllowDefaultName);
+            break;
+          case TOK_CLASS:
+            kid = classDefinition(YieldIsKeyword, ClassStatement, AllowDefaultName);
+            break;
+          default:
+            tokenStream.ungetToken();
+            kid = assignExpr(InAllowed, YieldIsKeyword);
+            break;
+        }
+        if (!kid)
+            return null();
+
+        return handler.newExportDefaultDeclaration(kid, TokenPos(begin, pos().end));
+      }
+
       case TOK_LET:
       case TOK_CONST:
         kid = lexicalDeclaration(YieldIsName, tt == TOK_CONST);
@@ -5842,7 +5933,8 @@ Parser<ParseHandler>::debuggerStatement()
 template <>
 ParseNode*
 Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
-                                          ClassContext classContext)
+                                          ClassContext classContext,
+                                          DefaultHandling defaultHandling)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_CLASS));
 
@@ -5861,9 +5953,14 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
         MOZ_ASSERT(yieldHandling != YieldIsKeyword);
         name = tokenStream.currentName();
     } else if (classContext == ClassStatement) {
-        // Class statements must have a bound name
-        report(ParseError, false, null(), JSMSG_UNNAMED_CLASS_STMT);
-        return null();
+        if (defaultHandling == AllowDefaultName) {
+            name = context->names().starDefaultStar;
+            tokenStream.ungetToken();
+        } else {
+            // Class statements must have a bound name
+            report(ParseError, false, null(), JSMSG_UNNAMED_CLASS_STMT);
+            return null();
+        }
     } else {
         // Make sure to put it back, whatever it was
         tokenStream.ungetToken();
@@ -5937,7 +6034,9 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
 
 template <>
 SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::classDefinition(YieldHandling yieldHandling, ClassContext classContext)
+Parser<SyntaxParseHandler>::classDefinition(YieldHandling yieldHandling,
+                                            ClassContext classContext,
+                                            DefaultHandling defaultHandling)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return SyntaxParseHandler::NodeFailure;
@@ -6082,13 +6181,13 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
 
       // HoistableDeclaration[?Yield]
       case TOK_FUNCTION:
-        return functionStmt(yieldHandling);
+        return functionStmt(yieldHandling, NameRequired);
 
       // ClassDeclaration[?Yield]
       case TOK_CLASS:
         if (!abortIfSyntaxParser())
             return null();
-        return classDefinition(yieldHandling, ClassStatement);
+        return classDefinition(yieldHandling, ClassStatement, NameRequired);
 
       // LexicalDeclaration[In, ?Yield]
       case TOK_LET:
@@ -8517,7 +8616,7 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TokenKind tt,
         return functionExpr(invoked);
 
       case TOK_CLASS:
-        return classDefinition(yieldHandling, ClassExpression);
+        return classDefinition(yieldHandling, ClassExpression, NameRequired);
 
       case TOK_LB:
         return arrayInitializer(yieldHandling);

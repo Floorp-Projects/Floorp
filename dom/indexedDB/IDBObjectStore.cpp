@@ -1230,14 +1230,17 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
           return nullptr;
         }
 
-        MOZ_ALWAYS_TRUE(fileActorOrMutableFileIds.AppendElement(fileActor));
+        MOZ_ALWAYS_TRUE(fileActorOrMutableFileIds.AppendElement(fileActor,
+                                                                fallible));
       } else {
         const int64_t fileId = blobOrFileInfo.mFileInfo->Id();
         MOZ_ASSERT(fileId > 0);
 
-        MOZ_ALWAYS_TRUE(fileActorOrMutableFileIds.AppendElement(fileId));
+        MOZ_ALWAYS_TRUE(fileActorOrMutableFileIds.AppendElement(fileId,
+                                                                fallible));
 
-        nsRefPtr<FileInfo>* newFileInfo = fileInfosToKeepAlive.AppendElement();
+        nsRefPtr<FileInfo>* newFileInfo =
+          fileInfosToKeepAlive.AppendElement(fallible);
         if (NS_WARN_IF(!newFileInfo)) {
           aRv = NS_ERROR_OUT_OF_MEMORY;
           return nullptr;

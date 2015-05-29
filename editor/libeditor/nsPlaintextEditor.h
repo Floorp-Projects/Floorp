@@ -35,7 +35,7 @@ class Selection;
 
 /**
  * The text editor implementation.
- * Use to edit text document represented as a DOM tree. 
+ * Use to edit text document represented as a DOM tree.
  */
 class nsPlaintextEditor : public nsEditor,
                           public nsIPlaintextEditor,
@@ -45,7 +45,7 @@ class nsPlaintextEditor : public nsEditor,
 public:
 
 // Interfaces for addref and release and queryinterface
-// NOTE macro used is for classes that inherit from 
+// NOTE macro used is for classes that inherit from
 // another class. Only the base class should use NS_DECL_ISUPPORTS
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsPlaintextEditor, nsEditor)
@@ -78,7 +78,7 @@ public:
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot,
                   nsISelectionController *aSelCon, uint32_t aFlags,
                   const nsAString& aValue) override;
-  
+
   NS_IMETHOD GetDocumentIsEmpty(bool *aDocumentIsEmpty) override;
   NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable) override;
 
@@ -103,7 +103,7 @@ public:
   NS_IMETHOD OutputToString(const nsAString& aFormatType,
                             uint32_t aFlags,
                             nsAString& aOutputString) override;
-                            
+
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
                             const nsAString& aFormatType,
                             const nsACString& aCharsetOverride,
@@ -178,7 +178,7 @@ protected:
                                   nsIDocumentEncoder** encoder);
 
   // key event helpers
-  NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset, 
+  NS_IMETHOD CreateBR(nsIDOMNode *aNode, int32_t aOffset,
                       nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect = eNone);
   already_AddRefed<mozilla::dom::Element>
       CreateBRImpl(nsCOMPtr<nsINode>* aInOutParent, int32_t* aInOutOffset,
@@ -207,7 +207,7 @@ protected:
     ePasswordFieldNotAllowed
   };
   bool CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed);
-  bool FireClipboardEvent(int32_t aType, int32_t aSelectionType);
+  bool FireClipboardEvent(int32_t aType, int32_t aSelectionType, bool* aActionTaken = nullptr);
 
   bool UpdateMetaCharset(nsIDOMDocument* aDocument,
                          const nsACString& aCharacterSet);

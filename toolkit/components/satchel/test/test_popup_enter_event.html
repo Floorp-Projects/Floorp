@@ -32,9 +32,7 @@ function setupFormHistory(aCallback) {
   ], aCallback);
 }
 
-var autocompleteMenu = getAutocompletePopup();
-
-SpecialPowers.addAutoCompletePopupEventListener(window, "popupshown", popupShownListener);
+registerPopupShownListener(popupShownListener);
 
 function handleEnter(evt) {
   if (evt.keyCode != KeyEvent.DOM_VK_RETURN) {

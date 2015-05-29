@@ -148,8 +148,10 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, InternalBindingsHandle 
 
 #ifdef DEBUG
     HashSet<PropertyName*> added(cx);
-    if (!added.init())
+    if (!added.init()) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 #endif
 
     uint32_t slot = CallObject::RESERVED_SLOTS;
@@ -160,8 +162,10 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, InternalBindingsHandle 
 #ifdef DEBUG
         // The caller ensures no duplicate aliased names.
         MOZ_ASSERT(!added.has(bi->name()));
-        if (!added.put(bi->name()))
+        if (!added.put(bi->name())) {
+            ReportOutOfMemory(cx);
             return false;
+        }
 #endif
 
         StackBaseShape stackBase(cx, &CallObject::class_,

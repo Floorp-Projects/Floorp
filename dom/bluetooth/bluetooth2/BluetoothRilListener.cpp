@@ -37,7 +37,7 @@ IccListener::NotifyIccInfoChanged()
 }
 
 NS_IMETHODIMP
-IccListener::NotifyStkCommand(const nsAString & aMessage)
+IccListener::NotifyStkCommand(nsIStkProactiveCmd *aStkProactiveCmd)
 {
   return NS_OK;
 }

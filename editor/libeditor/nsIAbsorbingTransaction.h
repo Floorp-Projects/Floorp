@@ -23,8 +23,8 @@ class nsSelectionState;
 class nsIAtom;
 
 /**
- * A transaction interface mixin - for transactions that can support. 
- * the placeholder absorbtion idiom. 
+ * A transaction interface mixin - for transactions that can support.
+ * the placeholder absorbtion idiom.
  */
 class nsIAbsorbingTransaction  : public nsISupports{
 public:
@@ -33,15 +33,15 @@ public:
 
   NS_IMETHOD Init(nsIAtom* aName, nsSelectionState* aSelState,
                   nsEditor* aEditor) = 0;
-  
+
   NS_IMETHOD EndPlaceHolderBatch()=0;
-  
+
   NS_IMETHOD GetTxnName(nsIAtom **aName)=0;
 
   NS_IMETHOD StartSelectionEquals(nsSelectionState *aSelState, bool *aResult)=0;
 
   NS_IMETHOD ForwardEndBatchTo(nsIAbsorbingTransaction *aForwardingAddress)=0;
-  
+
   NS_IMETHOD Commit()=0;
 };
 
