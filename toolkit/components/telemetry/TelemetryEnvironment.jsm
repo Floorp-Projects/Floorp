@@ -919,7 +919,7 @@ EnvironmentCache.prototype = {
   },
 
   /**
-   * Determine if Firefox is the default browser.
+   * Determine if we're the default browser.
    * @returns null on error, true if we are the default browser, or false otherwise.
    */
   _isDefaultBrowser: function () {
@@ -927,7 +927,7 @@ EnvironmentCache.prototype = {
     return true;
 #else
     if (!("@mozilla.org/browser/shell-service;1" in Cc)) {
-      this._log.error("_isDefaultBrowser - Could not obtain shell service");
+      this._log.info("_isDefaultBrowser - Could not obtain browser shell service");
       return null;
     }
 
@@ -940,14 +940,12 @@ EnvironmentCache.prototype = {
       return null;
     }
 
-    if (shellService) {
-      try {
-        // This uses the same set of flags used by the pref pane.
-        return shellService.isDefaultBrowser(false, true) ? true : false;
-      } catch (ex) {
-        this._log.error("_isDefaultBrowser - Could not determine if default browser", ex);
-        return null;
-      }
+    try {
+      // This uses the same set of flags used by the pref pane.
+      return shellService.isDefaultBrowser(false, true) ? true : false;
+    } catch (ex) {
+      this._log.error("_isDefaultBrowser - Could not determine if default browser", ex);
+      return null;
     }
 
     return null;
