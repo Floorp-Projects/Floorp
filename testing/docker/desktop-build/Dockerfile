@@ -18,9 +18,10 @@ RUN             /tmp/hacks.sh
 # So that the compiler can find installed libs
 ENV           LIBRARY_PATH  /usr/lib/x86_64-linux-gnu
 
-# Stubbed out credentials, which will force the upload step to be skipped.
-# Note that this needs to be in the parent of the workspace directory and in
-# the directory where mozharness is run (not its --work-dir)
+# Stubbed out credentials; mozharness looks for this file an issues a WARNING
+# if it's not found, which causes the build to fail.  Note that this needs to
+# be in the parent of the workspace directory and in the directory where
+# mozharness is run (not its --work-dir).  See Bug 1169652.
 ADD           oauth.txt /home/worker/
 
 # stubbed out buildprops, which keeps mozharness from choking
