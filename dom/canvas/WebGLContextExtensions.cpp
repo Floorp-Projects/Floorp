@@ -36,6 +36,7 @@ WebGLContext::GetExtensionString(WebGLExtensionID ext)
         WEBGL_EXTENSION_IDENTIFIER(EXT_shader_texture_lod)
         WEBGL_EXTENSION_IDENTIFIER(EXT_sRGB)
         WEBGL_EXTENSION_IDENTIFIER(EXT_texture_filter_anisotropic)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_disjoint_timer_query)
         WEBGL_EXTENSION_IDENTIFIER(OES_element_index_uint)
         WEBGL_EXTENSION_IDENTIFIER(OES_standard_derivatives)
         WEBGL_EXTENSION_IDENTIFIER(OES_texture_float)
@@ -179,13 +180,13 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
     if (Preferences::GetBool("webgl.enable-draft-extensions", false) ||
         IsWebGL2())
     {
-        /* None for now.
         switch (ext) {
+        case WebGLExtensionID::EXT_disjoint_timer_query:
+            return WebGLExtensionDisjointTimerQuery::IsSupported(this);
         default:
             // For warnings-as-errors.
             break;
         }
-        */
     }
 
     return false;
@@ -311,6 +312,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
         break;
     case WebGLExtensionID::EXT_color_buffer_half_float:
         obj = new WebGLExtensionColorBufferHalfFloat(this);
+        break;
+    case WebGLExtensionID::EXT_disjoint_timer_query:
+        obj = new WebGLExtensionDisjointTimerQuery(this);
         break;
     case WebGLExtensionID::EXT_frag_depth:
         obj = new WebGLExtensionFragDepth(this);

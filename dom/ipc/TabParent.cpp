@@ -10,6 +10,10 @@
 
 #include "AppProcessChecker.h"
 #include "mozIApplication.h"
+#ifdef ACCESSIBILITY
+#include "mozilla/a11y/DocAccessibleParent.h"
+#include "nsAccessibilityService.h"
+#endif
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -1105,6 +1109,45 @@ TabParent::SetDocShell(nsIDocShell *aDocShell)
   NS_ENSURE_ARG(aDocShell);
   NS_WARNING("No mDocShell member in TabParent so there is no docShell to set");
   return NS_OK;
+}
+
+  a11y::PDocAccessibleParent*
+TabParent::AllocPDocAccessibleParent(PDocAccessibleParent* aParent,
+                                     const uint64_t&)
+{
+#ifdef ACCESSIBILITY
+  return new a11y::DocAccessibleParent();
+#else
+  return nullptr;
+#endif
+}
+
+bool
+TabParent::DeallocPDocAccessibleParent(PDocAccessibleParent* aParent)
+{
+#ifdef ACCESSIBILITY
+  delete static_cast<a11y::DocAccessibleParent*>(aParent);
+#endif
+  return true;
+}
+
+bool
+TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
+                                         PDocAccessibleParent* aParentDoc,
+                                         const uint64_t& aParentID)
+{
+#ifdef ACCESSIBILITY
+  auto doc = static_cast<a11y::DocAccessibleParent*>(aDoc);
+  if (aParentDoc) {
+    MOZ_ASSERT(aParentID);
+    auto parentDoc = static_cast<a11y::DocAccessibleParent*>(aParentDoc);
+    return parentDoc->AddChildDoc(doc, aParentID);
+  } else {
+    MOZ_ASSERT(!aParentID);
+    a11y::DocManager::RemoteDocAdded(doc);
+  }
+#endif
+  return true;
 }
 
 PDocumentRendererParent*

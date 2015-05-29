@@ -375,8 +375,6 @@ private:
   friend nsIPrincipal* GetWebIDLCallerPrincipal();
 
   Maybe<DocshellEntryMonitor> mDocShellEntryMonitor;
-
-  bool mIsMainThread;
 };
 
 /*

@@ -1210,14 +1210,18 @@ nsScriptLoader::ProcessPendingRequests()
     child->RemoveExecuteBlocker();
   }
 
+  if (mDocumentParsingDone && mDocument && !mParserBlockingRequest &&
+      mNonAsyncExternalScriptInsertedRequests.isEmpty() &&
+      mXSLTRequests.isEmpty() && mDeferRequests.isEmpty() &&
+      MaybeRemovedDeferRequests()) {
+    return ProcessPendingRequests();
+  }
+
   if (mDocumentParsingDone && mDocument &&
       !mParserBlockingRequest && mLoadingAsyncRequests.isEmpty() &&
       mLoadedAsyncRequests.isEmpty() &&
       mNonAsyncExternalScriptInsertedRequests.isEmpty() &&
       mXSLTRequests.isEmpty() && mDeferRequests.isEmpty()) {
-    if (MaybeRemovedDeferRequests()) {
-      return ProcessPendingRequests();
-    }
     // No more pending scripts; time to unblock onload.
     // OK to unblock onload synchronously here, since callers must be
     // prepared for the world changing anyway.

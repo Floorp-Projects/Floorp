@@ -617,6 +617,18 @@ function ExpectedCheckAction(aChecked, aOptions) {
 
 ExpectedCheckAction.prototype = Object.create(ExpectedPresent.prototype);
 
+function ExpectedSwitchAction(aSwitched, aOptions) {
+  ExpectedPresent.call(this, {
+    eventType: 'action',
+    data: [{ string: aSwitched ? 'onAction' : 'offAction' }]
+  }, [{
+    eventType: AndroidEvent.VIEW_CLICKED,
+    checked: aSwitched
+  }], aOptions);
+}
+
+ExpectedSwitchAction.prototype = Object.create(ExpectedPresent.prototype);
+
 function ExpectedNameChange(aName, aOptions) {
   ExpectedPresent.call(this, {
     eventType: 'name-change',

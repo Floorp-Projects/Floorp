@@ -100,7 +100,7 @@ let ConnectionManager = {
     }
   },
   get connections() {
-    return [c for (c of this._connections)];
+    return [...this._connections];
   },
   getFreeTCPPort: function () {
     let serv = Cc['@mozilla.org/network/server-socket;1']
