@@ -30,7 +30,7 @@ static const char* kBrowserThreadNames[BrowserProcessSubThread::ID_COUNT] = {
 #endif
 };
 
-Lock BrowserProcessSubThread::sLock;
+/* static */ StaticMutex BrowserProcessSubThread::sLock;
 BrowserProcessSubThread* BrowserProcessSubThread::sBrowserThreads[ID_COUNT] = {
   nullptr,  // IO
 //  nullptr,  // FILE
@@ -46,7 +46,7 @@ BrowserProcessSubThread::BrowserProcessSubThread(ID aId) :
   mIdentifier(aId),
   mNotificationService(nullptr)
 {
-  AutoLock lock(sLock);
+  StaticMutexAutoLock lock(sLock);
   DCHECK(aId >= 0 && aId < ID_COUNT);
   DCHECK(sBrowserThreads[aId] == nullptr);
   sBrowserThreads[aId] = this;
@@ -55,7 +55,8 @@ BrowserProcessSubThread::BrowserProcessSubThread(ID aId) :
 BrowserProcessSubThread::~BrowserProcessSubThread()
 {
   Stop();
-  {AutoLock lock(sLock);
+  {
+    StaticMutexAutoLock lock(sLock);
     sBrowserThreads[mIdentifier] = nullptr;
   }
 
@@ -88,7 +89,7 @@ BrowserProcessSubThread::CleanUp()
 MessageLoop*
 BrowserProcessSubThread::GetMessageLoop(ID aId)
 {
-  AutoLock lock(sLock);
+  StaticMutexAutoLock lock(sLock);
   DCHECK(aId >= 0 && aId < ID_COUNT);
 
   if (sBrowserThreads[aId])

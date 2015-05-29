@@ -15,6 +15,7 @@
 #include "prprf.h"
 #include "GfxDriverInfo.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/gfx/Logging.h"
 #include "nsPrintfCString.h"
 
 #if defined(MOZ_CRASHREPORTER)
@@ -523,18 +524,25 @@ GfxInfo::Init()
              driverNumericVersion = 0, knownSafeMismatchVersion = 0;
     ParseDriverVersion(dllVersion, &dllNumericVersion);
     ParseDriverVersion(dllVersion2, &dllNumericVersion2);
+
     ParseDriverVersion(mDriverVersion, &driverNumericVersion);
     ParseDriverVersion(NS_LITERAL_STRING("9.17.10.0"), &knownSafeMismatchVersion);
 
     // If there's a driver version mismatch, consider this harmful only when
     // the driver version is less than knownSafeMismatchVersion.  See the
-    // above comment about crashes with old mismatches. If the GetDllVersion
-    // call fails, then they return 0, so that will be considered a mismatch.
-    if (dllNumericVersion != driverNumericVersion &&
-        dllNumericVersion2 != driverNumericVersion &&
-        (driverNumericVersion < knownSafeMismatchVersion ||
-         std::max(dllNumericVersion, dllNumericVersion2) < knownSafeMismatchVersion)) {
-      mHasDriverVersionMismatch = true;
+    // above comment about crashes with old mismatches.  If the GetDllVersion
+    // call fails, we are not calling it a mismatch.
+    if ((dllNumericVersion != 0 && dllNumericVersion != driverNumericVersion) ||
+        (dllNumericVersion2 != 0 && dllNumericVersion2 != driverNumericVersion)) {
+      if (driverNumericVersion < knownSafeMismatchVersion ||
+          std::max(dllNumericVersion, dllNumericVersion2) < knownSafeMismatchVersion) {
+        mHasDriverVersionMismatch = true;
+        gfxWarningOnce() << "Mismatched driver versions between the registry " << mDriverVersion.get() << " and DLL(s) " << NS_ConvertUTF16toUTF8(dllVersion).get() << ", " << NS_ConvertUTF16toUTF8(dllVersion2).get() << " reported.";
+      }
+    } else if (dllNumericVersion == 0 && dllNumericVersion2 == 0) {
+      // Leave it as an asserting error for now, to see if we can find
+      // a system that exhibits this kind of a problem internally.
+      gfxCriticalErrorOnce() << "Potential driver version mismatch ignored due to missing DLLs";
     }
   }
 
@@ -1200,7 +1208,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       os = DRIVER_OS_WINDOWS_XP;
 
     if (mHasDriverVersionMismatch) {
-      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_MISMATCHED_VERSION;
       return NS_OK;
     }
   }

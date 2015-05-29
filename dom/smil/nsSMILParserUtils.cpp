@@ -535,7 +535,8 @@ nsSMILParserUtils::ParseKeySplines(const nsAString& aSpec,
         !aKeySplines.AppendElement(nsSMILKeySpline(values[0],
                                                    values[1],
                                                    values[2],
-                                                   values[3]))) {
+                                                   values[3]),
+                                   fallible)) {
       return false;
     }
   }
@@ -563,7 +564,7 @@ nsSMILParserUtils::ParseSemicolonDelimitedProgressList(const nsAString& aSpec,
       return false;
     }
 
-    if (!aArray.AppendElement(value)) {
+    if (!aArray.AppendElement(value, fallible)) {
       return false;
     }
     previousValue = value;
@@ -594,7 +595,7 @@ public:
                                              tmpPreventCachingOfSandwich)))
       return false;
 
-    if (!mValuesArray->AppendElement(newValue)) {
+    if (!mValuesArray->AppendElement(newValue, fallible)) {
       return false;
     }
     if (tmpPreventCachingOfSandwich) {

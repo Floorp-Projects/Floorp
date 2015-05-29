@@ -20,7 +20,7 @@ class nsIControllerCommandTable;
 // the editor controller is used for both text widgets, and basic text editing
 // commands in composer. The refCon that gets passed to its commands is an nsIEditor.
 
-class nsEditorController 
+class nsEditorController
 {
 public:
   static nsresult RegisterEditorCommands(nsIControllerCommandTable* inCommandTable);

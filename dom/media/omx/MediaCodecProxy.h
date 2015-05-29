@@ -139,6 +139,10 @@ public:
   // allocated.
   bool AskMediaCodecAndWait();
 
+  // It asks for the OMX codec asynchronously.
+  // Only video codec is supported.
+  bool AsyncAskMediaCodec();
+
   // Free the OMX codec so others can allocate it.
   void SetMediaCodecFree();
 
@@ -148,7 +152,7 @@ protected:
   // MediaResourceHandler::EventListener::resourceReserved()
   virtual void resourceReserved();
   // MediaResourceHandler::EventListener::resourceCanceled()
-  virtual void resourceCanceled() {}
+  virtual void resourceCanceled();
 
 private:
   // Forbidden

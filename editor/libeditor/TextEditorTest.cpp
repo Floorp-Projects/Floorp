@@ -49,23 +49,23 @@ void TextEditorTest::Run(nsIEditor *aEditor, int32_t *outNumTests, int32_t *outN
 nsresult TextEditorTest::RunUnitTest(int32_t *outNumTests, int32_t *outNumTestsFailed)
 {
   nsresult result;
-  
+
   NS_ENSURE_TRUE(outNumTests && outNumTestsFailed, NS_ERROR_NULL_POINTER);
-  
+
   *outNumTests = 0;
   *outNumTestsFailed = 0;
-  
+
   result = InitDoc();
   TEST_RESULT(result);
   // shouldn't we just bail on error here?
-  
+
   // insert some simple text
   result = mTextEditor->InsertText(NS_LITERAL_STRING("1234567890abcdefghij1234567890"));
   TEST_RESULT(result);
   (*outNumTests)++;
   if (NS_FAILED(result))
     ++(*outNumTestsFailed);
-  
+
   // insert some more text
   result = mTextEditor->InsertText(NS_LITERAL_STRING("Moreover, I am cognizant of the interrelatedness of all communities and states.  I cannot sit idly by in Atlanta and not be concerned about what happens in Birmingham.  Injustice anywhere is a threat to justice everywhere"));
   TEST_RESULT(result);
@@ -123,7 +123,7 @@ nsresult TextEditorTest::TestInsertBreak()
   result = mTextEditor->InsertLineBreak();
   TEST_RESULT(result);
   mEditor->DebugDumpContent();
-    
+
   return result;
 }
 

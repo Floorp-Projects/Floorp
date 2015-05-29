@@ -960,7 +960,7 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
                        ErrorResult& aRv)
 {
   Sequence<nsString> protocols;
-  if (!protocols.AppendElement(aProtocol)) {
+  if (!protocols.AppendElement(aProtocol, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }

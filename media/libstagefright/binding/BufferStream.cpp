@@ -66,7 +66,7 @@ BufferStream::DiscardBefore(int64_t aOffset)
 bool
 BufferStream::AppendBytes(const uint8_t* aData, size_t aLength)
 {
-  return mData->AppendElements(aData, aLength);
+  return mData->AppendElements(aData, aLength, fallible);
 }
 
 MediaByteRange

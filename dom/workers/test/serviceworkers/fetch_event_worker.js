@@ -1,7 +1,7 @@
 var seenIndex = false;
 
 onfetch = function(ev) {
-  if (ev.request.url.includes("synthesized.txt")) {
+  if (ev.request.url.includes("bare-synthesized.txt")) {
     ev.respondWith(Promise.resolve(
       new Response("synthesized response body", {})
     ));
@@ -33,11 +33,23 @@ onfetch = function(ev) {
     ));
   }
 
-  else if (ev.request.url.includes("synthesized-redirect-synthesized.txt")) {
+  else if (ev.request.url.includes("synthesized-redirect-twice-real-file.txt")) {
     ev.respondWith(Promise.resolve(
-      Response.redirect("synthesized.txt")
+      Response.redirect("synthesized-redirect-real-file.txt")
     ));
   }
+
+  else if (ev.request.url.includes("synthesized-redirect-synthesized.txt")) {
+    ev.respondWith(Promise.resolve(
+      Response.redirect("bare-synthesized.txt")
+    ));
+  }
+
+  else if (ev.request.url.includes("synthesized-redirect-twice-synthesized.txt")) {
+    ev.respondWith(Promise.resolve(
+      Response.redirect("synthesized-redirect-synthesized.txt")
+     ));
+   }
 
   else if (ev.request.url.includes("ignored.txt")) {
   }

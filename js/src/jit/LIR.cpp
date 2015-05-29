@@ -57,18 +57,20 @@ LIRGraph::noteNeedsSafepoint(LInstruction* ins)
 }
 
 void
-LIRGraph::dump(FILE* fp)
+LIRGraph::dump(GenericPrinter& out)
 {
     for (size_t i = 0; i < numBlocks(); i++) {
-        getBlock(i)->dump(fp);
-        fprintf(fp, "\n");
+        getBlock(i)->dump(out);
+        out.printf("\n");
     }
 }
 
 void
 LIRGraph::dump()
 {
-    dump(stderr);
+    Fprinter out(stderr);
+    dump(out);
+    out.finish();
 }
 
 LBlock::LBlock(MBasicBlock* from)
@@ -149,23 +151,25 @@ LBlock::getExitMoveGroup(TempAllocator& alloc)
 }
 
 void
-LBlock::dump(FILE* fp)
+LBlock::dump(GenericPrinter& out)
 {
-    fprintf(fp, "block%u:\n", mir()->id());
+    out.printf("block%u:\n", mir()->id());
     for (size_t i = 0; i < numPhis(); ++i) {
-        getPhi(i)->dump(fp);
-        fprintf(fp, "\n");
+        getPhi(i)->dump(out);
+        out.printf("\n");
     }
     for (LInstructionIterator iter = begin(); iter != end(); iter++) {
-        iter->dump(fp);
-        fprintf(fp, "\n");
+        iter->dump(out);
+        out.printf("\n");
     }
 }
 
 void
 LBlock::dump()
 {
-    dump(stderr);
+    Fprinter out(stderr);
+    dump(out);
+    out.finish();
 }
 
 static size_t
@@ -308,7 +312,7 @@ LSnapshot::rewriteRecoveredInput(LUse input)
 }
 
 void
-LNode::printName(FILE* fp, Opcode op)
+LNode::printName(GenericPrinter& out, Opcode op)
 {
     static const char * const names[] =
     {
@@ -319,13 +323,13 @@ LNode::printName(FILE* fp, Opcode op)
     const char* name = names[op];
     size_t len = strlen(name);
     for (size_t i = 0; i < len; i++)
-        fprintf(fp, "%c", tolower(name[i]));
+        out.printf("%c", tolower(name[i]));
 }
 
 void
-LNode::printName(FILE* fp)
+LNode::printName(GenericPrinter& out)
 {
-    printName(fp, op());
+    printName(out, op());
 }
 
 bool
@@ -455,12 +459,12 @@ LDefinition::dump() const
 }
 
 void
-LNode::printOperands(FILE* fp)
+LNode::printOperands(GenericPrinter& out)
 {
     for (size_t i = 0, e = numOperands(); i < e; i++) {
-        fprintf(fp, " (%s)", getOperand(i)->toString());
+        out.printf(" (%s)", getOperand(i)->toString());
         if (i != numOperands() - 1)
-            fprintf(fp, ",");
+            out.printf(",");
     }
 }
 
@@ -473,56 +477,59 @@ LInstruction::assignSnapshot(LSnapshot* snapshot)
 #ifdef DEBUG
     if (JitSpewEnabled(JitSpew_IonSnapshots)) {
         JitSpewHeader(JitSpew_IonSnapshots);
-        fprintf(JitSpewFile, "Assigning snapshot %p to instruction %p (",
-                (void*)snapshot, (void*)this);
-        printName(JitSpewFile);
-        fprintf(JitSpewFile, ")\n");
+        Fprinter& out = JitSpewPrinter();
+        out.printf("Assigning snapshot %p to instruction %p (",
+                   (void*)snapshot, (void*)this);
+        printName(out);
+        out.printf(")\n");
     }
 #endif
 }
 
 void
-LNode::dump(FILE* fp)
+LNode::dump(GenericPrinter& out)
 {
     if (numDefs() != 0) {
-        fprintf(fp, "{");
+        out.printf("{");
         for (size_t i = 0; i < numDefs(); i++) {
-            fprintf(fp, "%s", getDef(i)->toString());
+            out.printf("%s", getDef(i)->toString());
             if (i != numDefs() - 1)
-                fprintf(fp, ", ");
+                out.printf(", ");
         }
-        fprintf(fp, "} <- ");
+        out.printf("} <- ");
     }
 
-    printName(fp);
-    printOperands(fp);
+    printName(out);
+    printOperands(out);
 
     if (numTemps()) {
-        fprintf(fp, " t=(");
+        out.printf(" t=(");
         for (size_t i = 0; i < numTemps(); i++) {
-            fprintf(fp, "%s", getTemp(i)->toString());
+            out.printf("%s", getTemp(i)->toString());
             if (i != numTemps() - 1)
-                fprintf(fp, ", ");
+                out.printf(", ");
         }
-        fprintf(fp, ")");
+        out.printf(")");
     }
 
     if (numSuccessors()) {
-        fprintf(fp, " s=(");
+        out.printf(" s=(");
         for (size_t i = 0; i < numSuccessors(); i++) {
-            fprintf(fp, "block%u", getSuccessor(i)->id());
+            out.printf("block%u", getSuccessor(i)->id());
             if (i != numSuccessors() - 1)
-                fprintf(fp, ", ");
+                out.printf(", ");
         }
-        fprintf(fp, ")");
+        out.printf(")");
     }
 }
 
 void
 LNode::dump()
 {
-    dump(stderr);
-    fprintf(stderr, "\n");
+    Fprinter out(stderr);
+    dump(out);
+    out.printf("\n");
+    out.finish();
 }
 
 void
@@ -590,18 +597,18 @@ LMoveGroup::addAfter(LAllocation from, LAllocation to, LDefinition::Type type)
 }
 
 void
-LMoveGroup::printOperands(FILE* fp)
+LMoveGroup::printOperands(GenericPrinter& out)
 {
     for (size_t i = 0; i < numMoves(); i++) {
         const LMove& move = getMove(i);
         // Use two printfs, as LAllocation::toString is not reentrant.
-        fprintf(fp, " [%s", move.from().toString());
-        fprintf(fp, " -> %s", move.to().toString());
+        out.printf(" [%s", move.from().toString());
+        out.printf(" -> %s", move.to().toString());
 #ifdef DEBUG
-        fprintf(fp, ", %s", TypeChars[move.type()]);
+        out.printf(", %s", TypeChars[move.type()]);
 #endif
-        fprintf(fp, "]");
+        out.printf("]");
         if (i != numMoves() - 1)
-            fprintf(fp, ",");
+            out.printf(",");
     }
 }
