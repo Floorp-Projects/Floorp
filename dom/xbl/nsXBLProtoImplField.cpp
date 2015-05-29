@@ -393,6 +393,8 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
     return NS_OK;
   }
 
+  nsAutoMicroTask mt;
+
   nsAutoCString uriSpec;
   aBindingDocURI->GetSpec(uriSpec);
 

@@ -28,6 +28,7 @@ typedef long long      GLsizeiptr;
 typedef octet          GLubyte;        /* 'octet' should be an unsigned 8 bit type. */
 typedef unsigned short GLushort;
 typedef unsigned long  GLuint;
+typedef unsigned long long GLuint64;
 typedef unrestricted float GLfloat;
 typedef unrestricted float GLclampf;
 
@@ -974,4 +975,30 @@ interface WebGLExtensionInstancedArrays {
 interface WebGLExtensionBlendMinMax {
     const GLenum MIN_EXT = 0x8007;
     const GLenum MAX_EXT = 0x8008;
+};
+
+// FIXME: Spec interface name is WebGLTimerQueryEXT.
+[NoInterfaceObject]
+interface WebGLTimerQuery {
+};
+
+// FIXME: Spec interface name is EXT_disjoint_timer_query.
+[NoInterfaceObject]
+interface WebGLExtensionDisjointTimerQuery {
+    const GLenum QUERY_COUNTER_BITS_EXT = 0x8864;
+    const GLenum CURRENT_QUERY_EXT = 0x8865;
+    const GLenum QUERY_RESULT_EXT = 0x8866;
+    const GLenum QUERY_RESULT_AVAILABLE_EXT = 0x8867;
+    const GLenum TIME_ELAPSED_EXT = 0x88BF;
+    const GLenum TIMESTAMP_EXT = 0x8E28;
+    const GLenum GPU_DISJOINT_EXT = 0x8FBB;
+
+    WebGLTimerQuery? createQueryEXT();
+    void deleteQueryEXT(WebGLTimerQuery? query);
+    [WebGLHandlesContextLoss] boolean isQueryEXT(WebGLTimerQuery? query);
+    void beginQueryEXT(GLenum target, WebGLTimerQuery? query);
+    void endQueryEXT(GLenum target);
+    void queryCounterEXT(WebGLTimerQuery? query, GLenum target);
+    any getQueryEXT(GLenum target, GLenum pname);
+    any getQueryObjectEXT(WebGLTimerQuery? query, GLenum pname);
 };

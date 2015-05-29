@@ -117,11 +117,15 @@ StreamCopier.prototype = {
     let bytesCopied;
     try {
       bytesCopied = this.output.writeFrom(this.input, amountToCopy);
-    } catch(e if e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK) {
-      this._debug("Base stream would block, will retry");
-      this._debug("Waiting for output stream");
-      this.baseAsyncOutput.asyncWait(this, 0, 0, Services.tm.currentThread);
-      return;
+    } catch(e) {
+      if (e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK) {
+        this._debug("Base stream would block, will retry");
+        this._debug("Waiting for output stream");
+        this.baseAsyncOutput.asyncWait(this, 0, 0, Services.tm.currentThread);
+        return;
+      } else {
+        throw e;
+      }
     }
 
     this._amountLeft -= bytesCopied;
@@ -149,13 +153,17 @@ StreamCopier.prototype = {
   _flush: function() {
     try {
       this.output.flush();
-    } catch(e if e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK ||
-                 e.result == Cr.NS_ERROR_FAILURE) {
-      this._debug("Flush would block, will retry");
-      this._streamReadyCallback = this._flush;
-      this._debug("Waiting for output stream");
-      this.baseAsyncOutput.asyncWait(this, 0, 0, Services.tm.currentThread);
-      return;
+    } catch(e) {
+      if (e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK ||
+          e.result == Cr.NS_ERROR_FAILURE) {
+        this._debug("Flush would block, will retry");
+        this._streamReadyCallback = this._flush;
+        this._debug("Waiting for output stream");
+        this.baseAsyncOutput.asyncWait(this, 0, 0, Services.tm.currentThread);
+        return;
+      } else {
+        throw e;
+      }
     }
     this._deferred.resolve();
   },

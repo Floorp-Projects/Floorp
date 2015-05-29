@@ -99,7 +99,9 @@ exports.items = [
     runAt: "client",
     name: "calllog chromestart",
     description: l10n.lookup("calllogChromeStartDesc"),
-    get hidden() gcli.hiddenByChromePref(),
+    get hidden() {
+      return gcli.hiddenByChromePref();
+    },
     params: [
       {
         name: "sourceType",
@@ -199,7 +201,9 @@ exports.items = [
     runAt: "client",
     name: "calllog chromestop",
     description: l10n.lookup("calllogChromeStopDesc"),
-    get hidden() gcli.hiddenByChromePref(),
+    get hidden() {
+      return gcli.hiddenByChromePref();
+    },
     exec: function(args, context) {
       let numDebuggers = chromeDebuggers.length;
       if (numDebuggers == 0) {

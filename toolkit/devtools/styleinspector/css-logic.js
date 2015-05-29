@@ -229,8 +229,8 @@ CssLogic.prototype = {
       this._propertyInfos = {};
     } else {
       // Update the CssPropertyInfo objects.
-      for each (let propertyInfo in this._propertyInfos) {
-        propertyInfo.needRefilter = true;
+      for (let property in this._propertyInfos) {
+        this._propertyInfos[property].needRefilter = true;
       }
     }
   },
@@ -408,7 +408,8 @@ CssLogic.prototype = {
    */
   forEachSheet: function CssLogic_forEachSheet(aCallback, aScope)
   {
-    for each (let sheets in this._sheets) {
+    for (let cacheId in this._sheets) {
+      let sheets = this._sheets[cacheId];
       for (let i = 0; i < sheets.length; i ++) {
         // We take this as an opportunity to clean dead sheets
         try {
@@ -437,8 +438,8 @@ CssLogic.prototype = {
    */
   forSomeSheets: function CssLogic_forSomeSheets(aCallback, aScope)
   {
-    for each (let sheets in this._sheets) {
-      if (sheets.some(aCallback, aScope)) {
+    for (let cacheId in this._sheets) {
+      if (this._sheets[cacheId].some(aCallback, aScope)) {
         return true;
       }
     }
@@ -810,10 +811,13 @@ CssLogic.getComputedStyle = function(node)
  * @param {string} aName The key to lookup.
  * @returns A localized version of the given key.
  */
-CssLogic.l10n = function(aName) CssLogic._strings.GetStringFromName(aName);
+CssLogic.l10n = function(aName)
+{
+  return CssLogic._strings.GetStringFromName(aName);
+};
 
-DevToolsUtils.defineLazyGetter(CssLogic, "_strings", function() Services.strings
-             .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
+DevToolsUtils.defineLazyGetter(CssLogic, "_strings", function() { return Services.strings
+             .createBundle("chrome://global/locale/devtools/styleinspector.properties")});
 
 /**
  * Is the given property sheet a content stylesheet?

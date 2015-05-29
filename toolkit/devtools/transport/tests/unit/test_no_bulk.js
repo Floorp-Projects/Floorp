@@ -15,7 +15,7 @@ function run_test() {
   // Allow incoming connections.
   DebuggerServer.init();
 
-  add_task(function() {
+  add_task(function*() {
     yield test_bulk_send_error(socket_transport);
     yield test_bulk_send_error(local_transport);
     DebuggerServer.destroy();

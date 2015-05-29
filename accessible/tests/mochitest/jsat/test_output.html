@@ -488,6 +488,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedUtterance: [["Last sync: 30min ago"],
                               ["Last sync: 30min ago"]],
           expectedBraille: [["Last sync: 30min ago"], ["Last sync: 30min ago"]]
+        }, {
+          accOrElmOrID: "switch-1",
+          expectedUtterance: [[{"string": "stateOn"}, {"string": "switch"},
+            "Simple switch"], ["Simple switch", {"string": "stateOn"},
+            {"string": "switch"}]],
+          expectedBraille: [[{"string": "stateCheckedAbbr"}, "Simple switch"],
+            ["Simple switch", {"string": "stateCheckedAbbr"}]]
+        }, {
+          accOrElmOrID: "switch-2",
+          expectedUtterance: [[{"string": "stateOff"},
+            {"string": "switch"}, "Another switch"], ["Another switch",
+            {"string": "stateOff"}, {"string": "switch"}]],
+          expectedBraille: [
+            [{"string": "stateUncheckedAbbr"}, "Another switch"],
+            ["Another switch", {"string": "stateUncheckedAbbr"}]]
         }];
 
         // Test all possible utterance order preference values.
@@ -645,6 +660,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       </select>
       <div id="statusbar-1" role="status">Last sync:<span>2 days ago</span></div>
       <div aria-label="Last sync: 30min ago" id="statusbar-2" role="status"></div>
+      <span id="switch-1" role="switch" aria-label="Simple switch" aria-checked="true"></span>
+      <span id="switch-2" role="switch" aria-label="Another switch" aria-checked="false"></span>
     </div>
   </body>
 </html>
