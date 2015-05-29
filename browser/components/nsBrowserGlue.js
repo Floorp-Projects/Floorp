@@ -1113,6 +1113,8 @@ BrowserGlue.prototype = {
       }
       catch (ex) { /* Don't break the default prompt if telemetry is broken. */ }
 
+      Services.setBoolPref("browser.shell.isSetAsDefaultBrowser", isDefault);
+
       if (shouldCheck && !isDefault && !willRecoverSession) {
         Services.tm.mainThread.dispatch(function() {
           DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
