@@ -83,6 +83,12 @@ protected:
   virtual bool
   DeallocPVsyncChild(PVsyncChild* aActor) override;
 
+  virtual PUDPSocketChild*
+  AllocPUDPSocketChild(const OptionalPrincipalInfo& aPrincipalInfo,
+                       const nsCString& aFilter) override;
+  virtual bool
+  DeallocPUDPSocketChild(PUDPSocketChild* aActor) override;
+
   virtual PBroadcastChannelChild*
   AllocPBroadcastChannelChild(const PrincipalInfo& aPrincipalInfo,
                               const nsString& aOrigin,

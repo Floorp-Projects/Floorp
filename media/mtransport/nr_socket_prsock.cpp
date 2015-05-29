@@ -1172,19 +1172,24 @@ int NrSocketIpc::read(void* buf, size_t maxlen, size_t *len) {
 void NrSocketIpc::create_i(const nsACString &host, const uint16_t port) {
   ASSERT_ON_THREAD(io_thread_);
 
-  ReentrantMonitorAutoEnter mon(monitor_);
-
   nsresult rv;
   nsCOMPtr<nsIUDPSocketChild> socketChild = do_CreateInstance("@mozilla.org/udp-socket-child;1", &rv);
   if (NS_FAILED(rv)) {
     err_ = true;
     MOZ_ASSERT(false, "Failed to create UDPSocketChild");
-    mon.NotifyAll();
     return;
   }
 
-  socket_child_ = socketChild;
-  socket_child_->SetFilterName(nsCString("stun"));
+  // This can spin the event loop; don't do that with the monitor held
+  socketChild->SetBackgroundSpinsEvents();
+
+  ReentrantMonitorAutoEnter mon(monitor_);
+  if (!socket_child_) {
+    socket_child_ = socketChild;
+    socket_child_->SetFilterName(nsCString("stun"));
+  } else {
+    socketChild = nullptr;
+  }
 
   nsRefPtr<NrSocketIpcProxy> proxy(new NrSocketIpcProxy);
   rv = proxy->Init(this);
@@ -1194,6 +1199,7 @@ void NrSocketIpc::create_i(const nsACString &host, const uint16_t port) {
     return;
   }
 
+  // XXX bug 1126232 - don't use null Principal!
   if (NS_FAILED(socket_child_->Bind(proxy, nullptr, host, port,
                                     /* reuse = */ false,
                                     /* loopback = */ false))) {
@@ -1426,4 +1432,3 @@ int NR_async_cancel(NR_SOCKET sock,int how) {
 nr_socket_vtbl* NrSocketBase::vtbl() {
   return &nr_socket_local_vtbl;
 }
-

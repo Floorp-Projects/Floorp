@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
+include protocol PBackground;
 include protocol PBlob;
 include InputStreamParams;
 
@@ -37,7 +38,7 @@ namespace net {
 //-------------------------------------------------------------------
 protocol PUDPSocket
 {
-  manager PNecko;
+  manager PNecko or PBackground;
 
 parent:
   Bind(UDPAddressInfo addressInfo, bool addressReuse, bool loopback);
