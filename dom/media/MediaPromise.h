@@ -125,35 +125,40 @@ public:
   class ResolveOrRejectValue
   {
   public:
-    void SetResolve(const ResolveValueType& aResolveValue)
+    template<typename ResolveValueType_>
+    void SetResolve(ResolveValueType_&& aResolveValue)
     {
       MOZ_ASSERT(IsNothing());
-      mResolveValue.emplace(aResolveValue);
+      mResolveValue.emplace(Forward<ResolveValueType_>(aResolveValue));
     }
 
-    void SetReject(const RejectValueType& aRejectValue)
+    template<typename RejectValueType_>
+    void SetReject(RejectValueType_&& aRejectValue)
     {
       MOZ_ASSERT(IsNothing());
-      mRejectValue.emplace(aRejectValue);
+      mRejectValue.emplace(Forward<RejectValueType_>(aRejectValue));
     }
 
-    static ResolveOrRejectValue MakeResolve(const ResolveValueType aResolveValue)
+    template<typename ResolveValueType_>
+    static ResolveOrRejectValue MakeResolve(ResolveValueType_&& aResolveValue)
     {
       ResolveOrRejectValue val;
-      val.SetResolve(aResolveValue);
+      val.SetResolve(Forward<ResolveValueType_>(aResolveValue));
       return val;
     }
 
-    static ResolveOrRejectValue MakeReject(const RejectValueType aRejectValue)
+    template<typename RejectValueType_>
+    static ResolveOrRejectValue MakeReject(RejectValueType_&& aRejectValue)
     {
       ResolveOrRejectValue val;
-      val.SetReject(aRejectValue);
+      val.SetReject(Forward<RejectValueType_>(aRejectValue));
       return val;
     }
 
     bool IsResolve() const { return mResolveValue.isSome(); }
     bool IsReject() const { return mRejectValue.isSome(); }
     bool IsNothing() const { return mResolveValue.isNothing() && mRejectValue.isNothing(); }
+
     const ResolveValueType& ResolveValue() const { return mResolveValue.ref(); }
     const RejectValueType& RejectValue() const { return mRejectValue.ref(); }
 
@@ -183,19 +188,21 @@ public:
   // NB: We can include the definition of this class inline once B2G ICS is gone.
   class Private;
 
+  template<typename ResolveValueType_>
   static nsRefPtr<MediaPromise>
-  CreateAndResolve(ResolveValueType aResolveValue, const char* aResolveSite)
+  CreateAndResolve(ResolveValueType_&& aResolveValue, const char* aResolveSite)
   {
     nsRefPtr<typename MediaPromise::Private> p = new MediaPromise::Private(aResolveSite);
-    p->Resolve(aResolveValue, aResolveSite);
+    p->Resolve(Forward<ResolveValueType_>(aResolveValue), aResolveSite);
     return Move(p);
   }
 
+  template<typename RejectValueType_>
   static nsRefPtr<MediaPromise>
-  CreateAndReject(RejectValueType aRejectValue, const char* aRejectSite)
+  CreateAndReject(RejectValueType_&& aRejectValue, const char* aRejectSite)
   {
     nsRefPtr<typename MediaPromise::Private> p = new MediaPromise::Private(aRejectSite);
-    p->Reject(aRejectValue, aRejectSite);
+    p->Reject(Forward<RejectValueType_>(aRejectValue), aRejectSite);
     return Move(p);
   }
 
@@ -353,18 +360,18 @@ protected:
   static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MediaPromise>>::value &&
                            TakesArgument<MethodType>::value,
                            already_AddRefed<MediaPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
-    return ((*aThisVal).*aMethod)(aValue).forget();
+    return ((*aThisVal).*aMethod)(Forward<ValueType>(aValue)).forget();
   }
 
   template<typename ThisType, typename MethodType, typename ValueType>
   static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
                            TakesArgument<MethodType>::value,
                            already_AddRefed<MediaPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
-    ((*aThisVal).*aMethod)(aValue);
+    ((*aThisVal).*aMethod)(Forward<ValueType>(aValue));
     return nullptr;
   }
 
@@ -372,7 +379,7 @@ protected:
   static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MediaPromise>>::value &&
                            !TakesArgument<MethodType>::value,
                            already_AddRefed<MediaPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
     return ((*aThisVal).*aMethod)().forget();
   }
@@ -381,7 +388,7 @@ protected:
   static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
                            !TakesArgument<MethodType>::value,
                            already_AddRefed<MediaPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
     ((*aThisVal).*aMethod)();
     return nullptr;
@@ -602,30 +609,33 @@ class MediaPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
 public:
   explicit Private(const char* aCreationSite) : MediaPromise(aCreationSite) {}
 
-  void Resolve(ResolveValueT aResolveValue, const char* aResolveSite)
+  template<typename ResolveValueT_>
+  void Resolve(ResolveValueT_&& aResolveValue, const char* aResolveSite)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolving MediaPromise (%p created at %s)", aResolveSite, this, mCreationSite);
-    mValue.SetResolve(aResolveValue);
+    mValue.SetResolve(Forward<ResolveValueT_>(aResolveValue));
     DispatchAll();
   }
 
-  void Reject(RejectValueT aRejectValue, const char* aRejectSite)
+  template<typename RejectValueT_>
+  void Reject(RejectValueT_&& aRejectValue, const char* aRejectSite)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s rejecting MediaPromise (%p created at %s)", aRejectSite, this, mCreationSite);
-    mValue.SetReject(aRejectValue);
+    mValue.SetReject(Forward<RejectValueT_>(aRejectValue));
     DispatchAll();
   }
 
-  void ResolveOrReject(ResolveOrRejectValue aValue, const char* aSite)
+  template<typename ResolveOrRejectValue_>
+  void ResolveOrReject(ResolveOrRejectValue_&& aValue, const char* aSite)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolveOrRejecting MediaPromise (%p created at %s)", aSite, this, mCreationSite);
-    mValue = aValue;
+    mValue = Forward<ResolveOrRejectValue_>(aValue);
     DispatchAll();
   }
 };
