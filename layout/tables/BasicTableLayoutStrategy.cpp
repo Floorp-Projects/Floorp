@@ -113,13 +113,25 @@ GetWidthInfo(nsRenderingContext *aRenderingContext,
         // for height).
         // For this reason, we also do not use box-sizing for just one of
         // them, as this may be confusing.
-        if (isQuirks || stylePos->mBoxSizing == NS_STYLE_BOX_SIZING_CONTENT) {
+        if (isQuirks) {
             boxSizingToBorderEdge = offsets.hPadding + offsets.hBorder;
         }
         else {
-            // NS_STYLE_BOX_SIZING_BORDER and standards-mode
-            minCoord += offsets.hPadding + offsets.hBorder;
-            prefCoord += offsets.hPadding + offsets.hBorder;
+            switch (stylePos->mBoxSizing) {
+                case NS_STYLE_BOX_SIZING_CONTENT:
+                    boxSizingToBorderEdge = offsets.hPadding + offsets.hBorder;
+                    break;
+                case NS_STYLE_BOX_SIZING_PADDING:
+                    minCoord += offsets.hPadding;
+                    prefCoord += offsets.hPadding;
+                    boxSizingToBorderEdge = offsets.hBorder;
+                    break;
+                default:
+                    // NS_STYLE_BOX_SIZING_BORDER
+                    minCoord += offsets.hPadding + offsets.hBorder;
+                    prefCoord += offsets.hPadding + offsets.hBorder;
+                    break;
+            }
         }
     } else {
         minCoord = 0;
