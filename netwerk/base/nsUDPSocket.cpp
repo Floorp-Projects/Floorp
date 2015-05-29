@@ -487,7 +487,7 @@ nsUDPSocket::AddOutputBytes(uint64_t aBytes)
 void
 nsUDPSocket::OnMsgClose()
 {
-  SOCKET_LOG(("nsUDPSocket::OnMsgClose [this=%p]\n", this));
+  UDPSOCKET_LOG(("nsUDPSocket::OnMsgClose [this=%p]\n", this));
 
   if (NS_FAILED(mCondition))
     return;
@@ -505,7 +505,7 @@ nsUDPSocket::OnMsgClose()
 void
 nsUDPSocket::OnMsgAttach()
 {
-  SOCKET_LOG(("nsUDPSocket::OnMsgAttach [this=%p]\n", this));
+  UDPSOCKET_LOG(("nsUDPSocket::OnMsgAttach [this=%p]\n", this));
 
   if (NS_FAILED(mCondition))
     return;
@@ -1314,7 +1314,7 @@ nsUDPSocket::SetSocketOption(const PRSocketOptionData& aOpt)
   }
 
   if (PR_SetSocketOption(mFD, &aOpt) != PR_SUCCESS) {
-    SOCKET_LOG(("nsUDPSocket::SetSocketOption [this=%p] failed for type %d, "
+    UDPSOCKET_LOG(("nsUDPSocket::SetSocketOption [this=%p] failed for type %d, "
       "error %d\n", this, aOpt.option, PR_GetError()));
     return NS_ERROR_FAILURE;
   }
