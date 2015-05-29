@@ -15,6 +15,10 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 
 namespace mozilla {
+namespace net {
+class PNeckoParent;
+}
+
 namespace dom {
 
 class UDPSocketParent : public mozilla::net::PUDPSocketParent
@@ -25,7 +29,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETLISTENER
 
-  UDPSocketParent();
+  explicit UDPSocketParent(PBackgroundParent* aManager);
+  explicit UDPSocketParent(PNeckoParent* aManager);
 
   bool Init(const IPC::Principal& aPrincipal, const nsACString& aFilter);
 
@@ -53,6 +58,10 @@ private:
                         const bool& aAddressReuse, const bool& aLoopback);
 
   void FireInternalError(uint32_t aLineNo);
+
+  // One of these will be null and the other non-null.
+  PBackgroundParent* mBackgroundManager;
+  PNeckoParent* mNeckoManager;
 
   bool mIPCOpen;
   nsCOMPtr<nsIUDPSocket> mSocket;

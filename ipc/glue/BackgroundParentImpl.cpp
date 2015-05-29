@@ -20,6 +20,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/PBackgroundTestParent.h"
 #include "mozilla/layout/VsyncParent.h"
+#include "mozilla/dom/network/UDPSocketParent.h"
 #include "nsIAppsService.h"
 #include "nsNetUtil.h"
 #include "nsRefPtr.h"
@@ -37,6 +38,7 @@ using mozilla::ipc::AssertIsOnBackgroundThread;
 using mozilla::dom::cache::PCacheParent;
 using mozilla::dom::cache::PCacheStorageParent;
 using mozilla::dom::cache::PCacheStreamControlParent;
+using mozilla::dom::UDPSocketParent;
 
 namespace {
 
@@ -249,6 +251,92 @@ BackgroundParentImpl::DeallocPVsyncParent(PVsyncParent* aActor)
   // This actor already has one ref-count. Please check AllocPVsyncParent().
   nsRefPtr<mozilla::layout::VsyncParent> actor =
       dont_AddRef(static_cast<mozilla::layout::VsyncParent*>(aActor));
+  return true;
+}
+
+namespace {
+
+class InitUDPSocketParentCallback final : public nsRunnable
+{
+public:
+  InitUDPSocketParentCallback(UDPSocketParent* aActor,
+                              const nsACString& aFilter)
+    : mActor(aActor)
+    , mFilter(aFilter)
+  {
+    AssertIsInMainProcess();
+    AssertIsOnBackgroundThread();
+  }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    AssertIsInMainProcess();
+
+    IPC::Principal principal;
+    if (!mActor->Init(principal, mFilter)) {
+      MOZ_CRASH("UDPSocketCallback - failed init");
+    }
+    return NS_OK;
+  }
+
+private:
+  ~InitUDPSocketParentCallback() {};
+
+  nsRefPtr<UDPSocketParent> mActor;
+  nsCString mFilter;
+};
+
+}
+
+auto
+BackgroundParentImpl::AllocPUDPSocketParent(const OptionalPrincipalInfo& /* unused */,
+                                            const nsCString& /* unused */)
+  -> PUDPSocketParent*
+{
+  nsRefPtr<UDPSocketParent> p = new UDPSocketParent(this);
+
+  return p.forget().take();
+}
+
+bool
+BackgroundParentImpl::RecvPUDPSocketConstructor(PUDPSocketParent* aActor,
+                                                const OptionalPrincipalInfo& aOptionalPrincipal,
+                                                const nsCString& aFilter)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  if (aOptionalPrincipal.type() == OptionalPrincipalInfo::TPrincipalInfo) {
+    // Support for checking principals (for non-mtransport use) will be handled in
+    // bug 1167039
+    return false;
+  }
+  // No principal - This must be from mtransport (WebRTC/ICE) - We'd want
+  // to DispatchToMainThread() here, but if we do we must block RecvBind()
+  // until Init() gets run.  Since we don't have a principal, and we verify
+  // we have a filter, we can safely skip the Dispatch and just invoke Init()
+  // to install the filter.
+
+  // For mtransport, this will always be "stun", which doesn't allow outbound packets if
+  // they aren't STUN packets until a STUN response is seen.
+  if (!aFilter.EqualsASCII("stun")) {
+    return false;
+  }
+
+  IPC::Principal principal;
+  if (!static_cast<UDPSocketParent*>(aActor)->Init(principal, aFilter)) {
+    MOZ_CRASH("UDPSocketCallback - failed init");
+  }
+
+  return true;
+}
+
+bool
+BackgroundParentImpl::DeallocPUDPSocketParent(PUDPSocketParent* actor)
+{
+  UDPSocketParent* p = static_cast<UDPSocketParent*>(actor);
+  p->Release();
   return true;
 }
 
@@ -482,8 +570,10 @@ public:
     }
 
     AssertIsOnBackgroundThread();
-    mCallback->Run();
-    mCallback = nullptr;
+    if (mCallback) {
+      mCallback->Run();
+      mCallback = nullptr;
+    }
 
     return NS_OK;
   }

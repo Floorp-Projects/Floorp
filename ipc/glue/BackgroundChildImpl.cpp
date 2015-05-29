@@ -15,6 +15,8 @@
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
 #include "mozilla/layout/VsyncChild.h"
+#include "mozilla/net/PUDPSocketChild.h"
+#include "mozilla/dom/network/UDPSocketChild.h"
 #include "nsID.h"
 #include "nsTraceRefcnt.h"
 
@@ -47,6 +49,9 @@ public:
 
 namespace mozilla {
 namespace ipc {
+
+using mozilla::dom::UDPSocketChild;
+using mozilla::net::PUDPSocketChild;
 
 using mozilla::dom::cache::PCacheChild;
 using mozilla::dom::cache::PCacheStorageChild;
@@ -210,6 +215,23 @@ BackgroundChildImpl::DeallocPVsyncChild(PVsyncChild* aActor)
   // This actor already has one ref-count. Please check AllocPVsyncChild().
   nsRefPtr<mozilla::layout::VsyncChild> actor =
       dont_AddRef(static_cast<mozilla::layout::VsyncChild*>(aActor));
+  return true;
+}
+
+PUDPSocketChild*
+BackgroundChildImpl::AllocPUDPSocketChild(const OptionalPrincipalInfo& aPrincipalInfo,
+                                          const nsCString& aFilter)
+{
+  MOZ_CRASH("AllocPUDPSocket should not be called");
+  return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPUDPSocketChild(PUDPSocketChild* child)
+{
+
+  UDPSocketChild* p = static_cast<UDPSocketChild*>(child);
+  p->ReleaseIPDLReference();
   return true;
 }
 
