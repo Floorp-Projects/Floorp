@@ -17,7 +17,7 @@
 #include "nsCoord.h"                    // for nscoord, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsPoint.h"                    // for nsIntPoint, nsPoint
-#include "nsSize.h"                     // for nsIntSize, nsSize
+#include "nsSize.h"                     // for IntSize, nsSize
 #include "nscore.h"                     // for NS_BUILD_REFCNT_LOGGING
 
 struct nsMargin;
