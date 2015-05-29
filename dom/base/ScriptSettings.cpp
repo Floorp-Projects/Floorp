@@ -529,14 +529,10 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
               aCx ? aCx : FindJSContext(aGlobalObject))
   , ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
   , mWebIDLCallerPrincipal(nullptr)
-  , mIsMainThread(aIsMainThread)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.
   MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == FindJSContext(aGlobalObject));
-  if (aIsMainThread) {
-    nsContentUtils::EnterMicroTask();
-  }
 
   if (aIsMainThread && gRunToCompletionListeners > 0) {
     mDocShellEntryMonitor.emplace(cx(), aReason);
@@ -545,10 +541,6 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
 
 AutoEntryScript::~AutoEntryScript()
 {
-  if (mIsMainThread) {
-    nsContentUtils::LeaveMicroTask();
-  }
-
   // GC when we pop a script entry point. This is a useful heuristic that helps
   // us out on certain (flawed) benchmarks like sunspider, because it lets us
   // avoid GCing during the timing loop.
