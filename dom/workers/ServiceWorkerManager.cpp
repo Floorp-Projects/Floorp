@@ -1049,20 +1049,21 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
 {
   AssertIsOnMainThread();
 
-  // XXXnsm Don't allow chrome callers for now, we don't support chrome
-  // ServiceWorkers.
-  MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
-
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-
-  nsCOMPtr<nsPIDOMWindow> outerWindow = window->GetOuterWindow();
-  bool serviceWorkersTestingEnabled =
-    outerWindow->GetServiceWorkersTestingEnabled();
+  MOZ_ASSERT(window);
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   if (!doc) {
     return NS_ERROR_FAILURE;
   }
+
+  // Don't allow service workers to register when the *document* is chrome for
+  // now.
+  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()));
+
+  nsCOMPtr<nsPIDOMWindow> outerWindow = window->GetOuterWindow();
+  bool serviceWorkersTestingEnabled =
+    outerWindow->GetServiceWorkersTestingEnabled();
 
   nsCOMPtr<nsIURI> documentURI = doc->GetBaseURI();
 
@@ -1474,14 +1475,17 @@ ServiceWorkerManager::GetRegistrations(nsIDOMWindow* aWindow,
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  // XXXnsm Don't allow chrome callers for now, we don't support chrome
-  // ServiceWorkers.
-  MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
-
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  if (!window) {
+  MOZ_ASSERT(window);
+
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  if (!doc) {
     return NS_ERROR_FAILURE;
   }
+
+  // Don't allow service workers to register when the *document* is chrome for
+  // now.
+  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()));
 
   nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(window);
   ErrorResult result;
@@ -1575,14 +1579,17 @@ ServiceWorkerManager::GetRegistration(nsIDOMWindow* aWindow,
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  // XXXnsm Don't allow chrome callers for now, we don't support chrome
-  // ServiceWorkers.
-  MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
-
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  if (!window) {
+  MOZ_ASSERT(window);
+
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  if (!doc) {
     return NS_ERROR_FAILURE;
   }
+
+  // Don't allow service workers to register when the *document* is chrome for
+  // now.
+  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()));
 
   nsCOMPtr<nsIGlobalObject> sgo = do_QueryInterface(window);
   ErrorResult result;
@@ -1784,14 +1791,17 @@ ServiceWorkerManager::GetReadyPromise(nsIDOMWindow* aWindow,
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
 
-  // XXXnsm Don't allow chrome callers for now, we don't support chrome
-  // ServiceWorkers.
-  MOZ_ASSERT(!nsContentUtils::IsCallerChrome());
-
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  if (!window) {
+  MOZ_ASSERT(window);
+
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  if (!doc) {
     return NS_ERROR_FAILURE;
   }
+
+  // Don't allow service workers to register when the *document* is chrome for
+  // now.
+  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()));
 
   MOZ_ASSERT(!mPendingReadyPromises.Contains(window));
 
