@@ -164,7 +164,8 @@ class UpvarCookie
     F(NEWTARGET) \
     \
     /* Unary operators. */ \
-    F(TYPEOF) \
+    F(TYPEOFNAME) \
+    F(TYPEOFEXPR) \
     F(VOID) \
     F(NOT) \
     F(BITNOT) \
@@ -395,10 +396,11 @@ IsDeleteKind(ParseNodeKind kind)
  * PNK_MOD
  * PNK_POS,     unary       pn_kid: UNARY expr
  * PNK_NEG
- * PNK_TYPEOF,  unary       pn_kid: UNARY expr
- * PNK_VOID,
+ * PNK_VOID,    unary       pn_kid: UNARY expr
  * PNK_NOT,
  * PNK_BITNOT
+ * PNK_TYPEOFNAME, unary    pn_kid: UNARY expr
+ * PNK_TYPEOFEXPR
  * PNK_PREINCREMENT, unary  pn_kid: MEMBER expr
  * PNK_POSTINCREMENT,
  * PNK_PREDECREMENT,

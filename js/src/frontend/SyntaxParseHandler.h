@@ -163,6 +163,10 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
+    Node newTypeof(uint32_t begin, Node kid) {
+        return NodeGeneric;
+    }
+
     Node newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, Node kid) {
         return NodeGeneric;
     }

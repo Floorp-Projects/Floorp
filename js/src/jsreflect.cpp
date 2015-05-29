@@ -1925,6 +1925,9 @@ ASTSerializer::unop(ParseNodeKind kind, JSOp op)
     if (IsDeleteKind(kind))
         return UNOP_DELETE;
 
+    if (kind == PNK_TYPEOFNAME || kind == PNK_TYPEOFEXPR)
+        return UNOP_TYPEOF;
+
     switch (op) {
       case JSOP_NEG:
         return UNOP_NEG;
@@ -1934,9 +1937,6 @@ ASTSerializer::unop(ParseNodeKind kind, JSOp op)
         return UNOP_NOT;
       case JSOP_BITNOT:
         return UNOP_BITNOT;
-      case JSOP_TYPEOF:
-      case JSOP_TYPEOFEXPR:
-        return UNOP_TYPEOF;
       case JSOP_VOID:
         return UNOP_VOID;
       default:
@@ -2944,7 +2944,8 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case PNK_DELETEELEM:
       case PNK_DELETESUPERELEM:
       case PNK_DELETEEXPR:
-      case PNK_TYPEOF:
+      case PNK_TYPEOFNAME:
+      case PNK_TYPEOFEXPR:
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
