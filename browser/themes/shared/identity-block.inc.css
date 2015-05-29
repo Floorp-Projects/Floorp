@@ -159,4 +159,9 @@
   #identity-box[open=true] > #page-proxy-favicon {
     -moz-image-region: rect(0, 96px, 32px, 64px);
   }
+
+  #identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
+    list-style-image: url("chrome://branding/content/icon128.png");
+    -moz-image-region: rect(0, 128px, 128px, 0);
+  }
 }

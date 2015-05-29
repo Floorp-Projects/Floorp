@@ -3148,10 +3148,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   #identity-popup.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
     -moz-image-region: rect(256px, 128px, 384px, 0px);
   }
-
-  #identity-popup.chromeUI > #identity-popup-container > #identity-popup-icon {
-    list-style-image: url("chrome://branding/content/icon128.png");
-  }
 }
 
 /* Popup Body Text */
