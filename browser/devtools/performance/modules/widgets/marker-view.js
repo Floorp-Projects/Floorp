@@ -174,12 +174,7 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    * @param nsIDOMNode arrowNode
    */
   _buildMarkerCells: function(doc, targetNode, arrowNode) {
-    // Root markers are an implementation detail and shouldn't be shown.
     let marker = this.marker;
-    if (marker.name == "(root)") {
-      return;
-    }
-
     let style = this.root._blueprint[marker.name];
     let startTime = this.root._interval.startTime;
     let endTime = this.root._interval.endTime;
