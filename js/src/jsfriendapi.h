@@ -2813,10 +2813,6 @@ GetFirstSubsumedSavedFrame(JSContext* cx, JS::HandleObject savedFrame);
 extern JS_FRIEND_API(bool)
 ReportIsNotFunction(JSContext* cx, JS::HandleValue v);
 
-extern JS_FRIEND_API(bool)
-DefineOwnProperty(JSContext* cx, JSObject* objArg, jsid idArg,
-                  JS::Handle<JSPropertyDescriptor> descriptor, JS::ObjectOpResult& result);
-
 extern JS_FRIEND_API(JSObject*)
 ConvertArgsToArray(JSContext* cx, const JS::CallArgs& args);
 
