@@ -21,6 +21,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gStkCmdFactory",
+                                   "@mozilla.org/icc/stkcmdfactory;1",
+                                   "nsIStkCmdFactory");
+
 let DEBUG = false;
 function debug(s) {
   dump("-@- RILSystemMessenger: " + s + "\n");
@@ -44,6 +48,10 @@ function RILSystemMessengerHelper() {
     }
 
     gSystemMessenger.broadcastMessage(aType, aMessage);
+  };
+
+  this.messenger.createCommandMessage = (aStkProactiveCmd) => {
+    return gStkCmdFactory.createCommandMessage(aStkProactiveCmd);
   };
 }
 RILSystemMessengerHelper.prototype = {

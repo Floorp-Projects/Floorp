@@ -19,7 +19,7 @@ MOZ_ARG_WITH_BOOL(system-icu,
 if test -n "$MOZ_NATIVE_ICU"; then
     PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
     MOZ_SHARED_ICU=1
-elif test -n "$gonkdir" && test "$ANDROID_VERSION" -ge 17; then
+elif test -n "$gonkdir" && test "$ANDROID_VERSION" -ge 18; then
     dnl Use system's ICU since version is 50.1+.
     if test -d "$gonkdir/external/icu/icu4c/source"; then
         dnl gonk-L (API version is 21)

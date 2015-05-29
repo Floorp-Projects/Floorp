@@ -6,6 +6,9 @@
  * and that they're cleared upon rerecording.
  */
 function* spawnTest() {
+  // This test seems to take a long time to cleanup on Ubuntu VMs.
+  requestLongerTimeout(2);
+
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, OverviewView } = panel.panelWin;
 

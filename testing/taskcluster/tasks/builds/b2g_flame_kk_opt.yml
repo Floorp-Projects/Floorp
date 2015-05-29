@@ -22,6 +22,9 @@ task:
         cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
         buildbot_step 'Build' ./build-phone.sh $HOME/workspace
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       symbol: B
       groupSymbol: Flame-KK

@@ -14,10 +14,6 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 
-    dexOptions {
-        incremental true
-    }
-
     lintOptions {
         abortOnError false
     }

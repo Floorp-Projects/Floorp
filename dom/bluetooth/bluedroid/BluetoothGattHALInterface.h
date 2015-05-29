@@ -138,11 +138,13 @@ public:
                   int aMinInterval,
                   int aMaxInterval,
                   int aApperance,
-                  uint8_t aManufacturerLen,
-                  const ArrayBuffer& aManufacturerData,
-                  uint8_t aServiceDataLen, const ArrayBuffer& aServiceData,
-                  uint8_t aServiceUUIDLen, const ArrayBuffer& aServiceUUID,
+                  uint16_t aManufacturerLen, char* aManufacturerData,
+                  uint16_t aServiceDataLen, char* aServiceData,
+                  uint16_t aServiceUUIDLen, char* aServiceUUID,
                   BluetoothGattClientResultHandler* aRes);
+
+  void TestCommand(int aCommand, const BluetoothGattTestParam& aTestParam,
+                   BluetoothGattClientResultHandler* aRes);
 
 protected:
   BluetoothGattClientHALInterface(
