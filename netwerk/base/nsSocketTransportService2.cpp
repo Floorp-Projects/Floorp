@@ -30,6 +30,7 @@ using namespace mozilla;
 using namespace mozilla::net;
 
 PRLogModuleInfo *gSocketTransportLog = nullptr;
+PRLogModuleInfo *gUDPSocketLog = nullptr;
 
 nsSocketTransportService *gSocketTransportService = nullptr;
 PRThread                 *gSocketThread           = nullptr;
@@ -111,6 +112,7 @@ nsSocketTransportService::nsSocketTransportService()
     , mProbedMaxCount(false)
 {
     gSocketTransportLog = PR_NewLogModule("nsSocketTransport");
+    gUDPSocketLog = PR_NewLogModule("UDPSocket");
 
     NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 

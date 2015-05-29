@@ -3,15 +3,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* global PrefCache, Roles, Prefilters, States, Filters, Utils,
-   TraversalRules */
+   TraversalRules, Components, XPCOMUtils */
 /* exported TraversalRules */
 
 'use strict';
 
-const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-const Cr = Components.results;
 
 this.EXPORTED_SYMBOLS = ['TraversalRules']; // jshint ignore:line
 
@@ -103,7 +101,8 @@ var gSimpleTraversalRoles =
    Roles.GRID_CELL,
    Roles.COLUMNHEADER,
    Roles.ROWHEADER,
-   Roles.STATUSBAR];
+   Roles.STATUSBAR,
+   Roles.SWITCH];
 
 var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
   // An object is simple, if it either has a single child lineage,
@@ -240,7 +239,8 @@ this.TraversalRules = { // jshint ignore:line
      Roles.RADIO_MENU_ITEM,
      Roles.SLIDER,
      Roles.CHECKBUTTON,
-     Roles.CHECK_MENU_ITEM]),
+     Roles.CHECK_MENU_ITEM,
+     Roles.SWITCH]),
 
   Graphic: new BaseTraversalRule(
     [Roles.GRAPHIC],
@@ -302,7 +302,8 @@ this.TraversalRules = { // jshint ignore:line
 
   Checkbox: new BaseTraversalRule(
     [Roles.CHECKBUTTON,
-     Roles.CHECK_MENU_ITEM]),
+     Roles.CHECK_MENU_ITEM,
+     Roles.SWITCH /* A type of checkbox that represents on/off values */]),
 
   _shouldSkipImage: function _shouldSkipImage(aAccessible) {
     if (gSkipEmptyImages.value && aAccessible.name === '') {

@@ -67,7 +67,7 @@ GMPChild::~GMPChild()
 
 static bool
 GetFileBase(const std::string& aPluginPath,
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
             nsCOMPtr<nsIFile>& aLibDirectory,
 #endif
             nsCOMPtr<nsIFile>& aFileBase,
@@ -81,7 +81,7 @@ GetFileBase(const std::string& aPluginPath,
     return false;
   }
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   if (NS_FAILED(aFileBase->Clone(getter_AddRefs(aLibDirectory)))) {
     return false;
   }
@@ -107,13 +107,13 @@ GetFileBase(const std::string& aPluginPath,
 
 static bool
 GetPluginFile(const std::string& aPluginPath,
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
               nsCOMPtr<nsIFile>& aLibDirectory,
 #endif
               nsCOMPtr<nsIFile>& aLibFile)
 {
   nsAutoString baseName;
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   GetFileBase(aPluginPath, aLibDirectory, aLibFile, baseName);
 #else
   GetFileBase(aPluginPath, aLibFile, baseName);
@@ -592,7 +592,7 @@ GetPluginVoucherFile(const std::string& aPluginPath,
                      nsCOMPtr<nsIFile>& aOutVoucherFile)
 {
   nsAutoString baseName;
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   nsCOMPtr<nsIFile> libDir;
   GetFileBase(aPluginPath, aOutVoucherFile, libDir, baseName);
 #else

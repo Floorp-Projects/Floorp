@@ -1269,6 +1269,24 @@ nsDisplayListBuilder::AppendNewScrollInfoItemForHoisting(nsDisplayScrollInfoLaye
   mScrollInfoItemsForHoisting->AppendNewToTop(aScrollInfoItem);
 }
 
+void
+nsDisplayListBuilder::StoreDirtyRectForScrolledContents(const nsIFrame* aScrollableFrame,
+                                                        const nsRect& aDirty)
+{
+  mDirtyRectForScrolledContents.Put(const_cast<nsIFrame*>(aScrollableFrame),
+                                    aDirty + ToReferenceFrame(aScrollableFrame));
+}
+
+nsRect
+nsDisplayListBuilder::GetDirtyRectForScrolledContents(const nsIFrame* aScrollableFrame) const
+{
+  nsRect result;
+  if (!mDirtyRectForScrolledContents.Get(const_cast<nsIFrame*>(aScrollableFrame), &result)) {
+    return nsRect();
+  }
+  return result;
+}
+
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
 {
   aDestination.BorderBackground()->AppendToTop(BorderBackground());
