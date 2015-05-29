@@ -1,0 +1,31 @@
+//#filter substitution
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko;
+
+import org.mozilla.gecko.adjust.AdjustHelperInterface;
+//#ifdef MOZ_INSTALL_TRACKING
+import org.mozilla.gecko.adjust.AdjustHelper;
+//#else
+import org.mozilla.gecko.adjust.StubAdjustHelper;
+//#endif
+
+public class AdjustConstants {
+    public static final String MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN =
+//#ifdef MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN
+    "@MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN@";
+//#else
+    null;
+//#endif
+
+    public static AdjustHelperInterface getAdjustHelper() {
+//#ifdef MOZ_INSTALL_TRACKING
+        return new AdjustHelper();
+//#else
+        return new StubAdjustHelper();
+//#endif
+    }
+}
