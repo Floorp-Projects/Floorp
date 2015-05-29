@@ -53,7 +53,7 @@ WrapTexCoord(GLfloat v)
 
 void
 DecomposeIntoNoRepeatTriangles(const gfx::IntRect& aTexCoordRect,
-                               const nsIntSize& aTexSize,
+                               const gfx::IntSize& aTexSize,
                                RectTriangles& aRects,
                                bool aFlipY /* = false */)
 {
