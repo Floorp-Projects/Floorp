@@ -12,7 +12,9 @@
 
 class nsStunUDPSocketFilterHandler : public nsIUDPSocketFilterHandler {
 public:
-  NS_DECL_ISUPPORTS
+  // Threadsafe because we create off-main-thread, but destroy on MainThread
+  // via FreeFactoryEntries()
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETFILTERHANDLER
 private:
   virtual ~nsStunUDPSocketFilterHandler() {}
