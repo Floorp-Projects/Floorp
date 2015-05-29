@@ -97,9 +97,10 @@ tc-vcs checkout $WORKSPACE/build/src $GECKO_BASE_REPOSITORY $GECKO_HEAD_REPOSITO
 # the TC docker worker looks for artifacts to upload in $HOME/artifacts, but
 # mach wants to put them in $WORKSPACE/build/upload; symlinking lets everyone
 # win!
-rm -rf $HOME/build/upload
+rm -rf $WORKSPACE/build/upload
 mkdir -p $HOME/artifacts
-ln -s $HOME/artifacts $HOME/build/upload
+ln -s $HOME/artifacts $WORKSPACE/build/upload
+
 # run mozharness in XVfb, if necessary; this is an array to maintain the quoting in the -s argument
 if $NEED_XVFB; then
     # Some mozharness scripts set DISPLAY=:2
@@ -176,8 +177,3 @@ done
   --no-action=generate-build-stats \
   --branch=${MH_BRANCH} \
   --build-pool=${MH_BUILD_POOL}
-
-# if mozharness has created an "upload" directory, copy all of that into artifacts
-if [ -d $WORKSPACE/build/upload ]; then
-    cp -r $WORKSPACE/build/upload/* $HOME/artifacts/
-fi
