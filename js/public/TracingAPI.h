@@ -133,11 +133,6 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
         contextName_(nullptr), contextIndex_(InvalidIndex), contextFunctor_(nullptr)
     {}
 
-    // Update the trace callback.
-    void setTraceCallback(JSTraceCallback traceCallback) {
-        callback = traceCallback;
-    }
-
     // Test if the given callback is the same as our callback.
     bool hasCallback(JSTraceCallback maybeCallback) const {
         return maybeCallback == callback;

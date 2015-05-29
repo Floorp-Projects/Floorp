@@ -12,6 +12,7 @@ this.EXPORTED_SYMBOLS = [ "AutoCompleteE10S" ];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
 
 // nsITreeView implementation that feeds the autocomplete popup
 // with the search data.
@@ -81,10 +82,14 @@ this.AutoCompleteE10S = {
                          getService(Ci.nsIMessageListenerManager);
     messageManager.addMessageListener("FormAutoComplete:SelectBy", this);
     messageManager.addMessageListener("FormAutoComplete:GetSelectedIndex", this);
+    messageManager.addMessageListener("FormAutoComplete:MaybeOpenPopup", this);
     messageManager.addMessageListener("FormAutoComplete:ClosePopup", this);
+    messageManager.addMessageListener("FormAutoComplete:RemoveEntry", this);
   },
 
   _initPopup: function(browserWindow, rect, direction) {
+    this._popupCache = { browserWindow, rect, direction };
+
     this.browser = browserWindow.gBrowser.selectedBrowser;
     this.popup = this.browser.autoCompletePopup;
     this.popup.hidden = false;
@@ -101,9 +106,12 @@ this.AutoCompleteE10S = {
     let resultsArray = [];
     let count = results.matchCount;
     for (let i = 0; i < count; i++) {
-      let result = results.getValueAt(i);
-      resultsArray.push(result);
-      AutoCompleteE10SView.addResult(result, results.getStyleAt(i));
+      // The actual result for each match in the results object is the value.
+      // We return that in order to submit the correct value. However, we have
+      // to make sure we display the label corresponding to it in the popup.
+      resultsArray.push(results.getValueAt(i));
+      AutoCompleteE10SView.addResult(results.getLabelAt(i),
+                                     results.getStyleAt(i));
     }
 
     this.popup.view = AutoCompleteE10SView;
@@ -121,6 +129,7 @@ this.AutoCompleteE10S = {
       this.popup.closePopup();
     }
 
+    this._resultCache = results;
     return resultsArray;
   },
 
@@ -130,6 +139,20 @@ this.AutoCompleteE10S = {
   showPopupWithResults: function(browserWindow, rect, results) {
     this._initPopup(browserWindow, rect);
     this._showPopup(results);
+  },
+
+  removeEntry(index) {
+    this._resultCache.removeValueAt(index, true);
+
+    let selectedIndex = this.popup.selectedIndex;
+    this.showPopupWithResults(this._popupCache.browserWindow,
+                              this._popupCache.rect,
+                              this._resultCache);
+
+    // If we removed the last result, bump the selected index back once.
+    if (selectedIndex >= this._resultCache.matchCount)
+      selectedIndex--;
+    this.popup.selectedIndex = selectedIndex;
   },
 
   // This function is called in response to AutoComplete requests from the
@@ -142,14 +165,33 @@ this.AutoCompleteE10S = {
 
     this._initPopup(browserWindow, rect, direction);
 
+    // NB: We use .wrappedJSObject here in order to pass our mock DOM object
+    // without being rejected by XPConnect (which attempts to enforce that DOM
+    // objects are implemented in C++.
     let formAutoComplete = Cc["@mozilla.org/satchel/form-autocomplete;1"]
-                             .getService(Ci.nsIFormAutoComplete);
+                             .getService(Ci.nsIFormAutoComplete).wrappedJSObject;
+
+    let values, labels;
+    if (message.data.datalistResult) {
+      // Create a full FormAutoCompleteResult from the mock one that we pass
+      // over IPC.
+      message.data.datalistResult =
+        new FormAutoCompleteResult(message.data.untrimmedSearchString,
+                                   Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+                                   0, "", message.data.datalistResult.values,
+                                   message.data.datalistResult.labels,
+                                   [], null);
+    } else {
+      message.data.datalistResult = null;
+    }
 
     formAutoComplete.autoCompleteSearchAsync(message.data.inputName,
                                              message.data.untrimmedSearchString,
+                                             message.data.mockField,
                                              null,
-                                             null,
-                                             this.onSearchComplete.bind(this));
+                                             message.data.datalistResult,
+                                             { onSearchCompletion:
+                                               this.onSearchComplete.bind(this) });
   },
 
   // The second half of search, this fills in the popup and returns the
@@ -172,6 +214,23 @@ this.AutoCompleteE10S = {
       case "FormAutoComplete:GetSelectedIndex":
         return this.popup.selectedIndex;
 
+      case "FormAutoComplete:RemoveEntry":
+        this.removeEntry(message.data.index);
+        break;
+
+      case "FormAutoComplete:MaybeOpenPopup":
+        if (AutoCompleteE10SView.treeData.length > 0 &&
+            !this.popup.popupOpen) {
+          // This happens when one of the arrow keys is pressed after a search
+          // has already been completed. nsAutoCompleteController tries to
+          // re-use its own cache of the results without re-doing the search.
+          // Detect that and show the popup here.
+          this.showPopupWithResults(this._popupCache.browserWindow,
+                                    this._popupCache.rect,
+                                    this._resultCache);
+        }
+        break;
+
       case "FormAutoComplete:ClosePopup":
         this.popup.closePopup();
         break;
@@ -182,7 +241,7 @@ this.AutoCompleteE10S = {
     this.browser.messageManager.sendAsyncMessage(
       "FormAutoComplete:HandleEnter",
       { selectedIndex: this.popup.selectedIndex,
-        IsPopupSelection: aIsPopupSelection }
+        isPopupSelection: aIsPopupSelection }
     );
   },
 

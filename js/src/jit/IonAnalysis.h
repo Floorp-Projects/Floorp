@@ -151,8 +151,7 @@ class LinearSum
     LinearTerm term(size_t i) const { return terms_[i]; }
     void replaceTerm(size_t i, MDefinition* def) { terms_[i].term = def; }
 
-    void print(Sprinter& sp) const;
-    void dump(FILE*) const;
+    void dump(GenericPrinter& out) const;
     void dump() const;
 
   private:

@@ -7,10 +7,14 @@
 
 [ptr] native RequestHeaderTuples(mozilla::net::RequestHeaderTuples);
 
-[uuid(306ACF4D-C6DF-4EF6-BDA9-5CB92E83EDD9)]
+[uuid(3842c5e9-b5b1-400c-8eb7-936a3316ff21)]
 interface nsIHttpChannelChild : nsISupports
 {
   void addCookiesToRequest();
+
+  // Mark this channel as requiring an interception; this will propagate
+  // to the corresponding parent channel when a redirect occurs.
+  void forceIntercepted();
 
   // Headers that the channel client has set via SetRequestHeader.
   readonly attribute RequestHeaderTuples clientSetRequestHeaders;

@@ -396,7 +396,7 @@ this.DOMApplicationRegistry = {
     if (aManifest.widgetPages) {
       let resolve = (aPage)=>{
         let filepath = AppsUtils.getFilePath(aPage);
-        return Services.io.newURI(aManifest.resolveURL(filepath), null, null);
+        return aManifest.resolveURL(filepath);
       };
       aDestApp.widgetPages = aManifest.widgetPages.map(resolve);
     } else {

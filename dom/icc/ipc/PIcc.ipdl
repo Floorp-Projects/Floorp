@@ -87,6 +87,19 @@ child:
    */
   NotifyIccInfoChanged(OptionalIccInfoData aInfoData);
 
+  /**
+   * Notify STK proactive command issue by selected UICC.
+   *
+   * @param aStkProactiveCmd
+   *        a MozStkCommand instance serialized in JSON.
+   */
+  NotifyStkCommand(nsString aStkProactiveCmd);
+
+  /**
+   * Notify that STK session is ended by selected UICC.
+   */
+  NotifyStkSessionEnd();
+
 parent:
   /**
    * Sent when the child no longer needs to use PIcc.
@@ -97,6 +110,34 @@ parent:
    * Sent when the child makes an asynchronous request to the parent.
    */
   PIccRequest(IccRequest aRequest);
+
+  /**
+   * Send STK response to the selected UICC.
+   *
+   * @param aCommand
+   *        a MozStkCommand instance serialized in JSON.
+   * @param aResponse
+   *        a MozStkResponse instance serialized in JSON.
+   */
+  StkResponse(nsString aCommand, nsString aResponse);
+
+  /**
+   * Send STK Menu Selection to the selected UICC.
+   */
+  StkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested);
+
+  /**
+   * Send STK Timer Expiration to the selected UICC.
+   */
+  StkTimerExpiration(uint16_t aTimerId, uint32_t aTimerValue);
+
+  /**
+   * Send STK Event Download to the selected UICC.
+   *
+   * @param aEvent
+   *        a MozStkXxxEvent instance serialized in JSON.
+   */
+  StkEventDownload(nsString aEvent);
 
   /**
    * Sync call to initialize the updated IccInfo/CardState.

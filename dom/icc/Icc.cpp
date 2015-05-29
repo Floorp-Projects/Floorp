@@ -15,7 +15,8 @@
 #include "nsIIccInfo.h"
 #include "nsIIccProvider.h"
 #include "nsIIccService.h"
-#include "nsJSON.h"
+#include "nsIStkCmdFactory.h"
+#include "nsIStkProactiveCmd.h"
 #include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
 
@@ -99,7 +100,7 @@ Icc::NotifyEvent(const nsAString& aName)
 }
 
 nsresult
-Icc::NotifyStkEvent(const nsAString& aName, const nsAString& aMessage)
+Icc::NotifyStkEvent(const nsAString& aName, nsIStkProactiveCmd* aStkProactiveCmd)
 {
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(GetOwner()))) {
@@ -108,13 +109,12 @@ Icc::NotifyStkEvent(const nsAString& aName, const nsAString& aMessage)
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> value(cx);
 
-  if (!aMessage.IsEmpty()) {
-    nsCOMPtr<nsIJSON> json(new nsJSON());
-    nsresult rv = json->DecodeToJSVal(aMessage, cx, &value);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    value = JS::NullValue();
-  }
+  nsCOMPtr<nsIStkCmdFactory> cmdFactory =
+    do_GetService(ICC_STK_CMD_FACTORY_CONTRACTID);
+  NS_ENSURE_TRUE(cmdFactory, NS_ERROR_UNEXPECTED);
+
+  cmdFactory->CreateCommandMessage(aStkProactiveCmd, &value);
+  NS_ENSURE_TRUE(value.isObject(), NS_ERROR_UNEXPECTED);
 
   MozStkCommandEventInit init;
   init.mBubbles = false;
@@ -195,13 +195,33 @@ void
 Icc::SendStkResponse(const JSContext* aCx, JS::Handle<JS::Value> aCommand,
                      JS::Handle<JS::Value> aResponse, ErrorResult& aRv)
 {
-  if (!mProvider) {
+  if (!mHandler) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  nsresult rv = mProvider->SendStkResponse(mClientId, GetOwner(), aCommand,
-                                           aResponse);
+  nsCOMPtr<nsIStkCmdFactory> cmdFactory =
+    do_GetService(ICC_STK_CMD_FACTORY_CONTRACTID);
+  if (!cmdFactory) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsIStkProactiveCmd> command;
+  cmdFactory->CreateCommand(aCommand, getter_AddRefs(command));
+  if (!command) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsIStkTerminalResponse> response;
+  cmdFactory->CreateResponse(aResponse, getter_AddRefs(response));
+  if (!response) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsresult rv = mHandler->SendStkResponse(command, response);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
@@ -211,15 +231,12 @@ void
 Icc::SendStkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested,
                           ErrorResult& aRv)
 {
-  if (!mProvider) {
+  if (!mHandler) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  nsresult rv = mProvider->SendStkMenuSelection(mClientId,
-                                                GetOwner(),
-                                                aItemIdentifier,
-                                                aHelpRequested);
+  nsresult rv = mHandler->SendStkMenuSelection(aItemIdentifier, aHelpRequested);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
@@ -229,13 +246,38 @@ void
 Icc::SendStkTimerExpiration(const JSContext* aCx, JS::Handle<JS::Value> aTimer,
                             ErrorResult& aRv)
 {
-  if (!mProvider) {
+  if (!mHandler) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  nsresult rv = mProvider->SendStkTimerExpiration(mClientId, GetOwner(),
-                                                  aTimer);
+  nsCOMPtr<nsIStkCmdFactory> cmdFactory =
+    do_GetService(ICC_STK_CMD_FACTORY_CONTRACTID);
+  if (!cmdFactory) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsIStkTimer> timer;
+  cmdFactory->CreateTimer(aTimer, getter_AddRefs(timer));
+  if (!timer) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  uint16_t timerId;
+  nsresult rv = timer->GetTimerId(&timerId);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+
+  uint32_t timerValue;
+  rv = timer->GetTimerValue(&timerValue);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+
+  rv = mHandler->SendStkTimerExpiration(timerId, timerValue);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
@@ -245,12 +287,26 @@ void
 Icc::SendStkEventDownload(const JSContext* aCx, JS::Handle<JS::Value> aEvent,
                           ErrorResult& aRv)
 {
-  if (!mProvider) {
+  if (!mHandler) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  nsresult rv = mProvider->SendStkEventDownload(mClientId, GetOwner(), aEvent);
+  nsCOMPtr<nsIStkCmdFactory> cmdFactory =
+    do_GetService(ICC_STK_CMD_FACTORY_CONTRACTID);
+  if (!cmdFactory) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsIStkDownloadEvent> event;
+  cmdFactory->CreateEvent(aEvent, getter_AddRefs(event));
+  if (!event) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsresult rv = mHandler->SendStkEventDownload(event);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }

@@ -121,7 +121,7 @@ const uint32_t CURRENT_VERSION = 3;
 nsresult
 TableUpdate::NewAddPrefix(uint32_t aAddChunk, const Prefix& aHash)
 {
-  AddPrefix *add = mAddPrefixes.AppendElement();
+  AddPrefix *add = mAddPrefixes.AppendElement(fallible);
   if (!add) return NS_ERROR_OUT_OF_MEMORY;
   add->addChunk = aAddChunk;
   add->prefix = aHash;
@@ -131,7 +131,7 @@ TableUpdate::NewAddPrefix(uint32_t aAddChunk, const Prefix& aHash)
 nsresult
 TableUpdate::NewSubPrefix(uint32_t aAddChunk, const Prefix& aHash, uint32_t aSubChunk)
 {
-  SubPrefix *sub = mSubPrefixes.AppendElement();
+  SubPrefix *sub = mSubPrefixes.AppendElement(fallible);
   if (!sub) return NS_ERROR_OUT_OF_MEMORY;
   sub->addChunk = aAddChunk;
   sub->prefix = aHash;
@@ -142,7 +142,7 @@ TableUpdate::NewSubPrefix(uint32_t aAddChunk, const Prefix& aHash, uint32_t aSub
 nsresult
 TableUpdate::NewAddComplete(uint32_t aAddChunk, const Completion& aHash)
 {
-  AddComplete *add = mAddCompletes.AppendElement();
+  AddComplete *add = mAddCompletes.AppendElement(fallible);
   if (!add) return NS_ERROR_OUT_OF_MEMORY;
   add->addChunk = aAddChunk;
   add->complete = aHash;
@@ -152,7 +152,7 @@ TableUpdate::NewAddComplete(uint32_t aAddChunk, const Completion& aHash)
 nsresult
 TableUpdate::NewSubComplete(uint32_t aAddChunk, const Completion& aHash, uint32_t aSubChunk)
 {
-  SubComplete *sub = mSubCompletes.AppendElement();
+  SubComplete *sub = mSubCompletes.AppendElement(fallible);
   if (!sub) return NS_ERROR_OUT_OF_MEMORY;
   sub->addChunk = aAddChunk;
   sub->complete = aHash;
@@ -478,7 +478,7 @@ Merge(ChunkSet* aStoreChunks,
   // to make the chunkranges continuous.
   aStoreChunks->Merge(aUpdateChunks);
 
-  aStorePrefixes->AppendElements(adds);
+  aStorePrefixes->AppendElements(adds, fallible);
   EntrySort(*aStorePrefixes);
 
   return NS_OK;
@@ -553,7 +553,7 @@ ExpireEntries(FallibleTArray<T>* aEntries, ChunkSet& aExpirations)
     }
   }
 
-  aEntries->SetLength(addIter - aEntries->Elements());
+  aEntries->TruncateLength(addIter - aEntries->Elements());
 }
 
 nsresult
@@ -709,8 +709,11 @@ ByteSliceRead(nsIInputStream* aInStream, FallibleTArray<uint32_t>* aData, uint32
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    aData->AppendElement((slice1[i] << 24) | (slice2[i] << 16)
-                         | (slice3[i] << 8) | (slice4[i]));
+    aData->AppendElement((slice1[i] << 24) |
+                           (slice2[i] << 16) |
+                           (slice3[i] << 8) |
+                           (slice4[i]),
+                         fallible);
   }
 
   return NS_OK;
@@ -729,7 +732,7 @@ HashStore::ReadAddPrefixes()
     return NS_ERROR_OUT_OF_MEMORY;
   }
   for (uint32_t i = 0; i < count; i++) {
-    AddPrefix *add = mAddPrefixes.AppendElement();
+    AddPrefix *add = mAddPrefixes.AppendElement(fallible);
     add->prefix.FromUint32(0);
     add->addChunk = chunks[i];
   }
@@ -758,7 +761,7 @@ HashStore::ReadSubPrefixes()
     return NS_ERROR_OUT_OF_MEMORY;
   }
   for (uint32_t i = 0; i < count; i++) {
-    SubPrefix *sub = mSubPrefixes.AppendElement();
+    SubPrefix *sub = mSubPrefixes.AppendElement(fallible);
     sub->addChunk = addchunks[i];
     sub->prefix.FromUint32(prefixes[i]);
     sub->subChunk = subchunks[i];
@@ -977,7 +980,7 @@ RemoveDeadSubPrefixes(SubPrefixArray& aSubs, ChunkSet& aAddChunks)
   }
 
   LOG(("Removed %u dead SubPrefix entries.", subEnd - subIter));
-  aSubs.SetLength(subIter - aSubs.Elements());
+  aSubs.TruncateLength(subIter - aSubs.Elements());
 }
 
 #ifdef DEBUG

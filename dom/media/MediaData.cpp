@@ -508,8 +508,8 @@ MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
   }
 
   // We ensure sufficient capacity above so this shouldn't fail.
-  MOZ_ALWAYS_TRUE(mBuffer->AppendElements(aData, aSize));
-  MOZ_ALWAYS_TRUE(mBuffer->AppendElements(RAW_DATA_ALIGNMENT));
+  MOZ_ALWAYS_TRUE(mBuffer->AppendElements(aData, aSize, fallible));
+  MOZ_ALWAYS_TRUE(mBuffer->AppendElements(RAW_DATA_ALIGNMENT, fallible));
   mSize = aSize;
 }
 
@@ -530,8 +530,8 @@ MediaRawData::Clone() const
     }
 
     // We ensure sufficient capacity above so this shouldn't fail.
-    MOZ_ALWAYS_TRUE(s->mBuffer->AppendElements(mData, mSize));
-    MOZ_ALWAYS_TRUE(s->mBuffer->AppendElements(RAW_DATA_ALIGNMENT));
+    MOZ_ALWAYS_TRUE(s->mBuffer->AppendElements(mData, mSize, fallible));
+    MOZ_ALWAYS_TRUE(s->mBuffer->AppendElements(RAW_DATA_ALIGNMENT, fallible));
     s->mSize = mSize;
   }
   return s.forget();

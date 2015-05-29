@@ -25,8 +25,9 @@
                          performance.clearMarks();
                          performance.clearMeasures();
                          performance.clearResourceTimings();
-                         arr = performance.getEntries();
-                         is(arr.length, 0, "clearing performance entries");
+                         is(performance.getEntriesByType("resource").length, 0, "clearing performance resource entries");
+                         is(performance.getEntriesByType("mark").length, 0, "clearing performance mark entries");
+                         is(performance.getEntriesByType("measure").length, 0, "clearing performance measure entries");
                          steps[i]();
                      } catch(ex) {
                          ok(false, "Caught exception", ex);

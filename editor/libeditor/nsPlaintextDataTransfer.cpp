@@ -128,7 +128,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
     }
   }
   free(bestFlavor);
-      
+
   // Try to scroll the selection into view if the paste/drop succeeded
 
   if (NS_SUCCEEDED(rv))
@@ -278,7 +278,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       //     note that 4.x does replace if dropped on
       //deleteSelection = true;
     }
-    else 
+    else
     {
       // We are NOT over the selection
       if (srcdomdoc == destdomdoc)
@@ -336,7 +336,7 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(int32_t aSelectionType)
   rv = PrepareTransferable(getter_AddRefs(trans));
   if (NS_SUCCEEDED(rv) && trans)
   {
-    // Get the Data from the clipboard  
+    // Get the Data from the clipboard
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
       // handle transferable hooks
@@ -381,7 +381,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(int32_t aSelectionType, bool *aCanPast
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   // the flavors that we can deal with
   const char* textEditorFlavors[] = { kUnicodeMime };
 
@@ -390,7 +390,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(int32_t aSelectionType, bool *aCanPast
                                          ArrayLength(textEditorFlavors),
                                          aSelectionType, &haveFlavors);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   *aCanPaste = haveFlavors;
   return NS_OK;
 }
@@ -421,7 +421,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanPasteTransferable(nsITransferable *aTransfer
     *aCanPaste = true;
   else
     *aCanPaste = false;
-  
+
   return NS_OK;
 }
 

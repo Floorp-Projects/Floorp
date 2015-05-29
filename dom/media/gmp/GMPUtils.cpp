@@ -8,6 +8,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
+#include "nsLiteralString.h"
 
 namespace mozilla {
 

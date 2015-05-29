@@ -251,7 +251,7 @@ MediaOmxReader::AsyncReadMetadata()
 
   nsRefPtr<MediaOmxReader> self = this;
   mMediaResourceRequest.Begin(mOmxDecoder->AllocateMediaResources()
-    ->RefableThen(GetTaskQueue(), __func__,
+    ->Then(GetTaskQueue(), __func__,
       [self] (bool) -> void {
         self->mMediaResourceRequest.Complete();
         self->HandleResourceAllocated();

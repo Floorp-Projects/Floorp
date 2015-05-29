@@ -53,7 +53,7 @@ private:
   static nsIAtom *sSampAtom;
   static nsIAtom *sSmallAtom;
   static nsIAtom *sSpacerAtom;
-  static nsIAtom *sSpanAtom;      
+  static nsIAtom *sSpanAtom;
   static nsIAtom *sStrikeAtom;
   static nsIAtom *sStrongAtom;
   static nsIAtom *sSubAtom;

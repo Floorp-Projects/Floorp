@@ -35,7 +35,8 @@ class QWindow;
 class gfxASurface;
 
 class nsShmImage {
-    NS_INLINE_DECL_REFCOUNTING(nsShmImage)
+    // bug 1168843, compositor thread may create shared memory instances that are destroyed by main thread on shutdown, so this must use thread-safe RC to avoid hitting assertion
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsShmImage)
 
     typedef mozilla::ipc::SharedMemorySysV SharedMemorySysV;
 

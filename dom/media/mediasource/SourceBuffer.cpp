@@ -452,9 +452,9 @@ SourceBuffer::AppendData(MediaLargeByteBuffer* aData, double aTimestampOffset,
   }
 
   mPendingAppend.Begin(mTrackBuffer->AppendData(aData, aTimestampOffset * USECS_PER_S)
-                       ->RefableThen(AbstractThread::MainThread(), __func__, this,
-                                     &SourceBuffer::AppendDataCompletedWithSuccess,
-                                     &SourceBuffer::AppendDataErrored));
+                       ->Then(AbstractThread::MainThread(), __func__, this,
+                              &SourceBuffer::AppendDataCompletedWithSuccess,
+                              &SourceBuffer::AppendDataErrored));
 }
 
 void
@@ -566,7 +566,7 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
   }
 
   nsRefPtr<MediaLargeByteBuffer> data = new MediaLargeByteBuffer();
-  if (!data->AppendElements(aData, aLength)) {
+  if (!data->AppendElements(aData, aLength, fallible)) {
     aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
     return nullptr;
   }

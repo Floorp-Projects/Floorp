@@ -78,7 +78,7 @@ static bool sRDSSupported;
 static int
 setControl(uint32_t id, int32_t value)
 {
-  struct v4l2_control control;
+  struct v4l2_control control = {0};
   control.id = id;
   control.value = value;
   return ioctl(sRadioFD, VIDIOC_S_CTRL, &control);
@@ -309,7 +309,7 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
     return;
   }
 
-  struct v4l2_capability cap;
+  struct v4l2_capability cap = {{0}};
   int rc = ioctl(fd, VIDIOC_QUERYCAP, &cap);
   if (rc < 0) {
     HAL_LOG("Unable to query radio device");
@@ -487,7 +487,7 @@ GetFMRadioFrequency()
   if (!sRadioEnabled)
     return 0;
 
-  struct v4l2_frequency freq;
+  struct v4l2_frequency freq = {0};
   int rc = ioctl(sRadioFD, VIDIOC_G_FREQUENCY, &freq);
   if (rc < 0) {
     HAL_LOG("Could not get radio frequency");

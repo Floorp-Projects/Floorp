@@ -21,7 +21,7 @@ interface nsITableEditor : nsISupports
   /* ------------ Table editing Methods -------------- */
 
   /** Insert table methods
-    * Insert relative to the selected cell or the 
+    * Insert relative to the selected cell or the
     *  cell enclosing the selection anchor
     * The selection is collapsed and is left in the new cell
     *  at the same row,col location as the original anchor cell
@@ -35,9 +35,9 @@ interface nsITableEditor : nsISupports
   void insertTableRow(in long  aNumber, in boolean aAfter);
 
   /** Delete table methods
-    * Delete starting at the selected cell or the 
+    * Delete starting at the selected cell or the
     *  cell (or table) enclosing the selection anchor
-    * The selection is collapsed and is left in the 
+    * The selection is collapsed and is left in the
     *  cell at the same row,col location as
     *  the previous selection anchor, if possible,
     *  else in the closest neigboring cell
@@ -56,7 +56,7 @@ interface nsITableEditor : nsISupports
     * @param aNumber   Number of contiguous cells, rows, or columns
     *
     * When there are more than 1 selected cells, aNumber is ignored.
-    * For Delete Rows or Columns, the complete columns or rows are 
+    * For Delete Rows or Columns, the complete columns or rows are
     *  determined by the selected cells. E.g., to delete 2 complete rows,
     *  user simply selects a cell in each, and they don't
     *  have to be contiguous.
@@ -99,35 +99,35 @@ interface nsITableEditor : nsISupports
 
   /** Merges contents of all selected cells
     * for selected cells that are adjacent,
-    * this will result in a larger cell with appropriate 
+    * this will result in a larger cell with appropriate
     * rowspan and colspan, and original cells are deleted
-    * The resulting cell is in the location of the 
+    * The resulting cell is in the location of the
     *   cell at the upper-left corner of the adjacent
     *   block of selected cells
     *
-    * @param aMergeNonContiguousContents:  
-    *       If true: 
+    * @param aMergeNonContiguousContents:
+    *       If true:
     *         Non-contiguous cells are not deleted,
-    *         but their contents are still moved 
+    *         but their contents are still moved
     *         to the upper-left cell
     *       If false: contiguous cells are ignored
     *
     * If there are no selected cells,
     *   and selection or caret is in a cell,
-    *   that cell and the one to the right 
+    *   that cell and the one to the right
     *   are merged
     */
   void joinTableCells(in boolean aMergeNonContiguousContents);
 
   /** Split a cell that has rowspan and/or colspan > 0
-    *   into cells such that all new cells have 
+    *   into cells such that all new cells have
     *   rowspan = 1 and colspan = 1
     *  All of the contents are not touched --
-    *   they will appear to be in the upper-left cell 
+    *   they will appear to be in the upper-left cell
     */
   void splitTableCell();
 
-  /** Scan through all rows and add cells as needed so 
+  /** Scan through all rows and add cells as needed so
     *   all locations in the cellmap are occupied.
     *   Used after inserting single cells or pasting
     *   a collection of cells that extend past the
@@ -141,14 +141,14 @@ interface nsITableEditor : nsISupports
 
   /** Get the row an column index from the layout's cellmap
     * If aCell is null, it will try to find enclosing table of selection anchor
-    * 
+    *
     */
   void getCellIndexes(in nsIDOMElement aCell,
                       out long aRowIndex, out long aColIndex);
 
   /** Get the number of rows and columns in a table from the layout's cellmap
     * If aTable is null, it will try to find enclosing table of selection ancho
-    * Note that all rows in table will not have this many because of 
+    * Note that all rows in table will not have this many because of
     * ROWSPAN effects or if table is not "rectangular" (has short rows)
     */
   void getTableSize(in nsIDOMElement aTable,
@@ -174,12 +174,12 @@ interface nsITableEditor : nsISupports
   /** Get a cell at cellmap grid coordinates and associated data
     * A cell that spans across multiple cellmap locations will
     *   be returned multiple times, once for each location it occupies
-    * Examine the returned aStartRowIndex and aStartColIndex to see 
+    * Examine the returned aStartRowIndex and aStartColIndex to see
     *   if it is in the same layout column or layout row:
     *   A "layout row" is all cells sharing the same top edge
     *   A "layout column" is all cells sharing the same left edge
     *   This is important to determine what to do when inserting or deleting a column or row
-    * 
+    *
     *  @param aTable                   A table in the document
     *  @param aRowIndex, aColIndex     The 0-based cellmap indexes
     * returns values:
@@ -191,7 +191,7 @@ interface nsITableEditor : nsISupports
     *  @param aActualRowSpan           The actual number of cellmap locations (rows) spanned by the cell
     *  @param aActualColSpan           The actual number of cellmap locations (columns) spanned by the cell
     *  @param aIsSelected
-    *  @param 
+    *  @param
     *
     * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *  passes NS_SUCCEEDED macro)
@@ -200,8 +200,8 @@ interface nsITableEditor : nsISupports
                      in long  aRowIndex, in long  aColIndex,
                      out nsIDOMElement aCell,
                      out long  aStartRowIndex, out long  aStartColIndex,
-                     out long  aRowSpan, out long  aColSpan, 
-                     out long  aActualRowSpan, out long  aActualColSpan, 
+                     out long  aRowSpan, out long  aColSpan,
+                     out long  aActualRowSpan, out long  aActualColSpan,
                      out boolean aIsSelected);
 
   /** Get the first row element in a table
@@ -224,10 +224,10 @@ interface nsITableEditor : nsISupports
     *  passes NS_SUCCEEDED macro)
     */
   nsIDOMNode getNextRow(in nsIDOMNode aTableElement);
-  
+
   /** Preferred direction to search for neighboring cell
     * when trying to locate a cell to place caret in after
-    * a table editing action. 
+    * a table editing action.
     * Used for aDirection param in SetSelectionAfterTableEdit
     */
 
@@ -245,11 +245,11 @@ interface nsITableEditor : nsISupports
     *                    If no cell is found, caret is place just before table;
     *                    and if that fails, at beginning of document.
     *                    Thus we generally don't worry about the return value
-    *                     and can use the nsSetSelectionAfterTableEdit stack-based 
+    *                     and can use the nsSetSelectionAfterTableEdit stack-based
     *                     object to insure we reset the caret in a table-editing method.
     */
   void setSelectionAfterTableEdit(in nsIDOMElement aTable,
-                                  in long aRow, in long aCol, 
+                                  in long aRow, in long aCol,
                                   in long aDirection, in boolean aSelected);
 
   /** Examine the current selection and find
@@ -270,12 +270,12 @@ interface nsITableEditor : nsISupports
 
   /** Generally used after GetSelectedOrParentTableElement
     *   to test if selected cells are complete rows or columns
-    * 
+    *
     * @param aElement           Any table or cell element or any element
     *                           inside a table
-    *                           Used to get enclosing table. 
+    *                           Used to get enclosing table.
     *                           If null, selection's anchorNode is used
-    * 
+    *
     * @return
     *     0                        aCellElement was not a cell
     *                              (returned result = NS_ERROR_FAILURE)
@@ -296,14 +296,14 @@ interface nsITableEditor : nsISupports
     * is in a separate range (selection parent node is table row)
     * @param aCell     [OUT] Selected cell or null if ranges don't contain
     *                  cell selections
-    * @param aRange    [OUT] Optional: if not null, return the selection range 
+    * @param aRange    [OUT] Optional: if not null, return the selection range
     *                     associated with the cell
     * Returns the DOM cell element
     *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *    passes NS_SUCCEEDED macro)
     */
   nsIDOMElement getFirstSelectedCell(out nsIDOMRange aRange);
-  
+
   /** Get first selected element in the table
     *   This is the upper-left-most selected cell in table,
     *   ignoring the order that the user selected them (order in the selection ranges)
@@ -326,7 +326,7 @@ interface nsITableEditor : nsISupports
     * Always call GetFirstSelectedCell() to initialize stored index of "next" cell
     * @param aCell     Selected cell or null if no more selected cells
     *                     or ranges don't contain cell selections
-    * @param aRange    Optional: if not null, return the selection range 
+    * @param aRange    Optional: if not null, return the selection range
     *                     associated with the cell
     *
     * Returns the DOM cell element

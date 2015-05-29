@@ -52,6 +52,7 @@ class MediaCodecReader : public MediaOmxCommonReader
 {
   typedef mozilla::layers::TextureClient TextureClient;
   typedef mozilla::layers::FenceHandle FenceHandle;
+  typedef MediaOmxCommonReader::MediaResourcePromise MediaResourcePromise;
 
 public:
   MediaCodecReader(AbstractMediaDecoder* aDecoder);
@@ -60,9 +61,6 @@ public:
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);
-
-  // True if this reader is waiting media resource allocation
-  virtual bool IsWaitingMediaResources();
 
   // True when this reader need to become dormant state
   virtual bool IsDormantNeeded() { return true;}
@@ -94,13 +92,7 @@ public:
   virtual bool HasAudio();
   virtual bool HasVideo();
 
-  virtual void PreReadMetadata() override;
-  // Read header data for all bitstreams in the file. Fills aInfo with
-  // the data required to present the media, and optionally fills *aTags
-  // with tag metadata from the file.
-  // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
-  virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags);
+  virtual nsRefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
 
   // Moves the decode head to aTime microseconds. aStartTime and aEndTime
   // denote the start and end times of the media in usecs, and aCurrentTime
@@ -177,18 +169,45 @@ protected:
   // Called on MediaCodecReader::mLooper thread.
   void onMessageReceived(const android::sp<android::AMessage>& aMessage);
 
+  // Receive a notify from ResourceListener.
+  // Called on Binder thread.
+  virtual void VideoCodecReserved();
+  virtual void VideoCodecCanceled();
+
   virtual bool CreateExtractor();
 
-  // Check the underlying HW resource is available and store the result in
-  // mIsWaitingResources.
-  void UpdateIsWaitingMediaResources();
+  virtual void HandleResourceAllocated();
 
   android::sp<android::MediaExtractor> mExtractor;
-  // A cache value updated by UpdateIsWaitingMediaResources(), makes the
-  // "waiting resources state" is synchronous to StateMachine.
-  bool mIsWaitingResources;
+
+  MediaPromiseHolder<MediaDecoderReader::MetadataPromise> mMetadataPromise;
+  // XXX Remove after bug 1168008 land.
+  MediaPromiseRequestHolder<MediaResourcePromise> mMediaResourceRequest;
+  MediaPromiseHolder<MediaResourcePromise> mMediaResourcePromise;
 
 private:
+
+  // An intermediary class that can be managed by android::sp<T>.
+  // Redirect codecReserved() and codecCanceled() to MediaCodecReader.
+  class VideoResourceListener : public android::MediaCodecProxy::CodecResourceListener
+  {
+  public:
+    VideoResourceListener(MediaCodecReader* aReader);
+    ~VideoResourceListener();
+
+    virtual void codecReserved();
+    virtual void codecCanceled();
+
+  private:
+    // Forbidden
+    VideoResourceListener() = delete;
+    VideoResourceListener(const VideoResourceListener& rhs) = delete;
+    const VideoResourceListener& operator=(const VideoResourceListener& rhs) = delete;
+
+    MediaCodecReader* mReader;
+  };
+  friend class VideoResourceListener;
+
   class VorbisInputCopier : public TrackInputCopier
   {
     virtual bool Copy(android::MediaBuffer* aSourceBuffer,
@@ -312,7 +331,7 @@ private:
   MediaCodecReader() = delete;
   const MediaCodecReader& operator=(const MediaCodecReader& rhs) = delete;
 
-  bool ReallocateResources();
+  bool ReallocateExtractorResources();
   void ReleaseCriticalResources();
   void ReleaseResources();
 
@@ -324,9 +343,11 @@ private:
   bool CreateMediaSources();
   void DestroyMediaSources();
 
-  bool CreateMediaCodecs();
+  nsRefPtr<MediaResourcePromise> CreateMediaCodecs();
   static bool CreateMediaCodec(android::sp<android::ALooper>& aLooper,
                                Track& aTrack,
+                               bool aAsync,
+                               bool& aIsWaiting,
                                android::wp<android::MediaCodecProxy::CodecResourceListener> aListener);
   static bool ConfigureMediaCodec(Track& aTrack);
   void DestroyMediaCodecs();
@@ -386,6 +407,8 @@ private:
                                        size_t& aIndex);
 
   void ReleaseAllTextureClients();
+
+  android::sp<VideoResourceListener> mVideoListener;
 
   android::sp<android::ALooper> mLooper;
   android::sp<android::MetaData> mMetaData;

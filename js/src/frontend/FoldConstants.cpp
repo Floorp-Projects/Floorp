@@ -128,6 +128,7 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_IMPORT_SPEC_LIST:
       case PNK_IMPORT_SPEC:
       case PNK_EXPORT_FROM:
+      case PNK_EXPORT_DEFAULT:
       case PNK_EXPORT_SPEC_LIST:
       case PNK_EXPORT_SPEC:
       case PNK_EXPORT:

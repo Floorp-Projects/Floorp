@@ -7,6 +7,7 @@
 #define GMPContentParent_h_
 
 #include "mozilla/gmp/PGMPContentParent.h"
+#include "GMPSharedMemManager.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {

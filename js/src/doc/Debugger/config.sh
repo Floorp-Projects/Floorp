@@ -64,3 +64,4 @@ resource 'img-alloc-plot'         alloc-plot-console.png             $RBASE/8461
 absolute-label 'protocol' https://wiki.mozilla.org/Remote_Debugging_Protocol "Remote Debugging Protocol"
 absolute-label 'saved-frame' https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/SavedFrame "SavedFrame"
 absolute-label 'bernoulli-trial' https://en.wikipedia.org/wiki/Bernoulli_trial "Bernoulli Trial"
+absolute-label 'ssa-form' https://en.wikipedia.org/wiki/Static_single_assignment_form "SSA form"

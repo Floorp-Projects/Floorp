@@ -138,6 +138,7 @@ class UpvarCookie
     F(IMPORT_SPEC) \
     F(EXPORT) \
     F(EXPORT_FROM) \
+    F(EXPORT_DEFAULT) \
     F(EXPORT_SPEC_LIST) \
     F(EXPORT_SPEC) \
     F(EXPORT_BATCH_SPEC) \
@@ -332,6 +333,12 @@ enum ParseNodeKind
  *                              in original source, not introduced via
  *                              constant folding or other tree rewriting
  * PNK_LABEL    name        pn_atom: label, pn_expr: labeled statement
+ * PNK_IMPORT   binary      pn_left: PNK_IMPORT_SPEC_LIST import specifiers
+ *                          pn_right: PNK_STRING module specifier
+ * PNK_EXPORT   unary       pn_kid: declaration expression
+ * PNK_EXPORT_FROM binary   pn_left: PNK_EXPORT_SPEC_LIST export specifiers
+ *                          pn_right: PNK_STRING module specifier
+ * PNK_EXPORT_DEFAULT unary pn_kid: export default declaration or expression
  *
  * <Expressions>
  * All left-associated binary trees of the same type are optimized into lists

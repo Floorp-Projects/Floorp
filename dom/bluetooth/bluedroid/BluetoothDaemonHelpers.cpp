@@ -494,6 +494,39 @@ Convert(uint8_t aIn, BluetoothStatus& aOut)
 }
 
 nsresult
+Convert(int32_t aIn, BluetoothGattStatus& aOut)
+{
+  /* Reference: $B2G/external/bluetooth/bluedroid/stack/include/gatt_api.h */
+  static const BluetoothGattStatus sGattStatus[] = {
+    CONVERT(0x0000, GATT_STATUS_SUCCESS),
+    CONVERT(0x0001, GATT_STATUS_INVALID_HANDLE),
+    CONVERT(0x0002, GATT_STATUS_READ_NOT_PERMITTED),
+    CONVERT(0x0003, GATT_STATUS_WRITE_NOT_PERMITTED),
+    CONVERT(0x0004, GATT_STATUS_INVALID_PDU),
+    CONVERT(0x0005, GATT_STATUS_INSUFFICIENT_AUTHENTICATION),
+    CONVERT(0x0006, GATT_STATUS_REQUEST_NOT_SUPPORTED),
+    CONVERT(0x0007, GATT_STATUS_INVALID_OFFSET),
+    CONVERT(0x0008, GATT_STATUS_INSUFFICIENT_AUTHORIZATION),
+    CONVERT(0x0009, GATT_STATUS_PREPARE_QUEUE_FULL),
+    CONVERT(0x000a, GATT_STATUS_ATTRIBUTE_NOT_FOUND),
+    CONVERT(0x000b, GATT_STATUS_ATTRIBUTE_NOT_LONG),
+    CONVERT(0x000c, GATT_STATUS_INSUFFICIENT_ENCRYPTION_KEY_SIZE),
+    CONVERT(0x000d, GATT_STATUS_INVALID_ATTRIBUTE_LENGTH),
+    CONVERT(0x000e, GATT_STATUS_UNLIKELY_ERROR),
+    CONVERT(0x000f, GATT_STATUS_INSUFFICIENT_ENCRYPTION),
+    CONVERT(0x0010, GATT_STATUS_UNSUPPORTED_GROUP_TYPE),
+    CONVERT(0x0011, GATT_STATUS_INSUFFICIENT_RESOURCES)
+  };
+  if (NS_WARN_IF(aIn < 0) ||
+      NS_WARN_IF(aIn >= static_cast<ssize_t>(MOZ_ARRAY_LENGTH(sGattStatus)))) {
+    aOut = GATT_STATUS_UNKNOWN_ERROR;
+  } else {
+    aOut = sGattStatus[aIn];
+  }
+  return NS_OK;
+}
+
+nsresult
 Convert(uint32_t aIn, int& aOut)
 {
   aOut = static_cast<int>(aIn);
@@ -963,6 +996,41 @@ Convert(ControlPlayStatus aIn, uint8_t& aOut)
   return NS_OK;
 }
 
+nsresult
+Convert(BluetoothGattAuthReq aIn, int32_t& aOut)
+{
+  static const int32_t sGattAuthReq[] = {
+    CONVERT(GATT_AUTH_REQ_NONE, 0x00),
+    CONVERT(GATT_AUTH_REQ_NO_MITM, 0x01),
+    CONVERT(GATT_AUTH_REQ_MITM, 0x02),
+    CONVERT(GATT_AUTH_REQ_SIGNED_NO_MITM, 0x03),
+    CONVERT(GATT_AUTH_REQ_SIGNED_MITM, 0x04)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sGattAuthReq))) {
+    aOut = GATT_AUTH_REQ_NONE; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sGattAuthReq[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothGattWriteType aIn, int32_t& aOut)
+{
+  static const int32_t sGattWriteType[] = {
+    CONVERT(GATT_WRITE_TYPE_NO_RESPONSE, 0x01),
+    CONVERT(GATT_WRITE_TYPE_NORMAL, 0x02),
+    CONVERT(GATT_WRITE_TYPE_PREPARE, 0x03),
+    CONVERT(GATT_WRITE_TYPE_SIGNED, 0x04)
+  };
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sGattWriteType))) {
+    aOut = GATT_WRITE_TYPE_NORMAL; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sGattWriteType[aIn];
+  return NS_OK;
+}
+
 /* |ConvertArray| is a helper for converting arrays. Pass an
  * instance of this structure as the first argument to |Convert|
  * to convert an array. The output type has to support the array
@@ -1331,6 +1399,45 @@ PackPDU(BluetoothTransport aIn, BluetoothDaemonPDU& aPDU)
   return PackPDU(PackConversion<BluetoothTransport, uint8_t>(aIn), aPDU);
 }
 
+nsresult
+PackPDU(const BluetoothUuid& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(
+    PackArray<uint8_t>(aIn.mUuid, sizeof(aIn.mUuid)), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothGattId& aIn, BluetoothDaemonPDU& aPDU)
+{
+  nsresult rv = PackPDU(aIn.mUuid, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return PackPDU(aIn.mInstanceId, aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothGattServiceId& aIn, BluetoothDaemonPDU& aPDU)
+{
+  nsresult rv = PackPDU(aIn.mId, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return PackPDU(aIn.mIsPrimary, aPDU);
+}
+
+nsresult
+PackPDU(BluetoothGattAuthReq aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(PackConversion<BluetoothGattAuthReq, int32_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(BluetoothGattWriteType aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(PackConversion<BluetoothGattWriteType, int32_t>(aIn), aPDU);
+}
+
 //
 // Unpacking
 //
@@ -1617,6 +1724,132 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothStatus& aOut)
   return UnpackPDU(aPDU, UnpackConversion<uint8_t, BluetoothStatus>(aOut));
 }
 
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattStatus& aOut)
+{
+  return UnpackPDU(aPDU, UnpackConversion<int32_t, BluetoothGattStatus>(aOut));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattId& aOut)
+{
+  /* unpack UUID */
+  nsresult rv = UnpackPDU(aPDU, aOut.mUuid);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack instance id */
+  return UnpackPDU(aPDU, aOut.mInstanceId);
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattServiceId& aOut)
+{
+  /* unpack id */
+  nsresult rv = UnpackPDU(aPDU, aOut.mId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack isPrimary */
+  return UnpackPDU(aPDU, aOut.mIsPrimary);
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattReadParam& aOut)
+{
+  /* unpack service id */
+  nsresult rv = UnpackPDU(aPDU, aOut.mServiceId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack characteristic id */
+  rv = UnpackPDU(aPDU, aOut.mCharId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack descriptor id */
+  rv = UnpackPDU(aPDU, aOut.mDescriptorId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack value type */
+  rv = UnpackPDU(aPDU, aOut.mValueType);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack status */
+  rv = UnpackPDU(aPDU, aOut.mStatus);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack length */
+  rv = UnpackPDU(aPDU, aOut.mValueLength);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack value */
+  return aPDU.Read(aOut.mValue, aOut.mValueLength);
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattWriteParam& aOut)
+{
+  /* unpack service id */
+  nsresult rv = UnpackPDU(aPDU, aOut.mServiceId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack characteristic id */
+  rv = UnpackPDU(aPDU, aOut.mCharId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack descriptor id */
+  rv = UnpackPDU(aPDU, aOut.mDescriptorId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack status */
+  return UnpackPDU(aPDU, aOut.mStatus);
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothGattNotifyParam& aOut)
+{
+
+  /* unpack address and convert to nsString */
+  BluetoothAddress address;
+  nsresult rv = UnpackPDU(aPDU, address);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = Convert(address, aOut.mBdAddr);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack service id */
+  rv = UnpackPDU(aPDU, aOut.mServiceId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack characteristic id */
+  rv = UnpackPDU(aPDU, aOut.mCharId);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack isNotify */
+  rv = UnpackPDU(aPDU, aOut.mIsNotify);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack length */
+  rv = UnpackPDU(aPDU, aOut.mLength);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* unpack value */
+  return aPDU.Read(aOut.mValue, aOut.mLength);
+}
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, nsDependentCString& aOut)
 {

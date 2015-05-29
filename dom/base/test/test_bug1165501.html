@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Spot test to see if newer meta-referrer policy is used
+https://bugzilla.mozilla.org/show_bug.cgi?id=1165501
+-->
+
+<head>
+  <meta charset="utf-8">
+  <title>Test policies for Bug 1165501</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="referrerHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+var advance = function() { tests.next(); };
+
+/**
+ * testing if policy is overwritten if there are two meta statements (1165501)
+ * XXX: would be nice to test this with CSP and meta as well
+ */
+var tests = (function() {
+  var iframe = document.getElementById("testframe");
+  const sjs = "/tests/dom/base/test/bug704320.sjs?action=generate-policy-test";
+
+  // setting first unsafe-url and then origin - origin shall prevail
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape('origin')+ "&wrongPolicy=" + escape('unsafe-url');
+  yield checkIndividualResults("unsafe-url then origin", ["origin"]);
+
+  // setting first no-referrer and then default - default shall prevail
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape('default')+ "&wrongPolicy=" + escape('no-referrer');
+  yield checkIndividualResults("no-referrer then default", ["full"]);
+
+
+  // complete.  Be sure to yield so we don't call this twice.
+  yield SimpleTest.finish();
+})();
+
+</script>
+</head>
+
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+
+</body>
+</html>
+

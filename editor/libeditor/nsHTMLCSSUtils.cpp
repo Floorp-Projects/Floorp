@@ -150,14 +150,14 @@ void ProcessMarginLeftValue(const nsAString * aInputString, nsAString & aOutputS
   if (aInputString) {
     if (aInputString->EqualsLiteral("center") ||
         aInputString->EqualsLiteral("-moz-center")) {
-      aOutputString.AppendLiteral("auto"); 
+      aOutputString.AppendLiteral("auto");
     }
     else if (aInputString->EqualsLiteral("right") ||
              aInputString->EqualsLiteral("-moz-right")) {
-      aOutputString.AppendLiteral("auto"); 
+      aOutputString.AppendLiteral("auto");
     }
     else {
-      aOutputString.AppendLiteral("0px"); 
+      aOutputString.AppendLiteral("0px");
     }
   }
 }
@@ -171,14 +171,14 @@ void ProcessMarginRightValue(const nsAString * aInputString, nsAString & aOutput
   if (aInputString) {
     if (aInputString->EqualsLiteral("center") ||
         aInputString->EqualsLiteral("-moz-center")) {
-      aOutputString.AppendLiteral("auto"); 
+      aOutputString.AppendLiteral("auto");
     }
     else if (aInputString->EqualsLiteral("left") ||
              aInputString->EqualsLiteral("-moz-left")) {
-      aOutputString.AppendLiteral("auto"); 
+      aOutputString.AppendLiteral("auto");
     }
     else {
-      aOutputString.AppendLiteral("0px"); 
+      aOutputString.AppendLiteral("0px");
     }
   }
 }
@@ -1190,7 +1190,7 @@ nsHTMLCSSUtils::IsCSSPrefChecked()
 }
 
 // ElementsSameStyle compares two elements and checks if they have the same
-// specified CSS declarations in the STYLE attribute 
+// specified CSS declarations in the STYLE attribute
 // The answer is always negative if at least one of them carries an ID or a class
 bool
 nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNode)

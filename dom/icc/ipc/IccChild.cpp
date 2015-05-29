@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/icc/IccChild.h"
 #include "IccInfo.h"
+#include "nsIStkCmdFactory.h"
+#include "nsIStkProactiveCmd.h"
 
 using mozilla::dom::IccInfo;
 
@@ -82,6 +84,35 @@ IccChild::RecvNotifyIccInfoChanged(const OptionalIccInfoData& aInfoData)
   return true;
 }
 
+bool
+IccChild::RecvNotifyStkCommand(const nsString& aStkProactiveCmd)
+{
+  nsCOMPtr<nsIStkCmdFactory> cmdFactory =
+    do_GetService(ICC_STK_CMD_FACTORY_CONTRACTID);
+  NS_ENSURE_TRUE(cmdFactory, false);
+
+  nsCOMPtr<nsIStkProactiveCmd> cmd;
+  cmdFactory->InflateCommand(aStkProactiveCmd, getter_AddRefs(cmd));
+
+  NS_ENSURE_TRUE(cmd, false);
+
+  for (int32_t i = 0; i < mListeners.Count(); i++) {
+    mListeners[i]->NotifyStkCommand(cmd);
+  }
+
+  return true;
+}
+
+bool
+IccChild::RecvNotifyStkSessionEnd()
+{
+  for (int32_t i = 0; i < mListeners.Count(); i++) {
+    mListeners[i]->NotifyStkSessionEnd();
+  }
+
+  return true;
+}
+
 PIccRequestChild*
 IccChild::AllocPIccRequestChild(const IccRequest& aRequest)
 {
@@ -131,8 +162,8 @@ IccChild::UpdateIccInfo(const OptionalIccInfoData& aInfoData) {
   // We update the orignal one instead of replacing with a new one
   // if the IccType is the same.
   if (mIccInfo) {
-    nsString oldIccType;
-    nsString newIccType;
+    nsAutoString oldIccType;
+    nsAutoString newIccType;
     mIccInfo->GetIccType(oldIccType);
     iccInfo->GetIccType(newIccType);
 
@@ -206,8 +237,8 @@ IccChild::UnlockCardLock(uint32_t aLockType,
                          nsIIccCallback* aRequestReply)
 {
   return SendRequest(UnlockCardLockRequest(aLockType,
-                                           nsString(aPassword),
-                                           nsString(aNewPin)),
+                                           nsAutoString(aPassword),
+                                           nsAutoString(aNewPin)),
                      aRequestReply)
     ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -219,7 +250,7 @@ IccChild::SetCardLockEnabled(uint32_t aLockType,
                              nsIIccCallback* aRequestReply)
 {
   return SendRequest(SetCardLockEnabledRequest(aLockType,
-                                               nsString(aPassword),
+                                               nsAutoString(aPassword),
                                                aEnabled),
                      aRequestReply)
     ? NS_OK : NS_ERROR_FAILURE;
@@ -232,8 +263,8 @@ IccChild::ChangeCardLockPassword(uint32_t aLockType,
                                  nsIIccCallback* aRequestReply)
 {
   return SendRequest(ChangeCardLockPasswordRequest(aLockType,
-                                                   nsString(aPassword),
-                                                   nsString(aNewPassword)),
+                                                   nsAutoString(aPassword),
+                                                   nsAutoString(aNewPassword)),
                      aRequestReply)
     ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -251,7 +282,7 @@ IccChild::MatchMvno(uint32_t aMvnoType,
                     const nsAString& aMvnoData,
                     nsIIccCallback* aRequestReply)
 {
-  return SendRequest(MatchMvnoRequest(aMvnoType, nsString(aMvnoData)),
+  return SendRequest(MatchMvnoRequest(aMvnoType, nsAutoString(aMvnoData)),
                      aRequestReply)
     ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -283,6 +314,55 @@ NS_IMETHODIMP
 IccChild::IccCloseChannel(int32_t aChannel, nsIIccChannelCallback* aCallback)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+IccChild::SendStkResponse(nsIStkProactiveCmd* aCommand, nsIStkTerminalResponse* aResponse)
+{
+  nsCOMPtr<nsIStkCmdFactory> cmdFactory =
+    do_GetService(ICC_STK_CMD_FACTORY_CONTRACTID);
+  NS_ENSURE_TRUE(cmdFactory, NS_ERROR_FAILURE);
+
+  nsAutoString cmd, response;
+
+  nsresult rv = cmdFactory->DeflateCommand(aCommand, cmd);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = cmdFactory->DeflateResponse(aResponse, response);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return PIccChild::SendStkResponse(cmd, response) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+IccChild::SendStkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested)
+{
+  return PIccChild::SendStkMenuSelection(aItemIdentifier, aHelpRequested)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+IccChild::SendStkTimerExpiration(uint16_t aTimerId, uint32_t aTimerValue)
+{
+  return PIccChild::SendStkTimerExpiration(aTimerId, aTimerValue)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+IccChild::SendStkEventDownload(nsIStkDownloadEvent* aEvent)
+{
+  MOZ_ASSERT(aEvent);
+
+  nsCOMPtr<nsIStkCmdFactory> cmdFactory =
+    do_GetService(ICC_STK_CMD_FACTORY_CONTRACTID);
+  NS_ENSURE_TRUE(cmdFactory, NS_ERROR_FAILURE);
+
+  nsAutoString event;
+
+  nsresult rv = cmdFactory->DeflateDownloadEvent(aEvent, event);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return PIccChild::SendStkEventDownload(event) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /**

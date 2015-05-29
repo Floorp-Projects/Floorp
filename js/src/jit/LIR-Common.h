@@ -100,7 +100,7 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
         return new(alloc) LMoveGroup(alloc);
     }
 
-    void printOperands(FILE* fp);
+    void printOperands(GenericPrinter& out);
 
     // Add a move which takes place simultaneously with all others in the group.
     bool add(LAllocation from, LAllocation to, LDefinition::Type type);

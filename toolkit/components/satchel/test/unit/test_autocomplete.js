@@ -85,7 +85,7 @@ add_test(function test1() {
 add_test(function test2() {
     do_log_info("Check search contains all entries");
 
-    fac.autoCompleteSearchAsync("field1", "", null, null, {
+    fac.autoCompleteSearchAsync("field1", "", null, null, null, {
         onSearchCompletion : function(aResults) {
             do_check_eq(numRecords, aResults.matchCount);
             run_next_test();
@@ -97,7 +97,7 @@ add_test(function test3() {
     do_log_info("Check search result ordering with empty search term");
 
     let lastFound = numRecords;
-    fac.autoCompleteSearchAsync("field1", "", null, null, {
+    fac.autoCompleteSearchAsync("field1", "", null, null, null, {
         onSearchCompletion : function(aResults) {
             for (let i = 0; i < numRecords; i+=2) {
                 do_check_eq(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
@@ -112,7 +112,7 @@ add_test(function test4() {
     do_log_info("Check search result ordering with \"v\"");
 
     let lastFound = numRecords;
-    fac.autoCompleteSearchAsync("field1", "v", null, null, {
+    fac.autoCompleteSearchAsync("field1", "v", null, null, null, {
         onSearchCompletion : function(aResults) {
             for (let i = 0; i < numRecords; i+=2) {
                 do_check_eq(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
@@ -142,7 +142,7 @@ add_test(function test6() {
     do_log_info("Check search result ordering with empty search term");
 
     let lastFound = timesUsedSamples;
-    fac.autoCompleteSearchAsync("field2", "", null, null, {
+    fac.autoCompleteSearchAsync("field2", "", null, null, null, {
         onSearchCompletion : function(aResults) {
             for (let i = 0; i < timesUsedSamples; i++) {
                 do_check_eq(parseInt(aResults.getValueAt(i).substr(5)), --lastFound);
@@ -156,7 +156,7 @@ add_test(function test7() {
     do_log_info("Check search result ordering with \"v\"");
 
     let lastFound = timesUsedSamples;
-    fac.autoCompleteSearchAsync("field2", "v", null, null, {
+    fac.autoCompleteSearchAsync("field2", "v", null, null, null, {
         onSearchCompletion : function(aResults) {
             for (let i = 0; i < timesUsedSamples; i++) {
                 do_check_eq(parseInt(aResults.getValueAt(i).substr(5)), --lastFound);
@@ -180,7 +180,7 @@ add_test(function test8() {
 });
 
 add_test(function test9() {
-    fac.autoCompleteSearchAsync("field3", "", null, null, {
+    fac.autoCompleteSearchAsync("field3", "", null, null, null, {
         onSearchCompletion : function(aResults) {
             do_check_eq(aResults.getValueAt(0), "senior citizen");
             do_check_eq(aResults.getValueAt(1), "old but not senior");
@@ -203,7 +203,7 @@ add_test(function test10() {
 });
 
 add_test(function test11() {
-    fac.autoCompleteSearchAsync("field4", "", null, null, {
+    fac.autoCompleteSearchAsync("field4", "", null, null, null, {
         onSearchCompletion : function(aResults) {
             do_check_eq(aResults.matchCount, 3);
             run_next_test();
@@ -223,21 +223,6 @@ add_test(function test12() {
     updateFormHistory(changes, run_next_test);
 });
 
-add_test(function test13() {
-  let autocompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete);
-  let results = autocompleteService.autoCompleteSearch("field5", "", null, null);
-  do_check_eq(results.matchCount, syncValues.length, "synchronous matchCount");
-  for (let i = 0; i < results.matchCount; i++) {
-    do_check_eq(results.getValueAt(i), syncValues[i]);
-  }
-
-  results = autocompleteService.autoCompleteSearch("field5", "sync1", null, null);
-  do_check_eq(results.matchCount, 2, "synchronous matchCount");
-  do_check_eq(results.getValueAt(0), "sync1");
-  do_check_eq(results.getValueAt(1), "sync1a");
-  run_next_test();
-});
-
 add_test(function test_token_limit_DB() {
     function test_token_limit_previousResult(previousResult) {
         do_log_info("Check that the number of tokens used in a search is not capped to " +
@@ -247,7 +232,7 @@ add_test(function test_token_limit_DB() {
         // when re-using a previous result.
         fac.autoCompleteSearchAsync("field_token_cap",
                                     "a b c d e f g h i j .",
-                                    null, previousResult, {
+                                    null, previousResult, null, {
                                         onSearchCompletion : function(aResults) {
                                             do_check_eq(aResults.matchCount, 0,
                                                         "All search tokens should be used with " +
@@ -269,7 +254,7 @@ add_test(function test_token_limit_DB() {
         // (which would prevent the result from being returned if the 11th term was used).
         fac.autoCompleteSearchAsync("field_token_cap",
                                     "a b c d e f g h i j .",
-                                    null, null, {
+                                    null, null, null, {
                                         onSearchCompletion : function(aResults) {
                                             do_check_eq(aResults.matchCount, 1,
                                                         "Only the first MAX_SEARCH_TOKENS tokens " +

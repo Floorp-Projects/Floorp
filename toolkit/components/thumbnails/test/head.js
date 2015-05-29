@@ -210,6 +210,9 @@ function addVisitsAndRepopulateNewTabLinks(aPlaceInfo, aCallback) {
     NewTabUtils.links.populateCache(aCallback, true);
   });
 }
+function promiseAddVisitsAndRepopulateNewTabLinks(aPlaceInfo) {
+  return new Promise(resolve => addVisitsAndRepopulateNewTabLinks(aPlaceInfo, resolve));
+}
 
 /**
  * Calls a given callback when the thumbnail for a given URL has been found

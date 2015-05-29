@@ -777,7 +777,7 @@ nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
   for (uint32_t i = 0; i < mSrcs.Length(); i++) {
     src.Truncate();
     mSrcs[i]->toString(src);
-    srcs.AppendElement(src);
+    srcs.AppendElement(src, mozilla::fallible);
   }
 
   switch(mDirective) {
@@ -1031,7 +1031,7 @@ nsCSPPolicy::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
   for (uint32_t i = 0; i < mDirectives.Length(); ++i) {
     if (mDirectives[i]->equals(nsIContentSecurityPolicy::REFERRER_DIRECTIVE)) {
       mozilla::dom::Sequence<nsString> srcs;
-      srcs.AppendElement(mReferrerPolicy);
+      srcs.AppendElement(mReferrerPolicy, mozilla::fallible);
       outCSP.mReferrer.Construct();
       outCSP.mReferrer.Value() = srcs;
     } else {

@@ -349,7 +349,7 @@ TVSource::NotifyEITBroadcasted(nsITVChannelData* aChannelData,
   for (uint32_t i = 0; i < aCount; i++) {
     nsRefPtr<TVProgram> program =
       new TVProgram(GetOwner(), channel, aProgramDataList[i]);
-    *programs.AppendElement() = program;
+    *programs.AppendElement(fallible) = program;
   }
   return DispatchEITBroadcastedEvent(programs);
 }

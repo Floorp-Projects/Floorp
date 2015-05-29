@@ -41,27 +41,34 @@ TestDescription.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationChannelDescription]),
 }
 
+const CONTROLLER_CONTROL_CHANNEL_PORT = 36777;
+const PRESENTER_CONTROL_CHANNEL_PORT = 36888;
+
+// presenter's presentation channel description
+const OFFER_ADDRESS = '192.168.123.123';
+const OFFER_PORT = 123;
+
+// controller's presentation channel description
+const ANSWER_ADDRESS = '192.168.321.321';
+const ANSWER_PORT = 321;
+
 function loopOfferAnser() {
-  const CONTROLLER_CONTROL_CHANNEL_PORT = 36777;
-  const PRESENTER_CONTROL_CHANNEL_PORT = 36888;
+  tps = Cc["@mozilla.org/presentation-device/tcp-presentation-server;1"]
+        .createInstance(Ci.nsITCPPresentationServer);
+  tps.init(null, PRESENTER_CONTROL_CHANNEL_PORT);
+  tps.id = 'controllerID';
 
-  // presenter's presentation channel description
-  const OFFER_ADDRESS = '192.168.123.123';
-  const OFFER_PORT = 123;
+  testPresentationServer();
+}
 
-  // controller's presentation channel description
-  const ANSWER_ADDRESS = '192.168.321.321';
-  const ANSWER_PORT = 321;
 
+function testPresentationServer() {
   let yayFuncs = makeJointSuccess(['controllerControlChannelClose',
                                    'presenterControlChannelClose']);
   let controllerDevice, controllerControlChannel;
   let presenterDevice, presenterControlChannel;
 
-  tps = Cc["@mozilla.org/presentation-device/tcp-presentation-server;1"]
-        .createInstance(Ci.nsITCPPresentationServer);
-  tps.init(null, PRESENTER_CONTROL_CHANNEL_PORT);
-  tps.id = 'controllerID';
+
   controllerDevice = tps.createTCPDevice('controllerID',
                                          'controllerName',
                                          'testType',
@@ -168,34 +175,40 @@ function loopOfferAnser() {
   };
 }
 
-function shutdownAndOneMoreLoop() {
-  const PRESENTER_CONTROL_CHANNEL_PORT = 36888;
-
-  let isFirstClose = true;
+function setOffline() {
   let expectedReason;
   tps.listener = {
     onClose: function(aReason) {
-      expectedReason = isFirstClose ? Cr.NS_ERROR_ABORT // non-manually closed
-                                    : Cr.NS_OK;         // manually closed
-      Assert.equal(aReason, expectedReason, 'TCPPresentationServer close as expected');
-      if (isFirstClose){
-        isFirstClose = false;
-        try {
-          tps.init('controllerID', PRESENTER_CONTROL_CHANNEL_PORT);
-          tps.close();
-        } catch (e) {
-          Assert.ok(false, 'TCP presentation init fail:' + e);
-          run_next_test();
-        }
-      } else {
-        run_next_test();
-      }
+      Assert.equal(aReason, Cr.NS_ERROR_ABORT, 'TCPPresentationServer close as expected');
+      Services.io.offline = false;
+      run_next_test();
     },
   }
 
-  // A fake event to pretend the server socket is closed non-manually
-  tps.QueryInterface(Ci.nsIServerSocketListener)
-     .onStopListening(null, Cr.NS_ERROR_ABORT);
+  // Let the server socket be closed non-manually
+  Services.io.offline = true;
+}
+
+function oneMoreLoop() {
+  try {
+    tps.init('controllerID', PRESENTER_CONTROL_CHANNEL_PORT);
+    testPresentationServer();
+  } catch (e) {
+    Assert.ok(false, 'TCP presentation init fail:' + e);
+    run_next_test();
+  }
+}
+
+
+function shutdown()
+{
+  tps.listener = {
+    onClose: function(aReason) {
+      Assert.equal(aReason, Cr.NS_OK, 'TCPPresentationServer close success');
+      run_next_test();
+    },
+  }
+  tps.close();
 }
 
 function setPref() {
@@ -210,7 +223,9 @@ function clearPref() {
 
 add_test(setPref);
 add_test(loopOfferAnser);
-add_test(shutdownAndOneMoreLoop);
+add_test(setOffline);
+add_test(oneMoreLoop);
+add_test(shutdown);
 add_test(clearPref);
 
 function run_test() {
