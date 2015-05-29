@@ -478,12 +478,11 @@ MediaEngineWebRTCAudioSource::Shutdown()
 {
   if (!mInitDone) {
     // duplicate these here in case we failed during Init()
-    if (mChannel != -1 && mVoENetwork) {
+    if (mChannel != -1) {
       mVoENetwork->DeRegisterExternalTransport(mChannel);
     }
 
     delete mNullTransport;
-    mNullTransport = nullptr;
     return;
   }
 
@@ -515,7 +514,6 @@ MediaEngineWebRTCAudioSource::Shutdown()
   }
 
   delete mNullTransport;
-  mNullTransport = nullptr;
 
   mVoEProcessing = nullptr;
   mVoENetwork = nullptr;

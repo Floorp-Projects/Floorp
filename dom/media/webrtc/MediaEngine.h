@@ -64,8 +64,6 @@ public:
   virtual void EnumerateAudioDevices(dom::MediaSourceEnum,
                                      nsTArray<nsRefPtr<MediaEngineAudioSource> >*) = 0;
 
-  virtual void Shutdown() = 0;
-
 protected:
   virtual ~MediaEngine() {}
 };
@@ -82,8 +80,6 @@ public:
   static const unsigned int kMaxUniqueIdLength = 256;
 
   virtual ~MediaEngineSource() {}
-
-  virtual void Shutdown() = 0;
 
   /* Populate the human readable name of this device in the nsAString */
   virtual void GetName(nsAString&) = 0;
@@ -249,7 +245,6 @@ public:
   /* This call reserves but does not start the device. */
   virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs) = 0;
-
 protected:
   explicit MediaEngineAudioSource(MediaEngineState aState)
     : MediaEngineSource(aState) {}

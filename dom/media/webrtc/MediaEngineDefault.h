@@ -36,8 +36,6 @@ class MediaEngineDefaultVideoSource : public nsITimerCallback,
 public:
   MediaEngineDefaultVideoSource();
 
-  virtual void Shutdown() override {};
-
   virtual void GetName(nsAString&) override;
   virtual void GetUUID(nsAString&) override;
 
@@ -106,8 +104,6 @@ class MediaEngineDefaultAudioSource : public nsITimerCallback,
 public:
   MediaEngineDefaultAudioSource();
 
-  virtual void Shutdown() override {};
-
   virtual void GetName(nsAString&) override;
   virtual void GetUUID(nsAString&) override;
 
@@ -162,23 +158,15 @@ public:
   {}
 
   virtual void EnumerateVideoDevices(dom::MediaSourceEnum,
-                                     nsTArray<nsRefPtr<MediaEngineVideoSource> >*) override;
+                                     nsTArray<nsRefPtr<MediaEngineVideoSource> >*);
   virtual void EnumerateAudioDevices(dom::MediaSourceEnum,
-                                     nsTArray<nsRefPtr<MediaEngineAudioSource> >*) override;
-  virtual void Shutdown() {
-    MutexAutoLock lock(mMutex);
-
-    mVSources.Clear();
-    mASources.Clear();
-  };
+                                     nsTArray<nsRefPtr<MediaEngineAudioSource> >*);
 
 protected:
   bool mHasFakeTracks;
 
 private:
-  ~MediaEngineDefault() {
-    Shutdown();
-  }
+  ~MediaEngineDefault() {}
 
   Mutex mMutex;
   // protected with mMutex:
