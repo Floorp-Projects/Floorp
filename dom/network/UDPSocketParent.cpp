@@ -20,6 +20,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptSecurityManager.h"
+#include "mozilla/ipc/PBackgroundParent.h"
 
 #if defined(PR_LOGGING)
 //
@@ -35,8 +36,18 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS(UDPSocketParent, nsIUDPSocketListener)
 
-UDPSocketParent::UDPSocketParent()
-  : mIPCOpen(true)
+UDPSocketParent::UDPSocketParent(PBackgroundParent* aManager)
+  : mBackgroundManager(aManager)
+  , mNeckoManager(nullptr)
+  , mIPCOpen(true)
+{
+  mObserver = new mozilla::net::OfflineObserver(this);
+}
+
+UDPSocketParent::UDPSocketParent(PNeckoParent* aManager)
+  : mBackgroundManager(nullptr)
+  , mNeckoManager(aManager)
+  , mIPCOpen(true)
 {
   mObserver = new mozilla::net::OfflineObserver(this);
 }
@@ -87,12 +98,22 @@ bool
 UDPSocketParent::Init(const IPC::Principal& aPrincipal,
                       const nsACString& aFilter)
 {
+  MOZ_ASSERT_IF(mBackgroundManager, !aPrincipal);
+  // will be used once we move all UDPSocket to PBackground, or
+  // if we add in Principal checking for mtransport
+  unused << mBackgroundManager;
+  
   mPrincipal = aPrincipal;
   if (net::UsingNeckoIPCSecurity() &&
       mPrincipal &&
       !ContentParent::IgnoreIPCPrincipal()) {
-    if (!AssertAppPrincipal(Manager()->Manager(), mPrincipal)) {
-      return false;
+    if (mNeckoManager) {
+      if (!AssertAppPrincipal(mNeckoManager->Manager(), mPrincipal)) {
+        return false;
+      }
+    } else {
+      // PBackground is (for now) using a STUN filter for verification
+      // it's not being used for DoS
     }
 
     nsCOMPtr<nsIPermissionManager> permMgr =
@@ -130,7 +151,7 @@ UDPSocketParent::Init(const IPC::Principal& aPrincipal,
   }
   // We don't have browser actors in xpcshell, and hence can't run automated
   // tests without this loophole.
-  if (net::UsingNeckoIPCSecurity() && !mFilter && 
+  if (net::UsingNeckoIPCSecurity() && !mFilter &&
       (!mPrincipal || ContentParent::IgnoreIPCPrincipal())) {
     return false;
   }

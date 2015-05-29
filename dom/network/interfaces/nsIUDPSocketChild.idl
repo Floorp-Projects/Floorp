@@ -19,12 +19,15 @@ union NetAddr;
 native NetAddr(mozilla::net::NetAddr);
 [ptr] native NetAddrPtr(mozilla::net::NetAddr);
 
-[scriptable, uuid(dd636fc5-05a0-401c-832f-2c07f3477c60)]
+[scriptable, uuid(481f15ce-224a-40b6-9927-7effbc326776)]
 interface nsIUDPSocketChild : nsISupports
 {
   readonly attribute unsigned short localPort;
   readonly attribute AUTF8String localAddress;
   attribute AUTF8String filterName;
+
+  // Allow hosting this over PBackground instead of PNecko
+  [noscript] void setBackgroundSpinsEvents();
 
   // Tell the chrome process to bind the UDP socket to a given local host and port
   void bind(in nsIUDPSocketInternal socket, in nsIPrincipal principal,
