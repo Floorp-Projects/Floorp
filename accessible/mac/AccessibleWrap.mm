@@ -61,13 +61,13 @@ AccessibleWrap::GetNativeType ()
 
   roles::Role role = Role();
   switch (role) {
+    case roles::COMBOBOX:
     case roles::PUSHBUTTON:
     case roles::SPLITBUTTON:
     case roles::TOGGLE_BUTTON:
     {
       // if this button may show a popup, let's make it of the popupbutton type.
-      return HasPopup() ? [mozPopupButtonAccessible class] : 
-             [mozButtonAccessible class];
+      return [mozButtonAccessible class];
     }
     
     case roles::PAGETAB:
@@ -96,9 +96,6 @@ AccessibleWrap::GetNativeType ()
     case roles::LINK:
       return [mozLinkAccessible class];
 
-    case roles::COMBOBOX:
-      return [mozPopupButtonAccessible class];
-      
     default:
       return [mozAccessible class];
   }
