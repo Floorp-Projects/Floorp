@@ -165,6 +165,16 @@ public:
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
 
+  /**
+   * @return the display port for the given element which should be used for
+   * visibility testing purposes.
+   *
+   * If low-precision buffers are enabled, this is the critical display port;
+   * otherwise, it's the same display port returned by GetDisplayPort().
+   */
+  static bool GetDisplayPortForVisibilityTesting(nsIContent* aContent,
+                                                 nsRect* aResult = nullptr);
+
   enum class RepaintMode : uint8_t {
     Repaint,
     DoNotRepaint
