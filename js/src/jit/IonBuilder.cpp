@@ -7194,8 +7194,8 @@ IonBuilder::testSingletonProperty(JSObject* obj, PropertyName* name)
     return nullptr;
 }
 
-bool
-IonBuilder::testSingletonPropertyTypes(MDefinition* obj, JSObject* singleton, PropertyName* name,
+JSObject*
+IonBuilder::testSingletonPropertyTypes(MDefinition* obj, PropertyName* name,
                                        bool* testObject, bool* testString)
 {
     // As for TestSingletonProperty, but the input is any value in a type set
@@ -7207,11 +7207,11 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, JSObject* singleton, Pr
 
     TemporaryTypeSet* types = obj->resultTypeSet();
     if (types && types->unknownObject())
-        return false;
+        return nullptr;
 
     JSObject* objectSingleton = types ? types->maybeSingleton() : nullptr;
     if (objectSingleton)
-        return testSingletonProperty(objectSingleton, name) == singleton;
+        return testSingletonProperty(objectSingleton, name);
 
     JSProtoKey key;
     switch (obj->type()) {
@@ -7235,7 +7235,7 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, JSObject* singleton, Pr
       case MIRType_Object:
       case MIRType_Value: {
         if (!types)
-            return false;
+            return nullptr;
 
         if (types->hasType(TypeSet::StringType())) {
             key = JSProto_String;
@@ -7244,11 +7244,12 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, JSObject* singleton, Pr
         }
 
         if (!types->maybeObject())
-            return false;
+            return nullptr;
 
         // For property accesses which may be on many objects, we just need to
         // find a prototype common to all the objects; if that prototype
         // has the singleton property, the access will not be on a missing property.
+        JSObject* singleton = nullptr;
         for (unsigned i = 0; i < types->getObjectCount(); i++) {
             TypeSet::ObjectKey* key = types->getObject(i);
             if (!key)
@@ -7258,35 +7259,42 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, JSObject* singleton, Pr
 
             const Class* clasp = key->clasp();
             if (!ClassHasEffectlessLookup(clasp) || ObjectHasExtraOwnProperty(compartment, key, name))
-                return false;
+                return nullptr;
             if (key->unknownProperties())
-                return false;
+                return nullptr;
             HeapTypeSetKey property = key->property(NameToId(name));
             if (property.isOwnProperty(constraints()))
-                return false;
+                return nullptr;
 
             if (JSObject* proto = key->proto().toObjectOrNull()) {
                 // Test this type.
-                if (testSingletonProperty(proto, name) != singleton)
-                    return false;
+                JSObject* thisSingleton = testSingletonProperty(proto, name);
+                if (!thisSingleton)
+                    return nullptr;
+                if (singleton) {
+                    if (thisSingleton != singleton)
+                        return nullptr;
+                } else {
+                    singleton = thisSingleton;
+                }
             } else {
                 // Can't be on the prototype chain with no prototypes...
-                return false;
+                return nullptr;
             }
         }
         // If this is not a known object, a test will be needed.
         *testObject = (obj->type() != MIRType_Object);
-        return true;
+        return singleton;
       }
       default:
-        return false;
+        return nullptr;
     }
 
     JSObject* proto = GetBuiltinPrototypePure(&script()->global(), key);
     if (proto)
-        return testSingletonProperty(proto, name) == singleton;
+        return testSingletonProperty(proto, name);
 
-    return false;
+    return nullptr;
 }
 
 bool
@@ -10301,14 +10309,16 @@ IonBuilder::getPropTryConstant(bool* emitted, MDefinition* obj, PropertyName* na
 {
     MOZ_ASSERT(*emitted == false);
 
-    JSObject* singleton = types ? types->maybeSingleton() : nullptr;
-    if (!singleton) {
-        trackOptimizationOutcome(TrackedOutcome::NotSingleton);
+    if (!types->mightBeMIRType(MIRType_Object)) {
+        // If we have not observed an object result here, don't look for a
+        // singleton constant.
+        trackOptimizationOutcome(TrackedOutcome::NotObject);
         return true;
     }
 
     bool testObject, testString;
-    if (!testSingletonPropertyTypes(obj, singleton, name, &testObject, &testString))
+    JSObject* singleton = testSingletonPropertyTypes(obj, name, &testObject, &testString);
+    if (!singleton)
         return true;
 
     // Property access is a known constant -- safe to emit.

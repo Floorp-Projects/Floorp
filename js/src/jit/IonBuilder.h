@@ -941,8 +941,8 @@ class IonBuilder
     MGetPropertyCache* getInlineableGetPropertyCache(CallInfo& callInfo);
 
     JSObject* testSingletonProperty(JSObject* obj, PropertyName* name);
-    bool testSingletonPropertyTypes(MDefinition* obj, JSObject* singleton, PropertyName* name,
-                                    bool* testObject, bool* testString);
+    JSObject* testSingletonPropertyTypes(MDefinition* obj, PropertyName* name,
+                                         bool* testObject, bool* testString);
     uint32_t getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_t* pnfixed,
                              BaselineInspector::ObjectGroupVector& convertUnboxedGroups);
     MDefinition* convertUnboxedObjects(MDefinition* obj,
