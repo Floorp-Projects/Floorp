@@ -1018,8 +1018,13 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
       switch (aAmount) {
         case eSelectBeginLine:
         case eSelectEndLine:
-          // set the caret Bidi level to the paragraph embedding level
-          SetCaretBidiLevel(NS_GET_BASE_LEVEL(theFrame));
+          // In Bidi contexts, PeekOffset calculates pos.mContentOffset
+          // differently depending on whether the movement is visual or logical.
+          // For visual movement, pos.mContentOffset depends on the direction-
+          // ality of the first/last frame on the line (theFrame), and the caret
+          // directionality must correspond.
+          SetCaretBidiLevel(visualMovement ? NS_GET_EMBEDDING_LEVEL(theFrame) :
+                                             NS_GET_BASE_LEVEL(theFrame));
           break;
 
         default:
