@@ -32,6 +32,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
     UNIFIED_SOURCES += [ '/gfx/2d/unittest/%s' % p for p in [
         'TestBase.cpp',
         'TestBugs.cpp',
+        'TestCairo.cpp',
         'TestPoint.cpp',
         'TestScaling.cpp',
     ]]
