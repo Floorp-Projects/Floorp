@@ -71,7 +71,7 @@ ObjectActor.prototype = {
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
-  grip: function () {
+  grip: function() {
     this.hooks.incrementGripDepth();
 
     let g = {
@@ -125,7 +125,8 @@ ObjectActor.prototype = {
             break;
           }
         } catch (e) {
-          DevToolsUtils.reportException("ObjectActor.prototype.grip previewer function", e);
+          let msg = "ObjectActor.prototype.grip previewer function";
+          DevToolsUtils.reportException(msg, e);
         }
       }
     }
@@ -137,7 +138,7 @@ ObjectActor.prototype = {
   /**
    * Releases this actor from the pool.
    */
-  release: function () {
+  release: function() {
     if (this.registeredPool.objectActors) {
       this.registeredPool.objectActors.delete(this.obj);
     }
@@ -149,11 +150,8 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the definition site of this function
    * object.
-   *
-   * @param aRequest object
-   *        The protocol request object.
    */
-  onDefinitionSite: function OA_onDefinitionSite(aRequest) {
+  onDefinitionSite: function() {
     if (this.obj.class != "Function") {
       return {
         from: this.actorID,
@@ -186,11 +184,8 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the names of the properties defined on
    * the object and not its prototype.
-   *
-   * @param aRequest object
-   *        The protocol request object.
    */
-  onOwnPropertyNames: function (aRequest) {
+  onOwnPropertyNames: function() {
     return { from: this.actorID,
              ownPropertyNames: this.obj.getOwnPropertyNames() };
   },
@@ -199,11 +194,11 @@ ObjectActor.prototype = {
    * Creates an actor to iterate over an object property names and values.
    * See PropertyIteratorActor constructor for more info about options param.
    *
-   * @param aRequest object
+   * @param request object
    *        The protocol request object.
    */
-  onEnumProperties: function (aRequest) {
-    let actor = new PropertyIteratorActor(this, aRequest.options);
+  onEnumProperties: function(request) {
+    let actor = new PropertyIteratorActor(this, request.options);
     this.registeredPool.addActor(actor);
     this.iterators.add(actor);
     return { iterator: actor.grip() };
@@ -212,11 +207,8 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the prototype and own properties of
    * the object.
-   *
-   * @param aRequest object
-   *        The protocol request object.
    */
-  onPrototypeAndProperties: function (aRequest) {
+  onPrototypeAndProperties: function() {
     let ownProperties = Object.create(null);
     let names;
     try {
@@ -242,17 +234,16 @@ ObjectActor.prototype = {
    * Find the safe getter values for the current Debugger.Object, |this.obj|.
    *
    * @private
-   * @param array aOwnProperties
+   * @param array ownProperties
    *        The array that holds the list of known ownProperties names for
    *        |this.obj|.
-   * @param number [aLimit=0]
+   * @param number [limit=0]
    *        Optional limit of getter values to find.
    * @return object
    *         An object that maps property names to safe getter descriptors as
    *         defined by the remote debugging protocol.
    */
-  _findSafeGetterValues: function (aOwnProperties, aLimit = 0)
-  {
+  _findSafeGetterValues: function(ownProperties, limit = 0) {
     let safeGetterValues = Object.create(null);
     let obj = this.obj;
     let level = 0, i = 0;
@@ -264,7 +255,7 @@ ObjectActor.prototype = {
         // avoid providing safeGetterValues from prototypes if property |name|
         // is already defined as an own property.
         if (name in safeGetterValues ||
-            (obj != this.obj && aOwnProperties.indexOf(name) !== -1)) {
+            (obj != this.obj && ownProperties.indexOf(name) !== -1)) {
           continue;
         }
 
@@ -302,13 +293,13 @@ ObjectActor.prototype = {
               enumerable: desc.enumerable,
               writable: level == 0 ? desc.writable : true,
             };
-            if (aLimit && ++i == aLimit) {
+            if (limit && ++i == limit) {
               break;
             }
           }
         }
       }
-      if (aLimit && i == aLimit) {
+      if (limit && i == limit) {
         break;
       }
 
@@ -324,22 +315,21 @@ ObjectActor.prototype = {
    * getters which are safe to execute.
    *
    * @private
-   * @param Debugger.Object aObject
+   * @param Debugger.Object object
    *        The Debugger.Object where you want to find safe getters.
    * @return Set
    *         A Set of names of safe getters. This result is cached for each
    *         Debugger.Object.
    */
-  _findSafeGetters: function (aObject)
-  {
-    if (aObject._safeGetters) {
-      return aObject._safeGetters;
+  _findSafeGetters: function(object) {
+    if (object._safeGetters) {
+      return object._safeGetters;
     }
 
     let getters = new Set();
     let names = [];
     try {
-      names = aObject.getOwnPropertyNames()
+      names = object.getOwnPropertyNames()
     } catch (ex) {
       // Calling getOwnPropertyNames() on some wrapped native prototypes is not
       // allowed: "cannot modify properties of a WrappedNative". See bug 952093.
@@ -348,7 +338,7 @@ ObjectActor.prototype = {
     for (let name of names) {
       let desc = null;
       try {
-        desc = aObject.getOwnPropertyDescriptor(name);
+        desc = object.getOwnPropertyDescriptor(name);
       } catch (e) {
         // Calling getOwnPropertyDescriptor on wrapped native prototypes is not
         // allowed (bug 560072).
@@ -362,17 +352,14 @@ ObjectActor.prototype = {
       }
     }
 
-    aObject._safeGetters = getters;
+    object._safeGetters = getters;
     return getters;
   },
 
   /**
    * Handle a protocol request to provide the prototype of the object.
-   *
-   * @param aRequest object
-   *        The protocol request object.
    */
-  onPrototype: function (aRequest) {
+  onPrototype: function() {
     return { from: this.actorID,
              prototype: this.hooks.createValueGrip(this.obj.proto) };
   },
@@ -381,26 +368,23 @@ ObjectActor.prototype = {
    * Handle a protocol request to provide the property descriptor of the
    * object's specified property.
    *
-   * @param aRequest object
+   * @param request object
    *        The protocol request object.
    */
-  onProperty: function (aRequest) {
-    if (!aRequest.name) {
+  onProperty: function(request) {
+    if (!request.name) {
       return { error: "missingParameter",
                message: "no property name was specified" };
     }
 
     return { from: this.actorID,
-             descriptor: this._propertyDescriptor(aRequest.name) };
+             descriptor: this._propertyDescriptor(request.name) };
   },
 
   /**
    * Handle a protocol request to provide the display string for the object.
-   *
-   * @param aRequest object
-   *        The protocol request object.
    */
-  onDisplayString: function (aRequest) {
+  onDisplayString: function() {
     const string = stringify(this.obj);
     return { from: this.actorID,
              displayString: this.hooks.createValueGrip(string) };
@@ -411,19 +395,19 @@ ObjectActor.prototype = {
    * properly formatted for sending in a protocol response.
    *
    * @private
-   * @param string aName
+   * @param string name
    *        The property that the descriptor is generated for.
-   * @param boolean [aOnlyEnumerable]
+   * @param boolean [onlyEnumerable]
    *        Optional: true if you want a descriptor only for an enumerable
    *        property, false otherwise.
    * @return object|undefined
    *         The property descriptor, or undefined if this is not an enumerable
-   *         property and aOnlyEnumerable=true.
+   *         property and onlyEnumerable=true.
    */
-  _propertyDescriptor: function (aName, aOnlyEnumerable) {
+  _propertyDescriptor: function(name, onlyEnumerable) {
     let desc;
     try {
-      desc = this.obj.getOwnPropertyDescriptor(aName);
+      desc = this.obj.getOwnPropertyDescriptor(name);
     } catch (e) {
       // Calling getOwnPropertyDescriptor on wrapped native prototypes is not
       // allowed (bug 560072). Inform the user with a bogus, but hopefully
@@ -436,7 +420,7 @@ ObjectActor.prototype = {
       };
     }
 
-    if (!desc || aOnlyEnumerable && !desc.enumerable) {
+    if (!desc || onlyEnumerable && !desc.enumerable) {
       return undefined;
     }
 
@@ -462,10 +446,10 @@ ObjectActor.prototype = {
   /**
    * Handle a protocol request to provide the source code of a function.
    *
-   * @param aRequest object
+   * @param request object
    *        The protocol request object.
    */
-  onDecompile: function (aRequest) {
+  onDecompile: function(request) {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
                message: "decompile request is only valid for object grips " +
@@ -473,16 +457,13 @@ ObjectActor.prototype = {
     }
 
     return { from: this.actorID,
-             decompiledCode: this.obj.decompile(!!aRequest.pretty) };
+             decompiledCode: this.obj.decompile(!!request.pretty) };
   },
 
   /**
    * Handle a protocol request to provide the parameters of a function.
-   *
-   * @param aRequest object
-   *        The protocol request object.
    */
-  onParameterNames: function (aRequest) {
+  onParameterNames: function() {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
                message: "'parameterNames' request is only valid for object " +
@@ -494,22 +475,16 @@ ObjectActor.prototype = {
 
   /**
    * Handle a protocol request to release a thread-lifetime grip.
-   *
-   * @param aRequest object
-   *        The protocol request object.
    */
-  onRelease: function (aRequest) {
+  onRelease: function() {
     this.release();
     return {};
   },
 
   /**
    * Handle a protocol request to provide the lexical scope of a function.
-   *
-   * @param aRequest object
-   *        The protocol request object.
    */
-  onScope: function (aRequest) {
+  onScope: function() {
     if (this.obj.class !== "Function") {
       return { error: "objectNotFunction",
                message: "scope request is only valid for object grips with a" +
@@ -700,7 +675,7 @@ PropertyIteratorActor.prototype.requestTypes = {
  *
  * In each array you can add functions that take two
  * arguments:
- *   - the ObjectActor instance to make a preview for,
+ *   - the ObjectActor instance and its hooks to make a preview for,
  *   - the grip object being prepared for the client,
  *   - the raw JS object after calling Debugger.Object.unsafeDereference(). This
  *   argument is only provided if the object is safe for reading properties and
@@ -710,7 +685,7 @@ PropertyIteratorActor.prototype.requestTypes = {
  * information for the debugger object, or true otherwise.
  */
 DebuggerServer.ObjectActorPreviewers = {
-  String: [function({obj, hooks}, aGrip) {
+  String: [function({obj, hooks}, grip) {
     let result = genericObjectPreviewer("String", String, obj, hooks);
     let length = DevToolsUtils.getProperty(obj, "length");
 
@@ -718,7 +693,7 @@ DebuggerServer.ObjectActorPreviewers = {
       return false;
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "ArrayLike",
       length: length
     };
@@ -727,7 +702,7 @@ DebuggerServer.ObjectActorPreviewers = {
       return true;
     }
 
-    let items = aGrip.preview.items = [];
+    let items = grip.preview.items = [];
 
     const max = Math.min(result.value.length, OBJECT_PREVIEW_MAX_ITEMS);
     for (let i = 0; i < max; i++) {
@@ -738,37 +713,37 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
-  Boolean: [function({obj, hooks}, aGrip) {
+  Boolean: [function({obj, hooks}, grip) {
     let result = genericObjectPreviewer("Boolean", Boolean, obj, hooks);
     if (result) {
-      aGrip.preview = result;
+      grip.preview = result;
       return true;
     }
 
     return false;
   }],
 
-  Number: [function({obj, hooks}, aGrip) {
+  Number: [function({obj, hooks}, grip) {
     let result = genericObjectPreviewer("Number", Number, obj, hooks);
     if (result) {
-      aGrip.preview = result;
+      grip.preview = result;
       return true;
     }
 
     return false;
   }],
 
-  Function: [function({obj, hooks}, aGrip) {
+  Function: [function({obj, hooks}, grip) {
     if (obj.name) {
-      aGrip.name = obj.name;
+      grip.name = obj.name;
     }
 
     if (obj.displayName) {
-      aGrip.displayName = obj.displayName.substr(0, 500);
+      grip.displayName = obj.displayName.substr(0, 500);
     }
 
     if (obj.parameterNames) {
-      aGrip.parameterNames = obj.parameterNames;
+      grip.parameterNames = obj.parameterNames;
     }
 
     // Check if the developer has added a de-facto standard displayName
@@ -784,39 +759,39 @@ DebuggerServer.ObjectActorPreviewers = {
 
     if (userDisplayName && typeof userDisplayName.value == "string" &&
         userDisplayName.value) {
-      aGrip.userDisplayName = hooks.createValueGrip(userDisplayName.value);
+      grip.userDisplayName = hooks.createValueGrip(userDisplayName.value);
     }
 
     return true;
   }],
 
-  RegExp: [function({obj, hooks}, aGrip) {
+  RegExp: [function({obj, hooks}, grip) {
     // Avoid having any special preview for the RegExp.prototype itself.
     if (!obj.proto || obj.proto.class != "RegExp") {
       return false;
     }
 
     let str = RegExp.prototype.toString.call(obj.unsafeDereference());
-    aGrip.displayString = hooks.createValueGrip(str);
+    grip.displayString = hooks.createValueGrip(str);
     return true;
   }],
 
-  Date: [function({obj, hooks}, aGrip) {
+  Date: [function({obj, hooks}, grip) {
     let time = Date.prototype.getTime.call(obj.unsafeDereference());
 
-    aGrip.preview = {
+    grip.preview = {
       timestamp: hooks.createValueGrip(time),
     };
     return true;
   }],
 
-  Array: [function({obj, hooks}, aGrip) {
+  Array: [function({obj, hooks}, grip) {
     let length = DevToolsUtils.getProperty(obj, "length");
     if (typeof length != "number") {
       return false;
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "ArrayLike",
       length: length,
     };
@@ -826,7 +801,7 @@ DebuggerServer.ObjectActorPreviewers = {
     }
 
     let raw = obj.unsafeDereference();
-    let items = aGrip.preview.items = [];
+    let items = grip.preview.items = [];
 
     for (let i = 0; i < length; ++i) {
       // Array Xrays filter out various possibly-unsafe properties (like
@@ -850,15 +825,15 @@ DebuggerServer.ObjectActorPreviewers = {
     }
 
     return true;
-  }], // Array
+  }],
 
-  Set: [function({obj, hooks}, aGrip) {
+  Set: [function({obj, hooks}, grip) {
     let size = DevToolsUtils.getProperty(obj, "size");
     if (typeof size != "number") {
       return false;
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "ArrayLike",
       length: size,
     };
@@ -869,7 +844,7 @@ DebuggerServer.ObjectActorPreviewers = {
     }
 
     let raw = obj.unsafeDereference();
-    let items = aGrip.preview.items = [];
+    let items = grip.preview.items = [];
     // We currently lack XrayWrappers for Set, so when we iterate over
     // the values, the temporary iterator objects get created in the target
     // compartment. However, we _do_ have Xrays to Object now, so we end up
@@ -890,15 +865,15 @@ DebuggerServer.ObjectActorPreviewers = {
     }
 
     return true;
-  }], // Set
+  }],
 
-  Map: [function({obj, hooks}, aGrip) {
+  Map: [function({obj, hooks}, grip) {
     let size = DevToolsUtils.getProperty(obj, "size");
     if (typeof size != "number") {
       return false;
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "MapLike",
       size: size,
     };
@@ -908,7 +883,7 @@ DebuggerServer.ObjectActorPreviewers = {
     }
 
     let raw = obj.unsafeDereference();
-    let entries = aGrip.preview.entries = [];
+    let entries = grip.preview.entries = [];
     // Iterating over a Map via .entries goes through various intermediate
     // objects - an Iterator object, then a 2-element Array object, then the
     // actual values we care about. We don't have Xrays to Iterator objects,
@@ -934,15 +909,15 @@ DebuggerServer.ObjectActorPreviewers = {
     }
 
     return true;
-  }], // Map
+  }],
 
-  DOMStringMap: [function({obj, hooks}, aGrip, aRawObj) {
-    if (!aRawObj) {
+  DOMStringMap: [function({obj, hooks}, grip, rawObj) {
+    if (!rawObj) {
       return false;
     }
 
     let keys = obj.getOwnPropertyNames();
-    aGrip.preview = {
+    grip.preview = {
       kind: "MapLike",
       size: keys.length,
     };
@@ -951,9 +926,9 @@ DebuggerServer.ObjectActorPreviewers = {
       return true;
     }
 
-    let entries = aGrip.preview.entries = [];
+    let entries = grip.preview.entries = [];
     for (let key of keys) {
-      let value = makeDebuggeeValueIfNeeded(obj, aRawObj[key]);
+      let value = makeDebuggeeValueIfNeeded(obj, rawObj[key]);
       entries.push([key, hooks.createValueGrip(value)]);
       if (entries.length == OBJECT_PREVIEW_MAX_ITEMS) {
         break;
@@ -961,43 +936,42 @@ DebuggerServer.ObjectActorPreviewers = {
     }
 
     return true;
-  }], // DOMStringMap
-
-}; // DebuggerServer.ObjectActorPreviewers
+  }],
+};
 
 /**
  * Generic previewer for "simple" classes like String, Number and Boolean.
  *
- * @param string aClassName
+ * @param string className
  *        Class name to expect.
- * @param object aClass
+ * @param object classObj
  *        The class to expect, eg. String. The valueOf() method of the class is
  *        invoked on the given object.
- * @param Debugger.Object aObj
+ * @param Debugger.Object obj
  *        The debugger object we need to preview.
- * @param object aHooks
+ * @param object hooks
  *        The thread actor to use to create a value grip.
  * @return object|null
  *         An object with one property, "value", which holds the value grip that
  *         represents the given object. Null is returned if we cant preview the
  *         object.
  */
-function genericObjectPreviewer(aClassName, aClass, aObj, aHooks) {
-  if (!aObj.proto || aObj.proto.class != aClassName) {
+function genericObjectPreviewer(className, classObj, obj, hooks) {
+  if (!obj.proto || obj.proto.class != className) {
     return null;
   }
 
-  let raw = aObj.unsafeDereference();
+  let raw = obj.unsafeDereference();
   let v = null;
   try {
-    v = aClass.prototype.valueOf.call(raw);
+    v = classObj.prototype.valueOf.call(raw);
   } catch (ex) {
     // valueOf() can throw if the raw JS object is "misbehaved".
     return null;
   }
 
   if (v !== null) {
-    v = aHooks.createValueGrip(makeDebuggeeValueIfNeeded(aObj, v));
+    v = hooks.createValueGrip(makeDebuggeeValueIfNeeded(obj, v));
     return { value: v };
   }
 
@@ -1006,7 +980,7 @@ function genericObjectPreviewer(aClassName, aClass, aObj, aHooks) {
 
 // Preview functions that do not rely on the object class.
 DebuggerServer.ObjectActorPreviewers.Object = [
-  function TypedArray({obj, hooks}, aGrip) {
+  function TypedArray({obj, hooks}, grip) {
     if (TYPED_ARRAY_CLASSES.indexOf(obj.class) == -1) {
       return false;
     }
@@ -1016,7 +990,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       return false;
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "ArrayLike",
       length: length,
     };
@@ -1030,8 +1004,9 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     let classProto = global[obj.class].prototype;
     // The Xray machinery for TypedArrays denies indexed access on the grounds
     // that it's slow, and advises callers to do a structured clone instead.
-    let safeView = Cu.cloneInto(classProto.subarray.call(raw, 0, OBJECT_PREVIEW_MAX_ITEMS), global);
-    let items = aGrip.preview.items = [];
+    let safeView = Cu.cloneInto(classProto.subarray.call(raw, 0,
+      OBJECT_PREVIEW_MAX_ITEMS), global);
+    let items = grip.preview.items = [];
     for (let i = 0; i < safeView.length; i++) {
       items.push(safeView[i]);
     }
@@ -1039,7 +1014,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     return true;
   },
 
-  function Error({obj, hooks}, aGrip) {
+  function Error({obj, hooks}, grip) {
     switch (obj.class) {
       case "Error":
       case "EvalError":
@@ -1054,7 +1029,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
         let fileName = DevToolsUtils.getProperty(obj, "fileName");
         let lineNumber = DevToolsUtils.getProperty(obj, "lineNumber");
         let columnNumber = DevToolsUtils.getProperty(obj, "columnNumber");
-        aGrip.preview = {
+        grip.preview = {
           kind: "Error",
           name: hooks.createValueGrip(name),
           message: hooks.createValueGrip(msg),
@@ -1069,46 +1044,46 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     }
   },
 
-  function CSSMediaRule({obj, hooks}, aGrip, aRawObj) {
-    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSMediaRule)) {
+  function CSSMediaRule({obj, hooks}, grip, rawObj) {
+    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMCSSMediaRule)) {
       return false;
     }
-    aGrip.preview = {
+    grip.preview = {
       kind: "ObjectWithText",
-      text: hooks.createValueGrip(aRawObj.conditionText),
+      text: hooks.createValueGrip(rawObj.conditionText),
     };
     return true;
   },
 
-  function CSSStyleRule({obj, hooks}, aGrip, aRawObj) {
-    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSStyleRule)) {
+  function CSSStyleRule({obj, hooks}, grip, rawObj) {
+    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMCSSStyleRule)) {
       return false;
     }
-    aGrip.preview = {
+    grip.preview = {
       kind: "ObjectWithText",
-      text: hooks.createValueGrip(aRawObj.selectorText),
+      text: hooks.createValueGrip(rawObj.selectorText),
     };
     return true;
   },
 
-  function ObjectWithURL({obj, hooks}, aGrip, aRawObj) {
-    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSImportRule ||
-                                  aRawObj instanceof Ci.nsIDOMCSSStyleSheet ||
-                                  aRawObj instanceof Ci.nsIDOMLocation ||
-                                  aRawObj instanceof Ci.nsIDOMWindow)) {
+  function ObjectWithURL({obj, hooks}, grip, rawObj) {
+    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMCSSImportRule ||
+                                 rawObj instanceof Ci.nsIDOMCSSStyleSheet ||
+                                 rawObj instanceof Ci.nsIDOMLocation ||
+                                 rawObj instanceof Ci.nsIDOMWindow)) {
       return false;
     }
 
     let url;
-    if (aRawObj instanceof Ci.nsIDOMWindow && aRawObj.location) {
-      url = aRawObj.location.href;
-    } else if (aRawObj.href) {
-      url = aRawObj.href;
+    if (rawObj instanceof Ci.nsIDOMWindow && rawObj.location) {
+      url = rawObj.location.href;
+    } else if (rawObj.href) {
+      url = rawObj.href;
     } else {
       return false;
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "ObjectWithURL",
       url: hooks.createValueGrip(url),
     };
@@ -1116,87 +1091,88 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     return true;
   },
 
-  function ArrayLike({obj, hooks}, aGrip, aRawObj) {
-    if (isWorker || !aRawObj ||
+  function ArrayLike({obj, hooks}, grip, rawObj) {
+    if (isWorker || !rawObj ||
         obj.class != "DOMStringList" &&
         obj.class != "DOMTokenList" &&
-        !(aRawObj instanceof Ci.nsIDOMMozNamedAttrMap ||
-          aRawObj instanceof Ci.nsIDOMCSSRuleList ||
-          aRawObj instanceof Ci.nsIDOMCSSValueList ||
-          aRawObj instanceof Ci.nsIDOMFileList ||
-          aRawObj instanceof Ci.nsIDOMFontFaceList ||
-          aRawObj instanceof Ci.nsIDOMMediaList ||
-          aRawObj instanceof Ci.nsIDOMNodeList ||
-          aRawObj instanceof Ci.nsIDOMStyleSheetList)) {
+        !(rawObj instanceof Ci.nsIDOMMozNamedAttrMap ||
+          rawObj instanceof Ci.nsIDOMCSSRuleList ||
+          rawObj instanceof Ci.nsIDOMCSSValueList ||
+          rawObj instanceof Ci.nsIDOMFileList ||
+          rawObj instanceof Ci.nsIDOMFontFaceList ||
+          rawObj instanceof Ci.nsIDOMMediaList ||
+          rawObj instanceof Ci.nsIDOMNodeList ||
+          rawObj instanceof Ci.nsIDOMStyleSheetList)) {
       return false;
     }
 
-    if (typeof aRawObj.length != "number") {
+    if (typeof rawObj.length != "number") {
       return false;
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "ArrayLike",
-      length: aRawObj.length,
+      length: rawObj.length,
     };
 
     if (hooks.getGripDepth() > 1) {
       return true;
     }
 
-    let items = aGrip.preview.items = [];
+    let items = grip.preview.items = [];
 
-    for (let i = 0; i < aRawObj.length &&
+    for (let i = 0; i < rawObj.length &&
                     items.length < OBJECT_PREVIEW_MAX_ITEMS; i++) {
-      let value = makeDebuggeeValueIfNeeded(obj, aRawObj[i]);
+      let value = makeDebuggeeValueIfNeeded(obj, rawObj[i]);
       items.push(hooks.createValueGrip(value));
     }
 
     return true;
-  }, // ArrayLike
+  },
 
-  function CSSStyleDeclaration({obj, hooks}, aGrip, aRawObj) {
-    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSStyleDeclaration)) {
+  function CSSStyleDeclaration({obj, hooks}, grip, rawObj) {
+    if (isWorker || !rawObj ||
+        !(rawObj instanceof Ci.nsIDOMCSSStyleDeclaration)) {
       return false;
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "MapLike",
-      size: aRawObj.length,
+      size: rawObj.length,
     };
 
-    let entries = aGrip.preview.entries = [];
+    let entries = grip.preview.entries = [];
 
     for (let i = 0; i < OBJECT_PREVIEW_MAX_ITEMS &&
-                    i < aRawObj.length; i++) {
-      let prop = aRawObj[i];
-      let value = aRawObj.getPropertyValue(prop);
+                    i < rawObj.length; i++) {
+      let prop = rawObj[i];
+      let value = rawObj.getPropertyValue(prop);
       entries.push([prop, hooks.createValueGrip(value)]);
     }
 
     return true;
   },
 
-  function DOMNode({obj, hooks}, aGrip, aRawObj) {
-    if (isWorker || obj.class == "Object" || !aRawObj ||
-        !(aRawObj instanceof Ci.nsIDOMNode)) {
+  function DOMNode({obj, hooks}, grip, rawObj) {
+    if (isWorker || obj.class == "Object" || !rawObj ||
+        !(rawObj instanceof Ci.nsIDOMNode)) {
       return false;
     }
 
-    let preview = aGrip.preview = {
+    let preview = grip.preview = {
       kind: "DOMNode",
-      nodeType: aRawObj.nodeType,
-      nodeName: aRawObj.nodeName,
+      nodeType: rawObj.nodeType,
+      nodeName: rawObj.nodeName,
     };
 
-    if (aRawObj instanceof Ci.nsIDOMDocument && aRawObj.location) {
-      preview.location = hooks.createValueGrip(aRawObj.location.href);
-    } else if (aRawObj instanceof Ci.nsIDOMDocumentFragment) {
-      preview.childNodesLength = aRawObj.childNodes.length;
+    if (rawObj instanceof Ci.nsIDOMDocument && rawObj.location) {
+      preview.location = hooks.createValueGrip(rawObj.location.href);
+    } else if (rawObj instanceof Ci.nsIDOMDocumentFragment) {
+      preview.childNodesLength = rawObj.childNodes.length;
 
       if (hooks.getGripDepth() < 2) {
         preview.childNodes = [];
-        for (let node of aRawObj.childNodes) {
+        for (let node of rawObj.childNodes) {
           let actor = hooks.createValueGrip(obj.makeDebuggeeValue(node));
           preview.childNodes.push(actor);
           if (preview.childNodes.length == OBJECT_PREVIEW_MAX_ITEMS) {
@@ -1204,79 +1180,79 @@ DebuggerServer.ObjectActorPreviewers.Object = [
           }
         }
       }
-    } else if (aRawObj instanceof Ci.nsIDOMElement) {
+    } else if (rawObj instanceof Ci.nsIDOMElement) {
       // Add preview for DOM element attributes.
-      if (aRawObj instanceof Ci.nsIDOMHTMLElement) {
+      if (rawObj instanceof Ci.nsIDOMHTMLElement) {
         preview.nodeName = preview.nodeName.toLowerCase();
       }
 
       let i = 0;
       preview.attributes = {};
-      preview.attributesLength = aRawObj.attributes.length;
-      for (let attr of aRawObj.attributes) {
+      preview.attributesLength = rawObj.attributes.length;
+      for (let attr of rawObj.attributes) {
         preview.attributes[attr.nodeName] = hooks.createValueGrip(attr.value);
         if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
           break;
         }
       }
-    } else if (aRawObj instanceof Ci.nsIDOMAttr) {
-      preview.value = hooks.createValueGrip(aRawObj.value);
-    } else if (aRawObj instanceof Ci.nsIDOMText ||
-               aRawObj instanceof Ci.nsIDOMComment) {
-      preview.textContent = hooks.createValueGrip(aRawObj.textContent);
+    } else if (rawObj instanceof Ci.nsIDOMAttr) {
+      preview.value = hooks.createValueGrip(rawObj.value);
+    } else if (rawObj instanceof Ci.nsIDOMText ||
+               rawObj instanceof Ci.nsIDOMComment) {
+      preview.textContent = hooks.createValueGrip(rawObj.textContent);
     }
 
     return true;
-  }, // DOMNode
+  },
 
-  function DOMEvent({obj, hooks}, aGrip, aRawObj) {
-    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMEvent)) {
+  function DOMEvent({obj, hooks}, grip, rawObj) {
+    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMEvent)) {
       return false;
     }
 
-    let preview = aGrip.preview = {
+    let preview = grip.preview = {
       kind: "DOMEvent",
-      type: aRawObj.type,
+      type: rawObj.type,
       properties: Object.create(null),
     };
 
     if (hooks.getGripDepth() < 2) {
-      let target = obj.makeDebuggeeValue(aRawObj.target);
+      let target = obj.makeDebuggeeValue(rawObj.target);
       preview.target = hooks.createValueGrip(target);
     }
 
     let props = [];
-    if (aRawObj instanceof Ci.nsIDOMMouseEvent) {
+    if (rawObj instanceof Ci.nsIDOMMouseEvent) {
       props.push("buttons", "clientX", "clientY", "layerX", "layerY");
-    } else if (aRawObj instanceof Ci.nsIDOMKeyEvent) {
+    } else if (rawObj instanceof Ci.nsIDOMKeyEvent) {
       let modifiers = [];
-      if (aRawObj.altKey) {
+      if (rawObj.altKey) {
         modifiers.push("Alt");
       }
-      if (aRawObj.ctrlKey) {
+      if (rawObj.ctrlKey) {
         modifiers.push("Control");
       }
-      if (aRawObj.metaKey) {
+      if (rawObj.metaKey) {
         modifiers.push("Meta");
       }
-      if (aRawObj.shiftKey) {
+      if (rawObj.shiftKey) {
         modifiers.push("Shift");
       }
       preview.eventKind = "key";
       preview.modifiers = modifiers;
 
       props.push("key", "charCode", "keyCode");
-    } else if (aRawObj instanceof Ci.nsIDOMTransitionEvent) {
+    } else if (rawObj instanceof Ci.nsIDOMTransitionEvent) {
       props.push("propertyName", "pseudoElement");
-    } else if (aRawObj instanceof Ci.nsIDOMAnimationEvent) {
+    } else if (rawObj instanceof Ci.nsIDOMAnimationEvent) {
       props.push("animationName", "pseudoElement");
-    } else if (aRawObj instanceof Ci.nsIDOMClipboardEvent) {
+    } else if (rawObj instanceof Ci.nsIDOMClipboardEvent) {
       props.push("clipboardData");
     }
 
     // Add event-specific properties.
     for (let prop of props) {
-      let value = aRawObj[prop];
+      let value = rawObj[prop];
       if (value && (typeof value == "object" || typeof value == "function")) {
         // Skip properties pointing to objects.
         if (hooks.getGripDepth() > 1) {
@@ -1290,8 +1266,8 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     // Add any properties we find on the event object.
     if (!props.length) {
       let i = 0;
-      for (let prop in aRawObj) {
-        let value = aRawObj[prop];
+      for (let prop in rawObj) {
+        let value = rawObj[prop];
         if (prop == "target" || prop == "type" || value === null ||
             typeof value == "function") {
           continue;
@@ -1310,28 +1286,28 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     }
 
     return true;
-  }, // DOMEvent
+  },
 
-  function DOMException({obj, hooks}, aGrip, aRawObj) {
-    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMDOMException)) {
+  function DOMException({obj, hooks}, grip, rawObj) {
+    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMDOMException)) {
       return false;
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "DOMException",
-      name: hooks.createValueGrip(aRawObj.name),
-      message: hooks.createValueGrip(aRawObj.message),
-      code: hooks.createValueGrip(aRawObj.code),
-      result: hooks.createValueGrip(aRawObj.result),
-      filename: hooks.createValueGrip(aRawObj.filename),
-      lineNumber: hooks.createValueGrip(aRawObj.lineNumber),
-      columnNumber: hooks.createValueGrip(aRawObj.columnNumber),
+      name: hooks.createValueGrip(rawObj.name),
+      message: hooks.createValueGrip(rawObj.message),
+      code: hooks.createValueGrip(rawObj.code),
+      result: hooks.createValueGrip(rawObj.result),
+      filename: hooks.createValueGrip(rawObj.filename),
+      lineNumber: hooks.createValueGrip(rawObj.lineNumber),
+      columnNumber: hooks.createValueGrip(rawObj.columnNumber),
     };
 
     return true;
   },
 
-  function PseudoArray({obj, hooks}, aGrip, aRawObj) {
+  function PseudoArray({obj, hooks}, grip, rawObj) {
     let length = 0;
 
     // Making sure all keys are numbers from 0 to length-1
@@ -1345,7 +1321,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       }
     }
 
-    aGrip.preview = {
+    grip.preview = {
       kind: "ArrayLike",
       length: length,
     };
@@ -1355,27 +1331,27 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       return true;
     }
 
-    let items = aGrip.preview.items = [];
+    let items = grip.preview.items = [];
 
     let i = 0;
     for (let key of keys) {
-      if (aRawObj.hasOwnProperty(key) && i++ < OBJECT_PREVIEW_MAX_ITEMS) {
-        let value = makeDebuggeeValueIfNeeded(obj, aRawObj[key]);
+      if (rawObj.hasOwnProperty(key) && i++ < OBJECT_PREVIEW_MAX_ITEMS) {
+        let value = makeDebuggeeValueIfNeeded(obj, rawObj[key]);
         items.push(hooks.createValueGrip(value));
       }
     }
 
     return true;
-  }, // PseudoArray
+  },
 
-  function GenericObject(aObjectActor, aGrip) {
-    let {obj, hooks} = aObjectActor;
-    if (aGrip.preview || aGrip.displayString || hooks.getGripDepth() > 1) {
+  function GenericObject(objectActor, grip) {
+    let {obj, hooks} = objectActor;
+    if (grip.preview || grip.displayString || hooks.getGripDepth() > 1) {
       return false;
     }
 
     let i = 0, names = [];
-    let preview = aGrip.preview = {
+    let preview = grip.preview = {
       kind: "Object",
       ownProperties: Object.create(null),
     };
@@ -1390,7 +1366,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     preview.ownPropertiesLength = names.length;
 
     for (let name of names) {
-      let desc = aObjectActor._propertyDescriptor(name, true);
+      let desc = objectActor._propertyDescriptor(name, true);
       if (!desc) {
         continue;
       }
@@ -1402,14 +1378,14 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     }
 
     if (i < OBJECT_PREVIEW_MAX_ITEMS) {
-      preview.safeGetterValues = aObjectActor.
-                                 _findSafeGetterValues(Object.keys(preview.ownProperties),
-                                                       OBJECT_PREVIEW_MAX_ITEMS - i);
+      preview.safeGetterValues = objectActor._findSafeGetterValues(
+                                    Object.keys(preview.ownProperties),
+                                    OBJECT_PREVIEW_MAX_ITEMS - i);
     }
 
     return true;
-  }, // GenericObject
-]; // DebuggerServer.ObjectActorPreviewers.Object
+  },
+];
 
 /**
  * Call PromiseDebugging.getState on this Debugger.Object's referent and wrap
@@ -1441,46 +1417,46 @@ function getPromiseState(obj) {
 /**
  * Determine if a given value is non-primitive.
  *
- * @param Any aValue
+ * @param Any value
  *        The value to test.
  * @return Boolean
  *         Whether the value is non-primitive.
  */
-function isObject(aValue) {
-  const type = typeof aValue;
-  return type == "object" ? aValue !== null : type == "function";
+function isObject(value) {
+  const type = typeof value;
+  return type == "object" ? value !== null : type == "function";
 }
 
 /**
  * Create a function that can safely stringify Debugger.Objects of a given
  * builtin type.
  *
- * @param Function aCtor
+ * @param Function ctor
  *        The builtin class constructor.
  * @return Function
  *         The stringifier for the class.
  */
-function createBuiltinStringifier(aCtor) {
-  return aObj => aCtor.prototype.toString.call(aObj.unsafeDereference());
+function createBuiltinStringifier(ctor) {
+  return obj => ctor.prototype.toString.call(obj.unsafeDereference());
 }
 
 /**
  * Stringify a Debugger.Object-wrapped Error instance.
  *
- * @param Debugger.Object aObj
+ * @param Debugger.Object obj
  *        The object to stringify.
  * @return String
  *         The stringification of the object.
  */
-function errorStringify(aObj) {
-  let name = DevToolsUtils.getProperty(aObj, "name");
+function errorStringify(obj) {
+  let name = DevToolsUtils.getProperty(obj, "name");
   if (name === "" || name === undefined) {
-    name = aObj.class;
+    name = obj.class;
   } else if (isObject(name)) {
     name = stringify(name);
   }
 
-  let message = DevToolsUtils.getProperty(aObj, "message");
+  let message = DevToolsUtils.getProperty(obj, "message");
   if (isObject(message)) {
     message = stringify(message);
   }
@@ -1494,22 +1470,22 @@ function errorStringify(aObj) {
 /**
  * Stringify a Debugger.Object based on its class.
  *
- * @param Debugger.Object aObj
+ * @param Debugger.Object obj
  *        The object to stringify.
  * @return String
  *         The stringification for the object.
  */
-function stringify(aObj) {
-  if (aObj.class == "DeadObject") {
+function stringify(obj) {
+  if (obj.class == "DeadObject") {
     const error = new Error("Dead object encountered.");
     DevToolsUtils.reportException("stringify", error);
     return "<dead object>";
   }
 
-  const stringifier = stringifiers[aObj.class] || stringifiers.Object;
+  const stringifier = stringifiers[obj.class] || stringifiers.Object;
 
   try {
-    return stringifier(aObj);
+    return stringifier(obj);
   } catch (e) {
     DevToolsUtils.reportException("stringify", e);
     return "<failed to stringify object>";
