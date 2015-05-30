@@ -96,6 +96,7 @@ enum JitSpewChannel {
     JitSpew_Terminator
 };
 
+class MIRGenerator;
 
 // The JitSpewer is only available on debug builds.
 // None of the global functions have effect on non-debug builds.
