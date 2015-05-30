@@ -73,13 +73,13 @@ const TEST_DATA = [
       let {d} = yield getHighlighterRegionPath("margin", toolbox.highlighter);
       ok(!d, "margin region is hidden");
 
-      ({d}) = yield getHighlighterRegionPath("border", toolbox.highlighter);
+      ({d} = yield getHighlighterRegionPath("border", toolbox.highlighter));
       ok(!d, "border region is hidden");
 
-      ({d}) = yield getHighlighterRegionPath("padding", toolbox.highlighter);
+      ({d} = yield getHighlighterRegionPath("padding", toolbox.highlighter));
       ok(!d, "padding region is hidden");
 
-      ({d}) = yield getHighlighterRegionPath("content", toolbox.highlighter);
+      ({d} = yield getHighlighterRegionPath("content", toolbox.highlighter));
       ok(d, "content region is shown");
     }
   },
@@ -90,13 +90,13 @@ const TEST_DATA = [
       let {d} = yield getHighlighterRegionPath("margin", toolbox.highlighter);
       ok(d, "margin region is shown");
 
-      ({d}) = yield getHighlighterRegionPath("border", toolbox.highlighter);
+      ({d} = yield getHighlighterRegionPath("border", toolbox.highlighter));
       ok(!d, "border region is hidden");
 
-      ({d}) = yield getHighlighterRegionPath("padding", toolbox.highlighter);
+      ({d} = yield getHighlighterRegionPath("padding", toolbox.highlighter));
       ok(!d, "padding region is hidden");
 
-      ({d}) = yield getHighlighterRegionPath("content", toolbox.highlighter);
+      ({d} = yield getHighlighterRegionPath("content", toolbox.highlighter));
       ok(!d, "content region is hidden");
     }
   },

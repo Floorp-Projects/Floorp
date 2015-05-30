@@ -49,7 +49,7 @@ testAll(testConst);
 
 function testGlobal(pattern, input) {
   return new Function('input',
-    '(' + pattern + ') = input;' +
+    '(' + pattern + ' = input);' +
     'return [a, b, c, d, e, f];'
   )(input);
 }
@@ -58,7 +58,7 @@ testAll(testGlobal);
 function testClosure(pattern, input) {
   return new Function('input',
     'var rest; (function () {' +
-    '(' + pattern + ') = input;' +
+    '(' + pattern + ' = input);' +
     '})();' +
     'return [a, b, c, d, e, f];'
   )(input);
@@ -113,7 +113,7 @@ assertEq(cc, 3);
 
 // test that the assignment happens in source order
 var a = undefined, b = undefined, c = undefined;
-({a: a = 1, c: c = 2, b: b = 3}) = {
+({a: a = 1, c: c = 2, b: b = 3} = {
   get a() {
     assertEq(a, undefined);
     assertEq(c, undefined);
@@ -132,7 +132,7 @@ var a = undefined, b = undefined, c = undefined;
     assertEq(b, undefined);
     return undefined;
   }
-};
+});
 assertEq(b, 4);
 
 assertThrowsInstanceOf(() => { var {a: {a} = null} = {}; }, TypeError);
@@ -150,7 +150,7 @@ assertEq(a.y, 2);
 
 // defaults are evaluated even if there is no binding
 var evaled = false;
-({a: {} = (evaled = true, {})}) = {};
+({a: {} = (evaled = true, {})} = {});
 assertEq(evaled, true);
 evaled = false;
 assertThrowsInstanceOf(() => { [[] = (evaled = true, 2)] = [] }, TypeError);

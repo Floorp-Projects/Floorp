@@ -35,7 +35,7 @@ add_task(function*() {
   yield selectNode("label", inspector);
 
   info("Set the popupNode to the node that contains the ref");
-  ({editor}) = yield getContainerForSelector("label", inspector);
+  ({editor} = yield getContainerForSelector("label", inspector));
   popupNode = editor.attrElements.get("for").querySelector(".link");
   inspector.panelDoc.popupNode = popupNode;
 
@@ -51,7 +51,7 @@ add_task(function*() {
   yield selectNode("output", inspector);
 
   info("Set the popupNode to the node that contains the ref");
-  ({editor}) = yield getContainerForSelector("output", inspector);
+  ({editor} = yield getContainerForSelector("output", inspector));
   popupNode = editor.attrElements.get("for").querySelectorAll(".link")[2];
   inspector.panelDoc.popupNode = popupNode;
 
