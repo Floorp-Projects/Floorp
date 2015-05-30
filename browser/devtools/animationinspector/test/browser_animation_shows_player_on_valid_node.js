@@ -13,7 +13,7 @@ add_task(function*() {
   let {inspector, panel} = yield openAnimationInspector();
   yield testShowsAnimations(inspector, panel);
 
-  ({inspector, panel}) = yield closeAnimationInspectorAndRestartWithNewUI();
+  ({inspector, panel} = yield closeAnimationInspectorAndRestartWithNewUI());
   yield testShowsAnimations(inspector, panel);
 });
 

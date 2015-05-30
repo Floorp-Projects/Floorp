@@ -16,7 +16,7 @@ add_task(function*() {
   ok(panel, "The animation panel exists");
   ok(panel.playersEl, "The animation panel has been initialized");
 
-  ({panel, controller}) = yield closeAnimationInspectorAndRestartWithNewUI();
+  ({panel, controller} = yield closeAnimationInspectorAndRestartWithNewUI());
 
   ok(controller, "The animation controller exists");
   ok(controller.animationsFront, "The animation controller has been initialized");

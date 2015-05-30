@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  ({ x: a }) = {}
+  ({ x: a } = {});
 
   reportCompare(expect, actual, summary);
 
