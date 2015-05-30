@@ -8,7 +8,11 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="8" />
+    <uses-sdk android:minSdkVersion="@MOZ_ANDROID_MIN_SDK_VERSION@"
+#ifdef MOZ_ANDROID_MAX_SDK_VERSION
+              android:maxSdkVersion="@MOZ_ANDROID_MAX_SDK_VERSION@"
+#endif
+              android:targetSdkVersion="@ANDROID_TARGET_SDK@"/>
 
     <instrumentation
         android:name="org.mozilla.gecko.FennecInstrumentationTestRunner"
@@ -41,6 +45,14 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
 
+        </activity>
+
+        <activity android:name="org.mozilla.gecko.LaunchFennecWithConfigurationActivity"
+                  android:label="Robocop Fennec">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
     </application>
