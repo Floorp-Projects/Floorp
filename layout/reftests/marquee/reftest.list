@@ -1,6 +1,6 @@
 random-if((B2G&&browserIsRemote)||Mulet) == 166591-dynamic-1.html 166591-dynamic-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(Android&&AndroidVersion>=15,8,50) == 336736-1a.html 336736-1-ref.html
-fuzzy-if(Android&&AndroidVersion>=15,8,50) == 336736-1b.html 336736-1-ref.html
+skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,8,50) == 336736-1a.html 336736-1-ref.html # Bug 1168747 for random b2g timeouts
+skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,8,50) == 336736-1b.html 336736-1-ref.html # Bug 1168747 for random b2g timeouts
 == 406073-1.html 406073-1-ref.html
 == 407016-2.html 407016-2-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,220) == 413027-4.html 413027-4-ref.html
