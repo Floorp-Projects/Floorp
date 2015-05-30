@@ -1592,6 +1592,186 @@ function makeDebuggeeValueIfNeeded(obj, value) {
   return value;
 }
 
+/**
+ * Creates an actor for the specied "very long" string. "Very long" is specified
+ * at the server's discretion.
+ *
+ * @param string String
+ *        The string.
+ */
+function LongStringActor(string) {
+  this.string = string;
+  this.stringLength = string.length;
+}
+
+LongStringActor.prototype = {
+  actorPrefix: "longString",
+
+  disconnect: function() {
+    // Because longStringActors is not a weak map, we won't automatically leave
+    // it so we need to manually leave on disconnect so that we don't leak
+    // memory.
+    this._releaseActor();
+  },
+
+  /**
+   * Returns a grip for this actor for returning in a protocol message.
+   */
+  grip: function() {
+    return {
+      "type": "longString",
+      "initial": this.string.substring(
+        0, DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+      "length": this.stringLength,
+      "actor": this.actorID
+    };
+  },
+
+  /**
+   * Handle a request to extract part of this actor's string.
+   *
+   * @param request object
+   *        The protocol request object.
+   */
+  onSubstring: function(request) {
+    return {
+      "from": this.actorID,
+      "substring": this.string.substring(request.start, request.end)
+    };
+  },
+
+  /**
+   * Handle a request to release this LongStringActor instance.
+   */
+  onRelease: function () {
+    // TODO: also check if registeredPool === threadActor.threadLifetimePool
+    // when the web console moves aray from manually releasing pause-scoped
+    // actors.
+    this._releaseActor();
+    this.registeredPool.removeActor(this);
+    return {};
+  },
+
+  _releaseActor: function() {
+    if (this.registeredPool && this.registeredPool.longStringActors) {
+      delete this.registeredPool.longStringActors[this.string];
+    }
+  }
+};
+
+LongStringActor.prototype.requestTypes = {
+  "substring": LongStringActor.prototype.onSubstring,
+  "release": LongStringActor.prototype.onRelease
+};
+
+/**
+ * Create a grip for the given debuggee value.  If the value is an
+ * object, will create an actor with the given lifetime.
+ */
+function createValueGrip(value, pool, makeObjectGrip) {
+  switch (typeof value) {
+    case "boolean":
+      return value;
+
+    case "string":
+      if (stringIsLong(value)) {
+        return longStringGrip(value, pool);
+      }
+      return value;
+
+    case "number":
+      if (value === Infinity) {
+        return { type: "Infinity" };
+      } else if (value === -Infinity) {
+        return { type: "-Infinity" };
+      } else if (Number.isNaN(value)) {
+        return { type: "NaN" };
+      } else if (!value && 1 / value === -Infinity) {
+        return { type: "-0" };
+      }
+      return value;
+
+    case "undefined":
+      return { type: "undefined" };
+
+    case "object":
+      if (value === null) {
+        return { type: "null" };
+      }
+    else if(value.optimizedOut ||
+            value.uninitialized ||
+            value.missingArguments) {
+        // The slot is optimized out, an uninitialized binding, or
+        // arguments on a dead scope
+        return {
+          type: "null",
+          optimizedOut: value.optimizedOut,
+          uninitialized: value.uninitialized,
+          missingArguments: value.missingArguments
+        };
+      }
+      return makeObjectGrip(value, pool);
+
+    case "symbol":
+      let form = {
+        type: "symbol"
+      };
+      let name = getSymbolName(value);
+      if (name !== undefined) {
+        form.name = createValueGrip(name, pool, makeObjectGrip);
+      }
+      return form;
+
+    default:
+      dbg_assert(false, "Failed to provide a grip for: " + value);
+      return null;
+  }
+}
+
+const symbolProtoToString = Symbol.prototype.toString;
+
+function getSymbolName(symbol) {
+  const name = symbolProtoToString.call(symbol).slice("Symbol(".length, -1);
+  return name || undefined;
+}
+
+/**
+ * Returns true if the string is long enough to use a LongStringActor instead
+ * of passing the value directly over the protocol.
+ *
+ * @param str String
+ *        The string we are checking the length of.
+ */
+function stringIsLong(str) {
+  return str.length >= DebuggerServer.LONG_STRING_LENGTH;
+}
+
+/**
+ * Create a grip for the given string.
+ *
+ * @param str String
+ *        The string we are creating a grip for.
+ * @param pool ActorPool
+ *        The actor pool where the new actor will be added.
+ */
+function longStringGrip(str, pool) {
+  if (!pool.longStringActors) {
+    pool.longStringActors = {};
+  }
+
+  if (pool.longStringActors.hasOwnProperty(str)) {
+    return pool.longStringActors[str].grip();
+  }
+
+  let actor = new LongStringActor(str);
+  pool.addActor(actor);
+  pool.longStringActors[str] = actor;
+  return actor.grip();
+}
+
 exports.ObjectActor = ObjectActor;
 exports.PropertyIteratorActor = PropertyIteratorActor;
-
+exports.LongStringActor = LongStringActor;
+exports.createValueGrip = createValueGrip;
+exports.stringIsLong = stringIsLong;
+exports.longStringGrip = longStringGrip;

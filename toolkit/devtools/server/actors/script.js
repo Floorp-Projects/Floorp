@@ -9,7 +9,7 @@
 const Services = require("Services");
 const { Cc, Ci, Cu, components, ChromeWorker } = require("chrome");
 const { ActorPool, OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
-const { ObjectActor } = require("devtools/server/actors/object");
+const { ObjectActor, createValueGrip, longStringGrip } = require("devtools/server/actors/object");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 const { dbg_assert, dumpn, update, fetch } = DevToolsUtils;
@@ -432,6 +432,8 @@ function ThreadActor(aParent, aGlobal)
   this.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
   this.onDebuggerStatement = this.onDebuggerStatement.bind(this);
   this.onNewScript = this.onNewScript.bind(this);
+  this.objectGrip = this.objectGrip.bind(this);
+  this.pauseObjectGrip = this.pauseObjectGrip.bind(this);
   this._onWindowReady = this._onWindowReady.bind(this);
   events.on(this._parent, "window-ready", this._onWindowReady);
   // Set a wrappedJSObject property so |this| can be sent via the observer svc
@@ -862,7 +864,8 @@ ThreadActor.prototype = {
       pauseAndRespond: (aFrame, onPacket=k=>k) => {
         return this._pauseAndRespond(aFrame, { type: "resumeLimit" }, onPacket);
       },
-      createValueGrip: this.createValueGrip.bind(this),
+      createValueGrip: v => createValueGrip(v, this._pausePool,
+        this.objectGrip),
       thread: this,
       startFrame: this.youngestFrame,
       startLocation: aStartLocation,
@@ -1408,7 +1411,7 @@ ThreadActor.prototype = {
         let nodeDO = this.globalDebugObject.makeDebuggeeValue(node);
         listenerForm.node = {
           selector: selector,
-          object: this.createValueGrip(nodeDO)
+          object: createValueGrip(nodeDO, this._pausePool, this.objectGrip)
         };
         listenerForm.type = handler.type;
         listenerForm.capturing = handler.capturing;
@@ -1445,7 +1448,8 @@ ThreadActor.prototype = {
         while (listenerDO.isBoundFunction) {
           listenerDO = listenerDO.boundTargetFunction;
         }
-        listenerForm.function = this.createValueGrip(listenerDO);
+        listenerForm.function = createValueGrip(listenerDO, this._pausePool,
+          this.objectGrip);
         listeners.push(listenerForm);
       }
     }
@@ -1621,74 +1625,6 @@ ThreadActor.prototype = {
   },
 
   /**
-   * Create a grip for the given debuggee value.  If the value is an
-   * object, will create an actor with the given lifetime.
-   */
-  createValueGrip: function (aValue, aPool=false) {
-    if (!aPool) {
-      aPool = this._pausePool;
-    }
-
-    switch (typeof aValue) {
-      case "boolean":
-        return aValue;
-
-      case "string":
-        if (this._stringIsLong(aValue)) {
-          return this.longStringGrip(aValue, aPool);
-        }
-        return aValue;
-
-      case "number":
-        if (aValue === Infinity) {
-          return { type: "Infinity" };
-        } else if (aValue === -Infinity) {
-          return { type: "-Infinity" };
-        } else if (Number.isNaN(aValue)) {
-          return { type: "NaN" };
-        } else if (!aValue && 1 / aValue === -Infinity) {
-          return { type: "-0" };
-        }
-        return aValue;
-
-      case "undefined":
-        return { type: "undefined" };
-
-      case "object":
-        if (aValue === null) {
-          return { type: "null" };
-        }
-      else if(aValue.optimizedOut ||
-              aValue.uninitialized ||
-              aValue.missingArguments) {
-          // The slot is optimized out, an uninitialized binding, or
-          // arguments on a dead scope
-          return {
-            type: "null",
-            optimizedOut: aValue.optimizedOut,
-            uninitialized: aValue.uninitialized,
-            missingArguments: aValue.missingArguments
-          };
-        }
-        return this.objectGrip(aValue, aPool);
-
-      case "symbol":
-        let form = {
-          type: "symbol"
-        };
-        let name = getSymbolName(aValue);
-        if (name !== undefined) {
-          form.name = this.createValueGrip(name);
-        }
-        return form;
-
-      default:
-        dbg_assert(false, "Failed to provide a grip for: " + aValue);
-        return null;
-    }
-  },
-
-  /**
    * Return a protocol completion value representing the given
    * Debugger-provided completion value.
    */
@@ -1697,11 +1633,14 @@ ThreadActor.prototype = {
     if (aCompletion == null) {
       protoValue.terminated = true;
     } else if ("return" in aCompletion) {
-      protoValue.return = this.createValueGrip(aCompletion.return);
+      protoValue.return = createValueGrip(aCompletion.return,
+        this._pausePool, this.objectGrip);
     } else if ("throw" in aCompletion) {
-      protoValue.throw = this.createValueGrip(aCompletion.throw);
+      protoValue.throw = createValueGrip(aCompletion.throw,
+        this._pausePool, this.objectGrip);
     } else {
-      protoValue.return = this.createValueGrip(aCompletion.yield);
+      protoValue.return = createValueGrip(aCompletion.yield,
+        this._pausePool, this.objectGrip);
     }
     return protoValue;
   },
@@ -1729,7 +1668,8 @@ ThreadActor.prototype = {
       getGripDepth: () => this._gripDepth,
       incrementGripDepth: () => this._gripDepth++,
       decrementGripDepth: () => this._gripDepth--,
-      createValueGrip: (v) => this.createValueGrip(v),
+      createValueGrip: v => createValueGrip(v, this._pausePool,
+        this.pauseObjectGrip),
       sources: () => this.sources,
       createEnvironmentActor: (env, pool) =>
         this.createEnvironmentActor(env, pool),
@@ -1797,36 +1737,13 @@ ThreadActor.prototype = {
   },
 
   /**
-   * Create a grip for the given string.
-   *
-   * @param aString String
-   *        The string we are creating a grip for.
-   * @param aPool ActorPool
-   *        The actor pool where the new actor will be added.
-   */
-  longStringGrip: function (aString, aPool) {
-    if (!aPool.longStringActors) {
-      aPool.longStringActors = {};
-    }
-
-    if (aPool.longStringActors.hasOwnProperty(aString)) {
-      return aPool.longStringActors[aString].grip();
-    }
-
-    let actor = new LongStringActor(aString, this);
-    aPool.addActor(actor);
-    aPool.longStringActors[aString] = actor;
-    return actor.grip();
-  },
-
-  /**
    * Create a long string grip that is scoped to a pause.
    *
    * @param aString String
    *        The string we are creating a grip for.
    */
   pauseLongStringGrip: function (aString) {
-    return this.longStringGrip(aString, this._pausePool);
+    return longStringGrip(aString, this._pausePool);
   },
 
   /**
@@ -1836,18 +1753,7 @@ ThreadActor.prototype = {
    *        The string we are creating a grip for.
    */
   threadLongStringGrip: function (aString) {
-    return this.longStringGrip(aString, this._threadLifetimePool);
-  },
-
-  /**
-   * Returns true if the string is long enough to use a LongStringActor instead
-   * of passing the value directly over the protocol.
-   *
-   * @param aString String
-   *        The string we are checking the length of.
-   */
-  _stringIsLong: function (aString) {
-    return aString.length >= DebuggerServer.LONG_STRING_LENGTH;
+    return longStringGrip(aString, this._threadLifetimePool);
   },
 
   // JS Debugger API hooks.
@@ -1922,7 +1828,9 @@ ThreadActor.prototype = {
       }
 
       packet.why = { type: "exception",
-                     exception: this.createValueGrip(aValue) };
+                     exception: createValueGrip(aValue, this._pausePool,
+                                                this.objectGrip)
+                   };
       this.conn.send(packet);
 
       this._pushThreadPause();
@@ -2474,8 +2382,8 @@ SourceActor.prototype = {
       .then(({ content, contentType }) => {
         return {
           from: this.actorID,
-          source: this.threadActor.createValueGrip(
-            content, this.threadActor.threadLifetimePool),
+          source: createValueGrip(content, this.threadActor.threadLifetimePool,
+            this.threadActor.objectGrip),
           contentType: contentType
         };
       })
@@ -3138,81 +3046,6 @@ update(PauseScopedObjectActor.prototype.requestTypes, {
   "threadGrip": PauseScopedObjectActor.prototype.onThreadGrip,
 });
 
-
-/**
- * Creates an actor for the specied "very long" string. "Very long" is specified
- * at the server's discretion.
- *
- * @param aString String
- *        The string.
- */
-function LongStringActor(aString)
-{
-  this.string = aString;
-  this.stringLength = aString.length;
-}
-
-LongStringActor.prototype = {
-
-  actorPrefix: "longString",
-
-  disconnect: function () {
-    // Because longStringActors is not a weak map, we won't automatically leave
-    // it so we need to manually leave on disconnect so that we don't leak
-    // memory.
-    if (this.registeredPool && this.registeredPool.longStringActors) {
-      delete this.registeredPool.longStringActors[this.actorID];
-    }
-  },
-
-  /**
-   * Returns a grip for this actor for returning in a protocol message.
-   */
-  grip: function () {
-    return {
-      "type": "longString",
-      "initial": this.string.substring(
-        0, DebuggerServer.LONG_STRING_INITIAL_LENGTH),
-      "length": this.stringLength,
-      "actor": this.actorID
-    };
-  },
-
-  /**
-   * Handle a request to extract part of this actor's string.
-   *
-   * @param aRequest object
-   *        The protocol request object.
-   */
-  onSubstring: function (aRequest) {
-    return {
-      "from": this.actorID,
-      "substring": this.string.substring(aRequest.start, aRequest.end)
-    };
-  },
-
-  /**
-   * Handle a request to release this LongStringActor instance.
-   */
-  onRelease: function () {
-    // TODO: also check if registeredPool === threadActor.threadLifetimePool
-    // when the web console moves aray from manually releasing pause-scoped
-    // actors.
-    if (this.registeredPool.longStringActors) {
-      delete this.registeredPool.longStringActors[this.actorID];
-    }
-    this.registeredPool.removeActor(this);
-    return {};
-  },
-};
-
-LongStringActor.prototype.requestTypes = {
-  "substring": LongStringActor.prototype.onSubstring,
-  "release": LongStringActor.prototype.onRelease
-};
-
-exports.LongStringActor = LongStringActor;
-
 /**
  * Creates an actor for the specified stack frame.
  *
@@ -3259,7 +3092,8 @@ FrameActor.prototype = {
     let form = { actor: this.actorID,
                  type: this.frame.type };
     if (this.frame.type === "call") {
-      form.callee = threadActor.createValueGrip(this.frame.callee);
+      form.callee = createValueGrip(this.frame.callee, threadActor._pausePool,
+        threadActor.objectGrip);
     }
 
     if (this.frame.environment) {
@@ -3269,7 +3103,8 @@ FrameActor.prototype = {
       );
       form.environment = envActor.form();
     }
-    form.this = threadActor.createValueGrip(this.frame.this);
+    form.this = createValueGrip(this.frame.this, threadActor._pausePool,
+      threadActor.objectGrip);
     form.arguments = this._args();
     if (this.frame.script) {
       var generatedLocation = this.threadActor.sources.getFrameLocation(this.frame);
@@ -3292,7 +3127,8 @@ FrameActor.prototype = {
       return [];
     }
 
-    return this.frame.arguments.map(arg => this.threadActor.createValueGrip(arg));
+    return this.frame.arguments.map(arg => createValueGrip(arg,
+      this.threadActor._pausePool, this.threadActor.objectGrip));
   },
 
   /**
@@ -3533,12 +3369,14 @@ EnvironmentActor.prototype = {
 
     // Does this environment reflect the properties of an object as variables?
     if (this.obj.type == "object" || this.obj.type == "with") {
-      form.object = this.threadActor.createValueGrip(this.obj.object);
+      form.object = createValueGrip(this.obj.object,
+        this.registeredPool, this.threadActor.objectGrip);
     }
 
     // Is this the environment created for a function call?
     if (this.obj.callee) {
-      form.function = this.threadActor.createValueGrip(this.obj.callee);
+      form.function = createValueGrip(this.obj.callee,
+        this.registeredPool, this.threadActor.objectGrip);
     }
 
     // Shall we list this environment's bindings?
@@ -3588,11 +3426,14 @@ EnvironmentActor.prototype = {
         configurable: desc.configurable
       };
       if ("value" in desc) {
-        descForm.value = this.threadActor.createValueGrip(desc.value);
+        descForm.value = createValueGrip(desc.value,
+          this.registeredPool, this.threadActor.objectGrip);
         descForm.writable = desc.writable;
       } else {
-        descForm.get = this.threadActor.createValueGrip(desc.get);
-        descForm.set = this.threadActor.createValueGrip(desc.set);
+        descForm.get = createValueGrip(desc.get, this.registeredPool,
+          this.threadActor.objectGrip);
+        descForm.set = createValueGrip(desc.set, this.registeredPool,
+          this.threadActor.objectGrip);
       }
       arg[name] = descForm;
       bindings.arguments.push(arg);
@@ -3625,11 +3466,14 @@ EnvironmentActor.prototype = {
         configurable: desc.configurable
       };
       if ("value" in desc) {
-        descForm.value = this.threadActor.createValueGrip(desc.value);
+        descForm.value = createValueGrip(desc.value,
+          this.registeredPool, this.threadActor.objectGrip);
         descForm.writable = desc.writable;
       } else {
-        descForm.get = this.threadActor.createValueGrip(desc.get || undefined);
-        descForm.set = this.threadActor.createValueGrip(desc.set || undefined);
+        descForm.get = createValueGrip(desc.get || undefined,
+          this.registeredPool, this.threadActor.objectGrip);
+        descForm.set = createValueGrip(desc.set || undefined,
+          this.registeredPool, this.threadActor.objectGrip);
       }
       bindings.variables[name] = descForm;
     }
@@ -3812,13 +3656,6 @@ reportError = function(aError, aPrefix="") {
   let msg = aPrefix + aError.message + ":\n" + aError.stack;
   oldReportError(msg);
   dumpn(msg);
-}
-
-const symbolProtoToString = Symbol.prototype.toString;
-
-function getSymbolName(symbol) {
-  const name = symbolProtoToString.call(symbol).slice("Symbol(".length, -1);
-  return name || undefined;
 }
 
 function isEvalSource(source) {
