@@ -7,7 +7,11 @@
 
 let { CATEGORY_MASK } = devtools.require("devtools/performance/global");
 
-function test() {
+function run_test() {
+  run_next_test();
+}
+
+add_task(function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
   let url = (n) => `http://content/${n}`;
 
@@ -31,24 +35,22 @@ function test() {
 
   // Test the root node.
 
-  is(root.calls.length, 2, "root has 2 children");
+  equal(root.calls.length, 2, "root has 2 children");
   ok(getFrameNodePath(root, url("A")), "root has content child");
   ok(getFrameNodePath(root, "64"), "root has platform generalized child");
-  is(getFrameNodePath(root, "64").calls.length, 0, "platform generalized child is a leaf.");
+  equal(getFrameNodePath(root, "64").calls.length, 0, "platform generalized child is a leaf.");
 
   ok(getFrameNodePath(root, `${url("A")} > 128`), "A has platform generalized child of another type");
-  is(getFrameNodePath(root, `${url("A")} > 128`).calls.length, 0, "second generalized type is a leaf.");
+  equal(getFrameNodePath(root, `${url("A")} > 128`).calls.length, 0, "second generalized type is a leaf.");
 
   ok(getFrameNodePath(root, `${url("A")} > ${url("E")} > ${url("F")} > 64`),
      "a second leaf of the first generalized type exists deep in the tree.");
   ok(getFrameNodePath(root, `${url("A")} > 128`), "A has platform generalized child of another type");
 
-  is(getFrameNodePath(root, "64").category,
+  equal(getFrameNodePath(root, "64").category,
      getFrameNodePath(root, `${url("A")} > ${url("E")} > ${url("F")} > 64`).category,
      "generalized frames of same type are duplicated in top-down view");
-
-  finish();
-}
+});
 
 let gThread = synthesizeProfileForTest([{
   time: 5,
