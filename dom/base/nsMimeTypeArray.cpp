@@ -27,8 +27,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeTypeArray,
                                       mWindow,
-                                      mMimeTypes,
-                                      mHiddenMimeTypes)
+                                      mMimeTypes)
 
 nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
@@ -49,7 +48,6 @@ void
 nsMimeTypeArray::Refresh()
 {
   mMimeTypes.Clear();
-  mHiddenMimeTypes.Clear();
 }
 
 nsPIDOMWindow*
@@ -114,10 +112,6 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
   ToLowerCase(lowerName);
 
   nsMimeType* mimeType = FindMimeType(mMimeTypes, lowerName);
-  if (!mimeType) {
-    mimeType = FindMimeType(mHiddenMimeTypes, lowerName);
-  }
-
   if (mimeType) {
     aFound = true;
     return mimeType;
@@ -164,11 +158,8 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
   // If we got here, we support this type!  Say so.
   aFound = true;
 
-  // We don't want navigator.mimeTypes enumeration to expose MIME types with
-  // application handlers, so add them to the list of hidden MIME types.
   nsMimeType *mt = new nsMimeType(mWindow, lowerName);
-  mHiddenMimeTypes.AppendElement(mt);
-
+  mMimeTypes.AppendElement(mt);
   return mt;
 }
 
@@ -199,7 +190,7 @@ nsMimeTypeArray::GetSupportedNames(unsigned, nsTArray< nsString >& aRetval)
 void
 nsMimeTypeArray::EnsurePluginMimeTypes()
 {
-  if (!mMimeTypes.IsEmpty() || !mHiddenMimeTypes.IsEmpty() || !mWindow) {
+  if (!mMimeTypes.IsEmpty() || !mWindow) {
     return;
   }
 
@@ -217,7 +208,7 @@ nsMimeTypeArray::EnsurePluginMimeTypes()
     return;
   }
 
-  pluginArray->GetMimeTypes(mMimeTypes, mHiddenMimeTypes);
+  pluginArray->GetMimeTypes(mMimeTypes);
 }
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsMimeType, AddRef)
