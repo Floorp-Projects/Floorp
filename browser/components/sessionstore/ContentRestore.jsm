@@ -136,7 +136,11 @@ ContentRestoreInternal.prototype = {
     SessionHistory.restore(this.docShell, tabData);
 
     // Add a listener to watch for reloads.
-    let listener = new HistoryListener(this.docShell, callbacks.onReload);
+    let listener = new HistoryListener(this.docShell, () => {
+      // On reload, restore tab contents.
+      this.restoreTabContent(null, callbacks.onLoadFinished);
+    });
+
     webNavigation.sessionHistory.addSHistoryListener(listener);
     this._historyListener = listener;
 
