@@ -31,7 +31,7 @@ add_task(function*() {
     "The icon to select the target element in the inspector exists");
 
   info("Test again with the new timeline UI");
-  ({inspector, panel}) = yield closeAnimationInspectorAndRestartWithNewUI();
+  ({inspector, panel} = yield closeAnimationInspectorAndRestartWithNewUI());
 
   info("Select the simple animated node");
   yield selectNode(".animated", inspector);

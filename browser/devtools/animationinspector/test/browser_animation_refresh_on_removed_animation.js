@@ -14,7 +14,7 @@ add_task(function*() {
   yield testAddedAnimationWorks(inspector, panel);
 
   info("Reload and test again with the new UI");
-  ({inspector, panel}) = yield closeAnimationInspectorAndRestartWithNewUI(true);
+  ({inspector, panel} = yield closeAnimationInspectorAndRestartWithNewUI(true));
   yield testRefreshOnRemove(inspector, panel, true);
 });
 

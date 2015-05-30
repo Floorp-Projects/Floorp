@@ -829,10 +829,10 @@ InplaceEditor.prototype = {
         this.popup.selectedIndex >= 0) {
       let label, preLabel;
       if (this._selectedIndex === undefined) {
-        ({label, preLabel}) = this.popup.getItemAtIndex(this.popup.selectedIndex);
+        ({label, preLabel} = this.popup.getItemAtIndex(this.popup.selectedIndex));
       }
       else {
-        ({label, preLabel}) = this.popup.getItemAtIndex(this._selectedIndex);
+        ({label, preLabel} = this.popup.getItemAtIndex(this._selectedIndex));
       }
       let input = this.input;
       let pre = "";
