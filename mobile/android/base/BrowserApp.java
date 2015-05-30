@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import com.nineoldandroids.animation.Animator;
-import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.nineoldandroids.animation.ObjectAnimator;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.PinReason;
@@ -37,6 +36,7 @@ import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomeBanner;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -157,6 +157,7 @@ public class BrowserApp extends GeckoApp
                                    BrowserSearch.OnEditSuggestionListener,
                                    OnUrlOpenListener,
                                    OnUrlOpenInBackgroundListener,
+                                   ReadingListHelper.OnReadingListEventListener,
                                    AnchoredPopup.OnVisibilityChangeListener,
                                    ActionModeCompat.Presenter,
                                    LayoutInflater.Factory {
@@ -496,6 +497,12 @@ public class BrowserApp extends GeckoApp
             case BOOKMARK_REMOVED:
                 showBookmarkRemovedToast();
                 break;
+            case READING_LIST_ADDED:
+                onAddedToReadingList(tab.getURL());
+                break;
+            case READING_LIST_REMOVED:
+                onRemovedFromReadingList(tab.getURL());
+                break;
 
             case UNSELECTED:
                 // We receive UNSELECTED immediately after the SELECTED listeners run
@@ -572,6 +579,36 @@ public class BrowserApp extends GeckoApp
 
     private void showBookmarkRemovedToast() {
         Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+    }
+
+    private void showSwitchToReadingListToast(String message) {
+        getButtonToast().show(false,
+                message,
+                ButtonToast.LENGTH_SHORT,
+                getResources().getString(R.string.switch_button_message),
+                R.drawable.switch_button_icon,
+                new ButtonToast.ToastListener() {
+                    @Override
+                    public void onButtonClicked() {
+                        final String aboutPageUrl = AboutPages.getURLForBuiltinPanelType(PanelType.READING_LIST);
+                        Tabs.getInstance().loadUrlInTab(aboutPageUrl);
+                    }
+
+                    @Override
+                    public void onToastHidden(ButtonToast.ReasonHidden reason) { }
+                });
+    }
+
+    public void onAddedToReadingList(String url) {
+        showSwitchToReadingListToast(getResources().getString(R.string.reading_list_added));
+    }
+
+    public void onAlreadyInReadingList(String url) {
+        showSwitchToReadingListToast(getResources().getString(R.string.reading_list_duplicate));
+    }
+
+    public void onRemovedFromReadingList(String url) {
+        Toast.makeText(this, R.string.reading_list_removed, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -808,7 +845,7 @@ public class BrowserApp extends GeckoApp
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
         mBrowserHealthReporter = new BrowserHealthReporter();
-        mReadingListHelper = new ReadingListHelper(appContext, getProfile());
+        mReadingListHelper = new ReadingListHelper(appContext, getProfile(), this);
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);

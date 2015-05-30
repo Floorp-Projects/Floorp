@@ -582,12 +582,7 @@ public class Tab {
                 }
 
                 mDB.getReadingListAccessor().addBasicReadingListItem(getContentResolver(), url, mTitle);
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(mAppContext, R.string.reading_list_added, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.READING_LIST_ADDED);
             }
         });
     }
@@ -604,12 +599,7 @@ public class Tab {
                     url = ReaderModeUtils.getUrlFromAboutReader(url);
                 }
                 mDB.getReadingListAccessor().removeReadingListItemWithURL(getContentResolver(), url);
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(mAppContext, R.string.reading_list_removed, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.READING_LIST_REMOVED);
             }
         });
     }
