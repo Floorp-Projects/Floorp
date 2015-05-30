@@ -11,7 +11,9 @@ import android.os.PowerManager;
 import android.test.ActivityInstrumentationTestCase2;
 import android.text.TextUtils;
 import android.util.Log;
+
 import com.jayway.android.robotium.solo.Solo;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -19,6 +21,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
+import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.Driver;
 import org.mozilla.gecko.FennecInstrumentationTestRunner;
 import org.mozilla.gecko.FennecMochitestAssert;
