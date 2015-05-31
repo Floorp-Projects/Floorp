@@ -77,8 +77,8 @@ loop.StandaloneMozLoop = (function(mozL10n) {
      */
     get: function(roomToken, callback) {
       var req = $.ajax({
-        url:         this._baseServerUrl + "/rooms/" + roomToken,
-        method:      "GET",
+        url: this._baseServerUrl + "/rooms/" + roomToken,
+        method: "GET",
         contentType: "application/json",
         beforeSend: function(xhr) {
           if (this.sessionToken) {
@@ -119,10 +119,10 @@ loop.StandaloneMozLoop = (function(mozL10n) {
     _postToRoom: function(roomToken, sessionToken, roomData, expectedProps,
                           async, callback) {
       var req = $.ajax({
-        url:         this._baseServerUrl + "/rooms/" + roomToken,
-        method:      "POST",
+        url: this._baseServerUrl + "/rooms/" + roomToken,
+        method: "POST",
         contentType: "application/json",
-        dataType:    "json",
+        dataType: "json",
         data: JSON.stringify(roomData),
         beforeSend: function(xhr) {
           if (sessionToken) {

@@ -129,11 +129,11 @@ describe("loop.webapp", function() {
     describe("#_setupWebSocket", function() {
       beforeEach(function() {
         conversation.setOutgoingSessionData({
-          sessionId:      "sessionId",
-          sessionToken:   "sessionToken",
-          apiKey:         "apiKey",
-          callId:         "Hello",
-          progressURL:    "http://invalid/url",
+          sessionId: "sessionId",
+          sessionToken: "sessionToken",
+          apiKey: "apiKey",
+          callId: "Hello",
+          progressURL: "http://invalid/url",
           websocketToken: 123
         });
       });
@@ -203,11 +203,11 @@ describe("loop.webapp", function() {
       describe("Websocket Events", function() {
         beforeEach(function() {
           conversation.setOutgoingSessionData({
-            sessionId:      "sessionId",
-            sessionToken:   "sessionToken",
-            apiKey:         "apiKey",
-            callId:         "Hello",
-            progressURL:    "http://progress.example.com",
+            sessionId: "sessionId",
+            sessionToken: "sessionToken",
+            apiKey: "apiKey",
+            callId: "Hello",
+            progressURL: "http://progress.example.com",
             websocketToken: 123
           });
 
@@ -298,12 +298,12 @@ describe("loop.webapp", function() {
 
       beforeEach(function() {
         fakeSessionData = {
-          sessionId:      "sessionId",
-          sessionToken:   "sessionToken",
-          apiKey:         "apiKey",
+          sessionId: "sessionId",
+          sessionToken: "sessionToken",
+          apiKey: "apiKey",
           websocketToken: 123,
-          progressURL:    "fakeUrl",
-          callId:         "fakeCallId"
+          progressURL: "fakeUrl",
+          callId: "fakeCallId"
         };
         conversation.set(fakeSessionData);
         conversation.set("loopToken", "fakeToken");
