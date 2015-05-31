@@ -462,9 +462,6 @@ public:
   void SetNetworkDuration(media::TimeUnit aDuration);
   media::NullableTimeUnit NetworkDuration() { return mNetworkDuration; }
 
-  // Sets the initial duration of the media. Called while the media metadata
-  // is being read and the decode is being setup.
-  void SetMediaDuration(int64_t aDuration) override;
   // Updates the media duration. This is called while the media is being
   // played, calls before the media has reached loaded metadata are ignored.
   // The duration is assumed to be an estimate, and so a degree of
@@ -491,9 +488,6 @@ public:
   // Set the end time of the media resource. When playback reaches
   // this point the media pauses. aTime is in seconds.
   virtual void SetFragmentEndTime(double aTime);
-
-  // Set the end time of the media. aTime is in microseconds.
-  void SetMediaEndTime(int64_t aTime) final override;
 
   // Invalidate the frame.
   void Invalidate();
