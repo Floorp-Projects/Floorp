@@ -433,7 +433,8 @@ private:
   void FlushRepaintsRecursively(HitTestingTreeNode* aNode);
 
   already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
-                                                           AsyncPanZoomController* aApzc);
+                                                           AsyncPanZoomController* aApzc,
+                                                           uint64_t aLayersId);
   HitTestingTreeNode* PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
                                           const FrameMetrics& aMetrics,
                                           uint64_t aLayersId,
