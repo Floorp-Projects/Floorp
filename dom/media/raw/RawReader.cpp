@@ -12,6 +12,7 @@
 #include "gfx2DGlue.h"
 
 using namespace mozilla;
+using namespace mozilla::media;
 
 RawReader::RawReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
@@ -97,10 +98,8 @@ nsresult RawReader::ReadMetadata(MediaInfo* aInfo,
 
   int64_t length = resource->GetLength();
   if (length != -1) {
-    ReentrantMonitorAutoEnter autoMonitor(mDecoder->GetReentrantMonitor());
-    mDecoder->SetMediaDuration(USECS_PER_S *
-                                      (length - sizeof(RawVideoHeader)) /
-                                      (mFrameSize * mFrameRate));
+    mInfo.mMetadataDuration.emplace(TimeUnit::FromSeconds((length - sizeof(RawVideoHeader)) /
+                                                          (mFrameSize * mFrameRate)));
   }
 
   *aInfo = mInfo;

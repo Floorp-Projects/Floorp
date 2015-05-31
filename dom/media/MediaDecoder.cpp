@@ -1106,12 +1106,6 @@ void MediaDecoder::SetNetworkDuration(TimeUnit aNetworkDuration)
   UpdatePlaybackRate();
 }
 
-void MediaDecoder::SetMediaDuration(int64_t aDuration)
-{
-  NS_ENSURE_TRUE_VOID(GetStateMachine());
-  GetStateMachine()->SetDuration(aDuration);
-}
-
 void MediaDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
 {
   if (mPlayState <= PLAY_STATE_LOADING) {
@@ -1165,12 +1159,6 @@ void MediaDecoder::SetFragmentEndTime(double aTime)
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     mDecoderStateMachine->SetFragmentEndTime(static_cast<int64_t>(aTime * USECS_PER_S));
   }
-}
-
-void MediaDecoder::SetMediaEndTime(int64_t aTime)
-{
-  NS_ENSURE_TRUE_VOID(GetStateMachine());
-  GetStateMachine()->SetMediaEndTime(aTime);
 }
 
 void MediaDecoder::Suspend()

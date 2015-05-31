@@ -206,11 +206,6 @@ public:
   // A value of INT64_MAX will be treated as infinity.
   void SetDuration(int64_t aDuration);
 
-  // Called while decoding metadata to set the end time of the media
-  // resource. The decoder monitor must be obtained before calling this.
-  // aEndTime is in microseconds.
-  void SetMediaEndTime(int64_t aEndTime);
-
   // Called from main thread to update the duration with an estimated value.
   // The duration is only changed if its significantly different than the
   // the current duration, as the incoming duration is an estimate and so
