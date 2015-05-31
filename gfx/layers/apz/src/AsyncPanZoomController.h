@@ -1087,6 +1087,11 @@ public:
     return mAsyncTransformAppliedToContent;
   }
 
+  uint64_t GetLayersId() const
+  {
+    return mLayersId;
+  }
+
 private:
   // Extra offset to add in SampleContentTransformForFrame for testing
   CSSPoint mTestAsyncScrollOffset;
