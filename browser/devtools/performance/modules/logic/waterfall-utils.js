@@ -8,7 +8,7 @@
  */
 
 loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/performance/global", true);
+  "devtools/performance/markers", true);
 
 /**
  * Collapses markers into a tree-like structure. Currently, this only goes

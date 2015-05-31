@@ -16,6 +16,7 @@ EXTRA_JS_MODULES.devtools.performance += [
     'modules/logic/recording-utils.js',
     'modules/logic/tree-model.js',
     'modules/logic/waterfall-utils.js',
+    'modules/markers.js',
     'modules/widgets/graphs.js',
     'modules/widgets/marker-details.js',
     'modules/widgets/marker-view.js',
