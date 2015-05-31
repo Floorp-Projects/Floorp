@@ -62,7 +62,7 @@ listbox:focus > listitem[selected="true"] {
 
 /* ::::: listheader ::::: */
 
-listheader { 
+listheader {
   -moz-appearance: treeheadercell;
   -moz-box-align: center;
   border: 2px solid;
@@ -160,22 +160,20 @@ listheader[sortable="true"]:hover:active {
       padding-top: 1px;
       padding-bottom: 1px;
       border-width: 1px;
-      border-radius: 3px;
       background-repeat: no-repeat;
       background-size: 100% 100%;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 -1px 0 1px rgba(255,255,255,.2);
     }
 
     listitem[selected="true"] {
       border-color: @selectedBorderColor@;
-      background-image: linear-gradient(@selectedGradientColor1@, @selectedGradientColor2@);
+      background-image: linear-gradient(@selectedGradientColor2@, @selectedGradientColor2@);
       background-color: rgba(190,190,190,.15);
       color: -moz-DialogText;
     }
 
     listbox:focus > listitem[selected="true"] {
       border-color: @selectedFocusBorderColor@;
-      background-image: linear-gradient(@selectedFocusGradientColor1@, @selectedFocusGradientColor2@);
+      background-image: linear-gradient(@selectedFocusGradientColor2@, @selectedFocusGradientColor2@);
       background-color: rgba(131,183,249,.02);
       color: -moz-DialogText;
     }
@@ -191,18 +189,19 @@ listheader[sortable="true"]:hover:active {
     }
   }
 
-  @media (-moz-os-version: windows-win8) {
+  @media (-moz-os-version: windows-vista),
+         (-moz-os-version: windows-win7) {
     listitem {
-      border-radius: 0;
-      box-shadow: none;
+      border-radius: 3px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 -1px 0 1px rgba(255,255,255,.2);
     }
 
     listitem[selected="true"] {
-      background-image: linear-gradient(@selectedGradientColor2@, @selectedGradientColor2@);
+      background-image: linear-gradient(@selectedGradientColor1@, @selectedGradientColor2@);
     }
 
     listbox:focus > listitem[selected="true"] {
-      background-image: linear-gradient(@selectedFocusGradientColor2@, @selectedFocusGradientColor2@);
+      background-image: linear-gradient(@selectedFocusGradientColor1@, @selectedFocusGradientColor2@);
     }
   }
 }
