@@ -24,6 +24,7 @@ extern "C" {
 #include "gfx2DGlue.h"
 
 using namespace mozilla::gfx;
+using namespace mozilla::media;
 
 namespace mozilla {
 
@@ -289,9 +290,8 @@ void OggReader::SetupTargetSkeleton(SkeletonState* aSkeletonState)
       BuildSerialList(tracks);
       int64_t duration = 0;
       if (NS_SUCCEEDED(aSkeletonState->GetDuration(tracks, duration))) {
-        ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-        mDecoder->SetMediaDuration(duration);
         LOG(LogLevel::Debug, ("Got duration from Skeleton index %lld", duration));
+        mInfo.mMetadataDuration.emplace(TimeUnit::FromMicroseconds(duration));
       }
     }
   }
@@ -474,10 +474,8 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
     MediaResource* resource = mDecoder->GetResource();
-    if (mDecoder->GetMediaDuration() == -1 &&
-        !mDecoder->IsShutdown() &&
-        resource->GetLength() >= 0 &&
-        mDecoder->IsMediaSeekable())
+    if (mInfo.mMetadataDuration.isNothing() && !mDecoder->IsShutdown() &&
+        resource->GetLength() >= 0 && mDecoder->IsMediaSeekable())
     {
       // We didn't get a duration from the index or a Content-Duration header.
       // Seek to the end of file to find the end time.
@@ -491,7 +489,7 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
         endTime = RangeEndTime(length);
       }
       if (endTime != -1) {
-        mDecoder->SetMediaEndTime(endTime);
+        mInfo.mMetadataEndTime.emplace(TimeUnit::FromMicroseconds(endTime));
         LOG(LogLevel::Debug, ("Got Ogg duration from seeking to end %lld", endTime));
       }
     }

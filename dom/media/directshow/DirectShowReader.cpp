@@ -14,6 +14,8 @@
 #include "MediaResource.h"
 #include "VideoUtils.h"
 
+using namespace mozilla::media;
+
 namespace mozilla {
 
 
@@ -194,10 +196,6 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
   mInfo.mAudio.mBitDepth = format.wBitsPerSample;
   mBytesPerSample = format.wBitsPerSample / 8;
 
-  *aInfo = mInfo;
-  // Note: The SourceFilter strips ID3v2 tags out of the stream.
-  *aTags = nullptr;
-
   // Begin decoding!
   hr = mControl->Run();
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
@@ -207,8 +205,7 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
 
   int64_t duration = mMP3FrameParser.GetDuration();
   if (SUCCEEDED(hr)) {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->SetMediaDuration(duration);
+    mInfo.mMetadataDuration.emplace(TimeUnit::FromMicroseconds(duration));
   }
 
   LOG("Successfully initialized DirectShow MP3 decoder.");
@@ -217,6 +214,10 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
       mInfo.mAudio.mRate,
       RefTimeToUsecs(duration),
       mBytesPerSample);
+
+  *aInfo = mInfo;
+  // Note: The SourceFilter strips ID3v2 tags out of the stream.
+  *aTags = nullptr;
 
   return NS_OK;
 }
