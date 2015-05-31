@@ -8343,6 +8343,22 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
   return metrics;
 }
 
+/* static */ bool
+nsLayoutUtils::ContainsMetricsWithId(const Layer* aLayer, const ViewID& aScrollId)
+{
+  for (uint32_t i = aLayer->GetFrameMetricsCount(); i > 0; i--) {
+    if (aLayer->GetFrameMetrics(i-1).GetScrollId() == aScrollId) {
+      return true;
+    }
+  }
+  for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
+    if (ContainsMetricsWithId(child, aScrollId)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /* static */ uint32_t
 nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame)
 {
