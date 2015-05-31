@@ -78,6 +78,7 @@ public:
   AsyncPanZoomController* GetNearestContainingApzc() const;
   AsyncPanZoomController* GetNearestContainingApzcWithSameLayersId() const;
   bool IsPrimaryHolder() const;
+  uint64_t GetLayersId() const;
 
   /* Hit test related methods */
 
