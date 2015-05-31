@@ -58,7 +58,6 @@
     "no-unused-expressions": 0,   // TODO: Remove (use default)
     "no-unused-vars": 0,          // TODO: Remove (use default)
     "no-use-before-define": 0,    // TODO: Remove (use default)
-    "no-wrap-func": 0,            // TODO: Remove (use default)
     "quotes": [2, "double", "avoid-escape"],
     "strict": 0,                  // [2, "function"],
     // eslint-plugin-react rules. These are documented at
