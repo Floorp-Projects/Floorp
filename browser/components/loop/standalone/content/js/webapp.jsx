@@ -817,7 +817,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
      */
     getMediaPrivs: function() {
       this.setState({callStatus: "gumPrompt"});
-      multiplexGum.getPermsAndCacheMedia({audio:true, video:true},
+      multiplexGum.getPermsAndCacheMedia({audio: true, video: true},
         function(localStream) {
           this.props.conversation.gotMediaPrivs();
         }.bind(this),

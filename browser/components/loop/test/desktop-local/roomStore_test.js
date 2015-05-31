@@ -322,7 +322,7 @@ describe("loop.store.RoomStore", function () {
       });
 
       it("should switch the pendingCreation state flag to false", function() {
-        store.setStoreState({pendingCreation:true});
+        store.setStoreState({pendingCreation: true});
 
         store.createdRoom(new sharedActions.CreatedRoom({
           roomToken: "fakeToken"
@@ -347,7 +347,7 @@ describe("loop.store.RoomStore", function () {
 
     describe("#createRoomError", function() {
       it("should switch the pendingCreation state flag to false", function() {
-        store.setStoreState({pendingCreation:true});
+        store.setStoreState({pendingCreation: true});
 
         store.createRoomError({
           error: new Error("fake")
