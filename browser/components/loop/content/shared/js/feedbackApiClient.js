@@ -90,10 +90,10 @@ loop.FeedbackAPIClient = (function($, _) {
      */
     send: function(fields, cb) {
       var req = $.ajax({
-        url:         this.baseUrl,
-        method:      "POST",
+        url: this.baseUrl,
+        method: "POST",
         contentType: "application/json",
-        dataType:    "json",
+        dataType: "json",
         data: JSON.stringify(this._createPayload(fields))
       });
 
