@@ -174,6 +174,12 @@ HitTestingTreeNode::IsPrimaryHolder() const
   return mIsPrimaryApzcHolder;
 }
 
+uint64_t
+HitTestingTreeNode::GetLayersId() const
+{
+  return mLayersId;
+}
+
 void
 HitTestingTreeNode::SetHitTestData(const EventRegions& aRegions,
                                    const gfx::Matrix4x4& aTransform,

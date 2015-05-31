@@ -1463,6 +1463,10 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
       HitTestResult hitResult = node->HitTest(aHitTestPoint);
       if (hitResult != HitTestResult::HitNothing) {
         result = node->GetNearestContainingApzcWithSameLayersId();
+        if (!result) {
+          result = FindRootApzcForLayersId(node->GetLayersId());
+          MOZ_ASSERT(result);
+        }
         APZCTM_LOG("Successfully matched APZC %p via node %p (hit result %d)\n",
              result, node, hitResult);
         MOZ_ASSERT(hitResult == HitLayer || hitResult == HitDispatchToContentRegion);
@@ -1473,6 +1477,35 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
 
     if (*aOutHitResult != HitNothing) {
       return result;
+    }
+  }
+
+  return nullptr;
+}
+
+AsyncPanZoomController*
+APZCTreeManager::FindRootApzcForLayersId(uint64_t aLayersId) const
+{
+  mTreeLock.AssertCurrentThreadOwns();
+
+  if (!mRootNode) {
+    return nullptr;
+  }
+  std::deque<const HitTestingTreeNode*> queue;
+  queue.push_back(mRootNode);
+  while (!queue.empty()) {
+    const HitTestingTreeNode* node = queue.front();
+    queue.pop_front();
+
+    AsyncPanZoomController* apzc = node->GetApzc();
+    if (apzc && apzc->GetLayersId() == aLayersId && apzc->IsRootForLayersId()) {
+      return apzc;
+    }
+
+    for (HitTestingTreeNode* child = node->GetLastChild();
+         child;
+         child = child->GetPrevSibling()) {
+      queue.push_back(child);
     }
   }
 
