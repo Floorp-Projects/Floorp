@@ -155,6 +155,19 @@ HitTestingTreeNode::GetNearestContainingApzc() const
   return nullptr;
 }
 
+AsyncPanZoomController*
+HitTestingTreeNode::GetNearestContainingApzcWithSameLayersId() const
+{
+  for (const HitTestingTreeNode* n = this;
+       n && n->mLayersId == mLayersId;
+       n = n->GetParent()) {
+    if (n->GetApzc()) {
+      return n->GetApzc();
+    }
+  }
+  return nullptr;
+}
+
 bool
 HitTestingTreeNode::IsPrimaryHolder() const
 {

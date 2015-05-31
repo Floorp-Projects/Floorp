@@ -1462,7 +1462,7 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
           node);
       HitTestResult hitResult = node->HitTest(aHitTestPoint);
       if (hitResult != HitTestResult::HitNothing) {
-        result = node->GetNearestContainingApzc();
+        result = node->GetNearestContainingApzcWithSameLayersId();
         APZCTM_LOG("Successfully matched APZC %p via node %p (hit result %d)\n",
              result, node, hitResult);
         MOZ_ASSERT(hitResult == HitLayer || hitResult == HitDispatchToContentRegion);
