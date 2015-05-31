@@ -93,10 +93,35 @@ add_test(function test_write_icc_ucs2_string() {
 
   for (let i = 0; i < test_data.length; i++) {
     let test = test_data[i];
-    iccHelper.writeICCUCS2String(alphaLen, test.data);
+    let writtenStr = iccHelper.writeICCUCS2String(alphaLen, test.data);
+    equal(writtenStr, test.data);
     equal(helper.readHexOctet(), test.encode);
     equal(iccHelper.readICCUCS2String(test.encode, alphaLen - 1), test.data);
   }
+
+  // This string use 0x80 encoded and the maximum capacity is 17 octets.
+  // Each alphabet takes 2 octets, thus the first 8 alphabets can be written.
+  let str = "Mozilla \u82b3\u8233 On Fire";
+  let writtenStr = iccHelper.writeICCUCS2String(alphaLen, str);
+  equal(writtenStr, str.substring(0, 8));
+  equal(helper.readHexOctet(), 0x80);
+  equal(iccHelper.readICCUCS2String(0x80, alphaLen - 1), str.substring(0, 8));
+
+  // This string use 0x81 encoded and the maximum capacity is 15 octets.
+  // Each alphabet takes 1 octets, thus the first 15 alphabets can be written.
+  str = "Mozilla \u6901\u697f On Fire";
+  writtenStr = iccHelper.writeICCUCS2String(alphaLen, str);
+  equal(writtenStr, str.substring(0, 15));
+  equal(helper.readHexOctet(), 0x81);
+  equal(iccHelper.readICCUCS2String(0x81, alphaLen - 1), str.substring(0, 15));
+
+  // This string use 0x82 encoded and the maximum capacity is 14 octets.
+  // Each alphabet takes 1 octets, thus the first 14 alphabets can be written.
+  str = "Mozilla \u0514\u0593 On Fire";
+  writtenStr = iccHelper.writeICCUCS2String(alphaLen, str);
+  equal(writtenStr, str.substring(0, 14));
+  equal(helper.readHexOctet(), 0x82);
+  equal(iccHelper.readICCUCS2String(0x82, alphaLen - 1), str.substring(0, 14));
 
   run_next_test();
 });
@@ -207,7 +232,8 @@ add_test(function test_write_string_to_8bit_unpacked() {
   let str;
 
   // Test 1, write GSM alphabets.
-  iccHelper.writeStringTo8BitUnpacked(langTable.length + ffLen, langTable);
+  let writtenStr = iccHelper.writeStringTo8BitUnpacked(langTable.length + ffLen, langTable);
+  equal(writtenStr, langTable);
 
   for (let i = 0; i < langTable.length; i++) {
     equal(helper.readHexOctet(), i);
@@ -219,8 +245,8 @@ add_test(function test_write_string_to_8bit_unpacked() {
 
   // Test 2, write GSM extended alphabets.
   str = "\u000c\u20ac";
-  iccHelper.writeStringTo8BitUnpacked(4, str);
-
+  writtenStr = iccHelper.writeStringTo8BitUnpacked(4, str);
+  equal(writtenStr, str);
   equal(iccHelper.read8BitUnpackedToString(4), str);
 
   // Test 3, write GSM and GSM extended alphabets.
@@ -232,8 +258,8 @@ add_test(function test_write_string_to_8bit_unpacked() {
   // 1 octet for 1 gsm alphabet,
   // 2 octes for trailing 0xff.
   // "Totally 7 octets are to be written."
-  iccHelper.writeStringTo8BitUnpacked(7, str);
-
+  writtenStr = iccHelper.writeStringTo8BitUnpacked(7, str);
+  equal(writtenStr, str);
   equal(iccHelper.read8BitUnpackedToString(7), str);
 
   run_next_test();
@@ -252,7 +278,8 @@ add_test(function test_write_string_to_8bit_unpacked_with_max_octets_written() {
 
   // The maximum of the number of octets that can be written is 3.
   // Only 3 characters shall be written even the length of the string is 4.
-  iccHelper.writeStringTo8BitUnpacked(3, langTable.substring(0, 4));
+  let writtenStr = iccHelper.writeStringTo8BitUnpacked(3, langTable.substring(0, 4));
+  equal(writtenStr, langTable.substring(0, 3));
   helper.writeHexOctet(0xff); // dummy octet.
   for (let i = 0; i < 3; i++) {
     equal(helper.readHexOctet(), i);
@@ -262,18 +289,21 @@ add_test(function test_write_string_to_8bit_unpacked_with_max_octets_written() {
   // \u000c is GSM extended alphabet, 2 octets.
   // \u00a3 is GSM alphabet, 1 octet.
   let str = "\u000c\u00a3";
-  iccHelper.writeStringTo8BitUnpacked(3, str);
+  writtenStr = iccHelper.writeStringTo8BitUnpacked(3, str);
+  equal(writtenStr, str.substring(0, 2));
   equal(iccHelper.read8BitUnpackedToString(3), str);
 
   str = "\u00a3\u000c";
-  iccHelper.writeStringTo8BitUnpacked(3, str);
+  writtenStr = iccHelper.writeStringTo8BitUnpacked(3, str);
+  equal(writtenStr, str.substring(0, 2));
   equal(iccHelper.read8BitUnpackedToString(3), str);
 
   // 2 GSM extended alphabets cost 4 octets, but maximum is 3, so only the 1st
   // alphabet can be written.
   str = "\u000c\u000c";
-  iccHelper.writeStringTo8BitUnpacked(3, str);
+  writtenStr = iccHelper.writeStringTo8BitUnpacked(3, str);
   helper.writeHexOctet(0xff); // dummy octet.
+  equal(writtenStr, str.substring(0, 1));
   equal(iccHelper.read8BitUnpackedToString(4), str.substring(0, 1));
 
   run_next_test();
@@ -336,36 +366,42 @@ add_test(function test_write_alpha_identifier() {
   let ffLen = 2;
 
   // Removal
-  iccHelper.writeAlphaIdentifier(10, null);
+  let writenAlphaId = iccHelper.writeAlphaIdentifier(10, null);
+  equal(writenAlphaId, null);
   equal(iccHelper.readAlphaIdentifier(10), "");
 
   // GSM 8 bit
   let str = "Mozilla";
-  iccHelper.writeAlphaIdentifier(str.length + ffLen, str);
+  writenAlphaId = iccHelper.writeAlphaIdentifier(str.length + ffLen, str);
+  equal(writenAlphaId , str);
   equal(iccHelper.readAlphaIdentifier(str.length + ffLen), str);
 
   // UCS2
   str = "Mozilla\u8000";
-  iccHelper.writeAlphaIdentifier(str.length * 2 + ffLen, str);
+  writenAlphaId = iccHelper.writeAlphaIdentifier(str.length * 2 + ffLen, str);
+  equal(writenAlphaId , str);
   // * 2 for each character will be encoded to UCS2 alphabets.
   equal(iccHelper.readAlphaIdentifier(str.length * 2 + ffLen), str);
 
   // Test with maximum octets written.
   // 1 coding scheme (0x80) and 1 UCS2 character, total 3 octets.
   str = "\u694a";
-  iccHelper.writeAlphaIdentifier(3, str);
+  writenAlphaId = iccHelper.writeAlphaIdentifier(3, str);
+  equal(writenAlphaId , str);
   equal(iccHelper.readAlphaIdentifier(3), str);
 
   // 1 coding scheme (0x80) and 2 UCS2 characters, total 5 octets.
   // numOctets is limited to 4, so only 1 UCS2 character can be written.
   str = "\u694a\u69ca";
-  iccHelper.writeAlphaIdentifier(4, str);
+  writenAlphaId = iccHelper.writeAlphaIdentifier(4, str);
   helper.writeHexOctet(0xff); // dummy octet.
+  equal(writenAlphaId , str.substring(0, 1));
   equal(iccHelper.readAlphaIdentifier(5), str.substring(0, 1));
 
   // Write 0 octet.
-  iccHelper.writeAlphaIdentifier(0, "1");
+  writenAlphaId = iccHelper.writeAlphaIdentifier(0, "1");
   helper.writeHexOctet(0xff); // dummy octet.
+  equal(writenAlphaId, null);
   equal(iccHelper.readAlphaIdentifier(1), "");
 
   run_next_test();
@@ -426,28 +462,32 @@ add_test(function test_write_alpha_id_dialling_number() {
     alphaId: "Mozilla",
     number: "1234567890"
   };
-  helper.writeAlphaIdDiallingNumber(recordSize, contactW.alphaId,
-                                    contactW.number);
+  let writtenContact = helper.writeAlphaIdDiallingNumber(recordSize,
+                                                         contactW.alphaId,
+                                                         contactW.number);
 
   let contactR = helper.readAlphaIdDiallingNumber(recordSize);
-  equal(contactW.alphaId, contactR.alphaId);
-  equal(contactW.number, contactR.number);
+  equal(writtenContact.alphaId, contactR.alphaId);
+  equal(writtenContact.number, contactR.number);
 
   // Write a contact with alphaId encoded in UCS2 and number has '+'.
   let contactUCS2 = {
     alphaId: "火狐",
     number: "+1234567890"
   };
-  helper.writeAlphaIdDiallingNumber(recordSize, contactUCS2.alphaId,
-                                    contactUCS2.number);
+  writtenContact = helper.writeAlphaIdDiallingNumber(recordSize,
+                                                     contactUCS2.alphaId,
+                                                     contactUCS2.number);
   contactR = helper.readAlphaIdDiallingNumber(recordSize);
-  equal(contactUCS2.alphaId, contactR.alphaId);
-  equal(contactUCS2.number, contactR.number);
+  equal(writtenContact.alphaId, contactR.alphaId);
+  equal(writtenContact.number, contactR.number);
 
   // Write a null contact (Removal).
-  helper.writeAlphaIdDiallingNumber(recordSize);
+  writtenContact = helper.writeAlphaIdDiallingNumber(recordSize);
   contactR = helper.readAlphaIdDiallingNumber(recordSize);
   equal(contactR, null);
+  equal(writtenContact.alphaId, null);
+  equal(writtenContact.number, null);
 
   // Write a longer alphaId/dialling number
   // Dialling Number : Maximum 20 digits(10 octets).
@@ -458,19 +498,21 @@ add_test(function test_write_alpha_id_dialling_number() {
     alphaId: "AAAAAAAAABBBBBBBBBCCCCCCCCC",
     number: "123456789012345678901234567890",
   };
-  helper.writeAlphaIdDiallingNumber(recordSize, longContact.alphaId,
-                                    longContact.number);
+  writtenContact = helper.writeAlphaIdDiallingNumber(recordSize,
+                                                     longContact.alphaId,
+                                                     longContact.number);
   contactR = helper.readAlphaIdDiallingNumber(recordSize);
-  equal(contactR.alphaId, "AAAAAAAAABBBBBBBBB");
-  equal(contactR.number, "12345678901234567890");
+  equal(writtenContact.alphaId, contactR.alphaId);
+  equal(writtenContact.number, contactR.number);
 
   // Add '+' to number and test again.
   longContact.number = "+123456789012345678901234567890";
-  helper.writeAlphaIdDiallingNumber(recordSize, longContact.alphaId,
-                                    longContact.number);
+  writtenContact = helper.writeAlphaIdDiallingNumber(recordSize,
+                                                     longContact.alphaId,
+                                                     longContact.number);
   contactR = helper.readAlphaIdDiallingNumber(recordSize);
-  equal(contactR.alphaId, "AAAAAAAAABBBBBBBBB");
-  equal(contactR.number, "+12345678901234567890");
+  equal(writtenContact.alphaId, contactR.alphaId);
+  equal(writtenContact.number, contactR.number);
 
   run_next_test();
 });
@@ -564,7 +606,8 @@ add_test(function test_write_number_with_length() {
 
   function test(number, expectedNumber) {
     expectedNumber = expectedNumber || number;
-    iccHelper.writeNumberWithLength(number);
+    let writeNumber = iccHelper.writeNumberWithLength(number);
+    equal(writeNumber, expectedNumber);
     let numLen = helper.readHexOctet();
     equal(expectedNumber, iccHelper.readDiallingNumber(numLen));
     for (let i = 0; i < (ADN_MAX_BCD_NUMBER_BYTES - numLen); i++) {
@@ -588,6 +631,9 @@ add_test(function test_write_number_with_length() {
   test("(1)23-456+789", "123456789");
 
   test("++(01)2*3-4#5,6+7(8)9*0#1,", "+012*34#5,6789*0#1,");
+
+  // over maximum 20 digits should be truncated.
+  test("012345678901234567890123456789", "01234567890123456789");
 
   // null
   iccHelper.writeNumberWithLength(null);
