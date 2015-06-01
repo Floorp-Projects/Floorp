@@ -532,9 +532,7 @@ gfxWindowsPlatform::UpdateRenderMode()
     }
 
     ID3D11Device *device = GetD3D11Device();
-    if (isVistaOrHigher && !InSafeMode() && tryD2D &&
-        device &&
-        device->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0 &&
+    if (isVistaOrHigher && !InSafeMode() && tryD2D && device &&
         DoesD3D11TextureSharingWork(device)) {
 
         VerifyD2DDevice(d2dForceEnabled);
@@ -1737,6 +1735,12 @@ bool DoesD3D11DeviceWork(ID3D11Device *device)
 // with E_OUTOFMEMORY.
 bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT format, UINT bindflags)
 {
+  // CreateTexture2D is known to crash on lower feature levels, see bugs
+  // 1170211 and 1089413.
+  if (device->GetFeatureLevel() < D3D_FEATURE_LEVEL_10_0) {
+    return false;
+  }
+
   if (gfxPrefs::Direct2DForceEnabled() ||
       gfxPrefs::LayersAccelerationForceEnabled())
   {
