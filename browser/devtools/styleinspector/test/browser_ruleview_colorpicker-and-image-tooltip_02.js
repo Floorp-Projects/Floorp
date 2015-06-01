@@ -36,7 +36,7 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
   swatch.click();
   yield onShown;
 
-  yield simulateColorPickerChange(picker, [0, 0, 0, 1], {
+  yield simulateColorPickerChange(ruleView, picker, [0, 0, 0, 1], {
     element: content.document.body,
     name: "backgroundColor",
     value: "rgb(0, 0, 0)"
