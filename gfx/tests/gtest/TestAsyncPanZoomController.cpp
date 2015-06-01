@@ -1894,6 +1894,10 @@ protected:
                                         CSSRect aScrollableRect = CSSRect(-1, -1, -1, -1)) {
     FrameMetrics metrics;
     metrics.SetScrollId(aScrollId);
+    // By convention in this test file, START_SCROLL_ID is the root, so mark it as such.
+    if (aScrollId == FrameMetrics::START_SCROLL_ID) {
+      metrics.SetIsLayersIdRoot(true);
+    }
     IntRect layerBound = aLayer->GetVisibleRegion().GetBounds();
     metrics.SetCompositionBounds(ParentLayerRect(layerBound.x, layerBound.y,
                                                  layerBound.width, layerBound.height));
@@ -2864,9 +2868,10 @@ protected:
   void CreateBug1119497LayerTree() {
     const char* layerTreeSyntax = "c(tt)";
     // LayerID                     0 12
-    // 0 is the root and doesn't have an APZC
-    // 1 is behind 2 and does have an APZC
-    // 2 entirely covers 1 and should take all the input events
+    // 0 is the root and has an APZC
+    // 1 is behind 2 and has an APZC
+    // 2 entirely covers 1 and should take all the input events, but has no APZC
+    // so hits to 2 should go to to the root APZC
     nsIntRegion layerVisibleRegions[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),
       nsIntRegion(IntRect(0, 0, 100, 100)),
@@ -2874,6 +2879,7 @@ protected:
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegions, nullptr, lm, layers);
 
+    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID);
     SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(0, root, mcc);
@@ -3006,8 +3012,8 @@ TEST_F(APZEventRegionsTester, Bug1119497) {
   HitTestResult result;
   nsRefPtr<AsyncPanZoomController> hit = manager->GetTargetAPZC(ScreenPoint(50, 50), &result);
   // We should hit layers[2], so |result| will be HitLayer but there's no
-  // actual APZC in that parent chain, so |hit| should be nullptr.
-  EXPECT_EQ(nullptr, hit.get());
+  // actual APZC on layers[2], so it will be the APZC of the root layer.
+  EXPECT_EQ(ApzcOf(layers[0]), hit.get());
   EXPECT_EQ(HitTestResult::HitLayer, result);
 }
 

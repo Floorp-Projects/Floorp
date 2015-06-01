@@ -165,6 +165,16 @@ public:
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
 
+  /**
+   * @return the display port for the given element which should be used for
+   * visibility testing purposes.
+   *
+   * If low-precision buffers are enabled, this is the critical display port;
+   * otherwise, it's the same display port returned by GetDisplayPort().
+   */
+  static bool GetDisplayPortForVisibilityTesting(nsIContent* aContent,
+                                                 nsRect* aResult = nullptr);
+
   enum class RepaintMode : uint8_t {
     Repaint,
     DoNotRepaint
@@ -2649,6 +2659,12 @@ public:
    *     scrollable content.
    */
   static nsMargin ScrollbarAreaToExcludeFromCompositionBoundsFor(nsIFrame* aScrollFrame);
+
+  /**
+   * Looks in the layer subtree rooted at aLayer for a metrics with scroll id
+   * aScrollId. Returns true if such is found.
+   */
+  static bool ContainsMetricsWithId(const Layer* aLayer, const ViewID& aScrollId);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;

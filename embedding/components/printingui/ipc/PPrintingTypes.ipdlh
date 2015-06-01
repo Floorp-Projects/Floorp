@@ -72,6 +72,7 @@ struct PrintData {
   bool isInitializedFromPrinter;
   bool isInitializedFromPrefs;
   bool persistMarginBoxSettings;
+  int32_t optionFlags;
 
   /* Windows-specific things */
   nsString driverName;
@@ -91,9 +92,20 @@ struct PrintData {
   CStringKeyValue[] GTKPrintSettings;
 
   /**
-   * TODO: OS X specific things - specifically, an array of names for the
-   * document to be supplied by nsIWebBrowserPrint::enumerateDocumentNames
+   * OS X specific things.
    */
+  nsString printJobName;
+  bool printAllPages;
+  bool mustCollate;
+  nsString disposition;
+  /** TODO: Is there an "unsigned short" primitive? **/
+  short pagesAcross;
+  short pagesDown;
+  double printTime;
+  bool detailedErrorReporting;
+  nsString faxNumber;
+  bool addHeaderAndFooter;
+  bool fileNameExtensionHidden;
 };
 
 } // namespace embedding

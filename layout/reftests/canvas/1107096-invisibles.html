@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<script>
+function draw() {
+	var c = document.getElementById('cc');
+	var g = c.getContext('2d');
+	g.fillStyle = 'red';
+	g.fillRect(0, 0, 200, 200);
+	g.font = '24px arial, sans-serif';
+	g.fillStyle = '#fff';
+	g.fillText('_\u00AD_', 10, 30);	// soft hyphen
+	g.fillText('_\u200B_', 10, 60);	// ZWSP
+	g.fillText('_\u200C_', 10, 90);	// ZWNJ
+	g.fillText('_\u200D_', 10, 120);// ZWJ
+}
+</script>
+</head>
+<body onload='draw()'>
+<canvas id='cc' width='200' height='200'></canvas>
+</body>
+</html>

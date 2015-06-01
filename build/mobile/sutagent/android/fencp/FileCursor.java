@@ -65,7 +65,6 @@ public class FileCursor extends AbstractWindowedCursor {
                     nCount = 1;
                 }
 
-                mRowIdColumnIndex = 0;
             }
         }
     }

@@ -702,6 +702,80 @@ BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shap
     return true;
 }
 
+MIRType
+BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
+{
+    if (!hasBaselineScript())
+        return MIRType_Value;
+
+    const ICEntry& entry = icEntryFromPC(pc);
+    MIRType type = MIRType_None;
+
+    for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
+        MIRType stubType;
+        switch (stub->kind()) {
+          case ICStub::GetProp_Fallback:
+            if (stub->toGetProp_Fallback()->hadUnoptimizableAccess())
+                return MIRType_Value;
+            continue;
+
+          case ICStub::GetElem_Fallback:
+            if (stub->toGetElem_Fallback()->hadUnoptimizableAccess())
+                return MIRType_Value;
+            continue;
+
+          case ICStub::GetProp_Generic:
+            return MIRType_Value;
+
+          case ICStub::GetProp_ArgumentsLength:
+          case ICStub::GetElem_Arguments:
+            // Either an object or magic arguments.
+            return MIRType_Value;
+
+          case ICStub::GetProp_ArrayLength:
+          case ICStub::GetProp_Native:
+          case ICStub::GetProp_NativeDoesNotExist:
+          case ICStub::GetProp_NativePrototype:
+          case ICStub::GetProp_Unboxed:
+          case ICStub::GetProp_TypedObject:
+          case ICStub::GetProp_CallScripted:
+          case ICStub::GetProp_CallNative:
+          case ICStub::GetProp_CallDOMProxyNative:
+          case ICStub::GetProp_CallDOMProxyWithGenerationNative:
+          case ICStub::GetProp_DOMProxyShadowed:
+          case ICStub::GetElem_NativeSlot:
+          case ICStub::GetElem_NativePrototypeSlot:
+          case ICStub::GetElem_NativePrototypeCallNative:
+          case ICStub::GetElem_NativePrototypeCallScripted:
+          case ICStub::GetElem_String:
+          case ICStub::GetElem_Dense:
+          case ICStub::GetElem_TypedArray:
+            stubType = MIRType_Object;
+            break;
+
+          case ICStub::GetProp_Primitive:
+            stubType = MIRTypeFromValueType(stub->toGetProp_Primitive()->primitiveType());
+            break;
+
+          case ICStub::GetProp_StringLength:
+            stubType = MIRType_String;
+            break;
+
+          default:
+            MOZ_CRASH("Unexpected stub");
+        }
+
+        if (type != MIRType_None) {
+            if (type != stubType)
+                return MIRType_Value;
+        } else {
+            type = stubType;
+        }
+    }
+
+    return (type == MIRType_None) ? MIRType_Value : type;
+}
+
 bool
 BaselineInspector::instanceOfData(jsbytecode* pc, Shape** shape, uint32_t* slot,
                                   JSObject** prototypeObject)

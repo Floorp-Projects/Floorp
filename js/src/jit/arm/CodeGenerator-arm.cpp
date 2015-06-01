@@ -135,7 +135,7 @@ CodeGeneratorARM::visitCompare(LCompare* comp)
     else
         masm.ma_cmp(ToRegister(left), ToOperand(right));
     masm.ma_mov(Imm32(0), ToRegister(def));
-    masm.ma_mov(Imm32(1), ToRegister(def), NoSetCond, cond);
+    masm.ma_mov(Imm32(1), ToRegister(def), LeaveCC, cond);
 }
 
 void
@@ -380,9 +380,9 @@ CodeGeneratorARM::visitAddI(LAddI* ins)
     const LDefinition* dest = ins->getDef(0);
 
     if (rhs->isConstant())
-        masm.ma_add(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCond);
+        masm.ma_add(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCC);
     else
-        masm.ma_add(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCond);
+        masm.ma_add(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCC);
 
     if (ins->snapshot())
         bailoutIf(Assembler::Overflow, ins->snapshot());
@@ -396,9 +396,9 @@ CodeGeneratorARM::visitSubI(LSubI* ins)
     const LDefinition* dest = ins->getDef(0);
 
     if (rhs->isConstant())
-        masm.ma_sub(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCond);
+        masm.ma_sub(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCC);
     else
-        masm.ma_sub(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCond);
+        masm.ma_sub(ToRegister(lhs), ToOperand(rhs), ToRegister(dest), SetCC);
 
     if (ins->snapshot())
         bailoutIf(Assembler::Overflow, ins->snapshot());
@@ -426,7 +426,7 @@ CodeGeneratorARM::visitMulI(LMulI* ins)
         // TODO: move these to ma_mul.
         switch (constant) {
           case -1:
-            masm.ma_rsb(ToRegister(lhs), Imm32(0), ToRegister(dest), SetCond);
+            masm.ma_rsb(ToRegister(lhs), Imm32(0), ToRegister(dest), SetCC);
             break;
           case 0:
             masm.ma_mov(Imm32(0), ToRegister(dest));
@@ -436,7 +436,7 @@ CodeGeneratorARM::visitMulI(LMulI* ins)
             masm.ma_mov(ToRegister(lhs), ToRegister(dest));
             return; // Escape overflow check;
           case 2:
-            masm.ma_add(ToRegister(lhs), ToRegister(lhs), ToRegister(dest), SetCond);
+            masm.ma_add(ToRegister(lhs), ToRegister(lhs), ToRegister(dest), SetCC);
             // Overflow is handled later.
             break;
           default: {
@@ -646,7 +646,7 @@ CodeGeneratorARM::visitDivPowTwoI(LDivPowTwoI* ins)
         MDiv* mir = ins->mir();
         if (!mir->isTruncated()) {
             // If the remainder is != 0, bailout since this must be a double.
-            masm.as_mov(ScratchRegister, lsl(lhs, 32 - shift), SetCond);
+            masm.as_mov(ScratchRegister, lsl(lhs, 32 - shift), SetCC);
             bailoutIf(Assembler::NonZero, ins->snapshot());
         }
 
@@ -811,11 +811,11 @@ CodeGeneratorARM::visitModPowTwoI(LModPowTwoI* ins)
     Label fin;
     // bug 739870, jbramley has a different sequence that may help with speed
     // here.
-    masm.ma_mov(in, out, SetCond);
+    masm.ma_mov(in, out, SetCC);
     masm.ma_b(&fin, Assembler::Zero);
-    masm.ma_rsb(Imm32(0), out, NoSetCond, Assembler::Signed);
+    masm.ma_rsb(Imm32(0), out, LeaveCC, Assembler::Signed);
     masm.ma_and(Imm32((1 << ins->shift()) - 1), out);
-    masm.ma_rsb(Imm32(0), out, SetCond, Assembler::Signed);
+    masm.ma_rsb(Imm32(0), out, SetCC, Assembler::Signed);
     if (mir->canBeNegativeDividend()) {
         if (!mir->isTruncated()) {
             MOZ_ASSERT(mir->fallible());
@@ -1100,8 +1100,8 @@ CodeGeneratorARM::emitTableSwitchDispatch(MTableSwitch* mir, Register index, Reg
 
     int32_t cases = mir->numCases();
     // Lower value with low value.
-    masm.ma_sub(index, Imm32(mir->low()), index, SetCond);
-    masm.ma_rsb(index, Imm32(cases - 1), index, SetCond, Assembler::NotSigned);
+    masm.ma_sub(index, Imm32(mir->low()), index, SetCC);
+    masm.ma_rsb(index, Imm32(cases - 1), index, SetCC, Assembler::NotSigned);
     // Inhibit pools within the following sequence because we are indexing into
     // a pc relative table. The region will have one instruction for ma_ldr, one
     // for ma_b, and each table case takes one word.
@@ -1612,8 +1612,8 @@ CodeGeneratorARM::visitNotD(LNotD* ins)
     } else {
         masm.as_vmrs(pc);
         masm.ma_mov(Imm32(0), dest);
-        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::Equal);
-        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::Overflow);
+        masm.ma_mov(Imm32(1), dest, LeaveCC, Assembler::Equal);
+        masm.ma_mov(Imm32(1), dest, LeaveCC, Assembler::Overflow);
     }
 }
 
@@ -1640,8 +1640,8 @@ CodeGeneratorARM::visitNotF(LNotF* ins)
     } else {
         masm.as_vmrs(pc);
         masm.ma_mov(Imm32(0), dest);
-        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::Equal);
-        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::Overflow);
+        masm.ma_mov(Imm32(1), dest, LeaveCC, Assembler::Equal);
+        masm.ma_mov(Imm32(1), dest, LeaveCC, Assembler::Overflow);
     }
 }
 
@@ -1793,9 +1793,9 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->output()));
             if (size == 32)
-                masm.ma_vldr(Operand(HeapReg, ptrImm), vd.singleOverlay(), Assembler::Always);
+                masm.ma_vldr(Address(HeapReg, ptrImm), vd.singleOverlay(), Assembler::Always);
             else
-                masm.ma_vldr(Operand(HeapReg, ptrImm), vd, Assembler::Always);
+                masm.ma_vldr(Address(HeapReg, ptrImm), vd, Assembler::Always);
         }  else {
             masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->output()), Offset, Assembler::Always);
@@ -1826,17 +1826,17 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
         FloatRegister dst = ToFloatRegister(ins->output());
         VFPRegister vd(dst);
         if (size == 32) {
-            masm.ma_vldr(Operand(GlobalReg, AsmJSNaN32GlobalDataOffset - AsmJSGlobalRegBias),
+            masm.ma_vldr(Address(GlobalReg, AsmJSNaN32GlobalDataOffset - AsmJSGlobalRegBias),
                          vd.singleOverlay(), Assembler::AboveOrEqual);
             masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Below);
         } else {
-            masm.ma_vldr(Operand(GlobalReg, AsmJSNaN64GlobalDataOffset - AsmJSGlobalRegBias),
+            masm.ma_vldr(Address(GlobalReg, AsmJSNaN64GlobalDataOffset - AsmJSGlobalRegBias),
                          vd, Assembler::AboveOrEqual);
             masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Below);
         }
     } else {
         Register d = ToRegister(ins->output());
-        masm.ma_mov(Imm32(0), d, NoSetCond, Assembler::AboveOrEqual);
+        masm.ma_mov(Imm32(0), d, LeaveCC, Assembler::AboveOrEqual);
         masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, d, Offset, Assembler::Below);
     }
     memoryBarrier(mir->barrierAfter());
@@ -1870,9 +1870,9 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->value()));
             if (size == 32)
-                masm.ma_vstr(vd.singleOverlay(), Operand(HeapReg, ptrImm), Assembler::Always);
+                masm.ma_vstr(vd.singleOverlay(), Address(HeapReg, ptrImm), Assembler::Always);
             else
-                masm.ma_vstr(vd, Operand(HeapReg, ptrImm), Assembler::Always);
+                masm.ma_vstr(vd, Address(HeapReg, ptrImm), Assembler::Always);
         } else {
             masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->value()), Offset, Assembler::Always);
@@ -2089,7 +2089,7 @@ void
 CodeGeneratorARM::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
 {
     const MAsmJSPassStackArg* mir = ins->mir();
-    Operand dst(StackPointer, mir->spOffset());
+    Address dst(StackPointer, mir->spOffset());
     if (ins->arg()->isConstant()) {
         //masm.as_bkpt();
         masm.ma_storeImm(Imm32(ToInt32(ins->arg())), dst);
@@ -2231,9 +2231,9 @@ CodeGeneratorARM::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins)
         masm.ma_dtr(IsLoad, GlobalReg, Imm32(addr), ToRegister(ins->output()));
     } else if (mir->type() == MIRType_Float32) {
         VFPRegister vd(ToFloatRegister(ins->output()));
-        masm.ma_vldr(Operand(GlobalReg, addr), vd.singleOverlay());
+        masm.ma_vldr(Address(GlobalReg, addr), vd.singleOverlay());
     } else {
-        masm.ma_vldr(Operand(GlobalReg, addr), ToFloatRegister(ins->output()));
+        masm.ma_vldr(Address(GlobalReg, addr), ToFloatRegister(ins->output()));
     }
 }
 
@@ -2250,9 +2250,9 @@ CodeGeneratorARM::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins)
         masm.ma_dtr(IsStore, GlobalReg, Imm32(addr), ToRegister(ins->value()));
     } else if (type == MIRType_Float32) {
         VFPRegister vd(ToFloatRegister(ins->value()));
-        masm.ma_vstr(vd.singleOverlay(), Operand(GlobalReg, addr));
+        masm.ma_vstr(vd.singleOverlay(), Address(GlobalReg, addr));
     } else {
-        masm.ma_vstr(ToFloatRegister(ins->value()), Operand(GlobalReg, addr));
+        masm.ma_vstr(ToFloatRegister(ins->value()), Address(GlobalReg, addr));
     }
 }
 
@@ -2275,7 +2275,7 @@ CodeGeneratorARM::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins)
 {
     const MAsmJSLoadFFIFunc* mir = ins->mir();
 
-    masm.ma_ldr(Operand(GlobalReg, mir->globalDataOffset() - AsmJSGlobalRegBias),
+    masm.ma_ldr(Address(GlobalReg, mir->globalDataOffset() - AsmJSGlobalRegBias),
                 ToRegister(ins->output()));
 }
 

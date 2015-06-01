@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-print">
+ <head>
+  <title>Testcase for bug 1161752</title>
+<style>
+  body,html { margin:0; padding:0; }
+  div
+    {
+      height: 56px;
+      width: 100px;
+      vertical-align: top;
+      margin-bottom: 50px;
+      margin-right: 100px;
+      margin-left: auto;
+    }
+  div div
+    {
+      height: 50px;
+      width: 100px;
+      background-color: green;
+    }
+
+</style>
+ </head>
+ <body>
+
+  <div><div></div></div>
+
+ </body>
+</html>

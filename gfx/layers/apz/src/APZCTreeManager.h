@@ -412,6 +412,7 @@ private:
   AsyncPanZoomController* GetAPZCAtPoint(HitTestingTreeNode* aNode,
                                          const ParentLayerPoint& aHitTestPoint,
                                          HitTestResult* aOutHitResult);
+  AsyncPanZoomController* FindRootApzcForLayersId(uint64_t aLayersId) const;
   already_AddRefed<AsyncPanZoomController> GetMultitouchTarget(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
   already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc) const;
@@ -433,7 +434,8 @@ private:
   void FlushRepaintsRecursively(HitTestingTreeNode* aNode);
 
   already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
-                                                           AsyncPanZoomController* aApzc);
+                                                           AsyncPanZoomController* aApzc,
+                                                           uint64_t aLayersId);
   HitTestingTreeNode* PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
                                           const FrameMetrics& aMetrics,
                                           uint64_t aLayersId,
