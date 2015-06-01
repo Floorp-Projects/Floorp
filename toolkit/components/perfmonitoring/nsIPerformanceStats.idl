@@ -6,6 +6,7 @@
 
 #include "nsISupports.idl"
 #include "nsIArray.idl"
+#include "nsIDOMWindow.idl"
 
 /**
  * Mechanisms for querying the current process about performance
@@ -21,7 +22,7 @@
  * All values are monotonic and are updated only when
  * `nsIPerformanceStatsService.isStopwatchActive` is `true`.
  */
-[scriptable, uuid(f015cbad-e16f-4982-a080-67e4e69a5b2e)]
+[scriptable, uuid(b060d75d-55bc-4c82-a4ff-458fc5ab2a69)]
 interface nsIPerformanceStats: nsISupports {
   /**
    * The name of the component:
@@ -37,6 +38,18 @@ interface nsIPerformanceStats: nsISupports {
    * otherwise an empty string.
    */
   readonly attribute AString addonId;
+
+  /**
+   * If the component is code executed in a window, the ID of the topmost
+   * outer window (i.e. the tab), otherwise 0.
+   */
+  readonly attribute uint64_t windowId;
+
+  /**
+   * If the component is code executed in a window, the title of the topmost
+   * window (i.e. the tab), otherwise an empty string.
+   */
+  readonly attribute AString title;
 
   /**
    * Total amount of time spent executing code in this group, in
@@ -91,7 +104,7 @@ interface nsIPerformanceSnapshot: nsISupports {
   nsIPerformanceStats getProcessData();
 };
 
-[scriptable, builtinclass, uuid(5795113a-39a1-4087-ba09-98b7d07d025a)]
+[scriptable, builtinclass, uuid(3a20d41d-9f24-44b3-bd65-0910f92d33d2)]
 interface nsIPerformanceStatsService : nsISupports {
   /**
    * `true` if we should monitor performance, `false` otherwise.
@@ -101,7 +114,7 @@ interface nsIPerformanceStatsService : nsISupports {
   /**
    * Capture a snapshot of the performance data.
    */
-  nsIPerformanceSnapshot getSnapshot();
+  [implicit_jscontext] nsIPerformanceSnapshot getSnapshot();
 };
 
 %{C++

@@ -8,7 +8,8 @@
 function* spawnTest() {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
-  let { L10N, TIMELINE_BLUEPRINT } = devtools.require("devtools/performance/global");
+  let { L10N } = devtools.require("devtools/performance/global");
+  let { TIMELINE_BLUEPRINT } = devtools.require("devtools/performance/markers");
   let { getMarkerLabel } = devtools.require("devtools/performance/marker-utils");
 
   // Hijack the markers massaging part of creating the waterfall view,

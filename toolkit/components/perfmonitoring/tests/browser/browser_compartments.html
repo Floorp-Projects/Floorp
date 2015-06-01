@@ -2,24 +2,19 @@
 <html>
 <head>
   <title>
-    browser_compartments.html
+    Main frame for test browser_compartments.js
   </title>
-  <script type="text/javascript">
-  // Use some CPU.
-  window.setInterval(() => {
-    // Compute an arbitrary value, print it out to make sure that the JS
-    // engine doesn't discard all our computation.
-    var date = Date.now();
-    var array = [];
-    var i = 0;
-    while (Date.now() - date <= 100) {
-      array[i%2] = i++;
-    }
-    console.log("Arbitrary value", array);
-  }, 300);
-  </script>
 </head>
 <body>
-browser_compartments.html
+Main frame.
+
+<iframe src="browser_compartments_frame.html?frame=1">
+  Subframe 1
+</iframe>
+
+<iframe src="browser_compartments_frame.html?frame=2">
+  Subframe 2.
+</iframe>
+
 </body>
 </html>

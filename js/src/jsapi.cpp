@@ -274,9 +274,10 @@ JS_GetEmptyString(JSRuntime* rt)
 namespace js {
 
 JS_PUBLIC_API(bool)
-GetPerformanceStats(JSRuntime* rt,
-                    PerformanceStatsVector& stats,
-                    PerformanceStats& processStats)
+IterPerformanceStats(JSContext* cx,
+                     PerformanceStatsWalker walker,
+                     PerformanceData* processStats,
+                     void* closure)
 {
     // As a PerformanceGroup is typically associated to several
     // compartments, use a HashSet to make sure that we only report
@@ -289,13 +290,16 @@ GetPerformanceStats(JSRuntime* rt,
         return false;
     }
 
+    JSRuntime* rt = JS_GetRuntime(cx);
     for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
         JSCompartment* compartment = c.get();
         if (!compartment->performanceMonitoring.isLinked()) {
             // Don't report compartments that do not even have a PerformanceGroup.
             continue;
         }
-        PerformanceGroup* group = compartment->performanceMonitoring.getGroup();
+
+        js::AutoCompartment autoCompartment(cx, compartment);
+        PerformanceGroup* group = compartment->performanceMonitoring.getGroup(cx);
 
         if (group->data.ticks == 0) {
             // Don't report compartments that have never been used.
@@ -308,38 +312,16 @@ GetPerformanceStats(JSRuntime* rt,
             continue;
         }
 
-        if (!stats.growBy(1)) {
-            // Memory issue
+        if (!(*walker)(cx, group->data, closure)) {
+            // Issue in callback
             return false;
         }
-        PerformanceStats* stat = &stats.back();
-        stat->isSystem = compartment->isSystem();
-        if (compartment->addonId)
-            stat->addonId = compartment->addonId;
-
-        if (compartment->addonId || !compartment->isSystem()) {
-            if (rt->compartmentNameCallback) {
-                (*rt->compartmentNameCallback)(rt, compartment,
-                                               stat->name,
-                                               mozilla::ArrayLength(stat->name));
-            } else {
-                strcpy(stat->name, "<unknown>");
-            }
-        } else {
-            strcpy(stat->name, "<platform>");
-        }
-        stat->performance = group->data;
         if (!set.add(ptr, group)) {
             // Memory issue
             return false;
         }
     }
-
-    strcpy(processStats.name, "<process>");
-    processStats.addonId = nullptr;
-    processStats.isSystem = true;
-    processStats.performance = rt->stopwatch.performance;
-
+    *processStats = rt->stopwatch.performance;
     return true;
 }
 
@@ -928,6 +910,7 @@ JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSScript* target
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     cx_->enterCompartment(target->compartment());
 }
+
 
 JSAutoCompartment::~JSAutoCompartment()
 {

@@ -6,7 +6,11 @@
  * while at the same time filtering by duration.
  */
 
-function test() {
+function run_test() {
+  run_next_test();
+}
+
+add_task(function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
 
   // Create a root node from a given samples array, filtering by time.
@@ -20,40 +24,38 @@ function test() {
 
   // Test the root node.
 
-  is(root.duration, endTime - startTime,
+  equal(root.duration, endTime - startTime,
     "The correct duration was calculated for the root node.");
 
-  is(root.calls.length, 1,
+  equal(root.calls.length, 1,
     "The correct number of child calls were calculated for the root node.");
   ok(getFrameNodePath(root, "A"),
     "The root node's only child call is correct.");
 
   // Test all the descendant nodes.
 
-  is(getFrameNodePath(root, "A").calls.length, 2,
+  equal(getFrameNodePath(root, "A").calls.length, 2,
     "The correct number of child calls were calculated for the 'A' node.");
   ok(getFrameNodePath(root, "A > B"),
     "The 'A' node has a 'B' child call.");
   ok(getFrameNodePath(root, "A > E"),
     "The 'A' node has a 'E' child call.");
 
-  is(getFrameNodePath(root, "A > B").calls.length, 1,
+  equal(getFrameNodePath(root, "A > B").calls.length, 1,
     "The correct number of child calls were calculated for the 'A > B' node.");
   ok(getFrameNodePath(root, "A > B > D"),
     "The 'A > B' node's only child call is correct.");
 
-  is(getFrameNodePath(root, "A > E").calls.length, 1,
+  equal(getFrameNodePath(root, "A > E").calls.length, 1,
     "The correct number of child calls were calculated for the 'A > E' node.");
   ok(getFrameNodePath(root, "A > E > F"),
     "The 'A > E' node's only child call is correct.");
 
-  is(getFrameNodePath(root, "A > B > D").calls.length, 0,
+  equal(getFrameNodePath(root, "A > B > D").calls.length, 0,
     "The correct number of child calls were calculated for the 'A > B > D' node.");
-  is(getFrameNodePath(root, "A > E > F").calls.length, 0,
+  equal(getFrameNodePath(root, "A > E > F").calls.length, 0,
     "The correct number of child calls were calculated for the 'A > E > F' node.");
-
-  finish();
-}
+});
 
 let gThread = synthesizeProfileForTest([{
   time: 5,
