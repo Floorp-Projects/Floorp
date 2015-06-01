@@ -53,8 +53,6 @@ const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
 
 const PING_FORMAT_VERSION = 4;
 
-// For midnight fuzzing we want to affect pings around midnight with this tolerance.
-const MIDNIGHT_TOLERANCE_FUZZ_MS = 5 * 60 * 1000;
 // We try to spread "midnight" pings out over this interval.
 const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * 60 * 1000;
 // We delay sending "midnight" pings on this client by this interval.
@@ -432,39 +430,28 @@ let TelemetrySendImpl = {
 
   /**
    * This helper calculates the next time that we can send pings at.
-   * Currently this mostly redistributes ping sends around midnight to avoid submission
-   * spikes around local midnight for daily pings.
+   * Currently this mostly redistributes ping sends from midnight until one hour after
+   * to avoid submission spikes around local midnight for daily pings.
    *
    * @param now Date The current time.
    * @return Number The next time (ms from UNIX epoch) when we can send pings.
    */
   _getNextPingSendTime: function(now) {
-    // 1. First we check if the time is between 11pm and 1am. If it's not, we send
+    // 1. First we check if the time is between 0am and 1am. If it's not, we send
     // immediately.
-    // 2. If we confirmed the time is indeed between 11pm and 1am in step 1, we
-    // then check if the time is also 11:55pm or later. If it's not, we send
-    // immediately.
-    // 3. Finally, if the time is between 11:55pm and 1am, we disallow sending
-    // before (midnight + fuzzing delay), which is a random time between 12am-1am
+    // 2. If we confirmed the time is indeed between 0am and 1am in step 1, we disallow
+    // sending before (midnight + fuzzing delay), which is a random time between 0am-1am
     // (decided at startup).
 
-    const midnightDate = Utils.getNearestMidnight(now, MIDNIGHT_FUZZING_INTERVAL_MS);
-
-    // Don't delay ping if we are not close to midnight.
-    if (!midnightDate) {
+    const midnight = Utils.truncateToDays(now);
+    // Don't delay pings if we are not within the fuzzing interval.
+    if ((now.getTime() - midnight.getTime()) > MIDNIGHT_FUZZING_INTERVAL_MS) {
       return now.getTime();
     }
 
     // Delay ping send if we are within the midnight fuzzing range.
-    // This is from: |midnight - MIDNIGHT_TOLERANCE_FUZZ_MS|
-    // to: |midnight + MIDNIGHT_FUZZING_INTERVAL_MS|
-    const midnightRangeStart = midnightDate.getTime() - MIDNIGHT_TOLERANCE_FUZZ_MS;
-    if (now.getTime() >= midnightRangeStart) {
-      // We spread those ping sends out between |midnight| and |midnight + midnightPingFuzzingDelay|.
-      return midnightDate.getTime() + Policy.midnightPingFuzzingDelay();
-    }
-
-    return now.getTime();
+    // We spread those ping sends out between |midnight| and |midnight + midnightPingFuzzingDelay|.
+    return midnight.getTime() + Policy.midnightPingFuzzingDelay();
   },
 
   /**
