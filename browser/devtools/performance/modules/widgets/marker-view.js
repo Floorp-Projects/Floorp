@@ -11,7 +11,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
 const { AbstractTreeItem } = require("resource:///modules/devtools/AbstractTreeItem.jsm");
-const { TIMELINE_BLUEPRINT: ORIGINAL_BP } = require("devtools/performance/global");
+const { TIMELINE_BLUEPRINT: ORIGINAL_BP } = require("devtools/performance/markers");
 
 loader.lazyRequireGetter(this, "MarkerUtils",
   "devtools/performance/marker-utils");

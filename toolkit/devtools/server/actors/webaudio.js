@@ -12,7 +12,7 @@ const events = require("sdk/event/core");
 const { on: systemOn, off: systemOff } = require("sdk/system/events");
 const protocol = require("devtools/server/protocol");
 const { CallWatcherActor, CallWatcherFront } = require("devtools/server/actors/call-watcher");
-const { ThreadActor } = require("devtools/server/actors/script");
+const { createValueGrip } = require("devtools/server/actors/object");
 const AutomationTimeline = require("./utils/automation-timeline");
 const { on, once, off, emit } = events;
 const { types, method, Arg, Option, RetVal } = protocol;
@@ -209,13 +209,8 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
     // AudioBuffer or Float32Array references and the like,
     // so this just formats the value to be displayed in the VariablesView,
     // without using real grips and managing via actor pools.
-    let grip;
-    try {
-      grip = ThreadActor.prototype.createValueGrip(value);
-    }
-    catch (e) {
-      grip = createObjectGrip(value);
-    }
+    let grip = createValueGrip(value, null, createObjectGrip);
+
     return grip;
   }, {
     request: {
