@@ -12,6 +12,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Atomics.h"
 
 class nsIRunnable;
 
@@ -88,7 +89,7 @@ private:
   mozilla::Monitor mMonitor;
   PRThread* mThread;
   nsCOMPtr<nsIThread> mXPCOMThread;
-  uint32_t mLowestLevelWaiting;
+  Atomic<uint32_t, Relaxed> mLowestLevelWaiting;
   uint32_t mCurrentlyExecutingLevel;
   nsTArray<nsCOMPtr<nsIRunnable> > mEventQueue[LAST_LEVEL];
 
