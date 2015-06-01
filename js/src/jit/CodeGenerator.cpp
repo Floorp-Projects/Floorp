@@ -1720,7 +1720,7 @@ CodeGenerator::visitLambda(LLambda* lir)
     masm.bind(ool->rejoin());
 }
 
-typedef JSObject* (*LambdaArrowFn)(JSContext*, HandleFunction, HandleObject, HandleValue);
+typedef JSObject* (*LambdaArrowFn)(JSContext*, HandleFunction, HandleObject, HandleValue, HandleValue);
 static const VMFunction LambdaArrowInfo = FunctionInfo<LambdaArrowFn>(js::LambdaArrow);
 
 void
@@ -1728,12 +1728,13 @@ CodeGenerator::visitLambdaArrow(LLambdaArrow* lir)
 {
     Register scopeChain = ToRegister(lir->scopeChain());
     ValueOperand thisv = ToValue(lir, LLambdaArrow::ThisValue);
+    ValueOperand newTargetv = ToValue(lir, LLambdaArrow::NewTargetValue);
     Register output = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
     const LambdaFunctionInfo& info = lir->mir()->info();
 
     OutOfLineCode* ool = oolCallVM(LambdaArrowInfo, lir,
-                                   (ArgList(), ImmGCPtr(info.fun), scopeChain, thisv),
+                                   (ArgList(), ImmGCPtr(info.fun), scopeChain, thisv, newTargetv),
                                    StoreRegisterTo(output));
 
     MOZ_ASSERT(!info.useSingletonForClone);
@@ -1754,8 +1755,10 @@ CodeGenerator::visitLambdaArrow(LLambdaArrow* lir)
     MOZ_ASSERT(info.flags & JSFunction::EXTENDED);
     static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2, "All slots must be initialized");
     static_assert(FunctionExtended::ARROW_THIS_SLOT == 0, "|this| must be stored in first slot");
+    static_assert(FunctionExtended::ARROW_NEWTARGET_SLOT == 1,
+                  "|new.target| must be stored in second slot");
     masm.storeValue(thisv, Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
-    masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
+    masm.storeValue(newTargetv, Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
 
     masm.bind(ool->rejoin());
 }
@@ -4963,6 +4966,14 @@ CodeGenerator::visitLoadArrowThis(LLoadArrowThis* lir)
     Register callee = ToRegister(lir->callee());
     ValueOperand output = ToOutValue(lir);
     masm.loadValue(Address(callee, FunctionExtended::offsetOfArrowThisSlot()), output);
+}
+
+void
+CodeGenerator::visitArrowNewTarget(LArrowNewTarget* lir)
+{
+    Register callee = ToRegister(lir->callee());
+    ValueOperand output = ToOutValue(lir);
+    masm.loadValue(Address(callee, FunctionExtended::offsetOfArrowNewTargetSlot()), output);
 }
 
 void

@@ -6707,6 +6707,36 @@ class MLoadArrowThis
     }
 };
 
+// Load an arrow function's |new.target| value.
+class MArrowNewTarget
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    explicit MArrowNewTarget(MDefinition* callee)
+      : MUnaryInstruction(callee)
+    {
+        setResultType(MIRType_Value);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(ArrowNewTarget)
+
+    static MArrowNewTarget* New(TempAllocator& alloc, MDefinition* callee) {
+        return new(alloc) MArrowNewTarget(callee);
+    }
+    MDefinition* callee() const {
+        return getOperand(0);
+    }
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const override {
+        // An arrow function's lexical |this| value is immutable.
+        return AliasSet::None();
+    }
+};
+
 class MPhi final
   : public MDefinition,
     public InlineListNode<MPhi>,
@@ -7539,14 +7569,14 @@ class MLambda
 };
 
 class MLambdaArrow
-  : public MBinaryInstruction,
-    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
+  : public MTernaryInstruction,
+    public Mix3Policy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2> >::Data
 {
     const LambdaFunctionInfo info_;
 
     MLambdaArrow(CompilerConstraintList* constraints, MDefinition* scopeChain,
-                 MDefinition* this_, JSFunction* fun)
-      : MBinaryInstruction(scopeChain, this_), info_(fun)
+                 MDefinition* this_, MDefinition* newTarget_, JSFunction* fun)
+      : MTernaryInstruction(scopeChain, this_, newTarget_), info_(fun)
     {
         setResultType(MIRType_Object);
         MOZ_ASSERT(!ObjectGroup::useSingletonForClone(fun));
@@ -7558,15 +7588,19 @@ class MLambdaArrow
     INSTRUCTION_HEADER(LambdaArrow)
 
     static MLambdaArrow* New(TempAllocator& alloc, CompilerConstraintList* constraints,
-                             MDefinition* scopeChain, MDefinition* this_, JSFunction* fun)
+                             MDefinition* scopeChain, MDefinition* this_, MDefinition* newTarget_,
+                             JSFunction* fun)
     {
-        return new(alloc) MLambdaArrow(constraints, scopeChain, this_, fun);
+        return new(alloc) MLambdaArrow(constraints, scopeChain, this_, newTarget_, fun);
     }
     MDefinition* scopeChain() const {
         return getOperand(0);
     }
     MDefinition* thisDef() const {
         return getOperand(1);
+    }
+    MDefinition* newTargetDef() const {
+        return getOperand(2);
     }
     const LambdaFunctionInfo& info() const {
         return info_;
