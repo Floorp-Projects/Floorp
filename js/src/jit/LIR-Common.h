@@ -1533,6 +1533,10 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
     uint32_t numActualArgs() const {
         return mir()->numActualArgs();
     }
+    
+    bool isConstructing() const {
+        return mir()->isConstructing();
+    }
 };
 
 // Generates a polymorphic callsite, wherein the function being called is

@@ -3191,7 +3191,7 @@ array_of(JSContext* cx, unsigned argc, Value* vp)
     {
         RootedValue v(cx);
         Value argv[1] = {NumberValue(args.length())};
-        if (!InvokeConstructor(cx, args.thisv(), 1, argv, &v))
+        if (!InvokeConstructor(cx, args.thisv(), 1, argv, false, &v))
             return false;
         obj = ToObject(cx, v);
         if (!obj)
@@ -3286,6 +3286,10 @@ bool
 js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    
+    if (args.isConstructing())
+        MOZ_ASSERT(args.newTarget().toObject().as<JSFunction>().native() == js::ArrayConstructor);
+    
     RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
     if (!group)
         return false;
