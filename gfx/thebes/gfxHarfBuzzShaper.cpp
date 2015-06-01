@@ -1791,10 +1791,18 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext     *aContext,
             charGlyphs[baseCharIndex].SetSimpleGlyph(advance,
                                                      ginfo[glyphStart].codepoint);
         } else {
-            // collect all glyphs in a list to be assigned to the first char;
+            // Collect all glyphs in a list to be assigned to the first char;
             // there must be at least one in the clump, and we already measured
             // its advance, hence the placement of the loop-exit test and the
-            // measurement of the next glyph
+            // measurement of the next glyph.
+            // For vertical orientation, we add a "base offset" to compensate
+            // for the positioning within the cluster being based on horizontal
+            // glyph origin/offset.
+            hb_position_t baseIOffset, baseBOffset;
+            if (aVertical) {
+                baseIOffset = 2 * (i_offset - i_advance);
+                baseBOffset = GetGlyphHAdvance(ginfo[glyphStart].codepoint);
+            }
             while (1) {
                 gfxTextRun::DetailedGlyph* details =
                     detailedGlyphs.AppendElement();
@@ -1817,9 +1825,9 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext     *aContext,
                 }
 
                 if (aVertical) {
-                    i_offset = posInfo[glyphStart].y_offset;
+                    i_offset = baseIOffset - posInfo[glyphStart].y_offset;
                     i_advance = posInfo[glyphStart].y_advance;
-                    b_offset = posInfo[glyphStart].x_offset;
+                    b_offset = baseBOffset - posInfo[glyphStart].x_offset;
                     b_advance = posInfo[glyphStart].x_advance;
                 } else {
                     i_offset = posInfo[glyphStart].x_offset;
