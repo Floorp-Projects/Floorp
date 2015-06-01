@@ -193,20 +193,6 @@ Telephony::GetServiceId(const Optional<uint32_t>& aServiceId,
   return serviceId;
 }
 
-bool
-Telephony::HasDialingCall()
-{
-  for (uint32_t i = 0; i < mCalls.Length(); i++) {
-    const nsRefPtr<TelephonyCall>& call = mCalls[i];
-    if (call->CallState() > nsITelephonyService::CALL_STATE_UNKNOWN &&
-        call->CallState() < nsITelephonyService::CALL_STATE_CONNECTED) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 already_AddRefed<Promise>
 Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
                         bool aEmergency, ErrorResult& aRv)
@@ -223,12 +209,6 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
 
   if (!IsValidNumber(aNumber) || !IsValidServiceId(aServiceId)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return promise.forget();
-  }
-
-  // We only support one outgoing call at a time.
-  if (HasDialingCall()) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
