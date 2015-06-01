@@ -1018,6 +1018,23 @@ describe("loop.store.ActiveRoomStore", function () {
 
       expect(store.getStoreState().receivingScreenShare).eql(true);
     });
+
+    it("should delete the screen remote video dimensions if screen sharing is not active", function() {
+      store.setStoreState({
+        remoteVideoDimensions: {
+          screen: {fake: 10},
+          camera: {fake: 20}
+        }
+      });
+
+      store.receivingScreenShare(new sharedActions.ReceivingScreenShare({
+        receiving: false
+      }));
+
+      expect(store.getStoreState().remoteVideoDimensions).eql({
+        camera: {fake: 20}
+      });
+    });
   });
 
   describe("#startScreenShare", function() {
