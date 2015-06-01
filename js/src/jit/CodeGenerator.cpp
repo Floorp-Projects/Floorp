@@ -3485,8 +3485,8 @@ CodeGenerator::visitFilterArgumentsOrEvalV(LFilterArgumentsOrEvalV* lir)
     masm.bind(&done);
 }
 
-typedef bool (*DirectEvalSFn)(JSContext*, HandleObject, HandleScript, HandleValue, HandleString,
-                              jsbytecode*, MutableHandleValue);
+typedef bool (*DirectEvalSFn)(JSContext*, HandleObject, HandleScript, HandleValue, HandleValue,
+                              HandleString, jsbytecode*, MutableHandleValue);
 static const VMFunction DirectEvalStringInfo = FunctionInfo<DirectEvalSFn>(DirectEvalStringFromIon);
 
 void
@@ -3497,6 +3497,7 @@ CodeGenerator::visitCallDirectEval(LCallDirectEval* lir)
 
     pushArg(ImmPtr(lir->mir()->pc()));
     pushArg(string);
+    pushArg(ToValue(lir, LCallDirectEval::NewTarget));
     pushArg(ToValue(lir, LCallDirectEval::ThisValue));
     pushArg(ImmGCPtr(gen->info().script()));
     pushArg(scopeChain);

@@ -105,7 +105,8 @@ InvokeConstructor(JSContext* cx, Value fval, unsigned argc, const Value* argv,
  */
 extern bool
 ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChain, const Value& thisv,
-              ExecuteType type, AbstractFramePtr evalInFrame, Value* result);
+              const Value& newTargetVal, ExecuteType type, AbstractFramePtr evalInFrame,
+              Value* result);
 
 /* Execute a script with the given scopeChain as global code. */
 extern bool
@@ -163,23 +164,28 @@ class ExecuteState : public RunState
     ExecuteType type_;
 
     RootedValue thisv_;
+    RootedValue newTargetValue_;
     RootedObject scopeChain_;
 
     AbstractFramePtr evalInFrame_;
     Value* result_;
 
   public:
-    ExecuteState(JSContext* cx, JSScript* script, const Value& thisv, JSObject& scopeChain,
-                 ExecuteType type, AbstractFramePtr evalInFrame, Value* result)
+    ExecuteState(JSContext* cx, JSScript* script, const Value& thisv, const Value& newTargetValue,
+                 JSObject& scopeChain, ExecuteType type, AbstractFramePtr evalInFrame,
+                 Value* result)
       : RunState(cx, Execute, script),
         type_(type),
         thisv_(cx, thisv),
+        newTargetValue_(cx, newTargetValue),
         scopeChain_(cx, &scopeChain),
         evalInFrame_(evalInFrame),
         result_(result)
     { }
 
     Value* addressOfThisv() { return thisv_.address(); }
+    Value thisv() { return thisv_; }
+    Value newTarget() { return newTargetValue_; }
     JSObject* scopeChain() const { return scopeChain_; }
     ExecuteType type() const { return type_; }
 
