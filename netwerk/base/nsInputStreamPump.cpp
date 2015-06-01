@@ -26,7 +26,7 @@ static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 //
 static PRLogModuleInfo *gStreamPumpLog = nullptr;
 #undef LOG
-#define LOG(args) MOZ_LOG(gStreamPumpLog, PR_LOG_DEBUG, args)
+#define LOG(args) MOZ_LOG(gStreamPumpLog, mozilla::LogLevel::Debug, args)
 
 //-----------------------------------------------------------------------------
 // nsInputStreamPump methods

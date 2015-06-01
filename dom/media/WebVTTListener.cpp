@@ -29,7 +29,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(WebVTTListener)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebVTTListener)
 
 PRLogModuleInfo* gTextTrackLog;
-# define VTT_LOG(...) MOZ_LOG(gTextTrackLog, PR_LOG_DEBUG, (__VA_ARGS__))
+# define VTT_LOG(...) MOZ_LOG(gTextTrackLog, LogLevel::Debug, (__VA_ARGS__))
 
 WebVTTListener::WebVTTListener(HTMLTrackElement* aElement)
   : mElement(aElement)

@@ -44,7 +44,7 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   vprintf(format, args);
 #else
 
-  PRLogModuleLevel level = static_cast<PRLogModuleLevel>(priority);
+  mozilla::LogLevel level = static_cast<mozilla::LogLevel>(priority);
 
   GetSignalingLogInfo();
 

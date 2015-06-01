@@ -22,7 +22,7 @@ namespace mozilla {
 
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(x, ...) \
-  MOZ_LOG(gMediaDecoderLog, PR_LOG_DEBUG, ("Decoder=%p " x, mDecoder, ##__VA_ARGS__))
+  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("Decoder=%p " x, mDecoder, ##__VA_ARGS__))
 
 // Same workaround as MediaDecoderStateMachine.cpp.
 #define DECODER_WARN_HELPER(a, b) NS_WARNING b

@@ -282,7 +282,7 @@ LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
   PRLogModuleInfo* logModule = IndexedDatabaseManager::GetLoggingModule();
   MOZ_ASSERT(logModule);
 
-  static const PRLogModuleLevel logLevel = PR_LOG_WARNING;
+  static const mozilla::LogLevel logLevel = LogLevel::Warning;
 
   if (MOZ_LOG_TEST(logModule, logLevel) ||
       (aUseProfiler && profiler_is_active())) {

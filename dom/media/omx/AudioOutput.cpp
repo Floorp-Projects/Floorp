@@ -96,13 +96,13 @@ status_t AudioOutput::Open(uint32_t aSampleRate,
     return BAD_VALUE;
   }
 
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("open(%u, %d, 0x%x, 0x%x, %d 0x%x)",
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("open(%u, %d, 0x%x, 0x%x, %d 0x%x)",
       aSampleRate, aChannelCount, aChannelMask, aFormat, mSessionId, aFlags));
 
   if (aChannelMask == CHANNEL_MASK_USE_CHANNEL_ORDER) {
     aChannelMask = audio_channel_out_mask_from_count(aChannelCount);
     if (0 == aChannelMask) {
-      AUDIO_OFFLOAD_LOG(PR_LOG_ERROR, ("open() error, can\'t derive mask for"
+      AUDIO_OFFLOAD_LOG(LogLevel::Error, ("open() error, can\'t derive mask for"
           " %d audio channels", aChannelCount));
       return NO_INIT;
     }
@@ -127,7 +127,7 @@ status_t AudioOutput::Open(uint32_t aSampleRate,
       mUid);
 
   if ((!t.get()) || (t->initCheck() != NO_ERROR)) {
-    AUDIO_OFFLOAD_LOG(PR_LOG_ERROR, ("Unable to create audio track"));
+    AUDIO_OFFLOAD_LOG(LogLevel::Error, ("Unable to create audio track"));
     delete newcbd;
     return NO_INIT;
   }
@@ -141,7 +141,7 @@ status_t AudioOutput::Open(uint32_t aSampleRate,
 
 status_t AudioOutput::Start()
 {
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("%s", __PRETTY_FUNCTION__));
   if (!mTrack.get()) {
     return NO_INIT;
   }
@@ -151,7 +151,7 @@ status_t AudioOutput::Start()
 
 void AudioOutput::Stop()
 {
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("%s", __PRETTY_FUNCTION__));
   if (mTrack.get()) {
     mTrack->stop();
   }
@@ -173,7 +173,7 @@ void AudioOutput::Pause()
 
 void AudioOutput::Close()
 {
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
+  AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("%s", __PRETTY_FUNCTION__));
   mTrack.clear();
 
   delete mCallbackData;
@@ -215,19 +215,19 @@ void AudioOutput::CallbackWrapper(int aEvent, void* aCookie, void* aInfo)
     } break;
 
     case AudioTrack::EVENT_STREAM_END:
-      AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Callback wrapper: EVENT_STREAM_END"));
+      AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("Callback wrapper: EVENT_STREAM_END"));
       (*me->mCallback)(me, nullptr /* buffer */, 0 /* size */,
           me->mCallbackCookie, CB_EVENT_STREAM_END);
       break;
 
     case AudioTrack::EVENT_NEW_IAUDIOTRACK :
-      AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Callback wrapper: EVENT_TEAR_DOWN"));
+      AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("Callback wrapper: EVENT_TEAR_DOWN"));
       (*me->mCallback)(me,  nullptr /* buffer */, 0 /* size */,
           me->mCallbackCookie, CB_EVENT_TEAR_DOWN);
       break;
 
     default:
-      AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("received unknown event type: %d in"
+      AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("received unknown event type: %d in"
           " Callback wrapper!", aEvent));
       break;
   }

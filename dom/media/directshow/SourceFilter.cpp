@@ -21,7 +21,7 @@ namespace mozilla {
 
 #if defined (DEBUG_SOURCE_TRACE)
 PRLogModuleInfo* GetDirectShowLog();
-#define DIRECTSHOW_LOG(...) MOZ_LOG(GetDirectShowLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define DIRECTSHOW_LOG(...) MOZ_LOG(GetDirectShowLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 #else
 #define DIRECTSHOW_LOG(...)
 #endif
