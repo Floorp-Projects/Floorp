@@ -93,7 +93,7 @@ private:
   uint32_t mCurrentlyExecutingLevel;
   nsTArray<nsCOMPtr<nsIRunnable> > mEventQueue[LAST_LEVEL];
 
-  bool mHasXPCOMEvents;
+  Atomic<bool, Relaxed> mHasXPCOMEvents;
   bool mRerunCurrentEvent;
   bool mShutdown;
   DebugOnly<bool> mInsideLoop;
