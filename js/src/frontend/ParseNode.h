@@ -155,6 +155,7 @@ class UpvarCookie
     F(CLASSNAMES) \
     F(SUPERPROP) \
     F(SUPERELEM) \
+    F(NEWTARGET) \
     \
     /* Unary operators. */ \
     F(TYPEOF) \
