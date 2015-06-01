@@ -101,20 +101,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     NonAssertingLabel returnLabel_;
     NonAssertingLabel deoptLabel_;
 
-    inline Operand ToOperand(const LAllocation& a) {
-        if (a.isGeneralReg())
-            return Operand(a.toGeneralReg()->reg());
-        if (a.isFloatReg())
-            return Operand(a.toFloatReg()->reg());
-        return Operand(StackPointer, ToStackOffset(&a));
-    }
-    inline Operand ToOperand(const LAllocation* a) {
-        return ToOperand(*a);
-    }
-    inline Operand ToOperand(const LDefinition* def) {
-        return ToOperand(def->output());
-    }
-
     MoveOperand toMoveOperand(LAllocation a) const;
 
     void bailoutIf(Assembler::Condition condition, LSnapshot* snapshot);

@@ -45,6 +45,7 @@
 #include "jsobjinlines.h"
 
 #include "frontend/ParseNode-inl.h"
+#include "jit/MacroAssembler-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/Stack-inl.h"
 
