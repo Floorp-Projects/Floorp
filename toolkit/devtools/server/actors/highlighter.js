@@ -130,6 +130,8 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     this._inspector = inspector;
     this._walker = this._inspector.walker;
     this._tabActor = this._inspector.tabActor;
+    this._highlighterEnv = new HighlighterEnvironment();
+    this._highlighterEnv.initFromTabActor(this._tabActor);
 
     this._highlighterReady = this._highlighterReady.bind(this);
     this._highlighterHidden = this._highlighterHidden.bind(this);
@@ -146,15 +148,15 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   get conn() this._inspector && this._inspector.conn,
 
   _createHighlighter: function() {
-    this._isPreviousWindowXUL = isXUL(this._tabActor);
+    this._isPreviousWindowXUL = isXUL(this._tabActor.window);
 
     if (!this._isPreviousWindowXUL) {
-      this._highlighter = new BoxModelHighlighter(this._tabActor,
-                                                          this._inspector);
+      this._highlighter = new BoxModelHighlighter(this._highlighterEnv,
+                                                  this._inspector);
       this._highlighter.on("ready", this._highlighterReady);
       this._highlighter.on("hide", this._highlighterHidden);
     } else {
-      this._highlighter = new SimpleOutlineHighlighter(this._tabActor);
+      this._highlighter = new SimpleOutlineHighlighter(this._highlighterEnv);
     }
   },
 
@@ -177,7 +179,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     }
 
     // Only rebuild the highlighter if the window type changed.
-    if (isXUL(this._tabActor) !== this._isPreviousWindowXUL) {
+    if (isXUL(this._tabActor.window) !== this._isPreviousWindowXUL) {
       this._destroyHighlighter();
       this._createHighlighter();
     }
@@ -188,6 +190,10 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
 
     this._destroyHighlighter();
     events.off(this._tabActor, "navigate", this._onNavigate);
+
+    this._highlighterEnv.destroy();
+    this._highlighterEnv = null;
+
     this._autohide = null;
     this._inspector = null;
     this._walker = null;
@@ -357,7 +363,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   },
 
   _startPickerListeners: function() {
-    let target = getPageListenerTarget(this._tabActor);
+    let target = this._highlighterEnv.pageListenerTarget;
     target.addEventListener("mousemove", this._onHovered, true);
     target.addEventListener("click", this._onPick, true);
     target.addEventListener("mousedown", this._preventContentEvent, true);
@@ -368,7 +374,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   },
 
   _stopPickerListeners: function() {
-    let target = getPageListenerTarget(this._tabActor);
+    let target = this._highlighterEnv.pageListenerTarget;
     target.removeEventListener("mousemove", this._onHovered, true);
     target.removeEventListener("click", this._onPick, true);
     target.removeEventListener("mousedown", this._preventContentEvent, true);
@@ -425,8 +431,10 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
 
     // The assumption is that all custom highlighters need the canvasframe
     // container to append their elements, so if this is a XUL window, bail out.
-    if (!isXUL(this._inspector.tabActor)) {
-      this._highlighter = new constructor(inspector.tabActor);
+    if (!isXUL(this._inspector.tabActor.window)) {
+      this._highlighterEnv = new HighlighterEnvironment();
+      this._highlighterEnv.initFromTabActor(inspector.tabActor);
+      this._highlighter = new constructor(this._highlighterEnv);
     } else {
       throw new Error("Custom " + typeName +
         "highlighter cannot be created in a XUL window");
@@ -439,6 +447,7 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
   destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
     this.finalize();
+    this._inspector = null;
   },
 
   /**
@@ -485,10 +494,16 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
    * is destroyed.
    */
   finalize: method(function() {
+    if (this._highlighterEnv) {
+      this._highlighterEnv.destroy();
+      this._highlighterEnv = null;
+    }
+
     if (this._highlighter) {
       this._highlighter.destroy();
       this._highlighter = null;
     }
+
   }, {
     oneway: true
   })
@@ -509,23 +524,23 @@ let CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
  * described in AnonymousContent.webidl.
  * To retrieve the AnonymousContent instance, use the content getter.
  *
- * @param {TabActor} tabActor
- *        The tabactor which windows will be used to insert the node
+ * @param {HighlighterEnv} highlighterEnv
+ *        The environemnt which windows will be used to insert the node.
  * @param {Function} nodeBuilder
  *        A function that, when executed, returns a DOM node to be inserted into
- *        the canvasFrame
+ *        the canvasFrame.
  */
-function CanvasFrameAnonymousContentHelper(tabActor, nodeBuilder) {
-  this.tabActor = tabActor;
+function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
+  this.highlighterEnv = highlighterEnv;
   this.nodeBuilder = nodeBuilder;
-  this.anonymousContentDocument = this.tabActor.window.document;
+  this.anonymousContentDocument = this.highlighterEnv.document;
   // XXX the next line is a wallpaper for bug 1123362.
   this.anonymousContentGlobal = Cu.getGlobalForObject(this.anonymousContentDocument);
 
   this._insert();
 
   this._onNavigate = this._onNavigate.bind(this);
-  events.on(this.tabActor, "navigate", this._onNavigate);
+  this.highlighterEnv.on("navigate", this._onNavigate);
 
   this.listeners = new Map();
 }
@@ -540,8 +555,8 @@ CanvasFrameAnonymousContentHelper.prototype = {
       let doc = this.anonymousContentDocument;
       doc.removeAnonymousContent(this._content);
     } catch (e) {}
-    events.off(this.tabActor, "navigate", this._onNavigate);
-    this.tabActor = this.nodeBuilder = this._content = null;
+    this.highlighterEnv.off("navigate", this._onNavigate);
+    this.highlighterEnv = this.nodeBuilder = this._content = null;
     this.anonymousContentDocument = null;
     this.anonymousContentGlobal = null;
 
@@ -551,11 +566,11 @@ CanvasFrameAnonymousContentHelper.prototype = {
   _insert: function() {
     // Insert the content node only if the page isn't in a XUL window, and if
     // the document still exists.
-    if (!this.tabActor.window.document.documentElement ||
-        isXUL(this.tabActor)) {
+    if (!this.highlighterEnv.document.documentElement ||
+        isXUL(this.highlighterEnv.window)) {
       return;
     }
-    let doc = this.tabActor.window.document;
+    let doc = this.highlighterEnv.document;
 
     // On B2G, for example, when connecting to keyboard just after startup,
     // we connect to a hidden document, which doesn't accept
@@ -575,17 +590,17 @@ CanvasFrameAnonymousContentHelper.prototype = {
     // <style scoped> doesn't work inside anonymous content (see bug 1086532).
     // If it did, highlighter.css would be injected as an anonymous content
     // node using CanvasFrameAnonymousContentHelper instead.
-    installHelperSheet(this.tabActor.window,
+    installHelperSheet(this.highlighterEnv.window,
       "@import url('" + HIGHLIGHTER_STYLESHEET_URI + "');");
     let node = this.nodeBuilder();
     this._content = doc.insertAnonymousContent(node);
   },
 
-  _onNavigate: function({isTopLevel}) {
+  _onNavigate: function(e, {isTopLevel}) {
     if (isTopLevel) {
       this._removeAllListeners();
       this._insert();
-      this.anonymousContentDocument = this.tabActor.window.document;
+      this.anonymousContentDocument = this.highlighterEnv.document;
     }
   },
 
@@ -665,7 +680,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
     // If no one is listening for this type of event yet, add one listener.
     if (!this.listeners.has(type)) {
-      let target = getPageListenerTarget(this.tabActor);
+      let target = this.highlighterEnv.pageListenerTarget;
       target.addEventListener(type, this, true);
       // Each type entry in the map is a map of ids:handlers.
       this.listeners.set(type, new Map);
@@ -691,7 +706,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
     // If no one is listening for event type anymore, remove the listener.
     if (!this.listeners.has(type)) {
-      let target = getPageListenerTarget(this.tabActor);
+      let target = this.highlighterEnv.pageListenerTarget;
       target.removeEventListener(type, this, true);
     }
   },
@@ -735,8 +750,8 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 
   _removeAllListeners: function() {
-    if (this.tabActor) {
-      let target = getPageListenerTarget(this.tabActor);
+    if (this.highlighterEnv) {
+      let target = this.highlighterEnv.pageListenerTarget;
       for (let [type] of this.listeners) {
         target.removeEventListener(type, this, true);
       }
@@ -823,11 +838,11 @@ CanvasFrameAnonymousContentHelper.prototype = {
  * - hidden
  * - updated
  */
-function AutoRefreshHighlighter(tabActor) {
+function AutoRefreshHighlighter(highlighterEnv) {
   EventEmitter.decorate(this);
 
-  this.tabActor = tabActor;
-  this.win = tabActor.window;
+  this.highlighterEnv = highlighterEnv;
+  this.win = highlighterEnv.window;
 
   this.currentNode = null;
   this.currentQuads = {};
@@ -973,7 +988,7 @@ AutoRefreshHighlighter.prototype = {
   destroy: function() {
     this.hide();
 
-    this.tabActor = null;
+    this.highlighterEnv = null;
     this.win = null;
     this.currentNode = null;
     this.layoutHelpers = null;
@@ -988,7 +1003,7 @@ AutoRefreshHighlighter.prototype = {
  *
  * Usage example:
  *
- * let h = new BoxModelHighlighter(browser);
+ * let h = new BoxModelHighlighter(env);
  * h.show(node, options);
  * h.hide();
  * h.destroy();
@@ -1036,10 +1051,10 @@ AutoRefreshHighlighter.prototype = {
  *   </div>
  * </div>
  */
-function BoxModelHighlighter(tabActor) {
-  AutoRefreshHighlighter.call(this, tabActor);
+function BoxModelHighlighter(highlighterEnv) {
+  AutoRefreshHighlighter.call(this, highlighterEnv);
 
-  this.markup = new CanvasFrameAnonymousContentHelper(this.tabActor,
+  this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
     this._buildMarkup.bind(this));
 
   /**
@@ -1647,10 +1662,10 @@ exports.BoxModelHighlighter = BoxModelHighlighter;
  * transformed element and an outline around where it would be if untransformed
  * as well as arrows connecting the 2 outlines' corners.
  */
-function CssTransformHighlighter(tabActor) {
-  AutoRefreshHighlighter.call(this, tabActor);
+function CssTransformHighlighter(highlighterEnv) {
+  AutoRefreshHighlighter.call(this, highlighterEnv);
 
-  this.markup = new CanvasFrameAnonymousContentHelper(this.tabActor,
+  this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
     this._buildMarkup.bind(this));
 }
 
@@ -1877,8 +1892,8 @@ exports.CssTransformHighlighter = CssTransformHighlighter;
  * document of the provided context node and then uses the BoxModelHighlighter
  * to highlight the matching nodes
  */
-function SelectorHighlighter(tabActor) {
-  this.tabActor = tabActor;
+function SelectorHighlighter(highlighterEnv) {
+  this.highlighterEnv = highlighterEnv;
   this._highlighters = [];
 }
 
@@ -1914,7 +1929,7 @@ SelectorHighlighter.prototype = {
         break;
       }
 
-      let highlighter = new BoxModelHighlighter(this.tabActor);
+      let highlighter = new BoxModelHighlighter(this.highlighterEnv);
       if (options.fill) {
         highlighter.regionFill[options.region || "border"] = options.fill;
       }
@@ -1933,7 +1948,7 @@ SelectorHighlighter.prototype = {
 
   destroy: function() {
     this.hide();
-    this.tabActor = null;
+    this.highlighterEnv = null;
   }
 };
 register(SelectorHighlighter);
@@ -1946,10 +1961,10 @@ exports.SelectorHighlighter = SelectorHighlighter;
  * It also does *not* update dynamically, it only highlights a rect and remains
  * there as long as it is shown.
  */
-function RectHighlighter(tabActor) {
-  this.win = tabActor.window;
+function RectHighlighter(highlighterEnv) {
+  this.win = highlighterEnv.window;
   this.layoutHelpers = new LayoutHelpers(this.win);
-  this.markup = new CanvasFrameAnonymousContentHelper(tabActor,
+  this.markup = new CanvasFrameAnonymousContentHelper(highlighterEnv,
     this._buildMarkup.bind(this));
 }
 
@@ -2113,13 +2128,13 @@ let GeoProp = {
  * Note that the class name contains the word Editor because the aim is for the
  * handles to be draggable in content to make the geometry editable.
  */
-function GeometryEditorHighlighter(tabActor) {
-  AutoRefreshHighlighter.call(this, tabActor);
+function GeometryEditorHighlighter(highlighterEnv) {
+  AutoRefreshHighlighter.call(this, highlighterEnv);
 
   // The list of element geometry properties that can be set.
   this.definedProperties = new Map();
 
-  this.markup = new CanvasFrameAnonymousContentHelper(tabActor,
+  this.markup = new CanvasFrameAnonymousContentHelper(highlighterEnv,
     this._buildMarkup.bind(this));
 }
 
@@ -2627,9 +2642,9 @@ exports.GeometryEditorHighlighter = GeometryEditorHighlighter;
  * vertical rules on the page, along the top and left edges, with pixel
  * graduations, useful for users to quickly check distances
  */
-function RulersHighlighter(tabActor) {
-  this.win = tabActor.window;
-  this.markup = new CanvasFrameAnonymousContentHelper(tabActor,
+function RulersHighlighter(highlighterEnv) {
+  this.win = highlighterEnv.window;
+  this.markup = new CanvasFrameAnonymousContentHelper(highlighterEnv,
     this._buildMarkup.bind(this));
 
   this.win.addEventListener("scroll", this, true);
@@ -2850,8 +2865,8 @@ exports.RulersHighlighter = RulersHighlighter;
  * It is used by the HighlighterActor when canvasframe-based highlighters can't
  * be used. This is the case for XUL windows.
  */
-function SimpleOutlineHighlighter(tabActor) {
-  this.chromeDoc = tabActor.window.document;
+function SimpleOutlineHighlighter(highlighterEnv) {
+  this.chromeDoc = highlighterEnv.document;
 }
 
 SimpleOutlineHighlighter.prototype = {
@@ -2930,10 +2945,12 @@ function installHelperSheet(win, source, type="agent") {
 }
 
 /**
- * Is the content window in this tabActor a XUL window
+ * Is this content window a XUL window?
+ * @param {Window} window
+ * @return {Boolean}
  */
-function isXUL(tabActor) {
-  return tabActor.window.document.documentElement.namespaceURI === XUL_NS;
+function isXUL(window) {
+  return window.document.documentElement.namespaceURI === XUL_NS;
 }
 
 /**
@@ -2994,23 +3011,6 @@ function createNode(win, options) {
 }
 
 /**
- * Get the right target for listening to events on the page (while picking an
- * element for instance).
- * - On a firefox desktop content page: tabActor is a BrowserTabActor from
- *   which the browser property will give us a target we can use to listen to
- *   events, even in nested iframes.
- * - On B2G: tabActor is a ContentActor which doesn't have a browser but
- *   since it overrides BrowserTabActor, it does get a browser property
- *   anyway, which points to its window object.
- * - When using the Browser Toolbox (to inspect firefox desktop): tabActor is
- *   the RootActor, in which case, the window property can be used to listen
- *   to events
- */
-function getPageListenerTarget(tabActor) {
-  return tabActor.isRootActor ? tabActor.window : tabActor.chromeEventHandler;
-}
-
-/**
  * Get a node's owner window.
  */
 function getWindow(node) {
@@ -3051,6 +3051,157 @@ function getOffsetParent(node) {
   };
 }
 
-XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils)
+/**
+ * The HighlighterEnvironment is an object that holds all the required data for
+ * highlighters to work: the window, docShell, event listener target, ...
+ * It also emits "will-navigate" and "navigate" events, similarly to the
+ * TabActor.
+ *
+ * It can be initialized either from a TabActor (which is the most frequent way
+ * of using it, since highlighters are usually initialized by the
+ * HighlighterActor or CustomHighlighterActor, which have a tabActor reference).
+ * It can also be initialized just with a window object (which is useful for
+ * when a highlighter is used outside of the debugger server context, for
+ * instance from a gcli command).
+ */
+function HighlighterEnvironment() {
+  this.relayTabActorNavigate = this.relayTabActorNavigate.bind(this);
+  this.relayTabActorWillNavigate = this.relayTabActorWillNavigate.bind(this);
+
+  EventEmitter.decorate(this);
+}
+
+exports.HighlighterEnvironment = HighlighterEnvironment;
+
+HighlighterEnvironment.prototype = {
+  initFromTabActor: function(tabActor) {
+    this._tabActor = tabActor;
+    events.on(this._tabActor, "navigate", this.relayTabActorNavigate);
+    events.on(this._tabActor, "will-navigate", this.relayTabActorWillNavigate);
+  },
+
+  initFromWindow: function(win) {
+    this._win = win;
+
+    // We need a progress listener to know when the window will navigate/has
+    // navigated.
+    let self = this;
+    this.listener = {
+      QueryInterface: XPCOMUtils.generateQI([
+        Ci.nsIWebProgressListener,
+        Ci.nsISupportsWeakReference,
+        Ci.nsISupports
+      ]),
+
+      onStateChange: function(progress, request, flag) {
+        let isStart = flag & Ci.nsIWebProgressListener.STATE_START;
+        let isStop = flag & Ci.nsIWebProgressListener.STATE_STOP;
+        let isWindow = flag & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
+        let isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+
+        if (progress.DOMWindow !== win) {
+          return;
+        }
+
+        if (isDocument && isStart) {
+          // One of the earliest events that tells us a new URI is being loaded
+          // in this window.
+          self.emit("will-navigate", {
+            window: win,
+            isTopLevel: true
+          });
+        }
+        if (isWindow && isStop) {
+          self.emit("navigate", {
+            window: win,
+            isTopLevel: true
+          });
+        }
+      }
+    };
+
+    this.webProgress.addProgressListener(this.listener,
+      Ci.nsIWebProgress.NOTIFY_STATUS |
+      Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
+      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+  },
+
+  get isInitialized() {
+    return this._win || this._tabActor;
+  },
+
+  get window() {
+    if (!this.isInitialized) {
+      throw new Error("Initialize HighlighterEnvironment with a tabActor " +
+        "or window first");
+    }
+    return this._tabActor ? this._tabActor.window : this._win;
+  },
+
+  get document() {
+    return this.window.document;
+  },
+
+  get docShell() {
+    return this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIDocShell);
+  },
+
+  get webProgress() {
+    return this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebProgress);
+  },
+
+  /**
+   * Get the right target for listening to events on the page.
+   * - If the environment was initialized from a TabActor *and* if we're in the
+   *   Browser Toolbox (to inspect firefox desktop): the tabActor is the
+   *   RootActor, in which case, the window property can be used to listen to
+   *   events.
+   * - With firefox desktop, that tabActor is a BrowserTabActor, and with B2G,
+   *   a ContentActor (which overrides BrowserTabActor). In both cases we use
+   *   the chromeEventHandler which gives us a target we can use to listen to
+   *   events, even from nested iframes.
+   * - If the environment was initialized from a window, we also use the
+   *   chromeEventHandler.
+   */
+  get pageListenerTarget() {
+    if (this._tabActor && this._tabActor.isRootActor) {
+      return this.window;
+    }
+    return this.docShell.chromeEventHandler;
+  },
+
+  relayTabActorNavigate: function(data) {
+    this.emit("navigate", data);
+  },
+
+  relayTabActorWillNavigate: function(data) {
+    this.emit("will-navigate", data);
+  },
+
+  destroy: function() {
+    if (this._tabActor) {
+      events.off(this._tabActor, "navigate", this.relayTabActorNavigate);
+      events.off(this._tabActor, "will-navigate", this.relayTabActorWillNavigate);
+    }
+
+    // In case the environment was initialized from a window, we need to remove
+    // the progress listener.
+    if (this._win) {
+      try {
+        this.webProgress.removeProgressListener(this.listener);
+      } catch(e) {
+        // Which may fail in case the window was already destroyed.
+      }
+    }
+
+    this._tabActor = null;
+    this._win = null;
+  }
+};
+
+XPCOMUtils.defineLazyGetter(this, "DOMUtils", function() {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });

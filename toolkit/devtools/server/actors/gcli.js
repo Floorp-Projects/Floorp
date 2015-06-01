@@ -261,8 +261,7 @@ const GcliActor = ActorClass({
         },
 
         get window() tabActor.window,
-        get document() tabActor.window.document,
-        get __deprecatedTabActor() tabActor,
+        get document() tabActor.window.document
       };
 
       return new Requisition(this._system, { environment: environment });
