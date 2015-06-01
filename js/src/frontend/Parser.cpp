@@ -5107,7 +5107,7 @@ Parser<SyntaxParseHandler>::forStatement(YieldHandling yieldHandling)
 
         /* Check that the left side of the 'in' or 'of' is valid. */
         if (!isForDecl &&
-            !handler.isName(lhsNode) &&
+            !handler.maybeName(lhsNode) &&
             !handler.isPropertyAccess(lhsNode))
         {
             JS_ALWAYS_FALSE(abortIfSyntaxParser());
@@ -6414,7 +6414,7 @@ Parser<ParseHandler>::checkAndMarkAsAssignmentLhs(Node target, AssignmentFlavor 
     if (handler.isPropertyAccess(target))
         return true;
 
-    if (handler.isName(target)) {
+    if (handler.maybeName(target)) {
         // The arguments/eval identifiers are simple in non-strict mode code,
         // but warn to discourage use nonetheless.
         if (!reportIfArgumentsEvalTarget(target))
@@ -6565,7 +6565,7 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::isValidSimpleAssignmentTarget(Node node)
 {
-    if (PropertyName* name = handler.isName(node)) {
+    if (PropertyName* name = handler.maybeName(node)) {
         // Note that we implement *exactly* the ES6 semantics here.  Warning
         // for arguments/eval when extraWarnings is set isn't handled here.
         if (!pc->sc->strict())
@@ -6583,7 +6583,7 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::reportIfArgumentsEvalTarget(Node target)
 {
-    PropertyName* name = handler.isName(target);
+    PropertyName* name = handler.maybeName(target);
     if (!name)
         return true;
 
@@ -6656,7 +6656,7 @@ Parser<ParseHandler>::checkAndMarkAsIncOperand(Node target, AssignmentFlavor fla
         return false;
 
     // Mark.
-    if (handler.isName(target)) {
+    if (handler.maybeName(target)) {
         handler.markAsAssigned(target);
     } else if (handler.isFunctionCall(target)) {
         if (!makeSetCall(target, JSMSG_BAD_INCOP_OPERAND))
@@ -6742,7 +6742,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, InvokedPrediction i
 
         // Per spec, deleting any unary expression is valid -- it simply
         // returns true -- except for one case that is illegal in strict mode.
-        if (handler.isName(expr)) {
+        if (handler.maybeName(expr)) {
             if (!report(ParseStrictError, pc->sc->strict(), expr, JSMSG_DEPRECATED_DELETE_OPERAND))
                 return null();
             pc->sc->setBindingsAccessedDynamically();
@@ -7983,8 +7983,8 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
                 return null();
 
             JSOp op = JSOP_CALL;
-            if (JSAtom* atom = handler.isName(lhs)) {
-                if (tt == TOK_LP && atom == context->names().eval) {
+            if (PropertyName* name = handler.maybeName(lhs)) {
+                if (tt == TOK_LP && name == context->names().eval) {
                     /* Select JSOP_EVAL and flag pc as heavyweight. */
                     op = pc->sc->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
                     pc->sc->setBindingsAccessedDynamically();
