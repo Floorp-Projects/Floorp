@@ -304,6 +304,8 @@ CrossCompartmentWrapper::construct(JSContext* cx, HandleObject wrapper, const Ca
             if (!cx->compartment()->wrap(cx, args[n]))
                 return false;
         }
+        if (!cx->compartment()->wrap(cx, args.newTarget()))
+            return false;
         if (!Wrapper::construct(cx, wrapper, args))
             return false;
     }

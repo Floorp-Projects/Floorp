@@ -119,9 +119,11 @@ js::StackUses(JSScript* script, jsbytecode* pc)
     switch (op) {
       case JSOP_POPN:
         return GET_UINT16(pc);
+      case JSOP_NEW:
+        return 2 + GET_ARGC(pc) + 1;
       default:
         /* stack: fun, this, [argc arguments] */
-        MOZ_ASSERT(op == JSOP_NEW || op == JSOP_CALL || op == JSOP_EVAL ||
+        MOZ_ASSERT(op == JSOP_CALL || op == JSOP_EVAL ||
                    op == JSOP_STRICTEVAL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
         return 2 + GET_ARGC(pc);
     }
