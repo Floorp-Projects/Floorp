@@ -126,7 +126,15 @@ js::GetNativeStackBaseImpl()
         // thread (see bug 846670). So we scan /proc/self/maps to find the
         // segment which contains the stack.
         rc = -1;
-        FILE* fs = fopen("/proc/self/maps", "r");
+
+        // Put the string on the stack, otherwise there is the danger that it
+        // has not been decompressed by the the on-demand linker. Bug 1165460.
+        //
+        // The volatile keyword should stop the compiler from trying to omit
+        // the stack copy in the future (hopefully).
+        volatile char path[] = "/proc/self/maps";
+        FILE* fs = fopen((const char*)path, "r");
+
         if (fs) {
             char line[100];
             unsigned long stackAddr = (unsigned long)&sattr;
