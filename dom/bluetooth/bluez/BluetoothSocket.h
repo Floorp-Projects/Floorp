@@ -61,24 +61,20 @@ public:
    * non-blocking manner.
    *
    * @param aConnector Connector object for socket type specific functions
-   * @param aAddress Address to connect to.
    * @param aDelayMs Time delay in milli-seconds.
-   *
-   * @return true on connect task started, false otherwise.
+   * @return NS_OK on success, or an XPCOM error code otherwise.
    */
-  bool ConnectSocket(BluetoothUnixSocketConnector* aConnector,
-                     const char* aAddress,
-                     int aDelayMs = 0);
+  nsresult Connect(BluetoothUnixSocketConnector* aConnector,
+                   int aDelayMs = 0);
 
   /**
    * Starts a task on the socket that will try to accept a new connection in a
    * non-blocking manner.
    *
    * @param aConnector Connector object for socket type specific functions
-   *
-   * @return true on listen started, false otherwise
+   * @return NS_OK on success, or an XPCOM error code otherwise.
    */
-  bool ListenSocket(BluetoothUnixSocketConnector* aConnector);
+  nsresult Listen(BluetoothUnixSocketConnector* aConnector);
 
   /**
    * Get the current socket address.
