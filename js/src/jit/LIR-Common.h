@@ -4007,12 +4007,13 @@ class LLambda : public LInstructionHelper<1, 1, 1>
     }
 };
 
-class LLambdaArrow : public LInstructionHelper<1, 1 + BOX_PIECES, 1>
+class LLambdaArrow : public LInstructionHelper<1, 1 + (2 * BOX_PIECES), 1>
 {
   public:
     LIR_HEADER(LambdaArrow)
 
     static const size_t ThisValue = 1;
+    static const size_t NewTargetValue = ThisValue + BOX_PIECES;
 
     LLambdaArrow(const LAllocation& scopeChain, const LDefinition& temp) {
         setOperand(0, scopeChain);
@@ -7036,6 +7037,20 @@ class LNewTarget : public LInstructionHelper<BOX_PIECES, 0, 0>
 {
   public:
     LIR_HEADER(NewTarget)
+};
+
+class LArrowNewTarget : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    explicit LArrowNewTarget(const LAllocation& callee) {
+        setOperand(0, callee);
+    }
+
+    LIR_HEADER(ArrowNewTarget)
+
+    const LAllocation* callee() {
+        return getOperand(0);
+    }
 };
 
 } // namespace jit
