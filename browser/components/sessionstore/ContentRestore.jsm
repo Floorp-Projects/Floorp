@@ -193,11 +193,6 @@ ContentRestoreInternal.prototype = {
       if (loadArguments) {
         // A load has been redirected to a new process so get history into the
         // same state it was before the load started then trigger the load.
-        let activeIndex = tabData.index - 1;
-        if (activeIndex > 0) {
-          // Go to the right history entry, but don't load anything yet.
-          history.getEntryAtIndex(activeIndex, true);
-        }
         let referrer = loadArguments.referrer ?
                        Utils.makeURI(loadArguments.referrer) : null;
         let referrerPolicy = ('referrerPolicy' in loadArguments
@@ -210,12 +205,6 @@ ContentRestoreInternal.prototype = {
         // If the user typed a URL into the URL bar and hit enter right before
         // we crashed, we want to start loading that page again. A non-zero
         // userTypedClear value means that the load had started.
-        let activeIndex = tabData.index - 1;
-        if (activeIndex > 0) {
-          // Go to the right history entry, but don't load anything yet.
-          history.getEntryAtIndex(activeIndex, true);
-        }
-
         // Load userTypedValue and fix up the URL if it's partial/broken.
         webNavigation.loadURI(tabData.userTypedValue,
                               Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
@@ -231,7 +220,6 @@ ContentRestoreInternal.prototype = {
         // In order to work around certain issues in session history, we need to
         // force session history to update its internal index and call reload
         // instead of gotoIndex. See bug 597315.
-        history.getEntryAtIndex(activeIndex, true);
         history.reloadCurrentEntry();
       } else {
         // If there's nothing to restore, we should still blank the page.
