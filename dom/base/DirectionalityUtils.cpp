@@ -528,9 +528,9 @@ private:
   }
 
 public:
-  void UpdateAutoDirection(Directionality aDir)
+  uint32_t UpdateAutoDirection(Directionality aDir)
   {
-    mElements.EnumerateEntries(SetNodeDirection, &aDir);
+    return mElements.EnumerateEntries(SetNodeDirection, &aDir);
   }
 
   void ResetAutoDirection(nsINode* aTextNode)
@@ -562,11 +562,12 @@ public:
     map->AddEntry(aTextNode, aElement);
   }
 
-  static void UpdateTextNodeDirection(nsINode* aTextNode, Directionality aDir)
+  static uint32_t UpdateTextNodeDirection(nsINode* aTextNode,
+                                          Directionality aDir)
   {
     MOZ_ASSERT(aTextNode->HasTextNodeDirectionalityMap(),
                "Map missing in UpdateTextNodeDirection");
-    GetDirectionalityMap(aTextNode)->UpdateAutoDirection(aDir);
+    return GetDirectionalityMap(aTextNode)->UpdateAutoDirection(aDir);
   }
 
   static void ResetTextNodeDirection(nsINode* aTextNode)
@@ -846,14 +847,16 @@ TextNodeChangedDirection(nsIContent* aTextNode, Directionality aOldDir,
     // This node has a strong directional character. If it has a
     // TextNodeDirectionalityMap property, it already determines the
     // directionality of some element(s), so call UpdateTextNodeDirection to
-    // reresolve their directionality. Otherwise call
-    // SetAncestorDirectionIfAuto to find ancestor elements which should
-    // have their directionality determined by this node.
-    if (aTextNode->HasTextNodeDirectionalityMap()) {
-      nsTextNodeDirectionalityMap::UpdateTextNodeDirection(aTextNode, newDir);
-    } else {
-      SetAncestorDirectionIfAuto(aTextNode, newDir, aNotify);
+    // reresolve their directionality. If it has no map, or if
+    // UpdateTextNodeDirection returns zero, indicating that the map is
+    // empty, call SetAncestorDirectionIfAuto to find ancestor elements
+    // which should have their directionality determined by this node.
+    if (aTextNode->HasTextNodeDirectionalityMap() &&
+        nsTextNodeDirectionalityMap::UpdateTextNodeDirection(aTextNode,
+                                                             newDir)) {
+      return;
     }
+    SetAncestorDirectionIfAuto(aTextNode, newDir, aNotify);
   }
 }
 
