@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSVGAnimatedTransformList.h"
+
 #include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGAnimationElement.h"
+#include "mozilla/Move.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsSVGTransform.h"
 #include "nsSMILValue.h"
@@ -248,7 +250,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
   }
 
   // Success! Populate our outparam with parsed value.
-  aResult.Swap(val);
+  aResult = Move(val);
 }
 
 int32_t

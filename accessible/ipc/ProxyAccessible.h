@@ -18,6 +18,7 @@
 namespace mozilla {
 namespace a11y {
 
+class Accessible;
 class Attribute;
 class DocAccessibleParent;
 enum class RelationType;
@@ -64,6 +65,8 @@ public:
    * Return the proxy for the parent of the wrapped accessible.
    */
   ProxyAccessible* Parent() const { return mParent; }
+
+  Accessible* OuterDocOfRemoteBrowser() const;
 
   /**
    * Get the role of the accessible we're proxying.

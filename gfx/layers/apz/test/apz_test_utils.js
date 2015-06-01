@@ -91,7 +91,7 @@ function buildApzcTree(paint) {
   // This 'root' does not correspond to an APZC.
   var root = makeNode(-1);
   for (var scrollId in paint) {
-    if ("isRootForLayersId" in paint[scrollId]) {
+    if ("hasNoParentWithSameLayersId" in paint[scrollId]) {
       addRoot(root, scrollId);
     } else if ("parentScrollId" in paint[scrollId]) {
       addLink(root, scrollId, paint[scrollId]["parentScrollId"]);

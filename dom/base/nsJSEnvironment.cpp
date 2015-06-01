@@ -2228,7 +2228,7 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
       if (sPostGCEventsToConsole) {
         NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f) ");
         nsString prefix, gcstats;
-        gcstats.Adopt(aDesc.formatMessage(aRt));
+        gcstats.Adopt(aDesc.formatSummaryMessage(aRt));
         prefix.Adopt(nsTextFormatter::smprintf(kFmt.get(),
                                              double(delta) / PR_USEC_PER_SEC));
         nsString msg = prefix + gcstats;
@@ -2302,6 +2302,15 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
 
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
         nsCycleCollector_dispatchDeferredDeletion();
+      }
+
+      if (sPostGCEventsToConsole) {
+        nsString gcstats;
+        gcstats.Adopt(aDesc.formatSliceMessage(aRt));
+        nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        if (cs) {
+          cs->LogStringMessage(gcstats.get());
+        }
       }
 
       break;

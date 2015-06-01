@@ -337,26 +337,27 @@ gfxGDIFont::Initialize()
             }
         }
 
-        // Cache the width of a single space.
-        SIZE size;
-        GetTextExtentPoint32W(dc.GetDC(), L" ", 1, &size);
-        mMetrics->spaceWidth = ROUND(size.cx);
-
-        // Cache the width of digit zero.
-        // XXX MSDN (http://msdn.microsoft.com/en-us/library/ms534223.aspx)
-        // does not say what the failure modes for GetTextExtentPoint32 are -
-        // is it safe to assume it will fail iff the font has no '0'?
-        if (GetTextExtentPoint32W(dc.GetDC(), L"0", 1, &size)) {
-            mMetrics->zeroOrAveCharWidth = ROUND(size.cx);
-        } else {
-            mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
-        }
-
         WORD glyph;
+        SIZE size;
         DWORD ret = GetGlyphIndicesW(dc.GetDC(), L" ", 1, &glyph,
                                      GGI_MARK_NONEXISTING_GLYPHS);
         if (ret != GDI_ERROR && glyph != 0xFFFF) {
             mSpaceGlyph = glyph;
+            // Cache the width of a single space.
+            GetTextExtentPoint32W(dc.GetDC(), L" ", 1, &size);
+            mMetrics->spaceWidth = ROUND(size.cx);
+        } else {
+            mMetrics->spaceWidth = mMetrics->aveCharWidth;
+        }
+
+        // Cache the width of digit zero, if available.
+        ret = GetGlyphIndicesW(dc.GetDC(), L"0", 1, &glyph,
+                               GGI_MARK_NONEXISTING_GLYPHS);
+        if (ret != GDI_ERROR && glyph != 0xFFFF) {
+            GetTextExtentPoint32W(dc.GetDC(), L"0", 1, &size);
+            mMetrics->zeroOrAveCharWidth = ROUND(size.cx);
+        } else {
+            mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
         }
 
         SanitizeMetrics(mMetrics, GetFontEntry()->mIsBadUnderlineFont);

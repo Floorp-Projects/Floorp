@@ -36,9 +36,9 @@ class MoveEmitterARM
     void assertDone();
     Register tempReg();
     FloatRegister tempFloatReg();
-    Operand cycleSlot(uint32_t slot, uint32_t subslot) const;
-    Operand spillSlot() const;
-    Operand toOperand(const MoveOperand& operand, bool isFloat) const;
+    Address cycleSlot(uint32_t slot, uint32_t subslot) const;
+    Address spillSlot() const;
+    Address toAddress(const MoveOperand& operand) const;
 
     void emitMove(const MoveOperand& from, const MoveOperand& to);
     void emitFloat32Move(const MoveOperand& from, const MoveOperand& to);
