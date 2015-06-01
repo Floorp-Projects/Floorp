@@ -29,8 +29,8 @@ gfxAlphaBoxBlur::~gfxAlphaBoxBlur()
 
 gfxContext*
 gfxAlphaBoxBlur::Init(const gfxRect& aRect,
-                      const gfxIntSize& aSpreadRadius,
-                      const gfxIntSize& aBlurRadius,
+                      const IntSize& aSpreadRadius,
+                      const IntSize& aBlurRadius,
                       const gfxRect* aDirtyRect,
                       const gfxRect* aSkipRect)
 {
@@ -152,11 +152,11 @@ gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx)
     DrawBlur(aDestinationCtx, mask, topLeft, dirtyRect);
 }
 
-gfxIntSize gfxAlphaBoxBlur::CalculateBlurRadius(const gfxPoint& aStd)
+IntSize gfxAlphaBoxBlur::CalculateBlurRadius(const gfxPoint& aStd)
 {
     mozilla::gfx::Point std(Float(aStd.x), Float(aStd.y));
     IntSize size = AlphaBoxBlur::CalculateBlurRadius(std);
-    return gfxIntSize(size.width, size.height);
+    return IntSize(size.width, size.height);
 }
 
 struct BlurCacheKey : public PLDHashEntryHdr {
@@ -165,11 +165,11 @@ struct BlurCacheKey : public PLDHashEntryHdr {
   enum { ALLOW_MEMMOVE = true };
 
   gfxRect mRect;
-  gfxIntSize mBlurRadius;
+  IntSize mBlurRadius;
   gfxRect mSkipRect;
   BackendType mBackend;
 
-  BlurCacheKey(const gfxRect& aRect, const gfxIntSize &aBlurRadius, const gfxRect& aSkipRect, BackendType aBackend)
+  BlurCacheKey(const gfxRect& aRect, const IntSize &aBlurRadius, const gfxRect& aSkipRect, BackendType aBackend)
     : mRect(aRect)
     , mBlurRadius(aBlurRadius)
     , mSkipRect(aSkipRect)
@@ -260,7 +260,7 @@ class BlurCache final : public nsExpirationTracker<BlurCacheData,4>
     }
 
     BlurCacheData* Lookup(const gfxRect& aRect,
-                          const gfxIntSize& aBlurRadius,
+                          const IntSize& aBlurRadius,
                           const gfxRect& aSkipRect,
                           BackendType aBackendType,
                           const gfxRect* aDirtyRect)
@@ -309,7 +309,7 @@ static BlurCache* gBlurCache = nullptr;
 SourceSurface*
 GetCachedBlur(DrawTarget *aDT,
               const gfxRect& aRect,
-              const gfxIntSize& aBlurRadius,
+              const IntSize& aBlurRadius,
               const gfxRect& aSkipRect,
               const gfxRect& aDirtyRect,
               IntPoint* aTopLeft)
@@ -330,7 +330,7 @@ GetCachedBlur(DrawTarget *aDT,
 void
 CacheBlur(DrawTarget *aDT,
           const gfxRect& aRect,
-          const gfxIntSize& aBlurRadius,
+          const IntSize& aBlurRadius,
           const gfxRect& aSkipRect,
           SourceSurface* aBlur,
           const IntPoint& aTopLeft,
@@ -372,14 +372,14 @@ gfxAlphaBoxBlur::BlurRectangle(gfxContext *aDestinationCtx,
 {
   DrawTarget& aDrawTarget = *aDestinationCtx->GetDrawTarget();
 
-  gfxIntSize blurRadius = CalculateBlurRadius(aBlurStdDev);
+  IntSize blurRadius = CalculateBlurRadius(aBlurStdDev);
 
   IntPoint topLeft;
   RefPtr<SourceSurface> surface = GetCachedBlur(&aDrawTarget, aRect, blurRadius, aSkipRect, aDirtyRect, &topLeft);
   if (!surface) {
     // Create the temporary surface for blurring
     gfxAlphaBoxBlur blur;
-    gfxContext* blurCtx = blur.Init(aRect, gfxIntSize(), blurRadius, &aDirtyRect, &aSkipRect);
+    gfxContext* blurCtx = blur.Init(aRect, IntSize(), blurRadius, &aDirtyRect, &aSkipRect);
     if (!blurCtx) {
       return;
     }

@@ -25,7 +25,7 @@ gfxTeeSurface::gfxTeeSurface(gfxASurface **aSurfaces, int32_t aSurfaceCount)
     }
 }
 
-const gfxIntSize
+const mozilla::gfx::IntSize
 gfxTeeSurface::GetSize() const
 {
     nsRefPtr<gfxASurface> master = Wrap(cairo_tee_surface_index(mSurface, 0));

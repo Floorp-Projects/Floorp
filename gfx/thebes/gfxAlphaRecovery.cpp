@@ -14,7 +14,7 @@
 gfxAlphaRecovery::RecoverAlpha(gfxImageSurface* blackSurf,
                                const gfxImageSurface* whiteSurf)
 {
-    gfxIntSize size = blackSurf->GetSize();
+    mozilla::gfx::IntSize size = blackSurf->GetSize();
 
     if (size != whiteSurf->GetSize() ||
         (blackSurf->Format() != gfxImageFormat::ARGB32 &&

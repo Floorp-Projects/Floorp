@@ -412,7 +412,7 @@ CreateTempXlibSurface (cairo_surface_t* cairoTarget,
 
     cairo_surface_t *surface =
         gfxXlibSurface::CreateCairoSurface(screen, visual,
-                                           gfxIntSize(size.width, size.height),
+                                           IntSize(size.width, size.height),
                                            drawable);
     if (!surface) {
         return nullptr;
@@ -448,7 +448,7 @@ gfxXlibNativeRenderer::DrawOntoTempSurface(cairo_surface_t *tempXlibSurface,
 
 static already_AddRefed<gfxImageSurface>
 CopyXlibSurfaceToImage(cairo_surface_t *tempXlibSurface,
-                       gfxIntSize size,
+                       IntSize size,
                        gfxImageFormat format)
 {
     nsRefPtr<gfxImageSurface> result = new gfxImageSurface(size, format);
