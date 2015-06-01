@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSVGViewBox.h"
+
+#include "mozilla/Move.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsSMILValue.h"
 #include "nsTextFormatter.h"
@@ -300,7 +302,7 @@ nsSVGViewBox::SMILViewBox
   }
   nsSMILValue val(&SVGViewBoxSMILType::sSingleton);
   *static_cast<nsSVGViewBoxRect*>(val.mU.mPtr) = viewBox;
-  aValue.Swap(val);
+  aValue = Move(val);
   aPreventCachingOfSandwich = false;
   
   return NS_OK;

@@ -207,6 +207,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitArrayPopShift(MArrayPopShift* ins);
     void visitArrayPush(MArrayPush* ins);
     void visitArrayConcat(MArrayConcat* ins);
+    void visitArraySlice(MArraySlice* ins);
     void visitArrayJoin(MArrayJoin* ins);
     void visitLoadUnboxedScalar(MLoadUnboxedScalar* ins);
     void visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole* ins);

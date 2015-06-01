@@ -74,9 +74,11 @@ class ABIArgGenerator
 
   public:
     ABIArgGenerator();
+
     ABIArg next(MIRType argType);
     ABIArg& current() { return current_; }
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
+
     static const Register NonArgReturnReg0;
     static const Register NonArgReturnReg1;
     static const Register NonReturn_VolatileReg0;
@@ -237,7 +239,6 @@ enum IsImmEDTR_ {
     IsNotImmEDTR = 0 << 22
 };
 
-
 enum ShiftType {
     LSL = 0, // << 5
     LSR = 1, // << 5
@@ -273,14 +274,17 @@ enum DTMWriteBack {
     NoWriteBack = 0 << 21
 };
 
-enum SetCond_ {
-    SetCond   = 1 << 20,
-    NoSetCond = 0 << 20
+// Condition code updating mode.
+enum SBit {
+    SetCC   = 1 << 20,  // Set condition code.
+    LeaveCC = 0 << 20   // Leave condition code unchanged.
 };
+
 enum LoadStore {
     IsLoad  = 1 << 20,
     IsStore = 0 << 20
 };
+
 // You almost never want to use this directly. Instead, you wantto pass in a
 // signed constant, and let this bit be implicitly set for you. This is however,
 // necessary if we want a negative index.
@@ -341,16 +345,19 @@ enum VFPOp {
     OpvCmp  = 0xB << 20 | 0x1 << 6 | 0x4 << 16,
     OpvCmpz  = 0xB << 20 | 0x1 << 6 | 0x5 << 16
 };
+
 // Negate the operation, AND negate the immediate that we were passed in.
 ALUOp ALUNeg(ALUOp op, Register dest, Imm32* imm, Register* negDest);
 bool can_dbl(ALUOp op);
 bool condsAreSafe(ALUOp op);
+
 // If there is a variant of op that has a dest (think cmp/sub) return that
 // variant of it.
 ALUOp getDestVariant(ALUOp op);
 
 static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
 static const ValueOperand softfpReturnOperand = ValueOperand(r1, r0);
+
 // All of these classes exist solely to shuffle data into the various operands.
 // For example Operand2 can be an imm8, a register-shifted-by-a-constant or a
 // register-shifted-by-a-register. We represent this in C++ by having a base
@@ -372,7 +379,9 @@ static const ValueOperand softfpReturnOperand = ValueOperand(r1, r0);
 class Op2Reg;
 class O2RegImmShift;
 class O2RegRegShift;
+
 namespace datastore {
+
 struct Reg
 {
     // The "second register".
@@ -389,11 +398,12 @@ struct Reg
       : RM(rm), RRS(rsr), Type(type), ShiftAmount(shiftamount), pad(0)
     { }
 
-    uint32_t encode() {
-        return RM | RRS << 4 | Type << 5 | ShiftAmount << 7;
-    }
     explicit Reg(const Op2Reg& op) {
         memcpy(this, &op, sizeof(*this));
+    }
+
+    uint32_t encode() const {
+        return RM | RRS << 4 | Type << 5 | ShiftAmount << 7;
     }
 };
 
@@ -409,10 +419,12 @@ struct Imm8mData
     // if we can encode it properly, a simple "|" will still suffice to meld it
     // into the instruction.
     uint32_t buff : 19;
+
   public:
     uint32_t invalid : 1;
 
-    uint32_t encode() {
+  public:
+    uint32_t encode() const {
         MOZ_ASSERT(!invalid);
         return data | rot << 8;
     };
@@ -438,12 +450,16 @@ struct Imm8Data
     uint32_t imm4H : 4;
 
   public:
-    uint32_t encode() {
-        return imm4L | (imm4H << 8);
-    };
-    Imm8Data(uint32_t imm) : imm4L(imm & 0xf), imm4H(imm >> 4) {
+    Imm8Data(uint32_t imm)
+      : imm4L(imm & 0xf), imm4H(imm >> 4)
+    {
         MOZ_ASSERT(imm <= 0xff);
     }
+
+  public:
+    uint32_t encode() const {
+        return imm4L | (imm4H << 8);
+    };
 };
 
 // VLDR/VSTR take an 8 bit offset, which is implicitly left shifted by 2.
@@ -453,12 +469,16 @@ struct Imm8VFPOffData
     uint32_t data;
 
   public:
-    uint32_t encode() {
-        return data;
-    };
-    Imm8VFPOffData(uint32_t imm) : data (imm) {
+    Imm8VFPOffData(uint32_t imm)
+      : data (imm)
+    {
         MOZ_ASSERT((imm & ~(0xff)) == 0);
     }
+
+  public:
+    uint32_t encode() const {
+        return data;
+    };
 };
 
 // ARM can magically encode 256 very special immediates to be moved into a
@@ -478,7 +498,7 @@ struct Imm8VFPImmData
     uint32_t imm4H : 4;
     int32_t isInvalid : 24;
 
-    uint32_t encode() {
+    uint32_t encode() const {
         // This assert is an attempting at ensuring that we don't create random
         // instances of this structure and then asking to encode() it.
         MOZ_ASSERT(isInvalid == 0);
@@ -489,9 +509,6 @@ struct Imm8VFPImmData
 struct Imm12Data
 {
     uint32_t data : 12;
-    uint32_t encode() {
-        return data;
-    }
 
     Imm12Data(uint32_t imm)
       : data(imm)
@@ -499,21 +516,28 @@ struct Imm12Data
         MOZ_ASSERT(data == imm);
     }
 
+    uint32_t encode() const {
+        return data;
+    }
 };
 
 struct RIS
 {
     uint32_t ShiftAmount : 5;
-    uint32_t encode () {
-        return ShiftAmount;
-    }
 
     RIS(uint32_t imm)
       : ShiftAmount(imm)
     {
         MOZ_ASSERT(ShiftAmount == imm);
     }
-    explicit RIS(Reg r) : ShiftAmount(r.ShiftAmount) {}
+
+    explicit RIS(Reg r)
+      : ShiftAmount(r.ShiftAmount)
+    { }
+
+    uint32_t encode() const {
+        return ShiftAmount;
+    }
 };
 
 struct RRS
@@ -528,7 +552,7 @@ struct RRS
         MOZ_ASSERT(rs == RS);
     }
 
-    uint32_t encode () {
+    uint32_t encode() const {
         return RS << 1;
     }
 };
@@ -542,40 +566,49 @@ class Operand2
     friend class Operand;
     friend class MacroAssemblerARM;
     friend class InstALU;
+
   public:
     uint32_t oper : 31;
     uint32_t invalid : 1;
-    bool isO2Reg() {
-        return !(oper & IsImmOp2);
-    }
-    Op2Reg toOp2Reg();
-    bool isImm8() {
-        return oper & IsImmOp2;
-    }
 
   protected:
-    Operand2(datastore::Imm8mData base)
+    explicit Operand2(datastore::Imm8mData base)
       : oper(base.invalid ? -1 : (base.encode() | (uint32_t)IsImmOp2)),
         invalid(base.invalid)
     { }
 
-    Operand2(datastore::Reg base)
+    explicit Operand2(datastore::Reg base)
       : oper(base.encode() | (uint32_t)IsNotImmOp2)
     { }
 
   private:
-    Operand2(int blob)
+    explicit Operand2(int blob)
       : oper(blob)
     { }
 
   public:
-    uint32_t encode() {
+    bool isO2Reg() const {
+        return !(oper & IsImmOp2);
+    }
+
+    Op2Reg toOp2Reg() const;
+
+    bool isImm8() const {
+        return oper & IsImmOp2;
+    }
+
+    uint32_t encode() const {
         return oper;
     }
 };
 
 class Imm8 : public Operand2
 {
+  public:
+    explicit Imm8(uint32_t imm)
+      : Operand2(EncodeImm(imm))
+    { }
+
   public:
     static datastore::Imm8mData EncodeImm(uint32_t imm) {
         // mozilla::CountLeadingZeroes32(imm) requires imm != 0.
@@ -607,6 +640,7 @@ class Imm8 : public Operand2
             return datastore::Imm8mData(mask, (8 - right) >> 1);
         return datastore::Imm8mData();
     }
+
     // Pair template?
     struct TwoImm8mData
     {
@@ -622,41 +656,41 @@ class Imm8 : public Operand2
     };
 
     static TwoImm8mData EncodeTwoImms(uint32_t);
-    Imm8(uint32_t imm)
-      : Operand2(EncodeImm(imm))
-    { }
 };
 
 class Op2Reg : public Operand2
 {
   public:
-    Op2Reg(Register rm, ShiftType type, datastore::RIS shiftImm)
+    explicit Op2Reg(Register rm, ShiftType type, datastore::RIS shiftImm)
       : Operand2(datastore::Reg(rm.code(), type, 0, shiftImm.encode()))
     { }
 
-    Op2Reg(Register rm, ShiftType type, datastore::RRS shiftReg)
+    explicit Op2Reg(Register rm, ShiftType type, datastore::RRS shiftReg)
       : Operand2(datastore::Reg(rm.code(), type, 1, shiftReg.encode()))
     { }
-    bool isO2RegImmShift() {
+
+  public:
+    bool isO2RegImmShift() const {
         datastore::Reg r(*this);
         return !r.RRS;
     }
-    O2RegImmShift toO2RegImmShift();
-    bool isO2RegRegShift() {
+    O2RegImmShift toO2RegImmShift() const;
+
+    bool isO2RegRegShift() const {
         datastore::Reg r(*this);
         return r.RRS;
     }
-    O2RegRegShift toO2RegRegShift();
+    O2RegRegShift toO2RegRegShift() const;
 
-    bool checkType(ShiftType type) {
+    bool checkType(ShiftType type) const {
         datastore::Reg r(*this);
         return r.Type == type;
     }
-    bool checkRM(Register rm) {
+    bool checkRM(Register rm) const {
         datastore::Reg r(*this);
         return r.RM == rm.code();
     }
-    bool getRM(Register* rm) {
+    bool getRM(Register* rm) const {
         datastore::Reg r(*this);
         *rm = Register::FromCode(r.RM);
         return true;
@@ -666,10 +700,12 @@ class Op2Reg : public Operand2
 class O2RegImmShift : public Op2Reg
 {
   public:
-    O2RegImmShift(Register rn, ShiftType type, uint32_t shift)
+    explicit O2RegImmShift(Register rn, ShiftType type, uint32_t shift)
       : Op2Reg(rn, type, datastore::RIS(shift))
     { }
-    int getShift() {
+
+  public:
+    int getShift() const {
         datastore::Reg r(*this);
         datastore::RIS ris(r);
         return ris.ShiftAmount;
@@ -679,22 +715,22 @@ class O2RegImmShift : public Op2Reg
 class O2RegRegShift : public Op2Reg
 {
   public:
-    O2RegRegShift(Register rn, ShiftType type, Register rs)
+    explicit O2RegRegShift(Register rn, ShiftType type, Register rs)
       : Op2Reg(rn, type, datastore::RRS(rs.code()))
     { }
 };
 
 O2RegImmShift O2Reg(Register r);
-O2RegImmShift lsl (Register r, int amt);
-O2RegImmShift lsr (Register r, int amt);
-O2RegImmShift asr (Register r, int amt);
-O2RegImmShift rol (Register r, int amt);
-O2RegImmShift ror (Register r, int amt);
+O2RegImmShift lsl(Register r, int amt);
+O2RegImmShift lsr(Register r, int amt);
+O2RegImmShift asr(Register r, int amt);
+O2RegImmShift rol(Register r, int amt);
+O2RegImmShift ror(Register r, int amt);
 
-O2RegRegShift lsl (Register r, Register amt);
-O2RegRegShift lsr (Register r, Register amt);
-O2RegRegShift asr (Register r, Register amt);
-O2RegRegShift ror (Register r, Register amt);
+O2RegRegShift lsl(Register r, Register amt);
+O2RegRegShift lsr(Register r, Register amt);
+O2RegRegShift asr(Register r, Register amt);
+O2RegRegShift ror(Register r, Register amt);
 
 // An offset from a register to be used for ldr/str. This should include the
 // sign bit, since ARM has "signed-magnitude" offsets. That is it encodes an
@@ -706,22 +742,22 @@ class DtrOff
     uint32_t data;
 
   protected:
-    DtrOff(datastore::Imm12Data immdata, IsUp_ iu)
+    explicit DtrOff(datastore::Imm12Data immdata, IsUp_ iu)
       : data(immdata.encode() | (uint32_t)IsImmDTR | ((uint32_t)iu))
     { }
 
-    DtrOff(datastore::Reg reg, IsUp_ iu = IsUp)
+    explicit DtrOff(datastore::Reg reg, IsUp_ iu = IsUp)
       : data(reg.encode() | (uint32_t) IsNotImmDTR | iu)
     { }
 
   public:
-    uint32_t encode() { return data; }
+    uint32_t encode() const { return data; }
 };
 
 class DtrOffImm : public DtrOff
 {
   public:
-    DtrOffImm(int32_t imm)
+    explicit DtrOffImm(int32_t imm)
       : DtrOff(datastore::Imm12Data(mozilla::Abs(imm)), imm >= 0 ? IsUp : IsDown)
     {
         MOZ_ASSERT(mozilla::Abs(imm) < 4096);
@@ -733,11 +769,11 @@ class DtrOffReg : public DtrOff
     // These are designed to be called by a constructor of a subclass.
     // Constructing the necessary RIS/RRS structures are annoying.
   protected:
-    DtrOffReg(Register rn, ShiftType type, datastore::RIS shiftImm, IsUp_ iu = IsUp)
+    explicit DtrOffReg(Register rn, ShiftType type, datastore::RIS shiftImm, IsUp_ iu = IsUp)
       : DtrOff(datastore::Reg(rn.code(), type, 0, shiftImm.encode()), iu)
     { }
 
-    DtrOffReg(Register rn, ShiftType type, datastore::RRS shiftReg, IsUp_ iu = IsUp)
+    explicit DtrOffReg(Register rn, ShiftType type, datastore::RRS shiftReg, IsUp_ iu = IsUp)
       : DtrOff(datastore::Reg(rn.code(), type, 1, shiftReg.encode()), iu)
     { }
 };
@@ -745,7 +781,7 @@ class DtrOffReg : public DtrOff
 class DtrRegImmShift : public DtrOffReg
 {
   public:
-    DtrRegImmShift(Register rn, ShiftType type, uint32_t shift, IsUp_ iu = IsUp)
+    explicit DtrRegImmShift(Register rn, ShiftType type, uint32_t shift, IsUp_ iu = IsUp)
       : DtrOffReg(rn, type, datastore::RIS(shift), iu)
     { }
 };
@@ -753,7 +789,7 @@ class DtrRegImmShift : public DtrOffReg
 class DtrRegRegShift : public DtrOffReg
 {
   public:
-    DtrRegRegShift(Register rn, ShiftType type, Register rs, IsUp_ iu = IsUp)
+    explicit DtrRegRegShift(Register rn, ShiftType type, Register rs, IsUp_ iu = IsUp)
       : DtrOffReg(rn, type, datastore::RRS(rs.code()), iu)
     { }
 };
@@ -762,24 +798,28 @@ class DtrRegRegShift : public DtrOffReg
 // an "operand" to a load instruction.
 class DTRAddr
 {
+    friend class Operand;
+
     uint32_t data;
 
   public:
-    DTRAddr(Register reg, DtrOff dtr)
+    explicit DTRAddr(Register reg, DtrOff dtr)
       : data(dtr.encode() | (reg.code() << 16))
     { }
 
-    uint32_t encode() {
-        return data;
-    }
-    Register getBase() {
-        return Register::FromCode((data >> 16) &0xf);
-    }
   private:
-    friend class Operand;
-    DTRAddr(uint32_t blob)
+    explicit DTRAddr(uint32_t blob)
       : data(blob)
     { }
+
+  public:
+    uint32_t encode() const {
+        return data;
+    }
+
+    Register getBase() const {
+        return Register::FromCode((data >> 16) &0xf);
+    }
 };
 
 // Offsets for the extended data transfer instructions:
@@ -789,16 +829,16 @@ class EDtrOff
     uint32_t data;
 
   protected:
-    EDtrOff(datastore::Imm8Data imm8, IsUp_ iu = IsUp)
+    explicit EDtrOff(datastore::Imm8Data imm8, IsUp_ iu = IsUp)
       : data(imm8.encode() | IsImmEDTR | (uint32_t)iu)
     { }
 
-    EDtrOff(Register rm, IsUp_ iu = IsUp)
+    explicit EDtrOff(Register rm, IsUp_ iu = IsUp)
       : data(rm.code() | IsNotImmEDTR | iu)
     { }
 
   public:
-    uint32_t encode() {
+    uint32_t encode() const {
         return data;
     }
 };
@@ -806,7 +846,7 @@ class EDtrOff
 class EDtrOffImm : public EDtrOff
 {
   public:
-    EDtrOffImm(int32_t imm)
+    explicit EDtrOffImm(int32_t imm)
       : EDtrOff(datastore::Imm8Data(mozilla::Abs(imm)), (imm >= 0) ? IsUp : IsDown)
     {
         MOZ_ASSERT(mozilla::Abs(imm) < 256);
@@ -818,7 +858,7 @@ class EDtrOffImm : public EDtrOff
 class EDtrOffReg : public EDtrOff
 {
   public:
-    EDtrOffReg(Register rm)
+    explicit EDtrOffReg(Register rm)
       : EDtrOff(rm)
     { }
 };
@@ -828,11 +868,11 @@ class EDtrAddr
     uint32_t data;
 
   public:
-    EDtrAddr(Register r, EDtrOff off)
+    explicit EDtrAddr(Register r, EDtrOff off)
       : data(RN(r) | off.encode())
     { }
 
-    uint32_t encode() {
+    uint32_t encode() const {
         return data;
     }
 };
@@ -842,12 +882,12 @@ class VFPOff
     uint32_t data;
 
   protected:
-    VFPOff(datastore::Imm8VFPOffData imm, IsUp_ isup)
+    explicit VFPOff(datastore::Imm8VFPOffData imm, IsUp_ isup)
       : data(imm.encode() | (uint32_t)isup)
     { }
 
   public:
-    uint32_t encode() {
+    uint32_t encode() const {
         return data;
     }
 };
@@ -855,17 +895,23 @@ class VFPOff
 class VFPOffImm : public VFPOff
 {
   public:
-    VFPOffImm(int32_t imm)
+    explicit VFPOffImm(int32_t imm)
       : VFPOff(datastore::Imm8VFPOffData(mozilla::Abs(imm) / 4), imm < 0 ? IsDown : IsUp)
     {
         MOZ_ASSERT(mozilla::Abs(imm) <= 255 * 4);
     }
 };
+
 class VFPAddr
 {
     friend class Operand;
 
     uint32_t data;
+
+  public:
+    explicit VFPAddr(Register base, VFPOff off)
+      : data(RN(base) | off.encode())
+    { }
 
   protected:
     VFPAddr(uint32_t blob)
@@ -873,27 +919,25 @@ class VFPAddr
     { }
 
   public:
-    VFPAddr(Register base, VFPOff off)
-      : data(RN(base) | off.encode())
-    { }
-
-    uint32_t encode() {
+    uint32_t encode() const {
         return data;
     }
 };
 
-class VFPImm {
+class VFPImm
+{
     uint32_t data;
+
+  public:
+    explicit VFPImm(uint32_t topWordOfDouble);
 
   public:
     static const VFPImm One;
 
-    VFPImm(uint32_t topWordOfDouble);
-
-    uint32_t encode() {
+    uint32_t encode() const {
         return data;
     }
-    bool isValid() {
+    bool isValid() const {
         return data != -1U;
     }
 };
@@ -903,16 +947,11 @@ class VFPImm {
 // constructing a branch.
 class BOffImm
 {
+    friend class InstBranchImm;
+
     uint32_t data;
 
   public:
-    uint32_t encode() {
-        return data;
-    }
-    int32_t decode() {
-        return ((((int32_t)data) << 8) >> 6) + 8;
-    }
-
     explicit BOffImm(int offset)
       : data ((offset - 8) >> 2 & 0x00ffffff)
     {
@@ -920,27 +959,36 @@ class BOffImm
         if (!IsInRange(offset))
             CrashAtUnhandlableOOM("BOffImm");
     }
-    static bool IsInRange(int offset)
-    {
+
+    explicit BOffImm()
+      : data(INVALID)
+    { }
+
+  private:
+    BOffImm(Instruction& inst);
+
+  public:
+    static const int INVALID = 0x00800000;
+
+    uint32_t encode() const {
+        return data;
+    }
+    int32_t decode() const {
+        return ((((int32_t)data) << 8) >> 6) + 8;
+    }
+
+    static bool IsInRange(int offset) {
         if ((offset - 8) < -33554432)
             return false;
         if ((offset - 8) > 33554428)
             return false;
         return true;
     }
-    static const int INVALID = 0x00800000;
-    BOffImm()
-      : data(INVALID)
-    { }
 
-    bool isInvalid() {
+    bool isInvalid() const {
         return data == uint32_t(INVALID);
     }
-    Instruction* getDest(Instruction* src);
-
-  private:
-    friend class InstBranchImm;
-    BOffImm(Instruction& inst);
+    Instruction* getDest(Instruction* src) const;
 };
 
 class Imm16
@@ -951,18 +999,18 @@ class Imm16
     uint32_t invalid : 12;
 
   public:
-    Imm16();
-    Imm16(uint32_t imm);
-    Imm16(Instruction& inst);
+    explicit Imm16();
+    explicit Imm16(uint32_t imm);
+    explicit Imm16(Instruction& inst);
 
-    uint32_t encode() {
+    uint32_t encode() const {
         return lower | upper << 16;
     }
-    uint32_t decode() {
+    uint32_t decode() const {
         return lower | upper << 12;
     }
 
-    bool isInvalid () {
+    bool isInvalid () const {
         return invalid;
     }
 };
@@ -988,26 +1036,27 @@ class Operand
     uint32_t data;
 
   public:
-    Operand (Register reg_)
+    explicit Operand(Register reg_)
       : Tag(OP2), reg(reg_.code())
     { }
 
-    Operand (FloatRegister freg)
+    explicit Operand(FloatRegister freg)
       : Tag(FOP), reg(freg.code())
     { }
 
-    Operand (Register base, Imm32 off)
+    explicit Operand(Register base, Imm32 off)
       : Tag(MEM), reg(base.code()), offset(off.value)
     { }
 
-    Operand (Register base, int32_t off)
+    explicit Operand(Register base, int32_t off)
       : Tag(MEM), reg(base.code()), offset(off)
     { }
 
-    Operand (const Address& addr)
+    explicit Operand(const Address& addr)
       : Tag(MEM), reg(addr.base.code()), offset(addr.offset)
     { }
 
+  public:
     Tag_ getTag() const {
         return Tag;
     }
@@ -1028,6 +1077,7 @@ class Operand
         *dest = Imm32(offset);
     }
     Address toAddress() const {
+        MOZ_ASSERT(Tag == MEM);
         return Address(Register::FromCode(reg), offset);
     }
     int32_t disp() const {
@@ -1052,6 +1102,7 @@ class Operand
 
 void
 PatchJump(CodeLocationJump& jump_, CodeLocationLabel label);
+
 static inline void
 PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
 {
@@ -1179,8 +1230,8 @@ class Assembler : public AssemblerShared
     static uint32_t GetNopFill();
     static uint32_t AsmPoolMaxOffset;
     static uint32_t GetPoolMaxOffset();
-  protected:
 
+  protected:
     // Structure for fixing up pc-relative loads/jumps when a the machine code
     // gets moved (executable copy, gc, etc.).
     struct RelativePatch
@@ -1214,8 +1265,7 @@ class Assembler : public AssemblerShared
         isFinished(false),
         dtmActive(false),
         dtmCond(Always)
-    {
-    }
+    { }
 
     // We need to wait until an AutoJitContextAlloc is created by the
     // MacroAssembler, before allocating any space.
@@ -1318,48 +1368,45 @@ class Assembler : public AssemblerShared
     void nopAlign(int alignment);
     BufferOffset as_nop();
     BufferOffset as_alu(Register dest, Register src1, Operand2 op2,
-                        ALUOp op, SetCond_ sc = NoSetCond, Condition c = Always);
+                        ALUOp op, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_mov(Register dest,
-                        Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                        Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_mvn(Register dest, Operand2 op2,
-                        SetCond_ sc = NoSetCond, Condition c = Always);
+                        SBit s = LeaveCC, Condition c = Always);
 
     static void as_alu_patch(Register dest, Register src1, Operand2 op2,
-                             ALUOp op, SetCond_ sc, Condition c, uint32_t* pos);
+                             ALUOp op, SBit s, Condition c, uint32_t* pos);
     static void as_mov_patch(Register dest,
-                             Operand2 op2, SetCond_ sc, Condition c, uint32_t* pos);
+                             Operand2 op2, SBit s, Condition c, uint32_t* pos);
 
     // Logical operations:
     BufferOffset as_and(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_bic(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_eor(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_orr(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     // Mathematical operations:
     BufferOffset as_adc(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_add(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_sbc(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_sub(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_rsb(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_rsc(Register dest, Register src1,
-                Operand2 op2, SetCond_ sc = NoSetCond, Condition c = Always);
+                Operand2 op2, SBit s = LeaveCC, Condition c = Always);
     // Test operations:
-    BufferOffset as_cmn(Register src1, Operand2 op2,
-                Condition c = Always);
-    BufferOffset as_cmp(Register src1, Operand2 op2,
-                Condition c = Always);
-    BufferOffset as_teq(Register src1, Operand2 op2,
-                Condition c = Always);
-    BufferOffset as_tst(Register src1, Operand2 op2,
-                Condition c = Always);
+    BufferOffset as_cmn(Register src1, Operand2 op2, Condition c = Always);
+    BufferOffset as_cmp(Register src1, Operand2 op2, Condition c = Always);
+    BufferOffset as_teq(Register src1, Operand2 op2, Condition c = Always);
+    BufferOffset as_tst(Register src1, Operand2 op2, Condition c = Always);
+
     // Sign extension operations:
     BufferOffset as_sxtb(Register dest, Register src, int rotate, Condition c = Always);
     BufferOffset as_sxth(Register dest, Register src, int rotate, Condition c = Always);
@@ -1367,8 +1414,7 @@ class Assembler : public AssemblerShared
     BufferOffset as_uxth(Register dest, Register src, int rotate, Condition c = Always);
 
     // Not quite ALU worthy, but useful none the less: These also have the issue
-    // of these being formatted completly differently from the standard ALU
-    // operations.
+    // of these being formatted completly differently from the standard ALU operations.
     BufferOffset as_movw(Register dest, Imm16 imm, Condition c = Always);
     BufferOffset as_movt(Register dest, Imm16 imm, Condition c = Always);
 
@@ -1376,23 +1422,23 @@ class Assembler : public AssemblerShared
     static void as_movt_patch(Register dest, Imm16 imm, Condition c, Instruction* pos);
 
     BufferOffset as_genmul(Register d1, Register d2, Register rm, Register rn,
-                   MULOp op, SetCond_ sc, Condition c = Always);
+                   MULOp op, SBit s, Condition c = Always);
     BufferOffset as_mul(Register dest, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_mla(Register dest, Register acc, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_umaal(Register dest1, Register dest2, Register src1, Register src2,
                   Condition c = Always);
     BufferOffset as_mls(Register dest, Register acc, Register src1, Register src2,
                 Condition c = Always);
     BufferOffset as_umull(Register dest1, Register dest2, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_umlal(Register dest1, Register dest2, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_smull(Register dest1, Register dest2, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
     BufferOffset as_smlal(Register dest1, Register dest2, Register src1, Register src2,
-                SetCond_ sc = NoSetCond, Condition c = Always);
+                SBit s = LeaveCC, Condition c = Always);
 
     BufferOffset as_sdiv(Register dest, Register num, Register div, Condition c = Always);
     BufferOffset as_udiv(Register dest, Register num, Register div, Condition c = Always);
@@ -1420,7 +1466,8 @@ class Assembler : public AssemblerShared
     // Load a 32 bit immediate from a pool into a register.
     BufferOffset as_Imm32Pool(Register dest, uint32_t value, Condition c = Always);
     // Make a patchable jump that can target the entire 32 bit address space.
-    BufferOffset as_BranchPool(uint32_t value, RepatchLabel* label, ARMBuffer::PoolEntry* pe = nullptr, Condition c = Always);
+    BufferOffset as_BranchPool(uint32_t value, RepatchLabel* label,
+                               ARMBuffer::PoolEntry* pe = nullptr, Condition c = Always);
 
     // Load a 64 bit floating point immediate from a pool into a register.
     BufferOffset as_FImm64Pool(VFPRegister dest, double value, Condition c = Always);
@@ -1444,10 +1491,8 @@ class Assembler : public AssemblerShared
     BufferOffset as_strexh(Register rd, Register rt, Register rn, Condition c = Always);
     BufferOffset as_strexb(Register rd, Register rt, Register rn, Condition c = Always);
 
-    // Memory synchronization: dmb, dsb, isb.
-    //
+    // Memory synchronization.
     // These are available from ARMv7 forward.
-
     BufferOffset as_dmb(BarrierOption option = BarrierSY);
     BufferOffset as_dsb(BarrierOption option = BarrierSY);
     BufferOffset as_isb();
@@ -1487,9 +1532,9 @@ class Assembler : public AssemblerShared
 
     BufferOffset as_mrs(Register r, Condition c = Always);
     BufferOffset as_msr(Register r, Condition c = Always);
+
     // VFP instructions!
   private:
-
     enum vfp_size {
         IsDouble = 1 << 8,
         IsSingle = 0 << 8
@@ -1505,39 +1550,22 @@ class Assembler : public AssemblerShared
                               VFPOp op, Condition c = Always);
 
   public:
-    BufferOffset as_vadd(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c = Always);
-
-    BufferOffset as_vdiv(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c = Always);
-
-    BufferOffset as_vmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c = Always);
-
-    BufferOffset as_vnmul(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                  Condition c = Always);
-
-    BufferOffset as_vnmla(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                  Condition c = Always);
-
-    BufferOffset as_vnmls(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                  Condition c = Always);
-
+    BufferOffset as_vadd(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c = Always);
+    BufferOffset as_vdiv(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c = Always);
+    BufferOffset as_vmul(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c = Always);
+    BufferOffset as_vnmul(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c = Always);
+    BufferOffset as_vnmla(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c = Always);
+    BufferOffset as_vnmls(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c = Always);
     BufferOffset as_vneg(VFPRegister vd, VFPRegister vm, Condition c = Always);
-
     BufferOffset as_vsqrt(VFPRegister vd, VFPRegister vm, Condition c = Always);
-
     BufferOffset as_vabs(VFPRegister vd, VFPRegister vm, Condition c = Always);
-
-    BufferOffset as_vsub(VFPRegister vd, VFPRegister vn, VFPRegister vm,
-                 Condition c = Always);
-
-    BufferOffset as_vcmp(VFPRegister vd, VFPRegister vm,
-                 Condition c = Always);
+    BufferOffset as_vsub(VFPRegister vd, VFPRegister vn, VFPRegister vm, Condition c = Always);
+    BufferOffset as_vcmp(VFPRegister vd, VFPRegister vm, Condition c = Always);
     BufferOffset as_vcmpz(VFPRegister vd,  Condition c = Always);
 
     // Specifically, a move between two same sized-registers.
     BufferOffset as_vmov(VFPRegister vd, VFPRegister vsrc, Condition c = Always);
+
     // Transfer between Core and VFP.
     enum FloatToCore_ {
         FloatToCore = 1 << 20,
@@ -1564,26 +1592,29 @@ class Assembler : public AssemblerShared
     // to uniquely specify the encoding that we are going to use.
     BufferOffset as_vcvt(VFPRegister vd, VFPRegister vm, bool useFPSCR = false,
                          Condition c = Always);
+
     // Hard coded to a 32 bit fixed width result for now.
-    BufferOffset as_vcvtFixed(VFPRegister vd, bool isSigned, uint32_t fixedPoint, bool toFixed, Condition c = Always);
+    BufferOffset as_vcvtFixed(VFPRegister vd, bool isSigned, uint32_t fixedPoint,
+                              bool toFixed, Condition c = Always);
 
     // Transfer between VFP and memory.
     BufferOffset as_vdtr(LoadStore ls, VFPRegister vd, VFPAddr addr,
                          Condition c = Always /* vfp doesn't have a wb option*/);
 
     static void as_vdtr_patch(LoadStore ls, VFPRegister vd, VFPAddr addr,
-                              Condition c  /* vfp doesn't have a wb option*/, uint32_t* dest);
+                              Condition c /* vfp doesn't have a wb option */, uint32_t* dest);
 
     // VFP's ldm/stm work differently from the standard arm ones. You can only
     // transfer a range.
 
     BufferOffset as_vdtm(LoadStore st, Register rn, VFPRegister vd, int length,
-                 /*also has update conditions*/Condition c = Always);
+                 /* also has update conditions */ Condition c = Always);
 
     BufferOffset as_vimm(VFPRegister vd, VFPImm imm, Condition c = Always);
 
     BufferOffset as_vmrs(Register r, Condition c = Always);
     BufferOffset as_vmsr(Register r, Condition c = Always);
+
     // Label operations.
     bool nextLink(BufferOffset b, BufferOffset* next);
     void bind(Label* label, BufferOffset boff = BufferOffset());
@@ -1911,6 +1942,7 @@ class InstLDR : public InstDTR
     InstLDR(Index mode, Register rt, DTRAddr addr, Assembler::Condition c)
         : InstDTR(IsLoad, IsWord, mode, rt, addr, c)
     { }
+
     static bool IsTHIS(const Instruction& i);
     static InstLDR* AsTHIS(const Instruction& i);
 
@@ -1939,13 +1971,17 @@ class InstBranchReg : public Instruction
         IsBX  = 0x012fff10,
         IsBLX = 0x012fff30
     };
+
     static const uint32_t IsBRegMask = 0x0ffffff0;
+
     InstBranchReg(BranchTag tag, Register rm, Assembler::Condition c)
       : Instruction(tag | rm.code(), c)
     { }
+
   public:
     static bool IsTHIS (const Instruction& i);
     static InstBranchReg* AsTHIS (const Instruction& i);
+
     // Get the register that is being branched to
     void extractDest(Register* dest);
     // Make sure we are branching to a pre-known register
@@ -1961,6 +1997,7 @@ class InstBranchImm : public Instruction
         IsB   = 0x0a000000,
         IsBL  = 0x0b000000
     };
+
     static const uint32_t IsBImmMask = 0x0f000000;
 
     InstBranchImm(BranchTag tag, BOffImm off, Assembler::Condition c)
@@ -1970,6 +2007,7 @@ class InstBranchImm : public Instruction
   public:
     static bool IsTHIS (const Instruction& i);
     static InstBranchImm* AsTHIS (const Instruction& i);
+
     void extractImm(BOffImm* dest);
 };
 JS_STATIC_ASSERT(sizeof(InstBranchImm) == sizeof(Instruction));
@@ -1981,6 +2019,7 @@ class InstBXReg : public InstBranchReg
     static bool IsTHIS (const Instruction& i);
     static InstBXReg* AsTHIS (const Instruction& i);
 };
+
 class InstBLXReg : public InstBranchReg
 {
   public:
@@ -1991,6 +2030,7 @@ class InstBLXReg : public InstBranchReg
     static bool IsTHIS (const Instruction& i);
     static InstBLXReg* AsTHIS (const Instruction& i);
 };
+
 class InstBImm : public InstBranchImm
 {
   public:
@@ -2001,6 +2041,7 @@ class InstBImm : public InstBranchImm
     static bool IsTHIS (const Instruction& i);
     static InstBImm* AsTHIS (const Instruction& i);
 };
+
 class InstBLImm : public InstBranchImm
 {
   public:
@@ -2056,6 +2097,7 @@ class InstMovT : public InstMovWT
     InstMovT (Register rd, Imm16 imm, Assembler::Condition c)
       : InstMovWT(rd, imm, IsT, c)
     { }
+
     static bool IsTHIS (const Instruction& i);
     static InstMovT* AsTHIS (const Instruction& i);
 };
@@ -2063,12 +2105,15 @@ class InstMovT : public InstMovWT
 class InstALU : public Instruction
 {
     static const int32_t ALUMask = 0xc << 24;
+
   public:
-    InstALU (Register rd, Register rn, Operand2 op2, ALUOp op, SetCond_ sc, Assembler::Condition c)
-        : Instruction(maybeRD(rd) | maybeRN(rn) | op2.encode() | op | sc, c)
+    InstALU (Register rd, Register rn, Operand2 op2, ALUOp op, SBit s, Assembler::Condition c)
+      : Instruction(maybeRD(rd) | maybeRN(rn) | op2.encode() | op | s, c)
     { }
+
     static bool IsTHIS (const Instruction& i);
     static InstALU* AsTHIS (const Instruction& i);
+
     void extractOp(ALUOp* ret);
     bool checkOp(ALUOp op);
     void extractDest(Register* ret);
@@ -2093,11 +2138,14 @@ class InstMOV : public InstALU
 };
 
 
-class InstructionIterator {
+class InstructionIterator
+{
   private:
     Instruction* i;
+
   public:
-    InstructionIterator(Instruction* i_);
+    explicit InstructionIterator(Instruction* i_);
+
     Instruction* next() {
         i = i->next();
         return cur();
@@ -2108,6 +2156,7 @@ class InstructionIterator {
 };
 
 static const uint32_t NumIntArgRegs = 4;
+
 // There are 16 *float* registers available for arguments
 // If doubles are used, only half the number of registers are available.
 static const uint32_t NumFloatArgRegs = 16;
@@ -2117,6 +2166,7 @@ GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
     if (usedIntArgs >= NumIntArgRegs)
         return false;
+
     *out = Register::FromCode(usedIntArgs);
     return true;
 }
@@ -2131,12 +2181,14 @@ GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
     if (GetIntArgReg(usedIntArgs, usedFloatArgs, out))
         return true;
+
     // Unfortunately, we have to assume things about the point at which
     // GetIntArgReg returns false, because we need to know how many registers it
     // can allocate.
     usedIntArgs -= NumIntArgRegs;
     if (usedIntArgs >= NumCallTempNonArgRegs)
         return false;
+
     *out = CallTempNonArgRegs[usedIntArgs];
     return true;
 }
@@ -2220,7 +2272,8 @@ GetDoubleArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t* pa
 
 
 
-class DoubleEncoder {
+class DoubleEncoder
+{
     struct DoubleEntry
     {
         uint32_t dblTop;
@@ -2230,7 +2283,7 @@ class DoubleEncoder {
     static const DoubleEntry table[256];
 
   public:
-    bool lookup(uint32_t top, datastore::Imm8VFPImmData* ret) {
+    bool lookup(uint32_t top, datastore::Imm8VFPImmData* ret) const {
         for (int i = 0; i < 256; i++) {
             if (table[i].dblTop == top) {
                 *ret = table[i].data;
@@ -2241,8 +2294,10 @@ class DoubleEncoder {
     }
 };
 
-class AutoForbidPools {
+class AutoForbidPools
+{
     Assembler* masm_;
+
   public:
     // The maxInst argument is the maximum number of word sized instructions
     // that will be allocated within this context. It is used to determine if
@@ -2251,9 +2306,12 @@ class AutoForbidPools {
     //
     // Allocation of pool entries is not supported within this content so the
     // code can not use large integers or float constants etc.
-    AutoForbidPools(Assembler* masm, size_t maxInst) : masm_(masm) {
+    AutoForbidPools(Assembler* masm, size_t maxInst)
+      : masm_(masm)
+    {
         masm_->enterNoPool(maxInst);
     }
+
     ~AutoForbidPools() {
         masm_->leaveNoPool();
     }
