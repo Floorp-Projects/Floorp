@@ -14,7 +14,7 @@ Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
  * There is also a min-height on the browser, but we still don't want to set
  * frame.height to be larger than that, since it can cause problems with
  * resizing the toolbox and panel layout. */
-const MIN_PAGE_SIZE = exports.MIN_PAGE_SIZE = 100;
+const MIN_PAGE_SIZE = 25;
 
 /**
  * A toolbox host represents an object that contains a toolbox (e.g. the
