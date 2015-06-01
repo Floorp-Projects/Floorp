@@ -7195,15 +7195,10 @@ IonBuilder::testSingletonProperty(JSObject* obj, PropertyName* name)
 }
 
 JSObject*
-IonBuilder::testSingletonPropertyTypes(MDefinition* obj, PropertyName* name,
-                                       bool* testObject, bool* testString)
+IonBuilder::testSingletonPropertyTypes(MDefinition* obj, PropertyName* name)
 {
     // As for TestSingletonProperty, but the input is any value in a type set
-    // rather than a specific object. If testObject is set then the constant
-    // result can only be used after ensuring the input is an object.
-
-    *testObject = false;
-    *testString = false;
+    // rather than a specific object.
 
     TemporaryTypeSet* types = obj->resultTypeSet();
     if (types && types->unknownObject())
@@ -7213,8 +7208,12 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, PropertyName* name,
     if (objectSingleton)
         return testSingletonProperty(objectSingleton, name);
 
+    MIRType objType = obj->type();
+    if (objType == MIRType_Value && types)
+        objType = types->getKnownMIRType();
+
     JSProtoKey key;
-    switch (obj->type()) {
+    switch (objType) {
       case MIRType_String:
         key = JSProto_String;
         break;
@@ -7232,18 +7231,8 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, PropertyName* name,
         key = JSProto_Boolean;
         break;
 
-      case MIRType_Object:
-      case MIRType_Value: {
+      case MIRType_Object: {
         if (!types)
-            return nullptr;
-
-        if (types->hasType(TypeSet::StringType())) {
-            key = JSProto_String;
-            *testString = true;
-            break;
-        }
-
-        if (!types->maybeObject())
             return nullptr;
 
         // For property accesses which may be on many objects, we just need to
@@ -7282,8 +7271,6 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, PropertyName* name,
                 return nullptr;
             }
         }
-        // If this is not a known object, a test will be needed.
-        *testObject = (obj->type() != MIRType_Object);
         return singleton;
       }
       default:
@@ -7738,6 +7725,8 @@ IonBuilder::jsop_getelem()
         TemporaryTypeSet* types = bytecodeTypes(pc);
         return pushTypeBarrier(ins, types, BarrierKind::TypeSet);
     }
+
+    obj = maybeUnboxForPropertyAccess(obj);
 
     bool emitted = false;
 
@@ -10017,6 +10006,21 @@ IonBuilder::shouldAbortOnPreliminaryGroups(MDefinition *obj)
     return preliminary;
 }
 
+MDefinition*
+IonBuilder::maybeUnboxForPropertyAccess(MDefinition* def)
+{
+    if (def->type() != MIRType_Value)
+        return def;
+
+    MIRType type = inspector->expectedPropertyAccessInputType(pc);
+    if (type == MIRType_Value || !def->mightBeType(type))
+        return def;
+
+    MUnbox* unbox = MUnbox::New(alloc(), def, type, MUnbox::Fallible);
+    current->add(unbox);
+    return unbox;
+}
+
 bool
 IonBuilder::jsop_getprop(PropertyName* name)
 {
@@ -10041,6 +10045,8 @@ IonBuilder::jsop_getprop(PropertyName* name)
         if (!getPropTryArgumentsCallee(&emitted, obj, name) || emitted)
             return emitted;
     }
+
+    obj = maybeUnboxForPropertyAccess(obj);
 
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        obj, name, types);
@@ -10316,19 +10322,12 @@ IonBuilder::getPropTryConstant(bool* emitted, MDefinition* obj, PropertyName* na
         return true;
     }
 
-    bool testObject, testString;
-    JSObject* singleton = testSingletonPropertyTypes(obj, name, &testObject, &testString);
+    JSObject* singleton = testSingletonPropertyTypes(obj, name);
     if (!singleton)
         return true;
 
     // Property access is a known constant -- safe to emit.
-    MOZ_ASSERT(!testString || !testObject);
-    if (testObject)
-        current->add(MGuardObject::New(alloc(), obj));
-    else if (testString)
-        current->add(MGuardString::New(alloc(), obj));
-    else
-        obj->setImplicitlyUsedUnchecked();
+    obj->setImplicitlyUsedUnchecked();
 
     pushConstant(ObjectValue(*singleton));
 
