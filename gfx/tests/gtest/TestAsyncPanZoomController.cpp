@@ -509,7 +509,7 @@ Pan(const nsRefPtr<InputReceiver>& aTarget,
   gfxPrefs::SetAPZTouchStartTolerance(1.0f / 1000.0f);
   const int OVERCOME_TOUCH_TOLERANCE = 1;
 
-  const TimeDuration TIME_BETWEEN_TOUCH_EVENT = TimeDuration::FromMilliseconds(100);
+  const TimeDuration TIME_BETWEEN_TOUCH_EVENT = TimeDuration::FromMilliseconds(50);
 
   // Even if the caller doesn't care about the block id, we need it to set the
   // allowed touch behaviour below, so make sure aOutInputBlockId is non-null.
