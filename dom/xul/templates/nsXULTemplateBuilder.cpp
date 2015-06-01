@@ -502,7 +502,7 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                                    nsIXULTemplateResult* aNewResult,
                                    nsIDOMNode* aQueryNode)
 {
-    MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+    MOZ_LOG(gXULTemplateLog, PR_LOG_INFO,
            ("nsXULTemplateBuilder::UpdateResult %p %p %p",
            aOldResult, aNewResult, aQueryNode));
 

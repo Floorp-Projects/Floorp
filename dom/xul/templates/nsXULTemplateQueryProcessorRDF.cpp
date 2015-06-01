@@ -492,7 +492,7 @@ nsXULTemplateQueryProcessorRDF::GenerateResults(nsISupports* aDatasource,
                 nsAutoString mvar;
                 query->mMemberVariable->ToString(mvar);
 
-                MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+                MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                        ("QueryProcessor::GenerateResults using ref %s and vars [ ref: %s  member: %s]",
                        NS_ConvertUTF16toUTF8(id).get(),
                        NS_ConvertUTF16toUTF8(rvar).get(),
@@ -871,7 +871,7 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
         nsAutoString targetStr;
         nsXULContentUtils::GetTextForNode(aTarget, targetStr);
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsXULTemplateQueryProcessorRDF::Propagate: [%s] -> [%s] -> [%s]\n",
                sourceStr, propertyStr, NS_ConvertUTF16toUTF8(targetStr).get()));
     }
@@ -958,7 +958,7 @@ nsXULTemplateQueryProcessorRDF::Retract(nsIRDFResource* aSource,
         nsAutoString targetStr;
         nsXULContentUtils::GetTextForNode(aTarget, targetStr);
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsXULTemplateQueryProcessorRDF::Retract: [%s] -> [%s] -> [%s]\n",
                sourceStr, propertyStr, NS_ConvertUTF16toUTF8(targetStr).get()));
     }
@@ -1269,13 +1269,13 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
     else if (aTag == nsGkAtoms::member) {
         rv = CompileMemberCondition(aQuery, aCondition, aParentNode, aResult);
     }
-    else if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_ALWAYS)) {
+    else if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_INFO)) {
         nsAutoString tagstr;
         aTag->ToString(tagstr);
 
         nsAutoCString tagstrC;
         tagstrC.AssignWithConversion(tagstr);
-        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_INFO,
                ("xultemplate[%p] unrecognized condition test <%s>",
                 this, tagstrC.get()));
     }

@@ -38,7 +38,7 @@ using namespace mozilla;
 //    set NSPR_LOG_MODULES=nsPrefetch:5
 //    set NSPR_LOG_FILE=prefetch.log
 //
-// this enables PR_LOG_ALWAYS level information and places all output in
+// this enables PR_LOG_DEBUG level information and places all output in
 // the file http.log
 //
 static PRLogModuleInfo *gPrefetchLog;
