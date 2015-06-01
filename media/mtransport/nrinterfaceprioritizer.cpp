@@ -24,7 +24,7 @@ public:
     char buf[MAXIFNAME + 41];
     int r = nr_transport_addr_fmt_ifname_addr_string(&local_addr.addr, buf, sizeof(buf));
     if (r) {
-      MOZ_MTLOG(PR_LOG_ERROR, "Error formatting interface address string.");
+      MOZ_MTLOG(ML_ERROR, "Error formatting interface address string.");
       return false;
     }
     key_ = buf;

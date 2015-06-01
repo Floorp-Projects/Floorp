@@ -440,7 +440,7 @@ bool OmxDecoder::SetVideoFormat() {
     NS_WARNING("rotation not available, assuming 0");
   }
 
-  LOG(PR_LOG_DEBUG, "display width: %d display height %d width: %d height: %d component: %s format: %d stride: %d sliceHeight: %d rotation: %d",
+  LOG(LogLevel::Debug, "display width: %d display height %d width: %d height: %d component: %s format: %d stride: %d sliceHeight: %d rotation: %d",
       mDisplayWidth, mDisplayHeight, mVideoWidth, mVideoHeight, componentName,
       mVideoColorFormat, mVideoStride, mVideoSliceHeight, mVideoRotation);
 
@@ -454,7 +454,7 @@ bool OmxDecoder::SetAudioFormat() {
     return false;
   }
 
-  LOG(PR_LOG_DEBUG, "channelCount: %d sampleRate: %d",
+  LOG(LogLevel::Debug, "channelCount: %d sampleRate: %d",
       mAudioChannels, mAudioSampleRate);
 
   return true;
@@ -535,7 +535,7 @@ bool OmxDecoder::ToVideoFrame(VideoFrame *aFrame, int64_t aTimeUs, void *aData, 
     SemiPlanarYVU420Frame(aFrame, aTimeUs, aData, aSize, aKeyFrame);
     break;
   default:
-    LOG(PR_LOG_DEBUG, "Unknown video color format %08x", mVideoColorFormat);
+    LOG(LogLevel::Debug, "Unknown video color format %08x", mVideoColorFormat);
     return false;
   }
   return true;
@@ -668,7 +668,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       char *data = static_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
 
       if (unreadable) {
-        LOG(PR_LOG_DEBUG, "video frame is unreadable");
+        LOG(LogLevel::Debug, "video frame is unreadable");
       }
 
       if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
@@ -692,13 +692,13 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
     return false;
   }
   else if (err == -ETIMEDOUT) {
-    LOG(PR_LOG_DEBUG, "OmxDecoder::ReadVideo timed out, will retry");
+    LOG(LogLevel::Debug, "OmxDecoder::ReadVideo timed out, will retry");
     return true;
   }
   else {
     // UNKNOWN_ERROR is sometimes is used to mean "out of memory", but
     // regardless, don't keep trying to decode if the decoder doesn't want to.
-    LOG(PR_LOG_DEBUG, "OmxDecoder::ReadVideo failed, err=%d", err);
+    LOG(LogLevel::Debug, "OmxDecoder::ReadVideo failed, err=%d", err);
     return false;
   }
 
@@ -753,11 +753,11 @@ bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
     }
   }
   else if (err == -ETIMEDOUT) {
-    LOG(PR_LOG_DEBUG, "OmxDecoder::ReadAudio timed out, will retry");
+    LOG(LogLevel::Debug, "OmxDecoder::ReadAudio timed out, will retry");
     return true;
   }
   else if (err != OK) {
-    LOG(PR_LOG_DEBUG, "OmxDecoder::ReadAudio failed, err=%d", err);
+    LOG(LogLevel::Debug, "OmxDecoder::ReadAudio failed, err=%d", err);
     return false;
   }
 

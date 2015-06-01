@@ -68,7 +68,7 @@ IsCertBuiltInRoot(CERTCertificate* cert, bool& result) {
   }
   for (PK11SlotListElement* le = slots->head; le; le = le->next) {
     char* token = PK11_GetTokenName(le->slot);
-    MOZ_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+    MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
            ("BuiltInRoot? subject=%s token=%s",cert->subjectName, token));
     if (strcmp("Builtin Object Token", token) == 0) {
       result = true;
@@ -125,7 +125,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
         /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus,
         /*optional out*/ KeySizeStatus* keySizeStatus)
 {
-  MOZ_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("Top of VerifyCert\n"));
+  MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("Top of VerifyCert\n"));
 
   PR_ASSERT(cert);
   PR_ASSERT(usage == certificateUsageSSLServer || !(flags & FLAG_MUST_BE_EV));

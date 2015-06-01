@@ -50,7 +50,7 @@ namespace mozilla {
 // the same log module.
 #define MIRROR_LOG(x, ...) \
   MOZ_ASSERT(gStateWatchingLog); \
-  MOZ_LOG(gStateWatchingLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
+  MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
 
 template<typename T> class AbstractMirror;
 
