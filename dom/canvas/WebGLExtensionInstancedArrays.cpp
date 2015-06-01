@@ -73,6 +73,6 @@ WebGLExtensionInstancedArrays::IsSupported(const WebGLContext* webgl)
            gl->IsSupported(gl::GLFeature::instanced_arrays);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionInstancedArrays)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionInstancedArrays, ANGLE_instanced_arrays)
 
 } // namespace mozilla

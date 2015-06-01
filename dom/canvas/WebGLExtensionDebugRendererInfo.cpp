@@ -19,6 +19,6 @@ WebGLExtensionDebugRendererInfo::~WebGLExtensionDebugRendererInfo()
 {
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDebugRendererInfo)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDebugRendererInfo, WEBGL_debug_renderer_info)
 
 } // namespace mozilla

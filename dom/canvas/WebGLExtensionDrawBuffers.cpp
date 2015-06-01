@@ -83,6 +83,6 @@ WebGLExtensionDrawBuffers::IsSupported(const WebGLContext* webgl)
     return true;
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDrawBuffers)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDrawBuffers, WEBGL_draw_buffers)
 
 } // namespace mozilla

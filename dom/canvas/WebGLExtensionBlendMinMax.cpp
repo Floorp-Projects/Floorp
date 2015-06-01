@@ -26,6 +26,6 @@ WebGLExtensionBlendMinMax::IsSupported(const WebGLContext* webgl)
     return webgl->GL()->IsSupported(gl::GLFeature::blend_minmax);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionBlendMinMax)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionBlendMinMax, EXT_blend_minmax)
 
 } // namespace mozilla

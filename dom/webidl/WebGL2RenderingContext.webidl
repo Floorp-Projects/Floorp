@@ -8,6 +8,7 @@
  */
 
 typedef long long GLint64; // Should this be int64?
+typedef unsigned long long GLuint64;
 
 [Pref="webgl.enable-prototype-webgl2"]
 interface WebGLQuery {
