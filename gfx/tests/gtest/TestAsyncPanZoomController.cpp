@@ -214,10 +214,11 @@ public:
     }
   }
 
-  bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
-                                      ViewTransform* aOutTransform,
-                                      ParentLayerPoint& aScrollOffset) {
-    bool ret = AdvanceAnimations(aSampleTime);
+  bool SampleContentTransformForFrame(ViewTransform* aOutTransform,
+                                      ParentLayerPoint& aScrollOffset,
+                                      const TimeDuration& aIncrement = TimeDuration::FromMilliseconds(0)) {
+    mcc->AdvanceBy(aIncrement);
+    bool ret = AdvanceAnimations(mcc->Time());
     AsyncPanZoomController::SampleContentTransformForFrame(
       aOutTransform, aScrollOffset);
     return ret;
@@ -324,7 +325,7 @@ protected:
     ParentLayerPoint pointOut;
     ViewTransform viewTransformOut;
     mcc->AdvanceBy(increment);
-    apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+    apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   }
 
   /**
@@ -338,7 +339,7 @@ protected:
     bool recoveredFromOverscroll = false;
     ParentLayerPoint pointOut;
     ViewTransform viewTransformOut;
-    while (apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut)) {
+    while (apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut)) {
       // The reported scroll offset should be the same throughout.
       EXPECT_EQ(aExpectedScrollOffset, pointOut);
 
@@ -934,7 +935,7 @@ TEST_F(APZCBasicTester, Overzoom) {
 TEST_F(APZCBasicTester, SimpleTransform) {
   ParentLayerPoint pointOut;
   ViewTransform viewTransformOut;
-  apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
 
   EXPECT_EQ(ParentLayerPoint(), pointOut);
   EXPECT_EQ(ViewTransform(), viewTransformOut);
@@ -1003,39 +1004,39 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   // initial transform
   apzc->SetFrameMetrics(metrics);
   apzc->NotifyLayersUpdated(metrics, true);
-  apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerToParentLayerScale(1), ParentLayerPoint()), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(60, 60), pointOut);
 
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->NotifyLayersUpdated(childMetrics, true);
-  childApzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+  childApzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerToParentLayerScale(1), ParentLayerPoint()), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(60, 60), pointOut);
 
   // do an async scroll by 5 pixels and check the transform
   metrics.ScrollBy(CSSPoint(5, 0));
   apzc->SetFrameMetrics(metrics);
-  apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerToParentLayerScale(1), ParentLayerPoint(-30, 0)), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(90, 60), pointOut);
 
   childMetrics.ScrollBy(CSSPoint(5, 0));
   childApzc->SetFrameMetrics(childMetrics);
-  childApzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+  childApzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerToParentLayerScale(1), ParentLayerPoint(-30, 0)), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(90, 60), pointOut);
 
   // do an async zoom of 1.5x and check the transform
   metrics.ZoomBy(1.5f);
   apzc->SetFrameMetrics(metrics);
-  apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerToParentLayerScale(1.5), ParentLayerPoint(-45, 0)), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(135, 90), pointOut);
 
   childMetrics.ZoomBy(1.5f);
   childApzc->SetFrameMetrics(childMetrics);
-  childApzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+  childApzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(ViewTransform(LayerToParentLayerScale(1.5), ParentLayerPoint(-45, 0)), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(135, 90), pointOut);
 
@@ -1064,7 +1065,7 @@ protected:
 
     // Pan down
     PanAndCheckStatus(apzc, mcc, touchStart, touchEnd, aShouldBeConsumed, &allowedTouchBehaviors);
-    apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+    apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
 
     if (aShouldTriggerScroll) {
       EXPECT_EQ(ParentLayerPoint(0, -(touchEnd-touchStart)), pointOut);
@@ -1080,7 +1081,7 @@ protected:
 
     // Pan back
     PanAndCheckStatus(apzc, mcc, touchEnd, touchStart, aShouldBeConsumed, &allowedTouchBehaviors);
-    apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+    apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
 
     EXPECT_EQ(ParentLayerPoint(), pointOut);
     EXPECT_EQ(ViewTransform(), viewTransformOut);
@@ -1108,7 +1109,7 @@ protected:
     // prevent-default timer).
     EXPECT_LE(1, mcc->RunThroughDelayedTasks());
 
-    apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+    apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
     EXPECT_EQ(ParentLayerPoint(), pointOut);
     EXPECT_EQ(ViewTransform(), viewTransformOut);
 
@@ -1173,7 +1174,7 @@ TEST_F(APZCBasicTester, Fling) {
   Pan(apzc, mcc, touchStart, touchEnd);
   ParentLayerPoint lastPoint;
   for (int i = 1; i < 50; i+=1) {
-    apzc->SampleContentTransformForFrame(mcc->Time()+TimeDuration::FromMilliseconds(i), &viewTransformOut, pointOut);
+    apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut, TimeDuration::FromMilliseconds(1));
     EXPECT_GT(pointOut.y, lastPoint.y);
     lastPoint = pointOut;
   }
@@ -1341,7 +1342,7 @@ TEST_F(APZCBasicTester, OverScrollAbort) {
 
   // This sample call will run to the end of the fling animation
   // and will schedule the overscroll animation.
-  apzc->SampleContentTransformForFrame(mcc->Time() + TimeDuration::FromMilliseconds(10000), &viewTransformOut, pointOut);
+  apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut, TimeDuration::FromMilliseconds(10000));
   EXPECT_TRUE(apzc->IsOverscrolled());
 
   // At this point, we have an active overscroll animation.
@@ -1396,7 +1397,7 @@ protected:
     // Advance the fling animation by timeDelta milliseconds.
     ParentLayerPoint pointOut;
     ViewTransform viewTransformOut;
-    apzc->SampleContentTransformForFrame(mcc->Time() + TimeDuration::FromMilliseconds(timeDelta), &viewTransformOut, pointOut);
+    apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut, TimeDuration::FromMilliseconds(timeDelta));
 
     // Deliver a tap to abort the fling. Ensure that we get a HandleSingleTap
     // call out of it if and only if the fling is slow.
@@ -1412,7 +1413,7 @@ protected:
 
     // Verify that we didn't advance any further after the fling was aborted, in either case.
     ParentLayerPoint finalPointOut;
-    apzc->SampleContentTransformForFrame(mcc->Time() + TimeDuration::FromMilliseconds(timeDelta + 1000), &viewTransformOut, finalPointOut);
+    apzc->SampleContentTransformForFrame(&viewTransformOut, finalPointOut, TimeDuration::FromMilliseconds(1000));
     EXPECT_EQ(pointOut.x, finalPointOut.x);
     EXPECT_EQ(pointOut.y, finalPointOut.y);
 
@@ -1434,15 +1435,15 @@ protected:
     // Sample the fling a couple of times to ensure it's going.
     ParentLayerPoint point, finalPoint;
     ViewTransform viewTransform;
-    apzc->SampleContentTransformForFrame(mcc->Time() + TimeDuration::FromMilliseconds(10), &viewTransform, point);
-    apzc->SampleContentTransformForFrame(mcc->Time() + TimeDuration::FromMilliseconds(20), &viewTransform, finalPoint);
+    apzc->SampleContentTransformForFrame(&viewTransform, point, TimeDuration::FromMilliseconds(10));
+    apzc->SampleContentTransformForFrame(&viewTransform, finalPoint, TimeDuration::FromMilliseconds(10));
     EXPECT_GT(finalPoint.y, point.y);
 
     // Now we put our finger down to stop the fling
     TouchDown(apzc, 10, 10, mcc->Time(), &blockId);
 
     // Re-sample to make sure it hasn't moved
-    apzc->SampleContentTransformForFrame(mcc->Time() + TimeDuration::FromMilliseconds(30), &viewTransform, point);
+    apzc->SampleContentTransformForFrame(&viewTransform, point, TimeDuration::FromMilliseconds(10));
     EXPECT_EQ(finalPoint.x, point.x);
     EXPECT_EQ(finalPoint.y, point.y);
 
@@ -1452,7 +1453,7 @@ protected:
     while (mcc->RunThroughDelayedTasks());
 
     // Verify the page hasn't moved
-    apzc->SampleContentTransformForFrame(mcc->Time() + TimeDuration::FromMilliseconds(100), &viewTransform, point);
+    apzc->SampleContentTransformForFrame(&viewTransform, point, TimeDuration::FromMilliseconds(70));
     EXPECT_EQ(finalPoint.x, point.x);
     EXPECT_EQ(finalPoint.y, point.y);
 
@@ -1651,7 +1652,7 @@ protected:
 
     ParentLayerPoint pointOut;
     ViewTransform viewTransformOut;
-    apzc->SampleContentTransformForFrame(mcc->Time(), &viewTransformOut, pointOut);
+    apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
 
     EXPECT_EQ(ParentLayerPoint(), pointOut);
     EXPECT_EQ(ViewTransform(), viewTransformOut);
@@ -2455,7 +2456,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
 
     ViewTransform viewTransform;
     ParentLayerPoint point;
-    apzcroot->SampleContentTransformForFrame(mcc->Time(), &viewTransform, point);
+    apzcroot->SampleContentTransformForFrame(&viewTransform, point);
     EXPECT_EQ(0, point.x);
     EXPECT_EQ((i + 1) * 10, point.y);
     EXPECT_EQ(0, viewTransform.mTranslation.x);
