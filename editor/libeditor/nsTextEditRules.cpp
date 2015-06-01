@@ -252,9 +252,11 @@ nsTextEditRules::WillDoAction(Selection* aSelection,
 
   switch (info->action) {
     case EditAction::insertBreak:
+      UndefineCaretBidiLevel(aSelection);
       return WillInsertBreak(aSelection, aCancel, aHandled, info->maxLength);
     case EditAction::insertText:
     case EditAction::insertIMEText:
+      UndefineCaretBidiLevel(aSelection);
       return WillInsertText(info->action, aSelection, aCancel, aHandled,
                             info->inString, info->outString, info->maxLength);
     case EditAction::deleteSelection:
