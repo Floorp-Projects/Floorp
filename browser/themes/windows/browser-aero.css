@@ -180,26 +180,33 @@
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
-  /* Vertical toolbar border */
-  #main-window:not([customizing])[sizemode=normal] #navigator-toolbox:not(:-moz-lwtheme)::after,
-  #main-window:not([customizing])[sizemode=normal] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
-  #main-window:not([customizing])[sizemode=normal] #navigator-toolbox:-moz-lwtheme,
-  #main-window[customizing] #navigator-toolbox::after,
-  #main-window[customizing] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
-    border-left: 1px solid @toolbarShadowColor@;
-    border-right: 1px solid @toolbarShadowColor@;
-    background-clip: padding-box;
-  }
-  #main-window[sizemode=normal] #browser-border-start,
-  #main-window[sizemode=normal] #browser-border-end {
-    display: -moz-box;
-    background-color: @toolbarShadowColor@;
-    width: 1px;
-  }
-  #main-window[sizemode=normal] #browser-bottombox {
-    border: 1px solid @toolbarShadowColor@;
-    border-top-style: none;
-    background-clip: padding-box;
+  /* Show borders on vista through win8, but not on win10 and later: */
+  @media (-moz-os-version: windows-vista),
+         (-moz-os-version: windows-win7),
+         (-moz-os-version: windows-win8) {
+    /* Vertical toolbar border */
+    #main-window:not([customizing])[sizemode=normal] #navigator-toolbox:not(:-moz-lwtheme)::after,
+    #main-window:not([customizing])[sizemode=normal] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
+    #main-window:not([customizing])[sizemode=normal] #navigator-toolbox:-moz-lwtheme,
+    #main-window[customizing] #navigator-toolbox::after,
+    #main-window[customizing] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+      border-left: 1px solid @toolbarShadowColor@;
+      border-right: 1px solid @toolbarShadowColor@;
+      background-clip: padding-box;
+    }
+
+    #main-window[sizemode=normal] #browser-border-start,
+    #main-window[sizemode=normal] #browser-border-end {
+      display: -moz-box;
+      background-color: @toolbarShadowColor@;
+      width: 1px;
+    }
+
+    #main-window[sizemode=normal] #browser-bottombox {
+      border: 1px solid @toolbarShadowColor@;
+      border-top-style: none;
+      background-clip: padding-box;
+    }
   }
 
   #main-window[sizemode=normal] #TabsToolbar {
