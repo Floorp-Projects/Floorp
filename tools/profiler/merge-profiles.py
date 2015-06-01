@@ -50,15 +50,23 @@ def MergeProfiles(files):
             pidStr = pid + ":"
 
             thread['startTime'] = fileData['profileJSON']['meta']['startTime']
-            samples = thread['samples']
-            for sample in thread['samples']:
-                for frame in sample['frames']:
-                    if "location" in frame and frame['location'][0:2] == '0x':
-                        oldLoc = frame['location']
-                        newLoc = pidStr + oldLoc
-                        frame['location'] = newLoc
-                        # Default to the unprefixed symbol if no translation is available
-                        symTable[newLoc] = oldLoc
+            if meta['version'] >= 3:
+                stringTable = thread['stringTable']
+                for i, str in enumerate(stringTable):
+                    if str[:2] == '0x':
+                        newLoc = pidStr + str
+                        stringTable[i] = newLoc
+                        symTable[newLoc] = str
+            else:
+                samples = thread['samples']
+                for sample in thread['samples']:
+                    for frame in sample['frames']:
+                        if "location" in frame and frame['location'][0:2] == '0x':
+                            oldLoc = frame['location']
+                            newLoc = pidStr + oldLoc
+                            frame['location'] = newLoc
+                            # Default to the unprefixed symbol if no translation is
+                            symTable[newLoc] = oldLoc
 
         filesyms = fileData['symbolicationTable']
         for sym in filesyms.keys():
@@ -68,11 +76,19 @@ def MergeProfiles(files):
     # earliest start
     for thread in threads:
         delta = thread['startTime'] - minStartTime
-        for sample in thread['samples']:
-            if "time" in sample:
-                sample['time'] += delta
-        for marker in thread['markers']:
-            marker['time'] += delta
+        if meta['version'] >= 3:
+            idxTime = thread['samples']['schema']['time']
+            for sample in thread['samples']['data']:
+                sample[idxTime] += delta
+            idxTime = thread['markers']['schema']['time']
+            for marker in thread['markers']['data']:
+                marker[idxTime] += delta
+        else:
+            for sample in thread['samples']:
+                if "time" in sample:
+                    sample['time'] += delta
+            for marker in thread['markers']:
+                marker['time'] += delta
 
     result = dict()
     result['profileJSON'] = dict()
