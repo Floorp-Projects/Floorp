@@ -294,9 +294,10 @@ BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
     return;
   }
 
-  mSocket =
-    new BluetoothSocket(this, BluetoothSocketType::RFCOMM, false, true);
-  mSocket->ConnectSocket(aDeviceAddress, kObexObjectPush, -1);
+  mSocket = new BluetoothSocket(this);
+  mSocket->Connect(aDeviceAddress, kObexObjectPush,
+                   BluetoothSocketType::RFCOMM, -1,
+                   false, true);
 }
 
 void
@@ -356,12 +357,14 @@ BluetoothOppManager::Listen()
     mServerSocket = nullptr;
   }
 
-  mServerSocket =
-    new BluetoothSocket(this, BluetoothSocketType::RFCOMM, false, true);
+  mServerSocket = new BluetoothSocket(this);
 
-  if (!mServerSocket->ListenSocket(NS_LITERAL_STRING("OBEX Object Push"),
-                                   kObexObjectPush,
-                                   BluetoothReservedChannels::CHANNEL_OPUSH)) {
+  nsresult rv = mServerSocket->Listen(NS_LITERAL_STRING("OBEX Object Push"),
+                                      kObexObjectPush,
+                                      BluetoothSocketType::RFCOMM,
+                                      BluetoothReservedChannels::CHANNEL_OPUSH,
+                                      false, true);
+  if (NS_FAILED(rv)) {
     BT_WARNING("[OPP] Can't listen on RFCOMM socket!");
     mServerSocket = nullptr;
     return false;
