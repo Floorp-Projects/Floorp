@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-
 #include "nsSVGAngle.h"
+
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SVGMarkerElement.h"
+#include "mozilla/Move.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
 #include "nsSMILValue.h"
 #include "nsSVGAttrTearoffTable.h"
@@ -383,7 +384,7 @@ nsSVGAngle::SMILOrient::ValueFromString(const nsAString& aStr,
     val.mU.mOrient.mUnit = unitType;
     val.mU.mOrient.mOrientType = SVG_MARKER_ORIENT_ANGLE;
   }
-  aValue.Swap(val);
+  aValue = Move(val);
   aPreventCachingOfSandwich = false;
 
   return NS_OK;

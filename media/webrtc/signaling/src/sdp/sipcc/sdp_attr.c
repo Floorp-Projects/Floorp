@@ -5163,13 +5163,11 @@ sdp_result_e sdp_parse_attr_setup(sdp_t *sdp_p,
             "%s Warning: Unknown setup attribute",
             sdp_p->debug_str);
         return SDP_INVALID_PARAMETER;
-        break;
     default:
         /* This is an internal error, not a parsing error */
         CSFLogError(logTag, "%s Error: Invalid setup enum (%d)",
                     sdp_p->debug_str, attr_p->attr.setup);
         return SDP_FAILURE;
-        break;
     }
 
     return SDP_SUCCESS;
@@ -5223,13 +5221,11 @@ sdp_result_e sdp_parse_attr_connection(sdp_t *sdp_p,
             "%s Warning: Unknown connection attribute",
             sdp_p->debug_str);
         return SDP_INVALID_PARAMETER;
-        break;
     default:
         /* This is an internal error, not a parsing error */
         CSFLogError(logTag, "%s Error: Invalid connection enum (%d)",
                     sdp_p->debug_str, attr_p->attr.connection);
         return SDP_FAILURE;
-        break;
     }
     return SDP_SUCCESS;
 }

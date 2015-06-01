@@ -22,7 +22,7 @@ interface nsIPrintSession;
 /**
  * Simplified graphics interface for JS rendering.
  */
-[scriptable, uuid(1bcfc611-8941-4c39-9e06-7116e564a1ce)]
+[scriptable, uuid(11b86b46-12c9-4e63-8023-129dd239ace7)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -137,9 +137,14 @@ interface nsIPrintSettings : nsISupports
   boolean GetPrintOptions(in int32_t aType);
 
   /**
-   * Set PrintOptions Bit field
+   * Get PrintOptions Bit field
    */
   int32_t GetPrintOptionsBits();
+
+  /**
+   * Set PrintOptions Bit field
+   */
+  void SetPrintOptionsBits(in int32_t bits);
 
   /**
    * Get the page size in twips, considering the

@@ -27,6 +27,7 @@ flags:
     - aries-ota
     - aries-eng
     - android-api-11
+    - linux64
 
   tests:
     - cppunit
