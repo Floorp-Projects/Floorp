@@ -219,6 +219,8 @@ private:
   nsRefPtr<BluetoothSocket> mRfcommSocket;
   nsRefPtr<BluetoothSocket> mL2capSocket;
 
+  BluetoothSocketType mSocketType;
+
   // This holds the time when OPP manager fail to get service channel and
   // prepare to refresh SDP records.
   mozilla::TimeStamp mLastServiceChannelCheck;
