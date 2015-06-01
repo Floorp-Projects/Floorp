@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGAnimatedPathSegList.h"
+
 #include "DOMSVGPathSegList.h"
+#include "mozilla/Move.h"
 #include "nsSVGElement.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
@@ -160,7 +162,7 @@ SVGAnimatedPathSegList::
   nsresult rv = list->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
     list->SetElement(mElement);
-    aValue.Swap(val);
+    aValue = Move(val);
   }
   aPreventCachingOfSandwich = false;
   return rv;
@@ -179,7 +181,7 @@ SVGAnimatedPathSegList::SMILAnimatedPathSegList::GetBaseValue() const
   nsresult rv = list->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     list->SetElement(mElement);
-    val.Swap(tmp);
+    val = Move(tmp);
   }
   return val;
 }

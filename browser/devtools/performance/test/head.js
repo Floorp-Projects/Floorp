@@ -538,22 +538,6 @@ function getInflatedStackLocations(thread, sample) {
 }
 
 /**
- * Get a path in a FrameNode call tree.
- */
-function getFrameNodePath(root, path) {
-  let calls = root.calls;
-  let node;
-  for (let key of path.split(" > ")) {
-    node = calls.find((node) => node.key == key);
-    if (!node) {
-      break;
-    }
-    calls = node.calls;
-  }
-  return node;
-}
-
-/**
  * Synthesize a profile for testing.
  */
 function synthesizeProfileForTest(samples) {

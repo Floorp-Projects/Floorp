@@ -17,7 +17,10 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/ObjectUtils.jsm");
+
+const Utils = TelemetryUtils;
 
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
@@ -151,21 +154,9 @@ const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 const PREF_UPDATE_ENABLED = "app.update.enabled";
 const PREF_UPDATE_AUTODOWNLOAD = "app.update.auto";
 
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-
 const EXPERIMENTS_CHANGED_TOPIC = "experiments-changed";
 const SEARCH_ENGINE_MODIFIED_TOPIC = "browser-search-engine-modified";
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
-
-/**
- * Turn a millisecond timestamp into a day timestamp.
- *
- * @param aMsec a number of milliseconds since epoch.
- * @return the number of whole days denoted by the input.
- */
-function truncateToDays(aMsec) {
-  return Math.floor(aMsec / MILLISECONDS_PER_DAY);
-}
 
 /**
  * Get the current browser.
@@ -502,8 +493,8 @@ EnvironmentAddonBuilder.prototype = {
         type: addon.type,
         foreignInstall: addon.foreignInstall,
         hasBinaryComponents: addon.hasBinaryComponents,
-        installDay: truncateToDays(installDate.getTime()),
-        updateDay: truncateToDays(updateDate.getTime()),
+        installDay: Utils.millisecondsToDays(installDate.getTime()),
+        updateDay: Utils.millisecondsToDays(updateDate.getTime()),
       };
     }
 
@@ -537,8 +528,8 @@ EnvironmentAddonBuilder.prototype = {
         scope: theme.scope,
         foreignInstall: theme.foreignInstall,
         hasBinaryComponents: theme.hasBinaryComponents,
-        installDay: truncateToDays(installDate.getTime()),
-        updateDay: truncateToDays(updateDate.getTime()),
+        installDay: Utils.millisecondsToDays(installDate.getTime()),
+        updateDay: Utils.millisecondsToDays(updateDate.getTime()),
       };
     }
 
@@ -571,7 +562,7 @@ EnvironmentAddonBuilder.prototype = {
         disabled: tag.disabled,
         clicktoplay: tag.clicktoplay,
         mimeTypes: tag.getMimeTypes({}),
-        updateDay: truncateToDays(updateDate.getTime()),
+        updateDay: Utils.millisecondsToDays(updateDate.getTime()),
       });
     }
 
@@ -928,7 +919,7 @@ EnvironmentCache.prototype = {
   },
 
   /**
-   * Determine if Firefox is the default browser.
+   * Determine if we're the default browser.
    * @returns null on error, true if we are the default browser, or false otherwise.
    */
   _isDefaultBrowser: function () {
@@ -936,7 +927,7 @@ EnvironmentCache.prototype = {
     return true;
 #else
     if (!("@mozilla.org/browser/shell-service;1" in Cc)) {
-      this._log.error("_isDefaultBrowser - Could not obtain shell service");
+      this._log.info("_isDefaultBrowser - Could not obtain browser shell service");
       return null;
     }
 
@@ -949,14 +940,12 @@ EnvironmentCache.prototype = {
       return null;
     }
 
-    if (shellService) {
-      try {
-        // This uses the same set of flags used by the pref pane.
-        return shellService.isDefaultBrowser(false, true) ? true : false;
-      } catch (ex) {
-        this._log.error("_isDefaultBrowser - Could not determine if default browser", ex);
-        return null;
-      }
+    try {
+      // This uses the same set of flags used by the pref pane.
+      return shellService.isDefaultBrowser(false, true) ? true : false;
+    } catch (ex) {
+      this._log.error("_isDefaultBrowser - Could not determine if default browser", ex);
+      return null;
     }
 
     return null;
@@ -1003,9 +992,10 @@ EnvironmentCache.prototype = {
     let resetDate = yield profileAccessor.reset;
 
     this._currentEnvironment.profile.creationDate =
-      truncateToDays(creationDate);
+      Utils.millisecondsToDays(creationDate);
     if (resetDate) {
-      this._currentEnvironment.profile.resetDate = truncateToDays(resetDate);
+      this._currentEnvironment.profile.resetDate =
+        Utils.millisecondsToDays(resetDate);
     }
   }),
 

@@ -18,7 +18,7 @@ loader.lazyRequireGetter(this, "DevToolsUtils",
 loader.lazyRequireGetter(this, "L10N",
   "devtools/performance/global", true);
 loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/performance/global", true);
+  "devtools/performance/markers", true);
 loader.lazyRequireGetter(this, "RecordingUtils",
   "devtools/performance/recording-utils");
 loader.lazyRequireGetter(this, "RecordingModel",
