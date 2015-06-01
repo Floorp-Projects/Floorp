@@ -20,18 +20,17 @@ add_task(function*() {
   let nbox = gBrowser.getNotificationBox();
   let {clientHeight: nboxHeight, clientWidth: nboxWidth} = nbox;
   let toolbox = yield gDevTools.showToolbox(TargetFactory.forTab(tab));
-  let {MIN_PAGE_SIZE} = devtools.require("devtools/framework/toolbox-hosts");
 
   is (nbox.clientHeight, nboxHeight, "Opening the toolbox hasn't changed the height of the nbox");
   is (nbox.clientWidth, nboxWidth, "Opening the toolbox hasn't changed the width of the nbox");
 
   let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
-  is (iframe.clientHeight, nboxHeight - MIN_PAGE_SIZE, "The iframe fits within the available space");
+  is (iframe.clientHeight, nboxHeight - 25, "The iframe fits within the available space");
 
   yield toolbox.switchHost(devtools.Toolbox.HostType.SIDE);
   iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
-  is (iframe.clientWidth, nboxWidth - MIN_PAGE_SIZE, "The iframe fits within the available space");
+  is (iframe.clientWidth, nboxWidth - 25, "The iframe fits within the available space");
 
   yield cleanup(toolbox);
 });
