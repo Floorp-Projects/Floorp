@@ -285,7 +285,7 @@ InterpreterFrame::epilogue(JSContext* cx)
     if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
         DebugScopes::onPopCall(this, cx);
 
-    if (isConstructing() && thisValue().isObject() && returnValue().isPrimitive())
+    if (!fun()->isGenerator() && isConstructing() && thisValue().isObject() && returnValue().isPrimitive())
         setReturnValue(ObjectValue(constructorThis()));
 }
 

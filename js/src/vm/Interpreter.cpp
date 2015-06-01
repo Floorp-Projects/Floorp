@@ -3812,6 +3812,10 @@ CASE(JSOP_RESUME)
         // popInlineFrame expects there to be an additional value on the stack
         // to pop off, so leave "gen" on the stack.
 
+        // Again, lie to popInlineFrame. Add a "new.target" to pop later.
+        if (gen->as<GeneratorObject>().isConstructing())
+            PUSH_UNDEFINED();
+
         GeneratorObject::ResumeKind resumeKind = GeneratorObject::getResumeKind(REGS.pc);
         bool ok = GeneratorObject::resume(cx, activation, gen, val, resumeKind);
         SET_SCRIPT(REGS.fp()->script());
