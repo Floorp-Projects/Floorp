@@ -163,31 +163,18 @@ SetDisplayPortMargins(nsIPresShell* aPresShell,
   nsLayoutUtils::SetDisplayPortBaseIfNotSet(aContent, base);
 }
 
-static already_AddRefed<nsIPresShell>
-GetPresShell(const nsIContent* aContent)
-{
-  nsCOMPtr<nsIPresShell> result;
-  if (nsIDocument* doc = aContent->GetComposedDoc()) {
-    result = doc->GetShell();
-  }
-  return result.forget();
-}
-
 void
-APZCCallbackHelper::UpdateRootFrame(nsIContent* aContent,
+APZCCallbackHelper::UpdateRootFrame(nsIPresShell* aPresShell,
                                     FrameMetrics& aMetrics)
 {
   // Precondition checks
-  MOZ_ASSERT(aContent);
+  MOZ_ASSERT(aPresShell);
   MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
-  nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent);
-  MOZ_ASSERT(shell);
-
   if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
     return;
   }
 
-  float presShellResolution = nsLayoutUtils::GetResolution(shell);
+  float presShellResolution = nsLayoutUtils::GetResolution(aPresShell);
 
   // If the pres shell resolution has changed on the content side side
   // the time this repaint request was fired, consider this request out of date
@@ -207,19 +194,30 @@ APZCCallbackHelper::UpdateRootFrame(nsIContent* aContent,
   // Note that this needs to happen before scrolling the frame (in UpdateFrameCommon),
   // otherwise the scroll position may get clamped incorrectly.
   CSSSize scrollPort = aMetrics.CalculateCompositedSizeInCssPixels();
-  nsLayoutUtils::SetScrollPositionClampingScrollPortSize(shell, scrollPort);
+  nsLayoutUtils::SetScrollPositionClampingScrollPortSize(aPresShell, scrollPort);
 
   // The pres shell resolution is updated by the the async zoom since the
   // last paint.
   presShellResolution = aMetrics.GetPresShellResolution()
                       * aMetrics.GetAsyncZoom().scale;
-  nsLayoutUtils::SetResolutionAndScaleTo(shell, presShellResolution);
+  nsLayoutUtils::SetResolutionAndScaleTo(aPresShell, presShellResolution);
 
   // Do this as late as possible since scrolling can flush layout. It also
   // adjusts the display port margins, so do it before we set those.
-  ScrollFrame(aContent, aMetrics);
+  nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
+  ScrollFrame(content, aMetrics);
 
-  SetDisplayPortMargins(shell, aContent, aMetrics);
+  SetDisplayPortMargins(aPresShell, content, aMetrics);
+}
+
+static already_AddRefed<nsIPresShell>
+GetPresShell(const nsIContent* aContent)
+{
+  nsCOMPtr<nsIPresShell> result;
+  if (nsIDocument* doc = aContent->GetComposedDoc()) {
+    result = doc->GetShell();
+  }
+  return result.forget();
 }
 
 void
