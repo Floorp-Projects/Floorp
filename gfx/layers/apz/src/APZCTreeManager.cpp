@@ -1339,7 +1339,7 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
     result->Add(apzc);
 
     if (apzc->GetScrollHandoffParentId() == FrameMetrics::NULL_SCROLL_ID) {
-      if (!apzc->HasNoParentWithSameLayersId()) {
+      if (!apzc->IsRootForLayersId()) {
         // This probably indicates a bug or missed case in layout code
         NS_WARNING("Found a non-root APZ with no handoff parent");
       }
@@ -1352,9 +1352,9 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
     MOZ_ASSERT(apzc->GetScrollHandoffParentId() != apzc->GetGuid().mScrollId);
 
     // Find the AsyncPanZoomController instance with a matching layersId and
-    // the scroll id that matches apzc->GetScrollHandoffParentId(). To do this
-    // search the subtree with the same layersId for the apzc with the specified
-    // scroll id.
+    // the scroll id that matches apzc->GetScrollHandoffParentId().
+    // As an optimization, we start by walking up the APZC tree from 'apzc'
+    // until we reach the top of the layer subtree for this layers id.
     AsyncPanZoomController* scrollParent = nullptr;
     AsyncPanZoomController* parent = apzc;
     while (!parent->HasNoParentWithSameLayersId()) {
@@ -1367,6 +1367,7 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
         break;
       }
     }
+    // If that heuristic didn't turn up the scroll parent, do a full tree search.
     if (!scrollParent) {
       ScrollableLayerGuid guid(parent->GetGuid().mLayersId, 0, apzc->GetScrollHandoffParentId());
       nsRefPtr<HitTestingTreeNode> node = GetTargetNode(guid, &GuidComparatorIgnoringPresShell);
