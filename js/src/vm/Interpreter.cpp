@@ -4039,21 +4039,30 @@ js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHa
             return true;
     }
 
-    /* Optimize (.1).toString(). */
-    RootedObject obj(cx);
-    if (v.isNumber() && name == cx->names().toString) {
-        NativeObject* proto = GlobalObject::getOrCreateNumberPrototype(cx, cx->global());
+    // Optimize common cases like (2).toString() or "foo".valueOf() to not
+    // create a wrapper object.
+    if (v.isPrimitive() && !v.isNullOrUndefined()) {
+        NativeObject* proto;
+        if (v.isNumber()) {
+            proto = GlobalObject::getOrCreateNumberPrototype(cx, cx->global());
+        } else if (v.isString()) {
+            proto = GlobalObject::getOrCreateStringPrototype(cx, cx->global());
+        } else if (v.isBoolean()) {
+            proto = GlobalObject::getOrCreateBooleanPrototype(cx, cx->global());
+        } else {
+            MOZ_ASSERT(v.isSymbol());
+            proto = GlobalObject::getOrCreateSymbolPrototype(cx, cx->global());
+        }
         if (!proto)
-            return false;
-        if (ClassMethodIsNative(cx, proto, &NumberObject::class_, NameToId(name), num_toString))
-            obj = proto;
+             return false;
+
+        if (GetPropertyPure(cx, proto, NameToId(name), vp.address()))
+            return true;
     }
 
-    if (!obj) {
-        obj = ToObjectFromStack(cx, v);
-        if (!obj)
-            return false;
-    }
+    RootedObject obj(cx, ToObjectFromStack(cx, v));
+    if (!obj)
+        return false;
 
     return GetProperty(cx, obj, obj, name, vp);
 }
