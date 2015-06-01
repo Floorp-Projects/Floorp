@@ -23,7 +23,7 @@ nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
       mRefVariable(aRefVariable),
       mTag(nullptr)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoString tag(NS_LITERAL_STRING("(none)"));
         if (mTag)
             mTag->ToString(tag);

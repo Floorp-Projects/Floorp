@@ -424,7 +424,7 @@ nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd)
             return PR_FAILURE;
         }
 
-        if (PR_LOG_TEST(gSOCKSLog, PR_LOG_DEBUG)) {
+        if (MOZ_LOG_TEST(gSOCKSLog, PR_LOG_DEBUG)) {
           char buf[kIPv6CStrBufSize];
           NetAddrToString(&mInternalProxyAddr, buf, sizeof(buf));
           LOGDEBUG(("socks: trying proxy server, %s:%hu",

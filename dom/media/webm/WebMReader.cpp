@@ -104,7 +104,7 @@ static void webm_log(nestegg * context,
                      unsigned int severity,
                      char const * format, ...)
 {
-  if (!PR_LOG_TEST(gNesteggLog, PR_LOG_DEBUG)) {
+  if (!MOZ_LOG_TEST(gNesteggLog, PR_LOG_DEBUG)) {
     return;
   }
 

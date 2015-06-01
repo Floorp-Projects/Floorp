@@ -1767,7 +1767,7 @@ nsCacheService::CreateCustomOfflineDevice(nsIFile *aProfileDir,
 {
     NS_ENSURE_ARG(aProfileDir);
 
-    if (PR_LOG_TEST(gCacheLog, PR_LOG_ALWAYS)) {
+    if (MOZ_LOG_TEST(gCacheLog, PR_LOG_ALWAYS)) {
       nsAutoCString profilePath;
       aProfileDir->GetNativePath(profilePath);
       CACHE_LOG_ALWAYS(("Creating custom offline device, %s, %d",

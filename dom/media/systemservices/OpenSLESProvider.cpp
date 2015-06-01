@@ -16,7 +16,7 @@
 #undef LOG_ENABLED
 PRLogModuleInfo *gOpenSLESProviderLog;
 #define LOG(args) MOZ_LOG(gOpenSLESProviderLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(gOpenSLESProviderLog, PR_LOG_DEBUG)
+#define LOG_ENABLED() MOZ_LOG_TEST(gOpenSLESProviderLog, PR_LOG_DEBUG)
 
 namespace mozilla {
 

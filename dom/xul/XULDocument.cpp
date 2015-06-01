@@ -375,7 +375,7 @@ XULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                nsIStreamListener **aDocListener,
                                bool aReset, nsIContentSink* aSink)
 {
-    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
+    if (MOZ_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
 
         nsCOMPtr<nsIURI> uri;
         nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(uri));
@@ -559,7 +559,7 @@ XULDocument::EndLoad()
     }
 
     OnPrototypeLoadDone(true);
-    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
+    if (MOZ_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
         nsAutoCString urlspec;
         rv = uri->GetSpec(urlspec);
         if (NS_SUCCEEDED(rv)) {
@@ -2271,7 +2271,7 @@ XULDocument::PrepareToWalk()
     nsXULPrototypeElement* proto = mCurrentPrototype->GetRootElement();
 
     if (! proto) {
-        if (PR_LOG_TEST(gXULLog, PR_LOG_ERROR)) {
+        if (MOZ_LOG_TEST(gXULLog, PR_LOG_ERROR)) {
             nsCOMPtr<nsIURI> url = mCurrentPrototype->GetURI();
 
             nsAutoCString urlspec;
@@ -2542,7 +2542,7 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
     *aShouldReturn = false;
     *aFailureFromContent = false;
 
-    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
         nsAutoCString urlspec;
         aURI->GetSpec(urlspec);
         nsAutoCString parentDoc;
@@ -3578,7 +3578,7 @@ XULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
     *aResult = nullptr;
     nsresult rv = NS_OK;
 
-    if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
         MOZ_LOG(gXULLog, PR_LOG_NOTICE,
                ("xul: creating <%s> from prototype",
                 NS_ConvertUTF16toUTF8(aPrototype->mNodeInfo->QualifiedName()).get()));
@@ -3848,7 +3848,7 @@ XULDocument::OverlayForwardReference::Resolve()
         if (NS_FAILED(rv)) return eResolve_Error;
     }
 
-    if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
         nsAutoCString idC;
         idC.AssignWithConversion(id);
         MOZ_LOG(gXULLog, PR_LOG_NOTICE,
@@ -4017,7 +4017,7 @@ XULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
 XULDocument::OverlayForwardReference::~OverlayForwardReference()
 {
-    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING) && !mResolved) {
+    if (MOZ_LOG_TEST(gXULLog, PR_LOG_WARNING) && !mResolved) {
         nsAutoString id;
         mOverlay->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
 
@@ -4060,7 +4060,7 @@ XULDocument::BroadcasterHookup::Resolve()
 
 XULDocument::BroadcasterHookup::~BroadcasterHookup()
 {
-    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING) && !mResolved) {
+    if (MOZ_LOG_TEST(gXULLog, PR_LOG_WARNING) && !mResolved) {
         // Tell the world we failed
 
         nsAutoString broadcasterID;
@@ -4279,7 +4279,7 @@ XULDocument::CheckBroadcasterHookup(Element* aElement,
     }
 
     // Tell the world we succeeded
-    if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
+    if (MOZ_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
         nsCOMPtr<nsIContent> content =
             do_QueryInterface(listener);
 
