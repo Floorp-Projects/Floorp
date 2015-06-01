@@ -2,17 +2,6 @@
 
 var test = `
 
-function assertThrownErrorContains(thunk, substr) {
-    try {
-        thunk();
-        throw new Error("Expected error containing " + substr + ", no exception thrown");
-    } catch (e) {
-        if (e.message.indexOf(substr) !== -1)
-            return;
-        throw new Error("Expected error containing " + substr + ", got " + e);
-    }
-}
-
 class testNonExistent {
     constructor() {
         super["prop"]();
