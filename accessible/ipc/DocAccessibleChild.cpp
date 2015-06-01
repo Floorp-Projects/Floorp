@@ -225,7 +225,7 @@ DocAccessibleChild::RecvRelationByType(const uint64_t& aID,
                                        const uint32_t& aType,
                                        nsTArray<uint64_t>* aTargets)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc)
     return true;
 
@@ -258,7 +258,7 @@ bool
 DocAccessibleChild::RecvRelations(const uint64_t& aID,
                                   nsTArray<RelationTargets>* aRelations)
 {
-  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  Accessible* acc = IdToAccessible(aID);
   if (!acc)
     return true;
 
