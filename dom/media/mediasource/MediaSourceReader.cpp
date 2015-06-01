@@ -26,7 +26,7 @@
 extern PRLogModuleInfo* GetMediaSourceLog();
 
 #define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("MediaSourceReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define MSE_DEBUGV(arg, ...) MOZ_LOG(GetMediaSourceLog(), PR_LOG_DEBUG + 1, ("MediaSourceReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define MSE_DEBUGV(arg, ...) MOZ_LOG(GetMediaSourceLog(), PR_LOG_VERBOSE, ("MediaSourceReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 // When a stream hits EOS it needs to decide what other stream to switch to. Due
 // to inaccuracies is determining buffer end frames (Bug 1065207) and rounding
