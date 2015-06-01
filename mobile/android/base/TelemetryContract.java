@@ -157,6 +157,9 @@ public interface TelemetryContract {
         // No method is specified.
         NONE(null),
 
+        // Action triggered from a notification in the Android notification bar.
+        NOTIFICATION("notification"),
+
         // Action triggered from a pageaction in the URLBar.
         // Note: Only used in JavaScript for now, but here for completeness.
         PAGEACTION("pageaction"),
