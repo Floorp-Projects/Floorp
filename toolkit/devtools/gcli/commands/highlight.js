@@ -1,22 +1,28 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals nodesSelected, PluralForm */
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
 const l10n = require("gcli/l10n");
 require("devtools/server/actors/inspector");
-const {BoxModelHighlighter} = require("devtools/server/actors/highlighter");
+const {
+  BoxModelHighlighter,
+  HighlighterEnvironment
+} = require("devtools/server/actors/highlighter");
 
 XPCOMUtils.defineLazyGetter(this, "nodesSelected", function() {
   return Services.strings.createBundle("chrome://global/locale/devtools/gclicommands.properties");
 });
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm","resource://gre/modules/PluralForm.jsm");
-const events = require("sdk/event/core");
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 // How many maximum nodes can be highlighted in parallel
 const MAX_HIGHLIGHTED_ELEMENTS = 100;
+
+// Store the environment object used to create highlighters so it can be
+// destroyed later.
+let highlighterEnv;
 
 // Stores the highlighters instances so they can be destroyed later.
 // also export them so tests can access those and assert they got created
@@ -31,6 +37,11 @@ function unhighlightAll() {
     highlighter.destroy();
   }
   exports.highlighters.length = 0;
+
+  if (highlighterEnv) {
+    highlighterEnv.destroy();
+    highlighterEnv = null;
+  }
 }
 
 exports.items = [
@@ -89,7 +100,7 @@ exports.items = [
             name: "keep",
             type: "boolean",
             description: l10n.lookup("highlightKeepDesc"),
-            manual: l10n.lookup("highlightKeepManual"),
+            manual: l10n.lookup("highlightKeepManual")
           }
         ]
       }
@@ -101,9 +112,11 @@ exports.items = [
       }
 
       let env = context.environment;
+      highlighterEnv = new HighlighterEnvironment();
+      highlighterEnv.initFromWindow(env.window);
 
       // Unhighlight on navigate
-      events.on(env.__deprecatedTabActor, "will-navigate", unhighlightAll);
+      highlighterEnv.once("will-navigate", unhighlightAll);
 
       let i = 0;
       for (let node of args.selector) {
@@ -111,7 +124,7 @@ exports.items = [
           break;
         }
 
-        let highlighter = new BoxModelHighlighter(env.__deprecatedTabActor);
+        let highlighter = new BoxModelHighlighter(highlighterEnv);
         if (args.fill) {
           highlighter.regionFill[args.region] = args.fill;
         }
@@ -122,7 +135,7 @@ exports.items = [
           showOnly: args.region
         });
         exports.highlighters.push(highlighter);
-        i ++;
+        i++;
       }
 
       let highlightText = nodesSelected.GetStringFromName("highlightOutputConfirm2");

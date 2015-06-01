@@ -9,7 +9,10 @@
 // This makes sure the 'domnode' protocol actor type is known when importing
 // highlighter.
 require("devtools/server/actors/inspector");
-const {CanvasFrameAnonymousContentHelper} = require("devtools/server/actors/highlighter");
+const {
+  CanvasFrameAnonymousContentHelper,
+  HighlighterEnvironment
+} = require("devtools/server/actors/highlighter");
 const TEST_URL = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test";
 
 add_task(function*() {
@@ -26,8 +29,9 @@ add_task(function*() {
   };
 
   info("Building the helper");
-  let helper = new CanvasFrameAnonymousContentHelper(
-    getMockTabActor(doc.defaultView), nodeBuilder);
+  let env = new HighlighterEnvironment();
+  env.initFromWindow(doc.defaultView);
+  let helper = new CanvasFrameAnonymousContentHelper(env, nodeBuilder);
 
   let el = helper.getElement("child-element");
 
@@ -36,7 +40,7 @@ add_task(function*() {
   function onMouseDown(e, id) {
     is(id, "child-element", "The mousedown event was triggered on the element");
     ok(!e.originalTarget, "The originalTarget property isn't available");
-    mouseDownHandled ++;
+    mouseDownHandled++;
   }
   el.addEventListener("mousedown", onMouseDown);
 
@@ -70,6 +74,7 @@ add_task(function*() {
   el.addEventListener("mousedown", onMouseDown);
 
   info("Destroying the helper");
+  env.destroy();
   helper.destroy();
 
   info("Synthesizing another event after the helper has been destroyed");
