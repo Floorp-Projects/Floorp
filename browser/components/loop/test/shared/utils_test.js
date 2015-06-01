@@ -174,6 +174,30 @@ describe("loop.shared.utils", function() {
       });
     });
 
+    it("should return true if enumerateDevices doesn't exist in navigator.mediaDevices", function(done) {
+      sharedUtils.setRootObjects(fakeWindowObject, {
+        mediaDevices: {}
+      });
+      delete fakeWindowObject.MediaStreamTrack;
+
+      sharedUtils.hasAudioOrVideoDevices(function(result) {
+        expect(result).eql(true);
+        done();
+      });
+    });
+
+    it("should return true if getSources doesn't exist in window.MediaStreamTrack", function(done) {
+      sharedUtils.setRootObjects({
+        MediaStreamTrack: {}
+      }, fakeNavigatorObject);
+      delete fakeNavigatorObject.mediaDevices;
+
+      sharedUtils.hasAudioOrVideoDevices(function(result) {
+        expect(result).eql(true);
+        done();
+      });
+    });
+
     it("should return false if no audio nor video devices exist according to navigator.mediaDevices", function(done) {
       delete fakeWindowObject.MediaStreamTrack;
 
