@@ -1065,6 +1065,13 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
   return GetDisplayPortImpl(aContent, aResult, 1.0f);
 }
 
+/* static */ bool
+nsLayoutUtils::GetDisplayPortForVisibilityTesting(nsIContent* aContent,
+                                                  nsRect* aResult)
+{
+  return GetDisplayPortImpl(aContent, aResult, 1.0f);
+}
+
 bool
 nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                                      nsIPresShell* aPresShell,
@@ -1102,6 +1109,10 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
       rootFrame->SchedulePaint();
     }
   }
+
+  // Display port margins changing means that the set of visible images may
+  // have drastically changed. Schedule an update.
+  aPresShell->ScheduleImageVisibilityUpdate();
 
   return true;
 }
@@ -8218,6 +8229,13 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
   metrics.SetIsRoot(aIsRoot);
   metrics.SetScrollParentId(aScrollParentId);
 
+  if (scrollId != FrameMetrics::NULL_SCROLL_ID && !presContext->GetParentPresContext()) {
+    if ((aScrollFrame && (aScrollFrame == presShell->GetRootScrollFrame())) ||
+        aContent == presShell->GetDocument()->GetDocumentElement()) {
+      metrics.SetIsLayersIdRoot(true);
+    }
+  }
+
   // Only the root scrollable frame for a given presShell should pick up
   // the presShell's resolution. All the other frames are 1.0.
   if (aScrollFrame == presShell->GetRootScrollFrame()) {
@@ -8330,6 +8348,22 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
   }
 
   return metrics;
+}
+
+/* static */ bool
+nsLayoutUtils::ContainsMetricsWithId(const Layer* aLayer, const ViewID& aScrollId)
+{
+  for (uint32_t i = aLayer->GetFrameMetricsCount(); i > 0; i--) {
+    if (aLayer->GetFrameMetrics(i-1).GetScrollId() == aScrollId) {
+      return true;
+    }
+  }
+  for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
+    if (ContainsMetricsWithId(child, aScrollId)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /* static */ uint32_t

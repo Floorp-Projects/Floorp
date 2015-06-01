@@ -2642,15 +2642,8 @@ ArrayConcatDenseKernel(JSContext* cx, JSObject* obj1, JSObject* obj2, JSObject* 
 
     MOZ_ASSERT(GetBoxedOrUnboxedInitializedLength<Type>(result) == 0);
 
-    if (Type == JSVAL_TYPE_MAGIC) {
-        if (!result->as<ArrayObject>().ensureElements(cx, len))
-            return DenseElementResult::Failure;
-    } else {
-        if (result->as<UnboxedArrayObject>().capacity() < len) {
-            if (!result->as<UnboxedArrayObject>().growElements(cx, len))
-                return DenseElementResult::Failure;
-        }
-    }
+    if (!EnsureBoxedOrUnboxedDenseElements<Type>(cx, result, len))
+        return DenseElementResult::Failure;
 
     CopyBoxedOrUnboxedDenseElements<Type>(cx, result, obj1, 0, 0, initlen1);
     CopyBoxedOrUnboxedDenseElements<Type>(cx, result, obj2, initlen1, 0, initlen2);
@@ -2899,6 +2892,20 @@ SliceSparse(JSContext* cx, HandleObject obj, uint32_t begin, uint32_t end, Handl
     return true;
 }
 
+template <typename T>
+static inline uint32_t
+NormalizeSliceTerm(T value, uint32_t length)
+{
+    if (value < 0) {
+        value += length;
+        if (value < 0)
+            return 0;
+    } else if (double(value) > double(length)) {
+        return length;
+    }
+    return uint32_t(value);
+}
+
 bool
 js::array_slice(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -2918,26 +2925,12 @@ js::array_slice(JSContext* cx, unsigned argc, Value* vp)
         double d;
         if (!ToInteger(cx, args[0], &d))
             return false;
-        if (d < 0) {
-            d += length;
-            if (d < 0)
-                d = 0;
-        } else if (d > length) {
-            d = length;
-        }
-        begin = (uint32_t)d;
+        begin = NormalizeSliceTerm(d, length);
 
         if (args.hasDefined(1)) {
             if (!ToInteger(cx, args[1], &d))
                 return false;
-            if (d < 0) {
-                d += length;
-                if (d < 0)
-                    d = 0;
-            } else if (d > length) {
-                d = length;
-            }
-            end = (uint32_t)d;
+            end = NormalizeSliceTerm(d, length);
         }
     }
 
@@ -2998,6 +2991,57 @@ js::array_slice(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().setObject(*narr);
     return true;
+}
+
+template <JSValueType Type>
+DenseElementResult
+ArraySliceDenseKernel(JSContext* cx, JSObject* obj, int32_t beginArg, int32_t endArg, JSObject* result)
+{
+    int32_t length = GetAnyBoxedOrUnboxedArrayLength(obj);
+
+    uint32_t begin = NormalizeSliceTerm(beginArg, length);
+    uint32_t end = NormalizeSliceTerm(endArg, length);
+
+    if (begin > end)
+        begin = end;
+
+    size_t initlen = GetBoxedOrUnboxedInitializedLength<Type>(obj);
+    if (initlen > begin) {
+        size_t count = Min<size_t>(initlen - begin, end - begin);
+        if (count) {
+            if (!EnsureBoxedOrUnboxedDenseElements<Type>(cx, result, count))
+                return DenseElementResult::Failure;
+            CopyBoxedOrUnboxedDenseElements<Type>(cx, result, obj, 0, begin, count);
+        }
+    }
+
+    SetAnyBoxedOrUnboxedArrayLength(cx, result, end - begin);
+    return DenseElementResult::Success;
+}
+
+DefineBoxedOrUnboxedFunctor5(ArraySliceDenseKernel,
+                             JSContext*, JSObject*, int32_t, int32_t, JSObject*);
+
+JSObject*
+js::array_slice_dense(JSContext* cx, HandleObject obj, int32_t begin, int32_t end,
+                      HandleObject result)
+{
+    if (result) {
+        ArraySliceDenseKernelFunctor functor(cx, obj, begin, end, result);
+        DenseElementResult rv = CallBoxedOrUnboxedSpecialization(functor, result);
+        MOZ_ASSERT(rv != DenseElementResult::Incomplete);
+        return rv == DenseElementResult::Success ? result : nullptr;
+    }
+
+    // Slower path if the JIT wasn't able to allocate an object inline.
+    JS::AutoValueArray<4> argv(cx);
+    argv[0].setUndefined();
+    argv[1].setObject(*obj);
+    argv[2].setInt32(begin);
+    argv[3].setInt32(end);
+    if (!array_slice(cx, 2, argv.begin()))
+        return nullptr;
+    return &argv[0].toObject();
 }
 
 /* ES5 15.4.4.20. */

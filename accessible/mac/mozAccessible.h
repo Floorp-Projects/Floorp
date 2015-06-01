@@ -57,11 +57,14 @@ static const uintptr_t IS_PROXY = 1;
   mozilla::a11y::role        mRole;
 }
 
-// return the Accessible for this mozAccessible.
-- (mozilla::a11y::AccessibleWrap*) getGeckoAccessible;
+// return the Accessible for this mozAccessible if it exists.
+- (mozilla::a11y::AccessibleWrap*)getGeckoAccessible;
+
+// return the ProxyAccessible for this mozAccessible if it exists.
+- (mozilla::a11y::ProxyAccessible*)getProxyAccessible;
 
 // inits with the gecko owner.
-- (id)initWithAccessible:(mozilla::a11y::AccessibleWrap*)geckoParent;
+- (id)initWithAccessible:(uintptr_t)aGeckoObj;
 
 // our accessible parent (AXParent)
 - (id <mozAccessible>)parent;

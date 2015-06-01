@@ -131,6 +131,7 @@ _cairo_path_bounder_curve_to (void *closure,
     else
     {
 	/* All control points are within the current extents. */
+	bounder->current_point = *d;
 	return CAIRO_STATUS_SUCCESS;
     }
 }

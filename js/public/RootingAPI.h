@@ -76,7 +76,7 @@
  * - MutableHandle<T> is a non-const reference to Rooted<T>. It is used in the
  *   same way as Handle<T> and includes a |set(const T& v)| method to allow
  *   updating the value of the referenced Rooted<T>. A MutableHandle<T> can be
- *   created from a Rooted<T> by using |Rooted<T>::operator&()|.
+ *   created with an implicit cast from a Rooted<T>*.
  *
  * In some cases the small performance overhead of exact rooting (measured to
  * be a few nanoseconds on desktop) is too much. In these cases, try the
@@ -1185,7 +1185,5 @@ CallTraceCallbackOnNonHeap(T* v, const TraceCallbacks& aCallbacks, const char* a
 } /* namespace js */
 
 #undef DELETE_ASSIGNMENT_OPS
-#undef DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS
-#undef DECLARE_NONPOINTER_ACCESSOR_METHODS
 
 #endif  /* js_RootingAPI_h */

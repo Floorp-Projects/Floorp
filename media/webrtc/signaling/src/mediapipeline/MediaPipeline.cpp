@@ -991,9 +991,8 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
         memset(samples, 0, chunk.mDuration * sizeof(samples[0]));
         break;
       default:
-        MOZ_ASSERT(PR_FALSE);
+        MOZ_ASSERT_UNREACHABLE("Unexpected AudioSampleFormat");
         return;
-        break;
     }
   } else {
     // This means silence.

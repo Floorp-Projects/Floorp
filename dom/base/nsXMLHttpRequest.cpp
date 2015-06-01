@@ -10,6 +10,7 @@
 #include <unistd.h>
 #endif
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BlobSet.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
@@ -3993,26 +3994,30 @@ ArrayBufferBuilder::append(const uint8_t *aNewData, uint32_t aDataLen,
 {
   MOZ_ASSERT(!mMapPtr);
 
+  CheckedUint32 neededCapacity = mLength;
+  neededCapacity += aDataLen;
+  if (!neededCapacity.isValid()) {
+    return false;
+  }
   if (mLength + aDataLen > mCapacity) {
-    uint32_t newcap;
+    CheckedUint32 newcap = mCapacity;
     // Double while under aMaxGrowth or if not specified.
     if (!aMaxGrowth || mCapacity < aMaxGrowth) {
-      newcap = mCapacity * 2;
+      newcap *= 2;
     } else {
-      newcap = mCapacity + aMaxGrowth;
+      newcap += aMaxGrowth;
     }
 
-    // But make sure there's always enough to satisfy our request.
-    if (newcap < mLength + aDataLen) {
-      newcap = mLength + aDataLen;
-    }
-
-    // Did we overflow?
-    if (newcap < mCapacity) {
+    if (!newcap.isValid()) {
       return false;
     }
 
-    if (!setCapacity(newcap)) {
+    // But make sure there's always enough to satisfy our request.
+    if (newcap.value() < neededCapacity.value()) {
+      newcap = neededCapacity;
+    }
+
+    if (!setCapacity(newcap.value())) {
       return false;
     }
   }

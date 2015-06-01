@@ -3808,7 +3808,7 @@ IsOptimizableElementPropertyName(JSContext* cx, HandleValue key, MutableHandleId
 static bool
 TryAttachNativeGetValueElemStub(JSContext* cx, HandleScript script, jsbytecode* pc,
                                 ICGetElem_Fallback* stub, HandleNativeObject obj,
-                                HandleValue key)
+                                HandleValue key, bool* attached)
 {
     RootedId id(cx);
     if (!IsOptimizableElementPropertyName(cx, key, &id))
@@ -3858,6 +3858,7 @@ TryAttachNativeGetValueElemStub(JSContext* cx, HandleScript script, jsbytecode* 
             return false;
 
         stub->addNewStub(newStub);
+        *attached = true;
     }
     return true;
 }
@@ -3865,7 +3866,7 @@ TryAttachNativeGetValueElemStub(JSContext* cx, HandleScript script, jsbytecode* 
 static bool
 TryAttachNativeGetAccessorElemStub(JSContext* cx, HandleScript script, jsbytecode* pc,
                                    ICGetElem_Fallback* stub, HandleNativeObject obj,
-                                   HandleValue key, bool* attached)
+                                   HandleValue key, bool* attached, bool* isTemporarilyUnoptimizable)
 {
     MOZ_ASSERT(!*attached);
 
@@ -3881,15 +3882,15 @@ TryAttachNativeGetAccessorElemStub(JSContext* cx, HandleScript script, jsbytecod
     RootedObject baseHolder(cx);
     if (!EffectlesslyLookupProperty(cx, obj, propName, &baseHolder, &shape))
         return false;
-    if(!baseHolder || baseHolder->isNative())
+    if (!baseHolder || baseHolder->isNative())
         return true;
 
     HandleNativeObject holder = baseHolder.as<NativeObject>();
 
     bool getterIsScripted = false;
-    bool isTemporarilyUnoptimizable = false;
     if (IsCacheableGetPropCall(cx, obj, baseHolder, shape, &getterIsScripted,
-                               &isTemporarilyUnoptimizable, /*isDOMProxy=*/false)) {
+                               isTemporarilyUnoptimizable, /*isDOMProxy=*/false))
+    {
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -4003,7 +4004,7 @@ IsNativeOrUnboxedDenseElementAccess(HandleObject obj, HandleValue key)
 
 static bool
 TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_Fallback* stub,
-                     HandleValue lhs, HandleValue rhs, HandleValue res)
+                     HandleValue lhs, HandleValue rhs, HandleValue res, bool* attached)
 {
     bool isCallElem = (JSOp(*pc) == JSOP_CALLELEM);
 
@@ -4020,6 +4021,7 @@ TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_
             return false;
 
         stub->addNewStub(stringStub);
+        *attached = true;
         return true;
     }
 
@@ -4038,6 +4040,7 @@ TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_
             return false;
 
         stub->addNewStub(argsStub);
+        *attached = true;
         return true;
     }
 
@@ -4060,6 +4063,7 @@ TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_
                 return false;
 
             stub->addNewStub(argsStub);
+            *attached = true;
             return true;
         }
     }
@@ -4074,6 +4078,7 @@ TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_
             return false;
 
         stub->addNewStub(denseStub);
+        *attached = true;
         return true;
     }
 
@@ -4081,10 +4086,12 @@ TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_
     if (obj->isNative() && rhs.isString()) {
         RootedScript rootedScript(cx, script);
         if (!TryAttachNativeGetValueElemStub(cx, rootedScript, pc, stub,
-            obj.as<NativeObject>(), rhs))
+                                             obj.as<NativeObject>(), rhs, attached))
         {
             return false;
         }
+        if (*attached)
+            return true;
         script = rootedScript;
     }
 
@@ -4098,6 +4105,7 @@ TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_
             return false;
 
         stub->addNewStub(unboxedStub);
+        *attached = true;
         return true;
     }
 
@@ -4131,6 +4139,7 @@ TryAttachGetElemStub(JSContext* cx, JSScript* script, jsbytecode* pc, ICGetElem_
             return false;
 
         stub->addNewStub(typedArrayStub);
+        *attached = true;
         return true;
     }
 
@@ -4179,15 +4188,20 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
     if (stub->numOptimizedStubs() >= ICGetElem_Fallback::MAX_OPTIMIZED_STUBS) {
         // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
         // But for now we just bail.
+        stub->noteUnoptimizableAccess();
         attached = true;
     }
 
     // Try to attach an optimized getter stub.
+    bool isTemporarilyUnoptimizable = false;
     if (!attached && lhs.isObject() && lhs.toObject().isNative() && rhs.isString()){
         RootedScript rootedScript(cx, frame->script());
         RootedNativeObject obj(cx, &lhs.toObject().as<NativeObject>());
-        if (!TryAttachNativeGetAccessorElemStub(cx, rootedScript, pc, stub, obj, rhs, &attached))
+        if (!TryAttachNativeGetAccessorElemStub(cx, rootedScript, pc, stub, obj, rhs, &attached,
+                                                &isTemporarilyUnoptimizable))
+        {
             return false;
+        }
         script = rootedScript;
     }
 
@@ -4209,11 +4223,11 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
         return true;
 
     // Try to attach an optimized stub.
-    if (!TryAttachGetElemStub(cx, frame->script(), pc, stub, lhs, rhs, res))
+    if (!TryAttachGetElemStub(cx, frame->script(), pc, stub, lhs, rhs, res, &attached))
         return false;
 
-    // If we ever add a way to note unoptimizable accesses here, propagate the
-    // isTemporarilyUnoptimizable state from TryAttachNativeGetElemStub to here.
+    if (!attached && !isTemporarilyUnoptimizable)
+        stub->noteUnoptimizableAccess();
 
     return true;
 }
@@ -9948,7 +9962,7 @@ GetTemplateObjectForNative(JSContext* cx, HandleScript script, jsbytecode* pc,
         return true;
     }
 
-    if (native == js::array_concat) {
+    if (native == js::array_concat || native == js::array_slice) {
         if (args.thisv().isObject() && !args.thisv().toObject().isSingleton()) {
             res.set(NewFullyAllocatedArrayTryReuseGroup(cx, &args.thisv().toObject(), 0,
                                                         TenuredObject, /* forceAnalyze = */ true));
@@ -12682,11 +12696,15 @@ ICGetIntrinsic_Constant::~ICGetIntrinsic_Constant()
 { }
 
 ICGetProp_Primitive::ICGetProp_Primitive(JitCode* stubCode, ICStub* firstMonitorStub,
-                                         Shape* protoShape, uint32_t offset)
+                                         JSValueType primitiveType, Shape* protoShape,
+                                         uint32_t offset)
   : ICMonitoredStub(GetProp_Primitive, stubCode, firstMonitorStub),
     protoShape_(protoShape),
     offset_(offset)
-{ }
+{
+    extra_ = uint16_t(primitiveType);
+    MOZ_ASSERT(JSValueType(extra_) == primitiveType);
+}
 
 ICGetPropNativeStub::ICGetPropNativeStub(ICStub::Kind kind, JitCode* stubCode,
                                          ICStub* firstMonitorStub,

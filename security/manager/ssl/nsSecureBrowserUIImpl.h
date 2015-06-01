@@ -48,7 +48,7 @@ public:
   NS_DECL_NSISSLSTATUSPROVIDER
 
 protected:
-  virtual ~nsSecureBrowserUIImpl();
+  virtual ~nsSecureBrowserUIImpl() {};
 
   mozilla::ReentrantMonitor mReentrantMonitor;
   
@@ -100,7 +100,7 @@ protected:
   nsCOMPtr<nsISSLStatus> mSSLStatus;
   nsCOMPtr<nsISupports> mCurrentToplevelSecurityInfo;
 
-  PLDHashTable mTransferringRequests;
+  PLDHashTable2 mTransferringRequests;
 };
 
 
