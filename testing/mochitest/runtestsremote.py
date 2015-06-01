@@ -541,11 +541,6 @@ def run_test_harness(options):
         if (options.dm_trans == 'adb' and options.robocopApk):
             dm._checkCmd(["install", "-r", options.robocopApk])
 
-        if not options.autorun:
-            # Force a single loop iteration. The iteration will start Fennec and
-            # the httpd server, but not actually run a test.
-            options.testPath = robocop_tests[0]['name']
-
         retVal = None
         # Filtering tests
         active_tests = []
@@ -573,36 +568,20 @@ def run_test_harness(options):
                 mochitest.localProfile = options.profilePath
 
             options.app = "am"
+            options.browserArgs = [
+                "instrument",
+                "-w",
+                "-e",
+                "deviceroot",
+                deviceRoot,
+                "-e",
+                "class"]
+            options.browserArgs.append(
+                "org.mozilla.gecko.tests.%s" %
+                test['name'])
+            options.browserArgs.append(
+                "org.mozilla.roboexample.test/org.mozilla.gecko.FennecInstrumentationTestRunner")
             mochitest.nsprLogName = "nspr-%s.log" % test['name']
-            if options.autorun:
-                # This launches a test (using "am instrument") and instructs
-                # Fennec to /quit/ the browser (using Robocop:Quit) and to
-                # /finish/ all opened activities.
-                options.browserArgs = [
-                    "instrument",
-                    "-w",
-                    "-e", "quit_and_finish", "1",
-                    "-e", "deviceroot", deviceRoot,
-                    "-e",
-                    "class"]
-                options.browserArgs.append(
-                    "org.mozilla.gecko.tests.%s" %
-                    test['name'])
-                options.browserArgs.append(
-                    "org.mozilla.roboexample.test/org.mozilla.gecko.FennecInstrumentationTestRunner")
-            else:
-                # This does not launch a test at all. It launches an activity
-                # that starts Fennec and then waits indefinitely, since cat
-                # never returns.
-                options.browserArgs = ["start",
-                                       "-n", "org.mozilla.roboexample.test/org.mozilla.gecko.LaunchFennecWithConfigurationActivity",
-                                       "&&", "cat"]
-                dm.default_timeout = sys.maxint # Forever.
-
-                mochitest.log.info("")
-                mochitest.log.info("Serving mochi.test Robocop root at http://%s:%s/tests/robocop/" %
-                    (options.remoteWebServer, options.httpPort))
-                mochitest.log.info("")
 
             # If the test is for checking the import from bookmarks then make
             # sure there is data to import
@@ -662,7 +641,6 @@ def run_test_harness(options):
                 screenShotDir = "/mnt/sdcard/Robotium-Screenshots"
                 dm.removeDir(screenShotDir)
                 dm.recordLogcat()
-
                 result = mochitest.runTests(options)
                 if result != 0:
                     log.error("runTests() exited with code %s" % result)

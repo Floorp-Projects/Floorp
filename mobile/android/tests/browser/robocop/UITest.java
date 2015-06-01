@@ -59,6 +59,22 @@ abstract class UITest extends BaseRobocopTest
     }
 
     @Override
+    public void tearDown() throws Exception {
+        try {
+            mAsserter.endTest();
+            // request a force quit of the browser and wait for it to take effect
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Robocop:Quit", null));
+            mSolo.sleep(120000);
+            // if still running, finish activities as recommended by Robotium
+            mSolo.finishOpenedActivities();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+
+        super.tearDown();
+    }
+
+    @Override
     protected void runTest() throws Throwable {
         try {
             super.runTest();
@@ -164,6 +180,26 @@ abstract class UITest extends BaseRobocopTest
 
     private String getAbsoluteUrl(final String baseUrl, final String url) {
         return baseUrl + "/" + url.replaceAll("(^/)", "");
+    }
+
+    @Override
+    protected Intent createActivityIntent() {
+        final Intent intent = new Intent(Intent.ACTION_MAIN);
+
+        // Don't show the first run experience.
+        intent.putExtra(BrowserApp.EXTRA_SKIP_STARTPANE, true);
+        intent.putExtra("args", "-no-remote -profile " + mProfile);
+
+        final String envString = mConfig.get("envvars");
+        if (!TextUtils.isEmpty(envString)) {
+            final String[] envStrings = envString.split(",");
+
+            for (int iter = 0; iter < envStrings.length; iter++) {
+                intent.putExtra("env" + iter, envStrings[iter]);
+            }
+        }
+
+        return intent;
     }
 
     /**

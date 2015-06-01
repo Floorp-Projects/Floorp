@@ -144,6 +144,38 @@ abstract class BaseTest extends BaseRobocopTest {
         }
     }
 
+    @Override
+    public void tearDown() throws Exception {
+        try {
+            mAsserter.endTest();
+            // request a force quit of the browser and wait for it to take effect
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Robocop:Quit", null));
+            mSolo.sleep(120000);
+            // if still running, finish activities as recommended by Robotium
+            mSolo.finishOpenedActivities();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        super.tearDown();
+    }
+
+    @Override
+    protected Intent createActivityIntent() {
+        final Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.putExtra("args", "-no-remote -profile " + mProfile);
+
+        final String envString = mConfig.get("envvars");
+        if (!TextUtils.isEmpty(envString)) {
+            final String[] envStrings = envString.split(",");
+
+            for (int iter = 0; iter < envStrings.length; iter++) {
+                intent.putExtra("env" + iter, envStrings[iter]);
+            }
+        }
+
+        return intent;
+    }
+
     public void assertMatches(String value, String regex, String name) {
         if (value == null) {
             mAsserter.ok(false, name, "Expected /" + regex + "/, got null");
