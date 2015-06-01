@@ -37,18 +37,18 @@
 extern PRLogModuleInfo *gHttpLog;
 
 // http logging
-#define LOG1(args) MOZ_LOG(gHttpLog, 1, args)
-#define LOG2(args) MOZ_LOG(gHttpLog, 2, args)
-#define LOG3(args) MOZ_LOG(gHttpLog, 3, args)
-#define LOG4(args) MOZ_LOG(gHttpLog, 4, args)
-#define LOG5(args) MOZ_LOG(gHttpLog, 5, args)
+#define LOG1(args) MOZ_LOG(gHttpLog, PR_LOG_ERROR, args)
+#define LOG2(args) MOZ_LOG(gHttpLog, PR_LOG_WARNING, args)
+#define LOG3(args) MOZ_LOG(gHttpLog, PR_LOG_INFO, args)
+#define LOG4(args) MOZ_LOG(gHttpLog, PR_LOG_DEBUG, args)
+#define LOG5(args) MOZ_LOG(gHttpLog, PR_LOG_VERBOSE, args)
 #define LOG(args) LOG4(args)
 
-#define LOG1_ENABLED() MOZ_LOG_TEST(gHttpLog, 1)
-#define LOG2_ENABLED() MOZ_LOG_TEST(gHttpLog, 2)
-#define LOG3_ENABLED() MOZ_LOG_TEST(gHttpLog, 3)
-#define LOG4_ENABLED() MOZ_LOG_TEST(gHttpLog, 4)
-#define LOG5_ENABLED() MOZ_LOG_TEST(gHttpLog, 5)
+#define LOG1_ENABLED() MOZ_LOG_TEST(gHttpLog, PR_LOG_ERROR)
+#define LOG2_ENABLED() MOZ_LOG_TEST(gHttpLog, PR_LOG_WARNING)
+#define LOG3_ENABLED() MOZ_LOG_TEST(gHttpLog, PR_LOG_INFO)
+#define LOG4_ENABLED() MOZ_LOG_TEST(gHttpLog, PR_LOG_DEBUG)
+#define LOG5_ENABLED() MOZ_LOG_TEST(gHttpLog, PR_LOG_VERBOSE)
 #define LOG_ENABLED() LOG4_ENABLED()
 
 #endif // HttpLog_h__
