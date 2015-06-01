@@ -304,6 +304,7 @@ protected:
 
   virtual void TearDown()
   {
+    while (mcc->RunThroughDelayedTasks());
     apzc->Destroy();
   }
 
@@ -902,10 +903,6 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_PreventDefault) {
   // Send the prevent-default notification for the touch block
   apzc->ContentReceivedInputBlock(blockId, true);
 
-  // Run all pending tasks (this should include at least the
-  // prevent-default timer).
-  EXPECT_LE(1, mcc->RunThroughDelayedTasks());
-
   // verify the metrics didn't change (i.e. the pinch was ignored)
   FrameMetrics fm = apzc->GetFrameMetrics();
   EXPECT_EQ(originalMetrics.GetZoom(), fm.GetZoom());
@@ -1113,9 +1110,6 @@ protected:
     // Send the signal that content has handled and preventDefaulted the touch
     // events. This flushes the event queue.
     apzc->ContentReceivedInputBlock(blockId, true);
-    // Run all pending tasks (this should include at least the
-    // prevent-default timer).
-    EXPECT_LE(1, mcc->RunThroughDelayedTasks());
 
     apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
     EXPECT_EQ(ParentLayerPoint(), pointOut);
@@ -1314,12 +1308,10 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051b) {
   // HandleFlingOverscroll().
   SampleAnimationOnce();
 
-  // Give the call to HandleFlingOverscroll() a chance to occur, creating
-  // an overscroll animation.
-  mcc->RunThroughDelayedTasks();
-
-  // Sample the overscroll animation once, to get it to initialize
-  // the first overscroll sample.
+  // This advances the time and runs the HandleFlingOverscroll task scheduled in
+  // the previous call, which starts an overscroll animation. It then samples
+  // the overscroll animation once, to get it to initialize the first overscroll
+  // sample.
   SampleAnimationOnce();
 
   // Do a touch-down to cancel the overscroll animation, and then a touch-up
@@ -1414,13 +1406,12 @@ protected:
 
     // Deliver another tap, to make sure that taps are flowing properly once
     // the fling is aborted.
-    mcc->AdvanceByMillis(500);
     Tap(apzc, 100, 100, mcc, 0);
     while (mcc->RunThroughDelayedTasks());
 
     // Verify that we didn't advance any further after the fling was aborted, in either case.
     ParentLayerPoint finalPointOut;
-    apzc->SampleContentTransformForFrame(&viewTransformOut, finalPointOut, TimeDuration::FromMilliseconds(1000));
+    apzc->SampleContentTransformForFrame(&viewTransformOut, finalPointOut);
     EXPECT_EQ(pointOut.x, finalPointOut.x);
     EXPECT_EQ(pointOut.y, finalPointOut.y);
 
@@ -1457,7 +1448,6 @@ protected:
     // respond to the touchdown that stopped the fling.
     // even if we do a prevent-default on it, the animation should remain stopped.
     apzc->ContentReceivedInputBlock(blockId, aPreventDefault);
-    while (mcc->RunThroughDelayedTasks());
 
     // Verify the page hasn't moved
     apzc->SampleContentTransformForFrame(&viewTransform, point, TimeDuration::FromMilliseconds(70));
@@ -1466,7 +1456,6 @@ protected:
 
     // clean up
     TouchUp(apzc, 10, 10, mcc->Time());
-    while (mcc->RunThroughDelayedTasks());
 
     apzc->AssertStateIsReset();
   }
@@ -1504,7 +1493,6 @@ TEST_F(APZCGestureDetectorTester, ShortPress) {
   check.Call("pre-tap");
   TapAndCheckStatus(apzc, 10, 10, mcc, TimeDuration::FromMilliseconds(100));
   check.Call("post-tap");
-  while (mcc->RunThroughDelayedTasks());
 
   apzc->AssertStateIsReset();
 }
@@ -1525,7 +1513,6 @@ TEST_F(APZCGestureDetectorTester, MediumPress) {
   check.Call("pre-tap");
   TapAndCheckStatus(apzc, 10, 10, mcc, TimeDuration::FromMilliseconds(400));
   check.Call("post-tap");
-  while (mcc->RunThroughDelayedTasks());
 
   apzc->AssertStateIsReset();
 }
@@ -1575,8 +1562,6 @@ protected:
     // with preventDefault=false, and then we run the timeout task which
     // "loses the race" and does nothing.
     apzc->ContentReceivedInputBlock(blockId, false);
-    mcc->RunThroughDelayedTasks();
-
     mcc->AdvanceByMillis(1000);
 
     // Finally, simulate lifting the finger. Since the long-press wasn't
@@ -1635,8 +1620,6 @@ protected:
     // the timeout task (it will be a no-op because the content "wins" the
     // race. This takes the place of the "contextmenu" event.
     apzc->ContentReceivedInputBlock(blockId, true);
-    mcc->RunThroughDelayedTasks();
-
     mcc->AdvanceByMillis(1000);
 
     MultiTouchInput mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, mcc->Time());
@@ -1754,8 +1737,6 @@ TEST_F(APZCGestureDetectorTester, DoubleTap) {
   apzc->ContentReceivedInputBlock(blockIds[0], false);
   apzc->ContentReceivedInputBlock(blockIds[1], false);
 
-  while (mcc->RunThroughDelayedTasks());
-
   apzc->AssertStateIsReset();
 }
 
@@ -1772,8 +1753,6 @@ TEST_F(APZCGestureDetectorTester, DoubleTapNotZoomable) {
   // responses to the two touchstarts
   apzc->ContentReceivedInputBlock(blockIds[0], false);
   apzc->ContentReceivedInputBlock(blockIds[1], false);
-
-  while (mcc->RunThroughDelayedTasks());
 
   apzc->AssertStateIsReset();
 }
@@ -1792,8 +1771,6 @@ TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultFirstOnly) {
   apzc->ContentReceivedInputBlock(blockIds[0], true);
   apzc->ContentReceivedInputBlock(blockIds[1], false);
 
-  while (mcc->RunThroughDelayedTasks());
-
   apzc->AssertStateIsReset();
 }
 
@@ -1810,8 +1787,6 @@ TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultBoth) {
   // responses to the two touchstarts
   apzc->ContentReceivedInputBlock(blockIds[0], true);
   apzc->ContentReceivedInputBlock(blockIds[1], true);
-
-  while (mcc->RunThroughDelayedTasks());
 
   apzc->AssertStateIsReset();
 }
@@ -1836,8 +1811,6 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByPinch) {
   mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20), ScreenSize(0, 0), 0, 0));
   mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
   apzc->ReceiveInputEvent(mti, nullptr);
-
-  while (mcc->RunThroughDelayedTasks());
 
   apzc->AssertStateIsReset();
 }
@@ -1865,8 +1838,6 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByMultipleTouches) {
   mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
   apzc->ReceiveInputEvent(mti, nullptr);
 
-  while (mcc->RunThroughDelayedTasks());
-
   apzc->AssertStateIsReset();
 }
 
@@ -1882,6 +1853,7 @@ protected:
   }
 
   virtual void TearDown() {
+    while (mcc->RunThroughDelayedTasks());
     manager->ClearTree();
   }
 
@@ -2430,8 +2402,6 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   mti.mType = MultiTouchInput::MULTITOUCH_END;
   EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(mti, nullptr, nullptr));
   EXPECT_EQ(touchPoint, mti.mTouches[0].mScreenPoint);
-
-  mcc->RunThroughDelayedTasks();
 }
 
 TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
@@ -2462,7 +2432,6 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnWheelEvents) {
 
     mcc->AdvanceByMillis(5);
   }
-  mcc->RunThroughDelayedTasks();
 }
 
 TEST_F(APZHitTestingTester, Bug1148350) {
@@ -2989,7 +2958,6 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
   // to the APZC.
   EXPECT_CALL(*mcc, HandleSingleTap(_, _, rootApzc->GetGuid())).Times(1);
   Tap(manager, 10, 160, mcc, TimeDuration::FromMilliseconds(100));
-  mcc->RunThroughDelayedTasks();    // this runs the tap event
 }
 
 TEST_F(APZEventRegionsTester, Obscuration) {
@@ -3036,7 +3004,6 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
   nsTArray<ScrollableLayerGuid> targets;
   targets.AppendElement(apzc2->GetGuid());
   manager->SetTargetAPZC(inputBlockId, targets);
-  while (mcc->RunThroughDelayedTasks());    // this runs the tap event
 }
 
 class TaskRunMetrics {
