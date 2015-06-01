@@ -10835,24 +10835,20 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     leaveStubFrame(masm, true);
 
-    // R1 and R0 are taken.
-    regs = availableGeneralRegs(2);
-    Register scratch = regs.takeAny();
-
     // If this is a |constructing| call, if the callee returns a non-object, we replace it with
     // the |this| object passed in.
-    MOZ_ASSERT(JSReturnOperand == R0);
-    Label skipThisReplace;
-    masm.load16ZeroExtend(Address(BaselineStubReg, ICStub::offsetOfExtra()), scratch);
-    masm.branchTest32(Assembler::Zero, scratch, Imm32(ICCall_Fallback::CONSTRUCTING_FLAG),
-                      &skipThisReplace);
-    masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
-    masm.moveValue(R1, R0);
+    if (isConstructing_) {
+        MOZ_ASSERT(JSReturnOperand == R0);
+        Label skipThisReplace;
+
+        masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
+        masm.moveValue(R1, R0);
 #ifdef DEBUG
-    masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
-    masm.assumeUnreachable("Failed to return object in constructing call.");
+        masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
+        masm.assumeUnreachable("Failed to return object in constructing call.");
 #endif
-    masm.bind(&skipThisReplace);
+        masm.bind(&skipThisReplace);
+    }
 
     // At this point, BaselineStubReg points to the ICCall_Fallback stub, which is NOT
     // a MonitoredStub, but rather a MonitoredFallbackStub.  To use EmitEnterTypeMonitorIC,
@@ -10873,7 +10869,8 @@ ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<Jit
 
     CodeOffsetLabel offset(returnOffset_);
     offset.fixup(&masm);
-    cx->compartment()->jitCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset());
+    cx->compartment()->jitCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset(),
+                                                                    isConstructing_);
     return true;
 }
 
