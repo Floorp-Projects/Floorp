@@ -1274,6 +1274,8 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
         // |this| could convert to a very long object initialiser, so cite it by
         // its keyword name.
         return write(js_this_str);
+      case JSOP_NEWTARGET:
+        return write("new.target");
       case JSOP_CALL:
       case JSOP_FUNCALL:
         return decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 2)) &&
