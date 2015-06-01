@@ -266,10 +266,6 @@ const GcliActor = ActorClass({
 
         get document() {
           return tabActor.window.document;
-        },
-
-        get __deprecatedTabActor() {
-          return tabActor;
         }
       };
 
