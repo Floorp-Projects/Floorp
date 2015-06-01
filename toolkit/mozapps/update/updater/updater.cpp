@@ -307,8 +307,10 @@ mmin(size_t a, size_t b)
 static NS_tchar*
 mstrtok(const NS_tchar *delims, NS_tchar **str)
 {
-  if (!*str || !**str)
+  if (!*str || !**str) {
+    *str = nullptr;
     return nullptr;
+  }
 
   // skip leading "whitespace"
   NS_tchar *ret = *str;
