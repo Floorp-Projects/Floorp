@@ -776,7 +776,7 @@ class FullParseHandler
     bool isConstant(ParseNode* pn) {
         return pn->isConstant();
     }
-    PropertyName* isName(ParseNode* pn) {
+    PropertyName* maybeName(ParseNode* pn) {
         return pn->isKind(PNK_NAME) ? pn->pn_atom->asPropertyName() : nullptr;
     }
     bool isCall(ParseNode* pn) {
