@@ -48,7 +48,7 @@ searchbar {
 
 /* Prevent shrinking the page content to 0 height and width */
 .browserStack > browser {
-  min-height: 100px;
+  min-height: 25px;
   min-width: 25px;
 }
 
