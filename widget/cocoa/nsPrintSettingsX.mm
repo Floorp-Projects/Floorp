@@ -94,7 +94,10 @@ NS_IMETHODIMP nsPrintSettingsX::InitUnwriteableMargin()
 void
 nsPrintSettingsX::SetCocoaPrintInfo(NSPrintInfo* aPrintInfo)
 {
-  mPrintInfo = aPrintInfo;
+  if (mPrintInfo != aPrintInfo) {
+    [mPrintInfo release];
+    mPrintInfo = [aPrintInfo retain];
+  }
 }
 
 NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()

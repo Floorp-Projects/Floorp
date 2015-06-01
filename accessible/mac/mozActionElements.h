@@ -9,6 +9,9 @@
 /* Simple subclasses for things like checkboxes, buttons, etc. */
 
 @interface mozButtonAccessible : mozAccessible
+ {
+ }
+- (BOOL)hasPopup;
 - (void)click;
 - (BOOL)isTab;
 @end
@@ -16,10 +19,6 @@
 @interface mozCheckboxAccessible : mozButtonAccessible
 // returns one of the constants defined in CheckboxValue
 - (int)isChecked;
-@end
-
-/* Used for buttons that may pop up a menu. */
-@interface mozPopupButtonAccessible : mozButtonAccessible
 @end
 
 /* Class for tabs - not individual tabs */

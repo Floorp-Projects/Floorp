@@ -73,12 +73,7 @@ class B2GMochitest(MochitestUtilsMixin):
 
     def buildTestPath(self, options, testsToFilter=None):
         if options.manifestFile != 'tests.json':
-            super(
-                B2GMochitest,
-                self).buildTestPath(
-                options,
-                testsToFilter,
-                disabled=False)
+            super(B2GMochitest, self).buildTestPath(options, testsToFilter, disabled=False)
         return self.buildTestURL(options)
 
     def build_profile(self, options):
@@ -199,7 +194,17 @@ class B2GMochitest(MochitestUtilsMixin):
             self.killNamedOrphans('xpcshell')
 
             self.startServers(options, None)
+
+            # In desktop mochitests buildTestPath is called before buildURLOptions. This
+            # means options.manifestFile has already been converted to the proper json
+            # style manifest. Not so with B2G, that conversion along with updating the URL
+            # option will happen later. So backup and restore options.manifestFile to
+            # prevent us from trying to pass in an instance of TestManifest via url param.
+            manifestFile = options.manifestFile
+            options.manifestFile = None
             self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
+            options.manifestFile = manifestFile
+
             self.test_script_args.append(not options.emulator)
             self.test_script_args.append(options.wifi)
             self.test_script_args.append(options.chrome)
@@ -479,7 +484,7 @@ def run_remote_mochitests(options):
 
     mochitest.message_logger.finish()
 
-    sys.exit(retVal)
+    return retVal
 
 
 def run_desktop_mochitests(options):
@@ -510,7 +515,7 @@ def run_desktop_mochitests(options):
     retVal = mochitest.runTests(options, onLaunch=mochitest.startTests)
     mochitest.message_logger.finish()
 
-    sys.exit(retVal)
+    return retVal
 
 
 def main():
@@ -518,9 +523,9 @@ def main():
     options = parser.parse_args()
 
     if options.desktop:
-        run_desktop_mochitests(options)
+        return run_desktop_mochitests(options)
     else:
-        run_remote_mochitests(options)
+        return run_remote_mochitests(options)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -2249,7 +2249,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                 const gfxTextRun::DetailedGlyph *details =
                     aTextRun->GetDetailedGlyphs(i);
                 NS_ASSERTION(details != nullptr,
-                             "detaiedGlyph record should not be missing!");
+                             "detailedGlyph record should not be missing!");
                 uint32_t j;
                 for (j = 0; j < glyphCount; ++j, ++details) {
                     uint32_t glyphIndex = details->mGlyphID;

@@ -44,6 +44,35 @@ nsSMILValue::operator=(const nsSMILValue& aVal)
   return *this;
 }
 
+// Move constructor / reassignment operator:
+nsSMILValue::nsSMILValue(nsSMILValue&& aVal)
+  : mU(aVal.mU), // Copying union is only OK because we clear aVal.mType below.
+    mType(aVal.mType)
+{
+  // Leave aVal with a null type, so that it's safely destructible (and won't
+  // mess with anything referenced by its union, which we've copied).
+  aVal.mType = nsSMILNullType::Singleton();
+}
+
+nsSMILValue&
+nsSMILValue::operator=(nsSMILValue&& aVal)
+{
+  if (!IsNull()) {
+    // Clean up any data we're currently tracking.
+    DestroyAndCheckPostcondition();
+  }
+
+  // Copy the union (which could include a pointer to external memory) & mType:
+  mU = aVal.mU;
+  mType = aVal.mType;
+
+  // Leave aVal with a null type, so that it's safely destructible (and won't
+  // mess with anything referenced by its union, which we've now copied).
+  aVal.mType = nsSMILNullType::Singleton();
+
+  return *this;
+}
+
 bool
 nsSMILValue::operator==(const nsSMILValue& aVal) const
 {
@@ -51,19 +80,6 @@ nsSMILValue::operator==(const nsSMILValue& aVal) const
     return true;
 
   return mType == aVal.mType && mType->IsEqual(*this, aVal);
-}
-
-void
-nsSMILValue::Swap(nsSMILValue& aOther)
-{
-  nsSMILValue tmp;
-  memcpy(&tmp,    &aOther, sizeof(nsSMILValue));  // tmp    = aOther
-  memcpy(&aOther, this,    sizeof(nsSMILValue));  // aOther = this
-  memcpy(this,    &tmp,    sizeof(nsSMILValue));  // this   = tmp
-
-  // |tmp| is about to die -- we need to clear its mType, so that its
-  // destructor doesn't muck with the data we just transferred out of it.
-  tmp.mType = nsSMILNullType::Singleton();
 }
 
 nsresult

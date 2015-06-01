@@ -336,7 +336,8 @@ struct JS_PUBLIC_API(GCDescription) {
     GCDescription(bool isCompartment, JSGCInvocationKind kind)
       : isCompartment_(isCompartment), invocationKind_(kind) {}
 
-    char16_t* formatMessage(JSRuntime* rt) const;
+    char16_t* formatSliceMessage(JSRuntime* rt) const;
+    char16_t* formatSummaryMessage(JSRuntime* rt) const;
     char16_t* formatJSON(JSRuntime* rt, uint64_t timestamp) const;
 
     JS::dbg::GarbageCollectionEvent::Ptr toGCEvent(JSRuntime* rt) const;

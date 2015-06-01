@@ -693,11 +693,18 @@ nsPrintSettings::SetPrintOptions(int32_t aType, bool aTurnOnOff)
  *  See documentation in nsPrintSettingsImpl.h
  *	@update 1/12/01 rods
  */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsPrintSettings::GetPrintOptionsBits(int32_t *aBits)
 {
   NS_ENSURE_ARG_POINTER(aBits);
   *aBits = mPrintOptions;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrintSettings::SetPrintOptionsBits(int32_t aBits)
+{
+  mPrintOptions = aBits;
   return NS_OK;
 }
 

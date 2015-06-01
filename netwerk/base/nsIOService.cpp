@@ -22,6 +22,7 @@
 #include "nsEscape.h"
 #include "nsNetCID.h"
 #include "nsCRT.h"
+#include "nsSecCheckWrapChannel.h"
 #include "nsSimpleNestedURI.h"
 #include "nsNetUtil.h"
 #include "nsTArray.h"
@@ -661,43 +662,43 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
     // Keep in mind that Addons can implement their own Protocolhandlers, hence
     // NewChannel2() might *not* be implemented.
     // We do not want to break those addons, therefore we first try to create a channel
-    // calling NewChannel2(); if that fails we fall back to creating a channel by calling
-    // NewChannel();
-
-    bool newChannel2Succeeded = true;
-
+    // calling NewChannel2(); if that fails:
+    // * we fall back to creating a channel by calling NewChannel()
+    // * wrap the addon channel
+    // * and attach the loadInfo to the channel wrapper
+    nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
     if (pph) {
         rv = pph->NewProxiedChannel2(aURI, nullptr, aProxyFlags, aProxyURI,
-                                     aLoadInfo, result);
+                                     aLoadInfo, getter_AddRefs(channel));
         // if calling NewProxiedChannel2() fails we try to fall back to
         // creating a new proxied channel by calling NewProxiedChannel().
         if (NS_FAILED(rv)) {
-            newChannel2Succeeded = false;
             rv = pph->NewProxiedChannel(aURI, nullptr, aProxyFlags, aProxyURI,
-                                        result);
+                                        getter_AddRefs(channel));
+            NS_ENSURE_SUCCESS(rv, rv);
+            // we have to wrap that channel
+            channel = new nsSecCheckWrapChannel(channel, aLoadInfo);
         }
     }
     else {
-        rv = handler->NewChannel2(aURI, aLoadInfo, result);
+        rv = handler->NewChannel2(aURI, aLoadInfo, getter_AddRefs(channel));
         // if calling newChannel2() fails we try to fall back to
         // creating a new channel by calling NewChannel().
         if (NS_FAILED(rv)) {
-            newChannel2Succeeded = false;
-            rv = handler->NewChannel(aURI, result);
+            rv = handler->NewChannel(aURI, getter_AddRefs(channel));
+            NS_ENSURE_SUCCESS(rv, rv);
+            // we have to wrap that channel
+            channel = new nsSecCheckWrapChannel(channel, aLoadInfo);
         }
     }
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (aLoadInfo && newChannel2Succeeded) {
-      // Make sure that all the individual protocolhandlers attach
-      // a loadInfo within it's implementation of ::newChannel2().
-      // Once Bug 1087720 lands, we should remove the surrounding
-      // if-clause here and always assert that we indeed have a
-      // loadinfo on the newly created channel.
-      nsCOMPtr<nsILoadInfo> loadInfo;
-      (*result)->GetLoadInfo(getter_AddRefs(loadInfo));
+    // Make sure that all the individual protocolhandlers attach a loadInfo.
+    if (aLoadInfo) {
       // make sure we have the same instance of loadInfo on the newly created channel
+      nsCOMPtr<nsILoadInfo> loadInfo;
+      channel->GetLoadInfo(getter_AddRefs(loadInfo));
+
       if (aLoadInfo != loadInfo) {
         MOZ_ASSERT(false, "newly created channel must have a loadinfo attached");
         return NS_ERROR_UNEXPECTED;
@@ -706,7 +707,7 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
       // If we're sandboxed, make sure to clear any owner the channel
       // might already have.
       if (loadInfo->GetLoadingSandboxed()) {
-        (*result)->SetOwner(nullptr);
+        channel->SetOwner(nullptr);
       }
     }
 
@@ -718,7 +719,7 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
     // implement the new interface.
     // See bug 529041
     if (!gHasWarnedUploadChannel2 && scheme.EqualsLiteral("http")) {
-        nsCOMPtr<nsIUploadChannel2> uploadChannel2 = do_QueryInterface(*result);
+        nsCOMPtr<nsIUploadChannel2> uploadChannel2 = do_QueryInterface(channel);
         if (!uploadChannel2) {
             nsCOMPtr<nsIConsoleService> consoleService =
                 do_GetService(NS_CONSOLESERVICE_CONTRACTID);
@@ -731,6 +732,7 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
         }
     }
 
+    channel.forget(result);
     return NS_OK;
 }
 

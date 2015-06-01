@@ -4945,6 +4945,39 @@ class LArrayConcat : public LCallInstructionHelper<1, 2, 2>
     }
 };
 
+class LArraySlice : public LCallInstructionHelper<1, 3, 2>
+{
+  public:
+    LIR_HEADER(ArraySlice)
+
+    LArraySlice(const LAllocation& obj, const LAllocation& begin, const LAllocation& end,
+                const LDefinition& temp1, const LDefinition& temp2) {
+        setOperand(0, obj);
+        setOperand(1, begin);
+        setOperand(2, end);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+    const MArraySlice* mir() const {
+        return mir_->toArraySlice();
+    }
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    const LAllocation* begin() {
+        return getOperand(1);
+    }
+    const LAllocation* end() {
+        return getOperand(2);
+    }
+    const LDefinition* temp1() {
+        return getTemp(0);
+    }
+    const LDefinition* temp2() {
+        return getTemp(1);
+    }
+};
+
 class LArrayJoin : public LCallInstructionHelper<1, 2, 0>
 {
   public:

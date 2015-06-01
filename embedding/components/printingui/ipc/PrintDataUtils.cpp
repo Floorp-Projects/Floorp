@@ -129,7 +129,23 @@ NS_IMETHODIMP
 MockWebBrowserPrint::EnumerateDocumentNames(uint32_t* aCount,
                                             char16_t*** aResult)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aCount = 0;
+  *aResult = nullptr;
+
+  if (mData.printJobName().IsEmpty()) {
+    return NS_OK;
+  }
+
+  // The only consumer that cares about this is the OS X printing
+  // dialog, and even then, it only cares about the first document
+  // name. That's why we only send a single document name through
+  // PrintData.
+  char16_t** array = (char16_t**) moz_xmalloc(sizeof(char16_t*));
+  array[0] = ToNewUnicode(mData.printJobName());
+
+  *aCount = 1;
+  *aResult = array;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

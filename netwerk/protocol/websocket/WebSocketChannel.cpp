@@ -2228,13 +2228,6 @@ WebSocketChannel::StopSession(nsresult reason)
 
   // normally this should be called on socket thread, but it is ok to call it
   // from OnStartRequest before the socket thread machine has gotten underway
-  if (NS_IsMainThread()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mDataStarted);
-  } else {
-    MOZ_DIAGNOSTIC_ASSERT(PR_GetCurrentThread() == gSocketThread,
-                          "Called on unexpected thread!");
-    MOZ_DIAGNOSTIC_ASSERT(mDataStarted);
-  }
 
   mStopped = 1;
 
@@ -2341,13 +2334,6 @@ WebSocketChannel::AbortSession(nsresult reason)
 
   // normally this should be called on socket thread, but it is ok to call it
   // from the main thread before StartWebsocketData() has completed
-  if (NS_IsMainThread()) {
-    MOZ_DIAGNOSTIC_ASSERT(!mDataStarted);
-  } else {
-    MOZ_DIAGNOSTIC_ASSERT(PR_GetCurrentThread() == gSocketThread,
-                          "Called on unexpected thread!");
-    MOZ_DIAGNOSTIC_ASSERT(mDataStarted);
-  }
 
   // When we are failing we need to close the TCP connection immediately
   // as per 7.1.1

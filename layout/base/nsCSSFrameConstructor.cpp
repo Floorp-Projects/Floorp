@@ -2395,6 +2395,15 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   MOZ_ASSERT(!mDocElementContainingBlock,
              "Shouldn't have a doc element containing block here");
 
+  // Resolve a new style context for the viewport since it may be affected
+  // by a new root element style (e.g. a propagated 'direction').
+  // @see nsStyleContext::ApplyStyleFixups
+  {
+    nsRefPtr<nsStyleContext> sc = mPresShell->StyleSet()->
+      ResolveAnonymousBoxStyle(nsCSSAnonBoxes::viewport, nullptr);
+    GetRootFrame()->SetStyleContextWithoutNotification(sc);
+  }
+
   // Make sure to call PropagateScrollToViewport before
   // SetUpDocElementContainingBlock, since it sets up our scrollbar state
   // properly.
