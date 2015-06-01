@@ -2932,7 +2932,7 @@ CodeGenerator::visitCallGetIntrinsicValue(LCallGetIntrinsicValue* lir)
     callVM(GetIntrinsicValueInfo, lir);
 }
 
-typedef bool (*InvokeFunctionFn)(JSContext*, HandleObject, uint32_t, Value*, Value*);
+typedef bool (*InvokeFunctionFn)(JSContext*, HandleObject, uint32_t, Value*, MutableHandleValue);
 static const VMFunction InvokeFunctionInfo = FunctionInfo<InvokeFunctionFn>(InvokeFunction);
 
 void
