@@ -2670,7 +2670,6 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
       return NPERR_NO_ERROR;
     }
 
-    break;
   default:
     // Fall through and return an error...
     ;
