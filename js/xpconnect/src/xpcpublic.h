@@ -139,9 +139,6 @@ XrayAwareCalleeGlobal(JSObject* fun);
 void
 TraceXPCGlobal(JSTracer* trc, JSObject* obj);
 
-uint64_t
-GetCompartmentCPOWMicroseconds(JSCompartment* compartment);
-
 } /* namespace xpc */
 
 namespace JS {
@@ -531,6 +528,12 @@ class ErrorReport {
 void
 DispatchScriptErrorEvent(nsPIDOMWindow* win, JSRuntime* rt, xpc::ErrorReport* xpcReport,
                          JS::Handle<JS::Value> exception);
+
+// Return a name for the compartment.
+// This function makes reasonable efforts to make this name both mostly human-readable
+// and unique. However, there are no guarantees of either property.
+extern void
+GetCurrentCompartmentName(JSContext*, nsCString& name);
 
 } // namespace xpc
 

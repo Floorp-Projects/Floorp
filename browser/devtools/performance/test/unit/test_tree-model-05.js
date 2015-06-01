@@ -42,38 +42,40 @@ let gThread = synthesizeProfileForTest([{
   ]
 }]);
 
-function test() {
+function run_test() {
+  run_next_test();
+}
+
+add_task(function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
 
   let root = new ThreadNode(gThread, { invertTree: true });
 
-  is(root.calls.length, 2,
+  equal(root.calls.length, 2,
      "Should get the 2 youngest frames, not the 1 oldest frame");
 
   let C = getFrameNodePath(root, "C");
   ok(C, "Should have C as a child of the root.");
 
-  is(C.calls.length, 3,
+  equal(C.calls.length, 3,
      "Should have 3 frames that called C.");
   ok(getFrameNodePath(C, "B"), "B called C.");
   ok(getFrameNodePath(C, "D"), "D called C.");
   ok(getFrameNodePath(C, "E"), "E called C.");
 
-  is(getFrameNodePath(C, "B").calls.length, 1);
+  equal(getFrameNodePath(C, "B").calls.length, 1);
   ok(getFrameNodePath(C, "B > A"), "A called B called C");
-  is(getFrameNodePath(C, "D").calls.length, 1);
+  equal(getFrameNodePath(C, "D").calls.length, 1);
   ok(getFrameNodePath(C, "D > A"), "A called D called C");
-  is(getFrameNodePath(C, "E").calls.length, 1);
+  equal(getFrameNodePath(C, "E").calls.length, 1);
   ok(getFrameNodePath(C, "E > A"), "A called E called C");
 
   let F = getFrameNodePath(root, "F");
   ok(F, "Should have F as a child of the root.");
 
-  is(F.calls.length, 1);
+  equal(F.calls.length, 1);
   ok(getFrameNodePath(F, "B"), "B called F");
 
-  is(getFrameNodePath(F, "B").calls.length, 1);
+  equal(getFrameNodePath(F, "B").calls.length, 1);
   ok(getFrameNodePath(F, "B > A"), "A called B called F");
-
-  finish();
-}
+});
