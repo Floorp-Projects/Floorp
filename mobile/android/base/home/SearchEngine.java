@@ -6,11 +6,14 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -25,7 +28,7 @@ public class SearchEngine {
     private final Bitmap icon;
     private volatile List<String> suggestions = new ArrayList<String>();   // Never null.
 
-    public SearchEngine(JSONObject engineJSON) throws JSONException {
+    public SearchEngine(final Context context, final JSONObject engineJSON) throws JSONException {
         if (engineJSON == null) {
             throw new IllegalArgumentException("Can't instantiate SearchEngine from null JSON.");
         }
@@ -40,10 +43,14 @@ public class SearchEngine {
         final String iconURI = getString(engineJSON, "iconURI");
         if (iconURI == null) {
             Log.w(LOG_TAG, "iconURI is null for search engine " + this.name);
-            this.icon = null;
-            return;
         }
-        this.icon = BitmapUtils.getBitmapFromDataURI(iconURI);
+        final Bitmap tempIcon = BitmapUtils.getBitmapFromDataURI(iconURI);
+
+        this.icon = (tempIcon != null) ? tempIcon : getDefaultFavicon(context);
+    }
+
+    private Bitmap getDefaultFavicon(final Context context) {
+        return BitmapFactory.decodeResource(context.getResources(), R.drawable.favicon_search);
     }
 
     private static String getString(JSONObject data, String key) throws JSONException {
