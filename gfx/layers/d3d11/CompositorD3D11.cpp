@@ -1059,7 +1059,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   // Failed to create a render target or the view.
   if (!mDefaultRT || !mDefaultRT->mRTView ||
-      mSize.width == 0 || mSize.height == 0) {
+      mSize.width <= 0 || mSize.height <= 0) {
     *aRenderBoundsOut = Rect();
     return;
   }
@@ -1128,6 +1128,10 @@ CompositorD3D11::EndFrame()
 
   nsIntSize oldSize = mSize;
   EnsureSize();
+  if (mSize.width <= 0 || mSize.height <= 0) {
+    return;
+  }
+
   UINT presentInterval = 0;
 
   if (gfxWindowsPlatform::GetPlatform()->IsWARP()) {
@@ -1216,6 +1220,7 @@ CompositorD3D11::VerifyBufferSize()
 
   hr = mSwapChain->GetDesc(&swapDesc);
   if (Failed(hr)) {
+    gfxCriticalError() << "Failed to get the description " << hexa(hr);
     return false;
   }
 
@@ -1253,9 +1258,17 @@ void
 CompositorD3D11::UpdateRenderTarget()
 {
   EnsureSize();
-  VerifyBufferSize();
+  if (!VerifyBufferSize()) {
+    gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed VerifyBufferSize in UpdateRenderTarget";
+    return;
+  }
 
   if (mDefaultRT) {
+    return;
+  }
+
+  if (mSize.width <= 0 || mSize.height <= 0) {
+    gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Invalid size in UpdateRenderTarget " << mSize;
     return;
   }
 
