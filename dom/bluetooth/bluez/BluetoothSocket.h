@@ -36,10 +36,6 @@ public:
   bool Listen(const nsAString& aServiceName,
               const BluetoothUuid& aServiceUuid,
               int aChannel);
-  inline void Disconnect()
-  {
-    Close();
-  }
 
   inline void GetAddress(nsAString& aDeviceAddress)
   {
