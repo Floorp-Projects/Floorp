@@ -2562,7 +2562,8 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state, AutoVal
             data.maxArgv = args.base() + 1;
         } else {
             MOZ_ASSERT(vals.empty());
-            if (!vals.reserve(Max(args.length() + 1, numFormals + 1)))
+            unsigned numPushedArgs = Max(args.length(), numFormals);
+            if (!vals.reserve(numPushedArgs + 1 + data.constructing))
                 return false;
 
             // Append |this| and any provided arguments.
@@ -2573,7 +2574,10 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state, AutoVal
             while (vals.length() < numFormals + 1)
                 vals.infallibleAppend(UndefinedValue());
 
-            MOZ_ASSERT(vals.length() >= numFormals + 1);
+            if (data.constructing)
+                vals.infallibleAppend(args.newTarget());
+
+            MOZ_ASSERT(vals.length() >= numFormals + 1 + data.constructing);
             data.maxArgv = vals.begin();
         }
     } else {
