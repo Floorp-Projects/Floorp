@@ -1265,6 +1265,13 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     }
 
     newEditor = mEditor; // just pretend that we have a new editor!
+
+    // Don't lose application flags in the process.
+    uint32_t originalFlags = 0;
+    newEditor->GetFlags(&originalFlags);
+    if (originalFlags & nsIPlaintextEditor::eEditorMailMask) {
+      editorFlags |= nsIPlaintextEditor::eEditorMailMask;
+    }
   }
 
   // Get the current value of the textfield from the content.
