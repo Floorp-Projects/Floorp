@@ -78,9 +78,13 @@ BluetoothUnixSocketConnector::CreateSocket(int& aFd) const
   MOZ_ASSERT(mType < MOZ_ARRAY_LENGTH(sType));
   MOZ_ASSERT(mType < MOZ_ARRAY_LENGTH(sProtocol));
 
+  BT_LOGR("mType=%d, sType=%d sProtocol=%d",
+          static_cast<int>(mType), sType[mType], sProtocol[mType]);
+
   aFd = socket(AF_BLUETOOTH, sType[mType], sProtocol[mType]);
   if (aFd < 0) {
-    BT_LOGR("Could not open Bluetooth socket!");
+    BT_LOGR("Could not open Bluetooth socket: %d(%s)",
+            errno, strerror(errno));
     return NS_ERROR_FAILURE;
   }
 
@@ -320,6 +324,9 @@ BluetoothUnixSocketConnector::ConvertAddressToString(
         b = l2->l2_bdaddr.b;
       }
       break;
+    default:
+      BT_LOGR("Unknown socket type %d", static_cast<int>(mType));
+      return NS_ERROR_ILLEGAL_VALUE;
   }
 
   char str[32];

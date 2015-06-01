@@ -24,18 +24,20 @@ class BluetoothUnixSocketConnector;
 class BluetoothSocket final : public mozilla::ipc::DataSocket
 {
 public:
-  BluetoothSocket(BluetoothSocketObserver* aObserver,
-                  BluetoothSocketType aType,
-                  bool aAuth,
-                  bool aEncrypt);
+  BluetoothSocket(BluetoothSocketObserver* aObserver);
   ~BluetoothSocket();
 
-  bool Connect(const nsAString& aDeviceAddress,
-               const BluetoothUuid& aServiceUuid,
-               int aChannel);
-  bool Listen(const nsAString& aServiceName,
-              const BluetoothUuid& aServiceUuid,
-              int aChannel);
+  nsresult Connect(const nsAString& aDeviceAddress,
+                   const BluetoothUuid& aServiceUuid,
+                   BluetoothSocketType aType,
+                   int aChannel,
+                   bool aAuth, bool aEncrypt);
+
+  nsresult Listen(const nsAString& aServiceName,
+                  const BluetoothUuid& aServiceUuid,
+                  BluetoothSocketType aType,
+                  int aChannel,
+                  bool aAuth, bool aEncrypt);
 
   /**
    * Method to be called whenever data is received. This is only called on the
@@ -104,9 +106,6 @@ private:
   class ListenTask;
 
   BluetoothSocketObserver* mObserver;
-  BluetoothSocketType mType;
-  bool mAuth;
-  bool mEncrypt;
   BluetoothSocketIO* mIO;
 };
 

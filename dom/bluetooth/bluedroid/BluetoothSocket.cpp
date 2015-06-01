@@ -579,15 +579,10 @@ DroidSocketImpl::DiscardBuffer()
 // |BluetoothSocket|
 //
 
-BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver,
-                                 BluetoothSocketType aType,
-                                 bool aAuth,
-                                 bool aEncrypt)
+BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver)
   : mObserver(aObserver)
   , mCurrentRes(nullptr)
   , mImpl(nullptr)
-  , mAuth(aAuth)
-  , mEncrypt(aEncrypt)
 {
   MOZ_ASSERT(aObserver);
 
@@ -642,13 +637,15 @@ private:
   DroidSocketImpl* mImpl;
 };
 
-bool
-BluetoothSocket::ConnectSocket(const nsAString& aDeviceAddress,
-                               const BluetoothUuid& aServiceUuid,
-                               int aChannel)
+nsresult
+BluetoothSocket::Connect(const nsAString& aDeviceAddress,
+                         const BluetoothUuid& aServiceUuid,
+                         BluetoothSocketType aType,
+                         int aChannel,
+                         bool aAuth, bool aEncrypt)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_FALSE(mImpl, false);
+  MOZ_ASSERT(!mImpl);
 
   SetConnectionStatus(SOCKET_CONNECTING);
 
@@ -658,12 +655,11 @@ BluetoothSocket::ConnectSocket(const nsAString& aDeviceAddress,
   SetCurrentResultHandler(res);
 
   sBluetoothSocketInterface->Connect(
-    aDeviceAddress,
-    BluetoothSocketType::RFCOMM,
+    aDeviceAddress, aType,
     aServiceUuid.mUuid, aChannel,
-    mEncrypt, mAuth, res);
+    aEncrypt, aAuth, res);
 
-  return true;
+  return NS_OK;
 }
 
 class ListenResultHandler final : public BluetoothSocketResultHandler
@@ -694,13 +690,15 @@ private:
   DroidSocketImpl* mImpl;
 };
 
-bool
-BluetoothSocket::ListenSocket(const nsAString& aServiceName,
-                              const BluetoothUuid& aServiceUuid,
-                              int aChannel)
+nsresult
+BluetoothSocket::Listen(const nsAString& aServiceName,
+                        const BluetoothUuid& aServiceUuid,
+                        BluetoothSocketType aType,
+                        int aChannel,
+                        bool aAuth, bool aEncrypt)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_FALSE(mImpl, false);
+  MOZ_ASSERT(!mImpl);
 
   SetConnectionStatus(SOCKET_LISTENING);
 
@@ -710,11 +708,11 @@ BluetoothSocket::ListenSocket(const nsAString& aServiceName,
   SetCurrentResultHandler(res);
 
   sBluetoothSocketInterface->Listen(
-    BluetoothSocketType::RFCOMM,
+    aType,
     aServiceName, aServiceUuid.mUuid, aChannel,
-    mEncrypt, mAuth, res);
+    aEncrypt, aAuth, res);
 
-  return true;
+  return NS_OK;
 }
 
 void
