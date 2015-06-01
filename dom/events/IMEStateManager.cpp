@@ -43,7 +43,7 @@ using namespace widget;
 
 /**
  * When a method is called, log its arguments and/or related static variables
- * with PR_LOG_ALWAYS.  However, if it puts too many logs like
+ * with PR_LOG_INFO.  However, if it puts too many logs like
  * OnDestroyPresContext(), should long only when the method actually does
  * something. In this case, the log should start with "ISM: <method name>".
  *
@@ -200,7 +200,7 @@ IMEStateManager::Init()
 void
 IMEStateManager::Shutdown()
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::Shutdown(), "
      "sTextCompositions=0x%p, sTextCompositions->Length()=%u",
      sTextCompositions, sTextCompositions ? sTextCompositions->Length() : 0));
@@ -241,7 +241,7 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
     return NS_OK;
   }
 
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::OnDestroyPresContext(aPresContext=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sTextCompositions=0x%p",
      aPresContext, sPresContext, sContent, sTextCompositions));
@@ -296,7 +296,7 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::OnRemoveContent(aPresContext=0x%p, "
      "aContent=0x%p), sPresContext=0x%p, sContent=0x%p, sTextCompositions=0x%p",
      aPresContext, aContent, sPresContext, sContent, sTextCompositions));
@@ -324,7 +324,7 @@ IMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
                                nsIContent* aContent,
                                InputContextAction::Cause aCause)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::OnChangeFocus(aPresContext=0x%p, "
      "aContent=0x%p, aCause=%s)",
      aPresContext, aContent, GetActionCauseName(aCause)));
@@ -339,7 +339,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
                                        nsIContent* aContent,
                                        InputContextAction aAction)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::OnChangeFocusInternal(aPresContext=0x%p, "
      "aContent=0x%p, aAction={ mCause=%s, mFocusChange=%s }), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p",
@@ -449,7 +449,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
 void
 IMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::OnInstalledMenuKeyboardListener(aInstalling=%s), "
      "sInstalledMenuKeyboardListener=%s",
      GetBoolName(aInstalling), GetBoolName(sInstalledMenuKeyboardListener)));
@@ -468,7 +468,7 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
                                             nsIContent* aContent,
                                             nsIDOMMouseEvent* aMouseEvent)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::OnMouseButtonEventInEditor(aPresContext=0x%p, "
      "aContent=0x%p, aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
      aPresContext, aContent, aMouseEvent, sPresContext, sContent));
@@ -506,10 +506,10 @@ IMEStateManager::OnMouseButtonEventInEditor(nsPresContext* aPresContext,
   bool consumed =
     sActiveIMEContentObserver->OnMouseButtonEvent(aPresContext, internalEvent);
 
-  if (MOZ_LOG_TEST(sISMLog, PR_LOG_ALWAYS)) {
+  if (MOZ_LOG_TEST(sISMLog, PR_LOG_INFO)) {
     nsAutoString eventType;
     aMouseEvent->GetType(eventType);
-    MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+    MOZ_LOG(sISMLog, PR_LOG_INFO,
       ("ISM:   IMEStateManager::OnMouseButtonEventInEditor(), "
        "mouse event (type=%s, button=%d) is %s",
        NS_ConvertUTF16toUTF8(eventType).get(), internalEvent->button,
@@ -525,7 +525,7 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
                                  nsIContent* aContent,
                                  nsIDOMMouseEvent* aMouseEvent)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::OnClickInEditor(aPresContext=0x%p, aContent=0x%p, "
      "aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
      aPresContext, aContent, aMouseEvent, sPresContext, sContent));
@@ -582,7 +582,7 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
                                  nsIContent* aContent,
                                  nsIEditor* aEditor)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::OnFocusInEditor(aPresContext=0x%p, aContent=0x%p, "
      "aEditor=0x%p), sPresContext=0x%p, sContent=0x%p, "
      "sActiveIMEContentObserver=0x%p",
@@ -617,7 +617,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
                                 nsIContent* aContent,
                                 nsIEditor* aEditor)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::UpdateIMEState(aNewIMEState={ mEnabled=%s, "
      "mOpen=%s }, aContent=0x%p, aEditor=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p, "
@@ -697,7 +697,7 @@ IMEState
 IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
                                 nsIContent*    aContent)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::GetNewIMEState(aPresContext=0x%p, aContent=0x%p), "
      "sInstalledMenuKeyboardListener=%s",
      aPresContext, aContent, GetBoolName(sInstalledMenuKeyboardListener)));
@@ -763,7 +763,7 @@ public:
     nsCOMPtr<nsIObserverService> observerService =
       services::GetObserverService();
     if (observerService) {
-      MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+      MOZ_LOG(sISMLog, PR_LOG_INFO,
         ("ISM: IMEEnabledStateChangedEvent::Run(), notifies observers of "
          "\"ime-enabled-state-changed\""));
       nsAutoString state;
@@ -785,7 +785,7 @@ IMEStateManager::SetIMEState(const IMEState& aState,
                              nsIWidget* aWidget,
                              InputContextAction aAction)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::SetIMEState(aState={ mEnabled=%s, mOpen=%s }, "
      "aContent=0x%p, aWidget=0x%p, aAction={ mCause=%s, mFocusChange=%s })",
      GetIMEStateEnabledName(aState.mEnabled),
@@ -913,7 +913,7 @@ IMEStateManager::DispatchCompositionEvent(
                    EventDispatchingCallback* aCallBack,
                    bool aIsSynthesized)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::DispatchCompositionEvent(aNode=0x%p, "
      "aPresContext=0x%p, aCompositionEvent={ message=%s, "
      "mFlags={ mIsTrusted=%s, mPropagationStopped=%s } }, "
@@ -996,7 +996,7 @@ IMEStateManager::OnCompositionEventDiscarded(
   // Note that this method is never called for synthesized events for emulating
   // commit or cancel composition.
 
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::OnCompositionEventDiscarded(aCompositionEvent={ "
      "message=%s, mFlags={ mIsTrusted=%s } })",
      GetEventMessageName(aCompositionEvent->message),
@@ -1019,7 +1019,7 @@ IMEStateManager::OnCompositionEventDiscarded(
     // a TextComposition instance for the composition was already removed from
     // the array and destroyed in OnDestroyPresContext().  Therefore, we may
     // fail to retrieve a TextComposition instance here.
-    MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+    MOZ_LOG(sISMLog, PR_LOG_INFO,
       ("ISM:   IMEStateManager::OnCompositionEventDiscarded(), "
        "TextComposition instance for the widget has already gone"));
     return;
@@ -1040,7 +1040,7 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
   bool isSynthesizedForTests =
     composition && composition->IsSynthesizedForTests();
 
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aWidget=0x%p), "
      "composition=0x%p, composition->IsSynthesizedForTests()=%s",
      GetNotifyIMEMessageName(aMessage), aWidget, composition.get(),
@@ -1075,7 +1075,7 @@ nsresult
 IMEStateManager::NotifyIME(IMEMessage aMessage,
                            nsPresContext* aPresContext)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aPresContext=0x%p)",
      GetNotifyIMEMessageName(aMessage), aPresContext));
 
@@ -1150,7 +1150,7 @@ IMEStateManager::IsIMEObserverNeeded(const IMEState& aState)
 void
 IMEStateManager::DestroyIMEContentObserver()
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::DestroyIMEContentObserver(), "
      "sActiveIMEContentObserver=0x%p",
      sActiveIMEContentObserver));
@@ -1173,7 +1173,7 @@ IMEStateManager::DestroyIMEContentObserver()
 void
 IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
 {
-  MOZ_LOG(sISMLog, PR_LOG_ALWAYS,
+  MOZ_LOG(sISMLog, PR_LOG_INFO,
     ("ISM: IMEStateManager::CreateIMEContentObserver(aEditor=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p, "
      "sActiveIMEContentObserver->IsManaging(sPresContext, sContent)=%s",

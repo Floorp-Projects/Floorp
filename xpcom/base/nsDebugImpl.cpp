@@ -331,12 +331,12 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
 
     case NS_DEBUG_BREAK:
       sevString = "###!!! BREAK";
-      ll = PR_LOG_ALWAYS;
+      ll = PR_LOG_ERROR;
       break;
 
     case NS_DEBUG_ABORT:
       sevString = "###!!! ABORT";
-      ll = PR_LOG_ALWAYS;
+      ll = PR_LOG_ERROR;
       break;
 
     default:

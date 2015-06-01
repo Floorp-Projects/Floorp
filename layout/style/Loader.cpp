@@ -264,13 +264,11 @@ GetLoaderLog()
   return sLog;
 }
 
-#define LOG_FORCE(args) MOZ_LOG(GetLoaderLog(), PR_LOG_ALWAYS, args)
 #define LOG_ERROR(args) MOZ_LOG(GetLoaderLog(), PR_LOG_ERROR, args)
 #define LOG_WARN(args) MOZ_LOG(GetLoaderLog(), PR_LOG_WARNING, args)
 #define LOG_DEBUG(args) MOZ_LOG(GetLoaderLog(), PR_LOG_DEBUG, args)
 #define LOG(args) LOG_DEBUG(args)
 
-#define LOG_FORCE_ENABLED() MOZ_LOG_TEST(GetLoaderLog(), PR_LOG_ALWAYS)
 #define LOG_ERROR_ENABLED() MOZ_LOG_TEST(GetLoaderLog(), PR_LOG_ERROR)
 #define LOG_WARN_ENABLED() MOZ_LOG_TEST(GetLoaderLog(), PR_LOG_WARNING)
 #define LOG_DEBUG_ENABLED() MOZ_LOG_TEST(GetLoaderLog(), PR_LOG_DEBUG)
