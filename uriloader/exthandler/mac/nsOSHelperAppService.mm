@@ -30,6 +30,8 @@
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
 #define BRAND_BUNDLE_URL "chrome://branding/locale/brand.properties"
 
+using mozilla::LogLevel;
+
 /* This is an undocumented interface (in the Foundation framework) that has
  * been stable since at least 10.2.8 and is still present on SnowLeopard.
  * Furthermore WebKit has three public methods (in WebKitSystemInterface.h)
@@ -306,7 +308,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   const nsCString& flatType = PromiseFlatCString(aMIMEType);
   const nsCString& flatExt = PromiseFlatCString(aFileExt);
 
-  MOZ_LOG(mLog, PR_LOG_DEBUG, ("Mac: HelperAppService lookup for type '%s' ext '%s'\n",
+  MOZ_LOG(mLog, LogLevel::Debug, ("Mac: HelperAppService lookup for type '%s' ext '%s'\n",
                               flatType.get(), flatExt.get()));
 
   // Create a Mac-specific MIME info so we can use Mac-specific members.
@@ -336,7 +338,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
       err = ::LSCopyApplicationForMIMEType(cfMIMEType, kLSRolesAll, &appURL);
       if ((err == noErr) && appURL && ::CFURLGetFSRef(appURL, &typeAppFSRef)) {
         haveAppForType = true;
-        MOZ_LOG(mLog, PR_LOG_DEBUG, ("LSCopyApplicationForMIMEType found a default application\n"));
+        MOZ_LOG(mLog, LogLevel::Debug, ("LSCopyApplicationForMIMEType found a default application\n"));
       }
       if (appURL) {
         ::CFRelease(appURL);
@@ -354,7 +356,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                       kLSRolesAll, &extAppFSRef, nullptr);
       if (err == noErr) {
         haveAppForExt = true;
-        MOZ_LOG(mLog, PR_LOG_DEBUG, ("LSGetApplicationForInfo found a default application\n"));
+        MOZ_LOG(mLog, LogLevel::Debug, ("LSGetApplicationForInfo found a default application\n"));
       }
       ::CFRelease(cfExt);
     }
@@ -526,7 +528,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     }
   }
 
-  MOZ_LOG(mLog, PR_LOG_DEBUG, ("OS gave us: type '%s' found '%i'\n", mimeType.get(), *aFound));
+  MOZ_LOG(mLog, LogLevel::Debug, ("OS gave us: type '%s' found '%i'\n", mimeType.get(), *aFound));
 
   [localPool release];
   return mimeInfoMac.forget();

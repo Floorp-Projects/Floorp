@@ -13,7 +13,7 @@
 
 extern PRLogModuleInfo* GetMediaSourceLog();
 
-#define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, ("MediaSourceResource(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
+#define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, ("MediaSourceResource(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 
 #define UNIMPLEMENTED() MSE_DEBUG("UNIMPLEMENTED FUNCTION at %s:%d", __FILE__, __LINE__)
 

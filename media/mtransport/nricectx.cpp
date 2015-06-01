@@ -459,13 +459,13 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
 #ifdef USE_INTERFACE_PRIORITIZER
   nr_interface_prioritizer *prioritizer = CreateInterfacePrioritizer();
   if (!prioritizer) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't create interface prioritizer.");
+    MOZ_MTLOG(LogLevel::Error, "Couldn't create interface prioritizer.");
     return nullptr;
   }
 
   r = nr_ice_ctx_set_interface_prioritizer(ctx->ctx_, prioritizer);
   if (r) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't set interface prioritizer.");
+    MOZ_MTLOG(LogLevel::Error, "Couldn't set interface prioritizer.");
     return nullptr;
   }
 #endif  // USE_INTERFACE_PRIORITIZER
@@ -655,7 +655,7 @@ nsresult NrIceCtx::SetProxyServer(const NrIceProxyServer& proxy_server) {
   }
 
   if ((r = nr_socket_wrapper_factory_proxy_tunnel_create(config, &wrapper))) {
-    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't create proxy tunnel wrapper.");
+    MOZ_MTLOG(LogLevel::Error, "Couldn't create proxy tunnel wrapper.");
     ABORT(r);
   }
 

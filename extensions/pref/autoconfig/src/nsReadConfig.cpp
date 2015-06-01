@@ -140,7 +140,7 @@ nsresult nsReadConfig::readConfigFile()
                                   getter_Copies(lockFileName));
 
 
-    MOZ_LOG(MCD, PR_LOG_DEBUG, ("general.config.filename = %s\n", lockFileName.get()));
+    MOZ_LOG(MCD, LogLevel::Debug, ("general.config.filename = %s\n", lockFileName.get()));
     if (NS_FAILED(rv))
         return rv;
 
@@ -174,11 +174,11 @@ nsresult nsReadConfig::readConfigFile()
 
     int32_t obscureValue = 0;
     (void) defaultPrefBranch->GetIntPref("general.config.obscure_value", &obscureValue);
-    MOZ_LOG(MCD, PR_LOG_DEBUG, ("evaluating .cfg file %s with obscureValue %d\n", lockFileName.get(), obscureValue));
+    MOZ_LOG(MCD, LogLevel::Debug, ("evaluating .cfg file %s with obscureValue %d\n", lockFileName.get(), obscureValue));
     rv = openAndEvaluateJSFile(lockFileName.get(), obscureValue, true, true);
     if (NS_FAILED(rv))
     {
-      MOZ_LOG(MCD, PR_LOG_DEBUG, ("error evaluating .cfg file %s %x\n", lockFileName.get(), rv));
+      MOZ_LOG(MCD, LogLevel::Debug, ("error evaluating .cfg file %s %x\n", lockFileName.get(), rv));
       return rv;
     }
     

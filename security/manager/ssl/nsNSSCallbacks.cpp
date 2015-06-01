@@ -275,7 +275,7 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
                                                         const char **http_response_data, 
                                                         uint32_t *http_response_data_len)
 {
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
          ("nsNSSHttpRequestSession::trySendAndReceiveFcn to %s\n", mURL.get()));
 
   bool onSTSThread;
@@ -313,7 +313,7 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
     {
       if (retryable_error)
       {
-        MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+        MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
                ("nsNSSHttpRequestSession::trySendAndReceiveFcn - sleeping and retrying: %d of %d\n",
                 retry_count, max_retries));
       }
@@ -335,10 +335,10 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
   if (retry_count > 1)
   {
     if (retryable_error)
-      MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
              ("nsNSSHttpRequestSession::trySendAndReceiveFcn - still failing, giving up...\n"));
     else
-      MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
              ("nsNSSHttpRequestSession::trySendAndReceiveFcn - success at attempt %d\n",
               retry_count));
   }
@@ -660,7 +660,7 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
   
   if (NS_FAILED(aStatus))
   {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("nsHTTPListener::OnStreamComplete status failed %d", aStatus));
   }
 
@@ -953,7 +953,7 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   SSLCipherSuiteInfo cipherInfo;
   if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
                              sizeof (cipherInfo)) != SECSuccess) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] failed - "
                                       " KEA %d\n", fd,
                                       static_cast<int32_t>(cipherInfo.keaType)));
     return SECSuccess;
@@ -964,7 +964,7 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   // Prevent version downgrade attacks from TLS 1.2, and avoid False Start for
   // TLS 1.3 and later. See Bug 861310 for all the details as to why.
   if (channelInfo.protocolVersion != SSL_LIBRARY_VERSION_TLS_1_2) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] failed - "
                                       "SSL Version must be TLS 1.2, was %x\n", fd,
                                       static_cast<int32_t>(channelInfo.protocolVersion)));
     reasonsForNotFalseStarting |= POSSIBLE_VERSION_DOWNGRADE;
@@ -972,7 +972,7 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
 
   // See bug 952863 for why ECDHE is allowed, but DHE (and RSA) are not.
   if (cipherInfo.keaType != ssl_kea_ecdh) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] failed - "
                                       "unsupported KEA %d\n", fd,
                                       static_cast<int32_t>(cipherInfo.keaType)));
     reasonsForNotFalseStarting |= KEA_NOT_SUPPORTED;
@@ -982,7 +982,7 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   // mode due to BEAST, POODLE, and other attacks on the MAC-then-Encrypt
   // design. See bug 1109766 for more details.
   if (cipherInfo.symCipher != ssl_calg_aes_gcm) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("CanFalseStartCallback [%p] failed - Symmetric cipher used, %d, "
             "is not supported with False Start.\n", fd,
             static_cast<int32_t>(cipherInfo.symCipher)));
@@ -1001,7 +1001,7 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     nsAutoCString negotiatedNPN;
     if (NS_FAILED(infoObject->GetNegotiatedNPN(negotiatedNPN)) ||
         !negotiatedNPN.Length()) {
-      MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] failed - "
                                         "NPN cannot be verified\n", fd));
       reasonsForNotFalseStarting |= NPN_NOT_NEGOTIATED;
     }
@@ -1014,7 +1014,7 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     *canFalseStart = PR_TRUE;
     infoObject->SetFalseStarted();
     infoObject->NoteTimeUntilReady();
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] ok\n", fd));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CanFalseStartCallback [%p] ok\n", fd));
   }
 
   return SECSuccess;
@@ -1124,7 +1124,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
   SSLVersionRange versions(infoObject->GetTLSVersionRange());
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
          ("[%p] HandshakeCallback: succeeded using TLS version range (0x%04x,0x%04x)\n",
           fd, static_cast<unsigned int>(versions.min),
               static_cast<unsigned int>(versions.max)));
@@ -1269,12 +1269,12 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                                              status);
 
   if (status->HasServerCert()) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("HandshakeCallback KEEPING existing cert\n"));
   } else {
     ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
     RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert.get()));
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("HandshakeCallback using NEW cert %p\n", nssc.get()));
     status->SetServerCert(nssc, nsNSSCertificate::ev_status_unknown);
   }
