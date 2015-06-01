@@ -785,7 +785,7 @@ FormatFrame(JSContext* cx, const ScriptFrameIter& iter, char* buf, int num,
                                         name ? name :"",
                                         name ? " = " : "",
                                         arg.isString() ? "\"" : "",
-					value,
+                                        value,
                                         arg.isString() ? "\"" : "");
                 if (!buf)
                     return buf;
