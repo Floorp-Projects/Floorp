@@ -73,6 +73,7 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/layout.js',
     'actors/memory.js',
     'actors/monitor.js',
+    'actors/object.js',
     'actors/preference.js',
     'actors/pretty-print-worker.js',
     'actors/profiler.js',

@@ -6,7 +6,7 @@
  */
 
 function* spawnTest() {
-  let { TIMELINE_BLUEPRINT } = devtools.require("devtools/performance/global");
+  let { TIMELINE_BLUEPRINT } = devtools.require("devtools/performance/markers");
 
   ok(TIMELINE_BLUEPRINT,
     "A timeline blueprint should be available.");

@@ -6,8 +6,6 @@
  * the FrameNodes have the correct optimization data after iterating over samples.
  */
 
-const RecordingUtils = devtools.require("devtools/performance/recording-utils");
-
 let gUniqueStacks = new RecordingUtils.UniqueStacks();
 
 function uniqStr(s) {
@@ -154,7 +152,11 @@ gThread.frameTable.data.forEach((frame) => {
   }
 });
 
-function test() {
+function run_test() {
+  run_next_test();
+}
+
+add_task(function test() {
   let { ThreadNode } = devtools.require("devtools/performance/tree-model");
 
   let root = new ThreadNode(gThread);
@@ -163,19 +165,17 @@ function test() {
 
   let opts = A.getOptimizations();
   let sites = opts.optimizationSites;
-  is(sites.length, 2, "Frame A has two optimization sites.");
-  is(sites[0].samples, 2, "first opt site has 2 samples.");
-  is(sites[1].samples, 1, "second opt site has 1 sample.");
+  equal(sites.length, 2, "Frame A has two optimization sites.");
+  equal(sites[0].samples, 2, "first opt site has 2 samples.");
+  equal(sites[1].samples, 1, "second opt site has 1 sample.");
 
   let E = getFrameNodePath(A, "E");
   opts = E.getOptimizations();
   sites = opts.optimizationSites;
-  is(sites.length, 1, "Frame E has one optimization site.");
-  is(sites[0].samples, 1, "first opt site has 1 samples.");
+  equal(sites.length, 1, "Frame E has one optimization site.");
+  equal(sites[0].samples, 1, "first opt site has 1 samples.");
 
   let D = getFrameNodePath(A, "D");
   ok(!D.getOptimizations(),
     "frames that do not have any opts data do not have JITOptimizations instances.");
-
-  finish();
-}
+});
