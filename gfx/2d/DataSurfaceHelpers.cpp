@@ -97,7 +97,7 @@ CopyBGRXSurfaceDataToPackedBGRArray(uint8_t* aSrc, uint8_t* aDst,
   uint8_t* dstPx = aDst;
 
   for (int row = 0; row < aSrcSize.height; ++row) {
-    for (int col = 0; col < aSrcSize.height; ++col) {
+    for (int col = 0; col < aSrcSize.width; ++col) {
       dstPx[0] = srcPx[0];
       dstPx[1] = srcPx[1];
       dstPx[2] = srcPx[2];
