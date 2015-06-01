@@ -658,16 +658,10 @@ class AndroidCommands(MachCommandBase):
         metavar='TEST',
         help='Test to run. Can be specified as a Robocop test name (like "testLoad"), '
         'or omitted. If omitted, the entire test suite is executed.')
-    @CommandArgument('--serve', default=False, action='store_true',
-        help='Run no tests but start the mochi.test web server and launch '
-             'Fennec with a test profile.')
-    def run_robocop(self, test_path, serve=False, **kwargs):
+    def run_robocop(self, test_path, **kwargs):
         host_ret = verify_host_bin()
         if host_ret != 0:
             return host_ret
-
-        if serve:
-            kwargs['autorun'] = False
 
         if not kwargs.get('robocopIni'):
             kwargs['robocopIni'] = os.path.join(self.topobjdir, '_tests', 'testing',
@@ -676,6 +670,5 @@ class AndroidCommands(MachCommandBase):
         if not kwargs.get('robocopApk'):
             kwargs['robocopApk'] = os.path.join(self.topobjdir, 'build', 'mobile',
                                                 'robocop', 'robocop-debug.apk')
-
         mochitest = self._spawn(MochitestRunner)
         return mochitest.run_android_test(test_path, **kwargs)
