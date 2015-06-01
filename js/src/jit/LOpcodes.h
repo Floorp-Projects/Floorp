@@ -350,7 +350,8 @@
     _(ThrowUninitializedLexical)    \
     _(NurseryObject)                \
     _(Debugger)                     \
-    _(NewTarget)
+    _(NewTarget)                    \
+    _(ArrowNewTarget)
 
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/LOpcodes-x86.h"
