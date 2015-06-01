@@ -23,7 +23,7 @@ class gfxPattern;
 class gfxDrawable {
     NS_INLINE_DECL_REFCOUNTING(gfxDrawable)
 public:
-    explicit gfxDrawable(const gfxIntSize aSize)
+    explicit gfxDrawable(const mozilla::gfx::IntSize aSize)
      : mSize(aSize) {}
 
     /**
@@ -49,13 +49,13 @@ public:
         return false;
     }
 
-    virtual gfxIntSize Size() { return mSize; }
+    virtual mozilla::gfx::IntSize Size() { return mSize; }
 
 protected:
     // Protected destructor, to discourage deletion outside of Release():
     virtual ~gfxDrawable() {}
 
-    const gfxIntSize mSize;
+    const mozilla::gfx::IntSize mSize;
 };
 
 /**
@@ -64,7 +64,7 @@ protected:
  */
 class gfxSurfaceDrawable : public gfxDrawable {
 public:
-    gfxSurfaceDrawable(mozilla::gfx::SourceSurface* aSurface, const gfxIntSize aSize,
+    gfxSurfaceDrawable(mozilla::gfx::SourceSurface* aSurface, const mozilla::gfx::IntSize aSize,
                        const gfxMatrix aTransform = gfxMatrix());
     virtual ~gfxSurfaceDrawable() {}
 
@@ -125,7 +125,7 @@ public:
  */
 class gfxCallbackDrawable : public gfxDrawable {
 public:
-    gfxCallbackDrawable(gfxDrawingCallback* aCallback, const gfxIntSize aSize);
+    gfxCallbackDrawable(gfxDrawingCallback* aCallback, const mozilla::gfx::IntSize aSize);
     virtual ~gfxCallbackDrawable() {}
 
     virtual bool Draw(gfxContext* aContext,
@@ -149,7 +149,7 @@ protected:
 class gfxPatternDrawable : public gfxDrawable {
 public:
     gfxPatternDrawable(gfxPattern* aPattern,
-                       const gfxIntSize aSize);
+                       const mozilla::gfx::IntSize aSize);
     virtual ~gfxPatternDrawable();
 
     virtual bool Draw(gfxContext* aContext,

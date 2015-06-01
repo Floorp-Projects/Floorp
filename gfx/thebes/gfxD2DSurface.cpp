@@ -37,7 +37,7 @@ gfxD2DSurface::gfxD2DSurface(cairo_surface_t *csurf)
     Init(csurf, true);
 }
 
-gfxD2DSurface::gfxD2DSurface(const gfxIntSize& size,
+gfxD2DSurface::gfxD2DSurface(const mozilla::gfx::IntSize& size,
                              gfxImageFormat imageFormat)
 {
     Init(cairo_d2d_surface_create(
@@ -94,8 +94,8 @@ gfxD2DSurface::ReleaseDC(const mozilla::gfx::IntRect *aUpdatedRect)
     cairo_d2d_release_dc(CairoSurface(), &rect);
 }
 
-const gfxIntSize gfxD2DSurface::GetSize() const
+const mozilla::gfx::IntSize gfxD2DSurface::GetSize() const
 { 
-    return gfxIntSize(cairo_d2d_surface_get_width(mSurface),
+    return mozilla::gfx::IntSize(cairo_d2d_surface_get_width(mSurface),
                       cairo_d2d_surface_get_height(mSurface));
 }

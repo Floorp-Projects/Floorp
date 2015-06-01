@@ -113,7 +113,7 @@ private:
     HDC mDC;
     XFORM mOldWorldTransform;
     POINT mOrigViewportOrigin;
-    gfxIntSize mTempSurfaceSize;
+    mozilla::gfx::IntSize mTempSurfaceSize;
 };
 
 #endif
