@@ -422,6 +422,7 @@ class IonBuilder
     bool shouldAbortOnPreliminaryGroups(MDefinition *obj);
 
     MDefinition* tryInnerizeWindow(MDefinition* obj);
+    MDefinition* maybeUnboxForPropertyAccess(MDefinition* def);
 
     // jsop_getprop() helpers.
     bool checkIsDefinitelyOptimizedArguments(MDefinition* obj, bool* isOptimizedArgs);
@@ -745,6 +746,7 @@ class IonBuilder
     InliningStatus inlineArrayPopShift(CallInfo& callInfo, MArrayPopShift::Mode mode);
     InliningStatus inlineArrayPush(CallInfo& callInfo);
     InliningStatus inlineArrayConcat(CallInfo& callInfo);
+    InliningStatus inlineArraySlice(CallInfo& callInfo);
     InliningStatus inlineArrayJoin(CallInfo& callInfo);
     InliningStatus inlineArraySplice(CallInfo& callInfo);
 
@@ -940,8 +942,8 @@ class IonBuilder
     MGetPropertyCache* getInlineableGetPropertyCache(CallInfo& callInfo);
 
     JSObject* testSingletonProperty(JSObject* obj, PropertyName* name);
-    bool testSingletonPropertyTypes(MDefinition* obj, JSObject* singleton, PropertyName* name,
-                                    bool* testObject, bool* testString);
+    JSObject* testSingletonPropertyTypes(MDefinition* obj, PropertyName* name);
+
     uint32_t getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_t* pnfixed,
                              BaselineInspector::ObjectGroupVector& convertUnboxedGroups);
     MDefinition* convertUnboxedObjects(MDefinition* obj,

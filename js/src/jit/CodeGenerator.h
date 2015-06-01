@@ -265,6 +265,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitArrayPushV(LArrayPushV* lir);
     void visitArrayPushT(LArrayPushT* lir);
     void visitArrayConcat(LArrayConcat* lir);
+    void visitArraySlice(LArraySlice* lir);
     void visitArrayJoin(LArrayJoin* lir);
     void visitLoadUnboxedScalar(LLoadUnboxedScalar* lir);
     void visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole* lir);

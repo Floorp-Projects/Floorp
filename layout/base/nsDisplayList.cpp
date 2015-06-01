@@ -1547,34 +1547,53 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   // want the root container layer to have metrics. If the parent process is
   // using XUL windows, there is no root scrollframe, and without explicitly
   // creating metrics there will be no guaranteed top-level APZC.
-  if (gfxPrefs::LayoutUseContainersForRootFrames() ||
-      (XRE_IsParentProcess() && !presShell->GetRootScrollFrame()))
-  {
+  bool addMetrics = gfxPrefs::LayoutUseContainersForRootFrames() ||
+      (XRE_IsParentProcess() && !presShell->GetRootScrollFrame());
+
+  // Add metrics if there are none in the layer tree with the id (create an id
+  // if there isn't one already) of the root scroll frame/root content.
+  bool ensureMetricsForRootId =
+    gfxPrefs::AsyncPanZoomEnabled() &&
+    !gfxPrefs::LayoutUseContainersForRootFrames() &&
+    aBuilder->IsPaintingToWindow() &&
+    !presContext->GetParentPresContext();
+
+  nsIContent* content = nullptr;
+  nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+  if (rootScrollFrame) {
+    content = rootScrollFrame->GetContent();
+  } else {
+    // If there is no root scroll frame, pick the document element instead.
+    // The only case we don't want to do this is in non-APZ fennec, where
+    // we want the root xul document to get a null scroll id so that the root
+    // content document gets the first non-null scroll id.
+#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
+    content = document->GetDocumentElement();
+#endif
+  }
+
+
+  if (ensureMetricsForRootId && content) {
+    ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
+    if (nsLayoutUtils::ContainsMetricsWithId(root, scrollId)) {
+      ensureMetricsForRootId = false;
+    }
+  }
+
+  if (addMetrics || ensureMetricsForRootId) {
     bool isRoot = presContext->IsRootContentDocument();
 
     nsRect viewport(aBuilder->ToReferenceFrame(frame), frame->GetSize());
 
-    nsIFrame* scrollFrame = presShell->GetRootScrollFrame();
-    nsIContent* content = nullptr;
-    if (scrollFrame) {
-      content = scrollFrame->GetContent();
-    } else {
-      // If there is no root scroll frame, pick the document element instead.
-      // The only case we don't want to do this is in non-APZ fennec, where
-      // we want the root xul document to get a null scroll id so that the root
-      // content document gets the first non-null scroll id.
-#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
-      content = document->GetDocumentElement();
-#endif
-    }
-
     root->SetFrameMetrics(
       nsLayoutUtils::ComputeFrameMetrics(frame,
-                         presShell->GetRootScrollFrame(),
-                         content,
+                         rootScrollFrame, content,
                          aBuilder->FindReferenceFrameFor(frame),
                          root, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
                          isRoot, containerParameters));
+  } else {
+    // Set empty metrics to clear any metrics that might be on a recycled layer.
+    root->SetFrameMetrics(nsTArray<FrameMetrics>());
   }
 
   // NS_WARNING is debug-only, so don't even bother checking the conditions in

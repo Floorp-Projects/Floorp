@@ -122,6 +122,12 @@ builds:
     types:
       opt:
         task: tasks/builds/android_api_11.yml
+  linux64:
+    platforms:
+      - Opt Linux64
+    types:
+      opt:
+        task: tasks/builds/opt_linux64.yml
 
 tests:
   cppunit:

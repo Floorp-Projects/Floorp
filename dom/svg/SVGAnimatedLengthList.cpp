@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGAnimatedLengthList.h"
+
 #include "DOMSVGAnimatedLengthList.h"
+#include "mozilla/Move.h"
 #include "nsSVGElement.h"
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSMILValue.h"
@@ -138,7 +140,7 @@ SVGAnimatedLengthList::
   nsresult rv = llai->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
     llai->SetInfo(mElement, mAxis, mCanZeroPadList);
-    aValue.Swap(val);
+    aValue = Move(val);
 
     // If any of the lengths in the list depend on their context, then we must
     // prevent caching of the entire animation sandwich. This is because the
@@ -181,7 +183,7 @@ SVGAnimatedLengthList::SMILAnimatedLengthList::GetBaseValue() const
   nsresult rv = llai->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     llai->SetInfo(mElement, mAxis, mCanZeroPadList);
-    val.Swap(tmp);
+    val = Move(tmp);
   }
   return val;
 }
