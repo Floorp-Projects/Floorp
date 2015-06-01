@@ -161,13 +161,15 @@ BluetoothPbapManager::Listen()
     mServerSocket = nullptr;
   }
 
-  mServerSocket =
-    new BluetoothSocket(this, BluetoothSocketType::RFCOMM, false, true);
+  mServerSocket = new BluetoothSocket(this);
 
-  if (NS_WARN_IF(!mServerSocket->ListenSocket(
-                    NS_LITERAL_STRING("OBEX Phonebook Access Server"),
-                    kPbapPSE,
-                    BluetoothReservedChannels::CHANNEL_PBAP_PSE))) {
+  nsresult rv = mServerSocket->Listen(
+    NS_LITERAL_STRING("OBEX Phonebook Access Server"),
+    kPbapPSE,
+    BluetoothSocketType::RFCOMM,
+    BluetoothReservedChannels::CHANNEL_PBAP_PSE, false, true);
+
+  if (NS_FAILED(rv)) {
     mServerSocket = nullptr;
     return false;
   }
