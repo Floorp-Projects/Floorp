@@ -131,6 +131,12 @@ ViewSourceChrome.prototype = {
       case "ViewSource:GoToLine:Failed":
         this.onGoToLineFailed();
         break;
+      case "ViewSource:StoreWrapping":
+        this.storeWrapping(data.state);
+        break;
+      case "ViewSource:StoreSyntaxHighlighting":
+        this.storeSyntaxHighlighting(data.state);
+        break;
       // End messages from super class
       case "ViewSource:SourceLoaded":
         this.onSourceLoaded();
@@ -629,28 +635,18 @@ ViewSourceChrome.prototype = {
   },
 
   /**
-   * Called when the user clicks on the "Wrap Long Lines" menu item, and
-   * flips the user preference for wrapping long lines in the view source
-   * browser.
+   * Called when the user clicks on the "Wrap Long Lines" menu item.
    */
   toggleWrapping() {
     this.shouldWrap = !this.shouldWrap;
-    Services.prefs.setBoolPref("view_source.wrap_long_lines",
-                               this.shouldWrap);
     this.sendAsyncMessage("ViewSource:ToggleWrapping");
   },
 
   /**
-   * Called when the user clicks on the "Syntax Highlighting" menu item, and
-   * flips the user preference for wrapping long lines in the view source
-   * browser.
+   * Called when the user clicks on the "Syntax Highlighting" menu item.
    */
   toggleSyntaxHighlighting() {
     this.shouldHighlight = !this.shouldHighlight;
-    // We can't flip this value in the child, since prefs are read-only there.
-    // We flip it here, and then toggle a class in the child.
-    Services.prefs.setBoolPref("view_source.syntax_highlight",
-                               this.shouldHighlight);
     this.sendAsyncMessage("ViewSource:ToggleSyntaxHighlighting");
   },
 
