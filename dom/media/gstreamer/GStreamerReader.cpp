@@ -224,10 +224,14 @@ void GStreamerReader::ElementAddedCb(GstBin *aPlayBin,
                                      GstElement *aElement,
                                      gpointer aUserData)
 {
-  const gchar *name =
-    gst_plugin_feature_get_name(GST_PLUGIN_FEATURE(gst_element_get_factory(aElement)));
+  GstElementFactory *factory = gst_element_get_factory(aElement);
 
-  if (!strcmp(name, "uridecodebin")) {
+  if (!factory)
+    return;
+
+  const gchar *name = gst_plugin_feature_get_name(GST_PLUGIN_FEATURE(factory));
+
+  if (name && !strcmp(name, "uridecodebin")) {
     g_signal_connect(G_OBJECT(aElement), "autoplug-sort",
                      G_CALLBACK(GStreamerReader::ElementFilterCb), aUserData);
   }
