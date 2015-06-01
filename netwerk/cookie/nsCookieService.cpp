@@ -204,7 +204,7 @@ GetCookieLog()
 
 #define COOKIE_LOGEVICTED(a, details)          \
   PR_BEGIN_MACRO                               \
-  if (PR_LOG_TEST(GetCookieLog(), PR_LOG_DEBUG))  \
+  if (MOZ_LOG_TEST(GetCookieLog(), PR_LOG_DEBUG))  \
       LogEvicted(a, details);                  \
   PR_END_MACRO
 
@@ -218,7 +218,7 @@ static void
 LogFailure(bool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const char *aReason)
 {
   // if logging isn't enabled, return now to save cycles
-  if (!PR_LOG_TEST(GetCookieLog(), PR_LOG_WARNING))
+  if (!MOZ_LOG_TEST(GetCookieLog(), PR_LOG_WARNING))
     return;
 
   nsAutoCString spec;
@@ -277,7 +277,7 @@ static void
 LogSuccess(bool aSetCookie, nsIURI *aHostURI, const char *aCookieString, nsCookie *aCookie, bool aReplacing)
 {
   // if logging isn't enabled, return now to save cycles
-  if (!PR_LOG_TEST(GetCookieLog(), PR_LOG_DEBUG)) {
+  if (!MOZ_LOG_TEST(GetCookieLog(), PR_LOG_DEBUG)) {
     return;
   }
 
@@ -351,7 +351,7 @@ protected:
 public:
   NS_IMETHOD HandleError(mozIStorageError* aError) override
   {
-    if (PR_LOG_TEST(GetCookieLog(), PR_LOG_WARNING)) {
+    if (MOZ_LOG_TEST(GetCookieLog(), PR_LOG_WARNING)) {
       int32_t result = -1;
       aError->GetResult(&result);
 

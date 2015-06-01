@@ -389,7 +389,7 @@ nsDocLoader::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 {
   // called each time a request is added to the group.
 
-  if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
     nsAutoCString name;
     request->GetName(name);
 
@@ -469,7 +469,7 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
 {
   nsresult rv = NS_OK;
 
-  if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
     nsAutoCString name;
     aRequest->GetName(name);
 

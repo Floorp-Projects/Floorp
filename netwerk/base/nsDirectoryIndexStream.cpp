@@ -92,7 +92,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     if (!isDir)
         return NS_ERROR_ILLEGAL_VALUE;
 
-    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gLog, PR_LOG_DEBUG)) {
         nsAutoCString path;
         aDir->GetNativePath(path);
         MOZ_LOG(gLog, PR_LOG_DEBUG,
@@ -239,7 +239,7 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
             nsIFile* current = mArray.ObjectAt(mPos);
             ++mPos;
 
-            if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+            if (MOZ_LOG_TEST(gLog, PR_LOG_DEBUG)) {
                 nsAutoCString path;
                 current->GetNativePath(path);
                 MOZ_LOG(gLog, PR_LOG_DEBUG,

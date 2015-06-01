@@ -32,10 +32,10 @@ extern PRLogModuleInfo *gWyciwygLog;
 #define LOG4(args) MOZ_LOG(gWyciwygLog, 4, args)
 #define LOG(args) LOG4(args)
 
-#define LOG1_ENABLED() PR_LOG_TEST(gWyciwygLog, 1)
-#define LOG2_ENABLED() PR_LOG_TEST(gWyciwygLog, 2)
-#define LOG3_ENABLED() PR_LOG_TEST(gWyciwygLog, 3)
-#define LOG4_ENABLED() PR_LOG_TEST(gWyciwygLog, 4)
+#define LOG1_ENABLED() MOZ_LOG_TEST(gWyciwygLog, 1)
+#define LOG2_ENABLED() MOZ_LOG_TEST(gWyciwygLog, 2)
+#define LOG3_ENABLED() MOZ_LOG_TEST(gWyciwygLog, 3)
+#define LOG4_ENABLED() MOZ_LOG_TEST(gWyciwygLog, 4)
 #define LOG_ENABLED() LOG4_ENABLED()
 
 #define WYCIWYG_TYPE "text/html"

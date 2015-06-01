@@ -24,7 +24,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
       mTargetVariable(aTargetVariable),
       mTarget(nullptr)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* prop = "(null)";
         if (aProperty)
             aProperty->GetValueConst(&prop);
@@ -57,7 +57,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
       mTargetVariable(aTargetVariable),
       mTarget(nullptr)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* source = "(null)";
         if (aSource)
             aSource->GetValueConst(&source);
@@ -90,7 +90,7 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
       mTargetVariable(0),
       mTarget(aTarget)
 {
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoString svar(NS_LITERAL_STRING("(none)"));
         if (mSourceVariable)
             mSourceVariable->ToString(svar);
@@ -148,7 +148,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                                                                    getter_AddRefs(targetValue));
         }
 
-        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             const char* source = "(unbound)";
             if (hasSourceBinding)
                 sourceRes->GetValueConst(&source);
@@ -229,7 +229,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                     value = do_QueryInterface(isupports);
                     NS_ASSERTION(value != nullptr, "target is not an nsIRDFNode");
 
-                    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                         nsAutoString s(NS_LITERAL_STRING("(none found)"));
                         if (value)
                             nsXULContentUtils::GetTextForNode(value, s);
@@ -248,7 +248,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                     nsCOMPtr<nsIRDFResource> source = do_QueryInterface(isupports);
                     NS_ASSERTION(source != nullptr, "source is not an nsIRDFResource");
 
-                    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                         const char* s = "(none found)";
                         if (source)
                             source->GetValueConst(&s);
@@ -321,7 +321,7 @@ nsRDFPropertyTestNode::CanPropagate(nsIRDFResource* aSource,
         result = true;
     }
 
-    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* source;
         aSource->GetValueConst(&source);
 
@@ -346,7 +346,7 @@ nsRDFPropertyTestNode::Retract(nsIRDFResource* aSource,
                                nsIRDFNode* aTarget) const
 {
     if (aProperty == mProperty.get()) {
-        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
             const char* source;
             aSource->GetValueConst(&source);
 

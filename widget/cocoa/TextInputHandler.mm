@@ -1041,7 +1041,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   NS_ASSERTION(aKeyEvent.message == NS_KEY_PRESS,
                "aKeyEvent must be NS_KEY_PRESS event");
 
-  if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+  if (MOZ_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
     nsAutoString chars;
     nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], chars);
     NS_ConvertUTF16toUTF8 utf8Chars(chars);
@@ -1443,7 +1443,7 @@ TextInputHandler::CreateAllKeyboardLayoutList()
 void
 TextInputHandler::DebugPrintAllKeyboardLayouts()
 {
-  if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+  if (MOZ_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
     CFArrayRef list = CreateAllKeyboardLayoutList();
     MOZ_LOG(gLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
     CFIndex idx = ::CFArrayGetCount(list);
@@ -2260,7 +2260,7 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
     tis.GetInputSourceID(sLatestIMEOpenedModeInputSourceID);
   }
 
-  if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+  if (MOZ_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
     static CFStringRef sLastTIS = nullptr;
     CFStringRef newTIS;
     tis.GetInputSourceID(newTIS);
@@ -2348,7 +2348,7 @@ IMEInputHandler::CreateAllIMEModeList()
 void
 IMEInputHandler::DebugPrintAllIMEModes()
 {
-  if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+  if (MOZ_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
     CFArrayRef list = CreateAllIMEModeList();
     MOZ_LOG(gLog, PR_LOG_ALWAYS, ("IME mode configuration:"));
     CFIndex idx = ::CFArrayGetCount(list);
@@ -3681,7 +3681,7 @@ IMEInputHandler::OpenSystemPreferredLanguageIME()
       TISInputSourceWrapper tis;
       tis.InitByLanguage(lang);
       if (tis.IsOpenedIMEMode()) {
-        if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+        if (MOZ_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
           CFStringRef foundTIS;
           tis.GetInputSourceID(foundTIS);
           MOZ_LOG(gLog, PR_LOG_ALWAYS,

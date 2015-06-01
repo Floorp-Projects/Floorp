@@ -244,7 +244,7 @@ Vacuumer::HandleError(mozIStorageError *aError)
   NS_WARNING(warnMsg.get());
 #endif
 
-  if (PR_LOG_TEST(gStorageLog, PR_LOG_ERROR)) {
+  if (MOZ_LOG_TEST(gStorageLog, PR_LOG_ERROR)) {
     int32_t result;
     nsresult rv = aError->GetResult(&result);
     NS_ENSURE_SUCCESS(rv, rv);

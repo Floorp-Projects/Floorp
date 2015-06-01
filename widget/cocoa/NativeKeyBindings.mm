@@ -233,7 +233,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
   for (uint32_t i = 0; i < bindingCommands.Length(); i++) {
     SEL selector = bindingCommands[i].selector;
 
-    if (PR_LOG_TEST(gNativeKeyBindingsLog, PR_LOG_ALWAYS)) {
+    if (MOZ_LOG_TEST(gNativeKeyBindingsLog, PR_LOG_ALWAYS)) {
       NSString* selectorString = NSStringFromSelector(selector);
       nsAutoString nsSelectorString;
       nsCocoaUtils::GetStringForNSString(selectorString, nsSelectorString);

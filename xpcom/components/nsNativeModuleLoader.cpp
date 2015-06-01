@@ -203,7 +203,7 @@ PLDHashOperator
 nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
                                    NativeLoadData& aLoadData, void*)
 {
-  if (PR_LOG_TEST(GetNativeModuleLoaderLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetNativeModuleLoaderLog(), PR_LOG_DEBUG)) {
     nsCOMPtr<nsIFile> file(do_QueryInterface(aHashedFile));
 
     nsAutoCString filePath;
