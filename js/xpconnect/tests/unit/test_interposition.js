@@ -34,11 +34,6 @@ let TestInterposition = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAddonInterposition,
                                          Ci.nsISupportsWeakReference]),
 
-  getWhitelist: function() {
-    return ["abcxyz", "utils", "dataprop", "getterprop", "setterprop",
-            "objprop", "defineprop", "configurableprop"];
-  },
-
   interposeProperty: function(addonId, target, iid, prop) {
     do_check_eq(addonId, ADDONID);
     do_check_eq(gExpectedProp, prop);

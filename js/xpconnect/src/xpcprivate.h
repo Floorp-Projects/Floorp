@@ -1018,17 +1018,6 @@ static inline bool IS_PROTO_CLASS(const js::Class* clazz)
            clazz == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
 }
 
-typedef js::HashSet<uint64_t,
-                    js::DefaultHasher<uint64_t>,
-                    js::SystemAllocPolicy> InterpositionWhitelist;
-
-struct InterpositionWhitelistPair {
-    nsIAddonInterposition* interposition;
-    InterpositionWhitelist whitelist;
-};
-
-typedef nsTArray<InterpositionWhitelistPair> InterpositionWhitelistArray;
-
 /***************************************************************************/
 // XPCWrappedNativeScope is one-to-one with a JS global object.
 
@@ -1198,13 +1187,8 @@ public:
     bool HasInterposition() { return mInterposition; }
     nsCOMPtr<nsIAddonInterposition> GetInterposition();
 
-    static bool SetAddonInterposition(JSContext* cx,
-                                      JSAddonId* addonId,
+    static bool SetAddonInterposition(JSAddonId* addonId,
                                       nsIAddonInterposition* interp);
-
-    static InterpositionWhitelist* GetInterpositionWhitelist(nsIAddonInterposition* interposition);
-    static bool UpdateInterpositionWhitelist(JSContext* cx,
-                                             nsIAddonInterposition* interposition);
 
     void SetAddonCallInterposition() { mHasCallInterpositions = true; }
     bool HasCallInterposition() { return mHasCallInterpositions; };
@@ -1227,8 +1211,6 @@ private:
     static XPCWrappedNativeScope* gDyingScopes;
 
     static InterpositionMap*         gInterpositionMap;
-
-    static InterpositionWhitelistArray* gInterpositionWhitelists;
 
     XPCJSRuntime*                    mRuntime;
     Native2WrappedNativeMap*         mWrappedNativeMap;

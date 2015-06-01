@@ -22,10 +22,6 @@ DefaultInterpositionService.prototype = {
   classID: Components.ID("{50bc93ce-602a-4bef-bf3a-61fc749c4caf}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAddonInterposition, Ci.nsISupportsWeakReference]),
 
-  getWhitelist: function() {
-    return [];
-  },
-
   interposeProperty: function(addon, target, iid, prop) {
     return null;
   },
