@@ -2638,6 +2638,7 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
 
     static const uint16_t EXTRA_NON_NATIVE = 0x1;
     static const uint16_t EXTRA_NEGATIVE_INDEX = 0x2;
+    static const uint16_t EXTRA_UNOPTIMIZABLE_ACCESS = 0x4;
 
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 16;
@@ -2654,6 +2655,12 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
     }
     bool hasNegativeIndex() const {
         return extra_ & EXTRA_NEGATIVE_INDEX;
+    }
+    void noteUnoptimizableAccess() {
+        extra_ |= EXTRA_UNOPTIMIZABLE_ACCESS;
+    }
+    bool hadUnoptimizableAccess() const {
+        return extra_ & EXTRA_UNOPTIMIZABLE_ACCESS;
     }
 
     // Compiler for this stub kind.
@@ -4109,13 +4116,17 @@ class ICGetProp_Primitive : public ICMonitoredStub
     // Fixed or dynamic slot offset.
     uint32_t offset_;
 
-    ICGetProp_Primitive(JitCode* stubCode, ICStub* firstMonitorStub,
+    ICGetProp_Primitive(JitCode* stubCode, ICStub* firstMonitorStub, JSValueType primitiveType,
                         Shape* protoShape, uint32_t offset);
 
   public:
     HeapPtrShape& protoShape() {
         return protoShape_;
     }
+    JSValueType primitiveType() const {
+        return JSValueType(extra_);
+    }
+
     static size_t offsetOfProtoShape() {
         return offsetof(ICGetProp_Primitive, protoShape_);
     }
@@ -4155,7 +4166,7 @@ class ICGetProp_Primitive : public ICMonitoredStub
         ICStub* getStub(ICStubSpace* space) {
             RootedShape protoShape(cx, prototype_->as<NativeObject>().lastProperty());
             return newStub<ICGetProp_Primitive>(space, getStubCode(), firstMonitorStub_,
-                                                protoShape, offset_);
+                                                primitiveType_, protoShape, offset_);
         }
     };
 };
