@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioParam.linearRampToValue</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var T0 = 0;
+
+var gTest = {
+  length: 2048,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var sourceBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      sourceBuffer.getChannelData(0)[i] = 1;
+    }
+
+    var curve2 = new Float32Array(100);
+    for (var i = 0; i < 100; ++i) {
+      curve2[i] = Math.sin(220 * 6 * Math.PI * i / context.sampleRate);
+    }
+
+    var source = context.createBufferSource();
+    source.buffer = sourceBuffer;
+
+    var gain = context.createGain();
+    gain.gain.setValueCurveAtTime(curve2, T0, this.duration/2);
+    //Set a diffrent curve from the first one
+    gain.gain.setValueCurveAtTime(this.curve, T0, this.duration);
+
+    source.connect(gain);
+
+    source.start(0);
+    return gain;
+  },
+  createExpectedBuffers: function(context) {
+    this.duration = 1024 / context.sampleRate;
+    this.curve = new Float32Array(100);
+    for (var i = 0; i < 100; ++i) {
+      this.curve[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    }
+    var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      var t = i / context.sampleRate;
+      expectedBuffer.getChannelData(0)[i] = this.curve[Math.min(99, Math.floor(100 * Math.min(1.0, (t - T0) / this.duration)))];
+    }
+    return expectedBuffer;
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

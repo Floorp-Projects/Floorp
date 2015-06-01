@@ -432,6 +432,19 @@ void TestExponentialInvalidPreviousZeroValue()
   is(rv, NS_OK, "Should succeed this time");
 }
 
+void
+TestSettingValueCurveTwice()
+{
+  Timeline timeline(0.f);
+  float curve[] = { -1.0f, 0.0f, 1.0f };
+
+  ErrorResultMock rv;
+
+  timeline.SetValueCurveAtTime(curve, ArrayLength(curve), 0.0f, 0.3f, rv);
+  timeline.SetValueCurveAtTime(curve, ArrayLength(curve), 0.0f, 0.3f, rv);
+  is(rv, NS_OK, "SetValueCurveAtTime succeeded");
+}
+
 int main()
 {
   ScopedXPCOM xpcom("TestAudioEventTimeline");
@@ -457,6 +470,7 @@ int main()
   TestExponentialRampAtSameTime();
   TestSetTargetZeroTimeConstant();
   TestExponentialInvalidPreviousZeroValue();
+  TestSettingValueCurveTwice();
 
   return gFailCount > 0;
 }
