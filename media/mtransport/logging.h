@@ -12,12 +12,11 @@
 #include <sstream>
 #include "mozilla/Logging.h"
 
-#define ML_EMERG            1
-#define ML_ERROR            2
-#define ML_WARNING          3
-#define ML_NOTICE           4
-#define ML_INFO             5
-#define ML_DEBUG            6
+#define ML_ERROR            PR_LOG_ERROR
+#define ML_WARNING          PR_LOG_WARNING
+#define ML_NOTICE           PR_LOG_INFO
+#define ML_INFO             PR_LOG_DEBUG
+#define ML_DEBUG            PR_LOG_VERBOSE
 
 #define MOZ_MTLOG_MODULE(n) \
   static PRLogModuleInfo* getLogModule() {      \
