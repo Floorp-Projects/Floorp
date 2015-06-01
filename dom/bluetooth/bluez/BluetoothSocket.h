@@ -37,11 +37,6 @@ public:
               const BluetoothUuid& aServiceUuid,
               int aChannel);
 
-  inline void GetAddress(nsAString& aDeviceAddress)
-  {
-    GetSocketAddr(aDeviceAddress);
-  }
-
   /**
    * Method to be called whenever data is received. This is only called on the
    * main thread.
@@ -86,9 +81,11 @@ public:
   bool ListenSocket(BluetoothUnixSocketConnector* aConnector);
 
   /**
-   * Get the current sockaddr for the socket
+   * Get the current socket address.
+   *
+   * @param[out] aDeviceAddress Returns the address string.
    */
-  void GetSocketAddr(nsAString& aAddrStr);
+  void GetAddress(nsAString& aDeviceAddress);
 
   // Methods for |DataSocket|
   //
