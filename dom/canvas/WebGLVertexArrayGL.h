@@ -10,15 +10,17 @@
 
 namespace mozilla {
 
-class WebGLVertexArrayGL final
+class WebGLVertexArrayGL
     : public WebGLVertexArray
 {
+    friend class WebGLVertexArray;
+
 public:
     virtual void DeleteImpl() override;
     virtual void BindVertexArrayImpl() override;
     virtual void GenVertexArray() override;
 
-private:
+protected:
     explicit WebGLVertexArrayGL(WebGLContext* webgl)
         : WebGLVertexArray(webgl)
     { }
@@ -26,8 +28,6 @@ private:
     ~WebGLVertexArrayGL() {
         DeleteOnce();
     }
-
-    friend class WebGLVertexArray;
 };
 
 } // namespace mozilla

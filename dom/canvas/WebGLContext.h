@@ -1390,6 +1390,8 @@ private:
 private:
     // -------------------------------------------------------------------------
     // Context customization points
+    virtual WebGLVertexArray* CreateVertexArrayImpl();
+
     virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, GLsizei* alignment, const char* info) = 0;
     virtual bool ValidateBufferTarget(GLenum target, const char* info) = 0;
     virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) = 0;

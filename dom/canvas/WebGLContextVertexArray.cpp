@@ -51,12 +51,18 @@ WebGLContext::CreateVertexArray()
     if (IsContextLost())
         return nullptr;
 
-    nsRefPtr<WebGLVertexArray> globj = WebGLVertexArray::Create(this);
+    nsRefPtr<WebGLVertexArray> globj = CreateVertexArrayImpl();
 
     MakeContextCurrent();
     globj->GenVertexArray();
 
     return globj.forget();
+}
+
+WebGLVertexArray*
+WebGLContext::CreateVertexArrayImpl()
+{
+    return WebGLVertexArray::Create(this);
 }
 
 void
