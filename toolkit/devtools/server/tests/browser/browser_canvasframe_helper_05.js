@@ -10,7 +10,10 @@
 // This makes sure the 'domnode' protocol actor type is known when importing
 // highlighter.
 require("devtools/server/actors/inspector");
-const {CanvasFrameAnonymousContentHelper} = require("devtools/server/actors/highlighter");
+const {
+  CanvasFrameAnonymousContentHelper,
+  HighlighterEnvironment
+} = require("devtools/server/actors/highlighter");
 const TEST_URL = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test";
 
 add_task(function*() {
@@ -33,8 +36,9 @@ add_task(function*() {
   };
 
   info("Building the helper");
-  let helper = new CanvasFrameAnonymousContentHelper(
-    getMockTabActor(doc.defaultView), nodeBuilder);
+  let env = new HighlighterEnvironment();
+  env.initFromWindow(doc.defaultView);
+  let helper = new CanvasFrameAnonymousContentHelper(env, nodeBuilder);
 
   info("Getting the parent and child elements");
   let parentEl = helper.getElement("parent-element");
@@ -88,6 +92,9 @@ add_task(function*() {
 
   info("Removing the parent listener");
   parentEl.removeEventListener("mousedown", onMouseDown);
+
+  env.destroy();
+  helper.destroy();
 
   gBrowser.removeCurrentTab();
 });
