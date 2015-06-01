@@ -53,8 +53,9 @@ class HitTestingTreeNode {
 private:
   ~HitTestingTreeNode();
 public:
-  HitTestingTreeNode(AsyncPanZoomController* aApzc, bool aIsPrimaryHolder);
-  void RecycleWith(AsyncPanZoomController* aApzc);
+  HitTestingTreeNode(AsyncPanZoomController* aApzc, bool aIsPrimaryHolder,
+                     uint64_t aLayersId);
+  void RecycleWith(AsyncPanZoomController* aApzc, uint64_t aLayersId);
   void Destroy();
 
   /* Tree construction methods */
@@ -75,7 +76,9 @@ public:
 
   AsyncPanZoomController* GetApzc() const;
   AsyncPanZoomController* GetNearestContainingApzc() const;
+  AsyncPanZoomController* GetNearestContainingApzcWithSameLayersId() const;
   bool IsPrimaryHolder() const;
+  uint64_t GetLayersId() const;
 
   /* Hit test related methods */
 
@@ -105,6 +108,8 @@ private:
 
   nsRefPtr<AsyncPanZoomController> mApzc;
   bool mIsPrimaryApzcHolder;
+
+  uint64_t mLayersId;
 
   /* Let {L,M} be the {layer, scrollable metrics} pair that this node
    * corresponds to in the layer tree. mEventRegions contains the event regions

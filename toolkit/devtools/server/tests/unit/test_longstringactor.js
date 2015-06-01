@@ -2,7 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { LongStringActor } = devtools.require("devtools/server/actors/script");
+const { LongStringActor } = devtools.require("devtools/server/actors/object");
 
 function run_test()
 {
@@ -23,7 +23,7 @@ function makeMockLongStringActor()
   actor.actorID = "longString1";
   actor.registeredPool = {
     longStringActors: {
-      longString1: actor
+      [string]: actor
     }
   };
   return actor;
@@ -32,10 +32,10 @@ function makeMockLongStringActor()
 function test_LSA_disconnect()
 {
   let actor = makeMockLongStringActor();
-  do_check_eq(actor.registeredPool.longStringActors[actor.actorID], actor);
+  do_check_eq(actor.registeredPool.longStringActors[TEST_STRING], actor);
 
   actor.disconnect();
-  do_check_eq(actor.registeredPool.longStringActors[actor.actorID], void 0);
+  do_check_eq(actor.registeredPool.longStringActors[TEST_STRING], void 0);
 }
 
 function test_LSA_substring()

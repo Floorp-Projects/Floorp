@@ -35,7 +35,11 @@ const CHROME_LOCATIONS = [
   "EnterJIT",
 ].map(argify);
 
-function test() {
+function run_test() {
+  run_next_test();
+}
+
+add_task(function () {
   const { isContent, parseLocation } = devtools.require("devtools/performance/frame-utils");
 
   for (let frame of CONTENT_LOCATIONS) {
@@ -66,7 +70,7 @@ function test() {
   for (let i = 0; i < PARSED_CONTENT.length; i++) {
     let parsed = parseLocation.apply(null, CONTENT_LOCATIONS[i]);
     for (let j = 0; j < FIELDS.length; j++) {
-      is(parsed[FIELDS[j]], PARSED_CONTENT[i][j], `${CONTENT_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);
+      equal(parsed[FIELDS[j]], PARSED_CONTENT[i][j], `${CONTENT_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);
     }
   }
 
@@ -82,12 +86,10 @@ function test() {
   for (let i = 0; i < PARSED_CHROME.length; i++) {
     let parsed = parseLocation.apply(null, CHROME_LOCATIONS[i]);
     for (let j = 0; j < FIELDS.length; j++) {
-      is(parsed[FIELDS[j]], PARSED_CHROME[i][j], `${CHROME_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);
+      equal(parsed[FIELDS[j]], PARSED_CHROME[i][j], `${CHROME_LOCATIONS[i]} was parsed to correct ${FIELDS[j]}`);
     }
   }
-
-  finish();
-}
+});
 
 /**
  * Takes either a string or an object and turns it into an array that
