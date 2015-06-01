@@ -1707,7 +1707,7 @@ nsPrintEngine::SetupToPrintContent()
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (PR_LOG_TEST(GetPrintingLog(), PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(GetPrintingLog(), PR_LOG_DEBUG)) {
       float calcRatio = 0.0f;
       if (mPrt->mPrintDocList.Length() > 1 && mPrt->mPrintObject->mFrameType == eFrameSet) {
         nsPrintObject* smallestPO = FindSmallestSTF();

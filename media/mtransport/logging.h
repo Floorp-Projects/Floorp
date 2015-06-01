@@ -29,7 +29,7 @@
 
 #define MOZ_MTLOG(level, b) \
   do {                                                                  \
-    if (PR_LOG_TEST(getLogModule(), level)) {                           \
+    if (MOZ_LOG_TEST(getLogModule(), level)) {                           \
       std::stringstream str;                                            \
       str << b;                                                         \
       MOZ_LOG(getLogModule(), level, ("%s", str.str().c_str()));         \

@@ -25,7 +25,7 @@ struct JSContext;
 extern PRLogModuleInfo *gUDPSocketLog;
 #endif
 #define UDPSOCKET_LOG(args)     PR_LOG(gUDPSocketLog, PR_LOG_DEBUG, args)
-#define UDPSOCKET_LOG_ENABLED() PR_LOG_TEST(gUDPSocketLog, PR_LOG_DEBUG)
+#define UDPSOCKET_LOG_ENABLED() MOZ_LOG_TEST(gUDPSocketLog, PR_LOG_DEBUG)
 
 namespace mozilla {
 namespace dom {
