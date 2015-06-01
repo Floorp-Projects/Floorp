@@ -88,34 +88,23 @@ public:
   }
 
   void AdvanceBy(const TimeDuration& aIncrement) {
-    mTime += aIncrement;
+    TimeStamp target = mTime + aIncrement;
+    while (mTaskQueue.Length() > 0 && mTaskQueue[0].second <= target) {
+      RunNextDelayedTask();
+    }
+    mTime = target;
   }
 
   void PostDelayedTask(Task* aTask, int aDelayMs) {
-    mTaskQueue.AppendElement(std::make_pair(aTask, mTime + TimeDuration::FromMilliseconds(aDelayMs)));
-  }
-
-  void CheckHasDelayedTask() {
-    EXPECT_TRUE(mTaskQueue.Length() > 0);
-  }
-
-  void ClearDelayedTask() {
-    mTaskQueue.RemoveElementAt(0);
-  }
-
-  void DestroyOldestTask() {
-    delete mTaskQueue[0].first;
-    mTaskQueue.RemoveElementAt(0);
-  }
-
-  // Note that deleting mCurrentTask is important in order to
-  // release the reference to the callee object. Without this
-  // that object might be leaked. This is also why we don't
-  // expose mTaskQueue to any users of MockContentControllerDelayed.
-  void RunDelayedTask() {
-    mTaskQueue[0].first->Run();
-    delete mTaskQueue[0].first;
-    mTaskQueue.RemoveElementAt(0);
+    TimeStamp runAtTime = mTime + TimeDuration::FromMilliseconds(aDelayMs);
+    int insIndex = mTaskQueue.Length();
+    while (insIndex > 0) {
+      if (mTaskQueue[insIndex - 1].second <= runAtTime) {
+        break;
+      }
+      insIndex--;
+    }
+    mTaskQueue.InsertElementAt(insIndex, std::make_pair(aTask, runAtTime));
   }
 
   // Run all the tasks in the queue, returning the number of tasks
@@ -124,14 +113,33 @@ public:
   // in the queue after this function is called. Only when the return
   // value is 0 is the queue guaranteed to be empty.
   int RunThroughDelayedTasks() {
-    int numTasks = mTaskQueue.Length();
+    nsTArray<std::pair<Task*, TimeStamp>> runQueue;
+    runQueue.SwapElements(mTaskQueue);
+    int numTasks = runQueue.Length();
     for (int i = 0; i < numTasks; i++) {
-      RunDelayedTask();
+      mTime = runQueue[i].second;
+      runQueue[i].first->Run();
+
+      // Deleting the task is important in order to release the reference to
+      // the callee object.
+      delete runQueue[i].first;
     }
     return numTasks;
   }
 
 private:
+  void RunNextDelayedTask() {
+    std::pair<Task*, TimeStamp> next = mTaskQueue[0];
+    mTaskQueue.RemoveElementAt(0);
+    mTime = next.second;
+    next.first->Run();
+    // Deleting the task is important in order to release the reference to
+    // the callee object.
+    delete next.first;
+  }
+
+  // The following array is sorted by timestamp (tasks are inserted in order by
+  // timestamp).
   nsTArray<std::pair<Task*, TimeStamp>> mTaskQueue;
   TimeStamp mTime;
 };
@@ -1386,7 +1394,6 @@ protected:
     // Start the fling down.
     Pan(apzc, mcc, touchStart, touchEnd);
     // The touchstart from the pan will leave some cancelled tasks in the queue, clear them out
-    while (mcc->RunThroughDelayedTasks());
 
     // If we want to tap while the fling is fast, let the fling advance for 10ms only. If we want
     // the fling to slow down more, advance to 2000ms. These numbers may need adjusting if our
@@ -1429,8 +1436,8 @@ protected:
 
     // Start the fling down.
     Pan(apzc, mcc, touchStart, touchEnd, false, nullptr, nullptr, &blockId);
+    apzc->ConfirmTarget(blockId);
     apzc->ContentReceivedInputBlock(blockId, false);
-    while (mcc->RunThroughDelayedTasks());
 
     // Sample the fling a couple of times to ensure it's going.
     ParentLayerPoint point, finalPoint;
@@ -1484,18 +1491,20 @@ TEST_F(APZCFlingStopTester, FlingStopPreventDefault) {
 TEST_F(APZCGestureDetectorTester, ShortPress) {
   MakeApzcUnzoomable();
 
+  MockFunction<void(std::string checkPointName)> check;
+  {
+    InSequence s;
+    // This verifies that the single tap notification is sent after the
+    // touchup is fully processed. The ordering here is important.
+    EXPECT_CALL(check, Call("pre-tap"));
+    EXPECT_CALL(check, Call("post-tap"));
+    EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+  }
+
+  check.Call("pre-tap");
   TapAndCheckStatus(apzc, 10, 10, mcc, TimeDuration::FromMilliseconds(100));
-  // There will be delayed tasks posted for the long-tap and MAX_TAP timeouts, but
-  // we want to clear those.
-  mcc->ClearDelayedTask();
-  mcc->ClearDelayedTask();
-
-  // This verifies that the single tap notification is sent after the
-  // touchdown is fully processed. The ordering here is important.
-  mcc->CheckHasDelayedTask();
-
-  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
-  mcc->RunDelayedTask();
+  check.Call("post-tap");
+  while (mcc->RunThroughDelayedTasks());
 
   apzc->AssertStateIsReset();
 }
@@ -1503,18 +1512,20 @@ TEST_F(APZCGestureDetectorTester, ShortPress) {
 TEST_F(APZCGestureDetectorTester, MediumPress) {
   MakeApzcUnzoomable();
 
+  MockFunction<void(std::string checkPointName)> check;
+  {
+    InSequence s;
+    // This verifies that the single tap notification is sent after the
+    // touchup is fully processed. The ordering here is important.
+    EXPECT_CALL(check, Call("pre-tap"));
+    EXPECT_CALL(check, Call("post-tap"));
+    EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+  }
+
+  check.Call("pre-tap");
   TapAndCheckStatus(apzc, 10, 10, mcc, TimeDuration::FromMilliseconds(400));
-  // There will be delayed tasks posted for the long-tap and MAX_TAP timeouts, but
-  // we want to clear those.
-  mcc->ClearDelayedTask();
-  mcc->ClearDelayedTask();
-
-  // This verifies that the single tap notification is sent after the
-  // touchdown is fully processed. The ordering here is important.
-  mcc->CheckHasDelayedTask();
-
-  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
-  mcc->RunDelayedTask();
+  check.Call("post-tap");
+  while (mcc->RunThroughDelayedTasks());
 
   apzc->AssertStateIsReset();
 }
@@ -1553,16 +1564,10 @@ protected:
       EXPECT_CALL(check, Call("postHandleSingleTap"));
     }
 
-    // There is a longpress event scheduled on a timeout
-    mcc->CheckHasDelayedTask();
-
     // Manually invoke the longpress while the touch is currently down.
     check.Call("preHandleLongTap");
-    mcc->RunDelayedTask();
+    mcc->RunThroughDelayedTasks();
     check.Call("postHandleLongTap");
-
-    // Destroy pending MAX_TAP timeout task
-    mcc->DestroyOldestTask();
 
     // Dispatching the longpress event starts a new touch block, which
     // needs a new content response and also has a pending timeout task
@@ -1570,8 +1575,7 @@ protected:
     // with preventDefault=false, and then we run the timeout task which
     // "loses the race" and does nothing.
     apzc->ContentReceivedInputBlock(blockId, false);
-    mcc->CheckHasDelayedTask();
-    mcc->RunDelayedTask();
+    mcc->RunThroughDelayedTasks();
 
     mcc->AdvanceByMillis(1000);
 
@@ -1579,7 +1583,7 @@ protected:
     // prevent-defaulted, we should get a long-tap-up event.
     check.Call("preHandleSingleTap");
     status = TouchUp(apzc, 10, 10, mcc->Time());
-    mcc->RunDelayedTask();
+    mcc->RunThroughDelayedTasks();
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
     check.Call("postHandleSingleTap");
 
@@ -1620,15 +1624,10 @@ protected:
       EXPECT_CALL(check, Call("postHandleLongTap"));
     }
 
-    mcc->CheckHasDelayedTask();
-
     // Manually invoke the longpress while the touch is currently down.
     check.Call("preHandleLongTap");
-    mcc->RunDelayedTask();
+    mcc->RunThroughDelayedTasks();
     check.Call("postHandleLongTap");
-
-    // Destroy pending MAX_TAP timeout task
-    mcc->DestroyOldestTask();
 
     // There should be a TimeoutContentResponse task in the queue still,
     // waiting for the response from the longtap event dispatched above.
@@ -1636,8 +1635,7 @@ protected:
     // the timeout task (it will be a no-op because the content "wins" the
     // race. This takes the place of the "contextmenu" event.
     apzc->ContentReceivedInputBlock(blockId, true);
-    mcc->CheckHasDelayedTask();
-    mcc->RunDelayedTask();
+    mcc->RunThroughDelayedTasks();
 
     mcc->AdvanceByMillis(1000);
 
