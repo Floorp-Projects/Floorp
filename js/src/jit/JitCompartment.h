@@ -422,7 +422,7 @@ class JitCompartment
 
     // Keep track of offset into various baseline stubs' code at return
     // point from called script.
-    void* baselineCallReturnAddr_;
+    void* baselineCallReturnAddrs_[2];
     void* baselineGetPropReturnAddr_;
     void* baselineSetPropReturnAddr_;
 
@@ -481,13 +481,13 @@ class JitCompartment
         ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
         return stubCodes_->add(p, key, stubCode.get());
     }
-    void initBaselineCallReturnAddr(void* addr) {
-        MOZ_ASSERT(baselineCallReturnAddr_ == nullptr);
-        baselineCallReturnAddr_ = addr;
+    void initBaselineCallReturnAddr(void* addr, bool constructing) {
+        MOZ_ASSERT(baselineCallReturnAddrs_[constructing] == nullptr);
+        baselineCallReturnAddrs_[constructing] = addr;
     }
-    void* baselineCallReturnAddr() {
-        MOZ_ASSERT(baselineCallReturnAddr_ != nullptr);
-        return baselineCallReturnAddr_;
+    void* baselineCallReturnAddr(bool constructing) {
+        MOZ_ASSERT(baselineCallReturnAddrs_[constructing] != nullptr);
+        return baselineCallReturnAddrs_[constructing];
     }
     void initBaselineGetPropReturnAddr(void* addr) {
         MOZ_ASSERT(baselineGetPropReturnAddr_ == nullptr);
