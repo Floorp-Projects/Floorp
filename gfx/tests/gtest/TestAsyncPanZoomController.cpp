@@ -92,7 +92,7 @@ public:
   }
 
   void PostDelayedTask(Task* aTask, int aDelayMs) {
-    mTaskQueue.AppendElement(aTask);
+    mTaskQueue.AppendElement(std::make_pair(aTask, mTime + TimeDuration::FromMilliseconds(aDelayMs)));
   }
 
   void CheckHasDelayedTask() {
@@ -104,7 +104,7 @@ public:
   }
 
   void DestroyOldestTask() {
-    delete mTaskQueue[0];
+    delete mTaskQueue[0].first;
     mTaskQueue.RemoveElementAt(0);
   }
 
@@ -113,8 +113,8 @@ public:
   // that object might be leaked. This is also why we don't
   // expose mTaskQueue to any users of MockContentControllerDelayed.
   void RunDelayedTask() {
-    mTaskQueue[0]->Run();
-    delete mTaskQueue[0];
+    mTaskQueue[0].first->Run();
+    delete mTaskQueue[0].first;
     mTaskQueue.RemoveElementAt(0);
   }
 
@@ -132,7 +132,7 @@ public:
   }
 
 private:
-  nsTArray<Task*> mTaskQueue;
+  nsTArray<std::pair<Task*, TimeStamp>> mTaskQueue;
   TimeStamp mTime;
 };
 
