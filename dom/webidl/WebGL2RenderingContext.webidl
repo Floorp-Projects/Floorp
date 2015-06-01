@@ -26,11 +26,9 @@ interface WebGLSync {
 interface WebGLTransformFeedback {
 };
 
-/*
 [Pref="webgl.enable-prototype-webgl2"]
 interface WebGLVertexArrayObject {
 };
-*/
 
 [Pref="webgl.enable-prototype-webgl2"]
 interface WebGL2RenderingContext : WebGLRenderingContext
@@ -475,10 +473,8 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     void uniformBlockBinding(WebGLProgram? program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
 
     /* Vertex Array Objects */
-    /*
     WebGLVertexArrayObject? createVertexArray();
     void deleteVertexArray(WebGLVertexArrayObject? vertexArray);
     [WebGLHandlesContextLoss] GLboolean isVertexArray(WebGLVertexArrayObject? vertexArray);
     void bindVertexArray(WebGLVertexArrayObject? array);
-    */
 };
