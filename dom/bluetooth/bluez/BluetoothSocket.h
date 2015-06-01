@@ -24,27 +24,20 @@ class BluetoothUnixSocketConnector;
 class BluetoothSocket final : public mozilla::ipc::DataSocket
 {
 public:
-  BluetoothSocket(BluetoothSocketObserver* aObserver,
-                  BluetoothSocketType aType,
-                  bool aAuth,
-                  bool aEncrypt);
+  BluetoothSocket(BluetoothSocketObserver* aObserver);
   ~BluetoothSocket();
 
-  bool Connect(const nsAString& aDeviceAddress,
-               const BluetoothUuid& aServiceUuid,
-               int aChannel);
-  bool Listen(const nsAString& aServiceName,
-              const BluetoothUuid& aServiceUuid,
-              int aChannel);
-  inline void Disconnect()
-  {
-    Close();
-  }
+  nsresult Connect(const nsAString& aDeviceAddress,
+                   const BluetoothUuid& aServiceUuid,
+                   BluetoothSocketType aType,
+                   int aChannel,
+                   bool aAuth, bool aEncrypt);
 
-  inline void GetAddress(nsAString& aDeviceAddress)
-  {
-    GetSocketAddr(aDeviceAddress);
-  }
+  nsresult Listen(const nsAString& aServiceName,
+                  const BluetoothUuid& aServiceUuid,
+                  BluetoothSocketType aType,
+                  int aChannel,
+                  bool aAuth, bool aEncrypt);
 
   /**
    * Method to be called whenever data is received. This is only called on the
@@ -70,29 +63,27 @@ public:
    * non-blocking manner.
    *
    * @param aConnector Connector object for socket type specific functions
-   * @param aAddress Address to connect to.
    * @param aDelayMs Time delay in milli-seconds.
-   *
-   * @return true on connect task started, false otherwise.
+   * @return NS_OK on success, or an XPCOM error code otherwise.
    */
-  bool ConnectSocket(BluetoothUnixSocketConnector* aConnector,
-                     const char* aAddress,
-                     int aDelayMs = 0);
+  nsresult Connect(BluetoothUnixSocketConnector* aConnector,
+                   int aDelayMs = 0);
 
   /**
    * Starts a task on the socket that will try to accept a new connection in a
    * non-blocking manner.
    *
    * @param aConnector Connector object for socket type specific functions
-   *
-   * @return true on listen started, false otherwise
+   * @return NS_OK on success, or an XPCOM error code otherwise.
    */
-  bool ListenSocket(BluetoothUnixSocketConnector* aConnector);
+  nsresult Listen(BluetoothUnixSocketConnector* aConnector);
 
   /**
-   * Get the current sockaddr for the socket
+   * Get the current socket address.
+   *
+   * @param[out] aDeviceAddress Returns the address string.
    */
-  void GetSocketAddr(nsAString& aAddrStr);
+  void GetAddress(nsAString& aDeviceAddress);
 
   // Methods for |DataSocket|
   //
@@ -115,9 +106,6 @@ private:
   class ListenTask;
 
   BluetoothSocketObserver* mObserver;
-  BluetoothSocketType mType;
-  bool mAuth;
-  bool mEncrypt;
   BluetoothSocketIO* mIO;
 };
 

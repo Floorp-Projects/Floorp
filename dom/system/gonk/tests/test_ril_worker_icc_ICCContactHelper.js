@@ -447,7 +447,8 @@ add_test(function test_update_icc_contact() {
       equal(pin2, aPin2);
       equal(contact.alphaId, aContact.alphaId);
       equal(contact.number, aContact.number);
-      onsuccess();
+      onsuccess({alphaId: contact.alphaId,
+                  number: contact.number});
     };
 
     recordHelper.readIAP = function(fileId, recordNumber, onsuccess, onerror) {
@@ -471,7 +472,7 @@ add_test(function test_update_icc_contact() {
         equal(recordNumber, EMAIL_RECORD_ID);
       }
       equal(email, aContact.email);
-      onsuccess();
+      onsuccess(email);
     };
 
     recordHelper.updateANR = function(pbr, recordNumber, number, adnRecordId, onsuccess, onerror) {
@@ -484,7 +485,7 @@ add_test(function test_update_icc_contact() {
       if (Array.isArray(aContact.anr)) {
         equal(number, aContact.anr[0]);
       }
-      onsuccess();
+      onsuccess(number);
     };
 
     recordHelper.findFreeRecordId = function(fileId, onsuccess, onerror) {
@@ -498,7 +499,23 @@ add_test(function test_update_icc_contact() {
     };
 
     let isSuccess = false;
-    let onsuccess = function onsuccess() {
+    let onsuccess = function onsuccess(updatedContact) {
+      equal(ADN_RECORD_ID, updatedContact.recordId);
+      equal(aContact.alphaId, updatedContact.alphaId);
+      if ((aSimType == CARD_APPTYPE_USIM || aSimType == CARD_APPTYPE_RUIM) &&
+          (aFileType == ICC_USIM_TYPE1_TAG || aFileType == ICC_USIM_TYPE2_TAG)) {
+        if (aContact.hasOwnProperty('email')) {
+          equal(aContact.email, updatedContact.email);
+        }
+
+        if (aContact.hasOwnProperty('anr')) {
+          equal(aContact.anr[0], updatedContact.anr[0]);
+        }
+      } else {
+        equal(updatedContact.email, null);
+        equal(updatedContact.anr, null);
+      }
+
       do_print("updateICCContact success");
       isSuccess = true;
     };
@@ -606,7 +623,8 @@ add_test(function test_update_icc_contact_with_remove_type1_attr() {
   let contactHelper = context.ICCContactHelper;
 
   recordHelper.updateADNLike = function(fileId, contact, pin2, onsuccess, onerror) {
-    onsuccess();
+    onsuccess({alphaId: contact.alphaId,
+               number: contact.number});
   };
 
   let contact = {
@@ -622,12 +640,12 @@ add_test(function test_update_icc_contact_with_remove_type1_attr() {
 
   recordHelper.updateEmail = function(pbr, recordNumber, email, adnRecordId, onsuccess, onerror) {
     ok(email == null);
-    onsuccess();
+    onsuccess(email);
   };
 
   recordHelper.updateANR = function(pbr, recordNumber, number, adnRecordId, onsuccess, onerror) {
     ok(number == null);
-    onsuccess();
+    onsuccess(number);
   };
 
   function do_test(type) {
@@ -652,7 +670,9 @@ add_test(function test_update_icc_contact_with_remove_type1_attr() {
       }
     };
 
-    let successCb = function() {
+    let successCb = function(updatedContact) {
+      equal(updatedContact.email, null);
+      equal(updatedContact.anr, null);
       ok(true);
     };
 
