@@ -557,14 +557,8 @@ public:
 // BluetoothSocket
 //
 
-BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver,
-                                 BluetoothSocketType aType,
-                                 bool aAuth,
-                                 bool aEncrypt)
+BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver)
   : mObserver(aObserver)
-  , mType(aType)
-  , mAuth(aAuth)
-  , mEncrypt(aEncrypt)
   , mIO(nullptr)
 {
   MOZ_ASSERT(aObserver);
@@ -575,17 +569,19 @@ BluetoothSocket::~BluetoothSocket()
   MOZ_ASSERT(!mIO);
 }
 
-bool
+nsresult
 BluetoothSocket::Connect(const nsAString& aDeviceAddress,
                          const BluetoothUuid& aServiceUuid,
-                         int aChannel)
+                         BluetoothSocketType aType,
+                         int aChannel,
+                         bool aAuth, bool aEncrypt)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aDeviceAddress.IsEmpty());
 
   nsAutoPtr<BluetoothUnixSocketConnector> connector(
     new BluetoothUnixSocketConnector(NS_ConvertUTF16toUTF8(aDeviceAddress),
-                                     mType, aChannel, mAuth, mEncrypt));
+                                     aType, aChannel, aAuth, aEncrypt));
 
   nsresult rv = Connect(connector);
   if (NS_FAILED(rv)) {
@@ -593,23 +589,25 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress,
     GetAddress(addr);
     BT_LOGD("%s failed. Current connected device address: %s",
            __FUNCTION__, NS_ConvertUTF16toUTF8(addr).get());
-    return false;
+    return rv;
   }
   connector.forget();
 
-  return true;
+  return NS_OK;
 }
 
-bool
+nsresult
 BluetoothSocket::Listen(const nsAString& aServiceName,
                         const BluetoothUuid& aServiceUuid,
-                        int aChannel)
+                        BluetoothSocketType aType,
+                        int aChannel,
+                        bool aAuth, bool aEncrypt)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsAutoPtr<BluetoothUnixSocketConnector> connector(
     new BluetoothUnixSocketConnector(NS_LITERAL_CSTRING(BLUETOOTH_ADDRESS_NONE),
-                                     mType, aChannel, mAuth, mEncrypt));
+                                     aType, aChannel, aAuth, aEncrypt));
 
   nsresult rv = Listen(connector);
   if (NS_FAILED(rv)) {
@@ -617,11 +615,11 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
     GetAddress(addr);
     BT_LOGD("%s failed. Current connected device address: %s",
            __FUNCTION__, NS_ConvertUTF16toUTF8(addr).get());
-    return false;
+    return rv;
   }
   connector.forget();
 
-  return true;
+  return NS_OK;
 }
 
 void

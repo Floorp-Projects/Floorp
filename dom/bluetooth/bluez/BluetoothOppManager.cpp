@@ -193,25 +193,27 @@ private:
   nsRefPtr<BluetoothSocket> mSocket;
 };
 
-BluetoothOppManager::BluetoothOppManager() : mConnected(false)
-                                           , mRemoteObexVersion(0)
-                                           , mRemoteConnectionFlags(0)
-                                           , mRemoteMaxPacketLength(0)
-                                           , mLastCommand(0)
-                                           , mPacketLength(0)
-                                           , mPutPacketReceivedLength(0)
-                                           , mBodySegmentLength(0)
-                                           , mAbortFlag(false)
-                                           , mNewFileFlag(false)
-                                           , mPutFinalFlag(false)
-                                           , mSendTransferCompleteFlag(false)
-                                           , mSuccessFlag(false)
-                                           , mIsServer(true)
-                                           , mWaitingForConfirmationFlag(false)
-                                           , mFileLength(0)
-                                           , mSentFileLength(0)
-                                           , mWaitingToSendPutFinal(false)
-                                           , mCurrentBlobIndex(-1)
+BluetoothOppManager::BluetoothOppManager()
+  : mConnected(false)
+  , mRemoteObexVersion(0)
+  , mRemoteConnectionFlags(0)
+  , mRemoteMaxPacketLength(0)
+  , mLastCommand(0)
+  , mPacketLength(0)
+  , mPutPacketReceivedLength(0)
+  , mBodySegmentLength(0)
+  , mAbortFlag(false)
+  , mNewFileFlag(false)
+  , mPutFinalFlag(false)
+  , mSendTransferCompleteFlag(false)
+  , mSuccessFlag(false)
+  , mIsServer(true)
+  , mWaitingForConfirmationFlag(false)
+  , mFileLength(0)
+  , mSentFileLength(0)
+  , mWaitingToSendPutFinal(false)
+  , mCurrentBlobIndex(-1)
+  , mSocketType(static_cast<BluetoothSocketType>(0))
 {
   mConnectedDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
 }
@@ -296,8 +298,8 @@ BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
     return;
   }
 
-  mSocket =
-    new BluetoothSocket(this, BluetoothSocketType::RFCOMM, true, true);
+  mSocket = new BluetoothSocket(this);
+  mSocketType = BluetoothSocketType::RFCOMM;
 }
 
 void
@@ -320,12 +322,16 @@ BluetoothOppManager::Listen()
   }
 
   if (!mRfcommSocket) {
-    mRfcommSocket =
-      new BluetoothSocket(this, BluetoothSocketType::RFCOMM, true, true);
+    mRfcommSocket = new BluetoothSocket(this);
 
-    if (!mRfcommSocket->Listen(NS_LITERAL_STRING("OBEX Object Push"),
-                               kObexObjectPush,
-                               BluetoothReservedChannels::CHANNEL_OPUSH)) {
+    nsresult rv = mRfcommSocket->Listen(
+      NS_LITERAL_STRING("OBEX Object Push"),
+      kObexObjectPush,
+      BluetoothSocketType::RFCOMM,
+      BluetoothReservedChannels::CHANNEL_OPUSH,
+      true, true);
+
+    if (NS_FAILED(rv)) {
       BT_WARNING("[OPP] Can't listen on RFCOMM socket!");
       mRfcommSocket = nullptr;
       return false;
@@ -333,12 +339,16 @@ BluetoothOppManager::Listen()
   }
 
   if (!mL2capSocket) {
-    mL2capSocket =
-      new BluetoothSocket(this, BluetoothSocketType::EL2CAP, true, true);
+    mL2capSocket = new BluetoothSocket(this);
 
-    if (!mL2capSocket->Listen(NS_LITERAL_STRING("OBEX Object Push"),
-                              kObexObjectPush,
-                              BluetoothReservedChannels::CHANNEL_OPUSH_L2CAP)) {
+    nsresult rv = mL2capSocket->Listen(
+      NS_LITERAL_STRING("OBEX Object Push"),
+      kObexObjectPush,
+      BluetoothSocketType::EL2CAP,
+      BluetoothReservedChannels::CHANNEL_OPUSH_L2CAP,
+      true, true);
+
+    if (NS_FAILED(rv)) {
       BT_WARNING("[OPP] Can't listen on L2CAP socket!");
       mRfcommSocket->Close();
       mRfcommSocket = nullptr;
@@ -1532,12 +1542,14 @@ BluetoothOppManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
   if (aSocket == mRfcommSocket) {
     MOZ_ASSERT(!mSocket);
     mRfcommSocket.swap(mSocket);
+    mSocketType = BluetoothSocketType::RFCOMM;
 
     mL2capSocket->Close();
     mL2capSocket = nullptr;
   } else if (aSocket == mL2capSocket) {
     MOZ_ASSERT(!mSocket);
     mL2capSocket.swap(mSocket);
+    mSocketType = BluetoothSocketType::EL2CAP;
 
     mRfcommSocket->Close();
     mRfcommSocket = nullptr;
@@ -1561,6 +1573,7 @@ BluetoothOppManager::OnSocketConnectError(BluetoothSocket* aSocket)
   mRfcommSocket = nullptr;
   mL2capSocket = nullptr;
   mSocket = nullptr;
+  mSocketType = static_cast<BluetoothSocketType>(0);
 
   if (!mIsServer) {
     // Inform gaia of remaining blobs' sending failure
@@ -1608,6 +1621,8 @@ BluetoothOppManager::OnSocketDisconnect(BluetoothSocket* aSocket)
   mSuccessFlag = false;
 
   mSocket = nullptr;
+  mSocketType = static_cast<BluetoothSocketType>(0);
+
   // Listen as a server if there's no more batch to process
   if (!ProcessNextBatch()) {
     Listen();
@@ -1654,7 +1669,9 @@ BluetoothOppManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
     return;
   }
 
-  if (!mSocket->Connect(aDeviceAddress, kObexObjectPush, aChannel)) {
+  nsresult rv = mSocket->Connect(aDeviceAddress, kObexObjectPush,
+                                 mSocketType, aChannel, true, true);
+  if (NS_FAILED(rv)) {
     OnSocketConnectError(mSocket);
   }
 }
