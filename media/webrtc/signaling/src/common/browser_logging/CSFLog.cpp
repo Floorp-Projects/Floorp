@@ -14,6 +14,8 @@
 #include "prthread.h"
 #include "nsThreadUtils.h"
 
+#include "mozilla/Logging.h"
+
 static PRLogModuleInfo *gLogModuleInfo = nullptr;
 
 PRLogModuleInfo *GetSignalingLogInfo()
