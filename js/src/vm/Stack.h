@@ -1041,7 +1041,7 @@ class InterpreterStack
 
     bool resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
                                   HandleFunction callee, HandleValue thisv,
-                                  HandleObject scopeChain);
+                                  HandleValue newTarget, HandleObject scopeChain);
 
     inline void purge(JSRuntime* rt);
 
@@ -1249,7 +1249,7 @@ class InterpreterActivation : public Activation
     inline void popInlineFrame(InterpreterFrame* frame);
 
     inline bool resumeGeneratorFrame(HandleFunction callee, HandleValue thisv,
-                                     HandleObject scopeChain);
+                                     HandleValue newTarget, HandleObject scopeChain);
 
     InterpreterFrame* current() const {
         return regs_.fp();
