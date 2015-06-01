@@ -242,6 +242,6 @@ WebGLExtensionDisjointTimerQuery::IsSupported(const WebGLContext* webgl)
 }
 
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDisjointTimerQuery)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDisjointTimerQuery, EXT_disjoint_timer_query)
 
 } // namespace mozilla
