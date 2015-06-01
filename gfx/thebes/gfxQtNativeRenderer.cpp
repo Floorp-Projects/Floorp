@@ -30,7 +30,7 @@ gfxQtNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
 
     nsRefPtr<gfxXlibSurface> xsurf =
         gfxXlibSurface::Create(screen, visual,
-                               gfxIntSize(size.width, size.height));
+                               mozilla::gfx::IntSize(size.width, size.height));
 
     if (!isOpaque) {
         gfxUtils::ClearThebesSurface(xsurf);

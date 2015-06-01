@@ -19,17 +19,17 @@ class gfxQuartzSurface : public gfxASurface {
 public:
     gfxQuartzSurface(const gfxSize& size, gfxImageFormat format);
     gfxQuartzSurface(CGContextRef context, const gfxSize& size);
-    gfxQuartzSurface(CGContextRef context, const gfxIntSize& size);
-    gfxQuartzSurface(cairo_surface_t *csurf, const gfxIntSize& aSize);
+    gfxQuartzSurface(CGContextRef context, const mozilla::gfx::IntSize& size);
+    gfxQuartzSurface(cairo_surface_t *csurf, const mozilla::gfx::IntSize& aSize);
     gfxQuartzSurface(unsigned char *data, const gfxSize& size, long stride, gfxImageFormat format);
-    gfxQuartzSurface(unsigned char *data, const gfxIntSize& size, long stride, gfxImageFormat format);
+    gfxQuartzSurface(unsigned char *data, const mozilla::gfx::IntSize& size, long stride, gfxImageFormat format);
 
     virtual ~gfxQuartzSurface();
 
     virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
-                                                               const gfxIntSize& aSize);
+                                                               const mozilla::gfx::IntSize& aSize);
 
-    virtual const gfxIntSize GetSize() const { return gfxIntSize(mSize.width, mSize.height); }
+    virtual const mozilla::gfx::IntSize GetSize() const { return mozilla::gfx::IntSize(mSize.width, mSize.height); }
 
     CGContextRef GetCGContext() { return mCGContext; }
 

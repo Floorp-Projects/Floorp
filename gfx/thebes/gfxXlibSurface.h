@@ -31,12 +31,12 @@ public:
 
     // construct a wrapper around the specified drawable with dpy/visual,
     // and known width/height.
-    gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size);
+    gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const mozilla::gfx::IntSize& size);
 
     // construct a wrapper around the specified drawable with dpy/format,
     // and known width/height.
     gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFormat *format,
-                   const gfxIntSize& size);
+                   const mozilla::gfx::IntSize& size);
 
     explicit gfxXlibSurface(cairo_surface_t *csurf);
 
@@ -45,23 +45,23 @@ public:
     // the pixmap should be in video or system memory.  It must be on
     // |screen| (if specified).
     static already_AddRefed<gfxXlibSurface>
-    Create(Screen *screen, Visual *visual, const gfxIntSize& size,
+    Create(Screen *screen, Visual *visual, const mozilla::gfx::IntSize& size,
            Drawable relatedDrawable = None);
     static cairo_surface_t *
-    CreateCairoSurface(Screen *screen, Visual *visual, const gfxIntSize& size,
+    CreateCairoSurface(Screen *screen, Visual *visual, const mozilla::gfx::IntSize& size,
                        Drawable relatedDrawable = None);
     static already_AddRefed<gfxXlibSurface>
-    Create(Screen* screen, XRenderPictFormat *format, const gfxIntSize& size,
+    Create(Screen* screen, XRenderPictFormat *format, const mozilla::gfx::IntSize& size,
            Drawable relatedDrawable = None);
 
     virtual ~gfxXlibSurface();
 
     virtual already_AddRefed<gfxASurface>
     CreateSimilarSurface(gfxContentType aType,
-                         const gfxIntSize& aSize) override;
+                         const mozilla::gfx::IntSize& aSize) override;
     virtual void Finish() override;
 
-    virtual const gfxIntSize GetSize() const override;
+    virtual const mozilla::gfx::IntSize GetSize() const override;
 
     Display* XDisplay() { return mDisplay; }
     Screen* XScreen();
@@ -112,7 +112,7 @@ protected:
     Display *mDisplay;
     Drawable mDrawable;
 
-    const gfxIntSize DoSizeQuery();
+    const mozilla::gfx::IntSize DoSizeQuery();
 
 #if defined(GL_PROVIDER_GLX)
     GLXPixmap mGLXPixmap;

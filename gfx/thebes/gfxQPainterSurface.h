@@ -18,8 +18,8 @@ class QImage;
 class gfxQPainterSurface : public gfxASurface {
 public:
     gfxQPainterSurface(QPainter *painter);
-    gfxQPainterSurface(const gfxIntSize& size, gfxImageFormat format);
-    gfxQPainterSurface(const gfxIntSize& size, gfxContentType content);
+    gfxQPainterSurface(const mozilla::gfx::IntSize& size, gfxImageFormat format);
+    gfxQPainterSurface(const mozilla::gfx::IntSize& size, gfxContentType content);
 
     gfxQPainterSurface(cairo_surface_t *csurf);
 

@@ -28,20 +28,20 @@ gfxQuartzImageSurface::~gfxQuartzImageSurface()
 {
 }
 
-gfxIntSize
+mozilla::gfx::IntSize
 gfxQuartzImageSurface::ComputeSize()
 {
   if (mSurfaceValid) {
     cairo_surface_t* isurf = cairo_quartz_image_surface_get_image(mSurface);
     if (isurf) {
-      return gfxIntSize(cairo_image_surface_get_width(isurf),
-                        cairo_image_surface_get_height(isurf));
+      return mozilla::gfx::IntSize(cairo_image_surface_get_width(isurf),
+                                   cairo_image_surface_get_height(isurf));
     }
   }
 
   // If we reach here then something went wrong. Just use the same default
   // value as gfxASurface::GetSize.
-  return gfxIntSize(-1, -1);
+  return mozilla::gfx::IntSize(-1, -1);
 }
 
 int32_t

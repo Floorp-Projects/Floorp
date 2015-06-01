@@ -34,18 +34,18 @@ public:
     gfxWindowsSurface(IDirect3DSurface9 *surface, uint32_t flags = 0);
 
     // Create a DIB surface
-    gfxWindowsSurface(const gfxIntSize& size,
+    gfxWindowsSurface(const mozilla::gfx::IntSize& size,
                       gfxImageFormat imageFormat = gfxImageFormat::RGB24);
 
     // Create a DDB surface; dc may be nullptr to use the screen DC
     gfxWindowsSurface(HDC dc,
-                      const gfxIntSize& size,
+                      const mozilla::gfx::IntSize& size,
                       gfxImageFormat imageFormat = gfxImageFormat::RGB24);
 
     gfxWindowsSurface(cairo_surface_t *csurf);
 
     virtual already_AddRefed<gfxASurface> CreateSimilarSurface(gfxContentType aType,
-                                                               const gfxIntSize& aSize);
+                                                               const mozilla::gfx::IntSize& aSize);
 
     void InitWithDC(uint32_t flags);
 
@@ -63,14 +63,14 @@ public:
     nsresult BeginPage();
     nsresult EndPage();
 
-    const gfxIntSize GetSize() const;
+    const mozilla::gfx::IntSize GetSize() const;
 
     // The memory used by this surface lives in this process's address space,
     // but not in the heap.
     virtual gfxMemoryLocation GetMemoryLocation() const;
 
 private:
-    void MakeInvalid(gfxIntSize& size);
+    void MakeInvalid(mozilla::gfx::IntSize& size);
 
     bool mOwnsDC;
     bool mForPrinting;
