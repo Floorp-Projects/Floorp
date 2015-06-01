@@ -377,7 +377,7 @@ txStylesheetCompiler::characters(const nsAString& aStr)
 nsresult
 txStylesheetCompiler::doneLoading()
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, PR_LOG_INFO,
            ("Compiler::doneLoading: %s\n",
             NS_LossyConvertUTF16toASCII(mStylesheetURI).get()));
     if (NS_FAILED(mStatus)) {
@@ -393,7 +393,7 @@ void
 txStylesheetCompiler::cancel(nsresult aError, const char16_t *aErrorText,
                              const char16_t *aParam)
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, PR_LOG_INFO,
            ("Compiler::cancel: %s, module: %d, code %d\n",
             NS_LossyConvertUTF16toASCII(mStylesheetURI).get(),
             NS_ERROR_GET_MODULE(aError),
@@ -422,7 +422,7 @@ txStylesheetCompiler::loadURI(const nsAString& aUri,
                               ReferrerPolicy aReferrerPolicy,
                               txStylesheetCompiler* aCompiler)
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, PR_LOG_INFO,
            ("Compiler::loadURI forwards %s thru %s\n",
             NS_LossyConvertUTF16toASCII(aUri).get(),
             NS_LossyConvertUTF16toASCII(mStylesheetURI).get()));
@@ -750,7 +750,7 @@ txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction>&& aInstructio
 nsresult
 txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, PR_LOG_INFO,
            ("CompilerState::loadIncludedStylesheet: %s\n",
             NS_LossyConvertUTF16toASCII(aURI).get()));
     if (mStylesheetURI.Equals(aURI)) {
@@ -795,7 +795,7 @@ nsresult
 txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
                                                   txStylesheet::ImportFrame* aFrame)
 {
-    MOZ_LOG(txLog::xslt, PR_LOG_ALWAYS,
+    MOZ_LOG(txLog::xslt, PR_LOG_INFO,
            ("CompilerState::loadImportedStylesheet: %s\n",
             NS_LossyConvertUTF16toASCII(aURI).get()));
     if (mStylesheetURI.Equals(aURI)) {
