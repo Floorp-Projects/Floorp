@@ -193,6 +193,8 @@ protected:
   nsresult CreateMozBR(nsIDOMNode* inParent, int32_t inOffset,
                        nsIDOMNode** outBRNode = nullptr);
 
+  void UndefineCaretBidiLevel(Selection* aSelection);
+
   nsresult CheckBidiLevelForDeletion(mozilla::dom::Selection* aSelection,
                                      nsIDOMNode           *aSelNode,
                                      int32_t               aSelOffset,
