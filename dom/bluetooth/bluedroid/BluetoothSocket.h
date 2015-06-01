@@ -19,18 +19,19 @@ class DroidSocketImpl;
 class BluetoothSocket final : public mozilla::ipc::DataSocket
 {
 public:
-  BluetoothSocket(BluetoothSocketObserver* aObserver,
+  BluetoothSocket(BluetoothSocketObserver* aObserver);
+
+  nsresult Connect(const nsAString& aDeviceAddress,
+                   const BluetoothUuid& aServiceUuid,
+                   BluetoothSocketType aType,
+                   int aChannel,
+                   bool aAuth, bool aEncrypt);
+
+  nsresult Listen(const nsAString& aServiceName,
+                  const BluetoothUuid& aServiceUuid,
                   BluetoothSocketType aType,
-                  bool aAuth,
-                  bool aEncrypt);
-
-  bool ConnectSocket(const nsAString& aDeviceAddress,
-                     const BluetoothUuid& aServiceUuid,
-                     int aChannel);
-
-  bool ListenSocket(const nsAString& aServiceName,
-                    const BluetoothUuid& aServiceUuid,
-                    int aChannel);
+                  int aChannel,
+                  bool aAuth, bool aEncrypt);
 
   /**
    * Method to be called whenever data is received. This is only called on the
@@ -74,8 +75,6 @@ private:
   BluetoothSocketResultHandler* mCurrentRes;
   DroidSocketImpl* mImpl;
   nsString mDeviceAddress;
-  bool mAuth;
-  bool mEncrypt;
 };
 
 END_BLUETOOTH_NAMESPACE
