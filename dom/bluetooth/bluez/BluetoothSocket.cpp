@@ -557,14 +557,8 @@ public:
 // BluetoothSocket
 //
 
-BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver,
-                                 BluetoothSocketType aType,
-                                 bool aAuth,
-                                 bool aEncrypt)
+BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver)
   : mObserver(aObserver)
-  , mType(aType)
-  , mAuth(aAuth)
-  , mEncrypt(aEncrypt)
   , mIO(nullptr)
 {
   MOZ_ASSERT(aObserver);
@@ -575,50 +569,57 @@ BluetoothSocket::~BluetoothSocket()
   MOZ_ASSERT(!mIO);
 }
 
-bool
+nsresult
 BluetoothSocket::Connect(const nsAString& aDeviceAddress,
                          const BluetoothUuid& aServiceUuid,
-                         int aChannel)
+                         BluetoothSocketType aType,
+                         int aChannel,
+                         bool aAuth, bool aEncrypt)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aDeviceAddress.IsEmpty());
 
-  nsAutoPtr<BluetoothUnixSocketConnector> c(
+  nsAutoPtr<BluetoothUnixSocketConnector> connector(
     new BluetoothUnixSocketConnector(NS_ConvertUTF16toUTF8(aDeviceAddress),
-                                     mType, aChannel, mAuth, mEncrypt));
+                                     aType, aChannel, aAuth, aEncrypt));
 
-  if (!ConnectSocket(c.forget(),
-                     NS_ConvertUTF16toUTF8(aDeviceAddress).BeginReading())) {
+  nsresult rv = Connect(connector);
+  if (NS_FAILED(rv)) {
     nsAutoString addr;
     GetAddress(addr);
     BT_LOGD("%s failed. Current connected device address: %s",
            __FUNCTION__, NS_ConvertUTF16toUTF8(addr).get());
-    return false;
+    return rv;
   }
+  connector.forget();
 
-  return true;
+  return NS_OK;
 }
 
-bool
+nsresult
 BluetoothSocket::Listen(const nsAString& aServiceName,
                         const BluetoothUuid& aServiceUuid,
-                        int aChannel)
+                        BluetoothSocketType aType,
+                        int aChannel,
+                        bool aAuth, bool aEncrypt)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<BluetoothUnixSocketConnector> c(
+  nsAutoPtr<BluetoothUnixSocketConnector> connector(
     new BluetoothUnixSocketConnector(NS_LITERAL_CSTRING(BLUETOOTH_ADDRESS_NONE),
-                                     mType, aChannel, mAuth, mEncrypt));
+                                     aType, aChannel, aAuth, aEncrypt));
 
-  if (!ListenSocket(c.forget())) {
+  nsresult rv = Listen(connector);
+  if (NS_FAILED(rv)) {
     nsAutoString addr;
     GetAddress(addr);
     BT_LOGD("%s failed. Current connected device address: %s",
            __FUNCTION__, NS_ConvertUTF16toUTF8(addr).get());
-    return false;
+    return rv;
   }
+  connector.forget();
 
-  return true;
+  return NS_OK;
 }
 
 void
@@ -642,34 +643,16 @@ BluetoothSocket::SendSocketData(const nsACString& aStr)
   return true;
 }
 
-void
-BluetoothSocket::GetSocketAddr(nsAString& aAddrStr)
+nsresult
+BluetoothSocket::Connect(BluetoothUnixSocketConnector* aConnector,
+                         int aDelayMs)
 {
-  aAddrStr.Truncate();
-  if (!mIO || GetConnectionStatus() != SOCKET_CONNECTED) {
-    NS_WARNING("No socket currently open!");
-    return;
-  }
-  mIO->GetSocketAddr(aAddrStr);
-}
-
-bool
-BluetoothSocket::ConnectSocket(BluetoothUnixSocketConnector* aConnector,
-                               const char* aAddress,
-                               int aDelayMs)
-{
-  MOZ_ASSERT(aConnector);
   MOZ_ASSERT(NS_IsMainThread());
-
-  nsAutoPtr<UnixSocketConnector> connector(aConnector);
-
-  if (mIO) {
-    NS_WARNING("Socket already connecting/connected!");
-    return false;
-  }
+  MOZ_ASSERT(aConnector);
+  MOZ_ASSERT(!mIO);
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-  mIO = new BluetoothSocketIO(ioLoop, this, connector.forget());
+  mIO = new BluetoothSocketIO(ioLoop, this, aConnector);
   SetConnectionStatus(SOCKET_CONNECTING);
   if (aDelayMs > 0) {
     DelayedConnectTask* connectTask = new DelayedConnectTask(mIO);
@@ -678,29 +661,34 @@ BluetoothSocket::ConnectSocket(BluetoothUnixSocketConnector* aConnector,
   } else {
     ioLoop->PostTask(FROM_HERE, new ConnectTask(mIO));
   }
-  return true;
+  return NS_OK;
 }
 
-bool
-BluetoothSocket::ListenSocket(BluetoothUnixSocketConnector* aConnector)
+nsresult
+BluetoothSocket::Listen(BluetoothUnixSocketConnector* aConnector)
 {
-  MOZ_ASSERT(aConnector);
   MOZ_ASSERT(NS_IsMainThread());
-
-  nsAutoPtr<UnixSocketConnector> connector(aConnector);
-
-  if (mIO) {
-    NS_WARNING("Socket already connecting/connected!");
-    return false;
-  }
+  MOZ_ASSERT(aConnector);
+  MOZ_ASSERT(!mIO);
 
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
 
-  mIO = new BluetoothSocketIO(ioLoop, this, connector.forget());
+  mIO = new BluetoothSocketIO(ioLoop, this, aConnector);
   SetConnectionStatus(SOCKET_LISTENING);
   ioLoop->PostTask(FROM_HERE, new ListenTask(mIO));
 
-  return true;
+  return NS_OK;
+}
+
+void
+BluetoothSocket::GetAddress(nsAString& aAddrStr)
+{
+  aAddrStr.Truncate();
+  if (!mIO || GetConnectionStatus() != SOCKET_CONNECTED) {
+    NS_WARNING("No socket currently open!");
+    return;
+  }
+  mIO->GetSocketAddr(aAddrStr);
 }
 
 // |DataSocket|
