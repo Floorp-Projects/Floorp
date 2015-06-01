@@ -642,17 +642,6 @@ BluetoothSocket::SendSocketData(const nsACString& aStr)
   return true;
 }
 
-void
-BluetoothSocket::GetSocketAddr(nsAString& aAddrStr)
-{
-  aAddrStr.Truncate();
-  if (!mIO || GetConnectionStatus() != SOCKET_CONNECTED) {
-    NS_WARNING("No socket currently open!");
-    return;
-  }
-  mIO->GetSocketAddr(aAddrStr);
-}
-
 bool
 BluetoothSocket::ConnectSocket(BluetoothUnixSocketConnector* aConnector,
                                const char* aAddress,
@@ -701,6 +690,17 @@ BluetoothSocket::ListenSocket(BluetoothUnixSocketConnector* aConnector)
   ioLoop->PostTask(FROM_HERE, new ListenTask(mIO));
 
   return true;
+}
+
+void
+BluetoothSocket::GetAddress(nsAString& aAddrStr)
+{
+  aAddrStr.Truncate();
+  if (!mIO || GetConnectionStatus() != SOCKET_CONNECTED) {
+    NS_WARNING("No socket currently open!");
+    return;
+  }
+  mIO->GetSocketAddr(aAddrStr);
 }
 
 // |DataSocket|
