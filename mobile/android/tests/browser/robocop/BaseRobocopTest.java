@@ -4,14 +4,8 @@
 
 package org.mozilla.gecko.tests;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.os.PowerManager;
-import android.test.ActivityInstrumentationTestCase2;
-import android.text.TextUtils;
-import android.util.Log;
-import com.jayway.android.robotium.solo.Solo;
+import java.util.Map;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -25,25 +19,26 @@ import org.mozilla.gecko.FennecMochitestAssert;
 import org.mozilla.gecko.FennecNativeActions;
 import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.FennecTalosAssert;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 
-import java.util.Map;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.res.Resources;
+import android.os.PowerManager;
+import android.test.ActivityInstrumentationTestCase2;
+import android.util.Log;
+
+import com.jayway.android.robotium.solo.Solo;
 
 @SuppressWarnings("unchecked")
 public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<Activity> {
-    public static final String LOGTAG = "BaseTest";
-
     public enum Type {
         MOCHITEST,
         TALOS
     }
 
-    public static final String DEFAULT_ROOT_PATH = "/mnt/sdcard/tests";
-
-    // How long to wait for a Robocop:Quit message to actually kill Fennec.
-    private static final int ROBOCOP_QUIT_WAIT_MS = 180000;
+    private static final String DEFAULT_ROOT_PATH = "/mnt/sdcard/tests";
 
     /**
      * The Java Class instance that launches the browser.
@@ -81,6 +76,8 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
 
     protected StringHelper mStringHelper;
 
+    protected abstract Intent createActivityIntent();
+
     /**
      * The browser is started at the beginning of this test. A single test is a
      * class inheriting from <code>BaseRobocopTest</code> that contains test
@@ -113,30 +110,6 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
      */
     protected Type getTestType() {
         return Type.MOCHITEST;
-    }
-
-    // Member function to allow specialization.
-    protected Intent createActivityIntent() {
-        return BaseRobocopTest.createActivityIntent(mConfig);
-    }
-
-    // Static function to allow re-use.
-    public static Intent createActivityIntent(Map<String, String> config) {
-        final Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.putExtra("args", "-no-remote -profile " + config.get("profile"));
-        // Don't show the first run experience.
-        intent.putExtra(BrowserApp.EXTRA_SKIP_STARTPANE, true);
-
-        final String envString = config.get("envvars");
-        if (!TextUtils.isEmpty(envString)) {
-            final String[] envStrings = envString.split(",");
-
-            for (int iter = 0; iter < envStrings.length; iter++) {
-                intent.putExtra("env" + iter, envStrings[iter]);
-            }
-        }
-
-        return intent;
     }
 
     @Override
@@ -179,43 +152,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         mSolo = new Solo(getInstrumentation(), tempActivity);
         mDriver = new FennecNativeDriver(tempActivity, mSolo, mRootPath);
         mActions = new FennecNativeActions(tempActivity, mSolo, getInstrumentation(), mAsserter);
-    }
 
-    @Override
-    public void tearDown() throws Exception {
-        try {
-            mAsserter.endTest();
-
-            // By default, we don't kill Fennec on finish, and we don't finish
-            // all opened activities. Not killing Fennec entirely is intended to
-            // make life better for local testers, who might want to alter a
-            // test that is under development rather than Fennec itself. Not
-            // finishing activities is intended to allow local testers to
-            // manually inspect an activity's state after a test
-            // run. runtestsremote.py sets this to "1".  Testers running via an
-            // IDE will not have this set at all.
-            final String killAndFinish = FennecInstrumentationTestRunner.getFennecArguments()
-                    .getString("kill_and_finish"); // null means not specified.
-            if ("1".equals(killAndFinish)) {
-                // Request the browser force quit and wait for it to take effect.
-                Log.i(LOGTAG, "Requesting force quit.");
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Robocop:Quit", null));
-                mSolo.sleep(ROBOCOP_QUIT_WAIT_MS);
-
-                // If still running, finish activities as recommended by Robotium.
-                Log.i(LOGTAG, "Finishing all opened activities.");
-                mSolo.finishOpenedActivities();
-            } else {
-                // This has the effect of keeping the activity-under-test
-                // around; if we don't set it to null, it is killed, either by
-                // finishOpenedActivities above or super.tearDown below.
-                Log.i(LOGTAG, "Not requesting force quit and trying to keep started activity alive.");
-                setActivity(null);
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        super.tearDown();
     }
 
     /**

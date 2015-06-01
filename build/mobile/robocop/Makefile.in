@@ -24,7 +24,6 @@ _JAVA_HARNESS := \
   FennecTalosAssert.java \
   FennecNativeDriver.java \
   FennecNativeElement.java \
-  LaunchFennecWithConfigurationActivity.java \
   RoboCopException.java \
   RobocopShare1.java \
   RobocopShare2.java \
