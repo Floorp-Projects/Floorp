@@ -1,0 +1,38 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 982726 - test match_all not crashing</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  if (!parent) {
+    info("sw_clients/simple.html shouldn't be launched directly!");
+  }
+
+  window.addEventListener("message", function(event) {
+    if (event.data === "REFRESH") {
+      window.location.reload();
+    } else if (event.data === "FORCE_REFRESH") {
+      window.location.reload(true);
+    }
+  });
+
+  navigator.serviceWorker.ready.then(function() {
+    parent.postMessage("READY_CACHED", "*");
+  });
+
+</script>
+</pre>
+</body>
+</html>
+
