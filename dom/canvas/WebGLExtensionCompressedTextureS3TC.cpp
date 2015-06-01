@@ -22,6 +22,6 @@ WebGLExtensionCompressedTextureS3TC::~WebGLExtensionCompressedTextureS3TC()
 {
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureS3TC)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureS3TC, WEBGL_compressed_texture_s3tc)
 
 } // namespace mozilla

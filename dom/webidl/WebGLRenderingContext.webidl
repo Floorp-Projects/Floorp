@@ -28,9 +28,9 @@ typedef long long      GLsizeiptr;
 typedef octet          GLubyte;        /* 'octet' should be an unsigned 8 bit type. */
 typedef unsigned short GLushort;
 typedef unsigned long  GLuint;
-typedef unsigned long long GLuint64;
 typedef unrestricted float GLfloat;
 typedef unrestricted float GLclampf;
+typedef unsigned long long GLuint64EXT;
 
 dictionary WebGLContextAttributes {
     // boolean alpha = true;
@@ -66,7 +66,8 @@ interface WebGLTexture {
 interface WebGLUniformLocation {
 };
 
-interface WebGLVertexArray {
+[NoInterfaceObject]
+interface WebGLVertexArrayObjectOES {
 };
 
 interface WebGLActiveInfo {
@@ -779,7 +780,7 @@ interface WebGLContextEvent : Event {
 // specific extension interfaces
 
 [NoInterfaceObject]
-interface WebGLExtensionCompressedTextureS3TC
+interface WEBGL_compressed_texture_s3tc
 {
     const GLenum COMPRESSED_RGB_S3TC_DXT1_EXT  = 0x83F0;
     const GLenum COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1;
@@ -788,7 +789,7 @@ interface WebGLExtensionCompressedTextureS3TC
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionCompressedTextureATC
+interface WEBGL_compressed_texture_atc
 {
     const GLenum COMPRESSED_RGB_ATC_WEBGL                     = 0x8C92;
     const GLenum COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL     = 0x8C93;
@@ -796,13 +797,13 @@ interface WebGLExtensionCompressedTextureATC
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionCompressedTextureETC1
+interface WEBGL_compressed_texture_etc1
 {
     const GLenum COMPRESSED_RGB_ETC1_WEBGL = 0x8D64;
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionCompressedTexturePVRTC
+interface WEBGL_compressed_texture_pvrtc
 {
     const GLenum COMPRESSED_RGB_PVRTC_4BPPV1_IMG  = 0x8C00;
     const GLenum COMPRESSED_RGB_PVRTC_2BPPV1_IMG  = 0x8C01;
@@ -811,49 +812,49 @@ interface WebGLExtensionCompressedTexturePVRTC
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionDebugRendererInfo
+interface WEBGL_debug_renderer_info
 {
     const GLenum UNMASKED_VENDOR_WEBGL        = 0x9245;
     const GLenum UNMASKED_RENDERER_WEBGL      = 0x9246;
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionDebugShaders
+interface WEBGL_debug_shaders
 {
     DOMString getTranslatedShaderSource(WebGLShader? shader);
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionDepthTexture
+interface WEBGL_depth_texture
 {
     const GLenum UNSIGNED_INT_24_8_WEBGL = 0x84FA;
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionElementIndexUint
+interface OES_element_index_uint
 {
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionFragDepth
+interface EXT_frag_depth
 {
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionLoseContext {
+interface WEBGL_lose_context {
     void loseContext();
     void restoreContext();
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionTextureFilterAnisotropic
+interface EXT_texture_filter_anisotropic
 {
     const GLenum TEXTURE_MAX_ANISOTROPY_EXT     = 0x84FE;
     const GLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionSRGB
+interface EXT_sRGB
 {
     const GLenum SRGB_EXT                                  = 0x8C40;
     const GLenum SRGB_ALPHA_EXT                            = 0x8C42;
@@ -862,17 +863,17 @@ interface WebGLExtensionSRGB
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionStandardDerivatives {
+interface OES_standard_derivatives {
     const GLenum FRAGMENT_SHADER_DERIVATIVE_HINT_OES = 0x8B8B;
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionTextureFloat
+interface OES_texture_float
 {
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionDrawBuffers {
+interface WEBGL_draw_buffers {
     const GLenum COLOR_ATTACHMENT0_WEBGL     = 0x8CE0;
     const GLenum COLOR_ATTACHMENT1_WEBGL     = 0x8CE1;
     const GLenum COLOR_ATTACHMENT2_WEBGL     = 0x8CE2;
@@ -914,28 +915,28 @@ interface WebGLExtensionDrawBuffers {
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionTextureFloatLinear
+interface OES_texture_float_linear
 {
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionShaderTextureLod
+interface EXT_shader_texture_lod
 {
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionTextureHalfFloat
+interface OES_texture_half_float
 {
     const GLenum HALF_FLOAT_OES = 0x8D61;
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionTextureHalfFloatLinear
+interface OES_texture_half_float_linear
 {
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionColorBufferFloat
+interface WEBGL_color_buffer_float
 {
     const GLenum RGBA32F_EXT = 0x8814;
     const GLenum RGB32F_EXT = 0x8815;
@@ -944,7 +945,7 @@ interface WebGLExtensionColorBufferFloat
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionColorBufferHalfFloat
+interface EXT_color_buffer_half_float
 {
     const GLenum RGBA16F_EXT = 0x881A;
     const GLenum RGB16F_EXT = 0x881B;
@@ -953,17 +954,17 @@ interface WebGLExtensionColorBufferHalfFloat
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionVertexArray {
+interface OES_vertex_array_object {
     const GLenum VERTEX_ARRAY_BINDING_OES = 0x85B5;
 
-    WebGLVertexArray? createVertexArrayOES();
-    void deleteVertexArrayOES(WebGLVertexArray? arrayObject);
-    [WebGLHandlesContextLoss] GLboolean isVertexArrayOES(WebGLVertexArray? arrayObject);
-    void bindVertexArrayOES(WebGLVertexArray? arrayObject);
+    WebGLVertexArrayObjectOES? createVertexArrayOES();
+    void deleteVertexArrayOES(WebGLVertexArrayObjectOES? arrayObject);
+    [WebGLHandlesContextLoss] GLboolean isVertexArrayOES(WebGLVertexArrayObjectOES? arrayObject);
+    void bindVertexArrayOES(WebGLVertexArrayObjectOES? arrayObject);
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionInstancedArrays {
+interface ANGLE_instanced_arrays {
     const GLenum VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE = 0x88FE;
 
     void drawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
@@ -972,19 +973,17 @@ interface WebGLExtensionInstancedArrays {
 };
 
 [NoInterfaceObject]
-interface WebGLExtensionBlendMinMax {
+interface EXT_blend_minmax {
     const GLenum MIN_EXT = 0x8007;
     const GLenum MAX_EXT = 0x8008;
 };
 
-// FIXME: Spec interface name is WebGLTimerQueryEXT.
 [NoInterfaceObject]
-interface WebGLTimerQuery {
+interface WebGLTimerQueryEXT {
 };
 
-// FIXME: Spec interface name is EXT_disjoint_timer_query.
 [NoInterfaceObject]
-interface WebGLExtensionDisjointTimerQuery {
+interface EXT_disjoint_timer_query {
     const GLenum QUERY_COUNTER_BITS_EXT = 0x8864;
     const GLenum CURRENT_QUERY_EXT = 0x8865;
     const GLenum QUERY_RESULT_EXT = 0x8866;
@@ -993,12 +992,12 @@ interface WebGLExtensionDisjointTimerQuery {
     const GLenum TIMESTAMP_EXT = 0x8E28;
     const GLenum GPU_DISJOINT_EXT = 0x8FBB;
 
-    WebGLTimerQuery? createQueryEXT();
-    void deleteQueryEXT(WebGLTimerQuery? query);
-    [WebGLHandlesContextLoss] boolean isQueryEXT(WebGLTimerQuery? query);
-    void beginQueryEXT(GLenum target, WebGLTimerQuery? query);
+    WebGLTimerQueryEXT? createQueryEXT();
+    void deleteQueryEXT(WebGLTimerQueryEXT? query);
+    [WebGLHandlesContextLoss] boolean isQueryEXT(WebGLTimerQueryEXT? query);
+    void beginQueryEXT(GLenum target, WebGLTimerQueryEXT? query);
     void endQueryEXT(GLenum target);
-    void queryCounterEXT(WebGLTimerQuery? query, GLenum target);
+    void queryCounterEXT(WebGLTimerQueryEXT? query, GLenum target);
     any getQueryEXT(GLenum target, GLenum pname);
-    any getQueryObjectEXT(WebGLTimerQuery? query, GLenum pname);
+    any getQueryObjectEXT(WebGLTimerQueryEXT? query, GLenum pname);
 };

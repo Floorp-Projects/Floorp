@@ -18,6 +18,6 @@ WebGLExtensionTextureFloat::~WebGLExtensionTextureFloat()
 {
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureFloat)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureFloat, OES_texture_float)
 
 } // namespace mozilla
