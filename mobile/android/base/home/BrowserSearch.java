@@ -554,7 +554,7 @@ public class BrowserSearch extends HomeFragment
             ArrayList<SearchEngine> searchEngines = new ArrayList<SearchEngine>();
             for (int i = 0; i < engines.length(); i++) {
                 final JSONObject engineJSON = engines.getJSONObject(i);
-                final SearchEngine engine = new SearchEngine(engineJSON);
+                final SearchEngine engine = new SearchEngine((Context) getActivity(), engineJSON);
 
                 if (engine.name.equals(suggestEngine) && suggestTemplate != null) {
                     // Suggest engine should be at the front of the list.
