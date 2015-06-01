@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -13,10 +13,19 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
 
-let DEBUG = false;
+XPCOMUtils.defineLazyModuleGetter(this, "SEUtils",
+                                  "resource://gre/modules/SEUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "SE", () => {
+  let obj = {};
+  Cu.import("resource://gre/modules/se_consts.js", obj);
+  return obj;
+});
+
+let DEBUG = SE.DEBUG_SE;
 function debug(aMsg) {
   if (DEBUG) {
-    dump("-- HCIEventTransactionSystemMessageConfigurator.js " + Date.now() + " : " + aMsg + "\n");
+    dump("-*- HCIEventTransaction: " + aMsg);
   }
 }
 
@@ -67,7 +76,7 @@ HCIEventTransactionSystemMessageConfigurator.prototype = {
 
     // convert AID and Secure Element name to uppercased string for comparison
     // with manifest secure_element_access rules
-    let aid = this._byteAIDToHex(aAid);
+    let aid = SEUtils.byteArrayToHexString(aAid);
     let seName = (aOrigin) ? aOrigin.toUpperCase() : "";
 
     let hciRules = aManifest["secure_element_access"] || [];
@@ -93,21 +102,6 @@ HCIEventTransactionSystemMessageConfigurator.prototype = {
     });
 
     return (matchingRule) ? Promise.resolve() : Promise.reject();
-  },
-
-  // FIXME: there is probably something which does this
-  _byteAIDToHex: function _byteAIDToHex(uint8arr) {
-    if (!uint8arr) {
-      return "";
-    }
-
-    var hexStr = "";
-    for (var i = 0; i < uint8arr.length; i++) {
-      var hex = (uint8arr[i] & 0xff).toString(16);
-      hex = (hex.length === 1) ? '0' + hex : hex;
-      hexStr += hex;
-    }
-    return hexStr.toUpperCase();
   },
 
   classID: Components.ID("{b501edd0-28bd-11e4-8c21-0800200c9a66}"),
