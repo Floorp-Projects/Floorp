@@ -195,10 +195,10 @@
 <!ENTITY pref_donottrack_title "Do not track">
 <!ENTITY pref_donottrack_summary "&brandShortName; will tell sites that you do not want to be tracked">
 
-<!ENTITY tab_queue_toast_message2 "Tab queued in &brandShortName;">
+<!ENTITY tab_queue_toast_message3 "Tab saved in &brandShortName;">
 <!ENTITY tab_queue_toast_action "Open now">
 <!ENTITY tab_queue_prompt_title "Opening multiple links?">
-<!ENTITY tab_queue_prompt_text2 "Open them without switching to &brandShortName; each time.">
+<!ENTITY tab_queue_prompt_text3 "Save them until the next time you open &brandShortName;">
 <!ENTITY tab_queue_prompt_tip_text "you can change this later in Settings">
 <!ENTITY tab_queue_prompt_positive_action_button "Enable">
 <!ENTITY tab_queue_prompt_negative_action_button "Not now">
@@ -402,7 +402,7 @@ size. -->
 <!ENTITY pref_scroll_title_bar_summary "Hide the &brandShortName; title bar when scrolling down a page">
 
 <!ENTITY pref_tab_queue_title2 "Open multiple links">
-<!ENTITY pref_tab_queue_summary2 "Queue links for later instead of switching to &brandShortName; each time">
+<!ENTITY pref_tab_queue_summary3 "Save them until the next time you open &brandShortName;">
 
 <!-- Localization note (page_removed): This string appears in a toast message when
      any page is removed frome about:home. This includes pages that are in history,
