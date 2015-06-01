@@ -2116,12 +2116,12 @@ private:
     ++childPi->mInternalRefs;
   }
 
-  JS::Zone* MergeZone(void* aGcthing)
+  JS::Zone* MergeZone(JS::GCCellPtr aGcthing)
   {
     if (!mMergeZones) {
       return nullptr;
     }
-    JS::Zone* zone = JS::GetTenuredGCThingZone(aGcthing);
+    JS::Zone* zone = JS::GetTenuredGCThingZone(aGcthing.asCell());
     if (js::IsSystemZone(zone)) {
       return nullptr;
     }
@@ -2275,7 +2275,7 @@ CCGraphBuilder::NoteXPCOMRoot(nsISupports* aRoot)
 NS_IMETHODIMP_(void)
 CCGraphBuilder::NoteJSRoot(JSObject* aRoot)
 {
-  if (JS::Zone* zone = MergeZone(aRoot)) {
+  if (JS::Zone* zone = MergeZone(JS::GCCellPtr(aRoot))) {
     NoteRoot(zone, mJSZoneParticipant);
   } else {
     NoteRoot(aRoot, mJSParticipant);
@@ -2384,7 +2384,7 @@ CCGraphBuilder::NoteJSChild(JS::GCCellPtr aChild)
   }
 
   if (GCThingIsGrayCCThing(aChild) || MOZ_UNLIKELY(WantAllTraces())) {
-    if (JS::Zone* zone = MergeZone(aChild.asCell())) {
+    if (JS::Zone* zone = MergeZone(aChild)) {
       NoteChild(zone, mJSZoneParticipant, edgeName);
     } else {
       NoteChild(aChild.asCell(), mJSParticipant, edgeName);
@@ -2409,7 +2409,7 @@ CCGraphBuilder::AddWeakMapNode(JS::GCCellPtr aNode)
     return nullptr;
   }
 
-  if (JS::Zone* zone = MergeZone(aNode.asCell())) {
+  if (JS::Zone* zone = MergeZone(aNode)) {
     return AddNode(zone, mJSZoneParticipant);
   }
   return AddNode(aNode.asCell(), mJSParticipant);
