@@ -165,7 +165,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
       request.onerror = (function(event) {
         if (event.target.error.name !== "NO_PROVIDER") {
-          console.error ("Unexpected " + event.target.error.name);
+          console.error("Unexpected " + event.target.error.name);
           this.trigger("session:error", "fxos_app_needed", {
             fxosAppName: loop.config.fxosApp.name
           });
