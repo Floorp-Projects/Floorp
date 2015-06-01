@@ -88,12 +88,12 @@ GfxInfo::GetDeviceInfo()
   io_registry_entry_t dsp_port = CGDisplayIOServicePort(kCGDirectMainDisplay);
   CFTypeRef vendor_id_ref = SearchPortForProperty(dsp_port, CFSTR("vendor-id"));
   if (vendor_id_ref) {
-    mAdapterVendorID.AppendPrintf("0x%4x", IntValueOfCFData((CFDataRef)vendor_id_ref));
+    mAdapterVendorID.AppendPrintf("0x%04x", IntValueOfCFData((CFDataRef)vendor_id_ref));
     CFRelease(vendor_id_ref);
   }
   CFTypeRef device_id_ref = SearchPortForProperty(dsp_port, CFSTR("device-id"));
   if (device_id_ref) {
-    mAdapterDeviceID.AppendPrintf("0x%4x", IntValueOfCFData((CFDataRef)device_id_ref));
+    mAdapterDeviceID.AppendPrintf("0x%04x", IntValueOfCFData((CFDataRef)device_id_ref));
     CFRelease(device_id_ref);
   }
 }
