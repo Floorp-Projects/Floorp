@@ -571,7 +571,19 @@ loop.store.ActiveRoomStore = (function() {
      * Used to note the current state of receiving screenshare data.
      */
     receivingScreenShare: function(actionData) {
-      this.setStoreState({receivingScreenShare: actionData.receiving});
+      if (!actionData.receiving &&
+          this.getStoreState().remoteVideoDimensions.screen) {
+        // Remove the remote video dimensions for type screen as we're not
+        // getting the share anymore.
+        var newDimensions = _.extend(this.getStoreState().remoteVideoDimensions);
+        delete newDimensions.screen;
+        this.setStoreState({
+          receivingScreenShare: actionData.receiving,
+          remoteVideoDimensions: newDimensions
+        });
+      } else {
+        this.setStoreState({receivingScreenShare: actionData.receiving});
+      }
     },
 
     /**
