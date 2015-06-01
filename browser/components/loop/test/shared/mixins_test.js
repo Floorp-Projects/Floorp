@@ -465,11 +465,9 @@ describe("loop.shared.mixins", function() {
           }
         };
 
-        beforeEach(function() {
-          view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
-        });
-
         it("should register video dimension updates correctly", function() {
+          view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
+
           expect(view._videoDimensionsCache.local.camera.width)
             .eql(localVideoDimensions.camera.width);
           expect(view._videoDimensionsCache.local.camera.height)
@@ -485,7 +483,16 @@ describe("loop.shared.mixins", function() {
             .eql(0.32857142857142857);
         });
 
+        it("should unregister video dimension updates correctly", function() {
+          view.updateVideoDimensions(localVideoDimensions, {});
+
+          expect("camera" in view._videoDimensionsCache.local).eql(true);
+          expect("camera" in view._videoDimensionsCache.remote).eql(false);
+        });
+
         it("should not populate the cache on another component instance", function() {
+            view.updateVideoDimensions(localVideoDimensions, remoteVideoDimensions);
+
             var view2 =
               TestUtils.renderIntoDocument(React.createElement(TestComp));
 
