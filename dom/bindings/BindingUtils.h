@@ -812,7 +812,7 @@ MaybeWrapStringValue(JSContext* cx, JS::MutableHandle<JS::Value> rval)
 {
   MOZ_ASSERT(rval.isString());
   JSString* str = rval.toString();
-  if (JS::GetTenuredGCThingZone(str) != js::GetContextZone(cx)) {
+  if (JS::GetStringZone(str) != js::GetContextZone(cx)) {
     return JS_WrapValue(cx, rval);
   }
   return true;
