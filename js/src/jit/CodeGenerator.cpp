@@ -3490,36 +3490,18 @@ typedef bool (*DirectEvalSFn)(JSContext*, HandleObject, HandleScript, HandleValu
 static const VMFunction DirectEvalStringInfo = FunctionInfo<DirectEvalSFn>(DirectEvalStringFromIon);
 
 void
-CodeGenerator::visitCallDirectEvalS(LCallDirectEvalS* lir)
+CodeGenerator::visitCallDirectEval(LCallDirectEval* lir)
 {
     Register scopeChain = ToRegister(lir->getScopeChain());
     Register string = ToRegister(lir->getString());
 
     pushArg(ImmPtr(lir->mir()->pc()));
     pushArg(string);
-    pushArg(ToValue(lir, LCallDirectEvalS::ThisValue));
+    pushArg(ToValue(lir, LCallDirectEval::ThisValue));
     pushArg(ImmGCPtr(gen->info().script()));
     pushArg(scopeChain);
 
     callVM(DirectEvalStringInfo, lir);
-}
-
-typedef bool (*DirectEvalVFn)(JSContext*, HandleObject, HandleScript, HandleValue, HandleValue,
-                              jsbytecode*, MutableHandleValue);
-static const VMFunction DirectEvalValueInfo = FunctionInfo<DirectEvalVFn>(DirectEvalValueFromIon);
-
-void
-CodeGenerator::visitCallDirectEvalV(LCallDirectEvalV* lir)
-{
-    Register scopeChain = ToRegister(lir->getScopeChain());
-
-    pushArg(ImmPtr(lir->mir()->pc()));
-    pushArg(ToValue(lir, LCallDirectEvalV::Argument));
-    pushArg(ToValue(lir, LCallDirectEvalV::ThisValue));
-    pushArg(ImmGCPtr(gen->info().script()));
-    pushArg(scopeChain);
-
-    callVM(DirectEvalValueInfo, lir);
 }
 
 void
