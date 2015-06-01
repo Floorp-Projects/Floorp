@@ -20,7 +20,7 @@ using dom::MediaTrackConstraintSet;
 
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
-#define LOGFRAME(msg) MOZ_LOG(GetMediaManagerLog(), 6, msg)
+#define LOGFRAME(msg) MOZ_LOG(GetMediaManagerLog(), PR_LOG_VERBOSE, msg)
 
 /**
  * Webrtc video source.
