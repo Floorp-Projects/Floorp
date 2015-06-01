@@ -1150,12 +1150,12 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceAddress,
 
   // Stop listening because currently we only support one connection at a time.
   if (mHandsfreeSocket) {
-    mHandsfreeSocket->Disconnect();
+    mHandsfreeSocket->Close();
     mHandsfreeSocket = nullptr;
   }
 
   if (mHeadsetSocket) {
-    mHeadsetSocket->Disconnect();
+    mHeadsetSocket->Close();
     mHeadsetSocket = nullptr;
   }
 
@@ -1202,7 +1202,7 @@ BluetoothHfpManager::Listen()
           kHeadsetAG,
           BluetoothReservedChannels::CHANNEL_HEADSET_AG)) {
       BT_WARNING("[HSP] Can't listen on RFCOMM socket!");
-      mHandsfreeSocket->Disconnect();
+      mHandsfreeSocket->Close();
       mHandsfreeSocket = nullptr;
       mHeadsetSocket = nullptr;
       return false;
@@ -1227,7 +1227,7 @@ BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
   MOZ_ASSERT(!mController);
 
   mController = aController;
-  mSocket->Disconnect();
+  mSocket->Close();
 }
 
 #ifdef MOZ_B2G_RIL
@@ -1796,14 +1796,14 @@ BluetoothHfpManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
     mIsHsp = false;
     mHandsfreeSocket.swap(mSocket);
 
-    mHeadsetSocket->Disconnect();
+    mHeadsetSocket->Close();
     mHeadsetSocket = nullptr;
   } else if (aSocket == mHeadsetSocket) {
     MOZ_ASSERT(!mSocket);
     mIsHsp = true;
     mHeadsetSocket.swap(mSocket);
 
-    mHandsfreeSocket->Disconnect();
+    mHandsfreeSocket->Close();
     mHandsfreeSocket = nullptr;
   }
 
@@ -1990,7 +1990,7 @@ BluetoothHfpManager::ConnectSco(BluetoothReplyRunnable* aRunnable)
   }
 
   // Stop listening
-  mScoSocket->Disconnect();
+  mScoSocket->Close();
 
   mScoSocket->Connect(mDeviceAddress, kUnknownService, -1);
   mScoSocketStatus = mScoSocket->GetConnectionStatus();
@@ -2007,7 +2007,7 @@ BluetoothHfpManager::DisconnectSco()
     return false;
   }
 
-  mScoSocket->Disconnect();
+  mScoSocket->Close();
   return true;
 }
 
@@ -2027,7 +2027,7 @@ BluetoothHfpManager::ListenSco()
     return false;
   }
 
-  mScoSocket->Disconnect();
+  mScoSocket->Close();
 
   if (!mScoSocket->Listen(NS_LITERAL_STRING("Handsfree Audio Gateway SCO"),
                           kUnknownService, -1)) {
