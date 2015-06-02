@@ -9,6 +9,8 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 
@@ -55,7 +57,7 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
             return;
         }
 
-        boolean shouldShowOpenInBackgroundToast = GeckoSharedPrefs.forApp(this).getBoolean(GeckoPreferences.PREFS_TAB_QUEUE, false);
+        boolean shouldShowOpenInBackgroundToast = TabQueueHelper.isTabQueueEnabled(this);
 
         if (shouldShowOpenInBackgroundToast) {
             showToast(safeIntent.getUnsafe());
@@ -76,6 +78,7 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
     private void loadNormally(Intent intent) {
         intent.setClassName(getApplicationContext(), AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
         startActivity(intent);
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "");
         finish();
     }
 

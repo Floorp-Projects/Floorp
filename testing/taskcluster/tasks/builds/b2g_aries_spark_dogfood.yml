@@ -1,0 +1,29 @@
+$inherits:
+  from: 'tasks/builds/b2g_aries_spark_ota_base.yml'
+  variables:
+    build_name: 'aries-dogfood'
+    build_type: 'debug'
+task:
+  metadata:
+    name: '[TC] B2G Aries Dogfood'
+  scopes:
+    - 'docker-worker:cache:build-aries-spark-dogfood'
+  payload:
+    cache:
+      build-aries-spark-dogfood: /home/worker/workspace
+    env:
+      VARIANT: userdebug
+      DOGFOOD: 1
+      MOZHARNESS_CONFIG: b2g/taskcluster-spark-dogfood.py
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      symbol: B
+      groupSymbol: Aries-DogFood
+      groupName: Aries Device Image
+      machine:
+        platform: b2g-device-image
+      collection:
+        debug: true
