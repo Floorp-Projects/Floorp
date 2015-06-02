@@ -16,7 +16,7 @@ extern PRLogModuleInfo* GetSourceBufferResourceLog();
 #endif
 
 #define SBR_DEBUG(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), PR_LOG_DEBUG, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define SBR_DEBUGV(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), PR_LOG_DEBUG+1, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define SBR_DEBUGV(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), PR_LOG_VERBOSE, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 
