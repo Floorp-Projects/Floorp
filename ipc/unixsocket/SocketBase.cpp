@@ -186,24 +186,18 @@ UnixSocketRawData::Send(int aFd)
 SocketConnectionStatus
 SocketBase::GetConnectionStatus() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   return mConnectionStatus;
 }
 
 int
 SocketBase::GetSuggestedConnectDelayMs() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   return mConnectDelayMs;
 }
 
 void
 SocketBase::NotifySuccess()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   mConnectionStatus = SOCKET_CONNECTED;
   mConnectTimestamp = PR_IntervalNow();
   OnConnectSuccess();
@@ -212,8 +206,6 @@ SocketBase::NotifySuccess()
 void
 SocketBase::NotifyError()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   mConnectionStatus = SOCKET_DISCONNECTED;
   mConnectDelayMs = CalculateConnectDelayMs();
   mConnectTimestamp = 0;
@@ -223,8 +215,6 @@ SocketBase::NotifyError()
 void
 SocketBase::NotifyDisconnect()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   mConnectionStatus = SOCKET_DISCONNECTED;
   mConnectDelayMs = CalculateConnectDelayMs();
   mConnectTimestamp = 0;
@@ -234,8 +224,6 @@ SocketBase::NotifyDisconnect()
 uint32_t
 SocketBase::CalculateConnectDelayMs() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   uint32_t connectDelayMs = mConnectDelayMs;
 
   if (mConnectTimestamp && (PR_IntervalNow()-mConnectTimestamp) > connectDelayMs) {
@@ -272,11 +260,30 @@ SocketBase::SetConnectionStatus(SocketConnectionStatus aConnectionStatus)
 // SocketIOBase
 //
 
-SocketIOBase::SocketIOBase()
-{ }
+SocketIOBase::SocketIOBase(nsIThread* aConsumerThread)
+  : mConsumerThread(aConsumerThread)
+{
+  MOZ_ASSERT(mConsumerThread);
+}
 
 SocketIOBase::~SocketIOBase()
 { }
+
+nsIThread*
+SocketIOBase::GetConsumerThread() const
+{
+  return mConsumerThread;
+}
+
+bool
+SocketIOBase::IsConsumerThread() const
+{
+  nsIThread* thread = nullptr;
+  if (NS_FAILED(NS_GetCurrentThread(&thread))) {
+    return false;
+  }
+  return thread == GetConsumerThread();
+}
 
 //
 // SocketIOEventRunnable
@@ -291,9 +298,9 @@ SocketIOEventRunnable::SocketIOEventRunnable(SocketIOBase* aIO,
 NS_METHOD
 SocketIOEventRunnable::Run()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   SocketIOBase* io = SocketIORunnable<SocketIOBase>::GetIO();
+
+  MOZ_ASSERT(io->IsConsumerThread());
 
   if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
     // Since we've already explicitly closed and the close
@@ -327,9 +334,9 @@ SocketIORequestClosingRunnable::SocketIORequestClosingRunnable(
 NS_METHOD
 SocketIORequestClosingRunnable::Run()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   SocketIOBase* io = SocketIORunnable<SocketIOBase>::GetIO();
+
+  MOZ_ASSERT(io->IsConsumerThread());
 
   if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
     // Since we've already explicitly closed and the close
@@ -373,19 +380,19 @@ SocketIOShutdownTask::SocketIOShutdownTask(SocketIOBase* aIO)
 void
 SocketIOShutdownTask::Run()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-
   SocketIOBase* io = SocketIOTask<SocketIOBase>::GetIO();
+
+  MOZ_ASSERT(!io->IsConsumerThread());
+  MOZ_ASSERT(!io->IsShutdownOnIOThread());
 
   // At this point, there should be no new events on the I/O thread
   // after this one with the possible exception of an accept task,
   // which ShutdownOnIOThread will cancel for us. We are now fully
   // shut down, so we can send a message to the main thread to delete
   // |io| safely knowing that it's not reference any longer.
-  MOZ_ASSERT(!io->IsShutdownOnIOThread());
   io->ShutdownOnIOThread();
-
-  NS_DispatchToMainThread(new SocketIODeleteInstanceRunnable(io));
+  io->GetConsumerThread()->Dispatch(new SocketIODeleteInstanceRunnable(io),
+                                    NS_DISPATCH_NORMAL);
 }
 
 }

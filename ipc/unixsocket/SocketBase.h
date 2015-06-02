@@ -353,8 +353,24 @@ public:
    */
   virtual void ShutdownOnMainThread() = 0;
 
+  /**
+   * Returns the consumer thread.
+   *
+   * @return A pointer to the consumer thread.
+   */
+  nsIThread* GetConsumerThread() const;
+
+  /**
+   * @return True if the current thread is thre consumer thread, or false
+   *         otherwise.
+   */
+  bool IsConsumerThread() const;
+
 protected:
-  SocketIOBase();
+  SocketIOBase(nsIThread* nsConsumerThread);
+
+private:
+  nsCOMPtr<nsIThread> mConsumerThread;
 };
 
 //
