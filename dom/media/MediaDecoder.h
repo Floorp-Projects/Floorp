@@ -995,6 +995,15 @@ public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalNetworkDuration() { return &mNetworkDuration; }
 protected:
 
+  // Media duration set explicitly by JS. At present, this is only ever present
+  // for MSE.
+  Canonical<Maybe<double>> mExplicitDuration;
+  double ExplicitDuration() { return mExplicitDuration.Ref().ref(); }
+  void SetExplicitDuration(double aValue) { mExplicitDuration.Set(Some(aValue)); }
+public:
+  AbstractCanonical<Maybe<double>>* CanonicalExplicitDuration() { return &mExplicitDuration; }
+protected:
+
   // Set to one of the valid play states.
   // This can only be changed on the main thread while holding the decoder
   // monitor. Thus, it can be safely read while holding the decoder monitor
