@@ -19,6 +19,8 @@
 #include "nsStringAPI.h"
 #endif
 
+using mozilla::LogLevel;
+
 static int gWebRtcTraceLoggingOn = 0;
 
 #ifndef ANDROID
@@ -49,7 +51,7 @@ public:
   void Print(webrtc::TraceLevel level, const char* message, int length)
   {
     PRLogModuleInfo *log = GetWebRtcTraceLog();
-    MOZ_LOG(log, PR_LOG_DEBUG, ("%s", message));
+    MOZ_LOG(log, LogLevel::Debug, ("%s", message));
   }
 };
 

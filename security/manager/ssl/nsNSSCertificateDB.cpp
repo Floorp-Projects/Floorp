@@ -106,13 +106,13 @@ nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
   char *asciiname = nullptr;
   NS_ConvertUTF16toUTF8 aUtf8Nickname(nickname);
   asciiname = const_cast<char*>(aUtf8Nickname.get());
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting \"%s\"\n", asciiname));
   cert = PK11_FindCertFromNickname(asciiname, nullptr);
   if (!cert) {
     cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), asciiname);
   }
   if (cert) {
-    MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("got it\n"));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("got it\n"));
     nsCOMPtr<nsIX509Cert> pCert = nsNSSCertificate::Create(cert.get());
     if (pCert) {
       pCert.forget(_rvCert);
@@ -345,7 +345,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
   if (NS_FAILED(rv))
     return rv;
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Creating temp cert\n"));
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
   ScopedCERTCertificate tmpCert(CERT_FindCertByDERCert(certdb, &der));
   if (!tmpCert) {
@@ -380,11 +380,11 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
   if (!allows)
     return NS_ERROR_NOT_AVAILABLE;
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("trust is %d\n", trustBits));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("trust is %d\n", trustBits));
   nsXPIDLCString nickname;
   nickname.Adopt(CERT_MakeCANickname(tmpCert.get()));
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Created nick \"%s\"\n", nickname.get()));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Created nick \"%s\"\n", nickname.get()));
 
   nsNSSCertTrust trust;
   trust.SetValidCA();
@@ -967,7 +967,7 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
     srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
                                cert.get(), trust.GetTrust());
   }
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("cert deleted: %d", srv));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("cert deleted: %d", srv));
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
 }
 
@@ -1222,7 +1222,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
   uint32_t numcerts = 0, i=0;
   char16_t **tmpArray = nullptr;
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("List of certs %d:\n", type));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("List of certs %d:\n", type));
   for (node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node, certList);
        node = CERT_LIST_NEXT(node)) {
@@ -1230,7 +1230,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
       numcerts++;
     }
   }
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("num certs: %d\n", numcerts));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("num certs: %d\n", numcerts));
   int nc = (numcerts == 0) ? 1 : numcerts;
   tmpArray = (char16_t **)moz_xmalloc(sizeof(char16_t *) * nc);
   if (numcerts == 0) goto finish;
@@ -1613,7 +1613,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char* aBase64,
   rv = newCert->GetRawDER(&der.len, (uint8_t **)&der.data);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Creating temp cert\n"));
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
   ScopedCERTCertificate tmpCert(CERT_FindCertByDERCert(certdb, &der));
   if (!tmpCert)
@@ -1637,7 +1637,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char* aBase64,
   nsXPIDLCString nickname;
   nickname.Adopt(CERT_MakeCANickname(tmpCert.get()));
 
-  MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Created nick \"%s\"\n", nickname.get()));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Created nick \"%s\"\n", nickname.get()));
 
   rv = attemptToLogInWithDefaultPassword();
   if (NS_WARN_IF(rv != NS_OK)) {

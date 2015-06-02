@@ -40,8 +40,8 @@ PRLogModuleInfo* GetDemuxerLog() {
   }
   return log;
 }
-#define LOG(arg, ...) MOZ_LOG(GetDemuxerLog(), PR_LOG_DEBUG, ("MP4Reader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define VLOG(arg, ...) MOZ_LOG(GetDemuxerLog(), PR_LOG_DEBUG, ("MP4Reader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...) MOZ_LOG(GetDemuxerLog(), mozilla::LogLevel::Debug, ("MP4Reader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define VLOG(arg, ...) MOZ_LOG(GetDemuxerLog(), mozilla::LogLevel::Debug, ("MP4Reader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 using namespace mp4_demuxer;
 
