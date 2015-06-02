@@ -1816,6 +1816,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
     if (!attemptedOptimisticPipeline &&
         (classification == nsHttpTransaction::CLASS_REVALIDATION ||
          classification == nsHttpTransaction::CLASS_SCRIPT)) {
+        // Assignation kept here for documentation purpose; Never read after
         attemptedOptimisticPipeline = true;
         if (AddToShortestPipeline(ent, trans,
                                   classification,
