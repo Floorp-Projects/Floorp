@@ -16,6 +16,8 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
+class MessageLoop;
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothSocketObserver;
@@ -64,10 +66,33 @@ public:
    *
    * @param aConnector Connector object for socket type specific functions
    * @param aDelayMs Time delay in milli-seconds.
+   * @param aIOLoop The socket's I/O thread.
+   * @return NS_OK on success, or an XPCOM error code otherwise.
+   */
+  nsresult Connect(BluetoothUnixSocketConnector* aConnector,
+                   int aDelayMs, MessageLoop* aIOLoop);
+
+  /**
+   * Starts a task on the socket that will try to connect to a socket in a
+   * non-blocking manner.
+   *
+   * @param aConnector Connector object for socket type specific functions
+   * @param aDelayMs Time delay in milli-seconds.
    * @return NS_OK on success, or an XPCOM error code otherwise.
    */
   nsresult Connect(BluetoothUnixSocketConnector* aConnector,
                    int aDelayMs = 0);
+
+  /**
+   * Starts a task on the socket that will try to accept a new connection in a
+   * non-blocking manner.
+   *
+   * @param aConnector Connector object for socket type specific functions
+   * @param aIOLoop The socket's I/O thread.
+   * @return NS_OK on success, or an XPCOM error code otherwise.
+   */
+  nsresult Listen(BluetoothUnixSocketConnector* aConnector,
+                  MessageLoop* aIOLoop);
 
   /**
    * Starts a task on the socket that will try to accept a new connection in a

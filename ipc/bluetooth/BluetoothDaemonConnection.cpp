@@ -437,10 +437,10 @@ BluetoothDaemonConnection::BluetoothDaemonConnection(
   BluetoothDaemonPDUConsumer* aPDUConsumer,
   BluetoothDaemonConnectionConsumer* aConsumer,
   int aIndex)
-  : mPDUConsumer(aPDUConsumer)
+  : mIO(nullptr)
+  , mPDUConsumer(aPDUConsumer)
   , mConsumer(aConsumer)
   , mIndex(aIndex)
-  , mIO(nullptr)
 {
   MOZ_ASSERT(mConsumer);
 }
@@ -452,6 +452,7 @@ BluetoothDaemonConnection::~BluetoothDaemonConnection()
 
 nsresult
 BluetoothDaemonConnection::PrepareAccept(UnixSocketConnector* aConnector,
+                                         MessageLoop* aIOLoop,
                                          ConnectionOrientedSocketIO*& aIO)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -465,7 +466,7 @@ BluetoothDaemonConnection::PrepareAccept(UnixSocketConnector* aConnector,
   SetConnectionStatus(SOCKET_CONNECTING);
 
   mIO = new BluetoothDaemonConnectionIO(
-    XRE_GetIOMessageLoop(), -1, UnixSocketWatcher::SOCKET_IS_CONNECTING,
+    aIOLoop, -1, UnixSocketWatcher::SOCKET_IS_CONNECTING,
     this, mPDUConsumer);
   aIO = mIO;
 
@@ -480,7 +481,7 @@ BluetoothDaemonConnection::SendSocketData(UnixSocketIOBuffer* aBuffer)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mIO);
 
-  XRE_GetIOMessageLoop()->PostTask(
+  mIO->GetIOLoop()->PostTask(
     FROM_HERE,
     new SocketIOSendTask<BluetoothDaemonConnectionIO,
                          UnixSocketIOBuffer>(mIO, aBuffer));
@@ -498,8 +499,7 @@ BluetoothDaemonConnection::Close()
     return;
   }
 
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
-
+  mIO->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
   mIO = nullptr;
 
   NotifyDisconnect();

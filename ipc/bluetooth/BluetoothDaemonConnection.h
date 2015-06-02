@@ -12,6 +12,8 @@
 #include "mozilla/ipc/ConnectionOrientedSocket.h"
 #include "nsAutoPtr.h"
 
+class MessageLoop;
+
 namespace mozilla {
 namespace ipc {
 
@@ -123,6 +125,7 @@ public:
   //
 
   nsresult PrepareAccept(UnixSocketConnector* aConnector,
+                         MessageLoop* aIOLoop,
                          ConnectionOrientedSocketIO*& aIO) override;
 
   // Methods for |DataSocket|
@@ -139,10 +142,10 @@ public:
   void OnDisconnect() override;
 
 private:
+  BluetoothDaemonConnectionIO* mIO;
   BluetoothDaemonPDUConsumer* mPDUConsumer;
   BluetoothDaemonConnectionConsumer* mConsumer;
   int mIndex;
-  BluetoothDaemonConnectionIO* mIO;
 };
 
 }

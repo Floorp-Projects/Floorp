@@ -398,8 +398,8 @@ public:
     }
 
     mImpl->mConsumer->SetAddress(aBdAddress);
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     new AcceptTask(mImpl, fd.forget()));
+    mImpl->GetIOLoop()->PostTask(FROM_HERE,
+                                 new AcceptTask(mImpl, fd.forget()));
   }
 
   void OnError(BluetoothStatus aStatus) override
@@ -615,8 +615,8 @@ public:
     }
 
     mImpl->mConsumer->SetAddress(aBdAddress);
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     new SocketConnectTask(mImpl, aFd));
+    mImpl->GetIOLoop()->PostTask(FROM_HERE,
+                                 new SocketConnectTask(mImpl, aFd));
   }
 
   void OnError(BluetoothStatus aStatus) override
@@ -642,14 +642,15 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress,
                          const BluetoothUuid& aServiceUuid,
                          BluetoothSocketType aType,
                          int aChannel,
-                         bool aAuth, bool aEncrypt)
+                         bool aAuth, bool aEncrypt,
+                         MessageLoop* aIOLoop)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mImpl);
 
   SetConnectionStatus(SOCKET_CONNECTING);
 
-  mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this);
+  mImpl = new DroidSocketImpl(aIOLoop, this);
 
   BluetoothSocketResultHandler* res = new ConnectSocketResultHandler(mImpl);
   SetCurrentResultHandler(res);
@@ -660,6 +661,17 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress,
     aEncrypt, aAuth, res);
 
   return NS_OK;
+}
+
+nsresult
+BluetoothSocket::Connect(const nsAString& aDeviceAddress,
+                         const BluetoothUuid& aServiceUuid,
+                         BluetoothSocketType aType,
+                         int aChannel,
+                         bool aAuth, bool aEncrypt)
+{
+  return Connect(aDeviceAddress, aServiceUuid, aType, aChannel, aAuth,
+                 aEncrypt, XRE_GetIOMessageLoop());
 }
 
 class ListenResultHandler final : public BluetoothSocketResultHandler
@@ -675,8 +687,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     new SocketListenTask(mImpl, aFd));
+    mImpl->GetIOLoop()->PostTask(FROM_HERE, new SocketListenTask(mImpl, aFd));
   }
 
   void OnError(BluetoothStatus aStatus) override
@@ -695,14 +706,15 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
                         const BluetoothUuid& aServiceUuid,
                         BluetoothSocketType aType,
                         int aChannel,
-                        bool aAuth, bool aEncrypt)
+                        bool aAuth, bool aEncrypt,
+                        MessageLoop* aIOLoop)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mImpl);
 
   SetConnectionStatus(SOCKET_LISTENING);
 
-  mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this);
+  mImpl = new DroidSocketImpl(aIOLoop, this);
 
   BluetoothSocketResultHandler* res = new ListenResultHandler(mImpl);
   SetCurrentResultHandler(res);
@@ -713,6 +725,17 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
     aEncrypt, aAuth, res);
 
   return NS_OK;
+}
+
+nsresult
+BluetoothSocket::Listen(const nsAString& aServiceName,
+                        const BluetoothUuid& aServiceUuid,
+                        BluetoothSocketType aType,
+                        int aChannel,
+                        bool aAuth, bool aEncrypt)
+{
+  return Listen(aServiceName, aServiceUuid, aType, aChannel, aAuth, aEncrypt,
+                XRE_GetIOMessageLoop());
 }
 
 void
@@ -733,7 +756,7 @@ BluetoothSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
   MOZ_ASSERT(mImpl);
   MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
 
-  XRE_GetIOMessageLoop()->PostTask(
+  mImpl->GetIOLoop()->PostTask(
     FROM_HERE,
     new SocketIOSendTask<DroidSocketImpl, UnixSocketIOBuffer>(mImpl, aBuffer));
 }
@@ -758,9 +781,7 @@ BluetoothSocket::Close()
   // We sever the relationship here so any future calls to listen or connect
   // will create a new implementation.
   mImpl->ShutdownOnMainThread();
-
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mImpl));
-
+  mImpl->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mImpl));
   mImpl = nullptr;
 
   NotifyDisconnect();

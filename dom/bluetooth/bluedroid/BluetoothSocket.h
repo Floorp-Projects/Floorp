@@ -10,6 +10,8 @@
 #include "BluetoothCommon.h"
 #include "mozilla/ipc/DataSocket.h"
 
+class MessageLoop;
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothSocketObserver;
@@ -25,7 +27,21 @@ public:
                    const BluetoothUuid& aServiceUuid,
                    BluetoothSocketType aType,
                    int aChannel,
+                   bool aAuth, bool aEncrypt,
+                   MessageLoop* aIOLoop);
+
+  nsresult Connect(const nsAString& aDeviceAddress,
+                   const BluetoothUuid& aServiceUuid,
+                   BluetoothSocketType aType,
+                   int aChannel,
                    bool aAuth, bool aEncrypt);
+
+  nsresult Listen(const nsAString& aServiceName,
+                  const BluetoothUuid& aServiceUuid,
+                  BluetoothSocketType aType,
+                  int aChannel,
+                  bool aAuth, bool aEncrypt,
+                  MessageLoop* aIOLoop);
 
   nsresult Listen(const nsAString& aServiceName,
                   const BluetoothUuid& aServiceUuid,

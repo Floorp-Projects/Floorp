@@ -293,9 +293,9 @@ private:
 //
 
 ListenSocket::ListenSocket(ListenSocketConsumer* aConsumer, int aIndex)
-  : mConsumer(aConsumer)
+  : mIO(nullptr)
+  , mConsumer(aConsumer)
   , mIndex(aIndex)
-  , mIO(nullptr)
 {
   MOZ_ASSERT(mConsumer);
 }
@@ -307,12 +307,13 @@ ListenSocket::~ListenSocket()
 
 nsresult
 ListenSocket::Listen(UnixSocketConnector* aConnector,
+                     MessageLoop* aIOLoop,
                      ConnectionOrientedSocket* aCOSocket)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIO);
 
-  mIO = new ListenSocketIO(XRE_GetIOMessageLoop(), this, aConnector);
+  mIO = new ListenSocketIO(aIOLoop, this, aConnector);
 
   // Prepared I/O object, now start listening.
   nsresult rv = Listen(aCOSocket);
@@ -323,6 +324,13 @@ ListenSocket::Listen(UnixSocketConnector* aConnector,
   }
 
   return NS_OK;
+}
+
+nsresult
+ListenSocket::Listen(UnixSocketConnector* aConnector,
+                     ConnectionOrientedSocket* aCOSocket)
+{
+  return Listen(aConnector, XRE_GetIOMessageLoop(), aCOSocket);
 }
 
 nsresult
@@ -342,7 +350,8 @@ ListenSocket::Listen(ConnectionOrientedSocket* aCOSocket)
   }
 
   nsAutoPtr<ConnectionOrientedSocketIO> io;
-  rv = aCOSocket->PrepareAccept(connector, *io.StartAssignment());
+  rv = aCOSocket->PrepareAccept(connector, mIO->GetIOLoop(),
+                                *io.StartAssignment());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -352,7 +361,7 @@ ListenSocket::Listen(ConnectionOrientedSocket* aCOSocket)
 
   SetConnectionStatus(SOCKET_LISTENING);
 
-  XRE_GetIOMessageLoop()->PostTask(
+  mIO->GetIOLoop()->PostTask(
     FROM_HERE, new ListenSocketIO::ListenTask(mIO, io.forget()));
 
   return NS_OK;
@@ -373,9 +382,7 @@ ListenSocket::Close()
   // the relationship here so any future calls to listen or connect
   // will create a new implementation.
   mIO->ShutdownOnMainThread();
-
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
-
+  mIO->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
   mIO = nullptr;
 
   NotifyDisconnect();
