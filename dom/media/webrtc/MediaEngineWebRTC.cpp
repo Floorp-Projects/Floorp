@@ -8,6 +8,8 @@
 #include "CSFLog.h"
 #include "prenv.h"
 
+#include "mozilla/Logging.h"
+
 static PRLogModuleInfo*
 GetUserMediaLog()
 {
