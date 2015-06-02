@@ -5586,3 +5586,12 @@ ScrollFrameHelper::GetSnapPointForDestination(nsIScrollableFrame::ScrollUnit aUn
   }
   return snapped;
 }
+
+bool
+ScrollFrameHelper::UsesContainerScrolling() const
+{
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
+    return mIsRoot;
+  }
+  return false;
+}
