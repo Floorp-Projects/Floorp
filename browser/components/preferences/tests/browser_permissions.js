@@ -115,8 +115,8 @@ var tests = [
     is(gSitesList.firstChild.id, "all-sites-item",
        "all sites is the first item in the sites list");
 
-    ok(getSiteItem(TEST_URI_1.host), "site item from places db exists");
-    ok(getSiteItem(TEST_URI_2.host), "site item from enumerating services exists");
+    ok(getSiteItem(TEST_URI_1.prePath), "site item from places db exists");
+    ok(getSiteItem(TEST_URI_2.prePath), "site item from enumerating services exists");
 
     runNextTest();
   },
@@ -128,9 +128,9 @@ var tests = [
     sitesFilter.doCommand();
 
     // make sure correct sites are collapsed/showing
-    let testSite1 = getSiteItem(TEST_URI_1.host);
+    let testSite1 = getSiteItem(TEST_URI_1.prePath);
     ok(!testSite1.collapsed, "test site 1 is not collapsed");
-    let testSite2 = getSiteItem(TEST_URI_2.host);
+    let testSite2 = getSiteItem(TEST_URI_2.prePath);
     ok(testSite2.collapsed, "test site 2 is collapsed");
 
     // clear filter
@@ -202,13 +202,13 @@ var tests = [
 
   function test_select_site() {
     // select the site that has the permissions we set at the beginning of the test
-    let testSiteItem = getSiteItem(TEST_URI_2.host);
+    let testSiteItem = getSiteItem(TEST_URI_2.prePath);
     gSitesList.selectedItem = testSiteItem;
 
     let siteHeader = gBrowser.contentDocument.getElementById("site-header");
     is(siteHeader, gHeaderDeck.selectedPanel,
        "correct header shown for a specific site");
-    is(gSiteLabel.value, TEST_URI_2.host, "header updated for selected site");
+    is(gSiteLabel.value, TEST_URI_2.prePath, "header updated for selected site");
 
     ok(!gBrowser.contentDocument.getElementById("passwords-count").hidden,
        "passwords count is not hidden");
@@ -283,7 +283,7 @@ var tests = [
          "all sites item selected after forgetting selected site");
 
       // check to make sure site is gone from sites list
-      let testSiteItem = getSiteItem(TEST_URI_2.host);
+      let testSiteItem = getSiteItem(TEST_URI_2.prePath);
       ok(!testSiteItem, "site removed from sites list");
 
       // check to make sure we forgot all permissions corresponding to site
