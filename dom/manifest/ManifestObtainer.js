@@ -74,7 +74,14 @@ ManifestObtainer.prototype = {
     });
 
     function toError(aErrorClone) {
-      const error = new Error();
+      let error;
+      switch (aErrorClone.name) {
+      case 'TypeError':
+        error = new TypeError();
+        break;
+      default:
+        error = new Error();
+      }
       Object.getOwnPropertyNames(aErrorClone)
         .forEach(name => error[name] = aErrorClone[name]);
       return error;
