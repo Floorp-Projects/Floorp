@@ -225,7 +225,7 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 }
 
 .searchbar-engine-one-off-item:not(.last-row) {
-  box-sizing: padding-box;
+  box-sizing: content-box;
   border-bottom: 1px solid #ccc;
 }
 
