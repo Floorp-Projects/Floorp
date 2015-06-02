@@ -13,37 +13,22 @@
   <hbox id="identity-popup-container" align="top">
     <image id="identity-popup-icon"/>
     <vbox id="identity-popup-content-box">
-      <label id="identity-popup-brandName"
+      <label id="identity-popup-content-host"
+             class="identity-popup-description"
+             crop="end"/>
+      <label id="identity-popup-connection-secure"
              class="identity-popup-label"
-             value="&brandFullName;"/>
-      <label id="identity-popup-chromeLabel"
-             class="identity-popup-label"/>
-      <label id="identity-popup-connectedToLabel"
+             value="&identity.connectionSecure;"/>
+      <label id="identity-popup-connection-not-secure"
              class="identity-popup-label"
-             value="&identity.connectedTo;"/>
-      <label id="identity-popup-connectedToLabel2"
-             class="identity-popup-label"
-             value="&identity.unverifiedsite2;"/>
-      <description id="identity-popup-content-host"
-                   class="identity-popup-description"/>
-      <label id="identity-popup-runByLabel"
-             class="identity-popup-label"
-             value="&identity.runBy;"/>
+             value="&identity.connectionNotSecure;"/>
       <description id="identity-popup-content-owner"
                    class="identity-popup-description"/>
       <description id="identity-popup-content-supplemental"
                    class="identity-popup-description"/>
       <description id="identity-popup-content-verifier"
                    class="identity-popup-description"/>
-      <hbox id="identity-popup-encryption" flex="1">
-        <vbox>
-          <image id="identity-popup-encryption-icon"/>
-        </vbox>
-        <description id="identity-popup-encryption-label" flex="1"
-                     class="identity-popup-description"/>
-      </hbox>
       <vbox id="identity-popup-permissions">
-        <separator class="thin"/>
         <label class="identity-popup-label header"
                value="&identity.permissions;"/>
         <vbox id="identity-popup-permission-list" class="indent"/>
