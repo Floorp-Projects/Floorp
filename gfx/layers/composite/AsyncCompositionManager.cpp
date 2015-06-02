@@ -633,13 +633,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
     // Transform the current local clip by this APZC's async transform. If we're
-    // using containerful scrolling, the layer's clip is pre-transform instead
-    // of post-transform, so we skip this to avoid transforming it twice.
-    if (asyncClip &&
-        !(gfxPrefs::LayoutUseContainersForRootFrames() &&
-          aLayer->AsContainerLayer() &&
-          i == 0))
-    {
+    // using containerful scrolling, then the clip is not part of the scrolled
+    // frame and should not be transformed.
+    if (asyncClip && !metrics.UsesContainerScrolling()) {
       asyncClip = Some(TransformTo<ParentLayerPixel>(asyncTransform, *asyncClip));
     }
 
