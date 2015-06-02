@@ -6,8 +6,6 @@
 USE_RCS_MK := 1
 include $(topsrcdir)/config/makefiles/rcs.mk
 
-DEFINES += -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"'
-
 ifdef MOZILLA_OFFICIAL
 MOZ_HISTOGRAMS_VERSION ?= $(call getSourceRepo)/rev/$(firstword $(shell hg -R $(topsrcdir) parent --template='{node|short}\n' 2>/dev/null))
 ifdef MOZ_HISTOGRAMS_VERSION
