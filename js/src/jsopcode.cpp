@@ -835,8 +835,10 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
         if (!nbytes)
             return false;
         nbytes = JS_sprintf_append(nullptr, "%s", nbytes);
-        if (!nbytes)
+        if (!nbytes) {
+            ReportOutOfMemory(cx);
             return false;
+        }
         bytes->initBytes(nbytes);
         return true;
     }
@@ -844,8 +846,10 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
     JSRuntime* rt = cx->runtime();
     if (rt->isHeapBusy() || !rt->gc.isAllocAllowed()) {
         char* source = JS_sprintf_append(nullptr, "<value>");
-        if (!source)
+        if (!source) {
+            ReportOutOfMemory(cx);
             return false;
+        }
         bytes->initBytes(source);
         return true;
     }
@@ -855,8 +859,10 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
         if (obj.is<StaticBlockObject>()) {
             Rooted<StaticBlockObject*> block(cx, &obj.as<StaticBlockObject>());
             char* source = JS_sprintf_append(nullptr, "depth %d {", block->localOffset());
-            if (!source)
+            if (!source) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
 
             Shape::Range<CanGC> r(cx, block->lastProperty());
 
@@ -875,13 +881,17 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
                                            bytes.ptr(),
                                            block->shapeToIndex(*shape),
                                            !r.empty() ? ", " : "");
-                if (!source)
+                if (!source) {
+                    ReportOutOfMemory(cx);
                     return false;
+                }
             }
 
             source = JS_sprintf_append(source, "}");
-            if (!source)
+            if (!source) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
             bytes->initBytes(source);
             return true;
         }

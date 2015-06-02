@@ -1279,7 +1279,7 @@ OptimizeMIR(MIRGenerator* mir)
     if (mir->shouldCancel("Start"))
         return false;
 
-    if (!mir->compilingAsmJS()) {
+    {
         AutoTraceLog log(logger, TraceLogger_FoldTests);
         FoldTests(graph);
         gs.spewPass("Fold Tests");

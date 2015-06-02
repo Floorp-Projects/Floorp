@@ -17,7 +17,7 @@ using namespace gfx;
 namespace gl {
 
 TextureImageCGL::TextureImageCGL(GLuint aTexture,
-                const nsIntSize& aSize,
+                const IntSize& aSize,
                 GLenum aWrapMode,
                 ContentType aContentType,
                 GLContext* aContext,
@@ -81,7 +81,7 @@ CreateTextureImageCGL(GLContext* gl,
 
 already_AddRefed<TextureImage>
 TileGenFuncCGL(GLContext *gl,
-               const nsIntSize& aSize,
+               const IntSize& aSize,
                TextureImage::ContentType aContentType,
                TextureImage::Flags aFlags,
                TextureImage::ImageFormat aImageFormat)

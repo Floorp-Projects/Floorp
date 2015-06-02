@@ -101,6 +101,11 @@ public:
   bool TimeoutContentResponse();
 
   /**
+   * Checks if the content response timer has already expired.
+   */
+  bool IsContentResponseTimerExpired() const;
+
+  /**
    * @return true iff web content cancelled this block of events.
    */
   bool IsDefaultPrevented() const;

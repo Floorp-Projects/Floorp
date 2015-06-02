@@ -219,7 +219,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   public:
     MacroAssembler()
-      : emitProfilingInstrumentation_(false)
+      : emitProfilingInstrumentation_(false),
+        framePushed_(0)
     {
         JitContext* jcx = GetJitContext();
         JSContext* cx = jcx->cx;
@@ -241,28 +242,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     // This constructor should only be used when there is no JitContext active
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
     explicit MacroAssembler(JSContext* cx, IonScript* ion = nullptr,
-                            JSScript* script = nullptr, jsbytecode* pc = nullptr)
-      : emitProfilingInstrumentation_(false)
-    {
-        constructRoot(cx);
-        jitContext_.emplace(cx, (js::jit::TempAllocator*)nullptr);
-        alloc_.emplace(cx);
-        moveResolver_.setAllocator(*jitContext_->temp);
-#ifdef JS_CODEGEN_ARM
-        initWithAllocator();
-        m_buffer.id = GetJitContext()->getNextAssemblerId();
-#endif
-        if (ion) {
-            setFramePushed(ion->frameSize());
-            if (pc && cx->runtime()->spsProfiler.enabled())
-                emitProfilingInstrumentation_ = true;
-        }
-    }
+                            JSScript* script = nullptr, jsbytecode* pc = nullptr);
 
     // asm.js compilation handles its own JitContext-pushing
     struct AsmJSToken {};
     explicit MacroAssembler(AsmJSToken)
-      : emitProfilingInstrumentation_(false)
+      : emitProfilingInstrumentation_(false),
+        framePushed_(0)
     {
 #ifdef JS_CODEGEN_ARM
         initWithAllocator();
@@ -274,11 +260,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         emitProfilingInstrumentation_ = true;
     }
 
-    void resetForNewCodeGenerator(TempAllocator& alloc) {
-        setFramePushed(0);
-        moveResolver_.clearTempObjectPool();
-        moveResolver_.setAllocator(alloc);
-    }
+    void resetForNewCodeGenerator(TempAllocator& alloc);
 
     void constructRoot(JSContext* cx) {
         autoRooter_.emplace(cx, this);
@@ -291,6 +273,26 @@ class MacroAssembler : public MacroAssemblerSpecific
     size_t instructionsSize() const {
         return size();
     }
+
+  public:
+    // ===============================================================
+    // Frame manipulation functions.
+
+    inline uint32_t framePushed() const;
+    inline void setFramePushed(uint32_t framePushed);
+    inline void adjustFrame(int value);
+
+    // Adjust the frame, to account for implicit modification of the stack
+    // pointer, such that callee can remove arguments on the behalf of the
+    // caller.
+    inline void implicitPop(uint32_t bytes);
+
+  private:
+    // This field is used to statically (at compilation time) emulate a frame
+    // pointer by keeping track of stack manipulations.
+    //
+    // It is maintained by all stack manipulation functions below.
+    uint32_t framePushed_;
 
   public:
     // ===============================================================
@@ -318,6 +320,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void Push(JSValueType type, Register reg);
     void PushValue(const Address& addr);
     void PushEmptyRooted(VMFunction::RootType rootType);
+    inline CodeOffsetLabel PushWithPatch(ImmWord word);
+    inline CodeOffsetLabel PushWithPatch(ImmPtr imm);
 
     void Pop(const Operand op) PER_ARCH ONLY_X86_X64;
     void Pop(Register reg) PER_ARCH;
@@ -325,7 +329,22 @@ class MacroAssembler : public MacroAssemblerSpecific
     void Pop(const ValueOperand& val) PER_ARCH;
     void popRooted(VMFunction::RootType rootType, Register cellReg, const ValueOperand& valueReg);
 
+    // Move the stack pointer based on the requested amount.
     void adjustStack(int amount);
+    void reserveStack(uint32_t amount) PER_ARCH;
+    void freeStack(uint32_t amount);
+
+    // Warning: This method does not update the framePushed() counter.
+    void freeStack(Register amount);
+
+  public:
+    // ===============================================================
+    // Call functions.
+
+    using MacroAssemblerSpecific::call; // legacy
+
+    inline void call(const CallSiteDesc& desc, const Register reg);
+    inline void call(const CallSiteDesc& desc, Label* label);
 
   public:
 
@@ -755,7 +774,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Inline version of js_TypedArray_uint8_clamp_double.
     // This function clobbers the input register.
-    void clampDoubleToUint8(FloatRegister input, Register output);
+    void clampDoubleToUint8(FloatRegister input, Register output) PER_ARCH;
 
     using MacroAssemblerSpecific::ensureDouble;
 
@@ -826,33 +845,19 @@ class MacroAssembler : public MacroAssemblerSpecific
     void linkExitFrame();
 
   public:
-    void PushStubCode() {
-        exitCodePatch_ = PushWithPatch(ImmWord(-1));
-    }
+    inline void PushStubCode();
 
-    void enterExitFrame(const VMFunction* f = nullptr) {
-        linkExitFrame();
-        // Push the ioncode. (Bailout or VM wrapper)
-        PushStubCode();
-        // Push VMFunction pointer, to mark arguments.
-        Push(ImmPtr(f));
-    }
+    // Push stub code, and the VMFunction pointer.
+    inline void enterExitFrame(const VMFunction* f = nullptr);
 
     // The JitCode * argument here is one of the tokens defined in the various
     // exit frame layout classes, e.g. NativeExitFrameLayout::Token().
-    void enterFakeExitFrame(JitCode* codeVal) {
-        linkExitFrame();
-        Push(ImmPtr(codeVal));
-        Push(ImmPtr(nullptr));
-    }
+    inline void enterFakeExitFrame(JitCode* codeVal);
 
-    void leaveExitFrame(size_t extraFrame = 0) {
-        freeStack(ExitFooterFrame::Size() + extraFrame);
-    }
+    // Pop ExitFrame footer in addition to the extra frame.
+    inline void leaveExitFrame(size_t extraFrame = 0);
 
-    bool hasEnteredExitFrame() const {
-        return exitCodePatch_.offset() != 0;
-    }
+    inline bool hasEnteredExitFrame() const;
 
     // Generates code used to complete a bailout.
     void generateBailoutTail(Register scratch, Register bailoutInfo);
@@ -1270,25 +1275,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         uint32_t alignmentPadding;
     };
 
-    void alignFrameForICArguments(AfterICSaveLive& aic);
-    void restoreFrameAlignmentForICArguments(AfterICSaveLive& aic);
+    void alignFrameForICArguments(AfterICSaveLive& aic) PER_ARCH;
+    void restoreFrameAlignmentForICArguments(AfterICSaveLive& aic) PER_ARCH;
 
-    AfterICSaveLive icSaveLive(LiveRegisterSet& liveRegs) {
-        PushRegsInMask(liveRegs);
-        AfterICSaveLive aic(framePushed());
-        alignFrameForICArguments(aic);
-        return aic;
-    }
-
-    bool icBuildOOLFakeExitFrame(void* fakeReturnAddr, AfterICSaveLive& aic) {
-        return buildOOLFakeExitFrame(fakeReturnAddr);
-    }
-
-    void icRestoreLive(LiveRegisterSet& liveRegs, AfterICSaveLive& aic) {
-        restoreFrameAlignmentForICArguments(aic);
-        MOZ_ASSERT(framePushed() == aic.initialStack);
-        PopRegsInMask(liveRegs);
-    }
+    AfterICSaveLive icSaveLive(LiveRegisterSet& liveRegs);
+    bool icBuildOOLFakeExitFrame(void* fakeReturnAddr, AfterICSaveLive& aic);
+    void icRestoreLive(LiveRegisterSet& liveRegs, AfterICSaveLive& aic);
 
     // Align the stack pointer based on the number of arguments which are pushed
     // on the stack, such that the JitFrameLayout would be correctly aligned on

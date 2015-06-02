@@ -639,6 +639,7 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 */
                 reportp->ucmessage = out = cx->pod_malloc<char16_t>(expandedLength + 1);
                 if (!out) {
+                    ReportOutOfMemory(cx);
                     js_free(buffer);
                     goto error;
                 }

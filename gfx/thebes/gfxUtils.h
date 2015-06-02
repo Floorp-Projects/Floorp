@@ -144,7 +144,7 @@ public:
     static void
     GetYCbCrToRGBDestFormatAndSize(const mozilla::layers::PlanarYCbCrData& aData,
                                    gfxImageFormat& aSuggestedFormat,
-                                   gfxIntSize& aSuggestedSize);
+                                   mozilla::gfx::IntSize& aSuggestedSize);
 
     /**
      * Convert YCbCrImage into RGB aDestBuffer
@@ -154,7 +154,7 @@ public:
     static void
     ConvertYCbCrToRGB(const mozilla::layers::PlanarYCbCrData& aData,
                       const gfxImageFormat& aDestFormat,
-                      const gfxIntSize& aDestSize,
+                      const mozilla::gfx::IntSize& aDestSize,
                       unsigned char* aDestBuffer,
                       int32_t aStride);
 
