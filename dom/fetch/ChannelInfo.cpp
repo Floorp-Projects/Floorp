@@ -13,6 +13,7 @@
 #include "mozilla/ipc/ChannelInfo.h"
 #include "nsIJARChannel.h"
 #include "nsJARChannel.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -20,12 +21,27 @@ using namespace mozilla::dom;
 void
 ChannelInfo::InitFromChannel(nsIChannel* aChannel)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mInited, "Cannot initialize the object twice");
 
   nsCOMPtr<nsISupports> securityInfo;
   aChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
   if (securityInfo) {
     SetSecurityInfo(securityInfo);
+  }
+
+  nsLoadFlags loadFlags = 0;
+  aChannel->GetLoadFlags(&loadFlags);
+  mRedirected = (loadFlags & nsIChannel::LOAD_REPLACE);
+  if (mRedirected) {
+    // Save the spec and not the nsIURI object itself, since those objects are
+    // not thread-safe, and releasing them somewhere other than the main thread
+    // is not possible.
+    nsCOMPtr<nsIURI> redirectedURI;
+    aChannel->GetURI(getter_AddRefs(redirectedURI));
+    if (redirectedURI) {
+      redirectedURI->GetSpec(mRedirectedURISpec);
+    }
   }
 
   mInited = true;
@@ -37,6 +53,8 @@ ChannelInfo::InitFromIPCChannelInfo(const ipc::IPCChannelInfo& aChannelInfo)
   MOZ_ASSERT(!mInited, "Cannot initialize the object twice");
 
   mSecurityInfo = aChannelInfo.securityInfo();
+  mRedirectedURISpec = aChannelInfo.redirectedURI();
+  mRedirected = aChannelInfo.redirected();
 
   mInited = true;
 }
@@ -56,7 +74,15 @@ ChannelInfo::SetSecurityInfo(nsISupports* aSecurityInfo)
 nsresult
 ChannelInfo::ResurrectInfoOnChannel(nsIChannel* aChannel)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mInited);
+
+  // These pointers may be null at this point.  They must be checked before
+  // being dereferenced.
+  nsCOMPtr<nsIHttpChannel> httpChannel =
+    do_QueryInterface(aChannel);
+  nsCOMPtr<nsIJARChannel> jarChannel =
+    do_QueryInterface(aChannel);
 
   if (!mSecurityInfo.IsEmpty()) {
     nsCOMPtr<nsISupports> infoObj;
@@ -64,8 +90,6 @@ ChannelInfo::ResurrectInfoOnChannel(nsIChannel* aChannel)
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    nsCOMPtr<nsIHttpChannel> httpChannel =
-      do_QueryInterface(aChannel);
     if (httpChannel) {
       net::HttpBaseChannel* httpBaseChannel =
         static_cast<net::HttpBaseChannel*>(httpChannel.get());
@@ -74,13 +98,35 @@ ChannelInfo::ResurrectInfoOnChannel(nsIChannel* aChannel)
         return rv;
       }
     } else {
-      nsCOMPtr<nsIJARChannel> jarChannel =
-        do_QueryInterface(aChannel);
       if (NS_WARN_IF(!jarChannel)) {
         return NS_ERROR_FAILURE;
       }
       static_cast<nsJARChannel*>(jarChannel.get())->
         OverrideSecurityInfo(infoObj);
+    }
+  }
+
+  if (mRedirected) {
+    nsLoadFlags flags = 0;
+    aChannel->GetLoadFlags(&flags);
+    flags |= nsIChannel::LOAD_REPLACE;
+    aChannel->SetLoadFlags(flags);
+
+    nsCOMPtr<nsIURI> redirectedURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(redirectedURI),
+                            mRedirectedURISpec);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    if (httpChannel) {
+      net::HttpBaseChannel* httpBaseChannel =
+        static_cast<net::HttpBaseChannel*>(httpChannel.get());
+      httpBaseChannel->OverrideURI(redirectedURI);
+    } else {
+      if (NS_WARN_IF(!jarChannel)) {
+        return NS_ERROR_FAILURE;
+      }
+      static_cast<nsJARChannel*>(jarChannel.get())->OverrideURI(redirectedURI);
     }
   }
 
@@ -98,6 +144,8 @@ ChannelInfo::AsIPCChannelInfo() const
   IPCChannelInfo ipcInfo;
 
   ipcInfo.securityInfo() = mSecurityInfo;
+  ipcInfo.redirectedURI() = mRedirectedURISpec;
+  ipcInfo.redirected() = mRedirected;
 
   return ipcInfo;
 }
