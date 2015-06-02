@@ -380,12 +380,19 @@ this.PushService = {
 
       var uri;
       var service;
-      for (let connProtocol of CONNECTION_PROTOCOLS) {
-        uri = connProtocol.checkServerURI(options.serverURI);
-        if (uri) {
-          service = connProtocol;
-          break;
+      if (!options.service) {
+        for (let connProtocol of CONNECTION_PROTOCOLS) {
+          uri = connProtocol.checkServerURI(options.serverURI);
+          if (uri) {
+            service = connProtocol;
+            break;
+          }
         }
+      } else {
+        try {
+          uri  = Services.io.newURI(options.serverURI, null, null);
+          service = options.service;
+        } catch(e) {}
       }
       if (!service) {
         this._setState(PUSH_SERVICE_INIT);
