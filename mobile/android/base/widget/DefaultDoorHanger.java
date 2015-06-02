@@ -5,17 +5,9 @@
 
 package org.mozilla.gecko.widget;
 
-import android.text.Html;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.URLSpan;
 import android.util.Log;
 import android.widget.Button;
-import android.widget.TextView;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.prompts.PromptInput;
 
 import org.json.JSONArray;
@@ -37,14 +29,11 @@ public class DefaultDoorHanger extends DoorHanger {
 
     private static int sSpinnerTextColor = -1;
 
-    private final TextView mMessage;
     private List<PromptInput> mInputs;
     private CheckBox mCheckBox;
 
     public DefaultDoorHanger(Context context, DoorhangerConfig config, Type type) {
         super(context, config, type);
-
-        mMessage = (TextView) findViewById(R.id.doorhanger_message);
 
         if (sSpinnerTextColor == -1) {
             sSpinnerTextColor = mResources.getColor(R.color.text_color_primary_disable_only);
@@ -69,12 +58,7 @@ public class DefaultDoorHanger extends DoorHanger {
             addLink(link.label, link.url, link.delimiter);
         }
 
-        addButtonsToLayout(config);
-    }
-
-    @Override
-    protected int getContentResource() {
-        return R.layout.default_doorhanger;
+        setButtons(config);
     }
 
     private List<PromptInput> getInputs() {
@@ -168,30 +152,6 @@ public class DefaultDoorHanger extends DoorHanger {
                 mOnButtonClickListener.onButtonClick(response, DefaultDoorHanger.this);
             }
         };
-    }
-
-    private void setMessage(String message) {
-        Spanned markupMessage = Html.fromHtml(message);
-        mMessage.setText(markupMessage);
-    }
-
-    private void addLink(String label, String url, String delimiter) {
-        String title = mMessage.getText().toString();
-        SpannableString titleWithLink = new SpannableString(title + delimiter + label);
-        URLSpan linkSpan = new URLSpan(url) {
-            @Override
-            public void onClick(View view) {
-                Tabs.getInstance().loadUrlInTab(getURL());
-            }
-        };
-
-        // Prevent text outside the link from flashing when clicked.
-        ForegroundColorSpan colorSpan = new ForegroundColorSpan(mMessage.getCurrentTextColor());
-        titleWithLink.setSpan(colorSpan, 0, title.length(), 0);
-
-        titleWithLink.setSpan(linkSpan, title.length() + 1, titleWithLink.length(), 0);
-        mMessage.setText(titleWithLink);
-        mMessage.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     private void styleInput(PromptInput input, View view) {

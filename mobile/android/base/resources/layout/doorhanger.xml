@@ -5,41 +5,51 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <LinearLayout android:layout_width="match_parent"
+    <LinearLayout android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
                   android:padding="@dimen/doorhanger_padding">
 
         <ImageView android:id="@+id/doorhanger_icon"
-                   android:layout_width="@dimen/doorhanger_icon_size"
-                   android:layout_height="@dimen/doorhanger_icon_size"
-                   android:layout_gravity="center_horizontal"
-                   android:paddingRight="@dimen/doorhanger_section_padding_small"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:paddingRight="@dimen/doorhanger_padding"
                    android:visibility="gone"/>
 
-        <ViewStub android:id="@+id/content"
+        <TextView android:id="@+id/doorhanger_message"
+                  android:focusable="true"
                   android:layout_width="match_parent"
-                  android:layout_height="wrap_content"/>
-
-    </LinearLayout>
-
-    <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:orientation="horizontal">
-
-        <Button android:id="@+id/doorhanger_button_negative"
-                style="@style/Widget.Doorhanger.Button"
-                android:textColor="@android:color/black"
-                android:background="@drawable/action_bar_button_negative"
-                android:visibility="gone"/>
-
-        <Button android:id="@+id/doorhanger_button_positive"
-                style="@style/Widget.Doorhanger.Button"
-                android:textColor="@android:color/white"
-                android:background="@drawable/action_bar_button_positive"
-                android:visibility="gone"/>
+                  android:textAppearance="@style/TextAppearance.DoorHanger.Medium"/>
 
     </LinearLayout>
+
+    <LinearLayout android:id="@+id/doorhanger_inputs"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:gravity="right"
+              android:paddingLeft="@dimen/doorhanger_padding"
+              android:visibility="gone"/>
+
+    <CheckBox android:id="@+id/doorhanger_checkbox"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:checked="true"
+              android:textColor="@color/placeholder_active_grey"
+              android:visibility="gone"/>
+
+    <View android:id="@+id/divider_buttons"
+          android:layout_width="match_parent"
+          android:layout_height="1dp"
+          android:background="@color/divider_light"
+          android:visibility="gone"/>
+
+    <LinearLayout android:id="@+id/doorhanger_buttons"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:visibility="gone"/>
 
    <View android:id="@+id/divider_doorhanger"
           android:layout_width="match_parent"
