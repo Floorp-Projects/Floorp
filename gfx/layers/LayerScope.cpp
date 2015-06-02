@@ -294,7 +294,7 @@ private:
     class CreateServerSocketRunnable : public nsRunnable
     {
     public:
-        CreateServerSocketRunnable(LayerScopeManager *aLayerScopeManager)
+        explicit CreateServerSocketRunnable(LayerScopeManager *aLayerScopeManager)
             : mLayerScopeManager(aLayerScopeManager)
         {
         }
