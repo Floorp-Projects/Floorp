@@ -455,7 +455,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
             TraceRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }
 
-    if (!rt->isBeingDestroyed() && !trc->runtime()->isHeapMinorCollecting()) {
+    if (!rt->isBeingDestroyed() && !rt->isHeapMinorCollecting()) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_RUNTIME_DATA);
 
         if (traceOrMark == TraceRuntime || rt->atomsCompartment()->zone()->isCollecting()) {
@@ -474,7 +474,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
             continue;
 
         /* Do not discard scripts with counts while profiling. */
-        if (rt->profilingScripts && !isHeapMinorCollecting()) {
+        if (rt->profilingScripts && !rt->isHeapMinorCollecting()) {
             for (ZoneCellIterUnderGC i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
                 JSScript* script = i.get<JSScript>();
                 if (script->hasScriptCounts()) {
@@ -487,7 +487,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
 
     /* We can't use GCCompartmentsIter if we're called from TraceRuntime. */
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        if (trc->runtime()->isHeapMinorCollecting())
+        if (rt->isHeapMinorCollecting())
             c->globalWriteBarriered = false;
 
         if (traceOrMark == MarkRuntime && !c->zone()->isCollecting())
@@ -514,7 +514,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
 
     jit::MarkJitActivations(rt, trc);
 
-    if (!isHeapMinorCollecting()) {
+    if (!rt->isHeapMinorCollecting()) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_EMBEDDING);
 
         /*
