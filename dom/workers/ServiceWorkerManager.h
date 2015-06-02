@@ -118,6 +118,9 @@ public:
   Clear();
 
   void
+  PurgeActiveWorker();
+
+  void
   TryToActivate();
 
   void
@@ -151,6 +154,7 @@ private:
   // There is a high chance of there being at least one ServiceWorker
   // associated with this all the time.
   nsAutoTArray<ServiceWorker*, 1> mInstances;
+  bool mSkipWaitingFlag;
 
   ~ServiceWorkerInfo()
   { }
@@ -181,14 +185,27 @@ public:
     mScriptSpec = aSpec;
   }
 
-  explicit ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
-                             const nsACString& aScriptSpec,
-                             const nsAString& aCacheName)
+  bool SkipWaitingFlag() const
+  {
+    AssertIsOnMainThread();
+    return mSkipWaitingFlag;
+  }
+
+  void SetSkipWaitingFlag()
+  {
+    AssertIsOnMainThread();
+    mSkipWaitingFlag = true;
+  }
+
+  ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
+                    const nsACString& aScriptSpec,
+                    const nsAString& aCacheName)
     : mRegistration(aReg)
     , mScriptSpec(aScriptSpec)
     , mCacheName(aCacheName)
     , mState(ServiceWorkerState::EndGuard_)
     , mServiceWorkerID(GetNextID())
+    , mSkipWaitingFlag(false)
   {
     MOZ_ASSERT(mRegistration);
     MOZ_ASSERT(!aCacheName.IsEmpty());
@@ -338,11 +355,14 @@ public:
   nsresult
   ClaimClients(nsIPrincipal* aPrincipal, const nsCString& aScope, uint64_t aId);
 
+  nsresult
+  SetSkipWaitingFlag(const nsCString& aScope, uint64_t aServiceWorkerID);
+
   static already_AddRefed<ServiceWorkerManager>
   GetInstance();
 
- void LoadRegistrations(
-                 const nsTArray<ServiceWorkerRegistrationData>& aRegistrations);
+  void
+  LoadRegistrations(const nsTArray<ServiceWorkerRegistrationData>& aRegistrations);
 
   // Used by remove() and removeAll() when clearing history.
   // MUST ONLY BE CALLED FROM UnregisterIfMatchesHost!

@@ -1,0 +1,95 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1131352 - Add ServiceWorkerGlobalScope skipWaiting()</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration, iframe, content;
+
+  function start() {
+    return navigator.serviceWorker.register("worker.js",
+                                            {scope: "./skip_waiting_scope/"});
+  }
+
+  function waitForActivated(swr) {
+    registration = swr;
+    var promise = new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          ok(true, "Active worker is activated now");
+          resolve();
+        } else {
+          ok(false, "Wrong value. Somenting went wrong");
+          resolve();
+        }
+      }
+    });
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute("src", "skip_waiting_scope/index.html");
+
+    content = document.getElementById("content");
+    content.appendChild(iframe);
+
+    return promise;
+  }
+
+  function checkWhetherItSkippedWaiting() {
+    var promise = new Promise(function(resolve, reject) {
+      window.onmessage = function (evt) {
+        if (evt.data.event === "controllerchange") {
+          ok(evt.data.controllerScriptURL.match("skip_waiting_installed_worker"),
+             "The controller changed after skiping the waiting step");
+          resolve();
+        } else {
+          ok(false, "Wrong value. Somenting went wrong");
+          resolve();
+        }
+      };
+    });
+
+    navigator.serviceWorker.register("skip_waiting_installed_worker.js",
+                                     {scope: "./skip_waiting_scope/"})
+      .then(swr => {
+        registration = swr;
+    });
+
+    return promise;
+  }
+
+  function clean() {
+    content.removeChild(iframe);
+
+    return registration.unregister();
+  }
+
+  function runTest() {
+    start()
+      .then(waitForActivated)
+      .then(checkWhetherItSkippedWaiting)
+      .then(clean)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
