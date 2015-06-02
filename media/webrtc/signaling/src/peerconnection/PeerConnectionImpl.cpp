@@ -365,7 +365,7 @@ bool PCUuidGenerator::Generate(std::string* idp) {
 
 
 PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
-: mTimeCard(MOZ_LOG_TEST(signalingLogInfo(),LogLevel::Error) ?
+: mTimeCard(PR_LOG_TEST(signalingLogInfo(),PR_LOG_ERROR) ?
             create_timecard() : nullptr)
   , mSignalingState(PCImplSignalingState::SignalingStable)
   , mIceConnectionState(PCImplIceConnectionState::New)

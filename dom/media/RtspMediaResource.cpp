@@ -21,7 +21,7 @@
 using namespace mozilla::net;
 
 PRLogModuleInfo* gRtspMediaResourceLog;
-#define RTSP_LOG(msg, ...) MOZ_LOG(gRtspMediaResourceLog, mozilla::LogLevel::Debug, \
+#define RTSP_LOG(msg, ...) MOZ_LOG(gRtspMediaResourceLog, PR_LOG_DEBUG, \
                                   (msg, ##__VA_ARGS__))
 // Debug logging macro with object pointer and class name.
 #define RTSPMLOG(msg, ...) \

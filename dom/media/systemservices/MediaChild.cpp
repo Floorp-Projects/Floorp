@@ -15,7 +15,7 @@
 
 #undef LOG
 PRLogModuleInfo *gMediaChildLog;
-#define LOG(args) MOZ_LOG(gMediaChildLog, mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(gMediaChildLog, PR_LOG_DEBUG, args)
 
 namespace mozilla {
 namespace media {

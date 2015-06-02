@@ -12,37 +12,37 @@ namespace mozilla {
 
 Logger::~Logger()
 {
-  LogLevel prlevel = LogLevel::Debug;
+  PRLogModuleLevel prlevel = PR_LOG_DEBUG;
   int xpcomlevel = -1;
 
   switch (mSeverity) {
   case LOG_INFO:
-    prlevel = LogLevel::Debug;
+    prlevel = PR_LOG_DEBUG;
     xpcomlevel = -1;
     break;
 
   case LOG_WARNING:
-    prlevel = LogLevel::Warning;
+    prlevel = PR_LOG_WARNING;
     xpcomlevel = NS_DEBUG_WARNING;
     break;
 
   case LOG_ERROR:
-    prlevel = LogLevel::Error;
+    prlevel = PR_LOG_ERROR;
     xpcomlevel = NS_DEBUG_WARNING;
     break;
 
   case LOG_ERROR_REPORT:
-    prlevel = LogLevel::Error;
+    prlevel = PR_LOG_ERROR;
     xpcomlevel = NS_DEBUG_ASSERTION;
     break;
 
   case LOG_FATAL:
-    prlevel = LogLevel::Error;
+    prlevel = PR_LOG_ERROR;
     xpcomlevel = NS_DEBUG_ABORT;
     break;
   }
 
-  MOZ_LOG(GetLog(), prlevel, ("%s:%i: %s", mFile, mLine, mMsg ? mMsg : "<no message>"));
+  PR_LOG(GetLog(), prlevel, ("%s:%i: %s", mFile, mLine, mMsg ? mMsg : "<no message>"));
   if (xpcomlevel != -1)
     NS_DebugBreak(xpcomlevel, mMsg, NULL, mFile, mLine);
 

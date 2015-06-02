@@ -31,7 +31,7 @@ GetTeeLog()
   }
   return sLog;
 }
-#define LOG(args) MOZ_LOG(GetTeeLog(), mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(GetTeeLog(), PR_LOG_DEBUG, args)
 
 class nsInputStreamTee final : public nsIInputStreamTee
 {
