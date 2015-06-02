@@ -511,6 +511,7 @@ nsBrowserContentHandler.prototype = {
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_welcome_url");
             break;
           case OVERRIDE_NEW_MSTONE:
+          case OVERRIDE_NEW_BUILD_ID:
             // Check whether we will restore a session. If we will, we assume
             // that this is an "update" session. This does not take crashes
             // into account because that requires waiting for the session file
