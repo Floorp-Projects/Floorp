@@ -7,12 +7,12 @@ package org.mozilla.gecko.widget;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.text.Html;
-import android.text.Spanned;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,6 +27,7 @@ import ch.boye.httpclientandroidlib.util.TextUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
@@ -37,7 +38,6 @@ public class LoginDoorHanger extends DoorHanger {
     private enum ActionType { EDIT, SELECT }
 
     private final TextView mTitle;
-    private final TextView mMessage;
     private final TextView mLink;
     private int mCallbackID;
 
@@ -45,31 +45,16 @@ public class LoginDoorHanger extends DoorHanger {
         super(context, config, Type.LOGIN);
 
         mTitle = (TextView) findViewById(R.id.doorhanger_title);
-        mMessage = (TextView) findViewById(R.id.doorhanger_message);
         mLink = (TextView) findViewById(R.id.doorhanger_link);
-        mIcon.setImageResource(R.drawable.icon_key);
-        mIcon.setVisibility(View.VISIBLE);
 
         loadConfig(config);
-    }
-
-    private void setMessage(String message) {
-        Spanned markupMessage = Html.fromHtml(message);
-        mMessage.setText(markupMessage);
     }
 
     @Override
     protected void loadConfig(DoorhangerConfig config) {
         setOptions(config.getOptions());
         setMessage(config.getMessage());
-        // Store the positive callback id for nested dialogs that need the same callback id.
-        mCallbackID = config.getPositiveButtonConfig().callback;
-        addButtonsToLayout(config);
-    }
-
-    @Override
-    protected int getContentResource() {
-        return R.layout.login_doorhanger;
+        setButtons(config);
     }
 
     @Override
@@ -102,6 +87,13 @@ public class LoginDoorHanger extends DoorHanger {
 
         final JSONObject actionText = options.optJSONObject("actionText");
         addActionText(actionText);
+    }
+
+    @Override
+    protected Button createButtonInstance(final String text, final int id) {
+        // HACK: Confirm button will the the rightmost/last button added. Bug 1147064 should add differentiation of the two.
+        mCallbackID = id;
+        return super.createButtonInstance(text, id);
     }
 
     @Override
@@ -215,7 +207,7 @@ public class LoginDoorHanger extends DoorHanger {
                             public void onClick(DialogInterface dialog, int which) {
                                 final JSONObject response = new JSONObject();
                                 try {
-                                    response.put("callback", mCallbackID);
+                                    response.put("callback", SiteIdentityPopup.ButtonType.COPY.ordinal());
                                     response.put("password", passwords[which]);
                                 } catch (JSONException e) {
                                     Log.e(LOGTAG, "Error making login select dialog JSON", e);

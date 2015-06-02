@@ -28,6 +28,16 @@ var PluginHelper = {
                                                        [uri.host], 1);
     let buttons = [
       {
+        label: Strings.browser.GetStringFromName("clickToPlayPlugins.activate"),
+        callback: function(aChecked) {
+          // If the user checked "Don't ask again", make a permanent exception
+          if (aChecked)
+            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.ALLOW_ACTION);
+
+          PluginHelper.playAllPlugins(aTab.browser.contentWindow);
+        }
+      },
+      {
         label: Strings.browser.GetStringFromName("clickToPlayPlugins.dontActivate"),
         callback: function(aChecked) {
           // If the user checked "Don't ask again", make a permanent exception
@@ -36,17 +46,6 @@ var PluginHelper = {
 
           // Other than that, do nothing
         }
-      },
-      {
-        label: Strings.browser.GetStringFromName("clickToPlayPlugins.activate"),
-        callback: function(aChecked) {
-          // If the user checked "Don't ask again", make a permanent exception
-          if (aChecked)
-            Services.perms.add(uri, "plugins", Ci.nsIPermissionManager.ALLOW_ACTION);
-
-          PluginHelper.playAllPlugins(aTab.browser.contentWindow);
-        },
-        positive: true
       }
     ];
 

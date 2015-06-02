@@ -9,7 +9,6 @@ import java.util.HashSet;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONArray;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -114,20 +113,8 @@ public class DoorHangerPopup extends AnchoredPopup
         final DoorhangerConfig config = new DoorhangerConfig(tabId, id, doorhangerType, this);
 
         config.setMessage(json.getString("message"));
+        config.appendButtonsFromJSON(json.getJSONArray("buttons"));
         config.setOptions(json.getJSONObject("options"));
-
-        final JSONArray buttonArray = json.getJSONArray("buttons");
-        int numButtons = buttonArray.length();
-        if (numButtons > 2) {
-            Log.e(LOGTAG, "Doorhanger can have a maximum of two buttons!");
-            numButtons = 2;
-        }
-
-        for (int i = 0; i < numButtons; i++) {
-            final JSONObject buttonJSON = buttonArray.getJSONObject(i);
-            final boolean isPositive = buttonJSON.optBoolean("positive", false);
-            config.setButton(buttonJSON.getString("label"), buttonJSON.getInt("callback"), isPositive);
-        }
 
         return config;
     }
