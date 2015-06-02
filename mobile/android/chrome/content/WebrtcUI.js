@@ -113,8 +113,7 @@ var WebrtcUI = {
           allowedDevices.AppendElement(videoDevices[videoId]);
 
         Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
-      },
-      positive: true
+      }
     }];
   },
 

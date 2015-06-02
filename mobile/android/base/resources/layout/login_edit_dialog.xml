@@ -25,6 +25,6 @@
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:text="@string/doorhanger_login_edit_toggle"
-              android:layout_marginTop="@dimen/doorhanger_padding"/>
+              android:paddingTop="@dimen/doorhanger_padding"/>
 
 </LinearLayout>
