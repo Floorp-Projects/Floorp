@@ -782,8 +782,6 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
     return;
   }
 
-#ifndef WIN32 // Bug 1170547
-
   MOZ_ASSERT((mAudioContextState == AudioContextState::Suspended &&
               aNewState == AudioContextState::Running)   ||
              (mAudioContextState == AudioContextState::Running   &&
@@ -794,8 +792,6 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
               aNewState == AudioContextState::Closed)    ||
              (mAudioContextState == aNewState),
              "Invalid AudioContextState transition");
-
-#endif // WIN32
 
   MOZ_ASSERT(
     mIsOffline || aPromise || aNewState == AudioContextState::Running,
