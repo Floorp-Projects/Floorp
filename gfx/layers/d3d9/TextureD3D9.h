@@ -308,8 +308,6 @@ public:
 
   virtual void Unlock() override;
 
-  virtual void Updated(const nsIntRegion* aRegion) override;
-
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override
@@ -322,6 +320,8 @@ public:
 protected:
   TextureHostD3D9(TextureFlags aFlags);
   IDirect3DDevice9* GetDevice();
+
+  virtual void UpdatedInternal(const nsIntRegion* aRegion) override;
 
   RefPtr<DataTextureSourceD3D9> mTextureSource;
   RefPtr<IDirect3DTexture9> mTexture;
