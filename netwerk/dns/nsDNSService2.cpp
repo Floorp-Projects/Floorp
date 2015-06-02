@@ -34,7 +34,6 @@
 #include "nsINetworkLinkService.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/VisualEventTracer.h"
 #include "mozilla/net/NeckoCommon.h"
 #if !defined(MOZILLA_XPCOMRT_API)
 #include "mozilla/net/ChildDNSService.h"
@@ -348,8 +347,6 @@ nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
         if (!rec)
             status = NS_ERROR_OUT_OF_MEMORY;
     }
-
-    MOZ_EVENT_TRACER_DONE(this, "net::dns::lookup");
 
     mListener->OnLookupComplete(this, rec, status);
     mListener = nullptr;
@@ -799,9 +796,6 @@ nsDNSService::AsyncResolveExtended(const nsACString  &aHostname,
     if (!req)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*result = req);
-
-    MOZ_EVENT_TRACER_NAME_OBJECT(req, aHostname.BeginReading());
-    MOZ_EVENT_TRACER_WAIT(req, "net::dns::lookup");
 
     // addref for resolver; will be released when OnLookupComplete is called.
     NS_ADDREF(req);

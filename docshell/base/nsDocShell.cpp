@@ -24,7 +24,6 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
-#include "mozilla/VisualEventTracer.h"
 #include "URIUtils.h"
 
 #include "nsIContent.h"
@@ -7500,8 +7499,6 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     return NS_ERROR_NULL_POINTER;
   }
 
-  MOZ_EVENT_TRACER_DONE(this, "docshell::pageload");
-
   nsCOMPtr<nsIURI> url;
   nsresult rv = aChannel->GetURI(getter_AddRefs(url));
   if (NS_FAILED(rv)) {
@@ -10482,13 +10479,6 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       nsIURI* aBaseURI,
                       nsContentPolicyType aContentPolicyType)
 {
-#ifdef MOZ_VISUAL_EVENT_TRACER
-  nsAutoCString urlSpec;
-  aURI->GetAsciiSpec(urlSpec);
-  MOZ_EVENT_TRACER_NAME_OBJECT(this, urlSpec.BeginReading());
-  MOZ_EVENT_TRACER_EXEC(this, "docshell::pageload");
-#endif
-
   nsresult rv;
   nsCOMPtr<nsIURILoader> uriLoader;
 
