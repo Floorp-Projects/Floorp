@@ -2295,12 +2295,13 @@ ServiceWorkerManager::GetInstance()
   // this can resurrect the ServiceWorkerManager pretty late during shutdown.
   static bool firstTime = true;
   if (firstTime) {
+    firstTime = false;
+
     AssertIsOnMainThread();
 
     gInstance = new ServiceWorkerManager();
     gInstance->Init();
     ClearOnShutdown(&gInstance);
-    firstTime = false;
   }
   nsRefPtr<ServiceWorkerManager> copy = gInstance.get();
   return copy.forget();
