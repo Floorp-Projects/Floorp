@@ -16,7 +16,6 @@
 #include "base/basictypes.h"
 
 #include "nsMultiplexInputStream.h"
-#include "nsICloneableInputStream.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsISeekableStream.h"
 #include "nsCOMPtr.h"
@@ -34,7 +33,6 @@ class nsMultiplexInputStream final
   : public nsIMultiplexInputStream
   , public nsISeekableStream
   , public nsIIPCSerializableInputStream
-  , public nsICloneableInputStream
 {
 public:
   nsMultiplexInputStream();
@@ -44,7 +42,6 @@ public:
   NS_DECL_NSIMULTIPLEXINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
-  NS_DECL_NSICLONEABLEINPUTSTREAM
 
 private:
   ~nsMultiplexInputStream()
@@ -81,8 +78,7 @@ NS_IMPL_QUERY_INTERFACE_CI(nsMultiplexInputStream,
                            nsIMultiplexInputStream,
                            nsIInputStream,
                            nsISeekableStream,
-                           nsIIPCSerializableInputStream,
-                           nsICloneableInputStream)
+                           nsIIPCSerializableInputStream)
 NS_IMPL_CI_INTERFACE_GETTER(nsMultiplexInputStream,
                             nsIMultiplexInputStream,
                             nsIInputStream,
@@ -783,65 +779,3 @@ nsMultiplexInputStream::Deserialize(const InputStreamParams& aParams,
 
   return true;
 }
-
-NS_IMETHODIMP
-nsMultiplexInputStream::GetCloneable(bool* aCloneable)
-{
-  MutexAutoLock lock(mLock);
-  //XXXnsm Cloning a multiplex stream which has started reading is not permitted
-  //right now.
-  if (mCurrentStream > 0 || mStartedReadingCurrent) {
-    *aCloneable = false;
-    return NS_OK;
-  }
-
-  uint32_t len = mStreams.Length();
-  for (uint32_t i = 0; i < len; ++i) {
-    nsCOMPtr<nsICloneableInputStream> cis = do_QueryInterface(mStreams[i]);
-    if (!cis || !cis->GetCloneable()) {
-      *aCloneable = false;
-      return NS_OK;
-    }
-  }
-
-  *aCloneable = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMultiplexInputStream::Clone(nsIInputStream** aClone)
-{
-  MutexAutoLock lock(mLock);
-
-  //XXXnsm Cloning a multiplex stream which has started reading is not permitted
-  //right now.
-  if (mCurrentStream > 0 || mStartedReadingCurrent) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<nsMultiplexInputStream> clone = new nsMultiplexInputStream();
-
-  nsresult rv;
-  uint32_t len = mStreams.Length();
-  for (uint32_t i = 0; i < len; ++i) {
-    nsCOMPtr<nsICloneableInputStream> substream = do_QueryInterface(mStreams[i]);
-    if (NS_WARN_IF(!substream)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIInputStream> clonedSubstream;
-    rv = substream->Clone(getter_AddRefs(clonedSubstream));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = clone->AppendStream(clonedSubstream);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  clone.forget(aClone);
-  return NS_OK;
-}
-
