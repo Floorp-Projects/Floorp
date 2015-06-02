@@ -256,23 +256,23 @@ public:
 
   /**
    * Queues the internal representation of socket for deletion. Can be called
-   * from main thread.
+   * from consumer thread.
    */
   virtual void Close() = 0;
 
   /**
    * Callback for socket connect/accept success. Called after connect/accept has
-   * finished. Will be run on main thread, before any reads take place.
+   * finished. Will be run on consumer thread before any reads take place.
    */
   virtual void OnConnectSuccess() = 0;
 
   /**
-   * Callback for socket connect/accept error. Will be run on main thread.
+   * Callback for socket connect/accept error. Will be run on consumer thread.
    */
   virtual void OnConnectError() = 0;
 
   /**
-   * Callback for socket disconnect. Will be run on main thread.
+   * Callback for socket disconnect. Will be run on consumer thread.
    */
   virtual void OnDisconnect() = 0;
 
@@ -340,7 +340,7 @@ public:
    *
    * @return True if the socket class has been shut down, false otherwise.
    */
-  virtual bool IsShutdownOnMainThread() const = 0;
+  virtual bool IsShutdownOnConsumerThread() const = 0;
 
   /**
    * Signals to the socket I/O classes that it has been shut down.
@@ -351,7 +351,7 @@ public:
    * Signals to the socket I/O classes that the socket class has been
    * shut down.
    */
-  virtual void ShutdownOnMainThread() = 0;
+  virtual void ShutdownOnConsumerThread() = 0;
 
   /**
    * Returns the consumer thread.
@@ -378,7 +378,7 @@ private:
 //
 
 /* |SocketIORunnable| is a runnable for sending a message from
- * the I/O thread to the main thread.
+ * the I/O thread to the consumer thread.
  */
 template <typename T>
 class SocketIORunnable : public nsRunnable
@@ -405,7 +405,7 @@ private:
 
 /**
  * |SocketIOEventRunnable| reports the connection state on the
- * I/O thread back to the main thread.
+ * I/O thread back to the consumer thread.
  */
 class SocketIOEventRunnable final : public SocketIORunnable<SocketIOBase>
 {
@@ -426,7 +426,7 @@ private:
 
 /**
  * |SocketIORequestClosingRunnable| closes an instance of |SocketBase|
- * to the main thread.
+ * to the consumer thread.
  */
 class SocketIORequestClosingRunnable final
   : public SocketIORunnable<SocketIOBase>
@@ -438,7 +438,7 @@ public:
 };
 
 /**
- * |SocketIODeleteInstanceRunnable| deletes an object on the main thread.
+ * |SocketIODeleteInstanceRunnable| deletes an object on the consumer thread.
  */
 class SocketIODeleteInstanceRunnable final : public nsRunnable
 {
@@ -493,7 +493,7 @@ private:
 
 /**
  * |SocketIOShutdownTask| signals shutdown to the socket I/O class on
- * the I/O thread and sends it to the main thread for destruction.
+ * the I/O thread and sends it to the consumer thread for destruction.
  */
 class SocketIOShutdownTask final : public SocketIOTask<SocketIOBase>
 {

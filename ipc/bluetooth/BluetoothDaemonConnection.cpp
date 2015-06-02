@@ -242,10 +242,10 @@ public:
 
   SocketBase* GetSocketBase() override;
 
-  bool IsShutdownOnMainThread() const override;
+  bool IsShutdownOnConsumerThread() const override;
   bool IsShutdownOnIOThread() const override;
 
-  void ShutdownOnMainThread() override;
+  void ShutdownOnConsumerThread() override;
   void ShutdownOnIOThread() override;
 
 private:
@@ -332,7 +332,7 @@ BluetoothDaemonConnectionIO::OnError(const char* aFunction, int aErrno)
   // Clean up watchers, status, fd
   Close();
 
-  // Tell the main thread we've errored
+  // Tell the consumer thread we've errored
   GetConsumerThread()->Dispatch(
     new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR),
     NS_DISPATCH_NORMAL);
@@ -403,7 +403,7 @@ BluetoothDaemonConnectionIO::GetSocketBase()
 }
 
 bool
-BluetoothDaemonConnectionIO::IsShutdownOnMainThread() const
+BluetoothDaemonConnectionIO::IsShutdownOnConsumerThread() const
 {
   MOZ_ASSERT(IsConsumerThread());
 
@@ -417,10 +417,10 @@ BluetoothDaemonConnectionIO::IsShutdownOnIOThread() const
 }
 
 void
-BluetoothDaemonConnectionIO::ShutdownOnMainThread()
+BluetoothDaemonConnectionIO::ShutdownOnConsumerThread()
 {
   MOZ_ASSERT(IsConsumerThread());
-  MOZ_ASSERT(!IsShutdownOnMainThread());
+  MOZ_ASSERT(!IsShutdownOnConsumerThread());
 
   mConnection = nullptr;
 }
@@ -505,7 +505,7 @@ BluetoothDaemonConnection::Close()
 
   MOZ_ASSERT(mIO->IsConsumerThread());
 
-  mIO->ShutdownOnMainThread();
+  mIO->ShutdownOnConsumerThread();
   mIO->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
   mIO = nullptr;
 

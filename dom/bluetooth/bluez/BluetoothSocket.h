@@ -43,7 +43,7 @@ public:
 
   /**
    * Method to be called whenever data is received. This is only called on the
-   * main thread.
+   * consumer thread.
    *
    * @param aBuffer Data received from the socket.
    */

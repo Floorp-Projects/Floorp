@@ -83,10 +83,10 @@ public:
 
   SocketBase* GetSocketBase() override;
 
-  bool IsShutdownOnMainThread() const override;
+  bool IsShutdownOnConsumerThread() const override;
   bool IsShutdownOnIOThread() const override;
 
-  void ShutdownOnMainThread() override;
+  void ShutdownOnConsumerThread() override;
   void ShutdownOnIOThread() override;
 
 private:
@@ -96,8 +96,8 @@ private:
 
   /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
-   * directly from main thread. All non-main-thread accesses should happen with
-   * mIO as container.
+   * directly from consumer thread. All non-consumer-thread accesses should
+   * happen with mIO as container.
    */
   RefPtr<BluetoothSocket> mConsumer;
 
@@ -122,7 +122,8 @@ private:
   struct sockaddr_storage mAddress;
 
   /**
-   * Task member for delayed connect task. Should only be access on main thread.
+   * Task member for delayed connect task. Should only be access on consumer
+   * thread.
    */
   CancelableTask* mDelayedConnectTask;
 
@@ -152,7 +153,7 @@ BluetoothSocket::BluetoothSocketIO::BluetoothSocketIO(
 BluetoothSocket::BluetoothSocketIO::~BluetoothSocketIO()
 {
   MOZ_ASSERT(IsConsumerThread());
-  MOZ_ASSERT(IsShutdownOnMainThread());
+  MOZ_ASSERT(IsShutdownOnConsumerThread());
 }
 
 void
@@ -380,7 +381,7 @@ BluetoothSocket::BluetoothSocketIO::FireSocketError()
   // Clean up watchers, statuses, fds
   Close();
 
-  // Tell the main thread we've errored
+  // Tell the consumer thread we've errored
   GetConsumerThread()->Dispatch(
     new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR),
     NS_DISPATCH_NORMAL);
@@ -405,7 +406,7 @@ BluetoothSocket::BluetoothSocketIO::QueryReceiveBuffer(
 
 /**
  * |ReceiveRunnable| transfers data received on the I/O thread
- * to an instance of |BluetoothSocket| on the main thread.
+ * to an instance of |BluetoothSocket| on the consumer thread.
  */
 class BluetoothSocket::BluetoothSocketIO::ReceiveRunnable final
   : public SocketIORunnable<BluetoothSocketIO>
@@ -422,7 +423,7 @@ public:
 
     MOZ_ASSERT(io->IsConsumerThread());
 
-    if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
+    if (NS_WARN_IF(io->IsShutdownOnConsumerThread())) {
       // Since we've already explicitly closed and the close
       // happened before this, this isn't really an error.
       return NS_OK;
@@ -462,7 +463,7 @@ BluetoothSocket::BluetoothSocketIO::GetSocketBase()
 }
 
 bool
-BluetoothSocket::BluetoothSocketIO::IsShutdownOnMainThread() const
+BluetoothSocket::BluetoothSocketIO::IsShutdownOnConsumerThread() const
 {
   MOZ_ASSERT(IsConsumerThread());
 
@@ -470,10 +471,10 @@ BluetoothSocket::BluetoothSocketIO::IsShutdownOnMainThread() const
 }
 
 void
-BluetoothSocket::BluetoothSocketIO::ShutdownOnMainThread()
+BluetoothSocket::BluetoothSocketIO::ShutdownOnConsumerThread()
 {
   MOZ_ASSERT(IsConsumerThread());
-  MOZ_ASSERT(!IsShutdownOnMainThread());
+  MOZ_ASSERT(!IsShutdownOnConsumerThread());
 
   mConsumer = nullptr;
 }
@@ -551,7 +552,7 @@ public:
     }
 
     BluetoothSocketIO* io = GetIO();
-    if (io->IsShutdownOnMainThread()) {
+    if (io->IsShutdownOnConsumerThread()) {
       return;
     }
 
@@ -730,7 +731,7 @@ BluetoothSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
 {
   MOZ_ASSERT(mIO);
   MOZ_ASSERT(mIO->IsConsumerThread());
-  MOZ_ASSERT(!mIO->IsShutdownOnMainThread());
+  MOZ_ASSERT(!mIO->IsShutdownOnConsumerThread());
 
   mIO->GetIOLoop()->PostTask(
     FROM_HERE,
@@ -753,7 +754,7 @@ BluetoothSocket::Close()
   // From this point on, we consider mIO as being deleted.
   // We sever the relationship here so any future calls to listen or connect
   // will create a new implementation.
-  mIO->ShutdownOnMainThread();
+  mIO->ShutdownOnConsumerThread();
   mIO->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
   mIO = nullptr;
 

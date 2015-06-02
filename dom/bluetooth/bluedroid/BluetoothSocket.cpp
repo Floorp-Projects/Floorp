@@ -123,8 +123,8 @@ public:
 
   /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
-   * directly from main thread. All non-main-thread accesses should happen with
-   * mImpl as container.
+   * directly from consumer thread. All non-consumer-thread accesses should
+   * happen with mImpl as container.
    */
   RefPtr<BluetoothSocket> mConsumer;
 
@@ -143,7 +143,7 @@ public:
     return GetDataSocket();
   }
 
-  bool IsShutdownOnMainThread() const override
+  bool IsShutdownOnConsumerThread() const override
   {
     MOZ_ASSERT(IsConsumerThread());
 
@@ -155,10 +155,11 @@ public:
     return mShuttingDownOnIOThread;
   }
 
-  void ShutdownOnMainThread() override
+  void ShutdownOnConsumerThread() override
   {
     MOZ_ASSERT(IsConsumerThread());
-    MOZ_ASSERT(!IsShutdownOnMainThread());
+    MOZ_ASSERT(!IsShutdownOnConsumerThread());
+
     mConsumer = nullptr;
   }
 
@@ -392,7 +393,7 @@ public:
 
     mozilla::ScopedClose fd(aFd); // Close received socket fd on error
 
-    if (mImpl->IsShutdownOnMainThread()) {
+    if (mImpl->IsShutdownOnConsumerThread()) {
       BT_LOGD("mConsumer is null, aborting receive!");
       return;
     }
@@ -412,7 +413,7 @@ public:
     MOZ_ASSERT(mImpl->IsConsumerThread());
     BT_LOGR("BluetoothSocketInterface::Accept failed: %d", (int)aStatus);
 
-    if (!mImpl->IsShutdownOnMainThread()) {
+    if (!mImpl->IsShutdownOnConsumerThread()) {
       // Instead of NotifyError(), call NotifyDisconnect() to trigger
       // BluetoothOppManager::OnSocketDisconnect() as
       // DroidSocketImpl::OnFileCanReadWithoutBlocking() in Firefox OS 2.0 in
@@ -534,7 +535,7 @@ DroidSocketImpl::QueryReceiveBuffer(
 
 /**
  * |ReceiveRunnable| transfers data received on the I/O thread
- * to an instance of |BluetoothSocket| on the main thread.
+ * to an instance of |BluetoothSocket| on the consumer thread.
  */
 class DroidSocketImpl::ReceiveRunnable final
   : public SocketIORunnable<DroidSocketImpl>
@@ -551,7 +552,7 @@ public:
 
     MOZ_ASSERT(io->IsConsumerThread());
 
-    if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
+    if (NS_WARN_IF(io->IsShutdownOnConsumerThread())) {
       // Since we've already explicitly closed and the close
       // happened before this, this isn't really an error.
       return NS_OK;
@@ -611,7 +612,7 @@ public:
   {
     MOZ_ASSERT(mImpl->IsConsumerThread());
 
-    if (mImpl->IsShutdownOnMainThread()) {
+    if (mImpl->IsShutdownOnConsumerThread()) {
       BT_LOGD("mConsumer is null, aborting send!");
       return;
     }
@@ -631,7 +632,7 @@ public:
     MOZ_ASSERT(mImpl->IsConsumerThread());
     BT_WARNING("Connect failed: %d", (int)aStatus);
 
-    if (!mImpl->IsShutdownOnMainThread()) {
+    if (!mImpl->IsShutdownOnConsumerThread()) {
       // Instead of NotifyError(), call NotifyDisconnect() to trigger
       // BluetoothOppManager::OnSocketDisconnect() as
       // DroidSocketImpl::OnFileCanReadWithoutBlocking() in Firefox OS 2.0 in
@@ -772,7 +773,7 @@ BluetoothSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
 {
   MOZ_ASSERT(mImpl);
   MOZ_ASSERT(mImpl->IsConsumerThread());
-  MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
+  MOZ_ASSERT(!mImpl->IsShutdownOnConsumerThread());
 
   mImpl->GetIOLoop()->PostTask(
     FROM_HERE,
@@ -800,7 +801,7 @@ BluetoothSocket::Close()
   // From this point on, we consider mImpl as being deleted.
   // We sever the relationship here so any future calls to listen or connect
   // will create a new implementation.
-  mImpl->ShutdownOnMainThread();
+  mImpl->ShutdownOnConsumerThread();
   mImpl->GetIOLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mImpl));
   mImpl = nullptr;
 
