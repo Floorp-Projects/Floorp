@@ -23,8 +23,7 @@ class CodeGeneratorNone : public CodeGeneratorShared
         MOZ_CRASH();
     }
 
-    template <typename T> inline Register ToOperand(T) { MOZ_CRASH(); }
-    MoveOperand toMoveOperand(const LAllocation) const { MOZ_CRASH(); }
+    MoveOperand toMoveOperand(LAllocation) const { MOZ_CRASH(); }
     template <typename T1, typename T2>
     void bailoutCmp32(Assembler::Condition, T1, T2, LSnapshot*) { MOZ_CRASH(); }
     template<typename T>

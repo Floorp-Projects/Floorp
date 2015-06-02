@@ -19,7 +19,7 @@ struct gfxSize : public mozilla::gfx::BaseSize<gfxFloat, gfxSize> {
 
     gfxSize() : Super() {}
     gfxSize(gfxFloat aWidth, gfxFloat aHeight) : Super(aWidth, aHeight) {}
-    MOZ_IMPLICIT gfxSize(const nsIntSize& aSize) : Super(aSize.width, aSize.height) {}
+    MOZ_IMPLICIT gfxSize(const mozilla::gfx::IntSize& aSize) : Super(aSize.width, aSize.height) {}
 };
 
 struct gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> {

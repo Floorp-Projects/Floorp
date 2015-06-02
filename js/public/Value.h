@@ -1698,6 +1698,7 @@ class ValueOperations
     JSObject& toObject() const { return value()->toObject(); }
     JSObject* toObjectOrNull() const { return value()->toObjectOrNull(); }
     gc::Cell* toGCThing() const { return value()->toGCThing(); }
+    JS::TraceKind traceKind() const { return value()->traceKind(); }
     uint64_t asRawBits() const { return value()->asRawBits(); }
 
     JSValueType extractNonDoubleType() const { return value()->extractNonDoubleType(); }

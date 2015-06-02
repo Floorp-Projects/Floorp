@@ -23,6 +23,8 @@ AtomThingMapPtr<Map>::ensureMap(ExclusiveContext* cx)
 
     AutoLockForExclusiveAccess lock(cx);
     map_ = cx->parseMapPool().acquire<Map>();
+    if (!map_)
+        ReportOutOfMemory(cx);
     return !!map_;
 }
 

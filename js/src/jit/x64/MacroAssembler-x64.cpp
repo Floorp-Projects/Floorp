@@ -13,6 +13,8 @@
 #include "jit/MacroAssembler.h"
 #include "jit/MoveEmitter.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace js::jit;
 
@@ -277,11 +279,11 @@ MacroAssemblerX64::callWithABIPre(uint32_t* stackAdjust)
                                             ABIStackAlignment);
     } else {
         *stackAdjust = stackForCall_
-                     + ComputeByteAlignment(stackForCall_ + framePushed_,
+                     + ComputeByteAlignment(stackForCall_ + asMasm().framePushed(),
                                             ABIStackAlignment);
     }
 
-    reserveStack(*stackAdjust);
+    asMasm().reserveStack(*stackAdjust);
 
     // Position all arguments.
     {
@@ -308,7 +310,7 @@ MacroAssemblerX64::callWithABIPre(uint32_t* stackAdjust)
 void
 MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
 {
-    freeStack(stackAdjust);
+    asMasm().freeStack(stackAdjust);
     if (dynamicAlignment_)
         pop(rsp);
 
@@ -508,7 +510,7 @@ MacroAssemblerX64::storeUnboxedValue(ConstantOrRegister value, MIRType valueType
 void
 MacroAssemblerX64::callWithExitFrame(JitCode* target, Register dynStack)
 {
-    addPtr(Imm32(framePushed()), dynStack);
+    addPtr(Imm32(asMasm().framePushed()), dynStack);
     makeFrameDescriptor(dynStack, JitFrame_IonJS);
     asMasm().Push(dynStack);
     call(target);
@@ -574,4 +576,27 @@ const MacroAssembler&
 MacroAssemblerX64::asMasm() const
 {
     return *static_cast<const MacroAssembler*>(this);
+}
+
+// ===============================================================
+// Stack manipulation functions.
+
+void
+MacroAssembler::reserveStack(uint32_t amount)
+{
+    if (amount) {
+        // On windows, we cannot skip very far down the stack without touching the
+        // memory pages in-between.  This is a corner-case code for situations where the
+        // Ion frame data for a piece of code is very large.  To handle this special case,
+        // for frames over 1k in size we allocate memory on the stack incrementally, touching
+        // it as we go.
+        uint32_t amountLeft = amount;
+        while (amountLeft > 4096) {
+            subq(Imm32(4096), StackPointer);
+            store32(Imm32(0), Address(StackPointer, 0));
+            amountLeft -= 4096;
+        }
+        subq(Imm32(amountLeft), StackPointer);
+    }
+    framePushed_ += amount;
 }

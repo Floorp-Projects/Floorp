@@ -19,7 +19,7 @@ gfxQPainterSurface::gfxQPainterSurface(QPainter *painter)
     Init (csurf);
 }
 
-gfxQPainterSurface::gfxQPainterSurface(const gfxIntSize& size, gfxImageFormat format)
+gfxQPainterSurface::gfxQPainterSurface(const mozilla::gfx::IntSize& size, gfxImageFormat format)
 {
     cairo_surface_t *csurf = cairo_qt_surface_create_with_qimage ((cairo_format_t) format,
                                                                         size.width,
@@ -29,7 +29,7 @@ gfxQPainterSurface::gfxQPainterSurface(const gfxIntSize& size, gfxImageFormat fo
     Init (csurf);
 }
 
-gfxQPainterSurface::gfxQPainterSurface(const gfxIntSize& size, gfxContentType content)
+gfxQPainterSurface::gfxQPainterSurface(const mozilla::gfx::IntSize& size, gfxContentType content)
 {
     cairo_surface_t *csurf = cairo_qt_surface_create_with_qpixmap ((cairo_content_t) content,
                                                                          size.width,

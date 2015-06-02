@@ -1915,6 +1915,13 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
   } else {
     SetState(NOTHING);
   }
+  if (!IsInPanningState()) {
+    // If we didn't enter a panning state because touch-action disallowed it,
+    // make sure to clear any leftover velocity from the pre-threshold
+    // touchmoves.
+    mX.SetVelocity(0);
+    mY.SetVelocity(0);
+  }
 }
 
 void AsyncPanZoomController::HandlePanning(double aAngle) {
@@ -1973,11 +1980,6 @@ nsEventStatus AsyncPanZoomController::StartPanning(const MultiTouchInput& aEvent
   ParentLayerPoint point = GetFirstTouchPoint(aEvent);
   float dx = mX.PanDistance(point.x);
   float dy = mY.PanDistance(point.y);
-
-  // When the touch move breaks through the pan threshold, reposition the touch down origin
-  // so the page won't jump when we start panning.
-  mX.StartTouch(point.x, aEvent.mTime);
-  mY.StartTouch(point.y, aEvent.mTime);
 
   double angle = atan2(dy, dx); // range [-pi, pi]
   angle = fabs(angle); // range [0, pi]
