@@ -174,8 +174,8 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 }
 
 .search-panel-one-offs {
+  margin: 0 0 !important;
   border-top: 1px solid #ccc;
-  margin-bottom: 0 !important;
 }
 
 .searchbar-engine-one-off-item {
