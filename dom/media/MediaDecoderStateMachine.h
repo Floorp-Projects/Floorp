@@ -906,6 +906,9 @@ public:
   // The duration according to HTTP headers etc, mirrored from the main thread.
   Mirror<media::NullableTimeUnit> mNetworkDuration;
 
+  // The duration explicitly set by JS, mirrored from the main thread.
+  Mirror<Maybe<double>> mExplicitDuration;
+
   // The current play state and next play state, mirrored from the main thread.
   Mirror<MediaDecoder::PlayState> mPlayState;
   Mirror<MediaDecoder::PlayState> mNextPlayState;

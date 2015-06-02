@@ -99,9 +99,6 @@ private:
   // mMediaSource.
   dom::MediaSource* mMediaSource;
   nsRefPtr<MediaSourceReader> mReader;
-
-  // Protected by GetReentrantMonitor()
-  double mMediaSourceDuration;
 };
 
 } // namespace mozilla
