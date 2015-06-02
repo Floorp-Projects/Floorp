@@ -44,7 +44,7 @@ function addBreakpoint() {
 }
 
 function pauseDebuggee() {
-  sendMouseClickToTab(gTab, content.document.querySelector("button"));
+  generateMouseClickInTab(gTab, "content.document.querySelector('button')");
 
   // The first 'with' scope should be expanded by default, but the
   // variables haven't been fetched yet. This is how 'with' scopes work.

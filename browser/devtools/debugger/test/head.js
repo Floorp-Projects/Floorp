@@ -959,51 +959,6 @@ function popPrefs() {
   return deferred.promise;
 }
 
-function sendMessageToTab(tab, name, data, objects) {
-  info("Sending message with name " + name + " to tab.");
-
-  tab.linkedBrowser.messageManager.sendAsyncMessage(name, data, objects);
-}
-
-function waitForMessageFromTab(tab, name) {
-  info("Waiting for message with name " + name + " from tab.");
-
-  return new Promise(function (resolve) {
-    let messageManager = tab.linkedBrowser.messageManager;
-    messageManager.addMessageListener(name, function listener(message) {
-      messageManager.removeMessageListener(name, listener);
-      resolve(message);
-    });
-  });
-}
-
-function callInTab(tab, name) {
-  info("Calling function with name " + name + " in tab.");
-
-  sendMessageToTab(tab, "test:call", {
-    name: name,
-    args: Array.prototype.slice.call(arguments, 2)
-  });
-  return waitForMessageFromTab(tab, "test:call");
-}
-
-function evalInTab(tab, string) {
-  info("Evalling string " + string + " in tab.");
-
-  sendMessageToTab(tab, "test:eval", {
-    string: string,
-  });
-  return waitForMessageFromTab(tab, "test:eval");
-}
-
-function sendMouseClickToTab(tab, target) {
-  info("Sending mouse click to tab.");
-
-  sendMessageToTab(tab, "test:click", undefined, {
-    target: target
-  });
-}
-
 // Source helpers
 
 function getSelectedSourceURL(aSources) {
@@ -1026,22 +981,68 @@ function getSourceForm(aSources, aURL) {
   return item.attachment.source;
 }
 
+let nextId = 0;
+
+function jsonrpc(tab, method, params) {
+  return new Promise(function (resolve, reject) {
+    let currentId = nextId++;
+    let messageManager = tab.linkedBrowser.messageManager;
+    messageManager.sendAsyncMessage("jsonrpc", {
+      method: method,
+      params: params,
+      id: currentId
+    });
+    messageManager.addMessageListener("jsonrpc", function listener({
+      data: { result, error, id }
+    }) {
+      if (id !== currentId) {
+        return;
+      }
+
+      messageManager.removeMessageListener("jsonrpc", listener);
+      if (error != null) {
+         reject(error);
+      }
+
+      resolve(result);
+    });
+  });
+}
+
+function callInTab(tab, name) {
+  info("Calling function with name '" + name + "' in tab.");
+
+  return jsonrpc(tab, "call", [name, Array.prototype.slice.call(arguments, 2)]);
+}
+
+function evalInTab(tab, string) {
+  info("Evalling string in tab.");
+
+  return jsonrpc(tab, "_eval", [string]);
+}
+
 function createWorkerInTab(tab, url) {
   info("Creating worker with url '" + url + "' in tab.");
 
-  sendMessageToTab(tab, "test:createWorker", {
-    url: url
-  });
-  return waitForMessageFromTab(tab, "test:createWorker");
+  return jsonrpc(tab, "createWorker", [url]);
 }
 
 function terminateWorkerInTab(tab, url) {
   info("Terminating worker with url '" + url + "' in tab.");
 
-  sendMessageToTab(tab, "test:terminateWorker", {
-    url: url
-  });
-  return waitForMessageFromTab(tab, "test:terminateWorker");
+  return jsonrpc(tab, "terminateWorker", [url]);
+}
+
+function postMessageToWorkerInTab(tab, url, message) {
+  info("Posting message to worker with url '" + url + "' in tab.");
+
+  return jsonrpc(tab, "postMessageToWorker", [url, message]);
+}
+
+function generateMouseClickInTab(tab, path) {
+  info("Generating mouse click in tab.");
+
+  return jsonrpc(tab, "generateMouseClick", [path]);
 }
 
 function connect(client) {
