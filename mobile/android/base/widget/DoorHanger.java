@@ -73,11 +73,8 @@ public abstract class DoorHanger extends LinearLayout {
         mIdentifier = config.getId();
         mType = type;
 
+        LayoutInflater.from(context).inflate(R.layout.doorhanger, this);
         setOrientation(VERTICAL);
-
-        final ViewStub contentStub = (ViewStub) findViewById(R.id.content);
-        contentStub.setLayoutResource(getContentResource());
-        contentStub.inflate();
 
         mDivider = findViewById(R.id.divider_doorhanger);
         mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
@@ -87,6 +84,10 @@ public abstract class DoorHanger extends LinearLayout {
         mOnButtonClickListener = config.getButtonClickListener();
 
         mDividerColor = mResources.getColor(R.color.divider_light);
+
+        final ViewStub contentStub = (ViewStub) findViewById(R.id.content);
+        contentStub.setLayoutResource(getContentResource());
+        contentStub.inflate();
     }
 
     protected abstract int getContentResource();
