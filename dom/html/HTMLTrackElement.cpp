@@ -195,7 +195,7 @@ HTMLTrackElement::LoadResource()
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NewURIFromString(src, getter_AddRefs(uri));
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
-  LOG(PR_LOG_ALWAYS, ("%p Trying to load from src=%s", this,
+  LOG(PR_LOG_INFO, ("%p Trying to load from src=%s", this,
       NS_ConvertUTF16toUTF8(src).get()));
 
   if (mChannel) {

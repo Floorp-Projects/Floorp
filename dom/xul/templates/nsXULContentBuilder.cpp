@@ -447,14 +447,14 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
     nsresult rv;
 
     if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsXULContentBuilder::BuildContentFromTemplate (is unique: %d)",
                aIsUnique));
 
         nsAutoString id;
         aChild->GetId(id);
 
-        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("Tags: [Template: %s  Resource: %s  Real: %s] for id %s",
                 nsAtomCString(aTemplateNode->NodeInfo()->NameAtom()).get(),
                 nsAtomCString(aResourceNode->NodeInfo()->NameAtom()).get(),
@@ -939,7 +939,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
     // and 2) recursive subcontent (if the current element refers to a
     // container result).
 
-    MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+    MOZ_LOG(gXULTemplateLog, PR_LOG_INFO,
            ("nsXULContentBuilder::CreateTemplateAndContainerContents start - flags: %d",
             mFlags));
 
@@ -975,7 +975,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
                                     false, true);
     }
 
-    MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+    MOZ_LOG(gXULTemplateLog, PR_LOG_INFO,
            ("nsXULContentBuilder::CreateTemplateAndContainerContents end"));
 
     return NS_OK;
@@ -1076,7 +1076,7 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
     if (MOZ_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         nsAutoString id;
         aResult->GetId(id);
-        MOZ_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
+        MOZ_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("nsXULContentBuilder::CreateContainerContentsForQuerySet start for ref %s\n",
                NS_ConvertUTF16toUTF8(id).get()));
     }

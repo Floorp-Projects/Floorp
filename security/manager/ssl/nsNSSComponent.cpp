@@ -1147,7 +1147,7 @@ nsNSSComponent::ShutdownNSS()
     mShutdownObjectList->evaporateAllNSSResources();
     EnsureNSSInitialized(nssShutdown);
     if (SECSuccess != ::NSS_Shutdown()) {
-      MOZ_LOG(gPIPNSSLog, PR_LOG_ALWAYS, ("NSS SHUTDOWN FAILURE\n"));
+      MOZ_LOG(gPIPNSSLog, PR_LOG_ERROR, ("NSS SHUTDOWN FAILURE\n"));
     }
     else {
       MOZ_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS shutdown =====>> OK <<=====\n"));
