@@ -161,8 +161,6 @@ typedef size_t (*PLDHashSizeOfEntryExcludingThisFun)(
  */
 class PLDHashTable
 {
-  friend class PLDHashTable2;
-
 private:
   const PLDHashTableOps* mOps;        /* Virtual operations; see below. */
   int16_t             mHashShift;     /* multiplicative hash shift */
@@ -204,24 +202,16 @@ private:
 #endif
 
 public:
-  // The most important thing here is that we zero |mOps| because it's used to
-  // determine if Init() has been called. (The use of MOZ_CONSTEXPR means all
-  // the other members must be initialized too.)
-  MOZ_CONSTEXPR PLDHashTable()
-    : mOps(nullptr)
-    , mHashShift(0)
-    , mEntrySize(0)
-    , mEntryCount(0)
-    , mRemovedCount(0)
-    , mGeneration(0)
-    , mEntryStore(nullptr)
-#ifdef PL_DHASHMETER
-    , mStats()
-#endif
-#ifdef DEBUG
-    , mRecursionLevel()
-#endif
-  {}
+  // Initialize the table with |aOps| and |aEntrySize|. The table's initial
+  // capacity is chosen such that |aLength| elements can be inserted without
+  // rehashing; if |aLength| is a power-of-two, this capacity will be
+  // |2*length|. However, because entry storage is allocated lazily, this
+  // initial capacity won't be relevant until the first element is added; prior
+  // to that the capacity will be zero.
+  //
+  // This will crash if |aEntrySize| and/or |aLength| are too large.
+  PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
+               uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
   PLDHashTable(PLDHashTable&& aOther)
     : mOps(nullptr)
@@ -234,6 +224,8 @@ public:
   }
 
   PLDHashTable& operator=(PLDHashTable&& aOther);
+
+  ~PLDHashTable();
 
   bool IsInitialized() const { return !!mOps; }
 
@@ -262,6 +254,20 @@ public:
   void RawRemove(PLDHashEntryHdr* aEntry);
 
   uint32_t Enumerate(PLDHashEnumerator aEtor, void* aArg);
+
+  // This function is equivalent to
+  // ClearAndPrepareForLength(PL_DHASH_DEFAULT_INITIAL_LENGTH).
+  void Clear();
+
+  // This function clears the table's contents and frees its entry storage,
+  // leaving it in a empty state ready to be used again. Afterwards, when the
+  // first element is added the entry storage that gets allocated will have a
+  // capacity large enough to fit |aLength| elements without rehashing.
+  //
+  // It's conceptually the same as calling the destructor and then re-calling
+  // the constructor with the original |aOps| and |aEntrySize| arguments, and
+  // a new |aLength| argument.
+  void ClearAndPrepareForLength(uint32_t aLength);
 
   size_t SizeOfIncludingThis(
     PLDHashSizeOfEntryExcludingThisFun aSizeOfEntryExcludingThis,
@@ -335,61 +341,8 @@ private:
   PLDHashTable& operator=(const PLDHashTable& aOther) = delete;
 };
 
-// PLDHashTable uses C style, manual initialization and finalization, via the
-// Init() and Finish() methods. PLDHashTable2 is a slight extension of
-// PLDHashTable that provides C++-style, automatic initialization and
-// finalization via an initializing constructor and a destructor. It also
-// overrides the Init() and Finish() methods with versions that will crash
-// immediately if called.
-//
-// XXX: We're using a subclass here so that instances of PLDHashTable can be
-// converted incrementally to PLDHashTable2. Once all instances have been
-// converted, we can merge the two and call the merged class PLDHashTable
-// again.
-class PLDHashTable2 : public PLDHashTable
-{
-public:
-  // Initialize the table with |aOps| and |aEntrySize|. The table's initial
-  // capacity is chosen such that |aLength| elements can be inserted without
-  // rehashing; if |aLength| is a power-of-two, this capacity will be
-  // |2*length|. However, because entry storage is allocated lazily, this
-  // initial capacity won't be relevant until the first element is added; prior
-  // to that the capacity will be zero.
-  //
-  // This will crash if |aEntrySize| and/or |aLength| are too large.
-  PLDHashTable2(const PLDHashTableOps* aOps, uint32_t aEntrySize,
-                uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
-
-  PLDHashTable2(PLDHashTable2&& aOther)
-    : PLDHashTable(mozilla::Move(aOther))
-  {}
-
-  PLDHashTable2& operator=(PLDHashTable2&& aOther)
-  {
-    return static_cast<PLDHashTable2&>(
-      PLDHashTable::operator=(mozilla::Move(aOther)));
-  }
-
-  ~PLDHashTable2();
-
-  // This function is equivalent to
-  // ClearAndPrepareForLength(PL_DHASH_DEFAULT_INITIAL_LENGTH).
-  void Clear();
-
-  // This function clears the table's contents and frees its entry storage,
-  // leaving it in a empty state ready to be used again. Afterwards, when the
-  // first element is added the entry storage that gets allocated will have a
-  // capacity large enough to fit |aLength| elements without rehashing.
-  //
-  // It's conceptually the same as calling the destructor and then re-calling
-  // the constructor with the original |aOps| and |aEntrySize| arguments, and
-  // a new |aLength| argument.
-  void ClearAndPrepareForLength(uint32_t aLength);
-
-private:
-  PLDHashTable2(const PLDHashTable2& aOther) = delete;
-  PLDHashTable2& operator=(const PLDHashTable2& aOther) = delete;
-};
+// XXX: this is a temporary typedef that will be removed shortly.
+typedef PLDHashTable PLDHashTable2;
 
 /*
  * Compute the hash code for a given key to be looked up, added, or removed

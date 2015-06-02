@@ -202,13 +202,6 @@ MOZ_ALWAYS_INLINE void
 PLDHashTable::Init(const PLDHashTableOps* aOps,
                    uint32_t aEntrySize, uint32_t aLength)
 {
-  MOZ_ASSERT(!IsInitialized());
-
-  // Check that the important fields have been set by the constructor.
-  MOZ_ASSERT(mOps == nullptr);
-  MOZ_ASSERT(mRecursionLevel == 0);
-  MOZ_ASSERT(mEntryStore == nullptr);
-
   if (aLength > PL_DHASH_MAX_INITIAL_LENGTH) {
     MOZ_CRASH("Initial length is too large");
   }
@@ -243,14 +236,14 @@ PLDHashTable::Init(const PLDHashTableOps* aOps,
 #endif
 }
 
-PLDHashTable2::PLDHashTable2(const PLDHashTableOps* aOps, uint32_t aEntrySize,
-                             uint32_t aLength)
-  : PLDHashTable()
+PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
+                           uint32_t aLength)
 {
-  PLDHashTable::Init(aOps, aEntrySize, aLength);
+  Init(aOps, aEntrySize, aLength);
 }
 
-PLDHashTable& PLDHashTable::operator=(PLDHashTable&& aOther)
+PLDHashTable&
+PLDHashTable::operator=(PLDHashTable&& aOther)
 {
   if (this == &aOther) {
     return *this;
@@ -276,7 +269,6 @@ PLDHashTable& PLDHashTable::operator=(PLDHashTable&& aOther)
 #endif
 
   // Clear up |aOther| so its destruction will be a no-op.
-  aOther.mOps = nullptr;
   aOther.mEntryStore = nullptr;
 #ifdef DEBUG
   aOther.mRecursionLevel = 0;
@@ -324,8 +316,7 @@ PLDHashTable::EntryIsFree(PLDHashEntryHdr* aEntry)
 MOZ_ALWAYS_INLINE void
 PLDHashTable::Finish()
 {
-  if (!IsInitialized()) {
-    MOZ_ASSERT(!mEntryStore);
+  if (!mEntryStore) {
     return;
   }
 
@@ -343,8 +334,6 @@ PLDHashTable::Finish()
     entryAddr += mEntrySize;
   }
 
-  mOps = nullptr;
-
   DECREMENT_RECURSION_LEVEL(this);
   MOZ_ASSERT(RECURSION_LEVEL_SAFE_TO_FINISH(this));
 
@@ -353,13 +342,13 @@ PLDHashTable::Finish()
   mEntryStore = nullptr;
 }
 
-PLDHashTable2::~PLDHashTable2()
+PLDHashTable::~PLDHashTable()
 {
-  PLDHashTable::Finish();
+  Finish();
 }
 
 void
-PLDHashTable2::ClearAndPrepareForLength(uint32_t aLength)
+PLDHashTable::ClearAndPrepareForLength(uint32_t aLength)
 {
   MOZ_ASSERT(IsInitialized());
 
@@ -367,12 +356,12 @@ PLDHashTable2::ClearAndPrepareForLength(uint32_t aLength)
   const PLDHashTableOps* ops = mOps;
   uint32_t entrySize = mEntrySize;
 
-  PLDHashTable::Finish();
-  PLDHashTable::Init(ops, entrySize, aLength);
+  Finish();
+  Init(ops, entrySize, aLength);
 }
 
 void
-PLDHashTable2::Clear()
+PLDHashTable::Clear()
 {
   ClearAndPrepareForLength(PL_DHASH_DEFAULT_INITIAL_LENGTH);
 }
@@ -993,7 +982,8 @@ PLDHashTable::Iterator::~Iterator()
   DECREMENT_RECURSION_LEVEL(mTable);
 }
 
-bool PLDHashTable::Iterator::HasMoreEntries() const
+bool
+PLDHashTable::Iterator::HasMoreEntries() const
 {
   MOZ_ASSERT(mTable->IsInitialized());
 
@@ -1004,7 +994,8 @@ bool PLDHashTable::Iterator::HasMoreEntries() const
   return mEntryOffset < mTable->EntryCount();
 }
 
-PLDHashEntryHdr* PLDHashTable::Iterator::NextEntry()
+PLDHashEntryHdr*
+PLDHashTable::Iterator::NextEntry()
 {
   MOZ_ASSERT(HasMoreEntries());
 
