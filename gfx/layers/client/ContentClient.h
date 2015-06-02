@@ -259,6 +259,11 @@ public:
   virtual void CreateBuffer(ContentType aType, const gfx::IntRect& aRect, uint32_t aFlags,
                             RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) override;
 
+  virtual TextureFlags ExtraTextureFlags() const
+  {
+    return TextureFlags::NO_FLAGS;
+  }
+
 protected:
   void DestroyBuffers();
 
@@ -390,7 +395,12 @@ public:
 
   virtual TextureInfo GetTextureInfo() const override
   {
-    return TextureInfo(CompositableType::CONTENT_SINGLE, mTextureFlags);
+    return TextureInfo(CompositableType::CONTENT_SINGLE, mTextureFlags | ExtraTextureFlags());
+  }
+
+  virtual TextureFlags ExtraTextureFlags() const override
+  {
+    return TextureFlags::IMMEDIATE_UPLOAD;
   }
 };
 

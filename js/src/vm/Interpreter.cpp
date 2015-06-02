@@ -241,47 +241,22 @@ GetPropertyOperation(JSContext* cx, InterpreterFrame* fp, HandleScript script, j
             return true;
     }
 
-    RootedId id(cx, NameToId(script->getName(pc)));
+    RootedPropertyName name(cx, script->getName(pc));
 
-    if (id == NameToId(cx->names().callee) && IsOptimizedArguments(fp, lval)) {
+    if (name == cx->names().callee && IsOptimizedArguments(fp, lval)) {
         vp.setObject(fp->callee());
         return true;
     }
 
-    Rooted<GlobalObject*> global(cx, &fp->global());
-    RootedObject obj(cx);
-
-    /* Optimize (.1).toString(). */
-    if (lval.isNumber() && id == NameToId(cx->names().toString)) {
-        NativeObject* proto = GlobalObject::getOrCreateNumberPrototype(cx, global);
-        if (!proto)
-            return false;
-        if (ClassMethodIsNative(cx, proto, &NumberObject::class_, id, num_toString))
-            obj = proto;
+    if (op == JSOP_CALLPROP) {
+        // The __noSuchMethod__ code in CallProperty requires non-aliasing
+        // v and vp arguments.
+        RootedValue v(cx, lval);
+        return CallProperty(cx, v, name, vp);
     }
 
-    if (!obj) {
-        obj = ToObjectFromStack(cx, lval);
-        if (!obj)
-            return false;
-    }
-
-    bool wasObject = lval.isObject();
-
-    if (!GetProperty(cx, obj, obj, id, vp))
-        return false;
-
-#if JS_HAS_NO_SUCH_METHOD
-    if (op == JSOP_CALLPROP &&
-        MOZ_UNLIKELY(vp.isUndefined()) &&
-        wasObject)
-    {
-        if (!OnUnknownMethod(cx, obj, IdToValue(id), vp))
-            return false;
-    }
-#endif
-
-    return true;
+    MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_LENGTH);
+    return GetProperty(cx, lval, name, vp);
 }
 
 static inline bool
@@ -4064,21 +4039,45 @@ js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHa
             return true;
     }
 
+    // Optimize common cases like (2).toString() or "foo".valueOf() to not
+    // create a wrapper object.
+    if (v.isPrimitive() && !v.isNullOrUndefined()) {
+        NativeObject* proto;
+        if (v.isNumber()) {
+            proto = GlobalObject::getOrCreateNumberPrototype(cx, cx->global());
+        } else if (v.isString()) {
+            proto = GlobalObject::getOrCreateStringPrototype(cx, cx->global());
+        } else if (v.isBoolean()) {
+            proto = GlobalObject::getOrCreateBooleanPrototype(cx, cx->global());
+        } else {
+            MOZ_ASSERT(v.isSymbol());
+            proto = GlobalObject::getOrCreateSymbolPrototype(cx, cx->global());
+        }
+        if (!proto)
+             return false;
+
+        if (GetPropertyPure(cx, proto, NameToId(name), vp.address()))
+            return true;
+    }
+
     RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
+
     return GetProperty(cx, obj, obj, name, vp);
 }
 
 bool
 js::CallProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHandleValue vp)
 {
+    // __noSuchMethod__ code below depends on this.
+    MOZ_ASSERT(v.address() != vp.address());
+
     if (!GetProperty(cx, v, name, vp))
         return false;
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (MOZ_UNLIKELY(vp.isUndefined()) && v.isObject())
-    {
+    if (MOZ_UNLIKELY(vp.isUndefined()) && v.isObject()) {
         RootedObject obj(cx, &v.toObject());
         if (!OnUnknownMethod(cx, obj, StringValue(name), vp))
             return false;

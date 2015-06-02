@@ -152,10 +152,6 @@ class MacroAssemblerNone : public Assembler
     MacroAssemblerNone() { MOZ_CRASH(); }
 
     MoveResolver moveResolver_;
-    size_t framePushed_;
-
-    uint32_t framePushed() const { MOZ_CRASH(); }
-    void setFramePushed(uint32_t) { MOZ_CRASH(); }
 
     size_t size() const { MOZ_CRASH(); }
     size_t bytesNeeded() const { MOZ_CRASH(); }
@@ -241,8 +237,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void Push(T) { MOZ_CRASH(); }
     template <typename T> void pop(T) { MOZ_CRASH(); }
     template <typename T> void Pop(T) { MOZ_CRASH(); }
-    template <typename T> CodeOffsetLabel PushWithPatch(T) { MOZ_CRASH(); }
-    void implicitPop(uint32_t) { MOZ_CRASH(); }
+    template <typename T> CodeOffsetLabel pushWithPatch(T) { MOZ_CRASH(); }
 
     CodeOffsetJump jumpWithPatch(RepatchLabel*) { MOZ_CRASH(); }
     CodeOffsetJump jumpWithPatch(RepatchLabel*, Condition) { MOZ_CRASH(); }
@@ -258,8 +253,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void cmpPtrSet(Condition, T, S, Register) { MOZ_CRASH(); }
     template <typename T, typename S> void cmp32Set(Condition, T, S, Register) { MOZ_CRASH(); }
 
-    void reserveStack(uint32_t) { MOZ_CRASH(); }
-    template <typename T> void freeStack(T) { MOZ_CRASH(); }
     template <typename T, typename S> void add32(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void addPtr(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void sub32(T, S) { MOZ_CRASH(); }

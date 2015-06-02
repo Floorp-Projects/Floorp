@@ -124,10 +124,9 @@ const RecipeHelpers = {
   },
 
   /**
-   * Create a document for the given URL containing the given HTML containing a
-   * form and return the <form>.
+   * Create a document for the given URL containing the given HTML with the ownerDocument of all <form>s having a mocked location.
    */
-  createTestForm(aDocumentURL, aHTML = "<form>") {
+  createTestDocument(aDocumentURL, aHTML = "<form>") {
     let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
     parser.init();
@@ -146,14 +145,13 @@ const RecipeHelpers = {
       },
     });
 
-    let form = parsedDoc.forms[0];
-
-    // Assign form.ownerDocument to the proxy so document.location works.
-    Object.defineProperty(form, "ownerDocument", {
-      value: document,
-    });
-
-    return form;
+    for (let form of parsedDoc.forms) {
+      // Assign form.ownerDocument to the proxy so document.location works.
+      Object.defineProperty(form, "ownerDocument", {
+        value: document,
+      });
+    }
+    return parsedDoc;
   }
 };
 
@@ -176,3 +174,23 @@ add_task(function test_common_initialize()
   // Clean up after every test.
   do_register_cleanup(() => LoginTestUtils.clearData());
 });
+
+/**
+ * Compare two FormLike to see if they represent the same information. Elements
+ * are compared using their @id attribute.
+ */
+function formLikeEqual(a, b) {
+  Assert.strictEqual(Object.keys(a).length, Object.keys(b).length,
+                     "Check the formLikes have the same number of properties");
+
+  for (let propName of Object.keys(a)) {
+    if (propName == "elements") {
+      Assert.strictEqual(a.elements.length, b.elements.length, "Check element count");
+      for (let i = 0; i < a.elements.length; i++) {
+        Assert.strictEqual(a.elements[i].id, b.elements[i].id, "Check element " + i + " id");
+      }
+      continue;
+    }
+    Assert.strictEqual(a[propName], b[propName], "Compare formLike " + propName + " property");
+  }
+}

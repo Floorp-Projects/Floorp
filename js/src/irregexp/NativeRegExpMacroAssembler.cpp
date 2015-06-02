@@ -37,6 +37,8 @@
 #endif
 #include "vm/MatchPairs.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace js::irregexp;
 using namespace js::jit;

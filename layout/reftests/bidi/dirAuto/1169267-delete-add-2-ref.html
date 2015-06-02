@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test bug 1169267</title>
+    <style>
+     textarea { resize: none; }
+    </style>
+  </head>
+  <body>
+    <div><input type="text" dir="rtl" value="456גדה"></div>
+    <div><span dir="rtl">456גדה</span></div>
+    <div><textarea dir="rtl">456גדה</textarea></div>
+    <div><button dir="rtl">456גדה</button></div>
+    <div><bdi dir="rtl">456גדה</bdi></div>
+  </body>
+</html>
