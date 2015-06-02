@@ -163,12 +163,6 @@ static_assert(QUICK_BUFFERING_LOW_DATA_USECS <= AMPLE_AUDIO_USECS,
 
 } // namespace detail
 
-// The amount of instability we tollerate in calls to
-// MediaDecoderStateMachine::UpdateEstimatedDuration(); changes of duration
-// less than this are ignored, as they're assumed to be the result of
-// instability in the duration estimation.
-static const uint64_t ESTIMATED_DURATION_FUZZ_FACTOR_USECS = USECS_PER_S / 2;
-
 static TimeDuration UsecsToDuration(int64_t aUsecs) {
   return TimeDuration::FromMicroseconds(aUsecs);
 }
@@ -200,6 +194,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDurationSet(false),
   mNetworkDuration(mTaskQueue, NullableTimeUnit(),
                    "MediaDecoderStateMachine::mNetworkDuration (Mirror)"),
+  mEstimatedDuration(mTaskQueue, NullableTimeUnit(),
+                    "MediaDecoderStateMachine::EstimatedDuration (Mirror)"),
   mExplicitDuration(mTaskQueue, Maybe<double>(),
                     "MediaDecoderStateMachine::mExplicitDuration (Mirror)"),
   mPlayState(mTaskQueue, MediaDecoder::PLAY_STATE_LOADING,
@@ -300,6 +296,7 @@ MediaDecoderStateMachine::InitializationTask()
 
   // Connect mirrors.
   mNetworkDuration.Connect(mDecoder->CanonicalNetworkDuration());
+  mEstimatedDuration.Connect(mDecoder->CanonicalEstimatedDuration());
   mExplicitDuration.Connect(mDecoder->CanonicalExplicitDuration());
   mPlayState.Connect(mDecoder->CanonicalPlayState());
   mNextPlayState.Connect(mDecoder->CanonicalNextPlayState());
@@ -315,6 +312,7 @@ MediaDecoderStateMachine::InitializationTask()
   mWatchManager.Watch(mLogicalPlaybackRate, &MediaDecoderStateMachine::LogicalPlaybackRateChanged);
   mWatchManager.Watch(mPreservesPitch, &MediaDecoderStateMachine::PreservesPitchChanged);
   mWatchManager.Watch(mNetworkDuration, &MediaDecoderStateMachine::RecomputeDuration);
+  mWatchManager.Watch(mEstimatedDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mExplicitDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::LogicallySeekingChanged);
@@ -1474,6 +1472,17 @@ void MediaDecoderStateMachine::RecomputeDuration()
     }
     TimeUnit duration = TimeUnit::FromSeconds(d);
     SetDuration(duration.ToMicroseconds());
+  } else if (mEstimatedDuration.Ref().isSome()) {
+    if (mEstimatedDuration.Ref()->ToMicroseconds() != GetDuration()) {
+      SetDuration(mEstimatedDuration.Ref()->ToMicroseconds());
+
+      // XXXbholley - Firing the event here is historical, and not necessarily
+      // sensical.
+      nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<TimeUnit>(mDecoder, &MediaDecoder::DurationChanged,
+                                              TimeUnit::FromMicroseconds(GetDuration()));
+      AbstractThread::MainThread()->Dispatch(event.forget());
+    }
   } else if (mInfo.mMetadataDuration.isSome()) {
     SetDuration(mInfo.mMetadataDuration.ref().ToMicroseconds());
   } else if (mInfo.mMetadataEndTime.isSome() && mStartTime >= 0) {
@@ -1520,20 +1529,6 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
         new SeekRunnable(mDecoder, double(mEndTime) / USECS_PER_S);
       AbstractThread::MainThread()->Dispatch(task.forget());
     }
-  }
-}
-
-void MediaDecoderStateMachine::UpdateEstimatedDuration(int64_t aDuration)
-{
-  AssertCurrentThreadInMonitor();
-  int64_t duration = GetDuration();
-  if (aDuration != duration &&
-      mozilla::Abs(aDuration - duration) > ESTIMATED_DURATION_FUZZ_FACTOR_USECS) {
-    SetDuration(aDuration);
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethodWithArg<TimeUnit>(mDecoder, &MediaDecoder::DurationChanged,
-                                            TimeUnit::FromMicroseconds(GetDuration()));
-    AbstractThread::MainThread()->Dispatch(event.forget());
   }
 }
 
@@ -2586,6 +2581,7 @@ MediaDecoderStateMachine::FinishShutdown()
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
   mNetworkDuration.DisconnectIfConnected();
+  mEstimatedDuration.DisconnectIfConnected();
   mExplicitDuration.DisconnectIfConnected();
   mPlayState.DisconnectIfConnected();
   mNextPlayState.DisconnectIfConnected();

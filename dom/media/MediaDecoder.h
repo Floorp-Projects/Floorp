@@ -995,6 +995,17 @@ public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalNetworkDuration() { return &mNetworkDuration; }
 protected:
 
+  // Media duration according to the demuxer's current estimate.
+  //
+  // Note that it's quite bizarre for this to live on the main thread - it would
+  // make much more sense for this to be owned by the demuxer's task queue. But
+  // currently this is only every changed in NotifyDataArrived, which runs on
+  // the main thread. That will need to be cleaned up at some point.
+  Canonical<media::NullableTimeUnit> mEstimatedDuration;
+public:
+  AbstractCanonical<media::NullableTimeUnit>* CanonicalEstimatedDuration() { return &mEstimatedDuration; }
+protected:
+
   // Media duration set explicitly by JS. At present, this is only ever present
   // for MSE.
   Canonical<Maybe<double>> mExplicitDuration;
