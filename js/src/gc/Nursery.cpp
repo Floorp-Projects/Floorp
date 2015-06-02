@@ -375,23 +375,8 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
   , tenuredSize(0)
   , head(nullptr)
   , tail(&head)
-  , savedRuntimeNeedBarrier(rt->needsIncrementalBarrier())
 {
     rt->gc.incGcNumber();
-
-    // We disable the runtime needsIncrementalBarrier() check so that
-    // pre-barriers do not fire on objects that have been relocated. The
-    // pre-barrier's call to obj->zone() will try to look through shape_,
-    // which is now the relocation magic and will crash. However,
-    // zone->needsIncrementalBarrier() must still be set correctly so that
-    // allocations we make in minor GCs between incremental slices will
-    // allocate their objects marked.
-    rt->setNeedsIncrementalBarrier(false);
-}
-
-js::TenuringTracer::~TenuringTracer()
-{
-    runtime()->setNeedsIncrementalBarrier(savedRuntimeNeedBarrier);
 }
 
 #define TIME_START(name) int64_t timestampStart_##name = enableProfiling_ ? PRMJ_Now() : 0
