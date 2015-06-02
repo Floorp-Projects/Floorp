@@ -6097,9 +6097,23 @@ ShellMallocSizeOf(const void* constPtr)
 #endif
 }
 
+static void
+PreInit()
+{
+#ifdef XP_WIN
+    // Disable the segfault dialog. We want to fail the tests immediately
+    // instead of hanging automation.
+    UINT prevMode = SetErrorMode(0);
+    UINT newMode = SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
+    SetErrorMode(prevMode | newMode);
+#endif
+}
+
 int
 main(int argc, char** argv, char** envp)
 {
+    PreInit();
+
     sArgc = argc;
     sArgv = argv;
 
