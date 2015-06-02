@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -35,16 +35,10 @@ protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
-  NS_IMETHOD ConvertNoBuff(const char16_t * aSrc, 
-                            int32_t * aSrcLength, 
-                            char * aDest, 
-                            int32_t * aDestLength);
-
-  NS_IMETHOD ConvertNoBuffNoErr(const char16_t * aSrc, int32_t * aSrcLength, 
-                                char * aDest, int32_t * aDestLength)
-  {
-    return NS_OK;
-  }  // just make it not abstract;
+  NS_IMETHOD ConvertNoBuffNoErr(const char16_t * aSrc,
+                                int32_t * aSrcLength,
+                                char * aDest,
+                                int32_t * aDestLength);
 
   virtual void CreateExtensionEncoder();
   virtual void Create4BytesEncoder();
@@ -54,9 +48,11 @@ protected:
 protected:
   char16_t mSurrogateHigh;
   nsGBKConvUtil mUtil;
-  bool TryExtensionEncoder(char16_t aChar, char* aDest, int32_t* aOutLen);
-  bool Try4BytesEncoder(char16_t aChar, char* aDest, int32_t* aOutLen);
-  virtual bool EncodeSurrogate(char16_t aSurrogateHigh, char16_t aSurrogateLow, char* aDest);
+  nsresult TryExtensionEncoder(char16_t aChar, char* aDest, int32_t* aOutLen);
+  nsresult Try4BytesEncoder(char16_t aChar, char* aDest, int32_t* aOutLen);
+  virtual nsresult EncodeSurrogate(char16_t aSurrogateHigh,
+                                   char16_t aSurrogateLow, char* aDest,
+                                   int32_t aDestLength, int32_t aBufferLength);
 };
 
 class nsUnicodeToGB18030: public nsUnicodeToGBK
@@ -67,7 +63,9 @@ public:
 protected:
   virtual void CreateExtensionEncoder();
   virtual void Create4BytesEncoder();
-  virtual bool EncodeSurrogate(char16_t aSurrogateHigh, char16_t aSurrogateLow, char* aDest);
+  virtual nsresult EncodeSurrogate(char16_t aSurrogateHigh,
+                                   char16_t aSurrogateLow, char* aDest,
+                                   int32_t aDestLength, int32_t aBufferLength);
 };
 
 #endif /* nsUnicodeToGBK_h___ */
