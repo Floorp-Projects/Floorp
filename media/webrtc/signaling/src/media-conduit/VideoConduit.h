@@ -7,6 +7,7 @@
 
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Atomics.h"
 
 #include "MediaConduitInterface.h"
 #include "MediaEngineWrapper.h"
@@ -134,13 +135,18 @@ public:
 
   virtual MediaConduitErrorCode SetReceiverTransport(mozilla::RefPtr<TransportInterface> aTransport) override;
 
+  void SelectBandwidth(webrtc::VideoCodec& vie_codec,
+                       unsigned short width,
+                       unsigned short height);
   /**
    * Function to select and change the encoding resolution based on incoming frame size
    * and current available bandwidth.
    * @param width, height: dimensions of the frame
+   * @param force: force setting the codec config if framerate may require a bandwidth change
    */
   bool SelectSendResolution(unsigned short width,
-                            unsigned short height);
+                            unsigned short height,
+                            bool force);
 
   /**
    * Function to select and change the encoding frame rate based on incoming frame rate
@@ -337,6 +343,8 @@ private:
   unsigned short mReceivingWidth;
   unsigned short mReceivingHeight;
   unsigned int   mSendingFramerate;
+  // scaled by *10 because Atomic<double/float> isn't supported
+  mozilla::Atomic<int32_t, mozilla::Relaxed> mLastFramerateTenths;
   unsigned short mNumReceivingStreams;
   bool mVideoLatencyTestEnable;
   uint64_t mVideoLatencyAvg;
