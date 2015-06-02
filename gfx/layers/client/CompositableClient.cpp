@@ -128,6 +128,7 @@ CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
 : mCompositableChild(nullptr)
 , mForwarder(aForwarder)
 , mTextureFlags(aTextureFlags)
+, mDestroyed(false)
 {
   MOZ_COUNT_CTOR(CompositableClient);
 }
@@ -169,6 +170,8 @@ CompositableClient::Connect()
 void
 CompositableClient::Destroy()
 {
+  mDestroyed = true;
+
   if (!mCompositableChild) {
     return;
   }

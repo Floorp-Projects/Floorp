@@ -428,7 +428,7 @@ ShadowLayerForwarder::RemoveTextureFromCompositableAsync(AsyncTransactionTracker
                                                      CompositableClient* aCompositable,
                                                      TextureClient* aTexture)
 {
-  if (mTxn->Opened()) {
+  if (mTxn->Opened() && !aCompositable->IsDestroyed()) {
     mTxn->AddEdit(OpRemoveTextureAsync(CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
                                        aAsyncTransactionTracker->GetId(),
                                        nullptr, aCompositable->GetIPDLActor(),
