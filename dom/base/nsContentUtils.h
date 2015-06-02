@@ -775,7 +775,7 @@ public:
   static nsresult ReportToConsoleNonLocalized(const nsAString& aErrorText,
                                               uint32_t aErrorFlags,
                                               const nsACString& aCategory,
-                                              nsIDocument* aDocument,
+                                              const nsIDocument* aDocument,
                                               nsIURI* aURI = nullptr,
                                               const nsAFlatString& aSourceLine
                                                 = EmptyString(),
@@ -820,7 +820,7 @@ public:
   };
   static nsresult ReportToConsole(uint32_t aErrorFlags,
                                   const nsACString& aCategory,
-                                  nsIDocument* aDocument,
+                                  const nsIDocument* aDocument,
                                   PropertiesFile aFile,
                                   const char *aMessageName,
                                   const char16_t **aParams = nullptr,
