@@ -3,7 +3,7 @@
 
 'use strict';
 
-const {PushDB, PushService} = serviceExports;
+const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 function run_test() {
   do_get_profile();
@@ -15,7 +15,7 @@ function run_test() {
 }
 
 add_task(function* test_notification_version_string() {
-  let db = new PushDB();
+  let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   yield db.put({
     channelID: '6ff97d56-d0c0-43bc-8f5b-61b855e1d93b',
@@ -28,6 +28,7 @@ add_task(function* test_notification_version_string() {
 
   let ackDefer = Promise.defer();
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     db,
     makeWebSocket(uri) {

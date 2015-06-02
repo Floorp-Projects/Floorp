@@ -3,7 +3,7 @@
 
 'use strict';
 
-const {PushDB, PushService} = serviceExports;
+const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 const userAgentID = 'bd744428-f125-436a-b6d0-dd0c9845837f';
 const channelID = '0ef2ad4a-6c49-41ad-af6e-95d2425276bf';
@@ -22,11 +22,12 @@ function run_test() {
 }
 
 add_task(function* test_register_success() {
-  let db = new PushDB();
+  let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
-  PushService._generateID = () => channelID;
+  PushServiceWebSocket._generateID = () => channelID;
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     db,
     makeWebSocket(uri) {
