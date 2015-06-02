@@ -19,7 +19,7 @@ function test() {
 
     // Spin the event loop before causing the debuggee to pause, to allow
     // this function to return first.
-    sendMouseClickToTab(tab, content.document.querySelector("button"));
+    generateMouseClickInTab(tab, "content.document.querySelector('button')");
 
     yield waitForDebuggerEvents(panel, gDebugger.EVENTS.FETCHED_SCOPES);
     let gVars = gDebugger.DebuggerView.Variables;

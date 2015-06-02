@@ -34,7 +34,7 @@ function test() {
       yield ensureThreadClientState(aPanel, "resumed");
 
       let paused = waitForCaretAndScopes(aPanel, 48);
-      sendMouseClickToTab(gTab, content.document.body);
+      generateMouseClickInTab(gTab, "content.document.body");
       yield paused;
       yield ensureThreadClientState(aPanel, "paused");
 
