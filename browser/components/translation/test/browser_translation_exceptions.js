@@ -51,7 +51,7 @@ function getDomainExceptions() {
 
     if (perm.type == "translate" &&
         perm.capability == Services.perms.DENY_ACTION)
-      results.push(perm.host);
+      results.push(perm.principal);
   }
 
   return results;
@@ -181,7 +181,7 @@ let gTests = [
     // Check this has been saved to the exceptions list.
     let sites = getDomainExceptions();
     is(sites.length, 1, "one site in the exception list");
-    is(sites[0], "example.com", "correct site in the exception list");
+    is(sites[0].origin, "http://example.com", "correct site in the exception list");
     ok(!ui.shouldShowInfoBar(uri, "fr"),
        "the infobar wouldn't be shown anymore");
 
