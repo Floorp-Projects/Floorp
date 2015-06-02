@@ -122,7 +122,9 @@ const RecipeHelpers = {
   initNewParent() {
     return (new LoginRecipesParent({ defaults: false })).initializationPromise;
   },
+};
 
+const MockDocument = {
   /**
    * Create a document for the given URL containing the given HTML with the ownerDocument of all <form>s having a mocked location.
    */
@@ -132,27 +134,32 @@ const RecipeHelpers = {
     parser.init();
     let parsedDoc = parser.parseFromString(aHTML, "text/html");
 
+    for (let element of parsedDoc.forms) {
+      this.mockOwnerDocumentProperty(element, parsedDoc, aDocumentURL);
+    }
+    return parsedDoc;
+  },
+
+  mockOwnerDocumentProperty(aElement, aDoc, aURL) {
     // Mock the document.location object so we can unit test without a frame. We use a proxy
     // instead of just assigning to the property since it's not configurable or writable.
-    let document = new Proxy(parsedDoc, {
+    let document = new Proxy(aDoc, {
       get(target, property, receiver) {
         // document.location is normally null when a document is outside of a "browsing context".
         // See https://html.spec.whatwg.org/#the-location-interface
         if (property == "location") {
-          return new URL(aDocumentURL);
+          return new URL(aURL);
         }
         return target[property];
       },
     });
 
-    for (let form of parsedDoc.forms) {
-      // Assign form.ownerDocument to the proxy so document.location works.
-      Object.defineProperty(form, "ownerDocument", {
-        value: document,
-      });
-    }
-    return parsedDoc;
-  }
+    // Assign element.ownerDocument to the proxy so document.location works.
+    Object.defineProperty(aElement, "ownerDocument", {
+      value: document,
+    });
+  },
+
 };
 
 //// Initialization functions common to all tests

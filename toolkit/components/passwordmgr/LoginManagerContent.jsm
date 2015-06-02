@@ -515,7 +515,7 @@ var LoginManagerContent = {
    * Can handle complex forms by trying to figure out what the
    * relevant fields are.
    *
-   * @param {HTMLFormElement} form
+   * @param {FormLike} form
    * @param {bool} isSubmission
    * @param {Set} recipes
    * @return {Array} [usernameField, newPasswordField, oldPasswordField]
@@ -564,7 +564,7 @@ var LoginManagerContent = {
 
     if (!usernameField) {
       // Locate the username field in the form by searching backwards
-      // from the first passwordfield, assume the first text field is the
+      // from the first password field, assume the first text field is the
       // username. We might not find a username field if the user is
       // already logged in to the site.
       for (var i = pwFields[0].index - 1; i >= 0; i--) {
@@ -1156,7 +1156,7 @@ let FormLikeFactory = {
       autocomplete: "on",
       // Exclude elements inside the rootElement that are already in a <form> as
       // they will be handled by their own FormLike.
-      elements: [for (el of doc.querySelectorAll("input")) if (!el.form) el],
+      elements: [for (el of doc.documentElement.querySelectorAll("input")) if (!el.form) el],
       ownerDocument: doc,
       rootElement: doc.documentElement,
     };
