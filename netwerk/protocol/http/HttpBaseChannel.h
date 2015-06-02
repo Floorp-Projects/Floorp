@@ -474,7 +474,7 @@ protected:
 template <class T>
 nsresult HttpAsyncAborter<T>::AsyncAbort(nsresult status)
 {
-  MOZ_LOG(gHttpLog, LogLevel::Debug,
+  MOZ_LOG(gHttpLog, 4,
          ("HttpAsyncAborter::AsyncAbort [this=%p status=%x]\n", mThis, status));
 
   mThis->mStatus = status;
@@ -491,7 +491,7 @@ inline void HttpAsyncAborter<T>::HandleAsyncAbort()
   NS_PRECONDITION(!mCallOnResume, "How did that happen?");
 
   if (mThis->mSuspendCount) {
-    MOZ_LOG(gHttpLog, LogLevel::Debug,
+    MOZ_LOG(gHttpLog, 4,
            ("Waiting until resume to do async notification [this=%p]\n", mThis));
     mCallOnResume = &T::HandleAsyncAbort;
     return;

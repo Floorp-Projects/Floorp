@@ -14,8 +14,6 @@
 #include "prthread.h"
 #include "nsThreadUtils.h"
 
-#include "mozilla/Logging.h"
-
 static PRLogModuleInfo *gLogModuleInfo = nullptr;
 
 PRLogModuleInfo *GetSignalingLogInfo()
@@ -44,12 +42,12 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   vprintf(format, args);
 #else
 
-  mozilla::LogLevel level = static_cast<mozilla::LogLevel>(priority);
+  PRLogModuleLevel level = static_cast<PRLogModuleLevel>(priority);
 
   GetSignalingLogInfo();
 
   // Skip doing any of this work if we're not logging the indicated level...
-  if (!MOZ_LOG_TEST(gLogModuleInfo,level)) {
+  if (!PR_LOG_TEST(gLogModuleInfo,level)) {
     return;
   }
 

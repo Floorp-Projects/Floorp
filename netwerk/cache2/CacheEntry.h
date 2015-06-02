@@ -294,7 +294,9 @@ private:
   //        fails to open an output stream.
   bool mHasData : 1;
 
+#ifdef PR_LOG
   static char const * StateString(uint32_t aState);
+#endif
 
   enum EState {      // transiting to:
     NOTLOADED = 0,   // -> LOADING | EMPTY

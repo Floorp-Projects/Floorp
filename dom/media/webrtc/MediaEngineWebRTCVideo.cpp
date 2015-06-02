@@ -19,8 +19,8 @@ using dom::ConstrainDoubleRange;
 using dom::MediaTrackConstraintSet;
 
 extern PRLogModuleInfo* GetMediaManagerLog();
-#define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
-#define LOGFRAME(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
+#define LOG(msg) MOZ_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
+#define LOGFRAME(msg) MOZ_LOG(GetMediaManagerLog(), 6, msg)
 
 /**
  * Webrtc video source.
@@ -227,7 +227,7 @@ MediaEngineWebRTCVideoSource::Allocate(const dom::MediaTrackConstraints &aConstr
     }
     mState = kAllocated;
     LOG(("Video device %d allocated", mCaptureIndex));
-  } else if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
+  } else if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
     MonitorAutoLock lock(mMonitor);
     if (mSources.IsEmpty()) {
       LOG(("Video device %d reallocated", mCaptureIndex));

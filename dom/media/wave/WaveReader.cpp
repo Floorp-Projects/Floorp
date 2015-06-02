@@ -254,7 +254,7 @@ nsRefPtr<MediaDecoderReader::SeekPromise>
 WaveReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
-  LOG(LogLevel::Debug, ("%p About to seek to %lld", mDecoder, aTarget));
+  LOG(PR_LOG_DEBUG, ("%p About to seek to %lld", mDecoder, aTarget));
 
   if (NS_FAILED(ResetDecode())) {
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
