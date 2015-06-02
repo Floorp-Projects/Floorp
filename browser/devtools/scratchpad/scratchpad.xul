@@ -92,6 +92,9 @@
        key="&largerFont.commandkey;"
        command="sp-cmd-larger-font"
        modifiers="accel"/>
+  <key key="&largerFont.commandkey2;"
+       command="sp-cmd-larger-font"
+       modifiers="accel"/>
   <key id="sp-key-smaller-font"
        key="&smallerFont.commandkey;"
        command="sp-cmd-smaller-font"
