@@ -11,4 +11,4 @@ skip-if(B2G||Mulet) fails-if(Android) == radio-stretched.html radio-stretched-re
 != indeterminate-native-checked.html indeterminate-native-checked-notref.html
 != indeterminate-native-unchecked.html indeterminate-native-unchecked-notref.html
 == indeterminate-selector.html indeterminate-selector-ref.html
-skip-if(!gtk2Widget||Mulet) == gtk-theme-width-height.html gtk-theme-width-height-ref.html # bug 1141511: Disable some gtk2Widget-dependant reftests on Mulet
+skip-if(!gtkWidget||Mulet) == gtk-theme-width-height.html gtk-theme-width-height-ref.html # bug 1141511: Disable some gtkWidget-dependant reftests on Mulet

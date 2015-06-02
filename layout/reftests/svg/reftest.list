@@ -225,8 +225,8 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android||B2G,9,586) == no
 == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 == objectBoundingBox-and-clipPath.svg pass.svg
 # Bug 588684
-random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
-random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundingBox-and-fePointLight-02-ref.svg
+random-if(gtkWidget) == objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
+random-if(gtkWidget) == objectBoundingBox-and-fePointLight-02.svg objectBoundingBox-and-fePointLight-02-ref.svg
 == objectBoundingBox-and-mask.svg pass.svg
 == objectBoundingBox-and-mask-02.svg pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
@@ -312,7 +312,7 @@ fuzzy-if(cocoaWidget,4,15982) fuzzy-if(winWidget,4,92) == radialGradient-basic-0
 == svg-transform-02.svg pass.svg
 == symbol-01.svg symbol-01-ref.svg
 == text-font-size-01.svg pass.svg
-random-if(gtk2Widget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
+random-if(gtkWidget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == text-gradient-01.svg text-gradient-01-ref.svg
 random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
 == text-gradient-03.svg pass.svg
@@ -322,7 +322,7 @@ HTTP(..) == text-gradient-04.svg text-gradient-04-ref.svg
 == text-in-link-03.svg text-in-link-03-ref.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
 skip-if(B2G||Mulet) != text-language-00.xhtml text-language-00-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(gtk2Widget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts. # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts. # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(OSX==1007,6,2) fuzzy-if(OSX==1008,46,26) == text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
 == text-layout-03.svg text-layout-03-ref.svg
