@@ -7,10 +7,7 @@
 
 "use strict";
 
-Cu.import("resource://testing-common/httpd.js");
 Cu.importGlobalProperties(["URL"]);
-
-Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 add_task(function* test_getFieldOverrides() {
   let recipes = new Set([
@@ -32,7 +29,8 @@ add_task(function* test_getFieldOverrides() {
     },
   ]);
 
-  let form = RecipeHelpers.createTestForm("http://localhost:8080/first/second/");
+  let form = RecipeHelpers.createTestDocument("http://localhost:8080/first/second/", "<form>").
+             forms[0];
   let override = LoginRecipesContent.getFieldOverrides(recipes, form);
   Assert.strictEqual(override.description, "best match",
                      "Check the best field override recipe was returned");

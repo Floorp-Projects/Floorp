@@ -315,7 +315,7 @@ class XPCShellTestThread(Thread):
                   name.replace('\\', '/')]
 
     def setupTempDir(self):
-        tempDir = mkdtemp()
+        tempDir = mkdtemp(prefix='xpc-other-')
         self.env["XPCSHELL_TEST_TEMP_DIR"] = tempDir
         if self.interactive:
             self.log.info("temp dir is %s" % tempDir)
@@ -325,7 +325,7 @@ class XPCShellTestThread(Thread):
         if not os.path.isdir(self.pluginsPath):
             return None
 
-        pluginsDir = mkdtemp()
+        pluginsDir = mkdtemp(prefix='xpc-plugins-')
         # shutil.copytree requires dst to not exist. Deleting the tempdir
         # would make a race condition possible in a concurrent environment,
         # so we are using dir_utils.copy_tree which accepts an existing dst
@@ -351,7 +351,7 @@ class XPCShellTestThread(Thread):
                 pass
             os.makedirs(profileDir)
         else:
-            profileDir = mkdtemp()
+            profileDir = mkdtemp(prefix='xpc-profile-')
         self.env["XPCSHELL_TEST_PROFILE_DIR"] = profileDir
         if self.interactive or self.singleFile:
             self.log.info("profile dir is %s" % profileDir)

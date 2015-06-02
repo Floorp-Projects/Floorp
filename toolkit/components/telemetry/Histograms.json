@@ -8070,5 +8070,29 @@
     "expires_in_version": "never",
     "kind": "count",
     "description": "Record the removal of defective permissions.sqlite"
+  },
+  "FENNEC_TABQUEUE_QUEUESIZE" : {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50",
+    "n_buckets": 10,
+    "description": "The number of tabs queued when opened."
+  },
+  "FENNEC_TABQUEUE_PROMPT_ENABLE_YES" : {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "The number of times the tab queue prompt was seen before the user selected YES."
+  },
+  "FENNEC_TABQUEUE_PROMPT_ENABLE_NO" : {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "The number of times the tab queue prompt was seen before the user selected NO."
+  },
+  "FENNEC_TABQUEUE_ENABLED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Has the tab queue functionality been enabled."
   }
 }
