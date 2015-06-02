@@ -2,8 +2,8 @@
 != backgr_border-table-cell.html empty.html
 != backgr_border-table-column-group.html empty.html
 # This seems to be caused by bug 527825
-asserts-if(gtk2Widget,0-12) != backgr_border-table-column.html empty.html
-asserts-if(gtk2Widget,0-6) != backgr_border-table-quirks.html empty.html
+asserts-if(gtkWidget,0-12) != backgr_border-table-column.html empty.html
+asserts-if(gtkWidget,0-6) != backgr_border-table-quirks.html empty.html
 != backgr_border-table-row-group.html empty.html
 != backgr_border-table-row.html empty.html
 != backgr_border-table.html empty.html

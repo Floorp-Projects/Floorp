@@ -50,7 +50,7 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,1,61) == perspective-origin-3a.html pe
 == sorting-3a.html green-rect.html
 # Different, but equivalent (for the given transform) transform origins
 == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
-fuzzy-if((gtk2Widget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),1,86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
+fuzzy-if((gtkWidget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),1,86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
 == transform-style-flat-1a.html transform-style-flat-1-ref.html
 pref(layout.css.will-change.enabled,true) == willchange-containing-block.html?willchange willchange-containing-block.html?ref
 pref(layout.css.will-change.enabled,true) != willchange-containing-block.html?willchange willchange-containing-block.html?noblock

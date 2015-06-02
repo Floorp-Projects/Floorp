@@ -107,7 +107,7 @@ skip-if(B2G||Mulet) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-r
 == flexbox-styling-on-svg-1.svg flexbox-styling-on-svg-1-ref.svg
 
 # Tests with widgets as flex items
-fuzzy-if(gtk2Widget,1,66) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
-fuzzy-if(gtk2Widget,1,74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
-fuzzy-if(gtk2Widget,1,58) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html
-fuzzy-if(gtk2Widget,1,31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
+fuzzy-if(gtkWidget,1,66) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
+fuzzy-if(gtkWidget,1,74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html
+fuzzy-if(gtkWidget,1,58) == flexbox-widget-flex-items-3.html flexbox-widget-flex-items-3-ref.html
+fuzzy-if(gtkWidget,1,31) == flexbox-widget-flex-items-4.html flexbox-widget-flex-items-4-ref.html
