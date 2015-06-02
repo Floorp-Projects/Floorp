@@ -26,6 +26,7 @@ OuterDocAccessible::
   OuterDocAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
+  mType = eOuterDocType;
 }
 
 OuterDocAccessible::~OuterDocAccessible()
