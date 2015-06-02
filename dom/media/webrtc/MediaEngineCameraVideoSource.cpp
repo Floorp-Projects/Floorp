@@ -218,7 +218,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
     const dom::MediaTrackConstraints &aConstraints,
     const MediaEnginePrefs &aPrefs)
 {
-  if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
+  if (MOZ_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
     LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
          aPrefs.GetWidth(), aPrefs.GetHeight(),
          aPrefs.mFPS, aPrefs.mMinFPS));

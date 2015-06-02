@@ -849,7 +849,7 @@ InMemoryDataSource::LogOperation(const char* aOperation,
                                  nsIRDFNode* aTarget,
                                  bool aTruthValue)
 {
-    if (! PR_LOG_TEST(gLog, PR_LOG_NOTICE))
+    if (! MOZ_LOG_TEST(gLog, PR_LOG_NOTICE))
         return;
 
     nsXPIDLCString uri;

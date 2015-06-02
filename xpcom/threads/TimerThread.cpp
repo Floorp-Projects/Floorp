@@ -341,7 +341,7 @@ TimerThread::Run()
         }
       }
 
-      if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
+      if (MOZ_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
         if (waitFor == PR_INTERVAL_NO_TIMEOUT)
           MOZ_LOG(GetTimerLog(), PR_LOG_DEBUG,
                  ("waiting for PR_INTERVAL_NO_TIMEOUT\n"));

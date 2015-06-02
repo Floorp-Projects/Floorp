@@ -447,7 +447,7 @@ nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
 
     rv = baseURI->Resolve(nsDependentCString(p, path.Length()-1), result);
 
-    if (PR_LOG_TEST(gResLog, PR_LOG_DEBUG)) {
+    if (MOZ_LOG_TEST(gResLog, PR_LOG_DEBUG)) {
         nsAutoCString spec;
         uri->GetAsciiSpec(spec);
         MOZ_LOG(gResLog, PR_LOG_DEBUG,

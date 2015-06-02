@@ -51,7 +51,7 @@ GetImgLog()
   }
   return sImgLog;
 }
-#define LOG_TEST(level) (GetImgLog() && PR_LOG_TEST(GetImgLog(), (level)))
+#define LOG_TEST(level) (GetImgLog() && MOZ_LOG_TEST(GetImgLog(), (level)))
 
 NS_IMPL_ISUPPORTS(imgRequest,
                   nsIStreamListener, nsIRequestObserver,
@@ -260,7 +260,7 @@ imgRequest::RemoveProxy(imgRequestProxy* proxy, nsresult aStatus)
       if (mLoader) {
         mLoader->SetHasNoProxies(this, mCacheEntry);
       }
-    } else if (PR_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
+    } else if (MOZ_LOG_TEST(GetImgLog(), PR_LOG_DEBUG)) {
       nsAutoCString spec;
       mURI->GetSpec(spec);
       LOG_MSG_WITH_PARAM(GetImgLog(),

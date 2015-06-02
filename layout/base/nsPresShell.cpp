@@ -1005,7 +1005,7 @@ LogTextPerfStats(gfxTextPerfMetrics* aTextPerf,
     logLevel = PR_LOG_DEBUG;
   }
 
-  if (!PR_LOG_TEST(tpLog, logLevel)) {
+  if (!MOZ_LOG_TEST(tpLog, logLevel)) {
     return;
   }
 
@@ -2709,7 +2709,7 @@ PresShell::BeginLoad(nsIDocument *aDocument)
     tp = mPresContext->GetTextPerfMetrics();
   }
 
-  bool shouldLog = gLog && PR_LOG_TEST(gLog, PR_LOG_DEBUG);
+  bool shouldLog = gLog && MOZ_LOG_TEST(gLog, PR_LOG_DEBUG);
   if (shouldLog || tp) {
     mLoadBegin = TimeStamp::Now();
   }
@@ -2745,7 +2745,7 @@ PresShell::LoadComplete()
   }
 
   // log load
-  bool shouldLog = gLog && PR_LOG_TEST(gLog, PR_LOG_DEBUG);
+  bool shouldLog = gLog && MOZ_LOG_TEST(gLog, PR_LOG_DEBUG);
   if (shouldLog || tp) {
     TimeDuration loadTime = TimeStamp::Now() - mLoadBegin;
     nsIURI* uri = mDocument->GetDocumentURI();
