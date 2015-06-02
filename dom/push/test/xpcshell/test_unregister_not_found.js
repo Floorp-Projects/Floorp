@@ -13,6 +13,7 @@ function run_test() {
 
 add_task(function* test_unregister_not_found() {
   PushService.init({
+    serverURI: "wss://push.example.org/",
     networkInfo: new MockDesktopNetworkInfo(),
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
