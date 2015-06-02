@@ -239,19 +239,20 @@ HTMLBreadcrumbs.prototype = {
     // for inspector.selection
     this.selection.setNodeFront(node, "breadcrumbs");
 
-    let title = this.chromeDoc.createElement("menuitem");
-    title.setAttribute("label", this.inspector.strings.GetStringFromName("breadcrumbs.siblings"));
-    title.setAttribute("disabled", "true");
-
-    let separator = this.chromeDoc.createElement("menuseparator");
-
-    let items = [title, separator];
+    // Build a list of extra menu items that will be appended at the end of the
+    // inspector node context menu.
+    let items = [this.chromeDoc.createElement("menuseparator")];
 
     this.walker.siblings(node, {
       whatToShow: Ci.nsIDOMNodeFilter.SHOW_ELEMENT
     }).then(siblings => {
       let nodes = siblings.nodes;
       for (let i = 0; i < nodes.length; i++) {
+        // Skip siblings of the documentElement node.
+        if (nodes[i].nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+          continue;
+        }
+
         let item = this.chromeDoc.createElement("menuitem");
         if (nodes[i] === node) {
           item.setAttribute("disabled", "true");
@@ -269,8 +270,10 @@ HTMLBreadcrumbs.prototype = {
         })(nodes[i]);
 
         items.push(item);
-        this.inspector.showNodeMenu(button, "before_start", items);
       }
+
+      // Append the items to the inspector node context menu and show the menu.
+      this.inspector.showNodeMenu(button, "before_start", items);
     });
   },
 
