@@ -12,6 +12,8 @@
 #
 # The histograms are defined in files provided as command-line arguments.
 
+from __future__ import print_function
+
 import histogram_tools
 import itertools
 import sys
@@ -19,11 +21,9 @@ import sys
 banner = """/* This file is auto-generated, see gen-histogram-enum.py.  */
 """
 
-def main(argv):
-    filenames = argv
-
-    print banner
-    print "enum ID : uint32_t {"
+def main(output, *filenames):
+    print(banner, file=output)
+    print("enum ID : uint32_t {", file=output)
 
     groups = itertools.groupby(histogram_tools.from_files(filenames),
                                lambda h: h.name().startswith("USE_COUNTER_"))
@@ -40,26 +40,27 @@ def main(argv):
         # of Histogram{First,Last}UseCounter easier.  Otherwise, we'd have to
         # special case the first and last histogram in the group.
         if use_counter_group:
-            print "  HistogramFirstUseCounter,"
-            print "  HistogramDUMMY1 = HistogramFirstUseCounter - 1,"
+            print("  HistogramFirstUseCounter,", file=output)
+            print("  HistogramDUMMY1 = HistogramFirstUseCounter - 1,", file=output)
 
         for histogram in histograms:
             cpp_guard = histogram.cpp_guard()
             if cpp_guard:
-                print "#if defined(%s)" % cpp_guard
-            print "  %s," % histogram.name()
+                print("#if defined(%s)" % cpp_guard, file=output)
+            print("  %s," % histogram.name(), file=output)
             if cpp_guard:
-                print "#endif"
+                print("#endif", file=output)
 
         if use_counter_group:
-            print "  HistogramDUMMY2,"
-            print "  HistogramLastUseCounter = HistogramDUMMY2 - 1,"
+            print("  HistogramDUMMY2,", file=output)
+            print("  HistogramLastUseCounter = HistogramDUMMY2 - 1,", file=output)
 
-    print "  HistogramCount,"
+    print("  HistogramCount,", file=output)
     if seen_use_counters:
-        print "  HistogramUseCounterCount = HistogramLastUseCounter - HistogramFirstUseCounter + 1"
+        print("  HistogramUseCounterCount = HistogramLastUseCounter - HistogramFirstUseCounter + 1", file=output)
     else:
-        print "  HistogramUseCounterCount = 0"
-    print "};"
+        print("  HistogramUseCounterCount = 0", file=output)
+    print("};", file=output)
 
-main(sys.argv[1:])
+if __name__ == '__main__':
+    main(sys.stdout, *sys.argv[1:])
