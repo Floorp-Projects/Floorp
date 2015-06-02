@@ -2070,7 +2070,7 @@ LayerManager::IsLogEnabled()
 {
   MOZ_ASSERT(!!sLog,
              "layer manager must be created before logging is allowed");
-  return MOZ_LOG_TEST(sLog, LogLevel::Debug);
+  return PR_LOG_TEST(sLog, PR_LOG_DEBUG);
 }
 
 void

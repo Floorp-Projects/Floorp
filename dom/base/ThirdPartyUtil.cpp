@@ -23,7 +23,7 @@ NS_IMPL_ISUPPORTS(ThirdPartyUtil, mozIThirdPartyUtil)
 //
 static PRLogModuleInfo *gThirdPartyLog;
 #undef LOG
-#define LOG(args)     MOZ_LOG(gThirdPartyLog, mozilla::LogLevel::Debug, args)
+#define LOG(args)     MOZ_LOG(gThirdPartyLog, PR_LOG_DEBUG, args)
 
 nsresult
 ThirdPartyUtil::Init()

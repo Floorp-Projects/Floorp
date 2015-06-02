@@ -307,7 +307,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
     NS_IF_RELEASE(mDocumentURL);
 
     if (mContextStack) {
-        MOZ_LOG(gLog, LogLevel::Warning,
+        MOZ_LOG(gLog, PR_LOG_WARNING,
                ("rdfxml: warning! unclosed tag"));
 
         // XXX we should never need to do this, but, we'll write the
@@ -323,10 +323,10 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
             // print some fairly useless debugging info
             // XXX we should save line numbers on the context stack: this'd
             // be about 1000x more helpful.
-            if (resource && MOZ_LOG_TEST(gLog, LogLevel::Debug)) {
+            if (resource && PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
                 nsXPIDLCString uri;
                 resource->GetValue(getter_Copies(uri));
-                MOZ_LOG(gLog, LogLevel::Debug,
+                MOZ_LOG(gLog, PR_LOG_NOTICE,
                        ("rdfxml:   uri=%s", (const char*) uri));
             }
 
@@ -421,7 +421,7 @@ RDFContentSinkImpl::HandleStartElement(const char16_t *aName,
       break;
 
   case eRDFContentSinkState_InEpilog:
-      MOZ_LOG(gLog, LogLevel::Warning,
+      MOZ_LOG(gLog, PR_LOG_WARNING,
              ("rdfxml: unexpected content in epilog at line %d",
               aLineNumber));
       break;
@@ -438,7 +438,7 @@ RDFContentSinkImpl::HandleEndElement(const char16_t *aName)
   nsIRDFResource* resource;
   if (NS_FAILED(PopContext(resource, mState, mParseMode))) {
       // XXX parser didn't catch unmatched tags?
-      if (MOZ_LOG_TEST(gLog, LogLevel::Warning)) {
+      if (PR_LOG_TEST(gLog, PR_LOG_WARNING)) {
           nsAutoString tagStr(aName);
           char* tagCStr = ToNewCString(tagStr);
 
@@ -850,7 +850,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const char16_t** aAttributes,
         }
         else if (localName == kAboutEachAtom) {
             // XXX we don't deal with aboutEach...
-            //MOZ_LOG(gLog, LogLevel::Warning,
+            //MOZ_LOG(gLog, PR_LOG_WARNING,
             //       ("rdfxml: ignoring aboutEach at line %d",
             //        aNode.GetSourceLineNumber()));
         }
@@ -1039,7 +1039,7 @@ RDFContentSinkImpl::OpenRDF(const char16_t* aName)
         SplitExpatName(aName, getter_AddRefs(localName));
 
     if (!nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI) || localName != kRDFAtom) {
-       // MOZ_LOG(gLog, LogLevel::Info,
+       // MOZ_LOG(gLog, PR_LOG_ALWAYS,
        //        ("rdfxml: expected RDF:RDF at line %d",
        //         aNode.GetSourceLineNumber()));
 
@@ -1213,7 +1213,7 @@ RDFContentSinkImpl::OpenMember(const char16_t* aName,
 
     if (!nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI) ||
         localName != kLiAtom) {
-        MOZ_LOG(gLog, LogLevel::Error,
+        MOZ_LOG(gLog, PR_LOG_ALWAYS,
                ("rdfxml: expected RDF:li at line %d",
                 -1)); // XXX pass in line number
 

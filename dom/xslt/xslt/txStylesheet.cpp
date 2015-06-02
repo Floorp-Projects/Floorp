@@ -16,7 +16,6 @@
 #include "txKey.h"
 #include "txXPathTreeWalker.h"
 
-using mozilla::LogLevel;
 using mozilla::Move;
 
 txStylesheet::txStylesheet()
@@ -158,7 +157,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
         }
     }
 
-    if (MOZ_LOG_TEST(txLog::xslt, LogLevel::Debug)) {
+    if (PR_LOG_TEST(txLog::xslt, PR_LOG_DEBUG)) {
       nsAutoString mode, nodeName;
       if (aMode.mLocalName) {
           aMode.mLocalName->ToString(mode);
@@ -169,14 +168,14 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
 #ifdef TX_TO_STRING
           match->toString(matchAttr);
 #endif
-          MOZ_LOG(txLog::xslt, LogLevel::Debug,
+          MOZ_LOG(txLog::xslt, PR_LOG_DEBUG,
                  ("MatchTemplate, Pattern %s, Mode %s, Node %s\n",
                   NS_LossyConvertUTF16toASCII(matchAttr).get(),
                   NS_LossyConvertUTF16toASCII(mode).get(),
                   NS_LossyConvertUTF16toASCII(nodeName).get()));
       }
       else {
-          MOZ_LOG(txLog::xslt, LogLevel::Debug,
+          MOZ_LOG(txLog::xslt, PR_LOG_DEBUG,
                  ("No match, Node %s, Mode %s\n", 
                   NS_LossyConvertUTF16toASCII(nodeName).get(),
                   NS_LossyConvertUTF16toASCII(mode).get()));
