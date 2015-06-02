@@ -2805,6 +2805,12 @@ jit::AddKeepAliveInstructions(MIRGraph& graph)
 
             MOZ_ASSERT(ownerObject->type() == MIRType_Object);
 
+            if (ownerObject->isConstant()) {
+                // Constants are kept alive by other pointers, for instance
+                // ImmGCPtr in JIT code.
+                continue;
+            }
+
             for (MUseDefIterator uses(ins); uses; uses++) {
                 MInstruction* use = uses.def()->toInstruction();
 
