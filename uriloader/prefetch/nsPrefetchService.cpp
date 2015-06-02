@@ -44,10 +44,10 @@ using namespace mozilla;
 static PRLogModuleInfo *gPrefetchLog;
 
 #undef LOG
-#define LOG(args) MOZ_LOG(gPrefetchLog, 4, args)
+#define LOG(args) MOZ_LOG(gPrefetchLog, PR_LOG_DEBUG, args)
 
 #undef LOG_ENABLED
-#define LOG_ENABLED() MOZ_LOG_TEST(gPrefetchLog, 4)
+#define LOG_ENABLED() MOZ_LOG_TEST(gPrefetchLog, PR_LOG_DEBUG)
 
 #define PREFETCH_PREF "network.prefetch-next"
 
