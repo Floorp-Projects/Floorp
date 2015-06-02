@@ -346,6 +346,8 @@ MediaDecoder::MediaDecoder() :
   mReentrantMonitor("media.decoder"),
   mNetworkDuration(AbstractThread::MainThread(), NullableTimeUnit(),
                    "MediaDecoder::mNetworkDuration (Canonical)"),
+  mExplicitDuration(AbstractThread::MainThread(), Maybe<double>(),
+                   "MediaDecoder::mExplicitDuration (Canonical)"),
   mPlayState(AbstractThread::MainThread(), PLAY_STATE_LOADING,
              "MediaDecoder::mPlayState (Canonical)"),
   mNextState(AbstractThread::MainThread(), PLAY_STATE_PAUSED,
