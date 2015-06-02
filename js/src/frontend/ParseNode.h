@@ -118,13 +118,7 @@ class UpvarCookie
     F(WITH) \
     F(RETURN) \
     F(NEW) \
-    /* Delete operations.  These must be sequential. */ \
-    F(DELETENAME) \
-    F(DELETEPROP) \
-    F(DELETESUPERPROP) \
-    F(DELETEELEM) \
-    F(DELETESUPERELEM) \
-    F(DELETEEXPR) \
+    F(DELETE) \
     F(TRY) \
     F(CATCH) \
     F(CATCHLIST) \
@@ -233,12 +227,6 @@ enum ParseNodeKind
     PNK_ASSIGNMENT_START = PNK_ASSIGN,
     PNK_ASSIGNMENT_LAST = PNK_MODASSIGN
 };
-
-inline bool
-IsDeleteKind(ParseNodeKind kind)
-{
-    return PNK_DELETENAME <= kind && kind <= PNK_DELETEEXPR;
-}
 
 /*
  * Label        Variant     Members
@@ -406,16 +394,7 @@ IsDeleteKind(ParseNodeKind kind)
  * PNK_NEW      list        pn_head: list of ctor, arg1, arg2, ... argN
  *                          pn_count: 1 + N (where N is number of args)
  *                          ctor is a MEMBER expr
- * PNK_DELETENAME unary     pn_kid: PNK_NAME expr
- * PNK_DELETEPROP unary     pn_kid: PNK_DOT expr
- * PNK_DELETESUPERPROP unary pn_kid: PNK_SUPERPROP expr
- * PNK_DELETEELEM unary     pn_kid: PNK_ELEM expr
- * PNK_DELETESUPERELEM unary pn_kid: PNK_SUPERELEM expr
- * PNK_DELETEEXPR unary     pn_kid: MEMBER expr that's evaluated, then the
- *                          overall delete evaluates to true; can't be a kind
- *                          for a more-specific PNK_DELETE* unless constant
- *                          folding (or a similar parse tree manipulation) has
- *                          occurred
+ * PNK_DELETE   unary       pn_kid: MEMBER expr
  * PNK_DOT      name        pn_expr: MEMBER expr to left of .
  *                          pn_atom: name to right of .
  * PNK_ELEM     binary      pn_left: MEMBER expr to left of [

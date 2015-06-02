@@ -1922,7 +1922,7 @@ ASTSerializer::aop(JSOp op)
 UnaryOperator
 ASTSerializer::unop(ParseNodeKind kind, JSOp op)
 {
-    if (IsDeleteKind(kind))
+    if (kind == PNK_DELETE)
         return UNOP_DELETE;
 
     switch (op) {
@@ -2938,12 +2938,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case PNK_INSTANCEOF:
         return leftAssociate(pn, dst);
 
-      case PNK_DELETENAME:
-      case PNK_DELETEPROP:
-      case PNK_DELETESUPERPROP:
-      case PNK_DELETEELEM:
-      case PNK_DELETESUPERELEM:
-      case PNK_DELETEEXPR:
+      case PNK_DELETE:
       case PNK_TYPEOF:
       case PNK_VOID:
       case PNK_NOT:

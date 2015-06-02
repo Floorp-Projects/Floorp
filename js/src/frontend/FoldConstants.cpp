@@ -325,12 +325,7 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
-      case PNK_DELETENAME:
-      case PNK_DELETEPROP:
-      case PNK_DELETESUPERPROP:
-      case PNK_DELETEELEM:
-      case PNK_DELETESUPERELEM:
-      case PNK_DELETEEXPR:
+      case PNK_DELETE:
       case PNK_POS:
       case PNK_NEG:
       case PNK_PREINCREMENT:
@@ -722,7 +717,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
             SyntacticContext kidsc =
                 pn->isKind(PNK_NOT)
                 ? SyntacticContext::Condition
-                : IsDeleteKind(pn->getKind())
+                : pn->isKind(PNK_DELETE)
                 ? SyntacticContext::Delete
                 : SyntacticContext::Other;
             if (!Fold(cx, &pn->pn_kid, handler, options, inGenexpLambda, kidsc))
@@ -752,7 +747,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
         break;
     }
 
-    // The immediate child of a PNK_DELETE* node should not be replaced
+    // The immediate child of a PNK_DELETE node should not be replaced
     // with node indicating a different syntactic form; |delete x| is not
     // the same as |delete (true && x)|. See bug 888002.
     //
