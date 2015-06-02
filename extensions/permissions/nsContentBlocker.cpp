@@ -39,7 +39,11 @@ static const char *kTypeString[] = {"other",
                                     "media",
                                     "websocket",
                                     "csp_report",
-                                    "xslt"};
+                                    "xslt",
+                                    "beacon",
+                                    "fetch",
+                                    "imageset",
+                                    "manifest"};
 
 #define NUMBER_OF_TYPES MOZ_ARRAY_LENGTH(kTypeString)
 uint8_t nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];

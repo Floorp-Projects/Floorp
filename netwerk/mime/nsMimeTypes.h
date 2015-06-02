@@ -64,6 +64,7 @@
 #define APPLICATION_OLEOBJECT2              "application/x-oleobject"
 #define APPLICATION_JAVAARCHIVE             "application/java-archive"
 #define APPLICATION_MARIMBA                 "application/marimba"
+#define APPLICATION_WEB_MANIFEST            "application/manifest+json"
 #define APPLICATION_XMARIMBA                "application/x-marimba"
 #define APPLICATION_XPINSTALL               "application/x-xpinstall"
 #define APPLICATION_XML                     "application/xml"

@@ -14,7 +14,9 @@
 /*globals content, sendAsyncMessage, addMessageListener, Components*/
 'use strict';
 const {
-  utils: Cu
+  utils: Cu,
+  classes: Cc,
+  interfaces: Ci
 } = Components;
 const {
   ManifestProcessor
@@ -34,6 +36,7 @@ addMessageListener('DOM:ManifestObtainer:Obtain', async(function* (aMsg) {
   try {
     response.result = yield fetchManifest();
   } catch (err) {
+    response.success = false;
     response.result = cloneError(err);
   }
   sendAsyncMessage('DOM:ManifestObtainer:Obtain', response);
@@ -64,6 +67,11 @@ function fetchManifest() {
     }
     // Throws on malformed URLs
     const manifestURL = new content.URL(elem.href, elem.baseURI);
+    if (!canLoadManifest(elem)) {
+      let msg = `Content Security Policy: The page's settings blocked the `;
+      msg += `loading of a resource at ${elem.href}`;
+      throw new Error(msg);
+    }
     const reqInit = {
       mode: 'cors'
     };
@@ -76,6 +84,21 @@ function fetchManifest() {
     const manifest = yield processResponse(response, content);
     return manifest;
   });
+}
+
+function canLoadManifest(aElem) {
+  const contentPolicy = Cc['@mozilla.org/layout/content-policy;1']
+    .getService(Ci.nsIContentPolicy);
+  const mimeType = aElem.type || 'application/manifest+json';
+  const elemURI = BrowserUtils.makeURI(
+    aElem.href, aElem.ownerDocument.characterSet
+  );
+  const shouldLoad = contentPolicy.shouldLoad(
+    Ci.nsIContentPolicy.TYPE_WEB_MANIFEST, elemURI,
+    aElem.ownerDocument.documentURIObject,
+    aElem, mimeType, null
+  );
+  return shouldLoad === Ci.nsIContentPolicy.ACCEPT;
 }
 
 function processResponse(aResp, aContentWindow) {

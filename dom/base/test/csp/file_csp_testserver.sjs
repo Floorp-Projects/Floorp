@@ -22,6 +22,7 @@ function loadHTMLFromFile(path) {
   return testHTML;
 }
 
+
 function handleRequest(request, response)
 {
   var query = {};
@@ -30,16 +31,23 @@ function handleRequest(request, response)
     query[name] = unescape(value);
   });
 
-  var csp = unescape(query['csp']);
+  var csp = (query['csp']) ? unescape(query['csp']) : "";
   var file = unescape(query['file']);
+  var cors = unescape(query['cors']);
 
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
   // Deliver the CSP policy encoded in the URI
-  response.setHeader("Content-Security-Policy", csp, false);
-
+  if(csp){
+    response.setHeader("Content-Security-Policy", csp, false);
+  }
+  // Deliver the CORS header in the URI
+  if(cors){
+    response.setHeader("Access-Control-Allow-Origin", cors, false);
+  }
   // Send HTML to test allowed/blocked behaviors
   response.setHeader("Content-Type", "text/html", false);
+
   response.write(loadHTMLFromFile(file));
 }
