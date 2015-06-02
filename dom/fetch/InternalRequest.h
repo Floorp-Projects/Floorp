@@ -49,7 +49,7 @@ namespace dom {
  * import            | Not supported by Gecko
  * internal          | TYPE_DOCUMENT, TYPE_XBL, TYPE_OTHER
  * location          |
- * manifest          |
+ * manifest          | TYPE_WEB_MANIFEST
  * object            | TYPE_OBJECT
  * ping              | TYPE_PING
  * plugin            | TYPE_OBJECT_SUBREQUEST

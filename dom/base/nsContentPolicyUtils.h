@@ -113,6 +113,7 @@ NS_CP_ContentTypeName(uint32_t contentType)
     CASE_RETURN( TYPE_BEACON            );
     CASE_RETURN( TYPE_FETCH             );
     CASE_RETURN( TYPE_IMAGESET          );
+    CASE_RETURN( TYPE_WEB_MANIFEST      );
    default:
     return "<Unknown Type>";
   }
