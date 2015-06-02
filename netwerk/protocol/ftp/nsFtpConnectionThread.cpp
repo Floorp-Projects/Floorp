@@ -46,8 +46,8 @@
 #endif
 
 extern PRLogModuleInfo* gFTPLog;
-#define LOG(args)         MOZ_LOG(gFTPLog, PR_LOG_DEBUG, args)
-#define LOG_INFO(args)  MOZ_LOG(gFTPLog, PR_LOG_INFO, args)
+#define LOG(args)         MOZ_LOG(gFTPLog, mozilla::LogLevel::Debug, args)
+#define LOG_INFO(args)  MOZ_LOG(gFTPLog, mozilla::LogLevel::Info, args)
 
 using namespace mozilla::net;
 

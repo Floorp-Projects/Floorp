@@ -384,7 +384,7 @@ txExecutionState::retrieveDocument(const nsAString& aUri)
         return nullptr;
     }
 
-    MOZ_LOG(txLog::xslt, PR_LOG_DEBUG,
+    MOZ_LOG(txLog::xslt, LogLevel::Debug,
            ("Retrieve Document %s", NS_LossyConvertUTF16toASCII(aUri).get()));
 
     // try to get already loaded document

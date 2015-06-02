@@ -1623,10 +1623,10 @@ RENDER_AGAIN:
 
 #if 0
   {
-    MOZ_LOG(gWindowsLog, PR_LOG_ERROR,
+    MOZ_LOG(gWindowsLog, LogLevel::Error,
            (stderr, "xform: %f %f %f %f [%f %f]\n", m._11, m._21, m._12, m._22,
             m._31, m._32));
-    MOZ_LOG(gWindowsLog, PR_LOG_ERROR,
+    MOZ_LOG(gWindowsLog, LogLevel::Error,
            (stderr, "tr: [%d %d %d %d]\ndr: [%d %d %d %d]\noff: [%f %f]\n",
             tr.x, tr.y, tr.width, tr.height, dr.x, dr.y, dr.width, dr.height,
             offset.x, offset.y));

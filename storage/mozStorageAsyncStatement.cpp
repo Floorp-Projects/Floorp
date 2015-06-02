@@ -125,7 +125,7 @@ AsyncStatement::initialize(Connection *aDBConnection,
   mNativeConnection = aNativeConnection;
   mSQLString = aSQLStatement;
 
-  MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Inited async statement '%s' (0x%p)",
+  MOZ_LOG(gStorageLog, LogLevel::Debug, ("Inited async statement '%s' (0x%p)",
                                       mSQLString.get()));
 
 #ifdef DEBUG
@@ -270,15 +270,15 @@ AsyncStatement::getAsyncStatement(sqlite3_stmt **_stmt)
     int rc = mDBConnection->prepareStatement(mNativeConnection, mSQLString,
                                              &mAsyncStatement);
     if (rc != SQLITE_OK) {
-      MOZ_LOG(gStorageLog, PR_LOG_ERROR,
+      MOZ_LOG(gStorageLog, LogLevel::Error,
              ("Sqlite statement prepare error: %d '%s'", rc,
               ::sqlite3_errmsg(mNativeConnection)));
-      MOZ_LOG(gStorageLog, PR_LOG_ERROR,
+      MOZ_LOG(gStorageLog, LogLevel::Error,
              ("Statement was: '%s'", mSQLString.get()));
       *_stmt = nullptr;
       return rc;
     }
-    MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Initialized statement '%s' (0x%p)",
+    MOZ_LOG(gStorageLog, LogLevel::Debug, ("Initialized statement '%s' (0x%p)",
                                         mSQLString.get(),
                                         mAsyncStatement));
   }
@@ -332,7 +332,7 @@ AsyncStatement::Finalize()
 
   mFinalized = true;
 
-  MOZ_LOG(gStorageLog, PR_LOG_NOTICE, ("Finalizing statement '%s'",
+  MOZ_LOG(gStorageLog, LogLevel::Debug, ("Finalizing statement '%s'",
                                       mSQLString.get()));
 
   asyncFinalize();

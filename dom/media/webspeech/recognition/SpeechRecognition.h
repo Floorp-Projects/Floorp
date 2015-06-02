@@ -45,7 +45,7 @@ class GlobalObject;
 class SpeechEvent;
 
 PRLogModuleInfo* GetSpeechRecognitionLog();
-#define SR_LOG(...) MOZ_LOG(GetSpeechRecognitionLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define SR_LOG(...) MOZ_LOG(GetSpeechRecognitionLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService();
 

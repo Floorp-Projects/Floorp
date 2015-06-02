@@ -12,11 +12,11 @@
 #include <sstream>
 #include "mozilla/Logging.h"
 
-#define ML_ERROR            PR_LOG_ERROR
-#define ML_WARNING          PR_LOG_WARNING
-#define ML_NOTICE           PR_LOG_INFO
-#define ML_INFO             PR_LOG_DEBUG
-#define ML_DEBUG            PR_LOG_VERBOSE
+#define ML_ERROR            mozilla::LogLevel::Error
+#define ML_WARNING          mozilla::LogLevel::Warning
+#define ML_NOTICE           mozilla::LogLevel::Info
+#define ML_INFO             mozilla::LogLevel::Debug
+#define ML_DEBUG            mozilla::LogLevel::Verbose
 
 #define MOZ_MTLOG_MODULE(n) \
   static PRLogModuleInfo* getLogModule() {      \

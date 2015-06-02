@@ -56,7 +56,7 @@ AppendEscapedBase64Item(const SECItem* encodedRequest, nsACString& path)
     return rv;
   }
 
-  MOZ_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+  MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
          ("Setting up OCSP GET path, pre path =%s\n",
           PromiseFlatCString(path).get()));
 
@@ -159,7 +159,7 @@ DoOCSPRequest(PLArenaPool* arena, const char* url,
   } else {
     path.Assign("/");
   }
-  MOZ_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+  MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
          ("Setting up OCSP request: pre all path =%s  pathlen=%d\n", path.get(),
           pathLen));
   nsAutoCString method("POST");

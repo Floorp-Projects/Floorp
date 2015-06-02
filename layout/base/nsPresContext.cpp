@@ -253,7 +253,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
 
   // if text perf logging enabled, init stats struct
   PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textperf);
-  if (log && log->level >= PR_LOG_WARNING) {
+  if (MOZ_LOG_TEST(log, LogLevel::Warning)) {
     mTextPerf = new gfxTextPerfMetrics();
   }
 
