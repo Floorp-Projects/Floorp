@@ -14,6 +14,8 @@
 // work progresses more functionality will be swapped out in favor of
 // mozilla logging implementations.
 
+#define PR_LOG_INFO PR_LOG_DEBUG
+
 #define MOZ_LOG PR_LOG
 
 // Tests if a module has enabled the given log level.
