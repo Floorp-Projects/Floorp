@@ -105,8 +105,7 @@ TextureClientMemoryDIB::AllocateForSurface(gfx::IntSize aSize, TextureAllocation
   MOZ_ASSERT(!IsAllocated());
   mSize = aSize;
 
-  mSurface = new gfxWindowsSurface(gfxIntSize(aSize.width, aSize.height),
-                                   SurfaceFormatToImageFormat(mFormat));
+  mSurface = new gfxWindowsSurface(aSize, SurfaceFormatToImageFormat(mFormat));
   if (!mSurface || mSurface->CairoStatus())
   {
     NS_WARNING("Could not create surface");

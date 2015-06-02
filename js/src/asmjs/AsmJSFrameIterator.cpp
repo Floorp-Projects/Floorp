@@ -22,6 +22,8 @@
 #include "asmjs/AsmJSValidate.h"
 #include "jit/MacroAssembler.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace js::jit;
 

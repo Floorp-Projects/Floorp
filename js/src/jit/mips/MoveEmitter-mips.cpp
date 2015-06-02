@@ -6,6 +6,8 @@
 
 #include "jit/mips/MoveEmitter-mips.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace js::jit;
 

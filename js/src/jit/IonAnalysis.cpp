@@ -3500,8 +3500,11 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
 
     MIRGraph graph(&temp);
     InlineScriptTree* inlineScriptTree = InlineScriptTree::New(&temp, nullptr, nullptr, script);
-    if (!inlineScriptTree)
+    if (!inlineScriptTree) {
+        ReportOutOfMemory(cx);
         return false;
+    }
+
     CompileInfo info(script, script->functionNonDelazifying(),
                      /* osrPc = */ nullptr, /* constructing = */ false,
                      Analysis_ArgumentsUsage,
@@ -3511,8 +3514,10 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
     const OptimizationInfo* optimizationInfo = js_IonOptimizations.get(Optimization_Normal);
 
     CompilerConstraintList* constraints = NewCompilerConstraintList(temp);
-    if (!constraints)
+    if (!constraints) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     BaselineInspector inspector(script);
     const JitCompileOptions options(cx);

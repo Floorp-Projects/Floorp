@@ -68,7 +68,7 @@ public:
      * @param dpy a display to use for the drawing if ctx doesn't have one
      */
 #if (MOZ_WIDGET_GTK == 2)
-    void Draw(gfxContext* ctx, nsIntSize size,
+    void Draw(gfxContext* ctx, mozilla::gfx::IntSize size,
               uint32_t flags, GdkColormap* colormap);
 #endif
 

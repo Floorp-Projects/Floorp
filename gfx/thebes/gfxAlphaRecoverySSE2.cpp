@@ -30,7 +30,7 @@ bool
 gfxAlphaRecovery::RecoverAlphaSSE2(gfxImageSurface* blackSurf,
                                    const gfxImageSurface* whiteSurf)
 {
-    gfxIntSize size = blackSurf->GetSize();
+    mozilla::gfx::IntSize size = blackSurf->GetSize();
 
     if (size != whiteSurf->GetSize() ||
         (blackSurf->Format() != gfxImageFormat::ARGB32 &&
@@ -187,7 +187,7 @@ gfxAlphaRecovery::AlignRectForSubimageRecovery(const mozilla::gfx::IntRect& aRec
     // SIMD-ized alpha recovery won't make a difference so this code
     // shouldn't be called.)
     //
-    gfxIntSize surfaceSize = aSurface->GetSize();
+    mozilla::gfx::IntSize surfaceSize = aSurface->GetSize();
     const int32_t stride = bpp * surfaceSize.width;
     if (stride != aSurface->Stride()) {
         NS_WARNING("Unexpected stride, falling back on slow alpha recovery");

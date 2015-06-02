@@ -125,37 +125,42 @@ public:
   class ResolveOrRejectValue
   {
   public:
-    void SetResolve(const ResolveValueType& aResolveValue)
+    template<typename ResolveValueType_>
+    void SetResolve(ResolveValueType_&& aResolveValue)
     {
       MOZ_ASSERT(IsNothing());
-      mResolveValue.emplace(aResolveValue);
+      mResolveValue.emplace(Forward<ResolveValueType_>(aResolveValue));
     }
 
-    void SetReject(const RejectValueType& aRejectValue)
+    template<typename RejectValueType_>
+    void SetReject(RejectValueType_&& aRejectValue)
     {
       MOZ_ASSERT(IsNothing());
-      mRejectValue.emplace(aRejectValue);
+      mRejectValue.emplace(Forward<RejectValueType_>(aRejectValue));
     }
 
-    static ResolveOrRejectValue MakeResolve(const ResolveValueType aResolveValue)
+    template<typename ResolveValueType_>
+    static ResolveOrRejectValue MakeResolve(ResolveValueType_&& aResolveValue)
     {
       ResolveOrRejectValue val;
-      val.SetResolve(aResolveValue);
+      val.SetResolve(Forward<ResolveValueType_>(aResolveValue));
       return val;
     }
 
-    static ResolveOrRejectValue MakeReject(const RejectValueType aRejectValue)
+    template<typename RejectValueType_>
+    static ResolveOrRejectValue MakeReject(RejectValueType_&& aRejectValue)
     {
       ResolveOrRejectValue val;
-      val.SetReject(aRejectValue);
+      val.SetReject(Forward<RejectValueType_>(aRejectValue));
       return val;
     }
 
     bool IsResolve() const { return mResolveValue.isSome(); }
     bool IsReject() const { return mRejectValue.isSome(); }
     bool IsNothing() const { return mResolveValue.isNothing() && mRejectValue.isNothing(); }
-    ResolveValueType& ResolveValue() { return mResolveValue.ref(); }
-    RejectValueType& RejectValue() { return mRejectValue.ref(); }
+
+    const ResolveValueType& ResolveValue() const { return mResolveValue.ref(); }
+    const RejectValueType& RejectValue() const { return mRejectValue.ref(); }
 
   private:
     Maybe<ResolveValueType> mResolveValue;
@@ -183,20 +188,83 @@ public:
   // NB: We can include the definition of this class inline once B2G ICS is gone.
   class Private;
 
+  template<typename ResolveValueType_>
   static nsRefPtr<MediaPromise>
-  CreateAndResolve(ResolveValueType aResolveValue, const char* aResolveSite)
+  CreateAndResolve(ResolveValueType_&& aResolveValue, const char* aResolveSite)
   {
     nsRefPtr<typename MediaPromise::Private> p = new MediaPromise::Private(aResolveSite);
-    p->Resolve(aResolveValue, aResolveSite);
-    return Move(p);
+    p->Resolve(Forward<ResolveValueType_>(aResolveValue), aResolveSite);
+    return p.forget();
   }
 
+  template<typename RejectValueType_>
   static nsRefPtr<MediaPromise>
-  CreateAndReject(RejectValueType aRejectValue, const char* aRejectSite)
+  CreateAndReject(RejectValueType_&& aRejectValue, const char* aRejectSite)
   {
     nsRefPtr<typename MediaPromise::Private> p = new MediaPromise::Private(aRejectSite);
-    p->Reject(aRejectValue, aRejectSite);
-    return Move(p);
+    p->Reject(Forward<RejectValueType_>(aRejectValue), aRejectSite);
+    return p.forget();
+  }
+
+  typedef MediaPromise<nsTArray<ResolveValueType>, RejectValueType, IsExclusive> AllPromiseType;
+private:
+  class AllPromiseHolder : public MediaPromiseRefcountable
+  {
+  public:
+    explicit AllPromiseHolder(size_t aDependentPromises)
+      : mPromise(new typename AllPromiseType::Private(__func__))
+      , mOutstandingPromises(aDependentPromises)
+    {
+      mResolveValues.SetLength(aDependentPromises);
+    }
+
+    void Resolve(size_t aIndex, const ResolveValueType& aResolveValue)
+    {
+      if (!mPromise) {
+        // Already rejected.
+        return;
+      }
+
+      mResolveValues[aIndex].emplace(aResolveValue);
+      if (--mOutstandingPromises == 0) {
+        nsTArray<ResolveValueType> resolveValues;
+        resolveValues.SetCapacity(mResolveValues.Length());
+        for (size_t i = 0; i < mResolveValues.Length(); ++i) {
+          resolveValues.AppendElement(mResolveValues[i].ref());
+        }
+
+        mPromise->Resolve(resolveValues, __func__);
+        mPromise = nullptr;
+        mResolveValues.Clear();
+      }
+    }
+
+    void Reject(const RejectValueType& aRejectValue)
+    {
+      mPromise->Reject(aRejectValue, __func__);
+      mPromise = nullptr;
+      mResolveValues.Clear();
+    }
+
+    AllPromiseType* Promise() { return mPromise; }
+
+  private:
+    nsTArray<Maybe<ResolveValueType>> mResolveValues;
+    nsRefPtr<typename AllPromiseType::Private> mPromise;
+    size_t mOutstandingPromises;
+  };
+public:
+
+  static nsRefPtr<AllPromiseType> All(AbstractThread* aProcessingThread, nsTArray<nsRefPtr<MediaPromise>>& aPromises)
+  {
+    nsRefPtr<AllPromiseHolder> holder = new AllPromiseHolder(aPromises.Length());
+    for (size_t i = 0; i < aPromises.Length(); ++i) {
+      aPromises[i]->Then(aProcessingThread, __func__,
+        [holder, i] (ResolveValueType aResolveValue) -> void { holder->Resolve(i, aResolveValue); },
+        [holder] (RejectValueType aRejectValue) -> void { holder->Reject(aRejectValue); }
+      );
+    }
+    return holder->Promise();
   }
 
   class Request : public MediaPromiseRefcountable
@@ -232,9 +300,12 @@ protected:
     class ResolveOrRejectRunnable : public nsRunnable
     {
     public:
-      ResolveOrRejectRunnable(ThenValueBase* aThenValue, ResolveOrRejectValue& aValue)
+      ResolveOrRejectRunnable(ThenValueBase* aThenValue, MediaPromise* aPromise)
         : mThenValue(aThenValue)
-        , mValue(aValue) {}
+        , mPromise(aPromise)
+      {
+        MOZ_DIAGNOSTIC_ASSERT(!mPromise->IsPending());
+      }
 
       ~ResolveOrRejectRunnable()
       {
@@ -244,14 +315,15 @@ protected:
       NS_IMETHODIMP Run()
       {
         PROMISE_LOG("ResolveOrRejectRunnable::Run() [this=%p]", this);
-        mThenValue->DoResolveOrReject(mValue);
+        mThenValue->DoResolveOrReject(mPromise->Value());
         mThenValue = nullptr;
+        mPromise = nullptr;
         return NS_OK;
       }
 
     private:
       nsRefPtr<ThenValueBase> mThenValue;
-      ResolveOrRejectValue mValue;
+      nsRefPtr<MediaPromise> mPromise;
     };
 
     explicit ThenValueBase(AbstractThread* aResponseTarget, const char* aCallSite)
@@ -273,7 +345,7 @@ protected:
       MOZ_ASSERT(!aPromise->IsPending());
 
       nsRefPtr<nsRunnable> runnable =
-        static_cast<nsRunnable*>(new (typename ThenValueBase::ResolveOrRejectRunnable)(this, aPromise->mValue));
+        static_cast<nsRunnable*>(new (typename ThenValueBase::ResolveOrRejectRunnable)(this, aPromise));
       PROMISE_LOG("%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p]",
                   aPromise->mValue.IsResolve() ? "Resolving" : "Rejecting", ThenValueBase::mCallSite,
                   runnable.get(), aPromise, this);
@@ -299,9 +371,9 @@ protected:
     }
 
   protected:
-    virtual already_AddRefed<MediaPromise> DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) = 0;
+    virtual already_AddRefed<MediaPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) = 0;
 
-    void DoResolveOrReject(ResolveOrRejectValue& aValue)
+    void DoResolveOrReject(const ResolveOrRejectValue& aValue)
     {
       Request::mComplete = true;
       if (Request::mDisconnected) {
@@ -349,18 +421,18 @@ protected:
   static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MediaPromise>>::value &&
                            TakesArgument<MethodType>::value,
                            already_AddRefed<MediaPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
-    return ((*aThisVal).*aMethod)(aValue).forget();
+    return ((*aThisVal).*aMethod)(Forward<ValueType>(aValue)).forget();
   }
 
   template<typename ThisType, typename MethodType, typename ValueType>
   static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
                            TakesArgument<MethodType>::value,
                            already_AddRefed<MediaPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
-    ((*aThisVal).*aMethod)(aValue);
+    ((*aThisVal).*aMethod)(Forward<ValueType>(aValue));
     return nullptr;
   }
 
@@ -368,7 +440,7 @@ protected:
   static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MediaPromise>>::value &&
                            !TakesArgument<MethodType>::value,
                            already_AddRefed<MediaPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
     return ((*aThisVal).*aMethod)().forget();
   }
@@ -377,7 +449,7 @@ protected:
   static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
                            !TakesArgument<MethodType>::value,
                            already_AddRefed<MediaPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType aValue)
+  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
     ((*aThisVal).*aMethod)();
     return nullptr;
@@ -406,7 +478,7 @@ protected:
   }
 
   protected:
-    virtual already_AddRefed<MediaPromise> DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
+    virtual already_AddRefed<MediaPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) override
     {
       nsRefPtr<MediaPromise> completion;
       if (aValue.IsResolve()) {
@@ -458,7 +530,7 @@ protected:
   }
 
   protected:
-    virtual already_AddRefed<MediaPromise> DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
+    virtual already_AddRefed<MediaPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) override
     {
       // Note: The usage of InvokeCallbackMethod here requires that
       // ResolveFunction/RejectFunction are capture-lambdas (i.e. anonymous
@@ -542,7 +614,15 @@ public:
   }
 
 protected:
-  bool IsPending() { return mValue.IsNothing(); }
+  bool IsPending() const { return mValue.IsNothing(); }
+  const ResolveOrRejectValue& Value() const
+  {
+    // This method should only be called once the value has stabilized. As
+    // such, we don't need to acquire the lock here.
+    MOZ_DIAGNOSTIC_ASSERT(!IsPending());
+    return mValue;
+  }
+
   void DispatchAll()
   {
     mMutex.AssertCurrentThreadOwns();
@@ -590,30 +670,33 @@ class MediaPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
 public:
   explicit Private(const char* aCreationSite) : MediaPromise(aCreationSite) {}
 
-  void Resolve(ResolveValueT aResolveValue, const char* aResolveSite)
+  template<typename ResolveValueT_>
+  void Resolve(ResolveValueT_&& aResolveValue, const char* aResolveSite)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolving MediaPromise (%p created at %s)", aResolveSite, this, mCreationSite);
-    mValue.SetResolve(aResolveValue);
+    mValue.SetResolve(Forward<ResolveValueT_>(aResolveValue));
     DispatchAll();
   }
 
-  void Reject(RejectValueT aRejectValue, const char* aRejectSite)
+  template<typename RejectValueT_>
+  void Reject(RejectValueT_&& aRejectValue, const char* aRejectSite)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s rejecting MediaPromise (%p created at %s)", aRejectSite, this, mCreationSite);
-    mValue.SetReject(aRejectValue);
+    mValue.SetReject(Forward<RejectValueT_>(aRejectValue));
     DispatchAll();
   }
 
-  void ResolveOrReject(ResolveOrRejectValue aValue, const char* aSite)
+  template<typename ResolveOrRejectValue_>
+  void ResolveOrReject(ResolveOrRejectValue_&& aValue, const char* aSite)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolveOrRejecting MediaPromise (%p created at %s)", aSite, this, mCreationSite);
-    mValue = aValue;
+    mValue = Forward<ResolveOrRejectValue_>(aValue);
     DispatchAll();
   }
 };
@@ -852,7 +935,7 @@ ProxyInternal(AbstractThread* aTarget, MethodCallBase<PromiseType>* aMethodCall,
   nsRefPtr<ProxyRunnable<PromiseType>> r = new ProxyRunnable<PromiseType>(p, aMethodCall);
   MOZ_ASSERT(aTarget->IsDispatchReliable());
   aTarget->Dispatch(r.forget());
-  return Move(p);
+  return p.forget();
 }
 
 } // namespace detail
