@@ -54,7 +54,7 @@ namespace net {
 Predictor *Predictor::sSelf = nullptr;
 
 static PRLogModuleInfo *gPredictorLog = nullptr;
-#define PREDICTOR_LOG(args) MOZ_LOG(gPredictorLog, 4, args)
+#define PREDICTOR_LOG(args) MOZ_LOG(gPredictorLog, PR_LOG_DEBUG, args)
 
 #define RETURN_IF_FAILED(_rv) \
   do { \
