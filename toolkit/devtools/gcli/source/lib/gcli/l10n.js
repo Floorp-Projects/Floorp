@@ -22,7 +22,7 @@ var Cu = require('chrome').Cu;
 
 var prefSvc = Cc['@mozilla.org/preferences-service;1']
                         .getService(Ci.nsIPrefService);
-var prefBranch = prefSvc.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
+var prefBranch = prefSvc.getBranch(null).QueryInterface(Ci.nsIPrefBranch);
 
 var Services = Cu.import('resource://gre/modules/Services.jsm', {}).Services;
 var stringBundle = Services.strings.createBundle(
@@ -75,5 +75,5 @@ exports.lookupFormat = function(name, swaps) {
  * </pre>
  */
 exports.hiddenByChromePref = function() {
-  return !prefBranch.prefHasUserValue('devtools.chrome.enabled');
+  return !prefBranch.getBoolPref('devtools.chrome.enabled');
 };
