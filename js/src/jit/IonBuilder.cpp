@@ -2007,9 +2007,6 @@ IonBuilder::inspectOpcode(JSOp op)
         // Just fall through to the unsupported bytecode case.
         break;
 
-      case JSOP_NEWTARGET:
-        return jsop_newtarget();
-
 #ifdef DEBUG
       case JSOP_PUSHBLOCKSCOPE:
       case JSOP_FRESHENBLOCKSCOPE:
@@ -5271,8 +5268,6 @@ IonBuilder::inlineCallsite(const ObjectVector& targets, CallInfo& callInfo)
         if (target->isSingleton()) {
             // Replace the function with an MConstant.
             MConstant* constFun = constant(ObjectValue(*target));
-            if (callInfo.constructing() && callInfo.getNewTarget() == callInfo.fun())
-                callInfo.setNewTarget(constFun);
             callInfo.setFun(constFun);
         }
 
@@ -6141,7 +6136,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
         }
     }
 
-    int calleeDepth = -((int)argc + 2 + constructing);
+    int calleeDepth = -((int)argc + 2);
 
     // Acquire known call target if existent.
     ObjectVector targets(alloc());
@@ -6284,13 +6279,10 @@ IonBuilder::makeCallHelper(JSFunction* target, CallInfo& callInfo)
         }
     }
 
-    MCall* call = MCall::New(alloc(), target, targetArgs + 1 + callInfo.constructing(),
-                             callInfo.argc(), callInfo.constructing(), isDOMCall);
+    MCall* call = MCall::New(alloc(), target, targetArgs + 1, callInfo.argc(),
+                             callInfo.constructing(), isDOMCall);
     if (!call)
         return nullptr;
-
-    if (callInfo.constructing())
-        call->addArg(targetArgs + 1, callInfo.getNewTarget());
 
     // Explicitly pad any missing arguments with |undefined|.
     // This permits skipping the argumentsRectifier.
@@ -6427,10 +6419,6 @@ IonBuilder::jsop_eval(uint32_t argc)
         current->pushSlot(info().thisSlot());
         MDefinition* thisValue = current->pop();
 
-        if (!jsop_newtarget())
-            return false;
-        MDefinition* newTargetValue = current->pop();
-
         // Try to pattern match 'eval(v + "()")'. In this case v is likely a
         // name on the scope chain and the eval is performing a call on that
         // value. Use a dynamic scope chain lookup rather than a full eval.
@@ -6459,8 +6447,7 @@ IonBuilder::jsop_eval(uint32_t argc)
         MInstruction* filterArguments = MFilterArgumentsOrEval::New(alloc(), string);
         current->add(filterArguments);
 
-        MInstruction* ins = MCallDirectEval::New(alloc(), scopeChain, string,
-                                                 thisValue, newTargetValue, pc);
+        MInstruction* ins = MCallDirectEval::New(alloc(), scopeChain, string, thisValue, pc);
         current->add(ins);
         current->push(ins);
 
@@ -9434,40 +9421,6 @@ IonBuilder::jsop_arguments()
 }
 
 bool
-IonBuilder::jsop_newtarget()
-{
-    if (!info().funMaybeLazy()) {
-        MOZ_ASSERT(!info().script()->isForEval());
-        pushConstant(NullValue());
-        return true;
-    }
-
-    MOZ_ASSERT(info().funMaybeLazy());
-
-    if (info().funMaybeLazy()->isArrow()) {
-        MArrowNewTarget* arrowNewTarget = MArrowNewTarget::New(alloc(), getCallee());
-        current->add(arrowNewTarget);
-        current->push(arrowNewTarget);
-        return true;
-    }
-
-    if (inliningDepth_ == 0) {
-        MNewTarget* newTarget = MNewTarget::New(alloc());
-        current->add(newTarget);
-        current->push(newTarget);
-        return true;
-    }
-
-    if (!info().constructing()) {
-        pushConstant(UndefinedValue());
-        return true;
-    }
-
-    current->push(inlineCallInfo_->getNewTarget());
-    return true;
-}
-
-bool
 IonBuilder::jsop_rest()
 {
     ArrayObject* templateObject = &inspector->getTemplateObject(pc)->as<ArrayObject>();
@@ -9487,7 +9440,7 @@ IonBuilder::jsop_rest()
     }
 
     // We know the exact number of arguments the callee pushed.
-    unsigned numActuals = inlineCallInfo_->argc();
+    unsigned numActuals = inlineCallInfo_->argv().length();
     unsigned numFormals = info().nargs() - 1;
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
 
@@ -11887,11 +11840,10 @@ IonBuilder::jsop_lambda_arrow(JSFunction* fun)
     MOZ_ASSERT(fun->isArrow());
     MOZ_ASSERT(!fun->isNative());
 
-    MDefinition* newTargetDef = current->pop();
     MDefinition* thisDef = current->pop();
 
     MLambdaArrow* ins = MLambdaArrow::New(alloc(), constraints(), current->scopeChain(),
-                                          thisDef, newTargetDef, fun);
+                                          thisDef, fun);
     current->add(ins);
     current->push(ins);
 

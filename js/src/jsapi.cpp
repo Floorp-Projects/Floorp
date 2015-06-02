@@ -4413,7 +4413,7 @@ JS::Construct(JSContext* cx, HandleValue fval, const JS::HandleValueArray& args,
     assertSameCompartment(cx, fval, args);
     AutoLastFrameCheck lfc(cx);
 
-    return InvokeConstructor(cx, fval, args.length(), args.begin(), false, rval);
+    return InvokeConstructor(cx, fval, args.length(), args.begin(), rval);
 }
 
 static JSObject*
@@ -4428,13 +4428,12 @@ JS_NewHelper(JSContext* cx, HandleObject ctor, const JS::HandleValueArray& input
     // of object to create, create it, and clamp the return value to an object,
     // among other details. InvokeConstructor does the hard work.
     InvokeArgs args(cx);
-    if (!args.init(inputArgs.length(), true))
+    if (!args.init(inputArgs.length()))
         return nullptr;
 
     args.setCallee(ObjectValue(*ctor));
     args.setThis(NullValue());
     PodCopy(args.array(), inputArgs.begin(), inputArgs.length());
-    args.newTarget().setObject(*ctor);
 
     if (!InvokeConstructor(cx, args))
         return nullptr;

@@ -285,7 +285,6 @@ class MOZ_STACK_CLASS CallArgsBase :
 {
   protected:
     unsigned argc_;
-    bool constructing_;
 
   public:
     /* Returns the number of arguments. */
@@ -315,18 +314,13 @@ class MOZ_STACK_CLASS CallArgsBase :
         return i < argc_ && !this->argv_[i].isUndefined();
     }
 
-    MutableHandleValue newTarget() const {
-        MOZ_ASSERT(constructing_);
-        return MutableHandleValue::fromMarkedLocation(&this->argv_[argc_]);
-    }
-
   public:
     // These methods are publicly exposed, but we're less sure of the interface
     // here than we'd like (because they're hackish and drop assertions).  Try
     // to avoid using these if you can.
 
     Value* array() const { return this->argv_; }
-    Value* end() const { return this->argv_ + argc_ + constructing_; }
+    Value* end() const { return this->argv_ + argc_; }
 };
 
 } // namespace detail
@@ -335,14 +329,13 @@ class MOZ_STACK_CLASS CallArgs : public detail::CallArgsBase<detail::IncludeUsed
 {
   private:
     friend CallArgs CallArgsFromVp(unsigned argc, Value* vp);
-    friend CallArgs CallArgsFromSp(unsigned stackSlots, Value* sp, bool constructing);
+    friend CallArgs CallArgsFromSp(unsigned argc, Value* sp);
 
-    static CallArgs create(unsigned argc, Value* argv, bool constructing) {
+    static CallArgs create(unsigned argc, Value* argv) {
         CallArgs args;
         args.clearUsedRval();
         args.argv_ = argv;
         args.argc_ = argc;
-        args.constructing_ = constructing;
         return args;
     }
 
@@ -358,16 +351,16 @@ class MOZ_STACK_CLASS CallArgs : public detail::CallArgsBase<detail::IncludeUsed
 MOZ_ALWAYS_INLINE CallArgs
 CallArgsFromVp(unsigned argc, Value* vp)
 {
-    return CallArgs::create(argc, vp + 2, vp[1].isMagic(JS_IS_CONSTRUCTING));
+    return CallArgs::create(argc, vp + 2);
 }
 
 // This method is only intended for internal use in SpiderMonkey.  We may
 // eventually move it to an internal header.  Embedders should use
 // JS::CallArgsFromVp!
 MOZ_ALWAYS_INLINE CallArgs
-CallArgsFromSp(unsigned stackSlots, Value* sp, bool constructing = false)
+CallArgsFromSp(unsigned argc, Value* sp)
 {
-    return CallArgs::create(stackSlots - constructing, sp - stackSlots, constructing);
+    return CallArgs::create(argc, sp - argc);
 }
 
 } // namespace JS
