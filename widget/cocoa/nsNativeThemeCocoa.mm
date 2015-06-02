@@ -369,7 +369,8 @@ static CGFloat kMaxFocusRingWidth = 0; // initialized by the nsNativeThemeCocoa 
 
 // These enums are for indexing into the margin array.
 enum {
-  leopardOS = 0
+  leopardOS = 0,
+  yosemiteOS = 1
 };
 
 enum {
@@ -418,7 +419,7 @@ static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, con
   if (!marginSet)
     return;
 
-  static int osIndex = leopardOS;
+  static int osIndex = nsCocoaFeatures::OnYosemiteOrLater() ? yosemiteOS : leopardOS;
   size_t controlSize = EnumSizeForCocoaSize(cocoaControlSize);
   const float* buttonMargins = marginSet[osIndex][controlSize];
   rect->origin.x -= buttonMargins[leftMargin];
@@ -763,10 +764,10 @@ struct CellRenderSettings {
   NSSize minimumSizes[3];
 
   // A three-dimensional array,
-  // with the first dimension being the OS version (only Leopard for the moment),
+  // with the first dimension being the OS version ([0] 10.6-10.9, [1] 10.10 and above),
   // the second being the control size (mini, small, regular), and the third
   // being the 4 margin values (left, top, right, bottom).
-  float margins[1][3][4];
+  float margins[2][3][4];
 };
 
 /*
@@ -992,6 +993,11 @@ static const CellRenderSettings radioSettings = {
       {0, 0, 0, 0},     // mini
       {0, 1, 1, 1},     // small
       {0, 0, 0, 0}      // regular
+    },
+    { // Yosemite
+      {0, 0, 0, 0},     // mini
+      {1, 1, 1, 2},     // small
+      {0, 0, 0, 0}      // regular
     }
   }
 };
@@ -1007,6 +1013,11 @@ static const CellRenderSettings checkboxSettings = {
   },
   {
     { // Leopard
+      {0, 1, 0, 0},     // mini
+      {0, 1, 0, 1},     // small
+      {0, 1, 0, 1}      // regular
+    },
+    { // Yosemite
       {0, 1, 0, 0},     // mini
       {0, 1, 0, 1},     // small
       {0, 1, 0, 1}      // regular
@@ -1060,6 +1071,11 @@ static const CellRenderSettings searchFieldSettings = {
   },
   {
     { // Leopard
+      {0, 0, 0, 0},     // mini
+      {0, 0, 0, 0},     // small
+      {0, 0, 0, 0}      // regular
+    },
+    { // Yosemite
       {0, 0, 0, 0},     // mini
       {0, 0, 0, 0},     // small
       {0, 0, 0, 0}      // regular
@@ -1170,6 +1186,11 @@ static const CellRenderSettings pushButtonSettings = {
   },
   {
     { // Leopard
+      {0, 0, 0, 0},    // mini
+      {4, 0, 4, 1},    // small
+      {5, 0, 5, 2}     // regular
+    },
+    { // Yosemite
       {0, 0, 0, 0},    // mini
       {4, 0, 4, 1},    // small
       {5, 0, 5, 2}     // regular
@@ -1441,6 +1462,11 @@ static const CellRenderSettings dropdownSettings = {
       {1, 1, 2, 1},    // mini
       {3, 0, 3, 1},    // small
       {3, 0, 3, 0}     // regular
+    },
+    { // Yosemite
+      {1, 1, 2, 1},    // mini
+      {3, 0, 3, 1},    // small
+      {3, 0, 3, 0}     // regular
     }
   }
 };
@@ -1458,6 +1484,11 @@ static const CellRenderSettings editableMenulistSettings = {
   },
   {
     { // Leopard
+      {0, 0, 2, 2},    // mini
+      {0, 0, 3, 2},    // small
+      {0, 1, 3, 3}     // regular
+    },
+    { // Yosemite
       {0, 0, 2, 2},    // mini
       {0, 0, 3, 2},    // small
       {0, 1, 3, 3}     // regular
@@ -1502,6 +1533,11 @@ static const CellRenderSettings spinnerSettings = {
   },
   {
     { // Leopard
+      {0, 0, 0, 0},    // mini
+      {0, 0, 0, 0},    // small
+      {0, 0, 0, 0}     // regular
+    },
+    { // Yosemite
       {0, 0, 0, 0},    // mini
       {0, 0, 0, 0},    // small
       {0, 0, 0, 0}     // regular
@@ -1671,6 +1707,11 @@ static const CellRenderSettings progressSettings[2][2] = {
           {0, 0, 0, 0},     // mini
           {1, 1, 1, 1},     // small
           {1, 0, 1, 0}      // regular
+        },
+        { // Yosemite
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {1, 0, 1, 0}      // regular
         }
       }
     }
@@ -1692,6 +1733,11 @@ static const CellRenderSettings progressSettings[2][2] = {
           {0, 0, 0, 0},     // mini
           {1, 1, 1, 1},     // small
           {1, 1, 1, 1}      // regular
+        },
+        { // Yosemite
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {1, 1, 1, 1}      // regular
         }
       }
     },
@@ -1707,6 +1753,11 @@ static const CellRenderSettings progressSettings[2][2] = {
       },
       {
         { // Leopard
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {0, 1, 0, 1}      // regular
+        },
+        { // Yosemite
           {0, 0, 0, 0},     // mini
           {1, 1, 1, 1},     // small
           {0, 1, 0, 1}      // regular
@@ -1752,6 +1803,11 @@ static const CellRenderSettings meterSetting = {
   },
   {
     { // Leopard
+      {1, 1, 1, 1},     // mini
+      {1, 1, 1, 1},     // small
+      {1, 1, 1, 1}      // regular
+    },
+    { // Yosemite
       {1, 1, 1, 1},     // mini
       {1, 1, 1, 1},     // small
       {1, 1, 1, 1}      // regular
