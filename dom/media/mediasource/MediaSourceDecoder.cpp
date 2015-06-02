@@ -169,42 +169,10 @@ MediaSourceDecoder::IsExpectingMoreData()
   return !mReader->IsEnded();
 }
 
-class DurationChangedRunnable : public nsRunnable {
-public:
-  DurationChangedRunnable(MediaSourceDecoder* aDecoder,
-                          double aOldDuration,
-                          double aNewDuration)
-    : mDecoder(aDecoder)
-    , mOldDuration(aOldDuration)
-    , mNewDuration(aNewDuration)
-  { }
-
-  NS_IMETHOD Run() override final {
-    mDecoder->DurationChanged(mOldDuration, mNewDuration);
-    return NS_OK;
-  }
-
-private:
-  RefPtr<MediaSourceDecoder> mDecoder;
-  double mOldDuration;
-  double mNewDuration;
-};
-
-void
-MediaSourceDecoder::DurationChanged(double aOldDuration, double aNewDuration)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  // Run the MediaSource duration changed algorithm
-  if (mMediaSource) {
-    mMediaSource->DurationChange(aOldDuration, aNewDuration);
-  }
-  // Run the MediaElement duration changed algorithm
-  MediaDecoder::DurationChanged();
-}
-
 void
 MediaSourceDecoder::SetInitialDuration(int64_t aDuration)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   // Only use the decoded duration if one wasn't already
   // set.
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -222,6 +190,7 @@ MediaSourceDecoder::SetInitialDuration(int64_t aDuration)
 void
 MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalAction aAction)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   double oldDuration = mMediaSourceDuration;
   if (aDuration >= 0) {
@@ -240,30 +209,10 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalActio
   if (mReader) {
     mReader->SetMediaSourceDuration(mMediaSourceDuration);
   }
-  ScheduleDurationChange(oldDuration, aDuration, aAction);
-}
 
-void
-MediaSourceDecoder::ScheduleDurationChange(double aOldDuration,
-                                           double aNewDuration,
-                                           MSRangeRemovalAction aAction)
-{
-  if (aAction == MSRangeRemovalAction::SKIP) {
-    if (NS_IsMainThread()) {
-      MediaDecoder::DurationChanged();
-    } else {
-      nsCOMPtr<nsIRunnable> task =
-        NS_NewRunnableMethod(this, &MediaDecoder::DurationChanged);
-      NS_DispatchToMainThread(task);
-    }
-  } else {
-    if (NS_IsMainThread()) {
-      DurationChanged(aOldDuration, aNewDuration);
-    } else {
-      nsCOMPtr<nsIRunnable> task =
-        new DurationChangedRunnable(this, aOldDuration, aNewDuration);
-      NS_DispatchToMainThread(task);
-    }
+  MediaDecoder::DurationChanged();
+  if (mMediaSource && aAction != MSRangeRemovalAction::SKIP) {
+    mMediaSource->DurationChange(oldDuration, aDuration);
   }
 }
 
