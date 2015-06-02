@@ -2018,8 +2018,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
           case PNK_DELETEEXPR:
             return checkSideEffects(pn->pn_kid, answer);
 
-          case PNK_TYPEOFNAME:
-          case PNK_TYPEOFEXPR:
+          case PNK_TYPEOF:
           case PNK_VOID:
           case PNK_NOT:
           case PNK_BITNOT:
@@ -7025,26 +7024,12 @@ BytecodeEmitter::emitUnary(ParseNode* pn)
     JSOp op = pn->getOp();
     ParseNode* pn2 = pn->pn_kid;
 
+    if (op == JSOP_TYPEOF && !pn2->isKind(PNK_NAME))
+        op = JSOP_TYPEOFEXPR;
+
     bool oldEmittingForInit = emittingForInit;
     emittingForInit = false;
     if (!emitTree(pn2))
-        return false;
-
-    emittingForInit = oldEmittingForInit;
-    return emit1(op);
-}
-
-bool
-BytecodeEmitter::emitTypeof(ParseNode* node, JSOp op)
-{
-    MOZ_ASSERT(op == JSOP_TYPEOF || op == JSOP_TYPEOFEXPR);
-
-    if (!updateSourceCoordNotes(node->pn_pos.begin))
-        return false;
-
-    bool oldEmittingForInit = emittingForInit;
-    emittingForInit = false;
-    if (!emitTree(node->pn_kid))
         return false;
 
     emittingForInit = oldEmittingForInit;
@@ -7519,15 +7504,8 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         break;
       }
 
-      case PNK_TYPEOFNAME:
-        ok = emitTypeof(pn, JSOP_TYPEOF);
-        break;
-
-      case PNK_TYPEOFEXPR:
-        ok = emitTypeof(pn, JSOP_TYPEOFEXPR);
-        break;
-
       case PNK_THROW:
+      case PNK_TYPEOF:
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:

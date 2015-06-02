@@ -321,8 +321,7 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_COLON:
       case PNK_SHORTHAND:
       case PNK_CONDITIONAL:
-      case PNK_TYPEOFNAME:
-      case PNK_TYPEOFEXPR:
+      case PNK_TYPEOF:
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
@@ -707,6 +706,18 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
         break;
 
       case PN_UNARY:
+        /*
+         * Kludge to deal with typeof expressions: because constant folding
+         * can turn an expression into a name node, we have to check here,
+         * before folding, to see if we should throw undefined name errors.
+         *
+         * NB: We know that if pn->pn_op is JSOP_TYPEOF, pn1 will not be
+         * null. This assumption does not hold true for other unary
+         * expressions.
+         */
+        if (pn->isKind(PNK_TYPEOF) && !pn->pn_kid->isKind(PNK_NAME))
+            pn->setOp(JSOP_TYPEOFEXPR);
+
         if (pn->pn_kid) {
             SyntacticContext kidsc =
                 pn->isKind(PNK_NOT)
@@ -991,8 +1002,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
         }
         break;
 
-      case PNK_TYPEOFNAME:
-      case PNK_TYPEOFEXPR:
+      case PNK_TYPEOF:
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
@@ -1096,7 +1106,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
             // necessarily-weird structure (say, by nulling out |pn->pn_left|
             // only) that would fail AST sanity assertions performed by
             // |handler.freeTree(pn)|.
-            pn->setKind(PNK_TYPEOFEXPR);
+            pn->setKind(PNK_TYPEOF);
             pn->setArity(PN_UNARY);
             pn->pn_kid = pn2;
             handler.freeTree(pn);
