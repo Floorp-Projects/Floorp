@@ -1209,7 +1209,7 @@ class GCRuntime
 
     bool poked;
 
-    volatile js::HeapState heapState;
+    js::HeapState heapState;
 
     /*
      * These options control the zealousness of the GC. The fundamental values
