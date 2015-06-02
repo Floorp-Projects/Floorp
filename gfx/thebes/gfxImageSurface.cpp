@@ -39,7 +39,7 @@ gfxImageSurface::InitFromSurface(cairo_surface_t *csurf)
     Init(csurf, true);
 }
 
-gfxImageSurface::gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
+gfxImageSurface::gfxImageSurface(unsigned char *aData, const IntSize& aSize,
                                  long aStride, gfxImageFormat aFormat)
 {
     InitWithData(aData, aSize, aStride, aFormat);
@@ -48,13 +48,13 @@ gfxImageSurface::gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
 void
 gfxImageSurface::MakeInvalid()
 {
-    mSize = gfxIntSize(-1, -1);
+    mSize = IntSize(-1, -1);
     mData = nullptr;
     mStride = 0;
 }
 
 void
-gfxImageSurface::InitWithData(unsigned char *aData, const gfxIntSize& aSize,
+gfxImageSurface::InitWithData(unsigned char *aData, const IntSize& aSize,
                               long aStride, gfxImageFormat aFormat)
 {
     mSize = aSize;
@@ -99,7 +99,7 @@ TryAllocAlignedBytes(size_t aSize)
 #endif
 }
 
-gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format, bool aClear)
+gfxImageSurface::gfxImageSurface(const IntSize& size, gfxImageFormat format, bool aClear)
  : mSize(size), mData(nullptr), mFormat(format)
 {
     AllocateAndInit(0, 0, aClear);
@@ -150,7 +150,7 @@ gfxImageSurface::AllocateAndInit(long aStride, int32_t aMinimalAllocation,
     }
 }
 
-gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format,
+gfxImageSurface::gfxImageSurface(const IntSize& size, gfxImageFormat format,
                                  long aStride, int32_t aExtraBytes, bool aClear)
  : mSize(size), mData(nullptr), mFormat(format)
 {
@@ -176,7 +176,7 @@ gfxImageSurface::~gfxImageSurface()
 }
 
 /*static*/ long
-gfxImageSurface::ComputeStride(const gfxIntSize& aSize, gfxImageFormat aFormat)
+gfxImageSurface::ComputeStride(const IntSize& aSize, gfxImageFormat aFormat)
 {
     long stride;
 
@@ -224,7 +224,7 @@ gfxImageSurface::SizeOfIsMeasured() const
 
 // helper function for the CopyFrom methods
 static void
-CopyForStride(unsigned char* aDest, unsigned char* aSrc, const gfxIntSize& aSize, long aDestStride, long aSrcStride)
+CopyForStride(unsigned char* aDest, unsigned char* aSrc, const IntSize& aSize, long aDestStride, long aSrcStride)
 {
     if (aDestStride == aSrcStride) {
         memcpy (aDest, aSrc, aSrcStride * aSize.height);
@@ -263,7 +263,7 @@ gfxImageSurface::CopyFrom (SourceSurface *aSurface)
         return false;
     }
 
-    gfxIntSize size(data->GetSize().width, data->GetSize().height);
+    IntSize size(data->GetSize().width, data->GetSize().height);
     if (size != mSize) {
         return false;
     }
@@ -303,7 +303,7 @@ gfxImageSurface::CopyTo(SourceSurface *aSurface) {
         return false;
     }
 
-    gfxIntSize size(data->GetSize().width, data->GetSize().height);
+    IntSize size(data->GetSize().width, data->GetSize().height);
     if (size != mSize) {
         return false;
     }
@@ -350,7 +350,7 @@ gfxImageSurface::GetSubimage(const gfxRect& aRect)
 
     nsRefPtr<gfxSubimageSurface> image =
         new gfxSubimageSurface(this, subData,
-                               gfxIntSize((int)r.Width(), (int)r.Height()),
+                               IntSize((int)r.Width(), (int)r.Height()),
                                format);
 
     return image.forget();
@@ -358,7 +358,7 @@ gfxImageSurface::GetSubimage(const gfxRect& aRect)
 
 gfxSubimageSurface::gfxSubimageSurface(gfxImageSurface* aParent,
                                        unsigned char* aData,
-                                       const gfxIntSize& aSize,
+                                       const IntSize& aSize,
                                        gfxImageFormat aFormat)
   : gfxImageSurface(aData, aSize, aParent->Stride(), aFormat)
   , mParent(aParent)

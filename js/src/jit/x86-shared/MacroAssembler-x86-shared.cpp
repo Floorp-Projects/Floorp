@@ -9,6 +9,8 @@
 #include "jit/JitFrames.h"
 #include "jit/MacroAssembler.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace js::jit;
 
@@ -65,26 +67,26 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 void
 MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t* offset)
 {
-    mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
+    mozilla::DebugOnly<uint32_t> initialDepth = asMasm().framePushed();
 
     CodeLabel cl;
     mov(cl.dest(), scratch);
 
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor));
     asMasm().Push(scratch);
 
     bind(cl.src());
     *offset = currentOffset();
 
-    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
+    MOZ_ASSERT(asMasm().framePushed() == initialDepth + ExitFrameLayout::Size());
     addCodeLabel(cl);
 }
 
 void
 MacroAssemblerX86Shared::callWithExitFrame(Label* target)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor));
     call(target);
 }
@@ -92,7 +94,7 @@ MacroAssemblerX86Shared::callWithExitFrame(Label* target)
 void
 MacroAssemblerX86Shared::callWithExitFrame(JitCode* target)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor));
     call(target);
 }
@@ -112,7 +114,7 @@ MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic)
 bool
 MacroAssemblerX86Shared::buildOOLFakeExitFrame(void* fakeReturnAddr)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor));
     asMasm().Push(ImmPtr(fakeReturnAddr));
     return true;

@@ -7586,27 +7586,19 @@ ComputeGetPropResult(JSContext* cx, BaselineFrame* frame, JSOp op, HandlePropert
             res.setObject(*frame->callee());
         }
     } else {
-        // Handle when val is an object.
-        RootedObject obj(cx, ToObjectFromStack(cx, val));
-        if (!obj)
-            return false;
-
-        RootedId id(cx, NameToId(name));
-        if (op == JSOP_GETXPROP) {
-            if (!GetPropertyForNameLookup(cx, obj, id, res))
+        if (op == JSOP_GETPROP || op == JSOP_LENGTH) {
+            if (!GetProperty(cx, val, name, res))
+                return false;
+        } else if (op == JSOP_CALLPROP) {
+            if (!CallProperty(cx, val, name, res))
                 return false;
         } else {
-            if (!GetProperty(cx, obj, obj, id, res))
+            MOZ_ASSERT(op == JSOP_GETXPROP);
+            RootedObject obj(cx, &val.toObject());
+            RootedId id(cx, NameToId(name));
+            if (!GetPropertyForNameLookup(cx, obj, id, res))
                 return false;
         }
-
-#if JS_HAS_NO_SUCH_METHOD
-        // Handle objects with __noSuchMethod__.
-        if (op == JSOP_CALLPROP && MOZ_UNLIKELY(res.isUndefined()) && val.isObject()) {
-            if (!OnUnknownMethod(cx, obj, IdToValue(id), res))
-                return false;
-        }
-#endif
     }
 
     return true;

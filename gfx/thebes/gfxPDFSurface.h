@@ -29,9 +29,9 @@ public:
     void GetDPI(double *xDPI, double *yDPI);
 
     // this is in points!
-    virtual const gfxIntSize GetSize() const
+    virtual const mozilla::gfx::IntSize GetSize() const
     {
-        return gfxIntSize(mSize.width, mSize.height);
+        return mozilla::gfx::IntSize(mSize.width, mSize.height);
     }
 
 private:

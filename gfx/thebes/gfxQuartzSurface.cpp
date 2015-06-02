@@ -12,13 +12,13 @@
 void
 gfxQuartzSurface::MakeInvalid()
 {
-    mSize = gfxIntSize(-1, -1);    
+    mSize = mozilla::gfx::IntSize(-1, -1);
 }
 
 gfxQuartzSurface::gfxQuartzSurface(const gfxSize& desiredSize, gfxImageFormat format)
     : mCGContext(nullptr), mSize(desiredSize)
 {
-    gfxIntSize size((unsigned int) floor(desiredSize.width),
+    mozilla::gfx::IntSize size((unsigned int) floor(desiredSize.width),
                     (unsigned int) floor(desiredSize.height));
     if (!CheckSurfaceSize(size))
         MakeInvalid();
@@ -43,7 +43,7 @@ gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
                                    const gfxSize& desiredSize)
     : mCGContext(context), mSize(desiredSize)
 {
-    gfxIntSize size((unsigned int) floor(desiredSize.width),
+    mozilla::gfx::IntSize size((unsigned int) floor(desiredSize.width),
                     (unsigned int) floor(desiredSize.height));
     if (!CheckSurfaceSize(size))
         MakeInvalid();
@@ -64,7 +64,7 @@ gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
 }
 
 gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
-                                   const gfxIntSize& size)
+                                   const mozilla::gfx::IntSize& size)
     : mCGContext(context), mSize(size)
 {
     if (!CheckSurfaceSize(size))
@@ -86,7 +86,7 @@ gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
 }
 
 gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
-                                   const gfxIntSize& aSize) :
+                                   const mozilla::gfx::IntSize& aSize) :
     mSize(aSize)
 {
     mCGContext = cairo_quartz_surface_get_cg_context (csurf);
@@ -101,7 +101,7 @@ gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
                                    gfxImageFormat format)
     : mCGContext(nullptr), mSize(desiredSize)
 {
-    gfxIntSize size((unsigned int) floor(desiredSize.width),
+    mozilla::gfx::IntSize size((unsigned int) floor(desiredSize.width),
                     (unsigned int) floor(desiredSize.height));
     if (!CheckSurfaceSize(size))
         MakeInvalid();
@@ -123,7 +123,7 @@ gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
 }
 
 gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
-                                   const gfxIntSize& aSize,
+                                   const mozilla::gfx::IntSize& aSize,
                                    long stride,
                                    gfxImageFormat format)
     : mCGContext(nullptr), mSize(aSize.width, aSize.height)
@@ -146,7 +146,7 @@ gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
 
 already_AddRefed<gfxASurface>
 gfxQuartzSurface::CreateSimilarSurface(gfxContentType aType,
-                                       const gfxIntSize& aSize)
+                                       const mozilla::gfx::IntSize& aSize)
 {
     cairo_surface_t *surface =
         cairo_quartz_surface_create_cg_layer(mSurface, (cairo_content_t)aType,

@@ -598,32 +598,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     /////////////////////////////////////////////////////////////////
     // Common interface.
     /////////////////////////////////////////////////////////////////
-    void reserveStack(uint32_t amount) {
-        if (amount) {
-            // On windows, we cannot skip very far down the stack without touching the
-            // memory pages in-between.  This is a corner-case code for situations where the
-            // Ion frame data for a piece of code is very large.  To handle this special case,
-            // for frames over 1k in size we allocate memory on the stack incrementally, touching
-            // it as we go.
-            uint32_t amountLeft = amount;
-            while (amountLeft > 4096) {
-                subl(Imm32(4096), StackPointer);
-                store32(Imm32(0), Address(StackPointer, 0));
-                amountLeft -= 4096;
-            }
-            subl(Imm32(amountLeft), StackPointer);
-        }
-        framePushed_ += amount;
-    }
-    void freeStack(uint32_t amount) {
-        MOZ_ASSERT(amount <= framePushed_);
-        if (amount)
-            addl(Imm32(amount), StackPointer);
-        framePushed_ -= amount;
-    }
-    void freeStack(Register amount) {
-        addl(amount, StackPointer);
-    }
 
     void addPtr(Register src, Register dest) {
         add32(src, dest);

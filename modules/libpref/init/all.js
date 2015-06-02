@@ -570,9 +570,8 @@ pref("apz.test.logging_enabled", false);
 pref("gfx.hidpi.enabled", 2);
 #endif
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
-// Containerless scrolling for root frames does not yet pass tests on Android
-// or B2G.
+#if !defined(MOZ_WIDGET_ANDROID)
+// Containerless scrolling for root frames does not yet pass tests on Android.
 pref("layout.scroll.root-frame-containers", false);
 #endif
 
@@ -4415,14 +4414,23 @@ pref("dom.mozPermissionSettings.enabled", false);
 pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
+#ifdef NIGHTLY_BUILD
+#if defined(XP_WIN) || defined(XP_LINUX) || defined(XP_MACOSX)
 // W3C draft pointer events
+pref("dom.w3c_pointer_events.enabled", true);
+// W3C touch-action css property (related to touch and pointer events)
+pref("layout.css.touch_action.enabled", true);
+#else
 pref("dom.w3c_pointer_events.enabled", false);
+pref("layout.css.touch_action.enabled", false);
+#endif
+#else
+pref("dom.w3c_pointer_events.enabled", false);
+pref("layout.css.touch_action.enabled", false);
+#endif
 
 // W3C draft ImageCapture API
 pref("dom.imagecapture.enabled", false);
-
-// W3C touch-action css property (related to touch and pointer events)
-pref("layout.css.touch_action.enabled", false);
 
 // Enables some assertions in nsStyleContext that are too expensive
 // for general use, but might be useful to enable for specific tests.

@@ -435,8 +435,8 @@ loop.store.ActiveRoomStore = (function() {
       // XXX Ideally we'd do this check before joining a room, but we're waiting
       // for the UX for that. See bug 1166824. In the meantime this gives us
       // additional information for analysis.
-      loop.shared.utils.hasAudioOrVideoDevices(function(hasAudio) {
-        if (hasAudio) {
+      loop.shared.utils.hasAudioOrVideoDevices(function(hasDevices) {
+        if (hasDevices) {
           // MEDIA_WAIT causes the views to dispatch sharedActions.SetupStreamElements,
           // which in turn starts the sdk obtaining the device permission.
           this.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
@@ -571,7 +571,19 @@ loop.store.ActiveRoomStore = (function() {
      * Used to note the current state of receiving screenshare data.
      */
     receivingScreenShare: function(actionData) {
-      this.setStoreState({receivingScreenShare: actionData.receiving});
+      if (!actionData.receiving &&
+          this.getStoreState().remoteVideoDimensions.screen) {
+        // Remove the remote video dimensions for type screen as we're not
+        // getting the share anymore.
+        var newDimensions = _.extend(this.getStoreState().remoteVideoDimensions);
+        delete newDimensions.screen;
+        this.setStoreState({
+          receivingScreenShare: actionData.receiving,
+          remoteVideoDimensions: newDimensions
+        });
+      } else {
+        this.setStoreState({receivingScreenShare: actionData.receiving});
+      }
     },
 
     /**

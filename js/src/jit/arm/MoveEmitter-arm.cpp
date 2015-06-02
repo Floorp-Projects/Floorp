@@ -6,6 +6,8 @@
 
 #include "jit/arm/MoveEmitter-arm.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace js::jit;
 

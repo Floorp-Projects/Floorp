@@ -1,0 +1,84 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 982726 - Test service worker post message </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+  function start() {
+    return navigator.serviceWorker.register("force_refresh_worker.js",
+                                            { scope: "./sw_clients/" })
+      .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+
+  function testForceRefresh(swr) {
+    var p = new Promise(function(res, rej) {
+      var count = 0;
+      var cachedCount = 0;
+      window.onmessage = function(e) {
+        if (e.data === "READY") {
+          count += 1;
+          if (count == 2) {
+            is(cachedCount, 1, "should have received cached message before " +
+                               "second non-cached message");
+            res();
+          }
+          iframe.contentWindow.postMessage("REFRESH", "*");
+        } else if (e.data === "READY_CACHED") {
+          cachedCount += 1;
+          is(count, 1, "should have received non-cached message before " +
+                       "cached message");
+          iframe.contentWindow.postMessage("FORCE_REFRESH", "*");
+        }
+      }
+    });
+
+    var content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "sw_clients/refresher_compressed.html");
+    content.appendChild(iframe);
+
+    return p.then(() => content.removeChild(iframe));
+  }
+
+  function runTest() {
+    start()
+      .then(testForceRefresh)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.caches.enabled", true],
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>

@@ -17,6 +17,8 @@
 #include "jit/mips/Simulator-mips.h"
 #include "jit/MoveEmitter.h"
 
+#include "jit/MacroAssembler-inl.h"
+
 using namespace js;
 using namespace jit;
 
@@ -1499,26 +1501,26 @@ MacroAssemblerMIPS::ma_bc1d(FloatRegister lhs, FloatRegister rhs, Label* label,
 void
 MacroAssemblerMIPSCompat::buildFakeExitFrame(Register scratch, uint32_t* offset)
 {
-    mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
+    mozilla::DebugOnly<uint32_t> initialDepth = asMasm().framePushed();
 
     CodeLabel cl;
     ma_li(scratch, cl.dest());
 
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor));
     asMasm().Push(scratch);
 
     bind(cl.src());
     *offset = currentOffset();
 
-    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
+    MOZ_ASSERT(asMasm().framePushed() == initialDepth + ExitFrameLayout::Size());
     addCodeLabel(cl);
 }
 
 bool
 MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
 
     asMasm().Push(Imm32(descriptor)); // descriptor_
     asMasm().Push(ImmPtr(fakeReturnAddr));
@@ -1529,7 +1531,7 @@ MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void* fakeReturnAddr)
 void
 MacroAssemblerMIPSCompat::callWithExitFrame(Label* target)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor)); // descriptor
 
     ma_callJitHalfPush(target);
@@ -1538,7 +1540,7 @@ MacroAssemblerMIPSCompat::callWithExitFrame(Label* target)
 void
 MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    uint32_t descriptor = MakeFrameDescriptor(asMasm().framePushed(), JitFrame_IonJS);
     asMasm().Push(Imm32(descriptor)); // descriptor
 
     addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
@@ -1549,7 +1551,7 @@ MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target)
 void
 MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target, Register dynStack)
 {
-    ma_addu(dynStack, dynStack, Imm32(framePushed()));
+    ma_addu(dynStack, dynStack, Imm32(asMasm().framePushed()));
     makeFrameDescriptor(dynStack, JitFrame_IonJS);
     asMasm().Push(dynStack); // descriptor
 
@@ -1561,36 +1563,13 @@ MacroAssemblerMIPSCompat::callWithExitFrame(JitCode* target, Register dynStack)
 void
 MacroAssemblerMIPSCompat::callJit(Register callee)
 {
-    MOZ_ASSERT((framePushed() & 3) == 0);
-    if ((framePushed() & 7) == 4) {
+    MOZ_ASSERT((asMasm().framePushed() & 3) == 0);
+    if ((asMasm().framePushed() & 7) == 4) {
         ma_callJitHalfPush(callee);
     } else {
-        adjustFrame(sizeof(uint32_t));
+        asMasm().adjustFrame(sizeof(uint32_t));
         ma_callJit(callee);
     }
-}
-
-void
-MacroAssemblerMIPSCompat::reserveStack(uint32_t amount)
-{
-    if (amount)
-        ma_subu(StackPointer, StackPointer, Imm32(amount));
-    adjustFrame(amount);
-}
-
-void
-MacroAssemblerMIPSCompat::freeStack(uint32_t amount)
-{
-    MOZ_ASSERT(amount <= framePushed_);
-    if (amount)
-        ma_addu(StackPointer, StackPointer, Imm32(amount));
-    adjustFrame(-amount);
-}
-
-void
-MacroAssemblerMIPSCompat::freeStack(Register amount)
-{
-    as_addu(StackPointer, StackPointer, amount);
 }
 
 void
@@ -3359,11 +3338,11 @@ MacroAssemblerMIPSCompat::callWithABIPre(uint32_t* stackAdjust, bool callFromAsm
     if (dynamicAlignment_) {
         *stackAdjust += ComputeByteAlignment(*stackAdjust, ABIStackAlignment);
     } else {
-        *stackAdjust += ComputeByteAlignment(framePushed_ + alignmentAtPrologue + *stackAdjust,
+        *stackAdjust += ComputeByteAlignment(asMasm().framePushed() + alignmentAtPrologue + *stackAdjust,
                                              ABIStackAlignment);
     }
 
-    reserveStack(*stackAdjust);
+    asMasm().reserveStack(*stackAdjust);
 
     // Save $ra because call is going to clobber it. Restore it in
     // callWithABIPost. NOTE: This is needed for calls from BaselineIC.
@@ -3394,9 +3373,9 @@ MacroAssemblerMIPSCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type res
         // Restore sp value from stack (as stored in setupUnalignedABICall()).
         ma_lw(StackPointer, Address(StackPointer, stackAdjust));
         // Use adjustFrame instead of freeStack because we already restored sp.
-        adjustFrame(-stackAdjust);
+        asMasm().adjustFrame(-stackAdjust);
     } else {
-        freeStack(stackAdjust);
+        asMasm().freeStack(stackAdjust);
     }
 
     MOZ_ASSERT(inCall_);
@@ -3787,4 +3766,12 @@ MacroAssembler::Pop(const ValueOperand& val)
 {
     popValue(val);
     framePushed_ -= sizeof(Value);
+}
+
+void
+MacroAssembler::reserveStack(uint32_t amount)
+{
+    if (amount)
+        ma_subu(StackPointer, StackPointer, Imm32(amount));
+    adjustFrame(amount);
 }
