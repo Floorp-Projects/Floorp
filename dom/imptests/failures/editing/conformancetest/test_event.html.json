@@ -9,8 +9,6 @@
   "Editable b: execCommand() must not throw, uncanceled":true,
   "Editable b: beforeinput event, uncanceled":true,
   "Editable b: input event, uncanceled":true,
-  "No editable content: execCommand() must not throw, canceled":true,
-  "No editable content: execCommand() must not throw, uncanceled":true,
   "Changing selection from handler: beforeinput event, canceled":true,
   "Changing selection from handler: input event, canceled":true,
   "Changing selection from handler: beforeinput event, uncanceled":true,

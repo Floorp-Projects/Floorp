@@ -96,13 +96,8 @@ function runTests() {
        "Command should not be enabled for non-privileged code");
     is(SpecialPowers.wrap(document).queryCommandEnabled(commands[i]), true,
        "Command should be enabled for privileged code");
-    try {
-      document.execCommand(commands[i], false, false);
-      ok(false, "Thould have thrown: " + commands[i]);
-    } catch (e) {
-      ok(/insecure|denied/.test(e), "Threw correctly: " + commands[i] + " - " + e);
-    }
-    SpecialPowers.wrap(document).execCommand(commands[i], false, false);
+    is(document.execCommand(commands[i], false, false), false, "Should return false: " + commands[i]);
+    is(SpecialPowers.wrap(document).execCommand(commands[i], false, false), true, "Should return true: " + commands[i]);
   }
 
   // delete/undo/redo -- we have to execute this commands because:
