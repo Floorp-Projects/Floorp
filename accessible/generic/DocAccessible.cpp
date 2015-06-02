@@ -456,7 +456,7 @@ DocAccessible::Shutdown()
 
   // XXX thinking about ordering?
   if (IPCAccessibilityActive()) {
-    DocAccessibleChild::Send__delete__(mIPCDoc);
+    mIPCDoc->Shutdown();
     MOZ_ASSERT(!mIPCDoc);
   }
 
